@@ -1,5 +1,6 @@
 
-The t8code is a software for parallel adaptive mesh refinement.
+The t8code is a C library to manage a collection (a forest) of multiple
+connected adaptive space-trees of general element types in parallel.
 It is licensed under the GNU General Public License 2.0 or later.
 
 Copyright (c) 2015 the developers
@@ -7,5 +8,5 @@ Copyright (c) 2015 the developers
 The t8code, or T8 for short, will eventually support elements of all types in
 both 2D and 3D, allowing for hybrid meshes including prism and pyramids.
 
-Currently, quadrilateral/hexahedral elements are inherited from the submodule
-p4est and triangular/tetrahedral elements are under development.
+Currently, quadrilateral/hexahedral elements are inherited from the p4est
+submodule; triangular/tetrahedral elements are under development.

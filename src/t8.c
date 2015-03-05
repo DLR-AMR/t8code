@@ -1,7 +1,7 @@
 /*
   This file is part of t8code.
   t8code is a C library to manage a collection (a forest) of multiple
-  connected adaptive quadtrees or octrees in parallel.
+  connected adaptive space-trees of general element types in parallel.
 
   Copyright (C) 2010 The University of Texas System
   Written by Carsten Burstedde, Lucas C. Wilcox, and Tobin Isaac

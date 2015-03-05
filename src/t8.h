@@ -1,7 +1,7 @@
 /*
   This file is part of t8code.
   t8code is a C library to manage a collection (a forest) of multiple
-  connected adaptive quadtrees or octrees in parallel.
+  connected adaptive space-trees of general element types in parallel.
 
   Copyright (C) 2010 The University of Texas System
   Written by Carsten Burstedde, Lucas C. Wilcox, and Tobin Isaac
@@ -23,6 +23,7 @@
 
 /** \file t8.h
  * This is the basic header file for t8code.
+ * It contains application-level convienience code such as logging functions.
  */
 
 #ifndef T8_H
@@ -45,11 +46,11 @@
 /* indirectly also include p4est_config.h, sc.h */
 #include <sc_containers.h>
 #include <p4est_base.h>
-#define t8_const _sc_const              /**< This is tested by configure. */
-#define t8_restrict _sc_restrict        /**< This is tested by configure. */
+#define t8_const _sc_const              /**< This is defined by configure. */
+#define t8_restrict _sc_restrict        /**< This is defined by configure. */
 
 /** Query the package identity as registered in libsc.
- * \return          This is -1 before t8_init and the identifier after.
+ * \return          This is -1 before \ref t8_init and the identifier after.
  */
 int                 t8_get_package_id (void);
 

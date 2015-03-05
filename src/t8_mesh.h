@@ -21,24 +21,19 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8.h>
+/** \file t8_mesh.h
+ * The mesh object is defined here.
+ * The mesh object is intended for interfacing from and to other codes.  It can
+ * be conforgming or adaptive, and replicated or distributed in parallel.
+ * On input to the creation of a forest, it provides the conforming mesh of
+ * coarse elements that are the roots of the tree-based subdivision.  The
+ * coarse input mesh must be conforming (have no hanging nodes).
+ * On output this mesh contains the connectivity of a mesh that has possibly
+ * been adaptively refined (has hanging nodes), including information on remote
+ * neighbors.
+ */
 
-int
-main (int argc, char **argv)
-{
-  int                 mpiret;
+#ifndef T8_MESH_H
+#define T8_MESH_H
 
-  mpiret = sc_MPI_Init (&argc, &argv);
-  SC_CHECK_MPI (mpiret);
-
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  p4est_init (NULL, SC_LP_ESSENTIAL);
-  t8_init (SC_LP_DEFAULT);
-
-  sc_finalize ();
-
-  mpiret = sc_MPI_Finalize ();
-  SC_CHECK_MPI (mpiret);
-
-  return 0;
-}
+#endif /* !T8_MESH_H */
