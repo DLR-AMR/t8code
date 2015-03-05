@@ -49,6 +49,9 @@
 #define t8_const _sc_const              /**< This is defined by configure. */
 #define t8_restrict _sc_restrict        /**< This is defined by configure. */
 
+typedef p4est_locidx_t t8_locidx_t;
+typedef p4est_gloidx_t t8_gloidx_t;
+
 /** Query the package identity as registered in libsc.
  * \return          This is -1 before \ref t8_init and the identifier after.
  */
@@ -138,4 +141,4 @@ void                t8_debugf (const char *fmt, ...)
  */
 void                t8_init (int log_threshold);
 
-#endif /* !T8.H */
+#endif /* !T8_H */

@@ -24,7 +24,7 @@
 /** \file t8_mesh.h
  * The mesh object is defined here.
  * The mesh object is intended for interfacing from and to other codes.  It can
- * be conforgming or adaptive, and replicated or distributed in parallel.
+ * be conforming or adaptive, and replicated or distributed in parallel.
  * On input to the creation of a forest, it provides the conforming mesh of
  * coarse elements that are the roots of the tree-based subdivision.  The
  * coarse input mesh must be conforming (have no hanging nodes).
@@ -35,5 +35,91 @@
 
 #ifndef T8_MESH_H
 #define T8_MESH_H
+
+#include <t8_element.h>
+
+typedef struct t8_mesh t8_mesh_t;
+
+/************************* preallocate **************************/
+
+t8_mesh_t * t8_mesh_new (int dimension,
+                         t8_gloidx_t Kglobal, t8_locidx_t Klocal);
+
+/************* all-in-one convenience constructors **************/
+
+t8_mesh_t * t8_mesh_new_unitcube (t8_type_t thetype);
+
+/***************************** setters **************************/
+
+void t8_mesh_set_comm (t8_mesh_t * mesh, sc_MPI_Comm comm);
+
+/** Determine whether we partition in \ref t8_mesh_build.
+ * Default true.
+ */
+void t8_mesh_set_partition (t8_mesh_t * mesh, int enable);
+
+void t8_mesh_set_element (t8_mesh_t * mesh, t8_type_t thetype,
+                     t8_gloidx_t gloid, t8_locidx_t locid);
+
+void t8_mesh_set_local_to_global (t8_mesh_t * mesh,
+                             t8_locidx_t ltog_length,
+                             const t8_gloidx_t * ltog);
+
+void t8_mesh_set_face (t8_mesh_t * mesh,
+                  t8_locidx_t locid1, int face1,
+                  t8_locidx_t locid2, int face2, int orientation);
+
+void t8_mesh_set_element_vertices (t8_mesh_t * mesh, t8_locidx_t locid,
+                              t8_locidx_t vids_length,
+                              const t8_locidx_t * vids);
+
+#if 0
+void t8_mesh_set_element_scheme (t8_mesh_t * mesh, t8_locidx_t locid,
+                                 t8_escheme_t * escheme);
+#endif
+
+/***************************** construct ************************/
+
+void t8_mesh_build (t8_mesh_t * mesh);
+
+/****************************** queries *************************/
+
+sc_MPI_Comm t8_mesh_get_comm (t8_mesh_t * mesh);
+
+t8_locidx_t t8_mesh_get_element_count (t8_mesh_t * mesh, t8_type_t thetype);
+
+/** 
+ * \param [in] locid            The local number can specify a point of any
+ *                              dimension that is locally relevant.
+ *                              The points are ordered in reverse to the
+ *                              types in \ref t8_type_t.  The local index
+ *                              is cumulative in this order.
+ */
+t8_locidx_t t8_mesh_get_element_type (t8_mesh_t * mesh, t8_locidx_t locid);
+
+t8_locidx_t t8_mesh_get_element_locid (t8_mesh_t * mesh, t8_gloidx_t gloid);
+
+t8_gloidx_t t8_mesh_get_element_gloid (t8_mesh_t * mesh, t8_locidx_t locid);
+
+t8_element_t t8_mesh_get_element (t8_mesh_t * mesh, t8_locidx_t locid);
+
+void t8_mesh_get_element_boundary (t8_mesh_t * mesh, t8_locidx_t locid,
+                                   int length_boundary,
+                                   t8_locidx_t * elemid, int * orientation);
+
+/** Return the maximum of the length of the support of any local element.
+ */
+int t8_mesh_get_maximum_support (t8_mesh_t * mesh);
+
+/**
+ * \param [in,out] length_support
+ */
+void t8_mesh_get_element_support (t8_mesh_t * mesh, t8_locidx_t locid,
+                                  int * length_support,
+                                  t8_locidx_t * elemid, int * orientation);
+
+/***************************** destruct *************************/
+
+void t8_mesh_destroy (t8_mesh_t * mesh);
 
 #endif /* !T8_MESH_H */
