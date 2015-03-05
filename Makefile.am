@@ -58,9 +58,8 @@ DISTCLEANFILES += \
 .PHONY: ChangeLog
 
 # non-recursive build
-# include src/Makefile.am
-# include test/Makefile.am
-# include example/common/Makefile.am
+include src/Makefile.am
+include example/basic/Makefile.am
 
 # revision control and ChangeLog
 ChangeLog:
