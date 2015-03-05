@@ -1,0 +1,26 @@
+
+p4est construction via new, set*, build, use*, destroy
+  set_adapt_from
+  set_partition_from
+
+tree-level boundary
+  tree knows about the possible types of elements in itself and its boundary
+    across all dimensions (0 to dim)
+
+partition coarse mesh even without knowing future refinement
+  most important use cases:
+  0. existing, partitioned mesh (different number of processors?)
+  1. one big common file with the whole mesh in it.
+     a. each processor reads part of it (subset of processors?)
+     b. one processor reads the whole file
+  2. pre-partitioned mesh with several files (less then #processors?)
+  3. meshes fully, explicitly known
+     must be implementable using the same interface as used by 1., 2.
+  in all cases we will repartition (we know old local_to_global and use it)
+
+virtual functions for different types of elements
+
+integrate coarsen, refine, balance
+  one callback: adapt (level +-1 or 0)
+  coarsen callback per element vs. per family
+  conflict resolution of tags and balance requirements
