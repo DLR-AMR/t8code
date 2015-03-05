@@ -1,3 +1,6 @@
 [submodule "p4est"]
 	path = p4est
-	url = ../p4est
+	url = https://github.com/cburstedde/p4est.git
+[submodule "sc"]
+	path = sc
+	url = https://github.com/cburstedde/libsc.git
