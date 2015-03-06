@@ -22,6 +22,7 @@
 */
 
 #include <t8_element_quad.h>
+#include <t8_element_tet.h>
 
 struct t8_element
 {
@@ -35,6 +36,7 @@ t8_type_scheme_new_default (void)
 
   s = T8_ALLOC_ZERO (t8_scheme_t, 1);
   s->type_schemes[T8_TYPE_QUAD] = t8_type_scheme_new_quad ();
+  s->type_schemes[T8_TYPE_TET] = t8_type_scheme_new_tet ();
 
   return s;
 }

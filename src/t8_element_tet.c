@@ -25,7 +25,7 @@
 
 typedef struct t8_tet
 {
-  int8_t itype;
+  int8_t itype;   /**< We store the type for compatibility with the pyramid. */
   int8_t level;
   /* add coordinates etc. here */
 }
