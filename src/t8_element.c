@@ -23,42 +23,75 @@
 
 #include <t8_element_quad.h>
 
-t8_escheme_t *t8_escheme_vertex_default;
-t8_escheme_t *t8_escheme_line_default;
-t8_escheme_t *t8_escheme_quad_default;
-t8_escheme_t *t8_escheme_triangle_default;
-t8_escheme_t *t8_escheme_hex_default;
-t8_escheme_t *t8_escheme_tet_default;
-t8_escheme_t *t8_escheme_prism_default;
-t8_escheme_t *t8_escheme_pyramid_default;
-
-void
-t8_escheme_new_defaults (void)
+struct t8_element
 {
-  t8_escheme_quad_default = t8_escheme_new_quad ();
+  int                 t8_element_dummy;
+};
+
+t8_scheme_t        *
+t8_type_scheme_new_default (void)
+{
+  t8_scheme_t        *s;
+
+  s = T8_ALLOC_ZERO (t8_scheme_t, 1);
+  s->type_schemes[T8_TYPE_QUAD] = t8_type_scheme_new_quad ();
+
+  return s;
 }
 
 void
-t8_escheme_destroy_defaults (void)
+t8_escheme_destroy_default (t8_scheme_t * s)
 {
-  t8_escheme_destroy (t8_escheme_quad_default);
-}
+  int                 t;
 
-void
-t8_escheme_destroy (t8_escheme_t * escheme)
-{
-  T8_ASSERT (escheme != NULL);
+  T8_ASSERT (s != NULL);
 
-  if (escheme->escheme_destroy != NULL) {
-    escheme->escheme_destroy (escheme->context);
+  for (t = T8_TYPE_FIRST; t < T8_TYPE_LAST; ++t) {
+    if (s->type_schemes[t] != NULL) {
+      t8_type_scheme_destroy (s->type_schemes[t]);
+    }
   }
-  T8_FREE (escheme);
+  T8_FREE (s);
 }
 
 void
-t8_element_new (t8_escheme_t * scheme,
-                int length, t8_element_t ** elems)
+t8_type_scheme_destroy (t8_type_scheme_t * ts)
 {
-  T8_ASSERT (scheme != NULL && scheme->elem_new != NULL);
-  scheme->elem_new (scheme->context, length, elems);
+  T8_ASSERT (ts != NULL);
+
+  if (ts->ts_destroy != NULL) {
+    ts->ts_destroy (ts);
+  }
+  T8_FREE (ts);
+}
+
+void
+t8_element_parent (t8_type_scheme_t * ts,
+                   const t8_element_t * elem, t8_element_t * parent)
+{
+  T8_ASSERT (ts != NULL && ts->elem_parent != NULL);
+  ts->elem_parent (elem, parent);
+}
+
+void
+t8_element_sibling (t8_type_scheme_t * ts,
+                    const t8_element_t * elem, int sibid,
+                    t8_element_t * sibling)
+{
+  T8_ASSERT (ts != NULL && ts->elem_sibling != NULL);
+  ts->elem_sibling (elem, sibid, sibling);
+}
+
+void
+t8_element_new (t8_type_scheme_t * ts, int length, t8_element_t ** elems)
+{
+  T8_ASSERT (ts != NULL && ts->elem_new != NULL);
+  ts->elem_new (ts->ts_context, length, elems);
+}
+
+void
+t8_element_destroy (t8_type_scheme_t * ts, int length, t8_element_t ** elems)
+{
+  T8_ASSERT (ts != NULL && ts->elem_destroy != NULL);
+  ts->elem_destroy (ts->ts_context, length, elems);
 }

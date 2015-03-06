@@ -24,6 +24,7 @@
 #include <t8_mesh.h>
 
 struct t8_mesh {
+  int t8_mesh_dummy;
 };
 
 t8_mesh_t * t8_mesh_new (int dimension,

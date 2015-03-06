@@ -51,6 +51,7 @@
 
 #define T8_ASSERT P4EST_ASSERT          /**< TODO: write proper function. */
 #define T8_ALLOC P4EST_ALLOC            /**< TODO: write proper function. */
+#define T8_ALLOC_ZERO P4EST_ALLOC_ZERO  /**< TODO: write proper function. */
 #define T8_FREE P4EST_FREE              /**< TODO: write proper function. */
 
 typedef p4est_locidx_t t8_locidx_t;

@@ -29,6 +29,6 @@
 
 #include <t8_element.h>
 
-t8_escheme_t * t8_escheme_new_quad (void);
+t8_type_scheme_t   *t8_type_scheme_new_quad (void);
 
 #endif /* !T8_ELEMENT_QUAD_H */
