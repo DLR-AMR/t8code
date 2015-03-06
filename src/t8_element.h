@@ -96,7 +96,7 @@ typedef struct t8_scheme
 t8_scheme_t;
 
 t8_scheme_t        *t8_scheme_new_default (void);
-void                t8_scheme_destroy_default (t8_scheme_t * scheme);
+void                t8_scheme_destroy (t8_scheme_t * scheme);
 
 void                t8_type_scheme_destroy (t8_type_scheme_t * ts);
 

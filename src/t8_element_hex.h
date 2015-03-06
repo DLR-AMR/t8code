@@ -21,19 +21,14 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_element_quad.h
- * We use a p4est_quadrant_t object as storage for the T8 quadrant.
- * To record if and if yes, how this quadrant is part of a 3D octant, we use
- * the member pad8 for the surrounding dimension (2 or 3), pad16 for the
- * direction of its normal relative to the surrounding octant (0, 1, or 2), and
- * p.user_int for the p4est_qcoord_t coordinate in the normal direction.
+/** \file t8_element_hex.h
  */
 
-#ifndef T8_ELEMENT_QUAD_H
-#define T8_ELEMENT_QUAD_H
+#ifndef T8_ELEMENT_HEX_H
+#define T8_ELEMENT_HEX_H
 
 #include <t8_element.h>
 
-t8_type_scheme_t   *t8_type_scheme_new_quad (void);
+t8_type_scheme_t   *t8_type_scheme_new_hex (void);
 
-#endif /* !T8_ELEMENT_QUAD_H */
+#endif /* !T8_ELEMENT_HEX_H */

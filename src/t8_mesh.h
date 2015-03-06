@@ -79,7 +79,7 @@ void                t8_mesh_set_element_vertices (t8_mesh_t * mesh,
 #if 0
 void                t8_mesh_set_element_scheme (t8_mesh_t * mesh,
                                                 t8_locidx_t locid,
-                                                t8_escheme_t * escheme);
+                                                t8_scheme_t * scheme);
 #endif
 
 /***************************** construct ************************/
