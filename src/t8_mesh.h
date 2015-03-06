@@ -84,6 +84,8 @@ void                t8_mesh_set_element_scheme (t8_mesh_t * mesh,
 
 /***************************** construct ************************/
 
+/** Setup a mesh and turn it into a usable object.
+ */
 void                t8_mesh_build (t8_mesh_t * mesh);
 
 /****************************** queries *************************/
