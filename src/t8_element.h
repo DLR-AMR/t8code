@@ -43,33 +43,68 @@ typedef enum t8_type
 }
 t8_type_t;
 
-int t8_type_get_num_boundary (t8_type_t thetype, t8_type_t boundary);
-
-typedef struct t8_escheme t8_escheme_t;
-
-extern t8_escheme_t * t8_escheme_default;
-
-/** Create the t8code default scheme for a certain element type.
- */
-t8_escheme_t * t8_escheme_new (t8_type_t);
-
-void t8_escheme_destroy (t8_escheme_t * escheme);
-
 typedef struct t8_element t8_element_t;
 
-t8_type_t t8_element_get_type (t8_element_t * elem);
+typedef void (*t8_element_parent_t) (const t8_element_t * elem,
+                                     t8_element_t * parent);
+typedef void (*t8_element_sibling_t) (const t8_element_t * elem,
+                                      int sibid, t8_element_t * sibling);
+typedef void (*t8_element_child_t) (const t8_element_t * elem,
+                                    int childid, t8_element_t * child);
+typedef void (*t8_element_nca_t) (const t8_element_t * elem1,
+                                  const t8_element_t * elem2,
+                                  t8_element_t * nca);
 
-void t8_element_get_parent (t8_escheme_t * scheme,
-                            t8_element_t * elem, t8_element_t * parent);
+typedef struct t8_escheme
+{
+  /** The type of the root element in the tree. */
+  t8_type_t           ttype;
+  t8_element_parent_t elem_parent;
+  t8_element_sibling_t elem_sibling;
+  t8_element_child_t  elem_child;
+  t8_element_nca_t    elem_nca;
 
-void t8_element_get_child (t8_escheme_t * scheme,
-                           t8_element_t * elem, int childid,
-                           t8_element_t * child);
+  void                (*elem_new) (void *context,
+                                   int length, t8_element_t ** elem);
+  void                (*elem_destroy) (void *context,
+                                       int length, t8_element_t ** elem);
+  void                (*escheme_destroy) (void * context);
+  void               *context;
+}
+t8_escheme_t;
 
-void t8_element_new (t8_escheme_t * scheme, t8_type_t thetype,
-                     int length, t8_element_t ** elems);
+extern t8_escheme_t *t8_escheme_vertex_default;
+extern t8_escheme_t *t8_escheme_line_default;
+extern t8_escheme_t *t8_escheme_quad_default;
+extern t8_escheme_t *t8_escheme_triangle_default;
+extern t8_escheme_t *t8_escheme_hex_default;
+extern t8_escheme_t *t8_escheme_tet_default;
+extern t8_escheme_t *t8_escheme_prism_default;
+extern t8_escheme_t *t8_escheme_pyramid_default;
 
-void t8_element_destroy (t8_escheme_t * scheme,
-                         int length, t8_element_t ** elem);
+void                t8_escheme_new_defaults (void);
+void                t8_escheme_destroy_defaults (void);
+void                t8_escheme_destroy (t8_escheme_t * escheme);
+
+int                 t8_type_get_num_boundary (t8_type_t thetype,
+                                              t8_type_t boundary);
+
+void                t8_element_get_parent (t8_escheme_t * scheme,
+                                           t8_element_t * elem,
+                                           t8_element_t * parent);
+
+void                t8_element_get_sibling (t8_escheme_t * scheme,
+                                            t8_element_t * elem, int sibid,
+                                            t8_element_t * sibling);
+
+void                t8_element_get_child (t8_escheme_t * scheme,
+                                          t8_element_t * elem, int childid,
+                                          t8_element_t * child);
+
+void                t8_element_new (t8_escheme_t * scheme,
+                                    int length, t8_element_t ** elems);
+
+void                t8_element_destroy (t8_escheme_t * scheme,
+                                        int length, t8_element_t ** elems);
 
 #endif /* !T8_ELEMENT_H */

@@ -21,44 +21,37 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <p4est_bits.h>
 #include <t8_element_quad.h>
 
-t8_escheme_t *t8_escheme_vertex_default;
-t8_escheme_t *t8_escheme_line_default;
-t8_escheme_t *t8_escheme_quad_default;
-t8_escheme_t *t8_escheme_triangle_default;
-t8_escheme_t *t8_escheme_hex_default;
-t8_escheme_t *t8_escheme_tet_default;
-t8_escheme_t *t8_escheme_prism_default;
-t8_escheme_t *t8_escheme_pyramid_default;
-
-void
-t8_escheme_new_defaults (void)
+static void
+t8_element_quad_sibling (const t8_element_t * elem,
+                         int sibid, t8_element_t * sibling)
 {
-  t8_escheme_quad_default = t8_escheme_new_quad ();
+  p4est_quadrant_sibling ((const p4est_quadrant_t *) elem,
+                          (p4est_quadrant_t *) sibling, sibid);
 }
 
-void
-t8_escheme_destroy_defaults (void)
+static void
+t8_escheme_quad_destroy (void * context)
 {
-  t8_escheme_destroy (t8_escheme_quad_default);
+  sc_mempool_destroy ((sc_mempool_t *) context);
 }
 
-void
-t8_escheme_destroy (t8_escheme_t * escheme)
+t8_escheme_t *
+t8_escheme_new_quad (void)
 {
-  T8_ASSERT (escheme != NULL);
+  t8_escheme_t * es;
 
-  if (escheme->escheme_destroy != NULL) {
-    escheme->escheme_destroy (escheme->context);
-  }
-  T8_FREE (escheme);
-}
+  es = T8_ALLOC (t8_escheme_t, 1);
 
-void
-t8_element_new (t8_escheme_t * scheme,
-                int length, t8_element_t ** elems)
-{
-  T8_ASSERT (scheme != NULL && scheme->elem_new != NULL);
-  scheme->elem_new (scheme->context, length, elems);
+  es->ttype = T8_TYPE_QUAD;
+  es->elem_parent = (t8_element_parent_t) p4est_quadrant_parent;
+  es->elem_sibling = t8_element_quad_sibling;
+  es->elem_nca = (t8_element_nca_t) p4est_nearest_common_ancestor;
+
+  es->escheme_destroy = t8_escheme_quad_destroy;
+  es->context = sc_mempool_new (sizeof (p4est_quadrant_t));
+
+  return es;
 }

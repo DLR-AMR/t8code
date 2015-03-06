@@ -49,6 +49,10 @@
 #define t8_const _sc_const              /**< This is defined by configure. */
 #define t8_restrict _sc_restrict        /**< This is defined by configure. */
 
+#define T8_ASSERT P4EST_ASSERT          /**< TODO: write proper function. */
+#define T8_ALLOC P4EST_ALLOC            /**< TODO: write proper function. */
+#define T8_FREE P4EST_FREE              /**< TODO: write proper function. */
+
 typedef p4est_locidx_t t8_locidx_t;
 typedef p4est_gloidx_t t8_gloidx_t;
 
