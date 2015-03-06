@@ -45,6 +45,9 @@ typedef enum t8_type
 }
 t8_type_t;
 
+/** Map each of the elementy types to its dimension. */
+extern const int t8_type_to_dimension[T8_TYPE_LAST];
+
 /** Opaque structure for a generic element, only used as pointer.
  * Applications are free to cast it to their internal element type.
  */
@@ -63,6 +66,9 @@ typedef void        (*t8_element_child_t) (const t8_element_t * elem,
 typedef void        (*t8_element_nca_t) (const t8_element_t * elem1,
                                          const t8_element_t * elem2,
                                          t8_element_t * nca);
+typedef void        (*t8_element_boundary_t) (const t8_element_t * elem,
+                                              int min_dim, int length,
+                                              t8_element_t ** boundary);
 
 typedef void        (*t8_element_new_t) (void *ts_context,
                                          int length, t8_element_t ** elem);
@@ -79,6 +85,7 @@ struct t8_type_scheme
   t8_element_sibling_t elem_sibling;
   t8_element_child_t  elem_child;
   t8_element_nca_t    elem_nca;
+  t8_element_boundary_t elem_boundary;
 
   /* these element routines have a context for memory allocation */
   t8_element_new_t    elem_new;
@@ -100,8 +107,46 @@ void                t8_scheme_destroy (t8_scheme_t * scheme);
 
 void                t8_type_scheme_destroy (t8_type_scheme_t * ts);
 
-int                 t8_type_get_num_boundary (t8_type_t thetype,
-                                              t8_type_t boundary);
+/** Query the type and count of boundary points.
+ * \param [in] thetype          We query a point of this type.
+ * \param [in] min_dim          Ignore boundary points of lesser dimension.
+ *                              The ignered points get a count value of 0.
+ * \param [out] per_type        Array of length T8_TYPE_LAST to be filled
+ *                              with the count of the boundary objects,
+ *                              counted per each of the element types.
+ * \return                      The count over all boundary points.
+ */
+int                 t8_type_count_boundary (t8_type_t thetype,
+                                            int min_dim, int *per_type);
+
+/** Allocate a set of elements suitable for the boundary of a given type.
+ * \param [in] scheme           Defines the implementation of the types.
+ * \param [in] thetype          Type of the element whose boundary we want.
+ * \param [in] min_dim          Ignore boundary points of lesser dimension.
+ * \param [in] length           Must be equal to the return value
+ *                              of \ref t8_type_count_boundary.
+ * \param [in,out] boundary     On input, array of element pointers of at
+ *                              least length \b length.  Filled on output.
+ */
+void                t8_type_boundary_new (t8_scheme_t * scheme,
+                                          t8_type_t thetype, int min_dim,
+                                          int length,
+                                          t8_element_t ** boundary);
+
+/** Allocate a set of elements suitable for the boundary of a given type.
+ * \param [in] scheme           Defines the implementation of the types.
+ * \param [in] thetype          Type of the element whose boundary we have.
+ * \param [in] min_dim          Ignore boundary points of lesser dimension.
+ * \param [in] length           Must be equal to the return value
+ *                              of \ref t8_type_count_boundary.
+ * \param [in,out] boundary     Array of element pointers holding elements
+ *                              as created by \ref t8_type_boundary_new.
+ *                              The elements are destroyed by this function.
+ */
+void                t8_type_boundary_destroy (t8_scheme_t * scheme,
+                                              t8_type_t thetype, int min_dim,
+                                              int length,
+                                              t8_element_t ** boundary);
 
 void                t8_element_parent (t8_type_scheme_t * ts,
                                        const t8_element_t * elem,
@@ -116,6 +161,10 @@ void                t8_element_nca (t8_type_scheme_t * ts,
                                     const t8_element_t * elem1,
                                     const t8_element_t * elem2,
                                     t8_element_t * nca);
+void                t8_element_boundary (t8_type_scheme_t * ts,
+                                         const t8_element_t * elem,
+                                         int min_dim, int length,
+                                         t8_element_t ** boundary);
 
 void                t8_element_new (t8_type_scheme_t * ts,
                                     int length, t8_element_t ** elems);

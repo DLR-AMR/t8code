@@ -30,6 +30,21 @@ struct t8_element
   int                 t8_element_dummy;
 };
 
+/* *INDENT-OFF* */
+const int t8_type_to_dimension[T8_TYPE_LAST] =
+  { 0, 1, 2, 2, 3, 3, 3, 3 };
+
+static const int t8_type_boundary_count[T8_TYPE_LAST][T8_TYPE_LAST] =
+  {{ 0,  0, 0, 0, 0, 0, 0, 0 },
+   { 2,  0, 0, 0, 0, 0, 0, 0 },
+   { 4,  4, 0, 0, 0, 0, 0, 0 },
+   { 3,  3, 0, 0, 0, 0, 0, 0 },
+   { 8, 12, 6, 0, 0, 0, 0, 0 },
+   { 4,  6, 0, 4, 0, 0, 0, 0 },
+   { 6,  9, 3, 2, 0, 0, 0, 0 },
+   { 5,  8, 1, 4, 0, 0, 0, 0 }};
+/* *INDENT-ON* */
+
 t8_scheme_t        *
 t8_scheme_new_default (void)
 {
@@ -50,7 +65,7 @@ t8_scheme_destroy (t8_scheme_t * s)
 
   T8_ASSERT (s != NULL);
 
-  for (t = T8_TYPE_FIRST; t < T8_TYPE_LAST; ++t) {
+  for (t = 0; t < T8_TYPE_LAST; ++t) {
     if (s->type_schemes[t] != NULL) {
       t8_type_scheme_destroy (s->type_schemes[t]);
     }
@@ -69,6 +84,71 @@ t8_type_scheme_destroy (t8_type_scheme_t * ts)
   T8_FREE (ts);
 }
 
+int
+t8_type_count_boundary (t8_type_t thetype, int min_dim, int *per_type)
+{
+  int                 t;
+  int                 sum;
+
+  sum = 0;
+  for (t = 0; t < T8_TYPE_LAST; ++t) {
+    if (t8_type_to_dimension[t] >= min_dim) {
+      sum += (per_type[t] = t8_type_boundary_count[thetype][t]);
+    }
+    else {
+      per_type[t] = 0;
+    }
+  }
+
+  return sum;
+}
+
+void
+t8_type_boundary_alloc (t8_scheme_t * scheme, t8_type_t thetype,
+                        int min_dim, int length, t8_element_t ** boundary)
+{
+  int                 t, offset, per;
+#ifdef T8_ENABLE_DEBUG
+  int                 per_type[T8_TYPE_LAST];
+#endif
+
+  T8_ASSERT (length == t8_type_count_boundary (thetype, min_dim, per_type));
+
+  for (offset = t = 0; t < T8_TYPE_LAST; ++t) {
+    if (t8_type_to_dimension[t] >= min_dim) {
+      per = t8_type_boundary_count[thetype][t];
+      if (per > 0) {
+        t8_element_new (scheme->type_schemes[t], per, boundary + offset);
+        offset += per;
+      }
+    }
+  }
+  T8_ASSERT (offset == length);
+}
+
+void
+t8_type_boundary_destroy (t8_scheme_t * scheme, t8_type_t thetype,
+                          int min_dim, int length, t8_element_t ** boundary)
+{
+  int                 t, offset, per;
+#ifdef T8_ENABLE_DEBUG
+  int                 per_type[T8_TYPE_LAST];
+#endif
+
+  T8_ASSERT (length == t8_type_count_boundary (thetype, min_dim, per_type));
+
+  for (offset = t = 0; t < T8_TYPE_LAST; ++t) {
+    if (t8_type_to_dimension[t] >= min_dim) {
+      per = t8_type_boundary_count[thetype][t];
+      if (per > 0) {
+        t8_element_destroy (scheme->type_schemes[t], per, boundary + offset);
+        offset += per;
+      }
+    }
+  }
+  T8_ASSERT (offset == length);
+}
+
 void
 t8_element_parent (t8_type_scheme_t * ts,
                    const t8_element_t * elem, t8_element_t * parent)
@@ -84,6 +164,15 @@ t8_element_sibling (t8_type_scheme_t * ts,
 {
   T8_ASSERT (ts != NULL && ts->elem_sibling != NULL);
   ts->elem_sibling (elem, sibid, sibling);
+}
+
+void
+t8_element_boundary (t8_type_scheme_t * ts,
+                     const t8_element_t * elem,
+                     int min_dim, int length, t8_element_t ** boundary)
+{
+  T8_ASSERT (ts != NULL && ts->elem_boundary != NULL);
+  ts->elem_boundary (elem, min_dim, length, boundary);
 }
 
 void
