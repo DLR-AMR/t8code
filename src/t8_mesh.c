@@ -23,25 +23,30 @@
 
 #include <t8_mesh.h>
 
-struct t8_mesh {
-  int t8_mesh_dummy;
+struct t8_mesh
+{
+  int                 t8_mesh_dummy;
 };
 
-t8_mesh_t * t8_mesh_new (int dimension,
-                         t8_gloidx_t Kglobal, t8_locidx_t Klocal)
+t8_mesh_t          *
+t8_mesh_new (int dimension, t8_gloidx_t Kglobal, t8_locidx_t Klocal)
 {
+  return NULL;
 }
 
 /* setters */
 
-void t8_mesh_set_comm (t8_mesh_t * mesh, sc_MPI_Comm comm)
+void
+t8_mesh_set_comm (t8_mesh_t * mesh, sc_MPI_Comm comm)
 {
 }
 
-void t8_mesh_build (t8_mesh_t * mesh)
+void
+t8_mesh_build (t8_mesh_t * mesh)
 {
 }
 
-void t8_mesh_destroy (t8_mesh_t * mesh)
+void
+t8_mesh_destroy (t8_mesh_t * mesh)
 {
 }

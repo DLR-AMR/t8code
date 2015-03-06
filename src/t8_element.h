@@ -31,7 +31,7 @@
 
 typedef enum t8_type
 {
-  T8_TYPE_FIRST,
+  T8_TYPE_FIRST = 0,
   T8_TYPE_VERTEX = T8_TYPE_FIRST,
   T8_TYPE_LINE,
   T8_TYPE_QUAD,
@@ -89,8 +89,6 @@ typedef struct t8_scheme
 }
 t8_scheme_t;
 
-typedef t8_type_scheme_t t8_escheme_t;
-
 t8_scheme_t        *t8_scheme_new_default (void);
 void                t8_scheme_destroy_default (t8_scheme_t * scheme);
 
@@ -115,6 +113,12 @@ void                t8_element_nca (t8_type_scheme_t * ts,
 
 void                t8_element_new (t8_type_scheme_t * ts,
                                     int length, t8_element_t ** elems);
+
+void                t8_type_scheme_mempool_destroy (t8_type_scheme_t * ts);
+void                t8_element_mempool_new (void *ts_context, int length,
+                                            t8_element_t ** elem);
+void                t8_element_mempool_destroy (void *ts_context, int length,
+                                                t8_element_t ** elem);
 
 void                t8_element_destroy (t8_type_scheme_t * ts,
                                         int length, t8_element_t ** elems);

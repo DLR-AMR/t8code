@@ -50,42 +50,6 @@ t8_element_quad_child (const t8_element_t * elem,
   P4EST_ASSERT (p4est_quadrant_is_parent (q, r));
 }
 
-static void
-t8_element_quad_new (void *ts_context, int length, t8_element_t ** elem)
-{
-  int                 i;
-
-  T8_ASSERT (ts_context != NULL);
-  T8_ASSERT (0 <= length);
-  T8_ASSERT (elem != NULL);
-
-  for (i = 0; i < length; ++i) {
-    elem[i] = (t8_element_t *) sc_mempool_alloc ((sc_mempool_t *) ts_context);
-  }
-}
-
-static void
-t8_element_quad_destroy (void *ts_context, int length, t8_element_t ** elem)
-{
-  int                 i;
-
-  T8_ASSERT (ts_context != NULL);
-  T8_ASSERT (0 <= length);
-  T8_ASSERT (elem != NULL);
-
-  for (i = 0; i < length; ++i) {
-    sc_mempool_free ((sc_mempool_t *) ts_context, elem[i]);
-  }
-}
-
-static void
-t8_type_scheme_quad_destroy (t8_type_scheme_t * ts)
-{
-  T8_ASSERT (ts->ts_context != NULL);
-
-  sc_mempool_destroy ((sc_mempool_t *) ts->ts_context);
-}
-
 t8_type_scheme_t   *
 t8_type_scheme_new_quad (void)
 {
@@ -98,10 +62,9 @@ t8_type_scheme_new_quad (void)
   ts->elem_child = t8_element_quad_child;
   ts->elem_nca = (t8_element_nca_t) p4est_nearest_common_ancestor;
 
-  ts->elem_new = t8_element_quad_new;
-  ts->elem_destroy = t8_element_quad_destroy;
-
-  ts->ts_destroy = t8_type_scheme_quad_destroy;
+  ts->elem_new = t8_element_mempool_new;
+  ts->elem_destroy = t8_element_mempool_destroy;
+  ts->ts_destroy = t8_type_scheme_mempool_destroy;
   ts->ts_context = sc_mempool_new (sizeof (p4est_quadrant_t));
 
   return ts;
