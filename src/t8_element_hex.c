@@ -66,7 +66,7 @@ t8_type_scheme_new_hex (void)
   ts->elem_new = t8_element_mempool_new;
   ts->elem_destroy = t8_element_mempool_destroy;
   ts->ts_destroy = t8_type_scheme_mempool_destroy;
-  ts->ts_context = sc_mempool_new (sizeof (p8est_quadrant_t));
+  ts->ts_context = sc_mempool_new (sizeof (t8_hex_t));
 
   return ts;
 }

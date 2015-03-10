@@ -167,6 +167,22 @@ t8_element_sibling (t8_type_scheme_t * ts,
 }
 
 void
+t8_element_child (t8_type_scheme_t * ts, const t8_element_t * elem,
+                  int childid, t8_element_t * child)
+{
+  T8_ASSERT (ts != NULL && ts->elem_child != NULL);
+  ts->elem_child (elem, childid, child);
+}
+
+void
+t8_element_nca (t8_type_scheme_t * ts, const t8_element_t * elem1,
+                const t8_element_t * elem2, t8_element_t * nca)
+{
+  T8_ASSERT (ts != NULL && ts->elem_nca != NULL);
+  ts->elem_nca (elem1, elem2, nca);
+}
+
+void
 t8_element_boundary (t8_type_scheme_t * ts,
                      const t8_element_t * elem,
                      int min_dim, int length, t8_element_t ** boundary)

@@ -30,9 +30,10 @@ static int
 t8_element_quad_surround_matches (const p4est_quadrant_t * q,
                                   const p4est_quadrant_t * r)
 {
-  return q->pad8 == r->pad8 &&
-    (q->pad8 == -1 || (q->pad16 == r->pad16 &&
-                       q->p.user_int == r->p.user_int));
+  return T8_QUAD_GET_TDIM (q) == T8_QUAD_GET_TDIM (r) &&
+    (T8_QUAD_GET_TDIM (q) == -1 ||
+     (T8_QUAD_GET_TNORMAL (q) == T8_QUAD_GET_TNORMAL (r) &&
+      T8_QUAD_GET_TCOORD (q) == T8_QUAD_GET_TCOORD (r)));
 }
 
 #endif /* T8_ENABLE_DEBUG */
@@ -41,9 +42,9 @@ static void
 t8_element_quad_copy_surround (const p4est_quadrant_t * q,
                                p4est_quadrant_t * r)
 {
-  r->pad8 = q->pad8;
-  r->pad16 = q->pad16;
-  r->p.user_int = q->p.user_int;
+  T8_QUAD_SET_TDIM (r, T8_QUAD_GET_TDIM (q));
+  T8_QUAD_SET_TNORMAL (r, T8_QUAD_GET_TNORMAL (q));
+  T8_QUAD_SET_TCOORD (r, T8_QUAD_GET_TCOORD (q));
 }
 
 static void
@@ -101,6 +102,21 @@ t8_element_quad_nca (const t8_element_t * elem1, const t8_element_t * elem2,
   t8_element_quad_copy_surround (q1, r);
 }
 
+static void
+t8_element_quad_boundary (const t8_element_t * elem,
+                          int min_dim, int length, t8_element_t ** boundary)
+{
+#ifdef T8_ENABLE_DEBUG
+  int pertype[T8_TYPE_LAST];
+#endif
+
+  T8_ASSERT (length ==
+             t8_type_count_boundary (T8_TYPE_QUAD, min_dim, pertype));
+
+  /* TODO: write this function */
+  SC_ABORT_NOT_REACHED ();
+}
+
 t8_type_scheme_t   *
 t8_type_scheme_new_quad (void)
 {
@@ -112,6 +128,7 @@ t8_type_scheme_new_quad (void)
   ts->elem_sibling = t8_element_quad_sibling;
   ts->elem_child = t8_element_quad_child;
   ts->elem_nca = t8_element_quad_nca;
+  ts->elem_boundary = t8_element_quad_boundary;
 
   ts->elem_new = t8_element_mempool_new;
   ts->elem_destroy = t8_element_mempool_destroy;

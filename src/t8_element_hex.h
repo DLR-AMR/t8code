@@ -27,7 +27,14 @@
 #ifndef T8_ELEMENT_HEX_H
 #define T8_ELEMENT_HEX_H
 
+#include <p8est.h>
 #include <t8_element.h>
+
+/** The structure holding a hexahedral element in the default scheme.
+ * We make this definition public for interoperability of element types.
+ * We might want to put this into a private, scheme-specific header file.
+ */
+typedef p8est_quadrant_t t8_hex_t;
 
 t8_type_scheme_t   *t8_type_scheme_new_hex (void);
 
