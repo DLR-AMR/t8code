@@ -22,7 +22,7 @@
 */
 
 #include <p8est_bits.h>
-#include "t8_element_hex.h"
+#include "t8_default_hex.h"
 
 static void
 t8_element_hex_sibling (const t8_element_t * elem,
