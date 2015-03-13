@@ -22,7 +22,7 @@
 */
 
 #include <p4est_bits.h>
-#include <t8_element_quad.h>
+#include "t8_element_quad.h"
 
 #ifdef T8_ENABLE_DEBUG
 

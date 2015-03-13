@@ -21,9 +21,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_element_quad.h>
-#include <t8_element_hex.h>
-#include <t8_element_tet.h>
+#include <t8_element.h>
 
 struct t8_element
 {
@@ -44,19 +42,6 @@ static const int t8_type_boundary_count[T8_TYPE_LAST][T8_TYPE_LAST] =
    { 6,  9, 3, 2, 0, 0, 0, 0 },
    { 5,  8, 1, 4, 0, 0, 0, 0 }};
 /* *INDENT-ON* */
-
-t8_scheme_t        *
-t8_scheme_new_default (void)
-{
-  t8_scheme_t        *s;
-
-  s = T8_ALLOC_ZERO (t8_scheme_t, 1);
-  s->type_schemes[T8_TYPE_QUAD] = t8_type_scheme_new_quad ();
-  s->type_schemes[T8_TYPE_HEX] = t8_type_scheme_new_hex ();
-  s->type_schemes[T8_TYPE_TET] = t8_type_scheme_new_tet ();
-
-  return s;
-}
 
 void
 t8_scheme_destroy (t8_scheme_t * s)
