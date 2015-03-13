@@ -102,7 +102,6 @@ typedef struct t8_scheme
 }
 t8_scheme_t;
 
-t8_scheme_t        *t8_scheme_new_default (void);
 void                t8_scheme_destroy (t8_scheme_t * scheme);
 
 void                t8_type_scheme_destroy (t8_type_scheme_t * ts);
@@ -170,32 +169,5 @@ void                t8_element_new (t8_type_scheme_t * ts,
                                     int length, t8_element_t ** elems);
 void                t8_element_destroy (t8_type_scheme_t * ts,
                                         int length, t8_element_t ** elems);
-
-/** This type independent function assumes an sc_mempool_t as context.
- * It is suitable as the ts_destroy callback in \ref t8_type_scheme_t.
- * We assume that the mempool has been created with the correct element size.
- * \param [in,out] ts           This type scheme's context is destroyed.
- */
-void                t8_type_scheme_mempool_destroy (t8_type_scheme_t * ts);
-
-/** This type independent function assumes an sc_mempool_t as context.
- * It is suitable as the elem_new callback in \ref t8_type_scheme_t.
- * We assume that the mempool has been created with the correct element size.
- * \param [in,out] ts_context   An element is allocated in this sc_mempool_t.
- * \param [in]     length       Non-negative number of elements to allocate.
- * \param [in,out] elem         Array of correct size whose members are filled.
- */
-void                t8_element_mempool_new (void *ts_context, int length,
-                                            t8_element_t ** elem);
-
-/** This type independent function assumes an sc_mempool_t as context.
- * It is suitable as the elem_destroy callback in \ref t8_type_scheme_t.
- * We assume that the mempool has been created with the correct element size.
- * \param [in,out] ts_context   An element is returned to this sc_mempool_t.
- * \param [in]     length       Non-negative number of elements to destroy.
- * \param [in,out] elem         Array whose members are returned to the mempool.
- */
-void                t8_element_mempool_destroy (void *ts_context, int length,
-                                                t8_element_t ** elem);
 
 #endif /* !T8_ELEMENT_H */

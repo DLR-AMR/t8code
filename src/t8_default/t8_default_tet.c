@@ -21,6 +21,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <t8_default.h>
 #include "t8_default_tet.h"
 
 typedef struct t8_tet

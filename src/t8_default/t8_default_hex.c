@@ -22,6 +22,7 @@
 */
 
 #include <p8est_bits.h>
+#include <t8_default.h>
 #include "t8_default_hex.h"
 
 static void

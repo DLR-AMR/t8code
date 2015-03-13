@@ -189,39 +189,3 @@ t8_element_destroy (t8_type_scheme_t * ts, int length, t8_element_t ** elems)
   T8_ASSERT (ts != NULL && ts->elem_destroy != NULL);
   ts->elem_destroy (ts->ts_context, length, elems);
 }
-
-void
-t8_type_scheme_mempool_destroy (t8_type_scheme_t * ts)
-{
-  T8_ASSERT (ts->ts_context != NULL);
-  sc_mempool_destroy ((sc_mempool_t *) ts->ts_context);
-}
-
-void
-t8_element_mempool_new (void *ts_context, int length, t8_element_t ** elem)
-{
-  int                 i;
-
-  T8_ASSERT (ts_context != NULL);
-  T8_ASSERT (0 <= length);
-  T8_ASSERT (elem != NULL);
-
-  for (i = 0; i < length; ++i) {
-    elem[i] = (t8_element_t *) sc_mempool_alloc ((sc_mempool_t *) ts_context);
-  }
-}
-
-void
-t8_element_mempool_destroy (void *ts_context, int length,
-                            t8_element_t ** elem)
-{
-  int                 i;
-
-  T8_ASSERT (ts_context != NULL);
-  T8_ASSERT (0 <= length);
-  T8_ASSERT (elem != NULL);
-
-  for (i = 0; i < length; ++i) {
-    sc_mempool_free ((sc_mempool_t *) ts_context, elem[i]);
-  }
-}
