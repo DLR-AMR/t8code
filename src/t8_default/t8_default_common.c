@@ -22,19 +22,38 @@
 */
 
 #include "t8_default_common.h"
-#include "t8_default_tet.h"
 
-t8_type_scheme_t   *
-t8_default_scheme_new_tet (void)
+void
+t8_default_scheme_mempool_destroy (t8_type_scheme_t * ts)
 {
-  t8_type_scheme_t   *ts;
+  T8_ASSERT (ts->ts_context != NULL);
+  sc_mempool_destroy ((sc_mempool_t *) ts->ts_context);
+}
 
-  ts = T8_ALLOC (t8_type_scheme_t, 1);
+void
+t8_default_mempool_alloc (void *ts_context, int length, t8_element_t ** elem)
+{
+  int                 i;
 
-  ts->elem_new = t8_default_mempool_alloc;
-  ts->elem_destroy = t8_default_mempool_free;
-  ts->ts_destroy = t8_default_scheme_mempool_destroy;
-  ts->ts_context = sc_mempool_new (sizeof (t8_tet_t));
+  T8_ASSERT (ts_context != NULL);
+  T8_ASSERT (0 <= length);
+  T8_ASSERT (elem != NULL);
 
-  return ts;
+  for (i = 0; i < length; ++i) {
+    elem[i] = (t8_element_t *) sc_mempool_alloc ((sc_mempool_t *) ts_context);
+  }
+}
+
+void
+t8_default_mempool_free (void *ts_context, int length, t8_element_t ** elem)
+{
+  int                 i;
+
+  T8_ASSERT (ts_context != NULL);
+  T8_ASSERT (0 <= length);
+  T8_ASSERT (elem != NULL);
+
+  for (i = 0; i < length; ++i) {
+    sc_mempool_free ((sc_mempool_t *) ts_context, elem[i]);
+  }
 }

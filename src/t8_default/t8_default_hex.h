@@ -36,6 +36,6 @@
  */
 typedef p8est_quadrant_t t8_hex_t;
 
-t8_type_scheme_t   *t8_type_scheme_new_hex (void);
+t8_type_scheme_t   *t8_default_scheme_new_hex (void);
 
 #endif /* !T8_ELEMENT_HEX_H */

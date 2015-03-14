@@ -22,7 +22,7 @@
 */
 
 #include <p8est_bits.h>
-#include <t8_default.h>
+#include "t8_default_common.h"
 #include "t8_default_hex.h"
 
 static void
@@ -53,7 +53,7 @@ t8_element_hex_child (const t8_element_t * elem,
 }
 
 t8_type_scheme_t   *
-t8_type_scheme_new_hex (void)
+t8_default_scheme_new_hex (void)
 {
   t8_type_scheme_t   *ts;
 
@@ -64,9 +64,9 @@ t8_type_scheme_new_hex (void)
   ts->elem_child = t8_element_hex_child;
   ts->elem_nca = (t8_element_nca_t) p8est_nearest_common_ancestor;
 
-  ts->elem_new = t8_element_mempool_new;
-  ts->elem_destroy = t8_element_mempool_destroy;
-  ts->ts_destroy = t8_type_scheme_mempool_destroy;
+  ts->elem_new = t8_default_mempool_alloc;
+  ts->elem_destroy = t8_default_mempool_free;
+  ts->ts_destroy = t8_default_scheme_mempool_destroy;
   ts->ts_context = sc_mempool_new (sizeof (t8_hex_t));
 
   return ts;

@@ -29,6 +29,15 @@
 
 #include <t8_element.h>
 
-t8_type_scheme_t   *t8_type_scheme_new_tet (void);
+typedef struct t8_tet
+{
+  int8_t              itype;
+                  /**< We store the type for compatibility with the pyramid. */
+  int8_t              level;
+  /* add coordinates etc. here */
+}
+t8_tet_t;
+
+t8_type_scheme_t   *t8_default_scheme_new_tet (void);
 
 #endif /* !T8_ELEMENT_TET_H */

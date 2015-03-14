@@ -54,6 +54,6 @@ typedef p4est_quadrant_t t8_quad_t;
 #define T8_QUAD_SET_TCOORD(quad,coord)                          \
   do { (quad)->p.user_long = (long) (coord); } while (0)
 
-t8_type_scheme_t   *t8_type_scheme_new_quad (void);
+t8_type_scheme_t   *t8_default_scheme_new_quad (void);
 
 #endif /* !T8_ELEMENT_QUAD_H */

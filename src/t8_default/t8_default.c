@@ -26,50 +26,14 @@
 #include "t8_default_tet.h"
 
 t8_scheme_t        *
-t8_scheme_new_default (void)
+t8_default_scheme_new (void)
 {
   t8_scheme_t        *s;
 
   s = T8_ALLOC_ZERO (t8_scheme_t, 1);
-  s->type_schemes[T8_TYPE_QUAD] = t8_type_scheme_new_quad ();
-  s->type_schemes[T8_TYPE_HEX] = t8_type_scheme_new_hex ();
-  s->type_schemes[T8_TYPE_TET] = t8_type_scheme_new_tet ();
+  s->type_schemes[T8_TYPE_QUAD] = t8_default_scheme_new_quad ();
+  s->type_schemes[T8_TYPE_HEX] = t8_default_scheme_new_hex ();
+  s->type_schemes[T8_TYPE_TET] = t8_default_scheme_new_tet ();
 
   return s;
-}
-
-void
-t8_type_scheme_mempool_destroy (t8_type_scheme_t * ts)
-{
-  T8_ASSERT (ts->ts_context != NULL);
-  sc_mempool_destroy ((sc_mempool_t *) ts->ts_context);
-}
-
-void
-t8_element_mempool_new (void *ts_context, int length, t8_element_t ** elem)
-{
-  int                 i;
-
-  T8_ASSERT (ts_context != NULL);
-  T8_ASSERT (0 <= length);
-  T8_ASSERT (elem != NULL);
-
-  for (i = 0; i < length; ++i) {
-    elem[i] = (t8_element_t *) sc_mempool_alloc ((sc_mempool_t *) ts_context);
-  }
-}
-
-void
-t8_element_mempool_destroy (void *ts_context, int length,
-                            t8_element_t ** elem)
-{
-  int                 i;
-
-  T8_ASSERT (ts_context != NULL);
-  T8_ASSERT (0 <= length);
-  T8_ASSERT (elem != NULL);
-
-  for (i = 0; i < length; ++i) {
-    sc_mempool_free ((sc_mempool_t *) ts_context, elem[i]);
-  }
 }
