@@ -28,21 +28,6 @@ struct t8_element
   int                 t8_element_dummy;
 };
 
-/* *INDENT-OFF* */
-const int t8_type_to_dimension[T8_TYPE_LAST] =
-  { 0, 1, 2, 2, 3, 3, 3, 3 };
-
-static const int t8_type_boundary_count[T8_TYPE_LAST][T8_TYPE_LAST] =
-  {{ 0,  0, 0, 0, 0, 0, 0, 0 },
-   { 2,  0, 0, 0, 0, 0, 0, 0 },
-   { 4,  4, 0, 0, 0, 0, 0, 0 },
-   { 3,  3, 0, 0, 0, 0, 0, 0 },
-   { 8, 12, 6, 0, 0, 0, 0, 0 },
-   { 4,  6, 0, 4, 0, 0, 0, 0 },
-   { 6,  9, 3, 2, 0, 0, 0, 0 },
-   { 5,  8, 1, 4, 0, 0, 0, 0 }};
-/* *INDENT-ON* */
-
 void
 t8_scheme_destroy (t8_scheme_t * s)
 {
@@ -67,25 +52,6 @@ t8_type_scheme_destroy (t8_type_scheme_t * ts)
     ts->ts_destroy (ts);
   }
   T8_FREE (ts);
-}
-
-int
-t8_type_count_boundary (t8_type_t thetype, int min_dim, int *per_type)
-{
-  int                 t;
-  int                 sum;
-
-  sum = 0;
-  for (t = 0; t < T8_TYPE_LAST; ++t) {
-    if (t8_type_to_dimension[t] >= min_dim) {
-      sum += (per_type[t] = t8_type_boundary_count[thetype][t]);
-    }
-    else {
-      per_type[t] = 0;
-    }
-  }
-
-  return sum;
 }
 
 void

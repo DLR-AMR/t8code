@@ -27,26 +27,7 @@
 #ifndef T8_ELEMENT_H
 #define T8_ELEMENT_H
 
-#include <t8.h>
-
-/** This enumeration contains all possible element types. */
-typedef enum t8_type
-{
-  T8_TYPE_FIRST = 0,
-  T8_TYPE_VERTEX = T8_TYPE_FIRST,
-  T8_TYPE_LINE,
-  T8_TYPE_QUAD,
-  T8_TYPE_TRIANGLE,
-  T8_TYPE_HEX,
-  T8_TYPE_TET,
-  T8_TYPE_PRISM,
-  T8_TYPE_PYRAMID,
-  T8_TYPE_LAST
-}
-t8_type_t;
-
-/** Map each of the elementy types to its dimension. */
-extern const int t8_type_to_dimension[T8_TYPE_LAST];
+#include <t8_type.h>
 
 /** Opaque structure for a generic element, only used as pointer.
  * Applications are free to cast it to their internal element type.
@@ -105,18 +86,6 @@ t8_scheme_t;
 void                t8_scheme_destroy (t8_scheme_t * scheme);
 
 void                t8_type_scheme_destroy (t8_type_scheme_t * ts);
-
-/** Query the type and count of boundary points.
- * \param [in] thetype          We query a point of this type.
- * \param [in] min_dim          Ignore boundary points of lesser dimension.
- *                              The ignered points get a count value of 0.
- * \param [out] per_type        Array of length T8_TYPE_LAST to be filled
- *                              with the count of the boundary objects,
- *                              counted per each of the element types.
- * \return                      The count over all boundary points.
- */
-int                 t8_type_count_boundary (t8_type_t thetype,
-                                            int min_dim, int *per_type);
 
 /** Allocate a set of elements suitable for the boundary of a given type.
  * \param [in] scheme           Defines the implementation of the types.
