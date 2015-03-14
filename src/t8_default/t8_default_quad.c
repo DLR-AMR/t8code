@@ -28,7 +28,7 @@
 #ifdef T8_ENABLE_DEBUG
 
 static int
-t8_element_quad_surround_matches (const p4est_quadrant_t * q,
+t8_default_quad_surround_matches (const p4est_quadrant_t * q,
                                   const p4est_quadrant_t * r)
 {
   return T8_QUAD_GET_TDIM (q) == T8_QUAD_GET_TDIM (r) &&
@@ -40,7 +40,7 @@ t8_element_quad_surround_matches (const p4est_quadrant_t * q,
 #endif /* T8_ENABLE_DEBUG */
 
 static void
-t8_element_quad_copy_surround (const p4est_quadrant_t * q,
+t8_default_quad_copy_surround (const p4est_quadrant_t * q,
                                p4est_quadrant_t * r)
 {
   T8_QUAD_SET_TDIM (r, T8_QUAD_GET_TDIM (q));
@@ -49,28 +49,28 @@ t8_element_quad_copy_surround (const p4est_quadrant_t * q,
 }
 
 static void
-t8_element_quad_parent (const t8_element_t * elem, t8_element_t * parent)
+t8_default_quad_parent (const t8_element_t * elem, t8_element_t * parent)
 {
   const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
   p4est_quadrant_t   *r = (p4est_quadrant_t *) parent;
 
   p4est_quadrant_parent (q, r);
-  t8_element_quad_copy_surround (q, r);
+  t8_default_quad_copy_surround (q, r);
 }
 
 static void
-t8_element_quad_sibling (const t8_element_t * elem,
+t8_default_quad_sibling (const t8_element_t * elem,
                          int sibid, t8_element_t * sibling)
 {
   const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
   p4est_quadrant_t   *r = (p4est_quadrant_t *) sibling;
 
   p4est_quadrant_sibling (q, r, sibid);
-  t8_element_quad_copy_surround (q, r);
+  t8_default_quad_copy_surround (q, r);
 }
 
 static void
-t8_element_quad_child (const t8_element_t * elem,
+t8_default_quad_child (const t8_element_t * elem,
                        int childid, t8_element_t * child)
 {
   const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
@@ -86,29 +86,29 @@ t8_element_quad_child (const t8_element_t * elem,
   r->level = q->level + 1;
   P4EST_ASSERT (p4est_quadrant_is_parent (q, r));
 
-  t8_element_quad_copy_surround (q, r);
+  t8_default_quad_copy_surround (q, r);
 }
 
 static void
-t8_element_quad_nca (const t8_element_t * elem1, const t8_element_t * elem2,
+t8_default_quad_nca (const t8_element_t * elem1, const t8_element_t * elem2,
                      t8_element_t * nca)
 {
   const p4est_quadrant_t *q1 = (const p4est_quadrant_t *) elem1;
   const p4est_quadrant_t *q2 = (const p4est_quadrant_t *) elem2;
   p4est_quadrant_t   *r = (p4est_quadrant_t *) nca;
 
-  T8_ASSERT (t8_element_quad_surround_matches (q1, q2));
+  T8_ASSERT (t8_default_quad_surround_matches (q1, q2));
 
   p4est_nearest_common_ancestor (q1, q2, r);
-  t8_element_quad_copy_surround (q1, r);
+  t8_default_quad_copy_surround (q1, r);
 }
 
 static void
-t8_element_quad_boundary (const t8_element_t * elem,
+t8_default_quad_boundary (const t8_element_t * elem,
                           int min_dim, int length, t8_element_t ** boundary)
 {
 #ifdef T8_ENABLE_DEBUG
-  int pertype[T8_TYPE_LAST];
+  int                 pertype[T8_TYPE_LAST];
 #endif
 
   T8_ASSERT (length ==
@@ -125,11 +125,11 @@ t8_default_scheme_new_quad (void)
 
   ts = T8_ALLOC (t8_type_scheme_t, 1);
 
-  ts->elem_parent = t8_element_quad_parent;
-  ts->elem_sibling = t8_element_quad_sibling;
-  ts->elem_child = t8_element_quad_child;
-  ts->elem_nca = t8_element_quad_nca;
-  ts->elem_boundary = t8_element_quad_boundary;
+  ts->elem_parent = t8_default_quad_parent;
+  ts->elem_sibling = t8_default_quad_sibling;
+  ts->elem_child = t8_default_quad_child;
+  ts->elem_nca = t8_default_quad_nca;
+  ts->elem_boundary = t8_default_quad_boundary;
 
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;

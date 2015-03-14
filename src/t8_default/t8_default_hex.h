@@ -21,14 +21,14 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_element_hex.h
+/** \file t8_default_hex.h
  */
 
-#ifndef T8_ELEMENT_HEX_H
-#define T8_ELEMENT_HEX_H
+#ifndef T8_DEFAULT_HEX_H
+#define T8_DEFAULT_HEX_H
 
 #include <p8est.h>
-#include <t8_element.h>
+#include <t8_default.h>
 
 /** The structure holding a hexahedral element in the default scheme.
  * We make this definition public for interoperability of element types.
@@ -38,4 +38,4 @@ typedef p8est_quadrant_t t8_hex_t;
 
 t8_type_scheme_t   *t8_default_scheme_new_hex (void);
 
-#endif /* !T8_ELEMENT_HEX_H */
+#endif /* !T8_DEFAULT_HEX_H */

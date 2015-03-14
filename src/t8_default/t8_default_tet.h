@@ -21,11 +21,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_element_tet.h
+/** \file t8_default_tet.h
  */
 
-#ifndef T8_ELEMENT_TET_H
-#define T8_ELEMENT_TET_H
+#ifndef T8_DEFAULT_TET_H
+#define T8_DEFAULT_TET_H
 
 #include <t8_element.h>
 
@@ -40,4 +40,4 @@ t8_tet_t;
 
 t8_type_scheme_t   *t8_default_scheme_new_tet (void);
 
-#endif /* !T8_ELEMENT_TET_H */
+#endif /* !T8_DEFAULT_TET_H */

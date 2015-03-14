@@ -26,7 +26,7 @@
 #include "t8_default_hex.h"
 
 static void
-t8_element_hex_sibling (const t8_element_t * elem,
+t8_default_hex_sibling (const t8_element_t * elem,
                         int sibid, t8_element_t * sibling)
 {
   p8est_quadrant_sibling ((const p8est_quadrant_t *) elem,
@@ -34,7 +34,7 @@ t8_element_hex_sibling (const t8_element_t * elem,
 }
 
 static void
-t8_element_hex_child (const t8_element_t * elem,
+t8_default_hex_child (const t8_element_t * elem,
                       int childid, t8_element_t * child)
 {
   const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
@@ -60,8 +60,8 @@ t8_default_scheme_new_hex (void)
   ts = T8_ALLOC (t8_type_scheme_t, 1);
 
   ts->elem_parent = (t8_element_parent_t) p8est_quadrant_parent;
-  ts->elem_sibling = t8_element_hex_sibling;
-  ts->elem_child = t8_element_hex_child;
+  ts->elem_sibling = t8_default_hex_sibling;
+  ts->elem_child = t8_default_hex_child;
   ts->elem_nca = (t8_element_nca_t) p8est_nearest_common_ancestor;
 
   ts->elem_new = t8_default_mempool_alloc;
