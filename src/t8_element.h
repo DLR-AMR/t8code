@@ -37,6 +37,10 @@ typedef struct t8_element t8_element_t;
 /** This typedef holds virtual functions for a particular element type. */
 typedef struct t8_type_scheme t8_type_scheme_t;
 
+/* *INDENT-OFF* */
+typedef size_t      (*t8_element_size_t) (void);
+/* *INDENT-ON* */
+
 typedef void        (*t8_element_parent_t) (const t8_element_t * elem,
                                             t8_element_t * parent);
 typedef void        (*t8_element_sibling_t) (const t8_element_t * elem,
@@ -62,6 +66,7 @@ typedef void        (*t8_type_scheme_destroy_t) (t8_type_scheme_t * ts);
 struct t8_type_scheme
 {
   /* these element routines are context free */
+  t8_element_size_t   elem_size;
   t8_element_parent_t elem_parent;
   t8_element_sibling_t elem_sibling;
   t8_element_child_t  elem_child;
@@ -115,6 +120,8 @@ void                t8_type_boundary_destroy (t8_scheme_t * scheme,
                                               t8_type_t thetype, int min_dim,
                                               int length,
                                               t8_element_t ** boundary);
+
+size_t              t8_element_size (t8_type_scheme_t * ts);
 
 void                t8_element_parent (t8_type_scheme_t * ts,
                                        const t8_element_t * elem,

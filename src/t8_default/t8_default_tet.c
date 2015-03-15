@@ -24,12 +24,20 @@
 #include "t8_default_common.h"
 #include "t8_default_tet.h"
 
+static              size_t
+t8_default_tet_size (void)
+{
+  return sizeof (t8_tet_t);
+}
+
 t8_type_scheme_t   *
 t8_default_scheme_new_tet (void)
 {
   t8_type_scheme_t   *ts;
 
   ts = T8_ALLOC (t8_type_scheme_t, 1);
+
+  ts->elem_size = t8_default_tet_size;
 
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;

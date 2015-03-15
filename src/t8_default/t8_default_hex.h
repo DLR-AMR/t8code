@@ -28,7 +28,7 @@
 #define T8_DEFAULT_HEX_H
 
 #include <p8est.h>
-#include <t8_default.h>
+#include <t8_element.h>
 
 /** The structure holding a hexahedral element in the default scheme.
  * We make this definition public for interoperability of element types.

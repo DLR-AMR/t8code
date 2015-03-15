@@ -25,6 +25,12 @@
 #include "t8_default_common.h"
 #include "t8_default_hex.h"
 
+static              size_t
+t8_default_hex_size (void)
+{
+  return sizeof (t8_hex_t);
+}
+
 static void
 t8_default_hex_sibling (const t8_element_t * elem,
                         int sibid, t8_element_t * sibling)
@@ -58,6 +64,8 @@ t8_default_scheme_new_hex (void)
   t8_type_scheme_t   *ts;
 
   ts = T8_ALLOC (t8_type_scheme_t, 1);
+
+  ts->elem_size = t8_default_hex_size;
 
   ts->elem_parent = (t8_element_parent_t) p8est_quadrant_parent;
   ts->elem_sibling = t8_default_hex_sibling;

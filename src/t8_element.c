@@ -100,6 +100,13 @@ t8_type_boundary_destroy (t8_scheme_t * scheme, t8_type_t thetype,
   T8_ASSERT (offset == length);
 }
 
+size_t
+t8_element_size (t8_type_scheme_t * ts)
+{
+  T8_ASSERT (ts != NULL && ts->elem_size != NULL);
+  return ts->elem_size ();
+}
+
 void
 t8_element_parent (t8_type_scheme_t * ts,
                    const t8_element_t * elem, t8_element_t * parent)

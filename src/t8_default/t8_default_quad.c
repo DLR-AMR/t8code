@@ -39,6 +39,12 @@ t8_default_quad_surround_matches (const p4est_quadrant_t * q,
 
 #endif /* T8_ENABLE_DEBUG */
 
+static              size_t
+t8_default_quad_size (void)
+{
+  return sizeof (t8_quad_t);
+}
+
 static void
 t8_default_quad_copy_surround (const p4est_quadrant_t * q,
                                p4est_quadrant_t * r)
@@ -124,6 +130,8 @@ t8_default_scheme_new_quad (void)
   t8_type_scheme_t   *ts;
 
   ts = T8_ALLOC (t8_type_scheme_t, 1);
+
+  ts->elem_size = t8_default_quad_size;
 
   ts->elem_parent = t8_default_quad_parent;
   ts->elem_sibling = t8_default_quad_sibling;
