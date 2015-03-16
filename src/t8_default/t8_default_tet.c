@@ -49,23 +49,6 @@ t8_default_tet_size (void)
   return sizeof (t8_tet_t);
 }
 
-t8_type_scheme_t   *
-t8_default_scheme_new_tet (void)
-{
-  t8_type_scheme_t   *ts;
-
-  ts = T8_ALLOC (t8_type_scheme_t, 1);
-
-  ts->elem_size = t8_default_tet_size;
-
-  ts->elem_new = t8_default_mempool_alloc;
-  ts->elem_destroy = t8_default_mempool_free;
-  ts->ts_destroy = t8_default_scheme_mempool_destroy;
-  ts->ts_context = sc_mempool_new (sizeof (t8_tet_t));
-
-  return ts;
-}
-
 static t8_default_tet_id_t *t8_default_tet_id_new(t8_default_tet_type_t type,t8_tcoord_t anchor_coordinates[3]){
     t8_default_tet_id_t *tet_id;
     int i;
@@ -105,4 +88,31 @@ static t8_default_tet_id_t *t8_default_tet_parent_tetid(const t8_default_tet_id_
     }
 
     return t8_default_tet_id_new(parent_type,parent_coord);
+}
+
+static void t8_default_tet_parent(const t8_element_t *elem,t8_element_t *parent){
+    const t8_tet_t *t = (const t8_tet_t *) elem;
+    t8_tet_t *p = (t8_tet_t *) parent;
+
+    p->itype = t->itype;
+    p->level = t->level-1;
+    p->tet_id = t8_default_tet_parent_tetid(t->tet_id,t->level);
+}
+
+t8_type_scheme_t   *
+t8_default_scheme_new_tet (void)
+{
+  t8_type_scheme_t   *ts;
+
+  ts = T8_ALLOC (t8_type_scheme_t, 1);
+
+  ts->elem_size = t8_default_tet_size;
+  ts->elem_parent = t8_default_tet_parent;
+
+  ts->elem_new = t8_default_mempool_alloc;
+  ts->elem_destroy = t8_default_mempool_free;
+  ts->ts_destroy = t8_default_scheme_mempool_destroy;
+  ts->ts_context = sc_mempool_new (sizeof (t8_tet_t));
+
+  return ts;
 }
