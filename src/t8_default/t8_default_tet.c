@@ -66,7 +66,7 @@ t8_default_scheme_new_tet (void)
   return ts;
 }
 
-t8_default_tet_id_t *t8_default_tet_id_new(t8_default_tet_type_t type,t8_tcoord_t anchor_coordinates[3]){
+static t8_default_tet_id_t *t8_default_tet_id_new(t8_default_tet_type_t type,t8_tcoord_t anchor_coordinates[3]){
     t8_default_tet_id_t *tet_id;
     int i;
 
@@ -78,18 +78,18 @@ t8_default_tet_id_t *t8_default_tet_id_new(t8_default_tet_type_t type,t8_tcoord_
     return tet_id;
 }
 
-void t8_default_tet_id_destroy(t8_default_tet_id_t *tid){
+static void t8_default_tet_id_destroy(t8_default_tet_id_t *tid){
     T8_FREE(tid);
 }
 
-t8_default_cube_id t8_default_tet_compute_cubeid(const t8_default_tet_id_t *tid){
+static t8_default_cube_id t8_default_tet_compute_cubeid(const t8_default_tet_id_t *tid){
     t8_default_cube_id cid=0;
 
     cid=tid->anchor_coordinates[0]&1+tid->anchor_coordinates[1]&2+tid->anchor_coordinates[2]&4;
     return cid;
 }
 
-t8_default_tet_id_t *t8_default_tet_parent_tetid(const t8_default_tet_id_t *tid,const int8_t level){
+static t8_default_tet_id_t *t8_default_tet_parent_tetid(const t8_default_tet_id_t *tid,const int8_t level){
     t8_default_cube_id cid;
     t8_default_tet_type_t parent_type;
     t8_tcoord_t parent_coord[3],h;
