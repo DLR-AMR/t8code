@@ -24,23 +24,24 @@
 #include "t8_default_common.h"
 #include "t8_default_tet.h"
 
-typedef int8_t	t8_default_tet_type_t;
-typedef int8_t t8_default_cube_id;
+typedef int8_t      t8_default_tet_type_t;
+typedef int8_t      t8_default_cube_id;
 
-struct t8_default_tet_id{
-    t8_default_tet_type_t	type;
-    t8_tcoord_t	anchor_coordinates[3];
+struct t8_default_tet_id
+{
+  t8_default_tet_type_t type;
+  t8_tcoord_t         anchor_coordinates[3];
 };
 
-int				t8_tet_cid_type_to_parenttype[8][6]={
-                    {0,1,2,3,4,5},
-                    {0,1,1,1,0,0},
-                    {2,2,2,3,3,3},
-                    {1,1,2,2,2,1},
-                    {5,5,4,4,4,5},
-                    {0,0,0,5,5,5},
-                    {4,3,3,3,4,4},
-                    {0,1,2,3,4,5}
+int                 t8_tet_cid_type_to_parenttype[8][6] = {
+  {0, 1, 2, 3, 4, 5},
+  {0, 1, 1, 1, 0, 0},
+  {2, 2, 2, 3, 3, 3},
+  {1, 1, 2, 2, 2, 1},
+  {5, 5, 4, 4, 4, 5},
+  {0, 0, 0, 5, 5, 5},
+  {4, 3, 3, 3, 4, 4},
+  {0, 1, 2, 3, 4, 5}
 };
 
 static              size_t
@@ -49,54 +50,68 @@ t8_default_tet_size (void)
   return sizeof (t8_tet_t);
 }
 
-static t8_default_tet_id_t *t8_default_tet_id_new(t8_default_tet_type_t type,t8_tcoord_t anchor_coordinates[3]){
-    t8_default_tet_id_t *tet_id;
-    int i;
+static t8_default_tet_id_t *
+t8_default_tet_id_new (t8_default_tet_type_t type,
+                       t8_tcoord_t anchor_coordinates[3])
+{
+  t8_default_tet_id_t *tet_id;
+  int                 i;
 
-    tet_id=T8_ALLOC(t8_default_tet_id_t,1);
-    tet_id->type=type;
-    for(i=0;i<3;i++){
-        tet_id->anchor_coordinates[i]=anchor_coordinates[i];
-    }
-    return tet_id;
+  tet_id = T8_ALLOC (t8_default_tet_id_t, 1);
+  tet_id->type = type;
+  for (i = 0; i < 3; i++) {
+    tet_id->anchor_coordinates[i] = anchor_coordinates[i];
+  }
+  return tet_id;
 }
 
-static void t8_default_tet_id_destroy(t8_default_tet_id_t *tid){
-    T8_FREE(tid);
+static void
+t8_default_tet_id_destroy (t8_default_tet_id_t * tid)
+{
+  T8_FREE (tid);
 }
 
-static t8_default_cube_id t8_default_tet_compute_cubeid(const t8_default_tet_id_t *tid){
-    t8_default_cube_id cid=0;
+static t8_default_cube_id
+t8_default_tet_compute_cubeid (const t8_default_tet_id_t * tid)
+{
+  t8_default_cube_id  cid = 0;
 
-    cid=tid->anchor_coordinates[0]&1+tid->anchor_coordinates[1]&2+tid->anchor_coordinates[2]&4;
-    return cid;
+  cid =
+    tid->anchor_coordinates[0] & 1 + tid->anchor_coordinates[1] & 2 +
+    tid->anchor_coordinates[2] & 4;
+  return cid;
 }
 
-static t8_default_tet_id_t *t8_default_tet_parent_tetid(const t8_default_tet_id_t *tid,const int8_t level){
-    t8_default_cube_id cid;
-    t8_default_tet_type_t parent_type;
-    t8_tcoord_t parent_coord[3],h;
-    int i;
+static t8_default_tet_id_t *
+t8_default_tet_parent_tetid (const t8_default_tet_id_t * tid,
+                             const int8_t level)
+{
+  t8_default_cube_id  cid;
+  t8_default_tet_type_t parent_type;
+  t8_tcoord_t         parent_coord[3], h;
+  int                 i;
 
-    /* Compute type of parent */
-    cid = t8_default_tet_compute_cubeid(tid);
-    parent_type = t8_tet_cid_type_to_parenttype[cid][tid->type];
-    /* Compute anchor coordinates of parent */
-    h = T8_TET_ROOT_LEN(level);
-    for(i=0;i<3;i++){
-        parent_coord[i] = tid->anchor_coordinates[i]& ~h;
-    }
+  /* Compute type of parent */
+  cid = t8_default_tet_compute_cubeid (tid);
+  parent_type = t8_tet_cid_type_to_parenttype[cid][tid->type];
+  /* Compute anchor coordinates of parent */
+  h = T8_TET_ROOT_LEN (level);
+  for (i = 0; i < 3; i++) {
+    parent_coord[i] = tid->anchor_coordinates[i] & ~h;
+  }
 
-    return t8_default_tet_id_new(parent_type,parent_coord);
+  return t8_default_tet_id_new (parent_type, parent_coord);
 }
 
-static void t8_default_tet_parent(const t8_element_t *elem,t8_element_t *parent){
-    const t8_tet_t *t = (const t8_tet_t *) elem;
-    t8_tet_t *p = (t8_tet_t *) parent;
+static void
+t8_default_tet_parent (const t8_element_t * elem, t8_element_t * parent)
+{
+  const t8_tet_t     *t = (const t8_tet_t *) elem;
+  t8_tet_t           *p = (t8_tet_t *) parent;
 
-    p->itype = t->itype;
-    p->level = t->level-1;
-    p->tet_id = t8_default_tet_parent_tetid(t->tet_id,t->level);
+  p->itype = t->itype;
+  p->level = t->level - 1;
+  p->tet_id = t8_default_tet_parent_tetid (t->tet_id, t->level);
 }
 
 t8_type_scheme_t   *
