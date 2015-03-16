@@ -29,12 +29,17 @@
 
 #include <t8_element.h>
 
+typedef struct t8_tet_id t8_tet_id_t;
+
+typedef int32_t t8_tcoord_t;
+
 typedef struct t8_tet
 {
   int8_t              itype;
                   /**< We store the type for compatibility with the pyramid. */
   int8_t              level;
   /* add coordinates etc. here */
+  t8_tet_id_t		 *tet_id;
 }
 t8_tet_t;
 

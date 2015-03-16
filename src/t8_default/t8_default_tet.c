@@ -24,6 +24,13 @@
 #include "t8_default_common.h"
 #include "t8_default_tet.h"
 
+typedef int8_t	t8_tet_type_t;
+
+struct t8_tet_id{
+    t8_tet_type_t	type;
+    t8_tcoord_t	anchor_coordinates[3];
+};
+
 static              size_t
 t8_default_tet_size (void)
 {
