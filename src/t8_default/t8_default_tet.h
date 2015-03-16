@@ -29,6 +29,13 @@
 
 #include <t8_element.h>
 
+/* TODO: assign a reasonable value
+ * TODO: maybe this should be better defined
+ * 	    independently of the element type.
+ */
+#define T8_TET_MAX_LEVEL 18
+#define T8_TET_ROOT_LEN(l) (1<<(T8_TET_MAX_LEVEL-(l)))
+
 typedef struct t8_tet_id t8_tet_id_t;
 
 typedef int32_t t8_tcoord_t;
