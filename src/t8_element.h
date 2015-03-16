@@ -106,7 +106,7 @@ void                t8_type_boundary_new (t8_scheme_t * scheme,
                                           int length,
                                           t8_element_t ** boundary);
 
-/** Allocate a set of elements suitable for the boundary of a given type.
+/** Destroy a set of elements suitable for the boundary of a given type.
  * \param [in] scheme           Defines the implementation of the types.
  * \param [in] thetype          Type of the element whose boundary we have.
  * \param [in] min_dim          Ignore boundary points of lesser dimension.
