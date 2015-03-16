@@ -53,3 +53,18 @@ t8_default_scheme_new_tet (void)
 
   return ts;
 }
+
+t8_tet_id *t8_tet_id_new(t8_tet_type_t type,t8_tcoord_t x,t8_tcoord_t y,t8_tcoord_t z){
+    t8_tet_id *tet_id;
+
+    tet_id=T8_ALLOC(t8_tet_id,1);
+    tet_id->type=type;
+    tet_id->anchor_coordinates[0]=x;
+    tet_id->anchor_coordinates[1]=y;
+    tet_id->anchor_coordinates[2]=z;
+    return tet_id;
+}
+
+void t8_tet_id_destroy(t8_tet_id *tid){
+    T8_FREE(tid);
+}
