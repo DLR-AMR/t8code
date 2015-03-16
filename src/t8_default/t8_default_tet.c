@@ -54,17 +54,18 @@ t8_default_scheme_new_tet (void)
   return ts;
 }
 
-t8_tet_id *t8_tet_id_new(t8_tet_type_t type,t8_tcoord_t x,t8_tcoord_t y,t8_tcoord_t z){
-    t8_tet_id *tet_id;
+t8_tet_id_t *t8_tet_id_new(t8_tet_type_t type,t8_tcoord_t anchor_coordinates[3]){
+    t8_tet_id_t *tet_id;
+    int i;
 
-    tet_id=T8_ALLOC(t8_tet_id,1);
+    tet_id=T8_ALLOC(t8_tet_id_t,1);
     tet_id->type=type;
-    tet_id->anchor_coordinates[0]=x;
-    tet_id->anchor_coordinates[1]=y;
-    tet_id->anchor_coordinates[2]=z;
+    for(i=0;i<3;i++){
+        tet_id->anchor_coordinates[i]=anchor_coordinates[i];
+    }
     return tet_id;
 }
 
-void t8_tet_id_destroy(t8_tet_id *tid){
+void t8_tet_id_destroy(t8_tet_id_t *tid){
     T8_FREE(tid);
 }
