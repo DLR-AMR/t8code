@@ -54,7 +54,7 @@ extern const int    t8_type_boundary_count[T8_TYPE_LAST][T8_TYPE_LAST];
 /** Query the type and count of boundary points.
  * \param [in] thetype          We query a point of this type.
  * \param [in] min_dim          Ignore boundary points of lesser dimension.
- *                              The ignered points get a count value of 0.
+ *                              The ignored points get a count value of 0.
  * \param [out] per_type        Array of length T8_TYPE_LAST to be filled
  *                              with the count of the boundary objects,
  *                              counted per each of the element types.
