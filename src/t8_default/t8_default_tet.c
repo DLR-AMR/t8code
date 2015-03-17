@@ -85,16 +85,18 @@ t8_default_tet_set_type (t8_tet_t * t, t8_default_tet_type_t type)
   t->tet_id->type = type;
 }
 
-static t8_tcoord_t
-t8_default_tet_get_coordinate(const t8_tet_t *t,int i){
-    T8_ASSERT(0<=i && i<3);
-    return t->tet_id->anchor_coordinates[i];
+static              t8_tcoord_t
+t8_default_tet_get_coordinate (const t8_tet_t * t, int i)
+{
+  T8_ASSERT (0 <= i && i < 3);
+  return t->tet_id->anchor_coordinates[i];
 }
 
 static void
-t8_default_tet_set_coordinate(t8_tet_t *t,int i,t8_tcoord_t value){
-    T8_ASSERT(0<=i && i<3);
-    t->tet_id->anchor_coordinates[i] = value;
+t8_default_tet_set_coordinate (t8_tet_t * t, int i, t8_tcoord_t value)
+{
+  T8_ASSERT (0 <= i && i < 3);
+  t->tet_id->anchor_coordinates[i] = value;
 }
 
 static              t8_default_tet_cube_id_t
@@ -128,8 +130,7 @@ t8_default_tet_parent_tetid (const t8_default_tet_id_t * tid,
 
   /* Compute type of parent */
   cid = t8_default_tet_compute_cubeid (tid, level);
-  parent_type =
-    t8_tet_cid_type_to_parenttype[cid][tid->type];
+  parent_type = t8_tet_cid_type_to_parenttype[cid][tid->type];
   /* Compute anchor coordinates of parent */
   h = T8_TET_ROOT_LEN (level);
   for (i = 0; i < 3; i++) {
@@ -145,15 +146,18 @@ t8_default_tet_parent (const t8_element_t * elem, t8_element_t * parent)
   const t8_tet_t     *t = (const t8_tet_t *) elem;
   t8_tet_t           *p = (t8_tet_t *) parent;
   t8_default_tet_cube_id_t cid;
-  t8_tcoord_t       h;
-  int i;
+  t8_tcoord_t         h;
+  int                 i;
+
+  T8_ASSERT (t->level > 0);
 
   p->itype = t->itype;
   p->level = t->level - 1;
 
   /* Compute type of parent */
-  cid = t8_default_tet_compute_cubeid (t->tet_id,t->level);
-  t8_default_tet_set_type(p,t8_tet_cid_type_to_parenttype[cid][t8_default_tet_get_type(t)]);
+  cid = t8_default_tet_compute_cubeid (t->tet_id, t->level);
+  t8_default_tet_set_type (p, t8_tet_cid_type_to_parenttype[cid]
+                           [t8_default_tet_get_type (t)]);
   /* Set coordinates of parent */
   h = T8_TET_ROOT_LEN (t->level);
   for (i = 0; i < 3; i++) {
@@ -161,30 +165,33 @@ t8_default_tet_parent (const t8_element_t * elem, t8_element_t * parent)
   }
 }
 
-static void t8_default_tet_compute_coords(const t8_tet_t *t,t8_tcoord_t coordinates[4][3]){
-    t8_default_tet_type_t type;
-    int ei,ej;
-    int i,j;
-    t8_tcoord_t h;
+static void
+t8_default_tet_compute_coords (const t8_tet_t * t,
+                               t8_tcoord_t coordinates[4][3])
+{
+  t8_default_tet_type_t type;
+  int                 ei, ej;
+  int                 i, j;
+  t8_tcoord_t         h;
 
-    type = t8_default_tet_get_type(t);
-    h = T8_TET_ROOT_LEN(t->level);
-    ei = type/2;
-    if(type%2==0){
-        ej = (ei+2) % 3;
-    }
-    else {
-        ej = (ei+1) % 3;
-    }
-    for(i=0;i<2;i++){
-        coordinates[0][i] = t8_default_tet_get_coordinate(t,i);
-        coordinates[1][i] = coordinates[0][i];
-        coordinates[2][i] = coordinates[0][i];
-        coordinates[3][i] = coordinates[0][i] + h;
-    }
-    coordinates[1][ei] += h;
-    coordinates[2][ei] += h;
-    coordinates[2][ej] += h;
+  type = t8_default_tet_get_type (t);
+  h = T8_TET_ROOT_LEN (t->level);
+  ei = type / 2;
+  if (type % 2 == 0) {
+    ej = (ei + 2) % 3;
+  }
+  else {
+    ej = (ei + 1) % 3;
+  }
+  for (i = 0; i < 2; i++) {
+    coordinates[0][i] = t8_default_tet_get_coordinate (t, i);
+    coordinates[1][i] = coordinates[0][i];
+    coordinates[2][i] = coordinates[0][i];
+    coordinates[3][i] = coordinates[0][i] + h;
+  }
+  coordinates[1][ei] += h;
+  coordinates[2][ei] += h;
+  coordinates[2][ej] += h;
 }
 
 t8_type_scheme_t   *
