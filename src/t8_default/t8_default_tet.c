@@ -44,6 +44,17 @@ int                 t8_tet_cid_type_to_parenttype[8][6] = {
   {0, 1, 2, 3, 4, 5}
 };
 
+/* In dependence of a type x give the type of
+ * the child with Bey number y */
+int                 t8_tet_type_of_child[6][8] = {
+  {0, 0, 0, 0, 4, 5, 2, 1},
+  {1, 1, 1, 1, 3, 2, 5, 0},
+  {2, 2, 2, 2, 0, 1, 4, 3},
+  {3, 3, 3, 3, 5, 4, 1, 2},
+  {4, 4, 4, 4, 2, 3, 0, 5},
+  {5, 5, 5, 5, 1, 0, 3, 4}
+};
+
 static              size_t
 t8_default_tet_size (void)
 {
@@ -194,6 +205,60 @@ t8_default_tet_compute_coords (const t8_tet_t * t,
   coordinates[2][ej] += h;
 }
 
+static void
+t8_default_tet_child (const t8_element_t * elem, int childid,
+                      t8_element_t * child)
+{
+  const t8_tet_t     *t = (const t8_tet_t *) (elem);
+  t8_tet_t           *c = (t8_tet_t *) (child);
+  t8_tcoord_t         t_coordinates[4][3], temp_coord;
+  t8_default_tet_type_t type;
+  int                 coord2, i;
+
+  T8_ASSERT (t->level < T8_TET_MAX_LEVEL);
+  T8_ASSERT (0 <= childid && childid < 8);
+
+  /* Compute anchor coordinates of child */
+  if (childid == 0) {
+    for (i = 0; i < 3; i++) {
+      t8_default_tet_set_coordinate (c, i,
+                                     t8_default_tet_get_coordinate (t, i));
+    }
+  }
+  else {
+    switch (childid) {
+    case 1:
+    case 4:
+    case 5:
+      coord2 = 1;
+      break;
+    case 2:
+    case 6:
+    case 7:
+      coord2 = 2;
+      break;
+    case 3:
+      coord2 = 3;
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();
+    }
+    /* i-th anchor coordinate of child is (X_(0,i)+X_(coord2,i))/2
+     * where X_(i,j) is the j-th coordinate of t's ith node */
+    t8_default_tet_compute_coords (t, t_coordinates);
+    for (i = 0; i < 3; i++) {
+      temp_coord = (t_coordinates[0][i] + t_coordinates[coord2][i]) >> 1;
+      t8_default_tet_set_coordinate (c, i, temp_coord);
+    }
+  }
+
+  /* Compute type of child */
+  type = t8_default_tet_get_type (t);
+  t8_default_tet_set_type (c, t8_tet_type_of_child[type][childid]);
+
+  c->level = t->level + 1;
+}
+
 t8_type_scheme_t   *
 t8_default_scheme_new_tet (void)
 {
@@ -203,6 +268,7 @@ t8_default_scheme_new_tet (void)
 
   ts->elem_size = t8_default_tet_size;
   ts->elem_parent = t8_default_tet_parent;
+  ts->elem_child = t8_default_tet_child;
 
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;
