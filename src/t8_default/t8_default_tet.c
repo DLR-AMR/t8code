@@ -122,10 +122,21 @@ t8_default_tet_parent (const t8_element_t * elem, t8_element_t * parent)
 {
   const t8_tet_t     *t = (const t8_tet_t *) elem;
   t8_tet_t           *p = (t8_tet_t *) parent;
+  t8_default_tet_cube_id_t cid;
+  t8_tcoord_t       h;
+  int i;
 
   p->itype = t->itype;
   p->level = t->level - 1;
-  p->tet_id = t8_default_tet_parent_tetid (t->tet_id, t->level);
+
+  /* Compute type of parent */
+  cid = t8_default_tet_compute_cubeid (t->tet_id,t->level);
+  p->tet_id->type = t8_tet_cid_type_to_parenttype[cid][t8_default_tet_get_type(t)];
+  /* Set coordinates of parent */
+  h = T8_TET_ROOT_LEN (t->level);
+  for (i = 0; i < 3; i++) {
+    p->tet_id->anchor_coordinates[i] = t->tet_id->anchor_coordinates[i] & ~h;
+  }
 }
 
 t8_type_scheme_t   *
