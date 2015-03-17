@@ -25,7 +25,7 @@
 #include "t8_default_tet.h"
 
 typedef int8_t      t8_default_tet_type_t;
-typedef int8_t      t8_default_cube_id_t;
+typedef int8_t      t8_default_tet_cube_id_t;
 
 struct t8_default_tet_id
 {
@@ -71,10 +71,15 @@ t8_default_tet_id_destroy (t8_default_tet_id_t * tid)
   T8_FREE (tid);
 }
 
-static t8_default_cube_id_t
+static t8_default_tet_type_t
+t8_default_tet_get_type(const t8_tet_t *t){
+    return t->tet_id->type;
+}
+
+static t8_default_tet_cube_id_t
 t8_default_tet_compute_cubeid (const t8_default_tet_id_t * tid, int level)
 {
-  t8_default_cube_id_t id = 0;
+  t8_default_tet_cube_id_t id = 0;
   t8_tcoord_t         h;
 
   T8_ASSERT (0 <= level && level <= T8_TET_MAX_LEVEL);
@@ -95,7 +100,7 @@ static t8_default_tet_id_t *
 t8_default_tet_parent_tetid (const t8_default_tet_id_t * tid,
                              const int8_t level)
 {
-  t8_default_cube_id_t cid;
+  t8_default_tet_cube_id_t cid;
   t8_default_tet_type_t parent_type;
   t8_tcoord_t         parent_coord[3], h;
   int                 i;
