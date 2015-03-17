@@ -161,6 +161,32 @@ t8_default_tet_parent (const t8_element_t * elem, t8_element_t * parent)
   }
 }
 
+static void t8_default_tet_compute_coords(const t8_tet_t *t,t8_tcoord_t coordinates[4][3]){
+    t8_default_tet_type_t type;
+    int ei,ej;
+    int i,j;
+    t8_tcoord_t h;
+
+    type = t8_default_tet_get_type(t);
+    h = T8_TET_ROOT_LEN(t->level);
+    ei = type/2;
+    if(type%2==0){
+        ej = (ei+2) % 3;
+    }
+    else {
+        ej = (ei+1) % 3;
+    }
+    for(i=0;i<2;i++){
+        coordinates[0][i] = t8_default_tet_get_coordinate(t,i);
+        coordinates[1][i] = coordinates[0][i];
+        coordinates[2][i] = coordinates[0][i];
+        coordinates[3][i] = coordinates[0][i] + h;
+    }
+    coordinates[1][ei] += h;
+    coordinates[2][ei] += h;
+    coordinates[2][ej] += h;
+}
+
 t8_type_scheme_t   *
 t8_default_scheme_new_tet (void)
 {
