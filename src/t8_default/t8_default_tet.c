@@ -71,13 +71,14 @@ t8_default_tet_id_destroy (t8_default_tet_id_t * tid)
   T8_FREE (tid);
 }
 
-static t8_default_cube_id_t t8_default_tet_compute_cubeid(const t8_default_tet_id_t * tid, int level)
+static t8_default_cube_id_t
+t8_default_tet_compute_cubeid (const t8_default_tet_id_t * tid, int level)
 {
-  t8_default_cube_id_t         id = 0;
-  t8_tcoord_t                   h;
+  t8_default_cube_id_t id = 0;
+  t8_tcoord_t         h;
 
-  T8_ASSERT (0<=level && level <= T8_TET_MAX_LEVEL);
-  h = T8_TET_ROOT_LEN(level);
+  T8_ASSERT (0 <= level && level <= T8_TET_MAX_LEVEL);
+  h = T8_TET_ROOT_LEN (level);
 
   if (level == 0) {
     return 0;
@@ -94,13 +95,13 @@ static t8_default_tet_id_t *
 t8_default_tet_parent_tetid (const t8_default_tet_id_t * tid,
                              const int8_t level)
 {
-  t8_default_cube_id_t  cid;
+  t8_default_cube_id_t cid;
   t8_default_tet_type_t parent_type;
   t8_tcoord_t         parent_coord[3], h;
   int                 i;
 
   /* Compute type of parent */
-  cid = t8_default_tet_compute_cubeid (tid,level);
+  cid = t8_default_tet_compute_cubeid (tid, level);
   parent_type = t8_tet_cid_type_to_parenttype[cid][tid->type];
   /* Compute anchor coordinates of parent */
   h = T8_TET_ROOT_LEN (level);
