@@ -1,7 +1,7 @@
 /*
   This file is part of t8code.
   t8code is a C library to manage a collection (a forest) of multiple
-  connected adaptive space-trees of general element types in parallel.
+  connected adaptive space-trees of general element classes in parallel.
 
   Copyright (C) 2010 The University of Texas System
   Written by Carsten Burstedde, Lucas C. Wilcox, and Tobin Isaac
@@ -114,22 +114,22 @@ t8_default_quad_boundary (const t8_element_t * elem,
                           int min_dim, int length, t8_element_t ** boundary)
 {
 #ifdef T8_ENABLE_DEBUG
-  int                 pertype[T8_TYPE_LAST];
+  int                 per_eclass[T8_ECLASS_LAST];
 #endif
 
   T8_ASSERT (length ==
-             t8_type_count_boundary (T8_TYPE_QUAD, min_dim, pertype));
+             t8_eclass_count_boundary (T8_ECLASS_QUAD, min_dim, per_eclass));
 
   /* TODO: write this function */
   SC_ABORT_NOT_REACHED ();
 }
 
-t8_type_scheme_t   *
+t8_eclass_scheme_t *
 t8_default_scheme_new_quad (void)
 {
-  t8_type_scheme_t   *ts;
+  t8_eclass_scheme_t *ts;
 
-  ts = T8_ALLOC (t8_type_scheme_t, 1);
+  ts = T8_ALLOC (t8_eclass_scheme_t, 1);
 
   ts->elem_size = t8_default_quad_size;
 

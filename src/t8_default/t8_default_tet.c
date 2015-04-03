@@ -1,7 +1,7 @@
 /*
   This file is part of t8code.
   t8code is a C library to manage a collection (a forest) of multiple
-  connected adaptive space-trees of general element types in parallel.
+  connected adaptive space-trees of general element classes in parallel.
 
   Copyright (C) 2010 The University of Texas System
   Written by Carsten Burstedde, Lucas C. Wilcox, and Tobin Isaac
@@ -30,12 +30,12 @@ t8_default_tet_size (void)
   return sizeof (t8_tet_t);
 }
 
-t8_type_scheme_t   *
+t8_eclass_scheme_t *
 t8_default_scheme_new_tet (void)
 {
-  t8_type_scheme_t   *ts;
+  t8_eclass_scheme_t *ts;
 
-  ts = T8_ALLOC (t8_type_scheme_t, 1);
+  ts = T8_ALLOC (t8_eclass_scheme_t, 1);
 
   ts->elem_size = t8_default_tet_size;
 

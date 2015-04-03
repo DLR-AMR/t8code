@@ -1,7 +1,7 @@
 /*
   This file is part of t8code.
   t8code is a C library to manage a collection (a forest) of multiple
-  connected adaptive space-trees of general element types in parallel.
+  connected adaptive space-trees of general element classes in parallel.
 
   Copyright (C) 2010 The University of Texas System
   Written by Carsten Burstedde, Lucas C. Wilcox, and Tobin Isaac
@@ -35,16 +35,16 @@ t8_scheme_destroy (t8_scheme_t * s)
 
   T8_ASSERT (s != NULL);
 
-  for (t = 0; t < T8_TYPE_LAST; ++t) {
-    if (s->type_schemes[t] != NULL) {
-      t8_type_scheme_destroy (s->type_schemes[t]);
+  for (t = 0; t < T8_ECLASS_LAST; ++t) {
+    if (s->eclass_schemes[t] != NULL) {
+      t8_eclass_scheme_destroy (s->eclass_schemes[t]);
     }
   }
   T8_FREE (s);
 }
 
 void
-t8_type_scheme_destroy (t8_type_scheme_t * ts)
+t8_eclass_scheme_destroy (t8_eclass_scheme_t * ts)
 {
   T8_ASSERT (ts != NULL);
 
@@ -55,21 +55,22 @@ t8_type_scheme_destroy (t8_type_scheme_t * ts)
 }
 
 void
-t8_type_boundary_alloc (t8_scheme_t * scheme, t8_type_t thetype,
-                        int min_dim, int length, t8_element_t ** boundary)
+t8_eclass_boundary_alloc (t8_scheme_t * scheme, t8_eclass_t theclass,
+                          int min_dim, int length, t8_element_t ** boundary)
 {
   int                 t, offset, per;
 #ifdef T8_ENABLE_DEBUG
-  int                 per_type[T8_TYPE_LAST];
+  int                 per_eclass[T8_ECLASS_LAST];
 #endif
 
-  T8_ASSERT (length == t8_type_count_boundary (thetype, min_dim, per_type));
+  T8_ASSERT (length ==
+             t8_eclass_count_boundary (theclass, min_dim, per_eclass));
 
-  for (offset = t = 0; t < T8_TYPE_LAST; ++t) {
-    if (t8_type_to_dimension[t] >= min_dim) {
-      per = t8_type_boundary_count[thetype][t];
+  for (offset = t = 0; t < T8_ECLASS_LAST; ++t) {
+    if (t8_eclass_to_dimension[t] >= min_dim) {
+      per = t8_eclass_boundary_count[theclass][t];
       if (per > 0) {
-        t8_element_new (scheme->type_schemes[t], per, boundary + offset);
+        t8_element_new (scheme->eclass_schemes[t], per, boundary + offset);
         offset += per;
       }
     }
@@ -78,21 +79,23 @@ t8_type_boundary_alloc (t8_scheme_t * scheme, t8_type_t thetype,
 }
 
 void
-t8_type_boundary_destroy (t8_scheme_t * scheme, t8_type_t thetype,
-                          int min_dim, int length, t8_element_t ** boundary)
+t8_eclass_boundary_destroy (t8_scheme_t * scheme, t8_eclass_t theclass,
+                            int min_dim, int length, t8_element_t ** boundary)
 {
   int                 t, offset, per;
 #ifdef T8_ENABLE_DEBUG
-  int                 per_type[T8_TYPE_LAST];
+  int                 per_eclass[T8_ECLASS_LAST];
 #endif
 
-  T8_ASSERT (length == t8_type_count_boundary (thetype, min_dim, per_type));
+  T8_ASSERT (length ==
+             t8_eclass_count_boundary (theclass, min_dim, per_eclass));
 
-  for (offset = t = 0; t < T8_TYPE_LAST; ++t) {
-    if (t8_type_to_dimension[t] >= min_dim) {
-      per = t8_type_boundary_count[thetype][t];
+  for (offset = t = 0; t < T8_ECLASS_LAST; ++t) {
+    if (t8_eclass_to_dimension[t] >= min_dim) {
+      per = t8_eclass_boundary_count[theclass][t];
       if (per > 0) {
-        t8_element_destroy (scheme->type_schemes[t], per, boundary + offset);
+        t8_element_destroy (scheme->eclass_schemes[t], per,
+                            boundary + offset);
         offset += per;
       }
     }
@@ -101,14 +104,14 @@ t8_type_boundary_destroy (t8_scheme_t * scheme, t8_type_t thetype,
 }
 
 size_t
-t8_element_size (t8_type_scheme_t * ts)
+t8_element_size (t8_eclass_scheme_t * ts)
 {
   T8_ASSERT (ts != NULL && ts->elem_size != NULL);
   return ts->elem_size ();
 }
 
 void
-t8_element_parent (t8_type_scheme_t * ts,
+t8_element_parent (t8_eclass_scheme_t * ts,
                    const t8_element_t * elem, t8_element_t * parent)
 {
   T8_ASSERT (ts != NULL && ts->elem_parent != NULL);
@@ -116,7 +119,7 @@ t8_element_parent (t8_type_scheme_t * ts,
 }
 
 void
-t8_element_sibling (t8_type_scheme_t * ts,
+t8_element_sibling (t8_eclass_scheme_t * ts,
                     const t8_element_t * elem, int sibid,
                     t8_element_t * sibling)
 {
@@ -125,7 +128,7 @@ t8_element_sibling (t8_type_scheme_t * ts,
 }
 
 void
-t8_element_child (t8_type_scheme_t * ts, const t8_element_t * elem,
+t8_element_child (t8_eclass_scheme_t * ts, const t8_element_t * elem,
                   int childid, t8_element_t * child)
 {
   T8_ASSERT (ts != NULL && ts->elem_child != NULL);
@@ -133,7 +136,7 @@ t8_element_child (t8_type_scheme_t * ts, const t8_element_t * elem,
 }
 
 void
-t8_element_nca (t8_type_scheme_t * ts, const t8_element_t * elem1,
+t8_element_nca (t8_eclass_scheme_t * ts, const t8_element_t * elem1,
                 const t8_element_t * elem2, t8_element_t * nca)
 {
   T8_ASSERT (ts != NULL && ts->elem_nca != NULL);
@@ -141,7 +144,7 @@ t8_element_nca (t8_type_scheme_t * ts, const t8_element_t * elem1,
 }
 
 void
-t8_element_boundary (t8_type_scheme_t * ts,
+t8_element_boundary (t8_eclass_scheme_t * ts,
                      const t8_element_t * elem,
                      int min_dim, int length, t8_element_t ** boundary)
 {
@@ -150,14 +153,15 @@ t8_element_boundary (t8_type_scheme_t * ts,
 }
 
 void
-t8_element_new (t8_type_scheme_t * ts, int length, t8_element_t ** elems)
+t8_element_new (t8_eclass_scheme_t * ts, int length, t8_element_t ** elems)
 {
   T8_ASSERT (ts != NULL && ts->elem_new != NULL);
   ts->elem_new (ts->ts_context, length, elems);
 }
 
 void
-t8_element_destroy (t8_type_scheme_t * ts, int length, t8_element_t ** elems)
+t8_element_destroy (t8_eclass_scheme_t * ts, int length,
+                    t8_element_t ** elems)
 {
   T8_ASSERT (ts != NULL && ts->elem_destroy != NULL);
   ts->elem_destroy (ts->ts_context, length, elems);

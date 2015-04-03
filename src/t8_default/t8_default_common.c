@@ -1,7 +1,7 @@
 /*
   This file is part of t8code.
   t8code is a C library to manage a collection (a forest) of multiple
-  connected adaptive space-trees of general element types in parallel.
+  connected adaptive space-trees of general element classes in parallel.
 
   Copyright (C) 2010 The University of Texas System
   Written by Carsten Burstedde, Lucas C. Wilcox, and Tobin Isaac
@@ -24,7 +24,7 @@
 #include "t8_default_common.h"
 
 void
-t8_default_scheme_mempool_destroy (t8_type_scheme_t * ts)
+t8_default_scheme_mempool_destroy (t8_eclass_scheme_t * ts)
 {
   T8_ASSERT (ts->ts_context != NULL);
   sc_mempool_destroy ((sc_mempool_t *) ts->ts_context);

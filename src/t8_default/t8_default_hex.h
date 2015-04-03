@@ -1,7 +1,7 @@
 /*
   This file is part of t8code.
   t8code is a C library to manage a collection (a forest) of multiple
-  connected adaptive space-trees of general element types in parallel.
+  connected adaptive space-trees of general element classes in parallel.
 
   Copyright (C) 2010 The University of Texas System
   Written by Carsten Burstedde, Lucas C. Wilcox, and Tobin Isaac
@@ -31,11 +31,11 @@
 #include <t8_element.h>
 
 /** The structure holding a hexahedral element in the default scheme.
- * We make this definition public for interoperability of element types.
+ * We make this definition public for interoperability of element classes.
  * We might want to put this into a private, scheme-specific header file.
  */
 typedef p8est_quadrant_t t8_hex_t;
 
-t8_type_scheme_t   *t8_default_scheme_new_hex (void);
+t8_eclass_scheme_t *t8_default_scheme_new_hex (void);
 
 #endif /* !T8_DEFAULT_HEX_H */
