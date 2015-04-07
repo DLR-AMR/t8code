@@ -205,6 +205,8 @@ t8_default_tet_compute_coords (const t8_tet_t * t,
   coordinates[2][ej] += h;
 }
 
+/* The childid here is the Bey child id,
+ * not the Morton child id */
 static void
 t8_default_tet_child (const t8_element_t * elem, int childid,
                       t8_element_t * child)
