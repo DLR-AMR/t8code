@@ -35,6 +35,7 @@
  */
 #define T8_TET_MAX_LEVEL 18
 #define T8_TET_ROOT_LEN(l) (1<<(T8_TET_MAX_LEVEL-(l)))
+#define T8_TET_CHILDREN 8
 
 typedef struct t8_default_tet_id t8_default_tet_id_t;
 

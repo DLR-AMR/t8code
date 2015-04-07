@@ -182,7 +182,7 @@ t8_default_tet_compute_coords (const t8_tet_t * t,
 {
   t8_default_tet_type_t type;
   int                 ei, ej;
-  int                 i, j;
+  int                 i;
   t8_tcoord_t         h;
 
   type = t8_default_tet_get_type (t);
@@ -206,7 +206,9 @@ t8_default_tet_compute_coords (const t8_tet_t * t,
 }
 
 /* The childid here is the Bey child id,
- * not the Morton child id */
+ * not the Morton child id
+ * It is possible that the function is called with
+ * elem = child */
 static void
 t8_default_tet_child (const t8_element_t * elem, int childid,
                       t8_element_t * child)
@@ -261,6 +263,17 @@ t8_default_tet_child (const t8_element_t * elem, int childid,
   c->level = t->level + 1;
 }
 
+/* The sibid here is the Bey child id of the parent.
+ * TODO: Implement this algorithm directly w/o using
+ * parent and child */
+static void
+t8_default_tet_sibling (const t8_element_t *elem,int sibid, t8_element_t *sibling){
+    T8_ASSERT(0<=sibid && sibid<T8_TET_CHILDREN);
+    T8_ASSERT(((const t8_tet_t*)(elem))->level>0);
+    t8_default_tet_parent(elem,sibling);
+    t8_default_tet_child(sibling,sibid,sibling);
+}
+
 t8_eclass_scheme_t *
 t8_default_scheme_new_tet (void)
 {
@@ -271,6 +284,7 @@ t8_default_scheme_new_tet (void)
   ts->elem_size = t8_default_tet_size;
   ts->elem_parent = t8_default_tet_parent;
   ts->elem_child = t8_default_tet_child;
+  ts->elem_sibling = t8_default_tet_sibling;
 
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;
