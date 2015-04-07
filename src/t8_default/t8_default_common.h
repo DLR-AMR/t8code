@@ -1,7 +1,7 @@
 /*
   This file is part of t8code.
   t8code is a C library to manage a collection (a forest) of multiple
-  connected adaptive space-trees of general element types in parallel.
+  connected adaptive space-trees of general element classes in parallel.
 
   Copyright (C) 2010 The University of Texas System
   Written by Carsten Burstedde, Lucas C. Wilcox, and Tobin Isaac
@@ -29,15 +29,16 @@
 
 #include <t8_element.h>
 
-/** This type independent function assumes an sc_mempool_t as context.
- * It is suitable as the ts_destroy callback in \ref t8_type_scheme_t.
+/** This class independent function assumes an sc_mempool_t as context.
+ * It is suitable as the ts_destroy callback in \ref t8_eclass_scheme_t.
  * We assume that the mempool has been created with the correct element size.
- * \param [in,out] ts           This type scheme's context is destroyed.
+ * \param [in,out] ts           The element class scheme context is destroyed.
  */
-void                t8_default_scheme_mempool_destroy (t8_type_scheme_t * ts);
+void                t8_default_scheme_mempool_destroy (t8_eclass_scheme_t *
+                                                       ts);
 
-/** This type independent function assumes an sc_mempool_t as context.
- * It is suitable as the elem_new callback in \ref t8_type_scheme_t.
+/** This class independent function assumes an sc_mempool_t as context.
+ * It is suitable as the elem_new callback in \ref t8_eclass_scheme_t.
  * We assume that the mempool has been created with the correct element size.
  * \param [in,out] ts_context   An element is allocated in this sc_mempool_t.
  * \param [in]     length       Non-negative number of elements to allocate.
@@ -46,8 +47,8 @@ void                t8_default_scheme_mempool_destroy (t8_type_scheme_t * ts);
 void                t8_default_mempool_alloc (void *ts_context, int length,
                                               t8_element_t ** elem);
 
-/** This type independent function assumes an sc_mempool_t as context.
- * It is suitable as the elem_destroy callback in \ref t8_type_scheme_t.
+/** This class independent function assumes an sc_mempool_t as context.
+ * It is suitable as the elem_destroy callback in \ref t8_eclass_scheme_t.
  * We assume that the mempool has been created with the correct element size.
  * \param [in,out] ts_context   An element is returned to this sc_mempool_t.
  * \param [in]     length       Non-negative number of elements to destroy.

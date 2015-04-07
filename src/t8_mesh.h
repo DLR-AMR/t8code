@@ -1,7 +1,7 @@
 /*
   This file is part of t8code.
   t8code is a C library to manage a collection (a forest) of multiple
-  connected adaptive space-trees of general element types in parallel.
+  connected adaptive space-trees of general element classes in parallel.
 
   Copyright (C) 2010 The University of Texas System
   Written by Carsten Burstedde, Lucas C. Wilcox, and Tobin Isaac
@@ -47,7 +47,7 @@ t8_mesh_t          *t8_mesh_new (int dimension,
 
 /************* all-in-one convenience constructors **************/
 
-t8_mesh_t          *t8_mesh_new_unitcube (t8_type_t thetype);
+t8_mesh_t          *t8_mesh_new_unitcube (t8_eclass_t theclass);
 
 /***************************** setters **************************/
 
@@ -58,7 +58,8 @@ void                t8_mesh_set_comm (t8_mesh_t * mesh, sc_MPI_Comm comm);
  */
 void                t8_mesh_set_partition (t8_mesh_t * mesh, int enable);
 
-void                t8_mesh_set_element (t8_mesh_t * mesh, t8_type_t thetype,
+void                t8_mesh_set_element (t8_mesh_t * mesh,
+                                         t8_eclass_t theclass,
                                          t8_gloidx_t gloid,
                                          t8_locidx_t locid);
 
@@ -93,17 +94,17 @@ void                t8_mesh_build (t8_mesh_t * mesh);
 sc_MPI_Comm         t8_mesh_get_comm (t8_mesh_t * mesh);
 
 t8_locidx_t         t8_mesh_get_element_count (t8_mesh_t * mesh,
-                                               t8_type_t thetype);
+                                               t8_eclass_t theclass);
 
 /** 
  * \param [in] locid            The local number can specify a point of any
  *                              dimension that is locally relevant.
  *                              The points are ordered in reverse to the
- *                              types in \ref t8_type_t.  The local index
- *                              is cumulative in this order.
+ *                              element classes in \ref t8_eclass_t.  The local
+ *                              index is cumulative in this order.
  */
-t8_locidx_t         t8_mesh_get_element_type (t8_mesh_t * mesh,
-                                              t8_locidx_t locid);
+t8_locidx_t         t8_mesh_get_element_class (t8_mesh_t * mesh,
+                                               t8_locidx_t locid);
 
 t8_locidx_t         t8_mesh_get_element_locid (t8_mesh_t * mesh,
                                                t8_gloidx_t gloid);
