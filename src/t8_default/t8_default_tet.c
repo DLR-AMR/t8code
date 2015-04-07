@@ -274,6 +274,59 @@ t8_default_tet_sibling (const t8_element_t *elem,int sibid, t8_element_t *siblin
     t8_default_tet_child(sibling,sibid,sibling);
 }
 
+/* Saves the neighbour of T along face "face" in N
+ * returns the facenumber of N along which T is its neighbour */
+int t8_default_tet_face_neighbour(const t8_tet_t *t,t8_tet_t *n,int face){
+    int type_new,type_old;
+    int i,sign;
+    int ret =-1;
+    int8_t level;
+    t8_tcoord_t coords[3];
+
+    T8_ASSERT(0<=face && face<4);
+
+    n->level=level=t->level;
+
+    for(i=0;i<3;i++){
+        coords[i] = t8_default_tet_get_coordinate(t,i);
+    }
+
+    type_old=t8_default_tet_get_type(t);
+    type_new=type_old;
+    type_new+=6; /* We want to compute modulo six and dont want negative numbers */
+    if(face==1 || face==2){
+       sign = (type_new%2==0?1:-1);
+       sign *= (face%2==0?1:-1);
+       type_new += sign;
+       type_new %= 6;
+       ret = face;
+    }
+    else{
+        if(face==0){
+            /* type: 0,1 --> x+1
+             *       2,3 --> y+1
+             *       4,5 --> z+1 */
+            coords[type_old/2]+=T8_TET_ROOT_LEN(level);
+            type_new+=(type_new%2==0?4:2);
+        }
+        else /* face == 3 */ {
+            /* type: 1,2 --> z-1
+             *       3,4 --> x-1
+             *       5,0 --> y-1 */
+            coords[((type_new+3)%6)/2]-=T8_TET_ROOT_LEN(level);
+            type_new+=(type_new%2==0?2:4);
+        }
+        type_new%=6;
+        ret = 3-face;
+    }
+
+    for(i=0;i<3;i++){
+        t8_default_tet_set_coordinate(n,i,coords[i]);
+    }
+    t8_default_tet_set_type(n,type_new);
+    return ret;
+}
+
 t8_eclass_scheme_t *
 t8_default_scheme_new_tet (void)
 {
@@ -283,8 +336,8 @@ t8_default_scheme_new_tet (void)
 
   ts->elem_size = t8_default_tet_size;
   ts->elem_parent = t8_default_tet_parent;
-  ts->elem_child = t8_default_tet_child;
   ts->elem_sibling = t8_default_tet_sibling;
+  ts->elem_child = t8_default_tet_child;
 
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;
