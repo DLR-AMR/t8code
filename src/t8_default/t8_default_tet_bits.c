@@ -68,6 +68,14 @@ t8_default_tet_compute_cubeid (const t8_tet_t * t, int level)
   return id;
 }
 
+int                 p4est_quadrant_is_equal (const t8_tet_t *t1,
+                                             const t8_tet_t *t2){
+    return (t1->level == t1->level && t1->type == t2->type &&
+            t1->anchor_coordinates[0] == t1->anchor_coordinates[0] &&
+            t1->anchor_coordinates[1] == t1->anchor_coordinates[1] &&
+            t1->anchor_coordinates[2] == t1->anchor_coordinates[2]);
+}
+
 void
 t8_default_tet_parent (const t8_element_t * elem, t8_element_t * parent)
 {

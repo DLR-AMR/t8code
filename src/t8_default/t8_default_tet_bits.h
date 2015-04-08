@@ -30,6 +30,12 @@
 #include <t8_element.h>
 #include "t8_default_tet.h"
 
+/** Test if two tetrahedra have the same coordinates, type and level.
+ * \return true if \a q1 describes the same quadrant as \a q2.
+ */
+int                 p4est_quadrant_is_equal (const t8_tet_t *t1,
+                                             const t8_tet_t *t2);
+
 /** Compute the parent of a tetrahedron.
  * \param [in]  elem Input tetrahedron.
  * \param [in,out] parent Existing tetrahedron whose data will
