@@ -103,6 +103,13 @@ t8_eclass_boundary_destroy (t8_scheme_t * scheme, t8_eclass_t theclass,
   T8_ASSERT (offset == length);
 }
 
+void
+t8_element_maxlevel (t8_eclass_scheme_t * ts)
+{
+  T8_ASSERT (ts != NULL && ts->elem_maxlevel != NULL);
+  ts->elem_maxlevel ();
+}
+
 size_t
 t8_element_size (t8_eclass_scheme_t * ts)
 {

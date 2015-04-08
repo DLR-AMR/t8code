@@ -25,6 +25,12 @@
 #include "t8_default_common.h"
 #include "t8_default_tet.h"
 
+static int
+t8_default_tet_maxlevel (void)
+{
+  return T8_DEFAULT_TET_MAXLEVEL;
+}
+
 static              size_t
 t8_default_tet_size (void)
 {
@@ -59,8 +65,6 @@ t8_default_tet_set_coordinate (t8_tet_t * t, int i, t8_tcoord_t value)
   t->anchor_coordinates[i] = value;
 }
 
-
-
 t8_eclass_scheme_t *
 t8_default_scheme_new_tet (void)
 {
@@ -68,6 +72,7 @@ t8_default_scheme_new_tet (void)
 
   ts = T8_ALLOC (t8_eclass_scheme_t, 1);
 
+  ts->elem_maxlevel = t8_default_tet_maxlevel;
   ts->elem_size = t8_default_tet_size;
   ts->elem_parent = t8_default_tet_parent;
   ts->elem_sibling = t8_default_tet_sibling;

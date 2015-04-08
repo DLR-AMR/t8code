@@ -37,6 +37,8 @@ typedef struct t8_element t8_element_t;
 /** This typedef holds virtual functions for a particular element class. */
 typedef struct t8_eclass_scheme t8_eclass_scheme_t;
 
+typedef int         (*t8_element_maxlevel_t) (void);
+
 /* *INDENT-OFF* */
 typedef size_t      (*t8_element_size_t) (void);
 /* *INDENT-ON* */
@@ -66,6 +68,7 @@ typedef void        (*t8_eclass_scheme_destroy_t) (t8_eclass_scheme_t * ts);
 struct t8_eclass_scheme
 {
   /* these element routines are context free */
+  t8_element_maxlevel_t elem_maxlevel;
   t8_element_size_t   elem_size;
   t8_element_parent_t elem_parent;
   t8_element_sibling_t elem_sibling;
@@ -120,6 +123,8 @@ void                t8_eclass_boundary_destroy (t8_scheme_t * scheme,
                                                 t8_eclass_t theclass,
                                                 int min_dim, int length,
                                                 t8_element_t ** boundary);
+
+void                t8_element_maxlevel (t8_eclass_scheme_t * ts);
 
 size_t              t8_element_size (t8_eclass_scheme_t * ts);
 
