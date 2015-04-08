@@ -28,39 +28,13 @@
 #define T8_DEFAULT_TET_H
 
 #include <t8_element.h>
+#include "t8_dtet.h"
 
-/* TODO: assign a reasonable value
- * TODO: maybe this should be better defined
- * 	    independently of the element type.
- */
-#define T8_DEFAULT_TET_MAXLEVEL 30
+#define T8_DEFAULT_TET_MAXLEVEL T8_DTET_MAXLEVEL
+#define T8_TET_CHILDREN T8_DTET_CHILDREN
 
-#define T8_DTET_ROOT_LEN(l) (1<<(T8_TET_MAX_LEVEL-(l)))
-#define T8_TET_CHILDREN 8
-
-typedef struct t8_default_tet
-{
-  int8_t              eclass;
-          /**< We store the element class for compatibility with the pyramid. */
-  int8_t              level;
-  /* add coordinates etc. here */
-  int8_t              type;
-  t8_default_coord_t  x, y, z;
-}
-t8_default_tet_t;
-
-typedef t8_default_tet_t   t8_dtet_t;
-typedef int8_t             t8_dtet_type_t;
-
-t8_default_tet_type_t t8_default_tet_get_type (const t8_dtet_t * t);
-
-void                t8_default_tet_set_type (t8_dtet_t * t,
-                                             t8_default_tet_type_t type);
-
-t8_tcoord_t         t8_default_tet_get_coordinate (const t8_dtet_t * t, int i);
-
-void                t8_default_tet_set_coordinate (t8_dtet_t * t, int i,
-                                                   t8_tcoord_t value);
+typedef t8_dtet_t   t8_default_tet_t;
+typedef t8_dtet_coord_t t8_default_tet_coord_t;
 
 t8_eclass_scheme_t *t8_default_scheme_new_tet (void);
 

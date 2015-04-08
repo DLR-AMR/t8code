@@ -21,7 +21,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "t8_default_tet_bits.h"
+#include "t8_dtet_bits.h"
 #include "t8_default_common.h"
 #include "t8_default_tet.h"
 
@@ -34,35 +34,34 @@ t8_default_tet_maxlevel (void)
 static              size_t
 t8_default_tet_size (void)
 {
-  return sizeof (t8_tet_t);
+  return sizeof (t8_default_tet_t);
+}
+static void
+t8_default_tet_parent (const t8_element_t * elem, t8_element_t * parent)
+{
+    const t8_default_tet_t *t = (const t8_default_tet_t *)(elem);
+    t8_default_tet_t *p = (t8_default_tet_t *)(parent);
+    t8_dtet_parent(t,p);
 }
 
-t8_default_tet_type_t
-t8_default_tet_get_type (const t8_tet_t * t)
+static void
+t8_default_tet_sibling (const t8_element_t * elem,
+                         int sibid, t8_element_t * sibling)
 {
-  return t->type;
+    const t8_default_tet_t *t = (const t8_default_tet_t *)(elem);
+    t8_default_tet_t *s = (t8_default_tet_t *)(sibling);
+
+    t8_dtet_sibling(t,sibid,s);
 }
 
-void
-t8_default_tet_set_type (t8_tet_t * t, t8_default_tet_type_t type)
+static void
+t8_default_tet_child (const t8_element_t * elem,
+                       int childid, t8_element_t * child)
 {
-  T8_ASSERT (0 <= type && type <= 5);
+    const t8_default_tet_t *t = (const t8_default_tet_t *)(elem);
+    t8_default_tet_t *c = (t8_default_tet_t *)(child);
 
-  t->type = type;
-}
-
-t8_tcoord_t
-t8_default_tet_get_coordinate (const t8_tet_t * t, int i)
-{
-  T8_ASSERT (0 <= i && i < 3);
-  return t->anchor_coordinates[i];
-}
-
-void
-t8_default_tet_set_coordinate (t8_tet_t * t, int i, t8_tcoord_t value)
-{
-  T8_ASSERT (0 <= i && i < 3);
-  t->anchor_coordinates[i] = value;
+    t8_dtet_child(t,childid,c);
 }
 
 t8_eclass_scheme_t *
@@ -81,7 +80,7 @@ t8_default_scheme_new_tet (void)
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;
   ts->ts_destroy = t8_default_scheme_mempool_destroy;
-  ts->ts_context = sc_mempool_new (sizeof (t8_tet_t));
+  ts->ts_context = sc_mempool_new (sizeof (t8_default_tet_t));
 
   return ts;
 }
