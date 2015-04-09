@@ -54,6 +54,7 @@ typedef struct t8_dtriangle
   /* add coordinates etc. here */
   int8_t              type;
   t8_dtriangle_coord_t x, y;
+  t8_dtriangle_coord_t n;
 }
 t8_dtriangle_t;
 

@@ -95,27 +95,41 @@ t8_dtriangle_compute_coords (const t8_dtriangle_t * t,
                              t8_dtriangle_coord_t coordinates[4][3])
 {
   t8_dtriangle_type_t type;
-  int                 ei, ej;
+  int                 ei;
+#ifdef T8_DTR_TO_DTET
+  int                 ej;
+#endif
   int                 i;
   t8_dtriangle_coord_t h;
 
   type = t->type;
   h = T8_DTRIANGLE_LEN (t->level);
+#ifndef T8_DTR_TO_DTET
+  ei = type;
+#else
   ei = type / 2;
   ej = (ei + ((type % 2 == 0) ? 2 : 1)) % 3;
+#endif
 
   coordinates[0][0] = t->x;
-  coordinates[0][1] = t->y;
-
-  //  coordinates[0][2] = t->z;
+  coordinates[0][1] = t->y;  
+#ifdef T8_DTR_TO_DTET
+  coordinates[0][2] = t->z;
+#endif
   for (i = 0; i < T8_DTRIANGLE_DIM; i++) {
     coordinates[1][i] = coordinates[0][i];
-    coordinates[2][i] = coordinates[0][i];
-    coordinates[3][i] = coordinates[0][i] + h;
+#ifndef T8_DTR_TO_DTET
+    coordinates[2][i] = coordinates[0][i]+h;
+#else
+    coordinates[2][i] = coordinates[0][i];    
+    coordinates[3][i] = coordinates[0][i]+h;
+#endif
   }
   coordinates[1][ei] += h;
+#ifdef T8_DTR_TO_DTET
   coordinates[2][ei] += h;
   coordinates[2][ej] += h;
+#endif
 }
 
 /* The childid here is the Bey child id,
@@ -124,11 +138,13 @@ t8_dtriangle_compute_coords (const t8_dtriangle_t * t,
  * TODO: We really need the Morton child id here; everything must be in SFC order.
  * It is possible that the function is called with
  * elem = child */
+
 void
 t8_dtriangle_child (const t8_dtriangle_t * elem, int childid,
                     t8_dtriangle_t * child)
 {
-
+#ifdef T8_DTR_TO_DTET
+   /* TODO: implement dimension independent */
   /* TODO: Das muss gehen, ohne alle Koordinaten auszurechnen */
 
   const t8_dtriangle_t *t = (const t8_dtriangle_t *) (elem);
@@ -143,9 +159,7 @@ t8_dtriangle_child (const t8_dtriangle_t * elem, int childid,
   if (childid == 0) {
     c->x = t->x;
     c->y = t->y;
-#ifdef T8_DTR_TO_DTET
     c->z = t->z;
-#endif
   }
   else {
     /* TODO: Das geht besser ueber ein Lookup-Array */
@@ -179,6 +193,9 @@ t8_dtriangle_child (const t8_dtriangle_t * elem, int childid,
   c->type = t8_dtriangle_type_of_child[t->type][childid];
 
   c->level = t->level + 1;
+#else
+  SC_ABORT("Not implemented");
+#endif
 }
 
 /* The sibid here is the Bey child id of the parent.
@@ -330,6 +347,9 @@ t8_dtriangle_is_ancestor (const t8_dtriangle_t * t, const t8_dtriangle_t * c)
   /* TODO: implement */
   SC_ABORT ("Not implemented");
 
-//  return (exclorx == 0 && exclory == 0 && exclorz == 0);
-  return (exclorx == 0 && exclory == 0);
+  return (exclorx == 0 && exclory == 0
+#ifdef T8_DTR_TO_DTET
+          && exclorz == 0
+#endif
+          );
 }
