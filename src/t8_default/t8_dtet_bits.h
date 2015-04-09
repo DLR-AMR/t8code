@@ -23,6 +23,8 @@
 
 /** \file t8_dtet_bits.h
  * TODO: Document this.
+ * TODO: Run make doxygen and grep for files.
+ *       Also document all arguments of functions.
  */
 
 #ifndef T8_DTET_BITS_H

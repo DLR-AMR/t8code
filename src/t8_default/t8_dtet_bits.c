@@ -25,6 +25,7 @@
 
 typedef int8_t      t8_dtet_cube_id_t;
 
+/* TODO: make this extern const int */
 int                 t8_tet_cid_type_to_parenttype[8][6] = {
   {0, 1, 2, 3, 4, 5},
   {0, 1, 1, 1, 0, 0},
@@ -38,6 +39,7 @@ int                 t8_tet_cid_type_to_parenttype[8][6] = {
 
 /* In dependence of a type x give the type of
  * the child with Bey number y */
+/* TODO: make this extern const int */
 int                 t8_dtet_type_of_child[6][8] = {
   {0, 0, 0, 0, 4, 5, 2, 1},
   {1, 1, 1, 1, 3, 2, 5, 0},
@@ -107,12 +109,7 @@ t8_dtet_compute_coords (const t8_dtet_t * t,
   type = t->type;
   h = T8_DTET_LEN (t->level);
   ei = type / 2;
-  if (type % 2 == 0) {
-    ej = (ei + 2) % 3;
-  }
-  else {
-    ej = (ei + 1) % 3;
-  }
+  ej = (ei + ((type % 2 == 0) ? 2 : 1)) % 3;
 
   coordinates[0][0] = t->x;
   coordinates[0][1] = t->y;
@@ -128,7 +125,8 @@ t8_dtet_compute_coords (const t8_dtet_t * t,
 }
 
 /* The childid here is the Bey child id,
- * not the Morton child id
+ * not the Morton child id (TODO: define this)
+ * TODO: We really need the Morton child id here; everything must be in SFC order.
  * It is possible that the function is called with
  * elem = child */
 void
@@ -136,12 +134,12 @@ t8_dtet_child (const t8_dtet_t * elem, int childid, t8_dtet_t * child)
 {
   const t8_dtet_t    *t = (const t8_dtet_t *) (elem);
   t8_dtet_t          *c = (t8_dtet_t *) (child);
+  /* TODO: Das muss gehen, ohne alle Koordinaten auszurechnen */
   t8_dtet_coord_t     t_coordinates[4][3];
-  t8_dtet_type_t      type;
   int                 coord2;
 
   T8_ASSERT (t->level < T8_DTET_MAXLEVEL);
-  T8_ASSERT (0 <= childid && childid < 8);
+  T8_ASSERT (0 <= childid && childid < T8_DTET_CHILDREN);
 
   /* Compute anchor coordinates of child */
   if (childid == 0) {
@@ -150,6 +148,7 @@ t8_dtet_child (const t8_dtet_t * elem, int childid, t8_dtet_t * child)
     c->z = t->z;
   }
   else {
+    /* TODO: Das geht besser ueber ein Lookup-Array */
     switch (childid) {
     case 1:
     case 4:
@@ -170,21 +169,23 @@ t8_dtet_child (const t8_dtet_t * elem, int childid, t8_dtet_t * child)
     /* i-th anchor coordinate of child is (X_(0,i)+X_(coord2,i))/2
      * where X_(i,j) is the j-th coordinate of t's ith node */
     t8_dtet_compute_coords (t, t_coordinates);
+    /* TODO: wie gesagt geht das, ohne ALLE Koordinaten zu beschaffen? */
     c->x = (t_coordinates[0][0] + t_coordinates[coord2][0]) >> 1;
     c->y = (t_coordinates[0][1] + t_coordinates[coord2][1]) >> 1;
     c->z = (t_coordinates[0][2] + t_coordinates[coord2][2]) >> 1;
   }
 
   /* Compute type of child */
-  type = t->type;
-  c->type = t8_dtet_type_of_child[type][childid];
+  c->type = t8_dtet_type_of_child[t->type][childid];
 
   c->level = t->level + 1;
 }
 
 /* The sibid here is the Bey child id of the parent.
  * TODO: Implement this algorithm directly w/o using
- * parent and child */
+ * parent and child
+ * TODO: CB agrees, make this as non-redundant as possible
+ */
 void
 t8_dtet_sibling (const t8_dtet_t * elem, int sibid, t8_dtet_t * sibling)
 {
@@ -205,7 +206,9 @@ t8_dtet_face_neighbour (const t8_dtet_t * t, t8_dtet_t * n, int face)
   int8_t              level;
   t8_dtet_coord_t     coords[3];
 
-  T8_ASSERT (0 <= face && face < 4);
+  /* TODO: document what happens if outside of root tet */
+
+  T8_ASSERT (0 <= face && face < T8_DTET_FACES);
 
   n->level = level = t->level;
 
