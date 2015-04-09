@@ -26,7 +26,7 @@
 
 typedef int8_t      t8_dtet_cube_id_t;
 
-int                 t8_tet_cid_type_to_parenttype[8][6] = {
+int                 t8_dtet_cid_type_to_parenttype[8][6] = {
   {0, 1, 2, 3, 4, 5},
   {0, 1, 1, 1, 0, 0},
   {2, 2, 2, 3, 3, 3},
@@ -88,7 +88,7 @@ t8_dtet_parent (const t8_dtet_t * t, t8_dtet_t * parent)
 
   /* Compute type of parent */
   cid = t8_dtet_compute_cubeid (t, t->level);
-  parent->type = t8_tet_cid_type_to_parenttype[cid][t->type];
+  parent->type = t8_dtet_cid_type_to_parenttype[cid][t->type];
   /* Set coordinates of parent */
   h = T8_DTET_ROOT_LEN (t->level);
   parent->x = t->x & ~h;
@@ -249,4 +249,46 @@ t8_dtet_face_neighbour (const t8_dtet_t * t, t8_dtet_t * n, int face)
   n->z = coords[2];
   n->type = type_new;
   return ret;
+}
+
+/* we check if t1 and t2 lie in the same subcube and have
+ * the same level and parent type */
+int
+t8_dtet_is_sibling (const t8_dtet_t * t1, const t8_dtet_t * t2)
+{
+  t8_dtet_coord_t     exclorx, exclory, exclorz;
+  t8_dtet_cube_id_t   cid1, cid2;
+
+  if (t1->level == 0) {
+    return 0;
+  }
+
+  exclorx = t1->x ^ t2->x;
+  exclory = t1->y ^ t2->y;
+  exclorz = t1->z ^ t2->z;
+  cid1 = t8_dtet_compute_cubeid (t1, t1->level);
+  cid2 = t8_dtet_compute_cubeid (t2, t2->level);
+
+  return
+    (t1->level == t2->level) &&
+    ((exclorx & ~T8_DTET_ROOT_LEN (t1->level)) == 0) &&
+    ((exclory & ~T8_DTET_ROOT_LEN (t1->level)) == 0) &&
+    ((exclorz & ~T8_DTET_ROOT_LEN (t1->level)) == 0) &&
+    t8_dtet_cid_type_to_parenttype[cid1][t1->type] ==
+    t8_dtet_cid_type_to_parenttype[cid2][t2->type] && t1->type != t2->type
+    && 1;
+}
+
+int
+t8_dtet_is_parent (const t8_dtet_t * t, const t8_dtet_t * c)
+{
+  t8_dtet_cube_id_t   cid;
+
+  cid = t8_dtet_compute_cubeid (c, c->level);
+  return
+    (t->level + 1 == c->level) &&
+    (t->x == (c->x & ~T8_DTET_ROOT_LEN (c->level))) &&
+    (t->y == (c->y & ~T8_DTET_ROOT_LEN (c->level))) &&
+    (t->z == (c->z & ~T8_DTET_ROOT_LEN (c->level))) &&
+    t->type == t8_dtet_cid_type_to_parenttype[cid][c->type] && 1;
 }

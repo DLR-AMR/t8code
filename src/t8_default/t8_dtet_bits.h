@@ -80,4 +80,21 @@ void                t8_dtet_sibling (const t8_dtet_t * elem,
 int                 t8_dtet_face_neighbour (const t8_dtet_t * t,
                                             t8_dtet_t * n, int face);
 
+/** Test if two tetrahedra are siblings.
+ * \param [in] t1 First tetrahedron to be tested.
+ * \param [in] t2 Second tetrahedron to be tested.
+ * \return true if \a t1 is unequal to and a sibling of \a t2.
+ */
+int
+ 
+              t8_dtet_is_sibling (const t8_dtet_t * t1, const t8_dtet_t * t2);
+
+/** Test if a tetrahedron is the parent of another tetrahedron.
+ * \param [in] t tetrahedron to be tested.
+ * \param [in] c Possible child tetrahedron.
+ * \return true if \a t is the parent of \a c.
+ */
+int                 t8_dtet_is_parent (const t8_dtet_t * t,
+                                       const t8_dtet_t * c);
+
 #endif /* T8_DTET_BITS_H */
