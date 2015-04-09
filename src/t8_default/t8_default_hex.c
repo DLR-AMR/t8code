@@ -31,6 +31,12 @@ t8_default_hex_size (void)
   return sizeof (t8_phex_t);
 }
 
+static int
+t8_default_hex_maxlevel (void)
+{
+  return P8EST_QMAXLEVEL;
+}
+
 static void
 t8_default_hex_sibling (const t8_element_t * elem,
                         int sibid, t8_element_t * sibling)
@@ -66,6 +72,7 @@ t8_default_scheme_new_hex (void)
   ts = T8_ALLOC (t8_eclass_scheme_t, 1);
 
   ts->elem_size = t8_default_hex_size;
+  ts->elem_maxlevel = t8_default_hex_maxlevel;
 
   ts->elem_parent = (t8_element_parent_t) p8est_quadrant_parent;
   ts->elem_sibling = t8_default_hex_sibling;

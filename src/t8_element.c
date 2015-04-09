@@ -105,6 +105,13 @@ t8_element_size (t8_eclass_scheme_t * ts)
   return ts->elem_size ();
 }
 
+int
+t8_element_maxlevel (t8_eclass_scheme_t * ts)
+{
+  T8_ASSERT (ts != NULL && ts->elem_maxlevel != NULL);
+  return ts->elem_maxlevel ();
+}
+
 void
 t8_element_parent (t8_eclass_scheme_t * ts,
                    const t8_element_t * elem, t8_element_t * parent)

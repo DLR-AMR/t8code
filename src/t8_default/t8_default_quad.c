@@ -45,6 +45,12 @@ t8_default_quad_size (void)
   return sizeof (t8_pquad_t);
 }
 
+static int
+t8_default_quad_maxlevel (void)
+{
+  return P4EST_QMAXLEVEL;
+}
+
 static void
 t8_default_quad_copy_surround (const p4est_quadrant_t * q,
                                p4est_quadrant_t * r)
@@ -132,6 +138,7 @@ t8_default_scheme_new_quad (void)
   ts = T8_ALLOC (t8_eclass_scheme_t, 1);
 
   ts->elem_size = t8_default_quad_size;
+  ts->elem_maxlevel = t8_default_quad_maxlevel;
 
   ts->elem_parent = t8_default_quad_parent;
   ts->elem_sibling = t8_default_quad_sibling;

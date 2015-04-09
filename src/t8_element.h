@@ -50,6 +50,9 @@ typedef struct t8_eclass_scheme t8_eclass_scheme_t;
 typedef size_t      (*t8_element_size_t) (void);
 /* *INDENT-ON* */
 
+/** Return the maximum level allowed for this element class. */
+typedef int         (*t8_element_maxlevel_t) (void);
+
 /** Construct the parent of a given element. */
 typedef void        (*t8_element_parent_t) (const t8_element_t * elem,
                                             t8_element_t * parent);
@@ -90,6 +93,7 @@ struct t8_eclass_scheme
 {
   /* these element routines are context free */
   t8_element_size_t   elem_size;        /**< Compute element size in bytes. */
+  t8_element_maxlevel_t elem_maxlevel;  /**< Compute element maximum level. */
   t8_element_parent_t elem_parent;      /**< Compute the parent element. */
   t8_element_sibling_t elem_sibling;    /**< Compute a given sibling element. */
   t8_element_child_t  elem_child;       /**< Compute a child element. */
@@ -148,8 +152,11 @@ void                t8_eclass_boundary_destroy (t8_scheme_t * scheme,
                                                 int min_dim, int length,
                                                 t8_element_t ** boundary);
 
-/** Return the size of an element of a given class. */
+/** Return the size of any element of a given class. */
 size_t              t8_element_size (t8_eclass_scheme_t * ts);
+
+/** Return the maximum allowed level for any element of a given class. */
+int                 t8_element_maxlevel (t8_eclass_scheme_t * ts);
 
 void                t8_element_parent (t8_eclass_scheme_t * ts,
                                        const t8_element_t * elem,
