@@ -51,8 +51,8 @@ int                 t8_dtet_type_of_child[6][8] = {
 static              t8_dtet_cube_id_t
 t8_dtet_compute_cubeid (const t8_dtet_t * t, int level)
 {
-  t8_dtet_cube_id_t id = 0;
-  t8_dtet_coord_t         h;
+  t8_dtet_cube_id_t   id = 0;
+  t8_dtet_coord_t     h;
 
   T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
   h = T8_DTET_ROOT_LEN (level);
@@ -68,19 +68,18 @@ t8_dtet_compute_cubeid (const t8_dtet_t * t, int level)
   return id;
 }
 
-int                 t8_dtet_is_equal (const t8_dtet_t *t1,
-                                             const t8_dtet_t *t2){
-    return (t1->level == t1->level && t1->type == t2->type &&
-            t1->x == t1->x &&
-            t1->y == t1->y &&
-            t1->z == t1->z);
+int
+t8_dtet_is_equal (const t8_dtet_t * t1, const t8_dtet_t * t2)
+{
+  return (t1->level == t1->level && t1->type == t2->type &&
+          t1->x == t1->x && t1->y == t1->y && t1->z == t1->z);
 }
 
 void
-t8_dtet_parent (const t8_dtet_t *t, t8_dtet_t *parent)
+t8_dtet_parent (const t8_dtet_t * t, t8_dtet_t * parent)
 {
-  t8_dtet_cube_id_t cid;
-  t8_dtet_coord_t         h;
+  t8_dtet_cube_id_t   cid;
+  t8_dtet_coord_t     h;
 
   T8_ASSERT (t->level > 0);
 
@@ -99,12 +98,12 @@ t8_dtet_parent (const t8_dtet_t *t, t8_dtet_t *parent)
 
 void
 t8_dtet_compute_coords (const t8_dtet_t * t,
-                               t8_dtet_coord_t coordinates[4][3])
+                        t8_dtet_coord_t coordinates[4][3])
 {
-  t8_dtet_type_t type;
+  t8_dtet_type_t      type;
   int                 ei, ej;
   int                 i;
-  t8_dtet_coord_t         h;
+  t8_dtet_coord_t     h;
 
   type = t->type;
   h = T8_DTET_ROOT_LEN (t->level);
@@ -134,13 +133,12 @@ t8_dtet_compute_coords (const t8_dtet_t * t,
  * It is possible that the function is called with
  * elem = child */
 void
-t8_dtet_child (const t8_dtet_t * elem, int childid,
-                      t8_dtet_t * child)
+t8_dtet_child (const t8_dtet_t * elem, int childid, t8_dtet_t * child)
 {
-  const t8_dtet_t     *t = (const t8_dtet_t *) (elem);
-  t8_dtet_t           *c = (t8_dtet_t *) (child);
-  t8_dtet_coord_t         t_coordinates[4][3];
-  t8_dtet_type_t type;
+  const t8_dtet_t    *t = (const t8_dtet_t *) (elem);
+  t8_dtet_t          *c = (t8_dtet_t *) (child);
+  t8_dtet_coord_t     t_coordinates[4][3];
+  t8_dtet_type_t      type;
   int                 coord2;
 
   T8_ASSERT (t->level < T8_DTET_MAXLEVEL);
@@ -148,9 +146,9 @@ t8_dtet_child (const t8_dtet_t * elem, int childid,
 
   /* Compute anchor coordinates of child */
   if (childid == 0) {
-      c->x = t->x;
-      c->y = t->y;
-      c->z = t->z;
+    c->x = t->x;
+    c->y = t->y;
+    c->z = t->z;
   }
   else {
     switch (childid) {
@@ -189,8 +187,7 @@ t8_dtet_child (const t8_dtet_t * elem, int childid,
  * TODO: Implement this algorithm directly w/o using
  * parent and child */
 void
-t8_dtet_sibling (const t8_dtet_t * elem, int sibid,
-                        t8_dtet_t * sibling)
+t8_dtet_sibling (const t8_dtet_t * elem, int sibid, t8_dtet_t * sibling)
 {
   T8_ASSERT (0 <= sibid && sibid < T8_DTET_CHILDREN);
   T8_ASSERT (((const t8_dtet_t *) (elem))->level > 0);
@@ -207,7 +204,7 @@ t8_dtet_face_neighbour (const t8_dtet_t * t, t8_dtet_t * n, int face)
   int                 sign;
   int                 ret = -1;
   int8_t              level;
-  t8_dtet_coord_t         coords[3];
+  t8_dtet_coord_t     coords[3];
 
   T8_ASSERT (0 <= face && face < 4);
 

@@ -37,7 +37,7 @@ typedef struct t8_dtet
   int8_t              level;
   /* add coordinates etc. here */
   int8_t              type;
-  t8_dtet_coord_t  x, y, z;
+  t8_dtet_coord_t     x, y, z;
 }
 t8_dtet_t;
 

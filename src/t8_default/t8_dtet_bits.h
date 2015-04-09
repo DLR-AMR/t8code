@@ -33,8 +33,8 @@
 /** Test if two tetrahedra have the same coordinates, type and level.
  * \return true if \a t1 describes the same tetrahedron as \a t2.
  */
-int                 t8_dtet_is_equal (const t8_dtet_t *t1,
-                                             const t8_dtet_t *t2);
+int                 t8_dtet_is_equal (const t8_dtet_t * t1,
+                                      const t8_dtet_t * t2);
 
 /** Compute the parent of a tetrahedron.
  * \param [in]  elem Input tetrahedron.
@@ -42,7 +42,7 @@ int                 t8_dtet_is_equal (const t8_dtet_t *t1,
  *                  be filled with the data of elem's parent.
  * \note \a elem may point to the same tetrahedron as \a parent.
  */
-void                t8_dtet_parent(const t8_dtet_t *t, t8_dtet_t *parent);
+void                t8_dtet_parent (const t8_dtet_t * t, t8_dtet_t * parent);
 
 /** Compute the coordinates of the four vertices of a tetrahedron.
  * \param [in] t    Input tetrahedron.
@@ -50,8 +50,8 @@ void                t8_dtet_parent(const t8_dtet_t *t, t8_dtet_t *parent);
  * 		     will be filled with the coordinates of t's vertices.
  */
 void                t8_dtet_compute_coords (const t8_dtet_t * t,
-                                                   t8_dtet_coord_t
-                                                   coordinates[4][3]);
+                                            t8_dtet_coord_t
+                                            coordinates[4][3]);
 
 /** Compute the childid-th child in Bey order of a tetrahedron t.
  * \param [in] t    Input tetrahedron.
@@ -60,7 +60,7 @@ void                t8_dtet_compute_coords (const t8_dtet_t * t,
  * 		    with the date of t's childid-th child.
  */
 void                t8_dtet_child (const t8_dtet_t * elem,
-                                          int childid, t8_dtet_t * child);
+                                   int childid, t8_dtet_t * child);
 
 /** Compute a specific sibling of a tetrahedron.
  * \param [in]     elem  Input tetrahedron.
@@ -69,8 +69,7 @@ void                t8_dtet_child (const t8_dtet_t * elem,
  * \param [in]     sibid The id of the sibling computed, 0..7 in Bey order.
  */
 void                t8_dtet_sibling (const t8_dtet_t * elem,
-                                            int sibid,
-                                            t8_dtet_t * sibling);
+                                     int sibid, t8_dtet_t * sibling);
 
 /** Compute the face neighbor of a tetrahedron.
  * \param [in]     t      Input tetrahedron.
@@ -79,6 +78,6 @@ void                t8_dtet_sibling (const t8_dtet_t * elem,
  * \note \a t may point to the same tetrahedron as \a n.
  */
 int                 t8_dtet_face_neighbour (const t8_dtet_t * t,
-                                                   t8_dtet_t * n, int face);
+                                            t8_dtet_t * n, int face);
 
 #endif /* T8_DTET_BITS_H */

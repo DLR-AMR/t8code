@@ -36,32 +36,33 @@ t8_default_tet_size (void)
 {
   return sizeof (t8_default_tet_t);
 }
+
 static void
 t8_default_tet_parent (const t8_element_t * elem, t8_element_t * parent)
 {
-    const t8_default_tet_t *t = (const t8_default_tet_t *)(elem);
-    t8_default_tet_t *p = (t8_default_tet_t *)(parent);
-    t8_dtet_parent(t,p);
+  const t8_default_tet_t *t = (const t8_default_tet_t *) (elem);
+  t8_default_tet_t   *p = (t8_default_tet_t *) (parent);
+  t8_dtet_parent (t, p);
 }
 
 static void
 t8_default_tet_sibling (const t8_element_t * elem,
-                         int sibid, t8_element_t * sibling)
+                        int sibid, t8_element_t * sibling)
 {
-    const t8_default_tet_t *t = (const t8_default_tet_t *)(elem);
-    t8_default_tet_t *s = (t8_default_tet_t *)(sibling);
+  const t8_default_tet_t *t = (const t8_default_tet_t *) (elem);
+  t8_default_tet_t   *s = (t8_default_tet_t *) (sibling);
 
-    t8_dtet_sibling(t,sibid,s);
+  t8_dtet_sibling (t, sibid, s);
 }
 
 static void
 t8_default_tet_child (const t8_element_t * elem,
-                       int childid, t8_element_t * child)
+                      int childid, t8_element_t * child)
 {
-    const t8_default_tet_t *t = (const t8_default_tet_t *)(elem);
-    t8_default_tet_t *c = (t8_default_tet_t *)(child);
+  const t8_default_tet_t *t = (const t8_default_tet_t *) (elem);
+  t8_default_tet_t   *c = (t8_default_tet_t *) (child);
 
-    t8_dtet_child(t,childid,c);
+  t8_dtet_child (t, childid, c);
 }
 
 t8_eclass_scheme_t *
