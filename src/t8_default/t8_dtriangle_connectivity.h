@@ -21,27 +21,25 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_dtet.h */
+/** \file t8_dtriangle_connectivity.h
+ */
 
-#ifndef T8_DTET_H
-#define T8_DTET_H
+#ifndef T8_DTRIANGLE_CONNECTIVITY_H
+#define T8_DTRIANGLE_CONNECTIVITY_H
 
-#define T8_DTET_MAXLEVEL 30
-#define T8_DTET_ROOT_LEN(l) (1<<(T8_DTET_MAXLEVEL-(l)))
+/** The spatial dimension */
+#define T8_DTRIANGLE_DIM 2
+/** The number of faces of a triangle */
+#define T8_DTRIANGLE_FACES (T8_DTRIANGLE_DIM +1)
+/** The number of children of a triangle
+ *
+ * also the nmber of corners */
+#define T8_DTRIANGLE_CHILDREN 4
 
-typedef int32_t     t8_dtet_coord_t;
+/** Store the type of parent for each (cube-id,type) combination. */
+extern const int    t8_dtriangle_cid_type_to_parenttype[4][2];
 
-typedef struct t8_dtet
-{
-  int8_t              eclass;
-          /**< We store the element class for compatibility with the pyramid. */
-  int8_t              level;
-  /* add coordinates etc. here */
-  int8_t              type;
-  t8_dtet_coord_t     x, y, z;
-}
-t8_dtet_t;
+/** Store the type of child for each (type,child number) combination. */
+extern const int    t8_dtriangle_type_of_child[2][4];
 
-typedef int8_t      t8_dtet_type_t;
-
-#endif /* T8_DTET_H */
+#endif /* T8_DTRIANGLE_CONNECTIVITY_H */

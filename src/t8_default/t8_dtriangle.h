@@ -21,27 +21,23 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_dtet.h */
+#ifndef T8_DTRIANGLE_H
+#define T8_DTRIANGLE_H
 
-#ifndef T8_DTET_H
-#define T8_DTET_H
+#define T8_DTRIANGLE_MAXLEVEL 30
+#define T8_DTRIANGLE_ROOT_LEN(l) (1<<(T8_DTRIANGLE_MAXLEVEL-(l)))
 
-#define T8_DTET_MAXLEVEL 30
-#define T8_DTET_ROOT_LEN(l) (1<<(T8_DTET_MAXLEVEL-(l)))
+typedef int32_t     t8_dtriangle_coord_t;
 
-typedef int32_t     t8_dtet_coord_t;
-
-typedef struct t8_dtet
+typedef struct t8_dtriangle
 {
-  int8_t              eclass;
-          /**< We store the element class for compatibility with the pyramid. */
   int8_t              level;
   /* add coordinates etc. here */
   int8_t              type;
-  t8_dtet_coord_t     x, y, z;
+  t8_dtriangle_coord_t x, y;
 }
-t8_dtet_t;
+t8_dtriangle_t;
 
-typedef int8_t      t8_dtet_type_t;
+typedef int8_t      t8_dtriangle_type_t;
 
-#endif /* T8_DTET_H */
+#endif /* T8_DTRIANGLE_H */

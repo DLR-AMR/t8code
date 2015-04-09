@@ -21,27 +21,18 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_dtet.h */
+#include "t8_dtriangle_connectivity.h"
 
-#ifndef T8_DTET_H
-#define T8_DTET_H
+const int           t8_dtriangle_cid_type_to_parenttype[4][2] = {
+  {0, 1},
+  {0, 0},
+  {1, 1},
+  {0, 1}
+};
 
-#define T8_DTET_MAXLEVEL 30
-#define T8_DTET_ROOT_LEN(l) (1<<(T8_DTET_MAXLEVEL-(l)))
-
-typedef int32_t     t8_dtet_coord_t;
-
-typedef struct t8_dtet
-{
-  int8_t              eclass;
-          /**< We store the element class for compatibility with the pyramid. */
-  int8_t              level;
-  /* add coordinates etc. here */
-  int8_t              type;
-  t8_dtet_coord_t     x, y, z;
-}
-t8_dtet_t;
-
-typedef int8_t      t8_dtet_type_t;
-
-#endif /* T8_DTET_H */
+/* In dependence of a type x give the type of
+ * the child with Bey number y */
+const int           t8_dtriangle_type_of_child[2][4] = {
+  {0, 0, 0, 1},
+  {1, 1, 1, 0}
+};
