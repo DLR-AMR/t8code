@@ -30,6 +30,8 @@
 #include <t8_element.h>
 #include "t8_dtriangle.h"
 
+T8_EXTERN_C_BEGIN ();
+
 /** Test if two triangles have the same coordinates, type and level.
  * \return true if \a t1 describes the same triangle as \a t2.
  */
@@ -106,5 +108,7 @@ int                 t8_dtriangle_is_parent (const t8_dtriangle_t * t,
  */
 int                 t8_dtriangle_is_ancestor (const t8_dtriangle_t * t,
                                               const t8_dtriangle_t * c);
+
+T8_EXTERN_C_END ();
 
 #endif /* T8_DTRIANGLE_BITS_H */

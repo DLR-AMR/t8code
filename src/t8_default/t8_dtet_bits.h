@@ -90,9 +90,8 @@ int                 t8_dtet_face_neighbour (const t8_dtet_t * t,
  * \param [in] t2 Second tetrahedron to be tested.
  * \return true if \a t1 is unequal to and a sibling of \a t2.
  */
-int
-t8_dtet_is_sibling (const t8_dtet_t* t1,
-                    const t8_dtet_t * t2);
+int                 t8_dtet_is_sibling (const t8_dtet_t * t1,
+                                        const t8_dtet_t * t2);
 
 /** Test if a tetrahedron is the parent of another tetrahedron.
  * \param [in] t tetrahedron to be tested.
@@ -100,7 +99,7 @@ t8_dtet_is_sibling (const t8_dtet_t* t1,
  * \return true if \a t is the parent of \a c.
  */
 int                 t8_dtet_is_parent (const t8_dtet_t * t,
-                                              const t8_dtet_t * c);
+                                       const t8_dtet_t * c);
 
 /** Test if a tetrahedron is an ancestor of another tetrahedron.
  * \param [in] t tetrahedron to be tested.
@@ -108,7 +107,7 @@ int                 t8_dtet_is_parent (const t8_dtet_t * t,
  * \return true if \a t is unequal to and an ancestor of \a c.
  */
 int                 t8_dtet_is_ancestor (const t8_dtet_t * t,
-                                                const t8_dtet_t * c);
+                                         const t8_dtet_t * c);
 
 T8_EXTERN_C_END ();
 

@@ -39,7 +39,7 @@ compute_cubeid (const t8_dtriangle_t * t, int level)
   t8_dtriangle_coord_t h;
 
   T8_ASSERT (0 <= level && level <= T8_DTRIANGLE_MAXLEVEL);
-  h = T8_DTRIANGLE_ROOT_LEN (level);
+  h = T8_DTRIANGLE_LEN (level);
 
   if (level == 0) {
     return 0;
@@ -82,7 +82,7 @@ t8_dtriangle_parent (const t8_dtriangle_t * t, t8_dtriangle_t * parent)
   cid = compute_cubeid (t, t->level);
   parent->type = t8_dtriangle_cid_type_to_parenttype[cid][t->type];
   /* Set coordinates of parent */
-  h = T8_DTRIANGLE_ROOT_LEN (t->level);
+  h = T8_DTRIANGLE_LEN (t->level);
   parent->x = t->x & ~h;
   parent->y = t->y & ~h;
 #ifdef T8_DTR_TO_DTET
@@ -100,14 +100,9 @@ t8_dtriangle_compute_coords (const t8_dtriangle_t * t,
   t8_dtriangle_coord_t h;
 
   type = t->type;
-  h = T8_DTRIANGLE_ROOT_LEN (t->level);
+  h = T8_DTRIANGLE_LEN (t->level);
   ei = type / 2;
-  if (type % 2 == 0) {
-    ej = (ei + 2) % 3;
-  }
-  else {
-    ej = (ei + 1) % 3;
-  }
+  ej = (ei + ((type % 2 == 0) ? 2 : 1)) % 3;
 
   coordinates[0][0] = t->x;
   coordinates[0][1] = t->y;
@@ -125,20 +120,24 @@ t8_dtriangle_compute_coords (const t8_dtriangle_t * t,
 
 /* The childid here is the Bey child id,
  * not the Morton child id
+ * (TODO: define this)
+ * TODO: We really need the Morton child id here; everything must be in SFC order.
  * It is possible that the function is called with
  * elem = child */
 void
 t8_dtriangle_child (const t8_dtriangle_t * elem, int childid,
                     t8_dtriangle_t * child)
 {
+
+  /* TODO: Das muss gehen, ohne alle Koordinaten auszurechnen */
+
   const t8_dtriangle_t *t = (const t8_dtriangle_t *) (elem);
   t8_dtriangle_t     *c = (t8_dtriangle_t *) (child);
   t8_dtriangle_coord_t t_coordinates[4][3];
-  t8_dtriangle_type_t type;
   int                 coord2;
 
   T8_ASSERT (t->level < T8_DTRIANGLE_MAXLEVEL);
-  T8_ASSERT (0 <= childid && childid < 8);
+  T8_ASSERT (0 <= childid && childid < T8_DTRIANGLE_CHILDREN);
 
   /* Compute anchor coordinates of child */
   if (childid == 0) {
@@ -149,6 +148,7 @@ t8_dtriangle_child (const t8_dtriangle_t * elem, int childid,
 #endif
   }
   else {
+    /* TODO: Das geht besser ueber ein Lookup-Array */
     switch (childid) {
     case 1:
     case 4:
@@ -169,21 +169,22 @@ t8_dtriangle_child (const t8_dtriangle_t * elem, int childid,
     /* i-th anchor coordinate of child is (X_(0,i)+X_(coord2,i))/2
      * where X_(i,j) is the j-th coordinate of t's ith node */
     t8_dtriangle_compute_coords (t, t_coordinates);
+    /* TODO: wie gesagt geht das, ohne ALLE Koordinaten zu beschaffen? */
     c->x = (t_coordinates[0][0] + t_coordinates[coord2][0]) >> 1;
     c->y = (t_coordinates[0][1] + t_coordinates[coord2][1]) >> 1;
     //   c->z = (t_coordinates[0][2] + t_coordinates[coord2][2]) >> 1;
   }
 
   /* Compute type of child */
-  type = t->type;
-  c->type = t8_dtriangle_type_of_child[type][childid];
+  c->type = t8_dtriangle_type_of_child[t->type][childid];
 
   c->level = t->level + 1;
 }
 
 /* The sibid here is the Bey child id of the parent.
  * TODO: Implement this algorithm directly w/o using
- * parent and child */
+ * parent and child
+ * TODO: CB agrees, make this as non-redundant as possible */
 void
 t8_dtriangle_sibling (const t8_dtriangle_t * elem, int sibid,
                       t8_dtriangle_t * sibling)
@@ -202,13 +203,14 @@ int
 t8_dtriangle_face_neighbour (const t8_dtriangle_t * t, t8_dtriangle_t * n,
                              int face)
 {
+  /* TODO: document what happens if outside of root tet */
   int                 type_new, type_old;
   int                 sign;
   int                 ret = -1;
   int8_t              level;
   t8_dtriangle_coord_t coords[3];
 
-  T8_ASSERT (0 <= face && face < 4);
+  T8_ASSERT (0 <= face && face < T8_DTRIANGLE_FACES);
 
   n->level = level = t->level;
 
@@ -231,7 +233,7 @@ t8_dtriangle_face_neighbour (const t8_dtriangle_t * t, t8_dtriangle_t * n,
       /* type: 0,1 --> x+1
        *       2,3 --> y+1
        *       4,5 --> z+1 */
-      coords[type_old / 2] += T8_DTRIANGLE_ROOT_LEN (level);
+      coords[type_old / 2] += T8_DTRIANGLE_LEN (level);
       type_new += (type_new % 2 == 0 ? 4 : 2);
     }
     else {                      /* face == 3 */
@@ -239,7 +241,7 @@ t8_dtriangle_face_neighbour (const t8_dtriangle_t * t, t8_dtriangle_t * n,
       /* type: 1,2 --> z-1
        *       3,4 --> x-1
        *       5,0 --> y-1 */
-      coords[((type_new + 3) % 6) / 2] -= T8_DTRIANGLE_ROOT_LEN (level);
+      coords[((type_new + 3) % 6) / 2] -= T8_DTRIANGLE_LEN (level);
       type_new += (type_new % 2 == 0 ? 2 : 4);
     }
     type_new %= 6;
@@ -280,10 +282,10 @@ t8_dtriangle_is_sibling (const t8_dtriangle_t * t1, const t8_dtriangle_t * t2)
 
   return
     (t1->level == t2->level) &&
-    ((exclorx & ~T8_DTRIANGLE_ROOT_LEN (t1->level)) == 0) &&
-    ((exclory & ~T8_DTRIANGLE_ROOT_LEN (t1->level)) == 0) &&
+    ((exclorx & ~T8_DTRIANGLE_LEN (t1->level)) == 0) &&
+    ((exclory & ~T8_DTRIANGLE_LEN (t1->level)) == 0) &&
 #ifdef T8_DTR_TO_DTET
-    ((exclorz & ~T8_DTRIANGLE_ROOT_LEN (t1->level)) == 0) &&
+    ((exclorz & ~T8_DTRIANGLE_LEN (t1->level)) == 0) &&
 #endif
     t8_dtriangle_cid_type_to_parenttype[cid1][t1->type] ==
     t8_dtriangle_cid_type_to_parenttype[cid2][t2->type]
@@ -298,10 +300,10 @@ t8_dtriangle_is_parent (const t8_dtriangle_t * t, const t8_dtriangle_t * c)
   cid = compute_cubeid (c, c->level);
   return
     (t->level + 1 == c->level) &&
-    (t->x == (c->x & ~T8_DTRIANGLE_ROOT_LEN (c->level))) &&
-    (t->y == (c->y & ~T8_DTRIANGLE_ROOT_LEN (c->level))) &&
+    (t->x == (c->x & ~T8_DTRIANGLE_LEN (c->level))) &&
+    (t->y == (c->y & ~T8_DTRIANGLE_LEN (c->level))) &&
 #ifdef T8_DTR_TO_DTET
-    (t->z == (c->z & ~T8_DTRIANGLE_ROOT_LEN (c->level))) &&
+    (t->z == (c->z & ~T8_DTRIANGLE_LEN (c->level))) &&
 #endif
     t->type == t8_dtriangle_cid_type_to_parenttype[cid][c->type] && 1;
 }

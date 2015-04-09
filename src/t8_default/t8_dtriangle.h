@@ -24,11 +24,19 @@
 #ifndef T8_DTRIANGLE_H
 #define T8_DTRIANGLE_H
 
+/** \file t8_dtriangle.h
+ *  TODO: document this.
+ */
+
+#include <t8.h>
+
+T8_EXTERN_C_BEGIN ();
+
 /** The number of children that a triangle is refined into. */
-#define T8_DTRIANGLE_CHILDREN 8
+#define T8_DTRIANGLE_CHILDREN 4
 
 /** The number of faces of a triangle. */
-#define T8_DTRIANGLE_FACES 4
+#define T8_DTRIANGLE_FACES 3
 
 /** The maximum refinement level allowed for a triangle. */
 #define T8_DTRIANGLE_MAXLEVEL 30
@@ -50,5 +58,7 @@ typedef struct t8_dtriangle
 t8_dtriangle_t;
 
 typedef int8_t      t8_dtriangle_type_t;
+
+T8_EXTERN_C_END ();
 
 #endif /* T8_DTRIANGLE_H */

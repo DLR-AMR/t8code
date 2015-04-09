@@ -27,19 +27,19 @@
 #ifndef T8_DTRIANGLE_CONNECTIVITY_H
 #define T8_DTRIANGLE_CONNECTIVITY_H
 
+#include "t8_dtriangle.h"
+
+T8_EXTERN_C_BEGIN ();
+
 /** The spatial dimension */
 #define T8_DTRIANGLE_DIM 2
-/** The number of faces of a triangle */
-#define T8_DTRIANGLE_FACES (T8_DTRIANGLE_DIM +1)
-/** The number of children of a triangle
- *
- * also the nmber of corners */
-#define T8_DTRIANGLE_CHILDREN 4
 
 /** Store the type of parent for each (cube-id,type) combination. */
 extern const int    t8_dtriangle_cid_type_to_parenttype[4][2];
 
 /** Store the type of child for each (type,child number) combination. */
 extern const int    t8_dtriangle_type_of_child[2][4];
+
+T8_EXTERN_C_END ();
 
 #endif /* T8_DTRIANGLE_CONNECTIVITY_H */
