@@ -42,7 +42,7 @@ t8_default_quad_surround_matches (const p4est_quadrant_t * q,
 static              size_t
 t8_default_quad_size (void)
 {
-  return sizeof (t8_quad_t);
+  return sizeof (t8_pquad_t);
 }
 
 static void
@@ -142,7 +142,7 @@ t8_default_scheme_new_quad (void)
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;
   ts->ts_destroy = t8_default_scheme_mempool_destroy;
-  ts->ts_context = sc_mempool_new (sizeof (p4est_quadrant_t));
+  ts->ts_context = sc_mempool_new (sizeof (t8_pquad_t));
 
   return ts;
 }

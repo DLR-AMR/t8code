@@ -28,7 +28,7 @@
 static              size_t
 t8_default_hex_size (void)
 {
-  return sizeof (t8_hex_t);
+  return sizeof (t8_phex_t);
 }
 
 static void
@@ -75,7 +75,7 @@ t8_default_scheme_new_hex (void)
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;
   ts->ts_destroy = t8_default_scheme_mempool_destroy;
-  ts->ts_context = sc_mempool_new (sizeof (t8_hex_t));
+  ts->ts_context = sc_mempool_new (sizeof (t8_phex_t));
 
   return ts;
 }

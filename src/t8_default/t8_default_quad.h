@@ -39,21 +39,40 @@
  * We make this definition public for interoperability of element classes.
  * We might want to put this into a private, scheme-specific header file.
  */
-typedef p4est_quadrant_t t8_quad_t;
+typedef p4est_quadrant_t t8_pquad_t;
 
+/** Return the toplevel dimension. */
 #define T8_QUAD_GET_TDIM(quad) ((int) (quad)->pad8)
-#define T8_QUAD_GET_TNORMAL(quad) ((int) (quad)->pad16)
-#define T8_QUAD_GET_TCOORD(quad) ((int) (quad)->p.user_long)
 
+/** Return the direction of the third dimension.
+ * This is only valid to call if the toplevel dimension is three.
+ */
+#define T8_QUAD_GET_TNORMAL(quad)                               \
+  ( T8_ASSERT (T8_QUAD_GET_TDIM(quad) == 3),                    \
+    ((int) (quad)->pad16) )
+
+/** Return the coordinate in the third dimension.
+ * This is only valid to call if the toplevel dimension is three.
+ */
+#define T8_QUAD_GET_TCOORD(quad)                                \
+  ( T8_ASSERT (T8_QUAD_GET_TDIM(quad) == 3),                    \
+    ((int) (quad)->p.user_long) )
+
+/** Set the toplevel dimension of a quadrilateral. */
 #define T8_QUAD_SET_TDIM(quad,dim)                              \
   do { T8_ASSERT ((dim) == 2 || (dim) == 3);                    \
        (quad)->pad8 = (int8_t) (dim); } while (0)
+
+/** Set the direction of the third demension. */
 #define T8_QUAD_SET_TNORMAL(quad,normal)                        \
   do { T8_ASSERT ((normal) >= 0 && (normal) < 3);               \
        (quad)->pad16 = (int16_t) (normal); } while (0)
+
+/** Set the coordinate in the third dimension. */
 #define T8_QUAD_SET_TCOORD(quad,coord)                          \
   do { (quad)->p.user_long = (long) (coord); } while (0)
 
+/** Provide an implementation for the quadrilateral element class. */
 t8_eclass_scheme_t *t8_default_scheme_new_quad (void);
 
 #endif /* !T8_DEFAULT_QUAD_H */
