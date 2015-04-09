@@ -292,3 +292,27 @@ t8_dtet_is_parent (const t8_dtet_t * t, const t8_dtet_t * c)
     (t->z == (c->z & ~T8_DTET_ROOT_LEN (c->level))) &&
     t->type == t8_dtet_cid_type_to_parenttype[cid][c->type] && 1;
 }
+
+
+int
+t8_dtet_is_ancestor (const t8_dtet_t * t,
+                            const t8_dtet_t * c)
+{
+  t8_dtet_coord_t      exclorx;
+  t8_dtet_coord_t      exclory;
+  t8_dtet_coord_t      exclorz;
+
+  if (t->level >= c->level) {
+    return 0;
+  }
+
+  exclorx = (t->x ^ c->x) >> (T8_DTET_MAXLEVEL - t->level);
+  exclory = (t->y ^ c->y) >> (T8_DTET_MAXLEVEL - t->level);
+  exclorz = (t->z ^ c->z) >> (T8_DTET_MAXLEVEL - t->level);
+
+  /* TODO: implement */
+  SC_ABORT("Not implemented");
+
+  return (exclorx == 0 && exclory == 0 && exclorz == 0);
+  return (exclorx == 0 && exclory == 0);
+}
