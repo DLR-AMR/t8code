@@ -29,12 +29,6 @@
 
 /** The spatial dimension */
 #define T8_DTET_DIM 3
-/** The number of faces of a tetrahedron */
-#define T8_DTET_FACES (T8_DTET_DIM +1)
-/** The number of children of a tetrahedron
- *
- * also the nmber of corners */
-#define T8_DTET_CHILDREN 8
 
 /** Store the type of parent for each (cube-id,type) combination. */
 extern const int                 t8_dtet_cid_type_to_parenttype[8][6];
