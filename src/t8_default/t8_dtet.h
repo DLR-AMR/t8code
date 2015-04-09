@@ -21,21 +21,26 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_tet.h
- */
+#ifndef T8_DTET_H
+#define T8_DTET_H
 
-#ifndef T8_DEFAULT_TET_H
-#define T8_DEFAULT_TET_H
+#define T8_DTET_MAXLEVEL 30
+#define T8_DTET_ROOT_LEN(l) (1<<(T8_DTET_MAXLEVEL-(l)))
+#define T8_DTET_CHILDREN 8
 
-#include <t8_element.h>
-#include "t8_dtet.h"
+typedef int32_t     t8_dtet_coord_t;
 
-#define T8_DEFAULT_TET_MAXLEVEL T8_DTET_MAXLEVEL
-#define T8_TET_CHILDREN T8_DTET_CHILDREN
+typedef struct t8_dtet
+{
+  int8_t              eclass;
+          /**< We store the element class for compatibility with the pyramid. */
+  int8_t              level;
+  /* add coordinates etc. here */
+  int8_t              type;
+  t8_dtet_coord_t     x, y, z;
+}
+t8_dtet_t;
 
-typedef t8_dtet_t   t8_default_tet_t;
-typedef t8_dtet_coord_t t8_default_tet_coord_t;
+typedef int8_t      t8_dtet_type_t;
 
-t8_eclass_scheme_t *t8_default_scheme_new_tet (void);
-
-#endif /* !T8_DEFAULT_TET_H */
+#endif /* T8_DTET_H */

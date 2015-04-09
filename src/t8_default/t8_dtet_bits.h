@@ -21,38 +21,37 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_tet_bits.h
+/** \file t8_dtet_bits.h
  */
 
-#ifndef T8_DEFAULT_TET_BITS_H
-#define T8_DEFAULT_TET_BITS_H
+#ifndef T8_DTET_BITS_H
+#define T8_DTET_BITS_H
 
 #include <t8_element.h>
-#include "t8_default_tet.h"
+#include "t8_dtet.h"
 
 /** Test if two tetrahedra have the same coordinates, type and level.
- * \return true if \a q1 describes the same quadrant as \a q2.
+ * \return true if \a t1 describes the same tetrahedron as \a t2.
  */
-int                 p4est_quadrant_is_equal (const t8_tet_t *t1,
-                                             const t8_tet_t *t2);
+int                 t8_dtet_is_equal (const t8_dtet_t * t1,
+                                      const t8_dtet_t * t2);
 
 /** Compute the parent of a tetrahedron.
  * \param [in]  elem Input tetrahedron.
  * \param [in,out] parent Existing tetrahedron whose data will
  *                  be filled with the data of elem's parent.
- * \note \a elem may point to the same quadrant as \a parent.
+ * \note \a elem may point to the same tetrahedron as \a parent.
  */
-void                t8_default_tet_parent (const t8_element_t * elem,
-                                           t8_element_t * parent);
+void                t8_dtet_parent (const t8_dtet_t * t, t8_dtet_t * parent);
 
 /** Compute the coordinates of the four vertices of a tetrahedron.
  * \param [in] t    Input tetrahedron.
- * \param [out] coordinates An array of 4x3 t8_tcoord_t that
+ * \param [out] coordinates An array of 4x3 t8_dtet_coord_t that
  * 		     will be filled with the coordinates of t's vertices.
  */
-void                t8_default_tet_compute_coords (const t8_tet_t * t,
-                                                   t8_tcoord_t
-                                                   coordinates[4][3]);
+void                t8_dtet_compute_coords (const t8_dtet_t * t,
+                                            t8_dtet_coord_t
+                                            coordinates[4][3]);
 
 /** Compute the childid-th child in Bey order of a tetrahedron t.
  * \param [in] t    Input tetrahedron.
@@ -60,8 +59,8 @@ void                t8_default_tet_compute_coords (const t8_tet_t * t,
  * \param [out] child  Existing tetrahedron whose data will be filled
  * 		    with the date of t's childid-th child.
  */
-void                t8_default_tet_child (const t8_element_t * elem,
-                                          int childid, t8_element_t * child);
+void                t8_dtet_child (const t8_dtet_t * elem,
+                                   int childid, t8_dtet_t * child);
 
 /** Compute a specific sibling of a tetrahedron.
  * \param [in]     elem  Input tetrahedron.
@@ -69,17 +68,16 @@ void                t8_default_tet_child (const t8_element_t * elem,
  *                    with the data of sibling no. sibling_id of elem.
  * \param [in]     sibid The id of the sibling computed, 0..7 in Bey order.
  */
-void                t8_default_tet_sibling (const t8_element_t * elem,
-                                            int sibid,
-                                            t8_element_t * sibling);
+void                t8_dtet_sibling (const t8_dtet_t * elem,
+                                     int sibid, t8_dtet_t * sibling);
 
 /** Compute the face neighbor of a tetrahedron.
  * \param [in]     t      Input tetrahedron.
  * \param [in]     face   The face across which to generate the neighbor.
  * \param [in,out] n      Existing tetrahedron whose data will be filled.
- * \note \a t may point to the same quadrant as \a n.
+ * \note \a t may point to the same tetrahedron as \a n.
  */
-int                 t8_default_tet_face_neighbour (const t8_tet_t * t,
-                                                   t8_tet_t * n, int face);
+int                 t8_dtet_face_neighbour (const t8_dtet_t * t,
+                                            t8_dtet_t * n, int face);
 
-#endif /* T8_DEFAULT_TET_BITS_H */
+#endif /* T8_DTET_BITS_H */
