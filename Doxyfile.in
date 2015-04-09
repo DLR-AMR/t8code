@@ -806,8 +806,8 @@ EXCLUDE_PATTERNS       =
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories use the pattern */test/*
 
-EXCLUDE_SYMBOLS        = SC_EXTERN_C_BEGIN \
-                         SC_EXTERN_C_END
+EXCLUDE_SYMBOLS        = T8_EXTERN_C_BEGIN \
+                         T8_EXTERN_C_END
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or directories
 # that contain example code fragments that are included (see the \include
@@ -994,7 +994,8 @@ COLS_IN_ALPHA_INDEX    = 3
 # This tag requires that the tag ALPHABETICAL_INDEX is set to YES.
 
 IGNORE_PREFIX          = t4_ \
-                         t8_
+                         t8_ \
+                         T8_
 
 #---------------------------------------------------------------------------
 # Configuration options related to the HTML output

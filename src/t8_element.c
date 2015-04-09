@@ -23,11 +23,6 @@
 
 #include <t8_element.h>
 
-struct t8_element
-{
-  int                 t8_element_dummy;
-};
-
 void
 t8_scheme_destroy (t8_scheme_t * s)
 {

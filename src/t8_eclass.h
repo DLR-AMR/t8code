@@ -23,6 +23,7 @@
 
 /** \file t8_eclass.h
  * We define all possible element classes that occur in hybrid meshes.
+ *
  * Notable examples are triangles, tetrahedra, quadrilaterals and hexahedra.
  * We cover all dimensions between zero and three, so it is in principal
  * possible to build a topological complex out of these element classes.
@@ -33,18 +34,29 @@
 
 #include <t8.h>
 
+T8_EXTERN_C_BEGIN ();
+
 /** This enumeration contains all possible element classes. */
 typedef enum t8_eclass
 {
   T8_ECLASS_FIRST = 0,
+  /** The vertex is the only zero-dimensional element class. */
   T8_ECLASS_VERTEX = T8_ECLASS_FIRST,
+  /** The line is the only one-dimensional element class. */
   T8_ECLASS_LINE,
+  /** The quadrilateral is one of two element classes in two dimensions. */
   T8_ECLASS_QUAD,
+  /** The element class for a triangle. */
   T8_ECLASS_TRIANGLE,
+  /** The hexahedron is one three-dimensional element class. */
   T8_ECLASS_HEX,
+  /** The tetrahedron is another three-dimensional element class. */
   T8_ECLASS_TET,
+  /** The prism has five sides, namely two opposing triangles joined by three quadrilaterals. */
   T8_ECLASS_PRISM,
+  /** The pyramid has a quadrilateral as base and four triangles as sides. */
   T8_ECLASS_PYRAMID,
+  /** This is no element class but can be used as the number of element classes. */
   T8_ECLASS_LAST
 }
 t8_eclass_t;
@@ -75,5 +87,7 @@ extern const int    t8_eclass_boundary_count[T8_ECLASS_LAST][T8_ECLASS_LAST];
  */
 int                 t8_eclass_count_boundary (t8_eclass_t theclass,
                                               int min_dim, int *per_eclass);
+
+T8_EXTERN_C_END ();
 
 #endif /* !T8_ELEMENT_H */

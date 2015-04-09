@@ -22,6 +22,9 @@
 */
 
 /** \file t8_default.h
+ * This file is the point of entry for our default element implementation.
+ *
+ * This scheme points to a consistent implementation of all element classes.
  */
 
 #ifndef T8_DEFAULT_H
@@ -29,6 +32,11 @@
 
 #include <t8_element.h>
 
+T8_EXTERN_C_BEGIN ();
+
+/** Return the default element implementation of t8code. */
 t8_scheme_t        *t8_scheme_new_default (void);
+
+T8_EXTERN_C_END ();
 
 #endif /* !T8_DEFAULT_H */
