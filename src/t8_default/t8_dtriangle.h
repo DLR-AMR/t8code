@@ -24,9 +24,20 @@
 #ifndef T8_DTRIANGLE_H
 #define T8_DTRIANGLE_H
 
-#define T8_DTRIANGLE_MAXLEVEL 30
-#define T8_DTRIANGLE_ROOT_LEN(l) (1<<(T8_DTRIANGLE_MAXLEVEL-(l)))
+/** The number of children that a triangle is refined into. */
+#define T8_DTRIANGLE_CHILDREN 8
 
+/** The number of faces of a triangle. */
+#define T8_DTRIANGLE_FACES 4
+
+/** The maximum refinement level allowed for a triangle. */
+#define T8_DTRIANGLE_MAXLEVEL 30
+
+/** The length of the root triangle in integer coordinates. */
+#define T8_DTRIANGLE_ROOT_LEN (1 << (T8_DTET_MAXLEVEL))
+
+/** The length of a triangle at a given level in integer coordinates. */
+#define T8_DTRIANGLE_LEN(l) (1 << (T8_DTRIANGLE_MAXLEVEL - (l)))
 typedef int32_t     t8_dtriangle_coord_t;
 
 typedef struct t8_dtriangle

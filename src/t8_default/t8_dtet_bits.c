@@ -22,7 +22,4 @@
 */
 
 #include "t8_dtriangle_to_dtet.h"
-#include "t8_default_common.h"
-#include "t8_dtet_connectivity.h"
-#include "t8_dtet_bits.h"
 #include "t8_dtriangle_bits.c"

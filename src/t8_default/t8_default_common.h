@@ -22,12 +22,15 @@
 */
 
 /** \file t8_default_common.h
+ * We provide some functions that are useful across element classes.
  */
 
 #ifndef T8_DEFAULT_COMMON_H
 #define T8_DEFAULT_COMMON_H
 
 #include <t8_element.h>
+
+T8_EXTERN_C_BEGIN ();
 
 /** This class independent function assumes an sc_mempool_t as context.
  * It is suitable as the ts_destroy callback in \ref t8_eclass_scheme_t.
@@ -56,5 +59,7 @@ void                t8_default_mempool_alloc (void *ts_context, int length,
  */
 void                t8_default_mempool_free (void *ts_context, int length,
                                              t8_element_t ** elem);
+
+T8_EXTERN_C_END ();
 
 #endif /* !T8_DEFAULT_COMMON_H */

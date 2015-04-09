@@ -42,7 +42,13 @@ t8_default_quad_surround_matches (const p4est_quadrant_t * q,
 static              size_t
 t8_default_quad_size (void)
 {
-  return sizeof (t8_quad_t);
+  return sizeof (t8_pquad_t);
+}
+
+static int
+t8_default_quad_maxlevel (void)
+{
+  return P4EST_QMAXLEVEL;
 }
 
 static void
@@ -132,6 +138,7 @@ t8_default_scheme_new_quad (void)
   ts = T8_ALLOC (t8_eclass_scheme_t, 1);
 
   ts->elem_size = t8_default_quad_size;
+  ts->elem_maxlevel = t8_default_quad_maxlevel;
 
   ts->elem_parent = t8_default_quad_parent;
   ts->elem_sibling = t8_default_quad_sibling;
@@ -142,7 +149,7 @@ t8_default_scheme_new_quad (void)
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;
   ts->ts_destroy = t8_default_scheme_mempool_destroy;
-  ts->ts_context = sc_mempool_new (sizeof (p4est_quadrant_t));
+  ts->ts_context = sc_mempool_new (sizeof (t8_pquad_t));
 
   return ts;
 }

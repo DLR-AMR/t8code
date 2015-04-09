@@ -22,8 +22,9 @@
 */
 
 /** \file t8.h
- * This is the basic header file for t8code.
- * It contains application-level convienience code such as logging functions.
+ * This is the administrative header file for t8code.
+ * It includes standard C headers via subpackages.
+ * It also provides application-level convenience code such as logging functions.
  */
 
 #ifndef T8_H
@@ -46,15 +47,33 @@
 /* indirectly also include p4est_config.h, sc.h */
 #include <sc_containers.h>
 #include <p4est_base.h>
-#define t8_const _sc_const              /**< This is defined by configure. */
-#define t8_restrict _sc_restrict        /**< This is defined by configure. */
+
+/** This macro opens the extern "C" brace needed in C headers.
+ * It needs to be followed by a semicolon to look like a statement. */
+#define T8_EXTERN_C_BEGIN() SC_EXTERN_C_BEGIN
+
+/** This macro closes the extern "C" brace needed in C headers.
+ * It needs to be followed by a semicolon to look like a statement. */
+#define T8_EXTERN_C_END() SC_EXTERN_C_END
+
+/* call this after including all headers */
+T8_EXTERN_C_BEGIN ();
+
+/** Portable way to use the const keyword determined by configure. */
+#define t8_const _sc_const
+
+/** Portable way to use the const keyword determined by configure. */
+#define t8_restrict _sc_restrict
 
 #define T8_ASSERT P4EST_ASSERT          /**< TODO: write proper function. */
 #define T8_ALLOC P4EST_ALLOC            /**< TODO: write proper function. */
 #define T8_ALLOC_ZERO P4EST_ALLOC_ZERO  /**< TODO: write proper function. */
 #define T8_FREE P4EST_FREE              /**< TODO: write proper function. */
 
+/** A type for processor-local indexing. */
 typedef p4est_locidx_t t8_locidx_t;
+
+/** A type for global indexing that holds really big numbers. */
 typedef p4est_gloidx_t t8_gloidx_t;
 
 /** Query the package identity as registered in libsc.
@@ -145,5 +164,8 @@ void                t8_debugf (const char *fmt, ...)
  *                           You can also choose from log levels SC_LP_*.
  */
 void                t8_init (int log_threshold);
+
+/* call this at the end of a header file to match T8_EXTERN_C_BEGIN (). */
+T8_EXTERN_C_END ();
 
 #endif /* !T8_H */
