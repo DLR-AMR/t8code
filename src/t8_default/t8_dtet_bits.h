@@ -22,6 +22,7 @@
 */
 
 /** \file t8_dtet_bits.h
+ * TODO: Document this.
  */
 
 #ifndef T8_DTET_BITS_H
@@ -29,6 +30,17 @@
 
 #include <t8_element.h>
 #include "t8_dtet.h"
+
+T8_EXTERN_C_BEGIN ();
+
+/** Compute the coordinates of the four vertices of a tetrahedron.
+ * \param [in] t    Input tetrahedron.
+ * \param [out] coordinates An array of 4x3 t8_dtet_coord_t that
+ * 		     will be filled with the coordinates of t's vertices.
+ */
+void                t8_dtet_compute_coords (const t8_dtet_t * t,
+                                            t8_dtet_coord_t
+                                            coordinates[4][3]);
 
 /** Test if two tetrahedra have the same coordinates, type and level.
  * \return true if \a t1 describes the same tetrahedron as \a t2.
@@ -43,15 +55,6 @@ int                 t8_dtet_is_equal (const t8_dtet_t * t1,
  * \note \a elem may point to the same tetrahedron as \a parent.
  */
 void                t8_dtet_parent (const t8_dtet_t * t, t8_dtet_t * parent);
-
-/** Compute the coordinates of the four vertices of a tetrahedron.
- * \param [in] t    Input tetrahedron.
- * \param [out] coordinates An array of 4x3 t8_dtet_coord_t that
- * 		     will be filled with the coordinates of t's vertices.
- */
-void                t8_dtet_compute_coords (const t8_dtet_t * t,
-                                            t8_dtet_coord_t
-                                            coordinates[4][3]);
 
 /** Compute the childid-th child in Bey order of a tetrahedron t.
  * \param [in] t    Input tetrahedron.
@@ -79,5 +82,7 @@ void                t8_dtet_sibling (const t8_dtet_t * elem,
  */
 int                 t8_dtet_face_neighbour (const t8_dtet_t * t,
                                             t8_dtet_t * n, int face);
+
+T8_EXTERN_C_END ();
 
 #endif /* T8_DTET_BITS_H */

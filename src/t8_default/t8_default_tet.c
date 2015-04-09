@@ -25,11 +25,7 @@
 #include "t8_default_common.h"
 #include "t8_default_tet.h"
 
-static int
-t8_default_tet_maxlevel (void)
-{
-  return T8_DEFAULT_TET_MAXLEVEL;
-}
+typedef t8_dtet_t t8_default_tet_t;
 
 static              size_t
 t8_default_tet_size (void)
@@ -37,11 +33,18 @@ t8_default_tet_size (void)
   return sizeof (t8_default_tet_t);
 }
 
+static int
+t8_default_tet_maxlevel (void)
+{
+  return T8_DTET_MAXLEVEL;
+}
+
 static void
 t8_default_tet_parent (const t8_element_t * elem, t8_element_t * parent)
 {
-  const t8_default_tet_t *t = (const t8_default_tet_t *) (elem);
-  t8_default_tet_t   *p = (t8_default_tet_t *) (parent);
+  const t8_default_tet_t *t = (const t8_default_tet_t *) elem;
+  t8_default_tet_t   *p = (t8_default_tet_t *) parent;
+
   t8_dtet_parent (t, p);
 }
 
@@ -49,8 +52,8 @@ static void
 t8_default_tet_sibling (const t8_element_t * elem,
                         int sibid, t8_element_t * sibling)
 {
-  const t8_default_tet_t *t = (const t8_default_tet_t *) (elem);
-  t8_default_tet_t   *s = (t8_default_tet_t *) (sibling);
+  const t8_default_tet_t *t = (const t8_default_tet_t *) elem;
+  t8_default_tet_t   *s = (t8_default_tet_t *) sibling;
 
   t8_dtet_sibling (t, sibid, s);
 }
@@ -59,8 +62,8 @@ static void
 t8_default_tet_child (const t8_element_t * elem,
                       int childid, t8_element_t * child)
 {
-  const t8_default_tet_t *t = (const t8_default_tet_t *) (elem);
-  t8_default_tet_t   *c = (t8_default_tet_t *) (child);
+  const t8_default_tet_t *t = (const t8_default_tet_t *) elem;
+  t8_default_tet_t   *c = (t8_default_tet_t *) child;
 
   t8_dtet_child (t, childid, c);
 }
@@ -72,8 +75,9 @@ t8_default_scheme_new_tet (void)
 
   ts = T8_ALLOC (t8_eclass_scheme_t, 1);
 
-  ts->elem_maxlevel = t8_default_tet_maxlevel;
   ts->elem_size = t8_default_tet_size;
+  ts->elem_maxlevel = t8_default_tet_maxlevel;
+
   ts->elem_parent = t8_default_tet_parent;
   ts->elem_sibling = t8_default_tet_sibling;
   ts->elem_child = t8_default_tet_child;

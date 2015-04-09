@@ -21,7 +21,6 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "t8_default_common.h"
 #include "t8_dtet_bits.h"
 
 typedef int8_t      t8_dtet_cube_id_t;
@@ -55,7 +54,7 @@ t8_dtet_compute_cubeid (const t8_dtet_t * t, int level)
   t8_dtet_coord_t     h;
 
   T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
-  h = T8_DTET_ROOT_LEN (level);
+  h = T8_DTET_LEN (level);
 
   if (level == 0) {
     return 0;
@@ -90,7 +89,7 @@ t8_dtet_parent (const t8_dtet_t * t, t8_dtet_t * parent)
   cid = t8_dtet_compute_cubeid (t, t->level);
   parent->type = t8_tet_cid_type_to_parenttype[cid][t->type];
   /* Set coordinates of parent */
-  h = T8_DTET_ROOT_LEN (t->level);
+  h = T8_DTET_LEN (t->level);
   parent->x = t->x & ~h;
   parent->y = t->y & ~h;
   parent->z = t->z & ~h;
@@ -106,7 +105,7 @@ t8_dtet_compute_coords (const t8_dtet_t * t,
   t8_dtet_coord_t     h;
 
   type = t->type;
-  h = T8_DTET_ROOT_LEN (t->level);
+  h = T8_DTET_LEN (t->level);
   ei = type / 2;
   if (type % 2 == 0) {
     ej = (ei + 2) % 3;
@@ -229,7 +228,7 @@ t8_dtet_face_neighbour (const t8_dtet_t * t, t8_dtet_t * n, int face)
       /* type: 0,1 --> x+1
        *       2,3 --> y+1
        *       4,5 --> z+1 */
-      coords[type_old / 2] += T8_DTET_ROOT_LEN (level);
+      coords[type_old / 2] += T8_DTET_LEN (level);
       type_new += (type_new % 2 == 0 ? 4 : 2);
     }
     else {                      /* face == 3 */
@@ -237,7 +236,7 @@ t8_dtet_face_neighbour (const t8_dtet_t * t, t8_dtet_t * n, int face)
       /* type: 1,2 --> z-1
        *       3,4 --> x-1
        *       5,0 --> y-1 */
-      coords[((type_new + 3) % 6) / 2] -= T8_DTET_ROOT_LEN (level);
+      coords[((type_new + 3) % 6) / 2] -= T8_DTET_LEN (level);
       type_new += (type_new % 2 == 0 ? 2 : 4);
     }
     type_new %= 6;

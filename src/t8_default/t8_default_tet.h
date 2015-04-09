@@ -22,6 +22,7 @@
 */
 
 /** \file t8_default_tet.h
+ * The default implementation for tetrahedra.
  */
 
 #ifndef T8_DEFAULT_TET_H
@@ -30,12 +31,13 @@
 #include <t8_element.h>
 #include "t8_dtet.h"
 
-#define T8_DEFAULT_TET_MAXLEVEL T8_DTET_MAXLEVEL
-#define T8_TET_CHILDREN T8_DTET_CHILDREN
+T8_EXTERN_C_BEGIN ();
 
-typedef t8_dtet_t   t8_default_tet_t;
-typedef t8_dtet_coord_t t8_default_tet_coord_t;
-
+/** Provide an implementation for the tetrahedral element class.
+ * It is written as a self-contained library in the t8_dtet_* files.
+ */
 t8_eclass_scheme_t *t8_default_scheme_new_tet (void);
+
+T8_EXTERN_C_END ();
 
 #endif /* !T8_DEFAULT_TET_H */
