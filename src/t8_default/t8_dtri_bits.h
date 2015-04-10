@@ -36,7 +36,7 @@ T8_EXTERN_C_BEGIN ();
  * \return true if \a t1 describes the same tri as \a t2.
  */
 int                 t8_dtri_is_equal (const t8_dtri_t * t1,
-                                           const t8_dtri_t * t2);
+                                      const t8_dtri_t * t2);
 
 /** Compute the parent of a tri.
  * \param [in]  elem Input tri.
@@ -44,8 +44,7 @@ int                 t8_dtri_is_equal (const t8_dtri_t * t1,
  *                  be filled with the data of elem's parent.
  * \note \a elem may point to the same tri as \a parent.
  */
-void                t8_dtri_parent (const t8_dtri_t * t,
-                                         t8_dtri_t * parent);
+void                t8_dtri_parent (const t8_dtri_t * t, t8_dtri_t * parent);
 
 /** Compute the coordinates of a vertex of a triangle.
  * \param [in] t    Input triangle.
@@ -73,7 +72,7 @@ void                t8_dtri_compute_all_coords (const t8_dtri_t * t,
  * 		    with the date of t's childid-th child.
  */
 void                t8_dtri_child (const t8_dtri_t * elem,
-                                        int childid, t8_dtri_t * child);
+                                   int childid, t8_dtri_t * child);
 
 /** Compute a specific sibling of a tri.
  * \param [in]     elem  Input tri.
@@ -82,8 +81,7 @@ void                t8_dtri_child (const t8_dtri_t * elem,
  * \param [in]     sibid The id of the sibling computed, 0..7 in Bey order.
  */
 void                t8_dtri_sibling (const t8_dtri_t * elem,
-                                          int sibid,
-                                          t8_dtri_t * sibling);
+                                     int sibid, t8_dtri_t * sibling);
 
 /** Compute the face neighbor of a tri.
  * \param [in]     t      Input tri.
@@ -92,8 +90,7 @@ void                t8_dtri_sibling (const t8_dtri_t * elem,
  * \note \a t may point to the same tri as \a n.
  */
 int                 t8_dtri_face_neighbour (const t8_dtri_t * t,
-                                                 t8_dtri_t * n,
-                                                 int face);
+                                            t8_dtri_t * n, int face);
 
 /** Test if two tris are siblings.
  * \param [in] t1 First tri to be tested.
@@ -101,7 +98,7 @@ int                 t8_dtri_face_neighbour (const t8_dtri_t * t,
  * \return true if \a t1 is unequal to and a sibling of \a t2.
  */
 int                 t8_dtri_is_sibling (const t8_dtri_t * t1,
-                                             const t8_dtri_t * t2);
+                                        const t8_dtri_t * t2);
 
 /** Test if a tri is the parent of another tri.
  * \param [in] t tri to be tested.
@@ -109,7 +106,7 @@ int                 t8_dtri_is_sibling (const t8_dtri_t * t1,
  * \return true if \a t is the parent of \a c.
  */
 int                 t8_dtri_is_parent (const t8_dtri_t * t,
-                                            const t8_dtri_t * c);
+                                       const t8_dtri_t * c);
 
 /** Test if a tri is an ancestor of another tri.
  * \param [in] t tri to be tested.
@@ -117,7 +114,7 @@ int                 t8_dtri_is_parent (const t8_dtri_t * t,
  * \return true if \a t is unequal to and an ancestor of \a c.
  */
 int                 t8_dtri_is_ancestor (const t8_dtri_t * t,
-                                              const t8_dtri_t * c);
+                                         const t8_dtri_t * c);
 
 T8_EXTERN_C_END ();
 

@@ -70,8 +70,8 @@ t8_dtri_is_equal (const t8_dtri_t * t1, const t8_dtri_t * t2)
 void
 t8_dtri_parent (const t8_dtri_t * t, t8_dtri_t * parent)
 {
-  t8_dtri_cube_id_t cid;
-  t8_dtri_coord_t h;
+  t8_dtri_cube_id_t   cid;
+  t8_dtri_coord_t     h;
 
   T8_ASSERT (t->level > 0);
 
@@ -192,16 +192,15 @@ t8_dtri_compute_all_coords (const t8_dtri_t * t,
  * elem = child */
 
 void
-t8_dtri_child (const t8_dtri_t * elem, int childid,
-                    t8_dtri_t * child)
+t8_dtri_child (const t8_dtri_t * elem, int childid, t8_dtri_t * child)
 {
 #ifdef T8_DTRI_TO_DTET
   /* TODO: implement dimension independent */
   /* TODO: Das muss gehen, ohne alle Koordinaten auszurechnen */
 
-  const t8_dtri_t *t = (const t8_dtri_t *) elem;
-  t8_dtri_t     *c = (t8_dtri_t *) child;
-  t8_dtri_coord_t t_coordinates[4][3];
+  const t8_dtri_t    *t = (const t8_dtri_t *) elem;
+  t8_dtri_t          *c = (t8_dtri_t *) child;
+  t8_dtri_coord_t     t_coordinates[4][3];
   int                 coord2;
 
   T8_ASSERT (t->level < T8_DTRI_MAXLEVEL);
@@ -255,8 +254,7 @@ t8_dtri_child (const t8_dtri_t * elem, int childid,
  * parent and child
  * TODO: CB agrees, make this as non-redundant as possible */
 void
-t8_dtri_sibling (const t8_dtri_t * elem, int sibid,
-                      t8_dtri_t * sibling)
+t8_dtri_sibling (const t8_dtri_t * elem, int sibid, t8_dtri_t * sibling)
 {
   T8_ASSERT (0 <= sibid && sibid < T8_DTRI_CHILDREN);
   T8_ASSERT (((const t8_dtri_t *) elem)->level > 0);
@@ -267,8 +265,7 @@ t8_dtri_sibling (const t8_dtri_t * elem, int sibid,
 /* Saves the neighbour of T along face "face" in N
  * returns the facenumber of N along which T is its neighbour */
 int
-t8_dtri_face_neighbour (const t8_dtri_t * t, t8_dtri_t * n,
-                             int face)
+t8_dtri_face_neighbour (const t8_dtri_t * t, t8_dtri_t * n, int face)
 {
   /* TODO: document what happens if outside of root tet */
   int                 type_new, type_old;
@@ -277,11 +274,11 @@ t8_dtri_face_neighbour (const t8_dtri_t * t, t8_dtri_t * n,
 #endif
   int                 ret = -1;
   int8_t              level;
-  t8_dtri_coord_t coords[3];
+  t8_dtri_coord_t     coords[3];
 
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
 
-  n->level = level = t->level;
+  level = t->level;
   type_old = t->type;
   type_new = type_old;
   coords[0] = t->x;
@@ -337,6 +334,7 @@ t8_dtri_face_neighbour (const t8_dtri_t * t, t8_dtri_t * n,
 #ifdef T8_DTRI_TO_DTET
   n->z = coords[2];
 #endif
+  n->level = level;
   n->type = type_new;
   return ret;
 }
@@ -346,12 +344,12 @@ t8_dtri_face_neighbour (const t8_dtri_t * t, t8_dtri_t * n,
 int
 t8_dtri_is_sibling (const t8_dtri_t * t1, const t8_dtri_t * t2)
 {
-  t8_dtri_coord_t exclorx, exclory;
+  t8_dtri_coord_t     exclorx, exclory;
 #ifdef T8_DTRI_TO_DTET
-  t8_dtri_coord_t exclorz;
+  t8_dtri_coord_t     exclorz;
 #endif
 
-  t8_dtri_cube_id_t cid1, cid2;
+  t8_dtri_cube_id_t   cid1, cid2;
 
   /* TODO: zulassen, dass level 0 element sein eigener sibling ist (?) */
   if (t1->level == 0) {
@@ -374,14 +372,13 @@ t8_dtri_is_sibling (const t8_dtri_t * t1, const t8_dtri_t * t2)
     ((exclorz & ~T8_DTRI_LEN (t1->level)) == 0) &&
 #endif
     t8_dtri_cid_type_to_parenttype[cid1][t1->type] ==
-    t8_dtri_cid_type_to_parenttype[cid2][t2->type] &&
-    t1->type != t2->type;
+    t8_dtri_cid_type_to_parenttype[cid2][t2->type] && t1->type != t2->type;
 }
 
 int
 t8_dtri_is_parent (const t8_dtri_t * t, const t8_dtri_t * c)
 {
-  t8_dtri_cube_id_t cid;
+  t8_dtri_cube_id_t   cid;
 
   cid = compute_cubeid (c, c->level);
   return
@@ -397,10 +394,10 @@ t8_dtri_is_parent (const t8_dtri_t * t, const t8_dtri_t * c)
 int
 t8_dtri_is_ancestor (const t8_dtri_t * t, const t8_dtri_t * c)
 {
-  t8_dtri_coord_t exclorx;
-  t8_dtri_coord_t exclory;
+  t8_dtri_coord_t     exclorx;
+  t8_dtri_coord_t     exclory;
 #ifdef T8_DTRI_TO_DTET
-  t8_dtri_coord_t exclorz;
+  t8_dtri_coord_t     exclorz;
 #endif
 
   if (t->level >= c->level) {
