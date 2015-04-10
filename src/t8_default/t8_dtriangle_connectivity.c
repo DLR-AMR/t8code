@@ -21,9 +21,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "t8_dtriangle_connectivity.h"
+#include "t8_dtri_connectivity.h"
 
-const int           t8_dtriangle_cid_type_to_parenttype[4][2] = {
+const int           t8_dtri_cid_type_to_parenttype[4][2] = {
   {0, 1},
   {0, 0},
   {1, 1},
@@ -32,7 +32,7 @@ const int           t8_dtriangle_cid_type_to_parenttype[4][2] = {
 
 /* In dependence of a type x give the type of
  * the child with Bey number y */
-const int           t8_dtriangle_type_of_child[2][4] = {
+const int           t8_dtri_type_of_child[2][4] = {
   {0, 0, 0, 1},
   {1, 1, 1, 0}
 };

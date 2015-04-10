@@ -21,25 +21,25 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_dtriangle_connectivity.h
+/** \file t8_dtri_connectivity.h
  */
 
-#ifndef T8_DTRIANGLE_CONNECTIVITY_H
-#define T8_DTRIANGLE_CONNECTIVITY_H
+#ifndef T8_DTRI_CONNECTIVITY_H
+#define T8_DTRI_CONNECTIVITY_H
 
-#include "t8_dtriangle.h"
+#include "t8_dtri.h"
 
 T8_EXTERN_C_BEGIN ();
 
 /** The spatial dimension */
-#define T8_DTRIANGLE_DIM 2
+#define T8_DTRI_DIM 2
 
 /** Store the type of parent for each (cube-id,type) combination. */
-extern const int    t8_dtriangle_cid_type_to_parenttype[4][2];
+extern const int    t8_dtri_cid_type_to_parenttype[4][2];
 
 /** Store the type of child for each (type,child number) combination. */
-extern const int    t8_dtriangle_type_of_child[2][4];
+extern const int    t8_dtri_type_of_child[2][4];
 
 T8_EXTERN_C_END ();
 
-#endif /* T8_DTRIANGLE_CONNECTIVITY_H */
+#endif /* T8_DTRI_CONNECTIVITY_H */

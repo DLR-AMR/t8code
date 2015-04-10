@@ -21,45 +21,44 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_DTRIANGLE_H
-#define T8_DTRIANGLE_H
+#ifndef T8_DTRI_H
+#define T8_DTRI_H
 
-/** \file t8_dtriangle.h
+/** \file t8_dtri.h
  * TODO: document this.
- * TODO: propose to rename dtriangle -> dtri, also in file names
  */
 
 #include <t8.h>
 
 T8_EXTERN_C_BEGIN ();
 
-/** The number of children that a triangle is refined into. */
-#define T8_DTRIANGLE_CHILDREN 4
+/** The number of children that a tri is refined into. */
+#define T8_DTRI_CHILDREN 4
 
-/** The number of faces of a triangle. */
-#define T8_DTRIANGLE_FACES 3
+/** The number of faces of a tri. */
+#define T8_DTRI_FACES 3
 
-/** The maximum refinement level allowed for a triangle. */
-#define T8_DTRIANGLE_MAXLEVEL 30
+/** The maximum refinement level allowed for a tri. */
+#define T8_DTRI_MAXLEVEL 30
 
-/** The length of the root triangle in integer coordinates. */
-#define T8_DTRIANGLE_ROOT_LEN (1 << (T8_DTET_MAXLEVEL))
+/** The length of the root tri in integer coordinates. */
+#define T8_DTRI_ROOT_LEN (1 << (T8_DTET_MAXLEVEL))
 
-/** The length of a triangle at a given level in integer coordinates. */
-#define T8_DTRIANGLE_LEN(l) (1 << (T8_DTRIANGLE_MAXLEVEL - (l)))
+/** The length of a tri at a given level in integer coordinates. */
+#define T8_DTRI_LEN(l) (1 << (T8_DTRI_MAXLEVEL - (l)))
 
-typedef int8_t      t8_dtriangle_type_t;
-typedef int32_t     t8_dtriangle_coord_t;
+typedef int8_t      t8_dtri_type_t;
+typedef int32_t     t8_dtri_coord_t;
 
-typedef struct t8_dtriangle
+typedef struct t8_dtri
 {
   int8_t              level;
-  t8_dtriangle_type_t type;
-  t8_dtriangle_coord_t x, y;
-  t8_dtriangle_coord_t n;
+  t8_dtri_type_t type;
+  t8_dtri_coord_t x, y;
+  t8_dtri_coord_t n;
 }
-t8_dtriangle_t;
+t8_dtri_t;
 
 T8_EXTERN_C_END ();
 
-#endif /* T8_DTRIANGLE_H */
+#endif /* T8_DTRI_H */

@@ -21,7 +21,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "t8_dtriangle_to_dtet.h"
+#include "t8_dtri_to_dtet.h"
 #include "t8_dtet_connectivity.h"
 
 const int                 t8_dtet_cid_type_to_parenttype[8][6] = {
