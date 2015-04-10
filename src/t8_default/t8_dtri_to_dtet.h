@@ -50,6 +50,7 @@ T8_EXTERN_C_BEGIN ();
 /* external variables */
 #define t8_dtri_cid_type_to_parenttype t8_dtet_cid_type_to_parenttype
 #define t8_dtri_type_of_child t8_dtet_type_of_child
+#define t8_dtri_index_to_bey_number t8_dtet_index_to_bey_number
 
 /* functions in d8_dtri_bits.h */
 #define t8_dtri_is_equal t8_dtet_is_equal

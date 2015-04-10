@@ -41,7 +41,7 @@ extern const int    t8_dtri_cid_type_to_parenttype[4][2];
 extern const int    t8_dtri_type_of_child[2][4];
 
 /** Store the Bey child number for each (Parent type,Morton child number) combination. */
-extern const int t8_tri_index_to_bey_number[2][4];
+extern const int t8_dtri_index_to_bey_number[2][4];
 
 T8_EXTERN_C_END ();
 

@@ -197,9 +197,10 @@ t8_dtri_child (const t8_dtri_t * elem, int childid, t8_dtri_t * child)
 
   const t8_dtri_t    *t = (const t8_dtri_t *) elem;
   t8_dtri_t          *c = (t8_dtri_t *) child;
-  t8_dtri_coord_t     t_coordinates[4][3];
+  t8_dtri_coord_t     t_coordinates[3];
   int                 coord2;
   int                 Bey_cid;
+  short               id_to_coord[8] = {0,1,2,3,1,1,2,2};
 
   T8_ASSERT (t->level < T8_DTRI_MAXLEVEL);
   T8_ASSERT (0 <= childid && childid < T8_DTRI_CHILDREN);
@@ -207,36 +208,20 @@ t8_dtri_child (const t8_dtri_t * elem, int childid, t8_dtri_t * child)
 
   /* Compute anchor coordinates of child */
   if (Bey_cid == 0) {
+    /* TODO: would it be better do drop this if and
+     *       capture it with (t->x+t->x)>>1 below? */
     c->x = t->x;
     c->y = t->y;
     c->z = t->z;
   }
   else {
-    /* TODO: Das geht besser ueber ein Lookup-Array */
-    switch (Bey_cid) {
-    case 1:
-    case 4:
-    case 5:
-      coord2 = 1;
-      break;
-    case 2:
-    case 6:
-    case 7:
-      coord2 = 2;
-      break;
-    case 3:
-      coord2 = 3;
-      break;
-    default:
-      SC_ABORT_NOT_REACHED ();
-    }
+    coord2 = id_to_coord[Bey_cid];
     /* i-th anchor coordinate of child is (X_(0,i)+X_(coord2,i))/2
      * where X_(i,j) is the j-th coordinate of t's ith node */
-    t8_dtri_compute_all_coords (t, t_coordinates);
-    /* TODO: wie gesagt geht das, ohne ALLE Koordinaten zu beschaffen? */
-    c->x = (t_coordinates[0][0] + t_coordinates[coord2][0]) >> 1;
-    c->y = (t_coordinates[0][1] + t_coordinates[coord2][1]) >> 1;
-    //   c->z = (t_coordinates[0][2] + t_coordinates[coord2][2]) >> 1;
+    t8_dtri_compute_coords (t, t_coordinates,coord2);
+    c->x = (t->x + t_coordinates[0]) >> 1;
+    c->y = (t->y + t_coordinates[1]) >> 1;
+    c->z = (t->z + t_coordinates[2]) >> 1;
   }
 
   /* Compute type of child */
