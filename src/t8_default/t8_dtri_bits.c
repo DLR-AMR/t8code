@@ -109,7 +109,7 @@ t8_dtri_compute_coords (const t8_dtri_t * t,
 #ifdef T8_DTRI_TO_DTET
   coordinates[2] = t->z;
 #endif
-  if (vertex == 0){
+  if (vertex == 0) {
     return;
   }
   coordinates[ei] += h;
@@ -363,8 +363,6 @@ t8_dtri_is_equal (const t8_dtri_t * t1, const t8_dtri_t * t2)
 #endif
     );
 }
-
-
 
 /* we check if t1 and t2 lie in the same subcube and have
  * the same level and parent type */
