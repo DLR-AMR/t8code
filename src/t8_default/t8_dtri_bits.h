@@ -47,14 +47,24 @@ int                 t8_dtri_is_equal (const t8_dtri_t * t1,
 void                t8_dtri_parent (const t8_dtri_t * t,
                                          t8_dtri_t * parent);
 
+/** Compute the coordinates of a vertex of a triangle.
+ * \param [in] t    Input triangle.
+ * \param [out] coordinates An array of 2 t8_dtri_coord_t that
+ * 		     will be filled with the coordinates of the vertex.
+ * \param [in] vertex The number of the vertex.
+ */
+void                t8_dtri_compute_coords (const t8_dtri_t * t,
+                                            t8_dtri_coord_t coordinates[2],
+                                            const int vertex);
+
 /** Compute the coordinates of the four vertices of a tri.
  * \param [in] t    Input tri.
  * \param [out] coordinates An array of 4x3 t8_dtri_coord_t that
  * 		     will be filled with the coordinates of t's vertices.
  */
-void                t8_dtri_compute_coords (const t8_dtri_t * t,
-                                                 t8_dtri_coord_t
-                                                 coordinates[4][3]);
+void                t8_dtri_compute_all_coords (const t8_dtri_t * t,
+                                                t8_dtri_coord_t
+                                                coordinates[3][2]);
 
 /** Compute the childid-th child in Bey order of a tri t.
  * \param [in] t    Input tri.

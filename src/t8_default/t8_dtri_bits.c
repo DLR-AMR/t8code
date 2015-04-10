@@ -35,8 +35,8 @@ typedef int8_t      t8_dtri_cube_id_t;
 static              t8_dtri_cube_id_t
 compute_cubeid (const t8_dtri_t * t, int level)
 {
-  t8_dtri_cube_id_t id = 0;
-  t8_dtri_coord_t h;
+  t8_dtri_cube_id_t   id = 0;
+  t8_dtri_coord_t     h;
 
   /* TODO: assert that 0 < level? This may simplify code elsewhere */
 
@@ -94,15 +94,65 @@ t8_dtri_parent (const t8_dtri_t * t, t8_dtri_t * parent)
 
 void
 t8_dtri_compute_coords (const t8_dtri_t * t,
-                             t8_dtri_coord_t coordinates[4][3])
+                        t8_dtri_coord_t coordinates[T8_DTRI_DIM],
+                        const int vertex)
 {
-  t8_dtri_type_t type;
+  t8_dtri_type_t      type;
+  int                 ei;
+#ifdef T8_DTRI_TO_DTET
+  int                 ej;
+#endif
+  t8_dtri_coord_t     h;
+
+  T8_ASSERT (0 <= vertex && vertex < T8_DTRI_FACES);
+
+  type = t->type;
+  h = T8_DTRI_LEN (t->level);
+#ifndef T8_DTRI_TO_DTET
+  ei = type;
+#else
+  ei = type / 2;
+  ej = (ei + ((type % 2 == 0) ? 2 : 1)) % 3;
+#endif
+
+  coordinates[0] = t->x;
+  coordinates[1] = t->y;
+#ifdef T8_DTRI_TO_DTET
+  coordinates[2] = t->z;
+#endif
+  if (vertex == 0)
+    return;
+  coordinates[ei] += h;
+#ifndef T8_DTRI_TO_DTET
+  if (vertex == 2) {
+    coordinates[1 - ei] += h;
+    return;
+  }
+#else
+  if (vertex == 2) {
+    coordinates[ej] += h;
+    return;
+  }
+  if (vertex == 3) {
+    coordinates[(ei + 1) % 3] += h;
+    coordinates[(ei + 2) % 3] += h;
+  }
+  /* done 3D */
+#endif
+}
+
+void
+t8_dtri_compute_all_coords (const t8_dtri_t * t,
+                            t8_dtri_coord_t
+                            coordinates[T8_DTRI_FACES][T8_DTRI_DIM])
+{
+  t8_dtri_type_t      type;
   int                 ei;
 #ifdef T8_DTRI_TO_DTET
   int                 ej;
 #endif
   int                 i;
-  t8_dtri_coord_t h;
+  t8_dtri_coord_t     h;
 
   type = t->type;
   h = T8_DTRI_LEN (t->level);
@@ -184,7 +234,7 @@ t8_dtri_child (const t8_dtri_t * elem, int childid,
     }
     /* i-th anchor coordinate of child is (X_(0,i)+X_(coord2,i))/2
      * where X_(i,j) is the j-th coordinate of t's ith node */
-    t8_dtri_compute_coords (t, t_coordinates);
+    t8_dtri_compute_all_coords (t, t_coordinates);
     /* TODO: wie gesagt geht das, ohne ALLE Koordinaten zu beschaffen? */
     c->x = (t_coordinates[0][0] + t_coordinates[coord2][0]) >> 1;
     c->y = (t_coordinates[0][1] + t_coordinates[coord2][1]) >> 1;

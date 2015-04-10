@@ -36,14 +36,24 @@
 
 T8_EXTERN_C_BEGIN ();
 
+/** Compute the coordinates of a vertex of a tetrahedron.
+ * \param [in] t    Input tetrahedron.
+ * \param [out] coordinates An array of 2 t8_dtet_coord_t that
+ * 		     will be filled with the coordinates of the vertex.
+ * \param [in] vertex The number of the vertex.
+ */
+void                t8_dtet_compute_coords (const t8_dtet_t * t,
+                                            t8_dtet_coord_t coordinates[3],
+                                            const int vertex);
+
 /** Compute the coordinates of the four vertices of a tetrahedron.
  * \param [in] t    Input tetrahedron.
  * \param [out] coordinates An array of 4x3 t8_dtet_coord_t that
  * 		     will be filled with the coordinates of t's vertices.
  */
-void                t8_dtet_compute_coords (const t8_dtet_t * t,
-                                            t8_dtet_coord_t
-                                            coordinates[4][3]);
+void                t8_dtet_compute_all_coords (const t8_dtet_t * t,
+                                                t8_dtet_coord_t
+                                                coordinates[4][3]);
 
 /** Test if two tetrahedra have the same coordinates, type and level.
  * \return true if \a t1 describes the same tetrahedron as \a t2.
