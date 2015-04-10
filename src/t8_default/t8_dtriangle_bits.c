@@ -22,6 +22,7 @@
 */
 
 #include "t8_default_common.h"
+/* TODO: Consistently rename DTRIANGLE, DTR -> DTRI */
 #ifndef T8_DTR_TO_DTET
 #include "t8_dtriangle_connectivity.h"
 #include "t8_dtriangle_bits.h"
@@ -37,6 +38,8 @@ compute_cubeid (const t8_dtriangle_t * t, int level)
 {
   t8_dtriangle_cube_id_t id = 0;
   t8_dtriangle_coord_t h;
+
+  /* TODO: assert that 0 < level? This may simplify code elsewhere */
 
   T8_ASSERT (0 <= level && level <= T8_DTRIANGLE_MAXLEVEL);
   h = T8_DTRIANGLE_LEN (level);
@@ -147,8 +150,8 @@ t8_dtriangle_child (const t8_dtriangle_t * elem, int childid,
    /* TODO: implement dimension independent */
   /* TODO: Das muss gehen, ohne alle Koordinaten auszurechnen */
 
-  const t8_dtriangle_t *t = (const t8_dtriangle_t *) (elem);
-  t8_dtriangle_t     *c = (t8_dtriangle_t *) (child);
+  const t8_dtriangle_t *t = (const t8_dtriangle_t *) elem;
+  t8_dtriangle_t     *c = (t8_dtriangle_t *) child;
   t8_dtriangle_coord_t t_coordinates[4][3];
   int                 coord2;
 
@@ -207,7 +210,7 @@ t8_dtriangle_sibling (const t8_dtriangle_t * elem, int sibid,
                       t8_dtriangle_t * sibling)
 {
   T8_ASSERT (0 <= sibid && sibid < T8_DTRIANGLE_CHILDREN);
-  T8_ASSERT (((const t8_dtriangle_t *) (elem))->level > 0);
+  T8_ASSERT (((const t8_dtriangle_t *) elem)->level > 0);
   t8_dtriangle_parent (elem, sibling);
   t8_dtriangle_child (sibling, sibid, sibling);
 }
@@ -285,6 +288,7 @@ t8_dtriangle_is_sibling (const t8_dtriangle_t * t1, const t8_dtriangle_t * t2)
 
   t8_dtriangle_cube_id_t cid1, cid2;
 
+  /* TODO: zulassen, dass level 0 element sein eigener sibling ist (?) */
   if (t1->level == 0) {
     return 0;
   }
@@ -305,8 +309,8 @@ t8_dtriangle_is_sibling (const t8_dtriangle_t * t1, const t8_dtriangle_t * t2)
     ((exclorz & ~T8_DTRIANGLE_LEN (t1->level)) == 0) &&
 #endif
     t8_dtriangle_cid_type_to_parenttype[cid1][t1->type] ==
-    t8_dtriangle_cid_type_to_parenttype[cid2][t2->type]
-    && t1->type != t2->type && 1;
+    t8_dtriangle_cid_type_to_parenttype[cid2][t2->type] &&
+    t1->type != t2->type;
 }
 
 int

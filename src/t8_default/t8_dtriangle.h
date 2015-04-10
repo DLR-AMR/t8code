@@ -25,7 +25,8 @@
 #define T8_DTRIANGLE_H
 
 /** \file t8_dtriangle.h
- *  TODO: document this.
+ * TODO: document this.
+ * TODO: propose to rename dtriangle -> dtri, also in file names
  */
 
 #include <t8.h>
@@ -46,19 +47,18 @@ T8_EXTERN_C_BEGIN ();
 
 /** The length of a triangle at a given level in integer coordinates. */
 #define T8_DTRIANGLE_LEN(l) (1 << (T8_DTRIANGLE_MAXLEVEL - (l)))
+
+typedef int8_t      t8_dtriangle_type_t;
 typedef int32_t     t8_dtriangle_coord_t;
 
 typedef struct t8_dtriangle
 {
   int8_t              level;
-  /* add coordinates etc. here */
-  int8_t              type;
+  t8_dtriangle_type_t type;
   t8_dtriangle_coord_t x, y;
   t8_dtriangle_coord_t n;
 }
 t8_dtriangle_t;
-
-typedef int8_t      t8_dtriangle_type_t;
 
 T8_EXTERN_C_END ();
 

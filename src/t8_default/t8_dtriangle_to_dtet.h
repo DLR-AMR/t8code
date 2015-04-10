@@ -27,6 +27,10 @@
 #ifndef T8_DTRIANGLE_TO_DTET_H
 #define T8_DTRIANGLE_TO_DTET_H
 
+#include <t8.h>
+
+T8_EXTERN_C_BEGIN ();
+
 #define T8_DTR_TO_DTET
 
 /* redefine macros */
@@ -57,5 +61,7 @@
 #define t8_dtriangle_is_sibling t8_dtet_is_sibling
 #define t8_dtriangle_is_parent t8_dtet_is_parent
 #define t8_dtriangle_is_ancestor t8_dtet_is_ancestor
+
+T8_EXTERN_C_END ();
 
 #endif /* T8_DTET_TO_DTRIANGLE_H */
