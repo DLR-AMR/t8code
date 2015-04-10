@@ -32,19 +32,19 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/** The number of children that a tri is refined into. */
+/** The number of children that a triangle is refined into. */
 #define T8_DTRI_CHILDREN 4
 
-/** The number of faces of a tri. */
+/** The number of faces of a triangle. */
 #define T8_DTRI_FACES 3
 
-/** The maximum refinement level allowed for a tri. */
+/** The maximum refinement level allowed for a triangle. */
 #define T8_DTRI_MAXLEVEL 30
 
-/** The length of the root tri in integer coordinates. */
+/** The length of the root triangle in integer coordinates. */
 #define T8_DTRI_ROOT_LEN (1 << (T8_DTET_MAXLEVEL))
 
-/** The length of a tri at a given level in integer coordinates. */
+/** The length of a triangle at a given level in integer coordinates. */
 #define T8_DTRI_LEN(l) (1 << (T8_DTRI_MAXLEVEL - (l)))
 
 typedef int8_t      t8_dtri_type_t;

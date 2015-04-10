@@ -32,17 +32,17 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/** Test if two tris have the same coordinates, type and level.
- * \return true if \a t1 describes the same tri as \a t2.
+/** Test if two triangles have the same coordinates, type and level.
+ * \return true if \a t1 describes the same triangle as \a t2.
  */
 int                 t8_dtri_is_equal (const t8_dtri_t * t1,
                                       const t8_dtri_t * t2);
 
-/** Compute the parent of a tri.
- * \param [in]  elem Input tri.
- * \param [in,out] parent Existing tri whose data will
+/** Compute the parent of a triangle.
+ * \param [in]  elem Input triangle.
+ * \param [in,out] parent Existing triangle whose data will
  *                  be filled with the data of elem's parent.
- * \note \a elem may point to the same tri as \a parent.
+ * \note \a elem may point to the same triangle as \a parent.
  */
 void                t8_dtri_parent (const t8_dtri_t * t, t8_dtri_t * parent);
 
@@ -56,8 +56,8 @@ void                t8_dtri_compute_coords (const t8_dtri_t * t,
                                             t8_dtri_coord_t coordinates[2],
                                             const int vertex);
 
-/** Compute the coordinates of the four vertices of a tri.
- * \param [in] t    Input tri.
+/** Compute the coordinates of the four vertices of a triangle.
+ * \param [in] t    Input triangle.
  * \param [out] coordinates An array of 4x3 t8_dtri_coord_t that
  * 		     will be filled with the coordinates of t's vertices.
  */
@@ -65,52 +65,52 @@ void                t8_dtri_compute_all_coords (const t8_dtri_t * t,
                                                 t8_dtri_coord_t
                                                 coordinates[3][2]);
 
-/** Compute the childid-th child in Bey order of a tri t.
- * \param [in] t    Input tri.
+/** Compute the childid-th child in Bey order of a triangle.
+ * \param [in] t    Input triangle.
  * \param [in,out] childid The id of the child, 0..7 in Bey order.
- * \param [out] child  Existing tri whose data will be filled
+ * \param [out] child  Existing triangle whose data will be filled
  * 		    with the date of t's childid-th child.
  */
 void                t8_dtri_child (const t8_dtri_t * elem,
                                    int childid, t8_dtri_t * child);
 
-/** Compute a specific sibling of a tri.
- * \param [in]     elem  Input tri.
- * \param [in,out] sibling  Existing tri whose data will be filled
+/** Compute a specific sibling of a triangle.
+ * \param [in]     elem  Input triangle.
+ * \param [in,out] sibling  Existing triangle whose data will be filled
  *                    with the data of sibling no. sibling_id of elem.
  * \param [in]     sibid The id of the sibling computed, 0..7 in Bey order.
  */
 void                t8_dtri_sibling (const t8_dtri_t * elem,
                                      int sibid, t8_dtri_t * sibling);
 
-/** Compute the face neighbor of a tri.
- * \param [in]     t      Input tri.
+/** Compute the face neighbor of a triangle.
+ * \param [in]     t      Input triangle.
  * \param [in]     face   The face across which to generate the neighbor.
- * \param [in,out] n      Existing tri whose data will be filled.
- * \note \a t may point to the same tri as \a n.
+ * \param [in,out] n      Existing triangle whose data will be filled.
+ * \note \a t may point to the same triangle as \a n.
  */
 int                 t8_dtri_face_neighbour (const t8_dtri_t * t,
                                             t8_dtri_t * n, int face);
 
-/** Test if two tris are siblings.
- * \param [in] t1 First tri to be tested.
- * \param [in] t2 Second tri to be tested.
+/** Test if two triangles are siblings.
+ * \param [in] t1 First triangle to be tested.
+ * \param [in] t2 Second triangle to be tested.
  * \return true if \a t1 is unequal to and a sibling of \a t2.
  */
 int                 t8_dtri_is_sibling (const t8_dtri_t * t1,
                                         const t8_dtri_t * t2);
 
-/** Test if a tri is the parent of another tri.
- * \param [in] t tri to be tested.
- * \param [in] c Possible child tri.
+/** Test if a triangle is the parent of another triangle.
+ * \param [in] t triangle to be tested.
+ * \param [in] c Possible child triangle.
  * \return true if \a t is the parent of \a c.
  */
 int                 t8_dtri_is_parent (const t8_dtri_t * t,
                                        const t8_dtri_t * c);
 
-/** Test if a tri is an ancestor of another tri.
- * \param [in] t tri to be tested.
- * \param [in] c Descendent tri.
+/** Test if a triangle is an ancestor of another triangle.
+ * \param [in] t triangle to be tested.
+ * \param [in] c Descendent triangle.
  * \return true if \a t is unequal to and an ancestor of \a c.
  */
 int                 t8_dtri_is_ancestor (const t8_dtri_t * t,
