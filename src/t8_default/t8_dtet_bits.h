@@ -25,6 +25,7 @@
  * TODO: Document this.
  * TODO: Run make doxygen and grep for files.
  *       Also document all arguments of functions.
+ * TODO: Group the dtet_is functions together.
  */
 
 #ifndef T8_DTET_BITS_H

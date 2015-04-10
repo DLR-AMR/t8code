@@ -22,10 +22,15 @@
 */
 
 /** \file t8_dtet_connectivity.h
+ * TODO: come back later to see if it's worth having this separate file.
  */
 
 #ifndef T8_DTET_CONNECTIVITY_H
 #define T8_DTET_CONNECTIVITY_H
+
+#include <t8.h>
+
+T8_EXTERN_C_BEGIN ();
 
 /** The spatial dimension */
 #define T8_DTET_DIM 3
@@ -35,5 +40,7 @@ extern const int                 t8_dtet_cid_type_to_parenttype[8][6];
 
 /** Store the type of child for each (type,child number) combination. */
 extern const int                 t8_dtet_type_of_child[6][8];
+
+T8_EXTERN_C_END ();
 
 #endif /* T8_DTET_CONNECTIVITY_H */
