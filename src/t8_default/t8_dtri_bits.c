@@ -263,7 +263,7 @@ t8_dtri_childrenpv (const t8_dtri_t * t, t8_dtri_t * c[T8_DTRI_CHILDREN])
   }
 }
 
-/* The sibid here is the Bey child id of the parent.
+/* The sibid here is the Morton child id of the parent.
  * TODO: Implement this algorithm directly w/o using
  * parent and child
  * TODO: CB agrees, make this as non-redundant as possible */
