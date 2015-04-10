@@ -214,15 +214,15 @@ t8_dtriangle_sibling (const t8_dtriangle_t * elem, int sibid,
 
 /* Saves the neighbour of T along face "face" in N
  * returns the facenumber of N along which T is its neighbour */
-/* TODO: this is 3D, implement 2D! */
-#ifdef T8_DTR_TO_DTET
 int
 t8_dtriangle_face_neighbour (const t8_dtriangle_t * t, t8_dtriangle_t * n,
                              int face)
 {
   /* TODO: document what happens if outside of root tet */
   int                 type_new, type_old;
+#ifdef T8_DTR_TO_DTET
   int                 sign;
+#endif
   int                 ret = -1;
   int8_t              level;
   t8_dtriangle_coord_t coords[3];
@@ -230,13 +230,27 @@ t8_dtriangle_face_neighbour (const t8_dtriangle_t * t, t8_dtriangle_t * n,
   T8_ASSERT (0 <= face && face < T8_DTRIANGLE_FACES);
 
   n->level = level = t->level;
-
-  coords[0] = t->x;
-  coords[1] = t->y;
-  coords[2] = t->z;
-
   type_old = t->type;
   type_new = type_old;
+  coords[0] = t->x;
+  coords[1] = t->y;
+#ifdef T8_DTR_TO_DTET
+  coords[2] = t->z;
+#endif
+
+#ifndef T8_DTR_TO_DTET
+  /* 2D */
+  ret = 2 - face;
+  type_new = 1 - type_old;
+  if (face == 0) {
+    coords[type_old] += T8_DTRIANGLE_LEN (level);
+  }
+  else if (face == 2) {
+    coords[1 - type_old] -= T8_DTRIANGLE_LEN (level);
+  }
+  /* 2D end */
+#else
+  /* 3D */
   type_new += 6;                /* We want to compute modulo six and dont want negative numbers */
   if (face == 1 || face == 2) {
     sign = (type_new % 2 == 0 ? 1 : -1);
@@ -264,14 +278,16 @@ t8_dtriangle_face_neighbour (const t8_dtriangle_t * t, t8_dtriangle_t * n,
     type_new %= 6;
     ret = 3 - face;
   }
-
+  /* 3D end */
+#endif
   n->x = coords[0];
   n->y = coords[1];
+#ifdef T8_DTR_TO_DTET
   n->z = coords[2];
+#endif
   n->type = type_new;
   return ret;
 }
-#endif
 
 /* we check if t1 and t2 lie in the same subcube and have
  * the same level and parent type */
