@@ -354,6 +354,13 @@ t8_dtri_face_neighbour (const t8_dtri_t * t, t8_dtri_t * n, int face)
 }
 
 int
+t8_dtri_is_outside (const t8_dtri_t * t, int8_t roottype, int8_t level)
+{
+  /* TODO: write this function */
+  return 0;
+}
+
+int
 t8_dtri_is_equal (const t8_dtri_t * t1, const t8_dtri_t * t2)
 {
   return (t1->level == t1->level && t1->type == t2->type &&
