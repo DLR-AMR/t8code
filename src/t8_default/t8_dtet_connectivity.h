@@ -41,7 +41,7 @@ extern const int                 t8_dtet_cid_type_to_parenttype[8][6];
 /** Store the type of child for each (type,child number) combination. */
 extern const int                 t8_dtet_type_of_child[6][8];
 
-/** Store the Bey child number for each (type,Morton child number) combination. */
+/** Store the Bey child number for each (Parent type,Morton child number) combination. */
 extern const int t8_tet_index_to_bey_number[6][8];
 
 T8_EXTERN_C_END ();

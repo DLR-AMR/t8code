@@ -184,13 +184,10 @@ t8_dtri_compute_all_coords (const t8_dtri_t * t,
 #endif
 }
 
-/* The childid here is the Bey child id,
- * not the Morton child id
+/* The childid here is the Morton child id
  * (TODO: define this)
- * TODO: We really need the Morton child id here; everything must be in SFC order.
  * It is possible that the function is called with
  * elem = child */
-
 void
 t8_dtri_child (const t8_dtri_t * elem, int childid, t8_dtri_t * child)
 {
@@ -202,19 +199,21 @@ t8_dtri_child (const t8_dtri_t * elem, int childid, t8_dtri_t * child)
   t8_dtri_t          *c = (t8_dtri_t *) child;
   t8_dtri_coord_t     t_coordinates[4][3];
   int                 coord2;
+  int                 Bey_cid;
 
   T8_ASSERT (t->level < T8_DTRI_MAXLEVEL);
   T8_ASSERT (0 <= childid && childid < T8_DTRI_CHILDREN);
+  Bey_cid = t8_dtri_index_to_bey_number[elem->type][childid];
 
   /* Compute anchor coordinates of child */
-  if (childid == 0) {
+  if (Bey_cid == 0) {
     c->x = t->x;
     c->y = t->y;
     c->z = t->z;
   }
   else {
     /* TODO: Das geht besser ueber ein Lookup-Array */
-    switch (childid) {
+    switch (Bey_cid) {
     case 1:
     case 4:
     case 5:
@@ -241,7 +240,7 @@ t8_dtri_child (const t8_dtri_t * elem, int childid, t8_dtri_t * child)
   }
 
   /* Compute type of child */
-  c->type = t8_dtri_type_of_child[t->type][childid];
+  c->type = t8_dtri_type_of_child[t->type][Bey_cid];
 
   c->level = t->level + 1;
 #else
