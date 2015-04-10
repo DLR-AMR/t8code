@@ -45,3 +45,14 @@ const int                 t8_dtet_type_of_child[6][8] = {
   {4, 4, 4, 4, 2, 3, 0, 5},
   {5, 5, 5, 5, 1, 0, 3, 4}
 };
+
+/* Line b, row I gives the Bey child-id of
+ * a Tet with Parent type b and local morton index I */
+const int t8_dtet_index_to_bey_number[6][8]={
+    {0,1,4,5,2,7,6,3},
+    {0,1,5,4,7,2,6,3},
+    {0,4,5,1,2,7,6,3},
+    {0,1,5,4,6,7,2,3},
+    {0,4,5,1,6,2,7,3},
+    {0,5,4,1,6,7,2,3},
+};

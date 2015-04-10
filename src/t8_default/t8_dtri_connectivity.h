@@ -40,6 +40,9 @@ extern const int    t8_dtri_cid_type_to_parenttype[4][2];
 /** Store the type of child for each (type,child number) combination. */
 extern const int    t8_dtri_type_of_child[2][4];
 
+/** Store the Bey child number for each (type,Morton child number) combination. */
+extern const int t8_tri_index_to_bey_number[2][4];
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DTRI_CONNECTIVITY_H */
