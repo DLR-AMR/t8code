@@ -68,6 +68,13 @@ void                t8_dtri_compute_all_coords (const t8_dtri_t * t,
 void                t8_dtri_child (const t8_dtri_t * elem,
                                    int childid, t8_dtri_t * child);
 
+/** Compute the 4 children of a triangle, array version.
+ * \param [in]     t  Input triangle.
+ * \param [in,out] c  Pointers to the 4 computed children in Morton order.
+ *                    t may point to the same quadrant as c[0].
+ */
+void                t8_dtri_childrenpv (const t8_dtri_t * t, t8_dtri_t * c[]);
+
 /** Compute a specific sibling of a triangle.
  * \param [in]     elem  Input triangle.
  * \param [in,out] sibling  Existing triangle whose data will be filled

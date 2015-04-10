@@ -183,17 +183,18 @@ t8_dtri_child (const t8_dtri_t * elem, int childid, t8_dtri_t * child)
 {
   const t8_dtri_t    *t = (const t8_dtri_t *) elem;
   t8_dtri_t          *c = (t8_dtri_t *) child;
-  t8_dtri_coord_t     t_coordinates[T8_DTRI_FACES];
+  t8_dtri_coord_t     t_coordinates[T8_DTRI_DIM];
   int                 vertex;
   int                 Bey_cid;
 #ifndef T8_DTRI_TO_DTET
-  short               id_to_vertex[4] = { 0, 1, 2, 1 };
+  short               beyid_to_vertex[4] = { 0, 1, 2, 1 };
 #else
-  short               id_to_vertex[8] = { 0, 1, 2, 3, 1, 1, 2, 2 };
+  short               beyid_to_vertex[8] = { 0, 1, 2, 3, 1, 1, 2, 2 };
 #endif
 
   T8_ASSERT (t->level < T8_DTRI_MAXLEVEL);
   T8_ASSERT (0 <= childid && childid < T8_DTRI_CHILDREN);
+
   Bey_cid = t8_dtri_index_to_bey_number[elem->type][childid];
 
   /* Compute anchor coordinates of child */
@@ -207,7 +208,7 @@ t8_dtri_child (const t8_dtri_t * elem, int childid, t8_dtri_t * child)
 #endif
   }
   else {
-    vertex = id_to_vertex[Bey_cid];
+    vertex = beyid_to_vertex[Bey_cid];
     /* i-th anchor coordinate of child is (X_(0,i)+X_(vertex,i))/2
      * where X_(i,j) is the j-th coordinate of t's ith node */
     t8_dtri_compute_coords (t, t_coordinates, vertex);
@@ -222,6 +223,44 @@ t8_dtri_child (const t8_dtri_t * elem, int childid, t8_dtri_t * child)
   c->type = t8_dtri_type_of_child[t->type][Bey_cid];
 
   c->level = t->level + 1;
+}
+
+void
+t8_dtri_childrenpv (const t8_dtri_t * t, t8_dtri_t * c[T8_DTRI_CHILDREN])
+{
+  t8_dtri_coord_t     t_coordinates[T8_DTRI_FACES][T8_DTRI_DIM];
+  const int8_t        level = t->level + 1;
+  int                 i;
+  int                 Bey_cid;
+  int                 vertex;
+#ifndef T8_DTRI_TO_DTET
+  short               beyid_to_vertex[4] = { 0, 1, 2, 1 };
+#else
+  short               beyid_to_vertex[8] = { 0, 1, 2, 3, 1, 1, 2, 2 };
+#endif
+
+  T8_ASSERT (t->level < T8_DTRI_MAXLEVEL);
+  t8_dtri_compute_all_coords (t, t_coordinates);
+  c[0]->x = t->x;
+  c[0]->y = t->y;
+#ifdef T8_DTRI_TO_DTET
+  c[0]->z = t->z;
+#endif
+  c[0]->type = t->type;
+  c[0]->level = level;
+  for (i = 1; i < T8_DTRI_CHILDREN; i++) {
+    Bey_cid = t8_dtri_index_to_bey_number[t->type][i];
+    vertex = beyid_to_vertex[Bey_cid];
+    /* i-th anchor coordinate of child is (X_(0,i)+X_(vertex,i))/2
+     * where X_(i,j) is the j-th coordinate of t's ith node */
+    c[i]->x = (t->x + t_coordinates[vertex][0]) >> 1;
+    c[i]->y = (t->y + t_coordinates[vertex][1]) >> 1;
+#ifdef T8_DTRI_TO_DTET
+    c[i]->z = (t->z + t_coordinates[vertex][2]) >> 1;
+#endif
+    c[i]->type = t8_dtri_type_of_child[t->type][Bey_cid];
+    c[i]->level = level;
+  }
 }
 
 /* The sibid here is the Bey child id of the parent.

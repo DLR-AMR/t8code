@@ -72,6 +72,13 @@ void                t8_dtet_parent (const t8_dtet_t * t, t8_dtet_t * parent);
 void                t8_dtet_child (const t8_dtet_t * elem,
                                    int childid, t8_dtet_t * child);
 
+/** Compute the 8 children of a tetrahedron, array version.
+ * \param [in]     t  Input tetrahedron.
+ * \param [in,out] c  Pointers to the 8 computed children in Morton order.
+ *                    t may point to the same quadrant as c[0].
+ */
+void                t8_dtet_childrenpv (const t8_dtet_t * t, t8_dtet_t * c[]);
+
 /** Compute a specific sibling of a tetrahedron.
  * \param [in]     elem  Input tetrahedron.
  * \param [in,out] sibling  Existing tetrahedron whose data will be filled
