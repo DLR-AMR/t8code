@@ -191,16 +191,16 @@ t8_dtri_compute_all_coords (const t8_dtri_t * t,
 void
 t8_dtri_child (const t8_dtri_t * elem, int childid, t8_dtri_t * child)
 {
-#ifdef T8_DTRI_TO_DTET
-  /* TODO: implement dimension independent */
-  /* TODO: Das muss gehen, ohne alle Koordinaten auszurechnen */
-
   const t8_dtri_t    *t = (const t8_dtri_t *) elem;
   t8_dtri_t          *c = (t8_dtri_t *) child;
-  t8_dtri_coord_t     t_coordinates[3];
-  int                 coord2;
+  t8_dtri_coord_t     t_coordinates[T8_DTRI_FACES];
+  int                 vertex;
   int                 Bey_cid;
-  short               id_to_coord[8] = {0,1,2,3,1,1,2,2};
+#ifndef T8_DTRI_TO_DTET
+  short               id_to_vertex[4] = { 0, 1, 2, 1 };
+#else
+  short               id_to_vertex[8] = { 0, 1, 2, 3, 1, 1, 2, 2 };
+#endif
 
   T8_ASSERT (t->level < T8_DTRI_MAXLEVEL);
   T8_ASSERT (0 <= childid && childid < T8_DTRI_CHILDREN);
@@ -212,25 +212,26 @@ t8_dtri_child (const t8_dtri_t * elem, int childid, t8_dtri_t * child)
      *       capture it with (t->x+t->x)>>1 below? */
     c->x = t->x;
     c->y = t->y;
+#ifdef T8_DTRI_TO_DTET
     c->z = t->z;
+#endif
   }
   else {
-    coord2 = id_to_coord[Bey_cid];
-    /* i-th anchor coordinate of child is (X_(0,i)+X_(coord2,i))/2
+    vertex = id_to_vertex[Bey_cid];
+    /* i-th anchor coordinate of child is (X_(0,i)+X_(vertex,i))/2
      * where X_(i,j) is the j-th coordinate of t's ith node */
-    t8_dtri_compute_coords (t, t_coordinates,coord2);
+    t8_dtri_compute_coords (t, t_coordinates, vertex);
     c->x = (t->x + t_coordinates[0]) >> 1;
     c->y = (t->y + t_coordinates[1]) >> 1;
+#ifdef T8_DTRI_TO_DTET
     c->z = (t->z + t_coordinates[2]) >> 1;
+#endif
   }
 
   /* Compute type of child */
   c->type = t8_dtri_type_of_child[t->type][Bey_cid];
 
   c->level = t->level + 1;
-#else
-  SC_ABORT ("Not implemented");
-#endif
 }
 
 /* The sibid here is the Bey child id of the parent.
