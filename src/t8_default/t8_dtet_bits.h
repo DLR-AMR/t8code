@@ -55,12 +55,6 @@ void                t8_dtet_compute_all_coords (const t8_dtet_t * t,
                                                 t8_dtet_coord_t
                                                 coordinates[4][3]);
 
-/** Test if two tetrahedra have the same coordinates, type and level.
- * \return true if \a t1 describes the same tetrahedron as \a t2.
- */
-int                 t8_dtet_is_equal (const t8_dtet_t * t1,
-                                      const t8_dtet_t * t2);
-
 /** Compute the parent of a tetrahedron.
  * \param [in]  elem Input tetrahedron.
  * \param [in,out] parent Existing tetrahedron whose data will
@@ -95,6 +89,12 @@ void                t8_dtet_sibling (const t8_dtet_t * elem,
  */
 int                 t8_dtet_face_neighbour (const t8_dtet_t * t,
                                             t8_dtet_t * n, int face);
+
+/** Test if two tetrahedra have the same coordinates, type and level.
+ * \return true if \a t1 describes the same tetrahedron as \a t2.
+ */
+int                 t8_dtet_is_equal (const t8_dtet_t * t1,
+                                      const t8_dtet_t * t2);
 
 /** Test if two tetrahedra are siblings.
  * \param [in] t1 First tetrahedron to be tested.

@@ -56,17 +56,6 @@ compute_cubeid (const t8_dtri_t * t, int level)
   return id;
 }
 
-int
-t8_dtri_is_equal (const t8_dtri_t * t1, const t8_dtri_t * t2)
-{
-  return (t1->level == t1->level && t1->type == t2->type &&
-          t1->x == t1->x && t1->y == t1->y
-#ifdef T8_DTRI_TO_DTET
-          && t1->z == t1->z
-#endif
-    );
-}
-
 void
 t8_dtri_parent (const t8_dtri_t * t, t8_dtri_t * parent)
 {
@@ -324,6 +313,19 @@ t8_dtri_face_neighbour (const t8_dtri_t * t, t8_dtri_t * n, int face)
   n->type = type_new;
   return ret;
 }
+
+int
+t8_dtri_is_equal (const t8_dtri_t * t1, const t8_dtri_t * t2)
+{
+  return (t1->level == t1->level && t1->type == t2->type &&
+          t1->x == t1->x && t1->y == t1->y
+#ifdef T8_DTRI_TO_DTET
+          && t1->z == t1->z
+#endif
+    );
+}
+
+
 
 /* we check if t1 and t2 lie in the same subcube and have
  * the same level and parent type */

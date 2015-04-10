@@ -32,12 +32,6 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/** Test if two triangles have the same coordinates, type and level.
- * \return true if \a t1 describes the same triangle as \a t2.
- */
-int                 t8_dtri_is_equal (const t8_dtri_t * t1,
-                                      const t8_dtri_t * t2);
-
 /** Compute the parent of a triangle.
  * \param [in]  elem Input triangle.
  * \param [in,out] parent Existing triangle whose data will
@@ -91,6 +85,12 @@ void                t8_dtri_sibling (const t8_dtri_t * elem,
  */
 int                 t8_dtri_face_neighbour (const t8_dtri_t * t,
                                             t8_dtri_t * n, int face);
+
+/** Test if two triangles have the same coordinates, type and level.
+ * \return true if \a t1 describes the same triangle as \a t2.
+ */
+int                 t8_dtri_is_equal (const t8_dtri_t * t1,
+                                      const t8_dtri_t * t2);
 
 /** Test if two triangles are siblings.
  * \param [in] t1 First triangle to be tested.
