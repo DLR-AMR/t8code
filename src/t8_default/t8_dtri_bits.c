@@ -120,8 +120,9 @@ t8_dtri_compute_coords (const t8_dtri_t * t,
 #ifdef T8_DTRI_TO_DTET
   coordinates[2] = t->z;
 #endif
-  if (vertex == 0)
+  if (vertex == 0){
     return;
+  }
   coordinates[ei] += h;
 #ifndef T8_DTRI_TO_DTET
   if (vertex == 2) {
@@ -336,7 +337,9 @@ t8_dtri_is_sibling (const t8_dtri_t * t1, const t8_dtri_t * t2)
 
   t8_dtri_cube_id_t   cid1, cid2;
 
-  /* TODO: zulassen, dass level 0 element sein eigener sibling ist (?) */
+  /* TODO: zulassen, dass level 0 element sein eigener sibling ist (?)
+   *       JH says no, b/c adopting the convention from p4est a tetrahedron
+   *       is never its own sibling */
   if (t1->level == 0) {
     return 0;
   }
