@@ -112,17 +112,17 @@ t8_dtriangle_compute_coords (const t8_dtriangle_t * t,
 #endif
 
   coordinates[0][0] = t->x;
-  coordinates[0][1] = t->y;  
+  coordinates[0][1] = t->y;
 #ifdef T8_DTR_TO_DTET
   coordinates[0][2] = t->z;
 #endif
   for (i = 0; i < T8_DTRIANGLE_DIM; i++) {
     coordinates[1][i] = coordinates[0][i];
 #ifndef T8_DTR_TO_DTET
-    coordinates[2][i] = coordinates[0][i]+h;
+    coordinates[2][i] = coordinates[0][i] + h;
 #else
-    coordinates[2][i] = coordinates[0][i];    
-    coordinates[3][i] = coordinates[0][i]+h;
+    coordinates[2][i] = coordinates[0][i];
+    coordinates[3][i] = coordinates[0][i] + h;
 #endif
   }
   coordinates[1][ei] += h;
@@ -144,7 +144,7 @@ t8_dtriangle_child (const t8_dtriangle_t * elem, int childid,
                     t8_dtriangle_t * child)
 {
 #ifdef T8_DTR_TO_DTET
-   /* TODO: implement dimension independent */
+  /* TODO: implement dimension independent */
   /* TODO: Das muss gehen, ohne alle Koordinaten auszurechnen */
 
   const t8_dtriangle_t *t = (const t8_dtriangle_t *) (elem);
@@ -194,7 +194,7 @@ t8_dtriangle_child (const t8_dtriangle_t * elem, int childid,
 
   c->level = t->level + 1;
 #else
-  SC_ABORT("Not implemented");
+  SC_ABORT ("Not implemented");
 #endif
 }
 
@@ -367,5 +367,5 @@ t8_dtriangle_is_ancestor (const t8_dtriangle_t * t, const t8_dtriangle_t * c)
 #ifdef T8_DTR_TO_DTET
           && exclorz == 0
 #endif
-          );
+    );
 }
