@@ -42,7 +42,7 @@ T8_EXTERN_C_BEGIN ();
 #define T8_DTRI_MAXLEVEL 30
 
 /** The length of the root triangle in integer coordinates. */
-#define T8_DTRI_ROOT_LEN (1 << (T8_DTET_MAXLEVEL))
+#define T8_DTRI_ROOT_LEN (1 << (T8_DTRI_MAXLEVEL))
 
 /** The length of a triangle at a given level in integer coordinates. */
 #define T8_DTRI_LEN(l) (1 << (T8_DTRI_MAXLEVEL - (l)))
