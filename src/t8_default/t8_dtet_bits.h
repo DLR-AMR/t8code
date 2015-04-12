@@ -97,6 +97,15 @@ void                t8_dtet_sibling (const t8_dtet_t * elem,
 int                 t8_dtet_face_neighbour (const t8_dtet_t * t,
                                             t8_dtet_t * n, int face);
 
+/** Test if a tetrahedron lies inside of the root tetrahedron,
+ *  that is the tetrahedron of level 0, anchor node (0,0,0)
+ *  and type 0.
+ *  \param [in]     t Input tetrahedron.
+ *  \return true    If \a t lies inside of the root tetrahedron.
+ */
+int
+t8_dtet_is_inside_root(t8_dtet_t *t);
+
 /** Test if a tetrahedron lies outside of a reference tetrahedron of
  *  a given type and level lying in the ancestor cube of the tetrahedron.
  * \param [in]     t     Input tetrahedron.

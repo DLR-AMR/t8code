@@ -93,6 +93,15 @@ void                t8_dtri_sibling (const t8_dtri_t * elem,
 int                 t8_dtri_face_neighbour (const t8_dtri_t * t,
                                             t8_dtri_t * n, int face);
 
+/** Test if a triangle lies inside of the root triangle,
+ *  that is the triangle of level 0, anchor node (0,0)
+ *  and type 0.
+ *  \param [in]     t Input triangle.
+ *  \return true    If \a t lies inside of the root triangle.
+ */
+int
+t8_dtri_is_inside_root(t8_dtri_t *t);
+
 /** Test if a triangle lies outside of a reference triangle of
  *  a given type and level lying in the ancestor cube of the triangle.
  * \param [in]     t     Input triangle.
