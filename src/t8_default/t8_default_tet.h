@@ -28,7 +28,6 @@
 #define T8_DEFAULT_TET_H
 
 #include <t8_element.h>
-#include "t8_dtet.h"
 
 T8_EXTERN_C_BEGIN ();
 

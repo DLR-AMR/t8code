@@ -20,9 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "t8_dtri_bits.h"
 #include "t8_default_common.h"
 #include "t8_default_tri.h"
+#include "t8_dtri_bits.h"
 
 typedef t8_dtri_t t8_default_tri_t;
 
@@ -83,7 +83,8 @@ t8_default_scheme_new_tri (void)
 {
   t8_eclass_scheme_t *ts;
 
-  ts = T8_ALLOC (t8_eclass_scheme_t, 1);
+  ts = T8_ALLOC_ZERO (t8_eclass_scheme_t, 1);
+  ts->eclass = T8_ECLASS_TRIANGLE;
 
   ts->elem_size = t8_default_tri_size;
   ts->elem_maxlevel = t8_default_tri_maxlevel;
@@ -95,6 +96,7 @@ t8_default_scheme_new_tri (void)
 
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;
+
   ts->ts_destroy = t8_default_scheme_mempool_destroy;
   ts->ts_context = sc_mempool_new (sizeof (t8_default_tri_t));
 

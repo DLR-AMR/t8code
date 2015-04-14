@@ -41,9 +41,8 @@ T8_EXTERN_C_BEGIN ();
  * 		     will be filled with the coordinates of the vertex.
  * \param [in] vertex The number of the vertex.
  */
-void                t8_dtet_compute_coords (const t8_dtet_t * t,
-                                            t8_dtet_coord_t coordinates[3],
-                                            const int vertex);
+void                t8_dtet_compute_coords (const t8_dtet_t * t, int vertex,
+                                            t8_dtet_coord_t coordinates[3]);
 
 /** Compute the coordinates of the four vertices of a tetrahedron.
  * \param [in] t    Input tetrahedron.
@@ -93,8 +92,8 @@ void                t8_dtet_sibling (const t8_dtet_t * elem,
  * \param [in,out] n      Existing tetrahedron whose data will be filled.
  * \note \a t may point to the same tetrahedron as \a n.
  */
-int                 t8_dtet_face_neighbour (const t8_dtet_t * t,
-                                            t8_dtet_t * n, int face);
+int                 t8_dtet_face_neighbour (const t8_dtet_t * t, int face,
+                                            t8_dtet_t * n);
 
 /** Computes the nearest common ancestor of two tetrahedra in the same tree.
  * \param [in]     t1 First input tetrahedron.
@@ -126,6 +125,7 @@ int                 t8_dtet_is_equal (const t8_dtet_t * t1,
  * \param [in] t1 First tetrahedron to be tested.
  * \param [in] t2 Second tetrahedron to be tested.
  * \return true if \a t1 is unequal to and a sibling of \a t2.
+ *              TODO: allow for equality
  */
 int                 t8_dtet_is_sibling (const t8_dtet_t * t1,
                                         const t8_dtet_t * t2);
@@ -142,6 +142,7 @@ int                 t8_dtet_is_parent (const t8_dtet_t * t,
  * \param [in] t tetrahedron to be tested.
  * \param [in] c Descendent tetrahedron.
  * \return true if \a t is unequal to and an ancestor of \a c.
+ *              TODO: allow for equality
  */
 int                 t8_dtet_is_ancestor (const t8_dtet_t * t,
                                          const t8_dtet_t * c);

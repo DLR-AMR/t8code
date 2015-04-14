@@ -22,11 +22,11 @@
 
 #include "t8_default_common.h"
 #ifndef T8_DTRI_TO_DTET
-#include "t8_dtri_connectivity.h"
 #include "t8_dtri_bits.h"
+#include "t8_dtri_connectivity.h"
 #else
-#include "t8_dtet_connectivity.h"
 #include "t8_dtet_bits.h"
+#include "t8_dtet_connectivity.h"
 #endif
 
 typedef int8_t      t8_dtri_cube_id_t;
@@ -81,9 +81,8 @@ t8_dtri_parent (const t8_dtri_t * t, t8_dtri_t * parent)
 }
 
 void
-t8_dtri_compute_coords (const t8_dtri_t * t,
-                        t8_dtri_coord_t coordinates[T8_DTRI_DIM],
-                        const int vertex)
+t8_dtri_compute_coords (const t8_dtri_t * t, int vertex,
+                        t8_dtri_coord_t coordinates[T8_DTRI_DIM])
 {
   t8_dtri_type_t      type;
   int                 ei;
@@ -205,7 +204,7 @@ t8_dtri_child (const t8_dtri_t * elem, int childid, t8_dtri_t * child)
     vertex = t8_dtri_beyid_to_vertex[Bey_cid];
     /* i-th anchor coordinate of child is (X_(0,i)+X_(vertex,i))/2
      * where X_(i,j) is the j-th coordinate of t's ith node */
-    t8_dtri_compute_coords (t, t_coordinates, vertex);
+    t8_dtri_compute_coords (t, vertex, t_coordinates);
     c->x = (t->x + t_coordinates[0]) >> 1;
     c->y = (t->y + t_coordinates[1]) >> 1;
 #ifdef T8_DTRI_TO_DTET
@@ -268,7 +267,7 @@ t8_dtri_sibling (const t8_dtri_t * elem, int sibid, t8_dtri_t * sibling)
 /* Saves the neighbour of T along face "face" in N
  * returns the facenumber of N along which T is its neighbour */
 int
-t8_dtri_face_neighbour (const t8_dtri_t * t, t8_dtri_t * n, int face)
+t8_dtri_face_neighbour (const t8_dtri_t * t, int face, t8_dtri_t * n)
 {
   /* TODO: document what happens if outside of root tet */
   int                 type_new, type_old;

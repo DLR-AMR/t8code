@@ -45,9 +45,8 @@ void                t8_dtri_parent (const t8_dtri_t * t, t8_dtri_t * parent);
  * 		     will be filled with the coordinates of the vertex.
  * \param [in] vertex The number of the vertex.
  */
-void                t8_dtri_compute_coords (const t8_dtri_t * t,
-                                            t8_dtri_coord_t coordinates[2],
-                                            const int vertex);
+void                t8_dtri_compute_coords (const t8_dtri_t * t, int vertex,
+                                            t8_dtri_coord_t coordinates[2]);
 
 /** Compute the coordinates of the four vertices of a triangle.
  * \param [in] t    Input triangle.
@@ -89,8 +88,8 @@ void                t8_dtri_sibling (const t8_dtri_t * elem,
  * \param [in,out] n      Existing triangle whose data will be filled.
  * \note \a t may point to the same triangle as \a n.
  */
-int                 t8_dtri_face_neighbour (const t8_dtri_t * t,
-                                            t8_dtri_t * n, int face);
+int                 t8_dtri_face_neighbour (const t8_dtri_t * t, int face,
+                                            t8_dtri_t * n);
 
 /** Computes the nearest common ancestor of two triangles in the same tree.
  * \param [in]     t1 First input triangle.
@@ -122,6 +121,7 @@ int                 t8_dtri_is_equal (const t8_dtri_t * t1,
  * \param [in] t1 First triangle to be tested.
  * \param [in] t2 Second triangle to be tested.
  * \return true if \a t1 is unequal to and a sibling of \a t2.
+ *              TODO: allow for equality
  */
 int                 t8_dtri_is_sibling (const t8_dtri_t * t1,
                                         const t8_dtri_t * t2);
@@ -138,6 +138,7 @@ int                 t8_dtri_is_parent (const t8_dtri_t * t,
  * \param [in] t triangle to be tested.
  * \param [in] c Descendent triangle.
  * \return true if \a t is an ancestor of \a c (or equal to \a c).
+ *              TODO: allow for equality
  */
 int                 t8_dtri_is_ancestor (const t8_dtri_t * t,
                                          const t8_dtri_t * c);
