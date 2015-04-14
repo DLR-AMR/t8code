@@ -67,6 +67,17 @@ t8_default_tet_child (const t8_element_t * elem,
   t8_dtet_child (t, childid, c);
 }
 
+static void
+t8_default_tet_nca (const t8_element_t * elem1,
+                    const t8_element_t * elem2,
+                    t8_element_t * nca){
+    const t8_default_tet_t *t1 = (const t8_default_tet_t *) elem1;
+    const t8_default_tet_t *t2 = (const t8_default_tet_t *) elem1;
+    t8_default_tet_t   *c = (t8_default_tet_t *) nca;
+
+    t8_dtet_nearest_common_ancestor(t1,t2,c);
+}
+
 t8_eclass_scheme_t *
 t8_default_scheme_new_tet (void)
 {
@@ -80,6 +91,7 @@ t8_default_scheme_new_tet (void)
   ts->elem_parent = t8_default_tet_parent;
   ts->elem_sibling = t8_default_tet_sibling;
   ts->elem_child = t8_default_tet_child;
+  ts->elem_nca = t8_default_tet_nca;
 
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;
