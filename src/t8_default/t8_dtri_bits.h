@@ -137,7 +137,7 @@ int                 t8_dtri_is_parent (const t8_dtri_t * t,
 /** Test if a triangle is an ancestor of another triangle.
  * \param [in] t triangle to be tested.
  * \param [in] c Descendent triangle.
- * \return true if \a t is unequal to and an ancestor of \a c.
+ * \return true if \a t is an ancestor of \a c (or equal to \a c).
  */
 int                 t8_dtri_is_ancestor (const t8_dtri_t * t,
                                          const t8_dtri_t * c);
