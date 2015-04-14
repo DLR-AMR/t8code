@@ -55,3 +55,5 @@ const int t8_dtet_index_to_bey_number[6][8]={
     {0,4,5,1,6,2,7,3},
     {0,5,4,1,6,7,2,3},
 };
+
+const int               t8_dtet_beyid_to_vertex[8] = { 0, 1, 2, 3, 1, 1, 2, 2 };

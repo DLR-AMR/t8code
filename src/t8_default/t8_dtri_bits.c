@@ -185,11 +185,6 @@ t8_dtri_child (const t8_dtri_t * elem, int childid, t8_dtri_t * child)
   t8_dtri_coord_t     t_coordinates[T8_DTRI_DIM];
   int                 vertex;
   int                 Bey_cid;
-#ifndef T8_DTRI_TO_DTET
-  short               beyid_to_vertex[4] = { 0, 1, 2, 1 };
-#else
-  short               beyid_to_vertex[8] = { 0, 1, 2, 3, 1, 1, 2, 2 };
-#endif
 
   T8_ASSERT (t->level < T8_DTRI_MAXLEVEL);
   T8_ASSERT (0 <= childid && childid < T8_DTRI_CHILDREN);
@@ -207,7 +202,7 @@ t8_dtri_child (const t8_dtri_t * elem, int childid, t8_dtri_t * child)
 #endif
   }
   else {
-    vertex = beyid_to_vertex[Bey_cid];
+    vertex = t8_dtri_beyid_to_vertex[Bey_cid];
     /* i-th anchor coordinate of child is (X_(0,i)+X_(vertex,i))/2
      * where X_(i,j) is the j-th coordinate of t's ith node */
     t8_dtri_compute_coords (t, t_coordinates, vertex);
@@ -232,11 +227,6 @@ t8_dtri_childrenpv (const t8_dtri_t * t, t8_dtri_t * c[T8_DTRI_CHILDREN])
   int                 i;
   int                 Bey_cid;
   int                 vertex;
-#ifndef T8_DTRI_TO_DTET
-  short               beyid_to_vertex[4] = { 0, 1, 2, 1 };
-#else
-  short               beyid_to_vertex[8] = { 0, 1, 2, 3, 1, 1, 2, 2 };
-#endif
 
   T8_ASSERT (t->level < T8_DTRI_MAXLEVEL);
   t8_dtri_compute_all_coords (t, t_coordinates);
@@ -249,7 +239,7 @@ t8_dtri_childrenpv (const t8_dtri_t * t, t8_dtri_t * c[T8_DTRI_CHILDREN])
   c[0]->level = level;
   for (i = 1; i < T8_DTRI_CHILDREN; i++) {
     Bey_cid = t8_dtri_index_to_bey_number[t->type][i];
-    vertex = beyid_to_vertex[Bey_cid];
+    vertex = t8_dtri_beyid_to_vertex[Bey_cid];
     /* i-th anchor coordinate of child is (X_(0,i)+X_(vertex,i))/2
      * where X_(i,j) is the j-th coordinate of t's ith node */
     c[i]->x = (t->x + t_coordinates[vertex][0]) >> 1;

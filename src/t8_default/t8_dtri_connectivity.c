@@ -42,3 +42,5 @@ const int t8_dtri_index_to_bey_number[2][4]={
     {0,1,3,2},
     {0,3,1,2}
 };
+
+const int t8_dtri_beyid_to_vertex[4] = {0,1,2,1};
