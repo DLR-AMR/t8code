@@ -72,7 +72,7 @@ t8_default_hex_child (const t8_element_t * elem,
 
   r->x = childid & 0x01 ? (q->x | shift) : q->x;
   r->y = childid & 0x02 ? (q->y | shift) : q->y;
-  r->z = childid & 0x04 ? (q->y | shift) : q->z;
+  r->z = childid & 0x04 ? (q->z | shift) : q->z;
   r->level = q->level + 1;
   P4EST_ASSERT (p8est_quadrant_is_parent (q, r));
 }
