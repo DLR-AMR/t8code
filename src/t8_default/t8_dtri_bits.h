@@ -112,17 +112,6 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
 int
 t8_dtri_is_inside_root(t8_dtri_t *t);
 
-/** Test if a triangle lies outside of a reference triangle of
- *  a given type and level lying in the ancestor cube of the triangle.
- * \param [in]     t     Input triangle.
- * \param [in]     roottype The type of the reference triangle.
- * \param [in]     level The level of the reference triangle,
- *                       must be smaller then the level of \a t.
- * \return true if \a t lies outside the reference triangle.
- */
-int                 t8_dtri_is_outside (const t8_dtri_t * t, int8_t roottype,
-                                        int8_t level);
-
 /** Test if two triangles have the same coordinates, type and level.
  * \return true if \a t1 describes the same triangle as \a t2.
  */

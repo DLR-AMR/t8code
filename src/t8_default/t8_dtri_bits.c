@@ -404,54 +404,6 @@ t8_dtri_is_inside_root (t8_dtri_t * t)
 }
 
 int
-t8_dtri_is_outside (const t8_dtri_t * t, int8_t roottype, int8_t level)
-{
-  t8_dtri_coord_t     n1, n2, cubex, cubey;
-  t8_dtri_coord_t     bitmask;
-#ifdef T8_DTRI_TO_DTET
-  t8_dtri_coord_t     dir3, cubez;
-  int                 sign;
-#endif
-
-  /* Compute anchor coordinates of the ancestor cube of t */
-  bitmask = ~(T8_DTRI_LEN (level) - 1);
-  cubex = t->x & bitmask;
-  cubey = t->y & bitmask;
-#ifdef T8_DTRI_TO_DTET
-  cubez = t->z & bitmask;
-#endif
-#ifndef T8_DTRI_TO_DTET
-  /* 2D */
-  n1 = (roottype == 0) ? t->x - cubex : t->y - cubey;
-  n2 = (roottype == 0) ? t->y - cubey : t->x - cubex;
-
-  return n1 >= T8_DTRI_LEN (level) || n2 < 0 || n2 - n1 > 0
-    || (n2 == n1 && t->type == 1 - roottype);
-#else
-  /* 3D */
-  /* *INDENT-OFF* */
-  n1 = roottype / 2 == 0 ? t->x - cubex :
-       roottype / 2 == 2 ? t->z - cubez : t->y - cubey;
-  n2 = (roottype + 3) % 6 == 0 ? t->x - cubex :
-       (roottype + 3) % 6 == 2 ? t->z - cubez : t->y - cubey;
-  dir3 = roottype % 3 == 2 ? t->x - cubex :
-         roottype % 3 == 0 ? t->z - cubez : t->y - cubey;
-  sign = (roottype % 2 == 0) ? 1 : -1;
-  /* *INDENT-ON* */
-
-  roottype += 6;                /* We need to compute modulo six and want
-                                   to avoid negative numbers when substracting from roottype. */
-  return n1 >= T8_DTRI_LEN (level) || n2 < 0 || dir3 - n1 > 0 || n2 - dir3 > 0
-    || (dir3 == n1 && (t->type == (roottype + sign * 1) % 6
-                       || t->type == (roottype + sign * 2) % 6
-                       || t->type == (roottype + sign * 3) % 6))
-    || (dir3 == n2 && (t->type == (roottype - sign * 1) % 6
-                       || t->type == (roottype - sign * 2) % 6
-                       || t->type == (roottype - sign * 3) % 6));
-#endif
-}
-
-int
 t8_dtri_is_equal (const t8_dtri_t * t1, const t8_dtri_t * t2)
 {
   return (t1->level == t1->level && t1->type == t2->type &&

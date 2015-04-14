@@ -116,17 +116,6 @@ t8_dtet_nearest_common_ancestor (const t8_dtet_t * t1,
 int
 t8_dtet_is_inside_root(t8_dtet_t *t);
 
-/** Test if a tetrahedron lies outside of a reference tetrahedron of
- *  a given type and level lying in the ancestor cube of the tetrahedron.
- * \param [in]     t     Input tetrahedron.
- * \param [in]     roottype The type of the reference tetrahedron.
- * \param [in]     level The level of the reference tetrahedron,
- *                       must be smaller then the level of \a t.
- * \return true if \a t lies outside the reference tetrahedron.
- */
-int                 t8_dtet_is_outside (const t8_dtet_t * t, int8_t roottype,
-                                        int8_t level);
-
 /** Test if two tetrahedra have the same coordinates, type and level.
  * \return true if \a t1 describes the same tetrahedron as \a t2.
  */
