@@ -112,11 +112,27 @@ t8_element_maxlevel (t8_eclass_scheme_t * ts)
   return ts->elem_maxlevel ();
 }
 
+t8_eclass_t
+t8_element_child_eclass (t8_eclass_scheme_t * ts, int childid)
+{
+  T8_ASSERT (ts != NULL && ts->elem_child_eclass != NULL);
+  T8_ASSERT (0 <= childid && childid < t8_eclass_num_children[ts->eclass]);
+  return ts->elem_child_eclass (childid);
+}
+
+int
+t8_element_level (t8_eclass_scheme_t * ts, const t8_element_t * elem)
+{
+  T8_ASSERT (ts != NULL && ts->elem_level != NULL);
+  return ts->elem_level (elem);
+}
+
 void
 t8_element_parent (t8_eclass_scheme_t * ts,
                    const t8_element_t * elem, t8_element_t * parent)
 {
   T8_ASSERT (ts != NULL && ts->elem_parent != NULL);
+  T8_ASSERT (t8_element_level (ts, elem) > 0);
   ts->elem_parent (elem, parent);
 }
 
@@ -126,6 +142,7 @@ t8_element_sibling (t8_eclass_scheme_t * ts,
                     t8_element_t * sibling)
 {
   T8_ASSERT (ts != NULL && ts->elem_sibling != NULL);
+  T8_ASSERT (0 <= sibid && sibid < t8_eclass_num_children[ts->eclass]);
   ts->elem_sibling (elem, sibid, sibling);
 }
 
@@ -134,7 +151,19 @@ t8_element_child (t8_eclass_scheme_t * ts, const t8_element_t * elem,
                   int childid, t8_element_t * child)
 {
   T8_ASSERT (ts != NULL && ts->elem_child != NULL);
+  T8_ASSERT (t8_element_level (ts, elem) < t8_element_maxlevel (ts));
+  T8_ASSERT (0 <= childid && childid < t8_eclass_num_children[ts->eclass]);
   ts->elem_child (elem, childid, child);
+}
+
+void
+t8_element_children (t8_eclass_scheme_t * ts, const t8_element_t * elem,
+                     int length, t8_element_t * c[])
+{
+  T8_ASSERT (ts != NULL && ts->elem_children != NULL);
+  T8_ASSERT (t8_element_level (ts, elem) < t8_element_maxlevel (ts));
+  T8_ASSERT (length == t8_eclass_num_children[ts->eclass]);
+  ts->elem_children (elem, length, c);
 }
 
 void

@@ -52,7 +52,7 @@ typedef enum t8_eclass
   T8_ECLASS_HEX,
   /** The tetrahedron is another three-dimensional element class. */
   T8_ECLASS_TET,
-  /** The prism has five sides, namely two opposing triangles joined by three quadrilaterals. */
+  /** The prism has five sides: two opposing triangles joined by three quadrilaterals. */
   T8_ECLASS_PRISM,
   /** The pyramid has a quadrilateral as base and four triangles as sides. */
   T8_ECLASS_PYRAMID,
@@ -64,11 +64,14 @@ t8_eclass_t;
 /** The maximum number of boundary faces an element class can have. */
 #define T8_ECLASS_MAX_FACES 6
 
-/** Map each of the element classs to its dimension. */
+/** Map each of the element classes to its dimension. */
 extern const int    t8_eclass_to_dimension[T8_ECLASS_LAST];
 
 /** The number of codimension-one boundaries of an element class. */
 extern const int    t8_eclass_num_faces[T8_ECLASS_LAST];
+
+/** The number of children of an element class. */
+extern const int    t8_eclass_num_children[T8_ECLASS_LAST];
 
 /** For each of the element classes, list the type of the faces. */
 extern const int    t8_eclass_face_types[T8_ECLASS_LAST][T8_ECLASS_MAX_FACES];

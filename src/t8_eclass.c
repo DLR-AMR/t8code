@@ -30,6 +30,9 @@ const int t8_eclass_to_dimension[T8_ECLASS_LAST] =
 const int t8_eclass_num_faces[T8_ECLASS_LAST] =
   { 0, 2, 4, 3, 6, 4, 5, 5 };
 
+const int t8_eclass_num_children[T8_ECLASS_LAST] =
+  { 0, 2, 4, 4, 8, 8, 8, 10 };
+
 const int t8_eclass_face_types[T8_ECLASS_LAST][T8_ECLASS_MAX_FACES] =
   {{ -1, -1, -1, -1, -1, -1 },
    {  0,  0, -1, -1, -1, -1 },
