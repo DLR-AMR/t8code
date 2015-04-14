@@ -37,6 +37,20 @@ t8_default_hex_maxlevel (void)
   return P8EST_QMAXLEVEL;
 }
 
+static              t8_eclass_t
+t8_default_hex_child_eclass (int childid)
+{
+  P4EST_ASSERT (0 <= childid && childid < P8EST_CHILDREN);
+
+  return T8_ECLASS_HEX;
+}
+
+static int
+t8_default_hex_level (const t8_element_t * elem)
+{
+  return (int) ((const p8est_quadrant_t *) elem)->level;
+}
+
 static void
 t8_default_hex_sibling (const t8_element_t * elem,
                         int sibid, t8_element_t * sibling)
@@ -55,7 +69,7 @@ t8_default_hex_child (const t8_element_t * elem,
 
   P4EST_ASSERT (p8est_quadrant_is_extended (q));
   P4EST_ASSERT (q->level < P8EST_QMAXLEVEL);
-  P4EST_ASSERT (childid >= 0 && childid < P8EST_CHILDREN);
+  P4EST_ASSERT (0 <= childid && childid < P8EST_CHILDREN);
 
   r->x = childid & 0x01 ? (q->x | shift) : q->x;
   r->y = childid & 0x02 ? (q->y | shift) : q->y;
@@ -64,23 +78,39 @@ t8_default_hex_child (const t8_element_t * elem,
   P4EST_ASSERT (p8est_quadrant_is_parent (q, r));
 }
 
+static void
+t8_default_hex_children (const t8_element_t * elem,
+                         int length, t8_element_t * c[])
+{
+  P4EST_ASSERT (length == P8EST_CHILDREN);
+
+  p8est_quadrant_childrenpv ((const p8est_quadrant_t *) elem,
+                             (p8est_quadrant_t **) c);
+}
+
 t8_eclass_scheme_t *
 t8_default_scheme_new_hex (void)
 {
   t8_eclass_scheme_t *ts;
 
   ts = T8_ALLOC (t8_eclass_scheme_t, 1);
+  ts->eclass = T8_ECLASS_HEX;
 
   ts->elem_size = t8_default_hex_size;
   ts->elem_maxlevel = t8_default_hex_maxlevel;
+  ts->elem_child_eclass = t8_default_hex_child_eclass;
 
+  ts->elem_level = t8_default_hex_level;
   ts->elem_parent = (t8_element_parent_t) p8est_quadrant_parent;
   ts->elem_sibling = t8_default_hex_sibling;
   ts->elem_child = t8_default_hex_child;
+  ts->elem_children = t8_default_hex_children;
   ts->elem_nca = (t8_element_nca_t) p8est_nearest_common_ancestor;
+  ts->elem_boundary = NULL;
 
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;
+
   ts->ts_destroy = t8_default_scheme_mempool_destroy;
   ts->ts_context = sc_mempool_new (sizeof (t8_phex_t));
 
