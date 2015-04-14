@@ -96,6 +96,17 @@ void                t8_dtet_sibling (const t8_dtet_t * elem,
 int                 t8_dtet_face_neighbour (const t8_dtet_t * t,
                                             t8_dtet_t * n, int face);
 
+/** Computes the nearest common ancestor of two tetrahedra in the same tree.
+ * \param [in]     t1 First input tetrahedron.
+ * \param [in]     t2 Second input tetrahedron.
+ * \param [in,out] r Existing tetrahedron whose data will be filled.
+ * \note \a t1, \a t2, \a r may point to the same quadrant.
+ */
+void
+t8_dtet_nearest_common_ancestor (const t8_dtet_t * t1,
+                                 const t8_dtet_t * t2,
+                                 t8_dtet_t * r);
+
 /** Test if a tetrahedron lies inside of the root tetrahedron,
  *  that is the tetrahedron of level 0, anchor node (0,0,0)
  *  and type 0.

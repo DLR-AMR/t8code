@@ -342,6 +342,47 @@ t8_dtri_face_neighbour (const t8_dtri_t * t, t8_dtri_t * n, int face)
   return ret;
 }
 
+void
+t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
+                                 const t8_dtri_t * t2, t8_dtri_t * r)
+{
+  int                 maxlevel;
+  uint32_t            exclorx, exclory;
+#ifdef P4_TO_P8
+  uint32_t            exclorz;
+#endif
+  uint32_t            maxclor;
+
+  exclorx = t1->x ^ t2->x;
+  exclory = t1->y ^ t2->y;
+#ifdef P4_TO_P8
+  exclorz = t1->z ^ t2->z;
+
+  maxclor = exclorx | exclory | exclorz;
+#else
+  maxclor = exclorx | exclory;
+#endif
+  maxlevel = SC_LOG2_32 (maxclor) + 1;
+
+  T8_ASSERT (maxlevel <= T8_DTRI_MAXLEVEL);
+
+  r->x = t1->x & ~((1 << maxlevel) - 1);
+  r->y = t1->y & ~((1 << maxlevel) - 1);
+#ifdef P4_TO_P8
+  r->z = t1->z & ~((1 << maxlevel) - 1);
+#endif
+  r->level = (int8_t) SC_MIN (T8_DTRI_MAXLEVEL - maxlevel,
+                              (int) SC_MIN (t1->level, t2->level));
+  /* Find the correct type of r by testing with
+   * which type it becomes an ancestor of t1. */
+  for (r->type = 0; r->type < 6; r->type++) {
+    if (t8_dtri_is_ancestor (r, t1)) {
+      return;
+    }
+  }
+  SC_ABORT_NOT_REACHED ();
+}
+
 int
 t8_dtri_is_inside_root (t8_dtri_t * t)
 {

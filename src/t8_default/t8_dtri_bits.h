@@ -92,6 +92,17 @@ void                t8_dtri_sibling (const t8_dtri_t * elem,
 int                 t8_dtri_face_neighbour (const t8_dtri_t * t,
                                             t8_dtri_t * n, int face);
 
+/** Computes the nearest common ancestor of two triangles in the same tree.
+ * \param [in]     t1 First input triangle.
+ * \param [in]     t2 Second input triangle.
+ * \param [in,out] r Existing triangle whose data will be filled.
+ * \note \a t1, \a t2, \a r may point to the same quadrant.
+ */
+void
+t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
+                                 const t8_dtri_t * t2,
+                                 t8_dtri_t * r);
+
 /** Test if a triangle lies inside of the root triangle,
  *  that is the triangle of level 0, anchor node (0,0)
  *  and type 0.
