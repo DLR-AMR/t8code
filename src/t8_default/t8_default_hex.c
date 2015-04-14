@@ -39,7 +39,7 @@ t8_default_hex_maxlevel (void)
 static              t8_eclass_t
 t8_default_hex_child_eclass (int childid)
 {
-  P4EST_ASSERT (0 <= childid && childid < P8EST_CHILDREN);
+  T8_ASSERT (0 <= childid && childid < P8EST_CHILDREN);
 
   return T8_ECLASS_HEX;
 }
@@ -66,22 +66,22 @@ t8_default_hex_child (const t8_element_t * elem,
   const p4est_qcoord_t shift = P8EST_QUADRANT_LEN (q->level + 1);
   p8est_quadrant_t   *r = (p8est_quadrant_t *) child;
 
-  P4EST_ASSERT (p8est_quadrant_is_extended (q));
-  P4EST_ASSERT (q->level < P8EST_QMAXLEVEL);
-  P4EST_ASSERT (0 <= childid && childid < P8EST_CHILDREN);
+  T8_ASSERT (p8est_quadrant_is_extended (q));
+  T8_ASSERT (q->level < P8EST_QMAXLEVEL);
+  T8_ASSERT (0 <= childid && childid < P8EST_CHILDREN);
 
   r->x = childid & 0x01 ? (q->x | shift) : q->x;
   r->y = childid & 0x02 ? (q->y | shift) : q->y;
   r->z = childid & 0x04 ? (q->z | shift) : q->z;
   r->level = q->level + 1;
-  P4EST_ASSERT (p8est_quadrant_is_parent (q, r));
+  T8_ASSERT (p8est_quadrant_is_parent (q, r));
 }
 
 static void
 t8_default_hex_children (const t8_element_t * elem,
                          int length, t8_element_t * c[])
 {
-  P4EST_ASSERT (length == P8EST_CHILDREN);
+  T8_ASSERT (length == P8EST_CHILDREN);
 
   p8est_quadrant_childrenpv ((const p8est_quadrant_t *) elem,
                              (p8est_quadrant_t **) c);
