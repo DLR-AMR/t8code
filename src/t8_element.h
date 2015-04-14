@@ -3,8 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2010 The University of Texas System
-  Written by Carsten Burstedde, Lucas C. Wilcox, and Tobin Isaac
+  Copyright (C) 2015 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -36,7 +35,7 @@
 T8_EXTERN_C_BEGIN ();
 
 /** Opaque structure for a generic element, only used as pointer.
- * Applications are free to cast it to their internal element class.
+ * Implementations are free to cast it to their internal data structure.
  */
 typedef struct t8_element t8_element_t;
 
@@ -53,11 +52,19 @@ typedef size_t      (*t8_element_size_t) (void);
 /** Return the maximum level allowed for this element class. */
 typedef int         (*t8_element_maxlevel_t) (void);
 
+/* *INDENT-OFF* */
+/** Return the type of each child in the ordering of the implementation. */
+typedef t8_eclass_t (*t8_element_child_eclass_t) (int childid);
+/* *INDENT-ON* */
+
+/** Return the refinement level of an element. */
+typedef int         (*t8_element_level_t) (const t8_element_t * elem);
+
 /** Construct the parent of a given element. */
 typedef void        (*t8_element_parent_t) (const t8_element_t * elem,
                                             t8_element_t * parent);
 
-/** Construct a given same-size sibling of a given element. */
+/** Construct a same-size sibling of a given element. */
 typedef void        (*t8_element_sibling_t) (const t8_element_t * elem,
                                              int sibid,
                                              t8_element_t * sibling);
@@ -65,6 +72,10 @@ typedef void        (*t8_element_sibling_t) (const t8_element_t * elem,
 /** Construct the child element of a given number. */
 typedef void        (*t8_element_child_t) (const t8_element_t * elem,
                                            int childid, t8_element_t * child);
+
+/** Construct all children of a given element. */
+typedef void        (*t8_element_children_t) (const t8_element_t * elem,
+                                              int length, t8_element_t * c[]);
 
 /** Construct the nearest common ancestor of two elements in the same tree. */
 typedef void        (*t8_element_nca_t) (const t8_element_t * elem1,
@@ -91,12 +102,20 @@ typedef void        (*t8_eclass_scheme_destroy_t) (t8_eclass_scheme_t * ts);
 /** The virtual table for a particular implementation of an element class. */
 struct t8_eclass_scheme
 {
-  /* these element routines are context free */
+  /** This scheme defines the operations for a particular element class. */
+  t8_eclass_t         eclass;
+
+  /* these element routines are context free and do not work on elements */
   t8_element_size_t   elem_size;        /**< Compute element size in bytes. */
   t8_element_maxlevel_t elem_maxlevel;  /**< Compute element maximum level. */
+  t8_element_child_eclass_t elem_child_eclass;  /**< Compute a child's element class. */
+
+  /* these element routines take one or more elements as input */
+  t8_element_level_t  elem_level;       /**< Compute the refinement level of an element. */
   t8_element_parent_t elem_parent;      /**< Compute the parent element. */
   t8_element_sibling_t elem_sibling;    /**< Compute a given sibling element. */
   t8_element_child_t  elem_child;       /**< Compute a child element. */
+  t8_element_children_t elem_children;  /**< Compute all children of an element. */
   t8_element_nca_t    elem_nca;         /**< Compute nearest common ancestor. */
   t8_element_boundary_t elem_boundary;  /**< Compute a set of boundary elements. */
 
@@ -157,15 +176,55 @@ size_t              t8_element_size (t8_eclass_scheme_t * ts);
 /** Return the maximum allowed level for any element of a given class. */
 int                 t8_element_maxlevel (t8_eclass_scheme_t * ts);
 
+/** Return the type of each child in the ordering of the implementation.
+ * \param [in] ts       The virtual table for this element class.
+ * \param [in] childid  Must be between 0 and the number of children (exclusive).
+ *                      The number of children is defined in \a t8_eclass_num_children.
+ * \return              The type for the given child.
+ */
+t8_eclass_t         t8_element_child_eclass (t8_eclass_scheme_t * ts,
+                                             int childid);
+
+int                 t8_element_level (t8_eclass_scheme_t * ts,
+                                      const t8_element_t * elem);
 void                t8_element_parent (t8_eclass_scheme_t * ts,
                                        const t8_element_t * elem,
                                        t8_element_t * parent);
 void                t8_element_sibling (t8_eclass_scheme_t * ts,
                                         const t8_element_t * elem, int sibid,
                                         t8_element_t * sibling);
+
+/** Construct the child element of a given number.
+ * \param [in] ts       The virtual table for this element class.
+ * \param [in] elem     This must be a valid element, bigger than maxlevel.
+ * \param [in] childid  The number of the child to construct.
+ * \param [in,out] child        The storage for this element must exist
+ *                              and match the element class of the child.
+ *                              For a pyramid, for example, it may be either a
+ *                              tetrahedron or a pyramid depending on \a childid.
+ *                              This can be checked by \a t8_element_child_eclass.
+ *                              On output, a valid element.
+ * \see t8_element_child_eclass
+ */
 void                t8_element_child (t8_eclass_scheme_t * ts,
                                       const t8_element_t * elem, int childid,
                                       t8_element_t * child);
+
+/** Construct all children of a given element.
+ * \param [in] ts       The virtual table for this element class.
+ * \param [in] elem     This must be a valid element, bigger than maxlevel.
+ * \param [in] length   The length of the output array \a c must match
+ *                      the number of children.
+ * \param [in,out] c    The storage for these \a length elements must exist
+ *                      and match the element class in the children's ordering.
+ *                      On output, all children are valid.
+ * \see t8_eclass_num_children
+ * \see t8_element_child_eclass
+ */
+void                t8_element_children (t8_eclass_scheme_t * ts,
+                                         const t8_element_t * elem,
+                                         int length, t8_element_t * c[]);
+
 void                t8_element_nca (t8_eclass_scheme_t * ts,
                                     const t8_element_t * elem1,
                                     const t8_element_t * elem2,

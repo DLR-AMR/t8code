@@ -3,8 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2010 The University of Texas System
-  Written by Carsten Burstedde, Lucas C. Wilcox, and Tobin Isaac
+  Copyright (C) 2015 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -29,6 +28,9 @@ const int t8_eclass_to_dimension[T8_ECLASS_LAST] =
 
 const int t8_eclass_num_faces[T8_ECLASS_LAST] =
   { 0, 2, 4, 3, 6, 4, 5, 5 };
+
+const int t8_eclass_num_children[T8_ECLASS_LAST] =
+  { 0, 2, 4, 4, 8, 8, 8, 10 };
 
 const int t8_eclass_face_types[T8_ECLASS_LAST][T8_ECLASS_MAX_FACES] =
   {{ -1, -1, -1, -1, -1, -1 },

@@ -3,8 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2010 The University of Texas System
-  Written by Carsten Burstedde, Lucas C. Wilcox, and Tobin Isaac
+  Copyright (C) 2015 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -136,18 +135,23 @@ t8_default_scheme_new_quad (void)
   t8_eclass_scheme_t *ts;
 
   ts = T8_ALLOC (t8_eclass_scheme_t, 1);
+  ts->eclass = T8_ECLASS_QUAD;
 
   ts->elem_size = t8_default_quad_size;
   ts->elem_maxlevel = t8_default_quad_maxlevel;
+  ts->elem_child_eclass = NULL;
 
+  ts->elem_level = NULL;
   ts->elem_parent = t8_default_quad_parent;
   ts->elem_sibling = t8_default_quad_sibling;
   ts->elem_child = t8_default_quad_child;
+  ts->elem_children = NULL;
   ts->elem_nca = t8_default_quad_nca;
   ts->elem_boundary = t8_default_quad_boundary;
 
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;
+
   ts->ts_destroy = t8_default_scheme_mempool_destroy;
   ts->ts_context = sc_mempool_new (sizeof (t8_pquad_t));
 
