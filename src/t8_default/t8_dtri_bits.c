@@ -425,11 +425,12 @@ t8_dtri_is_sibling (const t8_dtri_t * t1, const t8_dtri_t * t2)
 
   t8_dtri_cube_id_t   cid1, cid2;
 
-  /* TODO: zulassen, dass level 0 element sein eigener sibling ist (?)
-   *       JH says no, b/c adopting the convention from p4est a tetrahedron
-   *       is never its own sibling */
   if (t1->level == 0) {
-    return 0;
+    return t2->level == 0 && t1->x == t2->x && t1->y == t2->y &&
+#ifdef T8_DTRI_TO_DTET
+      t1->z == t2->z &&
+#endif
+      1;
   }
 
   exclorx = t1->x ^ t2->x;
@@ -448,7 +449,7 @@ t8_dtri_is_sibling (const t8_dtri_t * t1, const t8_dtri_t * t2)
     ((exclorz & ~T8_DTRI_LEN (t1->level)) == 0) &&
 #endif
     t8_dtri_cid_type_to_parenttype[cid1][t1->type] ==
-    t8_dtri_cid_type_to_parenttype[cid2][t2->type] && t1->type != t2->type;
+    t8_dtri_cid_type_to_parenttype[cid2][t2->type];
 }
 
 int
@@ -480,8 +481,11 @@ t8_dtri_is_ancestor (const t8_dtri_t * t, const t8_dtri_t * c)
 #endif
   int8_t              type_t;
 
-  if (t->level >= c->level) {
+  if (t->level > c->level) {
     return 0;
+  }
+  if (t->level == c->level) {
+    return t8_dtri_is_equal (t, c);
   }
 
   exclorx = (t->x ^ c->x) >> (T8_DTRI_MAXLEVEL - t->level);
@@ -489,9 +493,6 @@ t8_dtri_is_ancestor (const t8_dtri_t * t, const t8_dtri_t * c)
 #ifdef T8_DTRI_TO_DTET
   exclorz = (t->z ^ c->z) >> (T8_DTRI_MAXLEVEL - t->level);
 #endif
-
-  /* TODO: implement */
-  SC_ABORT ("Not implemented");
 
   if (exclorx == 0 && exclory == 0
 #ifdef T8_DTRI_TO_DTET

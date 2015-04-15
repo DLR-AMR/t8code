@@ -120,8 +120,7 @@ int                 t8_dtri_is_equal (const t8_dtri_t * t1,
 /** Test if two triangles are siblings.
  * \param [in] t1 First triangle to be tested.
  * \param [in] t2 Second triangle to be tested.
- * \return true if \a t1 is unequal to and a sibling of \a t2.
- *              TODO: allow for equality
+ * \return true if \a t1 is equal to or a sibling of \a t2. *
  */
 int                 t8_dtri_is_sibling (const t8_dtri_t * t1,
                                         const t8_dtri_t * t2);
@@ -137,8 +136,7 @@ int                 t8_dtri_is_parent (const t8_dtri_t * t,
 /** Test if a triangle is an ancestor of another triangle.
  * \param [in] t triangle to be tested.
  * \param [in] c Descendent triangle.
- * \return true if \a t is an ancestor of \a c (or equal to \a c).
- *              TODO: allow for equality
+ * \return true if \a t is equal to or an ancestor of \a c.
  */
 int                 t8_dtri_is_ancestor (const t8_dtri_t * t,
                                          const t8_dtri_t * c);

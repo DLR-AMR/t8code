@@ -124,8 +124,7 @@ int                 t8_dtet_is_equal (const t8_dtet_t * t1,
 /** Test if two tetrahedra are siblings.
  * \param [in] t1 First tetrahedron to be tested.
  * \param [in] t2 Second tetrahedron to be tested.
- * \return true if \a t1 is unequal to and a sibling of \a t2.
- *              TODO: allow for equality
+ * \return true if \a t1 is equal to or a sibling of \a t2.
  */
 int                 t8_dtet_is_sibling (const t8_dtet_t * t1,
                                         const t8_dtet_t * t2);
@@ -141,8 +140,7 @@ int                 t8_dtet_is_parent (const t8_dtet_t * t,
 /** Test if a tetrahedron is an ancestor of another tetrahedron.
  * \param [in] t tetrahedron to be tested.
  * \param [in] c Descendent tetrahedron.
- * \return true if \a t is unequal to and an ancestor of \a c.
- *              TODO: allow for equality
+ * \return true if \a t is equal to or an ancestor of \a c.
  */
 int                 t8_dtet_is_ancestor (const t8_dtet_t * t,
                                          const t8_dtet_t * c);
