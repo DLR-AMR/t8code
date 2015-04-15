@@ -508,7 +508,7 @@ t8_dtri_is_ancestor (const t8_dtri_t * t, const t8_dtri_t * c)
     n2 = (type_t == 0) ? c->y - t->y : c->x - t->x;
 
     return !(n1 >= T8_DTRI_LEN (t->level) || n2 < 0 || n2 - n1 > 0
-             || (n2 == n1 && t->type == 1 - type_t));
+             || (n2 == n1 && c->type == 1 - type_t));
 #else
     /* 3D */
       /* *INDENT-OFF* */
@@ -525,11 +525,11 @@ t8_dtri_is_ancestor (const t8_dtri_t * t, const t8_dtri_t * c)
                                    to avoid negative numbers when substracting from type_t. */
     return !(n1 >= T8_DTRI_LEN (t->level) || n2 < 0 || dir3 - n1 > 0
              || n2 - dir3 > 0 || (dir3 == n1
-                                  && (t->type == (type_t + sign * 1) % 6
+                                  && (c->type == (type_t + sign * 1) % 6
                                       || t->type == (type_t + sign * 2) % 6
                                       || t->type == (type_t + sign * 3) % 6))
              || (dir3 == n2
-                 && (t->type == (type_t - sign * 1) % 6
+                 && (c->type == (type_t - sign * 1) % 6
                      || t->type == (type_t - sign * 2) % 6
                      || t->type == (type_t - sign * 3) % 6)));
 #endif
