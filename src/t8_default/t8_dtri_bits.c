@@ -31,6 +31,8 @@
 
 typedef int8_t      t8_dtri_cube_id_t;
 
+/* Compute the cube-id of t's ancestor of level "level" in constant time.
+ * If "level" is greater then t->level then the cube-id 0 is returned. */
 static              t8_dtri_cube_id_t
 compute_cubeid (const t8_dtri_t * t, int level)
 {
@@ -53,6 +55,36 @@ compute_cubeid (const t8_dtri_t * t, int level)
 #endif
 
   return id;
+}
+
+/* A routine to compute the type of t's ancestor of level "level".
+ * If "level" equals t's level then t's type is returned.
+ * It is not allowed to call this function with "level" greater than t->level.
+ * This method runs in O(t->level - level).
+ */
+static t8_dtri_type_t
+compute_type (const t8_dtri_t * t, int level)
+{
+  int8_t              type = t->type;
+  t8_dtri_cube_id_t   cid;
+  int                 tlevel = t->level;
+  int                 i;
+
+  T8_ASSERT (0 <= level && level <= tlevel);
+  if (level == tlevel) {
+    return t->type;
+  }
+  if (level == 0) {
+    /* TODO: the level of the root tet is hardcoded to 0
+     *       maybe once we want to allow the root tet to have different types */
+    return 0;
+  }
+  for (i = tlevel; i < level; i++) {
+    cid = compute_cubeid (t, i);
+    /* compute type as the type of T^{i+1}, that is T's ancestor of level i+1 */
+    type = t8_dtri_cid_type_to_parenttype[cid][type];
+  }
+  return type;
 }
 
 void
