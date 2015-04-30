@@ -141,6 +141,14 @@ int                 t8_dtri_is_parent (const t8_dtri_t * t,
 int                 t8_dtri_is_ancestor (const t8_dtri_t * t,
                                          const t8_dtri_t * c);
 
+/** Computes the linear position of a triangle in a uniform grid.
+ * \param [in] t  triangle whose id will be computed.
+ * \param [in] level level of uniform grid to be considered.
+ * \return Returns the linear position of this triangle on a grid of level \a level.
+ * \note This id is not the Morton index.
+ */
+uint64_t            t8_dtri_linear_id (const t8_dtri_t *t,int level);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DTRI_BITS_H */

@@ -570,3 +570,25 @@ t8_dtri_is_ancestor (const t8_dtri_t * t, const t8_dtri_t * c)
     return 0;
   }
 }
+
+uint64_t
+t8_dtri_linear_id (const t8_dtri_t * t, int level)
+{
+  uint64_t            id = 0, power_of_2tod;
+  int8_t              type_temp = 0;
+  t8_dtri_cube_id_t   cid;
+  int                 i;
+  int                 beyid;
+
+  /* power_of_2tod is 4^(L-level) in 2d and 8^(L-level) in 3d */
+  power_of_2tod = 1 << T8_DTRI_DIM * (T8_DTRI_MAXLEVEL - level);
+  type_temp = compute_type (t, level);
+  for (i = level; i > 0; i++) {
+    cid = compute_cubeid (t, i);
+    beyid = t8_dtri_type_cid_to_beyid[type_temp][cid];
+    id += t8_dtri_type_beyid_to_Iloc[type_temp][beyid] * power_of_2tod;
+    power_of_2tod <<= T8_DTRI_DIM;      /* multiply with 4 (2d) resp. 8  (3d) */
+    type_temp = t8_dtri_cid_type_to_parenttype[cid][type_temp];
+  }
+  return id;
+}

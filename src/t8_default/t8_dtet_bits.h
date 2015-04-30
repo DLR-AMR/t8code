@@ -145,6 +145,14 @@ int                 t8_dtet_is_parent (const t8_dtet_t * t,
 int                 t8_dtet_is_ancestor (const t8_dtet_t * t,
                                          const t8_dtet_t * c);
 
+/** Computes the linear position of a tetrahedron in a uniform grid.
+ * \param [in] t  tetrahedron whose id will be computed.
+ * \param [in] level level of uniform grid to be considered.
+ * \return Returns the linear position of this tetrahedron on a grid of level \a level.
+ * \note This id is not the Morton index.
+ */
+uint64_t            t8_dtet_linear_id (const t8_dtet_t *t,int level);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DTET_BITS_H */
