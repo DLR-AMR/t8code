@@ -48,6 +48,12 @@ extern const int t8_dtri_index_to_bey_number[2][4];
  *  child id. */
 extern const int t8_dtri_beyid_to_vertex[4];
 
+/** Store the Bey child number for each (type,cube-id) combination. */
+extern const int    t8_dtri_type_cid_to_beyid[2][4];
+
+/** Store the local index for each (type,Bey child number) combination. */
+extern const int    t8_dtri_type_beyid_to_Iloc[2][4];
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DTRI_CONNECTIVITY_H */

@@ -44,3 +44,23 @@ const int t8_dtri_index_to_bey_number[2][4]={
 };
 
 const int t8_dtri_beyid_to_vertex[4] = {0,1,2,1};
+
+/* TODO: We us the next two tables after each other.
+ *       We should replace this operation by a new table
+ *          type + cid -> Iloc
+ *       thus removing the Beyid from the operation.
+ */
+
+/* Line b, row c gives the Bey child-id of
+ * a Tet with type b and cubeid c */                    
+const int           t8_dtri_type_cid_to_beyid[2][4] = {
+  {0, 1, 3, 2},
+  {0, 3, 1, 2}
+};
+
+/* Line b, row id gives the local index of
+ * a Tet with type b and Bey child number id */
+const int           t8_dtri_type_beyid_to_Iloc[2][4] = {
+  {0, 1, 3, 2},
+  {0, 2, 3, 1}
+};

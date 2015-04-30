@@ -57,3 +57,25 @@ const int t8_dtet_index_to_bey_number[6][8]={
 };
 
 const int               t8_dtet_beyid_to_vertex[8] = { 0, 1, 2, 3, 1, 1, 2, 2 };
+
+/* Line b, row c gives the Bey child-id of
+ * a Tet with type b and cubeid c */
+const int           t8_dtet_type_cid_to_beyid[6][8] = {
+  {0, 1, 4, 7, 5, 2, 6, 3},
+  {0, 1, 5, 2, 4, 7, 6, 3},
+  {0, 5, 1, 2, 4, 6, 7, 3},
+  {0, 4, 1, 7, 5, 6, 2, 3},
+  {0, 4, 5, 6, 1, 7, 2, 3},
+  {0, 5, 4, 6, 1, 2, 7, 3}
+};
+
+/* Line b, row id gives the local index of
+ * a Tet with type b and Bey child number id */
+const int           t8_dtet_type_beyid_to_Iloc[6][8] = {
+  {0, 1, 4, 7, 2, 3, 6, 5},
+  {0, 1, 5, 7, 2, 3, 6, 4},
+  {0, 3, 4, 7, 1, 2, 6, 5},
+  {0, 1, 6, 7, 2, 3, 4, 5},
+  {0, 3, 5, 7, 1, 2, 4, 6},
+  {0, 3, 6, 7, 2, 1, 4, 5}
+};
