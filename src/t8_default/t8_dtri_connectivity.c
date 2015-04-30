@@ -38,12 +38,12 @@ const int           t8_dtri_type_of_child[2][4] = {
 
 /* Line b, row I gives the Bey child-id of
  * a Tet with Parent type b and local morton index I */
-const int t8_dtri_index_to_bey_number[2][4]={
-    {0,1,3,2},
-    {0,3,1,2}
+const int           t8_dtri_index_to_bey_number[2][4] = {
+  {0, 1, 3, 2},
+  {0, 3, 1, 2}
 };
 
-const int t8_dtri_beyid_to_vertex[4] = {0,1,2,1};
+const int           t8_dtri_beyid_to_vertex[4] = { 0, 1, 2, 1 };
 
 /* TODO: We us the next two tables after each other.
  *       We should replace this operation by a new table

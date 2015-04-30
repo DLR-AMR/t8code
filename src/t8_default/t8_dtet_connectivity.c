@@ -23,7 +23,7 @@
 #include "t8_dtri_to_dtet.h"
 #include "t8_dtet_connectivity.h"
 
-const int                 t8_dtet_cid_type_to_parenttype[8][6] = {
+const int           t8_dtet_cid_type_to_parenttype[8][6] = {
   {0, 1, 2, 3, 4, 5},
   {0, 1, 1, 1, 0, 0},
   {2, 2, 2, 3, 3, 3},
@@ -36,7 +36,7 @@ const int                 t8_dtet_cid_type_to_parenttype[8][6] = {
 
 /* In dependence of a type x give the type of
  * the child with Bey number y */
-const int                 t8_dtet_type_of_child[6][8] = {
+const int           t8_dtet_type_of_child[6][8] = {
   {0, 0, 0, 0, 4, 5, 2, 1},
   {1, 1, 1, 1, 3, 2, 5, 0},
   {2, 2, 2, 2, 0, 1, 4, 3},
@@ -47,16 +47,16 @@ const int                 t8_dtet_type_of_child[6][8] = {
 
 /* Line b, row I gives the Bey child-id of
  * a Tet with Parent type b and local morton index I */
-const int t8_dtet_index_to_bey_number[6][8]={
-    {0,1,4,5,2,7,6,3},
-    {0,1,5,4,7,2,6,3},
-    {0,4,5,1,2,7,6,3},
-    {0,1,5,4,6,7,2,3},
-    {0,4,5,1,6,2,7,3},
-    {0,5,4,1,6,7,2,3},
+const int           t8_dtet_index_to_bey_number[6][8] = {
+  {0, 1, 4, 5, 2, 7, 6, 3},
+  {0, 1, 5, 4, 7, 2, 6, 3},
+  {0, 4, 5, 1, 2, 7, 6, 3},
+  {0, 1, 5, 4, 6, 7, 2, 3},
+  {0, 4, 5, 1, 6, 2, 7, 3},
+  {0, 5, 4, 1, 6, 7, 2, 3},
 };
 
-const int               t8_dtet_beyid_to_vertex[8] = { 0, 1, 2, 3, 1, 1, 2, 2 };
+const int           t8_dtet_beyid_to_vertex[8] = { 0, 1, 2, 3, 1, 1, 2, 2 };
 
 /* Line b, row c gives the Bey child-id of
  * a Tet with type b and cubeid c */

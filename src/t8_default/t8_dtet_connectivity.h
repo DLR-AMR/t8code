@@ -35,20 +35,19 @@ T8_EXTERN_C_BEGIN ();
 #define T8_DTET_DIM 3
 
 /** Store the type of parent for each (cube-id,type) combination. */
-extern const int                 t8_dtet_cid_type_to_parenttype[8][6];
+extern const int    t8_dtet_cid_type_to_parenttype[8][6];
 
 /** Store the type of child for each (type,child number) combination. */
-extern const int                 t8_dtet_type_of_child[6][8];
+extern const int    t8_dtet_type_of_child[6][8];
 
 /** Store the Bey child number for each (Parent type,Morton child number) combination. */
-extern const int t8_dtet_index_to_bey_number[6][8];
-
+extern const int    t8_dtet_index_to_bey_number[6][8];
 
 /** The anchor node of a child of a tetrahedron T is the convex combination
  *  of T's anchor node x_0 and another node x_i of T.
  *  This array gives the index i in dependence of the Bey
  *  child id. */
-extern const int t8_dtet_beyid_to_vertex[8];
+extern const int    t8_dtet_beyid_to_vertex[8];
 
 /** Store the Bey child number for each (type,cube-id) combination. */
 extern const int    t8_dtet_type_cid_to_beyid[6][8];

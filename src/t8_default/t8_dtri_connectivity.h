@@ -40,13 +40,13 @@ extern const int    t8_dtri_cid_type_to_parenttype[4][2];
 extern const int    t8_dtri_type_of_child[2][4];
 
 /** Store the Bey child number for each (Parent type,Morton child number) combination. */
-extern const int t8_dtri_index_to_bey_number[2][4];
+extern const int    t8_dtri_index_to_bey_number[2][4];
 
 /** The anchor node of a child of a triangle T is the convex combination
  *  of T's anchor node x_0 and another node x_i of T.
  *  This array gives the index i in dependence of the Bey
  *  child id. */
-extern const int t8_dtri_beyid_to_vertex[4];
+extern const int    t8_dtri_beyid_to_vertex[4];
 
 /** Store the Bey child number for each (type,cube-id) combination. */
 extern const int    t8_dtri_type_cid_to_beyid[2][4];
