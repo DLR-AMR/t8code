@@ -50,6 +50,20 @@ t8_default_quad_maxlevel (void)
   return P4EST_QMAXLEVEL;
 }
 
+static              t8_eclass_t
+t8_default_quad_child_eclass (int childid)
+{
+  T8_ASSERT (0 <= childid && childid < P4EST_CHILDREN);
+
+  return T8_ECLASS_QUAD;
+}
+
+static int
+t8_default_quad_level (const t8_element_t * elem)
+{
+  return (int) ((const p4est_quadrant_t *) elem)->level;
+}
+
 static void
 t8_default_quad_copy_surround (const p4est_quadrant_t * q,
                                p4est_quadrant_t * r)
@@ -88,16 +102,31 @@ t8_default_quad_child (const t8_element_t * elem,
   const p4est_qcoord_t shift = P4EST_QUADRANT_LEN (q->level + 1);
   p4est_quadrant_t   *r = (p4est_quadrant_t *) child;
 
-  P4EST_ASSERT (p4est_quadrant_is_extended (q));
-  P4EST_ASSERT (q->level < P4EST_QMAXLEVEL);
-  P4EST_ASSERT (childid >= 0 && childid < P4EST_CHILDREN);
+  T8_ASSERT (p4est_quadrant_is_extended (q));
+  T8_ASSERT (q->level < P4EST_QMAXLEVEL);
+  T8_ASSERT (childid >= 0 && childid < P4EST_CHILDREN);
 
   r->x = childid & 0x01 ? (q->x | shift) : q->x;
   r->y = childid & 0x02 ? (q->y | shift) : q->y;
   r->level = q->level + 1;
-  P4EST_ASSERT (p4est_quadrant_is_parent (q, r));
+  T8_ASSERT (p4est_quadrant_is_parent (q, r));
 
   t8_default_quad_copy_surround (q, r);
+}
+
+static void
+t8_default_quad_children (const t8_element_t * elem,
+                          int length, t8_element_t * c[])
+{
+  const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
+  int                 i;
+
+  T8_ASSERT (length == P4EST_CHILDREN);
+
+  p4est_quadrant_childrenpv (q, (p4est_quadrant_t **) c);
+  for (i = 0; i < P4EST_CHILDREN; ++i) {
+    t8_default_quad_copy_surround (q, (p4est_quadrant_t *) c[i]);
+  }
 }
 
 static void
@@ -139,13 +168,13 @@ t8_default_scheme_new_quad (void)
 
   ts->elem_size = t8_default_quad_size;
   ts->elem_maxlevel = t8_default_quad_maxlevel;
-  ts->elem_child_eclass = NULL;
+  ts->elem_child_eclass = t8_default_quad_child_eclass;
 
-  ts->elem_level = NULL;
+  ts->elem_level = t8_default_quad_level;
   ts->elem_parent = t8_default_quad_parent;
   ts->elem_sibling = t8_default_quad_sibling;
   ts->elem_child = t8_default_quad_child;
-  ts->elem_children = NULL;
+  ts->elem_children = t8_default_quad_children;
   ts->elem_nca = t8_default_quad_nca;
   ts->elem_boundary = t8_default_quad_boundary;
 
