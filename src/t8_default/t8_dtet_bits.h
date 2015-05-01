@@ -53,6 +53,14 @@ void                t8_dtet_compute_all_coords (const t8_dtet_t * t,
                                                 t8_dtet_coord_t
                                                 coordinates[4][3]);
 
+/** Copy the values of one tetrahedron to another.
+ * \param [in] t Tetrahedron whose values will be copied.
+ * \param [in,out] dest Existing tetrahedron whose data will be
+ *                      filled with the data of \a t. *
+ */
+void
+t8_dtet_copy (const t8_dtet_t *t,t8_dtet_t *dest);
+
 /** Compute the parent of a tetrahedron.
  * \param [in]  elem Input tetrahedron.
  * \param [in,out] parent Existing tetrahedron whose data will

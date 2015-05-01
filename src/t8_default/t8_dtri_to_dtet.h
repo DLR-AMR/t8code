@@ -59,6 +59,7 @@ T8_EXTERN_C_BEGIN ();
 
 /* functions in d8_dtri_bits.h */
 #define t8_dtri_is_equal t8_dtet_is_equal
+#define t8_dtri_copy t8_dtet_copy
 #define t8_dtri_parent t8_dtet_parent
 #define t8_dtri_compute_all_coords t8_dtet_compute_all_coords
 #define t8_dtri_compute_coords t8_dtet_compute_coords

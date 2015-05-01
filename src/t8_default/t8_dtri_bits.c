@@ -88,6 +88,12 @@ compute_type (const t8_dtri_t * t, int level)
 }
 
 void
+t8_dtri_copy (const t8_dtri_t * t, t8_dtri_t * dest)
+{
+  memcpy (dest, t, sizeof (t8_dtri_t));
+}
+
+void
 t8_dtri_parent (const t8_dtri_t * t, t8_dtri_t * parent)
 {
   t8_dtri_cube_id_t   cid;
