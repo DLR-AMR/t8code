@@ -598,3 +598,51 @@ t8_dtri_linear_id (const t8_dtri_t * t, int level)
   }
   return id;
 }
+
+static void
+t8_dtri_successor_recursion (const t8_dtri_t * t, t8_dtri_t * s, int level)
+{
+  t8_dtri_type_t      type_level, type_level_p1;
+  t8_dtri_cube_id_t   cid;
+  int                 local_index;
+
+  /* We exclude the case level = 0, because the root triangle does
+   * not have a successor. */
+  T8_ASSERT (1 <= level && level <= t->level);
+
+  cid = compute_cubeid (t, level);
+  type_level = compute_type (t, level);
+  local_index = t8_dtri_type_cid_to_Iloc (type_level, cid);
+  local_index = (local_index + 1) % T8_DTRI_CHILDREN;
+  if (local_index == 0) {
+    t8_dtri_successor_recursion (t, s, level - 1);
+    type_level_p1 = s->type;    /* We stored the type of s at level-1 in s->type */
+  }
+  else {
+    type_level_p1 = t8_dtri_cid_type_to_parenttype[cid][type_level];
+  }
+  type_level = t8_dtri_parenttype_Iloc_to_type[type_level_p1][local_index];
+  cid = t8_dtri_type_Iloc_to_cid[type_level][local_index];
+  s->type = type_level;
+  s->level = level;
+  /* Set the x,y(,z) coordinates at level to the cube-id. */
+  /* TODO: check if we set the correct bits here! */
+  s->x =
+    (cid & 1 ? s->x | 1 << (T8_DTRI_MAXLEVEL - level) : s->
+     x & ~(1 << (T8_DTRI_MAXLEVEL - level)));
+  s->y =
+    (cid & 2 ? s->y | 1 << (T8_DTRI_MAXLEVEL - level) : s->
+     y & ~(1 << (T8_DTRI_MAXLEVEL - level)));
+#ifdef T8_DTRI_TO_DTET
+  s->z =
+    (cid & 4 ? s->z | 1 << (T8_DTRI_MAXLEVEL - level) : s->
+     z & ~(1 << (T8_DTRI_MAXLEVEL - level)));
+#endif
+}
+
+void
+t8_dtri_successor (const t8_dtri_t * t, t8_dtri_t * s, int level)
+{
+  t8_dtri_copy (t, s, level);
+  t8_dtri_successor_recursion (t, s, level);
+}
