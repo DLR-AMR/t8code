@@ -54,6 +54,16 @@ extern const int    t8_dtri_type_cid_to_beyid[2][4];
 /** Store the local index for each (type,Bey child number) combination. */
 extern const int    t8_dtri_type_beyid_to_Iloc[2][4];
 
+/** Return the local index for each (type,cube-id) combination.
+ *  TODO: make this a look-up table. */
+const int           t8_dtri_type_cid_to_Iloc (int type, int cid);
+
+/** Store the type for each (parenttype,local Index) combination. */
+extern const int    t8_dtri_parenttype_Iloc_to_type[2][4];
+
+/** Store the cube-id for each (type,local Index) combination. */
+extern const int    t8_dtri_type_Iloc_to_cid[2][4];
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DTRI_CONNECTIVITY_H */

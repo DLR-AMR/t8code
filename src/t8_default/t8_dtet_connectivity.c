@@ -79,3 +79,28 @@ const int           t8_dtet_type_beyid_to_Iloc[6][8] = {
   {0, 3, 5, 7, 1, 2, 4, 6},
   {0, 3, 6, 7, 2, 1, 4, 5}
 };
+
+const int
+t8_dtet_type_cid_to_Iloc (int type, int cid)
+{
+  return
+    t8_dtet_type_cid_to_beyid[type][t8_dtet_type_cid_to_beyid[type][cid]];
+}
+
+const int           t8_dtet_parenttype_Iloc_to_type[6][8] = {
+  {0, 0, 4, 5, 0, 1, 2, 0},
+  {1, 1, 2, 3, 0, 1, 5, 1},
+  {2, 0, 1, 2, 2, 3, 4, 2},
+  {3, 3, 4, 5, 1, 2, 3, 3},
+  {4, 2, 3, 4, 0, 4, 5, 4},
+  {5, 0, 1, 5, 3, 4, 5, 5}
+};
+
+const int           t8_dtet_type_Iloc_to_cid[6][8] = {
+  {0, 1, 1, 1, 5, 5, 5, 7},
+  {0, 1, 1, 1, 3, 3, 3, 7},
+  {0, 2, 2, 2, 3, 3, 3, 7},
+  {0, 2, 2, 2, 6, 6, 6, 7},
+  {0, 4, 4, 4, 6, 6, 6, 7},
+  {0, 4, 4, 4, 5, 5, 5, 7}
+};

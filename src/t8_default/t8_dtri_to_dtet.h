@@ -53,6 +53,9 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_beyid_to_vertex t8_dtet_beyid_to_vertex
 #define t8_dtri_type_cid_to_beyid t8_dtet_type_cid_to_beyid
 #define t8_dtri_type_beyid_to_Iloc t8_dtet_type_beyid_to_Iloc
+#define t8_dtri_type_cid_to_Iloc t8_dtet_type_cid_to_Iloc
+#define t8_dtri_parenttype_Iloc_to_type t8_dtet_parenttype_Iloc_to_type
+#define t8_dtri_type_Iloc_to_cid t8_dtet_type_Iloc_to_cid
 
 /* functions in d8_dtri_bits.h */
 #define t8_dtri_is_equal t8_dtet_is_equal
