@@ -640,15 +640,15 @@ t8_dtri_succ_pred_recursion (const t8_dtri_t * t, t8_dtri_t * s, int level,
   /* Set the x,y(,z) coordinates at level to the cube-id. */
   /* TODO: check if we set the correct bits here! */
   s->x =
-    (cid & 1 ? s->x | 1 << (T8_DTRI_MAXLEVEL - level) : s->
-     x & ~(1 << (T8_DTRI_MAXLEVEL - level)));
+    (cid & 1 ? s->x | 1 << (T8_DTRI_MAXLEVEL - level) :
+     s->x & ~(1 << (T8_DTRI_MAXLEVEL - level)));
   s->y =
-    (cid & 2 ? s->y | 1 << (T8_DTRI_MAXLEVEL - level) : s->
-     y & ~(1 << (T8_DTRI_MAXLEVEL - level)));
+    (cid & 2 ? s->y | 1 << (T8_DTRI_MAXLEVEL - level) :
+     s->y & ~(1 << (T8_DTRI_MAXLEVEL - level)));
 #ifdef T8_DTRI_TO_DTET
   s->z =
-    (cid & 4 ? s->z | 1 << (T8_DTRI_MAXLEVEL - level) : s->
-     z & ~(1 << (T8_DTRI_MAXLEVEL - level)));
+    (cid & 4 ? s->z | 1 << (T8_DTRI_MAXLEVEL - level) :
+     s->z & ~(1 << (T8_DTRI_MAXLEVEL - level)));
 #endif
 }
 

@@ -58,8 +58,7 @@ void                t8_dtet_compute_all_coords (const t8_dtet_t * t,
  * \param [in,out] dest Existing tetrahedron whose data will be
  *                      filled with the data of \a t. *
  */
-void
-t8_dtet_copy (const t8_dtet_t *t,t8_dtet_t *dest);
+void                t8_dtet_copy (const t8_dtet_t * t, t8_dtet_t * dest);
 
 /** Compute the parent of a tetrahedron.
  * \param [in]  elem Input tetrahedron.
@@ -109,10 +108,9 @@ int                 t8_dtet_face_neighbour (const t8_dtet_t * t, int face,
  * \param [in,out] r Existing tetrahedron whose data will be filled.
  * \note \a t1, \a t2, \a r may point to the same quadrant.
  */
-void
-t8_dtet_nearest_common_ancestor (const t8_dtet_t * t1,
-                                 const t8_dtet_t * t2,
-                                 t8_dtet_t * r);
+void                t8_dtet_nearest_common_ancestor (const t8_dtet_t * t1,
+                                                     const t8_dtet_t * t2,
+                                                     t8_dtet_t * r);
 
 /** Test if a tetrahedron lies inside of the root tetrahedron,
  *  that is the tetrahedron of level 0, anchor node (0,0,0)
@@ -120,8 +118,7 @@ t8_dtet_nearest_common_ancestor (const t8_dtet_t * t1,
  *  \param [in]     t Input tetrahedron.
  *  \return true    If \a t lies inside of the root tetrahedron.
  */
-int
-t8_dtet_is_inside_root(t8_dtet_t *t);
+int                 t8_dtet_is_inside_root (t8_dtet_t * t);
 
 /** Test if two tetrahedra have the same coordinates, type and level.
  * \return true if \a t1 describes the same tetrahedron as \a t2.
@@ -159,7 +156,7 @@ int                 t8_dtet_is_ancestor (const t8_dtet_t * t,
  * \return Returns the linear position of this tetrahedron on a grid of level \a level.
  * \note This id is not the Morton index.
  */
-uint64_t            t8_dtet_linear_id (const t8_dtet_t *t,int level);
+uint64_t            t8_dtet_linear_id (const t8_dtet_t * t, int level);
 
 /** Computes the successor of a tetrahedron in a uniform grid of level \a level.
  * \param [in] t  tetrahedron whose id will be computed.

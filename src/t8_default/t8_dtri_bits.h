@@ -36,8 +36,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in,out] dest Existing triangle whose data will be
  *                      filled with the data of \a t. *
  */
-void
-t8_dtri_copy (const t8_dtri_t *t,t8_dtri_t *dest);
+void                t8_dtri_copy (const t8_dtri_t * t, t8_dtri_t * dest);
 
 /** Compute the parent of a triangle.
  * \param [in]  elem Input triangle.
@@ -105,10 +104,9 @@ int                 t8_dtri_face_neighbour (const t8_dtri_t * t, int face,
  * \param [in,out] r Existing triangle whose data will be filled.
  * \note \a t1, \a t2, \a r may point to the same quadrant.
  */
-void
-t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
-                                 const t8_dtri_t * t2,
-                                 t8_dtri_t * r);
+void                t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
+                                                     const t8_dtri_t * t2,
+                                                     t8_dtri_t * r);
 
 /** Test if a triangle lies inside of the root triangle,
  *  that is the triangle of level 0, anchor node (0,0)
@@ -116,8 +114,7 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
  *  \param [in]     t Input triangle.
  *  \return true    If \a t lies inside of the root triangle.
  */
-int
-t8_dtri_is_inside_root(t8_dtri_t *t);
+int                 t8_dtri_is_inside_root (t8_dtri_t * t);
 
 /** Test if two triangles have the same coordinates, type and level.
  * \return true if \a t1 describes the same triangle as \a t2.
@@ -155,7 +152,7 @@ int                 t8_dtri_is_ancestor (const t8_dtri_t * t,
  * \return Returns the linear position of this triangle on a grid of level \a level.
  * \note This id is not the Morton index.
  */
-uint64_t            t8_dtri_linear_id (const t8_dtri_t *t,int level);
+uint64_t            t8_dtri_linear_id (const t8_dtri_t * t, int level);
 
 /** Computes the successor of a triangle in a uniform grid of level \a level.
  * \param [in] t  triangle whose id will be computed.
