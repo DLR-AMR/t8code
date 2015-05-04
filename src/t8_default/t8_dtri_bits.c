@@ -642,6 +642,6 @@ t8_dtri_successor_recursion (const t8_dtri_t * t, t8_dtri_t * s, int level)
 void
 t8_dtri_successor (const t8_dtri_t * t, t8_dtri_t * s, int level)
 {
-  t8_dtri_copy (t, s, level);
+  t8_dtri_copy (t, s);
   t8_dtri_successor_recursion (t, s, level);
 }
