@@ -586,8 +586,7 @@ t8_dtri_linear_id (const t8_dtri_t * t, int level)
   int                 i;
 
   T8_ASSERT (0 <= level && level <= t->level);
-  /* power_of_2tod is 4^(L-level) in 2d and 8^(L-level) in 3d */
-  power_of_2tod = 1 << T8_DTRI_DIM * (T8_DTRI_MAXLEVEL - level);
+  power_of_2tod = 1;
   type_temp = compute_type (t, level);
   for (i = level; i > 0; i++) {
     cid = compute_cubeid (t, i);
