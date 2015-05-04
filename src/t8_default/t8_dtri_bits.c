@@ -635,6 +635,20 @@ t8_dtri_init_linear_id (t8_dtri_t * t, uint64_t id, int level)
   t->type = type;
 }
 
+void
+t8_dtri_init_root (t8_dtri_t * t)
+{
+  t->level = 0;
+  t->type = 0;
+  t->x = 0;
+  t->y = 0;
+#ifdef T8_DTRI_TO_DTET
+  t->z = 0;
+#else
+  t->n = 0;
+#endif
+}
+
 /* Stores in s the triangle that is obtained from t by going 'increment' positions
  * along the SFC of a uniform refinement of level 'level'.
  * 'increment' must be greater than -4 (-8) and smaller than +4 (+8).

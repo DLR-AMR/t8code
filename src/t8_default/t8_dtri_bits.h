@@ -163,6 +163,11 @@ uint64_t            t8_dtri_linear_id (const t8_dtri_t * t, int level);
 void                t8_dtri_init_linear_id (t8_dtri_t * t, uint64_t id,
                                             int level);
 
+/** Initialize a triangle as the root triangle (type 0 at level 0)
+ * \param [in,out] t Existing triangle whose data will be filled.
+ */
+void                t8_dtri_init_root (t8_dtri_t * t);
+
 /** Computes the successor of a triangle in a uniform grid of level \a level.
  * \param [in] t  triangle whose id will be computed.
  * \param [in,out] s Existing triangle whose data will be filled with the

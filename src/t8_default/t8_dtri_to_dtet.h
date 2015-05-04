@@ -74,6 +74,7 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_is_ancestor t8_dtet_is_ancestor
 #define t8_dtri_linear_id t8_dtet_linear_id
 #define t8_dtri_init_linear_id t8_dtet_init_linear_id
+#define t8_dtri_init_root t8_dtet_init_root
 #define t8_dtri_successor t8_dtet_successor
 #define t8_dtri_predecessor t8_dtet_predecessor
 

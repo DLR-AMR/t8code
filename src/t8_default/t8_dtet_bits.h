@@ -167,6 +167,11 @@ uint64_t            t8_dtet_linear_id (const t8_dtet_t * t, int level);
 void                t8_dtet_init_linear_id (t8_dtet_t * t, uint64_t id,
                                             int level);
 
+/** Initialize a tetrahedron as the root tetrahedron (type 0 at level 0)
+ * \param [in,out] t Existing tetrahedron whose data will be filled.
+ */
+void                t8_dtet_init_root (t8_dtet_t * t);
+
 /** Computes the successor of a tetrahedron in a uniform grid of level \a level.
  * \param [in] t  tetrahedron whose id will be computed.
  * \param [out] s Existing tetrahedron whose data will be filled with the
