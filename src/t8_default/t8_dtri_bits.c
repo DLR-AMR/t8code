@@ -598,23 +598,36 @@ t8_dtri_linear_id (const t8_dtri_t * t, int level)
   return id;
 }
 
+/* Stores in s the triangle that is obtained from t by going 'increment' positions
+ * along the SFC of a uniform refinement of level 'level'.
+ * 'increment' must be greater than -4 (-8) and smaller than +4 (+8).
+ * Before calling this function s should store the same entries as t. */
 static void
-t8_dtri_successor_recursion (const t8_dtri_t * t, t8_dtri_t * s, int level)
+t8_dtri_succ_pred_recursion (const t8_dtri_t * t, t8_dtri_t * s, int level,
+                             int increment)
 {
   t8_dtri_type_t      type_level, type_level_p1;
   t8_dtri_cube_id_t   cid;
   int                 local_index;
+  int                 sign;
 
   /* We exclude the case level = 0, because the root triangle does
    * not have a successor. */
   T8_ASSERT (1 <= level && level <= t->level);
+  T8_ASSERT (-T8_DTRI_CHILDREN < increment && increment < T8_DTRI_CHILDREN);
 
+  if (increment == 0) {
+    t8_dtri_copy (t, s);
+    return;
+  }
   cid = compute_cubeid (t, level);
   type_level = compute_type (t, level);
   local_index = t8_dtri_type_cid_to_Iloc (type_level, cid);
-  local_index = (local_index + 1) % T8_DTRI_CHILDREN;
+  local_index =
+    (local_index + T8_DTRI_CHILDREN + increment) % T8_DTRI_CHILDREN;
   if (local_index == 0) {
-    t8_dtri_successor_recursion (t, s, level - 1);
+    sign = increment < 0 ? -1 : increment > 0;
+    t8_dtri_succ_pred_recursion (t, s, level - 1, sign);
     type_level_p1 = s->type;    /* We stored the type of s at level-1 in s->type */
   }
   else {
@@ -643,5 +656,12 @@ void
 t8_dtri_successor (const t8_dtri_t * t, t8_dtri_t * s, int level)
 {
   t8_dtri_copy (t, s);
-  t8_dtri_successor_recursion (t, s, level);
+  t8_dtri_succ_pred_recursion (t, s, level, 1);
+}
+
+void
+t8_dtri_predecessor (const t8_dtri_t * t, t8_dtri_t * s, int level)
+{
+  t8_dtri_copy (t, s);
+  t8_dtri_succ_pred_recursion (t, s, level, -1);
 }

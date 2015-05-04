@@ -167,7 +167,17 @@ uint64_t            t8_dtet_linear_id (const t8_dtet_t *t,int level);
  *                data of t's successor on level \a level.
  * \param [in] level level of uniform grid to be considered.
  */
-void t8_dtet_successor (const t8_dtet_t *t, t8_dtet_t *s, int level);
+void                t8_dtet_successor (const t8_dtet_t * t, t8_dtet_t * s,
+                                       int level);
+
+/** Computes the predecessor of a tetrahedron in a uniform grid of level \a level.
+ * \param [in] t  tetrahedron whose id will be computed.
+ * \param [in,out] s Existing tetrahedron whose data will be filled with the
+ *                data of t's predecessor on level \a level.
+ * \param [in] level level of uniform grid to be considered.
+ */
+void                t8_dtet_predecessor (const t8_dtet_t * t, t8_dtet_t * s,
+                                         int level);
 
 T8_EXTERN_C_END ();
 

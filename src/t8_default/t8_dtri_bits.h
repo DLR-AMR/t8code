@@ -163,7 +163,17 @@ uint64_t            t8_dtri_linear_id (const t8_dtri_t *t,int level);
  *                data of t's successor on level \a level.
  * \param [in] level level of uniform grid to be considered.
  */
-void t8_dtri_successor (const t8_dtri_t *t, t8_dtri_t *s, int level);
+void                t8_dtri_successor (const t8_dtri_t * t, t8_dtri_t * s,
+                                       int level);
+
+/** Computes the predecessor of a triangle in a uniform grid of level \a level.
+ * \param [in] t  triangle whose id will be computed.
+ * \param [in,out] s Existing triangle whose data will be filled with the
+ *                data of t's predecessor on level \a level.
+ * \param [in] level level of uniform grid to be considered.
+ */
+void                t8_dtri_predecessor (const t8_dtri_t * t, t8_dtri_t * s,
+                                         int level);
 
 T8_EXTERN_C_END ();
 
