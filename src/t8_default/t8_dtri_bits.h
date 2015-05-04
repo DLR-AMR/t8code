@@ -186,6 +186,21 @@ void                t8_dtri_successor (const t8_dtri_t * t, t8_dtri_t * s,
 void                t8_dtri_predecessor (const t8_dtri_t * t, t8_dtri_t * s,
                                          int level);
 
+/** Compute the position of the ancestor of this child at level \a level within
+ * its siblings.
+ * \param [in] t  triangle to be considered.
+ * \param [in] level level to be considered.
+ * \return Returns its child id in 0..3
+ */
+int                 t8_dtri_ancestor_id (const t8_dtri_t * t, int level);
+
+/** Compute the position of the ancestor of this child at level \a level within
+ * its siblings.
+ * \param [in] t  triangle to be considered.
+ * \return Returns its child id in 0..3
+ */
+int                 t8_dtri_child_id (const t8_dtri_t * t);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DTRI_BITS_H */

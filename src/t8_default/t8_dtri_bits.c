@@ -716,3 +716,23 @@ t8_dtri_predecessor (const t8_dtri_t * t, t8_dtri_t * s, int level)
   t8_dtri_copy (t, s);
   t8_dtri_succ_pred_recursion (t, s, level, -1);
 }
+
+int
+t8_dtri_ancestor_id (const t8_dtri_t * t, int level)
+{
+  t8_dtri_cube_id_t   cid;
+  t8_dtri_type_t      type;
+
+  T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
+  T8_ASSERT (level <= t->level);
+
+  cid = compute_cubeid (t, level);
+  type = compute_type (t, level);
+  return t8_dtri_type_cid_to_Iloc (type, cid);
+}
+
+int
+t8_dtri_child_id (const t8_dtri_t * t)
+{
+  return t8_dtri_type_cid_to_Iloc (t->type, compute_cubeid (t, t->level));
+}

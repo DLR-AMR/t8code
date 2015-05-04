@@ -190,6 +190,21 @@ void                t8_dtet_successor (const t8_dtet_t * t, t8_dtet_t * s,
 void                t8_dtet_predecessor (const t8_dtet_t * t, t8_dtet_t * s,
                                          int level);
 
+/** Compute the position of the ancestor of this child at level \a level within
+ * its siblings.
+ * \param [in] t  tetrahedron to be considered.
+ * \param [in] level level to be considered.
+ * \return Returns its child id in 0..7
+ */
+int                 t8_dtet_ancestor_id (const t8_dtet_t * t, int level);
+
+/** Compute the position of the ancestor of this child at level \a level within
+ * its siblings.
+ * \param [in] t  tetrahedron to be considered.
+ * \return Returns its child id in 0..7
+ */
+int                 t8_dtet_child_id (const t8_dtet_t * t);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DTET_BITS_H */
