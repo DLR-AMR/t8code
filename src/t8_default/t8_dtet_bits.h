@@ -158,6 +158,15 @@ int                 t8_dtet_is_ancestor (const t8_dtet_t * t,
  */
 uint64_t            t8_dtet_linear_id (const t8_dtet_t * t, int level);
 
+/** Initialize a tetrahedron as the tetrahedron with a given global id in a uniform
+ *  refinement of a given level. *
+ * \param [in,out] t  Existing tetrahedron whose data will be filled.
+ * \param [in] id     Index to be considered.
+ * \param [in] level  level of uniform grid to be considered.
+ */
+void                t8_dtet_init_linear_id (t8_dtet_t * t, uint64_t id,
+                                            int level);
+
 /** Computes the successor of a tetrahedron in a uniform grid of level \a level.
  * \param [in] t  tetrahedron whose id will be computed.
  * \param [out] s Existing tetrahedron whose data will be filled with the

@@ -154,6 +154,15 @@ int                 t8_dtri_is_ancestor (const t8_dtri_t * t,
  */
 uint64_t            t8_dtri_linear_id (const t8_dtri_t * t, int level);
 
+/** Initialize a triangle as the triangle with a given global id in a uniform
+ *  refinement of a given level. *
+ * \param [in,out] t  Existing triangle whose data will be filled.
+ * \param [in] id     Index to be considered.
+ * \param [in] level  level of uniform grid to be considered.
+ */
+void                t8_dtri_init_linear_id (t8_dtri_t * t, uint64_t id,
+                                            int level);
+
 /** Computes the successor of a triangle in a uniform grid of level \a level.
  * \param [in] t  triangle whose id will be computed.
  * \param [in,out] s Existing triangle whose data will be filled with the
