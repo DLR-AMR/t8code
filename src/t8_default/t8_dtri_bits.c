@@ -580,18 +580,19 @@ t8_dtri_is_ancestor (const t8_dtri_t * t, const t8_dtri_t * c)
 uint64_t
 t8_dtri_linear_id (const t8_dtri_t * t, int level)
 {
-  uint64_t            id = 0, power_of_2tod;
+  uint64_t            id = 0;
   int8_t              type_temp = 0;
   t8_dtri_cube_id_t   cid;
   int                 i;
+  int                 exponent;
 
   T8_ASSERT (0 <= level && level <= t->level);
-  power_of_2tod = 1;
+  exponent = 0;
   type_temp = compute_type (t, level);
   for (i = level; i > 0; i++) {
     cid = compute_cubeid (t, i);
-    id += t8_dtri_type_cid_to_Iloc (type_temp, cid) * power_of_2tod;
-    power_of_2tod <<= T8_DTRI_DIM;      /* multiply with 4 (2d) resp. 8  (3d) */
+    id |= t8_dtri_type_cid_to_Iloc (type_temp, cid) << exponent;
+    exponent += T8_DTRI_DIM;      /* multiply with 4 (2d) resp. 8  (3d) */
     type_temp = t8_dtri_cid_type_to_parenttype[cid][type_temp];
   }
   return id;
