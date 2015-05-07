@@ -24,8 +24,8 @@
  * The default implementation for triangles.
  */
 
-#ifndef T8_DEFAULT_TET_H
-#define T8_DEFAULT_TET_H
+#ifndef T8_DEFAULT_TRI_H
+#define T8_DEFAULT_TRI_H
 
 #include <t8_element.h>
 
