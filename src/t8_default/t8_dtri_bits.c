@@ -589,9 +589,9 @@ t8_dtri_linear_id (const t8_dtri_t * t, int level)
   T8_ASSERT (0 <= level && level <= t->level);
   exponent = 0;
   type_temp = compute_type (t, level);
-  for (i = level; i > 0; i++) {
+  for (i = level; i > 0; i--) {
     cid = compute_cubeid (t, i);
-    id |= t8_dtri_type_cid_to_Iloc (type_temp, cid) << exponent;
+    id |= t8_dtri_type_cid_to_Iloc[type_temp][cid] << exponent;
     exponent += T8_DTRI_DIM;    /* multiply with 4 (2d) resp. 8  (3d) */
     type_temp = t8_dtri_cid_type_to_parenttype[cid][type_temp];
   }
@@ -624,8 +624,8 @@ t8_dtri_init_linear_id (t8_dtri_t * t, uint64_t id, int level)
     /* Get the local index of T's ancestor on level i */
     local_index = (id >> T8_DTRI_DIM * offset) & children_m1;
     /* Get the type and cube-id of T's ancestor on level i */
+    cid = t8_dtri_parenttype_Iloc_to_cid[type][local_index];
     type = t8_dtri_parenttype_Iloc_to_type[type][local_index];
-    cid = t8_dtri_type_Iloc_to_cid[type][local_index];
     t->x |= (cid & 1) ? 1 << offset : 0;
     t->y |= (cid & 2) ? 1 << offset : 0;
 #ifdef T8_DTRI_TO_DTET
@@ -673,7 +673,7 @@ t8_dtri_succ_pred_recursion (const t8_dtri_t * t, t8_dtri_t * s, int level,
   }
   cid = compute_cubeid (t, level);
   type_level = compute_type (t, level);
-  local_index = t8_dtri_type_cid_to_Iloc (type_level, cid);
+  local_index = t8_dtri_type_cid_to_Iloc [type_level][cid];
   local_index =
     (local_index + T8_DTRI_CHILDREN + increment) % T8_DTRI_CHILDREN;
   if (local_index == 0) {
@@ -685,7 +685,7 @@ t8_dtri_succ_pred_recursion (const t8_dtri_t * t, t8_dtri_t * s, int level,
     type_level_p1 = t8_dtri_cid_type_to_parenttype[cid][type_level];
   }
   type_level = t8_dtri_parenttype_Iloc_to_type[type_level_p1][local_index];
-  cid = t8_dtri_type_Iloc_to_cid[type_level][local_index];
+  cid = t8_dtri_parenttype_Iloc_to_cid[type_level_p1][local_index];
   s->type = type_level;
   s->level = level;
   /* Set the x,y(,z) coordinates at level to the cube-id. */
@@ -728,11 +728,11 @@ t8_dtri_ancestor_id (const t8_dtri_t * t, int level)
 
   cid = compute_cubeid (t, level);
   type = compute_type (t, level);
-  return t8_dtri_type_cid_to_Iloc (type, cid);
+  return t8_dtri_type_cid_to_Iloc [type][cid];
 }
 
 int
 t8_dtri_child_id (const t8_dtri_t * t)
 {
-  return t8_dtri_type_cid_to_Iloc (t->type, compute_cubeid (t, t->level));
+  return t8_dtri_type_cid_to_Iloc [t->type][compute_cubeid (t, t->level)];
 }

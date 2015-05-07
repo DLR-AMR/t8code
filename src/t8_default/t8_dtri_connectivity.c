@@ -60,24 +60,24 @@ const int           t8_dtri_type_cid_to_beyid[2][4] = {
 
 /* Line b, row id gives the local index of
  * a Tet with type b and Bey child number id */
-const int           t8_dtri_type_beyid_to_Iloc[2][4] = {
+const int           t8_dtri_parenttype_beyid_to_Iloc[2][4] = {
   {0, 1, 3, 2},
   {0, 2, 3, 1}
 };
 
 const int
-t8_dtri_type_cid_to_Iloc (int type, int cid)
+t8_dtri_type_cid_to_Iloc[2][4] =
 {
-  return
-    t8_dtri_type_cid_to_beyid[type][t8_dtri_type_cid_to_beyid[type][cid]];
-}
+  {0, 1, 1, 3},
+  {0, 2, 2, 3}
+};
 
 const int           t8_dtri_parenttype_Iloc_to_type[2][4] = {
   {0, 0, 1, 0},
   {1, 0, 1, 1}
 };
 
-const int           t8_dtri_type_Iloc_to_cid[2][4] = {
-  {0, 1, 1, 3},
+const int           t8_dtri_parenttype_Iloc_to_cid[2][4] = {
+  {0, 1,  1, 3},
   {0, 2, 2, 3}
 };

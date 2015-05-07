@@ -52,18 +52,17 @@ extern const int    t8_dtet_beyid_to_vertex[8];
 /** Store the Bey child number for each (type,cube-id) combination. */
 extern const int    t8_dtet_type_cid_to_beyid[6][8];
 
-/** Store the local index for each (type,Bey child number) combination. */
-extern const int    t8_dtet_type_beyid_to_Iloc[6][8];
+/** Store the local index for each (parenttype,Bey child number) combination. */
+extern const int    t8_dtet_parenttype_beyid_to_Iloc[6][8];
 
-/** Return the local index for each (type,cube-id) combination.
- *  TODO: make this a look-up table. */
-const int           t8_dtet_type_cid_to_Iloc (int type, int cid);
+/** Store the local index for each (type,cube-id) combination. */
+extern const int           t8_dtet_type_cid_to_Iloc[6][8];
 
 /** Store the type for each (parenttype,local Index) combination. */
 extern const int    t8_dtet_parenttype_Iloc_to_type[6][8];
 
-/** Store the cube-id for each (type,local Index) combination. */
-extern const int    t8_dtet_type_Iloc_to_cid[6][8];
+/** Store the cube-id for each (parenttype,local Index) combination. */
+extern const int    t8_dtet_parenttype_Iloc_to_cid[6][8];
 
 T8_EXTERN_C_END ();
 

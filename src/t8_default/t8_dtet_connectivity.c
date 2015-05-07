@@ -71,7 +71,7 @@ const int           t8_dtet_type_cid_to_beyid[6][8] = {
 
 /* Line b, row id gives the local index of
  * a Tet with type b and Bey child number id */
-const int           t8_dtet_type_beyid_to_Iloc[6][8] = {
+const int           t8_dtet_parenttype_beyid_to_Iloc[6][8] = {
   {0, 1, 4, 7, 2, 3, 6, 5},
   {0, 1, 5, 7, 2, 3, 6, 4},
   {0, 3, 4, 7, 1, 2, 6, 5},
@@ -81,11 +81,15 @@ const int           t8_dtet_type_beyid_to_Iloc[6][8] = {
 };
 
 const int
-t8_dtet_type_cid_to_Iloc (int type, int cid)
+t8_dtet_type_cid_to_Iloc[6][8] =
 {
-  return
-    t8_dtet_type_cid_to_beyid[type][t8_dtet_type_cid_to_beyid[type][cid]];
-}
+  {0, 1, 1, 4, 1, 4, 4, 7},
+  {0, 1, 2, 5, 2, 5, 4, 7},
+  {0, 2, 3, 4, 1, 6, 5, 7},
+  {0, 3, 1, 5, 2, 4, 6, 7},
+  {0, 2, 2, 6, 3, 5, 5, 7},
+  {0, 3, 3, 6, 3, 6, 6, 7}
+};
 
 const int           t8_dtet_parenttype_Iloc_to_type[6][8] = {
   {0, 0, 4, 5, 0, 1, 2, 0},
@@ -96,7 +100,7 @@ const int           t8_dtet_parenttype_Iloc_to_type[6][8] = {
   {5, 0, 1, 5, 3, 4, 5, 5}
 };
 
-const int           t8_dtet_type_Iloc_to_cid[6][8] = {
+const int           t8_dtet_parenttype_Iloc_to_cid[6][8] = {
   {0, 1, 1, 1, 5, 5, 5, 7},
   {0, 1, 1, 1, 3, 3, 3, 7},
   {0, 2, 2, 2, 3, 3, 3, 7},
