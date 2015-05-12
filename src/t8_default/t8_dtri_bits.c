@@ -385,14 +385,14 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
 {
   int                 maxlevel;
   uint32_t            exclorx, exclory;
-#ifdef P4_TO_P8
+#ifdef T8_DTRI_TO_DTET
   uint32_t            exclorz;
 #endif
   uint32_t            maxclor;
 
   exclorx = t1->x ^ t2->x;
   exclory = t1->y ^ t2->y;
-#ifdef P4_TO_P8
+#ifdef T8_DTRI_TO_DTET
   exclorz = t1->z ^ t2->z;
 
   maxclor = exclorx | exclory | exclorz;
@@ -405,7 +405,7 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
 
   r->x = t1->x & ~((1 << maxlevel) - 1);
   r->y = t1->y & ~((1 << maxlevel) - 1);
-#ifdef P4_TO_P8
+#ifdef T8_DTRI_TO_DTET
   r->z = t1->z & ~((1 << maxlevel) - 1);
 #endif
   r->level = (int8_t) SC_MIN (T8_DTRI_MAXLEVEL - maxlevel,
