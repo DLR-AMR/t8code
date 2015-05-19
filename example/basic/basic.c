@@ -21,12 +21,33 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8.h>
+#include <t8_default.h>
+#include <t8_forest.h>
+
+static void
+t8_basic (int level)
+{
+  t8_forest_t         forest;
+
+  t8_forest_new (&forest);
+  t8_forest_set_mpicomm (forest, sc_MPI_COMM_WORLD, 0);
+  t8_forest_set_cmesh (forest, t8_cmesh_new_tet (), 1);
+  t8_forest_set_scheme (forest, t8_scheme_new_default (), 1);
+
+  t8_forest_set_level (forest, level);
+
+  t8_forest_construct (forest);
+
+  t8_forest_write_vtk (forest, "basic");
+
+  t8_forest_destroy (&forest);
+}
 
 int
 main (int argc, char **argv)
 {
   int                 mpiret;
+  int                 level;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -34,6 +55,9 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   p4est_init (NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
+
+  level = 3;
+  t8_basic (level);
 
   sc_finalize ();
 
