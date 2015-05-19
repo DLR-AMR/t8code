@@ -33,6 +33,11 @@ typedef struct t8_cmesh *t8_cmesh_t;
 
 T8_EXTERN_C_BEGIN ();
 
+void                t8_cmesh_new (t8_cmesh_t * pcmesh);
+void                t8_cmesh_destroy (t8_cmesh_t * pcmesh);
+
+t8_cmesh_t          t8_cmesh_new_tet (void);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_H */

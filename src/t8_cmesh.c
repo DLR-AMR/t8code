@@ -21,3 +21,41 @@
 */
 
 #include <t8_cmesh.h>
+
+typedef struct t8_cmesh
+{
+}
+t8_cmesh_struct_t;
+
+void
+t8_cmesh_new (t8_cmesh_t * pcmesh)
+{
+  t8_cmesh_t          cmesh;
+
+  T8_ASSERT (pcmesh != NULL);
+  cmesh = *pcmesh = T8_ALLOC_ZERO (t8_cmesh_struct_t, 1);
+}
+
+void
+t8_cmesh_destroy (t8_cmesh_t * pcmesh)
+{
+  t8_cmesh_t          cmesh;
+
+  T8_ASSERT (pcmesh != NULL);
+  cmesh = *pcmesh;
+  T8_ASSERT (cmesh != NULL);
+
+  T8_FREE (cmesh);
+
+  *pcmesh = NULL;
+}
+
+t8_cmesh_t
+t8_cmesh_new_tet (void)
+{
+  t8_cmesh_t          cmesh;
+
+  t8_cmesh_new (&cmesh);
+
+  return cmesh;
+}

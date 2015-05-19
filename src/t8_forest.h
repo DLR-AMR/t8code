@@ -38,13 +38,12 @@ void                t8_forest_new (t8_forest_t * pforest);
 
 void                t8_forest_set_mpicomm (t8_forest_t forest,
                                            sc_MPI_Comm mpicomm, int do_dup);
-void                t8_forest_set_dimension (t8_forest_t forest,
-                                             int dimension);
-void                t8_forest_set_level (t8_forest_t forest, int level);
 void                t8_forest_set_cmesh (t8_forest_t forest,
-                                         t8_cmesh_t cmesh);
+                                         t8_cmesh_t cmesh, int do_owned);
 void                t8_forest_set_scheme (t8_forest_t forest,
-                                          t8_scheme_t * scheme);
+                                          t8_scheme_t * scheme, int do_owned);
+
+void                t8_forest_set_level (t8_forest_t forest, int level);
 
 void                t8_forest_set_copy (t8_forest_t forest,
                                         const t8_forest_t * from);

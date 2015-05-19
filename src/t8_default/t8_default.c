@@ -26,7 +26,7 @@
 #include "t8_default_tet.h"
 
 t8_scheme_t        *
-t8_default_scheme_new (void)
+t8_scheme_new_default (void)
 {
   t8_scheme_t        *s;
 
