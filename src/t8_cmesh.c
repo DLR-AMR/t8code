@@ -20,20 +20,42 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_default.h>
-#include "t8_default_quad.h"
-#include "t8_default_hex.h"
-#include "t8_default_tet.h"
+#include <t8_cmesh.h>
 
-t8_scheme_t        *
-t8_scheme_new_default (void)
+typedef struct t8_cmesh
 {
-  t8_scheme_t        *s;
+}
+t8_cmesh_struct_t;
 
-  s = T8_ALLOC_ZERO (t8_scheme_t, 1);
-  s->eclass_schemes[T8_ECLASS_QUAD] = t8_default_scheme_new_quad ();
-  s->eclass_schemes[T8_ECLASS_HEX] = t8_default_scheme_new_hex ();
-  s->eclass_schemes[T8_ECLASS_TET] = t8_default_scheme_new_tet ();
+void
+t8_cmesh_new (t8_cmesh_t * pcmesh)
+{
+  t8_cmesh_t          cmesh;
 
-  return s;
+  T8_ASSERT (pcmesh != NULL);
+  cmesh = *pcmesh = T8_ALLOC_ZERO (t8_cmesh_struct_t, 1);
+}
+
+void
+t8_cmesh_destroy (t8_cmesh_t * pcmesh)
+{
+  t8_cmesh_t          cmesh;
+
+  T8_ASSERT (pcmesh != NULL);
+  cmesh = *pcmesh;
+  T8_ASSERT (cmesh != NULL);
+
+  T8_FREE (cmesh);
+
+  *pcmesh = NULL;
+}
+
+t8_cmesh_t
+t8_cmesh_new_tet (void)
+{
+  t8_cmesh_t          cmesh;
+
+  t8_cmesh_new (&cmesh);
+
+  return cmesh;
 }

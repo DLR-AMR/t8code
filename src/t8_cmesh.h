@@ -20,20 +20,24 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_default.h>
-#include "t8_default_quad.h"
-#include "t8_default_hex.h"
-#include "t8_default_tet.h"
+/** \file t8_cmesh.h
+ * We define the coarse mesh of tet-trees in this file.
+ */
 
-t8_scheme_t        *
-t8_scheme_new_default (void)
-{
-  t8_scheme_t        *s;
+#ifndef T8_CMESH_H
+#define T8_CMESH_H
 
-  s = T8_ALLOC_ZERO (t8_scheme_t, 1);
-  s->eclass_schemes[T8_ECLASS_QUAD] = t8_default_scheme_new_quad ();
-  s->eclass_schemes[T8_ECLASS_HEX] = t8_default_scheme_new_hex ();
-  s->eclass_schemes[T8_ECLASS_TET] = t8_default_scheme_new_tet ();
+#include <t8.h>
 
-  return s;
-}
+typedef struct t8_cmesh *t8_cmesh_t;
+
+T8_EXTERN_C_BEGIN ();
+
+void                t8_cmesh_new (t8_cmesh_t * pcmesh);
+void                t8_cmesh_destroy (t8_cmesh_t * pcmesh);
+
+t8_cmesh_t          t8_cmesh_new_tet (void);
+
+T8_EXTERN_C_END ();
+
+#endif /* !T8_CMESH_H */
