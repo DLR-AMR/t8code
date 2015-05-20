@@ -20,10 +20,13 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <sc_refcount.h>
 #include <t8_forest.h>
 
 typedef struct t8_forest
 {
+  sc_refcount_t       rc;
+
   int                 set_do_dup;
   int                 set_level;
 
@@ -48,6 +51,7 @@ t8_forest_new (t8_forest_t * pforest)
   T8_ASSERT (pforest != NULL);
 
   forest = *pforest = T8_ALLOC_ZERO (t8_forest_struct_t, 1);
+  sc_refcount_init (&forest->rc);
 
   /* sensible defaults */
   forest->mpicomm = sc_MPI_COMM_NULL;
@@ -61,6 +65,7 @@ t8_forest_set_mpicomm (t8_forest_t forest, sc_MPI_Comm mpicomm, int do_dup)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (!forest->constructed);
+  /* TODO: check positive reference count in all functions */
 
   forest->mpicomm = mpicomm;
   forest->set_do_dup = do_dup;
@@ -150,7 +155,7 @@ t8_forest_write_vtk (t8_forest_t forest, const char *filename)
   T8_ASSERT (forest->constructed);
 }
 
-void
+static void
 t8_forest_destroy (t8_forest_t * pforest)
 {
   int                 mpiret;
@@ -159,6 +164,7 @@ t8_forest_destroy (t8_forest_t * pforest)
   T8_ASSERT (pforest != NULL);
   forest = *pforest;
   T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount == 0);
 
   if (forest->scheme_is_owned) {
     t8_scheme_destroy (forest->scheme);
@@ -176,4 +182,26 @@ t8_forest_destroy (t8_forest_t * pforest)
 
   T8_FREE (forest);
   *pforest = NULL;
+}
+
+void
+t8_forest_ref (t8_forest_t forest)
+{
+  T8_ASSERT (forest != NULL);
+
+  sc_refcount_ref (&forest->rc);
+}
+
+void
+t8_forest_unref (t8_forest_t * pforest)
+{
+  t8_forest_t         forest;
+
+  T8_ASSERT (pforest != NULL);
+  forest = *pforest;
+  T8_ASSERT (forest != NULL);
+
+  if (sc_refcount_unref (&forest->rc)) {
+    t8_forest_destroy (pforest);
+  }
 }

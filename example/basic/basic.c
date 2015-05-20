@@ -21,6 +21,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <sc_refcount.h>
 #include <t8_default.h>
 #include <t8_forest.h>
 
@@ -40,7 +41,7 @@ t8_basic (int level)
 
   t8_forest_write_vtk (forest, "basic");
 
-  t8_forest_destroy (&forest);
+  t8_forest_unref (&forest);
 }
 
 int
@@ -59,6 +60,8 @@ main (int argc, char **argv)
   level = 3;
   t8_basic (level);
 
+  /* TODO: eventually this function will be called from sc_finalize */
+  T8_ASSERT (sc_refcount_get_n_active () == 0);
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();

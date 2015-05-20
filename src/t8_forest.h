@@ -24,6 +24,8 @@
  * We define the forest of tet-trees in this file.
  */
 
+/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest */
+
 #ifndef T8_FOREST_H
 #define T8_FOREST_H
 
@@ -34,12 +36,27 @@ typedef struct t8_forest *t8_forest_t;
 
 T8_EXTERN_C_BEGIN ();
 
+/** Create a new forest with reference count one.
+ * This forest needs to be specialized with the t8_forest_set_* calls.
+ * Then in needs to be set up with \see t8_forest_construct.
+ * \param [in,out] pforest      On input, this pointer must be non-NULL.
+ *                              On return, this pointer set to the new forest.
+ */
 void                t8_forest_new (t8_forest_t * pforest);
 
 void                t8_forest_set_mpicomm (t8_forest_t forest,
                                            sc_MPI_Comm mpicomm, int do_dup);
+
+/* TODO: remove do_owned.  Instead, call cmesh_unref in forest_destroy;
+ *                         document that this function takes ownership of cmesh.
+ *                         If the function should not assume ownership of cmesh,
+ *                         the caller can achieve this by calling t8_cmesh_ref
+ *                         (cmesh) before passing cmesh into this function.
+ */
 void                t8_forest_set_cmesh (t8_forest_t forest,
                                          t8_cmesh_t cmesh, int do_owned);
+
+/* TODO: implement reference counting logic for scheme analogously. */
 void                t8_forest_set_scheme (t8_forest_t forest,
                                           t8_scheme_t * scheme, int do_owned);
 
@@ -62,6 +79,10 @@ void                t8_forest_set_add_ghost (t8_forest_t forest,
 void                t8_forest_set_load (t8_forest_t forest,
                                         const char *filename);
 
+/** After allocating and adding properties to a forest, finish its construction.
+ * \param [in,out] forest       Must be created with \see t8_forest_new and
+ *                              specialized with t8_forest_set_* calls first.
+ */
 void                t8_forest_construct (t8_forest_t forest);
 
 void                t8_forest_save (t8_forest_t forest);
@@ -70,7 +91,23 @@ void                t8_forest_write_vtk (t8_forest_t forest,
 
 void                t8_forest_iterate (t8_forest_t forest);
 
-void                t8_forest_destroy (t8_forest_t * pforest);
+/** Increase the reference counter of a forest.
+ * \param [in,out] forest       On input, this forest must exist with positive
+ *                              reference count.  It may be in any state.
+ */
+void                t8_forest_ref (t8_forest_t forest);
+
+/** Decrease the reference counter of a forest.
+ * If the counter reaches zero, this forest is destroyed.
+ * \param [in,out] pforest      On input, the forest pointed to must exist
+ *                              with positive reference count.  It may be in
+ *                              any state.  If the reference count reaches
+ *                              zero, the forest is destroyed and this pointer
+ *                              set to NULL.
+ *                              Otherwise, the pointer is not changed and
+ *                              the forest is not modified in other ways.
+ */
+void                t8_forest_unref (t8_forest_t * pforest);
 
 T8_EXTERN_C_END ();
 
