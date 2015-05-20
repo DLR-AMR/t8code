@@ -118,19 +118,24 @@ t8_forest_set_scheme (t8_forest_t forest, t8_scheme_t * scheme, int do_owned)
 void
 t8_forest_construct (t8_forest_t forest)
 {
-  sc_MPI_Comm       comm_dup;
+  int                 mpiret;
+  sc_MPI_Comm         comm_dup;
 
   T8_ASSERT (forest != NULL);
   T8_ASSERT (!forest->constructed);
 
   T8_ASSERT (forest->mpicomm != sc_MPI_COMM_NULL);
+
   /* dup communicator if requested */
-  if(forest->set_do_dup != 0){
-    sc_MPI_Comm_dup (forest->mpicomm, &comm_dup);
+  if (forest->set_do_dup) {
+    mpiret = sc_MPI_Comm_dup (forest->mpicomm, &comm_dup);
+    SC_CHECK_MPI (mpiret);
     forest->mpicomm = comm_dup;
   }
-  sc_MPI_Comm_rank (forest->mpicomm, &forest->mpirank);
-  sc_MPI_Comm_size (forest->mpicomm, &forest->mpisize);
+  mpiret = sc_MPI_Comm_size (forest->mpicomm, &forest->mpisize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (forest->mpicomm, &forest->mpirank);
+  SC_CHECK_MPI (mpiret);
 
   T8_ASSERT (forest->scheme != NULL);
   T8_ASSERT (forest->cmesh != NULL);
@@ -148,6 +153,7 @@ t8_forest_write_vtk (t8_forest_t forest, const char *filename)
 void
 t8_forest_destroy (t8_forest_t * pforest)
 {
+  int                 mpiret;
   t8_forest_t         forest;
 
   T8_ASSERT (pforest != NULL);
@@ -163,9 +169,11 @@ t8_forest_destroy (t8_forest_t * pforest)
   }
 
   /* undup communicator if necessary */
-  if(forest->set_do_dup != 0){
-    sc_MPI_Comm_free (&forest->mpicomm);
+  if (forest->set_do_dup) {
+    mpiret = sc_MPI_Comm_free (&forest->mpicomm);
+    SC_CHECK_MPI (mpiret);
   }
+
   T8_FREE (forest);
   *pforest = NULL;
 }
