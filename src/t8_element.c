@@ -38,6 +38,28 @@ t8_scheme_destroy (t8_scheme_t * s)
 }
 
 void
+t8_scheme_ref (t8_scheme_t *scheme)
+{
+  T8_ASSERT (scheme != NULL);
+
+  sc_refcount_ref (&scheme->rc);
+}
+
+void
+t8_scheme_unref (t8_scheme_t **pscheme)
+{
+  t8_scheme_t       *scheme;
+
+  T8_ASSERT (pscheme != NULL);
+  scheme = *pscheme;
+  T8_ASSERT (scheme != NULL);
+
+  if (sc_refcount_unref (&scheme->rc)){
+    t8_scheme_destroy (scheme);
+  }
+}
+
+void
 t8_eclass_scheme_destroy (t8_eclass_scheme_t * ts)
 {
   T8_ASSERT (ts != NULL);

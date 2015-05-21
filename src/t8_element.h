@@ -30,6 +30,7 @@
 #ifndef T8_ELEMENT_H
 #define T8_ELEMENT_H
 
+#include <sc_refcount.h>
 #include <t8_eclass.h>
 
 T8_EXTERN_C_BEGIN ();
@@ -131,13 +132,29 @@ struct t8_eclass_scheme
 /** The scheme holds implementations for one or more element classes. */
 typedef struct t8_scheme
 {
+  sc_refcount_t       rc;
   /** This array holds one virtual table per element class. */
   t8_eclass_scheme_t *eclass_schemes[T8_ECLASS_LAST];
 }
 t8_scheme_t;
 
-/** Destroy an element scheme. */
-void                t8_scheme_destroy (t8_scheme_t * scheme);
+/** Increase the reference counter of a scheme.
+ * \param [in,out] scheme       On input, this scheme must exist with positive
+ *                              reference count.  It may be in any state.
+ */
+void                t8_scheme_ref (t8_scheme_t *scheme);
+
+/** Decrease the reference counter of a scheme.
+ * If the counter reaches zero, this scheme is destroyed.
+ * \param [in,out] pscheme      On input, the scheme pointed to must exist
+ *                              with positive reference count.  It may be in
+ *                              any state.  If the reference count reaches
+ *                              zero, the scheme is destroyed and this pointer
+ *                              set to NULL.
+ *                              Otherwise, the pointer is not changed and
+ *                              the scheme is not modified in other ways.
+ */
+void                t8_scheme_unref (t8_scheme_t **pscheme);
 
 /** Destroy an implementation of a particular element class. */
 void                t8_eclass_scheme_destroy (t8_eclass_scheme_t * ts);
