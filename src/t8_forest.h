@@ -47,16 +47,23 @@ void                t8_forest_new (t8_forest_t * pforest);
 void                t8_forest_set_mpicomm (t8_forest_t forest,
                                            sc_MPI_Comm mpicomm, int do_dup);
 
-/* TODO: remove do_owned.  Instead, call cmesh_unref in forest_destroy;
- *                         document that this function takes ownership of cmesh.
- *                         If the function should not assume ownership of cmesh,
- *                         the caller can achieve this by calling t8_cmesh_ref
- *                         (cmesh) before passing cmesh into this function.
+/** Set the cmesh associated to a forest.
+ *  If the cmesh was not referenced yet, the forest takes ownership of the
+ *  cmesh and it will be destroyed when the forest is destroyed.
+ *  To reference cmesh, call t8_cmesh_ref before passing it to t8_forest_set_mesh.
+ *  \param [in,out] forest      The forest whose cmesh variable will be set.
+ *  \param [in]     cmesh       The cmesh to be set.
  */
 void                t8_forest_set_cmesh (t8_forest_t forest,
                                          t8_cmesh_t cmesh);
 
-/* TODO: implement reference counting logic for scheme analogously. */
+/** Set the scheme associated to a forest.
+ *  If the scheme was not referenced yet, the forest takes ownership of the
+ *  scheme and it will be destroyed when the forest is destroyed.
+ *  To reference scheme, call t8_scheme_ref before passing it to t8_forest_set_mesh.
+ *  \param [in,out] forest      The forest whose scheme variable will be set.
+ *  \param [in]     scheme       The scheme to be set.
+ */
 void                t8_forest_set_scheme (t8_forest_t forest,
                                           t8_scheme_t * scheme);
 

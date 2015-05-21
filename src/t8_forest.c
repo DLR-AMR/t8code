@@ -92,7 +92,6 @@ t8_forest_set_level (t8_forest_t forest, int level)
   forest->set_level = level;
 }
 
-/* TODO: implement reference counting for cmesh */
 void
 t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh)
 {
@@ -105,7 +104,6 @@ t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh)
   t8_cmesh_ref (forest->cmesh);
 }
 
-/* TODO: implement reference counting for scheme */
 void
 t8_forest_set_scheme (t8_forest_t forest, t8_scheme_t * scheme)
 {
