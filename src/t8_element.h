@@ -132,25 +132,26 @@ struct t8_eclass_scheme
 /** The scheme holds implementations for one or more element classes. */
 typedef struct t8_scheme
 {
+  /** Reference counter for this scheme. */
   sc_refcount_t       rc;
+
   /** This array holds one virtual table per element class. */
   t8_eclass_scheme_t *eclass_schemes[T8_ECLASS_LAST];
 }
 t8_scheme_t;
 
 /** Increase the reference counter of a scheme.
- * \param [in,out] scheme       On input, this scheme must exist with positive
- *                              reference count.  It may be in any state.
+ * \param [in,out] scheme       On input, this scheme must be alive, that is,
+ *                              exist with positive reference count.
  */
 void                t8_scheme_ref (t8_scheme_t *scheme);
 
 /** Decrease the reference counter of a scheme.
  * If the counter reaches zero, this scheme is destroyed.
  * \param [in,out] pscheme      On input, the scheme pointed to must exist
- *                              with positive reference count.  It may be in
- *                              any state.  If the reference count reaches
- *                              zero, the scheme is destroyed and this pointer
- *                              set to NULL.
+ *                              with positive reference count.  If the
+ *                              reference count reaches zero, the scheme is
+ *                              destroyed and this pointer set to NULL.
  *                              Otherwise, the pointer is not changed and
  *                              the scheme is not modified in other ways.
  */

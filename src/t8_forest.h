@@ -48,21 +48,23 @@ void                t8_forest_set_mpicomm (t8_forest_t forest,
                                            sc_MPI_Comm mpicomm, int do_dup);
 
 /** Set the cmesh associated to a forest.
- *  If the cmesh was not referenced yet, the forest takes ownership of the
- *  cmesh and it will be destroyed when the forest is destroyed.
- *  To reference cmesh, call t8_cmesh_ref before passing it to t8_forest_set_mesh.
- *  \param [in,out] forest      The forest whose cmesh variable will be set.
- *  \param [in]     cmesh       The cmesh to be set.
+ * By default, the forest takes ownership of the cmesh such that it will be
+ * destroyed when the forest is destroyed.  To keep ownership of the cmesh,
+ * call \see t8_cmesh_ref before passing it to \see t8_forest_set_cmesh.
+ * \param [in,out] forest       The forest whose cmesh variable will be set.
+ * \param [in]     cmesh        The cmesh to be set.  We take ownership.
+ *                              This can be prevented by referencing \b cmesh.
  */
 void                t8_forest_set_cmesh (t8_forest_t forest,
                                          t8_cmesh_t cmesh);
 
-/** Set the scheme associated to a forest.
- *  If the scheme was not referenced yet, the forest takes ownership of the
- *  scheme and it will be destroyed when the forest is destroyed.
- *  To reference scheme, call t8_scheme_ref before passing it to t8_forest_set_mesh.
- *  \param [in,out] forest      The forest whose scheme variable will be set.
- *  \param [in]     scheme       The scheme to be set.
+/** Set the element scheme associated to a forest.
+ * By default, the forest takes ownership of the scheme such that it will be
+ * destroyed when the forest is destroyed.  To keep ownership of the scheme, call
+ * \see t8_scheme_ref before passing it to \see t8_forest_set_scheme.
+ * \param [in,out] forest       The forest whose scheme variable will be set.
+ * \param [in]     scheme       The scheme to be set.  We take ownership.
+ *                              This can be prevented by referencing \b scheme.
  */
 void                t8_forest_set_scheme (t8_forest_t forest,
                                           t8_scheme_t * scheme);

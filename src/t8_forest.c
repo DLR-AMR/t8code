@@ -99,9 +99,9 @@ t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh)
   T8_ASSERT (!forest->constructed);
 
   T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (forest->cmesh == NULL);
 
   forest->cmesh = cmesh;
-  t8_cmesh_ref (forest->cmesh);
 }
 
 void
@@ -111,9 +111,9 @@ t8_forest_set_scheme (t8_forest_t forest, t8_scheme_t * scheme)
   T8_ASSERT (!forest->constructed);
 
   T8_ASSERT (scheme != NULL);
+  T8_ASSERT (forest->scheme == NULL);
 
   forest->scheme = scheme;
-  t8_scheme_ref (forest->scheme);
 }
 
 void

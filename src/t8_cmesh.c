@@ -23,6 +23,11 @@
 #include <sc_refcount.h>
 #include <t8_cmesh.h>
 
+/** \file t8_cmesh.h
+ *
+ * TODO: document this file
+ */
+
 typedef struct t8_cmesh
 {
   sc_refcount_t       rc;
@@ -39,7 +44,7 @@ t8_cmesh_new (t8_cmesh_t * pcmesh)
   sc_refcount_init (&cmesh->rc);
 }
 
-void
+static void
 t8_cmesh_destroy (t8_cmesh_t * pcmesh)
 {
   t8_cmesh_t          cmesh;
@@ -47,6 +52,7 @@ t8_cmesh_destroy (t8_cmesh_t * pcmesh)
   T8_ASSERT (pcmesh != NULL);
   cmesh = *pcmesh;
   T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (cmesh->rc.refcount == 0);
 
   T8_FREE (cmesh);
 
@@ -62,15 +68,15 @@ t8_cmesh_ref (t8_cmesh_t cmesh)
 }
 
 void
-t8_cmesh_unref (t8_cmesh_t *pcmesh)
+t8_cmesh_unref (t8_cmesh_t * pcmesh)
 {
-  t8_cmesh_t        cmesh;
+  t8_cmesh_t          cmesh;
 
   T8_ASSERT (pcmesh != NULL);
   cmesh = *pcmesh;
   T8_ASSERT (cmesh != NULL);
 
-  if (sc_refcount_unref (&cmesh->rc)){
+  if (sc_refcount_unref (&cmesh->rc)) {
     t8_cmesh_destroy (pcmesh);
   }
 }
@@ -81,6 +87,7 @@ t8_cmesh_new_tet (void)
   t8_cmesh_t          cmesh;
 
   t8_cmesh_new (&cmesh);
+  /* TODO: set a single tetrahedral tree and call construct */
 
   return cmesh;
 }
