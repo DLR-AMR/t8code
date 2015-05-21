@@ -54,11 +54,11 @@ void                t8_forest_set_mpicomm (t8_forest_t forest,
  *                         (cmesh) before passing cmesh into this function.
  */
 void                t8_forest_set_cmesh (t8_forest_t forest,
-                                         t8_cmesh_t cmesh, int do_owned);
+                                         t8_cmesh_t cmesh);
 
 /* TODO: implement reference counting logic for scheme analogously. */
 void                t8_forest_set_scheme (t8_forest_t forest,
-                                          t8_scheme_t * scheme, int do_owned);
+                                          t8_scheme_t * scheme);
 
 void                t8_forest_set_level (t8_forest_t forest, int level);
 

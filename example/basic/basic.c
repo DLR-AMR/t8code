@@ -32,8 +32,8 @@ t8_basic (int level)
 
   t8_forest_new (&forest);
   t8_forest_set_mpicomm (forest, sc_MPI_COMM_WORLD, 0);
-  t8_forest_set_cmesh (forest, t8_cmesh_new_tet (), 1);
-  t8_forest_set_scheme (forest, t8_scheme_new_default (), 1);
+  t8_forest_set_cmesh (forest, t8_cmesh_new_tet ());
+  t8_forest_set_scheme (forest, t8_scheme_new_default ());
 
   t8_forest_set_level (forest, level);
 

@@ -32,9 +32,7 @@ typedef struct t8_forest
 
   sc_MPI_Comm         mpicomm;
   t8_cmesh_t          cmesh;
-  int                 cmesh_is_owned;
   t8_scheme_t        *scheme;
-  int                 scheme_is_owned;
   int                 dimension;
 
   int                 constructed;
@@ -96,7 +94,7 @@ t8_forest_set_level (t8_forest_t forest, int level)
 
 /* TODO: implement reference counting for cmesh */
 void
-t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh, int do_owned)
+t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (!forest->constructed);
@@ -104,12 +102,12 @@ t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh, int do_owned)
   T8_ASSERT (cmesh != NULL);
 
   forest->cmesh = cmesh;
-  forest->cmesh_is_owned = do_owned;
+  t8_cmesh_ref (forest->cmesh);
 }
 
 /* TODO: implement reference counting for scheme */
 void
-t8_forest_set_scheme (t8_forest_t forest, t8_scheme_t * scheme, int do_owned)
+t8_forest_set_scheme (t8_forest_t forest, t8_scheme_t * scheme)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (!forest->constructed);
@@ -117,7 +115,7 @@ t8_forest_set_scheme (t8_forest_t forest, t8_scheme_t * scheme, int do_owned)
   T8_ASSERT (scheme != NULL);
 
   forest->scheme = scheme;
-  forest->scheme_is_owned = do_owned;
+  t8_scheme_ref (forest->scheme);
 }
 
 void
@@ -166,13 +164,8 @@ t8_forest_destroy (t8_forest_t * pforest)
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount == 0);
 
-  if (forest->scheme_is_owned) {
-    t8_scheme_destroy (forest->scheme);
-  }
-
-  if (forest->cmesh_is_owned) {
-    t8_cmesh_destroy (&forest->cmesh);
-  }
+  t8_scheme_unref (&forest->scheme);
+  t8_cmesh_unref (&forest->cmesh);
 
   /* undup communicator if necessary */
   if (forest->set_do_dup) {
