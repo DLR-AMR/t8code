@@ -62,20 +62,24 @@ void                t8_forest_set_scheme (t8_forest_t forest,
 
 void                t8_forest_set_level (t8_forest_t forest, int level);
 
+/* TODO: by default we take ownership of the 'from' forest.
+ *       This means that we call forest_unref (from) in forest_construct.
+ *       The caller can keep ownership by calling forest_ref (from) before
+ *       passing from into this function.
+ */
 void                t8_forest_set_copy (t8_forest_t forest,
                                         const t8_forest_t * from);
 void                t8_forest_set_adapt (t8_forest_t forest,
                                          const t8_forest_t * from);
 void                t8_forest_set_partition (t8_forest_t forest,
                                              const t8_forest_t * from);
-void                t8_forest_set_destroy_from (t8_forest_t forest,
-                                                int destroy_from);
 
 void                t8_forest_set_balance (t8_forest_t forest,
                                            int do_balance);
-void                t8_forest_set_add_ghost (t8_forest_t forest,
-                                             int do_ghost);
+void                t8_forest_set_ghost (t8_forest_t forest, int do_ghost);
 
+/* TODO: use assertions and document that the forest_set (..., from) and
+ *       set_load are mutually exclusive. */
 void                t8_forest_set_load (t8_forest_t forest,
                                         const char *filename);
 
