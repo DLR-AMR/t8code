@@ -29,6 +29,9 @@ const int t8_eclass_to_dimension[T8_ECLASS_LAST] =
 const int t8_eclass_num_faces[T8_ECLASS_LAST] =
   { 0, 2, 4, 3, 6, 4, 5, 5 };
 
+const int    t8_eclass_num_vertices[T8_ECLASS_LAST] =
+  { 1, 2, 4, 3, 8, 4, 6, 5 };
+
 const int t8_eclass_num_children[T8_ECLASS_LAST] =
   { 0, 2, 4, 4, 8, 8, 8, 10 };
 

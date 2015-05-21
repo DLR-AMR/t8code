@@ -69,6 +69,9 @@ extern const int    t8_eclass_to_dimension[T8_ECLASS_LAST];
 /** The number of codimension-one boundaries of an element class. */
 extern const int    t8_eclass_num_faces[T8_ECLASS_LAST];
 
+/** The number of vertices of an element class. */
+extern const int    t8_eclass_num_vertices[T8_ECLASS_LAST];
+
 /** The number of children of an element class. */
 extern const int    t8_eclass_num_children[T8_ECLASS_LAST];
 
