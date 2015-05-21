@@ -77,7 +77,7 @@ void                t8_forest_set_level (t8_forest_t forest, int level);
  *       passing from into this function.
  */
 void                t8_forest_set_copy (t8_forest_t forest,
-                                        const t8_forest_t * from);
+                                        const t8_forest_t from);
 void                t8_forest_set_adapt (t8_forest_t forest,
                                          const t8_forest_t * from);
 void                t8_forest_set_partition (t8_forest_t forest,

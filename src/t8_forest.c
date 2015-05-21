@@ -33,6 +33,7 @@ typedef struct t8_forest
   sc_MPI_Comm         mpicomm;
   t8_cmesh_t          cmesh;
   t8_scheme_t        *scheme;
+  t8_forest_t         from;
   int                 dimension;
 
   int                 constructed;
@@ -90,6 +91,30 @@ t8_forest_set_level (t8_forest_t forest, int level)
   T8_ASSERT (0 <= level);
 
   forest->set_level = level;
+}
+
+void
+t8_forest_set_copy (t8_forest_t forest, const t8_forest_t from)
+{
+  T8_ASSERT (forest != NULL);
+  T8_ASSERT (!forest->constructed);
+  T8_ASSERT (from != NULL);
+
+  forest->from = from;
+  if (forest->cmesh != NULL) {
+    t8_cmesh_unref (&forest->cmesh);
+  }
+  forest->cmesh = from->cmesh;
+  t8_cmesh_ref (forest->cmesh);
+  if (forest->scheme != NULL) {
+    t8_scheme_unref (&forest->scheme);
+  }
+  forest->scheme = from->scheme;
+  t8_scheme_ref (forest->scheme);
+  forest->dimension = from->dimension;
+  forest->set_level = from->set_level;
+  forest->mpicomm = from->mpicomm;
+  t8_forest_unref (&forest->from);
 }
 
 void
@@ -169,6 +194,9 @@ t8_forest_destroy (t8_forest_t * pforest)
   if (forest->set_do_dup) {
     mpiret = sc_MPI_Comm_free (&forest->mpicomm);
     SC_CHECK_MPI (mpiret);
+  }
+  if (forest->from != NULL) {
+    t8_forest_unref (&forest->from);
   }
 
   T8_FREE (forest);
