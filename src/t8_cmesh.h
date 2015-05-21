@@ -28,12 +28,17 @@
 #define T8_CMESH_H
 
 #include <t8.h>
+#include <t8_eclass.h>
 
 typedef struct t8_cmesh *t8_cmesh_t;
 
 T8_EXTERN_C_BEGIN ();
 
-void                t8_cmesh_new (t8_cmesh_t * pcmesh);
+void                t8_cmesh_init (t8_cmesh_t * pcmesh,
+                                   t8_topidx_t num_vertices,
+                                   t8_topidx_t num_trees,
+                                   t8_topidx_t num_trees_per_eclass[],
+                                   t8_eclass_t * tree_to_eclass);
 
 /** Increase the reference counter of a cmesh.
  * \param [in,out] cmesh        On input, this cmesh must exist with positive
