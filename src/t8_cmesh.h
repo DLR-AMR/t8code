@@ -34,15 +34,50 @@ typedef struct t8_cmesh *t8_cmesh_t;
 
 T8_EXTERN_C_BEGIN ();
 
-void                t8_cmesh_init (t8_cmesh_t * pcmesh, t8_topidx_t num_trees,
-                                   t8_topidx_t
-                                   num_trees_per_eclass[T8_ECLASS_LAST],
-                                   t8_topidx_t num_vertices);
+/** Create a new cmesh with reference count one.
+ * This cmesh needs to be specialized with the t8_cmesh_set_* calls.
+ * Then in needs to be set up with \see t8_cmesh_construct.
+ * \param [in,out] pcmesh       On input, this pointer must be non-NULL.
+ *                              On return, this pointer set to the new forest.
+ */
+void                t8_cmesh_init (t8_cmesh_t * pcmesh);
 
+/** Set the number of trees and number of trees per eclass for a cmesh.
+ *  It is not allowed to call this function after \see t8_cmesh_construct. *
+ * \param [in,out] cmesh        The cmesh to be updated.
+ * \param [in]     num_trees    The number of trees to be set.
+ * \param [in]     num_trees_per_eclass An array storing for each t8_eclass
+ *                              the number of trees of this class.
+ */
+void                t8_cmesh_set_num_trees (t8_cmesh_t cmesh,
+                                            t8_topidx_t num_trees,
+                                            t8_topidx_t
+                                            num_trees_per_eclass
+                                            [T8_ECLASS_LAST]);
+
+/** Set the number of vertices for a cmesh.
+ *  It is not allowed to call this function after \see t8_cmesh_construct. *
+ * \param [in,out] cmesh        The cmesh to be updated.
+ * \param [in]     num_vertices The number of vertices to be set.
+ */
+void                t8_cmesh_set_num_vertices (t8_cmesh_t cmesh,
+                                               t8_topidx_t num_vertices);
+
+/** Insert a new tree into the cmesh.
+ * \param [in,out] cmesh        The cmesh to be updated.
+ * \param [in]     tree         The global number of the tree.
+ * \param [in]     tree_class   The element class of this tree.
+ * \param [in]     vertices     An array storing for each corner of the
+ *                              tree a vertex in the mesh.
+ */
 void                t8_cmesh_insert_tree (t8_cmesh_t cmesh, t8_topidx_t tree,
                                           t8_eclass_t tree_class,
                                           t8_topidx_t * vertices);
 
+/** After allocating and adding properties to a cmesh, finish its construction.
+ * \param [in,out] cmesh        Must be created with \see t8_cmesh_init and
+ *                              specialized with t8_cmesh_set_* calls first.
+ */
 void                t8_cmesh_construct (t8_cmesh_t cmesh);
 
 /** Increase the reference counter of a cmesh.

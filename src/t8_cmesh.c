@@ -45,27 +45,38 @@ typedef struct t8_cmesh
 t8_cmesh_struct_t;
 
 void
-t8_cmesh_init (t8_cmesh_t * pcmesh, t8_topidx_t num_trees,
-               t8_topidx_t num_trees_per_eclass[T8_ECLASS_LAST],
-               t8_topidx_t num_vertices)
+t8_cmesh_init (t8_cmesh_t * pcmesh)
 {
   t8_cmesh_t          cmesh;
-  t8_eclass_t         class_it;
   T8_ASSERT (pcmesh != NULL);
-  T8_ASSERT (num_trees > 0);
-  T8_ASSERT (num_vertices > 0);
 
   cmesh = *pcmesh = T8_ALLOC_ZERO (t8_cmesh_struct_t, 1);
   sc_refcount_init (&cmesh->rc);
-  cmesh->num_vertices = num_vertices;
+}
+
+void
+t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees,
+                        t8_topidx_t num_trees_per_eclass[T8_ECLASS_LAST])
+{
+  int                 class_it;
+#ifdef T8_ENABLE_DEBUG
+  t8_topidx_t         count_trees = 0;
+#endif
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (!cmesh->constructed);
+  T8_ASSERT (num_trees > 0);
+
   cmesh->num_trees = num_trees;
+  if (cmesh->num_trees > 0) {
+    T8_FREE (cmesh->tree_to_eclass);
+    T8_FREE (cmesh->tree_to_num_in_eclass);
+  }
   cmesh->tree_to_eclass = T8_ALLOC_ZERO (t8_eclass_t, num_trees);
-  cmesh->vertices = T8_ALLOC_ZERO (double, 3 * cmesh->num_vertices);
-  memcpy (cmesh->num_trees_per_eclass, num_trees_per_eclass,
-          sizeof (t8_topidx_t) * T8_ECLASS_LAST);
   cmesh->tree_to_num_in_eclass = T8_ALLOC_ZERO (t8_topidx_t, num_trees);
-  /* allocate tree_to_vertex memory */
   for (class_it = T8_ECLASS_FIRST; class_it < T8_ECLASS_LAST; class_it++) {
+    if (cmesh->num_trees_per_eclass[class_it] > 0) {
+      T8_FREE (cmesh->tree_to_vertex[class_it]);
+    }
     if (num_trees_per_eclass[class_it] > 0) {
       cmesh->tree_to_vertex[class_it] =
         T8_ALLOC_ZERO (t8_topidx_t,
@@ -73,14 +84,27 @@ t8_cmesh_init (t8_cmesh_t * pcmesh, t8_topidx_t num_trees,
                        t8_eclass_num_vertices[class_it] *
                        num_trees_per_eclass[class_it]);
     }
+#ifdef T8_ENABLE_DEBUG
+    count_trees += num_trees_per_eclass[class_it];
+#endif
   }
+  T8_ASSERT (count_trees == num_trees);
+  memcpy (cmesh->num_trees_per_eclass, num_trees_per_eclass,
+          sizeof (t8_topidx_t) * T8_ECLASS_LAST);
 }
 
 void
-t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees)
+t8_cmesh_set_num_vertices (t8_cmesh_t cmesh, t8_topidx_t num_vertices)
 {
   T8_ASSERT (cmesh != NULL);
-  cmesh->num_trees = num_trees;
+  T8_ASSERT (!cmesh->constructed);
+  T8_ASSERT (num_vertices > 0);
+
+  if (cmesh->num_vertices > 0) {
+    T8_FREE (cmesh->vertices);
+  }
+  cmesh->num_vertices = num_vertices;
+  cmesh->vertices = T8_ALLOC_ZERO (double, 3 * cmesh->num_vertices);
 }
 
 void
@@ -105,13 +129,15 @@ void
 t8_cmesh_construct (t8_cmesh_t cmesh)
 {
 #ifdef T8_ENABLE_DEBUG
-  t8_eclass_t         class_it;
+  int                 class_it;
 #endif
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (!cmesh->constructed);
-  cmesh->constructed = 1;
+  T8_ASSERT (cmesh->num_trees > 0);
+  T8_ASSERT (cmesh->num_vertices > 0);
 
+  cmesh->constructed = 1;
 #ifdef T8_ENABLE_DEBUG
   for (class_it = T8_ECLASS_FIRST; class_it < T8_ECLASS_LAST; class_it++) {
     T8_ASSERT (cmesh->trees_per_eclass_counter[class_it] ==
@@ -124,7 +150,7 @@ static void
 t8_cmesh_destroy (t8_cmesh_t * pcmesh)
 {
   t8_cmesh_t          cmesh;
-  t8_eclass_t         class_it;
+  int                 class_it;
 
   T8_ASSERT (pcmesh != NULL);
   cmesh = *pcmesh;
@@ -174,7 +200,9 @@ t8_cmesh_new_tet (void)
   t8_topidx_t         vertices[4] = { 0, 1, 2, 3 };
 
   num_trees_per_eclass[T8_ECLASS_TET] = 1;
-  t8_cmesh_init (&cmesh, 1, num_trees_per_eclass, 4);
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_num_trees (cmesh, 1, num_trees_per_eclass);
+  t8_cmesh_set_num_vertices (cmesh, 4);
   t8_cmesh_insert_tree (cmesh, 0, T8_ECLASS_TET, vertices);
   t8_cmesh_construct (cmesh);
 
