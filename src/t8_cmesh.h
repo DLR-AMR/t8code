@@ -103,6 +103,16 @@ void                t8_cmesh_unref (t8_cmesh_t * pcmesh);
  */
 t8_cmesh_t          t8_cmesh_new_tet (void);
 
+/** Create a coarse mesh that consists of a single triangle.
+ * \return          A valid cmesh, as if _new and _construct had been called.
+ */
+t8_cmesh_t          t8_cmesh_new_tri (void);
+
+/** Create a coarse mesh that consists of a single hexahedron.
+ * \return          A valid cmesh, as if _new and _construct had been called.
+ */
+t8_cmesh_t          t8_cmesh_new_hex (void);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_H */

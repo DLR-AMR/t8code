@@ -208,3 +208,37 @@ t8_cmesh_new_tet (void)
 
   return cmesh;
 }
+
+t8_cmesh_t
+t8_cmesh_new_tri (void)
+{
+  t8_cmesh_t          cmesh;
+  t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST] = { };
+  t8_topidx_t         vertices[3] = { 0, 1, 2 };
+
+  num_trees_per_eclass[T8_ECLASS_TRIANGLE] = 1;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_num_trees (cmesh, 1, num_trees_per_eclass);
+  t8_cmesh_set_num_vertices (cmesh, 3);
+  t8_cmesh_insert_tree (cmesh, 0, T8_ECLASS_TRIANGLE, vertices);
+  t8_cmesh_construct (cmesh);
+
+  return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_new_hex (void)
+{
+  t8_cmesh_t          cmesh;
+  t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST] = { };
+  t8_topidx_t         vertices[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+
+  num_trees_per_eclass[T8_ECLASS_HEX] = 1;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_num_trees (cmesh, 1, num_trees_per_eclass);
+  t8_cmesh_set_num_vertices (cmesh, 8);
+  t8_cmesh_insert_tree (cmesh, 0, T8_ECLASS_HEX, vertices);
+  t8_cmesh_construct (cmesh);
+
+  return cmesh;
+}
