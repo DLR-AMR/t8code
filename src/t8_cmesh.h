@@ -34,11 +34,16 @@ typedef struct t8_cmesh *t8_cmesh_t;
 
 T8_EXTERN_C_BEGIN ();
 
-void                t8_cmesh_init (t8_cmesh_t * pcmesh,
-                                   t8_topidx_t num_vertices,
-                                   t8_topidx_t num_trees,
-                                   t8_topidx_t num_trees_per_eclass[],
-                                   t8_eclass_t * tree_to_eclass);
+void                t8_cmesh_init (t8_cmesh_t * pcmesh, t8_topidx_t num_trees,
+                                   t8_topidx_t
+                                   num_trees_per_eclass[T8_ECLASS_LAST],
+                                   t8_topidx_t num_vertices);
+
+void                t8_cmesh_insert_tree (t8_cmesh_t cmesh, t8_topidx_t tree,
+                                          t8_eclass_t tree_class,
+                                          t8_topidx_t * vertices);
+
+void                t8_cmesh_construct (t8_cmesh_t cmesh);
 
 /** Increase the reference counter of a cmesh.
  * \param [in,out] cmesh        On input, this cmesh must exist with positive
