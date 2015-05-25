@@ -21,7 +21,7 @@
 */
 
 /** \file t8_forest.h
- * We define the forest of tet-trees in this file.
+ * We define the forest of trees in this file.
  */
 
 /* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest */
@@ -32,25 +32,43 @@
 #include <t8_cmesh.h>
 #include <t8_element.h>
 
+/** Opaque pointer to a forest implementation. */
 typedef struct t8_forest *t8_forest_t;
 
 T8_EXTERN_C_BEGIN ();
 
 /** Create a new forest with reference count one.
  * This forest needs to be specialized with the t8_forest_set_* calls.
- * Then in needs to be set up with \see t8_forest_construct.
+ * Currently it is manatory to either call the functions \ref
+ * t8_forest_set_mpicomm, \ref t8_forest_set_cmesh, and \ref t8_forest_set_scheme,
+ * or to call one of \ref t8_forest_set_copy, \ref t8_forest_set_adapt, or
+ * \ref t8_forest_set_partition.  It is illegal to mix these calls, or to
+ * call more than one of the three latter functions
+ * Then it needs to be set up with \ref t8_forest_construct.
  * \param [in,out] pforest      On input, this pointer must be non-NULL.
  *                              On return, this pointer set to the new forest.
  */
-void                t8_forest_new (t8_forest_t * pforest);
+void                t8_forest_init (t8_forest_t * pforest);
 
+/** Set MPI communicator to use in constructing a new forest.
+ * This call is only valid when the forest is not created by a copy, adaptation,
+ * or partition of an existing forest.
+ * \param [in,out] forest       The forest whose communicator will be set.
+ * \param [in] mpicomm          This MPI communicator must be valid.
+ * \param [in] do_dup           If true, the communicator will be duped in
+ *                              this creation and whenever another forest is
+ *                              derived from it in the future.
+ *                              If false, no duping takes place at all.
+ */
 void                t8_forest_set_mpicomm (t8_forest_t forest,
                                            sc_MPI_Comm mpicomm, int do_dup);
 
 /** Set the cmesh associated to a forest.
  * By default, the forest takes ownership of the cmesh such that it will be
  * destroyed when the forest is destroyed.  To keep ownership of the cmesh,
- * call \see t8_cmesh_ref before passing it to \see t8_forest_set_cmesh.
+ * call \ref t8_cmesh_ref before passing it to \ref t8_forest_set_cmesh.
+ * This means that it is ILLEGAL to continue using cmesh or dereferencing it
+ * UNLESS it is referenced directly before passing it into this function.
  * \param [in,out] forest       The forest whose cmesh variable will be set.
  * \param [in]     cmesh        The cmesh to be set.  We take ownership.
  *                              This can be prevented by referencing \b cmesh.
@@ -61,7 +79,9 @@ void                t8_forest_set_cmesh (t8_forest_t forest,
 /** Set the element scheme associated to a forest.
  * By default, the forest takes ownership of the scheme such that it will be
  * destroyed when the forest is destroyed.  To keep ownership of the scheme, call
- * \see t8_scheme_ref before passing it to \see t8_forest_set_scheme.
+ * \ref t8_scheme_ref before passing it to \ref t8_forest_set_scheme.
+ * This means that it is ILLEGAL to continue using scheme or dereferencing it
+ * UNLESS it is referenced directly before passing it into this function.
  * \param [in,out] forest       The forest whose scheme variable will be set.
  * \param [in]     scheme       The scheme to be set.  We take ownership.
  *                              This can be prevented by referencing \b scheme.
@@ -71,17 +91,24 @@ void                t8_forest_set_scheme (t8_forest_t forest,
 
 void                t8_forest_set_level (t8_forest_t forest, int level);
 
-/* TODO: by default we take ownership of the 'from' forest.
- *       This means that we call forest_unref (from) in forest_construct.
- *       The caller can keep ownership by calling forest_ref (from) before
- *       passing from into this function.
+/** Set a forest as source for copying on construction.
+ * By default, the forest takes ownership of the source \b from such that it will
+ * be destroyed on calling \see t8_forest_construct.  To keep ownership of \b
+ * from, call \ref t8_forest_ref before passing it into this function.
+ * This means that it is ILLEGAL to continue using \b from or dereferencing it
+ * UNLESS it is referenced directly before passing it into this function.
  */
 void                t8_forest_set_copy (t8_forest_t forest,
                                         const t8_forest_t from);
+
+/* TODO: define adapt and replace callback functions */
 void                t8_forest_set_adapt (t8_forest_t forest,
-                                         const t8_forest_t * from);
+                                         const t8_forest_t from);
+
+/* TODO: define weight callback function */
 void                t8_forest_set_partition (t8_forest_t forest,
-                                             const t8_forest_t * from);
+                                             const t8_forest_t from,
+                                             int set_for_coarsening);
 
 void                t8_forest_set_balance (t8_forest_t forest,
                                            int do_balance);
@@ -93,7 +120,7 @@ void                t8_forest_set_load (t8_forest_t forest,
                                         const char *filename);
 
 /** After allocating and adding properties to a forest, finish its construction.
- * \param [in,out] forest       Must be created with \see t8_forest_new and
+ * \param [in,out] forest       Must be created with \see t8_forest_init and
  *                              specialized with t8_forest_set_* calls first.
  */
 void                t8_forest_construct (t8_forest_t forest);
@@ -112,6 +139,7 @@ void                t8_forest_ref (t8_forest_t forest);
 
 /** Decrease the reference counter of a forest.
  * If the counter reaches zero, this forest is destroyed.
+ * In this case, the forest dereferences its cmesh and scheme members.
  * \param [in,out] pforest      On input, the forest pointed to must exist
  *                              with positive reference count.  It may be in
  *                              any state.  If the reference count reaches

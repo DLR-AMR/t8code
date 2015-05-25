@@ -23,27 +23,42 @@
 #include <sc_refcount.h>
 #include <t8_forest.h>
 
+typedef enum t8_forest_from
+{
+  T8_FOREST_FROM_FIRST,
+  T8_FOREST_FROM_COPY = T8_FOREST_FROM_FIRST,
+  T8_FOREST_FROM_ADAPT,
+  T8_FOREST_FROM_PARTITION,
+  T8_FOREST_FROM_LAST
+}
+t8_forest_from_t;
+
+/** This structure is private to the implementation. */
 typedef struct t8_forest
 {
-  sc_refcount_t       rc;
+  sc_refcount_t       rc;               /**< Reference counter. */
 
-  int                 set_do_dup;
-  int                 set_level;
+  int                 set_level;        /**< Level to use in new construction. */
+  int                 set_for_coarsening;       /**< Change partition to allow
+                                                     for one round of coarsening */
 
-  sc_MPI_Comm         mpicomm;
-  t8_cmesh_t          cmesh;
-  t8_scheme_t        *scheme;
-  t8_forest_t         from;
-  int                 dimension;
+  sc_MPI_Comm         mpicomm;          /**< MPI communicator to use. */
+  t8_cmesh_t          cmesh;            /**< Coarse mesh to use. */
+  t8_scheme_t        *scheme;           /**< Scheme for element types. */
+  int                 do_dup;           /**< Communicator shall be duped. */
+  int                 dimension;        /**< Dimension inferred from \b cmesh. */
 
-  int                 constructed;
-  int                 mpisize;
-  int                 mpirank;
+  t8_forest_t         set_from;         /**< Temporarily store source forest. */
+  t8_forest_from_t    from_method;      /**< Method to derive from \b set_from. */
+
+  int                 constructed;      /**< \ref t8_forest_construct called? */
+  int                 mpisize;          /**< Number of MPI processes. */
+  int                 mpirank;          /**< Numbor of this MPI process. */
 }
 t8_forest_struct_t;
 
 void
-t8_forest_new (t8_forest_t * pforest)
+t8_forest_init (t8_forest_t * pforest)
 {
   t8_forest_t         forest;
 
@@ -52,9 +67,11 @@ t8_forest_new (t8_forest_t * pforest)
   forest = *pforest = T8_ALLOC_ZERO (t8_forest_struct_t, 1);
   sc_refcount_init (&forest->rc);
 
-  /* sensible defaults */
+  /* sensible (hard error) defaults */
   forest->mpicomm = sc_MPI_COMM_NULL;
-  forest->dimension = 2;
+  forest->dimension = -1;
+  forest->from_method = T8_FOREST_FROM_LAST;
+
   forest->mpisize = -1;
   forest->mpirank = -1;
 }
@@ -64,22 +81,40 @@ t8_forest_set_mpicomm (t8_forest_t forest, sc_MPI_Comm mpicomm, int do_dup)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (!forest->constructed);
+  T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
+  T8_ASSERT (forest->set_from == NULL);
   /* TODO: check positive reference count in all functions */
 
+  T8_ASSERT (mpicomm != sc_MPI_COMM_NULL);
+
   forest->mpicomm = mpicomm;
-  forest->set_do_dup = do_dup;
+  forest->do_dup = do_dup;
 }
 
 void
-t8_forest_set_dimension (t8_forest_t forest, int dimension)
+t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (!forest->constructed);
+  T8_ASSERT (forest->cmesh == NULL);
+  T8_ASSERT (forest->set_from == NULL);
 
-  /* TODO: extended this to dimensions 0 <= d <= 3 */
-  T8_ASSERT (2 <= dimension && dimension <= 3);
+  T8_ASSERT (cmesh != NULL);
 
-  forest->dimension = dimension;
+  forest->cmesh = cmesh;
+}
+
+void
+t8_forest_set_scheme (t8_forest_t forest, t8_scheme_t * scheme)
+{
+  T8_ASSERT (forest != NULL);
+  T8_ASSERT (!forest->constructed);
+  T8_ASSERT (forest->scheme == NULL);
+  T8_ASSERT (forest->set_from == NULL);
+
+  T8_ASSERT (scheme != NULL);
+
+  forest->scheme = scheme;
 }
 
 void
@@ -94,51 +129,54 @@ t8_forest_set_level (t8_forest_t forest, int level)
 }
 
 void
-t8_forest_set_copy (t8_forest_t forest, const t8_forest_t from)
+t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (!forest->constructed);
-  T8_ASSERT (from != NULL);
-
-  forest->from = from;
-  if (forest->cmesh != NULL) {
-    t8_cmesh_unref (&forest->cmesh);
-  }
-  forest->cmesh = from->cmesh;
-  t8_cmesh_ref (forest->cmesh);
-  if (forest->scheme != NULL) {
-    t8_scheme_unref (&forest->scheme);
-  }
-  forest->scheme = from->scheme;
-  t8_scheme_ref (forest->scheme);
-  forest->dimension = from->dimension;
-  forest->set_level = from->set_level;
-  forest->mpicomm = from->mpicomm;
-  t8_forest_unref (&forest->from);
-}
-
-void
-t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh)
-{
-  T8_ASSERT (forest != NULL);
-  T8_ASSERT (!forest->constructed);
-
-  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
+  T8_ASSERT (forest->scheme == NULL);
+  T8_ASSERT (forest->set_from == NULL);
 
-  forest->cmesh = cmesh;
+  T8_ASSERT (set_from != NULL);
+
+  forest->set_from = set_from;
+  forest->from_method = T8_FOREST_FROM_COPY;
 }
 
 void
-t8_forest_set_scheme (t8_forest_t forest, t8_scheme_t * scheme)
+t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (!forest->constructed);
-
-  T8_ASSERT (scheme != NULL);
+  T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
+  T8_ASSERT (forest->cmesh == NULL);
   T8_ASSERT (forest->scheme == NULL);
+  T8_ASSERT (forest->set_from == NULL);
 
-  forest->scheme = scheme;
+  T8_ASSERT (set_from != NULL);
+
+  forest->set_from = set_from;
+  forest->from_method = T8_FOREST_FROM_ADAPT;
+}
+
+void
+t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
+                         int set_for_coarsening)
+{
+  T8_ASSERT (forest != NULL);
+  T8_ASSERT (!forest->constructed);
+  T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
+  T8_ASSERT (forest->cmesh == NULL);
+  T8_ASSERT (forest->scheme == NULL);
+  T8_ASSERT (forest->set_from == NULL);
+
+  T8_ASSERT (set_from != NULL);
+
+  forest->set_for_coarsening = set_for_coarsening;
+
+  forest->set_from = set_from;
+  forest->from_method = T8_FOREST_FROM_PARTITION;
 }
 
 void
@@ -150,22 +188,62 @@ t8_forest_construct (t8_forest_t forest)
   T8_ASSERT (forest != NULL);
   T8_ASSERT (!forest->constructed);
 
-  T8_ASSERT (forest->mpicomm != sc_MPI_COMM_NULL);
+  if (forest->set_from == NULL) {
+    T8_ASSERT (forest->mpicomm != sc_MPI_COMM_NULL);
+    T8_ASSERT (forest->cmesh != NULL);
+    T8_ASSERT (forest->scheme != NULL);
+    T8_ASSERT (forest->from_method == T8_FOREST_FROM_LAST);
 
-  /* dup communicator if requested */
-  if (forest->set_do_dup) {
-    mpiret = sc_MPI_Comm_dup (forest->mpicomm, &comm_dup);
-    SC_CHECK_MPI (mpiret);
-    forest->mpicomm = comm_dup;
+    /* dup communicator if requested */
+    if (forest->do_dup) {
+      mpiret = sc_MPI_Comm_dup (forest->mpicomm, &comm_dup);
+      SC_CHECK_MPI (mpiret);
+      forest->mpicomm = comm_dup;
+    }
   }
+  else {
+    T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
+    T8_ASSERT (forest->cmesh == NULL);
+    T8_ASSERT (forest->scheme == NULL);
+    T8_ASSERT (!forest->do_dup);
+    T8_ASSERT (forest->from_method >= T8_FOREST_FROM_FIRST &&
+               forest->from_method < T8_FOREST_FROM_LAST);
+
+    /* TODO: optimize all this when forest->set_from has reference count one */
+
+    /* we must prevent the case that set_from frees the source communicator */
+    if (!forest->set_from->do_dup) {
+      forest->mpicomm = forest->set_from->mpicomm;
+    }
+    else {
+      mpiret = sc_MPI_Comm_dup (forest->set_from->mpicomm, &forest->mpicomm);
+      SC_CHECK_MPI (mpiret);
+    }
+    forest->do_dup = forest->set_from->do_dup;
+
+    /* increase reference count of cmesh and scheme from the input forest */
+    t8_cmesh_ref (forest->cmesh = forest->set_from->cmesh);
+    t8_scheme_ref (forest->scheme = forest->set_from->scheme);
+    forest->dimension = forest->set_from->dimension;
+
+    /* TODO: call adapt and partition subfunctions here */
+    /* TODO: currently we can only handle copy */
+    T8_ASSERT (forest->from_method == T8_FOREST_FROM_COPY);
+
+    /* decrease reference count of input forest, possibly destroying it */
+    t8_forest_unref (&forest->set_from);
+  }
+
+  /* query communicator anew */
   mpiret = sc_MPI_Comm_size (forest->mpicomm, &forest->mpisize);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (forest->mpicomm, &forest->mpirank);
   SC_CHECK_MPI (mpiret);
 
-  T8_ASSERT (forest->scheme != NULL);
-  T8_ASSERT (forest->cmesh != NULL);
-
+  /* we do not need the set parameters anymore */
+  forest->set_level = 0;
+  forest->set_for_coarsening = 0;
+  forest->set_from = NULL;
   forest->constructed = 1;
 }
 
@@ -177,7 +255,7 @@ t8_forest_write_vtk (t8_forest_t forest, const char *filename)
 }
 
 static void
-t8_forest_destroy (t8_forest_t * pforest)
+t8_forest_reset (t8_forest_t * pforest)
 {
   int                 mpiret;
   t8_forest_t         forest;
@@ -187,16 +265,24 @@ t8_forest_destroy (t8_forest_t * pforest)
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount == 0);
 
+  if (!forest->constructed) {
+    if (forest->set_from != NULL) {
+      /* in this case we have taken ownership and not released it yet */
+      t8_forest_unref (&forest->set_from);
+    }
+  }
+  else {
+    T8_ASSERT (forest->set_from == NULL);
+  }
+
+  /* we have taken ownership on calling t8_forest_set_* */
   t8_scheme_unref (&forest->scheme);
   t8_cmesh_unref (&forest->cmesh);
 
   /* undup communicator if necessary */
-  if (forest->set_do_dup) {
+  if (forest->do_dup) {
     mpiret = sc_MPI_Comm_free (&forest->mpicomm);
     SC_CHECK_MPI (mpiret);
-  }
-  if (forest->from != NULL) {
-    t8_forest_unref (&forest->from);
   }
 
   T8_FREE (forest);
@@ -221,6 +307,6 @@ t8_forest_unref (t8_forest_t * pforest)
   T8_ASSERT (forest != NULL);
 
   if (sc_refcount_unref (&forest->rc)) {
-    t8_forest_destroy (pforest);
+    t8_forest_reset (pforest);
   }
 }
