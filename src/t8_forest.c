@@ -58,7 +58,7 @@ typedef struct t8_forest
 t8_forest_struct_t;
 
 void
-t8_forest_new (t8_forest_t * pforest)
+t8_forest_init (t8_forest_t * pforest)
 {
   t8_forest_t         forest;
 
@@ -255,7 +255,7 @@ t8_forest_write_vtk (t8_forest_t forest, const char *filename)
 }
 
 static void
-t8_forest_destroy (t8_forest_t * pforest)
+t8_forest_reset (t8_forest_t * pforest)
 {
   int                 mpiret;
   t8_forest_t         forest;
@@ -307,6 +307,6 @@ t8_forest_unref (t8_forest_t * pforest)
   T8_ASSERT (forest != NULL);
 
   if (sc_refcount_unref (&forest->rc)) {
-    t8_forest_destroy (pforest);
+    t8_forest_reset (pforest);
   }
 }

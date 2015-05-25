@@ -30,7 +30,7 @@ t8_basic (int do_dup, int set_level, int do_construct)
 {
   t8_forest_t         forest;
 
-  t8_forest_new (&forest);
+  t8_forest_init (&forest);
 
   t8_forest_set_mpicomm (forest, sc_MPI_COMM_WORLD, 0);
   t8_forest_set_cmesh (forest, t8_cmesh_new_tet ());

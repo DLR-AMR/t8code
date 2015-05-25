@@ -48,7 +48,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in,out] pforest      On input, this pointer must be non-NULL.
  *                              On return, this pointer set to the new forest.
  */
-void                t8_forest_new (t8_forest_t * pforest);
+void                t8_forest_init (t8_forest_t * pforest);
 
 /** Set MPI communicator to use in constructing a new forest.
  * This call is only valid when the forest is not created by a copy, adaptation,
@@ -120,7 +120,7 @@ void                t8_forest_set_load (t8_forest_t forest,
                                         const char *filename);
 
 /** After allocating and adding properties to a forest, finish its construction.
- * \param [in,out] forest       Must be created with \see t8_forest_new and
+ * \param [in,out] forest       Must be created with \see t8_forest_init and
  *                              specialized with t8_forest_set_* calls first.
  */
 void                t8_forest_construct (t8_forest_t forest);
