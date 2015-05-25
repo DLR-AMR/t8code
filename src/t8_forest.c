@@ -51,7 +51,7 @@ typedef struct t8_forest
   t8_forest_t         set_from;         /**< Temporarily store source forest. */
   t8_forest_from_t    from_method;      /**< Method to derive from \b set_from. */
 
-  int                 constructed;      /**< \ref t8_forest_construct called? */
+  int                 committed;        /**< \ref t8_forest_commit called? */
   int                 mpisize;          /**< Number of MPI processes. */
   int                 mpirank;          /**< Numbor of this MPI process. */
 }
@@ -80,7 +80,7 @@ void
 t8_forest_set_mpicomm (t8_forest_t forest, sc_MPI_Comm mpicomm, int do_dup)
 {
   T8_ASSERT (forest != NULL);
-  T8_ASSERT (!forest->constructed);
+  T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->set_from == NULL);
   /* TODO: check positive reference count in all functions */
@@ -95,7 +95,7 @@ void
 t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh)
 {
   T8_ASSERT (forest != NULL);
-  T8_ASSERT (!forest->constructed);
+  T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->cmesh == NULL);
   T8_ASSERT (forest->set_from == NULL);
 
@@ -108,7 +108,7 @@ void
 t8_forest_set_scheme (t8_forest_t forest, t8_scheme_t * scheme)
 {
   T8_ASSERT (forest != NULL);
-  T8_ASSERT (!forest->constructed);
+  T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->scheme == NULL);
   T8_ASSERT (forest->set_from == NULL);
 
@@ -121,7 +121,7 @@ void
 t8_forest_set_level (t8_forest_t forest, int level)
 {
   T8_ASSERT (forest != NULL);
-  T8_ASSERT (!forest->constructed);
+  T8_ASSERT (!forest->committed);
 
   T8_ASSERT (0 <= level);
 
@@ -132,7 +132,7 @@ void
 t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
 {
   T8_ASSERT (forest != NULL);
-  T8_ASSERT (!forest->constructed);
+  T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
   T8_ASSERT (forest->scheme == NULL);
@@ -148,7 +148,7 @@ void
 t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from)
 {
   T8_ASSERT (forest != NULL);
-  T8_ASSERT (!forest->constructed);
+  T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
   T8_ASSERT (forest->scheme == NULL);
@@ -165,7 +165,7 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
                          int set_for_coarsening)
 {
   T8_ASSERT (forest != NULL);
-  T8_ASSERT (!forest->constructed);
+  T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
   T8_ASSERT (forest->scheme == NULL);
@@ -180,13 +180,13 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
 }
 
 void
-t8_forest_construct (t8_forest_t forest)
+t8_forest_commit (t8_forest_t forest)
 {
   int                 mpiret;
   sc_MPI_Comm         comm_dup;
 
   T8_ASSERT (forest != NULL);
-  T8_ASSERT (!forest->constructed);
+  T8_ASSERT (!forest->committed);
 
   if (forest->set_from == NULL) {
     T8_ASSERT (forest->mpicomm != sc_MPI_COMM_NULL);
@@ -244,14 +244,14 @@ t8_forest_construct (t8_forest_t forest)
   forest->set_level = 0;
   forest->set_for_coarsening = 0;
   forest->set_from = NULL;
-  forest->constructed = 1;
+  forest->committed = 1;
 }
 
 void
 t8_forest_write_vtk (t8_forest_t forest, const char *filename)
 {
   T8_ASSERT (forest != NULL);
-  T8_ASSERT (forest->constructed);
+  T8_ASSERT (forest->committed);
 }
 
 static void
@@ -265,7 +265,7 @@ t8_forest_reset (t8_forest_t * pforest)
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount == 0);
 
-  if (!forest->constructed) {
+  if (!forest->committed) {
     if (forest->set_from != NULL) {
       /* in this case we have taken ownership and not released it yet */
       t8_forest_unref (&forest->set_from);

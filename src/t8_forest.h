@@ -44,13 +44,13 @@ T8_EXTERN_C_BEGIN ();
  * or to call one of \ref t8_forest_set_copy, \ref t8_forest_set_adapt, or
  * \ref t8_forest_set_partition.  It is illegal to mix these calls, or to
  * call more than one of the three latter functions
- * Then it needs to be set up with \ref t8_forest_construct.
+ * Then it needs to be set up with \ref t8_forest_commit.
  * \param [in,out] pforest      On input, this pointer must be non-NULL.
  *                              On return, this pointer set to the new forest.
  */
 void                t8_forest_init (t8_forest_t * pforest);
 
-/** Set MPI communicator to use in constructing a new forest.
+/** Set MPI communicator to use in commiting a new forest.
  * This call is only valid when the forest is not created by a copy, adaptation,
  * or partition of an existing forest.
  * \param [in,out] forest       The forest whose communicator will be set.
@@ -91,9 +91,9 @@ void                t8_forest_set_scheme (t8_forest_t forest,
 
 void                t8_forest_set_level (t8_forest_t forest, int level);
 
-/** Set a forest as source for copying on construction.
+/** Set a forest as source for copying on commiting.
  * By default, the forest takes ownership of the source \b from such that it will
- * be destroyed on calling \see t8_forest_construct.  To keep ownership of \b
+ * be destroyed on calling \see t8_forest_commit.  To keep ownership of \b
  * from, call \ref t8_forest_ref before passing it into this function.
  * This means that it is ILLEGAL to continue using \b from or dereferencing it
  * UNLESS it is referenced directly before passing it into this function.
@@ -119,11 +119,12 @@ void                t8_forest_set_ghost (t8_forest_t forest, int do_ghost);
 void                t8_forest_set_load (t8_forest_t forest,
                                         const char *filename);
 
-/** After allocating and adding properties to a forest, finish its construction.
+/** After allocating and adding properties to a forest, commit the changes.
+ * This call sets up the internal state of the forest.
  * \param [in,out] forest       Must be created with \see t8_forest_init and
  *                              specialized with t8_forest_set_* calls first.
  */
-void                t8_forest_construct (t8_forest_t forest);
+void                t8_forest_commit (t8_forest_t forest);
 
 void                t8_forest_save (t8_forest_t forest);
 void                t8_forest_write_vtk (t8_forest_t forest,

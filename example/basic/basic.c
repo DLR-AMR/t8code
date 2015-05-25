@@ -26,7 +26,7 @@
 #include <t8_forest.h>
 
 static void
-t8_basic (int do_dup, int set_level, int do_construct)
+t8_basic (int do_dup, int set_level, int do_commit)
 {
   t8_forest_t         forest;
 
@@ -38,8 +38,8 @@ t8_basic (int do_dup, int set_level, int do_construct)
 
   t8_forest_set_level (forest, set_level);
 
-  if (do_construct) {
-    t8_forest_construct (forest);
+  if (do_commit) {
+    t8_forest_commit (forest);
     t8_forest_write_vtk (forest, "basic");
   }
 
