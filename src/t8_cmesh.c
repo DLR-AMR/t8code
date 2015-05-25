@@ -31,6 +31,7 @@
 
 typedef struct t8_cmesh
 {
+  /* TODO: make the comments more legible */
   int                 constructed;
   sc_refcount_t       rc; /**< The reference count of the cmesh. */
   t8_topidx_t         num_vertices; /**< the number of vertices that define the \a embedding of the forest (not the topology) */
@@ -55,7 +56,7 @@ t8_cmesh_init (t8_cmesh_t * pcmesh)
 }
 
 void
-t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees,
+t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees, const
                         t8_topidx_t num_trees_per_eclass[T8_ECLASS_LAST])
 {
   int                 class_it;
@@ -65,6 +66,11 @@ t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees,
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (!cmesh->constructed);
   T8_ASSERT (num_trees > 0);
+
+  /* TODO: we do not allow subsequent conflicting cmesh_set calls.
+   *       We should assert these and abort.
+   *       The idea is to keep the code as simple as possible.
+   */
 
   cmesh->num_trees = num_trees;
   if (cmesh->num_trees > 0) {
@@ -147,7 +153,7 @@ t8_cmesh_construct (t8_cmesh_t cmesh)
 }
 
 static void
-t8_cmesh_destroy (t8_cmesh_t * pcmesh)
+t8_cmesh_reset (t8_cmesh_t * pcmesh)
 {
   t8_cmesh_t          cmesh;
   int                 class_it;
@@ -188,25 +194,8 @@ t8_cmesh_unref (t8_cmesh_t * pcmesh)
   T8_ASSERT (cmesh != NULL);
 
   if (sc_refcount_unref (&cmesh->rc)) {
-    t8_cmesh_destroy (pcmesh);
+    t8_cmesh_reset (pcmesh);
   }
-}
-
-t8_cmesh_t
-t8_cmesh_new_tet (void)
-{
-  t8_cmesh_t          cmesh;
-  t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST] = { };
-  t8_topidx_t         vertices[4] = { 0, 1, 2, 3 };
-
-  num_trees_per_eclass[T8_ECLASS_TET] = 1;
-  t8_cmesh_init (&cmesh);
-  t8_cmesh_set_num_trees (cmesh, 1, num_trees_per_eclass);
-  t8_cmesh_set_num_vertices (cmesh, 4);
-  t8_cmesh_insert_tree (cmesh, 0, T8_ECLASS_TET, vertices);
-  t8_cmesh_construct (cmesh);
-
-  return cmesh;
 }
 
 t8_cmesh_t
@@ -221,6 +210,23 @@ t8_cmesh_new_tri (void)
   t8_cmesh_set_num_trees (cmesh, 1, num_trees_per_eclass);
   t8_cmesh_set_num_vertices (cmesh, 3);
   t8_cmesh_insert_tree (cmesh, 0, T8_ECLASS_TRIANGLE, vertices);
+  t8_cmesh_construct (cmesh);
+
+  return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_new_tet (void)
+{
+  t8_cmesh_t          cmesh;
+  t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST] = { };
+  t8_topidx_t         vertices[4] = { 0, 1, 2, 3 };
+
+  num_trees_per_eclass[T8_ECLASS_TET] = 1;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_num_trees (cmesh, 1, num_trees_per_eclass);
+  t8_cmesh_set_num_vertices (cmesh, 4);
+  t8_cmesh_insert_tree (cmesh, 0, T8_ECLASS_TET, vertices);
   t8_cmesh_construct (cmesh);
 
   return cmesh;

@@ -21,7 +21,7 @@
 */
 
 /** \file t8_cmesh.h
- * We define the coarse mesh of tet-trees in this file.
+ * We define the coarse mesh of trees in this file.
  */
 
 #ifndef T8_CMESH_H
@@ -36,14 +36,14 @@ T8_EXTERN_C_BEGIN ();
 
 /** Create a new cmesh with reference count one.
  * This cmesh needs to be specialized with the t8_cmesh_set_* calls.
- * Then in needs to be set up with \see t8_cmesh_construct.
+ * Then it needs to be set up with \see t8_cmesh_construct.
  * \param [in,out] pcmesh       On input, this pointer must be non-NULL.
- *                              On return, this pointer set to the new forest.
+ *                              On return, this pointer set to the new cmesh.
  */
 void                t8_cmesh_init (t8_cmesh_t * pcmesh);
 
 /** Set the number of trees and number of trees per eclass for a cmesh.
- *  It is not allowed to call this function after \see t8_cmesh_construct. *
+ * It is not allowed to call this function after \see t8_cmesh_construct.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     num_trees    The number of trees to be set.
  * \param [in]     num_trees_per_eclass An array storing for each t8_eclass
@@ -51,12 +51,13 @@ void                t8_cmesh_init (t8_cmesh_t * pcmesh);
  */
 void                t8_cmesh_set_num_trees (t8_cmesh_t cmesh,
                                             t8_topidx_t num_trees,
-                                            t8_topidx_t
+                                            const t8_topidx_t
                                             num_trees_per_eclass
                                             [T8_ECLASS_LAST]);
 
 /** Set the number of vertices for a cmesh.
- *  It is not allowed to call this function after \see t8_cmesh_construct. *
+ * TODO: remove vertex functions (we'll think of a safe parallel way).
+ * It is not allowed to call this function after \see t8_cmesh_construct.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     num_vertices The number of vertices to be set.
  */
@@ -68,7 +69,7 @@ void                t8_cmesh_set_num_vertices (t8_cmesh_t cmesh,
  * \param [in]     tree         The global number of the tree.
  * \param [in]     tree_class   The element class of this tree.
  * \param [in]     vertices     An array storing for each corner of the
- *                              tree a vertex in the mesh.
+ *                              tree a vertex in the mesh.  TODO: remove
  */
 void                t8_cmesh_insert_tree (t8_cmesh_t cmesh, t8_topidx_t tree,
                                           t8_eclass_t tree_class,
@@ -98,18 +99,20 @@ void                t8_cmesh_ref (t8_cmesh_t cmesh);
  */
 void                t8_cmesh_unref (t8_cmesh_t * pcmesh);
 
-/** Create a coarse mesh that consists of a single tetrahedron.
- * \return          A valid cmesh, as if _new and _construct had been called.
- */
-t8_cmesh_t          t8_cmesh_new_tet (void);
-
 /** Create a coarse mesh that consists of a single triangle.
- * \return          A valid cmesh, as if _new and _construct had been called.
+ * \return          A valid cmesh, as if _init and _construct had been called.
  */
 t8_cmesh_t          t8_cmesh_new_tri (void);
 
+/** Create a coarse mesh that consists of a single tetrahedron.
+ * \return          A valid cmesh, as if _init and _construct had been called.
+ */
+t8_cmesh_t          t8_cmesh_new_tet (void);
+
+/* TODO: add new_quad */
+
 /** Create a coarse mesh that consists of a single hexahedron.
- * \return          A valid cmesh, as if _new and _construct had been called.
+ * \return          A valid cmesh, as if _init and _construct had been called.
  */
 t8_cmesh_t          t8_cmesh_new_hex (void);
 
