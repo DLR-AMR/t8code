@@ -26,20 +26,20 @@
 #include <t8_forest.h>
 
 static void
-t8_basic (int do_dup, int set_level, int do_construct)
+t8_basic (int do_dup, int set_level, int do_commit)
 {
   t8_forest_t         forest;
 
   t8_forest_init (&forest);
 
-  t8_forest_set_mpicomm (forest, sc_MPI_COMM_WORLD, 0);
+  t8_forest_set_mpicomm (forest, sc_MPI_COMM_WORLD, do_dup);
   t8_forest_set_cmesh (forest, t8_cmesh_new_tet ());
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
 
   t8_forest_set_level (forest, set_level);
 
-  if (do_construct) {
-    t8_forest_construct (forest);
+  if (do_commit) {
+    t8_forest_commit (forest);
     t8_forest_write_vtk (forest, "basic");
   }
 
