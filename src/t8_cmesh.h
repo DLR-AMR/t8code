@@ -97,7 +97,10 @@ t8_cmesh_t          t8_cmesh_new_tri (void);
  */
 t8_cmesh_t          t8_cmesh_new_tet (void);
 
-/* TODO: add new_quad */
+/** Create a coarse mesh that consists of a single square.
+ * \return          A valid cmesh, as if _init and _construct had been called.
+ */
+t8_cmesh_t          t8_cmesh_new_quad (void);
 
 /** Create a coarse mesh that consists of a single hexahedron.
  * \return          A valid cmesh, as if _init and _construct had been called.

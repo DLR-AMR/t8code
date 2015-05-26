@@ -191,6 +191,21 @@ t8_cmesh_new_tet (void)
 }
 
 t8_cmesh_t
+t8_cmesh_new_quad (void)
+{
+  t8_cmesh_t          cmesh;
+  t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST] = { };
+
+  num_trees_per_eclass[T8_ECLASS_QUAD] = 1;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_num_trees (cmesh, 1, num_trees_per_eclass);
+  t8_cmesh_insert_tree (cmesh, 0, T8_ECLASS_QUAD);
+  t8_cmesh_construct (cmesh);
+
+  return cmesh;
+}
+
+t8_cmesh_t
 t8_cmesh_new_hex (void)
 {
   t8_cmesh_t          cmesh;
