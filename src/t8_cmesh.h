@@ -55,25 +55,13 @@ void                t8_cmesh_set_num_trees (t8_cmesh_t cmesh,
                                             num_trees_per_eclass
                                             [T8_ECLASS_LAST]);
 
-/** Set the number of vertices for a cmesh.
- * TODO: remove vertex functions (we'll think of a safe parallel way).
- * It is not allowed to call this function after \see t8_cmesh_construct.
- * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     num_vertices The number of vertices to be set.
- */
-void                t8_cmesh_set_num_vertices (t8_cmesh_t cmesh,
-                                               t8_topidx_t num_vertices);
-
 /** Insert a new tree into the cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     tree         The global number of the tree.
  * \param [in]     tree_class   The element class of this tree.
- * \param [in]     vertices     An array storing for each corner of the
- *                              tree a vertex in the mesh.  TODO: remove
  */
 void                t8_cmesh_insert_tree (t8_cmesh_t cmesh, t8_topidx_t tree,
-                                          t8_eclass_t tree_class,
-                                          t8_topidx_t * vertices);
+                                          t8_eclass_t tree_class);
 
 /** After allocating and adding properties to a cmesh, finish its construction.
  * \param [in,out] cmesh        Must be created with \see t8_cmesh_init and
