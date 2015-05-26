@@ -59,6 +59,7 @@ t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees, const
 #ifdef T8_ENABLE_DEBUG
   int                 class_it;
   t8_topidx_t         count_trees = 0;
+  t8_topidx_t         ti;
 #endif
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (!cmesh->constructed);
@@ -69,6 +70,12 @@ t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees, const
   cmesh->tree_to_eclass = T8_ALLOC_ZERO (t8_eclass_t, num_trees);
   cmesh->tree_to_num_in_eclass = T8_ALLOC_ZERO (t8_topidx_t, num_trees);
 #ifdef T8_ENABLE_DEBUG
+  /* fill trees_per_eclass array with invalid value, so that we are later
+   * able to check whether the entry is set or not. */
+  for (ti = 0; ti < num_trees; ti++) {
+    cmesh->tree_to_eclass[ti] = T8_ECLASS_LAST;
+  }
+  /* Check whether num_trees_per_eclass add up to num_trees. */
   for (class_it = T8_ECLASS_FIRST; class_it < T8_ECLASS_LAST; class_it++) {
     count_trees += num_trees_per_eclass[class_it];
   }
@@ -87,6 +94,7 @@ t8_cmesh_insert_tree (t8_cmesh_t cmesh, t8_topidx_t tree,
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (0 <= tree && tree < cmesh->num_trees);
   T8_ASSERT (!cmesh->constructed);
+  T8_ASSERT (cmesh->tree_to_eclass[tree] == T8_ECLASS_LAST);
 
   num_in_eclass = cmesh->trees_per_eclass_counter[tree_class]++;
   cmesh->tree_to_eclass[tree] = tree_class;
