@@ -80,10 +80,10 @@ void
 t8_forest_set_mpicomm (t8_forest_t forest, sc_MPI_Comm mpicomm, int do_dup)
 {
   T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->set_from == NULL);
-  /* TODO: check positive reference count in all functions */
 
   T8_ASSERT (mpicomm != sc_MPI_COMM_NULL);
 
@@ -95,6 +95,7 @@ void
 t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh)
 {
   T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->cmesh == NULL);
   T8_ASSERT (forest->set_from == NULL);
@@ -108,6 +109,7 @@ void
 t8_forest_set_scheme (t8_forest_t forest, t8_scheme_t * scheme)
 {
   T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->scheme == NULL);
   T8_ASSERT (forest->set_from == NULL);
@@ -121,6 +123,7 @@ void
 t8_forest_set_level (t8_forest_t forest, int level)
 {
   T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
 
   T8_ASSERT (0 <= level);
@@ -132,6 +135,7 @@ void
 t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
 {
   T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
@@ -148,6 +152,7 @@ void
 t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from)
 {
   T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
@@ -165,6 +170,7 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
                          int set_for_coarsening)
 {
   T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
@@ -186,6 +192,7 @@ t8_forest_commit (t8_forest_t forest)
   sc_MPI_Comm         comm_dup;
 
   T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
 
   if (forest->set_from == NULL) {
@@ -251,6 +258,7 @@ void
 t8_forest_write_vtk (t8_forest_t forest, const char *filename)
 {
   T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
 }
 
@@ -304,6 +312,7 @@ t8_forest_unref (t8_forest_t * pforest)
 
   T8_ASSERT (pforest != NULL);
   forest = *pforest;
+  T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest != NULL);
 
   if (sc_refcount_unref (&forest->rc)) {
