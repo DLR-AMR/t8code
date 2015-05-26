@@ -34,8 +34,28 @@ typedef struct t8_cmesh *t8_cmesh_t;
 T8_EXTERN_C_BEGIN ();
 
 void                t8_cmesh_new (t8_cmesh_t * pcmesh);
-void                t8_cmesh_destroy (t8_cmesh_t * pcmesh);
 
+/** Increase the reference counter of a cmesh.
+ * \param [in,out] cmesh        On input, this cmesh must exist with positive
+ *                              reference count.  It may be in any state.
+ */
+void                t8_cmesh_ref (t8_cmesh_t cmesh);
+
+/** Decrease the reference counter of a cmesh.
+ * If the counter reaches zero, this cmesh is destroyed.
+ * \param [in,out] pcmesh       On input, the cmesh pointed to must exist
+ *                              with positive reference count.  It may be in
+ *                              any state.  If the reference count reaches
+ *                              zero, the cmesh is destroyed and this pointer
+ *                              set to NULL.
+ *                              Otherwise, the pointer is not changed and
+ *                              the cmesh is not modified in other ways.
+ */
+void                t8_cmesh_unref (t8_cmesh_t * pcmesh);
+
+/** Create a coarse mesh that consists of a single tetrahedron.
+ * \return          A valid cmesh, as if _new and _construct had been called.
+ */
 t8_cmesh_t          t8_cmesh_new_tet (void);
 
 T8_EXTERN_C_END ();

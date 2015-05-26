@@ -31,6 +31,8 @@ t8_scheme_new_default (void)
   t8_scheme_t        *s;
 
   s = T8_ALLOC_ZERO (t8_scheme_t, 1);
+  sc_refcount_init (&s->rc);
+
   s->eclass_schemes[T8_ECLASS_QUAD] = t8_default_scheme_new_quad ();
   s->eclass_schemes[T8_ECLASS_HEX] = t8_default_scheme_new_hex ();
   s->eclass_schemes[T8_ECLASS_TET] = t8_default_scheme_new_tet ();

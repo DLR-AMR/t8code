@@ -22,12 +22,13 @@
 
 #include <t8_element.h>
 
-void
+static void
 t8_scheme_destroy (t8_scheme_t * s)
 {
   int                 t;
 
   T8_ASSERT (s != NULL);
+  T8_ASSERT (s->rc.refcount == 0);
 
   for (t = 0; t < T8_ECLASS_LAST; ++t) {
     if (s->eclass_schemes[t] != NULL) {
@@ -35,6 +36,29 @@ t8_scheme_destroy (t8_scheme_t * s)
     }
   }
   T8_FREE (s);
+}
+
+void
+t8_scheme_ref (t8_scheme_t *scheme)
+{
+  T8_ASSERT (scheme != NULL);
+
+  sc_refcount_ref (&scheme->rc);
+}
+
+void
+t8_scheme_unref (t8_scheme_t **pscheme)
+{
+  t8_scheme_t       *scheme;
+
+  T8_ASSERT (pscheme != NULL);
+  scheme = *pscheme;
+  T8_ASSERT (scheme != NULL);
+
+  if (sc_refcount_unref (&scheme->rc)){
+    t8_scheme_destroy (scheme);
+    *pscheme = NULL;
+  }
 }
 
 void

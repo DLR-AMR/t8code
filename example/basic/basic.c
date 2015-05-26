@@ -21,26 +21,29 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <sc_refcount.h>
 #include <t8_default.h>
 #include <t8_forest.h>
 
 static void
-t8_basic (int level)
+t8_basic (int do_dup, int set_level, int do_commit)
 {
   t8_forest_t         forest;
 
-  t8_forest_new (&forest);
-  t8_forest_set_mpicomm (forest, sc_MPI_COMM_WORLD, 0);
-  t8_forest_set_cmesh (forest, t8_cmesh_new_tet (), 1);
-  t8_forest_set_scheme (forest, t8_scheme_new_default (), 1);
+  t8_forest_init (&forest);
 
-  t8_forest_set_level (forest, level);
+  t8_forest_set_mpicomm (forest, sc_MPI_COMM_WORLD, do_dup);
+  t8_forest_set_cmesh (forest, t8_cmesh_new_tet ());
+  t8_forest_set_scheme (forest, t8_scheme_new_default ());
 
-  t8_forest_construct (forest);
+  t8_forest_set_level (forest, set_level);
 
-  t8_forest_write_vtk (forest, "basic");
+  if (do_commit) {
+    t8_forest_commit (forest);
+    t8_forest_write_vtk (forest, "basic");
+  }
 
-  t8_forest_destroy (&forest);
+  t8_forest_unref (&forest);
 }
 
 int
@@ -57,8 +60,13 @@ main (int argc, char **argv)
   t8_init (SC_LP_DEFAULT);
 
   level = 3;
-  t8_basic (level);
+  t8_basic (0, level, 0);
+  t8_basic (1, level, 0);
+  t8_basic (0, level, 1);
+  t8_basic (1, level, 1);
 
+  /* TODO: eventually this function will be called from sc_finalize */
+  T8_ASSERT (sc_refcount_get_n_active () == 0);
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();

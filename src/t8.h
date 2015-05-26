@@ -75,6 +75,9 @@ typedef p4est_locidx_t t8_locidx_t;
 /** A type for global indexing that holds really big numbers. */
 typedef p4est_gloidx_t t8_gloidx_t;
 
+/** A type for counting topological entities (trees, tree vertices, ...). */
+typedef p4est_topidx_t t8_topidx_t;
+
 /** Query the package identity as registered in libsc.
  * \return          This is -1 before \ref t8_init and the identifier after.
  */
