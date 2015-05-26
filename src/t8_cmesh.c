@@ -66,23 +66,13 @@ t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees, const
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (!cmesh->constructed);
   T8_ASSERT (num_trees > 0);
-
-  /* TODO: we do not allow subsequent conflicting cmesh_set calls.
-   *       We should assert these and abort.
-   *       The idea is to keep the code as simple as possible.
-   */
+  T8_ASSERT (cmesh->num_trees == 0);
 
   cmesh->num_trees = num_trees;
-  if (cmesh->num_trees > 0) {
-    T8_FREE (cmesh->tree_to_eclass);
-    T8_FREE (cmesh->tree_to_num_in_eclass);
-  }
   cmesh->tree_to_eclass = T8_ALLOC_ZERO (t8_eclass_t, num_trees);
   cmesh->tree_to_num_in_eclass = T8_ALLOC_ZERO (t8_topidx_t, num_trees);
   for (class_it = T8_ECLASS_FIRST; class_it < T8_ECLASS_LAST; class_it++) {
-    if (cmesh->num_trees_per_eclass[class_it] > 0) {
-      T8_FREE (cmesh->tree_to_vertex[class_it]);
-    }
+    T8_ASSERT (cmesh->num_trees_per_eclass[class_it] == 0);
     if (num_trees_per_eclass[class_it] > 0) {
       cmesh->tree_to_vertex[class_it] =
         T8_ALLOC_ZERO (t8_topidx_t,
@@ -105,10 +95,8 @@ t8_cmesh_set_num_vertices (t8_cmesh_t cmesh, t8_topidx_t num_vertices)
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (!cmesh->constructed);
   T8_ASSERT (num_vertices > 0);
+  T8_ASSERT (cmesh->num_vertices == 0);
 
-  if (cmesh->num_vertices > 0) {
-    T8_FREE (cmesh->vertices);
-  }
   cmesh->num_vertices = num_vertices;
   cmesh->vertices = T8_ALLOC_ZERO (double, 3 * cmesh->num_vertices);
 }
