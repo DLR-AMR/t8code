@@ -32,7 +32,7 @@ t8_basic (int do_dup, int set_level, int do_commit)
 
   t8_forest_init (&forest);
 
-  t8_forest_set_mpicomm (forest, sc_MPI_COMM_WORLD, 0);
+  t8_forest_set_mpicomm (forest, sc_MPI_COMM_WORLD, do_dup);
   t8_forest_set_cmesh (forest, t8_cmesh_new_tet ());
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
 

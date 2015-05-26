@@ -280,7 +280,7 @@ t8_forest_reset (t8_forest_t * pforest)
   t8_cmesh_unref (&forest->cmesh);
 
   /* undup communicator if necessary */
-  if (forest->do_dup) {
+  if (forest->do_dup && forest->committed) {
     mpiret = sc_MPI_Comm_free (&forest->mpicomm);
     SC_CHECK_MPI (mpiret);
   }
