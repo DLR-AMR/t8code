@@ -20,24 +20,28 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_default.h>
 #include <t8_refcount.h>
 
-#include "t8_default_quad.h"
-#include "t8_default_hex.h"
-#include "t8_default_tet.h"
-
-t8_scheme_t        *
-t8_scheme_new_default (void)
+void
+t8_refcount_init (t8_refcount_t * rc)
 {
-  t8_scheme_t        *s;
+  sc_refcount_init (rc, t8_get_package_id ());
+}
 
-  s = T8_ALLOC_ZERO (t8_scheme_t, 1);
-  t8_refcount_init (&s->rc);
+t8_refcount_t      *
+t8_refcount_new (void)
+{
+  t8_refcount_t      *rc;
 
-  s->eclass_schemes[T8_ECLASS_QUAD] = t8_default_scheme_new_quad ();
-  s->eclass_schemes[T8_ECLASS_HEX] = t8_default_scheme_new_hex ();
-  s->eclass_schemes[T8_ECLASS_TET] = t8_default_scheme_new_tet ();
+  rc = T8_ALLOC (t8_refcount_t, 1);
+  t8_refcount_init (rc);
 
-  return s;
+  return rc;
+}
+
+void
+t8_refcount_destroy (t8_refcount_t * rc)
+{
+  T8_ASSERT (!sc_refcount_is_active (rc));
+  T8_FREE (rc);
 }

@@ -20,8 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <sc_refcount.h>
-#include <t8.h>
+#include <t8_refcount.h>
 #include <t8_cmesh.h>
 
 /** \file t8_cmesh.h
@@ -33,7 +32,7 @@ typedef struct t8_cmesh
 {
   /* TODO: make the comments more legible */
   int                 constructed;
-  sc_refcount_t       rc; /**< The reference count of the cmesh. */
+  t8_refcount_t       rc; /**< The reference count of the cmesh. */
   t8_topidx_t         num_trees;  /**< The number of trees */
   t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST]; /**< Store for each elemet class the number of trees of this class. */
   t8_topidx_t         trees_per_eclass_counter[T8_ECLASS_LAST]; /**< Starts with zero and increases each time a tree is inserted. Must equal to \a num_trees_per_eclass after all insertions are done. */
@@ -49,7 +48,7 @@ t8_cmesh_init (t8_cmesh_t * pcmesh)
   T8_ASSERT (pcmesh != NULL);
 
   cmesh = *pcmesh = T8_ALLOC_ZERO (t8_cmesh_struct_t, 1);
-  sc_refcount_init (&cmesh->rc);
+  t8_refcount_init (&cmesh->rc);
 }
 
 void
@@ -142,8 +141,7 @@ void
 t8_cmesh_ref (t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh != NULL);
-
-  sc_refcount_ref (&cmesh->rc);
+  t8_refcount_ref (&cmesh->rc);
 }
 
 void
@@ -155,7 +153,7 @@ t8_cmesh_unref (t8_cmesh_t * pcmesh)
   cmesh = *pcmesh;
   T8_ASSERT (cmesh != NULL);
 
-  if (sc_refcount_unref (&cmesh->rc)) {
+  if (t8_refcount_unref (&cmesh->rc)) {
     t8_cmesh_reset (pcmesh);
   }
 }

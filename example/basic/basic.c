@@ -65,8 +65,6 @@ main (int argc, char **argv)
   t8_basic (0, level, 1);
   t8_basic (1, level, 1);
 
-  /* TODO: eventually this function will be called from sc_finalize */
-  T8_ASSERT (sc_refcount_get_n_active () == 0);
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();
