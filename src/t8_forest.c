@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <sc_refcount.h>
+#include <t8_refcount.h>
 #include <t8_forest.h>
 
 typedef enum t8_forest_from
@@ -36,7 +36,7 @@ t8_forest_from_t;
 /** This structure is private to the implementation. */
 typedef struct t8_forest
 {
-  sc_refcount_t       rc;               /**< Reference counter. */
+  t8_refcount_t       rc;               /**< Reference counter. */
 
   int                 set_level;        /**< Level to use in new construction. */
   int                 set_for_coarsening;       /**< Change partition to allow
@@ -65,7 +65,7 @@ t8_forest_init (t8_forest_t * pforest)
   T8_ASSERT (pforest != NULL);
 
   forest = *pforest = T8_ALLOC_ZERO (t8_forest_struct_t, 1);
-  sc_refcount_init (&forest->rc);
+  t8_refcount_init (&forest->rc);
 
   /* sensible (hard error) defaults */
   forest->mpicomm = sc_MPI_COMM_NULL;
@@ -301,8 +301,7 @@ void
 t8_forest_ref (t8_forest_t forest)
 {
   T8_ASSERT (forest != NULL);
-
-  sc_refcount_ref (&forest->rc);
+  t8_refcount_ref (&forest->rc);
 }
 
 void
@@ -315,7 +314,7 @@ t8_forest_unref (t8_forest_t * pforest)
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest != NULL);
 
-  if (sc_refcount_unref (&forest->rc)) {
+  if (t8_refcount_unref (&forest->rc)) {
     t8_forest_reset (pforest);
   }
 }

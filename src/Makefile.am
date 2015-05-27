@@ -5,11 +5,11 @@
 libt8_generated_headers = src/t8_config.h
 libt8_installed_headers = \
   src/t8.h src/t8_eclass.h src/t8_element.h src/t8_mesh.h \
-  src/t8_cmesh.h src/t8_forest.h
+  src/t8_refcount.h src/t8_cmesh.h src/t8_forest.h
 libt8_internal_headers =
 libt8_compiled_sources = \
   src/t8.c src/t8_eclass.c src/t8_element.c src/t8_mesh.c \
-  src/t8_cmesh.c src/t8_forest.c
+  src/t8_refcount.c src/t8_cmesh.c src/t8_forest.c
 
 # this variable is used for headers that are not publicly installed
 T8_CPPFLAGS =
