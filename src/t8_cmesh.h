@@ -30,6 +30,8 @@
 #include <t8.h>
 #include <t8_eclass.h>
 
+/* TODO: do set_mpicomm and figure out dup logic */
+
 typedef struct t8_cmesh *t8_cmesh_t;
 
 T8_EXTERN_C_BEGIN ();
@@ -68,6 +70,16 @@ void                t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
  *                              specialized with t8_cmesh_set_* calls first.
  */
 void                t8_cmesh_commit (t8_cmesh_t cmesh);
+
+/** Calculate the section of a uniform forest for the current rank.
+ * TODO: this requires that cmesh knows its MPI communicator.
+ */
+void                t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
+                                             t8_topidx_t * first_local_tree,
+                                             t8_gloidx_t *
+                                             child_in_tree_begin,
+                                             t8_topidx_t * last_local_tree,
+                                             t8_gloidx_t * child_in_tree_end);
 
 /** Increase the reference counter of a cmesh.
  * \param [in,out] cmesh        On input, this cmesh must exist with positive

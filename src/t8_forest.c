@@ -54,6 +54,9 @@ typedef struct t8_forest
   int                 committed;        /**< \ref t8_forest_commit called? */
   int                 mpisize;          /**< Number of MPI processes. */
   int                 mpirank;          /**< Numbor of this MPI process. */
+
+  t8_topidx_t         first_local_tree;
+  t8_topidx_t         last_local_tree;
 }
 t8_forest_struct_t;
 
@@ -185,6 +188,24 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
   forest->from_method = T8_FOREST_FROM_PARTITION;
 }
 
+static void
+t8_forest_populate (t8_forest_t forest)
+{
+  t8_gloidx_t         child_in_tree_begin;
+  t8_gloidx_t         child_in_tree_end;
+
+  /* TODO: create trees and quadrants according to uniform refinement */
+  t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level,
+                           &forest->first_local_tree, &child_in_tree_begin,
+                           &forest->last_local_tree, &child_in_tree_end);
+
+  /* TODO: create only the non-empty tree objects */
+
+  /* TODO: for each tree, allocate elements */
+
+  /* TODO: figure out global_first_position, global_first_quadrant without comm */
+}
+
 void
 t8_forest_commit (t8_forest_t forest)
 {
@@ -207,6 +228,9 @@ t8_forest_commit (t8_forest_t forest)
       SC_CHECK_MPI (mpiret);
       forest->mpicomm = comm_dup;
     }
+
+    /* populate a new forest with tree and quadrant objects */
+    t8_forest_populate (forest);
   }
   else {
     T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);

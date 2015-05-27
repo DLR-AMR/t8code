@@ -120,6 +120,20 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
 #endif
 }
 
+void
+t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
+                         t8_topidx_t * first_local_tree,
+                         t8_gloidx_t *
+                         child_in_tree_begin,
+                         t8_topidx_t * last_local_tree,
+                         t8_gloidx_t * child_in_tree_end)
+{
+  *first_local_tree = 0;
+  *child_in_tree_begin = 0;
+  *last_local_tree = 0;
+  *child_in_tree_end = 0;
+}
+
 static void
 t8_cmesh_reset (t8_cmesh_t * pcmesh)
 {
