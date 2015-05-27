@@ -119,6 +119,12 @@ t8_cmesh_t          t8_cmesh_new_quad (void);
  */
 t8_cmesh_t          t8_cmesh_new_hex (void);
 
+/** Construct a hypercube forest from one primitive tree class.
+ * \param [in] eclass       This element class determines the dimension and
+ *                          the number of trees needed to construct a cube.
+ */
+t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_H */
