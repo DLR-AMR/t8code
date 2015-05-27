@@ -31,7 +31,7 @@
 typedef struct t8_cmesh
 {
   /* TODO: make the comments more legible */
-  int                 constructed;
+  int                 committed;
   t8_refcount_t       rc; /**< The reference count of the cmesh. */
   t8_topidx_t         num_trees;  /**< The number of trees */
   t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST]; /**< Store for each elemet class the number of trees of this class. */
@@ -61,7 +61,7 @@ t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees, const
   t8_topidx_t         ti;
 #endif
   T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (!cmesh->constructed);
+  T8_ASSERT (!cmesh->committed);
   T8_ASSERT (num_trees > 0);
   T8_ASSERT (cmesh->num_trees == 0);
 
@@ -86,32 +86,32 @@ t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees, const
 }
 
 void
-t8_cmesh_insert_tree (t8_cmesh_t cmesh, t8_topidx_t tree,
-                      t8_eclass_t tree_class)
+t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
+                   t8_eclass_t tree_class)
 {
   t8_topidx_t         num_in_eclass;
   T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (0 <= tree && tree < cmesh->num_trees);
-  T8_ASSERT (!cmesh->constructed);
-  T8_ASSERT (cmesh->tree_to_eclass[tree] == T8_ECLASS_LAST);
+  T8_ASSERT (0 <= tree_id && tree_id < cmesh->num_trees);
+  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (cmesh->tree_to_eclass[tree_id] == T8_ECLASS_LAST);
 
   num_in_eclass = cmesh->trees_per_eclass_counter[tree_class]++;
-  cmesh->tree_to_eclass[tree] = tree_class;
-  cmesh->tree_to_num_in_eclass[tree] = num_in_eclass;
+  cmesh->tree_to_eclass[tree_id] = tree_class;
+  cmesh->tree_to_num_in_eclass[tree_id] = num_in_eclass;
 }
 
 void
-t8_cmesh_construct (t8_cmesh_t cmesh)
+t8_cmesh_commit (t8_cmesh_t cmesh)
 {
 #ifdef T8_ENABLE_DEBUG
   int                 class_it;
 #endif
 
   T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (!cmesh->constructed);
+  T8_ASSERT (!cmesh->committed);
   T8_ASSERT (cmesh->num_trees > 0);
 
-  cmesh->constructed = 1;
+  cmesh->committed = 1;
 #ifdef T8_ENABLE_DEBUG
   for (class_it = T8_ECLASS_FIRST; class_it < T8_ECLASS_LAST; class_it++) {
     T8_ASSERT (cmesh->trees_per_eclass_counter[class_it] ==
@@ -167,8 +167,8 @@ t8_cmesh_new_tri (void)
   num_trees_per_eclass[T8_ECLASS_TRIANGLE] = 1;
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_num_trees (cmesh, 1, num_trees_per_eclass);
-  t8_cmesh_insert_tree (cmesh, 0, T8_ECLASS_TRIANGLE);
-  t8_cmesh_construct (cmesh);
+  t8_cmesh_set_tree (cmesh, 0, T8_ECLASS_TRIANGLE);
+  t8_cmesh_commit (cmesh);
 
   return cmesh;
 }
@@ -182,8 +182,8 @@ t8_cmesh_new_tet (void)
   num_trees_per_eclass[T8_ECLASS_TET] = 1;
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_num_trees (cmesh, 1, num_trees_per_eclass);
-  t8_cmesh_insert_tree (cmesh, 0, T8_ECLASS_TET);
-  t8_cmesh_construct (cmesh);
+  t8_cmesh_set_tree (cmesh, 0, T8_ECLASS_TET);
+  t8_cmesh_commit (cmesh);
 
   return cmesh;
 }
@@ -197,8 +197,8 @@ t8_cmesh_new_quad (void)
   num_trees_per_eclass[T8_ECLASS_QUAD] = 1;
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_num_trees (cmesh, 1, num_trees_per_eclass);
-  t8_cmesh_insert_tree (cmesh, 0, T8_ECLASS_QUAD);
-  t8_cmesh_construct (cmesh);
+  t8_cmesh_set_tree (cmesh, 0, T8_ECLASS_QUAD);
+  t8_cmesh_commit (cmesh);
 
   return cmesh;
 }
@@ -212,8 +212,8 @@ t8_cmesh_new_hex (void)
   num_trees_per_eclass[T8_ECLASS_HEX] = 1;
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_num_trees (cmesh, 1, num_trees_per_eclass);
-  t8_cmesh_insert_tree (cmesh, 0, T8_ECLASS_HEX);
-  t8_cmesh_construct (cmesh);
+  t8_cmesh_set_tree (cmesh, 0, T8_ECLASS_HEX);
+  t8_cmesh_commit (cmesh);
 
   return cmesh;
 }

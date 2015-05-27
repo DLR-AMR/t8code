@@ -55,19 +55,19 @@ void                t8_cmesh_set_num_trees (t8_cmesh_t cmesh,
                                             num_trees_per_eclass
                                             [T8_ECLASS_LAST]);
 
-/** Insert a new tree into the cmesh.
+/** Set the class of a tree in the cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     tree         The global number of the tree.
+ * \param [in]     tree_id      The global number of the tree.
  * \param [in]     tree_class   The element class of this tree.
  */
-void                t8_cmesh_insert_tree (t8_cmesh_t cmesh, t8_topidx_t tree,
-                                          t8_eclass_t tree_class);
+void                t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
+                                       t8_eclass_t tree_class);
 
 /** After allocating and adding properties to a cmesh, finish its construction.
  * \param [in,out] cmesh        Must be created with \see t8_cmesh_init and
  *                              specialized with t8_cmesh_set_* calls first.
  */
-void                t8_cmesh_construct (t8_cmesh_t cmesh);
+void                t8_cmesh_commit (t8_cmesh_t cmesh);
 
 /** Increase the reference counter of a cmesh.
  * \param [in,out] cmesh        On input, this cmesh must exist with positive
