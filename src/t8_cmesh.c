@@ -242,3 +242,25 @@ t8_cmesh_new_hex (void)
 
   return cmesh;
 }
+
+t8_cmesh_t
+t8_cmesh_new_hypercube (t8_eclass_t eclass)
+{
+  t8_cmesh_t          cmesh;
+  t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST] = { };
+  int                 num_trees_for_hypercube[T8_ECLASS_LAST] =
+    { 1, 1, 1, 2, 1, 6, 2, 3 };
+  int                 i;
+
+  t8_cmesh_init (&cmesh);
+  num_trees_per_eclass[eclass] = num_trees_for_hypercube[eclass];
+  t8_cmesh_set_num_trees (cmesh, num_trees_for_hypercube[eclass],
+                          num_trees_per_eclass);
+  for (i = 0; i < num_trees_for_hypercube[eclass]; i++) {
+    t8_cmesh_set_tree (cmesh, i, eclass);
+  }
+
+  t8_cmesh_commit (cmesh);
+
+  return cmesh;
+}
