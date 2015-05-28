@@ -32,6 +32,7 @@ typedef struct t8_cmesh
 {
   /* TODO: make the comments more legible */
   int                 committed;
+  int                 dimension; /**< The dimension of the cmesh. It is set when the first tree is inserted. */
   t8_refcount_t       rc; /**< The reference count of the cmesh. */
   t8_topidx_t         num_trees;  /**< The number of trees */
   t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST]; /**< Store for each elemet class the number of trees of this class. */
@@ -98,6 +99,16 @@ t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
   num_in_eclass = cmesh->trees_per_eclass_counter[tree_class]++;
   cmesh->tree_to_eclass[tree_id] = tree_class;
   cmesh->tree_to_num_in_eclass[tree_id] = num_in_eclass;
+
+  /* If we insert the first tree, set the dimension of the cmesh
+   * to this tree's dimension. Otherwise check whether the dimension
+   * of the tree to be inserted equals the dimension of the cmesh. */
+  if (cmesh->dimension == 0) {
+    cmesh->dimension = t8_eclass_to_dimension[tree_class];
+  }
+  else {
+    T8_ASSERT (t8_eclass_to_dimension[tree_class] == cmesh->dimension);
+  }
 }
 
 void
