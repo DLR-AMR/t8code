@@ -53,7 +53,7 @@ typedef struct t8_forest
 
   int                 committed;        /**< \ref t8_forest_commit called? */
   int                 mpisize;          /**< Number of MPI processes. */
-  int                 mpirank;          /**< Numbor of this MPI process. */
+  int                 mpirank;          /**< Number of this MPI process. */
 
   t8_topidx_t         first_local_tree;
   t8_topidx_t         last_local_tree;
