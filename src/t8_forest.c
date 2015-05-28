@@ -79,7 +79,7 @@ t8_forest_init (t8_forest_t * pforest)
   forest->mpirank = -1;
 }
 
-void
+static void
 t8_forest_set_mpicomm (t8_forest_t forest, sc_MPI_Comm mpicomm, int do_dup)
 {
   T8_ASSERT (forest != NULL);
@@ -97,6 +97,8 @@ t8_forest_set_mpicomm (t8_forest_t forest, sc_MPI_Comm mpicomm, int do_dup)
 void
 t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh)
 {
+  sc_MPI_Comm         mpicomm;
+  int                 do_dup;
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
@@ -106,6 +108,8 @@ t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh)
   T8_ASSERT (cmesh != NULL);
 
   forest->cmesh = cmesh;
+  mpicomm = t8_cmesh_get_mpicomm (cmesh, &do_dup);
+  t8_forest_set_mpicomm (forest, mpicomm, do_dup);
 }
 
 void

@@ -57,6 +57,13 @@ void                t8_cmesh_init (t8_cmesh_t * pcmesh);
 void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
                                           sc_MPI_Comm mpicomm, int do_dup);
 
+/** Return the MPI communicator of a cmesh.
+ * \param [in] cmesh       The cmesh whose communicator will be returned.
+ * \param [out] do_dup     This variable is filled with the do_dup entry of \a cmesh.
+ * \return                 The MPI communicator associated to \a cmesh.
+ */
+sc_MPI_Comm         t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup);
+
 /** Set the number of trees and number of trees per eclass for a cmesh.
  * It is not allowed to call this function after \see t8_cmesh_construct.
  * \param [in,out] cmesh        The cmesh to be updated.
