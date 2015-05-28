@@ -122,29 +122,29 @@ void                t8_cmesh_unref (t8_cmesh_t * pcmesh);
 /** Create a coarse mesh that consists of a single triangle.
  * \return          A valid cmesh, as if _init and _construct had been called.
  */
-t8_cmesh_t          t8_cmesh_new_tri (sc_MPI_Comm comm);
+t8_cmesh_t          t8_cmesh_new_tri (sc_MPI_Comm comm, int do_dup);
 
 /** Create a coarse mesh that consists of a single tetrahedron.
  * \return          A valid cmesh, as if _init and _construct had been called.
  */
-t8_cmesh_t          t8_cmesh_new_tet (sc_MPI_Comm comm);
+t8_cmesh_t          t8_cmesh_new_tet (sc_MPI_Comm comm, int do_dup);
 
 /** Create a coarse mesh that consists of a single square.
  * \return          A valid cmesh, as if _init and _construct had been called.
  */
-t8_cmesh_t          t8_cmesh_new_quad (sc_MPI_Comm comm);
+t8_cmesh_t          t8_cmesh_new_quad (sc_MPI_Comm comm, int do_dup);
 
 /** Create a coarse mesh that consists of a single hexahedron.
  * \return          A valid cmesh, as if _init and _construct had been called.
  */
-t8_cmesh_t          t8_cmesh_new_hex (sc_MPI_Comm comm);
+t8_cmesh_t          t8_cmesh_new_hex (sc_MPI_Comm comm, int do_dup);
 
 /** Construct a hypercube forest from one primitive tree class.
  * \param [in] eclass       This element class determines the dimension and
  *                          the number of trees needed to construct a cube.
  */
 t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
-                                            sc_MPI_Comm comm);
+                                            sc_MPI_Comm comm, int do_dup);
 
 T8_EXTERN_C_END ();
 
