@@ -33,6 +33,10 @@ typedef struct t8_cmesh
   /* TODO: make the comments more legible */
   int                 committed;
   int                 dimension; /**< The dimension of the cmesh. It is set when the first tree is inserted. */
+  int                 do_dup;   /**< Communicator shall be duped. */
+  sc_MPI_Comm         mpicomm;  /**< MPI communicator to use. */
+  int                 mpirank;  /**< Number of this MPI process. */
+  int                 mpisize;  /**< Number of MPI processes. */
   t8_refcount_t       rc; /**< The reference count of the cmesh. */
   t8_topidx_t         num_trees;  /**< The number of trees */
   t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST]; /**< Store for each elemet class the number of trees of this class. */
@@ -50,6 +54,25 @@ t8_cmesh_init (t8_cmesh_t * pcmesh)
 
   cmesh = *pcmesh = T8_ALLOC_ZERO (t8_cmesh_struct_t, 1);
   t8_refcount_init (&cmesh->rc);
+
+  /* sensible (hard error) defaults */
+  cmesh->mpicomm = sc_MPI_COMM_NULL;
+  cmesh->mpirank = -1;
+  cmesh->mpisize = -1;
+}
+
+void
+t8_cmesh_set_mpicomm (t8_cmesh_t cmesh, sc_MPI_Comm mpicomm, int do_dup)
+{
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (cmesh->rc.refcount > 0);
+  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (cmesh->mpicomm == sc_MPI_COMM_NULL);
+
+  T8_ASSERT (mpicomm != sc_MPI_COMM_NULL);
+
+  cmesh->mpicomm = mpicomm;
+  cmesh->do_dup = do_dup;
 }
 
 void
@@ -114,11 +137,14 @@ t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
 void
 t8_cmesh_commit (t8_cmesh_t cmesh)
 {
+  int                 mpiret;
+  sc_MPI_Comm         comm_dup;
 #ifdef T8_ENABLE_DEBUG
   int                 class_it;
 #endif
 
   T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (cmesh->mpicomm != sc_MPI_COMM_NULL);
   T8_ASSERT (!cmesh->committed);
   T8_ASSERT (cmesh->num_trees > 0);
 
@@ -129,6 +155,19 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
                cmesh->num_trees_per_eclass[class_it]);
   }
 #endif
+
+  /* dup communicator if requested */
+  if (cmesh->do_dup) {
+    mpiret = sc_MPI_Comm_dup (cmesh->mpicomm, &comm_dup);
+    SC_CHECK_MPI (mpiret);
+    cmesh->mpicomm = comm_dup;
+  }
+
+  /* query communicator new */
+  mpiret = sc_MPI_Comm_size (cmesh->mpicomm, &cmesh->mpisize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (cmesh->mpicomm, &cmesh->mpirank);
+  SC_CHECK_MPI (mpiret);
 }
 
 void
@@ -148,6 +187,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
 static void
 t8_cmesh_reset (t8_cmesh_t * pcmesh)
 {
+  int                 mpiret;
   t8_cmesh_t          cmesh;
 
   T8_ASSERT (pcmesh != NULL);
@@ -157,6 +197,11 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
 
   T8_FREE (cmesh->tree_to_num_in_eclass);
   T8_FREE (cmesh->tree_to_eclass);
+
+  if (cmesh->do_dup && cmesh->committed) {
+    mpiret = sc_MPI_Comm_free (&cmesh->mpicomm);
+    SC_CHECK_MPI (mpiret);
+  }
   T8_FREE (cmesh);
 
   *pcmesh = NULL;
@@ -184,13 +229,14 @@ t8_cmesh_unref (t8_cmesh_t * pcmesh)
 }
 
 t8_cmesh_t
-t8_cmesh_new_tri (void)
+t8_cmesh_new_tri (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST] = { };
 
   num_trees_per_eclass[T8_ECLASS_TRIANGLE] = 1;
   t8_cmesh_init (&cmesh);
+  t8_cmesh_set_mpicomm (cmesh, comm, 0);
   t8_cmesh_set_num_trees (cmesh, 1, num_trees_per_eclass);
   t8_cmesh_set_tree (cmesh, 0, T8_ECLASS_TRIANGLE);
   t8_cmesh_commit (cmesh);
@@ -199,13 +245,14 @@ t8_cmesh_new_tri (void)
 }
 
 t8_cmesh_t
-t8_cmesh_new_tet (void)
+t8_cmesh_new_tet (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST] = { };
 
   num_trees_per_eclass[T8_ECLASS_TET] = 1;
   t8_cmesh_init (&cmesh);
+  t8_cmesh_set_mpicomm (cmesh, comm, 0);
   t8_cmesh_set_num_trees (cmesh, 1, num_trees_per_eclass);
   t8_cmesh_set_tree (cmesh, 0, T8_ECLASS_TET);
   t8_cmesh_commit (cmesh);
@@ -214,13 +261,14 @@ t8_cmesh_new_tet (void)
 }
 
 t8_cmesh_t
-t8_cmesh_new_quad (void)
+t8_cmesh_new_quad (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST] = { };
 
   num_trees_per_eclass[T8_ECLASS_QUAD] = 1;
   t8_cmesh_init (&cmesh);
+  t8_cmesh_set_mpicomm (cmesh, comm, 0);
   t8_cmesh_set_num_trees (cmesh, 1, num_trees_per_eclass);
   t8_cmesh_set_tree (cmesh, 0, T8_ECLASS_QUAD);
   t8_cmesh_commit (cmesh);
@@ -229,13 +277,14 @@ t8_cmesh_new_quad (void)
 }
 
 t8_cmesh_t
-t8_cmesh_new_hex (void)
+t8_cmesh_new_hex (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST] = { };
 
   num_trees_per_eclass[T8_ECLASS_HEX] = 1;
   t8_cmesh_init (&cmesh);
+  t8_cmesh_set_mpicomm (cmesh, comm, 0);
   t8_cmesh_set_num_trees (cmesh, 1, num_trees_per_eclass);
   t8_cmesh_set_tree (cmesh, 0, T8_ECLASS_HEX);
   t8_cmesh_commit (cmesh);
@@ -244,7 +293,7 @@ t8_cmesh_new_hex (void)
 }
 
 t8_cmesh_t
-t8_cmesh_new_hypercube (t8_eclass_t eclass)
+t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST] = { };
@@ -253,6 +302,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass)
   int                 i;
 
   t8_cmesh_init (&cmesh);
+  t8_cmesh_set_mpicomm (cmesh, comm, 0);
   num_trees_per_eclass[eclass] = num_trees_for_hypercube[eclass];
   t8_cmesh_set_num_trees (cmesh, num_trees_for_hypercube[eclass],
                           num_trees_per_eclass);

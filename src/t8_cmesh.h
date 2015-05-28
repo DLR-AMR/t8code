@@ -44,6 +44,19 @@ T8_EXTERN_C_BEGIN ();
  */
 void                t8_cmesh_init (t8_cmesh_t * pcmesh);
 
+/** Set MPI communicator to use in commiting a new cmesh.
+ * This call is only valid when the cmesh is not created by a copy, adaptation,
+ * or partition of an existing cmesh.
+ * \param [in,out] cmesh       The cmesh whose communicator will be set.
+ * \param [in] mpicomm          This MPI communicator must be valid.
+ * \param [in] do_dup           If true, the communicator will be duped in
+ *                              this creation and whenever another cmesh is
+ *                              derived from it in the future.
+ *                              If false, no duping takes place at all.
+ */
+void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
+                                          sc_MPI_Comm mpicomm, int do_dup);
+
 /** Set the number of trees and number of trees per eclass for a cmesh.
  * It is not allowed to call this function after \see t8_cmesh_construct.
  * \param [in,out] cmesh        The cmesh to be updated.
@@ -102,28 +115,29 @@ void                t8_cmesh_unref (t8_cmesh_t * pcmesh);
 /** Create a coarse mesh that consists of a single triangle.
  * \return          A valid cmesh, as if _init and _construct had been called.
  */
-t8_cmesh_t          t8_cmesh_new_tri (void);
+t8_cmesh_t          t8_cmesh_new_tri (sc_MPI_Comm comm);
 
 /** Create a coarse mesh that consists of a single tetrahedron.
  * \return          A valid cmesh, as if _init and _construct had been called.
  */
-t8_cmesh_t          t8_cmesh_new_tet (void);
+t8_cmesh_t          t8_cmesh_new_tet (sc_MPI_Comm comm);
 
 /** Create a coarse mesh that consists of a single square.
  * \return          A valid cmesh, as if _init and _construct had been called.
  */
-t8_cmesh_t          t8_cmesh_new_quad (void);
+t8_cmesh_t          t8_cmesh_new_quad (sc_MPI_Comm comm);
 
 /** Create a coarse mesh that consists of a single hexahedron.
  * \return          A valid cmesh, as if _init and _construct had been called.
  */
-t8_cmesh_t          t8_cmesh_new_hex (void);
+t8_cmesh_t          t8_cmesh_new_hex (sc_MPI_Comm comm);
 
 /** Construct a hypercube forest from one primitive tree class.
  * \param [in] eclass       This element class determines the dimension and
  *                          the number of trees needed to construct a cube.
  */
-t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass);
+t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
+                                            sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 
