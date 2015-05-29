@@ -145,6 +145,14 @@ t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
   }
 }
 
+t8_eclass_t
+t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_topidx_t tree_id)
+{
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (0 <= tree_id && tree_id <= cmesh->num_trees);
+  return cmesh->tree_to_eclass[tree_id];
+}
+
 void
 t8_cmesh_commit (t8_cmesh_t cmesh)
 {

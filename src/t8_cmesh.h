@@ -85,6 +85,13 @@ void                t8_cmesh_set_num_trees (t8_cmesh_t cmesh,
 void                t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
                                        t8_eclass_t tree_class);
 
+/** Return the eclass of a given tree.
+ * \param [in]    cmesh         The cmesh to be considered.
+ * \param [in]    tree_id       The id of the tree whose eclass will be returned.
+ * \return                      The eclass of the given tree.
+ */
+t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_topidx_t tree_id);
+
 /** After allocating and adding properties to a cmesh, finish its construction.
  * \param [in,out] cmesh        Must be created with \see t8_cmesh_init and
  *                              specialized with t8_cmesh_set_* calls first.
