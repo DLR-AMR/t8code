@@ -201,6 +201,61 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
   *child_in_tree_begin = 0;
   *last_local_tree = 0;
   *child_in_tree_end = 0;
+
+  if (cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] == 0) {
+    t8_gloidx_t         global_num_children;
+    t8_gloidx_t         first_global_child;
+    t8_gloidx_t         last_global_child;
+    t8_locidx_t         children_per_tree;
+
+    children_per_tree = 1 << cmesh->dimension * level;
+    global_num_children = cmesh->num_trees * children_per_tree;
+    if (cmesh->mpirank == 0) {
+      *child_in_tree_begin = first_global_child = 0;
+    }
+    else {
+      /* The first global children of processor p
+       * with P total processor is (the biggest int smaller than)
+       * (total_num_children * p) / P
+       * We cast to long double and double first to prevent integer overflow.
+       */
+      first_global_child =
+        ((long double) global_num_children *
+         cmesh->mpirank) / (double) cmesh->mpisize;
+    }
+    if (cmesh->mpirank != cmesh->mpisize - 1) {
+      last_global_child =
+        ((long double) global_num_children *
+         (cmesh->mpirank + 1)) / (double) cmesh->mpisize;
+    }
+    else {
+      last_global_child = global_num_children;
+    }
+    T8_ASSERT (0 <= first_global_child
+               && first_global_child <= global_num_children);
+    T8_ASSERT (0 <= last_global_child
+               && last_global_child <= global_num_children);
+    *child_in_tree_begin =
+      first_global_child - *first_local_tree * children_per_tree;
+    *first_local_tree = first_global_child / children_per_tree;
+    if (first_global_child < last_global_child) {
+      *last_local_tree = (last_global_child - 1) / children_per_tree;
+    }
+    else {
+      /* empty processor */
+      *last_local_tree = *first_local_tree;
+    }
+    if (*last_local_tree > 0) {
+      *child_in_tree_end =
+        last_global_child - (*last_local_tree - 1) * children_per_tree;
+    }
+    else {
+      *child_in_tree_end = last_global_child;
+    }
+  }
+  else {
+    SC_ABORT ("Partition does not support pyramidal elements yet.");
+  }
 }
 
 static void

@@ -100,6 +100,7 @@ void                t8_cmesh_commit (t8_cmesh_t cmesh);
 
 /** Calculate the section of a uniform forest for the current rank.
  * TODO: this requires that cmesh knows its MPI communicator.
+ * \param [out]    last_local_tree  The last tree that contains elements belonging to the calling processor.
  */
 void                t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
                                              t8_topidx_t * first_local_tree,
