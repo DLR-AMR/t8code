@@ -26,6 +26,30 @@
 #include <t8_forest.h>
 
 static void
+t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
+                    int do_commit)
+{
+  t8_forest_t         forest;
+  t8_cmesh_t          cmesh;
+
+  t8_forest_init (&forest);
+
+  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, do_dup);
+  t8_forest_set_cmesh (forest, cmesh);
+  t8_forest_set_scheme (forest, t8_scheme_new_default ());
+
+  t8_forest_set_level (forest, set_level);
+
+  if (do_commit) {
+    t8_forest_commit (forest);
+    t8_forest_write_vtk (forest, "basic");
+  }
+
+  t8_forest_unref (&forest);
+
+}
+
+static void
 t8_basic (int do_dup, int set_level, int do_commit)
 {
   t8_forest_t         forest;
@@ -50,6 +74,7 @@ main (int argc, char **argv)
 {
   int                 mpiret;
   int                 level;
+  int                 eclass;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -63,6 +88,13 @@ main (int argc, char **argv)
   t8_basic (1, level, 0);
   t8_basic (0, level, 1);
   t8_basic (1, level, 1);
+
+  for (eclass = T8_ECLASS_FIRST; eclass < T8_ECLASS_LAST; eclass++) {
+    t8_basic_hypercube (eclass, 0, level, 0);
+    t8_basic_hypercube (eclass, 1, level, 0);
+    t8_basic_hypercube (eclass, 0, level, 1);
+    t8_basic_hypercube (eclass, 1, level, 1);
+  }
 
   sc_finalize ();
 
