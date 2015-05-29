@@ -74,3 +74,40 @@ t8_eclass_count_boundary (t8_eclass_t theclass, int min_dim, int *per_eclass)
 
   return sum;
 }
+
+int
+t8_eclass_count_leaf (t8_eclass_t theclass, int level)
+{
+  if (theclass != T8_ECLASS_PYRAMID) {
+    /* For each eclass that is not the pyramid the number of leafs
+     * is dim^level.
+     */
+    return 1 << t8_eclass_to_dimension[theclass] * level;
+  }
+  else {
+    /* For the eclass pyramid the number of leafs is
+     * 6^level + 4 * \sum_{i=1}^l 6^{l-i}8^{i-1}
+     */
+    t8_locidx_t         power_of_6 = 1;
+    t8_locidx_t         six_to_level;
+    t8_locidx_t         power_of_8 = 1;
+    t8_locidx_t         number_of_leafs = 0;
+    t8_locidx_t         li;
+
+    /* compute 6^level */
+    for (li = 0; li < level; li++) {
+      power_of_6 *= 6;
+    }
+    six_to_level = power_of_6;
+    T8_ASSERT (six_to_level > 0);
+    for (li = 0; li < level; li++) {
+      power_of_6 /= 6;
+      number_of_leafs += power_of_8 * power_of_6;
+      power_of_8 *= 8;
+    }
+    number_of_leafs *= 4;
+    number_of_leafs += six_to_level;
+    T8_ASSERT (number_of_leafs > 0);
+    return number_of_leafs;
+  }
+}
