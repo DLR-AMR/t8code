@@ -99,7 +99,7 @@ int                 t8_eclass_count_boundary (t8_eclass_t theclass,
  * \return                      The number of leafs in a uniform refinement
  *                              of the given level.
  */
-int                 t8_eclass_count_leaf (t8_eclass_t theclass, int level);
+t8_gloidx_t         t8_eclass_count_leaf (t8_eclass_t theclass, int level);
 
 T8_EXTERN_C_END ();
 

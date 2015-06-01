@@ -75,7 +75,7 @@ t8_eclass_count_boundary (t8_eclass_t theclass, int min_dim, int *per_eclass)
   return sum;
 }
 
-int
+t8_gloidx_t
 t8_eclass_count_leaf (t8_eclass_t theclass, int level)
 {
   if (theclass != T8_ECLASS_PYRAMID) {
