@@ -56,6 +56,7 @@ t8_cmesh_init (t8_cmesh_t * pcmesh)
   t8_refcount_init (&cmesh->rc);
 
   /* sensible (hard error) defaults */
+  cmesh->dimension = -1;
   cmesh->mpicomm = sc_MPI_COMM_WORLD;
   cmesh->mpirank = -1;
   cmesh->mpisize = -1;
@@ -137,7 +138,7 @@ t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
   /* If we insert the first tree, set the dimension of the cmesh
    * to this tree's dimension. Otherwise check whether the dimension
    * of the tree to be inserted equals the dimension of the cmesh. */
-  if (cmesh->dimension == 0) {
+  if (cmesh->dimension == -1) {
     cmesh->dimension = t8_eclass_to_dimension[tree_class];
   }
   else {
