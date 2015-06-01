@@ -38,16 +38,16 @@ T8_EXTERN_C_BEGIN ();
 
 /** Create a new cmesh with reference count one.
  * This cmesh needs to be specialized with the t8_cmesh_set_* calls.
- * Then it needs to be set up with \see t8_cmesh_construct.
+ * Then it needs to be set up with \see t8_cmesh_commit.
  * \param [in,out] pcmesh       On input, this pointer must be non-NULL.
  *                              On return, this pointer set to the new cmesh.
  */
 void                t8_cmesh_init (t8_cmesh_t * pcmesh);
 
 /** Set MPI communicator to use in commiting a new cmesh.
- * This call is only valid when the cmesh is not created by a copy, adaptation,
- * or partition of an existing cmesh.
- * \param [in,out] cmesh       The cmesh whose communicator will be set.
+ * This call is only valid when the cmesh is not yet committed via a call
+ * to \see t8_cmesh_commit.
+ * \param [in,out] cmesh        The cmesh whose communicator will be set.
  * \param [in] mpicomm          This MPI communicator must be valid.
  * \param [in] do_dup           If true, the communicator will be duped in
  *                              this creation and whenever another cmesh is
@@ -65,7 +65,7 @@ void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
 sc_MPI_Comm         t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup);
 
 /** Set the number of trees and number of trees per eclass for a cmesh.
- * It is not allowed to call this function after \see t8_cmesh_construct.
+ * It is not allowed to call this function after \see t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     num_trees    The number of trees to be set.
  * \param [in]     num_trees_per_eclass An array storing for each t8_eclass
@@ -128,22 +128,22 @@ void                t8_cmesh_ref (t8_cmesh_t cmesh);
 void                t8_cmesh_unref (t8_cmesh_t * pcmesh);
 
 /** Create a coarse mesh that consists of a single triangle.
- * \return          A valid cmesh, as if _init and _construct had been called.
+ * \return          A valid cmesh, as if _init and _commit had been called.
  */
 t8_cmesh_t          t8_cmesh_new_tri (sc_MPI_Comm comm, int do_dup);
 
 /** Create a coarse mesh that consists of a single tetrahedron.
- * \return          A valid cmesh, as if _init and _construct had been called.
+ * \return          A valid cmesh, as if _init and _commit had been called.
  */
 t8_cmesh_t          t8_cmesh_new_tet (sc_MPI_Comm comm, int do_dup);
 
 /** Create a coarse mesh that consists of a single square.
- * \return          A valid cmesh, as if _init and _construct had been called.
+ * \return          A valid cmesh, as if _init and _commit had been called.
  */
 t8_cmesh_t          t8_cmesh_new_quad (sc_MPI_Comm comm, int do_dup);
 
 /** Create a coarse mesh that consists of a single hexahedron.
- * \return          A valid cmesh, as if _init and _construct had been called.
+ * \return          A valid cmesh, as if _init and _commit had been called.
  */
 t8_cmesh_t          t8_cmesh_new_hex (sc_MPI_Comm comm, int do_dup);
 
