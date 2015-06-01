@@ -56,7 +56,7 @@ t8_cmesh_init (t8_cmesh_t * pcmesh)
   t8_refcount_init (&cmesh->rc);
 
   /* sensible (hard error) defaults */
-  cmesh->mpicomm = sc_MPI_COMM_NULL;
+  cmesh->mpicomm = sc_MPI_COMM_WORLD;
   cmesh->mpirank = -1;
   cmesh->mpisize = -1;
 }
@@ -67,7 +67,7 @@ t8_cmesh_set_mpicomm (t8_cmesh_t cmesh, sc_MPI_Comm mpicomm, int do_dup)
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->rc.refcount > 0);
   T8_ASSERT (!cmesh->committed);
-  T8_ASSERT (cmesh->mpicomm == sc_MPI_COMM_NULL);
+  T8_ASSERT (cmesh->mpicomm == sc_MPI_COMM_WORLD);
 
   T8_ASSERT (mpicomm != sc_MPI_COMM_NULL);
 
