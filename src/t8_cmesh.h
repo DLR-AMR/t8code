@@ -77,6 +77,13 @@ void                t8_cmesh_set_num_trees (t8_cmesh_t cmesh,
                                             num_trees_per_eclass
                                             [T8_ECLASS_LAST]);
 
+/** Return the number of trees in a cmesh.
+ * \param [in] cmesh       The cmesh to be considered.
+ * \return                 The numbrt of trees associated to \a cmesh.
+ * \a cmesh must be committed before calling this function.
+ */
+t8_topidx_t         t8_cmesh_get_num_trees (t8_cmesh_t cmesh);
+
 /** Set the class of a tree in the cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     tree_id      The global number of the tree.

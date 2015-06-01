@@ -121,6 +121,15 @@ t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees, const
           sizeof (t8_topidx_t) * T8_ECLASS_LAST);
 }
 
+t8_topidx_t
+t8_cmesh_get_num_trees (t8_cmesh_t cmesh)
+{
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (cmesh->committed);
+
+  return cmesh->num_trees;
+}
+
 void
 t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
                    t8_eclass_t tree_class)
