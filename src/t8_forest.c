@@ -57,8 +57,33 @@ typedef struct t8_forest
 
   t8_topidx_t         first_local_tree;
   t8_topidx_t         last_local_tree;
+  sc_array_t         *trees;
 }
 t8_forest_struct_t;
+
+/** The t8 tree datatype */
+typedef struct t8_tree
+{
+  sc_array_t          elements;              /**< locally stored elements */
+  t8_eclass_t         eclass;                /**< The element class of this tree */
+  /* TODO: We will need the *_desc variables later for shure. */
+#if 0
+  t8_element_t        first_desc,            /**< first local descendant */
+                      last_desc;             /**< last local descendant */
+#endif
+  t8_locidx_t         quadrants_offset;      /**< cumulative sum over earlier
+                                                  trees on this processor
+                                                  (locals only) */
+  /* TODO: Do we need elements per level?
+   *       Then we definitely need a global MAXLEVEL
+   */
+#if 0
+  t8_locidx_t         elements_per_level[T8_MAXLEVEL + 1];
+                                             /**< locals only */
+#endif
+  int8_t              maxlevel;              /**< highest local element level */
+}
+t8_tree_t;
 
 void
 t8_forest_init (t8_forest_t * pforest)
