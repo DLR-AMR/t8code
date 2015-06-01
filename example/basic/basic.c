@@ -90,10 +90,12 @@ main (int argc, char **argv)
   t8_basic (1, level, 1);
 
   for (eclass = T8_ECLASS_FIRST; eclass < T8_ECLASS_LAST; eclass++) {
-    t8_basic_hypercube (eclass, 0, level, 0);
-    t8_basic_hypercube (eclass, 1, level, 0);
-    t8_basic_hypercube (eclass, 0, level, 1);
-    t8_basic_hypercube (eclass, 1, level, 1);
+    if (eclass != T8_ECLASS_PYRAMID) {
+      t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 0);
+      t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 0);
+      t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 1);
+      t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 1);
+    }
   }
 
   sc_finalize ();
