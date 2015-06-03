@@ -280,7 +280,7 @@ t8_forest_populate (t8_forest_t forest)
     /* Allocate elements for this processor. */
     sc_array_init_size (telements, sizeof (t8_element_t *),
                         num_tree_elements);
-    elements = sc_array_index (telements, 0);
+    elements = (t8_element_t **) sc_array_index (telements, 0);
     t8_element_new (eclass_scheme, num_tree_elements, elements);
     for (element_it = start; element_it < end; element_it++, count_children++) {
       tt = element_it - start;
