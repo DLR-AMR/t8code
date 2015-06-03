@@ -149,7 +149,7 @@ t8_scheme_t;
  * \param [in,out] scheme       On input, this scheme must be alive, that is,
  *                              exist with positive reference count.
  */
-void                t8_scheme_ref (t8_scheme_t *scheme);
+void                t8_scheme_ref (t8_scheme_t * scheme);
 
 /** Decrease the reference counter of a scheme.
  * If the counter reaches zero, this scheme is destroyed.
@@ -160,7 +160,7 @@ void                t8_scheme_ref (t8_scheme_t *scheme);
  *                              Otherwise, the pointer is not changed and
  *                              the scheme is not modified in other ways.
  */
-void                t8_scheme_unref (t8_scheme_t **pscheme);
+void                t8_scheme_unref (t8_scheme_t ** pscheme);
 
 /** Destroy an implementation of a particular element class. */
 void                t8_eclass_scheme_destroy (t8_eclass_scheme_t * ts);
