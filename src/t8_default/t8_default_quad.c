@@ -147,7 +147,7 @@ t8_default_quad_successor (const t8_element_t * elem1,
 
   id = p4est_quadrant_linear_id ((const p4est_quadrant_t *) elem1, level);
   T8_ASSERT (id + 1 < (1 << P4EST_CHILDREN * level));
-  p4est_quadrant_set_morton ((p4est_quadrant_t *) elem1, level, id + 1);
+  p4est_quadrant_set_morton ((p4est_quadrant_t *) elem2, level, id + 1);
 }
 
 static void
