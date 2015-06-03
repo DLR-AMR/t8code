@@ -378,6 +378,29 @@ t8_forest_write_vtk (t8_forest_t forest, const char *filename)
 }
 
 static void
+t8_forest_free_trees (t8_forest_t forest)
+{
+  t8_tree_t          *tree;
+  t8_eclass_scheme_t *tree_scheme;
+  t8_element_t      **first_element;
+  t8_topidx_t         jt, number_of_trees;
+
+  T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->committed);
+
+  number_of_trees = forest->trees->elem_count;
+  for (jt = 0; jt < number_of_trees; jt++) {
+    tree = t8_tree_array_index (forest->trees, jt);
+    tree_scheme = forest->scheme->eclass_schemes[tree->eclass];
+    first_element = (t8_element_t **) sc_array_index_int (&tree->elements, 0);
+    t8_element_destroy (tree_scheme, tree->elements.elem_count,
+                        first_element);
+    sc_array_reset (&tree->elements);
+  }
+  sc_array_destroy (forest->trees);
+}
+
+static void
 t8_forest_reset (t8_forest_t * pforest)
 {
   int                 mpiret;
@@ -398,15 +421,18 @@ t8_forest_reset (t8_forest_t * pforest)
     T8_ASSERT (forest->set_from == NULL);
   }
 
+  /* undup communicator if necessary */
+  if (forest->committed) {
+    if (forest->do_dup) {
+      mpiret = sc_MPI_Comm_free (&forest->mpicomm);
+      SC_CHECK_MPI (mpiret);
+    }
+    t8_forest_free_trees (forest);
+  }
+
   /* we have taken ownership on calling t8_forest_set_* */
   t8_scheme_unref (&forest->scheme);
   t8_cmesh_unref (&forest->cmesh);
-
-  /* undup communicator if necessary */
-  if (forest->do_dup && forest->committed) {
-    mpiret = sc_MPI_Comm_free (&forest->mpicomm);
-    SC_CHECK_MPI (mpiret);
-  }
 
   T8_FREE (forest);
   *pforest = NULL;
