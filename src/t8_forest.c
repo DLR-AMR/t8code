@@ -237,8 +237,9 @@ t8_forest_populate (t8_forest_t forest)
   t8_gloidx_t         num_tree_elements;
   t8_topidx_t         num_local_trees;
   t8_topidx_t         jt;
-  t8_gloidx_t         start, end, element_it, tt;
+  t8_gloidx_t         start, end, et;
   t8_tree_t          *tree;
+  t8_element_t       *element, *element_succ;
   sc_array_t         *telements;
   t8_eclass_t         tree_class;
   t8_eclass_scheme_t *eclass_scheme;
@@ -280,14 +281,14 @@ t8_forest_populate (t8_forest_t forest)
     /* Allocate elements for this processor. */
     sc_array_init_size (telements, t8_element_size (eclass_scheme),
                         num_tree_elements);
-    for (element_it = start; element_it < end; element_it++, count_children++) {
-      tt = element_it - start;
-      if (tt == 0) {
-        /* TODO: t8_element_set_linear_id (elements[0], element_it, level); */
-      }
-      else {
-        /* TODO: t8_element_successor (elements[tt-1],elements[tt], level); */
-      }
+    element = (t8_element_t *) t8_sc_array_index_topidx (telements, 0);
+    eclass_scheme->elem_set_linear_id (element, forest->set_level, start);
+    count_children++;
+    for (et = start + 1; et < end; et++, count_children++) {
+      element_succ =
+        (t8_element_t *) t8_sc_array_index_topidx (telements, et - start);
+      eclass_scheme->elem_successor (element, element_succ,
+                                     forest->set_level);
       /* TODO: process elements here */
       element = element_succ;
     }
