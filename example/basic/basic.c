@@ -40,8 +40,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
 
   t8_forest_set_level (forest, set_level);
 
-  if (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX ||
-      eclass == T8_ECLASS_TET) {
+  if (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX) {
     if (do_commit) {
       t8_forest_commit (forest);
       t8_forest_write_vtk (forest, "basic");
@@ -53,7 +52,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
 }
 
 static void
-t8_basic (int do_dup, int set_level, int do_commit)
+t8_basic (int do_dup, int set_level)
 {
   t8_forest_t         forest;
 
@@ -63,11 +62,6 @@ t8_basic (int do_dup, int set_level, int do_commit)
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
 
   t8_forest_set_level (forest, set_level);
-
-  if (do_commit) {
-    t8_forest_commit (forest);
-    t8_forest_write_vtk (forest, "basic");
-  }
 
   t8_forest_unref (&forest);
 }
@@ -87,10 +81,10 @@ main (int argc, char **argv)
   t8_init (SC_LP_DEFAULT);
 
   level = 3;
-  t8_basic (0, level, 0);
-  t8_basic (1, level, 0);
-  t8_basic (0, level, 1);
-  t8_basic (1, level, 1);
+  t8_basic (0, level);
+  t8_basic (1, level);
+  t8_basic (0, level);
+  t8_basic (1, level);
 
   for (eclass = T8_ECLASS_FIRST; eclass < T8_ECLASS_LAST; eclass++) {
     if (eclass != T8_ECLASS_PYRAMID) {
