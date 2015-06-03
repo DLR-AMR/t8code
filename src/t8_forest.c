@@ -220,14 +220,13 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
 /* Return a pointer to an array element indexed by a t8_topidx_t.
  * \param [in] index needs to be in [0]..[elem_count-1].
  */
-static t8_tree_t *
+static t8_tree_t   *
 t8_tree_array_index (sc_array_t * array, t8_topidx_t it)
 {
   P4EST_ASSERT (array->elem_size == sizeof (t8_tree_t));
   P4EST_ASSERT (it >= 0 && (size_t) it < array->elem_count);
 
-  return (t8_tree_t *) (array->array +
-                           sizeof (t8_tree_t) * (size_t) it);
+  return (t8_tree_t *) (array->array + sizeof (t8_tree_t) * (size_t) it);
 }
 
 static void
@@ -253,7 +252,7 @@ t8_forest_populate (t8_forest_t forest)
 
   /* TODO: create only the non-empty tree objects */
   if (forest->first_local_tree >= forest->last_local_tree
-        && child_in_tree_begin >= child_in_tree_end) {
+      && child_in_tree_begin >= child_in_tree_end) {
     /* This processor is empty
      * we still set the tree array to store 0 as the number of trees here */
     forest->trees = sc_array_new (sizeof (t8_tree_t));
@@ -264,8 +263,8 @@ t8_forest_populate (t8_forest_t forest)
   num_local_trees = forest->last_local_tree - forest->first_local_tree + 1;
   forest->trees = sc_array_new (sizeof (t8_tree_t));
   sc_array_resize (forest->trees, num_local_trees);
-  for (jt = forest->first_local_tree, count_children = 0; jt <= forest->last_local_tree;
-       jt++) {
+  for (jt = forest->first_local_tree, count_children = 0;
+       jt <= forest->last_local_tree; jt++) {
     tree = t8_tree_array_index (forest->trees, jt - forest->first_local_tree);
     tree_class = tree->eclass = t8_cmesh_get_tree_class (forest->cmesh, jt);
     tree->maxlevel = forest->set_level;
@@ -279,7 +278,8 @@ t8_forest_populate (t8_forest_t forest)
     num_tree_elements = end - start;
     T8_ASSERT (num_tree_elements > 0);
     /* Allocate elements for this processor. */
-    sc_array_init_size (telements, sizeof (t8_element_t *), num_tree_elements);
+    sc_array_init_size (telements, sizeof (t8_element_t *),
+                        num_tree_elements);
     elements = sc_array_index (telements, 0);
     t8_element_new (eclass_scheme, num_tree_elements, elements);
     for (element_it = start; element_it < end; element_it++, count_children++) {
