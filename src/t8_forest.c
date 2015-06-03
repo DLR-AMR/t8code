@@ -220,13 +220,12 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
 /* Return a pointer to an array element indexed by a t8_topidx_t.
  * \param [in] index needs to be in [0]..[elem_count-1].
  */
-static t8_tree_t   *
-t8_tree_array_index (sc_array_t * array, t8_topidx_t it)
+static void        *
+t8_sc_array_index_topidx (sc_array_t * array, t8_topidx_t it)
 {
-  P4EST_ASSERT (array->elem_size == sizeof (t8_tree_t));
   P4EST_ASSERT (it >= 0 && (size_t) it < array->elem_count);
 
-  return (t8_tree_t *) (array->array + sizeof (t8_tree_t) * (size_t) it);
+  return array->array + sizeof (array->elem_size) * (size_t) it;
 }
 
 static void
@@ -264,7 +263,9 @@ t8_forest_populate (t8_forest_t forest)
   sc_array_resize (forest->trees, num_local_trees);
   for (jt = forest->first_local_tree, count_children = 0;
        jt <= forest->last_local_tree; jt++) {
-    tree = t8_tree_array_index (forest->trees, jt - forest->first_local_tree);
+    tree =
+      (t8_tree_t *) t8_sc_array_index_topidx (forest->trees,
+                                              jt - forest->first_local_tree);
     tree_class = tree->eclass = t8_cmesh_get_tree_class (forest->cmesh, jt);
     tree->maxlevel = forest->set_level;
     eclass_scheme = forest->scheme->eclass_schemes[tree_class];
@@ -386,7 +387,7 @@ t8_forest_free_trees (t8_forest_t forest)
 
   number_of_trees = forest->trees->elem_count;
   for (jt = 0; jt < number_of_trees; jt++) {
-    tree = t8_tree_array_index (forest->trees, jt);
+    tree = (t8_tree_t *) t8_sc_array_index_topidx (forest->trees, jt);
     sc_array_reset (&tree->elements);
   }
   sc_array_destroy (forest->trees);
