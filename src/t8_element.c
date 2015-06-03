@@ -216,6 +216,15 @@ t8_element_set_linear_id (t8_eclass_scheme_t * ts,
 }
 
 void
+t8_element_successor (t8_eclass_scheme_t * ts, const t8_element_t * elem1,
+                      t8_element_t * elem2, int level)
+{
+  T8_ASSERT (ts != NULL && ts->elem_successor != NULL);
+
+  ts->elem_successor (elem1, elem2, level);
+}
+
+void
 t8_element_new (t8_eclass_scheme_t * ts, int length, t8_element_t ** elems)
 {
   T8_ASSERT (ts != NULL && ts->elem_new != NULL);

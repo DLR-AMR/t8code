@@ -92,6 +92,10 @@ typedef void        (*t8_element_boundary_t) (const t8_element_t * elem,
 typedef void        (*t8_element_linear_id_t) (t8_element_t * elem,
                                                int level, uint64_t id);
 
+/** Compute s as a successor of t*/
+typedef void        (*t8_element_successor_t) (const t8_element_t * t,
+                                               t8_element_t * s, int level);
+
 /** Allocate space for the codimension-one boundary elements. */
 typedef void        (*t8_element_new_t) (void *ts_context,
                                          int length, t8_element_t ** elem);
@@ -124,6 +128,7 @@ struct t8_eclass_scheme
   t8_element_nca_t    elem_nca;         /**< Compute nearest common ancestor. */
   t8_element_boundary_t elem_boundary;  /**< Compute a set of boundary elements. */
   t8_element_linear_id_t elem_set_linear_id; /**< Initialize an element from a given linear id. */
+  t8_element_successor_t elem_successor; /**< Compute the successor of a given element */
 
   /* these element routines have a context for memory allocation */
   t8_element_new_t    elem_new;         /**< Allocate space for one or more elements. */
@@ -269,6 +274,16 @@ void                t8_element_boundary (t8_eclass_scheme_t * ts,
 void                t8_element_set_linear_id (t8_eclass_scheme_t * ts,
                                               t8_element_t * elem,
                                               int level, uint64_t id);
+
+/** Construct the successor in a uniform refinement of a given element.
+ * \param [in] ts       The virtual table for this element class.
+ * \param [in] elem1    The element whose successor should be constructed.
+ * \param [in,out] elem2  The element whose entries will be set.
+ * \param [in] level    The level of the uniform refinement to consider.
+ */
+void                t8_element_successor (t8_eclass_scheme_t * ts,
+                                          const t8_element_t * elem1,
+                                          t8_element_t * elem2, int level);
 
 void                t8_element_new (t8_eclass_scheme_t * ts,
                                     int length, t8_element_t ** elems);
