@@ -225,7 +225,7 @@ t8_sc_array_index_topidx (sc_array_t * array, t8_topidx_t it)
 {
   P4EST_ASSERT (it >= 0 && (size_t) it < array->elem_count);
 
-  return array->array + sizeof (array->elem_size) * (size_t) it;
+  return array->array + array->elem_size * (size_t) it;
 }
 
 static void
