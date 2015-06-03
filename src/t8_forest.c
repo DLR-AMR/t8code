@@ -217,11 +217,34 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
   forest->from_method = T8_FOREST_FROM_PARTITION;
 }
 
+/* Return a pointer to an array element indexed by a t8_topidx_t.
+ * \param [in] index needs to be in [0]..[elem_count-1].
+ */
+static t8_tree_t *
+t8_tree_array_index (sc_array_t * array, t8_topidx_t it)
+{
+  P4EST_ASSERT (array->elem_size == sizeof (t8_tree_t));
+  P4EST_ASSERT (it >= 0 && (size_t) it < array->elem_count);
+
+  return (t8_tree_t *) (array->array +
+                           sizeof (t8_tree_t) * (size_t) it);
+}
+
 static void
 t8_forest_populate (t8_forest_t forest)
 {
   t8_gloidx_t         child_in_tree_begin;
   t8_gloidx_t         child_in_tree_end;
+  t8_gloidx_t         count_children;
+  t8_gloidx_t         num_tree_elements;
+  t8_topidx_t         num_local_trees;
+  t8_topidx_t         jt;
+  t8_gloidx_t         start, end, element_it, tt;
+  t8_tree_t          *tree;
+  sc_array_t         *telements;
+  t8_eclass_t         tree_class;
+  t8_element_t      **elements;
+  t8_eclass_scheme_t *eclass_scheme;
 
   /* TODO: create trees and quadrants according to uniform refinement */
   t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level,
@@ -229,8 +252,47 @@ t8_forest_populate (t8_forest_t forest)
                            &forest->last_local_tree, &child_in_tree_end);
 
   /* TODO: create only the non-empty tree objects */
+  if (forest->first_local_tree >= forest->last_local_tree
+        && child_in_tree_begin >= child_in_tree_end) {
+    /* This processor is empty
+     * we still set the tree array to store 0 as the number of trees here */
+    forest->trees = sc_array_new (sizeof (t8_tree_t));
+    return;
+  }
 
   /* TODO: for each tree, allocate elements */
+  num_local_trees = forest->last_local_tree - forest->first_local_tree + 1;
+  forest->trees = sc_array_new (sizeof (t8_tree_t));
+  sc_array_resize (forest->trees, num_local_trees);
+  for (jt = forest->first_local_tree, count_children = 0; jt <= forest->last_local_tree;
+       jt++) {
+    tree = t8_tree_array_index (forest->trees, jt - forest->first_local_tree);
+    tree_class = tree->eclass = t8_cmesh_get_tree_class (forest->cmesh, jt);
+    tree->maxlevel = forest->set_level;
+    eclass_scheme = forest->scheme->eclass_schemes[tree_class];
+    T8_ASSERT (eclass_scheme != NULL);
+    telements = &tree->elements;
+    /* calculate first and last element on this tree */
+    start = (jt == forest->first_local_tree) ? child_in_tree_begin : 0;
+    end = (jt == forest->last_local_tree) ? child_in_tree_end :
+      t8_eclass_count_leaf (tree_class, forest->set_level);
+    num_tree_elements = end - start;
+    T8_ASSERT (num_tree_elements > 0);
+    /* Allocate elements for this processor. */
+    sc_array_init_size (telements, sizeof (t8_element_t *), num_tree_elements);
+    elements = sc_array_index (telements, 0);
+    t8_element_new (eclass_scheme, num_tree_elements, elements);
+    for (element_it = start; element_it < end; element_it++, count_children++) {
+      tt = element_it - start;
+      if (tt == 0) {
+        /* TODO: t8_element_set_linear_id (elements[0], element_it, level); */
+      }
+      else {
+        /* TODO: t8_element_successor (elements[tt-1],elements[tt], level); */
+      }
+      /* TODO: process elements here */
+    }
+  }
 
   /* TODO: figure out global_first_position, global_first_quadrant without comm */
 }
