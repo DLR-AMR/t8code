@@ -277,7 +277,7 @@ t8_forest_populate (t8_forest_t forest)
     num_tree_elements = end - start;
     T8_ASSERT (num_tree_elements > 0);
     /* Allocate elements for this processor. */
-    sc_array_init_size (telements, sizeof (t8_element_size (eclass_scheme)),
+    sc_array_init_size (telements, t8_element_size (eclass_scheme),
                         num_tree_elements);
     for (element_it = start; element_it < end; element_it++, count_children++) {
       tt = element_it - start;
@@ -288,6 +288,7 @@ t8_forest_populate (t8_forest_t forest)
         /* TODO: t8_element_successor (elements[tt-1],elements[tt], level); */
       }
       /* TODO: process elements here */
+      element = element_succ;
     }
   }
 
