@@ -242,7 +242,6 @@ t8_forest_populate (t8_forest_t forest)
   t8_tree_t          *tree;
   sc_array_t         *telements;
   t8_eclass_t         tree_class;
-  t8_element_t      **elements;
   t8_eclass_scheme_t *eclass_scheme;
 
   /* TODO: create trees and quadrants according to uniform refinement */
@@ -278,10 +277,8 @@ t8_forest_populate (t8_forest_t forest)
     num_tree_elements = end - start;
     T8_ASSERT (num_tree_elements > 0);
     /* Allocate elements for this processor. */
-    sc_array_init_size (telements, sizeof (t8_element_t *),
+    sc_array_init_size (telements, sizeof (t8_element_size (eclass_scheme)),
                         num_tree_elements);
-    elements = (t8_element_t **) sc_array_index (telements, 0);
-    t8_element_new (eclass_scheme, num_tree_elements, elements);
     for (element_it = start; element_it < end; element_it++, count_children++) {
       tt = element_it - start;
       if (tt == 0) {
@@ -381,8 +378,6 @@ static void
 t8_forest_free_trees (t8_forest_t forest)
 {
   t8_tree_t          *tree;
-  t8_eclass_scheme_t *tree_scheme;
-  t8_element_t      **first_element;
   t8_topidx_t         jt, number_of_trees;
 
   T8_ASSERT (forest != NULL);
@@ -391,10 +386,6 @@ t8_forest_free_trees (t8_forest_t forest)
   number_of_trees = forest->trees->elem_count;
   for (jt = 0; jt < number_of_trees; jt++) {
     tree = t8_tree_array_index (forest->trees, jt);
-    tree_scheme = forest->scheme->eclass_schemes[tree->eclass];
-    first_element = (t8_element_t **) sc_array_index_int (&tree->elements, 0);
-    t8_element_destroy (tree_scheme, tree->elements.elem_count,
-                        first_element);
     sc_array_reset (&tree->elements);
   }
   sc_array_destroy (forest->trees);
