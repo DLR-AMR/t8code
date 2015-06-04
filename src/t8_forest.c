@@ -21,6 +21,7 @@
 */
 
 #include <t8_refcount.h>
+#include <t8_geometry.h>
 #include <t8_forest.h>
 
 typedef enum t8_forest_from
@@ -42,6 +43,7 @@ typedef struct t8_forest
   int                 set_for_coarsening;       /**< Change partition to allow
                                                      for one round of coarsening */
 
+  t8_geometry_t       geom;             /**< Geometry transformation for vtk output. */
   sc_MPI_Comm         mpicomm;          /**< MPI communicator to use. */
   t8_cmesh_t          cmesh;            /**< Coarse mesh to use. */
   t8_scheme_t        *scheme;           /**< Scheme for element types. */
@@ -161,6 +163,15 @@ t8_forest_set_level (t8_forest_t forest, int level)
   T8_ASSERT (0 <= level);
 
   forest->set_level = level;
+}
+
+void t8_forest_set_geom(t8_forest_t forest, t8_geometry_t geom)
+{
+  T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
+  T8_ASSERT (!forest->committed);
+
+  forest->geom = geom;
 }
 
 void
@@ -427,6 +438,9 @@ t8_forest_reset (t8_forest_t * pforest)
   /* we have taken ownership on calling t8_forest_set_* */
   t8_scheme_unref (&forest->scheme);
   t8_cmesh_unref (&forest->cmesh);
+  if (forest->geom != NULL) {
+    t8_geometry_unref (&forest->geom);
+  }
 
   T8_FREE (forest);
   *pforest = NULL;
