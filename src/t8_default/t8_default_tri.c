@@ -24,7 +24,7 @@
 #include "t8_default_tri.h"
 #include "t8_dtri_bits.h"
 
-typedef t8_dtri_t t8_default_tri_t;
+typedef t8_dtri_t   t8_default_tri_t;
 
 static              size_t
 t8_default_tri_size (void)
@@ -69,13 +69,13 @@ t8_default_tri_child (const t8_element_t * elem,
 
 static void
 t8_default_tri_nca (const t8_element_t * elem1,
-                    const t8_element_t * elem2,
-                    t8_element_t * nca){
-    const t8_default_tri_t *t1 = (const t8_default_tri_t *) elem1;
-    const t8_default_tri_t *t2 = (const t8_default_tri_t *) elem1;
-    t8_default_tri_t   *c = (t8_default_tri_t *) nca;
+                    const t8_element_t * elem2, t8_element_t * nca)
+{
+  const t8_default_tri_t *t1 = (const t8_default_tri_t *) elem1;
+  const t8_default_tri_t *t2 = (const t8_default_tri_t *) elem1;
+  t8_default_tri_t   *c = (t8_default_tri_t *) nca;
 
-    t8_dtri_nearest_common_ancestor(t1,t2,c);
+  t8_dtri_nearest_common_ancestor (t1, t2, c);
 }
 
 static void

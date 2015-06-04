@@ -24,7 +24,7 @@
 #include "t8_default_tet.h"
 #include "t8_dtet_bits.h"
 
-typedef t8_dtet_t t8_default_tet_t;
+typedef t8_dtet_t   t8_default_tet_t;
 
 static              size_t
 t8_default_tet_size (void)
@@ -69,13 +69,13 @@ t8_default_tet_child (const t8_element_t * elem,
 
 static void
 t8_default_tet_nca (const t8_element_t * elem1,
-                    const t8_element_t * elem2,
-                    t8_element_t * nca){
-    const t8_default_tet_t *t1 = (const t8_default_tet_t *) elem1;
-    const t8_default_tet_t *t2 = (const t8_default_tet_t *) elem2;
-    t8_default_tet_t   *c = (t8_default_tet_t *) nca;
+                    const t8_element_t * elem2, t8_element_t * nca)
+{
+  const t8_default_tet_t *t1 = (const t8_default_tet_t *) elem1;
+  const t8_default_tet_t *t2 = (const t8_default_tet_t *) elem2;
+  t8_default_tet_t   *c = (t8_default_tet_t *) nca;
 
-    t8_dtet_nearest_common_ancestor(t1,t2,c);
+  t8_dtet_nearest_common_ancestor (t1, t2, c);
 }
 
 static void
