@@ -82,7 +82,7 @@ static void
 t8_default_tet_set_linear_id (t8_element_t * elem, int level, uint64_t id)
 {
   T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < 1 << T8_DTET_CHILDREN * level);
+  T8_ASSERT (0 <= id && id < 1 << 3 * level);
 
   t8_dtet_init_linear_id ((t8_default_tet_t *) elem, id, level);
 }
