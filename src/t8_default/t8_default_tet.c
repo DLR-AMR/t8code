@@ -78,6 +78,25 @@ t8_default_tet_nca (const t8_element_t * elem1,
     t8_dtet_nearest_common_ancestor(t1,t2,c);
 }
 
+static void
+t8_default_tet_set_linear_id (t8_element_t * elem, int level, uint64_t id)
+{
+  T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
+  T8_ASSERT (0 <= id && id < 1 << T8_DTET_CHILDREN * level);
+
+  t8_dtet_init_linear_id ((t8_default_tet_t *) elem, id, level);
+}
+
+static void
+t8_default_tet_successor (const t8_element_t * elem1,
+                          t8_element_t * elem2, int level)
+{
+  T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
+
+  t8_dtet_successor ((const t8_default_tet_t *) elem1,
+                     (t8_default_tet_t *) elem2, level);
+}
+
 t8_eclass_scheme_t *
 t8_default_scheme_new_tet (void)
 {
@@ -93,6 +112,8 @@ t8_default_scheme_new_tet (void)
   ts->elem_sibling = t8_default_tet_sibling;
   ts->elem_child = t8_default_tet_child;
   ts->elem_nca = t8_default_tet_nca;
+  ts->elem_set_linear_id = t8_default_tet_set_linear_id;
+  ts->elem_successor = t8_default_tet_successor;
 
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;
