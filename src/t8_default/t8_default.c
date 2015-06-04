@@ -25,6 +25,7 @@
 
 #include "t8_default_quad.h"
 #include "t8_default_hex.h"
+#include "t8_default_tri.h"
 #include "t8_default_tet.h"
 
 t8_scheme_t        *
@@ -37,6 +38,7 @@ t8_scheme_new_default (void)
 
   s->eclass_schemes[T8_ECLASS_QUAD] = t8_default_scheme_new_quad ();
   s->eclass_schemes[T8_ECLASS_HEX] = t8_default_scheme_new_hex ();
+  s->eclass_schemes[T8_ECLASS_TRIANGLE] = t8_default_scheme_new_tri ();
   s->eclass_schemes[T8_ECLASS_TET] = t8_default_scheme_new_tet ();
 
   return s;
