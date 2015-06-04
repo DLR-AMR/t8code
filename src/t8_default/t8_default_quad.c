@@ -133,7 +133,7 @@ static void
 t8_default_quad_set_linear_id (t8_element_t * elem, int level, uint64_t id)
 {
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
-  T8_ASSERT (0 <= id && id < (uint64_t) 1 << P4EST_CHILDREN * level);
+  T8_ASSERT (0 <= id && id < (uint64_t) 1 << P4EST_DIM * level);
 
   p4est_quadrant_set_morton ((p4est_quadrant_t *) elem, level, id);
 }
@@ -146,7 +146,7 @@ t8_default_quad_successor (const t8_element_t * elem1,
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
 
   id = p4est_quadrant_linear_id ((const p4est_quadrant_t *) elem1, level);
-  T8_ASSERT (id + 1 < (1 << P4EST_CHILDREN * level));
+  T8_ASSERT (id + 1 < (1 << P4EST_DIM * level));
   p4est_quadrant_set_morton ((p4est_quadrant_t *) elem2, level, id + 1);
 }
 
