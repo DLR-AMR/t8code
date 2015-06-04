@@ -118,3 +118,23 @@ t8_geometry_reset (t8_geometry_t * pgeom)
     pgeom = NULL;
   }
 }
+
+static void
+t8_geometry_identity_X (t8_geometry_t geom, t8_topidx_t which_tree,
+                        const double abc[3], double xyz[3])
+{
+  xyz[0] = abc[0];
+  xyz[1] = abc[1];
+  xyz[2] = abc[2];
+}
+
+t8_geometry_t
+t8_geometry_new_identity (void)
+{
+  t8_geometry_t       geom;
+
+  t8_geometry_init (&geom);
+  t8_geometry_set_name (geom, "Identity");
+  t8_geometry_set_transformation (geom, t8_geometry_identity_X);
+  return geom;
+}

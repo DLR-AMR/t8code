@@ -75,6 +75,12 @@ void                t8_geometry_unref (t8_geometry_t * pgeom);
 
 void                t8_geometry_reset (t8_geometry_t * pgeom);
 
+/** Create a geometry that maps the unit square to itself via the identity mapping.
+ * This function exists to provide the minimal example of a t8_geometry_t.
+ * It should not be used for coarse meshes with more than one tree.
+ */
+t8_geometry_t       t8_geometry_new_identity (void);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_GEOMETRY_H! */
