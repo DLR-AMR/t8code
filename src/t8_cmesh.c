@@ -257,7 +257,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     }
     if (*last_local_tree > 0) {
       *child_in_tree_end =
-        last_global_child - (*last_local_tree - 1) * children_per_tree;
+        last_global_child - *last_local_tree * children_per_tree;
     }
     else {
       *child_in_tree_end = last_global_child;
