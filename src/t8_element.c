@@ -39,7 +39,7 @@ t8_scheme_destroy (t8_scheme_t * s)
 }
 
 void
-t8_scheme_ref (t8_scheme_t *scheme)
+t8_scheme_ref (t8_scheme_t * scheme)
 {
   T8_ASSERT (scheme != NULL);
 
@@ -47,15 +47,15 @@ t8_scheme_ref (t8_scheme_t *scheme)
 }
 
 void
-t8_scheme_unref (t8_scheme_t **pscheme)
+t8_scheme_unref (t8_scheme_t ** pscheme)
 {
-  t8_scheme_t       *scheme;
+  t8_scheme_t        *scheme;
 
   T8_ASSERT (pscheme != NULL);
   scheme = *pscheme;
   T8_ASSERT (scheme != NULL);
 
-  if (sc_refcount_unref (&scheme->rc)){
+  if (sc_refcount_unref (&scheme->rc)) {
     t8_scheme_destroy (scheme);
     *pscheme = NULL;
   }
@@ -204,6 +204,24 @@ t8_element_boundary (t8_eclass_scheme_t * ts,
 {
   T8_ASSERT (ts != NULL && ts->elem_boundary != NULL);
   ts->elem_boundary (elem, min_dim, length, boundary);
+}
+
+void
+t8_element_set_linear_id (t8_eclass_scheme_t * ts,
+                          t8_element_t * elem, int level, uint64_t id)
+{
+  T8_ASSERT (ts != NULL && ts->elem_set_linear_id != NULL);
+
+  ts->elem_set_linear_id (elem, level, id);
+}
+
+void
+t8_element_successor (t8_eclass_scheme_t * ts, const t8_element_t * elem1,
+                      t8_element_t * elem2, int level)
+{
+  T8_ASSERT (ts != NULL && ts->elem_successor != NULL);
+
+  ts->elem_successor (elem1, elem2, level);
 }
 
 void

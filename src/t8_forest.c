@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <sc_refcount.h>
+#include <t8_refcount.h>
 #include <t8_forest.h>
 
 typedef enum t8_forest_from
@@ -36,7 +36,7 @@ t8_forest_from_t;
 /** This structure is private to the implementation. */
 typedef struct t8_forest
 {
-  sc_refcount_t       rc;               /**< Reference counter. */
+  t8_refcount_t       rc;               /**< Reference counter. */
 
   int                 set_level;        /**< Level to use in new construction. */
   int                 set_for_coarsening;       /**< Change partition to allow
@@ -53,9 +53,37 @@ typedef struct t8_forest
 
   int                 committed;        /**< \ref t8_forest_commit called? */
   int                 mpisize;          /**< Number of MPI processes. */
-  int                 mpirank;          /**< Numbor of this MPI process. */
+  int                 mpirank;          /**< Number of this MPI process. */
+
+  t8_topidx_t         first_local_tree;
+  t8_topidx_t         last_local_tree;
+  sc_array_t         *trees;
 }
 t8_forest_struct_t;
+
+/** The t8 tree datatype */
+typedef struct t8_tree
+{
+  sc_array_t          elements;              /**< locally stored elements */
+  t8_eclass_t         eclass;                /**< The element class of this tree */
+  /* TODO: We will need the *_desc variables later for shure. */
+#if 0
+  t8_element_t        first_desc,            /**< first local descendant */
+                      last_desc;             /**< last local descendant */
+#endif
+  t8_locidx_t         quadrants_offset;      /**< cumulative sum over earlier
+                                                  trees on this processor
+                                                  (locals only) */
+  /* TODO: Do we need elements per level?
+   *       Then we definitely need a global MAXLEVEL
+   */
+#if 0
+  t8_locidx_t         elements_per_level[T8_MAXLEVEL + 1];
+                                             /**< locals only */
+#endif
+  int8_t              maxlevel;              /**< highest local element level */
+}
+t8_tree_t;
 
 void
 t8_forest_init (t8_forest_t * pforest)
@@ -65,7 +93,7 @@ t8_forest_init (t8_forest_t * pforest)
   T8_ASSERT (pforest != NULL);
 
   forest = *pforest = T8_ALLOC_ZERO (t8_forest_struct_t, 1);
-  sc_refcount_init (&forest->rc);
+  t8_refcount_init (&forest->rc);
 
   /* sensible (hard error) defaults */
   forest->mpicomm = sc_MPI_COMM_NULL;
@@ -76,14 +104,14 @@ t8_forest_init (t8_forest_t * pforest)
   forest->mpirank = -1;
 }
 
-void
+static void
 t8_forest_set_mpicomm (t8_forest_t forest, sc_MPI_Comm mpicomm, int do_dup)
 {
   T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->set_from == NULL);
-  /* TODO: check positive reference count in all functions */
 
   T8_ASSERT (mpicomm != sc_MPI_COMM_NULL);
 
@@ -94,7 +122,10 @@ t8_forest_set_mpicomm (t8_forest_t forest, sc_MPI_Comm mpicomm, int do_dup)
 void
 t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh)
 {
+  sc_MPI_Comm         mpicomm;
+  int                 do_dup;
   T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->cmesh == NULL);
   T8_ASSERT (forest->set_from == NULL);
@@ -102,12 +133,15 @@ t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh)
   T8_ASSERT (cmesh != NULL);
 
   forest->cmesh = cmesh;
+  mpicomm = t8_cmesh_get_mpicomm (cmesh, &do_dup);
+  t8_forest_set_mpicomm (forest, mpicomm, do_dup);
 }
 
 void
 t8_forest_set_scheme (t8_forest_t forest, t8_scheme_t * scheme)
 {
   T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->scheme == NULL);
   T8_ASSERT (forest->set_from == NULL);
@@ -121,6 +155,7 @@ void
 t8_forest_set_level (t8_forest_t forest, int level)
 {
   T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
 
   T8_ASSERT (0 <= level);
@@ -132,6 +167,7 @@ void
 t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
 {
   T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
@@ -148,6 +184,7 @@ void
 t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from)
 {
   T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
@@ -165,6 +202,7 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
                          int set_for_coarsening)
 {
   T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
@@ -179,6 +217,86 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
   forest->from_method = T8_FOREST_FROM_PARTITION;
 }
 
+/* Return a pointer to an array element indexed by a t8_topidx_t.
+ * \param [in] index needs to be in [0]..[elem_count-1].
+ */
+static void        *
+t8_sc_array_index_topidx (sc_array_t * array, t8_topidx_t it)
+{
+  P4EST_ASSERT (it >= 0 && (size_t) it < array->elem_count);
+
+  return array->array + array->elem_size * (size_t) it;
+}
+
+static void
+t8_forest_populate (t8_forest_t forest)
+{
+  t8_gloidx_t         child_in_tree_begin;
+  t8_gloidx_t         child_in_tree_end;
+  t8_gloidx_t         count_children;
+  t8_gloidx_t         num_tree_elements;
+  t8_topidx_t         num_local_trees;
+  t8_topidx_t         jt;
+  t8_gloidx_t         start, end, et;
+  t8_tree_t          *tree;
+  t8_element_t       *element, *element_succ;
+  sc_array_t         *telements;
+  t8_eclass_t         tree_class;
+  t8_eclass_scheme_t *eclass_scheme;
+
+  /* TODO: create trees and quadrants according to uniform refinement */
+  t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level,
+                           &forest->first_local_tree, &child_in_tree_begin,
+                           &forest->last_local_tree, &child_in_tree_end);
+
+  /* TODO: create only the non-empty tree objects */
+  if (forest->first_local_tree >= forest->last_local_tree
+      && child_in_tree_begin >= child_in_tree_end) {
+    /* This processor is empty
+     * we still set the tree array to store 0 as the number of trees here */
+    forest->trees = sc_array_new (sizeof (t8_tree_t));
+    return;
+  }
+
+  /* TODO: for each tree, allocate elements */
+  num_local_trees = forest->last_local_tree - forest->first_local_tree + 1;
+  forest->trees = sc_array_new (sizeof (t8_tree_t));
+  sc_array_resize (forest->trees, num_local_trees);
+  for (jt = forest->first_local_tree, count_children = 0;
+       jt <= forest->last_local_tree; jt++) {
+    tree =
+      (t8_tree_t *) t8_sc_array_index_topidx (forest->trees,
+                                              jt - forest->first_local_tree);
+    tree_class = tree->eclass = t8_cmesh_get_tree_class (forest->cmesh, jt);
+    tree->maxlevel = forest->set_level;
+    eclass_scheme = forest->scheme->eclass_schemes[tree_class];
+    T8_ASSERT (eclass_scheme != NULL);
+    telements = &tree->elements;
+    /* calculate first and last element on this tree */
+    start = (jt == forest->first_local_tree) ? child_in_tree_begin : 0;
+    end = (jt == forest->last_local_tree) ? child_in_tree_end :
+      t8_eclass_count_leaf (tree_class, forest->set_level);
+    num_tree_elements = end - start;
+    T8_ASSERT (num_tree_elements > 0);
+    /* Allocate elements for this processor. */
+    sc_array_init_size (telements, t8_element_size (eclass_scheme),
+                        num_tree_elements);
+    element = (t8_element_t *) t8_sc_array_index_topidx (telements, 0);
+    eclass_scheme->elem_set_linear_id (element, forest->set_level, start);
+    count_children++;
+    for (et = start + 1; et < end; et++, count_children++) {
+      element_succ =
+        (t8_element_t *) t8_sc_array_index_topidx (telements, et - start);
+      eclass_scheme->elem_successor (element, element_succ,
+                                     forest->set_level);
+      /* TODO: process elements here */
+      element = element_succ;
+    }
+  }
+
+  /* TODO: figure out global_first_position, global_first_quadrant without comm */
+}
+
 void
 t8_forest_commit (t8_forest_t forest)
 {
@@ -186,6 +304,7 @@ t8_forest_commit (t8_forest_t forest)
   sc_MPI_Comm         comm_dup;
 
   T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
 
   if (forest->set_from == NULL) {
@@ -200,6 +319,9 @@ t8_forest_commit (t8_forest_t forest)
       SC_CHECK_MPI (mpiret);
       forest->mpicomm = comm_dup;
     }
+
+    /* populate a new forest with tree and quadrant objects */
+    t8_forest_populate (forest);
   }
   else {
     T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
@@ -251,7 +373,25 @@ void
 t8_forest_write_vtk (t8_forest_t forest, const char *filename)
 {
   T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
+}
+
+static void
+t8_forest_free_trees (t8_forest_t forest)
+{
+  t8_tree_t          *tree;
+  t8_topidx_t         jt, number_of_trees;
+
+  T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->committed);
+
+  number_of_trees = forest->trees->elem_count;
+  for (jt = 0; jt < number_of_trees; jt++) {
+    tree = (t8_tree_t *) t8_sc_array_index_topidx (forest->trees, jt);
+    sc_array_reset (&tree->elements);
+  }
+  sc_array_destroy (forest->trees);
 }
 
 static void
@@ -275,15 +415,18 @@ t8_forest_reset (t8_forest_t * pforest)
     T8_ASSERT (forest->set_from == NULL);
   }
 
+  /* undup communicator if necessary */
+  if (forest->committed) {
+    if (forest->do_dup) {
+      mpiret = sc_MPI_Comm_free (&forest->mpicomm);
+      SC_CHECK_MPI (mpiret);
+    }
+    t8_forest_free_trees (forest);
+  }
+
   /* we have taken ownership on calling t8_forest_set_* */
   t8_scheme_unref (&forest->scheme);
   t8_cmesh_unref (&forest->cmesh);
-
-  /* undup communicator if necessary */
-  if (forest->do_dup && forest->committed) {
-    mpiret = sc_MPI_Comm_free (&forest->mpicomm);
-    SC_CHECK_MPI (mpiret);
-  }
 
   T8_FREE (forest);
   *pforest = NULL;
@@ -293,8 +436,7 @@ void
 t8_forest_ref (t8_forest_t forest)
 {
   T8_ASSERT (forest != NULL);
-
-  sc_refcount_ref (&forest->rc);
+  t8_refcount_ref (&forest->rc);
 }
 
 void
@@ -304,9 +446,10 @@ t8_forest_unref (t8_forest_t * pforest)
 
   T8_ASSERT (pforest != NULL);
   forest = *pforest;
+  T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest != NULL);
 
-  if (sc_refcount_unref (&forest->rc)) {
+  if (t8_refcount_unref (&forest->rc)) {
     t8_forest_reset (pforest);
   }
 }

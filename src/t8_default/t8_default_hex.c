@@ -87,6 +87,27 @@ t8_default_hex_children (const t8_element_t * elem,
                              (p8est_quadrant_t **) c);
 }
 
+static void
+t8_default_hex_set_linear_id (t8_element_t * elem, int level, uint64_t id)
+{
+  T8_ASSERT (0 <= level && level <= P8EST_QMAXLEVEL);
+  T8_ASSERT (0 <= id && id < (uint64_t) 1 << P8EST_CHILDREN * level);
+
+  p8est_quadrant_set_morton ((p8est_quadrant_t *) elem, level, id);
+}
+
+static void
+t8_default_hex_successor (const t8_element_t * elem1,
+                          t8_element_t * elem2, int level)
+{
+  uint64_t            id;
+  T8_ASSERT (0 <= level && level <= P8EST_QMAXLEVEL);
+
+  id = p8est_quadrant_linear_id ((const p8est_quadrant_t *) elem1, level);
+  T8_ASSERT (id + 1 < (1 << P8EST_CHILDREN * level));
+  p8est_quadrant_set_morton ((p8est_quadrant_t *) elem2, level, id + 1);
+}
+
 t8_eclass_scheme_t *
 t8_default_scheme_new_hex (void)
 {
@@ -106,6 +127,8 @@ t8_default_scheme_new_hex (void)
   ts->elem_children = t8_default_hex_children;
   ts->elem_nca = (t8_element_nca_t) p8est_nearest_common_ancestor;
   ts->elem_boundary = NULL;
+  ts->elem_set_linear_id = t8_default_hex_set_linear_id;
+  ts->elem_successor = t8_default_hex_successor;
 
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;

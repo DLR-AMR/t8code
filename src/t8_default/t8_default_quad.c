@@ -130,6 +130,27 @@ t8_default_quad_children (const t8_element_t * elem,
 }
 
 static void
+t8_default_quad_set_linear_id (t8_element_t * elem, int level, uint64_t id)
+{
+  T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
+  T8_ASSERT (0 <= id && id < (uint64_t) 1 << P4EST_CHILDREN * level);
+
+  p4est_quadrant_set_morton ((p4est_quadrant_t *) elem, level, id);
+}
+
+static void
+t8_default_quad_successor (const t8_element_t * elem1,
+                           t8_element_t * elem2, int level)
+{
+  uint64_t            id;
+  T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
+
+  id = p4est_quadrant_linear_id ((const p4est_quadrant_t *) elem1, level);
+  T8_ASSERT (id + 1 < (1 << P4EST_CHILDREN * level));
+  p4est_quadrant_set_morton ((p4est_quadrant_t *) elem2, level, id + 1);
+}
+
+static void
 t8_default_quad_nca (const t8_element_t * elem1, const t8_element_t * elem2,
                      t8_element_t * nca)
 {
@@ -177,6 +198,8 @@ t8_default_scheme_new_quad (void)
   ts->elem_children = t8_default_quad_children;
   ts->elem_nca = t8_default_quad_nca;
   ts->elem_boundary = t8_default_quad_boundary;
+  ts->elem_set_linear_id = t8_default_quad_set_linear_id;
+  ts->elem_successor = t8_default_quad_successor;
 
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;

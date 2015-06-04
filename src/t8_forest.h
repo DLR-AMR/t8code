@@ -50,19 +50,6 @@ T8_EXTERN_C_BEGIN ();
  */
 void                t8_forest_init (t8_forest_t * pforest);
 
-/** Set MPI communicator to use in commiting a new forest.
- * This call is only valid when the forest is not created by a copy, adaptation,
- * or partition of an existing forest.
- * \param [in,out] forest       The forest whose communicator will be set.
- * \param [in] mpicomm          This MPI communicator must be valid.
- * \param [in] do_dup           If true, the communicator will be duped in
- *                              this creation and whenever another forest is
- *                              derived from it in the future.
- *                              If false, no duping takes place at all.
- */
-void                t8_forest_set_mpicomm (t8_forest_t forest,
-                                           sc_MPI_Comm mpicomm, int do_dup);
-
 /** Set the cmesh associated to a forest.
  * By default, the forest takes ownership of the cmesh such that it will be
  * destroyed when the forest is destroyed.  To keep ownership of the cmesh,

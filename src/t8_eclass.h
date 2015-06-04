@@ -93,6 +93,14 @@ extern const int    t8_eclass_boundary_count[T8_ECLASS_LAST][T8_ECLASS_LAST];
 int                 t8_eclass_count_boundary (t8_eclass_t theclass,
                                               int min_dim, int *per_eclass);
 
+/** Compute the number of leafs in a uniform refinement of one tree at given level.
+ * \param [in] theclass         We consider this element type.
+ * \param [in] level            The refinement level to be considered.
+ * \return                      The number of leafs in a uniform refinement
+ *                              of the given level.
+ */
+t8_gloidx_t         t8_eclass_count_leaf (t8_eclass_t theclass, int level);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_ELEMENT_H */
