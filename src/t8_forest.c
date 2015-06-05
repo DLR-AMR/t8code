@@ -184,6 +184,7 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
   T8_ASSERT (forest->scheme == NULL);
+  T8_ASSERT (forest->geom == NULL);
   T8_ASSERT (forest->set_from == NULL);
 
   T8_ASSERT (set_from != NULL);
@@ -371,6 +372,7 @@ t8_forest_commit (t8_forest_t forest)
     T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
     T8_ASSERT (forest->cmesh == NULL);
     T8_ASSERT (forest->scheme == NULL);
+    T8_ASSERT (forest->geom == NULL);
     T8_ASSERT (!forest->do_dup);
     T8_ASSERT (forest->from_method >= T8_FOREST_FROM_FIRST &&
                forest->from_method < T8_FOREST_FROM_LAST);
@@ -387,9 +389,12 @@ t8_forest_commit (t8_forest_t forest)
     }
     forest->do_dup = forest->set_from->do_dup;
 
-    /* increase reference count of cmesh and scheme from the input forest */
+    /* increase reference count of cmesh, scheme and geom from the input forest */
     t8_cmesh_ref (forest->cmesh = forest->set_from->cmesh);
     t8_scheme_ref (forest->scheme = forest->set_from->scheme);
+    if (forest->set_from->geom != NULL) {
+      t8_geometry_ref (forest->geom = forest->set_from->geom);
+    }
     forest->dimension = forest->set_from->dimension;
 
     /* TODO: call adapt and partition subfunctions here */
