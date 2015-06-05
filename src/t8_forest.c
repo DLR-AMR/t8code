@@ -165,7 +165,8 @@ t8_forest_set_level (t8_forest_t forest, int level)
   forest->set_level = level;
 }
 
-void t8_forest_set_geom(t8_forest_t forest, t8_geometry_t geom)
+void
+t8_forest_set_geom (t8_forest_t forest, t8_geometry_t geom)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
