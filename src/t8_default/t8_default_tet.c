@@ -38,6 +38,12 @@ t8_default_tet_maxlevel (void)
   return T8_DTET_MAXLEVEL;
 }
 
+static int
+t8_default_tet_level (const t8_element_t * elem)
+{
+  return t8_dtet_get_level ((t8_dtet_t *) elem);
+}
+
 static void
 t8_default_tet_parent (const t8_element_t * elem, t8_element_t * parent)
 {
@@ -108,6 +114,7 @@ t8_default_scheme_new_tet (void)
   ts->elem_size = t8_default_tet_size;
   ts->elem_maxlevel = t8_default_tet_maxlevel;
 
+  ts->elem_level = t8_default_tet_level;
   ts->elem_parent = t8_default_tet_parent;
   ts->elem_sibling = t8_default_tet_sibling;
   ts->elem_child = t8_default_tet_child;

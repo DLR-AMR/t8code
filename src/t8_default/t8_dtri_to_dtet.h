@@ -80,6 +80,7 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_predecessor t8_dtet_predecessor
 #define t8_dtri_ancestor_id t8_dtet_ancestor_id
 #define t8_dtri_child_id  t8_dtet_child_id
+#define t8_dtri_get_level t8_dtet_get_level
 
 T8_EXTERN_C_END ();
 

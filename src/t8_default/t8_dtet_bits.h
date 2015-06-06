@@ -205,6 +205,12 @@ int                 t8_dtet_ancestor_id (const t8_dtet_t * t, int level);
  */
 int                 t8_dtet_child_id (const t8_dtet_t * t);
 
+/** Return the level of a tetrahedron.
+ * \param [in] t  tetrahedron to be considered.
+ * \return        The level of \a t.
+ */
+int                 t8_dtet_get_level (const t8_dtet_t * t);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DTET_BITS_H */

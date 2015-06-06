@@ -38,6 +38,12 @@ t8_default_tri_maxlevel (void)
   return T8_DTRI_MAXLEVEL;
 }
 
+static int
+t8_default_tri_level (const t8_element_t * elem)
+{
+  return t8_dtri_get_level ((t8_dtri_t *) elem);
+}
+
 static void
 t8_default_tri_parent (const t8_element_t * elem, t8_element_t * parent)
 {
@@ -108,6 +114,7 @@ t8_default_scheme_new_tri (void)
   ts->elem_size = t8_default_tri_size;
   ts->elem_maxlevel = t8_default_tri_maxlevel;
 
+  ts->elem_level = t8_default_tri_level;
   ts->elem_parent = t8_default_tri_parent;
   ts->elem_sibling = t8_default_tri_sibling;
   ts->elem_child = t8_default_tri_child;

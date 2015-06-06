@@ -201,6 +201,12 @@ int                 t8_dtri_ancestor_id (const t8_dtri_t * t, int level);
  */
 int                 t8_dtri_child_id (const t8_dtri_t * t);
 
+/** Return the level of a triangle.
+ * \param [in] t  triangle to be considered.
+ * \return        The level of \a t.
+ */
+int                 t8_dtri_get_level (const t8_dtri_t * t);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DTRI_BITS_H */
