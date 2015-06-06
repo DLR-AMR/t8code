@@ -673,7 +673,7 @@ t8_dtri_succ_pred_recursion (const t8_dtri_t * t, t8_dtri_t * s, int level,
   }
   cid = compute_cubeid (t, level);
   type_level = compute_type (t, level);
-  local_index = t8_dtri_type_cid_to_Iloc [type_level][cid];
+  local_index = t8_dtri_type_cid_to_Iloc[type_level][cid];
   local_index =
     (local_index + T8_DTRI_CHILDREN + increment) % T8_DTRI_CHILDREN;
   if (local_index == 0) {
@@ -728,13 +728,13 @@ t8_dtri_ancestor_id (const t8_dtri_t * t, int level)
 
   cid = compute_cubeid (t, level);
   type = compute_type (t, level);
-  return t8_dtri_type_cid_to_Iloc [type][cid];
+  return t8_dtri_type_cid_to_Iloc[type][cid];
 }
 
 int
 t8_dtri_child_id (const t8_dtri_t * t)
 {
-  return t8_dtri_type_cid_to_Iloc [t->type][compute_cubeid (t, t->level)];
+  return t8_dtri_type_cid_to_Iloc[t->type][compute_cubeid (t, t->level)];
 }
 
 int
