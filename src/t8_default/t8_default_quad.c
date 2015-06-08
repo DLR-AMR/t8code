@@ -69,8 +69,10 @@ t8_default_quad_copy_surround (const p4est_quadrant_t * q,
                                p4est_quadrant_t * r)
 {
   T8_QUAD_SET_TDIM (r, T8_QUAD_GET_TDIM (q));
-  T8_QUAD_SET_TNORMAL (r, T8_QUAD_GET_TNORMAL (q));
-  T8_QUAD_SET_TCOORD (r, T8_QUAD_GET_TCOORD (q));
+  if (T8_QUAD_GET_TDIM (q) == 3) {
+    T8_QUAD_SET_TNORMAL (r, T8_QUAD_GET_TNORMAL (q));
+    T8_QUAD_SET_TCOORD (r, T8_QUAD_GET_TCOORD (q));
+  }
 }
 
 static void
@@ -146,6 +148,7 @@ t8_default_quad_set_linear_id (t8_element_t * elem, int level, uint64_t id)
   T8_ASSERT (0 <= id && id < (uint64_t) 1 << P4EST_DIM * level);
 
   p4est_quadrant_set_morton ((p4est_quadrant_t *) elem, level, id);
+  T8_QUAD_SET_TDIM ((p4est_quadrant_t *) elem, 2);
 }
 
 static void
@@ -158,6 +161,8 @@ t8_default_quad_successor (const t8_element_t * elem1,
   id = p4est_quadrant_linear_id ((const p4est_quadrant_t *) elem1, level);
   T8_ASSERT (id + 1 < (1 << P4EST_DIM * level));
   p4est_quadrant_set_morton ((p4est_quadrant_t *) elem2, level, id + 1);
+  t8_default_quad_copy_surround ((const p4est_quadrant_t *) elem1,
+                                 (p4est_quadrant_t *) elem2);
 }
 
 static void
