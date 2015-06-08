@@ -74,6 +74,16 @@ t8_default_quad_copy_surround (const p4est_quadrant_t * q,
 }
 
 static void
+t8_default_quad_copy (const t8_element_t * source, t8_element_t * dest)
+{
+  const p4est_quadrant_t *q = (const p4est_quadrant_t *) source;
+  p4est_quadrant_t   *r = (p4est_quadrant_t *) dest;
+
+  *r = *q;
+  t8_default_quad_copy_surround (q, r);
+}
+
+static void
 t8_default_quad_parent (const t8_element_t * elem, t8_element_t * parent)
 {
   const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
@@ -192,6 +202,7 @@ t8_default_scheme_new_quad (void)
   ts->elem_child_eclass = t8_default_quad_child_eclass;
 
   ts->elem_level = t8_default_quad_level;
+  ts->elem_copy = t8_default_quad_copy;
   ts->elem_parent = t8_default_quad_parent;
   ts->elem_sibling = t8_default_quad_sibling;
   ts->elem_child = t8_default_quad_child;

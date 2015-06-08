@@ -150,6 +150,12 @@ t8_element_level (t8_eclass_scheme_t * ts, const t8_element_t * elem)
   return ts->elem_level (elem);
 }
 
+void t8_element_copy(t8_eclass_scheme_t *ts, const t8_element_t *source, t8_element_t *dest)
+{
+  T8_ASSERT (ts != NULL && ts->elem_copy != NULL);
+  ts->elem_copy (source, dest);
+}
+
 void
 t8_element_parent (t8_eclass_scheme_t * ts,
                    const t8_element_t * elem, t8_element_t * parent)

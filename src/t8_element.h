@@ -61,6 +61,10 @@ typedef t8_eclass_t (*t8_element_child_eclass_t) (int childid);
 /** Return the refinement level of an element. */
 typedef int         (*t8_element_level_t) (const t8_element_t * elem);
 
+/** Copy one element to another */
+typedef void        (*t8_element_copy_t) (const t8_element_t * source,
+                                          t8_element_t * dest);
+
 /** Construct the parent of a given element. */
 typedef void        (*t8_element_parent_t) (const t8_element_t * elem,
                                             t8_element_t * parent);
@@ -121,6 +125,7 @@ struct t8_eclass_scheme
 
   /* these element routines take one or more elements as input */
   t8_element_level_t  elem_level;       /**< Compute the refinement level of an element. */
+  t8_element_copy_t   elem_copy;        /**< Copy the entries of one element to another */
   t8_element_parent_t elem_parent;      /**< Compute the parent element. */
   t8_element_sibling_t elem_sibling;    /**< Compute a given sibling element. */
   t8_element_child_t  elem_child;       /**< Compute a child element. */
@@ -216,6 +221,10 @@ t8_eclass_t         t8_element_child_eclass (t8_eclass_scheme_t * ts,
 
 int                 t8_element_level (t8_eclass_scheme_t * ts,
                                       const t8_element_t * elem);
+void                t8_element_copy (t8_eclass_scheme_t * ts,
+                                     const t8_element_t * source,
+                                     t8_element_t * dest);
+
 void                t8_element_parent (t8_eclass_scheme_t * ts,
                                        const t8_element_t * elem,
                                        t8_element_t * parent);

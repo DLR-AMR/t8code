@@ -51,6 +51,12 @@ t8_default_hex_level (const t8_element_t * elem)
 }
 
 static void
+t8_default_hex_copy (const t8_element_t * source, t8_element_t * dest)
+{
+  *(p8est_quadrant_t *) dest = *(const p8est_quadrant_t *) source;
+}
+
+static void
 t8_default_hex_sibling (const t8_element_t * elem,
                         int sibid, t8_element_t * sibling)
 {
@@ -121,6 +127,7 @@ t8_default_scheme_new_hex (void)
   ts->elem_child_eclass = t8_default_hex_child_eclass;
 
   ts->elem_level = t8_default_hex_level;
+  ts->elem_copy = t8_default_hex_copy;
   ts->elem_parent = (t8_element_parent_t) p8est_quadrant_parent;
   ts->elem_sibling = t8_default_hex_sibling;
   ts->elem_child = t8_default_hex_child;
