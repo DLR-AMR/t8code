@@ -75,6 +75,36 @@ t8_eclass_count_boundary (t8_eclass_t theclass, int min_dim, int *per_eclass)
   return sum;
 }
 
+static              t8_gloidx_t
+t8_eclass_count_pyramid (int level)
+{
+  /* We like to compute the number of leaves in a uniformly refined pyramid.
+   * If T_l is this number at level l, we make use of the recursion:
+   * T_{l + 2^i} =
+   *   6^{2^i} T_l +
+   *   4 ( \Prod_{j = 0}^{i - 1} (6^{2^j} + 8^{2^j}) ) 8^l
+   */
+
+  t8_gloidx_t         Tl = 1;
+  t8_gloidx_t         sixpow2i = 6, eightpow2i = 8;
+  t8_gloidx_t         prodsumpow = 1, eightpowl = 1;
+
+  T8_ASSERT (level >= 0);
+
+  while (level > 0) {
+    if (level & 1) {
+      Tl = sixpow2i * Tl + 4 * prodsumpow * eightpowl;
+      eightpowl *= eightpow2i;
+    }
+    prodsumpow *= (sixpow2i + eightpow2i);
+    sixpow2i *= sixpow2i;
+    eightpow2i *= eightpow2i;
+    level >>= 1;
+  }
+
+  return Tl;
+}
+
 t8_gloidx_t
 t8_eclass_count_leaf (t8_eclass_t theclass, int level)
 {
