@@ -233,17 +233,6 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
   forest->from_method = T8_FOREST_FROM_PARTITION;
 }
 
-/* Return a pointer to an array element indexed by a t8_topidx_t.
- * \param [in] index needs to be in [0]..[elem_count-1].
- */
-static void        *
-t8_sc_array_index_topidx (sc_array_t * array, t8_topidx_t it)
-{
-  P4EST_ASSERT (it >= 0 && (size_t) it < array->elem_count);
-
-  return array->array + array->elem_size * (size_t) it;
-}
-
 static void
 t8_forest_populate (t8_forest_t forest)
 {
