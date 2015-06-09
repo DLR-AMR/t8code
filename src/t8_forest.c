@@ -205,9 +205,9 @@ t8_forest_populate (t8_forest_t forest)
     sc_array_resize (forest->trees, num_local_trees);
     for (jt = forest->first_local_tree, count_elements = 0;
          jt <= forest->last_local_tree; jt++) {
-      tree =
-        (t8_tree_t *) t8_sc_array_index_topidx (forest->trees,
-                                                jt - forest->first_local_tree);
+      tree = (t8_tree_t) t8_sc_array_index_topidx (forest->trees,
+                                                   jt -
+                                                   forest->first_local_tree);
       tree_class = tree->eclass = t8_cmesh_get_tree_class (forest->cmesh, jt);
       tree->maxlevel = forest->set_level;
       tree->elements_offset = count_elements;

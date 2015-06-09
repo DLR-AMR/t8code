@@ -35,7 +35,7 @@
 
 /** Opaque pointer to a forest implementation. */
 typedef struct t8_forest *t8_forest_t;
-typedef struct t8_tree   *t8_tree_t;
+typedef struct t8_tree *t8_tree_t;
 
 T8_EXTERN_C_BEGIN ();
 
@@ -80,7 +80,8 @@ void                t8_forest_set_scheme (t8_forest_t forest,
 
 void                t8_forest_set_level (t8_forest_t forest, int level);
 
-void                t8_forest_set_geom (t8_forest_t forest, t8_geometry_t geom);
+void                t8_forest_set_geom (t8_forest_t forest,
+                                        t8_geometry_t geom);
 
 /** Set a forest as source for copying on commiting.
  * By default, the forest takes ownership of the source \b from such that it will
