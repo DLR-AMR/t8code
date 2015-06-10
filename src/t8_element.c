@@ -205,7 +205,7 @@ t8_element_child_id (t8_eclass_scheme_t * ts, const t8_element_t * elem)
 }
 
 int
-t8_element_is_family (t8_eclass_scheme_t * ts, const t8_element_t ** fam)
+t8_element_is_family (t8_eclass_scheme_t * ts, t8_element_t **fam)
 {
   T8_ASSERT (ts != NULL && ts->elem_is_family != NULL);
 

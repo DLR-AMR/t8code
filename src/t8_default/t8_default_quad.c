@@ -148,7 +148,7 @@ t8_default_quad_child_id (const t8_element_t * elem)
 }
 
 static int
-t8_default_quad_is_family (const t8_element_t ** fam)
+t8_default_quad_is_family (t8_element_t ** fam)
 {
   return p4est_quadrant_is_familypv ((p4est_quadrant_t **) fam);
 }

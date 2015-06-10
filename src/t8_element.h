@@ -86,7 +86,7 @@ typedef void        (*t8_element_children_t) (const t8_element_t * elem,
 typedef int         (*t8_element_child_id_t) (const t8_element_t * elem);
 
 /** Return nonzero if collection of elements is a family */
-typedef int         (*t8_element_is_family_t) (const t8_element_t ** fam);
+typedef int         (*t8_element_is_family_t) (t8_element_t ** fam);
 
 /** Construct the nearest common ancestor of two elements in the same tree. */
 typedef void        (*t8_element_nca_t) (const t8_element_t * elem1,
@@ -275,7 +275,7 @@ int                 t8_element_child_id (t8_eclass_scheme_t * ts,
                                          const t8_element_t * elem);
 
 int                 t8_element_is_family (t8_eclass_scheme_t * ts,
-                                          const t8_element_t ** fam);
+                                          t8_element_t ** fam);
 
 void                t8_element_nca (t8_eclass_scheme_t * ts,
                                     const t8_element_t * elem1,
