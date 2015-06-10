@@ -45,6 +45,12 @@ t8_default_tet_level (const t8_element_t * elem)
 }
 
 static void
+t8_default_tet_copy (const t8_element_t * source, t8_element_t * dest)
+{
+  t8_dtet_copy ((const t8_dtet_t *) source, (t8_dtet_t *) dest);
+}
+
+static void
 t8_default_tet_parent (const t8_element_t * elem, t8_element_t * parent)
 {
   const t8_default_tet_t *t = (const t8_default_tet_t *) elem;
@@ -72,6 +78,29 @@ t8_default_tet_child (const t8_element_t * elem,
 
   t8_dtet_child (t, childid, c);
 }
+
+static void
+t8_default_tet_children (const t8_element_t * elem,
+                         int length, t8_element_t * c[])
+{
+  T8_ASSERT (length == T8_DTET_CHILDREN);
+
+  t8_dtet_childrenpv ((const t8_dtet_t *) elem, (t8_dtet_t **) c);
+}
+
+static int
+t8_default_tet_child_id (const t8_element_t * elem)
+{
+  return t8_dtet_child_id ((t8_dtet_t *) elem);
+}
+
+#if 0
+static int
+t8_default_tet_is_family (t8_element_t ** fam)
+{
+  t8_dtet_is_family ((t8_dtet_t **) fam);
+}
+#endif
 
 static void
 t8_default_tet_nca (const t8_element_t * elem1,
@@ -115,9 +144,12 @@ t8_default_scheme_new_tet (void)
   ts->elem_maxlevel = t8_default_tet_maxlevel;
 
   ts->elem_level = t8_default_tet_level;
+  ts->elem_copy = t8_default_tet_copy;
   ts->elem_parent = t8_default_tet_parent;
   ts->elem_sibling = t8_default_tet_sibling;
   ts->elem_child = t8_default_tet_child;
+  ts->elem_children = t8_default_tet_children;
+  ts->elem_child_id = t8_default_tet_child_id;
   ts->elem_nca = t8_default_tet_nca;
   ts->elem_set_linear_id = t8_default_tet_set_linear_id;
   ts->elem_successor = t8_default_tet_successor;

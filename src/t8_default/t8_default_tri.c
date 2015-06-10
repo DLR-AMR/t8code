@@ -45,6 +45,12 @@ t8_default_tri_level (const t8_element_t * elem)
 }
 
 static void
+t8_default_tri_copy (const t8_element_t * source, t8_element_t * dest)
+{
+  t8_dtri_copy ((const t8_dtri_t *) source, (t8_dtri_t *) dest);
+}
+
+static void
 t8_default_tri_parent (const t8_element_t * elem, t8_element_t * parent)
 {
   const t8_default_tri_t *t = (const t8_default_tri_t *) elem;
@@ -71,6 +77,27 @@ t8_default_tri_child (const t8_element_t * elem,
   t8_default_tri_t   *c = (t8_default_tri_t *) child;
 
   t8_dtri_child (t, childid, c);
+}
+
+static void
+t8_default_tri_children (const t8_element_t * elem,
+                         int length, t8_element_t * c[])
+{
+  T8_ASSERT (length == T8_DTRI_CHILDREN);
+
+  t8_dtri_childrenpv ((const t8_dtri_t *) elem, (t8_dtri_t **) c);
+}
+
+static int
+t8_default_tri_child_id (const t8_element_t * elem)
+{
+  return t8_dtri_child_id ((t8_dtri_t *) elem);
+}
+
+static int
+t8_default_tri_is_family (t8_element_t ** fam)
+{
+  return t8_dtri_is_familypv ((const t8_dtri_t **) fam);
 }
 
 static void
@@ -115,9 +142,13 @@ t8_default_scheme_new_tri (void)
   ts->elem_maxlevel = t8_default_tri_maxlevel;
 
   ts->elem_level = t8_default_tri_level;
+  ts->elem_copy = t8_default_tri_copy;
   ts->elem_parent = t8_default_tri_parent;
   ts->elem_sibling = t8_default_tri_sibling;
   ts->elem_child = t8_default_tri_child;
+  ts->elem_children = t8_default_tri_children;
+  ts->elem_is_family = t8_default_tri_is_family;
+  ts->elem_child_id = t8_default_tri_child_id;
   ts->elem_nca = t8_default_tri_nca;
   ts->elem_set_linear_id = t8_default_tri_set_linear_id;
   ts->elem_successor = t8_default_tri_successor;

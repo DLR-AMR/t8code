@@ -84,6 +84,12 @@ void                t8_dtet_child (const t8_dtet_t * elem,
  */
 void                t8_dtet_childrenpv (const t8_dtet_t * t, t8_dtet_t * c[]);
 
+/** Check whether a collection of eight tetrahedra is a family in Morton order.
+ * \param [in]     f  An array of eight tetrahedra.
+ * \return            Nonzero if \a f is a family of tetrahedra.
+ */
+int                 t8_dtet_is_familypv (const t8_dtet_t * f[]);
+
 /** Compute a specific sibling of a tetrahedron.
  * \param [in]     elem  Input tetrahedron.
  * \param [in,out] sibling  Existing tetrahedron whose data will be filled

@@ -66,6 +66,7 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_compute_coords t8_dtet_compute_coords
 #define t8_dtri_child t8_dtet_child
 #define t8_dtri_childrenpv t8_dtet_childrenpv
+#define t8_dtri_is_familypv t8_dtet_is_familypv
 #define t8_dtri_sibling t8_dtet_sibling
 #define t8_dtri_face_neighbour t8_dtet_face_neighbour
 #define t8_dtri_nearest_common_ancestor t8_dtet_nearest_common_ancestor

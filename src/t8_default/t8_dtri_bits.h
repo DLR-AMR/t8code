@@ -80,6 +80,12 @@ void                t8_dtri_child (const t8_dtri_t * elem,
  */
 void                t8_dtri_childrenpv (const t8_dtri_t * t, t8_dtri_t * c[]);
 
+/** Check whether a collection of eight triangles is a family in Morton order.
+ * \param [in]     f  An array of eight triangles.
+ * \return            Nonzero if \a f is a family of triangles.
+ */
+int                 t8_dtri_is_familypv (const t8_dtri_t * f[]);
+
 /** Compute a specific sibling of a triangle.
  * \param [in]     elem  Input triangle.
  * \param [in,out] sibling  Existing triangle whose data will be filled

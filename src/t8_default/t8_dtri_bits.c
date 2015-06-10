@@ -289,6 +289,47 @@ t8_dtri_childrenpv (const t8_dtri_t * t, t8_dtri_t * c[T8_DTRI_CHILDREN])
   }
 }
 
+int
+t8_dtri_is_familypv (const t8_dtri_t * f[])
+{
+  const int8_t        level = f[0]->level;
+#ifndef T8_DTRI_TO_DTET
+  t8_dtri_coord_t     coords0[T8_DTRI_CHILDREN];
+  t8_dtri_coord_t     coords1[T8_DTRI_CHILDREN];
+  t8_dtri_coord_t     inc;
+  int                 dir;
+#endif
+
+  if (level == 0 || level != f[1]->level ||
+      level != f[2]->level || level != f[3]->level
+#ifdef T8_DTRI_TO_DTET
+      || level != f[4]->level || level != f[5]->level ||
+      level != f[6]->level || level != f[7]->level
+#endif
+    ) {
+    return 0;
+  }
+#ifndef T8_DTRI_TO_DTET
+  inc = T8_DTRI_LEN (level);
+  if (f[1]->type != 1 || f[2]->type != 0 || f[3]->type != f[0]->type) {
+    return 0;
+  }
+  if (f[1]->x != f[2]->x || f[1]->y != f[2]->y) {
+    return 0;
+  }
+  coords0[0] = f[0]->x;
+  coords0[1] = f[0]->y;
+  coords1[0] = f[1]->x;
+  coords1[1] = f[1]->y;
+  dir = f[0]->type;
+  return (coords1[dir] == coords0[dir] + inc
+          && coords1[1 - dir] == coords0[1 - dir]
+          && f[3]->x == f[0]->x && f[3]->y == f[0]->y);
+#else
+  SC_ABORT ("dtet_is_family is not implemented yet");
+#endif
+}
+
 /* The sibid here is the Morton child id of the parent.
  * TODO: Implement this algorithm directly w/o using
  * parent and child
