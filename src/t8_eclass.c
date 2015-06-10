@@ -88,11 +88,11 @@ t8_eclass_count_leaf (t8_eclass_t theclass, int level)
     /* For the eclass pyramid the number of leafs is
      * 6^level + 4 * \sum_{i=1}^l 6^{l-i}8^{i-1}
      */
-    t8_locidx_t         power_of_6 = 1;
-    t8_locidx_t         six_to_level;
-    t8_locidx_t         power_of_8 = 1;
-    t8_locidx_t         number_of_leafs = 0;
-    t8_locidx_t         li;
+    t8_gloidx_t         power_of_6 = 1;
+    t8_gloidx_t         six_to_level;
+    t8_gloidx_t         power_of_8 = 1;
+    t8_gloidx_t         number_of_leafs = 0;
+    int                 li;
 
     /* compute 6^level */
     for (li = 0; li < level; li++) {
