@@ -225,6 +225,7 @@ t8_default_scheme_new_quad (void)
   ts->elem_child = t8_default_quad_child;
   ts->elem_children = t8_default_quad_children;
   ts->elem_child_id = t8_default_quad_child_id;
+  ts->elem_is_family = t8_default_quad_is_family;
   ts->elem_nca = t8_default_quad_nca;
   ts->elem_boundary = t8_default_quad_boundary;
   ts->elem_set_linear_id = t8_default_quad_set_linear_id;
