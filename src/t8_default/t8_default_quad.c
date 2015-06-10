@@ -141,6 +141,18 @@ t8_default_quad_children (const t8_element_t * elem,
   }
 }
 
+static int
+t8_default_quad_child_id (const t8_element_t * elem)
+{
+  return p4est_quadrant_child_id ((p4est_quadrant_t *) elem);
+}
+
+static int
+t8_default_quad_is_family (const t8_element_t ** fam)
+{
+  return p4est_quadrant_is_familypv ((p4est_quadrant_t **) fam);
+}
+
 static void
 t8_default_quad_set_linear_id (t8_element_t * elem, int level, uint64_t id)
 {
@@ -212,6 +224,7 @@ t8_default_scheme_new_quad (void)
   ts->elem_sibling = t8_default_quad_sibling;
   ts->elem_child = t8_default_quad_child;
   ts->elem_children = t8_default_quad_children;
+  ts->elem_child_id = t8_default_quad_child_id;
   ts->elem_nca = t8_default_quad_nca;
   ts->elem_boundary = t8_default_quad_boundary;
   ts->elem_set_linear_id = t8_default_quad_set_linear_id;

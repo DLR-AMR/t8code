@@ -82,6 +82,12 @@ typedef void        (*t8_element_child_t) (const t8_element_t * elem,
 typedef void        (*t8_element_children_t) (const t8_element_t * elem,
                                               int length, t8_element_t * c[]);
 
+/** Return the child id of an element */
+typedef int         (*t8_element_child_id_t) (const t8_element_t * elem);
+
+/** Return nonzero if collection of elements is a family */
+typedef int         (*t8_element_is_family_t) (const t8_element_t ** fam);
+
 /** Construct the nearest common ancestor of two elements in the same tree. */
 typedef void        (*t8_element_nca_t) (const t8_element_t * elem1,
                                          const t8_element_t * elem2,
@@ -130,6 +136,8 @@ struct t8_eclass_scheme
   t8_element_sibling_t elem_sibling;    /**< Compute a given sibling element. */
   t8_element_child_t  elem_child;       /**< Compute a child element. */
   t8_element_children_t elem_children;  /**< Compute all children of an element. */
+  t8_element_child_id_t elem_child_id;  /**< Return the child id of an element. */
+  t8_element_is_family_t elem_is_family;/**< Return nonzero if the given collection of elements is a family */
   t8_element_nca_t    elem_nca;         /**< Compute nearest common ancestor. */
   t8_element_boundary_t elem_boundary;  /**< Compute a set of boundary elements. */
   t8_element_linear_id_t elem_set_linear_id; /**< Initialize an element from a given linear id. */
@@ -262,6 +270,12 @@ void                t8_element_child (t8_eclass_scheme_t * ts,
 void                t8_element_children (t8_eclass_scheme_t * ts,
                                          const t8_element_t * elem,
                                          int length, t8_element_t * c[]);
+
+int                 t8_element_child_id (t8_eclass_scheme_t * ts,
+                                         const t8_element_t * elem);
+
+int                 t8_element_is_family (t8_eclass_scheme_t * ts,
+                                          const t8_element_t ** fam);
 
 void                t8_element_nca (t8_eclass_scheme_t * ts,
                                     const t8_element_t * elem1,

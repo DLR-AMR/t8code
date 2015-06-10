@@ -195,6 +195,21 @@ t8_element_children (t8_eclass_scheme_t * ts, const t8_element_t * elem,
   ts->elem_children (elem, length, c);
 }
 
+int
+t8_element_child_id (t8_eclass_scheme_t * ts, const t8_element_t * elem)
+{
+  T8_ASSERT (ts != NULL && ts->elem_child_id != NULL);
+  return ts->elem_child_id (elem);
+}
+
+int
+t8_element_is_family (t8_eclass_scheme_t * ts, const t8_element_t ** fam)
+{
+  T8_ASSERT (ts != NULL && ts->elem_is_family != NULL);
+
+  return ts->elem_is_family (fam);
+}
+
 void
 t8_element_nca (t8_eclass_scheme_t * ts, const t8_element_t * elem1,
                 const t8_element_t * elem2, t8_element_t * nca)

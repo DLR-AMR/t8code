@@ -93,6 +93,18 @@ t8_default_hex_children (const t8_element_t * elem,
                              (p8est_quadrant_t **) c);
 }
 
+static int
+t8_default_hex_child_id (const t8_element_t * elem)
+{
+  return p8est_quadrant_child_id ((p8est_quadrant_t *) elem);
+}
+
+static int
+t8_default_hex_is_family (const t8_element_t ** fam)
+{
+  return p8est_quadrant_is_familypv ((p8est_quadrant_t **) fam);
+}
+
 static void
 t8_default_hex_set_linear_id (t8_element_t * elem, int level, uint64_t id)
 {
@@ -132,6 +144,8 @@ t8_default_scheme_new_hex (void)
   ts->elem_sibling = t8_default_hex_sibling;
   ts->elem_child = t8_default_hex_child;
   ts->elem_children = t8_default_hex_children;
+  ts->elem_child_id = t8_default_hex_child_id;
+  ts->elem_is_family = t8_default_hex_is_family;
   ts->elem_nca = (t8_element_nca_t) p8est_nearest_common_ancestor;
   ts->elem_boundary = NULL;
   ts->elem_set_linear_id = t8_default_hex_set_linear_id;
