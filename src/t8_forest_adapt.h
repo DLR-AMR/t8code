@@ -33,6 +33,9 @@
 #include <t8_forest.h>
 
 /* TODO: There is no user_data yet */
+/* TODO: if eclass is a vertex then num_outgoing/num_incoming are always
+ *       1 and it is not possible to decide whether we are rfining or coarsening.
+ *       Is this an issue? */
 /** Callback function prototype to replace one set of elements with another.
  *
  * This is used by the adapt routine when the elements of an existing, valid
