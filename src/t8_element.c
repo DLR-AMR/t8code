@@ -261,3 +261,13 @@ t8_element_destroy (t8_eclass_scheme_t * ts, int length,
   T8_ASSERT (ts != NULL && ts->elem_destroy != NULL);
   ts->elem_destroy (ts->ts_context, length, elems);
 }
+
+t8_element_t *
+t8_element_array_index (t8_eclass_scheme_t * ts, sc_array_t * array, size_t it)
+{
+  T8_ASSERT (ts != NULL && ts->elem_size != NULL);
+  T8_ASSERT (array->elem_size == ts->elem_size());
+  T8_ASSERT (it < array->elem_count);
+
+  return (t8_element_t *) (array->array + array->elem_size * it);
+}

@@ -313,6 +313,10 @@ void                t8_element_new (t8_eclass_scheme_t * ts,
 void                t8_element_destroy (t8_eclass_scheme_t * ts,
                                         int length, t8_element_t ** elems);
 
+/** Return a pointer to an t8_element array element indexed by a size_t. */
+t8_element_t *      t8_element_array_index (t8_eclass_scheme_t * ts,
+                                            sc_array_t *array, size_t it);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_ELEMENT_H */
