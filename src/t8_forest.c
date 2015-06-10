@@ -42,6 +42,8 @@ t8_forest_init (t8_forest_t * pforest)
 
   forest->mpisize = -1;
   forest->mpirank = -1;
+  forest->first_local_tree = -1;
+  forest->global_num_elements = -1;
 }
 
 static void
