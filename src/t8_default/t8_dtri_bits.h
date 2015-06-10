@@ -64,7 +64,7 @@ void                t8_dtri_compute_all_coords (const t8_dtri_t * t,
                                                 t8_dtri_coord_t
                                                 coordinates[3][2]);
 
-/** Compute the childid-th child in Bey order of a triangle.
+/** Compute the childid-th child in Morton order of a triangle.
  * \param [in] t    Input triangle.
  * \param [in,out] childid The id of the child, 0..7 in Bey order.
  * \param [out] child  Existing triangle whose data will be filled

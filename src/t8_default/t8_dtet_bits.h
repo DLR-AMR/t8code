@@ -68,7 +68,7 @@ void                t8_dtet_copy (const t8_dtet_t * t, t8_dtet_t * dest);
  */
 void                t8_dtet_parent (const t8_dtet_t * t, t8_dtet_t * parent);
 
-/** Compute the childid-th child in Bey order of a tetrahedron t.
+/** Compute the childid-th child in Morton order of a tetrahedron t.
  * \param [in] t    Input tetrahedron.
  * \param [in,out] childid The id of the child, 0..7 in Bey order.
  * \param [out] child  Existing tetrahedron whose data will be filled
