@@ -32,6 +32,13 @@ t8_basic_refine (t8_forest_t forest, t8_topidx_t which_tree,
   return t8_element_level (ts, element) < 3;
 }
 
+static int
+t8_basic_coarsen (t8_forest_t forest, t8_topidx_t which_tree,
+                  t8_eclass_scheme_t * ts, t8_element_t * elements[])
+{
+  return t8_element_level (ts, elements[0]) > 1;
+}
+
 static void
 t8_basic_refine_test ()
 {
@@ -42,6 +49,13 @@ t8_basic_refine_test ()
   t8_forest_init (&forest_refine);
 
   t8_forest_set_cmesh (forest, t8_cmesh_new_quad (sc_MPI_COMM_WORLD, 0));
+  t8_forest_t         forest_coarsen;
+
+  t8_forest_init (&forest);
+  t8_forest_init (&forest_refine);
+  t8_forest_init (&forest_coarsen);
+
+  t8_forest_set_cmesh (forest, t8_cmesh_new_tri (sc_MPI_COMM_WORLD, 0));
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
   t8_forest_set_level (forest, 1);
   t8_forest_commit (forest);
@@ -50,6 +64,18 @@ t8_basic_refine_test ()
 
   t8_forest_commit (forest_refine);
   t8_forest_unref (&forest_refine);
+
+  t8_forest_set_adapt (forest_refine, forest,
+                       t8_basic_refine, NULL, NULL, NULL);
+
+  t8_forest_commit (forest_refine);
+
+  t8_forest_set_adapt (forest_coarsen, forest_refine,
+                       NULL, t8_basic_coarsen, NULL, NULL);
+
+  t8_forest_commit (forest_coarsen);
+
+  t8_forest_unref (&forest_coarsen);
 }
 
 static void
