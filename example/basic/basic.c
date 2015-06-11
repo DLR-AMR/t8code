@@ -55,7 +55,7 @@ t8_basic_refine_test ()
   t8_forest_init (&forest_refine);
   t8_forest_init (&forest_coarsen);
 
-  t8_forest_set_cmesh (forest, t8_cmesh_new_tri (sc_MPI_COMM_WORLD, 0));
+  t8_forest_set_cmesh (forest, t8_cmesh_new_tet (sc_MPI_COMM_WORLD, 0));
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
   t8_forest_set_level (forest, 1);
   t8_forest_commit (forest);
