@@ -72,9 +72,7 @@ const int           t8_dtri_parenttype_beyid_to_Iloc[2][4] = {
   {0, 2, 3, 1}
 };
 
-const int
-t8_dtri_type_cid_to_Iloc[2][4] =
-{
+const int           t8_dtri_type_cid_to_Iloc[2][4] = {
   {0, 1, 1, 3},
   {0, 2, 2, 3}
 };
@@ -85,6 +83,6 @@ const int           t8_dtri_parenttype_Iloc_to_type[2][4] = {
 };
 
 const int           t8_dtri_parenttype_Iloc_to_cid[2][4] = {
-  {0, 1,  1, 3},
+  {0, 1, 1, 3},
   {0, 2, 2, 3}
 };

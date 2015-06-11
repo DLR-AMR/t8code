@@ -91,9 +91,7 @@ const int           t8_dtet_parenttype_beyid_to_Iloc[6][8] = {
   {0, 3, 6, 7, 2, 1, 4, 5}
 };
 
-const int
-t8_dtet_type_cid_to_Iloc[6][8] =
-{
+const int           t8_dtet_type_cid_to_Iloc[6][8] = {
   {0, 1, 1, 4, 1, 4, 4, 7},
   {0, 1, 2, 5, 2, 5, 4, 7},
   {0, 2, 3, 4, 1, 6, 5, 7},

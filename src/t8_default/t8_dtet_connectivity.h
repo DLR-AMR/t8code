@@ -61,7 +61,7 @@ extern const int    t8_dtet_type_cid_to_beyid[6][8];
 extern const int    t8_dtet_parenttype_beyid_to_Iloc[6][8];
 
 /** Store the local index for each (type,cube-id) combination. */
-extern const int           t8_dtet_type_cid_to_Iloc[6][8];
+extern const int    t8_dtet_type_cid_to_Iloc[6][8];
 
 /** Store the type for each (parenttype,local Index) combination. */
 extern const int    t8_dtet_parenttype_Iloc_to_type[6][8];
