@@ -49,6 +49,7 @@ T8_EXTERN_C_BEGIN ();
 /* external variables */
 #define t8_dtri_cid_type_to_parenttype t8_dtet_cid_type_to_parenttype
 #define t8_dtri_type_of_child t8_dtet_type_of_child
+#define t8_dtri_type_of_child_morton t8_dtet_type_of_child_morton
 #define t8_dtri_index_to_bey_number t8_dtet_index_to_bey_number
 #define t8_dtri_beyid_to_vertex t8_dtet_beyid_to_vertex
 #define t8_dtri_type_cid_to_beyid t8_dtet_type_cid_to_beyid

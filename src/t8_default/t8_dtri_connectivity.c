@@ -36,6 +36,13 @@ const int           t8_dtri_type_of_child[2][4] = {
   {1, 1, 1, 0}
 };
 
+/* in dependence of a type x give the type of
+ * the child with Morton number y */
+const int           t8_dtri_type_of_child_morton[2][4] = {
+  {0, 0, 1, 0},
+  {1, 0, 1, 1}
+};
+
 /* Line b, row I gives the Bey child-id of
  * a Tet with Parent type b and local morton index I */
 const int           t8_dtri_index_to_bey_number[2][4] = {
