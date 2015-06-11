@@ -326,10 +326,9 @@ t8_forest_commit (t8_forest_t forest)
     }
     forest->do_dup = forest->set_from->do_dup;
 
-    /* increase reference count of cmesh, scheme and geom from the input forest */
+    /* increase reference count of cmesh and scheme from the input forest */
     t8_cmesh_ref (forest->cmesh = forest->set_from->cmesh);
     t8_scheme_ref (forest->scheme = forest->set_from->scheme);
-    }
     forest->dimension = forest->set_from->dimension;
 
     /* TODO: call adapt and partition subfunctions here */
@@ -410,8 +409,11 @@ t8_forest_reset (t8_forest_t * pforest)
   }
 
   /* we have taken ownership on calling t8_forest_set_* */
-  t8_scheme_unref (&forest->scheme);
-  t8_cmesh_unref (&forest->cmesh);
+  if (forest->scheme != NULL) {
+    t8_scheme_unref (&forest->scheme);
+  }
+  if (forest->cmesh != NULL) {
+    t8_cmesh_unref (&forest->cmesh);
   }
 
   T8_FREE (forest);
