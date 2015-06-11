@@ -293,11 +293,14 @@ int
 t8_dtri_is_familypv (const t8_dtri_t * f[])
 {
   const int8_t        level = f[0]->level;
-#ifndef T8_DTRI_TO_DTET
   t8_dtri_coord_t     coords0[T8_DTRI_CHILDREN];
   t8_dtri_coord_t     coords1[T8_DTRI_CHILDREN];
   t8_dtri_coord_t     inc;
-  int                 dir;
+  int                 local_ind, type;
+  int                 dir1, dir2;
+#ifdef T8_DTRI_TO_DTET
+  int                 dir3;
+  t8_dtri_coord_t     coords2[T8_DTRI_CHILDREN];
 #endif
 
   if (level == 0 || level != f[1]->level ||
@@ -309,25 +312,56 @@ t8_dtri_is_familypv (const t8_dtri_t * f[])
     ) {
     return 0;
   }
-#ifndef T8_DTRI_TO_DTET
-  inc = T8_DTRI_LEN (level);
-  if (f[1]->type != 0 || f[2]->type != 1 || f[3]->type != f[0]->type) {
-    return 0;
+  /* check whether the types are correct */
+  type = f[0]->type;
+  for (local_ind = 1; local_ind < T8_DTRI_CHILDREN - 1; local_ind++) {
+    if (f[local_ind]->type != t8_dtri_type_of_child_morton[type][local_ind]) {
+      return 0;
+    }
   }
+  /* check whether the coordinates are correct
+   * in 2d triangle 1 and 2 have to have the same coordinates
+   * in 3d tets 1, 2, 3 and 4, 5, 6.*/
+#ifndef T8_DTRI_TO_DTET
   if (f[1]->x != f[2]->x || f[1]->y != f[2]->y) {
     return 0;
   }
+#else
+  if (f[1]->x != f[2]->x || f[1]->y != f[2]->y || f[1]->z != f[2]->z ||
+      f[1]->x != f[3]->x || f[1]->y != f[3]->y || f[1]->z != f[3]->z ||
+      f[4]->x != f[5]->x || f[4]->y != f[5]->y || f[4]->z != f[5]->z ||
+      f[4]->x != f[6]->x || f[4]->y != f[6]->y || f[4]->z != f[6]->z) {
+    return 0;
+  }
+#endif
+  dir1 = T8_DTRI_DIM == 2 ? type : type / 2;
+  dir2 = T8_DTRI_DIM == 2 ? 1 - dir1 : 2 - type % 3;
+  inc = T8_DTRI_LEN (level);
   coords0[0] = f[0]->x;
   coords0[1] = f[0]->y;
   coords1[0] = f[1]->x;
   coords1[1] = f[1]->y;
-  dir = f[0]->type;
-  return (coords1[dir] == coords0[dir] + inc
-          && coords1[1 - dir] == coords0[1 - dir]
-          && f[3]->x == f[0]->x + inc && f[3]->y == f[0]->y + inc);
-#else
-  SC_ABORT ("dtet_is_family is not implemented yet");
+#ifdef T8_DTRI_TO_DTET
+  coords0[2] = f[0]->z;
+  coords1[2] = f[1]->z;
+  coords2[0] = f[4]->x;
+  coords2[1] = f[4]->y;
+  coords2[2] = f[4]->z;
+  dir3 = ((type + 3) % 6) / 2;
+  T8_ASSERT (dir1 != dir2 && dir2 != dir3 && dir1 != dir3);
 #endif
+  return (coords1[dir1] == coords0[dir1] + inc
+          && coords1[dir2] == coords0[dir2]
+          && f[T8_DTRI_CHILDREN - 1]->x == f[0]->x + inc
+          && f[T8_DTRI_CHILDREN - 1]->y == f[0]->y + inc
+#ifdef T8_DTRI_TO_DTET
+          && f[T8_DTRI_CHILDREN - 1]->z == f[0]->z + inc
+          && coords1[dir3] == coords0[dir3]
+          && coords2[dir1] == coords0[dir1] + inc
+          && coords2[dir2] == coords0[dir2] + inc
+          && coords2[dir3] == coords0[dir3]
+#endif
+    );
 }
 
 /* The sibid here is the Morton child id of the parent.
