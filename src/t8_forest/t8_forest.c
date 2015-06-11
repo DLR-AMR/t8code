@@ -22,7 +22,7 @@
 
 #include <t8_refcount.h>
 #include <t8_forest.h>
-#include <t8_forest_types.h>
+#include <t8_forest/t8_forest_types.h>
 
 void
 t8_forest_init (t8_forest_t * pforest)

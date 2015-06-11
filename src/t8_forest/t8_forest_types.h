@@ -31,7 +31,7 @@
 #include <t8_refcount.h>
 #include <t8_cmesh.h>
 #include <t8_element.h>
-#include <t8_forest_adapt.h>
+#include <t8_forest/t8_forest_adapt.h>
 
 typedef enum t8_forest_from
 {
