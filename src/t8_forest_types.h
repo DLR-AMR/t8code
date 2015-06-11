@@ -31,7 +31,6 @@
 #include <t8_refcount.h>
 #include <t8_cmesh.h>
 #include <t8_element.h>
-#include <t8_geometry.h>
 #include <t8_forest_adapt.h>
 
 typedef enum t8_forest_from
@@ -53,7 +52,6 @@ typedef struct t8_forest
   int                 set_for_coarsening;       /**< Change partition to allow
                                                      for one round of coarsening */
 
-  t8_geometry_t       geom;             /**< Geometry transformation for vtk output. */
   sc_MPI_Comm         mpicomm;          /**< MPI communicator to use. */
   t8_cmesh_t          cmesh;            /**< Coarse mesh to use. */
   t8_scheme_t        *scheme;           /**< Scheme for element types. */

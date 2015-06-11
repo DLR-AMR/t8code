@@ -87,7 +87,6 @@ t8_basic (int do_dup, int set_level)
 
   t8_forest_set_cmesh (forest, t8_cmesh_new_tet (sc_MPI_COMM_WORLD, do_dup));
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
-  t8_forest_set_geom (forest, t8_geometry_new_identity ());
 
   t8_forest_set_level (forest, set_level);
 

@@ -21,7 +21,6 @@
 */
 
 #include <t8_refcount.h>
-#include <t8_geometry.h>
 #include <t8_forest.h>
 #include <t8_forest_types.h>
 
@@ -106,16 +105,6 @@ t8_forest_set_level (t8_forest_t forest, int level)
 }
 
 void
-t8_forest_set_geom (t8_forest_t forest, t8_geometry_t geom)
-{
-  T8_ASSERT (forest != NULL);
-  T8_ASSERT (forest->rc.refcount > 0);
-  T8_ASSERT (!forest->committed);
-
-  forest->geom = geom;
-}
-
-void
 t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
 {
   T8_ASSERT (forest != NULL);
@@ -124,7 +113,6 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
   T8_ASSERT (forest->scheme == NULL);
-  T8_ASSERT (forest->geom == NULL);
   T8_ASSERT (forest->set_from == NULL);
 
   T8_ASSERT (set_from != NULL);
@@ -322,7 +310,6 @@ t8_forest_commit (t8_forest_t forest)
     T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
     T8_ASSERT (forest->cmesh == NULL);
     T8_ASSERT (forest->scheme == NULL);
-    T8_ASSERT (forest->geom == NULL);
     T8_ASSERT (!forest->do_dup);
     T8_ASSERT (forest->from_method >= T8_FOREST_FROM_FIRST &&
                forest->from_method < T8_FOREST_FROM_LAST);
@@ -342,8 +329,6 @@ t8_forest_commit (t8_forest_t forest)
     /* increase reference count of cmesh, scheme and geom from the input forest */
     t8_cmesh_ref (forest->cmesh = forest->set_from->cmesh);
     t8_scheme_ref (forest->scheme = forest->set_from->scheme);
-    if (forest->set_from->geom != NULL) {
-      t8_geometry_ref (forest->geom = forest->set_from->geom);
     }
     forest->dimension = forest->set_from->dimension;
 
@@ -427,8 +412,6 @@ t8_forest_reset (t8_forest_t * pforest)
   /* we have taken ownership on calling t8_forest_set_* */
   t8_scheme_unref (&forest->scheme);
   t8_cmesh_unref (&forest->cmesh);
-  if (forest->geom != NULL) {
-    t8_geometry_unref (&forest->geom);
   }
 
   T8_FREE (forest);
