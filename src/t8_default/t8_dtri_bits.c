@@ -311,7 +311,7 @@ t8_dtri_is_familypv (const t8_dtri_t * f[])
   }
 #ifndef T8_DTRI_TO_DTET
   inc = T8_DTRI_LEN (level);
-  if (f[1]->type != 1 || f[2]->type != 0 || f[3]->type != f[0]->type) {
+  if (f[1]->type != 0 || f[2]->type != 1 || f[3]->type != f[0]->type) {
     return 0;
   }
   if (f[1]->x != f[2]->x || f[1]->y != f[2]->y) {
@@ -324,7 +324,7 @@ t8_dtri_is_familypv (const t8_dtri_t * f[])
   dir = f[0]->type;
   return (coords1[dir] == coords0[dir] + inc
           && coords1[1 - dir] == coords0[1 - dir]
-          && f[3]->x == f[0]->x && f[3]->y == f[0]->y);
+          && f[3]->x == f[0]->x + inc && f[3]->y == f[0]->y + inc);
 #else
   SC_ABORT ("dtet_is_family is not implemented yet");
 #endif
