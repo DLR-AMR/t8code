@@ -645,7 +645,7 @@ t8_dtri_init_linear_id (t8_dtri_t * t, uint64_t id, int level)
   t8_dtri_cube_id_t   cid;
   t8_dtri_type_t      type;
 
-  T8_ASSERT (0 <= id && id <= (u_int64_t) 1 << (T8_DTRI_DIM * level));
+  T8_ASSERT (0 <= id && id <= (uint64_t) 1 << (T8_DTRI_DIM * level));
 
   t->level = level;
   t->x = 0;
@@ -659,7 +659,7 @@ t8_dtri_init_linear_id (t8_dtri_t * t, uint64_t id, int level)
   for (i = 1; i <= level; i++) {
     offset = level - i;
     /* Get the local index of T's ancestor on level i */
-    local_index = (id >> T8_DTRI_DIM * offset) & children_m1;
+    local_index = (id >> (T8_DTRI_DIM * offset)) & children_m1;
     /* Get the type and cube-id of T's ancestor on level i */
     cid = t8_dtri_parenttype_Iloc_to_cid[type][local_index];
     type = t8_dtri_parenttype_Iloc_to_type[type][local_index];

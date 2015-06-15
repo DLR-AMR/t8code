@@ -32,7 +32,7 @@
 T8_EXTERN_C_BEGIN ();
 
 /** The spatial dimension */
-#define T8_DTET_DIM 3
+#define T8_DTET_DIM (3)
 
 /** Store the type of parent for each (cube-id,type) combination. */
 extern const int    t8_dtet_cid_type_to_parenttype[8][6];

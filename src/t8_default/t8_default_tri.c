@@ -115,7 +115,7 @@ static void
 t8_default_tri_set_linear_id (t8_element_t * elem, int level, uint64_t id)
 {
   T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < (u_int64_t) 1 << 2 * level);
+  T8_ASSERT (0 <= id && id < (uint64_t) 1 << (2 * level));
 
   t8_dtri_init_linear_id ((t8_default_tri_t *) elem, id, level);
 }

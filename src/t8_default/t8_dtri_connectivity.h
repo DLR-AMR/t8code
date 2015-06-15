@@ -31,7 +31,7 @@
 T8_EXTERN_C_BEGIN ();
 
 /** The spatial dimension */
-#define T8_DTRI_DIM 2
+#define T8_DTRI_DIM (2)
 
 /** Store the type of parent for each (cube-id,type) combination. */
 extern const int    t8_dtri_cid_type_to_parenttype[4][2];
