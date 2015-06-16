@@ -29,7 +29,7 @@
 static int
 t8_basic_adapt (t8_forest_t forest, t8_topidx_t which_tree,
                 t8_eclass_scheme_t * ts, t8_element_t * elements[]) {
-  return 0;
+  return elements[1] == NULL ? 0 : -1;
 }
 
 static int
@@ -54,7 +54,7 @@ t8_basic_refine_test ()
 
   t8_forest_set_cmesh (forest, t8_cmesh_new_quad (sc_MPI_COMM_WORLD, 0));
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
-  t8_forest_set_level (forest, 1);
+  t8_forest_set_level (forest, 2);
   t8_forest_commit (forest);
 
   t8_forest_set_adapt_temp (forest_adapt, forest, t8_basic_adapt, 0);

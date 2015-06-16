@@ -175,6 +175,8 @@ t8_forest_set_adapt_temp (t8_forest_t forest, const t8_forest_t set_from,
 
   forest->set_adapt_fn = adapt_fn;
   forest->set_adapt_recursive = recursive != 0;
+  forest->set_from = set_from;
+  forest->from_method = T8_FOREST_FROM_ADAPT;
 }
 
 void
