@@ -28,8 +28,18 @@
 
 static int
 t8_basic_adapt (t8_forest_t forest, t8_topidx_t which_tree,
-                t8_eclass_scheme_t * ts, t8_element_t * elements[]) {
-  return elements[1] == NULL ? 0 : -1;
+                t8_eclass_scheme_t * ts, t8_element_t * elements[])
+{
+  int                 level;
+  level = t8_element_level (ts, elements[0]);
+  if (elements[1] != NULL) {
+    if (level > 0)
+      return -1;
+    return 0;
+  }
+  if (level < 3)
+    return 1;
+  return 0;
 }
 
 static int
@@ -43,9 +53,6 @@ static void
 t8_basic_refine_test ()
 {
   t8_forest_t         forest;
-
-  t8_forest_init (&forest);
-  t8_forest_t         forest_coarsen;
   t8_forest_t         forest_adapt;
 
   t8_forest_init (&forest);
@@ -57,7 +64,7 @@ t8_basic_refine_test ()
   t8_forest_set_level (forest, 2);
   t8_forest_commit (forest);
 
-  t8_forest_set_adapt_temp (forest_adapt, forest, t8_basic_adapt, 0);
+  t8_forest_set_adapt_temp (forest_adapt, forest, t8_basic_adapt, 1);
   t8_forest_commit (forest_adapt);
 
   t8_forest_unref (&forest_adapt);
@@ -133,7 +140,7 @@ main (int argc, char **argv)
     }
   }*/
 
-  t8_basic_refine_test();
+  t8_basic_refine_test ();
 
   sc_finalize ();
 
