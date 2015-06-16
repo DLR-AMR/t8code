@@ -73,6 +73,7 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
 /** Callback function prototype to decide for refining and coarsening.
  *  If the second argument in the elements array is NULL, then we only consider
  *  the first element in the array for refining.
+ *  In this case \a elements[i] , i>1 must not be referenced.
  *  In the other case, the elements form a family and we decide whether the
  *  family should be coarsened or only the first element should be refined.
  * \param [in] forest      the forest
