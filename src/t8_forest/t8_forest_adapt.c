@@ -32,8 +32,9 @@ t8_forest_adapt (t8_forest_t forest)
   sc_list_t          *element_list;     /* This is only needed when we adapt recursive */
   sc_array_t         *telements, *telements_from;
   size_t              tt;
-  t8_locidx_t         considered_elements;
-  t8_locidx_t         inserted_elements;
+  t8_locidx_t         el_considered;
+  t8_locidx_t         el_inserted;
+  t8_locidx_t         num_el_from;
   t8_topidx_t         treeid;
   size_t              num_children, zz;
   t8_tree_t           tree, tree_from;
@@ -62,27 +63,32 @@ t8_forest_adapt (t8_forest_t forest)
     tree_from = (t8_tree_t) t8_sc_array_index_topidx (forest_from->trees, tt);
     telements = &tree->elements;
     telements_from = &tree_from->elements;
+    num_el_from = (t8_locidx_t) telements_from->elem_count;
     tscheme = forest->scheme->eclass_schemes[tree->eclass];
-    considered_elements = 0;
-    inserted_elements = 0;
+    el_considered = 0;
+    el_inserted = 0;
     level = -1;
     /* TODO: this will generate problems with pyramidal elements */
     num_children = t8_eclass_num_children[tree->eclass];
     elements = T8_ALLOC (t8_element_t *, num_children);
     elements_from = T8_ALLOC (t8_element_t *, num_children);
-    while (considered_elements < (t8_locidx_t) telements_from->elem_count) {
+    while (el_considered < num_el_from) {
       is_family = 1;
-      for (zz = 0; zz < num_children; zz++) {
+      for (zz = 0; zz < num_children &&
+           el_considered + zz >= num_el_from; zz++) {
         elements_from[zz] = t8_element_array_index (tscheme, telements_from,
-                                                    considered_elements + zz);
+                                                    el_considered + zz);
         if ((size_t) t8_element_child_id (tscheme, elements_from[zz]) != zz) {
-          elements_from[1] = NULL;
-          is_family = 0;
           break;
         }
       }
+      if (zz != num_children) {
+        elements_from[1] = NULL;
+        is_family = 0;
+      }
       T8_ASSERT (!is_family || t8_element_is_family (tscheme, elements_from));
       refine = forest->set_adapt_fn (forest, treeid, tscheme, elements_from);
+      T8_ASSERT (is_family || refine >= 0);
       if (refine > 0) {
         /* The first element is to be refined */
         if (forest->set_adapt_recursive) {
@@ -94,8 +100,8 @@ t8_forest_adapt (t8_forest_t forest)
             elements[zz] = (t8_element_t *) sc_array_push (telements);
             t8_element_child (tscheme, elements_from[0], zz, elements[zz]);
           }
-          inserted_elements += num_children;
-          considered_elements++;
+          el_inserted += num_children;
+          el_considered++;
         }
       }
       else if (refine < 0) {
@@ -106,8 +112,8 @@ t8_forest_adapt (t8_forest_t forest)
         else {
           elements[0] = (t8_element_t *) sc_array_push (telements);
           t8_element_parent (tscheme, elements_from[0], elements[0]);
-          inserted_elements++;
-          considered_elements += num_children;
+          el_inserted++;
+          el_considered += num_children;
         }
       }
       else {
@@ -115,19 +121,19 @@ t8_forest_adapt (t8_forest_t forest)
          * one to be refined */
         T8_ASSERT (refine == 0);
         if (forest->set_adapt_recursive) {
-          if (t8_element_level (tscheme, elements_from[0]) > level + 1) {
-            /* TODO: recursive refinement */
+          if ((size_t) t8_element_child_id (tscheme, elements_from[0])
+              == num_children - 1) {
+            /* TODO: recursive coarsening */
           }
-          else if ((size_t) t8_element_child_id (tscheme, elements_from[0])
-                   == num_children - 1) {
-            /* TODO: recursiv refinement */
+          else {
+            /* TODO: insert element to list */
           }
         }
         else {
           elements[0] = (t8_element_t *) sc_array_push (telements);
           t8_element_copy (tscheme, elements_from[0], elements[0]);
-          inserted_elements++;
-          considered_elements++;
+          el_inserted++;
+          el_considered++;
         }
       }
     }
