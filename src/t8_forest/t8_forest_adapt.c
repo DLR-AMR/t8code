@@ -63,7 +63,6 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_topidx_t treeid,
     if (isfamily && forest->set_adapt_fn (forest, treeid, ts, num_children,
                                           fam) < 0) {
       t8_element_parent (ts, fam[0], fam[0]);
-      //t8_element_destroy (ts, num_children - 1,fam + 1);
       *el_inserted -= num_children - 1;
       telement->elem_count = *el_inserted;
       element = fam[0];
