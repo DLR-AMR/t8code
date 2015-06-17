@@ -72,8 +72,8 @@ typedef struct t8_forest
   t8_topidx_t         last_local_tree;
   sc_array_t         *trees;
 
-  t8_locidx_t         local_num_elements; /**< Number of elements on this processor. */
-  t8_gloidx_t         global_num_elements; /**< Number of elemenrs on all processors. */
+  t8_locidx_t         local_num_elements;  /**< Number of elements on this processor. */
+  t8_gloidx_t         global_num_elements; /**< Number of elements on all processors. */
 }
 t8_forest_struct_t;
 

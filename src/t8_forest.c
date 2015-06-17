@@ -170,6 +170,20 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
   forest->from_method = T8_FOREST_FROM_PARTITION;
 }
 
+void
+t8_forest_comm_global_num_elements (t8_forest_t forest)
+{
+  int                 mpiret;
+  t8_gloidx_t         local_num_el;
+  t8_gloidx_t         global_num_el;
+
+  local_num_el = (t8_gloidx_t) forest->local_num_elements;
+  mpiret = sc_MPI_Allreduce (&local_num_el, &global_num_el, 1,
+                             T8_MPI_GLOIDX, sc_MPI_SUM, forest->mpicomm);
+  SC_CHECK_MPI (mpiret);
+  forest->global_num_elements = global_num_el;
+}
+
 static void
 t8_forest_populate (t8_forest_t forest)
 {
@@ -242,8 +256,7 @@ t8_forest_populate (t8_forest_t forest)
   /* TODO: if no tree has pyramid type we can optimize this to
    * global_num_elements = global_num_trees * 2^(dim*level)
    */
-  sc_MPI_Allreduce (&count_elements, &forest->global_num_elements, 1,
-                    sc_MPI_LONG_LONG_INT, sc_MPI_SUM, forest->mpicomm);
+  t8_forest_comm_global_num_elements (forest);
   /* TODO: figure out global_first_position, global_first_quadrant without comm */
 }
 
@@ -276,6 +289,8 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from)
   }
   forest->first_local_tree = from->first_local_tree;
   forest->last_local_tree = from->last_local_tree;
+  forest->local_num_elements = from->local_num_elements;
+  forest->global_num_elements = from->global_num_elements;
 }
 
 void
