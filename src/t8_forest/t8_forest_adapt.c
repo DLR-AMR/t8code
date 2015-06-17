@@ -52,7 +52,7 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_topidx_t treeid,
       }
     }
     else {
-      insert_el = sc_array_push (telements);
+      insert_el = (t8_element_t *) sc_array_push (telements);
       t8_element_copy (ts, elements[0], insert_el);
       t8_element_destroy (ts, 1, elements);
       (*num_inserted)++;
