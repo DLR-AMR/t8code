@@ -35,9 +35,6 @@
 
 /** Opaque pointer to a forest implementation. */
 typedef struct t8_forest *t8_forest_t;
-
-/** Opaque pointer to a forest implementation. */
-typedef struct t8_forest *t8_forest_t;
 typedef struct t8_tree   *t8_tree_t;
 
 T8_EXTERN_C_BEGIN ();
