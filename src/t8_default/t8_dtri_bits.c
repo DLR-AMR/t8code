@@ -104,18 +104,18 @@ t8_dtri_parent (const t8_dtri_t * t, t8_dtri_t * parent)
 #ifdef T8_DTRI_TO_DTET
   parent->eclass = t->eclass;
 #endif
-  parent->level = t->level - 1;
 
+  h = T8_DTRI_LEN (t->level);
   /* Compute type of parent */
   cid = compute_cubeid (t, t->level);
   parent->type = t8_dtri_cid_type_to_parenttype[cid][t->type];
   /* Set coordinates of parent */
-  h = T8_DTRI_LEN (t->level);
   parent->x = t->x & ~h;
   parent->y = t->y & ~h;
 #ifdef T8_DTRI_TO_DTET
   parent->z = t->z & ~h;
 #endif
+  parent->level = t->level - 1;
 }
 
 void
