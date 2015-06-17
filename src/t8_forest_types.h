@@ -90,7 +90,6 @@ typedef struct t8_tree
   t8_locidx_t         elements_offset;      /**< cumulative sum over earlier
                                                   trees on this processor
                                                   (locals only) */
-  int8_t              maxlevel;              /**< highest local element level */
 }
 t8_tree_struct_t;
 

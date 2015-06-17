@@ -225,7 +225,6 @@ t8_forest_populate (t8_forest_t forest)
                                                    jt -
                                                    forest->first_local_tree);
       tree_class = tree->eclass = t8_cmesh_get_tree_class (forest->cmesh, jt);
-      tree->maxlevel = forest->set_level;
       tree->elements_offset = count_elements;
       eclass_scheme = forest->scheme->eclass_schemes[tree_class];
       T8_ASSERT (eclass_scheme != NULL);
