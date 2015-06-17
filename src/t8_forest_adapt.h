@@ -53,7 +53,7 @@
  * If an element is being refined, num_outgoing will be 1 and num_incoming will
  * be the number of children, and vice versa if a family is being coarsened.
  */
-typedef void        (*t8_forest_replace_t) (t8_forest_t * forest,
+typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
                                             t8_topidx_t which_tree,
                                             t8_eclass_scheme_t * ts,
                                             int num_outgoing,
