@@ -62,6 +62,10 @@ typedef struct t8_forest
   t8_forest_from_t    from_method;      /**< Method to derive from \b set_from. */
   t8_forest_replace_t set_replace_fn;   /**< Replace function. Called when \b from_method
                                              is set to T8_FOREST_FROM_ADAPT. */
+  t8_forest_adapt_t   set_adapt_fn;     /** refinement and coarsen function. Called when \b from_method
+                                             is set to T8_FOREST_FROM_ADAPT. */
+  int                 set_adapt_recursive; /**< Flag to decide whether coarsen and refine
+                                                are carried out recursive */
   int                 committed;        /**< \ref t8_forest_commit called? */
   int                 mpisize;          /**< Number of MPI processes. */
   int                 mpirank;          /**< Number of this MPI process. */
