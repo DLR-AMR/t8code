@@ -73,6 +73,7 @@ t8_forest_adapt (t8_forest_t forest)
   t8_locidx_t         el_inserted;
   t8_locidx_t         el_coarsen;
   t8_locidx_t         num_el_from;
+  t8_locidx_t         el_offset;
   t8_topidx_t         treeid;
   size_t              num_children, zz;
   t8_tree_t           tree, tree_from;
@@ -99,6 +100,7 @@ t8_forest_adapt (t8_forest_t forest)
     refine_list = sc_list_new (NULL);
   }
   forest->local_num_elements = 0;
+  el_offset = 0;
   for (tt = 0; tt < forest->trees->elem_count; tt++) {
     treeid = tt + forest->first_local_tree;
     tree = (t8_tree_t) t8_sc_array_index_topidx (forest->trees, tt);
@@ -183,13 +185,12 @@ t8_forest_adapt (t8_forest_t forest)
         elements[0] = (t8_element_t *) sc_array_push (telements);
         t8_element_copy (tscheme, elements_from[0], elements[0]);
         el_inserted++;
-        if (forest->set_adapt_recursive) {
-          if ((size_t) t8_element_child_id (tscheme, elements[0])
-              == num_children - 1) {
-            t8_forest_adapt_coarsen_recursive (forest, treeid, tscheme,
-                                               telements, el_coarsen,
-                                               &el_inserted);
-          }
+        if (forest->set_adapt_recursive &&
+            (size_t) t8_element_child_id (tscheme, elements[0])
+            == num_children - 1) {
+          t8_forest_adapt_coarsen_recursive (forest, treeid, tscheme,
+                                             telements, el_coarsen,
+                                             &el_inserted);
         }
         el_considered++;
       }
@@ -204,7 +205,10 @@ t8_forest_adapt (t8_forest_t forest)
         el_inserted++;
       }
     }
+    tree->elements_offset = el_offset;
+    el_offset += el_inserted;
     forest->local_num_elements += el_inserted;
+
     T8_FREE (elements);
     T8_FREE (elements_from);
     /* TODO: compute tree->element_offset */
