@@ -28,11 +28,15 @@
 
 static int
 t8_basic_adapt (t8_forest_t forest, t8_topidx_t which_tree,
-                t8_eclass_scheme_t * ts, t8_element_t * elements[])
+                t8_eclass_scheme_t * ts,
+                int num_elements,
+                t8_element_t * elements[])
 {
   int                 level;
+  T8_ASSERT (num_elements == 1 || num_elements ==
+             t8_eclass_num_children[ts->eclass]);
   level = t8_element_level (ts, elements[0]);
-  if (elements[1] != NULL) {
+  if (num_elements > 1) {
     if (level > 0)
       return -1;
     return 0;
