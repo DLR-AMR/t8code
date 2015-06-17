@@ -49,10 +49,10 @@ t8_forest_adapt (t8_forest_t forest)
   T8_ASSERT (forest->set_adapt_recursive != -1);
   T8_ASSERT (forest->from_method == T8_FOREST_FROM_ADAPT);
 
-  t8_global_productionf ("Into t8_forest_adapt with %lld total elements\n",
-                         (long long) forest->global_num_elements);
-
   forest_from = forest->set_from;
+  t8_global_productionf ("Into t8_forest_adapt from %lld total elements\n",
+                         (long long) forest_from->global_num_elements);
+
   /* TODO: Allocate memory for the trees of forest.
    * Will we do this here or in an extra function? */
   T8_ASSERT (forest->trees->elem_count == forest_from->trees->elem_count);
@@ -79,7 +79,7 @@ t8_forest_adapt (t8_forest_t forest)
     while (el_considered < num_el_from) {
       is_family = 1;
       for (zz = 0; zz < num_children &&
-           el_considered + zz < num_el_from; zz++) {
+           el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
         elements_from[zz] = t8_element_array_index (tscheme, telements_from,
                                                     el_considered + zz);
         if ((size_t) t8_element_child_id (tscheme, elements_from[zz]) != zz) {

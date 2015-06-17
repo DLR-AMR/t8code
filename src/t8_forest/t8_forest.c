@@ -269,7 +269,7 @@ t8_forest_populate (t8_forest_t forest)
 }
 
 static void
-t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from)
+t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
 {
   t8_tree_t           tree, fromtree;
   t8_gloidx_t         num_tree_elements;
@@ -293,12 +293,23 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from)
                         num_tree_elements);
     /* TODO: replace with t8_elem_copy (not existing yet), in order to
      * eventually copy additional pointer data stored in the elements? */
-    sc_array_copy (&tree->elements, &fromtree->elements);
+    if (copy_elements) {
+      sc_array_copy (&tree->elements, &fromtree->elements);
+    }
+    else {
+      sc_array_truncate (&tree->elements);
+    }
   }
   forest->first_local_tree = from->first_local_tree;
   forest->last_local_tree = from->last_local_tree;
-  forest->local_num_elements = from->local_num_elements;
-  forest->global_num_elements = from->global_num_elements;
+  if (copy_elements) {
+    forest->local_num_elements = from->local_num_elements;
+    forest->global_num_elements = from->global_num_elements;
+  }
+  else {
+    forest->local_num_elements = 0;
+    forest->global_num_elements = 0;
+  }
 }
 
 void
@@ -352,12 +363,11 @@ t8_forest_commit (t8_forest_t forest)
     t8_scheme_ref (forest->scheme = forest->set_from->scheme);
     forest->dimension = forest->set_from->dimension;
 
-    /* TODO: call adapt and partition subfunctions here */
-    t8_forest_copy_trees (forest, forest->set_from);
     /* TODO: currently we can only handle copy */
     // T8_ASSERT (forest->from_method == T8_FOREST_FROM_COPY);
     if (forest->from_method == T8_FOREST_FROM_ADAPT) {
       if (forest->set_adapt_fn != NULL) {
+        t8_forest_copy_trees (forest, forest->set_from, 0);
         t8_forest_adapt (forest);
       }
     }
