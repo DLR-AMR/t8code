@@ -243,7 +243,7 @@ t8_forest_populate (t8_forest_t forest)
   t8_topidx_t         num_local_trees;
   t8_topidx_t         jt;
   t8_gloidx_t         start, end, et;
-  t8_tree_t          *tree;
+  t8_tree_t           tree;
   t8_element_t       *element, *element_succ;
   sc_array_t         *telements;
   t8_eclass_t         tree_class;
@@ -313,7 +313,7 @@ t8_forest_populate (t8_forest_t forest)
 static void
 t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from)
 {
-  t8_tree_t          *tree, *fromtree;
+  t8_tree_t           tree, fromtree;
   t8_gloidx_t         num_tree_elements;
   t8_topidx_t         jt, number_of_trees;
   t8_eclass_scheme_t *eclass_scheme;
@@ -429,7 +429,7 @@ t8_forest_write_vtk (t8_forest_t forest, const char *filename)
 static void
 t8_forest_free_trees (t8_forest_t forest)
 {
-  t8_tree_t          *tree;
+  t8_tree_t           tree;
   t8_topidx_t         jt, number_of_trees;
 
   T8_ASSERT (forest != NULL);
