@@ -208,6 +208,7 @@ t8_forest_adapt (t8_forest_t forest)
     tree->elements_offset = el_offset;
     el_offset += el_inserted;
     forest->local_num_elements += el_inserted;
+    sc_array_resize (telements, el_inserted);
 
     T8_FREE (elements);
     T8_FREE (elements_from);
