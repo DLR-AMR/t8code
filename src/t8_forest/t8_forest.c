@@ -160,6 +160,24 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
 }
 
 void
+t8_forest_set_adapt_temp (t8_forest_t forest, const t8_forest_t set_from,
+                          t8_forest_adapt_fn adapt_fn, int recursive)
+{
+  T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
+  T8_ASSERT (!forest->committed);
+  T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
+  T8_ASSERT (forest->cmesh == NULL);
+  T8_ASSERT (forest->scheme == NULL);
+  T8_ASSERT (forest->set_from == NULL);
+  T8_ASSERT (forest->set_adapt_fn == NULL);
+  T8_ASSERT (forest->set_adapt_recursive == -1);
+
+  forest->set_adapt_fn = adapt_fn;
+  forest->set_adapt_recursive = recursive != 0;
+}
+
+void
 t8_forest_comm_global_num_elements (t8_forest_t forest)
 {
   int                 mpiret;
@@ -335,7 +353,12 @@ t8_forest_commit (t8_forest_t forest)
     /* TODO: call adapt and partition subfunctions here */
     t8_forest_copy_trees (forest, forest->set_from);
     /* TODO: currently we can only handle copy */
-    T8_ASSERT (forest->from_method == T8_FOREST_FROM_COPY);
+    // T8_ASSERT (forest->from_method == T8_FOREST_FROM_COPY);
+    if (forest->from_method == T8_FOREST_FROM_ADAPT) {
+      if (forest->set_adapt_fn != NULL) {
+        t8_forest_adapt (forest);
+      }
+    }
 
     /* decrease reference count of input forest, possibly destroying it */
     t8_forest_unref (&forest->set_from);
