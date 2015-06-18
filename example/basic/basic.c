@@ -68,7 +68,8 @@ t8_basic_refine_test ()
   t8_forest_set_level (forest, 2);
   t8_forest_commit (forest);
 
-  t8_forest_set_adapt_temp (forest_adapt, forest, t8_basic_adapt, 1);
+  t8_forest_set_adapt_temp (forest_adapt, forest, t8_basic_adapt,
+                            NULL, 1);
   t8_forest_commit (forest_adapt);
 
   t8_forest_unref (&forest_adapt);

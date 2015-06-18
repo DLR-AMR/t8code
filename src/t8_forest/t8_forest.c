@@ -161,7 +161,8 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
 
 void
 t8_forest_set_adapt_temp (t8_forest_t forest, const t8_forest_t set_from,
-                          t8_forest_adapt_fn adapt_fn, int recursive)
+                          t8_forest_adapt_t adapt_fn,
+                          t8_forest_replace_t replace_fn, int recursive)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
@@ -174,6 +175,7 @@ t8_forest_set_adapt_temp (t8_forest_t forest, const t8_forest_t set_from,
   T8_ASSERT (forest->set_adapt_recursive == -1);
 
   forest->set_adapt_fn = adapt_fn;
+  forest->set_replace_fn = replace_fn;
   forest->set_adapt_recursive = recursive != 0;
   forest->set_from = set_from;
   forest->from_method = T8_FOREST_FROM_ADAPT;
