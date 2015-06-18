@@ -222,13 +222,13 @@ t8_forest_populate (t8_forest_t forest)
       && child_in_tree_begin >= child_in_tree_end) {
     /* This processor is empty
      * we still set the tree array to store 0 as the number of trees here */
-    forest->trees = sc_array_new (sizeof (t8_tree_t));
+    forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
     count_elements = 0;
   }
   else {
     /* TODO: for each tree, allocate elements */
     num_local_trees = forest->last_local_tree - forest->first_local_tree + 1;
-    forest->trees = sc_array_new (sizeof (t8_tree_t));
+    forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
     sc_array_resize (forest->trees, num_local_trees);
     for (jt = forest->first_local_tree, count_elements = 0;
          jt <= forest->last_local_tree; jt++) {
@@ -284,7 +284,7 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
   T8_ASSERT (from->committed);
 
   number_of_trees = from->trees->elem_count;
-  forest->trees = sc_array_new_size (sizeof (t8_tree_t), number_of_trees);
+  forest->trees = sc_array_new_size (sizeof (t8_tree_struct_t), number_of_trees);
   sc_array_copy (forest->trees, from->trees);
   for (jt = 0; jt < number_of_trees; jt++) {
     tree = (t8_tree_t) t8_sc_array_index_topidx (forest->trees, jt);
