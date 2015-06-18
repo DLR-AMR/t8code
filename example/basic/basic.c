@@ -25,6 +25,33 @@
 #include <t8_default.h>
 #include <t8_forest.h>
 
+static int
+t8_basic_refine (t8_forest_t forest, t8_topidx_t which_tree,
+                 t8_eclass_scheme_t * ts, t8_element_t * element)
+{
+  return t8_element_level (ts, element) < 3;
+}
+
+static void
+t8_basic_refine_test ()
+{
+  t8_forest_t         forest;
+  t8_forest_t         forest_refine;
+
+  t8_forest_init (&forest);
+  t8_forest_init (&forest_refine);
+
+  t8_forest_set_cmesh (forest, t8_cmesh_new_quad (sc_MPI_COMM_WORLD, 0));
+  t8_forest_set_scheme (forest, t8_scheme_new_default ());
+  t8_forest_set_level (forest, 1);
+  t8_forest_commit (forest);
+
+  t8_forest_set_adapt (forest_refine, forest);
+
+  t8_forest_commit (forest_refine);
+  t8_forest_unref (&forest_refine);
+}
+
 static void
 t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
                     int do_commit)
@@ -81,7 +108,7 @@ main (int argc, char **argv)
   p4est_init (NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  level = 3;
+  level = 3; /*
   t8_basic (0, level);
   t8_basic (1, level);
   t8_basic (0, level);
@@ -94,7 +121,9 @@ main (int argc, char **argv)
       t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 1);
       t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 1);
     }
-  }
+  }*/
+
+  t8_basic_refine_test();
 
   sc_finalize ();
 
