@@ -70,7 +70,13 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
                                             int num_incoming,
                                             t8_element_t * incoming[]);
 
-/** Create a new forest with reference count one.
+
+typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
+                                           t8_topidx_t which_tree,
+                                           t8_eclass_scheme_t * ts,
+                                           t8_element_t * elements[]);
+
+  /** Create a new forest with reference count one.
  * This forest needs to be specialized with the t8_forest_set_* calls.
  * Currently it is manatory to either call the functions \ref
  * t8_forest_set_mpicomm, \ref t8_forest_set_cmesh, and \ref t8_forest_set_scheme,

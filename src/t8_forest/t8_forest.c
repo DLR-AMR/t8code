@@ -43,6 +43,7 @@ t8_forest_init (t8_forest_t * pforest)
   forest->mpirank = -1;
   forest->first_local_tree = -1;
   forest->global_num_elements = -1;
+  forest->set_adapt_recursive = -1;
 }
 
 static void
