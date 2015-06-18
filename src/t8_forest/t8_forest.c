@@ -289,6 +289,7 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
   for (jt = 0; jt < number_of_trees; jt++) {
     tree = (t8_tree_t) t8_sc_array_index_topidx (forest->trees, jt);
     fromtree = (t8_tree_t) t8_sc_array_index_topidx (from->trees, jt);
+    tree->eclass = fromtree->eclass;
     eclass_scheme = forest->scheme->eclass_schemes[tree->eclass];
     num_tree_elements = fromtree->elements.elem_count;
     sc_array_init_size (&tree->elements, t8_element_size (eclass_scheme),
@@ -297,6 +298,7 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
      * eventually copy additional pointer data stored in the elements? */
     if (copy_elements) {
       sc_array_copy (&tree->elements, &fromtree->elements);
+      tree->elements_offset = fromtree->elements_offset;
     }
     else {
       sc_array_truncate (&tree->elements);
