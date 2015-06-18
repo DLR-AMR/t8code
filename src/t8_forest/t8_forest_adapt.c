@@ -49,6 +49,9 @@ t8_forest_adapt (t8_forest_t forest)
   T8_ASSERT (forest->set_adapt_recursive != -1);
   T8_ASSERT (forest->from_method == T8_FOREST_FROM_ADAPT);
 
+  t8_global_productionf ("Into t8_forest_adapt with %lld total elements\n",
+                         (long long) forest->global_num_elements);
+
   forest_from = forest->set_from;
   /* TODO: Allocate memory for the trees of forest.
    * Will we do this here or in an extra function? */
@@ -57,6 +60,7 @@ t8_forest_adapt (t8_forest_t forest)
   if (forest->set_adapt_recursive) {
     element_list = sc_list_new (NULL);
   }
+  forest->local_num_elements = 0;
   for (tt = 0; tt < forest->trees->elem_count; tt++) {
     treeid = tt + forest->first_local_tree;
     tree = (t8_tree_t) t8_sc_array_index_topidx (forest->trees, tt);
@@ -75,7 +79,7 @@ t8_forest_adapt (t8_forest_t forest)
     while (el_considered < num_el_from) {
       is_family = 1;
       for (zz = 0; zz < num_children &&
-           el_considered + zz >= num_el_from; zz++) {
+           el_considered + zz < num_el_from; zz++) {
         elements_from[zz] = t8_element_array_index (tscheme, telements_from,
                                                     el_considered + zz);
         if ((size_t) t8_element_child_id (tscheme, elements_from[zz]) != zz) {
@@ -137,6 +141,12 @@ t8_forest_adapt (t8_forest_t forest)
         }
       }
     }
+    forest->local_num_elements += el_inserted;
+    T8_FREE (elements);
+    T8_FREE (elements_from);
     /* TODO: compute tree->element_offset */
   }
+  t8_forest_comm_global_num_elements (forest);
+  t8_global_productionf ("Done t8_forest_adapt with %lld total elements\n",
+                         (long long) forest->global_num_elements);
 }

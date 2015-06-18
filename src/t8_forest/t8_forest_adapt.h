@@ -64,4 +64,7 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
                                             int num_incoming,
                                             t8_element_t * incoming[]);
 
+/* TODO: comment */
+void                t8_forest_adapt (t8_forest_t forest);
+
 #endif /* !T8_FOREST_ADAPT_H! */
