@@ -36,6 +36,10 @@
 /** Opaque pointer to a forest implementation. */
 typedef struct t8_forest *t8_forest_t;
 
+/** Opaque pointer to a forest implementation. */
+typedef struct t8_forest *t8_forest_t;
+typedef struct t8_tree   *t8_tree_t;
+
 T8_EXTERN_C_BEGIN ();
 
 /** Create a new forest with reference count one.
@@ -144,3 +148,4 @@ void                t8_forest_unref (t8_forest_t * pforest);
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_H */
+

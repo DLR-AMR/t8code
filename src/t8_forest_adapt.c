@@ -21,4 +21,5 @@
 */
 
 #include <t8_forest_adapt.h>
+#include <t8_forest_types.h>
 

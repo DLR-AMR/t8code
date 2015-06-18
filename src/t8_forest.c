@@ -23,72 +23,7 @@
 #include <t8_refcount.h>
 #include <t8_geometry.h>
 #include <t8_forest.h>
-
-typedef enum t8_forest_from
-{
-  T8_FOREST_FROM_FIRST,
-  T8_FOREST_FROM_COPY = T8_FOREST_FROM_FIRST,
-  T8_FOREST_FROM_ADAPT,
-  T8_FOREST_FROM_PARTITION,
-  T8_FOREST_FROM_LAST
-}
-t8_forest_from_t;
-
-/** This structure is private to the implementation. */
-typedef struct t8_forest
-{
-  t8_refcount_t       rc;               /**< Reference counter. */
-
-  int                 set_level;        /**< Level to use in new construction. */
-  int                 set_for_coarsening;       /**< Change partition to allow
-                                                     for one round of coarsening */
-
-  t8_geometry_t       geom;             /**< Geometry transformation for vtk output. */
-  sc_MPI_Comm         mpicomm;          /**< MPI communicator to use. */
-  t8_cmesh_t          cmesh;            /**< Coarse mesh to use. */
-  t8_scheme_t        *scheme;           /**< Scheme for element types. */
-  int                 do_dup;           /**< Communicator shall be duped. */
-  int                 dimension;        /**< Dimension inferred from \b cmesh. */
-
-  t8_forest_t         set_from;         /**< Temporarily store source forest. */
-  t8_forest_from_t    from_method;      /**< Method to derive from \b set_from. */
-
-  int                 committed;        /**< \ref t8_forest_commit called? */
-  int                 mpisize;          /**< Number of MPI processes. */
-  int                 mpirank;          /**< Number of this MPI process. */
-
-  t8_topidx_t         first_local_tree;
-  t8_topidx_t         last_local_tree;
-  sc_array_t         *trees;
-
-  t8_locidx_t         local_num_elements; /**< Number of elements on this processor. */
-  t8_gloidx_t         global_num_elements; /**< Number of elemenrs on all processors. */
-}
-t8_forest_struct_t;
-
-/** The t8 tree datatype */
-typedef struct t8_tree
-{
-  sc_array_t          elements;              /**< locally stored elements */
-  t8_eclass_t         eclass;                /**< The element class of this tree */
-  /* TODO: We will need the *_desc variables later for shure. */
-#if 0
-  t8_element_t        first_desc,            /**< first local descendant */
-                      last_desc;             /**< last local descendant */
-#endif
-  t8_locidx_t         elements_offset;      /**< cumulative sum over earlier
-                                                  trees on this processor
-                                                  (locals only) */
-  /* TODO: Do we need elements per level?
-   *       Then we definitely need a global MAXLEVEL
-   */
-#if 0
-  t8_locidx_t         elements_per_level[T8_MAXLEVEL + 1];
-                                             /**< locals only */
-#endif
-  int8_t              maxlevel;              /**< highest local element level */
-}
-t8_tree_t;
+#include <t8_forest_types.h>
 
 void
 t8_forest_init (t8_forest_t * pforest)
