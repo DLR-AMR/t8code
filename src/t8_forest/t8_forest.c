@@ -161,7 +161,8 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
 
 void
 t8_forest_set_adapt_temp (t8_forest_t forest, const t8_forest_t set_from,
-                          t8_forest_adapt_fn adapt_fn, int recursive)
+                          t8_forest_adapt_t adapt_fn,
+                          t8_forest_replace_t replace_fn, int recursive)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
@@ -174,6 +175,7 @@ t8_forest_set_adapt_temp (t8_forest_t forest, const t8_forest_t set_from,
   T8_ASSERT (forest->set_adapt_recursive == -1);
 
   forest->set_adapt_fn = adapt_fn;
+  forest->set_replace_fn = replace_fn;
   forest->set_adapt_recursive = recursive != 0;
   forest->set_from = set_from;
   forest->from_method = T8_FOREST_FROM_ADAPT;
@@ -220,13 +222,13 @@ t8_forest_populate (t8_forest_t forest)
       && child_in_tree_begin >= child_in_tree_end) {
     /* This processor is empty
      * we still set the tree array to store 0 as the number of trees here */
-    forest->trees = sc_array_new (sizeof (t8_tree_t));
+    forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
     count_elements = 0;
   }
   else {
     /* TODO: for each tree, allocate elements */
     num_local_trees = forest->last_local_tree - forest->first_local_tree + 1;
-    forest->trees = sc_array_new (sizeof (t8_tree_t));
+    forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
     sc_array_resize (forest->trees, num_local_trees);
     for (jt = forest->first_local_tree, count_elements = 0;
          jt <= forest->last_local_tree; jt++) {
@@ -269,7 +271,7 @@ t8_forest_populate (t8_forest_t forest)
 }
 
 static void
-t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from)
+t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
 {
   t8_tree_t           tree, fromtree;
   t8_gloidx_t         num_tree_elements;
@@ -282,23 +284,36 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from)
   T8_ASSERT (from->committed);
 
   number_of_trees = from->trees->elem_count;
-  forest->trees = sc_array_new_size (sizeof (t8_tree_t), number_of_trees);
+  forest->trees = sc_array_new_size (sizeof (t8_tree_struct_t), number_of_trees);
   sc_array_copy (forest->trees, from->trees);
   for (jt = 0; jt < number_of_trees; jt++) {
-    tree = (t8_tree_t *) t8_sc_array_index_topidx (forest->trees, jt);
-    fromtree = (t8_tree_t *) t8_sc_array_index_topidx (from->trees, jt);
+    tree = (t8_tree_t) t8_sc_array_index_topidx (forest->trees, jt);
+    fromtree = (t8_tree_t) t8_sc_array_index_topidx (from->trees, jt);
+    tree->eclass = fromtree->eclass;
     eclass_scheme = forest->scheme->eclass_schemes[tree->eclass];
     num_tree_elements = fromtree->elements.elem_count;
     sc_array_init_size (&tree->elements, t8_element_size (eclass_scheme),
                         num_tree_elements);
     /* TODO: replace with t8_elem_copy (not existing yet), in order to
      * eventually copy additional pointer data stored in the elements? */
-    sc_array_copy (&tree->elements, &fromtree->elements);
+    if (copy_elements) {
+      sc_array_copy (&tree->elements, &fromtree->elements);
+      tree->elements_offset = fromtree->elements_offset;
+    }
+    else {
+      sc_array_truncate (&tree->elements);
+    }
   }
   forest->first_local_tree = from->first_local_tree;
   forest->last_local_tree = from->last_local_tree;
-  forest->local_num_elements = from->local_num_elements;
-  forest->global_num_elements = from->global_num_elements;
+  if (copy_elements) {
+    forest->local_num_elements = from->local_num_elements;
+    forest->global_num_elements = from->global_num_elements;
+  }
+  else {
+    forest->local_num_elements = 0;
+    forest->global_num_elements = 0;
+  }
 }
 
 void
@@ -352,12 +367,11 @@ t8_forest_commit (t8_forest_t forest)
     t8_scheme_ref (forest->scheme = forest->set_from->scheme);
     forest->dimension = forest->set_from->dimension;
 
-    /* TODO: call adapt and partition subfunctions here */
-    t8_forest_copy_trees (forest, forest->set_from);
     /* TODO: currently we can only handle copy */
     // T8_ASSERT (forest->from_method == T8_FOREST_FROM_COPY);
     if (forest->from_method == T8_FOREST_FROM_ADAPT) {
       if (forest->set_adapt_fn != NULL) {
+        t8_forest_copy_trees (forest, forest->set_from, 0);
         t8_forest_adapt (forest);
       }
     }
@@ -398,7 +412,7 @@ t8_forest_free_trees (t8_forest_t forest)
 
   number_of_trees = forest->trees->elem_count;
   for (jt = 0; jt < number_of_trees; jt++) {
-    tree = (t8_tree_t *) t8_sc_array_index_topidx (forest->trees, jt);
+    tree = (t8_tree_t) t8_sc_array_index_topidx (forest->trees, jt);
     sc_array_reset (&tree->elements);
   }
   sc_array_destroy (forest->trees);

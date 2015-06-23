@@ -71,13 +71,16 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
                                             t8_element_t * incoming[]);
 
 /** Callback function prototype to decide for refining and coarsening.
- *  If the second argument in the elements array is NULL, then we only consider
- *  the first element in the array for refining.
- *  In the other case, the elements form a family and we decide whether the
- *  family should be coarsened or only the first element should be refined.
+ * If the \a num_elements equals the number of children then the elements
+ * form a family and we decide whether this family should be coarsened
+ * or only the first element should be refined.
+ * Otherwise \num_elements must equal one and we consider the first entry
+ * of the element array for refinement. In this case the other entries of
+ * the element array are undefined.
  * \param [in] forest      the forest
  * \param [in] which_tree  the tree containing \a elements
  * \param [in] ts          the eclass scheme of the tree
+ * \param [in] num_elements the number of entries in \a elements
  * \param [in] elements    Pointers to a family or, if second entry is NULL,
  *                         pointer to one element.
  * \return greater zero if the first entry in \a elements should be refined
@@ -87,6 +90,7 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
 typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
                                            t8_topidx_t which_tree,
                                            t8_eclass_scheme_t * ts,
+                                           int num_elements,
                                            t8_element_t * elements[]);
 
   /** Create a new forest with reference count one.
@@ -161,7 +165,7 @@ void                t8_forest_set_load (t8_forest_t forest,
 
 void
 t8_forest_set_adapt_temp (t8_forest_t forest, const t8_forest_t set_from,
-                          t8_forest_adapt_fn adapt_fn, int recursive);
+                          t8_forest_adapt_t adapt_fn, t8_forest_replace_t replace_fn, int recursive);
 
 /** Compute the global number of elements in a forest as the sum
  *  of the local element counts.
