@@ -23,7 +23,14 @@
 
 #include <sc_refcount.h>
 #include <t8_default.h>
+#include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest.h>
+
+static int
+t8_basic_adapt (t8_forest_t forest, t8_topidx_t which_tree,
+                t8_eclass_scheme_t * ts, t8_element_t * elements[]) {
+  return elements[1] == NULL ? 0 : -1;
+}
 
 static int
 t8_basic_refine (t8_forest_t forest, t8_topidx_t which_tree,
@@ -43,10 +50,13 @@ static void
 t8_basic_refine_test ()
 {
   t8_forest_t         forest;
-  t8_forest_t         forest_refine;
 
   t8_forest_init (&forest);
-  t8_forest_init (&forest_refine);
+  t8_forest_t         forest_adapt;
+
+  t8_forest_init (&forest);
+  t8_forest_init (&forest_adapt);
+
 
   t8_forest_set_cmesh (forest, t8_cmesh_new_quad (sc_MPI_COMM_WORLD, 0));
   t8_forest_t         forest_coarsen;
@@ -57,25 +67,13 @@ t8_basic_refine_test ()
 
   t8_forest_set_cmesh (forest, t8_cmesh_new_tet (sc_MPI_COMM_WORLD, 0));
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
-  t8_forest_set_level (forest, 1);
+  t8_forest_set_level (forest, 2);
   t8_forest_commit (forest);
 
-  t8_forest_set_adapt (forest_refine, forest);
+  t8_forest_set_adapt_temp (forest_adapt, forest, t8_basic_adapt, 0);
+  t8_forest_commit (forest_adapt);
 
-  t8_forest_commit (forest_refine);
-  t8_forest_unref (&forest_refine);
-
-  t8_forest_set_adapt (forest_refine, forest,
-                       t8_basic_refine, NULL, NULL, NULL);
-
-  t8_forest_commit (forest_refine);
-
-  t8_forest_set_adapt (forest_coarsen, forest_refine,
-                       NULL, t8_basic_coarsen, NULL, NULL);
-
-  t8_forest_commit (forest_coarsen);
-
-  t8_forest_unref (&forest_coarsen);
+  t8_forest_unref (&forest_adapt);
 }
 
 static void
@@ -114,7 +112,6 @@ t8_basic (int do_dup, int set_level, int do_commit)
 
   t8_forest_set_cmesh (forest, t8_cmesh_new_tet (sc_MPI_COMM_WORLD, do_dup));
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
-  t8_forest_set_geom (forest, t8_geometry_new_identity ());
 
   t8_forest_set_level (forest, set_level);
 

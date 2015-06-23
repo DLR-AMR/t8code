@@ -21,9 +21,8 @@
 */
 
 #include <t8_refcount.h>
-#include <t8_geometry.h>
 #include <t8_forest.h>
-#include <t8_forest_types.h>
+#include <t8_forest/t8_forest_types.h>
 
 void
 t8_forest_init (t8_forest_t * pforest)
@@ -44,6 +43,7 @@ t8_forest_init (t8_forest_t * pforest)
   forest->mpirank = -1;
   forest->first_local_tree = -1;
   forest->global_num_elements = -1;
+  forest->set_adapt_recursive = -1;
 }
 
 static void
@@ -106,16 +106,6 @@ t8_forest_set_level (t8_forest_t forest, int level)
 }
 
 void
-t8_forest_set_geom (t8_forest_t forest, t8_geometry_t geom)
-{
-  T8_ASSERT (forest != NULL);
-  T8_ASSERT (forest->rc.refcount > 0);
-  T8_ASSERT (!forest->committed);
-
-  forest->geom = geom;
-}
-
-void
 t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
 {
   T8_ASSERT (forest != NULL);
@@ -124,7 +114,6 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
   T8_ASSERT (forest->scheme == NULL);
-  T8_ASSERT (forest->geom == NULL);
   T8_ASSERT (forest->set_from == NULL);
 
   T8_ASSERT (set_from != NULL);
@@ -168,6 +157,26 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
 
   forest->set_from = set_from;
   forest->from_method = T8_FOREST_FROM_PARTITION;
+}
+
+void
+t8_forest_set_adapt_temp (t8_forest_t forest, const t8_forest_t set_from,
+                          t8_forest_adapt_fn adapt_fn, int recursive)
+{
+  T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
+  T8_ASSERT (!forest->committed);
+  T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
+  T8_ASSERT (forest->cmesh == NULL);
+  T8_ASSERT (forest->scheme == NULL);
+  T8_ASSERT (forest->set_from == NULL);
+  T8_ASSERT (forest->set_adapt_fn == NULL);
+  T8_ASSERT (forest->set_adapt_recursive == -1);
+
+  forest->set_adapt_fn = adapt_fn;
+  forest->set_adapt_recursive = recursive != 0;
+  forest->set_from = set_from;
+  forest->from_method = T8_FOREST_FROM_ADAPT;
 }
 
 void
@@ -322,7 +331,6 @@ t8_forest_commit (t8_forest_t forest)
     T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
     T8_ASSERT (forest->cmesh == NULL);
     T8_ASSERT (forest->scheme == NULL);
-    T8_ASSERT (forest->geom == NULL);
     T8_ASSERT (!forest->do_dup);
     T8_ASSERT (forest->from_method >= T8_FOREST_FROM_FIRST &&
                forest->from_method < T8_FOREST_FROM_LAST);
@@ -339,18 +347,20 @@ t8_forest_commit (t8_forest_t forest)
     }
     forest->do_dup = forest->set_from->do_dup;
 
-    /* increase reference count of cmesh, scheme and geom from the input forest */
+    /* increase reference count of cmesh and scheme from the input forest */
     t8_cmesh_ref (forest->cmesh = forest->set_from->cmesh);
     t8_scheme_ref (forest->scheme = forest->set_from->scheme);
-    if (forest->set_from->geom != NULL) {
-      t8_geometry_ref (forest->geom = forest->set_from->geom);
-    }
     forest->dimension = forest->set_from->dimension;
 
     /* TODO: call adapt and partition subfunctions here */
     t8_forest_copy_trees (forest, forest->set_from);
     /* TODO: currently we can only handle copy */
-    T8_ASSERT (forest->from_method == T8_FOREST_FROM_COPY);
+    // T8_ASSERT (forest->from_method == T8_FOREST_FROM_COPY);
+    if (forest->from_method == T8_FOREST_FROM_ADAPT) {
+      if (forest->set_adapt_fn != NULL) {
+        t8_forest_adapt (forest);
+      }
+    }
 
     /* decrease reference count of input forest, possibly destroying it */
     t8_forest_unref (&forest->set_from);
@@ -425,10 +435,11 @@ t8_forest_reset (t8_forest_t * pforest)
   }
 
   /* we have taken ownership on calling t8_forest_set_* */
-  t8_scheme_unref (&forest->scheme);
-  t8_cmesh_unref (&forest->cmesh);
-  if (forest->geom != NULL) {
-    t8_geometry_unref (&forest->geom);
+  if (forest->scheme != NULL) {
+    t8_scheme_unref (&forest->scheme);
+  }
+  if (forest->cmesh != NULL) {
+    t8_cmesh_unref (&forest->cmesh);
   }
 
   T8_FREE (forest);

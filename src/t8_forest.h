@@ -31,7 +31,6 @@
 
 #include <t8_cmesh.h>
 #include <t8_element.h>
-#include <t8_geometry.h>
 
 /** Opaque pointer to a forest implementation. */
 typedef struct t8_forest *t8_forest_t;
@@ -71,7 +70,26 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
                                             int num_incoming,
                                             t8_element_t * incoming[]);
 
-/** Create a new forest with reference count one.
+/** Callback function prototype to decide for refining and coarsening.
+ *  If the second argument in the elements array is NULL, then we only consider
+ *  the first element in the array for refining.
+ *  In the other case, the elements form a family and we decide whether the
+ *  family should be coarsened or only the first element should be refined.
+ * \param [in] forest      the forest
+ * \param [in] which_tree  the tree containing \a elements
+ * \param [in] ts          the eclass scheme of the tree
+ * \param [in] elements    Pointers to a family or, if second entry is NULL,
+ *                         pointer to one element.
+ * \return greater zero if the first entry in \a elements should be refined
+ *         smaller zero if the family \a elements shall be coarsened
+ *         zero else.
+ */
+typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
+                                           t8_topidx_t which_tree,
+                                           t8_eclass_scheme_t * ts,
+                                           t8_element_t * elements[]);
+
+  /** Create a new forest with reference count one.
  * This forest needs to be specialized with the t8_forest_set_* calls.
  * Currently it is manatory to either call the functions \ref
  * t8_forest_set_mpicomm, \ref t8_forest_set_cmesh, and \ref t8_forest_set_scheme,
@@ -112,8 +130,6 @@ void                t8_forest_set_scheme (t8_forest_t forest,
 
 void                t8_forest_set_level (t8_forest_t forest, int level);
 
-void                t8_forest_set_geom (t8_forest_t forest,
-                                        t8_geometry_t geom);
 
 /** Set a forest as source for copying on commiting.
  * By default, the forest takes ownership of the source \b from such that it will
@@ -142,6 +158,10 @@ void                t8_forest_set_ghost (t8_forest_t forest, int do_ghost);
  *       set_load are mutually exclusive. */
 void                t8_forest_set_load (t8_forest_t forest,
                                         const char *filename);
+
+void
+t8_forest_set_adapt_temp (t8_forest_t forest, const t8_forest_t set_from,
+                          t8_forest_adapt_fn adapt_fn, int recursive);
 
 /** Compute the global number of elements in a forest as the sum
  *  of the local element counts.

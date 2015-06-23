@@ -31,8 +31,7 @@
 #include <t8_refcount.h>
 #include <t8_cmesh.h>
 #include <t8_element.h>
-#include <t8_geometry.h>
-#include <t8_forest_adapt.h>
+#include <t8_forest/t8_forest_adapt.h>
 
 typedef enum t8_forest_from
 {
@@ -53,7 +52,6 @@ typedef struct t8_forest
   int                 set_for_coarsening;       /**< Change partition to allow
                                                      for one round of coarsening */
 
-  t8_geometry_t       geom;             /**< Geometry transformation for vtk output. */
   sc_MPI_Comm         mpicomm;          /**< MPI communicator to use. */
   t8_cmesh_t          cmesh;            /**< Coarse mesh to use. */
   t8_scheme_t        *scheme;           /**< Scheme for element types. */
@@ -64,6 +62,10 @@ typedef struct t8_forest
   t8_forest_from_t    from_method;      /**< Method to derive from \b set_from. */
   t8_forest_replace_t set_replace_fn;   /**< Replace function. Called when \b from_method
                                              is set to T8_FOREST_FROM_ADAPT. */
+  t8_forest_adapt_t   set_adapt_fn;     /** refinement and coarsen function. Called when \b from_method
+                                             is set to T8_FOREST_FROM_ADAPT. */
+  int                 set_adapt_recursive; /**< Flag to decide whether coarsen and refine
+                                                are carried out recursive */
   int                 committed;        /**< \ref t8_forest_commit called? */
   int                 mpisize;          /**< Number of MPI processes. */
   int                 mpirank;          /**< Number of this MPI process. */
