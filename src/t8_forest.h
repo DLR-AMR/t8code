@@ -31,11 +31,45 @@
 
 #include <t8_cmesh.h>
 #include <t8_element.h>
+#include <t8_geometry.h>
 
 /** Opaque pointer to a forest implementation. */
 typedef struct t8_forest *t8_forest_t;
+typedef struct t8_tree *t8_tree_t;
 
 T8_EXTERN_C_BEGIN ();
+
+/* TODO: There is no user_data yet */
+/* TODO: if eclass is a vertex then num_outgoing/num_incoming are always
+ *       1 and it is not possible to decide whether we are rfining or coarsening.
+ *       Is this an issue? */
+/** Callback function prototype to replace one set of elements with another.
+ *
+ * This is used by the adapt routine when the elements of an existing, valid
+ * forest are changed.  The callback allows the user to make changes to newly
+ * initialized elements before the elements that they replace are destroyed.
+ *
+ * \param [in] forest      the forest
+ * \param [in] which_tree  the tree containing \a outgoing and \a incoming
+ * \param [in] ts          the eclass scheme of the tree
+ * \param [in] num_outgoing The number of outgoing elements.
+ * \param [in] outgoing     The outgoing elements: after the callback, the
+ *                          user_data will be destroyed. (at the current state there is no user data)
+ * \param [in] num_incoming The number of incoming elements.
+ * \param [in,out] incoming The incoming elements: prior to the callback,
+ *                          the user_data is allocated, and the forest_init_t callback,
+ *                          if it has been provided, will be called.
+ *
+ * If an element is being refined, num_outgoing will be 1 and num_incoming will
+ * be the number of children, and vice versa if a family is being coarsened.
+ */
+typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
+                                            t8_topidx_t which_tree,
+                                            t8_eclass_scheme_t * ts,
+                                            int num_outgoing,
+                                            t8_element_t * outgoing[],
+                                            int num_incoming,
+                                            t8_element_t * incoming[]);
 
 /** Create a new forest with reference count one.
  * This forest needs to be specialized with the t8_forest_set_* calls.
@@ -78,6 +112,9 @@ void                t8_forest_set_scheme (t8_forest_t forest,
 
 void                t8_forest_set_level (t8_forest_t forest, int level);
 
+void                t8_forest_set_geom (t8_forest_t forest,
+                                        t8_geometry_t geom);
+
 /** Set a forest as source for copying on commiting.
  * By default, the forest takes ownership of the source \b from such that it will
  * be destroyed on calling \see t8_forest_commit.  To keep ownership of \b
@@ -105,6 +142,12 @@ void                t8_forest_set_ghost (t8_forest_t forest, int do_ghost);
  *       set_load are mutually exclusive. */
 void                t8_forest_set_load (t8_forest_t forest,
                                         const char *filename);
+
+/** Compute the global number of elements in a forest as the sum
+ *  of the local element counts.
+ *  \param [in] forest    The forest.
+ */
+void                t8_forest_comm_global_num_elements (t8_forest_t forest);
 
 /** After allocating and adding properties to a forest, commit the changes.
  * This call sets up the internal state of the forest.
@@ -141,3 +184,4 @@ void                t8_forest_unref (t8_forest_t * pforest);
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_H */
+

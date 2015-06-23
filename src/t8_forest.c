@@ -21,69 +21,9 @@
 */
 
 #include <t8_refcount.h>
+#include <t8_geometry.h>
 #include <t8_forest.h>
-
-typedef enum t8_forest_from
-{
-  T8_FOREST_FROM_FIRST,
-  T8_FOREST_FROM_COPY = T8_FOREST_FROM_FIRST,
-  T8_FOREST_FROM_ADAPT,
-  T8_FOREST_FROM_PARTITION,
-  T8_FOREST_FROM_LAST
-}
-t8_forest_from_t;
-
-/** This structure is private to the implementation. */
-typedef struct t8_forest
-{
-  t8_refcount_t       rc;               /**< Reference counter. */
-
-  int                 set_level;        /**< Level to use in new construction. */
-  int                 set_for_coarsening;       /**< Change partition to allow
-                                                     for one round of coarsening */
-
-  sc_MPI_Comm         mpicomm;          /**< MPI communicator to use. */
-  t8_cmesh_t          cmesh;            /**< Coarse mesh to use. */
-  t8_scheme_t        *scheme;           /**< Scheme for element types. */
-  int                 do_dup;           /**< Communicator shall be duped. */
-  int                 dimension;        /**< Dimension inferred from \b cmesh. */
-
-  t8_forest_t         set_from;         /**< Temporarily store source forest. */
-  t8_forest_from_t    from_method;      /**< Method to derive from \b set_from. */
-
-  int                 committed;        /**< \ref t8_forest_commit called? */
-  int                 mpisize;          /**< Number of MPI processes. */
-  int                 mpirank;          /**< Number of this MPI process. */
-
-  t8_topidx_t         first_local_tree;
-  t8_topidx_t         last_local_tree;
-  sc_array_t         *trees;
-}
-t8_forest_struct_t;
-
-/** The t8 tree datatype */
-typedef struct t8_tree
-{
-  sc_array_t          elements;              /**< locally stored elements */
-  t8_eclass_t         eclass;                /**< The element class of this tree */
-  /* TODO: We will need the *_desc variables later for shure. */
-#if 0
-  t8_element_t        first_desc,            /**< first local descendant */
-                      last_desc;             /**< last local descendant */
-#endif
-  t8_locidx_t         quadrants_offset;      /**< cumulative sum over earlier
-                                                  trees on this processor
-                                                  (locals only) */
-  /* TODO: Do we need elements per level?
-   *       Then we definitely need a global MAXLEVEL
-   */
-#if 0
-  t8_locidx_t         elements_per_level[T8_MAXLEVEL + 1];
-                                             /**< locals only */
-#endif
-  int8_t              maxlevel;              /**< highest local element level */
-}
-t8_tree_t;
+#include <t8_forest_types.h>
 
 void
 t8_forest_init (t8_forest_t * pforest)
@@ -102,6 +42,8 @@ t8_forest_init (t8_forest_t * pforest)
 
   forest->mpisize = -1;
   forest->mpirank = -1;
+  forest->first_local_tree = -1;
+  forest->global_num_elements = -1;
 }
 
 static void
@@ -164,6 +106,16 @@ t8_forest_set_level (t8_forest_t forest, int level)
 }
 
 void
+t8_forest_set_geom (t8_forest_t forest, t8_geometry_t geom)
+{
+  T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
+  T8_ASSERT (!forest->committed);
+
+  forest->geom = geom;
+}
+
+void
 t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
 {
   T8_ASSERT (forest != NULL);
@@ -172,6 +124,7 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
   T8_ASSERT (forest->scheme == NULL);
+  T8_ASSERT (forest->geom == NULL);
   T8_ASSERT (forest->set_from == NULL);
 
   T8_ASSERT (set_from != NULL);
@@ -217,15 +170,18 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
   forest->from_method = T8_FOREST_FROM_PARTITION;
 }
 
-/* Return a pointer to an array element indexed by a t8_topidx_t.
- * \param [in] index needs to be in [0]..[elem_count-1].
- */
-static void        *
-t8_sc_array_index_topidx (sc_array_t * array, t8_topidx_t it)
+void
+t8_forest_comm_global_num_elements (t8_forest_t forest)
 {
-  P4EST_ASSERT (it >= 0 && (size_t) it < array->elem_count);
+  int                 mpiret;
+  t8_gloidx_t         local_num_el;
+  t8_gloidx_t         global_num_el;
 
-  return array->array + array->elem_size * (size_t) it;
+  local_num_el = (t8_gloidx_t) forest->local_num_elements;
+  mpiret = sc_MPI_Allreduce (&local_num_el, &global_num_el, 1,
+                             T8_MPI_GLOIDX, sc_MPI_SUM, forest->mpicomm);
+  SC_CHECK_MPI (mpiret);
+  forest->global_num_elements = global_num_el;
 }
 
 static void
@@ -233,12 +189,12 @@ t8_forest_populate (t8_forest_t forest)
 {
   t8_gloidx_t         child_in_tree_begin;
   t8_gloidx_t         child_in_tree_end;
-  t8_gloidx_t         count_children;
+  t8_gloidx_t         count_elements;
   t8_gloidx_t         num_tree_elements;
   t8_topidx_t         num_local_trees;
   t8_topidx_t         jt;
   t8_gloidx_t         start, end, et;
-  t8_tree_t          *tree;
+  t8_tree_t           tree;
   t8_element_t       *element, *element_succ;
   sc_array_t         *telements;
   t8_eclass_t         tree_class;
@@ -249,52 +205,91 @@ t8_forest_populate (t8_forest_t forest)
                            &forest->first_local_tree, &child_in_tree_begin,
                            &forest->last_local_tree, &child_in_tree_end);
 
+  forest->global_num_elements = forest->local_num_elements = 0;
   /* TODO: create only the non-empty tree objects */
   if (forest->first_local_tree >= forest->last_local_tree
       && child_in_tree_begin >= child_in_tree_end) {
     /* This processor is empty
      * we still set the tree array to store 0 as the number of trees here */
     forest->trees = sc_array_new (sizeof (t8_tree_t));
-    return;
+    count_elements = 0;
   }
-
-  /* TODO: for each tree, allocate elements */
-  num_local_trees = forest->last_local_tree - forest->first_local_tree + 1;
-  forest->trees = sc_array_new (sizeof (t8_tree_t));
-  sc_array_resize (forest->trees, num_local_trees);
-  for (jt = forest->first_local_tree, count_children = 0;
-       jt <= forest->last_local_tree; jt++) {
-    tree =
-      (t8_tree_t *) t8_sc_array_index_topidx (forest->trees,
-                                              jt - forest->first_local_tree);
-    tree_class = tree->eclass = t8_cmesh_get_tree_class (forest->cmesh, jt);
-    tree->maxlevel = forest->set_level;
-    eclass_scheme = forest->scheme->eclass_schemes[tree_class];
-    T8_ASSERT (eclass_scheme != NULL);
-    telements = &tree->elements;
-    /* calculate first and last element on this tree */
-    start = (jt == forest->first_local_tree) ? child_in_tree_begin : 0;
-    end = (jt == forest->last_local_tree) ? child_in_tree_end :
-      t8_eclass_count_leaf (tree_class, forest->set_level);
-    num_tree_elements = end - start;
-    T8_ASSERT (num_tree_elements > 0);
-    /* Allocate elements for this processor. */
-    sc_array_init_size (telements, t8_element_size (eclass_scheme),
-                        num_tree_elements);
-    element = (t8_element_t *) t8_sc_array_index_topidx (telements, 0);
-    eclass_scheme->elem_set_linear_id (element, forest->set_level, start);
-    count_children++;
-    for (et = start + 1; et < end; et++, count_children++) {
-      element_succ =
-        (t8_element_t *) t8_sc_array_index_topidx (telements, et - start);
-      eclass_scheme->elem_successor (element, element_succ,
-                                     forest->set_level);
-      /* TODO: process elements here */
-      element = element_succ;
+  else {
+    /* TODO: for each tree, allocate elements */
+    num_local_trees = forest->last_local_tree - forest->first_local_tree + 1;
+    forest->trees = sc_array_new (sizeof (t8_tree_t));
+    sc_array_resize (forest->trees, num_local_trees);
+    for (jt = forest->first_local_tree, count_elements = 0;
+         jt <= forest->last_local_tree; jt++) {
+      tree = (t8_tree_t) t8_sc_array_index_topidx (forest->trees,
+                                                   jt -
+                                                   forest->first_local_tree);
+      tree_class = tree->eclass = t8_cmesh_get_tree_class (forest->cmesh, jt);
+      tree->elements_offset = count_elements;
+      eclass_scheme = forest->scheme->eclass_schemes[tree_class];
+      T8_ASSERT (eclass_scheme != NULL);
+      telements = &tree->elements;
+      /* calculate first and last element on this tree */
+      start = (jt == forest->first_local_tree) ? child_in_tree_begin : 0;
+      end = (jt == forest->last_local_tree) ? child_in_tree_end :
+        t8_eclass_count_leaf (tree_class, forest->set_level);
+      num_tree_elements = end - start;
+      T8_ASSERT (num_tree_elements > 0);
+      /* Allocate elements for this processor. */
+      sc_array_init_size (telements, t8_element_size (eclass_scheme),
+                          num_tree_elements);
+      element = (t8_element_t *) t8_sc_array_index_topidx (telements, 0);
+      eclass_scheme->elem_set_linear_id (element, forest->set_level, start);
+      count_elements++;
+      for (et = start + 1; et < end; et++, count_elements++) {
+        element_succ =
+          (t8_element_t *) t8_sc_array_index_topidx (telements, et - start);
+        eclass_scheme->elem_successor (element, element_succ,
+                                       forest->set_level);
+        /* TODO: process elements here */
+        element = element_succ;
+      }
     }
   }
-
+  forest->local_num_elements = count_elements;
+  /* TODO: if no tree has pyramid type we can optimize this to
+   * global_num_elements = global_num_trees * 2^(dim*level)
+   */
+  t8_forest_comm_global_num_elements (forest);
   /* TODO: figure out global_first_position, global_first_quadrant without comm */
+}
+
+static void
+t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from)
+{
+  t8_tree_t           tree, fromtree;
+  t8_gloidx_t         num_tree_elements;
+  t8_topidx_t         jt, number_of_trees;
+  t8_eclass_scheme_t *eclass_scheme;
+
+  T8_ASSERT (forest != NULL);
+  T8_ASSERT (from != NULL);
+  T8_ASSERT (!forest->committed);
+  T8_ASSERT (from->committed);
+
+  number_of_trees = from->trees->elem_count;
+  forest->trees = sc_array_new_size (sizeof (t8_tree_t), number_of_trees);
+  sc_array_copy (forest->trees, from->trees);
+  for (jt = 0; jt < number_of_trees; jt++) {
+    tree = (t8_tree_t *) t8_sc_array_index_topidx (forest->trees, jt);
+    fromtree = (t8_tree_t *) t8_sc_array_index_topidx (from->trees, jt);
+    eclass_scheme = forest->scheme->eclass_schemes[tree->eclass];
+    num_tree_elements = fromtree->elements.elem_count;
+    sc_array_init_size (&tree->elements, t8_element_size (eclass_scheme),
+                        num_tree_elements);
+    /* TODO: replace with t8_elem_copy (not existing yet), in order to
+     * eventually copy additional pointer data stored in the elements? */
+    sc_array_copy (&tree->elements, &fromtree->elements);
+  }
+  forest->first_local_tree = from->first_local_tree;
+  forest->last_local_tree = from->last_local_tree;
+  forest->local_num_elements = from->local_num_elements;
+  forest->global_num_elements = from->global_num_elements;
 }
 
 void
@@ -327,6 +322,7 @@ t8_forest_commit (t8_forest_t forest)
     T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
     T8_ASSERT (forest->cmesh == NULL);
     T8_ASSERT (forest->scheme == NULL);
+    T8_ASSERT (forest->geom == NULL);
     T8_ASSERT (!forest->do_dup);
     T8_ASSERT (forest->from_method >= T8_FOREST_FROM_FIRST &&
                forest->from_method < T8_FOREST_FROM_LAST);
@@ -343,12 +339,16 @@ t8_forest_commit (t8_forest_t forest)
     }
     forest->do_dup = forest->set_from->do_dup;
 
-    /* increase reference count of cmesh and scheme from the input forest */
+    /* increase reference count of cmesh, scheme and geom from the input forest */
     t8_cmesh_ref (forest->cmesh = forest->set_from->cmesh);
     t8_scheme_ref (forest->scheme = forest->set_from->scheme);
+    if (forest->set_from->geom != NULL) {
+      t8_geometry_ref (forest->geom = forest->set_from->geom);
+    }
     forest->dimension = forest->set_from->dimension;
 
     /* TODO: call adapt and partition subfunctions here */
+    t8_forest_copy_trees (forest, forest->set_from);
     /* TODO: currently we can only handle copy */
     T8_ASSERT (forest->from_method == T8_FOREST_FROM_COPY);
 
@@ -380,7 +380,7 @@ t8_forest_write_vtk (t8_forest_t forest, const char *filename)
 static void
 t8_forest_free_trees (t8_forest_t forest)
 {
-  t8_tree_t          *tree;
+  t8_tree_t           tree;
   t8_topidx_t         jt, number_of_trees;
 
   T8_ASSERT (forest != NULL);
@@ -427,6 +427,9 @@ t8_forest_reset (t8_forest_t * pforest)
   /* we have taken ownership on calling t8_forest_set_* */
   t8_scheme_unref (&forest->scheme);
   t8_cmesh_unref (&forest->cmesh);
+  if (forest->geom != NULL) {
+    t8_geometry_unref (&forest->geom);
+  }
 
   T8_FREE (forest);
   *pforest = NULL;

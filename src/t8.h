@@ -71,12 +71,21 @@ T8_EXTERN_C_BEGIN ();
 
 /** A type for processor-local indexing. */
 typedef p4est_locidx_t t8_locidx_t;
+#define T8_MPI_LOCIDX P4EST_MPI_LOCIDX
 
 /** A type for global indexing that holds really big numbers. */
 typedef p4est_gloidx_t t8_gloidx_t;
+#define T8_MPI_GLOIDX P4EST_MPI_GLOIDX
 
 /** A type for counting topological entities (trees, tree vertices, ...). */
 typedef p4est_topidx_t t8_topidx_t;
+#define T8_MPI_TOPIDX P4EST_MPI_TOPIDX
+
+/** Return a pointer to an array element indexed by a t8_topidx_t.
+ * \param [in] index needs to be in [0]..[elem_count-1].
+ * \return           A void * pointing to entry \a it in \a array.
+ */
+void        *t8_sc_array_index_topidx (sc_array_t * array, t8_topidx_t it);
 
 /** Query the package identity as registered in libsc.
  * \return          This is -1 before \ref t8_init and the identifier after.

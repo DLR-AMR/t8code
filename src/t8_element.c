@@ -151,6 +151,14 @@ t8_element_level (t8_eclass_scheme_t * ts, const t8_element_t * elem)
 }
 
 void
+t8_element_copy (t8_eclass_scheme_t * ts, const t8_element_t * source,
+                 t8_element_t * dest)
+{
+  T8_ASSERT (ts != NULL && ts->elem_copy != NULL);
+  ts->elem_copy (source, dest);
+}
+
+void
 t8_element_parent (t8_eclass_scheme_t * ts,
                    const t8_element_t * elem, t8_element_t * parent)
 {
@@ -187,6 +195,21 @@ t8_element_children (t8_eclass_scheme_t * ts, const t8_element_t * elem,
   T8_ASSERT (t8_element_level (ts, elem) < t8_element_maxlevel (ts));
   T8_ASSERT (length == t8_eclass_num_children[ts->eclass]);
   ts->elem_children (elem, length, c);
+}
+
+int
+t8_element_child_id (t8_eclass_scheme_t * ts, const t8_element_t * elem)
+{
+  T8_ASSERT (ts != NULL && ts->elem_child_id != NULL);
+  return ts->elem_child_id (elem);
+}
+
+int
+t8_element_is_family (t8_eclass_scheme_t * ts, t8_element_t **fam)
+{
+  T8_ASSERT (ts != NULL && ts->elem_is_family != NULL);
+
+  return ts->elem_is_family (fam);
 }
 
 void
@@ -237,4 +260,14 @@ t8_element_destroy (t8_eclass_scheme_t * ts, int length,
 {
   T8_ASSERT (ts != NULL && ts->elem_destroy != NULL);
   ts->elem_destroy (ts->ts_context, length, elems);
+}
+
+t8_element_t *
+t8_element_array_index (t8_eclass_scheme_t * ts, sc_array_t * array, size_t it)
+{
+  T8_ASSERT (ts != NULL && ts->elem_size != NULL);
+  T8_ASSERT (array->elem_size == ts->elem_size());
+  T8_ASSERT (it < array->elem_count);
+
+  return (t8_element_t *) (array->array + array->elem_size * it);
 }

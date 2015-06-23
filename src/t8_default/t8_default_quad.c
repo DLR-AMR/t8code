@@ -69,8 +69,20 @@ t8_default_quad_copy_surround (const p4est_quadrant_t * q,
                                p4est_quadrant_t * r)
 {
   T8_QUAD_SET_TDIM (r, T8_QUAD_GET_TDIM (q));
-  T8_QUAD_SET_TNORMAL (r, T8_QUAD_GET_TNORMAL (q));
-  T8_QUAD_SET_TCOORD (r, T8_QUAD_GET_TCOORD (q));
+  if (T8_QUAD_GET_TDIM (q) == 3) {
+    T8_QUAD_SET_TNORMAL (r, T8_QUAD_GET_TNORMAL (q));
+    T8_QUAD_SET_TCOORD (r, T8_QUAD_GET_TCOORD (q));
+  }
+}
+
+static void
+t8_default_quad_copy (const t8_element_t * source, t8_element_t * dest)
+{
+  const p4est_quadrant_t *q = (const p4est_quadrant_t *) source;
+  p4est_quadrant_t   *r = (p4est_quadrant_t *) dest;
+
+  *r = *q;
+  t8_default_quad_copy_surround (q, r);
 }
 
 static void
@@ -129,6 +141,18 @@ t8_default_quad_children (const t8_element_t * elem,
   }
 }
 
+static int
+t8_default_quad_child_id (const t8_element_t * elem)
+{
+  return p4est_quadrant_child_id ((p4est_quadrant_t *) elem);
+}
+
+static int
+t8_default_quad_is_family (t8_element_t ** fam)
+{
+  return p4est_quadrant_is_familypv ((p4est_quadrant_t **) fam);
+}
+
 static void
 t8_default_quad_set_linear_id (t8_element_t * elem, int level, uint64_t id)
 {
@@ -136,6 +160,7 @@ t8_default_quad_set_linear_id (t8_element_t * elem, int level, uint64_t id)
   T8_ASSERT (0 <= id && id < (uint64_t) 1 << P4EST_DIM * level);
 
   p4est_quadrant_set_morton ((p4est_quadrant_t *) elem, level, id);
+  T8_QUAD_SET_TDIM ((p4est_quadrant_t *) elem, 2);
 }
 
 static void
@@ -148,6 +173,8 @@ t8_default_quad_successor (const t8_element_t * elem1,
   id = p4est_quadrant_linear_id ((const p4est_quadrant_t *) elem1, level);
   T8_ASSERT (id + 1 < (1 << P4EST_DIM * level));
   p4est_quadrant_set_morton ((p4est_quadrant_t *) elem2, level, id + 1);
+  t8_default_quad_copy_surround ((const p4est_quadrant_t *) elem1,
+                                 (p4est_quadrant_t *) elem2);
 }
 
 static void
@@ -192,10 +219,13 @@ t8_default_scheme_new_quad (void)
   ts->elem_child_eclass = t8_default_quad_child_eclass;
 
   ts->elem_level = t8_default_quad_level;
+  ts->elem_copy = t8_default_quad_copy;
   ts->elem_parent = t8_default_quad_parent;
   ts->elem_sibling = t8_default_quad_sibling;
   ts->elem_child = t8_default_quad_child;
   ts->elem_children = t8_default_quad_children;
+  ts->elem_child_id = t8_default_quad_child_id;
+  ts->elem_is_family = t8_default_quad_is_family;
   ts->elem_nca = t8_default_quad_nca;
   ts->elem_boundary = t8_default_quad_boundary;
   ts->elem_set_linear_id = t8_default_quad_set_linear_id;
