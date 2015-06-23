@@ -51,7 +51,7 @@ T8_EXTERN_C_BEGIN ();
 /** The type of a tetrahedron designates its position relative to the surrounding cube. */
 typedef int8_t      t8_dtet_type_t;
 
-/** The coordinetes of a tetrahedron are integers relative to the maximum refinement. */
+/** The coordinates of a tetrahedron are integers relative to the maximum refinement. */
 typedef int32_t     t8_dtet_coord_t;
 
 /** This data type stores a tetrahedron. */
