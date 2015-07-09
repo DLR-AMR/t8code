@@ -116,6 +116,7 @@ main (int argc, char **argv)
     return 1;
   }
 
+  sc_flops_start (&fi);
   sc_flops_snap (&fi, &snapshot);
 
   t8_timings_adapt (start_level, end_level, dim);
