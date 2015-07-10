@@ -75,7 +75,7 @@ t8_timings_adapt (int start_l, int end_l, int runs, int dim)
   T8_ASSERT (num_levels > 0);
   T8_ASSERT (runs > 0);
   if (num_levels > 0) {
-    forests = T8_ALLOC (t8_forest_t, num_levels * runs);
+    forests = T8_ALLOC (t8_forest_t, 2*num_levels * runs);
   }
   t8_forest_init (&forests[0]);
 
@@ -90,7 +90,7 @@ t8_timings_adapt (int start_l, int end_l, int runs, int dim)
   t8_forest_set_level (forests[0], start_l);
   t8_forest_commit (forests[0]);
 
-  for (run = 0, cur_for = 0;run < runs;run++) {
+  for (run = 0, cur_for = 1;run < runs;run++) {
     for (li = 1; li < num_levels; li++, cur_for++) {
       t8_forest_init (&forests[cur_for]);
       t8_forest_set_adapt_temp (forests[cur_for], forests[cur_for - 1], t8_basic_adapt_refine,
@@ -105,7 +105,7 @@ t8_timings_adapt (int start_l, int end_l, int runs, int dim)
     }
   }
 
-  t8_forest_unref (&forests[num_levels - 1]);
+  t8_forest_unref (&forests[cur_for - 1]);
   T8_FREE (forests);
 }
 
