@@ -70,6 +70,10 @@ t8_timings_adapt (int start_l, int end_l, int runs, int dim)
   t8_forest_t        *forests;
   int                 li, num_levels, cur_for, run;
   t8_eclass_t         eclass;
+  sc_flopinfo_t       fi, snapshot;
+  sc_statinfo_t       stats[1];
+
+
 
   num_levels = end_l - start_l + 1;
   T8_ASSERT (num_levels > 0);
@@ -90,6 +94,10 @@ t8_timings_adapt (int start_l, int end_l, int runs, int dim)
   t8_forest_set_level (forests[0], start_l);
   t8_forest_commit (forests[0]);
 
+  sc_flops_start (&fi);
+  sc_flops_snap (&fi, &snapshot);
+
+
   for (run = 0, cur_for = 1;run < runs;run++) {
     for (li = 1; li < num_levels; li++, cur_for++) {
       t8_forest_init (&forests[cur_for]);
@@ -105,8 +113,16 @@ t8_timings_adapt (int start_l, int end_l, int runs, int dim)
     }
   }
 
+  sc_flops_shot (&fi, &snapshot);
+  sc_stats_set1 (&stats[0], snapshot.iwtime, "Adapt");
+
+
   t8_forest_unref (&forests[cur_for - 1]);
   T8_FREE (forests);
+
+  sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
+  sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 1, stats, 1, 1);
+
 }
 
 int
@@ -117,8 +133,6 @@ main (int argc, char **argv)
   int                 first_argc;
   int		      repeat;
   sc_options_t       *opt;
-  sc_flopinfo_t       fi, snapshot;
-  sc_statinfo_t       stats[1];
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -144,17 +158,8 @@ main (int argc, char **argv)
     return 1;
   }
 
-  sc_flops_start (&fi);
-  sc_flops_snap (&fi, &snapshot);
 
   t8_timings_adapt (start_level, end_level, 20, dim);
-
-  sc_flops_shot (&fi, &snapshot);
-  sc_stats_set1 (&stats[0], snapshot.iwtime, "Adapt");
-
-  t8_global_productionf ("Timings for NP=%i\n", mpisize);
-  sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
-  sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 1, stats, 1, 1);
 
   sc_options_destroy (opt);
 
