@@ -31,7 +31,7 @@
 
 /* This function refines every element */
 static int
-t8_basic_adapt (t8_forest_t forest, t8_topidx_t which_tree,
+t8_basic_adapt_refine (t8_forest_t forest, t8_topidx_t which_tree,
                 t8_eclass_scheme_t * ts,
                 int num_elements, t8_element_t * elements[])
 {
@@ -52,33 +52,57 @@ t8_basic_adapt (t8_forest_t forest, t8_topidx_t which_tree,
   return 1;
 }
 
+/* This function coarsens each element */
+static int
+t8_basic_adapt_coarsen (t8_forest_t forest, t8_topidx_t which_tree,
+                t8_eclass_scheme_t * ts,
+                int num_elements, t8_element_t * elements[])
+{
+  if (num_elements > 1) {
+    return -1;
+  }
+  return 0;
+}
+
 static void
-t8_timings_adapt (int start_l, int end_l, int dim)
+t8_timings_adapt (int start_l, int end_l, int runs, int dim)
 {
   t8_forest_t        *forests;
-  int                 li, num_levels;
+  int                 li, num_levels, cur_for, run;
   t8_eclass_t         eclass;
 
   num_levels = end_l - start_l + 1;
   T8_ASSERT (num_levels > 0);
+  T8_ASSERT (runs > 0);
   if (num_levels > 0) {
-    forests = T8_ALLOC (t8_forest_t, num_levels);
+    forests = T8_ALLOC (t8_forest_t, num_levels * runs);
   }
   t8_forest_init (&forests[0]);
 
   eclass = dim == 2 ? T8_ECLASS_TRIANGLE : T8_ECLASS_TET;
-
+/*
   t8_forest_set_cmesh (forests[0],
                        t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0));
+*/
+  t8_forest_set_cmesh (forests[0],
+                       t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD, 0));
   t8_forest_set_scheme (forests[0], t8_scheme_new_default ());
   t8_forest_set_level (forests[0], start_l);
   t8_forest_commit (forests[0]);
 
-  for (li = 1; li < num_levels; li++) {
-    t8_forest_init (&forests[li]);
-    t8_forest_set_adapt_temp (forests[li], forests[li - 1], t8_basic_adapt,
-                              NULL, 0);
-    t8_forest_commit (forests[li]);
+  for (run = 0, cur_for = 0;run < runs;run++) {
+    for (li = 1; li < num_levels; li++, cur_for++) {
+      t8_forest_init (&forests[cur_for]);
+      t8_forest_set_adapt_temp (forests[cur_for], forests[cur_for - 1], t8_basic_adapt_refine,
+                                NULL, 0);
+      t8_forest_commit (forests[cur_for]);
+    }
+    for (li = 1; li < num_levels; li++, cur_for++) {
+      t8_forest_init (&forests[cur_for]);
+      t8_forest_set_adapt_temp (forests[cur_for], forests[cur_for - 1], t8_basic_adapt_coarsen,
+                                NULL, 0);
+      t8_forest_commit (forests[cur_for]);
+    }
   }
 
   t8_forest_unref (&forests[num_levels - 1]);
@@ -88,9 +112,10 @@ t8_timings_adapt (int start_l, int end_l, int dim)
 int
 main (int argc, char **argv)
 {
-  int                 mpiret;
+  int                 mpiret, mpisize;
   int                 start_level, end_level, dim;
   int                 first_argc;
+  int		      repeat;
   sc_options_t       *opt;
   sc_flopinfo_t       fi, snapshot;
   sc_statinfo_t       stats[1];
@@ -101,6 +126,9 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   p4est_init (NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
+ 
+  mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+  SC_CHECK_MPI (mpiret);
 
   opt = sc_options_new (argv[0]);
   sc_options_add_int (opt, 's', "slevel", &start_level, 0,
@@ -119,11 +147,12 @@ main (int argc, char **argv)
   sc_flops_start (&fi);
   sc_flops_snap (&fi, &snapshot);
 
-  t8_timings_adapt (start_level, end_level, dim);
+  t8_timings_adapt (start_level, end_level, 20, dim);
 
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[0], snapshot.iwtime, "Adapt");
 
+  t8_global_productionf ("Timings for NP=%i\n", mpisize);
   sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
   sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 1, stats, 1, 1);
 
