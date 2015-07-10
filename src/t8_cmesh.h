@@ -162,6 +162,16 @@ t8_cmesh_t          t8_cmesh_new_hex (sc_MPI_Comm comm, int do_dup);
 t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
                                             sc_MPI_Comm comm, int do_dup);
 
+/** Construct a mesh consisting of a given number of same type trees.
+ * \param [in] eclass       This element class determines the dimension and
+ *                          the type trees used.
+ * \param [in] num_trees    The number of trees to use.
+ * \param [in] comm         The MPI_Communicator associated to the cmesh.
+ * \return                  A valid cmesh, as if _init and _commit had been called.
+ */
+t8_cmesh_t          t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees,
+                                          sc_MPI_Comm comm, int do_dup);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_H */
