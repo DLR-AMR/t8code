@@ -22,12 +22,43 @@
 */
 
 #include <sc_refcount.h>
+#include <t8_default/t8_dtri.h>
+#include <t8_default/t8_dtet.h>
 #include <t8_default.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest.h>
 #include <sc_flops.h>
 #include <sc_statistics.h>
 #include <sc_options.h>
+
+#include <t8_forest/t8_forest_types.h> /* TODO: This file should not be included from an application */
+
+/* This function refines every element */
+static int
+t8_basic_adapt_refine_type (t8_forest_t forest, t8_topidx_t which_tree,
+                t8_eclass_scheme_t * ts,
+                int num_elements, t8_element_t * elements[])
+{
+  int                 level;
+  int                 type;
+  int                 dim;
+
+  T8_ASSERT (num_elements == 1 || num_elements ==
+             t8_eclass_num_children[ts->eclass]);
+
+  dim = t8_eclass_to_dimension[ts->eclass];
+  level = t8_element_level (ts, elements[0]);
+  if (level > 6) {
+    return 0;
+  }
+  type = dim == 2 ? ((t8_dtri_t *) elements[0])->type :
+                    ((t8_dtet_t *) elements[0])->type;
+  /* refine type 0 */
+  if (type == 0) {
+      return 1;
+  }
+  return 0;
+}
 
 /* This function refines every element */
 static int
@@ -63,6 +94,33 @@ t8_basic_adapt_coarsen (t8_forest_t forest, t8_topidx_t which_tree,
   }
   return 0;
 }
+
+static void
+t8_timings_adapt_type (int start_l, int dim)
+{
+  t8_forest_t         forests[2];
+  t8_eclass_t         eclass;
+
+  t8_forest_init (&forests[0]);
+
+  eclass = dim == 2 ? T8_ECLASS_TRIANGLE : T8_ECLASS_TET;
+
+  t8_forest_set_cmesh (forests[0],
+                       t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD, 0));
+  t8_forest_set_scheme (forests[0], t8_scheme_new_default ());
+  t8_forest_set_level (forests[0], start_l);
+  t8_forest_commit (forests[0]);
+
+  t8_forest_init (&forests[1]);
+  t8_forest_set_adapt_temp (forests[1], forests[0], t8_basic_adapt_refine_type,
+                              NULL, 1);
+  t8_forest_commit (forests[1]);
+
+  t8_debugf ("=P= I have %lli elements\n", (long long) forests[1]->local_num_elements);
+
+  t8_forest_unref (&forests[1]);
+}
+
 
 static void
 t8_timings_adapt (int start_l, int end_l, int runs, int dim)
@@ -131,7 +189,6 @@ main (int argc, char **argv)
   int                 mpiret, mpisize;
   int                 start_level, end_level, dim;
   int                 first_argc;
-  int		      repeat;
   sc_options_t       *opt;
 
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -158,8 +215,8 @@ main (int argc, char **argv)
     return 1;
   }
 
-
-  t8_timings_adapt (start_level, end_level, 20, dim);
+  t8_timings_adapt_type (start_level, dim);
+  //t8_timings_adapt (start_level, end_level, 20, dim);
 
   sc_options_destroy (opt);
 
