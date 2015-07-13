@@ -216,10 +216,12 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     t8_gloidx_t         global_num_children;
     t8_gloidx_t         first_global_child;
     t8_gloidx_t         last_global_child;
-    t8_locidx_t         children_per_tree;
+    t8_gloidx_t         children_per_tree;
+    const t8_gloidx_t	one = 1;
 
-    children_per_tree = 1 << cmesh->dimension * level;
+    children_per_tree = one << cmesh->dimension * level;
     global_num_children = cmesh->num_trees * children_per_tree;
+    
     if (cmesh->mpirank == 0) {
       *child_in_tree_begin = first_global_child = 0;
     }
