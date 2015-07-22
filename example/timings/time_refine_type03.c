@@ -68,6 +68,9 @@ t8_timings_adapt_type (int start_l, int dim)
 {
   t8_forest_t         forests[2];
   t8_eclass_t         eclass;
+  sc_flopinfo_t       fi, snapshot;
+  sc_statinfo_t       stats[1];
+  long long           num_el;
 
   t8_forest_init (&forests[0]);
 
@@ -82,11 +85,22 @@ t8_timings_adapt_type (int start_l, int dim)
   t8_forest_init (&forests[1]);
   t8_forest_set_adapt_temp (forests[1], forests[0], t8_basic_adapt_refine_type,
                               NULL, 1);
+
+  sc_flops_start (&fi);
+  sc_flops_snap (&fi, &snapshot);
+
   t8_forest_commit (forests[1]);
 
-  t8_debugf ("=P= I have %lli elements\n", (long long) forests[1]->local_num_elements);
+  sc_flops_shot (&fi, &snapshot);
+  sc_stats_set1 (&stats[0], snapshot.iwtime, "New");
+
+  num_el = (long long) forests[1]->local_num_elements;
 
   t8_forest_unref (&forests[1]);
+
+  t8_debugf ("=P= I have %lli elements\n", num_el);
+  sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
+  sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 1, stats, 1, 1);
 }
 
 int
