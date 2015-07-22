@@ -33,6 +33,8 @@
 
 #include <t8_forest/t8_forest_types.h> /* TODO: This file should not be included from an application */
 
+int max_ref_level = 0;
+
 /* This function refines every element */
 static int
 t8_basic_adapt_refine_type (t8_forest_t forest, t8_topidx_t which_tree,
@@ -48,13 +50,14 @@ t8_basic_adapt_refine_type (t8_forest_t forest, t8_topidx_t which_tree,
 
   dim = t8_eclass_to_dimension[ts->eclass];
   level = t8_element_level (ts, elements[0]);
-  if (level > 6) {
+  if (level >= max_ref_level) {
     return 0;
   }
+  /* get the type of the current element */
   type = dim == 2 ? ((t8_dtri_t *) elements[0])->type :
                     ((t8_dtet_t *) elements[0])->type;
-  /* refine type 0 */
-  if (type == 0) {
+  /* refine type 0 and 3 */
+  if (type == 0 || type == 3) {
       return 1;
   }
   return 0;
@@ -215,6 +218,7 @@ main (int argc, char **argv)
     return 1;
   }
 
+  max_ref_level = end_level;
   t8_timings_adapt_type (start_level, dim);
   //t8_timings_adapt (start_level, end_level, 20, dim);
 
