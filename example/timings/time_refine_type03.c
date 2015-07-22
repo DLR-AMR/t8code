@@ -32,100 +32,61 @@
 #include <sc_options.h>
 
 #include <t8_forest/t8_forest_types.h> /* TODO: This file should not be included from an application */
+
+int max_ref_level = 0;
+
 /* This function refines every element */
 static int
-t8_basic_adapt_refine (t8_forest_t forest, t8_topidx_t which_tree,
+t8_basic_adapt_refine_type (t8_forest_t forest, t8_topidx_t which_tree,
                 t8_eclass_scheme_t * ts,
                 int num_elements, t8_element_t * elements[])
 {
-#if 0
   int                 level;
-#endif
+  int                 type;
+  int                 dim;
+
   T8_ASSERT (num_elements == 1 || num_elements ==
              t8_eclass_num_children[ts->eclass]);
-#if 0
+
+  dim = t8_eclass_to_dimension[ts->eclass];
   level = t8_element_level (ts, elements[0]);
-  /* coarsen */
-  if (num_elements > 1) {
-    if (level > 0)
-      return -1;
+  if (level >= max_ref_level) {
     return 0;
   }
-#endif
-  return 1;
-}
-
-/* This function coarsens each element */
-static int
-t8_basic_adapt_coarsen (t8_forest_t forest, t8_topidx_t which_tree,
-                t8_eclass_scheme_t * ts,
-                int num_elements, t8_element_t * elements[])
-{
-  if (num_elements > 1) {
-    return -1;
+  /* get the type of the current element */
+  type = dim == 2 ? ((t8_dtri_t *) elements[0])->type :
+                    ((t8_dtet_t *) elements[0])->type;
+  /* refine type 0 and 3 */
+  if (type == 0 || type == 3) {
+      return 1;
   }
   return 0;
 }
 
 static void
-t8_timings_adapt (int start_l, int end_l, int runs, int dim)
+t8_timings_adapt_type (int start_l, int dim)
 {
-  t8_forest_t        *forests;
-  int                 li, num_levels, cur_for, run;
+  t8_forest_t         forests[2];
   t8_eclass_t         eclass;
-  sc_flopinfo_t       fi, snapshot;
-  sc_statinfo_t       stats[1];
 
-
-
-  num_levels = end_l - start_l + 1;
-  T8_ASSERT (num_levels > 0);
-  T8_ASSERT (runs > 0);
-  if (num_levels > 0) {
-    forests = T8_ALLOC (t8_forest_t, 2*num_levels * runs);
-  }
   t8_forest_init (&forests[0]);
 
   eclass = dim == 2 ? T8_ECLASS_TRIANGLE : T8_ECLASS_TET;
-/*
-  t8_forest_set_cmesh (forests[0],
-                       t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0));
-*/
+
   t8_forest_set_cmesh (forests[0],
                        t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD, 0));
   t8_forest_set_scheme (forests[0], t8_scheme_new_default ());
   t8_forest_set_level (forests[0], start_l);
   t8_forest_commit (forests[0]);
 
-  sc_flops_start (&fi);
-  sc_flops_snap (&fi, &snapshot);
+  t8_forest_init (&forests[1]);
+  t8_forest_set_adapt_temp (forests[1], forests[0], t8_basic_adapt_refine_type,
+                              NULL, 1);
+  t8_forest_commit (forests[1]);
 
+  t8_debugf ("=P= I have %lli elements\n", (long long) forests[1]->local_num_elements);
 
-  for (run = 0, cur_for = 1;run < runs;run++) {
-    for (li = 1; li < num_levels; li++, cur_for++) {
-      t8_forest_init (&forests[cur_for]);
-      t8_forest_set_adapt_temp (forests[cur_for], forests[cur_for - 1], t8_basic_adapt_refine,
-                                NULL, 0);
-      t8_forest_commit (forests[cur_for]);
-    }
-    for (li = 1; li < num_levels; li++, cur_for++) {
-      t8_forest_init (&forests[cur_for]);
-      t8_forest_set_adapt_temp (forests[cur_for], forests[cur_for - 1], t8_basic_adapt_coarsen,
-                                NULL, 0);
-      t8_forest_commit (forests[cur_for]);
-    }
-  }
-
-  sc_flops_shot (&fi, &snapshot);
-  sc_stats_set1 (&stats[0], snapshot.iwtime, "Adapt");
-
-
-  t8_forest_unref (&forests[cur_for - 1]);
-  T8_FREE (forests);
-
-  sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
-  sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 1, stats, 1, 1);
-
+  t8_forest_unref (&forests[1]);
 }
 
 int
@@ -142,7 +103,7 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   p4est_init (NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
- 
+
   mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
   SC_CHECK_MPI (mpiret);
 
@@ -160,7 +121,8 @@ main (int argc, char **argv)
     return 1;
   }
 
-  t8_timings_adapt (start_level, end_level, 20, dim);
+  max_ref_level = end_level;
+  t8_timings_adapt_type (start_level, dim);
 
   sc_options_destroy (opt);
 

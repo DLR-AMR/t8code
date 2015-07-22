@@ -3,6 +3,8 @@
 # Included from toplevel directory
 
 bin_PROGRAMS += \
-	example/timings/t8_timings
+	example/timings/t8_timings \
+	example/timings/t8_time_refine_type03
 
 example_timings_t8_timings_SOURCES = example/timings/timings.c
+example_timings_t8_time_refine_type03_SOURCES = example/timings/time_refine_type03.c
