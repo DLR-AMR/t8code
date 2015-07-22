@@ -3,6 +3,6 @@
 # Included from toplevel directory
 
 bin_PROGRAMS += \
-	example/basic/t8_basic 
+	example/timings/t8_timings
 
-example_basic_t8_basic_SOURCES = example/basic/basic.c
+example_timings_t8_timings_SOURCES = example/timings/timings.c

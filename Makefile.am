@@ -61,6 +61,7 @@ DISTCLEANFILES += \
 include src/Makefile.am
 include src/t8_default/Makefile.am
 include example/basic/Makefile.am
+include example/timings/Makefile.am
 
 # revision control and ChangeLog
 ChangeLog:
