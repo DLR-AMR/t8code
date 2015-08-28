@@ -212,10 +212,16 @@ void                t8_eclass_boundary_destroy (t8_scheme_t * scheme,
                                                 int min_dim, int length,
                                                 t8_element_t ** boundary);
 
-/** Return the size of any element of a given class. */
+/** Return the size of any element of a given class.
+ * \param [in] ts               The virtual table for this element class.
+ * \return                      The size of an element of class \b ts.
+ */
 size_t              t8_element_size (t8_eclass_scheme_t * ts);
 
-/** Return the maximum allowed level for any element of a given class. */
+/** Return the maximum allowed level for any element of a given class.
+ * \param [in] ts               The virtual table for this element class.
+ * \return                      The maximum allowed level for elements of class \b ts.
+ */
 int                 t8_element_maxlevel (t8_eclass_scheme_t * ts);
 
 /** Return the type of each child in the ordering of the implementation.
@@ -227,15 +233,48 @@ int                 t8_element_maxlevel (t8_eclass_scheme_t * ts);
 t8_eclass_t         t8_element_child_eclass (t8_eclass_scheme_t * ts,
                                              int childid);
 
+/** Return the level of a particular element.
+ * \param [in] ts      The virtual table for this element class.
+ * \param [in] elem    The element whose level should be returned.
+ * \return             The level of \b elem.
+ */
 int                 t8_element_level (t8_eclass_scheme_t * ts,
                                       const t8_element_t * elem);
+
+/** Copy all entries of \b source to \b dest. \b dest must be an existing
+ *  element. No memory is allocated by this function.
+ * \param [in] ts     The virtual table for this element class.
+ * \param [in] source The element whose entries will be copied to \b dest.
+ * \param [in,out] dest This element's entries will be overwritted with the
+ *                    entries of \b source.
+ */
 void                t8_element_copy (t8_eclass_scheme_t * ts,
                                      const t8_element_t * source,
                                      t8_element_t * dest);
 
+/** Compute the parent of a given element \b elem and store it in \b parent.
+ *  \b parent needs to be an existing element. No memory is allocated by this function.
+ *  \b elem and \b parent can point to the same element, then the entries of
+ *  \b elem are overwritten by the ones of its parent.
+ * \param [in] ts     The virtual table for this element class.
+ * \param [in] elem   The element whose parent will be computed.
+ * \param [in,out] parent This element's entries will be overwritten by those
+ *                    of \b elem's parent.
+ */
 void                t8_element_parent (t8_eclass_scheme_t * ts,
                                        const t8_element_t * elem,
                                        t8_element_t * parent);
+
+/** Compute a specific sibling of a given element \b elem and store it in \b sibling.
+ *  \b sibling needs to be an existing element. No memory is allocated by this function.
+ *  \b elem and \b sibling can point to the same element, then the entries of
+ *  \b elem are overwritten by the ones of its i-th sibling.
+ * \param [in] ts     The virtual table for this element class.
+ * \param [in] elem   The element whose parent will be computed.
+ * \param [in] sibid  The id of the sibling computed.
+ * \param [in,out] sibling This element's entries will be overwritten by those
+ *                    of \b elem's sibid-th sibling.
+ */
 void                t8_element_sibling (t8_eclass_scheme_t * ts,
                                         const t8_element_t * elem, int sibid,
                                         t8_element_t * sibling);
