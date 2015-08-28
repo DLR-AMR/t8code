@@ -186,10 +186,6 @@ void                t8_forest_set_ghost (t8_forest_t forest, int do_ghost);
 void                t8_forest_set_load (t8_forest_t forest,
                                         const char *filename);
 
-void
-t8_forest_set_adapt_temp (t8_forest_t forest, const t8_forest_t set_from,
-                          t8_forest_adapt_t adapt_fn, t8_forest_replace_t replace_fn, int recursive);
-
 /** Compute the global number of elements in a forest as the sum
  *  of the local element counts.
  *  \param [in] forest    The forest.
@@ -231,4 +227,3 @@ void                t8_forest_unref (t8_forest_t * pforest);
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_H */
-
