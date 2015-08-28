@@ -46,6 +46,7 @@ T8_EXTERN_C_BEGIN ();
  *
  * This is used by the adapt routine when the elements of an existing, valid
  * forest are changed.  The callback allows the user to make changes to newly
+ *
  * initialized elements before the elements that they replace are destroyed.
  *
  * \param [in] forest      the forest
@@ -88,10 +89,10 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
  *         zero else.
  */
 typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
-                                           t8_topidx_t which_tree,
-                                           t8_eclass_scheme_t * ts,
-                                           int num_elements,
-                                           t8_element_t * elements[]);
+                                          t8_topidx_t which_tree,
+                                          t8_eclass_scheme_t * ts,
+                                          int num_elements,
+                                          t8_element_t * elements[]);
 
   /** Create a new forest with reference count one.
  * This forest needs to be specialized with the t8_forest_set_* calls.
@@ -132,12 +133,16 @@ void                t8_forest_set_cmesh (t8_forest_t forest,
 void                t8_forest_set_scheme (t8_forest_t forest,
                                           t8_scheme_t * scheme);
 
+/** Set the initial refinement level to be used when \b forest is commited.
+ * \param [in,out] forest      The forest whose level will be set.
+ * \param [in]     level       The initial refinement level of \b forest, when
+ *                             it is commited.
+ */
 void                t8_forest_set_level (t8_forest_t forest, int level);
-
 
 /** Set a forest as source for copying on commiting.
  * By default, the forest takes ownership of the source \b from such that it will
- * be destroyed on calling \see t8_forest_commit.  To keep ownership of \b
+ * be destroyed on calling \ref t8_forest_commit.  To keep ownership of \b
  * from, call \ref t8_forest_ref before passing it into this function.
  * This means that it is ILLEGAL to continue using \b from or dereferencing it
  * UNLESS it is referenced directly before passing it into this function.
@@ -145,9 +150,27 @@ void                t8_forest_set_level (t8_forest_t forest, int level);
 void                t8_forest_set_copy (t8_forest_t forest,
                                         const t8_forest_t from);
 
-/* TODO: define adapt and replace callback functions */
+/** Set a source forest with an adapt function to be adapted on commiting.
+ * By default, the forest takes ownership of the source \b set_from such that it will
+ * be destroyed on calling \ref t8_forest_commit.  To keep ownership of \b
+ * set_from, call \ref t8_forest_ref before passing it into this function.
+ * This means that it is ILLEGAL to continue using \b set_from or dereferencing it
+ * UNLESS it is referenced directly before passing it into this function.
+ * \param [in,out] forest   The forest
+ * \param [in] set_from     The source forest from which \b forest will be adapted.
+ *                          We take ownership. This can be prevented by
+ *                          referencing \b set_from.
+ * \param [in] adapt_fn     The adapt function used on commiting.
+ * \param [in] replace_fn   The replace function to be used in \b adapt_fn.
+ * \param [in] recursive    A flag specifying whether adaptation is to be done recursively6
+ *                          or not. If the value is zero, adaptation is not recursive
+ *                          and it is recursive otherwise.
+ */
 void                t8_forest_set_adapt (t8_forest_t forest,
-                                         const t8_forest_t from);
+                                         const t8_forest_t set_from,
+                                         t8_forest_adapt_t adapt_fn,
+                                         t8_forest_replace_t replace_fn,
+                                         int recursive);
 
 /* TODO: define weight callback function */
 void                t8_forest_set_partition (t8_forest_t forest,
@@ -175,7 +198,7 @@ void                t8_forest_comm_global_num_elements (t8_forest_t forest);
 
 /** After allocating and adding properties to a forest, commit the changes.
  * This call sets up the internal state of the forest.
- * \param [in,out] forest       Must be created with \see t8_forest_init and
+ * \param [in,out] forest       Must be created with \ref t8_forest_init and
  *                              specialized with t8_forest_set_* calls first.
  */
 void                t8_forest_commit (t8_forest_t forest);
