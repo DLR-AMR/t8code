@@ -365,7 +365,7 @@ void                t8_element_boundary (t8_eclass_scheme_t * ts,
  * \param [in,out] elem The element whose entries will be set.
  * \param [in] level    The level of the uniform refinement to consider.
  * \param [in] id       The linear id.
- *                      id must fulfil 0 <= id < 'number of leafs in the uniform refinemen'
+ *                      id must fulfil 0 <= id < 'number of leafs in the uniform refinement'
  */
 void                t8_element_set_linear_id (t8_eclass_scheme_t * ts,
                                               t8_element_t * elem,
