@@ -164,6 +164,17 @@ t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 }
 
 void
+t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
+                     int face1, int face2, int orientation)
+{
+  SC_ABORT ("t8_cmesh_join_faces is not implemented");
+  /* TODO:
+   * check if both faces are of the same type (i.e. do not join a triangle and a square)
+   * how are the trees addressed if they are not processor local?
+   */
+}
+
+void
 t8_cmesh_commit (t8_cmesh_t cmesh)
 {
   int                 mpiret;
