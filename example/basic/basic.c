@@ -46,13 +46,6 @@ t8_basic_adapt (t8_forest_t forest, t8_topidx_t which_tree,
   return 0;
 }
 
-static int
-t8_basic_refine (t8_forest_t forest, t8_topidx_t which_tree,
-                 t8_eclass_scheme_t * ts, t8_element_t * element)
-{
-  return t8_element_level (ts, element) < 3;
-}
-
 static void
 t8_basic_refine_test ()
 {
@@ -68,7 +61,7 @@ t8_basic_refine_test ()
   t8_forest_set_level (forest, 2);
   t8_forest_commit (forest);
 
-  t8_forest_set_adapt_temp (forest_adapt, forest, t8_basic_adapt,
+  t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt,
                             NULL, 1);
   t8_forest_commit (forest_adapt);
 
@@ -130,7 +123,7 @@ main (int argc, char **argv)
   p4est_init (NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  level = 3; /*
+  level = 3;
   t8_basic (0, level);
   t8_basic (1, level);
   t8_basic (0, level);
@@ -143,7 +136,7 @@ main (int argc, char **argv)
       t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 1);
       t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 1);
     }
-  }*/
+  }
 
   t8_basic_refine_test ();
 

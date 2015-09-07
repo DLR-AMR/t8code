@@ -46,9 +46,6 @@ t8_forest_init (t8_forest_t * pforest)
   forest->set_adapt_recursive = -1;
 }
 
-/* TODO: Do we still need this function?
- *       It should be made obsolete by set_cmesh now */
-#if 0
 static void
 t8_forest_set_mpicomm (t8_forest_t forest, sc_MPI_Comm mpicomm, int do_dup)
 {
@@ -63,7 +60,6 @@ t8_forest_set_mpicomm (t8_forest_t forest, sc_MPI_Comm mpicomm, int do_dup)
   forest->mpicomm = mpicomm;
   forest->do_dup = do_dup;
 }
-#endif
 
 void
 t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh)
