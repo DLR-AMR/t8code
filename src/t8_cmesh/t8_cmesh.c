@@ -39,7 +39,7 @@ typedef struct t8_cmesh
   int                 mpisize;  /**< Number of MPI processes. */
   t8_refcount_t       rc; /**< The reference count of the cmesh. */
   t8_topidx_t         num_trees;  /**< The number of trees */
-  t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST]; /**< Store for each elemet class the number of trees of this class. */
+  t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST]; /**< Store for each element class the number of trees of this class. */
   t8_topidx_t         trees_per_eclass_counter[T8_ECLASS_LAST]; /**< Starts with zero and increases each time a tree is inserted. Must equal to \a num_trees_per_eclass after all insertions are done. */
   t8_topidx_t        *tree_to_num_in_eclass; /**< Each tree gets a consecutive index inside the eclass it belongs to. */
   t8_eclass_t        *tree_to_eclass; /**< Store for each tree the element class it belongs to. */
