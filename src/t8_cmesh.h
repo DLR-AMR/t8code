@@ -100,6 +100,19 @@ void                t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
 t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
                                              t8_topidx_t tree_id);
 
+/** Insert a face-connection between two trees in a cmesh.
+ * \param [in,out] cmesh        The cmesh to be updated.
+ * \param [in]     tree1        The tree id of the first of the two trees.
+ * \param [in]     tree2        The tree id of the second of the two trees.
+ * \param [in]     face1        The face number of the first tree.
+ * \param [in]     face2        The face number of the second tree.
+ * \param [in]     orientation  Specify how face1 and face2 are oriented to each other
+ * TODO: document orientation
+ */
+void                t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1,
+                                         t8_topidx_t tree2, int face1,
+                                         int face2, int orientation);
+
 /** After allocating and adding properties to a cmesh, finish its construction.
  * \param [in,out] cmesh        Must be created with \see t8_cmesh_init and
  *                              specialized with t8_cmesh_set_* calls first.
