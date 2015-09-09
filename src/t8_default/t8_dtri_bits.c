@@ -549,7 +549,7 @@ void
 t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
                                  const t8_dtri_t * t2, t8_dtri_t * r)
 {
-  int                 maxlevel;
+  int                 maxlevel, r_level;
   uint32_t            exclorx, exclory;
 #ifdef T8_DTRI_TO_DTET
   uint32_t            exclorz;
@@ -569,13 +569,10 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
 
   T8_ASSERT (maxlevel <= T8_DTRI_MAXLEVEL);
 
-  r->x = t1->x & ~((1 << maxlevel) - 1);
-  r->y = t1->y & ~((1 << maxlevel) - 1);
-#ifdef T8_DTRI_TO_DTET
-  r->z = t1->z & ~((1 << maxlevel) - 1);
-#endif
-  r->level = (int8_t) SC_MIN (T8_DTRI_MAXLEVEL - maxlevel,
-                              (int) SC_MIN (t1->level, t2->level));
+  r_level = (int8_t) SC_MIN (T8_DTRI_MAXLEVEL - maxlevel,
+                             (int) SC_MIN (t1->level, t2->level));
+  t8_dtri_ancestor (t1, r_level, r);
+#if 0
   /* Find the correct type of r by testing with
    * which type it becomes an ancestor of t1. */
   for (r->type = 0; r->type < 6; r->type++) {
@@ -584,6 +581,7 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
     }
   }
   SC_ABORT_NOT_REACHED ();
+#endif
 }
 
 int
