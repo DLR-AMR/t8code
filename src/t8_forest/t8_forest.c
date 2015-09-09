@@ -123,23 +123,6 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
 }
 
 void
-t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from)
-{
-  T8_ASSERT (forest != NULL);
-  T8_ASSERT (forest->rc.refcount > 0);
-  T8_ASSERT (!forest->committed);
-  T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
-  T8_ASSERT (forest->cmesh == NULL);
-  T8_ASSERT (forest->scheme == NULL);
-  T8_ASSERT (forest->set_from == NULL);
-
-  T8_ASSERT (set_from != NULL);
-
-  forest->set_from = set_from;
-  forest->from_method = T8_FOREST_FROM_ADAPT;
-}
-
-void
 t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
                          int set_for_coarsening)
 {
@@ -160,7 +143,7 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
 }
 
 void
-t8_forest_set_adapt_temp (t8_forest_t forest, const t8_forest_t set_from,
+t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from,
                           t8_forest_adapt_t adapt_fn,
                           t8_forest_replace_t replace_fn, int recursive)
 {
@@ -195,6 +178,8 @@ t8_forest_comm_global_num_elements (t8_forest_t forest)
   forest->global_num_elements = global_num_el;
 }
 
+/* Create the elements on this process given a uniform partition
+ * of the coarse mesh. */
 static void
 t8_forest_populate (t8_forest_t forest)
 {
@@ -217,7 +202,7 @@ t8_forest_populate (t8_forest_t forest)
                            &forest->last_local_tree, &child_in_tree_end);
 
   forest->global_num_elements = forest->local_num_elements = 0;
-  /* TODO: create only the non-empty tree objects */
+  /* create only the non-empty tree objects */
   if (forest->first_local_tree >= forest->last_local_tree
       && child_in_tree_begin >= child_in_tree_end) {
     /* This processor is empty
@@ -226,7 +211,7 @@ t8_forest_populate (t8_forest_t forest)
     count_elements = 0;
   }
   else {
-    /* TODO: for each tree, allocate elements */
+    /* for each tree, allocate elements */
     num_local_trees = forest->last_local_tree - forest->first_local_tree + 1;
     forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
     sc_array_resize (forest->trees, num_local_trees);
@@ -270,6 +255,10 @@ t8_forest_populate (t8_forest_t forest)
   /* TODO: figure out global_first_position, global_first_quadrant without comm */
 }
 
+/* Allocate memory for trees and set their values as in from.
+ * For each tree allocate enough element memory to fit the elements of from.
+ * If copy_elements is true, copy the elements of from into the element memory.
+ */
 static void
 t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
 {
@@ -401,6 +390,9 @@ t8_forest_write_vtk (t8_forest_t forest, const char *filename)
   T8_ASSERT (forest->committed);
 }
 
+/* Iterate through all the trees and free the element memory as well as
+ * the tree memory.
+ */
 static void
 t8_forest_free_trees (t8_forest_t forest)
 {
@@ -418,6 +410,9 @@ t8_forest_free_trees (t8_forest_t forest)
   sc_array_destroy (forest->trees);
 }
 
+/* Completely destroy a forest and unreference all structs that the
+ * forest has taken ownership on.
+ */
 static void
 t8_forest_reset (t8_forest_t * pforest)
 {

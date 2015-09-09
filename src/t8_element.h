@@ -211,10 +211,17 @@ void                t8_eclass_boundary_destroy (t8_scheme_t * scheme,
                                                 t8_eclass_t theclass,
                                                 int min_dim, int length,
                                                 t8_element_t ** boundary);
-/** Return the size of any element of a given class. */
+
+/** Return the size of any element of a given class.
+ * \param [in] ts               The virtual table for this element class.
+ * \return                      The size of an element of class \b ts.
+ */
 size_t              t8_element_size (t8_eclass_scheme_t * ts);
 
-/** Return the maximum allowed level for any element of a given class. */
+/** Return the maximum allowed level for any element of a given class.
+ * \param [in] ts               The virtual table for this element class.
+ * \return                      The maximum allowed level for elements of class \b ts.
+ */
 int                 t8_element_maxlevel (t8_eclass_scheme_t * ts);
 
 /** Return the type of each child in the ordering of the implementation.
@@ -226,15 +233,56 @@ int                 t8_element_maxlevel (t8_eclass_scheme_t * ts);
 t8_eclass_t         t8_element_child_eclass (t8_eclass_scheme_t * ts,
                                              int childid);
 
+/** Return the level of a particular element.
+ * \param [in] ts      The virtual table for this element class.
+ * \param [in] elem    The element whose level should be returned.
+ * \return             The level of \b elem.
+ */
 int                 t8_element_level (t8_eclass_scheme_t * ts,
                                       const t8_element_t * elem);
+
+/** Copy all entries of \b source to \b dest. \b dest must be an existing
+ *  element. No memory is allocated by this function.
+ * \param [in] ts     The virtual table for this element class.
+ * \param [in] source The element whose entries will be copied to \b dest.
+ * \param [in,out] dest This element's entries will be overwritted with the
+ *                    entries of \b source.
+ */
 void                t8_element_copy (t8_eclass_scheme_t * ts,
                                      const t8_element_t * source,
                                      t8_element_t * dest);
 
+/** Compute the parent of a given element \b elem and store it in \b parent.
+ *  \b parent needs to be an existing element. No memory is allocated by this function.
+ *  \b elem and \b parent can point to the same element, then the entries of
+ *  \b elem are overwritten by the ones of its parent.
+ * \param [in] ts     The virtual table for this element class.
+ * \param [in] elem   The element whose parent will be computed.
+ * \param [in,out] parent This element's entries will be overwritten by those
+ *                    of \b elem's parent.
+ *                    The storage for this element must exist
+ *                    and match the element class of the parent.
+ *                    For a pyramid, for example, it may be either a
+ *                    tetrahedron or a pyramid depending on \b elem's childid.
+ */
 void                t8_element_parent (t8_eclass_scheme_t * ts,
                                        const t8_element_t * elem,
                                        t8_element_t * parent);
+
+/** Compute a specific sibling of a given element \b elem and store it in \b sibling.
+ *  \b sibling needs to be an existing element. No memory is allocated by this function.
+ *  \b elem and \b sibling can point to the same element, then the entries of
+ *  \b elem are overwritten by the ones of its i-th sibling.
+ * \param [in] ts     The virtual table for this element class.
+ * \param [in] elem   The element whose parent will be computed.
+ * \param [in] sibid  The id of the sibling computed.
+ * \param [in,out] sibling This element's entries will be overwritten by those
+ *                    of \b elem's sibid-th sibling.
+ *                    The storage for this element must exist
+ *                    and match the element class of the sibling.
+ *                    For a pyramid, for example, it may be either a
+ *                    tetrahedron or a pyramid depending on \b sibid.
+ */
 void                t8_element_sibling (t8_eclass_scheme_t * ts,
                                         const t8_element_t * elem, int sibid,
                                         t8_element_t * sibling);
@@ -270,16 +318,42 @@ void                t8_element_children (t8_eclass_scheme_t * ts,
                                          const t8_element_t * elem,
                                          int length, t8_element_t * c[]);
 
+/** Compute the child id of an element.
+ * \param [in] ts       The virtual table for this element class.
+ * \param [in] elem     This must be a valid element.
+ * \return              The child id of elem.
+ */
 int                 t8_element_child_id (t8_eclass_scheme_t * ts,
                                          const t8_element_t * elem);
 
+/** Query whether a given set of elements is a family or not.
+ * \param [in] ts       The virtual table for this element class.
+ * \param [in] fam      An array of as many elements as an element of class
+ *                      \b ts has children.
+ * \return              Zero if \b fam is not a family, nonzero if it is.
+ */
 int                 t8_element_is_family (t8_eclass_scheme_t * ts,
                                           t8_element_t ** fam);
 
+/* TODO: This could be problematic for pyramids, since elem1 and elem2
+ *       could be of different classes. Would need two eclass_schemes as input */
+/** Compute the nearest common ancestor of two elements. That is,
+ * the element with highest level that still has both given elements as
+ * descendants.
+ * \param [in] ts       The virtual table for this element class.
+ * \param [in] elem1    The first of the two input elements.
+ * \param [in] elem2    The second of the two input elements.
+ * \param [in,out] nca  The storage for this element must exist
+ *                      and match the element class of the child.
+ *                      On output the unique nearest common ancestor of
+ *                      \b elem1 and \b elem2.
+ */
 void                t8_element_nca (t8_eclass_scheme_t * ts,
                                     const t8_element_t * elem1,
                                     const t8_element_t * elem2,
                                     t8_element_t * nca);
+
+/* TODO: comment */
 void                t8_element_boundary (t8_eclass_scheme_t * ts,
                                          const t8_element_t * elem,
                                          int min_dim, int length,
@@ -291,7 +365,7 @@ void                t8_element_boundary (t8_eclass_scheme_t * ts,
  * \param [in,out] elem The element whose entries will be set.
  * \param [in] level    The level of the uniform refinement to consider.
  * \param [in] id       The linear id.
- *                      id must fulfil 0 <= id < 'number of leafs in the uniform refinemen'
+ *                      id must fulfil 0 <= id < 'number of leafs in the uniform refinement'
  */
 void                t8_element_set_linear_id (t8_eclass_scheme_t * ts,
                                               t8_element_t * elem,
@@ -307,12 +381,34 @@ void                t8_element_successor (t8_eclass_scheme_t * ts,
                                           const t8_element_t * elem1,
                                           t8_element_t * elem2, int level);
 
+/** Allocate memory for an array of elements of a given class.
+ * \param [in] ts       The virtual table for this element class.
+ * \param [in] length   The number of elements to be allocated.
+ * \param [in,out] elems On input an array of \b length many unallocated
+ *                      element pointers.
+ *                      On output all these pointers will point to an allocated
+ *                      and uninitialized element.
+ */
 void                t8_element_new (t8_eclass_scheme_t * ts,
                                     int length, t8_element_t ** elems);
+
+/** Deallocate an array of elements.
+ * \param [in] ts       The virtual table for this element class.
+ * \param [in] length   The number of elements in the array.
+ * \param [in,out] elems On input an array of \b length many allocated
+ *                      element pointers.
+ *                      On output all these pointers will be freed.
+ *                      \b elem itself will not be freed by this function.
+ */
 void                t8_element_destroy (t8_eclass_scheme_t * ts,
                                         int length, t8_element_t ** elems);
 
-/** Return a pointer to an t8_element array element indexed by a size_t. */
+/** Return a pointer to an t8_element array element indexed by a size_t.
+ * \param [in] ts       The virtual table for this element class.
+ * \param [in] array    The \ref sc_array storing \t t8_element_t pointers.
+ * \param [in] it       The index of the element that should be returned.
+ * \return              A pointer to the it-th element in \b array.
+ */
 t8_element_t *      t8_element_array_index (t8_eclass_scheme_t * ts,
                                             sc_array_t *array, size_t it);
 
