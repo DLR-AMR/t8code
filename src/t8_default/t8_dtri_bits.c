@@ -118,6 +118,44 @@ t8_dtri_parent (const t8_dtri_t * t, t8_dtri_t * parent)
   parent->level = t->level - 1;
 }
 
+#ifndef T8_DTRI_TO_DTET
+void
+t8_dtri_ancestor (const t8_dtri_t * t, int level, t8_dtri_t * ancestor)
+{
+  /* TODO: find out, at which level difference it is faster to use this function
+   * opposed to iteratively computing the parent type.
+   */
+  t8_dtri_coord_t     delta_x, delta_y, diff;
+
+  /* delta_{x,y} = t->{x,y} - ancestor->{x,y}
+   * the difference of the coordinates.
+   Needed to compute the type of the ancestor. */
+  delta_x = t->x & (T8_DTRI_LEN (level) - 1);
+  delta_y = t->y & (T8_DTRI_LEN (level) - 1);
+
+  /* The coordinates of the ancestor. It is necessary
+     to compute the delta first, since ancestor and t
+     could point to the same triangle. */
+  ancestor->x = t->x & ~(T8_DTRI_LEN (level) - 1);
+  ancestor->y = t->y & ~(T8_DTRI_LEN (level) - 1);
+
+  /* The type of the ancestor depends on delta_x - delta_y */
+  diff = delta_x - delta_y;
+  if (diff > 0) {
+    ancestor->type = 0;
+  }
+  else if (diff < 0) {
+    ancestor->type = 1;
+  }
+  else {
+    T8_ASSERT (diff == 0);
+    ancestor->type = t->type;
+  }
+  ancestor->level = level;
+  ancestor->n = t->n;
+}
+#endif
+
 void
 t8_dtri_compute_coords (const t8_dtri_t * t, int vertex,
                         t8_dtri_coord_t coordinates[T8_DTRI_DIM])

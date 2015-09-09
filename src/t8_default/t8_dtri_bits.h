@@ -46,6 +46,17 @@ void                t8_dtri_copy (const t8_dtri_t * t, t8_dtri_t * dest);
  */
 void                t8_dtri_parent (const t8_dtri_t * t, t8_dtri_t * parent);
 
+/** Compute the ancestor of a triangle at a given level.
+ * \param [in]  t   Input triangle.
+ * \param [in]  level A smaller level than \a t.
+ * \param [in,out] ancestor Existing triangle whose data will
+ *                  be filled with the data of \a t's ancestor on
+ *                  level \a level.
+ * \note The triangle \a ancestor may point to the same triangle as \a t.
+ */
+void                t8_dtri_ancestor (const t8_dtri_t * t, int level,
+                                      t8_dtri_t * ancestor);
+
 /** Compute the coordinates of a vertex of a triangle.
  * \param [in] t    Input triangle.
  * \param [out] coordinates An array of 2 t8_dtri_coord_t that
