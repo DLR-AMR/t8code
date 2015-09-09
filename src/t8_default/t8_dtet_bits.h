@@ -68,6 +68,17 @@ void                t8_dtet_copy (const t8_dtet_t * t, t8_dtet_t * dest);
  */
 void                t8_dtet_parent (const t8_dtet_t * t, t8_dtet_t * parent);
 
+/** Compute the ancestor of a tetrahedron at a given level.
+ * \param [in]  t   Input tetrahedron.
+ * \param [in]  level A smaller level than \a t.
+ * \param [in,out] ancestor Existing tetrahedron whose data will
+ *                  be filled with the data of \a t's ancestor on
+ *                  level \a level.
+ * \note The tetrahedron \a ancestor may point to the same tetrahedron as \a t.
+ */
+void                t8_dtet_ancestor (const t8_dtet_t * t, int level,
+                                      t8_dtet_t * ancestor);
+
 /** Compute the childid-th child in Morton order of a tetrahedron t.
  * \param [in] t    Input tetrahedron.
  * \param [in,out] childid The id of the child, 0..7 in Bey order.

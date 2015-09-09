@@ -118,43 +118,134 @@ t8_dtri_parent (const t8_dtri_t * t, t8_dtri_t * parent)
   parent->level = t->level - 1;
 }
 
-#ifndef T8_DTRI_TO_DTET
 void
 t8_dtri_ancestor (const t8_dtri_t * t, int level, t8_dtri_t * ancestor)
 {
-  /* TODO: find out, at which level difference it is faster to use this function
+  /* TODO: find out, at which level difference it is faster to use    *
+   * the arithmetic computation of ancestor type
    * opposed to iteratively computing the parent type.
    */
-  t8_dtri_coord_t     delta_x, delta_y, diff;
+  t8_dtri_coord_t     delta_x, delta_y, diff_xy;
+#ifdef T8_DTRI_TO_DTET
+  t8_dtri_coord_t     delta_z, diff_xz, diff_yz;
+  t8_dtet_type_t      possible_types[6] = { 1, 1, 1, 1, 1, 1 };
+  int                 i;
+#ifdef T8_ENABLE_DEBUG
+  int                 set_type = 0;
+#endif
+#endif /* T8_DTRI_TO_DTET */
 
   /* delta_{x,y} = t->{x,y} - ancestor->{x,y}
    * the difference of the coordinates.
-   Needed to compute the type of the ancestor. */
+   * Needed to compute the type of the ancestor. */
   delta_x = t->x & (T8_DTRI_LEN (level) - 1);
   delta_y = t->y & (T8_DTRI_LEN (level) - 1);
+#ifdef T8_DTRI_TO_DTET
+  delta_z = t->z & (T8_DTRI_LEN (level) - 1);
+#endif
 
   /* The coordinates of the ancestor. It is necessary
-     to compute the delta first, since ancestor and t
-     could point to the same triangle. */
+   * to compute the delta first, since ancestor and t
+   * could point to the same triangle. */
   ancestor->x = t->x & ~(T8_DTRI_LEN (level) - 1);
   ancestor->y = t->y & ~(T8_DTRI_LEN (level) - 1);
+#ifdef T8_DTRI_TO_DTET
+  ancestor->z = t->z & ~(T8_DTRI_LEN (level) - 1);
+#endif
 
+#ifndef T8_DTRI_TO_DTET
   /* The type of the ancestor depends on delta_x - delta_y */
-  diff = delta_x - delta_y;
-  if (diff > 0) {
+  diff_xy = delta_x - delta_y;
+  if (diff_xy > 0) {
     ancestor->type = 0;
   }
-  else if (diff < 0) {
+  else if (diff_xy < 0) {
     ancestor->type = 1;
   }
   else {
-    T8_ASSERT (diff == 0);
+    T8_ASSERT (diff_xy == 0);
     ancestor->type = t->type;
   }
-  ancestor->level = level;
+
   ancestor->n = t->n;
-}
+#else
+/* The sign of each diff reduces the number of possible types
+ * for the ancestor. At the end only one possible type is left,
+ * this type's entry in the possible_types array will be positive.
+ */
+
+  diff_xy = delta_x - delta_y;
+  diff_xz = delta_x - delta_z;
+  diff_yz = delta_y - delta_z;
+
+/* delta_x - delta_y */
+  if (diff_xy > 0) {
+    possible_types[2] = possible_types[3] = possible_types[4] = 0;
+  }
+  else if (diff_xy < 0) {
+    possible_types[0] = possible_types[1] = possible_types[5] = 0;
+  }
+  else {
+    T8_ASSERT (diff_xy == 0);
+    if (t->type == 0 || t->type == 1 || t->type == 5) {
+      possible_types[2] = possible_types[3] = possible_types[4] = 0;
+    }
+    else {
+      possible_types[0] = possible_types[1] = possible_types[5] = 0;
+    }
+  }
+
+/* delta_x - delta_z */
+  if (diff_xz > 0) {
+    possible_types[3] = possible_types[4] = possible_types[5] = 0;
+  }
+  else if (diff_xz < 0) {
+    possible_types[0] = possible_types[1] = possible_types[2] = 0;
+  }
+  else {
+    T8_ASSERT (diff_xz == 0);
+    if (t->type == 0 || t->type == 1 || t->type == 2) {
+      possible_types[3] = possible_types[4] = possible_types[5] = 0;
+    }
+    else {
+      possible_types[0] = possible_types[1] = possible_types[2] = 0;
+    }
+  }
+
+/* delta_y - delta_z */
+  if (diff_yz > 0) {
+    possible_types[0] = possible_types[4] = possible_types[5] = 0;
+  }
+  else if (diff_yz < 0) {
+    possible_types[1] = possible_types[2] = possible_types[3] = 0;
+  }
+  else {
+    T8_ASSERT (diff_yz == 0);
+    if (t->type == 1 || t->type == 2 || t->type == 3) {
+      possible_types[0] = possible_types[4] = possible_types[5] = 0;
+    }
+    else {
+      possible_types[1] = possible_types[2] = possible_types[3] = 0;
+    }
+  }
+
+  /* Got through possible_types array and find the only entry
+   * that is nonzero
+   */
+  for (i = 0; i < 6; i++) {
+    T8_ASSERT (possible_types[i] == 0 || possible_types[i] == 1);
+    if (possible_types[i] == 1) {
+      ancestor->type = i;
+#ifdef T8_ENABLE_DEBUG
+      T8_ASSERT (set_type != 1);
+      set_type = 1;
 #endif
+    }
+  }
+  T8_ASSERT (set_type == 1);
+#endif /* T8_DTRI_TO_DTET */
+  ancestor->level = level;
+}
 
 void
 t8_dtri_compute_coords (const t8_dtri_t * t, int vertex,
