@@ -160,7 +160,9 @@ t8_forest_adapt (t8_forest_t forest)
   t8_tree_t           tree, tree_from;
   t8_eclass_scheme_t *tscheme;
   t8_element_t      **elements, **elements_from, *elpop;
+#ifdef T8_ENABLE_DEBUG
   int                 is_family;
+#endif
   int                 refine;
   int                 ci;
   int                 num_elements;
@@ -199,7 +201,9 @@ t8_forest_adapt (t8_forest_t forest)
     elements = T8_ALLOC (t8_element_t *, num_children);
     elements_from = T8_ALLOC (t8_element_t *, num_children);
     while (el_considered < num_el_from) {
+#ifdef T8_ENABLE_DEBUG
       is_family = 1;
+#endif
       num_elements = num_children;
       for (zz = 0; zz < num_children &&
            el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
@@ -211,7 +215,9 @@ t8_forest_adapt (t8_forest_t forest)
       }
       if (zz != num_children) {
         num_elements = 1;
+#ifdef T8_ENABLE_DEBUG
         is_family = 0;
+#endif
       }
       T8_ASSERT (!is_family || t8_element_is_family (tscheme, elements_from));
       refine = forest->set_adapt_fn (forest, treeid, tscheme, num_elements,
