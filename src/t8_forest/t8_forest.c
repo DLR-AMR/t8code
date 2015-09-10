@@ -46,9 +46,6 @@ t8_forest_init (t8_forest_t * pforest)
   forest->set_adapt_recursive = -1;
 }
 
-/* TODO: Do we still need this function?
- *       It should be made obsolete by set_cmesh now */
-#if 0
 static void
 t8_forest_set_mpicomm (t8_forest_t forest, sc_MPI_Comm mpicomm, int do_dup)
 {
@@ -63,7 +60,6 @@ t8_forest_set_mpicomm (t8_forest_t forest, sc_MPI_Comm mpicomm, int do_dup)
   forest->mpicomm = mpicomm;
   forest->do_dup = do_dup;
 }
-#endif
 
 void
 t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh)
@@ -148,8 +144,8 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
 
 void
 t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from,
-                          t8_forest_adapt_t adapt_fn,
-                          t8_forest_replace_t replace_fn, int recursive)
+                     t8_forest_adapt_t adapt_fn,
+                     t8_forest_replace_t replace_fn, int recursive)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
@@ -277,7 +273,8 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
   T8_ASSERT (from->committed);
 
   number_of_trees = from->trees->elem_count;
-  forest->trees = sc_array_new_size (sizeof (t8_tree_struct_t), number_of_trees);
+  forest->trees =
+    sc_array_new_size (sizeof (t8_tree_struct_t), number_of_trees);
   sc_array_copy (forest->trees, from->trees);
   for (jt = 0; jt < number_of_trees; jt++) {
     tree = (t8_tree_t) t8_sc_array_index_topidx (forest->trees, jt);
