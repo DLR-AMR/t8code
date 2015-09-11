@@ -34,17 +34,42 @@ typedef struct t8_cmesh
   int                 committed;
   int                 dimension; /**< The dimension of the cmesh. It is set when the first tree is inserted. */
   int                 do_dup;   /**< Communicator shall be duped. */
+  int                 set_partitioned; /**< If nonzero the cmesh is partitioned.
+                                            If zero each process has the whole cmesh. */
   sc_MPI_Comm         mpicomm;  /**< MPI communicator to use. */
   int                 mpirank;  /**< Number of this MPI process. */
   int                 mpisize;  /**< Number of MPI processes. */
   t8_refcount_t       rc; /**< The reference count of the cmesh. */
   t8_topidx_t         num_trees;  /**< The number of trees */
-  t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST]; /**< Store for each element class the number of trees of this class. */
-  t8_topidx_t         trees_per_eclass_counter[T8_ECLASS_LAST]; /**< Starts with zero and increases each time a tree is inserted. Must equal to \a num_trees_per_eclass after all insertions are done. */
-  t8_topidx_t        *tree_to_num_in_eclass; /**< Each tree gets a consecutive index inside the eclass it belongs to. */
-  t8_eclass_t        *tree_to_eclass; /**< Store for each tree the element class it belongs to. */
+  t8_topidx_t         num_local_trees; /**< If partitioned the number of trees on this process. */
+  t8_topidx_t         num_ghosts; /**< If partitioned the number of neighbor trees
+                                    owned by different processes. */
+  t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST]; /**< After commit the number of
+                                                                 trees for each eclas. */
+  /* TODO: is num_local_trees unset if replicated or is it set to num_trees? */
+  sc_array_t         *ctrees; /**< An array of all trees in the cmesh. */
+  t8_topidx_t         first_tree; /**< The global index of the first full tree
+                                       on this process. Zero if the cmesh is not partitioned. */
+  t8_topidx_t        *tree_offsets; /**< If partitioned the global number of the
+                                         first full tree of each process. */
 }
 t8_cmesh_struct_t;
+
+typedef struct t8_ctree_fneighbor
+{
+  t8_topidx_t         treeid; /**< The global number of this neighbor. */
+  t8_eclass_t         eclass; /**< The eclass of this neighbor. */
+  int8_t              tree_to_face;     /* TODO: think of an encoding and document */
+}
+t8_ctree_fneighbor_struct_t;
+
+typedef struct t8_ctree
+{
+  t8_topidx_t         treeid; /**< The global number of this tree. */
+  t8_eclass_t         eclass; /**< The eclass of this tree. */
+  t8_ctree_fneighbor_struct_t *face_neighbors; /**< Information about the face neighbors of this tree. */
+}
+t8_ctree_struct_t;
 
 void
 t8_cmesh_init (t8_cmesh_t * pcmesh)

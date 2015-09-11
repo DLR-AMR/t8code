@@ -33,6 +33,7 @@
 /* TODO: do set_mpicomm and figure out dup logic */
 
 typedef struct t8_cmesh *t8_cmesh_t;
+typedef struct t8_ctree *t8_ctree_t;
 
 T8_EXTERN_C_BEGIN ();
 
