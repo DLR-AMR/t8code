@@ -680,3 +680,24 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup)
 
   return cmesh;
 }
+
+t8_cmesh_t
+t8_cmesh_new_flat_torus (sc_MPI_Comm comm, int do_dup, int dim)
+{
+  t8_cmesh_t          cmesh;
+
+  T8_ASSERT (dim == 2 || dim == 3);
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
+  t8_cmesh_set_num_trees (cmesh, 1);
+  t8_cmesh_set_tree (cmesh, 0, dim == 2 ? T8_ECLASS_QUAD : T8_ECLASS_HEX);
+  /* TODO: if orientation is specified, check whether 0 is the correct choice here */
+  t8_cmesh_join_faces (cmesh, 0, 0, 0, 1, 0, T8_ECLASS_LAST);
+  t8_cmesh_join_faces (cmesh, 0, 0, 2, 3, 0, T8_ECLASS_LAST);
+  if (dim == 3)
+  {
+    t8_cmesh_join_faces (cmesh, 0, 0, 4, 5, 0, T8_ECLASS_LAST);
+  }
+  t8_cmesh_commit (cmesh);
+  return cmesh;
+}
