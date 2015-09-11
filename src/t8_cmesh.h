@@ -65,7 +65,7 @@ void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
  */
 sc_MPI_Comm         t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup);
 
-/** Set the number of trees and number of trees per eclass for a cmesh.
+/** Set the number of trees for a cmesh.
  * It is not allowed to call this function after \see t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     num_trees    The number of trees to be set.
@@ -73,17 +73,7 @@ sc_MPI_Comm         t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup);
  *                              the number of trees of this class.
  */
 void                t8_cmesh_set_num_trees (t8_cmesh_t cmesh,
-                                            t8_topidx_t num_trees,
-                                            const t8_topidx_t
-                                            num_trees_per_eclass
-                                            [T8_ECLASS_LAST]);
-
-/** Return the number of trees in a cmesh.
- * \param [in] cmesh       The cmesh to be considered.
- * \return                 The numbrt of trees associated to \a cmesh.
- * \a cmesh must be committed before calling this function.
- */
-t8_topidx_t         t8_cmesh_get_num_trees (t8_cmesh_t cmesh);
+                                            t8_topidx_t num_trees);
 
 /** Set the class of a tree in the cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.
@@ -92,14 +82,6 @@ t8_topidx_t         t8_cmesh_get_num_trees (t8_cmesh_t cmesh);
  */
 void                t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
                                        t8_eclass_t tree_class);
-
-/** Return the eclass of a given tree.
- * \param [in]    cmesh         The cmesh to be considered.
- * \param [in]    tree_id       The id of the tree whose eclass will be returned.
- * \return                      The eclass of the given tree.
- */
-t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
-                                             t8_topidx_t tree_id);
 
 /** Insert a face-connection between two trees in a cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.
@@ -119,6 +101,31 @@ void                t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1,
  *                              specialized with t8_cmesh_set_* calls first.
  */
 void                t8_cmesh_commit (t8_cmesh_t cmesh);
+
+/** Return the eclass of a given tree.
+ * \param [in]    cmesh         The cmesh to be considered.
+ * \param [in]    tree_id       The id of the tree whose eclass will be returned.
+ * \return                      The eclass of the given tree.
+ * \a cmesh must be committed before calling this function.
+ */
+t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
+                                             t8_topidx_t tree_id);
+
+/** Return the global number of trees in a cmesh.
+ * \param [in] cmesh       The cmesh to be considered.
+ * \return                 The number of trees associated to \a cmesh.
+ * \a cmesh must be committed before calling this function.
+ */
+t8_topidx_t         t8_cmesh_get_num_trees (t8_cmesh_t cmesh);
+
+/** Return the processor local number of trees in a cmesh.
+ * If the cmesh is not partitioned this is the same as
+ * the global number of trees.
+ * \param [in] cmesh       The cmesh to be considered.
+ * \return                 The number of trees associated to \a cmesh.
+ * \a cmesh must be committed before calling this function.
+ */
+t8_topidx_t         t8_cmesh_get_local_num_trees (t8_cmesh_t cmesh);
 
 /** Calculate the section of a uniform forest for the current rank.
  * TODO: this requires that cmesh knows its MPI communicator.

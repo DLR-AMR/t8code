@@ -113,61 +113,68 @@ t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup)
 }
 
 void
-t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees, const
-                        t8_topidx_t num_trees_per_eclass[T8_ECLASS_LAST])
+t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees)
 {
-#ifdef T8_ENABLE_DEBUG
-  int                 class_it;
-  t8_topidx_t         count_trees = 0;
-  t8_topidx_t         ti;
-#endif
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (!cmesh->committed);
-  T8_ASSERT (num_trees > 0);
-  T8_ASSERT (cmesh->num_trees == 0);
 
-  cmesh->num_trees = num_trees;
-  cmesh->tree_to_eclass = T8_ALLOC_ZERO (t8_eclass_t, num_trees);
-  cmesh->tree_to_num_in_eclass = T8_ALLOC_ZERO (t8_topidx_t, num_trees);
-#ifdef T8_ENABLE_DEBUG
-  /* fill trees_per_eclass array with invalid value, so that we are later
-   * able to check whether the entry is set or not. */
-  for (ti = 0; ti < num_trees; ti++) {
-    cmesh->tree_to_eclass[ti] = T8_ECLASS_LAST;
+  /* If the cmesh is entered as a partitioned cmesh,
+   * this function sets the local number of trees;
+   * the global number then must have been set in cmesh_set_partitioned.
+   * Otherwise the global number of trees is set here.
+   */
+  if (cmesh->set_partitioned) {
+    /* num_trees == 0 is allowed */
+    T8_ASSERT (cmesh->num_trees > 0);
+    T8_ASSERT (cmesh->num_local_trees == 0);
+    cmesh->num_local_trees = num_trees;
   }
-  /* Check whether num_trees_per_eclass add up to num_trees. */
-  for (class_it = T8_ECLASS_FIRST; class_it < T8_ECLASS_LAST; class_it++) {
-    count_trees += num_trees_per_eclass[class_it];
+  else {
+    /* num_trees == 0 is not allowed */
+    T8_ASSERT (num_trees > 0);
+    T8_ASSERT (cmesh->num_trees == 0);
+    cmesh->num_trees = cmesh->num_local_trees = num_trees;
   }
-#endif
-
-  T8_ASSERT (count_trees == num_trees);
-  memcpy (cmesh->num_trees_per_eclass, num_trees_per_eclass,
-          sizeof (t8_topidx_t) * T8_ECLASS_LAST);
+  /* As soon as we know the number of trees, we allocate
+   * the ctree array.
+   */
+  cmesh->ctrees = sc_array_new_size (sizeof (t8_ctree_struct_t), num_trees);
 }
 
-t8_topidx_t
-t8_cmesh_get_num_trees (t8_cmesh_t cmesh)
+/* Check whether a given tree_id belongs to a tree in the cmesh.
+ * If partitioned only local trees are allowed.
+ */
+static int
+t8_cmesh_tree_id_is_valid (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 {
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
+  if (cmesh->set_partitioned) {
+    return cmesh->first_tree < tree_id
+      && tree_id < cmesh->first_tree + cmesh->num_local_trees;
+  }
+  else {
+    return 0 <= tree_id && tree_id < cmesh->num_trees;
+  }
+}
 
-  return cmesh->num_trees;
+/* Given a tree_id return the index of the specified tree in
+ * cmesh's tree array
+ */
+static              t8_topidx_t
+t8_cmesh_tree_index (t8_cmesh_t cmesh, t8_topidx_t tree_id)
+{
+  return cmesh->set_partitioned ? tree_id - cmesh->first_tree : tree_id;
 }
 
 void
 t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
                    t8_eclass_t tree_class)
 {
-  t8_topidx_t         num_in_eclass;
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (0 <= tree_id && tree_id < cmesh->num_trees);
-  T8_ASSERT (!cmesh->committed);
-  T8_ASSERT (cmesh->tree_to_eclass[tree_id] == T8_ECLASS_LAST);
+  t8_ctree_t          tree;
+  int                 i, num_neighbors;
 
-  num_in_eclass = cmesh->trees_per_eclass_counter[tree_class]++;
-  cmesh->tree_to_eclass[tree_id] = tree_class;
-  cmesh->tree_to_num_in_eclass[tree_id] = num_in_eclass;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (t8_cmesh_tree_id_is_valid (cmesh, tree_id));
 
   /* If we insert the first tree, set the dimension of the cmesh
    * to this tree's dimension. Otherwise check whether the dimension
@@ -178,14 +185,23 @@ t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
   else {
     T8_ASSERT (t8_eclass_to_dimension[tree_class] == cmesh->dimension);
   }
-}
+  cmesh->num_trees_per_eclass[tree_class]++;
 
-t8_eclass_t
-t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_topidx_t tree_id)
-{
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (0 <= tree_id && tree_id <= cmesh->num_trees);
-  return cmesh->tree_to_eclass[tree_id];
+  tree = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees,
+                                                t8_cmesh_tree_index (cmesh,
+                                                                     tree_id));
+
+  tree->eclass = tree_class;
+  tree->treeid = tree_id;
+  num_neighbors = t8_eclass_num_faces[tree_class];
+  /* Allocate neighbors and set entries to invalid values. */
+  tree->face_neighbors =
+    T8_ALLOC (t8_ctree_fneighbor_struct_t, num_neighbors);
+  for (i = 0; i < num_neighbors; i++) {
+    tree->face_neighbors[i].eclass = T8_ECLASS_LAST;
+    tree->face_neighbors[i].treeid = -1;
+    tree->face_neighbors[i].tree_to_face = -1;
+  }
 }
 
 void
@@ -204,9 +220,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
 {
   int                 mpiret;
   sc_MPI_Comm         comm_dup;
-#ifdef T8_ENABLE_DEBUG
-  int                 class_it;
-#endif
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->mpicomm != sc_MPI_COMM_NULL);
@@ -214,12 +227,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   T8_ASSERT (cmesh->num_trees > 0);
 
   cmesh->committed = 1;
-#ifdef T8_ENABLE_DEBUG
-  for (class_it = T8_ECLASS_FIRST; class_it < T8_ECLASS_LAST; class_it++) {
-    T8_ASSERT (cmesh->trees_per_eclass_counter[class_it] ==
-               cmesh->num_trees_per_eclass[class_it]);
-  }
-#endif
 
   /* dup communicator if requested */
   if (cmesh->do_dup) {
@@ -233,6 +240,44 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (cmesh->mpicomm, &cmesh->mpirank);
   SC_CHECK_MPI (mpiret);
+}
+
+t8_topidx_t
+t8_cmesh_get_num_trees (t8_cmesh_t cmesh)
+{
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (cmesh->committed);
+
+  return cmesh->num_trees;
+}
+
+t8_topidx_t
+t8_cmesh_get_local_num_trees (t8_cmesh_t cmesh)
+{
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (cmesh->committed);
+
+  if (cmesh->set_partitioned) {
+    return cmesh->num_local_trees;
+  }
+  else {
+    return cmesh->num_trees;
+  }
+}
+
+t8_eclass_t
+t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_topidx_t tree_id)
+{
+  t8_ctree_t          tree;
+
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (t8_cmesh_tree_id_is_valid (cmesh, tree_id));
+
+  tree = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees,
+                                                t8_cmesh_tree_index (cmesh,
+                                                                     tree_id));
+  return tree->eclass;
 }
 
 void
@@ -313,18 +358,30 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
 {
   int                 mpiret;
   t8_cmesh_t          cmesh;
+  t8_ctree_t          treeit;
+  t8_topidx_t         ti;
 
   T8_ASSERT (pcmesh != NULL);
   cmesh = *pcmesh;
   T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->rc.refcount == 0);
-
-  T8_FREE (cmesh->tree_to_num_in_eclass);
-  T8_FREE (cmesh->tree_to_eclass);
+  T8_ASSERT (cmesh->rc.refcount == 0);  
 
   if (cmesh->do_dup && cmesh->committed) {
     mpiret = sc_MPI_Comm_free (&cmesh->mpicomm);
     SC_CHECK_MPI (mpiret);
+  }
+  if (cmesh->ctrees != NULL)
+  {
+    for (ti = 0;ti < cmesh->num_local_trees;ti++)
+    {
+      treeit = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, ti);
+      T8_FREE (treeit->face_neighbors);
+    }
+    sc_array_destroy (cmesh->ctrees);
+  }
+  if (cmesh->tree_offsets != NULL)
+  {
+    T8_FREE (cmesh->tree_offsets);
   }
   T8_FREE (cmesh);
 
@@ -356,13 +413,10 @@ t8_cmesh_t
 t8_cmesh_new_tri (sc_MPI_Comm comm, int do_dup)
 {
   t8_cmesh_t          cmesh;
-  t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST] =
-    { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-  num_trees_per_eclass[T8_ECLASS_TRIANGLE] = 1;
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
-  t8_cmesh_set_num_trees (cmesh, 1, num_trees_per_eclass);
+  t8_cmesh_set_num_trees (cmesh, 1);
   t8_cmesh_set_tree (cmesh, 0, T8_ECLASS_TRIANGLE);
   t8_cmesh_commit (cmesh);
 
@@ -373,13 +427,10 @@ t8_cmesh_t
 t8_cmesh_new_tet (sc_MPI_Comm comm, int do_dup)
 {
   t8_cmesh_t          cmesh;
-  t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST] =
-    { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-  num_trees_per_eclass[T8_ECLASS_TET] = 1;
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
-  t8_cmesh_set_num_trees (cmesh, 1, num_trees_per_eclass);
+  t8_cmesh_set_num_trees (cmesh, 1);
   t8_cmesh_set_tree (cmesh, 0, T8_ECLASS_TET);
   t8_cmesh_commit (cmesh);
 
@@ -390,13 +441,10 @@ t8_cmesh_t
 t8_cmesh_new_quad (sc_MPI_Comm comm, int do_dup)
 {
   t8_cmesh_t          cmesh;
-  t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST] =
-    { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-  num_trees_per_eclass[T8_ECLASS_QUAD] = 1;
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
-  t8_cmesh_set_num_trees (cmesh, 1, num_trees_per_eclass);
+  t8_cmesh_set_num_trees (cmesh, 1);
   t8_cmesh_set_tree (cmesh, 0, T8_ECLASS_QUAD);
   t8_cmesh_commit (cmesh);
 
@@ -407,13 +455,10 @@ t8_cmesh_t
 t8_cmesh_new_hex (sc_MPI_Comm comm, int do_dup)
 {
   t8_cmesh_t          cmesh;
-  t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST] =
-    { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-  num_trees_per_eclass[T8_ECLASS_HEX] = 1;
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
-  t8_cmesh_set_num_trees (cmesh, 1, num_trees_per_eclass);
+  t8_cmesh_set_num_trees (cmesh, 1);
   t8_cmesh_set_tree (cmesh, 0, T8_ECLASS_HEX);
   t8_cmesh_commit (cmesh);
 
@@ -424,17 +469,13 @@ t8_cmesh_t
 t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup)
 {
   t8_cmesh_t          cmesh;
-  t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST] =
-    { 0, 0, 0, 0, 0, 0, 0, 0 };
   int                 num_trees_for_hypercube[T8_ECLASS_LAST] =
     { 1, 1, 1, 2, 1, 6, 2, 3 };
   int                 i;
 
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
-  num_trees_per_eclass[eclass] = num_trees_for_hypercube[eclass];
-  t8_cmesh_set_num_trees (cmesh, num_trees_for_hypercube[eclass],
-                          num_trees_per_eclass);
+  t8_cmesh_set_num_trees (cmesh, num_trees_for_hypercube[eclass]);
   for (i = 0; i < num_trees_for_hypercube[eclass]; i++) {
     t8_cmesh_set_tree (cmesh, i, eclass);
   }
