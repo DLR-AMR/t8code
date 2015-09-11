@@ -339,6 +339,7 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
     t8_topidx_t         owned_id;
     int                 owned_face;
     int                 ghost_face;
+    int                 i;
     t8_cghost_t         Ghost;
     size_t              pos;
     /* Find out which one is owned and which one not. */
@@ -369,9 +370,17 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
       T8_ASSERT (Ghost->eclass == ghost_eclass);
     }
     else
+    /* The ghost doesn't exist yet, set relevant values and allocate memory. */
     {
       Ghost->eclass = ghost_eclass;
       Ghost->treeid = ghost_id;
+      Ghost->local_neighbors = T8_ALLOC (t8_topidx_t,
+                                         t8_eclass_num_faces[ghost_eclass]);
+      for (i = 0;i < t8_eclass_num_faces[ghost_eclass];i++)
+      {
+        /* Set all of Ghost's neighbors to an invalid value. */
+        Ghost->local_neighbors[i] = -1;
+      }
     }
     Ghost->local_neighbors[ghost_face] = owned_id;
     /* The ghost already exists in the array and we only need to add data to it. */
