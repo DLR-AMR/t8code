@@ -92,6 +92,22 @@ t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
 }
 
 static void
+t8_basic_flat_torus (int do_dup, int set_level, int dim)
+{
+  t8_forest_t         forest;
+
+  t8_forest_init (&forest);
+
+  t8_forest_set_cmesh (forest, t8_cmesh_new_flat_torus (sc_MPI_COMM_WORLD,
+                                                        do_dup, dim));
+  t8_forest_set_scheme (forest, t8_scheme_new_default ());
+
+  t8_forest_set_level (forest, set_level);
+
+  t8_forest_unref (&forest);
+}
+
+static void
 t8_basic (int do_dup, int set_level)
 {
   t8_forest_t         forest;
@@ -134,8 +150,12 @@ main (int argc, char **argv)
       t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 1);
     }
   }
+  t8_basic_flat_torus (0, level, 2);
+  t8_basic_flat_torus (1, level, 2);
+  t8_basic_flat_torus (0, level, 3);
+  t8_basic_flat_torus (1, level, 3);
 
-  t8_basic_refine_test ();
+  t8_basic_refine_test ();  
 
   sc_finalize ();
 
