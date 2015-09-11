@@ -220,6 +220,7 @@ t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees)
   cmesh->ctrees = sc_array_new_size (sizeof (t8_ctree_struct_t), num_trees);
 }
 
+#ifdef T8_ENABLE_DEBUG
 /* Check whether a given tree_id belongs to a tree in the cmesh.
  * If partitioned only local trees are allowed.
  */
@@ -234,6 +235,7 @@ t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_topidx_t tree_id)
     return 0 <= tree_id && tree_id < cmesh->num_trees;
   }
 }
+#endif
 
 /* Given a tree_id return the index of the specified tree in
  * cmesh's tree array
