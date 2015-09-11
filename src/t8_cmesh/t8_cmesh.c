@@ -172,7 +172,7 @@ t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees)
  * If partitioned only local trees are allowed.
  */
 static int
-t8_cmesh_tree_id_is_valid (t8_cmesh_t cmesh, t8_topidx_t tree_id)
+t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 {
   if (cmesh->set_partitioned) {
     return cmesh->first_tree < tree_id
@@ -201,7 +201,7 @@ t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (!cmesh->committed);
-  T8_ASSERT (t8_cmesh_tree_id_is_valid (cmesh, tree_id));
+  T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree_id));
 
   /* If we insert the first tree, set the dimension of the cmesh
    * to this tree's dimension. Otherwise check whether the dimension
@@ -236,8 +236,8 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
                      int face1, int face2, int orientation)
 {
   SC_ABORT ("t8_cmesh_join_faces is not implemented");
-  T8_ASSERT (t8_cmesh_tree_id_is_valid (cmesh, tree1)
-             || t8_cmesh_tree_id_is_valid (cmesh, tree2)); /* At least one of the trees
+  T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree1)
+             || t8_cmesh_tree_id_is_owned (cmesh, tree2)); /* At least one of the trees
                                                             * must belong to the processes. */
   /* TODO:
    * check if both faces are of the same type (i.e. do not join a triangle and a square)
@@ -302,7 +302,7 @@ t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
-  T8_ASSERT (t8_cmesh_tree_id_is_valid (cmesh, tree_id));
+  T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree_id));
 
   tree = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees,
                                                 t8_cmesh_tree_index (cmesh,
