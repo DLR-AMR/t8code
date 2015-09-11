@@ -113,11 +113,14 @@ void                t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
  * \param [in]     face1        The face number of the first tree.
  * \param [in]     face2        The face number of the second tree.
  * \param [in]     orientation  Specify how face1 and face2 are oriented to each other
+ * \param [in]     ghost_eclass If one of the trees is a ghost, the element
+ *                              class of it has to be specified here.
  * TODO: document orientation
  */
 void                t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1,
                                          t8_topidx_t tree2, int face1,
-                                         int face2, int orientation);
+                                         int face2, int orientation,
+                                         t8_eclass_t ghost_eclass);
 
 /** After allocating and adding properties to a cmesh, finish its construction.
  * \param [in,out] cmesh        Must be created with \see t8_cmesh_init and

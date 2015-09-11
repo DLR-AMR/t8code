@@ -289,9 +289,11 @@ t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
 
 void
 t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
-                     int face1, int face2, int orientation)
+                     int face1, int face2, int orientation,
+                     t8_eclass_t ghost_eclass)
 {
   t8_ctree_t        T1, T2;
+  int8_t            tree_to_face;
   SC_ABORT ("t8_cmesh_join_faces is not implemented");
   T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree1)
              || t8_cmesh_tree_id_is_owned (cmesh, tree2)); /* At least one of the trees
@@ -308,14 +310,18 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
     /* Check if both faces are of the same type (i.e. do not join a triangle and a square) */
     T8_ASSERT (t8_eclass_face_types[T1->eclass][face1] ==
                t8_eclass_face_types[T2->eclass][face2]);
+    /* Compute the tree_to_face index according to the tree with the smaller id. */
+    tree_to_face = tree1 < tree2 ?
+          t8_cmesh_tree_to_face_index (T1->eclass, T2->eclass, face1, face2,
+                                       orientation):
+          t8_cmesh_tree_to_face_index (T2->eclass, T1->eclass, face2, face1,
+                                       orientation);
     T1->face_neighbors[face1].is_owned = 1;
     T1->face_neighbors[face1].treeid = tree2;
-    T1->face_neighbors[face1].tree_to_face =
-        t8_cmesh_tree_to_face_index (T1, T2, face1, face2, orientation);
+    T1->face_neighbors[face1].tree_to_face = tree_to_face;
     T2->face_neighbors[face2].is_owned = 1;
     T2->face_neighbors[face2].treeid = tree1;
-    T2->face_neighbors[face2].tree_to_face =
-        t8_cmesh_tree_to_face_index (T1, T2, face1, face2, orientation);
+    T2->face_neighbors[face2].tree_to_face = tree_to_face;
   }
   else
     /* One of the trees is not owned by this process. */
@@ -349,11 +355,25 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
     /* The ghost already exists in the array and we only need to add data to it. */
     {
       T8_FREE (Ghost);
-      Ghost = (t8_cghost_t *) sc_array_index (cmesh->ghosts->a, pos);
-      Ghost->treeid = ghost_id;
-      /* TODO: how is the eclass of ghost set? */
+      Ghost = (t8_cghost_t) sc_array_index (&cmesh->ghosts->a, pos);
+      T8_ASSERT (Ghost->treeid == ghost_id);
+      T8_ASSERT (Ghost->eclass == ghost_eclass);
     }
-    Ghost->local_neighbors[ghost_face] = owned_face;
+    else
+    {
+      Ghost->eclass = ghost_eclass;
+      Ghost->treeid = ghost_id;
+    }
+    Ghost->local_neighbors[ghost_face] = owned_id;
+    /* The ghost already exists in the array and we only need to add data to it. */
+    tree_to_face = owned_id < ghost_id ?
+          t8_cmesh_tree_to_face_index (T1->eclass, Ghost->eclass, owned_face,
+                                       ghost_face, orientation) :
+          t8_cmesh_tree_to_face_index (Ghost->eclass, T1->eclass, ghost_face,
+                                       owned_face, orientation);
+    T1->face_neighbors[ghost_face].is_owned = 0;
+    T1->face_neighbors[ghost_face].treeid = ghost_id;
+    T1->face_neighbors[ghost_face].tree_to_face = tree_to_face;
   }
 }
 
