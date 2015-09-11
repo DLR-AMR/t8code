@@ -283,6 +283,9 @@ t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
     tree->face_neighbors[i].treeid = -1;
     tree->face_neighbors[i].tree_to_face = -1;
   }
+#ifdef T8_ENABLE_DEBUG
+  cmesh->inserted_trees++;
+#endif
 }
 
 void
