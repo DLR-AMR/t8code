@@ -40,18 +40,18 @@ typedef struct t8_cmesh
   int                 mpirank;  /**< Number of this MPI process. */
   int                 mpisize;  /**< Number of MPI processes. */
   t8_refcount_t       rc; /**< The reference count of the cmesh. */
-  t8_topidx_t         num_trees;  /**< The number of trees */
-  t8_topidx_t         num_local_trees; /**< If partitioned the number of trees on this process. */
+  t8_topidx_t         num_trees;  /**< The global number of trees */
+  t8_topidx_t         num_local_trees; /**< If partitioned the number of trees on this process. Otherwise the global number of trees. */
   t8_topidx_t         num_ghosts; /**< If partitioned the number of neighbor trees
                                     owned by different processes. */
   t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST]; /**< After commit the number of
                                                                  trees for each eclass. */
-  /* TODO: is num_local_trees unset if replicated or is it set to num_trees? */
   sc_array_t         *ctrees; /**< An array of all trees in the cmesh. */
   t8_topidx_t         first_tree; /**< The global index of the first full tree
                                        on this process. Zero if the cmesh is not partitioned. */
   t8_topidx_t        *tree_offsets; /**< If partitioned the global number of the
                                          first full tree of each process. */
+  /* TODO: make tree_offsets shared array as soon as libsc is updated */
 }
 t8_cmesh_struct_t;
 
