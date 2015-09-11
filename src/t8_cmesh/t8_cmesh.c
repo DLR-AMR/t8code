@@ -291,14 +291,70 @@ void
 t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
                      int face1, int face2, int orientation)
 {
+  t8_ctree_t        T1, T2;
   SC_ABORT ("t8_cmesh_join_faces is not implemented");
   T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree1)
              || t8_cmesh_tree_id_is_owned (cmesh, tree2)); /* At least one of the trees
-                                                            * must belong to the processes. */
-  /* TODO:
-   * check if both faces are of the same type (i.e. do not join a triangle and a square)
-   * how are the trees addressed if they are not processor local?
-   */
+                                                            * must belong to this process. */
+
+  if (t8_cmesh_tree_id_is_owned (cmesh, tree1)
+      || t8_cmesh_tree_id_is_owned (cmesh, tree2))
+  /* Both trees belong to this process. */
+  {
+    T1 = t8_sc_array_index_topidx (cmesh->ctrees, tree1);
+    T2 = t8_sc_array_index_topidx (cmesh->ctrees, tree2);
+    /* Check if the trees were added to cmesh before. */
+    T8_ASSERT (T1->treeid == tree1 && T2->treeid == tree2);
+    /* Check if both faces are of the same type (i.e. do not join a triangle and a square) */
+    T8_ASSERT (t8_eclass_face_types[T1->eclass][face1] ==
+               t8_eclass_face_types[T2->eclass][face2]);
+    T1->face_neighbors[face1].is_owned = 1;
+    T1->face_neighbors[face1].treeid = tree2;
+    T1->face_neighbors[face1].tree_to_face =
+        t8_cmesh_tree_to_face_index (T1, T2, face1, face2, orientation);
+    T2->face_neighbors[face2].is_owned = 1;
+    T2->face_neighbors[face2].treeid = tree1;
+    T2->face_neighbors[face2].tree_to_face =
+        t8_cmesh_tree_to_face_index (T1, T2, face1, face2, orientation);
+  }
+  else
+    /* One of the trees is not owned by this process. */
+  {
+    t8_topidx_t         ghost_id;
+    t8_topidx_t         owned_id;
+    int                 owned_face;
+    int                 ghost_face;
+    t8_cghost_t         Ghost;
+    size_t              pos;
+    /* Find out which one is owned and which one not. */
+    if (t8_cmesh_tree_id_is_owned (cmesh, tree1))
+    {
+      owned_id = tree1;
+      ghost_id = tree2;
+      owned_face = face1;
+      ghost_face = face2;
+    }
+    else
+    {
+      T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree2));
+      owned_id = tree2;
+      ghost_id = tree1;
+      owned_face = face2;
+      ghost_face = face1;
+    }
+    T1 = t8_sc_array_index_topidx (cmesh->ctrees, owned_id);
+    Ghost = T8_ALLOC (t8_cghost_struct_t, 1);
+    Ghost->treeid = ghost_id;
+    if (sc_hash_array_insert_unique (cmesh->ghosts, Ghost, &pos) == NULL)
+    /* The ghost already exists in the array and we only need to add data to it. */
+    {
+      T8_FREE (Ghost);
+      Ghost = (t8_cghost_t *) sc_array_index (cmesh->ghosts->a, pos);
+      Ghost->treeid = ghost_id;
+      /* TODO: how is the eclass of ghost set? */
+    }
+    Ghost->local_neighbors[ghost_face] = owned_face;
+  }
 }
 
 void
