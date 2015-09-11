@@ -236,6 +236,9 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
                      int face1, int face2, int orientation)
 {
   SC_ABORT ("t8_cmesh_join_faces is not implemented");
+  T8_ASSERT (t8_cmesh_tree_id_is_valid (cmesh, tree1)
+             || t8_cmesh_tree_id_is_valid (cmesh, tree2)); /* At least one of the trees
+                                                            * must belong to the processes. */
   /* TODO:
    * check if both faces are of the same type (i.e. do not join a triangle and a square)
    * how are the trees addressed if they are not processor local?
