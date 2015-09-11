@@ -47,10 +47,18 @@ typedef struct t8_cmesh
   t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST]; /**< After commit the number of
                                                                  trees for each eclass. */
   sc_array_t         *ctrees; /**< An array of all trees in the cmesh. */
+  sc_hash_array_t    *ghosts; /**< The trees that do not belong to this process
+                                   but are a face-neighbor of at least one local tree. */
   t8_topidx_t         first_tree; /**< The global index of the first full tree
-                                       on this process. Zero if the cmesh is not partitioned. */
+                                       on this process. Zero if the cmesh is not partitioned. -1 if this processor is empty. */
   t8_topidx_t        *tree_offsets; /**< If partitioned the global number of the
                                          first full tree of each process. */
+#ifdef T8_ENABLE_DEBUG
+  t8_topidx_t         inserted_trees; /**< Count the number of inserted trees to
+                                           check at commit if it equals the total number. */
+  t8_topidx_t         inserted_ghosts; /**< Count the number of inserted ghosts to
+                                           check at commit if it equals the total number. */
+#endif
   /* TODO: make tree_offsets shared array as soon as libsc is updated */
 }
 t8_cmesh_struct_t;
@@ -58,10 +66,20 @@ t8_cmesh_struct_t;
 typedef struct t8_ctree_fneighbor
 {
   t8_topidx_t         treeid; /**< The global number of this neighbor. */
-  t8_eclass_t         eclass; /**< The eclass of this neighbor. */
+  int                 is_owned; /**< Nonzero if the neighbor belongs to this process. */
   int8_t              tree_to_face;     /* TODO: think of an encoding and document */
 }
 t8_ctree_fneighbor_struct_t;
+
+typedef struct t8_cghost
+{
+  t8_topidx_t         treeid; /**< The global number of this ghost. */
+  t8_eclass_t         eclass; /**< The eclass of this ghost. */
+  int                 owning_proc; /**< The number of the owning process. */
+  t8_topidx_t        *local_neighbors; /** Neighbors of this ghost that
+                                           are owned by this process. */
+}
+t8_cghost_struct_t;
 
 typedef struct t8_ctree
 {
@@ -70,6 +88,36 @@ typedef struct t8_ctree
   t8_ctree_fneighbor_struct_t *face_neighbors; /**< Information about the face neighbors of this tree. */
 }
 t8_ctree_struct_t;
+
+/* Compute a hash value for a ghost tree. */
+static unsigned
+t8_cmesh_ghost_hash_fn (const void * ghost, const void * data)
+{
+  t8_cmesh_t      cmesh;
+  t8_cghost_t G;
+
+  T8_ASSERT (data!=NULL);
+  cmesh = (t8_cmesh_t) data;
+  T8_ASSERT (cmesh->num_ghosts > 0);
+  T8_ASSERT (cmesh->set_partitioned);
+  T8_ASSERT (cmesh->num_local_trees > 0);
+
+  G = (t8_cghost_t) ghost;
+  /* TODO: is this a reasonable hash value? */
+  return G->treeid % cmesh->num_ghosts;
+}
+
+static int
+t8_cmesh_ghost_equal_fn (const void * ghost1, const void * ghost2,
+                         const void * data)
+{
+  t8_cghost_t G1, G2;
+
+  G1 = (t8_cghost_t) ghost1;
+  G2 = (t8_cghost_t) ghost2;
+
+  return G1->treeid == G2->treeid;
+}
 
 void
 t8_cmesh_init (t8_cmesh_t * pcmesh)
@@ -136,6 +184,10 @@ t8_cmesh_set_partitioned (t8_cmesh_t cmesh, int set_partitioned,
     cmesh->num_trees = num_global_trees;
     cmesh->first_tree = first_local_tree;
     cmesh->num_ghosts = num_ghosts;
+    cmesh->ghosts = sc_hash_array_new (sizeof (t8_cghost_struct_t),
+                                       t8_cmesh_ghost_hash_fn,
+                                       t8_cmesh_ghost_equal_fn,
+                                       (void *) cmesh);
   }
 }
 

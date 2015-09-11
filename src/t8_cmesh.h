@@ -34,6 +34,7 @@
 
 typedef struct t8_cmesh *t8_cmesh_t;
 typedef struct t8_ctree *t8_ctree_t;
+typedef struct t8_cghost *t8_cghost_t;
 
 T8_EXTERN_C_BEGIN ();
 
