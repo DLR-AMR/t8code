@@ -312,8 +312,8 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
       || t8_cmesh_tree_id_is_owned (cmesh, tree2))
   /* Both trees belong to this process. */
   {
-    T1 = t8_sc_array_index_topidx (cmesh->ctrees, tree1);
-    T2 = t8_sc_array_index_topidx (cmesh->ctrees, tree2);
+    T1 = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, tree1);
+    T2 = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, tree2);
     /* Check if the trees were added to cmesh before. */
     T8_ASSERT (T1->treeid == tree1 && T2->treeid == tree2);
     /* Check if both faces are of the same type (i.e. do not join a triangle and a square) */
@@ -357,7 +357,7 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
       owned_face = face2;
       ghost_face = face1;
     }
-    T1 = t8_sc_array_index_topidx (cmesh->ctrees, owned_id);
+    T1 = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, owned_id);
     Ghost = T8_ALLOC (t8_cghost_struct_t, 1);
     Ghost->treeid = ghost_id;
     if (sc_hash_array_insert_unique (cmesh->ghosts, Ghost, &pos) == NULL)
