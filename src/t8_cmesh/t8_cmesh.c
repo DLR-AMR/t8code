@@ -287,6 +287,17 @@ t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
 #endif
 }
 
+/* Given two faces of two elements and an orientation,
+ * determine the tree_to_face index.
+ * The first eclass/face_id pair belongs to the tree with the smaller treeid. */
+/* TODO: right now this is a dummy implementation */
+static int8_t
+t8_cmesh_tree_to_face_index (t8_eclass_t eclass1, t8_eclass_t eclass2,
+                             int face1, int face2, int orientation)
+{
+  return 0;
+}
+
 void
 t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
                      int face1, int face2, int orientation,
