@@ -45,7 +45,7 @@ typedef struct t8_cmesh
   t8_topidx_t         num_ghosts; /**< If partitioned the number of neighbor trees
                                     owned by different processes. */
   t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST]; /**< After commit the number of
-                                                                 trees for each eclas. */
+                                                                 trees for each eclass. */
   /* TODO: is num_local_trees unset if replicated or is it set to num_trees? */
   sc_array_t         *ctrees; /**< An array of all trees in the cmesh. */
   t8_topidx_t         first_tree; /**< The global index of the first full tree
