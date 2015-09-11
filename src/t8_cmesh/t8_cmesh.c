@@ -279,7 +279,6 @@ t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
   tree->face_neighbors =
     T8_ALLOC (t8_ctree_fneighbor_struct_t, num_neighbors);
   for (i = 0; i < num_neighbors; i++) {
-    tree->face_neighbors[i].eclass = T8_ECLASS_LAST;
     tree->face_neighbors[i].treeid = -1;
     tree->face_neighbors[i].tree_to_face = -1;
   }
