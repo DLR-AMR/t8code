@@ -65,6 +65,28 @@ void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
  */
 sc_MPI_Comm         t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup);
 
+
+/** Declare if the cmesh is understood as a partitioned cmesh or a
+ * replicated cmesh. Replicated (each processor owns the whole mesh) is
+ * the default and in this case \ref t8_cmesh_set_partitioned is the same as
+ * \ref t8_cmesh_set_num_trees and the values \a first_local_tree and
+ * \a num_ghosts are ignored.
+ * \param [in,out] cmesh        The cmesh to be updated.
+ * \param [in]     set_partitioned A nonzero value specifies that \a cmesh
+ *                              is interpreted as a partitioned mesh.
+ * \param [in]     num_global_trees The global number of trees in the mesh.
+ * \param [in]     first_local_tree The global index of the first tree on this process.
+ *                                  Only used if \a set_partitioned is nonzero.
+ * \param [in]     num_ghosts The number of trees from other processes that are
+ *                            face-neighbor to trees on this process.
+ *                            Only used if \a set_partitioned is nonzero.
+ */
+void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
+                                              int set_partitioned,
+                                              t8_topidx_t num_global_trees,
+                                              t8_topidx_t first_local_tree,
+                                              t8_topidx_t num_ghosts);
+
 /** Set the number of trees for a cmesh.
  * It is not allowed to call this function after \see t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.

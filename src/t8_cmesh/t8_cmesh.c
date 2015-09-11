@@ -113,6 +113,33 @@ t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup)
 }
 
 void
+t8_cmesh_set_partitioned (t8_cmesh_t cmesh, int set_partitioned,
+                          t8_topidx_t num_global_trees,
+                          t8_topidx_t first_local_tree, t8_topidx_t num_ghosts)
+{
+  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (cmesh->set_partitioned == 0);
+  T8_ASSERT (cmesh->num_trees == 0);
+  T8_ASSERT (cmesh->num_local_trees == 0);
+  T8_ASSERT (cmesh->first_tree == 0);
+
+  if ((cmesh->set_partitioned = set_partitioned) == 0)
+  {
+    /* The mesh is replicated, and this function just serves
+     * as set_num_trees.
+     * first_local_tree and num_ghosts are ignored. */
+    t8_cmesh_set_num_trees (cmesh, num_global_trees);
+    return;
+  }
+  else
+  {
+    cmesh->num_trees = num_global_trees;
+    cmesh->first_tree = first_local_tree;
+    cmesh->num_ghosts = num_ghosts;
+  }
+}
+
+void
 t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees)
 {
   T8_ASSERT (cmesh != NULL);
