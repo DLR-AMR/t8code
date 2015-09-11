@@ -539,6 +539,7 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
   int                 mpiret;
   t8_cmesh_t          cmesh;
   t8_ctree_t          treeit;
+  t8_cghost_t         ghostit;
   t8_topidx_t         ti;
 
   T8_ASSERT (pcmesh != NULL);
@@ -550,6 +551,7 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
     mpiret = sc_MPI_Comm_free (&cmesh->mpicomm);
     SC_CHECK_MPI (mpiret);
   }
+  /* free trees */
   if (cmesh->ctrees != NULL)
   {
     for (ti = 0;ti < cmesh->num_local_trees;ti++)
@@ -559,9 +561,23 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
     }
     sc_array_destroy (cmesh->ctrees);
   }
+  /* free tree_offset */
   if (cmesh->tree_offsets != NULL)
   {
     T8_FREE (cmesh->tree_offsets);
+  }
+  /* free ghosts */
+  if (cmesh->ghosts != NULL)
+  {
+    for (ti = 0;ti < cmesh->num_ghosts;ti++)
+    {
+      ghostit = (t8_cghost_t) t8_sc_array_index_topidx (&cmesh->ghosts->a, ti);
+      if (ghostit != NULL)
+      {
+        T8_FREE (ghostit->local_neighbors);
+        T8_FREE (ghostit);
+      }
+    }
   }
   T8_FREE (cmesh);
 
