@@ -303,7 +303,7 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
 {
   t8_ctree_t        T1, T2;
   int8_t            tree_to_face;
-  SC_ABORT ("t8_cmesh_join_faces is not implemented");
+
   T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree1)
              || t8_cmesh_tree_id_is_owned (cmesh, tree2)); /* At least one of the trees
                                                             * must belong to this process. */
