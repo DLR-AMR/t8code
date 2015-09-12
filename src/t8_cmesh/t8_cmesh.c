@@ -382,8 +382,11 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
         Ghost->local_neighbors[i] = -1;
       }
     }
+    /* Check if both faces are of the same type (i.e. do not join a triangle and a square) */
+    T8_ASSERT (t8_eclass_face_types[T1->eclass][owned_face] ==
+               t8_eclass_face_types[ghost_eclass][ghost_face]);
     Ghost->local_neighbors[ghost_face] = owned_id;
-    /* The ghost already exists in the array and we only need to add data to it. */
+    /* Compute the tree_to_face index according to the tree with the smaller id. */
     tree_to_face = owned_id < ghost_id ?
           t8_cmesh_tree_to_face_index (T1->eclass, Ghost->eclass, owned_face,
                                        ghost_face, orientation) :
@@ -406,6 +409,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   T8_ASSERT (!cmesh->committed);
   T8_ASSERT (cmesh->num_trees > 0);
 
+  T8_ASSERT (cmesh->num_trees == cmesh->inserted_trees);
   cmesh->committed = 1;
 
   /* dup communicator if requested */
