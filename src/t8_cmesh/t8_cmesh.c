@@ -227,7 +227,7 @@ static int
 t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 {
   if (cmesh->set_partitioned) {
-    return cmesh->first_tree < tree_id
+    return cmesh->first_tree <= tree_id
       && tree_id < cmesh->first_tree + cmesh->num_local_trees;
   }
   else {
