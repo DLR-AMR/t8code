@@ -484,8 +484,6 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     t8_gloidx_t         children_per_tree;
     const t8_gloidx_t   one = 1;
 
-    /* TODO: children per tree is not a constant anymore if we
-     *       consider hybrid meshes */
     children_per_tree = one << cmesh->dimension * level;
     global_num_children = cmesh->num_trees * children_per_tree;
 
