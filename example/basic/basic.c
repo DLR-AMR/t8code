@@ -99,7 +99,7 @@ t8_basic_periodic (int do_dup, int set_level, int dim)
   t8_forest_init (&forest);
 
   t8_forest_set_cmesh (forest, t8_cmesh_new_periodic (sc_MPI_COMM_WORLD,
-                                                        do_dup, dim));
+                                                      do_dup, dim));
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
 
   t8_forest_set_level (forest, set_level);
@@ -128,6 +128,7 @@ main (int argc, char **argv)
   int                 mpiret;
   int                 level;
   int                 eclass;
+  int                 dim;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -150,12 +151,11 @@ main (int argc, char **argv)
       t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 1);
     }
   }
-  t8_basic_periodic (0, level, 2);
-  t8_basic_periodic (1, level, 2);
-  t8_basic_periodic (0, level, 3);
-  t8_basic_periodic (1, level, 3);
-
-  t8_basic_refine_test ();  
+  for (dim = 1; dim < 4; dim++) {
+    t8_basic_periodic (0, level, dim);
+    t8_basic_periodic (1, level, dim);
+  }
+  t8_basic_refine_test ();
 
   sc_finalize ();
 

@@ -214,10 +214,10 @@ t8_cmesh_t          t8_cmesh_new_hex (sc_MPI_Comm comm, int do_dup);
 t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
                                             sc_MPI_Comm comm, int do_dup);
 
-/** Construct a unit square/cube forest that is periodic in each direction.
+/** Construct a unit interval/square/cube forest that is periodic in each direction.
  * \param [in] comm         The mpi communicator to use.
  * \param [in] do_dup       Whether the mpi communicator is to be duplicated.
- * \param [in] dim          The dimension of the forest, 2 or 3.
+ * \param [in] dim          The dimension of the forest, 1, 2 or 3.
  * \return                  A valid cmesh, as if _init and _commit had been called.
  */
 t8_cmesh_t          t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup,
