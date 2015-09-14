@@ -289,7 +289,7 @@ t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
  * The first eclass/face_id pair belongs to the tree with the smaller treeid. */
 /* TODO: right now this is a dummy implementation */
 static int8_t
-t8_cmesh_tree_to_face_index (t8_eclass_t eclass1, t8_eclass_t eclass2,
+t8_cmesh_tree_to_face_orientation (t8_eclass_t eclass1, t8_eclass_t eclass2,
                              int face1, int face2, int orientation)
 {
   return 0;
@@ -320,9 +320,9 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
                t8_eclass_face_types[T2->eclass][face2]);
     /* Compute the tree_to_face index according to the tree with the smaller id. */
     tree_to_face = tree1 < tree2 ?
-      t8_cmesh_tree_to_face_index (T1->eclass, T2->eclass, face1, face2,
+      t8_cmesh_tree_to_face_orientation (T1->eclass, T2->eclass, face1, face2,
                                    orientation) :
-      t8_cmesh_tree_to_face_index (T2->eclass, T1->eclass, face2, face1,
+      t8_cmesh_tree_to_face_orientation (T2->eclass, T1->eclass, face2, face1,
                                    orientation);
     T1->face_neighbors[face1].is_owned = 1;
     T1->face_neighbors[face1].treeid = tree2;
@@ -384,9 +384,9 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
     Ghost->local_neighbors[ghost_face] = owned_id;
     /* Compute the tree_to_face index according to the tree with the smaller id. */
     tree_to_face = owned_id < ghost_id ?
-      t8_cmesh_tree_to_face_index (T1->eclass, Ghost->eclass, owned_face,
+      t8_cmesh_tree_to_face_orientation (T1->eclass, Ghost->eclass, owned_face,
                                    ghost_face, orientation) :
-      t8_cmesh_tree_to_face_index (Ghost->eclass, T1->eclass, ghost_face,
+      t8_cmesh_tree_to_face_orientation (Ghost->eclass, T1->eclass, ghost_face,
                                    owned_face, orientation);
     T1->face_neighbors[ghost_face].is_owned = 0;
     T1->face_neighbors[ghost_face].treeid = ghost_id;
