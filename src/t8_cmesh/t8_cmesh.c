@@ -28,6 +28,26 @@
  * TODO: document this file
  */
 
+/** This structure hold the connectivity data of the coarse mesh.
+ *  It can either be replicated, then each process stores a copy of the whole
+ *  mesh, or partitioned. In the latter case, each process only stores a local
+ *  portion of the mesh plus information about ghost elements.
+ *
+ *  The coarse mesh is a collection of coarse trees that can be identified
+ *  along faces.
+ *  The array ctrees stores these coarse trees sorted by their (global) tree_id.
+ *  If the mesh if partitioned it is partitioned according to an (possible only
+ *  virtually existing) underlying fine mesh. Therefore the ctrees array can
+ *  store duplicated trees on different processes, if each of these processes
+ *  owns elements of the same tree in the fine mesh.
+ *
+ *  Each tree stores information about its face-neighbours in an array of
+ *  \ref t8_ctree_fneighbor. \see t8_ctree_fneighbor
+ *
+ *  If partitioned the ghost trees are stored in a hash table that is backed up
+ *  by an array. The hash value of a ghost tree is its tree_id modulo the number
+ *  of ghosts on this process.
+ */
 typedef struct t8_cmesh
 {
   /* TODO: make the comments more legible */
@@ -63,6 +83,21 @@ typedef struct t8_cmesh
 }
 t8_cmesh_struct_t;
 
+/** This structure holds the data of a face-neighbor of a tree.
+ * The tree_to_face index is computed as follows.
+ * Let F be the number of faces of the neighbor tree, then
+ * ttf % F is the face number and ttf / F is the orientation.
+ * The orientation is determined as follows.  Let my_face and other_face
+ * be the two face numbers of the connecting trees.  Then the first
+ * face corner of the lower of my_face and other_face connects to a face
+ * corner in the higher of my_face and other_face.  The face
+ * orientation is defined as the number of this corner.
+ * If my_face == other_face, treating
+ * either of both faces as the lower one leads to the same result.
+ */
+/* TODO: This last statement about the same result has to be checked!
+ *       It depends on the numbering of the faces as soon as different element
+ *       types occur */
 typedef struct t8_ctree_fneighbor
 {
   t8_topidx_t         treeid; /**< The global number of this neighbor. */
