@@ -284,24 +284,12 @@ t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
 #endif
 }
 
-/* Given two faces of two elements and an orientation,
- * determine the tree_to_face index.
- * The first eclass/face_id pair belongs to the tree with the smaller treeid. */
-/* TODO: right now this is a dummy implementation */
-static int8_t
-t8_cmesh_tree_to_face_orientation (t8_eclass_t eclass1, t8_eclass_t eclass2,
-                             int face1, int face2, int orientation)
-{
-  return 0;
-}
-
 void
 t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
                      int face1, int face2, int orientation,
                      t8_eclass_t ghost_eclass)
 {
   t8_ctree_t          T1, T2;
-  int8_t              tree_to_face;
 
   T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree1)
              || t8_cmesh_tree_id_is_owned (cmesh, tree2));      /* At least one of the trees
@@ -320,19 +308,14 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
                t8_eclass_face_types[T2->eclass][face2]);
     T8_ASSERT (0 <= face1 && face1 < t8_eclass_num_faces[T1->eclass]);
     T8_ASSERT (0 <= face2 && face2 < t8_eclass_num_faces[T2->eclass]);
-    /* Compute the tree_to_face index according to the tree with the smaller id. */
-    tree_to_face = tree1 < tree2 ?
-      t8_cmesh_tree_to_face_orientation (T1->eclass, T2->eclass, face1, face2,
-                                   orientation) :
-      t8_cmesh_tree_to_face_orientation (T2->eclass, T1->eclass, face2, face1,
-                                   orientation);
+    /* Compute the tree_to_face index according to the given orientation. */
     T1->face_neighbors[face1].is_owned = 1;
     T1->face_neighbors[face1].treeid = tree2;
-    T1->face_neighbors[face1].tree_to_face = tree_to_face *
+    T1->face_neighbors[face1].tree_to_face = orientation *
         t8_eclass_num_faces[T2->eclass] + face2;
     T2->face_neighbors[face2].is_owned = 1;
     T2->face_neighbors[face2].treeid = tree1;
-    T2->face_neighbors[face2].tree_to_face = tree_to_face *
+    T2->face_neighbors[face2].tree_to_face = orientation *
         t8_eclass_num_faces[T1->eclass] + face1;
   }
   else
@@ -386,15 +369,10 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
     T8_ASSERT (t8_eclass_face_types[T1->eclass][owned_face] ==
                t8_eclass_face_types[ghost_eclass][ghost_face]);
     Ghost->local_neighbors[ghost_face] = owned_id;
-    /* Compute the tree_to_face index according to the tree with the smaller id. */
-    tree_to_face = owned_id < ghost_id ?
-      t8_cmesh_tree_to_face_orientation (T1->eclass, Ghost->eclass, owned_face,
-                                   ghost_face, orientation) :
-      t8_cmesh_tree_to_face_orientation (Ghost->eclass, T1->eclass, ghost_face,
-                                   owned_face, orientation);
+    /* Compute the tree_to_face index according to the given orientation. */
     T1->face_neighbors[ghost_face].is_owned = 0;
     T1->face_neighbors[ghost_face].treeid = ghost_id;
-    T1->face_neighbors[ghost_face].tree_to_face = tree_to_face *
+    T1->face_neighbors[ghost_face].tree_to_face = orientation *
         t8_eclass_num_faces[ghost_eclass] + ghost_face;
   }
 }
