@@ -91,12 +91,12 @@ t8_ctree_struct_t;
 
 /* Compute a hash value for a ghost tree. */
 static unsigned
-t8_cmesh_ghost_hash_fn (const void * ghost, const void * data)
+t8_cmesh_ghost_hash_fn (const void *ghost, const void *data)
 {
-  t8_cmesh_t      cmesh;
-  t8_cghost_t G;
+  t8_cmesh_t          cmesh;
+  t8_cghost_t         G;
 
-  T8_ASSERT (data!=NULL);
+  T8_ASSERT (data != NULL);
   cmesh = (t8_cmesh_t) data;
   T8_ASSERT (cmesh->num_ghosts > 0);
   T8_ASSERT (cmesh->set_partitioned);
@@ -108,10 +108,10 @@ t8_cmesh_ghost_hash_fn (const void * ghost, const void * data)
 }
 
 static int
-t8_cmesh_ghost_equal_fn (const void * ghost1, const void * ghost2,
-                         const void * data)
+t8_cmesh_ghost_equal_fn (const void *ghost1, const void *ghost2,
+                         const void *data)
 {
-  t8_cghost_t G1, G2;
+  t8_cghost_t         G1, G2;
 
   G1 = (t8_cghost_t) ghost1;
   G2 = (t8_cghost_t) ghost2;
@@ -163,7 +163,8 @@ t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup)
 void
 t8_cmesh_set_partitioned (t8_cmesh_t cmesh, int set_partitioned,
                           t8_topidx_t num_global_trees,
-                          t8_topidx_t first_local_tree, t8_topidx_t num_ghosts)
+                          t8_topidx_t first_local_tree,
+                          t8_topidx_t num_ghosts)
 {
   T8_ASSERT (!cmesh->committed);
   T8_ASSERT (cmesh->set_partitioned == 0);
@@ -171,16 +172,14 @@ t8_cmesh_set_partitioned (t8_cmesh_t cmesh, int set_partitioned,
   T8_ASSERT (cmesh->num_local_trees == 0);
   T8_ASSERT (cmesh->first_tree == 0);
 
-  if ((cmesh->set_partitioned = set_partitioned) == 0)
-  {
+  if ((cmesh->set_partitioned = set_partitioned) == 0) {
     /* The mesh is replicated, and this function just serves
      * as set_num_trees.
      * first_local_tree and num_ghosts are ignored. */
     t8_cmesh_set_num_trees (cmesh, num_global_trees);
     return;
   }
-  else
-  {
+  else {
     cmesh->num_trees = num_global_trees;
     cmesh->first_tree = first_local_tree;
     cmesh->num_ghosts = num_ghosts;
@@ -238,7 +237,7 @@ t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 /* Given a tree_id return the index of the specified tree in
  * cmesh's tree array
  */
-static              t8_topidx_t
+static t8_topidx_t
 t8_cmesh_tree_index (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 {
   return cmesh->set_partitioned ? tree_id - cmesh->first_tree : tree_id;
@@ -301,16 +300,16 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
                      int face1, int face2, int orientation,
                      t8_eclass_t ghost_eclass)
 {
-  t8_ctree_t        T1, T2;
-  int8_t            tree_to_face;
+  t8_ctree_t          T1, T2;
+  int8_t              tree_to_face;
 
   T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree1)
-             || t8_cmesh_tree_id_is_owned (cmesh, tree2)); /* At least one of the trees
-                                                            * must belong to this process. */
+             || t8_cmesh_tree_id_is_owned (cmesh, tree2));      /* At least one of the trees
+                                                                 * must belong to this process. */
 
   if (t8_cmesh_tree_id_is_owned (cmesh, tree1)
       || t8_cmesh_tree_id_is_owned (cmesh, tree2))
-  /* Both trees belong to this process. */
+    /* Both trees belong to this process. */
   {
     T1 = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, tree1);
     T2 = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, tree2);
@@ -321,10 +320,10 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
                t8_eclass_face_types[T2->eclass][face2]);
     /* Compute the tree_to_face index according to the tree with the smaller id. */
     tree_to_face = tree1 < tree2 ?
-          t8_cmesh_tree_to_face_index (T1->eclass, T2->eclass, face1, face2,
-                                       orientation):
-          t8_cmesh_tree_to_face_index (T2->eclass, T1->eclass, face2, face1,
-                                       orientation);
+      t8_cmesh_tree_to_face_index (T1->eclass, T2->eclass, face1, face2,
+                                   orientation) :
+      t8_cmesh_tree_to_face_index (T2->eclass, T1->eclass, face2, face1,
+                                   orientation);
     T1->face_neighbors[face1].is_owned = 1;
     T1->face_neighbors[face1].treeid = tree2;
     T1->face_neighbors[face1].tree_to_face = tree_to_face;
@@ -343,15 +342,13 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
     t8_cghost_t         Ghost;
     size_t              pos;
     /* Find out which one is owned and which one not. */
-    if (t8_cmesh_tree_id_is_owned (cmesh, tree1))
-    {
+    if (t8_cmesh_tree_id_is_owned (cmesh, tree1)) {
       owned_id = tree1;
       ghost_id = tree2;
       owned_face = face1;
       ghost_face = face2;
     }
-    else
-    {
+    else {
       T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree2));
       owned_id = tree2;
       ghost_id = tree1;
@@ -362,7 +359,7 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
     Ghost = T8_ALLOC (t8_cghost_struct_t, 1);
     Ghost->treeid = ghost_id;
     if (sc_hash_array_insert_unique (cmesh->ghosts, Ghost, &pos) == NULL)
-    /* The ghost already exists in the array and we only need to add data to it. */
+      /* The ghost already exists in the array and we only need to add data to it. */
     {
       T8_FREE (Ghost);
       Ghost = (t8_cghost_t) sc_array_index (&cmesh->ghosts->a, pos);
@@ -370,14 +367,13 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
       T8_ASSERT (Ghost->eclass == ghost_eclass);
     }
     else
-    /* The ghost doesn't exist yet, set relevant values and allocate memory. */
+      /* The ghost doesn't exist yet, set relevant values and allocate memory. */
     {
       Ghost->eclass = ghost_eclass;
       Ghost->treeid = ghost_id;
       Ghost->local_neighbors = T8_ALLOC (t8_topidx_t,
                                          t8_eclass_num_faces[ghost_eclass]);
-      for (i = 0;i < t8_eclass_num_faces[ghost_eclass];i++)
-      {
+      for (i = 0; i < t8_eclass_num_faces[ghost_eclass]; i++) {
         /* Set all of Ghost's neighbors to an invalid value. */
         Ghost->local_neighbors[i] = -1;
       }
@@ -388,10 +384,10 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
     Ghost->local_neighbors[ghost_face] = owned_id;
     /* Compute the tree_to_face index according to the tree with the smaller id. */
     tree_to_face = owned_id < ghost_id ?
-          t8_cmesh_tree_to_face_index (T1->eclass, Ghost->eclass, owned_face,
-                                       ghost_face, orientation) :
-          t8_cmesh_tree_to_face_index (Ghost->eclass, T1->eclass, ghost_face,
-                                       owned_face, orientation);
+      t8_cmesh_tree_to_face_index (T1->eclass, Ghost->eclass, owned_face,
+                                   ghost_face, orientation) :
+      t8_cmesh_tree_to_face_index (Ghost->eclass, T1->eclass, ghost_face,
+                                   owned_face, orientation);
     T1->face_neighbors[ghost_face].is_owned = 0;
     T1->face_neighbors[ghost_face].treeid = ghost_id;
     T1->face_neighbors[ghost_face].tree_to_face = tree_to_face;
@@ -547,35 +543,30 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
   T8_ASSERT (pcmesh != NULL);
   cmesh = *pcmesh;
   T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->rc.refcount == 0);  
+  T8_ASSERT (cmesh->rc.refcount == 0);
 
   if (cmesh->do_dup && cmesh->committed) {
     mpiret = sc_MPI_Comm_free (&cmesh->mpicomm);
     SC_CHECK_MPI (mpiret);
   }
   /* free trees */
-  if (cmesh->ctrees != NULL)
-  {
-    for (ti = 0;ti < cmesh->num_local_trees;ti++)
-    {
+  if (cmesh->ctrees != NULL) {
+    for (ti = 0; ti < cmesh->num_local_trees; ti++) {
       treeit = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, ti);
       T8_FREE (treeit->face_neighbors);
     }
     sc_array_destroy (cmesh->ctrees);
   }
   /* free tree_offset */
-  if (cmesh->tree_offsets != NULL)
-  {
+  if (cmesh->tree_offsets != NULL) {
     T8_FREE (cmesh->tree_offsets);
   }
   /* free ghosts */
-  if (cmesh->ghosts != NULL)
-  {
-    for (ti = 0;ti < cmesh->num_ghosts;ti++)
-    {
-      ghostit = (t8_cghost_t) t8_sc_array_index_topidx (&cmesh->ghosts->a, ti);
-      if (ghostit != NULL)
-      {
+  if (cmesh->ghosts != NULL) {
+    for (ti = 0; ti < cmesh->num_ghosts; ti++) {
+      ghostit =
+        (t8_cghost_t) t8_sc_array_index_topidx (&cmesh->ghosts->a, ti);
+      if (ghostit != NULL) {
         T8_FREE (ghostit->local_neighbors);
         T8_FREE (ghostit);
       }
