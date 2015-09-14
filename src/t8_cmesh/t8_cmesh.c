@@ -326,10 +326,12 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
                                    orientation);
     T1->face_neighbors[face1].is_owned = 1;
     T1->face_neighbors[face1].treeid = tree2;
-    T1->face_neighbors[face1].tree_to_face = tree_to_face;
+    T1->face_neighbors[face1].tree_to_face = tree_to_face *
+        t8_eclass_num_faces[T2->eclass] + face2;
     T2->face_neighbors[face2].is_owned = 1;
     T2->face_neighbors[face2].treeid = tree1;
-    T2->face_neighbors[face2].tree_to_face = tree_to_face;
+    T2->face_neighbors[face2].tree_to_face = tree_to_face *
+        t8_eclass_num_faces[T1->eclass] + face1;
   }
   else
     /* One of the trees is not owned by this process. */
@@ -390,7 +392,8 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
                                    owned_face, orientation);
     T1->face_neighbors[ghost_face].is_owned = 0;
     T1->face_neighbors[ghost_face].treeid = ghost_id;
-    T1->face_neighbors[ghost_face].tree_to_face = tree_to_face;
+    T1->face_neighbors[ghost_face].tree_to_face = tree_to_face *
+        t8_eclass_num_faces[ghost_eclass] + ghost_face;
   }
 }
 
