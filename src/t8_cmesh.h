@@ -214,15 +214,14 @@ t8_cmesh_t          t8_cmesh_new_hex (sc_MPI_Comm comm, int do_dup);
 t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
                                             sc_MPI_Comm comm, int do_dup);
 
-/** Construct a flat torus forest in either 2d or 3d.
- *  A quadrant/cube where each face is connected to the opposite face.
+/** Construct a unit square/cube forest that is periodic in each direction.
  * \param [in] comm         The mpi communicator to use.
  * \param [in] do_dup       Whether the mpi communicator is to be duplicated.
- * \param [in] dim          The dimension of the flat torus, 2 or 3.
+ * \param [in] dim          The dimension of the forest, 2 or 3.
  * \return                  A valid cmesh, as if _init and _commit had been called.
  */
-t8_cmesh_t          t8_cmesh_new_flat_torus (sc_MPI_Comm comm, int do_dup,
-                                             int dim);
+t8_cmesh_t          t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup,
+                                           int dim);
 
 
 T8_EXTERN_C_END ();

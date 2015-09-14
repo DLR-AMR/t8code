@@ -684,7 +684,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup)
 }
 
 t8_cmesh_t
-t8_cmesh_new_flat_torus (sc_MPI_Comm comm, int do_dup, int dim)
+t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup, int dim)
 {
   t8_cmesh_t          cmesh;
 
