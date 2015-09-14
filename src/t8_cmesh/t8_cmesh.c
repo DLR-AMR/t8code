@@ -318,6 +318,8 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
     /* Check if both faces are of the same type (i.e. do not join a triangle and a square) */
     T8_ASSERT (t8_eclass_face_types[T1->eclass][face1] ==
                t8_eclass_face_types[T2->eclass][face2]);
+    T8_ASSERT (0 <= face1 && face1 < t8_eclass_num_faces[T1->eclass]);
+    T8_ASSERT (0 <= face2 && face2 < t8_eclass_num_faces[T2->eclass]);
     /* Compute the tree_to_face index according to the tree with the smaller id. */
     tree_to_face = tree1 < tree2 ?
       t8_cmesh_tree_to_face_orientation (T1->eclass, T2->eclass, face1, face2,
