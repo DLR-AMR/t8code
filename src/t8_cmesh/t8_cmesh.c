@@ -360,9 +360,12 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
 {
   t8_ctree_t          T1, T2;
 
+  T8_ASSERT (0 <= tree1 && tree1 < cmesh->num_trees);
+  T8_ASSERT (0 <= tree2 && tree2 < cmesh->num_trees);
   T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree1)
              || t8_cmesh_tree_id_is_owned (cmesh, tree2));      /* At least one of the trees
                                                                  * must belong to this process. */
+  T8_ASSERT (0 <= orientation);
 
   if (t8_cmesh_tree_id_is_owned (cmesh, tree1)
       || t8_cmesh_tree_id_is_owned (cmesh, tree2))
@@ -372,20 +375,23 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
     T2 = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, tree2);
     /* Check if the trees were added to cmesh before. */
     T8_ASSERT (T1->treeid == tree1 && T2->treeid == tree2);
+    T8_ASSERT (0 <= face1 && face1 < t8_eclass_num_faces[T1->eclass]);
+    T8_ASSERT (0 <= face2 && face2 < t8_eclass_num_faces[T2->eclass]);
     /* Check if both faces are of the same type (i.e. do not join a triangle and a square) */
     T8_ASSERT (t8_eclass_face_types[T1->eclass][face1] ==
                t8_eclass_face_types[T2->eclass][face2]);
-    T8_ASSERT (0 <= face1 && face1 < t8_eclass_num_faces[T1->eclass]);
-    T8_ASSERT (0 <= face2 && face2 < t8_eclass_num_faces[T2->eclass]);
+    /* Check if both faces are not joined already */
+    T8_ASSERT (T1->face_neighbors[face1].treeid == -1);
+    T8_ASSERT (T2->face_neighbors[face2].treeid == -1);
     /* Compute the tree_to_face index according to the given orientation. */
     T1->face_neighbors[face1].is_owned = 1;
     T1->face_neighbors[face1].treeid = tree2;
     T1->face_neighbors[face1].tree_to_face = orientation *
-        t8_eclass_num_faces[T2->eclass] + face2;
+      t8_eclass_num_faces[T2->eclass] + face2;
     T2->face_neighbors[face2].is_owned = 1;
     T2->face_neighbors[face2].treeid = tree1;
     T2->face_neighbors[face2].tree_to_face = orientation *
-        t8_eclass_num_faces[T1->eclass] + face1;
+      t8_eclass_num_faces[T1->eclass] + face1;
   }
   else
     /* One of the trees is not owned by this process. */
@@ -412,6 +418,7 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
       ghost_face = face1;
     }
     T1 = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, owned_id);
+
     Ghost = T8_ALLOC (t8_cghost_struct_t, 1);
     Ghost->treeid = ghost_id;
     if (sc_hash_array_insert_unique (cmesh->ghosts, Ghost, &pos) == NULL)
@@ -437,12 +444,16 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
     /* Check if both faces are of the same type (i.e. do not join a triangle and a square) */
     T8_ASSERT (t8_eclass_face_types[T1->eclass][owned_face] ==
                t8_eclass_face_types[ghost_eclass][ghost_face]);
+    /* Check if both faces are not joined already */
+    T8_ASSERT (T1->face_neighbors[face1].treeid == -1);
+    T8_ASSERT (Ghost->local_neighbors[ghost_face] == -1);
+
     Ghost->local_neighbors[ghost_face] = owned_id;
     /* Compute the tree_to_face index according to the given orientation. */
     T1->face_neighbors[ghost_face].is_owned = 0;
     T1->face_neighbors[ghost_face].treeid = ghost_id;
     T1->face_neighbors[ghost_face].tree_to_face = orientation *
-        t8_eclass_num_faces[ghost_eclass] + ghost_face;
+      t8_eclass_num_faces[ghost_eclass] + ghost_face;
   }
 }
 
