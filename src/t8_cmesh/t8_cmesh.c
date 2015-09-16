@@ -686,6 +686,27 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup)
   for (i = 0; i < num_trees_for_hypercube[eclass]; i++) {
     t8_cmesh_set_tree (cmesh, i, eclass);
   }
+  switch (eclass) {
+  case T8_ECLASS_PRISM:
+  case T8_ECLASS_TRIANGLE:
+    t8_cmesh_join_faces (cmesh, 0, 1, 1, 2, 0, eclass);
+    break;
+  case T8_ECLASS_TET:
+    t8_cmesh_join_faces (cmesh, 0, 1, 1, 2, 0, eclass);
+    t8_cmesh_join_faces (cmesh, 1, 2, 1, 2, 0, eclass);
+    t8_cmesh_join_faces (cmesh, 2, 3, 1, 2, 0, eclass);
+    t8_cmesh_join_faces (cmesh, 3, 4, 1, 2, 0, eclass);
+    t8_cmesh_join_faces (cmesh, 4, 5, 1, 2, 0, eclass);
+    t8_cmesh_join_faces (cmesh, 5, 0, 1, 2, 0, eclass);
+    break;
+  case T8_ECLASS_PYRAMID:
+    t8_cmesh_join_faces (cmesh, 0, 1, 3, 2, 0, eclass);
+    t8_cmesh_join_faces (cmesh, 1, 2, 0, 0, 0, eclass);
+    t8_cmesh_join_faces (cmesh, 2, 0, 2, 0, 1, eclass);
+    break;
+  default:
+    break;
+  }
 
   t8_cmesh_commit (cmesh);
 
