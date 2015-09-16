@@ -127,8 +127,7 @@ void                t8_cmesh_set_ghost (t8_cmesh_t cmesh,
  */
 void                t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1,
                                          t8_topidx_t tree2, int face1,
-                                         int face2, int orientation,
-                                         t8_eclass_t ghost_eclass);
+                                         int face2, int orientation);
 
 /** After allocating and adding properties to a cmesh, finish its construction.
  * \param [in,out] cmesh        Must be created with \see t8_cmesh_init and

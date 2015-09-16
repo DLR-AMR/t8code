@@ -355,8 +355,7 @@ t8_cmesh_set_ghost (t8_cmesh_t cmesh, t8_topidx_t ghost_id,
 
 void
 t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
-                     int face1, int face2, int orientation,
-                     t8_eclass_t ghost_eclass)
+                     int face1, int face2, int orientation)
 {
   t8_ctree_t          T1, T2;
 
@@ -400,9 +399,10 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
     t8_topidx_t         owned_id;
     int                 owned_face;
     int                 ghost_face;
-    int                 i;
     t8_cghost_t         Ghost;
+    t8_eclass_t         ghost_eclass;
     size_t              pos;
+
     /* Find out which one is owned and which one not. */
     if (t8_cmesh_tree_id_is_owned (cmesh, tree1)) {
       owned_id = tree1;
@@ -426,20 +426,12 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
     {
       T8_FREE (Ghost);
       Ghost = (t8_cghost_t) sc_array_index (&cmesh->ghosts->a, pos);
+      ghost_eclass = Ghost->eclass;
       T8_ASSERT (Ghost->treeid == ghost_id);
-      T8_ASSERT (Ghost->eclass == ghost_eclass);
     }
-    else
-      /* The ghost doesn't exist yet, set relevant values and allocate memory. */
-    {
-      Ghost->eclass = ghost_eclass;
-      Ghost->treeid = ghost_id;
-      Ghost->local_neighbors = T8_ALLOC (t8_topidx_t,
-                                         t8_eclass_num_faces[ghost_eclass]);
-      for (i = 0; i < t8_eclass_num_faces[ghost_eclass]; i++) {
-        /* Set all of Ghost's neighbors to an invalid value. */
-        Ghost->local_neighbors[i] = -1;
-      }
+    else {
+      SC_ABORTF ("The ghost tree %i was not found in the coarse mesh.",
+                 ghost_id);
     }
     /* Check if both faces are of the same type (i.e. do not join a triangle and a square) */
     T8_ASSERT (t8_eclass_face_types[T1->eclass][owned_face] ==
@@ -734,20 +726,20 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup)
   switch (eclass) {
   case T8_ECLASS_PRISM:
   case T8_ECLASS_TRIANGLE:
-    t8_cmesh_join_faces (cmesh, 0, 1, 1, 2, 0, eclass);
+    t8_cmesh_join_faces (cmesh, 0, 1, 1, 2, 0);
     break;
   case T8_ECLASS_TET:
-    t8_cmesh_join_faces (cmesh, 0, 1, 1, 2, 0, eclass);
-    t8_cmesh_join_faces (cmesh, 1, 2, 1, 2, 0, eclass);
-    t8_cmesh_join_faces (cmesh, 2, 3, 1, 2, 0, eclass);
-    t8_cmesh_join_faces (cmesh, 3, 4, 1, 2, 0, eclass);
-    t8_cmesh_join_faces (cmesh, 4, 5, 1, 2, 0, eclass);
-    t8_cmesh_join_faces (cmesh, 5, 0, 1, 2, 0, eclass);
+    t8_cmesh_join_faces (cmesh, 0, 1, 1, 2, 0);
+    t8_cmesh_join_faces (cmesh, 1, 2, 1, 2, 0);
+    t8_cmesh_join_faces (cmesh, 2, 3, 1, 2, 0);
+    t8_cmesh_join_faces (cmesh, 3, 4, 1, 2, 0);
+    t8_cmesh_join_faces (cmesh, 4, 5, 1, 2, 0);
+    t8_cmesh_join_faces (cmesh, 5, 0, 1, 2, 0);
     break;
   case T8_ECLASS_PYRAMID:
-    t8_cmesh_join_faces (cmesh, 0, 1, 3, 2, 0, eclass);
-    t8_cmesh_join_faces (cmesh, 1, 2, 0, 0, 0, eclass);
-    t8_cmesh_join_faces (cmesh, 2, 0, 2, 0, 1, eclass);
+    t8_cmesh_join_faces (cmesh, 0, 1, 3, 2, 0);
+    t8_cmesh_join_faces (cmesh, 1, 2, 0, 0, 0);
+    t8_cmesh_join_faces (cmesh, 2, 0, 2, 0, 1);
     break;
   default:
     break;
@@ -784,15 +776,15 @@ t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup, int dim)
 
   t8_cmesh_set_tree (cmesh, 0, tree_class);
   /* TODO: if orientation is specified, check whether 0 is the correct choice here */
-  t8_cmesh_join_faces (cmesh, 0, 0, 0, 1, 0, tree_class);
-  t8_cmesh_join_faces (cmesh, 0, 0, 1, 0, 0, tree_class);
+  t8_cmesh_join_faces (cmesh, 0, 0, 0, 1, 0);
+  t8_cmesh_join_faces (cmesh, 0, 0, 1, 0, 0);
   if (dim > 1) {
-    t8_cmesh_join_faces (cmesh, 0, 0, 2, 3, 0, tree_class);
-    t8_cmesh_join_faces (cmesh, 0, 0, 3, 2, 0, tree_class);
+    t8_cmesh_join_faces (cmesh, 0, 0, 2, 3, 0);
+    t8_cmesh_join_faces (cmesh, 0, 0, 3, 2, 0);
   }
   if (dim == 3) {
-    t8_cmesh_join_faces (cmesh, 0, 0, 4, 5, 0, tree_class);
-    t8_cmesh_join_faces (cmesh, 0, 0, 5, 4, 0, tree_class);
+    t8_cmesh_join_faces (cmesh, 0, 0, 4, 5, 0);
+    t8_cmesh_join_faces (cmesh, 0, 0, 5, 4, 0);
   }
   t8_cmesh_commit (cmesh);
   return cmesh;
