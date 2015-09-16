@@ -66,7 +66,6 @@ void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
  */
 sc_MPI_Comm         t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup);
 
-
 /** Declare if the cmesh is understood as a partitioned cmesh or a
  * replicated cmesh. Replicated (each processor owns the whole mesh) is
  * the default and in this case \ref t8_cmesh_set_partitioned is the same as
