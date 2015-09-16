@@ -111,3 +111,39 @@ t8_eclass_count_leaf (t8_eclass_t theclass, int level)
     return number_of_leafs;
   }
 }
+
+/* Compares two eclasses within the order
+ * Tri < Quad
+ * Tet < Hex < Prism < Pyramid
+ * Eclasses of different dimension are not allowed to be compared.
+ */
+int
+t8_eclass_compare (t8_eclass_t eclass1, t8_eclass_t eclass2)
+{
+  int                 dim = t8_eclass_to_dimension[eclass1];
+  T8_ASSERT (dim == t8_eclass_to_dimension[eclass2]);
+
+  if (eclass1 == eclass2) {
+    /* If both are equal return 0.
+     * This also captures the case dim <= 1. */
+    return 0;
+  }
+  else if (dim == 2) {
+    /* Either eclass1 = tri and eclass2 = quad or the other way around. */
+    return eclass1 == T8_ECLASS_TRIANGLE ? -1 : 1;
+  }
+  else {
+    T8_ASSERT (dim == 3);
+    switch (eclass1) {
+    case T8_ECLASS_TET:
+      return -1;
+    case T8_ECLASS_HEX:
+      return eclass2 == T8_ECLASS_TET ? 1 : -1;
+    case T8_ECLASS_PRISM:
+      return eclass2 == T8_ECLASS_PYRAMID ? -1 : 1;
+    default:
+      T8_ASSERT (eclass1 == T8_ECLASS_PYRAMID);
+      return -1;
+    }
+  }
+}

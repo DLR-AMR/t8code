@@ -101,6 +101,18 @@ int                 t8_eclass_count_boundary (t8_eclass_t theclass,
  */
 t8_gloidx_t         t8_eclass_count_leaf (t8_eclass_t theclass, int level);
 
+/** Compare two eclasses of the sam dimensiona
+ *  as necessary for face neighbor orientation.
+ *  The implemented order is Triangle < Square in 2D and
+ *  Tet < Hex < Prism < Pyramid in 3D.
+ *  \param [in] eclass1 The first eclass to compare.
+ *  \param [in] eclass2 The second eclass to compare.
+ *  \return 0 if the eclasses are equal, 1 if eclass1 > eclass2
+ *            and -1 if eclass1 < eclass2
+ */
+int                 t8_eclass_compare (t8_eclass_t eclass1,
+                                       t8_eclass_t eclass2);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_ELEMENT_H */
