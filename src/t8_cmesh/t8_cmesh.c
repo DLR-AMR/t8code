@@ -320,6 +320,40 @@ t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
 }
 
 void
+t8_cmesh_set_ghost (t8_cmesh_t cmesh, t8_topidx_t ghost_id,
+                    t8_eclass_t ghost_eclass)
+{
+  t8_cghost_t         Ghost;
+  int                 i;
+  void               *check_ret;
+
+  T8_ASSERT (cmesh->set_partitioned);
+  T8_ASSERT (0 <= ghost_id && ghost_id < cmesh->num_ghosts);
+  /* If we insert the very first tree, set the dimension of the cmesh
+   * to this tree's dimension. Otherwise check whether the dimension
+   * of the tree to be inserted equals the dimension of the cmesh. */
+  if (cmesh->dimension == -1) {
+    cmesh->dimension = t8_eclass_to_dimension[ghost_eclass];
+  }
+  else {
+    T8_ASSERT (t8_eclass_to_dimension[ghost_eclass] == cmesh->dimension);
+  }
+  Ghost = T8_ALLOC (t8_cghost_struct_t, 1);
+  Ghost->eclass = ghost_eclass;
+  Ghost->treeid = ghost_id;
+  Ghost->owning_proc = -1;
+  Ghost->local_neighbors = T8_ALLOC (t8_topidx_t,
+                                     t8_eclass_num_faces[ghost_eclass]);
+  for (i = 0; i < t8_eclass_num_faces[ghost_eclass]; i++) {
+    Ghost->local_neighbors[i] = -1;
+  }
+  check_ret = sc_hash_array_insert_unique (cmesh->ghosts, Ghost, NULL);
+  if (check_ret == NULL) {
+    SC_ABORTF ("Ghost tree %i inserted twice.", ghost_id);
+  }
+}
+
+void
 t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
                      int face1, int face2, int orientation,
                      t8_eclass_t ghost_eclass)

@@ -106,6 +106,15 @@ void                t8_cmesh_set_num_trees (t8_cmesh_t cmesh,
 void                t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
                                        t8_eclass_t tree_class);
 
+/** Set the class of a ghost in a partitioned cmesh.
+ * \param [in,out] cmesh        The cmesh to be updated.
+ * \param [in]     ghost_id     The global number of the ghost.
+ * \param [in]     ghost_eclass The element class of this ghost.
+ */
+void                t8_cmesh_set_ghost (t8_cmesh_t cmesh,
+                                        t8_topidx_t ghost_id,
+                                        t8_eclass_t ghost_eclass);
+
 /** Insert a face-connection between two trees in a cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     tree1        The tree id of the first of the two trees.
