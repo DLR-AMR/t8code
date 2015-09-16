@@ -719,12 +719,14 @@ t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup, int dim)
   t8_cmesh_set_tree (cmesh, 0, tree_class);
   /* TODO: if orientation is specified, check whether 0 is the correct choice here */
   t8_cmesh_join_faces (cmesh, 0, 0, 0, 1, 0, tree_class);
-  if (dim > 1)
-  {
+  t8_cmesh_join_faces (cmesh, 0, 0, 1, 0, 0, tree_class);
+  if (dim > 1) {
     t8_cmesh_join_faces (cmesh, 0, 0, 2, 3, 0, tree_class);
+    t8_cmesh_join_faces (cmesh, 0, 0, 3, 2, 0, tree_class);
   }
   if (dim == 3) {
     t8_cmesh_join_faces (cmesh, 0, 0, 4, 5, 0, tree_class);
+    t8_cmesh_join_faces (cmesh, 0, 0, 5, 4, 0, tree_class);
   }
   t8_cmesh_commit (cmesh);
   return cmesh;
