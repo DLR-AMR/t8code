@@ -87,6 +87,14 @@ void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
                                               t8_topidx_t first_local_tree,
                                               t8_topidx_t num_ghosts);
 
+/** Set the number of vertices for a cmesh.
+ * It is not allowed to call this function after \see t8_cmesh_commit.
+ * \param [in,out] cmesh        The cmesh to be updated.
+ * \param [in]     num_vertices The number of vertices to be set.
+ */
+void                t8_cmesh_set_num_vertices (t8_cmesh_t cmesh,
+                                               t8_topidx_t num_vertices);
+
 /** Set the number of trees for a cmesh.
  * It is not allowed to call this function after \see t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
@@ -143,6 +151,13 @@ void                t8_cmesh_commit (t8_cmesh_t cmesh);
  */
 t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
                                              t8_topidx_t tree_id);
+
+/** Return the gloval numbet of vertices in a cmesh.
+ * \param [in] cmesh       The cmesh to be considered.
+ * \return                 The number of vertices associated to \a cmesh.
+ * \a cmesh must be committed before calling this function.
+ */
+t8_topidx_t         t8_cmesh_get_num_vertices (t8_cmesh_t cmesh);
 
 /** Return the global number of trees in a cmesh.
  * \param [in] cmesh       The cmesh to be considered.

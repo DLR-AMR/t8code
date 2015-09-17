@@ -60,6 +60,7 @@ typedef struct t8_cmesh
   int                 mpirank;  /**< Number of this MPI process. */
   int                 mpisize;  /**< Number of MPI processes. */
   t8_refcount_t       rc; /**< The reference count of the cmesh. */
+  t8_topidx_t         num_vertices; /**< The global number of vertices. */
   t8_topidx_t         num_trees;  /**< The global number of trees */
   t8_topidx_t         num_local_trees; /**< If partitioned the number of trees on this process. Otherwise the global number of trees. */
   t8_topidx_t         num_ghosts; /**< If partitioned the number of neighbor trees
@@ -223,6 +224,17 @@ t8_cmesh_set_partitioned (t8_cmesh_t cmesh, int set_partitioned,
                                        t8_cmesh_ghost_equal_fn,
                                        (void *) cmesh);
   }
+}
+
+void
+t8_cmesh_set_num_vertices (t8_cmesh_t cmesh, t8_topidx_t num_vertices)
+{
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (num_vertices > 0);
+  T8_ASSERT (cmesh->num_vertices == 0);
+
+  cmesh->num_vertices = num_vertices;
 }
 
 void
@@ -475,6 +487,15 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (cmesh->mpicomm, &cmesh->mpirank);
   SC_CHECK_MPI (mpiret);
+}
+
+t8_topidx_t
+t8_cmesh_get_num_vertices (t8_cmesh_t cmesh)
+{
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (cmesh->committed);
+
+  return cmesh->num_vertices;
 }
 
 t8_topidx_t
