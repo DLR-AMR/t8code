@@ -32,4 +32,24 @@
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 
+/* put typedefs here */
+
+T8_EXTERN_C_BEGIN ();
+
+/* put declarations here */
+
+/* Open a .node, .ele and .edge file to read cmesh.
+ * and create a cmesh from them. the cmesh will be replicated.
+ * (TODO: maybe allow for replicated input later)
+ * We should only open the file on one process and
+ * broadcast the information to the others before committing on each process.
+ * A fully commited, replicated cmesh should be returned.
+ */
+t8_cmesh_t
+t8_cmesh_from_triangle_file (char *filename, int partition, sc_MPI_Comm comm,\
+                             int do_dup);
+
+T8_EXTERN_C_END ();
+
 #endif /* !T8_CMESH_TRIANGLE_H */
+
