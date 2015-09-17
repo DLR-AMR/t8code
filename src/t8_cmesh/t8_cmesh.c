@@ -61,6 +61,11 @@ typedef struct t8_cmesh
   int                 mpisize;  /**< Number of MPI processes. */
   t8_refcount_t       rc; /**< The reference count of the cmesh. */
   t8_topidx_t         num_corners; /**< The global number of corners. */
+  t8_topidx_t         num_local_corners; /**< If partitioned the number the local number of corners. Otherwise the global number of corners. */
+  t8_topidx_t        *vertices; /**< An array of (3 * \a num_local_vertices) that stores
+                                     the geometry values of the vertices. */
+  /* TODO: Are there ghost vertices? Or do we just store the copies?
+   * I think storing copies is better. */
   t8_topidx_t         num_trees;  /**< The global number of trees */
   t8_topidx_t         num_local_trees; /**< If partitioned the number of trees on this process. Otherwise the global number of trees. */
   t8_topidx_t         num_ghosts; /**< If partitioned the number of neighbor trees
