@@ -88,7 +88,6 @@ t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
   }
 
   t8_forest_unref (&forest);
-
 }
 
 static void
@@ -138,11 +137,14 @@ main (int argc, char **argv)
   t8_init (SC_LP_DEFAULT);
 
   level = 3;
+  t8_global_productionf ("Testing basic tet mesh.\n");
   t8_basic (0, level);
   t8_basic (1, level);
   t8_basic (0, level);
   t8_basic (1, level);
+  t8_global_productionf ("Done testing basic tet mesh.\n");
 
+  t8_global_productionf ("Testing hypercube cmesh.\n");
   for (eclass = T8_ECLASS_FIRST; eclass < T8_ECLASS_LAST; eclass++) {
     if (eclass != T8_ECLASS_PYRAMID) {
       t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 0);
@@ -151,11 +153,17 @@ main (int argc, char **argv)
       t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 1);
     }
   }
+  t8_global_productionf ("Done testing hypercube cmesh.\n");
+  t8_global_productionf ("Testing periodic cmesh.\n");
   for (dim = 1; dim < 4; dim++) {
     t8_basic_periodic (0, level, dim);
     t8_basic_periodic (1, level, dim);
   }
+  t8_global_productionf ("Done testing periodic cmesh.\n");
+
+  t8_global_productionf ("Testing adapt forest.\n");
   t8_basic_refine_test ();
+  t8_global_productionf ("Done testing adapt forest.\n");
 
   sc_finalize ();
 
