@@ -121,6 +121,7 @@ typedef struct t8_ctree
 {
   t8_topidx_t         treeid; /**< The global number of this tree. */
   t8_eclass_t         eclass; /**< The eclass of this tree. */
+  t8_topidx_t        *vertices; /**< The vertex indices of this tree's corners. */
   t8_ctree_fneighbor_struct_t *face_neighbors; /**< Information about the face neighbors of this tree. */
 }
 t8_ctree_struct_t;
@@ -348,6 +349,28 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_topidx_t tree_id,
 #ifdef T8_ENABLE_DEBUG
   cmesh->inserted_trees++;
 #endif
+}
+
+void
+t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_topidx_t tree_id,
+                            t8_topidx_t * vertices, t8_topidx_t num_vertices)
+{
+  t8_ctree_t          tree;
+  int                 vi;
+
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree_id));
+  T8_ASSERT (vertices != NULL);
+
+  tree = t8_cmesh_get_tree (cmesh, tree_id);
+  T8_ASSERT (tree->eclass != T8_ECLASS_LAST);
+  T8_ASSERT (num_vertices == t8_eclass_num_vertices[tree->eclass]);
+  T8_ASSERT (tree->vertices == NULL);
+
+  tree->vertices = T8_ALLOC (t8_topidx_t, num_vertices);
+  for (vi = 0; vi < num_vertices; vi++) {
+    tree->vertices[i] = vertices[i];
+  }
 }
 
 void
