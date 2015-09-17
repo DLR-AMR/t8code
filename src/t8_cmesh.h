@@ -154,6 +154,20 @@ void                t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1,
                                          t8_topidx_t tree2, int face1,
                                          int face2, int orientation);
 
+/** Broadcast a cmesh structure that exists only on one process to all
+ *  processes in the cmesh's communicator.
+ *  On the other processors, it will be allocated.
+ *  It is not allowed to call this function after \see t8_cmesh_commit.
+ *  \param [in] cmesh_in For the root process the cmesh to be broadcast,
+ *                      for the other processes it must be NULL.
+ *  \param [in] root    The rank of the process that provides the cmesh.
+ *  \return             For the root process this is a pointer to \a cmesh_in.
+ *                      Else, a pointer to a newly allocated cmesh
+ *                      structure with the same values as \a conn_in on the
+ *                      root process.
+ */
+t8_cmesh_t
+t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root);
 /** After allocating and adding properties to a cmesh, finish its construction.
  * \param [in,out] cmesh        Must be created with \see t8_cmesh_init and
  *                              specialized with t8_cmesh_set_* calls first.
