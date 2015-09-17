@@ -125,6 +125,14 @@ typedef struct t8_ctree
 }
 t8_ctree_struct_t;
 
+/* *INDENT-OFF* */
+static int
+t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_topidx_t tree_id);
+
+static t8_ctree_t
+t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id);
+/* *INDENT-ON* */
+
 /* Compute a hash value for a ghost tree. */
 static unsigned
 t8_cmesh_ghost_hash_fn (const void *ghost, const void *data)
@@ -224,6 +232,19 @@ t8_cmesh_set_partitioned (t8_cmesh_t cmesh, int set_partitioned,
                                        t8_cmesh_ghost_equal_fn,
                                        (void *) cmesh);
   }
+}
+
+/* Return a pointer to the ctree of a given tree_id. */
+static              t8_ctree_t
+t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id)
+{
+  t8_topidx_t         index;
+
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree_id));
+
+  index = cmesh->set_partitioned ? tree_id - cmesh->first_tree : tree_id;
+  return (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, index);
 }
 
 void
