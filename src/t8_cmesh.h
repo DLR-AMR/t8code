@@ -110,8 +110,9 @@ void                t8_cmesh_set_num_trees (t8_cmesh_t cmesh,
  * \param [in]     tree_id      The global number of the tree.
  * \param [in]     tree_class   The element class of this tree.
  */
-void                t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
-                                       t8_eclass_t tree_class);
+void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
+                                             t8_topidx_t tree_id,
+                                             t8_eclass_t tree_class);
 
 /** Set the class of a ghost in a partitioned cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.

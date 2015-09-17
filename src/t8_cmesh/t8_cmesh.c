@@ -312,8 +312,8 @@ t8_cmesh_tree_index (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 }
 
 void
-t8_cmesh_set_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id,
-                   t8_eclass_t tree_class)
+t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_topidx_t tree_id,
+                         t8_eclass_t tree_class)
 {
   t8_ctree_t          tree;
   int                 i, num_neighbors;
@@ -699,7 +699,7 @@ t8_cmesh_new_tri (sc_MPI_Comm comm, int do_dup)
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   t8_cmesh_set_num_trees (cmesh, 1);
-  t8_cmesh_set_tree (cmesh, 0, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
   t8_cmesh_commit (cmesh);
 
   return cmesh;
@@ -713,7 +713,7 @@ t8_cmesh_new_tet (sc_MPI_Comm comm, int do_dup)
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   t8_cmesh_set_num_trees (cmesh, 1);
-  t8_cmesh_set_tree (cmesh, 0, T8_ECLASS_TET);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);
   t8_cmesh_commit (cmesh);
 
   return cmesh;
@@ -727,7 +727,7 @@ t8_cmesh_new_quad (sc_MPI_Comm comm, int do_dup)
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   t8_cmesh_set_num_trees (cmesh, 1);
-  t8_cmesh_set_tree (cmesh, 0, T8_ECLASS_QUAD);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
   t8_cmesh_commit (cmesh);
 
   return cmesh;
@@ -741,7 +741,7 @@ t8_cmesh_new_hex (sc_MPI_Comm comm, int do_dup)
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   t8_cmesh_set_num_trees (cmesh, 1);
-  t8_cmesh_set_tree (cmesh, 0, T8_ECLASS_HEX);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
   t8_cmesh_commit (cmesh);
 
   return cmesh;
@@ -759,7 +759,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup)
   t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   t8_cmesh_set_num_trees (cmesh, num_trees_for_hypercube[eclass]);
   for (i = 0; i < num_trees_for_hypercube[eclass]; i++) {
-    t8_cmesh_set_tree (cmesh, i, eclass);
+    t8_cmesh_set_tree_class (cmesh, i, eclass);
   }
   switch (eclass) {
   case T8_ECLASS_PRISM:
@@ -812,7 +812,7 @@ t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup, int dim)
     SC_ABORT_NOT_REACHED ();
   }
 
-  t8_cmesh_set_tree (cmesh, 0, tree_class);
+  t8_cmesh_set_tree_class (cmesh, 0, tree_class);
   /* TODO: if orientation is specified, check whether 0 is the correct choice here */
   t8_cmesh_join_faces (cmesh, 0, 0, 0, 1, 0);
   t8_cmesh_join_faces (cmesh, 0, 0, 1, 0, 0);
