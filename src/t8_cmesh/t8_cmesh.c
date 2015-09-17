@@ -406,6 +406,9 @@ t8_cmesh_set_ghost (t8_cmesh_t cmesh, t8_topidx_t ghost_id,
   if (check_ret == NULL) {
     SC_ABORTF ("Ghost tree %i inserted twice.", ghost_id);
   }
+#ifdef T8_ENABLE_DEBUG
+  cmesh->inserted_ghosts++;
+#endif
 }
 
 void
@@ -516,6 +519,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   T8_ASSERT (cmesh->num_trees > 0);
 
   T8_ASSERT (cmesh->num_trees == cmesh->inserted_trees);
+  T8_ASSERT (cmesh->num_ghosts == cmesh->inserted_ghosts);
   cmesh->committed = 1;
 
   /* dup communicator if requested */
