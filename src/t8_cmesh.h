@@ -106,6 +106,7 @@ void                t8_cmesh_set_num_trees (t8_cmesh_t cmesh,
                                             t8_topidx_t num_trees);
 
 /** Set the class of a tree in the cmesh.
+ * It is not allowed to call this function after \see t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     tree_id      The global number of the tree.
  * \param [in]     tree_class   The element class of this tree.
