@@ -346,6 +346,7 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_topidx_t tree_id,
     tree->face_neighbors[i].treeid = -1;
     tree->face_neighbors[i].tree_to_face = -1;
   }
+  tree->vertices = NULL;
 #ifdef T8_ENABLE_DEBUG
   cmesh->inserted_trees++;
 #endif
@@ -369,7 +370,7 @@ t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_topidx_t tree_id,
 
   tree->vertices = T8_ALLOC (t8_topidx_t, num_vertices);
   for (vi = 0; vi < num_vertices; vi++) {
-    tree->vertices[i] = vertices[i];
+    tree->vertices[vi] = vertices[vi];
   }
 }
 
@@ -670,6 +671,7 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
     for (ti = 0; ti < cmesh->num_local_trees; ti++) {
       treeit = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, ti);
       T8_FREE (treeit->face_neighbors);
+      T8_FREE (treeit->vertices);
     }
     sc_array_destroy (cmesh->ctrees);
   }
