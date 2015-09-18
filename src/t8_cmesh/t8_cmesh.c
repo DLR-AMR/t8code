@@ -539,7 +539,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   t8_topidx_t         count_face;
   t8_topidx_t         count_corner;
   t8_topidx_t        *corners;
-  t8_topidx_t         num_neighbors;
+  t8_topidx_t         num_neighbors, num_corners;
   t8_ctree_fneighbor_struct_t *fneighbors;
 
   struct
@@ -624,13 +624,16 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
    * faster, we collect all corner and face neighbor information in arrays and
    * broadcast those.
    */
-  corners = T8_ALLOC (t8_topidx_t, cmesh_in->num_corners);
-  /* count total number of face neighbors */
+  /* count total number of face neighbors and tree corners */
   num_neighbors = 0;
+  num_corners = 0;
   for (iclass = 0; iclass < T8_ECLASS_LAST; iclass++) {
     num_neighbors += cmesh_in->num_trees_per_eclass[iclass] *
       t8_eclass_num_faces[iclass];
+    num_corners += cmesh_in->num_trees_per_eclass[iclass] *
+        t8_eclass_num_vertices[iclass];
   }
+  corners = T8_ALLOC (t8_topidx_t, num_corners);
   fneighbors = T8_ALLOC (t8_ctree_fneighbor_struct_t, num_neighbors);
   /* fill corner and face_neighbor arrays on root */
   if (mpirank == 0) {
@@ -645,12 +648,13 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
               sizeof (t8_ctree_fneighbor_struct_t));
       count_face += t8_eclass_num_faces[tree->eclass];
     }
-    T8_ASSERT (count_corner == cmesh_in->num_corners);
+    T8_ASSERT (count_corner == num_corners);
     T8_ASSERT (count_face == num_neighbors);
   }
   sc_MPI_Bcast (corners, cmesh_in->num_corners * sizeof (t8_topidx_t),
                 sc_MPI_BYTE, root, comm);
-  sc_MPI_Bcast (fneighbors, num_neighbors, sc_MPI_BYTE, root, comm);
+  sc_MPI_Bcast (fneighbors, num_neighbors * sizeof (t8_ctree_struct_t),
+                sc_MPI_BYTE, root, comm);
 
   if (mpirank != 0) {
     count_face = count_corner = 0;
@@ -664,7 +668,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
               sizeof (t8_ctree_fneighbor_struct_t));
       count_face += t8_eclass_num_faces[tree->eclass];
     }
-    T8_ASSERT (count_corner == cmesh_in->num_corners);
+    T8_ASSERT (count_corner == num_corners);
     T8_ASSERT (count_face == num_neighbors);
   }
   T8_FREE (corners);
