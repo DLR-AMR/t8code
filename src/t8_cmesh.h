@@ -161,13 +161,16 @@ void                t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1,
  *  \param [in] cmesh_in For the root process the cmesh to be broadcast,
  *                      for the other processes it must be NULL.
  *  \param [in] root    The rank of the process that provides the cmesh.
+ *  \param [in] comm    The mpi communicator. Must match cmesh's communicator
+ *                      on the root process.
  *  \return             For the root process this is a pointer to \a cmesh_in.
  *                      Else, a pointer to a newly allocated cmesh
  *                      structure with the same values as \a conn_in on the
  *                      root process.
  */
-t8_cmesh_t
-t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root);
+t8_cmesh_t           t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root,
+                                     sc_MPI_Comm comm);
+
 /** After allocating and adding properties to a cmesh, finish its construction.
  * \param [in,out] cmesh        Must be created with \see t8_cmesh_init and
  *                              specialized with t8_cmesh_set_* calls first.

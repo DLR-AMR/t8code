@@ -512,6 +512,144 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
   }
 }
 
+t8_cmesh_t
+t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
+{
+  int         mpirank, mpisize, mpiret;
+  int         iclass, i;
+  t8_ctree_t  tree;
+  t8_topidx_t itree;
+  t8_topidx_t count_face;
+  t8_topidx_t count_corner;
+  t8_topidx_t *corners;
+  t8_topidx_t num_neighbors;
+  t8_ctree_fneighbor *fneighbors;
+
+  struct
+  {
+    int     dimension;
+    int     do_dup;
+    t8_topidx_t     num_corners;
+    t8_topidx_t     num_trees;
+    t8_topidx_t     num_trees_per_eclass[T8_ECLASS_LAST];
+#ifdef T8_ENABLE_DEBUG
+    t8_topidx_t     inserted_trees;
+#endif
+  } dimensions;
+
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  T8_ASSERT (0 <= root && root < mpisize);
+  T8_ASSERT (mpirank == root || cmesh_in == NULL);
+  T8_ASSERT (mpirank != root || cmesh_in != NULL);
+  T8_ASSERT (mpirank != root || cmesh_in->mpicomm == comm);
+  T8_ASSERT (mpirank != root || cmesh_in->set_partitioned == 0);
+
+  /* At first we broadcast all inforamtion needed to allocate the tree
+   * arrays. */
+  if (mpirank == root) {
+    /* TODO: vertices are missing yet */
+    dimensions.dimension = cmesh_in->dimension;
+    dimensions.do_dup = cmesh_in->do_dup;
+    dimensions.num_corners = cmesh_in->num_corners;
+    dimensions.num_trees = cmesh_in->num_trees;
+    for (iclass = 0;iclass < T8_ECLASS_LAST;iclass++) {
+      dimensions.num_trees_per_eclass[iclass] =
+          cmesh_in->num_trees_per_eclass[iclass];
+    }
+#ifdef T8_ENABLE_DEBUG
+    dimensions.inserted_trees = cmesh_in->inserted_trees;
+#endif
+  }
+  /* TODO: we could optimize this by using IBcast */
+  sc_MPI_Bcast (&dimensions, sizeof(dimensions), sc_MPI_BYTE, root, comm);
+
+  /* If not root store information in new cmesh and allocate memory for arrays. */
+  if (mpirank != root) {
+    t8_cmesh_init (&cmesh_in);
+    cmesh_in->mpicomm = comm;
+    cmesh_in->dimension = dimensions.dimension;
+    cmesh_in->do_dup = dimensions.do_dup;
+    t8_cmesh_set_num_corners (cmesh_in, dimensions.num_corners);
+    /* set tree num and allocate trees */
+    t8_cmesh_set_num_trees (cmesh_in, dimensions.num_trees);
+    for (iclass = 0;iclass < T8_ECLASS_LAST;iclass++) {
+      cmesh_in->num_trees_per_eclass[iclass] =
+          dimensions.num_trees_per_eclass[iclass];
+    }
+#ifdef T8_ENABLE_DEBUG
+    cmesh_in->inserted_trees = dimensions.inserted_trees;
+#endif
+  }
+  /* broadcast all the trees */
+  /* TODO: this step relies on the sc_array implementation.
+   *       can we do it differently ? */
+  sc_MPI_Bcast (cmesh_in->ctrees->array,
+                cmesh_in->num_trees * sizeof(t8_ctree_struct_t),
+                sc_MPI_BYTE, root, comm);
+  if (mpirank != root) {
+    /* iterate through trees and allocate neighbor and corner arrays.
+     * We cannot do it before because we have to know a tree's eclass for this */
+    for (itree = 0; itree < cmesh_in->num_trees;itree++) {
+      tree = t8_cmesh_get_tree (cmesh_in, itree);
+      tree->face_neighbors = T8_ALLOC (t8_ctree_fneighbor_struct_t,
+                                       t8_eclass_num_faces[tree->eclass]);
+      tree->corners = T8_ALLOC (t8_topidx_t,
+                                t8_eclass_num_vertices[tree->eclass]);
+    }
+  }
+  /* Since broadcasting one big data set instead of several small ones is much
+   * faster, we collect all corner and face neighbor information in arrays and
+   * broadcast those.
+   */
+  corners = T8_ALLOC (t8_topidx_t, cmesh_in->num_corners);
+  /* count total number of face neighbors */
+  num_neighbors = 0;
+  for (iclass = 0;iclass < T8_ECLASS_LAST;iclass++) {
+    num_neighbors += cmesh_in->num_trees_per_eclass[iclass] *
+        t8_eclass_num_faces[iclass];
+  }
+  fneighbors = T8_ALLOC (t8_ctree_fneighbor_struct_t, num_neighbors);
+  /* fill corner and face_neighbor arrays on root */
+  if (mpirank == 0) {
+    count_face = count_corner = 0;
+    for (itree = 0; itree < cmesh_in->num_trees;itree++) {
+      tree = t8_cmesh_get_tree (cmesh_in, itree);
+      memcpy (corners + count_corner, tree->corners,
+              t8_eclass_num_vertices[tree->eclass] * sizeof(t8_topidx_t));
+      count_corner += t8_eclass_num_vertices[tree->eclass];
+      memcpy (fneighbors + count_face, tree->face_neighbors,
+              t8_eclass_num_faces[tree->eclass] *
+              sizeof(t8_ctree_fneighbor_struct_t));
+      count_face += t8_eclass_num_faces[tree->eclass];
+    }
+    T8_ASSERT (count_corner == cmesh_in->num_corners);
+    T8_ASSERT (count_face == num_neighbors);
+  }
+  sc_MPI_Bcast (corners, cmesh_in->num_corners * sizeof(t8_topidx_t),
+                sc_MPI_BYTE, root, comm);
+  sc_MPI_Bcast (fneighbors, num_neighbors, sc_MPI_BYTE, root, comm);
+
+  if (mpirank != 0) {
+    count_face = count_corner = 0;
+    for (itree = 0; itree < cmesh_in->num_trees;itree++) {
+      tree = t8_cmesh_get_tree (cmesh_in, itree);
+      memcpy (tree->corners, corners + count_corner,
+              t8_eclass_num_vertices[tree->eclass] * sizeof(t8_topidx_t));
+      count_corner += t8_eclass_num_vertices[tree->eclass];
+      memcpy (tree->face_neighbors, fneighbors + count_face,
+              t8_eclass_num_faces[tree->eclass] *
+              sizeof(t8_ctree_fneighbor_struct_t));
+      count_face += t8_eclass_num_faces[tree->eclass];
+    }
+    T8_ASSERT (count_corner == cmesh_in->num_corners);
+    T8_ASSERT (count_face == num_neighbors);
+  }
+  return cmesh_in;
+}
+
 void
 t8_cmesh_commit (t8_cmesh_t cmesh)
 {
