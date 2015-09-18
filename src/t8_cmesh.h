@@ -87,13 +87,13 @@ void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
                                               t8_topidx_t first_local_tree,
                                               t8_topidx_t num_ghosts);
 
-/** Set the number of vertices for a cmesh.
+/** Set the number of corners for a cmesh.
  * It is not allowed to call this function after \see t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     num_vertices The number of vertices to be set.
+ * \param [in]     num_corners The number of corners to be set.
  */
-void                t8_cmesh_set_num_vertices (t8_cmesh_t cmesh,
-                                               t8_topidx_t num_vertices);
+void                t8_cmesh_set_num_corners (t8_cmesh_t cmesh,
+                                               t8_topidx_t num_corners);
 
 /** Set the number of trees for a cmesh.
  * It is not allowed to call this function after \see t8_cmesh_commit.
@@ -115,20 +115,20 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
                                              t8_topidx_t tree_id,
                                              t8_eclass_t tree_class);
 
-/** Set the vertices of a tree in the cmesh.
+/** Set the corners of a tree in the cmesh.
  * It is not allowed to call this function after \see t8_cmesh_commit.
  * The eclass of the tree has to be set before calling this function.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     tree_id      The global number of the tree.
- * \param [in]     vertices     An array of as many vertex indices as the tree
+ * \param [in]     corners     An array of as many corner indices as the tree
  *                              has corners.
- * \param [in]     num_vertices The number of vertices in \a vertices. Must
+ * \param [in]     num_corners The number of corners in \a corners. Must
  *                              match the number of corners of the tree.
  */
-void                t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh,
+void                t8_cmesh_set_tree_corners (t8_cmesh_t cmesh,
                                                 t8_topidx_t tree_id,
-                                                t8_topidx_t * vertices,
-                                                t8_topidx_t num_vertices);
+                                                t8_topidx_t * corners,
+                                                t8_topidx_t num_corners);
 
 /** Set the class of a ghost in a partitioned cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.
@@ -186,12 +186,12 @@ void                t8_cmesh_commit (t8_cmesh_t cmesh);
 t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
                                              t8_topidx_t tree_id);
 
-/** Return the gloval numbet of vertices in a cmesh.
+/** Return the gloval numbet of corners in a cmesh.
  * \param [in] cmesh       The cmesh to be considered.
- * \return                 The number of vertices associated to \a cmesh.
+ * \return                 The number of corners associated to \a cmesh.
  * \a cmesh must be committed before calling this function.
  */
-t8_topidx_t         t8_cmesh_get_num_vertices (t8_cmesh_t cmesh);
+t8_topidx_t         t8_cmesh_get_num_corners (t8_cmesh_t cmesh);
 
 /** Return the global number of trees in a cmesh.
  * \param [in] cmesh       The cmesh to be considered.
