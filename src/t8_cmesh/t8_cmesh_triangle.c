@@ -33,16 +33,16 @@
  * \return                  The number of read arguments of the last line read.
  *                          negative on failure */
 static int
-t8_cmesh_triangle_read_next_line (char ** line, size_t *n, FILE * fp)
+t8_cmesh_triangle_read_next_line (char **line, size_t * n, FILE * fp)
 {
-  int         retval;
+  int                 retval;
 
   do {
     /* read first non-comment line from file */
     /* TODO: getline depends on IEEE Std 1003.1-2008 (``POSIX.1'')
      *       p4est therefore has its own getline function in p4est_connectivity.h. */
     retval = getline (line, n, fp);
-    if (retval < 0){
+    if (retval < 0) {
       return retval;
     }
   }
@@ -52,15 +52,16 @@ t8_cmesh_triangle_read_next_line (char ** line, size_t *n, FILE * fp)
   return retval;
 }
 
-t8_cmesh_t t8_cmesh_from_triangle_file (char *filenames[3], int partition,
-                                        sc_MPI_Comm comm, int do_dup)
+t8_cmesh_t
+t8_cmesh_from_triangle_file (char *filenames[3], int partition,
+                             sc_MPI_Comm comm, int do_dup)
 {
-  int           mpirank, mpisize, mpiret;
-  char         *line = T8_ALLOC (char, 1024);
-  size_t        linen = 1024;
-  int           retval;
-  t8_cmesh_t    cmesh;
-  FILE         *fp; /* File pointer for .node, .ele and .edge files */
+  int                 mpirank, mpisize, mpiret;
+  char               *line = T8_ALLOC (char, 1024);
+  size_t              linen = 1024;
+  int                 retval;
+  t8_cmesh_t          cmesh;
+  FILE               *fp;       /* File pointer for .node, .ele and .edge files */
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -69,15 +70,15 @@ t8_cmesh_t t8_cmesh_from_triangle_file (char *filenames[3], int partition,
 
   cmesh = NULL;
   if (mpirank == 0) {
-    t8_topidx_t   num_corners, cit;
-    t8_topidx_t   corner, corner_offset;
-    int           dim;
-#if 0 /* used for currently disabeld code */
-    int           i, bdy_marker;
+    t8_topidx_t         num_corners, cit;
+    t8_topidx_t         corner, corner_offset;
+    int                 dim;
+#if 0                           /* used for currently disabeld code */
+    int                 i, bdy_marker;
 #endif
-    int           num_attributes;
-    int           nbdy_marker;
-    double        x,y;
+    int                 num_attributes;
+    int                 nbdy_marker;
+    double              x, y;
 
     /* Open all .node file */
     /* TODO: If we do not need to read all three at the same time,
@@ -89,9 +90,9 @@ t8_cmesh_t t8_cmesh_from_triangle_file (char *filenames[3], int partition,
       goto die;
     }
 
-      /* read first non-comment line from .node file */
+    /* read first non-comment line from .node file */
     retval = t8_cmesh_triangle_read_next_line (&line, &linen, fp);
-    if (retval < 0){
+    if (retval < 0) {
       t8_global_errorf ("Failed to read first line from %s.\n", filenames[0]);
       goto die;
     }
@@ -117,9 +118,9 @@ t8_cmesh_t t8_cmesh_from_triangle_file (char *filenames[3], int partition,
     t8_cmesh_set_num_vertices (cmesh, num_corners);
 
     /* read all vertex coordinates */
-    for (cit = 0;cit < num_corners;cit++) {
+    for (cit = 0; cit < num_corners; cit++) {
       retval = t8_cmesh_triangle_read_next_line (&line, &linen, fp);
-      if (retval < 0){
+      if (retval < 0) {
         t8_global_errorf ("Failed to read line from %s.\n", filenames[0]);
         goto die;
       }
@@ -134,10 +135,10 @@ t8_cmesh_t t8_cmesh_from_triangle_file (char *filenames[3], int partition,
       }
       t8_cmesh_set_vertex (cmesh, corner - corner_offset, x, y, 0);
 
-#if 0 /* read attributes and boundary marker. This part is currently not needed */
+#if 0                           /* read attributes and boundary marker. This part is currently not needed */
       /* read attributes but do not save them */
-      for (i = 0;i < num_attributes;i++) {
-        retval = sscanf(line, "%*f ");
+      for (i = 0; i < num_attributes; i++) {
+        retval = sscanf (line, "%*f ");
         if (retval != 0) {
           t8_global_errorf ("Premature end of line in %s.\n", filenames[0]);
         }
@@ -149,7 +150,6 @@ t8_cmesh_t t8_cmesh_from_triangle_file (char *filenames[3], int partition,
 #endif /* if 0 */
     }
     fclose (fp);
-
 
   }
   return cmesh;

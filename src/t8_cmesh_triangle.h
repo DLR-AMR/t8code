@@ -46,10 +46,9 @@ T8_EXTERN_C_BEGIN ();
  * A fully commited, replicated cmesh should be returned.
  */
 t8_cmesh_t
-t8_cmesh_from_triangle_file (char *filenames[], int partition, sc_MPI_Comm comm,
-                             int do_dup);
+t8_cmesh_from_triangle_file (char *filenames[], int partition,
+                             sc_MPI_Comm comm, int do_dup);
 
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_TRIANGLE_H */
-
