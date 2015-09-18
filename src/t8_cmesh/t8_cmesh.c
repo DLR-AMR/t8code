@@ -265,6 +265,19 @@ t8_cmesh_set_num_corners (t8_cmesh_t cmesh, t8_topidx_t num_corners)
 }
 
 void
+t8_cmesh_set_num_vertices (t8_cmesh_t cmesh, t8_topidx_t num_vertices)
+{
+  return;
+}
+
+void
+t8_cmesh_set_vertex (t8_cmesh_t cmesh, t8_topidx_t vertex_id, double x,
+                     double y, double z)
+{
+  return;
+}
+
+void
 t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees)
 {
   T8_ASSERT (cmesh != NULL);

@@ -95,6 +95,15 @@ void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
 void                t8_cmesh_set_num_corners (t8_cmesh_t cmesh,
                                                t8_topidx_t num_corners);
 
+/* TODO: implement and document */
+void                t8_cmesh_set_num_vertices (t8_cmesh_t cmesh,
+                                               t8_topidx_t num_vertices);
+
+/* TODO: implement and document */
+void                t8_cmesh_set_vertex (t8_cmesh_t cmesh,
+                                         t8_topidx_t vertex_id, double x,
+                                         double y, double z);
+
 /** Set the number of trees for a cmesh.
  * It is not allowed to call this function after \see t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
