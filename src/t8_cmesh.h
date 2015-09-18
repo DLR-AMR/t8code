@@ -168,8 +168,8 @@ void                t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1,
  *                      structure with the same values as \a conn_in on the
  *                      root process.
  */
-t8_cmesh_t           t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root,
-                                     sc_MPI_Comm comm);
+t8_cmesh_t          t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root,
+                                    sc_MPI_Comm comm);
 
 /** After allocating and adding properties to a cmesh, finish its construction.
  * \param [in,out] cmesh        Must be created with \see t8_cmesh_init and
