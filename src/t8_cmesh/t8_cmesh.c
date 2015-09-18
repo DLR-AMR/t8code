@@ -546,6 +546,9 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   T8_ASSERT (mpirank != root || cmesh_in != NULL);
   T8_ASSERT (mpirank != root || cmesh_in->mpicomm == comm);
   T8_ASSERT (mpirank != root || cmesh_in->set_partitioned == 0);
+  /* The cmesh on the calling process must not be owned by something
+   * else. */
+  T8_ASSERT (mpirank != root || cmesh_in->rc.refcount == 1);
 
   /* At first we broadcast all inforamtion needed to allocate the tree
    * arrays. */
@@ -647,6 +650,8 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     T8_ASSERT (count_corner == cmesh_in->num_corners);
     T8_ASSERT (count_face == num_neighbors);
   }
+  T8_FREE (corners);
+  T8_FREE (fneighbors);
   return cmesh_in;
 }
 
