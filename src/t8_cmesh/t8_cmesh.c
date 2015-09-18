@@ -262,6 +262,9 @@ t8_cmesh_set_num_corners (t8_cmesh_t cmesh, t8_topidx_t num_corners)
   T8_ASSERT (cmesh->num_corners == 0);
 
   cmesh->num_corners = num_corners;
+  if (cmesh->set_partitioned == 0) {
+    cmesh->num_local_corners = num_corners;
+  }
 }
 
 void
@@ -363,6 +366,7 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_topidx_t tree_id,
   for (i = 0; i < num_neighbors; i++) {
     tree->face_neighbors[i].treeid = -1;
     tree->face_neighbors[i].tree_to_face = -1;
+    tree->face_neighbors[i].is_owned = -1;
   }
   tree->corners = NULL;
 #ifdef T8_ENABLE_DEBUG
