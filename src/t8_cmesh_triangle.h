@@ -38,7 +38,7 @@ T8_EXTERN_C_BEGIN ();
 
 /* put declarations here */
 
-/* Open a .node, .ele and .edge file to read cmesh.
+/* Open a .node, .ele and .neigh file to read cmesh.
  * and create a cmesh from them. the cmesh will be replicated.
  * (TODO: maybe allow for replicated input later)
  * We should only open the file on one process and
