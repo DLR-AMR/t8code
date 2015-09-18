@@ -93,7 +93,7 @@ void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
  * \param [in]     num_corners The number of corners to be set.
  */
 void                t8_cmesh_set_num_corners (t8_cmesh_t cmesh,
-                                               t8_topidx_t num_corners);
+                                              t8_topidx_t num_corners);
 
 /* TODO: implement and document */
 void                t8_cmesh_set_num_vertices (t8_cmesh_t cmesh,
@@ -135,9 +135,9 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
  *                              match the number of corners of the tree.
  */
 void                t8_cmesh_set_tree_corners (t8_cmesh_t cmesh,
-                                                t8_topidx_t tree_id,
-                                                t8_topidx_t * corners,
-                                                t8_topidx_t num_corners);
+                                               t8_topidx_t tree_id,
+                                               t8_topidx_t * corners,
+                                               t8_topidx_t num_corners);
 
 /** Set the class of a ghost in a partitioned cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.

@@ -327,7 +327,7 @@ t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 /* Given a tree_id return the index of the specified tree in
  * cmesh's tree array
  */
-static t8_topidx_t
+static              t8_topidx_t
 t8_cmesh_tree_index (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 {
   return cmesh->set_partitioned ? tree_id - cmesh->first_tree : tree_id;
@@ -631,7 +631,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     num_neighbors += cmesh_in->num_trees_per_eclass[iclass] *
       t8_eclass_num_faces[iclass];
     num_corners += cmesh_in->num_trees_per_eclass[iclass] *
-        t8_eclass_num_vertices[iclass];
+      t8_eclass_num_vertices[iclass];
   }
   corners = T8_ALLOC (t8_topidx_t, num_corners);
   fneighbors = T8_ALLOC (t8_ctree_fneighbor_struct_t, num_neighbors);
