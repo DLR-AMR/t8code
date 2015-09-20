@@ -101,8 +101,7 @@ t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename)
   T8_ASSERT (num_attributes >= 0);
   T8_ASSERT (nbdy_marker == 0 || nbdy_marker == 1);
 
-  /* init mesh and set number of corners */
-  t8_cmesh_init (&cmesh);
+  /* set number of corners */
   t8_cmesh_set_num_corners (cmesh, num_corners);
   t8_cmesh_set_num_vertices (cmesh, num_corners);
 
@@ -299,7 +298,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int corner_offset,
 
   for (tit = 0; tit < num_triangles; tit++) {
     for (face1 = 0; face1 < 3; face1++) {
-      triangle = tneighbors[3 * tit + face1];
+      triangle = tneighbors[3 * tit + face1] - element_offset;
       for (face2 = 0; face2 < 3; face2++) {
         if (tneighbors[3 * triangle + face2] == tit) {
           break;
@@ -327,6 +326,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int corner_offset,
   }
   T8_FREE (tneighbors);
   T8_FREE (line);
+  return 0;
 die_neigh:
   /* Clean up on error. */
   /* Close open file */
@@ -353,6 +353,7 @@ t8_cmesh_from_triangle_file (char *filenames[3], int partition,
   if (mpirank == 0) {
     int                 retval, corner_offset, triangle_offset;
 
+    t8_cmesh_init (&cmesh);
     retval = t8_cmesh_triangle_read_nodes (cmesh, filenames[0]);
     if (retval != 0 || retval != 1) {
       t8_cmesh_unref (&cmesh);
@@ -373,8 +374,14 @@ t8_cmesh_from_triangle_file (char *filenames[3], int partition,
         }
       }
     }
+    T8_ASSERT (cmesh != NULL);
   }
+  /* TODO: broadcasting NULL does not work. We need a way to tell the
+   *       other processes if something went wrong. */
   /* This broadcasts the NULL pointer if anything went wrong */
   t8_cmesh_bcast (cmesh, 0, comm);
+  if (cmesh != NULL) {
+    t8_cmesh_commit (cmesh);
+  }
   return cmesh;
 }
