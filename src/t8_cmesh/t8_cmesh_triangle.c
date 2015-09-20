@@ -246,9 +246,10 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int corner_offset,
   char               *line = T8_ALLOC (char, 1024);
   size_t              linen = 1024;
   t8_topidx_t         triangle, num_triangles, tit;
-  t8_topidx_t         tneighbors[3];
+  t8_topidx_t        *tneighbors;
   int                 retval;
   int                 temp;
+  int                 orientation, face1, face2;
 
   /* Open .neigh file and read face neighbor information */
   T8_ASSERT (filename != NULL);
@@ -270,6 +271,8 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int corner_offset,
   }
   T8_ASSERT (temp == 3);
 
+  tneighbors = T8_ALLOC (t8_topidx_t, num_triangles * 3);
+
   for (tit = 0; tit < num_triangles; tit++) {
     retval = t8_cmesh_triangle_read_next_line (&line, &linen, fp);
     if (retval < 0) {
@@ -277,8 +280,8 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int corner_offset,
       goto die_neigh;
     }
     retval =
-      sscanf (line, "%i %i %i %i", &triangle, tneighbors, tneighbors + 1,
-              tneighbors + 2);
+      sscanf (line, "%i %i %i %i", &triangle, tneighbors + 3 * tit,
+              tneighbors + 3 * tit + 1, tneighbors + 3 * tit + 2);
     if (retval != 4) {
       t8_global_errorf ("Premature end of line in %s.\n", filename);
       goto die_neigh;
@@ -288,6 +291,35 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int corner_offset,
     /* How do we know with which face we are connected? */
     SC_ABORTF ("%s not implemented", "read neighbor file");
   }
+  /* We are done reading the file. */
+  fclose (fp);
+
+  for (tit = 0; tit < num_triangles; tit++) {
+    for (face1 = 0; face1 < 3; face1++) {
+      triangle = tneighbors[3 * tit + face1];
+      for (face2 = 0; face2 < 3; face2++) {
+        if (tneighbors[3 * triangle + face2] == tit) {
+          break;
+        }
+      }
+      /* jump here after break */
+      T8_ASSERT (face2 < 3);
+      /* compute orientation after the pattern
+       *         f1
+       *        0 1 2
+       *       ======
+       *    0 | 1 0 1
+       * f2 1 | 0 1 0
+       *    2 | 1 0 1
+       */
+      orientation = (face1 + face2 + 1) % 2;
+      /* TODO: right now we insert each face twice.
+       *       this will cause cmesh_join_faces to abort */
+      t8_cmesh_join_faces (cmesh, tit, triangle, face1, face2, orientation);
+    }
+  }
+  T8_FREE (tneighbors);
+  T8_FREE (line);
 die_neigh:
   /* Clean up on error. */
   /* Close open file */
