@@ -273,6 +273,10 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int corner_offset,
 
   tneighbors = T8_ALLOC (t8_topidx_t, num_triangles * 3);
 
+  /* We read all the neighbors and write them into an array.
+   * Since TRIANGLE provides us for each triangle and each face with
+   * which triangle ist is connected, we still need to find
+   * out with which face of this triangle it is connected. */
   for (tit = 0; tit < num_triangles; tit++) {
     retval = t8_cmesh_triangle_read_next_line (&line, &linen, fp);
     if (retval < 0) {
@@ -289,7 +293,6 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int corner_offset,
     T8_ASSERT (triangle - element_offset == tit);
 
     /* How do we know with which face we are connected? */
-    SC_ABORTF ("%s not implemented", "read neighbor file");
   }
   /* We are done reading the file. */
   fclose (fp);
@@ -313,9 +316,13 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int corner_offset,
        *    2 | 1 0 1
        */
       orientation = (face1 + face2 + 1) % 2;
-      /* TODO: right now we insert each face twice.
-       *       this will cause cmesh_join_faces to abort */
-      t8_cmesh_join_faces (cmesh, tit, triangle, face1, face2, orientation);
+      /* Insert this face connection if we did not insert it before */
+      if (tit < triangle) {
+        t8_cmesh_join_faces (cmesh, tit, triangle, face1, face2, orientation);
+      }
+      if (tit == triangle && face1 < face2) {
+        t8_cmesh_join_faces (cmesh, tit, triangle, face1, face2, orientation);
+      }
     }
   }
   T8_FREE (tneighbors);
