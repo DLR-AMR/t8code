@@ -477,7 +477,9 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
   {
     t8_topidx_t         ghost_id;
     t8_topidx_t         owned_id;
+#ifdef T8_ENABLE_DEBUG
     int                 owned_face;
+#endif
     int                 ghost_face;
     t8_cghost_t         Ghost;
     t8_eclass_t         ghost_eclass;
@@ -487,14 +489,18 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
     if (t8_cmesh_tree_id_is_owned (cmesh, tree1)) {
       owned_id = tree1;
       ghost_id = tree2;
+#ifdef T8_ENABLE_DEBUG
       owned_face = face1;
+#endif
       ghost_face = face2;
     }
     else {
       T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree2));
       owned_id = tree2;
       ghost_id = tree1;
+#ifdef T8_ENABLE_DEBUG
       owned_face = face2;
+#endif
       ghost_face = face1;
     }
     T1 = t8_cmesh_get_tree (cmesh, owned_id);
