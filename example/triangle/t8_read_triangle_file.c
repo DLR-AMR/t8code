@@ -36,6 +36,9 @@ t8_read_triangle_file_build_cmesh (const char * prefix, int do_dup)
   if (cmesh != NULL) {
     t8_debugf ("Succesfully constructed cmesh from %s files.\n",
                            prefix);
+    t8_debugf ("cmesh has:\n\t%i corners\n\t%i triangles\n",
+               t8_cmesh_get_num_corners (cmesh),
+               t8_cmesh_get_num_trees (cmesh));
     t8_cmesh_unref (&cmesh);
   }
   else {
