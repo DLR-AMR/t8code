@@ -338,7 +338,7 @@ die_neigh:
 }
 
 t8_cmesh_t
-t8_cmesh_from_triangle_file (char *filenames[3], int partition,
+t8_cmesh_from_triangle_file (char *fileprefix, int partition,
                              sc_MPI_Comm comm, int do_dup)
 {
   int                 mpirank, mpisize, mpiret;
@@ -352,23 +352,30 @@ t8_cmesh_from_triangle_file (char *filenames[3], int partition,
   cmesh = NULL;
   if (mpirank == 0) {
     int                 retval, corner_offset, triangle_offset;
+    char                current_file[BUFSIZ];
 
     t8_cmesh_init (&cmesh);
-    retval = t8_cmesh_triangle_read_nodes (cmesh, filenames[0]);
+    /* read .node file */
+    snprintf (current_file, BUFSIZ, "%s.node", fileprefix);
+    retval = t8_cmesh_triangle_read_nodes (cmesh, current_file);
     if (retval != 0 || retval != 1) {
       t8_cmesh_unref (&cmesh);
     }
     else {
-      corner_offset = retval;
+      /* read .ele file */
+      corner_offset = retval;      
+      snprintf (current_file, BUFSIZ, "%s.ele", fileprefix);
       retval =
-        t8_cmesh_triangle_read_eles (cmesh, corner_offset, filenames[1]);
+        t8_cmesh_triangle_read_eles (cmesh, corner_offset, current_file);
       if (retval != 0 || retval != 1) {
         t8_cmesh_unref (&cmesh);
       }
       else {
+        /* read .neigh file */
         triangle_offset = retval;
+        snprintf (current_file, BUFSIZ, "%s.neigh", fileprefix);
         retval = t8_cmesh_triangle_read_neigh (cmesh, corner_offset,
-                                               triangle_offset, filenames[2]);
+                                               triangle_offset, current_file);
         if (retval != 0) {
           t8_cmesh_unref (&cmesh);
         }
