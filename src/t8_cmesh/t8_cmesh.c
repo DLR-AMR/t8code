@@ -657,10 +657,15 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     T8_ASSERT (count_corner == num_corners);
     T8_ASSERT (count_face == num_neighbors);
   }
-  sc_MPI_Bcast (corners, cmesh_in->num_corners * sizeof (t8_topidx_t),
-                sc_MPI_BYTE, root, comm);
-  sc_MPI_Bcast (fneighbors, num_neighbors * sizeof (t8_ctree_struct_t),
-                sc_MPI_BYTE, root, comm);
+
+  mpiret =
+    sc_MPI_Bcast (corners, cmesh_in->num_corners * sizeof (t8_topidx_t),
+                  sc_MPI_BYTE, root, comm);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Bcast (fneighbors, num_neighbors *
+                         sizeof (t8_ctree_fneighbor_struct_t),
+                         sc_MPI_BYTE, root, comm);
+  SC_CHECK_MPI (mpiret);
 
   if (mpirank != 0) {
     count_face = count_corner = 0;
