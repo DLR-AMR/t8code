@@ -34,13 +34,14 @@ t8_read_triangle_file_build_cmesh (const char * prefix, int do_dup)
   cmesh = t8_cmesh_from_triangle_file ((char *) prefix, 0, sc_MPI_COMM_WORLD,
                                        do_dup);
   if (cmesh != NULL) {
-    t8_global_productionf ("Succesfully constructed cmesh from %s files.\n",
+    t8_debugf ("Succesfully constructed cmesh from %s files.\n",
                            prefix);
     t8_cmesh_unref (&cmesh);
   }
   else {
-    t8_global_errorf ("An error occured while reading %s files.\n", prefix);
+    t8_debugf ("An error occured while reading %s files.\n", prefix);
   }
+  fflush (stdout);
 }
 
 int main (int argc, char * argv[])
