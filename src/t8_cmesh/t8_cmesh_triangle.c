@@ -296,31 +296,37 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int corner_offset,
   /* We are done reading the file. */
   fclose (fp);
 
+  /* Finde the neighboring faces */
   for (tit = 0; tit < num_triangles; tit++) {
     for (face1 = 0; face1 < 3; face1++) {
       triangle = tneighbors[3 * tit + face1] - element_offset;
-      for (face2 = 0; face2 < 3; face2++) {
-        if (tneighbors[3 * triangle + face2] == tit) {
-          break;
+      /* triangle store the neighbor triangle on face1 of tit
+       * or -1 if there is no neighbor */
+      if (triangle != -1 - element_offset) {
+        for (face2 = 0; face2 < 3; face2++) {
+          /* Finde the face number of triangle which is connected to tit */
+          if (tneighbors[3 * triangle + face2] == tit + element_offset) {
+            break;
+          }
         }
-      }
-      /* jump here after break */
-      T8_ASSERT (face2 < 3);
-      /* compute orientation after the pattern
-       *         f1
-       *        0 1 2
-       *       ======
-       *    0 | 1 0 1
-       * f2 1 | 0 1 0
-       *    2 | 1 0 1
-       */
-      orientation = (face1 + face2 + 1) % 2;
-      /* Insert this face connection if we did not insert it before */
-      if (tit < triangle) {
-        t8_cmesh_join_faces (cmesh, tit, triangle, face1, face2, orientation);
-      }
-      if (tit == triangle && face1 < face2) {
-        t8_cmesh_join_faces (cmesh, tit, triangle, face1, face2, orientation);
+        /* jump here after break */
+        T8_ASSERT (face2 < 3);
+        /* compute orientation after the pattern
+         *         f1
+         *        0 1 2
+         *       ======
+         *    0 | 1 0 1
+         * f2 1 | 0 1 0
+         *    2 | 1 0 1
+         */
+        orientation = (face1 + face2 + 1) % 2;
+        /* Insert this face connection if we did not insert it before */
+        if (tit < triangle) {
+          t8_cmesh_join_faces (cmesh, tit, triangle, face1, face2, orientation);
+        }
+        if (tit == triangle && face1 < face2) {
+          t8_cmesh_join_faces (cmesh, tit, triangle, face1, face2, orientation);
+        }
       }
     }
   }
@@ -358,7 +364,9 @@ t8_cmesh_from_triangle_file (char *fileprefix, int partition,
     /* read .node file */
     snprintf (current_file, BUFSIZ, "%s.node", fileprefix);
     retval = t8_cmesh_triangle_read_nodes (cmesh, current_file);
-    if (retval != 0 || retval != 1) {
+    if (retval != 0 && retval != 1) {
+      t8_global_errorf ("Error while parsing file %s.\n",
+                        current_file);
       t8_cmesh_unref (&cmesh);
     }
     else {
@@ -367,7 +375,9 @@ t8_cmesh_from_triangle_file (char *fileprefix, int partition,
       snprintf (current_file, BUFSIZ, "%s.ele", fileprefix);
       retval =
         t8_cmesh_triangle_read_eles (cmesh, corner_offset, current_file);
-      if (retval != 0 || retval != 1) {
+      if (retval != 0 && retval != 1) {
+        t8_global_errorf ("Error while parsing file %s.\n",
+                          current_file);
         t8_cmesh_unref (&cmesh);
       }
       else {
@@ -377,6 +387,8 @@ t8_cmesh_from_triangle_file (char *fileprefix, int partition,
         retval = t8_cmesh_triangle_read_neigh (cmesh, corner_offset,
                                                triangle_offset, current_file);
         if (retval != 0) {
+          t8_global_errorf ("Error while parsing file %s.\n",
+                            current_file);
           t8_cmesh_unref (&cmesh);
         }
       }
@@ -386,7 +398,7 @@ t8_cmesh_from_triangle_file (char *fileprefix, int partition,
   /* TODO: broadcasting NULL does not work. We need a way to tell the
    *       other processes if something went wrong. */
   /* This broadcasts the NULL pointer if anything went wrong */
-  t8_cmesh_bcast (cmesh, 0, comm);
+  cmesh = t8_cmesh_bcast (cmesh, 0, comm);
   if (cmesh != NULL) {
     t8_cmesh_commit (cmesh);
   }
