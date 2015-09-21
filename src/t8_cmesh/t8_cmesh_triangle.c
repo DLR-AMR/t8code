@@ -322,10 +322,12 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int corner_offset,
         orientation = (face1 + face2 + 1) % 2;
         /* Insert this face connection if we did not insert it before */
         if (tit < triangle) {
-          t8_cmesh_join_faces (cmesh, tit, triangle, face1, face2, orientation);
+          t8_cmesh_join_faces (cmesh, tit, triangle, face1, face2,
+                               orientation);
         }
         if (tit == triangle && face1 < face2) {
-          t8_cmesh_join_faces (cmesh, tit, triangle, face1, face2, orientation);
+          t8_cmesh_join_faces (cmesh, tit, triangle, face1, face2,
+                               orientation);
         }
       }
     }
@@ -365,19 +367,17 @@ t8_cmesh_from_triangle_file (char *fileprefix, int partition,
     snprintf (current_file, BUFSIZ, "%s.node", fileprefix);
     retval = t8_cmesh_triangle_read_nodes (cmesh, current_file);
     if (retval != 0 && retval != 1) {
-      t8_global_errorf ("Error while parsing file %s.\n",
-                        current_file);
+      t8_global_errorf ("Error while parsing file %s.\n", current_file);
       t8_cmesh_unref (&cmesh);
     }
     else {
       /* read .ele file */
-      corner_offset = retval;      
+      corner_offset = retval;
       snprintf (current_file, BUFSIZ, "%s.ele", fileprefix);
       retval =
         t8_cmesh_triangle_read_eles (cmesh, corner_offset, current_file);
       if (retval != 0 && retval != 1) {
-        t8_global_errorf ("Error while parsing file %s.\n",
-                          current_file);
+        t8_global_errorf ("Error while parsing file %s.\n", current_file);
         t8_cmesh_unref (&cmesh);
       }
       else {
@@ -387,8 +387,7 @@ t8_cmesh_from_triangle_file (char *fileprefix, int partition,
         retval = t8_cmesh_triangle_read_neigh (cmesh, corner_offset,
                                                triangle_offset, current_file);
         if (retval != 0) {
-          t8_global_errorf ("Error while parsing file %s.\n",
-                            current_file);
+          t8_global_errorf ("Error while parsing file %s.\n", current_file);
           t8_cmesh_unref (&cmesh);
         }
       }
