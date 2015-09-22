@@ -683,22 +683,26 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     count_face = count_corner = 0;
     for (itree = 0; itree < cmesh_in->num_trees; itree++) {
       tree = t8_cmesh_get_tree (cmesh_in, itree);
-      memcpy (corners + count_corner, tree->corners,
-              t8_eclass_num_vertices[tree->eclass] * sizeof (t8_topidx_t));
-      count_corner += t8_eclass_num_vertices[tree->eclass];
+      if (cmesh_in->num_corners != 0) {
+        memcpy (corners + count_corner, tree->corners,
+                t8_eclass_num_vertices[tree->eclass] * sizeof (t8_topidx_t));
+        count_corner += t8_eclass_num_vertices[tree->eclass];
+      }
       memcpy (fneighbors + count_face, tree->face_neighbors,
               t8_eclass_num_faces[tree->eclass] *
               sizeof (t8_ctree_fneighbor_struct_t));
       count_face += t8_eclass_num_faces[tree->eclass];
     }
-    T8_ASSERT (count_corner == num_corners);
+    T8_ASSERT (cmesh_in->num_corners == 0 || count_corner == num_corners);
     T8_ASSERT (count_face == num_neighbors);
   }
 
-  mpiret =
-    sc_MPI_Bcast (corners, cmesh_in->num_corners * sizeof (t8_topidx_t),
-                  sc_MPI_BYTE, root, comm);
-  SC_CHECK_MPI (mpiret);
+  if (cmesh_in->num_corners != 0) {
+    mpiret =
+      sc_MPI_Bcast (corners, cmesh_in->num_corners * sizeof (t8_topidx_t),
+                    sc_MPI_BYTE, root, comm);
+    SC_CHECK_MPI (mpiret);
+  }
   mpiret = sc_MPI_Bcast (fneighbors, num_neighbors *
                          sizeof (t8_ctree_fneighbor_struct_t),
                          sc_MPI_BYTE, root, comm);
@@ -708,15 +712,17 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     count_face = count_corner = 0;
     for (itree = 0; itree < cmesh_in->num_trees; itree++) {
       tree = t8_cmesh_get_tree (cmesh_in, itree);
-      memcpy (tree->corners, corners + count_corner,
-              t8_eclass_num_vertices[tree->eclass] * sizeof (t8_topidx_t));
-      count_corner += t8_eclass_num_vertices[tree->eclass];
+      if (cmesh_in->num_corners != 0) {
+        memcpy (tree->corners, corners + count_corner,
+                t8_eclass_num_vertices[tree->eclass] * sizeof (t8_topidx_t));
+        count_corner += t8_eclass_num_vertices[tree->eclass];
+      }
       memcpy (tree->face_neighbors, fneighbors + count_face,
               t8_eclass_num_faces[tree->eclass] *
               sizeof (t8_ctree_fneighbor_struct_t));
       count_face += t8_eclass_num_faces[tree->eclass];
     }
-    T8_ASSERT (count_corner == num_corners);
+    T8_ASSERT (cmesh_in->num_corners == 0 || count_corner == num_corners);
     T8_ASSERT (count_face == num_neighbors);
   }
   T8_FREE (corners);
