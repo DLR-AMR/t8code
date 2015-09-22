@@ -468,9 +468,15 @@ t8_cmesh_set_tree_corners (t8_cmesh_t cmesh, t8_topidx_t tree_id,
   T8_ASSERT (tree->corners == NULL);
 
   tree->corners = T8_ALLOC (t8_topidx_t, num_corners);
+
+#ifdef T8_ENABLE_DEBUG
   for (vi = 0; vi < num_corners; vi++) {
+    T8_ASSERT (0 <= corners[vi] && corners[vi] < cmesh->num_corners);
     tree->corners[vi] = corners[vi];
   }
+#else
+  memcpy (tree->corners, corners, num_corners * sizeof (*corners));
+#endif
 }
 
 void
