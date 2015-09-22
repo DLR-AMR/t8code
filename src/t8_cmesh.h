@@ -304,9 +304,15 @@ t8_cmesh_t          t8_cmesh_new_hex (sc_MPI_Comm comm, int do_dup);
 /** Construct a hypercube forest from one primitive tree class.
  * \param [in] eclass       This element class determines the dimension and
  *                          the number of trees needed to construct a cube.
+ * \param [in] comm         The mpi communicator to be used.
+ * \param [in] do_dup       Whether \a comm is to be duplicated.
+ * \param [in] do_bcast     If this flag is nonzero the cmesh is only constructed
+ *                          on processor 0 and then broadcasted to the other
+ *                          processors in \a comm.
  */
 t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
-                                            sc_MPI_Comm comm, int do_dup);
+                                            sc_MPI_Comm comm, int do_dup,
+                                            int do_bcast);
 
 /** Construct a unit interval/square/cube forest that is periodic in each direction.
  * \param [in] comm         The mpi communicator to use.

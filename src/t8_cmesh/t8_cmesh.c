@@ -1005,14 +1005,14 @@ t8_cmesh_new_hex (sc_MPI_Comm comm, int do_dup)
  * as above.
  */
 t8_cmesh_t
-t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup)
+t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
+                        int do_bcast)
 {
   t8_cmesh_t          cmesh;
   int                 num_trees_for_hypercube[T8_ECLASS_LAST] =
     { 1, 1, 1, 2, 1, 6, 2, 3 };
   int                 i;
   t8_topidx_t         corners[8];
-  int                 do_bcast = 1;
   int                 mpirank, mpiret;
 
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);

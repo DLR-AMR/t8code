@@ -67,14 +67,14 @@ t8_basic_refine_test ()
 
 static void
 t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
-                    int do_commit)
+                    int do_commit, int do_bcast)
 {
   t8_forest_t         forest;
   t8_cmesh_t          cmesh;
 
   t8_forest_init (&forest);
 
-  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, do_dup);
+  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, do_dup, do_bcast);
   t8_forest_set_cmesh (forest, cmesh);
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
 
@@ -147,10 +147,16 @@ main (int argc, char **argv)
   t8_global_productionf ("Testing hypercube cmesh.\n");
   for (eclass = T8_ECLASS_FIRST; eclass < T8_ECLASS_LAST; eclass++) {
     if (eclass != T8_ECLASS_PYRAMID) {
-      t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 0);
-      t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 0);
-      t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 1);
-      t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 1);
+      /* Construct the mesh on each process */
+      t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 0, 0);
+      t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 0, 0);
+      t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 1, 0);
+      t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 1, 0);
+      /* Construct the mesh on one process and broadcast it */
+      t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 0, 1);
+      t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 0, 1);
+      t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 1, 1);
+      t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 1, 1);
     }
   }
   t8_global_productionf ("Done testing hypercube cmesh.\n");
