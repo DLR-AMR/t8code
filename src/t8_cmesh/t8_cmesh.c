@@ -445,6 +445,7 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_topidx_t tree_id,
     tree->face_neighbors[i].is_owned = -1;
   }
   tree->corners = NULL;
+  tree->vertices = NULL;
 #ifdef T8_ENABLE_DEBUG
   cmesh->inserted_trees++;
 #endif
@@ -470,6 +471,34 @@ t8_cmesh_set_tree_corners (t8_cmesh_t cmesh, t8_topidx_t tree_id,
   for (vi = 0; vi < num_corners; vi++) {
     tree->corners[vi] = corners[vi];
   }
+}
+
+void
+t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_topidx_t tree_id,
+                            t8_topidx_t * vertices, t8_topidx_t num_vertices)
+{
+  t8_ctree_t          tree;
+  int                 vi;
+
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree_id));
+  T8_ASSERT (vertices != NULL);
+
+  tree = t8_cmesh_get_tree (cmesh, tree_id);
+  T8_ASSERT (tree->eclass != T8_ECLASS_LAST);
+  T8_ASSERT (num_vertices == t8_eclass_num_vertices[tree->eclass]);
+  T8_ASSERT (tree->vertices == NULL);
+
+  tree->vertices = T8_ALLOC (t8_topidx_t, num_vertices);
+
+#ifdef T8_ENABLE_DEBUG
+  for (vi = 0; vi < num_vertices; vi++) {
+    T8_ASSERT (0 <= vertices[vi] && vertices[vi] < cmesh->num_vertices);
+    tree->vertices[vi] = vertices[vi];
+  }
+#else
+  memcpy (tree->vertices, vertices, num_vertices * sizeof (*vertices));
+#endif
 }
 
 void
@@ -938,6 +967,7 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
       treeit = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, ti);
       T8_FREE (treeit->face_neighbors);
       T8_FREE (treeit->corners);
+      T8_FREE (treeit->vertices);
     }
     sc_array_destroy (cmesh->ctrees);
   }
