@@ -127,6 +127,17 @@ void                t8_cmesh_set_num_local_vertices (t8_cmesh_t cmesh,
                                                      t8_topidx_t
                                                      num_local_vertices);
 
+/** Set the coordinates of all vertices of a cmesh at once.
+ * \param [in] cmesh         The cmesh to be updated.
+ * \param [in] vertices      An array of \a cmesh.num_local_vertices * 3, storing
+ *                           for each vertex its x,y and z coordinates.
+ * \param [in] num_entries   The number of allocated entries in \a vertices,
+ *                           must match \a cmesh.num_local_vertices * 3.
+ */
+void                t8_cmesh_set_all_vertices (t8_cmesh_t cmesh,
+                                               double *vertices,
+                                               size_t num_entries);
+
 void                t8_cmesh_set_vertex (t8_cmesh_t cmesh,
                                          t8_topidx_t vertex_id, double x,
                                          double y, double z);
