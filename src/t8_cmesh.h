@@ -88,6 +88,8 @@ void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
                                               t8_topidx_t num_ghosts);
 
 /** Set the number of corners for a cmesh.
+ * If there are no corners (num_corners = 0) this function does not need to
+ * be called.
  * It is not allowed to call this function after \see t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     num_corners The number of corners to be set.
@@ -95,11 +97,36 @@ void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
 void                t8_cmesh_set_num_corners (t8_cmesh_t cmesh,
                                               t8_topidx_t num_corners);
 
-/* TODO: implement and document */
+/** Set the number of local corners for a partitioned cmesh.
+*  If there are no local corners (num_local_corners = 0) this function does not need to
+ * be called.
+ * It is not allowed to call this function after \see t8_cmesh_commit.
+ * Must be called after \ref t8_cmesh_set_num_corners.
+ * \param [in,out] cmesh        The cmesh to be updated.
+ * \param [in]     num_local_corners The number of local corners to be set.
+ */
+void                t8_cmesh_set_num_local_corners (t8_cmesh_t cmesh,
+                                                    t8_topidx_t
+                                                    num_local_corners);
+
+/** Set the number of vertices for a cmesh.
+ * It is not allowed to call this function after \see t8_cmesh_commit.
+ * \param [in,out] cmesh        The cmesh to be updated.
+ * \param [in]     num_vertices The number of vertices to be set.
+ */
 void                t8_cmesh_set_num_vertices (t8_cmesh_t cmesh,
                                                t8_topidx_t num_vertices);
 
-/* TODO: implement and document */
+/** Set the number of local vertices for a partitioned cmesh.
+ * It is not allowed to call this function after \see t8_cmesh_commit.
+ * Must be called after \ref t8_cmesh_set_num_vertices.
+ * \param [in,out] cmesh        The cmesh to be updated.
+ * \param [in]     num_local_vertices The number of local vertices to be set.
+ */
+void                t8_cmesh_set_num_local_vertices (t8_cmesh_t cmesh,
+                                                     t8_topidx_t
+                                                     num_local_vertices);
+
 void                t8_cmesh_set_vertex (t8_cmesh_t cmesh,
                                          t8_topidx_t vertex_id, double x,
                                          double y, double z);
