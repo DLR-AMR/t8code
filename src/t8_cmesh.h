@@ -261,6 +261,8 @@ void                t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
                                              t8_topidx_t * last_local_tree,
                                              t8_gloidx_t * child_in_tree_end);
 
+void                t8_cmesh_write_vtk (t8_cmesh_t cmesh, char *fileprefix);
+
 /** Increase the reference counter of a cmesh.
  * \param [in,out] cmesh        On input, this cmesh must exist with positive
  *                              reference count.  It may be in any state.
