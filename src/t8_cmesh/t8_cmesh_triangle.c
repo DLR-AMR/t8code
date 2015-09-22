@@ -156,6 +156,11 @@ die_node:
 /* Open .ele file and read element input
  * On succes the index of the first element is returned (0 or 1).
  * On failure -1 is returned. */
+/* TODO: We can use this file to scan for the neighbors as well
+ *       for each node create a list of all nodes (with smaller index)
+ *       that it shares a face with. And for each triangle face, look-up
+ *       in this list.
+ */
 static int
 t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
                              char *filename)
@@ -363,6 +368,7 @@ t8_cmesh_from_triangle_file (char *fileprefix, int partition,
     char                current_file[BUFSIZ];
 
     t8_cmesh_init (&cmesh);
+    t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
     /* read .node file */
     snprintf (current_file, BUFSIZ, "%s.node", fileprefix);
     retval = t8_cmesh_triangle_read_nodes (cmesh, current_file);

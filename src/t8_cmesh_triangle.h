@@ -38,12 +38,19 @@ T8_EXTERN_C_BEGIN ();
 
 /* put declarations here */
 
-/* Open a .node, .ele and .neigh file to read cmesh.
- * and create a cmesh from them. the cmesh will be replicated.
- * (TODO: maybe allow for replicated input later)
- * We should only open the file on one process and
- * broadcast the information to the others before committing on each process.
- * A fully commited, replicated cmesh should be returned.
+/** Open a .node, .ele and .neigh file created by TRIANGLE to read
+ * and create a cmesh from them. The cmesh will be replicated.
+ * The files are opened and read by one process and the cmesh is then
+ * broadcasted to the other processes.
+ * \param [in] fileprefix A string holding the prefix of the TRIANGLE files.
+ *                        The files \a fileprefix.node, \a fileprefix.ele and
+ *                        \a fileprefix.neigh are read.
+ * \param [in] partition  In the future this flag can decide whether the returned
+ *                        cmesh is partitioned or not. Currently it is always replicated.
+ * \param [in] comm       The mpi communicator to be used.
+ * \param [in] do_dup     Whether \a comm should be duplicated by cmesh.
+ * \return                A ommited, replicated cmesh constructed from the info
+ *                        in the TRIANGLE files.
  */
 t8_cmesh_t
 t8_cmesh_from_triangle_file (char *fileprefix, int partition,
