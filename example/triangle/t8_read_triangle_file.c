@@ -25,6 +25,7 @@
 #include <t8.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_triangle.h>
+#include <t8_cmesh_vtk.h>
 
 void
 t8_read_triangle_file_build_cmesh (const char * prefix, int do_dup)
@@ -39,6 +40,7 @@ t8_read_triangle_file_build_cmesh (const char * prefix, int do_dup)
     t8_debugf ("cmesh has:\n\t%i corners\n\t%i triangles\n",
                t8_cmesh_get_num_corners (cmesh),
                t8_cmesh_get_num_trees (cmesh));
+    t8_cmesh_vtk_write_file (cmesh, "triangle_file", 1.);
     t8_cmesh_unref (&cmesh);
   }
   else {
