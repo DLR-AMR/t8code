@@ -35,10 +35,18 @@ const int    t8_eclass_num_vertices[T8_ECLASS_LAST] =
 const int t8_eclass_num_children[T8_ECLASS_LAST] =
   { 0, 2, 4, 4, 8, 8, 8, 10 };
 
-/* TODO: p4est uses 8 (vtk_pixel) and 11 (vtk_voxel) for
- *       quads and hexs. What is the difference? */
 const int t8_eclass_vtk_type[T8_ECLASS_LAST] =
-  { 1, 3, 8, 5, 11, 13, 14};
+  { 1, 3, 9, 5, 12, 10, 13, 14};
+
+const int t8_eclass_vtk_corner_number[T8_ECLASS_LAST][8] =
+{{  0, -1, -1, -1, -1, -1, -1, -1}, /* vertex */
+ {  0,  1, -1, -1, -1, -1, -1, -1}, /* line */
+ {  0,  1,  3,  2, -1, -1, -1, -1}, /* quad */
+ {  0,  1,  2, -1, -1, -1, -1, -1}, /* triangle */
+ {  0,  1,  3,  2,  4,  5,  7,  6}, /* hex */
+ {  0,  2,  1,  3, -1, -1, -1, -1}, /* tet */
+ {  0,  1,  2,  3,  4,  5, -1, -1}, /* prism */
+ {  0,  1,  3,  2,  4, -1, -1, -1}}; /* pyramid */
 
 const int t8_eclass_face_types[T8_ECLASS_LAST][T8_ECLASS_MAX_FACES] =
   {{ -1, -1, -1, -1, -1, -1 },

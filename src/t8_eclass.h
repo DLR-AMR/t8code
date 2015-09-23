@@ -78,6 +78,8 @@ extern const int    t8_eclass_num_children[T8_ECLASS_LAST];
 /** The vtk cell type for the eclass */
 extern const int    t8_eclass_vtk_type[T8_ECLASS_LAST];
 
+extern const int t8_eclass_vtk_corner_number[T8_ECLASS_LAST][8];
+
 /** For each of the element classes, list the type of the faces. */
 extern const int    t8_eclass_face_types[T8_ECLASS_LAST][T8_ECLASS_MAX_FACES];
 
