@@ -224,6 +224,8 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
     }
     t8_cmesh_set_tree_corners (cmesh, triangle - triangle_offset, tcorners,
                                3);
+    t8_cmesh_set_tree_vertices (cmesh, triangle - triangle_offset, tcorners,
+                               3);
   }
   fclose (fp);
   T8_FREE (line);
