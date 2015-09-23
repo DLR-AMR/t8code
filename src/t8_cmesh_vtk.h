@@ -48,7 +48,7 @@
 #define T8_VTK_FORMAT_STRING "binary"
 #endif
 
-#define T8_VTK_LOCIDX "Int32"
+#define T8_VTK_TOPIDX "Int32"
 
 T8_EXTERN_C_BEGIN ();
 /* function declarations */
