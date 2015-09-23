@@ -843,6 +843,15 @@ t8_cmesh_get_num_corners (t8_cmesh_t cmesh)
 }
 
 t8_topidx_t
+t8_cmesh_get_num_vertices (t8_cmesh_t cmesh)
+{
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (cmesh->committed);
+
+  return cmesh->num_vertices;
+}
+
+t8_topidx_t
 t8_cmesh_get_num_trees (t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh != NULL);
