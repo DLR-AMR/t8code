@@ -35,6 +35,11 @@ const int    t8_eclass_num_vertices[T8_ECLASS_LAST] =
 const int t8_eclass_num_children[T8_ECLASS_LAST] =
   { 0, 2, 4, 4, 8, 8, 8, 10 };
 
+/* TODO: p4est uses 8 (vtk_pixel) and 11 (vtk_voxel) for
+ *       quads and hexs. What is the difference? */
+const int t8_eclass_vtk_type[T8_ECLASS_LAST] =
+  { 1, 3, 8, 5, 11, 13, 14};
+
 const int t8_eclass_face_types[T8_ECLASS_LAST][T8_ECLASS_MAX_FACES] =
   {{ -1, -1, -1, -1, -1, -1 },
    {  0,  0, -1, -1, -1, -1 },
