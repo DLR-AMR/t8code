@@ -67,6 +67,16 @@ const int t8_eclass_boundary_count[T8_ECLASS_LAST][T8_ECLASS_LAST] =
    { 4,  6, 0, 4, 0, 0, 0, 0 },
    { 6,  9, 3, 2, 0, 0, 0, 0 },
    { 5,  8, 1, 4, 0, 0, 0, 0 }};
+
+const char * t8_eclass_to_string[T8_ECLASS_LAST] =
+     {"Vertex",
+      "Line",
+      "Quad",
+      "Triangle",
+      "Hex",
+      "Tet",
+      "Prism",
+      "Pyramid"};
 /* *INDENT-ON* */
 
 int

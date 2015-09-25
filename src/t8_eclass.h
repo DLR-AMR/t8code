@@ -86,6 +86,9 @@ extern const int    t8_eclass_face_types[T8_ECLASS_LAST][T8_ECLASS_MAX_FACES];
 /** For each of the element classes, count the boundary points. */
 extern const int    t8_eclass_boundary_count[T8_ECLASS_LAST][T8_ECLASS_LAST];
 
+/** For each eclass, the name of this class as a string */
+extern const char * t8_eclass_to_string[T8_ECLASS_LAST];
+
 /** Query the element class and count of boundary points.
  * \param [in] theclass         We query a point of this element class.
  * \param [in] min_dim          Ignore boundary points of lesser dimension.
