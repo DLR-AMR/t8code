@@ -87,28 +87,6 @@ void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
                                               t8_topidx_t first_local_tree,
                                               t8_topidx_t num_ghosts);
 
-/** Set the number of corners for a cmesh.
- * If there are no corners (num_corners = 0) this function does not need to
- * be called.
- * It is not allowed to call this function after \see t8_cmesh_commit.
- * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     num_corners The number of corners to be set.
- */
-void                t8_cmesh_set_num_corners (t8_cmesh_t cmesh,
-                                              t8_topidx_t num_corners);
-
-/** Set the number of local corners for a partitioned cmesh.
-*  If there are no local corners (num_local_corners = 0) this function does not need to
- * be called.
- * It is not allowed to call this function after \see t8_cmesh_commit.
- * Must be called after \ref t8_cmesh_set_num_corners.
- * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     num_local_corners The number of local corners to be set.
- */
-void                t8_cmesh_set_num_local_corners (t8_cmesh_t cmesh,
-                                                    t8_topidx_t
-                                                    num_local_corners);
-
 /** Set the number of vertices for a cmesh.
  * It is not allowed to call this function after \see t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
@@ -161,21 +139,6 @@ void                t8_cmesh_set_num_trees (t8_cmesh_t cmesh,
 void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
                                              t8_topidx_t tree_id,
                                              t8_eclass_t tree_class);
-
-/** Set the corners of a tree in the cmesh.
- * It is not allowed to call this function after \see t8_cmesh_commit.
- * The eclass of the tree has to be set before calling this function.
- * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     tree_id      The global number of the tree.
- * \param [in]     corners     An array of as many corner indices as the tree
- *                              has corners.
- * \param [in]     num_corners The number of corners in \a corners. Must
- *                              match the number of corners of the tree.
- */
-void                t8_cmesh_set_tree_corners (t8_cmesh_t cmesh,
-                                               t8_topidx_t tree_id,
-                                               t8_topidx_t * corners,
-                                               t8_topidx_t num_corners);
 
 /** Set the vertices of a tree in the cmesh.
  * It is not allowed to call this function after \see t8_cmesh_commit.

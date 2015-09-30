@@ -102,7 +102,6 @@ t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename)
   T8_ASSERT (nbdy_marker == 0 || nbdy_marker == 1);
 
   /* set number of corners */
-  t8_cmesh_set_num_corners (cmesh, num_corners);
   t8_cmesh_set_num_vertices (cmesh, num_corners);
 
   /* read all vertex coordinates */
@@ -222,8 +221,6 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
       tcorners[1] -= corner_offset;
       tcorners[2] -= corner_offset;
     }
-    t8_cmesh_set_tree_corners (cmesh, triangle - triangle_offset, tcorners,
-                               3);
     t8_cmesh_set_tree_vertices (cmesh, triangle - triangle_offset, tcorners,
                                3);
   }
