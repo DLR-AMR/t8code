@@ -1065,7 +1065,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
     1, 1, 1
   };
 
-  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
   if (!do_bcast || mpirank == 0) {
     t8_cmesh_init (&cmesh);
