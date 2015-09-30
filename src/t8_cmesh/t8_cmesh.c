@@ -587,6 +587,15 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 #endif
   } dimensions;
 
+  SC_ABORT ("cmesh_bcast is buggy at the moment.");
+  /* TODO: BUG: running with two processes and a cmesh of one T8_ECLASS_LINE,
+   *       the on both processes the face_neigbors and vertices arrays of
+   *       the single tree point to the same physical memory.
+   *       (face_neighbors on both processes are equal and vertices on both
+   *        processes are equal)
+   */
+  /* TODO: Send the tree's vertices */
+
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
