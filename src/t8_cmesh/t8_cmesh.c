@@ -649,7 +649,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   }
   /* broadcast vertices */
   mpiret = sc_MPI_Bcast (cmesh_in->vertices,
-                         3 * cmesh_in->num_vertices * sizeof (double),
+                         3 * cmesh_in->num_vertices,
                          sc_MPI_DOUBLE, root, comm);
   SC_CHECK_MPI (mpiret);
   /* broadcast all the trees */
@@ -668,6 +668,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
                                        t8_eclass_num_faces[tree->eclass]);
       tree->vertices = T8_ALLOC (t8_topidx_t,
                                  t8_eclass_num_vertices[tree->eclass]);
+      tree->corners = NULL;
     }
   }
   /* Since broadcasting one big data set instead of several small ones is much
