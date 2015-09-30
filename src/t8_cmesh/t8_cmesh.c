@@ -615,7 +615,9 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 #endif
   }
   /* TODO: we could optimize this by using IBcast */
-  sc_MPI_Bcast (&dimensions, sizeof (dimensions), sc_MPI_BYTE, root, comm);
+  mpiret = sc_MPI_Bcast (&dimensions, sizeof (dimensions), sc_MPI_BYTE, root,
+                         comm);
+  SC_CHECK_MPI (mpiret);
 
   /* If not root store information in new cmesh and allocate memory for arrays. */
   if (mpirank != root) {
@@ -629,16 +631,23 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
       cmesh_in->num_trees_per_eclass[iclass] =
         dimensions.num_trees_per_eclass[iclass];
     }
+    t8_cmesh_set_num_vertices (cmesh_in, dimensions.num_vertices);
 #ifdef T8_ENABLE_DEBUG
     cmesh_in->inserted_trees = dimensions.inserted_trees;
 #endif
   }
+  /* broadcast vertices */
+  mpiret = sc_MPI_Bcast (cmesh_in->vertices,
+                         3 * cmesh_in->num_vertices * sizeof (double),
+                         sc_MPI_DOUBLE, root, comm);
+  SC_CHECK_MPI (mpiret);
   /* broadcast all the trees */
   /* TODO: this step relies on the sc_array implementation.
    *       can we do it differently ? */
-  sc_MPI_Bcast (cmesh_in->ctrees->array,
-                cmesh_in->num_trees * sizeof (t8_ctree_struct_t),
-                sc_MPI_BYTE, root, comm);
+  mpiret = sc_MPI_Bcast (cmesh_in->ctrees->array,
+                         cmesh_in->num_trees * sizeof (t8_ctree_struct_t),
+                         sc_MPI_BYTE, root, comm);
+  SC_CHECK_MPI (mpiret);
   if (mpirank != root) {
     /* iterate through trees and allocate neighbor and corner arrays.
      * We cannot do it before because we have to know a tree's eclass for this */
