@@ -26,7 +26,7 @@
 /* TODO: implement for replicated mesh
  * TODO: implement for scale < 1 */
 int
-t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, char *fileprefix, double scale)
+t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix, double scale)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
