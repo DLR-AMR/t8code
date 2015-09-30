@@ -581,6 +581,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     int                 do_dup;
     t8_topidx_t         num_trees;
     t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST];
+    t8_topidx_t         num_vertices;
 #ifdef T8_ENABLE_DEBUG
     t8_topidx_t         inserted_trees;
 #endif
@@ -610,6 +611,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
       dimensions.num_trees_per_eclass[iclass] =
         cmesh_in->num_trees_per_eclass[iclass];
     }
+    dimensions.num_vertices = cmesh_in->num_vertices;
 #ifdef T8_ENABLE_DEBUG
     dimensions.inserted_trees = cmesh_in->inserted_trees;
 #endif
@@ -655,6 +657,8 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
       tree = t8_cmesh_get_tree (cmesh_in, itree);
       tree->face_neighbors = T8_ALLOC (t8_ctree_fneighbor_struct_t,
                                        t8_eclass_num_faces[tree->eclass]);
+      tree->vertices = T8_ALLOC (t8_topidx_t,
+                                 t8_eclass_num_vertices[tree->eclass]);
     }
   }
   /* Since broadcasting one big data set instead of several small ones is much
