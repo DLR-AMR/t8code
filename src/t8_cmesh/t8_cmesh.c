@@ -609,7 +609,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
    * else. */
   T8_ASSERT (mpirank != root || cmesh_in->rc.refcount == 1);
 
-  /* At first we broadcast all inforamtion needed to allocate the tree
+  /* At first we broadcast all information needed to allocate the tree
    * arrays. */
   if (mpirank == root) {
     /* TODO: vertices are missing yet */
