@@ -26,26 +26,26 @@
 /* TODO: implement for replicated mesh
  * TODO: implement for scale < 1 */
 int
-t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix, double scale)
+t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
+                         double scale)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
-  T8_ASSERT (!cmesh->set_partitioned); /* not implemented for parallel yet */
+  T8_ASSERT (!cmesh->set_partitioned);  /* not implemented for parallel yet */
   T8_ASSERT (fileprefix != NULL);
-  T8_ASSERT (scale == 1.); /* scale = 1 not implemented yet */
-
+  T8_ASSERT (scale == 1.);      /* scale = 1 not implemented yet */
 
   /* Currently only rank 0 prints the cmesh.
    * This requires that the cmesh is replicated. */
   if (cmesh->mpirank == 0) {
-    char            vtufilename[BUFSIZ];
-    FILE           *vtufile;
-    t8_topidx_t     num_vertices, num_trees, itree, ivertex;
-    t8_ctree_t      tree;
-    double          x, y, z;
-    double         *vertices;
-    int             k, sk;
-    long long       offset, count_vertices;
+    char                vtufilename[BUFSIZ];
+    FILE               *vtufile;
+    t8_topidx_t         num_vertices, num_trees, itree, ivertex;
+    t8_ctree_t          tree;
+    double              x, y, z;
+    double             *vertices;
+    int                 k, sk;
+    long long           offset, count_vertices;
 
     num_vertices = t8_cmesh_get_num_vertices (cmesh);
     num_trees = t8_cmesh_get_num_trees (cmesh);
@@ -58,46 +58,45 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix, double scale)
     }
     fprintf (vtufile, "<?xml version=\"1.0\"?>\n");
     fprintf (vtufile, "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\"");
-  #if defined T8_VTK_BINARY && defined T8_VTK_COMPRESSION
+#if defined T8_VTK_BINARY && defined T8_VTK_COMPRESSION
     fprintf (vtufile, " compressor=\"vtkZLibDataCompressor\"");
-  #endif
-  #ifdef SC_IS_BIGENDIAN
+#endif
+#ifdef SC_IS_BIGENDIAN
     fprintf (vtufile, " byte_order=\"BigEndian\">\n");
-  #else
+#else
     fprintf (vtufile, " byte_order=\"LittleEndian\">\n");
-  #endif
+#endif
     fprintf (vtufile, "  <UnstructuredGrid>\n");
     fprintf (vtufile,
              "    <Piece NumberOfPoints=\"%lld\" NumberOfCells=\"%lld\">\n",
              (long long) num_vertices, (long long) num_trees);
     fprintf (vtufile, "      <Points>\n");
 
-
     /* write point position data */
     fprintf (vtufile, "        <DataArray type=\"%s\" Name=\"Position\""
              " NumberOfComponents=\"3\" format=\"%s\">\n",
              T8_VTK_FLOAT_NAME, T8_VTK_FORMAT_STRING);
 
-    for (itree = 0; itree < num_trees; itree++) {
 #ifdef T8_VTK_ASCII
+    for (itree = 0; itree < num_trees; itree++) {
       tree = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, itree);
-      for (ivertex = 0;ivertex < t8_eclass_num_vertices[tree->eclass];
+      for (ivertex = 0; ivertex < t8_eclass_num_vertices[tree->eclass];
            ivertex++) {
         vertices = ((double *) tree->attribute) +
-            3 * t8_eclass_vtk_corner_number[tree->eclass][ivertex];
+          3 * t8_eclass_vtk_corner_number[tree->eclass][ivertex];
         x = vertices[0];
         y = vertices[1];
         z = vertices[2];
-  #ifdef T8_VTK_DOUBLES
+#ifdef T8_VTK_DOUBLES
         fprintf (vtufile, "     %24.16e %24.16e %24.16e\n", x, y, z);
-  #else
+#else
         fprintf (vtufile, "          %16.8e %16.8e %16.8e\n", x, y, z);
-  #endif
+#endif
       }
-  }
+    }
 #else
     SC_ABORT ("Binary vtk file not implemented\n");
-#endif
+#endif /* T8_VTK_ASCII */
     fprintf (vtufile, "        </DataArray>\n");
     fprintf (vtufile, "      </Points>\n");
     fprintf (vtufile, "      <Cells>\n");
@@ -105,7 +104,7 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix, double scale)
     /* write connectivity data */
     fprintf (vtufile, "        <DataArray type=\"%s\" Name=\"connectivity\""
              " format=\"%s\">\n", T8_VTK_TOPIDX, T8_VTK_FORMAT_STRING);
-  #ifdef T8_VTK_ASCII
+#ifdef T8_VTK_ASCII
     for (itree = 0, count_vertices = 0; itree < num_trees; itree++) {
       tree = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, itree);
       fprintf (vtufile, "         ");
@@ -115,15 +114,15 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix, double scale)
       }
       fprintf (vtufile, "\n");
     }
-  #else
+#else
     SC_ABORT ("Binary vtk file not implemented\n");
-  #endif
+#endif /* T8_VTK_ASCII */
     fprintf (vtufile, "        </DataArray>\n");
 
     /* write offset data */
     fprintf (vtufile, "        <DataArray type=\"%s\" Name=\"offsets\""
              " format=\"%s\">\n", T8_VTK_TOPIDX, T8_VTK_FORMAT_STRING);
-  #ifdef T8_VTK_ASCII
+#ifdef T8_VTK_ASCII
     fprintf (vtufile, "         ");
     for (itree = 0, sk = 1, offset = 0; itree < num_trees; ++itree, ++sk) {
       tree = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, itree);
@@ -133,14 +132,14 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix, double scale)
         fprintf (vtufile, "\n         ");
     }
     fprintf (vtufile, "\n");
-  #else
+#else
     SC_ABORT ("Binary vtk file not implemented\n");
-  #endif
+#endif /* T8_VTK_ASCII */
     fprintf (vtufile, "        </DataArray>\n");
     /* write type data */
     fprintf (vtufile, "        <DataArray type=\"UInt8\" Name=\"types\""
              " format=\"%s\">\n", T8_VTK_FORMAT_STRING);
-  #ifdef T8_VTK_ASCII
+#ifdef T8_VTK_ASCII
     fprintf (vtufile, "         ");
     for (itree = 0, sk = 1; itree < num_trees; ++itree, ++sk) {
       fprintf (vtufile, " %d", t8_eclass_vtk_type[tree->eclass]);
@@ -148,16 +147,16 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix, double scale)
         fprintf (vtufile, "\n         ");
     }
     fprintf (vtufile, "\n");
-  #else
+#else
     SC_ABORT ("Binary vtk file not implemented\n");
-  #endif
+#endif /* T8_VTK_ASCII */
     fprintf (vtufile, "        </DataArray>\n");
     fprintf (vtufile, "      </Cells>\n");
     /* write treeif data */
     fprintf (vtufile, "      <CellData Scalars=\"treeid\">\n");
     fprintf (vtufile, "        <DataArray type=\"%s\" Name=\"treeid\""
              " format=\"%s\">\n", T8_VTK_TOPIDX, T8_VTK_FORMAT_STRING);
-  #ifdef T8_VTK_ASCII
+#ifdef T8_VTK_ASCII
     fprintf (vtufile, "         ");
     for (itree = 0, sk = 1, offset = 0; itree < num_trees; ++itree, ++sk) {
       tree = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, itree);
@@ -166,9 +165,9 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix, double scale)
         fprintf (vtufile, "\n         ");
     }
     fprintf (vtufile, "\n");
-  #else
+#else
     SC_ABORT ("Binary vtk file not implemented\n");
-  #endif
+#endif /* T8_VTK_ASCII */
     fprintf (vtufile, "        </DataArray>\n");
     fprintf (vtufile, "      </CellData>\n");
     /* write type data */
