@@ -634,7 +634,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     int                 do_dup;
     t8_topidx_t         num_trees;
     t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST];
-    t8_topidx_t         num_vertices;
+    size_t              tree_attribute_size[T8_ECLASS_LAST];
 #ifdef T8_ENABLE_DEBUG
     t8_topidx_t         inserted_trees;
 #endif
@@ -676,8 +676,9 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     for (iclass = 0; iclass < T8_ECLASS_LAST; iclass++) {
       dimensions.num_trees_per_eclass[iclass] =
         cmesh_in->num_trees_per_eclass[iclass];
+      dimensions.tree_attribute_size[iclass] =
+          cmesh_in->tree_attribute_size[iclass];
     }
-    dimensions.num_vertices = cmesh_in->num_vertices;
 #ifdef T8_ENABLE_DEBUG
     dimensions.inserted_trees = cmesh_in->inserted_trees;
 #endif
@@ -699,16 +700,12 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
       cmesh_in->num_trees_per_eclass[iclass] =
         dimensions.num_trees_per_eclass[iclass];
     }
-    t8_cmesh_set_num_vertices (cmesh_in, dimensions.num_vertices);
+    t8_cmesh_set_attribute_sizes (cmesh_in, dimensions.tree_attribute_size,
+                                 T8_ECLASS_LAST);
 #ifdef T8_ENABLE_DEBUG
     cmesh_in->inserted_trees = dimensions.inserted_trees;
 #endif
   }
-  /* broadcast vertices */
-  mpiret = sc_MPI_Bcast (cmesh_in->vertices,
-                         3 * cmesh_in->num_vertices,
-                         sc_MPI_DOUBLE, root, comm);
-  SC_CHECK_MPI (mpiret);
   /* broadcast all the trees */
   /* TODO: this step relies on the sc_array implementation.
    *       can we do it differently ? */
@@ -726,6 +723,19 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
       tree->vertices = T8_ALLOC (t8_topidx_t,
                                  t8_eclass_num_vertices[tree->eclass]);
       tree->corners = NULL;
+      if (tree->attribute != NULL) {
+        tree->attribute =
+            T8_ALLOC (char, cmesh_in->tree_attribute_size[tree->eclass]);
+      }
+    }
+  }
+  /* broadcast attributes */
+  for (itree = 0; itree < cmesh_in->num_trees; itree++) {
+    tree = t8_cmesh_get_tree (cmesh_in, itree);
+    if (tree->attribute != NULL) {
+      sc_MPI_Bcast (tree->attribute,
+                    cmesh_in->tree_attribute_size[tree->eclass], sc_MPI_BYTE,
+                    root, comm);
     }
   }
   /* Since broadcasting one big data set instead of several small ones is much
