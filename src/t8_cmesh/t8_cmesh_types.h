@@ -85,6 +85,7 @@ typedef struct t8_cmesh
                                        on this process. Zero if the cmesh is not partitioned. -1 if this processor is empty. */
   t8_topidx_t        *tree_offsets; /**< If partitioned the global number of the
                                          first full tree of each process. */
+  size_t              tree_attribute_size[T8_ECLASS_LAST];
 #ifdef T8_ENABLE_DEBUG
   t8_topidx_t         inserted_trees; /**< Count the number of inserted trees to
                                            check at commit if it equals the total number. */
@@ -136,6 +137,7 @@ typedef struct t8_ctree
   t8_topidx_t        *corners; /**< The corner indices of this tree's corners. Can be NULL if \a cmesh.num_corners is 0. */
   t8_topidx_t        *vertices; /**< The vertex indices of this tree's corners. This defines an embedding of the tree into \f$R^3$\f. */
   t8_ctree_fneighbor_struct_t *face_neighbors; /**< Information about the face neighbors of this tree. */
+  void               *attribute;
 }
 t8_ctree_struct_t;
 
