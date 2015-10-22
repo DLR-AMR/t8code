@@ -194,7 +194,7 @@ t8_cmesh_set_num_local_corners (t8_cmesh_t cmesh,
 }
 
 void
-t8_cmesh_set_attribte_sizes (t8_cmesh_t cmesh, size_t attr_sizes[],
+t8_cmesh_set_attribute_sizes (t8_cmesh_t cmesh, size_t attr_sizes[],
                              int num_sizes)
 {
   int                 iclass;
@@ -208,7 +208,7 @@ t8_cmesh_set_attribte_sizes (t8_cmesh_t cmesh, size_t attr_sizes[],
 }
 
 void
-t8_cmesh_set_attribte_size_single (t8_cmesh_t cmesh, size_t attr_size,
+t8_cmesh_set_attribute_size_single (t8_cmesh_t cmesh, size_t attr_size,
                                    t8_eclass_t tree_class)
 {
   T8_ASSERT (cmesh != NULL);
@@ -455,7 +455,7 @@ t8_cmesh_set_attribute_to_vertices (t8_cmesh_t cmesh)
     attribute_sizes[iclass] =
       3 * sizeof (double) * t8_eclass_num_vertices[iclass];
   }
-  t8_cmesh_set_attribte_sizes (cmesh, attribute_sizes, T8_ECLASS_LAST);
+  t8_cmesh_set_attribute_sizes (cmesh, attribute_sizes, T8_ECLASS_LAST);
 }
 
 void
