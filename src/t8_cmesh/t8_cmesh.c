@@ -443,8 +443,22 @@ t8_cmesh_set_tree_corners (t8_cmesh_t cmesh, t8_topidx_t tree_id,
 }
 
 void
+t8_cmesh_set_attribute_to_vertices (t8_cmesh_t cmesh)
+{
+  size_t              attribute_sizes[T8_ECLASS_LAST];
+  int                 iclass;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (!cmesh->committed);
+
+  for (iclass = T8_ECLASS_FIRST;iclass < T8_ECLASS_LAST;iclass++) {
+    attribute_sizes[iclass] = 3 * sizeof (double) * t8_eclass_num_vertices[iclass];
+  }
+  t8_cmesh_set_attribte_sizes (cmesh, attribute_sizes, T8_ECLASS_LAST);
+}
+
+void
 t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_topidx_t tree_id,
-                            t8_topidx_t * vertices, t8_topidx_t num_vertices)
+                            double * vertices, t8_topidx_t num_vertices)
 {
   t8_ctree_t          tree;
   int                 vi;
@@ -455,19 +469,11 @@ t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_topidx_t tree_id,
 
   tree = t8_cmesh_get_tree (cmesh, tree_id);
   T8_ASSERT (tree->eclass != T8_ECLASS_LAST);
-  T8_ASSERT (num_vertices == t8_eclass_num_vertices[tree->eclass]);
-  T8_ASSERT (tree->vertices == NULL);
+  T8_ASSERT (num_vertices * 3 * sizeof (double) ==
+             cmesh->tree_attribute_size[tree->eclass]);
+  T8_ASSERT (tree->attribute == NULL);
 
-  tree->vertices = T8_ALLOC (t8_topidx_t, num_vertices);
-
-#ifdef T8_ENABLE_DEBUG
-  for (vi = 0; vi < num_vertices; vi++) {
-    T8_ASSERT (0 <= vertices[vi] && vertices[vi] < cmesh->num_vertices);
-    tree->vertices[vi] = vertices[vi];
-  }
-#else
-  memcpy (tree->vertices, vertices, num_vertices * sizeof (*vertices));
-#endif
+  t8_cmesh_tree_set_attribute (cmesh, tree_id, (void *) vertices);
 }
 
 void

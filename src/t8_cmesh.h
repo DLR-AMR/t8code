@@ -140,6 +140,10 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
                                              t8_topidx_t tree_id,
                                              t8_eclass_t tree_class);
 
+/** Specifies that the attributes are to be used as vertices */
+/* TODO: document */
+void                t8_cmesh_set_attribute_to_vertices (t8_cmesh_t cmesh);
+
 /** Set the vertices of a tree in the cmesh.
  * It is not allowed to call this function after \see t8_cmesh_commit.
  * The eclass of the tree has to be set before calling this function.
@@ -152,7 +156,7 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
  */
 void                t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh,
                                                 t8_topidx_t tree_id,
-                                                t8_topidx_t * vertices,
+                                                double *vertices,
                                                 t8_topidx_t num_vertices);
 
 /** Set the class of a ghost in a partitioned cmesh.
