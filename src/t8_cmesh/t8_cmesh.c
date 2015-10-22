@@ -392,7 +392,6 @@ t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_topidx_t tree_id,
                             double *vertices, t8_topidx_t num_vertices)
 {
   t8_ctree_t          tree;
-  int                 vi;
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree_id));
@@ -546,6 +545,40 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
   }
 }
 
+static int
+t8_cmesh_ctree_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b)
+{
+  int                 is_equal;
+  T8_ASSERT (tree_a != NULL && tree_b != NULL);
+
+  is_equal = tree_a->treeid != tree_b->treeid ||
+      tree_a->eclass != tree_b->eclass;
+  if (is_equal != 0) {
+    return 0;
+  }
+  if (tree_a->corners != NULL) {
+    if (tree_b->corners == NULL) {
+      return 0;
+    }
+    else {
+      is_equal = memcmp (tree_a->corners, tree_b->corners,
+                         t8_eclass_num_vertices[tree_a->eclass] *
+                         sizeof (t8_topidx_t));
+    }
+  }
+  if (is_equal != 0) {
+    return 0;
+  }
+  if (memcmp (tree_a->face_neighbors, tree_b->face_neighbors,
+              sizeof (t8_ctree_fneighbor_struct_t) *
+              t8_eclass_num_faces[tree_a->eclass]) != 0) {
+    return 0;
+  }
+
+  /* TODO check attributes */
+  return 1;
+}
+
 /* returns true if cmesh_a equals cmesh_b */
 int
 t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
@@ -569,10 +602,10 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
     cmesh_a->num_ghosts != cmesh_b->num_ghosts ||
     cmesh_a->first_tree != cmesh_b->first_tree;
 #ifdef T8_ENABLE_DEBUG
-  is_equal = is_equal || cmesh_a->inserted_tree != cmesh_b->inserted_trees ||
+  is_equal = is_equal || cmesh_a->inserted_trees != cmesh_b->inserted_trees ||
     cmesh_a->inserted_ghosts != cmesh_b->inserted_ghosts;
 #endif
-  if (is_equal == 1) {
+  if (is_equal != 0) {
     return 0;
   }
   /* check arrays */
