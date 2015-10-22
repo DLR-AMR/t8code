@@ -991,6 +991,21 @@ t8_cmesh_unref (t8_cmesh_t * pcmesh)
   }
 }
 
+static void
+t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t * tvertices,
+                                               double * vertices,
+                                               double * attr_vertices,
+                                               int  num_vertices)
+{
+  int i;
+
+  for (i = 0;i < num_vertices;i++) {
+    attr_vertices[3 * i] = vertices[tvertices[i]];
+    attr_vertices[3 * i + 1] = vertices[tvertices[i] + 1];
+    attr_vertices[3 * i + 2] = vertices[tvertices[i] + 2];
+  }
+}
+
 t8_cmesh_t
 t8_cmesh_new_tri (sc_MPI_Comm comm, int do_dup)
 {
@@ -1000,15 +1015,13 @@ t8_cmesh_new_tri (sc_MPI_Comm comm, int do_dup)
     1, 0, 0,
     1, 1, 0
   };
-  t8_topidx_t         tvertices[3] = { 0, 1, 2 };
 
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
-  t8_cmesh_set_num_vertices (cmesh, 3);
-  t8_cmesh_set_all_vertices (cmesh, vertices, 9);
+  t8_cmesh_set_attribute_to_vertices (cmesh);
   t8_cmesh_set_num_trees (cmesh, 1);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
-  t8_cmesh_set_tree_vertices (cmesh, 0, tvertices, 3);
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 3);
   t8_cmesh_commit (cmesh);
 
   return cmesh;
@@ -1024,15 +1037,13 @@ t8_cmesh_new_tet (sc_MPI_Comm comm, int do_dup)
     -1, 1, -1,
     -1, -1, 1
   };
-  t8_topidx_t         tvertices[4] = { 0, 1, 2, 3 };
 
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   t8_cmesh_set_num_trees (cmesh, 1);
-  t8_cmesh_set_num_vertices (cmesh, 4);
-  t8_cmesh_set_all_vertices (cmesh, vertices, 12);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);
-  t8_cmesh_set_tree_vertices (cmesh, 0, tvertices, 4);
+  t8_cmesh_set_attribute_to_vertices (cmesh);
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 4);
   t8_cmesh_commit (cmesh);
 
   return cmesh;
@@ -1048,15 +1059,13 @@ t8_cmesh_new_quad (sc_MPI_Comm comm, int do_dup)
     0, 1, 0,
     1, 1, 0,
   };
-  t8_topidx_t         tvertices[4] = { 0, 1, 2, 3 };
 
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   t8_cmesh_set_num_trees (cmesh, 1);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
-  t8_cmesh_set_num_vertices (cmesh, 4);
-  t8_cmesh_set_all_vertices (cmesh, vertices, 12);
-  t8_cmesh_set_tree_vertices (cmesh, 0, tvertices, 4);
+  t8_cmesh_set_attribute_to_vertices (cmesh);
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 4);
   t8_cmesh_commit (cmesh);
 
   return cmesh;
@@ -1076,15 +1085,13 @@ t8_cmesh_new_hex (sc_MPI_Comm comm, int do_dup)
     0, 1, 1,
     1, 1, 1
   };
-  t8_topidx_t         tvertices[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
 
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   t8_cmesh_set_num_trees (cmesh, 1);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
-  t8_cmesh_set_num_vertices (cmesh, 8);
-  t8_cmesh_set_all_vertices (cmesh, vertices, 24);
-  t8_cmesh_set_tree_vertices (cmesh, 0, tvertices, 8);
+  t8_cmesh_set_attribute_to_vertices (cmesh);
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 8);
   t8_cmesh_commit (cmesh);
 
   return cmesh;
@@ -1104,8 +1111,8 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
     { 1, 1, 1, 2, 1, 6, 2, 3 };
   int                 i;
   t8_topidx_t         vertices[8];
+  double              attr_vertices[24];
   int                 mpirank, mpiret;
-  int                 dim;
   double              vertices_coords[24] = {
     0, 0, 0,
     1, 0, 0,
@@ -1122,10 +1129,8 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
   if (!do_bcast || mpirank == 0) {
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
-    dim = t8_eclass_to_dimension[eclass];
     t8_cmesh_set_num_trees (cmesh, num_trees_for_hypercube[eclass]);
-    t8_cmesh_set_num_vertices (cmesh, 1 << dim);
-    t8_cmesh_set_all_vertices (cmesh, vertices_coords, 3 * (1 << dim));
+    t8_cmesh_set_attribute_to_vertices (cmesh);
     for (i = 0; i < num_trees_for_hypercube[eclass]; i++) {
       t8_cmesh_set_tree_class (cmesh, i, eclass);
     }
@@ -1142,7 +1147,11 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
       vertices[1] = 1;
     case T8_ECLASS_VERTEX:
       vertices[0] = 0;
-      t8_cmesh_set_tree_vertices (cmesh, 0, vertices,
+      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+                                                     attr_vertices,
+                                                     t8_eclass_num_vertices
+                                                     [eclass]);
+      t8_cmesh_set_tree_vertices (cmesh, 0, attr_vertices,
                                   t8_eclass_num_vertices[eclass]);
       break;
     case T8_ECLASS_PRISM:
@@ -1153,22 +1162,30 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
       vertices[3] = 2;
       vertices[4] = 3;
       vertices[5] = 7;
-      t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 6);
+      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+                                                     attr_vertices, 6);
+      t8_cmesh_set_tree_vertices (cmesh, 0, attr_vertices, 6);
       vertices[1] = 5;
       vertices[2] = 4;
       vertices[4] = 7;
       vertices[5] = 6;
-      t8_cmesh_set_tree_vertices (cmesh, 1, vertices, 6);
+      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+                                                     attr_vertices, 6);
+      t8_cmesh_set_tree_vertices (cmesh, 1, attr_vertices, 6);
       break;
     case T8_ECLASS_TRIANGLE:
       t8_cmesh_join_faces (cmesh, 0, 1, 1, 2, 0);
       vertices[0] = 0;
       vertices[1] = 1;
       vertices[2] = 3;
-      t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 3);
+      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+                                                     attr_vertices, 3);
+      t8_cmesh_set_tree_vertices (cmesh, 0, attr_vertices, 3);
       vertices[1] = 3;
       vertices[2] = 2;
-      t8_cmesh_set_tree_vertices (cmesh, 1, vertices, 3);
+      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+                                                     attr_vertices, 3);
+      t8_cmesh_set_tree_vertices (cmesh, 1, attr_vertices, 3);
       break;
     case T8_ECLASS_TET:
       t8_cmesh_join_faces (cmesh, 0, 1, 1, 2, 0);
@@ -1181,22 +1198,34 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
       vertices[3] = 7;
       vertices[1] = 5;
       vertices[2] = 1;
-      t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 4);
+      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+                                                     attr_vertices, 4);
+      t8_cmesh_set_tree_vertices (cmesh, 0, attr_vertices, 4);
       vertices[1] = 1;
       vertices[2] = 3;
-      t8_cmesh_set_tree_vertices (cmesh, 1, vertices, 4);
+      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+                                                     attr_vertices, 4);
+      t8_cmesh_set_tree_vertices (cmesh, 1, attr_vertices, 4);
       vertices[1] = 3;
       vertices[2] = 2;
-      t8_cmesh_set_tree_vertices (cmesh, 2, vertices, 4);
+      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+                                                     attr_vertices, 4);
+      t8_cmesh_set_tree_vertices (cmesh, 2, attr_vertices, 4);
       vertices[1] = 2;
       vertices[2] = 6;
-      t8_cmesh_set_tree_vertices (cmesh, 3, vertices, 4);
+      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+                                                     attr_vertices, 4);
+      t8_cmesh_set_tree_vertices (cmesh, 3, attr_vertices, 4);
       vertices[1] = 6;
       vertices[2] = 4;
-      t8_cmesh_set_tree_vertices (cmesh, 4, vertices, 4);
+      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+                                                     attr_vertices, 4);
+      t8_cmesh_set_tree_vertices (cmesh, 4, attr_vertices, 4);
       vertices[1] = 4;
       vertices[2] = 5;
-      t8_cmesh_set_tree_vertices (cmesh, 5, vertices, 4);
+      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+                                                     attr_vertices, 4);
+      t8_cmesh_set_tree_vertices (cmesh, 5, attr_vertices, 4);
       break;
     case T8_ECLASS_PYRAMID:
       t8_cmesh_join_faces (cmesh, 0, 1, 3, 2, 0);
@@ -1234,14 +1263,12 @@ t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup, int dim)
     0, 1, 1,
     1, 1, 1
   };
-  t8_topidx_t         tvertices[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
 
   T8_ASSERT (dim == 1 || dim == 2 || dim == 3);
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   t8_cmesh_set_num_trees (cmesh, 1);
-  t8_cmesh_set_num_vertices (cmesh, 1 << dim);
-  t8_cmesh_set_all_vertices (cmesh, vertices, 3 * (1 << dim));
+  t8_cmesh_set_attribute_to_vertices (cmesh);
   switch (dim) {
   case 1:
     tree_class = T8_ECLASS_LINE;
@@ -1257,7 +1284,7 @@ t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup, int dim)
   }
 
   t8_cmesh_set_tree_class (cmesh, 0, tree_class);
-  t8_cmesh_set_tree_vertices (cmesh, 0, tvertices, 1 << dim);
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 1 << dim);
   t8_cmesh_join_faces (cmesh, 0, 0, 0, 1, 0);
   if (dim > 1) {
     t8_cmesh_join_faces (cmesh, 0, 0, 2, 3, 0);
