@@ -62,6 +62,7 @@ include src/Makefile.am
 include src/t8_default/Makefile.am
 include example/basic/Makefile.am
 include example/triangle/Makefile.am
+include example/check_bcast/Makefile.am
 
 # revision control and ChangeLog
 ChangeLog:
