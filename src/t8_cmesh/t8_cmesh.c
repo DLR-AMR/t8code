@@ -613,12 +613,21 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
                      cmesh_b->num_trees_per_eclass,
                      T8_ECLASS_LAST * sizeof (t8_topidx_t)) ||
     memcmp (cmesh_a->tree_attribute_size, cmesh_b->tree_attribute_size,
-            T8_ECLASS_LAST * sizeof (t8_topidx_t)) ||
-    memcmp (cmesh_a->tree_offsets, cmesh_b->tree_offsets, cmesh_a->mpisize);
+            T8_ECLASS_LAST * sizeof (t8_topidx_t));
+  if (cmesh_a->tree_offsets != NULL) {
+    if (cmesh_b->tree_offsets == NULL) {
+      return 0;
+    }
+    else {
+      is_equal = is_equal || memcmp (cmesh_a->tree_offsets,
+                                     cmesh_b->tree_offsets,
+                                     cmesh_a->mpisize * sizeof (t8_topidx_t));
+    }
+  }
   if (is_equal != 0) {
     return 0;
   }
-  if (!sc_array_is_equal (cmesh_a->ctrees, cmesh_b->ctrees) ||
+  if (!t8_cmesh_ctree_is_equal (cmesh_a->ctrees, cmesh_b->ctrees) ||
       !sc_array_is_equal (&cmesh_a->ghosts->a, &cmesh_b->ghosts->a)) {
     return 0;
   }
