@@ -26,24 +26,25 @@
 #include <t8_cmesh.h>
 
 static void
-t8_check_bcast_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
-                          int do_commit)
+t8_check_bcast_hypercube (t8_eclass_t eclass, int do_dup)
 {
   t8_cmesh_t          cmesh_bcast, cmesh_check;
 
   cmesh_bcast = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, do_dup, 1);
   cmesh_check = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, do_dup, 0);
-  SC_CHECK_ABORT (t8_cmesh_is_equal (cmesh_bcast, cmesh_check),
-                  "cmesh_bcast check failed.");
+  SC_CHECK_ABORTF (t8_cmesh_is_equal (cmesh_bcast, cmesh_check),
+                   "cmesh_bcast check failed. %s %i\n",
+                   t8_eclass_to_string[eclass], do_dup);
   t8_cmesh_unref (&cmesh_bcast);
   t8_cmesh_unref (&cmesh_check);
+  t8_global_productionf ("cmesh_bcast check passed. %s %i\n",
+                         t8_eclass_to_string[eclass], do_dup);
 }
 
 int
 main (int argc, char **argv)
 {
   int                 mpiret;
-  int                 level;
   int                 eclass;
 
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -55,10 +56,8 @@ main (int argc, char **argv)
 
   t8_global_productionf ("Testing cmesh broadcast.\n");
   for (eclass = T8_ECLASS_FIRST; eclass < T8_ECLASS_LAST; eclass++) {
-    t8_check_bcast_hypercube ((t8_eclass_t) eclass, 0, level, 0);
-    t8_check_bcast_hypercube ((t8_eclass_t) eclass, 1, level, 0);
-    t8_check_bcast_hypercube ((t8_eclass_t) eclass, 0, level, 1);
-    t8_check_bcast_hypercube ((t8_eclass_t) eclass, 1, level, 1);
+    t8_check_bcast_hypercube ((t8_eclass_t) eclass, 0);
+    t8_check_bcast_hypercube ((t8_eclass_t) eclass, 1);
   }
   t8_global_productionf ("Done testing cmesh broadcast.\n");
 
