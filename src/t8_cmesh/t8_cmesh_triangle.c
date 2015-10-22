@@ -59,8 +59,8 @@ t8_cmesh_triangle_read_next_line (char **line, size_t * n, FILE * fp)
  * On succes the index of the first node is returned (0 or 1).
  * On failure -1 is returned. */
 static int
-t8_cmesh_triangle_read_nodes  (t8_cmesh_t cmesh, char *filename,
-                             double ** vertices)
+t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename,
+                              double **vertices)
 {
   FILE               *fp;
   char               *line = T8_ALLOC (char, 1024);
@@ -124,8 +124,8 @@ t8_cmesh_triangle_read_nodes  (t8_cmesh_t cmesh, char *filename,
       T8_ASSERT (corner == 0 || corner == 1);
       corner_offset = corner;
     }
-    (*vertices) [2 * cit] = x;
-    (*vertices) [2 * cit + 1] = y;
+    (*vertices)[2 * cit] = x;
+    (*vertices)[2 * cit + 1] = y;
 
 #if 0                           /* read attributes and boundary marker. This part is currently not needed */
     /* read attributes but do not save them */
@@ -165,7 +165,7 @@ die_node:
  */
 static int
 t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
-                             char *filename, double * vertices)
+                             char *filename, double *vertices)
 {
   FILE               *fp;
   char               *line = T8_ALLOC (char, 1024);
@@ -226,10 +226,10 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
       tcorners[1] -= corner_offset;
       tcorners[2] -= corner_offset;
     }
-    for (i = 0;i < 3;i++) {
-      tree_vertices[3*i] = vertices[2 * tcorners[i]];
-      tree_vertices[3*i + 1] = vertices[2 * tcorners[i] + 1];
-      tree_vertices[3*i + 2] = 0;
+    for (i = 0; i < 3; i++) {
+      tree_vertices[3 * i] = vertices[2 * tcorners[i]];
+      tree_vertices[3 * i + 1] = vertices[2 * tcorners[i] + 1];
+      tree_vertices[3 * i + 2] = 0;
     }
     t8_cmesh_set_tree_vertices (cmesh, triangle - triangle_offset,
                                 tree_vertices, 3);
@@ -380,7 +380,7 @@ t8_cmesh_from_triangle_file (char *fileprefix, int partition,
     char                current_file[BUFSIZ];
 
     t8_cmesh_init (&cmesh);
-    t8_cmesh_set_mpicomm (cmesh, comm, do_dup);\
+    t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
     t8_cmesh_set_attribute_to_vertices (cmesh);
     /* read .node file */
     snprintf (current_file, BUFSIZ, "%s.node", fileprefix);
