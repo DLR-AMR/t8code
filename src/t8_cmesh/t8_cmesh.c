@@ -239,77 +239,6 @@ t8_cmesh_tree_set_attribute (t8_cmesh_t cmesh, t8_topidx_t tree_id,
 }
 
 void
-t8_cmesh_set_num_vertices (t8_cmesh_t cmesh, t8_topidx_t num_vertices)
-{
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (!cmesh->committed);
-  T8_ASSERT (num_vertices > 0);
-  T8_ASSERT (cmesh->num_vertices == 0);
-
-  cmesh->num_vertices = num_vertices;
-  if (cmesh->set_partitioned == 0) {
-    cmesh->num_local_vertices = num_vertices;
-    cmesh->vertices = T8_ALLOC_ZERO (double, num_vertices * 3);
-  }
-  else {
-    SC_ABORT ("Set num_vertices for partitioned mesh is not implemented.\n");
-  }
-}
-
-void
-t8_cmesh_set_num_local_vertices (t8_cmesh_t cmesh,
-                                 t8_topidx_t num_local_vertices)
-{
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (!cmesh->committed);
-  T8_ASSERT (num_local_vertices > 0);
-  T8_ASSERT (cmesh->num_vertices >= num_local_vertices);
-  T8_ASSERT (cmesh->set_partitioned);
-
-  cmesh->num_local_vertices = num_local_vertices;
-}
-
-void
-t8_cmesh_set_all_vertices (t8_cmesh_t cmesh, double *vertices,
-                           size_t num_entries)
-{
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (!cmesh->committed);
-  T8_ASSERT (cmesh->num_local_vertices > 0);
-  T8_ASSERT (num_entries == (size_t) (3 * cmesh->num_local_vertices));
-
-  if (cmesh->set_partitioned) {
-    SC_ABORT ("Set all vertices for partitioned mesh is not implemented.\n");
-  }
-  else {
-    memcpy (cmesh->vertices, vertices, num_entries * sizeof (*vertices));
-  }
-}
-
-void
-t8_cmesh_set_vertex (t8_cmesh_t cmesh, t8_topidx_t vertex_id, double x,
-                     double y, double z)
-{
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (!cmesh->committed);
-  T8_ASSERT (cmesh->num_local_vertices > 0);
-  T8_ASSERT (0 <= vertex_id && vertex_id < cmesh->num_vertices);
-  if (cmesh->set_partitioned) {
-    SC_ABORT ("Set vertex for partitioned mesh is not implemented.\n");
-  }
-  else {
-    T8_ASSERT (!cmesh->set_partitioned);
-    T8_ASSERT (cmesh->vertices[vertex_id * 3] == 0.);
-    T8_ASSERT (cmesh->vertices[vertex_id * 3 + 1] == 0.);
-    T8_ASSERT (cmesh->vertices[vertex_id * 3 + 2] == 0.);
-    cmesh->vertices[vertex_id * 3] = x;
-    cmesh->vertices[vertex_id * 3 + 1] = y;
-    cmesh->vertices[vertex_id * 3 + 2] = z;
-  }
-  return;
-}
-
-void
 t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees)
 {
   T8_ASSERT (cmesh != NULL);
@@ -986,7 +915,6 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
       }
     }
   }
-  T8_FREE (cmesh->vertices);
   T8_FREE (cmesh);
 
   *pcmesh = NULL;

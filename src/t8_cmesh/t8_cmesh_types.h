@@ -64,20 +64,13 @@ typedef struct t8_cmesh
   t8_refcount_t       rc; /**< The reference count of the cmesh. */
   t8_topidx_t         num_corners; /**< The global number of corners that help define the topology. Is allowed to be zero if topology and geometry are equal. */
   t8_topidx_t         num_local_corners; /**< If partitioned the local number of corners. Otherwise the global number of corners. */
-  t8_topidx_t         num_vertices; /**< The number of vertices that define the geometry. Must always be set. */
-  t8_topidx_t         num_local_vertices; /**< If partitioned the local number of vertices. Otherwise the global number of vertices. */
-  double             *vertices; /**< An array of (3 * \a num_local_vertices) that stores
-                                     the geometry values of the vertices. */
-  /* TODO: if partitioned, how are the vertices in the array indexed?
-   *       vertex range on a process is not guaranteed to be consecutive */
-  /* TODO: Are there ghost vertices? Or do we just store the copies?
-   * I think storing copies is better. */
-  t8_topidx_t         num_trees;  /**< The global number of trees */
+   t8_topidx_t         num_trees;  /**< The global number of trees */
   t8_topidx_t         num_local_trees; /**< If partitioned the number of trees on this process. Otherwise the global number of trees. */
   t8_topidx_t         num_ghosts; /**< If partitioned the number of neighbor trees
                                     owned by different processes. */
   t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST]; /**< After commit the number of
                                                                  trees for each eclass. */
+
   sc_array_t         *ctrees; /**< An array of all trees in the cmesh. */
   sc_hash_array_t    *ghosts; /**< The trees that do not belong to this process
                                    but are a face-neighbor of at least one local tree. */
