@@ -153,7 +153,7 @@ main (int argc, char **argv)
       t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 1, 0);
       t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 1, 0);
       /* Construct the mesh on one process and broadcast it */
-#if 0
+#if 1
       t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 0, 1);
       t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 0, 1);
       t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 1, 1);
