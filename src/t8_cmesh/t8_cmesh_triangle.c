@@ -53,10 +53,14 @@ t8_cmesh_triangle_read_next_line (char **line, size_t * n, FILE * fp)
 }
 
 /* Open .node file  and read node input
+ * vertices is needed to temporarily store the vertex coordinates and pass
+ * to t8_cmesh_triangle_read_eles.
+ * memory for vertices is allocated here.
  * On succes the index of the first node is returned (0 or 1).
  * On failure -1 is returned. */
 static int
-t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename)
+t8_cmesh_triangle_read_nodes  (t8_cmesh_t cmesh, char *filename,
+                             double ** vertices)
 {
   FILE               *fp;
   char               *line = T8_ALLOC (char, 1024);
@@ -101,9 +105,7 @@ t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename)
   T8_ASSERT (num_attributes >= 0);
   T8_ASSERT (nbdy_marker == 0 || nbdy_marker == 1);
 
-  /* set number of corners */
-  t8_cmesh_set_num_vertices (cmesh, num_corners);
-
+  *vertices = T8_ALLOC (double, 2 * num_corners);
   /* read all vertex coordinates */
   for (cit = 0; cit < num_corners; cit++) {
     retval = t8_cmesh_triangle_read_next_line (&line, &linen, fp);
@@ -122,7 +124,8 @@ t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename)
       T8_ASSERT (corner == 0 || corner == 1);
       corner_offset = corner;
     }
-    t8_cmesh_set_vertex (cmesh, corner - corner_offset, x, y, 0);
+    (*vertices) [2 * cit] = x;
+    (*vertices) [2 * cit + 1] = y;
 
 #if 0                           /* read attributes and boundary marker. This part is currently not needed */
     /* read attributes but do not save them */
@@ -162,7 +165,7 @@ die_node:
  */
 static int
 t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
-                             char *filename)
+                             char *filename, double * vertices)
 {
   FILE               *fp;
   char               *line = T8_ALLOC (char, 1024);
@@ -172,6 +175,8 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
   t8_topidx_t         tcorners[3];
   int                 retval;
   int                 temp;
+  int                 i;
+  double              tree_vertices[9];
 
   /* Open .ele file and read element input */
   T8_ASSERT (filename != NULL);
@@ -221,10 +226,16 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
       tcorners[1] -= corner_offset;
       tcorners[2] -= corner_offset;
     }
-    t8_cmesh_set_tree_vertices (cmesh, triangle - triangle_offset, tcorners,
-                               3);
+    for (i = 0;i < 3;i++) {
+      tree_vertices[3*i] = vertices[2 * tcorners[i]];
+      tree_vertices[3*i + 1] = vertices[2 * tcorners[i] + 1];
+      tree_vertices[3*i + 2] = 0;
+    }
+    t8_cmesh_set_tree_vertices (cmesh, triangle - triangle_offset,
+                                tree_vertices, 3);
   }
   fclose (fp);
+  T8_FREE (vertices);
   T8_FREE (line);
   /* Done reading .ele file */
   return triangle_offset;
@@ -234,6 +245,7 @@ die_ele:
   if (fp != NULL) {
     fclose (fp);
   }
+  T8_FREE (vertices);
   T8_FREE (line);
   return -1;
 }
@@ -355,6 +367,7 @@ t8_cmesh_from_triangle_file (char *fileprefix, int partition,
 {
   int                 mpirank, mpisize, mpiret;
   t8_cmesh_t          cmesh;
+  double             *vertices;
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -367,10 +380,11 @@ t8_cmesh_from_triangle_file (char *fileprefix, int partition,
     char                current_file[BUFSIZ];
 
     t8_cmesh_init (&cmesh);
-    t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
+    t8_cmesh_set_mpicomm (cmesh, comm, do_dup);\
+    t8_cmesh_set_attribute_to_vertices (cmesh);
     /* read .node file */
     snprintf (current_file, BUFSIZ, "%s.node", fileprefix);
-    retval = t8_cmesh_triangle_read_nodes (cmesh, current_file);
+    retval = t8_cmesh_triangle_read_nodes (cmesh, current_file, &vertices);
     if (retval != 0 && retval != 1) {
       t8_global_errorf ("Error while parsing file %s.\n", current_file);
       t8_cmesh_unref (&cmesh);
@@ -380,7 +394,8 @@ t8_cmesh_from_triangle_file (char *fileprefix, int partition,
       corner_offset = retval;
       snprintf (current_file, BUFSIZ, "%s.ele", fileprefix);
       retval =
-        t8_cmesh_triangle_read_eles (cmesh, corner_offset, current_file);
+        t8_cmesh_triangle_read_eles (cmesh, corner_offset, current_file,
+                                     vertices);
       if (retval != 0 && retval != 1) {
         t8_global_errorf ("Error while parsing file %s.\n", current_file);
         t8_cmesh_unref (&cmesh);

@@ -43,8 +43,9 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix, double scale)
     t8_topidx_t     num_vertices, num_trees, itree, ivertex;
     t8_ctree_t      tree;
     double          x, y, z;
+    double         *vertices;
     int             k, sk;
-    long long       offset;
+    long long       offset, count_vertices;
 
     num_vertices = t8_cmesh_get_num_vertices (cmesh);
     num_trees = t8_cmesh_get_num_trees (cmesh);
@@ -77,16 +78,22 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix, double scale)
              " NumberOfComponents=\"3\" format=\"%s\">\n",
              T8_VTK_FLOAT_NAME, T8_VTK_FORMAT_STRING);
 
-    for (ivertex = 0; ivertex < num_vertices; ivertex++) {
+    for (itree = 0; itree < num_trees; itree++) {
 #ifdef T8_VTK_ASCII
-      x = cmesh->vertices[3 * ivertex];
-      y = cmesh->vertices[3 * ivertex + 1];
-      z = cmesh->vertices[3 * ivertex + 2];
-#ifdef T8_VTK_DOUBLES
-      fprintf (vtufile, "     %24.16e %24.16e %24.16e\n", x, y, z);
-#else
-      fprintf (vtufile, "          %16.8e %16.8e %16.8e\n", x, y, z);
-#endif
+      tree = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, itree);
+      for (ivertex = 0;ivertex < t8_eclass_num_vertices[tree->eclass];
+           ivertex++) {
+        vertices = ((double *) tree->attribute) +
+            3 * t8_eclass_vtk_corner_number[tree->eclass][ivertex];
+        x = vertices[0];
+        y = vertices[1];
+        z = vertices[2];
+  #ifdef T8_VTK_DOUBLES
+        fprintf (vtufile, "     %24.16e %24.16e %24.16e\n", x, y, z);
+  #else
+        fprintf (vtufile, "          %16.8e %16.8e %16.8e\n", x, y, z);
+  #endif
+      }
   }
 #else
     SC_ABORT ("Binary vtk file not implemented\n");
@@ -99,17 +106,12 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix, double scale)
     fprintf (vtufile, "        <DataArray type=\"%s\" Name=\"connectivity\""
              " format=\"%s\">\n", T8_VTK_TOPIDX, T8_VTK_FORMAT_STRING);
   #ifdef T8_VTK_ASCII
-    for (itree = 0, sk =0; itree < num_trees; itree++) {
+    for (itree = 0, count_vertices = 0; itree < num_trees; itree++) {
       tree = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, itree);
       fprintf (vtufile, "         ");
-      for (k = 0; k < t8_eclass_num_vertices[tree->eclass]; ++k) {
-        if (tree->eclass == T8_ECLASS_TET) {
-          printf("%c",k == 0 ? '\n' :' ');
-          printf ( "[%i: %lld]",k, (long long) tree->vertices[
-                           t8_eclass_vtk_corner_number[tree->eclass][k]]);
-        }
-        fprintf (vtufile, " %lld", (long long) tree->vertices[
-                 t8_eclass_vtk_corner_number[tree->eclass][k]]);
+      for (k = 0; k < t8_eclass_num_vertices[tree->eclass]; ++k,
+           count_vertices++) {
+        fprintf (vtufile, " %lld", count_vertices);
       }
       fprintf (vtufile, "\n");
     }
