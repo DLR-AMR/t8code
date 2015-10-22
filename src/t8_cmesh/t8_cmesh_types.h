@@ -64,7 +64,7 @@ typedef struct t8_cmesh
   t8_refcount_t       rc; /**< The reference count of the cmesh. */
   t8_topidx_t         num_corners; /**< The global number of corners that help define the topology. Is allowed to be zero if topology and geometry are equal. */
   t8_topidx_t         num_local_corners; /**< If partitioned the local number of corners. Otherwise the global number of corners. */
-   t8_topidx_t         num_trees;  /**< The global number of trees */
+  t8_topidx_t         num_trees;   /**< The global number of trees */
   t8_topidx_t         num_local_trees; /**< If partitioned the number of trees on this process. Otherwise the global number of trees. */
   t8_topidx_t         num_ghosts; /**< If partitioned the number of neighbor trees
                                     owned by different processes. */

@@ -185,7 +185,8 @@ void                t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1,
 
 /* returns true if cmesh_a equals cmesh_b */
 /* TODO: document */
-int                 t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b);
+int                 t8_cmesh_is_equal (t8_cmesh_t cmesh_a,
+                                       t8_cmesh_t cmesh_b);
 
 /** Broadcast a cmesh structure that exists only on one process to all
  *  processes in the cmesh's communicator.
@@ -264,7 +265,6 @@ void                t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
                                              child_in_tree_begin,
                                              t8_topidx_t * last_local_tree,
                                              t8_gloidx_t * child_in_tree_end);
-
 
 /** Increase the reference counter of a cmesh.
  * \param [in,out] cmesh        On input, this cmesh must exist with positive
