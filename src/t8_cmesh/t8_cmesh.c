@@ -546,6 +546,53 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
   }
 }
 
+/* returns true if cmesh_a equals cmesh_b */
+int
+t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
+{
+  int is_equal;
+  T8_ASSERT (cmesh_a != NULL && cmesh_b != NULL);
+
+  if (cmesh_a == cmesh_b) {
+    return 1;
+  }
+  /* check entries that are numbers */
+  is_equal = cmesh_a->committed != cmesh_b->committed || cmesh_a->dimension !=
+             cmesh_b->dimension || cmesh_a->do_dup != cmesh_b->do_dup ||
+             cmesh_a->set_partitioned != cmesh_b->set_partitioned ||
+             cmesh_a->mpicomm != cmesh_b->mpicomm || cmesh_a->mpirank !=
+             cmesh_b->mpirank || cmesh_a->mpisize != cmesh_b->mpisize ||
+             cmesh_a->num_corners != cmesh_b->num_corners ||
+             cmesh_a->num_local_corners != cmesh_b->num_local_corners ||
+             cmesh_a->num_trees != cmesh_b->num_trees ||
+             cmesh_a->num_local_trees != cmesh_b->num_local_trees ||
+             cmesh_a->num_ghosts != cmesh_b->num_ghosts ||
+             cmesh_a->first_tree != cmesh_b->first_tree;
+#ifdef T8_ENABLE_DEBUG
+  is_equal = is_equal || cmesh_a->inserted_tree != cmesh_b->inserted_trees ||
+             cmesh_a->inserted_ghosts != cmesh_b->inserted_ghosts;
+#endif
+  if (is_equal == 1) {
+    return 0;
+  }
+  /* check arrays */
+  is_equal = memcmp (cmesh_a->num_trees_per_eclass,
+                     cmesh_b->num_trees_per_eclass,
+                     T8_ECLASS_LAST * sizeof(t8_topidx_t)) ||
+             memcmp (cmesh_a->tree_attribute_size, cmesh_b->tree_attribute_size,
+                     T8_ECLASS_LAST * sizeof(t8_topidx_t)) ||
+             memcmp (cmesh_a->tree_offsets, cmesh_b->tree_offsets,
+                     cmesh_a->mpisize);
+  if (is_equal != 0) {
+    return 0;
+  }
+  if (!sc_array_is_equal (cmesh_a->ctrees, cmesh_b->ctrees) ||
+      !sc_array_is_equal (&cmesh_a->ghosts->a, &cmesh_b->ghosts->a)) {
+    return 0;
+  }
+  return 1;
+}
+
 t8_cmesh_t
 t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 {

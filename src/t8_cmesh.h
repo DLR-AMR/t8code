@@ -183,6 +183,10 @@ void                t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1,
                                          t8_topidx_t tree2, int face1,
                                          int face2, int orientation);
 
+/* returns true if cmesh_a equals cmesh_b */
+/* TODO: document */
+int                 t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b);
+
 /** Broadcast a cmesh structure that exists only on one process to all
  *  processes in the cmesh's communicator.
  *  On the other processors, it will be allocated.
