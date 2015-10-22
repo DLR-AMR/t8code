@@ -197,12 +197,12 @@ void
 t8_cmesh_set_attribte_sizes (t8_cmesh_t cmesh, size_t attr_sizes[],
                              int num_sizes)
 {
-  int               iclass;
+  int                 iclass;
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (!cmesh->committed);
   T8_ASSERT (num_sizes == T8_ECLASS_LAST);
 
-  for (iclass = 0;iclass < num_sizes;iclass++) {
+  for (iclass = 0; iclass < num_sizes; iclass++) {
     cmesh->tree_attribute_size[iclass] = attr_sizes[iclass];
   }
 }
@@ -220,7 +220,7 @@ t8_cmesh_set_attribte_size_single (t8_cmesh_t cmesh, size_t attr_size,
 
 void
 t8_cmesh_tree_set_attribute (t8_cmesh_t cmesh, t8_topidx_t tree_id,
-                             void * attribute)
+                             void *attribute)
 {
   t8_ctree_t          tree;
   T8_ASSERT (cmesh != NULL);
@@ -234,7 +234,8 @@ t8_cmesh_tree_set_attribute (t8_cmesh_t cmesh, t8_topidx_t tree_id,
 
   /* TODO: maybe use memory pool for this */
   tree->attribute = T8_ALLOC (char, cmesh->tree_attribute_size[tree->eclass]);
-  memcpy (tree->attribute, attribute, cmesh->tree_attribute_size[tree->eclass]);
+  memcpy (tree->attribute, attribute,
+          cmesh->tree_attribute_size[tree->eclass]);
 }
 
 void
@@ -450,15 +451,16 @@ t8_cmesh_set_attribute_to_vertices (t8_cmesh_t cmesh)
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (!cmesh->committed);
 
-  for (iclass = T8_ECLASS_FIRST;iclass < T8_ECLASS_LAST;iclass++) {
-    attribute_sizes[iclass] = 3 * sizeof (double) * t8_eclass_num_vertices[iclass];
+  for (iclass = T8_ECLASS_FIRST; iclass < T8_ECLASS_LAST; iclass++) {
+    attribute_sizes[iclass] =
+      3 * sizeof (double) * t8_eclass_num_vertices[iclass];
   }
   t8_cmesh_set_attribte_sizes (cmesh, attribute_sizes, T8_ECLASS_LAST);
 }
 
 void
 t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_topidx_t tree_id,
-                            double * vertices, t8_topidx_t num_vertices)
+                            double *vertices, t8_topidx_t num_vertices)
 {
   t8_ctree_t          tree;
   int                 vi;
@@ -648,7 +650,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Comm_size (comm, &mpisize);  
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
   if (mpisize > 1) {
     SC_ABORT ("cmesh_bcast is buggy at the moment.");
@@ -811,14 +813,14 @@ t8_cmesh_get_num_corners (t8_cmesh_t cmesh)
 t8_topidx_t
 t8_cmesh_get_num_vertices (t8_cmesh_t cmesh)
 {
-  int           iclass;
-  t8_topidx_t   num_vertices = 0;
+  int                 iclass;
+  t8_topidx_t         num_vertices = 0;
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
 
-  for (iclass = T8_ECLASS_FIRST;iclass < T8_ECLASS_LAST;iclass++) {
+  for (iclass = T8_ECLASS_FIRST; iclass < T8_ECLASS_LAST; iclass++) {
     num_vertices += t8_eclass_num_vertices[iclass] *
-        cmesh->num_trees_per_eclass[iclass];
+      cmesh->num_trees_per_eclass[iclass];
   }
   return num_vertices;
 }
@@ -1003,13 +1005,13 @@ t8_cmesh_unref (t8_cmesh_t * pcmesh)
 
 static void
 t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t * tvertices,
-                                               double * vertices,
-                                               double * attr_vertices,
-                                               int  num_vertices)
+                                               double *vertices,
+                                               double *attr_vertices,
+                                               int num_vertices)
 {
-  int i;
+  int                 i;
 
-  for (i = 0;i < num_vertices;i++) {
+  for (i = 0; i < num_vertices; i++) {
     attr_vertices[3 * i] = vertices[tvertices[i]];
     attr_vertices[3 * i + 1] = vertices[tvertices[i] + 1];
     attr_vertices[3 * i + 2] = vertices[tvertices[i] + 2];
@@ -1157,7 +1159,8 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
       vertices[1] = 1;
     case T8_ECLASS_VERTEX:
       vertices[0] = 0;
-      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+      t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                     vertices_coords,
                                                      attr_vertices,
                                                      t8_eclass_num_vertices
                                                      [eclass]);
@@ -1172,14 +1175,16 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
       vertices[3] = 2;
       vertices[4] = 3;
       vertices[5] = 7;
-      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+      t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                     vertices_coords,
                                                      attr_vertices, 6);
       t8_cmesh_set_tree_vertices (cmesh, 0, attr_vertices, 6);
       vertices[1] = 5;
       vertices[2] = 4;
       vertices[4] = 7;
       vertices[5] = 6;
-      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+      t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                     vertices_coords,
                                                      attr_vertices, 6);
       t8_cmesh_set_tree_vertices (cmesh, 1, attr_vertices, 6);
       break;
@@ -1188,12 +1193,14 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
       vertices[0] = 0;
       vertices[1] = 1;
       vertices[2] = 3;
-      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+      t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                     vertices_coords,
                                                      attr_vertices, 3);
       t8_cmesh_set_tree_vertices (cmesh, 0, attr_vertices, 3);
       vertices[1] = 3;
       vertices[2] = 2;
-      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+      t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                     vertices_coords,
                                                      attr_vertices, 3);
       t8_cmesh_set_tree_vertices (cmesh, 1, attr_vertices, 3);
       break;
@@ -1208,32 +1215,38 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
       vertices[3] = 7;
       vertices[1] = 5;
       vertices[2] = 1;
-      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+      t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                     vertices_coords,
                                                      attr_vertices, 4);
       t8_cmesh_set_tree_vertices (cmesh, 0, attr_vertices, 4);
       vertices[1] = 1;
       vertices[2] = 3;
-      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+      t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                     vertices_coords,
                                                      attr_vertices, 4);
       t8_cmesh_set_tree_vertices (cmesh, 1, attr_vertices, 4);
       vertices[1] = 3;
       vertices[2] = 2;
-      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+      t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                     vertices_coords,
                                                      attr_vertices, 4);
       t8_cmesh_set_tree_vertices (cmesh, 2, attr_vertices, 4);
       vertices[1] = 2;
       vertices[2] = 6;
-      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+      t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                     vertices_coords,
                                                      attr_vertices, 4);
       t8_cmesh_set_tree_vertices (cmesh, 3, attr_vertices, 4);
       vertices[1] = 6;
       vertices[2] = 4;
-      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+      t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                     vertices_coords,
                                                      attr_vertices, 4);
       t8_cmesh_set_tree_vertices (cmesh, 4, attr_vertices, 4);
       vertices[1] = 4;
       vertices[2] = 5;
-      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords,
+      t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                     vertices_coords,
                                                      attr_vertices, 4);
       t8_cmesh_set_tree_vertices (cmesh, 5, attr_vertices, 4);
       break;
