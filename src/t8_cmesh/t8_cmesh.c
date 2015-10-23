@@ -685,6 +685,45 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
   return 1;
 }
 
+/* broadcast the tree attributes of a cmesh on root to all processors */
+/* TODO: can we optimize it by just sending the memory of the mempools? */
+static void
+t8_cmesh_bcast_attributes (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
+{
+  int                 mpirank, mpisize, mpiret;
+  t8_topidx_t         itree;
+  int                 has_attr;
+  t8_ctree_t          tree;
+
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+
+  for (itree = 0; itree < cmesh_in->num_trees; itree++) {
+    tree = t8_cmesh_get_tree (cmesh_in, itree);
+    if (mpirank == root && tree->attribute != NULL) {
+      has_attr = 1;
+    }
+    else {
+      has_attr = 0;
+    }
+    mpiret = sc_MPI_Bcast (&has_attr, 1, sc_MPI_INT, root, comm);
+    SC_CHECK_MPI (mpiret);
+    if (has_attr) {
+      if (mpirank != root) {
+        tree->attribute =
+          sc_mempool_alloc (cmesh_in->tree_attributes_mem[tree->eclass]);
+      }
+      mpiret = sc_MPI_Bcast (tree->attribute,
+                             t8_cmesh_get_attribute_size (cmesh_in,
+                                                          tree->eclass),
+                             sc_MPI_BYTE, root, comm);
+      SC_CHECK_MPI (mpiret);
+    }
+  }
+}
+
 t8_cmesh_t
 t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 {
@@ -787,21 +826,10 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
       tree->vertices = T8_ALLOC (t8_topidx_t,
                                  t8_eclass_num_vertices[tree->eclass]);
       tree->corners = NULL;
-      if (tree->attribute != NULL) {
-        tree->attribute =
-          T8_ALLOC (char, cmesh_in->tree_attribute_size[tree->eclass]);
-      }
     }
   }
   /* broadcast attributes */
-  for (itree = 0; itree < cmesh_in->num_trees; itree++) {
-    tree = t8_cmesh_get_tree (cmesh_in, itree);
-    if (tree->attribute != NULL) {
-      sc_MPI_Bcast (tree->attribute,
-                    cmesh_in->tree_attribute_size[tree->eclass], sc_MPI_BYTE,
-                    root, comm);
-    }
-  }
+  t8_cmesh_bcast_attributes (cmesh_in, root, comm);
   /* Since broadcasting one big data set instead of several small ones is much
    * faster, we collect all corner and face neighbor information in arrays and
    * broadcast those.
