@@ -78,7 +78,8 @@ typedef struct t8_cmesh
                                        on this process. Zero if the cmesh is not partitioned. -1 if this processor is empty. */
   t8_topidx_t        *tree_offsets; /**< If partitioned the global number of the
                                          first full tree of each process. */
-  size_t              tree_attribute_size[T8_ECLASS_LAST];
+  sc_mempool_t       *tree_attributes_mem[T8_ECLASS_LAST]; /**< For each eclass we can specify an
+                                         attribute size and attach attributes of this size to each trees */
 #ifdef T8_ENABLE_DEBUG
   t8_topidx_t         inserted_trees; /**< Count the number of inserted trees to
                                            check at commit if it equals the total number. */

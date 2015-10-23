@@ -203,7 +203,7 @@ t8_cmesh_set_attribute_sizes (t8_cmesh_t cmesh, size_t attr_sizes[],
   T8_ASSERT (num_sizes == T8_ECLASS_LAST);
 
   for (iclass = 0; iclass < num_sizes; iclass++) {
-    cmesh->tree_attribute_size[iclass] = attr_sizes[iclass];
+    cmesh->tree_attributes_mem[iclass] = sc_mempool_new (attr_sizes[iclass]);
   }
 }
 
@@ -215,7 +215,7 @@ t8_cmesh_set_attribute_size_single (t8_cmesh_t cmesh, size_t attr_size,
   T8_ASSERT (!cmesh->committed);
   T8_ASSERT (T8_ECLASS_FIRST <= tree_class && tree_class < T8_ECLASS_LAST);
 
-  cmesh->tree_attribute_size[tree_class] = attr_size;
+  cmesh->tree_attributes_mem[(int) tree_class] = sc_mempool_new (attr_size);
 }
 
 void
@@ -232,8 +232,8 @@ t8_cmesh_tree_set_attribute (t8_cmesh_t cmesh, t8_topidx_t tree_id,
   T8_ASSERT (tree->attribute == NULL);
   T8_ASSERT (cmesh->tree_attribute_size[tree->eclass] > 0);
 
-  /* TODO: maybe use memory pool for this */
-  tree->attribute = T8_ALLOC (char, cmesh->tree_attribute_size[tree->eclass]);
+  tree->attribute =
+    sc_mempool_alloc (cmesh->tree_attributes_mem[tree->eclass]);
   memcpy (tree->attribute, attribute,
           cmesh->tree_attribute_size[tree->eclass]);
 }
@@ -985,6 +985,7 @@ static void
 t8_cmesh_reset (t8_cmesh_t * pcmesh)
 {
   int                 mpiret;
+  int                 iclass;
   t8_cmesh_t          cmesh;
   t8_ctree_t          treeit;
   t8_cghost_t         ghostit;
@@ -999,6 +1000,10 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
     mpiret = sc_MPI_Comm_free (&cmesh->mpicomm);
     SC_CHECK_MPI (mpiret);
   }
+  /* free attributes */
+  for (iclass = T8_ECLASS_FIRST; iclass < T8_ECLASS_LAST; iclass++) {
+    sc_mempool_destroy (cmesh->tree_attributes_mem[iclass]);
+  }
   /* free trees */
   if (cmesh->ctrees != NULL) {
     for (ti = 0; ti < cmesh->num_local_trees; ti++) {
@@ -1006,7 +1011,6 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
       T8_FREE (treeit->face_neighbors);
       T8_FREE (treeit->corners);
       T8_FREE (treeit->vertices);
-      T8_FREE (treeit->attribute);
     }
     sc_array_destroy (cmesh->ctrees);
   }
