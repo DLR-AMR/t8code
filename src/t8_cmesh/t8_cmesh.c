@@ -695,10 +695,6 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
-  if (mpisize > 1) {
-    SC_ABORT ("cmesh_bcast is buggy at the moment.");
-    /* see comment above */
-  }
 
   T8_ASSERT (0 <= root && root < mpisize);
   T8_ASSERT (mpirank == root || cmesh_in == NULL);
