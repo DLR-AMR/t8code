@@ -578,17 +578,16 @@ t8_cmesh_ctree_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b)
       return 0;
     }
     else {
-      is_equal = memcmp (tree_a->corners, tree_b->corners,
-                         t8_eclass_num_vertices[tree_a->eclass] *
-                         sizeof (t8_topidx_t));
+      if (memcmp (tree_a->corners, tree_b->corners,
+                  t8_eclass_num_vertices[tree_a->eclass] *
+                  sizeof (t8_topidx_t))) {
+        return 0;
+      }
     }
   }
-  if (is_equal != 0) {
-    return 0;
-  }
-  if (memcmp (tree_a->face_neighbors, tree_b->face_neighbors,
-              sizeof (t8_ctree_fneighbor_struct_t) *
-              t8_eclass_num_faces[tree_a->eclass]) != 0) {
+  if (!t8_cmesh_face_n_is_equal
+      (tree_a->face_neighbors, tree_b->face_neighbors,
+       t8_eclass_num_faces[tree_a->eclass])) {
     return 0;
   }
 
