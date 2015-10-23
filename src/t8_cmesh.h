@@ -88,7 +88,7 @@ void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
                                               t8_topidx_t num_ghosts);
 
 /** Set the number of vertices for a cmesh.
- * It is not allowed to call this function after \see t8_cmesh_commit.
+ * It is not allowed to call this function after \ref t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     num_vertices The number of vertices to be set.
  */
@@ -96,7 +96,7 @@ void                t8_cmesh_set_num_vertices (t8_cmesh_t cmesh,
                                                t8_topidx_t num_vertices);
 
 /** Set the number of local vertices for a partitioned cmesh.
- * It is not allowed to call this function after \see t8_cmesh_commit.
+ * It is not allowed to call this function after \ref t8_cmesh_commit.
  * Must be called after \ref t8_cmesh_set_num_vertices.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     num_local_vertices The number of local vertices to be set.
@@ -152,7 +152,7 @@ void                t8_cmesh_set_attribute_size_single (t8_cmesh_t cmesh,
 void                t8_cmesh_set_attribute_to_vertices (t8_cmesh_t cmesh);
 
 /** Set the number of trees for a cmesh.
- * It is not allowed to call this function after \see t8_cmesh_commit.
+ * It is not allowed to call this function after \ref t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     num_trees    The number of trees to be set.
  * \param [in]     num_trees_per_eclass An array storing for each t8_eclass
@@ -162,7 +162,7 @@ void                t8_cmesh_set_num_trees (t8_cmesh_t cmesh,
                                             t8_topidx_t num_trees);
 
 /** Set the class of a tree in the cmesh.
- * It is not allowed to call this function after \see t8_cmesh_commit.
+ * It is not allowed to call this function after \ref t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     tree_id      The global number of the tree.
  * \param [in]     tree_class   The element class of this tree.
@@ -172,7 +172,7 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
                                              t8_eclass_t tree_class);
 
 /** Set the vertices of a tree in the cmesh.
- * It is not allowed to call this function after \see t8_cmesh_commit.
+ * It is not allowed to call this function after \ref t8_cmesh_commit.
  * The eclass of the tree has to be set before calling this function.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     tree_id      The global number of the tree.
@@ -225,7 +225,7 @@ int                 t8_cmesh_is_equal (t8_cmesh_t cmesh_a,
 /** Broadcast a cmesh structure that exists only on one process to all
  *  processes in the cmesh's communicator.
  *  On the other processors, it will be allocated.
- *  It is not allowed to call this function after \see t8_cmesh_commit.
+ *  It is not allowed to call this function after \ref t8_cmesh_commit.
  *  \param [in] cmesh_in For the root process the cmesh to be broadcast,
  *                      for the other processes it must be NULL.
  *  \param [in] root    The rank of the process that provides the cmesh.
