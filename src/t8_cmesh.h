@@ -120,6 +120,37 @@ void                t8_cmesh_set_vertex (t8_cmesh_t cmesh,
                                          t8_topidx_t vertex_id, double x,
                                          double y, double z);
 
+/** Set the sizes of the attributes for each tree class and create the attribute mempools.
+ * A size of zero can be set, in this case no mempool is created.
+ * It is not allowed to call this function after \ref t8_cmesh_commit.
+ * \param [in,out] cmesh    The cmesh to be updated.
+ * \param [in]     attr_sizes An array of size_t specifying for each eclass the
+ *                          size (in bytes) of the attributes.
+ * \param [in]     num_sizes The number of entries in \a attr_sizes. Must match
+ *                           \ref T8_ECLASS_LAST.
+ */
+void                t8_cmesh_set_attribute_sizes (t8_cmesh_t cmesh,
+                                                  size_t attr_sizes[],
+                                                  int num_sizes);
+
+/** Set the size of the attribute for one specific tree class and create the attribute
+ * mempool.
+ * It is not allowed to call this function after \ref t8_cmesh_commit.
+ * \param [in,out] cmesh    The cmesh to be updated.
+ * \param [in]     attr_size The size (in bytes) to be set. Must be greater than 0.
+ * \param [in]     tree_class The tree class for which the attribute size is to be set.
+ */
+void                t8_cmesh_set_attribute_size_single (t8_cmesh_t cmesh,
+                                                        size_t attr_size,
+                                                        t8_eclass_t
+                                                        tree_class);
+
+/** Set the sizes of the attributes to hold a \f$R^3\f$ coordinate for each tree corner.
+ * It is not allowed to call this function after \ref t8_cmesh_commit.
+ * \param [in,out] cmesh    The cmesh to be updated.
+ */
+void                t8_cmesh_set_attribute_to_vertices (t8_cmesh_t cmesh);
+
 /** Set the number of trees for a cmesh.
  * It is not allowed to call this function after \see t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
@@ -139,10 +170,6 @@ void                t8_cmesh_set_num_trees (t8_cmesh_t cmesh,
 void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
                                              t8_topidx_t tree_id,
                                              t8_eclass_t tree_class);
-
-/** Specifies that the attributes are to be used as vertices */
-/* TODO: document */
-void                t8_cmesh_set_attribute_to_vertices (t8_cmesh_t cmesh);
 
 /** Set the vertices of a tree in the cmesh.
  * It is not allowed to call this function after \see t8_cmesh_commit.
@@ -185,6 +212,13 @@ void                t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1,
 
 /* returns true if cmesh_a equals cmesh_b */
 /* TODO: document */
+/** Check whether two given cmeshes carry the same information.
+ * \param [in]    cmesh_a       The first of the two cmeshes to be checked.
+ * \param [in]    cmesh_b       The second of the two cmeshes to be checked.
+ * \return                      True if both cmeshes carry the same information,
+ *                              false otherwise.
+ * Currently the attributes of the trees are not compared.
+ */
 int                 t8_cmesh_is_equal (t8_cmesh_t cmesh_a,
                                        t8_cmesh_t cmesh_b);
 
