@@ -607,6 +607,7 @@ int
 t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
 {
   int                 is_equal;
+  int                 iclass;
   t8_topidx_t         itree;
   T8_ASSERT (cmesh_a != NULL && cmesh_b != NULL);
 
@@ -638,9 +639,24 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
   /* check arrays */
   is_equal = memcmp (cmesh_a->num_trees_per_eclass,
                      cmesh_b->num_trees_per_eclass,
-                     T8_ECLASS_LAST * sizeof (t8_topidx_t)) ||
-    memcmp (cmesh_a->tree_attribute_size, cmesh_b->tree_attribute_size,
-            T8_ECLASS_LAST * sizeof (t8_topidx_t));
+                     T8_ECLASS_LAST * sizeof (t8_topidx_t));
+  /* check attribute sizes */
+  for (iclass = 0; iclass < T8_ECLASS_LAST; iclass++) {
+    if (cmesh_a->tree_attributes_mem[iclass] != NULL) {
+      if (cmesh_b->tree_attributes_mem[iclass] == NULL) {
+        return 0;
+      }
+      else {
+        is_equal = is_equal
+          || t8_cmesh_get_attribute_size (cmesh_a,
+                                          (t8_eclass_t ) iclass) !=
+          t8_cmesh_get_attribute_size (cmesh_b, (t8_eclass_t ) iclass)
+          || sc_mempool_memory_used (cmesh_a->tree_attributes_mem[iclass]) !=
+          sc_mempool_memory_used (cmesh_b->tree_attributes_mem[iclass]);
+      }
+    }
+  }
+  /* check tree_offsets */
   if (cmesh_a->tree_offsets != NULL) {
     if (cmesh_b->tree_offsets == NULL) {
       return 0;
@@ -654,12 +670,14 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
   if (is_equal != 0) {
     return 0;
   }
+  /* check trees */
   for (itree = 0; itree < cmesh_a->num_trees; itree++) {
     if (!t8_cmesh_ctree_is_equal (t8_cmesh_get_tree (cmesh_a, itree),
                                   t8_cmesh_get_tree (cmesh_b, itree))) {
       return 0;
     }
   }
+  /* check ghosts */
   if (cmesh_a->num_ghosts > 0 &&
       !sc_array_is_equal (&cmesh_a->ghosts->a, &cmesh_b->ghosts->a)) {
     return 0;
