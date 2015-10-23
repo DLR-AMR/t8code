@@ -545,6 +545,23 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
   }
 }
 
+/* compare two arrays of face_neighbors for equality */
+static int
+t8_cmesh_face_n_is_equal (t8_ctree_fneighbor_struct_t * face_a,
+                          t8_ctree_fneighbor_struct_t * face_b, int num_neigh)
+{
+  int                 iface;
+
+  for (iface = 0; iface < num_neigh; iface++) {
+    if (face_a[iface].is_owned != face_b[iface].is_owned ||
+        face_a[iface].treeid != face_b[iface].treeid ||
+        face_a[iface].tree_to_face != face_b[iface].tree_to_face) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
 static int
 t8_cmesh_ctree_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b)
 {
