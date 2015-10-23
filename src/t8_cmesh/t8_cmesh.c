@@ -203,7 +203,9 @@ t8_cmesh_set_attribute_sizes (t8_cmesh_t cmesh, size_t attr_sizes[],
   T8_ASSERT (num_sizes == T8_ECLASS_LAST);
 
   for (iclass = 0; iclass < num_sizes; iclass++) {
-    cmesh->tree_attributes_mem[iclass] = sc_mempool_new (attr_sizes[iclass]);
+    if (attr_sizes[iclass] > 0) {
+      cmesh->tree_attributes_mem[iclass] = sc_mempool_new (attr_sizes[iclass]);
+    }
   }
 }
 
@@ -221,6 +223,7 @@ t8_cmesh_set_attribute_size_single (t8_cmesh_t cmesh, size_t attr_size,
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (!cmesh->committed);
   T8_ASSERT (T8_ECLASS_FIRST <= tree_class && tree_class < T8_ECLASS_LAST);
+  T8_ASSERT (attr_size > 0);
 
   cmesh->tree_attributes_mem[(int) tree_class] = sc_mempool_new (attr_size);
 }
