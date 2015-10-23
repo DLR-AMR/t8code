@@ -83,7 +83,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
   if (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX) {
     if (do_commit) {
       t8_forest_commit (forest);
-      t8_forest_write_vtk (forest, "basic");
+      t8_forest_write_vtk (forest, "basic"); /* This does nothing right now */
     }
   }
 
