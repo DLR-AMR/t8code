@@ -1,0 +1,12 @@
+# This file is part of t8code
+# Non-recursive Makefile.am in test
+# Included from toplevel directory
+
+t8code_test_programs = \
+	test/t8_test_bcast
+
+test_t8_test_bcast_SOURCES = test/t8_test_bcast.c
+
+TESTS += $(t8code_test_programs)
+check_PROGRAMS += $(t8code_test_programs)
+
