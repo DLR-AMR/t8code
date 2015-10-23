@@ -207,6 +207,13 @@ t8_cmesh_set_attribute_sizes (t8_cmesh_t cmesh, size_t attr_sizes[],
   }
 }
 
+static              size_t
+t8_cmesh_get_attribute_size (t8_cmesh_t cmesh, t8_eclass_t eclass)
+{
+  T8_ASSERT (cmesh->tree_attributes_mem[eclass] != NULL);
+  return cmesh->tree_attributes_mem[eclass]->elem_size;
+}
+
 void
 t8_cmesh_set_attribute_size_single (t8_cmesh_t cmesh, size_t attr_size,
                                     t8_eclass_t tree_class)
@@ -230,12 +237,12 @@ t8_cmesh_tree_set_attribute (t8_cmesh_t cmesh, t8_topidx_t tree_id,
   tree = t8_cmesh_get_tree (cmesh, tree_id);
   T8_ASSERT (tree->eclass != T8_ECLASS_LAST);
   T8_ASSERT (tree->attribute == NULL);
-  T8_ASSERT (cmesh->tree_attribute_size[tree->eclass] > 0);
+  T8_ASSERT (t8_cmesh_get_attribute_size (cmesh, tree->eclass) > 0);
 
   tree->attribute =
     sc_mempool_alloc (cmesh->tree_attributes_mem[tree->eclass]);
   memcpy (tree->attribute, attribute,
-          cmesh->tree_attribute_size[tree->eclass]);
+          t8_cmesh_get_attribute_size (cmesh, tree->eclass));
 }
 
 void
@@ -400,7 +407,7 @@ t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_topidx_t tree_id,
   tree = t8_cmesh_get_tree (cmesh, tree_id);
   T8_ASSERT (tree->eclass != T8_ECLASS_LAST);
   T8_ASSERT (num_vertices * 3 * sizeof (double) ==
-             cmesh->tree_attribute_size[tree->eclass]);
+             t8_cmesh_get_attribute_size (cmesh, tree->eclass));
   T8_ASSERT (tree->attribute == NULL);
 
   t8_cmesh_tree_set_attribute (cmesh, tree_id, (void *) vertices);
@@ -716,7 +723,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
       dimensions.num_trees_per_eclass[iclass] =
         cmesh_in->num_trees_per_eclass[iclass];
       dimensions.tree_attribute_size[iclass] =
-        cmesh_in->tree_attribute_size[iclass];
+        t8_cmesh_get_attribute_size (cmesh_in, (t8_eclass_t ) iclass);
     }
 #ifdef T8_ENABLE_DEBUG
     dimensions.inserted_trees = cmesh_in->inserted_trees;
