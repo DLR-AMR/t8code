@@ -139,6 +139,7 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
                                              t8_eclass_t tree_class);
 
 /** Set the vertices of a tree in the cmesh.
+ * Before using this function, \ref t8_cmesh_set_attribute_to_vertices has to be called.
  * It is not allowed to call this function after \ref t8_cmesh_commit.
  * The eclass of the tree has to be set before calling this function.
  * \param [in,out] cmesh        The cmesh to be updated.
