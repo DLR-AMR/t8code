@@ -87,39 +87,6 @@ void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
                                               t8_topidx_t first_local_tree,
                                               t8_topidx_t num_ghosts);
 
-/** Set the number of vertices for a cmesh.
- * It is not allowed to call this function after \ref t8_cmesh_commit.
- * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     num_vertices The number of vertices to be set.
- */
-void                t8_cmesh_set_num_vertices (t8_cmesh_t cmesh,
-                                               t8_topidx_t num_vertices);
-
-/** Set the number of local vertices for a partitioned cmesh.
- * It is not allowed to call this function after \ref t8_cmesh_commit.
- * Must be called after \ref t8_cmesh_set_num_vertices.
- * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     num_local_vertices The number of local vertices to be set.
- */
-void                t8_cmesh_set_num_local_vertices (t8_cmesh_t cmesh,
-                                                     t8_topidx_t
-                                                     num_local_vertices);
-
-/** Set the coordinates of all vertices of a cmesh at once.
- * \param [in] cmesh         The cmesh to be updated.
- * \param [in] vertices      An array of \a cmesh.num_local_vertices * 3, storing
- *                           for each vertex its x,y and z coordinates.
- * \param [in] num_entries   The number of allocated entries in \a vertices,
- *                           must match \a cmesh.num_local_vertices * 3.
- */
-void                t8_cmesh_set_all_vertices (t8_cmesh_t cmesh,
-                                               double *vertices,
-                                               size_t num_entries);
-
-void                t8_cmesh_set_vertex (t8_cmesh_t cmesh,
-                                         t8_topidx_t vertex_id, double x,
-                                         double y, double z);
-
 /** Set the sizes of the attributes for each tree class and create the attribute mempools.
  * A size of zero can be set, in this case no mempool is created.
  * It is not allowed to call this function after \ref t8_cmesh_commit.
