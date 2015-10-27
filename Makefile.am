@@ -63,6 +63,7 @@ include src/t8_default/Makefile.am
 include test/Makefile.am
 include example/basic/Makefile.am
 include example/triangle/Makefile.am
+include example/tetgen/Makefile.am
 
 # revision control and ChangeLog
 ChangeLog:

@@ -21,6 +21,7 @@
 */
 
 #include <t8_cmesh_triangle.h>
+#include <t8_cmesh_tetgen.h>
 
 /* Read a the next line from a file stream that does not start with '#' or
  * contains only whitespaces (tabs etc.)
@@ -60,14 +61,14 @@ t8_cmesh_triangle_read_next_line (char **line, size_t * n, FILE * fp)
  * On failure -1 is returned. */
 static int
 t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename,
-                              double **vertices)
+                              double **vertices, int dim)
 {
   FILE               *fp;
   char               *line = T8_ALLOC (char, 1024);
   size_t              linen = 1024;
   t8_topidx_t         num_corners, cit;
   t8_topidx_t         corner, corner_offset;
-  double              x, y;
+  double              x, y, z;
 #if 0                           /* used for currently disabeld code */
   int                 i, bdy_marker;
 #endif
@@ -75,8 +76,10 @@ t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename,
   int                 nbdy_marker;
   int                 retval;
   int                 temp;
+  int                 num_read;
 
   T8_ASSERT (filename != NULL);
+  T8_ASSERT (dim == 2 || dim == 3);
   fp = fopen (filename, "r");
   if (fp == NULL) {
     t8_global_errorf ("Failed to open %s.\n", filename);
@@ -98,14 +101,14 @@ t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename,
     t8_global_errorf ("Premature end of line.\n");
     goto die_node;
   }
-  if (temp != 2) {
-    t8_global_errorf ("Dimension must equal 2.\n");
+  if (temp != dim) {
+    t8_global_errorf ("Dimension must equal %i.\n", dim);
     goto die_node;
   }
   T8_ASSERT (num_attributes >= 0);
   T8_ASSERT (nbdy_marker == 0 || nbdy_marker == 1);
 
-  *vertices = T8_ALLOC (double, 2 * num_corners);
+  *vertices = T8_ALLOC (double, dim * num_corners);
   /* read all vertex coordinates */
   for (cit = 0; cit < num_corners; cit++) {
     retval = t8_cmesh_triangle_read_next_line (&line, &linen, fp);
@@ -114,8 +117,11 @@ t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename,
       goto die_node;
     }
     /* read corner number and coordinates */
-    retval = sscanf (line, "%i %lf %lf", &corner, &x, &y);
-    if (retval != 3) {
+    retval = sscanf (line, "%i %lf %lf%n", &corner, &x, &y, &num_read);
+    if (dim == 3) {
+      retval += sscanf (line + num_read, "%lf", &z);
+    }
+    if (retval != dim + 1) {
       t8_global_errorf ("Premature end of line in %s.\n", filename);
     }
     /* The corners in a triangle file are indexed starting with zero or one.
@@ -124,8 +130,11 @@ t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename,
       T8_ASSERT (corner == 0 || corner == 1);
       corner_offset = corner;
     }
-    (*vertices)[2 * cit] = x;
-    (*vertices)[2 * cit + 1] = y;
+    (*vertices)[dim * cit] = x;
+    (*vertices)[dim * cit + 1] = y;
+    if (dim == 3) {
+      (*vertices)[dim * cit + 2] = z;
+    }
 
 #if 0                           /* read attributes and boundary marker. This part is currently not needed */
     /* read attributes but do not save them */
@@ -165,21 +174,23 @@ die_node:
  */
 static int
 t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
-                             char *filename, double *vertices)
+                             char *filename, double *vertices, int dim)
 {
   FILE               *fp;
   char               *line = T8_ALLOC (char, 1024);
   size_t              linen = 1024;
-  t8_topidx_t         num_triangles, tit;
+  t8_topidx_t         num_elems, tit;
   t8_topidx_t         triangle, triangle_offset;
-  t8_topidx_t         tcorners[3];
+  t8_topidx_t         tcorners[4];      /* in 2d only the first 3 values are needed */
   int                 retval;
   int                 temp;
   int                 i;
+  int                 num_read;
   double              tree_vertices[9];
 
   /* Open .ele file and read element input */
   T8_ASSERT (filename != NULL);
+  T8_ASSERT (dim == 2 || dim == 3);
   fp = fopen (filename, "r");
   if (fp == NULL) {
     t8_global_errorf ("Failed to open %s.\n", filename);
@@ -193,22 +204,26 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
   }
 
   /* get number of triangles and points per triangle */
-  retval = sscanf (line, "%i %i", &num_triangles, &temp);
+  retval = sscanf (line, "%i %i", &num_elems, &temp);
   if (retval != 2) {
     t8_global_errorf ("Premature end of line in %s.\n", filename);
   }
   T8_ASSERT (temp >= 3);
-  t8_cmesh_set_num_trees (cmesh, num_triangles);
+  t8_cmesh_set_num_trees (cmesh, num_elems);
   /* For each triangle read the corner indices */
-  for (tit = 0; tit < num_triangles; tit++) {
+  for (tit = 0; tit < num_elems; tit++) {
     retval = t8_cmesh_triangle_read_next_line (&line, &linen, fp);
     if (retval < 0) {
       t8_global_errorf ("Failed to read line from %s.\n", filename);
       goto die_ele;
     }
-    retval = sscanf (line, "%i %i %i %i", &triangle, tcorners, tcorners + 1,
-                     tcorners + 2);
-    if (retval != 4) {
+    retval = sscanf (line, "%i %i %i %i%n", &triangle, tcorners, tcorners + 1,
+                     tcorners + 2, &num_read);
+    if (dim == 3) {
+      /* TODO: this is kind of unelegant, can we do it better? */
+      retval += sscanf (line + num_read, "%i", tcorners + 3);
+    }
+    if (retval != dim + 2) {
       t8_global_errorf ("Premature end of line in %s.\n", filename);
       goto die_ele;
     }
@@ -220,19 +235,21 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
     }
     T8_ASSERT (triangle - triangle_offset == tit);
     t8_cmesh_set_tree_class (cmesh, triangle - triangle_offset,
-                             T8_ECLASS_TRIANGLE);
+                             dim == 2 ? T8_ECLASS_TRIANGLE : T8_ECLASS_TET);
     if (corner_offset != 0) {
       tcorners[0] -= corner_offset;
       tcorners[1] -= corner_offset;
       tcorners[2] -= corner_offset;
+      tcorners[3] -= corner_offset;
     }
-    for (i = 0; i < 3; i++) {
-      tree_vertices[3 * i] = vertices[2 * tcorners[i]];
-      tree_vertices[3 * i + 1] = vertices[2 * tcorners[i] + 1];
-      tree_vertices[3 * i + 2] = 0;
+    for (i = 0; i < dim + 1; i++) {
+      tree_vertices[3 * i] = vertices[dim * tcorners[i]];
+      tree_vertices[3 * i + 1] = vertices[dim * tcorners[i] + 1];
+      tree_vertices[3 * i + 2] =
+        dim == 2 ? 0 : vertices[dim * tcorners[i] + 2];
     }
     t8_cmesh_set_tree_vertices (cmesh, triangle - triangle_offset,
-                                tree_vertices, 3);
+                                tree_vertices, dim + 1);
   }
   fclose (fp);
   T8_FREE (vertices);
@@ -254,20 +271,23 @@ die_ele:
  * On success 0 is returned.
  * On failure -1 is returned. */
 static int
-t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int corner_offset,
-                              int element_offset, char *filename)
+t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
+                              char *filename, int dim)
 {
   FILE               *fp;
   char               *line = T8_ALLOC (char, 1024);
   size_t              linen = 1024;
-  t8_topidx_t         triangle, num_triangles, tit;
+  t8_topidx_t         element, num_elems, tit;
   t8_topidx_t        *tneighbors;
   int                 retval;
   int                 temp;
   int                 orientation, face1, face2;
+  int                 num_read;
+  const int           num_faces = dim + 1;
 
   /* Open .neigh file and read face neighbor information */
   T8_ASSERT (filename != NULL);
+  T8_ASSERT (dim == 2 || dim == 3);
   fp = fopen (filename, "r");
   if (fp == NULL) {
     t8_global_errorf ("Failed to open %s.\n", filename);
@@ -279,33 +299,38 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int corner_offset,
     t8_global_errorf ("Failed to read first line from %s.\n", filename);
     goto die_neigh;
   }
-  retval = sscanf (line, "%i %i", &num_triangles, &temp);
+  retval = sscanf (line, "%i %i", &num_elems, &temp);
   if (retval != 2) {
     t8_global_errorf ("Premature end of line in   %s.\n", filename);
     goto die_neigh;
   }
-  T8_ASSERT (temp == 3);
+  T8_ASSERT (temp == dim + 1);
 
-  tneighbors = T8_ALLOC (t8_topidx_t, num_triangles * 3);
+  tneighbors = T8_ALLOC (t8_topidx_t, num_elems * num_faces);
 
   /* We read all the neighbors and write them into an array.
    * Since TRIANGLE provides us for each triangle and each face with
    * which triangle ist is connected, we still need to find
    * out with which face of this triangle it is connected. */
-  for (tit = 0; tit < num_triangles; tit++) {
+  for (tit = 0; tit < num_elems; tit++) {
     retval = t8_cmesh_triangle_read_next_line (&line, &linen, fp);
     if (retval < 0) {
       t8_global_errorf ("Failed to read line from %s.\n", filename);
       goto die_neigh;
     }
     retval =
-      sscanf (line, "%i %i %i %i", &triangle, tneighbors + 3 * tit,
-              tneighbors + 3 * tit + 1, tneighbors + 3 * tit + 2);
-    if (retval != 4) {
+      sscanf (line, "%i %i %i %i%n", &element, tneighbors + num_faces * tit,
+              tneighbors + num_faces * tit + 1,
+              tneighbors + num_faces * tit + 2, &num_read);
+    if (dim == 3) {
+      retval +=
+        sscanf (line + num_read, "%i", tneighbors + num_faces * tit + 3);
+    }
+    if (retval != dim + 2) {
       t8_global_errorf ("Premature end of line in %s.\n", filename);
       goto die_neigh;
     }
-    T8_ASSERT (triangle - element_offset == tit);
+    T8_ASSERT (element - element_offset == tit);
 
     /* How do we know with which face we are connected? */
   }
@@ -313,20 +338,20 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int corner_offset,
   fclose (fp);
 
   /* Finde the neighboring faces */
-  for (tit = 0; tit < num_triangles; tit++) {
-    for (face1 = 0; face1 < 3; face1++) {
-      triangle = tneighbors[3 * tit + face1] - element_offset;
+  for (tit = 0; tit < num_elems; tit++) {
+    for (face1 = 0; face1 < num_faces; face1++) {
+      element = tneighbors[num_faces * tit + face1] - element_offset;
       /* triangle store the neighbor triangle on face1 of tit
        * or -1 if there is no neighbor */
-      if (triangle != -1 - element_offset) {
+      if (element != -1 - element_offset) {
         for (face2 = 0; face2 < 3; face2++) {
           /* Finde the face number of triangle which is connected to tit */
-          if (tneighbors[3 * triangle + face2] == tit + element_offset) {
+          if (tneighbors[num_faces * element + face2] == tit + element_offset) {
             break;
           }
         }
         /* jump here after break */
-        T8_ASSERT (face2 < 3);
+        T8_ASSERT (face2 < num_faces);
         /* compute orientation after the pattern
          *         f1
          *        0 1 2
@@ -335,14 +360,15 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int corner_offset,
          * f2 1 | 0 1 0
          *    2 | 1 0 1
          */
+        /* TODO: compute correct orientation in 3d */
         orientation = (face1 + face2 + 1) % 2;
         /* Insert this face connection if we did not insert it before */
-        if (tit < triangle) {
-          t8_cmesh_join_faces (cmesh, tit, triangle, face1, face2,
+        if (tit < element) {
+          t8_cmesh_join_faces (cmesh, tit, element, face1, face2,
                                orientation);
         }
-        if (tit == triangle && face1 < face2) {
-          t8_cmesh_join_faces (cmesh, tit, triangle, face1, face2,
+        if (tit == element && face1 < face2) {
+          t8_cmesh_join_faces (cmesh, tit, element, face1, face2,
                                orientation);
         }
       }
@@ -361,9 +387,9 @@ die_neigh:
   return -1;
 }
 
-t8_cmesh_t
-t8_cmesh_from_triangle_file (char *fileprefix, int partition,
-                             sc_MPI_Comm comm, int do_dup)
+static              t8_cmesh_t
+t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
+                                       sc_MPI_Comm comm, int do_dup, int dim)
 {
   int                 mpirank, mpisize, mpiret;
   t8_cmesh_t          cmesh;
@@ -376,7 +402,7 @@ t8_cmesh_from_triangle_file (char *fileprefix, int partition,
 
   cmesh = NULL;
   if (mpirank == 0) {
-    int                 retval, corner_offset, triangle_offset;
+    int                 retval, corner_offset;
     char                current_file[BUFSIZ];
 
     t8_cmesh_init (&cmesh);
@@ -384,7 +410,8 @@ t8_cmesh_from_triangle_file (char *fileprefix, int partition,
     t8_cmesh_set_attribute_to_vertices (cmesh);
     /* read .node file */
     snprintf (current_file, BUFSIZ, "%s.node", fileprefix);
-    retval = t8_cmesh_triangle_read_nodes (cmesh, current_file, &vertices);
+    retval =
+      t8_cmesh_triangle_read_nodes (cmesh, current_file, &vertices, dim);
     if (retval != 0 && retval != 1) {
       t8_global_errorf ("Error while parsing file %s.\n", current_file);
       t8_cmesh_unref (&cmesh);
@@ -395,17 +422,16 @@ t8_cmesh_from_triangle_file (char *fileprefix, int partition,
       snprintf (current_file, BUFSIZ, "%s.ele", fileprefix);
       retval =
         t8_cmesh_triangle_read_eles (cmesh, corner_offset, current_file,
-                                     vertices);
+                                     vertices, dim);
       if (retval != 0 && retval != 1) {
         t8_global_errorf ("Error while parsing file %s.\n", current_file);
         t8_cmesh_unref (&cmesh);
       }
       else {
         /* read .neigh file */
-        triangle_offset = retval;
         snprintf (current_file, BUFSIZ, "%s.neigh", fileprefix);
         retval = t8_cmesh_triangle_read_neigh (cmesh, corner_offset,
-                                               triangle_offset, current_file);
+                                               current_file, dim);
         if (retval != 0) {
           t8_global_errorf ("Error while parsing file %s.\n", current_file);
           t8_cmesh_unref (&cmesh);
@@ -422,4 +448,20 @@ t8_cmesh_from_triangle_file (char *fileprefix, int partition,
     t8_cmesh_commit (cmesh);
   }
   return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_from_triangle_file (char *fileprefix, int partition,
+                             sc_MPI_Comm comm, int do_dup)
+{
+  return t8_cmesh_from_tetgen_or_triangle_file (fileprefix, partition, comm,
+                                                do_dup, 2);
+}
+
+t8_cmesh_t
+t8_cmesh_from_tetgen_file (char *fileprefix, int partition,
+                           sc_MPI_Comm comm, int do_dup)
+{
+  return t8_cmesh_from_tetgen_or_triangle_file (fileprefix, partition, comm,
+                                                do_dup, 3);
 }
