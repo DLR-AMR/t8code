@@ -248,6 +248,12 @@ t8_cmesh_tree_set_attribute (t8_cmesh_t cmesh, t8_topidx_t tree_id,
           t8_cmesh_get_attribute_size (cmesh, tree->eclass));
 }
 
+void               *
+t8_cmesh_tree_get_attribute (t8_cmesh_t cmesh, t8_topidx_t tree_id)
+{
+  return t8_cmesh_get_tree (cmesh, tree_id)->attribute;
+}
+
 void
 t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees)
 {

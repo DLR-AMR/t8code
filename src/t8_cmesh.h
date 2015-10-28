@@ -154,6 +154,14 @@ void                t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh,
                                                 double *vertices,
                                                 t8_topidx_t num_vertices);
 
+/** Return the attribute pointer of a tree.
+ * \param [in]     cmesh        The cmesh.
+ * \param [in]     tree_id      The global number of the tree.
+ * \return         The attribute pointer of the tree \a tree_id.
+ */
+void               *t8_cmesh_tree_get_attribute (t8_cmesh_t cmesh,
+                                                 t8_topidx_t tree_id);
+
 /** Set the class of a ghost in a partitioned cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     ghost_id     The global number of the ghost.
