@@ -31,6 +31,7 @@ void
 t8_read_triangle_file_build_cmesh (const char * prefix, int do_dup)
 {
   t8_cmesh_t          cmesh;
+  char                fileprefix[BUFSIZ];
 
   cmesh = t8_cmesh_from_triangle_file ((char *) prefix, 0, sc_MPI_COMM_WORLD,
                                        do_dup);
@@ -40,7 +41,8 @@ t8_read_triangle_file_build_cmesh (const char * prefix, int do_dup)
     t8_debugf ("cmesh has:\n\t%i corners\n\t%i triangles\n",
                t8_cmesh_get_num_corners (cmesh),
                t8_cmesh_get_num_trees (cmesh));
-    t8_cmesh_vtk_write_file (cmesh, "triangle_file", 1.);
+    snprintf (fileprefix, BUFSIZ, "%s_t8_trianle", prefix);
+    t8_cmesh_vtk_write_file (cmesh, fileprefix, 1.);
     t8_cmesh_unref (&cmesh);
   }
   else {
@@ -82,7 +84,6 @@ int main (int argc, char * argv[])
   }
   else {
     t8_read_triangle_file_build_cmesh (prefix, 0);
-    t8_read_triangle_file_build_cmesh (prefix, 1);
     sc_options_print_summary (t8_get_package_id (), SC_LP_PRODUCTION, opt);
   }
 
