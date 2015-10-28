@@ -366,22 +366,44 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
         }
         /* jump here after break */
         T8_ASSERT (face2 < num_faces);
-        /* compute orientation after the pattern
-         *         f1
-         *        0 1 2
-         *       ======
-         *    0 | 1 0 1
-         * f2 1 | 0 1 0
-         *    2 | 1 0 1
-         */
-        /* TODO: compute correct orientation in 3d */
-        orientation = (face1 + face2 + 1) % 2;
-        /* Insert this face connection if we did not insert it before */
-        if (tit < element) {
-          t8_cmesh_join_faces (cmesh, tit, element, face1, face2,
-                               orientation);
+        if (dim == 2) {
+          /* compute orientation after the pattern
+           *         f1
+           *        0 1 2
+           *       ======
+           *    0 | 1 0 1
+           * f2 1 | 0 1 0
+           *    2 | 1 0 1
+           */
+          orientation = (face1 + face2 + 1) % 2;
         }
-        if (tit == element && face1 < face2) {
+        else {
+          /* TODO: compute correct orientation in 3d */
+          firstvertex = face1 == 0 ? 1 : 0;
+          el_vertices1 = (double *) t8_cmesh_tree_get_attribute (cmesh, tit);
+          el_vertices2 = (double *) t8_cmesh_tree_get_attribute (cmesh,
+                                                                 element);
+          el_vertices1 += 3 * firstvertex;
+          for (ivertex = 1; ivertex <= 3; ivertex++) {
+            /* The face with number k consists of the vertices with numbers
+             * k+1, k+2, k+3 (mod 4)
+             * in el_vertices are the coordinates of these vertices in order
+             * v_0x v_0y v_0z v_1x v_1y ... */
+            if (el_vertices1[0] == el_vertices2[3 * ((face2 + ivertex) % 4)]
+                && el_vertices1[1] ==
+                el_vertices2[3 * ((face2 + ivertex) % 4) + 1]
+                && el_vertices1[2] ==
+                el_vertices2[3 * ((face2 + ivertex) % 4) + 2]) {
+              orientation = ivertex;
+              ivertex = 4;      /* Abort loop */
+            }
+          }
+          T8_ASSERT (ivertex == 5);     /* asserts if an orientation was successfully found */
+        }
+        /* Insert this face connection if we did not insert it before */
+        if (tit < element || face1 <= face2) {
+          /* if tit !< element then tit == element,
+           * face1 > face2 would mean that we already inserted this connection */
           t8_cmesh_join_faces (cmesh, tit, element, face1, face2,
                                orientation);
         }
