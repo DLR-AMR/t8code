@@ -1111,21 +1111,6 @@ t8_cmesh_unref (t8_cmesh_t * pcmesh)
   }
 }
 
-static void
-t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t * tvertices,
-                                               double *vertices,
-                                               double *attr_vertices,
-                                               int num_vertices)
-{
-  int                 i;
-
-  for (i = 0; i < num_vertices; i++) {
-    attr_vertices[3 * i] = vertices[tvertices[i]];
-    attr_vertices[3 * i + 1] = vertices[tvertices[i] + 1];
-    attr_vertices[3 * i + 2] = vertices[tvertices[i] + 2];
-  }
-}
-
 /* TODO: In p4est a tree edge is joined with itself to denote a domain boundary.
  *       Will we do it the same in t8code? This is not yet decided, however the
  *       function below stores these neighbourhood information in the cmesh. */
@@ -1293,6 +1278,28 @@ t8_cmesh_new_hex (sc_MPI_Comm comm, int do_dup)
   t8_cmesh_commit (cmesh);
 
   return cmesh;
+}
+
+/* TODO: This is just a helper function that was needed when we changed the vertex interface
+ *       to use attributes. Before we stored a list of vertex coordinates in the cmesh and each tree indexed into this list.
+ *       Now each tree carries the coordinates of its vertices.
+ *       This function translates from the first approached to the second
+ *       and was introduced to avoid rewritting the already existing cmesh_new... functions below.
+ *       It would be nice to eventually rewrite these functions correctly.
+ */
+static void
+t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t * tvertices,
+                                               double *vertices,
+                                               double *attr_vertices,
+                                               int num_vertices)
+{
+  int                 i;
+
+  for (i = 0; i < num_vertices; i++) {
+    attr_vertices[3 * i] = vertices[tvertices[i]];
+    attr_vertices[3 * i + 1] = vertices[tvertices[i] + 1];
+    attr_vertices[3 * i + 2] = vertices[tvertices[i] + 2];
+  }
 }
 
 /* The unit cube is constructed from trees of the same eclass.
