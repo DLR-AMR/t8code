@@ -25,6 +25,9 @@
 #include <t8_default.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest.h>
+#include <t8_cmesh_vtk.h>
+#include <p4est_connectivity.h>
+#include <p8est_connectivity.h>
 
 static int
 t8_basic_adapt (t8_forest_t forest, t8_topidx_t which_tree,
@@ -107,6 +110,32 @@ t8_basic_periodic (int do_dup, int set_level, int dim)
 }
 
 static void
+t8_basic_p4est (int do_dup)
+{
+  t8_cmesh_t          cmesh;
+  p4est_connectivity_t *conn;
+
+  conn = p4est_connectivity_new_moebius();
+  cmesh = t8_cmesh_new_from_p4est (conn, sc_MPI_COMM_WORLD, do_dup);
+  p4est_connectivity_destroy (conn);
+  t8_cmesh_vtk_write_file (cmesh, "t8_p4est_moebius", 1.);
+  t8_cmesh_unref (&cmesh);
+}
+
+static void
+t8_basic_p8est (int do_dup, int x, int y, int z)
+{
+  t8_cmesh_t          cmesh;
+  p8est_connectivity_t *conn;
+
+  conn = p8est_connectivity_new_brick (x, y, z, 0, 0, 0);
+  cmesh = t8_cmesh_new_from_p8est (conn, sc_MPI_COMM_WORLD, do_dup);
+  p8est_connectivity_destroy (conn);
+  t8_cmesh_vtk_write_file (cmesh, "t8_p8est_brick", 1.);
+  t8_cmesh_unref (&cmesh);
+}
+
+static void
 t8_basic (int do_dup, int set_level)
 {
   t8_forest_t         forest;
@@ -172,6 +201,15 @@ main (int argc, char **argv)
   t8_global_productionf ("Testing adapt forest.\n");
   t8_basic_refine_test ();
   t8_global_productionf ("Done testing adapt forest.\n");
+
+  t8_global_productionf ("Testing cmesh from p4est.\n");
+  t8_basic_p4est (0);
+  t8_basic_p4est (1);
+  t8_global_productionf ("Done testing cmesh from p4est.\n");
+  t8_global_productionf ("Testing cmesh from p8est.\n");
+  t8_basic_p8est (0, 10, 13, 17);
+  t8_basic_p8est (1, 10, 13, 17);
+  t8_global_productionf ("Done testing cmesh from p8est.\n");
 
   sc_finalize ();
 
