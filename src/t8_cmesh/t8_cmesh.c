@@ -204,7 +204,8 @@ t8_cmesh_set_attribute_sizes (t8_cmesh_t cmesh, size_t attr_sizes[],
 
   for (iclass = 0; iclass < num_sizes; iclass++) {
     if (attr_sizes[iclass] > 0) {
-      cmesh->tree_attributes_mem[iclass] = sc_mempool_new (attr_sizes[iclass]);
+      cmesh->tree_attributes_mem[iclass] =
+        sc_mempool_new (attr_sizes[iclass]);
     }
   }
 }
@@ -652,8 +653,8 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
       else {
         is_equal = is_equal
           || t8_cmesh_get_attribute_size (cmesh_a,
-                                          (t8_eclass_t ) iclass) !=
-          t8_cmesh_get_attribute_size (cmesh_b, (t8_eclass_t ) iclass)
+                                          (t8_eclass_t) iclass) !=
+          t8_cmesh_get_attribute_size (cmesh_b, (t8_eclass_t) iclass)
           || sc_mempool_memory_used (cmesh_a->tree_attributes_mem[iclass]) !=
           sc_mempool_memory_used (cmesh_b->tree_attributes_mem[iclass]);
       }
@@ -783,7 +784,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
       dimensions.num_trees_per_eclass[iclass] =
         cmesh_in->num_trees_per_eclass[iclass];
       dimensions.tree_attribute_size[iclass] =
-        t8_cmesh_get_attribute_size (cmesh_in, (t8_eclass_t ) iclass);
+        t8_cmesh_get_attribute_size (cmesh_in, (t8_eclass_t) iclass);
     }
 #ifdef T8_ENABLE_DEBUG
     dimensions.inserted_trees = cmesh_in->inserted_trees;
