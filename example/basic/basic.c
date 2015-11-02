@@ -126,13 +126,26 @@ static void
 t8_basic_p8est (int do_dup, int x, int y, int z)
 {
   t8_cmesh_t          cmesh;
-  p8est_connectivity_t *conn;
+  p8est_connectivity_t *conn;  
 
   conn = p8est_connectivity_new_brick (x, y, z, 0, 0, 0);
   cmesh = t8_cmesh_new_from_p8est (conn, sc_MPI_COMM_WORLD, do_dup);
-  p8est_connectivity_destroy (conn);
   t8_cmesh_vtk_write_file (cmesh, "t8_p8est_brick", 1.);
   t8_cmesh_unref (&cmesh);
+#ifdef T8_WITH_METIS
+  {
+    int                 mpirank, mpiret;
+    mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+    SC_CHECK_MPI (mpiret);
+    p8est_connectivity_reorder (sc_MPI_COMM_WORLD,
+                                mpirank, conn,
+                                P8EST_CONNECT_FULL);
+    cmesh = t8_cmesh_new_from_p8est (conn, sc_MPI_COMM_WORLD, do_dup);
+    t8_cmesh_vtk_write_file (cmesh, "t8_p8est_brick_metis", 1.);
+  }
+#endif
+  t8_cmesh_unref (&cmesh);
+  p8est_connectivity_destroy (conn);
 }
 
 static void
