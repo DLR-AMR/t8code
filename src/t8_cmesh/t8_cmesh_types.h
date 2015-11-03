@@ -129,6 +129,7 @@ typedef struct t8_ctree
   t8_topidx_t         treeid; /**< The global number of this tree. */
   t8_eclass_t         eclass; /**< The eclass of this tree. */
   t8_topidx_t        *corners; /**< The corner indices of this tree's corners. Can be NULL if \a cmesh.num_corners is 0. */
+  /* TODO: remove vertices */
   t8_topidx_t        *vertices; /**< The vertex indices of this tree's corners. This defines an embedding of the tree into \f$R^3$\f. */
   t8_ctree_fneighbor_struct_t *face_neighbors; /**< Information about the face neighbors of this tree. */
   void               *attribute;
