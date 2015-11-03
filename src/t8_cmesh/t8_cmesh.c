@@ -1118,19 +1118,82 @@ t8_cmesh_unref (t8_cmesh_t * pcmesh)
   }
 }
 
-static void
-t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t * tvertices,
-                                               double *vertices,
-                                               double *attr_vertices,
-                                               int num_vertices)
+/* TODO: In p4est a tree edge is joined with itself to denote a domain boundary.
+ *       Will we do it the same in t8code? This is not yet decided, however the
+ *       function below stores these neighbourhood information in the cmesh. */
+static              t8_cmesh_t
+t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
+                             int do_dup)
 {
-  int                 i;
+#define _T8_CMESH_P48_CONN(_ENTRY) \
+  (dim == 2 ? ((p4est_connectivity_t *) conn)->_ENTRY \
+            : ((p8est_connectivity_t *) conn)->_ENTRY)
+  t8_cmesh_t          cmesh;
+  t8_topidx_t         itree;
+  p4est_topidx_t      treevertex;
+  double              vertices[24];     /* Only 4 * 3 = 12 used in 2d */
+  int                 num_tvertices;
+  int                 num_faces;
+  int                 ivertex, iface;
+  int8_t              ttf;
+  p4est_topidx_t      ttt;
 
-  for (i = 0; i < num_vertices; i++) {
-    attr_vertices[3 * i] = vertices[tvertices[i]];
-    attr_vertices[3 * i + 1] = vertices[tvertices[i] + 1];
-    attr_vertices[3 * i + 2] = vertices[tvertices[i] + 2];
+  T8_ASSERT (dim == 2 || dim == 3);
+  T8_ASSERT (dim == 3 ||
+             p4est_connectivity_is_valid ((p4est_connectivity_t *) (conn)));
+  T8_ASSERT (dim == 2 ||
+             p8est_connectivity_is_valid ((p8est_connectivity_t *) (conn)));
+  num_tvertices = 1 << dim;     /*vertices per tree. 4 if dim = 2 and 8 if dim = 3. */
+  num_faces = dim == 2 ? 4 : 6;
+  /* basic setup */
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
+  t8_cmesh_set_num_trees (cmesh, _T8_CMESH_P48_CONN (num_trees));
+  t8_cmesh_set_attribute_to_vertices (cmesh);
+  /* Add each tree to cmesh and get vertex information for each tree */
+  for (itree = 0; itree < cmesh->num_trees; itree++) {  /* loop over each tree */
+    t8_cmesh_set_tree_class (cmesh, itree,
+                             dim == 2 ? T8_ECLASS_QUAD : T8_ECLASS_HEX);
+    for (ivertex = 0; ivertex < num_tvertices; ivertex++) {     /* loop over each tree corner */
+      treevertex =
+        _T8_CMESH_P48_CONN (tree_to_vertex[num_tvertices * itree + ivertex]);
+      vertices[3 * ivertex] = _T8_CMESH_P48_CONN (vertices[3 * treevertex]);
+      vertices[3 * ivertex + 1] =
+        _T8_CMESH_P48_CONN (vertices[3 * treevertex + 1]);
+      vertices[3 * ivertex + 2] =
+        _T8_CMESH_P48_CONN (vertices[3 * treevertex + 2]);
+    }
+    t8_cmesh_tree_set_attribute (cmesh, itree, (void *) vertices);
   }
+  /* get face neighbor information from conn and join faces in cmesh */
+  for (itree = 0; itree < cmesh->num_trees; itree++) {  /* loop over each tree */
+    for (iface = 0; iface < num_faces; iface++) {       /* loop over each face */
+      ttf = _T8_CMESH_P48_CONN (tree_to_face[num_faces * itree + iface]);
+      ttt = _T8_CMESH_P48_CONN (tree_to_tree[num_faces * itree + iface]);
+      /* insert the face only if we did not insert it before */
+      if (itree < ttt || (itree == ttt && iface <= ttf % num_faces)) {
+        t8_cmesh_join_faces (cmesh, itree, ttt, iface, ttf % num_faces,
+                             ttf / num_faces);
+      }
+    }
+  }
+  t8_cmesh_commit (cmesh);
+  return cmesh;
+#undef _T8_CMESH_P48_CONN
+}
+
+t8_cmesh_t
+t8_cmesh_new_from_p4est (p4est_connectivity_t * conn, sc_MPI_Comm comm,
+                         int do_dup)
+{
+  return t8_cmesh_new_from_p4est_ext (conn, 2, comm, do_dup);
+}
+
+t8_cmesh_t
+t8_cmesh_new_from_p8est (p8est_connectivity_t * conn, sc_MPI_Comm comm,
+                         int do_dup)
+{
+  return t8_cmesh_new_from_p4est_ext (conn, 3, comm, do_dup);
 }
 
 t8_cmesh_t
@@ -1222,6 +1285,28 @@ t8_cmesh_new_hex (sc_MPI_Comm comm, int do_dup)
   t8_cmesh_commit (cmesh);
 
   return cmesh;
+}
+
+/* TODO: This is just a helper function that was needed when we changed the vertex interface
+ *       to use attributes. Before we stored a list of vertex coordinates in the cmesh and each tree indexed into this list.
+ *       Now each tree carries the coordinates of its vertices.
+ *       This function translates from the first approached to the second
+ *       and was introduced to avoid rewritting the already existing cmesh_new... functions below.
+ *       It would be nice to eventually rewrite these functions correctly.
+ */
+static void
+t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t * tvertices,
+                                               double *vertices,
+                                               double *attr_vertices,
+                                               int num_vertices)
+{
+  int                 i;
+
+  for (i = 0; i < num_vertices; i++) {
+    attr_vertices[3 * i] = vertices[tvertices[i]];
+    attr_vertices[3 * i + 1] = vertices[tvertices[i] + 1];
+    attr_vertices[3 * i + 2] = vertices[tvertices[i] + 2];
+  }
 }
 
 /* The unit cube is constructed from trees of the same eclass.
