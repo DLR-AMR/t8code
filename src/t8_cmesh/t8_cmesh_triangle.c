@@ -417,8 +417,11 @@ t8_cmesh_from_triangle_file (char *fileprefix, int partition,
   /* TODO: broadcasting NULL does not work. We need a way to tell the
    *       other processes if something went wrong. */
   /* This broadcasts the NULL pointer if anything went wrong */
-  cmesh = t8_cmesh_bcast (cmesh, 0, comm);
+  cmesh = t8_cmesh_bcast (cmesh, 0, comm);  
   if (cmesh != NULL) {
+#ifdef T8_WITH_METIS
+    t8_cmesh_reorder (cmesh, comm);
+#endif
     t8_cmesh_commit (cmesh);
   }
   return cmesh;
