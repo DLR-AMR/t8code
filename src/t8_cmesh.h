@@ -209,6 +209,10 @@ int                 t8_cmesh_is_equal (t8_cmesh_t cmesh_a,
 t8_cmesh_t          t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root,
                                     sc_MPI_Comm comm);
 
+#ifdef T8_WITH_METIS
+void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
+#endif
+
 /** After allocating and adding properties to a cmesh, finish its construction.
  * \param [in,out] cmesh        Must be created with \see t8_cmesh_init and
  *                              specialized with t8_cmesh_set_* calls first.
