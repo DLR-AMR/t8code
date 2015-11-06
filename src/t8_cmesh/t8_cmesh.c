@@ -895,6 +895,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_topidx_t         neigh_id;
   t8_ctree_t             tree;
 
+  /* cmesh must not be commited or partitioned */
   T8_ASSERT (!cmesh->committed);
   T8_ASSERT (!cmesh->set_partitioned);
 
@@ -904,6 +905,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   elemens = cmesh->num_trees;
   T8_ASSERT ((t8_topidx_t) elemens == cmesh->num_trees);
 
+  /* Count the number of tree-to-tree connections via a face */
   num_faces = 0;
   for (itree = 0;itree < cmesh->num_trees;itree++) {
     T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, itree));
@@ -913,9 +915,14 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     }
   }
 
+  /* xadj and adjncy store the face-connections in a CSR format
+   * xadj[treeid] = offset of the tree in adjncy
+   * adjncy[xadj[treeid]]...adjncy[xadj[treeid]-1] are the trees with which
+   * the tree has a face connection */
   xadj = T8_ALLOC_ZERO (int, elemens + 1);
   adjncy = T8_ALLOC (int, num_faces);
 
+  /* fill xadj and adjncy arrays */
   for (itree = 0, count_face = 0;itree < cmesh->num_trees;itree++) {
     tree = t8_cmesh_get_tree (cmesh, itree);
     xadj[itree + 1] = xadj[itree];
@@ -927,29 +934,37 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     }
   }
 
+  /* partutuib stores the new partitino number for each element */
   partition = T8_ALLOC (int, elemens);
+  /* partition the elements in mpisize many partitions */
   success = METIS_PartGraphRecursive (&elemens, &ncon, xadj, adjncy, NULL, NULL,
                                       NULL, &mpisize, NULL, NULL, NULL, &volume,
                                       partition);
   T8_ASSERT (success == METIS_OK);
   /* memory to store the new treeid of a tree */
   new_number = T8_ALLOC (t8_topidx_t, cmesh->num_trees);
+  /* Store the number of trees per partition */
   tree_per_part = T8_ALLOC_ZERO (t8_topidx_t, mpisize);
+  /* Store the treeid offset of each partition. */
   tree_per_part_off = T8_ALLOC_ZERO (t8_topidx_t, mpisize + 1);
   tree_per_part_off[0] = 0;
+  /* compute tree_per_part and prepare tree_per_part_off */
   for (itree = 0;itree < cmesh->num_trees;itree++) {
     tree_per_part[partition[itree]]++;
     tree_per_part_off[partition[itree]+1]++;
   }
+  /* compute tree_per_part_off */
   for (ipart = 1;ipart <= mpisize;ipart++) {
     tree_per_part_off[ipart] += tree_per_part_off[ipart-1];
   }
+  /* Compute for each tree its new treeid */
   for (itree = 0;itree < cmesh->num_trees;itree++) {
     newpart = partition[itree];
     T8_ASSERT (tree_per_part[newpart] > 0);
     new_number[itree] = tree_per_part_off[newpart+1] - tree_per_part[newpart];
     tree_per_part[newpart]--;
   }
+  /* Set for each tree its new treeid and the new ids of its neighbors */
   for (itree = 0;itree < cmesh->num_trees;itree++) {
     tree = t8_cmesh_get_tree (cmesh, itree);
     tree->treeid = new_number[itree];
