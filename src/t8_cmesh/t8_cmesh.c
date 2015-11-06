@@ -344,7 +344,6 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_topidx_t tree_id,
     tree->face_neighbors[i].is_owned = -1;
   }
   tree->corners = NULL;
-  tree->vertices = NULL;
   tree->attribute = NULL;
 #ifdef T8_ENABLE_DEBUG
   cmesh->inserted_trees++;
@@ -833,8 +832,6 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
       tree = t8_cmesh_get_tree (cmesh_in, itree);
       tree->face_neighbors = T8_ALLOC (t8_ctree_fneighbor_struct_t,
                                        t8_eclass_num_faces[tree->eclass]);
-      tree->vertices = T8_ALLOC (t8_topidx_t,
-                                 t8_eclass_num_vertices[tree->eclass]);
       tree->corners = NULL;
     }
   }
@@ -1073,7 +1070,6 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
       treeit = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, ti);
       T8_FREE (treeit->face_neighbors);
       T8_FREE (treeit->corners);
-      T8_FREE (treeit->vertices);
     }
     sc_array_destroy (cmesh->ctrees);
   }
