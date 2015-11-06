@@ -893,7 +893,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   int                 success;
   t8_topidx_t        *new_number, itree, *tree_per_part_off, *tree_per_part;
   t8_topidx_t         neigh_id;
-  t8_ctree_t             tree;
+  t8_ctree_t          tree;
 
   /* cmesh must not be commited or partitioned */
   T8_ASSERT (!cmesh->committed);
@@ -907,11 +907,12 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   /* Count the number of tree-to-tree connections via a face */
   num_faces = 0;
-  for (itree = 0;itree < cmesh->num_trees;itree++) {
+  for (itree = 0; itree < cmesh->num_trees; itree++) {
     T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, itree));
     tree = t8_cmesh_get_tree (cmesh, itree);
-    for (iface = 0;iface < t8_eclass_num_faces[tree->eclass];iface++) {
-      if (tree->face_neighbors[iface].treeid >= 0) num_faces++;
+    for (iface = 0; iface < t8_eclass_num_faces[tree->eclass]; iface++) {
+      if (tree->face_neighbors[iface].treeid >= 0)
+        num_faces++;
     }
   }
 
@@ -923,10 +924,10 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   adjncy = T8_ALLOC (int, num_faces);
 
   /* fill xadj and adjncy arrays */
-  for (itree = 0, count_face = 0;itree < cmesh->num_trees;itree++) {
+  for (itree = 0, count_face = 0; itree < cmesh->num_trees; itree++) {
     tree = t8_cmesh_get_tree (cmesh, itree);
     xadj[itree + 1] = xadj[itree];
-    for (iface = 0;iface < t8_eclass_num_faces[tree->eclass];iface++) {
+    for (iface = 0; iface < t8_eclass_num_faces[tree->eclass]; iface++) {
       if (tree->face_neighbors[iface].treeid >= 0) {
         adjncy[count_face++] = tree->face_neighbors[iface].treeid;
         xadj[itree + 1]++;
@@ -937,9 +938,9 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   /* partutuib stores the new partitino number for each element */
   partition = T8_ALLOC (int, elemens);
   /* partition the elements in mpisize many partitions */
-  success = METIS_PartGraphRecursive (&elemens, &ncon, xadj, adjncy, NULL, NULL,
-                                      NULL, &mpisize, NULL, NULL, NULL, &volume,
-                                      partition);
+  success =
+    METIS_PartGraphRecursive (&elemens, &ncon, xadj, adjncy, NULL, NULL, NULL,
+                              &mpisize, NULL, NULL, NULL, &volume, partition);
   T8_ASSERT (success == METIS_OK);
   /* memory to store the new treeid of a tree */
   new_number = T8_ALLOC (t8_topidx_t, cmesh->num_trees);
@@ -949,26 +950,27 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   tree_per_part_off = T8_ALLOC_ZERO (t8_topidx_t, mpisize + 1);
   tree_per_part_off[0] = 0;
   /* compute tree_per_part and prepare tree_per_part_off */
-  for (itree = 0;itree < cmesh->num_trees;itree++) {
+  for (itree = 0; itree < cmesh->num_trees; itree++) {
     tree_per_part[partition[itree]]++;
-    tree_per_part_off[partition[itree]+1]++;
+    tree_per_part_off[partition[itree] + 1]++;
   }
   /* compute tree_per_part_off */
-  for (ipart = 1;ipart <= mpisize;ipart++) {
-    tree_per_part_off[ipart] += tree_per_part_off[ipart-1];
+  for (ipart = 1; ipart <= mpisize; ipart++) {
+    tree_per_part_off[ipart] += tree_per_part_off[ipart - 1];
   }
   /* Compute for each tree its new treeid */
-  for (itree = 0;itree < cmesh->num_trees;itree++) {
+  for (itree = 0; itree < cmesh->num_trees; itree++) {
     newpart = partition[itree];
     T8_ASSERT (tree_per_part[newpart] > 0);
-    new_number[itree] = tree_per_part_off[newpart+1] - tree_per_part[newpart];
+    new_number[itree] =
+      tree_per_part_off[newpart + 1] - tree_per_part[newpart];
     tree_per_part[newpart]--;
   }
   /* Set for each tree its new treeid and the new ids of its neighbors */
-  for (itree = 0;itree < cmesh->num_trees;itree++) {
+  for (itree = 0; itree < cmesh->num_trees; itree++) {
     tree = t8_cmesh_get_tree (cmesh, itree);
     tree->treeid = new_number[itree];
-    for (iface = 0;iface < t8_eclass_num_faces[tree->eclass];iface++) {
+    for (iface = 0; iface < t8_eclass_num_faces[tree->eclass]; iface++) {
       neigh_id = tree->face_neighbors[iface].treeid;
       if (neigh_id >= 0) {
         tree->face_neighbors[iface].treeid = new_number[neigh_id];
