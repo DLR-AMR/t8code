@@ -138,7 +138,7 @@ t8_cmesh_set_partitioned (t8_cmesh_t cmesh, int set_partitioned,
   }
 }
 
-/* Return a pointer to the ctree of a given tree_id. */
+/* Return a pointer to the ctree of a given global tree_id. */
 static              t8_ctree_t
 t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 {
