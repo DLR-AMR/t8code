@@ -892,6 +892,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   int                *xadj, *adjncy;
   int                 success;
   t8_topidx_t        *new_number, itree, *tree_per_part_off, *tree_per_part;
+  t8_topidx_t         neigh_id;
   t8_ctree_t             tree;
 
   T8_ASSERT (!cmesh->committed);
@@ -930,7 +931,8 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   success = METIS_PartGraphRecursive (&elemens, &ncon, xadj, adjncy, NULL, NULL,
                                       NULL, &mpisize, NULL, NULL, NULL, &volume,
                                       partition);
-  P4EST_ASSERT (success == METIS_OK);
+  T8_ASSERT (success == METIS_OK);
+  /* memory to store the new treeid of a tree */
   new_number = T8_ALLOC (t8_topidx_t, cmesh->num_trees);
   tree_per_part = T8_ALLOC_ZERO (t8_topidx_t, mpisize);
   tree_per_part_off = T8_ALLOC_ZERO (t8_topidx_t, mpisize + 1);
@@ -952,8 +954,9 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     tree = t8_cmesh_get_tree (cmesh, itree);
     tree->treeid = new_number[itree];
     for (iface = 0;iface < t8_eclass_num_faces[tree->eclass];iface++) {
-      if (tree->face_neighbors[iface].treeid >= 0) {
-        tree->face_neighbors[iface].treeid = new_number[itree];
+      neigh_id = tree->face_neighbors[iface].treeid;
+      if (neigh_id >= 0) {
+        tree->face_neighbors[iface].treeid = new_number[neigh_id];
       }
     }
   }
