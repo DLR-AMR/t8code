@@ -62,8 +62,6 @@ typedef struct t8_cmesh
   int                 mpirank;  /**< Number of this MPI process. */
   int                 mpisize;  /**< Number of MPI processes. */
   t8_refcount_t       rc; /**< The reference count of the cmesh. */
-  t8_topidx_t         num_corners; /**< The global number of corners that help define the topology. Is allowed to be zero if topology and geometry are equal. */
-  t8_topidx_t         num_local_corners; /**< If partitioned the local number of corners. Otherwise the global number of corners. */
   t8_topidx_t         num_trees;   /**< The global number of trees */
   t8_topidx_t         num_local_trees; /**< If partitioned the number of trees on this process. Otherwise the global number of trees. */
   t8_topidx_t         num_ghosts; /**< If partitioned the number of neighbor trees
@@ -128,9 +126,6 @@ typedef struct t8_ctree
 {
   t8_topidx_t         treeid; /**< The global number of this tree. */
   t8_eclass_t         eclass; /**< The eclass of this tree. */
-  t8_topidx_t        *corners; /**< The corner indices of this tree's corners. Can be NULL if \a cmesh.num_corners is 0. */
-  /* TODO: remove vertices */
-  t8_topidx_t        *vertices; /**< The vertex indices of this tree's corners. This defines an embedding of the tree into \f$R^3$\f. */
   t8_ctree_fneighbor_struct_t *face_neighbors; /**< Information about the face neighbors of this tree. */
   void               *attribute;
 }
