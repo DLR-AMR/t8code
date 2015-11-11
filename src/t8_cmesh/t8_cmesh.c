@@ -131,10 +131,7 @@ t8_cmesh_set_partitioned (t8_cmesh_t cmesh, int set_partitioned,
     cmesh->num_trees = num_global_trees;
     cmesh->first_tree = first_local_tree;
     cmesh->num_ghosts = num_ghosts;
-    cmesh->ghosts = sc_hash_array_new (sizeof (t8_cghost_struct_t),
-                                       t8_cmesh_ghost_hash_fn,
-                                       t8_cmesh_ghost_equal_fn,
-                                       (void *) cmesh);
+    cmesh->ghosts = sc_array_new_size (sizeof (t8_cghost_struct_t), num_ghosts);
   }
 }
 
@@ -341,6 +338,8 @@ t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_topidx_t tree_id,
   t8_cmesh_tree_set_attribute (cmesh, tree_id, (void *) vertices);
 }
 
+/* TODO: do we still need this function? if yes, write it correctly. */
+#if 0
 void
 t8_cmesh_set_ghost (t8_cmesh_t cmesh, t8_topidx_t ghost_id,
                     t8_eclass_t ghost_eclass)
@@ -369,7 +368,7 @@ t8_cmesh_set_ghost (t8_cmesh_t cmesh, t8_topidx_t ghost_id,
   for (i = 0; i < t8_eclass_num_faces[ghost_eclass]; i++) {
     Ghost->local_neighbors[i] = -1;
   }
-  check_ret = sc_hash_array_insert_unique (cmesh->ghosts, Ghost, NULL);
+  check_ret = sc_array_ (cmesh->ghosts, Ghost, NULL);
   if (check_ret == NULL) {
     SC_ABORTF ("Ghost tree %i inserted twice.", ghost_id);
   }
@@ -377,6 +376,7 @@ t8_cmesh_set_ghost (t8_cmesh_t cmesh, t8_topidx_t ghost_id,
   cmesh->inserted_ghosts++;
 #endif
 }
+#endif
 
 void
 t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
@@ -420,6 +420,8 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
   else
     /* One of the trees is not owned by this process. */
   {
+    /* TODO: handle ghosts coorectly here */
+#if 0
     t8_topidx_t         ghost_id;
     t8_topidx_t         owned_id;
 #ifdef T8_ENABLE_DEBUG
@@ -477,6 +479,7 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
     T1->face_neighbors[ghost_face].treeid = ghost_id;
     T1->face_neighbors[ghost_face].tree_to_face = orientation *
       t8_eclass_num_faces[ghost_eclass] + ghost_face;
+#endif
   }
 }
 
@@ -593,7 +596,7 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
   }
   /* check ghosts */
   if (cmesh_a->num_ghosts > 0 &&
-      !sc_array_is_equal (&cmesh_a->ghosts->a, &cmesh_b->ghosts->a)) {
+      !sc_array_is_equal (cmesh_a->ghosts, cmesh_b->ghosts)) {
     return 0;
   }
   return 1;
@@ -975,9 +978,9 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
   if (cmesh->ghosts != NULL) {
     for (ti = 0; ti < cmesh->num_ghosts; ti++) {
       ghostit =
-        (t8_cghost_t) t8_sc_array_index_topidx (&cmesh->ghosts->a, ti);
+        (t8_cghost_t) t8_sc_array_index_topidx (cmesh->ghosts, ti);
       if (ghostit != NULL) {
-        T8_FREE (ghostit->local_neighbors);
+        T8_FREE (ghostit->neighbors);
         T8_FREE (ghostit);
       }
     }

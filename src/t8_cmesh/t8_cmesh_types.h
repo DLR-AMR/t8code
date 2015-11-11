@@ -70,7 +70,7 @@ typedef struct t8_cmesh
                                                                  trees for each eclass. */
 
   sc_array_t         *ctrees; /**< An array of all trees in the cmesh. */
-  sc_hash_array_t    *ghosts; /**< The trees that do not belong to this process
+  sc_array_t         *ghosts; /**< The trees that do not belong to this process
                                    but are a face-neighbor of at least one local tree. */
   t8_topidx_t         first_tree; /**< The global index of the first full tree
                                        on this process. Zero if the cmesh is not partitioned. -1 if this processor is empty. */
@@ -116,15 +116,15 @@ typedef struct t8_cghost
 {
   t8_topidx_t         treeid; /**< The global number of this ghost. */
   t8_eclass_t         eclass; /**< The eclass of this ghost. */
-  int                 owning_proc; /**< The number of the owning process. */
-  t8_topidx_t        *local_neighbors; /** Neighbors of this ghost that
-                                           are owned by this process. */
+  t8_topidx_t        *neighbors; /**< Global id's of all neighbors of this ghost */
 }
 t8_cghost_struct_t;
 
 typedef struct t8_ctree
 {
   t8_topidx_t         treeid; /**< The global number of this tree. */
+  /* TODO: The global id of a tree should be clear from context, the entry can
+   *       be optimized out. */
   t8_eclass_t         eclass; /**< The eclass of this tree. */
   t8_ctree_fneighbor_struct_t *face_neighbors; /**< Information about the face neighbors of this tree. */
   void               *attribute;
