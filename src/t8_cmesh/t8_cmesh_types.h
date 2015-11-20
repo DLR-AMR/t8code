@@ -67,13 +67,11 @@ typedef struct t8_cmesh
   t8_topidx_t         num_local_trees; /**< If partitioned the number of trees on this process. Otherwise the global number of trees. */
   t8_topidx_t         num_ghosts; /**< If partitioned the number of neighbor trees
                                     owned by different processes. */
+  /* TODO: wouldnt a local num_trees_per_eclass be better? */
   t8_gloidx_t         num_trees_per_eclass[T8_ECLASS_LAST]; /**< After commit the number of
                                                                  trees for each eclass. */
 
-  t8_part_tree_t     *trees_ghosts;
-  int                 num_parts; /** Number of entries in \a trees_ghosts */
-  size_t             *attribute_size; /** If attributes are used, for each tree the size of its attribute */
-  size_t             *attribute_offset; /* TODO: document, for each tree offset into the part array */
+  t8_cmesh_trees_t    trees; /**< structure that holds all local trees and ghosts */
 #if 0
   sc_array_t         *ctrees; /**< An array of all trees in the cmesh. */
   sc_array_t         *ghosts; /**< The trees that do not belong to this process
@@ -134,13 +132,16 @@ typedef struct t8_ctree
                                           of this tree at the face. Indices greater than
                                           the number of local trees refer to ghosts. */
   int8_t             *tree_to_face; /**< For each face the encoding of the face neighbor orientation. */
+  size_t              attribute_size; /**< The size of this trees attribute */
+  size_t              attribute_offset; /**< The offset of this attribute in the corresponding \a t8_part_tree structure */
 }
 t8_ctree_struct_t;
 
 /* TODO: document */
 typedef struct t8_part_tree
 {
-  char              *first_tree;
+  char              *first_tree; /* Stores the trees, the ghosts and the attributes.
+                                   The last 2*sizeof(t8_topidx) bytes store num_trees and num_ghosts */
   t8_topidx_t        num_trees;
   t8_topidx_t        num_ghosts;
 #if 0
@@ -149,5 +150,14 @@ typedef struct t8_part_tree
 #endif
 }
 t8_part_tree_struct_t;
+
+typedef struct t8_cmesh_trees
+{
+  sc_array_t        *from_proc; /* array of t8_part_tree, one for each process */
+  int               *tree_to_proc; /* for each tree its process */
+  t8_topidx_t       *tree_to_offset; /* for each tree its offset within the process */
+  int               *ghost_to_proc; /* for each ghost its process */
+  t8_topidx_t       *ghost_to_offset; /* for each ghost its offset within the process */
+}t8_cmesh_trees_struct_t;
 
 #endif /* !T8_CMESH_TYPES_H */

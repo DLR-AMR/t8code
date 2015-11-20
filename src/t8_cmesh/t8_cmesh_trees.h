@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_part_tree.h
+/** \file t8_cmesh_trees.h
  *
  * TODO: document this file
  */
@@ -33,18 +33,30 @@
 #include <t8_cmesh/t8_cmesh_types.h>
 
 typedef t8_part_tree *t8_part_tree_t;
+typedef t8_cmesh_trees *t8_cmesh_trees_t;
 
 T8_EXTERN_C_BEGIN ();
 
-t8_ctree_t          t8_part_tree_get_tree (t8_part_tree_t P,
+/* allocate a t8_cmesh_tree struct and allocate memory for its entries.
+ * No memory for ctrees or ghosts is allocated here */
+/* TODO: document */
+void              t8_cmesh_trees_init (t8_cmesh_trees_t * ptrees, int num_procs,
+                                       t8_topidx_t num_trees,
+                                       t8_topidx_t num_ghosts);
+
+/* allocate the first_tree array of a given tree_part in a tree struct
+ * with a given number of bytes */
+void              t8_cmesh_trees_init_part (t8_cmesh_trees_t trees, int proc,
+                                            size_t array_size);
+
+t8_ctree_t        t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees,
                                            t8_topidx_t tree);
 
-
-t8_cghost_t         t8_part_tree_get_ghost (t8_part_tree_t P,
+t8_cghost_t       t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees,
                                             t8_topidx_t ghost);
 
-void               *t8_part_tree_get_attribute (t8_part_tree_t P,
-                                                size_t offset);
+void             *t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees,
+                                                t8_topidx_t tree);
 
 T8_EXTERN_C_END ();
 
