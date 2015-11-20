@@ -62,8 +62,6 @@ typedef struct t8_cmesh
   int                 mpirank;  /**< Number of this MPI process. */
   int                 mpisize;  /**< Number of MPI processes. */
   t8_refcount_t       rc; /**< The reference count of the cmesh. */
-  t8_topidx_t         num_corners; /**< The global number of corners that help define the topology. Is allowed to be zero if topology and geometry are equal. */
-  t8_topidx_t         num_local_corners; /**< If partitioned the local number of corners. Otherwise the global number of corners. */
   t8_topidx_t         num_trees;   /**< The global number of trees */
   t8_topidx_t         num_local_trees; /**< If partitioned the number of trees on this process. Otherwise the global number of trees. */
   t8_topidx_t         num_ghosts; /**< If partitioned the number of neighbor trees
@@ -72,7 +70,7 @@ typedef struct t8_cmesh
                                                                  trees for each eclass. */
 
   sc_array_t         *ctrees; /**< An array of all trees in the cmesh. */
-  sc_hash_array_t    *ghosts; /**< The trees that do not belong to this process
+  sc_array_t         *ghosts; /**< The trees that do not belong to this process
                                    but are a face-neighbor of at least one local tree. */
   t8_topidx_t         first_tree; /**< The global index of the first full tree
                                        on this process. Zero if the cmesh is not partitioned. -1 if this processor is empty. */
@@ -118,17 +116,16 @@ typedef struct t8_cghost
 {
   t8_topidx_t         treeid; /**< The global number of this ghost. */
   t8_eclass_t         eclass; /**< The eclass of this ghost. */
-  int                 owning_proc; /**< The number of the owning process. */
-  t8_topidx_t        *local_neighbors; /** Neighbors of this ghost that
-                                           are owned by this process. */
+  t8_topidx_t        *neighbors; /**< Global id's of all neighbors of this ghost */
 }
 t8_cghost_struct_t;
 
 typedef struct t8_ctree
 {
   t8_topidx_t         treeid; /**< The global number of this tree. */
+  /* TODO: The global id of a tree should be clear from context, the entry can
+   *       be optimized out. */
   t8_eclass_t         eclass; /**< The eclass of this tree. */
-  t8_topidx_t        *corners; /**< The corner indices of this tree's corners. Can be NULL if \a cmesh.num_corners is 0. */
   t8_ctree_fneighbor_struct_t *face_neighbors; /**< Information about the face neighbors of this tree. */
   void               *attribute;
 }
