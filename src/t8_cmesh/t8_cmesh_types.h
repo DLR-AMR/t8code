@@ -25,6 +25,7 @@
 
 #include <t8.h>
 #include <t8_refcount.h>
+#include <t8_cmesh/t8_cmesh_part_tree.h>
 
 /** \file t8_cmesh_types.h
  * We define here the datatypes needed for internal cmesh routines.
@@ -62,20 +63,27 @@ typedef struct t8_cmesh
   int                 mpirank;  /**< Number of this MPI process. */
   int                 mpisize;  /**< Number of MPI processes. */
   t8_refcount_t       rc; /**< The reference count of the cmesh. */
-  t8_topidx_t         num_trees;   /**< The global number of trees */
+  t8_gloidx_t         num_trees;   /**< The global number of trees */
   t8_topidx_t         num_local_trees; /**< If partitioned the number of trees on this process. Otherwise the global number of trees. */
   t8_topidx_t         num_ghosts; /**< If partitioned the number of neighbor trees
                                     owned by different processes. */
-  t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST]; /**< After commit the number of
+  t8_gloidx_t         num_trees_per_eclass[T8_ECLASS_LAST]; /**< After commit the number of
                                                                  trees for each eclass. */
 
+  t8_part_tree_t     *trees_ghosts;
+  int                 num_parts; /** Number of entries in \a trees_ghosts */
+  size_t             *attribute_size; /** If attributes are used, for each tree the size of its attribute */
+  size_t             *attribute_offset; /* TODO: document, for each tree offset into the part array */
+#if 0
   sc_array_t         *ctrees; /**< An array of all trees in the cmesh. */
   sc_array_t         *ghosts; /**< The trees that do not belong to this process
                                    but are a face-neighbor of at least one local tree. */
-  t8_topidx_t         first_tree; /**< The global index of the first full tree
+#endif
+  t8_gloidx_t         first_tree; /**< The global index of the first local tree
                                        on this process. Zero if the cmesh is not partitioned. -1 if this processor is empty. */
-  t8_topidx_t        *tree_offsets; /**< If partitioned the global number of the
-                                         first full tree of each process. */
+  t8_topidx_t        *tree_per_proc; /**< If partitioned twice the number of local
+                                          trees on each process plus one if the last tree of the respective
+                                          process is the first tree of the next process */
   sc_mempool_t       *tree_attributes_mem[T8_ECLASS_LAST]; /**< For each eclass we can specify an
                                          attribute size and attach attributes of this size to each trees */
 #ifdef T8_ENABLE_DEBUG
@@ -88,47 +96,58 @@ typedef struct t8_cmesh
 }
 t8_cmesh_struct_t;
 
-/** This structure holds the data of a face-neighbor of a tree.
- * The tree_to_face index is computed as follows.
- * Let F be the number of faces of the neighbor tree, then
- * ttf % F is the face number and ttf / F is the orientation.
- * The orientation is determined as follows.  Let my_face and other_face
- * be the two face numbers of the connecting trees.  Then the first
- * face corner of the lower of my_face and other_face connects to a face
- * corner in the higher of my_face and other_face.  The face
- * orientation is defined as the number of this corner.
- * If my_face == other_face, treating
- * either of both faces as the lower one leads to the same result.
- */
-/* TODO: This last statement about the same result has to be checked!
- *       It depends on the numbering of the faces as soon as different element
- *       types occur */
-typedef struct t8_ctree_fneighbor
-{
-  t8_topidx_t         treeid; /**< The global number of this neighbor. */
-  /* TODO: write a macro instead of is_owned */
-  int                 is_owned; /**< Nonzero if the neighbor belongs to this process. */
-  int8_t              tree_to_face;     /* TODO: think of an encoding and document */
-}
-t8_ctree_fneighbor_struct_t;
-
 typedef struct t8_cghost
 {
-  t8_topidx_t         treeid; /**< The global number of this ghost. */
+  t8_gloidx_t         treeid; /**< The global number of this ghost. */
   t8_eclass_t         eclass; /**< The eclass of this ghost. */
-  t8_topidx_t        *neighbors; /**< Global id's of all neighbors of this ghost */
+  t8_gloidx_t        *neighbors; /**< Global id's of all neighbors of this ghost */
 }
 t8_cghost_struct_t;
 
+/** This structure holds the data of a local tree including the information
+ * about face neighbors. For those
+ * the tree_to_face index is computed as follows.
+ * Let F be the number of faces of the neighbor tree, then
+ * ttf % F is the face number and ttf / F is the orientation.
+ * The orientation is determined as follows.  Let my_face and other_face
+ * be the two face numbers of the connecting trees.
+ * We chose a master_face from them as follows: Either both trees have the same
+ * element class, then the face with the lower face number is the master_face or
+ * the trees belong to different classes in which case the face belonging to the
+ * tree with the lower class according to the ordering
+ * triangle < square,
+ * hex < tet < prism < pyramid,
+ * is the master_face.
+ * Then the first face corner of the master_face connects to a face
+ * corner in the other face.  The face
+ * orientation is defined as the number of this corner.
+ * If the classes are equal and my_face == other_face, treating
+ * either of both faces as the master_face leads to the same result.
+ */
 typedef struct t8_ctree
 {
-  t8_topidx_t         treeid; /**< The global number of this tree. */
-  /* TODO: The global id of a tree should be clear from context, the entry can
+  t8_topidx_t         treeid; /**< The local number of this tree. */
+  /* TODO: The local id of a tree should be clear from context, the entry can
    *       be optimized out. */
   t8_eclass_t         eclass; /**< The eclass of this tree. */
-  t8_ctree_fneighbor_struct_t *face_neighbors; /**< Information about the face neighbors of this tree. */
-  void               *attribute;
+  t8_topidx_t        *face_neighbors; /**< For each face the local index of the face neighbor
+                                          of this tree at the face. Indices greater than
+                                          the number of local trees refer to ghosts. */
+  int8_t             *tree_to_face; /**< For each face the encoding of the face neighbor orientation. */
 }
 t8_ctree_struct_t;
+
+/* TODO: document */
+typedef struct t8_part_tree
+{
+  char              *first_tree;
+  t8_topidx_t        num_trees;
+  t8_topidx_t        num_ghosts;
+#if 0
+  /* TODO: Do we need this? */
+  size_t             num_bytes_for_attributes;
+#endif
+}
+t8_part_tree_struct_t;
 
 #endif /* !T8_CMESH_TYPES_H */
