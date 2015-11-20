@@ -24,7 +24,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 
-/** \file t8_cmesh.h
+/** \file t8_cmesh.c
  *
  * TODO: document this file
  */
