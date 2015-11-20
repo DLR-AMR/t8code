@@ -162,6 +162,10 @@ t8_cmesh_first_tree (t8_cmesh_t cmesh)
     (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, 0) : NULL;
 }
 
+/* returns the next local tree in the cmesh (by treeid)
+ * after a given tree.
+ * The given tree must be a valid and owned tree.
+ * If the given tree is the last local tree, NULL is returned */
 static              t8_ctree_t
 t8_cmesh_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree)
 {
@@ -482,6 +486,15 @@ t8_cmesh_set_ghost (t8_cmesh_t cmesh, t8_topidx_t ghost_id,
 #endif
 }
 
+/* TODO: this function requires both trees to be set already.
+ *       We could instead: Only require one tree to be set. In commit we would then
+ *                         parse through all trees and wherever a neighbour is set we
+ *                         set the respective neighbour for the second tree.
+ *                     Or: Store the tree and face numbers and the orientation in a
+ *                         temporary array and parse the info when committing.
+ *                         This would not require any tree to be set.
+ *                         But certainly is more memory intensive.
+ */
 void
 t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
                      int face1, int face2, int orientation)
