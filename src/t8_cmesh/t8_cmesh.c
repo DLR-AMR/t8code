@@ -23,6 +23,7 @@
 #include <t8_refcount.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh_trees.h>
 
 /** \file t8_cmesh.c
  *
@@ -145,7 +146,7 @@ t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id)
   T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree_id));
 
   index = cmesh->set_partitioned ? tree_id - cmesh->first_tree : tree_id;
-  return (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, index);
+  return t8_cmesh_trees_get_tree (cmesh->trees, index);
 }
 
 /* Returns the first local tree.
@@ -155,8 +156,7 @@ t8_cmesh_first_tree (t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh != NULL);
 
-  return cmesh->num_local_trees > 0 ?
-    (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, 0) : NULL;
+  return cmesh->num_local_trees > 0 ? t8_cmesh_get_tree (cmesh, 0) : NULL;
 }
 
 /* returns the next local tree in the cmesh (by treeid)
@@ -234,7 +234,7 @@ t8_cmesh_tree_set_attribute (t8_cmesh_t cmesh, t8_topidx_t tree_id,
 void               *
 t8_cmesh_tree_get_attribute (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 {
-  return t8_cmesh_get_tree (cmesh, tree_id)->attribute;
+  return t8_cmesh_trees_get_attribute (cmesh->trees, tree_id);
 }
 
 void

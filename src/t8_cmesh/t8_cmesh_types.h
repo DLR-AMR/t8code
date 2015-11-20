@@ -54,6 +54,8 @@
 typedef struct t8_cmesh
 {
   /* TODO: make the comments more legible */
+  /* TODO: right now a not replicated cmesh is limited to t8_topidx in tree indices
+   *       we should think about how to extend this to t8_gloidx */
   int                 committed;
   int                 dimension; /**< The dimension of the cmesh. It is set when the first tree is inserted. */
   int                 do_dup;   /**< Communicator shall be duped. */
