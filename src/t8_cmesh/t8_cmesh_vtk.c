@@ -40,7 +40,7 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
   if (cmesh->mpirank == 0) {
     char                vtufilename[BUFSIZ];
     FILE               *vtufile;
-    t8_topidx_t         num_vertices, num_trees, itree, ivertex;
+    t8_topidx_t         num_vertices, num_trees, ivertex;
     t8_ctree_t          tree;
     double              x, y, z;
     double             *vertices;
@@ -78,11 +78,12 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
              T8_VTK_FLOAT_NAME, T8_VTK_FORMAT_STRING);
 
 #ifdef T8_VTK_ASCII
-    for (itree = 0; itree < num_trees; itree++) {
-      tree = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, itree);
+    for (tree = t8_cmesh_first_tree (cmesh); tree != NULL;
+         tree = t8_cmesh_next_tree (cmesh, tree)) {
       for (ivertex = 0; ivertex < t8_eclass_num_vertices[tree->eclass];
            ivertex++) {
-        vertices = ((double *) tree->attribute) +
+        vertices = ((double *) t8_cmesh_tree_get_attribute (cmesh,
+                                                            tree->treeid)) +
           3 * t8_eclass_vtk_corner_number[tree->eclass][ivertex];
         x = vertices[0];
         y = vertices[1];
@@ -105,8 +106,8 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
     fprintf (vtufile, "        <DataArray type=\"%s\" Name=\"connectivity\""
              " format=\"%s\">\n", T8_VTK_TOPIDX, T8_VTK_FORMAT_STRING);
 #ifdef T8_VTK_ASCII
-    for (itree = 0, count_vertices = 0; itree < num_trees; itree++) {
-      tree = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, itree);
+    for (tree = t8_cmesh_first_tree (cmesh), count_vertices = 0; tree != NULL;
+         tree = t8_cmesh_next_tree (cmesh, tree)) {
       fprintf (vtufile, "         ");
       for (k = 0; k < t8_eclass_num_vertices[tree->eclass]; ++k,
            count_vertices++) {
@@ -124,11 +125,11 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
              " format=\"%s\">\n", T8_VTK_TOPIDX, T8_VTK_FORMAT_STRING);
 #ifdef T8_VTK_ASCII
     fprintf (vtufile, "         ");
-    for (itree = 0, sk = 1, offset = 0; itree < num_trees; ++itree, ++sk) {
-      tree = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, itree);
+    for (tree = t8_cmesh_first_tree (cmesh), sk = 1, offset = 0; tree != NULL;
+         tree = t8_cmesh_next_tree (cmesh, tree), ++sk) {
       offset += t8_eclass_num_vertices[tree->eclass];
       fprintf (vtufile, " %lld", offset);
-      if (!(sk % 8) && itree != num_trees)
+      if (!(sk % 8))
         fprintf (vtufile, "\n         ");
     }
     fprintf (vtufile, "\n");
@@ -141,9 +142,10 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
              " format=\"%s\">\n", T8_VTK_FORMAT_STRING);
 #ifdef T8_VTK_ASCII
     fprintf (vtufile, "         ");
-    for (itree = 0, sk = 1; itree < num_trees; ++itree, ++sk) {
+    for (tree = t8_cmesh_first_tree (cmesh), sk = 1; tree != NULL;
+         tree = t8_cmesh_next_tree (cmesh, tree), ++sk) {
       fprintf (vtufile, " %d", t8_eclass_vtk_type[tree->eclass]);
-      if (!(sk % 20) && itree != (num_trees - 1))
+      if (!(sk % 20) && tree->treeid != (cmesh->num_local_trees - 1))
         fprintf (vtufile, "\n         ");
     }
     fprintf (vtufile, "\n");
@@ -158,10 +160,10 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
              " format=\"%s\">\n", T8_VTK_TOPIDX, T8_VTK_FORMAT_STRING);
 #ifdef T8_VTK_ASCII
     fprintf (vtufile, "         ");
-    for (itree = 0, sk = 1, offset = 0; itree < num_trees; ++itree, ++sk) {
-      tree = (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees, itree);
+    for (tree = t8_cmesh_first_tree (cmesh), sk = 1, offset = 0; tree != NULL;
+         tree = t8_cmesh_next_tree (cmesh, tree), ++sk) {
       fprintf (vtufile, " %lld", (long long) tree->treeid);
-      if (!(sk % 8) && itree != num_trees)
+      if (!(sk % 8))
         fprintf (vtufile, "\n         ");
     }
     fprintf (vtufile, "\n");
