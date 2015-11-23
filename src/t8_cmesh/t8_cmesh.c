@@ -226,13 +226,12 @@ t8_cmesh_set_attribute_size_single (t8_cmesh_t cmesh, size_t attr_size,
 
 void
 t8_cmesh_tree_set_attribute (t8_cmesh_t cmesh, t8_topidx_t tree_id,
-                             size_t attr_size, void *attribute)
+                             size_t attr_size, void *attribute, int copy)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (!cmesh->committed);
-  T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree_id));
 
-  t8_stash_add_attribute (cmesh->stash, tree_id, attr_size, attribute);
+  t8_stash_add_attribute (cmesh->stash, tree_id, attr_size, attribute, copy);
 }
 
 void               *
@@ -362,9 +361,10 @@ t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_topidx_t tree_id,
 {
   T8_ASSERT (cmesh != NULL);  
   T8_ASSERT (vertices != NULL);  
+  T8_ASSERT (!cmesh->committed);
 
   t8_stash_add_attribute(cmesh->stash, tree_id, num_vertices * sizeof (double),
-                         (void *) vertices);
+                         (void *) vertices, 1);
 }
 
 /* TODO: do we still need this function? if yes, write it correctly. */

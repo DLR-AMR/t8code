@@ -50,6 +50,7 @@ typedef struct t8_stash_attribute
   t8_gloidx_t       id;
   size_t            attr_size;
   void             *attr_data;
+  int               is_owned;
 } t8_stash_attribute_struct_t;
 
 typedef struct t8_stash
@@ -73,7 +74,7 @@ void              t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t id1,
                                          int orientation);
 
 void              t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id,
-                                          size_t size, void * attr);
+                                          size_t size, void * attr, int copy);
 
 T8_EXTERN_C_END ();
 

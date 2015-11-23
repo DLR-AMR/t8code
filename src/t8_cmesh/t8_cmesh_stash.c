@@ -44,13 +44,22 @@ t8_stash_init (t8_stash_t * pstash)
 void              t8_stash_destroy (t8_stash_t * pstash)
 {
   t8_stash_t        stash;
+  t8_stash_attribute_struct_t *attr;
+  size_t            attr_count;
 
   T8_ASSERT (pstash != NULL);
   stash = *pstash;
-  sc_array_reset (&stash->attributes);
   sc_array_reset (&stash->classes);
   sc_array_reset (&stash->joinfaces);
-  free (stash);
+  for (attr_count = 0; attr_count < stash->attributes.elem_count;attr_count++) {
+    attr = (t8_stash_attribute_struct_t *) sc_array_index (&stash->attributes,
+                                                           attr_count);
+    if (attr->is_owned) {
+      T8_FREE (attr->attr_data);
+    }
+  }
+  sc_array_reset (&stash->attributes);
+  T8_FREE (stash);
   pstash = NULL;
 }
 
@@ -82,13 +91,17 @@ t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t id1, t8_gloidx_t id2,
 
 void
 t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id, size_t size,
-                        void * attr)
+                        void * attr, int copy)
 {
   t8_stash_attribute_struct_t      *sattr;
 
   T8_ASSERT (stash != NULL);
   sattr = sc_array_push (&stash->attributes);
-  sattr->attr_data = attr;
   sattr->attr_size = size;
   sattr->id = id;
+  sattr->is_owned = !copy ? 1 : 0;
+  sattr->attr_data = !copy ? T8_ALLOC (char, size) : attr;
+  if (!copy) {
+    memcpy (sattr->attr_data, attr, size);
+  }
 }
