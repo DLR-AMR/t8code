@@ -150,3 +150,11 @@ t8_cmesh_trees_is_equal (t8_cmesh_trees_t trees_a, t8_cmesh_trees_t trees_b)
   /*TODO: implement */
   SC_ABORTF ("Comparison of cmesh_trees not implemented %s\n", "yet");
 }
+
+
+void
+t8_cmesh_trees_destroy (t8_cmesh_trees_t * trees)
+{
+  /*TODO: implement */
+  SC_ABORTF ("cmesh_trees_destroy not implemented %s\n", "yet");
+}

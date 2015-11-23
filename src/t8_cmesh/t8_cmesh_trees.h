@@ -58,6 +58,8 @@ void             *t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees,
 int               t8_cmesh_trees_is_equal (t8_cmesh_trees_t trees_a,
                                            t8_cmesh_trees_t trees_b);
 
+void              t8_cmesh_trees_destroy (t8_cmesh_trees_t * trees);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_PART_TREE_H */

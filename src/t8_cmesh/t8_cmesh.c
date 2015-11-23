@@ -302,7 +302,6 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_topidx_t tree_id,
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (!cmesh->committed);
-  T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree_id));
 
   /* If we insert the first tree, set the dimension of the cmesh
    * to this tree's dimension. Otherwise check whether the dimension
@@ -421,9 +420,6 @@ void
 t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
                      int face1, int face2, int orientation)
 {
-  T8_ASSERT (0 <= tree1 && tree1 < cmesh->num_trees);
-  T8_ASSERT (0 <= tree2 && tree2 < cmesh->num_trees);
-
   T8_ASSERT (0 <= orientation);
 
   t8_stash_add_facejoin (cmesh->stash, tree1, tree2, face1, face2, orientation);
@@ -743,10 +739,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->mpicomm != sc_MPI_COMM_NULL);
   T8_ASSERT (!cmesh->committed);
-  T8_ASSERT (cmesh->num_trees > 0);
 
-  T8_ASSERT (cmesh->num_trees == cmesh->inserted_trees);
-  T8_ASSERT (cmesh->num_ghosts == cmesh->inserted_ghosts);
   cmesh->committed = 1;
 
   /* dup communicator if requested */
@@ -762,6 +755,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (cmesh->mpicomm, &cmesh->mpirank);
   SC_CHECK_MPI (mpiret);
+  t8_stash_destroy (&cmesh->stash);
 }
 
 t8_topidx_t
@@ -911,6 +905,9 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
     T8_FREE (cmesh->tree_per_proc);
   }
   /*TODO: write this */
+  if (!cmesh->committed) {
+    t8_stash_destroy (&cmesh->stash);
+  }
 #if 0
   t8_cmesh_trees_destroy (cmesh->trees);
 #endif

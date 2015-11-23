@@ -69,7 +69,7 @@ t8_stash_add_class (t8_stash_t stash, t8_gloidx_t id, t8_eclass_t eclass)
   t8_stash_class_struct_t    *sclass;
 
   T8_ASSERT (stash != NULL);
-  sclass = sc_array_push(&stash->classes);
+  sclass = (t8_stash_class_struct_t*) sc_array_push(&stash->classes);
   sclass->eclass = eclass;
   sclass->id = id;
 }
