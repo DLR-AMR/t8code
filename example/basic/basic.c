@@ -79,6 +79,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
   t8_forest_init (&forest);
 
   cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, do_dup, do_bcast);
+#if 1
   t8_forest_set_cmesh (forest, cmesh);
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
 
@@ -92,6 +93,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
   }
 
   t8_forest_unref (&forest);
+#endif
 }
 
 static void
@@ -189,7 +191,7 @@ main (int argc, char **argv)
       t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 1, 0);
       t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 1, 0);
       /* Construct the mesh on one process and broadcast it */
-#if 1
+#if 0
       t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 0, 1);
       t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 0, 1);
       t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 1, 1);
@@ -198,6 +200,7 @@ main (int argc, char **argv)
     }
   }
   t8_global_productionf ("Done testing hypercube cmesh.\n");
+
   t8_global_productionf ("Testing periodic cmesh.\n");
   for (dim = 1; dim < 4; dim++) {
     t8_basic_periodic (0, level, dim);
@@ -217,6 +220,7 @@ main (int argc, char **argv)
   t8_basic_p8est (0, 10, 13, 17);
   t8_basic_p8est (1, 10, 13, 17);
   t8_global_productionf ("Done testing cmesh from p8est.\n");
+#endif
 
   sc_finalize ();
 
