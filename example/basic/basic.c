@@ -74,6 +74,8 @@ t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
   t8_forest_t         forest;
   t8_cmesh_t          cmesh;
 
+  t8_global_productionf ("Entering t8_basic hypercube %s\n",
+                         t8_eclass_to_string[eclass]);
   t8_forest_init (&forest);
 
   cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, do_dup, do_bcast);
@@ -160,19 +162,25 @@ main (int argc, char **argv)
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  p4est_init (NULL, SC_LP_ESSENTIAL);
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);  
   t8_init (SC_LP_DEFAULT);
 
   level = 3;
   t8_global_productionf ("Testing basic tet mesh.\n");
+
+#if 0
   t8_basic (0, level);
+  t8_global_productionf ("1st\n");
   t8_basic (1, level);
+  t8_global_productionf ("2nd\n");
   t8_basic (0, level);
+  t8_global_productionf ("3rd\n");
   t8_basic (1, level);
   t8_global_productionf ("Done testing basic tet mesh.\n");
-
+#endif
+#if 1
   t8_global_productionf ("Testing hypercube cmesh.\n");
+
   for (eclass = T8_ECLASS_FIRST; eclass < T8_ECLASS_LAST; eclass++) {
     if (eclass != T8_ECLASS_PYRAMID) {
       /* Construct the mesh on each process */
