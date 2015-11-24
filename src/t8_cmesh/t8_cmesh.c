@@ -132,10 +132,11 @@ t8_cmesh_set_partitioned (t8_cmesh_t cmesh, int set_partitioned,
   else {
     cmesh->num_trees = num_global_trees;
     cmesh->first_tree = first_local_tree;
-    cmesh->num_ghosts = num_ghosts;    
+    cmesh->num_ghosts = num_ghosts;
 #if 0
     /* TODO: rethink with the new interface */
-    cmesh->ghosts = sc_array_new_size (sizeof (t8_cghost_struct_t), num_ghosts);
+    cmesh->ghosts =
+      sc_array_new_size (sizeof (t8_cghost_struct_t), num_ghosts);
 #endif
   }
 }
@@ -357,12 +358,13 @@ void
 t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_topidx_t tree_id,
                             double *vertices, t8_topidx_t num_vertices)
 {
-  T8_ASSERT (cmesh != NULL);  
-  T8_ASSERT (vertices != NULL);  
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (vertices != NULL);
   T8_ASSERT (!cmesh->committed);
 
-  t8_stash_add_attribute(cmesh->stash, tree_id, num_vertices * sizeof (double),
-                         (void *) vertices, 1);
+  t8_stash_add_attribute (cmesh->stash, tree_id,
+                          num_vertices * sizeof (double), (void *) vertices,
+                          1);
 }
 
 /* TODO: do we still need this function? if yes, write it correctly. */
@@ -421,7 +423,8 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
 {
   T8_ASSERT (0 <= orientation);
 
-  t8_stash_add_facejoin (cmesh->stash, tree1, tree2, face1, face2, orientation);
+  t8_stash_add_facejoin (cmesh->stash, tree1, tree2, face1, face2,
+                         orientation);
 }
 
 /* compare two arrays of face_neighbors for equality */
@@ -432,7 +435,7 @@ t8_cmesh_face_n_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b, int num_neigh)
 
   for (iface = 0; iface < num_neigh; iface++) {
     if (tree_a->face_neighbors[iface] != tree_b->face_neighbors[iface]
-    || tree_a->tree_to_face[iface] != tree_b->tree_to_face[iface]) {
+        || tree_a->tree_to_face[iface] != tree_b->tree_to_face[iface]) {
       return 0;
     }
   }
@@ -578,7 +581,6 @@ t8_cmesh_bcast_attributes (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 }
 #endif
 
-
 t8_cmesh_t
 t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 {
@@ -679,7 +681,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     for (tree = t8_cmesh_first_tree (cmesh_in); tree != NULL;
          tree = t8_cmesh_next_tree (cmesh_in, tree)) {
       tree->face_neighbors = T8_ALLOC (t8_ctree_fneighbor_struct_t,
-                                       t8_eclass_num_faces[tree->eclass]);      
+                                       t8_eclass_num_faces[tree->eclass]);
     }
   }
   /* broadcast attributes */
@@ -1023,7 +1025,8 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
       vertices[3 * ivertex + 2] =
         _T8_CMESH_P48_CONN (vertices[3 * treevertex + 2]);
     }
-    t8_cmesh_set_tree_vertices (cmesh, itree, (void *) vertices, num_tvertices);
+    t8_cmesh_set_tree_vertices (cmesh, itree, (void *) vertices,
+                                num_tvertices);
   }
   /* get face neighbor information from conn and join faces in cmesh */
   for (itree = 0; itree < cmesh->num_trees; itree++) {  /* loop over each tree */
