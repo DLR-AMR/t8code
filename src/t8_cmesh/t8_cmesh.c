@@ -77,7 +77,6 @@ t8_cmesh_init (t8_cmesh_t * pcmesh)
   cmesh = *pcmesh = T8_ALLOC_ZERO (t8_cmesh_struct_t, 1);
   t8_refcount_init (&cmesh->rc);
 
-
   /* sensible (hard error) defaults */
   cmesh->dimension = -1;
   cmesh->mpicomm = sc_MPI_COMM_WORLD;
@@ -749,6 +748,47 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     cmesh->mpicomm = comm_dup;
   }
   /* TODO: setup trees */
+  if (!cmesh->set_partitioned) {
+    if (cmesh->stash != NULL && cmesh->stash->classes.elem_count > 0) {
+      t8_stash_t          stash = cmesh->stash;
+      sc_array_t         *class_entries = &stash->classes;
+      t8_stash_class_struct_t *entry;
+      t8_topidx_t         num_trees =
+        class_entries->elem_count, itree, newtree;
+      size_t              si, attr_bytes, attr_offset;
+
+      t8_cmesh_trees_init (&cmesh->trees, 1, num_trees, 0);
+      /* compute size of attributes */
+      attr_bytes = 0;
+      for (si = 0; si < stash->attributes.elem_count; si++) {
+        attr_bytes += t8_stash_get_attribute_size (stash, si);
+      }
+      cmesh->num_trees = cmesh->num_local_trees = num_trees;
+      cmesh->first_tree = 0;
+      t8_cmesh_trees_init_part (cmesh->trees, 0, 0, num_trees, 0, attr_bytes);
+      /* set tree classes */
+      for (itree = 0; itree < num_trees; itree++) {
+        entry = t8_sc_array_index_topidx (class_entries, itree);
+        t8_cmesh_trees_add_tree (cmesh->trees, entry->id, 0, entry->eclass);
+      }
+      /* set tree attributes */
+      t8_stash_attribute_sort (cmesh->stash);
+      attr_offset = 0;
+      for (si = 0; si < stash->attributes.elem_count; si++) {
+        attr_bytes = t8_stash_get_attribute_size (cmesh->stash, si);
+        newtree = t8_stash_get_attribute_tree_id (cmesh->stash, si) -
+          cmesh->first_tree;
+        t8_cmesh_tree_add_attribute (cmesh->trees, 0, newtree,
+                                     t8_stash_get_attribute (cmesh->stash,
+                                                             si), attr_bytes,
+                                     attr_offset);
+        attr_offset += attr_bytes;
+      }
+    }
+  }
+  else {
+    SC_ABORTF ("partitioned commit not implemented.%c", '\n');
+  }
 
   /* query communicator new */
   mpiret = sc_MPI_Comm_size (cmesh->mpicomm, &cmesh->mpisize);
@@ -908,9 +948,11 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
   if (!cmesh->committed) {
     t8_stash_destroy (&cmesh->stash);
   }
-#if 0
-  t8_cmesh_trees_destroy (cmesh->trees);
-#endif
+  else {
+    if (cmesh->trees != NULL) {
+      t8_cmesh_trees_destroy (&cmesh->trees);
+    }
+  }
 
   T8_FREE (cmesh);
 
