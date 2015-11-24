@@ -37,28 +37,42 @@ T8_EXTERN_C_BEGIN ();
 /* allocate a t8_cmesh_tree struct and allocate memory for its entries.
  * No memory for ctrees or ghosts is allocated here */
 /* TODO: document */
-void              t8_cmesh_trees_init (t8_cmesh_trees_t * ptrees, int num_procs,
-                                       t8_topidx_t num_trees,
-                                       t8_topidx_t num_ghosts);
+void                t8_cmesh_trees_init (t8_cmesh_trees_t * ptrees,
+                                         int num_procs, t8_topidx_t num_trees,
+                                         t8_topidx_t num_ghosts);
 
 /* allocate the first_tree array of a given tree_part in a tree struct
  * with a given number of bytes */
-void              t8_cmesh_trees_init_part (t8_cmesh_trees_t trees, int proc,
-                                            size_t array_size);
+void                t8_cmesh_trees_init_part (t8_cmesh_trees_t trees,
+                                              int proc,
+                                              t8_topidx_t first_tree,
+                                              t8_topidx_t last_tree,
+                                              t8_topidx_t num_ghosts,
+                                              size_t attr_bytes);
 
-t8_ctree_t        t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees,
-                                           t8_topidx_t tree);
+void                t8_cmesh_trees_add_tree (t8_cmesh_trees_t trees,
+                                             t8_topidx_t tree_id, int proc,
+                                             t8_eclass_t eclass);
 
-t8_cghost_t       t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees,
-                                            t8_topidx_t ghost);
+t8_ctree_t          t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees,
+                                             t8_topidx_t tree);
 
-void             *t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees,
-                                                t8_topidx_t tree);
+t8_cghost_t         t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees,
+                                              t8_topidx_t ghost);
 
-int               t8_cmesh_trees_is_equal (t8_cmesh_trees_t trees_a,
-                                           t8_cmesh_trees_t trees_b);
+void               *t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees,
+                                                  t8_topidx_t tree_id);
 
-void              t8_cmesh_trees_destroy (t8_cmesh_trees_t * trees);
+void                t8_cmesh_tree_add_attribute (t8_cmesh_trees_t trees,
+                                                 int proc,
+                                                 t8_topidx_t tree_id,
+                                                 char *attr, size_t size,
+                                                 size_t offset);
+
+int                 t8_cmesh_trees_is_equal (t8_cmesh_trees_t trees_a,
+                                             t8_cmesh_trees_t trees_b);
+
+void                t8_cmesh_trees_destroy (t8_cmesh_trees_t * trees);
 
 T8_EXTERN_C_END ();
 
