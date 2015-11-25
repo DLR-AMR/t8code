@@ -78,23 +78,12 @@ typedef struct t8_cmesh
                                                                  trees for each eclass. */
 
   t8_cmesh_trees_t    trees; /**< structure that holds all local trees and ghosts */
-#if 1
-  /* TODO: remove */
-  sc_array_t         *ctrees; /**< An array of all trees in the cmesh. */
-  sc_array_t         *ghosts; /**< The trees that do not belong to this process
-                                   but are a face-neighbor of at least one local tree. */
-#endif
+
   t8_gloidx_t         first_tree; /**< The global index of the first local tree
                                        on this process. Zero if the cmesh is not partitioned. -1 if this processor is empty. */
   t8_topidx_t        *tree_per_proc; /**< If partitioned twice the number of local
                                           trees on each process plus one if the last tree of the respective
                                           process is the first tree of the next process */
-#if 1
-  /* TODO: remove */
-  sc_mempool_t       *tree_attributes_mem[T8_ECLASS_LAST]; /**< For each eclass we can specify an
-                                         attribute size and attach attributes of this size to each trees
- */
-#endif
 #ifdef T8_ENABLE_DEBUG
   t8_topidx_t         inserted_trees; /**< Count the number of inserted trees to
                                            check at commit if it equals the total number. */

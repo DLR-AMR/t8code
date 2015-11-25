@@ -38,7 +38,9 @@ static t8_ctree_t
 t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id);
 /* *INDENT-ON* */
 
+#if 0
 /* Compute a hash value for a ghost tree. */
+/* deprecated */
 static unsigned
 t8_cmesh_ghost_hash_fn (const void *ghost, const void *data)
 {
@@ -67,6 +69,7 @@ t8_cmesh_ghost_equal_fn (const void *ghost1, const void *ghost2,
 
   return G1->treeid == G2->treeid;
 }
+#endif
 
 void
 t8_cmesh_init (t8_cmesh_t * pcmesh)
@@ -866,11 +869,7 @@ static void
 t8_cmesh_reset (t8_cmesh_t * pcmesh)
 {
   int                 mpiret;
-  int                 iclass;
   t8_cmesh_t          cmesh;
-  t8_ctree_t          treeit;
-  t8_cghost_t         ghostit;
-  t8_topidx_t         ti;
 
   T8_ASSERT (pcmesh != NULL);
   cmesh = *pcmesh;
