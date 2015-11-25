@@ -69,7 +69,7 @@ void              t8_stash_add_class (t8_stash_t stash, t8_gloidx_t id,
                                       t8_eclass_t eclass);
 
 void              t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t id1,
-                                         t8_gloidx_t id1, int face1, int face2,
+                                         t8_gloidx_t id2, int face1, int face2,
                                          int orientation);
 
 void              t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id,

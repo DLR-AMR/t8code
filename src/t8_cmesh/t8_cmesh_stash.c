@@ -47,9 +47,9 @@ void              t8_stash_destroy (t8_stash_t * pstash)
 
   T8_ASSERT (pstash != NULL);
   stash = *pstash;
-  sc_array_reset (stash->attributes);
-  sc_array_reset (stash->classes);
-  sc_array_reset (stash->joinfaces);
+  sc_array_reset (&stash->attributes);
+  sc_array_reset (&stash->classes);
+  sc_array_reset (&stash->joinfaces);
   free (stash);
   pstash = NULL;
 }
@@ -57,25 +57,25 @@ void              t8_stash_destroy (t8_stash_t * pstash)
 void
 t8_stash_add_class (t8_stash_t stash, t8_gloidx_t id, t8_eclass_t eclass)
 {
-  t8_stash_class    *sclass;
+  t8_stash_class_struct_t    *sclass;
 
   T8_ASSERT (stash != NULL);
-  sclass = sc_array_push(stash->classes);
+  sclass = sc_array_push(&stash->classes);
   sclass->eclass = eclass;
   sclass->id = id;
 }
 
 void
-t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t id1, t8_gloidx_t id1,
+t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t id1, t8_gloidx_t id2,
                        int face1, int face2, int orientation)
 {
-  t8_stash_joinface   *sjoin;
+  t8_stash_joinface_struct_t   *sjoin;
 
   T8_ASSERT (stash != NULL);
-  sjoin = sc_array_push (stash->joinfaces);
+  sjoin = sc_array_push (&stash->joinfaces);
   sjoin->face1 = face1;
   sjoin->face2 = face2;
-  sjoin->id1 = id1;
+  sjoin->id1 = id2;
   sjoin->id2 = id2;
   sjoin->orientation = orientation;
 }
@@ -84,10 +84,10 @@ void
 t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id, size_t size,
                         void * attr)
 {
-  t8_stash_attribute      *sattr;
+  t8_stash_attribute_struct_t      *sattr;
 
   T8_ASSERT (stash != NULL);
-  sattr = sc_array_push (stash->attributes);
+  sattr = sc_array_push (&stash->attributes);
   sattr->attr_data = attr;
   sattr->attr_size = size;
   sattr->id = id;
