@@ -586,9 +586,6 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 {
   int                 mpirank, mpisize, mpiret;
   int                 iclass;
-  t8_ctree_t          tree;
-  t8_topidx_t         count_face;
-  t8_topidx_t         num_neighbors;
 
   struct
   {
@@ -596,9 +593,10 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     int                 do_dup;
     t8_topidx_t         num_trees;
     t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST];
-    size_t              tree_attribute_size[T8_ECLASS_LAST];
+    size_t              stash_elem_counts[3];
 #ifdef T8_ENABLE_DEBUG
     t8_topidx_t         inserted_trees;
+    sc_MPI_Comm         comm;
 #endif
   } dimensions;
 
@@ -610,8 +608,6 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
    */
   /* TODO: Send the tree's vertices */
 
-  return cmesh_in;
-#if 0
   /* TODO: rewrite */
 
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
@@ -626,22 +622,25 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   T8_ASSERT (mpirank != root || cmesh_in->set_partitioned == 0);
   /* The cmesh on the calling process must not be owned by something
    * else. */
+  /* TODO: would it be useful to allow bcast even if the cmesh is referenced?
+   * But then the bcasted version on other procs would have a different refcount
+   * than the cmesh on the root */
   T8_ASSERT (mpirank != root || cmesh_in->rc.refcount == 1);
 
-  /* At first we broadcast all information needed to allocate the tree
-   * arrays. */
+  /* At first we broadcast all meta information. */
   if (mpirank == root) {
-    /* TODO: vertices are missing yet */
     dimensions.dimension = cmesh_in->dimension;
     dimensions.do_dup = cmesh_in->do_dup;
     dimensions.num_trees = cmesh_in->num_trees;
     for (iclass = 0; iclass < T8_ECLASS_LAST; iclass++) {
       dimensions.num_trees_per_eclass[iclass] =
         cmesh_in->num_trees_per_eclass[iclass];
-      dimensions.tree_attribute_size[iclass] =
-        t8_cmesh_get_attribute_size (cmesh_in, (t8_eclass_t) iclass);
     }
+    dimensions.stash_elem_counts[0] = cmesh_in->stash->attributes.elem_count;
+    dimensions.stash_elem_counts[0] = cmesh_in->stash->classes.elem_count;
+    dimensions.stash_elem_counts[0] = cmesh_in->stash->joinfaces.elem_count;
 #ifdef T8_ENABLE_DEBUG
+    dimensions.comm = cmesh_in->mpicomm;
     dimensions.inserted_trees = cmesh_in->inserted_trees;
 #endif
   }
@@ -662,73 +661,14 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
       cmesh_in->num_trees_per_eclass[iclass] =
         dimensions.num_trees_per_eclass[iclass];
     }
-    t8_cmesh_set_attribute_sizes (cmesh_in, dimensions.tree_attribute_size,
-                                  T8_ECLASS_LAST);
 #ifdef T8_ENABLE_DEBUG
     cmesh_in->inserted_trees = dimensions.inserted_trees;
+    T8_ASSERT (dimensions.comm == comm);
 #endif
   }
-  /* broadcast all the trees */
-  /* TODO: this step relies on the sc_array implementation.
-   *       can we do it differently ? */
-  mpiret = sc_MPI_Bcast (cmesh_in->ctrees->array,
-                         cmesh_in->num_trees * sizeof (t8_ctree_struct_t),
-                         sc_MPI_BYTE, root, comm);
-  SC_CHECK_MPI (mpiret);
-  if (mpirank != root) {
-    /* iterate through trees and allocate neighbor arrays.
-     * We cannot do it before because we have to know a tree's eclass for this */
-    for (tree = t8_cmesh_first_tree (cmesh_in); tree != NULL;
-         tree = t8_cmesh_next_tree (cmesh_in, tree)) {
-      tree->face_neighbors = T8_ALLOC (t8_ctree_fneighbor_struct_t,
-                                       t8_eclass_num_faces[tree->eclass]);
-    }
-  }
-  /* broadcast attributes */
-  t8_cmesh_bcast_attributes (cmesh_in, root, comm);
-  /* Since broadcasting one big data set instead of several small ones is much
-   * faster, we collect all face neighbor information in arrays and
-   * broadcast those.
-   */
-  /* count total number of face neighbors */
-  num_neighbors = 0;
-  for (iclass = 0; iclass < T8_ECLASS_LAST; iclass++) {
-    num_neighbors += cmesh_in->num_trees_per_eclass[iclass] *
-      t8_eclass_num_faces[iclass];
-  }
-  fneighbors = T8_ALLOC (t8_ctree_fneighbor_struct_t, num_neighbors);
-  /* fill face_neighbor arrays on root */
-  if (mpirank == 0) {
-    count_face = 0;
-    for (tree = t8_cmesh_first_tree (cmesh_in); tree != NULL;
-         tree = t8_cmesh_next_tree (cmesh_in, tree)) {
-      memcpy (fneighbors + count_face, tree->face_neighbors,
-              t8_eclass_num_faces[tree->eclass] *
-              sizeof (t8_ctree_fneighbor_struct_t));
-      count_face += t8_eclass_num_faces[tree->eclass];
-    }
-    T8_ASSERT (count_face == num_neighbors);
-  }
-
-  mpiret = sc_MPI_Bcast (fneighbors, num_neighbors *
-                         sizeof (t8_ctree_fneighbor_struct_t),
-                         sc_MPI_BYTE, root, comm);
-  SC_CHECK_MPI (mpiret);
-
-  if (mpirank != 0) {
-    count_face = 0;
-    for (tree = t8_cmesh_first_tree (cmesh_in); tree != NULL;
-         tree = t8_cmesh_next_tree (cmesh_in, tree)) {
-      memcpy (tree->face_neighbors, fneighbors + count_face,
-              t8_eclass_num_faces[tree->eclass] *
-              sizeof (t8_ctree_fneighbor_struct_t));
-      count_face += t8_eclass_num_faces[tree->eclass];
-    }
-    T8_ASSERT (count_face == num_neighbors);
-  }
-  T8_FREE (fneighbors);
+  /* broadcast all the stashed information about trees/neighbors/attributes */
+  t8_stash_bcast (cmesh_in->stash, root, comm, dimensions.stash_elem_counts);
   return cmesh_in;
-#endif
 }
 
 void

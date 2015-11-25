@@ -150,3 +150,34 @@ t8_stash_attribute_sort (t8_stash_t stash)
 {
   sc_array_sort (&stash->attributes, t8_stash_attribute_compare);
 }
+
+/* bcast the data of stash on root to all procs.
+ * On the other procs stash_init has to be called before */
+t8_stash_t
+t8_stash_bcast (t8_stash_t stash, int root, sc_MPI_Comm comm,
+                size_t elem_counts[3])
+{
+  int mpirank, mpisize, mpiret;
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+
+  if (mpirank != root) {
+    sc_array_resize (&stash->attributes, elem_counts[0]);
+    sc_array_resize (&stash->classes, elem_counts[1]);
+    sc_array_resize (&stash->joinfaces, elem_counts[2]);
+  }
+  mpiret = sc_MPI_Bcast (stash->attributes.array,
+                         elem_counts[0] * sizeof (t8_stash_attribute_struct_t),
+                         sc_MPI_BYTE, 0, comm);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Bcast (stash->classes.array,
+                         elem_counts[0] * sizeof (t8_stash_class_struct_t),
+                         sc_MPI_BYTE, 0, comm);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Bcast (stash->joinfaces.array,
+                         elem_counts[0] * sizeof (t8_stash_joinface_struct_t),
+                         sc_MPI_BYTE, 0, comm);
+  SC_CHECK_MPI (mpiret);
+}

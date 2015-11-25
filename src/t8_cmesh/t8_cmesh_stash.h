@@ -90,6 +90,13 @@ int                 t8_stash_attribute_is_owned (t8_stash_t stash,
 
 void                t8_stash_attribute_sort (t8_stash_t stash);
 
+/* broadcast the data of a stash on proc root.
+ * stash is setup on root. on the other procs only stash_init was called
+ * elem_counts holds number of attributes/classes/joinfaces
+ */
+t8_stash_t          t8_stash_bcast (t8_stash_t stash, int root,
+                                    sc_MPI_Comm comm, size_t elem_counts[]);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_STASH_H */
