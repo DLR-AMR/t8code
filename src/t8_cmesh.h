@@ -122,6 +122,8 @@ void                t8_cmesh_set_attribute_size_single (t8_cmesh_t cmesh,
  */
 void                t8_cmesh_set_attribute_to_vertices (t8_cmesh_t cmesh);
 
+#endif
+
 /** Set the number of trees for a cmesh.
  * It is not allowed to call this function after \ref t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
@@ -131,8 +133,6 @@ void                t8_cmesh_set_attribute_to_vertices (t8_cmesh_t cmesh);
  */
 void                t8_cmesh_set_num_trees (t8_cmesh_t cmesh,
                                             t8_topidx_t num_trees);
-
-#endif
 
 /** Set the class of a tree in the cmesh.
  * It is not allowed to call this function after \ref t8_cmesh_commit.
