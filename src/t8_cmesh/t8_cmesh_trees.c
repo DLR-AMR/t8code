@@ -143,3 +143,10 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree)
   return t8_part_tree_get_attribute (t8_cmesh_trees_get_part (trees, proc),
                                      trees->tree_to_offset[tree]);
 }
+
+int
+t8_cmesh_trees_is_equal (t8_cmesh_trees_t trees_a, t8_cmesh_trees_t trees_b)
+{
+  /*TODO: implement */
+  SC_ABORTF ("Comparison of cmesh_trees not implemented %s\n", "yet");
+}

@@ -55,6 +55,9 @@ t8_cghost_t       t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees,
 void             *t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees,
                                                 t8_topidx_t tree);
 
+int               t8_cmesh_trees_is_equal (t8_cmesh_trees_t trees_a,
+                                           t8_cmesh_trees_t trees_b);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_PART_TREE_H */
