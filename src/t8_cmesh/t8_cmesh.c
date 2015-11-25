@@ -363,7 +363,7 @@ t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_topidx_t tree_id,
   T8_ASSERT (!cmesh->committed);
 
   t8_stash_add_attribute (cmesh->stash, tree_id,
-                          num_vertices * sizeof (double), (void *) vertices,
+                          3 * num_vertices * sizeof (double), (void *) vertices,
                           1);
 }
 
