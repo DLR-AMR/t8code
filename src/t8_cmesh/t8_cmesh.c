@@ -366,8 +366,8 @@ t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_topidx_t tree_id,
   T8_ASSERT (!cmesh->committed);
 
   t8_stash_add_attribute (cmesh->stash, tree_id,
-                          3 * num_vertices * sizeof (double), (void *) vertices,
-                          1);
+                          3 * num_vertices * sizeof (double),
+                          (void *) vertices, 1);
 }
 
 /* TODO: do we still need this function? if yes, write it correctly. */
@@ -952,7 +952,7 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   /* Add each tree to cmesh and get vertex information for each tree */
-  for (itree = 0; itree < _T8_CMESH_P48_CONN (num_trees); itree++) {  /* loop over each tree */
+  for (itree = 0; itree < _T8_CMESH_P48_CONN (num_trees); itree++) {    /* loop over each tree */
     t8_cmesh_set_tree_class (cmesh, itree,
                              dim == 2 ? T8_ECLASS_QUAD : T8_ECLASS_HEX);
     for (ivertex = 0; ivertex < num_tvertices; ivertex++) {     /* loop over each tree corner */
