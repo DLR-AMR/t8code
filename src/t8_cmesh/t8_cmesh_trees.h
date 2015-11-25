@@ -32,9 +32,6 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 
-typedef t8_part_tree *t8_part_tree_t;
-typedef t8_cmesh_trees *t8_cmesh_trees_t;
-
 T8_EXTERN_C_BEGIN ();
 
 /* allocate a t8_cmesh_tree struct and allocate memory for its entries.

@@ -38,7 +38,7 @@ t8_cmesh_trees_init (t8_cmesh_trees_t * ptrees, int num_procs,
   T8_ASSERT (num_trees > 0);
   T8_ASSERT (num_ghosts >= 0);
 
-  trees = *ptrees = T8_ALLOC (t8_trees_struct_t, 1);
+  trees = *ptrees = T8_ALLOC (t8_cmesh_trees_struct_t, 1);
   sc_array_init_size (trees->from_proc, sizeof (t8_part_tree_struct_t),
                       num_procs);
   trees->tree_to_proc = T8_ALLOC_ZERO (int, num_trees);
@@ -60,14 +60,14 @@ t8_cmesh_trees_get_num_procs (t8_cmesh_trees_t trees)
 void
 t8_cmesh_trees_init_part (t8_cmesh_trees_t trees, int proc, size_t array_size)
 {
-  t8_part_tree        part;
+  t8_part_tree_t        part;
   T8_ASSERT (trees != NULL);
   T8_ASSERT (proc >= 0 && proc < t8_cmesh_trees_get_num_procs (trees));
   T8_ASSERT (array_size > 0);
 
-  part = (t8_part_tree) sc_array_index_int (trees->from_proc, proc);
-  part.num_ghosts = part.num_trees = -1;
-  part.first_tree = T8_ALLOC (char, array_size);
+  part = (t8_part_tree_t) sc_array_index_int (trees->from_proc, proc);
+  part->num_ghosts = part->num_trees = -1;
+  part->first_tree = T8_ALLOC (char, array_size);
 }
 
 static t8_part_tree_t
