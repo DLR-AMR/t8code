@@ -348,6 +348,11 @@ t8_cmesh_t          t8_cmesh_new_quad (sc_MPI_Comm comm, int do_dup);
  */
 t8_cmesh_t          t8_cmesh_new_hex (sc_MPI_Comm comm, int do_dup);
 
+/** Create a coarse mesh that consists of a single pyramid.
+ * \return          A valid cmesh, as if _init and _commit had been called.
+ */
+t8_cmesh_t          t8_cmesh_new_pyramid (sc_MPI_Comm comm, int do_dup);
+
 /** Construct a hypercube forest from one primitive tree class.
  * \param [in] eclass       This element class determines the dimension and
  *                          the number of trees needed to construct a cube.

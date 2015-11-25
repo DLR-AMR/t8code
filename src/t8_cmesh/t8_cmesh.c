@@ -1081,6 +1081,27 @@ t8_cmesh_new_hex (sc_MPI_Comm comm, int do_dup)
   return cmesh;
 }
 
+t8_cmesh_t
+t8_cmesh_new_pyramid (sc_MPI_Comm comm, int do_dup)
+{
+  t8_cmesh_t          cmesh;
+  double              vertices[15] = {
+    -1, -1, 0,
+    1, -1, 0,
+    -1, 1, 0,
+    1, 1, 0,
+    0, 0, sqrt (2)
+  };
+
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 15);
+  t8_cmesh_commit (cmesh);
+
+  return cmesh;
+}
+
 /* TODO: This is just a helper function that was needed when we changed the vertex interface
  *       to use attributes. Before we stored a list of vertex coordinates in the cmesh and each tree indexed into this list.
  *       Now each tree carries the coordinates of its vertices.
