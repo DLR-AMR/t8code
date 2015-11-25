@@ -1097,9 +1097,9 @@ t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t * tvertices,
   int                 i;
 
   for (i = 0; i < num_vertices; i++) {
-    attr_vertices[3 * i] = vertices[tvertices[i]];
-    attr_vertices[3 * i + 1] = vertices[tvertices[i] + 1];
-    attr_vertices[3 * i + 2] = vertices[tvertices[i] + 2];
+    attr_vertices[3 * i] = vertices[3 * tvertices[i]];
+    attr_vertices[3 * i + 1] = vertices[3 * tvertices[i] + 1];
+    attr_vertices[3 * i + 2] = vertices[3 * tvertices[i] + 2];
   }
 }
 
