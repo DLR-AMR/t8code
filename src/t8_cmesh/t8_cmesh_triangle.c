@@ -22,6 +22,8 @@
 
 #include <t8_cmesh_triangle.h>
 #include <t8_cmesh_tetgen.h>
+#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh_stash.h>
 
 /* TODO: eventually compute neighbours only from .node and .ele files, since
  *       creating .neigh files with tetgen/triangle is not common and even seems
@@ -351,6 +353,10 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
   /* We are done reading the file. */
   fclose (fp);
 
+  /* To compute the face neighbor orientations it is necessary to look up the
+   * vertices of a given tree_id. This is only possible if the attribute array
+   * is sorted. */
+  t8_stash_attribute_sort (cmesh->stash);
   /* Finde the neighboring faces */
   for (tit = 0; tit < num_elems; tit++) {
     for (face1 = 0; face1 < num_faces; face1++) {
@@ -378,11 +384,12 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
           orientation = (face1 + face2 + 1) % 2;
         }
         else {
-          /* TODO: compute correct orientation in 3d */
+          /* TODO: compute correct orientation in 3d
+                   or do we do this here? */
           firstvertex = face1 == 0 ? 1 : 0;
-          el_vertices1 = (double *) t8_cmesh_tree_get_attribute (cmesh, tit);
-          el_vertices2 = (double *) t8_cmesh_tree_get_attribute (cmesh,
-                                                                 element);
+          el_vertices1 = (double *) t8_stash_get_attribute (cmesh->stash, tit);
+          el_vertices2 = (double *) t8_stash_get_attribute (cmesh->stash,
+                                                            element);
           el_vertices1 += 3 * firstvertex;
           for (ivertex = 1; ivertex <= 3; ivertex++) {
             /* The face with number k consists of the vertices with numbers
