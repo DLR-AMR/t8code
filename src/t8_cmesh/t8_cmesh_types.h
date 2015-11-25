@@ -25,11 +25,15 @@
 
 #include <t8.h>
 #include <t8_refcount.h>
-#include <t8_cmesh/t8_cmesh_part_tree.h>
+#include <t8_cmesh/t8_cmesh_stash.h>
 
 /** \file t8_cmesh_types.h
  * We define here the datatypes needed for internal cmesh routines.
  */
+
+typedef struct t8_stash * t8_stash_t;
+typedef struct t8_part_tree *t8_part_tree_t;
+typedef struct t8_cmesh_trees *t8_cmesh_trees_t;
 
 /** This structure hold the connectivity data of the coarse mesh.
  *  It can either be replicated, then each process stores a copy of the whole
@@ -74,7 +78,8 @@ typedef struct t8_cmesh
                                                                  trees for each eclass. */
 
   t8_cmesh_trees_t    trees; /**< structure that holds all local trees and ghosts */
-#if 0
+#if 1
+  /* TODO: remove */
   sc_array_t         *ctrees; /**< An array of all trees in the cmesh. */
   sc_array_t         *ghosts; /**< The trees that do not belong to this process
                                    but are a face-neighbor of at least one local tree. */
@@ -84,14 +89,19 @@ typedef struct t8_cmesh
   t8_topidx_t        *tree_per_proc; /**< If partitioned twice the number of local
                                           trees on each process plus one if the last tree of the respective
                                           process is the first tree of the next process */
+#if 1
+  /* TODO: remove */
   sc_mempool_t       *tree_attributes_mem[T8_ECLASS_LAST]; /**< For each eclass we can specify an
-                                         attribute size and attach attributes of this size to each trees */
+                                         attribute size and attach attributes of this size to each trees
+ */
+#endif
 #ifdef T8_ENABLE_DEBUG
   t8_topidx_t         inserted_trees; /**< Count the number of inserted trees to
                                            check at commit if it equals the total number. */
   t8_topidx_t         inserted_ghosts; /**< Count the number of inserted ghosts to
                                            check at commit if it equals the total number. */
 #endif
+  t8_stash_t          stash; /**< Used as temporary storage for the trees before commit. */
   /* TODO: make tree_offsets shared array as soon as libsc is updated */
 }
 t8_cmesh_struct_t;
