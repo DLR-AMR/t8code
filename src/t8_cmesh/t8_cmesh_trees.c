@@ -73,6 +73,7 @@ t8_cmesh_trees_add_tree (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
   num_faces = t8_eclass_num_faces[eclass];
   tree->face_neighbors = T8_ALLOC (t8_topidx_t, num_faces);
   tree->tree_to_face = T8_ALLOC (int8_t, num_faces);
+  tree->treeid = tree_id;
   for (iface = 0; iface < num_faces; iface++) {
     tree->face_neighbors[iface] = tree->tree_to_face[iface] = -1;
   }
