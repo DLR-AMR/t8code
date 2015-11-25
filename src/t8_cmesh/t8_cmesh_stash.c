@@ -101,9 +101,9 @@ t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id, size_t size,
   sattr = sc_array_push (&stash->attributes);
   sattr->attr_size = size;
   sattr->id = id;
-  sattr->is_owned = !copy ? 1 : 0;
-  sattr->attr_data = !copy ? T8_ALLOC (char, size) : attr;
-  if (!copy) {
+  sattr->is_owned = copy ? 1 : 0;
+  sattr->attr_data = copy ? T8_ALLOC (char, size) : attr;
+  if (copy) {
     memcpy (sattr->attr_data, attr, size);
   }
 }
