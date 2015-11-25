@@ -31,7 +31,7 @@
  * We define here the datatypes needed for internal cmesh routines.
  */
 
-typedef struct t8_stash * t8_stash_t;
+typedef struct t8_stash *t8_stash_t;
 typedef struct t8_part_tree *t8_part_tree_t;
 typedef struct t8_cmesh_trees *t8_cmesh_trees_t;
 
@@ -141,24 +141,24 @@ t8_ctree_struct_t;
 /* TODO: document */
 typedef struct t8_part_tree
 {
-  char              *first_tree; /* Stores the trees, the ghosts and the attributes.
-                                   The last 2*sizeof(t8_topidx) bytes store num_trees and num_ghosts */
-  t8_topidx_t        first_tree_id; /* tree_id of the first tree */
-  t8_topidx_t        num_trees;
-  t8_topidx_t        num_ghosts;
+  char               *first_tree;       /* Stores the trees, the ghosts and the attributes.
+                                           The last 2*sizeof(t8_topidx) bytes store num_trees and num_ghosts */
+  t8_topidx_t         first_tree_id;    /* tree_id of the first tree */
+  t8_topidx_t         num_trees;
+  t8_topidx_t         num_ghosts;
 #if 0
   /* TODO: Do we need this? */
-  size_t             num_bytes_for_attributes;
+  size_t              num_bytes_for_attributes;
 #endif
 }
 t8_part_tree_struct_t;
 
 typedef struct t8_cmesh_trees
 {
-  sc_array_t        *from_proc; /* array of t8_part_tree, one for each process */
-  int               *tree_to_proc; /* for each tree its process */
-  int               *ghost_to_proc; /* for each ghost its process */
-  t8_topidx_t       *ghost_to_offset; /* for each ghost its offset within the process */
-}t8_cmesh_trees_struct_t;
+  sc_array_t         *from_proc;        /* array of t8_part_tree, one for each process */
+  int                *tree_to_proc;     /* for each tree its process */
+  int                *ghost_to_proc;    /* for each ghost its process */
+  t8_topidx_t        *ghost_to_offset;  /* for each ghost its offset within the process */
+} t8_cmesh_trees_struct_t;
 
 #endif /* !T8_CMESH_TYPES_H */

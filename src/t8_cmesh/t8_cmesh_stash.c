@@ -157,7 +157,7 @@ t8_stash_t
 t8_stash_bcast (t8_stash_t stash, int root, sc_MPI_Comm comm,
                 size_t elem_counts[3])
 {
-  int mpirank, mpisize, mpiret;
+  int                 mpirank, mpisize, mpiret;
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
@@ -169,8 +169,9 @@ t8_stash_bcast (t8_stash_t stash, int root, sc_MPI_Comm comm,
     sc_array_resize (&stash->joinfaces, elem_counts[2]);
   }
   mpiret = sc_MPI_Bcast (stash->attributes.array,
-                         elem_counts[0] * sizeof (t8_stash_attribute_struct_t),
-                         sc_MPI_BYTE, 0, comm);
+                         elem_counts[0] *
+                         sizeof (t8_stash_attribute_struct_t), sc_MPI_BYTE, 0,
+                         comm);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Bcast (stash->classes.array,
                          elem_counts[0] * sizeof (t8_stash_class_struct_t),

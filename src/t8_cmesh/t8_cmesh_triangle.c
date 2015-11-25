@@ -385,11 +385,12 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
         }
         else {
           /* TODO: compute correct orientation in 3d
-                   or do we do this here? */
+             or do we do this here? */
           firstvertex = face1 == 0 ? 1 : 0;
-          el_vertices1 = (double *) t8_stash_get_attribute (cmesh->stash, tit);
-          el_vertices2 = (double *) t8_stash_get_attribute (cmesh->stash,
-                                                            element);
+          el_vertices1 =
+            (double *) t8_stash_get_attribute (cmesh->stash, tit);
+          el_vertices2 =
+            (double *) t8_stash_get_attribute (cmesh->stash, element);
           el_vertices1 += 3 * firstvertex;
           for (ivertex = 1; ivertex <= 3; ivertex++) {
             /* The face with number k consists of the vertices with numbers
