@@ -1264,9 +1264,34 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
       t8_cmesh_set_tree_vertices (cmesh, 5, attr_vertices, 4);
       break;
     case T8_ECLASS_PYRAMID:
+      vertices[0] = 1;
+      vertices[1] = 3;
+      vertices[2] = 0;
+      vertices[3] = 2;
+      vertices[4] = 7;
+      t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                     vertices_coords,
+                                                     attr_vertices, 5);
+      t8_cmesh_set_tree_vertices (cmesh, 0, attr_vertices, 5);
+      vertices[0] = 0;
+      vertices[1] = 2;
+      vertices[2] = 4;
+      vertices[3] = 6;
+      t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                     vertices_coords,
+                                                     attr_vertices, 5);
+      t8_cmesh_set_tree_vertices (cmesh, 1, attr_vertices, 5);
+      vertices[0] = 1;
+      vertices[1] = 0;
+      vertices[2] = 5;
+      vertices[3] = 4;
+      t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                     vertices_coords,
+                                                     attr_vertices, 5);
+      t8_cmesh_set_tree_vertices (cmesh, 2, attr_vertices, 5);
       t8_cmesh_join_faces (cmesh, 0, 1, 3, 2, 0);
-      t8_cmesh_join_faces (cmesh, 1, 2, 0, 0, 0);
-      t8_cmesh_join_faces (cmesh, 2, 0, 2, 0, 1);
+      t8_cmesh_join_faces (cmesh, 1, 2, 0, 1, 0);
+      t8_cmesh_join_faces (cmesh, 2, 0, 2, 0, 0);
       break;
     default:
       break;
