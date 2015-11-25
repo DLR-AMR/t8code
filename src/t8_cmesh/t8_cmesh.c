@@ -77,11 +77,13 @@ t8_cmesh_init (t8_cmesh_t * pcmesh)
   cmesh = *pcmesh = T8_ALLOC_ZERO (t8_cmesh_struct_t, 1);
   t8_refcount_init (&cmesh->rc);
 
+
   /* sensible (hard error) defaults */
   cmesh->dimension = -1;
   cmesh->mpicomm = sc_MPI_COMM_WORLD;
   cmesh->mpirank = -1;
   cmesh->mpisize = -1;
+  sc_array_new (cmesh->stash);
 }
 
 void
@@ -131,12 +133,17 @@ t8_cmesh_set_partitioned (t8_cmesh_t cmesh, int set_partitioned,
   else {
     cmesh->num_trees = num_global_trees;
     cmesh->first_tree = first_local_tree;
-    cmesh->num_ghosts = num_ghosts;
+    cmesh->num_ghosts = num_ghosts;    
+#if 0
+    /* TODO: rethink with the new interface */
     cmesh->ghosts = sc_array_new_size (sizeof (t8_cghost_struct_t), num_ghosts);
+#endif
   }
 }
 
 /* Return a pointer to the ctree of a given global tree_id. */
+/* TODO: should get a gloidx?
+ *       place after commit */
 static              t8_ctree_t
 t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 {
@@ -144,6 +151,7 @@ t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree_id));
+  T8_ASSERT (cmesh->committed);
 
   index = cmesh->set_partitioned ? tree_id - cmesh->first_tree : tree_id;
   return t8_cmesh_trees_get_tree (cmesh->trees, index);
@@ -151,10 +159,12 @@ t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 
 /* Returns the first local tree.
  * Returns NULL if there are no local trees. */
-static              t8_ctree_t
+/* TODO: hide */
+t8_ctree_t
 t8_cmesh_first_tree (t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (cmesh->committed);
 
   return cmesh->num_local_trees > 0 ? t8_cmesh_get_tree (cmesh, 0) : NULL;
 }
@@ -163,18 +173,20 @@ t8_cmesh_first_tree (t8_cmesh_t cmesh)
  * after a given tree.
  * The given tree must be a valid and owned tree.
  * If the given tree is the last local tree, NULL is returned */
-static              t8_ctree_t
+/* TODO: hide */
+t8_ctree_t
 t8_cmesh_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (tree != NULL);
   T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree->treeid));
+  T8_ASSERT (cmesh->committed);
   return tree->treeid <
     cmesh->num_local_trees -
-    1 ? (t8_ctree_t) t8_sc_array_index_topidx (cmesh->ctrees,
-                                               tree->treeid + 1) : NULL;
+    1 ? t8_cmesh_get_tree (cmesh, tree->treeid + 1) : NULL;
 }
 
+#if 0
 void
 t8_cmesh_set_attribute_sizes (t8_cmesh_t cmesh, size_t attr_sizes[],
                               int num_sizes)
@@ -210,33 +222,28 @@ t8_cmesh_set_attribute_size_single (t8_cmesh_t cmesh, size_t attr_size,
 
   cmesh->tree_attributes_mem[(int) tree_class] = sc_mempool_new (attr_size);
 }
+#endif
 
 void
 t8_cmesh_tree_set_attribute (t8_cmesh_t cmesh, t8_topidx_t tree_id,
-                             void *attribute)
+                             size_t attr_size, void *attribute)
 {
   t8_ctree_t          tree;
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (!cmesh->committed);
   T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree_id));
 
-  tree = t8_cmesh_get_tree (cmesh, tree_id);
-  T8_ASSERT (tree->eclass != T8_ECLASS_LAST);
-  T8_ASSERT (tree->attribute == NULL);
-  T8_ASSERT (t8_cmesh_get_attribute_size (cmesh, tree->eclass) > 0);
-
-  tree->attribute =
-    sc_mempool_alloc (cmesh->tree_attributes_mem[tree->eclass]);
-  memcpy (tree->attribute, attribute,
-          t8_cmesh_get_attribute_size (cmesh, tree->eclass));
+  t8_stash_add_attribute (cmesh->stash, tree_id, attr_size, attribute);
 }
 
 void               *
 t8_cmesh_tree_get_attribute (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 {
+  T8_ASSERT (cmesh->committed);
   return t8_cmesh_trees_get_attribute (cmesh->trees, tree_id);
 }
 
+/* TODO: this can be removed */
 void
 t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees)
 {
@@ -263,7 +270,6 @@ t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees)
   /* As soon as we know the number of trees, we allocate
    * the ctree array.
    */
-  cmesh->ctrees = sc_array_new_size (sizeof (t8_ctree_struct_t), num_trees);
 }
 
 /* Check whether a given tree_id belongs to a tree in the cmesh.
@@ -272,6 +278,7 @@ t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees)
 static int
 t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 {
+  T8_ASSERT (cmesh->committed);
   if (cmesh->set_partitioned) {
     return cmesh->first_tree <= tree_id
       && tree_id < cmesh->first_tree + cmesh->num_local_trees;
@@ -281,6 +288,7 @@ t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_topidx_t tree_id)
   }
 }
 
+#if 0
 /* Given a tree_id return the index of the specified tree in
  * cmesh's tree array
  */
@@ -289,6 +297,7 @@ t8_cmesh_tree_index (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 {
   return cmesh->set_partitioned ? tree_id - cmesh->first_tree : tree_id;
 }
+#endif
 
 void
 t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_topidx_t tree_id,
@@ -312,6 +321,9 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_topidx_t tree_id,
   }
   cmesh->num_trees_per_eclass[tree_class]++;
 
+  t8_stash_add_class (cmesh->stash, tree_id, tree_class);
+#if 0
+  /* TODO: recycle this in commit, delete if not needed anymore */
   tree = t8_cmesh_get_tree (cmesh, tree_id);
 
   tree->eclass = tree_class;
@@ -326,11 +338,13 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_topidx_t tree_id,
     tree->face_neighbors[i].is_owned = -1;
   }
   tree->attribute = NULL;
+#endif
 #ifdef T8_ENABLE_DEBUG
   cmesh->inserted_trees++;
 #endif
 }
 
+#if 0
 void
 t8_cmesh_set_attribute_to_vertices (t8_cmesh_t cmesh)
 {
@@ -345,24 +359,17 @@ t8_cmesh_set_attribute_to_vertices (t8_cmesh_t cmesh)
   }
   t8_cmesh_set_attribute_sizes (cmesh, attribute_sizes, T8_ECLASS_LAST);
 }
+#endif
 
 void
 t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_topidx_t tree_id,
                             double *vertices, t8_topidx_t num_vertices)
 {
-  t8_ctree_t          tree;
+  T8_ASSERT (cmesh != NULL);  
+  T8_ASSERT (vertices != NULL);  
 
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree_id));
-  T8_ASSERT (vertices != NULL);
-
-  tree = t8_cmesh_get_tree (cmesh, tree_id);
-  T8_ASSERT (tree->eclass != T8_ECLASS_LAST);
-  T8_ASSERT (num_vertices * 3 * sizeof (double) ==
-             t8_cmesh_get_attribute_size (cmesh, tree->eclass));
-  T8_ASSERT (tree->attribute == NULL);
-
-  t8_cmesh_tree_set_attribute (cmesh, tree_id, (void *) vertices);
+  t8_stash_add_attribute(cmesh->stash, tree_id, num_vertices * sizeof (double),
+                         (void *) vertices);
 }
 
 /* TODO: do we still need this function? if yes, write it correctly. */
@@ -414,6 +421,7 @@ t8_cmesh_set_ghost (t8_cmesh_t cmesh, t8_topidx_t ghost_id,
  *                         This would not require any tree to be set.
  *                         But certainly is more memory intensive.
  */
+/* TODO: change to gloidx? */
 void
 t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
                      int face1, int face2, int orientation)
@@ -422,101 +430,10 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
 
   T8_ASSERT (0 <= tree1 && tree1 < cmesh->num_trees);
   T8_ASSERT (0 <= tree2 && tree2 < cmesh->num_trees);
-  T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree1)
-             || t8_cmesh_tree_id_is_owned (cmesh, tree2));      /* At least one of the trees
-                                                                 * must belong to this process. */
+
   T8_ASSERT (0 <= orientation);
 
-  if (t8_cmesh_tree_id_is_owned (cmesh, tree1)
-      || t8_cmesh_tree_id_is_owned (cmesh, tree2))
-    /* Both trees belong to this process. */
-  {
-    T1 = t8_cmesh_get_tree (cmesh, tree1);
-    T2 = t8_cmesh_get_tree (cmesh, tree2);
-    /* Check if the trees were added to cmesh before. */
-    T8_ASSERT (T1->treeid == tree1 && T2->treeid == tree2);
-    T8_ASSERT (0 <= face1 && face1 < t8_eclass_num_faces[T1->eclass]);
-    T8_ASSERT (0 <= face2 && face2 < t8_eclass_num_faces[T2->eclass]);
-    /* Check if both faces are of the same type (i.e. do not join a triangle and a square) */
-    T8_ASSERT (t8_eclass_face_types[T1->eclass][face1] ==
-               t8_eclass_face_types[T2->eclass][face2]);
-    /* Check if both faces are not joined already */
-    T8_ASSERT (T1->face_neighbors[face1].treeid == -1);
-    T8_ASSERT (T2->face_neighbors[face2].treeid == -1);
-    /* Compute the tree_to_face index according to the given orientation. */
-    T1->face_neighbors[face1].is_owned = 1;
-    T1->face_neighbors[face1].treeid = tree2;
-    T1->face_neighbors[face1].tree_to_face = orientation *
-      t8_eclass_num_faces[T2->eclass] + face2;
-    T2->face_neighbors[face2].is_owned = 1;
-    T2->face_neighbors[face2].treeid = tree1;
-    T2->face_neighbors[face2].tree_to_face = orientation *
-      t8_eclass_num_faces[T1->eclass] + face1;
-  }
-  else
-    /* One of the trees is not owned by this process. */
-  {
-    /* TODO: handle ghosts coorectly here */
-#if 0
-    t8_topidx_t         ghost_id;
-    t8_topidx_t         owned_id;
-#ifdef T8_ENABLE_DEBUG
-    int                 owned_face;
-#endif
-    int                 ghost_face;
-    t8_cghost_t         Ghost;
-    t8_eclass_t         ghost_eclass;
-    size_t              pos;
-
-    /* Find out which one is owned and which one not. */
-    if (t8_cmesh_tree_id_is_owned (cmesh, tree1)) {
-      owned_id = tree1;
-      ghost_id = tree2;
-#ifdef T8_ENABLE_DEBUG
-      owned_face = face1;
-#endif
-      ghost_face = face2;
-    }
-    else {
-      T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree2));
-      owned_id = tree2;
-      ghost_id = tree1;
-#ifdef T8_ENABLE_DEBUG
-      owned_face = face2;
-#endif
-      ghost_face = face1;
-    }
-    T1 = t8_cmesh_get_tree (cmesh, owned_id);
-
-    Ghost = T8_ALLOC (t8_cghost_struct_t, 1);
-    Ghost->treeid = ghost_id;
-    if (sc_hash_array_insert_unique (cmesh->ghosts, Ghost, &pos) == NULL)
-      /* The ghost already exists in the array and we only need to add data to it. */
-    {
-      T8_FREE (Ghost);
-      Ghost = (t8_cghost_t) sc_array_index (&cmesh->ghosts->a, pos);
-      ghost_eclass = Ghost->eclass;
-      T8_ASSERT (Ghost->treeid == ghost_id);
-    }
-    else {
-      SC_ABORTF ("The ghost tree %i was not found in the coarse mesh.",
-                 ghost_id);
-    }
-    /* Check if both faces are of the same type (i.e. do not join a triangle and a square) */
-    T8_ASSERT (t8_eclass_face_types[T1->eclass][owned_face] ==
-               t8_eclass_face_types[ghost_eclass][ghost_face]);
-    /* Check if both faces are not joined already */
-    T8_ASSERT (T1->face_neighbors[face1].treeid == -1);
-    T8_ASSERT (Ghost->local_neighbors[ghost_face] == -1);
-
-    Ghost->local_neighbors[ghost_face] = owned_id;
-    /* Compute the tree_to_face index according to the given orientation. */
-    T1->face_neighbors[ghost_face].is_owned = 0;
-    T1->face_neighbors[ghost_face].treeid = ghost_id;
-    T1->face_neighbors[ghost_face].tree_to_face = orientation *
-      t8_eclass_num_faces[ghost_eclass] + ghost_face;
-#endif
-  }
+  t8_stash_add_facejoin (cmesh->stash, tree1, tree2, face1, face2, orientation);
 }
 
 /* compare two arrays of face_neighbors for equality */
@@ -560,12 +477,15 @@ t8_cmesh_ctree_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b)
 /* returns true if cmesh_a equals cmesh_b */
 int
 t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
+/* TODO: rewrite */
 {
   int                 is_equal;
   int                 iclass;
   t8_ctree_t          tree_a, tree_b;
   T8_ASSERT (cmesh_a != NULL && cmesh_b != NULL);
 
+  return 0;
+#if 0
   if (cmesh_a == cmesh_b) {
     return 1;
   }
@@ -639,8 +559,10 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
     return 0;
   }
   return 1;
+#endif
 }
 
+#if 0
 /* broadcast the tree attributes of a cmesh on root to all processors */
 /* TODO: can we optimize it by just sending the memory of the mempools? */
 static void
@@ -678,6 +600,8 @@ t8_cmesh_bcast_attributes (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     }
   }
 }
+#endif
+
 
 t8_cmesh_t
 t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
@@ -708,6 +632,10 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
    *        processes are equal)
    */
   /* TODO: Send the tree's vertices */
+
+  return NULL;
+#if 0
+  /* TODO: rewrite */
 
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -823,6 +751,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   }
   T8_FREE (fneighbors);
   return cmesh_in;
+#endif
 }
 
 void
@@ -846,6 +775,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     SC_CHECK_MPI (mpiret);
     cmesh->mpicomm = comm_dup;
   }
+  /* TODO: setup trees */
 
   /* query communicator new */
   mpiret = sc_MPI_Comm_size (cmesh->mpicomm, &cmesh->mpisize);
@@ -995,33 +925,16 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
     mpiret = sc_MPI_Comm_free (&cmesh->mpicomm);
     SC_CHECK_MPI (mpiret);
   }
-  /* free attributes */
-  for (iclass = T8_ECLASS_FIRST; iclass < T8_ECLASS_LAST; iclass++) {
-    sc_mempool_destroy (cmesh->tree_attributes_mem[iclass]);
-  }
-  /* free trees */
-  if (cmesh->ctrees != NULL) {
-    for (treeit = t8_cmesh_first_tree (cmesh); treeit != NULL;
-         treeit = t8_cmesh_next_tree (cmesh, treeit)) {
-      T8_FREE (treeit->face_neighbors);
-    }
-    sc_array_destroy (cmesh->ctrees);
-  }
+
   /* free tree_offset */
   if (cmesh->tree_offsets != NULL) {
     T8_FREE (cmesh->tree_offsets);
   }
-  /* free ghosts */
-  if (cmesh->ghosts != NULL) {
-    for (ti = 0; ti < cmesh->num_ghosts; ti++) {
-      ghostit =
-        (t8_cghost_t) t8_sc_array_index_topidx (cmesh->ghosts, ti);
-      if (ghostit != NULL) {
-        T8_FREE (ghostit->neighbors);
-        T8_FREE (ghostit);
-      }
-    }
-  }
+  /*TODO: write this */
+#if 0
+  t8_cmesh_trees_destroy (cmesh->trees);
+#endif
+
   T8_FREE (cmesh);
 
   *pcmesh = NULL;
