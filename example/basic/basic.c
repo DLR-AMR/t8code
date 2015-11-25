@@ -170,13 +170,10 @@ main (int argc, char **argv)
   level = 3;
   t8_global_productionf ("Testing basic tet mesh.\n");
 
-#if 0
+#if 1
   t8_basic (0, level);
-  t8_global_productionf ("1st\n");
   t8_basic (1, level);
-  t8_global_productionf ("2nd\n");
   t8_basic (0, level);
-  t8_global_productionf ("3rd\n");
   t8_basic (1, level);
   t8_global_productionf ("Done testing basic tet mesh.\n");
 #endif
@@ -184,7 +181,6 @@ main (int argc, char **argv)
   t8_global_productionf ("Testing hypercube cmesh.\n");
 
   for (eclass = T8_ECLASS_FIRST; eclass < T8_ECLASS_LAST; eclass++) {
-    if (eclass != T8_ECLASS_PYRAMID) {
       /* Construct the mesh on each process */
       t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 0, 0);
       t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 0, 0);
@@ -196,8 +192,7 @@ main (int argc, char **argv)
       t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 0, 1);
       t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 1, 1);
       t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 1, 1);
-#endif
-    }
+#endif   
   }
   t8_global_productionf ("Done testing hypercube cmesh.\n");
 
