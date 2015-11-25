@@ -444,7 +444,6 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
 
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
-    t8_cmesh_set_attribute_to_vertices (cmesh);
     /* read .node file */
     snprintf (current_file, BUFSIZ, "%s.node", fileprefix);
     retval =
