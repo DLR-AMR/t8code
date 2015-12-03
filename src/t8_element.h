@@ -185,10 +185,11 @@ struct t8_eclass_scheme
   t8_element_get_linear_id_t elem_get_linear_id; /**< Calculate the linear id of a given element. */
   t8_element_successor_t elem_successor; /**< Compute the successor of a given element */
   t8_element_anchor_t elem_anchor; /**< Compute the anchor node of a given element */
-  t8_element_vertex_coords_t elem_vertex_coords; /**< Compute the coordinates of a vertex */
   t8_element_root_len_t elem_root_len; /**< Compute the root length of a given element */
   t8_element_first_descendant_t elem_first_desc; /**< Compute an element's first descendant */
   t8_element_last_descendant_t elem_last_desc; /**< Compute an element's last descendant */
+  t8_element_vertex_coords_t elem_vertex_coords; /**< Compute the coordinates of a vertex */
+
   /* these element routines have a context for memory allocation */
   t8_element_new_t    elem_new;         /**< Allocate space for one or more elements. */
   t8_element_destroy_t elem_destroy;    /**< Deallocate space for one or more elements. */
