@@ -97,6 +97,8 @@ void                t8_stash_attribute_sort (t8_stash_t stash);
 t8_stash_t          t8_stash_bcast (t8_stash_t stash, int root,
                                     sc_MPI_Comm comm, size_t elem_counts[]);
 
+int                 t8_stash_is_equal (t8_stash_t stash_a, t8_stash_t stash_b);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_STASH_H */

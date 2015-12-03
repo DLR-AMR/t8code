@@ -182,3 +182,17 @@ t8_stash_bcast (t8_stash_t stash, int root, sc_MPI_Comm comm,
                          sc_MPI_BYTE, 0, comm);
   SC_CHECK_MPI (mpiret);
 }
+
+int
+t8_stash_is_equal (t8_stash_t stash_a, t8_stash_t stash_b)
+{
+  if (stash_a == stash_b) {
+    return 1;
+  }
+  if (stash_a == NULL || stash_b == NULL) {
+    return 0;
+  }
+  return (sc_array_is_equal (&stash_a->attributes, &stash_b->attributes)
+         && sc_array_is_equal (&stash_a->classes, &stash_b->classes)
+         && sc_array_is_equal (&stash_a->joinfaces, &stash_b->joinfaces));
+}
