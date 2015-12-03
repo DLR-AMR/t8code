@@ -1353,9 +1353,8 @@ t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees, sc_MPI_Comm comm,
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   num_trees_per_eclass[eclass] = num_trees;
-  t8_cmesh_set_num_trees (cmesh, num_trees, num_trees_per_eclass);
   for (i = 0; i < num_trees; i++) {
-    t8_cmesh_set_tree (cmesh, i, eclass);
+    t8_cmesh_set_tree_class (cmesh, i, eclass);
   }
 
   t8_cmesh_commit (cmesh);

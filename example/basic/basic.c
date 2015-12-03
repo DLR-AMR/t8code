@@ -178,10 +178,10 @@ main (int argc, char **argv)
 
 #if 1
   t8_global_productionf ("Testing basic tet mesh.\n");
-  t8_basic (0, level);
-  t8_basic (1, level);
-  t8_basic (0, level);
-  t8_basic (1, level);
+  t8_basic (0, level, 0);
+  t8_basic (1, level, 0);
+  t8_basic (0, level, 1);
+  t8_basic (1, level, 1);
   t8_global_productionf ("Done testing basic tet mesh.\n");
 #endif
 #if 1

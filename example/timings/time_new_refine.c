@@ -149,7 +149,8 @@ t8_timings_new (int level, int dim)
   
   t8_forest_init (&forest);
   t8_forest_set_cmesh (forest,
-                       t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0));
+                       t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0,
+                                               0));
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
   t8_forest_set_level (forest, level);
   t8_forest_commit (forest);
