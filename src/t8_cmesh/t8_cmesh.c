@@ -262,8 +262,7 @@ t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees)
     cmesh->num_local_trees = num_trees;
   }
   else {
-    /* num_trees == 0 is not allowed */
-    T8_ASSERT (num_trees > 0);
+    /* num_trees == 0 is allowed */
     T8_ASSERT (cmesh->num_trees == 0);
     cmesh->num_trees = cmesh->num_local_trees = num_trees;
   }
