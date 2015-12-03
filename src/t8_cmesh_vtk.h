@@ -20,19 +20,43 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_forest_adapt.h
- * We define the adapt routine to refine and corsen a forest of trees in this file.
+/** file t8_cmesh_vtk.h
  */
+/* TODO: document this file */
 
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_adapt */
-
-#ifndef T8_FOREST_ADAPT_H
-#define T8_FOREST_ADAPT_H
+#ifndef T8_CMESH_VTK_H
+#define T8_CMESH_VTK_H
 
 #include <t8.h>
-#include <t8_forest.h>
+#include <t8_cmesh.h>
 
-/* TODO: comment */
-void                t8_forest_adapt (t8_forest_t forest);
+/* typedef and macros */
 
-#endif /* !T8_FOREST_ADAPT_H! */
+/* TODO: these macros need to be set by configure */
+#ifndef T8_VTK_DOUBLES
+#define T8_VTK_FLOAT_NAME "Float32"
+#define T8_VTK_FLOAT_TYPE float
+#else
+#define T8_VTK_FLOAT_NAME "Float64"
+#define T8_VTK_FLOAT_TYPE double
+#endif
+
+#ifndef T8_VTK_BINARY
+#define T8_VTK_ASCII 1
+#define T8_VTK_FORMAT_STRING "ascii"
+#else
+#define T8_VTK_FORMAT_STRING "binary"
+#endif
+
+#define T8_VTK_TOPIDX "Int32"
+
+T8_EXTERN_C_BEGIN ();
+/* function declarations */
+
+int                 t8_cmesh_vtk_write_file (t8_cmesh_t cmesh,
+                                             const char *fileprefix,
+                                             double scale);
+
+T8_EXTERN_C_END ();
+
+#endif /* !T8_CMESH_VTK_H */

@@ -409,8 +409,8 @@ void                t8_element_destroy (t8_eclass_scheme_t * ts,
  * \param [in] it       The index of the element that should be returned.
  * \return              A pointer to the it-th element in \b array.
  */
-t8_element_t *      t8_element_array_index (t8_eclass_scheme_t * ts,
-                                            sc_array_t *array, size_t it);
+t8_element_t       *t8_element_array_index (t8_eclass_scheme_t * ts,
+                                            sc_array_t * array, size_t it);
 
 T8_EXTERN_C_END ();
 

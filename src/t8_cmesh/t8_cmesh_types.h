@@ -1,0 +1,164 @@
+/*
+  This file is part of t8code.
+  t8code is a C library to manage a collection (a forest) of multiple
+  connected adaptive space-trees of general element classes in parallel.
+
+  Copyright (C) 2015 the developers
+
+  t8code is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  t8code is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with t8code; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+*/
+
+#ifndef T8_CMESH_TYPES_H
+#define T8_CMESH_TYPES_H
+
+#include <t8.h>
+#include <t8_refcount.h>
+#include <t8_cmesh/t8_cmesh_stash.h>
+
+/** \file t8_cmesh_types.h
+ * We define here the datatypes needed for internal cmesh routines.
+ */
+
+typedef struct t8_stash *t8_stash_t;
+typedef struct t8_part_tree *t8_part_tree_t;
+typedef struct t8_cmesh_trees *t8_cmesh_trees_t;
+
+/** This structure hold the connectivity data of the coarse mesh.
+ *  It can either be replicated, then each process stores a copy of the whole
+ *  mesh, or partitioned. In the latter case, each process only stores a local
+ *  portion of the mesh plus information about ghost elements.
+ *
+ *  The coarse mesh is a collection of coarse trees that can be identified
+ *  along faces.
+ *  The array ctrees stores these coarse trees sorted by their (global) tree_id.
+ *  If the mesh if partitioned it is partitioned according to an (possible only
+ *  virtually existing) underlying fine mesh. Therefore the ctrees array can
+ *  store duplicated trees on different processes, if each of these processes
+ *  owns elements of the same tree in the fine mesh.
+ *
+ *  Each tree stores information about its face-neighbours in an array of
+ *  \ref t8_ctree_fneighbor. \see t8_ctree_fneighbor
+ *
+ *  If partitioned the ghost trees are stored in a hash table that is backed up
+ *  by an array. The hash value of a ghost tree is its tree_id modulo the number
+ *  of ghosts on this process.
+ */
+typedef struct t8_cmesh
+{
+  /* TODO: make the comments more legible */
+  /* TODO: right now a not replicated cmesh is limited to t8_topidx in tree indices
+   *       we should think about how to extend this to t8_gloidx */
+  int                 committed;
+  int                 dimension; /**< The dimension of the cmesh. It is set when the first tree is inserted. */
+  int                 do_dup;   /**< Communicator shall be duped. */
+  int                 set_partitioned; /**< If nonzero the cmesh is partitioned.
+                                            If zero each process has the whole cmesh. */
+  sc_MPI_Comm         mpicomm;  /**< MPI communicator to use. */
+  int                 mpirank;  /**< Number of this MPI process. */
+  int                 mpisize;  /**< Number of MPI processes. */
+  t8_refcount_t       rc; /**< The reference count of the cmesh. */
+  t8_gloidx_t         num_trees;   /**< The global number of trees */
+  t8_topidx_t         num_local_trees; /**< If partitioned the number of trees on this process. Otherwise the global number of trees. */
+  t8_topidx_t         num_ghosts; /**< If partitioned the number of neighbor trees
+                                    owned by different processes. */
+  /* TODO: wouldnt a local num_trees_per_eclass be better? */
+  t8_gloidx_t         num_trees_per_eclass[T8_ECLASS_LAST]; /**< After commit the number of
+                                                                 trees for each eclass. */
+
+  t8_cmesh_trees_t    trees; /**< structure that holds all local trees and ghosts */
+
+  t8_gloidx_t         first_tree; /**< The global index of the first local tree
+                                       on this process. Zero if the cmesh is not partitioned. -1 if this processor is empty. */
+  t8_topidx_t        *tree_per_proc; /**< If partitioned twice the number of local
+                                          trees on each process plus one if the last tree of the respective
+                                          process is the first tree of the next process */
+#ifdef T8_ENABLE_DEBUG
+  t8_topidx_t         inserted_trees; /**< Count the number of inserted trees to
+                                           check at commit if it equals the total number. */
+  t8_topidx_t         inserted_ghosts; /**< Count the number of inserted ghosts to
+                                           check at commit if it equals the total number. */
+#endif
+  t8_stash_t          stash; /**< Used as temporary storage for the trees before commit. */
+  /* TODO: make tree_offsets shared array as soon as libsc is updated */
+}
+t8_cmesh_struct_t;
+
+typedef struct t8_cghost
+{
+  t8_gloidx_t         treeid; /**< The global number of this ghost. */
+  t8_eclass_t         eclass; /**< The eclass of this ghost. */
+  t8_gloidx_t        *neighbors; /**< Global id's of all neighbors of this ghost */
+}
+t8_cghost_struct_t;
+
+/** This structure holds the data of a local tree including the information
+ * about face neighbors. For those
+ * the tree_to_face index is computed as follows.
+ * Let F be the number of faces of the neighbor tree, then
+ * ttf % F is the face number and ttf / F is the orientation.
+ * The orientation is determined as follows.  Let my_face and other_face
+ * be the two face numbers of the connecting trees.
+ * We chose a master_face from them as follows: Either both trees have the same
+ * element class, then the face with the lower face number is the master_face or
+ * the trees belong to different classes in which case the face belonging to the
+ * tree with the lower class according to the ordering
+ * triangle < square,
+ * hex < tet < prism < pyramid,
+ * is the master_face.
+ * Then the first face corner of the master_face connects to a face
+ * corner in the other face.  The face
+ * orientation is defined as the number of this corner.
+ * If the classes are equal and my_face == other_face, treating
+ * either of both faces as the master_face leads to the same result.
+ */
+typedef struct t8_ctree
+{
+  t8_topidx_t         treeid; /**< The local number of this tree. */
+  /* TODO: The local id of a tree should be clear from context, the entry can
+   *       be optimized out. */
+  t8_eclass_t         eclass; /**< The eclass of this tree. */
+  t8_topidx_t        *face_neighbors; /**< For each face the local index of the face neighbor
+                                          of this tree at the face. Indices greater than
+                                          the number of local trees refer to ghosts. */
+  int8_t             *tree_to_face; /**< For each face the encoding of the face neighbor orientation. */
+  size_t              attribute_size; /**< The size of this trees attribute */
+  size_t              attribute_offset; /**< The offset of this attribute in the corresponding \a t8_part_tree structure */
+}
+t8_ctree_struct_t;
+
+/* TODO: document */
+typedef struct t8_part_tree
+{
+  char               *first_tree;       /* Stores the trees, the ghosts and the attributes.
+                                           The last 2*sizeof(t8_topidx) bytes store num_trees and num_ghosts */
+  t8_topidx_t         first_tree_id;    /* tree_id of the first tree */
+  t8_topidx_t         num_trees;
+  t8_topidx_t         num_ghosts;
+#if 0
+  /* TODO: Do we need this? */
+  size_t              num_bytes_for_attributes;
+#endif
+}
+t8_part_tree_struct_t;
+
+typedef struct t8_cmesh_trees
+{
+  sc_array_t         *from_proc;        /* array of t8_part_tree, one for each process */
+  int                *tree_to_proc;     /* for each tree its process */
+  int                *ghost_to_proc;    /* for each ghost its process */
+  t8_topidx_t        *ghost_to_offset;  /* for each ghost its offset within the process */
+} t8_cmesh_trees_struct_t;
+
+#endif /* !T8_CMESH_TYPES_H */

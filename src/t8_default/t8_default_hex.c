@@ -122,7 +122,7 @@ t8_default_hex_successor (const t8_element_t * elem1,
   T8_ASSERT (0 <= level && level <= P8EST_QMAXLEVEL);
 
   id = p8est_quadrant_linear_id ((const p8est_quadrant_t *) elem1, level);
-  T8_ASSERT (id + 1 < (1 << P8EST_DIM * level));
+  T8_ASSERT (id + 1 < (1UL << P8EST_DIM * level));
   p8est_quadrant_set_morton ((p8est_quadrant_t *) elem2, level, id + 1);
 }
 

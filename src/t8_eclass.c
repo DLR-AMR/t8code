@@ -35,6 +35,19 @@ const int    t8_eclass_num_vertices[T8_ECLASS_LAST] =
 const int t8_eclass_num_children[T8_ECLASS_LAST] =
   { 0, 2, 4, 4, 8, 8, 8, 10 };
 
+const int t8_eclass_vtk_type[T8_ECLASS_LAST] =
+  { 1, 3, 9, 5, 12, 10, 13, 14};
+
+const int t8_eclass_vtk_corner_number[T8_ECLASS_LAST][8] =
+{{  0, -1, -1, -1, -1, -1, -1, -1}, /* vertex */
+ {  0,  1, -1, -1, -1, -1, -1, -1}, /* line */
+ {  0,  1,  3,  2, -1, -1, -1, -1}, /* quad */
+ {  0,  1,  2, -1, -1, -1, -1, -1}, /* triangle */
+ {  0,  1,  3,  2,  4,  5,  7,  6}, /* hex */
+ {  0,  2,  1,  3, -1, -1, -1, -1}, /* tet */
+ {  0,  1,  2,  3,  4,  5, -1, -1}, /* prism */
+ {  0,  1,  3,  2,  4, -1, -1, -1}}; /* pyramid */
+
 const int t8_eclass_face_types[T8_ECLASS_LAST][T8_ECLASS_MAX_FACES] =
   {{ -1, -1, -1, -1, -1, -1 },
    {  0,  0, -1, -1, -1, -1 },
@@ -54,6 +67,16 @@ const int t8_eclass_boundary_count[T8_ECLASS_LAST][T8_ECLASS_LAST] =
    { 4,  6, 0, 4, 0, 0, 0, 0 },
    { 6,  9, 3, 2, 0, 0, 0, 0 },
    { 5,  8, 1, 4, 0, 0, 0, 0 }};
+
+const char * t8_eclass_to_string[T8_ECLASS_LAST] =
+     {"Vertex",
+      "Line",
+      "Quad",
+      "Triangle",
+      "Hex",
+      "Tet",
+      "Prism",
+      "Pyramid"};
 /* *INDENT-ON* */
 
 int
@@ -139,5 +162,41 @@ t8_eclass_count_leaf (t8_eclass_t theclass, int level)
     number_of_leafs += six_to_level;
     T8_ASSERT (number_of_leafs > 0);
     return number_of_leafs;
+  }
+}
+
+/* Compares two eclasses within the order
+ * Tri < Quad
+ * Tet < Hex < Prism < Pyramid
+ * Eclasses of different dimension are not allowed to be compared.
+ */
+int
+t8_eclass_compare (t8_eclass_t eclass1, t8_eclass_t eclass2)
+{
+  int                 dim = t8_eclass_to_dimension[eclass1];
+  T8_ASSERT (dim == t8_eclass_to_dimension[eclass2]);
+
+  if (eclass1 == eclass2) {
+    /* If both are equal return 0.
+     * This also captures the case dim <= 1. */
+    return 0;
+  }
+  else if (dim == 2) {
+    /* Either eclass1 = tri and eclass2 = quad or the other way around. */
+    return eclass1 == T8_ECLASS_TRIANGLE ? -1 : 1;
+  }
+  else {
+    T8_ASSERT (dim == 3);
+    switch (eclass1) {
+    case T8_ECLASS_TET:
+      return -1;
+    case T8_ECLASS_HEX:
+      return eclass2 == T8_ECLASS_TET ? 1 : -1;
+    case T8_ECLASS_PRISM:
+      return eclass2 == T8_ECLASS_PYRAMID ? -1 : 1;
+    default:
+      T8_ASSERT (eclass1 == T8_ECLASS_PYRAMID);
+      return -1;
+    }
   }
 }

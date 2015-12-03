@@ -75,11 +75,19 @@ extern const int    t8_eclass_num_vertices[T8_ECLASS_LAST];
 /** The number of children of an element class. */
 extern const int    t8_eclass_num_children[T8_ECLASS_LAST];
 
+/** The vtk cell type for the eclass */
+extern const int    t8_eclass_vtk_type[T8_ECLASS_LAST];
+
+extern const int    t8_eclass_vtk_corner_number[T8_ECLASS_LAST][8];
+
 /** For each of the element classes, list the type of the faces. */
 extern const int    t8_eclass_face_types[T8_ECLASS_LAST][T8_ECLASS_MAX_FACES];
 
 /** For each of the element classes, count the boundary points. */
 extern const int    t8_eclass_boundary_count[T8_ECLASS_LAST][T8_ECLASS_LAST];
+
+/** For each eclass, the name of this class as a string */
+extern const char  *t8_eclass_to_string[T8_ECLASS_LAST];
 
 /** Query the element class and count of boundary points.
  * \param [in] theclass         We query a point of this element class.
@@ -100,6 +108,18 @@ int                 t8_eclass_count_boundary (t8_eclass_t theclass,
  *                              of the given level.
  */
 t8_gloidx_t         t8_eclass_count_leaf (t8_eclass_t theclass, int level);
+
+/** Compare two eclasses of the sam dimensiona
+ *  as necessary for face neighbor orientation.
+ *  The implemented order is Triangle < Square in 2D and
+ *  Tet < Hex < Prism < Pyramid in 3D.
+ *  \param [in] eclass1 The first eclass to compare.
+ *  \param [in] eclass2 The second eclass to compare.
+ *  \return 0 if the eclasses are equal, 1 if eclass1 > eclass2
+ *            and -1 if eclass1 < eclass2
+ */
+int                 t8_eclass_compare (t8_eclass_t eclass1,
+                                       t8_eclass_t eclass2);
 
 T8_EXTERN_C_END ();
 
