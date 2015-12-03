@@ -168,19 +168,26 @@ t8_stash_bcast (t8_stash_t stash, int root, sc_MPI_Comm comm,
     sc_array_resize (&stash->classes, elem_counts[1]);
     sc_array_resize (&stash->joinfaces, elem_counts[2]);
   }
-  mpiret = sc_MPI_Bcast (stash->attributes.array,
+  if (elem_counts[0] > 0){
+    mpiret = sc_MPI_Bcast (stash->attributes.array,
                          elem_counts[0] *
                          sizeof (t8_stash_attribute_struct_t), sc_MPI_BYTE, 0,
                          comm);
-  SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Bcast (stash->classes.array,
-                         elem_counts[0] * sizeof (t8_stash_class_struct_t),
-                         sc_MPI_BYTE, 0, comm);
-  SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Bcast (stash->joinfaces.array,
-                         elem_counts[0] * sizeof (t8_stash_joinface_struct_t),
-                         sc_MPI_BYTE, 0, comm);
-  SC_CHECK_MPI (mpiret);
+    SC_CHECK_MPI (mpiret);
+  }
+  if (elem_counts[1] > 0) {
+    mpiret = sc_MPI_Bcast (stash->classes.array,
+                           elem_counts[1] * sizeof (t8_stash_class_struct_t),
+                           sc_MPI_BYTE, 0, comm);
+    SC_CHECK_MPI (mpiret);
+  }
+  if (elem_counts[2] > 0) {
+    mpiret = sc_MPI_Bcast (stash->joinfaces.array,
+                           elem_counts[2] * sizeof (t8_stash_joinface_struct_t),
+                           sc_MPI_BYTE, 0, comm);
+    SC_CHECK_MPI (mpiret);
+  }
+  return stash;
 }
 
 int

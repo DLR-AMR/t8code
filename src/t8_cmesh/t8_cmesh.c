@@ -627,8 +627,8 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
         cmesh_in->num_trees_per_eclass[iclass];
     }
     dimensions.stash_elem_counts[0] = cmesh_in->stash->attributes.elem_count;
-    dimensions.stash_elem_counts[0] = cmesh_in->stash->classes.elem_count;
-    dimensions.stash_elem_counts[0] = cmesh_in->stash->joinfaces.elem_count;
+    dimensions.stash_elem_counts[1] = cmesh_in->stash->classes.elem_count;
+    dimensions.stash_elem_counts[2] = cmesh_in->stash->joinfaces.elem_count;
 #ifdef T8_ENABLE_DEBUG
     dimensions.comm = cmesh_in->mpicomm;
     dimensions.inserted_trees = cmesh_in->inserted_trees;
@@ -644,8 +644,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     t8_cmesh_init (&cmesh_in);
     cmesh_in->mpicomm = comm;
     cmesh_in->dimension = dimensions.dimension;
-    cmesh_in->do_dup = dimensions.do_dup;
-    /* set tree num and allocate trees */
+    cmesh_in->do_dup = dimensions.do_dup;    
     t8_cmesh_set_num_trees (cmesh_in, dimensions.num_trees);
     for (iclass = 0; iclass < T8_ECLASS_LAST; iclass++) {
       cmesh_in->num_trees_per_eclass[iclass] =

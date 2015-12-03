@@ -33,7 +33,7 @@ t8_check_bcast_hypercube (t8_eclass_t eclass, int do_dup)
   cmesh_bcast = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, do_dup, 1);
   cmesh_check = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, do_dup, 0);
   SC_CHECK_ABORTF (t8_cmesh_is_equal (cmesh_bcast, cmesh_check),
-                   "cmesh_bcast check failed. %s %i\n",
+                   "cmesh_bcast check failed. ECLASS = %s,   do_dup = %i\n",
                    t8_eclass_to_string[eclass], do_dup);
   t8_cmesh_unref (&cmesh_bcast);
   t8_cmesh_unref (&cmesh_check);
