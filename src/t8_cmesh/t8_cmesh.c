@@ -433,25 +433,23 @@ t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
 static int
 t8_cmesh_face_n_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b, int num_neigh)
 {
-  int                 iface;
-
-  for (iface = 0; iface < num_neigh; iface++) {
-    if (tree_a->face_neighbors[iface] != tree_b->face_neighbors[iface]
-        || tree_a->tree_to_face[iface] != tree_b->tree_to_face[iface]) {
-      return 0;
-    }
-  }
-  return 1;
+  return memcmp (tree_a->face_neighbors, tree_b->face_neighbors,
+          num_neigh * sizeof (t8_topidx_t)) ||
+         memcmp (tree_a->tree_to_face, tree_b->tree_to_face,
+          num_neigh * sizeof (int8_t)) ? 0 : 1;
 }
 
-static int
+/* TODO: hide this function, is used by t8_cmesh_trees_is_equal */
+int
 t8_cmesh_ctree_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b)
 {
   int                 is_equal;
   T8_ASSERT (tree_a != NULL && tree_b != NULL);
 
   is_equal = tree_a->treeid != tree_b->treeid ||
-    tree_a->eclass != tree_b->eclass;
+    tree_a->eclass != tree_b->eclass ||
+      tree_a->attribute_offset != tree_b->attribute_offset ||
+            tree_a->attribute_size != tree_b->attribute_size;
   if (is_equal != 0) {
     return 0;
   }
@@ -474,8 +472,6 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
 {
   int                 is_equal;
   T8_ASSERT (cmesh_a != NULL && cmesh_b != NULL);
-
-  return 0;
 
   if (cmesh_a == cmesh_b) {
     return 1;
@@ -504,24 +500,7 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
   is_equal = memcmp (cmesh_a->num_trees_per_eclass,
                      cmesh_b->num_trees_per_eclass,
                      T8_ECLASS_LAST * sizeof (t8_topidx_t));
-  /* check attribute sizes */
-#if 0
-  for (iclass = 0; iclass < T8_ECLASS_LAST; iclass++) {
-    if (cmesh_a->tree_attributes_mem[iclass] != NULL) {
-      if (cmesh_b->tree_attributes_mem[iclass] == NULL) {
-        return 0;
-      }
-      else {
-        is_equal = is_equal
-          || t8_cmesh_get_attribute_size (cmesh_a,
-                                          (t8_eclass_t) iclass) !=
-          t8_cmesh_get_attribute_size (cmesh_b, (t8_eclass_t) iclass)
-          || sc_mempool_memory_used (cmesh_a->tree_attributes_mem[iclass]) !=
-          sc_mempool_memory_used (cmesh_b->tree_attributes_mem[iclass]);
-      }
-    }
-  }
-#endif
+
   /* check tree_offsets */
   if (cmesh_a->tree_per_proc != NULL) {
     if (cmesh_b->tree_per_proc == NULL) {
@@ -537,8 +516,17 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
     return 0;
   }
   /* check trees */
-  if (!t8_cmesh_trees_is_equal (cmesh_a->trees, cmesh_b->trees)) {
-    return 0;
+  if (cmesh_a->committed &&
+      !t8_cmesh_trees_is_equal (cmesh_a, cmesh_a->trees, cmesh_b->trees)) {
+    /* if we have committed check tree arrays */
+      return 0;
+  }
+  else {
+    if (!cmesh_a->committed &&
+        !t8_stash_is_equal (cmesh_a->stash, cmesh_b->stash)) {
+      /* if we have not committed check stash arrays */
+      return 0;
+    }
   }
   return 1;
 }

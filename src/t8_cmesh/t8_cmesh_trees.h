@@ -69,7 +69,7 @@ void                t8_cmesh_tree_add_attribute (t8_cmesh_trees_t trees,
                                                  char *attr, size_t size,
                                                  size_t offset);
 
-int                 t8_cmesh_trees_is_equal (t8_cmesh_trees_t trees_a,
+int                 t8_cmesh_trees_is_equal (t8_cmesh_t cmesh, t8_cmesh_trees_t trees_a,
                                              t8_cmesh_trees_t trees_b);
 
 void                t8_cmesh_trees_destroy (t8_cmesh_trees_t * trees);
