@@ -89,6 +89,7 @@ void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
                                               t8_topidx_t first_local_tree,
                                               t8_topidx_t num_ghosts);
 
+#if 0
 /** Set the sizes of the attributes for each tree class and create the attribute mempools.
  * A size of zero can be set, in this case no mempool is created.
  * It is not allowed to call this function after \ref t8_cmesh_commit.
@@ -114,11 +115,14 @@ void                t8_cmesh_set_attribute_size_single (t8_cmesh_t cmesh,
                                                         t8_eclass_t
                                                         tree_class);
 
+
 /** Set the sizes of the attributes to hold a \f$R^3\f$ coordinate for each tree corner.
  * It is not allowed to call this function after \ref t8_cmesh_commit.
  * \param [in,out] cmesh    The cmesh to be updated.
  */
 void                t8_cmesh_set_attribute_to_vertices (t8_cmesh_t cmesh);
+
+#endif
 
 /** Set the number of trees for a cmesh.
  * It is not allowed to call this function after \ref t8_cmesh_commit.
@@ -222,6 +226,12 @@ t8_cmesh_t          t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root,
  *                              specialized with t8_cmesh_set_* calls first.
  */
 void                t8_cmesh_commit (t8_cmesh_t cmesh);
+
+
+t8_ctree_t          t8_cmesh_first_tree (t8_cmesh_t cmesh);
+
+
+t8_ctree_t          t8_cmesh_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree);
 
 /** Return the eclass of a given tree.
  * \param [in]    cmesh         The cmesh to be considered.
@@ -337,6 +347,11 @@ t8_cmesh_t          t8_cmesh_new_quad (sc_MPI_Comm comm, int do_dup);
  * \return          A valid cmesh, as if _init and _commit had been called.
  */
 t8_cmesh_t          t8_cmesh_new_hex (sc_MPI_Comm comm, int do_dup);
+
+/** Create a coarse mesh that consists of a single pyramid.
+ * \return          A valid cmesh, as if _init and _commit had been called.
+ */
+t8_cmesh_t          t8_cmesh_new_pyramid (sc_MPI_Comm comm, int do_dup);
 
 /** Construct a hypercube forest from one primitive tree class.
  * \param [in] eclass       This element class determines the dimension and
