@@ -20,7 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <sc_shmem.h>
 #include <t8_refcount.h>
+#include <t8_shmem.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
@@ -86,6 +88,14 @@ t8_cmesh_init (t8_cmesh_t * pcmesh)
   cmesh->mpirank = -1;
   cmesh->mpisize = -1;
   t8_stash_init (&cmesh->stash);
+}
+
+static void
+t8_cmesh_set_shmem_type (t8_cmesh_t cmesh)
+{
+  T8_ASSERT (cmesh != NULL);
+
+  sc_shmem_set_type (cmesh->mpicomm, T8_SHMEM_BEST_TYPE);
 }
 
 void
@@ -718,6 +728,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     }
   }
   else {
+    t8_cmesh_set_shmem_type (cmesh);
     SC_ABORTF ("partitioned commit not implemented.%c", '\n');
   }
 
@@ -727,6 +738,29 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   mpiret = sc_MPI_Comm_rank (cmesh->mpicomm, &cmesh->mpirank);
   SC_CHECK_MPI (mpiret);
   t8_stash_destroy (&cmesh->stash);
+}
+
+static void
+t8_cmesh_gather_treecount (t8_cmesh_t cmesh)
+{
+  t8_topidx_t         tree_on_proc;
+
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (cmesh->set_partitioned);
+
+  tree_on_proc = cmesh->last_tree_shared ? -cmesh->num_local_trees - 1 :
+    cmesh->num_local_trees;
+  cmesh->tree_per_proc = SC_SHMEM_ALLOC (t8_topidx_t, cmesh->mpisize,
+                                         cmesh->mpicomm);
+  sc_shmem_allgather (&tree_on_proc, 1, sc_MPI_INT, cmesh->tree_per_proc, 1,
+                      sc_MPI_INT, cmesh->mpicomm);
+}
+
+static void
+t8_cmesh_free_treecount (t8_cmesh_t cmesh)
+{
+  SC_SHMEM_FREE (cmesh->tree_per_proc, cmesh->mpicomm);
 }
 
 t8_topidx_t
