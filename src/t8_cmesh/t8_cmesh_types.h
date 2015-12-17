@@ -133,10 +133,21 @@ typedef struct t8_ctree
                                           of this tree at the face. Indices greater than
                                           the number of local trees refer to ghosts. */
   int8_t             *tree_to_face; /**< For each face the encoding of the face neighbor orientation. */
-  size_t              attribute_size; /**< The size of this trees attribute */
-  size_t              attribute_offset; /**< The offset of this attribute in the corresponding \a t8_part_tree structure */
+  sc_array_t         *attributes; /**< Array of \a t8_attribute_info_t objects sorted by package_id and key. */
+#if 1
+  /* These are deprecated and will be removed */
+  size_t              attribute_offset, attribute_size;
+#endif
 }
 t8_ctree_struct_t;
+
+typedef struct t8_attribute_info
+{
+  int       package_id;
+  int       key;
+  size_t    attribute_size;
+  size_t    attribute_offset;
+} t8_attribute_info_struct_t;
 
 /* TODO: document */
 typedef struct t8_part_tree
