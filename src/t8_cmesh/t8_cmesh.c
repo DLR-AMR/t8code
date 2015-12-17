@@ -437,9 +437,9 @@ static int
 t8_cmesh_face_n_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b, int num_neigh)
 {
   return memcmp (tree_a->face_neighbors, tree_b->face_neighbors,
-          num_neigh * sizeof (t8_topidx_t)) ||
-         memcmp (tree_a->tree_to_face, tree_b->tree_to_face,
-          num_neigh * sizeof (int8_t)) ? 0 : 1;
+                 num_neigh * sizeof (t8_topidx_t)) ||
+    memcmp (tree_a->tree_to_face, tree_b->tree_to_face,
+            num_neigh * sizeof (int8_t)) ? 0 : 1;
 }
 
 /* TODO: hide this function, is used by t8_cmesh_trees_is_equal */
@@ -451,8 +451,8 @@ t8_cmesh_ctree_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b)
 
   is_equal = tree_a->treeid != tree_b->treeid ||
     tree_a->eclass != tree_b->eclass ||
-      tree_a->attribute_offset != tree_b->attribute_offset ||
-            tree_a->attribute_size != tree_b->attribute_size;
+    tree_a->attribute_offset != tree_b->attribute_offset ||
+    tree_a->attribute_size != tree_b->attribute_size;
   if (is_equal != 0) {
     return 0;
   }
@@ -522,7 +522,7 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
   if (cmesh_a->committed &&
       !t8_cmesh_trees_is_equal (cmesh_a, cmesh_a->trees, cmesh_b->trees)) {
     /* if we have committed check tree arrays */
-      return 0;
+    return 0;
   }
   else {
     if (!cmesh_a->committed &&
@@ -647,7 +647,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     t8_cmesh_init (&cmesh_in);
     cmesh_in->mpicomm = comm;
     cmesh_in->dimension = dimensions.dimension;
-    cmesh_in->do_dup = dimensions.do_dup;    
+    cmesh_in->do_dup = dimensions.do_dup;
     t8_cmesh_set_num_trees (cmesh_in, dimensions.num_trees);
     for (iclass = 0; iclass < T8_ECLASS_LAST; iclass++) {
       cmesh_in->num_trees_per_eclass[iclass] =
