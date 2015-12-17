@@ -51,6 +51,8 @@ typedef struct t8_stash_attribute
   size_t              attr_size;
   void               *attr_data;
   int                 is_owned;
+  int                 package_id;
+  int                 key;
 } t8_stash_attribute_struct_t;
 
 typedef struct t8_stash
@@ -73,7 +75,19 @@ void                t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t id1,
                                            t8_gloidx_t id2, int face1,
                                            int face2, int orientation);
 
+/** Add an attribute to a tree.
+ * \param [in] stash    The stash structure to be modified.
+ * \param [in] id       The global index of the tree to which the attribute is added.
+ * \param [in] package_id The unique id of the current package.
+ * \param [in] key      An integer value used to identify this attribute.
+ * \param [in] size     The size (in bytes) of the attribute.
+ * \param [in] attr     Points to \a size bytes of memory that should be stored as the attribute.
+ * \param [in] copy     If true the attribute data is copied from \a attr to an internal storage.
+ *                      If false only the pointer \a attr is stored and the data is only copied
+ *                      if the cmesh is committed. (More memory efficient).
+ */
 void                t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id,
+                                            int package_id, int key,
                                             size_t size, void *attr,
                                             int copy);
 

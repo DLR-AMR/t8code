@@ -157,6 +157,7 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
  */
 void                t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh,
                                                 t8_topidx_t tree_id,
+                                                int package_id, int key,
                                                 double *vertices,
                                                 t8_topidx_t num_vertices);
 

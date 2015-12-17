@@ -92,8 +92,8 @@ t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t id1, t8_gloidx_t id2,
 }
 
 void
-t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id, size_t size,
-                        void *attr, int copy)
+t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id, int package_id,
+                        int key, size_t size, void *attr, int copy)
 {
   t8_stash_attribute_struct_t *sattr;
 
@@ -102,6 +102,8 @@ t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id, size_t size,
   sattr->attr_size = size;
   sattr->id = id;
   sattr->is_owned = copy ? 1 : 0;
+  sattr->key = key;
+  sattr->package_id = package_id;
   sattr->attr_data = copy ? T8_ALLOC (char, size) : attr;
   if (copy) {
     memcpy (sattr->attr_data, attr, size);
@@ -136,15 +138,28 @@ t8_stash_attribute_is_owned (t8_stash_t stash, size_t index)
           sc_array_index (&stash->attributes, index))->is_owned;
 }
 
+/* Compare to attribute entries A1 and A2.
+ * A1 is smaller than A2 if and only if its treeid is smaller or (if equal)
+ * its package id is smaller or (if also equal) its key is smaller.
+ */
 static int
 t8_stash_attribute_compare (const void *v1, const void *v2)
 {
   t8_stash_attribute_struct_t *A1 = (t8_stash_attribute_struct_t *) v1;
   t8_stash_attribute_struct_t *A2 = (t8_stash_attribute_struct_t *) v2;
 
+  if (A1->id == A2->id) {
+    if (A1->package_id == A2->package_id) {
+      return A1->key < A2->key ? -1 : A1->key > A2->key;
+    }
+    return A1->package_id < A2->package_id ? -1 : 1;
+  }
   return A1->id < A2->id ? -1 : A1->id > A2->id;
 }
 
+/* Sort the attribute entries in the order
+ * (treeid, packageid, key)
+ */
 void
 t8_stash_attribute_sort (t8_stash_t stash)
 {
