@@ -62,6 +62,7 @@ void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
                                           sc_MPI_Comm mpicomm, int do_dup);
 
 /** Return the MPI communicator of a cmesh.
+ * TODO: Move all _get_ functions after _commit.
  * \param [in] cmesh       The cmesh whose communicator will be returned.
  * \param [out] do_dup     This variable is filled with the do_dup entry of \a cmesh.
  * \return                 The MPI communicator associated to \a cmesh.
@@ -76,18 +77,28 @@ sc_MPI_Comm         t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup);
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     set_partitioned A nonzero value specifies that \a cmesh
  *                              is interpreted as a partitioned mesh.
- * \param [in]     num_global_trees The global number of trees in the mesh.
+ * \parma [in]     set_face_knowledge   Several values are possible that define
+ *                              how much information is required on face connections,
+ *                              specified by \ref t8_cmesh_set_join.
+ *                              0: Expect face connection of local trees.
+                                1: In addition, expect face connection from
+ *                                 ghost trees to local trees.
+ *                              2: In addition, expect face connection between
+ *                                 ghost trees.
+ *                              3: Expect face connection of local and ghost trees.
+ *                              Consistency of this requirement is checked on
+ *                              \ref t8_cmesh_commit.
  * \param [in]     first_local_tree The global index of the first tree on this process.
- *                                  Only used if \a set_partitioned is nonzero.
- * \param [in]     num_ghosts The number of trees from other processes that are
- *                            face-neighbor to trees on this process.
- *                            Only used if \a set_partitioned is nonzero.
+ *                                  If \a set_partitioned is zero, must be 0.
+ * \param [in]     last_local_tree  The global index of the last tree on this process.
+ *                                  If \a set_partitioned is zero, must be
+ *                                  \a num_global_trees - 1.
  */
 void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
                                               int set_partitioned,
-                                              t8_topidx_t num_global_trees,
+                                              int set_face_knowledge,
                                               t8_topidx_t first_local_tree,
-                                              t8_topidx_t num_ghosts);
+                                              t8_topidx_t last_local_tree);
 
 #if 0
 /** Set the sizes of the attributes for each tree class and create the attribute mempools.
@@ -124,15 +135,15 @@ void                t8_cmesh_set_attribute_to_vertices (t8_cmesh_t cmesh);
 
 #endif
 
-/** Set the number of trees for a cmesh.
+/** Set the total number of trees for a coarse mesh.
  * It is not allowed to call this function after \ref t8_cmesh_commit.
+ * TODO: Clarify that this holds for all _set_ functions.
+ * TODO: Explain what _commit does in general as a convention.
  * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     num_trees    The number of trees to be set.
- * \param [in]     num_trees_per_eclass An array storing for each t8_eclass
- *                              the number of trees of this class.
+ * \param [in]     num_trees    The total number of trees in this coarse mesh.
  */
 void                t8_cmesh_set_num_trees (t8_cmesh_t cmesh,
-                                            t8_topidx_t num_trees);
+                                            t8_gloidx_t num_trees);
 
 /** Set the class of a tree in the cmesh.
  * It is not allowed to call this function after \ref t8_cmesh_commit.
@@ -141,10 +152,11 @@ void                t8_cmesh_set_num_trees (t8_cmesh_t cmesh,
  * \param [in]     tree_class   The element class of this tree.
  */
 void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
-                                             t8_topidx_t tree_id,
+                                             t8_gloidx_t tree_id,
                                              t8_eclass_t tree_class);
 
 /** Set the vertices of a tree in the cmesh.
+ * TODO: This is currently really inefficient.  Only used for VTK.
  * Before using this function, \ref t8_cmesh_set_attribute_to_vertices has to be called.
  * It is not allowed to call this function after \ref t8_cmesh_commit.
  * The eclass of the tree has to be set before calling this function.
@@ -168,15 +180,6 @@ void                t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh,
  */
 void               *t8_cmesh_tree_get_attribute (t8_cmesh_t cmesh,
                                                  t8_topidx_t tree_id);
-
-/** Set the class of a ghost in a partitioned cmesh.
- * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     ghost_id     The global number of the ghost.
- * \param [in]     ghost_eclass The element class of this ghost.
- */
-void                t8_cmesh_set_ghost (t8_cmesh_t cmesh,
-                                        t8_topidx_t ghost_id,
-                                        t8_eclass_t ghost_eclass);
 
 /** Insert a face-connection between two trees in a cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.
