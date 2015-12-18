@@ -32,12 +32,16 @@
 
 typedef struct t8_stash *t8_stash_t;
 
+/** The eclass information that is stored before a cmesh is committed.
+ */
 typedef struct t8_stash_class
 {
   t8_gloidx_t         id;     /**< The global tree id */
   t8_eclass_t         eclass; /**< The eclass of that tree */
 } t8_stash_class_struct_t;
 
+/** The face-connection information that is stored before a cmesh is committed.
+ */
 typedef struct t8_stash_joinface
 {
   t8_gloidx_t         id1; /**< The global tree id of the first tree in the connection. */
@@ -47,6 +51,10 @@ typedef struct t8_stash_joinface
   int                 orientation; /**< The orientation of the face connection. \see t8_cmesh_types.h. */
 } t8_stash_joinface_struct_t;
 
+/** The attribute information that is stored before a cmesh is committed.
+ *  The pair (package_id, key) serves as a lookup key to identify the
+ *  data.
+ */
 typedef struct t8_stash_attribute
 {
   t8_gloidx_t         id;   /**< The global tree id */
@@ -57,11 +65,19 @@ typedef struct t8_stash_attribute
   int                 key; /**< The key used by the package to identify this attribute. */
 } t8_stash_attribute_struct_t;
 
+/** The stash data structure is used to store information about the cmesh
+ *  before it is commited. In particular we store the eclasses of the trees,
+ *  the face-connections and the tree attributes.
+ *  Using the stash structure allows us to have a very flexible interface.  When constructing a new mesh, the
+ *  user can specify all these mesh entities in arbitrary order.
+ *  As soon as the cmesh is commited the information is copied from the stash
+ *  to the cmesh in an order mannered.
+ */
 typedef struct t8_stash
 {
-  sc_array_t          classes; /**< Stores the eclasses of the trees. */
-  sc_array_t          joinfaces; /**< Stores the face-connections. */
-  sc_array_t          attributes; /**< Stores the attributes. */
+  sc_array_t          classes; /**< Stores the eclasses of the trees. \see t8_stash_class */
+  sc_array_t          joinfaces; /**< Stores the face-connections. \see t8_stash_joinface */
+  sc_array_t          attributes; /**< Stores the attributes. \see t8_stash_attribute */
 } t8_stash_struct_t;
 
 T8_EXTERN_C_BEGIN ();
@@ -148,13 +164,20 @@ int                 t8_stash_attribute_is_owned (t8_stash_t stash,
 
 /** Sort the attributes array of a stash in the order
  * (treeid, packageid, key) *
- * \param [in]   stash   The stash to be considered.
+ * \param [in,out]   stash   The stash to be considered.
  */
 void                t8_stash_attribute_sort (t8_stash_t stash);
 
-/* broadcast the data of a stash on proc root.
- * stash is setup on root. on the other procs only stash_init was called
- * elem_counts holds number of attributes/classes/joinfaces
+/** Broadcast a stash on the root process to all processes in a communicator.
+ *  The number of entries in the classes, joinfaces and attributes arrays must
+ *  be known on the receiving processes before calling this function.
+ *  \param [in,out] stash   On root the stash that is to be broadcasted.
+ *                          On the other process an initialized stash. Its entries will
+ *                          get overwritten by the entries in the root stash.
+ *  \param [in]     root    The mpirank of the root process.
+ *  \param [in]     comm    The mpi communicator which is used fpr broadcast.
+ *  \param [in]     elem_counts An array with three entries giving the number of
+ *                  elements in the classes, joinfaces and attributes arrays.
  */
 t8_stash_t          t8_stash_bcast (t8_stash_t stash, int root,
                                     sc_MPI_Comm comm, size_t elem_counts[]);
