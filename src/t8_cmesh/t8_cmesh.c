@@ -706,6 +706,11 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
         t8_cmesh_trees_add_tree (cmesh->trees, entry->id, 0, entry->eclass);
       }
       /* set tree attributes */
+      /* TODO: replace attribute sort by bucket sort into tree structs +
+       *       sorting inside the tree structs by key.
+       *       This will bring down the runtime of this step from O(nlog(n)) to
+       *       O(nm) where m is the maximum number of attributes under all trees.
+       */
       t8_stash_attribute_sort (cmesh->stash);
       attr_offset = 0;
       for (si = 0; si < stash->attributes.elem_count; si++) {

@@ -50,19 +50,42 @@ void                t8_cmesh_trees_init_part (t8_cmesh_trees_t trees,
                                               t8_topidx_t num_ghosts,
                                               size_t attr_bytes);
 
+/** Add a tree to a trees structure.
+ * \param [in,out]  trees The trees structure to be updated.
+ * \param [in]      tree_id The local id of the tree to be inserted.
+ * \param [in]      proc  The mpirank of the process from which the tree was
+ *                        received.
+ * \param [in]      eclass The tree's element class.
+ */
 void                t8_cmesh_trees_add_tree (t8_cmesh_trees_t trees,
                                              t8_topidx_t tree_id, int proc,
                                              t8_eclass_t eclass);
 
+/* TODO: This function return NULL if the tree is not present.
+ *       So far no error checking is done here. */
+/** Return a pointer to a specific tree in a trees struct.
+ * \param [in]      trees The tress structure where the tree is to be looked up.
+ * \param [in]      tree  The local id of the tree.
+ * \return                A pointer to the tree with local id \a tree.
+ */
 t8_ctree_t          t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees,
                                              t8_topidx_t tree);
 
+/* TODO: This function return NULL if the ghost is not present.
+ *       So far no error checking is done here. */
+/** Return a pointer to a specific ghost in a trees struct.
+ * \param [in]      trees The tress structure where the tree is to be looked up.
+ * \param [in]      ghost The local id of the ghost.
+ * \return                A pointer to the ghost with local id \a ghost.
+ */
 t8_cghost_t         t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees,
                                               t8_topidx_t ghost);
 
+/* TODO: These need to be rewritten with package_id and key */
 void               *t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees,
                                                   t8_topidx_t tree_id);
 
+/* TODO: These need to be rewritten with package_id and key */
 void                t8_cmesh_tree_add_attribute (t8_cmesh_trees_t trees,
                                                  int proc,
                                                  t8_topidx_t tree_id,
