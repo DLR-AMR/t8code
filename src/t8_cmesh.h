@@ -140,26 +140,6 @@ void                t8_cmesh_set_attribute (t8_cmesh_t cmesh,
                                             void * data, size_t data_size,
                                             int data_persists);
 
-/* TODO: Should this function be part of the interface?
- * Not for now: Move to _vtk.h but mark as DEPRECATED */
-/** Set the vertices of a tree in the cmesh.
- * TODO: This is currently really inefficient.  Only used for VTK.
- * Before using this function, \ref t8_cmesh_set_attribute_to_vertices has to be called.
- * It is not allowed to call this function after \ref t8_cmesh_commit.
- * The eclass of the tree has to be set before calling this function.
- * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     tree_id      The global number of the tree.
- * \param [in]     vertices     An array of as many vertex indices as the tree
- *                              has corners.
- * \param [in]     num_vertices The number of verticess in \a vertices. Must
- *                              match the number of corners of the tree.
- */
-void                t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh,
-                                                t8_topidx_t tree_id,
-                                                int package_id, int key,
-                                                double *vertices,
-                                                t8_topidx_t num_vertices);
-
 /** Insert a face-connection between two trees in a cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     tree1        The tree id of the first of the two trees.

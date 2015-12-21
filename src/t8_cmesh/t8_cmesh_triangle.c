@@ -22,6 +22,7 @@
 
 #include <t8_cmesh_triangle.h>
 #include <t8_cmesh_tetgen.h>
+#include <t8_cmesh_vtk.h>
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_stash.h"
 
