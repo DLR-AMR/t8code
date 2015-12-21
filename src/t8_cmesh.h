@@ -408,41 +408,6 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
 t8_cmesh_t          t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup,
                                            int dim);
 
-/** Open a .node, .ele and .neigh file created by TRIANGLE to read
- * and create a cmesh from them. The cmesh will be replicated.
- * The files are opened and read by one process and the cmesh is then
- * broadcasted to the other processes.
- * \param [in] fileprefix A string holding the prefix of the TRIANGLE files.
- *                        The files \a fileprefix.node, \a fileprefix.ele and
- *                        \a fileprefix.neigh are read.
- * \param [in] partition  In the future this flag can decide whether the returned
- *                        cmesh is partitioned or not. Currently it is always replicated.
- * \param [in] comm       The mpi communicator to be used.
- * \param [in] do_dup     Whether \a comm should be duplicated by cmesh.
- * \return                A ommited, replicated cmesh constructed from the info
- *                        in the TRIANGLE files.
- */
-t8_cmesh_t
-t8_cmesh_from_triangle_file (char *fileprefix, int partition,
-                             sc_MPI_Comm comm, int do_dup);
-
-/** Open a .node, .ele and .neigh file created by TETGEN to read
- * and create a cmesh from them. The cmesh will be replicated.
- * The files are opened and read by one process and the cmesh is then
- * broadcasted to the other processes.
- * \param [in] fileprefix A string holding the prefix of the TETGEN files.
- *                        The files \a fileprefix.node, \a fileprefix.ele and
- *                        \a fileprefix.neigh are read.
- * \param [in] partition  In the future this flag can decide whether the returned
- *                        cmesh is partitioned or not. Currently it is always replicated.
- * \param [in] comm       The mpi communicator to be used.
- * \param [in] do_dup     Whether \a comm should be duplicated by cmesh.
- * \return                A ommited, replicated cmesh constructed from the info
- *                        in the TETGEN files.
- */
-t8_cmesh_t
-t8_cmesh_from_tetgen_file (char *fileprefix, int partition,
-                           sc_MPI_Comm comm, int do_dup);
 
 T8_EXTERN_C_END ();
 
