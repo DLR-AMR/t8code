@@ -106,6 +106,7 @@ sc_MPI_Comm
 t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup)
 {
   T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (cmesh->committed);
   T8_ASSERT (cmesh->rc.refcount > 0);
   T8_ASSERT (cmesh->mpicomm != sc_MPI_COMM_NULL);
 
