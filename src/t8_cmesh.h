@@ -260,13 +260,15 @@ t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
  * \param [in]     key          A key used to identify the attribute under all
  *                              attributes of this tree with the same \a package_id.
  * \param [in]     tree_id      The local number of the tree.
+ * \param [out]    data_size    The size of the attribute in bytes.
  * \return         The attribute pointer of the tree \a tree_id.
  * \a cmesh must be committed before calling this function.
  * \see t8_cmesh_set_attribute
  */
 void               *t8_cmesh_get_attribute (t8_cmesh_t cmesh,
-                                                 int package_id, int key,
-                                                 t8_locidx_t tree_id);
+                                            int package_id, int key,
+                                            t8_locidx_t tree_id,
+                                            size_t *data_size);
 
 /* TODO: remove get_ when there is no risk of confusion? Convention? */
 

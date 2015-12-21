@@ -83,7 +83,7 @@ t8_cghost_t         t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees,
 
 /* TODO: These need to be rewritten with package_id and key */
 void               *t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees,
-                                                  t8_topidx_t tree_id);
+                                                  t8_topidx_t tree_id, size_t *data_size);
 
 /* TODO: These need to be rewritten with package_id and key */
 void                t8_cmesh_tree_add_attribute (t8_cmesh_trees_t trees,

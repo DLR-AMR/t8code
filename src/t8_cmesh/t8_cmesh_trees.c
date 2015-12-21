@@ -168,7 +168,8 @@ t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees, t8_topidx_t ghost)
 }
 
 void               *
-t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id)
+t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
+                              size_t * data_size)
 {
   int                 proc;
   t8_ctree_t          tree;
@@ -178,7 +179,7 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id)
   T8_ASSERT (proc >= 0 && proc < t8_cmesh_trees_get_num_procs (trees));
   tree = t8_part_tree_get_tree (t8_cmesh_trees_get_part (trees, proc),
                                 tree_id);
-
+  *data_size = tree->attribute_size;
   return t8_part_tree_get_attribute (t8_cmesh_trees_get_part (trees, proc),
                                      tree->attribute_offset);
 }

@@ -205,10 +205,10 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t tree_id, int package_id,
 
 void               *
 t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key,
-                             t8_locidx_t tree_id)
+                        t8_locidx_t tree_id, size_t * data_size)
 {
   T8_ASSERT (cmesh->committed);
-  return t8_cmesh_trees_get_attribute (cmesh->trees, tree_id);
+  return t8_cmesh_trees_get_attribute (cmesh->trees, tree_id, data_size);
 }
 
 void
