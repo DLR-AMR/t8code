@@ -140,8 +140,6 @@ void                t8_cmesh_set_attribute (t8_cmesh_t cmesh,
                                             void * data, size_t data_size,
                                             int data_persists);
 
-/* TODO: Create interface for triangle/tetgen t8_cmesh_triangle.h, _tetgen.h */
-
 /* TODO: Should this function be part of the interface?
  * Not for now: Move to _vtk.h but mark as DEPRECATED */
 /** Set the vertices of a tree in the cmesh.
@@ -229,6 +227,22 @@ void                t8_cmesh_commit (t8_cmesh_t cmesh);
  */
 sc_MPI_Comm         t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup);
 
+/** Return the global number of trees in a cmesh.
+ * \param [in] cmesh       The cmesh to be considered.
+ * \return                 The number of trees associated to \a cmesh.
+ * \a cmesh must be committed before calling this function.
+ */
+t8_gloidx_t         t8_cmesh_get_num_trees (t8_cmesh_t cmesh);
+
+/** Return the processor local number of trees in a cmesh.
+ * If the cmesh is not partitioned this is the same as
+ * the global number of trees.
+ * \param [in] cmesh       The cmesh to be considered.
+ * \return                 The number of trees associated to \a cmesh.
+ * \a cmesh must be committed before calling this function.
+ */
+t8_locidx_t         t8_cmesh_get_local_num_trees (t8_cmesh_t cmesh);
+
 /* TODO: should this and the next function be part of the interface? */
 /** Return a pointer to the first local tree in a cmesh.
  * \param [in]     cmesh        The cmesh to be queried.
@@ -258,24 +272,6 @@ t8_ctree_t          t8_cmesh_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree);
  */
 t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
                                              t8_locidx_t tree_id);
-
-/** Return the global number of trees in a cmesh.
- * TODO: move up before the per-tree functions.
- * \param [in] cmesh       The cmesh to be considered.
- * \return                 The number of trees associated to \a cmesh.
- * \a cmesh must be committed before calling this function.
- */
-t8_gloidx_t         t8_cmesh_get_num_trees (t8_cmesh_t cmesh);
-
-/** Return the processor local number of trees in a cmesh.
- * TODO: move up before the per-tree functions.
- * If the cmesh is not partitioned this is the same as
- * the global number of trees.
- * \param [in] cmesh       The cmesh to be considered.
- * \return                 The number of trees associated to \a cmesh.
- * \a cmesh must be committed before calling this function.
- */
-t8_locidx_t         t8_cmesh_get_local_num_trees (t8_cmesh_t cmesh);
 
 /** Return the attribute pointer of a tree.
  * TODO: add size parameter.
