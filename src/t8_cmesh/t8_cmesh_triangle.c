@@ -20,8 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_cmesh_triangle.h>
-#include <t8_cmesh_tetgen.h>
+#include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_stash.h>
 
@@ -413,7 +412,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
         if (tit < element || face1 <= face2) {
           /* if tit !< element then tit == element,
            * face1 > face2 would mean that we already inserted this connection */
-          t8_cmesh_join_faces (cmesh, tit, element, face1, face2,
+          t8_cmesh_set_join (cmesh, tit, element, face1, face2,
                                orientation);
         }
       }

@@ -93,7 +93,7 @@ t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t id1, t8_gloidx_t id2,
 
 void
 t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id, int package_id,
-                        int key, size_t size, void *attr, int copy)
+                        int key, size_t size, void *attr, int data_persists)
 {
   t8_stash_attribute_struct_t *sattr;
 
@@ -101,11 +101,11 @@ t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id, int package_id,
   sattr = (t8_stash_attribute_struct_t *) sc_array_push (&stash->attributes);
   sattr->attr_size = size;
   sattr->id = id;
-  sattr->is_owned = copy ? 1 : 0;
+  sattr->is_owned = data_persists ? 0 : 1;
   sattr->key = key;
   sattr->package_id = package_id;
-  sattr->attr_data = copy ? T8_ALLOC (char, size) : attr;
-  if (copy) {
+  sattr->attr_data = data_persists ? attr : T8_ALLOC (char, size);
+  if (!data_persists) {
     memcpy (sattr->attr_data, attr, size);
   }
 }

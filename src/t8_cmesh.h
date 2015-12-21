@@ -61,14 +61,6 @@ void                t8_cmesh_init (t8_cmesh_t * pcmesh);
 void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
                                           sc_MPI_Comm mpicomm, int do_dup);
 
-/** Return the MPI communicator of a cmesh.
- * TODO: Move all _get_ functions after _commit.
- * \param [in] cmesh       The cmesh whose communicator will be returned.
- * \param [out] do_dup     This variable is filled with the do_dup entry of \a cmesh.
- * \return                 The MPI communicator associated to \a cmesh.
- */
-sc_MPI_Comm         t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup);
-
 /** Declare if the cmesh is understood as a partitioned cmesh or a
  * replicated cmesh. Replicated (each processor owns the whole mesh) is
  * the default and in this case \ref t8_cmesh_set_partitioned is the same as
@@ -100,41 +92,6 @@ void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
                                               t8_topidx_t first_local_tree,
                                               t8_topidx_t last_local_tree);
 
-#if 0
-/** Set the sizes of the attributes for each tree class and create the attribute mempools.
- * A size of zero can be set, in this case no mempool is created.
- * It is not allowed to call this function after \ref t8_cmesh_commit.
- * \param [in,out] cmesh    The cmesh to be updated.
- * \param [in]     attr_sizes An array of size_t specifying for each eclass the
- *                          size (in bytes) of the attributes.
- * \param [in]     num_sizes The number of entries in \a attr_sizes. Must match
- *                           \ref T8_ECLASS_LAST.
- */
-void                t8_cmesh_set_attribute_sizes (t8_cmesh_t cmesh,
-                                                  size_t attr_sizes[],
-                                                  int num_sizes);
-
-/** Set the size of the attribute for one specific tree class and create the attribute
- * mempool.
- * It is not allowed to call this function after \ref t8_cmesh_commit.
- * \param [in,out] cmesh    The cmesh to be updated.
- * \param [in]     attr_size The size (in bytes) to be set. Must be greater than 0.
- * \param [in]     tree_class The tree class for which the attribute size is to be set.
- */
-void                t8_cmesh_set_attribute_size_single (t8_cmesh_t cmesh,
-                                                        size_t attr_size,
-                                                        t8_eclass_t
-                                                        tree_class);
-
-
-/** Set the sizes of the attributes to hold a \f$R^3\f$ coordinate for each tree corner.
- * It is not allowed to call this function after \ref t8_cmesh_commit.
- * \param [in,out] cmesh    The cmesh to be updated.
- */
-void                t8_cmesh_set_attribute_to_vertices (t8_cmesh_t cmesh);
-
-#endif
-
 /** Set the total number of trees for a coarse mesh.
  * It is not allowed to call this function after \ref t8_cmesh_commit.
  * TODO: Clarify that this holds for all _set_ functions.
@@ -155,6 +112,34 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
                                              t8_gloidx_t tree_id,
                                              t8_eclass_t tree_class);
 
+/** Store an attribute at a tree in a cmesh.
+ *  Attributes can be arbitrary data that is copied to an internal storage
+ *  associated to the tree.
+ *  Each application can set multiple attributes and attributes are distinguished
+ *  by an interger key, where each application can use any integer as key.
+ * \param [in, out] cmesh       The cmesh to be updated.
+ * \param [in]      tree_id     The global id of the tree.
+ * \param [in]      package_id  Unique identifier of the calling application. \see sc_package_register
+ * \param [in]      key         An integer key used to identify this attribute under all
+ *                              attributes with the same package_id.
+ *                              \a key must be a unique value for this tree and package_id.
+ * \param [in]      data        A pointer to the attribute data.
+ * \param [in]      data_size   The number of bytes of the attribute.
+ * \param [in]      data_persists This flag can be used to optimize memory. If true
+ *                              then t8code assumes that the attribute data is present at the
+ *                              memory that \a data points to when \ref t8_cmesh_commit is called
+ *                              (This is more memory efficient).
+ *                              If the flag is false an internal copy of the data is created
+ *                              immediately and this copy is used at commit.
+ *                              In both cases a copy of the data is used by t8_code after t8_cmesh_commit.
+ */
+void                t8_cmesh_set_attribute (t8_cmesh_t cmesh,
+                                            t8_gloidx_t tree_id,
+                                            int package_id, int key,
+                                            void * data, size_t data_size,
+                                            int data_persists);
+
+/* TODO: Should this function be part of the interface? */
 /** Set the vertices of a tree in the cmesh.
  * TODO: This is currently really inefficient.  Only used for VTK.
  * Before using this function, \ref t8_cmesh_set_attribute_to_vertices has to be called.
@@ -173,14 +158,6 @@ void                t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh,
                                                 double *vertices,
                                                 t8_topidx_t num_vertices);
 
-/** Return the attribute pointer of a tree.
- * \param [in]     cmesh        The cmesh.
- * \param [in]     tree_id      The global number of the tree.
- * \return         The attribute pointer of the tree \a tree_id.
- */
-void               *t8_cmesh_tree_get_attribute (t8_cmesh_t cmesh,
-                                                 t8_topidx_t tree_id);
-
 /** Insert a face-connection between two trees in a cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     tree1        The tree id of the first of the two trees.
@@ -192,9 +169,9 @@ void               *t8_cmesh_tree_get_attribute (t8_cmesh_t cmesh,
  *                              class of it has to be specified here.
  * TODO: document orientation
  */
-void                t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1,
-                                         t8_topidx_t tree2, int face1,
-                                         int face2, int orientation);
+void                t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t tree1,
+                                       t8_gloidx_t tree2, int face1,
+                                       int face2, int orientation);
 
 /* returns true if cmesh_a equals cmesh_b */
 /* TODO: document */
@@ -204,6 +181,7 @@ void                t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1,
  * \return                      True if both cmeshes carry the same information,
  *                              false otherwise.
  * Currently the attributes of the trees are not compared.
+ * This function works on committed and uncommitted cmeshes.
  */
 int                 t8_cmesh_is_equal (t8_cmesh_t cmesh_a,
                                        t8_cmesh_t cmesh_b);
@@ -231,41 +209,50 @@ t8_cmesh_t          t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root,
  */
 void                t8_cmesh_commit (t8_cmesh_t cmesh);
 
+/** Return the MPI communicator of a cmesh.
+ * TODO: Move all _get_ functions after _commit.
+ * \param [in] cmesh       The cmesh whose communicator will be returned.
+ * \param [out] do_dup     This variable is filled with the do_dup entry of \a cmesh.
+ * \return                 The MPI communicator associated to \a cmesh.
+ * \a cmesh must be committed before calling this function.
+ */
+sc_MPI_Comm         t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup);
 
+/* TODO: should this and the next function be part of the interface? */
+/** Return a pointer to the first local tree in a cmesh.
+ * \param [in]     cmesh        The cmesh to be queried.
+ * \return                      A pointer to the first local tree in \a cmesh.
+ *                              If \a cmesh has no local trees, NULL is returned.
+ * \a cmesh must be committed before calling this function.
+ */
 t8_ctree_t          t8_cmesh_first_tree (t8_cmesh_t cmesh);
 
-
+/* TODO: should this function behave like first_tree if tree argument is NULL? */
+/** Given a local tree in a cmesh return a pointer to the next local tree.
+ * \param [in]      cmesh       The cmesh to be queried.
+ * \param [in]      tree        A local tree in \a cmesh.
+ * \return                      A pointer to the next local tree in \a cmesh
+ *                              after \a tree. If no such tree exists, NULL is
+ *                              returned.
+ * * \a cmesh must be committed before calling this function.
+ */
 t8_ctree_t          t8_cmesh_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree);
 
-/** Return the eclass of a given tree.
+/** Return the eclass of a given local tree.
  * \param [in]    cmesh         The cmesh to be considered.
- * \param [in]    tree_id       The id of the tree whose eclass will be returned.
+ * \param [in]    tree_id       The local id of the tree whose eclass will be returned.
  * \return                      The eclass of the given tree.
  * \a cmesh must be committed before calling this function.
  */
 t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
-                                             t8_topidx_t tree_id);
-
-/** Return the global numbet of corners in a cmesh.
- * \param [in] cmesh       The cmesh to be considered.
- * \return                 The number of corners associated to \a cmesh.
- * \a cmesh must be committed before calling this function.
- */
-t8_topidx_t         t8_cmesh_get_num_corners (t8_cmesh_t cmesh);
-
-/** Return the global numbet of vertices in a cmesh.
- * \param [in] cmesh       The cmesh to be considered.
- * \return                 The number of vertices associated to \a cmesh.
- * \a cmesh must be committed before calling this function.
- */
-t8_topidx_t         t8_cmesh_get_num_vertices (t8_cmesh_t cmesh);
+                                             t8_locidx_t tree_id);
 
 /** Return the global number of trees in a cmesh.
  * \param [in] cmesh       The cmesh to be considered.
  * \return                 The number of trees associated to \a cmesh.
  * \a cmesh must be committed before calling this function.
  */
-t8_topidx_t         t8_cmesh_get_num_trees (t8_cmesh_t cmesh);
+t8_gloidx_t         t8_cmesh_get_num_trees (t8_cmesh_t cmesh);
 
 /** Return the processor local number of trees in a cmesh.
  * If the cmesh is not partitioned this is the same as
@@ -274,22 +261,36 @@ t8_topidx_t         t8_cmesh_get_num_trees (t8_cmesh_t cmesh);
  * \return                 The number of trees associated to \a cmesh.
  * \a cmesh must be committed before calling this function.
  */
-t8_topidx_t         t8_cmesh_get_local_num_trees (t8_cmesh_t cmesh);
+t8_locidx_t         t8_cmesh_get_local_num_trees (t8_cmesh_t cmesh);
+
+/** Return the attribute pointer of a tree.
+ * \param [in]     cmesh        The cmesh.
+ * \param [in]     package_id   The identifier of the current software package. \see sc_package_register
+ * \param [in]     key          A key used to identify the attribute under all
+ *                              attributes of this tree with the same \a package_id.
+ * \param [in]     tree_id      The local number of the tree.
+ * \return         The attribute pointer of the tree \a tree_id.
+ * \a cmesh must be committed before calling this function.
+ * \see t8_cmesh_set_attribute
+ */
+void               *t8_cmesh_get_attribute (t8_cmesh_t cmesh,
+                                                 int package_id, int key,
+                                                 t8_locidx_t tree_id);
 
 /** Calculate the section of a uniform forest for the current rank.
- * TODO: this requires that cmesh knows its MPI communicator.
  * \param [in]    cmesh         The cmesh to be considered.
  * \param [in]    level         The uniform refinement level to be created.
  * \param [out]   first_local_tree  The first tree that contains elements belonging to the calling processor.
  * \param [out]   child_in_tree_begin The global index of the first element belonging to the calling processor.
  * \param [out]   last_local_tree  The last tree that contains elements belonging to the calling processor.
  * \param [out]   child_in_tree_end The global index of the last element belonging to the calling processor.
+ * \a cmesh must be committed before calling this function.
  */
 void                t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
-                                             t8_topidx_t * first_local_tree,
+                                             t8_gloidx_t * first_local_tree,
                                              t8_gloidx_t *
                                              child_in_tree_begin,
-                                             t8_topidx_t * last_local_tree,
+                                             t8_gloidx_t * last_local_tree,
                                              t8_gloidx_t * child_in_tree_end);
 
 /** Increase the reference counter of a cmesh.
@@ -309,6 +310,9 @@ void                t8_cmesh_ref (t8_cmesh_t cmesh);
  *                              the cmesh is not modified in other ways.
  */
 void                t8_cmesh_unref (t8_cmesh_t * pcmesh);
+
+
+/* Functions for construcing complete and committed cmeshes */
 
 /** Constructs a cmesh from a given p4est_connectivity structure.
  *  The constructed cmesh will be replicated.
@@ -378,6 +382,42 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
  */
 t8_cmesh_t          t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup,
                                            int dim);
+
+/** Open a .node, .ele and .neigh file created by TRIANGLE to read
+ * and create a cmesh from them. The cmesh will be replicated.
+ * The files are opened and read by one process and the cmesh is then
+ * broadcasted to the other processes.
+ * \param [in] fileprefix A string holding the prefix of the TRIANGLE files.
+ *                        The files \a fileprefix.node, \a fileprefix.ele and
+ *                        \a fileprefix.neigh are read.
+ * \param [in] partition  In the future this flag can decide whether the returned
+ *                        cmesh is partitioned or not. Currently it is always replicated.
+ * \param [in] comm       The mpi communicator to be used.
+ * \param [in] do_dup     Whether \a comm should be duplicated by cmesh.
+ * \return                A ommited, replicated cmesh constructed from the info
+ *                        in the TRIANGLE files.
+ */
+t8_cmesh_t
+t8_cmesh_from_triangle_file (char *fileprefix, int partition,
+                             sc_MPI_Comm comm, int do_dup);
+
+/** Open a .node, .ele and .neigh file created by TETGEN to read
+ * and create a cmesh from them. The cmesh will be replicated.
+ * The files are opened and read by one process and the cmesh is then
+ * broadcasted to the other processes.
+ * \param [in] fileprefix A string holding the prefix of the TETGEN files.
+ *                        The files \a fileprefix.node, \a fileprefix.ele and
+ *                        \a fileprefix.neigh are read.
+ * \param [in] partition  In the future this flag can decide whether the returned
+ *                        cmesh is partitioned or not. Currently it is always replicated.
+ * \param [in] comm       The mpi communicator to be used.
+ * \param [in] do_dup     Whether \a comm should be duplicated by cmesh.
+ * \return                A ommited, replicated cmesh constructed from the info
+ *                        in the TETGEN files.
+ */
+t8_cmesh_t
+t8_cmesh_from_tetgen_file (char *fileprefix, int partition,
+                           sc_MPI_Comm comm, int do_dup);
 
 T8_EXTERN_C_END ();
 
