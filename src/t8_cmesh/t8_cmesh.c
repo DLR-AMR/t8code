@@ -924,6 +924,40 @@ t8_cmesh_new_from_p8est (p8est_connectivity_t * conn, sc_MPI_Comm comm,
 }
 
 t8_cmesh_t
+t8_cmesh_new_vertex (sc_MPI_Comm comm, int do_dup)
+{
+  t8_cmesh_t          cmesh;
+  double              vertices[3] = {0, 0, 0};
+
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_VERTEX);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 1);
+  t8_cmesh_commit (cmesh);
+
+  return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_new_line (sc_MPI_Comm comm, int do_dup)
+{
+  t8_cmesh_t          cmesh;
+  double              vertices[6] =
+  {
+    0, 0, 0,
+    1, 0, 0
+  };
+
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_LINE);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 2);
+  t8_cmesh_commit (cmesh);
+
+  return cmesh;
+}
+
+t8_cmesh_t
 t8_cmesh_new_tri (sc_MPI_Comm comm, int do_dup)
 {
   t8_cmesh_t          cmesh;
@@ -1023,6 +1057,28 @@ t8_cmesh_new_pyramid (sc_MPI_Comm comm, int do_dup)
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);
   t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices,
                               15);
+  t8_cmesh_commit (cmesh);
+
+  return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_new_prism (sc_MPI_Comm comm, int do_dup)
+{
+  t8_cmesh_t          cmesh;
+  double              vertices[18] = {
+    0, 0, 0,
+    1, 0, 0,
+    1, 1, 0,
+    0, 0, 1,
+    1, 0, 1,
+    1, 1, 1
+  };
+
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PRISM);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 6);
   t8_cmesh_commit (cmesh);
 
   return cmesh;
