@@ -264,6 +264,7 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
         dim == 2 ? 0 : vertices[dim * tcorners[i] + 2];
     }
     t8_cmesh_set_tree_vertices (cmesh, triangle - triangle_offset,
+                                t8_get_package_id(), 0,
                                 tree_vertices, dim + 1);
   }
   fclose (fp);
