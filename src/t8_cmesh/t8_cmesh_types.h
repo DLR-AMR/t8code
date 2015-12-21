@@ -25,7 +25,7 @@
 
 #include <t8.h>
 #include <t8_refcount.h>
-#include <t8_cmesh/t8_cmesh_stash.h>
+#include "t8_cmesh_stash.h"
 
 /** \file t8_cmesh_types.h
  * We define here the datatypes needed for internal cmesh routines.

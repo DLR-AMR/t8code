@@ -21,7 +21,7 @@
 */
 
 #include <t8_cmesh_vtk.h>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include "t8_cmesh_types.h"
 
 
 /* Return the global number of vertices in a cmesh.

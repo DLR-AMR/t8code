@@ -22,8 +22,8 @@
 
 #include <t8_cmesh_triangle.h>
 #include <t8_cmesh_tetgen.h>
-#include <t8_cmesh/t8_cmesh_types.h>
-#include <t8_cmesh/t8_cmesh_stash.h>
+#include "t8_cmesh_types.h"
+#include "t8_cmesh_stash.h"
 
 /* TODO: eventually compute neighbours only from .node and .ele files, since
  *       creating .neigh files with tetgen/triangle is not common and even seems

@@ -22,8 +22,8 @@
 
 #include <t8_refcount.h>
 #include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_types.h>
-#include <t8_cmesh/t8_cmesh_trees.h>
+#include "t8_cmesh_types.h"
+#include "t8_cmesh_trees.h"
 
 /** \file t8_cmesh.c
  *
