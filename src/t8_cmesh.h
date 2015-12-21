@@ -117,6 +117,7 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
  *  associated to the tree.
  *  Each application can set multiple attributes and attributes are distinguished
  *  by an interger key, where each application can use any integer as key.
+ *  TODO: What to do if attribute exists already?
  * \param [in, out] cmesh       The cmesh to be updated.
  * \param [in]      tree_id     The global id of the tree.
  * \param [in]      package_id  Unique identifier of the calling application. \see sc_package_register
@@ -139,7 +140,10 @@ void                t8_cmesh_set_attribute (t8_cmesh_t cmesh,
                                             void * data, size_t data_size,
                                             int data_persists);
 
-/* TODO: Should this function be part of the interface? */
+/* TODO: Create interface for triangle/tetgen t8_cmesh_triangle.h, _tetgen.h */
+
+/* TODO: Should this function be part of the interface?
+ * Not for now: Move to _vtk.h but mark as DEPRECATED */
 /** Set the vertices of a tree in the cmesh.
  * TODO: This is currently really inefficient.  Only used for VTK.
  * Before using this function, \ref t8_cmesh_set_attribute_to_vertices has to be called.
@@ -165,8 +169,8 @@ void                t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh,
  * \param [in]     face1        The face number of the first tree.
  * \param [in]     face2        The face number of the second tree.
  * \param [in]     orientation  Specify how face1 and face2 are oriented to each other
- * \param [in]     ghost_eclass If one of the trees is a ghost, the element
- *                              class of it has to be specified here.
+ *                              TODO: orientation needs to be carefully defined
+ *                              for all element classes.
  * TODO: document orientation
  */
 void                t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t tree1,
@@ -174,12 +178,15 @@ void                t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t tree1,
                                        int face2, int orientation);
 
 /* returns true if cmesh_a equals cmesh_b */
-/* TODO: document */
+/* TODO: document
+ * collective or serial */
 /** Check whether two given cmeshes carry the same information.
  * \param [in]    cmesh_a       The first of the two cmeshes to be checked.
  * \param [in]    cmesh_b       The second of the two cmeshes to be checked.
  * \return                      True if both cmeshes carry the same information,
  *                              false otherwise.
+ *                              TODO: define carefully.
+ *                              Orders, sequences, equivalences?
  * Currently the attributes of the trees are not compared.
  * This function works on committed and uncommitted cmeshes.
  */
@@ -188,6 +195,8 @@ int                 t8_cmesh_is_equal (t8_cmesh_t cmesh_a,
 
 /** Broadcast a cmesh structure that exists only on one process to all
  *  processes in the cmesh's communicator.
+ *  TODO: Input structure must be replicated, not parallelized.
+ *  TODO: Recommend to call this just before commit.  Earlier is thinkable too.
  *  On the other processors, it will be allocated.
  *  It is not allowed to call this function after \ref t8_cmesh_commit.
  *  \param [in] cmesh_in For the root process the cmesh to be broadcast,
@@ -204,8 +213,10 @@ t8_cmesh_t          t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root,
                                     sc_MPI_Comm comm);
 
 /** After allocating and adding properties to a cmesh, finish its construction.
- * \param [in,out] cmesh        Must be created with \see t8_cmesh_init and
- *                              specialized with t8_cmesh_set_* calls first.
+ * TODO: this function is MPI collective.
+ * \param [in,out] cmesh        Must be created with \ref t8_cmesh_init
+ *                              (TODO: or bcast) and
+ *                              specialized with t8_cmesh_set_* calls first (?).
  */
 void                t8_cmesh_commit (t8_cmesh_t cmesh);
 
@@ -239,6 +250,7 @@ t8_ctree_t          t8_cmesh_first_tree (t8_cmesh_t cmesh);
 t8_ctree_t          t8_cmesh_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree);
 
 /** Return the eclass of a given local tree.
+ * TODO: Should we refer to indices or consequently use ctree_t?
  * \param [in]    cmesh         The cmesh to be considered.
  * \param [in]    tree_id       The local id of the tree whose eclass will be returned.
  * \return                      The eclass of the given tree.
@@ -248,6 +260,7 @@ t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
                                              t8_locidx_t tree_id);
 
 /** Return the global number of trees in a cmesh.
+ * TODO: move up before the per-tree functions.
  * \param [in] cmesh       The cmesh to be considered.
  * \return                 The number of trees associated to \a cmesh.
  * \a cmesh must be committed before calling this function.
@@ -255,6 +268,7 @@ t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
 t8_gloidx_t         t8_cmesh_get_num_trees (t8_cmesh_t cmesh);
 
 /** Return the processor local number of trees in a cmesh.
+ * TODO: move up before the per-tree functions.
  * If the cmesh is not partitioned this is the same as
  * the global number of trees.
  * \param [in] cmesh       The cmesh to be considered.
@@ -264,8 +278,9 @@ t8_gloidx_t         t8_cmesh_get_num_trees (t8_cmesh_t cmesh);
 t8_locidx_t         t8_cmesh_get_local_num_trees (t8_cmesh_t cmesh);
 
 /** Return the attribute pointer of a tree.
+ * TODO: add size parameter.
  * \param [in]     cmesh        The cmesh.
- * \param [in]     package_id   The identifier of the current software package. \see sc_package_register
+ * \param [in]     package_id   The identifier of a valid software package. \see sc_package_register
  * \param [in]     key          A key used to identify the attribute under all
  *                              attributes of this tree with the same \a package_id.
  * \param [in]     tree_id      The local number of the tree.
@@ -276,6 +291,8 @@ t8_locidx_t         t8_cmesh_get_local_num_trees (t8_cmesh_t cmesh);
 void               *t8_cmesh_get_attribute (t8_cmesh_t cmesh,
                                                  int package_id, int key,
                                                  t8_locidx_t tree_id);
+
+/* TODO: remove get_ when there is no risk of confusion? Convention? */
 
 /** Calculate the section of a uniform forest for the current rank.
  * \param [in]    cmesh         The cmesh to be considered.
@@ -336,6 +353,8 @@ t8_cmesh_t          t8_cmesh_new_from_p4est (p4est_connectivity_t * conn,
 t8_cmesh_t          t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
                                              sc_MPI_Comm comm, int do_dup);
 
+/* TODO: t8_cmesh_new_from_class to replace the ones below. */
+
 /** Create a coarse mesh that consists of a single triangle.
  * \return          A valid cmesh, as if _init and _commit had been called.
  */
@@ -369,12 +388,18 @@ t8_cmesh_t          t8_cmesh_new_pyramid (sc_MPI_Comm comm, int do_dup);
  * \param [in] do_bcast     If this flag is nonzero the cmesh is only constructed
  *                          on processor 0 and then broadcasted to the other
  *                          processors in \a comm.
+ *                          TODO: this parameter will be moved to internal.
+ * TODO: Add periodic flags for each dimension.
  */
 t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
                                             sc_MPI_Comm comm, int do_dup,
-                                            int do_bcast);
+                                            int do_bcast
+                                            );
 
 /** Construct a unit interval/square/cube forest that is periodic in each direction.
+ * Element class?
+ * Hypercube?
+ * TODO: redundant, remove.
  * \param [in] comm         The mpi communicator to use.
  * \param [in] do_dup       Whether the mpi communicator is to be duplicated.
  * \param [in] dim          The dimension of the forest, 1, 2 or 3.
