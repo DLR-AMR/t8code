@@ -1084,6 +1084,41 @@ t8_cmesh_new_prism (sc_MPI_Comm comm, int do_dup)
   return cmesh;
 }
 
+t8_cmesh_t
+t8_cmesh_new_from_class (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup)
+{
+  switch (eclass)
+  {
+    case T8_ECLASS_VERTEX:
+      return t8_cmesh_new_vertex (comm, do_dup);
+      break;
+    case T8_ECLASS_LINE:
+      return t8_cmesh_new_line (comm, do_dup);
+      break;
+    case T8_ECLASS_TRIANGLE:
+      return t8_cmesh_new_tri (comm, do_dup);
+      break;
+    case T8_ECLASS_QUAD:
+      return t8_cmesh_new_quad (comm, do_dup);
+      break;
+    case T8_ECLASS_TET:
+      return t8_cmesh_new_tet (comm, do_dup);
+      break;
+    case T8_ECLASS_HEX:
+      return t8_cmesh_new_hex (comm, do_dup);
+      break;
+    case T8_ECLASS_PYRAMID:
+      return t8_cmesh_new_pyramid (comm, do_dup);
+      break;
+    case T8_ECLASS_PRISM:
+      return t8_cmesh_new_prism (comm, do_dup);
+      break;
+    default:
+      SC_ABORTF ("Invalid eclass\n");
+      return NULL;
+  }
+}
+
 /* TODO: This is just a helper function that was needed when we changed the vertex interface
  *       to use attributes. Before we stored a list of vertex coordinates in the cmesh and each tree indexed into this list.
  *       Now each tree carries the coordinates of its vertices.

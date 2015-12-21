@@ -353,32 +353,14 @@ t8_cmesh_t          t8_cmesh_new_from_p4est (p4est_connectivity_t * conn,
 t8_cmesh_t          t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
                                              sc_MPI_Comm comm, int do_dup);
 
-/* TODO: t8_cmesh_new_from_class to replace the ones below. */
-
-/** Create a coarse mesh that consists of a single triangle.
- * \return          A valid cmesh, as if _init and _commit had been called.
+/** Constructs a cmesh that consists only of one tree of a given element class.
+ * \param [in]      eclass     The element class.
+ * \param [in]      comm       mpi communicator to be used with the new cmesh.
+ * \param [in]      do_dup     Flag whether the communicator shall be duplicated or not.
+ * \return          A committed t8_cmesh structure with one tree of class \a eclass.
  */
-t8_cmesh_t          t8_cmesh_new_tri (sc_MPI_Comm comm, int do_dup);
-
-/** Create a coarse mesh that consists of a single tetrahedron.
- * \return          A valid cmesh, as if _init and _commit had been called.
- */
-t8_cmesh_t          t8_cmesh_new_tet (sc_MPI_Comm comm, int do_dup);
-
-/** Create a coarse mesh that consists of a single square.
- * \return          A valid cmesh, as if _init and _commit had been called.
- */
-t8_cmesh_t          t8_cmesh_new_quad (sc_MPI_Comm comm, int do_dup);
-
-/** Create a coarse mesh that consists of a single hexahedron.
- * \return          A valid cmesh, as if _init and _commit had been called.
- */
-t8_cmesh_t          t8_cmesh_new_hex (sc_MPI_Comm comm, int do_dup);
-
-/** Create a coarse mesh that consists of a single pyramid.
- * \return          A valid cmesh, as if _init and _commit had been called.
- */
-t8_cmesh_t          t8_cmesh_new_pyramid (sc_MPI_Comm comm, int do_dup);
+t8_cmesh_t          t8_cmesh_new_from_class (t8_eclass_t eclass,
+                                             sc_MPI_Comm comm, int do_dup);
 
 /** Construct a hypercube forest from one primitive tree class.
  * \param [in] eclass       This element class determines the dimension and
