@@ -83,7 +83,7 @@ t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t id1, t8_gloidx_t id2,
   t8_stash_joinface_struct_t *sjoin;
 
   T8_ASSERT (stash != NULL);
-  sjoin = sc_array_push (&stash->joinfaces);
+  sjoin = (t8_stash_joinface_struct_t *) sc_array_push (&stash->joinfaces);
   sjoin->face1 = face1;
   sjoin->face2 = face2;
   sjoin->id1 = id2;
@@ -98,7 +98,7 @@ t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id, int package_id,
   t8_stash_attribute_struct_t *sattr;
 
   T8_ASSERT (stash != NULL);
-  sattr = sc_array_push (&stash->attributes);
+  sattr = (t8_stash_attribute_struct_t *) sc_array_push (&stash->attributes);
   sattr->attr_size = size;
   sattr->id = id;
   sattr->is_owned = copy ? 1 : 0;

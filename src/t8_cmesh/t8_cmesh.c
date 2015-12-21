@@ -702,7 +702,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       t8_cmesh_trees_init_part (cmesh->trees, 0, 0, num_trees, 0, attr_bytes);
       /* set tree classes */
       for (itree = 0; itree < num_trees; itree++) {
-        entry = t8_sc_array_index_topidx (class_entries, itree);
+        entry = (t8_stash_class_struct_t *)
+            t8_sc_array_index_topidx (class_entries, itree);
         t8_cmesh_trees_add_tree (cmesh->trees, entry->id, 0, entry->eclass);
       }
       /* set tree attributes */
@@ -717,7 +718,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
         attr_bytes = t8_stash_get_attribute_size (cmesh->stash, si);
         newtree = t8_stash_get_attribute_tree_id (cmesh->stash, si) -
           cmesh->first_tree;
-        t8_cmesh_tree_add_attribute (cmesh->trees, 0, newtree,
+        t8_cmesh_tree_add_attribute (cmesh->trees, 0, newtree, (char *)
                                      t8_stash_get_attribute (cmesh->stash,
                                                              si), attr_bytes,
                                      attr_offset);
@@ -959,7 +960,7 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
         _T8_CMESH_P48_CONN (vertices[3 * treevertex + 2]);
     }
     t8_cmesh_set_tree_vertices (cmesh, itree, t8_get_package_id (), 0,
-                                (void *) vertices, num_tvertices);
+                                vertices, num_tvertices);
   }
   /* get face neighbor information from conn and join faces in cmesh */
   for (itree = 0; itree < cmesh->num_trees; itree++) {  /* loop over each tree */
