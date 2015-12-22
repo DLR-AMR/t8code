@@ -25,7 +25,7 @@
  * TODO: document this file
  */
 
-#include <t8_cmesh/t8_cmesh_trees.h>
+#include "t8_cmesh_trees.h"
 
 
 extern int

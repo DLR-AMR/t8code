@@ -6,7 +6,7 @@ libt8_generated_headers = src/t8_config.h
 libt8_installed_headers = \
   src/t8.h src/t8_eclass.h src/t8_element.h src/t8_mesh.h \
   src/t8_refcount.h src/t8_cmesh.h src/t8_cmesh_triangle.h \
-  src/t8_cmesh_tetgen.h src/t8_cmesh/t8_cmesh_trees.h \
+  src/t8_cmesh_tetgen.h \
   src/t8_cmesh_vtk.h \
   src/t8_forest.h src/t8_forest/t8_forest_types.h \
   src/t8_forest/t8_forest_adapt.h src/t8_geometry.h
