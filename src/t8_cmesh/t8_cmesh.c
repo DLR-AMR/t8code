@@ -1115,7 +1115,7 @@ t8_cmesh_new_from_class (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup)
       return t8_cmesh_new_prism (comm, do_dup);
       break;
     default:
-      SC_ABORTF ("Invalid eclass\n");
+      SC_ABORT ("Invalid eclass\n");
       return NULL;
   }
 }
