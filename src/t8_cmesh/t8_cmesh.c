@@ -193,7 +193,7 @@ t8_cmesh_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree)
 
 void
 t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t tree_id, int package_id,
-                        int key, void * data, size_t data_size,
+                        int key, void *data, size_t data_size,
                         int data_persists)
 {
   T8_ASSERT (cmesh != NULL);
@@ -372,7 +372,7 @@ t8_cmesh_set_ghost (t8_cmesh_t cmesh, t8_topidx_t ghost_id,
 /* TODO: change to gloidx? */
 void
 t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t tree1, t8_gloidx_t tree2,
-                     int face1, int face2, int orientation)
+                   int face1, int face2, int orientation)
 {
   T8_ASSERT (0 <= orientation);
 
@@ -651,7 +651,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       /* set tree classes */
       for (itree = 0; itree < num_trees; itree++) {
         entry = (t8_stash_class_struct_t *)
-            t8_sc_array_index_topidx (class_entries, itree);
+          t8_sc_array_index_topidx (class_entries, itree);
         t8_cmesh_trees_add_tree (cmesh->trees, entry->id, 0, entry->eclass);
       }
       /* set tree attributes */
@@ -686,7 +686,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   t8_stash_destroy (&cmesh->stash);
 }
 
-t8_gloidx_t t8_cmesh_get_num_trees(t8_cmesh_t cmesh)
+t8_gloidx_t
+t8_cmesh_get_num_trees (t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
@@ -694,7 +695,8 @@ t8_gloidx_t t8_cmesh_get_num_trees(t8_cmesh_t cmesh)
   return cmesh->num_trees;
 }
 
-t8_locidx_t t8_cmesh_get_local_num_trees(t8_cmesh_t cmesh)
+t8_locidx_t
+t8_cmesh_get_local_num_trees (t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
@@ -723,9 +725,9 @@ t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_locidx_t tree_id)
 
 void
 t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
-                         t8_gloidx_t *first_local_tree,
+                         t8_gloidx_t * first_local_tree,
                          t8_gloidx_t * child_in_tree_begin,
-                         t8_gloidx_t *last_local_tree,
+                         t8_gloidx_t * last_local_tree,
                          t8_gloidx_t * child_in_tree_end)
 {
   *first_local_tree = 0;
@@ -901,7 +903,7 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
       /* insert the face only if we did not insert it before */
       if (itree < ttt || (itree == ttt && iface <= ttf % num_faces)) {
         t8_cmesh_set_join (cmesh, itree, ttt, iface, ttf % num_faces,
-                             ttf / num_faces);
+                           ttf / num_faces);
       }
     }
   }
@@ -928,7 +930,7 @@ t8_cmesh_t
 t8_cmesh_new_vertex (sc_MPI_Comm comm, int do_dup)
 {
   t8_cmesh_t          cmesh;
-  double              vertices[3] = {0, 0, 0};
+  double              vertices[3] = { 0, 0, 0 };
 
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
@@ -943,8 +945,7 @@ t8_cmesh_t
 t8_cmesh_new_line (sc_MPI_Comm comm, int do_dup)
 {
   t8_cmesh_t          cmesh;
-  double              vertices[6] =
-  {
+  double              vertices[6] = {
     0, 0, 0,
     1, 0, 0
   };
@@ -1088,35 +1089,34 @@ t8_cmesh_new_prism (sc_MPI_Comm comm, int do_dup)
 t8_cmesh_t
 t8_cmesh_new_from_class (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup)
 {
-  switch (eclass)
-  {
-    case T8_ECLASS_VERTEX:
-      return t8_cmesh_new_vertex (comm, do_dup);
-      break;
-    case T8_ECLASS_LINE:
-      return t8_cmesh_new_line (comm, do_dup);
-      break;
-    case T8_ECLASS_TRIANGLE:
-      return t8_cmesh_new_tri (comm, do_dup);
-      break;
-    case T8_ECLASS_QUAD:
-      return t8_cmesh_new_quad (comm, do_dup);
-      break;
-    case T8_ECLASS_TET:
-      return t8_cmesh_new_tet (comm, do_dup);
-      break;
-    case T8_ECLASS_HEX:
-      return t8_cmesh_new_hex (comm, do_dup);
-      break;
-    case T8_ECLASS_PYRAMID:
-      return t8_cmesh_new_pyramid (comm, do_dup);
-      break;
-    case T8_ECLASS_PRISM:
-      return t8_cmesh_new_prism (comm, do_dup);
-      break;
-    default:
-      SC_ABORT ("Invalid eclass\n");
-      return NULL;
+  switch (eclass) {
+  case T8_ECLASS_VERTEX:
+    return t8_cmesh_new_vertex (comm, do_dup);
+    break;
+  case T8_ECLASS_LINE:
+    return t8_cmesh_new_line (comm, do_dup);
+    break;
+  case T8_ECLASS_TRIANGLE:
+    return t8_cmesh_new_tri (comm, do_dup);
+    break;
+  case T8_ECLASS_QUAD:
+    return t8_cmesh_new_quad (comm, do_dup);
+    break;
+  case T8_ECLASS_TET:
+    return t8_cmesh_new_tet (comm, do_dup);
+    break;
+  case T8_ECLASS_HEX:
+    return t8_cmesh_new_hex (comm, do_dup);
+    break;
+  case T8_ECLASS_PYRAMID:
+    return t8_cmesh_new_pyramid (comm, do_dup);
+    break;
+  case T8_ECLASS_PRISM:
+    return t8_cmesh_new_prism (comm, do_dup);
+    break;
+  default:
+    SC_ABORT ("Invalid eclass\n");
+    return NULL;
   }
 }
 

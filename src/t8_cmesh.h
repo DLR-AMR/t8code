@@ -137,7 +137,7 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
 void                t8_cmesh_set_attribute (t8_cmesh_t cmesh,
                                             t8_gloidx_t tree_id,
                                             int package_id, int key,
-                                            void * data, size_t data_size,
+                                            void *data, size_t data_size,
                                             int data_persists);
 
 /** Insert a face-connection between two trees in a cmesh.
@@ -267,7 +267,7 @@ t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
 void               *t8_cmesh_get_attribute (t8_cmesh_t cmesh,
                                             int package_id, int key,
                                             t8_locidx_t tree_id,
-                                            size_t *data_size);
+                                            size_t * data_size);
 
 /* TODO: remove get_ when there is no risk of confusion? Convention? */
 
@@ -304,7 +304,6 @@ void                t8_cmesh_ref (t8_cmesh_t cmesh);
  *                              the cmesh is not modified in other ways.
  */
 void                t8_cmesh_unref (t8_cmesh_t * pcmesh);
-
 
 /* Functions for construcing complete and committed cmeshes */
 
@@ -352,8 +351,7 @@ t8_cmesh_t          t8_cmesh_new_from_class (t8_eclass_t eclass,
  */
 t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
                                             sc_MPI_Comm comm, int do_dup,
-                                            int do_bcast
-                                            );
+                                            int do_bcast);
 
 /** Construct a unit interval/square/cube forest that is periodic in each direction.
  * Element class?
@@ -366,7 +364,6 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
  */
 t8_cmesh_t          t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup,
                                            int dim);
-
 
 T8_EXTERN_C_END ();
 
