@@ -65,7 +65,7 @@ void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
  * replicated cmesh. Replicated (each processor owns the whole mesh) is
  * the default and in this case \ref t8_cmesh_set_partitioned is the same as
  * \ref t8_cmesh_set_num_trees and the values \a first_local_tree and
- * \a num_ghosts are ignored.
+ * \a set_face_knowledge are ignored.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     set_partitioned A nonzero value specifies that \a cmesh
  *                              is interpreted as a partitioned mesh.
@@ -254,7 +254,6 @@ t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
                                              t8_locidx_t tree_id);
 
 /** Return the attribute pointer of a tree.
- * TODO: add size parameter.
  * \param [in]     cmesh        The cmesh.
  * \param [in]     package_id   The identifier of a valid software package. \see sc_package_register
  * \param [in]     key          A key used to identify the attribute under all
