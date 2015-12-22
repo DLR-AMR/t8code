@@ -169,7 +169,7 @@ t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees, t8_topidx_t ghost)
 
 void               *
 t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
-                              size_t * data_size)
+                              int package_id, int key, size_t * data_size)
 {
   int                 proc;
   t8_ctree_t          tree;
@@ -186,8 +186,8 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
 
 void
 t8_cmesh_tree_add_attribute (t8_cmesh_trees_t trees, int proc,
-                             t8_topidx_t tree_id, char *attr, size_t size,
-                             size_t offset)
+                             t8_topidx_t tree_id, int package_id, int key,
+                             char *attr, size_t size, size_t offset)
 {
   t8_part_tree_t      part;
   t8_ctree_t          tree;
