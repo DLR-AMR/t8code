@@ -27,9 +27,8 @@
 
 #include "t8_cmesh_trees.h"
 
-
 extern int
-t8_cmesh_ctree_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b);
+         t8_cmesh_ctree_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b);
 
 static              t8_part_tree_t
 t8_cmesh_trees_get_part (t8_cmesh_trees_t trees, int proc)

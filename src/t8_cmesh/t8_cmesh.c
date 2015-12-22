@@ -208,7 +208,8 @@ t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key,
                         t8_locidx_t tree_id, size_t * data_size)
 {
   T8_ASSERT (cmesh->committed);
-  return t8_cmesh_trees_get_attribute (cmesh->trees, tree_id, data_size);
+  return t8_cmesh_trees_get_attribute (cmesh->trees, tree_id, package_id, key,
+                                       data_size);
 }
 
 void
@@ -666,7 +667,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
         attr_bytes = t8_stash_get_attribute_size (cmesh->stash, si);
         newtree = t8_stash_get_attribute_tree_id (cmesh->stash, si) -
           cmesh->first_tree;
-        t8_cmesh_tree_add_attribute (cmesh->trees, 0, newtree, (char *)
+        t8_cmesh_tree_add_attribute (cmesh->trees, 0, newtree,
+                                     t8_get_package_id(), 0,
+                                     (char *)
                                      t8_stash_get_attribute (cmesh->stash,
                                                              si), attr_bytes,
                                      attr_offset);
