@@ -318,7 +318,7 @@ t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_topidx_t tree_id,
 
   t8_stash_add_attribute (cmesh->stash, tree_id, package_id, key,
                           3 * num_vertices * sizeof (double),
-                          (void *) vertices, 1);
+                          (void *) vertices, 0);
 }
 
 /* TODO: do we still need this function? if yes, write it correctly. */
