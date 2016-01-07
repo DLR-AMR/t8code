@@ -132,6 +132,20 @@ t8_stash_get_attribute_tree_id (t8_stash_t stash, size_t index)
 }
 
 int
+t8_stash_get_attribute_key (t8_stash_t stash, size_t index)
+{
+  return ((t8_stash_attribute_struct_t *)
+          sc_array_index (&stash->attributes, index))->key;
+}
+
+int
+t8_stash_get_attribute_id (t8_stash_t stash, size_t index)
+{
+  return ((t8_stash_attribute_struct_t *)
+          sc_array_index (&stash->attributes, index))->package_id;
+}
+
+int
 t8_stash_attribute_is_owned (t8_stash_t stash, size_t index)
 {
   return ((t8_stash_attribute_struct_t *)

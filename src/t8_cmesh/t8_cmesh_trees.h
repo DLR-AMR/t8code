@@ -81,6 +81,11 @@ t8_ctree_t          t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees,
 t8_cghost_t         t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees,
                                               t8_topidx_t ghost);
 
+/* TODO: document */
+void                t8_cmesh_trees_init_attributes (t8_cmesh_trees_t trees,
+                                                    t8_locidx_t tree_id,
+                                                    size_t num_attributes);
+
 /* TODO: These need to be rewritten with package_id and key */
 void               *t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees,
                                                   t8_topidx_t tree_id,
@@ -89,12 +94,15 @@ void               *t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees,
 
 /* TODO: These need to be rewritten with package_id and key */
 /* TODO: this uses char * and cmesh_set_attribute uses void *. Unify! */
+/* attr_tree_index is index of attr in tree's attribute array.
+ * We assume that the attributes are already sorted! */
 void                t8_cmesh_tree_add_attribute (t8_cmesh_trees_t trees,
                                                  int proc,
                                                  t8_topidx_t tree_id,
                                                  int package_id, int key,
                                                  char *attr, size_t size,
-                                                 size_t offset);
+                                                 size_t offset,
+                                                 int attr_tree_index);
 
 int                 t8_cmesh_trees_is_equal (t8_cmesh_t cmesh,
                                              t8_cmesh_trees_t trees_a,

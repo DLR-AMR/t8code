@@ -152,6 +152,22 @@ void               *t8_stash_get_attribute (t8_stash_t stash, size_t index);
 t8_gloidx_t         t8_stash_get_attribute_tree_id (t8_stash_t stash,
                                                     size_t index);
 
+/** Return the key of a given attribute.
+ * \param [in]   stash   The stash to be considered.
+ * \param [in]   index   The index of the attribute in the attribute array of \a stash.
+ * \return               The attribute's key.
+ */
+int                 t8_stash_get_attribute_key (t8_stash_t stash,
+                                                size_t index);
+
+/** Return the package_id of a given attribute.
+ * \param [in]   stash   The stash to be considered.
+ * \param [in]   index   The index of the attribute in the attribute array of \a stash.
+ * \return               The attribute's package_id.
+ */
+int                 t8_stash_get_attribute_id (t8_stash_t stash,
+                                               size_t index);
+
 /** Return true if an attribute in the stash is owned by the stash, that is,
  * it was copied in the call to \a t8_stash_add_attribute.
  * Returns false if the attribute is not owned by the stash.
