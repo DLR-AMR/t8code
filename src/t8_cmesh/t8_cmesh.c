@@ -877,6 +877,7 @@ t8_cmesh_unref (t8_cmesh_t * pcmesh)
 /* TODO: In p4est a tree edge is joined with itself to denote a domain boundary.
  *       Will we do it the same in t8code? This is not yet decided, however the
  *       function below stores these neighbourhood information in the cmesh. */
+/* TODO: Eventually we may directly partition the mesh here */
 static              t8_cmesh_t
 t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
                              int do_dup)

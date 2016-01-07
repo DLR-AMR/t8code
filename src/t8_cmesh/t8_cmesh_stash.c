@@ -152,7 +152,7 @@ t8_stash_attribute_is_owned (t8_stash_t stash, size_t index)
           sc_array_index (&stash->attributes, index))->is_owned;
 }
 
-/* Compare to attribute entries A1 and A2.
+/* Compare two attribute entries A1 and A2.
  * A1 is smaller than A2 if and only if its treeid is smaller or (if equal)
  * its package id is smaller or (if also equal) its key is smaller.
  */
