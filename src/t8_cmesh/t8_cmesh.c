@@ -615,7 +615,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 void
 t8_cmesh_commit (t8_cmesh_t cmesh)
 {
-  int                 mpiret;
+  int                 mpiret, key;
   sc_MPI_Comm         comm_dup;
 
   T8_ASSERT (cmesh != NULL);
@@ -636,9 +636,10 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       t8_stash_t          stash = cmesh->stash;
       sc_array_t         *class_entries = &stash->classes;
       t8_stash_class_struct_t *entry;
-      t8_topidx_t         num_trees =
-        class_entries->elem_count, itree, newtree;
-      size_t              si, attr_bytes, attr_offset;
+      t8_topidx_t         num_trees = class_entries->elem_count, itree;
+      t8_locidx_t         tree_id, temptree;
+      size_t              si, attr_bytes, attr_offset, num_attr, attr_index;
+      int                 attr_id;
 
       t8_cmesh_trees_init (&cmesh->trees, 1, num_trees, 0);
       /* compute size of attributes */
@@ -663,17 +664,38 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
        */
       t8_stash_attribute_sort (cmesh->stash);
       attr_offset = 0;
+      temptree = -1;
       for (si = 0; si < stash->attributes.elem_count; si++) {
-        attr_bytes = t8_stash_get_attribute_size (cmesh->stash, si);
-        newtree = t8_stash_get_attribute_tree_id (cmesh->stash, si) -
+        tree_id = t8_stash_get_attribute_tree_id (cmesh->stash, si) -
           cmesh->first_tree;
-        t8_cmesh_tree_add_attribute (cmesh->trees, 0, newtree,
-                                     t8_get_package_id(), 0,
+        if (tree_id > temptree) {
+          /* We are entering a new tree */
+          temptree = tree_id;
+          /* count the number of attributes at this tree... */
+          num_attr = si;
+          /* ...by counting after how many attributes we enter a new tree */
+          while (temptree == tree_id
+                 && ++num_attr < stash->attributes.elem_count) {
+            temptree =
+              t8_stash_get_attribute_tree_id (cmesh->stash,
+                                              num_attr) - cmesh->first_tree;
+          }
+          num_attr -= si;       /* now stores the number of attribute of the tree */
+          /* initialize storage for tree attributes */
+          t8_cmesh_trees_init_attributes (cmesh->trees, tree_id, num_attr);
+          temptree = tree_id;   /* store the current tree_id in oldtree */
+          attr_index = 0;
+        }
+        attr_bytes = t8_stash_get_attribute_size (cmesh->stash, si);
+        key = t8_stash_get_attribute_key (cmesh->stash, si);
+        attr_id = t8_stash_get_attribute_id (cmesh->stash, si);
+        t8_cmesh_tree_add_attribute (cmesh->trees, 0, tree_id, attr_id, key,
                                      (char *)
                                      t8_stash_get_attribute (cmesh->stash,
                                                              si), attr_bytes,
-                                     attr_offset);
+                                     attr_offset, attr_index);
         attr_offset += attr_bytes;
+        attr_index++;
       }
     }
   }
