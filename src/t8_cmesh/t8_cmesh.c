@@ -1173,6 +1173,7 @@ t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t * tvertices,
  * For prisms the front (y=0) and back (y=1) face are divided into triangles
  * as above.
  */
+/* TODO: upgrade with int x,y,z for periodic faces */
 t8_cmesh_t
 t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
                         int do_bcast)
