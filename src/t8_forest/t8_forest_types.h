@@ -70,8 +70,8 @@ typedef struct t8_forest
   int                 mpisize;          /**< Number of MPI processes. */
   int                 mpirank;          /**< Number of this MPI process. */
 
-  t8_topidx_t         first_local_tree;
-  t8_topidx_t         last_local_tree;
+  t8_gloidx_t         first_local_tree;
+  t8_gloidx_t         last_local_tree;
   sc_array_t         *trees;
 
   t8_locidx_t         local_num_elements;  /**< Number of elements on this processor. */

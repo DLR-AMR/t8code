@@ -25,7 +25,7 @@
 
 #include <t8.h>
 #include <t8_refcount.h>
-#include <t8_cmesh/t8_cmesh_stash.h>
+#include "t8_cmesh_stash.h"
 
 /** \file t8_cmesh_types.h
  * We define here the datatypes needed for internal cmesh routines.
@@ -35,7 +35,7 @@ typedef struct t8_stash *t8_stash_t;
 typedef struct t8_part_tree *t8_part_tree_t;
 typedef struct t8_cmesh_trees *t8_cmesh_trees_t;
 
-/** This structure hold the connectivity data of the coarse mesh.
+/** This structure holds the connectivity data of the coarse mesh.
  *  It can either be replicated, then each process stores a copy of the whole
  *  mesh, or partitioned. In the latter case, each process only stores a local
  *  portion of the mesh plus information about ghost elements.
@@ -142,6 +142,7 @@ typedef struct t8_ctree
 }
 t8_ctree_struct_t;
 
+/* TODO: document */
 typedef struct t8_attribute_info
 {
   int       package_id;
@@ -165,6 +166,7 @@ typedef struct t8_part_tree
 }
 t8_part_tree_struct_t;
 
+/* TODO: document */
 typedef struct t8_cmesh_trees
 {
   sc_array_t         *from_proc;        /* array of t8_part_tree, one for each process */

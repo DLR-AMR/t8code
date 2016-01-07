@@ -22,8 +22,9 @@
 
 #include <t8_cmesh_triangle.h>
 #include <t8_cmesh_tetgen.h>
-#include <t8_cmesh/t8_cmesh_types.h>
-#include <t8_cmesh/t8_cmesh_stash.h>
+#include <t8_cmesh_vtk.h>
+#include "t8_cmesh_types.h"
+#include "t8_cmesh_stash.h"
 
 /* TODO: eventually compute neighbours only from .node and .ele files, since
  *       creating .neigh files with tetgen/triangle is not common and even seems
@@ -413,7 +414,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
         if (tit < element || face1 <= face2) {
           /* if tit !< element then tit == element,
            * face1 > face2 would mean that we already inserted this connection */
-          t8_cmesh_join_faces (cmesh, tit, element, face1, face2,
+          t8_cmesh_set_join (cmesh, tit, element, face1, face2,
                                orientation);
         }
       }
