@@ -67,13 +67,14 @@ typedef struct t8_cmesh
   int                 do_dup;   /**< Communicator shall be duped. */
   int                 set_partitioned; /**< If nonzero the cmesh is partitioned.
                                             If zero each process has the whole cmesh. */
+  int                 face_knowledge;  /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partioned */
   sc_MPI_Comm         mpicomm;  /**< MPI communicator to use. */
   int                 mpirank;  /**< Number of this MPI process. */
   int                 mpisize;  /**< Number of MPI processes. */
   t8_refcount_t       rc; /**< The reference count of the cmesh. */
   t8_gloidx_t         num_trees;   /**< The global number of trees */
-  t8_topidx_t         num_local_trees; /**< If partitioned the number of trees on this process. Otherwise the global number of trees. */
-  t8_topidx_t         num_ghosts; /**< If partitioned the number of neighbor trees
+  t8_locidx_t         num_local_trees; /**< If partitioned the number of trees on this process. Otherwise the global number of trees. */
+  t8_locidx_t         num_ghosts; /**< If partitioned the number of neighbor trees
                                     owned by different processes. */
   /* TODO: wouldnt a local num_trees_per_eclass be better? */
   t8_gloidx_t         num_trees_per_eclass[T8_ECLASS_LAST]; /**< After commit the number of
@@ -83,9 +84,10 @@ typedef struct t8_cmesh
 
   t8_gloidx_t         first_tree; /**< The global index of the first local tree
                                        on this process. Zero if the cmesh is not partitioned. -1 if this processor is empty. */
-  t8_topidx_t        *tree_per_proc; /**< If partitioned twice the number of local
-                                          trees on each process plus one if the last tree of the respective
-                                          process is the first tree of the next process */
+  t8_topidx_t        *tree_per_proc; /**< If partitioned the num_local_trees of each process
+                                          or -num_local_trees - 1 if the last tree of the respective
+                                          process is the first tree of the next process.
+                                          Since this is very memory consuming we only fill it when needed. */
 #ifdef T8_ENABLE_DEBUG
   t8_topidx_t         inserted_trees; /**< Count the number of inserted trees to
                                            check at commit if it equals the total number. */

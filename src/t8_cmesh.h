@@ -90,8 +90,8 @@ void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
 void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
                                               int set_partitioned,
                                               int set_face_knowledge,
-                                              t8_topidx_t first_local_tree,
-                                              t8_topidx_t last_local_tree);
+                                              t8_gloidx_t first_local_tree,
+                                              t8_gloidx_t last_local_tree);
 
 /* TODO: This is actually not part of the interface?
  *       At least it is only used if the cmesh is partitioned.
