@@ -35,13 +35,14 @@ typedef struct t8_stash *t8_stash_t;
 typedef struct t8_part_tree *t8_part_tree_t;
 typedef struct t8_cmesh_trees *t8_cmesh_trees_t;
 
-/** This structure hold the connectivity data of the coarse mesh.
+/** This structure holds the connectivity data of the coarse mesh.
  *  It can either be replicated, then each process stores a copy of the whole
  *  mesh, or partitioned. In the latter case, each process only stores a local
  *  portion of the mesh plus information about ghost elements.
  *
  *  The coarse mesh is a collection of coarse trees that can be identified
  *  along faces.
+ *  TODO: this description is outdated. rewrite it.
  *  The array ctrees stores these coarse trees sorted by their (global) tree_id.
  *  If the mesh if partitioned it is partitioned according to an (possible only
  *  virtually existing) underlying fine mesh. Therefore the ctrees array can
@@ -59,7 +60,8 @@ typedef struct t8_cmesh
 {
   /* TODO: make the comments more legible */
   /* TODO: right now a not replicated cmesh is limited to t8_topidx in tree indices
-   *       we should think about how to extend this to t8_gloidx */
+   *       we should think about how to extend this to t8_gloidx,
+   *       or actually we should take t8_locidx?*/
   int                 committed;
   int                 dimension; /**< The dimension of the cmesh. It is set when the first tree is inserted. */
   int                 do_dup;   /**< Communicator shall be duped. */
@@ -169,6 +171,8 @@ typedef struct t8_cmesh_trees
   sc_array_t         *from_proc;        /* array of t8_part_tree, one for each process */
   int                *tree_to_proc;     /* for each tree its process */
   int                *ghost_to_proc;    /* for each ghost its process */
+  /* TODO: the ghost_to_offset field may not be necessary since the ghost can
+   *       be identified by its local index */
   t8_topidx_t        *ghost_to_offset;  /* for each ghost its offset within the process */
 } t8_cmesh_trees_struct_t;
 
