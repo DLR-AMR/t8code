@@ -612,6 +612,9 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   return cmesh_in;
 }
 
+/* TODO: set boundary face connections here.
+ *       not trivial if replicated and not level 3 face_knowledg
+ */
 void
 t8_cmesh_commit (t8_cmesh_t cmesh)
 {

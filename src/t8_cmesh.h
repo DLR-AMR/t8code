@@ -61,6 +61,7 @@ void                t8_cmesh_init (t8_cmesh_t * pcmesh);
 void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
                                           sc_MPI_Comm mpicomm, int do_dup);
 
+/* TODO: think about how set_num_trees and this function play together */
 /** Declare if the cmesh is understood as a partitioned cmesh or a
  * replicated cmesh. Replicated (each processor owns the whole mesh) is
  * the default and in this case \ref t8_cmesh_set_partitioned is the same as
@@ -92,6 +93,9 @@ void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
                                               t8_topidx_t first_local_tree,
                                               t8_topidx_t last_local_tree);
 
+/* TODO: This is actually not part of the interface?
+ *       At least it is only used if the cmesh is partitioned.
+ */
 /** Set the total number of trees for a coarse mesh.
  * It is not allowed to call this function after \ref t8_cmesh_commit.
  * TODO: Clarify that this holds for all _set_ functions.
