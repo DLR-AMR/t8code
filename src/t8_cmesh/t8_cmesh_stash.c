@@ -26,7 +26,7 @@
 
 #include <t8.h>
 #include <t8_eclass.h>
-#include <t8_cmesh/t8_cmesh_stash.h>
+#include "t8_cmesh_stash.h"
 
 void
 t8_stash_init (t8_stash_t * pstash)
@@ -83,7 +83,7 @@ t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t id1, t8_gloidx_t id2,
   t8_stash_joinface_struct_t *sjoin;
 
   T8_ASSERT (stash != NULL);
-  sjoin = sc_array_push (&stash->joinfaces);
+  sjoin = (t8_stash_joinface_struct_t *) sc_array_push (&stash->joinfaces);
   sjoin->face1 = face1;
   sjoin->face2 = face2;
   sjoin->id1 = id2;
@@ -93,19 +93,19 @@ t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t id1, t8_gloidx_t id2,
 
 void
 t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id, int package_id,
-                        int key, size_t size, void *attr, int copy)
+                        int key, size_t size, void *attr, int data_persists)
 {
   t8_stash_attribute_struct_t *sattr;
 
   T8_ASSERT (stash != NULL);
-  sattr = sc_array_push (&stash->attributes);
+  sattr = (t8_stash_attribute_struct_t *) sc_array_push (&stash->attributes);
   sattr->attr_size = size;
   sattr->id = id;
-  sattr->is_owned = copy ? 1 : 0;
+  sattr->is_owned = data_persists ? 0 : 1;
   sattr->key = key;
   sattr->package_id = package_id;
-  sattr->attr_data = copy ? T8_ALLOC (char, size) : attr;
-  if (copy) {
+  sattr->attr_data = data_persists ? attr : T8_ALLOC (char, size);
+  if (!data_persists) {
     memcpy (sattr->attr_data, attr, size);
   }
 }
@@ -132,13 +132,27 @@ t8_stash_get_attribute_tree_id (t8_stash_t stash, size_t index)
 }
 
 int
+t8_stash_get_attribute_key (t8_stash_t stash, size_t index)
+{
+  return ((t8_stash_attribute_struct_t *)
+          sc_array_index (&stash->attributes, index))->key;
+}
+
+int
+t8_stash_get_attribute_id (t8_stash_t stash, size_t index)
+{
+  return ((t8_stash_attribute_struct_t *)
+          sc_array_index (&stash->attributes, index))->package_id;
+}
+
+int
 t8_stash_attribute_is_owned (t8_stash_t stash, size_t index)
 {
   return ((t8_stash_attribute_struct_t *)
           sc_array_index (&stash->attributes, index))->is_owned;
 }
 
-/* Compare to attribute entries A1 and A2.
+/* Compare two attribute entries A1 and A2.
  * A1 is smaller than A2 if and only if its treeid is smaller or (if equal)
  * its package id is smaller or (if also equal) its key is smaller.
  */

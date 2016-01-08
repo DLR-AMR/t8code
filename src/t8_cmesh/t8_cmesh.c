@@ -22,8 +22,9 @@
 
 #include <t8_refcount.h>
 #include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_types.h>
-#include <t8_cmesh/t8_cmesh_trees.h>
+#include <t8_cmesh_vtk.h>
+#include "t8_cmesh_types.h"
+#include "t8_cmesh_trees.h"
 
 /** \file t8_cmesh.c
  *
@@ -106,6 +107,7 @@ sc_MPI_Comm
 t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup)
 {
   T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (cmesh->committed);
   T8_ASSERT (cmesh->rc.refcount > 0);
   T8_ASSERT (cmesh->mpicomm != sc_MPI_COMM_NULL);
 
@@ -189,65 +191,29 @@ t8_cmesh_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree)
     1 ? t8_cmesh_get_tree (cmesh, tree->treeid + 1) : NULL;
 }
 
-#if 0
 void
-t8_cmesh_set_attribute_sizes (t8_cmesh_t cmesh, size_t attr_sizes[],
-                              int num_sizes)
-{
-  int                 iclass;
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (!cmesh->committed);
-  T8_ASSERT (num_sizes == T8_ECLASS_LAST);
-
-  for (iclass = 0; iclass < num_sizes; iclass++) {
-    if (attr_sizes[iclass] > 0) {
-      cmesh->tree_attributes_mem[iclass] =
-        sc_mempool_new (attr_sizes[iclass]);
-    }
-  }
-}
-
-static              size_t
-t8_cmesh_get_attribute_size (t8_cmesh_t cmesh, t8_eclass_t eclass)
-{
-  T8_ASSERT (cmesh->tree_attributes_mem[eclass] != NULL);
-  return cmesh->tree_attributes_mem[eclass]->elem_size;
-}
-
-void
-t8_cmesh_set_attribute_size_single (t8_cmesh_t cmesh, size_t attr_size,
-                                    t8_eclass_t tree_class)
-{
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (!cmesh->committed);
-  T8_ASSERT (T8_ECLASS_FIRST <= tree_class && tree_class < T8_ECLASS_LAST);
-  T8_ASSERT (attr_size > 0);
-
-  cmesh->tree_attributes_mem[(int) tree_class] = sc_mempool_new (attr_size);
-}
-#endif
-
-void
-t8_cmesh_tree_set_attribute (t8_cmesh_t cmesh, t8_topidx_t tree_id,
-                             int package_id, int key,
-                             size_t attr_size, void *attribute, int copy)
+t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t tree_id, int package_id,
+                        int key, void *data, size_t data_size,
+                        int data_persists)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (!cmesh->committed);
 
-  t8_stash_add_attribute (cmesh->stash, tree_id, package_id, key, attr_size,
-                          attribute, copy);
+  t8_stash_add_attribute (cmesh->stash, tree_id, package_id, key, data_size,
+                          data, data_persists);
 }
 
 void               *
-t8_cmesh_tree_get_attribute (t8_cmesh_t cmesh, t8_topidx_t tree_id)
+t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key,
+                        t8_locidx_t tree_id, size_t * data_size)
 {
   T8_ASSERT (cmesh->committed);
-  return t8_cmesh_trees_get_attribute (cmesh->trees, tree_id);
+  return t8_cmesh_trees_get_attribute (cmesh->trees, tree_id, package_id, key,
+                                       data_size);
 }
 
 void
-t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_topidx_t num_trees)
+t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_gloidx_t num_trees)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (!cmesh->committed);
@@ -301,7 +267,7 @@ t8_cmesh_tree_index (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 #endif
 
 void
-t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_topidx_t tree_id,
+t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t tree_id,
                          t8_eclass_t tree_class)
 {
   T8_ASSERT (cmesh != NULL);
@@ -341,23 +307,6 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_topidx_t tree_id,
 #endif
 }
 
-#if 0
-void
-t8_cmesh_set_attribute_to_vertices (t8_cmesh_t cmesh)
-{
-  size_t              attribute_sizes[T8_ECLASS_LAST];
-  int                 iclass;
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (!cmesh->committed);
-
-  for (iclass = T8_ECLASS_FIRST; iclass < T8_ECLASS_LAST; iclass++) {
-    attribute_sizes[iclass] =
-      3 * sizeof (double) * t8_eclass_num_vertices[iclass];
-  }
-  t8_cmesh_set_attribute_sizes (cmesh, attribute_sizes, T8_ECLASS_LAST);
-}
-#endif
-
 void
 t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_topidx_t tree_id,
                             int package_id, int key,
@@ -369,7 +318,7 @@ t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_topidx_t tree_id,
 
   t8_stash_add_attribute (cmesh->stash, tree_id, package_id, key,
                           3 * num_vertices * sizeof (double),
-                          (void *) vertices, 1);
+                          (void *) vertices, 0);
 }
 
 /* TODO: do we still need this function? if yes, write it correctly. */
@@ -423,8 +372,8 @@ t8_cmesh_set_ghost (t8_cmesh_t cmesh, t8_topidx_t ghost_id,
  */
 /* TODO: change to gloidx? */
 void
-t8_cmesh_join_faces (t8_cmesh_t cmesh, t8_topidx_t tree1, t8_topidx_t tree2,
-                     int face1, int face2, int orientation)
+t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t tree1, t8_gloidx_t tree2,
+                   int face1, int face2, int orientation)
 {
   T8_ASSERT (0 <= orientation);
 
@@ -666,7 +615,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 void
 t8_cmesh_commit (t8_cmesh_t cmesh)
 {
-  int                 mpiret;
+  int                 mpiret, key;
   sc_MPI_Comm         comm_dup;
 
   T8_ASSERT (cmesh != NULL);
@@ -687,9 +636,10 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       t8_stash_t          stash = cmesh->stash;
       sc_array_t         *class_entries = &stash->classes;
       t8_stash_class_struct_t *entry;
-      t8_topidx_t         num_trees =
-        class_entries->elem_count, itree, newtree;
-      size_t              si, attr_bytes, attr_offset;
+      t8_topidx_t         num_trees = class_entries->elem_count, itree;
+      t8_locidx_t         tree_id, temptree;
+      size_t              si, attr_bytes, attr_offset, num_attr, attr_index;
+      int                 attr_id;
 
       t8_cmesh_trees_init (&cmesh->trees, 1, num_trees, 0);
       /* compute size of attributes */
@@ -702,21 +652,50 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       t8_cmesh_trees_init_part (cmesh->trees, 0, 0, num_trees, 0, attr_bytes);
       /* set tree classes */
       for (itree = 0; itree < num_trees; itree++) {
-        entry = t8_sc_array_index_topidx (class_entries, itree);
+        entry = (t8_stash_class_struct_t *)
+          t8_sc_array_index_topidx (class_entries, itree);
         t8_cmesh_trees_add_tree (cmesh->trees, entry->id, 0, entry->eclass);
       }
       /* set tree attributes */
+      /* TODO: replace attribute sort by bucket sort into tree structs +
+       *       sorting inside the tree structs by key.
+       *       This will bring down the runtime of this step from O(nlog(n)) to
+       *       O(nm) where m is the maximum number of attributes under all trees.
+       */
       t8_stash_attribute_sort (cmesh->stash);
       attr_offset = 0;
+      temptree = -1;
       for (si = 0; si < stash->attributes.elem_count; si++) {
-        attr_bytes = t8_stash_get_attribute_size (cmesh->stash, si);
-        newtree = t8_stash_get_attribute_tree_id (cmesh->stash, si) -
+        tree_id = t8_stash_get_attribute_tree_id (cmesh->stash, si) -
           cmesh->first_tree;
-        t8_cmesh_tree_add_attribute (cmesh->trees, 0, newtree,
+        if (tree_id > temptree) {
+          /* We are entering a new tree */
+          temptree = tree_id;
+          /* count the number of attributes at this tree... */
+          num_attr = si;
+          /* ...by counting after how many attributes we enter a new tree */
+          while (temptree == tree_id
+                 && ++num_attr < stash->attributes.elem_count) {
+            temptree =
+              t8_stash_get_attribute_tree_id (cmesh->stash,
+                                              num_attr) - cmesh->first_tree;
+          }
+          num_attr -= si;       /* now stores the number of attribute of the tree */
+          /* initialize storage for tree attributes */
+          t8_cmesh_trees_init_attributes (cmesh->trees, tree_id, num_attr);
+          temptree = tree_id;   /* store the current tree_id in oldtree */
+          attr_index = 0;
+        }
+        attr_bytes = t8_stash_get_attribute_size (cmesh->stash, si);
+        key = t8_stash_get_attribute_key (cmesh->stash, si);
+        attr_id = t8_stash_get_attribute_id (cmesh->stash, si);
+        t8_cmesh_tree_add_attribute (cmesh->trees, 0, tree_id, attr_id, key,
+                                     (char *)
                                      t8_stash_get_attribute (cmesh->stash,
                                                              si), attr_bytes,
-                                     attr_offset);
+                                     attr_offset, attr_index);
         attr_offset += attr_bytes;
+        attr_index++;
       }
     }
   }
@@ -732,22 +711,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   t8_stash_destroy (&cmesh->stash);
 }
 
-t8_topidx_t
-t8_cmesh_get_num_vertices (t8_cmesh_t cmesh)
-{
-  int                 iclass;
-  t8_topidx_t         num_vertices = 0;
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
-
-  for (iclass = T8_ECLASS_FIRST; iclass < T8_ECLASS_LAST; iclass++) {
-    num_vertices += t8_eclass_num_vertices[iclass] *
-      cmesh->num_trees_per_eclass[iclass];
-  }
-  return num_vertices;
-}
-
-t8_topidx_t
+t8_gloidx_t
 t8_cmesh_get_num_trees (t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh != NULL);
@@ -756,7 +720,7 @@ t8_cmesh_get_num_trees (t8_cmesh_t cmesh)
   return cmesh->num_trees;
 }
 
-t8_topidx_t
+t8_locidx_t
 t8_cmesh_get_local_num_trees (t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh != NULL);
@@ -766,12 +730,13 @@ t8_cmesh_get_local_num_trees (t8_cmesh_t cmesh)
     return cmesh->num_local_trees;
   }
   else {
-    return cmesh->num_trees;
+    T8_ASSERT ((t8_locidx_t) cmesh->num_trees == cmesh->num_trees);
+    return (t8_locidx_t) cmesh->num_trees;
   }
 }
 
 t8_eclass_t
-t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_topidx_t tree_id)
+t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_locidx_t tree_id)
 {
   t8_ctree_t          tree;
 
@@ -785,10 +750,9 @@ t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 
 void
 t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
-                         t8_topidx_t * first_local_tree,
-                         t8_gloidx_t *
-                         child_in_tree_begin,
-                         t8_topidx_t * last_local_tree,
+                         t8_gloidx_t * first_local_tree,
+                         t8_gloidx_t * child_in_tree_begin,
+                         t8_gloidx_t * last_local_tree,
                          t8_gloidx_t * child_in_tree_end)
 {
   *first_local_tree = 0;
@@ -913,6 +877,7 @@ t8_cmesh_unref (t8_cmesh_t * pcmesh)
 /* TODO: In p4est a tree edge is joined with itself to denote a domain boundary.
  *       Will we do it the same in t8code? This is not yet decided, however the
  *       function below stores these neighbourhood information in the cmesh. */
+/* TODO: Eventually we may directly partition the mesh here */
 static              t8_cmesh_t
 t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
                              int do_dup)
@@ -954,7 +919,7 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
         _T8_CMESH_P48_CONN (vertices[3 * treevertex + 2]);
     }
     t8_cmesh_set_tree_vertices (cmesh, itree, t8_get_package_id (), 0,
-                                (void *) vertices, num_tvertices);
+                                vertices, num_tvertices);
   }
   /* get face neighbor information from conn and join faces in cmesh */
   for (itree = 0; itree < cmesh->num_trees; itree++) {  /* loop over each tree */
@@ -963,8 +928,8 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
       ttt = _T8_CMESH_P48_CONN (tree_to_tree[num_faces * itree + iface]);
       /* insert the face only if we did not insert it before */
       if (itree < ttt || (itree == ttt && iface <= ttf % num_faces)) {
-        t8_cmesh_join_faces (cmesh, itree, ttt, iface, ttf % num_faces,
-                             ttf / num_faces);
+        t8_cmesh_set_join (cmesh, itree, ttt, iface, ttf % num_faces,
+                           ttf / num_faces);
       }
     }
   }
@@ -985,6 +950,39 @@ t8_cmesh_new_from_p8est (p8est_connectivity_t * conn, sc_MPI_Comm comm,
                          int do_dup)
 {
   return t8_cmesh_new_from_p4est_ext (conn, 3, comm, do_dup);
+}
+
+t8_cmesh_t
+t8_cmesh_new_vertex (sc_MPI_Comm comm, int do_dup)
+{
+  t8_cmesh_t          cmesh;
+  double              vertices[3] = { 0, 0, 0 };
+
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_VERTEX);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 1);
+  t8_cmesh_commit (cmesh);
+
+  return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_new_line (sc_MPI_Comm comm, int do_dup)
+{
+  t8_cmesh_t          cmesh;
+  double              vertices[6] = {
+    0, 0, 0,
+    1, 0, 0
+  };
+
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_LINE);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 2);
+  t8_cmesh_commit (cmesh);
+
+  return cmesh;
 }
 
 t8_cmesh_t
@@ -1092,6 +1090,62 @@ t8_cmesh_new_pyramid (sc_MPI_Comm comm, int do_dup)
   return cmesh;
 }
 
+t8_cmesh_t
+t8_cmesh_new_prism (sc_MPI_Comm comm, int do_dup)
+{
+  t8_cmesh_t          cmesh;
+  double              vertices[18] = {
+    0, 0, 0,
+    1, 0, 0,
+    1, 1, 0,
+    0, 0, 1,
+    1, 0, 1,
+    1, 1, 1
+  };
+
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PRISM);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 6);
+  t8_cmesh_commit (cmesh);
+
+  return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_new_from_class (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup)
+{
+  switch (eclass) {
+  case T8_ECLASS_VERTEX:
+    return t8_cmesh_new_vertex (comm, do_dup);
+    break;
+  case T8_ECLASS_LINE:
+    return t8_cmesh_new_line (comm, do_dup);
+    break;
+  case T8_ECLASS_TRIANGLE:
+    return t8_cmesh_new_tri (comm, do_dup);
+    break;
+  case T8_ECLASS_QUAD:
+    return t8_cmesh_new_quad (comm, do_dup);
+    break;
+  case T8_ECLASS_TET:
+    return t8_cmesh_new_tet (comm, do_dup);
+    break;
+  case T8_ECLASS_HEX:
+    return t8_cmesh_new_hex (comm, do_dup);
+    break;
+  case T8_ECLASS_PYRAMID:
+    return t8_cmesh_new_pyramid (comm, do_dup);
+    break;
+  case T8_ECLASS_PRISM:
+    return t8_cmesh_new_prism (comm, do_dup);
+    break;
+  default:
+    SC_ABORT ("Invalid eclass\n");
+    return NULL;
+  }
+}
+
 /* TODO: This is just a helper function that was needed when we changed the vertex interface
  *       to use attributes. Before we stored a list of vertex coordinates in the cmesh and each tree indexed into this list.
  *       Now each tree carries the coordinates of its vertices.
@@ -1119,6 +1173,7 @@ t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t * tvertices,
  * For prisms the front (y=0) and back (y=1) face are divided into triangles
  * as above.
  */
+/* TODO: upgrade with int x,y,z for periodic faces */
 t8_cmesh_t
 t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
                         int do_bcast)
@@ -1172,7 +1227,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
                                   t8_eclass_num_vertices[eclass]);
       break;
     case T8_ECLASS_PRISM:
-      t8_cmesh_join_faces (cmesh, 0, 1, 1, 2, 0);
+      t8_cmesh_set_join (cmesh, 0, 1, 1, 2, 0);
       vertices[0] = 0;
       vertices[1] = 1;
       vertices[2] = 5;
@@ -1195,7 +1250,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
                                   attr_vertices, 6);
       break;
     case T8_ECLASS_TRIANGLE:
-      t8_cmesh_join_faces (cmesh, 0, 1, 1, 2, 0);
+      t8_cmesh_set_join (cmesh, 0, 1, 1, 2, 0);
       vertices[0] = 0;
       vertices[1] = 1;
       vertices[2] = 3;
@@ -1214,12 +1269,12 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
                                   attr_vertices, 3);
       break;
     case T8_ECLASS_TET:
-      t8_cmesh_join_faces (cmesh, 0, 1, 1, 2, 0);
-      t8_cmesh_join_faces (cmesh, 1, 2, 1, 2, 0);
-      t8_cmesh_join_faces (cmesh, 2, 3, 1, 2, 0);
-      t8_cmesh_join_faces (cmesh, 3, 4, 1, 2, 0);
-      t8_cmesh_join_faces (cmesh, 4, 5, 1, 2, 0);
-      t8_cmesh_join_faces (cmesh, 5, 0, 1, 2, 0);
+      t8_cmesh_set_join (cmesh, 0, 1, 1, 2, 0);
+      t8_cmesh_set_join (cmesh, 1, 2, 1, 2, 0);
+      t8_cmesh_set_join (cmesh, 2, 3, 1, 2, 0);
+      t8_cmesh_set_join (cmesh, 3, 4, 1, 2, 0);
+      t8_cmesh_set_join (cmesh, 4, 5, 1, 2, 0);
+      t8_cmesh_set_join (cmesh, 5, 0, 1, 2, 0);
       vertices[0] = 0;
       vertices[3] = 7;
       vertices[1] = 5;
@@ -1294,9 +1349,9 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
                                                      attr_vertices, 5);
       t8_cmesh_set_tree_vertices (cmesh, 2, t8_get_package_id (), 0,
                                   attr_vertices, 5);
-      t8_cmesh_join_faces (cmesh, 0, 1, 3, 2, 0);
-      t8_cmesh_join_faces (cmesh, 1, 2, 0, 1, 0);
-      t8_cmesh_join_faces (cmesh, 2, 0, 2, 0, 0);
+      t8_cmesh_set_join (cmesh, 0, 1, 3, 2, 0);
+      t8_cmesh_set_join (cmesh, 1, 2, 0, 1, 0);
+      t8_cmesh_set_join (cmesh, 2, 0, 2, 0, 0);
       break;
     default:
       break;
@@ -1350,12 +1405,12 @@ t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup, int dim)
   t8_cmesh_set_tree_class (cmesh, 0, tree_class);
   t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices,
                               1 << dim);
-  t8_cmesh_join_faces (cmesh, 0, 0, 0, 1, 0);
+  t8_cmesh_set_join (cmesh, 0, 0, 0, 1, 0);
   if (dim > 1) {
-    t8_cmesh_join_faces (cmesh, 0, 0, 2, 3, 0);
+    t8_cmesh_set_join (cmesh, 0, 0, 2, 3, 0);
   }
   if (dim == 3) {
-    t8_cmesh_join_faces (cmesh, 0, 0, 4, 5, 0);
+    t8_cmesh_set_join (cmesh, 0, 0, 4, 5, 0);
   }
   t8_cmesh_commit (cmesh);
   return cmesh;

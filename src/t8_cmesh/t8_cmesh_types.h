@@ -25,7 +25,7 @@
 
 #include <t8.h>
 #include <t8_refcount.h>
-#include <t8_cmesh/t8_cmesh_stash.h>
+#include "t8_cmesh_stash.h"
 
 /** \file t8_cmesh_types.h
  * We define here the datatypes needed for internal cmesh routines.
@@ -143,6 +143,7 @@ typedef struct t8_ctree
 }
 t8_ctree_struct_t;
 
+/* TODO: document */
 typedef struct t8_attribute_info
 {
   int       package_id;
@@ -166,6 +167,7 @@ typedef struct t8_part_tree
 }
 t8_part_tree_struct_t;
 
+/* TODO: document */
 typedef struct t8_cmesh_trees
 {
   sc_array_t         *from_proc;        /* array of t8_part_tree, one for each process */

@@ -56,7 +56,8 @@ t8_basic_refine_test ()
   t8_forest_init (&forest);
   t8_forest_init (&forest_adapt);
 
-  t8_forest_set_cmesh (forest, t8_cmesh_new_quad (sc_MPI_COMM_WORLD, 0));
+  t8_forest_set_cmesh (forest, t8_cmesh_new_from_class (T8_ECLASS_QUAD,
+                                                        sc_MPI_COMM_WORLD, 0));
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
   t8_forest_set_level (forest, 2);
   t8_forest_commit (forest);
@@ -146,7 +147,9 @@ t8_basic (int do_dup, int set_level)
 
   t8_forest_init (&forest);
 
-  t8_forest_set_cmesh (forest, t8_cmesh_new_tet (sc_MPI_COMM_WORLD, do_dup));
+  t8_forest_set_cmesh (forest, t8_cmesh_new_from_class (T8_ECLASS_TET,
+                                                        sc_MPI_COMM_WORLD,
+                                                        do_dup));
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
 
   t8_forest_set_level (forest, set_level);

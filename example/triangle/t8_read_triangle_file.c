@@ -37,8 +37,8 @@ t8_read_triangle_file_build_cmesh (const char * prefix, int do_dup)
   if (cmesh != NULL) {
     t8_debugf ("Succesfully constructed cmesh from %s files.\n",
                            prefix);
-    t8_debugf ("cmesh has:\n\t%i triangles\n",
-               t8_cmesh_get_num_trees (cmesh));
+    t8_debugf ("cmesh has:\n\t%lli triangles\n",
+               (long long) t8_cmesh_get_num_trees (cmesh));
     snprintf (fileprefix, BUFSIZ, "%s_t8_trianle", prefix);
     t8_cmesh_vtk_write_file (cmesh, fileprefix, 1.);
     t8_cmesh_unref (&cmesh);

@@ -25,11 +25,18 @@
  * TODO: document this file
  */
 
-#include <t8_cmesh/t8_cmesh_trees.h>
-
+#include "t8_cmesh_trees.h"
 
 extern int
-t8_cmesh_ctree_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b);
+         t8_cmesh_ctree_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b);
+
+/* This struct is needed as a key to search
+ * for an argument in the arguments array of a tree */
+struct t8_key_id_pair
+{
+  int                 key;
+  int                 package_id;
+};
 
 static              t8_part_tree_t
 t8_cmesh_trees_get_part (t8_cmesh_trees_t trees, int proc)
@@ -110,9 +117,10 @@ t8_cmesh_trees_init_part (t8_cmesh_trees_t trees, int proc,
    * two arrays for equality using memcmp.
    * (since we store structs, we would not have control of the padding bytes
    * otherwise) */
-  part->first_tree = T8_ALLOC_ZERO (char, num_trees * sizeof (t8_ctree_struct_t) +
-                               num_ghosts * sizeof (t8_cghost_struct_t) +
-                               attr_bytes);    
+  part->first_tree =
+    T8_ALLOC_ZERO (char,
+                   num_trees * sizeof (t8_ctree_struct_t) +
+                   num_ghosts * sizeof (t8_cghost_struct_t) + attr_bytes);
   part->first_tree_id = first_tree;
 }
 
@@ -167,53 +175,121 @@ t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees, t8_topidx_t ghost)
                                  trees->ghost_to_offset[ghost]);
 }
 
-void               *
-t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id)
+void
+t8_cmesh_trees_init_attributes (t8_cmesh_trees_t trees, t8_locidx_t tree_id,
+                                size_t num_attributes)
 {
   int                 proc;
   t8_ctree_t          tree;
+
   T8_ASSERT (trees != NULL);
-  T8_ASSERT (tree >= 0);
+  T8_ASSERT (tree_id >= 0);
   proc = trees->tree_to_proc[tree_id];
   T8_ASSERT (proc >= 0 && proc < t8_cmesh_trees_get_num_procs (trees));
   tree = t8_part_tree_get_tree (t8_cmesh_trees_get_part (trees, proc),
                                 tree_id);
 
+  tree->attributes = sc_array_new_size (sizeof (t8_attribute_info_struct_t),
+                                        num_attributes);
+}
+
+/* gets a key_id_pair as first argument and an attribute as second */
+static int
+t8_cmesh_trees_compare_attributes (const void *A1, const void *A2)
+{
+  t8_attribute_info_struct_t *attr;
+  int                 key, package_id;
+
+  key = ((struct t8_key_id_pair *) A1)->key;
+  package_id = ((struct t8_key_id_pair *) A1)->package_id;
+  attr = (t8_attribute_info_struct_t *) A2;
+
+  if (package_id < attr->package_id) {
+    return -1;
+  }
+  else if (package_id > attr->package_id) {
+    return 1;
+  }
+  else {
+    /* both attributes have the same package_id */
+    return key < attr->key ? -1 : key != attr->key;
+    /* -1 if key < attr_key, 0 if key == attr_key, +1 if key > attr_key */
+  }
+}
+
+void               *
+t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
+                              int package_id, int key, size_t * data_size)
+{
+  int                 proc;
+  t8_ctree_t          tree;
+  ssize_t             attr_index;
+  t8_attribute_info_struct_t *attr_info;
+  struct t8_key_id_pair key_id;
+  T8_ASSERT (trees != NULL);
+  T8_ASSERT (tree_id >= 0);
+  proc = trees->tree_to_proc[tree_id];
+  T8_ASSERT (proc >= 0 && proc < t8_cmesh_trees_get_num_procs (trees));
+  tree = t8_part_tree_get_tree (t8_cmesh_trees_get_part (trees, proc),
+                                tree_id);
+
+  key_id.key = key;
+  key_id.package_id = package_id;
+
+  attr_index = sc_array_bsearch (tree->attributes, &key_id,
+                                 t8_cmesh_trees_compare_attributes);
+  if (attr_index < 0) {
+    /* TODO: Error handling if attribute not found */
+    t8_global_errorf ("Attribute with package id %i and key %i not found"
+                      " on tree %li.\n", package_id, key, (long) tree_id);
+    return NULL;
+  }
+  attr_info =
+    (t8_attribute_info_struct_t *) sc_array_index_ssize_t (tree->attributes,
+                                                           attr_index);
+  *data_size = attr_info->attribute_size;
   return t8_part_tree_get_attribute (t8_cmesh_trees_get_part (trees, proc),
-                                     tree->attribute_offset);
+                                     attr_info->attribute_offset);
 }
 
 void
 t8_cmesh_tree_add_attribute (t8_cmesh_trees_t trees, int proc,
-                             t8_topidx_t tree_id, char *attr, size_t size,
-                             size_t offset)
+                             t8_topidx_t tree_id, int package_id, int key,
+                             char *attr, size_t size, size_t offset,
+                             int attr_tree_index)
 {
   t8_part_tree_t      part;
   t8_ctree_t          tree;
   char               *new_attr;
+  t8_attribute_info_struct_t *attr_info;
   T8_ASSERT (trees != NULL);
   T8_ASSERT (attr != NULL || size == 0);
   T8_ASSERT (size >= 0 && offset >= 0);
+  T8_ASSERT (tree_id >= 0);
 
   part = t8_cmesh_trees_get_part (trees, proc);
   new_attr = part->first_tree + part->num_trees * sizeof (t8_ctree_struct_t)
     + part->num_ghosts * sizeof (t8_cghost_struct_t) + offset;
   memcpy (new_attr, attr, size);
   tree = t8_part_tree_get_tree (part, tree_id);
-  tree->attribute_offset = offset;
-  tree->attribute_size = size;
+  attr_info = (t8_attribute_info_struct_t *)
+    sc_array_index_int (tree->attributes, attr_tree_index);
+  attr_info->attribute_offset = offset;
+  attr_info->attribute_size = size;
+  attr_info->key = key;
+  attr_info->package_id = package_id;
 }
 
 int
-t8_cmesh_trees_is_equal (t8_cmesh_t cmesh, t8_cmesh_trees_t trees_a, t8_cmesh_trees_t trees_b)
+t8_cmesh_trees_is_equal (t8_cmesh_t cmesh, t8_cmesh_trees_t trees_a,
+                         t8_cmesh_trees_t trees_b)
 {
-  int is_equal;
-  t8_topidx_t num_trees, num_ghost;
-  size_t      it;
-  t8_part_tree_t part_a, part_b;
-  t8_topidx_t treeit;
-  t8_ctree_t    tree_a, tree_b;
-
+  int                 is_equal;
+  t8_topidx_t         num_trees, num_ghost;
+  size_t              it;
+  t8_part_tree_t      part_a, part_b;
+  t8_topidx_t         treeit;
+  t8_ctree_t          tree_a, tree_b;
 
   T8_ASSERT (cmesh != NULL);
   if (trees_a == trees_b) {
@@ -226,11 +302,11 @@ t8_cmesh_trees_is_equal (t8_cmesh_t cmesh, t8_cmesh_trees_t trees_a, t8_cmesh_tr
   num_trees = cmesh->num_trees;
   num_ghost = cmesh->num_ghosts;
   is_equal = memcmp (trees_a->tree_to_proc, trees_b->tree_to_proc,
-                  num_trees * sizeof (int))
-      || memcmp (trees_a->ghost_to_proc, trees_b->ghost_to_proc,
-                  num_ghost * sizeof (int))
-      || memcmp (trees_a->ghost_to_offset, trees_b->ghost_to_proc,
-                  num_ghost * sizeof (t8_topidx_t));
+                     num_trees * sizeof (int))
+    || memcmp (trees_a->ghost_to_proc, trees_b->ghost_to_proc,
+               num_ghost * sizeof (int))
+    || memcmp (trees_a->ghost_to_offset, trees_b->ghost_to_proc,
+               num_ghost * sizeof (t8_topidx_t));
   if (is_equal != 0) {
     return 0;
   }
@@ -238,19 +314,19 @@ t8_cmesh_trees_is_equal (t8_cmesh_t cmesh, t8_cmesh_trees_t trees_a, t8_cmesh_tr
   /* we can't use sc_array_is_equal because we store structs in the array
    * and don't have any control over the padding in these structs.
    */
-  for (it = 0;it < trees_a->from_proc->elem_count;it++) {
+  for (it = 0; it < trees_a->from_proc->elem_count; it++) {
     if (it >= trees_b->from_proc->elem_count) {
       return 0;
     }
     part_a = (t8_part_tree_t) sc_array_index (trees_a->from_proc, it);
     part_b = (t8_part_tree_t) sc_array_index (trees_b->from_proc, it);
     is_equal = part_a->first_tree_id != part_b->first_tree_id
-        || part_a->num_ghosts != part_b->num_ghosts
-        || part_a->num_trees != part_b->num_trees;
+      || part_a->num_ghosts != part_b->num_ghosts
+      || part_a->num_trees != part_b->num_trees;
     if (is_equal != 0) {
       return 0;
     }
-    for (treeit = 0;treeit < part_a->num_trees;treeit++) {
+    for (treeit = 0; treeit < part_a->num_trees; treeit++) {
       tree_a = t8_part_tree_get_tree (part_a, treeit - part_a->first_tree_id);
       tree_b = t8_part_tree_get_tree (part_b, treeit - part_b->first_tree_id);
       if (!t8_cmesh_ctree_is_equal (tree_a, tree_b)) {
@@ -277,6 +353,7 @@ t8_cmesh_trees_destroy (t8_cmesh_trees_t * ptrees)
     part = t8_cmesh_trees_get_part (trees, proc);
     for (itree = 0; itree < part->num_trees; itree++) {
       tree = t8_part_tree_get_tree (part, itree + part->first_tree_id);
+      sc_array_destroy (tree->attributes);
       T8_FREE (tree->face_neighbors);
       T8_FREE (tree->tree_to_face);
     }
