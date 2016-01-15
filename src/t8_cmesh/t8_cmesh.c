@@ -640,14 +640,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   T8_ASSERT (cmesh->mpicomm != sc_MPI_COMM_NULL);
   T8_ASSERT (!cmesh->committed);
 
-  cmesh->committed = 1;
-
-  /* dup communicator if requested */
-  if (cmesh->do_dup) {
-    mpiret = sc_MPI_Comm_dup (cmesh->mpicomm, &comm_dup);
-    SC_CHECK_MPI (mpiret);
-    cmesh->mpicomm = comm_dup;
-  }
   /* TODO: setup trees */
   if (!cmesh->set_partitioned) {
     if (cmesh->stash != NULL && cmesh->stash->classes.elem_count > 0) {
@@ -718,10 +710,25 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     }
   }
   else {
+    if (cmesh->face_knowledge != 3) {
+      t8_global_errorf ("Expected a face knowledge of 3.\nAbort commit.");
+      return NULL;
+    }
     t8_cmesh_set_shmem_type (cmesh);
+#if 0
+    t8_cmesh_stash_partition (cmesh->stash, first, last);
+#endif
     SC_ABORTF ("partitioned commit not implemented.%c", '\n');
   }
 
+  cmesh->committed = 1;
+
+  /* dup communicator if requested */
+  if (cmesh->do_dup) {
+    mpiret = sc_MPI_Comm_dup (cmesh->mpicomm, &comm_dup);
+    SC_CHECK_MPI (mpiret);
+    cmesh->mpicomm = comm_dup;
+  }
   /* query communicator new */
   mpiret = sc_MPI_Comm_size (cmesh->mpicomm, &cmesh->mpisize);
   SC_CHECK_MPI (mpiret);
