@@ -42,6 +42,7 @@ typedef struct t8_cmesh_trees *t8_cmesh_trees_t;
  *
  *  The coarse mesh is a collection of coarse trees that can be identified
  *  along faces.
+ *  TODO: this description is outdated. rewrite it.
  *  The array ctrees stores these coarse trees sorted by their (global) tree_id.
  *  If the mesh if partitioned it is partitioned according to an (possible only
  *  virtually existing) underlying fine mesh. Therefore the ctrees array can
@@ -59,19 +60,21 @@ typedef struct t8_cmesh
 {
   /* TODO: make the comments more legible */
   /* TODO: right now a not replicated cmesh is limited to t8_topidx in tree indices
-   *       we should think about how to extend this to t8_gloidx */
+   *       we should think about how to extend this to t8_gloidx,
+   *       or actually we should take t8_locidx?*/
   int                 committed;
   int                 dimension; /**< The dimension of the cmesh. It is set when the first tree is inserted. */
   int                 do_dup;   /**< Communicator shall be duped. */
   int                 set_partitioned; /**< If nonzero the cmesh is partitioned.
                                             If zero each process has the whole cmesh. */
+  int                 face_knowledge;  /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partioned */
   sc_MPI_Comm         mpicomm;  /**< MPI communicator to use. */
   int                 mpirank;  /**< Number of this MPI process. */
   int                 mpisize;  /**< Number of MPI processes. */
   t8_refcount_t       rc; /**< The reference count of the cmesh. */
   t8_gloidx_t         num_trees;   /**< The global number of trees */
-  t8_topidx_t         num_local_trees; /**< If partitioned the number of trees on this process. Otherwise the global number of trees. */
-  t8_topidx_t         num_ghosts; /**< If partitioned the number of neighbor trees
+  t8_locidx_t         num_local_trees; /**< If partitioned the number of trees on this process. Otherwise the global number of trees. */
+  t8_locidx_t         num_ghosts; /**< If partitioned the number of neighbor trees
                                     owned by different processes. */
   /* TODO: wouldnt a local num_trees_per_eclass be better? */
   t8_gloidx_t         num_trees_per_eclass[T8_ECLASS_LAST]; /**< After commit the number of
@@ -84,7 +87,8 @@ typedef struct t8_cmesh
   int8_t              last_tree_shared; /**< If partitioned true if the last tree on this process is also the first tree on the next process. */
   t8_topidx_t        *tree_per_proc; /**< If partitioned for each process the number of local trees
                                         or -(num_local_trees) - 1
-                                        if the last tree on that process is the first tree of the next process */
+                                        if the last tree on that process is the first tree of the next process
+                                          Since this is very memory consuming we only fill it when needed. */
 #ifdef T8_ENABLE_DEBUG
   t8_topidx_t         inserted_trees; /**< Count the number of inserted trees to
                                            check at commit if it equals the total number. */
@@ -136,6 +140,7 @@ typedef struct t8_ctree
   int8_t             *tree_to_face; /**< For each face the encoding of the face neighbor orientation. */
   sc_array_t         *attributes; /**< Array of \a t8_attribute_info_t objects sorted by package_id and key. */
 #if 1
+  /* TODO: remove, this involves rewriting t8_cmesh_tree_is_equal */
   /* These are deprecated and will be removed */
   size_t              attribute_offset, attribute_size;
 #endif
@@ -172,6 +177,8 @@ typedef struct t8_cmesh_trees
   sc_array_t         *from_proc;        /* array of t8_part_tree, one for each process */
   int                *tree_to_proc;     /* for each tree its process */
   int                *ghost_to_proc;    /* for each ghost its process */
+  /* TODO: the ghost_to_offset field may not be necessary since the ghost can
+   *       be identified by its local index */
   t8_topidx_t        *ghost_to_offset;  /* for each ghost its offset within the process */
 } t8_cmesh_trees_struct_t;
 

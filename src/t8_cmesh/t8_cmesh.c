@@ -127,9 +127,9 @@ t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup)
 
 void
 t8_cmesh_set_partitioned (t8_cmesh_t cmesh, int set_partitioned,
-                          t8_topidx_t num_global_trees,
-                          t8_topidx_t first_local_tree,
-                          t8_topidx_t num_ghosts)
+                          int set_face_knowledge,
+                          t8_gloidx_t first_local_tree,
+                          t8_gloidx_t last_local_tree)
 {
   T8_ASSERT (!cmesh->committed);
   T8_ASSERT (cmesh->set_partitioned == 0);
@@ -137,22 +137,27 @@ t8_cmesh_set_partitioned (t8_cmesh_t cmesh, int set_partitioned,
   T8_ASSERT (cmesh->num_local_trees == 0);
   T8_ASSERT (cmesh->first_tree == 0);
 
-  if ((cmesh->set_partitioned = set_partitioned) == 0) {
+  /* set cmesh->set_partition to 0 or 1 */
+  cmesh->set_partitioned = set_partitioned != 0;
+  if (set_partitioned == 0) {
     /* The mesh is replicated, and this function just serves
      * as set_num_trees.
      * first_local_tree and num_ghosts are ignored. */
-    t8_cmesh_set_num_trees (cmesh, num_global_trees);
+    t8_cmesh_set_num_trees (cmesh, last_local_tree + 1);
     return;
   }
   else {
-    cmesh->num_trees = num_global_trees;
+    T8_ASSERT (set_partitioned != 0);
     cmesh->first_tree = first_local_tree;
-    cmesh->num_ghosts = num_ghosts;
-#if 0
-    /* TODO: rethink with the new interface */
-    cmesh->ghosts =
-      sc_array_new_size (sizeof (t8_cghost_struct_t), num_ghosts);
-#endif
+    cmesh->num_local_trees = last_local_tree - first_local_tree + 1;
+    /* Since num_local_trees is a locidx we have to check whether we did create an
+     * overflow in the previous computation */
+    T8_ASSERT (cmesh->num_local_trees ==
+               last_local_tree - first_local_tree + 1);
+    cmesh->face_knowledge = set_face_knowledge;
+    /* Right know no other face_knowledge is supported */
+    SC_CHECK_ABORTF (set_face_knowledge == 3, "Level %i of face knowledge"
+                     "is not supported.\n", set_face_knowledge);
   }
 }
 
@@ -622,6 +627,9 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   return cmesh_in;
 }
 
+/* TODO: set boundary face connections here.
+ *       not trivial if replicated and not level 3 face_knowledg
+ */
 void
 t8_cmesh_commit (t8_cmesh_t cmesh)
 {
