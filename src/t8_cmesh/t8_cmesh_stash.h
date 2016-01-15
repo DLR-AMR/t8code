@@ -45,7 +45,7 @@ typedef struct t8_stash_class
 typedef struct t8_stash_joinface
 {
   t8_gloidx_t         id1; /**< The global tree id of the first tree in the connection. */
-  t8_gloidx_t         id2; /**< The global tree id of the second tree. */
+  t8_gloidx_t         id2; /**< The global tree id of the second tree. We ensure id1<=id2. */
   int                 face1; /**< The face number of the first of the connected faces. */
   int                 face2; /**< The face number of the second face. */
   int                 orientation; /**< The orientation of the face connection. \see t8_cmesh_types.h. */

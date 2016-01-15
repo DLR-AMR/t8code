@@ -84,10 +84,12 @@ t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t id1, t8_gloidx_t id2,
 
   T8_ASSERT (stash != NULL);
   sjoin = (t8_stash_joinface_struct_t *) sc_array_push (&stash->joinfaces);
-  sjoin->face1 = face1;
-  sjoin->face2 = face2;
-  sjoin->id1 = id1;
-  sjoin->id2 = id2;
+  /* We inserte the face connection such that join->id1 is the smaller of
+   * the two ids */
+  sjoin->face1 = id1 <= id2 ? face1 : face2;
+  sjoin->face2 = id1 <= id2 ? face2 : face1;;
+  sjoin->id1 = id1 <= id2 ? id1 : id2;;
+  sjoin->id2 = id1 <= id2 ? id2 : id1;;
   sjoin->orientation = orientation;
 }
 
