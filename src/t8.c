@@ -132,3 +132,13 @@ t8_init (int log_threshold)
   t8_global_productionf ("%-*s %s\n", w, "LDFLAGS", T8_LDFLAGS);
   t8_global_productionf ("%-*s %s\n", w, "LIBS", T8_LIBS);
 }
+
+int
+t8_compare_gloidx (const void *gidx1, const void *gidx2)
+{
+  t8_gloidx_t         id1, id2;
+
+  id1 = *((t8_gloidx_t *) gidx1);
+  id2 = *((t8_gloidx_t *) gidx2);
+  return id1 < id2 ? -1 : id1 != id2;
+}

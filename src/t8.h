@@ -177,6 +177,13 @@ void                t8_debugf (const char *fmt, ...)
  */
 void                t8_init (int log_threshold);
 
+/** Compare function for t8_gloidx_t for usage with standard sorting algorithms.
+ *  \param [in] gidx1 A pointer to the first t8_gloidx_t.
+ *  \param [in] gidx2 A pointer to the second t8_gloidx_t.
+ *  \return -1 if *gidx1 < *gidx2, 0 if equal and +1 if gidx1 > gidx2
+ */
+int                 t8_compare_gloidx (const void *gidx1, const void *gidx2);
+
 /* call this at the end of a header file to match T8_EXTERN_C_BEGIN (). */
 T8_EXTERN_C_END ();
 
