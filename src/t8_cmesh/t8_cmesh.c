@@ -713,14 +713,83 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     }
   }
   else {
+    sc_array_t         *ghost_ids;
+    size_t              joinfaces_it, attr_byte_count, attr_it;
+    t8_stash_joinface_struct_t *joinface;
+    t8_gloidx_t         last_tree = cmesh->num_trees + cmesh->first_tree - 1,
+      id1, id2, *ghost;
+    t8_stash_attribute_struct_t *attribute;
+
     if (cmesh->face_knowledge != 3) {
       t8_global_errorf ("Expected a face knowledge of 3.\nAbort commit.");
-      return NULL;
+      /* TODO: reset cmesh */
+      return;
     }
-    t8_cmesh_set_shmem_type (cmesh);
-#if 0
-    t8_cmesh_stash_partition (cmesh->stash, first, last);
-#endif
+    t8_cmesh_set_shmem_type (cmesh);    /* TODO: do we actually need the shared array? */
+    t8_stash_class_sort (cmesh->stash);
+    t8_stash_joinface_sort (cmesh->stash);
+    t8_stash_attribute_sort (cmesh->stash);
+
+    ghost_ids = sc_array_new (sizeof (t8_gloidx_t));
+    for (joinfaces_it = 0; joinfaces_it < cmesh->stash->joinfaces.elem_count;
+         joinfaces_it++) {
+      joinface =
+        (t8_stash_joinface_struct_t *) sc_array_index (&cmesh->stash->
+                                                       joinfaces,
+                                                       joinfaces_it);
+      id1 = joinface->id1;
+      id2 = joinface->id2;
+      if (cmesh->first_tree <= id1 && last_tree >= id1) {
+        if (id2 > last_tree) {
+          /* id2 is a ghost */
+          ghost = (t8_gloidx_t *) sc_array_push (ghost_ids);
+          *ghost = id2;
+        }
+      }
+      else if (cmesh->first_tree <= id2 && last_tree >= id2) {
+        /* id1 is a ghost */
+        ghost = (t8_gloidx_t *) sc_array_push (ghost_ids);
+        *ghost = id1;
+      }
+    }
+    /* Added one ghostid entry for each face connection with a ghost.
+     * Need to remove duplicates. */
+    sc_array_sort (ghost_ids, t8_compare_gloidx);
+    /* Count the ghosts without duplicates */
+    /* Start with 1 if the ghost array is nonempty */
+    cmesh->num_ghosts = ghost_ids->elem_count > 0;
+    id1 = *((t8_gloidx_t *) sc_array_index (ghost_ids, 0));
+    for (joinfaces_it = 1; joinfaces_it < ghost_ids->elem_count;
+         joinfaces_it++) {
+      id2 = *((t8_gloidx_t *) sc_array_index (ghost_ids, joinfaces_it));
+      /* Whenever the current entry is different to the entry before, we add 1 */
+      if (id2 != id1) {
+        cmesh->num_ghosts++;
+      }
+      id1 = id2;
+    }
+    /* Count attribute bytes */
+    attr_byte_count = 0;
+    /* TODO: optimize: start in attributes array at position of the first tree,
+     * resp. the first tree with attributes
+     */
+    for (attr_it = 0; attr_it < cmesh->stash->attributes.elem_count;
+         attr_it++) {
+      attribute =
+        (t8_stash_attribute_struct_t *) sc_array_index (&cmesh->stash->
+                                                        attributes, attr_it);
+      if (cmesh->first_tree <= attribute->id && attribute->id <= last_tree) {
+        /* TODO: check for duplicate attributes */
+        attr_byte_count += attribute->attr_size;
+      }
+    }
+    /* Now that we know the number of trees/ghosts/and attribute_bytes we can
+     * initialize the trees structure. */
+    t8_cmesh_trees_init (&cmesh->trees, 1, cmesh->num_trees,
+                         cmesh->num_ghosts);
+    t8_cmesh_trees_init_part (cmesh->trees, 0, 0, cmesh->num_trees + 1,
+                              cmesh->num_ghosts, attr_byte_count);
+
     SC_ABORTF ("partitioned commit not implemented.%c", '\n');
   }
 
