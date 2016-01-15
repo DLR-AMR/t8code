@@ -45,7 +45,7 @@ void                t8_cmesh_trees_init (t8_cmesh_trees_t * ptrees,
  * with a given number of bytes */
 void                t8_cmesh_trees_init_part (t8_cmesh_trees_t trees,
                                               int proc,
-                                              t8_topidx_t first_tree,
+                                              t8_locidx_t first_tree,
                                               t8_topidx_t last_tree,
                                               t8_topidx_t num_ghosts,
                                               size_t attr_bytes);

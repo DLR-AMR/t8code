@@ -101,7 +101,7 @@ t8_cmesh_trees_get_num_procs (t8_cmesh_trees_t trees)
 
 void
 t8_cmesh_trees_init_part (t8_cmesh_trees_t trees, int proc,
-                          t8_topidx_t first_tree, t8_topidx_t num_trees,
+                          t8_locidx_t first_tree, t8_topidx_t num_trees,
                           t8_topidx_t num_ghosts, size_t attr_bytes)
 {
   t8_part_tree_t      part;

@@ -161,7 +161,7 @@ typedef struct t8_part_tree
 {
   char               *first_tree;       /* Stores the trees, the ghosts and the attributes.
                                            The last 2*sizeof(t8_topidx) bytes store num_trees and num_ghosts */
-  t8_topidx_t         first_tree_id;    /* tree_id of the first tree */
+  t8_locidx_t         first_tree_id;    /* local tree_id of the first tree */
   t8_topidx_t         num_trees;
   t8_topidx_t         num_ghosts;
 #if 0
