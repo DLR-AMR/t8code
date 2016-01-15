@@ -113,6 +113,17 @@ void                t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t id1,
                                            t8_gloidx_t id2, int face1,
                                            int face2, int orientation);
 
+/** Sort then entries in the class array by the order given in
+ *  the enum definition of t8_eclass.
+ *  \param [in,out] stash The stash whose class array is sorted.
+ */
+void                t8_stash_class_sort (t8_stash_t stash);
+
+/** Sort then entries in the facejoin array in order of the first treeid.
+ *  \param [in,out] stash The stash whose facejoin array is sorted.
+ */
+void                t8_stash_joinface_sort (t8_stash_t stash);
+
 /** Add an attribute to a tree.
  * \param [in] stash    The stash structure to be modified.
  * \param [in] id       The global index of the tree to which the attribute is added.

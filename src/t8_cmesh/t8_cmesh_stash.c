@@ -76,6 +76,29 @@ t8_stash_add_class (t8_stash_t stash, t8_gloidx_t id, t8_eclass_t eclass)
   sclass->id = id;
 }
 
+/* returns -1 if class1 < class2
+ *          0           =
+ *         +1           >
+ */
+static int
+t8_stash_class_compare (const void *c1, const void *c2)
+{
+  t8_stash_class_struct_t *class1, *class2;
+
+  class1 = (t8_stash_class_struct_t *) c1;
+  class2 = (t8_stash_class_struct_t *) c2;
+  return class1->eclass < class2->eclass ? -1 :
+    class1->eclass != class2->eclass;
+}
+
+void
+t8_stash_class_sort (t8_stash_t stash)
+{
+  T8_ASSERT (stash != NULL);
+
+  sc_array_sort (&stash->classes, t8_stash_class_compare);
+}
+
 void
 t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t id1, t8_gloidx_t id2,
                        int face1, int face2, int orientation)
@@ -84,13 +107,36 @@ t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t id1, t8_gloidx_t id2,
 
   T8_ASSERT (stash != NULL);
   sjoin = (t8_stash_joinface_struct_t *) sc_array_push (&stash->joinfaces);
-  /* We inserte the face connection such that join->id1 is the smaller of
+  /* We insert the face connection such that join->id1 is the smaller of
    * the two ids */
   sjoin->face1 = id1 <= id2 ? face1 : face2;
   sjoin->face2 = id1 <= id2 ? face2 : face1;;
   sjoin->id1 = id1 <= id2 ? id1 : id2;;
   sjoin->id2 = id1 <= id2 ? id2 : id1;;
   sjoin->orientation = orientation;
+}
+
+/* return -1 if face1.id1 < face2.id1
+ *         0              =
+ *        +1              >
+ */
+static int
+t8_stash_facejoin_compare (const void *j1, const void *j2)
+{
+  t8_stash_joinface_struct_t *join1, *join2;
+
+  join1 = (t8_stash_joinface_struct_t *) j1;
+  join2 = (t8_stash_joinface_struct_t *) j2;
+
+  return join1->id1 < join2->id1 ? -1 : join1->id1 != join2->id1;
+}
+
+void
+t8_stash_joinface_sort (t8_stash_t stash)
+{
+  T8_ASSERT (stash != NULL);
+
+  sc_array_sort (&stash->joinfaces, t8_stash_facejoin_compare);
 }
 
 void
