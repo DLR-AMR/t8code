@@ -629,6 +629,9 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 
 /* TODO: set boundary face connections here.
  *       not trivial if replicated and not level 3 face_knowledg
+ *       Edit: boundary face is default. If no face-connection is added then
+ *             we assume a boundary face.
+ * TODO: Implement a debug check for mesh consistency between processes.
  */
 void
 t8_cmesh_commit (t8_cmesh_t cmesh)
