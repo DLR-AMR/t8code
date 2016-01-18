@@ -61,6 +61,12 @@ void                t8_cmesh_trees_add_tree (t8_cmesh_trees_t trees,
                                              t8_topidx_t tree_id, int proc,
                                              t8_eclass_t eclass);
 
+/* TODO: document. Adds a face-connection */
+void                t8_cmesh_tree_set_join (t8_cmesh_trees_t trees,
+                                            t8_locidx_t id1, t8_locidx_t id2,
+                                            int face1, int face2,
+                                            int orientation);
+
 /** Add a ghost to a trees structure.
  * \param [in,out]  trees The trees structure to be updated.
  * \param [in]      ghost_index The local id of the ghost to be inserted.
@@ -92,7 +98,7 @@ t8_ctree_t          t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees,
  * \return                A pointer to the ghost with local id \a ghost.
  */
 t8_cghost_t         t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees,
-                                              t8_topidx_t ghost);
+                                              t8_locidx_t ghost);
 
 /* TODO: document */
 void                t8_cmesh_trees_init_attributes (t8_cmesh_trees_t trees,

@@ -714,13 +714,16 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   }
   else {
     sc_array_t         *ghost_ids;
-    size_t              joinfaces_it, attr_byte_count, iz, class_end,
+    size_t              joinfaces_it, attr_byte_count, iz, jz, class_end,
       ghost_ind;
     t8_stash_joinface_struct_t *joinface;
     t8_gloidx_t         last_tree = cmesh->num_trees + cmesh->first_tree - 1,
       id1, id2, *ghost;
     t8_stash_attribute_struct_t *attribute;
     t8_stash_class_struct_t *classentry;
+    int                 id1_istree, id2_istree, F;
+    t8_ctree_t          tree1;
+    t8_cghost_t         ghost1;
 
     if (cmesh->face_knowledge != 3) {
       t8_global_errorf ("Expected a face knowledge of 3.\nAbort commit.");
@@ -736,8 +739,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     for (joinfaces_it = 0; joinfaces_it < cmesh->stash->joinfaces.elem_count;
          joinfaces_it++) {
       joinface =
-        (t8_stash_joinface_struct_t *) sc_array_index (&cmesh->stash->
-                                                       joinfaces,
+        (t8_stash_joinface_struct_t *) sc_array_index (&cmesh->
+                                                       stash->joinfaces,
                                                        joinfaces_it);
       id1 = joinface->id1;
       id2 = joinface->id2;
@@ -759,17 +762,26 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     sc_array_sort (ghost_ids, t8_compare_gloidx);
     /* Count the ghosts without duplicates */
     /* Start with 1 if the ghost array is nonempty */
-    cmesh->num_ghosts = ghost_ids->elem_count > 0;
-    id1 = *((t8_gloidx_t *) sc_array_index (ghost_ids, 0));
-    for (joinfaces_it = 1; joinfaces_it < ghost_ids->elem_count;
-         joinfaces_it++) {
-      id2 = *((t8_gloidx_t *) sc_array_index (ghost_ids, joinfaces_it));
-      /* Whenever the current entry is different to the entry before, we add 1 */
-      if (id2 != id1) {
-        cmesh->num_ghosts++;
+    /* Remove duplicate entries in ghost_id array */
+    if (ghost_ids->elem_count > 0) {
+      id1 = *((t8_gloidx_t *) sc_array_index (ghost_ids, 0));
+      id2 = id1;
+      jz = 0;
+      iz = 1;
+      while (iz < ghost_ids->elem_count) {
+        for (; iz < ghost_ids->elem_count && id2 == id1; iz++) {
+          id2 = *((t8_gloidx_t *) sc_array_index (ghost_ids, iz));
+        }
+        if (id2 != id1 && iz < ghost_ids->elem_count) {
+          T8_ASSERT (id2 > id1);
+          jz++;
+          id1 = *((t8_gloidx_t *) sc_array_index (ghost_ids, jz)) = id2;
+        }
       }
-      id1 = id2;
+      sc_array_resize (ghost_ids, jz + 1);
     }
+    cmesh->num_ghosts = ghost_ids->elem_count;
+
     /* Count attribute bytes */
     attr_byte_count = 0;
     /* TODO: optimize: start in attributes array at position of the first tree,
@@ -777,8 +789,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
      */
     for (iz = 0; iz < cmesh->stash->attributes.elem_count; iz++) {
       attribute =
-        (t8_stash_attribute_struct_t *) sc_array_index (&cmesh->stash->
-                                                        attributes, iz);
+        (t8_stash_attribute_struct_t *) sc_array_index (&cmesh->
+                                                        stash->attributes,
+                                                        iz);
       if (cmesh->first_tree <= attribute->id && attribute->id <= last_tree) {
         /* TODO: check for duplicate attributes */
         attr_byte_count += attribute->attr_size;
@@ -814,6 +827,75 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
         sc_array_index (&cmesh->stash->classes, ghost_ind);
       t8_cmesh_trees_add_ghost (cmesh->trees, iz, *ghost, 0,
                                 classentry->eclass);
+    }
+    /* We are done with stash->classes now  so we free memory.
+     * Since the array is destroyed in stash_destroy we only reset it. */
+    sc_array_reset (&cmesh->stash->classes);
+    /* Go through all face_neighbour entries and parse every
+     * entry that has a local tree or ghost involved */
+    for (iz = 0; iz < cmesh->stash->joinfaces.elem_count; iz++) {
+      joinface = (t8_stash_joinface_struct_t *)
+        sc_array_index (&cmesh->stash->joinfaces, iz);
+      id1_istree = cmesh->first_tree <= joinface->id1 &&
+        last_tree > joinface->id1;
+      id2_istree = cmesh->first_tree <= joinface->id2 &&
+        last_tree > joinface->id2;
+      /* Both trees in the connection are local trees */
+      if (id1_istree && id2_istree) {
+        t8_cmesh_tree_set_join (cmesh->trees,
+                                joinface->id1 - cmesh->first_tree,
+                                joinface->id2 - cmesh->first_tree,
+                                joinface->face1, joinface->face2,
+                                joinface->orientation);
+      }
+      /* One tree is a local tree the other one a ghost */
+      else if (id1_istree || id2_istree) {
+        /* If second one is local tree we swap first and second one */
+        if (id2_istree) {
+          id1 = joinface->id1;
+          joinface->id1 = joinface->id2;
+          joinface->id2 = id1;
+          F = joinface->face1;
+          joinface->face1 = joinface->face2;
+          joinface->face2 = F;
+        }
+        /* From here on the first tree is a local tree and the second one a ghost */
+        ghost_ind = sc_array_bsearch (ghost_ids, &joinface->id2,
+                                      t8_compare_gloidx);
+        /* Search for local ghost id in array */
+        SC_CHECK_ABORT (ghost_ind >= 0,
+                        "Ghost tree in face-connections that is"
+                        " not in classes.\n");
+        tree1 =
+          t8_cmesh_trees_get_tree (cmesh->trees,
+                                   joinface->id1 - cmesh->num_trees);
+        ghost1 = t8_cmesh_trees_get_ghost (cmesh->trees, ghost_ind);
+        tree1->face_neighbors[joinface->face1] = ghost_ind;
+        F = t8_eclass_num_faces[ghost1->eclass];
+        tree1->tree_to_face[joinface->face1] = joinface->face2 * F +
+          joinface->orientation;
+        ghost1->neighbors[joinface->face2] = joinface->id1;
+      }
+      else {
+        /* Either both trees are ghosts or non is local tree or ghost */
+        ghost1 = NULL;
+        ghost_ind = sc_array_bsearch (ghost_ids, &joinface->id1,
+                                      t8_compare_gloidx);
+        if (ghost_ind >= 0) {
+          /* First tree is local ghost second is ghost of this ghost */
+          ghost1 = t8_cmesh_trees_get_ghost (cmesh->trees, ghost_ind);
+          ghost1->neighbors[joinface->face1] = joinface->id2;
+        }
+        else {
+          ghost_ind = sc_array_bsearch (ghost_ids, &joinface->id2,
+                                        t8_compare_gloidx);
+          if (ghost_ind >= 0) {
+            /* Second tree is local ghost, first is ghost of this ghost */
+            ghost1 = t8_cmesh_trees_get_ghost (cmesh->trees, ghost_ind);
+            ghost1->neighbors[joinface->face2] = joinface->id1;
+          }
+        }
+      }
     }
 
     SC_ABORTF ("partitioned commit not implemented.%c", '\n');
