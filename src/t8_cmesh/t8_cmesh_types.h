@@ -177,9 +177,11 @@ typedef struct t8_cmesh_trees
   sc_array_t         *from_proc;        /* array of t8_part_tree, one for each process */
   int                *tree_to_proc;     /* for each tree its process */
   int                *ghost_to_proc;    /* for each ghost its process */
-  /* TODO: the ghost_to_offset field may not be necessary since the ghost can
-   *       be identified by its local index */
+#if 1
+  /* TODO: the ghost_to_offset field is not be necessary since the ghost can
+   *       be identified by its local index? - remove */
   t8_topidx_t        *ghost_to_offset;  /* for each ghost its offset within the process */
+#endif
 } t8_cmesh_trees_struct_t;
 
 #endif /* !T8_CMESH_TYPES_H */
