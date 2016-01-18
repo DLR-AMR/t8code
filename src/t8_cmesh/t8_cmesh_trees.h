@@ -61,6 +61,19 @@ void                t8_cmesh_trees_add_tree (t8_cmesh_trees_t trees,
                                              t8_topidx_t tree_id, int proc,
                                              t8_eclass_t eclass);
 
+/** Add a ghost to a trees structure.
+ * \param [in,out]  trees The trees structure to be updated.
+ * \param [in]      ghost_index The local id of the ghost to be inserted.
+ * \param [in]      tree_id The global index of the ghost.
+ * \param [in]      proc  The mpirank of the process from which the ghost was
+ *                        received.
+ * \param [in]      eclass The ghost's element class.
+ */
+void                t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees,
+                                              t8_locidx_t ghost_index,
+                                              t8_gloidx_t tree_id, int proc,
+                                              t8_eclass_t eclass);
+
 /* TODO: This function return NULL if the tree is not present.
  *       So far no error checking is done here. */
 /** Return a pointer to a specific tree in a trees struct.

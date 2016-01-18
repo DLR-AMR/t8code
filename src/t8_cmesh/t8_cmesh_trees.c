@@ -78,8 +78,7 @@ t8_cmesh_trees_add_tree (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
   T8_ASSERT (tree_id >= 0);
 
   part = t8_cmesh_trees_get_part (trees, proc);
-  tree =
-    &((t8_ctree_struct_t *) part->first_tree)[tree_id - part->first_tree_id];
+  tree = &((t8_ctree_t) part->first_tree)[tree_id - part->first_tree_id];
   tree->eclass = eclass;
   num_faces = t8_eclass_num_faces[eclass];
   tree->face_neighbors = T8_ALLOC (t8_topidx_t, num_faces);
@@ -89,6 +88,35 @@ t8_cmesh_trees_add_tree (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
     tree->face_neighbors[iface] = tree->tree_to_face[iface] = -1;
   }
   trees->tree_to_proc[tree_id] = proc;
+}
+
+void
+t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees, t8_locidx_t ghost_index,
+                          t8_gloidx_t tree_id, int proc, t8_eclass_t eclass)
+{
+  t8_part_tree_t      part;
+  t8_cghost_t         ghost;
+  int                 iface, num_faces;
+
+  T8_ASSERT (trees != NULL);
+  T8_ASSERT (proc >= 0);
+  T8_ASSERT (tree_id >= 0);
+  T8_ASSERT (ghost_index >= 0);
+
+  part = t8_cmesh_trees_get_part (trees, proc);
+  T8_ASSERT (ghost_index < part->num_ghosts);
+  /* From first tree we have to go num_trees to get to the first ghost.
+   * From the first ghost we go by ghost_index to get to the desired ghost */
+  ghost = &((t8_cghost_t) (((t8_ctree_struct_t *) part->first_tree) +
+                           part->num_trees))[ghost_index];
+  ghost->eclass = eclass;
+  ghost->treeid = tree_id;
+  num_faces = t8_eclass_num_faces[eclass];
+  ghost->neighbors = T8_ALLOC (t8_gloidx_t, num_faces);
+  /* Set the neighbors to the default value of -1 (=domain boundary) */
+  for (iface = 0; iface < num_faces; iface++) {
+    ghost->neighbors[iface] = -1;
+  }
 }
 
 static int
