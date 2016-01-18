@@ -76,9 +76,9 @@ t8_stash_add_class (t8_stash_t stash, t8_gloidx_t id, t8_eclass_t eclass)
   sclass->id = id;
 }
 
-/* returns -1 if class1 < class2
- *          0           =
- *         +1           >
+/* returns -1 if treeid1 < treeid2
+ *          0            =
+ *         +1            >
  */
 static int
 t8_stash_class_compare (const void *c1, const void *c2)
@@ -87,8 +87,7 @@ t8_stash_class_compare (const void *c1, const void *c2)
 
   class1 = (t8_stash_class_struct_t *) c1;
   class2 = (t8_stash_class_struct_t *) c2;
-  return class1->eclass < class2->eclass ? -1 :
-    class1->eclass != class2->eclass;
+  return class1->id < class2->id ? -1 : class1->id != class2->id;
 }
 
 void
@@ -97,6 +96,24 @@ t8_stash_class_sort (t8_stash_t stash)
   T8_ASSERT (stash != NULL);
 
   sc_array_sort (&stash->classes, t8_stash_class_compare);
+}
+
+static int
+t8_stash_class_compare_index (const void *index, const void *c)
+{
+  t8_gloidx_t         index1, index2;
+
+  index1 = *((t8_gloidx_t *) index);
+  index2 = ((t8_stash_class_struct_t *) c)->id;
+
+  return index1 < index2 ? -1 : index1 != index2;
+}
+
+ssize_t
+t8_stash_class_bsearch (t8_stash_t stash, t8_gloidx_t tree_id)
+{
+  return sc_array_bsearch (&stash->classes, &tree_id,
+                           t8_stash_class_compare_index);
 }
 
 void

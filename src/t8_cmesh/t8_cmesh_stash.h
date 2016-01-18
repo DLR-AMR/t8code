@@ -119,6 +119,17 @@ void                t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t id1,
  */
 void                t8_stash_class_sort (t8_stash_t stash);
 
+/** Search for an entry with a given tree index in the class-stash.
+ *  The stash must be sorted beforehand.
+ * \param [in]      stash The stash to be searched for.
+ * \param [in]      tree_id The global tree id.
+ * \return                The index of an element in the classes array
+ *                        of \a stash corresponding to \a tree_id.
+ *                        -1 if not found.
+ */
+ssize_t             t8_stash_class_bsearch (t8_stash_t stash,
+                                            t8_gloidx_t tree_id);
+
 /** Sort then entries in the facejoin array in order of the first treeid.
  *  \param [in,out] stash The stash whose facejoin array is sorted.
  */

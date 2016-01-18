@@ -714,11 +714,13 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   }
   else {
     sc_array_t         *ghost_ids;
-    size_t              joinfaces_it, attr_byte_count, attr_it;
+    size_t              joinfaces_it, attr_byte_count, attr_it, class_it,
+      class_end;
     t8_stash_joinface_struct_t *joinface;
     t8_gloidx_t         last_tree = cmesh->num_trees + cmesh->first_tree - 1,
       id1, id2, *ghost;
     t8_stash_attribute_struct_t *attribute;
+    t8_stash_class_struct_t *classentry;
 
     if (cmesh->face_knowledge != 3) {
       t8_global_errorf ("Expected a face knowledge of 3.\nAbort commit.");
@@ -734,8 +736,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     for (joinfaces_it = 0; joinfaces_it < cmesh->stash->joinfaces.elem_count;
          joinfaces_it++) {
       joinface =
-        (t8_stash_joinface_struct_t *) sc_array_index (&cmesh->stash->
-                                                       joinfaces,
+        (t8_stash_joinface_struct_t *) sc_array_index (&cmesh->
+                                                       stash->joinfaces,
                                                        joinfaces_it);
       id1 = joinface->id1;
       id2 = joinface->id2;
@@ -776,8 +778,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     for (attr_it = 0; attr_it < cmesh->stash->attributes.elem_count;
          attr_it++) {
       attribute =
-        (t8_stash_attribute_struct_t *) sc_array_index (&cmesh->stash->
-                                                        attributes, attr_it);
+        (t8_stash_attribute_struct_t *) sc_array_index (&cmesh->
+                                                        stash->attributes,
+                                                        attr_it);
       if (cmesh->first_tree <= attribute->id && attribute->id <= last_tree) {
         /* TODO: check for duplicate attributes */
         attr_byte_count += attribute->attr_size;
@@ -789,6 +792,20 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
                          cmesh->num_ghosts);
     t8_cmesh_trees_init_part (cmesh->trees, 0, 0, cmesh->num_trees + 1,
                               cmesh->num_ghosts, attr_byte_count);
+    class_it =
+      (size_t) t8_stash_class_bsearch (cmesh->stash, cmesh->first_tree);
+    class_end = t8_stash_class_bsearch (cmesh->stash, last_tree);
+    T8_ASSERT (class_it >= 0);
+    T8_ASSERT (class_end >= 0);
+    /* loop over all local trees */
+    for (; class_it < class_end + 1; class_it++) {
+      /* get class and tree id */
+      classentry = (t8_stash_class_struct_t *)
+        sc_array_index (&cmesh->stash->classes, class_it);
+      /* initialize tree */
+      t8_cmesh_trees_add_tree (cmesh->trees, classentry->id, 0,
+                               classentry->eclass);
+    }
 
     SC_ABORTF ("partitioned commit not implemented.%c", '\n');
   }
