@@ -32,6 +32,10 @@
 
 typedef struct t8_stash *t8_stash_t;
 
+/* TODO: could store class information in an offset array instead of
+ *       for each single tree. Especially for non-hybrid meshes this
+ *       would massively reduce our memory footprint */
+
 /** The eclass information that is stored before a cmesh is committed.
  */
 typedef struct t8_stash_class
