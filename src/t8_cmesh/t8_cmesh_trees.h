@@ -46,8 +46,8 @@ void                t8_cmesh_trees_init (t8_cmesh_trees_t * ptrees,
 void                t8_cmesh_trees_init_part (t8_cmesh_trees_t trees,
                                               int proc,
                                               t8_locidx_t first_tree,
-                                              t8_topidx_t last_tree,
-                                              t8_topidx_t num_ghosts,
+                                              t8_locidx_t last_tree,
+                                              t8_locidx_t num_ghosts,
                                               size_t attr_bytes);
 
 /** Add a tree to a trees structure.
