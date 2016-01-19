@@ -18,7 +18,7 @@ libt8_compiled_sources = \
   src/t8.c src/t8_eclass.c src/t8_element.c src/t8_mesh.c \
   src/t8_refcount.c src/t8_cmesh/t8_cmesh.c src/t8_cmesh/t8_cmesh_triangle.c \
   src/t8_cmesh/t8_cmesh_vtk.c src/t8_cmesh/t8_cmesh_stash.c \
-  src/t8_cmesh/t8_cmesh_trees.c \
+  src/t8_cmesh/t8_cmesh_trees.c \ src/t8_cmesh/t8_cmesh_commit.c \
   src/t8_cmesh/t8_cmesh_partition.c \
   src/t8_forest/t8_forest.c src/t8_forest/t8_forest_adapt.c src/t8_geometry.c
 
