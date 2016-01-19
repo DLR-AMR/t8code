@@ -212,8 +212,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
      * initialize the trees structure. */
     /* This even initializes the trees structure if there are neither trees
      * nor ghosts */
-    t8_debugf ("Init trees with %lli T, %lli G\n", cmesh->num_local_trees,
-               cmesh->num_ghosts);
+    t8_debugf ("Init trees with %li T, %li G\n", (long) cmesh->num_local_trees,
+               (long) cmesh->num_ghosts);
     t8_cmesh_trees_init (&cmesh->trees, 1, cmesh->num_local_trees,
                          cmesh->num_ghosts);
     t8_cmesh_trees_init_part (cmesh->trees, 0, 0, cmesh->num_local_trees,
@@ -225,7 +225,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
                  0);
       T8_ASSERT (t8_stash_class_bsearch (cmesh->stash, last_tree) >= 0);
       t8_debugf ("%i %i\n", (int) iz, (int) class_end);
-      T8_ASSERT (class_end - iz + 1 == cmesh->num_local_trees);
+      T8_ASSERT ((t8_locidx_t) class_end - (t8_locidx_t) iz + 1 ==
+                 cmesh->num_local_trees);
     }
     else {
       t8_debugf ("Empty partition.\n");
@@ -292,9 +293,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
                                       t8_compare_gloidx);
         /* Search for local ghost id in array */
         t8_debugf
-          ("Face-conn %i <--> %i via faces %i and %i. Ghost_index = %i\n",
-           joinface->id1, joinface->id2, joinface->face1, joinface->face2,
-           ghost_ind);
+          ("Face-conn %lli <--> %lli via faces %i and %i. Ghost_index = %li\n",
+           (long long) joinface->id1, (long long) joinface->id2,
+           joinface->face1, joinface->face2, (long) ghost_ind);
         SC_CHECK_ABORTF (ghost_ind >= 0
                          && ghost_ind < cmesh->num_ghosts,
                          "Ghost tree (global id %lli) in face-connections that"
