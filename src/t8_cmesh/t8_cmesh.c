@@ -1103,7 +1103,7 @@ t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t * tvertices,
 /* TODO: upgrade with int x,y,z for periodic faces */
 t8_cmesh_t
 t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
-                        int do_bcast)
+                        int do_bcast, int do_partition)
 {
   t8_cmesh_t          cmesh;
   int                 num_trees_for_hypercube[T8_ECLASS_LAST] =
@@ -1289,6 +1289,20 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
       cmesh = NULL;
     }
     cmesh = t8_cmesh_bcast (cmesh, 0, comm);
+  }
+
+  if (do_partition){
+    int mpirank, mpisize, mpiret;
+    int first_tree, last_tree, num_trees;
+
+    mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Comm_size (comm, &mpisize);
+    SC_CHECK_MPI (mpiret);
+    num_trees = num_trees_for_hypercube[eclass];
+    first_tree = (mpirank * num_trees)/mpisize;
+    last_tree = ((mpirank + 1) * num_trees)/mpisize - 1;
+    t8_cmesh_set_partitioned (cmesh, 1, 3, first_tree, last_tree);
   }
 
   t8_cmesh_commit (cmesh);

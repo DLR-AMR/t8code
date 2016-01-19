@@ -351,11 +351,12 @@ t8_cmesh_t          t8_cmesh_new_from_class (t8_eclass_t eclass,
  *                          on processor 0 and then broadcasted to the other
  *                          processors in \a comm.
  *                          TODO: this parameter will be moved to internal.
+ * \param [in] do_partition Create a partitioned cmesh.
  * TODO: Add periodic flags for each dimension.
  */
 t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
                                             sc_MPI_Comm comm, int do_dup,
-                                            int do_bcast);
+                                            int do_bcast, int do_partition);
 
 /** Construct a unit interval/square/cube forest that is periodic in each direction.
  * Element class?
