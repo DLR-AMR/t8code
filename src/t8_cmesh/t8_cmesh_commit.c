@@ -78,7 +78,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       for (itree = 0; itree < num_trees; itree++) {
         entry = (t8_stash_class_struct_t *)
           t8_sc_array_index_topidx (class_entries, itree);
-        t8_cmesh_trees_add_tree (cmesh->trees, entry->id, 0, entry->eclass);
+        t8_cmesh_trees_add_tree (cmesh->trees, entry->id, 0, entry->eclass);        
+        cmesh->num_trees_per_eclass[entry->eclass]++;
       }
       /* set tree attributes */
       /* TODO: replace attribute sort by bucket sort into tree structs +
@@ -242,7 +243,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       /* initialize tree */
       t8_cmesh_trees_add_tree (cmesh->trees,
                                classentry->id - cmesh->first_tree, 0,
-                               classentry->eclass);
+                               classentry->eclass);      
+      cmesh->num_trees_per_eclass[classentry->eclass]++;
     }
     /* TODO: optimize if non-hybrid mesh */
     /* Iterate through ghosts */

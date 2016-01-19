@@ -286,7 +286,6 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t tree_id,
   else {
     T8_ASSERT (t8_eclass_to_dimension[tree_class] == cmesh->dimension);
   }
-  cmesh->num_trees_per_eclass[tree_class]++;
 
   t8_stash_add_class (cmesh->stash, tree_id, tree_class);
 #if 0
