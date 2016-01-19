@@ -37,7 +37,7 @@ static int
 t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_topidx_t tree_id);
 
 static t8_ctree_t
-t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id);
+t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_locidx_t tree_id);
 /* *INDENT-ON* */
 
 #if 0
@@ -156,16 +156,13 @@ t8_cmesh_set_partitioned (t8_cmesh_t cmesh, int set_partitioned,
 /* TODO: should get a gloidx?
  *       place after commit */
 static              t8_ctree_t
-t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_topidx_t tree_id)
+t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_locidx_t tree_id)
 {
-  t8_topidx_t         index;
-
   T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree_id));
+  T8_ASSERT (0 <= tree_id && tree_id < cmesh->num_local_trees);
   T8_ASSERT (cmesh->committed);
 
-  index = cmesh->set_partitioned ? tree_id - cmesh->first_tree : tree_id;
-  return t8_cmesh_trees_get_tree (cmesh->trees, index);
+  return t8_cmesh_trees_get_tree (cmesh->trees, tree_id);
 }
 
 /* Returns the first local tree.
@@ -177,7 +174,8 @@ t8_cmesh_first_tree (t8_cmesh_t cmesh)
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
 
-  return cmesh->num_local_trees > 0 ? t8_cmesh_get_tree (cmesh, 0) : NULL;
+  return cmesh->num_local_trees > 0 ?
+        t8_cmesh_get_tree (cmesh, 0) : NULL;
 }
 
 /* returns the next local tree in the cmesh (by treeid)
@@ -190,7 +188,7 @@ t8_cmesh_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (tree != NULL);
-  T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree->treeid));
+  T8_ASSERT (0 <= tree->treeid && tree->treeid < cmesh->num_local_trees);
   T8_ASSERT (cmesh->committed);
   return tree->treeid <
     cmesh->num_local_trees -
