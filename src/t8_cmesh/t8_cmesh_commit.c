@@ -128,7 +128,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       for (itree = 0; itree < num_trees; itree++) {
         entry = (t8_stash_class_struct_t *)
           t8_sc_array_index_topidx (class_entries, itree);
-        t8_cmesh_trees_add_tree (cmesh->trees, entry->id, 0, entry->eclass);        
+        t8_cmesh_trees_add_tree (cmesh->trees, entry->id, 0, entry->eclass);
         cmesh->num_trees_per_eclass[entry->eclass]++;
       }
       /* set tree attributes */
@@ -231,8 +231,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
      * initialize the trees structure. */
     /* This even initializes the trees structure if there are neither trees
      * nor ghosts */
-    t8_debugf ("Init trees with %li T, %li G\n", (long) cmesh->num_local_trees,
-               (long) cmesh->num_ghosts);
+    t8_debugf ("Init trees with %li T, %li G\n",
+               (long) cmesh->num_local_trees, (long) cmesh->num_ghosts);
     t8_cmesh_trees_init (&cmesh->trees, 1, cmesh->num_local_trees,
                          cmesh->num_ghosts);
     t8_cmesh_trees_init_part (cmesh->trees, 0, 0, cmesh->num_local_trees,
@@ -261,7 +261,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       /* initialize tree */
       t8_cmesh_trees_add_tree (cmesh->trees,
                                classentry->id - cmesh->first_tree, 0,
-                               classentry->eclass);      
+                               classentry->eclass);
       cmesh->num_trees_per_eclass[classentry->eclass]++;
     }
     /* TODO: optimize if non-hybrid mesh */
