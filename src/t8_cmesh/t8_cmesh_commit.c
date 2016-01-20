@@ -161,8 +161,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   }
   else {
     sc_array_t         *ghost_ids;
-    size_t              joinfaces_it, attr_byte_count, iz, jz, class_end;
-    ssize_t             ghost_ind;
+    size_t              joinfaces_it, attr_byte_count, iz;
+    ssize_t             ghost_ind, jz, class_end;
     t8_stash_joinface_struct_t *joinface;
     t8_gloidx_t         last_tree = cmesh->num_local_trees +
       cmesh->first_tree - 1, id1, id2;
@@ -314,13 +314,15 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     for (iz = 0, jz = 0; iz < ghost_ids->elem_count; iz++, jz++) {
       /* Skip all duplicate entries */
       do {
+        t8_debugf ("Accessing %i\n", iz);
         ghost_facejoin = (struct ghost_facejoins_struct *)
           sc_array_index (ghost_ids, iz++);
       }
-      while (ghost_facejoin->ghost_id <= id1 ||
-             (t8_locidx_t) iz >= cmesh->num_ghosts);
+      while (ghost_facejoin->ghost_id <= id1 &&
+             (t8_locidx_t) iz < ghost_ids->elem_count);
       iz--;
-      if (iz < ghost_ids->elem_count) {
+      if (iz < ghost_ids->elem_count &&
+         ghost_facejoin->ghost_id > id1 ) {
         id1 = ghost_facejoin->ghost_id;
         /* Get position of ghost in classes array */
         /* TODO: optimize so that we do not need this bsearch */
@@ -331,9 +333,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
         t8_cmesh_trees_add_ghost (cmesh->trees, jz, id1, 0,
                                   classentry->eclass);
         cmesh->trees->ghost_to_offset[jz] = jz;
+        T8_ASSERT (iz < ghost_ids->elem_count - 1 ||
+                   (t8_locidx_t) jz == cmesh->num_ghosts - 1);
       }
-      T8_ASSERT (iz < ghost_ids->elem_count - 1 ||
-                 (t8_locidx_t) jz == cmesh->num_ghosts);
     }
     /* We are done with stash->classes now  so we free memory.
      * Since the array is destroyed in stash_destroy we only reset it. */
