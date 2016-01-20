@@ -124,8 +124,8 @@ t8_cmesh_set_partitioned (t8_cmesh_t cmesh, int set_partitioned,
 {
   T8_ASSERT (!cmesh->committed);
   T8_ASSERT (cmesh->set_partitioned == 0);
-  T8_ASSERT (cmesh->num_trees == 0);
-  T8_ASSERT (cmesh->num_local_trees == 0);
+ //T8_ASSERT (cmesh->num_trees == 0);
+// T8_ASSERT (cmesh->num_local_trees == 0);
   T8_ASSERT (cmesh->first_tree == 0);
 
   /* set cmesh->set_partition to 0 or 1 */

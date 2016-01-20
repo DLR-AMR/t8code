@@ -221,6 +221,9 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
     t8_global_errorf ("Premature end of line in %s.\n", filename);
   }
   T8_ASSERT (temp >= 3);
+  /* This step is actually only necessary if the cmesh will be bcasted and
+   * partitioned. Then we use the num_elems variable to compute the partition table
+   * on the remote processes */
   t8_cmesh_set_num_trees (cmesh, num_elems);
   /* For each triangle read the corner indices */
   for (tit = 0; tit < num_elems; tit++) {
@@ -441,6 +444,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
   t8_cmesh_t          cmesh;
   double             *vertices;
   t8_topidx_t         num_vertices;
+  t8_gloidx_t         first_tree, last_tree;
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -495,7 +499,15 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
    *       other processes if something went wrong. */
   /* This broadcasts the NULL pointer if anything went wrong */
   cmesh = t8_cmesh_bcast (cmesh, 0, comm);
+
   if (cmesh != NULL) {
+    if (partition) {
+      first_tree = (mpirank * cmesh->num_trees)/mpisize;
+      last_tree = ((mpirank + 1) * cmesh->num_trees)/mpisize - 1;
+      t8_debugf ("Partition range [%lli,%lli]\n", (long long) first_tree,
+                 (long long) last_tree);
+      t8_cmesh_set_partitioned (cmesh, 1, 3, first_tree, last_tree);
+    }
     t8_cmesh_commit (cmesh);
   }
   return cmesh;
