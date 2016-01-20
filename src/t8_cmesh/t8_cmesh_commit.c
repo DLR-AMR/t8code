@@ -62,7 +62,6 @@ t8_cmesh_add_attributes (t8_cmesh_t cmesh, t8_stash_t stash)
         }
         num_attr -= si;         /* now stores the number of attribute of the tree */
         /* initialize storage for tree attributes */
-        t8_debugf ("Init attr. T %li, Num %i\n", tree_id, num_attr);
         t8_cmesh_trees_init_attributes (cmesh->trees, tree_id, num_attr);
         temptree = tree_id;     /* store the current tree_id in oldtree */
         attr_index = 0;
@@ -70,7 +69,6 @@ t8_cmesh_add_attributes (t8_cmesh_t cmesh, t8_stash_t stash)
       attr_bytes = t8_stash_get_attribute_size (cmesh->stash, si);
       key = t8_stash_get_attribute_key (cmesh->stash, si);
       attr_id = t8_stash_get_attribute_id (cmesh->stash, si);
-      t8_debugf ("Add attr. T %li, Pid %i, Key %i\n", tree_id, attr_id, key);
       t8_cmesh_tree_add_attribute (cmesh->trees, 0, tree_id, attr_id, key,
                                    (char *)
                                    t8_stash_get_attribute (cmesh->stash,
@@ -312,10 +310,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
         ghost_ind = sc_array_bsearch (ghost_ids, &joinface->id2,
                                       t8_compare_gloidx);
         /* Search for local ghost id in array */
-        t8_debugf
-          ("Face-conn %lli <--> %lli via faces %i and %i. Ghost_index = %li\n",
-           (long long) joinface->id1, (long long) joinface->id2,
-           joinface->face1, joinface->face2, (long) ghost_ind);
         SC_CHECK_ABORTF (ghost_ind >= 0
                          && ghost_ind < cmesh->num_ghosts,
                          "Ghost tree (global id %lli) in face-connections that"
