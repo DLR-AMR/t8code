@@ -30,17 +30,19 @@
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_trees.h"
 
-struct ghost_facejoins_struct{
-  t8_gloidx_t       ghost_id; /* The id of the ghost */
-  size_t            index;    /* The index in stash->joinfaces where this ghost is used */
-  int8_t            flag;     /* First bit is true if we are certain if entry is a real ghost,
-                               * but may also be false in this case.
-                               * First but is guaranteed to be false if entry is only ghost of ghost.
-                               * Second bit is true if and only if this entry comes from the second
-                               * id member of joinfaces[index]. */
+struct ghost_facejoins_struct
+{
+  t8_gloidx_t         ghost_id; /* The id of the ghost */
+  size_t              index;    /* The index in stash->joinfaces where this ghost is used */
+  int8_t              flag;     /* First bit is true if we are certain if entry is a real ghost,
+                                 * but may also be false in this case.
+                                 * First but is guaranteed to be false if entry is only ghost of ghost.
+                                 * Second bit is true if and only if this entry comes from the second
+                                 * id member of joinfaces[index]. */
 };
 
-static int t8_ghost_facejoins_compare (const void * fj1, const void * fj2)
+static int
+t8_ghost_facejoins_compare (const void *fj1, const void *fj2)
 {
   struct ghost_facejoins_struct *FJ1 = (struct ghost_facejoins_struct *) fj1;
   struct ghost_facejoins_struct *FJ2 = (struct ghost_facejoins_struct *) fj2;
@@ -187,8 +189,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     for (joinfaces_it = 0; joinfaces_it < cmesh->stash->joinfaces.elem_count;
          joinfaces_it++) {
       joinface =
-        (t8_stash_joinface_struct_t *) sc_array_index (&cmesh->
-                                                       stash->joinfaces,
+        (t8_stash_joinface_struct_t *) sc_array_index (&cmesh->stash->
+                                                       joinfaces,
                                                        joinfaces_it);
       id1 = joinface->id1;
       id2 = joinface->id2;
@@ -196,14 +198,16 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       id1_istree = id1 <= last_tree && id1 >= cmesh->first_tree;
       if (!id2_istree) {
         /* id2 is a ghost */
-        ghost_facejoin = (struct ghost_facejoins_struct *) sc_array_push (ghost_ids);
+        ghost_facejoin =
+          (struct ghost_facejoins_struct *) sc_array_push (ghost_ids);
         ghost_facejoin->ghost_id = id2;
         ghost_facejoin->index = joinfaces_it;
-        ghost_facejoin->flag = id1_istree | 2; /* The 2 specifies that we come from id2 entry */
+        ghost_facejoin->flag = id1_istree | 2;  /* The 2 specifies that we come from id2 entry */
       }
       if (!id1_istree) {
-        /* id1 is a ghost */        
-        ghost_facejoin = (struct ghost_facejoins_struct *) sc_array_push (ghost_ids);
+        /* id1 is a ghost */
+        ghost_facejoin =
+          (struct ghost_facejoins_struct *) sc_array_push (ghost_ids);
         ghost_facejoin->ghost_id = id1;
         ghost_facejoin->index = joinfaces_it;
         ghost_facejoin->flag = id2_istree;
@@ -219,29 +223,33 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     /* TODO: we could also reduce the ghost_ids list and only keep entries with proper ghosts */
     id1 = -1;
     is_true_ghost = 1;
-    for (cmesh->num_ghosts = 0, jz = -1, iz = 0;iz < ghost_ids->elem_count;iz++) {
-      ghost_facejoin = (struct ghost_facejoins_struct *) sc_array_index (ghost_ids, iz);
+    for (cmesh->num_ghosts = 0, jz = -1, iz = 0; iz < ghost_ids->elem_count;
+         iz++) {
+      ghost_facejoin =
+        (struct ghost_facejoins_struct *) sc_array_index (ghost_ids, iz);
       if (ghost_facejoin->ghost_id > id1) {
         id1 = ghost_facejoin->ghost_id;
         /* Check if the current global id belongs to a ghost */
-        if (jz >=0 && is_true_ghost == 1) {
+        if (jz >= 0 && is_true_ghost == 1) {
           /* If so go back to first entry of this id and set flag to 1.
            * Count this entry as ghost. */
-          ghost_facejoin = (struct ghost_facejoins_struct *) sc_array_index (ghost_ids, jz);
+          ghost_facejoin =
+            (struct ghost_facejoins_struct *) sc_array_index (ghost_ids, jz);
           ghost_facejoin->flag |= 1;
           cmesh->num_ghosts++;
         }
-        jz = iz; /* Store first index of new id */
+        jz = iz;                /* Store first index of new id */
         is_true_ghost = 1;
       }
-      is_true_ghost |= ghost_facejoin->flag & 1; /* is_true_ghost gets true if any flag's
-                                                    first bit is true. */
+      is_true_ghost |= ghost_facejoin->flag & 1;        /* is_true_ghost gets true if any flag's
+                                                           first bit is true. */
     }
     /* This is to catch the last entry in the array */
-    if (jz >=0 && is_true_ghost == 1) {
+    if (jz >= 0 && is_true_ghost == 1) {
       /* If so go back to first entry of this id and set flag to 1.
        * Count this entry as ghost. */
-      ghost_facejoin = (struct ghost_facejoins_struct *) sc_array_index (ghost_ids, jz);
+      ghost_facejoin =
+        (struct ghost_facejoins_struct *) sc_array_index (ghost_ids, jz);
       ghost_facejoin->flag |= 1;
       cmesh->num_ghosts++;
     }
@@ -253,9 +261,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
      */
     for (iz = 0; iz < cmesh->stash->attributes.elem_count; iz++) {
       attribute =
-        (t8_stash_attribute_struct_t *) sc_array_index (&cmesh->
-                                                        stash->attributes,
-                                                        iz);
+        (t8_stash_attribute_struct_t *) sc_array_index (&cmesh->stash->
+                                                        attributes, iz);
       if (cmesh->first_tree <= attribute->id && attribute->id <= last_tree) {
         /* TODO: check for duplicate attributes */
         attr_byte_count += attribute->attr_size;
@@ -290,7 +297,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       class_end = -1;
     }
     /* TODO: optimize if non-hybrid mesh */
-    /* loop over all local trees and set classes*/
+    /* loop over all local trees and set classes */
     for (; iz < class_end + 1; iz++) {
       /* get class and tree id */
       classentry = (t8_stash_class_struct_t *)
@@ -308,7 +315,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       /* Skip all duplicate entries */
       do {
         ghost_facejoin = (struct ghost_facejoins_struct *)
-            sc_array_index (ghost_ids, iz++);
+          sc_array_index (ghost_ids, iz++);
       }
       while (ghost_facejoin->ghost_id <= id1 ||
              (t8_locidx_t) iz >= cmesh->num_ghosts);
@@ -352,20 +359,20 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     /* Go through ghost_id array and set all facejoins with at least one ghost involved */
     id1 = -1;
     is_true_ghost = 0;
-    for (iz = 0, jz = -1;iz < ghost_ids->elem_count;iz++) {
+    for (iz = 0, jz = -1; iz < ghost_ids->elem_count; iz++) {
       ghost_facejoin = (struct ghost_facejoins_struct *)
-          sc_array_index (ghost_ids, iz);
+        sc_array_index (ghost_ids, iz);
       if (ghost_facejoin->ghost_id > id1) {
         /* The first bit of flag of the first occurence of an id specifies whether the id belongs
          * to a true ghost. Only in this case we have to do anything */
         is_true_ghost = ghost_facejoin->flag & 1;
         id1 = ghost_facejoin->ghost_id;
-        jz++; /* Count the local ghost id */
+        jz++;                   /* Count the local ghost id */
       }
       if (is_true_ghost) {
         ghost1 = t8_cmesh_trees_get_ghost (cmesh->trees, jz);
         joinface = (t8_stash_joinface_struct_t *)
-            sc_array_index (&cmesh->stash->joinfaces, ghost_facejoin->index);
+          sc_array_index (&cmesh->stash->joinfaces, ghost_facejoin->index);
         /* Store the id of the neighbor */
         id2 = ghost_facejoin->flag & 2 ? joinface->id1 : joinface->id2;
         /* Store the face of the ghost */
@@ -378,7 +385,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
           tree1 = t8_cmesh_trees_get_tree (cmesh->trees,
                                            id2 - cmesh->first_tree);
           /* Store the face of the tree */
-          face2 = ghost_facejoin->flag & 2 ? joinface->face1 : joinface->face2;
+          face2 =
+            ghost_facejoin->flag & 2 ? joinface->face1 : joinface->face2;
           /* Set the local ghost id as neighbor */
           tree1->face_neighbors[face2] = jz + cmesh->first_tree;
           F = t8_eclass_num_faces[ghost1->eclass];
