@@ -74,6 +74,8 @@ t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
 {
   t8_forest_t         forest;
   t8_cmesh_t          cmesh;
+  char                vtuname[BUFSIZ];
+  int                 mpirank, mpiret;
 
   t8_global_productionf ("Entering t8_basic hypercube %s\n",
                          t8_eclass_to_string[eclass]);
@@ -83,6 +85,16 @@ t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
     t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, do_dup, do_bcast,
                             do_partition);
 
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  SC_CHECK_MPI (mpiret);
+
+  snprintf (vtuname, BUFSIZ, "./%s_%04d",t8_eclass_to_string[eclass], mpirank);
+  if (t8_cmesh_vtk_write_file (cmesh, vtuname, 1.0) == 0) {
+    t8_debugf ("Output to %s\n", vtuname);
+  }
+  else {
+    t8_debugf ("Error in output\n");
+  }
 #if 1
   t8_forest_set_cmesh (forest, cmesh);
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
@@ -143,6 +155,36 @@ t8_basic_p8est (int do_dup, int x, int y, int z)
 }
 
 static void
+t8_basic_partitioned ()
+{
+  t8_cmesh_t        cmesh;
+  int               mpirank, mpisize, mpiret;
+  int               first_tree, last_tree, i;
+  const int         num_trees = 11;
+
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  first_tree = (mpirank * num_trees)/mpisize;
+  last_tree = ((mpirank + 1) * num_trees)/mpisize - 1;
+  t8_debugf ("Range in %i trees: [%i,%i]\n", num_trees, first_tree, last_tree);
+  t8_cmesh_init (&cmesh);
+  if (cmesh == NULL) {
+    return;
+  }
+  t8_cmesh_set_partitioned (cmesh, 1, 3, first_tree, last_tree);
+  for (i = first_tree > 1 ? first_tree : 2;i <= last_tree;i++) {
+    t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_TRIANGLE);
+  }
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_join (cmesh, 0, 1, 0, 0, 0);
+  t8_cmesh_commit (cmesh);
+  t8_cmesh_unref (&cmesh);
+}
+
+static void
 t8_basic (int do_dup, int set_level)
 {
   t8_forest_t         forest;
@@ -176,13 +218,18 @@ main (int argc, char **argv)
   level = 3;
   t8_global_productionf ("Testing basic tet mesh.\n");
 
-#if 1
+#if 0
+  t8_basic_partitioned ();
+#endif
+
+#if 0
   t8_basic (0, level);
   t8_basic (1, level);
   t8_basic (0, level);
   t8_basic (1, level);
   t8_global_productionf ("Done testing basic tet mesh.\n");
 #endif
+  t8_basic_hypercube (T8_ECLASS_TET, 0, level, 0, 0, 1);
 #if 1
   t8_global_productionf ("Testing hypercube cmesh.\n");
 

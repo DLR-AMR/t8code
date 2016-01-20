@@ -644,7 +644,10 @@ t8_cmesh_get_num_trees (t8_cmesh_t cmesh)
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
 
-  return cmesh->num_trees;
+  return cmesh->num_local_trees;
+#if 0
+  return cmesh->num_trees; // HOLKE edit
+#endif
 }
 
 t8_locidx_t
