@@ -298,7 +298,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     }
     /* TODO: optimize if non-hybrid mesh */
     /* loop over all local trees and set classes */
-    for (; iz < class_end + 1; iz++) {
+    for (; iz < (size_t) class_end + 1; iz++) {
       /* get class and tree id */
       classentry = (t8_stash_class_struct_t *)
         sc_array_index (&cmesh->stash->classes, iz);
@@ -319,7 +319,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
           sc_array_index (ghost_ids, iz++);
       }
       while (ghost_facejoin->ghost_id <= id1 &&
-             (t8_locidx_t) iz < ghost_ids->elem_count);
+             iz < ghost_ids->elem_count);
       iz--;
       if (iz < ghost_ids->elem_count &&
          ghost_facejoin->ghost_id > id1 ) {
