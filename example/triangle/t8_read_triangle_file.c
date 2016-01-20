@@ -32,7 +32,10 @@ t8_read_triangle_file_build_cmesh (const char * prefix, int do_dup,
 {
   t8_cmesh_t          cmesh;
   char                fileprefix[BUFSIZ];
+  int                 mpirank, mpiret;
 
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  SC_CHECK_MPI (mpiret);
   cmesh = t8_cmesh_from_triangle_file ((char *) prefix, do_partition,
                                        sc_MPI_COMM_WORLD, do_dup);
   if (cmesh != NULL) {
@@ -40,8 +43,13 @@ t8_read_triangle_file_build_cmesh (const char * prefix, int do_dup,
                            prefix);
     t8_debugf ("cmesh has:\n\t%lli triangles\n",
                (long long) t8_cmesh_get_num_trees (cmesh));
-    snprintf (fileprefix, BUFSIZ, "%s_t8_trianle", prefix);
-    t8_cmesh_vtk_write_file (cmesh, fileprefix, 1.);
+    snprintf (fileprefix, BUFSIZ, "%s_t8_triangle_%04d", prefix, mpirank);
+    if (!t8_cmesh_vtk_write_file (cmesh, fileprefix, 1.)) {
+      t8_debugf ("Wrote to file %s\n", fileprefix);
+    }
+    else {
+      t8_debugf ("Error in writing cmesh vtk\n");
+    }
     t8_cmesh_unref (&cmesh);
   }
   else {
