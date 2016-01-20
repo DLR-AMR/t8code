@@ -168,7 +168,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       cmesh->first_tree - 1, id1, id2;
     t8_stash_attribute_struct_t *attribute;
     t8_stash_class_struct_t *classentry;
-    int                 id1_istree, id2_istree, F, face, face2;
+    int                 id1_istree, id2_istree, F, face, face2, temp;
     t8_ctree_t          tree1;
     t8_cghost_t         ghost1;
     struct ghost_facejoins_struct *ghost_facejoin;
@@ -222,11 +222,13 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     /* Count the ghosts without duplicates */
     /* TODO: we could also reduce the ghost_ids list and only keep entries with proper ghosts */
     id1 = -1;
-    is_true_ghost = 1;
+    is_true_ghost = 0;
+
     for (cmesh->num_ghosts = 0, jz = -1, iz = 0; iz < ghost_ids->elem_count;
          iz++) {
       ghost_facejoin =
         (struct ghost_facejoins_struct *) sc_array_index (ghost_ids, iz);
+      temp = ghost_facejoin->flag & 1;
       if (ghost_facejoin->ghost_id > id1) {
         id1 = ghost_facejoin->ghost_id;
         /* Check if the current global id belongs to a ghost */
@@ -239,9 +241,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
           cmesh->num_ghosts++;
         }
         jz = iz;                /* Store first index of new id */
-        is_true_ghost = 1;
+        is_true_ghost = 0;
       }
-      is_true_ghost |= ghost_facejoin->flag & 1;        /* is_true_ghost gets true if any flag's
+      is_true_ghost |= temp;        /* is_true_ghost gets true if any flag's
                                                            first bit is true. */
     }
     /* This is to catch the last entry in the array */
@@ -287,7 +289,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       T8_ASSERT (t8_stash_class_bsearch (cmesh->stash, cmesh->first_tree) >=
                  0);
       T8_ASSERT (t8_stash_class_bsearch (cmesh->stash, last_tree) >= 0);
-      t8_debugf ("%i %i\n", (int) iz, (int) class_end);
       T8_ASSERT ((t8_locidx_t) class_end - (t8_locidx_t) iz + 1 ==
                  cmesh->num_local_trees);
     }
@@ -311,7 +312,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     /* TODO: optimize if non-hybrid mesh */
     /* Iterate through ghosts and set classes */
     id1 = -1;
-    for (iz = 0, jz = 0; iz < ghost_ids->elem_count; iz++, jz++) {
+    for (iz = 0, jz = 0; iz < ghost_ids->elem_count; iz++) {
       /* Skip all duplicate entries */
       do {
         ghost_facejoin = (struct ghost_facejoins_struct *)
@@ -321,7 +322,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
              iz < ghost_ids->elem_count);
       iz--;
       if (iz < ghost_ids->elem_count &&
-         ghost_facejoin->ghost_id > id1 ) {
+         ghost_facejoin->ghost_id > id1 && ghost_facejoin->flag & 1) {
         id1 = ghost_facejoin->ghost_id;
         /* Get position of ghost in classes array */
         /* TODO: optimize so that we do not need this bsearch */
@@ -334,6 +335,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
         cmesh->trees->ghost_to_offset[jz] = jz;
         T8_ASSERT (iz < ghost_ids->elem_count - 1 ||
                    (t8_locidx_t) jz == cmesh->num_ghosts - 1);
+        jz++;
       }
     }
     /* We are done with stash->classes now  so we free memory.
@@ -361,6 +363,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     id1 = -1;
     is_true_ghost = 0;
     for (iz = 0, jz = -1; iz < ghost_ids->elem_count; iz++) {
+      temp = 0;
       ghost_facejoin = (struct ghost_facejoins_struct *)
         sc_array_index (ghost_ids, iz);
       if (ghost_facejoin->ghost_id > id1) {
@@ -368,9 +371,10 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
          * to a true ghost. Only in this case we have to do anything */
         is_true_ghost = ghost_facejoin->flag & 1;
         id1 = ghost_facejoin->ghost_id;
-        jz++;                   /* Count the local ghost id */
+        temp = 1; /* stores that we are at the first entry */
       }
-      if (is_true_ghost) {
+      if (is_true_ghost && temp) {
+        jz++;
         ghost1 = t8_cmesh_trees_get_ghost (cmesh->trees, jz);
         joinface = (t8_stash_joinface_struct_t *)
           sc_array_index (&cmesh->stash->joinfaces, ghost_facejoin->index);
