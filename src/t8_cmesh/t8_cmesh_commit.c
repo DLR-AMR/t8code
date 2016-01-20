@@ -352,6 +352,11 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     sc_array_destroy (ghost_ids);
     /* Add attributes to the local trees */
     t8_cmesh_add_attributes (cmesh, cmesh->stash);
+    /* compute global number of trees. id1 serves as buffer since
+     * global number and local number have different datatypes */
+    id1 = cmesh->num_local_trees;
+    sc_MPI_Allreduce (&id1, &cmesh->num_trees, 1, T8_MPI_GLOIDX,
+                      sc_MPI_SUM, cmesh->mpicomm);
   }
 
   cmesh->committed = 1;
