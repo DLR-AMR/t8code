@@ -180,7 +180,7 @@ typedef struct t8_cmesh_trees
 #if 1
   /* TODO: the ghost_to_offset field is not be necessary since the ghost can
    *       be identified by its local index? - remove */
-  t8_topidx_t        *ghost_to_offset;  /* for each ghost its offset within the process */
+  t8_locidx_t        *ghost_to_offset;  /* for each ghost its offset within the process */
 #endif
 } t8_cmesh_trees_struct_t;
 
