@@ -452,7 +452,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
   SC_CHECK_MPI (mpiret);
 
   cmesh = NULL;
-  if (mpirank == 0) {
+  if (mpirank == 0 || partition) {
     int                 retval, corner_offset;
     char                current_file[BUFSIZ];
 
@@ -498,7 +498,10 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
   /* TODO: broadcasting NULL does not work. We need a way to tell the
    *       other processes if something went wrong. */
   /* This broadcasts the NULL pointer if anything went wrong */
-  cmesh = t8_cmesh_bcast (cmesh, 0, comm);
+
+  if (!partition ) {
+    cmesh = t8_cmesh_bcast (cmesh, 0, comm);
+  }
 
   if (cmesh != NULL) {
     if (partition) {
