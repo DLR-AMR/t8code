@@ -25,3 +25,31 @@
  * TODO: document this file
  */
 
+#include <t8_cmesh.h>
+#include "t8_cmesh_types.h"
+#include "t8_cmesh_trees.h"
+#include "t8_cmesh_partition.h"
+
+void
+t8_cmesh_partition (t8_cmesh_t cmesh)
+{
+  t8_cmesh_t        cmesh_from;
+  t8_gloidx_t       last_tree;
+
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (cmesh->set_partitioned);
+  T8_ASSERT (cmesh->set_from != NULL);
+  T8_ASSERT (cmesh->set_from->committed);
+
+  cmesh_from = cmesh->set_from;
+  if (cmesh->set_level >= 0) {
+    /* Compute first and last tree index */
+    t8_cmesh_uniform_bounds (cmesh_from, cmesh->set_level, &cmesh->first_tree,
+                             NULL, &last_tree, NULL, &cmesh->last_tree_shared);
+    cmesh->num_local_trees = last_tree - cmesh->first_tree + 1;
+  }
+  else {
+    T8_ASSERT (cmesh->tree_per_proc != NULL);
+  }
+}

@@ -34,6 +34,8 @@
 
 T8_EXTERN_C_BEGIN ();
 
+void            t8_cmesh_partition (t8_cmesh_t cmesh);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_PARTITION_H */
