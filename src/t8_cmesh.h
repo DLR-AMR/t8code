@@ -97,6 +97,8 @@ void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
 
 /* TODO: document.
  *       if level >= 0 then ignore trees_per_proc
+ *       trees_per_proc[p] has to be negative if the last tree of proc p is
+ *       shared. trees_per_proc must fulfill the description from \see t8_cmesh_types.h
  */
 void                t8_cmesh_set_partition_from (t8_cmesh_t cmesh,
                                                  const t8_cmesh_t cmesh_from,

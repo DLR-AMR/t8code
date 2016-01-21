@@ -769,7 +769,9 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
       next_first_tree = (last_global_child + 1) / children_per_tree;
       T8_ASSERT (cmesh->mpirank + 1 < cmesh->mpisize ||
                  next_first_tree == cmesh->num_trees);
-      if (next_first_tree == *last_local_tree) {
+      if (next_first_tree == *last_local_tree && first_global_child
+          != last_global_child) {
+        /* We exclude empty partitions here, by def their last_tree_shared flag is zero */
         *last_tree_shared = 1;
       }
       else {

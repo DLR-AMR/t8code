@@ -70,8 +70,8 @@ typedef struct t8_cmesh
   int                 face_knowledge;  /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partioned */
   int8_t              set_level;       /**< Non-negative if the cmesh should be partition from an already existing cmesh
                                          with an assumes \a level uniform mesh underneath */
-  struct t8_cmesh    *set_from; /**< If this cmesh is a modified (i.e. partitioned) version
-                                     of another cmesh, we store a pointer to this other cmesh here. */
+  const struct t8_cmesh *set_from; /**< If this cmesh is a modified (i.e. partitioned) version
+                                        of another cmesh, we store a pointer to this other cmesh here. */
   sc_MPI_Comm         mpicomm;  /**< MPI communicator to use. */
   int                 mpirank;  /**< Number of this MPI process. */
   int                 mpisize;  /**< Number of MPI processes. */
@@ -88,9 +88,10 @@ typedef struct t8_cmesh
 
   t8_gloidx_t         first_tree; /**< The global index of the first local tree
                                        on this process. Zero if the cmesh is not partitioned. -1 if this processor is empty. */
-  int8_t              last_tree_shared; /**< If partitioned true if the last tree on this process is also the first tree on the next process. */
-  t8_topidx_t        *tree_per_proc; /**< If partitioned for each process the number of local trees
-                                        or -(num_local_trees) - 1
+  int8_t              last_tree_shared; /**< If partitioned true if the last tree on this process is also the first tree on the next process.
+                                             Always zero if num_local_trees = 0 */
+  t8_locidx_t        *tree_per_proc; /**< If partitioned for each process the number of local trees
+                                        or -(num_local_trees)
                                         if the last tree on that process is the first tree of the next process
                                           Since this is very memory consuming we only fill it when needed. */
 #ifdef T8_ENABLE_DEBUG
