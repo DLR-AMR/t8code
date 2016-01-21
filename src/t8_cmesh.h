@@ -67,6 +67,8 @@ void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
  * the default and in this case \ref t8_cmesh_set_partitioned is the same as
  * \ref t8_cmesh_set_num_trees and the values \a first_local_tree and
  * \a set_face_knowledge are ignored.
+ * This call is only valid when the cmesh is not yet committed via a call
+ * to \see t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     set_partitioned A nonzero value specifies that \a cmesh
  *                              is interpreted as a partitioned mesh.
