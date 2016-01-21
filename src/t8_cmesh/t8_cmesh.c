@@ -700,29 +700,38 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
                          t8_gloidx_t * first_local_tree,
                          t8_gloidx_t * child_in_tree_begin,
                          t8_gloidx_t * last_local_tree,
-                         t8_gloidx_t * child_in_tree_end)
+                         t8_gloidx_t * child_in_tree_end,
+                         int8_t *last_tree_shared)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
   T8_ASSERT (level >= 0);
 
   *first_local_tree = 0;
-  *child_in_tree_begin = 0;
+  if (child_in_tree_begin != NULL) {
+    *child_in_tree_begin = 0;
+  }
   *last_local_tree = 0;
-  *child_in_tree_end = 0;
+  if (child_in_tree_end != NULL) {
+    *child_in_tree_end = 0;
+  }
 
   if (cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] == 0) {
     t8_gloidx_t         global_num_children;
     t8_gloidx_t         first_global_child;
     t8_gloidx_t         last_global_child;
     t8_gloidx_t         children_per_tree;
+    t8_gloidx_t         next_first_tree = -1;
     const t8_gloidx_t   one = 1;
 
     children_per_tree = one << cmesh->dimension * level;
     global_num_children = cmesh->num_trees * children_per_tree;
 
     if (cmesh->mpirank == 0) {
-      *child_in_tree_begin = first_global_child = 0;
+      first_global_child = 0;
+      if (child_in_tree_begin != NULL) {
+        *child_in_tree_begin = 0;
+      }
     }
     else {
       /* The first global children of processor p
@@ -746,22 +755,35 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
                && first_global_child <= global_num_children);
     T8_ASSERT (0 <= last_global_child
                && last_global_child <= global_num_children);
-    *first_local_tree = first_global_child / children_per_tree;
-    *child_in_tree_begin =
-      first_global_child - *first_local_tree * children_per_tree;
-    if (first_global_child < last_global_child) {
-      *last_local_tree = (last_global_child - 1) / children_per_tree;
+    *first_local_tree = first_global_child / children_per_tree;        
+    if (child_in_tree_begin != NULL) {
+      *child_in_tree_begin =
+       first_global_child - *first_local_tree * children_per_tree;
     }
-    else {
-      /* empty processor */
-      *last_local_tree = *first_local_tree;
+    /* TODO: Just fixed this line from last_global_child -1 / cpt
+     *       Why did we not notice this error before? */
+    *last_local_tree = last_global_child / children_per_tree;
+    if (last_tree_shared != NULL) {
+      /* This works even for the last process, since then next_first_tree
+       * is computed to num_global_trees */
+      next_first_tree = (last_global_child + 1) / children_per_tree;
+      T8_ASSERT (cmesh->mpirank + 1 < cmesh->mpisize ||
+                 next_first_tree == cmesh->num_trees);
+      if (next_first_tree == *last_local_tree) {
+        *last_tree_shared = 1;
+      }
+      else {
+        *last_tree_shared = 0;
+      }
     }
-    if (*last_local_tree > 0) {
-      *child_in_tree_end =
-        last_global_child - *last_local_tree * children_per_tree;
-    }
-    else {
-      *child_in_tree_end = last_global_child;
+    if (child_in_tree_end != NULL) {
+      if (*last_local_tree > 0) {
+        *child_in_tree_end =
+          last_global_child - *last_local_tree * children_per_tree;
+      }
+      else {
+        *child_in_tree_end = last_global_child;
+      }
     }
   }
   else {
