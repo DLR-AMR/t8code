@@ -95,6 +95,14 @@ void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
                                               t8_gloidx_t first_local_tree,
                                               t8_gloidx_t last_local_tree);
 
+/* TODO: document.
+ *       if level >= 0 then ignore trees_per_proc
+ */
+void                t8_cmesh_set_partition_from (t8_cmesh_t cmesh,
+                                                 const t8_cmesh_t cmesh_from,
+                                                 int level,
+                                                 t8_locidx_t * trees_per_proc);
+
 /* TODO: This is actually not part of the interface?
  *       At least it is only used if the cmesh is partitioned.
  */

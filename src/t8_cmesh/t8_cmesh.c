@@ -83,6 +83,7 @@ t8_cmesh_init (t8_cmesh_t * pcmesh)
   t8_refcount_init (&cmesh->rc);
 
   /* sensible (hard error) defaults */
+  cmesh->set_level = -1;
   cmesh->dimension = -1;
   cmesh->mpicomm = sc_MPI_COMM_WORLD;
   cmesh->mpirank = -1;
@@ -149,6 +150,25 @@ t8_cmesh_set_partitioned (t8_cmesh_t cmesh, int set_partitioned,
     /* Right know no other face_knowledge is supported */
     SC_CHECK_ABORTF (set_face_knowledge == 3, "Level %i of face knowledge"
                      "is not supported.\n", set_face_knowledge);
+  }
+}
+
+void
+t8_cmesh_set_partition_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
+                             int level, t8_locidx_t *trees_per_proc)
+{
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (cmesh_from != NULL);
+  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (cmesh_from->committed);
+
+  cmesh->set_from = cmesh_from;
+  cmesh->set_partitioned = 1;
+  if (level >= 0) {
+    cmesh->set_level = level;
+  }
+  else {
+    cmesh->tree_per_proc = trees_per_proc;
   }
 }
 
