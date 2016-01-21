@@ -219,6 +219,12 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     /* Added one ghostid entry for each face connection with a ghost and ghost of a ghost.
      * Need to count w/o duplicates.
      * Need to know which ones are proper ghosts */
+    /* TODO: this step is the most expensive one in this algorihtm.
+     * ~5-6 times slower than the sections above and below each.
+     * Also this step scales with the number of non-local trees (not ghosts!)
+     * which scales with the number of processes and approximates O(global trees).
+     * Would be much faster if we only had ghosts here, since ghost = O(trees)
+     */
     sc_array_sort (ghost_ids, t8_ghost_facejoins_compare);
     /* Count the ghosts without duplicates */
     /* TODO: we could also reduce the ghost_ids list and only keep entries with proper ghosts */
