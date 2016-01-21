@@ -27,6 +27,8 @@
 
 #include <t8_shmem.h>
 #include <t8_cmesh.h>
+#include <sc_flops.h>
+#include <sc_statistics.h>
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_trees.h"
 
@@ -120,6 +122,13 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   int                 mpiret;
   sc_MPI_Comm         comm_dup;
 
+
+  sc_flopinfo_t       fi, snapshot;
+  sc_statinfo_t       stats[3];
+
+  sc_flops_start (&fi);
+
+
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->mpicomm != sc_MPI_COMM_NULL);
   T8_ASSERT (!cmesh->committed);
@@ -175,6 +184,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     struct ghost_facejoins_struct *ghost_facejoin;
     int8_t              is_true_ghost;
 
+
+    sc_flops_snap (&fi, &snapshot);
+
     if (cmesh->face_knowledge != 3) {
       t8_global_errorf ("Expected a face knowledge of 3.\nAbort commit.");
       /* TODO: reset cmesh */
@@ -184,6 +196,10 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     t8_stash_class_sort (cmesh->stash);
 //    t8_stash_joinface_sort (cmesh->stash); /* TODO: this is propably not usefull */
     t8_stash_attribute_sort (cmesh->stash);
+
+    sc_flops_shot (&fi, &snapshot);
+    sc_stats_set1 (&stats[0], snapshot.iwtime, "cmesh_commit_sort");
+    sc_flops_snap (&fi, &snapshot);
 
     ghost_ids = sc_array_new (sizeof (struct ghost_facejoins_struct));
     /* Parse joinfaces array and save all indices of entries with ghosts involved */
@@ -286,6 +302,10 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
         attr_byte_count += attribute->attr_size;
       }
     }
+
+    sc_flops_shot (&fi, &snapshot);
+    sc_stats_set1 (&stats[1], snapshot.iwtime, "cmesh_commit_count");
+    sc_flops_snap (&fi, &snapshot);
     /********************************************************/
     /*      END COUNTING TREES/GHOSTS/ATTRIBUTES            */
     /********************************************************/
@@ -406,6 +426,13 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     id1 = cmesh->num_local_trees;
     sc_MPI_Allreduce (&id1, &cmesh->num_trees, 1, T8_MPI_GLOIDX,
                       sc_MPI_SUM, cmesh->mpicomm);
+
+    sc_flops_shot (&fi, &snapshot);
+    sc_stats_set1 (&stats[2], snapshot.iwtime, "cmesh_commit_end");
+
+
+    sc_stats_compute (sc_MPI_COMM_WORLD, 3, stats);
+    sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 3, stats, 1, 1);
   }
 
   cmesh->committed = 1;

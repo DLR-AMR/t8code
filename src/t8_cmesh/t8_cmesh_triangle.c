@@ -23,8 +23,6 @@
 #include <t8_cmesh_triangle.h>
 #include <t8_cmesh_tetgen.h>
 #include <t8_cmesh_vtk.h>
-#include <sc_flops.h>
-#include <sc_statistics.h>
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_stash.h"
 
@@ -448,12 +446,6 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
   t8_topidx_t         num_vertices;
   t8_gloidx_t         first_tree, last_tree;
 
-  sc_flopinfo_t       fi, snapshot;
-  sc_statinfo_t       stats[1];
-
-  sc_flops_start (&fi);
-
-
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
@@ -519,14 +511,8 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
                  (long long) last_tree);
       t8_cmesh_set_partitioned (cmesh, 1, 3, first_tree, last_tree);
     }
-    sc_flops_snap (&fi, &snapshot);
     t8_cmesh_commit (cmesh);
 
-    sc_flops_shot (&fi, &snapshot);
-    sc_stats_set1 (&stats[0], snapshot.iwtime, "cmesh_commit");
-
-    sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
-    sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 1, stats, 1, 1);
   }
   return cmesh;
 }
