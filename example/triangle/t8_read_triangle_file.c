@@ -25,8 +25,6 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh_triangle.h>
 #include <t8_cmesh_vtk.h>
-#include <sc_flops.h>
-#include <sc_statistics.h>
 
 void
 t8_read_triangle_file_build_cmesh (const char * prefix, int do_dup,
@@ -35,23 +33,13 @@ t8_read_triangle_file_build_cmesh (const char * prefix, int do_dup,
   t8_cmesh_t          cmesh;
   char                fileprefix[BUFSIZ];
   int                 mpirank, mpiret;
-  sc_flopinfo_t       fi, snapshot;
-  sc_statinfo_t       stats[1];
-
-
-  sc_flops_start (&fi);
 
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
 
 
-  sc_flops_snap (&fi, &snapshot);
-
   cmesh = t8_cmesh_from_triangle_file ((char *) prefix, do_partition,
                                        sc_MPI_COMM_WORLD, do_dup);
-
-  sc_flops_shot (&fi, &snapshot);
-  sc_stats_set1 (&stats[0], snapshot.iwtime, "cmesh_commit");
 
   if (cmesh != NULL) {
     t8_debugf ("Succesfully constructed cmesh from %s files.\n",
@@ -72,8 +60,6 @@ t8_read_triangle_file_build_cmesh (const char * prefix, int do_dup,
   }
   fflush (stdout);
 
-  sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
-  sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 1, stats, 1, 1);
 }
 
 int main (int argc, char * argv[])
