@@ -56,13 +56,13 @@ t8_ghost_facejoin_equal (const void *v1, const void *v2, const void *u)
 /* The hash value for a ghost is
  * global_id % num_local_trees
  *
- * This hash function gets as input the global ghost id
+ * This hash function gets as input a facejoins_struct
  * and as user data the number of local trees.
  */
 static unsigned
 t8_ghost_hash (const void *v, const void *u)
 {
-  t8_gloidx_t         ghost_id = *((t8_gloidx_t *) v);
+  t8_gloidx_t         ghost_id = ((t8_ghost_facejoin_t *) v)->ghost_id;
   t8_locidx_t         num_local_trees = *((t8_locidx_t *) u);
 
   return ghost_id % num_local_trees;
@@ -138,12 +138,10 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   int                 mpiret;
   sc_MPI_Comm         comm_dup;
 
-
   sc_flopinfo_t       fi, snapshot;
   sc_statinfo_t       stats[3];
 
   sc_flops_start (&fi);
-
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->mpicomm != sc_MPI_COMM_NULL);
@@ -200,7 +198,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     t8_ctree_t          tree1, tree2;
     t8_cghost_t         ghost1, ghost2;
 
-
     sc_flops_snap (&fi, &snapshot);
 
     if (cmesh->face_knowledge != 3) {
@@ -220,13 +217,16 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     ghost_facejoin_mempool = sc_mempool_new (sizeof (t8_ghost_facejoin_t));
     ghost_ids = sc_hash_new (t8_ghost_hash, t8_ghost_facejoin_equal,
                              &cmesh->num_local_trees, ghost_facejoin_mempool);
+
+    temp_facejoin = sc_mempool_alloc (ghost_facejoin_mempool);
+
     cmesh->num_ghosts = 0;
     /* Parse joinfaces array and save all global id of local ghosts, and assign them a local id */
     for (joinfaces_it = 0; joinfaces_it < cmesh->stash->joinfaces.elem_count;
          joinfaces_it++) {
       joinface =
-        (t8_stash_joinface_struct_t *) sc_array_index (&cmesh->
-                                                       stash->joinfaces,
+        (t8_stash_joinface_struct_t *) sc_array_index (&cmesh->stash->
+                                                       joinfaces,
                                                        joinfaces_it);
       id1 = joinface->id1;
       id2 = joinface->id2;
@@ -237,23 +237,21 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
          * ids of all local ghosts. */
         if (!id2_istree) {
           /* id2 is a ghost */
-          if (sc_hash_insert_unique (ghost_ids, &id2,
-                                     (void ***) &facejoin_pp)) {
+          temp_facejoin->ghost_id = id2;
+          if (sc_hash_insert_unique (ghost_ids, temp_facejoin, NULL)) {
             /* If we did not already stored id2 in the hash we do so and assign the next local ghost id */
-            ghost_facejoin = *facejoin_pp;
-            ghost_facejoin->ghost_id = id2;
-            ghost_facejoin->local_id = cmesh->num_ghosts++;
+            temp_facejoin->local_id = cmesh->num_ghosts++;
+            temp_facejoin = sc_mempool_alloc (ghost_facejoin_mempool);
           }
         }
         if (!id1_istree) {
           /* id1 is a ghost */
           T8_ASSERT (id2_istree);
-          if (sc_hash_insert_unique (ghost_ids, &id2,
-                                     (void ***) &facejoin_pp)) {
+          temp_facejoin->ghost_id = id1;
+          if (sc_hash_insert_unique (ghost_ids, temp_facejoin, NULL)) {
             /* If we did not already stored id1 in the hash we do so and assign the next local ghost id */
-            ghost_facejoin = *facejoin_pp;
-            ghost_facejoin->ghost_id = id1;
-            ghost_facejoin->local_id = cmesh->num_ghosts++;
+            temp_facejoin->local_id = cmesh->num_ghosts++;
+            temp_facejoin = sc_mempool_alloc (ghost_facejoin_mempool);
           }
         }
       }
@@ -266,9 +264,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
      */
     for (iz = 0; iz < cmesh->stash->attributes.elem_count; iz++) {
       attribute =
-        (t8_stash_attribute_struct_t *) sc_array_index (&cmesh->
-                                                        stash->attributes,
-                                                        iz);
+        (t8_stash_attribute_struct_t *) sc_array_index (&cmesh->stash->
+                                                        attributes, iz);
       if (cmesh->first_tree <= attribute->id && attribute->id <= last_tree) {
         /* TODO: check for duplicate attributes */
         attr_byte_count += attribute->attr_size;
@@ -300,12 +297,12 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     /* TODO: optimize if non-hybrid mesh */
     /* Itterate through classes and add ghosts and trees */
     /* We need a temporary ghost_facejoin to check the hash for existing global ids */
-    temp_facejoin = T8_ALLOC (struct ghost_facejoins_struct, 1);
-    temp_facejoin->local_id = -1;
+    temp_facejoin->local_id = -10;
     for (iz = 0; iz < cmesh->stash->classes.elem_count; iz++) {
       /* get class and tree id */
       classentry = (t8_stash_class_struct_t *)
         sc_array_index (&cmesh->stash->classes, iz);
+      temp_facejoin->ghost_id = classentry->id;
       if (cmesh->first_tree <= classentry->id && classentry->id <= last_tree) {
         /* initialize tree */
         t8_cmesh_trees_add_tree (cmesh->trees,
@@ -314,7 +311,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
         cmesh->num_trees_per_eclass[classentry->eclass]++;
       }
       else {
-        ghost_facejoin->ghost_id = classentry->id;
+        temp_facejoin->ghost_id = classentry->id;
         if (sc_hash_lookup (ghost_ids, temp_facejoin,
                             (void ***) &facejoin_pp)) {
           /* The classentry belongs to a local ghost */
@@ -355,7 +352,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
         tree1 = t8_cmesh_trees_get_tree (cmesh->trees,
                                          joinface->id1 - cmesh->first_tree);
       }
-      else if (sc_hash_lookup (ghost_ids, &temp_facejoin,
+      else if (sc_hash_lookup (ghost_ids, temp_facejoin,
                                (void ***) &facejoin_pp)) {
         /* id1 is a local ghost */
         ghost_facejoin = *facejoin_pp;
@@ -371,14 +368,14 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
         tree2 = t8_cmesh_trees_get_tree (cmesh->trees,
                                          joinface->id2 - cmesh->first_tree);
       }
-      else if (sc_hash_lookup (ghost_ids, &temp_facejoin,
+      else if (sc_hash_lookup (ghost_ids, temp_facejoin,
                                (void ***) &facejoin_pp)) {
         /* id1 is a local ghost */
         ghost_facejoin = *facejoin_pp;
         ghost2 = t8_cmesh_trees_get_ghost (cmesh->trees,
                                            ghost_facejoin->local_id);
       }
-      if (tree1) {
+      if (tree1 != NULL) {
         T8_ASSERT (ghost2 != NULL || tree2 != NULL);
         tree1->face_neighbors[joinface->face1] =
           tree2 ? id2 - cmesh->first_tree :
@@ -388,29 +385,29 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
         tree1->tree_to_face[joinface->face1] =
           F * joinface->orientation + joinface->face2;
       }
-      else if (ghost1) {
+      else if (ghost1 != NULL) {
         ghost1->neighbors[joinface->face1] = id2;
       }
       else if (ghost2 != NULL) {
         ghost2->neighbors[joinface->face2] = id1;
         /* Done with setting face join */
       }
-      if (tree2) {
+      if (tree2 != NULL) {
         T8_ASSERT (tree1 != NULL || ghost1 != NULL);
         tree2->face_neighbors[joinface->face2] =
           tree1 ? id1 - cmesh->first_tree :
           temp_local_id + cmesh->num_local_trees;
         F =
           t8_eclass_num_faces[tree1 != NULL ? tree1->eclass : ghost1->eclass];
-        tree1->tree_to_face[joinface->face2] =
+        tree2->tree_to_face[joinface->face2] =
           F * joinface->orientation + joinface->face1;
       }
-      else if (ghost2) {
+      else if (ghost2 != NULL) {
         ghost2->neighbors[joinface->face2] = id2;
       }
       /* Done with setting face join */
     }
-    T8_FREE (temp_facejoin);
+    sc_mempool_free (ghost_facejoin_mempool, temp_facejoin);
     sc_hash_destroy (ghost_ids);
     sc_mempool_destroy (ghost_facejoin_mempool);
     /* Add attributes to the local trees */
@@ -423,7 +420,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
 
     sc_flops_shot (&fi, &snapshot);
     sc_stats_set1 (&stats[2], snapshot.iwtime, "cmesh_commit_end");
-
 
     sc_stats_compute (sc_MPI_COMM_WORLD, 3, stats);
     sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 3, stats, 1, 1);
