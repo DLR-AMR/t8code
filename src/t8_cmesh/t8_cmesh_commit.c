@@ -30,16 +30,11 @@
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_trees.h"
 
-struct ghost_facejoins_struct
+typedef struct ghost_facejoins_struct
 {
   t8_gloidx_t         ghost_id; /* The id of the ghost */
-  size_t              index;    /* The index in stash->joinfaces where this ghost is used */
-  int8_t              flag;     /* First bit is true if we are certain if entry is a real ghost,
-                                 * but may also be false in this case.
-                                 * First but is guaranteed to be false if entry is only ghost of ghost.
-                                 * Second bit is true if and only if this entry comes from the second
-                                 * id member of joinfaces[index]. */
-};
+  t8_locidx_t         local_id; /* The local id of the ghost */
+} t8_ghost_facejoin_t;
 
 static int
 t8_ghost_facejoins_compare (const void *fj1, const void *fj2)
@@ -48,6 +43,27 @@ t8_ghost_facejoins_compare (const void *fj1, const void *fj2)
   struct ghost_facejoins_struct *FJ2 = (struct ghost_facejoins_struct *) fj2;
 
   return FJ1->ghost_id < FJ2->ghost_id ? -1 : FJ1->ghost_id != FJ2->ghost_id;
+}
+
+static int
+t8_ghost_facejoin_equal (const void *v1, const void *v2, const void *u)
+{
+  return t8_ghost_facejoins_compare (v1, v2) == 0;
+}
+
+/* The hash value for a ghost is
+ * global_id % num_local_trees
+ *
+ * This hash function gets as input the global ghost id
+ * and as user data the number of local trees.
+ */
+static unsigned
+t8_ghost_hash (const void *v, const void *u)
+{
+  t8_gloidx_t         ghost_id = *((t8_gloidx_t *) v);
+  t8_locidx_t         num_local_trees = *((t8_locidx_t *) u);
+
+  return ghost_id % num_local_trees;
 }
 
 /* requires the attributes array on the stash to be sorted */
@@ -160,20 +176,20 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     }
   }
   else {
-    sc_array_t         *ghost_ids;
+    sc_hash_t          *ghost_ids;
+    sc_mempool_t       *ghost_facejoin_mempool;
+    struct ghost_facejoins_struct *ghost_facejoin, *temp_facejoin,
+      **facejoin_pp;
     size_t              joinfaces_it, attr_byte_count, iz;
-    size_t             *ghost_offsets;
-    ssize_t             ghost_ind, jz, class_end;
     t8_stash_joinface_struct_t *joinface;
     t8_gloidx_t         last_tree = cmesh->num_local_trees +
       cmesh->first_tree - 1, id1, id2;
+    t8_locidx_t         temp_local_id;
     t8_stash_attribute_struct_t *attribute;
     t8_stash_class_struct_t *classentry;
-    int                 id1_istree, id2_istree, F, face, face2, temp;
-    t8_ctree_t          tree1;
-    t8_cghost_t         ghost1;
-    struct ghost_facejoins_struct *ghost_facejoin;
-    int8_t              is_true_ghost;
+    int                 id1_istree, id2_istree, F;
+    t8_ctree_t          tree1, tree2;
+    t8_cghost_t         ghost1, ghost2;
 
     if (cmesh->face_knowledge != 3) {
       t8_global_errorf ("Expected a face knowledge of 3.\nAbort commit.");
@@ -181,102 +197,51 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       return;
     }
     t8_cmesh_set_shmem_type (cmesh);    /* TODO: do we actually need the shared array? */
-    t8_stash_class_sort (cmesh->stash);
+    t8_stash_class_sort (cmesh->stash); /* TODO: do we need this to be sorted */
 //    t8_stash_joinface_sort (cmesh->stash); /* TODO: this is propably not usefull */
     t8_stash_attribute_sort (cmesh->stash);
 
-    ghost_ids = sc_array_new (sizeof (struct ghost_facejoins_struct));
-    /* Parse joinfaces array and save all indices of entries with ghosts involved */
+    ghost_facejoin_mempool = sc_mempool_new (sizeof (t8_ghost_facejoin_t));
+    ghost_ids = sc_hash_new (t8_ghost_hash, t8_ghost_facejoin_equal,
+                             &cmesh->num_local_trees, ghost_facejoin_mempool);
+    cmesh->num_ghosts = 0;
+    /* Parse joinfaces array and save all global id of local ghosts, and assign them a local id */
     for (joinfaces_it = 0; joinfaces_it < cmesh->stash->joinfaces.elem_count;
          joinfaces_it++) {
       joinface =
-        (t8_stash_joinface_struct_t *) sc_array_index (&cmesh->stash->
-                                                       joinfaces,
+        (t8_stash_joinface_struct_t *) sc_array_index (&cmesh->
+                                                       stash->joinfaces,
                                                        joinfaces_it);
       id1 = joinface->id1;
       id2 = joinface->id2;
       id2_istree = id2 <= last_tree && id2 >= cmesh->first_tree;
       id1_istree = id1 <= last_tree && id1 >= cmesh->first_tree;
-      if (!id2_istree) {
-        /* id2 is a ghost */
-        ghost_facejoin =
-          (struct ghost_facejoins_struct *) sc_array_push (ghost_ids);
-        ghost_facejoin->ghost_id = id2;
-        ghost_facejoin->index = joinfaces_it;
-        ghost_facejoin->flag = id1_istree | 2;  /* The 2 specifies that we come from id2 entry */
-      }
-      if (!id1_istree) {
-        /* id1 is a ghost */
-        ghost_facejoin =
-          (struct ghost_facejoins_struct *) sc_array_push (ghost_ids);
-        ghost_facejoin->ghost_id = id1;
-        ghost_facejoin->index = joinfaces_it;
-        ghost_facejoin->flag = id2_istree;
-      }
-      /* For a true ghost at least one entry will have flag = 1 */
-    }
-
-    /* Added one ghostid entry for each face connection with a ghost and ghost of a ghost.
-     * Need to count w/o duplicates.
-     * Need to know which ones are proper ghosts */
-    /* TODO: this step is the most expensive one in this algorihtm.
-     * ~5-6 times slower than the sections above and below each.
-     * Also this step scales with the number of non-local trees (not ghosts!)
-     * which scales with the number of processes and approximates O(global trees).
-     * Would be much faster if we only had ghosts here, since ghost = O(trees)
-     */
-    sc_array_sort (ghost_ids, t8_ghost_facejoins_compare);
-    /* Count the ghosts without duplicates */
-    /* TODO: we could also reduce the ghost_ids list and only keep entries with proper ghosts */
-    id1 = -1;
-    is_true_ghost = 0;
-
-    for (cmesh->num_ghosts = 0, jz = -1, iz = 0; iz < ghost_ids->elem_count;
-         iz++) {
-      ghost_facejoin =
-        (struct ghost_facejoins_struct *) sc_array_index (ghost_ids, iz);
-      temp = ghost_facejoin->flag & 1;
-      if (ghost_facejoin->ghost_id > id1) {
-        id1 = ghost_facejoin->ghost_id;
-        /* Check if the current global id belongs to a ghost */
-        if (jz >= 0 && is_true_ghost == 1) {
-          /* If so go back to first entry of this id and set flag to 1.
-           * Count this entry as ghost. */
-          ghost_facejoin =
-            (struct ghost_facejoins_struct *) sc_array_index (ghost_ids, jz);
-          ghost_facejoin->flag |= 1;
-          cmesh->num_ghosts++;
+      if (id1_istree || id2_istree) {
+        /* Only consider facejoins with local trees involved to geth the global
+         * ids of all local ghosts. */
+        if (!id2_istree) {
+          /* id2 is a ghost */
+          if (sc_hash_insert_unique (ghost_ids, &id2,
+                                     (void ***) &facejoin_pp)) {
+            /* If we did not already stored id2 in the hash we do so and assign the next local ghost id */
+            ghost_facejoin = *facejoin_pp;
+            ghost_facejoin->ghost_id = id2;
+            ghost_facejoin->local_id = cmesh->num_ghosts++;
+          }
         }
-        jz = iz;                /* Store first index of new id */
-        is_true_ghost = 0;
-      }
-      is_true_ghost |= temp;        /* is_true_ghost gets true if any flag's
-                                                           first bit is true. */
-    }
-    /* This is to catch the last entry in the array */
-    if (jz >= 0 && is_true_ghost == 1) {
-      /* If so go back to first entry of this id and set flag to 1.
-       * Count this entry as ghost. */
-      ghost_facejoin =
-        (struct ghost_facejoins_struct *) sc_array_index (ghost_ids, jz);
-      ghost_facejoin->flag |= 1;
-      cmesh->num_ghosts++;
-    }
-    /* Now that we know the number of ghosts, we can save the offsets of
-     * the true ghosts into the ghost_ids array */
-    ghost_offsets = T8_ALLOC (size_t, cmesh->num_ghosts);
-    id1 = -1;
-    for (iz = 0, jz = 0; iz < ghost_ids->elem_count;iz++) {
-      ghost_facejoin =
-        (struct ghost_facejoins_struct *) sc_array_index (ghost_ids, iz);
-      if (ghost_facejoin->ghost_id > id1 && ghost_facejoin->flag & 1) {
-        /* If we enter a new real ghost, store its offset */
-        ghost_offsets[jz] = iz;
-        id1 = ghost_facejoin->ghost_id;
-        jz++;
+        if (!id1_istree) {
+          /* id1 is a ghost */
+          T8_ASSERT (id2_istree);
+          if (sc_hash_insert_unique (ghost_ids, &id2,
+                                     (void ***) &facejoin_pp)) {
+            /* If we did not already stored id1 in the hash we do so and assign the next local ghost id */
+            ghost_facejoin = *facejoin_pp;
+            ghost_facejoin->ghost_id = id1;
+            ghost_facejoin->local_id = cmesh->num_ghosts++;
+          }
+        }
       }
     }
-    T8_ASSERT (jz == cmesh->num_ghosts);
 
     /* Count attribute bytes */
     attr_byte_count = 0;
@@ -285,8 +250,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
      */
     for (iz = 0; iz < cmesh->stash->attributes.elem_count; iz++) {
       attribute =
-        (t8_stash_attribute_struct_t *) sc_array_index (&cmesh->stash->
-                                                        attributes, iz);
+        (t8_stash_attribute_struct_t *) sc_array_index (&cmesh->
+                                                        stash->attributes,
+                                                        iz);
       if (cmesh->first_tree <= attribute->id && attribute->id <= last_tree) {
         /* TODO: check for duplicate attributes */
         attr_byte_count += attribute->attr_size;
@@ -305,57 +271,45 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
                          cmesh->num_ghosts);
     t8_cmesh_trees_init_part (cmesh->trees, 0, 0, cmesh->num_local_trees,
                               cmesh->num_ghosts, attr_byte_count);
-    if (cmesh->num_local_trees > 0) {
-      iz = (size_t) t8_stash_class_bsearch (cmesh->stash, cmesh->first_tree);
-      class_end = (size_t) t8_stash_class_bsearch (cmesh->stash, last_tree);
-      T8_ASSERT (t8_stash_class_bsearch (cmesh->stash, cmesh->first_tree) >=
-                 0);
-      T8_ASSERT (t8_stash_class_bsearch (cmesh->stash, last_tree) >= 0);
-      T8_ASSERT ((t8_locidx_t) class_end - (t8_locidx_t) iz + 1 ==
-                 cmesh->num_local_trees);
-    }
-    else {
+
+#ifdef T8_ENABLE_DEBUG
+    if (cmesh->num_local_trees == 0) {
       t8_debugf ("Empty partition.\n");
-      iz = 0;
-      class_end = -1;
     }
+#endif
     /* TODO: optimize if non-hybrid mesh */
-    /* loop over all local trees and set classes */
-    for (; iz < (size_t) class_end + 1; iz++) {
+    /* Itterate through classes and add ghosts and trees */
+    /* We need a temporary ghost_facejoin to check the hash for existing global ids */
+    temp_facejoin = T8_ALLOC (struct ghost_facejoins_struct, 1);
+    temp_facejoin->local_id = -1;
+    for (iz = 0; iz < cmesh->stash->classes.elem_count; iz++) {
       /* get class and tree id */
       classentry = (t8_stash_class_struct_t *)
         sc_array_index (&cmesh->stash->classes, iz);
-      /* initialize tree */
-      t8_cmesh_trees_add_tree (cmesh->trees,
-                               classentry->id - cmesh->first_tree, 0,
-                               classentry->eclass);
-      cmesh->num_trees_per_eclass[classentry->eclass]++;
-    }
-    /* TODO: optimize if non-hybrid mesh */
-    /* Iterate through ghosts and set classes */
-    id1 = -1;
-    for (iz = 0; iz < cmesh->num_ghosts; iz++) {
-        ghost_facejoin = (struct ghost_facejoins_struct *)
-          sc_array_index (ghost_ids, ghost_offsets[iz]);
-      T8_ASSERT (ghost_facejoin->flag & 1);
-      T8_ASSERT (ghost_facejoin->ghost_id > id1);
-      id1 = ghost_facejoin->ghost_id;
-      /* Get position of ghost in classes array */
-      /* TODO: optimize so that we do not need this bsearch */
-      ghost_ind = t8_stash_class_bsearch (cmesh->stash, id1);
-      T8_ASSERT (ghost_ind >= 0);
-      classentry = (t8_stash_class_struct_t *)
-          sc_array_index_ssize_t (&cmesh->stash->classes, ghost_ind);
-      t8_cmesh_trees_add_ghost (cmesh->trees, iz, id1, 0,
-                                classentry->eclass);
-      cmesh->trees->ghost_to_offset[iz] = iz;
+      if (cmesh->first_tree <= classentry->id && classentry->id <= last_tree) {
+        /* initialize tree */
+        t8_cmesh_trees_add_tree (cmesh->trees,
+                                 classentry->id - cmesh->first_tree, 0,
+                                 classentry->eclass);
+        cmesh->num_trees_per_eclass[classentry->eclass]++;
+      }
+      else {
+        ghost_facejoin->ghost_id = classentry->id;
+        if (sc_hash_lookup (ghost_ids, temp_facejoin,
+                            (void ***) &facejoin_pp)) {
+          /* The classentry belongs to a local ghost */
+          ghost_facejoin = *facejoin_pp;
+          t8_cmesh_trees_add_ghost (cmesh->trees, ghost_facejoin->local_id,
+                                    ghost_facejoin->ghost_id, 0,
+                                    classentry->eclass);
+        }
+      }
     }
     /* We are done with stash->classes now  so we free memory.
      * Since the array is destroyed in stash_destroy we only reset it. */
     sc_array_reset (&cmesh->stash->classes);
     /* Go through all face_neighbour entries and parse every
-     * local tree to local tree entry */
-    /* TODO: could optimize by also using an questions array */
+     * important entry */
     for (iz = 0; iz < cmesh->stash->joinfaces.elem_count; iz++) {
       joinface = (t8_stash_joinface_struct_t *)
         sc_array_index (&cmesh->stash->joinfaces, iz);
@@ -363,48 +317,83 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
         last_tree >= joinface->id1;
       id2_istree = cmesh->first_tree <= joinface->id2 &&
         last_tree >= joinface->id2;
-      /* Both trees in the connection are local trees */
-      if (id1_istree && id2_istree) {
-        t8_cmesh_tree_set_join (cmesh->trees,
-                                joinface->id1 - cmesh->first_tree,
-                                joinface->id2 - cmesh->first_tree,
-                                joinface->face1, joinface->face2,
-                                joinface->orientation);
+      temp_facejoin->ghost_id = joinface->id1;
+      id1 = joinface->id1;
+      tree1 = NULL;
+      ghost1 = NULL;
+      /* There are the following cases:
+       * Both trees are local trees.
+       * One is a local tree and one a local ghost.
+       * Both are local ghosts.
+       * One is a local ghost and on neither ghost nor local tree.
+       * For each of these cases we have to set the correct face connection.
+       */
+      /* TODO: This if else if else spaghetti code is quite ugly, think it over
+       *       and find a better way */
+      if (id1_istree) {
+        /* First tree in the connection is a local tree */
+        tree1 = t8_cmesh_trees_get_tree (cmesh->trees,
+                                         joinface->id1 - cmesh->first_tree);
       }
-    }
-    /* Go through ghost_id array and set all facejoins with at least one ghost involved */
-    id1 = -1;
-    is_true_ghost = 0;
-    for (iz = 0, jz = -1; iz < cmesh->num_ghosts; iz++) {
-      temp = 0;
-      ghost_facejoin = (struct ghost_facejoins_struct *)
-        sc_array_index (ghost_ids, ghost_offsets[iz]);
-      T8_ASSERT (ghost_facejoin->ghost_id > id1);
-      T8_ASSERT (ghost_facejoin->flag & 1);
-      ghost1 = t8_cmesh_trees_get_ghost (cmesh->trees, iz);
-      joinface = (t8_stash_joinface_struct_t *)
-          sc_array_index (&cmesh->stash->joinfaces, ghost_facejoin->index);
-      /* Store the id of the neighbor */
-      id2 = ghost_facejoin->flag & 2 ? joinface->id1 : joinface->id2;
-      /* Store the face of the ghost */
-      face = ghost_facejoin->flag & 2 ? joinface->face2 : joinface->face1;
-      ghost1->neighbors[face] = id2;
-      /* Check whether the second tree in face-connection is a local tree */
-      /* If it is we have to add the connection to the local tree */
-      id2_istree = cmesh->first_tree <= id2 && last_tree >= id2;
+      else if (sc_hash_lookup (ghost_ids, &temp_facejoin,
+                               (void ***) &facejoin_pp)) {
+        /* id1 is a local ghost */
+        ghost_facejoin = *facejoin_pp;
+        ghost1 = t8_cmesh_trees_get_ghost (cmesh->trees,
+                                           ghost_facejoin->local_id);
+        temp_local_id = ghost_facejoin->local_id;
+      }
+      id2 = temp_facejoin->ghost_id = joinface->id2;
+      ghost2 = NULL;
+      tree2 = NULL;
       if (id2_istree) {
-        tree1 = t8_cmesh_trees_get_tree (cmesh->trees, id2 - cmesh->first_tree);
-        /* Store the face of the tree */
-        face2 =
-          ghost_facejoin->flag & 2 ? joinface->face1 : joinface->face2;
-        /* Set the local ghost id as neighbor */
-        tree1->face_neighbors[face2] = jz + cmesh->first_tree;
-        F = t8_eclass_num_faces[ghost1->eclass];
-        tree1->tree_to_face[face2] = face * F + joinface->orientation;
+        /* Second tree in the connection is a local tree */
+        tree2 = t8_cmesh_trees_get_tree (cmesh->trees,
+                                         joinface->id2 - cmesh->first_tree);
+      }
+      else if (sc_hash_lookup (ghost_ids, &temp_facejoin,
+                               (void ***) &facejoin_pp)) {
+        /* id1 is a local ghost */
+        ghost_facejoin = *facejoin_pp;
+        ghost2 = t8_cmesh_trees_get_ghost (cmesh->trees,
+                                           ghost_facejoin->local_id);
+      }
+      if (tree1) {
+        tree1->face_neighbors[joinface->face1] =
+          tree2 ? id2 - cmesh->first_tree :
+          ghost_facejoin->local_id + cmesh->num_local_trees;
+        F =
+          t8_eclass_num_faces[tree2 != NULL ? tree2->eclass : ghost2->eclass];
+        tree1->tree_to_face[joinface->face1] =
+          F * joinface->orientation + joinface->face2;
+      }
+      else if (ghost1) {
+        ghost1->neighbors[joinface->face1] = id2;
+      }
+      else {
+        T8_ASSERT (ghost2 != NULL);
+        ghost2->neighbors[joinface->face2] = id1;
+        /* Done with setting face join */
+      }
+      if (tree2) {
+        tree2->face_neighbors[joinface->face2] =
+          tree1 ? id1 - cmesh->first_tree :
+          temp_local_id + cmesh->num_local_trees;
+        F =
+          t8_eclass_num_faces[tree1 != NULL ? tree1->eclass : ghost1->eclass];
+        tree1->tree_to_face[joinface->face2] =
+          F * joinface->orientation + joinface->face1;
+      }
+      else if (ghost2) {
+        ghost2->neighbors[joinface->face2] = id2;
+      }
+      else {
+        T8_ASSERT (ghost1 != NULL);
+        /* Done with setting face join */
       }
     }
-    T8_FREE (ghost_offsets);
-    sc_array_destroy (ghost_ids);
+    sc_hash_destroy (ghost_ids);
+    sc_mempool_destroy (ghost_facejoin_mempool);
     /* Add attributes to the local trees */
     t8_cmesh_add_attributes (cmesh, cmesh->stash);
     /* compute global number of trees. id1 serves as buffer since
