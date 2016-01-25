@@ -199,7 +199,7 @@ t8_forest_populate (t8_forest_t forest)
   /* TODO: create trees and quadrants according to uniform refinement */
   t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level,
                            &forest->first_local_tree, &child_in_tree_begin,
-                           &forest->last_local_tree, &child_in_tree_end);
+                           &forest->last_local_tree, &child_in_tree_end, NULL);
 
   forest->global_num_elements = forest->local_num_elements = 0;
   /* create only the non-empty tree objects */

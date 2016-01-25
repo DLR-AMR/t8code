@@ -67,6 +67,8 @@ void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
  * the default and in this case \ref t8_cmesh_set_partitioned is the same as
  * \ref t8_cmesh_set_num_trees and the values \a first_local_tree and
  * \a set_face_knowledge are ignored.
+ * This call is only valid when the cmesh is not yet committed via a call
+ * to \see t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     set_partitioned A nonzero value specifies that \a cmesh
  *                              is interpreted as a partitioned mesh.
@@ -92,6 +94,16 @@ void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
                                               int set_face_knowledge,
                                               t8_gloidx_t first_local_tree,
                                               t8_gloidx_t last_local_tree);
+
+/* TODO: document.
+ *       if level >= 0 then ignore trees_per_proc
+ *       trees_per_proc[p] has to be negative if the last tree of proc p is
+ *       shared. trees_per_proc must fulfill the description from \see t8_cmesh_types.h
+ */
+void                t8_cmesh_set_partition_from (t8_cmesh_t cmesh,
+                                                 const t8_cmesh_t cmesh_from,
+                                                 int level,
+                                                 t8_locidx_t * trees_per_proc);
 
 /* TODO: This is actually not part of the interface?
  *       At least it is only used if the cmesh is partitioned.
@@ -279,17 +291,20 @@ void               *t8_cmesh_get_attribute (t8_cmesh_t cmesh,
  * \param [in]    cmesh         The cmesh to be considered.
  * \param [in]    level         The uniform refinement level to be created.
  * \param [out]   first_local_tree  The first tree that contains elements belonging to the calling processor.
- * \param [out]   child_in_tree_begin The global index of the first element belonging to the calling processor.
+ * \param [out]   child_in_tree_begin The global index of the first element belonging to the calling processor. Not computed if NULL.
  * \param [out]   last_local_tree  The last tree that contains elements belonging to the calling processor.
- * \param [out]   child_in_tree_end The global index of the last element belonging to the calling processor.
- * \a cmesh must be committed before calling this function.
+ * \param [out]   child_in_tree_end The global index of the last element belonging to the calling processor. Not computed if NULL.
+ * \param [out[   last_tree_shared If not NULL, 1 or 0 is stored here depending on whether \a last_local_tree is the
+ *                                 same as \a first_local_tree on the next process.
+ * \a cmesh must be committed before calling this function. *
  */
 void                t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
                                              t8_gloidx_t * first_local_tree,
                                              t8_gloidx_t *
                                              child_in_tree_begin,
                                              t8_gloidx_t * last_local_tree,
-                                             t8_gloidx_t * child_in_tree_end);
+                                             t8_gloidx_t * child_in_tree_end,
+                                             int8_t * last_tree_shared);
 
 /** Increase the reference counter of a cmesh.
  * \param [in,out] cmesh        On input, this cmesh must exist with positive

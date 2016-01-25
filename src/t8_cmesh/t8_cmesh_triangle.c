@@ -26,6 +26,10 @@
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_stash.h"
 
+/* TODO: if partitioned then only add the needed face-connections to join faces
+ *       maybe also only trees and ghosts to classes.
+ *       Specifying all face-connections makes commit algorithm slow! */
+
 /* TODO: eventually compute neighbours only from .node and .ele files, since
  *       creating .neigh files with tetgen/triangle is not common and even seems
  *       to not work sometimes */

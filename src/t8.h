@@ -88,6 +88,13 @@ typedef p4est_topidx_t t8_topidx_t;
 void               *t8_sc_array_index_topidx (sc_array_t * array,
                                               t8_topidx_t it);
 
+/** Return a pointer to an array element indexed by a t8_locidx_t.
+ * \param [in] index needs to be in [0]..[elem_count-1].
+ * \return           A void * pointing to entry \a it in \a array.
+ */
+void               *t8_sc_array_index_locidx (sc_array_t * array,
+                                              t8_locidx_t it);
+
 /** Query the package identity as registered in libsc.
  * \return          This is -1 before \ref t8_init and the identifier after.
  */
