@@ -369,8 +369,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       else if (ghost1 != NULL) {
         ghost1->neighbors[joinface->face1] = id2;
       }
-      else {
-        T8_ASSERT (ghost2 != NULL);
+      else if (ghost2 != NULL) {
         ghost2->neighbors[joinface->face2] = id1;
         /* Done with setting face join */
       }
@@ -387,10 +386,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       else if (ghost2 != NULL) {
         ghost2->neighbors[joinface->face2] = id2;
       }
-      else {
-        T8_ASSERT (ghost1 != NULL);
-        /* Done with setting face join */
-      }
+      /* Done with setting face join */
     }
     sc_mempool_free (ghost_facejoin_mempool, temp_facejoin);
     sc_hash_destroy (ghost_ids);
