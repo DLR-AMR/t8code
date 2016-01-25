@@ -196,9 +196,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       /* TODO: reset cmesh */
       return;
     }
-    t8_cmesh_set_shmem_type (cmesh);    /* TODO: do we actually need the shared array? */
-    t8_stash_class_sort (cmesh->stash); /* TODO: do we need this to be sorted */
-//    t8_stash_joinface_sort (cmesh->stash); /* TODO: this is propably not usefull */
+    t8_cmesh_set_shmem_type (cmesh);    /* TODO: do we actually need the shared array? */    
     t8_stash_attribute_sort (cmesh->stash);
 
     ghost_facejoin_mempool = sc_mempool_new (sizeof (t8_ghost_facejoin_t));
