@@ -379,6 +379,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
                                            ghost_facejoin->local_id);
       }
       if (tree1) {
+        T8_ASSERT (ghost2 != NULL || tree2 != NULL);
         tree1->face_neighbors[joinface->face1] =
           tree2 ? id2 - cmesh->first_tree :
           ghost_facejoin->local_id + cmesh->num_local_trees;
@@ -390,12 +391,12 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       else if (ghost1) {
         ghost1->neighbors[joinface->face1] = id2;
       }
-      else {
-        T8_ASSERT (ghost2 != NULL);
+      else if (ghost2 != NULL) {
         ghost2->neighbors[joinface->face2] = id1;
         /* Done with setting face join */
       }
       if (tree2) {
+        T8_ASSERT (tree1 != NULL || ghost1 != NULL);
         tree2->face_neighbors[joinface->face2] =
           tree1 ? id1 - cmesh->first_tree :
           temp_local_id + cmesh->num_local_trees;
@@ -407,11 +408,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       else if (ghost2) {
         ghost2->neighbors[joinface->face2] = id2;
       }
-      else {
-        T8_ASSERT (ghost1 != NULL);
-        /* Done with setting face join */
-      }
+      /* Done with setting face join */
     }
+    T8_FREE (temp_facejoin);
     sc_hash_destroy (ghost_ids);
     sc_mempool_destroy (ghost_facejoin_mempool);
     /* Add attributes to the local trees */
