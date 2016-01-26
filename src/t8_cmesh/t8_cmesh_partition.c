@@ -31,38 +31,9 @@
 #include "t8_cmesh_trees.h"
 #include "t8_cmesh_partition.h"
 
-/* TODO: the function t8_cmesh_scan_trees and t8_cmesh_partition_sendrange
- *        both traverse the trees_per_proc array.
- *        If this is a runtime issue we should merge both traverses in one function */
-/* TODO: moving back from the 32bit tree_per_proc to a 64 bit first_tree array
- *       could replace these linear searches by binary ones.
- *       We would double the memory but cut the runtime from O(P) to O(log P) */
-
-/* Given the trees_per_proc array compute the first local tree */
-static void
-t8_cmesh_scan_trees (t8_cmesh_t cmesh)
-{
-  int                 iproc;
-  int                 last_tree_shared;
-
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->tree_per_proc != NULL);
-
-  cmesh->first_tree = 0;
-  for (iproc = 0; iproc < cmesh->mpirank; iproc++) {
-    last_tree_shared = cmesh->tree_per_proc[iproc] < 0;
-    cmesh->first_tree += last_tree_shared ? -cmesh->tree_per_proc[iproc] - 1
-      : cmesh->tree_per_proc[iproc];
-  }
-  /* An alternative is to use MPI_Scan with a self-defined operation.
-   * This could be faster since MPI_Scan is O(log(P)) instead of O(P)
-   * but it introduces a new synchronization point.
-   * We decided against this option. */
-
-}
-
 /* Compute first and last process to which we will send data */
 /* Returns the local tree_id of last local tree on send_first. */
+/* TODO: This can propably be optimized since we changed to tree_offsets. using binary search or so */
 static t8_locidx_t
 t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                               int *send_first, int *send_last)
@@ -92,10 +63,9 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
        iproc++) {
     /* first tree stores new first_tree of process iproc */
     /* last tree the new last tree of process iproc */
-    last_tree_shared = cmesh->tree_per_proc[iproc] < 0;
-    last_tree =
-      first_tree + last_tree_shared ? -cmesh->tree_per_proc[iproc] -
-      1 : cmesh->tree_per_proc[iproc] - 1;
+    last_tree_shared = cmesh->tree_offsets[iproc] < 0;
+    first_tree = t8_glo_abs (cmesh->tree_offsets[iproc]);
+    last_tree = t8_glo_abs (cmesh->tree_offsets[iproc+1]) - 1 + last_tree_shared;
 
     if (*send_first == -1 &&
         first_tree <= cmesh_from->first_tree && cmesh_from->first_tree <=
@@ -109,8 +79,6 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
       /* set send_last */
       *send_last = iproc;
     }
-    first_tree += last_tree_shared ? -cmesh->tree_per_proc[iproc] - 1
-      : cmesh->tree_per_proc[iproc];
   }
   T8_ASSERT (*send_first >= 0);
   T8_ASSERT (*send_last >= 0);
@@ -141,7 +109,7 @@ t8_cmesh_partition_recvrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
    * so we need the shared array on cmesh_from to exist. See also TODO comment
    * in partition_given. */
 
-  T8_ASSERT (cmesh_from->tree_per_proc != NULL);
+  T8_ASSERT (cmesh_from->tree_offsets != NULL);
   (void) t8_cmesh_partition_sendrange (cmesh_from, cmesh, recv_first,
                                        recv_last);
 }
@@ -160,7 +128,7 @@ t8_cmesh_send_ghost (t8_cmesh_t cmesh, int p, t8_locidx_t tree)
 
 static void
 t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
-                          t8_locidx_t * trees_per_proc)
+                          t8_gloidx_t * tree_offset)
 {
   int                 send_first, send_last;    /* ranks of the processor to which we will send */
   int                 recv_first, recv_last;    /* ranks of the processor from which we will receive */
@@ -304,42 +272,49 @@ t8_cmesh_partition (t8_cmesh_t cmesh)
   /**********************************************/
   if (cmesh->set_level >= 0) {
     /* Compute first and last tree index */
-    T8_ASSERT (cmesh->tree_per_proc == NULL);
+    T8_ASSERT (cmesh->tree_offsets == NULL);
     t8_cmesh_uniform_bounds (cmesh_from, cmesh->set_level, &cmesh->first_tree,
                              NULL, &last_tree, NULL,
                              &cmesh->last_tree_shared);
     cmesh->num_local_trees = last_tree - cmesh->first_tree;
-    /* To compute the tree_per_proc correctly we have to invert the sign on the
-     * local tree count if last tree is shared */
+    /* To compute the tree_offsets correctly we have to invert the sign on the
+     * first tree if last tree is shared, since we use it for MPI to allgather the tree_offsets */
     if (cmesh->last_tree_shared) {
-      cmesh->num_local_trees = -cmesh->num_local_trees;
+      cmesh->first_tree = -cmesh->first_tree;
     }
-    /* allocate and fill tree_per_proc array with number of trees per process */
+    /* allocate and fill tree_offset array with number of trees per process */
     /* We have to be careful with shared memory in the case where cmesh comm is
      * duplicated, since we have to use the same communicator for allocating and freeing memory.
-     * Thus this function must only be called after cmesh communicator was duplicated. */
+     * Thus this function must only be called after cmesh communicator was duplicated,
+     * so we check whether mpisize has been set */
     T8_ASSERT (cmesh->mpisize > 0);
-    cmesh->tree_per_proc = SC_SHMEM_ALLOC (t8_locidx_t, cmesh->mpisize,
-                                           cmesh->mpicomm);
-    sc_shmem_allgather (&cmesh->num_local_trees, 1, T8_MPI_LOCIDX,
-                        cmesh->tree_per_proc, 1, T8_MPI_LOCIDX,
+    cmesh->tree_offsets = (t8_gloidx_t *) SC_SHMEM_ALLOC (t8_locidx_t,
+                                                          cmesh->mpisize + 1,
+                                                          cmesh->mpicomm);
+    sc_shmem_allgather (&cmesh->first_tree, 1, T8_MPI_GLOIDX,
+                        cmesh->tree_offsets, 1, T8_MPI_LOCIDX,
                         cmesh->mpicomm);
-    /* tree_to_proc was computed, reinvert the sign */
+    cmesh->tree_offsets[cmesh->mpisize] = cmesh_from->num_trees;
+    /* tree_offsets was computed, reinvert the sign */
     if (cmesh->last_tree_shared) {
-      T8_ASSERT (cmesh->num_local_trees < 0);
-      cmesh->num_local_trees = -cmesh->num_local_trees;
+      T8_ASSERT (cmesh->first_tree <= 0);
+      cmesh->first_tree = -cmesh->first_tree;
     }
   }
   else {
-    T8_ASSERT (cmesh->tree_per_proc != NULL);
-    cmesh->last_tree_shared = cmesh->tree_per_proc[cmesh->mpirank] < 0;
-    cmesh->num_local_trees = cmesh->last_tree_shared ?
-      -cmesh->tree_per_proc[cmesh->mpirank] :
-      cmesh->tree_per_proc[cmesh->mpirank];
-    t8_cmesh_scan_trees (cmesh);
+    /* We compute the partition after a given partition table in cmesh->tree_offsets */
+    T8_ASSERT (cmesh->tree_offsets != NULL);
+    cmesh->last_tree_shared = cmesh->tree_offsets[cmesh->mpirank] < 0;
+    /* compute local first tree */
+    cmesh->first_tree = cmesh->last_tree_shared ?
+      -cmesh->tree_offsets[cmesh->mpirank] :
+        cmesh->tree_offsets[cmesh->mpirank];
+    /* compute local num trees */
+    cmesh->num_local_trees = t8_glo_abs (cmesh->tree_offsets[cmesh->mpirank + 1])
+        - cmesh->first_tree + cmesh->last_tree_shared;
   }
   /***************************************************/
-  /*        Done with local num and trees_per_proc   */
+  /*        Done with local num and tree_offset      */
   /***************************************************/
-  t8_cmesh_partition_given (cmesh, cmesh->set_from, cmesh->tree_per_proc);
+  t8_cmesh_partition_given (cmesh, cmesh->set_from, cmesh->tree_offsets);
 }

@@ -155,7 +155,7 @@ t8_cmesh_set_partitioned (t8_cmesh_t cmesh, int set_partitioned,
 
 void
 t8_cmesh_set_partition_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
-                             int level, t8_locidx_t *trees_per_proc)
+                             int level, t8_gloidx_t *tree_offsets)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh_from != NULL);
@@ -168,7 +168,7 @@ t8_cmesh_set_partition_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
     cmesh->set_level = level;
   }
   else {
-    cmesh->tree_per_proc = trees_per_proc;
+    cmesh->tree_offsets = tree_offsets;
   }
 }
 
@@ -474,14 +474,15 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
                      T8_ECLASS_LAST * sizeof (t8_topidx_t));
 
   /* check tree_offsets */
-  if (cmesh_a->tree_per_proc != NULL) {
-    if (cmesh_b->tree_per_proc == NULL) {
+  if (cmesh_a->tree_offsets != NULL) {
+    if (cmesh_b->tree_offsets == NULL) {
       return 0;
     }
     else {
-      is_equal = is_equal || memcmp (cmesh_a->tree_per_proc,
-                                     cmesh_b->tree_per_proc,
-                                     cmesh_a->mpisize * sizeof (t8_topidx_t));
+      is_equal = is_equal || memcmp (cmesh_a->tree_offsets,
+                                     cmesh_b->tree_offsets,
+                                     (cmesh_a->mpisize + 1)
+                                     * sizeof (t8_gloidx_t));
     }
   }
   if (is_equal != 0) {
@@ -635,24 +636,25 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 static void
 t8_cmesh_gather_treecount (t8_cmesh_t cmesh)
 {
-  t8_topidx_t         tree_on_proc;
+  t8_gloidx_t         tree_offset;
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
   T8_ASSERT (cmesh->set_partitioned);
 
-  tree_on_proc = cmesh->last_tree_shared ? -cmesh->num_local_trees - 1 :
-    cmesh->num_local_trees;
-  cmesh->tree_per_proc = SC_SHMEM_ALLOC (t8_topidx_t, cmesh->mpisize,
-                                         cmesh->mpicomm);
-  sc_shmem_allgather (&tree_on_proc, 1, sc_MPI_INT, cmesh->tree_per_proc, 1,
-                      sc_MPI_INT, cmesh->mpicomm);
+  tree_offset = cmesh->last_tree_shared ? -cmesh->first_tree :
+    cmesh->first_tree;
+  cmesh->tree_offsets = SC_SHMEM_ALLOC (t8_gloidx_t, cmesh->mpisize + 1,
+                                        cmesh->mpicomm);
+  sc_shmem_allgather (&tree_offset, 1, T8_MPI_GLOIDX, cmesh->tree_offsets, 1,
+                      T8_MPI_GLOIDX, cmesh->mpicomm);
+  cmesh->tree_offsets[cmesh->mpisize] = cmesh->num_trees;
 }
 
 static void
 t8_cmesh_free_treecount (t8_cmesh_t cmesh)
 {
-  SC_SHMEM_FREE (cmesh->tree_per_proc, cmesh->mpicomm);
+  SC_SHMEM_FREE (cmesh->tree_offsets, cmesh->mpicomm);
 }
 
 t8_gloidx_t
@@ -807,8 +809,8 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
   }
 
   /* free tree_offset */
-  if (cmesh->tree_per_proc != NULL) {
-    T8_FREE (cmesh->tree_per_proc);
+  if (cmesh->tree_offsets != NULL) {
+    t8_cmesh_free_treecount (cmesh);
   }
   /*TODO: write this */
   if (!cmesh->committed) {
