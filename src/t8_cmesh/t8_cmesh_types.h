@@ -146,11 +146,6 @@ typedef struct t8_ctree
                                           the number of local trees refer to ghosts. */
   int8_t             *tree_to_face; /**< For each face the encoding of the face neighbor orientation. */
   sc_array_t         *attributes; /**< Array of \a t8_attribute_info_t objects sorted by package_id and key. */
-#if 1
-  /* TODO: remove, this involves rewriting t8_cmesh_tree_is_equal */
-  /* These are deprecated and will be removed */
-  size_t              attribute_offset, attribute_size;
-#endif
 }
 t8_ctree_struct_t;
 

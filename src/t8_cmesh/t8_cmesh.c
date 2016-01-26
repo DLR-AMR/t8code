@@ -422,9 +422,8 @@ t8_cmesh_ctree_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b)
   T8_ASSERT (tree_a != NULL && tree_b != NULL);
 
   is_equal = tree_a->treeid != tree_b->treeid ||
-    tree_a->eclass != tree_b->eclass ||
-    tree_a->attribute_offset != tree_b->attribute_offset ||
-    tree_a->attribute_size != tree_b->attribute_size;
+    tree_a->eclass != tree_b->eclass;
+  is_equal |= !sc_array_is_equal (tree_a->attributes, tree_b->attributes);
   if (is_equal != 0) {
     return 0;
   }
@@ -434,9 +433,7 @@ t8_cmesh_ctree_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b)
   }
 
   /* TODO check attributes */
-  if (tree_a->attribute_size != tree_b->attribute_size) {
-    return 0;
-  }
+
   return 1;
 }
 
