@@ -125,8 +125,6 @@ t8_cmesh_tree_set_join (t8_cmesh_trees_t trees, t8_locidx_t id1,
   tree2->tree_to_face[face2] = face1 * F + orientation;
 }
 
-/* WARNING: This function does not set the value for ghost_to_offset.
- *          It has to be set manually. */
 void
 t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees, t8_locidx_t ghost_index,
                           t8_gloidx_t tree_id, int proc, t8_eclass_t eclass)
@@ -195,14 +193,76 @@ t8_cmesh_trees_start_part (t8_cmesh_trees_t trees, int proc,
 /* After all classes of trees and ghosts have been set and after the
  * number of tree attributes  was set and their total size (per tree)
  * stored temporarily in the att_offset variable
- * we grow the part array by the neede amount of memory and set the
+ * we grow the part array by the needed amount of memory and set the
  * offsets appropiately */
 /* The workflow can be: call start_part, set tree classes maually, call
- * init_attributes, call finish_part */
+ * init_attributes, call finish_part, successively call add_attributes
+ * and also set all face neighbors (TODO: write function)*/
 void
 t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees, int proc)
 {
+  t8_part_tree_t          part;
+  t8_ctree_t              tree;
+  t8_cghost_t             ghost;
+  size_t                  attr_bytes, face_neigh_bytes, temp_offset,
+      first_face;
+  t8_locidx_t             it;
+#ifndef SC_ENABLE_REALLOC
+  char                   *temp;
+#endif
 
+  T8_ASSERT (trees != NULL);
+  part = t8_cmesh_trees_get_part (trees, proc);
+  T8_ASSERT (part != NULL);
+
+  attr_bytes = face_neigh_bytes = 0;
+  temp_offset = part->num_trees * sizeof (t8_ctree_struct_t); /* The offset of the first ghost/tree */
+  first_face = temp_offset + part->num_ghosts * sizeof (t8_cghost_struct_t);
+  for (it = 0;it < part->num_ghosts;it++) {
+    ghost = t8_part_tree_get_ghost (part, it + part->first_ghost_id);
+    ghost->neigh_offset = first_face + face_neigh_bytes - temp_offset;
+    face_neigh_bytes += t8_eclass_num_faces[ghost->eclass] *
+        (sizeof (t8_locidx_t) + sizeof (int8_t));
+    face_neigh_bytes += 4 - (face_neigh_bytes % 4);
+    /* This is for padding, such that face_neigh_bytes %4 == 0 */
+    T8_ASSERT (face_neigh_bytes % 4 == 0);
+    temp_offset += sizeof (t8_cghost_struct_t);
+  }
+  /* TODO: passing through trees twice is not optimal. Can we do it all in one round?
+           Currently we need the first one to compute the total number of face bytes */
+  /* First pass through trees to set the face neighbor offsets */
+  temp_offset = 0;
+  for (it = 0;it < part->num_trees;it++) {
+    tree = t8_part_tree_get_tree (part, it + part->first_tree_id);
+    tree->neigh_offset = first_face + face_neigh_bytes - temp_offset;
+    face_neigh_bytes += t8_eclass_num_faces[tree->eclass] *
+        (sizeof (t8_locidx_t) + sizeof (int8_t));
+    face_neigh_bytes += 4 - (face_neigh_bytes % 4);
+    /* This is for padding, such that face_neigh_bytes %4 == 0 */
+    T8_ASSERT (face_neigh_bytes % 4 == 0);
+    temp_offset += sizeof (t8_ctree_struct_t);
+  }
+  /* Second pass through trees to set attribute offsets */
+  first_face = face_neigh_bytes + part->num_trees * sizeof (t8_ctree_struct_t) +
+      part->num_ghosts * sizeof (t8_cghost_struct_t); /* Offset of first attribute */
+  temp_offset = 0;
+  for (it = 0;it < part->num_trees;it++) {
+    tree = t8_part_tree_get_tree (part, it + part->first_tree_id);
+    attr_bytes += tree->att_offset; /* att_offset stored the total size of the attributes */
+    tree->att_offset = first_face - temp_offset + attr_bytes;
+    temp_offset += sizeof (t8_ctree_struct_t);
+  }
+  /* Done setting all tree and ghost offsets */
+  /* Allocate memory, first_face + attr_bytes gives the new total byte count */
+  /* TODO: Since we use realloc and padding, memcmp will not work */
+#ifdef SC_ENABLE_REALLOC
+  SC_REALLOC (part->first_tree, char, first_face + attr_bytes);
+#else
+  temp = T8_ALLOC (char, first_face + attr_bytes);
+  memcpy (temp, part->first_tree, first_face);
+  T8_FREE (part->first_tree);
+  part->first_tree = temp;
+#endif
 }
 
 /* Get a tree form a part given its local id */

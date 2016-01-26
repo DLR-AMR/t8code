@@ -59,8 +59,8 @@ T8_EXTERN_C_BEGIN ();
  * Each tree T stores an offset to its Tree faces, such that (char*)&T + offset is
  * a pointer to the faces array.
  * The same holds for the ghost.
- * Also each tree stores the number of attributes. A pointer to the attribute data
- * can be calculated from offset.
+ * Also each tree stores the number of attributes and an offset relative to itself
+ * to the first attribute entry of that tree.
  *
  * Tree faces:
  *
