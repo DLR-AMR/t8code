@@ -94,7 +94,7 @@ typedef struct t8_cmesh
   t8_gloidx_t        *tree_offsets;  /**< If partitioned for each process the global index of its first local tree
                                         or -(first local tree)
                                         if the last tree on that process is the first tree of the next process
-                                          Since this is very memory consuming we only fill it when needed. */
+                                          Since this is very memory consuming we only fill it when needed. */  
 #ifdef T8_ENABLE_DEBUG
   t8_topidx_t         inserted_trees; /**< Count the number of inserted trees to
                                            check at commit if it equals the total number. */
@@ -140,10 +140,14 @@ typedef struct t8_ctree
   /* TODO: The local id of a tree should be clear from context, the entry can
    *       be optimized out. */
   t8_eclass_t         eclass; /**< The eclass of this tree. */
+  /* TODO: This is a locidx_t */
+  /* TOOD: remove */
   t8_topidx_t        *face_neighbors; /**< For each face the local index of the face neighbor
                                           of this tree at the face. Indices greater than
                                           the number of local trees refer to ghosts. */
   int8_t             *tree_to_face; /**< For each face the encoding of the face neighbor orientation. */
+  size_t              f_neigh_offset; /* TODO: document */
+  size_t              ttf_offset; /* TODO: document */
   sc_array_t         *attributes; /**< Array of \a t8_attribute_info_t objects sorted by package_id and key. */
 }
 t8_ctree_struct_t;
