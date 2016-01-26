@@ -34,6 +34,73 @@
 
 T8_EXTERN_C_BEGIN ();
 
+/* Interface for the data layout of the corse trees.
+ *
+ * The layout is the same for replicated and partitioned meshes.
+ * Each process stores a meta array of data arrays. In the replicated case this meta
+ * array has only one entry wheras in the partitioned case there is one data array for
+ * each processor from which local trees were received in the last partition step
+ * (and only one meta array if the cmesh arised from a partitioned commit).
+ *
+ * Each dara arrays stores the local trees, the ghosts, face neighbor information
+ * of the ghosts, face neihbor information of the trees and the attributes of the trees,
+ * so the data looks like:
+ *
+ * M_0:   | Trees | Ghosts | Ghost faces | Tree faces | Tree attributes |
+ * M_1:   | Trees | Ghosts | Ghost faces | Tree faces | Tree attributes |
+ *  .         .        .          .            .               .
+ * M_n:   | Trees | Ghosts | Ghost faces | Tree faces | Tree attributes |
+ *
+ * Each tree T stores an offset to its Tree faces, such that (char*)&T + offset is
+ * a pointer to the faces array.
+ * The same holds for the ghost.
+ * Also each tree stores the number of attributes. A pointer to the attribute data
+ * can be calculated from offset.
+ *
+ * Tree faces:
+ *
+ * The data of Tree faces looks for each tree:
+ *
+ * | Treeid1 Treeid2  ... | ttf1 ttf2 ... | padding |
+ *
+ * Where padding is a number of unused bytes that makes the whole block a multiple
+ * of 4 Bytes.
+ * Treeid is a t8_locidx_t storing the local tree id for local tree neighbors and
+ * the local ghost id + num_local_trees for ghost neighbors.
+ * For the encoding of ttf (tree to face) see \ref t8_ctree_struct_t, ttf entries are int8_t
+ * and the offset of ttf1 can be calculated from the Tree faces offset and the
+ * class of the tree.
+ *
+ * Ghost faces:
+ *
+ * | Treeid1 Treeid2 ... |
+ *
+ * with global tree ids stored as t8_gloidx_t
+ * (so no padding needed since gloidx is multiple of 4 bytes).
+ *
+ * Tree attributes:
+ *
+ * The data of Tree attributes looks for each tree:
+ *
+ * | Att1_descr | Att2_descr | ... | Attrend_descr | padding | Att1_data | Att2_data | ... |
+ *
+ * Where Atti_descr is a descriptor of the i-th attribute data storing
+ * - an offset to Atti_data starting from the beginning of the attributes block
+ * - package id of the attribute (int)
+ * - key of the attribute (int)
+ *
+ * Attrend_descr only stores the offset of the end of this attributes block
+ * (like an imaginary very last attribute);
+ * using this info the size of each attribute can be computed as the difference
+ * of the sizes of two consecutive attributes.
+ *
+ * padding is a number of nonused bytes to make the size of the descr block
+ * a multiple of four.
+ *
+ *  TODO: maybe padding after the last Att_data is useful too
+ *
+ */
+
 /* allocate a t8_cmesh_tree struct and allocate memory for its entries.
  * No memory for ctrees or ghosts is allocated here */
 /* TODO: document */
