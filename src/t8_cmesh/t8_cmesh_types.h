@@ -153,6 +153,7 @@ typedef struct t8_ctree
 #endif
   size_t              neigh_offset; /* TODO: document */
   size_t              att_offset; /* TODO: document */
+  int                 num_attributes;
 
 #if 1 /* TODO: remove */
   sc_array_t         *attributes; /**< Array of \a t8_attribute_info_t objects sorted by package_id and key. */
@@ -173,7 +174,8 @@ typedef struct t8_part_tree
 {
   char               *first_tree;       /* Stores the trees, the ghosts and the attributes.
                                            The last 2*sizeof(t8_topidx) bytes store num_trees and num_ghosts */
-  t8_locidx_t         first_tree_id;    /* local tree_id of the first tree */
+  t8_locidx_t         first_tree_id;    /* local tree_id of the first tree. -1 if num_trees = 0 */
+  t8_locidx_t         first_ghost_id;   /* TODO: document. -1 if num_ghost=0 */
   t8_topidx_t         num_trees;
   t8_topidx_t         num_ghosts;
 #if 0
@@ -189,7 +191,7 @@ typedef struct t8_cmesh_trees
   sc_array_t         *from_proc;        /* array of t8_part_tree, one for each process */
   int                *tree_to_proc;     /* for each tree its process */
   int                *ghost_to_proc;    /* for each ghost its process */
-#if 1
+#if 0
   /* TODO: the ghost_to_offset field is not be necessary since the ghost can
    *       be identified by its local index? - remove */
   t8_locidx_t        *ghost_to_offset;  /* for each ghost its offset within the process */

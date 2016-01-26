@@ -43,13 +43,18 @@ T8_EXTERN_C_BEGIN ();
  * (and only one meta array if the cmesh arised from a partitioned commit).
  *
  * Each dara arrays stores the local trees, the ghosts, face neighbor information
- * of the ghosts, face neihbor information of the trees and the attributes of the trees,
- * so the data looks like:
+ * of the ghosts, face neihbor information of the trees and the attributes of the trees.
+ * Furthermore we store for each tree and for each ghost to which data array they belong to.
+ * So the data looks like:
  *
  * M_0:   | Trees | Ghosts | Ghost faces | Tree faces | Tree attributes |
  * M_1:   | Trees | Ghosts | Ghost faces | Tree faces | Tree attributes |
  *  .         .        .          .            .               .
  * M_n:   | Trees | Ghosts | Ghost faces | Tree faces | Tree attributes |
+ *
+ * tree_to_proc:  | 0 | 0 | 1 | ... | n |  these are just random examples here
+ * ghost_to_proc: | 0 | 1 | 2 | ... | n |
+ *
  *
  * Each tree T stores an offset to its Tree faces, such that (char*)&T + offset is
  * a pointer to the faces array.
@@ -88,6 +93,7 @@ T8_EXTERN_C_BEGIN ();
  * - an offset to Atti_data starting from the beginning of the attributes block
  * - package id of the attribute (int)
  * - key of the attribute (int)
+ * The data type is t8_attribute_info_struct_t
  *
  * Attrend_descr only stores the offset of the end of this attributes block
  * (like an imaginary very last attribute);
@@ -105,17 +111,19 @@ T8_EXTERN_C_BEGIN ();
  * No memory for ctrees or ghosts is allocated here */
 /* TODO: document */
 void                t8_cmesh_trees_init (t8_cmesh_trees_t * ptrees,
-                                         int num_procs, t8_topidx_t num_trees,
-                                         t8_topidx_t num_ghosts);
+                                         int num_procs, t8_locidx_t num_trees,
+                                         t8_locidx_t num_ghosts);
 
 /* allocate the first_tree array of a given tree_part in a tree struct
  * with a given number of bytes */
+/* !!! This does only allocate memory for the trees and ghosts
+ *     not yet for the face data and the attributes. See below !!!
+ */
 void                t8_cmesh_trees_init_part (t8_cmesh_trees_t trees,
                                               int proc,
                                               t8_locidx_t first_tree,
                                               t8_locidx_t last_tree,
-                                              t8_locidx_t num_ghosts,
-                                              size_t attr_bytes);
+                                              t8_locidx_t num_ghosts);
 
 /** Add a tree to a trees structure.
  * \param [in,out]  trees The trees structure to be updated.
@@ -155,7 +163,7 @@ void                t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees,
  * \return                A pointer to the tree with local id \a tree.
  */
 t8_ctree_t          t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees,
-                                             t8_topidx_t tree);
+                                             t8_locidx_t tree);
 
 /* TODO: This function return NULL if the ghost is not present.
  *       So far no error checking is done here. */
@@ -168,9 +176,11 @@ t8_cghost_t         t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees,
                                               t8_locidx_t ghost);
 
 /* TODO: document */
+/* attr_bytes is the total size of all attributes of that tree */
 void                t8_cmesh_trees_init_attributes (t8_cmesh_trees_t trees,
                                                     t8_locidx_t tree_id,
-                                                    size_t num_attributes);
+                                                    size_t num_attributes,
+                                                    size_t attr_bytes);
 
 /* TODO: These need to be rewritten with package_id and key */
 void               *t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees,
@@ -187,7 +197,6 @@ void                t8_cmesh_tree_add_attribute (t8_cmesh_trees_t trees,
                                                  t8_topidx_t tree_id,
                                                  int package_id, int key,
                                                  char *attr, size_t size,
-                                                 size_t offset,
                                                  int attr_tree_index);
 
 int                 t8_cmesh_trees_is_equal (t8_cmesh_t cmesh,
