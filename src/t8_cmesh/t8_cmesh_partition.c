@@ -280,7 +280,8 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
         if (tree->attributes != NULL) {
           for (iz = 0; iz < tree->attributes->elem_count;iz++) {
             attr_info = sc_array_index (tree->attributes, iz);
-            mem
+            t8_cmesh_trees_get_attribute (cmesh->trees, itree, a)
+            memccpy ()
           }
         }
     }
