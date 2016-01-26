@@ -203,7 +203,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     ghost_ids = sc_hash_new (t8_ghost_hash, t8_ghost_facejoin_equal,
                              &cmesh->num_local_trees, ghost_facejoin_mempool);
 
-    temp_facejoin = sc_mempool_alloc (ghost_facejoin_mempool);
+    temp_facejoin = (t8_ghost_facejoin_t *) sc_mempool_alloc (ghost_facejoin_mempool);
 
     cmesh->num_ghosts = 0;
     /* Parse joinfaces array and save all global id of local ghosts, and assign them a local id */
@@ -226,7 +226,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
           if (sc_hash_insert_unique (ghost_ids, temp_facejoin, NULL)) {
             /* If we did not already stored id2 in the hash we do so and assign the next local ghost id */
             temp_facejoin->local_id = cmesh->num_ghosts++;
-            temp_facejoin = sc_mempool_alloc (ghost_facejoin_mempool);
+            temp_facejoin = (t8_ghost_facejoin_t *)
+                sc_mempool_alloc (ghost_facejoin_mempool);
           }
         }
         if (!id1_istree) {
@@ -236,7 +237,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
           if (sc_hash_insert_unique (ghost_ids, temp_facejoin, NULL)) {
             /* If we did not already stored id1 in the hash we do so and assign the next local ghost id */
             temp_facejoin->local_id = cmesh->num_ghosts++;
-            temp_facejoin = sc_mempool_alloc (ghost_facejoin_mempool);
+            temp_facejoin = (t8_ghost_facejoin_t *)
+                sc_mempool_alloc (ghost_facejoin_mempool);
           }
         }
       }
