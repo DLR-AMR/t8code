@@ -75,6 +75,35 @@ t8_cmesh_set_shmem_type (t8_cmesh_t cmesh)
   sc_shmem_set_type (cmesh->mpicomm, T8_SHMEM_BEST_TYPE);
 }
 
+void
+t8_cmesh_add_attributes (t8_cmesh_t cmesh)
+{
+  t8_stash_attribute_struct_t *attribute;
+  t8_stash_t        stash = cmesh->stash;
+  t8_locidx_t       itree;
+  size_t            si, sj;
+
+  itree = -1;
+  for (si = 0, sj = 0; si < stash->attributes.elem_count; si++, sj++) {
+    attribute = sc_array_index (&stash->attributes, si);
+    if (cmesh->first_tree <= attribute->id &&
+        attribute->id < cmesh->first_tree + cmesh->num_local_trees) {
+      if (attribute->id > itree) {
+        /* Enter a new tree */
+       itree = attribute->id;
+       sj = 0;
+      }
+      /* attribute->id is a gloidx that is casted to a locidx here.
+      * Should not cause problems, since mesh is replicated */
+      T8_ASSERT (attribute->id - cmesh->first_tree ==
+                 (t8_locidx_t) attribute->id - cmesh->first_tree);
+      t8_cmesh_tree_add_attribute (cmesh->trees, 0, attribute,
+                                   attribute->id - cmesh->first_tree,
+                                   sj);
+    }
+  }
+}
+
 /* TODO: set boundary face connections here.
  *       not trivial if replicated and not level 3 face_knowledg
  *       Edit: boundary face is default. If no face-connection is added then
@@ -126,21 +155,15 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       /* Finish memory allocation of tree/ghost/face/attribute array
        * using the info calculated above */
       t8_cmesh_trees_finish_part (cmesh->trees, 0);
+
+      /* Add attributes */
+      /* TODO: currently the attributes array still has to be sorted,
+       *       find a way around it */
       t8_stash_attribute_sort(cmesh->stash);
-      itree = -1;
-      for (si = 0, sj =0; si < stash->attributes.elem_count; si++, sj++) {
-        attribute = sc_array_index (&stash->attributes, si);
-        if (attribute->id > itree) {
-          /* Enter a new tree */
-          itree = attribute->id;
-          sj = 0;
-        }
-        /* attribute->id is a gloidx that is casted to a locidx here.
-         * Should not cause problems, since mesh is replicated */
-        T8_ASSERT (attribute->id == (t8_locidx_t) attribute->id);
-        t8_cmesh_tree_add_attribute (cmesh->trees, 0, attribute, attribute->id,
-                                     sj);
-      }
+      cmesh->num_trees = cmesh->num_local_trees = num_trees;
+      cmesh->first_tree = 0;
+      t8_cmesh_add_attributes (cmesh);
+
       for (si = 0;si < cmesh->stash->joinfaces.elem_count;si++) {
         joinface = sc_array_index(&cmesh->stash->joinfaces, si);
         F = 0;
@@ -239,33 +262,19 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       }
     }
 
-    /* Count attribute bytes */
-    attr_byte_count = 0;
-    /* TODO: optimize: start in attributes array at position of the first tree,
-     * resp. the first tree with attributes
-     */
-    for (iz = 0; iz < cmesh->stash->attributes.elem_count; iz++) {
-      attribute =
-        (t8_stash_attribute_struct_t *) sc_array_index (&cmesh->stash->
-                                                        attributes, iz);
-      if (cmesh->first_tree <= attribute->id && attribute->id <= last_tree) {
-        /* TODO: check for duplicate attributes */
-        attr_byte_count += attribute->attr_size;
-      }
-    }
     /********************************************************/
-    /*      END COUNTING TREES/GHOSTS/ATTRIBUTES            */
+    /*             END COUNTING TREES/GHOSTS                */
     /********************************************************/
-    /* Now that we know the number of trees/ghosts/and attribute_bytes we can
-     * initialize the trees structure. */
+    /* Now that we know the number of trees and ghosts we can
+     * start initializing the trees structure. */
     /* This even initializes the trees structure if there are neither trees
      * nor ghosts */
     t8_debugf ("Init trees with %li T, %li G\n",
                (long) cmesh->num_local_trees, (long) cmesh->num_ghosts);
     t8_cmesh_trees_init (&cmesh->trees, 1, cmesh->num_local_trees,
                          cmesh->num_ghosts);
-    t8_cmesh_trees_init_part (cmesh->trees, 0, 0, cmesh->num_local_trees,
-                              cmesh->num_ghosts, attr_byte_count);
+    t8_cmesh_trees_start_part (cmesh->trees, 0, 0, cmesh->num_local_trees, 0,
+                               cmesh->num_ghosts);
 
 #ifdef T8_ENABLE_DEBUG
     if (cmesh->num_local_trees == 0) {
@@ -299,99 +308,47 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
                                     classentry->eclass);
         }
       }
-    }
-    /* We are done with stash->classes now  so we free memory.
-     * Since the array is destroyed in stash_destroy we only reset it. */
-    sc_array_reset (&cmesh->stash->classes);
-    /* Go through all face_neighbour entries and parse every
-     * important entry */
-    for (iz = 0; iz < cmesh->stash->joinfaces.elem_count; iz++) {
-      joinface = (t8_stash_joinface_struct_t *)
-        sc_array_index (&cmesh->stash->joinfaces, iz);
-      id1_istree = cmesh->first_tree <= joinface->id1 &&
-        last_tree >= joinface->id1;
-      id2_istree = cmesh->first_tree <= joinface->id2 &&
-        last_tree >= joinface->id2;
-      temp_facejoin->ghost_id = joinface->id1;
-      id1 = joinface->id1;
-      tree1 = NULL;
-      ghost1 = NULL;
-      /* There are the following cases:
-       * Both trees are local trees.
-       * One is a local tree and one a local ghost.
-       * Both are local ghosts.
-       * One is a local ghost and on neither ghost nor local tree.
-       * For each of these cases we have to set the correct face connection.
-       */
-      /* TODO: This if else if else spaghetti code is quite ugly, think it over
-       *       and find a better way */
-      if (id1_istree) {
-        /* First tree in the connection is a local tree */
-        tree1 = t8_cmesh_trees_get_tree (cmesh->trees,
-                                         joinface->id1 - cmesh->first_tree);
-      }
-      else if (sc_hash_lookup (ghost_ids, temp_facejoin,
-                               (void ***) &facejoin_pp)) {
-        /* id1 is a local ghost */
-        ghost_facejoin = *facejoin_pp;
-        ghost1 = t8_cmesh_trees_get_ghost (cmesh->trees,
-                                           ghost_facejoin->local_id);
-        temp_local_id = ghost_facejoin->local_id;
-      }
-      id2 = temp_facejoin->ghost_id = joinface->id2;
-      ghost2 = NULL;
-      tree2 = NULL;
-      if (id2_istree) {
-        /* Second tree in the connection is a local tree */
-        tree2 = t8_cmesh_trees_get_tree (cmesh->trees,
-                                         joinface->id2 - cmesh->first_tree);
-      }
-      else if (sc_hash_lookup (ghost_ids, temp_facejoin,
-                               (void ***) &facejoin_pp)) {
-        /* id1 is a local ghost */
-        ghost_facejoin = *facejoin_pp;
-        ghost2 = t8_cmesh_trees_get_ghost (cmesh->trees,
-                                           ghost_facejoin->local_id);
-      }
-      if (tree1 != NULL) {
-        T8_ASSERT (ghost2 != NULL || tree2 != NULL);
-        tree1->face_neighbors[joinface->face1] =
-          tree2 ? id2 - cmesh->first_tree :
-          ghost_facejoin->local_id + cmesh->num_local_trees;
-        F =
-          t8_eclass_num_faces[tree2 != NULL ? tree2->eclass : ghost2->eclass];
-        tree1->tree_to_face[joinface->face1] =
-          F * joinface->orientation + joinface->face2;
-      }
-      else if (ghost1 != NULL) {
-        ghost1->neighbors[joinface->face1] = id2;
+      /* We are done with stash->classes now  so we free memory.
+       * Since the array is destroyed in stash_destroy we only reset it. */
+      sc_array_reset (&cmesh->stash->classes);
+
+      /* Parse through attributes to count the number of attributes per tree
+       * and total size of attributes per tree */
+      for (si = 0; si < cmesh->stash->attributes.elem_count; si++) {
+        attribute = sc_array_index (&cmesh->stash->attributes, si);
+        if (cmesh->first_tree <= attribute->id && attribute->id <
+            cmesh->first_tree + cmesh->num_local_trees) {
+          /* attribute->id is a gloidx that is casted to a locidx here.
+          * Should not cause problems, since mesh is replicated */
+          T8_ASSERT (attribute->id - cmesh->first_tree ==
+                     (t8_locidx_t) (attribute->id - cmesh->first_tree));
+          tree1 = t8_cmesh_trees_get_tree (cmesh->trees, attribute->id
+                                           - cmesh->first_tree);
+          tree1->num_attributes++;
+          tree1->att_offset += attribute->attr_size;
+        }
       }
       else if (ghost2 != NULL) {
         ghost2->neighbors[joinface->face2] = id1;
         /* Done with setting face join */
       }
-      if (tree2 != NULL) {
-        T8_ASSERT (tree1 != NULL || ghost1 != NULL);
-        tree2->face_neighbors[joinface->face2] =
-          tree1 ? id1 - cmesh->first_tree :
-          temp_local_id + cmesh->num_local_trees;
-        F =
-          t8_eclass_num_faces[tree1 != NULL ? tree1->eclass : ghost1->eclass];
-        tree2->tree_to_face[joinface->face2] =
-          F * joinface->orientation + joinface->face1;
-      }
-      else if (ghost2 != NULL) {
-        ghost2->neighbors[joinface->face2] = id2;
-      }
-      /* Done with setting face join */
-    }
+
+      /* Add attributes */
+      /* TODO: attribute is required to be sorted right now. Think this over
+       *       if we cant work around it, at least use the sorted array above when
+       *       counting the attributes per tree. */
+
+      t8_stash_attribute_sort (cmesh->stash);
+      t8_cmesh_add_attributes (cmesh);
+
+      /* compute global number of trees. id1 serves as buffer since
+       * global number and local number have different datatypes */
+    } /* End if nonempty partition */
+
     sc_mempool_free (ghost_facejoin_mempool, temp_facejoin);
     sc_hash_destroy (ghost_ids);
     sc_mempool_destroy (ghost_facejoin_mempool);
-    /* Add attributes to the local trees */
-    t8_cmesh_add_attributes (cmesh, cmesh->stash);
-    /* compute global number of trees. id1 serves as buffer since
-     * global number and local number have different datatypes */
+
     id1 = cmesh->num_local_trees;
     sc_MPI_Allreduce (&id1, &cmesh->num_trees, 1, T8_MPI_GLOIDX,
                       sc_MPI_SUM, cmesh->mpicomm);
