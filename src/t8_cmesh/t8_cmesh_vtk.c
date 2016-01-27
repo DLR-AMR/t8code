@@ -65,7 +65,7 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
     t8_topidx_t         num_vertices, num_trees, ivertex;
     t8_ctree_t          tree;
     double              x, y, z;
-    double             *vertices;
+    double             *vertices, *vertex;
     int                 k, sk;
     long long           offset, count_vertices;
 
@@ -102,15 +102,16 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
 #ifdef T8_VTK_ASCII
     for (tree = t8_cmesh_first_tree (cmesh); tree != NULL;
          tree = t8_cmesh_next_tree (cmesh, tree)) {
+      vertices = ((double *) t8_cmesh_get_attribute (cmesh,
+                                                     t8_get_package_id (), 0,
+                                                     tree->treeid));
       for (ivertex = 0; ivertex < t8_eclass_num_vertices[tree->eclass];
            ivertex++) {
-        vertices = ((double *) t8_cmesh_get_attribute (cmesh,
-                                                       t8_get_package_id (), 0,
-                                                       tree->treeid)) +
-          3 * t8_eclass_vtk_corner_number[tree->eclass][ivertex];
-        x = vertices[0];
-        y = vertices[1];
-        z = vertices[2];
+        vertex = vertices +
+            3 * t8_eclass_vtk_corner_number[tree->eclass][ivertex];
+        x = vertex[0];
+        y = vertex[1];
+        z = vertex[2];
 #ifdef T8_VTK_DOUBLES
         fprintf (vtufile, "     %24.16e %24.16e %24.16e\n", x, y, z);
 #else

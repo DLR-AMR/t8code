@@ -158,7 +158,7 @@ t8_stash_joinface_sort (t8_stash_t stash)
 
 void
 t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id, int package_id,
-                        int key, size_t size, void *attr, int data_persists)
+                        int key, size_t size, void *attr, int copy)
 {
   t8_stash_attribute_struct_t *sattr;
 
@@ -166,11 +166,11 @@ t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id, int package_id,
   sattr = (t8_stash_attribute_struct_t *) sc_array_push (&stash->attributes);
   sattr->attr_size = size;
   sattr->id = id;
-  sattr->is_owned = data_persists ? 0 : 1;
+  sattr->is_owned = !copy ? 0 : 1;
   sattr->key = key;
   sattr->package_id = package_id;
-  sattr->attr_data = data_persists ? attr : T8_ALLOC (char, size);
-  if (!data_persists) {
+  sattr->attr_data = !copy ? attr : T8_ALLOC (char, size);
+  if (copy) {
     memcpy (sattr->attr_data, attr, size);
   }
 }

@@ -86,7 +86,11 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   int                 mpiret;
   sc_MPI_Comm         comm_dup;
   t8_stash_attribute_struct_t *attribute;
-  t8_ctree_t          tree1;
+  t8_locidx_t        *face_neigh, *face_neigh2;
+  int8_t             *ttf, *ttf2;
+  t8_stash_joinface_struct_t *joinface;
+  t8_ctree_t          tree1, tree2;
+  int                 F;
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->mpicomm != sc_MPI_COMM_NULL);
@@ -97,7 +101,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       t8_stash_t          stash = cmesh->stash;
       sc_array_t         *class_entries = &stash->classes;
       t8_stash_class_struct_t *entry;
-      t8_topidx_t         num_trees = class_entries->elem_count, itree;
+      t8_locidx_t         num_trees = class_entries->elem_count, itree;
       size_t              si, sj;
 
       t8_cmesh_trees_init (&cmesh->trees, 1, num_trees, 0);
@@ -121,14 +125,46 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       /* Finish memory allocation of tree/ghost/face/attribute array
        * using the info calculated above */
       t8_cmesh_trees_finish_part (cmesh->trees, 0);
-      for (si = 0, sj = 0; si < stash->attributes.elem_count; si++, sj++) {
+      t8_stash_attribute_sort(cmesh->stash);
+      itree = -1;
+      for (si = 0, sj =0; si < stash->attributes.elem_count; si++, sj++) {
         attribute = sc_array_index (&stash->attributes, si);
+        if (attribute->id > itree) {
+          /* Enter a new tree */
+          itree = attribute->id;
+          sj = 0;
+        }
         /* attribute->id is a gloidx that is casted to a locidx here.
          * Should not cause problems, since mesh is replicated */
         T8_ASSERT (attribute->id == (t8_locidx_t) attribute->id);
-        t8_cmesh_tree_add_attribute (cmesh->trees, 0, attribute, attribute->id);
+        t8_cmesh_tree_add_attribute (cmesh->trees, 0, attribute, attribute->id,
+                                     sj);
       }
-      t8_cmesh_trees_attribute_info_sort (cmesh->trees);
+      for (si = 0;si < cmesh->stash->joinfaces.elem_count;si++) {
+        joinface = sc_array_index(&cmesh->stash->joinfaces, si);
+        F = 0;
+        t8_debugf( " Try to join %i %i at %i--%i\n", joinface->id1,
+                   joinface->id2, joinface->face1, joinface->face2);
+        if (joinface->face1 >= 0) {
+          tree1 = t8_cmesh_trees_get_tree_ext (cmesh->trees, joinface->id1,
+                                               face_neigh, ttf);
+        }
+        if (joinface->face2 >= 0) {
+          tree2 = t8_cmesh_trees_get_tree_ext (cmesh->trees, joinface->id2,
+                                              face_neigh2, ttf2);
+          F = t8_eclass_num_faces[tree2->eclass];
+        }
+        if (joinface->face1 >= 0) {
+          face_neigh[joinface->face1] = (t8_locidx_t) joinface->id2;
+          ttf[joinface->face1] = joinface->orientation * F +
+              joinface->face2;
+          F = t8_eclass_num_faces[tree1->eclass];
+        }
+        if (joinface->face2 >= 0) {
+          face_neigh[joinface->face2] = (t8_locidx_t) joinface->id1;
+          ttf[joinface->face2] = joinface->orientation * F + joinface->face1;
+        }
+      }
       cmesh->num_trees = cmesh->num_local_trees = num_trees;
       cmesh->first_tree = 0;
     }
@@ -140,13 +176,11 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     struct ghost_facejoins_struct *ghost_facejoin, *temp_facejoin,
       **facejoin_pp;
     size_t              joinfaces_it, attr_byte_count, iz;
-    t8_stash_joinface_struct_t *joinface;
     t8_gloidx_t         last_tree = cmesh->num_local_trees +
       cmesh->first_tree - 1, id1, id2;
     t8_locidx_t         temp_local_id;
     t8_stash_class_struct_t *classentry;
-    int                 id1_istree, id2_istree, F;
-    t8_ctree_t          tree2;
+    int                 id1_istree, id2_istree;
     t8_cghost_t         ghost1, ghost2;
 
     if (cmesh->face_knowledge != 3) {

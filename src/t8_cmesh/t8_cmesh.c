@@ -34,7 +34,7 @@
 
 /* *INDENT-OFF* */
 static int
-t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_topidx_t tree_id);
+t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_locidx_t tree_id);
 
 static t8_ctree_t
 t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_locidx_t tree_id);
@@ -266,7 +266,7 @@ t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_gloidx_t num_trees)
  * If partitioned only local trees are allowed.
  */
 static int
-t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_topidx_t tree_id)
+t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_locidx_t tree_id)
 {
   T8_ASSERT (cmesh->committed);
   if (cmesh->set_partitioned) {
@@ -340,7 +340,7 @@ t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_topidx_t tree_id,
 
   t8_stash_add_attribute (cmesh->stash, tree_id, package_id, key,
                           3 * num_vertices * sizeof (double),
-                          (void *) vertices, 0);
+                          (void *) vertices, 1);
 }
 
 /* TODO: do we still need this function? if yes, write it correctly. */
@@ -759,8 +759,9 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
        first_global_child - *first_local_tree * children_per_tree;
     }
     /* TODO: Just fixed this line from last_global_child -1 / cpt
-     *       Why did we not notice this error before? */
-    *last_local_tree = last_global_child / children_per_tree;
+     *       Why did we not notice this error before?
+     *       Changed it back*/
+    *last_local_tree = (last_global_child - 1)/ children_per_tree;
     if (last_tree_shared != NULL) {
       /* This works even for the last process, since then next_first_tree
        * is computed to num_global_trees */

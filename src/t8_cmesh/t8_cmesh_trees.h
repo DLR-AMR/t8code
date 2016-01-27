@@ -85,12 +85,12 @@ T8_EXTERN_C_BEGIN ();
  *
  * Tree attributes:
  *
- * The data of Tree attributes looks for each tree:
+ * The data of Tree attributes looks like:
  *
- * | Att1_descr | Att2_descr | ... | Attrend_descr | padding | Att1_data | Att2_data | ... |
- *
- * Where Atti_descr is a descriptor of the i-th attribute data storing
- * - an offset to Atti_data starting from the beginning of the attributes block
+ * | Att00_descr | Att01_descr | ... | Att10_desct | ... | Attrend_descr | Att1_data | Att2_data | ... |
+ *                TODO: maybe insert padding here ||
+ * Where Attij_descr is a descriptor of the j-th attribute data of tree i storing
+ * - an offset to Atti_data starting from Atti0_descr
  * - package id of the attribute (int)
  * - key of the attribute (int)
  * The data type is t8_attribute_info_struct_t
@@ -177,6 +177,13 @@ void                t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees,
 t8_ctree_t          t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees,
                                              t8_locidx_t tree);
 
+/* Return tree and its face neighbor arrays */
+/* TODO: document */
+t8_ctree_t          t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees,
+                                                 t8_locidx_t tree_id,
+                                                 t8_locidx_t *face_neigh,
+                                                 int8_t *ttf);
+
 /* TODO: This function return NULL if the ghost is not present.
  *       So far no error checking is done here. */
 /** Return a pointer to a specific ghost in a trees struct.
@@ -213,7 +220,7 @@ void               *t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees,
 void                t8_cmesh_tree_add_attribute (t8_cmesh_trees_t trees,
                                                  int proc,
                                                  t8_stash_attribute_struct_t *
-                                                 attr, t8_locidx_t tree_id);
+                                                 attr, t8_locidx_t tree_id, size_t index);
 
 int                 t8_cmesh_trees_is_equal (t8_cmesh_t cmesh,
                                              t8_cmesh_trees_t trees_a,
