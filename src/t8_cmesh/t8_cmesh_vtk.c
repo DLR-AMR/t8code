@@ -68,7 +68,6 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
     double             *vertices;
     int                 k, sk;
     long long           offset, count_vertices;
-    size_t              data_size;
 
     num_vertices = t8_cmesh_get_num_vertices (cmesh);
     num_trees = t8_cmesh_get_num_trees (cmesh);
@@ -107,11 +106,8 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
            ivertex++) {
         vertices = ((double *) t8_cmesh_get_attribute (cmesh,
                                                        t8_get_package_id (), 0,
-                                                       tree->treeid,
-                                                       &data_size)) +
+                                                       tree->treeid)) +
           3 * t8_eclass_vtk_corner_number[tree->eclass][ivertex];
-        T8_ASSERT (data_size == (size_t) t8_eclass_num_vertices[tree->eclass]
-            * 3 * sizeof (double));
         x = vertices[0];
         y = vertices[1];
         z = vertices[2];

@@ -31,6 +31,8 @@
 #include "t8_cmesh_trees.h"
 #include "t8_cmesh_partition.h"
 
+#if 0
+
 /* Compute first and last process to which we will send data */
 /* Returns the local tree_id of last local tree on send_first. */
 /* TODO: This can propably be optimized since we changed to tree_offsets. using binary search or so */
@@ -356,3 +358,4 @@ t8_cmesh_partition (t8_cmesh_t cmesh)
   /***************************************************/
   t8_cmesh_partition_given (cmesh, cmesh->set_from, cmesh->tree_offsets);
 }
+#endif

@@ -282,8 +282,7 @@ t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
  */
 void               *t8_cmesh_get_attribute (t8_cmesh_t cmesh,
                                             int package_id, int key,
-                                            t8_locidx_t tree_id,
-                                            size_t * data_size);
+                                            t8_locidx_t tree_id);
 
 /* TODO: remove get_ when there is no risk of confusion? Convention? */
 

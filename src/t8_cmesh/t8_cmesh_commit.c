@@ -66,56 +66,6 @@ t8_ghost_hash (const void *v, const void *u)
   return ghost_id % num_local_trees;
 }
 
-/* requires the attributes array on the stash to be sorted */
-static void
-t8_cmesh_add_attributes (t8_cmesh_t cmesh, t8_stash_t stash)
-{
-  size_t              attr_bytes, attr_offset, num_attr, attr_index, si;
-  int                 attr_id, key;
-  t8_locidx_t         tree_id, temptree;
-
-  attr_offset = 0;
-  temptree = -1;
-  /* TODO: optimize loop by looping only over local trees */
-  for (si = 0; si < stash->attributes.elem_count; si++) {
-    tree_id = t8_stash_get_attribute_tree_id (cmesh->stash, si) -
-      cmesh->first_tree;
-    T8_ASSERT (t8_stash_get_attribute_tree_id (cmesh->stash, si) -
-               cmesh->first_tree == (t8_gloidx_t) tree_id);
-    /* Only add local trees */
-    if (0 <= tree_id && tree_id < cmesh->num_local_trees) {
-      if (tree_id > temptree) {
-        /* We are entering a new tree */
-        temptree = tree_id;
-        /* count the number of attributes at this tree... */
-        num_attr = si;
-        /* ...by counting after how many attributes we enter a new tree */
-        while (temptree == tree_id
-               && ++num_attr < stash->attributes.elem_count) {
-          temptree =
-            t8_stash_get_attribute_tree_id (cmesh->stash,
-                                            num_attr) - cmesh->first_tree;
-        }
-        num_attr -= si;         /* now stores the number of attribute of the tree */
-        /* initialize storage for tree attributes */
-        t8_cmesh_trees_init_attributes (cmesh->trees, tree_id, num_attr);
-        temptree = tree_id;     /* store the current tree_id in oldtree */
-        attr_index = 0;
-      }
-      attr_bytes = t8_stash_get_attribute_size (cmesh->stash, si);
-      key = t8_stash_get_attribute_key (cmesh->stash, si);
-      attr_id = t8_stash_get_attribute_id (cmesh->stash, si);
-      t8_cmesh_tree_add_attribute (cmesh->trees, 0, tree_id, attr_id, key,
-                                   (char *)
-                                   t8_stash_get_attribute (cmesh->stash,
-                                                           si), attr_bytes,
-                                   attr_offset, attr_index);
-      attr_offset += attr_bytes;
-      attr_index++;
-    }
-  }
-}
-
 static void
 t8_cmesh_set_shmem_type (t8_cmesh_t cmesh)
 {
@@ -135,29 +85,23 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
 {
   int                 mpiret;
   sc_MPI_Comm         comm_dup;
+  t8_stash_attribute_struct_t *attribute;
+  t8_ctree_t          tree1;
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->mpicomm != sc_MPI_COMM_NULL);
   T8_ASSERT (!cmesh->committed);
 
-  /* TODO: setup trees */
   if (!cmesh->set_partitioned) {
     if (cmesh->stash != NULL && cmesh->stash->classes.elem_count > 0) {
       t8_stash_t          stash = cmesh->stash;
       sc_array_t         *class_entries = &stash->classes;
       t8_stash_class_struct_t *entry;
       t8_topidx_t         num_trees = class_entries->elem_count, itree;
-      size_t              si, attr_bytes;
+      size_t              si, sj;
 
       t8_cmesh_trees_init (&cmesh->trees, 1, num_trees, 0);
-      /* compute size of attributes */
-      attr_bytes = 0;
-      for (si = 0; si < stash->attributes.elem_count; si++) {
-        attr_bytes += t8_stash_get_attribute_size (stash, si);
-      }
-      cmesh->num_trees = cmesh->num_local_trees = num_trees;
-      cmesh->first_tree = 0;
-      t8_cmesh_trees_init_part (cmesh->trees, 0, 0, num_trees, 0, attr_bytes);
+      t8_cmesh_trees_start_part (cmesh->trees, 0, 0, num_trees, 0, 0);
       /* set tree classes */
       for (itree = 0; itree < num_trees; itree++) {
         entry = (t8_stash_class_struct_t *)
@@ -165,16 +109,31 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
         t8_cmesh_trees_add_tree (cmesh->trees, entry->id, 0, entry->eclass);
         cmesh->num_trees_per_eclass[entry->eclass]++;
       }
-      /* set tree attributes */
-      /* TODO: replace attribute sort by bucket sort into tree structs +
-       *       sorting inside the tree structs by key.
-       *       This will bring down the runtime of this step from O(nlog(n)) to
-       *       O(nm) where m is the maximum number of attributes under all trees.
-       */
-      t8_stash_attribute_sort (cmesh->stash);
-      t8_cmesh_add_attributes (cmesh, cmesh->stash);
+      for (si = 0; si < stash->attributes.elem_count; si++) {
+        attribute = sc_array_index (&stash->attributes, si);
+        /* attribute->id is a gloidx that is casted to a locidx here.
+         * Should not cause problems, since mesh is replicated */
+        T8_ASSERT (attribute->id == (t8_locidx_t) attribute->id);
+        tree1 = t8_cmesh_trees_get_tree (cmesh->trees, attribute->id);
+        tree1->num_attributes++;
+        tree1->att_offset += attribute->attr_size;
+      }
+      /* Finish memory allocation of tree/ghost/face/attribute array
+       * using the info calculated above */
+      t8_cmesh_trees_finish_part (cmesh->trees, 0);
+      for (si = 0, sj = 0; si < stash->attributes.elem_count; si++, sj++) {
+        attribute = sc_array_index (&stash->attributes, si);
+        /* attribute->id is a gloidx that is casted to a locidx here.
+         * Should not cause problems, since mesh is replicated */
+        T8_ASSERT (attribute->id == (t8_locidx_t) attribute->id);
+        t8_cmesh_tree_add_attribute (cmesh->trees, 0, attribute, attribute->id);
+      }
+      t8_cmesh_trees_attribute_info_sort (cmesh->trees);
+      cmesh->num_trees = cmesh->num_local_trees = num_trees;
+      cmesh->first_tree = 0;
     }
   }
+#if 0
   else {
     sc_hash_t          *ghost_ids;
     sc_mempool_t       *ghost_facejoin_mempool;
@@ -185,10 +144,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     t8_gloidx_t         last_tree = cmesh->num_local_trees +
       cmesh->first_tree - 1, id1, id2;
     t8_locidx_t         temp_local_id;
-    t8_stash_attribute_struct_t *attribute;
     t8_stash_class_struct_t *classentry;
     int                 id1_istree, id2_istree, F;
-    t8_ctree_t          tree1, tree2;
+    t8_ctree_t          tree2;
     t8_cghost_t         ghost1, ghost2;
 
     if (cmesh->face_knowledge != 3) {
@@ -401,6 +359,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     sc_MPI_Allreduce (&id1, &cmesh->num_trees, 1, T8_MPI_GLOIDX,
                       sc_MPI_SUM, cmesh->mpicomm);
   }
+#endif
 
   cmesh->committed = 1;
 
