@@ -114,16 +114,27 @@ void                t8_cmesh_trees_init (t8_cmesh_trees_t * ptrees,
                                          int num_procs, t8_locidx_t num_trees,
                                          t8_locidx_t num_ghosts);
 
-/* allocate the first_tree array of a given tree_part in a tree struct
- * with a given number of bytes */
-/* !!! This does only allocate memory for the trees and ghosts
- *     not yet for the face data and the attributes. See below !!!
- */
+#if 0
 void                t8_cmesh_trees_init_part (t8_cmesh_trees_t trees,
                                               int proc,
                                               t8_locidx_t first_tree,
                                               t8_locidx_t last_tree,
                                               t8_locidx_t num_ghosts);
+#endif
+/* allocate the first_tree array of a given tree_part in a tree struct
+ * with a given number of bytes */
+/* !!! This does only allocate memory for the trees and ghosts
+ *     not yet for the face data and the attributes. See below !!!
+ */
+void                t8_cmesh_trees_start_part (t8_cmesh_trees_t trees, int proc,
+                                               t8_locidx_t first_tree,
+                                               t8_locidx_t num_trees,
+                                               t8_locidx_t first_ghost,
+                                               t8_locidx_t num_ghosts);
+
+/* TODO: document */
+void                t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees,
+                                                int proc);
 
 /** Add a tree to a trees structure.
  * \param [in,out]  trees The trees structure to be updated.

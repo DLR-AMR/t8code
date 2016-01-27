@@ -34,7 +34,7 @@
   ((char*)(t) + (t)->att_offset + \
   (i) * sizeof (t8_attribute_info_struct_t))
 /* Given a tree and an attribute info return the attribute */
-#define T8_TREE_ATTR(t,ai) T8_TREE_FIRST_ATT(t) + (ai)->attibute_offset
+#define T8_TREE_ATTR(t,ai) T8_TREE_FIRST_ATT(t) + (ai)->attribute_offset
 
 extern int
          t8_cmesh_ctree_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b);
@@ -163,6 +163,28 @@ t8_cmesh_trees_get_num_procs (t8_cmesh_trees_t trees)
   return trees->from_proc->elem_count;
 }
 
+/* Get a tree form a part given its local id */
+static              t8_ctree_t
+t8_part_tree_get_tree (t8_part_tree_t P, t8_locidx_t tree_id)
+{
+  T8_ASSERT (0 <= tree_id);
+  return ((t8_ctree_t) P->first_tree) + tree_id - P->first_tree_id;
+}
+
+/* get a ghost from a part given its local id */
+static t8_cghost_t
+t8_part_tree_get_ghost (t8_part_tree_t P, t8_locidx_t ghost_id)
+{
+  t8_cghost_t         first_ghost;
+  t8_locidx_t         ghost_offset;
+
+  ghost_offset = ghost_id - P->first_ghost_id;
+  T8_ASSERT (ghost_offset >= 0 && ghost_offset < P->num_ghosts);
+  first_ghost = (t8_cghost_t)
+    (P->first_tree + (P->num_trees * sizeof (t8_ctree_struct_t)));
+  return first_ghost + ghost_offset;
+}
+
 void
 t8_cmesh_trees_start_part (t8_cmesh_trees_t trees, int proc,
                            t8_locidx_t first_tree, t8_locidx_t num_trees,
@@ -172,7 +194,6 @@ t8_cmesh_trees_start_part (t8_cmesh_trees_t trees, int proc,
   T8_ASSERT (trees != NULL);
   T8_ASSERT (proc >= 0 && proc < t8_cmesh_trees_get_num_procs (trees));
   T8_ASSERT (num_trees >= 0);
-  T8_ASSERT (num_ghosts >= 0 && attr_bytes >= 0);
 
   part = (t8_part_tree_t) sc_array_index_int (trees->from_proc, proc);
   part->num_ghosts = num_ghosts;
@@ -189,7 +210,6 @@ t8_cmesh_trees_start_part (t8_cmesh_trees_t trees, int proc,
   part->first_ghost_id = first_ghost;
 }
 
-/* TODO: code */
 /* After all classes of trees and ghosts have been set and after the
  * number of tree attributes  was set and their total size (per tree)
  * stored temporarily in the att_offset variable
@@ -263,28 +283,6 @@ t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees, int proc)
   T8_FREE (part->first_tree);
   part->first_tree = temp;
 #endif
-}
-
-/* Get a tree form a part given its local id */
-static              t8_ctree_t
-t8_part_tree_get_tree (t8_part_tree_t P, t8_locidx_t tree_id)
-{
-  T8_ASSERT (0 <= tree_id);
-  return ((t8_ctree_t) P->first_tree) + tree_id - P->first_tree_id;
-}
-
-/* get a ghost from a part given its local id */
-static t8_cghost_t
-t8_part_tree_get_ghost (t8_part_tree_t P, t8_locidx_t ghost_id)
-{
-  t8_cghost_t         first_ghost;
-  t8_locidx_t         ghost_offset;
-
-  ghost_offset = ghost_id - P->first_ghost_id;
-  T8_ASSERT (ghost_offset >= 0 && ghost_offset < P->num_ghosts);
-  first_ghost = (t8_cghost_t)
-    (P->first_tree + (P->num_trees * sizeof (t8_ctree_struct_t)));
-  return first_ghost + ghost_offset;
 }
 
 t8_ctree_t
@@ -373,7 +371,6 @@ t8_cmesh_tree_add_attribute (t8_cmesh_trees_t trees, int proc,
   memcpy (new_attr, attr, size);
 
   /* Set new values */
-  attr_info->attribute_size = size;
   attr_info->key = key;
   attr_info->package_id = package_id;
   /* Store offset */
@@ -436,9 +433,9 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
   attr_array = (t8_attribute_info_struct_t *) T8_TREE_FIRST_ATT (tree);
 
   if (attr_array != NULL) {
-    atttr_info = bsearch (&key, attr_array, sizeof (*attr_array),
-                          tree->num_attributes,
-                          t8_cmesh_trees_compare_attributes);
+    attr_info = bsearch (&key, attr_array, sizeof (*attr_array),
+                         tree->num_attributes,
+                         t8_cmesh_trees_compare_attributes);
   }
 
   if (attr_array == NULL || attr_info == NULL) {
@@ -448,7 +445,9 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
     return NULL;
   }
 
-  *data_size = attr_info->attribute_size;
+  /* The size of the data is the offset of the next attribute minus the offset
+   * of this attribute */
+  *data_size = (attr_info + 1)->attribute_offset - attr_info->attribute_offset;
   return (void *) ((char *) attr_array + attr_info->attribute_offset);
 }
 
@@ -476,9 +475,7 @@ t8_cmesh_trees_is_equal (t8_cmesh_t cmesh, t8_cmesh_trees_t trees_a,
   is_equal = memcmp (trees_a->tree_to_proc, trees_b->tree_to_proc,
                      num_trees * sizeof (int))
     || memcmp (trees_a->ghost_to_proc, trees_b->ghost_to_proc,
-               num_ghost * sizeof (int))
-    || memcmp (trees_a->ghost_to_offset, trees_b->ghost_to_proc,
-               num_ghost * sizeof (t8_topidx_t));
+               num_ghost * sizeof (int));
   if (is_equal != 0) {
     return 0;
   }
