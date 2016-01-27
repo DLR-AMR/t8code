@@ -55,15 +55,16 @@ t8_ghost_facejoin_equal (const void *v1, const void *v2, const void *u)
  * global_id % num_local_trees
  *
  * This hash function gets as input a facejoins_struct
- * and as user data the number of local trees.
+ * and as user data the number of hashs, which is the number of local trees if
+ * nonzero and 10 otherwise.
  */
 static unsigned
 t8_ghost_hash (const void *v, const void *u)
 {
   t8_gloidx_t         ghost_id = ((t8_ghost_facejoin_t *) v)->ghost_id;
-  t8_locidx_t         num_local_trees = *((t8_locidx_t *) u);
+  t8_locidx_t         num_hashs = *((t8_locidx_t *) u);
 
-  return ghost_id % num_local_trees;
+  return ghost_id % num_hashs;
 }
 
 static void
@@ -179,6 +180,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     t8_gloidx_t         last_tree = cmesh->num_local_trees +
       cmesh->first_tree - 1, id1, id2;
     t8_locidx_t         temp_local_id;
+    t8_locidx_t         num_hashs;
     t8_stash_class_struct_t *classentry;
     int                 id1_istree, id2_istree;
     t8_cghost_t         ghost1, ghost2;
@@ -191,9 +193,10 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     t8_cmesh_set_shmem_type (cmesh);    /* TODO: do we actually need the shared array? */    
     t8_stash_attribute_sort (cmesh->stash);
 
+    num_hashs = cmesh->num_local_trees > 0 ? cmesh->num_local_trees : 10;
     ghost_facejoin_mempool = sc_mempool_new (sizeof (t8_ghost_facejoin_t));
     ghost_ids = sc_hash_new (t8_ghost_hash, t8_ghost_facejoin_equal,
-                             &cmesh->num_local_trees, ghost_facejoin_mempool);
+                             &num_hashs, ghost_facejoin_mempool);
 
     temp_facejoin = (t8_ghost_facejoin_t *) sc_mempool_alloc (ghost_facejoin_mempool);
 
