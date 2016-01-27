@@ -188,7 +188,7 @@ t8_forest_populate (t8_forest_t forest)
   t8_gloidx_t         count_elements;
   t8_gloidx_t         num_tree_elements;
   t8_topidx_t         num_local_trees;
-  t8_topidx_t         jt;
+  t8_gloidx_t         jt, first_ctree;
   t8_gloidx_t         start, end, et;
   t8_tree_t           tree;
   t8_element_t       *element, *element_succ;
@@ -215,13 +215,17 @@ t8_forest_populate (t8_forest_t forest)
     num_local_trees = forest->last_local_tree - forest->first_local_tree + 1;
     forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
     sc_array_resize (forest->trees, num_local_trees);
+    t8_debugf ("ft = %i, lt = %i\n", forest->first_local_tree,
+               forest->last_local_tree);
+    first_ctree = t8_cmesh_first_treeid (forest->cmesh);
     for (jt = forest->first_local_tree, count_elements = 0;
          jt <= forest->last_local_tree; jt++) {
       tree = (t8_tree_t) t8_sc_array_index_topidx (forest->trees,
                                                    jt -
                                                    forest->first_local_tree);
-      t8_debugf ("Check tree %i\n", jt);
-      tree_class = tree->eclass = t8_cmesh_get_tree_class (forest->cmesh, jt);
+      t8_debugf ("Ask for tree %li %i\n", jt, jt - first_ctree);
+      tree_class = tree->eclass = t8_cmesh_get_tree_class (forest->cmesh,
+                                                           jt - first_ctree);
       tree->elements_offset = count_elements;
       eclass_scheme = forest->scheme->eclass_schemes[tree_class];
       T8_ASSERT (eclass_scheme != NULL);

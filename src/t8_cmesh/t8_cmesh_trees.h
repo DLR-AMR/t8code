@@ -181,8 +181,8 @@ t8_ctree_t          t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees,
 /* TODO: document */
 t8_ctree_t          t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees,
                                                  t8_locidx_t tree_id,
-                                                 t8_locidx_t *face_neigh,
-                                                 int8_t *ttf);
+                                                 t8_locidx_t **face_neigh,
+                                                 int8_t **ttf);
 
 /* TODO: This function return NULL if the ghost is not present.
  *       So far no error checking is done here. */
@@ -193,6 +193,11 @@ t8_ctree_t          t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees,
  */
 t8_cghost_t         t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees,
                                               t8_locidx_t ghost);
+
+/* TODO: document */
+t8_cghost_t t8_cmesh_trees_get_ghost_ext(t8_cmesh_trees_t trees,
+                                                  t8_locidx_t ghost_id,
+                                                  t8_locidx_t **face_neigh);
 
 /* TODO: document */
 /* attr_bytes is the total size of all attributes of that tree */

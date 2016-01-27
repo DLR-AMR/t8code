@@ -42,6 +42,8 @@
 #define T8_TREE_TTF(t) (T8_TREE_FACE(t) + \
   t8_eclass_num_faces[(t)->eclass] * sizeof(t8_locidx_t))
 
+#define T8_GHOST_FACE(g) T8_TREE_FACE(g)
+
 extern int
          t8_cmesh_ctree_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b);
 
@@ -133,7 +135,6 @@ t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees, t8_locidx_t ghost_index,
 {
   t8_part_tree_t      part;
   t8_cghost_t         ghost;
-  int                 iface, num_faces;
 
   T8_ASSERT (trees != NULL);
   T8_ASSERT (proc >= 0);
@@ -148,12 +149,7 @@ t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees, t8_locidx_t ghost_index,
                            part->num_trees))[ghost_index];
   ghost->eclass = eclass;
   ghost->treeid = tree_id;
-  num_faces = t8_eclass_num_faces[eclass];
-  ghost->neighbors = T8_ALLOC (t8_gloidx_t, num_faces);
-  /* Set the neighbors to the default value of -1 (=domain boundary) */
-  for (iface = 0; iface < num_faces; iface++) {
-    ghost->neighbors[iface] = -1;
-  }
+  ghost->neigh_offset = 0;
   trees->ghost_to_proc[ghost_index] = proc;
 }
 
@@ -298,8 +294,6 @@ t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees, int proc)
   T8_FREE (part->first_tree);
   part->first_tree = temp;
 #endif
-  t8_debugf("Allocated %zd from %p to %p\n",first_face + attr_bytes + face_neigh_bytes,
-            part->first_tree, part->first_tree + first_face + attr_bytes + face_neigh_bytes);
   /* Set attribute offset, works even if there are no attributes */
   attr = (t8_attribute_info_struct_t *) (part->first_tree + first_face
       + face_neigh_bytes);
@@ -320,13 +314,12 @@ t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees, t8_locidx_t tree)
 
 t8_ctree_t
 t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees, t8_locidx_t tree_id,
-                             t8_locidx_t *face_neigh, int8_t *ttf)
+                             t8_locidx_t **face_neigh, int8_t **ttf)
 {
   t8_ctree_t            tree;
   tree = t8_cmesh_trees_get_tree (trees, tree_id);
-  face_neigh = (t8_locidx_t *) T8_TREE_FACE(tree);
-  ttf = (int8_t *) T8_TREE_TTF(tree);
-  t8_debugf ("Face at %p ttf at %p\n",face_neigh,ttf);
+  *face_neigh = (t8_locidx_t *) T8_TREE_FACE(tree);
+  *ttf = (int8_t *) T8_TREE_TTF(tree);
   return tree;
 }
 
@@ -341,6 +334,17 @@ t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees, t8_locidx_t ghost)
 
   return t8_part_tree_get_ghost (t8_cmesh_trees_get_part (trees, proc),
                                  ghost);
+}
+
+t8_cghost_t
+t8_cmesh_trees_get_ghost_ext (t8_cmesh_trees_t trees, t8_locidx_t ghost_id,
+                              t8_locidx_t **face_neigh)
+{
+  t8_cghost_t         ghost;
+
+  ghost = t8_cmesh_trees_get_ghost (trees, ghost_id);
+  *face_neigh = (t8_locidx_t *) T8_GHOST_FACE(ghost);
+  return ghost;
 }
 
 void
