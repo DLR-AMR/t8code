@@ -239,6 +239,9 @@ t8_gloidx_t         t8_cmesh_get_num_trees (t8_cmesh_t cmesh);
  */
 t8_locidx_t         t8_cmesh_get_local_num_trees (t8_cmesh_t cmesh);
 
+/* TODO: document */
+t8_gloidx_t         t8_cmesh_first_treeid (t8_cmesh_t cmesh);
+
 /* TODO: should this and the next function be part of the interface? */
 /** Return a pointer to the first local tree in a cmesh.
  * \param [in]     cmesh        The cmesh to be queried.

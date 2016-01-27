@@ -172,6 +172,12 @@ t8_cmesh_set_partition_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
   }
 }
 
+t8_gloidx_t
+t8_cmesh_first_treeid (t8_cmesh_t cmesh)
+{
+  return cmesh->first_tree;
+}
+
 /* Return a pointer to the ctree of a given global tree_id. */
 /* TODO: should get a gloidx?
  *       place after commit */
