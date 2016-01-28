@@ -97,13 +97,13 @@ void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
 
 /* TODO: document.
  *       if level >= 0 then ignore trees_per_proc
- *       trees_per_proc[p] has to be negative if the last tree of proc p is
- *       shared. trees_per_proc must fulfill the description from \see t8_cmesh_types.h
+ *       tree_offsets[p] has to be negative if the last tree of proc p is
+ *       shared. tree_offsets must fulfill the description from \see t8_cmesh_types.h
  */
 void                t8_cmesh_set_partition_from (t8_cmesh_t cmesh,
                                                  const t8_cmesh_t cmesh_from,
                                                  int level,
-                                                 t8_locidx_t * trees_per_proc);
+                                                 t8_gloidx_t *tree_offsets);
 
 /* TODO: This is actually not part of the interface?
  *       At least it is only used if the cmesh is partitioned.
@@ -239,6 +239,9 @@ t8_gloidx_t         t8_cmesh_get_num_trees (t8_cmesh_t cmesh);
  */
 t8_locidx_t         t8_cmesh_get_local_num_trees (t8_cmesh_t cmesh);
 
+/* TODO: document */
+t8_gloidx_t         t8_cmesh_first_treeid (t8_cmesh_t cmesh);
+
 /* TODO: should this and the next function be part of the interface? */
 /** Return a pointer to the first local tree in a cmesh.
  * \param [in]     cmesh        The cmesh to be queried.
@@ -282,8 +285,7 @@ t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
  */
 void               *t8_cmesh_get_attribute (t8_cmesh_t cmesh,
                                             int package_id, int key,
-                                            t8_locidx_t tree_id,
-                                            size_t * data_size);
+                                            t8_locidx_t tree_id);
 
 /* TODO: remove get_ when there is no risk of confusion? Convention? */
 

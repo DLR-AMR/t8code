@@ -191,6 +191,16 @@ void                t8_init (int log_threshold);
  */
 int                 t8_compare_gloidx (const void *gidx1, const void *gidx2);
 
+/** Absolute value for glo_idx
+ * \param [in] x    An integer of type t8_gloidx_t
+ * \return          The absolute value of x.
+ */
+static inline       t8_gloidx_t
+t8_glo_abs (const t8_gloidx_t x)
+{
+  return x >= 0 ? x : -x;
+}
+
 /* call this at the end of a header file to match T8_EXTERN_C_BEGIN (). */
 T8_EXTERN_C_END ();
 

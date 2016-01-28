@@ -91,11 +91,10 @@ typedef struct t8_cmesh
   int8_t              last_tree_shared; /**< If partitioned true if the last tree on this process is also the first tree on the next process.
                                              Always zero if num_local_trees = 0 */
   /* TODO: deprecated, replaced by offset */
-  t8_locidx_t        *tree_per_proc; /**< If partitioned for each process the number of local trees
-                                        or -(num_local_trees)
+  t8_gloidx_t        *tree_offsets;  /**< If partitioned for each process the global index of its first local tree
+                                        or -(first local tree)
                                         if the last tree on that process is the first tree of the next process
-                                          Since this is very memory consuming we only fill it when needed. */
-  t8_gloidx_t        *tree_offsets;
+                                          Since this is very memory consuming we only fill it when needed. */  
 #ifdef T8_ENABLE_DEBUG
   t8_topidx_t         inserted_trees; /**< Count the number of inserted trees to
                                            check at commit if it equals the total number. */
@@ -111,7 +110,10 @@ typedef struct t8_cghost
 {
   t8_gloidx_t         treeid; /**< The global number of this ghost. */
   t8_eclass_t         eclass; /**< The eclass of this ghost. */
+#if 1 /* TODO: remove */
   t8_gloidx_t        *neighbors; /**< Global id's of all neighbors of this ghost */
+#endif
+  size_t              neigh_offset; /* TODO: document */
 }
 t8_cghost_struct_t;
 
@@ -141,15 +143,20 @@ typedef struct t8_ctree
   /* TODO: The local id of a tree should be clear from context, the entry can
    *       be optimized out. */
   t8_eclass_t         eclass; /**< The eclass of this tree. */
+#if 1
+  /* TODO: This is a locidx_t */
+  /* TOOD: remove */
   t8_topidx_t        *face_neighbors; /**< For each face the local index of the face neighbor
                                           of this tree at the face. Indices greater than
                                           the number of local trees refer to ghosts. */
   int8_t             *tree_to_face; /**< For each face the encoding of the face neighbor orientation. */
+#endif
+  size_t              neigh_offset; /* TODO: document */
+  size_t              att_offset; /* TODO: document */
+  int                 num_attributes;
+
+#if 1 /* TODO: remove */
   sc_array_t         *attributes; /**< Array of \a t8_attribute_info_t objects sorted by package_id and key. */
-#if 1
-  /* TODO: remove, this involves rewriting t8_cmesh_tree_is_equal */
-  /* These are deprecated and will be removed */
-  size_t              attribute_offset, attribute_size;
 #endif
 }
 t8_ctree_struct_t;
@@ -159,7 +166,6 @@ typedef struct t8_attribute_info
 {
   int       package_id;
   int       key;
-  size_t    attribute_size;
   size_t    attribute_offset;
 } t8_attribute_info_struct_t;
 
@@ -168,7 +174,8 @@ typedef struct t8_part_tree
 {
   char               *first_tree;       /* Stores the trees, the ghosts and the attributes.
                                            The last 2*sizeof(t8_topidx) bytes store num_trees and num_ghosts */
-  t8_locidx_t         first_tree_id;    /* local tree_id of the first tree */
+  t8_locidx_t         first_tree_id;    /* local tree_id of the first tree. -1 if num_trees = 0 */
+  t8_locidx_t         first_ghost_id;   /* TODO: document. -1 if num_ghost=0 */
   t8_topidx_t         num_trees;
   t8_topidx_t         num_ghosts;
 #if 0
@@ -184,7 +191,7 @@ typedef struct t8_cmesh_trees
   sc_array_t         *from_proc;        /* array of t8_part_tree, one for each process */
   int                *tree_to_proc;     /* for each tree its process */
   int                *ghost_to_proc;    /* for each ghost its process */
-#if 1
+#if 0
   /* TODO: the ghost_to_offset field is not be necessary since the ghost can
    *       be identified by its local index? - remove */
   t8_locidx_t        *ghost_to_offset;  /* for each ghost its offset within the process */
