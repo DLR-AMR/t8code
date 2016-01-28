@@ -173,25 +173,26 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  level = 3;
+  level = 0;
   t8_global_productionf ("Testing basic tet mesh.\n");
 
-#if 1
+#if 0
   t8_basic (0, level);
   t8_basic (1, level);
   t8_basic (0, level);
   t8_basic (1, level);
   t8_global_productionf ("Done testing basic tet mesh.\n");
 #endif
+  t8_basic_hypercube (T8_ECLASS_QUAD, 0, level, 1, 0, 0);
 #if 1
   t8_global_productionf ("Testing hypercube cmesh.\n");
 
   for (eclass = T8_ECLASS_FIRST; eclass < T8_ECLASS_LAST; eclass++) {
     /* Construct the mesh on each process */
-    t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 0, 0, 0);
-    t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 0, 0, 0);
-    t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 1, 0, 0);
-    t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 1, 0, 0);
+    t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 0, 0, 1);
+    t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 0, 0, 1);
+    t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 1, 0, 1);
+    t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 1, 0, 1);
     /* Construct the mesh on one process and broadcast it */
 #if 0
     t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 0, 1, 0);
@@ -217,10 +218,12 @@ main (int argc, char **argv)
   t8_basic_p4est (0);
   t8_basic_p4est (1);
   t8_global_productionf ("Done testing cmesh from p4est.\n");
+#if 1
   t8_global_productionf ("Testing cmesh from p8est.\n");
   t8_basic_p8est (0, 10, 13, 17);
   t8_basic_p8est (1, 10, 13, 17);
   t8_global_productionf ("Done testing cmesh from p8est.\n");
+#endif
 #endif
 
   sc_finalize ();
