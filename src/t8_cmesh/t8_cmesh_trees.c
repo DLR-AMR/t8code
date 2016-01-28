@@ -488,7 +488,7 @@ t8_cmesh_trees_compare_keyattr (const void *A1, const void *A2)
   }
 }
 
-/* ! The size of the attribute is not accessible */
+/* The size of the attribute is not returned, but would be accesible */
 void               *
 t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
                               int package_id, int key)
@@ -532,6 +532,20 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
   attr_info = (t8_attribute_info_struct_t *)
       sc_array_index (&attr_array, index);
   return T8_TREE_ATTR (tree, attr_info);
+}
+
+/* return the total size of attributes of a tree */
+size_t
+t8_cmesh_trees_attribute_size (t8_cmesh_trees_t trees, t8_ctree_t tree)
+{
+  t8_attribute_info_struct_t  *attr_info_first, *attr_info_end;
+
+  if (tree->num_attributes <= 0) {
+    return 0;
+  }
+  attr_info_first = T8_TREE_ATTR_INFO (tree, 0);
+  attr_info_end = T8_TREE_ATTR_INFO (tree, tree->num_attributes);
+  return attr_info_end->attribute_offset - attr_info_first->attribute_offset;
 }
 
 int
