@@ -88,13 +88,13 @@ typedef struct t8_cmesh
 
   t8_gloidx_t         first_tree; /**< The global index of the first local tree
                                        on this process. Zero if the cmesh is not partitioned. -1 if this processor is empty. */
-  int8_t              last_tree_shared; /**< If partitioned true if the last tree on this process is also the first tree on the next process.
+  int8_t             first_tree_shared; /**< If partitioned true if the first tree on this process is also the last tree on the next process.
                                              Always zero if num_local_trees = 0 */
   /* TODO: deprecated, replaced by offset */
   t8_gloidx_t        *tree_offsets;  /**< If partitioned for each process the global index of its first local tree
                                         or -(first local tree)
-                                        if the last tree on that process is the first tree of the next process
-                                          Since this is very memory consuming we only fill it when needed. */  
+                                        if the first tree on that process is shared.
+                                        Since this is very memory consuming we only fill it when needed. */
 #ifdef T8_ENABLE_DEBUG
   t8_topidx_t         inserted_trees; /**< Count the number of inserted trees to
                                            check at commit if it equals the total number. */
