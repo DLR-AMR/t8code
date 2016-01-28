@@ -39,7 +39,6 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                               int *send_first, int *send_last)
 {
   int                 iproc;
-  int                 last_tree_shared;
   t8_gloidx_t         first_tree = 0, last_tree, last_local_tree, ret;
 
   /* p_i is first process we send to if and only if
@@ -63,9 +62,9 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
        iproc++) {
     /* first tree stores new first_tree of process iproc */
     /* last tree the new last tree of process iproc */
-    last_tree_shared = cmesh->tree_offsets[iproc] < 0;
     first_tree = t8_glo_abs (cmesh->tree_offsets[iproc]);
-    last_tree = t8_glo_abs (cmesh->tree_offsets[iproc+1]) - 1 + last_tree_shared;
+    last_tree = t8_glo_abs (cmesh->tree_offsets[iproc+1]) - 1 +
+        cmesh->tree_offsets[iproc + 1 ] < 0;
 
     if (*send_first == -1 &&
         first_tree <= cmesh_from->first_tree && cmesh_from->first_tree <=
@@ -319,11 +318,11 @@ t8_cmesh_partition (t8_cmesh_t cmesh)
     T8_ASSERT (cmesh->tree_offsets == NULL);
     t8_cmesh_uniform_bounds (cmesh_from, cmesh->set_level, &cmesh->first_tree,
                              NULL, &last_tree, NULL,
-                             &cmesh->last_tree_shared);
+                             &cmesh->first_tree_shared);
     cmesh->num_local_trees = last_tree - cmesh->first_tree;
     /* To compute the tree_offsets correctly we have to invert the sign on the
      * first tree if last tree is shared, since we use it for MPI to allgather the tree_offsets */
-    if (cmesh->last_tree_shared) {
+    if (cmesh->first_tree_shared) {
       cmesh->first_tree = -cmesh->first_tree;
     }
     /* allocate and fill tree_offset array with number of trees per process */
@@ -340,7 +339,7 @@ t8_cmesh_partition (t8_cmesh_t cmesh)
                         cmesh->mpicomm);
     cmesh->tree_offsets[cmesh->mpisize] = cmesh_from->num_trees;
     /* tree_offsets was computed, reinvert the sign */
-    if (cmesh->last_tree_shared) {
+    if (cmesh->first_tree_shared) {
       T8_ASSERT (cmesh->first_tree <= 0);
       cmesh->first_tree = -cmesh->first_tree;
     }
@@ -348,14 +347,12 @@ t8_cmesh_partition (t8_cmesh_t cmesh)
   else {
     /* We compute the partition after a given partition table in cmesh->tree_offsets */
     T8_ASSERT (cmesh->tree_offsets != NULL);
-    cmesh->last_tree_shared = cmesh->tree_offsets[cmesh->mpirank] < 0;
+    cmesh->first_tree_shared = cmesh->tree_offsets[cmesh->mpirank] < 0;
     /* compute local first tree */
-    cmesh->first_tree = cmesh->last_tree_shared ?
-      -cmesh->tree_offsets[cmesh->mpirank] :
-        cmesh->tree_offsets[cmesh->mpirank];
+    cmesh->first_tree = t8_glo_abs (cmesh->tree_offsets[cmesh->mpirank]);
     /* compute local num trees */
     cmesh->num_local_trees = t8_glo_abs (cmesh->tree_offsets[cmesh->mpirank + 1])
-        - cmesh->first_tree + cmesh->last_tree_shared;
+        - cmesh->first_tree + cmesh->tree_offsets[cmesh->mpirank + 1] < 0;
   }
   /***************************************************/
   /*        Done with local num and tree_offset      */

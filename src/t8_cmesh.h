@@ -296,8 +296,8 @@ void               *t8_cmesh_get_attribute (t8_cmesh_t cmesh,
  * \param [out]   child_in_tree_begin The global index of the first element belonging to the calling processor. Not computed if NULL.
  * \param [out]   last_local_tree  The last tree that contains elements belonging to the calling processor.
  * \param [out]   child_in_tree_end The global index of the last element belonging to the calling processor. Not computed if NULL.
- * \param [out[   last_tree_shared If not NULL, 1 or 0 is stored here depending on whether \a last_local_tree is the
- *                                 same as \a first_local_tree on the next process.
+ * \param [out[   first_tree_shared If not NULL, 1 or 0 is stored here depending on whether \a first_local_tree is the
+ *                                 same as \a last_local_tree on the next process.
  * \a cmesh must be committed before calling this function. *
  */
 void                t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
@@ -306,7 +306,7 @@ void                t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
                                              child_in_tree_begin,
                                              t8_gloidx_t * last_local_tree,
                                              t8_gloidx_t * child_in_tree_end,
-                                             int8_t * last_tree_shared);
+                                             int8_t * first_tree_shared);
 
 /** Increase the reference counter of a cmesh.
  * \param [in,out] cmesh        On input, this cmesh must exist with positive
