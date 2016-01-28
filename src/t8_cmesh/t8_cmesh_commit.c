@@ -200,6 +200,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       cmesh->first_tree - 1, id1, id2;
     t8_locidx_t         temp_local_id;
     t8_locidx_t         num_hashs;
+    t8_gloidx_t        *face_neigh_g, *face_neigh_g2;
     t8_stash_class_struct_t *classentry;
     int                 id1_istree, id2_istree;
     t8_cghost_t         ghost1, ghost2;
@@ -364,7 +365,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
           ghost_facejoin = *facejoin_pp;
           ghost1 = t8_cmesh_trees_get_ghost_ext (cmesh->trees,
                                                  ghost_facejoin->local_id,
-                                                 &face_neigh);
+                                                 &face_neigh_g);
           temp_local_id = ghost_facejoin->local_id;
         }
         id2 = temp_facejoin->ghost_id = joinface->id2;
@@ -382,13 +383,24 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
           ghost_facejoin = *facejoin_pp;
           ghost2 = t8_cmesh_trees_get_ghost_ext (cmesh->trees,
                                                  ghost_facejoin->local_id,
-                                                 &face_neigh2);
+                                                 &face_neigh_g2);
         }
-        if (joinface->id2 == -1 && face_neigh != NULL) {
-          face_neigh[joinface->face1] = -1;
+        /* TODO: think of boundary encoding. This is not right */
+        if (joinface->id2 == -1) {
+          if (face_neigh != NULL) {
+            face_neigh[joinface->face1] = -1;
+          }
+          if (face_neigh_g != NULL) {
+            face_neigh_g[joinface->face1] = -1;
+          }
         }
-        else if (joinface->id1 == -1 && face_neigh2 != NULL) {
-          face_neigh2[joinface->face2] = -1;
+        else if (joinface->id1 == -1) {
+          if (face_neigh2 != NULL) {
+            face_neigh2[joinface->face2] = -1;
+          }
+          if (face_neigh_g2 != NULL) {
+            face_neigh_g2[joinface->face2] = -1;
+          }
         }
         else {
           if (tree1 != NULL) {
@@ -402,11 +414,11 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
           }
           else if (ghost1 != NULL) {
             T8_ASSERT (ttf == NULL);
-            face_neigh[joinface->face1] = id2;
+            face_neigh_g[joinface->face1] = id2;
           }
           else if (ghost2 != NULL) {
             T8_ASSERT (ttf2 == NULL);
-            face_neigh2[joinface->face2] = id1;
+            face_neigh_g2[joinface->face2] = id1;
             /* Done with setting face join */
           }
           if (tree2 != NULL) {
