@@ -92,7 +92,7 @@ typedef struct t8_cmesh
                                              Always zero if num_local_trees = 0 */
   /* TODO: deprecated, replaced by offset */
   t8_gloidx_t        *tree_offsets;  /**< If partitioned for each process the global index of its first local tree
-                                        or -(first local tree)
+                                        or -(first local tree) - 1
                                         if the first tree on that process is shared.
                                         Since this is very memory consuming we only fill it when needed. */
 #ifdef T8_ENABLE_DEBUG

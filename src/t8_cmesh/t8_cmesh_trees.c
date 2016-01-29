@@ -480,7 +480,7 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
   int                 proc;
   t8_ctree_t          tree;
   t8_attribute_info_struct_t *attr_info;
-  size_t              index;
+  ssize_t             index;
   sc_array_t          attr_array;
   struct t8_key_id_pair key_id;
   T8_ASSERT (trees != NULL);
@@ -507,6 +507,8 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
   index = sc_array_bsearch (&attr_array, &key_id,
                             t8_cmesh_trees_compare_keyattr);
 
+  t8_debugf("Ask for att at %i + %zd",tree_id, tree->att_offset);
+  t8_debugf("Found att at %i\n", index);
   if (index < 0) {
     /* TODO: Error handling if attribute not found */
     t8_global_errorf ("Attribute with package id %i and key %i not found"

@@ -230,6 +230,9 @@ sc_MPI_Comm         t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup);
  */
 t8_gloidx_t         t8_cmesh_get_num_trees (t8_cmesh_t cmesh);
 
+/* TODO: document */
+t8_gloidx_t         t8_cmesh_get_num_local_trees (t8_cmesh_t cmesh);
+
 /** Return the processor local number of trees in a cmesh.
  * If the cmesh is not partitioned this is the same as
  * the global number of trees.

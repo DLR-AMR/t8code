@@ -70,7 +70,7 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
     long long           offset, count_vertices;
 
     num_vertices = t8_cmesh_get_num_vertices (cmesh);
-    num_trees = t8_cmesh_get_num_trees (cmesh);
+    num_trees = t8_cmesh_get_num_local_trees (cmesh);
 
     snprintf (vtufilename, BUFSIZ, "%s.vtu", fileprefix);
     vtufile = fopen (vtufilename, "wb");
@@ -102,6 +102,7 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
 #ifdef T8_VTK_ASCII
     for (tree = t8_cmesh_first_tree (cmesh); tree != NULL;
          tree = t8_cmesh_next_tree (cmesh, tree)) {
+      t8_debugf ("Ask for pid %i\n", t8_get_package_id());
       vertices = ((double *) t8_cmesh_get_attribute (cmesh,
                                                      t8_get_package_id (), 0,
                                                      tree->treeid));
@@ -179,14 +180,30 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
     fprintf (vtufile, "        </DataArray>\n");
     fprintf (vtufile, "      </Cells>\n");
     /* write treeif data */
-    fprintf (vtufile, "      <CellData Scalars=\"treeid\">\n");
+    fprintf (vtufile, "      <CellData Scalars=\"treeid,mpirank\">\n");
     fprintf (vtufile, "        <DataArray type=\"%s\" Name=\"treeid\""
-             " format=\"%s\">\n", T8_VTK_TOPIDX, T8_VTK_FORMAT_STRING);
+             " format=\"%s\">\n", T8_VTK_GLOIDX, T8_VTK_FORMAT_STRING);
 #ifdef T8_VTK_ASCII
     fprintf (vtufile, "         ");
     for (tree = t8_cmesh_first_tree (cmesh), sk = 1, offset = 0; tree != NULL;
          tree = t8_cmesh_next_tree (cmesh, tree), ++sk) {
-      fprintf (vtufile, " %lld", (long long) tree->treeid);
+      fprintf (vtufile, " %lld", (long long) tree->treeid + cmesh->first_tree);
+      if (!(sk % 8))
+        fprintf (vtufile, "\n         ");
+    }
+    fprintf (vtufile, "\n");
+#else
+    SC_ABORT ("Binary vtk file not implemented\n");
+#endif /* T8_VTK_ASCII */
+    fprintf (vtufile, "        </DataArray>\n");
+    /* write mpirank data */
+    fprintf (vtufile, "        <DataArray type=\"%s\" Name=\"mpirank\""
+             " format=\"%s\">\n", "Int32", T8_VTK_FORMAT_STRING);
+#ifdef T8_VTK_ASCII
+    fprintf (vtufile, "         ");
+    for (tree = t8_cmesh_first_tree (cmesh), sk = 1, offset = 0; tree != NULL;
+         tree = t8_cmesh_next_tree (cmesh, tree), ++sk) {
+      fprintf (vtufile, " %i", cmesh->mpirank);
       if (!(sk % 8))
         fprintf (vtufile, "\n         ");
     }

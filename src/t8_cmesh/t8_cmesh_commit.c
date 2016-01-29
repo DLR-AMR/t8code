@@ -153,8 +153,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   if (cmesh->set_from != NULL) {
     cmesh->num_trees = cmesh->set_from->num_trees;
     cmesh->dimension = cmesh->set_from->dimension;
-    memcpy (cmesh->num_trees_per_eclass, cmesh->set_from->num_trees_per_eclass,
-            T8_ECLASS_LAST * sizeof (t8_gloidx_t));
     if (cmesh->set_partitioned) {
       t8_debugf ("Enter cmesh_partition\n");
       t8_cmesh_partition (cmesh);

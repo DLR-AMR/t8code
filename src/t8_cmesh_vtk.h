@@ -49,6 +49,7 @@
 #endif
 
 #define T8_VTK_TOPIDX "Int32"
+#define T8_VTK_GLOIDX "Int64"
 
 T8_EXTERN_C_BEGIN ();
 /* function declarations */

@@ -651,10 +651,16 @@ t8_cmesh_get_num_trees (t8_cmesh_t cmesh)
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
 
+  return cmesh->num_trees;
+}
+
+t8_gloidx_t
+t8_cmesh_get_num_local_trees (t8_cmesh_t cmesh)
+{
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (cmesh->committed);
+
   return cmesh->num_local_trees;
-#if 0
-  return cmesh->num_trees; // HOLKE edit
-#endif
 }
 
 t8_locidx_t
@@ -679,7 +685,6 @@ t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_locidx_t tree_id)
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
-  T8_ASSERT (t8_cmesh_tree_id_is_owned (cmesh, tree_id));
 
   tree = t8_cmesh_get_tree (cmesh, tree_id);
   return tree->eclass;
@@ -755,14 +760,15 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
      *       Changed it back*/
     *last_local_tree = (last_global_child - 1)/ children_per_tree;
     if (first_tree_shared != NULL) {
-      /* This works even for the last process, since then next_first_tree
-       * is computed to num_global_trees */
       prev_last_tree = (first_global_child - 1) / children_per_tree;
-      T8_ASSERT (cmesh->mpirank > 0 ||
-                 prev_last_tree < 0);
-      if (prev_last_tree == *first_local_tree && first_global_child
-          != last_global_child) {
+      T8_ASSERT (cmesh->mpirank > 0 || prev_last_tree <= 0);
+      if (cmesh->mpirank > 0 && prev_last_tree == *first_local_tree &&
+          first_global_child != last_global_child
+          && last_global_child >= 0) {
         /* We exclude empty partitions here, by def their first_tree_shared flag is zero */
+        /* We also exclude that the previous partition was empty at the beginning of the
+         * partitions array */
+        /* TODO: If empty partitions in the middle can occur then we have to think this over */
         *first_tree_shared = 1;
       }
       else {
