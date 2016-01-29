@@ -351,23 +351,24 @@ t8_cmesh_partition_copy_data (char *send_buffer,
       ghost_cpy->treeid = ghost_id + cmesh_from->first_tree;
       /* copy face_neighbor entries, since the ones on the tree are local and
        * we need global, we have to compute each one */
-      for (iface = 0; iface < t8_eclass_num_faces[ghost_cpy->eclass];iface++) {
+      for (iface = 0; iface < t8_eclass_num_faces[ghost_cpy->eclass]; iface++) {
         if (face_neighbor[iface] < 0) {
           /* TODO: think about this */
-          new_neighbor = -1; /* boundary indicator */
+          new_neighbor = -1;    /* boundary indicator */
         }
         else {
           /* Compute global index from local index */
           new_neighbor = face_neighbor[iface] < cmesh_from->num_local_trees ?
-                face_neighbor[iface] + cmesh_from->first_tree :
-                face_neighbor[iface] - cmesh_from->num_local_trees
-                + cmesh_from->first_tree;
+            face_neighbor[iface] + cmesh_from->first_tree :
+            face_neighbor[iface] - cmesh_from->num_local_trees
+            + cmesh_from->first_tree;
         }
         face_neighbor_gnew[iface] = new_neighbor;
       }
     }
     /* compute new offsets */
-    temp_offset = t8_eclass_num_faces[ghost_cpy->eclass] * sizeof (t8_gloidx_t);
+    temp_offset =
+      t8_eclass_num_faces[ghost_cpy->eclass] * sizeof (t8_gloidx_t);
     temp_offset_tree += sizeof (t8_cghost_struct_t);
   }
 }
