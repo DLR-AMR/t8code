@@ -49,6 +49,11 @@ t8_read_triangle_file_build_cmesh (const char * prefix, int do_dup,
       t8_cmesh_set_partition_from (cmesh_part, cmesh,
                                    0,NULL);
       t8_cmesh_commit (cmesh_part);
+      snprintf (fileprefix, BUFSIZ, "%s_t8_triangle_partition_%04d", prefix,
+                mpirank);
+      if (!t8_cmesh_vtk_write_file (cmesh_part, fileprefix, 1.0)){
+        t8_debugf ("Wrote to file %s\n", fileprefix);
+      }
       t8_cmesh_unref (&cmesh_part);
     }
     t8_debugf ("Succesfully constructed cmesh from %s files.\n",
@@ -56,7 +61,7 @@ t8_read_triangle_file_build_cmesh (const char * prefix, int do_dup,
     t8_debugf ("cmesh has:\n\t%lli triangles\n",
                (long long) t8_cmesh_get_num_trees (cmesh));
     snprintf (fileprefix, BUFSIZ, "%s_t8_triangle_%04d", prefix, mpirank);
-    if (!do_partition && !t8_cmesh_vtk_write_file (cmesh, fileprefix, 1.)) {
+    if (!t8_cmesh_vtk_write_file (cmesh, fileprefix, 1.)) {
       t8_debugf ("Wrote to file %s\n", fileprefix);
     }
     else {

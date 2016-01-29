@@ -27,6 +27,7 @@
 #include <t8_cmesh_vtk.h>
 #include <p4est_connectivity.h>
 #include <p8est_connectivity.h>
+#include <sc_shmem.h>
 
 static int
 t8_basic_adapt (t8_forest_t forest, t8_topidx_t which_tree,
@@ -205,11 +206,33 @@ static void
 t8_basic_partition (t8_eclass_t eclass, int set_level)
 {
   t8_cmesh_t        cmesh, cmesh_part;
+  char              file[BUFSIZ];
+  int               mpirank, mpiret, mpisize, iproc;
+  t8_gloidx_t      *offsets;
+
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+  SC_CHECK_MPI (mpiret);
+
+  offsets = SC_SHMEM_ALLOC (t8_gloidx_t, mpisize + 1,
+                            sc_MPI_COMM_WORLD);
 
   t8_cmesh_init (&cmesh_part);
   cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 1);
-  t8_cmesh_set_partition_from (cmesh_part, cmesh, set_level, NULL);
+  snprintf (file, BUFSIZ,"basic_before_partition_%04d", mpirank);
+  t8_cmesh_vtk_write_file (cmesh, file, 1.0);
+  /* A partition that concentrates everything to proc 0 */
+  offsets[0] = 0;
+  offsets[1] = t8_cmesh_get_num_trees (cmesh)/2;
+  offsets[2] = t8_cmesh_get_num_trees (cmesh);
+  for (iproc = 3; iproc <= mpisize; iproc++) {
+    offsets[iproc] = offsets[2];
+  }
+  t8_cmesh_set_partition_from (cmesh_part, cmesh, -1, offsets);
   t8_cmesh_commit (cmesh_part);  
+  snprintf (file, BUFSIZ,"basic_partition_%04d", mpirank);
+  t8_cmesh_vtk_write_file (cmesh_part, file, 1.0);
   t8_cmesh_unref (&cmesh_part);
 }
 
@@ -227,7 +250,7 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  level = 0;
+  level = 1;
   t8_global_productionf ("Testing basic tet mesh.\n");
 
 #if 0
@@ -242,9 +265,8 @@ main (int argc, char **argv)
   t8_global_productionf ("Done testing basic tet mesh.\n");
 #endif
 
- // t8_basic_partition (T8_ECLASS_QUAD, level);
-  t8_basic_partition (T8_ECLASS_TRIANGLE, level);
-  t8_basic_partition (T8_ECLASS_QUAD, level);
+ //t8_basic_partition (T8_ECLASS_QUAD, level);
+  t8_basic_partition (T8_ECLASS_TET, level);
 #if 0
   t8_global_productionf ("Testing hypercube cmesh.\n");
 
