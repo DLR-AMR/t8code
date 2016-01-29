@@ -334,7 +334,7 @@ t8_cmesh_partition_copy_data (char *send_buffer,
       attr_info->attribute_offset += last_attribute_diff;
     }
     temp_offset_att += sizeof (t8_attribute_info_struct_t);
-    temp_offset_tree += sizeof (t8_ctree_t);
+    temp_offset_tree += sizeof (t8_ctree_struct_t);
   }
   /* Copy all ghosts and set their face entries and offsets */
   /* Offset of ghost face_neighbor from first ghost */
