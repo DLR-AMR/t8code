@@ -31,6 +31,7 @@
 #include <sc_statistics.h>
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_trees.h"
+#include "t8_cmesh_partition.h"
 
 typedef struct ghost_facejoins_struct
 {
@@ -112,6 +113,7 @@ t8_cmesh_add_attributes (t8_cmesh_t cmesh)
  *             we assume a boundary face.
  * TODO: Implement a debug check for mesh consistency between processes.
  */
+/* TODO: split this up into smaller functions */
 void
 t8_cmesh_commit (t8_cmesh_t cmesh)
 {
@@ -134,7 +136,32 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   T8_ASSERT (cmesh->mpicomm != sc_MPI_COMM_NULL);
   T8_ASSERT (!cmesh->committed);
 
-  if (!cmesh->set_partitioned) {
+
+
+  /* dup communicator if requested */
+  if (cmesh->do_dup) {
+    mpiret = sc_MPI_Comm_dup (cmesh->mpicomm, &comm_dup);
+    SC_CHECK_MPI (mpiret);
+    cmesh->mpicomm = comm_dup;
+  }
+  /* query communicator new */
+  mpiret = sc_MPI_Comm_size (cmesh->mpicomm, &cmesh->mpisize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (cmesh->mpicomm, &cmesh->mpirank);
+  SC_CHECK_MPI (mpiret);
+
+  if (cmesh->set_from != NULL) {
+    cmesh->num_trees = cmesh->set_from->num_trees;
+    cmesh->dimension = cmesh->set_from->dimension;
+    memcpy (cmesh->num_trees_per_eclass, cmesh->set_from->num_trees_per_eclass,
+            T8_ECLASS_LAST * sizeof (t8_gloidx_t));
+    if (cmesh->set_partitioned) {
+      t8_debugf ("Enter cmesh_partition\n");
+      t8_cmesh_partition (cmesh);
+      t8_debugf ("Done cmesh_partition\n");
+    }
+  }
+  else if (!cmesh->set_partitioned) {
     if (cmesh->stash != NULL && cmesh->stash->classes.elem_count > 0) {
       t8_stash_t          stash = cmesh->stash;
       sc_array_t         *class_entries = &stash->classes;
@@ -196,7 +223,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       }
     }
   }
-#if 1
   else {
     sc_hash_t          *ghost_ids;
     sc_mempool_t       *ghost_facejoin_mempool;
@@ -207,6 +233,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       cmesh->first_tree - 1, id1, id2;
     t8_locidx_t         temp_local_id;
     t8_locidx_t         num_hashs;
+    t8_gloidx_t        *face_neigh_g, *face_neigh_g2;
     t8_stash_class_struct_t *classentry;
     int                 id1_istree, id2_istree;
     t8_cghost_t         ghost1, ghost2;
@@ -380,7 +407,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
           ghost_facejoin = *facejoin_pp;
           ghost1 = t8_cmesh_trees_get_ghost_ext (cmesh->trees,
                                                  ghost_facejoin->local_id,
-                                                 &face_neigh);
+                                                 &face_neigh_g);
           temp_local_id = ghost_facejoin->local_id;
         }
         id2 = temp_facejoin->ghost_id = joinface->id2;
@@ -398,13 +425,24 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
           ghost_facejoin = *facejoin_pp;
           ghost2 = t8_cmesh_trees_get_ghost_ext (cmesh->trees,
                                                  ghost_facejoin->local_id,
-                                                 &face_neigh2);
+                                                 &face_neigh_g2);
         }
-        if (joinface->id2 == -1 && face_neigh != NULL) {
-          face_neigh[joinface->face1] = -1;
+        /* TODO: think of boundary encoding. This is not right */
+        if (joinface->id2 == -1) {
+          if (face_neigh != NULL) {
+            face_neigh[joinface->face1] = -1;
+          }
+          if (face_neigh_g != NULL) {
+            face_neigh_g[joinface->face1] = -1;
+          }
         }
-        else if (joinface->id1 == -1 && face_neigh2 != NULL) {
-          face_neigh2[joinface->face2] = -1;
+        else if (joinface->id1 == -1) {
+          if (face_neigh2 != NULL) {
+            face_neigh2[joinface->face2] = -1;
+          }
+          if (face_neigh_g2 != NULL) {
+            face_neigh_g2[joinface->face2] = -1;
+          }
         }
         else {
           if (tree1 != NULL) {
@@ -418,11 +456,11 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
           }
           else if (ghost1 != NULL) {
             T8_ASSERT (ttf == NULL);
-            face_neigh[joinface->face1] = id2;
+            face_neigh_g[joinface->face1] = id2;
           }
           else if (ghost2 != NULL) {
             T8_ASSERT (ttf2 == NULL);
-            face_neigh2[joinface->face2] = id1;
+            face_neigh_g2[joinface->face2] = id1;
             /* Done with setting face join */
           }
           if (tree2 != NULL) {
@@ -463,20 +501,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     sc_stats_compute (sc_MPI_COMM_WORLD, 3, stats);
     sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 3, stats, 1, 1);
   }
-#endif
 
   cmesh->committed = 1;
 
-  /* dup communicator if requested */
-  if (cmesh->do_dup) {
-    mpiret = sc_MPI_Comm_dup (cmesh->mpicomm, &comm_dup);
-    SC_CHECK_MPI (mpiret);
-    cmesh->mpicomm = comm_dup;
-  }
-  /* query communicator new */
-  mpiret = sc_MPI_Comm_size (cmesh->mpicomm, &cmesh->mpisize);
-  SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Comm_rank (cmesh->mpicomm, &cmesh->mpirank);
-  SC_CHECK_MPI (mpiret);
   t8_stash_destroy (&cmesh->stash);
 }

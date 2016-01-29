@@ -164,6 +164,7 @@ t8_cmesh_set_partition_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
 
   cmesh->set_from = cmesh_from;
   cmesh->set_partitioned = 1;
+  cmesh->face_knowledge = cmesh_from->face_knowledge;
   if (level >= 0) {
     cmesh->set_level = level;
   }
@@ -639,24 +640,6 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 }
 
 static void
-t8_cmesh_gather_treecount (t8_cmesh_t cmesh)
-{
-  t8_gloidx_t         tree_offset;
-
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
-  T8_ASSERT (cmesh->set_partitioned);
-
-  tree_offset = cmesh->last_tree_shared ? -cmesh->first_tree :
-    cmesh->first_tree;
-  cmesh->tree_offsets = SC_SHMEM_ALLOC (t8_gloidx_t, cmesh->mpisize + 1,
-                                        cmesh->mpicomm);
-  sc_shmem_allgather (&tree_offset, 1, T8_MPI_GLOIDX, cmesh->tree_offsets, 1,
-                      T8_MPI_GLOIDX, cmesh->mpicomm);
-  cmesh->tree_offsets[cmesh->mpisize] = cmesh->num_trees;
-}
-
-static void
 t8_cmesh_free_treecount (t8_cmesh_t cmesh)
 {
   SC_SHMEM_FREE (cmesh->tree_offsets, cmesh->mpicomm);
@@ -708,7 +691,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
                          t8_gloidx_t * child_in_tree_begin,
                          t8_gloidx_t * last_local_tree,
                          t8_gloidx_t * child_in_tree_end,
-                         int8_t *last_tree_shared)
+                         int8_t *first_tree_shared)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
@@ -728,7 +711,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     t8_gloidx_t         first_global_child;
     t8_gloidx_t         last_global_child;
     t8_gloidx_t         children_per_tree;
-    t8_gloidx_t         next_first_tree = -1;
+    t8_gloidx_t         prev_last_tree = -1;
     const t8_gloidx_t   one = 1;
 
     children_per_tree = one << cmesh->dimension * level;
@@ -771,19 +754,19 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
      *       Why did we not notice this error before?
      *       Changed it back*/
     *last_local_tree = (last_global_child - 1)/ children_per_tree;
-    if (last_tree_shared != NULL) {
+    if (first_tree_shared != NULL) {
       /* This works even for the last process, since then next_first_tree
        * is computed to num_global_trees */
-      next_first_tree = (last_global_child + 1) / children_per_tree;
-      T8_ASSERT (cmesh->mpirank + 1 < cmesh->mpisize ||
-                 next_first_tree == cmesh->num_trees);
-      if (next_first_tree == *last_local_tree && first_global_child
+      prev_last_tree = (first_global_child - 1) / children_per_tree;
+      T8_ASSERT (cmesh->mpirank > 0 ||
+                 prev_last_tree < 0);
+      if (prev_last_tree == *first_local_tree && first_global_child
           != last_global_child) {
-        /* We exclude empty partitions here, by def their last_tree_shared flag is zero */
-        *last_tree_shared = 1;
+        /* We exclude empty partitions here, by def their first_tree_shared flag is zero */
+        *first_tree_shared = 1;
       }
       else {
-        *last_tree_shared = 0;
+        *first_tree_shared = 0;
       }
     }
     if (child_in_tree_end != NULL) {
@@ -829,6 +812,10 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
     if (cmesh->trees != NULL) {
       t8_cmesh_trees_destroy (&cmesh->trees);
     }
+  }
+  if (cmesh->set_from != NULL) {
+    /* We have taken ownership of cmesh_from */
+    t8_cmesh_unref (&cmesh->set_from);
   }
 
   T8_FREE (cmesh);

@@ -110,6 +110,23 @@ T8_EXTERN_C_BEGIN ();
 /* allocate a t8_cmesh_tree struct and allocate memory for its entries.
  * No memory for ctrees or ghosts is allocated here */
 /* TODO: document */
+
+/* Given a tree return the beginning of its attributes block */
+#define T8_TREE_FIRST_ATT(t) ((char *)(t) + (t)->att_offset)
+/* Given a tree and an index i return the i-th attribute index of that tree */
+#define T8_TREE_ATTR_INFO(t,i) ((t8_attribute_info_struct_t *) \
+  ((char*)(t) + (t)->att_offset + \
+  (i) * sizeof (t8_attribute_info_struct_t)))
+/* Given a tree and an attribute info return the attribute */
+#define T8_TREE_ATTR(t,ai) (T8_TREE_FIRST_ATT(t) + (ai)->attribute_offset)
+/* Given a tree return its face_neighbor array */
+#define T8_TREE_FACE(t) ((char *) (t) + (t)->neigh_offset)
+/* Given a tree return irs tree_to_face arrat */
+#define T8_TREE_TTF(t) (T8_TREE_FACE(t) + \
+  t8_eclass_num_faces[(t)->eclass] * sizeof(t8_locidx_t))
+
+#define T8_GHOST_FACE(g) T8_TREE_FACE(g)
+
 void                t8_cmesh_trees_init (t8_cmesh_trees_t * ptrees,
                                          int num_procs, t8_locidx_t num_trees,
                                          t8_locidx_t num_ghosts);
@@ -121,6 +138,10 @@ void                t8_cmesh_trees_init_part (t8_cmesh_trees_t trees,
                                               t8_locidx_t last_tree,
                                               t8_locidx_t num_ghosts);
 #endif
+
+/* TODO: document */
+t8_part_tree_t      t8_cmesh_trees_get_part (t8_cmesh_trees_t trees, int proc);
+
 /* allocate the first_tree array of a given tree_part in a tree struct
  * with a given number of bytes */
 /* !!! This does only allocate memory for the trees and ghosts
@@ -195,9 +216,9 @@ t8_cghost_t         t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees,
                                               t8_locidx_t ghost);
 
 /* TODO: document */
-t8_cghost_t t8_cmesh_trees_get_ghost_ext(t8_cmesh_trees_t trees,
-                                                  t8_locidx_t ghost_id,
-                                                  t8_locidx_t **face_neigh);
+t8_cghost_t         t8_cmesh_trees_get_ghost_ext(t8_cmesh_trees_t trees,
+                                                 t8_locidx_t ghost_id,
+                                                 t8_gloidx_t **face_neigh);
 
 /* TODO: document */
 /* attr_bytes is the total size of all attributes of that tree */
@@ -217,6 +238,10 @@ void                t8_cmesh_trees_attribute_info_sort (t8_cmesh_trees_t trees);
 void               *t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees,
                                                   t8_topidx_t tree_id,
                                                   int package_id, int key);
+
+
+/* TODO: document. total size of attributes of given tree */
+size_t              t8_cmesh_trees_attribute_size (t8_ctree_t tree);
 
 /* TODO: These need to be rewritten with package_id and key */
 /* TODO: this uses char * and cmesh_set_attribute uses void *. Unify! */

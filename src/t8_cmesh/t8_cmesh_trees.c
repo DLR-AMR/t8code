@@ -28,22 +28,6 @@
 #include "t8_cmesh_stash.h"
 #include "t8_cmesh_trees.h"
 
-/* Given a tree return the beginning of its attributes block */
-#define T8_TREE_FIRST_ATT(t) ((char *)(t) + (t)->att_offset)
-/* Given a tree and an index i return the i-th attribute index of that tree */
-#define T8_TREE_ATTR_INFO(t,i) ((t8_attribute_info_struct_t *) \
-  ((char*)(t) + (t)->att_offset + \
-  (i) * sizeof (t8_attribute_info_struct_t)))
-/* Given a tree and an attribute info return the attribute */
-#define T8_TREE_ATTR(t,ai) (T8_TREE_FIRST_ATT(t) + (ai)->attribute_offset)
-/* Given a tree return its face_neighbor array */
-#define T8_TREE_FACE(t) ((char *) (t) + (t)->neigh_offset)
-/* Given a tree return irs tree_to_face arrat */
-#define T8_TREE_TTF(t) (T8_TREE_FACE(t) + \
-  t8_eclass_num_faces[(t)->eclass] * sizeof(t8_locidx_t))
-
-#define T8_GHOST_FACE(g) T8_TREE_FACE(g)
-
 extern int
          t8_cmesh_ctree_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b);
 
@@ -55,7 +39,7 @@ struct t8_key_id_pair
   int                 package_id;
 };
 
-static              t8_part_tree_t
+t8_part_tree_t
 t8_cmesh_trees_get_part (t8_cmesh_trees_t trees, int proc)
 {
   T8_ASSERT (trees != NULL);
@@ -69,7 +53,7 @@ t8_cmesh_trees_init (t8_cmesh_trees_t * ptrees, int num_procs,
   t8_cmesh_trees_t    trees;
 
   T8_ASSERT (ptrees != NULL);
-  T8_ASSERT (num_procs > 0);
+  T8_ASSERT (num_procs >= 0);
   T8_ASSERT (num_trees >= 0);
   T8_ASSERT (num_ghosts >= 0);
 
@@ -338,12 +322,12 @@ t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees, t8_locidx_t ghost)
 
 t8_cghost_t
 t8_cmesh_trees_get_ghost_ext (t8_cmesh_trees_t trees, t8_locidx_t ghost_id,
-                              t8_locidx_t **face_neigh)
+                              t8_gloidx_t **face_neigh)
 {
   t8_cghost_t         ghost;
 
   ghost = t8_cmesh_trees_get_ghost (trees, ghost_id);
-  *face_neigh = (t8_locidx_t *) T8_GHOST_FACE(ghost);
+  *face_neigh = (t8_gloidx_t *) T8_GHOST_FACE(ghost);
   return ghost;
 }
 
@@ -488,7 +472,7 @@ t8_cmesh_trees_compare_keyattr (const void *A1, const void *A2)
   }
 }
 
-/* ! The size of the attribute is not accessible */
+/* The size of the attribute is not returned, but would be accesible */
 void               *
 t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
                               int package_id, int key)
@@ -532,6 +516,21 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
   attr_info = (t8_attribute_info_struct_t *)
       sc_array_index (&attr_array, index);
   return T8_TREE_ATTR (tree, attr_info);
+}
+
+/* return the total size of attributes of a tree */
+size_t
+t8_cmesh_trees_attribute_size (t8_ctree_t tree)
+{
+  t8_attribute_info_struct_t  *attr_info_first, *attr_info_end;
+
+  if (tree->num_attributes <= 0) {
+    return 0;
+  }
+  attr_info_first = T8_TREE_ATTR_INFO (tree, 0);
+  attr_info_end = T8_TREE_ATTR_INFO (tree, tree->num_attributes);
+  return attr_info_end->attribute_offset + tree->num_attributes *
+      sizeof (t8_attribute_info_struct_t) - attr_info_first->attribute_offset;
 }
 
 int
@@ -607,7 +606,3 @@ t8_cmesh_trees_destroy (t8_cmesh_trees_t * ptrees)
   T8_FREE (trees);
   ptrees = NULL;
 }
-
-#undef T8_TREE_FIRST_ATT
-#undef T8_TREE_ATTR_INFO
-#undef T8_TREE_ATTR
