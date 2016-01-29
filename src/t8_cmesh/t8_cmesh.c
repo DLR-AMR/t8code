@@ -164,6 +164,7 @@ t8_cmesh_set_partition_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
 
   cmesh->set_from = cmesh_from;
   cmesh->set_partitioned = 1;
+  cmesh->face_knowledge = cmesh_from->face_knowledge;
   if (level >= 0) {
     cmesh->set_level = level;
   }
@@ -639,24 +640,6 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 }
 
 static void
-t8_cmesh_gather_treecount (t8_cmesh_t cmesh)
-{
-  t8_gloidx_t         tree_offset;
-
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
-  T8_ASSERT (cmesh->set_partitioned);
-
-  tree_offset = cmesh->first_tree_shared ? -cmesh->first_tree :
-    cmesh->first_tree;
-  cmesh->tree_offsets = SC_SHMEM_ALLOC (t8_gloidx_t, cmesh->mpisize + 1,
-                                        cmesh->mpicomm);
-  sc_shmem_allgather (&tree_offset, 1, T8_MPI_GLOIDX, cmesh->tree_offsets, 1,
-                      T8_MPI_GLOIDX, cmesh->mpicomm);
-  cmesh->tree_offsets[cmesh->mpisize] = cmesh->num_trees;
-}
-
-static void
 t8_cmesh_free_treecount (t8_cmesh_t cmesh)
 {
   SC_SHMEM_FREE (cmesh->tree_offsets, cmesh->mpicomm);
@@ -826,6 +809,10 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
     if (cmesh->trees != NULL) {
       t8_cmesh_trees_destroy (&cmesh->trees);
     }
+  }
+  if (cmesh->set_from != NULL) {
+    /* We have taken ownership of cmesh_from */
+    t8_cmesh_unref (&cmesh->set_from);
   }
 
   T8_FREE (cmesh);

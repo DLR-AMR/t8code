@@ -29,6 +29,7 @@
 #include <t8_cmesh.h>
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_trees.h"
+#include "t8_cmesh_partition.h"
 
 typedef struct ghost_facejoins_struct
 {
@@ -110,6 +111,7 @@ t8_cmesh_add_attributes (t8_cmesh_t cmesh)
  *             we assume a boundary face.
  * TODO: Implement a debug check for mesh consistency between processes.
  */
+/* TODO: split this up into smaller functions */
 void
 t8_cmesh_commit (t8_cmesh_t cmesh)
 {
@@ -127,7 +129,32 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   T8_ASSERT (cmesh->mpicomm != sc_MPI_COMM_NULL);
   T8_ASSERT (!cmesh->committed);
 
-  if (!cmesh->set_partitioned) {
+
+
+  /* dup communicator if requested */
+  if (cmesh->do_dup) {
+    mpiret = sc_MPI_Comm_dup (cmesh->mpicomm, &comm_dup);
+    SC_CHECK_MPI (mpiret);
+    cmesh->mpicomm = comm_dup;
+  }
+  /* query communicator new */
+  mpiret = sc_MPI_Comm_size (cmesh->mpicomm, &cmesh->mpisize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (cmesh->mpicomm, &cmesh->mpirank);
+  SC_CHECK_MPI (mpiret);
+
+  if (cmesh->set_from != NULL) {
+    cmesh->num_trees = cmesh->set_from->num_trees;
+    cmesh->dimension = cmesh->set_from->dimension;
+    memcpy (cmesh->num_trees_per_eclass, cmesh->set_from->num_trees_per_eclass,
+            T8_ECLASS_LAST * sizeof (t8_gloidx_t));
+    if (cmesh->set_partitioned) {
+      t8_debugf ("Enter cmesh_partition\n");
+      t8_cmesh_partition (cmesh);
+      t8_debugf ("Done cmesh_partition\n");
+    }
+  }
+  else if (!cmesh->set_partitioned) {
     if (cmesh->stash != NULL && cmesh->stash->classes.elem_count > 0) {
       t8_stash_t          stash = cmesh->stash;
       sc_array_t         *class_entries = &stash->classes;
@@ -189,7 +216,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       }
     }
   }
-#if 1
   else {
     sc_hash_t          *ghost_ids;
     sc_mempool_t       *ghost_facejoin_mempool;
@@ -453,20 +479,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     sc_MPI_Allreduce (&id1, &cmesh->num_trees, 1, T8_MPI_GLOIDX,
                       sc_MPI_SUM, cmesh->mpicomm);
   }
-#endif
 
   cmesh->committed = 1;
 
-  /* dup communicator if requested */
-  if (cmesh->do_dup) {
-    mpiret = sc_MPI_Comm_dup (cmesh->mpicomm, &comm_dup);
-    SC_CHECK_MPI (mpiret);
-    cmesh->mpicomm = comm_dup;
-  }
-  /* query communicator new */
-  mpiret = sc_MPI_Comm_size (cmesh->mpicomm, &cmesh->mpisize);
-  SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Comm_rank (cmesh->mpicomm, &cmesh->mpirank);
-  SC_CHECK_MPI (mpiret);
   t8_stash_destroy (&cmesh->stash);
 }

@@ -53,7 +53,7 @@ t8_cmesh_trees_init (t8_cmesh_trees_t * ptrees, int num_procs,
   t8_cmesh_trees_t    trees;
 
   T8_ASSERT (ptrees != NULL);
-  T8_ASSERT (num_procs > 0);
+  T8_ASSERT (num_procs >= 0);
   T8_ASSERT (num_trees >= 0);
   T8_ASSERT (num_ghosts >= 0);
 

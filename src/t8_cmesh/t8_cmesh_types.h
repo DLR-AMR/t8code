@@ -70,7 +70,7 @@ typedef struct t8_cmesh
   int                 face_knowledge;  /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partioned */
   int8_t              set_level;       /**< Non-negative if the cmesh should be partition from an already existing cmesh
                                          with an assumes \a level uniform mesh underneath */
-  const struct t8_cmesh *set_from; /**< If this cmesh is a modified (i.e. partitioned) version
+  struct t8_cmesh    *set_from; /**< If this cmesh is a modified (i.e. partitioned) version
                                         of another cmesh, we store a pointer to this other cmesh here. */
   sc_MPI_Comm         mpicomm;  /**< MPI communicator to use. */
   int                 mpirank;  /**< Number of this MPI process. */
@@ -176,8 +176,8 @@ typedef struct t8_part_tree
                                            The last 2*sizeof(t8_topidx) bytes store num_trees and num_ghosts */
   t8_locidx_t         first_tree_id;    /* local tree_id of the first tree. -1 if num_trees = 0 */
   t8_locidx_t         first_ghost_id;   /* TODO: document. -1 if num_ghost=0 */
-  t8_topidx_t         num_trees;
-  t8_topidx_t         num_ghosts;
+  t8_locidx_t         num_trees;
+  t8_locidx_t         num_ghosts;
 #if 0
   /* TODO: Do we need this? */
   size_t              num_bytes_for_attributes;

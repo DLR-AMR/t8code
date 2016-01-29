@@ -36,6 +36,7 @@ T8_EXTERN_C_BEGIN ();
  * current machine.
  * \see sc_shmem.h
  */
+#if 0
 #if defined(__bgq__)
   #define T8_SHMEM_BEST_TYPE SC_SHMEM_BGQ
 #elif defined(SC_ENABLE_MPIWINSHARED)
@@ -43,6 +44,9 @@ T8_EXTERN_C_BEGIN ();
 #else
   #define T8_SHMEM_BEST_TYPE SC_SHMEM_BASIC
 #endif
+#endif
+/* For testing we only use basic shmem type */
+#define T8_SHMEM_BEST_TYPE SC_SHMEM_BASIC
 
 T8_EXTERN_C_END ();
 
