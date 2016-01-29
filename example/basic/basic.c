@@ -159,6 +159,18 @@ t8_basic (int do_dup, int set_level)
   t8_forest_unref (&forest);
 }
 
+static void
+t8_basic_partition (t8_eclass_t eclass, int set_level)
+{
+  t8_cmesh_t        cmesh, cmesh_part;
+
+  t8_cmesh_init (&cmesh_part);
+  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 1);
+  t8_cmesh_set_partition_from (cmesh_part, cmesh, set_level, NULL);
+  t8_cmesh_commit (cmesh_part);  
+  t8_cmesh_unref (&cmesh_part);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -183,8 +195,10 @@ main (int argc, char **argv)
   t8_basic (1, level);
   t8_global_productionf ("Done testing basic tet mesh.\n");
 #endif
-  t8_basic_hypercube (T8_ECLASS_QUAD, 0, level, 1, 0, 0);
-#if 1
+ // t8_basic_partition (T8_ECLASS_QUAD, level);
+  t8_basic_partition (T8_ECLASS_TRIANGLE, level);
+  t8_basic_partition (T8_ECLASS_QUAD, level);
+#if 0
   t8_global_productionf ("Testing hypercube cmesh.\n");
 
   for (eclass = T8_ECLASS_FIRST; eclass < T8_ECLASS_LAST; eclass++) {

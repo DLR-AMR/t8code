@@ -39,6 +39,14 @@ t8_read_triangle_file_build_cmesh (const char * prefix, int do_dup,
   cmesh = t8_cmesh_from_triangle_file ((char *) prefix, do_partition,
                                        sc_MPI_COMM_WORLD, do_dup);
   if (cmesh != NULL) {
+    if (do_partition) {
+      t8_cmesh_t      cmesh_part;
+      t8_cmesh_ref (cmesh);
+      t8_cmesh_init (&cmesh_part);
+      t8_cmesh_set_partition_from (cmesh_part, cmesh,
+                                   0,NULL);
+      t8_cmesh_unref (&cmesh_part);
+    }
     t8_debugf ("Succesfully constructed cmesh from %s files.\n",
                            prefix);
     t8_debugf ("cmesh has:\n\t%lli triangles\n",
