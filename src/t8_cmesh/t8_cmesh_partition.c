@@ -54,6 +54,7 @@ t8_offset_first (int proc, t8_gloidx_t * offset)
 }
 
 /* The number of trees of a given process */
+/* Can get negative for empty processes */
 static t8_gloidx_t
 t8_offset_num_trees (int proc, t8_gloidx_t * offset)
 {
@@ -66,10 +67,46 @@ t8_offset_num_trees (int proc, t8_gloidx_t * offset)
 static t8_gloidx_t
 t8_offset_last (int proc, t8_gloidx_t * offset)
 {
-  T8_ASSERT (proc >= 0);
+  T8_ASSERT (proc >= -1);
   T8_ASSERT (offset != NULL);
 
   return t8_glo_abs (offset[proc + 1]) - 1;
+}
+
+static int
+t8_offset_empty (int proc, t8_gloidx_t * offset)
+{
+  T8_ASSERT (proc >= 0);
+  T8_ASSERT (offset != NULL);
+
+  /* proc is empty if the first tree of the next process is smaller than
+   * the "first tree" of proc.
+   * In this case the first tree of proc+1 is shared. */
+  if (t8_offset_first (proc + 1, offset) < t8_offset_first (proc, offset))
+    return 1;
+  /* Or the "first tree" of proc equals the first tree of proc+1 but the latter
+   * is not shared */
+  if (t8_offset_first (proc + 1, offset) == t8_offset_first (proc, offset)
+      && offset[proc+1] >= 0) {
+    return 1;
+  }
+  return 0;
+}
+
+/* Count the number of nenempty procs from start to end */
+static int
+t8_offset_range_woempty (int start, int end, t8_gloidx_t * offset)
+{
+  int count = 0, i;
+
+  for (i = start;i <= end;i++) {
+    if (!t8_offset_empty (i, offset)) {
+      count++;
+    } else
+      t8_debugf ("%i is empty\n", i);
+  }
+  t8_debugf ("Between %i and %i are %i nonempty\n", start,end,count);
+  return count;
 }
 
 static void

@@ -267,6 +267,7 @@ main (int argc, char **argv)
 
  //t8_basic_partition (T8_ECLASS_QUAD, level);
   t8_basic_partition (T8_ECLASS_TET, level);
+  t8_basic_partition (T8_ECLASS_TRIANGLE, level);
 #if 0
   t8_global_productionf ("Testing hypercube cmesh.\n");
 
