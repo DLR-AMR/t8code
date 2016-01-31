@@ -247,7 +247,9 @@ t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees, int proc)
     T8_ASSERT (face_neigh_bytes % 4 == 0);
     temp_offset += sizeof (t8_ctree_struct_t);
   }
+#if 0
   num_attributes ++;
+#endif
   /* Second pass through trees to set attribute offsets */
   temp_offset = 0;
   num_attributes = 0;
@@ -261,7 +263,9 @@ t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees, int proc)
     num_attributes += tree->num_attributes;
     temp_offset += sizeof (t8_ctree_struct_t);
   }
-  num_attributes++;
+#if 0
+  num_attributes++; /* Add one attribute at the end */
+#endif
   attr_bytes += num_attributes * sizeof(t8_attribute_info_struct_t);
   /* Done setting all tree and ghost offsets */
   /* Allocate memory, first_face + attr_bytes gives the new total byte count */
@@ -278,7 +282,7 @@ t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees, int proc)
   T8_FREE (part->first_tree);
   part->first_tree = temp;
 #endif
-  /* Set attribute offset, works even if there are no attributes */
+  /* Set attribute first offset, works even if there are no attributes */
   attr = (t8_attribute_info_struct_t *) (part->first_tree + first_face
       + face_neigh_bytes);
   attr->attribute_offset = num_attributes * sizeof(t8_attribute_info_struct_t);
@@ -384,18 +388,21 @@ t8_cmesh_tree_add_attribute (t8_cmesh_trees_t trees, int proc,
 
   memcpy (new_attr, attr->attr_data, attr->attr_size);
 
-
   /* Set new values */
   attr_info->key = attr->key;
   attr_info->package_id = attr->package_id;
+  attr_info->attribute_size = attr->attr_size;
   /* Store offset */
   offset = attr_info->attribute_offset;
   /* Get next attribute and set its offset */
-  attr_info = attr_info + 1;
-  attr_info->attribute_offset = offset + attr->attr_size;
-  if (index == tree->num_attributes - 1) {
-    attr_info->attribute_offset -= tree->num_attributes *
-        sizeof(t8_attribute_info_struct_t);
+  if (!(index == tree->num_attributes - 1 &&
+        part->num_trees == tree_id + 1 - part->first_tree_id)) {
+    attr_info = attr_info + 1;
+    attr_info->attribute_offset = offset + attr->attr_size;
+    if (index == tree->num_attributes - 1) {
+     attr_info->attribute_offset -= tree->num_attributes *
+         sizeof(t8_attribute_info_struct_t);
+    }
   }
 }
 
@@ -507,8 +514,6 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
   index = sc_array_bsearch (&attr_array, &key_id,
                             t8_cmesh_trees_compare_keyattr);
 
-  t8_debugf("Ask for att at %i + %zd",tree_id, tree->att_offset);
-  t8_debugf("Found att at %i\n", index);
   if (index < 0) {
     /* TODO: Error handling if attribute not found */
     t8_global_errorf ("Attribute with package id %i and key %i not found"
@@ -524,15 +529,15 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
 size_t
 t8_cmesh_trees_attribute_size (t8_ctree_t tree)
 {
-  t8_attribute_info_struct_t  *attr_info_first, *attr_info_end;
+  t8_attribute_info_struct_t  *attr_info;
+  int               i;
+  size_t            total = 0;
 
-  if (tree->num_attributes <= 0) {
-    return 0;
+  for (i = 0;i < tree->num_attributes;i++) {
+    attr_info = T8_TREE_ATTR_INFO (tree, i);
+    total += attr_info->attribute_size;
   }
-  attr_info_first = T8_TREE_ATTR_INFO (tree, 0);
-  attr_info_end = T8_TREE_ATTR_INFO (tree, tree->num_attributes);
-  return attr_info_end->attribute_offset + tree->num_attributes *
-      sizeof (t8_attribute_info_struct_t) - attr_info_first->attribute_offset;
+  return total;
 }
 
 int

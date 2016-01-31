@@ -160,6 +160,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     }
   }
   else if (!cmesh->set_partitioned) {
+    /* TODO: Does not use new data layout yet! */
     if (cmesh->stash != NULL && cmesh->stash->classes.elem_count > 0) {
       t8_stash_t          stash = cmesh->stash;
       sc_array_t         *class_entries = &stash->classes;

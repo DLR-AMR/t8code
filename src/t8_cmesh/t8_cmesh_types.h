@@ -167,6 +167,7 @@ typedef struct t8_attribute_info
   int       package_id;
   int       key;
   size_t    attribute_offset;
+  size_t    attribute_size; /* TODO: eventually remove this */
 } t8_attribute_info_struct_t;
 
 /* TODO: document */

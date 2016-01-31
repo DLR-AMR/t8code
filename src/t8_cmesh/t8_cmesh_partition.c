@@ -93,6 +93,21 @@ t8_offset_empty (int proc, t8_gloidx_t * offset)
   return 0;
 }
 
+/* Return 1 if the process will not send any trees, that is if it is
+ * empty or has only one shared tree */
+static int
+t8_offset_nosend (int proc, t8_gloidx_t * offset)
+{
+  if (t8_offset_empty (proc, offset)) {
+    return 1;
+  }
+  else if (t8_offset_num_trees (proc, offset) == 1 &&
+           offset[proc + 1] < 0) {
+    return 1;
+  }
+  return 0;
+}
+
 /* Count the number of nenempty procs from start to end */
 static int
 t8_offset_range_woempty (int start, int end, t8_gloidx_t * offset)
@@ -116,7 +131,7 @@ t8_cmesh_gather_treecount (t8_cmesh_t cmesh)
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
-  T8_ASSERT (cmesh->set_partitioned);
+  //T8_ASSERT (cmesh->set_partitioned);
 
   tree_offset = cmesh->first_tree_shared ? -cmesh->first_tree - 1 :
     cmesh->first_tree;
@@ -176,7 +191,7 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                cmesh_from->num_local_trees, cmesh_from->first_tree);
   }
 
-  if (last_local_tree < cmesh_from->first_tree) {
+  if (last_local_tree < first_local_tree) {
     /* This partition is empty and we can not send anything */
     *send_last = -2;
     return -1;
@@ -326,7 +341,7 @@ t8_cmesh_partition_copy_data (char *send_buffer,
 {
   t8_ctree_t          tree, tree_cpy;
   size_t              temp_offset_tree, temp_offset_att, iz, temp_offset,
-    temp_offset_data;
+    temp_offset_data, last_offset, last_num_att, last_size;
   ssize_t             last_attribute_diff;
   t8_attribute_info_struct_t *attr_info;
   t8_locidx_t         num_ghost_send = send_as_ghost->elem_count;
@@ -365,15 +380,7 @@ t8_cmesh_partition_copy_data (char *send_buffer,
                    temp_offset_att, T8_TREE_ATTR_INFO (tree, 0),
                    tree->num_attributes *
                    sizeof (t8_attribute_info_struct_t));
-    t8_debugf ("Copied att pid %i k %i to %zd\n",
-               ((t8_attribute_info_struct_t *)
-                T8_TREE_ATTR_INFO (tree, 0))->package_id,
-               ((t8_attribute_info_struct_t *)
-                T8_TREE_ATTR_INFO (tree, 0))->key,
-               num_trees * sizeof (t8_ctree_struct_t) +
-               num_ghost_send * sizeof (t8_cghost_struct_t) +
-               ghost_neighbor_bytes + tree_neighbor_bytes + temp_offset_att);
-    temp_offset_att +=
+     temp_offset_att +=
       tree->num_attributes * sizeof (t8_attribute_info_struct_t);
     /* Copy all attribute data to send_buffer */
     (void) memcpy (send_buffer + num_trees * sizeof (t8_ctree_struct_t) +
@@ -396,9 +403,16 @@ t8_cmesh_partition_copy_data (char *send_buffer,
                                               sizeof (t8_cghost_struct_t) +
                                               ghost_neighbor_bytes +
                                               tree_neighbor_bytes);
+#if 0
   /* This has to be add to each attribute info offset to calculated the new offset */
   last_attribute_diff = attr_info_bytes - attr_info->attribute_offset;
+#endif
   /* Set attribute offsets of trees and attribute data offsets of info objects */
+  tree_cpy = NULL;
+  last_num_att = 0;
+  last_size = 0;
+  last_offset = attr_info_bytes;
+  /* TODO: The last changes here did not make it better */
   for (itree = send_first; itree <= send_last; itree++) {
     tree_cpy = (t8_ctree_t) (send_buffer + temp_offset_tree);
     /* new neighbor offset of tree */
@@ -409,15 +423,25 @@ t8_cmesh_partition_copy_data (char *send_buffer,
       + ((4 - t8_eclass_num_faces[tree_cpy->eclass] *
           (sizeof (t8_locidx_t) + sizeof (int8_t)) % 4) % 4);
     /* new attribute offset for tree */
-    tree_cpy->att_offset = temp_offset_att - temp_offset_tree;
+    tree_cpy->att_offset = temp_offset_att - temp_offset_tree;    
+    attr_info->attribute_offset = last_offset + last_size -
+        last_num_att * sizeof(t8_attribute_info_struct_t);
+    last_offset = attr_info->attribute_offset;
+    last_size = attr_info->attribute_size;
     /* set new attribtue data offsets */
-    for (iz = 0; iz < tree_cpy->num_attributes; iz++) {
+    for (iz = 1; iz < tree_cpy->num_attributes; iz++) {
+      attr_info->attribute_offset = last_offset + last_size;
       attr_info++;
-      attr_info->attribute_offset += last_attribute_diff;
     }
-    temp_offset_att += sizeof (t8_attribute_info_struct_t);
+    temp_offset_att += tree_cpy->num_attributes *
+        sizeof (t8_attribute_info_struct_t);
     temp_offset_tree += sizeof (t8_ctree_struct_t);
   }
+#if 0
+  /* Set the new offset of the last (non existing attribute) */
+  t8_debugf("From %i\n", attr_info->attribute_offset);
+  attr_info->attribute_offset += last_attribute_diff;
+#endif
   /* Copy all ghosts and set their face entries and offsets */
   /* Offset of ghost face_neighbor from first ghost */
   temp_offset = num_trees * sizeof (t8_ctree_struct_t) +
@@ -558,7 +582,6 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
     sc_array_truncate (&send_as_ghost);
     /* loop over all trees that will be send */
     for (itree = range_start; itree <= range_end; itree++) {
-      t8_debugf ("Wabt tree %i\n", itree);
       tree = t8_cmesh_trees_get_tree_ext (cmesh_from->trees, itree,
                                           &face_neighbor, &ttf);
       /* Count the additional memory needed per tree from neighbors */
@@ -605,7 +628,9 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
      * | tree 0,1...| ghost 0,1...| face_neighbors0, tree_to_face0,...| ghost_neighbors 0,1,...| Attinfo00,01,...,Attinfoend | attdata00,01,... |
      *
      */
-    attr_info_bytes += sizeof (t8_attribute_info_struct_t);     /* We always put one attribute info struct at the end */
+#if 0
+    attr_info_bytes += sizeof (t8_attribute_info_struct_t);     /* We always put one attribute info structat the end */
+ #endif
     num_trees = range_end - range_start + 1;
     num_ghost_send = send_as_ghost.elem_count;
     /* TODO: parse throgh send_as_ghost and add to ghost_neighbor_bytes */
@@ -614,21 +639,32 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
       tree_neighbor_bytes + attr_info_bytes + attr_bytes;
     /* Extra space to store the number of trees and ghosts in the send buffer */
     total_alloc += 2 * sizeof (t8_locidx_t);
-    t8_debugf ("Access buffer at %i\n", iproc - send_first);
+    t8_debugf("NT %i\n",num_trees);
+    t8_debugf("NGS %i\n",num_ghost_send);
+    t8_debugf("GNB %i\n",ghost_neighbor_bytes);
+    t8_debugf("TNB %i\n",tree_neighbor_bytes);
+    t8_debugf("AIB %i\n",attr_info_bytes);
+    t8_debugf("AB %i\n",attr_bytes);
+    t8_debugf("Ta %i\n",total_alloc);
+    t8_debugf ("Access buffer at %i to alloc %i\n", iproc - send_first, total_alloc);
     send_buffer[iproc - send_first] = T8_ALLOC (char, total_alloc);
 
-    /* Store number of trees and ghosts at the end of send buffer */
-    *(t8_locidx_t *) (send_buffer[iproc - send_first] + total_alloc -
-                      2 * sizeof (t8_locidx_t))
-      = num_trees;
-    *(t8_locidx_t *) (send_buffer[iproc - send_first] + total_alloc -
-                      sizeof (t8_locidx_t))
-      = num_ghost_send;
     /* Copy all data to the send buffer */
     t8_cmesh_partition_copy_data (send_buffer[iproc - send_first], cmesh_from,
                                   num_trees, attr_info_bytes, attr_bytes,
                                   ghost_neighbor_bytes, tree_neighbor_bytes,
                                   &send_as_ghost, range_start, range_end);
+
+    /* Store number of trees and ghosts at the end of send buffer */
+    *(t8_locidx_t *) (send_buffer[iproc - send_first] + total_alloc -
+                      2 * sizeof (t8_locidx_t))
+      = num_trees;
+    t8_debugf ("[T] Send %i trees\n",
+               *(t8_locidx_t *) (send_buffer[iproc - send_first] + total_alloc -
+                                 2 * sizeof (t8_locidx_t)));
+    *(t8_locidx_t *) (send_buffer[iproc - send_first] + total_alloc -
+                      sizeof (t8_locidx_t))
+      = num_ghost_send;
     if (iproc == cmesh->mpirank) {
       /* TODO: */
       /* We do not need to send the trees since we already own them */
@@ -642,24 +678,29 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
       if (send_first <= cmesh->mpirank && iproc > cmesh->mpirank) {
         flag = 1;
       }
-      t8_debugf ("Post send to %i\n", iproc - flag);
+      t8_debugf ("Post send of %i trees/%zd bytes to %i\n",
+                 *(t8_locidx_t *) (send_buffer[iproc - send_first] + total_alloc -
+                                   2 * sizeof (t8_locidx_t)),
+                 total_alloc, iproc - flag);
       mpiret = sc_MPI_Isend (send_buffer[iproc - send_first], total_alloc,
                              sc_MPI_BYTE, iproc, 0,
                              cmesh->mpicomm, requests + iproc - flag -
           send_first);
       SC_CHECK_MPI (mpiret);
     }
-    /* compute new ranges here */
-    /* If tree_offset of iproc + 1 is < 0 the last tree is shared and has to
-     * be send to the next process as well */
-    range_start = range_end + 1 - (tree_offset[iproc + 1] < 0);
-    /* add number of trees in iproc + 1 to send to range_end */
-    /* We have to be careful with locidx overflow when we go out of bounds
-     * of our process */
-    range_end = t8_glo_min (range_end +
-                            t8_offset_num_trees (iproc + 1,
-                                                 cmesh_from->tree_offsets),
-                            cmesh_from->num_local_trees - 1);
+    if (iproc < send_last) {
+      /* compute new ranges here */
+      /* If tree_offset of iproc + 1 is < 0 the last tree is shared and has to
+       * be send to the next process as well */
+      range_start = range_end + 1 - (tree_offset[iproc + 1] < 0);
+      /* add number of trees in iproc + 1 to send to range_end */
+      /* We have to be careful with locidx overflow when we go out of bounds
+       * of our process */
+      range_end = t8_glo_min (range_end +
+                              t8_offset_num_trees (iproc + 1,
+                                                   cmesh_from->tree_offsets),
+                              cmesh_from->num_local_trees - 1);
+    }
   }                             /* sending loop ends here */
   t8_debugf ("End send loop\n");
   T8_FREE (ghost_flag);
@@ -681,8 +722,8 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
   if (recv_first >= 0) {
     local_procid = T8_ALLOC_ZERO (int, recv_last - recv_first + 1);
     for (iproc = 1;iproc < recv_last - recv_first + 1;iproc++) {
-      local_procid[iproc] = t8_offset_empty (iproc + recv_first,
-                                             cmesh_from->tree_offsets) ?
+      local_procid[iproc] = t8_offset_nosend (iproc + recv_first,
+                                              cmesh_from->tree_offsets) ?
             local_procid[iproc-1] : local_procid[iproc-1] + 1;
     }
   }
@@ -713,15 +754,16 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
                           proc_recv, 0, cmesh->mpicomm, sc_MPI_STATUS_IGNORE);
     SC_CHECK_MPI (mpiret);
     /* Read num trees and num ghosts */
-    recv_part->num_trees = (t8_locidx_t) recv_part->first_tree[recv_bytes -
+    recv_part->num_trees = *((t8_locidx_t*) (recv_part->first_tree + recv_bytes -
                                                                2 *
                                                                sizeof
-                                                               (t8_locidx_t)];
+                                                               (t8_locidx_t)));
 
-    t8_debugf ("Received %i from %i to %i\n", recv_part->num_trees, proc_recv,
+    t8_debugf ("Received %i trees/%zd bytes from %i to %i\n",
+               recv_part->num_trees, recv_bytes, proc_recv,
                 local_procid[proc_recv - recv_first]);
     recv_part->num_ghosts =
-      (t8_locidx_t) recv_part->first_tree[recv_bytes - sizeof (t8_locidx_t)];
+      *((t8_locidx_t*) (recv_part->first_tree + recv_bytes - sizeof (t8_locidx_t)));
 #if 0
     /* Free memory that was only used to store num_trees/ghosts */
     /* TODO: If we want to do this properly we have to realloc the memory,
@@ -795,7 +837,6 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
          itree < recv_part->first_tree_id + recv_part->num_trees; itree++) {
       /* TODO: Also set ghost from proc here */
       cmesh->trees->tree_to_proc[itree] = iproc;
-      t8_debugf ("Ask tree %i\n", itree);
       tree = t8_cmesh_trees_get_tree (cmesh->trees, itree);
       tree->treeid = itree;
       cmesh->num_trees_per_eclass[tree->eclass]++;
