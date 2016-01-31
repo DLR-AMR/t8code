@@ -102,7 +102,6 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
 #ifdef T8_VTK_ASCII
     for (tree = t8_cmesh_first_tree (cmesh); tree != NULL;
          tree = t8_cmesh_next_tree (cmesh, tree)) {
-      t8_debugf ("Ask for pid %i\n", t8_get_package_id());
       vertices = ((double *) t8_cmesh_get_attribute (cmesh,
                                                      t8_get_package_id (), 0,
                                                      tree->treeid));
