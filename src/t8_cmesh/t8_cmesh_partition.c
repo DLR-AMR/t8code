@@ -133,7 +133,8 @@ static              t8_locidx_t
 t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                               int *send_first, int *send_last)
 {
-  t8_gloidx_t         first_tree = 0, last_tree, last_local_tree, ret;
+  t8_gloidx_t         first_tree = 0, last_tree, last_local_tree,
+      first_local_tree, ret;
   int                 range[2], lookhere;
 
   /* p_i is first process we send to if and only if
@@ -149,12 +150,18 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
    *  new_partition     cmesh_from->first_tree     new_partition
    *                       + num_local_trees-1
    */
+  /* We have to be careful with empty processes and first tree shared */
+  /* If the first tree of a process is shared than it will not send this tree,
+     but the smallest process that owns this tree will do. */
 
   *send_first = -1;
   *send_last = -1;
   range[0] = 0;
   range[1] = cmesh->mpisize - 1;
   last_local_tree = cmesh_from->first_tree + cmesh_from->num_local_trees - 1;
+  /* We exclude the first tree if it is shared */
+  first_local_tree = !cmesh_from->first_tree_shared ?
+        cmesh_from->first_tree : cmesh_from->first_tree + 1;
 
   T8_ASSERT (cmesh->tree_offsets != NULL);
   {
@@ -174,6 +181,7 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     *send_last = -2;
     return -1;
   }
+  /* Determine send_first */
   while (*send_first == -1) {
     lookhere = (range[0] + range[1]) / 2;
     t8_debugf ("looking at %i\n", lookhere);
@@ -183,41 +191,38 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     last_tree = t8_offset_last (lookhere, cmesh->tree_offsets);
 
     t8_debugf ("ft = %li, lt = %li\n", first_tree, last_tree);
-    if (last_tree < cmesh_from->first_tree) {
-      /* We have to look further right */
-      t8_debugf ("right\n");
-      range[0] = lookhere + 1;
-    }
-    else if (first_tree > cmesh_from->first_tree) {
-      /* We have to look further left */
-      t8_debugf ("left\n");
-      range[1] = lookhere - 1;
-    }
-    else if (first_tree == cmesh_from->first_tree) {
-      /* We may have to look a bit left if our first tree is shared */
-      while (lookhere > 0 && cmesh->tree_offsets[lookhere] < 0 &&
-             *send_first == -1) {
-        t8_debugf ("looking at %i\n", lookhere);
+    if (first_tree == first_local_tree) {
+      *send_first = lookhere;
+      while (last_tree >= first_local_tree && lookhere >= 0) {
         lookhere--;
         last_tree = t8_offset_last (lookhere, cmesh->tree_offsets);
-        if (last_tree < cmesh->first_tree) {
-          /* The previous proc was the correct one */
-          lookhere++;
-          *send_first = lookhere;
-        }
+      }
+      lookhere++;
+      /* Now we found the correct process, however the proc found may be
+       * the first one and empty */
+      while (t8_offset_empty (lookhere, cmesh->tree_offsets)) {
+        lookhere++;
       }
       *send_first = lookhere;
+      /* We are done now */
     }
-    else {
-      /* first_tree < cmesh_first_tree <= last_tree */
-      T8_ASSERT (first_tree < cmesh_from->first_tree && cmesh_from->first_tree
-                 <= last_tree);
+    else if (first_tree < first_local_tree && first_local_tree <= last_tree) {
+      /* This has to be the correct process */
       *send_first = lookhere;
     }
+    else if (last_tree < first_local_tree) {
+      /* We have to look further right */
+      t8_debugf ("look right\n");
+      range[0] = lookhere + 1;
+    }
+    else {
+      T8_ASSERT (first_local_tree < first_tree);
+      /* We have to look further left */
+      t8_debugf ("look left\n");
+      range[1] = lookhere - 1;
+    }
   }
-  while (t8_offset_num_trees (*send_first, cmesh->tree_offsets) == 0) {
-    (*send_first)++;
-  }
+  /* Determine send_last */
   range[0] = *send_first;
   range[1] = cmesh->mpisize;
   while (*send_last == -1) {
@@ -227,42 +232,34 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     /* last tree the new last tree of process lookhere */
     first_tree = t8_offset_first (lookhere, cmesh->tree_offsets);
     last_tree = t8_offset_last (lookhere, cmesh->tree_offsets);
-    if (last_tree < last_local_tree) {
-      /* We have to look further right */
-      t8_debugf ("right\n");
-      range[0] = lookhere + 1;
-    }
-    else if (first_tree > last_local_tree) {
-      /* We have to look further left */
-      t8_debugf ("left\n");
-      range[1] = lookhere - 1;
-    }
-    else if (first_tree == last_local_tree) {
-      /* We may have to look a bit right if our first tree is shared */
-      while (lookhere < cmesh->mpisize
-             && cmesh->tree_offsets[lookhere + 1] < 0 && *send_last == -1) {
-        t8_debugf ("--looking at %i\n", lookhere);
+    if (last_tree == last_local_tree) {
+      while (first_tree <= last_local_tree && lookhere < cmesh->mpisize) {
         lookhere++;
-        last_tree = t8_offset_last (lookhere, cmesh->tree_offsets);
-        if (last_tree < cmesh_from->first_tree) {
-          /* The previous proc was the correct one */
-          lookhere--;
-          *send_last = lookhere;
-        }
+        first_tree = t8_offset_first (lookhere, cmesh->tree_offsets);
+      }
+      lookhere--;
+      /* We have found our proc, but it may be the last and empty */
+      while (t8_offset_empty (lookhere, cmesh->tree_offsets)) {
+        lookhere--;
       }
       *send_last = lookhere;
     }
-    else {
-      t8_debugf ("ft = %li lt = %li\n", first_tree, last_tree);
-      /* first_tree < cmesh_last_tree <= last_tree */
-      T8_ASSERT (first_tree < last_local_tree && cmesh_from->first_tree
-                 <= last_tree);
+    else if (first_tree <= last_local_tree && last_local_tree < last_tree) {
       *send_last = lookhere;
     }
+    else if (last_tree < last_local_tree) {
+      /* We have to look further right */
+      t8_debugf ("look right\n");
+      range[0] = lookhere + 1;
+    }
+    else {
+      T8_ASSERT (last_local_tree < first_tree);
+      /* We have to look further left */
+      t8_debugf ("look left\n");
+      range[1] = lookhere - 1;
+    }
   }
-  while (t8_offset_num_trees (*send_last, cmesh->tree_offsets) == 0) {
-    (*send_last)--;
-  }
+
   ret = t8_glo_min (t8_offset_last (*send_first, cmesh->tree_offsets) -
                     cmesh_from->first_tree, cmesh_from->num_local_trees - 1);
   t8_debugf ("ret = %li - %li\n",
