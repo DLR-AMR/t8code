@@ -340,7 +340,7 @@ void                t8_cmesh_unref (t8_cmesh_t * pcmesh);
  *                  as \a conn.
  */
 t8_cmesh_t          t8_cmesh_new_from_p4est (p4est_connectivity_t * conn,
-                                             sc_MPI_Comm comm, int do_dup);
+                                             sc_MPI_Comm comm, int do_dup, int set_partition);
 
 /** Constructs a cmesh from a given p8est_connectivity structure.
  *  The constructed cmesh will be replicated.

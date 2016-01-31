@@ -856,7 +856,7 @@ t8_cmesh_unref (t8_cmesh_t * pcmesh)
 /* TODO: Eventually we may directly partition the mesh here */
 static              t8_cmesh_t
 t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
-                             int do_dup)
+                             int do_dup, int set_partition)
 {
 #define _T8_CMESH_P48_CONN(_ENTRY) \
   (dim == 2 ? ((p4est_connectivity_t *) conn)->_ENTRY \
@@ -909,6 +909,20 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
       }
     }
   }
+  if (set_partition){
+    /* TODO: a copy of this code exists below, make it a function */
+    int mpirank, mpisize, mpiret;
+    int first_tree, last_tree, num_trees;
+
+    mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Comm_size (comm, &mpisize);
+    SC_CHECK_MPI (mpiret);
+    num_trees = _T8_CMESH_P48_CONN (num_trees);
+    first_tree = (mpirank * num_trees)/mpisize;
+    last_tree = ((mpirank + 1) * num_trees)/mpisize - 1;
+    t8_cmesh_set_partitioned (cmesh, 1, 3, first_tree, last_tree);
+  }
   t8_cmesh_commit (cmesh);
   return cmesh;
 #undef _T8_CMESH_P48_CONN
@@ -916,16 +930,16 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
 
 t8_cmesh_t
 t8_cmesh_new_from_p4est (p4est_connectivity_t * conn, sc_MPI_Comm comm,
-                         int do_dup)
+                         int do_dup, int set_partition)
 {
-  return t8_cmesh_new_from_p4est_ext (conn, 2, comm, do_dup);
+  return t8_cmesh_new_from_p4est_ext (conn, 2, comm, do_dup, set_partition);
 }
 
 t8_cmesh_t
 t8_cmesh_new_from_p8est (p8est_connectivity_t * conn, sc_MPI_Comm comm,
                          int do_dup)
 {
-  return t8_cmesh_new_from_p4est_ext (conn, 3, comm, do_dup);
+  return t8_cmesh_new_from_p4est_ext (conn, 3, comm, do_dup, 0);
 }
 
 t8_cmesh_t
