@@ -47,7 +47,7 @@ t8_read_triangle_file_build_cmesh (const char * prefix, int do_dup,
       t8_cmesh_ref (cmesh);
       t8_cmesh_init (&cmesh_part);
       t8_cmesh_set_partition_from (cmesh_part, cmesh,
-                                   0,NULL);
+                                   1,NULL);
       t8_cmesh_commit (cmesh_part);
       snprintf (fileprefix, BUFSIZ, "%s_t8_triangle_partition_%04d", prefix,
                 mpirank);
