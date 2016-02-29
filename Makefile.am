@@ -65,6 +65,7 @@ include example/basic/Makefile.am
 include example/triangle/Makefile.am
 include example/tetgen/Makefile.am
 include example/partition/Makefile.am
+include example/ExtremeScaling/Makefile.am
 
 # revision control and ChangeLog
 ChangeLog:

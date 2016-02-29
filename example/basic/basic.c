@@ -229,6 +229,7 @@ t8_basic_partition (t8_eclass_t eclass, int set_level)
   for (iproc = 3; iproc <= mpisize; iproc++) {
     offsets[iproc] = offsets[2];
   }
+  //SC_SHMEM_FREE (offsets, sc_MPI_COMM_WORLD);
   t8_cmesh_set_partition_from (cmesh_part, cmesh, -1, offsets);
   t8_cmesh_commit (cmesh_part);  
   snprintf (file, BUFSIZ,"basic_partition_%04d", mpirank);
