@@ -689,61 +689,23 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 }
 
 static void
-t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
-                          t8_gloidx_t * tree_offset)
+t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
+                             const struct t8_cmesh *cmesh_from,
+                             t8_gloidx_t * tree_offset, int num_send,
+                             char *my_buffer,
+                             int my_buffer_bytes, sc_MPI_Request * requests)
 {
-  int                 send_first, send_last, num_send;        /* ranks of the processor to which we will send */
-  int                 recv_first, recv_last, num_receive, *local_procid;       /* ranks of the processor from which we will receive */
-  int                 iproc,  mpiret, proc_recv, recv_bytes,
-    my_buffer_bytes;
-  char              **send_buffer = NULL, *my_buffer = NULL;
-
-  sc_MPI_Request     *requests;
-  sc_MPI_Status      *status;
-  t8_locidx_t         num_ghost_send, itree, num_trees;
+  int                 num_receive, *local_procid;       /* ranks of the processor from which we will receive */
+  int                 mpiret, proc_recv, recv_bytes, iproc;
+  int                 recv_first, recv_last;    /* ranks of the processor from which we will receive */
+  t8_locidx_t         num_trees;
   t8_part_tree_t      recv_part;
-  t8_ctree_t          tree;
-  sc_array_t          keep_as_ghost;    /* Store local id's of local trees and ghosts that will be ghost on this process */
-
-  /* TODO: computing recv information needs the shared array of the old partition in cmesh_from,
-   *       thus, two of those huge arrays need to exist at the same time.
-   *       Using MPI-2.1 One-sided communication we could resolve this, since
-   *       pi \in pj_recv if and only if pj \in pi_send. The latter can be computed
-   *       using only the new partition array w/o communication and then via one-sided
-   *       communication we can compute the number of receiving processes on each process, which
-   *       should be enough to receive all messages in a while loop. */
-
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (!cmesh->committed);
-  T8_ASSERT (cmesh->set_partitioned);
-  T8_ASSERT (cmesh_from != NULL);
-  T8_ASSERT (cmesh_from->committed);
-
-  sc_array_init (&keep_as_ghost, sizeof (t8_locidx_t));
-
-  /* determine send and receive range. temp_tree is last local tree of send_first in new partition */
-  cmesh->first_tree = t8_offset_first (cmesh->mpirank, tree_offset);
-  cmesh->num_local_trees = t8_offset_num_trees (cmesh->mpirank, tree_offset);
-  /*
-     t8_debugf ("%li %li %li\n", cmesh->tree_offsets[0],cmesh->tree_offsets[1],
-     cmesh->tree_offsets[2]); */
-  t8_debugf ("%li %i\n", cmesh->first_tree, cmesh->num_local_trees);
+  sc_MPI_Status      *status;
 
   t8_cmesh_partition_recvrange (cmesh, (t8_cmesh_t) cmesh_from, &recv_first,
                                 &recv_last);
 
-  /*********************************************/
-  /*        Done with setup                    */
-  /*********************************************/
-
-  t8_cmesh_partition_sendloop (cmesh, (t8_cmesh_t) cmesh_from, &send_first,
-                               &send_last, &num_send,
-                               &keep_as_ghost, &send_buffer, &my_buffer,
-                               &my_buffer_bytes, &requests, tree_offset);
-
-
   num_trees = t8_offset_num_trees (cmesh->mpirank, tree_offset);
-
   /* Receive from other processes */
   num_receive = t8_offset_range_woempty (recv_first, recv_last,
                                          cmesh_from->tree_offsets);
@@ -839,13 +801,71 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
              2 * sizeof (t8_locidx_t));
 #endif
   }
+  t8_debugf ("num_send = %i\n", num_send);
   if (recv_first >= 0) {
     T8_FREE (local_procid);
   }
-  t8_debugf ("num_send = %i\n", num_send);
   mpiret = sc_MPI_Waitall (num_send, requests, sc_MPI_STATUSES_IGNORE);
-  t8_debugf ("End waitall\n");
   SC_CHECK_MPI (mpiret);
+  t8_debugf ("End waitall\n");
+}
+
+static void
+t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
+                          t8_gloidx_t * tree_offset)
+{
+  int                 send_first, send_last, num_send;  /* ranks of the processor to which we will send */
+  int                 iproc, my_buffer_bytes;
+  char              **send_buffer = NULL, *my_buffer = NULL;
+
+  sc_MPI_Request     *requests;
+  t8_locidx_t         num_ghost_send, itree, num_trees;
+  t8_part_tree_t      recv_part;
+  t8_ctree_t          tree;
+  sc_array_t          keep_as_ghost;    /* Store local id's of local trees and ghosts that will be ghost on this process */
+
+  /* TODO: computing recv information needs the shared array of the old partition in cmesh_from,
+   *       thus, two of those huge arrays need to exist at the same time.
+   *       Using MPI-2.1 One-sided communication we could resolve this, since
+   *       pi \in pj_recv if and only if pj \in pi_send. The latter can be computed
+   *       using only the new partition array w/o communication and then via one-sided
+   *       communication we can compute the number of receiving processes on each process, which
+   *       should be enough to receive all messages in a while loop. */
+
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (cmesh->set_partitioned);
+  T8_ASSERT (cmesh_from != NULL);
+  T8_ASSERT (cmesh_from->committed);
+
+  sc_array_init (&keep_as_ghost, sizeof (t8_locidx_t));
+
+  /* determine send and receive range. temp_tree is last local tree of send_first in new partition */
+  cmesh->first_tree = t8_offset_first (cmesh->mpirank, tree_offset);
+  cmesh->num_local_trees = t8_offset_num_trees (cmesh->mpirank, tree_offset);
+  /*
+     t8_debugf ("%li %li %li\n", cmesh->tree_offsets[0],cmesh->tree_offsets[1],
+     cmesh->tree_offsets[2]); */
+  t8_debugf ("%li %i\n", cmesh->first_tree, cmesh->num_local_trees);
+
+
+  /*********************************************/
+  /*        Done with setup                    */
+  /*********************************************/
+
+  /* Send all trees and ghosts */
+  t8_cmesh_partition_sendloop (cmesh, (t8_cmesh_t) cmesh_from, tree_offset,
+                               &send_first,
+                               &send_last, &num_send,
+                               &keep_as_ghost, &send_buffer, &my_buffer,
+                               &my_buffer_bytes, &requests);
+
+  /* receive all trees and ghosts */
+  t8_cmesh_partition_recvloop (cmesh, cmesh_from, tree_offset,
+                               num_send,
+                               my_buffer, my_buffer_bytes, requests);
+
+  /* Clean-up */
   for (iproc = 0; iproc < send_last - send_first + 1; iproc++) {
     t8_debugf ("free buffer at %i\n", iproc);
     T8_FREE (send_buffer[iproc]);
@@ -853,6 +873,8 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
   T8_FREE (send_buffer);
   T8_FREE (requests);
   sc_array_reset (&keep_as_ghost);
+  /* Done with Clean-up */
+
   /* set recv_part->first_tree_id/first_ghost_id */
   /* Use as temporary variables to store the first tree_id/ghost_id of the new parts */
   num_trees = 0;
