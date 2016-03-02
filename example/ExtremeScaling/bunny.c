@@ -176,7 +176,7 @@ main (int argc, char **argv)
                         (long) connectivity->num_corners);
   sc_flops_snap (&fi, &snapshot);
 
-  cmesh_p8 = t8_cmesh_new_from_p8est (connectivity, sc_MPI_COMM_WORLD, 0);
+  cmesh_p8 = t8_cmesh_new_from_p8est (connectivity, sc_MPI_COMM_WORLD, 0, 0);
 
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[4], snapshot.iwtime, "Cmesh from Connectivity");

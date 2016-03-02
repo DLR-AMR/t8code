@@ -351,7 +351,7 @@ t8_cmesh_t          t8_cmesh_new_from_p4est (p4est_connectivity_t * conn,
  *                  as \a conn.
  */
 t8_cmesh_t          t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
-                                             sc_MPI_Comm comm, int do_dup);
+                                             sc_MPI_Comm comm, int do_dup, int do_partition);
 
 /** Constructs a cmesh that consists only of one tree of a given element class.
  * \param [in]      eclass     The element class.
