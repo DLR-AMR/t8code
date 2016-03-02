@@ -361,6 +361,13 @@ t8_cmesh_partition_copy_data (char *send_buffer,
   for (itree = send_first; itree <= send_last; itree++) {
     tree = t8_cmesh_trees_get_tree_ext (cmesh_from->trees, itree,
                                         &face_neighbor, &ttf);
+    {
+        t8_attribute_info_struct_t *att;
+        att = T8_TREE_ATTR_INFO (tree, 0);
+        t8_debugf ("Tree %i att offet = %zd\n", itree, tree->att_offset);
+        t8_debugf ("Att %i: Offset = %zd, size = %zd\n", itree,
+                   att->attribute_offset, att->attribute_size);
+    }
     (void) memcpy (send_buffer + temp_offset_tree, tree,
                    sizeof (t8_ctree_struct_t));
     temp_offset_tree += sizeof (t8_ctree_struct_t);
@@ -412,8 +419,10 @@ t8_cmesh_partition_copy_data (char *send_buffer,
   last_num_att = 0;
   last_size = 0;
   last_offset = attr_info_bytes;
+  t8_debugf("------------------\n");
   /* TODO: The last changes here did not make it better */
   for (itree = send_first; itree <= send_last; itree++) {
+    /* Get the current tree */
     tree_cpy = (t8_ctree_t) (send_buffer + temp_offset_tree);
     /* new neighbor offset of tree */
     tree_cpy->neigh_offset = temp_offset - temp_offset_tree;
@@ -425,10 +434,18 @@ t8_cmesh_partition_copy_data (char *send_buffer,
     /* new attribute offset for tree */
     tree_cpy->att_offset = temp_offset_att - temp_offset_tree;
     attr_info = T8_TREE_ATTR_INFO (tree_cpy, 0);
+    t8_debugf ("%i change %zd to %zd\n", itree, attr_info->attribute_offset,
+               last_offset + last_size -
+                     last_num_att * sizeof (t8_attribute_info_struct_t));
     attr_info->attribute_offset = last_offset + last_size -
       last_num_att * sizeof (t8_attribute_info_struct_t);
     last_offset = attr_info->attribute_offset;
     last_size = attr_info->attribute_size;
+    {
+        t8_debugf ("Tree %i att offet = %zd\n", itree, tree_cpy->att_offset);
+        t8_debugf ("Att %i: Offset = %zd, size = %zd\n", itree,
+                   attr_info->attribute_offset, attr_info->attribute_size);
+    }
     /* set new attribtue data offsets */
     for (iz = 1; iz < tree_cpy->num_attributes; iz++) {
       attr_info->attribute_offset = last_offset + last_size;
@@ -682,6 +699,10 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
       /* add number of trees in iproc + 1 to send to range_end */
       /* We have to be careful with locidx overflow when we go out of bounds
        * of our process */
+      t8_debugf ("Change range_end from %i to %i\n", range_end,
+                 t8_glo_min (range_end + t8_offset_num_trees (iproc + 1,
+                                                              cmesh->tree_offsets),
+                             cmesh_from->num_local_trees - 1));
       range_end = t8_glo_min (range_end +
                               t8_offset_num_trees (iproc + 1,
                                                    cmesh->tree_offsets),
