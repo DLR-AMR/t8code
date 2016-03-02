@@ -87,7 +87,9 @@ T8_EXTERN_C_BEGIN ();
  *
  * The data of Tree attributes looks like:
  *
- * | Att00_descr | Att01_descr | ... | Att10_desct | ... | Attrend_descr | Att1_data | Att2_data | ... |
+ * TODO: This description seems incomplete. Why is it not Attij_data?
+ *
+ * | Att00_descr | Att01_descr | ... | Att10_descr | ... | Attrend_descr | Att1_data | Att2_data | ... |
  *                TODO: maybe insert padding here ||
  * Where Attij_descr is a descriptor of the j-th attribute data of tree i storing
  * - an offset to Atti_data starting from Atti0_descr
