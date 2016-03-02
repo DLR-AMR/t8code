@@ -35,10 +35,10 @@
 static t8_gloidx_t *
 t8_partition_offset (int proc, sc_MPI_Comm comm, t8_gloidx_t num_trees)
 {
-  int               mpirank, mpiret, mpisize, iproc;
-  t8_gloidx_t      *offsets;
+  int                 mpirank, mpiret, mpisize, iproc;
+  t8_gloidx_t        *offsets;
 #ifdef T8_ENABLE_DEBUG
-  char              out[BUFSIZ] = "";
+  char                out[BUFSIZ] = "";
 #endif
 
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
@@ -46,8 +46,7 @@ t8_partition_offset (int proc, sc_MPI_Comm comm, t8_gloidx_t num_trees)
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
 
-  offsets = SC_SHMEM_ALLOC (t8_gloidx_t, mpisize + 1,
-                            sc_MPI_COMM_WORLD);
+  offsets = SC_SHMEM_ALLOC (t8_gloidx_t, mpisize + 1, sc_MPI_COMM_WORLD);
   offsets[0] = 0;
   for (iproc = 1; iproc <= mpisize; iproc++) {
     if (iproc == proc + 1) {
@@ -57,7 +56,8 @@ t8_partition_offset (int proc, sc_MPI_Comm comm, t8_gloidx_t num_trees)
       offsets[iproc] = offsets[iproc - 1];
     }
 #ifdef T8_ENABLE_DEBUG
-    snprintf (out + strlen(out), BUFSIZ - strlen(out), "%li,",offsets[iproc]);
+    snprintf (out + strlen (out), BUFSIZ - strlen (out), "%li,",
+              offsets[iproc]);
 #endif
   }
 #ifdef T8_ENABLE_DEBUG
@@ -69,135 +69,134 @@ t8_partition_offset (int proc, sc_MPI_Comm comm, t8_gloidx_t num_trees)
 /* Create a random partition */
 /* if shared is nonzero than first trees can be shared */
 static t8_gloidx_t *
-t8_partition_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared)
+t8_partition_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees,
+                            int shared)
 {
-    unsigned                seed;
-    int                     iproc, mpisize, mpiret, random_number, mpirank;
-    int                     i;
-    t8_gloidx_t            *offsets, trees_so_far = 0;
+  unsigned            seed;
+  int                 iproc, mpisize, mpiret, random_number, mpirank;
+  int                 i;
+  t8_gloidx_t        *offsets, trees_so_far = 0;
 
-    T8_ASSERT (shared == 0); /* shared not yet implemented */
+  T8_ASSERT (shared == 0);      /* shared not yet implemented */
 
+  mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+  SC_CHECK_MPI (mpiret);
 
-    mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
-    SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  SC_CHECK_MPI (mpiret);
 
-    mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
-    SC_CHECK_MPI (mpiret);
+  seed = time (NULL);
+  //  seed = 1456933851;
+  if (mpirank == 0) {
+    t8_debugf ("Random number seed = %u\n", seed);
+  }
+  mpiret = sc_MPI_Bcast (&seed, 1, sc_MPI_INT, 0, sc_MPI_COMM_WORLD);
+  SC_CHECK_MPI (mpiret);
+  srand (seed);
+  offsets = SC_SHMEM_ALLOC (t8_gloidx_t, mpisize + 1, sc_MPI_COMM_WORLD);
+  offsets[0] = 0;
+  for (iproc = 1; iproc < mpisize; iproc++) {
+    random_number = rand () % (num_trees - trees_so_far);
+    offsets[iproc] = random_number + offsets[iproc - 1];
+    trees_so_far += random_number;
+  }
+  offsets[mpisize] = num_trees;
 
-    seed = time (NULL);
- //  seed = 1456933851;
-    if (mpirank == 0) {
-        t8_debugf ("Random number seed = %u\n", seed);
+  for (i = 0; i < mpisize; i++) {
+    sc_MPI_Barrier (sc_MPI_COMM_WORLD);
+    if (i == mpirank) {
+      for (iproc = 0; iproc < mpisize + 1; iproc++) {
+        t8_debugf ("[H] %li\n", offsets[iproc]);
+      }
     }
-    mpiret = sc_MPI_Bcast (&seed, 1, sc_MPI_INT, 0, sc_MPI_COMM_WORLD);
-    SC_CHECK_MPI (mpiret);
-    srand (seed);
-    offsets = SC_SHMEM_ALLOC (t8_gloidx_t, mpisize + 1,
-                              sc_MPI_COMM_WORLD);
-    offsets[0] = 0;
-    for (iproc = 1; iproc < mpisize; iproc++) {
-        random_number = rand () % (num_trees - trees_so_far);
-        offsets[iproc] = random_number + offsets[iproc - 1];
-        trees_so_far += random_number;
-    }
-    offsets[mpisize] = num_trees;
+  }
 
-    for (i =0 ;i < mpisize;i++) {
-        sc_MPI_Barrier (sc_MPI_COMM_WORLD);
-        if (i == mpirank) {
-            for (iproc = 0;iproc < mpisize + 1;iproc++) {
-                t8_debugf ("[H] %li\n", offsets[iproc]);
-            }
-        }
-    }
-
-    return offsets;
+  return offsets;
 }
 
 static void
 t8_random_partition ()
 {
-    t8_cmesh_t        cmesh, cmesh_part, cmesh_part2;
-    char              file[BUFSIZ];
-    p8est_connectivity_t *conn;
-    int               mpirank, mpiret, mpisize;
-
-
-    mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
-    SC_CHECK_MPI (mpiret);
-    mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
-    SC_CHECK_MPI (mpiret);
-
-    conn = p8est_connectivity_new_brick (3, 3, 3, 0, 0, 0);
-    cmesh = t8_cmesh_new_from_p8est (conn, sc_MPI_COMM_WORLD, 0, 1);
-    p8est_connectivity_destroy (conn);
-    snprintf (file, BUFSIZ,"t8_brick_random_%04d", mpirank);
-    t8_cmesh_vtk_write_file (cmesh, file, 1.);
-
-    t8_cmesh_init (&cmesh_part);
-    t8_cmesh_set_partition_from (cmesh_part, cmesh, -1,
-                                 t8_partition_offset_random (sc_MPI_COMM_WORLD,
-                                 t8_cmesh_get_num_trees (cmesh), 0));
-    t8_cmesh_commit (cmesh_part);
-
-    t8_cmesh_init (&cmesh_part2);
-
-    t8_cmesh_set_partition_from (cmesh_part2, cmesh_part, -1,
-                                 t8_partition_offset_random (sc_MPI_COMM_WORLD,
-                                 t8_cmesh_get_num_trees (cmesh), 0));
-    t8_cmesh_commit (cmesh_part2);
-
-    snprintf (file, BUFSIZ,"t8_brick_partition_random_%04d", mpirank);
-    t8_cmesh_vtk_write_file (cmesh_part, file, 1.0);
-    snprintf (file, BUFSIZ,"t8_brick_partition_random2_%04d", mpirank);
-    t8_cmesh_vtk_write_file (cmesh_part2, file, 1.0);
-    t8_cmesh_unref (&cmesh_part2);
-}
-
-static void
-t8_partition ()
-{
-  t8_cmesh_t        cmesh, cmesh_part, cmesh_part2;
-  char              file[BUFSIZ];
-  p4est_connectivity_t *conn;
-  int               mpirank, mpiret, mpisize;
-
+  t8_cmesh_t          cmesh, cmesh_part, cmesh_part2;
+  char                file[BUFSIZ];
+  p8est_connectivity_t *conn;
+  int                 mpirank, mpiret, mpisize;
 
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
   SC_CHECK_MPI (mpiret);
 
-  conn = p4est_connectivity_new_brick (2,2,0,0);
+  conn = p8est_connectivity_new_brick (3, 3, 3, 0, 0, 0);
+  cmesh = t8_cmesh_new_from_p8est (conn, sc_MPI_COMM_WORLD, 0, 1);
+  p8est_connectivity_destroy (conn);
+  snprintf (file, BUFSIZ, "t8_brick_random_%04d", mpirank);
+  t8_cmesh_vtk_write_file (cmesh, file, 1.);
+
+  t8_cmesh_init (&cmesh_part);
+  t8_cmesh_set_partition_from (cmesh_part, cmesh, -1,
+                               t8_partition_offset_random (sc_MPI_COMM_WORLD,
+                                                           t8_cmesh_get_num_trees
+                                                           (cmesh), 0));
+  t8_cmesh_commit (cmesh_part);
+
+  t8_cmesh_init (&cmesh_part2);
+
+  t8_cmesh_set_partition_from (cmesh_part2, cmesh_part, -1,
+                               t8_partition_offset_random (sc_MPI_COMM_WORLD,
+                                                           t8_cmesh_get_num_trees
+                                                           (cmesh), 0));
+  t8_cmesh_commit (cmesh_part2);
+
+  snprintf (file, BUFSIZ, "t8_brick_partition_random_%04d", mpirank);
+  t8_cmesh_vtk_write_file (cmesh_part, file, 1.0);
+  snprintf (file, BUFSIZ, "t8_brick_partition_random2_%04d", mpirank);
+  t8_cmesh_vtk_write_file (cmesh_part2, file, 1.0);
+  t8_cmesh_unref (&cmesh_part2);
+}
+
+static void
+t8_partition ()
+{
+  t8_cmesh_t          cmesh, cmesh_part, cmesh_part2;
+  char                file[BUFSIZ];
+  p4est_connectivity_t *conn;
+  int                 mpirank, mpiret, mpisize;
+
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+  SC_CHECK_MPI (mpiret);
+
+  conn = p4est_connectivity_new_brick (2, 2, 0, 0);
   cmesh = t8_cmesh_new_from_p4est (conn, sc_MPI_COMM_WORLD, 0, 1);
   p4est_connectivity_destroy (conn);
-  snprintf (file, BUFSIZ,"t8_brick_%04d", mpirank);
+  snprintf (file, BUFSIZ, "t8_brick_%04d", mpirank);
   t8_cmesh_vtk_write_file (cmesh, file, 1.);
 
   t8_cmesh_init (&cmesh_part);
   t8_cmesh_set_partition_from (cmesh_part, cmesh, -1,
                                t8_partition_offset (0, sc_MPI_COMM_WORLD,
-                               t8_cmesh_get_num_trees (cmesh)));
+                                                    t8_cmesh_get_num_trees
+                                                    (cmesh)));
   t8_cmesh_commit (cmesh_part);
   if (mpisize > 1) {
     t8_cmesh_init (&cmesh_part2);
     t8_cmesh_set_partition_from (cmesh_part2, cmesh_part, -1,
-                               t8_partition_offset (1, sc_MPI_COMM_WORLD,
-                               t8_cmesh_get_num_trees (cmesh)));
+                                 t8_partition_offset (1, sc_MPI_COMM_WORLD,
+                                                      t8_cmesh_get_num_trees
+                                                      (cmesh)));
     t8_cmesh_commit (cmesh_part2);
-    snprintf (file, BUFSIZ,"t8_brick_partition2_%04d", mpirank);
+    snprintf (file, BUFSIZ, "t8_brick_partition2_%04d", mpirank);
     t8_cmesh_vtk_write_file (cmesh_part2, file, 1.0);
   }
   else {
-      cmesh_part2 = cmesh_part;
+    cmesh_part2 = cmesh_part;
   }
-  snprintf (file, BUFSIZ,"t8_brick_partition_%04d", mpirank);
+  snprintf (file, BUFSIZ, "t8_brick_partition_%04d", mpirank);
   t8_cmesh_vtk_write_file (cmesh_part, file, 1.0);
   t8_cmesh_unref (&cmesh_part2);
 }
-
-
 
 int
 main (int argc, char **argv)
