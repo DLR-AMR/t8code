@@ -96,7 +96,12 @@ t8_partition_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees,
   offsets = SC_SHMEM_ALLOC (t8_gloidx_t, mpisize + 1, sc_MPI_COMM_WORLD);
   offsets[0] = 0;
   for (iproc = 1; iproc < mpisize; iproc++) {
-    random_number = rand () % (num_trees - trees_so_far);
+      /* Create a random number between 0 and 200% of an ideal partition */
+    random_number = rand () % (int)(num_trees * 2./mpisize);
+    /* If we would excees the number of trees we cut the random number */
+    if (offsets[iproc - 1] + random_number > num_trees) {
+        random_number = num_trees - offsets[iproc - 1];
+    }
     offsets[iproc] = random_number + offsets[iproc - 1];
     trees_so_far += random_number;
   }
