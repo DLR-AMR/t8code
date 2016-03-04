@@ -63,6 +63,7 @@ t8_partition_offset (int proc, sc_MPI_Comm comm, t8_gloidx_t num_trees)
 #ifdef T8_ENABLE_DEBUG
   t8_debugf ("Partition with offsets:0,%s\n", out);
 #endif
+  offsets[proc + 1] = -num_trees;
   return offsets;
 }
 
@@ -180,7 +181,7 @@ t8_partition ()
                                t8_partition_offset (0, sc_MPI_COMM_WORLD,
                                t8_cmesh_get_num_trees (cmesh)));
   t8_cmesh_commit (cmesh_part);
-  if (mpisize > 1) {
+  if (mpisize > 1 && 1) {
     t8_cmesh_init (&cmesh_part2);
     t8_cmesh_set_partition_from (cmesh_part2, cmesh_part, -1,
                                t8_partition_offset (1, sc_MPI_COMM_WORLD,

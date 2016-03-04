@@ -145,7 +145,7 @@ t8_cmesh_gather_treecount (t8_cmesh_t cmesh)
 /* Returns the local tree_id of last local tree on send_first. */
 static              t8_locidx_t
 t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
-                              int *send_first, int *send_last)
+                              int *send_first, int *send_last, int receive)
 {
   t8_gloidx_t         first_tree = 0, last_tree, last_local_tree,
     first_local_tree, ret;
@@ -168,6 +168,8 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   /* If the first tree of a process is shared than it will not send this tree,
      but the smallest process that owns this tree will do. */
 
+   t8_debugf ("Determining %srange\n", receive ? "receive" : "send");
+
   *send_first = -1;
   *send_last = -1;
   range[0] = 0;
@@ -175,7 +177,7 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   last_local_tree = cmesh_from->first_tree + cmesh_from->num_local_trees - 1;
   /* We exclude the first tree if it is shared */
   first_local_tree = !cmesh_from->first_tree_shared ?
-    cmesh_from->first_tree : cmesh_from->first_tree + 1;
+    cmesh_from->first_tree : cmesh_from->first_tree + !receive;
 
   T8_ASSERT (cmesh->tree_offsets != NULL);
   {
@@ -245,6 +247,12 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     /* first tree stores new first_tree of process lookhere */
     /* last tree the new last tree of process lookhere */
     first_tree = t8_offset_first (lookhere, cmesh->tree_offsets);
+    /* If the first tree of lookhere is shared and we determine reveive range
+     * then we ignore this first tree */
+    if (receive && cmesh->tree_offsets[lookhere] < 0) {
+        first_tree++;
+    }
+
     last_tree = t8_offset_last (lookhere, cmesh->tree_offsets);
     if (last_tree == last_local_tree) {
       while (first_tree <= last_local_tree && lookhere < cmesh->mpisize) {
@@ -312,7 +320,7 @@ t8_cmesh_partition_recvrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 
   T8_ASSERT (cmesh_from->tree_offsets != NULL);
   (void) t8_cmesh_partition_sendrange (cmesh_from, cmesh, recv_first,
-                                       recv_last);
+                                       recv_last, 1);
 }
 
 /* Determine whether a local tree or ghost should be send to process p.
@@ -551,7 +559,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 
 
   range_end = t8_cmesh_partition_sendrange (cmesh, (t8_cmesh_t) cmesh_from,
-                                            send_first, send_last);
+                                            send_first, send_last, 0);
   range_start = cmesh_from->first_tree_shared;  /* Stores the first tree that was not send yet */
   /* We do not send the first tree if it is shared, so we start with the second tree then */
   t8_debugf ("rs = %i, re = %i\n", range_start, range_end);
