@@ -360,7 +360,6 @@ static void
 t8_cmesh_partition_copy_data (char *send_buffer,
                               const struct t8_cmesh *cmesh_from,
                               t8_locidx_t num_trees, size_t attr_info_bytes,
-                              size_t attr_bytes,
                               size_t ghost_neighbor_bytes,
                               size_t tree_neighbor_bytes,
                               sc_array_t * send_as_ghost,
@@ -389,10 +388,7 @@ t8_cmesh_partition_copy_data (char *send_buffer,
   for (itree = send_first; itree <= send_last; itree++) {
     tree = t8_cmesh_trees_get_tree_ext (cmesh_from->trees, itree,
                                         &face_neighbor, &ttf);
-    {
-      t8_attribute_info_struct_t *att;
-      att = T8_TREE_ATTR_INFO (tree, 0);
-    }
+
     (void) memcpy (send_buffer + temp_offset_tree, tree,
                    sizeof (t8_ctree_struct_t));
     temp_offset_tree += sizeof (t8_ctree_struct_t);
@@ -546,7 +542,8 @@ t8_cmesh_partition_copy_data (char *send_buffer,
 static int
 t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                              t8_gloidx_t * tree_offset,
-                             int *num_send, int *send_first, int *send_last,
+                             int *num_request_alloc, int *send_first,
+                             int *send_last,
                              sc_array_t * keep_as_ghost,
                              char ***send_buffer, char **my_buffer,
                              int *my_buffer_bytes, sc_MPI_Request ** requests)
@@ -574,17 +571,20 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   /* We do not send the first tree if it is shared, so we start with the second tree then */
   t8_debugf ("rs = %i, re = %i\n", range_start, range_end);
 
-  flag = (*send_first <= cmesh->mpirank && cmesh->mpirank <= *send_last);
-  *num_send = *send_last - *send_first + 1 - flag;
+  /* Determine the number of request for MPI communication.
+   * If the current process is included in the sendrange we do not allocate
+   * a request for it. In this case we have one more buffer than requests */
+  flag = cmesh->mpirank < *send_first || cmesh->mpirank > *send_last ? 1 : 0;
+  *num_request_alloc = *send_last - *send_first + flag;
   /* range_end stores (my rank) local tree_id of last tree on *send_first */
-  flag = 0;
 
-  t8_debugf ("Allocate %i requests\n", *send_last - *send_first + 1);
-  t8_debugf ("Allocating %i buffers\n", *send_last - *send_first + 1);
-  if (*send_last - *send_first + 1 > 0) {
-    *send_buffer = T8_ALLOC (char *, *send_last - *send_first + 1);
-    *requests = T8_ALLOC (sc_MPI_Request, *send_last - *send_first + 1);
-  }
+
+  t8_debugf ("Allocating %i requests\n", *num_request_alloc);
+  t8_debugf ("Allocating %i buffers\n", *num_request_alloc + !flag);
+  *send_buffer = T8_ALLOC (char *, *num_request_alloc + !flag);
+  *requests = T8_ALLOC (sc_MPI_Request, *num_request_alloc);
+
+  flag = 0;
 
   for (iproc = *send_first; iproc <= *send_last; iproc++) {
     t8_debugf ("send to %i [%i,%i]\n", iproc, range_start, range_end);
@@ -672,7 +672,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     /* Copy all data to the send buffer */
     t8_cmesh_partition_copy_data ((*send_buffer)[iproc - *send_first],
                                   cmesh_from, num_trees, attr_info_bytes,
-                                  attr_bytes, ghost_neighbor_bytes,
+                                  ghost_neighbor_bytes,
                                   tree_neighbor_bytes, &send_as_ghost,
                                   range_start, range_end);
 
@@ -750,9 +750,9 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 static void
 t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
                              const struct t8_cmesh *cmesh_from,
-                             t8_gloidx_t * tree_offset, int num_send,
+                             t8_gloidx_t * tree_offset,
                              char *my_buffer,
-                             int my_buffer_bytes, sc_MPI_Request * requests)
+                             int my_buffer_bytes)
 {
   int                 num_receive, *local_procid;       /* ranks of the processor from which we will receive */
   int                 mpiret, proc_recv, recv_bytes, iproc;
@@ -861,7 +861,6 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
              2 * sizeof (t8_locidx_t));
 #endif
   }
-  t8_debugf ("num_send = %i\n", num_send);
   if (recv_first >= 0) {
     T8_FREE (local_procid);
   }
@@ -871,7 +870,7 @@ static void
 t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
                           t8_gloidx_t * tree_offset)
 {
-  int                 send_first, send_last, num_send;  /* ranks of the processor to which we will send */
+  int                 send_first, send_last, num_request_alloc;  /* ranks of the processor to which we will send */
   int                 iproc, my_buffer_bytes, num_send_mpi, mpiret;
   char              **send_buffer = NULL, *my_buffer = NULL;
 
@@ -910,17 +909,17 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
   /* Send all trees and ghosts */
   num_send_mpi =
     t8_cmesh_partition_sendloop (cmesh, (t8_cmesh_t) cmesh_from, tree_offset,
-                                 &num_send, &send_first, &send_last,
+                                 &num_request_alloc, &send_first, &send_last,
                                  &keep_as_ghost, &send_buffer, &my_buffer,
                                  &my_buffer_bytes, &requests);
   t8_debugf ("send first = %i, send_last = %i\n", send_first, send_last);
 
   /* receive all trees and ghosts */
-  t8_cmesh_partition_recvloop (cmesh, cmesh_from, tree_offset,
-                               num_send,
-                               my_buffer, my_buffer_bytes, requests);
+  t8_cmesh_partition_recvloop (cmesh, cmesh_from, tree_offset, my_buffer,
+                               my_buffer_bytes);
   if (num_send_mpi > 0) {
-    mpiret = sc_MPI_Waitall (num_send, requests, sc_MPI_STATUSES_IGNORE);
+    mpiret = sc_MPI_Waitall (num_request_alloc, requests,
+                             sc_MPI_STATUSES_IGNORE);
     SC_CHECK_MPI (mpiret);
   }
   t8_debugf ("End waitall\n");
