@@ -100,24 +100,27 @@ t8_offset_nosend (int proc, t8_gloidx_t * offset)
   if (t8_offset_empty (proc, offset)) {
     return 1;
   }
-  else if (t8_offset_num_trees (proc, offset) == 1 && offset[proc + 1] < 0) {
+  else if (t8_offset_num_trees (proc, offset) == 1 && offset[proc] < 0) {
     return 1;
   }
   return 0;
 }
 
-/* Count the number of nenempty procs from start to end */
+/* Count the number of nonempty procs from start to end
+ * A process counts as nonempty if it has either no elements or
+ * just one and this is shared */
 static int
 t8_offset_range_woempty (int start, int end, t8_gloidx_t * offset)
 {
   int                 count = 0, i;
 
   for (i = start; i <= end; i++) {
-    if (!t8_offset_empty (i, offset)) {
+    if (t8_offset_nosend (i, offset)) {
+      t8_debugf ("%i is empty\n", i);
+    }
+    else {
       count++;
     }
-    else
-      t8_debugf ("%i is empty\n", i);
   }
   t8_debugf ("Between %i and %i are %i nonempty\n", start, end, count);
   return count;
