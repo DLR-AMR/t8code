@@ -262,7 +262,8 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 
     last_tree = t8_offset_last (lookhere, cmesh->tree_offsets);
 
-    t8_debugf ("-first tree = %i last = %i\n", first_tree, last_tree);
+    t8_debugf ("-first tree = %lli last = %lli\n", (long long) first_tree,
+               (long long) last_tree);
     if (last_tree == last_local_tree) {
       while (first_tree <= last_local_tree && lookhere < cmesh->mpisize) {
         lookhere++;
@@ -716,6 +717,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
         /* If num_trees + num_ghost_send = 0 we do not post an MPI_Send
          * and we set the associated request to NULL in order for it to
          * be ignored in the MPI_Waitall call later */
+        t8_debugf ("Set request %i to NULL\n", iproc - flag - *send_first);
         *(*requests + iproc - flag - *send_first) = sc_MPI_REQUEST_NULL;
       }
     }
@@ -727,7 +729,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
       /* add number of trees in iproc + 1 to send to range_end */
       /* We have to be careful with locidx overflow when we go out of bounds
        * of our process */
-      t8_debugf ("Change range_end from %i to %i\n", range_end,
+      t8_debugf ("Change range_end from %i to %li\n", range_end,
                  t8_glo_min (range_end + t8_offset_num_trees (iproc + 1,
                                                               cmesh->
                                                               tree_offsets)
