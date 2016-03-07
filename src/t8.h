@@ -81,6 +81,12 @@ typedef p4est_gloidx_t t8_gloidx_t;
 typedef p4est_topidx_t t8_topidx_t;
 #define T8_MPI_TOPIDX P4EST_MPI_TOPIDX
 
+typedef enum {
+  T8_MPI_TAG_FIRST = SC_TAG_FIRST,
+  T8_MPI_PARTITION_CMESH = SC_TAG_LAST,
+  T8_MPI_TAG_LAST
+} t8_MPI_tag_t;
+
 /** Return a pointer to an array element indexed by a t8_topidx_t.
  * \param [in] index needs to be in [0]..[elem_count-1].
  * \return           A void * pointing to entry \a it in \a array.
