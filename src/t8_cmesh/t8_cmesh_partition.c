@@ -775,7 +775,8 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
   /* Total number of processor from which we receive is one less if the current
    * rank is included */
   num_receive -= (recv_first <= cmesh->mpirank
-                  && cmesh->mpirank <= recv_last);
+                  && cmesh->mpirank <= recv_last) &&
+          !t8_offset_nosend(cmesh->mpirank, cmesh_from->tree_offsets);
 
   /* stores at i-th position the new local proc id of the respective process.
    * This is important to account for empty processes */
@@ -796,45 +797,59 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
              !t8_offset_empty (recv_first, cmesh_from->tree_offsets));
   status = T8_ALLOC (sc_MPI_Status, num_receive);
 
-  //if (cmesh->mpirank == 1) while (1);
+  /**************************************************/
+  /*            Receive MPI messages                */
+  /**************************************************/
 
+  /* Find first process from which we will receive */
+  if (num_receive > 0) {
+    proc_recv = recv_first;
+    /* Check whether we expect an MPI message from this process */
+    while (proc_recv == cmesh->mpirank ||
+            t8_offset_nosend (proc_recv, cmesh_from->tree_offsets)) {
+        t8_debugf ("Skip process %i\n", proc_recv);
+        proc_recv++;
+    }
+  }
   for (iproc = 0; iproc < num_receive; iproc++) {
     t8_debugf ("Start receive\n");
-    /* Blocking test for message. We do not know from which process or how big it is */
+
+    /* Blocking test for message. */
+    t8_debugf ("Probing for message from %i\n", proc_recv);
     mpiret =
-      sc_MPI_Probe (sc_MPI_ANY_SOURCE, T8_MPI_PARTITION_CMESH, cmesh->mpicomm,
+      sc_MPI_Probe (proc_recv, T8_MPI_PARTITION_CMESH, cmesh->mpicomm,
                     status + iproc);
     SC_CHECK_MPI (mpiret);
-    proc_recv = status[iproc].MPI_SOURCE;
+    T8_ASSERT (proc_recv == status[iproc].MPI_SOURCE);
     t8_debugf ("Received a message from %i\n", proc_recv);
     T8_ASSERT (status[iproc].MPI_TAG == T8_MPI_PARTITION_CMESH);
-    if (recv_first <= proc_recv && proc_recv <= recv_last &&
-        !t8_offset_nosend (proc_recv, cmesh_from->tree_offsets)) {
-      mpiret = sc_MPI_Get_count (status + iproc, sc_MPI_BYTE, &recv_bytes);
-      SC_CHECK_MPI (mpiret);
-      t8_debugf ("Received %i bytes\n", recv_bytes);
-      /* Allocate receive buffer */
-      recv_part =
-        t8_cmesh_trees_get_part (cmesh->trees,
-                                 local_procid[proc_recv - recv_first]);
-      /* take first tree of part and allocate recv_bytes */
-      recv_part->first_tree = T8_ALLOC (char, recv_bytes);
-      /* Receive message */
-      mpiret = sc_MPI_Recv (recv_part->first_tree, recv_bytes, sc_MPI_BYTE,
-                            proc_recv, T8_MPI_PARTITION_CMESH, cmesh->mpicomm,
-                            sc_MPI_STATUS_IGNORE);
-      SC_CHECK_MPI (mpiret);
-      /* Read num trees and num ghosts */
-      recv_part->num_trees =
-        *((t8_locidx_t *) (recv_part->first_tree + recv_bytes -
-                           2 * sizeof (t8_locidx_t)));
+    T8_ASSERT (recv_first <= proc_recv && proc_recv <= recv_last &&
+               !t8_offset_nosend (proc_recv, cmesh_from->tree_offsets));
+    mpiret = sc_MPI_Get_count (status + iproc, sc_MPI_BYTE, &recv_bytes);
+    SC_CHECK_MPI (mpiret);
+    t8_debugf ("Received %i bytes\n", recv_bytes);
+    /* Allocate receive buffer */
+    recv_part =
+      t8_cmesh_trees_get_part (cmesh->trees,
+                               local_procid[proc_recv - recv_first]);
+    /* take first tree of part and allocate recv_bytes */
+    recv_part->first_tree = T8_ALLOC (char, recv_bytes);
+    /* Receive message */
+    mpiret = sc_MPI_Recv (recv_part->first_tree, recv_bytes, sc_MPI_BYTE,
+                          proc_recv, T8_MPI_PARTITION_CMESH, cmesh->mpicomm,
+                          sc_MPI_STATUS_IGNORE);
+    SC_CHECK_MPI (mpiret);
+    /* Read num trees and num ghosts */
+    recv_part->num_trees =
+      *((t8_locidx_t *) (recv_part->first_tree + recv_bytes -
+                         2 * sizeof (t8_locidx_t)));
 
-      t8_debugf ("Received %i trees/%i bytes from %i to %i\n",
-                 recv_part->num_trees, recv_bytes, proc_recv,
-                 local_procid[proc_recv - recv_first]);
-      recv_part->num_ghosts =
-        *((t8_locidx_t *) (recv_part->first_tree + recv_bytes -
-                           sizeof (t8_locidx_t)));
+    t8_debugf ("Received %i trees/%i bytes from %i to %i\n",
+               recv_part->num_trees, recv_bytes, proc_recv,
+               local_procid[proc_recv - recv_first]);
+    recv_part->num_ghosts =
+      *((t8_locidx_t *) (recv_part->first_tree + recv_bytes -
+                         sizeof (t8_locidx_t)));
   #if 0
       /* Free memory that was only used to store num_trees/ghosts */
       /* TODO: If we want to do this properly we have to realloc the memory,
@@ -843,15 +858,24 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
        * the trees_part is destroyed */
       T8_FREE (recv_part->first_tree + recv_bytes - 2 * sizeof (t8_locidx_t));
   #endif
-    }
-    else {
-      t8_debugf ("Ignoring message.\n");
-      iproc--;
+
+    /* Calculate next rank from which we receive a message */
+    proc_recv++;
+    /* Check whether we expect an MPI message from this process */
+    while (proc_recv <= recv_last && (proc_recv == cmesh->mpirank ||
+            t8_offset_nosend (proc_recv, cmesh_from->tree_offsets))){
+        t8_debugf ("Skip process %i\n", proc_recv);
+        proc_recv++;
     }
   }
-
   t8_debugf ("End receive\n");
   T8_FREE (status);
+
+  /**************************************************/
+  /*            End receiving MPI messages          */
+  /**************************************************/
+
+
   /* Got trees and ghosts from myself */
   if (my_buffer != NULL) {
     /* TODO: Get ghosts from myself! */
