@@ -799,6 +799,13 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
     t8_debugf ("Start receive\n");
 
     /* Blocking test for message. */
+    /* TODO: Right now we are waiting for each message in order to be received.
+     *       We do this, since when we use Iprobe and ANY_SOURCE, we could receive
+     *       messages that other processors send in later calls to partition, which
+     *       then mess up the current partition.
+     *       It would certainly be more efficient not to receive the messages in order
+     *       of the receiving processes but in temporal order of receivement.
+     */
     t8_debugf ("Probing for message from %i\n", proc_recv);
     mpiret =
       sc_MPI_Probe (proc_recv, T8_MPI_PARTITION_CMESH, cmesh->mpicomm,
