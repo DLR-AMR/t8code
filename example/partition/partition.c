@@ -127,16 +127,13 @@ t8_partition_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees,
     first_shared = 0;
     for (iproc = 1; iproc < mpisize; iproc++) {
       offsets[iproc] = 0;
-      /* Computing modulo zero raises a floating point exception,
-       * so we have to handle this case manually */
-      if (num_trees - trees_so_far > 0) {
-        random_number = rand_r (&seed) % (num_trees - trees_so_far);
-      }
-      else {
-        random_number = 0;
+      /* Create a random number between 0 and 200% of an ideal partition */
+      random_number = rand () % (int)(num_trees * 2./mpisize);
+      /* If we would excees the number of trees we cut the random number */
+      if (offsets[iproc - 1] + random_number > num_trees) {
+          random_number = num_trees - offsets[iproc - 1];
       }
       random_number += first_shared;
-
       first_shared = rand_r (&seed) % 2;
 
       offsets[iproc] = random_number + fabs (offsets[iproc - 1])
@@ -175,6 +172,7 @@ t8_random_partition ()
   SC_CHECK_MPI (mpiret);
 
   conn = p8est_connectivity_new_brick (8, 8, 8, 0, 0, 0);
+
   cmesh = t8_cmesh_new_from_p8est (conn, sc_MPI_COMM_WORLD, 0, 1);
   p8est_connectivity_destroy (conn);
   snprintf (file, BUFSIZ, "t8_brick_random_%04d", mpirank);
@@ -232,7 +230,7 @@ t8_partition ()
                                                     t8_cmesh_get_num_trees
                                                     (cmesh)));
   t8_cmesh_commit (cmesh_part);
-  if (mpisize > 1 && 1) {
+  if (mpisize > 1 && 0) {
     t8_cmesh_init (&cmesh_part2);
     t8_cmesh_set_partition_from (cmesh_part2, cmesh_part, -1,
                                  t8_partition_offset (1, sc_MPI_COMM_WORLD,

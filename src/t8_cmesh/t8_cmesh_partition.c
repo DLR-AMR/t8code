@@ -203,7 +203,6 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   /* Determine send_first */
   while (*send_first == -1) {
     lookhere = (range[0] + range[1]) / 2;
-    t8_debugf ("looking at %i\n", lookhere);
     /* first tree stores new first_tree of process lookhere */
     /* last tree the new last tree of process lookhere */
     first_tree = t8_offset_first (lookhere, cmesh->tree_offsets);
@@ -213,7 +212,6 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     }
     last_tree = t8_offset_last (lookhere, cmesh->tree_offsets);
 
-    t8_debugf ("ft = %li, lt = %li\n", first_tree, last_tree);
     if (first_tree == first_local_tree) {
       *send_first = lookhere;
       while (last_tree >= first_local_tree && lookhere >= 0) {
@@ -235,13 +233,11 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     }
     else if (last_tree < first_local_tree) {
       /* We have to look further right */
-      t8_debugf ("look right\n");
       range[0] = lookhere + 1;
     }
     else {
       T8_ASSERT (first_local_tree < first_tree);
       /* We have to look further left */
-      t8_debugf ("look left\n");
       range[1] = lookhere - 1;
     }
   }
@@ -250,7 +246,6 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   range[1] = cmesh->mpisize;
   while (*send_last == -1) {
     lookhere = (range[0] + range[1]) / 2;
-    t8_debugf ("-looking at %i\n", lookhere);
     /* first tree stores new first_tree of process lookhere */
     /* last tree the new last tree of process lookhere */
     first_tree = t8_offset_first (lookhere, cmesh->tree_offsets);
@@ -292,13 +287,11 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     }
     else if (last_tree < last_local_tree) {
       /* We have to look further right */
-      t8_debugf ("look right\n");
       range[0] = lookhere + 1;
     }
     else {
       T8_ASSERT (last_local_tree < first_tree);
       /* We have to look further left */
-      t8_debugf ("look left\n");
       range[1] = lookhere - 1;
     }
   }
@@ -440,28 +433,29 @@ t8_cmesh_partition_copy_data (char *send_buffer,
   last_num_att = 0;
   last_size = 0;
   last_offset = attr_info_bytes;
-  t8_debugf ("------------------\n");
+
   /* TODO: The last changes here did not make it better */
   for (itree = send_first; itree <= send_last; itree++) {
     /* Get the current tree */
     tree_cpy = (t8_ctree_t) (send_buffer + temp_offset_tree);
+
     /* new neighbor offset of tree */
     tree_cpy->neigh_offset = temp_offset - temp_offset_tree;
+
     /* compute neighbor offset for next tree */
     temp_offset += t8_eclass_num_faces[tree_cpy->eclass] *
       (sizeof (t8_locidx_t) + sizeof (int8_t))
       + ((4 - t8_eclass_num_faces[tree_cpy->eclass] *
           (sizeof (t8_locidx_t) + sizeof (int8_t)) % 4) % 4);
+
     /* new attribute offset for tree */
     tree_cpy->att_offset = temp_offset_att - temp_offset_tree;
     attr_info = T8_TREE_ATTR_INFO (tree_cpy, 0);
-    t8_debugf ("%i change %zd to %zd\n", itree, attr_info->attribute_offset,
-               last_offset + last_size -
-               last_num_att * sizeof (t8_attribute_info_struct_t));
     attr_info->attribute_offset = last_offset + last_size -
       last_num_att * sizeof (t8_attribute_info_struct_t);
     last_offset = attr_info->attribute_offset;
     last_size = attr_info->attribute_size;
+
     /* set new attribtue data offsets */
     for (iz = 1; iz < tree_cpy->num_attributes; iz++) {
       attr_info->attribute_offset = last_offset + last_size;
@@ -473,11 +467,7 @@ t8_cmesh_partition_copy_data (char *send_buffer,
     temp_offset_tree += sizeof (t8_ctree_struct_t);
     last_num_att = tree_cpy->num_attributes;
   }
-#if 0
-  /* Set the new offset of the last (non existing attribute) */
-  t8_debugf ("From %i\n", attr_info->attribute_offset);
-  attr_info->attribute_offset += last_attribute_diff;
-#endif
+
   /* Copy all ghosts and set their face entries and offsets */
   /* Offset of ghost face_neighbor from first ghost */
   temp_offset = num_trees * sizeof (t8_ctree_struct_t) +
@@ -578,7 +568,6 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   flag = cmesh->mpirank < *send_first || cmesh->mpirank > *send_last ? 1 : 0;
   *num_request_alloc = *send_last - *send_first + flag;
   /* range_end stores (my rank) local tree_id of last tree on *send_first */
-
 
   t8_debugf ("Allocating %i requests\n", *num_request_alloc);
   t8_debugf ("Allocating %i buffers\n", *num_request_alloc + !flag);
@@ -729,12 +718,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
       /* add number of trees in iproc + 1 to send to range_end */
       /* We have to be careful with locidx overflow when we go out of bounds
        * of our process */
-      t8_debugf ("Change range_end from %i to %li\n", range_end,
-                 t8_glo_min (range_end + t8_offset_num_trees (iproc + 1,
-                                                              cmesh->
-                                                              tree_offsets)
-                             - (cmesh->tree_offsets[iproc + 1] < 0),
-                             cmesh_from->num_local_trees - 1));
+
       range_end =
         t8_glo_min (range_end +
                     t8_offset_num_trees (iproc + 1, cmesh->tree_offsets)
@@ -942,8 +926,6 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
   cmesh->first_tree = t8_offset_first (cmesh->mpirank, tree_offset);
   cmesh->num_local_trees = t8_offset_num_trees (cmesh->mpirank, tree_offset);
 
-  t8_debugf ("%li %i\n", cmesh->first_tree, cmesh->num_local_trees);
-
   /*********************************************/
   /*        Done with setup                    */
   /*********************************************/
@@ -954,7 +936,6 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
                                  &num_request_alloc, &send_first, &send_last,
                                  &keep_as_ghost, &send_buffer, &my_buffer,
                                  &my_buffer_bytes, &requests);
-  t8_debugf ("send first = %i, send_last = %i\n", send_first, send_last);
 
   /* receive all trees and ghosts */
   t8_cmesh_partition_recvloop (cmesh, cmesh_from, tree_offset, my_buffer,
@@ -967,9 +948,7 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
   t8_debugf ("End waitall\n");
 
   /* Clean-up */
-  t8_debugf ("send first = %i, send_last = %i\n", send_first, send_last);
   for (iproc = 0; iproc < send_last - send_first + 1; iproc++) {
-    t8_debugf ("free buffer at %i\n", iproc);
     T8_FREE (send_buffer[iproc]);
   }
   T8_FREE (send_buffer);
@@ -982,7 +961,6 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
   num_trees = 0;
   for (iproc = 0; iproc < cmesh->trees->from_proc->elem_count; iproc++) {
     num_ghost_send = 0;
-    t8_debugf ("LOOOOP\n");
     recv_part = t8_cmesh_trees_get_part (cmesh->trees, iproc);
     recv_part->first_tree_id = num_trees;
     recv_part->first_ghost_id = num_ghost_send;
@@ -992,7 +970,6 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
 #ifdef T8_ENABLE_DEBUG
     cmesh->committed = 1;       /* To pass through get_tree_class function */
 #endif
-    t8_debugf ("Looking at %i\n", iproc);
     for (itree = recv_part->first_tree_id;
          itree < recv_part->first_tree_id + recv_part->num_trees; itree++) {
       /* TODO: Also set ghost from proc here */
@@ -1005,7 +982,6 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
     cmesh->committed = 0;
 #endif
   }
-  t8_debugf ("LOOOOP_end with %i trees\n", num_trees);
   T8_ASSERT (cmesh->num_local_trees == num_trees);
   cmesh->num_ghosts = num_ghost_send;
   /* TODO: set new local ids of face_neighbors */
@@ -1037,7 +1013,6 @@ t8_cmesh_partition (t8_cmesh_t cmesh)
     cmesh->num_local_trees = last_tree - cmesh->first_tree + 1;
     t8_debugf ("first = %li, last = %li, num_loc %i\n", cmesh->first_tree,
                last_tree, cmesh->num_local_trees);
-    t8_debugf ("from num loc %i\n", cmesh->set_from->num_local_trees);
     /* To compute the tree_offsets correctly we have to invert the sign on the
      * first tree if last tree is shared, since we use it for MPI to allgather the tree_offsets */
     if (cmesh->first_tree_shared) {
