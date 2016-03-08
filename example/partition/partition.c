@@ -159,7 +159,7 @@ t8_partition_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees,
 }
 
 static void
-t8_random_partition ()
+t8_random_partition (int level)
 {
   t8_cmesh_t          cmesh, cmesh_part, cmesh_part2;
   char                file[BUFSIZ];
@@ -179,10 +179,7 @@ t8_random_partition ()
   t8_cmesh_vtk_write_file (cmesh, file, 1.);
 
   t8_cmesh_init (&cmesh_part);
-  t8_cmesh_set_partition_from (cmesh_part, cmesh, -1,
-                               t8_partition_offset_random (sc_MPI_COMM_WORLD,
-                                                           t8_cmesh_get_num_trees
-                                                           (cmesh), 0));
+  t8_cmesh_set_partition_from (cmesh_part, cmesh, level, NULL);
   t8_cmesh_commit (cmesh_part);
 
   if (mpisize > 1 && 1) {
@@ -206,7 +203,7 @@ t8_random_partition ()
 }
 
 static void
-t8_partition ()
+t8_partition (int level)
 {
   t8_cmesh_t          cmesh, cmesh_part, cmesh_part2;
   char                file[BUFSIZ];
@@ -225,12 +222,9 @@ t8_partition ()
   t8_cmesh_vtk_write_file (cmesh, file, 1.);
 
   t8_cmesh_init (&cmesh_part);
-  t8_cmesh_set_partition_from (cmesh_part, cmesh, -1,
-                               t8_partition_offset (0, sc_MPI_COMM_WORLD,
-                                                    t8_cmesh_get_num_trees
-                                                    (cmesh)));
+  t8_cmesh_set_partition_from (cmesh_part, cmesh, level, NULL);
   t8_cmesh_commit (cmesh_part);
-  if (mpisize > 1 && 0) {
+  if (mpisize > 1 && 1) {
     t8_cmesh_init (&cmesh_part2);
     t8_cmesh_set_partition_from (cmesh_part2, cmesh_part, -1,
                                  t8_partition_offset (1, sc_MPI_COMM_WORLD,
@@ -252,6 +246,7 @@ int
 main (int argc, char **argv)
 {
   int                 mpiret, loop;
+  int                 level;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -259,9 +254,11 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  //t8_partition ();
+  level = 5;
+
+  t8_partition (level);
   for (loop = 0; loop < 1; loop++) {
-    t8_random_partition ();
+    t8_random_partition (level);
   }
 
   sc_finalize ();
