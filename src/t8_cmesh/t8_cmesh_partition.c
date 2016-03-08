@@ -901,7 +901,7 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
   char              **send_buffer = NULL, *my_buffer = NULL;
 
   sc_MPI_Request     *requests = NULL;
-  t8_locidx_t         num_ghost_send, itree, num_trees;
+  t8_locidx_t         num_ghosts, itree, num_trees;
   t8_part_tree_t      recv_part;
   t8_ctree_t          tree;
   sc_array_t          keep_as_ghost;    /* Store local id's of local trees and ghosts that will be ghost on this process */
@@ -960,12 +960,12 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
   /* Use as temporary variables to store the first tree_id/ghost_id of the new parts */
   num_trees = 0;
   for (iproc = 0; iproc < cmesh->trees->from_proc->elem_count; iproc++) {
-    num_ghost_send = 0;
+    num_ghosts = 0;
     recv_part = t8_cmesh_trees_get_part (cmesh->trees, iproc);
     recv_part->first_tree_id = num_trees;
-    recv_part->first_ghost_id = num_ghost_send;
+    recv_part->first_ghost_id = num_ghosts;
     num_trees += recv_part->num_trees;
-    num_ghost_send += recv_part->num_ghosts;
+    num_ghosts += recv_part->num_ghosts;
     /* count trees_per_eclass */
 #ifdef T8_ENABLE_DEBUG
     cmesh->committed = 1;       /* To pass through get_tree_class function */
@@ -983,7 +983,7 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
 #endif
   }
   T8_ASSERT (cmesh->num_local_trees == num_trees);
-  cmesh->num_ghosts = num_ghost_send;
+  cmesh->num_ghosts = num_ghosts;
   /* TODO: set new local ids of face_neighbors */
 }
 
