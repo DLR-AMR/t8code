@@ -881,6 +881,7 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
   /* basic setup */
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
+  t8_cmesh_set_num_trees (cmesh, _T8_CMESH_P48_CONN (num_trees));
   /* Add each tree to cmesh and get vertex information for each tree */
   for (itree = 0; itree < _T8_CMESH_P48_CONN (num_trees); itree++) {    /* loop over each tree */
     t8_cmesh_set_tree_class (cmesh, itree,
