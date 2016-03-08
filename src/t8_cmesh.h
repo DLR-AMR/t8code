@@ -336,22 +336,26 @@ void                t8_cmesh_unref (t8_cmesh_t * pcmesh);
  * \param[in]       conn       The p4est connectivity.
  * \param[in]       comm       mpi communicator to be used with the new cmesh.
  * \param[in]       do_dup     Flag whether the communicator shall be duplicated or not.
+ * \param[in]       do_partition Flag whether the cmesh should be partitioned or not.
  * \return          A t8_cmesh structure that holds the same connectivity information
  *                  as \a conn.
  */
 t8_cmesh_t          t8_cmesh_new_from_p4est (p4est_connectivity_t * conn,
-                                             sc_MPI_Comm comm, int do_dup, int set_partition);
+                                             sc_MPI_Comm comm, int do_dup,
+                                             int do_partition);
 
 /** Constructs a cmesh from a given p8est_connectivity structure.
  *  The constructed cmesh will be replicated.
  * \param[in]       conn       The p8est connectivity.
  * \param[in]       comm       mpi communicator to be used with the new cmesh.
  * \param[in]       do_dup     Flag whether the communicator shall be duplicated or not.
+ * \param[in]       do_partition Flag whether the cmesh should be partitioned or not.
  * \return          A t8_cmesh structure that holds the same connectivity information
  *                  as \a conn.
  */
 t8_cmesh_t          t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
-                                             sc_MPI_Comm comm, int do_dup, int do_partition);
+                                             sc_MPI_Comm comm, int do_dup,
+                                             int do_partition);
 
 /** Constructs a cmesh that consists only of one tree of a given element class.
  * \param [in]      eclass     The element class.
