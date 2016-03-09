@@ -607,23 +607,25 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
       /* loop over all faces of each tree to determine ghost to send */
       for (iface = 0; iface < t8_eclass_num_faces[tree->eclass]; iface++) {
         neighbor = face_neighbor[iface];
-        if (neighbor >= 0 && neighbor < cmesh_from->num_local_trees &&
-            (neighbor < range_start || neighbor > range_end)) {
-          /* neighbor is a local tree or local ghost and will be ghost on iproc */
-          if (ghost_flag[neighbor] == 0 &&
-              t8_cmesh_send_ghost (cmesh, iproc, neighbor)) {
-            /* we did not add this neighbor yet and it should be send to iproc */
-            ghost_flag[neighbor] = 1;
-            *((t8_locidx_t *) sc_array_push (&send_as_ghost)) = neighbor;
+        if (neighbor >= 0 && neighbor != itree) { /* Consider only non-boundary neighbors */
+          if (neighbor < cmesh_from->num_local_trees &&
+              (neighbor < range_start || neighbor > range_end)) {
+            /* neighbor is a local tree or local ghost and will be ghost on iproc */
+            if (ghost_flag[neighbor] == 0 &&
+                t8_cmesh_send_ghost (cmesh, iproc, neighbor)) {
+              /* we did not add this neighbor yet and it should be send to iproc */
+              ghost_flag[neighbor] = 1;
+              *((t8_locidx_t *) sc_array_push (&send_as_ghost)) = neighbor;
+            }
           }
-        }
-        else if (cmesh->first_tree <= neighbor + cmesh_from->first_tree
-                 && neighbor + cmesh_from->first_tree <= cmesh->first_tree +
-                 cmesh->num_local_trees - 1) {
-          /* neighbor will be local on this process, thus tree will be ghost on this process */
-          if (ghost_flag[itree] == 0) {
-            ghost_flag[itree] = 3;
-            *((t8_locidx_t *) sc_array_push (keep_as_ghost)) = itree;
+          else if (cmesh->first_tree <= neighbor + cmesh_from->first_tree
+                   && neighbor + cmesh_from->first_tree <= cmesh->first_tree +
+                   cmesh->num_local_trees - 1) {
+            /* neighbor will be local on this process, thus tree will be ghost on this process */
+            if (ghost_flag[itree] == 0) {
+              ghost_flag[itree] = 3;
+              *((t8_locidx_t *) sc_array_push (keep_as_ghost)) = itree;
+            }
           }
         }
       }
