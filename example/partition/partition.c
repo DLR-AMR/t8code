@@ -87,7 +87,6 @@ t8_partition_offset (int proc, sc_MPI_Comm comm, t8_gloidx_t num_trees)
 #ifdef T8_ENABLE_DEBUG
   t8_debugf ("Partition with offsets:0,%s\n", out);
 #endif
-  offsets[proc + 1] = -num_trees;
   return offsets;
 }
 
