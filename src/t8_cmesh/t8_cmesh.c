@@ -399,7 +399,6 @@ t8_cmesh_set_ghost (t8_cmesh_t cmesh, t8_topidx_t ghost_id,
  *                         This would not require any tree to be set.
  *                         But certainly is more memory intensive.
  */
-/* TODO: change to gloidx? */
 void
 t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t tree1, t8_gloidx_t tree2,
                    int face1, int face2, int orientation)

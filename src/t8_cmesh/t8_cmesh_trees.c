@@ -306,8 +306,12 @@ t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees, t8_locidx_t tree_id,
 {
   t8_ctree_t            tree;
   tree = t8_cmesh_trees_get_tree (trees, tree_id);
-  *face_neigh = (t8_locidx_t *) T8_TREE_FACE(tree);
-  *ttf = (int8_t *) T8_TREE_TTF(tree);
+  if (face_neigh != NULL) {
+    *face_neigh = (t8_locidx_t *) T8_TREE_FACE(tree);
+  }
+  if (ttf != NULL) {
+    *ttf = (int8_t *) T8_TREE_TTF(tree);
+  }
   return tree;
 }
 

@@ -223,6 +223,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     }
   }
   else {
+    /* Cmesh is partitioned and new */
     sc_hash_t          *ghost_ids;
     sc_mempool_t       *ghost_facejoin_mempool;
     struct ghost_facejoins_struct *ghost_facejoin, *temp_facejoin,
@@ -271,7 +272,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       id2_istree = id2 <= last_tree && id2 >= cmesh->first_tree;
       id1_istree = id1 <= last_tree && id1 >= cmesh->first_tree;
       if (id1_istree || id2_istree) {
-        /* Only consider facejoins with local trees involved to geth the global
+        /* Only consider facejoins with local trees involved to get the global
          * ids of all local ghosts. */
         if (!id2_istree) {
           /* id2 is a ghost */
@@ -457,12 +458,12 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
             T8_ASSERT (ttf == NULL);
             face_neigh_g[joinface->face1] = id2;
           }
-          else if (ghost2 != NULL) {
+          if (ghost2 != NULL) {
             T8_ASSERT (ttf2 == NULL);
             face_neigh_g2[joinface->face2] = id1;
             /* Done with setting face join */
           }
-          if (tree2 != NULL) {
+          else if (tree2 != NULL) {
             T8_ASSERT (tree1 != NULL || ghost1 != NULL);
             face_neigh2[joinface->face2] = tree1 ? id1 - cmesh->first_tree :
               temp_local_id + cmesh->num_local_trees;

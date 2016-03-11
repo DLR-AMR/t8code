@@ -202,6 +202,7 @@ t8_ctree_t          t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees,
 
 /* Return tree and its face neighbor arrays */
 /* TODO: document */
+/* either of face_neigh or ttf can be NULL, then they are not set */
 t8_ctree_t          t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees,
                                                  t8_locidx_t tree_id,
                                                  t8_locidx_t **face_neigh,
