@@ -225,7 +225,7 @@ t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees, int proc)
     ghost = t8_part_tree_get_ghost (part, it + part->first_ghost_id);
     ghost->neigh_offset = first_face + face_neigh_bytes - temp_offset;
     face_neigh_bytes += t8_eclass_num_faces[ghost->eclass] *
-        (sizeof (t8_locidx_t) + sizeof (int8_t));
+        (sizeof (t8_gloidx_t) + sizeof (int8_t));
     face_neigh_bytes += (4 - (face_neigh_bytes % 4)) % 4;
     /* This is for padding, such that face_neigh_bytes %4 == 0 */
     T8_ASSERT (face_neigh_bytes % 4 == 0);
