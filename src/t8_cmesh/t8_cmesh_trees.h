@@ -78,11 +78,14 @@ T8_EXTERN_C_BEGIN ();
  *
  * Ghost faces:
  *
- * | Treeid1 Treeid2 ... |
+ * | Treeid1 Treeid2 ... | ttf1 ttf2 ... | padding |
  *
- * with global tree ids stored as t8_gloidx_t
- * (so no padding needed since gloidx is multiple of 4 bytes).
- *
+ * Where padding is a number of unused bytes that makes the whole block a multiple
+ * of 4 Bytes.
+ * Treeidj is a t8_gloidx_t storing the global tree id for all neighbors.
+ * For the encoding of ttf (tree to face) see \ref t8_ctree_struct_t, ttf entries are int8_t
+ * and the offset of ttf1 can be calculated from the Tree faces offset and the
+ * class of the tree.
  * Tree attributes:
  *
  * The data of Tree attributes looks like:
@@ -123,11 +126,15 @@ T8_EXTERN_C_BEGIN ();
 #define T8_TREE_ATTR(t,ai) (T8_TREE_FIRST_ATT(t) + (ai)->attribute_offset)
 /* Given a tree return its face_neighbor array */
 #define T8_TREE_FACE(t) ((char *) (t) + (t)->neigh_offset)
-/* Given a tree return irs tree_to_face arrat */
+/* Given a tree return irs tree_to_face array */
 #define T8_TREE_TTF(t) (T8_TREE_FACE(t) + \
   t8_eclass_num_faces[(t)->eclass] * sizeof(t8_locidx_t))
-
+/* Given a ghost return its face_neighbor array */
 #define T8_GHOST_FACE(g) T8_TREE_FACE(g)
+/* Given a ghost return its tree_to_face array */
+#define T8_GHOST_TTF(g) (T8_GHOST_FACE(g) + \
+  t8_eclass_num_faces[(g)->eclass] * sizeof(t8_gloidx_t))
+
 
 void                t8_cmesh_trees_init (t8_cmesh_trees_t * ptrees,
                                          int num_procs, t8_locidx_t num_trees,
@@ -221,7 +228,7 @@ t8_cghost_t         t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees,
 /* TODO: document */
 t8_cghost_t         t8_cmesh_trees_get_ghost_ext(t8_cmesh_trees_t trees,
                                                  t8_locidx_t ghost_id,
-                                                 t8_gloidx_t **face_neigh);
+                                                 t8_gloidx_t **face_neigh, int8_t **ttf);
 
 /* TODO: document */
 /* attr_bytes is the total size of all attributes of that tree */

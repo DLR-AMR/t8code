@@ -219,28 +219,32 @@ t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees, int proc)
   T8_ASSERT (part != NULL);
 
   attr_bytes = face_neigh_bytes = 0;
-  temp_offset = part->num_trees * sizeof (t8_ctree_struct_t); /* The offset of the first ghost/tree */
+  /* The offset of the first ghost */
+  temp_offset = part->num_trees * sizeof (t8_ctree_struct_t);
+  /* The offset of the first ghost face */
   first_face = temp_offset + part->num_ghosts * sizeof (t8_cghost_struct_t);
-  for (it = 0;it < part->num_ghosts;it++) {
+  for (it = 0; it < part->num_ghosts; it++) {
     ghost = t8_part_tree_get_ghost (part, it + part->first_ghost_id);
     ghost->neigh_offset = first_face + face_neigh_bytes - temp_offset;
+    /* Add space for storing the gloid's of the neighbors plus the tree_to_face
+     * values of the neighbors */
     face_neigh_bytes += t8_eclass_num_faces[ghost->eclass] *
-        (sizeof (t8_gloidx_t) + sizeof (int8_t));
-    face_neigh_bytes += (4 - (face_neigh_bytes % 4)) % 4;
+      (sizeof (t8_gloidx_t) + sizeof (int8_t));
     /* This is for padding, such that face_neigh_bytes %4 == 0 */
+    face_neigh_bytes += (4 - (face_neigh_bytes % 4)) % 4;
     T8_ASSERT (face_neigh_bytes % 4 == 0);
     temp_offset += sizeof (t8_cghost_struct_t);
   }
   /* TODO: passing through trees twice is not optimal. Can we do it all in one round?
-           Currently we need the first one to compute the total number of face bytes */
+     Currently we need the first one to compute the total number of face bytes */
   /* First pass through trees to set the face neighbor offsets */
   temp_offset = 0;
   num_attributes = 0;
-  for (it = 0;it < part->num_trees;it++) {
+  for (it = 0; it < part->num_trees; it++) {
     tree = t8_part_tree_get_tree (part, it + part->first_tree_id);
     tree->neigh_offset = first_face + face_neigh_bytes - temp_offset;
     face_neigh_bytes += t8_eclass_num_faces[tree->eclass] *
-        (sizeof (t8_locidx_t) + sizeof (int8_t));
+      (sizeof (t8_locidx_t) + sizeof (int8_t));
     num_attributes += tree->num_attributes;
     face_neigh_bytes += (4 - (face_neigh_bytes % 4)) % 4;
     /* This is for padding, such that face_neigh_bytes %4 == 0 */
@@ -330,12 +334,17 @@ t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees, t8_locidx_t ghost)
 
 t8_cghost_t
 t8_cmesh_trees_get_ghost_ext (t8_cmesh_trees_t trees, t8_locidx_t ghost_id,
-                              t8_gloidx_t **face_neigh)
+                              t8_gloidx_t **face_neigh, int8_t ** ttf)
 {
   t8_cghost_t         ghost;
 
   ghost = t8_cmesh_trees_get_ghost (trees, ghost_id);
-  *face_neigh = (t8_gloidx_t *) T8_GHOST_FACE(ghost);
+  if (face_neigh != NULL) {
+      *face_neigh = (t8_gloidx_t *) T8_GHOST_FACE(ghost);
+  }
+  if (ttf != NULL) {
+      *ttf = (int8_t *) T8_GHOST_TTF (ghost);
+  }
   return ghost;
 }
 

@@ -407,7 +407,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
           ghost_facejoin = *facejoin_pp;
           ghost1 = t8_cmesh_trees_get_ghost_ext (cmesh->trees,
                                                  ghost_facejoin->local_id,
-                                                 &face_neigh_g);
+                                                 &face_neigh_g, &ttf);
           temp_local_id = ghost_facejoin->local_id;
         }
         id2 = temp_facejoin->ghost_id = joinface->id2;
@@ -425,7 +425,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
           ghost_facejoin = *facejoin_pp;
           ghost2 = t8_cmesh_trees_get_ghost_ext (cmesh->trees,
                                                  ghost_facejoin->local_id,
-                                                 &face_neigh_g2);
+                                                 &face_neigh_g2, &ttf2);
         }
         /* TODO: think of boundary encoding. This is not right */
         if (joinface->id2 == -1) {
@@ -455,12 +455,14 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
             ttf[joinface->face1] = F * joinface->orientation + joinface->face2;
           }
           else if (ghost1 != NULL) {
-            T8_ASSERT (ttf == NULL);
+            T8_ASSERT (ttf != NULL);
             face_neigh_g[joinface->face1] = id2;
+            ttf[joinface->face1] = F * joinface->orientation + joinface->face2;
           }
           if (ghost2 != NULL) {
-            T8_ASSERT (ttf2 == NULL);
+            T8_ASSERT (ttf2 != NULL);
             face_neigh_g2[joinface->face2] = id1;
+            ttf2[joinface->face2] = F * joinface->orientation + joinface->face1;
             /* Done with setting face join */
           }
           else if (tree2 != NULL) {
