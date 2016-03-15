@@ -131,10 +131,11 @@ t8_offset_range_woempty (int start, int end, t8_gloidx_t * offset)
  * Output: The face neighbor entry is changed to match its new id in cmesh.
  */
 static void
-t8_cmesh_partition_send_change_neighbor (t8_cmesh_t cmesh,t8_cmesh_t cmesh_from,
-                                         t8_locidx_t *neighbor, int to_proc)
+t8_cmesh_partition_send_change_neighbor (t8_cmesh_t cmesh,
+                                         t8_cmesh_t cmesh_from,
+                                         t8_locidx_t * neighbor, int to_proc)
 {
-  t8_gloidx_t       temp;
+  t8_gloidx_t         temp;
 
   t8_debugf ("neigh = %li at %p\n", (long) *neighbor, neighbor);
 
@@ -143,23 +144,25 @@ t8_cmesh_partition_send_change_neighbor (t8_cmesh_t cmesh,t8_cmesh_t cmesh_from,
     temp = cmesh_from->first_tree - cmesh->first_tree;
     /* Assert for possible overflow du to gloidx computation */
     T8_ASSERT ((t8_locidx_t) (temp + *neighbor) == temp + *neighbor);
-    *neighbor =  temp + *neighbor;
+    *neighbor = temp + *neighbor;
   }
   else {
-    t8_cghost_t     ghost;
+    t8_cghost_t         ghost;
     /* neighbor is a ghost in cmesh_from */
     T8_ASSERT (*neighbor >= cmesh_from->num_local_trees &&
-               *neighbor < cmesh_from->num_local_trees + cmesh_from->num_ghosts);
-    ghost = t8_cmesh_trees_get_ghost(cmesh_from->trees,
-                                     *neighbor - cmesh_from->num_local_trees);
+               *neighbor <
+               cmesh_from->num_local_trees + cmesh_from->num_ghosts);
+    ghost =
+      t8_cmesh_trees_get_ghost (cmesh_from->trees,
+                                *neighbor - cmesh_from->num_local_trees);
     /* We only do something if the neighbor will be a local tree
      * of to_proc in cmesh */
-     if (t8_offset_first (to_proc, cmesh->tree_offsets) <=
+    if (t8_offset_first (to_proc, cmesh->tree_offsets) <=
         ghost->treeid && ghost->treeid <= t8_offset_last (to_proc,
-                                                          cmesh->tree_offsets))
-    {
-     /* The new neighbor id is The global index of ghost - first tree of cmesh
-      */
+                                                          cmesh->
+                                                          tree_offsets)) {
+      /* The new neighbor id is The global index of ghost - first tree of cmesh
+       */
       temp = ghost->treeid - t8_offset_first (to_proc, cmesh->tree_offsets);
       /* assert for gloidx overflow */
       T8_ASSERT ((t8_locidx_t) temp == temp);

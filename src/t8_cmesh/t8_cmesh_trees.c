@@ -203,15 +203,15 @@ t8_cmesh_trees_start_part (t8_cmesh_trees_t trees, int proc,
 void
 t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees, int proc)
 {
-  t8_part_tree_t          part;
-  t8_ctree_t              tree;
-  t8_cghost_t             ghost;
-  size_t                  attr_bytes, face_neigh_bytes, temp_offset,
-      first_face, num_attributes;
+  t8_part_tree_t      part;
+  t8_ctree_t          tree;
+  t8_cghost_t         ghost;
+  size_t              attr_bytes, face_neigh_bytes, temp_offset,
+    first_face, num_attributes;
   t8_attribute_info_struct_t *attr;
-  t8_locidx_t             it;
+  t8_locidx_t         it;
 #ifndef SC_ENABLE_REALLOC
-  char                   *temp;
+  char               *temp;
 #endif
 
   T8_ASSERT (trees != NULL);
@@ -252,30 +252,29 @@ t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees, int proc)
     temp_offset += sizeof (t8_ctree_struct_t);
   }
 #if 0
-  num_attributes ++;
+  num_attributes++;
 #endif
   /* Second pass through trees to set attribute offsets */
   temp_offset = 0;
   num_attributes = 0;
-  for (it = 0;it < part->num_trees;it++) {
+  for (it = 0; it < part->num_trees; it++) {
     tree = t8_part_tree_get_tree (part, it + part->first_tree_id);
-    attr_bytes += tree->att_offset; /* att_offset stored the total size of the attributes */
+    attr_bytes += tree->att_offset;     /* att_offset stored the total size of the attributes */
     /* The att_offset of the tree is the first_face plus the number of attribute
      * bytes used by previous trees minus the temp_offset */
     tree->att_offset = first_face - temp_offset + face_neigh_bytes +
-        num_attributes * sizeof (t8_attribute_info_struct_t);
+      num_attributes * sizeof (t8_attribute_info_struct_t);
     num_attributes += tree->num_attributes;
     temp_offset += sizeof (t8_ctree_struct_t);
   }
 #if 0
-  num_attributes++; /* Add one attribute at the end */
+  num_attributes++;             /* Add one attribute at the end */
 #endif
-  attr_bytes += num_attributes * sizeof(t8_attribute_info_struct_t);
+  attr_bytes += num_attributes * sizeof (t8_attribute_info_struct_t);
   /* Done setting all tree and ghost offsets */
   /* Allocate memory, first_face + attr_bytes gives the new total byte count */
   /* TODO: Since we use realloc and padding, memcmp will not work, solved with memset */
-  first_face = part->num_trees * sizeof (t8_ctree_struct_t) +
-      part->num_ghosts * sizeof (t8_cghost_struct_t); /* Total number of bytes in first_tree */
+  first_face = part->num_trees * sizeof (t8_ctree_struct_t) + part->num_ghosts * sizeof (t8_cghost_struct_t);   /* Total number of bytes in first_tree */
 #ifdef SC_ENABLE_REALLOC
   SC_REALLOC (part->first_tree, char, first_face + attr_bytes
               + face_neigh_bytes);
@@ -288,8 +287,9 @@ t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees, int proc)
 #endif
   /* Set attribute first offset, works even if there are no attributes */
   attr = (t8_attribute_info_struct_t *) (part->first_tree + first_face
-      + face_neigh_bytes);
-  attr->attribute_offset = num_attributes * sizeof(t8_attribute_info_struct_t);
+                                         + face_neigh_bytes);
+  attr->attribute_offset =
+    num_attributes * sizeof (t8_attribute_info_struct_t);
 }
 
 t8_ctree_t
@@ -306,15 +306,15 @@ t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees, t8_locidx_t tree)
 
 t8_ctree_t
 t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees, t8_locidx_t tree_id,
-                             t8_locidx_t **face_neigh, int8_t **ttf)
+                             t8_locidx_t ** face_neigh, int8_t ** ttf)
 {
-  t8_ctree_t            tree;
+  t8_ctree_t          tree;
   tree = t8_cmesh_trees_get_tree (trees, tree_id);
   if (face_neigh != NULL) {
-    *face_neigh = (t8_locidx_t *) T8_TREE_FACE(tree);
+    *face_neigh = (t8_locidx_t *) T8_TREE_FACE (tree);
   }
   if (ttf != NULL) {
-    *ttf = (int8_t *) T8_TREE_TTF(tree);
+    *ttf = (int8_t *) T8_TREE_TTF (tree);
   }
   return tree;
 }
@@ -334,16 +334,16 @@ t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees, t8_locidx_t ghost)
 
 t8_cghost_t
 t8_cmesh_trees_get_ghost_ext (t8_cmesh_trees_t trees, t8_locidx_t ghost_id,
-                              t8_gloidx_t **face_neigh, int8_t ** ttf)
+                              t8_gloidx_t ** face_neigh, int8_t ** ttf)
 {
   t8_cghost_t         ghost;
 
   ghost = t8_cmesh_trees_get_ghost (trees, ghost_id);
   if (face_neigh != NULL) {
-      *face_neigh = (t8_gloidx_t *) T8_GHOST_FACE(ghost);
+    *face_neigh = (t8_gloidx_t *) T8_GHOST_FACE (ghost);
   }
   if (ttf != NULL) {
-      *ttf = (int8_t *) T8_GHOST_TTF (ghost);
+    *ttf = (int8_t *) T8_GHOST_TTF (ghost);
   }
   return ghost;
 }
@@ -395,7 +395,6 @@ t8_cmesh_tree_add_attribute (t8_cmesh_trees_t trees, int proc,
   part = t8_cmesh_trees_get_part (trees, proc);
   tree = t8_part_tree_get_tree (part, tree_id);
 
-
   attr_info = T8_TREE_ATTR_INFO (tree, index);
   new_attr = T8_TREE_ATTR (tree, attr_info);
 
@@ -413,15 +412,15 @@ t8_cmesh_tree_add_attribute (t8_cmesh_trees_t trees, int proc,
     attr_info = attr_info + 1;
     attr_info->attribute_offset = offset + attr->attr_size;
     if (index == tree->num_attributes - 1) {
-     attr_info->attribute_offset -= tree->num_attributes *
-         sizeof(t8_attribute_info_struct_t);
+      attr_info->attribute_offset -= tree->num_attributes *
+        sizeof (t8_attribute_info_struct_t);
     }
   }
 }
 
 /* Gets two attribute_info structs and compares their package id and key */
 static int
-t8_cmesh_trees_compare_attributes (const void * A1, const void * A2)
+t8_cmesh_trees_compare_attributes (const void *A1, const void *A2)
 {
   t8_attribute_info_struct_t *attr1, *attr2;
 
@@ -448,9 +447,9 @@ t8_cmesh_part_attribute_info_sort (t8_part_tree_t P)
 
   T8_ASSERT (P != NULL);
 
-  for (itree = 0;itree < P->num_trees;itree++) {
+  for (itree = 0; itree < P->num_trees; itree++) {
     tree = t8_part_tree_get_tree (P, P->first_tree_id + itree);
-    sc_array_init_data (&tree_attr, (char*)tree + tree->att_offset,
+    sc_array_init_data (&tree_attr, (char *) tree + tree->att_offset,
                         sizeof (t8_attribute_info_struct_t),
                         tree->num_attributes);
     sc_array_sort (&tree_attr, t8_cmesh_trees_compare_attributes);
@@ -463,8 +462,9 @@ t8_cmesh_trees_attribute_info_sort (t8_cmesh_trees_t trees)
   int                 iproc;
 
   T8_ASSERT (trees != NULL);
-  for (iproc = 0;iproc < trees->from_proc->elem_count;iproc++) {
-    t8_cmesh_part_attribute_info_sort (t8_cmesh_trees_get_part (trees, iproc));
+  for (iproc = 0; iproc < trees->from_proc->elem_count; iproc++) {
+    t8_cmesh_part_attribute_info_sort (t8_cmesh_trees_get_part
+                                       (trees, iproc));
   }
 }
 
@@ -532,9 +532,9 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
     t8_global_errorf ("Attribute with package id %i and key %i not found"
                       " on tree %li.\n", package_id, key, (long) tree_id);
     return NULL;
-  }  
+  }
   attr_info = (t8_attribute_info_struct_t *)
-      sc_array_index (&attr_array, index);
+    sc_array_index (&attr_array, index);
   return T8_TREE_ATTR (tree, attr_info);
 }
 
@@ -542,11 +542,11 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
 size_t
 t8_cmesh_trees_attribute_size (t8_ctree_t tree)
 {
-  t8_attribute_info_struct_t  *attr_info;
-  int               i;
-  size_t            total = 0;
+  t8_attribute_info_struct_t *attr_info;
+  int                 i;
+  size_t              total = 0;
 
-  for (i = 0;i < tree->num_attributes;i++) {
+  for (i = 0; i < tree->num_attributes; i++) {
     attr_info = T8_TREE_ATTR_INFO (tree, i);
     total += attr_info->attribute_size;
   }

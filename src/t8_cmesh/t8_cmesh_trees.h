@@ -135,7 +135,6 @@ T8_EXTERN_C_BEGIN ();
 #define T8_GHOST_TTF(g) (T8_GHOST_FACE(g) + \
   t8_eclass_num_faces[(g)->eclass] * sizeof(t8_gloidx_t))
 
-
 void                t8_cmesh_trees_init (t8_cmesh_trees_t * ptrees,
                                          int num_procs, t8_locidx_t num_trees,
                                          t8_locidx_t num_ghosts);
@@ -149,7 +148,8 @@ void                t8_cmesh_trees_init_part (t8_cmesh_trees_t trees,
 #endif
 
 /* TODO: document */
-t8_part_tree_t      t8_cmesh_trees_get_part (t8_cmesh_trees_t trees, int proc);
+t8_part_tree_t      t8_cmesh_trees_get_part (t8_cmesh_trees_t trees,
+                                             int proc);
 
 /* allocate the first_tree array of a given tree_part in a tree struct
  * with a given number of bytes */
@@ -212,8 +212,8 @@ t8_ctree_t          t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees,
 /* either of face_neigh or ttf can be NULL, then they are not set */
 t8_ctree_t          t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees,
                                                  t8_locidx_t tree_id,
-                                                 t8_locidx_t **face_neigh,
-                                                 int8_t **ttf);
+                                                 t8_locidx_t ** face_neigh,
+                                                 int8_t ** ttf);
 
 /* TODO: This function return NULL if the ghost is not present.
  *       So far no error checking is done here. */
@@ -226,9 +226,10 @@ t8_cghost_t         t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees,
                                               t8_locidx_t ghost);
 
 /* TODO: document */
-t8_cghost_t         t8_cmesh_trees_get_ghost_ext(t8_cmesh_trees_t trees,
-                                                 t8_locidx_t ghost_id,
-                                                 t8_gloidx_t **face_neigh, int8_t **ttf);
+t8_cghost_t         t8_cmesh_trees_get_ghost_ext (t8_cmesh_trees_t trees,
+                                                  t8_locidx_t ghost_id,
+                                                  t8_gloidx_t ** face_neigh,
+                                                  int8_t ** ttf);
 
 /* TODO: document */
 /* attr_bytes is the total size of all attributes of that tree */
@@ -242,13 +243,13 @@ void                t8_cmesh_trees_init_attributes (t8_cmesh_trees_t trees,
  * attributes is in O(log(A)) with A the number of attributes of that tree.
  * However, with this method we do not know the size of an attribute any longer,
  * this is something the user has to take care of */
-void                t8_cmesh_trees_attribute_info_sort (t8_cmesh_trees_t trees);
+void                t8_cmesh_trees_attribute_info_sort (t8_cmesh_trees_t
+                                                        trees);
 
 /* TODO: These need to be rewritten with package_id and key */
 void               *t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees,
                                                   t8_topidx_t tree_id,
                                                   int package_id, int key);
-
 
 /* TODO: document. total size of attributes of given tree */
 size_t              t8_cmesh_trees_attribute_size (t8_ctree_t tree);
@@ -260,7 +261,8 @@ size_t              t8_cmesh_trees_attribute_size (t8_ctree_t tree);
 void                t8_cmesh_tree_add_attribute (t8_cmesh_trees_t trees,
                                                  int proc,
                                                  t8_stash_attribute_struct_t *
-                                                 attr, t8_locidx_t tree_id, size_t index);
+                                                 attr, t8_locidx_t tree_id,
+                                                 size_t index);
 
 int                 t8_cmesh_trees_is_equal (t8_cmesh_t cmesh,
                                              t8_cmesh_trees_t trees_a,
