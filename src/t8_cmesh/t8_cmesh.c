@@ -125,7 +125,7 @@ t8_cmesh_set_partitioned (t8_cmesh_t cmesh, int set_partitioned,
 {
   T8_ASSERT (!cmesh->committed);
   T8_ASSERT (cmesh->set_partitioned == 0);
- //T8_ASSERT (cmesh->num_trees == 0);
+  //T8_ASSERT (cmesh->num_trees == 0);
 // T8_ASSERT (cmesh->num_local_trees == 0);
   T8_ASSERT (cmesh->first_tree == 0);
 
@@ -155,7 +155,7 @@ t8_cmesh_set_partitioned (t8_cmesh_t cmesh, int set_partitioned,
 
 void
 t8_cmesh_set_partition_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
-                             int level, t8_gloidx_t *tree_offsets)
+                             int level, t8_gloidx_t * tree_offsets)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh_from != NULL);
@@ -201,8 +201,7 @@ t8_cmesh_first_tree (t8_cmesh_t cmesh)
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
 
-  return cmesh->num_local_trees > 0 ?
-        t8_cmesh_get_tree (cmesh, 0) : NULL;
+  return cmesh->num_local_trees > 0 ? t8_cmesh_get_tree (cmesh, 0) : NULL;
 }
 
 /* returns the next local tree in the cmesh (by treeid)
@@ -239,7 +238,8 @@ t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key,
                         t8_locidx_t tree_id)
 {
   T8_ASSERT (cmesh->committed);
-  return t8_cmesh_trees_get_attribute (cmesh->trees, tree_id, package_id, key);
+  return t8_cmesh_trees_get_attribute (cmesh->trees, tree_id, package_id,
+                                       key);
 }
 
 void
@@ -712,7 +712,8 @@ t8_cmesh_get_global_id (t8_cmesh_t cmesh, t8_locidx_t local_id)
   }
   else {
     return t8_cmesh_trees_get_ghost (cmesh->trees,
-                                     local_id - cmesh->num_local_trees)->treeid;
+                                     local_id -
+                                     cmesh->num_local_trees)->treeid;
   }
 }
 
@@ -722,7 +723,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
                          t8_gloidx_t * child_in_tree_begin,
                          t8_gloidx_t * last_local_tree,
                          t8_gloidx_t * child_in_tree_end,
-                         int8_t *first_tree_shared)
+                         int8_t * first_tree_shared)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
@@ -776,21 +777,20 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
                && first_global_child <= global_num_children);
     T8_ASSERT (0 <= last_global_child
                && last_global_child <= global_num_children);
-    *first_local_tree = first_global_child / children_per_tree;        
+    *first_local_tree = first_global_child / children_per_tree;
     if (child_in_tree_begin != NULL) {
       *child_in_tree_begin =
-       first_global_child - *first_local_tree * children_per_tree;
+        first_global_child - *first_local_tree * children_per_tree;
     }
     /* TODO: Just fixed this line from last_global_child -1 / cpt
      *       Why did we not notice this error before?
      *       Changed it back*/
-    *last_local_tree = (last_global_child - 1)/ children_per_tree;
+    *last_local_tree = (last_global_child - 1) / children_per_tree;
     if (first_tree_shared != NULL) {
       prev_last_tree = (first_global_child - 1) / children_per_tree;
       T8_ASSERT (cmesh->mpirank > 0 || prev_last_tree <= 0);
       if (cmesh->mpirank > 0 && prev_last_tree == *first_local_tree &&
-          first_global_child != last_global_child
-          && last_global_child >= 0) {
+          first_global_child != last_global_child && last_global_child >= 0) {
         /* We exclude empty partitions here, by def their first_tree_shared flag is zero */
         /* We also exclude that the previous partition was empty at the beginning of the
          * partitions array */
@@ -936,18 +936,18 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
       }
     }
   }
-  if (set_partition){
+  if (set_partition) {
     /* TODO: a copy of this code exists below, make it a function */
-    int mpirank, mpisize, mpiret;
-    int first_tree, last_tree, num_trees;
+    int                 mpirank, mpisize, mpiret;
+    int                 first_tree, last_tree, num_trees;
 
     mpiret = sc_MPI_Comm_rank (comm, &mpirank);
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Comm_size (comm, &mpisize);
     SC_CHECK_MPI (mpiret);
     num_trees = _T8_CMESH_P48_CONN (num_trees);
-    first_tree = (mpirank * num_trees)/mpisize;
-    last_tree = ((mpirank + 1) * num_trees)/mpisize - 1;
+    first_tree = (mpirank * num_trees) / mpisize;
+    last_tree = ((mpirank + 1) * num_trees) / mpisize - 1;
     t8_cmesh_set_partitioned (cmesh, 1, 3, first_tree, last_tree);
   }
   t8_cmesh_commit (cmesh);
@@ -1381,17 +1381,17 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
     cmesh = t8_cmesh_bcast (cmesh, 0, comm);
   }
 
-  if (do_partition){
-    int mpirank, mpisize, mpiret;
-    int first_tree, last_tree, num_trees;
+  if (do_partition) {
+    int                 mpirank, mpisize, mpiret;
+    int                 first_tree, last_tree, num_trees;
 
     mpiret = sc_MPI_Comm_rank (comm, &mpirank);
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Comm_size (comm, &mpisize);
     SC_CHECK_MPI (mpiret);
     num_trees = num_trees_for_hypercube[eclass];
-    first_tree = (mpirank * num_trees)/mpisize;
-    last_tree = ((mpirank + 1) * num_trees)/mpisize - 1;
+    first_tree = (mpirank * num_trees) / mpisize;
+    last_tree = ((mpirank + 1) * num_trees) / mpisize - 1;
     t8_cmesh_set_partitioned (cmesh, 1, 3, first_tree, last_tree);
   }
 

@@ -103,7 +103,7 @@ void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
 void                t8_cmesh_set_partition_from (t8_cmesh_t cmesh,
                                                  const t8_cmesh_t cmesh_from,
                                                  int level,
-                                                 t8_gloidx_t *tree_offsets);
+                                                 t8_gloidx_t * tree_offsets);
 
 /* TODO: This is actually not part of the interface?
  *       At least it is only used if the cmesh is partitioned.
@@ -284,7 +284,7 @@ t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
  * \a cmesh must be committed before calling this function.
  */
 t8_eclass_t         t8_cmesh_get_ghost_class (t8_cmesh_t cmesh,
-                                             t8_locidx_t ghost_id);
+                                              t8_locidx_t ghost_id);
 
 /** Return the global id of a given local tree or ghost.
  * \param [in]    cmesh         The cmesh to be considered.
