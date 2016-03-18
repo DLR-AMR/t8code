@@ -689,6 +689,33 @@ t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_locidx_t tree_id)
   return tree->eclass;
 }
 
+t8_eclass_t
+t8_cmesh_get_ghost_class (t8_cmesh_t cmesh, t8_locidx_t ghost_id)
+{
+  t8_cghost_t         ghost;
+
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (0 <= ghost_id && ghost_id < cmesh->num_ghosts);
+
+  ghost = t8_cmesh_trees_get_ghost (cmesh->trees, ghost_id);
+  return ghost->eclass;
+}
+
+t8_gloidx_t
+t8_cmesh_get_global_id (t8_cmesh_t cmesh, t8_locidx_t local_id)
+{
+  T8_ASSERT (0 <= local_id && local_id <
+             cmesh->num_ghosts + cmesh->num_local_trees);
+  if (local_id < cmesh->num_local_trees) {
+    return local_id + cmesh->first_tree;
+  }
+  else {
+    return t8_cmesh_trees_get_ghost (cmesh->trees,
+                                     local_id - cmesh->num_local_trees)->treeid;
+  }
+}
+
 void
 t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
                          t8_gloidx_t * first_local_tree,

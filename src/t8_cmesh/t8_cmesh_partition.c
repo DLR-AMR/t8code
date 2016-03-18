@@ -126,6 +126,14 @@ t8_offset_range_woempty (int start, int end, t8_gloidx_t * offset)
   return count;
 }
 
+/* Determine whether a given global tree id is in the range of a given process */
+int
+t8_offset_in_range (t8_gloidx_t tree_id, int proc, t8_gloidx_t * offset)
+{
+  return t8_offset_first (proc, offset) <= tree_id
+      && tree_id <= t8_offset_last (proc, offset);
+}
+
 /* Change the neighbor entry of a tree to match the new partition.
  * Input: A face_neighbor entry in cmesh_from and a process to which the corresponding tree will be send
  * Output: The face neighbor entry is changed to match its new id in cmesh.

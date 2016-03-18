@@ -275,6 +275,27 @@ t8_ctree_t          t8_cmesh_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree);
 t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
                                              t8_locidx_t tree_id);
 
+/** Return the eclass of a given local ghost.
+ * TODO: Should we refer to indices or consequently use cghost_t?
+ * \param [in]    cmesh         The cmesh to be considered.
+ * \param [in]    ghost_id      The local id of the ghost whose eclass will be returned.
+ *                              0 <= \a tree_id < cmesh.num_ghosts.
+ * \return                      The eclass of the given ghost.
+ * \a cmesh must be committed before calling this function.
+ */
+t8_eclass_t         t8_cmesh_get_ghost_class (t8_cmesh_t cmesh,
+                                             t8_locidx_t ghost_id);
+
+/** Return the global id of a given local tree or ghost.
+ * \param [in]    cmesh         The cmesh to be considered.
+ * \param [in]    local_id      The local id of a tree or a ghost.
+ *                              If \a local_id < cmesh.num_local_trees then it is
+ *                              a tree, otherwise a ghost.
+ * \return                      The global id of the tree/ghost.
+ */
+t8_gloidx_t         t8_cmesh_get_global_id (t8_cmesh_t cmesh,
+                                            t8_locidx_t local_id);
+
 /** Return the attribute pointer of a tree.
  * \param [in]     cmesh        The cmesh.
  * \param [in]     package_id   The identifier of a valid software package. \see sc_package_register
