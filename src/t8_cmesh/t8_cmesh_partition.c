@@ -179,12 +179,14 @@ t8_cmesh_partition_send_change_neighbor (t8_cmesh_t cmesh,
   }
 }
 
-
+/* After we received all parts from the other processes we have to compute
+ * the new local ids of the ghosts and set those in the neighbor fields
+ * of all local trees.
+ */
 static void
 t8_partition_new_ghost_ids (t8_cmesh_t cmesh,
-                            const struct t8_cmesh * cmesh_from,
                             t8_part_tree_t recv_part,
-                            t8_locidx_t first_ghost)
+                            t8_locidx_t first_ghost, int proc)
 {
   t8_locidx_t           ghost_it;
   t8_cghost_t           ghost;
@@ -192,10 +194,13 @@ t8_partition_new_ghost_ids (t8_cmesh_t cmesh,
   t8_gloidx_t          *face_neighbors, tree_id_glo;
   t8_locidx_t          *tree_neighbors;
   int8_t               *ttf;
-  int                   iface, iface_tree;
+  int                   iface, face_tree;
 
   for (ghost_it = 0;ghost_it < recv_part->num_ghosts;ghost_it++) {
     /* loop over all ghosts of recv_part */
+    t8_debugf ("Try to access ghost %i of part %i\n",
+               ghost_it + first_ghost, proc);
+    cmesh->trees->ghost_to_proc[ghost_it + first_ghost] = proc;
     ghost = t8_cmesh_trees_get_ghost_ext (cmesh->trees, first_ghost + ghost_it,
                                           &face_neighbors, &ttf);
     for (iface = 0;iface < t8_eclass_num_faces[ghost->eclass];iface++) {
@@ -207,17 +212,11 @@ t8_partition_new_ghost_ids (t8_cmesh_t cmesh,
         tree = t8_cmesh_trees_get_tree_ext (cmesh->trees,
                                             tree_id_glo - cmesh->first_tree,
                                             &tree_neighbors, NULL);
-        for (iface_tree = 0;iface_tree < t8_eclass_num_faces[tree->eclass];
-             iface_tree++) {
-#if 0
-            if (tree_neighbors[iface_tree] == cmesh_from->nu)
-            /* TODO: we need to parse the neighbors of tree to look for ocurence of
-             * ghost, however the neighbor entries of tree are (partly) the old entries in
-             * cmesh_from and we do not know which local id our ghost had on the process
-             * from which tree comes (different from the proc from which ghost comes)
-             */
-#endif
-        }
+        /* Get the number of the face of tree that is connected with ghost
+         * and set the new local ghost id */
+        face_tree = ttf[iface] % t8_eclass_num_faces[tree->eclass];
+        tree_neighbors[face_tree] = ghost_it + first_ghost
+            + cmesh->num_local_trees;
       }
     }
   }
@@ -434,15 +433,129 @@ t8_cmesh_partition_recvrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                                        recv_last, 1);
 }
 
+/* Compute the number of bytes that need to be allocated in the send buffer
+ * for the neighbor entries of ghost */
+static size_t
+t8_partition_compute_gnb (t8_cmesh_t cmesh_from, sc_array_t * send_as_ghost)
+{
+  size_t  ghost_neighbor_bytes = 0;
+  t8_locidx_t ghost_id, ighost;
+  t8_eclass_t eclass;
+
+  for (ighost = 0; ighost < send_as_ghost->elem_count;ighost++) {
+    ghost_id = *(t8_locidx_t *) t8_sc_array_index_locidx (send_as_ghost,
+                                                          ighost);
+    T8_ASSERT (ghost_id >= 0);
+    if (ghost_id < cmesh_from->num_local_trees) {
+      /* The ghost to send is currently a tree */
+      eclass = t8_cmesh_get_tree_class (cmesh_from, ghost_id);
+    }
+    else {
+      /* The ghost to send is currently a ghost */
+      T8_ASSERT (ghost_id < cmesh_from->num_local_trees
+                 + cmesh_from->num_ghosts);
+      eclass = t8_cmesh_get_ghost_class (cmesh_from, ghost_id
+                                         - cmesh_from->num_local_trees);
+    }
+    ghost_neighbor_bytes += t8_eclass_num_faces[eclass] *
+        (sizeof (t8_gloidx_t) + sizeof (int8_t)) /* offset */
+        + ((4 - t8_eclass_num_faces[eclass] *
+            (sizeof (t8_gloidx_t) + sizeof (int8_t)) % 4) % 4); /* padding */
+  }
+  return ghost_neighbor_bytes;
+}
+
 /* Determine whether a local tree or ghost should be send to process p.
  * This is the case if and only if:
  *  - tree is not already a ghost or tree on p
  * and
  *  - we are the smallest rank under all procs sending to p that
  *    has this tree as ghost or local tree. */
+/* Offset is the new partition. The old partition is assumed to be cmesh_from->tree_offsets */
 static int
-t8_cmesh_send_ghost (t8_cmesh_t cmesh, int p, t8_locidx_t tree)
+t8_cmesh_send_ghost (t8_cmesh_t cmesh, const struct t8_cmesh * cmesh_from,
+                     int p, t8_locidx_t tree, t8_gloidx_t * offset)
 {
+  t8_gloidx_t tree_id, *ghost_neighbors, neighbor;
+  t8_locidx_t *tree_neighbors;
+  t8_cghost_t ghost = NULL;
+  t8_ctree_t ctree = NULL;
+  t8_eclass_t eclass;
+  int proc, iface;
+
+  if (tree < cmesh_from->num_local_trees) {
+    /* Given local id belongs to a tree. We compute its global id */
+    ctree = t8_cmesh_trees_get_tree_ext (cmesh_from->trees, tree,
+                                        &tree_neighbors, NULL);
+    tree_id = tree + cmesh_from->first_tree;
+    eclass = ctree->eclass;
+  }
+  else {
+    /* Given local id belongs to a ghost. We store the ghost and its
+     * global id */
+    ghost = t8_cmesh_trees_get_ghost_ext (cmesh_from->trees,
+                                          tree - cmesh_from->num_local_trees,
+                                          &ghost_neighbors, NULL);
+    tree_id = ghost->treeid;
+    eclass = ghost->eclass;
+  }
+
+  if (t8_offset_in_range (tree_id, p, offset)
+      || t8_offset_in_range (tree_id, p, cmesh_from->tree_offsets)) {
+    /* The tree is or will be a local tree on p */
+    return 0;
+  }
+
+  if (ghost != NULL) {
+    size_t          left = 0, right = cmesh->mpirank;
+    int             found = 0;
+    /* Parse all processes that own neighbors of ghost and check for each if
+     * it sends trees to p. If the current rank is the smallest rank sending trees
+     * to p, then we also send the ghost. */
+    t8_debugf ("Consider neighbors of %li\n", tree_id);
+    for (iface = 0;iface < t8_eclass_num_faces[eclass];iface++) {
+      /* Get the global id of the considered neighbor */
+      neighbor = ctree != NULL ?
+            t8_cmesh_get_global_id ((t8_cmesh_t )cmesh_from,
+                                    tree_neighbors[iface]) :
+            ghost_neighbors[iface];
+      /* We perform a binary search in the offset array to find the
+       * process proc that owns the neighbor iface.
+       * We ignore processes with bigger ranks than mpirank.
+       * We start with checking mpirank, since it is most probable.
+       */
+      found = 0;
+      proc = cmesh->mpirank;
+      left = 0, right = cmesh->mpirank;
+      while (!found && proc >= 0 && proc < cmesh->mpirank) {
+        if (t8_offset_first (proc, cmesh_from->tree_offsets)
+            > neighbor) {
+          /* look left */
+          right = proc;
+          proc = left + (proc - left) / 2;
+        }
+        else if (t8_offset_last (proc, cmesh_from->tree_offsets)
+                 < neighbor) {
+          /* look right */
+          left = proc;
+          proc++;
+          proc += (right - proc) / 2;
+        }
+        else {
+          found = 1;
+        }
+      }
+      t8_debugf ("%li is a ghost/tree from %i\n", neighbor, proc);
+      if ((proc >= 0 && proc < cmesh->mpirank) || proc == p) {
+        /* We do not send the ghost */
+        t8_debugf ("Not send %li.\n", ghost->treeid);
+        return 0;
+      }
+    }
+    t8_debugf ("Send %li\n", ghost->treeid);
+    return 1;
+  }
+
   return 0;
 }
 
@@ -466,6 +579,7 @@ t8_cmesh_partition_copy_data (char *send_buffer,
   t8_gloidx_t        *face_neighbor_g, *face_neighbor_gnew, new_neighbor;
   t8_cghost_t         ghost, ghost_cpy;
   int                 iface;
+  int8_t             *ttf_ghost, *ttf;
 
   /* Copy all trees to the send buffer */
   /* TODO: This is currently inefficient since we copy each tree for itself.
@@ -576,7 +690,9 @@ t8_cmesh_partition_copy_data (char *send_buffer,
                                num_trees * sizeof (t8_ctree_struct_t)
                                + iz * sizeof (t8_cghost_struct_t));
     ghost_cpy->neigh_offset = temp_offset - temp_offset_tree;   /* New face neighbor offset */
+    t8_debugf ("New ghost offset %zd\n", ghost_cpy->neigh_offset);
     face_neighbor_gnew = (t8_gloidx_t *) T8_GHOST_FACE (ghost_cpy);
+    ttf_ghost = T8_GHOST_TTF (ghost_cpy);
     if (ghost_id >= cmesh_from->num_local_trees) {
       /* The ghost that we send was a local ghost */
       ghost = t8_cmesh_trees_get_ghost_ext (cmesh_from->trees,
@@ -585,15 +701,16 @@ t8_cmesh_partition_copy_data (char *send_buffer,
                                             &face_neighbor_g, NULL);
       ghost_cpy->eclass = ghost->eclass;
       ghost_cpy->treeid = ghost->treeid;
-      /* Copt face_neighbor entries */
+      /* Copt face_neighbor entries and ttf entries */
       memcpy (face_neighbor_gnew, face_neighbor_g,
-              t8_eclass_num_faces[ghost_cpy->eclass] * sizeof (t8_gloidx_t));
+              t8_eclass_num_faces[ghost_cpy->eclass] * (sizeof (t8_gloidx_t)
+                                                        + sizeof (int8_t)));
     }
     else {
       /* The ghost we send was a local tree */
       T8_ASSERT (0 <= ghost_id && ghost_id < cmesh_from->num_local_trees);
       tree = t8_cmesh_trees_get_tree_ext (cmesh_from->trees, ghost_id,
-                                          &face_neighbor, NULL);
+                                          &face_neighbor, &ttf);
       ghost_cpy->eclass = tree->eclass;
       ghost_cpy->treeid = ghost_id + cmesh_from->first_tree;
       /* copy face_neighbor entries, since the ones on the tree are local and
@@ -605,17 +722,20 @@ t8_cmesh_partition_copy_data (char *send_buffer,
         }
         else {
           /* Compute global index from local index */
-          new_neighbor = face_neighbor[iface] < cmesh_from->num_local_trees ?
-            face_neighbor[iface] + cmesh_from->first_tree :
-            face_neighbor[iface] - cmesh_from->num_local_trees
-            + cmesh_from->first_tree;
+          new_neighbor = t8_cmesh_get_global_id ((t8_cmesh_t) cmesh_from,
+                                                 face_neighbor[iface]);
         }
         face_neighbor_gnew[iface] = new_neighbor;
       }
+      /* Copy tree_to_face entries */
+      memcpy (ttf_ghost, ttf, t8_eclass_num_faces[ghost_cpy->eclass]
+          * sizeof (int8_t));
     }
     /* compute new offsets */
-    temp_offset =
-      t8_eclass_num_faces[ghost_cpy->eclass] * sizeof (t8_gloidx_t);
+    temp_offset += t8_eclass_num_faces[ghost_cpy->eclass] *
+        (sizeof (t8_gloidx_t) + sizeof (int8_t)) /* offset */
+        + ((4 - t8_eclass_num_faces[tree_cpy->eclass] *
+            (sizeof (t8_gloidx_t) + sizeof (int8_t)) % 4) % 4); /* padding */
     temp_offset_tree += sizeof (t8_cghost_struct_t);
   }
 }
@@ -703,16 +823,21 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
       /* loop over all faces of each tree to determine ghost to send */
       for (iface = 0; iface < t8_eclass_num_faces[tree->eclass]; iface++) {
         neighbor = face_neighbor[iface];
+        t8_debugf ("[H] Check %i\n", neighbor);
         if (neighbor >= 0 && neighbor != itree) { /* Consider only non-boundary neighbors */
-          if (neighbor < cmesh_from->num_local_trees &&
-              (neighbor < range_start || neighbor > range_end)) {
+          if ((neighbor < cmesh_from->num_local_trees &&
+              (neighbor < range_start || neighbor > range_end))
+              || neighbor >= cmesh->num_local_trees) {
             /* neighbor is a local tree or local ghost and will be ghost on iproc */
+            t8_debugf ("[H] loc tree %i is a candidate for a ghost\n", neighbor);
             if (ghost_flag[neighbor] == 0 &&
-                t8_cmesh_send_ghost (cmesh, iproc, neighbor)) {
+                t8_cmesh_send_ghost (cmesh, cmesh_from, iproc, neighbor,
+                                     tree_offset)) {
               /* we did not add this neighbor yet and it should be send to iproc */
               ghost_flag[neighbor] = 1;
               *((t8_locidx_t *) sc_array_push (&send_as_ghost)) = neighbor;
             }
+            t8_debugf ("[H] was %s added\n", ghost_flag[neighbor] == 0 ? "not" : "");
           }
           else if (cmesh->first_tree <= neighbor + cmesh_from->first_tree
                    && neighbor + cmesh_from->first_tree <= cmesh->first_tree +
@@ -724,7 +849,6 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
             }
           }
         }
-        t8_debugf ("tree = %i face = %i\n", itree, iface);
 #if 0
         t8_cmesh_partition_change_neighbor (cmesh, cmesh_from,
                                             face_neighbor + iface);
@@ -745,7 +869,9 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 #endif
     num_trees = range_end - range_start + 1;
     num_ghost_send = send_as_ghost.elem_count;
-    /* TODO: parse throgh send_as_ghost and add to ghost_neighbor_bytes */
+    /* parse through send_as_ghost to compute ghost_neighbor_bytes */
+    ghost_neighbor_bytes = t8_partition_compute_gnb (cmesh_from,
+                                                     &send_as_ghost);
     total_alloc = num_trees * sizeof (t8_ctree_struct_t) +
       num_ghost_send * sizeof (t8_cghost_struct_t) + ghost_neighbor_bytes +
       tree_neighbor_bytes + attr_info_bytes + attr_bytes;
@@ -836,6 +962,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   return num_send_mpi;
 }
 
+/* stores the number of received ghosts in num_ghosts */
 static void
 t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
                              const struct t8_cmesh *cmesh_from,
@@ -846,7 +973,7 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
   int                 num_receive, *local_procid;       /* ranks of the processor from which we will receive */
   int                 mpiret, proc_recv, recv_bytes, iproc;
   int                 recv_first, recv_last;    /* ranks of the processor from which we will receive */
-  t8_locidx_t         num_trees;
+  t8_locidx_t         num_trees, num_ghosts;
   t8_part_tree_t      recv_part;
   sc_MPI_Status      *status;
 
@@ -859,6 +986,7 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
                                          cmesh_from->tree_offsets);
   /* Initialize trees structure with yet unknown number of ghosts */
   t8_cmesh_trees_init (&cmesh->trees, num_receive, num_trees, 0);
+  num_ghosts = 0;
   /* Total number of processor from which we receive is one less if the current
    * rank is included */
   num_receive -= (recv_first <= cmesh->mpirank
@@ -937,13 +1065,15 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
     recv_part->num_trees =
       *((t8_locidx_t *) (recv_part->first_tree + recv_bytes -
                          2 * sizeof (t8_locidx_t)));
-
-    t8_debugf ("Received %i trees/%i bytes from %i to %i\n",
-               recv_part->num_trees, recv_bytes, proc_recv,
-               local_procid[proc_recv - recv_first]);
     recv_part->num_ghosts =
       *((t8_locidx_t *) (recv_part->first_tree + recv_bytes -
                          sizeof (t8_locidx_t)));
+    num_ghosts += recv_part->num_ghosts;
+
+    t8_debugf ("Received %i trees/%i ghosts/%i bytes from %i to %i\n",
+               recv_part->num_trees, recv_part->num_ghosts, recv_bytes,
+               proc_recv,
+               local_procid[proc_recv - recv_first]);
   #if 0
       /* Free memory that was only used to store num_trees/ghosts */
       /* TODO: If we want to do this properly we have to realloc the memory,
@@ -984,6 +1114,7 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
     recv_part->num_ghosts = *(t8_locidx_t *) (recv_part->first_tree +
                                               my_buffer_bytes
                                               - sizeof (t8_locidx_t));
+    num_ghosts += recv_part->num_ghosts;
 
     t8_debugf ("Received %i from %i to %i\n", recv_part->num_trees,
                cmesh->mpirank, local_procid[cmesh->mpirank - recv_first]);
@@ -997,6 +1128,8 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
              2 * sizeof (t8_locidx_t));
 #endif
   }
+  cmesh->trees->ghost_to_proc = T8_ALLOC (int, num_ghosts);
+  cmesh->num_ghosts = num_ghosts;
   if (recv_first >= 0) {
     T8_FREE (local_procid);
   }
@@ -1069,18 +1202,15 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
   /* set recv_part->first_tree_id/first_ghost_id */
   /* Use as temporary variables to store the first tree_id/ghost_id of the new parts */
   num_trees = 0;
+  num_ghosts = 0;
   for (iproc = 0; iproc < cmesh->trees->from_proc->elem_count; iproc++) {
-    num_ghosts = 0;
     recv_part = t8_cmesh_trees_get_part (cmesh->trees, iproc);
-    t8_partition_new_ghost_ids (cmesh, cmesh_from, recv_part, num_ghosts);
+    /* Set first ids */
     recv_part->first_tree_id = num_trees;
     recv_part->first_ghost_id = num_ghosts;
-    num_trees += recv_part->num_trees;
-    num_ghosts += recv_part->num_ghosts;
+    /* Assing new local ids to the ghosts of this part, also set ghost_to_proc */
+    t8_partition_new_ghost_ids (cmesh, recv_part, num_ghosts, iproc);
     /* count trees_per_eclass */
-#ifdef T8_ENABLE_DEBUG
-    cmesh->committed = 1;       /* To pass through get_tree_class function */
-#endif
     for (itree = recv_part->first_tree_id;
          itree < recv_part->first_tree_id + recv_part->num_trees; itree++) {
       /* TODO: Also set ghost from proc here */
@@ -1089,13 +1219,12 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
       tree->treeid = itree;
       cmesh->num_trees_per_eclass[tree->eclass]++;
     }
-#ifdef T8_ENABLE_DEBUG
-    cmesh->committed = 0;
-#endif
+    /* Calculate num_trees and num_ghosts for next part */
+    num_trees += recv_part->num_trees;
+    num_ghosts += recv_part->num_ghosts;
   }
   T8_ASSERT (cmesh->num_local_trees == num_trees);
   cmesh->num_ghosts = num_ghosts;
-  /* TODO: set new local ids of face_neighbors */
 }
 
 void

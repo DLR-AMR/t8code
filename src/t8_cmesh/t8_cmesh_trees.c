@@ -160,6 +160,9 @@ t8_part_tree_get_ghost (t8_part_tree_t P, t8_locidx_t ghost_id)
   t8_cghost_t         first_ghost;
   t8_locidx_t         ghost_offset;
 
+  t8_debugf ("This part has %i ghosts, first id is %i\n", P->num_ghosts,
+             P->first_ghost_id);
+
   ghost_offset = ghost_id - P->first_ghost_id;
   T8_ASSERT (ghost_offset >= 0 && ghost_offset < P->num_ghosts);
   first_ghost = (t8_cghost_t)
@@ -326,6 +329,7 @@ t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees, t8_locidx_t ghost)
   T8_ASSERT (trees != NULL);
   T8_ASSERT (ghost >= 0);
   proc = trees->ghost_to_proc[ghost];
+  t8_debugf ("Looking for ghost %i at proc %i\n", ghost, proc);
   T8_ASSERT (proc >= 0 && proc < t8_cmesh_trees_get_num_procs (trees));
 
   return t8_part_tree_get_ghost (t8_cmesh_trees_get_part (trees, proc),

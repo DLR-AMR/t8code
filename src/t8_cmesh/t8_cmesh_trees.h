@@ -132,7 +132,7 @@ T8_EXTERN_C_BEGIN ();
 /* Given a ghost return its face_neighbor array */
 #define T8_GHOST_FACE(g) T8_TREE_FACE(g)
 /* Given a ghost return its tree_to_face array */
-#define T8_GHOST_TTF(g) (T8_GHOST_FACE(g) + \
+#define T8_GHOST_TTF(g) (int8_t *) (T8_GHOST_FACE(g) + \
   t8_eclass_num_faces[(g)->eclass] * sizeof(t8_gloidx_t))
 
 void                t8_cmesh_trees_init (t8_cmesh_trees_t * ptrees,

@@ -186,7 +186,7 @@ typedef struct t8_part_tree
 }
 t8_part_tree_struct_t;
 
-/* TODO: document */
+/* TODO: document, process is a bad naming, since it does not refer to MPI ranks here */
 typedef struct t8_cmesh_trees
 {
   sc_array_t         *from_proc;        /* array of t8_part_tree, one for each process */
