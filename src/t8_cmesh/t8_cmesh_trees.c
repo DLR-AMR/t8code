@@ -63,11 +63,6 @@ t8_cmesh_trees_init (t8_cmesh_trees_t * ptrees, int num_procs,
   trees->tree_to_proc = T8_ALLOC_ZERO (int, num_trees);
   trees->ghost_to_proc = num_ghosts > 0 ? T8_ALLOC_ZERO (int, num_ghosts)
   :                   NULL;
-#if 0
-  /* TODO: deprecated? */
-  trees->ghost_to_offset = num_ghosts > 0 ?
-    T8_ALLOC_ZERO (t8_locidx_t, num_ghosts) : NULL;
-#endif
 }
 
 void
