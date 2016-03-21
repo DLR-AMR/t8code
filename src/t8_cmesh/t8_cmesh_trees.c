@@ -556,6 +556,7 @@ t8_cmesh_trees_attribute_size (t8_ctree_t tree)
 void
 t8_cmesh_trees_print (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
 {
+#ifdef T8_ENABLE_DEBUG
   t8_locidx_t         itree, ighost;
   t8_locidx_t        *tree_neighbor;
   t8_gloidx_t         tree_neighbor_global, *ghost_neighbor;
@@ -564,8 +565,7 @@ t8_cmesh_trees_print (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
   int                 iface;
   t8_eclass_t         eclass;
   char                buf[BUFSIZ];
-
-#ifndef T8_ENABLE_DEBUG
+#else
   return;
 #endif
   t8_debugf ("Trees (local/global): %s\n", cmesh->num_local_trees == 0 ? "None" : "");

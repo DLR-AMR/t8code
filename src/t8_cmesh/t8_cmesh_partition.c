@@ -145,8 +145,6 @@ t8_cmesh_partition_send_change_neighbor (t8_cmesh_t cmesh,
 {
   t8_gloidx_t         temp;
 
-  t8_debugf ("neigh = %li at %p\n", (long) *neighbor, neighbor);
-
   if (0 <= *neighbor && *neighbor < cmesh_from->num_local_trees) {
     /* Neighbor is a local tree in cmesh */
     temp = cmesh_from->first_tree - t8_offset_first (to_proc,
@@ -213,9 +211,11 @@ t8_partition_new_ghost_ids (t8_cmesh_t cmesh,
                                             &tree_neighbors, NULL);
         /* Get the number of the face of tree that is connected with ghost
          * and set the new local ghost id */
-        t8_debugf ("Accessing face %i of ghost\n", iface);
+        t8_debugf ("Accessing face %i (local tree %li) of ghost at %p %p\n", iface,
+                    tree_id_glo - cmesh->first_tree,
+                   T8_GHOST_FACE (ghost), T8_GHOST_TTF (ghost));
         face_tree = ttf[iface] % t8_eclass_num_faces[tree->eclass];
-        t8_debugf ("and face %i of tree %li\n", face_tree, tree_id_glo);
+      //  t8_debugf ("and face %i of tree %li\n", face_tree, tree_id_glo);
         tree_neighbors[face_tree] = ghost_it + first_ghost
           + cmesh->num_local_trees;
       }
@@ -728,7 +728,10 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
                                             &face_neighbor_g, NULL);
       ghost_cpy->eclass = ghost->eclass;
       ghost_cpy->treeid = ghost->treeid;
-      /* Copt face_neighbor entries and ttf entries */
+      /* Copy face_neighbor entries and ttf entries */
+      t8_debugf ("[H] Copy %i x %lu bytes to %p\n", t8_eclass_num_faces[ghost_cpy->eclass],
+          sizeof (t8_gloidx_t) + sizeof (int8_t),
+          face_neighbor_gnew);
       memcpy (face_neighbor_gnew, face_neighbor_g,
               t8_eclass_num_faces[ghost_cpy->eclass] * (sizeof (t8_gloidx_t)
                                                         + sizeof (int8_t)));
@@ -755,6 +758,8 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
         face_neighbor_gnew[iface] = new_neighbor;
       }
       /* Copy tree_to_face entries */
+      t8_debugf ("[H] Copy %i values to %p\n", t8_eclass_num_faces[ghost_cpy->eclass],
+          ttf_ghost);
       memcpy (ttf_ghost, ttf, t8_eclass_num_faces[ghost_cpy->eclass]
               * sizeof (int8_t));
     }
@@ -821,7 +826,6 @@ t8_cmesh_partition_sendtreeloop (t8_cmesh_t cmesh,
     /* loop over all faces of each tree to determine ghost to send */
     for (iface = 0; iface < t8_eclass_num_faces[tree->eclass]; iface++) {
       neighbor = face_neighbor[iface];
-      t8_debugf ("[H] Check neighbor %i of loc tree %i\n", neighbor, itree);
       if (neighbor >= 0 && neighbor != itree) { /* Consider only non-boundary neighbors */
         if ((neighbor < cmesh_from->num_local_trees &&
              (neighbor < range_start || neighbor > range_end))
