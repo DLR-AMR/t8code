@@ -571,15 +571,8 @@ t8_cmesh_trees_print (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
               (long long) itree + cmesh->first_tree,
               t8_eclass_to_string[eclass]);
     for (iface = 0;iface < t8_eclass_num_faces[eclass];iface++) {
-      tree_neighbor_global = tree_neighbor[iface];
-/* TODO: eventually print global tree_id here. Currently it is not possible, since
- * the tree_neighbor id is sometimes not in the allowed range (bug)
- */
-#if 0
-      >= 0 ?
-            t8_cmesh_get_global_id (cmesh, tree_neighbor[iface])
-          : tree_neighbor[iface];
-#endif
+      tree_neighbor_global =
+          t8_cmesh_get_global_id (cmesh, tree_neighbor[iface]);
       snprintf (buf + strlen(buf), BUFSIZ - strlen (buf), " %li |",
                 tree_neighbor_global);
     }
