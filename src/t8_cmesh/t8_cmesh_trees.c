@@ -557,6 +557,56 @@ t8_cmesh_trees_attribute_size (t8_ctree_t tree)
   return total;
 }
 
+void
+t8_cmesh_trees_print (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
+{
+  t8_locidx_t         itree, ighost;
+  t8_locidx_t        *tree_neighbor;
+  t8_gloidx_t         tree_neighbor_global, *ghost_neighbor;
+  t8_ctree_t          tree;
+  t8_cghost_t         ghost;
+  int                 iface;
+  t8_eclass_t         eclass;
+  char                buf[BUFSIZ];
+
+#ifndef T8_ENABLE_DEBUG
+  return;
+#endif
+  t8_debugf ("Trees (local/global): %s\n", cmesh->num_local_trees == 0 ? "None" : "");
+  for (itree = 0;itree < cmesh->num_local_trees;itree++) {
+    tree = t8_cmesh_trees_get_tree_ext (trees, itree, &tree_neighbor, NULL);
+    eclass = tree->eclass;
+    snprintf (buf, BUFSIZ, "%li/%li (%s):  |", itree, itree + cmesh->first_tree,
+              t8_eclass_to_string[eclass]);
+    for (iface = 0;iface < t8_eclass_num_faces[eclass];iface++) {
+      tree_neighbor_global = tree_neighbor[iface];
+/* TODO: eventually print global tree_id here. Currently it is not possible, since
+ * the tree_neighbor id is sometimes not in the allowed range (bug)
+ */
+#if 0
+      >= 0 ?
+            t8_cmesh_get_global_id (cmesh, tree_neighbor[iface])
+          : tree_neighbor[iface];
+#endif
+      snprintf (buf + strlen(buf), BUFSIZ - strlen (buf), " %li |",
+                tree_neighbor_global);
+    }
+    t8_debugf ("%s\n", buf);
+  }
+  t8_debugf ("Ghosts: %s\n", cmesh->num_ghosts == 0 ? "None" :"");
+  for (ighost = 0;ighost < cmesh->num_ghosts;ighost++) {
+    ghost = t8_cmesh_trees_get_ghost_ext (trees, ighost, &ghost_neighbor, NULL);
+    eclass = ghost->eclass;
+    snprintf (buf, BUFSIZ, "%li (%s):  |", ghost->treeid,
+              t8_eclass_to_string[eclass]);
+    for (iface = 0;iface < t8_eclass_num_faces[eclass];iface++) {
+      snprintf (buf + strlen(buf), BUFSIZ - strlen (buf), " %li |",
+                ghost_neighbor[iface]);
+    }
+    t8_debugf ("%s\n", buf);
+  }
+}
+
 int
 t8_cmesh_trees_is_equal (t8_cmesh_t cmesh, t8_cmesh_trees_t trees_a,
                          t8_cmesh_trees_t trees_b)

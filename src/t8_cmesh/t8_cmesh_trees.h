@@ -264,6 +264,11 @@ void                t8_cmesh_tree_add_attribute (t8_cmesh_trees_t trees,
                                                  attr, t8_locidx_t tree_id,
                                                  size_t index);
 
+/* Print the trees,ghosts and their neighbors in ASCII.
+ * This function is used for debugging purposes */
+void                t8_cmesh_trees_print (t8_cmesh_t cmesh,
+                                          t8_cmesh_trees_t trees);
+
 int                 t8_cmesh_trees_is_equal (t8_cmesh_t cmesh,
                                              t8_cmesh_trees_t trees_a,
                                              t8_cmesh_trees_t trees_b);
