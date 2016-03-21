@@ -521,9 +521,11 @@ t8_cmesh_send_ghost (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
       /* There is no neighbor at this face */
       continue;
     }
-    //  if (t8_offset_in_range (neighbor, p, cmesh_from->tree_offsets)) {
-    /* neighbor is currently a tree on p, thus */
-    //  }
+    /* TODO: What if neighbor is currently a tree on p?
+      if (t8_offset_in_range (neighbor, p, cmesh_from->tree_offsets)) {
+
+      }
+      */
     /* We perform a binary search in the offset array to find the
      * process proc that owns the neighbor iface.
      * We ignore processes with bigger ranks than mpirank.
