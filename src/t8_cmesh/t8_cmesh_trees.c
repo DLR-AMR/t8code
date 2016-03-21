@@ -572,7 +572,8 @@ t8_cmesh_trees_print (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
   for (itree = 0;itree < cmesh->num_local_trees;itree++) {
     tree = t8_cmesh_trees_get_tree_ext (trees, itree, &tree_neighbor, NULL);
     eclass = tree->eclass;
-    snprintf (buf, BUFSIZ, "%li/%li (%s):  |", itree, itree + cmesh->first_tree,
+    snprintf (buf, BUFSIZ, "%li/%lli (%s):  |", (long) itree,
+              (long long) itree + cmesh->first_tree,
               t8_eclass_to_string[eclass]);
     for (iface = 0;iface < t8_eclass_num_faces[eclass];iface++) {
       tree_neighbor_global = tree_neighbor[iface];
@@ -589,11 +590,13 @@ t8_cmesh_trees_print (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
     }
     t8_debugf ("%s\n", buf);
   }
-  t8_debugf ("Ghosts: %s\n", cmesh->num_ghosts == 0 ? "None" :"");
+  t8_debugf ("Ghosts (local/global): %s\n", cmesh->num_ghosts == 0 ? "None" :"");
   for (ighost = 0;ighost < cmesh->num_ghosts;ighost++) {
     ghost = t8_cmesh_trees_get_ghost_ext (trees, ighost, &ghost_neighbor, NULL);
     eclass = ghost->eclass;
-    snprintf (buf, BUFSIZ, "%li (%s):  |", ghost->treeid,
+    snprintf (buf, BUFSIZ, "%li/%lli (%s):  |",
+              (long) ighost + cmesh->num_local_trees,
+              (long long) ghost->treeid,
               t8_eclass_to_string[eclass]);
     for (iface = 0;iface < t8_eclass_num_faces[eclass];iface++) {
       snprintf (buf + strlen(buf), BUFSIZ - strlen (buf), " %li |",
