@@ -1179,6 +1179,7 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
              2 * sizeof (t8_locidx_t));
 #endif
   }
+  t8_debugf ("Total number of ghosts in new partition: %i\n", num_ghosts);
   cmesh->trees->ghost_to_proc = T8_ALLOC (int, num_ghosts);
   cmesh->num_ghosts = num_ghosts;
   if (recv_first >= 0) {
