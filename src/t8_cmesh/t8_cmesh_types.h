@@ -162,6 +162,7 @@ typedef struct t8_ctree
 t8_ctree_struct_t;
 
 /* TODO: document */
+
 typedef struct t8_attribute_info
 {
   int       package_id;
