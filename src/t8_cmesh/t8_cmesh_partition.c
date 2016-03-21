@@ -482,6 +482,8 @@ t8_cmesh_send_ghost (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
   t8_ctree_t          ctree = NULL;
   t8_eclass_t         eclass;
   int                 proc, iface;
+  size_t              left = 0, right = cmesh->mpirank;
+  int                 found = 0;
 
   if (tree < cmesh_from->num_local_trees) {
     /* Given local id belongs to a tree. We compute its global id */
@@ -506,57 +508,61 @@ t8_cmesh_send_ghost (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
     return 0;
   }
 
-  if (ghost != NULL) {
-    size_t              left = 0, right = cmesh->mpirank;
-    int                 found = 0;
-    /* Parse all processes that own neighbors of ghost and check for each if
-     * it sends trees to p. If the current rank is the smallest rank sending trees
-     * to p, then we also send the ghost. */
-    t8_debugf ("Consider neighbors of %li\n", tree_id);
-    for (iface = 0; iface < t8_eclass_num_faces[eclass]; iface++) {
-      /* Get the global id of the considered neighbor */
-      neighbor = ctree != NULL ?
-        t8_cmesh_get_global_id ((t8_cmesh_t) cmesh_from,
-                                tree_neighbors[iface]) :
-        ghost_neighbors[iface];
-      /* We perform a binary search in the offset array to find the
-       * process proc that owns the neighbor iface.
-       * We ignore processes with bigger ranks than mpirank.
-       * We start with checking mpirank, since it is most probable.
-       */
-      found = 0;
-      proc = cmesh->mpirank;
-      left = 0, right = cmesh->mpirank;
-      while (!found && proc >= 0 && proc < cmesh->mpirank) {
-        if (t8_offset_first (proc, cmesh_from->tree_offsets)
-            > neighbor) {
-          /* look left */
-          right = proc;
-          proc = left + (proc - left) / 2;
-        }
-        else if (t8_offset_last (proc, cmesh_from->tree_offsets)
-                 < neighbor) {
-          /* look right */
-          left = proc;
-          proc++;
-          proc += (right - proc) / 2;
-        }
-        else {
-          found = 1;
-        }
+  /* Parse all processes that own neighbors of ghost and check for each if
+   * it sends trees to p. If the current rank is the smallest rank sending trees
+   * to p (and p itself does'nt), then we also send the ghost. */
+  t8_debugf ("Consider neighbors of %li\n", tree_id);
+  for (iface = 0; iface < t8_eclass_num_faces[eclass]; iface++) {
+    /* Get the global id of the considered neighbor */
+    neighbor = ctree != NULL ?
+      t8_cmesh_get_global_id ((t8_cmesh_t) cmesh_from,
+                              tree_neighbors[iface]) :
+      ghost_neighbors[iface];
+    t8_debugf ("Neighbor = %li\n", neighbor);
+    if (neighbor == tree_id) {
+      /* There is no neighbor at this face */
+      continue;
+    }
+  //  if (t8_offset_in_range (neighbor, p, cmesh_from->tree_offsets)) {
+      /* neighbor is currently a tree on p, thus */
+  //  }
+    /* We perform a binary search in the offset array to find the
+     * process proc that owns the neighbor iface.
+     * We ignore processes with bigger ranks than mpirank.
+     * We start with checking mpirank, since it is most probable.
+     */
+    found = 0;
+    proc = cmesh->mpirank;
+    left = 0, right = cmesh->mpisize;
+    while (!found) {
+      if (t8_offset_first (proc, cmesh_from->tree_offsets)
+          > neighbor) {
+        /* look left */
+        //    t8_debugf ("not %i, left\n", proc);
+        right = proc;
+        proc = left + (proc - left) / 2;
       }
-      t8_debugf ("%li is a ghost/tree from %i\n", neighbor, proc);
-      if ((proc >= 0 && proc < cmesh->mpirank) || proc == p) {
-        /* We do not send the ghost */
-        t8_debugf ("Not send %li.\n", ghost->treeid);
-        return 0;
+      else if (t8_offset_last (proc, cmesh_from->tree_offsets)
+               < neighbor) {
+        /* look right */
+        //    t8_debugf ("not %i, right\n", proc);
+        left = proc;
+        proc++;
+        proc += (right - proc) / 2;
+      }
+      else {
+        found = 1;
       }
     }
-    t8_debugf ("Send %li\n", ghost->treeid);
-    return 1;
+    t8_debugf ("%li is a tree from %i\n", neighbor, proc);
+    if ((proc >= 0 && proc < cmesh->mpirank) || proc == p) {
+      /* We do not send the ghost */
+      t8_debugf ("Not send %li.\n", tree_id);
+      return 0;
+    }
   }
-
-  return 0;
+  t8_debugf ("Send %li\n", tree_id);
+  return 1;
 }
 
 /* copy all tree/ghost/attribute data to the send buffer */
