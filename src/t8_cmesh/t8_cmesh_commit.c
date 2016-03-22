@@ -479,6 +479,16 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 3, stats, 1, 1);
   }
 
+  t8_debugf ("Cmesh is %spartitioned.\n", cmesh->set_partitioned ? "":"not ");
+  if (cmesh->set_partitioned && cmesh->tree_offsets != NULL) {
+    char          buf[BUFSIZ] = "| ";
+    int           i;
+    for (i = 0;i <= cmesh->mpisize;i++) {
+      snprintf (buf + strlen(buf), BUFSIZ - strlen (buf), " %lli |",
+                (long long) cmesh->tree_offsets[i]);
+    }
+    t8_debugf ("Offsets = %s\n", buf);
+  }
   t8_cmesh_trees_print (cmesh, cmesh->trees);
   cmesh->committed = 1;
 
