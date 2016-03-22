@@ -213,7 +213,6 @@ t8_partition_new_ghost_ids (t8_cmesh_t cmesh,
 {
   t8_locidx_t         ghost_it;
   t8_cghost_t         ghost;
-  t8_ctree_t          tree;
   t8_gloidx_t        *face_neighbors, tree_id_glo;
   t8_locidx_t        *tree_neighbors;
   int8_t             *ttf;
@@ -233,17 +232,19 @@ t8_partition_new_ghost_ids (t8_cmesh_t cmesh,
       if (cmesh->first_tree <= tree_id_glo &&
           tree_id_glo < cmesh->first_tree + cmesh->num_local_trees) {
         /* the face neighbor is a local tree */
-        tree = t8_cmesh_trees_get_tree_ext (cmesh->trees,
+        (void) t8_cmesh_trees_get_tree_ext (cmesh->trees,
                                             tree_id_glo - cmesh->first_tree,
                                             &tree_neighbors, NULL);
         /* Get the number of the face of tree that is connected with ghost
          * and set the new local ghost id */
         t8_debugf ("Accessing face %i (local tree %li) of ghost at %p %p\n",
                    iface, tree_id_glo - cmesh->first_tree,
-                   T8_GHOST_FACE (ghost), T8_GHOST_TTF (ghost));
-        face_tree = ttf[iface] % t8_eclass_num_faces[tree->eclass];
-        //  t8_debugf ("and face %i of tree %li\n", face_tree, tree_id_glo);
-        tree_neighbors[face_tree] = ghost_it + first_ghost
+                   T8_GHOST_FACE (ghost), ttf);
+        face_tree = ttf[iface] % t8_eclass_max_num_faces[cmesh->dimension];
+        t8_debugf ("and face %i of tree %li\n", face_tree, tree_id_glo);
+        tree_neighbors[face_tree] =
+            ghost_it
+          + first_ghost
           + cmesh->num_local_trees;
       }
     }
@@ -529,7 +530,7 @@ t8_cmesh_send_ghost (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
     eclass = ghost->eclass;
   }
 
-  if (t8_offset_in_range (tree_id, p, offset)
+  if (t8_offset_in_range_wofirstshared (tree_id, p, offset)
       || t8_offset_in_range (tree_id, p, cmesh_from->tree_offsets)) {
     /* The tree is or will be a local tree on p */
     return 0;
@@ -556,14 +557,14 @@ t8_cmesh_send_ghost (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
      */
     /* We perform a binary search in the offset array to find the
      * process proc that owns the neighbor iface.
-     * We ignore processes with bigger ranks than mpirank.
      * We start with checking mpirank, since it is most probable.
      */
     found = 0;
     proc = cmesh->mpirank;
     left = 0, right = cmesh->mpisize;
     while (!found) {
-      if (t8_offset_first (proc, cmesh_from->tree_offsets)
+      if (t8_offset_first (proc, cmesh_from->tree_offsets) +
+          (cmesh_from->tree_offsets[proc] < 0)
           > neighbor) {
         /* look left */
         //    t8_debugf ("not %i, left\n", proc);
@@ -582,13 +583,30 @@ t8_cmesh_send_ghost (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
         found = 1;
       }
     }
-    t8_debugf ("%li is a tree from %i\n", neighbor, proc);
-    if ((proc >= 0 && proc < cmesh->mpirank) ||
-        (proc == p && proc != cmesh->mpirank)) {
-      /* We do not send the ghost */
-      t8_debugf ("Not send %li.\n", tree_id);
-      return 0;
+#if 0
+    /* We have to consider the special case where neighbor is owned by more
+     * than one process. We find the smallest one first and then consider
+     * all of them. */
+    while (neighbor == t8_offset_first (proc, cmesh_from->tree_offsets)
+        && cmesh_from->tree_offsets[proc] < 0) {
+      proc--;
     }
+    do {
+#endif
+      t8_debugf ("%li is a tree from %i\n", neighbor, proc);
+      if ((proc >= 0 && proc < cmesh->mpirank &&
+           t8_offset_sendsto (proc, p, cmesh_from->tree_offsets,
+                              offset)) ||
+          (proc == p && proc != cmesh->mpirank)) {
+        /* We do not send the ghost */
+        t8_debugf ("Not send %li.\n", tree_id);
+        return 0;
+      }
+      proc++;
+#if 0
+    } while (neighbor == t8_offset_first (proc, cmesh_from->tree_offsets)
+             && cmesh_from->tree_offsets[proc] < 0);
+#endif
   }
   t8_debugf ("Send %li\n", tree_id);
   return 1;
