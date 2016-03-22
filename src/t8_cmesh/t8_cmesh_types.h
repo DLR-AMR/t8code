@@ -120,8 +120,8 @@ t8_cghost_struct_t;
 /** This structure holds the data of a local tree including the information
  * about face neighbors. For those
  * the tree_to_face index is computed as follows.
- * Let F be the number of faces of the neighbor tree, then
- * ttf % F is the face number and ttf / F is the orientation.
+ * Let F be the maximal number of faces of any eclass of the cmesh's dimension, then
+ * ttf % F is the face number and ttf / F is the orientation. (\ref t8_eclass_max_num_faces)
  * The orientation is determined as follows.  Let my_face and other_face
  * be the two face numbers of the connecting trees.
  * We chose a master_face from them as follows: Either both trees have the same

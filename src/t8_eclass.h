@@ -62,12 +62,17 @@ t8_eclass_t;
 
 /** The maximum number of boundary faces an element class can have. */
 #define T8_ECLASS_MAX_FACES 6
+/** The maximal possible dimension for an eclass */
+#define T8_ECLASS_MAX_DIM 3
 
 /** Map each of the element classes to its dimension. */
 extern const int    t8_eclass_to_dimension[T8_ECLASS_LAST];
 
 /** The number of codimension-one boundaries of an element class. */
 extern const int    t8_eclass_num_faces[T8_ECLASS_LAST];
+
+/** For each dimension the maximum possible number of faces of an eclass of that dimension. */
+extern const int    t8_eclass_max_num_faces[T8_ECLASS_MAX_DIM + 1];
 
 /** The number of vertices of an element class. */
 extern const int    t8_eclass_num_vertices[T8_ECLASS_LAST];

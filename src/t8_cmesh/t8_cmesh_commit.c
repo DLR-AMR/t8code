@@ -199,26 +199,16 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
 
       for (si = 0;si < cmesh->stash->joinfaces.elem_count;si++) {
         joinface = sc_array_index(&cmesh->stash->joinfaces, si);
-        F = 0;
-        if (joinface->face1 >= 0) {
-          tree1 = t8_cmesh_trees_get_tree_ext (cmesh->trees, joinface->id1,
-                                               &face_neigh, &ttf);
-        }
-        if (joinface->face2 >= 0) {
-          tree2 = t8_cmesh_trees_get_tree_ext (cmesh->trees, joinface->id2,
-                                               &face_neigh2, &ttf2);
-          F = t8_eclass_num_faces[tree2->eclass];
-        }
-        if (joinface->face1 >= 0) {
-          face_neigh[joinface->face1] = (t8_locidx_t) joinface->id2;
-          ttf[joinface->face1] = joinface->orientation * F +
-              joinface->face2;
-          F = t8_eclass_num_faces[tree1->eclass];
-        }
-        if (joinface->face2 >= 0) {
-          face_neigh[joinface->face2] = (t8_locidx_t) joinface->id1;
-          ttf[joinface->face2] = joinface->orientation * F + joinface->face1;
-        }
+        F = t8_eclass_max_num_faces[cmesh->dimension];
+        tree1 = t8_cmesh_trees_get_tree_ext (cmesh->trees, joinface->id1,
+                                             &face_neigh, &ttf);
+        tree2 = t8_cmesh_trees_get_tree_ext (cmesh->trees, joinface->id2,
+                                             &face_neigh2, &ttf2);
+        face_neigh[joinface->face1] = (t8_locidx_t) joinface->id2;
+        ttf[joinface->face1] = joinface->orientation * F +
+            joinface->face2;
+        face_neigh[joinface->face2] = (t8_locidx_t) joinface->id1;
+        ttf[joinface->face2] = joinface->orientation * F + joinface->face1;
       }
     }
   }
@@ -376,12 +366,13 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       for (iz = 0; iz < cmesh->stash->joinfaces.elem_count; iz++) {
         joinface = (t8_stash_joinface_struct_t *)
           sc_array_index (&cmesh->stash->joinfaces, iz);
-        id1_istree = cmesh->first_tree <= joinface->id1 &&
-          last_tree >= joinface->id1;
-        id2_istree = cmesh->first_tree <= joinface->id2 &&
-          last_tree >= joinface->id2;
-        temp_facejoin->ghost_id = joinface->id1;
         id1 = joinface->id1;
+        id2 = joinface->id2;
+        id1_istree = cmesh->first_tree <= id1 &&
+          last_tree >= id1;
+        id2_istree = cmesh->first_tree <= id2 &&
+          last_tree >= id2;
+        temp_facejoin->ghost_id = id1;
         tree1 = NULL;
         ghost1 = NULL;
         /* There are the following cases:
@@ -410,9 +401,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
                                                  &face_neigh_g, &ttf);
           temp_local_id = ghost_facejoin->local_id;
         }
-        id2 = temp_facejoin->ghost_id = joinface->id2;
         ghost2 = NULL;
         tree2 = NULL;
+        temp_facejoin->ghost_id = joinface->id2;
         if (id2_istree) {
           /* Second tree in the connection is a local tree */
           tree2 = t8_cmesh_trees_get_tree_ext (cmesh->trees,
@@ -427,51 +418,35 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
                                                  ghost_facejoin->local_id,
                                                  &face_neigh_g2, &ttf2);
         }
-        /* TODO: think of boundary encoding. This is not right */
-        if (joinface->id2 == -1) {
-          if (face_neigh != NULL) {
-            face_neigh[joinface->face1] = -1;
-          }
-          if (face_neigh_g != NULL) {
-            face_neigh_g[joinface->face1] = -1;
-          }
-        }
-        else if (joinface->id1 == -1) {
-          if (face_neigh2 != NULL) {
-            face_neigh2[joinface->face2] = -1;
-          }
-          if (face_neigh_g2 != NULL) {
-            face_neigh_g2[joinface->face2] = -1;
-          }
-        }
-        else {
+        F = t8_eclass_max_num_faces[cmesh->dimension];
+        if (ttf != NULL) {
+          /* The first entry is either a tree or ghost */
+          ttf[joinface->face1] = F * joinface->orientation + joinface->face2;
           if (tree1 != NULL) {
+            /* First entry is a tree */
             T8_ASSERT (ghost2 != NULL || tree2 != NULL);
             face_neigh[joinface->face1] =
               tree2 ? id2 - cmesh->first_tree :
               ghost_facejoin->local_id + cmesh->num_local_trees;
-            F =
-              t8_eclass_num_faces[tree2 != NULL ? tree2->eclass : ghost2->eclass];
-            ttf[joinface->face1] = F * joinface->orientation + joinface->face2;
           }
-          else if (ghost1 != NULL) {
-            T8_ASSERT (ttf != NULL);
+          else {
+            /* First entry is a ghost */
+            T8_ASSERT (ghost1 != NULL);
             face_neigh_g[joinface->face1] = id2;
-            ttf[joinface->face1] = F * joinface->orientation + joinface->face2;
           }
-          if (ghost2 != NULL) {
-            T8_ASSERT (ttf2 != NULL);
-            face_neigh_g2[joinface->face2] = id1;
-            ttf2[joinface->face2] = F * joinface->orientation + joinface->face1;
-            /* Done with setting face join */
-          }
-          else if (tree2 != NULL) {
+        }
+        if (ttf2 != NULL) {
+          /* The sencond entry is either a tree or a ghost */
+          ttf2[joinface->face2] = F * joinface->orientation + joinface->face1;
+          if (tree2 != NULL) {
+            /* The second entry is a ghost */
             T8_ASSERT (tree1 != NULL || ghost1 != NULL);
             face_neigh2[joinface->face2] = tree1 ? id1 - cmesh->first_tree :
               temp_local_id + cmesh->num_local_trees;
-            F =
-              t8_eclass_num_faces[tree1 != NULL ? tree1->eclass : ghost1->eclass];
-            ttf2[joinface->face2] = F * joinface->orientation + joinface->face1;
+          }
+          else {
+            T8_ASSERT (ghost2 != NULL);
+            face_neigh_g2[joinface->face2] = id1;
           }
         }
         /* Done with setting face join */
