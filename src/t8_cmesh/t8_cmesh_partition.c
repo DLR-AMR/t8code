@@ -106,6 +106,25 @@ t8_offset_nosend (int proc, t8_gloidx_t * offset)
   return 0;
 }
 
+/* Return one if proca sends trees to procb */
+static int
+t8_offset_sendsto (int proca, int procb, t8_gloidx_t * t8_offset_from,
+                   t8_gloidx_t * t8_offset_to)
+{
+  t8_gloidx_t         proca_first, proca_last;
+  /* proca sends to procb if proca's first tree (plus 1 if it is shared)
+   * is smaller than procb's last tree and
+   * proca's last tree is bigger than procb's first tree */
+  proca_first = t8_offset_first (proca, t8_offset_from) +
+      (t8_offset_from[proca] < 0);
+  proca_last = t8_offset_last (proca, t8_offset_from);
+  if (proca_first <= t8_offset_last (procb, t8_offset_to)
+      && proca_last >= t8_offset_first (procb, t8_offset_to)) {
+    return 1;
+  }
+  return 0;
+}
+
 /* Count the number of nonempty procs from start to end
  * A process counts as nonempty if it has either no elements or
  * just one and this is shared */
@@ -131,6 +150,14 @@ int
 t8_offset_in_range (t8_gloidx_t tree_id, int proc, t8_gloidx_t * offset)
 {
   return t8_offset_first (proc, offset) <= tree_id
+    && tree_id <= t8_offset_last (proc, offset);
+}
+
+int
+t8_offset_in_range_wofirstshared (t8_gloidx_t tree_id, int proc,
+                                  t8_gloidx_t * offset)
+{
+  return t8_offset_first (proc, offset) + (offset[proc] < 0) <= tree_id
     && tree_id <= t8_offset_last (proc, offset);
 }
 
