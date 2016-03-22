@@ -33,9 +33,6 @@
  */
 
 /* *INDENT-OFF* */
-static int
-t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_locidx_t tree_id);
-
 static t8_ctree_t
 t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_locidx_t tree_id);
 /* *INDENT-ON* */
@@ -269,6 +266,7 @@ t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_gloidx_t num_trees)
    */
 }
 
+#if 0
 /* Check whether a given tree_id belongs to a tree in the cmesh.
  * If partitioned only local trees are allowed.
  */
@@ -284,6 +282,8 @@ t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_locidx_t tree_id)
     return 0 <= tree_id && tree_id < cmesh->num_trees;
   }
 }
+
+#endif
 
 #if 0
 /* Given a tree_id return the index of the specified tree in

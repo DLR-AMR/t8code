@@ -86,29 +86,6 @@ t8_cmesh_trees_add_tree (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
 }
 
 void
-t8_cmesh_tree_set_join (t8_cmesh_trees_t trees, t8_locidx_t id1,
-                        t8_locidx_t id2, int face1, int face2,
-                        int orientation)
-{
-  t8_ctree_t          tree1, tree2;
-  int                 F;
-
-  T8_ASSERT (trees != NULL);
-  T8_ASSERT (id1 >= 0);
-  T8_ASSERT (id2 >= 0);
-
-  tree1 = t8_cmesh_trees_get_tree (trees, id1);
-  tree2 = t8_cmesh_trees_get_tree (trees, id2);
-  T8_ASSERT (tree1 != NULL && tree2 != NULL);
-  tree1->face_neighbors[face1] = id2;
-  tree2->face_neighbors[face2] = id1;
-  F = t8_eclass_num_faces[tree2->eclass];
-  tree1->tree_to_face[face1] = face2 * F + orientation;
-  F = t8_eclass_num_faces[tree1->eclass];
-  tree2->tree_to_face[face2] = face1 * F + orientation;
-}
-
-void
 t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees, t8_locidx_t ghost_index,
                           t8_gloidx_t tree_id, int proc, t8_eclass_t eclass)
 {
