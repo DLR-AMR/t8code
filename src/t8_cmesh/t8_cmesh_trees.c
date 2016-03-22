@@ -126,7 +126,7 @@ t8_part_tree_get_tree (t8_part_tree_t P, t8_locidx_t tree_id)
 }
 
 /* get a ghost from a part given its local id */
-static t8_cghost_t
+static              t8_cghost_t
 t8_part_tree_get_ghost (t8_part_tree_t P, t8_locidx_t ghost_id)
 {
   t8_cghost_t         first_ghost;
