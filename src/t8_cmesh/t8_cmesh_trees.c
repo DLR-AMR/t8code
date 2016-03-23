@@ -28,9 +28,6 @@
 #include "t8_cmesh_stash.h"
 #include "t8_cmesh_trees.h"
 
-extern int
-         t8_cmesh_ctree_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b);
-
 /* This struct is needed as a key to search
  * for an argument in the arguments array of a tree */
 struct t8_key_id_pair
@@ -572,6 +569,40 @@ t8_cmesh_trees_print (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
     t8_debugf ("%s\n", buf);
   }
 }
+
+#if 0
+/* compare two arrays of face_neighbors for equality */
+static int
+t8_cmesh_face_n_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b, int num_neigh)
+{
+  return memcmp (T8_TREE_FACE (tree_a), T8_TREE_FACE (tree_b),
+                 num_neigh * sizeof (t8_topidx_t)) ||
+    memcmp (T8_TREE_TTF (tree_a), T8_TREE_TTF (tree_b),
+            num_neigh * sizeof (int8_t)) ? 0 : 1;
+}
+
+/* TODO: hide this function, is used by t8_cmesh_trees_is_equal */
+static int
+t8_cmesh_ctree_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b)
+{
+  int                 is_equal;
+  T8_ASSERT (tree_a != NULL && tree_b != NULL);
+
+  is_equal = tree_a->treeid != tree_b->treeid ||
+    tree_a->eclass != tree_b->eclass;
+  if (is_equal != 0) {
+    return 0;
+  }
+  if (!t8_cmesh_face_n_is_equal
+      (tree_a, tree_b, t8_eclass_num_faces[tree_a->eclass])) {
+    return 0;
+  }
+
+  /* TODO check attributes */
+
+  return 1;
+}
+#endif
 
 int
 t8_cmesh_trees_is_equal (t8_cmesh_t cmesh, t8_cmesh_trees_t trees_a,

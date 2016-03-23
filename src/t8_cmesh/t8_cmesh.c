@@ -409,39 +409,6 @@ t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t tree1, t8_gloidx_t tree2,
                          orientation);
 }
 
-/* compare two arrays of face_neighbors for equality */
-static int
-t8_cmesh_face_n_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b, int num_neigh)
-{
-  return memcmp (tree_a->face_neighbors, tree_b->face_neighbors,
-                 num_neigh * sizeof (t8_topidx_t)) ||
-    memcmp (tree_a->tree_to_face, tree_b->tree_to_face,
-            num_neigh * sizeof (int8_t)) ? 0 : 1;
-}
-
-/* TODO: hide this function, is used by t8_cmesh_trees_is_equal */
-int
-t8_cmesh_ctree_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b)
-{
-  int                 is_equal;
-  T8_ASSERT (tree_a != NULL && tree_b != NULL);
-
-  is_equal = tree_a->treeid != tree_b->treeid ||
-    tree_a->eclass != tree_b->eclass;
-  is_equal |= !sc_array_is_equal (tree_a->attributes, tree_b->attributes);
-  if (is_equal != 0) {
-    return 0;
-  }
-  if (!t8_cmesh_face_n_is_equal
-      (tree_a, tree_b, t8_eclass_num_faces[tree_a->eclass])) {
-    return 0;
-  }
-
-  /* TODO check attributes */
-
-  return 1;
-}
-
 /* returns true if cmesh_a equals cmesh_b */
 int
 t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)

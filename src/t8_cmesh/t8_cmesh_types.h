@@ -59,9 +59,6 @@ typedef struct t8_cmesh_trees *t8_cmesh_trees_t;
 typedef struct t8_cmesh
 {
   /* TODO: make the comments more legible */
-  /* TODO: right now a not replicated cmesh is limited to t8_topidx in tree indices
-   *       we should think about how to extend this to t8_gloidx,
-   *       or actually we should take t8_locidx?*/
   int                 committed;
   int                 dimension; /**< The dimension of the cmesh. It is set when the first tree is inserted. */
   int                 do_dup;   /**< Communicator shall be duped. */
@@ -110,9 +107,6 @@ typedef struct t8_cghost
 {
   t8_gloidx_t         treeid; /**< The global number of this ghost. */
   t8_eclass_t         eclass; /**< The eclass of this ghost. */
-#if 1 /* TODO: remove */
-  t8_gloidx_t        *neighbors; /**< Global id's of all neighbors of this ghost */
-#endif
   size_t              neigh_offset; /* TODO: document */
 }
 t8_cghost_struct_t;
@@ -143,21 +137,9 @@ typedef struct t8_ctree
   /* TODO: The local id of a tree should be clear from context, the entry can
    *       be optimized out. */
   t8_eclass_t         eclass; /**< The eclass of this tree. */
-#if 1
-  /* TODO: This is a locidx_t */
-  /* TOOD: remove */
-  t8_topidx_t        *face_neighbors; /**< For each face the local index of the face neighbor
-                                          of this tree at the face. Indices greater than
-                                          the number of local trees refer to ghosts. */
-  int8_t             *tree_to_face; /**< For each face the encoding of the face neighbor orientation. */
-#endif
   size_t              neigh_offset; /* TODO: document */
   size_t              att_offset; /* TODO: document */
   int                 num_attributes;
-
-#if 1 /* TODO: remove */
-  sc_array_t         *attributes; /**< Array of \a t8_attribute_info_t objects sorted by package_id and key. */
-#endif
 }
 t8_ctree_struct_t;
 
@@ -180,10 +162,6 @@ typedef struct t8_part_tree
   t8_locidx_t         first_ghost_id;   /* TODO: document. -1 if num_ghost=0 */
   t8_locidx_t         num_trees;
   t8_locidx_t         num_ghosts;
-#if 0
-  /* TODO: Do we need this? */
-  size_t              num_bytes_for_attributes;
-#endif
 }
 t8_part_tree_struct_t;
 
@@ -193,11 +171,6 @@ typedef struct t8_cmesh_trees
   sc_array_t         *from_proc;        /* array of t8_part_tree, one for each process */
   int                *tree_to_proc;     /* for each tree its process */
   int                *ghost_to_proc;    /* for each ghost its process */
-#if 0
-  /* TODO: the ghost_to_offset field is not be necessary since the ghost can
-   *       be identified by its local index? - remove */
-  t8_locidx_t        *ghost_to_offset;  /* for each ghost its offset within the process */
-#endif
 } t8_cmesh_trees_struct_t;
 
 #endif /* !T8_CMESH_TYPES_H */
