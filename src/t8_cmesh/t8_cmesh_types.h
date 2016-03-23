@@ -137,21 +137,43 @@ typedef struct t8_ctree
   /* TODO: The local id of a tree should be clear from context, the entry can
    *       be optimized out. */
   t8_eclass_t         eclass; /**< The eclass of this tree. */
-  size_t              neigh_offset; /* TODO: document */
-  size_t              att_offset; /* TODO: document */
-  int                 num_attributes;
+  size_t              neigh_offset;  /**< Adding this offset to the adress of the tree
+                                       yield the array of face_neighbor entries */
+  size_t              att_offset;    /**< Adding this offset to the adress of the tree
+                                       yield the array of attribute_info entries */
+  int                 num_attributes; /**< The number of attributes at this tree */
 }
 t8_ctree_struct_t;
 
-/* TODO: document */
-
+/** This structure hold the information associated to an attribute of a tree.
+ *  The attributes of each are stored in a key-value storage, where the key consists
+ *  of the two entries (package_id,key) both being integers.
+ *  The package_id serves to identify the application layer that added the attribute
+ *  and the key identifies the attribute whithin that application layer.
+ *
+ *  All attribute info objects of one tree are stored in an array and adding
+ *  a tree's att_offset entry to the tree's adress yields this array.
+ *  The attributes themselfes are stored in an array directly behind the array of
+ *  the attribute infos.
+ */
 typedef struct t8_attribute_info
 {
-  int       package_id;
-  int       key;
-  size_t    attribute_offset;
-  size_t    attribute_size; /* TODO: eventually remove this */
+  int       package_id; /**< The identifier of the application layer that added this attribute */
+  int       key; /**< The (tree unique) key of the attribute whithin this AL. */
+  size_t    attribute_offset; /**< The offset of the attribute data from the first
+                    attribute info of the tree.
+                    (Thus, the attribute is stored at adress tree + tree->att_offset + attribute_offset) */
+  /* TODO: eventually remove the size */
+  size_t    attribute_size; /**< The size in bytes of the attribute */
 } t8_attribute_info_struct_t;
+
+/* TODO: document, process is a bad naming, since it does not refer to MPI ranks here */
+typedef struct t8_cmesh_trees
+{
+  sc_array_t         *from_proc;        /* array of t8_part_tree, one for each process */
+  int                *tree_to_proc;     /* for each tree its process */
+  int                *ghost_to_proc;    /* for each ghost its process */
+} t8_cmesh_trees_struct_t;
 
 /* TODO: document */
 typedef struct t8_part_tree
@@ -164,13 +186,5 @@ typedef struct t8_part_tree
   t8_locidx_t         num_ghosts;
 }
 t8_part_tree_struct_t;
-
-/* TODO: document, process is a bad naming, since it does not refer to MPI ranks here */
-typedef struct t8_cmesh_trees
-{
-  sc_array_t         *from_proc;        /* array of t8_part_tree, one for each process */
-  int                *tree_to_proc;     /* for each tree its process */
-  int                *ghost_to_proc;    /* for each ghost its process */
-} t8_cmesh_trees_struct_t;
 
 #endif /* !T8_CMESH_TYPES_H */

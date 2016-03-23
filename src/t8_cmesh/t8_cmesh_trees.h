@@ -201,9 +201,16 @@ void                t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees,
 t8_ctree_t          t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees,
                                              t8_locidx_t tree);
 
-/* Return tree and its face neighbor arrays */
-/* TODO: document */
-/* either of face_neigh or ttf can be NULL, then they are not set */
+/** Return a pointer to a specific tree in a trees struct plus pointers to
+ * its face_neighbor and tree_to_face arrays.
+ * \param [in]      trees The tress structure where the tree is to be looked up.
+ * \param [in]      tree_id  The local id of the tree.
+ * \param [out]     face_neigh If not NULL a pointer to the trees face_neighbor
+ *                             array is stored here on return.
+ * \param [out]     ttf        If not NULL a pointer to the trees tree_to_face
+ *                             array is stored here on return.
+ * \return                   A pointer to the tree with local id \a tree.
+ */
 t8_ctree_t          t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees,
                                                  t8_locidx_t tree_id,
                                                  t8_locidx_t ** face_neigh,
@@ -219,7 +226,16 @@ t8_ctree_t          t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees,
 t8_cghost_t         t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees,
                                               t8_locidx_t ghost);
 
-/* TODO: document */
+/** Return a pointer to a specific ghost in a trees struct plus pointers to
+ * its face_neighbor and tree_to_face arrays.
+ * \param [in]      trees The tress structure where the ghost is to be looked up.
+ * \param [in]      ghost_id  The local id of the ghost.
+ * \param [out]     face_neigh If not NULL a pointer to the ghosts face_neighbor
+ *                             array is stored here on return.
+ * \param [out]     ttf        If not NULL a pointer to the ghosts tree_to_face
+ *                             array is stored here on return.
+ * \return                   A pointer to the tree with local id \a tree.
+ */
 t8_cghost_t         t8_cmesh_trees_get_ghost_ext (t8_cmesh_trees_t trees,
                                                   t8_locidx_t ghost_id,
                                                   t8_gloidx_t ** face_neigh,
