@@ -34,6 +34,10 @@
 
 T8_EXTERN_C_BEGIN ();
 
+/** Given a cmesh which is to be partitioned, execute the partition task.
+ *  This includes partitioning by uiniform level and partitioning from a second cmesh
+ *  \param [in,out]  cmesh   The cmesh to be partitioned
+ *  This function is usually called within \ref t8_cmesh_commit */
 void                t8_cmesh_partition (t8_cmesh_t cmesh);
 
 T8_EXTERN_C_END ();

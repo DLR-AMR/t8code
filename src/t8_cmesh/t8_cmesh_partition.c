@@ -31,19 +31,22 @@
 #include "t8_cmesh_trees.h"
 #include "t8_cmesh_partition.h"
 
-static              t8_gloidx_t
+/* Return the minimum of two t8_gloidx_t's */
+static t8_gloidx_t
 t8_glo_min (t8_gloidx_t A, t8_gloidx_t B)
 {
   return A < B ? A : B;
 }
 
+/* Return -1 if A is smaller 0
+ * Return 0 if not. */
 static int
 t8_glo_kl0 (t8_gloidx_t A)
 {
   return A < 0 ? -1 : 0;
 }
 
-/* The first tree of a given process */
+/* The first tree of a given process in a partition */
 static              t8_gloidx_t
 t8_offset_first (int proc, t8_gloidx_t * offset)
 {
@@ -52,7 +55,7 @@ t8_offset_first (int proc, t8_gloidx_t * offset)
   return t8_glo_abs (offset[proc]) + t8_glo_kl0 (offset[proc]);
 }
 
-/* The number of trees of a given process */
+/* The number of trees of a given process in a partition */
 /* Can get negative for empty processes */
 static              t8_gloidx_t
 t8_offset_num_trees (int proc, t8_gloidx_t * offset)
@@ -63,6 +66,7 @@ t8_offset_num_trees (int proc, t8_gloidx_t * offset)
   return t8_glo_abs (offset[proc + 1]) - t8_offset_first (proc, offset);
 }
 
+/* The last local tree of a given process in a partition */
 static              t8_gloidx_t
 t8_offset_last (int proc, t8_gloidx_t * offset)
 {
@@ -72,6 +76,8 @@ t8_offset_last (int proc, t8_gloidx_t * offset)
   return t8_glo_abs (offset[proc + 1]) - 1;
 }
 
+/* Return 1 if the process has no trees in the partition.
+ * Return 0 if the process has at least one tree */
 static int
 t8_offset_empty (int proc, t8_gloidx_t * offset)
 {
@@ -106,7 +112,8 @@ t8_offset_nosend (int proc, t8_gloidx_t * offset)
   return 0;
 }
 
-/* Return one if proca sends trees to procb */
+/* Return one if proca sends trees to procb when partitioning from
+ * offset_from to offset_to */
 static int
 t8_offset_sendsto (int proca, int procb, t8_gloidx_t * t8_offset_from,
                    t8_gloidx_t * t8_offset_to)
@@ -125,11 +132,11 @@ t8_offset_sendsto (int proca, int procb, t8_gloidx_t * t8_offset_from,
   return 0;
 }
 
-/* Count the number of nonempty procs from start to end
- * A process counts as nonempty if it has either no elements or
+/* Count the number of sending procs from start to end
+ * A process counts as sending if it has either no elements or
  * just one and this is shared */
 static int
-t8_offset_range_woempty (int start, int end, t8_gloidx_t * offset)
+t8_offset_range_send (int start, int end, t8_gloidx_t * offset)
 {
   int                 count = 0, i;
 
@@ -153,6 +160,8 @@ t8_offset_in_range (t8_gloidx_t tree_id, int proc, t8_gloidx_t * offset)
     && tree_id <= t8_offset_last (proc, offset);
 }
 
+/* Determine whether a given global tree id is in the range of a given
+ * process without considering the first tree if it is shared */
 int
 t8_offset_in_range_wofirstshared (t8_gloidx_t tree_id, int proc,
                                   t8_gloidx_t * offset)
@@ -251,6 +260,8 @@ t8_partition_new_ghost_ids (t8_cmesh_t cmesh,
   }
 }
 
+/* Given a cmesh create its tree_offsets from the local number of
+ * trees on each process */
 static void
 t8_cmesh_gather_treecount (t8_cmesh_t cmesh)
 {
@@ -258,7 +269,6 @@ t8_cmesh_gather_treecount (t8_cmesh_t cmesh)
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
-  //T8_ASSERT (cmesh->set_partitioned);
 
   tree_offset = cmesh->first_tree_shared ? -cmesh->first_tree - 1 :
     cmesh->first_tree;
@@ -435,6 +445,7 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   return (t8_locidx_t) ret;
 }
 
+/* Compute the first and last process from which we will receive local trees */
 static void
 t8_cmesh_partition_recvrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                               int *recv_first, int *recv_last)
@@ -1178,6 +1189,8 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   return num_send_mpi;
 }
 
+/* Loop over all the processes that we receive trees from and get the
+ * MPI messages. */
 /* stores the number of received ghosts in num_ghosts */
 static void
 t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
@@ -1198,7 +1211,7 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
 
   num_trees = t8_offset_num_trees (cmesh->mpirank, tree_offset);
   /* Receive from other processes */
-  num_receive = t8_offset_range_woempty (recv_first, recv_last,
+  num_receive = t8_offset_range_send (recv_first, recv_last,
                                          cmesh_from->tree_offsets);
   t8_debugf ("[H] woempty %i\n", num_receive);
   /* We reserve one part slot for myrank if it was not counted above
@@ -1390,6 +1403,8 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
   T8_FREE (local_procid);
 }
 
+/* Given an initial cmesh (cmesh_from) and a new partition table (tree_offset)
+ * create the new partition on the destination cmesh (cmesh) */
 static void
 t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
                           t8_gloidx_t * tree_offset)
@@ -1486,6 +1501,8 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
   cmesh->num_ghosts = num_ghosts;
 }
 
+/* Given a cmesh which is to be partitioned, execute the partition task.
+ * This includes partitioning by uiniform level and partitioning from a second cmesh */
 void
 t8_cmesh_partition (t8_cmesh_t cmesh)
 {

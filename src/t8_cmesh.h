@@ -100,6 +100,20 @@ void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
  *       tree_offsets[p] has to be negative if the last tree of proc p is
  *       shared. tree_offsets must fulfill the description from \see t8_cmesh_types.h
  */
+/** Set a cmesh to be partitioned from a second cmesh.
+ *  This function can be used instead of \ref t8_cmesh_set_partitioned.
+ *  There a two modes: Either a level is specified, than the new cmesh is partitioned
+ *  according to an assumed uniform refinement of the old cmesh,
+ *  or an array of tree offsets for each process is specified.
+ *  In the latter case each process will get the local trees given by his offsets.
+ *  For specification of the offset array see \ref t8_cmesh_types.h.
+ * \param [in,out] cmesh       The cmesh to be partitioned.
+ * \param [in] cmesh_from      The cmesh to start with.
+ * \param [in] level           If >= 0 a uniform refinement of this level is taken
+ *                             as reference for the partitioning.
+ * \param [in] tree_offsets    If level < 0 then an array of global tree_id offsets
+ *                             for each process can be specified here.
+ */
 void                t8_cmesh_set_partition_from (t8_cmesh_t cmesh,
                                                  const t8_cmesh_t cmesh_from,
                                                  int level,
@@ -230,7 +244,13 @@ sc_MPI_Comm         t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup);
  */
 t8_gloidx_t         t8_cmesh_get_num_trees (t8_cmesh_t cmesh);
 
-/* TODO: document */
+/** Return the number of local trees of a cmesh.
+ *  If the cmesh is not partitioned this is equivalent to \ref t8_cmesh_get_num_trees.
+ * \param [in] cmesh       The cmesh to be considered.
+ * \return                 The number of local trees of the cmesh.
+ * \a cmesh must be committed before calling this function.
+ */
+/* TODO: We return gloidx_t although the number of local trees is stored as locidx_t */
 t8_gloidx_t         t8_cmesh_get_num_local_trees (t8_cmesh_t cmesh);
 
 /** Return the processor local number of trees in a cmesh.
@@ -242,7 +262,12 @@ t8_gloidx_t         t8_cmesh_get_num_local_trees (t8_cmesh_t cmesh);
  */
 t8_locidx_t         t8_cmesh_get_local_num_trees (t8_cmesh_t cmesh);
 
-/* TODO: document */
+/** Return the global index of the first local tree of a cmesh.
+ * If the cmesh is not partitioned this is allways 0.
+ * \param [in] cmesh       The cmesh to be considered.
+ * \return                 The global id of the first local tree in cmesh.
+ * \a cmesh must be committed before calling this function.
+ */
 t8_gloidx_t         t8_cmesh_first_treeid (t8_cmesh_t cmesh);
 
 /* TODO: should this and the next function be part of the interface? */
