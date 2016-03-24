@@ -52,7 +52,12 @@ t8_random_partition (int level)
   t8_cmesh_vtk_write_file (cmesh, file, 1.);
 
   t8_cmesh_init (&cmesh_part);
-  t8_cmesh_set_partition_from (cmesh_part, cmesh, level, NULL);
+  //t8_cmesh_set_partition_from (cmesh_part, cmesh, level, NULL);
+
+  t8_cmesh_set_partition_from (cmesh_part, cmesh, -1,
+                               t8_cmesh_offset_random
+                               (sc_MPI_COMM_WORLD,
+                                t8_cmesh_get_num_trees (cmesh), 0));
   t8_cmesh_commit (cmesh_part);
 
   if (mpisize > 1 && 1) {
