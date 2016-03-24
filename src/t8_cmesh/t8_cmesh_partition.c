@@ -626,7 +626,9 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
                    t8_eclass_num_faces[tree->eclass] *
                    (sizeof (t8_locidx_t) + sizeof (int8_t)));
     temp_offset += t8_eclass_num_faces[tree->eclass] *
-      (sizeof (t8_locidx_t) + sizeof (int8_t));
+      (sizeof (t8_locidx_t) + sizeof (int8_t))
+        + ((4 - t8_eclass_num_faces[tree->eclass] *
+            (sizeof (t8_locidx_t) + sizeof (int8_t)) % 4) % 4);
     /* Copy all attribute infos to send_buffer */
     (void) memcpy (send_buffer + num_trees * sizeof (t8_ctree_struct_t) +
                    num_ghost_send * sizeof (t8_cghost_struct_t) +
