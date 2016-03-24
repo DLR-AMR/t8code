@@ -121,11 +121,13 @@ t8_offset_sendsto (int proca, int procb, t8_gloidx_t * t8_offset_from,
   t8_gloidx_t         proca_first, proca_last;
   /* proca sends to procb if proca's first tree (plus 1 if it is shared)
    * is smaller than procb's last tree and
-   * proca's last tree is bigger than procb's first tree */
+   * proca's last tree is bigger than procb's first tree
+   * and proca has trees to send */
   proca_first = t8_offset_first (proca, t8_offset_from) +
       (t8_offset_from[proca] < 0);
   proca_last = t8_offset_last (proca, t8_offset_from);
-  if (proca_first <= t8_offset_last (procb, t8_offset_to)
+  if (proca_first <= proca_last &&
+      proca_first <= t8_offset_last (procb, t8_offset_to)
       && proca_last >= t8_offset_first (procb, t8_offset_to)) {
     return 1;
   }
@@ -1076,14 +1078,16 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
   }
   /* stores at i-th position the new local proc id of the respective process.
    * This is important to account for empty processes */
-  local_procid = T8_ALLOC_ZERO (int, num_parts);
+  local_procid = T8_ALLOC_ZERO (int,  recv_last - recv_first + 1);
   /* Allocate memory */
   for (iproc = 1; iproc < recv_last - recv_first + 1; iproc++) {
     local_procid[iproc] = t8_offset_nosend (iproc + recv_first,
                                             cmesh_from->tree_offsets) ?
       local_procid[iproc - 1] : local_procid[iproc - 1] + 1;
   }
-  if (recv_first <= cmesh->mpirank && cmesh->mpirank <= recv_last) {
+  if (recv_first <= cmesh->mpirank && cmesh->mpirank <= recv_last
+      && t8_offset_sendsto (cmesh->mpirank, cmesh->mpirank,
+                            cmesh_from->tree_offsets, tree_offset)) {
     myrank_part = local_procid[cmesh->mpirank - recv_first];
   }
   else {
