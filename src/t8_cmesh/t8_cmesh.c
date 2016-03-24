@@ -158,6 +158,7 @@ t8_cmesh_set_partition_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
   T8_ASSERT (cmesh_from != NULL);
   T8_ASSERT (!cmesh->committed);
   T8_ASSERT (cmesh_from->committed);
+  T8_ASSERT (cmesh_from->set_partitioned);
 
   cmesh->set_from = cmesh_from;
   cmesh->set_partitioned = 1;

@@ -95,11 +95,8 @@ void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
                                               t8_gloidx_t first_local_tree,
                                               t8_gloidx_t last_local_tree);
 
-/* TODO: document.
- *       if level >= 0 then ignore trees_per_proc
- *       tree_offsets[p] has to be negative if the last tree of proc p is
- *       shared. tree_offsets must fulfill the description from \see t8_cmesh_types.h
- */
+/* TODO: Currently cmesh_from needs to be partitioned as well.
+ *       Change partition function such that it also accepts replicated cmesh_from */
 /** Set a cmesh to be partitioned from a second cmesh.
  *  This function can be used instead of \ref t8_cmesh_set_partitioned.
  *  There a two modes: Either a level is specified, than the new cmesh is partitioned
