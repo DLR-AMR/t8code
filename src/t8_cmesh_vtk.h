@@ -49,7 +49,9 @@
 #endif
 
 #define T8_VTK_TOPIDX "Int32"
-#define T8_VTK_GLOIDX "Int64"
+/* TODO: Paraview has troubles with Int64, so we switch to Int32 and be careful.
+ *       Investigate this further. See also vtk makro VTK_USE_64BIT_IDS */
+#define T8_VTK_GLOIDX "Int32"
 
 T8_EXTERN_C_BEGIN ();
 /* function declarations */
