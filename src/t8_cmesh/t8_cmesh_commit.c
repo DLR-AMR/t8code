@@ -489,7 +489,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     }
     t8_debugf ("Offsets = %s\n", buf);
   }
-  t8_cmesh_trees_print (cmesh, cmesh->trees);
+ // t8_cmesh_trees_print (cmesh, cmesh->trees);
   cmesh->committed = 1;
 
   t8_stash_destroy (&cmesh->stash);

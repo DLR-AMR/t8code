@@ -23,6 +23,7 @@
 #include <sc_options.h>
 #include <t8.h>
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh_tetgen.h>
 #include <t8_cmesh_vtk.h>
 
@@ -51,7 +52,31 @@ t8_read_tetgen_file_build_cmesh (const char * prefix, int do_dup,
     else {
       t8_debugf ("Error in writing cmesh vtk\n");
     }
-    t8_cmesh_unref (&cmesh);
+    if (do_partition) {
+      t8_cmesh_t cmesh_partitioned;
+
+      t8_cmesh_init (&cmesh_partitioned);
+      t8_cmesh_set_partition_from (cmesh_partitioned, cmesh, -1,
+                                   t8_cmesh_offset_random (sc_MPI_COMM_WORLD,
+                                                           cmesh->num_trees,
+                                                           1));
+      t8_cmesh_commit (cmesh_partitioned);
+      t8_debugf ("Succesfully partitioned %s.\n", "cmesh");
+      t8_debugf ("cmesh has:\n\t%li local tetrahedra\n",
+                 (long) t8_cmesh_get_num_local_trees (cmesh_partitioned));
+      snprintf (fileprefix, BUFSIZ, "%s_t8_tetgen_partitioned_%04d", prefix,
+                mpirank);
+      if (!t8_cmesh_vtk_write_file (cmesh_partitioned, fileprefix, 1.)) {
+        t8_debugf ("Wrote to file %s\n", fileprefix);
+      }
+      else {
+        t8_debugf ("Error in writing cmesh vtk\n");
+      }
+      t8_cmesh_unref (&cmesh_partitioned);
+    }
+    else {
+      t8_cmesh_unref (&cmesh);
+    }
   }
   else {
     t8_debugf ("An error occured while reading %s files.\n", prefix);
