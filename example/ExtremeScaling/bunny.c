@@ -96,7 +96,7 @@ main (int argc, char **argv)
   sc_MPI_Comm         mpicomm;
   box_t               Box_ex1;
   sc_flopinfo_t       fi, snapshot;
-  sc_statinfo_t       stats[6];
+  sc_statinfo_t       stats[9];
 
   t8_cmesh_t          cmesh_p8, cmesh_t8;
   t8_forest_t         forest_p8, forest_t8;
