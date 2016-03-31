@@ -79,7 +79,7 @@ t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename,
   char               *line = T8_ALLOC (char, 1024);
   size_t              linen = 1024;
   t8_topidx_t         cit;
-  t8_topidx_t         corner, corner_offset;
+  t8_topidx_t         corner, corner_offset = 0;
   double              x, y, z;
 #if 0                           /* used for currently disabeld code */
   int                 i, bdy_marker;
@@ -196,7 +196,7 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
   char               *line = T8_ALLOC (char, 1024);
   size_t              linen = 1024;
   t8_topidx_t         num_elems, tit;
-  t8_topidx_t         triangle, triangle_offset;
+  t8_topidx_t         triangle, triangle_offset = 0;
   t8_topidx_t         tcorners[4];      /* in 2d only the first 3 values are needed */
   int                 retval;
   int                 temp;
@@ -305,7 +305,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
   t8_topidx_t        *tneighbors;
   int                 retval;
   int                 temp;
-  int                 orientation, face1, face2;
+  int                 orientation = 0, face1, face2;
   int                 num_read;
   const int           num_faces = dim + 1;
   double             *el_vertices1, *el_vertices2;
@@ -457,7 +457,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
 
   cmesh = NULL;
   if (mpirank == 0 || partition) {
-    int                 retval, corner_offset;
+    int                 retval, corner_offset = 0;
     char                current_file[BUFSIZ];
 
     t8_cmesh_init (&cmesh);

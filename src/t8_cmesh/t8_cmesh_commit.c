@@ -219,12 +219,12 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     /* Cmesh is partitioned and new */
     sc_hash_t          *ghost_ids;
     sc_mempool_t       *ghost_facejoin_mempool;
-    struct ghost_facejoins_struct *ghost_facejoin, *temp_facejoin,
+    struct ghost_facejoins_struct *ghost_facejoin = NULL, *temp_facejoin,
       **facejoin_pp;
     size_t              joinfaces_it, iz;
     t8_gloidx_t         last_tree = cmesh->num_local_trees +
       cmesh->first_tree - 1, id1, id2;
-    t8_locidx_t         temp_local_id;
+    t8_locidx_t         temp_local_id = 0;
     t8_locidx_t         num_hashs;
     t8_gloidx_t        *face_neigh_g, *face_neigh_g2;
     t8_stash_class_struct_t *classentry;

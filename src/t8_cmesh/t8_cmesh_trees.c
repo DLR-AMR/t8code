@@ -534,9 +534,6 @@ t8_cmesh_trees_print (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
   int                 iface;
   t8_eclass_t         eclass;
   char                buf[BUFSIZ];
-#else
-  return;
-#endif
   t8_debugf ("Trees (local/global): %s\n",
              cmesh->num_local_trees == 0 ? "None" : "");
   for (itree = 0; itree < cmesh->num_local_trees; itree++) {
@@ -568,6 +565,9 @@ t8_cmesh_trees_print (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
     }
     t8_debugf ("%s\n", buf);
   }
+#else
+  return;
+#endif
 }
 
 #if 0
