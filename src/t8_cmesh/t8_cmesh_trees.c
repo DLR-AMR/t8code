@@ -376,11 +376,11 @@ t8_cmesh_tree_add_attribute (t8_cmesh_trees_t trees, int proc,
   /* Store offset */
   offset = attr_info->attribute_offset;
   /* Get next attribute and set its offset */
-  if (!(index == tree->num_attributes - 1 &&
+  if (!(index == (size_t) tree->num_attributes - 1 &&
         part->num_trees == tree_id + 1 - part->first_tree_id)) {
     attr_info = attr_info + 1;
     attr_info->attribute_offset = offset + attr->attr_size;
-    if (index == tree->num_attributes - 1) {
+    if (index == (size_t) tree->num_attributes - 1) {
       attr_info->attribute_offset -= tree->num_attributes *
         sizeof (t8_attribute_info_struct_t);
     }
@@ -431,7 +431,7 @@ t8_cmesh_trees_attribute_info_sort (t8_cmesh_trees_t trees)
   int                 iproc;
 
   T8_ASSERT (trees != NULL);
-  for (iproc = 0; iproc < trees->from_proc->elem_count; iproc++) {
+  for (iproc = 0; iproc < (int) trees->from_proc->elem_count; iproc++) {
     t8_cmesh_part_attribute_info_sort (t8_cmesh_trees_get_part
                                        (trees, iproc));
   }

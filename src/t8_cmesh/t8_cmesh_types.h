@@ -141,6 +141,7 @@ typedef struct t8_ctree
                                        yield the array of face_neighbor entries */
   size_t              att_offset;    /**< Adding this offset to the adress of the tree
                                        yield the array of attribute_info entries */
+  /* TODO: Could be a size_t */
   int                 num_attributes; /**< The number of attributes at this tree */
 }
 t8_ctree_struct_t;

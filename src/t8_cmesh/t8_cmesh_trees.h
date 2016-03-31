@@ -76,7 +76,7 @@ T8_EXTERN_C_BEGIN ();
  * and the offset of ttf1 can be calculated from the Tree faces offset and the
  * class of the tree.
  *
- * /* TODO: Should we really keep the padding?
+ *  TODO: Should we really keep the padding?
  *
  * Ghost faces:
  *

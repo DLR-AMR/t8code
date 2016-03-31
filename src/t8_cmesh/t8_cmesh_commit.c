@@ -88,7 +88,8 @@ t8_cmesh_add_attributes (t8_cmesh_t cmesh)
 
   itree = -1;
   for (si = 0, sj = 0; si < stash->attributes.elem_count; si++, sj++) {
-    attribute = sc_array_index (&stash->attributes, si);
+    attribute =  ( t8_stash_attribute_struct_t *)
+        sc_array_index (&stash->attributes, si);
     if (cmesh->first_tree <= attribute->id &&
         attribute->id < cmesh->first_tree + cmesh->num_local_trees) {
       if (attribute->id > itree) {
@@ -177,7 +178,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
         cmesh->num_trees_per_eclass[entry->eclass]++;
       }
       for (si = 0; si < stash->attributes.elem_count; si++) {
-        attribute = sc_array_index (&stash->attributes, si);
+        attribute = (t8_stash_attribute_struct_t *)
+            sc_array_index (&stash->attributes, si);
         /* attribute->id is a gloidx that is casted to a locidx here.
          * Should not cause problems, since mesh is replicated */
         T8_ASSERT (attribute->id == (t8_locidx_t) attribute->id);
@@ -198,7 +200,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       t8_cmesh_add_attributes (cmesh);
 
       for (si = 0;si < cmesh->stash->joinfaces.elem_count;si++) {
-        joinface = sc_array_index(&cmesh->stash->joinfaces, si);
+        joinface = (t8_stash_joinface_struct_t *)
+            sc_array_index(&cmesh->stash->joinfaces, si);
         F = t8_eclass_max_num_faces[cmesh->dimension];
         tree1 = t8_cmesh_trees_get_tree_ext (cmesh->trees, joinface->id1,
                                              &face_neigh, &ttf);
@@ -346,7 +349,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       /* Parse through attributes to count the number of attributes per tree
        * and total size of attributes per tree */
       for (si = 0; si < cmesh->stash->attributes.elem_count; si++) {
-        attribute = sc_array_index (&cmesh->stash->attributes, si);
+        attribute = (t8_stash_attribute_struct_t *)
+            sc_array_index (&cmesh->stash->attributes, si);
         if (cmesh->first_tree <= attribute->id && attribute->id <
             cmesh->first_tree + cmesh->num_local_trees) {
           /* attribute->id is a gloidx that is casted to a locidx here.
