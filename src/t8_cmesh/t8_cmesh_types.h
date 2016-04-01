@@ -31,7 +31,6 @@
  * We define here the datatypes needed for internal cmesh routines.
  */
 
-typedef struct t8_stash *t8_stash_t;
 typedef struct t8_part_tree *t8_part_tree_t;
 typedef struct t8_cmesh_trees *t8_cmesh_trees_t;
 
