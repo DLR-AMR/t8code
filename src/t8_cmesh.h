@@ -116,6 +116,12 @@ void                t8_cmesh_set_partition_from (t8_cmesh_t cmesh,
                                                  int level,
                                                  t8_gloidx_t * tree_offsets);
 
+/* refine a given cmesh to a given level
+ * thus split each tree into x^level subtrees
+ * TODO: implement */
+void                t8_cmesh_set_refine_from (t8_cmesh_t cmesh, const t8_cmesh_t
+                                              cmesh_from, int level);
+
 /* TODO: This is actually not part of the interface?
  *       At least it is only used if the cmesh is partitioned.
  */
