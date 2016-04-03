@@ -159,6 +159,15 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       t8_cmesh_partition (cmesh);
       t8_debugf ("Done cmesh_partition\n");
     }
+    else if (cmesh->from_method == T8_CMESH_FROM_REFINE) {
+      t8_debugf ("Enter cmesh_refine\n");
+      t8_cmesh_refine (cmesh);
+      t8_debugf ("Done cmesh_refine\n");
+    }
+    else {
+      SC_ABORT_NOT_REACHED ();
+      /* TODO: Other from methods are not implemented yet */
+    }
   }
   else if (!cmesh->set_partitioned) {
     /* TODO: Does not use new data layout yet! */
