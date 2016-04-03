@@ -169,6 +169,7 @@ t8_cmesh_set_partition_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
   else {
     cmesh->tree_offsets = tree_offsets;
   }
+  cmesh->from_method = T8_CMESH_FROM_PARTITION;
 }
 
 
@@ -176,7 +177,16 @@ void
 t8_cmesh_set_refine_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
                           int level)
 {
-  SC_ABORTF ("Cmesh refine is not implemented %s\n","yet");
+  T8_ASSERT (cmesh_from->committed);
+  T8_ASSERT (!cmesh->committed);
+  if (cmesh_from->num_trees_per_eclass[T8_ECLASS_PYRAMID] > 0) {
+    SC_ABORTF ("Cmesh refine is not implemented for meshes containing %s\n",
+               "pyramids.");
+  }
+  cmesh->set_from = cmesh_from;
+  cmesh->set_level = level;
+  cmesh->set_partitioned = cmesh_from->set_partitioned;
+  cmesh->from_method = T8_CMESH_FROM_REFINE;
 }
 
 t8_gloidx_t

@@ -34,6 +34,16 @@
 typedef struct t8_part_tree *t8_part_tree_t;
 typedef struct t8_cmesh_trees *t8_cmesh_trees_t;
 
+typedef enum t8_cmesh_from
+{
+  T8_CMESH_FROM_FIRST,
+  T8_CMESH_FROM_COPY = T8_CMESH_FROM_FIRST,
+  T8_CMESH_FROM_REFINE,
+  T8_CMESH_FROM_PARTITION,
+  T8_CMESH_FROM_LAST
+}
+t8_cmesh_from_t;
+
 /** This structure holds the connectivity data of the coarse mesh.
  *  It can either be replicated, then each process stores a copy of the whole
  *  mesh, or partitioned. In the latter case, each process only stores a local
@@ -66,6 +76,7 @@ typedef struct t8_cmesh
   int                 face_knowledge;  /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partioned */
   int8_t              set_level;       /**< Non-negative if the cmesh should be partition from an already existing cmesh
                                          with an assumes \a level uniform mesh underneath */
+  t8_cmesh_from_t     from_method;    /* TODO: Document */
   struct t8_cmesh    *set_from; /**< If this cmesh is a modified (i.e. partitioned) version
                                         of another cmesh, we store a pointer to this other cmesh here. */
   sc_MPI_Comm         mpicomm;  /**< MPI communicator to use. */

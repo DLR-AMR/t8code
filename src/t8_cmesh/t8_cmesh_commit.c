@@ -154,7 +154,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   if (cmesh->set_from != NULL) {
     cmesh->num_trees = cmesh->set_from->num_trees;
     cmesh->dimension = cmesh->set_from->dimension;
-    if (cmesh->set_partitioned) {
+    if (cmesh->from_method == T8_CMESH_FROM_PARTITION) {
       t8_debugf ("Enter cmesh_partition\n");
       t8_cmesh_partition (cmesh);
       t8_debugf ("Done cmesh_partition\n");
