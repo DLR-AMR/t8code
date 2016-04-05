@@ -102,7 +102,7 @@ t8_cmesh_add_attributes (t8_cmesh_t cmesh)
       * Should not cause problems, since mesh is replicated */
       T8_ASSERT (attribute->id - cmesh->first_tree ==
                  (t8_locidx_t) attribute->id - cmesh->first_tree);
-      t8_cmesh_tree_add_attribute (cmesh->trees, 0, attribute,
+      t8_cmesh_trees_add_attribute (cmesh->trees, 0, attribute,
                                    attribute->id - cmesh->first_tree,
                                    sj);
     }

@@ -347,9 +347,9 @@ t8_cmesh_trees_init_attributes (t8_cmesh_trees_t trees, t8_locidx_t tree_id,
 /* TODO: This is not the final version, currently we still need the attributes
  * array to be sorted! */
 void
-t8_cmesh_tree_add_attribute (t8_cmesh_trees_t trees, int proc,
-                             t8_stash_attribute_struct_t * attr,
-                             t8_locidx_t tree_id, size_t index)
+t8_cmesh_trees_add_attribute (t8_cmesh_trees_t trees, int proc,
+                              t8_stash_attribute_struct_t * attr,
+                              t8_locidx_t tree_id, size_t index)
 {
   t8_part_tree_t      part;
   t8_ctree_t          tree;

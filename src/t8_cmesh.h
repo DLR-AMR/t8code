@@ -119,6 +119,7 @@ void                t8_cmesh_set_partition_from (t8_cmesh_t cmesh,
 /* refine a given cmesh to a given level
  * thus split each tree into x^level subtrees
  * TODO: implement */
+/* TODO: if level = 0  then copy */
 void                t8_cmesh_set_refine_from (t8_cmesh_t cmesh, const t8_cmesh_t
                                               cmesh_from, int level);
 

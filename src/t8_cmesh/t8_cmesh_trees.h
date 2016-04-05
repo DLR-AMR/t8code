@@ -270,11 +270,11 @@ size_t              t8_cmesh_trees_attribute_size (t8_ctree_t tree);
 /* TODO: this uses char * and cmesh_set_attribute uses void *. Unify! */
 /* attr_tree_index is index of attr in tree's attribute array.
  * We assume that the attributes are already sorted! */
-void                t8_cmesh_tree_add_attribute (t8_cmesh_trees_t trees,
-                                                 int proc,
-                                                 t8_stash_attribute_struct_t *
-                                                 attr, t8_locidx_t tree_id,
-                                                 size_t index);
+void                t8_cmesh_trees_add_attribute (t8_cmesh_trees_t trees,
+                                                  int proc,
+                                                  t8_stash_attribute_struct_t *
+                                                  attr, t8_locidx_t tree_id,
+                                                  size_t index);
 
 /* Print the trees,ghosts and their neighbors in ASCII.
  * This function is used for debugging purposes */
