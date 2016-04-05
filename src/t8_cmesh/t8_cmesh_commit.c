@@ -32,6 +32,7 @@
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_trees.h"
 #include "t8_cmesh_partition.h"
+#include "t8_cmesh_refine.h"
 
 typedef struct ghost_facejoins_struct
 {
