@@ -166,6 +166,14 @@ void                t8_cmesh_trees_start_part (t8_cmesh_trees_t trees,
                                                t8_locidx_t num_ghosts);
 
 /* TODO: document */
+/* After all classes of trees and ghosts have been set and after the
+ * number of tree attributes  was set and their total size (per tree)
+ * stored temporarily in the att_offset variable
+ * we grow the part array by the needed amount of memory and set the
+ * offsets appropiately */
+/* The workflow can be: call start_part, set tree and ghost classes maually, call
+ * init_attributes, call finish_part, successively call add_attributes
+ * and also set all face neighbors (TODO: write function)*/
 void                t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees,
                                                 int proc);
 

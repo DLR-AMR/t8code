@@ -166,7 +166,7 @@ t8_cmesh_trees_start_part (t8_cmesh_trees_t trees, int proc,
  * stored temporarily in the att_offset variable
  * we grow the part array by the needed amount of memory and set the
  * offsets appropiately */
-/* The workflow can be: call start_part, set tree classes maually, call
+/* The workflow can be: call start_part, set tree and ghost classes maually, call
  * init_attributes, call finish_part, successively call add_attributes
  * and also set all face neighbors (TODO: write function)*/
 void
