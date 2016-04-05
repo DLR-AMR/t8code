@@ -32,16 +32,32 @@
 #include "t8_cmesh_trees.h"
 #include "t8_cmesh_partition.h"
 
+/* Compute the coordinates of the i-th child of a tree of a given class
+ * from the coordinates of that three.
+ *
+ * !!! For Triangles and Tets we use Bey's original order !!!
+ *
+ *          x_2
+ *          /\
+ *         /2 \
+ *        /____\
+ *       /\ 3  /\       For Triangles.
+ *      /0 \  / 1\
+ *     /____\/____\
+ *    x_0          x_1
+ *
+ */
 double *
 t8_cmesh_refine_new_coord (const double *coords_in,
                            t8_eclass_t eclass, int child_id)
 {
   int         num_vertices, ivertex, dim, idim;
   double     *coords_out;
+  int         coord_lookup[8];
 
   T8_ASSERT (coords_in != NULL);
   T8_ASSERT (eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_QUAD
-             || eclass == T8_ECLASS_TRIANGLE);
+             || eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_TET);
 
   num_vertices = t8_eclass_num_vertices[eclass];
   dim = t8_eclass_to_dimension[eclass];
@@ -58,34 +74,73 @@ t8_cmesh_refine_new_coord (const double *coords_in,
         }
       }
       break;
+    case T8_ECLASS_TET:
     case T8_ECLASS_TRIANGLE:
-      if (child_id != 2) {
-        if (child_id == 3) {
-          child_id = 2; /* This is a hack to spare the additional if-block, since for
-                          child_id = 3 we have Xout_i = Xin_i,2
-                           Thus the formula below with childid = 2 */
-        }
-        for (ivertex = 0;ivertex < num_vertices;ivertex++) {
-          for (idim = 0;idim < dim;idim++) {
-            /* Xout_i = Xin_i,childid   ,where i=ivertex and x_ij = (x_i+x_j)/2 */
-            coords_out[3 * ivertex + idim] =
-                (coords_in[3 * ivertex + idim] +
-                coords_in[3 * child_id + idim])/2;
+      switch (child_id){
+        case 0:
+        case 1:
+        case 2:
+        case 3: /* Xout_i = Xin_i,childid   ,where i=ivertex and x_ij = (x_i+x_j)/2 */
+          coord_lookup[0] = 0;
+          coord_lookup[1] = child_id;
+          coord_lookup[2] = 1;
+          coord_lookup[3] = child_id;
+          coord_lookup[4] = 2;
+          coord_lookup[5] = child_id;
+          coord_lookup[6] = 3;
+          coord_lookup[7] = child_id;
+          if (eclass == T8_ECLASS_TRIANGLE && child_id == 3) {
+            coord_lookup[0] = 0;
+            coord_lookup[1] = 1;
+            coord_lookup[2] = 0;
+            coord_lookup[3] = 2;
+            coord_lookup[4] = 1;
+            coord_lookup[5] = 2;
           }
-        }
+          break;
+        case 4: coord_lookup[0] = 0;
+          coord_lookup[1] = 1;
+          coord_lookup[2] = 0;
+          coord_lookup[3] = 2;
+          coord_lookup[4] = 0;
+          coord_lookup[5] = 3;
+          coord_lookup[6] = 1;
+          coord_lookup[7] = 3;
+          break;
+        case 5: coord_lookup[0] = 0;
+          coord_lookup[1] = 1;
+          coord_lookup[2] = 0;
+          coord_lookup[3] = 2;
+          coord_lookup[4] = 1;
+          coord_lookup[5] = 2;
+          coord_lookup[6] = 1;
+          coord_lookup[7] = 3;
+          break;
+        case 6: coord_lookup[0] = 0;
+          coord_lookup[1] = 2;
+          coord_lookup[2] = 0;
+          coord_lookup[3] = 3;
+          coord_lookup[4] = 1;
+          coord_lookup[5] = 3;
+          coord_lookup[6] = 2;
+          coord_lookup[7] = 3;
+          break;
+        case 7: coord_lookup[0] = 0;
+          coord_lookup[1] = 2;
+          coord_lookup[2] = 1;
+          coord_lookup[3] = 2;
+          coord_lookup[4] = 1;
+          coord_lookup[5] = 3;
+          coord_lookup[6] = 2;
+          coord_lookup[7] = 3;
+          break;
       }
-      if (child_id == 2){
-        /* Xout_0 = Xin_01 */
-        for (idim = 0;idim < dim;idim++) {
-          coords_out[idim] = (coords_in[idim] + coords_in[3 + idim])/2;
-        }
-        /* Xout_1 = Xin_02 */
-        for (idim = 0;idim < dim;idim++) {
-          coords_out[3 + idim] = (coords_in[idim] + coords_in[6 + idim])/2;
-        }
-        /* Xout_2 = Xin_12 */
-        for (idim = 0;idim < dim;idim++) {
-          coords_out[6 + idim] = (coords_in[3 + idim] + coords_in[6 + idim])/2;
+
+      for (ivertex = 0;ivertex < num_vertices;ivertex++) {
+        for (idim = 0;idim < 3;idim++) {
+          coords_out[3 * ivertex + idim] =
+              (coords_in[3 * coord_lookup[2*ivertex] + idim] +
+              coords_in[3 * coord_lookup[2*ivertex + 1] + idim])/2;
         }
       }
       break;
