@@ -47,12 +47,12 @@
  *    x_0          x_1
  *
  */
-double *
+void
 t8_cmesh_refine_new_coord (const double *coords_in,
-                           t8_eclass_t eclass, int child_id)
+                           t8_eclass_t eclass, int child_id,
+                           double * coords_out)
 {
   int         num_vertices, ivertex, dim, idim;
-  double     *coords_out;
   int         coord_lookup[8];
 
   T8_ASSERT (coords_in != NULL);
@@ -61,7 +61,6 @@ t8_cmesh_refine_new_coord (const double *coords_in,
 
   num_vertices = t8_eclass_num_vertices[eclass];
   dim = t8_eclass_to_dimension[eclass];
-  coords_out = T8_ALLOC_ZERO (double, 3 * num_vertices);
   switch (eclass){
     case T8_ECLASS_QUAD:
     case T8_ECLASS_HEX:
@@ -146,7 +145,6 @@ t8_cmesh_refine_new_coord (const double *coords_in,
       break;
     default: SC_ABORT_NOT_REACHED ();
   }
-  return coords_out;
 }
 
 /* Set the number of attributes and the class for each child of a given tree in cmesh_from */
@@ -189,6 +187,7 @@ t8_cmesh_refine_tree (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   int8_t             *ttf, *nttf;
   size_t              iatt;
   int                 num_faces;
+  double             *coords;
   t8_attribute_info_struct_t *attr_info;
   t8_stash_attribute_struct_t attr_struct;
 
@@ -207,17 +206,18 @@ t8_cmesh_refine_tree (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
       attr_struct.package_id = attr_info->package_id;
       attr_struct.is_owned = 0; /* Make sure that the attribute data is copied
                                   from the old tree */
-      if (attr_struct.package_id == t8_get_package_id ()
-          && attr_struct.key == 0) {
-        attr_struct.attr_data =
-            t8_cmesh_refine_new_coord (attr_struct.attr_data, tree->eclass,
-                                       itree);
-        attr_struct.is_owned = 1;
-      }
       t8_cmesh_trees_add_attribute (cmesh->trees, 0, &attr_struct,
                                     firstnewtree + itree, iatt);
-      if (attr_struct.is_owned) {
-        T8_FREE (attr_struct.attr_data);
+      if (attr_struct.package_id == t8_get_package_id ()
+          && attr_struct.key == 0) {
+        /* The attribute was the tree's coordinates.
+         * In this case we compute the new coordinates */
+        coords = (double *) T8_TREE_ATTR (newtree, T8_TREE_ATTR_INFO (newtree,
+                                                                      iatt));
+        /* coords is the attribute of newtree */
+        t8_cmesh_refine_new_coord (attr_struct.attr_data, tree->eclass, itree,
+                                   coords);
+        attr_struct.is_owned = 1;
       }
     }
     /* Set all face_neighbors of the child tree */
