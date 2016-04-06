@@ -32,6 +32,83 @@
 #include "t8_cmesh_trees.h"
 #include "t8_cmesh_partition.h"
 
+
+t8_locidx_t
+t8_cmesh_refine_new_localid (t8_locidx_t parent_id, int child_id,
+                             int factor)
+{
+  return parent_id * factor + child_id;
+}
+
+/* TODO: comment */
+/* The eclass is the eclass of the parent tree */
+void
+t8_cmesh_refine_new_neighbors (t8_locidx_t parent_id,
+                               t8_eclass_t eclass, int child_id,
+                               t8_locidx_t * neighbor_out, int8_t *ttf_out,
+                               int factor)
+{
+  t8_locidx_t         iface, old_neigh;
+  int                 num_faces, F, dim, old_face, orient, new_neigh_childid;
+
+
+  dim = t8_eclass_to_dimension[eclass];
+  F = t8_eclass_max_num_faces[dim];
+  num_faces = t8_eclass_num_faces[eclass];
+  switch (eclass) {
+    case T8_ECLASS_TRIANGLE:
+      if (child_id == 3) {
+        /* The triangle in the middle is connect to child i on face i.
+         * The orientation of each edge is 1 */
+        for (iface = 0;iface < num_faces;iface++) {
+          /* Set the new local id of the face neighbors */
+          neighbor_out[iface] = t8_cmesh_refine_new_localid(parent_id, iface,
+                                                            factor);
+          /* Set the new orientation and face number */
+          ttf_out[iface] = 1 * F + iface;
+        }
+      }
+      else {
+        int neigh_childidsA[6] = {1,0,0,2,2,1};
+        int neigh_childidsB[6] = {2,2,1,1,0,0};
+        /* child_id is 0,1,2 */
+        T8_ASSERT (0 <= child_id && child_id <= 2);
+        /* Along face number child_id we are connected with the middle triangle
+         * which has child_id = 3 */
+        neighbor_out[child_id] = t8_cmesh_refine_new_localid (parent_id, 3,
+                                                              factor);
+        ttf_out[child_id] = 1 * F + child_id;
+        for (iface = 0;iface < num_faces;iface++) {
+          if (iface == child_id) {
+            /* We already set this side */
+            continue;
+          }
+          /* Get the old face neighbor, face number and orientation */
+          old_neigh = neighbor_out[iface];
+          old_face = ttf_out[iface] % F;
+          orient = ttf_out[iface] / F;
+          /* depending on the child_id and old_face we set the new neighbors
+           * child_id */
+          if (2 * child_id + old_face <= 2) {
+            new_neigh_childid = neigh_childidsA[orient * 3 + old_face];
+          }
+          else {
+            new_neigh_childid = neigh_childidsB[orient * 3 + old_face];
+          }
+          /* Compute the new neighbors local id from the old one and the new
+           * child id */
+          neighbor_out[iface] = t8_cmesh_refine_new_localid (old_neigh,
+                                                             new_neigh_childid,
+                                                             factor);
+          /* Set the new orientation and face number are the same as the old
+           * ones so we do not need to change ttf_out */
+        }
+      }
+      break;
+    default: SC_ABORTF ("Not implemented %s.\n", "yet");
+  }
+}
+
 /* Compute the coordinates of the i-th child of a tree of a given class
  * from the coordinates of that three.
  *
@@ -47,6 +124,7 @@
  *    x_0          x_1
  *
  */
+/* TODO: Implement for prisms, Pyramids, points and lines */
 void
 t8_cmesh_refine_new_coord (const double *coords_in,
                            t8_eclass_t eclass, int child_id,
@@ -174,9 +252,11 @@ t8_cmesh_refine_inittree (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   }
 }
 
-/* Set the attributes and face_neighbors for each child of a given tree in cmesh_from */
-/* Currently the attributes are just copies of the parent's attributes.
- * TODO: For coordinates compute the correct children's coordinates */
+/* Set the attributes and face_neighbors for each child of a given tree (treeid) in cmesh_from */
+/* The attributes are just copies of the parent's attributes,
+ * except for the coordinate attribute if it is set (t8_package_id and key=0).
+ * The new coordinates are then calculated.
+ */
 void
 t8_cmesh_refine_tree (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                       t8_locidx_t treeid, t8_locidx_t firstnewtree, int factor)
@@ -186,7 +266,6 @@ t8_cmesh_refine_tree (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   t8_locidx_t        *tree_neighbors, *ntree_neighbors;
   int8_t             *ttf, *nttf;
   size_t              iatt;
-  int                 num_faces;
   double             *coords;
   t8_attribute_info_struct_t *attr_info;
   t8_stash_attribute_struct_t attr_struct;
@@ -221,11 +300,8 @@ t8_cmesh_refine_tree (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
       }
     }
     /* Set all face_neighbors of the child tree */
-    num_faces = t8_eclass_num_faces[newtree->eclass];
-    /* TODO: The copied face neighbors are not the correct face neighbors.
-     *       Set the correct ones */
-    memcpy (ntree_neighbors, tree_neighbors, num_faces * sizeof (t8_locidx_t));
-    memcpy (nttf, ttf, num_faces * sizeof (int8_t));
+    t8_cmesh_refine_new_neighbors (treeid, tree->eclass, itree, ntree_neighbors,
+                                   nttf, factor);
   }
 }
 
