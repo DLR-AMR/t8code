@@ -682,7 +682,6 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
      * to the local ids of the new process */
     face_neighbor = (t8_locidx_t *) T8_TREE_FACE (tree_cpy);
     for (iface = 0; iface < t8_eclass_num_faces[tree_cpy->eclass]; iface++) {
-      t8_debugf ("Read face neighbor at %p\n", face_neighbor + iface);
       t8_cmesh_partition_send_change_neighbor (cmesh, (t8_cmesh_t) cmesh_from,
                                                face_neighbor + iface,
                                                to_proc);
