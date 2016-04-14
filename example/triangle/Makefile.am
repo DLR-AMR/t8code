@@ -1,5 +1,5 @@
 # This file is part of t8code
-# Non-recursive Makefile.am in example/basic
+# Non-recursive Makefile.am in example/triangle
 # Included from toplevel directory
 
 bin_PROGRAMS += \

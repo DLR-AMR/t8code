@@ -3,8 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element types in parallel.
 
-  Copyright (C) 2010 The University of Texas System
-  Written by Carsten Burstedde, Lucas C. Wilcox, and Tobin Isaac
+  Copyright (C) 2015 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -28,30 +27,58 @@
 #include <t8_cmesh_vtk.h>
 
 void
-t8_read_triangle_file_build_cmesh (const char * prefix, int do_dup)
+t8_read_triangle_file_build_cmesh (const char * prefix, int do_dup,
+                                   int do_partition)
 {
   t8_cmesh_t          cmesh;
+  char                fileprefix[BUFSIZ];
+  int                 mpirank, mpiret;
 
-  cmesh = t8_cmesh_from_triangle_file ((char *) prefix, 0, sc_MPI_COMM_WORLD,
-                                       do_dup);
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  SC_CHECK_MPI (mpiret);
+
+
+  cmesh = t8_cmesh_from_triangle_file ((char *) prefix, do_partition,
+                                       sc_MPI_COMM_WORLD, do_dup);
+
   if (cmesh != NULL) {
+    if (do_partition) {
+      t8_cmesh_t      cmesh_part;
+      t8_cmesh_ref (cmesh);
+      t8_cmesh_init (&cmesh_part);
+      t8_cmesh_set_partition_from (cmesh_part, cmesh,
+                                   1,NULL);
+      t8_cmesh_commit (cmesh_part);
+      snprintf (fileprefix, BUFSIZ, "%s_t8_triangle_partition_%04d", prefix,
+                mpirank);
+      if (!t8_cmesh_vtk_write_file (cmesh_part, fileprefix, 1.0)){
+        t8_debugf ("Wrote to file %s\n", fileprefix);
+      }
+      t8_cmesh_unref (&cmesh_part);
+    }
     t8_debugf ("Succesfully constructed cmesh from %s files.\n",
                            prefix);
-    t8_debugf ("cmesh has:\n\t%i corners\n\t%i triangles\n",
-               t8_cmesh_get_num_corners (cmesh),
-               t8_cmesh_get_num_trees (cmesh));
-    t8_cmesh_vtk_write_file (cmesh, "triangle_file", 1.);
+    t8_debugf ("cmesh has:\n\t%lli triangles\n",
+               (long long) t8_cmesh_get_num_trees (cmesh));
+    snprintf (fileprefix, BUFSIZ, "%s_t8_triangle_%04d", prefix, mpirank);
+    if (!t8_cmesh_vtk_write_file (cmesh, fileprefix, 1.)) {
+      t8_debugf ("Wrote to file %s\n", fileprefix);
+    }
+    else {
+      t8_debugf ("Error in writing cmesh vtk\n");
+    }
     t8_cmesh_unref (&cmesh);
   }
   else {
     t8_debugf ("An error occured while reading %s files.\n", prefix);
   }
   fflush (stdout);
+
 }
 
 int main (int argc, char * argv[])
 {
-  int                 mpiret, parsed;
+  int                 mpiret, parsed, partition;
   sc_options_t       *opt;
   const char         *prefix;
   char                usage[BUFSIZ];
@@ -74,6 +101,8 @@ int main (int argc, char * argv[])
   opt = sc_options_new (argv[0]);
   sc_options_add_string (opt, 'f', "prefix", &prefix, "", "The prefix of the"
                          "triangle files.");
+  sc_options_add_bool (opt, 'p', "Partition", &partition, 0, "If true"
+                         "the generated cmesh is partitioned.");
   parsed =
       sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (parsed < 0 || strcmp (prefix,"") == 0) {
@@ -81,8 +110,7 @@ int main (int argc, char * argv[])
     return 1;
   }
   else {
-    t8_read_triangle_file_build_cmesh (prefix, 0);
-    t8_read_triangle_file_build_cmesh (prefix, 1);
+    t8_read_triangle_file_build_cmesh (prefix, 0, partition);
     sc_options_print_summary (t8_get_package_id (), SC_LP_PRODUCTION, opt);
   }
 

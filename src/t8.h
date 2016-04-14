@@ -81,12 +81,25 @@ typedef p4est_gloidx_t t8_gloidx_t;
 typedef p4est_topidx_t t8_topidx_t;
 #define T8_MPI_TOPIDX P4EST_MPI_TOPIDX
 
+typedef enum {
+  T8_MPI_TAG_FIRST = SC_TAG_FIRST,
+  T8_MPI_PARTITION_CMESH = SC_TAG_LAST,
+  T8_MPI_TAG_LAST
+} t8_MPI_tag_t;
+
 /** Return a pointer to an array element indexed by a t8_topidx_t.
  * \param [in] index needs to be in [0]..[elem_count-1].
  * \return           A void * pointing to entry \a it in \a array.
  */
 void               *t8_sc_array_index_topidx (sc_array_t * array,
                                               t8_topidx_t it);
+
+/** Return a pointer to an array element indexed by a t8_locidx_t.
+ * \param [in] index needs to be in [0]..[elem_count-1].
+ * \return           A void * pointing to entry \a it in \a array.
+ */
+void               *t8_sc_array_index_locidx (sc_array_t * array,
+                                              t8_locidx_t it);
 
 /** Query the package identity as registered in libsc.
  * \return          This is -1 before \ref t8_init and the identifier after.
@@ -176,6 +189,23 @@ void                t8_debugf (const char *fmt, ...)
  *                           You can also choose from log levels SC_LP_*.
  */
 void                t8_init (int log_threshold);
+
+/** Compare function for t8_gloidx_t for usage with standard sorting algorithms.
+ *  \param [in] gidx1 A pointer to the first t8_gloidx_t.
+ *  \param [in] gidx2 A pointer to the second t8_gloidx_t.
+ *  \return -1 if *gidx1 < *gidx2, 0 if equal and +1 if gidx1 > gidx2
+ */
+int                 t8_compare_gloidx (const void *gidx1, const void *gidx2);
+
+/** Absolute value for glo_idx
+ * \param [in] x    An integer of type t8_gloidx_t
+ * \return          The absolute value of x.
+ */
+static inline       t8_gloidx_t
+t8_glo_abs (const t8_gloidx_t x)
+{
+  return x >= 0 ? x : -x;
+}
 
 /* call this at the end of a header file to match T8_EXTERN_C_BEGIN (). */
 T8_EXTERN_C_END ();
