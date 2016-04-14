@@ -33,6 +33,9 @@
 #include "t8_cmesh_partition.h"
 
 
+/* Given a parent's local tree/ghost id and a child_id,
+ * compute the new local id of the child.
+ * This works for local trees and ghosts. */
 t8_locidx_t
 t8_cmesh_refine_new_localid (t8_locidx_t parent_id, int child_id,
                              int factor)
