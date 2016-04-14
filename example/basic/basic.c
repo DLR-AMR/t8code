@@ -161,7 +161,7 @@ t8_basic_p8est (int do_dup, int x, int y, int z)
     p8est_connectivity_reorder (sc_MPI_COMM_WORLD,
                                 mpirank, conn,
                                 P8EST_CONNECT_FULL);
-    cmesh = t8_cmesh_new_from_p8est (conn, sc_MPI_COMM_WORLD, do_dup);
+    cmesh = t8_cmesh_new_from_p8est (conn, sc_MPI_COMM_WORLD, do_dup, 0);
     t8_cmesh_vtk_write_file (cmesh, "t8_p8est_brick_metis", 1.);
   }
 #endif
