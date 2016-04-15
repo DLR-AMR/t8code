@@ -456,7 +456,12 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
   SC_CHECK_MPI (mpiret);
 
   cmesh = NULL;
+#if 0
+  /* TODO: Use cmesh_bcast when scanning replicated mesh.
+   *       in that case only rank 0 will read the mesh */
   if (mpirank == 0 || partition) {
+#endif
+    {
     int                 retval, corner_offset = 0;
     char                current_file[BUFSIZ];
 
@@ -502,9 +507,12 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
   /* TODO: broadcasting NULL does not work. We need a way to tell the
    *       other processes if something went wrong. */
   /* This broadcasts the NULL pointer if anything went wrong */
-  if (!partition ) {
+#if 0
+    /* TODO: If not partitioned use bcast */
+  if (!partition) {
     cmesh = t8_cmesh_bcast (cmesh, 0, comm);
   }
+#endif
 
   if (cmesh != NULL) {
     if (partition) {
@@ -519,6 +527,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
 #ifdef T8_WITH_METIS
   if (cmesh != NULL && !partition) {
     t8_cmesh_reorder (cmesh, comm);
+    t8_debugf("Reordered mesh with METIS.\n");
   }
 #endif
   return cmesh;
