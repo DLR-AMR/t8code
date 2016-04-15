@@ -57,3 +57,11 @@ TODO für METIS:
  
 TODO für repliziertes cmesh partitionieren: sieh workflow
 
+TODO für cmesh_refine: 
+- setze face_neighbors in cmesh_refine_ghost richtig. Eigentlich 
+     ist das ein Aufruf von t8_cmesh_refine_new_neighbors, nur dass wir kein locidx sondern
+     ein gloidx array eingeben müssen. Funktion komplett zu kopieren wäre unelegant.
+- Berechne neue Nachbarn für Tets in t8_cmesh_refine_new_neighbors. Die Formeln
+  für die äußeren Nachbarn (Bey child id 0,1,2,3) habe ich schon auf Papier
+  aufgearbeitet und werde ein Foto hochladen.
+  
