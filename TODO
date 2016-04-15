@@ -1,0 +1,59 @@
+Für die Berechnungen auf Juqueen:
+Der Plan ist skalierungstest der cmesh_partition Funktion zu machen.
+Wir haben dafür das Bunny mesh in einer Version mit 495k Tets.
+Und das box mesh von p4est mit 1000 Tets.
+
+Wir können zwar im Moment ein Tetgen Gitter direkt beim Lesen partitionieren,
+laden dazu aber trotzdem das gesamte Gitter in den Stash, deshalb wollen wir 
+die cmesh_refine Funktion haben, die uns ein partitioniertes cmesh in_place 
+verfeinert.
+
+Wie sollen die Testcases aussehen?
+
+Mesh uniform partitioniert laden -> Mesh nach bestimmter Regel partitionieren (z.Bsp. halbe Prozessorlast auf den naechsten Nachbarn schicken)
+	|
+	v
+Ursprungsmesh in-place verfeinern -> Mesh nach Regel partitionieren
+	
+usw.
+
+Tetgen nummeriert die Bäume allerdings in einem wie zufällig aussehenden Muster,
+damit aber die Bilder die wir herauskriegen schon nach sinnvollen Partitionen
+aussehen, wollen wir das Grobgitter vorher mit (par)METIS umsortieren.
+
+Ideal wäre natürlich ein partitioniertes mesh mit parMETIS umzusortieren, ich halte es aber für nicht realistisch, dass wir das bis Ende des Monats haben.
+Ich hatte vor einem halben Jahr schon die Funktion cmesh_reorder geschrieben, welche ein
+Repliziertes cmesh mit METIS umsortiert. Allerdings hat sich seitdem viel getan und 
+die Funktion muss noch etwas angepasst werden, siehe TODO unten.
+
+Der Workflow wäre dann:
+
+cmesh repliziert aus Tetgen laden -> cmesh mit METIS umsortieren 
+a) -> cmesh partitionieren und wie oben Verfahren
+b) -> cmesh als Tetgen file ausschreiben, damit wir uns den METIS Schritt beim nächsten Mal sparen können.
+
+
+TODO für METIS:
+
+- Die Funktion cmesh_reorder sollte ein repliziertes cmesh mit METIS (nicht ParMETIS) so umsortieren, dass eine Partition mit mpisize vielen Prozessen optimal ist.
+- cmesh_reorder funktioniert schon insoweit, dass es jedem Baum eine neue tree-id zuweist und die neuen treeids in den Nachbarn setzt.
+- Aber es ordnet die Baeume im trees array nicht um:
+	Vorher:	Baum 0, Baum 1, Baum 2, ...
+	Nachher: Baum 4, Baum 3, Baum 7, ...
+  Stattdessen muesste auch nachher die Ordnung im trees array wieder aufsteigend sein. Baum 0, Baum 1, Baum 2,... Nur dass ebene die Baumdaten jetzt andere sind.
+  Einfache Loesung: Nachdem die Baueme umnummeriert wurden und die face connection umgesetzt, tausche jeden Baum an die richtige Position.
+  ! Dabei muessen auch die face_neighbor, tree_to_face und attribute Eintraege an die richtige Stelle getauscht werden. Die entsprechenden offsets werden dann von dem Baum uebernommen, mit dem wir getaucht haben. !
+  Die genaue Dokumentation dieser Eintraege steht in t8_cmesh_trees.h
+  Wichtige Funktion: 
+	t8_ctree_t          t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees,
+                                                 t8_locidx_t tree_id,
+                                                 t8_locidx_t ** face_neigh,
+                                                 int8_t ** ttf);
+  liefert zu einer lokalen Baumid sowohl den Baum, als auch sein face_neighbor und tree_to_face Array.
+  In t8_cmesh_trees.h sind auch Makros definert, die den Zugriff auf die Attribute eines Baumes ermoeglichen.
+  Achtung: Ein Baum "zeigt" (via offset) nicht direkt auf seine Attribute sondern
+	   auf ein Array von t8_attribute_info_struct_t, welche wiederum alles Noetigen 
+	   Infos zu den einzelnen Attributen haben und auf sie "zeigen".
+ 
+TODO für repliziertes cmesh partitionieren: sieh workflow
+
