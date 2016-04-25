@@ -201,6 +201,13 @@ void                t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees,
                                               t8_gloidx_t tree_id, int proc,
                                               t8_eclass_t eclass);
 
+/** Set all neighbor fields of all local trees and ghosts to boundary.
+ * \param [in,out]  cmesh, The associated cmesh.
+ * \param [in,out]  trees, The trees structure.
+ */
+void                t8_cmesh_trees_set_all_boundary (t8_cmesh_t cmesh,
+                                                     t8_cmesh_trees_t trees);
+
 /* TODO: This function return NULL if the tree is not present.
  *       So far no error checking is done here. */
 /** Return a pointer to a specific tree in a trees struct.

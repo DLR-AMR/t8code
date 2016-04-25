@@ -374,6 +374,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
         }
       }
       t8_cmesh_trees_finish_part (cmesh->trees, 0);
+      t8_cmesh_trees_set_all_boundary (cmesh, cmesh->trees);
 
       /* Go through all face_neighbour entries and parse every
        * important entry */
@@ -450,15 +451,16 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
           }
         }
         if (ttf2 != NULL) {
-          /* The sencond entry is either a tree or a ghost */
+          /* The second entry is either a tree or a ghost */
           ttf2[joinface->face2] = F * joinface->orientation + joinface->face1;
           if (tree2 != NULL) {
-            /* The second entry is a ghost */
+            /* The second entry is a tree */
             T8_ASSERT (tree1 != NULL || ghost1 != NULL);
             face_neigh2[joinface->face2] = tree1 ? id1 - cmesh->first_tree :
               temp_local_id + cmesh->num_local_trees;
           }
           else {
+            /* The second entry is a ghost */
             T8_ASSERT (ghost2 != NULL);
             face_neigh_g2[joinface->face2] = id1;
           }
