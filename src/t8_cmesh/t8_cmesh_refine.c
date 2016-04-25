@@ -93,7 +93,13 @@ t8_cmesh_refine_new_neighbors (t8_locidx_t parent_id,
          * The orientation of each edge is 1 */
         for (iface = 0;iface < num_faces;iface++) {
           /* Set the new local id of the face neighbors */
-          neighbor_out[iface] = t8_cmesh_refine_new_localid(parent_id, iface,
+          /* face    neighbor child_id      2 - face
+           *   0          2                   2
+           *   1          1                   1
+           *   2          0                   0
+           */
+          neighbor_out[iface] = t8_cmesh_refine_new_localid(parent_id,
+                                                            2 - iface,
                                                             factor);
           /* Set the new orientation and face number */
           ttf_out[iface] = 1 * F + iface;
