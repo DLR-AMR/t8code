@@ -62,6 +62,7 @@ t8_cmesh_refine_new_globalid (t8_gloidx_t parent_id, int child_id,
  * global one. The global id is only needed when parent is a ghost */
 /* neighbor_out are the face neighbors if parent is a local tree and
  * neighbor_out_ghost if parent is a ghost */
+/* Factor should be the same whether parent is a tree or a ghost */
 void
 t8_cmesh_refine_new_neighbors (t8_locidx_t parent_id,
                                t8_gloidx_t global_parent_id,
