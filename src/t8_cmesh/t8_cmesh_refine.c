@@ -361,7 +361,9 @@ t8_cmesh_refine_tree (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   }
 }
 
-/* Set the class for each child of a given ghost in cmesh_from */
+/* Set the class for each child of a given ghost in cmesh_from.
+ * The number of childs that stay a ghost on this process depends on the
+ * faces of the ghost connected to local trees. */
 void
 t8_cmesh_refine_initghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                            t8_locidx_t ghostid, t8_locidx_t firstnewghost,
@@ -379,6 +381,18 @@ t8_cmesh_refine_initghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     newghost = t8_cmesh_trees_get_ghost (cmesh->trees, firstnewghost + ighost);
     newghost->eclass = ghost->eclass; /* TODO: For pyramid support we will
                                         need to change the eclass here to tets for some ghosts*/
+    /*     ighost     child_id
+     * tri
+     * face 0
+     *        0           1
+     *        1           2
+     * face 1
+     *        0           0
+     *        1           2
+     * face 2
+     *        0           0
+     *        1           1
+     */
     newghost->treeid = ghost->treeid * factor + ighost;
   }
 }
@@ -393,7 +407,6 @@ t8_cmesh_refine_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   t8_gloidx_t        *ghost_neighbors, *nghost_neighbors;
   int8_t             *ttf, *nttf;
   t8_locidx_t         ighost;
-  int                 num_faces;
 
   (void) t8_cmesh_trees_get_ghost_ext (cmesh_from->trees, ghostid,
                                        &ghost_neighbors, &ttf);
@@ -402,13 +415,69 @@ t8_cmesh_refine_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                                              firstnewghost + ighost,
                                              &nghost_neighbors, &nttf);
     /* Set all face_neighbors of the child ghost */
-    num_faces = t8_eclass_num_faces[newghost->eclass];
-    /* TODO: The copied face neighbors are not the correct face neighbors.
-     *       Set the correct ones */
     t8_cmesh_refine_new_neighbors (ghostid,
                                    t8_cmesh_get_global_id (cmesh, ghostid),
                                    newghost->eclass, ighost,
                                    NULL, nghost_neighbors, nttf, factor);
+  }
+}
+
+t8_locidx_t
+t8_cmesh_refine_count_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from)
+{
+  t8_cghost_t         ghost;
+  t8_gloidx_t        *face_neighbor, neighbor;
+  t8_locidx_t         num_ghosts, ighost;
+  int                 iface, ichild, num_face_child;
+  /* For each eclass we give a lookup table of the child id's on a given face.
+   * For example for type T8_ECLASS_QUAD we have
+   *                    f_3
+   * 			 _ _
+   *              f_0  |2 3|  f_1
+   *                   |0 1|
+   * 			 - -
+   *                    f_2
+   * where the numbers inside refer to the chlid_ids of the quad.
+   * The lookup table then gives:  0 -> 0,2
+   *                               1 -> 1,3
+   *                               2 -> 0,1
+   *                               3 -> 2,3
+   * as can be see in the 2nd line of the array */
+  int8_t              child_id_by_class_and_face[T8_ECLASS_LAST][6][10] =
+  {
+    {{0},{1}}, /* LINE */
+    {{0,2},{1,3},{0,1},{2,3}}, /* QUAD */
+    {{1,2},{0,2},{0,1}}, /* TRIANGLE */
+    {{0,2,4,6},{1,3,5,7},{0,1,4,5},{2,3,6,7},{0,1,2,3},{4,5,6,7}}, /* HEX */
+    {{1,2,3,7},{0,2,3,6},{0,1,3,4},{0,1,2,5}}  /* TET */
+  };
+  int8_t              child_counted[10] = {0}, *temp_child_counted;
+
+  num_ghosts = 0;
+  for (ighost = 0; ighost < cmesh_from->num_ghosts;ighost++) {
+    ghost = t8_cmesh_trees_get_ghost_ext (cmesh_from->trees, ghost_id,
+                                          &face_neighbor, NULL);
+    T8_ASSERT (ghost->eclass != T8_ECLASS_PRISM &&
+        ghost->eclass != T8_ECLASS_PYRAMID &&
+        ghost->eclass != T8_ECLASS_VERTEX);
+    num_face_child = t8_eclass_num_face_children[ghost->eclass];
+    for (iface = 0;iface < t8_eclass_num_faces[ghost->eclass];iface++) {
+      neighbor = face_neighbor[iface];
+      if (neighbor >= cmesh_from->first_tree &&
+          neighbor < cmesh_from->first_tree + cmesh_from->num_local_trees) {
+        /* This neighbor of the ghost is a local tree */
+        for (ichild = 0;ichild < num_face_child; ichild++) {
+          /* For each child of this face check whether we counted the corresponding ghost */
+          temp_child_counted = & child_counted[
+              child_id_by_class_and_face[ghost->eclass][iface][ichild]];
+          if (*temp_child_counted != 1) {
+            /* If we did not count this ghost child then we do it now */
+            num_ghosts++;
+            *temp_child_counted = 1;
+          }
+        }
+      }
+    }
   }
 }
 
@@ -473,6 +542,11 @@ void            t8_cmesh_refine (t8_cmesh_t cmesh)
   for (itree = 0, firstnewtree = 0;itree < cmesh_from->num_local_trees;
        itree++, firstnewtree += factor) {
     t8_cmesh_refine_inittree (cmesh, cmesh_from, itree, firstnewtree, factor);
+  }
+  for (ighost = 0, firstnewghost = 0; ighost < cmesh_from->num_ghosts;
+       ighost++, firstnewghost += factor_ghosts) {
+    t8_cmesh_refine_initghost (cmesh, cmesh_from, ighost, firstnewghost,
+                               factor_ghosts);
   }
   /* Allocate face neihbors and attributes for new trees */
   t8_cmesh_trees_finish_part (cmesh->trees, 0);
