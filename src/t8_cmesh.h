@@ -110,6 +110,7 @@ void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
  *                             as reference for the partitioning.
  * \param [in] tree_offsets    If level < 0 then an array of global tree_id offsets
  *                             for each process can be specified here.
+ *                             TODO: document flag for shared trees.
  */
 void                t8_cmesh_set_partition_from (t8_cmesh_t cmesh,
                                                  const t8_cmesh_t cmesh_from,
@@ -225,7 +226,11 @@ t8_cmesh_t          t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root,
                                     sc_MPI_Comm comm);
 
 #ifdef T8_WITH_METIS
+/* TODO: document this. */
+/* TODO: think about making this a pre-commit set_reorder function. */
 void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
+
+/* TODO: think about a sensible interface for a parmetis reordering. */
 #endif
 
 /** After allocating and adding properties to a cmesh, finish its construction.
@@ -267,6 +272,7 @@ t8_gloidx_t         t8_cmesh_get_num_local_trees (t8_cmesh_t cmesh);
  * \param [in] cmesh       The cmesh to be considered.
  * \return                 The number of trees associated to \a cmesh.
  * \a cmesh must be committed before calling this function.
+ * TODO: This or the above function is redundant.
  */
 t8_locidx_t         t8_cmesh_get_local_num_trees (t8_cmesh_t cmesh);
 
@@ -295,6 +301,7 @@ t8_ctree_t          t8_cmesh_first_tree (t8_cmesh_t cmesh);
  *                              after \a tree. If no such tree exists, NULL is
  *                              returned.
  * * \a cmesh must be committed before calling this function.
+ * TODO: If we run over tree numbers only, don't use ctree_t in API if possible.
  */
 t8_ctree_t          t8_cmesh_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree);
 
@@ -303,6 +310,7 @@ t8_ctree_t          t8_cmesh_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree);
  * \param [in]    cmesh         The cmesh to be considered.
  * \param [in]    tree_id       The local id of the tree whose eclass will be returned.
  * \return                      The eclass of the given tree.
+ * TODO: Call tree ids ltree_id or gtree_id etc. instead of tree_id.
  * \a cmesh must be committed before calling this function.
  */
 t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
@@ -344,7 +352,9 @@ void               *t8_cmesh_get_attribute (t8_cmesh_t cmesh,
                                             int package_id, int key,
                                             t8_locidx_t tree_id);
 
-/* TODO: remove get_ when there is no risk of confusion? Convention? */
+/* TODO: remove get_ when there is no risk of confusion? Convention?
+ *       Update: use get throughout for access functions that do not change the object.
+ * */
 
 /** Calculate the section of a uniform forest for the current rank.
  * \param [in]    cmesh         The cmesh to be considered.
