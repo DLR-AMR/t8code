@@ -28,6 +28,7 @@
 /* TODO: could this file be part of cmesh_commit.c? */
 
 #include <t8_cmesh.h>
+#include "t8_cmesh_refine.h"
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_trees.h"
 #include "t8_cmesh_partition.h"
@@ -321,7 +322,7 @@ t8_cmesh_refine_tree (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   t8_locidx_t         itree;
   t8_locidx_t        *tree_neighbors, *ntree_neighbors;
   int8_t             *ttf, *nttf;
-  size_t              iatt;
+  int                 iatt;
   double             *coords;
   t8_attribute_info_struct_t *attr_info;
   t8_stash_attribute_struct_t attr_struct;
@@ -332,7 +333,7 @@ t8_cmesh_refine_tree (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     newtree = t8_cmesh_trees_get_tree_ext (cmesh->trees, firstnewtree + itree,
                                            &ntree_neighbors, &nttf);
     /* Set all attributes of the child tree */
-    for (iatt = 0;iatt < tree->num_attributes;iatt++) {
+    for (iatt = 0; iatt < tree->num_attributes;iatt++) {
       attr_info = T8_TREE_ATTR_INFO (tree, iatt);
       attr_struct.attr_data = T8_TREE_ATTR (tree, attr_info);
       attr_struct.attr_size = attr_info->attribute_size;
@@ -350,8 +351,8 @@ t8_cmesh_refine_tree (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
         coords = (double *) T8_TREE_ATTR (newtree, T8_TREE_ATTR_INFO (newtree,
                                                                       iatt));
         /* coords is the attribute of newtree */
-        t8_cmesh_refine_new_coord (attr_struct.attr_data, tree->eclass, itree,
-                                   coords);
+        t8_cmesh_refine_new_coord ((double *) attr_struct.attr_data,
+                                   tree->eclass, itree, coords);
         attr_struct.is_owned = 1;
       }
     }
@@ -455,7 +456,7 @@ t8_cmesh_refine_count_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from)
 
   num_ghosts = 0;
   for (ighost = 0; ighost < cmesh_from->num_ghosts;ighost++) {
-    ghost = t8_cmesh_trees_get_ghost_ext (cmesh_from->trees, ghost_id,
+    ghost = t8_cmesh_trees_get_ghost_ext (cmesh_from->trees, ighost,
                                           &face_neighbor, NULL);
     T8_ASSERT (ghost->eclass != T8_ECLASS_PRISM &&
         ghost->eclass != T8_ECLASS_PYRAMID &&
@@ -479,6 +480,8 @@ t8_cmesh_refine_count_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from)
       }
     }
   }
+
+  return -1;
 }
 
 void            t8_cmesh_refine (t8_cmesh_t cmesh)
