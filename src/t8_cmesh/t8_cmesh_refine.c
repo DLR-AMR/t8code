@@ -136,26 +136,40 @@ t8_cmesh_refine_new_neighbors (t8_locidx_t parent_id,
           }
           old_face = ttf_out[iface] % F;
           orient = ttf_out[iface] / F;
-          /* depending on the child_id and old_face we set the new neighbors
-           * child_id */
-          if (2 * child_id + old_face <= 2) {
-            new_neigh_childid = neigh_childidsA[orient * 3 + old_face];
-          }
-          else {
-            new_neigh_childid = neigh_childidsB[orient * 3 + old_face];
-          }
-          if (!compute_ghost) {
-            /* Compute the new neighbors local id from the old one and the new
-             * child id */
-            neighbor_out[iface] = t8_cmesh_refine_new_localid (old_neigh,
-                                                               new_neigh_childid,
+          if (!compute_ghost && old_neigh == parent_id) {
+            /* We are local tree and this side is a boundary,
+             * so we set our own local id as face neighbor */
+            neighbor_out[iface] = t8_cmesh_refine_new_localid (parent_id,
+                                                               child_id,
                                                                factor);
           }
+          else if (compute_ghost && old_neigh_ghost == global_parent_id) {
+            /* We are local ghost and this side is a boundary,
+             * so we set our own glocal id as face neighbor */
+            t8_cmesh_refine_new_globalid (global_parent_id, child_id, factor);
+          }
           else {
-            neighbor_out_ghost[iface] =
-                t8_cmesh_refine_new_globalid (old_neigh_ghost,
-                                              new_neigh_childid,
-                                              factor);
+            /* depending on the child_id and old_face we set the new neighbors
+             * child_id */
+            if (2 * child_id + old_face <= 2) {
+              new_neigh_childid = neigh_childidsA[orient * 3 + old_face];
+            }
+            else {
+              new_neigh_childid = neigh_childidsB[orient * 3 + old_face];
+            }
+            if (!compute_ghost) {
+              /* Compute the new neighbors local id from the old one and the new
+               * child id */
+              neighbor_out[iface] = t8_cmesh_refine_new_localid (old_neigh,
+                                                                 new_neigh_childid,
+                                                                 factor);
+            }
+            else {
+              neighbor_out_ghost[iface] =
+                  t8_cmesh_refine_new_globalid (old_neigh_ghost,
+                                                new_neigh_childid,
+                                                factor);
+            }
           }
           /* The new orientation and face number are the same as the old
            * ones so we do not need to change ttf_out */
@@ -480,8 +494,7 @@ t8_cmesh_refine_count_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from)
       }
     }
   }
-
-  return -1;
+  return num_ghosts;
 }
 
 void            t8_cmesh_refine (t8_cmesh_t cmesh)
