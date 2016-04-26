@@ -200,6 +200,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       /* Finish memory allocation of tree/ghost/face/attribute array
        * using the info calculated above */
       t8_cmesh_trees_finish_part (cmesh->trees, 0);
+      cmesh->num_trees = cmesh->num_local_trees = num_trees;
+      t8_cmesh_trees_set_all_boundary (cmesh, cmesh->trees);
 
       /* Add attributes */
       /* TODO: currently the attributes array still has to be sorted,
@@ -220,7 +222,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
         face_neigh[joinface->face1] = (t8_locidx_t) joinface->id2;
         ttf[joinface->face1] = joinface->orientation * F +
             joinface->face2;
-        face_neigh[joinface->face2] = (t8_locidx_t) joinface->id1;
+        face_neigh2[joinface->face2] = (t8_locidx_t) joinface->id1;
         ttf[joinface->face2] = joinface->orientation * F + joinface->face1;
       }
     }
