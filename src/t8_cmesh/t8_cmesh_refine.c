@@ -39,9 +39,10 @@
  * that are ghosts in the refined cmesh.
  * Thus, for each coarse ghost we get an array of maximal number of children entries.
  */
- typedef struct {
-  int8_t child_id;
-  t8_locidx_t local_id;
+typedef struct
+{
+  int8_t              child_id;
+  t8_locidx_t         local_id;
 } t8_child_id_to_local_id;
 
 /* When setting the new ghost neighbors of a refined tree we have to look up the new local_ids
@@ -52,12 +53,12 @@ static t8_locidx_t
 t8_cmesh_refine_childid_to_localid (t8_child_id_to_local_id ** idarray,
                                     t8_locidx_t lparent_id, int8_t child_id)
 {
-  int          ichild;
-  int8_t       child_id_found = -2;
+  int                 ichild;
+  int8_t              child_id_found = -2;
 
   for (ichild = 0; child_id_found != child_id; ichild++) {
     child_id_found = idarray[lparent_id][ichild].child_id;
-    T8_ASSERT (child_id_found != -1); /* -1 marks the end of the array */
+    T8_ASSERT (child_id_found != -1);   /* -1 marks the end of the array */
   }
   T8_ASSERT (child_id_found == child_id);
   return idarray[lparent_id][ichild - 1].local_id;
@@ -82,18 +83,18 @@ t8_cmesh_refine_init_idarray (t8_cmesh_t cmesh_from)
  * This function is meant to be called for each ghost parent in ascending order of
  * their local ids.
  */
-static t8_locidx_t
+static              t8_locidx_t
 t8_cmesh_refine_fill_idarray (t8_child_id_to_local_id ** idarray,
-                              t8_locidx_t gparent_id, int8_t child_counted[10],
-                              int num_children,
+                              t8_locidx_t gparent_id,
+                              int8_t child_counted[10], int num_children,
                               t8_locidx_t next_local_id)
 {
-  int       ichild, child_index;
-  int       num_alloc;
+  int                 ichild, child_index;
+  int                 num_alloc;
 
   num_alloc = num_children + 1;
   idarray[gparent_id] = T8_ALLOC (t8_child_id_to_local_id, num_alloc);
-  for (ichild = 0, child_index = 0;ichild < num_children;ichild++) {
+  for (ichild = 0, child_index = 0; ichild < num_children; ichild++) {
     /* Look for the next nonzero entry in child_counted */
     while (child_counted[child_index] == 0) {
       child_index++;
@@ -114,9 +115,9 @@ static void
 t8_cmesh_refine_destroy_idarray (t8_child_id_to_local_id ** idarray,
                                  t8_locidx_t num_parent_ghosts)
 {
-  t8_locidx_t     lghost;
+  t8_locidx_t         lghost;
 
-  for (lghost = 0;lghost < num_parent_ghosts;lghost++) {
+  for (lghost = 0; lghost < num_parent_ghosts; lghost++) {
     T8_FREE (idarray[lghost]);
   }
   T8_FREE (idarray);
@@ -128,20 +129,20 @@ t8_cmesh_refine_destroy_idarray (t8_child_id_to_local_id ** idarray,
 /* TODO: This will not work anymore when pyramids are used together with other types */
 static t8_locidx_t
 t8_cmesh_refine_new_neighborid (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
-                             int child_id,
-                             t8_child_id_to_local_id ** id_array,
-                             int factor)
+                                int child_id,
+                                t8_child_id_to_local_id ** id_array,
+                                int factor)
 {
   if (parent_id >= cmesh_from->num_local_trees) {
     /* The parent is a ghost */
     return t8_cmesh_refine_childid_to_localid (id_array, parent_id
                                                - cmesh_from->num_local_trees,
                                                child_id)
-        + cmesh_from->num_local_trees * factor; /* This is the new number of local trees */
+      + cmesh_from->num_local_trees * factor;   /* This is the new number of local trees */
   }
   else {
-   /* The parent is a tree */
-   return parent_id * factor + child_id;
+    /* The parent is a tree */
+    return parent_id * factor + child_id;
   }
 }
 
@@ -149,12 +150,10 @@ t8_cmesh_refine_new_neighborid (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
  * compute the new global id of the child. */
 /* TODO: This will not work anymore when pyramids are used together with other types */
 static t8_gloidx_t
-t8_cmesh_refine_new_globalid (t8_gloidx_t parent_id, int child_id,
-                              int factor)
+t8_cmesh_refine_new_globalid (t8_gloidx_t parent_id, int child_id, int factor)
 {
   return parent_id * factor + child_id;
 }
-
 
 /* TODO: comment */
 /* The eclass is the eclass of the parent tree */
@@ -174,9 +173,9 @@ t8_cmesh_refine_new_neighbors (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
                                t8_gloidx_t * neighbor_out_ghost,
                                int8_t * ttf_out, int factor)
 {
-  t8_locidx_t         iface, old_neigh, * neighbor_old;
-  t8_gloidx_t         old_neigh_ghost, * gneighbor_old;
-  int8_t              *ttf_old;
+  t8_locidx_t         iface, old_neigh, *neighbor_old;
+  t8_gloidx_t         old_neigh_ghost, *gneighbor_old;
+  int8_t             *ttf_old;
   int                 num_faces, F, dim, old_face, orient, new_neigh_childid;
   int                 compute_ghost;
 
@@ -212,10 +211,10 @@ t8_cmesh_refine_new_neighbors (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
          *   2          0                   0
          */
         neighbor_out[iface] = t8_cmesh_refine_new_neighborid (cmesh_from,
-                                                           parent_id,
-                                                           2 - iface,
-                                                           id_array,
-                                                           factor);
+                                                              parent_id,
+                                                              2 - iface,
+                                                              id_array,
+                                                              factor);
         /* Set the new orientation and face number */
         ttf_out[iface] = 1 * F + iface;
       }
@@ -236,9 +235,9 @@ t8_cmesh_refine_new_neighbors (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
         /* Along face number child_id we are connected with the middle triangle
          * which has child_id = 3 */
         neighbor_out[child_id] = t8_cmesh_refine_new_neighborid (cmesh_from,
-                                                              parent_id, 3,
-                                                              id_array,
-                                                              factor);
+                                                                 parent_id, 3,
+                                                                 id_array,
+                                                                 factor);
       }
       else {
         neighbor_out_ghost[child_id] =
@@ -263,16 +262,16 @@ t8_cmesh_refine_new_neighbors (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
           /* We are local tree and this side is a boundary,
            * so we set our own local id as face neighbor */
           neighbor_out[iface] = t8_cmesh_refine_new_neighborid (cmesh_from,
-                                                             parent_id,
-                                                             child_id,
-                                                             id_array,
-                                                             factor);
+                                                                parent_id,
+                                                                child_id,
+                                                                id_array,
+                                                                factor);
         }
         else if (compute_ghost && old_neigh_ghost == global_parent_id) {
           /* We are local ghost and this side is a boundary,
            * so we set our own glocal id as face neighbor */
           neighbor_out_ghost[iface] =
-              t8_cmesh_refine_new_globalid (global_parent_id, child_id, factor);
+            t8_cmesh_refine_new_globalid (global_parent_id, child_id, factor);
         }
         else {
           /* depending on the child_id and old_face we set the new neighbors
@@ -287,10 +286,10 @@ t8_cmesh_refine_new_neighbors (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
             /* Compute the new neighbors local id from the old one and the new
              * child id */
             neighbor_out[iface] = t8_cmesh_refine_new_neighborid (cmesh_from,
-                                                               old_neigh,
-                                                               new_neigh_childid,
-                                                               id_array,
-                                                               factor);
+                                                                  old_neigh,
+                                                                  new_neigh_childid,
+                                                                  id_array,
+                                                                  factor);
           }
           else {
             neighbor_out_ghost[iface] =
@@ -529,8 +528,7 @@ t8_cmesh_refine_initghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   child_id = idarray[ghostid][0].child_id;
   for (ighost = 0; child_id != -1; ighost++) {
     lghost_id = idarray[ghostid][ighost].local_id;
-    newghost =
-      t8_cmesh_trees_get_ghost (cmesh->trees, lghost_id);
+    newghost = t8_cmesh_trees_get_ghost (cmesh->trees, lghost_id);
     newghost->eclass = ghost->eclass;   /* TODO: For pyramid support we will
                                            need to change the eclass here to tets for some ghosts */
     /*     ighost     child_id
@@ -602,7 +600,7 @@ t8_cmesh_refine_count_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
    *                               3 -> 2,3
    * as can be see in the 2nd line of the array */
   int8_t              child_id_by_class_and_face[T8_ECLASS_LAST][6][10] = {
-    {{}}, /* VERTEX */
+    {{}},                       /* VERTEX */
     {{0}, {1}},                 /* LINE */
     {{0, 2}, {1, 3}, {0, 1}, {2, 3}},   /* QUAD */
     {{1, 2}, {0, 2}, {0, 1}},   /* TRIANGLE */
@@ -687,7 +685,8 @@ t8_cmesh_refine (t8_cmesh_t cmesh)
 
   /* Count the number of new ghosts and temporarily store their local ids */
   idarray = t8_cmesh_refine_init_idarray (cmesh_from);
-  cmesh->num_ghosts = t8_cmesh_refine_count_ghost (cmesh, cmesh_from, idarray);
+  cmesh->num_ghosts =
+    t8_cmesh_refine_count_ghost (cmesh, cmesh_from, idarray);
   /* Check for locidx overflow */
   T8_ASSERT ((t8_gloidx_t) cmesh_from->num_local_trees * factor ==
              cmesh->num_local_trees);
@@ -705,8 +704,8 @@ t8_cmesh_refine (t8_cmesh_t cmesh)
        itree++, firstnewtree += factor) {
     t8_cmesh_refine_inittree (cmesh, cmesh_from, itree, firstnewtree, factor);
   }
-  for (ighost = 0; ighost < cmesh_from->num_ghosts;ighost++) {
-    t8_cmesh_refine_initghost (cmesh, cmesh_from,idarray, ighost, factor);
+  for (ighost = 0; ighost < cmesh_from->num_ghosts; ighost++) {
+    t8_cmesh_refine_initghost (cmesh, cmesh_from, idarray, ighost, factor);
   }
   /* Allocate face neihbors and attributes for new trees */
   t8_cmesh_trees_finish_part (cmesh->trees, 0);
@@ -716,7 +715,7 @@ t8_cmesh_refine (t8_cmesh_t cmesh)
     t8_cmesh_refine_tree (cmesh, cmesh_from, idarray, itree, firstnewtree,
                           factor);
   }
-  for (ighost = 0;ighost < cmesh_from->num_ghosts;ighost++) {
+  for (ighost = 0; ighost < cmesh_from->num_ghosts; ighost++) {
     t8_cmesh_refine_ghost (cmesh, cmesh_from, idarray, ighost, factor);
   }
   t8_cmesh_refine_destroy_idarray (idarray, cmesh_from->num_ghosts);
