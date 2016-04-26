@@ -23,7 +23,6 @@
 #include <t8_cmesh_vtk.h>
 #include "t8_cmesh_types.h"
 
-
 /* Return the global number of vertices in a cmesh.
  * \param [in] cmesh       The cmesh to be considered.
  * \return                 The number of vertices associated to \a cmesh.
