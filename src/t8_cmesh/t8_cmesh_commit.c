@@ -223,7 +223,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
         ttf[joinface->face1] = joinface->orientation * F +
             joinface->face2;
         face_neigh2[joinface->face2] = (t8_locidx_t) joinface->id1;
-        ttf[joinface->face2] = joinface->orientation * F + joinface->face1;
+        ttf2[joinface->face2] = joinface->orientation * F + joinface->face1;
       }
     }
   }
