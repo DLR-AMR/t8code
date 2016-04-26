@@ -38,7 +38,7 @@
  * compute the new local id of the child.
  * This works for local trees and ghosts. */
 /* TODO: This will not work anymore when pyramids are used together with other types */
-t8_locidx_t
+static t8_locidx_t
 t8_cmesh_refine_new_localid (t8_locidx_t parent_id, int child_id,
                              int factor)
 {
@@ -48,7 +48,7 @@ t8_cmesh_refine_new_localid (t8_locidx_t parent_id, int child_id,
 /* Given a parent's global tree/ghost id and a child_id,
  * compute the new global id of the child. */
 /* TODO: This will not work anymore when pyramids are used together with other types */
-t8_locidx_t
+static t8_locidx_t
 t8_cmesh_refine_new_globalid (t8_gloidx_t parent_id, int child_id,
                               int factor)
 {
@@ -63,7 +63,7 @@ t8_cmesh_refine_new_globalid (t8_gloidx_t parent_id, int child_id,
 /* neighbor_out are the face neighbors if parent is a local tree and
  * neighbor_out_ghost if parent is a ghost */
 /* Factor should be the same whether parent is a tree or a ghost */
-void
+static void
 t8_cmesh_refine_new_neighbors (t8_locidx_t parent_id,
                                t8_gloidx_t global_parent_id,
                                t8_eclass_t eclass, int child_id,
@@ -197,7 +197,7 @@ t8_cmesh_refine_new_neighbors (t8_locidx_t parent_id,
  *
  */
 /* TODO: Implement for prisms, Pyramids, points and lines */
-void
+static void
 t8_cmesh_refine_new_coord (const double *coords_in,
                            t8_eclass_t eclass, int child_id,
                            double * coords_out)
@@ -298,7 +298,7 @@ t8_cmesh_refine_new_coord (const double *coords_in,
 }
 
 /* Set the number of attributes and the class for each child of a given tree in cmesh_from */
-void
+static void
 t8_cmesh_refine_inittree (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                           t8_locidx_t treeid, t8_locidx_t firstnewtree,
                           int factor)
@@ -329,7 +329,7 @@ t8_cmesh_refine_inittree (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
  * except for the coordinate attribute if it is set (t8_package_id and key=0).
  * The new coordinates are then calculated.
  */
-void
+static void
 t8_cmesh_refine_tree (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                       t8_locidx_t treeid, t8_locidx_t firstnewtree, int factor)
 {
@@ -380,7 +380,7 @@ t8_cmesh_refine_tree (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 /* Set the class for each child of a given ghost in cmesh_from.
  * The number of childs that stay a ghost on this process depends on the
  * faces of the ghost connected to local trees. */
-void
+static void
 t8_cmesh_refine_initghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                            t8_locidx_t ghostid, t8_locidx_t firstnewghost,
                            int factor)
@@ -414,7 +414,7 @@ t8_cmesh_refine_initghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 }
 
 
-void
+static void
 t8_cmesh_refine_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                        t8_locidx_t ghostid, t8_locidx_t firstnewghost,
                        int factor)
@@ -438,7 +438,7 @@ t8_cmesh_refine_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   }
 }
 
-t8_locidx_t
+static t8_locidx_t
 t8_cmesh_refine_count_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from)
 {
   t8_cghost_t         ghost;

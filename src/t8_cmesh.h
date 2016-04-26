@@ -242,7 +242,6 @@ void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 void                t8_cmesh_commit (t8_cmesh_t cmesh);
 
 /** Return the MPI communicator of a cmesh.
- * TODO: Move all _get_ functions after _commit.
  * \param [in] cmesh       The cmesh whose communicator will be returned.
  * \param [out] do_dup     This variable is filled with the do_dup entry of \a cmesh.
  * \return                 The MPI communicator associated to \a cmesh.
@@ -263,18 +262,7 @@ t8_gloidx_t         t8_cmesh_get_num_trees (t8_cmesh_t cmesh);
  * \return                 The number of local trees of the cmesh.
  * \a cmesh must be committed before calling this function.
  */
-/* TODO: We return gloidx_t although the number of local trees is stored as locidx_t */
-t8_gloidx_t         t8_cmesh_get_num_local_trees (t8_cmesh_t cmesh);
-
-/** Return the processor local number of trees in a cmesh.
- * If the cmesh is not partitioned this is the same as
- * the global number of trees.
- * \param [in] cmesh       The cmesh to be considered.
- * \return                 The number of trees associated to \a cmesh.
- * \a cmesh must be committed before calling this function.
- * TODO: This or the above function is redundant.
- */
-t8_locidx_t         t8_cmesh_get_local_num_trees (t8_cmesh_t cmesh);
+t8_locidx_t         t8_cmesh_get_num_local_trees (t8_cmesh_t cmesh);
 
 /** Return the global index of the first local tree of a cmesh.
  * If the cmesh is not partitioned this is allways 0.
@@ -282,8 +270,10 @@ t8_locidx_t         t8_cmesh_get_local_num_trees (t8_cmesh_t cmesh);
  * \return                 The global id of the first local tree in cmesh.
  * \a cmesh must be committed before calling this function.
  */
-t8_gloidx_t         t8_cmesh_first_treeid (t8_cmesh_t cmesh);
+t8_gloidx_t         t8_cmesh_get_first_treeid (t8_cmesh_t cmesh);
 
+/* TODO: Replace this iterator with a new one that does not need the
+ *        treeid to be part of the ctree struct */
 /* TODO: should this and the next function be part of the interface? */
 /** Return a pointer to the first local tree in a cmesh.
  * \param [in]     cmesh        The cmesh to be queried.
@@ -291,7 +281,7 @@ t8_gloidx_t         t8_cmesh_first_treeid (t8_cmesh_t cmesh);
  *                              If \a cmesh has no local trees, NULL is returned.
  * \a cmesh must be committed before calling this function.
  */
-t8_ctree_t          t8_cmesh_first_tree (t8_cmesh_t cmesh);
+t8_ctree_t          t8_cmesh_get_first_tree (t8_cmesh_t cmesh);
 
 /* TODO: should this function behave like first_tree if tree argument is NULL? */
 /** Given a local tree in a cmesh return a pointer to the next local tree.
@@ -303,7 +293,7 @@ t8_ctree_t          t8_cmesh_first_tree (t8_cmesh_t cmesh);
  * * \a cmesh must be committed before calling this function.
  * TODO: If we run over tree numbers only, don't use ctree_t in API if possible.
  */
-t8_ctree_t          t8_cmesh_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree);
+t8_ctree_t          t8_cmesh_get_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree);
 
 /** Return the eclass of a given local tree.
  * TODO: Should we refer to indices or consequently use ctree_t?

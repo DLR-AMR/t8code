@@ -100,8 +100,8 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
              T8_VTK_FLOAT_NAME, T8_VTK_FORMAT_STRING);
 
 #ifdef T8_VTK_ASCII
-    for (tree = t8_cmesh_first_tree (cmesh); tree != NULL;
-         tree = t8_cmesh_next_tree (cmesh, tree)) {
+    for (tree = t8_cmesh_get_first_tree (cmesh); tree != NULL;
+         tree = t8_cmesh_get_next_tree (cmesh, tree)) {
       vertices = ((double *) t8_cmesh_get_attribute (cmesh,
                                                      t8_get_package_id (), 0,
                                                      tree->treeid));
@@ -130,8 +130,8 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
     fprintf (vtufile, "        <DataArray type=\"%s\" Name=\"connectivity\""
              " format=\"%s\">\n", T8_VTK_TOPIDX, T8_VTK_FORMAT_STRING);
 #ifdef T8_VTK_ASCII
-    for (tree = t8_cmesh_first_tree (cmesh), count_vertices = 0; tree != NULL;
-         tree = t8_cmesh_next_tree (cmesh, tree)) {
+    for (tree = t8_cmesh_get_first_tree (cmesh), count_vertices = 0;
+         tree != NULL; tree = t8_cmesh_get_next_tree (cmesh, tree)) {
       fprintf (vtufile, "         ");
       for (k = 0; k < t8_eclass_num_vertices[tree->eclass]; ++k,
            count_vertices++) {
@@ -149,8 +149,8 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
              " format=\"%s\">\n", T8_VTK_TOPIDX, T8_VTK_FORMAT_STRING);
 #ifdef T8_VTK_ASCII
     fprintf (vtufile, "         ");
-    for (tree = t8_cmesh_first_tree (cmesh), sk = 1, offset = 0; tree != NULL;
-         tree = t8_cmesh_next_tree (cmesh, tree), ++sk) {
+    for (tree = t8_cmesh_get_first_tree (cmesh), sk = 1, offset = 0;
+         tree != NULL; tree = t8_cmesh_get_next_tree (cmesh, tree), ++sk) {
       offset += t8_eclass_num_vertices[tree->eclass];
       fprintf (vtufile, " %lld", offset);
       if (!(sk % 8))
@@ -166,8 +166,8 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
              " format=\"%s\">\n", T8_VTK_FORMAT_STRING);
 #ifdef T8_VTK_ASCII
     fprintf (vtufile, "         ");
-    for (tree = t8_cmesh_first_tree (cmesh), sk = 1; tree != NULL;
-         tree = t8_cmesh_next_tree (cmesh, tree), ++sk) {
+    for (tree = t8_cmesh_get_first_tree (cmesh), sk = 1; tree != NULL;
+         tree = t8_cmesh_get_next_tree (cmesh, tree), ++sk) {
       fprintf (vtufile, " %d", t8_eclass_vtk_type[tree->eclass]);
       if (!(sk % 20) && tree->treeid != (cmesh->num_local_trees - 1))
         fprintf (vtufile, "\n         ");
@@ -184,8 +184,8 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
              " format=\"%s\">\n", T8_VTK_GLOIDX, T8_VTK_FORMAT_STRING);
 #ifdef T8_VTK_ASCII
     fprintf (vtufile, "         ");
-    for (tree = t8_cmesh_first_tree (cmesh), sk = 1, offset = 0; tree != NULL;
-         tree = t8_cmesh_next_tree (cmesh, tree), ++sk) {
+    for (tree = t8_cmesh_get_first_tree (cmesh), sk = 1, offset = 0; tree != NULL;
+         tree = t8_cmesh_get_next_tree (cmesh, tree), ++sk) {
       /* Since tree_id is actually 64 Bit but we store it as 32, we have to check
        * that we do not get into conversion errors */
       /* TODO: We switched to 32 Bit because Paraview could not handle 64 well enough.
@@ -206,8 +206,8 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
              " format=\"%s\">\n", "Int32", T8_VTK_FORMAT_STRING);
 #ifdef T8_VTK_ASCII
     fprintf (vtufile, "         ");
-    for (tree = t8_cmesh_first_tree (cmesh), sk = 1, offset = 0; tree != NULL;
-         tree = t8_cmesh_next_tree (cmesh, tree), ++sk) {
+    for (tree = t8_cmesh_get_first_tree (cmesh), sk = 1, offset = 0;
+         tree != NULL; tree = t8_cmesh_get_next_tree (cmesh, tree), ++sk) {
       fprintf (vtufile, " %i", cmesh->mpirank);
       if (!(sk % 8))
         fprintf (vtufile, "\n         ");

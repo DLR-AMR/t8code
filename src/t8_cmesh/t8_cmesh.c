@@ -193,7 +193,7 @@ t8_cmesh_set_refine_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
 }
 
 t8_gloidx_t
-t8_cmesh_first_treeid (t8_cmesh_t cmesh)
+t8_cmesh_get_first_treeid (t8_cmesh_t cmesh)
 {
   return cmesh->first_tree;
 }
@@ -215,7 +215,7 @@ t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_locidx_t tree_id)
  * Returns NULL if there are no local trees. */
 /* TODO: hide */
 t8_ctree_t
-t8_cmesh_first_tree (t8_cmesh_t cmesh)
+t8_cmesh_get_first_tree (t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
@@ -229,7 +229,7 @@ t8_cmesh_first_tree (t8_cmesh_t cmesh)
  * If the given tree is the last local tree, NULL is returned */
 /* TODO: hide */
 t8_ctree_t
-t8_cmesh_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree)
+t8_cmesh_get_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (tree != NULL);
@@ -513,8 +513,8 @@ t8_cmesh_bcast_attributes (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
 
-  for (tree = t8_cmesh_first_tree (cmesh_in); tree != NULL;
-       tree = t8_cmesh_next_tree (cmesh_in, tree)) {
+  for (tree = t8_cmesh_get_first_tree (cmesh_in); tree != NULL;
+       tree = t8_cmesh_get_next_tree (cmesh_in, tree)) {
     if (mpirank == root && tree->attribute != NULL) {
       has_attr = 1;
     }
@@ -751,28 +751,13 @@ t8_cmesh_get_num_trees (t8_cmesh_t cmesh)
   return cmesh->num_trees;
 }
 
-t8_gloidx_t
+t8_locidx_t
 t8_cmesh_get_num_local_trees (t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
 
   return cmesh->num_local_trees;
-}
-
-t8_locidx_t
-t8_cmesh_get_local_num_trees (t8_cmesh_t cmesh)
-{
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
-
-  if (cmesh->set_partitioned) {
-    return cmesh->num_local_trees;
-  }
-  else {
-    T8_ASSERT ((t8_locidx_t) cmesh->num_trees == cmesh->num_trees);
-    return (t8_locidx_t) cmesh->num_trees;
-  }
 }
 
 t8_eclass_t
