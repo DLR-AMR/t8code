@@ -40,7 +40,6 @@ T8_EXTERN_C_BEGIN ();
  *  This function is usually called within \ref t8_cmesh_commit */
 void                t8_cmesh_partition (t8_cmesh_t cmesh);
 
-
 /** Create a valid partition table that concentrates all trees at a given
  *  process.
  * \param[in]        proc    The processor that should get all trees.
@@ -50,7 +49,7 @@ void                t8_cmesh_partition (t8_cmesh_t cmesh);
  *                           and communicator \a comm, where each tree is on process \a proc.
  */
 t8_gloidx_t        *t8_cmesh_offset_concentrate (int proc, sc_MPI_Comm comm,
-                                                     t8_gloidx_t num_trees);
+                                                 t8_gloidx_t num_trees);
 
 /** Create a random partition table.
  * The use of this function is only reasonable for debugging.

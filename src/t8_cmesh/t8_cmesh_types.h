@@ -71,10 +71,10 @@ typedef struct t8_cmesh
   int                 committed;
   int                 dimension; /**< The dimension of the cmesh. It is set when the first tree is inserted. */
   int                 do_dup;   /**< Communicator shall be duped. */
-  int                 set_partitioned; /**< If nonzero the cmesh is partitioned.
+  int                 set_partition; /**< If nonzero the cmesh is partitioned.
                                             If zero each process has the whole cmesh. */
   int                 face_knowledge;  /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partioned;
-                            see \ref t8_cmesh_set_partitioned.
+                            see \ref t8_cmesh_set_partition.
 */
   int8_t              set_level;       /**< Non-negative if the cmesh should be partition from an already existing cmesh
                                          with an assumes \a level uniform mesh underneath.  TODO: fix sentence */
@@ -190,7 +190,8 @@ typedef struct t8_cmesh_trees
   sc_array_t         *from_proc;        /* array of t8_part_tree, one for each process */
   int                *tree_to_proc;     /* for each tree its process */
   int                *ghost_to_proc;    /* for each ghost its process */
-} t8_cmesh_trees_struct_t;
+}
+t8_cmesh_trees_struct_t;
 
 /* TODO: document */
 typedef struct t8_part_tree

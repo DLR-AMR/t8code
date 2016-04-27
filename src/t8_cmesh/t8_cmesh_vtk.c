@@ -51,7 +51,7 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
-  //T8_ASSERT (!cmesh->set_partitioned);  /* not implemented for parallel yet */
+  //T8_ASSERT (!cmesh->set_partition);  /* not implemented for parallel yet */
   T8_ASSERT (fileprefix != NULL);
   T8_ASSERT (scale == 1.);      /* scale = 1 not implemented yet */
 

@@ -73,13 +73,13 @@ void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
 
 /** Declare if the cmesh is understood as a partitioned cmesh or a
  * replicated cmesh. Replicated (each processor owns the whole mesh) is
- * the default and in this case \ref t8_cmesh_set_partitioned only sets the
+ * the default and in this case \ref t8_cmesh_set_partition only sets the
  * number of global trees and the values \a first_local_tree and
  * \a set_face_knowledge are ignored.
  * This call is only valid when the cmesh is not yet committed via a call
  * to \see t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     set_partitioned A nonzero value specifies that \a cmesh
+ * \param [in]     set_partition A nonzero value specifies that \a cmesh
  *                              is interpreted as a partitioned mesh.
  * \parma [in]     set_face_knowledge   Several values are possible that define
  *                              how much information is required on face connections,
@@ -93,23 +93,23 @@ void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
  *                              Consistency of this requirement is checked on
  *                              \ref t8_cmesh_commit.
  * \param [in]     first_local_tree The global index of the first tree on this process.
- *                                  If \a set_partitioned is zero, must be 0.
+ *                                  If \a set_partition is zero, must be 0.
  * \param [in]     last_local_tree  The global index of the last tree on this process.
- *                                  If \a set_partitioned is zero, must be
+ *                                  If \a set_partition is zero, must be
  *                                  \a num_global_trees - 1.
  *                                  If this process should be empty then \a last_local_tree
  *                                  must be strictly smaller than \a first_local_tree.
  */
-void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
-                                              int set_partitioned,
-                                              int set_face_knowledge,
-                                              t8_gloidx_t first_local_tree,
-                                              t8_gloidx_t last_local_tree);
+void                t8_cmesh_set_partition (t8_cmesh_t cmesh,
+                                            int set_partition,
+                                            int set_face_knowledge,
+                                            t8_gloidx_t first_local_tree,
+                                            t8_gloidx_t last_local_tree);
 
 /* TODO: Currently cmesh_from needs to be partitioned as well.
  *       Change partition function such that it also accepts replicated cmesh_from */
 /** Set a cmesh to be partitioned from a second cmesh.
- *  This function can be used instead of \ref t8_cmesh_set_partitioned.
+ *  This function can be used instead of \ref t8_cmesh_set_partition.
  *  There a two modes: Either a level is specified, than the new cmesh is partitioned
  *  according to an assumed uniform refinement of the old cmesh,
  *  or an array of tree offsets for each process is specified.
@@ -132,8 +132,9 @@ void                t8_cmesh_set_partition_from (t8_cmesh_t cmesh,
  * thus split each tree into x^level subtrees
  * TODO: implement */
 /* TODO: if level = 0  then copy */
-void                t8_cmesh_set_refine_from (t8_cmesh_t cmesh, const t8_cmesh_t
-                                              cmesh_from, int level);
+void                t8_cmesh_set_refine_from (t8_cmesh_t cmesh,
+                                              const t8_cmesh_t cmesh_from,
+                                              int level);
 
 /** Set the class of a tree in the cmesh.
  * It is not allowed to call this function after \ref t8_cmesh_commit.
@@ -291,7 +292,8 @@ t8_ctree_t          t8_cmesh_get_first_tree (t8_cmesh_t cmesh);
  * * \a cmesh must be committed before calling this function.
  * TODO: If we run over tree numbers only, don't use ctree_t in API if possible.
  */
-t8_ctree_t          t8_cmesh_get_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree);
+t8_ctree_t          t8_cmesh_get_next_tree (t8_cmesh_t cmesh,
+                                            t8_ctree_t tree);
 
 /** Return the eclass of a given local tree.
  * TODO: Should we refer to indices or consequently use ctree_t?

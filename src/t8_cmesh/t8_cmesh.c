@@ -51,7 +51,7 @@ t8_cmesh_ghost_hash_fn (const void *ghost, const void *data)
   T8_ASSERT (data != NULL);
   cmesh = (t8_cmesh_t) data;
   T8_ASSERT (cmesh->num_ghosts > 0);
-  T8_ASSERT (cmesh->set_partitioned);
+  T8_ASSERT (cmesh->set_partition);
   T8_ASSERT (cmesh->num_local_trees > 0);
 
   G = (t8_cghost_t) ghost;
@@ -124,10 +124,10 @@ t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_gloidx_t num_trees)
 
   /* If the cmesh is entered as a partitioned cmesh,
    * this function sets the local number of trees;
-   * the global number then must have been set in cmesh_set_partitioned.
+   * the global number then must have been set in cmesh_set_partition.
    * Otherwise the global number of trees is set here.
    */
-  if (cmesh->set_partitioned) {
+  if (cmesh->set_partition) {
     /* num_trees == 0 is allowed */
     T8_ASSERT (cmesh->num_trees > 0);
     T8_ASSERT (cmesh->num_local_trees == 0);
@@ -144,20 +144,20 @@ t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_gloidx_t num_trees)
 }
 
 void
-t8_cmesh_set_partitioned (t8_cmesh_t cmesh, int set_partitioned,
+t8_cmesh_set_partition (t8_cmesh_t cmesh, int set_partition,
                           int set_face_knowledge,
                           t8_gloidx_t first_local_tree,
                           t8_gloidx_t last_local_tree)
 {
   T8_ASSERT (!cmesh->committed);
-  T8_ASSERT (cmesh->set_partitioned == 0);
+  T8_ASSERT (cmesh->set_partition == 0);
   //T8_ASSERT (cmesh->num_trees == 0);
 // T8_ASSERT (cmesh->num_local_trees == 0);
   T8_ASSERT (cmesh->first_tree == 0);
 
   /* set cmesh->set_partition to 0 or 1 */
-  cmesh->set_partitioned = set_partitioned != 0;
-  if (set_partitioned == 0) {
+  cmesh->set_partition = set_partition != 0;
+  if (set_partition == 0) {
     /* The mesh is replicated, and this function just serves
      * as set_num_trees.
      * first_local_tree and num_ghosts are ignored. */
@@ -165,7 +165,7 @@ t8_cmesh_set_partitioned (t8_cmesh_t cmesh, int set_partitioned,
     return;
   }
   else {
-    T8_ASSERT (set_partitioned != 0);
+    T8_ASSERT (set_partition != 0);
     cmesh->first_tree = first_local_tree;
     cmesh->num_local_trees = last_local_tree - first_local_tree + 1;
     /* Since num_local_trees is a locidx we have to check whether we did create an
@@ -187,10 +187,10 @@ t8_cmesh_set_partition_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
   T8_ASSERT (cmesh_from != NULL);
   T8_ASSERT (!cmesh->committed);
   T8_ASSERT (cmesh_from->committed);
-  T8_ASSERT (cmesh_from->set_partitioned);
+  T8_ASSERT (cmesh_from->set_partition);
 
   cmesh->set_from = cmesh_from;
-  cmesh->set_partitioned = 1;
+  cmesh->set_partition = 1;
   cmesh->face_knowledge = cmesh_from->face_knowledge;
   if (level >= 0) {
     cmesh->set_level = level;
@@ -213,7 +213,7 @@ t8_cmesh_set_refine_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
   }
   cmesh->set_from = cmesh_from;
   cmesh->set_level = level;
-  cmesh->set_partitioned = cmesh_from->set_partitioned;
+  cmesh->set_partition = cmesh_from->set_partition;
   cmesh->from_method = T8_CMESH_FROM_REFINE;
 }
 
@@ -294,7 +294,7 @@ static int
 t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_locidx_t tree_id)
 {
   T8_ASSERT (cmesh->committed);
-  if (cmesh->set_partitioned) {
+  if (cmesh->set_partition) {
     return cmesh->first_tree <= tree_id
       && tree_id < cmesh->first_tree + cmesh->num_local_trees;
   }
@@ -312,7 +312,7 @@ t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_locidx_t tree_id)
 static              t8_topidx_t
 t8_cmesh_tree_index (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 {
-  return cmesh->set_partitioned ? tree_id - cmesh->first_tree : tree_id;
+  return cmesh->set_partition ? tree_id - cmesh->first_tree : tree_id;
 }
 #endif
 
@@ -380,7 +380,7 @@ t8_cmesh_set_ghost (t8_cmesh_t cmesh, t8_topidx_t ghost_id,
   int                 i;
   void               *check_ret;
 
-  T8_ASSERT (cmesh->set_partitioned);
+  T8_ASSERT (cmesh->set_partition);
   T8_ASSERT (0 <= ghost_id && ghost_id < cmesh->num_ghosts);
   /* If we insert the very first tree, set the dimension of the cmesh
    * to this tree's dimension. Otherwise check whether the dimension
@@ -443,7 +443,7 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
   /* check entries that are numbers */
   is_equal = cmesh_a->committed != cmesh_b->committed || cmesh_a->dimension !=
     cmesh_b->dimension || cmesh_a->do_dup != cmesh_b->do_dup ||
-    cmesh_a->set_partitioned != cmesh_b->set_partitioned ||
+    cmesh_a->set_partition != cmesh_b->set_partition ||
     cmesh_a->mpirank != cmesh_b->mpirank ||
     cmesh_a->mpisize != cmesh_b->mpisize ||
     cmesh_a->num_trees != cmesh_b->num_trees ||
@@ -574,7 +574,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   T8_ASSERT (mpirank == root || cmesh_in == NULL);
   T8_ASSERT (mpirank != root || cmesh_in != NULL);
   T8_ASSERT (mpirank != root || cmesh_in->mpicomm == comm);
-  T8_ASSERT (mpirank != root || cmesh_in->set_partitioned == 0);
+  T8_ASSERT (mpirank != root || cmesh_in->set_partition == 0);
   /* The cmesh on the calling process must not be owned by something
    * else. */
   /* TODO: would it be useful to allow bcast even if the cmesh is referenced?
@@ -643,7 +643,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   /* cmesh must be commited and not partitioned */
   T8_ASSERT (cmesh->committed);
-  T8_ASSERT (!cmesh->set_partitioned);
+  T8_ASSERT (!cmesh->set_partition);
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   idx_mpisize = mpisize;
@@ -1030,7 +1030,7 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
     num_trees = _T8_CMESH_P48_CONN (num_trees);
     first_tree = (mpirank * num_trees) / mpisize;
     last_tree = ((mpirank + 1) * num_trees) / mpisize - 1;
-    t8_cmesh_set_partitioned (cmesh, 1, 3, first_tree, last_tree);
+    t8_cmesh_set_partition (cmesh, 1, 3, first_tree, last_tree);
   }
   t8_cmesh_commit (cmesh);
   return cmesh;
@@ -1474,7 +1474,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
     num_trees = num_trees_for_hypercube[eclass];
     first_tree = (mpirank * num_trees) / mpisize;
     last_tree = ((mpirank + 1) * num_trees) / mpisize - 1;
-    t8_cmesh_set_partitioned (cmesh, 1, 3, first_tree, last_tree);
+    t8_cmesh_set_partition (cmesh, 1, 3, first_tree, last_tree);
   }
 
   t8_cmesh_commit (cmesh);
