@@ -117,6 +117,33 @@ t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup)
   return cmesh->mpicomm;
 }
 
+static void
+t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_gloidx_t num_trees)
+{
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (!cmesh->committed);
+
+  /* If the cmesh is entered as a partitioned cmesh,
+   * this function sets the local number of trees;
+   * the global number then must have been set in cmesh_set_partitioned.
+   * Otherwise the global number of trees is set here.
+   */
+  if (cmesh->set_partitioned) {
+    /* num_trees == 0 is allowed */
+    T8_ASSERT (cmesh->num_trees > 0);
+    T8_ASSERT (cmesh->num_local_trees == 0);
+    cmesh->num_local_trees = num_trees;
+  }
+  else {
+    /* num_trees == 0 is allowed */
+    T8_ASSERT (cmesh->num_trees == 0);
+    cmesh->num_trees = cmesh->num_local_trees = num_trees;
+  }
+  /* As soon as we know the number of trees, we allocate
+   * the ctree array.
+   */
+}
+
 void
 t8_cmesh_set_partitioned (t8_cmesh_t cmesh, int set_partitioned,
                           int set_face_knowledge,
@@ -259,33 +286,6 @@ t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key,
   T8_ASSERT (cmesh->committed);
   return t8_cmesh_trees_get_attribute (cmesh->trees, tree_id, package_id,
                                        key);
-}
-
-void
-t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_gloidx_t num_trees)
-{
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (!cmesh->committed);
-
-  /* If the cmesh is entered as a partitioned cmesh,
-   * this function sets the local number of trees;
-   * the global number then must have been set in cmesh_set_partitioned.
-   * Otherwise the global number of trees is set here.
-   */
-  if (cmesh->set_partitioned) {
-    /* num_trees == 0 is allowed */
-    T8_ASSERT (cmesh->num_trees > 0);
-    T8_ASSERT (cmesh->num_local_trees == 0);
-    cmesh->num_local_trees = num_trees;
-  }
-  else {
-    /* num_trees == 0 is allowed */
-    T8_ASSERT (cmesh->num_trees == 0);
-    cmesh->num_trees = cmesh->num_local_trees = num_trees;
-  }
-  /* As soon as we know the number of trees, we allocate
-   * the ctree array.
-   */
 }
 
 #if 0

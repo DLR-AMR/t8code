@@ -61,11 +61,10 @@ void                t8_cmesh_init (t8_cmesh_t * pcmesh);
 void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
                                           sc_MPI_Comm mpicomm, int do_dup);
 
-/* TODO: think about how set_num_trees and this function play together */
 /** Declare if the cmesh is understood as a partitioned cmesh or a
  * replicated cmesh. Replicated (each processor owns the whole mesh) is
- * the default and in this case \ref t8_cmesh_set_partitioned is the same as
- * \ref t8_cmesh_set_num_trees and the values \a first_local_tree and
+ * the default and in this case \ref t8_cmesh_set_partitioned only sets the
+ * number of global trees and the values \a first_local_tree and
  * \a set_face_knowledge are ignored.
  * This call is only valid when the cmesh is not yet committed via a call
  * to \see t8_cmesh_commit.
@@ -125,19 +124,6 @@ void                t8_cmesh_set_partition_from (t8_cmesh_t cmesh,
 /* TODO: if level = 0  then copy */
 void                t8_cmesh_set_refine_from (t8_cmesh_t cmesh, const t8_cmesh_t
                                               cmesh_from, int level);
-
-/* TODO: This is actually not part of the interface?
- *       At least it is only used if the cmesh is partitioned.
- */
-/** Set the total number of trees for a coarse mesh.
- * It is not allowed to call this function after \ref t8_cmesh_commit.
- * TODO: Clarify that this holds for all _set_ functions.
- * TODO: Explain what _commit does in general as a convention.
- * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     num_trees    The total number of trees in this coarse mesh.
- */
-void                t8_cmesh_set_num_trees (t8_cmesh_t cmesh,
-                                            t8_gloidx_t num_trees);
 
 /** Set the class of a tree in the cmesh.
  * It is not allowed to call this function after \ref t8_cmesh_commit.

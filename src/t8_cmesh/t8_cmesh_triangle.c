@@ -228,7 +228,7 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
   /* This step is actually only necessary if the cmesh will be bcasted and
    * partitioned. Then we use the num_elems variable to compute the partition table
    * on the remote processes */
-  t8_cmesh_set_num_trees (cmesh, num_elems);
+  cmesh->num_trees = num_elems;
   /* For each triangle read the corner indices */
   for (tit = 0; tit < num_elems; tit++) {
     retval = t8_cmesh_triangle_read_next_line (&line, &linen, fp);
