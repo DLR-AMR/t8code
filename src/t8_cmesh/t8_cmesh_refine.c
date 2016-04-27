@@ -619,6 +619,7 @@ t8_cmesh_refine_count_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                ghost->eclass != T8_ECLASS_VERTEX);
     num_face_child = t8_eclass_num_face_children[ghost->eclass];
     num_local_children = 0;
+    memset (child_counted, 0, 10 * sizeof (int8_t));
     for (iface = 0; iface < t8_eclass_num_faces[ghost->eclass]; iface++) {
       neighbor = face_neighbor[iface];
       if (neighbor >= cmesh_from->first_tree &&
