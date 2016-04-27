@@ -43,6 +43,9 @@
 #include <p8est_connectivity.h>
 
 /* TODO: do set_mpicomm and figure out dup logic */
+/* TODO: make it legal to call cmesh_set functions multiple times,
+ *       just overwrite the previous setting if no inconsistency can occur.
+ */
 
 typedef struct t8_cmesh *t8_cmesh_t;
 typedef struct t8_ctree *t8_ctree_t;
@@ -58,7 +61,28 @@ T8_EXTERN_C_BEGIN ();
  */
 void                t8_cmesh_init (t8_cmesh_t * pcmesh);
 
+/** Check whether a cmesh is not NULL, initialized and not committed.
+ * In addition, it asserts that the cmesh is consistent as much as possible.
+ * \param [in] cmesh            This cmesh is examined.  May be NULL.
+ * \return                      True if cmesh is not NULL,
+ *                              \ref t8_cmesh_init has been called on it,
+ *                              but not \ref t8_cmesh_commit.
+ *                              False otherwise.
+ */
+int                 t8_cmesh_is_initialized (t8_cmesh_t cmesh);
+
+/** Check whether a cmesh is not NULL, initialized and committed.
+ * In addition, it asserts that the cmesh is consistent as much as possible.
+ * \param [in] cmesh            This cmesh is examined.  May be NULL.
+ * \return                      True if cmesh is not NULL and
+ *                              \ref t8_cmesh_init has been called on it
+ *                              as well as \ref t8_cmesh_commit.
+ *                              False otherwise.
+ */
+int                 t8_cmesh_is_committed (t8_cmesh_t cmesh);
+
 /** Set MPI communicator to use in commiting a new cmesh.
+ * TODO: remove the internal storage of mpicomm asap.
  * This call is only valid when the cmesh is not yet committed via a call
  * to \see t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh whose communicator will be set.
@@ -71,13 +95,27 @@ void                t8_cmesh_init (t8_cmesh_t * pcmesh);
 void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
                                           sc_MPI_Comm mpicomm, int do_dup);
 
+/** A coarse mesh can be constructed by deriving it from an existing one.
+ * The derivation may optionally be combined with a repartition or uniform
+ * refinement of each tree.
+ * This function sets the cmesh to be derived from.
+ * This function overrides a previously set cmesh to be derived from.
+ * \param [in,out] cmesh        Must be initialized, but not committed.
+ * \param [in,out] set_from     Reference counter on this cmesh is bumped.
+ *                              It will be unbumped by \ref t8_cmesh_commit,
+ *                              after which \a from is no longer remembered.
+ *                              Other than that the from object is not changed.
+ */
+void                t8_cmesh_set_derive (t8_cmesh_t cmesh,
+                                         t8_cmesh_t set_from);
+
 /** Declare if the cmesh is understood as a partitioned cmesh or a
  * replicated cmesh. Replicated (each processor owns the whole mesh) is
  * the default and in this case \ref t8_cmesh_set_partition only sets the
  * number of global trees and the values \a first_local_tree and
  * \a set_face_knowledge are ignored.
  * This call is only valid when the cmesh is not yet committed via a call
- * to \see t8_cmesh_commit.
+ * to \ref t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     set_partition A nonzero value specifies that \a cmesh
  *                              is interpreted as a partitioned mesh.
@@ -92,6 +130,8 @@ void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
  *                              3: Expect face connection of local and ghost trees.
  *                              Consistency of this requirement is checked on
  *                              \ref t8_cmesh_commit.
+ *                              TODO: if -1 is given, do NOT change it?
+ *                                    This may be a general convention?
  * \param [in]     first_local_tree The global index of the first tree on this process.
  *                                  If \a set_partition is zero, must be 0.
  * \param [in]     last_local_tree  The global index of the last tree on this process.
@@ -99,13 +139,20 @@ void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
  *                                  \a num_global_trees - 1.
  *                                  If this process should be empty then \a last_local_tree
  *                                  must be strictly smaller than \a first_local_tree.
+ * \param [in] tree_offsets    An array of global tree_id offsets
+ *                             for each process can be specified here.
+ *                             This array may be NULL for automatic computation.
+ *                             TODO: document flag for shared trees.
  */
 void                t8_cmesh_set_partition (t8_cmesh_t cmesh,
                                             int set_partition,
                                             int set_face_knowledge,
                                             t8_gloidx_t first_local_tree,
-                                            t8_gloidx_t last_local_tree);
+                                            t8_gloidx_t last_local_tree,
+                                            t8_gloidx_t * tree_offsets);
 
+/* TODO: This function is no longer needed.  Scavenge documentation if helpful. */
+#if 0
 /* TODO: Currently cmesh_from needs to be partitioned as well.
  *       Change partition function such that it also accepts replicated cmesh_from */
 /** Set a cmesh to be partitioned from a second cmesh.
@@ -123,18 +170,15 @@ void                t8_cmesh_set_partition (t8_cmesh_t cmesh,
  *                             for each process can be specified here.
  *                             TODO: document flag for shared trees.
  */
-void                t8_cmesh_set_partition_from (t8_cmesh_t cmesh,
-                                                 const t8_cmesh_t cmesh_from,
-                                                 int level,
-                                                 t8_gloidx_t * tree_offsets);
+void                t8_cmesh_set_partition_given (t8_cmesh_t cmesh,
+                                                  t8_gloidx_t * tree_offsets);
+#endif
 
-/* refine a given cmesh to a given level
- * thus split each tree into x^level subtrees
+/** Refine the cmesh to a given level.
+ * Thus split each tree into x^level subtrees
  * TODO: implement */
-/* TODO: if level = 0  then copy */
-void                t8_cmesh_set_refine_from (t8_cmesh_t cmesh,
-                                              const t8_cmesh_t cmesh_from,
-                                              int level);
+/* TODO: if level = 0  then no refinement is performed */
+void                t8_cmesh_set_refine (t8_cmesh_t cmesh, int level);
 
 /** Set the class of a tree in the cmesh.
  * It is not allowed to call this function after \ref t8_cmesh_commit.
@@ -175,6 +219,7 @@ void                t8_cmesh_set_attribute (t8_cmesh_t cmesh,
                                             int data_persists);
 
 /** Insert a face-connection between two trees in a cmesh.
+ * TODO: Make it clear by a common convention whether tree ids are local or global.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     tree1        The tree id of the first of the two trees.
  * \param [in]     tree2        The tree id of the second of the two trees.
@@ -373,6 +418,8 @@ void                t8_cmesh_ref (t8_cmesh_t cmesh);
 
 /** Decrease the reference counter of a cmesh.
  * If the counter reaches zero, this cmesh is destroyed.
+ * See also \ref t8_cmesh_destroy, which is to be preferred when it is
+ * known that the last reference to a cmesh is deleted.
  * \param [in,out] pcmesh       On input, the cmesh pointed to must exist
  *                              with positive reference count.  It may be in
  *                              any state.  If the reference count reaches
@@ -382,6 +429,15 @@ void                t8_cmesh_ref (t8_cmesh_t cmesh);
  *                              the cmesh is not modified in other ways.
  */
 void                t8_cmesh_unref (t8_cmesh_t * pcmesh);
+
+/** Verify that a coarse mesh has only one reference left and destroy it.
+ * This function is preferred over \ref t8_cmesh_unref when it is known
+ * that the last reference is to be deleted.
+ * \param [in,out]  This cmesh must have a reference count of one.
+ *                  It can be in any state (committed or not).
+ *                  Then it effectively calls \ref t8_cmesh_unref.
+ */
+void                t8_cmesh_destroy (t8_cmesh_t * pcmesh);
 
 /* Functions for construcing complete and committed cmeshes */
 

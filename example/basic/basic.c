@@ -249,7 +249,10 @@ t8_basic_partition (t8_eclass_t eclass, int set_level)
     offsets[iproc] = offsets[2];
   }
   //SC_SHMEM_FREE (offsets, sc_MPI_COMM_WORLD);
-  t8_cmesh_set_partition_from (cmesh_part, cmesh, -1, offsets);
+  t8_cmesh_set_derive (cmesh_part, cmesh);
+  /* TODO: indicate/document how first and last local tree can be left open,
+   *       same idea for face_knowledge */
+  t8_cmesh_set_partition (cmesh_part, 1, 3, -1, -1, offsets);
   t8_cmesh_commit (cmesh_part);
   snprintf (file, BUFSIZ, "basic_partition_%04d", mpirank);
   t8_cmesh_vtk_write_file (cmesh_part, file, 1.0);

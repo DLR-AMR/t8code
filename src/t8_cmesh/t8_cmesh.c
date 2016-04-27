@@ -34,6 +34,42 @@
  * TODO: document this file
  */
 
+int
+t8_cmesh_is_initialized (t8_cmesh_t cmesh)
+{
+  if (!(cmesh != NULL && t8_refcount_is_active (&cmesh->rc) &&
+        !cmesh->committed)) {
+    return 0;
+  }
+
+#ifdef T8_ENABLE_DEBUG
+  /* TODO: check conditions that must always hold after init and before commit */
+  if (0) {
+    return 0;
+  }
+#endif
+
+  return 1;
+}
+
+int
+t8_cmesh_is_committed (t8_cmesh_t cmesh)
+{
+  if (!(cmesh != NULL && t8_refcount_is_active (&cmesh->rc) &&
+        cmesh->committed)) {
+    return 0;
+  }
+
+#ifdef T8_ENABLE_DEBUG
+  /* TODO: check more conditions that must always hold after commit */
+  if ((cmesh->mpicomm != sc_MPI_COMM_NULL) || 0) {
+    return 0;
+  }
+#endif
+
+  return 1;
+}
+
 /* *INDENT-OFF* */
 static t8_ctree_t
 t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_locidx_t tree_id);
@@ -82,22 +118,21 @@ t8_cmesh_init (t8_cmesh_t * pcmesh)
   t8_refcount_init (&cmesh->rc);
 
   /* sensible (hard error) defaults */
-  cmesh->set_level = -1;
-  cmesh->dimension = -1;
+  cmesh->set_level = 0;         /*< sensible default TODO document */
+  cmesh->dimension = -1;        /*< ok; force user to select dimension */
   cmesh->mpicomm = sc_MPI_COMM_WORLD;
   cmesh->mpirank = -1;
   cmesh->mpisize = -1;
+  cmesh->face_knowledge = 3;    /*< sensible default TODO document */
   t8_stash_init (&cmesh->stash);
+
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 }
 
 void
 t8_cmesh_set_mpicomm (t8_cmesh_t cmesh, sc_MPI_Comm mpicomm, int do_dup)
 {
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->rc.refcount > 0);
-  T8_ASSERT (!cmesh->committed);
-  T8_ASSERT (cmesh->mpicomm == sc_MPI_COMM_WORLD);
-
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (mpicomm != sc_MPI_COMM_NULL);
 
   cmesh->mpicomm = mpicomm;
@@ -107,25 +142,30 @@ t8_cmesh_set_mpicomm (t8_cmesh_t cmesh, sc_MPI_Comm mpicomm, int do_dup)
 sc_MPI_Comm
 t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup)
 {
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
-  T8_ASSERT (cmesh->rc.refcount > 0);
-  T8_ASSERT (cmesh->mpicomm != sc_MPI_COMM_NULL);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
   *do_dup = cmesh->do_dup;
   return cmesh->mpicomm;
 }
 
+/* TODO: rename num_trees to global_num_trees or num_gtrees etc.
+ *       to always distinguish between local and global.
+ *       Do this everywhere in the code.
+ */
 static void
 t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_gloidx_t num_trees)
 {
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
   /* If the cmesh is entered as a partitioned cmesh,
    * this function sets the local number of trees;
+   * (TODO ^^^ would require locidx -- better provide two arguments)
    * the global number then must have been set in cmesh_set_partition.
    * Otherwise the global number of trees is set here.
+   * TODO: make this function behave consistently independent on prior
+   *       calls to set_partition.
+   *       We want the user to be free in the sequence of calls
+   *       as much as possible.
    */
   if (cmesh->set_partition) {
     /* num_trees == 0 is allowed */
@@ -135,29 +175,47 @@ t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_gloidx_t num_trees)
   }
   else {
     /* num_trees == 0 is allowed */
-    T8_ASSERT (cmesh->num_trees == 0);
+    T8_ASSERT (cmesh->num_trees >= 0);
     cmesh->num_trees = cmesh->num_local_trees = num_trees;
   }
   /* As soon as we know the number of trees, we allocate
    * the ctree array.
+   * TODO?
    */
 }
 
 void
-t8_cmesh_set_partition (t8_cmesh_t cmesh, int set_partition,
-                          int set_face_knowledge,
-                          t8_gloidx_t first_local_tree,
-                          t8_gloidx_t last_local_tree)
+t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from)
 {
-  T8_ASSERT (!cmesh->committed);
-  T8_ASSERT (cmesh->set_partition == 0);
-  //T8_ASSERT (cmesh->num_trees == 0);
-// T8_ASSERT (cmesh->num_local_trees == 0);
-  T8_ASSERT (cmesh->first_tree == 0);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (set_from));
 
-  /* set cmesh->set_partition to 0 or 1 */
-  cmesh->set_partition = set_partition != 0;
-  if (set_partition == 0) {
+  cmesh->set_from = set_from;
+  t8_cmesh_ref (set_from);
+}
+
+void
+t8_cmesh_set_partition (t8_cmesh_t cmesh, int set_partition,
+                        int set_face_knowledge,
+                        t8_gloidx_t first_local_tree,
+                        t8_gloidx_t last_local_tree,
+                        t8_gloidx_t * tree_offsets)
+{
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (0 <= set_face_knowledge && set_face_knowledge <= 3);
+  /* TODO: allow -1 for set_face_knowledge to keep it unchanged? */
+
+  /* TODO: Careful with tese assumptions; allow the user maximum flexibility */
+#if 0
+  T8_ASSERT (cmesh->num_trees == 0);
+  T8_ASSERT (cmesh->num_local_trees == 0);
+  T8_ASSERT (cmesh->first_tree == 0);
+#endif
+
+  /* set cmesh->set_partition to 0 or 1 (no; we always treat nonzero as true) */
+  cmesh->set_partition = set_partition;
+  /* TODO: this is how to query boolean variables */
+  if (!set_partition) {
     /* The mesh is replicated, and this function just serves
      * as set_num_trees.
      * first_local_tree and num_ghosts are ignored. */
@@ -165,7 +223,8 @@ t8_cmesh_set_partition (t8_cmesh_t cmesh, int set_partition,
     return;
   }
   else {
-    T8_ASSERT (set_partition != 0);
+    /* TODO: this is how to query boolean variables */
+    T8_ASSERT (set_partition);
     cmesh->first_tree = first_local_tree;
     cmesh->num_local_trees = last_local_tree - first_local_tree + 1;
     /* Since num_local_trees is a locidx we have to check whether we did create an
@@ -177,16 +236,18 @@ t8_cmesh_set_partition (t8_cmesh_t cmesh, int set_partition,
     SC_CHECK_ABORTF (set_face_knowledge == 3, "Level %i of face knowledge"
                      "is not supported.\n", set_face_knowledge);
   }
+
+  cmesh->tree_offsets = tree_offsets;
 }
 
+#if 0
+/* No longer needed */
 void
 t8_cmesh_set_partition_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
                              int level, t8_gloidx_t * tree_offsets)
 {
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh_from != NULL);
-  T8_ASSERT (!cmesh->committed);
-  T8_ASSERT (cmesh_from->committed);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh_from));
   T8_ASSERT (cmesh_from->set_partition);
 
   cmesh->set_from = cmesh_from;
@@ -198,23 +259,24 @@ t8_cmesh_set_partition_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
   else {
     cmesh->tree_offsets = tree_offsets;
   }
-  cmesh->from_method = T8_CMESH_FROM_PARTITION;
+  cmesh->from_method |= T8_CMESH_PARTITION;
 }
+#endif
 
 void
-t8_cmesh_set_refine_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
-                          int level)
+t8_cmesh_set_refine (t8_cmesh_t cmesh, int level)
 {
-  T8_ASSERT (cmesh_from->committed);
-  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (level >= 0);
+
+  /* TODO: move the following check into t8_commit */
+#if 0
   if (cmesh_from->num_trees_per_eclass[T8_ECLASS_PYRAMID] > 0) {
     SC_ABORTF ("Cmesh refine is not implemented for meshes containing %s\n",
                "pyramids.");
   }
-  cmesh->set_from = cmesh_from;
+#endif
   cmesh->set_level = level;
-  cmesh->set_partition = cmesh_from->set_partition;
-  cmesh->from_method = T8_CMESH_FROM_REFINE;
 }
 
 t8_gloidx_t
@@ -958,6 +1020,16 @@ t8_cmesh_unref (t8_cmesh_t * pcmesh)
   }
 }
 
+void
+t8_cmesh_destroy (t8_cmesh_t * pcmesh)
+{
+  T8_ASSERT (pcmesh != NULL && *pcmesh != NULL &&
+             t8_refcount_is_last (&(*pcmesh)->rc));
+
+  t8_cmesh_unref (pcmesh);
+  T8_ASSERT (*pcmesh == NULL);
+}
+
 /* TODO: In p4est a tree edge is joined with itself to denote a domain boundary.
  *       Will we do it the same in t8code? This is not yet decided, however the
  *       function below stores these neighbourhood information in the cmesh. */
@@ -1030,7 +1102,7 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
     num_trees = _T8_CMESH_P48_CONN (num_trees);
     first_tree = (mpirank * num_trees) / mpisize;
     last_tree = ((mpirank + 1) * num_trees) / mpisize - 1;
-    t8_cmesh_set_partition (cmesh, 1, 3, first_tree, last_tree);
+    t8_cmesh_set_partition (cmesh, 1, 3, first_tree, last_tree, NULL);
   }
   t8_cmesh_commit (cmesh);
   return cmesh;
@@ -1474,7 +1546,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
     num_trees = num_trees_for_hypercube[eclass];
     first_tree = (mpirank * num_trees) / mpisize;
     last_tree = ((mpirank + 1) * num_trees) / mpisize - 1;
-    t8_cmesh_set_partition (cmesh, 1, 3, first_tree, last_tree);
+    t8_cmesh_set_partition (cmesh, 1, 3, first_tree, last_tree, NULL);
   }
 
   t8_cmesh_commit (cmesh);

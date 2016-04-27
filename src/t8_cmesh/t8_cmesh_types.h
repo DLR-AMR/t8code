@@ -34,15 +34,26 @@
 typedef struct t8_part_tree *t8_part_tree_t;
 typedef struct t8_cmesh_trees *t8_cmesh_trees_t;
 
+/* TODO: no longer needed.
+ *       User may use set_derived_from, then set_from is non-NULL.
+ *       When refinement is desired, level shall be set positive.
+ *       When partition is desired, we expect set_partition to be true.
+ *       Any combination can be called.
+ *       In t8_commit we check whether the parameters are consistent,
+ *       and whether a combination is currently supported,
+ *       and provide informative error messages both in debug and non-debug.
+ */
+#if 0
+/** Bitfield to designate the operations done on the cmesh created. */
 typedef enum t8_cmesh_from
 {
-  T8_CMESH_FROM_FIRST,
-  T8_CMESH_FROM_COPY = T8_CMESH_FROM_FIRST,
-  T8_CMESH_FROM_REFINE,
-  T8_CMESH_FROM_PARTITION,
-  T8_CMESH_FROM_LAST
+  T8_CMESH_FROM_NONE = 0,
+  T8_CMESH_FROM = 0x01,
+  T8_CMESH_REFINE = 0x02,
+  T8_CMESH_PARTITION = 0x04,
 }
 t8_cmesh_from_t;
+#endif
 
 /** This structure holds the connectivity data of the coarse mesh.
  *  It can either be replicated, then each process stores a copy of the whole
@@ -78,9 +89,13 @@ typedef struct t8_cmesh
 */
   int8_t              set_level;       /**< Non-negative if the cmesh should be partition from an already existing cmesh
                                          with an assumes \a level uniform mesh underneath.  TODO: fix sentence */
+#if 0
   t8_cmesh_from_t     from_method;      /* TODO: Document */
-  t8_cmesh_t          set_from; /**< If this cmesh shall be devired from a modified (i.e. partitioned) version
-                                        of another cmesh, we store a pointer to this other cmesh here. */
+#endif
+  t8_cmesh_t          set_from; /**< If this cmesh shall be derived from an
+                                  existing cmesh by copy or more elaborate
+                                  modification, we store a pointer to this
+                                  other cmesh here. */
   sc_MPI_Comm         mpicomm;  /**< MPI communicator to use. */
   int                 mpirank;  /**< Number of this MPI process. */
   int                 mpisize;  /**< Number of MPI processes. */

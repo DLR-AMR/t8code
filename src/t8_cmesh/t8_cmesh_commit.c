@@ -152,12 +152,12 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   if (cmesh->set_from != NULL) {
     cmesh->num_trees = cmesh->set_from->num_trees;
     cmesh->dimension = cmesh->set_from->dimension;
-    if (cmesh->from_method == T8_CMESH_FROM_PARTITION) {
+    if (cmesh->set_partition) {
       t8_debugf ("Enter cmesh_partition\n");
       t8_cmesh_partition (cmesh);
       t8_debugf ("Done cmesh_partition\n");
     }
-    else if (cmesh->from_method == T8_CMESH_FROM_REFINE) {
+    else if (cmesh->set_level > 0) {
       t8_debugf ("Enter cmesh_refine\n");
       t8_cmesh_refine (cmesh);
       t8_debugf ("Done cmesh_refine\n");
@@ -266,8 +266,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     for (joinfaces_it = 0; joinfaces_it < cmesh->stash->joinfaces.elem_count;
          joinfaces_it++) {
       joinface =
-        (t8_stash_joinface_struct_t *) sc_array_index (&cmesh->
-                                                       stash->joinfaces,
+        (t8_stash_joinface_struct_t *) sc_array_index (&cmesh->stash->
+                                                       joinfaces,
                                                        joinfaces_it);
       id1 = joinface->id1;
       id2 = joinface->id2;
@@ -495,8 +495,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 3, stats, 1, 1);
   }
 
-  t8_debugf ("Cmesh is %spartitioned.\n",
-             cmesh->set_partition ? "" : "not ");
+  t8_debugf ("Cmesh is %spartitioned.\n", cmesh->set_partition ? "" : "not ");
   if (cmesh->set_partition && cmesh->tree_offsets != NULL) {
     char                buf[BUFSIZ] = "| ";
     int                 i;
@@ -509,8 +508,14 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   // t8_cmesh_trees_print (cmesh, cmesh->trees);
   cmesh->committed = 1;
 
+  if (cmesh->set_from != NULL) {
+    t8_cmesh_unref (&cmesh->set_from);
+  }
+
   t8_stash_destroy (&cmesh->stash);
   t8_debugf ("Commited cmesh with %li local and %lli global trees and"
              " %li ghosts.\n", (long) cmesh->num_local_trees,
              (long long) cmesh->num_trees, (long) cmesh->num_ghosts);
+
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
 }
