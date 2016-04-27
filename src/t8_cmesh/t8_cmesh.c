@@ -188,7 +188,7 @@ void
 t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-  T8_ASSERT (t8_cmesh_is_committed (set_from));
+  T8_ASSERT (set_from == NULL || t8_cmesh_is_committed (set_from));
 
   cmesh->set_from = set_from;
   t8_cmesh_ref (set_from);

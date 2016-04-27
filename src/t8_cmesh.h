@@ -95,12 +95,14 @@ int                 t8_cmesh_is_committed (t8_cmesh_t cmesh);
 void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
                                           sc_MPI_Comm mpicomm, int do_dup);
 
-/** A coarse mesh can be constructed by deriving it from an existing one.
- * The derivation may optionally be combined with a repartition or uniform
- * refinement of each tree.
- * This function sets the cmesh to be derived from.
+/** This function sets a cmesh to be derived from.
+ * The default is to create a cmesh standalone by specifying all data manually.
+ * A coarse mesh can also be constructed by deriving it from an existing one.
+ * The derivation from another cmesh may optionally be combined with a
+ * repartition or uniform refinement of each tree.
  * This function overrides a previously set cmesh to be derived from.
  * \param [in,out] cmesh        Must be initialized, but not committed.
+ *                              May even be NULL to revert to standalone.
  * \param [in,out] set_from     Reference counter on this cmesh is bumped.
  *                              It will be unbumped by \ref t8_cmesh_commit,
  *                              after which \a from is no longer remembered.
