@@ -52,7 +52,7 @@ t8_offset_first (int proc, t8_gloidx_t * offset)
 {
   T8_ASSERT (proc >= 0);
   T8_ASSERT (offset != NULL);
-  return t8_glo_abs (offset[proc]) + t8_glo_kl0 (offset[proc]);
+  return T8_GLOIDX_ABS (offset[proc]) + t8_glo_kl0 (offset[proc]);
 }
 
 /* The number of trees of a given process in a partition */
@@ -63,7 +63,7 @@ t8_offset_num_trees (int proc, t8_gloidx_t * offset)
   T8_ASSERT (proc >= 0);
   T8_ASSERT (offset != NULL);
 
-  return t8_glo_abs (offset[proc + 1]) - t8_offset_first (proc, offset);
+  return T8_GLOIDX_ABS (offset[proc + 1]) - t8_offset_first (proc, offset);
 }
 
 /* The last local tree of a given process in a partition */
@@ -73,7 +73,7 @@ t8_offset_last (int proc, t8_gloidx_t * offset)
   T8_ASSERT (proc >= -1);
   T8_ASSERT (offset != NULL);
 
-  return t8_glo_abs (offset[proc + 1]) - 1;
+  return T8_GLOIDX_ABS (offset[proc + 1]) - 1;
 }
 
 /* Return 1 if the process has no trees in the partition.

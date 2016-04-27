@@ -106,6 +106,8 @@ t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees, t8_locidx_t ghost_index,
   trees->ghost_to_proc[ghost_index] = proc;
 }
 
+#ifdef T8_ENABLE_DEBUG
+
 static int
 t8_cmesh_trees_get_num_procs (t8_cmesh_trees_t trees)
 {
@@ -113,6 +115,8 @@ t8_cmesh_trees_get_num_procs (t8_cmesh_trees_t trees)
   T8_ASSERT (trees->from_proc != NULL);
   return trees->from_proc->elem_count;
 }
+
+#endif
 
 /* Get a tree form a part given its local id */
 static              t8_ctree_t
