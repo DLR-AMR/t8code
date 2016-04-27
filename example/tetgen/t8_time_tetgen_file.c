@@ -34,7 +34,9 @@ t8_read_tetgen_file_build_cmesh (const char * prefix, int do_dup,
                                  int do_partition)
 {
   t8_cmesh_t          cmesh;
+#if 0
   char                fileprefix[BUFSIZ];
+#endif
   int                 mpirank, mpiret;
   sc_flopinfo_t       fi, snapshot;
   sc_statinfo_t       stats[6];

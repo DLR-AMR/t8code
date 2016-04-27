@@ -29,6 +29,8 @@
 #include <p8est_connectivity.h>
 #include <sc_shmem.h>
 
+#if 0
+
 static int
 t8_basic_adapt (t8_forest_t forest, t8_topidx_t which_tree,
                 t8_eclass_scheme_t * ts,
@@ -216,6 +218,8 @@ t8_basic (int do_dup, int set_level)
   t8_forest_unref (&forest);
 }
 
+#endif
+
 static void
 t8_basic_partition (t8_eclass_t eclass, int set_level)
 {
@@ -256,8 +260,10 @@ main (int argc, char **argv)
 {
   int                 mpiret;
   int                 level;
+#if 0
   int                 eclass;
   int                 dim;
+#endif
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);

@@ -38,7 +38,10 @@
 typedef struct
 {
     double xm,xM,ym,yM,zm,zM;
-}box_t;
+}
+box_t;
+
+#if 0
 
 /** Get the coordinates of the midpoint of a quadrant.
  *
@@ -58,6 +61,8 @@ bunny_get_midpoint (p8est_t * p8est, p4est_topidx_t which_tree,
                           q->z + half_length,
                           xyz);
 }
+
+#endif
 
 #if 0
 /* Refine if we lie in a cylinder defined by a bounding box */
@@ -86,15 +91,17 @@ bunny_refine (p8est_t * p8est, p4est_topidx_t which_tree,
 int
 main (int argc, char **argv)
 {
-  int                 mpiret, retval;
+  int                 mpiret;
   int                 mpirank;
   const char         *argbasename;
-//  char                afilename[BUFSIZ];
+/* char                afilename[BUFSIZ]; */
   p4est_topidx_t      tnum_flips;
   p8est_tets_t       *ptg;
   p8est_connectivity_t *connectivity;
   sc_MPI_Comm         mpicomm;
+#if 0
   box_t               Box_ex1;
+#endif
   sc_flopinfo_t       fi, snapshot;
   sc_statinfo_t       stats[9];
 
@@ -118,13 +125,14 @@ main (int argc, char **argv)
   }
   argbasename = argv[1];
 
+#if 0
   Box_ex1.xm = -6;
   Box_ex1.ym = -6;
   Box_ex1.zm = -6;
   Box_ex1.xM =  7;
   Box_ex1.yM =  7;
   Box_ex1.zM =  7;
-
+#endif
 
   sc_flops_start (&fi);
   sc_flops_snap (&fi, &snapshot);
@@ -222,6 +230,7 @@ main (int argc, char **argv)
 
   sc_flops_snap (&fi, &snapshot);
   cmesh_t8 = t8_cmesh_from_tetgen_file((char *)argbasename, 0, sc_MPI_COMM_WORLD, 0);
+  t8_cmesh_unref (&cmesh_t8);
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[5], snapshot.iwtime, "t8 cmesh from tetgen");
 

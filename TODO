@@ -1,4 +1,16 @@
+Basic standards:
+================
+ * Don't use C++ comments //
+ * Make sure warnings are eliminated even in beta code.
+   This can be done with suitable #ifdef FEATURE_ABC macros,
+   where the line #define FEATURE_ABC is commented out.
+
+
+TODOs
+=================================
+
 Für die Berechnungen auf Juqueen:
+
 Der Plan ist skalierungstest der cmesh_partition Funktion zu machen.
 Wir haben dafür das Bunny mesh in einer Version mit 495k Tets.
 Und das box mesh von p4est mit 1000 Tets.
