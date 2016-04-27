@@ -88,6 +88,8 @@ void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
  * \param [in]     last_local_tree  The global index of the last tree on this process.
  *                                  If \a set_partitioned is zero, must be
  *                                  \a num_global_trees - 1.
+ *                                  If this process should be empty then \a last_local_tree
+ *                                  must be strictly smaller than \a first_local_tree.
  */
 void                t8_cmesh_set_partitioned (t8_cmesh_t cmesh,
                                               int set_partitioned,
