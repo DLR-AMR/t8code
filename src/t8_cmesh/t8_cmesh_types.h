@@ -73,11 +73,13 @@ typedef struct t8_cmesh
   int                 do_dup;   /**< Communicator shall be duped. */
   int                 set_partitioned; /**< If nonzero the cmesh is partitioned.
                                             If zero each process has the whole cmesh. */
-  int                 face_knowledge;  /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partioned */
+  int                 face_knowledge;  /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partioned;
+                            see \ref t8_cmesh_set_partitioned.
+*/
   int8_t              set_level;       /**< Non-negative if the cmesh should be partition from an already existing cmesh
-                                         with an assumes \a level uniform mesh underneath */
+                                         with an assumes \a level uniform mesh underneath.  TODO: fix sentence */
   t8_cmesh_from_t     from_method;    /* TODO: Document */
-  struct t8_cmesh    *set_from; /**< If this cmesh is a modified (i.e. partitioned) version
+  t8_cmesh_t          set_from; /**< If this cmesh shall be devired from a modified (i.e. partitioned) version
                                         of another cmesh, we store a pointer to this other cmesh here. */
   sc_MPI_Comm         mpicomm;  /**< MPI communicator to use. */
   int                 mpirank;  /**< Number of this MPI process. */

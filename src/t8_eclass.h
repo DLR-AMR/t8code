@@ -75,7 +75,7 @@ extern const int    t8_eclass_num_faces[T8_ECLASS_LAST];
 extern const int    t8_eclass_max_num_faces[T8_ECLASS_MAX_DIM + 1];
 
 /** For each eclass the number of children on each face when refined */
-extern const int t8_eclass_num_face_children[T8_ECLASS_LAST];
+extern const int    t8_eclass_num_face_children[T8_ECLASS_LAST];
 
 /** The number of vertices of an element class. */
 extern const int    t8_eclass_num_vertices[T8_ECLASS_LAST];
@@ -86,6 +86,7 @@ extern const int    t8_eclass_num_children[T8_ECLASS_LAST];
 /** The vtk cell type for the eclass */
 extern const int    t8_eclass_vtk_type[T8_ECLASS_LAST];
 
+/* TODO: document; can we replace the number 8 with a define/enum? */
 extern const int    t8_eclass_vtk_corner_number[T8_ECLASS_LAST][8];
 
 /** For each of the element classes, list the type of the faces. */
@@ -117,7 +118,7 @@ int                 t8_eclass_count_boundary (t8_eclass_t theclass,
  */
 t8_gloidx_t         t8_eclass_count_leaf (t8_eclass_t theclass, int level);
 
-/** Compare two eclasses of the sam dimensiona
+/** Compare two eclasses of the sam dimension
  *  as necessary for face neighbor orientation.
  *  The implemented order is Triangle < Square in 2D and
  *  Tet < Hex < Prism < Pyramid in 3D.

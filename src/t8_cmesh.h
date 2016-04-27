@@ -28,7 +28,17 @@
 #define T8_CMESH_H
 
 #include <t8.h>
+
+/* TODO: If including eclass were just for the cmesh_new routines, we should
+ *       move them into a different file.
+ *       However, when specifying the parent-child order in cmesh_reorder,
+ *       we might keep the eclass interface for virtual functions.
+ *       Actually, we need eclass in the type definition in cmesh.c.
+ *       So we might as well use tree-related virtual functions there too.
+ */
 #include <t8_eclass.h>
+
+/* TODO: See above comment, when moving cmesh_new these get moved too. */
 #include <p4est_connectivity.h>
 #include <p8est_connectivity.h>
 
@@ -42,7 +52,7 @@ T8_EXTERN_C_BEGIN ();
 
 /** Create a new cmesh with reference count one.
  * This cmesh needs to be specialized with the t8_cmesh_set_* calls.
- * Then it needs to be set up with \see t8_cmesh_commit.
+ * Then it needs to be set up with \ref t8_cmesh_commit.
  * \param [in,out] pcmesh       On input, this pointer must be non-NULL.
  *                              On return, this pointer set to the new cmesh.
  */

@@ -27,7 +27,6 @@
 #ifndef T8_CMESH_VTK_H
 #define T8_CMESH_VTK_H
 
-#include <t8.h>
 #include <t8_cmesh.h>
 
 /* typedef and macros */
@@ -56,10 +55,10 @@
 T8_EXTERN_C_BEGIN ();
 /* function declarations */
 
+/* TODO: document this function */
 int                 t8_cmesh_vtk_write_file (t8_cmesh_t cmesh,
                                              const char *fileprefix,
                                              double scale);
-
 
 /* TODO: Should this function be part of the interface?
  * Not for now: Move to _vtk.h but mark as DEPRECATED */
