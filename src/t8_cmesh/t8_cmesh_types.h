@@ -78,7 +78,7 @@ typedef struct t8_cmesh
 */
   int8_t              set_level;       /**< Non-negative if the cmesh should be partition from an already existing cmesh
                                          with an assumes \a level uniform mesh underneath.  TODO: fix sentence */
-  t8_cmesh_from_t     from_method;    /* TODO: Document */
+  t8_cmesh_from_t     from_method;      /* TODO: Document */
   t8_cmesh_t          set_from; /**< If this cmesh shall be devired from a modified (i.e. partitioned) version
                                         of another cmesh, we store a pointer to this other cmesh here. */
   sc_MPI_Comm         mpicomm;  /**< MPI communicator to use. */
@@ -90,14 +90,14 @@ typedef struct t8_cmesh
   t8_locidx_t         num_ghosts; /**< If partitioned the number of neighbor trees
                                     owned by different processes. */
   /* TODO: wouldnt a local num_trees_per_eclass be better? */
-  t8_gloidx_t         num_trees_per_eclass[T8_ECLASS_LAST]; /**< After commit the number of
+  t8_gloidx_t         num_trees_per_eclass[T8_ECLASS_COUNT]; /**< After commit the number of
                                                                  trees for each eclass. */
 
   t8_cmesh_trees_t    trees; /**< structure that holds all local trees and ghosts */
 
   t8_gloidx_t         first_tree; /**< The global index of the first local tree
                                        on this process. Zero if the cmesh is not partitioned. -1 if this processor is empty. */
-  int8_t             first_tree_shared; /**< If partitioned true if the first tree on this process is also the last tree on the next process.
+  int8_t              first_tree_shared;/**< If partitioned true if the first tree on this process is also the last tree on the next process.
                                              Always zero if num_local_trees = 0 */
   /* TODO: deprecated, replaced by offset */
   t8_gloidx_t        *tree_offsets;  /**< If partitioned for each process the global index of its first local tree
@@ -119,7 +119,7 @@ typedef struct t8_cghost
 {
   t8_gloidx_t         treeid; /**< The global number of this ghost. */
   t8_eclass_t         eclass; /**< The eclass of this ghost. */
-  size_t              neigh_offset; /* TODO: document */
+  size_t              neigh_offset;     /* TODO: document */
 }
 t8_cghost_struct_t;
 
@@ -171,13 +171,17 @@ t8_ctree_struct_t;
  */
 typedef struct t8_attribute_info
 {
-  int       package_id; /**< The identifier of the application layer that added this attribute */
-  int       key; /**< The (tree unique) key of the attribute whithin this AL. */
-  size_t    attribute_offset; /**< The offset of the attribute data from the first
+  int                 package_id;
+                        /**< The identifier of the application layer that added this attribute */
+  int                 key;
+                 /**< The (tree unique) key of the attribute whithin this AL. */
+  size_t              attribute_offset;
+                              /**< The offset of the attribute data from the first
                     attribute info of the tree.
                     (Thus, the attribute is stored at adress tree + tree->att_offset + attribute_offset) */
   /* TODO: eventually remove the size */
-  size_t    attribute_size; /**< The size in bytes of the attribute */
+  size_t              attribute_size;
+                            /**< The size in bytes of the attribute */
 } t8_attribute_info_struct_t;
 
 /* TODO: document, process is a bad naming, since it does not refer to MPI ranks here */

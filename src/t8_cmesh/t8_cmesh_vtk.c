@@ -36,13 +36,12 @@ t8_cmesh_get_num_vertices (t8_cmesh_t cmesh)
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
 
-  for (iclass = T8_ECLASS_FIRST; iclass < T8_ECLASS_LAST; iclass++) {
+  for (iclass = T8_ECLASS_ZERO; iclass < T8_ECLASS_COUNT; iclass++) {
     num_vertices += t8_eclass_num_vertices[iclass] *
       cmesh->num_trees_per_eclass[iclass];
   }
   return num_vertices;
 }
-
 
 /* TODO: implement for replicated mesh
  * TODO: implement for scale < 1 */
@@ -58,7 +57,7 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
 
   /* Currently only rank 0 prints the cmesh.
    * This requires that the cmesh is replicated. */
-  if (cmesh->mpirank >= 0) { // HOLKE edit
+  if (cmesh->mpirank >= 0) {    // HOLKE edit
     char                vtufilename[BUFSIZ];
     FILE               *vtufile;
     t8_topidx_t         num_vertices, num_trees, ivertex;
@@ -107,7 +106,7 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
       for (ivertex = 0; ivertex < t8_eclass_num_vertices[tree->eclass];
            ivertex++) {
         vertex = vertices +
-            3 * t8_eclass_vtk_corner_number[tree->eclass][ivertex];
+          3 * t8_eclass_vtk_corner_number[tree->eclass][ivertex];
         x = vertex[0];
         y = vertex[1];
         z = vertex[2];
@@ -183,14 +182,14 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
              " format=\"%s\">\n", T8_VTK_GLOIDX, T8_VTK_FORMAT_STRING);
 #ifdef T8_VTK_ASCII
     fprintf (vtufile, "         ");
-    for (tree = t8_cmesh_get_first_tree (cmesh), sk = 1, offset = 0; tree != NULL;
-         tree = t8_cmesh_get_next_tree (cmesh, tree), ++sk) {
+    for (tree = t8_cmesh_get_first_tree (cmesh), sk = 1, offset = 0;
+         tree != NULL; tree = t8_cmesh_get_next_tree (cmesh, tree), ++sk) {
       /* Since tree_id is actually 64 Bit but we store it as 32, we have to check
        * that we do not get into conversion errors */
       /* TODO: We switched to 32 Bit because Paraview could not handle 64 well enough.
        */
       T8_ASSERT (tree->treeid + cmesh->first_tree ==
-                 (t8_gloidx_t)((long) tree->treeid + cmesh->first_tree));
+                 (t8_gloidx_t) ((long) tree->treeid + cmesh->first_tree));
       fprintf (vtufile, " %ld", (long) tree->treeid + cmesh->first_tree);
       if (!(sk % 8))
         fprintf (vtufile, "\n         ");

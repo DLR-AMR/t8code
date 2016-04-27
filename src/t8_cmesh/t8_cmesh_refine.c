@@ -49,7 +49,7 @@ typedef struct
  * in this array. Thus we have to search in it for the respective child_id.
  * We store an additional entry with child_id = -1 at the end, so that
  * this search terminates when the entry is not found. */
-static t8_locidx_t
+static              t8_locidx_t
 t8_cmesh_refine_childid_to_localid (t8_child_id_to_local_id ** idarray,
                                     t8_locidx_t lparent_id, int8_t child_id)
 {
@@ -127,7 +127,7 @@ t8_cmesh_refine_destroy_idarray (t8_child_id_to_local_id ** idarray,
  * compute the new local id of the child to be used as a face neihgbor.
  * This works for local trees and ghosts. */
 /* TODO: This will not work anymore when pyramids are used together with other types */
-static t8_locidx_t
+static              t8_locidx_t
 t8_cmesh_refine_new_neighborid (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
                                 int child_id,
                                 t8_child_id_to_local_id ** id_array,
@@ -149,7 +149,7 @@ t8_cmesh_refine_new_neighborid (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
 /* Given a parent's global tree/ghost id and a child_id,
  * compute the new global id of the child. */
 /* TODO: This will not work anymore when pyramids are used together with other types */
-static t8_gloidx_t
+static              t8_gloidx_t
 t8_cmesh_refine_new_globalid (t8_gloidx_t parent_id, int child_id, int factor)
 {
   return parent_id * factor + child_id;
@@ -564,25 +564,26 @@ t8_cmesh_refine_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   t8_locidx_t         lghost_id;
   int                 ichild;
 
-
   (void) t8_cmesh_trees_get_ghost_ext (cmesh_from->trees, ghostid,
                                        &ghost_neighbors, &ttf);
   child_id = idarray[ghostid][0].child_id;
-  for (ichild = 0; child_id != -1;ichild++) {
+  for (ichild = 0; child_id != -1; ichild++) {
     lghost_id = idarray[ghostid][ichild].local_id;
     newghost = t8_cmesh_trees_get_ghost_ext (cmesh->trees, lghost_id,
                                              &nghost_neighbors, &nttf);
     /* Set all face_neighbors of the child ghost */
     t8_cmesh_refine_new_neighbors (cmesh_from, ghostid,
                                    t8_cmesh_get_global_id (cmesh_from,
-                                         cmesh_from->num_local_trees + ghostid),
+                                                           cmesh_from->
+                                                           num_local_trees +
+                                                           ghostid),
                                    newghost->eclass, idarray, (int) child_id,
                                    NULL, nghost_neighbors, nttf, factor);
     child_id = idarray[ghostid][ichild + 1].child_id;
   }
 }
 
-static t8_locidx_t
+static              t8_locidx_t
 t8_cmesh_refine_count_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                              t8_child_id_to_local_id ** idarray)
 {
@@ -593,10 +594,10 @@ t8_cmesh_refine_count_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   /* For each eclass we give a lookup table of the child id's on a given face.
    * For example for type T8_ECLASS_QUAD we have
    *                    f_3
-   * 			 _ _
+   *                     _ _
    *              f_0  |2 3|  f_1
    *                   |0 1|
-   * 			 - -
+   *                     - -
    *                    f_2
    * where the numbers inside refer to the chlid_ids of the quad.
    * The lookup table then gives:  0 -> 0,2
@@ -604,7 +605,7 @@ t8_cmesh_refine_count_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
    *                               2 -> 0,1
    *                               3 -> 2,3
    * as can be see in the 2nd line of the array */
-  int8_t              child_id_by_class_and_face[T8_ECLASS_LAST][6][10] = {
+  int8_t              child_id_by_class_and_face[T8_ECLASS_COUNT][6][10] = {
     {{}},                       /* VERTEX */
     {{0}, {1}},                 /* LINE */
     {{0, 2}, {1, 3}, {0, 1}, {2, 3}},   /* QUAD */
@@ -681,7 +682,7 @@ t8_cmesh_refine (t8_cmesh_t cmesh)
   factor = 1 << (dim * level);
   cmesh->num_local_trees = cmesh_from->num_local_trees * factor;
   cmesh->num_trees = cmesh_from->num_trees * factor;
-  for (iclass = T8_ECLASS_FIRST; iclass < T8_ECLASS_LAST; iclass++) {
+  for (iclass = T8_ECLASS_ZERO; iclass < T8_ECLASS_COUNT; iclass++) {
     /* TODO: This does not work with pyramids */
     cmesh->num_trees_per_eclass[iclass] =
       cmesh_from->num_trees_per_eclass[iclass] * factor;

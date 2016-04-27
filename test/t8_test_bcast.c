@@ -55,7 +55,7 @@ main (int argc, char **argv)
   t8_init (SC_LP_DEFAULT);
 
   t8_global_productionf ("Testing cmesh broadcast.\n");
-  for (eclass = T8_ECLASS_FIRST; eclass < T8_ECLASS_LAST; eclass++) {
+  for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; eclass++) {
     t8_check_bcast_hypercube ((t8_eclass_t) eclass, 0);
     t8_check_bcast_hypercube ((t8_eclass_t) eclass, 1);
   }

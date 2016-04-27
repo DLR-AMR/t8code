@@ -30,7 +30,7 @@ t8_scheme_destroy (t8_scheme_t * s)
   T8_ASSERT (s != NULL);
   T8_ASSERT (s->rc.refcount == 0);
 
-  for (t = 0; t < T8_ECLASS_LAST; ++t) {
+  for (t = 0; t < T8_ECLASS_COUNT; ++t) {
     if (s->eclass_schemes[t] != NULL) {
       t8_eclass_scheme_destroy (s->eclass_schemes[t]);
     }
@@ -78,13 +78,13 @@ t8_eclass_boundary_alloc (t8_scheme_t * scheme, t8_eclass_t theclass,
 {
   int                 t, offset, per;
 #ifdef T8_ENABLE_DEBUG
-  int                 per_eclass[T8_ECLASS_LAST];
+  int                 per_eclass[T8_ECLASS_COUNT];
 #endif
 
   T8_ASSERT (length ==
              t8_eclass_count_boundary (theclass, min_dim, per_eclass));
 
-  for (offset = t = 0; t < T8_ECLASS_LAST; ++t) {
+  for (offset = t = 0; t < T8_ECLASS_COUNT; ++t) {
     if (t8_eclass_to_dimension[t] >= min_dim) {
       per = t8_eclass_boundary_count[theclass][t];
       if (per > 0) {
@@ -102,13 +102,13 @@ t8_eclass_boundary_destroy (t8_scheme_t * scheme, t8_eclass_t theclass,
 {
   int                 t, offset, per;
 #ifdef T8_ENABLE_DEBUG
-  int                 per_eclass[T8_ECLASS_LAST];
+  int                 per_eclass[T8_ECLASS_COUNT];
 #endif
 
   T8_ASSERT (length ==
              t8_eclass_count_boundary (theclass, min_dim, per_eclass));
 
-  for (offset = t = 0; t < T8_ECLASS_LAST; ++t) {
+  for (offset = t = 0; t < T8_ECLASS_COUNT; ++t) {
     if (t8_eclass_to_dimension[t] >= min_dim) {
       per = t8_eclass_boundary_count[theclass][t];
       if (per > 0) {

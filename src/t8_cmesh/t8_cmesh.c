@@ -201,7 +201,6 @@ t8_cmesh_set_partition_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
   cmesh->from_method = T8_CMESH_FROM_PARTITION;
 }
 
-
 void
 t8_cmesh_set_refine_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
                           int level)
@@ -464,7 +463,7 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
   /* check arrays */
   is_equal = memcmp (cmesh_a->num_trees_per_eclass,
                      cmesh_b->num_trees_per_eclass,
-                     T8_ECLASS_LAST * sizeof (t8_topidx_t));
+                     T8_ECLASS_COUNT * sizeof (t8_topidx_t));
 
   /* check tree_offsets */
   if (cmesh_a->tree_offsets != NULL) {
@@ -548,7 +547,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     int                 dimension;
     int                 do_dup;
     t8_topidx_t         num_trees;
-    t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST];
+    t8_topidx_t         num_trees_per_eclass[T8_ECLASS_COUNT];
     size_t              stash_elem_counts[3];
 #ifdef T8_ENABLE_DEBUG
     t8_topidx_t         inserted_trees;
@@ -588,7 +587,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     dimensions.dimension = cmesh_in->dimension;
     dimensions.do_dup = cmesh_in->do_dup;
     dimensions.num_trees = cmesh_in->num_trees;
-    for (iclass = 0; iclass < T8_ECLASS_LAST; iclass++) {
+    for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
       dimensions.num_trees_per_eclass[iclass] =
         cmesh_in->num_trees_per_eclass[iclass];
     }
@@ -612,7 +611,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     cmesh_in->dimension = dimensions.dimension;
     cmesh_in->do_dup = dimensions.do_dup;
     t8_cmesh_set_num_trees (cmesh_in, dimensions.num_trees);
-    for (iclass = 0; iclass < T8_ECLASS_LAST; iclass++) {
+    for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
       cmesh_in->num_trees_per_eclass[iclass] =
         dimensions.num_trees_per_eclass[iclass];
     }
@@ -688,7 +687,8 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   /* partition the elements in mpisize many partitions */
   success =
     METIS_PartGraphRecursive (&elemens, &ncon, xadj, adjncy, NULL, NULL, NULL,
-                              &idx_mpisize, NULL, NULL, NULL, &volume, partition);
+                              &idx_mpisize, NULL, NULL, NULL, &volume,
+                              partition);
   T8_ASSERT (success == METIS_OK);
   /* memory to store the new treeid of a tree */
   new_number = T8_ALLOC (t8_locidx_t, cmesh->num_trees);
@@ -1278,7 +1278,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
                         int do_bcast, int do_partition)
 {
   t8_cmesh_t          cmesh;
-  int                 num_trees_for_hypercube[T8_ECLASS_LAST] =
+  int                 num_trees_for_hypercube[T8_ECLASS_COUNT] =
     { 1, 1, 1, 2, 1, 6, 2, 3 };
   int                 i;
   t8_topidx_t         vertices[8];

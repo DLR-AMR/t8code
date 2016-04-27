@@ -196,7 +196,7 @@ t8_default_quad_boundary (const t8_element_t * elem,
                           int min_dim, int length, t8_element_t ** boundary)
 {
 #ifdef T8_ENABLE_DEBUG
-  int                 per_eclass[T8_ECLASS_LAST];
+  int                 per_eclass[T8_ECLASS_COUNT];
 #endif
 
   T8_ASSERT (length ==

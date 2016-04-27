@@ -29,7 +29,7 @@ test_eclass (sc_MPI_Comm mpic)
   int                 eci;
   int                 retval;
 
-  for (eci = T8_ECLASS_FIRST; eci < T8_ECLASS_LAST; ++eci) {
+  for (eci = T8_ECLASS_ZERO; eci < T8_ECLASS_COUNT; ++eci) {
     retval = t8_eclass_compare ((t8_eclass_t) eci, (t8_eclass_t) eci);
     SC_CHECK_ABORT (retval == 0, "Eclass identity failed");
   }

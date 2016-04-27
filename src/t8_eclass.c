@@ -23,28 +23,28 @@
 #include <t8_eclass.h>
 
 /* *INDENT-OFF* */
-const int t8_eclass_to_dimension[T8_ECLASS_LAST] =
+const int t8_eclass_to_dimension[T8_ECLASS_COUNT] =
   { 0, 1, 2, 2, 3, 3, 3, 3 };
 
-const int t8_eclass_num_faces[T8_ECLASS_LAST] =
+const int t8_eclass_num_faces[T8_ECLASS_COUNT] =
   { 0, 2, 4, 3, 6, 4, 5, 5 };
 
 const int t8_eclass_max_num_faces[T8_ECLASS_MAX_DIM + 1] =
   { 0, 2, 4, 6};
 
-const int t8_eclass_num_face_children[T8_ECLASS_LAST] =
+const int t8_eclass_num_face_children[T8_ECLASS_COUNT] =
  { 0, 1, 2, 2, 4, 4, 4, 4};
 
-const int    t8_eclass_num_vertices[T8_ECLASS_LAST] =
+const int    t8_eclass_num_vertices[T8_ECLASS_COUNT] =
   { 1, 2, 4, 3, 8, 4, 6, 5 };
 
-const int t8_eclass_num_children[T8_ECLASS_LAST] =
+const int t8_eclass_num_children[T8_ECLASS_COUNT] =
   { 0, 2, 4, 4, 8, 8, 8, 10 };
 
-const int t8_eclass_vtk_type[T8_ECLASS_LAST] =
+const int t8_eclass_vtk_type[T8_ECLASS_COUNT] =
   { 1, 3, 9, 5, 12, 10, 13, 14};
 
-const int t8_eclass_vtk_corner_number[T8_ECLASS_LAST][8] =
+const int t8_eclass_vtk_corner_number[T8_ECLASS_COUNT][8] =
 {{  0, -1, -1, -1, -1, -1, -1, -1}, /* vertex */
  {  0,  1, -1, -1, -1, -1, -1, -1}, /* line */
  {  0,  1,  3,  2, -1, -1, -1, -1}, /* quad */
@@ -54,7 +54,7 @@ const int t8_eclass_vtk_corner_number[T8_ECLASS_LAST][8] =
  {  0,  1,  2,  3,  4,  5, -1, -1}, /* prism */
  {  0,  1,  3,  2,  4, -1, -1, -1}}; /* pyramid */
 
-const int t8_eclass_face_types[T8_ECLASS_LAST][T8_ECLASS_MAX_FACES] =
+const int t8_eclass_face_types[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES] =
   {{ -1, -1, -1, -1, -1, -1 },
    {  0,  0, -1, -1, -1, -1 },
    {  1,  1,  1,  1, -1, -1 },
@@ -64,7 +64,7 @@ const int t8_eclass_face_types[T8_ECLASS_LAST][T8_ECLASS_MAX_FACES] =
    {  2,  2,  2,  3,  3, -1 },
    {  3,  3,  3,  3,  2, -1 }};
 
-const int t8_eclass_boundary_count[T8_ECLASS_LAST][T8_ECLASS_LAST] =
+const int t8_eclass_boundary_count[T8_ECLASS_COUNT][T8_ECLASS_COUNT] =
   {{ 0,  0, 0, 0, 0, 0, 0, 0 },
    { 2,  0, 0, 0, 0, 0, 0, 0 },
    { 4,  4, 0, 0, 0, 0, 0, 0 },
@@ -74,7 +74,7 @@ const int t8_eclass_boundary_count[T8_ECLASS_LAST][T8_ECLASS_LAST] =
    { 6,  9, 3, 2, 0, 0, 0, 0 },
    { 5,  8, 1, 4, 0, 0, 0, 0 }};
 
-const char * t8_eclass_to_string[T8_ECLASS_LAST] =
+const char * t8_eclass_to_string[T8_ECLASS_COUNT] =
      {"Vertex",
       "Line",
       "Quad",
@@ -92,7 +92,7 @@ t8_eclass_count_boundary (t8_eclass_t theclass, int min_dim, int *per_eclass)
   int                 sum;
 
   sum = 0;
-  for (t = 0; t < T8_ECLASS_LAST; ++t) {
+  for (t = 0; t < T8_ECLASS_COUNT; ++t) {
     if (t8_eclass_to_dimension[t] >= min_dim) {
       sum += (per_eclass[t] = t8_eclass_boundary_count[theclass][t]);
     }
