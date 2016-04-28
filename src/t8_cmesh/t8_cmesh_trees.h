@@ -296,6 +296,18 @@ void                t8_cmesh_trees_add_attribute (t8_cmesh_trees_t trees,
 void                t8_cmesh_trees_print (t8_cmesh_t cmesh,
                                           t8_cmesh_trees_t trees);
 
+/** Check whether the face connection of a trees structure are consistent.
+ * That is if tree1 lists tree2 as neighbor at face i with ttf entries (or,face j),
+ * then tree2 must list tree1 as neighbor at face j with ttf entries (or, face i).
+ * \param[in]       cmesh A cmesh structure to be checked.
+ * \param[in]       trees The cmesh's trees struct.
+ * \return          True if the face connections are consistent,
+ *                  False if not.
+ */
+int                 t8_cmesh_trees_is_face_consistend (t8_cmesh_t cmesh,
+                                                       t8_cmesh_trees_t
+                                                       trees);
+
 int                 t8_cmesh_trees_is_equal (t8_cmesh_t cmesh,
                                              t8_cmesh_trees_t trees_a,
                                              t8_cmesh_trees_t trees_b);

@@ -62,7 +62,8 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
 
 #ifdef T8_ENABLE_DEBUG
   /* TODO: check more conditions that must always hold after commit */
-  if ((cmesh->mpicomm == sc_MPI_COMM_NULL) || 0) {
+  if ((!t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) ||
+      (cmesh->mpicomm == sc_MPI_COMM_NULL) || 0) {
     return 0;
   }
 #endif
