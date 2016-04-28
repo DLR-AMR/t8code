@@ -246,7 +246,7 @@ t8_cmesh_refine_new_neighbors (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
                                                               id_array,
                                                               factor);
         /* Set the new orientation and face number */
-        ttf_out[iface] = 1 * F + iface;
+        ttf_out[iface] = 1 * F + 2 - iface;
       }
     }
     else {
@@ -263,7 +263,7 @@ t8_cmesh_refine_new_neighbors (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
       T8_ASSERT (0 <= child_id && child_id <= 2);
       if (!compute_ghost) {
         /* Along face number child_id we are connected with the middle triangle
-         * which has child_id = 3 */
+         * which has child_id = 3, we are connected with its face 2 - child_id */
         neighbor_out[child_id] = t8_cmesh_refine_new_neighborid (cmesh_from,
                                                                  parent_id, 3,
                                                                  id_array,
@@ -273,7 +273,7 @@ t8_cmesh_refine_new_neighbors (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
         neighbor_out_ghost[child_id] =
           t8_cmesh_refine_new_globalid (global_parent_id, 3, factor);
       }
-      ttf_out[child_id] = 1 * F + child_id;
+      ttf_out[child_id] = 1 * F + 2 - child_id;
       for (iface = 0; iface < num_faces; iface++) {
         if (iface == child_id) {
           /* We already set this side */
