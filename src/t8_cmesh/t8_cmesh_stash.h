@@ -113,8 +113,8 @@ void                t8_stash_add_class (t8_stash_t stash, t8_gloidx_t id,
  * \param [in]      face2 The face number of the face of the second tree.
  * \param [in]      orientation The orientation of the faces to each other.
  */
-void                t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t id1,
-                                           t8_gloidx_t id2, int face1,
+void                t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t gid1,
+                                           t8_gloidx_t gid2, int face1,
                                            int face2, int orientation);
 
 /** Sort then entries in the class array by the order given in

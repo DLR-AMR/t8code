@@ -185,7 +185,7 @@ void                t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees,
  * \param [in]      eclass The tree's element class.
  */
 void                t8_cmesh_trees_add_tree (t8_cmesh_trees_t trees,
-                                             t8_topidx_t tree_id, int proc,
+                                             t8_locidx_t ltree_id, int proc,
                                              t8_eclass_t eclass);
 
 /** Add a ghost to a trees structure.
@@ -198,7 +198,7 @@ void                t8_cmesh_trees_add_tree (t8_cmesh_trees_t trees,
  */
 void                t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees,
                                               t8_locidx_t ghost_index,
-                                              t8_gloidx_t tree_id, int proc,
+                                              t8_gloidx_t gtree_id, int proc,
                                               t8_eclass_t eclass);
 
 /** Set all neighbor fields of all local trees and ghosts to boundary.

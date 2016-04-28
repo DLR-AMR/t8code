@@ -184,12 +184,13 @@ void                t8_cmesh_set_refine (t8_cmesh_t cmesh, int level);
 
 /** Set the class of a tree in the cmesh.
  * It is not allowed to call this function after \ref t8_cmesh_commit.
+ * It is not allowed to call this function multiple times for the same tree.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     tree_id      The global number of the tree.
  * \param [in]     tree_class   The element class of this tree.
  */
 void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
-                                             t8_gloidx_t tree_id,
+                                             t8_gloidx_t gtree_id,
                                              t8_eclass_t tree_class);
 
 /** Store an attribute at a tree in a cmesh.
@@ -198,6 +199,9 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
  *  Each application can set multiple attributes and attributes are distinguished
  *  by an interger key, where each application can use any integer as key.
  *  TODO: What to do if attribute exists already?
+ *        update: Just replace the existing attribute. Our philosophy is that
+ *                it is legal to call set functions multiple times.
+ *
  * \param [in, out] cmesh       The cmesh to be updated.
  * \param [in]      tree_id     The global id of the tree.
  * \param [in]      package_id  Unique identifier of a valid software package. \see sc_package_register
@@ -232,8 +236,8 @@ void                t8_cmesh_set_attribute (t8_cmesh_t cmesh,
  *                              for all element classes.
  * TODO: document orientation
  */
-void                t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t tree1,
-                                       t8_gloidx_t tree2, int face1,
+void                t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t gtree1,
+                                       t8_gloidx_t gtree2, int face1,
                                        int face2, int orientation);
 
 /* returns true if cmesh_a equals cmesh_b */

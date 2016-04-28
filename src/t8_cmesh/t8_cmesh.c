@@ -148,6 +148,10 @@ t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup)
   return cmesh->mpicomm;
 }
 
+#if 0
+/* This function is not part of the interface. The number of trees is always clear
+ * from the number of calls to t8_cmesh_set_tree_class.
+ * It is set in t8_cmesh_commit */
 /* TODO: rename num_trees to global_num_trees or num_gtrees etc.
  *       to always distinguish between local and global.
  *       Do this everywhere in the code.
@@ -183,6 +187,7 @@ t8_cmesh_set_num_trees (t8_cmesh_t cmesh, t8_gloidx_t num_trees)
    * TODO?
    */
 }
+#endif
 
 void
 t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from)
@@ -203,7 +208,10 @@ t8_cmesh_set_partition (t8_cmesh_t cmesh, int set_partition,
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (0 <= set_face_knowledge && set_face_knowledge <= 3);
-  /* TODO: allow -1 for set_face_knowledge to keep it unchanged? */
+  /* TODO: allow -1 for set_face_knowledge to keep it unchanged?
+   *      update: unchanged from what? face_knowledge is only important for the
+   * information on the stash. When the cmesh is derived there is no
+   * stash. A committed cmesh has always face_knowledge 3. */
 
   /* TODO: Careful with tese assumptions; allow the user maximum flexibility */
 #if 0
@@ -215,16 +223,7 @@ t8_cmesh_set_partition (t8_cmesh_t cmesh, int set_partition,
   /* set cmesh->set_partition to 0 or 1 (no; we always treat nonzero as true) */
   cmesh->set_partition = set_partition;
   /* TODO: this is how to query boolean variables */
-  if (!set_partition) {
-    /* The mesh is replicated, and this function just serves
-     * as set_num_trees.
-     * first_local_tree and num_ghosts are ignored. */
-    t8_cmesh_set_num_trees (cmesh, last_local_tree + 1);
-    return;
-  }
-  else {
-    /* TODO: this is how to query boolean variables */
-    T8_ASSERT (set_partition);
+  if (set_partition) {
     cmesh->first_tree = first_local_tree;
     cmesh->num_local_trees = last_local_tree - first_local_tree + 1;
     /* Since num_local_trees is a locidx we have to check whether we did create an
@@ -232,12 +231,11 @@ t8_cmesh_set_partition (t8_cmesh_t cmesh, int set_partition,
     T8_ASSERT (cmesh->num_local_trees ==
                last_local_tree - first_local_tree + 1);
     cmesh->face_knowledge = set_face_knowledge;
-    /* Right know no other face_knowledge is supported */
+    /* Right now no other face_knowledge is supported */
     SC_CHECK_ABORTF (set_face_knowledge == 3, "Level %i of face knowledge"
                      "is not supported.\n", set_face_knowledge);
+    cmesh->tree_offsets = tree_offsets;
   }
-
-  cmesh->tree_offsets = tree_offsets;
 }
 
 #if 0
@@ -269,13 +267,6 @@ t8_cmesh_set_refine (t8_cmesh_t cmesh, int level)
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (level >= 0);
 
-  /* TODO: move the following check into t8_commit */
-#if 0
-  if (cmesh_from->num_trees_per_eclass[T8_ECLASS_PYRAMID] > 0) {
-    SC_ABORTF ("Cmesh refine is not implemented for meshes containing %s\n",
-               "pyramids.");
-  }
-#endif
   cmesh->set_level = level;
 }
 
@@ -379,11 +370,11 @@ t8_cmesh_tree_index (t8_cmesh_t cmesh, t8_topidx_t tree_id)
 #endif
 
 void
-t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t tree_id,
+t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
                          t8_eclass_t tree_class)
 {
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (gtree_id >= 0);
 
   /* If we insert the first tree, set the dimension of the cmesh
    * to this tree's dimension. Otherwise check whether the dimension
@@ -392,27 +383,13 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t tree_id,
     cmesh->dimension = t8_eclass_to_dimension[tree_class];
   }
   else {
+    /* TODO: This makes it illegal to set a tree to i.e. quad and change it
+     *       to hex later. Even if we replace all trees with another dimension.
+     *       We could move this check to commit. */
     T8_ASSERT (t8_eclass_to_dimension[tree_class] == cmesh->dimension);
   }
 
-  t8_stash_add_class (cmesh->stash, tree_id, tree_class);
-#if 0
-  /* TODO: recycle this in commit, delete if not needed anymore */
-  tree = t8_cmesh_get_tree (cmesh, tree_id);
-
-  tree->eclass = tree_class;
-  tree->treeid = tree_id;
-  num_neighbors = t8_eclass_num_faces[tree_class];
-  /* Allocate neighbors and set entries to invalid values. */
-  tree->face_neighbors =
-    T8_ALLOC (t8_ctree_fneighbor_struct_t, num_neighbors);
-  for (i = 0; i < num_neighbors; i++) {
-    tree->face_neighbors[i].treeid = -1;
-    tree->face_neighbors[i].tree_to_face = -1;
-    tree->face_neighbors[i].is_owned = -1;
-  }
-  tree->attribute = NULL;
-#endif
+  t8_stash_add_class (cmesh->stash, gtree_id, tree_class);
 #ifdef T8_ENABLE_DEBUG
   cmesh->inserted_trees++;
 #endif
@@ -432,62 +409,13 @@ t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_topidx_t tree_id,
                           (void *) vertices, 1);
 }
 
-/* TODO: do we still need this function? if yes, write it correctly. */
-#if 0
 void
-t8_cmesh_set_ghost (t8_cmesh_t cmesh, t8_topidx_t ghost_id,
-                    t8_eclass_t ghost_eclass)
-{
-  t8_cghost_t         Ghost;
-  int                 i;
-  void               *check_ret;
-
-  T8_ASSERT (cmesh->set_partition);
-  T8_ASSERT (0 <= ghost_id && ghost_id < cmesh->num_ghosts);
-  /* If we insert the very first tree, set the dimension of the cmesh
-   * to this tree's dimension. Otherwise check whether the dimension
-   * of the tree to be inserted equals the dimension of the cmesh. */
-  if (cmesh->dimension == -1) {
-    cmesh->dimension = t8_eclass_to_dimension[ghost_eclass];
-  }
-  else {
-    T8_ASSERT (t8_eclass_to_dimension[ghost_eclass] == cmesh->dimension);
-  }
-  Ghost = T8_ALLOC (t8_cghost_struct_t, 1);
-  Ghost->eclass = ghost_eclass;
-  Ghost->treeid = ghost_id;
-  Ghost->owning_proc = -1;
-  Ghost->local_neighbors = T8_ALLOC (t8_topidx_t,
-                                     t8_eclass_num_faces[ghost_eclass]);
-  for (i = 0; i < t8_eclass_num_faces[ghost_eclass]; i++) {
-    Ghost->local_neighbors[i] = -1;
-  }
-  check_ret = sc_array_ (cmesh->ghosts, Ghost, NULL);
-  if (check_ret == NULL) {
-    SC_ABORTF ("Ghost tree %i inserted twice.", ghost_id);
-  }
-#ifdef T8_ENABLE_DEBUG
-  cmesh->inserted_ghosts++;
-#endif
-}
-#endif
-
-/* TODO: this function requires both trees to be set already.
- *       We could instead: Only require one tree to be set. In commit we would then
- *                         parse through all trees and wherever a neighbour is set we
- *                         set the respective neighbour for the second tree.
- *                     Or: Store the tree and face numbers and the orientation in a
- *                         temporary array and parse the info when committing.
- *                         This would not require any tree to be set.
- *                         But certainly is more memory intensive.
- */
-void
-t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t tree1, t8_gloidx_t tree2,
+t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t gtree1, t8_gloidx_t gtree2,
                    int face1, int face2, int orientation)
 {
   T8_ASSERT (0 <= orientation);
 
-  t8_stash_add_facejoin (cmesh->stash, tree1, tree2, face1, face2,
+  t8_stash_add_facejoin (cmesh->stash, gtree1, gtree2, face1, face2,
                          orientation);
 }
 
@@ -672,7 +600,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     cmesh_in->mpicomm = comm;
     cmesh_in->dimension = dimensions.dimension;
     cmesh_in->do_dup = dimensions.do_dup;
-    t8_cmesh_set_num_trees (cmesh_in, dimensions.num_trees);
+    cmesh_in->num_trees = dimensions.num_trees;
     for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
       cmesh_in->num_trees_per_eclass[iclass] =
         dimensions.num_trees_per_eclass[iclass];
@@ -1061,7 +989,6 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
   /* basic setup */
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
-  t8_cmesh_set_num_trees (cmesh, _T8_CMESH_P48_CONN (num_trees));
   /* Add each tree to cmesh and get vertex information for each tree */
   for (itree = 0; itree < _T8_CMESH_P48_CONN (num_trees); itree++) {    /* loop over each tree */
     t8_cmesh_set_tree_class (cmesh, itree,

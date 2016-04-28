@@ -63,35 +63,37 @@ t8_cmesh_trees_init (t8_cmesh_trees_t * ptrees, int num_procs,
 }
 
 void
-t8_cmesh_trees_add_tree (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
+t8_cmesh_trees_add_tree (t8_cmesh_trees_t trees, t8_locidx_t ltree_id,
                          int proc, t8_eclass_t eclass)
 {
   t8_part_tree_t      part;
   t8_ctree_t          tree;
   T8_ASSERT (trees != NULL);
   T8_ASSERT (proc >= 0);
-  T8_ASSERT (tree_id >= 0);
+  T8_ASSERT (ltree_id >= 0);
 
   part = t8_cmesh_trees_get_part (trees, proc);
-  tree = &((t8_ctree_t) part->first_tree)[tree_id - part->first_tree_id];
+  tree = &((t8_ctree_t) part->first_tree)[ltree_id - part->first_tree_id];
+  SC_CHECK_ABORTF ((int) tree->eclass == 0 && tree->treeid == 0,
+                   "A duplicate treeid (%li) was found.\n", (long) ltree_id);
   tree->eclass = eclass;
-  tree->treeid = tree_id;
+  tree->treeid = ltree_id;
   tree->neigh_offset = 0;
   tree->att_offset = 0;
   tree->num_attributes = 0;
-  trees->tree_to_proc[tree_id] = proc;
+  trees->tree_to_proc[ltree_id] = proc;
 }
 
 void
 t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees, t8_locidx_t ghost_index,
-                          t8_gloidx_t tree_id, int proc, t8_eclass_t eclass)
+                          t8_gloidx_t gtree_id, int proc, t8_eclass_t eclass)
 {
   t8_part_tree_t      part;
   t8_cghost_t         ghost;
 
   T8_ASSERT (trees != NULL);
   T8_ASSERT (proc >= 0);
-  T8_ASSERT (tree_id >= 0);
+  T8_ASSERT (gtree_id >= 0);
   T8_ASSERT (ghost_index >= 0);
 
   part = t8_cmesh_trees_get_part (trees, proc);
@@ -100,8 +102,11 @@ t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees, t8_locidx_t ghost_index,
    * From the first ghost we go by ghost_index to get to the desired ghost */
   ghost = &((t8_cghost_t) (((t8_ctree_struct_t *) part->first_tree) +
                            part->num_trees))[ghost_index];
+  SC_CHECK_ABORTF ((int) ghost->eclass == 0 && ghost->treeid == 0,
+                   "A duplicate ghostid (%li) was found.\n",
+                   (long) ghost_index);
   ghost->eclass = eclass;
-  ghost->treeid = tree_id;
+  ghost->treeid = gtree_id;
   ghost->neigh_offset = 0;
   trees->ghost_to_proc[ghost_index] = proc;
 }

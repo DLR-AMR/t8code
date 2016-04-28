@@ -117,7 +117,7 @@ t8_stash_class_bsearch (t8_stash_t stash, t8_gloidx_t tree_id)
 }
 
 void
-t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t id1, t8_gloidx_t id2,
+t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t gid1, t8_gloidx_t gid2,
                        int face1, int face2, int orientation)
 {
   t8_stash_joinface_struct_t *sjoin;
@@ -126,10 +126,10 @@ t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t id1, t8_gloidx_t id2,
   sjoin = (t8_stash_joinface_struct_t *) sc_array_push (&stash->joinfaces);
   /* We insert the face connection such that join->id1 is the smaller of
    * the two ids */
-  sjoin->face1 = id1 <= id2 ? face1 : face2;
-  sjoin->face2 = id1 <= id2 ? face2 : face1;;
-  sjoin->id1 = id1 <= id2 ? id1 : id2;;
-  sjoin->id2 = id1 <= id2 ? id2 : id1;;
+  sjoin->face1 = gid1 <= gid2 ? face1 : face2;
+  sjoin->face2 = gid1 <= gid2 ? face2 : face1;;
+  sjoin->id1 = gid1 <= gid2 ? gid1 : gid2;;
+  sjoin->id2 = gid1 <= gid2 ? gid2 : gid1;;
   sjoin->orientation = orientation;
 }
 
