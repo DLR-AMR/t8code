@@ -62,7 +62,7 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
 
 #ifdef T8_ENABLE_DEBUG
   /* TODO: check more conditions that must always hold after commit */
-  if ((cmesh->mpicomm != sc_MPI_COMM_NULL) || 0) {
+  if ((cmesh->mpicomm == sc_MPI_COMM_NULL) || 0) {
     return 0;
   }
 #endif
