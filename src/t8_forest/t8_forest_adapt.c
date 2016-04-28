@@ -147,7 +147,7 @@ void
 t8_forest_adapt (t8_forest_t forest)
 {
   t8_forest_t         forest_from;
-  sc_list_t          *refine_list = NULL;      /* This is only needed when we adapt recursively */
+  sc_list_t          *refine_list = NULL;       /* This is only needed when we adapt recursively */
   sc_array_t         *telements, *telements_from;
   size_t              tt;
   t8_locidx_t         el_considered;

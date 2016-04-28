@@ -1165,8 +1165,8 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
     /* Check whether we expect an MPI message from this process */
     while (proc_recv <= recv_last && (proc_recv == cmesh->mpirank ||
                                       t8_offset_nosend (proc_recv,
-                                                        cmesh_from->tree_offsets)))
-    {
+                                                        cmesh_from->
+                                                        tree_offsets))) {
       proc_recv++;
     }
   }

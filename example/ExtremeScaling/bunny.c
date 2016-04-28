@@ -27,17 +27,15 @@
 #include <t8_cmesh_vtk.h>
 #include <t8_forest.h>
 #include <t8_default.h>
-
 #include <p8est.h>
 #include <p8est_connectivity.h>
 #include <p8est_tets_hexes.h>
 #include <sc_flops.h>
 #include <sc_statistics.h>
 #include <sc_options.h>
-
-typedef struct
+  typedef struct
 {
-    double xm,xM,ym,yM,zm,zM;
+  double              xm, xM, ym, yM, zm, zM;
 }
 box_t;
 
@@ -58,8 +56,7 @@ bunny_get_midpoint (p8est_t * p8est, p4est_topidx_t which_tree,
 
   p8est_qcoord_to_vertex (p8est->connectivity, which_tree,
                           q->x + half_length, q->y + half_length,
-                          q->z + half_length,
-                          xyz);
+                          q->z + half_length, xyz);
 }
 
 #endif
@@ -70,21 +67,21 @@ static int
 bunny_refine (p8est_t * p8est, p4est_topidx_t which_tree,
               p8est_quadrant_t * quadrant)
 {
-    box_t * box;
-    double coords[3];
-    double R, r;
+  box_t              *box;
+  double              coords[3];
+  double              R, r;
 
+  box = (box_t *) p8est->user_pointer;
 
-    box = (box_t *) p8est->user_pointer;
-
-    bunny_get_midpoint (p8est, which_tree, quadrant, coords);
-    R = (box->xM-box->xm)/4.;
-    r = (coords[1] - box->ym)/(box->yM - box->ym) * R;
-    if (pow((coords[0] - (box->xM + box->xm)/2),2)
-            + pow((coords[2] - (box->zM + box->zm)/2),2) <=  r*r) {
-        return 1;
-    }
-    else return 0;
+  bunny_get_midpoint (p8est, which_tree, quadrant, coords);
+  R = (box->xM - box->xm) / 4.;
+  r = (coords[1] - box->ym) / (box->yM - box->ym) * R;
+  if (pow ((coords[0] - (box->xM + box->xm) / 2), 2)
+      + pow ((coords[2] - (box->zM + box->zm) / 2), 2) <= r * r) {
+    return 1;
+  }
+  else
+    return 0;
 }
 #endif
 
@@ -129,9 +126,9 @@ main (int argc, char **argv)
   Box_ex1.xm = -6;
   Box_ex1.ym = -6;
   Box_ex1.zm = -6;
-  Box_ex1.xM =  7;
-  Box_ex1.yM =  7;
-  Box_ex1.zM =  7;
+  Box_ex1.xM = 7;
+  Box_ex1.yM = 7;
+  Box_ex1.zM = 7;
 #endif
 
   sc_flops_start (&fi);
@@ -142,7 +139,6 @@ main (int argc, char **argv)
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[0], snapshot.iwtime, "Read");
   sc_flops_snap (&fi, &snapshot);
-
 
   SC_CHECK_ABORTF (ptg != NULL, "Failed to read tetgen %s", argbasename);
   P4EST_GLOBAL_STATISTICSF ("Read %d nodes and %d tets %s attributes\n",
@@ -160,18 +156,18 @@ main (int argc, char **argv)
 
   /* create a connectivity from the tet mesh and save it */
   if (mpirank == 0) {
-      connectivity = p8est_connectivity_new_tets (ptg);
+    connectivity = p8est_connectivity_new_tets (ptg);
   }
   else {
-      connectivity = NULL;
+    connectivity = NULL;
   }
   sc_flops_snap (&fi, &snapshot);
-  connectivity = p8est_connectivity_bcast (connectivity, 0, sc_MPI_COMM_WORLD);
+  connectivity =
+    p8est_connectivity_bcast (connectivity, 0, sc_MPI_COMM_WORLD);
 
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[2], snapshot.iwtime, "Bcast");
   sc_flops_snap (&fi, &snapshot);
-
 
   P4EST_GLOBAL_LDEBUGF ("Created and broadcasted %s\n", "conn");
 
@@ -190,14 +186,13 @@ main (int argc, char **argv)
   sc_stats_set1 (&stats[4], snapshot.iwtime, "Cmesh from Connectivity");
   sc_flops_snap (&fi, &snapshot);
 
-
   /*
-  if (mpirank == 0) {
-    snprintf (afilename, BUFSIZ, "%s", "read_tetgen.p8c");
-    retval = p8est_connectivity_save (afilename, connectivity);
-    SC_CHECK_ABORT (retval == 0, "Failed connectivity_save");
-  }
-  */
+     if (mpirank == 0) {
+     snprintf (afilename, BUFSIZ, "%s", "read_tetgen.p8c");
+     retval = p8est_connectivity_save (afilename, connectivity);
+     SC_CHECK_ABORT (retval == 0, "Failed connectivity_save");
+     }
+   */
 
   /* create a forest and visualize */
 
@@ -206,7 +201,7 @@ main (int argc, char **argv)
   t8_forest_init (&forest_p8);
   t8_forest_set_cmesh (forest_p8, cmesh_p8);
   t8_forest_set_level (forest_p8, level);
-  t8_forest_set_scheme (forest_p8, t8_scheme_new_default());
+  t8_forest_set_scheme (forest_p8, t8_scheme_new_default ());
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[5], snapshot.iwtime, "t8 forest p8 New level 4");
   sc_flops_snap (&fi, &snapshot);
@@ -214,14 +209,12 @@ main (int argc, char **argv)
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[6], snapshot.iwtime, "t8 forest p8 commit level 4");
 
-
   t8_forest_unref (&forest_p8);
- // p8est_refine (p8est, 0,bunny_refine, NULL);
- // p8est_refine (p8est, 0,bunny_refine, NULL);
+  // p8est_refine (p8est, 0,bunny_refine, NULL);
+  // p8est_refine (p8est, 0,bunny_refine, NULL);
 
 //  sc_flops_shot (&fi, &snapshot);
 //  sc_stats_set1 (&stats[5], snapshot.iwtime, "Refine 1 times");
-
 
 /*
   snprintf (afilename, BUFSIZ, "%s", "read_tetgen");
@@ -229,7 +222,8 @@ main (int argc, char **argv)
 */
 
   sc_flops_snap (&fi, &snapshot);
-  cmesh_t8 = t8_cmesh_from_tetgen_file((char *)argbasename, 0, sc_MPI_COMM_WORLD, 0);
+  cmesh_t8 =
+    t8_cmesh_from_tetgen_file ((char *) argbasename, 0, sc_MPI_COMM_WORLD, 0);
   t8_cmesh_unref (&cmesh_t8);
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[5], snapshot.iwtime, "t8 cmesh from tetgen");
@@ -239,7 +233,7 @@ main (int argc, char **argv)
   t8_forest_init (&forest_t8);
   t8_forest_set_cmesh (forest_t8, cmesh_p8);
   t8_forest_set_level (forest_t8, level);
-  t8_forest_set_scheme (forest_t8, t8_scheme_new_default());
+  t8_forest_set_scheme (forest_t8, t8_scheme_new_default ());
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[7], snapshot.iwtime, "t8 forest t8 New Level 4");
   sc_flops_snap (&fi, &snapshot);

@@ -30,15 +30,15 @@
 #include <sc_statistics.h>
 #include <sc_options.h>
 
-#include <t8_forest/t8_forest_types.h> /* TODO: This file should not be included from an application */
+#include <t8_forest/t8_forest_types.h>  /* TODO: This file should not be included from an application */
 
-int max_ref_level = 0;
+int                 max_ref_level = 0;
 
 /* This function refines every element */
 static int
 t8_basic_adapt_refine_type (t8_forest_t forest, t8_topidx_t which_tree,
-                t8_eclass_scheme_t * ts,
-                int num_elements, t8_element_t * elements[])
+                            t8_eclass_scheme_t * ts,
+                            int num_elements, t8_element_t * elements[])
 {
   int                 level;
   int                 type;
@@ -54,10 +54,10 @@ t8_basic_adapt_refine_type (t8_forest_t forest, t8_topidx_t which_tree,
   }
   /* get the type of the current element */
   type = dim == 2 ? ((t8_dtri_t *) elements[0])->type :
-                    ((t8_dtet_t *) elements[0])->type;
+    ((t8_dtet_t *) elements[0])->type;
   /* refine type 0 and 3 */
   if (type == 0 || type == 3) {
-      return 1;
+    return 1;
   }
   return 0;
 }
@@ -76,14 +76,15 @@ t8_timings_adapt_type (int start_l, int dim)
   eclass = dim == 2 ? T8_ECLASS_TRIANGLE : T8_ECLASS_TET;
 
   t8_forest_set_cmesh (forests[0],
-                       t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD, 0));
+                       t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD,
+                                             0));
   t8_forest_set_scheme (forests[0], t8_scheme_new_default ());
   t8_forest_set_level (forests[0], start_l);
   t8_forest_commit (forests[0]);
 
   t8_forest_init (&forests[1]);
-  t8_forest_set_adapt_temp (forests[1], forests[0], t8_basic_adapt_refine_type,
-                              NULL, 1);
+  t8_forest_set_adapt_temp (forests[1], forests[0],
+                            t8_basic_adapt_refine_type, NULL, 1);
 
   sc_flops_start (&fi);
   sc_flops_snap (&fi, &snapshot);

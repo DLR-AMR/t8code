@@ -266,8 +266,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     for (joinfaces_it = 0; joinfaces_it < cmesh->stash->joinfaces.elem_count;
          joinfaces_it++) {
       joinface =
-        (t8_stash_joinface_struct_t *) sc_array_index (&cmesh->stash->
-                                                       joinfaces,
+        (t8_stash_joinface_struct_t *) sc_array_index (&cmesh->
+                                                       stash->joinfaces,
                                                        joinfaces_it);
       id1 = joinface->id1;
       id2 = joinface->id2;

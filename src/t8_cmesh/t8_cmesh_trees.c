@@ -269,22 +269,23 @@ t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees, int proc)
 void
 t8_cmesh_trees_set_all_boundary (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
 {
-  t8_locidx_t           ltree, lghost;
-  t8_cghost_t           ghost;
-  t8_ctree_t            tree;
-  t8_locidx_t          *face_neighbor;
-  t8_gloidx_t          *gface_neighbor;
-  int                   iface;
+  t8_locidx_t         ltree, lghost;
+  t8_cghost_t         ghost;
+  t8_ctree_t          tree;
+  t8_locidx_t        *face_neighbor;
+  t8_gloidx_t        *gface_neighbor;
+  int                 iface;
 
-  for (ltree = 0;ltree < cmesh->num_local_trees;ltree++) {
+  for (ltree = 0; ltree < cmesh->num_local_trees; ltree++) {
     tree = t8_cmesh_trees_get_tree_ext (trees, ltree, &face_neighbor, NULL);
-    for (iface = 0;iface < t8_eclass_num_faces[tree->eclass];iface++) {
+    for (iface = 0; iface < t8_eclass_num_faces[tree->eclass]; iface++) {
       face_neighbor[iface] = ltree;
     }
   }
-  for (lghost = 0;lghost < cmesh->num_ghosts;lghost++) {
-    ghost = t8_cmesh_trees_get_ghost_ext (trees, lghost, &gface_neighbor, NULL);
-    for (iface = 0;iface < t8_eclass_num_faces[ghost->eclass];iface++) {
+  for (lghost = 0; lghost < cmesh->num_ghosts; lghost++) {
+    ghost =
+      t8_cmesh_trees_get_ghost_ext (trees, lghost, &gface_neighbor, NULL);
+    for (iface = 0; iface < t8_eclass_num_faces[ghost->eclass]; iface++) {
       gface_neighbor[iface] = ghost->treeid;
     }
   }

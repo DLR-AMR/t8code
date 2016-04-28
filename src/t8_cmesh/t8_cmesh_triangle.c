@@ -458,191 +458,193 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
 #if 0
   /* TODO: Use cmesh_bcast when scanning replicated mesh.
    *       in that case only rank 0 will read the mesh */
-  if (mpirank == 0 || partition) {
+  if (mpirank == 0 || partition)
 #endif
-    {
-      int                 retval, corner_offset = 0;
-      char                current_file[BUFSIZ];
-
-      t8_cmesh_init (&cmesh);
-      t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
-      /* read .node file */
-      snprintf (current_file, BUFSIZ, "%s.node", fileprefix);
-      retval =
-        t8_cmesh_triangle_read_nodes (cmesh, current_file, &vertices,
-                                      &num_vertices, dim);
-      if (retval != 0 && retval != 1) {
-        t8_global_errorf ("Error while parsing file %s.\n", current_file);
-        t8_cmesh_unref (&cmesh);
-      }
-      else {
-        /* read .ele file */
-        corner_offset = retval;
-        snprintf (current_file, BUFSIZ, "%s.ele", fileprefix);
-        retval =
-          t8_cmesh_triangle_read_eles (cmesh, corner_offset, current_file,
-                                       vertices, dim
-#ifdef T8_ENABLE_DEBUG
-                                       , num_vertices
-#endif
-          );
-        if (retval != 0 && retval != 1) {
-          t8_global_errorf ("Error while parsing file %s.\n", current_file);
-          t8_cmesh_unref (&cmesh);
-        }
-        else {
-          /* read .neigh file */
-          snprintf (current_file, BUFSIZ, "%s.neigh", fileprefix);
-          retval = t8_cmesh_triangle_read_neigh (cmesh, corner_offset,
-                                                 current_file, dim);
-          if (retval != 0) {
-            t8_global_errorf ("Error while parsing file %s.\n", current_file);
-            t8_cmesh_unref (&cmesh);
-          }
-        }
-      }
-      T8_ASSERT (cmesh != NULL);
-    }
-    /* TODO: broadcasting NULL does not work. We need a way to tell the
-     *       other processes if something went wrong. */
-    /* This broadcasts the NULL pointer if anything went wrong */
-#if 0
-    /* TODO: If not partitioned use bcast */
-    if (!partition) {
-      cmesh = t8_cmesh_bcast (cmesh, 0, comm);
-    }
-#endif
-
-    if (cmesh != NULL) {
-      if (partition) {
-        first_tree = (mpirank * cmesh->num_trees) / mpisize;
-        last_tree = ((mpirank + 1) * cmesh->num_trees) / mpisize - 1;
-        t8_debugf ("Partition range [%lli,%lli]\n", (long long) first_tree,
-                   (long long) last_tree);
-        t8_cmesh_set_partition (cmesh, 1, 3, first_tree, last_tree, NULL);
-      }
-      t8_cmesh_commit (cmesh);
-    }
-#ifdef T8_WITH_METIS
-    if (cmesh != NULL && !partition) {
-      t8_cmesh_reorder (cmesh, comm);
-      t8_debugf ("Reordered mesh with METIS.\n");
-    }
-#endif
-    return cmesh;
-  }
-
-  static              t8_cmesh_t
-    t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix,
-                                                int partition,
-                                                sc_MPI_Comm comm, int do_dup,
-                                                int dim, sc_flopinfo_t * fi,
-                                                sc_flopinfo_t * snapshot,
-                                                sc_statinfo_t * stats,
-                                                int statindex)
   {
-    int                 mpirank, mpisize, mpiret;
-    t8_cmesh_t          cmesh;
-    double             *vertices;
-    t8_topidx_t         num_vertices;
-    t8_gloidx_t         first_tree, last_tree;
+    int                 retval, corner_offset = 0;
+    char                current_file[BUFSIZ];
 
-    mpiret = sc_MPI_Comm_size (comm, &mpisize);
-    SC_CHECK_MPI (mpiret);
-    mpiret = sc_MPI_Comm_rank (comm, &mpirank);
-    SC_CHECK_MPI (mpiret);
-
-    cmesh = NULL;
-    if (mpirank == 0 || partition) {
-      int                 retval, corner_offset;
-      char                current_file[BUFSIZ];
-
-      t8_cmesh_init (&cmesh);
-      t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
-      /* read .node file */
-      snprintf (current_file, BUFSIZ, "%s.node", fileprefix);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
+    /* read .node file */
+    snprintf (current_file, BUFSIZ, "%s.node", fileprefix);
+    retval =
+      t8_cmesh_triangle_read_nodes (cmesh, current_file, &vertices,
+                                    &num_vertices, dim);
+    if (retval != 0 && retval != 1) {
+      t8_global_errorf ("Error while parsing file %s.\n", current_file);
+      t8_cmesh_unref (&cmesh);
+    }
+    else {
+      /* read .ele file */
+      corner_offset = retval;
+      snprintf (current_file, BUFSIZ, "%s.ele", fileprefix);
       retval =
-        t8_cmesh_triangle_read_nodes (cmesh, current_file, &vertices,
-                                      &num_vertices, dim);
+        t8_cmesh_triangle_read_eles (cmesh, corner_offset, current_file,
+                                     vertices, dim
+#ifdef T8_ENABLE_DEBUG
+                                     , num_vertices
+#endif
+        );
       if (retval != 0 && retval != 1) {
         t8_global_errorf ("Error while parsing file %s.\n", current_file);
         t8_cmesh_unref (&cmesh);
       }
       else {
-        /* read .ele file */
-        corner_offset = retval;
-        snprintf (current_file, BUFSIZ, "%s.ele", fileprefix);
-        retval =
-          t8_cmesh_triangle_read_eles (cmesh, corner_offset, current_file,
-                                       vertices, dim
-#ifdef T8_ENABLE_DEBUG
-                                       , num_vertices
-#endif
-          );
-        if (retval != 0 && retval != 1) {
+        /* read .neigh file */
+        snprintf (current_file, BUFSIZ, "%s.neigh", fileprefix);
+        retval = t8_cmesh_triangle_read_neigh (cmesh, corner_offset,
+                                               current_file, dim);
+        if (retval != 0) {
           t8_global_errorf ("Error while parsing file %s.\n", current_file);
           t8_cmesh_unref (&cmesh);
         }
-        else {
-          /* read .neigh file */
-          snprintf (current_file, BUFSIZ, "%s.neigh", fileprefix);
-          retval = t8_cmesh_triangle_read_neigh (cmesh, corner_offset,
-                                                 current_file, dim);
-          if (retval != 0) {
-            t8_global_errorf ("Error while parsing file %s.\n", current_file);
-            t8_cmesh_unref (&cmesh);
-          }
+      }
+    }
+    T8_ASSERT (cmesh != NULL);
+  }
+  /* TODO: broadcasting NULL does not work. We need a way to tell the
+   *       other processes if something went wrong. */
+  /* This broadcasts the NULL pointer if anything went wrong */
+#if 0
+  /* TODO: If not partitioned use bcast */
+  if (!partition) {
+    cmesh = t8_cmesh_bcast (cmesh, 0, comm);
+  }
+#endif
+
+  if (cmesh != NULL) {
+    if (partition) {
+      first_tree = (mpirank * cmesh->num_trees) / mpisize;
+      last_tree = ((mpirank + 1) * cmesh->num_trees) / mpisize - 1;
+      t8_debugf ("Partition range [%lli,%lli]\n", (long long) first_tree,
+                 (long long) last_tree);
+      t8_cmesh_set_partition (cmesh, 1, 3, first_tree, last_tree, NULL);
+    }
+    t8_cmesh_commit (cmesh);
+  }
+#ifdef T8_WITH_METIS
+  if (cmesh != NULL && !partition) {
+    t8_cmesh_reorder (cmesh, comm);
+    t8_debugf ("Reordered mesh with METIS.\n");
+  }
+#endif
+  return cmesh;
+}
+
+static              t8_cmesh_t
+t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix,
+                                            int partition,
+                                            sc_MPI_Comm comm, int do_dup,
+                                            int dim, sc_flopinfo_t * fi,
+                                            sc_flopinfo_t * snapshot,
+                                            sc_statinfo_t * stats,
+                                            int statindex)
+{
+  int                 mpirank, mpisize, mpiret;
+  t8_cmesh_t          cmesh;
+  double             *vertices;
+  t8_topidx_t         num_vertices;
+  t8_gloidx_t         first_tree, last_tree;
+
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+
+  cmesh = NULL;
+  if (mpirank == 0 || partition) {
+    int                 retval, corner_offset;
+    char                current_file[BUFSIZ];
+
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
+    /* read .node file */
+    snprintf (current_file, BUFSIZ, "%s.node", fileprefix);
+    retval =
+      t8_cmesh_triangle_read_nodes (cmesh, current_file, &vertices,
+                                    &num_vertices, dim);
+    if (retval != 0 && retval != 1) {
+      t8_global_errorf ("Error while parsing file %s.\n", current_file);
+      t8_cmesh_unref (&cmesh);
+    }
+    else {
+      /* read .ele file */
+      corner_offset = retval;
+      snprintf (current_file, BUFSIZ, "%s.ele", fileprefix);
+      retval =
+        t8_cmesh_triangle_read_eles (cmesh, corner_offset, current_file,
+                                     vertices, dim
+#ifdef T8_ENABLE_DEBUG
+                                     , num_vertices
+#endif
+        );
+      if (retval != 0 && retval != 1) {
+        t8_global_errorf ("Error while parsing file %s.\n", current_file);
+        t8_cmesh_unref (&cmesh);
+      }
+      else {
+        /* read .neigh file */
+        snprintf (current_file, BUFSIZ, "%s.neigh", fileprefix);
+        retval = t8_cmesh_triangle_read_neigh (cmesh, corner_offset,
+                                               current_file, dim);
+        if (retval != 0) {
+          t8_global_errorf ("Error while parsing file %s.\n", current_file);
+          t8_cmesh_unref (&cmesh);
         }
       }
-      T8_ASSERT (cmesh != NULL);
     }
-    /* TODO: broadcasting NULL does not work. We need a way to tell the
-     *       other processes if something went wrong. */
-    /* This broadcasts the NULL pointer if anything went wrong */
+    T8_ASSERT (cmesh != NULL);
+  }
+  /* TODO: broadcasting NULL does not work. We need a way to tell the
+   *       other processes if something went wrong. */
+  /* This broadcasts the NULL pointer if anything went wrong */
 
-    if (!partition) {
-      cmesh = t8_cmesh_bcast (cmesh, 0, comm);
+  if (!partition) {
+    cmesh = t8_cmesh_bcast (cmesh, 0, comm);
+  }
+
+  if (cmesh != NULL) {
+    if (partition) {
+      first_tree = (mpirank * cmesh->num_trees) / mpisize;
+      last_tree = ((mpirank + 1) * cmesh->num_trees) / mpisize - 1;
+      t8_debugf ("Partition range [%lli,%lli]\n", (long long) first_tree,
+                 (long long) last_tree);
+      t8_cmesh_set_partition (cmesh, 1, 3, first_tree, last_tree, NULL);
     }
+    sc_flops_snap (fi, snapshot);
+    t8_cmesh_commit (cmesh);
+    sc_stats_set1 (&stats[statindex], snapshot->iwtime, "Partitioned Commit");
 
-    if (cmesh != NULL) {
-      if (partition) {
-        first_tree = (mpirank * cmesh->num_trees) / mpisize;
-        last_tree = ((mpirank + 1) * cmesh->num_trees) / mpisize - 1;
-        t8_debugf ("Partition range [%lli,%lli]\n", (long long) first_tree,
-                   (long long) last_tree);
-        t8_cmesh_set_partition (cmesh, 1, 3, first_tree, last_tree, NULL);
-      }
-      sc_flops_snap (fi, snapshot);
-      t8_cmesh_commit (cmesh);
-      sc_stats_set1 (&stats[statindex], snapshot->iwtime,
-                     "Partitioned Commit");
-
-    }
-    return cmesh;
   }
+  return cmesh;
+}
 
-  t8_cmesh_t
-    t8_cmesh_from_triangle_file (char *fileprefix, int partition,
-                                 sc_MPI_Comm comm, int do_dup) {
-    return t8_cmesh_from_tetgen_or_triangle_file (fileprefix, partition, comm,
-                                                  do_dup, 2);
-  }
+t8_cmesh_t
+t8_cmesh_from_triangle_file (char *fileprefix, int partition,
+                             sc_MPI_Comm comm, int do_dup)
+{
+  return t8_cmesh_from_tetgen_or_triangle_file (fileprefix, partition, comm,
+                                                do_dup, 2);
+}
 
-  t8_cmesh_t
-    t8_cmesh_from_tetgen_file_time (char *fileprefix, int partition,
-                                    sc_MPI_Comm comm, int do_dup,
-                                    sc_flopinfo_t * fi,
-                                    sc_flopinfo_t * snapshot,
-                                    sc_statinfo_t * stats, int statentry) {
-    return t8_cmesh_from_tetgen_or_triangle_file_time (fileprefix, partition,
-                                                       comm, do_dup, 3, fi,
-                                                       snapshot, stats,
-                                                       statentry);
-  }
+t8_cmesh_t
+t8_cmesh_from_tetgen_file_time (char *fileprefix, int partition,
+                                sc_MPI_Comm comm, int do_dup,
+                                sc_flopinfo_t * fi,
+                                sc_flopinfo_t * snapshot,
+                                sc_statinfo_t * stats, int statentry)
+{
+  return t8_cmesh_from_tetgen_or_triangle_file_time (fileprefix, partition,
+                                                     comm, do_dup, 3, fi,
+                                                     snapshot, stats,
+                                                     statentry);
+}
 
-  t8_cmesh_t
-    t8_cmesh_from_tetgen_file (char *fileprefix, int partition,
-                               sc_MPI_Comm comm, int do_dup) {
-    return t8_cmesh_from_tetgen_or_triangle_file (fileprefix, partition, comm,
-                                                  do_dup, 3);
-  }
+t8_cmesh_t
+t8_cmesh_from_tetgen_file (char *fileprefix, int partition,
+                           sc_MPI_Comm comm, int do_dup)
+{
+  return t8_cmesh_from_tetgen_or_triangle_file (fileprefix, partition, comm,
+                                                do_dup, 3);
+}
