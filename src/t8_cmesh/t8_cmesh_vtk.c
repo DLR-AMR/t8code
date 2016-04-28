@@ -55,9 +55,9 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
   T8_ASSERT (fileprefix != NULL);
   T8_ASSERT (scale == 1.);      /* scale = 1 not implemented yet */
 
-  /* Currently only rank 0 prints the cmesh.
-   * This requires that the cmesh is replicated. */
-  if (cmesh->mpirank >= 0) {    // HOLKE edit
+  /* If the cmesh is replicated only rank 0 prints it,
+   * otherwise each process prints its part of the cmesh.*/
+  if (cmesh->mpirank == 0 || cmesh->set_partition) {
     char                vtufilename[BUFSIZ];
     FILE               *vtufile;
     t8_topidx_t         num_vertices, num_trees, ivertex;
