@@ -530,6 +530,8 @@ t8_cmesh_refine_tree (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
           && attr_struct.key == 0) {
         /* The attribute was the tree's coordinates.
          * In this case we compute the new coordinates */
+        /* TODO: We assume here that this particular combination of package id and
+         *       key is only used for attributes. This must be ensured */
         coords = (double *) T8_TREE_ATTR (newtree, T8_TREE_ATTR_INFO (newtree,
                                                                       iatt));
         /* coords is the attribute of newtree */
