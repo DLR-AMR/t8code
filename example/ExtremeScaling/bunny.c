@@ -33,7 +33,7 @@
 #include <sc_flops.h>
 #include <sc_statistics.h>
 #include <sc_options.h>
-  typedef struct
+typedef struct
 {
   double              xm, xM, ym, yM, zm, zM;
 }
