@@ -577,13 +577,13 @@ t8_cmesh_trees_print (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
   for (itree = 0; itree < cmesh->num_local_trees; itree++) {
     tree = t8_cmesh_trees_get_tree_ext (trees, itree, &tree_neighbor, &ttf);
     eclass = tree->eclass;
-    snprintf (buf, BUFSIZ, "%li/%lli (%s):  |", (long) itree,
+    snprintf (buf, BUFSIZ, "%li/%lli (%s):  \t|", (long) itree,
               (long long) itree + cmesh->first_tree,
               t8_eclass_to_string[eclass]);
     for (iface = 0; iface < t8_eclass_num_faces[eclass]; iface++) {
       tree_neighbor_global =
         t8_cmesh_get_global_id (cmesh, tree_neighbor[iface]);
-      snprintf (buf + strlen (buf), BUFSIZ - strlen (buf), " %li (%i) |",
+      snprintf (buf + strlen (buf), BUFSIZ - strlen (buf), " %2li (%i) |",
                 tree_neighbor_global, ttf[iface] % F);
     }
     t8_debugf ("%s\n", buf);
