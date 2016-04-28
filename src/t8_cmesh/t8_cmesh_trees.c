@@ -566,13 +566,16 @@ t8_cmesh_trees_print (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
   t8_gloidx_t         tree_neighbor_global, *ghost_neighbor;
   t8_ctree_t          tree;
   t8_cghost_t         ghost;
-  int                 iface;
+  int8_t             *ttf;
+  int                 iface, F;
   t8_eclass_t         eclass;
   char                buf[BUFSIZ];
+
   t8_debugf ("Trees (local/global): %s\n",
              cmesh->num_local_trees == 0 ? "None" : "");
+  F = t8_eclass_max_num_faces[cmesh->dimension];
   for (itree = 0; itree < cmesh->num_local_trees; itree++) {
-    tree = t8_cmesh_trees_get_tree_ext (trees, itree, &tree_neighbor, NULL);
+    tree = t8_cmesh_trees_get_tree_ext (trees, itree, &tree_neighbor, &ttf);
     eclass = tree->eclass;
     snprintf (buf, BUFSIZ, "%li/%lli (%s):  |", (long) itree,
               (long long) itree + cmesh->first_tree,
@@ -580,8 +583,8 @@ t8_cmesh_trees_print (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
     for (iface = 0; iface < t8_eclass_num_faces[eclass]; iface++) {
       tree_neighbor_global =
         t8_cmesh_get_global_id (cmesh, tree_neighbor[iface]);
-      snprintf (buf + strlen (buf), BUFSIZ - strlen (buf), " %li |",
-                tree_neighbor_global);
+      snprintf (buf + strlen (buf), BUFSIZ - strlen (buf), " %li (%i) |",
+                tree_neighbor_global, ttf[iface] % F);
     }
     t8_debugf ("%s\n", buf);
   }
@@ -589,14 +592,14 @@ t8_cmesh_trees_print (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
              cmesh->num_ghosts == 0 ? "None" : "");
   for (ighost = 0; ighost < cmesh->num_ghosts; ighost++) {
     ghost =
-      t8_cmesh_trees_get_ghost_ext (trees, ighost, &ghost_neighbor, NULL);
+      t8_cmesh_trees_get_ghost_ext (trees, ighost, &ghost_neighbor, &ttf);
     eclass = ghost->eclass;
     snprintf (buf, BUFSIZ, "%li/%lli (%s):  |",
               (long) ighost + cmesh->num_local_trees,
               (long long) ghost->treeid, t8_eclass_to_string[eclass]);
     for (iface = 0; iface < t8_eclass_num_faces[eclass]; iface++) {
-      snprintf (buf + strlen (buf), BUFSIZ - strlen (buf), " %li |",
-                ghost_neighbor[iface]);
+      snprintf (buf + strlen (buf), BUFSIZ - strlen (buf), " %li (%i) |",
+                ghost_neighbor[iface], ttf[iface] % F);
     }
     t8_debugf ("%s\n", buf);
   }
