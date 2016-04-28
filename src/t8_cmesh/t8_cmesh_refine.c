@@ -198,6 +198,36 @@ t8_cmesh_refine_new_neighbors (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
                                         &neighbor_old, &ttf_old);
   }
   switch (eclass) {
+  case T8_ECLASS_QUAD:
+    /* Inner face connections */
+    /* For the inner face connections we have
+     *                 faces
+     * child_id     f_0 f_1 f_2 f_3
+     *    0          -   1   -   2
+     *    1          0   -   -   3
+     *    2          -   3   0   -
+     *    3          2   1   -   -
+     *
+     *   This means that child i along its face f_j is connected to the child
+     *   given in the table.
+     *   These values can be computed as follows:
+     *   child i is connected along face 1-(i%2) with child (1 xor i)
+     *                    and along face 3-(i/2) with child (2 xor i)
+     *
+     * The orientation for each of these connections is 0.
+     */
+    iface = 1 - (child_id % 2);
+    if (compute_ghost) {
+      neighbor_out[iface] =
+        t8_cmesh_refine_new_neighborid (cmesh_from, parent_id, child_id ^ 1,
+                                        id_array, factor);
+    }
+    else {
+      neighbor_out_ghost[iface] =
+        t8_cmesh_refine_new_globalid (global_parent_id, child_id ^ 1, factor);
+    }
+    ttf_out[iface] = iface;     /* TODO: set correcte face number */
+    break;
   case T8_ECLASS_TRIANGLE:
     if (child_id == 3) {
       T8_ASSERT (!compute_ghost);
