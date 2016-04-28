@@ -38,11 +38,11 @@ T8_EXTERN_C_BEGIN ();
  */
 #if 0
 #if defined(__bgq__)
-  #define T8_SHMEM_BEST_TYPE SC_SHMEM_BGQ
+#define T8_SHMEM_BEST_TYPE SC_SHMEM_BGQ
 #elif defined(SC_ENABLE_MPIWINSHARED)
-  #define T8_SHMEM_BEST_TYPE SC_SHMEM_WINDOW
+#define T8_SHMEM_BEST_TYPE SC_SHMEM_WINDOW
 #else
-  #define T8_SHMEM_BEST_TYPE SC_SHMEM_BASIC
+#define T8_SHMEM_BEST_TYPE SC_SHMEM_BASIC
 #endif
 #endif
 /* For testing we only use basic shmem type */

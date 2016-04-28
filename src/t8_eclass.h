@@ -90,12 +90,12 @@ extern const int    t8_eclass_vtk_type[T8_ECLASS_COUNT];
 extern const int    t8_eclass_vtk_corner_number[T8_ECLASS_COUNT][8];
 
 /** For each of the element classes, list the type of the faces. */
-extern const int   
-  t8_eclass_face_types[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES];
+extern const int
+     t8_eclass_face_types[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES];
 
 /** For each of the element classes, count the boundary points. */
-extern const int   
-  t8_eclass_boundary_count[T8_ECLASS_COUNT][T8_ECLASS_COUNT];
+extern const int
+     t8_eclass_boundary_count[T8_ECLASS_COUNT][T8_ECLASS_COUNT];
 
 /** For each eclass, the name of this class as a string */
 extern const char  *t8_eclass_to_string[T8_ECLASS_COUNT];

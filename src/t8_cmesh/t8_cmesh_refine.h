@@ -34,7 +34,7 @@
 
 T8_EXTERN_C_BEGIN ();
 
-void            t8_cmesh_refine (t8_cmesh_t cmesh);
+void                t8_cmesh_refine (t8_cmesh_t cmesh);
 
 T8_EXTERN_C_END ();
 
