@@ -83,9 +83,9 @@ void
 t8_cmesh_add_attributes (t8_cmesh_t cmesh)
 {
   t8_stash_attribute_struct_t *attribute;
-  t8_stash_t        stash = cmesh->stash;
-  t8_locidx_t       ltree;
-  size_t            si, sj;
+  t8_stash_t          stash = cmesh->stash;
+  t8_locidx_t         ltree;
+  size_t              si, sj;
 
   ltree = -1;
   for (si = 0, sj = 0; si < stash->attributes.elem_count; si++, sj++) {
@@ -95,8 +95,8 @@ t8_cmesh_add_attributes (t8_cmesh_t cmesh)
         attribute->id < cmesh->first_tree + cmesh->num_local_trees) {
       if (attribute->id > ltree) {
         /* Enter a new tree */
-       ltree = attribute->id;
-       sj = 0;
+        ltree = attribute->id;
+        sj = 0;
       }
       /* attribute->id is a gloidx that is casted to a locidx here.
        * Should not cause problems, since mesh is replicated */
@@ -136,7 +136,7 @@ t8_cmesh_commit_replicated_new (t8_cmesh_t cmesh)
     }
     for (si = 0; si < stash->attributes.elem_count; si++) {
       attribute = (t8_stash_attribute_struct_t *)
-          sc_array_index (&stash->attributes, si);
+        sc_array_index (&stash->attributes, si);
       /* attribute->id is a gloidx that is casted to a locidx here.
        * Should not cause problems, since mesh is replicated */
       T8_ASSERT (attribute->id == (t8_locidx_t) attribute->id);
@@ -152,24 +152,23 @@ t8_cmesh_commit_replicated_new (t8_cmesh_t cmesh)
     /* Add attributes */
     /* TODO: currently the attributes array still has to be sorted,
      *       find a way around it */
-    t8_stash_attribute_sort(cmesh->stash);
+    t8_stash_attribute_sort (cmesh->stash);
     cmesh->num_trees = cmesh->num_local_trees = num_trees;
     cmesh->first_tree = 0;
     t8_cmesh_add_attributes (cmesh);
 
     /* Set all face connections */
     t8_cmesh_trees_set_all_boundary (cmesh, cmesh->trees);
-    for (si = 0;si < cmesh->stash->joinfaces.elem_count;si++) {
+    for (si = 0; si < cmesh->stash->joinfaces.elem_count; si++) {
       joinface = (t8_stash_joinface_struct_t *)
-          sc_array_index(&cmesh->stash->joinfaces, si);
+        sc_array_index (&cmesh->stash->joinfaces, si);
       F = t8_eclass_max_num_faces[cmesh->dimension];
       (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, joinface->id1,
-                                           &face_neigh, &ttf);
+                                          &face_neigh, &ttf);
       (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, joinface->id2,
-                                           &face_neigh2, &ttf2);
+                                          &face_neigh2, &ttf2);
       face_neigh[joinface->face1] = (t8_locidx_t) joinface->id2;
-      ttf[joinface->face1] = joinface->orientation * F +
-          joinface->face2;
+      ttf[joinface->face1] = joinface->orientation * F + joinface->face2;
       face_neigh2[joinface->face2] = (t8_locidx_t) joinface->id1;
       ttf2[joinface->face2] = joinface->orientation * F + joinface->face1;
     }
@@ -212,7 +211,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh)
     /* TODO: reset cmesh */
     return;
   }
-  t8_cmesh_set_shmem_type (cmesh);    /* TODO: do we actually need the shared array? */
+  t8_cmesh_set_shmem_type (cmesh);      /* TODO: do we actually need the shared array? */
   t8_stash_attribute_sort (cmesh->stash);
 
   sc_flops_shot (&fi, &snapshot);
@@ -224,15 +223,15 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh)
   ghost_ids = sc_hash_new (t8_ghost_hash, t8_ghost_facejoin_equal,
                            &num_hashs, ghost_facejoin_mempool);
 
-  temp_facejoin = (t8_ghost_facejoin_t *) sc_mempool_alloc (ghost_facejoin_mempool);
+  temp_facejoin =
+    (t8_ghost_facejoin_t *) sc_mempool_alloc (ghost_facejoin_mempool);
 
   cmesh->num_ghosts = 0;
   /* Parse joinfaces array and save all global id of local ghosts, and assign them a local id */
   for (joinfaces_it = 0; joinfaces_it < cmesh->stash->joinfaces.elem_count;
        joinfaces_it++) {
     joinface =
-      (t8_stash_joinface_struct_t *) sc_array_index (&cmesh->stash->
-                                                     joinfaces,
+      (t8_stash_joinface_struct_t *) sc_array_index (&cmesh->stash->joinfaces,
                                                      joinfaces_it);
     id1 = joinface->id1;
     id2 = joinface->id2;
@@ -248,7 +247,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh)
           /* If we did not already stored id2 in the hash we do so and assign the next local ghost id */
           temp_facejoin->local_id = cmesh->num_ghosts++;
           temp_facejoin = (t8_ghost_facejoin_t *)
-              sc_mempool_alloc (ghost_facejoin_mempool);
+            sc_mempool_alloc (ghost_facejoin_mempool);
         }
       }
       if (!id1_istree) {
@@ -259,7 +258,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh)
           /* If we did not already stored id1 in the hash we do so and assign the next local ghost id */
           temp_facejoin->local_id = cmesh->num_ghosts++;
           temp_facejoin = (t8_ghost_facejoin_t *)
-              sc_mempool_alloc (ghost_facejoin_mempool);
+            sc_mempool_alloc (ghost_facejoin_mempool);
         }
       }
     }
@@ -324,11 +323,11 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh)
      * and total size of attributes per tree */
     for (si = 0; si < cmesh->stash->attributes.elem_count; si++) {
       attribute = (t8_stash_attribute_struct_t *)
-          sc_array_index (&cmesh->stash->attributes, si);
+        sc_array_index (&cmesh->stash->attributes, si);
       if (cmesh->first_tree <= attribute->id && attribute->id <
           cmesh->first_tree + cmesh->num_local_trees) {
         /* attribute->id is a gloidx that is casted to a locidx here.
-        * Should not cause problems, since mesh is replicated */
+         * Should not cause problems, since mesh is replicated */
         T8_ASSERT (attribute->id - cmesh->first_tree ==
                    (t8_locidx_t) (attribute->id - cmesh->first_tree));
         tree1 = t8_cmesh_trees_get_tree (cmesh->trees, attribute->id
@@ -347,10 +346,8 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh)
         sc_array_index (&cmesh->stash->joinfaces, iz);
       id1 = joinface->id1;
       id2 = joinface->id2;
-      id1_istree = cmesh->first_tree <= id1 &&
-        last_tree >= id1;
-      id2_istree = cmesh->first_tree <= id2 &&
-        last_tree >= id2;
+      id1_istree = cmesh->first_tree <= id1 && last_tree >= id1;
+      id2_istree = cmesh->first_tree <= id2 && last_tree >= id2;
       temp_facejoin->ghost_id = id1;
       tree1 = NULL;
       ghost1 = NULL;
@@ -368,8 +365,9 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh)
       if (id1_istree) {
         /* First tree in the connection is a local tree */
         tree1 = t8_cmesh_trees_get_tree_ext (cmesh->trees,
-                                             joinface->id1 - cmesh->first_tree,
-                                             &face_neigh, &ttf);
+                                             joinface->id1 -
+                                             cmesh->first_tree, &face_neigh,
+                                             &ttf);
       }
       else if (sc_hash_lookup (ghost_ids, temp_facejoin,
                                (void ***) &facejoin_pp)) {
@@ -386,8 +384,9 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh)
       if (id2_istree) {
         /* Second tree in the connection is a local tree */
         tree2 = t8_cmesh_trees_get_tree_ext (cmesh->trees,
-                                             joinface->id2 - cmesh->first_tree,
-                                             &face_neigh2, &ttf2);
+                                             joinface->id2 -
+                                             cmesh->first_tree, &face_neigh2,
+                                             &ttf2);
       }
       else if (sc_hash_lookup (ghost_ids, temp_facejoin,
                                (void ***) &facejoin_pp)) {
@@ -443,7 +442,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh)
     /* compute global number of trees. id1 serves as buffer since
      * global number and local number have different datatypes */
 
-  } /* End if nonempty partition */
+  }                             /* End if nonempty partition */
 
   sc_mempool_free (ghost_facejoin_mempool, temp_facejoin);
   sc_hash_destroy (ghost_ids);
