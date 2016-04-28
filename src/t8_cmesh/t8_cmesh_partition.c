@@ -1324,6 +1324,7 @@ t8_cmesh_partition (t8_cmesh_t cmesh)
   /*      Compute local number of trees         */
   /*         and trees per proc array           */
   /**********************************************/
+  /* TODO: is set_level still the correct variable? Currently this does not work */
   if (cmesh->set_level >= 0) {
     /* Compute first and last tree index */
     T8_ASSERT (cmesh->tree_offsets == NULL);
