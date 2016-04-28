@@ -1315,11 +1315,10 @@ t8_cmesh_partition (t8_cmesh_t cmesh)
   t8_cmesh_t          cmesh_from;
   t8_gloidx_t         last_tree;
 
-  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh->set_from));
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (!cmesh->committed);
   T8_ASSERT (cmesh->set_partition);
-  T8_ASSERT (cmesh->set_from != NULL);
-  T8_ASSERT (cmesh->set_from->committed);
 
   cmesh_from = (t8_cmesh_t) cmesh->set_from;
   /**********************************************/
