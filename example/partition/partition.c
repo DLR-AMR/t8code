@@ -45,7 +45,7 @@ t8_random_partition (int level)
   mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
   SC_CHECK_MPI (mpiret);
 
-  conn = p8est_connectivity_new_brick (8, 8, 8, 0, 0, 0);
+  conn = p8est_connectivity_new_brick (2, 2, 2, 0, 0, 0);
 
   cmesh = t8_cmesh_new_from_p8est (conn, sc_MPI_COMM_WORLD, 0, 1);
   p8est_connectivity_destroy (conn);
