@@ -177,7 +177,7 @@ t8_cmesh_refine_new_neighbors (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
   t8_gloidx_t         old_neigh_ghost, *gneighbor_old;
   int8_t             *ttf_old;
   int                 num_faces, F, dim, old_face, orient, new_neigh_childid;
-  int                 compute_ghost;
+  int                 compute_ghost, k;
 
   /* One of the inputs must be NULL and the other one must be set */
   T8_ASSERT (neighbor_out == NULL || neighbor_out_ghost == NULL);
@@ -206,27 +206,61 @@ t8_cmesh_refine_new_neighbors (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
      *    0          -   1   -   2
      *    1          0   -   -   3
      *    2          -   3   0   -
-     *    3          2   1   -   -
+     *    3          2   -   1   -
      *
      *   This means that child i along its face f_j is connected to the child
      *   given in the table.
      *   These values can be computed as follows:
      *   child i is connected along face 1-(i%2) with child (1 xor i)
      *                    and along face 3-(i/2) with child (2 xor i)
-     *
+     *   The face number on the neighbor of this connection is (j xor 1)
      * The orientation for each of these connections is 0.
      */
-    iface = 1 - (child_id % 2);
-    if (compute_ghost) {
-      neighbor_out[iface] =
-        t8_cmesh_refine_new_neighborid (cmesh_from, parent_id, child_id ^ 1,
-                                        id_array, factor);
+    for (k = 1, iface = 1 - (child_id % 2); k <= 2;
+         k++, iface = 3 - child_id / 2) {
+      t8_debugf ("Setting face neighbor %i for child %i\n", iface, child_id);
+      if (!compute_ghost) {
+        neighbor_out[iface] =
+          t8_cmesh_refine_new_neighborid (cmesh_from, parent_id, child_id ^ k,
+                                          id_array, factor);
+      }
+      else {
+        neighbor_out_ghost[iface] =
+          t8_cmesh_refine_new_globalid (global_parent_id, child_id ^ k,
+                                        factor);
+      }
+      ttf_out[iface] = iface ^ 1;
     }
-    else {
-      neighbor_out_ghost[iface] =
-        t8_cmesh_refine_new_globalid (global_parent_id, child_id ^ 1, factor);
+    /* Outer face connections */
+    for (k = 0, iface = child_id % 2; k < 2; k++, iface = 2 + child_id / 2) {
+      /* Get the old face neighbor, face number and orientation */
+      if (!compute_ghost) {
+        old_neigh = neighbor_old[iface];
+      }
+      else {
+        old_neigh_ghost = gneighbor_old[iface];
+      }
+      old_face = ttf_old[iface] % F;
+      orient = ttf_old[iface] / F;
+      if (!compute_ghost && old_neigh == parent_id) {
+        /* We are local tree and this side is a boundary,
+         * so we set our own local id as face neighbor */
+        neighbor_out[iface] = t8_cmesh_refine_new_neighborid (cmesh_from,
+                                                              parent_id,
+                                                              child_id,
+                                                              id_array,
+                                                              factor);
+      }
+      else if (compute_ghost && old_neigh_ghost == global_parent_id) {
+        /* We are local ghost and this side is a boundary,
+         * so we set our own glocal id as face neighbor */
+        neighbor_out_ghost[iface] =
+          t8_cmesh_refine_new_globalid (global_parent_id, child_id, factor);
+      }
+      else {
+        /* We are connected to another tree */
+      }
     }
-    ttf_out[iface] = iface;     /* TODO: set correcte face number */
     break;
   case T8_ECLASS_TRIANGLE:
     if (child_id == 3) {
@@ -334,6 +368,7 @@ t8_cmesh_refine_new_neighbors (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
         }
         /* The new orientation and face number are the same as the old
          * ones so we do not need to change ttf_out */
+        ttf_out[iface] = ttf_old[iface];
       }
     }
     break;
@@ -604,12 +639,12 @@ t8_cmesh_refine_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     newghost = t8_cmesh_trees_get_ghost_ext (cmesh->trees, lghost_id,
                                              &nghost_neighbors, &nttf);
     /* Set all face_neighbors of the child ghost */
+    /* *INDENT-OFF* */
     t8_cmesh_refine_new_neighbors (cmesh_from, ghostid,
-                                   t8_cmesh_get_global_id (cmesh_from,
-                                                           cmesh_from->num_local_trees
-                                                           + ghostid),
+     t8_cmesh_get_global_id (cmesh_from, cmesh_from->num_local_trees + ghostid),
                                    newghost->eclass, idarray, (int) child_id,
                                    NULL, nghost_neighbors, nttf, factor);
+    /* *INDENT-ON* */
     child_id = idarray[ghostid][ichild + 1].child_id;
   }
 }
