@@ -146,12 +146,19 @@ void                t8_cmesh_set_derive (t8_cmesh_t cmesh,
  *                             This array may be NULL for automatic computation.
  *                             TODO: document flag for shared trees.
  */
-void                t8_cmesh_set_partition (t8_cmesh_t cmesh,
-                                            int set_partition,
-                                            int set_face_knowledge,
-                                            t8_gloidx_t first_local_tree,
-                                            t8_gloidx_t last_local_tree,
-                                            t8_gloidx_t * tree_offsets);
+void                t8_cmesh_set_partition_range (t8_cmesh_t cmesh,
+                                                  int set_face_knowledge,
+                                                  t8_gloidx_t
+                                                  first_local_tree,
+                                                  t8_gloidx_t
+                                                  last_local_tree);
+
+void                t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh,
+                                                    t8_gloidx_t *
+                                                    tree_offsets);
+
+void                t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh,
+                                                    int element_level);
 
 /* TODO: This function is no longer needed.  Scavenge documentation if helpful. */
 #if 0
