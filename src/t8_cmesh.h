@@ -111,16 +111,13 @@ void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
 void                t8_cmesh_set_derive (t8_cmesh_t cmesh,
                                          t8_cmesh_t set_from);
 
-/** Declare if the cmesh is understood as a partitioned cmesh or a
- * replicated cmesh. Replicated (each processor owns the whole mesh) is
- * the default and in this case \ref t8_cmesh_set_partition only sets the
- * number of global trees and the values \a first_local_tree and
- * \a set_face_knowledge are ignored.
+/** Declare if the cmesh is understood as a partitioned cmesh and specify
+ * the processor local tree range.
+ * This function should be preferred over \ref t8_cmesh_set_partition_offsets
+ * when the cmesh is not derived from another cmesh.
  * This call is only valid when the cmesh is not yet committed via a call
  * to \ref t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     set_partition A nonzero value specifies that \a cmesh
- *                              is interpreted as a partitioned mesh.
  * \parma [in]     set_face_knowledge   Several values are possible that define
  *                              how much information is required on face connections,
  *                              specified by \ref t8_cmesh_set_join.
@@ -132,19 +129,16 @@ void                t8_cmesh_set_derive (t8_cmesh_t cmesh,
  *                              3: Expect face connection of local and ghost trees.
  *                              Consistency of this requirement is checked on
  *                              \ref t8_cmesh_commit.
+ *                             -1: Co not change the face_knowledge level but keep any
+ *                                 previously set ones. (Possibly by a previous call to \ref t8_cmesh_set_partition_range)
  *                              TODO: if -1 is given, do NOT change it?
  *                                    This may be a general convention?
  * \param [in]     first_local_tree The global index of the first tree on this process.
- *                                  If \a set_partition is zero, must be 0.
  * \param [in]     last_local_tree  The global index of the last tree on this process.
- *                                  If \a set_partition is zero, must be
- *                                  \a num_global_trees - 1.
  *                                  If this process should be empty then \a last_local_tree
  *                                  must be strictly smaller than \a first_local_tree.
- * \param [in] tree_offsets    An array of global tree_id offsets
- *                             for each process can be specified here.
- *                             This array may be NULL for automatic computation.
- *                             TODO: document flag for shared trees.
+ *
+ * \see t8_cmesh_set_partition_offset \see t8_cmesh_set_partition_uniform
  */
 void                t8_cmesh_set_partition_range (t8_cmesh_t cmesh,
                                                   int set_face_knowledge,
@@ -153,10 +147,28 @@ void                t8_cmesh_set_partition_range (t8_cmesh_t cmesh,
                                                   t8_gloidx_t
                                                   last_local_tree);
 
+/** Declare if the cmesh is understood as a partitioned cmesh and specify
+ * the first local tree for each process.
+ * This call is only valid when the cmesh is not yet committed via a call
+ * to \ref t8_cmesh_commit.
+ * If instead \ref t8_cmesh_set_partition_range was called and the cmesh is
+ * derived then the offset array is constructed during commit.
+ * \param [in,out] cmesh        The cmesh to be updated.
+ * \param [in] tree_offsets    An array of global tree_id offsets
+ *                             for each process can be specified here.
+ *                             TODO: document flag for shared trees.
+ */
 void                t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh,
                                                     t8_gloidx_t *
                                                     tree_offsets);
 
+/** Declare if the cmesh is understood as a partitioned cmesh where the partition
+ * table is derived from an assumed uniform refinement of a given level.
+ * This call is only valid when the cmesh is not yet committed via a call
+ * to \ref t8_cmesh_commit.
+ * \param [in,out] cmesh        The cmesh to be updated.
+ * \param [in]     element_level The refinement_level.
+ */
 void                t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh,
                                                     int element_level);
 
