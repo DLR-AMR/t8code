@@ -87,7 +87,8 @@ typedef struct t8_cmesh
   int                 face_knowledge;  /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partioned;
                             see \ref t8_cmesh_set_partition.
 */
-  int8_t              set_level;       /**< Non-negative if the cmesh should be partition from an already existing cmesh
+  int8_t              set_refine_level;
+  int8_t              set_partition_level; /**< Non-negative if the cmesh should be partition from an already existing cmesh
                                          with an assumes \a level uniform mesh underneath.  TODO: fix sentence */
 #if 0
   t8_cmesh_from_t     from_method;      /* TODO: Document */

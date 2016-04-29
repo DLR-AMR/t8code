@@ -56,20 +56,20 @@ t8_random_partition (int level)
   //t8_cmesh_set_partition_from (cmesh_part, cmesh, level, NULL);
 
   t8_cmesh_set_derive (cmesh_part, cmesh);
-  t8_cmesh_set_partition (cmesh_part, 1, -1, -1, -1,
-                          t8_cmesh_offset_random
-                          (sc_MPI_COMM_WORLD,
-                           t8_cmesh_get_num_trees (cmesh), 0));
+  t8_cmesh_set_partition_offsets (cmesh_part,
+                                  t8_cmesh_offset_random
+                                  (sc_MPI_COMM_WORLD,
+                                   t8_cmesh_get_num_trees (cmesh), 0));
   t8_cmesh_commit (cmesh_part);
 
   if (mpisize > 1 && 1) {
     t8_cmesh_init (&cmesh_part2);
 
     t8_cmesh_set_derive (cmesh_part2, cmesh_part);
-    t8_cmesh_set_partition (cmesh_part2, 1, -1, -1, -1,
-                            t8_cmesh_offset_random
-                            (sc_MPI_COMM_WORLD,
-                             t8_cmesh_get_num_trees (cmesh), 1));
+    t8_cmesh_set_partition_offsets (cmesh_part2,
+                                    t8_cmesh_offset_random
+                                    (sc_MPI_COMM_WORLD,
+                                     t8_cmesh_get_num_trees (cmesh), 1));
     t8_cmesh_commit (cmesh_part2);
 
     snprintf (file, BUFSIZ, "t8_brick_partition_random2_%04d", mpirank);
@@ -104,15 +104,15 @@ t8_partition (int level)
 
   t8_cmesh_init (&cmesh_part);
   t8_cmesh_set_derive (cmesh_part, cmesh);
-  t8_cmesh_set_refine (cmesh_part, level);
+  t8_cmesh_set_partition_uniform (cmesh_part, level);
   t8_cmesh_commit (cmesh_part);
   if (mpisize > 1 && 1) {
     t8_cmesh_init (&cmesh_part2);
     t8_cmesh_set_derive (cmesh_part2, cmesh_part);
-    t8_cmesh_set_partition (cmesh_part2, 1, -1, -1, -1,
-                            t8_cmesh_offset_concentrate
-                            (1, sc_MPI_COMM_WORLD,
-                             t8_cmesh_get_num_trees (cmesh)));
+    t8_cmesh_set_partition_offsets (cmesh_part2,
+                                    t8_cmesh_offset_concentrate
+                                    (1, sc_MPI_COMM_WORLD,
+                                     t8_cmesh_get_num_trees (cmesh)));
     t8_cmesh_commit (cmesh_part2);
     snprintf (file, BUFSIZ, "t8_brick_partition2_%04d", mpirank);
     t8_cmesh_vtk_write_file (cmesh_part2, file, 1.0);

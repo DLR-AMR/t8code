@@ -1308,6 +1308,10 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
 
 /* Given a cmesh which is to be partitioned, execute the partition task.
  * This includes partitioning by uiniform level and partitioning from a second cmesh */
+/* TODO: Check whether the input data is consistent.
+ *       If tree_offset is set on one process it has to be set on each process.
+ *       If first_tree is set   "       "         "
+ *       what else? */
 void
 t8_cmesh_partition (t8_cmesh_t cmesh)
 {
@@ -1325,11 +1329,11 @@ t8_cmesh_partition (t8_cmesh_t cmesh)
   /*         and trees per proc array           */
   /**********************************************/
   /* TODO: is set_level still the correct variable? Currently this does not work */
-  if (cmesh->set_level >= 0) {
+  if (cmesh->set_partition_level >= 0) {
     /* Compute first and last tree index */
     T8_ASSERT (cmesh->tree_offsets == NULL);
-    t8_cmesh_uniform_bounds (cmesh_from, cmesh->set_level, &cmesh->first_tree,
-                             NULL, &last_tree, NULL,
+    t8_cmesh_uniform_bounds (cmesh_from, cmesh->set_partition_level,
+                             &cmesh->first_tree, NULL, &last_tree, NULL,
                              &cmesh->first_tree_shared);
     cmesh->num_local_trees = last_tree - cmesh->first_tree + 1;
     /* To compute the tree_offsets correctly we have to invert the sign on the

@@ -119,7 +119,8 @@ t8_cmesh_init (t8_cmesh_t * pcmesh)
   t8_refcount_init (&cmesh->rc);
 
   /* sensible (hard error) defaults */
-  cmesh->set_level = 0;         /*< sensible default TODO document */
+  cmesh->set_refine_level = 0;  /*< sensible default TODO document */
+  cmesh->set_partition_level = -1;
   cmesh->dimension = -1;        /*< ok; force user to select dimension */
   cmesh->mpicomm = sc_MPI_COMM_WORLD;
   cmesh->mpirank = -1;
@@ -200,6 +201,8 @@ t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from)
   t8_cmesh_ref (set_from);
 }
 
+#if 0
+/* TODO: deprecated, remove */
 void
 t8_cmesh_set_partition (t8_cmesh_t cmesh, int set_partition,
                         int set_face_knowledge,
@@ -238,6 +241,56 @@ t8_cmesh_set_partition (t8_cmesh_t cmesh, int set_partition,
     cmesh->tree_offsets = tree_offsets;
   }
 }
+#endif
+
+void
+t8_cmesh_set_partition_range (t8_cmesh_t cmesh, int set_face_knowledge,
+                              t8_gloidx_t first_local_tree,
+                              t8_gloidx_t last_local_tree)
+{
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+
+  SC_CHECK_ABORT (set_face_knowledge == 1 || set_face_knowledge == 3,
+                  "Face knowledge other than three is not implemented yet.");
+  cmesh->face_knowledge = set_face_knowledge;
+  cmesh->first_tree = first_local_tree;
+  cmesh->num_local_trees = last_local_tree - first_local_tree + 1;
+  cmesh->set_partition = 1;
+  /* Overwrite previous partition settings */
+  cmesh->tree_offsets = NULL;   /* TODO: Do we need to free memory? */
+  cmesh->set_partition_level = -1;
+}
+
+void
+t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh, t8_gloidx_t * tree_offsets)
+{
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+
+  cmesh->tree_offsets = tree_offsets;
+  cmesh->set_partition = 1;
+  if (tree_offsets != NULL) {
+    /* We overwrite any previously partition settings */
+    cmesh->first_tree = -1;
+    cmesh->num_local_trees = -1;
+    cmesh->set_partition_level = -1;
+  }
+}
+
+void
+t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level)
+{
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (element_level >= -1);
+
+  cmesh->set_partition = 1;
+  cmesh->set_partition_level = element_level;
+  if (element_level >= 0) {
+    /* We overwrite any previous partition settings */
+    cmesh->first_tree = -1;
+    cmesh->num_local_trees = -1;
+    cmesh->tree_offsets = NULL; /* TODO: Do we need to free memory? */
+  }
+}
 
 #if 0
 /* No longer needed */
@@ -253,7 +306,7 @@ t8_cmesh_set_partition_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
   cmesh->set_partition = 1;
   cmesh->face_knowledge = cmesh_from->face_knowledge;
   if (level >= 0) {
-    cmesh->set_level = level;
+    cmesh->set_partition_level = level;
   }
   else {
     cmesh->tree_offsets = tree_offsets;
@@ -268,7 +321,7 @@ t8_cmesh_set_refine (t8_cmesh_t cmesh, int level)
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (level >= 0);
 
-  cmesh->set_level = level;
+  cmesh->set_refine_level = level;
 }
 
 t8_gloidx_t
@@ -1030,7 +1083,7 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
     num_trees = _T8_CMESH_P48_CONN (num_trees);
     first_tree = (mpirank * num_trees) / mpisize;
     last_tree = ((mpirank + 1) * num_trees) / mpisize - 1;
-    t8_cmesh_set_partition (cmesh, 1, 3, first_tree, last_tree, NULL);
+    t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
   }
   t8_cmesh_commit (cmesh);
   return cmesh;
@@ -1474,7 +1527,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
     num_trees = num_trees_for_hypercube[eclass];
     first_tree = (mpirank * num_trees) / mpisize;
     last_tree = ((mpirank + 1) * num_trees) / mpisize - 1;
-    t8_cmesh_set_partition (cmesh, 1, 3, first_tree, last_tree, NULL);
+    t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
   }
 
   t8_cmesh_commit (cmesh);

@@ -58,9 +58,10 @@ t8_read_tetgen_file_build_cmesh (const char *prefix, int do_dup,
       t8_cmesh_init (&cmesh_partitioned);
 
       t8_cmesh_set_derive (cmesh_partitioned, cmesh);
-      t8_cmesh_set_partition (cmesh_partitioned, 1, -1, -1, -1,
-                              t8_cmesh_offset_random (sc_MPI_COMM_WORLD,
-                                                      cmesh->num_trees, 1));
+      t8_cmesh_set_partition_offsets (cmesh_partitioned,
+                                      t8_cmesh_offset_random
+                                      (sc_MPI_COMM_WORLD, cmesh->num_trees,
+                                       1));
       t8_cmesh_commit (cmesh_partitioned);
       t8_debugf ("Succesfully partitioned %s.\n", "cmesh");
       t8_debugf ("cmesh has:\n\t%li local tetrahedra\n",

@@ -606,9 +606,8 @@ t8_cmesh_refine_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     /* Set all face_neighbors of the child ghost */
     t8_cmesh_refine_new_neighbors (cmesh_from, ghostid,
                                    t8_cmesh_get_global_id (cmesh_from,
-                                                           cmesh_from->
-                                                           num_local_trees +
-                                                           ghostid),
+                                                           cmesh_from->num_local_trees
+                                                           + ghostid),
                                    newghost->eclass, idarray, (int) child_id,
                                    NULL, nghost_neighbors, nttf, factor);
     child_id = idarray[ghostid][ichild + 1].child_id;
@@ -698,11 +697,11 @@ t8_cmesh_refine (t8_cmesh_t cmesh)
   T8_ASSERT (cmesh->set_from != NULL);
   T8_ASSERT (cmesh->set_from->committed);
   T8_ASSERT (cmesh->set_from->num_trees_per_eclass[T8_ECLASS_PYRAMID] == 0);
-  T8_ASSERT (cmesh->set_level == 1);    /* levels bigger than 1 are not yet implemented */
+  T8_ASSERT (cmesh->set_refine_level == 1);     /* levels bigger than 1 are not yet implemented */
 
   cmesh_from = (t8_cmesh_t) cmesh->set_from;
   dim = cmesh_from->dimension;
-  level = cmesh->set_level;
+  level = cmesh->set_refine_level;
   /* The number of new trees per old tree
    * dim     factor (level = 1)
    *  0         1   (points)

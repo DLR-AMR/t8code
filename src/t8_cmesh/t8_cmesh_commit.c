@@ -499,7 +499,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
       t8_cmesh_partition (cmesh);
       t8_debugf ("Done cmesh_partition\n");
     }
-    else if (cmesh->set_level > 0) {
+    else if (cmesh->set_refine_level > 0) {
       t8_debugf ("Enter cmesh_refine\n");
       t8_cmesh_refine (cmesh);
       t8_debugf ("Done cmesh_refine\n");

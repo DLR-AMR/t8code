@@ -192,7 +192,7 @@ t8_basic_partitioned ()
   if (cmesh == NULL) {
     return;
   }
-  t8_cmesh_set_partitioned (cmesh, 1, 3, first_tree, last_tree);
+  t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
   for (i = first_tree > 1 ? first_tree : 2; i <= last_tree; i++) {
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_TRIANGLE);
   }
@@ -252,7 +252,7 @@ t8_basic_partition (t8_eclass_t eclass, int set_level)
   t8_cmesh_set_derive (cmesh_part, cmesh);
   /* TODO: indicate/document how first and last local tree can be left open,
    *       same idea for face_knowledge */
-  t8_cmesh_set_partition (cmesh_part, 1, 3, -1, -1, offsets);
+  t8_cmesh_set_partition_offsets (cmesh_part, offsets);
   t8_cmesh_commit (cmesh_part);
   snprintf (file, BUFSIZ, "basic_partition_%04d", mpirank);
   t8_cmesh_vtk_write_file (cmesh_part, file, 1.0);
