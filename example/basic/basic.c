@@ -71,6 +71,8 @@ t8_basic_refine_test ()
 
   t8_forest_unref (&forest_adapt);
 }
+#endif
+#if 1
 
 static void
 t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
@@ -100,7 +102,16 @@ t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
   else {
     t8_debugf ("Error in output\n");
   }
-#if 1
+  {
+    t8_cmesh_t          cmesh_refine;
+
+    t8_cmesh_init (&cmesh_refine);
+    t8_cmesh_set_derive (cmesh_refine, cmesh);
+    t8_cmesh_set_refine (cmesh_refine, 1);
+    t8_cmesh_commit (cmesh_refine);
+    t8_cmesh_destroy (&cmesh_refine);
+  }
+#if 0
   t8_forest_set_cmesh (forest, cmesh);
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
 
@@ -112,11 +123,12 @@ t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
       t8_forest_write_vtk (forest, "basic");    /* This does nothing right now */
     }
   }
-
-  t8_forest_unref (&forest);
 #endif
+  t8_forest_unref (&forest);
+  t8_cmesh_destroy (&cmesh);
 }
-
+#endif
+#if 0
 static void
 t8_basic_periodic (int do_dup, int set_level, int dim)
 {
@@ -221,7 +233,7 @@ t8_basic (int do_dup, int set_level)
 }
 
 #endif
-
+#if 0
 static void
 t8_basic_partition (t8_eclass_t eclass, int set_level)
 {
@@ -258,7 +270,7 @@ t8_basic_partition (t8_eclass_t eclass, int set_level)
   t8_cmesh_vtk_write_file (cmesh_part, file, 1.0);
   t8_cmesh_unref (&cmesh_part);
 }
-
+#endif
 int
 main (int argc, char **argv)
 {
@@ -289,10 +301,7 @@ main (int argc, char **argv)
   t8_basic (1, level);
   t8_global_productionf ("Done testing basic tet mesh.\n");
 #endif
-
-  //t8_basic_partition (T8_ECLASS_QUAD, level);
-  t8_basic_partition (T8_ECLASS_TET, level);
-  t8_basic_partition (T8_ECLASS_TRIANGLE, level);
+  t8_basic_hypercube (T8_ECLASS_QUAD, 0, 0, 1, 0, 0);
 #if 0
   t8_global_productionf ("Testing hypercube cmesh.\n");
 
