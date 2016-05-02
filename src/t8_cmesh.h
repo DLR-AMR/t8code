@@ -81,20 +81,6 @@ int                 t8_cmesh_is_initialized (t8_cmesh_t cmesh);
  */
 int                 t8_cmesh_is_committed (t8_cmesh_t cmesh);
 
-/** Set MPI communicator to use in commiting a new cmesh.
- * TODO: remove the internal storage of mpicomm asap.
- * This call is only valid when the cmesh is not yet committed via a call
- * to \see t8_cmesh_commit.
- * \param [in,out] cmesh        The cmesh whose communicator will be set.
- * \param [in] mpicomm          This MPI communicator must be valid.
- * \param [in] do_dup           If true, the communicator will be duped in
- *                              this creation and whenever another cmesh is
- *                              derived from it in the future.
- *                              If false, no duping takes place at all.
- */
-void                t8_cmesh_set_mpicomm (t8_cmesh_t cmesh,
-                                          sc_MPI_Comm mpicomm, int do_dup);
-
 /** This function sets a cmesh to be derived from.
  * The default is to create a cmesh standalone by specifying all data manually.
  * A coarse mesh can also be constructed by deriving it from an existing one.
@@ -308,15 +294,19 @@ void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
  *                              (TODO: or bcast) and
  *                              specialized with t8_cmesh_set_* calls first (?).
  */
-void                t8_cmesh_commit (t8_cmesh_t cmesh);
+void                t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
-/** Return the MPI communicator of a cmesh.
- * \param [in] cmesh       The cmesh whose communicator will be returned.
- * \param [out] do_dup     This variable is filled with the do_dup entry of \a cmesh.
- * \return                 The MPI communicator associated to \a cmesh.
- * \a cmesh must be committed before calling this function.
- */
-sc_MPI_Comm         t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup);
+/** Check whether a given MPI communicator assigns the same rank and mpisize
+  * as stored in a cmesh.
+  * \param [in] cmesh       The cmesh to be considered.
+  * \param [in] comm        A MPI communicator.
+  * \return                 True if mpirank and mpisize from \a comm are the same as
+  *                         the values stored in \a cmesh.
+  *                         False otherwise.
+  * \a cmesh must be committed before calling this function.
+  * */
+int                 t8_cmesh_comm_is_valid (t8_cmesh_t cmesh,
+                                            sc_MPI_Comm comm);
 
 /** Return the global number of trees in a cmesh.
  * \param [in] cmesh       The cmesh to be considered.
@@ -453,7 +443,7 @@ void                t8_cmesh_ref (t8_cmesh_t cmesh);
  *                              Otherwise, the pointer is not changed and
  *                              the cmesh is not modified in other ways.
  */
-void                t8_cmesh_unref (t8_cmesh_t * pcmesh);
+void                t8_cmesh_unref (t8_cmesh_t * pcmesh, sc_MPI_Comm comm);
 
 /** Verify that a coarse mesh has only one reference left and destroy it.
  * This function is preferred over \ref t8_cmesh_unref when it is known
@@ -461,8 +451,9 @@ void                t8_cmesh_unref (t8_cmesh_t * pcmesh);
  * \param [in,out]  This cmesh must have a reference count of one.
  *                  It can be in any state (committed or not).
  *                  Then it effectively calls \ref t8_cmesh_unref.
+ * \param [in]      comm A mpi communicator that is valid with \a cmesh.
  */
-void                t8_cmesh_destroy (t8_cmesh_t * pcmesh);
+void                t8_cmesh_destroy (t8_cmesh_t * pcmesh, sc_MPI_Comm comm);
 
 /* Functions for construcing complete and committed cmeshes */
 

@@ -81,7 +81,7 @@ typedef struct t8_cmesh
   /* TODO: make the comments more legible */
   int                 committed;
   int                 dimension; /**< The dimension of the cmesh. It is set when the first tree is inserted. */
-  int                 do_dup;   /**< Communicator shall be duped. */
+
   int                 set_partition; /**< If nonzero the cmesh is partitioned.
                                             If zero each process has the whole cmesh. */
   int                 face_knowledge;  /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partioned;
@@ -97,7 +97,6 @@ typedef struct t8_cmesh
                                   existing cmesh by copy or more elaborate
                                   modification, we store a pointer to this
                                   other cmesh here. */
-  sc_MPI_Comm         mpicomm;  /**< MPI communicator to use. */
   int                 mpirank;  /**< Number of this MPI process. */
   int                 mpisize;  /**< Number of MPI processes. */
   t8_refcount_t       rc; /**< The reference count of the cmesh. */

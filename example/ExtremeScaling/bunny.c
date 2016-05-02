@@ -224,7 +224,7 @@ main (int argc, char **argv)
   sc_flops_snap (&fi, &snapshot);
   cmesh_t8 =
     t8_cmesh_from_tetgen_file ((char *) argbasename, 0, sc_MPI_COMM_WORLD, 0);
-  t8_cmesh_unref (&cmesh_t8);
+  t8_cmesh_unref (&cmesh_t8, sc_MPI_COMM_WORLD);
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[5], snapshot.iwtime, "t8 cmesh from tetgen");
 

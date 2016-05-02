@@ -62,8 +62,7 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
 
 #ifdef T8_ENABLE_DEBUG
   /* TODO: check more conditions that must always hold after commit */
-  if ((!t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) ||
-      (cmesh->mpicomm == sc_MPI_COMM_NULL) || 0) {
+  if ((!t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) || 0) {
     return 0;
   }
 #endif
@@ -109,6 +108,23 @@ t8_cmesh_ghost_equal_fn (const void *ghost1, const void *ghost2,
 }
 #endif
 
+/* Check whether a given communicator assigns the same rank and mpisize
+ * as stored in a given cmesh. */
+int
+t8_cmesh_comm_is_valid (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+{
+  int                 mpiret, mpisize, mpirank;
+
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  if (mpisize != cmesh->mpisize || mpirank != cmesh->mpirank) {
+    return 0;
+  }
+  return 1;
+}
+
 void
 t8_cmesh_init (t8_cmesh_t * pcmesh)
 {
@@ -122,32 +138,12 @@ t8_cmesh_init (t8_cmesh_t * pcmesh)
   cmesh->set_refine_level = 0;  /*< sensible default TODO document */
   cmesh->set_partition_level = -1;
   cmesh->dimension = -1;        /*< ok; force user to select dimension */
-  cmesh->mpicomm = sc_MPI_COMM_WORLD;
   cmesh->mpirank = -1;
   cmesh->mpisize = -1;
   cmesh->face_knowledge = 3;    /*< sensible default TODO document */
   t8_stash_init (&cmesh->stash);
 
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-}
-
-void
-t8_cmesh_set_mpicomm (t8_cmesh_t cmesh, sc_MPI_Comm mpicomm, int do_dup)
-{
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-  T8_ASSERT (mpicomm != sc_MPI_COMM_NULL);
-
-  cmesh->mpicomm = mpicomm;
-  cmesh->do_dup = do_dup;
-}
-
-sc_MPI_Comm
-t8_cmesh_get_mpicomm (t8_cmesh_t cmesh, int *do_dup)
-{
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
-
-  *do_dup = cmesh->do_dup;
-  return cmesh->mpicomm;
 }
 
 #if 0
@@ -486,7 +482,7 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
   }
   /* check entries that are numbers */
   is_equal = cmesh_a->committed != cmesh_b->committed || cmesh_a->dimension !=
-    cmesh_b->dimension || cmesh_a->do_dup != cmesh_b->do_dup ||
+    cmesh_b->dimension ||
     cmesh_a->set_partition != cmesh_b->set_partition ||
     cmesh_a->mpirank != cmesh_b->mpirank ||
     cmesh_a->mpisize != cmesh_b->mpisize ||
@@ -498,9 +494,6 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
   is_equal = is_equal || cmesh_a->inserted_trees != cmesh_b->inserted_trees ||
     cmesh_a->inserted_ghosts != cmesh_b->inserted_ghosts;
 #endif
-  if (cmesh_a->do_dup == 0) {
-    is_equal = is_equal || cmesh_a->mpicomm != cmesh_b->mpicomm;
-  }
   if (is_equal != 0) {
     return 0;
   }
@@ -589,7 +582,6 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   struct
   {
     int                 dimension;
-    int                 do_dup;
     t8_topidx_t         num_trees;
     t8_topidx_t         num_trees_per_eclass[T8_ECLASS_COUNT];
     size_t              stash_elem_counts[3];
@@ -617,7 +609,6 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   T8_ASSERT (0 <= root && root < mpisize);
   T8_ASSERT (mpirank == root || cmesh_in == NULL);
   T8_ASSERT (mpirank != root || cmesh_in != NULL);
-  T8_ASSERT (mpirank != root || cmesh_in->mpicomm == comm);
   T8_ASSERT (mpirank != root || cmesh_in->set_partition == 0);
   /* The cmesh on the calling process must not be owned by something
    * else. */
@@ -629,7 +620,6 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   /* At first we broadcast all meta information. */
   if (mpirank == root) {
     dimensions.dimension = cmesh_in->dimension;
-    dimensions.do_dup = cmesh_in->do_dup;
     dimensions.num_trees = cmesh_in->num_trees;
     for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
       dimensions.num_trees_per_eclass[iclass] =
@@ -639,7 +629,6 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     dimensions.stash_elem_counts[1] = cmesh_in->stash->classes.elem_count;
     dimensions.stash_elem_counts[2] = cmesh_in->stash->joinfaces.elem_count;
 #ifdef T8_ENABLE_DEBUG
-    dimensions.comm = cmesh_in->mpicomm;
     dimensions.inserted_trees = cmesh_in->inserted_trees;
 #endif
   }
@@ -651,9 +640,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   /* If not root store information in new cmesh and allocate memory for arrays. */
   if (mpirank != root) {
     t8_cmesh_init (&cmesh_in);
-    cmesh_in->mpicomm = comm;
     cmesh_in->dimension = dimensions.dimension;
-    cmesh_in->do_dup = dimensions.do_dup;
     cmesh_in->num_trees = dimensions.num_trees;
     for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
       cmesh_in->num_trees_per_eclass[iclass] =
@@ -780,9 +767,9 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 #endif
 
 static void
-t8_cmesh_free_treecount (t8_cmesh_t cmesh)
+t8_cmesh_free_treecount (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  SC_SHMEM_FREE (cmesh->tree_offsets, cmesh->mpicomm);
+  SC_SHMEM_FREE (cmesh->tree_offsets, comm);
 }
 
 t8_gloidx_t
@@ -943,9 +930,8 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
 }
 
 static void
-t8_cmesh_reset (t8_cmesh_t * pcmesh)
+t8_cmesh_reset (t8_cmesh_t * pcmesh, sc_MPI_Comm comm)
 {
-  int                 mpiret;
   t8_cmesh_t          cmesh;
 
   T8_ASSERT (pcmesh != NULL);
@@ -953,14 +939,10 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->rc.refcount == 0);
 
-  if (cmesh->do_dup && cmesh->committed) {
-    mpiret = sc_MPI_Comm_free (&cmesh->mpicomm);
-    SC_CHECK_MPI (mpiret);
-  }
-
   /* free tree_offset */
   if (cmesh->tree_offsets != NULL) {
-    t8_cmesh_free_treecount (cmesh);
+    T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
+    t8_cmesh_free_treecount (cmesh, comm);
   }
   /*TODO: write this */
   if (!cmesh->committed) {
@@ -973,7 +955,7 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
   }
   if (cmesh->set_from != NULL) {
     /* We have taken ownership of cmesh_from */
-    t8_cmesh_unref (&cmesh->set_from);
+    t8_cmesh_unref (&cmesh->set_from, comm);
   }
 
   T8_FREE (cmesh);
@@ -989,7 +971,7 @@ t8_cmesh_ref (t8_cmesh_t cmesh)
 }
 
 void
-t8_cmesh_unref (t8_cmesh_t * pcmesh)
+t8_cmesh_unref (t8_cmesh_t * pcmesh, sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
 
@@ -998,17 +980,17 @@ t8_cmesh_unref (t8_cmesh_t * pcmesh)
   T8_ASSERT (cmesh != NULL);
 
   if (t8_refcount_unref (&cmesh->rc)) {
-    t8_cmesh_reset (pcmesh);
+    t8_cmesh_reset (pcmesh, comm);
   }
 }
 
 void
-t8_cmesh_destroy (t8_cmesh_t * pcmesh)
+t8_cmesh_destroy (t8_cmesh_t * pcmesh, sc_MPI_Comm comm)
 {
   T8_ASSERT (pcmesh != NULL && *pcmesh != NULL &&
              t8_refcount_is_last (&(*pcmesh)->rc));
 
-  t8_cmesh_unref (pcmesh);
+  t8_cmesh_unref (pcmesh, comm);
   T8_ASSERT (*pcmesh == NULL);
 }
 
@@ -1042,7 +1024,6 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
   num_faces = dim == 2 ? 4 : 6;
   /* basic setup */
   t8_cmesh_init (&cmesh);
-  t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   /* Add each tree to cmesh and get vertex information for each tree */
   for (itree = 0; itree < _T8_CMESH_P48_CONN (num_trees); itree++) {    /* loop over each tree */
     t8_cmesh_set_tree_class (cmesh, itree,
@@ -1085,7 +1066,7 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
     last_tree = ((mpirank + 1) * num_trees) / mpisize - 1;
     t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
   }
-  t8_cmesh_commit (cmesh);
+  t8_cmesh_commit (cmesh, comm);
   return cmesh;
 #undef _T8_CMESH_P48_CONN
 }
@@ -1111,10 +1092,9 @@ t8_cmesh_new_vertex (sc_MPI_Comm comm, int do_dup)
   double              vertices[3] = { 0, 0, 0 };
 
   t8_cmesh_init (&cmesh);
-  t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_VERTEX);
   t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 1);
-  t8_cmesh_commit (cmesh);
+  t8_cmesh_commit (cmesh, comm);
 
   return cmesh;
 }
@@ -1129,10 +1109,9 @@ t8_cmesh_new_line (sc_MPI_Comm comm, int do_dup)
   };
 
   t8_cmesh_init (&cmesh);
-  t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_LINE);
   t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 2);
-  t8_cmesh_commit (cmesh);
+  t8_cmesh_commit (cmesh, comm);
 
   return cmesh;
 }
@@ -1148,10 +1127,9 @@ t8_cmesh_new_tri (sc_MPI_Comm comm, int do_dup)
   };
 
   t8_cmesh_init (&cmesh);
-  t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
   t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 3);
-  t8_cmesh_commit (cmesh);
+  t8_cmesh_commit (cmesh, comm);
 
   return cmesh;
 }
@@ -1168,10 +1146,9 @@ t8_cmesh_new_tet (sc_MPI_Comm comm, int do_dup)
   };
 
   t8_cmesh_init (&cmesh);
-  t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);
   t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 4);
-  t8_cmesh_commit (cmesh);
+  t8_cmesh_commit (cmesh, comm);
 
   return cmesh;
 }
@@ -1188,10 +1165,9 @@ t8_cmesh_new_quad (sc_MPI_Comm comm, int do_dup)
   };
 
   t8_cmesh_init (&cmesh);
-  t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
   t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 4);
-  t8_cmesh_commit (cmesh);
+  t8_cmesh_commit (cmesh, comm);
 
   return cmesh;
 }
@@ -1212,10 +1188,9 @@ t8_cmesh_new_hex (sc_MPI_Comm comm, int do_dup)
   };
 
   t8_cmesh_init (&cmesh);
-  t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
   t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 8);
-  t8_cmesh_commit (cmesh);
+  t8_cmesh_commit (cmesh, comm);
 
   return cmesh;
 }
@@ -1233,11 +1208,10 @@ t8_cmesh_new_pyramid (sc_MPI_Comm comm, int do_dup)
   };
 
   t8_cmesh_init (&cmesh);
-  t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);
   t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices,
                               15);
-  t8_cmesh_commit (cmesh);
+  t8_cmesh_commit (cmesh, comm);
 
   return cmesh;
 }
@@ -1256,10 +1230,9 @@ t8_cmesh_new_prism (sc_MPI_Comm comm, int do_dup)
   };
 
   t8_cmesh_init (&cmesh);
-  t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PRISM);
   t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 6);
-  t8_cmesh_commit (cmesh);
+  t8_cmesh_commit (cmesh, comm);
 
   return cmesh;
 }
@@ -1352,7 +1325,6 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
   SC_CHECK_MPI (mpiret);
   if (!do_bcast || mpirank == 0) {
     t8_cmesh_init (&cmesh);
-    t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
     for (i = 0; i < num_trees_for_hypercube[eclass]; i++) {
       t8_cmesh_set_tree_class (cmesh, i, eclass);
     }
@@ -1530,7 +1502,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup,
     t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
   }
 
-  t8_cmesh_commit (cmesh);
+  t8_cmesh_commit (cmesh, comm);
 
   return cmesh;
 }
@@ -1553,7 +1525,6 @@ t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup, int dim)
 
   T8_ASSERT (dim == 1 || dim == 2 || dim == 3);
   t8_cmesh_init (&cmesh);
-  t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   switch (dim) {
   case 1:
     tree_class = T8_ECLASS_LINE;
@@ -1578,6 +1549,6 @@ t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup, int dim)
   if (dim == 3) {
     t8_cmesh_set_join (cmesh, 0, 0, 4, 5, 0);
   }
-  t8_cmesh_commit (cmesh);
+  t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }

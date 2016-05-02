@@ -72,11 +72,10 @@ t8_ghost_hash (const void *v, const void *u)
 }
 
 static void
-t8_cmesh_set_shmem_type (t8_cmesh_t cmesh)
+t8_cmesh_set_shmem_type (sc_MPI_Comm comm)
 {
-  T8_ASSERT (cmesh != NULL);
-
-  sc_shmem_set_type (cmesh->mpicomm, T8_SHMEM_BEST_TYPE);
+  T8_ASSERT (comm != sc_MPI_COMM_NULL);
+  sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
 }
 
 void
@@ -176,7 +175,7 @@ t8_cmesh_commit_replicated_new (t8_cmesh_t cmesh)
 }
 
 static void
-t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh)
+t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   /* Cmesh is partitioned and new */
   t8_stash_attribute_struct_t *attribute;
@@ -206,12 +205,14 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh)
 
   sc_flops_snap (&fi, &snapshot);
 
+  T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
+
   if (cmesh->face_knowledge != 3) {
     t8_global_errorf ("Expected a face knowledge of 3.\nAbort commit.");
     /* TODO: reset cmesh */
     return;
   }
-  t8_cmesh_set_shmem_type (cmesh);      /* TODO: do we actually need the shared array? */
+  t8_cmesh_set_shmem_type (comm);       /* TODO: do we actually need the shared array? */
   t8_stash_attribute_sort (cmesh->stash);
 
   sc_flops_shot (&fi, &snapshot);
@@ -450,7 +451,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh)
 
   id1 = cmesh->num_local_trees;
   sc_MPI_Allreduce (&id1, &cmesh->num_trees, 1, T8_MPI_GLOIDX,
-                    sc_MPI_SUM, cmesh->mpicomm);
+                    sc_MPI_SUM, comm);
 
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[2], snapshot.iwtime, "cmesh_commit_end");
@@ -467,28 +468,21 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh)
  */
 /* TODO: split this up into smaller functions */
 void
-t8_cmesh_commit (t8_cmesh_t cmesh)
+t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   int                 mpiret;
-  sc_MPI_Comm         comm_dup;
   sc_flopinfo_t       fi;
 
   sc_flops_start (&fi);
 
   T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->mpicomm != sc_MPI_COMM_NULL);
+  T8_ASSERT (comm != sc_MPI_COMM_NULL);
   T8_ASSERT (!cmesh->committed);
 
-  /* dup communicator if requested */
-  if (cmesh->do_dup) {
-    mpiret = sc_MPI_Comm_dup (cmesh->mpicomm, &comm_dup);
-    SC_CHECK_MPI (mpiret);
-    cmesh->mpicomm = comm_dup;
-  }
-  /* query communicator new */
-  mpiret = sc_MPI_Comm_size (cmesh->mpicomm, &cmesh->mpisize);
+  /* Get mpisize and rank */
+  mpiret = sc_MPI_Comm_size (comm, &cmesh->mpisize);
   SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Comm_rank (cmesh->mpicomm, &cmesh->mpirank);
+  mpiret = sc_MPI_Comm_rank (comm, &cmesh->mpirank);
   SC_CHECK_MPI (mpiret);
 
   if (cmesh->set_from != NULL) {
@@ -496,7 +490,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     cmesh->dimension = cmesh->set_from->dimension;
     if (cmesh->set_partition) {
       t8_debugf ("Enter cmesh_partition\n");
-      t8_cmesh_partition (cmesh);
+      t8_cmesh_partition (cmesh, comm);
       t8_debugf ("Done cmesh_partition\n");
     }
     else if (cmesh->set_refine_level > 0) {
@@ -513,7 +507,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
     t8_cmesh_commit_replicated_new (cmesh);
   }
   else {
-    t8_cmesh_commit_partitioned_new (cmesh);
+    t8_cmesh_commit_partitioned_new (cmesh, comm);
   }
 
 #if T8_ENABLE_DEBUG
@@ -532,7 +526,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh)
   cmesh->committed = 1;
 
   if (cmesh->set_from != NULL) {
-    t8_cmesh_unref (&cmesh->set_from);
+    t8_cmesh_unref (&cmesh->set_from, comm);
   }
 
   t8_stash_destroy (&cmesh->stash);

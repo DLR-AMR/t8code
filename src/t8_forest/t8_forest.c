@@ -75,7 +75,11 @@ t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh)
   T8_ASSERT (cmesh != NULL);
 
   forest->cmesh = cmesh;
+  /* TODO: Change forest mpi logic */
+  SC_ABORT ("This functionality is currently not working\n");
+#if 0
   mpicomm = t8_cmesh_get_mpicomm (cmesh, &do_dup);
+#endif
   t8_forest_set_mpicomm (forest, mpicomm, do_dup);
 }
 
@@ -451,7 +455,7 @@ t8_forest_reset (t8_forest_t * pforest)
     t8_scheme_unref (&forest->scheme);
   }
   if (forest->cmesh != NULL) {
-    t8_cmesh_unref (&forest->cmesh);
+    t8_cmesh_unref (&forest->cmesh, forest->mpicomm);
   }
 
   T8_FREE (forest);

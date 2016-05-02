@@ -465,7 +465,6 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
     char                current_file[BUFSIZ];
 
     t8_cmesh_init (&cmesh);
-    t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
     /* read .node file */
     snprintf (current_file, BUFSIZ, "%s.node", fileprefix);
     retval =
@@ -473,7 +472,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
                                     &num_vertices, dim);
     if (retval != 0 && retval != 1) {
       t8_global_errorf ("Error while parsing file %s.\n", current_file);
-      t8_cmesh_unref (&cmesh);
+      t8_cmesh_unref (&cmesh, comm);
     }
     else {
       /* read .ele file */
@@ -488,7 +487,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
         );
       if (retval != 0 && retval != 1) {
         t8_global_errorf ("Error while parsing file %s.\n", current_file);
-        t8_cmesh_unref (&cmesh);
+        t8_cmesh_unref (&cmesh, comm);
       }
       else {
         /* read .neigh file */
@@ -497,7 +496,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
                                                current_file, dim);
         if (retval != 0) {
           t8_global_errorf ("Error while parsing file %s.\n", current_file);
-          t8_cmesh_unref (&cmesh);
+          t8_cmesh_unref (&cmesh, comm);
         }
       }
     }
@@ -521,7 +520,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
                  (long long) last_tree);
       t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
     }
-    t8_cmesh_commit (cmesh);
+    t8_cmesh_commit (cmesh, comm);
   }
 #ifdef T8_WITH_METIS
   if (cmesh != NULL && !partition) {
@@ -558,7 +557,6 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix,
     char                current_file[BUFSIZ];
 
     t8_cmesh_init (&cmesh);
-    t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
     /* read .node file */
     snprintf (current_file, BUFSIZ, "%s.node", fileprefix);
     retval =
@@ -566,7 +564,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix,
                                     &num_vertices, dim);
     if (retval != 0 && retval != 1) {
       t8_global_errorf ("Error while parsing file %s.\n", current_file);
-      t8_cmesh_unref (&cmesh);
+      t8_cmesh_unref (&cmesh, comm);
     }
     else {
       /* read .ele file */
@@ -581,7 +579,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix,
         );
       if (retval != 0 && retval != 1) {
         t8_global_errorf ("Error while parsing file %s.\n", current_file);
-        t8_cmesh_unref (&cmesh);
+        t8_cmesh_unref (&cmesh, comm);
       }
       else {
         /* read .neigh file */
@@ -590,7 +588,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix,
                                                current_file, dim);
         if (retval != 0) {
           t8_global_errorf ("Error while parsing file %s.\n", current_file);
-          t8_cmesh_unref (&cmesh);
+          t8_cmesh_unref (&cmesh, comm);
         }
       }
     }
@@ -613,7 +611,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix,
       t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
     }
     sc_flops_snap (fi, snapshot);
-    t8_cmesh_commit (cmesh);
+    t8_cmesh_commit (cmesh, comm);
     sc_stats_set1 (&stats[statindex], snapshot->iwtime, "Partitioned Commit");
 
   }

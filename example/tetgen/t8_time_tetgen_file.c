@@ -63,7 +63,7 @@ t8_read_tetgen_file_build_cmesh (const char *prefix, int do_dup,
       t8_debugf ("Error in writing cmesh vtk\n");
     }
 #endif
-    t8_cmesh_unref (&cmesh);
+    t8_cmesh_unref (&cmesh, sc_MPI_COMM_WORLD);
   }
   else {
     t8_debugf ("An error occured while reading %s files.\n", prefix);

@@ -38,7 +38,7 @@ T8_EXTERN_C_BEGIN ();
  *  This includes partitioning by uiniform level and partitioning from a second cmesh
  *  \param [in,out]  cmesh   The cmesh to be partitioned
  *  This function is usually called within \ref t8_cmesh_commit */
-void                t8_cmesh_partition (t8_cmesh_t cmesh);
+void                t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
 /** Create a valid partition table that concentrates all trees at a given
  *  process.
