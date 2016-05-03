@@ -62,6 +62,8 @@ t8_eclass_t;
 
 /** The maximum number of boundary faces an element class can have. */
 #define T8_ECLASS_MAX_FACES 6
+/** The maximum number of cornes an element class can have. */
+#define T8_ECLASS_MAX_CORNERS 8
 /** The maximal possible dimension for an eclass */
 #define T8_ECLASS_MAX_DIM 3
 
@@ -86,8 +88,9 @@ extern const int    t8_eclass_num_children[T8_ECLASS_COUNT];
 /** The vtk cell type for the eclass */
 extern const int    t8_eclass_vtk_type[T8_ECLASS_COUNT];
 
-/* TODO: document; can we replace the number 8 with a define/enum? */
-extern const int    t8_eclass_vtk_corner_number[T8_ECLASS_COUNT][8];
+/** Map the t8code corner number to the vtk corner number */
+extern const int
+     t8_eclass_vtk_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS];
 
 /** For each of the element classes, list the type of the faces. */
 extern const int

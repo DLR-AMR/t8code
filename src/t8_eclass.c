@@ -44,7 +44,7 @@ const int t8_eclass_num_children[T8_ECLASS_COUNT] =
 const int t8_eclass_vtk_type[T8_ECLASS_COUNT] =
   { 1, 3, 9, 5, 12, 10, 13, 14};
 
-const int t8_eclass_vtk_corner_number[T8_ECLASS_COUNT][8] =
+const int t8_eclass_vtk_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS] =
 {{  0, -1, -1, -1, -1, -1, -1, -1}, /* vertex */
  {  0,  1, -1, -1, -1, -1, -1, -1}, /* line */
  {  0,  1,  3,  2, -1, -1, -1, -1}, /* quad */
