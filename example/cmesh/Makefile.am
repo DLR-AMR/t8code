@@ -3,6 +3,8 @@
 # Included from toplevel directory
 
 bin_PROGRAMS += \
-	example/cmesh/t8_cmesh_partition
+	example/cmesh/t8_cmesh_partition \
+	example/cmesh/t8_cmesh_refine
 
 example_cmesh_t8_cmesh_partition_SOURCES = example/cmesh/cmesh_partition.c
+example_cmesh_t8_cmesh_refine_SOURCES = example/cmesh/cmesh_refine.c
