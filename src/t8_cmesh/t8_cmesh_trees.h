@@ -282,7 +282,7 @@ void               *t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees,
 /* TODO: document. total size of attributes of given tree */
 size_t              t8_cmesh_trees_attribute_size (t8_ctree_t tree);
 
-/* TODO: These need to be rewritten with package_id and key */
+/* TODO: Currently there is a bug that forces us to give each tree an attribute */
 /* TODO: this uses char * and cmesh_set_attribute uses void *. Unify! */
 /* attr_tree_index is index of attr in tree's attribute array.
  * We assume that the attributes are already sorted! */
