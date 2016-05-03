@@ -34,6 +34,30 @@
 
 T8_EXTERN_C_BEGIN ();
 
+/* A cmesh is refined uniformly by replacing each tree with a certain number
+ * of subtrees. This number depends on the element class of the tree.
+ * Per default these are:
+ *  - Vertices cannot be refined,
+ *  - Line become two sublines,
+ *  - Quadrants become four subquads,
+ *  - Triangles become four subtriangles,
+ *  - Hexahedra become eight subhexahedra,
+ *  - Tetrahedra become eight subtetrahedra,
+ *  - Prism become eight subprisms,
+ *  - Pyramids becom six subpyramids and four subtetrahedra.
+ *
+ * When refining a cmesh new treeid's and face neighbors have to be computed,
+ * to this end it is necessary to specify a order of the children of each eclass
+ * and an enumeration of the faces of each eclass.
+ * The standard schemes are Morton and tetrahedral Morton order for lines/quads/hexes
+ * respectively triangles/tets.
+ */
+
+/** Populate a cmesh that is derived via refinement from another cmesh.
+ * \param [in,out]  cmesh       The cmesh to be populated. Its set_from entry has
+ *                              to be set to a committed cmesh and its set_refine_level
+ *                              entry has to be positive.
+ */
 void                t8_cmesh_refine (t8_cmesh_t cmesh);
 
 T8_EXTERN_C_END ();
