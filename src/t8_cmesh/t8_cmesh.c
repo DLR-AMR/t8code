@@ -1046,12 +1046,12 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
                                 vertices, num_tvertices);
   }
   /* get face neighbor information from conn and join faces in cmesh */
-  for (itree = 0; itree < cmesh->num_trees; itree++) {  /* loop over each tree */
+  for (itree = 0; itree < _T8_CMESH_P48_CONN (num_trees); itree++) {    /* loop over each tree */
     for (iface = 0; iface < num_faces; iface++) {       /* loop over each face */
       ttf = _T8_CMESH_P48_CONN (tree_to_face[num_faces * itree + iface]);
       ttt = _T8_CMESH_P48_CONN (tree_to_tree[num_faces * itree + iface]);
       /* insert the face only if we did not insert it before */
-      if (itree < ttt || (itree == ttt && iface <= ttf % num_faces)) {
+      if (itree < ttt || (itree == ttt && iface < ttf % num_faces)) {
         t8_cmesh_set_join (cmesh, itree, ttt, iface, ttf % num_faces,
                            ttf / num_faces);
       }
