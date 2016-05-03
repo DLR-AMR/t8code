@@ -336,7 +336,6 @@ t8_cmesh_refine_new_neighbors (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
      */
     for (k = 1, iface = 1 - (child_id % 2); k <= 2;
          k++, iface = 3 - child_id / 2) {
-      t8_debugf ("Setting face neighbor %i for child %i\n", iface, child_id);
       if (!compute_ghost) {
         neighbor_out[iface] =
           t8_cmesh_refine_new_neighborid (cmesh_from, parent_id, child_id ^ k,
@@ -377,7 +376,43 @@ t8_cmesh_refine_new_neighbors (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
       }
       else {
         /* We are connected to another tree */
+        /* These arrays decode at index 4*or + neighbor_face the child id of the neighbor
+         * that we are connected to. For example if we consider child_id 0 and now it
+         * has a face neighbor along face 2 with orientation 0, then the child_id of
+         * the coarse neighbor's child we are connected to is neigh_childidsA[4*0+2] = 0.
+         * The encoding is such that neigh_childidsA is for child_id 0 (all iface), child_id 1 if
+         * iface = 2, child_id 3 if iface = 3, neigh_childidsB is for child_id 1 if iface = 1,
+         * child_id 2 if iface = 0 and child_id 3 (all ifaces).
+         */
+        int                 neigh_childidsA[8] = { 0, 1, 0, 2, 2, 3, 1, 3 };
+        int                 neigh_childidsB[8] = { 2, 3, 1, 3, 0, 1, 0, 2 };
+        /* depending on the child_id and old_face we set the new neighbors
+         * child_id */
+        if (child_id == 0 || (child_id != 3 && iface % 2)) {
+          new_neigh_childid = neigh_childidsA[orient * 4 + old_face];
+        }
+        else {
+          T8_ASSERT (child_id == 3 || iface % 2 == 0);
+          new_neigh_childid = neigh_childidsB[orient * 4 + old_face];
+        }
+        if (!compute_ghost) {
+          /* Compute the new neighbors local id from the old one and the new
+           * child id */
+          neighbor_out[iface] = t8_cmesh_refine_new_neighborid (cmesh_from,
+                                                                old_neigh,
+                                                                new_neigh_childid,
+                                                                id_array,
+                                                                factor);
+        }
+        else {
+          neighbor_out_ghost[iface] =
+            t8_cmesh_refine_new_globalid (old_neigh_ghost,
+                                          new_neigh_childid, factor);
+        }
       }
+      /* The new orientation and face number are the same as the old
+       * ones so we do not need to change ttf_out */
+      ttf_out[iface] = ttf_old[iface];
     }
     break;
   case T8_ECLASS_TRIANGLE:
@@ -402,15 +437,6 @@ t8_cmesh_refine_new_neighbors (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
       }
     }
     else {
-      /* These arrays decode at index 3*or + neighbor_face the child id of the neighbor
-       * that we are connected to. For example if we consider child_id 0 and now it
-       * has a face neighbor along face 2 with orientation 0, then the child_id of
-       * the coarse neighbor's child we are connected to is neigh_childidsA[3*0+2] = 0.
-       * The encoding is such that neigh_childidsA is for child_id 0 (all iface) and child_id 1 if
-       * iface = 0, neigh_childidsB is for child_id 2 (all iface) and child_id 1 if iface = 1.
-       */
-      int                 neigh_childidsA[6] = { 1, 0, 0, 2, 2, 1 };
-      int                 neigh_childidsB[6] = { 2, 2, 1, 1, 0, 0 };
       /* child_id is 0,1,2 */
       T8_ASSERT (0 <= child_id && child_id <= 2);
       if (!compute_ghost) {
@@ -456,6 +482,15 @@ t8_cmesh_refine_new_neighbors (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
             t8_cmesh_refine_new_globalid (global_parent_id, child_id, factor);
         }
         else {
+          /* These arrays decode at index 3*or + neighbor_face the child id of the neighbor
+           * that we are connected to. For example if we consider child_id 0 and now it
+           * has a face neighbor along face 2 with orientation 0, then the child_id of
+           * the coarse neighbor's child we are connected to is neigh_childidsA[3*0+2] = 0.
+           * The encoding is such that neigh_childidsA is for child_id 0 (all iface) and child_id 1 if
+           * iface = 0, neigh_childidsB is for child_id 2 (all iface) and child_id 1 if iface = 1.
+           */
+          int                 neigh_childidsA[6] = { 1, 0, 0, 2, 2, 1 };
+          int                 neigh_childidsB[6] = { 2, 2, 1, 1, 0, 0 };
           /* depending on the child_id and old_face we set the new neighbors
            * child_id */
           if (2 * child_id + iface <= 2) {
@@ -472,11 +507,6 @@ t8_cmesh_refine_new_neighbors (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
                                                                   new_neigh_childid,
                                                                   id_array,
                                                                   factor);
-          }
-          else if (compute_ghost && old_neigh_ghost == global_parent_id) {
-            /* We are local ghost and this side is a boundary,
-             * so we set our own glocal id as face neighbor */
-            t8_cmesh_refine_new_globalid (global_parent_id, child_id, factor);
           }
           else {
             neighbor_out_ghost[iface] =
