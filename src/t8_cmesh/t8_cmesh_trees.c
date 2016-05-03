@@ -700,9 +700,10 @@ t8_cmesh_trees_is_face_consistend (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
         /* Neighbor is a local tree */
         (void) t8_cmesh_trees_get_tree_ext (trees, neigh1, &faces2, &ttf2);
         /* Check whether the face_neighbor entry of tree2 is correct */
-        ret = faces2[face1] == ltree;
+        ret = ret && faces2[face1] == ltree;
         /* Check whether the ttf entry of neighbor is correct */
-        ret = ttf2[face1] % F == iface && ttf2[face1] / F == orientation;
+        ret = ret && ttf2[face1] % F == iface
+          && ttf2[face1] / F == orientation;
       }
       else {
         /* Neighbor is a ghost */
@@ -724,7 +725,7 @@ t8_cmesh_trees_is_face_consistend (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
   }
   /* Now we check the face_connections of each local ghost.
    * Here we can only check the connection to local trees and local ghosts */
-  for (lghost = 0; lghost < cmesh->num_ghosts; lghost++) {
+  for (lghost = 0; lghost < cmesh->num_ghosts && ret == 1; lghost++) {
     ghost1 = t8_cmesh_trees_get_ghost_ext (trees, lghost, &gfaces1, &ttf1);
     for (iface = 0; iface < t8_eclass_num_faces[ghost1->eclass]; iface++) {
       gneigh1 = gfaces1[iface];
@@ -742,9 +743,10 @@ t8_cmesh_trees_is_face_consistend (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
                                             gneigh1 - cmesh->first_tree,
                                             &faces2, &ttf2);
         /* Check whether the face_neighbor entry of tree2 is correct */
-        ret = faces2[face1] == lghost + cmesh->num_local_trees;
+        ret = ret && faces2[face1] == lghost + cmesh->num_local_trees;
         /* Check whether the ttf entry of neighbor is correct */
-        ret = ttf2[face1] % F == iface && ttf2[face1] / F == orientation;
+        ret = ret && ttf2[face1] % F == iface
+          && ttf2[face1] / F == orientation;
       }
       else if ((neigh1 = t8_cmesh_trees_ghost_id (cmesh, trees, gneigh1)) >=
                0) {
@@ -753,9 +755,10 @@ t8_cmesh_trees_is_face_consistend (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
                                              neigh1 + cmesh->num_local_trees,
                                              &gfaces2, &ttf2);
         /* Check whether the face_neighbor entry of tree2 is correct */
-        ret = gfaces2[face1] == ghost1->treeid;
+        ret = ret && gfaces2[face1] == ghost1->treeid;
         /* Check whether the ttf entry of neighbor is correct */
-        ret = ttf2[face1] % F == iface && ttf2[face1] / F == orientation;
+        ret = ret && ttf2[face1] % F == iface
+          && ttf2[face1] / F == orientation;
       }
 #ifdef T8_ENABLE_DEBUG
       if (ret != 1) {
