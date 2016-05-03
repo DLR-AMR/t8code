@@ -193,8 +193,13 @@ t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from)
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (set_from == NULL || t8_cmesh_is_committed (set_from));
 
+  /* TODO: If a previuously set cmesh is overwritten than the user is
+   * responsible for unreffing it. Otherwise we have to give an mpi communicator
+   * as parameter to this function. */
   cmesh->set_from = set_from;
-  t8_cmesh_ref (set_from);
+  if (set_from != NULL) {
+    t8_cmesh_ref (set_from);
+  }
 }
 
 #if 0
