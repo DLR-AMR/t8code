@@ -49,8 +49,8 @@ T8_EXTERN_C_BEGIN ();
  * When refining a cmesh new treeid's and face neighbors have to be computed,
  * to this end it is necessary to specify a order of the children of each eclass
  * and an enumeration of the faces of each eclass.
- * The standard schemes are Morton and tetrahedral Morton order for lines/quads/hexes
- * respectively triangles/tets.
+ * The standard schemes are Morton for lines/quads/hexes
+ * and Bey order for triangles/tets.
  */
 
 /** Populate a cmesh that is derived via refinement from another cmesh.
