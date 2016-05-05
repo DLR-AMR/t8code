@@ -138,6 +138,18 @@ T8_EXTERN_C_BEGIN ();
 #define T8_GHOST_TTF(g) (int8_t *) (T8_GHOST_FACE(g) + \
   t8_eclass_num_faces[(g)->eclass] * sizeof(t8_gloidx_t))
 
+/** Initialize a trees structure and allocate its parts.
+ * This function allocates the from_procs array without filling it, it
+ * also allocates the tree_to_proc and ghost_to_proc arrays.
+ * No memory for trees or ghosts is allocated.
+ * \param [in,ou      ptrees   The trees structure to be initialized.
+ * \param [in]        num_procs The number of entries of its from_proc array
+ *                              (can be different for each process).
+ * \param [in]        num_trees The number of trees that will be stored in this
+ *                              structure.
+ * \param [in]        num_ghosts The number of ghosts that will be stored in this
+ *                              structure.
+ */
 void                t8_cmesh_trees_init (t8_cmesh_trees_t * ptrees,
                                          int num_procs, t8_locidx_t num_trees,
                                          t8_locidx_t num_ghosts);
@@ -150,14 +162,29 @@ void                t8_cmesh_trees_init_part (t8_cmesh_trees_t trees,
                                               t8_locidx_t num_ghosts);
 #endif
 
-/* TODO: document */
+/** Return one part of a specified tree array.
+ * \param [in]        trees   The tree array to be queried
+ * \param [in]        proc    An index specifying the part to be returned.
+ * \return                    The part number \a proc of \a trees.
+ */
 t8_part_tree_t      t8_cmesh_trees_get_part (t8_cmesh_trees_t trees,
                                              int proc);
 
-/* allocate the first_tree array of a given tree_part in a tree struct
- * with a given number of bytes */
 /* !!! This does only allocate memory for the trees and ghosts
  *     not yet for the face data and the attributes. See below !!!
+ */
+/** Allocate the first_tree array of a given tree_part in a tree struct
+ *  with a given number of trees and ghosts.
+ *  This function allocates the memory for the trees and the ghosts
+ *  but not for their face neighbor entries or attributes. These must
+ *  be allocated later when the eclasses of the trees and ghosts are known
+ *  \ref t8_cmesh_trees_finish_part.
+ *  \param [in,out]         trees   The trees structure to be updated.
+ *  \param [in]             proc    The index of the part to be updated.
+ *  \param [in]             first_tree The local id of the first tree of that part.
+ *  \param [in]             num_trees The number of trees of that part.
+ *  \param [in]             first_ghost The local id of the first ghost of that part.
+ *  \param [in]             num_ghosts The number of ghosts of that part.
  */
 void                t8_cmesh_trees_start_part (t8_cmesh_trees_t trees,
                                                int proc,
@@ -166,15 +193,21 @@ void                t8_cmesh_trees_start_part (t8_cmesh_trees_t trees,
                                                t8_locidx_t first_ghost,
                                                t8_locidx_t num_ghosts);
 
-/* TODO: document */
-/* After all classes of trees and ghosts have been set and after the
+/** After all classes of trees and ghosts have been set and after the
  * number of tree attributes  was set and their total size (per tree)
  * stored temporarily in the att_offset variable
  * we grow the part array by the needed amount of memory and set the
- * offsets appropiately */
-/* The workflow can be: call start_part, set tree and ghost classes maually, call
- * init_attributes, call finish_part, successively call add_attributes
- * and also set all face neighbors (TODO: write function)*/
+ * offsets appropiately.
+ * The workflow should be: call \ref t8_cmesh_trees_start_part,
+ * set tree and ghost classes maually via \ref t8_cmesh_trees_add_tree
+ * and \ref t8_cmesh_trees_add_ghost, call
+ * \ref t8_cmesh_trees_init_attributes, then call this function.
+ * Afterwards successively call \ref t8_cmesh_trees_add_attribute for
+ * each attribute and
+ * also set all face neighbors (TODO: write function).
+ * \param [in,out]        trees The trees structure to be updated.
+ * \param [in]            proc  The number of the part to be finished.
+ */
 void                t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees,
                                                 int proc);
 
