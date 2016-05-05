@@ -85,7 +85,7 @@ t8_cmesh_trees_add_tree (t8_cmesh_trees_t trees, t8_locidx_t ltree_id,
 }
 
 void
-t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees, t8_locidx_t ghost_index,
+t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees, t8_locidx_t lghost_index,
                           t8_gloidx_t gtree_id, int proc, t8_eclass_t eclass)
 {
   t8_part_tree_t      part;
@@ -94,21 +94,21 @@ t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees, t8_locidx_t ghost_index,
   T8_ASSERT (trees != NULL);
   T8_ASSERT (proc >= 0);
   T8_ASSERT (gtree_id >= 0);
-  T8_ASSERT (ghost_index >= 0);
+  T8_ASSERT (lghost_index >= 0);
 
   part = t8_cmesh_trees_get_part (trees, proc);
-  T8_ASSERT (ghost_index < part->num_ghosts);
+  T8_ASSERT (lghost_index < part->num_ghosts);
   /* From first tree we have to go num_trees to get to the first ghost.
    * From the first ghost we go by ghost_index to get to the desired ghost */
   ghost = &((t8_cghost_t) (((t8_ctree_struct_t *) part->first_tree) +
-                           part->num_trees))[ghost_index];
+                           part->num_trees))[lghost_index];
   SC_CHECK_ABORTF ((int) ghost->eclass == 0 && ghost->treeid == 0,
                    "A duplicate ghostid (%li) was found.\n",
-                   (long) ghost_index);
+                   (long) lghost_index);
   ghost->eclass = eclass;
   ghost->treeid = gtree_id;
   ghost->neigh_offset = 0;
-  trees->ghost_to_proc[ghost_index] = proc;
+  trees->ghost_to_proc[lghost_index] = proc;
 }
 
 #ifdef T8_ENABLE_DEBUG
@@ -147,8 +147,8 @@ t8_part_tree_get_ghost (t8_part_tree_t P, t8_locidx_t ghost_id)
 
 void
 t8_cmesh_trees_start_part (t8_cmesh_trees_t trees, int proc,
-                           t8_locidx_t first_tree, t8_locidx_t num_trees,
-                           t8_locidx_t first_ghost, t8_locidx_t num_ghosts)
+                           t8_locidx_t lfirst_tree, t8_locidx_t num_trees,
+                           t8_locidx_t lfirst_ghost, t8_locidx_t num_ghosts)
 {
   t8_part_tree_t      part;
   T8_ASSERT (trees != NULL);
@@ -166,8 +166,8 @@ t8_cmesh_trees_start_part (t8_cmesh_trees_t trees, int proc,
     T8_ALLOC_ZERO (char,
                    num_trees * sizeof (t8_ctree_struct_t) +
                    num_ghosts * sizeof (t8_cghost_struct_t));
-  part->first_tree_id = first_tree;
-  part->first_ghost_id = first_ghost;
+  part->first_tree_id = lfirst_tree;
+  part->first_ghost_id = lfirst_ghost;
 }
 
 /* After all classes of trees and ghosts have been set and after the
@@ -297,23 +297,23 @@ t8_cmesh_trees_set_all_boundary (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
 }
 
 t8_ctree_t
-t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees, t8_locidx_t tree)
+t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees, t8_locidx_t ltree)
 {
   int                 proc;
   T8_ASSERT (trees != NULL);
-  T8_ASSERT (tree >= 0);
-  proc = trees->tree_to_proc[tree];
+  T8_ASSERT (ltree >= 0);
+  proc = trees->tree_to_proc[ltree];
   T8_ASSERT (proc >= 0 && proc < t8_cmesh_trees_get_num_procs (trees));
 
-  return t8_part_tree_get_tree (t8_cmesh_trees_get_part (trees, proc), tree);
+  return t8_part_tree_get_tree (t8_cmesh_trees_get_part (trees, proc), ltree);
 }
 
 t8_ctree_t
-t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees, t8_locidx_t tree_id,
+t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees, t8_locidx_t ltree_id,
                              t8_locidx_t ** face_neigh, int8_t ** ttf)
 {
   t8_ctree_t          tree;
-  tree = t8_cmesh_trees_get_tree (trees, tree_id);
+  tree = t8_cmesh_trees_get_tree (trees, ltree_id);
   if (face_neigh != NULL) {
     *face_neigh = (t8_locidx_t *) T8_TREE_FACE (tree);
   }
@@ -324,25 +324,25 @@ t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees, t8_locidx_t tree_id,
 }
 
 t8_cghost_t
-t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees, t8_locidx_t ghost)
+t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees, t8_locidx_t lghost)
 {
   int                 proc;
   T8_ASSERT (trees != NULL);
-  T8_ASSERT (ghost >= 0);
-  proc = trees->ghost_to_proc[ghost];
+  T8_ASSERT (lghost >= 0);
+  proc = trees->ghost_to_proc[lghost];
   T8_ASSERT (proc >= 0 && proc < t8_cmesh_trees_get_num_procs (trees));
 
   return t8_part_tree_get_ghost (t8_cmesh_trees_get_part (trees, proc),
-                                 ghost);
+                                 lghost);
 }
 
 t8_cghost_t
-t8_cmesh_trees_get_ghost_ext (t8_cmesh_trees_t trees, t8_locidx_t ghost_id,
+t8_cmesh_trees_get_ghost_ext (t8_cmesh_trees_t trees, t8_locidx_t lghost_id,
                               t8_gloidx_t ** face_neigh, int8_t ** ttf)
 {
   t8_cghost_t         ghost;
 
-  ghost = t8_cmesh_trees_get_ghost (trees, ghost_id);
+  ghost = t8_cmesh_trees_get_ghost (trees, lghost_id);
   if (face_neigh != NULL) {
     *face_neigh = (t8_gloidx_t *) T8_GHOST_FACE (ghost);
   }
@@ -353,18 +353,18 @@ t8_cmesh_trees_get_ghost_ext (t8_cmesh_trees_t trees, t8_locidx_t ghost_id,
 }
 
 void
-t8_cmesh_trees_init_attributes (t8_cmesh_trees_t trees, t8_locidx_t tree_id,
+t8_cmesh_trees_init_attributes (t8_cmesh_trees_t trees, t8_locidx_t ltree_id,
                                 size_t num_attributes, size_t attr_bytes)
 {
   int                 proc;
   t8_ctree_t          tree;
 
   T8_ASSERT (trees != NULL);
-  T8_ASSERT (tree_id >= 0);
-  proc = trees->tree_to_proc[tree_id];
+  T8_ASSERT (ltree_id >= 0);
+  proc = trees->tree_to_proc[ltree_id];
   T8_ASSERT (proc >= 0 && proc < t8_cmesh_trees_get_num_procs (trees));
   tree = t8_part_tree_get_tree (t8_cmesh_trees_get_part (trees, proc),
-                                tree_id);
+                                ltree_id);
 
   tree->att_offset = attr_bytes;        /* This is only temporary until t8_cmesh_trees_finish_part
                                            is called */
@@ -422,6 +422,9 @@ t8_cmesh_trees_add_attribute (t8_cmesh_trees_t trees, int proc,
   }
 }
 
+#if 0
+/* TODO: Are the tree following function needed? */
+
 /* Gets two attribute_info structs and compares their package id and key */
 static int
 t8_cmesh_trees_compare_attributes (const void *A1, const void *A2)
@@ -471,6 +474,7 @@ t8_cmesh_trees_attribute_info_sort (t8_cmesh_trees_t trees)
                                        (trees, iproc));
   }
 }
+#endif
 
 /* gets a key_id_pair as first argument and an attribute as second */
 static int
@@ -498,7 +502,7 @@ t8_cmesh_trees_compare_keyattr (const void *A1, const void *A2)
 
 /* The size of the attribute is not returned, but would be accesible */
 void               *
-t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
+t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t ltree_id,
                               int package_id, int key)
 {
   int                 proc;
@@ -508,11 +512,11 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
   sc_array_t          attr_array;
   struct t8_key_id_pair key_id;
   T8_ASSERT (trees != NULL);
-  T8_ASSERT (tree_id >= 0);
-  proc = trees->tree_to_proc[tree_id];
+  T8_ASSERT (ltree_id >= 0);
+  proc = trees->tree_to_proc[ltree_id];
   T8_ASSERT (proc >= 0 && proc < t8_cmesh_trees_get_num_procs (trees));
   tree = t8_part_tree_get_tree (t8_cmesh_trees_get_part (trees, proc),
-                                tree_id);
+                                ltree_id);
 
   key_id.key = key;
   key_id.package_id = package_id;
@@ -521,7 +525,7 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
     /* TODO: Error handling if attribute not found */
     t8_global_errorf ("Attribute with package id %i and key %i not found"
                       " on tree %li. This tree has no attributes at all.\n",
-                      package_id, key, (long) tree_id);
+                      package_id, key, (long) ltree_id);
     return NULL;
   }
 
@@ -534,7 +538,7 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t tree_id,
   if (index < 0) {
     /* TODO: Error handling if attribute not found */
     t8_global_errorf ("Attribute with package id %i and key %i not found"
-                      " on tree %li.\n", package_id, key, (long) tree_id);
+                      " on tree %li.\n", package_id, key, (long) ltree_id);
     return NULL;
   }
   attr_info = (t8_attribute_info_struct_t *)
@@ -647,7 +651,7 @@ t8_cmesh_ctree_is_equal (t8_ctree_t tree_a, t8_ctree_t tree_b)
  * This function just does a linear search on the ghost array and its runtime is
  * thus O(number of local ghosts).
  */
-static t8_locidx_t
+static              t8_locidx_t
 t8_cmesh_trees_ghost_id (t8_cmesh_t cmesh, t8_cmesh_trees_t trees,
                          t8_gloidx_t gghost_id)
 {
