@@ -46,3 +46,8 @@ Mögliche Implementierung:
 7. Rufe t8_cmesh_trees_finish_part auf
 
 Im Grunde ähnlich wie cmesh_commit ohne Partition (cmesh_commit.c:173) nur mit zusätzlichen Ghosts.
+
+Funktion wurde mit minimalem Aufwand realisiert:
+Das partition vom partitionierten cmesh so angepasst, dass wir im replizierten
+Fall nur von dem aktuellen Prozess Baeume und Ghosts "senden" und "empfangen".
+
