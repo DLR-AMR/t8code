@@ -302,6 +302,98 @@ t8_cmesh_trees_set_all_boundary (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
   }
 }
 
+/* return the total size of a trees face_neighbor entries, including padding */
+static              size_t
+t8_cmesh_trees_neighbor_bytes (t8_ctree_t tree)
+{
+  size_t              total_size;
+  total_size =
+    t8_eclass_num_faces[tree->eclass] * (sizeof (t8_locidx_t) +
+                                         sizeof (int8_t));
+  total_size += T8_ADD_PADDING (total_size);
+  return total_size;
+}
+
+/* return the total size of a ghosts face_neighbor entries, including padding */
+static              size_t
+t8_cmesh_trees_gneighbor_bytes (t8_cghost_t tree)
+{
+  size_t              total_size;
+  total_size =
+    t8_eclass_num_faces[tree->eclass] * (sizeof (t8_gloidx_t) +
+                                         sizeof (int8_t));
+  total_size += T8_ADD_PADDING (total_size);
+  return total_size;
+}
+
+/* return the total size of attributes of a tree */
+size_t
+t8_cmesh_trees_attribute_size (t8_ctree_t tree)
+{
+  t8_attribute_info_struct_t *attr_info;
+  int                 i;
+  size_t              total = 0;
+
+  for (i = 0; i < tree->num_attributes; i++) {
+    attr_info = T8_TREE_ATTR_INFO (tree, i);
+    total += attr_info->attribute_size;
+  }
+  return total;
+}
+
+static              size_t
+t8_cmesh_trees_get_part_alloc (t8_cmesh_trees_t trees, t8_part_tree_t part)
+{
+  size_t              byte_alloc;
+  t8_locidx_t         ltree, lghost;
+  t8_ctree_t          tree;
+  t8_cghost_t         ghost;
+
+  byte_alloc = 0;
+  for (ltree = 0; ltree < part->num_trees; ltree++) {
+    tree = t8_cmesh_trees_get_tree (trees, ltree + part->first_tree_id);
+    byte_alloc += t8_cmesh_trees_attribute_size (tree);
+    byte_alloc += tree->num_attributes * sizeof (t8_attribute_info_struct_t);
+    byte_alloc += t8_cmesh_trees_neighbor_bytes (tree);
+  }
+  for (lghost = 0; lghost < part->num_ghosts; lghost++) {
+    ghost = t8_cmesh_trees_get_ghost (trees, lghost + part->first_ghost_id);
+    byte_alloc += t8_cmesh_trees_gneighbor_bytes (ghost);
+  }
+  return byte_alloc;
+}
+
+void
+t8_cmesh_trees_get_part_data (t8_cmesh_trees_t trees, int proc,
+                              t8_locidx_t * first_tree,
+                              t8_locidx_t * num_trees,
+                              t8_locidx_t * first_ghost,
+                              t8_locidx_t * num_ghosts)
+{
+  t8_part_tree_t      part;
+
+  part = t8_cmesh_trees_get_part (trees, proc);
+  *first_tree = part->first_tree_id;
+  *num_trees = part->num_trees;
+  *first_ghost = part->first_ghost_id;
+  *num_ghosts = part->num_ghosts;
+}
+
+void
+t8_cmesh_trees_copy_part (t8_cmesh_trees_t trees_dest, int part_dest,
+                          t8_cmesh_trees_t trees_src, int part_src)
+{
+  t8_part_tree_t      partD, partS;
+  size_t              byte_count;
+
+  partD = t8_cmesh_trees_get_part (trees_dest, part_dest);
+  partS = t8_cmesh_trees_get_part (trees_src, part_src);
+  T8_ASSERT (partD->first_tree == NULL);
+  byte_count = t8_cmesh_trees_get_part_alloc (trees_src, partS);
+  partD->first_tree = T8_ALLOC_ZERO (char, byte_count);
+  memcpy (partD->first_tree, partS->first_tree, byte_count);
+}
+
 t8_ctree_t
 t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees, t8_locidx_t ltree)
 {
@@ -356,6 +448,17 @@ t8_cmesh_trees_get_ghost_ext (t8_cmesh_trees_t trees, t8_locidx_t lghost_id,
     *ttf = (int8_t *) T8_GHOST_TTF (ghost);
   }
   return ghost;
+}
+
+void
+t8_cmesh_trees_copy_toproc (t8_cmesh_trees_t trees_dest,
+                            t8_cmesh_trees_t trees_src,
+                            t8_locidx_t lnum_trees, t8_locidx_t lnum_ghosts)
+{
+  memcpy (trees_dest->tree_to_proc, trees_src->tree_to_proc, sizeof (int) *
+          lnum_trees);
+  memcpy (trees_dest->ghost_to_proc, trees_src->ghost_to_proc, sizeof (int) *
+          lnum_ghosts);
 }
 
 void
@@ -552,19 +655,10 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t ltree_id,
   return T8_TREE_ATTR (tree, attr_info);
 }
 
-/* return the total size of attributes of a tree */
 size_t
-t8_cmesh_trees_attribute_size (t8_ctree_t tree)
+t8_cmesh_trees_get_numproc (t8_cmesh_trees_t trees)
 {
-  t8_attribute_info_struct_t *attr_info;
-  int                 i;
-  size_t              total = 0;
-
-  for (i = 0; i < tree->num_attributes; i++) {
-    attr_info = T8_TREE_ATTR_INFO (tree, i);
-    total += attr_info->attribute_size;
-  }
-  return total;
+  return trees->from_proc->elem_count;
 }
 
 void

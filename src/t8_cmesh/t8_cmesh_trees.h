@@ -138,6 +138,12 @@ T8_EXTERN_C_BEGIN ();
 #define T8_GHOST_TTF(g) (int8_t *) (T8_GHOST_FACE(g) + \
   t8_eclass_num_faces[(g)->eclass] * sizeof(t8_gloidx_t))
 
+#define T8_PADDING_SIZE 4       /* TODO: change to sizeof (void *) */
+/* Compute the number of bytes that have to be added to a given byte_count
+ * such that it is a multiple of the padding size */
+#define T8_ADD_PADDING(_x) \
+  ((T8_PADDING_SIZE - ((_x) %  T8_PADDING_SIZE)) %  T8_PADDING_SIZE);
+
 /** Initialize a trees structure and allocate its parts.
  * This function allocates the from_procs array without filling it, it
  * also allocates the tree_to_proc and ghost_to_proc arrays.
@@ -215,6 +221,32 @@ void                t8_cmesh_trees_start_part (t8_cmesh_trees_t trees,
 void                t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees,
                                                 int proc);
 
+/** Copy the tree_to_proc and ghost_to_proc arrays of one tree structure to
+ * another one.
+ * \param [in,out]      trees_dest    The destination trees structure.
+ * \param [in]          trees_src     The source trees structure.
+ * \param [in]          lnum_trees    The total number of trees stored in \a trees_src.
+ * \param [in]          lnum_ghosts    The total number of ghosts stored in \a trees_src.
+ */
+void                t8_cmesh_trees_copy_toproc (t8_cmesh_trees_t trees_dest,
+                                                t8_cmesh_trees_t trees_src,
+                                                t8_locidx_t lnum_trees,
+                                                t8_locidx_t lnum_ghosts);
+
+/** Copy the trees array from one part to another.
+ * \param [in,out]      trees_dest    The trees struct of the destination part.
+ * \param [in]          part_dest     The index of the destination part. Must be initialized
+ *                                    by \ref t8_cmesh_trees_start_part with alloc = 0.
+ * \param [in]          trees_src     The trees struct of the source part.
+ * \param [in]          part_src      The index of the destination part.
+ *                                    Must be a valid part, thus \ref t8_cmesh_trees_finish_part
+ *                                    must have been called.
+ */
+void                t8_cmesh_trees_copy_part (t8_cmesh_trees_t trees_dest,
+                                              int part_dest,
+                                              t8_cmesh_trees_t trees_src,
+                                              int part_src);
+
 /** Add a tree to a trees structure.
  * \param [in,out]  trees The trees structure to be updated.
  * \param [in]      tree_id The local id of the tree to be inserted.
@@ -245,6 +277,13 @@ void                t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees,
  */
 void                t8_cmesh_trees_set_all_boundary (t8_cmesh_t cmesh,
                                                      t8_cmesh_trees_t trees);
+
+void                t8_cmesh_trees_get_part_data (t8_cmesh_trees_t trees,
+                                                  int proc,
+                                                  t8_locidx_t * first_tree,
+                                                  t8_locidx_t * num_trees,
+                                                  t8_locidx_t * first_ghost,
+                                                  t8_locidx_t * num_ghosts);
 
 /* TODO: This function return NULL if the tree is not present.
  *       So far no error checking is done here. */
@@ -349,6 +388,12 @@ void                t8_cmesh_trees_add_attribute (t8_cmesh_trees_t trees,
                                                   t8_stash_attribute_struct_t
                                                   * attr, t8_locidx_t tree_id,
                                                   size_t index);
+
+/** Return the number of parts of a trees structure.
+ * \param [in]        trees The trees structure.
+ * \return            The number of parts in \a trees.
+ */
+size_t              t8_cmesh_trees_get_numproc (t8_cmesh_trees_t trees);
 
 /* TODO: To fit to the interface a trees struct is given as parameter here,
  *       however we could just take the one associated to the cmesh given.*/
