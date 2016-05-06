@@ -185,13 +185,17 @@ t8_part_tree_t      t8_cmesh_trees_get_part (t8_cmesh_trees_t trees,
  *  \param [in]             num_trees The number of trees of that part.
  *  \param [in]             lfirst_ghost The local id of the first ghost of that part.
  *  \param [in]             num_ghosts The number of ghosts of that part.
+ *  \param [in]             alloc   If true then tge first_tree array is allocated for
+ *                          the number of trees and ghosts.
+ *                          When a cmesh is copied we do not want this, so in we pass alloc = 0 then.
  */
 void                t8_cmesh_trees_start_part (t8_cmesh_trees_t trees,
                                                int proc,
                                                t8_locidx_t lfirst_tree,
                                                t8_locidx_t num_trees,
                                                t8_locidx_t lfirst_ghost,
-                                               t8_locidx_t num_ghosts);
+                                               t8_locidx_t num_ghosts,
+                                               int alloc);
 
 /** After all classes of trees and ghosts have been set and after the
  * number of tree attributes  was set and their total size (per tree)

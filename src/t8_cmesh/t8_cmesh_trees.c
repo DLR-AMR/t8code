@@ -148,7 +148,8 @@ t8_part_tree_get_ghost (t8_part_tree_t P, t8_locidx_t ghost_id)
 void
 t8_cmesh_trees_start_part (t8_cmesh_trees_t trees, int proc,
                            t8_locidx_t lfirst_tree, t8_locidx_t num_trees,
-                           t8_locidx_t lfirst_ghost, t8_locidx_t num_ghosts)
+                           t8_locidx_t lfirst_ghost, t8_locidx_t num_ghosts,
+                           int alloc)
 {
   t8_part_tree_t      part;
   T8_ASSERT (trees != NULL);
@@ -162,10 +163,15 @@ t8_cmesh_trees_start_part (t8_cmesh_trees_t trees, int proc,
    * two arrays for equality using memcmp.
    * (since we store structs, we would not have control of the padding bytes
    * otherwise) */
-  part->first_tree =
-    T8_ALLOC_ZERO (char,
-                   num_trees * sizeof (t8_ctree_struct_t) +
-                   num_ghosts * sizeof (t8_cghost_struct_t));
+  if (alloc) {
+    part->first_tree =
+      T8_ALLOC_ZERO (char,
+                     num_trees * sizeof (t8_ctree_struct_t) +
+                     num_ghosts * sizeof (t8_cghost_struct_t));
+  }
+  else {
+    part->first_tree = NULL;
+  }
   part->first_tree_id = lfirst_tree;
   part->first_ghost_id = lfirst_ghost;
 }

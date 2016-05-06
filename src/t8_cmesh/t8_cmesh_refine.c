@@ -918,7 +918,7 @@ t8_cmesh_refine (t8_cmesh_t cmesh)
   t8_cmesh_trees_init (&cmesh->trees, 1, cmesh->num_local_trees,
                        cmesh->num_ghosts);
   t8_cmesh_trees_start_part (cmesh->trees, 0, 0, cmesh->num_local_trees, 0,
-                             cmesh->num_ghosts);
+                             cmesh->num_ghosts, 1);
   /* Loop over all trees in cmesh_from and set the classes for their children */
   for (itree = 0, firstnewtree = 0; itree < cmesh_from->num_local_trees;
        itree++, firstnewtree += factor) {
