@@ -83,8 +83,14 @@ t8_random_partition (int level)
   t8_cmesh_unref (&cmesh_part2, sc_MPI_COMM_WORLD);
 }
 
+/* Create a coarse mesh from a p4est brick connectivity.
+ * Then derive a new partitioned cmesh from it according to
+ * a uniform refinement of a given level.
+ * If partition_from is nonzero then the initial coarse mesh
+ * will also be partitioned. Otherwise replicated.
+ */
 static void
-t8_partition (int level)
+t8_partition (int level, int partition_from)
 {
   t8_cmesh_t          cmesh, cmesh_part, cmesh_part2;
   char                file[BUFSIZ];
@@ -96,8 +102,9 @@ t8_partition (int level)
   mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
   SC_CHECK_MPI (mpiret);
 
-  conn = p4est_connectivity_new_brick (2, 2, 0, 0);
-  cmesh = t8_cmesh_new_from_p4est (conn, sc_MPI_COMM_WORLD, 0, 1);
+  conn = p4est_connectivity_new_brick (3, 2, 0, 0);
+  cmesh =
+    t8_cmesh_new_from_p4est (conn, sc_MPI_COMM_WORLD, 0, partition_from);
   p4est_connectivity_destroy (conn);
   snprintf (file, BUFSIZ, "t8_brick_%04d", mpirank);
   t8_cmesh_vtk_write_file (cmesh, file, 1.);
@@ -137,12 +144,14 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  level = 5;
+  level = 1;
 
-  t8_partition (level);
+  t8_partition (level, 1);
   for (loop = 0; loop < 1; loop++) {
     t8_random_partition (level);
   }
+
+  t8_partition (level, 0);
 
   sc_finalize ();
 
