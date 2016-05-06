@@ -1504,13 +1504,13 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared)
   int                 i;
   t8_gloidx_t        *offsets, trees_so_far = 0;
 
-  mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
 
-  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  offsets = SC_SHMEM_ALLOC (t8_gloidx_t, mpisize + 1, sc_MPI_COMM_WORLD);
+  offsets = t8_cmesh_alloc_offsets (mpisize, comm);
 
   do {
     seed = sc_MPI_Wtime () * 10000;
@@ -1518,7 +1518,7 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared)
     if (mpirank == 0) {
       t8_debugf ("Random number seed = %u\n", seed);
     }
-    mpiret = sc_MPI_Bcast (&seed, 1, sc_MPI_INT, 0, sc_MPI_COMM_WORLD);
+    mpiret = sc_MPI_Bcast (&seed, 1, sc_MPI_INT, 0, comm);
     SC_CHECK_MPI (mpiret);
     srand (seed);
 
@@ -1550,7 +1550,7 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared)
     offsets[mpisize] = num_trees;
 
     for (i = 0; i < mpisize; i++) {
-      sc_MPI_Barrier (sc_MPI_COMM_WORLD);
+      sc_MPI_Barrier (comm);
       if (i == mpirank) {
         for (iproc = 0; iproc < mpisize + 1; iproc++) {
           t8_debugf ("[H] %li\n", offsets[iproc]);
