@@ -755,9 +755,7 @@ t8_cmesh_trees_is_face_consistend (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
       else if ((neigh1 = t8_cmesh_trees_ghost_id (cmesh, trees, gneigh1)) >=
                0) {
         /* This neighbor is a local ghost, its ghost id is stored in neigh1 */
-        (void) t8_cmesh_trees_get_ghost_ext (trees,
-                                             neigh1 + cmesh->num_local_trees,
-                                             &gfaces2, &ttf2);
+        (void) t8_cmesh_trees_get_ghost_ext (trees, neigh1, &gfaces2, &ttf2);
         /* Check whether the face_neighbor entry of tree2 is correct */
         ret = ret && gfaces2[face1] == ghost1->treeid;
         /* Check whether the ttf entry of neighbor is correct */
