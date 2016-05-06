@@ -33,6 +33,7 @@
 #include "t8_cmesh_trees.h"
 #include "t8_cmesh_partition.h"
 #include "t8_cmesh_refine.h"
+#include "t8_cmesh_copy.h"
 
 typedef struct ghost_facejoins_struct
 {
@@ -499,7 +500,11 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
       t8_debugf ("Done cmesh_refine\n");
     }
     else {
-      SC_ABORT_NOT_REACHED ();
+      T8_ASSERT (cmesh->set_refine_level == 0);
+      T8_ASSERT (!cmesh->set_partition);
+      t8_debugf ("Enter cmesh_copy.\n");
+      t8_cmesh_copy (cmesh, cmesh->set_from, comm);
+      t8_debugf ("Done cmesh_copy.\n");
       /* TODO: Other from methods are not implemented yet */
     }
   }
@@ -528,8 +533,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   if (cmesh->set_from != NULL) {
     t8_cmesh_unref (&cmesh->set_from, comm);
   }
-
-  t8_stash_destroy (&cmesh->stash);
+  if (cmesh->stash != NULL) {
+    t8_stash_destroy (&cmesh->stash);
+  }
   t8_debugf ("Commited cmesh with %li local and %lli global trees and"
              " %li ghosts.\n", (long) cmesh->num_local_trees,
              (long long) cmesh->num_trees, (long) cmesh->num_ghosts);

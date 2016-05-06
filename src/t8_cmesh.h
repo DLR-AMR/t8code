@@ -184,7 +184,7 @@ void                t8_cmesh_set_partition_given (t8_cmesh_t cmesh,
 /** Refine the cmesh to a given level.
  * Thus split each tree into x^level subtrees
  * TODO: implement */
-/* TODO: if level = 0  then no refinement is performed */
+/* If level = 0  then no refinement is performed */
 void                t8_cmesh_set_refine (t8_cmesh_t cmesh, int level);
 
 /** Set the class of a tree in the cmesh.
