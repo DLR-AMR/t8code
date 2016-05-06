@@ -262,8 +262,7 @@ t8_cmesh_gather_treecount (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   tree_offset = cmesh->first_tree_shared ? -cmesh->first_tree - 1 :
     cmesh->first_tree;
-  cmesh->tree_offsets = SC_SHMEM_ALLOC (t8_gloidx_t, cmesh->mpisize + 1,
-                                        comm);
+  cmesh->tree_offsets = t8_cmesh_alloc_offsets (cmesh->mpisize, comm);
   sc_shmem_allgather (&tree_offset, 1, T8_MPI_GLOIDX, cmesh->tree_offsets, 1,
                       T8_MPI_GLOIDX, comm);
   cmesh->tree_offsets[cmesh->mpisize] = cmesh->num_trees;
@@ -1390,9 +1389,7 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
      * Thus this function must only be called after cmesh communicator was duplicated,
      * so we check whether mpisize has been set */
     T8_ASSERT (cmesh->mpisize > 0);
-    cmesh->tree_offsets = (t8_gloidx_t *) SC_SHMEM_ALLOC (t8_gloidx_t,
-                                                          cmesh->mpisize + 1,
-                                                          comm);
+    cmesh->tree_offsets = t8_cmesh_alloc_offsets (cmesh->mpisize, comm);
     sc_shmem_allgather (&cmesh->first_tree, 1, T8_MPI_GLOIDX,
                         cmesh->tree_offsets, 1, T8_MPI_GLOIDX, comm);
     cmesh->tree_offsets[cmesh->mpisize] = cmesh_from->num_trees;
@@ -1463,7 +1460,7 @@ t8_cmesh_offset_concentrate (int proc, sc_MPI_Comm comm,
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
 
-  offsets = SC_SHMEM_ALLOC (t8_gloidx_t, mpisize + 1, sc_MPI_COMM_WORLD);
+  offsets = t8_cmesh_alloc_offsets (mpisize, comm);
   offsets[0] = 0;
   for (iproc = 1; iproc <= mpisize; iproc++) {
     if (iproc == proc + 1) {
@@ -1481,6 +1478,19 @@ t8_cmesh_offset_concentrate (int proc, sc_MPI_Comm comm,
   t8_debugf ("Partition with offsets:0,%s\n", out);
 #endif
   return offsets;
+}
+
+t8_gloidx_t        *
+t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm)
+{
+#ifdef T8_ENABLE_DEBUG
+  int                 mpisize_debug, mpiret;
+  mpiret = sc_MPI_Comm_size (comm, &mpisize_debug);
+  SC_CHECK_MPI (mpiret);
+  T8_ASSERT (mpisize == mpisize_debug);
+#endif
+
+  return (t8_gloidx_t *) SC_SHMEM_ALLOC (t8_gloidx_t, mpisize + 1, comm);
 }
 
 /* Create a random partition */

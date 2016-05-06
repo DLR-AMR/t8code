@@ -51,6 +51,15 @@ void                t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 t8_gloidx_t        *t8_cmesh_offset_concentrate (int proc, sc_MPI_Comm comm,
                                                  t8_gloidx_t num_trees);
 
+/** Allocate a shared memory array to store the tree offsets of a cmesh.
+ * \param [in]      mpisize The number of processes.
+ * \param [in]      comm    The MPI communicator to use. Its mpisize must match \a mpisize.
+ *                  The shared memory type must have been set. Best practice would be
+ *                  calling \ref sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE).
+ * \return          A pointer to an allocated shared memory array of size \a mpisize + 1.
+ */
+t8_gloidx_t        *t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
+
 /** Create a random partition table.
  * The use of this function is only reasonable for debugging.
  * \param[in]        comm    The communicator to use.
