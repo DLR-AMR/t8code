@@ -150,22 +150,25 @@ t8_offset_range_send (int start, int end, t8_gloidx_t * offset)
 }
 
 /* Determine whether a given global tree id is in the range of a given process */
-int
+static int
 t8_offset_in_range (t8_gloidx_t tree_id, int proc, t8_gloidx_t * offset)
 {
   return t8_offset_first (proc, offset) <= tree_id
     && tree_id <= t8_offset_last (proc, offset);
 }
 
+#if 0
+/* TODO: Do we need this function? */
 /* Determine whether a given global tree id is in the range of a given
  * process without considering the first tree if it is shared */
-int
+static int
 t8_offset_in_range_wofirstshared (t8_gloidx_t tree_id, int proc,
                                   t8_gloidx_t * offset)
 {
   return t8_offset_first (proc, offset) + (offset[proc] < 0) <= tree_id
     && tree_id <= t8_offset_last (proc, offset);
 }
+#endif
 
 /* Change the neighbor entry of a tree to match the new partition.
  * Input: A face_neighbor entry in cmesh_from and a process to which the corresponding tree will be send
