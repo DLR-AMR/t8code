@@ -1563,18 +1563,17 @@ t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees, sc_MPI_Comm comm,
                       int do_dup)
 {
   t8_cmesh_t          cmesh;
-  t8_topidx_t         num_trees_per_eclass[T8_ECLASS_LAST] =
+  t8_topidx_t         num_trees_per_eclass[T8_ECLASS_COUNT] =
     { 0, 0, 0, 0, 0, 0, 0, 0 };
   int                 i;
 
   t8_cmesh_init (&cmesh);
-  t8_cmesh_set_mpicomm (cmesh, comm, do_dup);
   num_trees_per_eclass[eclass] = num_trees;
   for (i = 0; i < num_trees; i++) {
     t8_cmesh_set_tree_class (cmesh, i, eclass);
   }
 
-  t8_cmesh_commit (cmesh);
+  t8_cmesh_commit (cmesh, comm);
 
   return cmesh;
 }

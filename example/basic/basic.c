@@ -124,9 +124,9 @@ t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
       t8_forest_write_vtk (forest, "basic");    /* This does nothing right now */
     }
   }
+  t8_cmesh_destroy (&cmesh, sc_MPI_COMM_WORLD);
 #endif
   t8_forest_unref (&forest);
-  t8_cmesh_destroy (&cmesh, sc_MPI_COMM_WORLD);
 }
 #endif
 #if 0
