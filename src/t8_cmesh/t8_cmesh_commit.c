@@ -204,6 +204,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   int                 id1_istree, id2_istree;
   t8_cghost_t         ghost1, ghost2;
 
+  sc_flops_start (&fi);
   sc_flops_snap (&fi, &snapshot);
 
   T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
@@ -457,7 +458,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[2], snapshot.iwtime, "cmesh_commit_end");
 
-  sc_stats_compute (sc_MPI_COMM_WORLD, 3, stats);
+  sc_stats_compute (comm, 3, stats);
   sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 3, stats, 1, 1);
 }
 
