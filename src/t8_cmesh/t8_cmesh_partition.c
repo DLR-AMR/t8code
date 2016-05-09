@@ -1001,7 +1001,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
       buffer = (*send_buffer)[iproc - *send_first - flag] = T8_ALLOC (char,
                                                                       total_alloc);
     }
-    else {
+    else if (num_trees > 0 || num_ghost_send > 0) {
       *my_buffer = buffer = T8_ALLOC (char, total_alloc);
       *my_buffer_bytes = total_alloc;
     }
