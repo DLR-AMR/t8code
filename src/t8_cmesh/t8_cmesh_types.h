@@ -79,7 +79,7 @@ t8_cmesh_from_t;
 typedef struct t8_cmesh
 {
   /* TODO: make the comments more legible */
-  int                 committed;
+  int                 committed; /**< Flag that specifies whether the cmesh is committed or not. \ref t8_cmesh_commit */
   int                 dimension; /**< The dimension of the cmesh. It is set when the first tree is inserted. */
 
   int                 set_partition; /**< If nonzero the cmesh is partitioned.
@@ -87,7 +87,8 @@ typedef struct t8_cmesh
   int                 face_knowledge;  /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partioned;
                             see \ref t8_cmesh_set_partition.
 */
-  int8_t              set_refine_level;
+  int8_t              set_refine_level; /**< If the cmesh is derived from a second cmesh, a refinement level is specified here.
+                                      \ref t8_cmesh_set_derive \ref t8_cmesh_set_refine. */
   int8_t              set_partition_level; /**< Non-negative if the cmesh should be partition from an already existing cmesh
                                          with an assumes \a level uniform mesh underneath.  TODO: fix sentence */
 #if 0
@@ -126,15 +127,16 @@ typedef struct t8_cmesh
                                            check at commit if it equals the total number. */
 #endif
   t8_stash_t          stash; /**< Used as temporary storage for the trees before commit. */
-  /* TODO: make tree_offsets shared array as soon as libsc is updated */
 }
 t8_cmesh_struct_t;
 
+/* TODO: document */
 typedef struct t8_cghost
 {
   t8_gloidx_t         treeid; /**< The global number of this ghost. */
   t8_eclass_t         eclass; /**< The eclass of this ghost. */
-  size_t              neigh_offset;     /* TODO: document */
+  size_t              neigh_offset; /** Offset to the array of face neighbors of this ghost.
+                                        This count has to be added to the address of the ghost to get its face neighbors. */
 }
 t8_cghost_struct_t;
 
