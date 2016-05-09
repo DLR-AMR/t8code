@@ -81,6 +81,8 @@ int                 t8_cmesh_is_initialized (t8_cmesh_t cmesh);
  */
 int                 t8_cmesh_is_committed (t8_cmesh_t cmesh);
 
+/* TODO: Currently it is not possible to destroy set_from before
+ *       cmesh is destroyed. */
 /** This function sets a cmesh to be derived from.
  * The default is to create a cmesh standalone by specifying all data manually.
  * A coarse mesh can also be constructed by deriving it from an existing one.
