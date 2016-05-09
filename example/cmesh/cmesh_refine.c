@@ -26,7 +26,7 @@
 /* TODO: rename this file to t8_something */
 
 void
-t8_refine_hybrid ()
+t8_refine_hybrid (int level)
 {
   t8_cmesh_t          cmesh, cmesh_refine;
   int                 dummy_data = 0;
@@ -42,26 +42,26 @@ t8_refine_hybrid ()
   t8_cmesh_set_join (cmesh, 0, 1, 2, 1, 0);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   t8_cmesh_set_derive (cmesh_refine, cmesh);
-  t8_cmesh_set_refine (cmesh_refine, 1);
+  t8_cmesh_set_refine (cmesh_refine, level);
   t8_cmesh_commit (cmesh_refine, sc_MPI_COMM_WORLD);
   t8_cmesh_destroy (&cmesh_refine, sc_MPI_COMM_WORLD);
 }
 
 void
-t8_refine_cube (t8_eclass_t eclass)
+t8_refine_cube (t8_eclass_t eclass, int level)
 {
   t8_cmesh_t          cmesh, cmesh_refine;
 
   cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
   t8_cmesh_init (&cmesh_refine);
   t8_cmesh_set_derive (cmesh_refine, cmesh);
-  t8_cmesh_set_refine (cmesh_refine, 1);
+  t8_cmesh_set_refine (cmesh_refine, level);
   t8_cmesh_commit (cmesh_refine, sc_MPI_COMM_WORLD);
   t8_cmesh_destroy (&cmesh_refine, sc_MPI_COMM_WORLD);
 }
 
 void
-t8_refine_p4est ()
+t8_refine_p4est (int level)
 {
   t8_cmesh_t          cmesh, cmesh_refine;
   p4est_connectivity_t *conn;
@@ -71,7 +71,7 @@ t8_refine_p4est ()
   p4est_connectivity_destroy (conn);
   t8_cmesh_init (&cmesh_refine);
   t8_cmesh_set_derive (cmesh_refine, cmesh);
-  t8_cmesh_set_refine (cmesh_refine, 1);
+  t8_cmesh_set_refine (cmesh_refine, level);
   t8_cmesh_commit (cmesh_refine, sc_MPI_COMM_WORLD);
   t8_cmesh_destroy (&cmesh_refine, sc_MPI_COMM_WORLD);
 }
@@ -79,7 +79,7 @@ t8_refine_p4est ()
 int
 main (int argc, char **argv)
 {
-  int                 mpiret;
+  int                 mpiret, level;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -87,9 +87,12 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  t8_refine_p4est ();
-  t8_refine_cube (T8_ECLASS_TRIANGLE);
-  t8_refine_hybrid ();
+  level = 2;
+  t8_refine_p4est (level);
+  t8_refine_cube (T8_ECLASS_TRIANGLE, level);
+#if 0
+  t8_refine_hybrid (level);
+#endif
 
   sc_finalize ();
 
