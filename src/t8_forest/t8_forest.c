@@ -388,6 +388,12 @@ t8_forest_commit (t8_forest_t forest)
   forest->committed = 1;
 }
 
+t8_locidx_t
+t8_forest_get_num_element (t8_forest_t forest)
+{
+  return forest->local_num_elements;
+}
+
 void
 t8_forest_write_vtk (t8_forest_t forest, const char *filename)
 {

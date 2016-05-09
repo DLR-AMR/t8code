@@ -199,6 +199,9 @@ void                t8_forest_comm_global_num_elements (t8_forest_t forest);
  */
 void                t8_forest_commit (t8_forest_t forest);
 
+
+t8_locidx_t         t8_forest_get_num_element (t8_forest_t forest);
+
 void                t8_forest_save (t8_forest_t forest);
 void                t8_forest_write_vtk (t8_forest_t forest,
                                          const char *filename);
