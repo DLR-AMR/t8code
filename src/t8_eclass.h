@@ -38,9 +38,9 @@ T8_EXTERN_C_BEGIN ();
 /** This enumeration contains all possible element classes. */
 typedef enum t8_eclass
 {
-  T8_ECLASS_FIRST = 0,
+  T8_ECLASS_ZERO = 0,
   /** The vertex is the only zero-dimensional element class. */
-  T8_ECLASS_VERTEX = T8_ECLASS_FIRST,
+  T8_ECLASS_VERTEX = T8_ECLASS_ZERO,
   /** The line is the only one-dimensional element class. */
   T8_ECLASS_LINE,
   /** The quadrilateral is one of two element classes in two dimensions. */
@@ -56,44 +56,58 @@ typedef enum t8_eclass
   /** The pyramid has a quadrilateral as base and four triangles as sides. */
   T8_ECLASS_PYRAMID,
   /** This is no element class but can be used as the number of element classes. */
-  T8_ECLASS_LAST
+  T8_ECLASS_COUNT
 }
 t8_eclass_t;
 
 /** The maximum number of boundary faces an element class can have. */
 #define T8_ECLASS_MAX_FACES 6
+/** The maximum number of cornes an element class can have. */
+#define T8_ECLASS_MAX_CORNERS 8
+/** The maximal possible dimension for an eclass */
+#define T8_ECLASS_MAX_DIM 3
 
 /** Map each of the element classes to its dimension. */
-extern const int    t8_eclass_to_dimension[T8_ECLASS_LAST];
+extern const int    t8_eclass_to_dimension[T8_ECLASS_COUNT];
 
 /** The number of codimension-one boundaries of an element class. */
-extern const int    t8_eclass_num_faces[T8_ECLASS_LAST];
+extern const int    t8_eclass_num_faces[T8_ECLASS_COUNT];
+
+/** For each dimension the maximum possible number of faces of an eclass of that dimension. */
+extern const int    t8_eclass_max_num_faces[T8_ECLASS_MAX_DIM + 1];
+
+/** For each eclass the number of children on each face when refined */
+extern const int    t8_eclass_num_face_children[T8_ECLASS_COUNT];
 
 /** The number of vertices of an element class. */
-extern const int    t8_eclass_num_vertices[T8_ECLASS_LAST];
+extern const int    t8_eclass_num_vertices[T8_ECLASS_COUNT];
 
 /** The number of children of an element class. */
-extern const int    t8_eclass_num_children[T8_ECLASS_LAST];
+extern const int    t8_eclass_num_children[T8_ECLASS_COUNT];
 
 /** The vtk cell type for the eclass */
-extern const int    t8_eclass_vtk_type[T8_ECLASS_LAST];
+extern const int    t8_eclass_vtk_type[T8_ECLASS_COUNT];
 
-extern const int    t8_eclass_vtk_corner_number[T8_ECLASS_LAST][8];
+/** Map the t8code corner number to the vtk corner number */
+extern const int
+     t8_eclass_vtk_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS];
 
 /** For each of the element classes, list the type of the faces. */
-extern const int    t8_eclass_face_types[T8_ECLASS_LAST][T8_ECLASS_MAX_FACES];
+extern const int
+     t8_eclass_face_types[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES];
 
 /** For each of the element classes, count the boundary points. */
-extern const int    t8_eclass_boundary_count[T8_ECLASS_LAST][T8_ECLASS_LAST];
+extern const int
+     t8_eclass_boundary_count[T8_ECLASS_COUNT][T8_ECLASS_COUNT];
 
 /** For each eclass, the name of this class as a string */
-extern const char  *t8_eclass_to_string[T8_ECLASS_LAST];
+extern const char  *t8_eclass_to_string[T8_ECLASS_COUNT];
 
 /** Query the element class and count of boundary points.
  * \param [in] theclass         We query a point of this element class.
  * \param [in] min_dim          Ignore boundary points of lesser dimension.
  *                              The ignored points get a count value of 0.
- * \param [out] per_eclass      Array of length T8_ECLASS_LAST to be filled
+ * \param [out] per_eclass      Array of length T8_ECLASS_COUNT to be filled
  *                              with the count of the boundary objects,
  *                              counted per each of the element classes.
  * \return                      The count over all boundary points.
@@ -109,7 +123,7 @@ int                 t8_eclass_count_boundary (t8_eclass_t theclass,
  */
 t8_gloidx_t         t8_eclass_count_leaf (t8_eclass_t theclass, int level);
 
-/** Compare two eclasses of the sam dimensiona
+/** Compare two eclasses of the sam dimension
  *  as necessary for face neighbor orientation.
  *  The implemented order is Triangle < Square in 2D and
  *  Tet < Hex < Prism < Pyramid in 3D.

@@ -159,7 +159,7 @@ typedef struct t8_scheme
   sc_refcount_t       rc;
 
   /** This array holds one virtual table per element class. */
-  t8_eclass_scheme_t *eclass_schemes[T8_ECLASS_LAST];
+  t8_eclass_scheme_t *eclass_schemes[T8_ECLASS_COUNT];
 }
 t8_scheme_t;
 

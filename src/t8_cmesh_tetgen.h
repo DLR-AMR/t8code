@@ -31,6 +31,9 @@
 #include <t8.h>
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
+#include <sc_flops.h>
+#include <sc_statistics.h>
+#include <sc_options.h>
 
 /* put typedefs here */
 
@@ -52,9 +55,18 @@ T8_EXTERN_C_BEGIN ();
  * \return                A ommited, replicated cmesh constructed from the info
  *                        in the TETGEN files.
  */
-t8_cmesh_t
-t8_cmesh_from_tetgen_file (char *fileprefix, int partition,
-                           sc_MPI_Comm comm, int do_dup);
+t8_cmesh_t          t8_cmesh_from_tetgen_file (char *fileprefix,
+                                               int partition,
+                                               sc_MPI_Comm comm, int do_dup);
+
+t8_cmesh_t          t8_cmesh_from_tetgen_file_time (char *fileprefix,
+                                                    int partition,
+                                                    sc_MPI_Comm comm,
+                                                    int do_dup,
+                                                    sc_flopinfo_t * fi,
+                                                    sc_flopinfo_t * snapshot,
+                                                    sc_statinfo_t * stats,
+                                                    int statentry);
 
 T8_EXTERN_C_END ();
 

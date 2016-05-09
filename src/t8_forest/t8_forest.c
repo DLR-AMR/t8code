@@ -61,10 +61,10 @@ t8_forest_set_mpicomm (t8_forest_t forest, sc_MPI_Comm mpicomm, int do_dup)
   forest->do_dup = do_dup;
 }
 
+/* TODO: Change forest mpi logic */
 void
-t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh)
+t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  sc_MPI_Comm         mpicomm;
   int                 do_dup;
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
@@ -75,8 +75,11 @@ t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh)
   T8_ASSERT (cmesh != NULL);
 
   forest->cmesh = cmesh;
+  do_dup = 0;
+#if 0
   mpicomm = t8_cmesh_get_mpicomm (cmesh, &do_dup);
-  t8_forest_set_mpicomm (forest, mpicomm, do_dup);
+#endif
+  t8_forest_set_mpicomm (forest, comm, do_dup);
 }
 
 void
@@ -188,7 +191,7 @@ t8_forest_populate (t8_forest_t forest)
   t8_gloidx_t         count_elements;
   t8_gloidx_t         num_tree_elements;
   t8_topidx_t         num_local_trees;
-  t8_topidx_t         jt;
+  t8_gloidx_t         jt, first_ctree;
   t8_gloidx_t         start, end, et;
   t8_tree_t           tree;
   t8_element_t       *element, *element_succ;
@@ -199,7 +202,8 @@ t8_forest_populate (t8_forest_t forest)
   /* TODO: create trees and quadrants according to uniform refinement */
   t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level,
                            &forest->first_local_tree, &child_in_tree_begin,
-                           &forest->last_local_tree, &child_in_tree_end);
+                           &forest->last_local_tree, &child_in_tree_end,
+                           NULL);
 
   forest->global_num_elements = forest->local_num_elements = 0;
   /* create only the non-empty tree objects */
@@ -215,12 +219,14 @@ t8_forest_populate (t8_forest_t forest)
     num_local_trees = forest->last_local_tree - forest->first_local_tree + 1;
     forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
     sc_array_resize (forest->trees, num_local_trees);
+    first_ctree = t8_cmesh_get_first_treeid (forest->cmesh);
     for (jt = forest->first_local_tree, count_elements = 0;
          jt <= forest->last_local_tree; jt++) {
       tree = (t8_tree_t) t8_sc_array_index_topidx (forest->trees,
                                                    jt -
                                                    forest->first_local_tree);
-      tree_class = tree->eclass = t8_cmesh_get_tree_class (forest->cmesh, jt);
+      tree_class = tree->eclass = t8_cmesh_get_tree_class (forest->cmesh,
+                                                           jt - first_ctree);
       tree->elements_offset = count_elements;
       eclass_scheme = forest->scheme->eclass_schemes[tree_class];
       T8_ASSERT (eclass_scheme != NULL);
@@ -328,7 +334,6 @@ t8_forest_commit (t8_forest_t forest)
       SC_CHECK_MPI (mpiret);
       forest->mpicomm = comm_dup;
     }
-
     /* populate a new forest with tree and quadrant objects */
     t8_forest_populate (forest);
   }
@@ -449,7 +454,7 @@ t8_forest_reset (t8_forest_t * pforest)
     t8_scheme_unref (&forest->scheme);
   }
   if (forest->cmesh != NULL) {
-    t8_cmesh_unref (&forest->cmesh);
+    t8_cmesh_unref (&forest->cmesh, forest->mpicomm);
   }
 
   T8_FREE (forest);

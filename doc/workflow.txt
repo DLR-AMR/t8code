@@ -1,0 +1,53 @@
+-------------------------
+cmesh_reorder
+
+Input: repliziertes cmesh
+Output: repliziertes cmesh, mit METIS für uniform lvl 0 Partitionierung auf
+			    mpisize Procs optimiert
+
+Fehlt nur noch umsortierung der Bäume in place.
+Wichtige Datenstruktur: cmesh->trees  (t8_cmesh_trees.h, t8_cmesh_types.h)
+
+trees besteht aus Parts, jeder Part steht für die Daten, die in einem (eventuell fiktiven) vorherigen Partitionsschritt empfangen wurden.
+
+trees > Parts > Bäume,Ghost,face Daten
+
+cmesh ist repliziert => Nur ein Part existiert.
+
+trees->from_proc[0]->first_tree ist ein char array, welches die Baeume, Ghosts, Face_neighbors und Attribute speichert. Siehe dazu t8_cmesh_trees.h
+
+---------------------------
+repliziertes cmesh partitionieren
+
+1. t8_cmesh_set_partition_from (t8_cmesh.c) mit level oder offset_array
+   soll als cmesh_from auch ein repliziertes akzeptieren.
+2. In commit (t8_cmesh_commit.c) wird dann aus level ein offset_array gebaut oder das von 1. verwendet
+   um cmesh_partition_given (t8_cmesh_partition.c) aufzurufen.
+3. cmesh_partition_given baut das partitionierte cmesh mit Hilfe einer Partitionstabelle
+
+
+cmesh_partition_given muss die funktionalität liefern auch mit einem replizierten cmesh_from zu arbeiten.
+
+input: repliziertes cmesh, Partitionstabelle
+output: partitioniertes cmesh
+
+Muss also lokal Bäume und Ghost allokieren und mit Daten füllen.
+Wichtige Datenstruktur: cmesh->trees  (t8_cmesh_trees.h, t8_cmesh_types.h)
+
+Mögliche Implementierung:
+1. Ghosts zählen durch parsen der lokalen Bäume und einsortieren der Ghost indices in array oder hash table, dabei doppelte Einträge nicht zählen.
+2. Initialisieren der trees Struktur via 
+  t8_cmesh_trees_init (&cmesh->trees, num_parts, num_trees, 0); (t8_cmesh_trees.c)
+3. Initialisieren der part Struktur in der trees Struktur
+  t8_cmesh_trees_start_part mit proc=0
+4. Setze Baum Klassen mit t8_cmesh_add_tree (t8_cmesh_trees.h)
+5. Setze Ghost Klassen mit t8_cmesh_add_ghost (t8_cmesh_trees.h)
+6. initialisiere Attribute pro Baum , siehe auch t8_cmesh_trees_init_attributes
+7. Rufe t8_cmesh_trees_finish_part auf
+
+Im Grunde ähnlich wie cmesh_commit ohne Partition (cmesh_commit.c:173) nur mit zusätzlichen Ghosts.
+
+Funktion wurde mit minimalem Aufwand realisiert:
+Das partition vom partitionierten cmesh so angepasst, dass wir im replizierten
+Fall nur von dem aktuellen Prozess Baeume und Ghosts "senden" und "empfangen".
+

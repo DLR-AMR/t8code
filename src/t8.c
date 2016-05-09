@@ -24,15 +24,6 @@
 
 static int          t8_package_id = -1;
 
-
-void        *
-t8_sc_array_index_topidx (sc_array_t * array, t8_topidx_t it)
-{
-  P4EST_ASSERT (it >= 0 && (size_t) it < array->elem_count);
-
-  return array->array + array->elem_size * (size_t) it;
-}
-
 int
 t8_get_package_id (void)
 {
@@ -131,4 +122,20 @@ t8_init (int log_threshold)
   t8_global_productionf ("%-*s %s\n", w, "CFLAGS", T8_CFLAGS);
   t8_global_productionf ("%-*s %s\n", w, "LDFLAGS", T8_LDFLAGS);
   t8_global_productionf ("%-*s %s\n", w, "LIBS", T8_LIBS);
+}
+
+void               *
+t8_sc_array_index_topidx (sc_array_t * array, t8_topidx_t it)
+{
+  P4EST_ASSERT (it >= 0 && (size_t) it < array->elem_count);
+
+  return array->array + array->elem_size * (size_t) it;
+}
+
+void               *
+t8_sc_array_index_locidx (sc_array_t * array, t8_locidx_t it)
+{
+  P4EST_ASSERT (it >= 0 && (size_t) it < array->elem_count);
+
+  return array->array + array->elem_size * (size_t) it;
 }

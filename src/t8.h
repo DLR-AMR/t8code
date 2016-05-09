@@ -69,27 +69,40 @@ T8_EXTERN_C_BEGIN ();
 #define T8_ALLOC_ZERO P4EST_ALLOC_ZERO  /**< TODO: write proper function. */
 #define T8_FREE P4EST_FREE              /**< TODO: write proper function. */
 
+/** A type for counting coarse mesh related values (trees, tree vertices, ...).
+ * The name topidx alludes to mesh topology as this is what cmesh defines.
+ * We use the p4est_locidx_t type here since t8code allows for creating
+ * really large connectivities.
+ */
+typedef p4est_locidx_t t8_topidx_t;
+#define T8_MPI_TOPIDX P4EST_MPI_LOCIDX
+#define T8_TOPIDX_ABS(x) P4EST_LOCIDX_ABS(x)
+#define t8_compare_topidx(v,w) p4est_locidx_compare(v,w)
+
 /** A type for processor-local indexing. */
 typedef p4est_locidx_t t8_locidx_t;
 #define T8_MPI_LOCIDX P4EST_MPI_LOCIDX
+#define T8_LOCIDX_ABS(x) P4EST_LOCIDX_ABS(x)
+#define t8_compare_locidx(v,w) p4est_locidx_compare(v,w)
 
 /** A type for global indexing that holds really big numbers. */
 typedef p4est_gloidx_t t8_gloidx_t;
 #define T8_MPI_GLOIDX P4EST_MPI_GLOIDX
+#define T8_GLOIDX_ABS(x) P4EST_GLOIDX_ABS(x)
+#define t8_compare_gloidx(v,w) p4est_gloidx_compare(v,w)
 
-/** A type for counting topological entities (trees, tree vertices, ...). */
-typedef p4est_topidx_t t8_topidx_t;
-#define T8_MPI_TOPIDX P4EST_MPI_TOPIDX
-
-/** Return a pointer to an array element indexed by a t8_topidx_t.
- * \param [in] index needs to be in [0]..[elem_count-1].
- * \return           A void * pointing to entry \a it in \a array.
- */
-void               *t8_sc_array_index_topidx (sc_array_t * array,
-                                              t8_topidx_t it);
+/** Communication tags used internal to t8code. */
+typedef enum
+{
+  T8_MPI_TAG_FIRST = P4EST_COMM_TAG_FIRST,
+  T8_MPI_PARTITION_CMESH = P4EST_COMM_TAG_LAST,
+  T8_MPI_TAG_LAST
+}
+t8_MPI_tag_t;
 
 /** Query the package identity as registered in libsc.
- * \return          This is -1 before \ref t8_init and the identifier after.
+ * \return          This is -1 before \ref t8_init has been called
+ *                  and a proper package identifier afterwards.
  */
 int                 t8_get_package_id (void);
 
@@ -176,6 +189,20 @@ void                t8_debugf (const char *fmt, ...)
  *                           You can also choose from log levels SC_LP_*.
  */
 void                t8_init (int log_threshold);
+
+/** Return a pointer to an array element indexed by a t8_topidx_t.
+ * \param [in] index needs to be in [0]..[elem_count-1].
+ * \return           A void * pointing to entry \a it in \a array.
+ */
+void               *t8_sc_array_index_topidx (sc_array_t * array,
+                                              t8_topidx_t it);
+
+/** Return a pointer to an array element indexed by a t8_locidx_t.
+ * \param [in] index needs to be in [0]..[elem_count-1].
+ * \return           A void * pointing to entry \a it in \a array.
+ */
+void               *t8_sc_array_index_locidx (sc_array_t * array,
+                                              t8_locidx_t it);
 
 /* call this at the end of a header file to match T8_EXTERN_C_BEGIN (). */
 T8_EXTERN_C_END ();

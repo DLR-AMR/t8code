@@ -26,7 +26,7 @@
 
 #include <t8.h>
 #include <t8_eclass.h>
-#include <t8_cmesh/t8_cmesh_stash.h>
+#include "t8_cmesh_stash.h"
 
 void
 t8_stash_init (t8_stash_t * pstash)
@@ -76,33 +76,100 @@ t8_stash_add_class (t8_stash_t stash, t8_gloidx_t id, t8_eclass_t eclass)
   sclass->id = id;
 }
 
+/* returns -1 if treeid1 < treeid2
+ *          0            =
+ *         +1            >
+ */
+static int
+t8_stash_class_compare (const void *c1, const void *c2)
+{
+  t8_stash_class_struct_t *class1, *class2;
+
+  class1 = (t8_stash_class_struct_t *) c1;
+  class2 = (t8_stash_class_struct_t *) c2;
+  return class1->id < class2->id ? -1 : class1->id != class2->id;
+}
+
 void
-t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t id1, t8_gloidx_t id2,
+t8_stash_class_sort (t8_stash_t stash)
+{
+  T8_ASSERT (stash != NULL);
+
+  sc_array_sort (&stash->classes, t8_stash_class_compare);
+}
+
+static int
+t8_stash_class_compare_index (const void *index, const void *c)
+{
+  t8_gloidx_t         index1, index2;
+
+  index1 = *((t8_gloidx_t *) index);
+  index2 = ((t8_stash_class_struct_t *) c)->id;
+
+  return index1 < index2 ? -1 : index1 != index2;
+}
+
+ssize_t
+t8_stash_class_bsearch (t8_stash_t stash, t8_gloidx_t tree_id)
+{
+  return sc_array_bsearch (&stash->classes, &tree_id,
+                           t8_stash_class_compare_index);
+}
+
+void
+t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t gid1, t8_gloidx_t gid2,
                        int face1, int face2, int orientation)
 {
   t8_stash_joinface_struct_t *sjoin;
 
   T8_ASSERT (stash != NULL);
-  sjoin = sc_array_push (&stash->joinfaces);
-  sjoin->face1 = face1;
-  sjoin->face2 = face2;
-  sjoin->id1 = id2;
-  sjoin->id2 = id2;
+  sjoin = (t8_stash_joinface_struct_t *) sc_array_push (&stash->joinfaces);
+  /* We insert the face connection such that join->id1 is the smaller of
+   * the two ids */
+  sjoin->face1 = gid1 <= gid2 ? face1 : face2;
+  sjoin->face2 = gid1 <= gid2 ? face2 : face1;;
+  sjoin->id1 = gid1 <= gid2 ? gid1 : gid2;;
+  sjoin->id2 = gid1 <= gid2 ? gid2 : gid1;;
   sjoin->orientation = orientation;
 }
 
+/* return -1 if face1.id1 < face2.id1
+ *         0              =
+ *        +1              >
+ */
+static int
+t8_stash_facejoin_compare (const void *j1, const void *j2)
+{
+  t8_stash_joinface_struct_t *join1, *join2;
+
+  join1 = (t8_stash_joinface_struct_t *) j1;
+  join2 = (t8_stash_joinface_struct_t *) j2;
+
+  return join1->id1 < join2->id1 ? -1 : join1->id1 != join2->id1;
+}
+
 void
-t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id, size_t size,
-                        void *attr, int copy)
+t8_stash_joinface_sort (t8_stash_t stash)
+{
+  T8_ASSERT (stash != NULL);
+
+  sc_array_sort (&stash->joinfaces, t8_stash_facejoin_compare);
+}
+
+void
+t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id, int package_id,
+                        int key, size_t size, void *attr, int copy)
 {
   t8_stash_attribute_struct_t *sattr;
 
   T8_ASSERT (stash != NULL);
-  sattr = sc_array_push (&stash->attributes);
+  sattr = (t8_stash_attribute_struct_t *) sc_array_push (&stash->attributes);
   sattr->attr_size = size;
   sattr->id = id;
-  sattr->is_owned = copy ? 1 : 0;
-  sattr->attr_data = copy ? T8_ALLOC (char, size) : attr;
+  sattr->is_owned = !copy ? 0 : 1;
+  sattr->key = key;
+  sattr->package_id = package_id;
+  sattr->attr_data = !copy ? attr : T8_ALLOC (char, size);
   if (copy) {
     memcpy (sattr->attr_data, attr, size);
   }
@@ -130,21 +197,48 @@ t8_stash_get_attribute_tree_id (t8_stash_t stash, size_t index)
 }
 
 int
+t8_stash_get_attribute_key (t8_stash_t stash, size_t index)
+{
+  return ((t8_stash_attribute_struct_t *)
+          sc_array_index (&stash->attributes, index))->key;
+}
+
+int
+t8_stash_get_attribute_id (t8_stash_t stash, size_t index)
+{
+  return ((t8_stash_attribute_struct_t *)
+          sc_array_index (&stash->attributes, index))->package_id;
+}
+
+int
 t8_stash_attribute_is_owned (t8_stash_t stash, size_t index)
 {
   return ((t8_stash_attribute_struct_t *)
           sc_array_index (&stash->attributes, index))->is_owned;
 }
 
+/* Compare two attribute entries A1 and A2.
+ * A1 is smaller than A2 if and only if its treeid is smaller or (if equal)
+ * its package id is smaller or (if also equal) its key is smaller.
+ */
 static int
 t8_stash_attribute_compare (const void *v1, const void *v2)
 {
   t8_stash_attribute_struct_t *A1 = (t8_stash_attribute_struct_t *) v1;
   t8_stash_attribute_struct_t *A2 = (t8_stash_attribute_struct_t *) v2;
 
+  if (A1->id == A2->id) {
+    if (A1->package_id == A2->package_id) {
+      return A1->key < A2->key ? -1 : A1->key > A2->key;
+    }
+    return A1->package_id < A2->package_id ? -1 : 1;
+  }
   return A1->id < A2->id ? -1 : A1->id > A2->id;
 }
 
+/* Sort the attribute entries in the order
+ * (treeid, packageid, key)
+ */
 void
 t8_stash_attribute_sort (t8_stash_t stash)
 {
@@ -168,11 +262,11 @@ t8_stash_bcast (t8_stash_t stash, int root, sc_MPI_Comm comm,
     sc_array_resize (&stash->classes, elem_counts[1]);
     sc_array_resize (&stash->joinfaces, elem_counts[2]);
   }
-  if (elem_counts[0] > 0){
+  if (elem_counts[0] > 0) {
     mpiret = sc_MPI_Bcast (stash->attributes.array,
-                         elem_counts[0] *
-                         sizeof (t8_stash_attribute_struct_t), sc_MPI_BYTE, 0,
-                         comm);
+                           elem_counts[0] *
+                           sizeof (t8_stash_attribute_struct_t), sc_MPI_BYTE,
+                           0, comm);
     SC_CHECK_MPI (mpiret);
   }
   if (elem_counts[1] > 0) {
@@ -183,8 +277,9 @@ t8_stash_bcast (t8_stash_t stash, int root, sc_MPI_Comm comm,
   }
   if (elem_counts[2] > 0) {
     mpiret = sc_MPI_Bcast (stash->joinfaces.array,
-                           elem_counts[2] * sizeof (t8_stash_joinface_struct_t),
-                           sc_MPI_BYTE, 0, comm);
+                           elem_counts[2] *
+                           sizeof (t8_stash_joinface_struct_t), sc_MPI_BYTE,
+                           0, comm);
     SC_CHECK_MPI (mpiret);
   }
   return stash;
@@ -200,6 +295,6 @@ t8_stash_is_equal (t8_stash_t stash_a, t8_stash_t stash_b)
     return 0;
   }
   return (sc_array_is_equal (&stash_a->attributes, &stash_b->attributes)
-         && sc_array_is_equal (&stash_a->classes, &stash_b->classes)
-         && sc_array_is_equal (&stash_a->joinfaces, &stash_b->joinfaces));
+          && sc_array_is_equal (&stash_a->classes, &stash_b->classes)
+          && sc_array_is_equal (&stash_a->joinfaces, &stash_b->joinfaces));
 }

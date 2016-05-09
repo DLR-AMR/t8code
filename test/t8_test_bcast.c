@@ -30,8 +30,10 @@ t8_check_bcast_hypercube (t8_eclass_t eclass, int do_dup)
 {
   t8_cmesh_t          cmesh_bcast, cmesh_check;
 
-  cmesh_bcast = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, do_dup, 1);
-  cmesh_check = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, do_dup, 0);
+  cmesh_bcast = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, do_dup, 1,
+                                        0);
+  cmesh_check = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, do_dup, 0,
+                                        0);
   SC_CHECK_ABORTF (t8_cmesh_is_equal (cmesh_bcast, cmesh_check),
                    "cmesh_bcast check failed. ECLASS = %s,   do_dup = %i\n",
                    t8_eclass_to_string[eclass], do_dup);
@@ -55,7 +57,7 @@ main (int argc, char **argv)
   t8_init (SC_LP_DEFAULT);
 
   t8_global_productionf ("Testing cmesh broadcast.\n");
-  for (eclass = T8_ECLASS_FIRST; eclass < T8_ECLASS_LAST; eclass++) {
+  for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; eclass++) {
     t8_check_bcast_hypercube ((t8_eclass_t) eclass, 0);
     t8_check_bcast_hypercube ((t8_eclass_t) eclass, 1);
   }
