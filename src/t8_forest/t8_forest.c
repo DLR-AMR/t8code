@@ -61,10 +61,10 @@ t8_forest_set_mpicomm (t8_forest_t forest, sc_MPI_Comm mpicomm, int do_dup)
   forest->do_dup = do_dup;
 }
 
+/* TODO: Change forest mpi logic */
 void
-t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh)
+t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  sc_MPI_Comm         mpicomm;
   int                 do_dup;
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
@@ -75,12 +75,11 @@ t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh)
   T8_ASSERT (cmesh != NULL);
 
   forest->cmesh = cmesh;
-  /* TODO: Change forest mpi logic */
-  SC_ABORT ("This functionality is currently not working\n");
+  do_dup = 0;
 #if 0
   mpicomm = t8_cmesh_get_mpicomm (cmesh, &do_dup);
 #endif
-  t8_forest_set_mpicomm (forest, mpicomm, do_dup);
+  t8_forest_set_mpicomm (forest, comm, do_dup);
 }
 
 void

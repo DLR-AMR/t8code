@@ -118,7 +118,7 @@ void                t8_forest_init (t8_forest_t * pforest);
  *                              This can be prevented by referencing \b cmesh.
  */
 void                t8_forest_set_cmesh (t8_forest_t forest,
-                                         t8_cmesh_t cmesh);
+                                         t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
 /** Set the element scheme associated to a forest.
  * By default, the forest takes ownership of the scheme such that it will be
