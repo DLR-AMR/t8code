@@ -275,8 +275,8 @@ int
 main (int argc, char **argv)
 {
   int                 mpiret;
-  int                 level;
 #if 0
+  int                 level;
   int                 eclass;
   int                 dim;
 #endif
@@ -287,7 +287,9 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
+#if 0
   level = 1;
+#endif
   t8_global_productionf ("Testing basic tet mesh.\n");
 
 #if 0

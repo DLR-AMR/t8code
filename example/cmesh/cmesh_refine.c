@@ -96,9 +96,8 @@ main (int argc, char **argv)
   level = 2;
   t8_refine_p4est (level);
   t8_refine_cube (T8_ECLASS_TRIANGLE, level);
-#if 0
-  t8_refine_hybrid (level);
-#endif
+  /* TODO: does not work with level > 0 yet */
+  t8_refine_hybrid (0);
 
   sc_finalize ();
 
