@@ -25,7 +25,9 @@
 
 /* TODO: rename this file to t8_something */
 
-void
+/* Create a small hybrid mesh in dimension 2 and refine it
+ * to a given level. */
+static void
 t8_refine_hybrid (int level)
 {
   t8_cmesh_t          cmesh, cmesh_refine;
@@ -47,7 +49,9 @@ t8_refine_hybrid (int level)
   t8_cmesh_destroy (&cmesh_refine, sc_MPI_COMM_WORLD);
 }
 
-void
+/* Create a unit cube out of a given eclass and
+ * refine it to a given level. */
+static void
 t8_refine_cube (t8_eclass_t eclass, int level)
 {
   t8_cmesh_t          cmesh, cmesh_refine;
@@ -60,7 +64,9 @@ t8_refine_cube (t8_eclass_t eclass, int level)
   t8_cmesh_destroy (&cmesh_refine, sc_MPI_COMM_WORLD);
 }
 
-void
+/* Create a cmesh from a p4est brick connectivity
+ * and refine it to a given level. */
+static void
 t8_refine_p4est (int level)
 {
   t8_cmesh_t          cmesh, cmesh_refine;
