@@ -461,6 +461,58 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 3, stats, 1, 1);
 }
 
+/* Refine a cmesh to an arbitrary level >= 1.
+ * The function t8_cmesh_refine can only refine a cmesh one level,
+ * so we use intermediate cmeshes for the higher levels. */
+static void
+t8_cmesh_commit_refine (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+{
+  int                 level, il;
+  t8_cmesh_t          cmesh_temp[2], cmesh_from;
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh->set_from));
+  T8_ASSERT (cmesh->set_refine_level > 0);
+
+  cmesh_from = cmesh->set_from;
+  level = cmesh->set_refine_level;
+
+  cmesh_temp[1] = cmesh_from;
+  for (il = 0; il < level - 1; il++) {
+    /* cmesh_temp[0] and cmesh_temp[1] are successively refined from each other,
+     * starting with cmesh_temp[1] = cmesh_from */
+    t8_cmesh_init (&cmesh_temp[il % 2]);
+    t8_cmesh_set_derive (cmesh_temp[il % 2], cmesh_temp[1 - il % 2]);
+    t8_cmesh_set_refine (cmesh_temp[il % 2], 1);
+    t8_cmesh_commit (cmesh_temp[il % 2], comm);
+    t8_debugf ("[%i] Commited %i\n", level, il % 2);
+    if (il > 0) {
+      t8_cmesh_destroy (&cmesh_temp[1 - il % 2], comm);
+      t8_debugf ("[%i] Destroyed %i\n", level, 1 - il % 2);
+    }
+    /* TODO: we have to set set_from to NULL manually because we destroyed set_from
+     *       before we destroy cmesh_temp[il % 2].
+     *       This should eventually be fixed, such that set_from is automatically NULL
+     *       when the from cmesh was destroyed. */
+    cmesh_temp[il % 2]->set_from = NULL;
+  }
+  if (level > 1) {
+    /* Refine from the last temporary cmesh */
+    cmesh->set_from = cmesh_temp[1 - il % 2];
+    /* t8_cmesh_refine only accepts refinement level 1, so we
+     * set it temporarily. */
+    cmesh->set_refine_level = 1;
+  }
+  t8_cmesh_refine (cmesh);
+  if (level > 1) {
+    /* Destroy the last temp cmesh and reset the refinement level and
+     * cmesh_from. */
+    t8_cmesh_destroy (&cmesh_temp[1 - il % 2], comm);
+    cmesh->set_refine_level = level;
+    cmesh->set_from = cmesh_from;
+  }
+}
+
 /* TODO: set boundary face connections here.
  *       not trivial if replicated and not level 3 face_knowledg
  *       Edit: boundary face is default. If no face-connection is added then
@@ -496,7 +548,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     }
     else if (cmesh->set_refine_level > 0) {
       t8_debugf ("Enter cmesh_refine\n");
-      t8_cmesh_refine (cmesh);
+      t8_cmesh_commit_refine (cmesh, comm);
       t8_debugf ("Done cmesh_refine\n");
     }
     else {
