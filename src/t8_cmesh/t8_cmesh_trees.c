@@ -349,7 +349,8 @@ t8_cmesh_trees_get_part_alloc (t8_cmesh_trees_t trees, t8_part_tree_t part)
   t8_ctree_t          tree;
   t8_cghost_t         ghost;
 
-  byte_alloc = 0;
+  byte_alloc = part->num_trees * sizeof (t8_ctree_struct_t)
+    + part->num_ghosts * sizeof (t8_cghost_struct_t);
   for (ltree = 0; ltree < part->num_trees; ltree++) {
     tree = t8_cmesh_trees_get_tree (trees, ltree + part->first_tree_id);
     byte_alloc += t8_cmesh_trees_attribute_size (tree);
