@@ -612,7 +612,7 @@ t8_cmesh_trees_compare_keyattr (const void *A1, const void *A2)
 
 /* The size of the attribute is not returned, but would be accesible */
 void               *
-t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t ltree_id,
+t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_locidx_t ltree_id,
                               int package_id, int key)
 {
   int                 proc;
@@ -879,7 +879,7 @@ t8_cmesh_trees_is_equal (t8_cmesh_t cmesh, t8_cmesh_trees_t trees_a,
                          t8_cmesh_trees_t trees_b)
 {
   int                 is_equal;
-  t8_topidx_t         num_trees, num_ghost;
+  t8_locidx_t         num_trees, num_ghost;
   size_t              it;
   t8_part_tree_t      part_a, part_b;
 

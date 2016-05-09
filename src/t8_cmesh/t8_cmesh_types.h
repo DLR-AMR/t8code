@@ -121,9 +121,9 @@ typedef struct t8_cmesh
                                         if the first tree on that process is shared.
                                         Since this is very memory consuming we only fill it when needed. */
 #ifdef T8_ENABLE_DEBUG
-  t8_topidx_t         inserted_trees; /**< Count the number of inserted trees to
+  t8_locidx_t         inserted_trees; /**< Count the number of inserted trees to
                                            check at commit if it equals the total number. */
-  t8_topidx_t         inserted_ghosts; /**< Count the number of inserted ghosts to
+  t8_locidx_t         inserted_ghosts; /**< Count the number of inserted ghosts to
                                            check at commit if it equals the total number. */
 #endif
   t8_stash_t          stash; /**< Used as temporary storage for the trees before commit. */
@@ -162,7 +162,7 @@ t8_cghost_struct_t;
  */
 typedef struct t8_ctree
 {
-  t8_topidx_t         treeid; /**< The local number of this tree. */
+  t8_locidx_t         treeid; /**< The local number of this tree. */
   /* TODO: The local id of a tree should be clear from context, the entry can
    *       be optimized out. */
   t8_eclass_t         eclass; /**< The eclass of this tree. */

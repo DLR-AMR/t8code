@@ -75,10 +75,10 @@ int                 t8_cmesh_vtk_write_file (t8_cmesh_t cmesh,
  *                              match the number of corners of the tree.
  */
 void                t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh,
-                                                t8_topidx_t tree_id,
+                                                t8_locidx_t ltree_id,
                                                 int package_id, int key,
                                                 double *vertices,
-                                                t8_topidx_t num_vertices);
+                                                int num_vertices);
 
 T8_EXTERN_C_END ();
 

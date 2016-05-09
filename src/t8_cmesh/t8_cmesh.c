@@ -417,8 +417,8 @@ t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_locidx_t tree_id)
 /* Given a tree_id return the index of the specified tree in
  * cmesh's tree array
  */
-static              t8_topidx_t
-t8_cmesh_tree_index (t8_cmesh_t cmesh, t8_topidx_t tree_id)
+static t8_locidx_t
+t8_cmesh_tree_index (t8_cmesh_t cmesh, t8_locidx_t tree_id)
 {
   return cmesh->set_partition ? tree_id - cmesh->first_tree : tree_id;
 }
@@ -451,15 +451,15 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
 }
 
 void
-t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_topidx_t tree_id,
+t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltree_id,
                             int package_id, int key,
-                            double *vertices, t8_topidx_t num_vertices)
+                            double *vertices, int num_vertices)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (vertices != NULL);
   T8_ASSERT (!cmesh->committed);
 
-  t8_stash_add_attribute (cmesh->stash, tree_id, package_id, key,
+  t8_stash_add_attribute (cmesh->stash, ltree_id, package_id, key,
                           3 * num_vertices * sizeof (double),
                           (void *) vertices, 1);
 }
@@ -505,7 +505,7 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
   /* check arrays */
   is_equal = memcmp (cmesh_a->num_trees_per_eclass,
                      cmesh_b->num_trees_per_eclass,
-                     T8_ECLASS_COUNT * sizeof (t8_topidx_t));
+                     T8_ECLASS_COUNT * sizeof (t8_gloidx_t));
 
   /* check tree_offsets */
   if (cmesh_a->tree_offsets != NULL) {
@@ -587,11 +587,11 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   struct
   {
     int                 dimension;
-    t8_topidx_t         num_trees;
-    t8_topidx_t         num_trees_per_eclass[T8_ECLASS_COUNT];
+    t8_locidx_t         num_trees;
+    t8_gloidx_t         num_trees_per_eclass[T8_ECLASS_COUNT];
     size_t              stash_elem_counts[3];
 #ifdef T8_ENABLE_DEBUG
-    t8_topidx_t         inserted_trees;
+    t8_locidx_t         inserted_trees;
     sc_MPI_Comm         comm;
 #endif
   } dimensions;
@@ -1011,7 +1011,7 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
   (dim == 2 ? ((p4est_connectivity_t *) conn)->_ENTRY \
             : ((p8est_connectivity_t *) conn)->_ENTRY)
   t8_cmesh_t          cmesh;
-  t8_topidx_t         itree;
+  t8_locidx_t         ltree;
   p4est_topidx_t      treevertex;
   double              vertices[24];     /* Only 4 * 3 = 12 used in 2d */
   int                 num_tvertices;
@@ -1030,29 +1030,29 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm,
   /* basic setup */
   t8_cmesh_init (&cmesh);
   /* Add each tree to cmesh and get vertex information for each tree */
-  for (itree = 0; itree < _T8_CMESH_P48_CONN (num_trees); itree++) {    /* loop over each tree */
-    t8_cmesh_set_tree_class (cmesh, itree,
+  for (ltree = 0; ltree < _T8_CMESH_P48_CONN (num_trees); ltree++) {    /* loop over each tree */
+    t8_cmesh_set_tree_class (cmesh, ltree,
                              dim == 2 ? T8_ECLASS_QUAD : T8_ECLASS_HEX);
     for (ivertex = 0; ivertex < num_tvertices; ivertex++) {     /* loop over each tree corner */
       treevertex =
-        _T8_CMESH_P48_CONN (tree_to_vertex[num_tvertices * itree + ivertex]);
+        _T8_CMESH_P48_CONN (tree_to_vertex[num_tvertices * ltree + ivertex]);
       vertices[3 * ivertex] = _T8_CMESH_P48_CONN (vertices[3 * treevertex]);
       vertices[3 * ivertex + 1] =
         _T8_CMESH_P48_CONN (vertices[3 * treevertex + 1]);
       vertices[3 * ivertex + 2] =
         _T8_CMESH_P48_CONN (vertices[3 * treevertex + 2]);
     }
-    t8_cmesh_set_tree_vertices (cmesh, itree, t8_get_package_id (), 0,
+    t8_cmesh_set_tree_vertices (cmesh, ltree, t8_get_package_id (), 0,
                                 vertices, num_tvertices);
   }
   /* get face neighbor information from conn and join faces in cmesh */
-  for (itree = 0; itree < _T8_CMESH_P48_CONN (num_trees); itree++) {    /* loop over each tree */
+  for (ltree = 0; ltree < _T8_CMESH_P48_CONN (num_trees); ltree++) {    /* loop over each tree */
     for (iface = 0; iface < num_faces; iface++) {       /* loop over each face */
-      ttf = _T8_CMESH_P48_CONN (tree_to_face[num_faces * itree + iface]);
-      ttt = _T8_CMESH_P48_CONN (tree_to_tree[num_faces * itree + iface]);
+      ttf = _T8_CMESH_P48_CONN (tree_to_face[num_faces * ltree + iface]);
+      ttt = _T8_CMESH_P48_CONN (tree_to_tree[num_faces * ltree + iface]);
       /* insert the face only if we did not insert it before */
-      if (itree < ttt || (itree == ttt && iface < ttf % num_faces)) {
-        t8_cmesh_set_join (cmesh, itree, ttt, iface, ttf % num_faces,
+      if (ltree < ttt || (ltree == ttt && iface < ttf % num_faces)) {
+        t8_cmesh_set_join (cmesh, ltree, ttt, iface, ttf % num_faces,
                            ttf / num_faces);
       }
     }

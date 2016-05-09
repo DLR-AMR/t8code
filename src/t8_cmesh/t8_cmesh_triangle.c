@@ -195,8 +195,8 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
   FILE               *fp;
   char               *line = T8_ALLOC (char, 1024);
   size_t              linen = 1024;
-  t8_topidx_t         num_elems, tit;
-  t8_topidx_t         triangle, triangle_offset = 0;
+  t8_locidx_t         num_elems, tit;
+  t8_locidx_t         triangle, triangle_offset = 0;
   t8_topidx_t         tcorners[4];      /* in 2d only the first 3 values are needed */
   int                 retval;
   int                 temp;
@@ -301,8 +301,8 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
   FILE               *fp;
   char               *line = T8_ALLOC (char, 1024);
   size_t              linen = 1024;
-  t8_topidx_t         element, num_elems, tit;
-  t8_topidx_t        *tneighbors;
+  t8_locidx_t         element, num_elems, tit;
+  t8_locidx_t        *tneighbors;
   int                 retval;
   int                 temp;
   int                 orientation = 0, face1, face2;
@@ -332,7 +332,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
   }
   T8_ASSERT (temp == dim + 1);
 
-  tneighbors = T8_ALLOC (t8_topidx_t, num_elems * num_faces);
+  tneighbors = T8_ALLOC (t8_locidx_t, num_elems * num_faces);
 
   /* We read all the neighbors and write them into an array.
    * Since TRIANGLE provides us for each triangle and each face with
