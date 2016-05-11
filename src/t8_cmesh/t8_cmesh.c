@@ -196,6 +196,8 @@ t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from)
   /* TODO: If a previuously set cmesh is overwritten than the user is
    * responsible for unreffing it. Otherwise we have to give an mpi communicator
    * as parameter to this function. */
+  /* TODO: we will resolve this when we use a struct for shmem array such that
+   * unreffing does not need a comm anymore */
   cmesh->set_from = set_from;
   if (set_from != NULL) {
     t8_cmesh_ref (set_from);
@@ -952,15 +954,14 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh, sc_MPI_Comm comm)
   /*TODO: write this */
   if (!cmesh->committed) {
     t8_stash_destroy (&cmesh->stash);
+    /* We unref our reference of set_from */
+    t8_cmesh_unref (&cmesh->set_from, comm);
   }
   else {
     if (cmesh->trees != NULL) {
       t8_cmesh_trees_destroy (&cmesh->trees);
     }
-  }
-  if (cmesh->set_from != NULL) {
-    /* We have taken ownership of cmesh_from */
-    t8_cmesh_unref (&cmesh->set_from, comm);
+    T8_ASSERT (cmesh->set_from == NULL);
   }
 
   T8_FREE (cmesh);

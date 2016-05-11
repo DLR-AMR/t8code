@@ -584,7 +584,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   cmesh->committed = 1;
 
   if (cmesh->set_from != NULL) {
+    /* Unref set_from and set it to NULL */
     t8_cmesh_unref (&cmesh->set_from, comm);
+    cmesh->set_from = NULL;
   }
   if (cmesh->stash != NULL) {
     t8_stash_destroy (&cmesh->stash);

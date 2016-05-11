@@ -77,9 +77,12 @@ t8_random_partition (int level)
   }
   else {
     cmesh_part2 = cmesh_part;
+    t8_cmesh_ref (cmesh_part);
   }
   snprintf (file, BUFSIZ, "t8_brick_partition_random_%04d", mpirank);
   t8_cmesh_vtk_write_file (cmesh_part, file, 1.0);
+  t8_cmesh_unref (&cmesh, sc_MPI_COMM_WORLD);
+  t8_cmesh_unref (&cmesh_part, sc_MPI_COMM_WORLD);
   t8_cmesh_unref (&cmesh_part2, sc_MPI_COMM_WORLD);
 }
 
@@ -126,9 +129,12 @@ t8_partition (int level, int partition_from)
   }
   else {
     cmesh_part2 = cmesh_part;
+    t8_cmesh_ref (cmesh_part);
   }
   snprintf (file, BUFSIZ, "t8_brick_partition_%04d", mpirank);
   t8_cmesh_vtk_write_file (cmesh_part, file, 1.0);
+  t8_cmesh_unref (&cmesh, sc_MPI_COMM_WORLD);
+  t8_cmesh_unref (&cmesh_part, sc_MPI_COMM_WORLD);
   t8_cmesh_unref (&cmesh_part2, sc_MPI_COMM_WORLD);
 }
 
