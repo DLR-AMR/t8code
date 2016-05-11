@@ -462,9 +462,25 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 3, stats, 1, 1);
 }
 
-/* Refine a cmesh to an arbitrary level >= 1.
+void
+t8_cmesh_commit_from_stash (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+{
+  T8_ASSERT (cmesh != NULL);
+
+  if (cmesh->set_partition) {
+    /* partitioned commit */
+    t8_cmesh_commit_partitioned_new (cmesh, comm);
+  }
+  else {
+    /* replicated commit */
+    t8_cmesh_commit_replicated_new (cmesh);
+  }
+}
+
+/* Refine a cmesh to an arbitrary level >= 0.
  * The function t8_cmesh_refine can only refine a cmesh one level,
- * so we use intermediate cmeshes for the higher levels. */
+ * so we use intermediate cmeshes for the higher levels.
+ * If the level is 0 then we only copy the cmesh. */
 static void
 t8_cmesh_commit_refine (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
@@ -473,10 +489,15 @@ t8_cmesh_commit_refine (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (!cmesh->committed);
   T8_ASSERT (t8_cmesh_is_committed (cmesh->set_from));
-  T8_ASSERT (cmesh->set_refine_level > 0);
+  T8_ASSERT (cmesh->set_refine_level >= 0);
 
   cmesh_from = cmesh->set_from;
   level = cmesh->set_refine_level;
+
+  if (level == 0) {
+    t8_cmesh_copy (cmesh, cmesh_from, comm);
+    return;
+  }
 
   cmesh_temp[1] = cmesh_from;
   for (il = 0; il < level - 1; il++) {
@@ -525,6 +546,7 @@ void
 t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   int                 mpiret;
+  t8_cmesh_t          cmesh_temp;
   sc_flopinfo_t       fi;
 
   sc_flops_start (&fi);
@@ -540,32 +562,81 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   SC_CHECK_MPI (mpiret);
 
   if (cmesh->set_from != NULL) {
-    cmesh->num_trees = cmesh->set_from->num_trees;
     cmesh->dimension = cmesh->set_from->dimension;
     if (cmesh->set_partition) {
-      t8_debugf ("Enter cmesh_partition\n");
-      t8_cmesh_partition (cmesh, comm);
-      t8_debugf ("Done cmesh_partition\n");
-    }
-    else if (cmesh->set_refine_level > 0) {
-      t8_debugf ("Enter cmesh_refine\n");
-      t8_cmesh_commit_refine (cmesh, comm);
-      t8_debugf ("Done cmesh_refine\n");
+      /* The cmesh should be partitioned */
+      if (cmesh->set_refine_level > 0) {
+        /* The cmesh should also be refined.
+         * We create a temporary cmesh, partition it and refine it to
+         * create the new cmesh. */
+        t8_cmesh_init (&cmesh_temp);
+        t8_cmesh_set_derive (cmesh_temp, cmesh->set_from);
+        /* TODO: This code is duplicated below and may also be shorter */
+        if (cmesh->tree_offsets) {
+          t8_cmesh_set_partition_offsets (cmesh_temp, cmesh->tree_offsets);
+        }
+        else if (cmesh->set_partition_level) {
+          t8_cmesh_set_partition_uniform (cmesh_temp,
+                                          cmesh->set_partition_level);
+        }
+        else {
+          T8_ASSERT (cmesh->first_tree >= 0 && cmesh->num_local_trees >= 0);
+          t8_cmesh_set_partition_range (cmesh_temp, cmesh->face_knowledge,
+                                        cmesh->first_tree,
+                                        cmesh->num_local_trees +
+                                        cmesh->first_tree);
+        }
+        t8_cmesh_partition (cmesh_temp, comm);
+        t8_cmesh_unref (&cmesh->set_from, comm);        /* TODO: remove this line as soon as
+                                                           unref does not need a comm anymore
+                                                           and set_derive does the unreffing */
+        t8_cmesh_set_derive (cmesh, cmesh_temp);
+        t8_cmesh_unref (&cmesh_temp, comm);
+        t8_cmesh_commit_refine (cmesh, comm);
+      }
+      else {
+        /* cmesh should only be partitioned and not refined */
+        t8_cmesh_partition (cmesh, comm);
+      }
     }
     else {
-      T8_ASSERT (cmesh->set_refine_level == 0);
-      T8_ASSERT (!cmesh->set_partition);
-      t8_debugf ("Enter cmesh_copy.\n");
-      t8_cmesh_copy (cmesh, cmesh->set_from, comm);
-      t8_debugf ("Done cmesh_copy.\n");
-      /* TODO: Other from methods are not implemented yet */
+      /* cmesh should only be refined and not partitioned */
+      t8_cmesh_commit_refine (cmesh, comm);
     }
-  }
-  else if (!cmesh->set_partition) {
-    t8_cmesh_commit_replicated_new (cmesh);
-  }
+  }                             /* End set_from != NULL */
   else {
-    t8_cmesh_commit_partitioned_new (cmesh, comm);
+    /* cmesh is constructed from a stash */
+    if (cmesh->set_refine_level > 0) {
+      /* cmesh should be refined */
+      t8_cmesh_init (&cmesh_temp);
+      cmesh_temp->stash = cmesh->stash;
+      cmesh->stash = NULL;
+      /* TODO: This code is duplicated above and may also be shorter */
+      if (cmesh->set_partition) {
+        if (cmesh->tree_offsets) {
+          t8_cmesh_set_partition_offsets (cmesh_temp, cmesh->tree_offsets);
+        }
+        else if (cmesh->set_partition_level) {
+          t8_cmesh_set_partition_uniform (cmesh_temp,
+                                          cmesh->set_partition_level);
+        }
+        else {
+          T8_ASSERT (cmesh->first_tree >= 0 && cmesh->num_local_trees >= 0);
+          t8_cmesh_set_partition_range (cmesh_temp, cmesh->face_knowledge,
+                                        cmesh->first_tree,
+                                        cmesh->num_local_trees +
+                                        cmesh->first_tree);
+        }
+      }
+      t8_cmesh_commit_from_stash (cmesh_temp, comm);
+      t8_cmesh_set_derive (cmesh, cmesh_temp);
+      t8_cmesh_unref (&cmesh_temp, comm);
+      t8_cmesh_commit_refine (cmesh, comm);
+    }
+    else {
+      /* cmesh should not be refined. Partitioned or replicated commit from stash */
+      t8_cmesh_commit_from_stash (cmesh, comm);
+    }
   }
 
 #if T8_ENABLE_DEBUG

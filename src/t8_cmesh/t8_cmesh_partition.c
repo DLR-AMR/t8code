@@ -1370,6 +1370,7 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   T8_ASSERT (cmesh->set_partition);
 
   cmesh_from = (t8_cmesh_t) cmesh->set_from;
+  cmesh->num_trees = cmesh_from->num_trees;
   /**********************************************/
   /*      Compute local number of trees         */
   /*         and trees per proc array           */
