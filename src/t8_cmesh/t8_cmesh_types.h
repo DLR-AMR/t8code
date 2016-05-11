@@ -87,6 +87,7 @@ typedef struct t8_cmesh
   int                 face_knowledge;  /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partioned;
                             see \ref t8_cmesh_set_partition.
 */
+  /* TODO: Define a maximum allowed refinemet level */
   int8_t              set_refine_level; /**< If the cmesh is derived from a second cmesh, a refinement level is specified here.
                                       \ref t8_cmesh_set_derive \ref t8_cmesh_set_refine. */
   int8_t              set_partition_level; /**< Non-negative if the cmesh should be partition from an already existing cmesh
@@ -116,6 +117,8 @@ typedef struct t8_cmesh
   int8_t              first_tree_shared;/**< If partitioned true if the first tree on this process is also the last tree on the next process.
                                              Always zero if num_local_trees = 0 */
   /* TODO: deprecated, replaced by offset */
+  /* TODO: make t8_shmem object that stores comm, for debugging element size and
+   *       size */
   t8_gloidx_t        *tree_offsets;  /**< If partitioned for each process the global index of its first local tree
                                         or -(first local tree) - 1
                                         if the first tree on that process is shared.
