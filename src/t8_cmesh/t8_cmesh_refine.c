@@ -888,6 +888,11 @@ t8_cmesh_refine (t8_cmesh_t cmesh)
   T8_ASSERT (cmesh->set_from->num_trees_per_eclass[T8_ECLASS_PYRAMID] == 0);
   T8_ASSERT (cmesh->set_refine_level == 1);     /* levels bigger than 1 are not yet implemented */
 
+  if (cmesh->set_from->set_partition && cmesh->set_from->first_tree_shared) {
+    SC_ABORT ("Refining a partioned cmesh with shared first trees "
+              "is not implemented yet.\n");
+  }
+
   cmesh_from = (t8_cmesh_t) cmesh->set_from;
   dim = cmesh_from->dimension;
   level = cmesh->set_refine_level;
