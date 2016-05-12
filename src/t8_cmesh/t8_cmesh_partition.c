@@ -1129,7 +1129,8 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
   local_procid = T8_ALLOC_ZERO (int, recv_last - recv_first + 1);
   /* Allocate memory */
   for (iproc = 1; iproc < recv_last - recv_first + 1; iproc++) {
-    local_procid[iproc] = t8_offset_nosend (iproc + recv_first, from_offsets) ?
+    local_procid[iproc] =
+      t8_offset_nosend (iproc + recv_first, from_offsets) ?
       local_procid[iproc - 1] : local_procid[iproc - 1] + 1;
   }
   if (cmesh_from->set_partition) {
