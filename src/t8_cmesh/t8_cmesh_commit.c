@@ -509,7 +509,7 @@ t8_cmesh_commit_refine (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     t8_cmesh_commit (cmesh_temp[il % 2], comm);
     t8_debugf ("[%i] Commited %i\n", level, il % 2);
     if (il > 0) {
-      t8_cmesh_destroy (&cmesh_temp[1 - il % 2], comm);
+      t8_cmesh_destroy (&cmesh_temp[1 - il % 2]);
       t8_debugf ("[%i] Destroyed %i\n", level, 1 - il % 2);
     }
     /* TODO: we have to set set_from to NULL manually because we destroyed set_from
@@ -529,7 +529,7 @@ t8_cmesh_commit_refine (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   if (level > 1) {
     /* Destroy the last temp cmesh and reset the refinement level and
      * cmesh_from. */
-    t8_cmesh_destroy (&cmesh_temp[1 - il % 2], comm);
+    t8_cmesh_destroy (&cmesh_temp[1 - il % 2]);
     cmesh->set_refine_level = level;
     cmesh->set_from = cmesh_from;
   }
@@ -587,11 +587,11 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
                                         cmesh->first_tree);
         }
         t8_cmesh_partition (cmesh_temp, comm);
-        t8_cmesh_unref (&cmesh->set_from, comm);        /* TODO: remove this line as soon as
+        t8_cmesh_unref (&cmesh->set_from);        /* TODO: remove this line as soon as
                                                            unref does not need a comm anymore
                                                            and set_derive does the unreffing */
         t8_cmesh_set_derive (cmesh, cmesh_temp);
-        t8_cmesh_unref (&cmesh_temp, comm);
+        t8_cmesh_unref (&cmesh_temp);
         t8_cmesh_commit_refine (cmesh, comm);
       }
       else {
@@ -630,7 +630,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
       }
       t8_cmesh_commit_from_stash (cmesh_temp, comm);
       t8_cmesh_set_derive (cmesh, cmesh_temp);
-      t8_cmesh_unref (&cmesh_temp, comm);
+      t8_cmesh_unref (&cmesh_temp);
       t8_cmesh_commit_refine (cmesh, comm);
     }
     else {
@@ -657,7 +657,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   if (cmesh->set_from != NULL) {
     /* Unref set_from and set it to NULL */
-    t8_cmesh_unref (&cmesh->set_from, comm);
+    t8_cmesh_unref (&cmesh->set_from);
     cmesh->set_from = NULL;
   }
   if (cmesh->stash != NULL) {

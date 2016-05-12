@@ -456,7 +456,7 @@ void                t8_cmesh_ref (t8_cmesh_t cmesh);
  *                              Otherwise, the pointer is not changed and
  *                              the cmesh is not modified in other ways.
  */
-void                t8_cmesh_unref (t8_cmesh_t * pcmesh, sc_MPI_Comm comm);
+void                t8_cmesh_unref (t8_cmesh_t * pcmesh);
 
 /** Verify that a coarse mesh has only one reference left and destroy it.
  * This function is preferred over \ref t8_cmesh_unref when it is known
@@ -466,7 +466,7 @@ void                t8_cmesh_unref (t8_cmesh_t * pcmesh, sc_MPI_Comm comm);
  *                  Then it effectively calls \ref t8_cmesh_unref.
  * \param [in]      comm A mpi communicator that is valid with \a cmesh.
  */
-void                t8_cmesh_destroy (t8_cmesh_t * pcmesh, sc_MPI_Comm comm);
+void                t8_cmesh_destroy (t8_cmesh_t * pcmesh);
 
 /* Functions for construcing complete and committed cmeshes */
 

@@ -109,7 +109,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
     t8_cmesh_set_derive (cmesh_refine, cmesh);
     t8_cmesh_set_refine (cmesh_refine, 1);
     t8_cmesh_commit (cmesh_refine, sc_MPI_COMM_WORLD);
-    t8_cmesh_destroy (&cmesh_refine, sc_MPI_COMM_WORLD);
+    t8_cmesh_destroy (&cmesh_refine);
   }
 #if 0
   t8_forest_set_cmesh (forest, cmesh);
@@ -125,7 +125,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
   }
 #endif
   t8_forest_unref (&forest);
-  t8_cmesh_destroy (&cmesh, sc_MPI_COMM_WORLD);
+  t8_cmesh_destroy (&cmesh);
 }
 #endif
 #if 0
@@ -155,7 +155,7 @@ t8_basic_p4est (int do_dup)
   cmesh = t8_cmesh_new_from_p4est (conn, sc_MPI_COMM_WORLD, do_dup, 0);
   p4est_connectivity_destroy (conn);
   t8_cmesh_vtk_write_file (cmesh, "t8_p4est_moebius", 1.);
-  t8_cmesh_unref (&cmesh, sc_MPI_COMM_WORLD);
+  t8_cmesh_unref (&cmesh);
 }
 
 static void
@@ -168,7 +168,7 @@ t8_basic_p8est (int do_dup, int x, int y, int z)
   cmesh = t8_cmesh_new_from_p8est (conn, sc_MPI_COMM_WORLD, do_dup, 0);
   p8est_connectivity_destroy (conn);
   t8_cmesh_vtk_write_file (cmesh, "t8_p8est_brick", 1.);
-  t8_cmesh_unref (&cmesh, sc_MPI_COMM_WORLD);
+  t8_cmesh_unref (&cmesh);
 #ifdef T8_WITH_METIS
   {
     int                 mpirank, mpiret;
@@ -180,7 +180,7 @@ t8_basic_p8est (int do_dup, int x, int y, int z)
     t8_cmesh_vtk_write_file (cmesh, "t8_p8est_brick_metis", 1.);
   }
 #endif
-  t8_cmesh_unref (&cmesh, sc_MPI_COMM_WORLD);
+  t8_cmesh_unref (&cmesh);
   p8est_connectivity_destroy (conn);
 }
 
@@ -212,7 +212,7 @@ t8_basic_partitioned ()
   t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
   t8_cmesh_set_join (cmesh, 0, 1, 0, 0, 0);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
-  t8_cmesh_unref (&cmesh, sc_MPI_COMM_WORLD);
+  t8_cmesh_unref (&cmesh);
 }
 
 static void
@@ -268,7 +268,7 @@ t8_basic_partition (t8_eclass_t eclass, int set_level)
   t8_cmesh_commit (cmesh_part, sc_MPI_COMM_WORLD);
   snprintf (file, BUFSIZ, "basic_partition_%04d", mpirank);
   t8_cmesh_vtk_write_file (cmesh_part, file, 1.0);
-  t8_cmesh_unref (&cmesh_part, sc_MPI_COMM_WORLD);
+  t8_cmesh_unref (&cmesh_part);
 }
 #endif
 int

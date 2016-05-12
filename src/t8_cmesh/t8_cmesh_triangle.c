@@ -473,7 +473,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
                                     &num_vertices, dim);
     if (retval != 0 && retval != 1) {
       t8_global_errorf ("Error while parsing file %s.\n", current_file);
-      t8_cmesh_unref (&cmesh, comm);
+      t8_cmesh_unref (&cmesh);
     }
     else {
       /* read .ele file */
@@ -488,7 +488,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
         );
       if (retval != 0 && retval != 1) {
         t8_global_errorf ("Error while parsing file %s.\n", current_file);
-        t8_cmesh_unref (&cmesh, comm);
+        t8_cmesh_unref (&cmesh);
       }
       else {
         /* read .neigh file */
@@ -497,7 +497,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
                                                current_file, dim);
         if (retval != 0) {
           t8_global_errorf ("Error while parsing file %s.\n", current_file);
-          t8_cmesh_unref (&cmesh, comm);
+          t8_cmesh_unref (&cmesh);
         }
       }
     }
@@ -565,7 +565,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix,
                                     &num_vertices, dim);
     if (retval != 0 && retval != 1) {
       t8_global_errorf ("Error while parsing file %s.\n", current_file);
-      t8_cmesh_unref (&cmesh, comm);
+      t8_cmesh_unref (&cmesh);
     }
     else {
       /* read .ele file */
@@ -580,7 +580,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix,
         );
       if (retval != 0 && retval != 1) {
         t8_global_errorf ("Error while parsing file %s.\n", current_file);
-        t8_cmesh_unref (&cmesh, comm);
+        t8_cmesh_unref (&cmesh);
       }
       else {
         /* read .neigh file */
@@ -589,7 +589,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix,
                                                current_file, dim);
         if (retval != 0) {
           t8_global_errorf ("Error while parsing file %s.\n", current_file);
-          t8_cmesh_unref (&cmesh, comm);
+          t8_cmesh_unref (&cmesh);
         }
       }
     }

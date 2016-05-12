@@ -454,7 +454,7 @@ t8_forest_reset (t8_forest_t * pforest)
     t8_scheme_unref (&forest->scheme);
   }
   if (forest->cmesh != NULL) {
-    t8_cmesh_unref (&forest->cmesh, forest->mpicomm);
+    t8_cmesh_unref (&forest->cmesh);
   }
 
   T8_FREE (forest);

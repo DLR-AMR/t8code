@@ -958,7 +958,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
 }
 
 static void
-t8_cmesh_reset (t8_cmesh_t * pcmesh, sc_MPI_Comm comm)
+t8_cmesh_reset (t8_cmesh_t * pcmesh)
 {
   t8_cmesh_t          cmesh;
 
@@ -979,9 +979,11 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh, sc_MPI_Comm comm)
   }
   /*TODO: write this */
   if (!cmesh->committed) {
-    t8_stash_destroy (&cmesh->stash);
-    /* We unref our reference of set_from */
-    t8_cmesh_unref (&cmesh->set_from, comm);
+    t8_stash_destroy (&cmesh->stash);    
+    if (cmesh->set_from != NULL) {
+      /* We unref our reference of set_from */
+      t8_cmesh_unref (&cmesh->set_from);
+    }
   }
   else {
     if (cmesh->trees != NULL) {
@@ -1002,23 +1004,23 @@ t8_cmesh_ref (t8_cmesh_t cmesh)
 }
 
 void
-t8_cmesh_unref (t8_cmesh_t * pcmesh, sc_MPI_Comm comm)
+t8_cmesh_unref (t8_cmesh_t * pcmesh)
 {
   t8_cmesh_t          cmesh;
   T8_ASSERT (pcmesh != NULL);
   cmesh = *pcmesh;
   T8_ASSERT (cmesh != NULL);
   if (t8_refcount_unref (&cmesh->rc)) {
-    t8_cmesh_reset (pcmesh, comm);
+    t8_cmesh_reset (pcmesh);
   }
 }
 
 void
-t8_cmesh_destroy (t8_cmesh_t * pcmesh, sc_MPI_Comm comm)
+t8_cmesh_destroy (t8_cmesh_t * pcmesh)
 {
   T8_ASSERT (pcmesh != NULL && *pcmesh != NULL &&
              t8_refcount_is_last (&(*pcmesh)->rc));
-  t8_cmesh_unref (pcmesh, comm);
+  t8_cmesh_unref (pcmesh);
   T8_ASSERT (*pcmesh == NULL);
 }
 
