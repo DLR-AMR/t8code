@@ -246,6 +246,23 @@ t8_cmesh_set_partition (t8_cmesh_t cmesh, int set_partition,
 }
 #endif
 
+t8_shmem_array_t
+t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm)
+{
+  t8_shmem_array_t    offsets;
+#ifdef T8_ENABLE_DEBUG
+  int                 mpisize_debug, mpiret;
+  mpiret = sc_MPI_Comm_size (comm, &mpisize_debug);
+  SC_CHECK_MPI (mpiret);
+  T8_ASSERT (mpisize == mpisize_debug);
+  t8_debugf ("Allocating shared array with type %s\n",
+             sc_shmem_type_to_string[sc_shmem_get_type (comm)]);
+#endif
+
+  t8_shmem_array_init (&offsets, sizeof (t8_gloidx_t), mpisize + 1, comm);
+  return offsets;
+}
+
 void
 t8_cmesh_set_partition_range (t8_cmesh_t cmesh, int set_face_knowledge,
                               t8_gloidx_t first_local_tree,
@@ -260,15 +277,24 @@ t8_cmesh_set_partition_range (t8_cmesh_t cmesh, int set_face_knowledge,
   cmesh->num_local_trees = last_local_tree - first_local_tree + 1;
   cmesh->set_partition = 1;
   /* Overwrite previous partition settings */
-  cmesh->tree_offsets = NULL;   /* TODO: Do we need to free memory? */
+  if (cmesh->tree_offsets != NULL) {
+    t8_shmem_array_destroy (&cmesh->tree_offsets);
+    cmesh->tree_offsets = NULL;
+  }
   cmesh->set_partition_level = -1;
 }
 
 void
-t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh, t8_gloidx_t * tree_offsets)
+t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh,
+                                t8_shmem_array_t tree_offsets)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
+  if (cmesh->tree_offsets != NULL && cmesh->tree_offsets != tree_offsets) {
+    /* We overwrite a previouly set offset array, so
+     * we need to free its memory first. */
+    t8_shmem_array_destroy (&cmesh->tree_offsets);
+  }
   cmesh->tree_offsets = tree_offsets;
   cmesh->set_partition = 1;
   if (tree_offsets != NULL) {
@@ -291,7 +317,10 @@ t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level)
     /* We overwrite any previous partition settings */
     cmesh->first_tree = -1;
     cmesh->num_local_trees = -1;
-    cmesh->tree_offsets = NULL; /* TODO: Do we need to free memory? */
+    if (cmesh->tree_offsets != NULL) {
+      t8_shmem_array_destroy (&cmesh->tree_offsets);
+      cmesh->tree_offsets = NULL;
+    }
   }
 }
 
@@ -515,10 +544,8 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
       return 0;
     }
     else {
-      is_equal = is_equal || memcmp (cmesh_a->tree_offsets,
-                                     cmesh_b->tree_offsets,
-                                     (cmesh_a->mpisize + 1)
-                                     * sizeof (t8_gloidx_t));
+      is_equal = is_equal || t8_shmem_array_is_equal (cmesh_a->tree_offsets,
+                                                      cmesh_b->tree_offsets);
     }
   }
   if (is_equal != 0) {
@@ -773,12 +800,6 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 }
 #endif
 
-static void
-t8_cmesh_free_treecount (t8_cmesh_t cmesh, sc_MPI_Comm comm)
-{
-  SC_SHMEM_FREE (cmesh->tree_offsets, comm);
-}
-
 t8_gloidx_t
 t8_cmesh_get_num_trees (t8_cmesh_t cmesh)
 {
@@ -948,8 +969,13 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh, sc_MPI_Comm comm)
 
   /* free tree_offset */
   if (cmesh->tree_offsets != NULL) {
+    sc_MPI_Comm         comm;
+    /* Check whether a correct communicator was stored at tree_offsets.
+     * This is useful for debugging. */
+    comm = t8_shmem_array_get_comm (cmesh->tree_offsets);
     T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
-    t8_cmesh_free_treecount (cmesh, comm);
+    /* Destroy the shared memory array */
+    t8_shmem_array_destroy (&cmesh->tree_offsets);
   }
   /*TODO: write this */
   if (!cmesh->committed) {
@@ -965,7 +991,6 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh, sc_MPI_Comm comm)
   }
 
   T8_FREE (cmesh);
-
   *pcmesh = NULL;
 }
 

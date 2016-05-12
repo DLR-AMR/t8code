@@ -37,7 +37,7 @@ typedef struct t8_shmem_array *t8_shmem_array_t;
  * \see sc_shmem.h
  */
 /* TODO: Change it as soon as we do not always need basic */
-#if 0
+#if 1
 #if defined(__bgq__)
 #define T8_SHMEM_BEST_TYPE SC_SHMEM_BGQ
 #elif defined(SC_ENABLE_MPIWINSHARED)
@@ -46,8 +46,10 @@ typedef struct t8_shmem_array *t8_shmem_array_t;
 #define T8_SHMEM_BEST_TYPE SC_SHMEM_BASIC
 #endif
 #endif
+#if 0
 /* For testing we only use basic shmem type */
 #define T8_SHMEM_BEST_TYPE SC_SHMEM_BASIC
+#endif
 
 T8_EXTERN_C_BEGIN ();
 
@@ -57,10 +59,41 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]          elem_size The size in bytes of an array element.
  * \param [in]          elem_count The total number of elements to allocate.
  * \param [in]          comm      The MPI communicator to be associated with the shmem_array.
+ *                                The shared memory type must have been set. Best practice would be
+ *                                calling \ref sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE).
  */
 void                t8_shmem_array_init (t8_shmem_array_t * parray,
                                          size_t elem_size,
                                          size_t elem_count, sc_MPI_Comm comm);
+
+/** Set an entry of a t8_shmem array that is used to store t8_gloidx_t.
+ * \param [in,out]      array   The array to be mofified.
+ * \param [in]          index   The array entry to be modified.
+ * \param [in]          value   The new value to be set.
+ */
+void                t8_shmem_array_set_gloidx (t8_shmem_array_t array,
+                                               int index, t8_gloidx_t value);
+
+/** Fill a t8_shmem array with an allgather.
+ *
+ * \param[in] sendbuf         the source from this process
+ * \param[in] sendcount       the number of items to allgather
+ * \param[in] sendtype        the type of items to allgather
+ * \param[in,out] recvbuf     the destination shmem array
+ * \param[in] recvcount       the number of items to allgather
+ * \param[in] recvtype        the type of items to allgather
+ */
+void                t8_shmem_array_allgather (void *sendbuf, int sendcount,
+                                              sc_MPI_Datatype sendtype,
+                                              t8_shmem_array_t recvarray,
+                                              int recvcount,
+                                              sc_MPI_Datatype recvtype);
+
+/** Return the MPI communicator associated with a shmem array.
+ * \param [in]          array The shmem_array to be queried.
+ * \return              The MPI communicator stored at \a array.
+ */
+sc_MPI_Comm         t8_shmem_array_get_comm (t8_shmem_array_t array);
 
 /** Get the element size of a t8_shmem_array
  * \param [in]          array The array.
@@ -80,6 +113,18 @@ size_t              t8_shmem_array_get_elem_count (t8_shmem_array_t array);
  * \return              The data of \a array as t8_gloidx_t pointer.
  */
 t8_gloidx_t        *t8_shmem_array_get_gloidx_array (t8_shmem_array_t array);
+
+/** Return an entry of a shared memory array that stores t8_gloidx_t.
+ * \param [in]          array   The t8_shmem_array
+ * \param [in]          index   The index of the entry to be queried.
+ * \return              The \a index-th entry of \a array as t8_gloidx_t.
+ */
+t8_gloidx_t         t8_shmem_array_get_gloidx (t8_shmem_array_t array,
+                                               int index);
+
+/* TODO: implement and comment */
+int                 t8_shmem_array_is_equal (t8_shmem_array_t array_a,
+                                             t8_shmem_array_t array_b);
 
 /** Free all memory associated with a t8_shmem_array.
  * \param [in,out]      parray  On input a pointer to a valid t8_shmem_array.

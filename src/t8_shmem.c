@@ -27,6 +27,8 @@
 
 #include <t8_shmem.h>
 
+/* TODO: Think about whether we include a reference counter */
+
 typedef struct t8_shmem_array
 {
   void               *array;
@@ -47,7 +49,6 @@ t8_shmem_array_init (t8_shmem_array_t * parray, size_t elem_size,
   T8_ASSERT (parray != NULL);
 
   array = *parray = T8_ALLOC_ZERO (t8_shmem_array_struct_t, 1);
-  sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
   array->array = sc_shmem_malloc (t8_get_package_id (), elem_size, elem_count,
                                   comm);
   array->comm = comm;
@@ -56,6 +57,26 @@ t8_shmem_array_init (t8_shmem_array_t * parray, size_t elem_size,
 #ifdef T8_ENABLE_DEBUG
   array->shmem_type = T8_SHMEM_BEST_TYPE;
 #endif
+}
+
+void
+t8_shmem_array_allgather (void *sendbuf, int sendcount,
+                          sc_MPI_Datatype sendtype,
+                          t8_shmem_array_t recvarray, int recvcount,
+                          sc_MPI_Datatype recvtype)
+{
+  T8_ASSERT (recvarray != NULL);
+  T8_ASSERT (recvarray->array != NULL);
+
+  sc_shmem_allgather (sendbuf, sendcount, sendtype, recvarray->array,
+                      recvcount, recvtype, recvarray->comm);
+}
+
+sc_MPI_Comm
+t8_shmem_array_get_comm (t8_shmem_array_t array)
+{
+  T8_ASSERT (array != NULL);
+  return array->comm;
 }
 
 size_t
@@ -78,6 +99,37 @@ t8_shmem_array_get_gloidx_array (t8_shmem_array_t array)
   T8_ASSERT (array != NULL);
   T8_ASSERT (array->elem_size == sizeof (t8_gloidx_t));
   return (t8_gloidx_t *) array->array;
+}
+
+t8_gloidx_t
+t8_shmem_array_get_gloidx (t8_shmem_array_t array, int index)
+{
+  T8_ASSERT (array != NULL);
+  T8_ASSERT (array->array != NULL);
+  T8_ASSERT (array->elem_size == sizeof (t8_gloidx_t));
+  T8_ASSERT (index < array->elem_count);
+
+  return ((t8_gloidx_t *) array->array)[index];
+}
+
+void
+t8_shmem_array_set_gloidx (t8_shmem_array_t array, int index,
+                           t8_gloidx_t value)
+{
+  T8_ASSERT (array != NULL);
+  T8_ASSERT (array->array != NULL);
+  T8_ASSERT (array->elem_size == sizeof (t8_gloidx_t));
+  T8_ASSERT (index < array->elem_count);
+
+  ((t8_gloidx_t *) array->array)[index] = value;
+}
+
+/* TODO: implement */
+int
+t8_shmem_array_is_equal (t8_shmem_array_t array_a, t8_shmem_array_t array_b)
+{
+  SC_ABORT ("t8_shmem_array_is_equal is not implemented yet.");
+  return 0;
 }
 
 void

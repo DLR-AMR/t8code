@@ -646,7 +646,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     int                 i;
     for (i = 0; i <= cmesh->mpisize; i++) {
       snprintf (buf + strlen (buf), BUFSIZ - strlen (buf), " %lli |",
-                (long long) cmesh->tree_offsets[i]);
+                (long long) t8_shmem_array_get_gloidx (cmesh->tree_offsets,
+                                                       i));
     }
     t8_debugf ("Offsets = %s\n", buf);
   }
@@ -662,6 +663,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   if (cmesh->stash != NULL) {
     t8_stash_destroy (&cmesh->stash);
   }
+
   t8_debugf ("Commited cmesh with %li local and %lli global trees and"
              " %li ghosts.\n", (long) cmesh->num_local_trees,
              (long long) cmesh->num_trees, (long) cmesh->num_ghosts);
