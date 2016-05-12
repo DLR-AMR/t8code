@@ -79,6 +79,7 @@ t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh, sc_MPI_Comm comm)
 #if 0
   mpicomm = t8_cmesh_get_mpicomm (cmesh, &do_dup);
 #endif
+  T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
   t8_forest_set_mpicomm (forest, comm, do_dup);
 }
 
