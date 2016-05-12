@@ -587,9 +587,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
                                         cmesh->first_tree);
         }
         t8_cmesh_partition (cmesh_temp, comm);
-        t8_cmesh_unref (&cmesh->set_from);        /* TODO: remove this line as soon as
-                                                           unref does not need a comm anymore
-                                                           and set_derive does the unreffing */
         t8_cmesh_set_derive (cmesh, cmesh_temp);
         t8_cmesh_unref (&cmesh_temp);
         t8_cmesh_commit_refine (cmesh, comm);

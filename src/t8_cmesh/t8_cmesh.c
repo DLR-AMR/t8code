@@ -193,11 +193,10 @@ t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from)
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (set_from == NULL || t8_cmesh_is_committed (set_from));
 
-  /* TODO: If a previuously set cmesh is overwritten than the user is
-   * responsible for unreffing it. Otherwise we have to give an mpi communicator
-   * as parameter to this function. */
-  /* TODO: we will resolve this when we use a struct for shmem array such that
-   * unreffing does not need a comm anymore */
+  if (cmesh->set_from != NULL) {
+    /* If we overwrite a previously set cmesh, then we unref it. */
+    t8_cmesh_unref (&cmesh->set_from);
+  }
   cmesh->set_from = set_from;
   if (set_from != NULL) {
     t8_cmesh_ref (set_from);
