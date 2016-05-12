@@ -43,7 +43,6 @@ t8_read_triangle_file_build_cmesh (const char *prefix, int do_dup,
   if (cmesh != NULL) {
     if (do_partition) {
       t8_cmesh_t          cmesh_part;
-      t8_cmesh_ref (cmesh);
       t8_cmesh_init (&cmesh_part);
       t8_cmesh_set_derive (cmesh_part, cmesh);
       t8_cmesh_set_refine (cmesh_part, 1);
@@ -53,7 +52,7 @@ t8_read_triangle_file_build_cmesh (const char *prefix, int do_dup,
       if (!t8_cmesh_vtk_write_file (cmesh_part, fileprefix, 1.0)) {
         t8_debugf ("Wrote to file %s\n", fileprefix);
       }
-      t8_cmesh_unref (&cmesh_part, sc_MPI_COMM_WORLD);
+      t8_cmesh_destroy (&cmesh_part, sc_MPI_COMM_WORLD);
     }
     t8_debugf ("Succesfully constructed cmesh from %s files.\n", prefix);
     t8_debugf ("cmesh has:\n\t%lli triangles\n",
@@ -65,7 +64,7 @@ t8_read_triangle_file_build_cmesh (const char *prefix, int do_dup,
     else {
       t8_debugf ("Error in writing cmesh vtk\n");
     }
-    t8_cmesh_unref (&cmesh, sc_MPI_COMM_WORLD);
+    t8_cmesh_destroy (&cmesh, sc_MPI_COMM_WORLD);
   }
   else {
     t8_debugf ("An error occured while reading %s files.\n", prefix);
