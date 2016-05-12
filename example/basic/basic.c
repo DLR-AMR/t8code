@@ -102,6 +102,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
     t8_debugf ("Error in output\n");
   }
   if (create_forest) {
+    T8_ASSERT (set_level == 0); /* TODO: for different levels use new cmesh, see basic_p4est */
     t8_forest_init (&forest);
     t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
     t8_forest_set_scheme (forest, t8_scheme_new_default ());
