@@ -72,11 +72,11 @@ t8_basic_refine_test ()
   t8_forest_unref (&forest_adapt);
 }
 #endif
-#if 1
 
+#if 0
 static void
-t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
-                    int do_commit, int do_bcast, int do_partition)
+t8_basic_hypercube (t8_eclass_t eclass, int set_level,
+                    int create_forest, int do_partition)
 {
   t8_forest_t         forest;
   t8_cmesh_t          cmesh;
@@ -85,10 +85,9 @@ t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
 
   t8_global_productionf ("Entering t8_basic hypercube %s\n",
                          t8_eclass_to_string[eclass]);
-  t8_forest_init (&forest);
 
   cmesh =
-    t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, do_dup, do_bcast,
+    t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0,
                             do_partition);
 
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
@@ -102,29 +101,20 @@ t8_basic_hypercube (t8_eclass_t eclass, int do_dup, int set_level,
   else {
     t8_debugf ("Error in output\n");
   }
-  {
-    t8_cmesh_t          cmesh_refine;
+  if (create_forest) {
+    t8_forest_init (&forest);
+    t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
+    t8_forest_set_scheme (forest, t8_scheme_new_default ());
 
-    t8_cmesh_init (&cmesh_refine);
-    t8_cmesh_set_derive (cmesh_refine, cmesh);
-    t8_cmesh_set_refine (cmesh_refine, 1);
-    t8_cmesh_commit (cmesh_refine, sc_MPI_COMM_WORLD);
-    t8_cmesh_destroy (&cmesh_refine);
-  }
-#if 0
-  t8_forest_set_cmesh (forest, cmesh);
-  t8_forest_set_scheme (forest, t8_scheme_new_default ());
+    t8_forest_set_level (forest, set_level);
 
-  t8_forest_set_level (forest, set_level);
-
-  if (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX) {
-    if (do_commit) {
-      t8_forest_commit (forest);
-      t8_forest_write_vtk (forest, "basic");    /* This does nothing right now */
+    if (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX) {
+        t8_forest_commit (forest);
+        t8_debugf ("Successfully committed forest.\n");
+        t8_forest_write_vtk (forest, "basic");    /* This does nothing right now */
     }
+    t8_forest_unref (&forest);
   }
-#endif
-  t8_forest_unref (&forest);
   t8_cmesh_destroy (&cmesh);
 }
 #endif
@@ -144,20 +134,41 @@ t8_basic_periodic (int do_dup, int set_level, int dim)
 
   t8_forest_unref (&forest);
 }
+#endif
 
 static void
-t8_basic_p4est (int do_dup)
+t8_basic_p4est (int do_partition, int create_forest, int forest_level)
 {
   t8_cmesh_t          cmesh;
+  t8_forest_t         forest;
   p4est_connectivity_t *conn;
 
   conn = p4est_connectivity_new_moebius ();
-  cmesh = t8_cmesh_new_from_p4est (conn, sc_MPI_COMM_WORLD, do_dup, 0);
+  cmesh = t8_cmesh_new_from_p4est (conn, sc_MPI_COMM_WORLD, 0, do_partition);
   p4est_connectivity_destroy (conn);
   t8_cmesh_vtk_write_file (cmesh, "t8_p4est_moebius", 1.);
+  if (create_forest) {
+    /* To make shure that the cmesh has each tree that the forest
+     * needs, even if forest_level > 0, we create a new cmesh that
+     * is partitioned according to uniform level refinement. */
+    t8_cmesh_t      cmesh_new;
+    t8_cmesh_init (&cmesh_new);
+    t8_cmesh_set_derive (cmesh_new, cmesh);
+    t8_cmesh_set_partition_uniform (cmesh_new, forest_level);
+    t8_cmesh_commit (cmesh_new, sc_MPI_COMM_WORLD);
+    t8_forest_init (&forest);
+    t8_forest_set_scheme (forest, t8_scheme_new_default ());
+    t8_forest_set_cmesh (forest, cmesh_new, sc_MPI_COMM_WORLD);
+    t8_forest_set_level (forest, forest_level);
+    t8_forest_commit (forest);
+    t8_debugf ("Successfully committed forest.\n");
+    t8_forest_unref (&forest);
+    t8_cmesh_destroy (&cmesh_new);
+  }
   t8_cmesh_unref (&cmesh);
 }
 
+#if 0
 static void
 t8_basic_p8est (int do_dup, int x, int y, int z)
 {
@@ -302,8 +313,10 @@ main (int argc, char **argv)
   t8_basic (0, level);
   t8_basic (1, level);
   t8_global_productionf ("Done testing basic tet mesh.\n");
+  t8_basic_hypercube (T8_ECLASS_QUAD, 0, 1, 1);
 #endif
-  t8_basic_hypercube (T8_ECLASS_QUAD, 0, 0, 1, 0, 0);
+  t8_basic_p4est (1, 1, 1);
+
 #if 0
   t8_global_productionf ("Testing hypercube cmesh.\n");
 
