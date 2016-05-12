@@ -74,12 +74,15 @@ t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   T8_ASSERT (cmesh != NULL);
 
+  if (forest->cmesh != NULL) {
+    t8_cmesh_unref (&forest->cmesh);
+  }
+  if (cmesh != NULL) {
+    t8_cmesh_ref (cmesh);
+    T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
+  }
   forest->cmesh = cmesh;
   do_dup = 0;
-#if 0
-  mpicomm = t8_cmesh_get_mpicomm (cmesh, &do_dup);
-#endif
-  T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
   t8_forest_set_mpicomm (forest, comm, do_dup);
 }
 
@@ -387,6 +390,12 @@ t8_forest_commit (t8_forest_t forest)
   forest->set_for_coarsening = 0;
   forest->set_from = NULL;
   forest->committed = 1;
+  t8_debugf ("Committed forest with %li local elements and %lli "
+             "global elements.\nTree range ist from %lli to %lli.\n",
+             (long) forest->local_num_elements,
+             (long long) forest->global_num_elements,
+             (long long) forest->first_local_tree,
+             (long long) forest->last_local_tree);
 }
 
 void
