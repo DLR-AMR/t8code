@@ -349,7 +349,8 @@ t8_cmesh_trees_get_part_alloc (t8_cmesh_trees_t trees, t8_part_tree_t part)
   t8_ctree_t          tree;
   t8_cghost_t         ghost;
 
-  byte_alloc = 0;
+  byte_alloc = part->num_trees * sizeof (t8_ctree_struct_t)
+    + part->num_ghosts * sizeof (t8_cghost_struct_t);
   for (ltree = 0; ltree < part->num_trees; ltree++) {
     tree = t8_cmesh_trees_get_tree (trees, ltree + part->first_tree_id);
     byte_alloc += t8_cmesh_trees_attribute_size (tree);
@@ -611,7 +612,7 @@ t8_cmesh_trees_compare_keyattr (const void *A1, const void *A2)
 
 /* The size of the attribute is not returned, but would be accesible */
 void               *
-t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_topidx_t ltree_id,
+t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_locidx_t ltree_id,
                               int package_id, int key)
 {
   int                 proc;
@@ -878,7 +879,7 @@ t8_cmesh_trees_is_equal (t8_cmesh_t cmesh, t8_cmesh_trees_t trees_a,
                          t8_cmesh_trees_t trees_b)
 {
   int                 is_equal;
-  t8_topidx_t         num_trees, num_ghost;
+  t8_locidx_t         num_trees, num_ghost;
   size_t              it;
   t8_part_tree_t      part_a, part_b;
 

@@ -25,6 +25,7 @@
 
 #include <t8.h>
 #include <t8_refcount.h>
+#include <t8_shmem.h>
 #include "t8_cmesh_stash.h"
 
 /** \file t8_cmesh_types.h
@@ -79,7 +80,7 @@ t8_cmesh_from_t;
 typedef struct t8_cmesh
 {
   /* TODO: make the comments more legible */
-  int                 committed;
+  int                 committed; /**< Flag that specifies whether the cmesh is committed or not. \ref t8_cmesh_commit */
   int                 dimension; /**< The dimension of the cmesh. It is set when the first tree is inserted. */
 
   int                 set_partition; /**< If nonzero the cmesh is partitioned.
@@ -87,7 +88,9 @@ typedef struct t8_cmesh
   int                 face_knowledge;  /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partioned;
                             see \ref t8_cmesh_set_partition.
 */
-  int8_t              set_refine_level;
+  /* TODO: Define a maximum allowed refinemet level */
+  int8_t              set_refine_level; /**< If the cmesh is derived from a second cmesh, a refinement level is specified here.
+                                      \ref t8_cmesh_set_derive \ref t8_cmesh_set_refine. */
   int8_t              set_partition_level; /**< Non-negative if the cmesh should be partition from an already existing cmesh
                                          with an assumes \a level uniform mesh underneath.  TODO: fix sentence */
 #if 0
@@ -115,26 +118,32 @@ typedef struct t8_cmesh
   int8_t              first_tree_shared;/**< If partitioned true if the first tree on this process is also the last tree on the next process.
                                              Always zero if num_local_trees = 0 */
   /* TODO: deprecated, replaced by offset */
+  /* TODO: make t8_shmem object that stores comm, for debugging element size and
+   *       size */
+#if 0
   t8_gloidx_t        *tree_offsets;  /**< If partitioned for each process the global index of its first local tree
                                         or -(first local tree) - 1
                                         if the first tree on that process is shared.
                                         Since this is very memory consuming we only fill it when needed. */
+#endif
+  t8_shmem_array_t    tree_offsets;
 #ifdef T8_ENABLE_DEBUG
-  t8_topidx_t         inserted_trees; /**< Count the number of inserted trees to
+  t8_locidx_t         inserted_trees; /**< Count the number of inserted trees to
                                            check at commit if it equals the total number. */
-  t8_topidx_t         inserted_ghosts; /**< Count the number of inserted ghosts to
+  t8_locidx_t         inserted_ghosts; /**< Count the number of inserted ghosts to
                                            check at commit if it equals the total number. */
 #endif
   t8_stash_t          stash; /**< Used as temporary storage for the trees before commit. */
-  /* TODO: make tree_offsets shared array as soon as libsc is updated */
 }
 t8_cmesh_struct_t;
 
+/* TODO: document */
 typedef struct t8_cghost
 {
   t8_gloidx_t         treeid; /**< The global number of this ghost. */
   t8_eclass_t         eclass; /**< The eclass of this ghost. */
-  size_t              neigh_offset;     /* TODO: document */
+  size_t              neigh_offset; /** Offset to the array of face neighbors of this ghost.
+                                        This count has to be added to the address of the ghost to get its face neighbors. */
 }
 t8_cghost_struct_t;
 
@@ -160,7 +169,7 @@ t8_cghost_struct_t;
  */
 typedef struct t8_ctree
 {
-  t8_topidx_t         treeid; /**< The local number of this tree. */
+  t8_locidx_t         treeid; /**< The local number of this tree. */
   /* TODO: The local id of a tree should be clear from context, the entry can
    *       be optimized out. */
   t8_eclass_t         eclass; /**< The eclass of this tree. */

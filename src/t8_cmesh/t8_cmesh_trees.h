@@ -370,7 +370,7 @@ void                t8_cmesh_trees_attribute_info_sort (t8_cmesh_trees_t
  *                    does not exist.
  */
 void               *t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees,
-                                                  t8_topidx_t ltree_id,
+                                                  t8_locidx_t ltree_id,
                                                   int package_id, int key);
 
 /** Return the total size of all attributes stored at a specified tree.

@@ -28,6 +28,7 @@
 #define T8_CMESH_H
 
 #include <t8.h>
+#include <t8_shmem.h>
 
 /* TODO: If including eclass were just for the cmesh_new routines, we should
  *       move them into a different file.
@@ -99,6 +100,16 @@ int                 t8_cmesh_is_committed (t8_cmesh_t cmesh);
 void                t8_cmesh_set_derive (t8_cmesh_t cmesh,
                                          t8_cmesh_t set_from);
 
+/** Allocate a shared memory array to store the tree offsets of a cmesh.
+ * \param [in]      mpisize The number of processes.
+ * \param [in]      comm    The MPI communicator to use. Its mpisize must match \a mpisize.
+ *                  The shared memory type must have been set. Best practice would be
+ *                  calling \ref sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE).
+ * \return          A t8_shmem_array struct that stores \a mpisize + 1 t8_gloidx_t entries.
+ * \see t8_shmem.h
+ */
+t8_shmem_array_t    t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
+
 /** Declare if the cmesh is understood as a partitioned cmesh and specify
  * the processor local tree range.
  * This function should be preferred over \ref t8_cmesh_set_partition_offsets
@@ -147,7 +158,7 @@ void                t8_cmesh_set_partition_range (t8_cmesh_t cmesh,
  *                             TODO: document flag for shared trees.
  */
 void                t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh,
-                                                    t8_gloidx_t *
+                                                    t8_shmem_array_t
                                                     tree_offsets);
 
 /** Declare if the cmesh is understood as a partitioned cmesh where the partition
@@ -445,7 +456,7 @@ void                t8_cmesh_ref (t8_cmesh_t cmesh);
  *                              Otherwise, the pointer is not changed and
  *                              the cmesh is not modified in other ways.
  */
-void                t8_cmesh_unref (t8_cmesh_t * pcmesh, sc_MPI_Comm comm);
+void                t8_cmesh_unref (t8_cmesh_t * pcmesh);
 
 /** Verify that a coarse mesh has only one reference left and destroy it.
  * This function is preferred over \ref t8_cmesh_unref when it is known
@@ -455,7 +466,7 @@ void                t8_cmesh_unref (t8_cmesh_t * pcmesh, sc_MPI_Comm comm);
  *                  Then it effectively calls \ref t8_cmesh_unref.
  * \param [in]      comm A mpi communicator that is valid with \a cmesh.
  */
-void                t8_cmesh_destroy (t8_cmesh_t * pcmesh, sc_MPI_Comm comm);
+void                t8_cmesh_destroy (t8_cmesh_t * pcmesh);
 
 /* Functions for construcing complete and committed cmeshes */
 

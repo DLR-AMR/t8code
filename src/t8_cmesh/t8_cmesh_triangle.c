@@ -195,8 +195,8 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
   FILE               *fp;
   char               *line = T8_ALLOC (char, 1024);
   size_t              linen = 1024;
-  t8_topidx_t         num_elems, tit;
-  t8_topidx_t         triangle, triangle_offset = 0;
+  t8_locidx_t         num_elems, tit;
+  t8_locidx_t         triangle, triangle_offset = 0;
   t8_topidx_t         tcorners[4];      /* in 2d only the first 3 values are needed */
   int                 retval;
   int                 temp;
@@ -301,8 +301,8 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
   FILE               *fp;
   char               *line = T8_ALLOC (char, 1024);
   size_t              linen = 1024;
-  t8_topidx_t         element, num_elems, tit;
-  t8_topidx_t        *tneighbors;
+  t8_locidx_t         element, num_elems, tit;
+  t8_locidx_t        *tneighbors;
   int                 retval;
   int                 temp;
   int                 orientation = 0, face1, face2;
@@ -332,7 +332,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
   }
   T8_ASSERT (temp == dim + 1);
 
-  tneighbors = T8_ALLOC (t8_topidx_t, num_elems * num_faces);
+  tneighbors = T8_ALLOC (t8_locidx_t, num_elems * num_faces);
 
   /* We read all the neighbors and write them into an array.
    * Since TRIANGLE provides us for each triangle and each face with
@@ -439,6 +439,7 @@ die_neigh:
   return -1;
 }
 
+/* TODO: remove do_dup argument */
 static              t8_cmesh_t
 t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
                                        sc_MPI_Comm comm, int do_dup, int dim)
@@ -472,7 +473,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
                                     &num_vertices, dim);
     if (retval != 0 && retval != 1) {
       t8_global_errorf ("Error while parsing file %s.\n", current_file);
-      t8_cmesh_unref (&cmesh, comm);
+      t8_cmesh_unref (&cmesh);
     }
     else {
       /* read .ele file */
@@ -487,7 +488,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
         );
       if (retval != 0 && retval != 1) {
         t8_global_errorf ("Error while parsing file %s.\n", current_file);
-        t8_cmesh_unref (&cmesh, comm);
+        t8_cmesh_unref (&cmesh);
       }
       else {
         /* read .neigh file */
@@ -496,7 +497,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
                                                current_file, dim);
         if (retval != 0) {
           t8_global_errorf ("Error while parsing file %s.\n", current_file);
-          t8_cmesh_unref (&cmesh, comm);
+          t8_cmesh_unref (&cmesh);
         }
       }
     }
@@ -564,7 +565,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix,
                                     &num_vertices, dim);
     if (retval != 0 && retval != 1) {
       t8_global_errorf ("Error while parsing file %s.\n", current_file);
-      t8_cmesh_unref (&cmesh, comm);
+      t8_cmesh_unref (&cmesh);
     }
     else {
       /* read .ele file */
@@ -579,7 +580,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix,
         );
       if (retval != 0 && retval != 1) {
         t8_global_errorf ("Error while parsing file %s.\n", current_file);
-        t8_cmesh_unref (&cmesh, comm);
+        t8_cmesh_unref (&cmesh);
       }
       else {
         /* read .neigh file */
@@ -588,7 +589,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix,
                                                current_file, dim);
         if (retval != 0) {
           t8_global_errorf ("Error while parsing file %s.\n", current_file);
-          t8_cmesh_unref (&cmesh, comm);
+          t8_cmesh_unref (&cmesh);
         }
       }
     }

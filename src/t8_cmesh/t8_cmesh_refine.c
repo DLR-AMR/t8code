@@ -146,6 +146,8 @@ t8_cmesh_refine_new_neighborid (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
   }
 }
 
+/*TODO: Will this function be used?*/
+#if 0
 static void
 t8_cmesh_refine_fill_childids (t8_eclass_t eclass, int **childidsA,
                                int **childidsB)
@@ -182,6 +184,7 @@ t8_cmesh_refine_fill_childids (t8_eclass_t eclass, int **childidsA,
     SC_ABORT_NOT_REACHED ();
   }
 }
+#endif
 
 /* Given a parent's global tree/ghost id and a child_id,
  * compute the new global id of the child. */
@@ -192,6 +195,8 @@ t8_cmesh_refine_new_globalid (t8_gloidx_t parent_id, int child_id, int factor)
   return parent_id * factor + child_id;
 }
 
+/* TODO: Will this function be needed? */
+#if 0
 static void
 t8_cmesh_refine_outer_faces (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
                              t8_gloidx_t global_parent_id,
@@ -272,6 +277,7 @@ t8_cmesh_refine_outer_faces (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
     ttf_out[iface] = ttf_old[iface];
   }
 }
+#endif
 
 /* TODO: comment */
 /* The eclass is the eclass of the parent tree */
@@ -881,6 +887,11 @@ t8_cmesh_refine (t8_cmesh_t cmesh)
   T8_ASSERT (cmesh->set_from->committed);
   T8_ASSERT (cmesh->set_from->num_trees_per_eclass[T8_ECLASS_PYRAMID] == 0);
   T8_ASSERT (cmesh->set_refine_level == 1);     /* levels bigger than 1 are not yet implemented */
+
+  if (cmesh->set_from->set_partition && cmesh->set_from->first_tree_shared) {
+    SC_ABORT ("Refining a partioned cmesh with shared first trees "
+              "is not implemented yet.\n");
+  }
 
   cmesh_from = (t8_cmesh_t) cmesh->set_from;
   dim = cmesh_from->dimension;

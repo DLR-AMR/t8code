@@ -45,31 +45,22 @@ void                t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm);
  * \param[in]        proc    The processor that should get all trees.
  * \param[in]        comm    The communicator to use.
  * \param[in]        num_trees The number of global trees in the partition.
- * \return                   A valid partition table for a mesh with \a num_trees trees
+ * \return                   A valid partition table for a cmesh with \a num_trees trees
  *                           and communicator \a comm, where each tree is on process \a proc.
  */
-t8_gloidx_t        *t8_cmesh_offset_concentrate (int proc, sc_MPI_Comm comm,
+t8_shmem_array_t    t8_cmesh_offset_concentrate (int proc, sc_MPI_Comm comm,
                                                  t8_gloidx_t num_trees);
-
-/** Allocate a shared memory array to store the tree offsets of a cmesh.
- * \param [in]      mpisize The number of processes.
- * \param [in]      comm    The MPI communicator to use. Its mpisize must match \a mpisize.
- *                  The shared memory type must have been set. Best practice would be
- *                  calling \ref sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE).
- * \return          A pointer to an allocated shared memory array of size \a mpisize + 1.
- */
-t8_gloidx_t        *t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
 
 /** Create a random partition table.
  * The use of this function is only reasonable for debugging.
  * \param[in]        comm    The communicator to use.
  * \param[in]        num_trees The number of global trees in the partition.
  * \param[in]        shared  If true than there will be shared trees in the generated partition table.
- * \return                   A valid partition table for a mesh with \a num_trees trees
+ * \return                   A valid partition table for a cmesh with \a num_trees trees
  *                           and communicator \a comm, where each processor gets a random number
  *                           of trees. The number of trees per processor is roughly uniformly distributed.
  */
-t8_gloidx_t        *t8_cmesh_offset_random (sc_MPI_Comm comm,
+t8_shmem_array_t    t8_cmesh_offset_random (sc_MPI_Comm comm,
                                             t8_gloidx_t num_trees,
                                             int shared);
 

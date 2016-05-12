@@ -60,7 +60,8 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
   if (cmesh->mpirank == 0 || cmesh->set_partition) {
     char                vtufilename[BUFSIZ];
     FILE               *vtufile;
-    t8_topidx_t         num_vertices, num_trees, ivertex;
+    t8_topidx_t         num_vertices, ivertex;
+    t8_locidx_t         num_trees;
     t8_ctree_t          tree;
     double              x, y, z;
     double             *vertices, *vertex;
