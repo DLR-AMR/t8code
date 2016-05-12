@@ -1,0 +1,54 @@
+#!/bin/sh
+#
+# A hook script to verify what is about to be committed.
+# This hook checks whether the code is properly indented using
+# the provided indent script.
+# Move into .git/hooks folder and name it "pre-commit".
+# Called by "git commit" with no arguments.  The hook should
+# exit with non-zero status after issuing an appropriate message if
+# it wants to stop the commit.
+#
+
+# This is the indent script in the project's directory
+INDENT=./p4estindent
+
+if git rev-parse --verify HEAD >/dev/null 2>&1
+then
+	against=HEAD
+else
+	# Initial commit: diff against an empty tree object
+	against=4b825dc642cb6eb9a060e54bf8d69288fbee4904
+fi
+
+# Redirect output to stderr.
+exec 1>&2
+
+
+nocontinue=0
+# create a temporary file
+TMP_FILE=`tempfile`
+for file in `git diff --cached --name-only`
+do
+  # We only indent .c and .h files
+#-a ${file: -2} != ".h" ]
+  FILE_ENDING="${file##*.}"
+  if [ $FILE_ENDING = "c" -o $FILE_ENDING = "h" ]
+  then
+    echo "Checking file $file"
+    # indent the source file and store temporarily
+    $INDENT -o $TMP_FILE $file 
+    # Check whether the indented file and the original differ
+    # We are only interested in the exit status of diff so we throw away its output.
+    diff -q $TMP_FILE $file > /dev/null
+    status=$?
+    if test $status -ne 0 
+    then
+      echo "File $file is not indented."
+      nocontinue=1
+    fi
+  fi
+done
+
+# exit 1 if there was a nonindented file
+# this will abort the commit
+exit $nocontinue
