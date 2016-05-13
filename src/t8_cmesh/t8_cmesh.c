@@ -978,7 +978,7 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
   }
   /*TODO: write this */
   if (!cmesh->committed) {
-    t8_stash_destroy (&cmesh->stash);    
+    t8_stash_destroy (&cmesh->stash);
     if (cmesh->set_from != NULL) {
       /* We unref our reference of set_from */
       t8_cmesh_unref (&cmesh->set_from);
