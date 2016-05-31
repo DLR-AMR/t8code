@@ -107,7 +107,7 @@ t8_shmem_array_get_gloidx (t8_shmem_array_t array, int index)
   T8_ASSERT (array != NULL);
   T8_ASSERT (array->array != NULL);
   T8_ASSERT (array->elem_size == sizeof (t8_gloidx_t));
-  T8_ASSERT (index < array->elem_count);
+  T8_ASSERT (0 <= index && (size_t) index < array->elem_count);
 
   return ((t8_gloidx_t *) array->array)[index];
 }
@@ -119,7 +119,7 @@ t8_shmem_array_set_gloidx (t8_shmem_array_t array, int index,
   T8_ASSERT (array != NULL);
   T8_ASSERT (array->array != NULL);
   T8_ASSERT (array->elem_size == sizeof (t8_gloidx_t));
-  T8_ASSERT (index < array->elem_count);
+  T8_ASSERT (0 <= index && (size_t) index < array->elem_count);
 
   ((t8_gloidx_t *) array->array)[index] = value;
 }
