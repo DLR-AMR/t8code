@@ -371,11 +371,12 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   range[0] = *send_first;
   range[1] = cmesh->mpisize;
   while (*send_last == -1) {
+    /* TODO: This is our initial guess. Maybe mpirank is a better choice? */
     lookhere = (range[0] + range[1]) / 2;
     /* first tree stores new first_tree of process lookhere */
     /* last tree the new last tree of process lookhere */
     first_tree = t8_offset_first (lookhere, tree_offsets);
-    /* If the first tree of lookhere is shared and we determine reveive range
+    /* If the first tree of lookhere is shared and we determine receive range
      * then we ignore this first tree */
     if (receive && tree_offsets[lookhere] < 0) {
       first_tree++;
@@ -1174,6 +1175,11 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
      *       then mess up the current partition.
      *       It would certainly be more efficient not to receive the messages in order
      *       of the receiving processes but in temporal order of receivement.
+     */
+    /* TODO: Proposed solution is to do an MPI_IProbe for each process that we
+     *       receive from and then do MPI_Waitany/some until all messages are
+     *       received.
+     *       Problem if one process sends in the next round to the same one?
      */
     t8_debugf ("Probing for message from %i\n", proc_recv);
     mpiret =
