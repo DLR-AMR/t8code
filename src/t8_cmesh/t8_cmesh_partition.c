@@ -1637,7 +1637,13 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared)
     for (iproc = 1; iproc < mpisize; iproc++) {
       offsets[iproc] = 0;
       /* Create a random number between 0 and 200% of an ideal partition */
-      random_number = rand () % (int) (num_trees * 2. / mpisize);
+      if ((int) (num_trees * 2. / mpisize) == 0) {
+        /* This case prevents dvision by 0 */
+        random_number = 1;
+      }
+      else {
+        random_number = rand () % (int) (num_trees * 2. / mpisize);
+      }
       /* If we would excees the number of trees we cut the random number */
       if (offsets[iproc - 1] + random_number > num_trees) {
         random_number = num_trees - offsets[iproc - 1];
