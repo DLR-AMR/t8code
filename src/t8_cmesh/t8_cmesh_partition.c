@@ -1610,9 +1610,9 @@ t8_cmesh_offset_concentrate (int proc, sc_MPI_Comm comm,
 /* Create a random partition */
 /* if shared is nonzero than first trees can be shared */
 t8_shmem_array_t
-t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared)
+t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared,
+                        unsigned seed)
 {
-  unsigned            seed;
   int                 iproc, mpisize, mpiret, random_number, mpirank;
   int                 first_shared;
   int                 i;
@@ -1629,7 +1629,9 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared)
 
   offsets = t8_shmem_array_get_gloidx_array (shmem_array);
 
-  seed = sc_MPI_Wtime () * 10000;
+  if (seed < 0) {
+    seed = sc_MPI_Wtime () * 10000;
+  }
 
   if (mpirank >= 0) {
     t8_debugf ("Random number seed = %u\n", seed);
@@ -1677,6 +1679,7 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared)
         t8_debugf ("[H] %li\n", offsets[iproc]);
       }
     }
+    seed = -1;
   }
   T8_ASSERT (t8_offset_consistent (mpisize, offsets, num_trees));
   return shmem_array;
