@@ -286,13 +286,13 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 
   /* p_i is first process we send to if and only if
    *
-   * tree_first[p_i]    <=    tree_first    <=    tree_last[pi]
+   * tree_first[p_i]    <=    tree_first    <=    tree_last[p_i]
    *      |                       ||                    |
    *  new_partition     cmesh_from->first_tree     new_partition
    */
   /* p_i is last process we send to if and only if
    *
-   * tree_first[p_i]    <=    tree_last    <=    tree_last[pi]
+   * tree_first[p_i]    <=    tree_last    <=    tree_last[p_i]
    *        |                     ||                    |
    *  new_partition     cmesh_from->first_tree     new_partition
    *                       + num_local_trees-1
