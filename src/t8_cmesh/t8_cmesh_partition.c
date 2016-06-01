@@ -1616,7 +1616,7 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared)
   int                 iproc, mpisize, mpiret, random_number, mpirank;
   int                 first_shared;
   int                 i;
-  t8_gloidx_t        *offsets, trees_so_far = 0;
+  t8_gloidx_t        *offsets;
   t8_shmem_array_t    shmem_array;
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
@@ -1628,58 +1628,56 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared)
   shmem_array = t8_cmesh_alloc_offsets (mpisize, comm);
 
   offsets = t8_shmem_array_get_gloidx_array (shmem_array);
-  do {
-    seed = sc_MPI_Wtime () * 10000;
 
-    if (mpirank == 0) {
-      t8_debugf ("Random number seed = %u\n", seed);
+  seed = sc_MPI_Wtime () * 10000;
+
+  if (mpirank >= 0) {
+    t8_debugf ("Random number seed = %u\n", seed);
+  }
+  mpiret = sc_MPI_Bcast (&seed, 1, sc_MPI_INT, 0, comm);
+  SC_CHECK_MPI (mpiret);
+  srand (seed);
+
+  offsets[0] = 0;
+  first_shared = 0;
+  for (iproc = 1; iproc < mpisize; iproc++) {
+    offsets[iproc] = 0;
+    /* Create a random number between 0 and 200% of an ideal partition */
+    if ((int) (num_trees * 2. / mpisize) == 0) {
+      /* This case prevents division by 0 */
+      random_number = 1;
     }
-    mpiret = sc_MPI_Bcast (&seed, 1, sc_MPI_INT, 0, comm);
-    SC_CHECK_MPI (mpiret);
-    srand (seed);
-
-    offsets[0] = 0;
-    first_shared = 0;
-    for (iproc = 1; iproc < mpisize; iproc++) {
-      offsets[iproc] = 0;
-      /* Create a random number between 0 and 200% of an ideal partition */
-      if ((int) (num_trees * 2. / mpisize) == 0) {
-        /* This case prevents dvision by 0 */
-        random_number = 1;
-      }
-      else {
-        random_number = rand () % (int) (num_trees * 2. / mpisize);
-      }
-      /* If we would excees the number of trees we cut the random number */
-      if (offsets[iproc - 1] + random_number > num_trees) {
-        random_number = num_trees - offsets[iproc - 1];
-      }
-      random_number += first_shared;
-      if (shared) {
-        first_shared = rand_r (&seed) % 2;
-      }
-      else {
-        first_shared = 0;
-      }
-
-      offsets[iproc] = random_number + fabs (offsets[iproc - 1])
-        - (offsets[iproc - 1] < 0);
-      if (first_shared && offsets[iproc] != num_trees) {
-        offsets[iproc] = -offsets[iproc] - 1;
-      }
-      trees_so_far += random_number;
+    else {
+      random_number = rand () % (int) (num_trees * 2. / mpisize);
     }
-    offsets[mpisize] = num_trees;
 
-    for (i = 0; i < mpisize; i++) {
-      sc_MPI_Barrier (comm);
-      if (i == mpirank) {
-        for (iproc = 0; iproc < mpisize + 1; iproc++) {
-          t8_debugf ("[H] %li\n", offsets[iproc]);
-        }
+    random_number += first_shared;
+    /* If we would exceed the number of trees we cut the random number */
+    if (t8_offset_first (iproc - 1, offsets) + random_number > num_trees) {
+      random_number = num_trees - t8_offset_first (iproc - 1, offsets);
+    }
+    if (shared) {
+      first_shared = rand_r (&seed) % 2;
+    }
+    else {
+      first_shared = 0;
+    }
+
+    offsets[iproc] = random_number + t8_offset_first (iproc - 1, offsets);
+    if (first_shared && offsets[iproc] != num_trees) {
+      offsets[iproc] = -offsets[iproc] - 1;
+    }
+  }
+  offsets[mpisize] = num_trees;
+
+  for (i = 0; i < mpisize; i++) {
+    sc_MPI_Barrier (comm);
+    if (i == mpirank) {
+      for (iproc = 0; iproc < mpisize + 1; iproc++) {
+        t8_debugf ("[H] %li\n", offsets[iproc]);
       }
     }
   }
-  while (!t8_offset_consistent (mpisize, offsets, num_trees));
+  T8_ASSERT (t8_offset_consistent (mpisize, offsets, num_trees));
   return shmem_array;
 }
