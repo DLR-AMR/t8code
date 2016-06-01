@@ -637,7 +637,8 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
   /* TODO: This is currently inefficient since we copy each tree for itself.
    *       Best practive is to copy chunks of trees out of the different part
    *       arrays of cmesh_from */
-  if (total_alloc == 0) {
+  if (total_alloc == 0 || send_buffer == NULL) {
+    t8_debugf ("No data to store in buffer.\n");
     return;
   }
   temp_offset = 0;
@@ -1015,6 +1016,10 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
       *my_buffer = buffer = T8_ALLOC (char, total_alloc);
       *my_buffer_bytes = total_alloc;
     }
+    else {
+      my_buffer = NULL;
+      buffer = NULL;
+    }
 
     /* Copy all data to the send buffer */
     t8_cmesh_partition_copy_data (buffer, cmesh,
@@ -1152,7 +1157,7 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
   else {
     recv_first = cmesh->mpirank;
     recv_last = cmesh->mpirank;
-    num_parts = 1;
+    num_parts = my_buffer != NULL ? 1 : 0;
   }
   /* Initialize trees structure with yet unknown number of ghosts */
   t8_cmesh_trees_init (&cmesh->trees, num_parts, num_trees, 0);
@@ -1200,7 +1205,8 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
     }
   }
   else {
-    myrank_part = 0;
+    /* cmesh_from is replicated */
+    myrank_part = my_buffer != NULL ? 0 : -1;
   }
 
   T8_ASSERT (recv_first == -1 || !cmesh_from->set_partition ||
