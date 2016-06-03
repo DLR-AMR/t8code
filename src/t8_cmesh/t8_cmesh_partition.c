@@ -1433,6 +1433,7 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
     recv_first = cmesh->mpirank;
     recv_last = cmesh->mpirank;
     num_parts = my_buffer != NULL ? 1 : 0;
+    from_offsets = NULL;
   }
   /* Initialize trees structure with yet unknown number of ghosts */
   t8_cmesh_trees_init (&cmesh->trees, num_parts, num_trees, 0);
