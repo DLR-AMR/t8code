@@ -398,7 +398,7 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh_to, t8_cmesh_t cmesh_from,
     lookhere = (range[0] + range[1]) / 2;
     /* However it could be empty in this case we search linearly to
      * find the next nonempty receiver in search direction */
-    while (t8_offset_empty (lookhere, offset_to)) {
+    while (t8_offset_empty (lookhere, receive ? offset_from : offset_to)) {
       lookhere += search_dir;
     }
     if (t8_offset_sendsto (*sender, *receiver, offset_from, offset_to)) {
@@ -430,7 +430,7 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh_to, t8_cmesh_t cmesh_from,
     lookhere = ceil ((range[0] + range[1]) / 2.);
     /* However it could be empty in this case we search linearly to
      * find the next nonempty receiver in search direction */
-    while (t8_offset_empty (lookhere, offset_to)) {
+    while (t8_offset_empty (lookhere, receive ? offset_from : offset_to)) {
       /* We may be already at the end or beginning in which
        * case the search direction is the opposite one */
       if (lookhere == cmesh_from->mpisize - 1) {
