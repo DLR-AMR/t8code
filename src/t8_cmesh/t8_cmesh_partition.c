@@ -302,6 +302,7 @@ t8_cmesh_partition_send_any (int proc, t8_cmesh_t cmesh_from,
   T8_ASSERT (proc >= 0 && proc < cmesh_from->mpisize);
   range[0] = 0;
   range[1] = cmesh_from->mpisize;
+  lookhere = (range[0] + range[1]) / 2;
 
   if (!receive) {
     sender = &proc;
@@ -344,19 +345,19 @@ t8_cmesh_partition_send_any (int proc, t8_cmesh_t cmesh_from,
 /* Compute first and last process to which we will send data */
 /* Returns the local tree_id of last local tree on send_first. */
 static              t8_locidx_t
-t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
+t8_cmesh_partition_sendrange (t8_cmesh_t cmesh_to, t8_cmesh_t cmesh_from,
                               int *send_first, int *send_last, int receive)
 {
   t8_gloidx_t         ret;
-  int                 range[2], lookhere, first_guess, search_dir = -1;
+  int                 range[2], lookhere, first_guess, search_dir = -1, last;
+  int                *sender, *receiver;
   t8_gloidx_t        *offset_from, *offset_to;
 
-  if ((!receive && !cmesh_from->set_partition)
-      || (receive && !cmesh->set_partition)) {
+  if (!cmesh_from->set_partition) {
     /* If cmesh_from is not partitioned we can send/recv all information
      * to/from ourself */
     *send_first = *send_last = cmesh_from->mpirank;
-    offset_to = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
+    offset_to = t8_shmem_array_get_gloidx_array (cmesh_to->tree_offsets);
     return t8_offset_last (cmesh_from->mpirank, offset_to);
   }
 
@@ -365,13 +366,14 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   range[0] = 0;
   range[1] = cmesh_from->mpisize - 1;
 
-  if (cmesh_from->num_local_trees == 0) {
-    /* This partition is empty and we can not send anything */
+  if ((!receive && cmesh_from->num_local_trees == 0)
+      || (receive && cmesh_to->num_local_trees == 0)) {
+    /* This partition is empty and we can not send/recv anything */
     *send_last = -2;
     return -1;
   }
   offset_from = t8_shmem_array_get_gloidx_array (cmesh_from->tree_offsets);
-  offset_to = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
+  offset_to = t8_shmem_array_get_gloidx_array (cmesh_to->tree_offsets);
 
   /* Binary search the smallest process to which we send something */
 
@@ -379,68 +381,86 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   first_guess = t8_cmesh_partition_send_any (cmesh_from->mpirank, cmesh_from,
                                              offset_from, offset_to, receive);
   t8_debugf ("first guess %i\n", first_guess);
+  if (!receive) {
+    /* in sendmode we are the sender and look for receivers */
+    sender = &cmesh_from->mpirank;
+    receiver = &lookhere;
+  }
+  else {
+    /* in receive mode we are receiver and look for senders */
+    sender = &lookhere;
+    receiver = &cmesh_from->mpirank;
+  }
 
   range[1] = first_guess;
-  if (!receive) {
-    while (*send_first == -1) {
-      /* Our guess is the midpoint between range[0] and [1] */
-      lookhere = (range[0] + range[1]) / 2;
-      /* However it could be empty in this case we search linearly to
-       * find the next nonempty receiver in search direction */
-      while (t8_offset_empty (lookhere, offset_to)) {
-        lookhere += search_dir;
-      }
-      if (t8_offset_sendsto (cmesh_from->mpirank, lookhere, offset_from,
-                             offset_to)) {
-        /* We send to this process */
-        /* We have to look further left */
-        range[1] = lookhere;
-        search_dir = -1;
-      }
-      else {
-        /* We do not send to this process */
-        /* We have to look further right */
-        range[0] = lookhere + 1;
-        search_dir = +1;
-      }
-      if (range[0] == range[1]) {
-        /* The only possibility left is send_first */
-        *send_first = range[0];
-      }
+  while (*send_first == -1) {
+    /* Our guess is the midpoint between range[0] and [1] */
+    lookhere = (range[0] + range[1]) / 2;
+    /* However it could be empty in this case we search linearly to
+     * find the next nonempty receiver in search direction */
+    while (t8_offset_empty (lookhere, offset_to)) {
+      lookhere += search_dir;
+    }
+    if (t8_offset_sendsto (*sender, *receiver, offset_from, offset_to)) {
+      /* We send to this process */
+      /* We have to look further left */
+      range[1] = lookhere;
+      search_dir = -1;
+    }
+    else {
+      /* We do not send to this process */
+      /* We have to look further right */
+      range[0] = lookhere + 1;
+      search_dir = +1;
+    }
+    if (range[0] == range[1]) {
+      /* The only possibility left is send_first */
+      *send_first = range[0];
     }
   }
+
   range[0] = first_guess;
   range[1] = cmesh_from->mpisize - 1;
   search_dir = +1;
 
-  if (!receive) {
-    while (*send_last == -1) {
-      /* Our guess is the midpoint between range[0] and [1] */
-      /* We use ceil, since if we always want to look more to the right than
-       * the left */
-      lookhere = ceil ((range[0] + range[1]) / 2.);
-      /* However it could be empty in this case we search linearly to
-       * find the next nonempty receiver in search direction */
-      while (t8_offset_empty (lookhere, offset_to)) {
-        lookhere += search_dir;
-      }
-      if (t8_offset_sendsto (cmesh_from->mpirank, lookhere, offset_from,
-                             offset_to)) {
-        /* We have to look further right */
-        range[0] = lookhere;
-        search_dir = +1;
-      }
-      else {
-        /* We have to look further left */
-        range[1] = lookhere - 1;
+  while (*send_last == -1) {
+    /* Our guess is the midpoint between range[0] and [1] */
+    /* We use ceil, since we always want to look more to the right than
+     * the left */
+    lookhere = ceil ((range[0] + range[1]) / 2.);
+    /* However it could be empty in this case we search linearly to
+     * find the next nonempty receiver in search direction */
+    while (t8_offset_empty (lookhere, offset_to)) {
+      /* We may be already at the end or beginning in which
+       * case the search direction is the opposite one */
+      if (lookhere == cmesh_from->mpisize - 1) {
         search_dir = -1;
       }
-      if (range[0] == range[1]) {
-        /* The only possibility left is send_last */
-        T8_ASSERT (0 <= range[0] && range[0] < cmesh_from->mpisize);
-        *send_last = range[0];
+      if (lookhere == 0) {
+        search_dir = +1;
       }
+      lookhere += search_dir;
     }
+    if (lookhere == last) {
+      /* We did not change, so we found the right process */
+      *send_last = lookhere;
+    }
+    else if (t8_offset_sendsto (*sender, *receiver, offset_from, offset_to)) {
+      /* We have to look further right */
+      range[0] = lookhere;
+      search_dir = +1;
+    }
+    else {
+      /* We have to look further left */
+      range[1] = lookhere - 1;
+      search_dir = -1;
+    }
+    if (range[0] == range[1]) {
+      /* The only possibility left is send_last */
+      T8_ASSERT (0 <= range[0] && range[0] < cmesh_from->mpisize);
+      *send_last = range[0];
+    }
+    last = lookhere;
   }
 
   ret = t8_glo_min (t8_offset_last (*send_first, offset_to) -
@@ -684,23 +704,7 @@ static void
 t8_cmesh_partition_recvrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                               int *recv_first, int *recv_last)
 {
-  /* p_i is first process we receive from if and only if
-   *
-   * tree_first[p_i]    <=    tree_first    <=    tree_last[pi]
-   *      |                       ||                    |
-   *  old_partition        cmesh->first_tree     old_partition
-   */
-  /* p_i is last process we send to if and only if
-   *
-   * tree_first[p_i]    <=    tree_last    <=    tree_last[pi]
-   *        |                     ||                    |
-   *  old_partition       cmesh->first_tree     old_partition
-   *                      + num_local_trees-1
-   */
-  /* This is the reversed situation of send first/last, so we can
-   * use this function with cmesh and cmesh_from changed. However, if we do
-   * so we need the shared array on cmesh_from to exist. See also TODO comment
-   * in partition_given. */
+  /*  */
 
   if (!cmesh_from->set_partition) {
     /* If cmesh_from is not partitioned we can receive all information
@@ -710,7 +714,7 @@ t8_cmesh_partition_recvrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     return;
   }
 
-  (void) t8_cmesh_partition_sendrange (cmesh_from, cmesh,
+  (void) t8_cmesh_partition_sendrange (cmesh, cmesh_from,
                                        recv_first, recv_last, 1);
 }
 
