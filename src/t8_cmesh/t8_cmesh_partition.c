@@ -1646,6 +1646,37 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
   T8_FREE (local_procid);
 }
 
+static void
+t8_cmesh_partition_debug_listprocs (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
+                                    sc_MPI_Comm comm)
+{
+  int                 mpiret, mpisize, mpirank, p;
+  char                out[BUFSIZ] = { };
+  t8_gloidx_t        *from, *to;
+
+  from = t8_shmem_array_get_gloidx_array (cmesh_from->tree_offsets);
+  to = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  for (p = 0; p < mpisize; p++) {
+    if (t8_offset_sendsto (mpirank, p, from, to)) {
+      snprintf (out + strlen (out), BUFSIZ - strlen (out), "%i%c ", p,
+                p == mpisize - 1 ? '!' : ',');
+    }
+  }
+  t8_debugf ("I send to: %s\n", out);
+  sprintf (out, " ");
+  for (p = 0; p < mpisize; p++) {
+    if (t8_offset_sendsto (p, mpirank, from, to)) {
+      snprintf (out + strlen (out), BUFSIZ - strlen (out), "%i%c ", p,
+                p == mpisize - 1 ? '!' : ',');
+    }
+  }
+  t8_debugf ("I receive from: %s\n", out);
+}
+
 /* Given an initial cmesh (cmesh_from) and a new partition table (tree_offset)
  * create the new partition on the destination cmesh (cmesh) */
 /* TODO: remove offset argument and use cmesh_from.tree_offsets */
@@ -1680,6 +1711,8 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
   /* determine send and receive range. temp_tree is last local tree of send_first in new partition */
   cmesh->first_tree = t8_offset_first (cmesh->mpirank, tree_offset);
   cmesh->num_local_trees = t8_offset_num_trees (cmesh->mpirank, tree_offset);
+
+  t8_cmesh_partition_debug_listprocs (cmesh, (t8_cmesh_t) cmesh_from, comm);
 
   /*********************************************/
   /*        Done with setup                    */
