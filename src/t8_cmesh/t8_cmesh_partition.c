@@ -138,11 +138,12 @@ t8_offset_sendsto (int proca, int procb, t8_gloidx_t * t8_offset_from,
     (t8_offset_from[proca] < 0);
   proca_last = t8_offset_last (proca, t8_offset_from);
   if (proca_first <= proca_last &&      /* There are trees to send  and... */
-      proca_first <= t8_offset_last (procb, t8_offset_to) /* The first tree on a before is smaller than
-                                                           * the last on b after partitioning and... */
-      && proca_last >= t8_offset_first (procb, t8_offset_to) /* The last tree on before is bigger than */
-      + (t8_offset_to[procb] < 0 && proca != procb)) {     /* the first on b (excluding a shared first one if a != b)
-                                                            * after partitioning */
+      proca_first <= t8_offset_last (procb, t8_offset_to)       /* The first tree on a before is smaller than
+                                                                 * the last on b after partitioning and... */
+      &&proca_last >= t8_offset_first (procb, t8_offset_to)     /* The last tree on before is bigger than */
+    ) {                         /* the first on b (excluding a shared first one if a != b)
+                                 * after partitioning */
+    // TODO: +(t8_offset_to[procb] < 0 && proca != procb)
     return 1;
   }
   /* We also have to cover the case where a process sends the first tree to
@@ -158,8 +159,8 @@ t8_offset_sendsto (int proca, int procb, t8_gloidx_t * t8_offset_from,
 /* Count the number of sending procs from start to end sending to mpirank
  * A process counts as sending if it has at least one non-shared local tree */
 static int
-t8_offset_range_send (int start, int end, int mpirank, t8_gloidx_t * offset_from,
-                      t8_gloidx_t * offset_to)
+t8_offset_range_send (int start, int end, int mpirank,
+                      t8_gloidx_t * offset_from, t8_gloidx_t * offset_to)
 {
   int                 count = 0, i;
 
@@ -287,12 +288,164 @@ t8_cmesh_gather_treecount (t8_cmesh_t cmesh, sc_MPI_Comm comm)
                              cmesh->num_trees);
 }
 
+
 /* Compute first and last process to which we will send data */
 /* Returns the local tree_id of last local tree on send_first. */
 static              t8_locidx_t
 t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
-                              t8_gloidx_t * tree_offsets,
                               int *send_first, int *send_last, int receive)
+{
+  t8_gloidx_t         first_tree = 0, last_tree, last_local_tree,
+    first_local_tree, ret;
+  int                 range[2], lookhere, temp;
+  t8_gloidx_t        *offset_from, *offset_to;
+
+  if ((!receive && !cmesh_from->set_partition)
+      || (receive && !cmesh->set_partition)) {
+    /* If cmesh_from is not partitioned we can send/recv all information
+     * to/from ourself */
+    *send_first = *send_last = cmesh_from->mpirank;
+    offset_to = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
+    return t8_offset_last (cmesh_from->mpirank, offset_to);
+  }
+
+  *send_first = -1;
+  *send_last = -1;
+  range[0] = 0;
+  range[1] = cmesh_from->mpisize - 1;
+
+  if (cmesh_from->num_local_trees == 0) {
+    /* This partition is empty and we can not send anything */
+    *send_last = -2;
+    return -1;
+  }
+  offset_from = t8_shmem_array_get_gloidx_array (cmesh_from->tree_offsets);
+  offset_to = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
+
+  /* Binary search the smallest process to which we send something */
+
+  lookhere = cmesh_from->mpirank;       /* We start with our rank as first guess */
+  while (*send_first == -1) {
+    /* Compute the first and last tree on the receiving process */
+    first_tree = t8_offset_first (lookhere, offset_to);
+    last_tree = t8_offset_last (lookhere, offset_to);
+    /* Compute the first significant tree that we send.
+     * This is our first local tree if it is not shared our we are the receiving
+     * process,
+     * otherwise it is the second local tree. */
+    if (lookhere == cmesh_from->mpirank) {
+      first_local_tree = cmesh_from->first_tree;
+    }
+    else {
+      first_local_tree =
+        cmesh_from->first_tree + cmesh_from->first_tree_shared;
+    }
+    if (last_tree < first_local_tree) {
+      /* We have to look further right */
+      range[0] = lookhere + 1;
+      lookhere = (range[0] + range[1]) / 2;
+    }
+    else if (first_local_tree < first_tree) {
+      /* We have to look further left */
+      range[1] = lookhere - 1;
+      lookhere = (range[0] + range[1]) / 2;
+    }
+    else {
+      /* first_tree <= first_local_tree <= last_tree */
+      T8_ASSERT (t8_offset_sendsto
+                 (cmesh_from->mpirank, lookhere, offset_from, offset_to));
+      /* We found our process, except when the first nonempty process
+       * smaller lookhere also needs the first tree. */
+      temp = lookhere - 1;
+      *send_first = lookhere;
+      while (temp >= 0 && (t8_offset_empty (temp, offset_to)
+                           || t8_offset_sendsto (cmesh_from->mpirank, temp,
+                                                 offset_from, offset_to))) {
+        temp--;
+      }
+      if (temp != lookhere - 1) {
+        temp++;
+        lookhere = temp;
+        *send_first = lookhere;
+      }
+      T8_ASSERT (t8_offset_sendsto
+                 (cmesh_from->mpirank, lookhere, offset_from, offset_to));
+    }
+  }
+  /* Now we search for the last process that we need to send to */
+  range[0] = 0;
+  range[1] = cmesh_from->mpisize - 1;
+  /* Our first guess is mpirank, except when send_first is already bigger,
+   * since then we can never send to mpirank. */
+  lookhere = SC_MAX (cmesh_from->mpirank, *send_first);
+  while (*send_last == -1) {
+    /* Compute the first and last tree on the receiving process */
+    last_tree = t8_offset_last (lookhere, offset_to);
+    first_tree = t8_offset_first (lookhere, offset_to);
+    /* Get the global treeid of the last tree on this rank */
+    last_local_tree =
+      cmesh_from->first_tree + cmesh_from->num_local_trees - 1;
+    if (lookhere != cmesh_from->mpirank
+        && t8_offset_in_range (last_local_tree, lookhere, offset_from)) {
+      /* If lookhere shares this rank's last_tree then we exclude it from sending */
+      last_local_tree--;
+    }
+
+    if (last_tree < last_local_tree) {
+      /* We have to look further right */
+      range[0] = lookhere + 1;
+    }
+    else if (last_local_tree < first_tree) {
+      /* We have to look further left */
+      range[1] = lookhere - 1;
+    }
+    else {
+      /* first_tree <= last_local_tree <= last_tree */
+      T8_ASSERT (t8_offset_sendsto
+                 (cmesh_from->mpirank, lookhere, offset_from, offset_to));
+      temp = lookhere + 1;
+      *send_last = lookhere;
+      /* We found our process, except when the next process bigger than lookhere
+       * do also need last_local_tree */
+      while (temp < cmesh_from->mpisize && (t8_offset_empty (temp, offset_to)
+                                            || t8_offset_sendsto (cmesh_from->
+                                                                  mpirank,
+                                                                  temp,
+                                                                  offset_from,
+                                                                  offset_to)))
+      {
+        temp++;
+      }
+      if (temp != lookhere + 1) {
+        temp--;
+        lookhere = temp;
+        *send_last = lookhere;
+      }
+      T8_ASSERT (t8_offset_sendsto
+                 (cmesh_from->mpirank, lookhere, offset_from, offset_to));
+    }
+  }
+
+  ret = t8_glo_min (t8_offset_last (*send_first, offset_to) -
+                    cmesh_from->first_tree, cmesh_from->num_local_trees - 1);
+  t8_debugf ("%s_first = %i, %s_last = %i, first_tree = %li\n",
+             receive ? "recv" : "send", *send_first,
+             receive ? "recv" : "send", *send_last, ret);
+
+  T8_ASSERT (*send_first >= 0);
+  T8_ASSERT (*send_last >= 0);
+  T8_ASSERT (receive || (ret >= 0 && ret <= cmesh_from->num_local_trees));
+  T8_ASSERT (ret == (t8_locidx_t) ret);
+  return (t8_locidx_t) ret;
+}
+
+/* Compute first and last process to which we will send data */
+/* Returns the local tree_id of last local tree on send_first. */
+static              t8_locidx_t
+t8_cmesh_partition_sendrange_old (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
+                                  t8_gloidx_t * tree_offsets,
+                                  int *send_first, int *send_last,
+                                  int receive)
 {
   t8_gloidx_t         first_tree = 0, last_tree, last_local_tree,
     first_local_tree, ret;
@@ -337,7 +490,7 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   first_local_tree = !cmesh_from->first_tree_shared ?
     cmesh_from->first_tree : cmesh_from->first_tree + !receive;
 
-  if (last_local_tree < first_local_tree) {
+  if (cmesh_from->num_local_trees == 0) {
     /* This partition is empty and we can not send anything */
     *send_last = -2;
     return -1;
@@ -356,7 +509,7 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   }
   else
 #endif
-    if (receive && cmesh->first_tree == cmesh_from->first_tree) {
+  if (receive && cmesh->first_tree == cmesh_from->first_tree) {
     /* We receive the first tree from ourselves.
      * If this is our smallest local tree there can't be any smaller rank
      * sending to us. */
@@ -371,6 +524,13 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     /* first tree stores new first_tree of process lookhere */
     /* last tree the new last tree of process lookhere */
     first_tree = t8_offset_first (lookhere, tree_offsets);
+    if (lookhere == cmesh->mpirank) {
+      first_local_tree = cmesh_from->first_tree;
+    }
+    else {
+      first_local_tree =
+        cmesh_from->first_tree + cmesh_from->first_tree_shared;
+    }
     /* If this first tree is shared we exclude it when we receive */
     if (receive && tree_offsets[lookhere] < 0) {
       first_tree++;
@@ -407,6 +567,8 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     }
   }
 
+  t8_debugf ("Done send first %i\n", *send_first);
+
   /* Determine send_last */
   range[0] = *send_first;
   range[1] = cmesh->mpisize;
@@ -428,12 +590,11 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
       while (first_tree <= last_local_tree && lookhere < cmesh->mpisize) {
         lookhere++;
         first_tree = t8_offset_first (lookhere, tree_offsets);
-        /* If the first tree of lookhere is shared and we determine reveive range
+        /* If the first tree of lookhere is shared and we determine receive range
          * then we ignore this first tree */
         if (receive && tree_offsets[lookhere] < 0) {
           first_tree++;
         }
-
       }
       lookhere--;
       /* We have found our proc, but it may be the last and empty */
@@ -460,9 +621,10 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
       range[1] = lookhere - 1;
     }
   }
-  while (!receive &&  lookhere >= 0
-         && t8_offset_in_range (last_local_tree, lookhere, tree_offsets)
-         && (last_local_tree == t8_offset_first (lookhere, tree_offsets)
+  t8_debugf ("prelim sendlast = %i\n", *send_last);
+  while (!receive && *send_last != cmesh->mpirank && *send_last >= 0
+         && t8_offset_in_range (last_local_tree, *send_last, tree_offsets)
+         && (last_local_tree == t8_offset_first (*send_last, tree_offsets)
              || last_local_tree == first_local_tree)) {
     /* The last process we want to send to only needs last_local_tree
      * but in fact it already has it, so we exclude it from the list.
@@ -474,9 +636,9 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
      *   New    |0|1|-2|-2|4|5|
      *      since now both p1 and p2 want to send to p3?
      */
-    lookhere--;
-    while (lookhere >= 0 && t8_offset_empty (lookhere, tree_offsets)) {
-      lookhere--;
+    (*send_last)--;
+    while (*send_last >= 0 && t8_offset_empty (*send_last, tree_offsets)) {
+      (*send_last)--;
     }
   }
   if (receive && t8_offset_in_range (cmesh->first_tree, cmesh->mpirank,
@@ -487,9 +649,11 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     }
   }
 
-  t8_debugf ("send_first = %i, send_last = %i\n", *send_first, *send_last);
   ret = t8_glo_min (t8_offset_last (*send_first, tree_offsets) -
                     cmesh_from->first_tree, cmesh_from->num_local_trees - 1);
+  t8_debugf ("%s_first = %i, %s_last = %i, first_tree = %li\n",
+             receive ? "recv" : "send", *send_first,
+             receive ? "recv" : "send", *send_last, ret);
 
   T8_ASSERT (*send_first >= 0);
   T8_ASSERT (*send_last >= 0);
@@ -501,7 +665,6 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 /* Compute the first and last process from which we will receive local trees */
 static void
 t8_cmesh_partition_recvrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
-                              t8_gloidx_t * tree_offsets,
                               int *recv_first, int *recv_last)
 {
   /* p_i is first process we receive from if and only if
@@ -530,8 +693,7 @@ t8_cmesh_partition_recvrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     return;
   }
 
-  T8_ASSERT (tree_offsets != NULL);
-  (void) t8_cmesh_partition_sendrange (cmesh_from, cmesh, tree_offsets,
+  (void) t8_cmesh_partition_sendrange (cmesh_from, cmesh,
                                        recv_first, recv_last, 1);
 }
 
@@ -980,11 +1142,16 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   sc_array_init (&send_as_ghost, sizeof (t8_locidx_t));
 
   range_end = t8_cmesh_partition_sendrange (cmesh, (t8_cmesh_t) cmesh_from,
-                                            tree_offset, send_first,
-                                            send_last, 0);
+                                            send_first, send_last, 0);
   if (cmesh_from->set_partition) {
     range_start = cmesh_from->first_tree_shared;        /* Stores the first local tree that was not send yet */
     /* We do not send the first tree if it is shared, so we start with the second tree then */
+    if (t8_offset_in_range
+        (cmesh_from->first_tree, cmesh->mpirank, tree_offset)) {
+      /* In the special case that we send our first tree to ourselves, we
+       * set it as start even if it is shared */
+      range_start = 0;
+    }
   }
   else {
     range_start = t8_offset_first (cmesh_from->mpirank, tree_offset);
@@ -1087,6 +1254,12 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
       my_buffer = NULL;
       buffer = NULL;
     }
+    T8_ASSERT (num_trees + num_ghost_send == 0 ||
+               t8_offset_sendsto (cmesh->mpirank, iproc,
+                                  t8_shmem_array_get_gloidx_array
+                                  (cmesh_from->tree_offsets),
+                                  t8_shmem_array_get_gloidx_array
+                                  (cmesh->tree_offsets)));
 
     /* Copy all data to the send buffer */
     t8_cmesh_partition_copy_data (buffer, cmesh,
@@ -1226,7 +1399,7 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
     T8_ASSERT (cmesh_from->tree_offsets != NULL);
     from_offsets = t8_shmem_array_get_gloidx_array (cmesh_from->tree_offsets);
     t8_cmesh_partition_recvrange (cmesh, (t8_cmesh_t) cmesh_from,
-                                  from_offsets, &recv_first, &recv_last);
+                                  &recv_first, &recv_last);
     num_parts = t8_offset_range_send (recv_first, recv_last, cmesh->mpirank,
                                       from_offsets, tree_offset);
   }
@@ -1267,8 +1440,8 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
   /* Allocate memory */
   for (iproc = 1; iproc < recv_last - recv_first + 1; iproc++) {
     local_procid[iproc] =
-        !t8_offset_sendsto (iproc + recv_first, cmesh->mpirank, from_offsets,
-                            tree_offset) ?
+      !t8_offset_sendsto (iproc + recv_first, cmesh->mpirank, from_offsets,
+                          tree_offset) ?
       local_procid[iproc - 1] : local_procid[iproc - 1] + 1;
   }
   if (cmesh_from->set_partition) {
@@ -1458,6 +1631,8 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
 
 /* Given an initial cmesh (cmesh_from) and a new partition table (tree_offset)
  * create the new partition on the destination cmesh (cmesh) */
+/* TODO: remove offset argument and use cmesh_from.tree_offsets */
+/* TODO: remove const */
 static void
 t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
                           t8_gloidx_t * tree_offset, sc_MPI_Comm comm)
