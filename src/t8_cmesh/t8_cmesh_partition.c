@@ -1124,7 +1124,8 @@ t8_cmesh_send_ghost (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
       }
     }
     T8_ASSERT (0 <= proc && proc < cmesh->mpisize);
-    if (proc < cmesh->mpirank) {
+    if (proc < cmesh->mpirank && t8_offset_sendstree (proc, p, neighbor,
+                                                     from_offsets, offset)) {
       /* We do not send the ghost */
       return 0;
     }
@@ -1347,10 +1348,8 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
  *  - The local trees and ghosts that have to be send as a ghost.
  *  - The local trees that we will be a ghost in the new partition and
  *    therefore need to be kept local.
- *
- * If the process we send to is mpirank than ghost_flag_keep and keep_as _ghosts
- * should be NULL and ghost_flag_send and send_as_ghosts should be the arrays of ghosts to keep. */
-static void
+ */
+ static void
 t8_cmesh_partition_sendtreeloop (t8_cmesh_t cmesh,
                                  const struct t8_cmesh *cmesh_from,
                                  t8_locidx_t range_start,
@@ -1374,6 +1373,7 @@ t8_cmesh_partition_sendtreeloop (t8_cmesh_t cmesh,
     /* Count the additional memory needed per tree from neighbors */
     *tree_neighbor_bytes += t8_eclass_num_faces[tree->eclass] *
       (sizeof (*face_neighbor) + sizeof (*ttf));
+    /* TODO: change padding to sizeof (void*) */
     *tree_neighbor_bytes += (4 - *tree_neighbor_bytes % 4) % 4; /* padding to make number of bytes per tree
                                                                    a multiple of 4 */
     /*  Compute number of attribute bytes in this tree range.
@@ -1550,7 +1550,8 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
       my_buffer = NULL;
       buffer = NULL;
     }
-    T8_ASSERT (num_trees + num_ghost_send == 0 ||
+    T8_ASSERT (num_trees + num_ghost_send == 0 || (!cmesh_from->set_partition
+                                                   && iproc == cmesh_from->mpirank) ||
                t8_offset_sendsto (cmesh->mpirank, iproc,
                                   t8_shmem_array_get_gloidx_array
                                   (cmesh_from->tree_offsets),
@@ -1666,6 +1667,7 @@ t8_cmesh_partition_receive_message (t8_cmesh_t cmesh, sc_MPI_Comm comm,
 /* Loop over all the processes that we receive trees from and get the
  * MPI messages. */
 /* stores the number of received ghosts in num_ghosts */
+/* fr and lr are only for debugging, see t8_cmesh_partition_debug_listprocs */
 static void
 t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
                              const struct t8_cmesh *cmesh_from,
