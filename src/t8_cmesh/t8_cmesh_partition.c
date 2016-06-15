@@ -2263,7 +2263,7 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared,
   else {
     u_seed = seed;
   }
-u_seed = 2915531318;
+
   if (mpirank == 0) {
     t8_debugf ("Random number seed = %u\n", u_seed);
   }
