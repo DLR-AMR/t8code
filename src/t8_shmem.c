@@ -140,5 +140,5 @@ t8_shmem_array_destroy (t8_shmem_array_t * parray)
   array = *parray;
   sc_shmem_free (t8_get_package_id (), array->array, array->comm);
   T8_FREE (array);
-  parray = NULL;
+  *parray = NULL;
 }
