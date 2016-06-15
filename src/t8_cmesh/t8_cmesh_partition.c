@@ -98,23 +98,6 @@ t8_offset_empty (int proc, t8_gloidx_t * offset)
   return 0;
 }
 
-#if 0
-/* TODO: deprecated and replaced by !t8_offset_sendsto */
-/* Return 1 if the process will not send any trees, that is if it is
- * empty or has only one shared tree */
-static int
-t8_offset_nosend (int proc, t8_gloidx_t * offset)
-{
-  if (t8_offset_empty (proc, offset)) {
-    return 1;
-  }
-  else if (t8_offset_num_trees (proc, offset) == 1 && offset[proc] < 0) {
-    return 1;
-  }
-  return 0;
-}
-#endif
-
 /* Determine whether a given global tree id is in the range of a given process */
 static int
 t8_offset_in_range (t8_gloidx_t tree_id, int proc, t8_gloidx_t * offset)
@@ -123,6 +106,150 @@ t8_offset_in_range (t8_gloidx_t tree_id, int proc, t8_gloidx_t * offset)
     && tree_id <= t8_offset_last (proc, offset);
 }
 
+/* Compute a list of all processes that own a specific tree */
+static void
+t8_offset_all_owners_of_tree (int mpisize, t8_gloidx_t gtree, t8_gloidx_t * offset,
+                              sc_array_t * owners)
+{
+  int proc, range[2], found, proc_temp;
+  int *entry;
+  T8_ASSERT (owners != NULL);
+  T8_ASSERT (owners->elem_count == 0);
+  T8_ASSERT (owners->elem_size == sizeof (int));
+  T8_ASSERT (0 <= gtree && gtree <= t8_offset_last (mpisize - 1, offset));
+
+  range[0] = 0;
+  range[1] = mpisize - 1;
+  /* At first we find any process that owns the tree with a binary search */
+  found = 0;
+  while (!found) {
+    proc = (range[0] + range[1]) /2;
+    if (t8_offset_in_range (gtree, proc, offset)) {
+      found = 1;
+    }
+    else if (t8_offset_last (proc, offset) < gtree){
+      /* look further right */
+      range[0] = proc + 1;
+    }
+    else {
+      range[1] = proc - 1;
+    }
+  }
+  /* Now we find the smallest process that has the tree */
+  proc_temp = proc;
+  while (proc_temp >= 0 && t8_offset_in_range (gtree, proc_temp, offset)) {
+    /* decrement temp as long as it holds the tree */
+    proc_temp--;
+    while (0 <= proc_temp && t8_offset_empty (proc_temp, offset)) {
+      /* Skip empty processes */
+      proc_temp--;
+    }
+  }
+  /* We are now one nonempty proccess below the smallest process having the tree */
+  if (proc_temp >= 0) {
+    proc_temp++;
+    while (t8_offset_empty (proc_temp, offset)) {
+      /* Skip empty processes */
+      proc_temp++;
+    }
+    T8_ASSERT (t8_offset_in_range (gtree, proc_temp, offset));
+  }
+  else {
+    proc_temp = proc;
+  }
+  /* Add the first process to the array */
+  proc = proc_temp;
+  entry = (int*) sc_array_push (owners);
+  *entry = proc;
+  found = 0;
+  /* Now we parse through all processes bigger than the firt one until
+   * they do not have the tree anymore. */
+  while (!found) {
+    proc++;
+    while (proc < mpisize && t8_offset_empty (proc, offset)) {
+      /* Skip empty processes */
+      proc++;
+    }
+    if (proc < mpisize && t8_offset_in_range (gtree, proc, offset)) {
+      entry = (int*) sc_array_push (owners);
+      *entry = proc;
+    }
+    else {
+      found = 1;
+    }
+  }
+}
+
+/* Return 1 if the process will not send any trees, that is if it is
+ * empty or has only one shared tree. */
+static int
+t8_offset_nosend (int proc,int mpisize, t8_gloidx_t * offset_from, t8_gloidx_t * offset_to)
+{
+  t8_gloidx_t num_trees;
+
+  num_trees = t8_offset_num_trees (proc, offset_from);
+  if (t8_offset_empty (proc, offset_from)) {
+    return 1;
+  }
+  else if (num_trees <= 2) {
+    int first_not_send, last_not_send = 0;
+    /* We only have one or two trees */
+    /* The first tree is not send if it is shared and will not be on
+     * this process in the new partition */
+    first_not_send = offset_from[proc] < 0
+        && !t8_offset_in_range (t8_offset_first (proc, offset_from),proc, offset_to);
+
+    if ((first_not_send && num_trees == 2)
+        || (!first_not_send && num_trees == 1)) {
+      int temp_proc, i;
+      t8_gloidx_t last_tree = t8_offset_last (proc, offset_from);
+      sc_array_t receivers;
+      /* It could be that our last tree is not send either, this is the case
+       * if all processes in the new partition that have it, already have it shared
+       * in the current partition. */
+      /* At first we find out if last tree is shared by anybody, since if not
+       * we do not need to find all receivers. */
+      if (t8_offset_in_range (last_tree, proc, offset_to)) {
+        /* We keep our last tree, thus it is send by us */
+          return 0;
+      }
+
+      temp_proc = proc + 1;
+      /* Find next nonempty process */
+      while (temp_proc < mpisize && t8_offset_empty (temp_proc, offset_from)) {
+        temp_proc++;
+      }
+      if (temp_proc >= mpisize ||
+          t8_offset_first (temp_proc, offset_from) != last_tree) {
+        /* Our last tree is unique and thus we need to send it */
+        return 0;
+      }
+      sc_array_init (&receivers, sizeof (int));
+      /* Now we need to find out all process in the new partition that have last_tree
+       * and check if any of them did not have it before. */
+      t8_offset_all_owners_of_tree (mpisize, last_tree, offset_to, &receivers);
+      for (i = 0; i < receivers.elem_count;i++) {
+        temp_proc = *(int *) sc_array_index_int (&receivers, i);
+        if (!t8_offset_in_range (last_tree, temp_proc, offset_from)) {
+          /* We found at least one process that needs our last tree */
+          sc_array_reset (&receivers);
+          return 0;
+        }
+      }
+      sc_array_reset (&receivers);
+      last_not_send = 1;
+    }
+    if (num_trees - first_not_send - last_not_send <= 0) {
+      /* We only have one tree, it is shared and we do not keep it.
+       * Or we have only two trees and both are also on other procs and only
+       * persist on these procs */
+      return 1;
+    }
+  }
+  return 0;
+}
+
+
 /* Return one if proca sends trees to procb when partitioning from
  * offset_from to offset_to */
 static int
@@ -130,30 +257,81 @@ t8_offset_sendsto (int proca, int procb, t8_gloidx_t * t8_offset_from,
                    t8_gloidx_t * t8_offset_to)
 {
   t8_gloidx_t         proca_first, proca_last;
+  int                 keeps_first;
+  T8_ASSERT (t8_offset_from != NULL && t8_offset_to != NULL);
   /* proca sends to procb if proca's first tree (plus 1 if it is shared)
    * is smaller than procb's last tree and
    * proca's last tree is bigger than procb's first tree
    * and proca has trees to send */
+  /*  true if procb will keep its first tree and it is shared */
+  keeps_first = t8_offset_from[procb] < 0 &&
+      t8_offset_in_range (t8_offset_first (procb, t8_offset_from),
+                          procb, t8_offset_to)
+      && !t8_offset_empty (procb, t8_offset_from);
+  if (proca == procb && keeps_first) {
+    /* If proca = procb and the first tree is kept, we definetely send */
+    return 1;
+  }
   proca_first = t8_offset_first (proca, t8_offset_from) +
     (t8_offset_from[proca] < 0);
   proca_last = t8_offset_last (proca, t8_offset_from);
   if (proca_first <= proca_last &&      /* There are trees to send  and... */
       proca_first <= t8_offset_last (procb, t8_offset_to)       /* The first tree on a before is smaller than
                                                                  * the last on b after partitioning and... */
-      &&proca_last >= t8_offset_first (procb, t8_offset_to)     /* The last tree on before is bigger than */
-    ) {                         /* the first on b (excluding a shared first one if a != b)
-                                 * after partitioning */
-    // TODO: +(t8_offset_to[procb] < 0 && proca != procb)
+      && proca_last >= t8_offset_first (procb, t8_offset_to)     /* The last tree on before is bigger than */
+                    + keeps_first                 /* the first on b
+                                                   * after partitioning */
+    ) {
+
     return 1;
   }
   /* We also have to cover the case where a process sends the first tree to
    * itself */
   if (proca == procb &&
       t8_offset_in_range (t8_offset_first (proca, t8_offset_from), procb,
-                          t8_offset_to)) {
+                          t8_offset_to)
+      && !t8_offset_empty (proca, t8_offset_from)) {
     return 1;
   }
   return 0;
+}
+
+/* Determine whether a process A will send a tree T to a process B.
+ */
+static int
+t8_offset_sendstree (int proc_send, int proc_to, t8_gloidx_t gtree,
+                     t8_gloidx_t * offset_from, t8_gloidx_t * offset_to)
+{
+  /* If the tree is not the last tree on proc_send it is send if
+   * first_tree <= tree <= last_tree on the new partition for process proc_to.
+   * If the tree is the last tree is is send if the same condition holds and
+   * it is not already the first tree of proc_to in the old partition */
+  if (!t8_offset_in_range (gtree, proc_send, offset_from)) {
+    /* The tree is not in proc_send's part of the partition */
+      return 0;
+  }
+
+  if (!t8_offset_in_range (gtree, proc_to, offset_to)) {
+    /* The tree will not be in proc_to's part of the new partition */
+    return 0;
+  }
+  if (gtree == t8_offset_first (proc_to, offset_from) &&
+      proc_send != proc_to) {
+    /* The tree is already a tree of proc_to. This catches the case where
+     * tree is shared between proc_send and proc_to. */
+    return 0;
+  }
+  if (proc_send != proc_to &&
+      gtree == t8_offset_first (proc_send, offset_from) &&
+      offset_from[proc_send] < 0) {
+    /* proc_send is not proc_to and tree is the first of proc send and shared
+     * then a process smaller then proc_send will send tree */
+    return 0;
+  }
+  /* The tree is on proc_send and will be on proc_to.
+   * If proc_send is not proc_to then
+   * tree is not shared by a smaller process than proc_send. */
+  return 1;
 }
 
 /* Count the number of sending procs from start to end sending to mpirank
@@ -318,11 +496,20 @@ t8_cmesh_partition_send_any (int proc, t8_cmesh_t cmesh_from,
                              t8_gloidx_t * offset_to, int receive)
 {
   int                 lookhere, range[2], *sender, *receiver;
-#ifdef T8_ENABLE_DEBUG
-  int                 temp;
-#endif
+  int                 search_dir;
+  int                 last;
+
 
   T8_ASSERT (proc >= 0 && proc < cmesh_from->mpisize);
+
+
+  if ((!receive && t8_offset_nosend (proc, cmesh_from->mpisize, offset_from,
+                                     offset_to)) ||
+      (receive && t8_offset_empty (proc, receive ? offset_to : offset_from))) {
+    /* We do not send/recv anything */
+    return -1;
+  }
+
   range[0] = 0;
   range[1] = cmesh_from->mpisize;
   lookhere = (range[0] + range[1]) / 2;
@@ -335,33 +522,69 @@ t8_cmesh_partition_send_any (int proc, t8_cmesh_t cmesh_from,
     sender = &lookhere;
     receiver = &proc;
   }
+  search_dir = +1;
   while (!t8_offset_sendsto (*sender, *receiver, offset_from, offset_to)) {
-#ifdef T8_ENABLE_DEBUG
-    temp = lookhere;
-#endif
+    last = lookhere;
+    while ((receive && t8_offset_nosend (lookhere, cmesh_from->mpisize,
+                                          offset_from, offset_to))
+            || (!receive && t8_offset_empty (lookhere, offset_to))) {
+      /* Skip processes that do not send/recv anything */
+      lookhere += search_dir;
+      if (lookhere < 0) {
+        /* There is no candidate to the left of last */
+        range[0] = last + 1;
+        lookhere = (range[0] + range[1])/2;
+        last = lookhere;
+        search_dir = 1;
+      }
+      else if (lookhere >= cmesh_from->mpisize) {
+        /* There is no candidate to the right of last */
+        range[1] = last - 1;
+        lookhere = (range[0] + range[1])/2;
+        last = lookhere;
+        search_dir = -1;
+      }
+    }
     if (t8_offset_last (*sender, offset_from)
-        < t8_offset_first (*receiver, offset_to)) {
-      /* If the last process we could send is smaller then the first we could
+        < t8_offset_first (*receiver, offset_to)
+        + (offset_to[*receiver] < 0 && *sender != *receiver
+          && t8_offset_in_range (t8_offset_first (*receiver, offset_to),
+                                 *receiver, offset_from))) {
+
+      /* If the last tree we could send is smaller than the first we could
        * receive then we have to make receiver smaller or sender bigger */
       if (!receive) {
-        range[1] = lookhere - 1;
+        range[1] = SC_MIN (lookhere - 1, range[1] - 1);
+        search_dir = -1;
       }
       else {
-        range[0] = lookhere + 1;
+        range[0] = SC_MAX (lookhere + 1, range[0] + 1);
+        search_dir = +1;
       }
     }
     else {
       if (!receive) {
-        range[0] = lookhere + 1;
+        range[0] = SC_MAX (lookhere, range[0] + (search_dir > 0));
+        search_dir = +1;
       }
       else {
-        range[1] = lookhere - 1;
+        range[1] = SC_MIN (lookhere, range[1] - (search_dir < 0));
+        search_dir = -1;
       }
     }
-    lookhere = (range[0] + range[1]) / 2;
+    if (range[0] <= range[1]) {
+      lookhere = (range[0] + range[1]) / 2;
+    }
+    t8_debugf ("%i\n ", lookhere);
     T8_ASSERT (0 <= lookhere && lookhere < cmesh_from->mpisize);
-    T8_ASSERT (temp != lookhere);
+#if 0
+    if (last == lookhere) {
+      /* We did not change in this round which means, that we found the rank */
+      return lookhere;
+    }
+#endif
   }
+
   return lookhere;
 }
 
