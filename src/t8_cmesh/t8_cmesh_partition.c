@@ -749,6 +749,7 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh_to, t8_cmesh_t cmesh_from,
   return (t8_locidx_t) ret;
 }
 
+#if 0
 /* Compute first and last process to which we will send data */
 /* Returns the local tree_id of last local tree on send_first. */
 static              t8_locidx_t
@@ -971,6 +972,7 @@ t8_cmesh_partition_sendrange_old (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   T8_ASSERT (ret == (t8_locidx_t) ret);
   return (t8_locidx_t) ret;
 }
+#endif
 
 /* Compute the first and last process from which we will receive local trees */
 static void
