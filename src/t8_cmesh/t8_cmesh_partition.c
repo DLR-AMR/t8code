@@ -257,7 +257,9 @@ t8_offset_sendsto (int proca, int procb, t8_gloidx_t * t8_offset_from,
                    t8_gloidx_t * t8_offset_to)
 {
   t8_gloidx_t         proca_first, proca_last;
+  t8_gloidx_t         procb_first, procb_last;
   int                 keeps_first;
+
   T8_ASSERT (t8_offset_from != NULL && t8_offset_to != NULL);
   /* proca sends to procb if proca's first tree (plus 1 if it is shared)
    * is smaller than procb's last tree and
@@ -275,12 +277,15 @@ t8_offset_sendsto (int proca, int procb, t8_gloidx_t * t8_offset_from,
   proca_first = t8_offset_first (proca, t8_offset_from) +
     (t8_offset_from[proca] < 0);
   proca_last = t8_offset_last (proca, t8_offset_from);
+  procb_first = t8_offset_first (procb, t8_offset_to);
+  procb_last = t8_offset_last (procb, t8_offset_to);
   if (proca_first <= proca_last &&      /* There are trees to send  and... */
-      proca_first <= t8_offset_last (procb, t8_offset_to)       /* The first tree on a before is smaller than
-                                                                 * the last on b after partitioning and... */
-      && proca_last >= t8_offset_first (procb, t8_offset_to)     /* The last tree on before is bigger than */
-                    + keeps_first                 /* the first on b
-                                                   * after partitioning */
+      proca_first <= procb_last       /* The first tree on a before is smaller than
+                                       * the last on b after partitioning and... */
+      && proca_last >= procb_first    /* The last tree on before is bigger than */
+                    + (keeps_first    /* the first on b after partitioning */
+                      && procb_first == t8_offset_first(procb, t8_offset_from))
+
     ) {
 
     return 1;
@@ -315,7 +320,8 @@ t8_offset_sendstree (int proc_send, int proc_to, t8_gloidx_t gtree,
     /* The tree will not be in proc_to's part of the new partition */
     return 0;
   }
-  if (gtree == t8_offset_first (proc_to, offset_from) &&
+  if (!t8_offset_empty (proc_to, offset_from) &&
+      gtree == t8_offset_first (proc_to, offset_from) &&
       proc_send != proc_to) {
     /* The tree is already a tree of proc_to. This catches the case where
      * tree is shared between proc_send and proc_to. */
