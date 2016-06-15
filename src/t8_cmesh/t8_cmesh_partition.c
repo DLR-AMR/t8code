@@ -270,7 +270,7 @@ t8_partition_new_ghost_ids (t8_cmesh_t cmesh,
 
 /* Given a cmesh create its tree_offsets from the local number of
  * trees on each process */
-static void
+void
 t8_cmesh_gather_treecount (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   t8_gloidx_t         tree_offset;
@@ -286,6 +286,29 @@ t8_cmesh_gather_treecount (t8_cmesh_t cmesh, sc_MPI_Comm comm)
                             cmesh->tree_offsets, 1, T8_MPI_GLOIDX);
   t8_shmem_array_set_gloidx (cmesh->tree_offsets, cmesh->mpisize,
                              cmesh->num_trees);
+}
+
+void
+t8_offset_print (t8_cmesh_t cmesh, sc_MPI_Comm comm){
+#if T8_ENABLE_DEBUG
+  char                buf[BUFSIZ] = "| ";
+  int                 i, offset_isnew = 0;
+
+  if (cmesh->tree_offsets == NULL) {
+    t8_cmesh_gather_treecount (cmesh, comm);
+    offset_isnew = 1;
+  }
+  for (i = 0; i <= cmesh->mpisize; i++) {
+    snprintf (buf + strlen (buf), BUFSIZ - strlen (buf), " % lli |",
+              (long long) t8_shmem_array_get_gloidx (cmesh->tree_offsets,
+                                                     i));
+  }
+  if (offset_isnew == 1) {
+    t8_shmem_array_destroy (&cmesh->tree_offsets);
+    T8_ASSERT (cmesh->tree_offsets == NULL);
+  }
+  t8_debugf ("Offsets = %s\n", buf);
+#endif
 }
 
 /* Return a process that a given process definitely sends to/receives from */
@@ -1665,7 +1688,9 @@ t8_cmesh_partition_debug_listprocs (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   char                out[BUFSIZ] = { };
   t8_gloidx_t        *from, *to;
 
-  from = t8_shmem_array_get_gloidx_array (cmesh_from->tree_offsets);
+  if (cmesh_from->set_partition) {
+    from = t8_shmem_array_get_gloidx_array (cmesh_from->tree_offsets);
+  }
   to = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -1683,13 +1708,19 @@ t8_cmesh_partition_debug_listprocs (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   }
   t8_debugf ("I send to: %s\n", out);
   sprintf (out, " ");
-  for (p = 0; p < mpisize; p++) {
-    if (t8_offset_sendsto (p, mpirank, from, to)) {
-      snprintf (out + strlen (out), BUFSIZ - strlen (out), "%i%c ", p,
-                p == mpisize - 1 ? '!' : ',');
-      *fr = SC_MIN (*fr, p);
-      *lr = SC_MAX (*lr, p);
+  if (cmesh_from->set_partition) {
+    for (p = 0; p < mpisize; p++) {
+      if (t8_offset_sendsto (p, mpirank, from, to)) {
+        snprintf (out + strlen (out), BUFSIZ - strlen (out), "%i%c ", p,
+                  p == mpisize - 1 ? '!' : ',');
+        *fr = SC_MIN (*fr, p);
+        *lr = SC_MAX (*lr, p);
+      }
     }
+  }
+  else {
+    *fr = *lr = cmesh_from->mpirank;
+    snprintf (out, BUFSIZ, "%i", cmesh_from->mpirank);
   }
   t8_debugf ("I receive from: %s\n", out);
 }
@@ -1731,8 +1762,10 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
   cmesh->first_tree = t8_offset_first (cmesh->mpirank, tree_offset);
   cmesh->num_local_trees = t8_offset_num_trees (cmesh->mpirank, tree_offset);
 
-  t8_cmesh_partition_debug_listprocs (cmesh, (t8_cmesh_t) cmesh_from, comm,
-                                      &fs, &ls, &fr, &lr);
+  if (cmesh_from->set_partition) {
+    t8_cmesh_partition_debug_listprocs (cmesh, (t8_cmesh_t) cmesh_from, comm,
+                                        &fs, &ls, &fr, &lr);
+  }
 
   /*********************************************/
   /*        Done with setup                    */
@@ -1744,8 +1777,8 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
                                  &num_request_alloc, &send_first, &send_last,
                                  &send_buffer, &my_buffer,
                                  &my_buffer_bytes, &requests, comm);
-  T8_ASSERT (send_first == fs);
-  T8_ASSERT (send_last == ls);
+  T8_ASSERT (!cmesh_from->set_partition || send_first == -1 || send_first == fs);
+  T8_ASSERT (!cmesh_from->set_partition || send_last == -2 || send_last == ls);
 
   /* receive all trees and ghosts */
   t8_cmesh_partition_recvloop (cmesh, cmesh_from, tree_offset, my_buffer,
@@ -1817,8 +1850,10 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   T8_ASSERT (!cmesh->committed);
   T8_ASSERT (cmesh->set_partition);
 
+  t8_global_productionf ("Enter cmesh partition\n");
   cmesh_from = (t8_cmesh_t) cmesh->set_from;
   cmesh->num_trees = cmesh_from->num_trees;
+
   /**********************************************/
   /*      Compute local number of trees         */
   /*         and trees per proc array           */
@@ -1871,10 +1906,15 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     /* Create the partition table for cmesh_from */
     t8_cmesh_gather_treecount (cmesh->set_from, comm);
   }
+  t8_debugf ("Partition from:\n");
+  t8_offset_print (cmesh->set_from, comm);
+  t8_debugf ("To:\n");
+  t8_offset_print (cmesh, comm);
   /***************************************************/
   /*        Done with local num and tree_offset      */
   /***************************************************/
   t8_cmesh_partition_given (cmesh, cmesh->set_from, tree_offsets, comm);
+  t8_global_productionf ("Done cmesh partition\n");
 }
 
 static int

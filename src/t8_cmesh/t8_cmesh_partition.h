@@ -40,6 +40,17 @@ T8_EXTERN_C_BEGIN ();
  *  This function is usually called within \ref t8_cmesh_commit */
 void                t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
+/** Create the offset array for a partitioned cmesh.
+ * \param [in,out]    cmesh  The cmesh whose array should be created.
+ *                           Must be partitioned and committed.
+ * \param [in]        comm   Mpi communicator used to create the offset array.
+ */
+void                t8_cmesh_gather_treecount (t8_cmesh_t cmesh,
+                                               sc_MPI_Comm comm);
+
+/* TODO: document, only for debug */
+void                t8_offset_print (t8_cmesh_t cmesh, sc_MPI_Comm comm);
+
 /** Create a valid partition table that concentrates all trees at a given
  *  process.
  * \param[in]        proc    The processor that should get all trees.

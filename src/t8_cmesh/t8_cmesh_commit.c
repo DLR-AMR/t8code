@@ -636,21 +636,15 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     }
   }
 
+  cmesh->committed = 1;
+
 #if T8_ENABLE_DEBUG
   t8_debugf ("Cmesh is %spartitioned.\n", cmesh->set_partition ? "" : "not ");
-  if (cmesh->set_partition && cmesh->tree_offsets != NULL) {
-    char                buf[BUFSIZ] = "| ";
-    int                 i;
-    for (i = 0; i <= cmesh->mpisize; i++) {
-      snprintf (buf + strlen (buf), BUFSIZ - strlen (buf), " %lli |",
-                (long long) t8_shmem_array_get_gloidx (cmesh->tree_offsets,
-                                                       i));
-    }
-    t8_debugf ("Offsets = %s\n", buf);
+  if (cmesh->set_partition) {
+    t8_offset_print (cmesh, comm);
   }
   t8_cmesh_trees_print (cmesh, cmesh->trees);
 #endif
-  cmesh->committed = 1;
 
   if (cmesh->set_from != NULL) {
     /* Unref set_from and set it to NULL */
