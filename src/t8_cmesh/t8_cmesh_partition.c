@@ -1136,6 +1136,10 @@ t8_cmesh_send_ghost (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
       while (neighbor == t8_offset_first (proc, from_offsets)
              && from_offsets[proc] < 0) {
         proc--;
+        while (t8_offset_empty (proc, from_offsets)) {
+          /* Skip empty processes */
+          proc--;
+        }
       }
     }
     T8_ASSERT (0 <= proc && proc < cmesh->mpisize);
