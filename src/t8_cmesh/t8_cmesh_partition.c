@@ -279,6 +279,9 @@ t8_offset_sendsto (int proca, int procb, t8_gloidx_t * t8_offset_from,
   proca_last = t8_offset_last (proca, t8_offset_from);
   procb_first = t8_offset_first (procb, t8_offset_to);
   procb_last = t8_offset_last (procb, t8_offset_to);
+  if (keeps_first && proca_last == t8_offset_first (procb, t8_offset_from)) {
+    proca_last--;
+  }
   if (proca_first <= proca_last &&      /* There are trees to send  and... */
       proca_first <= procb_last       /* The first tree on a before is smaller than
                                        * the last on b after partitioning and... */
@@ -551,33 +554,38 @@ t8_cmesh_partition_send_any (int proc, t8_cmesh_t cmesh_from,
         search_dir = -1;
       }
     }
-    if (t8_offset_last (*sender, offset_from)
-        < t8_offset_first (*receiver, offset_to)
-        + (offset_to[*receiver] < 0 && *sender != *receiver
-          && t8_offset_in_range (t8_offset_first (*receiver, offset_to),
-                                 *receiver, offset_from))) {
+    if (!t8_offset_sendsto (*sender, *receiver, offset_from, offset_to)) {
+      if (t8_offset_last (*sender, offset_from)
+          < t8_offset_first (*receiver, offset_to)
+          + (offset_to[*receiver] < 0 && *sender != *receiver
+            && t8_offset_in_range (t8_offset_first (*receiver, offset_to),
+                                   *receiver, offset_from))) {
 
-      /* If the last tree we could send is smaller than the first we could
-       * receive then we have to make receiver smaller or sender bigger */
-      if (!receive) {
-        range[1] = SC_MIN (lookhere - 1, range[1] - 1);
-        search_dir = -1;
+        /* If the last tree we could send is smaller than the first we could
+         * receive then we have to make receiver smaller or sender bigger */
+        if (!receive) {
+          range[1] = SC_MIN (lookhere - 1, range[1] - 1);
+          search_dir = -1;
+        }
+        else {
+          range[0] = SC_MAX (lookhere + 1, range[0] + 1);
+          search_dir = +1;
+        }
       }
       else {
-        range[0] = SC_MAX (lookhere + 1, range[0] + 1);
-        search_dir = +1;
+        if (!receive) {
+          range[0] = SC_MAX (lookhere, range[0] + (search_dir > 0));
+          search_dir = +1;
+        }
+        else {
+          range[1] = SC_MIN (lookhere, range[1] - (search_dir < 0));
+          search_dir = -1;
+        }
       }
     }
-    else {
-      if (!receive) {
-        range[0] = SC_MAX (lookhere, range[0] + (search_dir > 0));
-        search_dir = +1;
+    else { /* t8_offset_sendsto */
+        range[0] = range[1] = lookhere;
       }
-      else {
-        range[1] = SC_MIN (lookhere, range[1] - (search_dir < 0));
-        search_dir = -1;
-      }
-    }
     if (range[0] <= range[1]) {
       lookhere = (range[0] + range[1]) / 2;
     }
@@ -655,7 +663,8 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh_to, t8_cmesh_t cmesh_from,
      * find the next nonempty receiver in search direction */
     /* TODO: replace nonempty with nonsending? */
     while (1 <= lookhere && lookhere < cmesh_from->mpisize - 1 &&
-           (t8_offset_empty (lookhere, receive ? offset_from : offset_to)
+           (!t8_offset_sendsto (*sender, *receiver, offset_from, offset_to)
+            /* TODO: The two next lines can be removed?*/
             || (receive && t8_offset_num_trees (lookhere, offset_from) == 1
                 && offset_from[lookhere] < 0 && lookhere != *receiver))) {
       lookhere += search_dir;
@@ -690,9 +699,7 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh_to, t8_cmesh_t cmesh_from,
     /* Our guess could be empty in this case we search linearly to
      * find the next nonempty receiver in search direction */
     /* TODO: replace nonempty with nonsending? */
-    while ((receive && t8_offset_nosend (lookhere, cmesh_from->mpisize, offset_from,
-                             offset_to))
-           || (!receive && t8_offset_empty (lookhere, offset_to))) {
+    while (!t8_offset_sendsto (*sender, *receiver, offset_from, offset_to)) {
       t8_debugf ("lookhere %i\n", lookhere);
       /* We may be already at the end or beginning in which
        * case the search direction is the opposite one */
@@ -1618,6 +1625,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
        * we exclude it from sending */
       if (cmesh_from->mpirank != iproc + 1 &&
           range_end == cmesh_from->num_local_trees - 1
+          && !t8_offset_empty (iproc + 1, offset_from)
           && t8_offset_first (iproc + 1, offset_from)
           == cmesh_from->first_tree + cmesh_from->num_local_trees - 1) {
         range_end--;
