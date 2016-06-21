@@ -1281,7 +1281,6 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
   last_size = 0;
   last_offset = attr_info_bytes;
 
-  /* TODO: The last changes here did not make it better */
   for (itree = send_first; itree <= send_last; itree++) {
     /* Get the current tree */
     tree_cpy = (t8_ctree_t) (send_buffer + temp_offset_tree);

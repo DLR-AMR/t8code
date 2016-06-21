@@ -59,7 +59,8 @@ t8_random_partition (int level)
   t8_cmesh_set_partition_offsets (cmesh_part,
                                   t8_cmesh_offset_random
                                   (sc_MPI_COMM_WORLD,
-                                   t8_cmesh_get_num_trees (cmesh), 1,1210313158));
+                                   t8_cmesh_get_num_trees (cmesh), 1,
+                                 0));
   t8_cmesh_commit (cmesh_part, sc_MPI_COMM_WORLD);
 
   if (mpisize > 1 && 1) {
@@ -69,7 +70,8 @@ t8_random_partition (int level)
     t8_cmesh_set_partition_offsets (cmesh_part2,
                                     t8_cmesh_offset_random
                                     (sc_MPI_COMM_WORLD,
-                                     t8_cmesh_get_num_trees (cmesh), 1, 1117882063));
+                                     t8_cmesh_get_num_trees (cmesh), 1,
+                                    0));
     t8_cmesh_commit (cmesh_part2, sc_MPI_COMM_WORLD);
 
     snprintf (file, BUFSIZ, "t8_brick_partition_random2_%04d", mpirank);
