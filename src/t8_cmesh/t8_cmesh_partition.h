@@ -67,15 +67,15 @@ t8_shmem_array_t    t8_cmesh_offset_concentrate (int proc, sc_MPI_Comm comm,
  * \param[in]        comm    The communicator to use.
  * \param[in]        num_trees The number of global trees in the partition.
  * \param[in]        shared  If true than there will be shared trees in the generated partition table.
- * \param[in]        seed    A seed to be used for the random number generator. If negative, a random
- *                           seed is choosen. This has to be the same on each process.
+ * \param[in]        seed    A seed to be used for the random number generator. If zero, a random
+ *                           seed is choosen. \a seed has to be the same on each process.
  * \return                   A valid partition table for a cmesh with \a num_trees trees
  *                           and communicator \a comm, where each processor gets a random number
  *                           of trees. The number of trees per processor is roughly uniformly distributed.
  */
 t8_shmem_array_t    t8_cmesh_offset_random (sc_MPI_Comm comm,
                                             t8_gloidx_t num_trees,
-                                            int shared, int seed);
+                                            int shared, unsigned seed);
 
 T8_EXTERN_C_END ();
 
