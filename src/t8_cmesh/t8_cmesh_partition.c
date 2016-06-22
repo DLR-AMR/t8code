@@ -100,6 +100,33 @@ t8_offset_empty (int proc, t8_gloidx_t * offset)
   return 0;
 }
 
+/* Check whether a given offset array represents a valid 
+ * partition. */
+static int
+t8_offset_consistent (int mpisize, t8_gloidx_t * offset,
+                      t8_gloidx_t num_trees)
+{
+  int                 i, ret = 1;
+  t8_gloidx_t         temp;
+
+  ret = offset[0] == 0;
+  temp = 0;
+  for (i = 1; i < mpisize && ret; i++) {
+    if (offset[i] < 0) {
+      ret &= (fabs (offset[i] + 1) >= temp);
+      temp = fabs (offset[i] + 1);
+    }
+    else {
+      ret &= (offset[i] >= temp);
+      temp = offset[i];
+    }
+    ret &= (temp <= num_trees);
+  }
+  ret &= (offset[mpisize] == num_trees);
+  t8_debugf ("Offset is %s\n", ret ? "consistend." : "not consistend!");
+  return ret;
+}
+
 /* Determine whether a given global tree id is in the range of a given process */
 static int
 t8_offset_in_range (t8_gloidx_t tree_id, int proc, t8_gloidx_t * offset)
@@ -492,6 +519,9 @@ t8_offset_print (t8_cmesh_t cmesh, sc_MPI_Comm comm){
     t8_cmesh_gather_treecount (cmesh, comm);
     offset_isnew = 1;
   }
+  T8_ASSERT (t8_offset_consistent (cmesh->mpisize, 
+				   t8_shmem_array_get_gloidx_array (cmesh->tree_offsets),
+				   cmesh->num_trees));
   for (i = 0; i <= cmesh->mpisize; i++) {
     snprintf (buf + strlen (buf), BUFSIZ - strlen (buf), " % lli |",
               (long long) t8_shmem_array_get_gloidx (cmesh->tree_offsets,
@@ -2256,31 +2286,6 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   /***************************************************/
   t8_cmesh_partition_given (cmesh, cmesh->set_from, tree_offsets, comm);
   t8_global_productionf ("Done cmesh partition\n");
-}
-
-static int
-t8_offset_consistent (int mpisize, t8_gloidx_t * offset,
-                      t8_gloidx_t num_trees)
-{
-  int                 i, ret = 1;
-  t8_gloidx_t         temp;
-
-  ret = offset[0] == 0;
-  temp = 0;
-  for (i = 1; i < mpisize && ret; i++) {
-    if (offset[i] < 0) {
-      ret &= (fabs (offset[i] + 1) >= temp);
-      temp = fabs (offset[i] + 1);
-    }
-    else {
-      ret &= (offset[i] >= temp);
-      temp = offset[i];
-    }
-    ret &= (temp <= num_trees);
-  }
-  ret &= (offset[mpisize] == num_trees);
-  t8_debugf ("Offset is %s\n", ret ? "consistend." : "not consistend!");
-  return ret;
 }
 
 /* Create a partition that concentrates everything at a given proc */
