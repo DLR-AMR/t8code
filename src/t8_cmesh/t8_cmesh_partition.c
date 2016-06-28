@@ -2428,8 +2428,8 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared,
     if (t8_offset_first (iproc - 1, offsets) + random_number > num_trees) {
       random_number = num_trees - t8_offset_first (iproc - 1, offsets);
     }
-    if (shared) {
-      first_shared = rand () % 2;
+    if (shared && random_number != 0) { /* We also check if this process is nonempty */
+      first_shared = rand () % 2;       /* since empty processes never share their first tree */
     }
     else {
       first_shared = 0;
