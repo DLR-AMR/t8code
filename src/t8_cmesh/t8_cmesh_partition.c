@@ -107,27 +107,32 @@ t8_offset_consistent (int mpisize, t8_gloidx_t * offset,
                       t8_gloidx_t num_trees)
 {
   int                 i, ret = 1;
-  t8_gloidx_t         temp;
+  t8_gloidx_t         last_tree;
 
   ret = offset[0] == 0;
-  temp = 0;
+  last_tree = t8_offset_last (0, offset);       /* stores the last tree of process i-1 */
   for (i = 1; i < mpisize && ret; i++) {
-    if (offset[i] < 0) {
-      ret &= (fabs (offset[i] + 1) >= temp);
-      temp = fabs (offset[i] + 1);
-    }
-    else {
-      ret &= (offset[i] >= temp);
-      temp = offset[i];
-    }
-    if (t8_offset_first (i, offset) > t8_offset_last (i, offset)) {
+    if (t8_offset_empty (i, offset)) {
       /* If the process is empty, then its first tree must not be shared */
       ret &= offset[i] >= 0;
     }
-    ret &= (temp <= num_trees);
+    else {
+      /* If the process is not empty its first local tree must be bigger or
+       * equal to the last tree of the last nonempty process.
+       * Equality must only hold, when the first tree is shared, thus offset[i] < 0 */
+      if (offset[i] < 0) {
+        ret &= t8_offset_first (i, offset) == last_tree;
+      }
+      else {
+        ret &= t8_offset_first (i, offset) > last_tree;
+      }
+      last_tree = t8_offset_last (i, offset);
+      ret &= (last_tree <= num_trees);
+    }
   }
   ret &= (offset[mpisize] == num_trees);
-  t8_debugf ("Offset is %s\n", ret ? "consistend." : "not consistend!");
+  t8_debugf ("Offset is %s %i\n", ret ? "consistend." : "not consistend!",
+             i - 1);
   return ret;
 }
 
@@ -526,18 +531,18 @@ t8_offset_print (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     t8_cmesh_gather_treecount (cmesh, comm);
     offset_isnew = 1;
   }
-  T8_ASSERT (t8_offset_consistent (cmesh->mpisize,
-                                   t8_shmem_array_get_gloidx_array
-                                   (cmesh->tree_offsets), cmesh->num_trees));
   for (i = 0; i <= cmesh->mpisize; i++) {
     snprintf (buf + strlen (buf), BUFSIZ - strlen (buf), " % lli |",
               (long long) t8_shmem_array_get_gloidx (cmesh->tree_offsets, i));
   }
+  t8_debugf ("Offsets = %s\n", buf);
+  T8_ASSERT (t8_offset_consistent (cmesh->mpisize,
+                                   t8_shmem_array_get_gloidx_array
+                                   (cmesh->tree_offsets), cmesh->num_trees));
   if (offset_isnew == 1) {
     t8_shmem_array_destroy (&cmesh->tree_offsets);
     T8_ASSERT (cmesh->tree_offsets == NULL);
   }
-  t8_debugf ("Offsets = %s\n", buf);
 #endif
 }
 
@@ -2415,6 +2420,7 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared,
   for (iproc = 1; iproc < mpisize; iproc++) {
     offsets[iproc] = 0;
     /* Create a random number between 0 and 200% of an ideal partition */
+    /* This is the number of trees on process iproc-1. */
     if ((int) (num_trees * 2. / mpisize) == 0) {
       /* This case prevents division by 0 */
       random_number = 1;
@@ -2423,13 +2429,19 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared,
       random_number = rand () % (int) (num_trees * 2. / mpisize);
     }
 
+    if (random_number == 0 && first_shared) {
+      /* The previous proc is empty but set its first tree to be shared. */
+      /* We have to manually reset the shared flag. */
+      offsets[iproc - 1] = -offsets[iproc - 1] - 1;
+      first_shared = 0;
+    }
     random_number += first_shared;
     /* If we would exceed the number of trees we cut the random number */
     if (t8_offset_first (iproc - 1, offsets) + random_number > num_trees) {
       random_number = num_trees - t8_offset_first (iproc - 1, offsets);
     }
-    if (shared && random_number != 0) { /* We also check if this process is nonempty */
-      first_shared = rand () % 2;       /* since empty processes never share their first tree */
+    if (shared) {
+      first_shared = rand () % 2;
     }
     else {
       first_shared = 0;

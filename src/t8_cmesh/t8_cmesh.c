@@ -896,7 +896,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
       }
     }
     else {
-      /* The first global children of processor p
+      /* The first global child of processor p
        * with P total processor is (the biggest int smaller than)
        * (total_num_children * p) / P
        * We cast to long double and double first to prevent integer overflow.
@@ -930,7 +930,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
       prev_last_tree = (first_global_child - 1) / children_per_tree;
       T8_ASSERT (cmesh->mpirank > 0 || prev_last_tree <= 0);
       if (cmesh->mpirank > 0 && prev_last_tree == *first_local_tree &&
-          first_global_child != last_global_child && last_global_child >= 0) {
+          first_global_child < last_global_child && last_global_child >= 0) {
         /* We exclude empty partitions here, by def their first_tree_shared flag is zero */
         /* We also exclude that the previous partition was empty at the beginning of the
          * partitions array */
@@ -949,6 +949,10 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
       else {
         *child_in_tree_end = last_global_child;
       }
+    }
+    if (first_global_child >= last_global_child && cmesh->mpirank != 0) {
+      /* This process is empty */
+      *first_local_tree = prev_last_tree + 1;
     }
   }
   else {
