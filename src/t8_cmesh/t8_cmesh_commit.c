@@ -76,6 +76,7 @@ static void
 t8_cmesh_set_shmem_type (sc_MPI_Comm comm)
 {
   T8_ASSERT (comm != sc_MPI_COMM_NULL);
+  /* TODO: Only set type if it is not set yet */
   sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
 }
 

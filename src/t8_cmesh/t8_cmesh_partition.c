@@ -544,6 +544,7 @@ t8_cmesh_partition_send_any (int proc, t8_cmesh_t cmesh_from,
   int                 lookhere, range[2], *sender, *receiver;
   int                 search_dir;
   int                 last;
+  int                 done = 0;
 
 
   T8_ASSERT (proc >= 0 && proc < cmesh_from->mpisize);
@@ -574,7 +575,7 @@ t8_cmesh_partition_send_any (int proc, t8_cmesh_t cmesh_from,
                          offset_from, offset_to)) {
     return cmesh_from->mpirank;
   }
-  while (!t8_offset_sendsto (*sender, *receiver, offset_from, offset_to)) {
+  while (!done && !t8_offset_sendsto (*sender, *receiver, offset_from, offset_to)) {
     last = lookhere;
     while ((receive && t8_offset_nosend (lookhere, cmesh_from->mpisize,
                                           offset_from, offset_to))
@@ -599,7 +600,7 @@ t8_cmesh_partition_send_any (int proc, t8_cmesh_t cmesh_from,
     if (!t8_offset_sendsto (*sender, *receiver, offset_from, offset_to)) {
       if (t8_offset_last (*sender, offset_from)
           < t8_offset_first (*receiver, offset_to)
-          + (offset_to[*receiver] < 0 && *sender != *receiver
+          + (offset_from[*receiver] < 0 && *sender != *receiver
             && t8_offset_in_range (t8_offset_first (*receiver, offset_to),
                                    *receiver, offset_from))) {
 
@@ -631,19 +632,47 @@ t8_cmesh_partition_send_any (int proc, t8_cmesh_t cmesh_from,
     if (range[0] <= range[1]) {
       lookhere = (range[0] + range[1]) / 2;
     }
-    else {
-      return lookhere;
+    if (range[0] >= range[1]) {
+      done = 1;
     }
     t8_debugf ("%i\n ", lookhere);
     T8_ASSERT (0 <= lookhere && lookhere < cmesh_from->mpisize);
 #if 0
     if (last == lookhere) {
       /* We did not change in this round which means, that we found the rank */
-      return lookhere;
+      done = 1;
     }
 #endif
   }
-
+  if (done && !t8_offset_sendsto (*sender, *receiver, offset_from, offset_to)) {
+    /* We were not able to find a process, so we do a linear search instead */
+    /* TODO: Currently the function above has some flaws such that in rare cases,
+     *       no process is found. We should eventually repair it. */
+    int     searcher[2]; /* We search from mpirank in both directions */\
+    int     pos = 0;
+    t8_debugf ("[H] Could not find any process in bin search. Start linear search.\n");
+    lookhere = cmesh_from->mpirank;
+    search_dir = 1;
+    searcher[0] = cmesh_from->mpirank - 1;
+    searcher[1] = cmesh_from->mpirank + 1;
+    while (!t8_offset_sendsto (*sender, *receiver, offset_from, offset_to)) {
+      T8_ASSERT (0 <= searcher[0] || searcher[1] < cmesh_from->mpisize);
+      if (searcher[0] < 0) {
+        /* Always search below, if the top search reached its end */
+        pos = 1;
+      }
+      else if (searcher[1] >= cmesh_from->mpirank) {
+        /* Always search on top, if the below search reached its end */
+        pos = 0;
+      }
+      else {
+        /* In each step we change the search direction */
+        pos = 1 - pos;
+      }
+      lookhere = searcher[pos];
+      searcher[pos] += 2 * pos - 1; /* if pos = 0, substract one, if pos = 1, add 1 */
+    }
+  }
   return lookhere;
 }
 
@@ -680,11 +709,11 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh_to, t8_cmesh_t cmesh_from,
   /* We start with any process that we send to/recv from */
   first_guess = t8_cmesh_partition_send_any (cmesh_from->mpirank, cmesh_from,
                                              offset_from, offset_to, receive);
+  t8_debugf ("first guess %i\n", first_guess);
   T8_ASSERT (first_guess == -1 || (!receive && t8_offset_sendsto (cmesh_from->mpirank, first_guess, offset_from,
                                 offset_to))
              || (receive && t8_offset_sendsto (first_guess, cmesh_from->mpirank, offset_from,
                                                offset_to)));
-  t8_debugf ("first guess %i\n", first_guess);
 
   if (first_guess == -1 || (!receive && cmesh_from->num_local_trees == 0)
       || (receive && cmesh_to->num_local_trees == 0)) {
