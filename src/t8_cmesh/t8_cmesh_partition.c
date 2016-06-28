@@ -2390,6 +2390,7 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared,
   unsigned            u_seed;
   t8_gloidx_t        *offsets;
   t8_shmem_array_t    shmem_array;
+  t8_gloidx_t         new_first;
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -2437,10 +2438,12 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared,
     }
     random_number += first_shared;
     /* If we would exceed the number of trees we cut the random number */
-    if (t8_offset_first (iproc - 1, offsets) + random_number > num_trees) {
+    new_first = t8_offset_first (iproc - 1, offsets) + random_number;
+    if (new_first > num_trees) {
       random_number = num_trees - t8_offset_first (iproc - 1, offsets);
+      new_first = num_trees;
     }
-    if (shared) {
+    if (shared && new_first < num_trees) {      /* new first is num_trees, this process must be empty */
       first_shared = rand () % 2;
     }
     else {
