@@ -120,6 +120,10 @@ t8_offset_consistent (int mpisize, t8_gloidx_t * offset,
       ret &= (offset[i] >= temp);
       temp = offset[i];
     }
+    if (t8_offset_first (i, offset) > t8_offset_last (i, offset)) {
+      /* If the process is empty, then its first tree must not be shared */
+      ret &= offset[i] >= 0;
+    }
     ret &= (temp <= num_trees);
   }
   ret &= (offset[mpisize] == num_trees);
