@@ -338,14 +338,6 @@ t8_offset_sendsto (int proca, int procb, t8_gloidx_t * t8_offset_from,
 
     return 1;
   }
-  /* We also have to cover the case where a process sends the first tree to
-   * itself */
-  if (proca == procb &&
-      t8_offset_in_range (t8_offset_first (proca, t8_offset_from), procb,
-                          t8_offset_to)
-      && !t8_offset_empty (proca, t8_offset_from)) {
-    return 1;
-  }
   return 0;
 }
 
