@@ -1116,7 +1116,7 @@ t8_partition_compute_gnb (t8_cmesh_t cmesh_from, sc_array_t * send_as_ghost)
                                          - cmesh_from->num_local_trees);
     }
     ghost_neighbor_bytes += t8_eclass_num_faces[eclass] * (sizeof (t8_gloidx_t) + sizeof (int8_t))      /* offset */
-      +((4 - t8_eclass_num_faces[eclass] * (sizeof (t8_gloidx_t) + sizeof (int8_t)) % 4) % 4);  /* padding */
+      + T8_ADD_PADDING (t8_eclass_num_faces[eclass] * (sizeof (t8_gloidx_t) + sizeof (int8_t)));  /* padding */
   }
   return ghost_neighbor_bytes;
 }
@@ -1304,8 +1304,8 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
                    (sizeof (t8_locidx_t) + sizeof (int8_t)));
     temp_offset += t8_eclass_num_faces[tree->eclass] *
       (sizeof (t8_locidx_t) + sizeof (int8_t))
-      + ((4 - t8_eclass_num_faces[tree->eclass] *
-          (sizeof (t8_locidx_t) + sizeof (int8_t)) % 4) % 4);
+      + T8_ADD_PADDING (t8_eclass_num_faces[tree->eclass] *
+          (sizeof (t8_locidx_t) + sizeof (int8_t)));
     /* Copy all attribute infos to send_buffer */
     (void) memcpy (send_buffer + num_trees * sizeof (t8_ctree_struct_t) +
                    num_ghost_send * sizeof (t8_cghost_struct_t) +
@@ -1365,8 +1365,8 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
     /* compute neighbor offset for next tree */
     temp_offset += t8_eclass_num_faces[tree_cpy->eclass] *
       (sizeof (t8_locidx_t) + sizeof (int8_t))
-      + ((4 - t8_eclass_num_faces[tree_cpy->eclass] *
-          (sizeof (t8_locidx_t) + sizeof (int8_t)) % 4) % 4);
+      + T8_ADD_PADDING (t8_eclass_num_faces[tree_cpy->eclass] *
+          (sizeof (t8_locidx_t) + sizeof (int8_t)));
 
     /* new attribute offset for tree */
     tree_cpy->att_offset = temp_offset_att - temp_offset_tree;
@@ -1447,7 +1447,7 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
     }
     /* compute new offsets */
     temp_offset += t8_eclass_num_faces[ghost_cpy->eclass] * (sizeof (t8_gloidx_t) + sizeof (int8_t))    /* offset */
-      +((4 - t8_eclass_num_faces[ghost_cpy->eclass] * (sizeof (t8_gloidx_t) + sizeof (int8_t)) % 4) % 4);       /* padding */
+      + T8_ADD_PADDING (t8_eclass_num_faces[ghost_cpy->eclass] * (sizeof (t8_gloidx_t) + sizeof (int8_t)));       /* padding */
     temp_offset_tree += sizeof (t8_cghost_struct_t);
   }
   /* Store number of trees and ghosts at the end of send buffer */
@@ -1499,7 +1499,7 @@ t8_cmesh_partition_sendtreeloop (t8_cmesh_t cmesh,
     *tree_neighbor_bytes += t8_eclass_num_faces[tree->eclass] *
       (sizeof (*face_neighbor) + sizeof (*ttf));
     /* TODO: change padding to sizeof (void*) */
-    *tree_neighbor_bytes += (4 - *tree_neighbor_bytes % 4) % 4; /* padding to make number of bytes per tree
+    *tree_neighbor_bytes += T8_ADD_PADDING (*tree_neighbor_bytes); /* padding to make number of bytes per tree
                                                                    a multiple of 4 */
     /*  Compute number of attribute bytes in this tree range.
      *       Not every tree has an attribute */

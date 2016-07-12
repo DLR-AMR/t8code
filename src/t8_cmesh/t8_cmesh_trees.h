@@ -138,7 +138,7 @@ T8_EXTERN_C_BEGIN ();
 #define T8_GHOST_TTF(g) (int8_t *) (T8_GHOST_FACE(g) + \
   t8_eclass_num_faces[(g)->eclass] * sizeof(t8_gloidx_t))
 
-#define T8_PADDING_SIZE 4       /* TODO: change to sizeof (void *) */
+#define T8_PADDING_SIZE sizeof (void*)
 /* Compute the number of bytes that have to be added to a given byte_count
  * such that it is a multiple of the padding size */
 #define T8_ADD_PADDING(_x) \
