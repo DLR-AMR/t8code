@@ -1125,8 +1125,11 @@ t8_partition_compute_gnb (t8_cmesh_t cmesh_from, sc_array_t * send_as_ghost)
  * This is the case if and only if:
  *  - tree will not be a local tree on p
  * and
+ *  - If p sends to itself then tree is currently neither
+ *    a local tree nor a ghost on p
+ * and
  *  - we are the smallest rank under all procs sending a tree to p that
- *    has this tree as ghost or local tree. */
+ *    has this tree as ghost or local tree . */
 static int
 t8_cmesh_send_ghost (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
                      int p, t8_locidx_t tree)
@@ -2249,7 +2252,7 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
 }
 
 /* Given a cmesh which is to be partitioned, execute the partition task.
- * This includes partitioning by uiniform level and partitioning from a second cmesh */
+ * This includes partitioning by uniform level and partitioning from a second cmesh */
 /* TODO: Check whether the input data is consistent.
  *       If tree_offset is set on one process it has to be set on each process.
  *       If first_tree is set   "       "         "
