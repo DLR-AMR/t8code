@@ -131,12 +131,16 @@ void t8_time_cmesh_partition_brick (int x, int y, sc_MPI_Comm comm)
   sc_statinfo_t       stats[1];
 
   /* Create p4est brick connectivity x times y */
+  t8_global_productionf ("Generate brick connectivity.\n");
   p4est_conn = p4est_connectivity_new_brick (x, y, 0, 0);
   /* Build t8 cmesh from connectivity. The cmesh is partitioned according
    * to uniform level 0 refinement */
   cmesh = t8_cmesh_new_from_p4est (p4est_conn, comm, 0, 1);
   /* We do not need the p4est connectivity anymore, so we destroy it */
   p4est_connectivity_destroy (p4est_conn);
+  t8_global_productionf ("Committed cmesh with"
+                         " %lli global trees.\n",
+                         (long long) t8_cmesh_get_num_trees (cmesh));
   /* Set up cmesh_partition to be a repartition of cmesh. */
   t8_cmesh_init (&cmesh_partition);
   t8_cmesh_set_derive (cmesh_partition, cmesh);
@@ -152,6 +156,9 @@ void t8_time_cmesh_partition_brick (int x, int y, sc_MPI_Comm comm)
   /* measure passed time */
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[0], snapshot.iwtime, "Partition");
+  t8_global_productionf ("Partitioned cmesh with"
+                         " %lli global trees.\n",
+                         (long long) t8_cmesh_get_num_trees (cmesh_partition));
   /* print stats */
   sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
   sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 1, stats, 1, 1);
@@ -217,7 +224,7 @@ int main (int argc, char *argv[])
   }
   else {
     /* Execute this part of the code if all options are correctly set */
-    t8_debugf ("Starting with x-dim = %i, y-dim = %i\n", x_dim, y_dim);
+    t8_global_productionf ("Starting with x-dim = %i, y-dim = %i\n", x_dim, y_dim);
     t8_time_cmesh_partition_brick (x_dim, y_dim, sc_MPI_COMM_WORLD);
   }
   sc_options_destroy (opt);
