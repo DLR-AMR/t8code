@@ -424,6 +424,19 @@ t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key,
                                        key);
 }
 
+t8_shmem_array_t
+t8_cmesh_get_partition_table (t8_cmesh_t cmesh)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  if (!cmesh->set_partition) {
+    /* The mesh is not partitioned. We return NULL. */
+    return NULL;
+  }
+  /* If the mesh is not stored, NULL is returned, otherwise the
+   * partition array. */
+  return cmesh->tree_offsets;
+}
+
 #if 0
 /* Check whether a given tree_id belongs to a tree in the cmesh.
  * If partitioned only local trees are allowed.

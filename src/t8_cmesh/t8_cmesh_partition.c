@@ -57,6 +57,17 @@ t8_offset_first (int proc, t8_gloidx_t * offset)
   return T8_GLOIDX_ABS (offset[proc]) + t8_glo_kl0 (offset[proc]);
 }
 
+/* Given the global tree id of the first local tree of a process and
+ * the flag whether it is shared or not, compute the entry in the offset array. */
+/* This entry is the first_tree if it is not shared and
+ * -first_tree - 1  if it is shared.
+ */
+static t8_gloidx_t
+t8_offset_first_tree_to_entry (t8_gloidx_t first_tree, int shared)
+{
+   return shared ? - first_tree - 1 : first_tree;
+}
+
 /* The number of trees of a given process in a partition */
 /* Can get negative for empty processes */
 static              t8_gloidx_t
@@ -2463,4 +2474,67 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared,
   }
   T8_ASSERT (t8_offset_consistent (mpisize, offsets, num_trees));
   return shmem_array;
+}
+
+/* Create a repartition array, where each process sends half of its
+ * trees to the next process. The last process does not send any trees. */
+/* TODO: This function was not tested with shared trees yet. */
+t8_shmem_array_t t8_cmesh_offset_half (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+{
+  t8_gloidx_t       new_first_tree, old_first_tree;
+  t8_locidx_t       old_num_trees_pm1;
+  t8_shmem_array_t  partition_array;
+  t8_gloidx_t      *old_partition;
+  int               mpirank, mpisize, mpiret;
+  int               created = 0;
+
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
+
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+
+  /* Get old partition table and check for existence. */
+  /* TODO: If it does not exists (NULL is returned), we could compute
+   * the number of trees and first tree of the next smaller rank by hand. */
+  if (cmesh->tree_offsets == NULL) {
+    /* We need to create the old partition array. */
+    t8_cmesh_gather_treecount (cmesh, comm);
+    created = 1;
+  }
+  old_partition = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
+  T8_ASSERT (old_partition != NULL);
+
+  /* Allocate new partition array. */
+  partition_array = t8_cmesh_alloc_offsets (mpisize, comm);
+  /* get the first local tree from the current cmesh */
+  old_first_tree = t8_cmesh_get_first_treeid (cmesh);
+  /* Get the number of local trees of nex smaller process, or
+   * 0 if we are rank 0. */
+  old_num_trees_pm1 = t8_offset_num_trees (mpirank > 0 ? mpirank - 1 : 0,
+                                           old_partition);
+  /* Compute the new first local tree */
+  new_first_tree = old_first_tree - old_num_trees_pm1/2;
+  /* Compute the new entry in the offset array.
+   * If the old first tree was shared, then the new one will be as well
+   * and if not it will not be shared. */
+  if (mpirank != 0) {
+    new_first_tree = t8_offset_first_tree_to_entry (new_first_tree,
+                                                    cmesh->first_tree_shared);
+  }
+  else {
+    new_first_tree = 0;
+  }
+  t8_shmem_array_allgather (&new_first_tree, 1, T8_MPI_GLOIDX, partition_array,
+                            1, T8_MPI_GLOIDX);
+  t8_shmem_array_set_gloidx (partition_array, mpisize,
+                             t8_cmesh_get_num_trees (cmesh));
+  if (created) {
+    /* We needed to create the old partition array and thus we clean it up
+     * again. */
+    t8_shmem_array_destroy (&cmesh->tree_offsets);
+  }
+  return partition_array;
 }

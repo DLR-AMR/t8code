@@ -417,6 +417,16 @@ void               *t8_cmesh_get_attribute (t8_cmesh_t cmesh,
                                             int package_id, int key,
                                             t8_locidx_t tree_id);
 
+/** Return the shared memory array storing the partition table of
+ * a partitioned cmesh.
+ * \param [in]      cmesh       The cmesh.
+ * \return                      The partition array.
+ *                              NULL if the cmesh is not partitioned or
+ *                              the partition array is not stored in \a cmesh.
+ * \a cmesh must be committed before calling this function.
+ */
+t8_shmem_array_t    t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
+
 /* TODO: remove get_ when there is no risk of confusion? Convention?
  *       Update: use get throughout for access functions that do not change the object.
  * */
