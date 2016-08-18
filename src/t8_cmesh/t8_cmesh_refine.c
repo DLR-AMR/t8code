@@ -297,8 +297,8 @@ t8_cmesh_refine_new_neighbors (t8_cmesh_t cmesh_from, t8_locidx_t parent_id,
                                t8_gloidx_t * neighbor_out_ghost,
                                int8_t * ttf_out, int factor)
 {
-  t8_locidx_t         iface, old_neigh, *neighbor_old;
-  t8_gloidx_t         old_neigh_ghost, *gneighbor_old;
+  t8_locidx_t         iface, old_neigh = -1, *neighbor_old;     /* old_neigh and old_neigh_ghost get initial */
+  t8_gloidx_t         old_neigh_ghost = -1, *gneighbor_old;     /* values to prevent unused variable warnings */
   int8_t             *ttf_old;
   int                 num_faces, F, dim, old_face, orient, new_neigh_childid;
   int                 compute_ghost, k;

@@ -111,6 +111,7 @@ t8_offset_empty (int proc, t8_gloidx_t * offset)
   return 0;
 }
 
+#if T8_ENABLE_DEBUG
 /* Check whether a given offset array represents a valid 
  * partition. */
 static int
@@ -146,6 +147,7 @@ t8_offset_consistent (int mpisize, t8_gloidx_t * offset,
              i - 1);
   return ret;
 }
+#endif
 
 /* Determine whether a given global tree id is in the range of a given process */
 static int
@@ -252,7 +254,8 @@ t8_offset_nosend (int proc, int mpisize, t8_gloidx_t * offset_from,
 
     if ((first_not_send && num_trees == 2)
         || (!first_not_send && num_trees == 1)) {
-      int                 temp_proc, i;
+      int                 temp_proc;
+      size_t              iz;
       t8_gloidx_t         last_tree = t8_offset_last (proc, offset_from);
       sc_array_t          receivers;
       /* It could be that our last tree is not send either, this is the case
@@ -280,8 +283,8 @@ t8_offset_nosend (int proc, int mpisize, t8_gloidx_t * offset_from,
        * and check if any of them did not have it before. */
       t8_offset_all_owners_of_tree (mpisize, last_tree, offset_to,
                                     &receivers);
-      for (i = 0; i < receivers.elem_count; i++) {
-        temp_proc = *(int *) sc_array_index_int (&receivers, i);
+      for (iz = 0; iz < receivers.elem_count; iz++) {
+        temp_proc = *(int *) sc_array_index (&receivers, iz);
         if (!t8_offset_in_range (last_tree, temp_proc, offset_from)) {
           /* We found at least one process that needs our last tree */
           sc_array_reset (&receivers);
@@ -697,7 +700,7 @@ static              t8_locidx_t
 t8_cmesh_partition_sendrange (t8_cmesh_t cmesh_to, t8_cmesh_t cmesh_from,
                               int *send_first, int *send_last, int receive)
 {
-  t8_gloidx_t         ret;
+  t8_gloidx_t         ret = -1;
   int                 range[2], lookhere, first_guess, search_dir = -1, last;
   int                *sender, *receiver;
   t8_gloidx_t        *offset_from, *offset_to;
@@ -1161,6 +1164,9 @@ t8_cmesh_send_ghost (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
   if (cmesh_from->set_partition) {
     T8_ASSERT (cmesh_from->tree_offsets != NULL);
     from_offsets = t8_shmem_array_get_gloidx_array (cmesh_from->tree_offsets);
+  }
+  else {
+    from_offsets = NULL;
   }
   if (tree < cmesh_from->num_local_trees) {
     /* Given local id belongs to a tree. We compute its global id */
@@ -2118,6 +2124,9 @@ t8_cmesh_partition_debug_listprocs (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   if (cmesh_from->set_partition) {
     from = t8_shmem_array_get_gloidx_array (cmesh_from->tree_offsets);
   }
+  else {
+    from = NULL;
+  }
   to = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -2161,7 +2170,7 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
                           t8_gloidx_t * tree_offset, sc_MPI_Comm comm)
 {
   int                 send_first, send_last, num_request_alloc; /* ranks of the processor to which we will send */
-  int                 iproc, my_buffer_bytes, num_send_mpi, mpiret;
+  int                 iproc, my_buffer_bytes = 0, num_send_mpi, mpiret;
   char              **send_buffer = NULL, *my_buffer = NULL;
 
   int                 fs, ls, fr, lr;

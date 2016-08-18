@@ -985,11 +985,13 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
 
   /* free tree_offset */
   if (cmesh->tree_offsets != NULL) {
+#if T8_ENABLE_DEBUG
     sc_MPI_Comm         comm;
     /* Check whether a correct communicator was stored at tree_offsets.
      * This is useful for debugging. */
     comm = t8_shmem_array_get_comm (cmesh->tree_offsets);
     T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
+#endif
     /* Destroy the shared memory array */
     t8_shmem_array_destroy (&cmesh->tree_offsets);
   }

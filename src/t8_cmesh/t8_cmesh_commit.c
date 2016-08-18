@@ -203,7 +203,9 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_gloidx_t        *face_neigh_g, *face_neigh_g2;
   t8_stash_class_struct_t *classentry;
   int                 id1_istree, id2_istree;
+#if T8_ENABLE_DEBUG
   t8_cghost_t         ghost1, ghost2;
+#endif
 
   sc_flops_start (&fi);
   sc_flops_snap (&fi, &snapshot);
@@ -354,7 +356,9 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
       id2_istree = cmesh->first_tree <= id2 && last_tree >= id2;
       temp_facejoin->ghost_id = id1;
       tree1 = NULL;
+#if T8_ENABLE_DEBUG
       ghost1 = NULL;
+#endif
       /* There are the following cases:
        * Both trees are local trees.
        * One is a local tree and one a local ghost.
@@ -377,12 +381,20 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
                                (void ***) &facejoin_pp)) {
         /* id1 is a local ghost */
         ghost_facejoin = *facejoin_pp;
+#if T8_ENABLE_DEBUG
         ghost1 = t8_cmesh_trees_get_ghost_ext (cmesh->trees,
                                                ghost_facejoin->local_id,
                                                &face_neigh_g, &ttf);
+#else
+        (void) t8_cmesh_trees_get_ghost_ext (cmesh->trees,
+                                             ghost_facejoin->local_id,
+                                             &face_neigh_g, &ttf);
+#endif
         temp_local_id = ghost_facejoin->local_id;
       }
+#if T8_ENABLE_DEBUG
       ghost2 = NULL;
+#endif
       tree2 = NULL;
       temp_facejoin->ghost_id = joinface->id2;
       if (id2_istree) {
@@ -396,9 +408,15 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
                                (void ***) &facejoin_pp)) {
         /* id1 is a local ghost */
         ghost_facejoin = *facejoin_pp;
+#if T8_ENABLE_DEBUG
         ghost2 = t8_cmesh_trees_get_ghost_ext (cmesh->trees,
                                                ghost_facejoin->local_id,
                                                &face_neigh_g2, &ttf2);
+#else
+        (void) t8_cmesh_trees_get_ghost_ext (cmesh->trees,
+                                             ghost_facejoin->local_id,
+                                             &face_neigh_g2, &ttf2);
+#endif
       }
       F = t8_eclass_max_num_faces[cmesh->dimension];
       if (ttf != NULL) {
