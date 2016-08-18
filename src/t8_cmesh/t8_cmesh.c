@@ -1565,3 +1565,29 @@ t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup, int dim)
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }
+
+t8_cmesh_t
+t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees, sc_MPI_Comm comm)
+{
+  t8_cmesh_t          cmesh;
+  int                 i;
+  int                 dummy_data = 0;
+
+  t8_cmesh_init (&cmesh);
+  for (i = 0; i < num_trees; i++) {
+    t8_cmesh_set_tree_class (cmesh, i, eclass);
+    /* TODO: as long as we have the bug, that each tree needs at least one
+     *       attribute, we need to set a dummy attribute to the trees */
+    t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (), 1, &dummy_data,
+                            sizeof (int), 0);
+    if (cmesh->dimension > 0) {
+      /* We join each tree with its successor along faces 0 and 1
+       * to get a nontrivial connectivity */
+      t8_cmesh_set_join (cmesh, i, (i + 1) % num_trees, 0, 1, 0);
+    }
+  }
+
+  t8_cmesh_commit (cmesh, comm);
+
+  return cmesh;
+}
