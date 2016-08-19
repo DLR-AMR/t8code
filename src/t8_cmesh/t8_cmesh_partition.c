@@ -170,6 +170,9 @@ t8_offset_print (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 #endif
 }
 
+/* TODO: currently this function is unused.
+ *        Also it better fits to cmesh_offset.c/h */
+#if 0
 /* Return a process that a given process definitely sends to/receives from */
 static int
 t8_cmesh_partition_send_any (int proc, t8_cmesh_t cmesh_from,
@@ -311,7 +314,9 @@ t8_cmesh_partition_send_any (int proc, t8_cmesh_t cmesh_from,
   }
   return lookhere;
 }
+#endif
 
+#if 0
 /* Compute first and last process to which we will send data */
 /* Returns the local tree_id of last local tree on send_first. */
 static              t8_locidx_t
@@ -374,10 +379,6 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh_to, t8_cmesh_t cmesh_from,
   range[1] = first_guess;
   /* We start by probing our first_guess */
   lookhere = first_guess;
-#if T8_ENABLE_DEBUG
-  {
-#endif
-    int count_sendsto = 0;
   while (*send_first == -1) {
     /* However it could be empty in this case we search linearly to
      * find the next nonempty receiver in search direction */
@@ -388,14 +389,8 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh_to, t8_cmesh_t cmesh_from,
             || (receive && t8_offset_num_trees (lookhere, offset_from) == 1
                 && offset_from[lookhere] < 0 && lookhere != *receiver))) {
       lookhere += search_dir;
-#if T8_ENABLE_DEBUG
-      count_sendsto++;
-#endif
     }
     if (t8_offset_sendsto (*sender, *receiver, offset_from, offset_to)) {
-#if T8_ENABLE_DEBUG
-      count_sendsto++;
-#endif
       /* We send to this process */
       /* We have to look further left */
       range[1] = SC_MIN (lookhere, range[1]);
@@ -414,11 +409,6 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh_to, t8_cmesh_t cmesh_from,
     /* Our next guess is the midpoint between range[0] and [1] */
     lookhere = (range[0] + range[1]) / 2;
   }
-#if T8_ENABLE_DEBUG
-  t8_debugf("[H] To find the first process t8_offset_sendsto was called %i times\n", count_sendsto);
-  count_sendsto = 0;
-#endif
-
   range[0] = first_guess;
   range[1] = cmesh_from->mpisize - 1;
   search_dir = +1;
@@ -429,9 +419,7 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh_to, t8_cmesh_t cmesh_from,
     /* Our guess could be empty in this case we search linearly to
      * find the next nonempty receiver in search direction */
     while (!t8_offset_sendsto (*sender, *receiver, offset_from, offset_to)) {
-#if T8_ENABLE_DEBUG
-      count_sendsto++;
-#endif
+
       t8_debugf ("lookhere %i\n", lookhere);
       /* We may be already at the end or beginning in which
        * case the search direction is the opposite one */
@@ -448,9 +436,7 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh_to, t8_cmesh_t cmesh_from,
       *send_last = lookhere;
     }
     else if (t8_offset_sendsto (*sender, *receiver, offset_from, offset_to)) {
- #if T8_ENABLE_DEBUG
-      count_sendsto++;
-#endif
+
       /* We have to look further right */
       range[0] = SC_MAX (lookhere, range[0]);
       search_dir = +1;
@@ -471,11 +457,6 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh_to, t8_cmesh_t cmesh_from,
      * the left */
     lookhere = ceil ((range[0] + range[1]) / 2.);
   }
-
-  t8_debugf("[H] To find the last process t8_offset_sendsto was called %i times\n", count_sendsto);
-#if T8_ENABLE_DEBUG
-  }
-#endif
 
   if (!receive) {
     /* Calculate the last local tree that we need to send to send_first */
@@ -504,7 +485,9 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh_to, t8_cmesh_t cmesh_from,
   T8_ASSERT (receive || ret == (t8_locidx_t) ret);
   return (t8_locidx_t) ret;
 }
+#endif
 
+/* TODO: deprecated, can be removed */
 #if 0
 /* Compute first and last process to which we will send data */
 /* Returns the local tree_id of last local tree on send_first. */
@@ -730,6 +713,8 @@ t8_cmesh_partition_sendrange_old (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 }
 #endif
 
+/* TODO: deprecated. Can be removed */
+#if 0
 /* Compute the first and last process from which we will receive local trees */
 static void
 t8_cmesh_partition_recvrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
@@ -748,6 +733,7 @@ t8_cmesh_partition_recvrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   (void) t8_cmesh_partition_sendrange (cmesh, cmesh_from,
                                        recv_first, recv_last, 1);
 }
+#endif
 
 static              t8_locidx_t
 t8_cmesh_partition_alternative_sendrange (t8_cmesh_t cmesh,
