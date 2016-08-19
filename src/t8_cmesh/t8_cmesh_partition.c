@@ -749,12 +749,10 @@ t8_cmesh_partition_recvrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                                        recv_first, recv_last, 1);
 }
 
-
-static t8_locidx_t
-t8_cmesh_partition_debug_alternative_sendfirst (t8_cmesh_t cmesh,
-                                                t8_cmesh_t cmesh_from,
-                                                int *send_first,
-                                                int *send_last)
+static              t8_locidx_t
+t8_cmesh_partition_alternative_sendrange (t8_cmesh_t cmesh,
+                                          t8_cmesh_t cmesh_from,
+                                          int *send_first, int *send_last)
 {
   t8_gloidx_t         first_tree = t8_cmesh_get_first_treeid (cmesh_from),
     last_tree;
@@ -915,6 +913,71 @@ t8_cmesh_partition_debug_alternative_sendfirst (t8_cmesh_t cmesh,
   T8_ASSERT ((ret >= 0 && ret < cmesh_from->num_local_trees));
   T8_ASSERT (ret == (t8_locidx_t) ret);
   return (t8_locidx_t) ret;
+}
+
+static void
+t8_cmesh_partition_alternative_recvrange (t8_cmesh_t cmesh,
+                                          t8_cmesh_t cmesh_from,
+                                          int *recv_first, int *recv_last)
+{
+  t8_gloidx_t         first_tree, last_tree;
+  t8_gloidx_t        *offset_to;
+  t8_gloidx_t        *offset_from;
+  int                 alternative_recvfirst, alternative_recvlast;
+  int                 some_owner = -1;  /* Passes as argument to first/last owner functions */
+
+  if (cmesh->num_local_trees == 0) {
+    /* This process is empty and therefore does not receive anything */
+    *recv_last = -2;
+    *recv_first = -1;
+    return;
+  }
+  if (!cmesh_from->set_partition) {
+    /* If cmesh_from is not partitioned we can receive all information
+     * from ourself */
+    *recv_first = cmesh_from->mpirank;
+    *recv_last = cmesh_from->mpirank;
+    return;
+  }
+  offset_to = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
+  offset_from = t8_shmem_array_get_gloidx_array (cmesh_from->tree_offsets);
+  /* Get the new first local tree */
+  first_tree = t8_cmesh_get_first_treeid (cmesh);
+  if (t8_offset_in_range (first_tree, cmesh->mpirank, offset_from)) {
+    /* It it already was a local tree then we received it from ourselves
+     * and are thus the first process we receive from */
+    alternative_recvfirst = cmesh->mpirank;
+  }
+  else {
+    /* Otherwise the first process we receive from is the smallest process that
+     * had our new first tree as a local tree. */
+    some_owner = -1;
+    alternative_recvfirst =
+      t8_offset_first_owner_of_tree (cmesh->mpisize, first_tree, offset_from,
+                                     &some_owner);
+  }
+  /* Get the new last local tree */
+  last_tree = t8_offset_last (cmesh->mpirank, offset_to);
+  if (t8_offset_in_range (last_tree, cmesh->mpirank, offset_from)) {
+    /* We had our last local tree as a local tree before and thus
+     * we are the last process that we receive from */
+    alternative_recvlast = cmesh->mpirank;
+  }
+  else {
+    /* We receive from the smallest process that had our new last local tree
+     * as a local tree. */
+    if (first_tree != last_tree) {
+      /* We can reuse the computed owner if first_tree == last_tree,
+       * otherwise we have to reset it */
+      some_owner = -1;
+    }
+    alternative_recvlast = t8_offset_first_owner_of_tree (cmesh->mpisize,
+                                                          last_tree,
+                                                          offset_from,
+                                                          &some_owner);
+  }
+  *recv_first = alternative_recvfirst;
+  *recv_last = alternative_recvlast;
 }
 
 /* Compute the number of bytes that need to be allocated in the send buffer
@@ -1391,12 +1454,10 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 
   sc_array_init (&send_as_ghost, sizeof (t8_locidx_t));
 
-//  range_end = t8_cmesh_partition_sendrange (cmesh, (t8_cmesh_t) cmesh_from,
-  //                                          send_first, send_last, 0);
   range_end =
-    t8_cmesh_partition_debug_alternative_sendfirst (cmesh,
-                                                    (t8_cmesh_t) cmesh_from,
-                                                    send_first, send_last);
+    t8_cmesh_partition_alternative_sendrange (cmesh,
+                                              (t8_cmesh_t) cmesh_from,
+                                              send_first, send_last);
 
   offset_to = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
   if (cmesh_from->set_partition) {
@@ -1661,6 +1722,7 @@ t8_cmesh_partition_receive_message (t8_cmesh_t cmesh, sc_MPI_Comm comm,
  * MPI messages. */
 /* stores the number of received ghosts in num_ghosts */
 /* fr and lr are only for debugging, see t8_cmesh_partition_debug_listprocs */
+/* TODO: Remove the const qualifier at the cmesh_from parameter */
 static void
 t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
                              const struct t8_cmesh *cmesh_from,
@@ -1689,12 +1751,14 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
   if (cmesh_from->set_partition) {
     T8_ASSERT (cmesh_from->tree_offsets != NULL);
     from_offsets = t8_shmem_array_get_gloidx_array (cmesh_from->tree_offsets);
-    t8_cmesh_partition_recvrange (cmesh, (t8_cmesh_t) cmesh_from,
-                                  &recv_first, &recv_last);
+    t8_cmesh_partition_alternative_recvrange (cmesh, (t8_cmesh_t) cmesh_from,
+                                              &recv_first, &recv_last);
+#if T8_ENABLE_DEBUG
     if (recv_first <= recv_last) {
       T8_ASSERT (fr == recv_first);
       T8_ASSERT (lr == recv_last);
     }
+#endif
 
     num_parts = t8_offset_range_send (recv_first, recv_last, cmesh->mpirank,
                                       from_offsets, tree_offset);
