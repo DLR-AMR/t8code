@@ -2188,13 +2188,35 @@ t8_cmesh_partition_debug_alternative_sendfirst (t8_cmesh_t cmesh,
       first_tree += 1;
     }
   }
+  /* We either found the alternative first process now or we consider
+   * the second local tree */
   sc_array_init (&owners, sizeof (int));
   if (flag != 1) {
     /* Compute all new owners of our first tree */
     t8_debugf ("[H] Computing owners of tree %lli\n", (long long) first_tree);
     t8_offset_all_owners_of_tree (cmesh->mpisize, first_tree, offset_to,
                                   &owners);
-    alternative_sendfirst = *(int *) sc_array_index (&owners, 0);
+    /* search for smallest owner that did not own this tree before */
+    curr_owner = 0;
+    while (curr_owner < owners.elem_count && flag == 0) {
+      alternative_sendfirst =
+        *(int *) sc_array_index_int (&owners, curr_owner);
+      if (alternative_sendfirst == cmesh->mpirank
+          || t8_offset_empty (alternative_sendfirst, offset_from)
+          || t8_offset_first (alternative_sendfirst,
+                              offset_from) != first_tree) {
+        /* We found the process if it is either ourself or it did not own first_tree
+         * before */
+        flag = 1;
+      }
+      else {
+        curr_owner++;
+      }
+      /* If the first tree is shared, we consider the  second tree here and
+       * must have found the process in the first round */
+      T8_ASSERT (!cmesh_from->first_tree_shared || flag == 1);
+    }
+    T8_ASSERT (flag == 1);      /* We must have found the process by now */
     t8_debugf ("[H] Alternative send first = %i\n", alternative_sendfirst);
     T8_ASSERT (alternative_sendfirst == send_first);
   }
@@ -2218,7 +2240,8 @@ t8_cmesh_partition_debug_alternative_sendfirst (t8_cmesh_t cmesh,
     while (curr_owner >= 0 && flag == 0) {
       alternative_sendlast =
         *(int *) sc_array_index_int (&owners, curr_owner);
-      if (alternative_sendlast == cmesh->mpirank || alternative_sendlast <=
+      if (alternative_sendlast == cmesh->mpirank ||
+          //  alternative_sendlast <=
           //  alternative_sendfirst ||
           t8_offset_empty (alternative_sendlast, offset_from) ||
           t8_offset_first (alternative_sendlast, offset_from) != last_tree) {
