@@ -39,7 +39,7 @@
  * \param [in]  proc    The rank of the process.
  * \param [in]  offset  The partition table.
  * \return              The global id of the first local tree
- *                      of \a proc in the partition 3\a offset.
+ *                      of \a proc in the partition \a offset.
  */
 t8_gloidx_t         t8_offset_first (int proc, t8_gloidx_t * offset);
 
@@ -109,6 +109,72 @@ int                 t8_offset_consistent (int mpisize, t8_gloidx_t * offset,
  */
 int                 t8_offset_in_range (t8_gloidx_t tree_id, int proc,
                                         t8_gloidx_t * offset);
+
+/** Find the smallest process that has a given tree as local tree.
+ * To increase the runtime, an arbitrary process having this tree as local tree
+ * can be passed as an argument.
+ * Otherwise, such an owner is computed during the call.
+ * \param [in] mpisize    The number of MPI ranks, also the number of entries in \a offset minus 1.
+ * \param [in] gtree      The global id of a tree.
+ * \param [in] offset     The partition to be considered.
+ * \param [in] some_owner If >= 0 considered as input: a process that has \a gtree as local tree.
+ *                        If < 0 on output a process that has \a gtree as local tree.
+ *                        Specifying \a some_owner increases the runtime from
+ *                        O(log mpisize) to O(n), where n is the number of owners of the tree.
+ * \return                The smallest rank that has \a gtree as a local tree.
+ */
+int                 t8_offset_first_owner_of_tree (int mpisize,
+                                                   t8_gloidx_t gtree,
+                                                   t8_gloidx_t * offset,
+                                                   int *some_owner);
+
+/** Find the biggest process that has a given tree as local tree.
+ * To increase the runtime, an arbitrary process having this tree as local tree
+ * can be passed as an argument.
+ * Otherwise, such an owner is computed during the call.
+ * \param [in] mpisize    The number of MPI ranks, also the number of entries in \a offset minus 1.
+ * \param [in] gtree      The global id of a tree.
+ * \param [in] offset     The partition to be considered.
+ * \param [in,out] some_owner If >= 0 considered as input: a process that has \a gtree as local tree.
+ *                        If < 0 on output a process that has \a gtree as local tree.
+ *                        Specifying \a some_owner increases the runtime from
+ *                        O(log mpisize) to O(n), where n is the number of owners of the tree.
+ * \return                The biggest rank that has \a gtree as a local tree.
+ */
+int                 t8_offset_last_owner_of_tree (int mpisize,
+                                                  t8_gloidx_t gtree,
+                                                  t8_gloidx_t * offset,
+                                                  int *some_owner);
+
+/** Given a process current_owner that has the tree gtree as local tree,
+ * find the next bigger rank that also has this tree as local tree.
+ * \param [in] mpisize    The number of MPI ranks, also the number of entries in \a offset minus 1.
+ * \param [in] gtree      The global id of a tree.
+ * \param [in] offset     The partition to be considered.
+ * \param [in] current_owner A process that has \a gtree as local tree.
+ * \return                The MPI rank of the next bigger rank than \a current_owner
+ *                        that has \a gtree as local tree.
+ *                        -1 if non such rank exists.
+ */
+int                 t8_offset_next_owner_of_tree (int mpisize,
+                                                  t8_gloidx_t gtree,
+                                                  t8_gloidx_t * offset,
+                                                  int current_owner);
+
+/** Given a process current_owner that has the tree gtree as local tree,
+ * find the next smaller rank that also has this tree as local tree.
+ * \param [in] mpisize    The number of MPI ranks, also the number of entries in \a offset minus 1.
+ * \param [in] gtree      The global id of a tree.
+ * \param [in] offset     The partition to be considered.
+ * \param [in] current_owner A process that has \a gtree as local tree.
+ * \return                The MPI rank of the next smaller rank than \a current_owner
+ *                        that has \a gtree as local tree.
+ *                        -1 if non such rank exists.
+ */
+int                 t8_offset_prev_owner_of_tree (int mpisize,
+                                                  t8_gloidx_t gtree,
+                                                  t8_gloidx_t * offset,
+                                                  int current_owner);
 
 /** Compute a list of all processes that own a specific tree.n \a offset minus 1.
  * \param [in] mpisize    The number of MPI ranks, also the number of entries in \a offset minus 1.

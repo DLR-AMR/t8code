@@ -79,6 +79,15 @@ t8_offset_last (int proc, t8_gloidx_t * offset)
   return T8_GLOIDX_ABS (offset[proc + 1]) - 1;
 }
 
+/* Query whether a given global tree is in a valid range of a partition */
+static int
+t8_offset_valid_tree (t8_gloidx_t gtree, int mpisize, t8_gloidx_t * offset)
+{
+  T8_ASSERT (offset != NULL);
+
+  return 0 <= gtree && gtree <= t8_offset_last (mpisize - 1, offset);
+}
+
 /* Return 1 if the process has no trees in the partition.
  * Return 0 if the process has at least one tree */
 int
@@ -148,23 +157,19 @@ t8_offset_in_range (t8_gloidx_t tree_id, int proc, t8_gloidx_t * offset)
     && tree_id <= t8_offset_last (proc, offset);
 }
 
-/* Compute a list of all processes that own a specific tree */
-/* Owners must be an initialized sc_array with int elements and
- * element count 0 */
-void
-t8_offset_all_owners_of_tree (int mpisize, t8_gloidx_t gtree,
-                              t8_gloidx_t * offset, sc_array_t * owners)
+/* Find any owner of a given tree.
+ * TODO: In most cases the search should start with the current mpirank
+ *       to optimize runtime.
+ */
+static int
+t8_offset_any_owner_of_tree (int mpisize, t8_gloidx_t gtree,
+                             t8_gloidx_t * offset)
 {
-  int                 proc, range[2], found, proc_temp;
-  int                *entry;
-  T8_ASSERT (owners != NULL);
-  T8_ASSERT (owners->elem_count == 0);
-  T8_ASSERT (owners->elem_size == sizeof (int));
-  T8_ASSERT (0 <= gtree && gtree <= t8_offset_last (mpisize - 1, offset));
+  int                 proc, range[2], found;
 
   range[0] = 0;
   range[1] = mpisize - 1;
-  /* At first we find any process that owns the tree with a binary search */
+  /* find any process that owns the tree with a binary search */
   found = 0;
   while (!found) {
     proc = (range[0] + range[1]) / 2;
@@ -179,7 +184,26 @@ t8_offset_all_owners_of_tree (int mpisize, t8_gloidx_t gtree,
       range[1] = proc - 1;
     }
   }
-  /* Now we find the smallest process that has the tree */
+  return proc;
+}
+
+/* Find the smallest process that owns a given tree.
+ * To increase the runtime, some_owner can be a process that
+ * already owns the tree. Otherwise (some_owner < 0), the function will compute one. */
+int
+t8_offset_first_owner_of_tree (int mpisize, t8_gloidx_t gtree,
+                               t8_gloidx_t * offset, int *some_owner)
+{
+  int                 proc, proc_temp;
+
+  T8_ASSERT (t8_offset_valid_tree (gtree, mpisize, offset));
+  if (*some_owner < 0) {
+    *some_owner = t8_offset_any_owner_of_tree (mpisize, gtree, offset);
+  }
+  T8_ASSERT (*some_owner < mpisize);
+  proc = *some_owner;
+  /* Here, proc stores an arbitrary owner of gtree */
+  /* Now we find the smallest process that owns the tree */
   proc_temp = proc;
   while (proc_temp >= 0 && t8_offset_in_range (gtree, proc_temp, offset)) {
     /* decrement temp as long as it holds the tree */
@@ -199,29 +223,138 @@ t8_offset_all_owners_of_tree (int mpisize, t8_gloidx_t gtree,
     T8_ASSERT (t8_offset_in_range (gtree, proc_temp, offset));
   }
   else {
+    /* TODO: This should never happen */
+    T8_ASSERT (1 == 0);
     proc_temp = proc;
   }
-  /* Add the first process to the array */
   proc = proc_temp;
+  return proc;
+}
+
+static int
+t8_offset_next_prev_owner_of_tree (int mpisize, t8_gloidx_t gtree,
+                                   t8_gloidx_t * offset, int current_owner,
+                                   int search_dir)
+{
+  int                 proc;
+
+  search_dir = search_dir > 0 ? 1 : -1; /* Adjust search dir. Positive means next process,
+                                           negative previous. */
+  proc = current_owner + search_dir;
+  while (proc >= 0 && proc < mpisize && t8_offset_empty (proc, offset)) {
+    /* Skip empty processes */
+    proc += search_dir;
+  }
+  if (proc >= 0 && proc < mpisize && t8_offset_in_range (gtree, proc, offset)) {
+    /* proc is still in the range and it owns gtree */
+    return proc;
+  }
+  /* Either proc is greater than mpisize or smaller 0 or it does not
+   * own gtree any more. */
+  return -1;
+
+}
+
+/* Given a process current_owner that has the local tree gtree,
+ * find the next bigger rank that also has this tree.
+ * If none is found, we return -1.
+ */
+int
+t8_offset_next_owner_of_tree (int mpisize, t8_gloidx_t gtree,
+                              t8_gloidx_t * offset, int current_owner)
+{
+  return t8_offset_next_prev_owner_of_tree (mpisize, gtree, offset,
+                                            current_owner, +1);
+}
+
+/* Given a process current_owner that has the local tree gtree,
+ * find the next smaller rank that also has this tree.
+ * If none is found, we return -1.
+ */
+int
+t8_offset_prev_owner_of_tree (int mpisize, t8_gloidx_t gtree,
+                              t8_gloidx_t * offset, int current_owner)
+{
+  return t8_offset_next_prev_owner_of_tree (mpisize, gtree, offset,
+                                            current_owner, -1);
+}
+
+/* Find the biggest process that owns a given tree.
+ * To increase the runtime, some_owner can be a process that
+ * already owns the tree. Otherwise (some_owner < 0), the function will compute one. */
+int
+t8_offset_last_owner_of_tree (int mpisize, t8_gloidx_t gtree,
+                              t8_gloidx_t * offset, int *some_owner)
+{
+  int                 proc, proc_temp;
+
+  T8_ASSERT (t8_offset_valid_tree (gtree, mpisize, offset));
+  if (*some_owner < 0) {
+    *some_owner = t8_offset_any_owner_of_tree (mpisize, gtree, offset);
+  }
+  T8_ASSERT (*some_owner < mpisize);
+  proc = *some_owner;
+  /* Here, proc stores an arbitrary owner of gtree */
+  /* Now we find the smallest process that owns the tree */
+  proc_temp = proc;
+  while (proc_temp < mpisize && t8_offset_in_range (gtree, proc_temp, offset)) {
+    /* increment temp as long as it holds the tree */
+    proc_temp++;
+    while (proc_temp < mpisize && t8_offset_empty (proc_temp, offset)) {
+      /* Skip empty processes */
+      proc_temp++;
+    }
+  }
+  /* We are now one nonempty proccess above the biggest process having the tree */
+  if (proc_temp <= mpisize) {
+    proc_temp--;
+    while (t8_offset_empty (proc_temp, offset)) {
+      /* Skip empty processes */
+      proc_temp--;
+    }
+    T8_ASSERT (t8_offset_in_range (gtree, proc_temp, offset));
+  }
+  else {
+    /* TODO: This should never happen */
+    T8_ASSERT (1 == 0);
+    proc_temp = proc;
+  }
+  proc = proc_temp;
+  return proc;
+}
+
+/* Compute a list of all processes that own a specific tree */
+/* Owners must be an initialized sc_array with int elements and
+ * element count 0 */
+void
+t8_offset_all_owners_of_tree (int mpisize, t8_gloidx_t gtree,
+                              t8_gloidx_t * offset, sc_array_t * owners)
+{
+  int                 proc;
+  int                *entry;
+  int                 some_owner = -1;
+  T8_ASSERT (owners != NULL);
+  T8_ASSERT (owners->elem_count == 0);
+  T8_ASSERT (owners->elem_size == sizeof (int));
+  T8_ASSERT (t8_offset_valid_tree (gtree, mpisize, offset));
+
+  /* Find the smallest process that has the tree */
+  proc = t8_offset_first_owner_of_tree (mpisize, gtree, offset, &some_owner);
+  /* Add the first process to the array */
   entry = (int *) sc_array_push (owners);
   *entry = proc;
   t8_debugf ("[H] add %i as owner\n", proc);
-  found = 0;
-  /* Now we parse through all processes bigger than the firt one until
+  /* Now we parse through all processes bigger than the first one until
    * they do not have the tree anymore. */
-  while (!found) {
-    proc++;
-    while (proc < mpisize && t8_offset_empty (proc, offset)) {
-      /* Skip empty processes */
-      proc++;
-    }
-    if (proc < mpisize && t8_offset_in_range (gtree, proc, offset)) {
+  while (proc >= 0) {
+    /* Find the next owner of gtree */
+    proc = t8_offset_next_owner_of_tree (mpisize, gtree, offset, proc);
+    if (proc >= 0) {
+      /* If we found one, we add it to the array */
+      /* Otherwise we found all owners */
       entry = (int *) sc_array_push (owners);
       *entry = proc;
       t8_debugf ("[H] add %i as owner\n", proc);
-    }
-    else {
-      found = 1;
     }
   }
 }
