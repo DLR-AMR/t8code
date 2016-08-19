@@ -1769,7 +1769,7 @@ t8_cmesh_partition_debug_alternative_sendfirst (t8_cmesh_t cmesh,
   sc_array_t          owners;
   int                 alternative_sendfirst, alternative_sendlast;
   int                 flag, count;
-  int                 curr_owner;
+  int                 some_owner = -1;  /* Passes as argument to first/last owner functions */
 
   t8_debugf
     ("[H] Checking alternative send_first/send_last. Checking against: %i  %i\n",
@@ -1807,14 +1807,12 @@ t8_cmesh_partition_debug_alternative_sendfirst (t8_cmesh_t cmesh,
   sc_array_init (&owners, sizeof (int));
   if (flag != 1) {
     /* Compute all new owners of our first tree */
-    t8_debugf ("[H] Computing owners of tree %lli\n", (long long) first_tree);
-    t8_offset_all_owners_of_tree (cmesh->mpisize, first_tree, offset_to,
-                                  &owners);
     /* search for smallest owner that did not own this tree before */
-    curr_owner = 0;
-    while (curr_owner < owners.elem_count && flag == 0) {
-      alternative_sendfirst =
-        *(int *) sc_array_index_int (&owners, curr_owner);
+    /* Get the smallest owner of first_tree in the new partition */
+    alternative_sendfirst =
+      t8_offset_first_owner_of_tree (cmesh->mpisize, first_tree, offset_to,
+                                     &some_owner);
+    while (alternative_sendfirst >= 0 && flag == 0) {
       if (alternative_sendfirst == cmesh->mpirank
           || t8_offset_empty (alternative_sendfirst, offset_from)
           || t8_offset_first (alternative_sendfirst,
@@ -1824,7 +1822,11 @@ t8_cmesh_partition_debug_alternative_sendfirst (t8_cmesh_t cmesh,
         flag = 1;
       }
       else {
-        curr_owner++;
+        /* Compute the next bigger process that has first_tree as local tree in
+         * the new partition. */
+        alternative_sendfirst =
+          t8_offset_next_owner_of_tree (cmesh->mpisize, first_tree,
+                                        offset_to, alternative_sendfirst);
       }
       /* If the first tree is shared, we consider the  second tree here and
        * must have found the process in the first round */
@@ -1839,29 +1841,35 @@ t8_cmesh_partition_debug_alternative_sendfirst (t8_cmesh_t cmesh,
     t8_cmesh_get_num_local_trees (cmesh_from) - 1;
   flag = 0;
   count = 0;
+  /* If we do not send our last tree, we have to check the second last one.
+   * This while loop is executed once for the last tree and, if unsuccessfull
+   * once for the second last tree. */
   while (last_tree >= first_tree && count < 2 && flag == 0) {
     sc_array_reset (&owners);
     count++;
-    /* Get all new owners of the last tree */
-    t8_debugf ("[H] Computing owners of tree %lli\n", (long long) last_tree);
-    t8_offset_all_owners_of_tree (cmesh->mpisize, last_tree, offset_to,
-                                  &owners);
-    /* send last is the biggest of these owners that did not own last tree before */
-    curr_owner = (int) owners.elem_count - 1;
     flag = 0;
+    some_owner = -1;            /* Reset some_owner, since we do not know an owner of last_tree */
     /* Parse the owners array from the top and stop at the first process
      * that did not own last_tree */ ;
-    while (curr_owner >= 0 && flag == 0) {
-      alternative_sendlast =
-        *(int *) sc_array_index_int (&owners, curr_owner);
+    alternative_sendlast =
+      t8_offset_last_owner_of_tree (cmesh->mpisize, last_tree, offset_to,
+                                    &some_owner);
+    t8_debugf ("[H] Last owner of %lli is %i\n", (long long) last_tree,
+               alternative_sendlast);
+    while (alternative_sendlast >= 0 && flag == 0) {
       if (alternative_sendlast == cmesh->mpirank ||
-          //  alternative_sendlast <=
-          //  alternative_sendfirst ||
           t8_offset_empty (alternative_sendlast, offset_from) ||
           t8_offset_first (alternative_sendlast, offset_from) != last_tree) {
         flag = 1;
       }
-      curr_owner--;
+      else {
+        /* Compute next smaller process that has last_tree as local tree */
+        alternative_sendlast =
+          t8_offset_prev_owner_of_tree (cmesh->mpisize, last_tree, offset_to,
+                                        alternative_sendlast);
+        t8_debugf ("[H] Prev owner of %lli is %i\n", (long long) last_tree,
+                   alternative_sendlast);
+      }
     }
     /* If we did not found the alternative send here, then all procs in owners
      * owned the last tree before and we have to check the second last tree.
