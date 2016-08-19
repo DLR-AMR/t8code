@@ -1802,8 +1802,8 @@ t8_cmesh_partition_debug_alternative_sendfirst (t8_cmesh_t cmesh,
       first_tree += 1;
     }
   }
-  /* We either found the alternative first process now or we consider
-   * the second local tree */
+  /* If we have not found the process yet, our first tree is not shared
+   * or we consider our the second local tree */
   sc_array_init (&owners, sizeof (int));
   if (flag != 1) {
     /* Compute all new owners of our first tree */
