@@ -132,12 +132,17 @@ void t8_time_cmesh_partition_brick (int x, int y, sc_MPI_Comm comm)
 
   /* Create p4est brick connectivity x times y */
   t8_global_productionf ("Generate brick connectivity.\n");
+#if 0
   p4est_conn = p4est_connectivity_new_brick (x, y, 0, 0);
   /* Build t8 cmesh from connectivity. The cmesh is partitioned according
    * to uniform level 0 refinement */
   cmesh = t8_cmesh_new_from_p4est (p4est_conn, comm, 0, 1);
+#endif
+  cmesh = t8_cmesh_new_disjoint_bricks (x, y, 0, 0, comm);
+#if 0
   /* We do not need the p4est connectivity anymore, so we destroy it */
   p4est_connectivity_destroy (p4est_conn);
+#endif
   t8_global_productionf ("Committed cmesh with"
                          " %lli global trees.\n",
                          (long long) t8_cmesh_get_num_trees (cmesh));
