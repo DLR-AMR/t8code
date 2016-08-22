@@ -1642,7 +1642,6 @@ t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees, sc_MPI_Comm comm)
   return cmesh;
 }
 
-
 /* On each process, create a num_x by num_y brick connectivity and
  * make a cmesh connectivity from the disjoint union of those.
  * Example: 2 processors,
@@ -1658,13 +1657,14 @@ t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees, sc_MPI_Comm comm)
  * Leads to the cmesh |_|  |_|_|
  * which is partitioned accordingly.
  */
-t8_cmesh_t t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x, t8_gloidx_t num_y,
-                                         int x_periodic, int y_periodic,
-                                         sc_MPI_Comm comm)
+t8_cmesh_t
+t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x, t8_gloidx_t num_y,
+                              int x_periodic, int y_periodic,
+                              sc_MPI_Comm comm)
 {
-  p4est_connectivity_t     *my_brick;
-  t8_cmesh_t                   cmesh;
-  t8_gloidx_t               num_trees, offset;
+  p4est_connectivity_t *my_brick;
+  t8_cmesh_t          cmesh;
+  t8_gloidx_t         num_trees, offset;
 
   /* Create a p4est brick connectivity on the process with
    * num_x times num_y elements */

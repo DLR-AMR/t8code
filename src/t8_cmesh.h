@@ -555,10 +555,12 @@ t8_cmesh_t          t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup,
 t8_cmesh_t          t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees,
                                           sc_MPI_Comm comm);
 
+/* TODO: Document */
 t8_cmesh_t          t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x,
                                                   t8_gloidx_t num_y,
                                                   int x_periodic,
-                                                  int y_periodic, sc_MPI_Comm comm);
+                                                  int y_periodic,
+                                                  sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 
