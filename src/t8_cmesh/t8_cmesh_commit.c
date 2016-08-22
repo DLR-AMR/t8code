@@ -295,7 +295,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   if (cmesh->num_local_trees != 0 || cmesh->num_ghosts != 0) {
     /* Only do something if the partition is not empty */
     /* TODO: optimize if non-hybrid mesh */
-    /* Itterate through classes and add ghosts and trees */
+    /* Iterate through classes and add ghosts and trees */
     /* We need a temporary ghost_facejoin to check the hash for existing global ids */
     temp_facejoin->local_id = -10;
     for (iz = 0; iz < cmesh->stash->classes.elem_count; iz++) {
