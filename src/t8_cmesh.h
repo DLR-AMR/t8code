@@ -508,6 +508,14 @@ t8_cmesh_t          t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
                                              sc_MPI_Comm comm, int do_dup,
                                              int do_partition);
 
+/** Construct a cmesh that has no trees. We do not know a special use case,
+ * this function is merely for debugging and to show the possibility.
+ * \param [in]      comm       mpi communicator to be used with the new cmesh.
+ * \param [in]      do_partition Flag whether the cmesh should be partitioned or not.
+ * \return                     A committed t8_cmesh structure that has no trees.
+ */
+t8_cmesh_t          t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition);
+
 /** Constructs a cmesh that consists only of one tree of a given element class.
  * \param [in]      eclass     The element class.
  * \param [in]      comm       mpi communicator to be used with the new cmesh.
@@ -558,13 +566,15 @@ t8_cmesh_t          t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees,
 /** Create a partitoned cmesh of quads whose local trees are given by an
  * num_x by num_y brick connectivity from p4est.
  * num_x and num_y can be different for different MPI ranks.
- * \param [in] num_x       The number of trees in x direction for this rank. Must be > 0.
- * \param [in] num_y       The number of trees in y direction for this rank. Must be > 0.
+ * \param [in] num_x       The number of trees in x direction for this rank. Must be >= 0.
+ * \param [in] num_y       The number of trees in y direction for this rank. Must be >= 0.
  * \param [in] x_periodic  If nonzero the local brick connectivity is periodic in x direction.
  * \param [in] y_periodic  If nonzero the local brick connectivity is periodic in y direction.
  * \param [in] comm        The MPI communicator used to commit the cmesh.
  * \return                 A committed and partitioned cmesh. The process local trees
  *                         form a \a num_x by \a num_y brick.
+ * It is possible for num_x or num_y to be set to zero. In this case the local part
+ * of the cmesh will be empty.
  */
 t8_cmesh_t          t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x,
                                                   t8_gloidx_t num_y,

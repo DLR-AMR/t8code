@@ -1336,6 +1336,16 @@ t8_cmesh_new_from_class (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup)
   }
 }
 
+t8_cmesh_t
+t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition)
+{
+  t8_cmesh_t          cmesh;
+
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
 /* TODO: This is just a helper function that was needed when we changed the vertex interface
  *       to use attributes. Before we stored a list of vertex coordinates in the cmesh and each tree indexed into this list.
  *       Now each tree carries the coordinates of its vertices.
