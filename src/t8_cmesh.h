@@ -555,7 +555,17 @@ t8_cmesh_t          t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup,
 t8_cmesh_t          t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees,
                                           sc_MPI_Comm comm);
 
-/* TODO: Document */
+/** Create a partitoned cmesh of quads whose local trees are given by an
+ * num_x by num_y brick connectivity from p4est.
+ * num_x and num_y can be different for different MPI ranks.
+ * \param [in] num_x       The number of trees in x direction for this rank. Must be > 0.
+ * \param [in] num_y       The number of trees in y direction for this rank. Must be > 0.
+ * \param [in] x_periodic  If nonzero the local brick connectivity is periodic in x direction.
+ * \param [in] y_periodic  If nonzero the local brick connectivity is periodic in y direction.
+ * \param [in] comm        The MPI communicator used to commit the cmesh.
+ * \return                 A committed and partitioned cmesh. The process local trees
+ *                         form a \a num_x by \a num_y brick.
+ */
 t8_cmesh_t          t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x,
                                                   t8_gloidx_t num_y,
                                                   int x_periodic,
