@@ -1676,13 +1676,21 @@ t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x, t8_gloidx_t num_y,
   t8_cmesh_t          cmesh;
   t8_gloidx_t         num_trees, offset;
 
+  T8_ASSERT (num_x >= 0 && num_y >= 0);
+  num_trees = num_x * num_y;
   /* Create a p4est brick connectivity on the process with
    * num_x times num_y elements */
-  my_brick = p4est_connectivity_new_brick (num_x, num_y, x_periodic,
-                                           y_periodic);
+  if (num_trees > 0) {
+    my_brick = p4est_connectivity_new_brick (num_x, num_y, x_periodic,
+                                             y_periodic);
+  }
+  else {
+    num_x = num_y = 0;
+    num_trees = 0;
+    my_brick = p4est_connectivity_new (0, 0, 0, 0);
+  }
 
   /* Calculate the x and y offset of trees */
-  num_trees = num_x * num_y;
   sc_MPI_Scan (&num_trees, &offset, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
   offset -= num_trees;
   t8_debugf ("[H] offset = %li\n", offset);
