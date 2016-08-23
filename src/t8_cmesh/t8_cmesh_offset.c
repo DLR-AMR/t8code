@@ -79,6 +79,7 @@ t8_offset_last (int proc, t8_gloidx_t * offset)
   return T8_GLOIDX_ABS (offset[proc + 1]) - 1;
 }
 
+#ifdef T8_ENABLE_DEBUG
 /* Query whether a given global tree is in a valid range of a partition */
 static int
 t8_offset_valid_tree (t8_gloidx_t gtree, int mpisize, t8_gloidx_t * offset)
@@ -87,6 +88,7 @@ t8_offset_valid_tree (t8_gloidx_t gtree, int mpisize, t8_gloidx_t * offset)
 
   return 0 <= gtree && gtree <= t8_offset_last (mpisize - 1, offset);
 }
+#endif
 
 /* Return 1 if the process has no trees in the partition.
  * Return 0 if the process has at least one tree */

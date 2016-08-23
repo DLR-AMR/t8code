@@ -456,37 +456,39 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh_to, t8_cmesh_t cmesh_from,
     lookhere = ceil ((range[0] + range[1]) / 2.);
   }
 
-  t8_debugf("[H] To find the last process t8_offset_sendsto was called %i times\n", count_sendsto);
+  t8_debugf
+    ("[H] To find the last process t8_offset_sendsto was called %i times\n",
+     count_sendsto);
 #if T8_ENABLE_DEBUG
-  }
+}
 #endif
 
-  if (!receive) {
-    /* Calculate the last local tree that we need to send to send_first */
-    /* Set it to the last tree on send_first */
-    ret = t8_offset_last (*send_first, offset_to) - cmesh_from->first_tree;
-    /* If there are actually more trees on send_first than we have, we need to send
-     * all our local trees to send_first */
-    ret = SC_MIN (ret, cmesh_from->num_local_trees - 1);
-    if (cmesh_from->mpirank != *send_first &&
-        t8_offset_in_range (t8_offset_last (cmesh_from->mpirank, offset_from),
-                            *send_first, offset_from)
-        && ret == cmesh_from->num_local_trees - 1) {
-      /* Substract one if our last tree already belonged to send_first,
-       * and we counted this last tree. */
-      ret--;
-    }
+if (!receive) {
+  /* Calculate the last local tree that we need to send to send_first */
+  /* Set it to the last tree on send_first */
+  ret = t8_offset_last (*send_first, offset_to) - cmesh_from->first_tree;
+  /* If there are actually more trees on send_first than we have, we need to send
+   * all our local trees to send_first */
+  ret = SC_MIN (ret, cmesh_from->num_local_trees - 1);
+  if (cmesh_from->mpirank != *send_first &&
+      t8_offset_in_range (t8_offset_last (cmesh_from->mpirank, offset_from),
+                          *send_first, offset_from)
+      && ret == cmesh_from->num_local_trees - 1) {
+    /* Substract one if our last tree already belonged to send_first,
+     * and we counted this last tree. */
+    ret--;
   }
+}
 
-  t8_debugf ("%s_first = %i, %s_last = %i, last_tree = %li\n",
-             receive ? "recv" : "send", *send_first,
-             receive ? "recv" : "send", *send_last, ret);
+t8_debugf ("%s_first = %i, %s_last = %i, last_tree = %li\n",
+           receive ? "recv" : "send", *send_first,
+           receive ? "recv" : "send", *send_last, ret);
 
-  T8_ASSERT (*send_first >= 0);
+T8_ASSERT (*send_first >= 0);
 //TODO:reactivate  T8_ASSERT (*send_last >= 0);
-  T8_ASSERT (receive || (ret >= 0 && ret < cmesh_from->num_local_trees));
-  T8_ASSERT (receive || ret == (t8_locidx_t) ret);
-  return (t8_locidx_t) ret;
+T8_ASSERT (receive || (ret >= 0 && ret < cmesh_from->num_local_trees));
+T8_ASSERT (receive || ret == (t8_locidx_t) ret);
+return (t8_locidx_t) ret;
 }
 #endif
 
@@ -748,13 +750,9 @@ t8_cmesh_partition_alternative_sendrange (t8_cmesh_t cmesh,
   t8_gloidx_t         ret;
   t8_gloidx_t        *offset_to;
   t8_gloidx_t        *offset_from;
-  int                 alternative_sendfirst, alternative_sendlast;
+  int                 alternative_sendfirst, alternative_sendlast = -2;
   int                 flag, count;
   int                 some_owner = -1;  /* Passes as argument to first/last owner functions */
-
-  t8_debugf
-    ("[H] Checking alternative send_first/send_last. Checking against: %i  %i\n",
-     *send_first, *send_last);
 
   offset_to = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
   if (!cmesh_from->set_partition) {
@@ -877,21 +875,19 @@ t8_cmesh_partition_alternative_sendrange (t8_cmesh_t cmesh,
   *send_first = alternative_sendfirst;
   *send_last = alternative_sendlast;
 
-  {
-    /* Calculate the last local tree that we need to send to send_first */
-    /* Set it to the last tree on send_first */
-    ret = t8_offset_last (*send_first, offset_to) - cmesh_from->first_tree;
-    /* If there are actually more trees on send_first than we have, we need to send
-     * all our local trees to send_first */
-    ret = SC_MIN (ret, cmesh_from->num_local_trees - 1);
-    if (cmesh_from->mpirank != *send_first &&
-        t8_offset_in_range (t8_offset_last (cmesh_from->mpirank, offset_from),
-                            *send_first, offset_from)
-        && ret == cmesh_from->num_local_trees - 1) {
-      /* Substract one if our last tree already belonged to send_first,
-       * and we counted this last tree. */
-      ret--;
-    }
+  /* Calculate the last local tree that we need to send to send_first */
+  /* Set it to the last tree on send_first */
+  ret = t8_offset_last (*send_first, offset_to) - cmesh_from->first_tree;
+  /* If there are actually more trees on send_first than we have, we need to send
+   * all our local trees to send_first */
+  ret = SC_MIN (ret, cmesh_from->num_local_trees - 1);
+  if (cmesh_from->mpirank != *send_first &&
+      t8_offset_in_range (t8_offset_last (cmesh_from->mpirank, offset_from),
+                          *send_first, offset_from)
+      && ret == cmesh_from->num_local_trees - 1) {
+    /* Substract one if our last tree already belonged to send_first,
+     * and we counted this last tree. */
+    ret--;
   }
 
   t8_debugf ("%s_first = %i, %s_last = %i, last_tree = %li\n",
@@ -1981,105 +1977,6 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
 }
 
 static void
-t8_cmesh_partition_debug_alternative_sendfirst (t8_cmesh_t cmesh,
-                                                t8_cmesh_t cmesh_from,
-                                                int send_first, int send_last)
-{
-  t8_gloidx_t     first_tree = t8_cmesh_get_first_treeid (cmesh_from),
-      last_tree;
-  t8_gloidx_t    *offset_to =
-      t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
-  t8_gloidx_t    *offset_from =
-      t8_shmem_array_get_gloidx_array (cmesh_from->tree_offsets);
-  sc_array_t      owners;
-  int             alternative_sendfirst, alternative_sendlast;
-  int             flag, count;
-  int             curr_owner;
-
-  t8_debugf ("[H] Checking alternative send_first/send_last. Checking against: %i  %i\n",
-             send_first, send_last);
-  /* TODO: try to work around calling this function, since it has log(P) runtime */
-  if (t8_offset_nosend (cmesh->mpirank, cmesh->mpisize,
-                        offset_from, offset_to)) {
-    /* We do not send at all */
-    T8_ASSERT (send_last < send_first);
-    return;
-  }
-  flag = 0;
-  if (cmesh_from->first_tree_shared == 1) {
-    /* If the first tree was shared then we only send it, if
-     * we own it in the new partition. In this case we send to ourself first. */
-    if (t8_offset_in_range (first_tree, cmesh->mpirank, offset_to)) {
-      alternative_sendfirst = cmesh->mpirank;
-      flag = 1; /* We found the process */
-      T8_ASSERT (send_first == cmesh->mpirank);
-      t8_debugf ("[H] I send to myself first.\n");
-    }
-    else {
-      /* We do not own the first tree in the new partition */
-      if (cmesh_from->num_local_trees == 1) {
-        /* We do not send at all */
-        T8_ASSERT (send_last < send_first);
-        return;
-      }
-      /* The second local tree of cmesh_from is the first that is sent */
-      first_tree += 1;
-    }
-  }
-  sc_array_init (&owners, sizeof (int));
-  if (flag != 1) {
-    /* Compute all new owners of our first tree */
-    t8_debugf ("[H] Computing owners of tree %lli\n", (long long) first_tree);
-    t8_offset_all_owners_of_tree (cmesh->mpisize, first_tree, offset_to,
-                                  &owners);
-    alternative_sendfirst = *(int*) sc_array_index (&owners, 0);
-    t8_debugf ("[H] Alternative send first = %i\n", alternative_sendfirst);
-    T8_ASSERT (alternative_sendfirst == send_first);
-  }
-  /* Get the last local tree on cmesh_from */
-  last_tree = t8_cmesh_get_first_treeid (cmesh_from) +
-      t8_cmesh_get_num_local_trees (cmesh_from) - 1;
-  flag = 0;
-  count = 0;
-  while (last_tree >= first_tree && count < 2 && flag == 0) {
-    sc_array_reset (&owners);
-    count++;
-    /* Get all new owners of the last tree */
-    t8_debugf ("[H] Computing owners of tree %lli\n", (long long) last_tree);
-    t8_offset_all_owners_of_tree (cmesh->mpisize, last_tree, offset_to, &owners);
-    /* send last is the biggest of these owners that did not own last tree before */
-    curr_owner = (int) owners.elem_count - 1;
-    flag = 0;
-    /* Parse the owners array from the top and stop at the first process
-     * that did not own last_tree */;
-    while (curr_owner >= 0 && flag == 0) {
-      alternative_sendlast = *(int*) sc_array_index_int (&owners, curr_owner);
-      if (alternative_sendlast == cmesh->mpirank || alternative_sendlast <=
-        //  alternative_sendfirst ||
-          t8_offset_empty (alternative_sendlast, offset_from) ||
-          t8_offset_first (alternative_sendlast, offset_from) != last_tree) {
-        flag = 1;
-      }
-      curr_owner--;
-    }
-    /* If we did not found the alternative send here, then all procs in owners
-     * owned the last tree before and we have to check the second last tree.
-     * Here a success is guaranteed. */
-    last_tree--;
-  }
-  if (flag == 0) {
-    /* This should never happen */
-    t8_debugf ("[H] Could not find alternative sendlast.\n");
-    T8_ASSERT (0 == 1);
-  }
-  else {
-    t8_debugf ("[H] Found alternative last send %i\n", alternative_sendlast);
-    T8_ASSERT (alternative_sendlast == send_last);
-  }
-  sc_array_reset (&owners);
-}
-
-static void
 t8_cmesh_partition_debug_listprocs (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                                     sc_MPI_Comm comm, int *fs, int *ls,
                                     int *fr, int *lr)
@@ -2184,10 +2081,6 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
              || send_first == fs);
   T8_ASSERT (!cmesh_from->set_partition || send_last == -2
              || send_last == ls);
-  if (cmesh_from->set_partition) {
-    t8_cmesh_partition_debug_alternative_sendfirst (cmesh, (t8_cmesh_t) cmesh_from,
-                                                    send_first, send_last);
-  }
 
   /* receive all trees and ghosts */
   t8_cmesh_partition_recvloop (cmesh, cmesh_from, tree_offset, my_buffer,
