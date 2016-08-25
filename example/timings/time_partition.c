@@ -28,6 +28,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh_vtk.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
+#include "t8_cmesh/t8_cmesh_types.h"
 
 #if 0
 /* Repartition a partitioned cmesh by shipping half of the local trees
@@ -124,33 +125,26 @@ void t8_time_cmesh_partition_brick (int x, int y, sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   t8_cmesh_t          cmesh_partition;
-  p4est_connectivity_t *p4est_conn;
   t8_shmem_array_t    new_partition;
 
+  t8_cprofile_t       *profile;
   sc_flopinfo_t       fi, snapshot;
-  sc_statinfo_t       stats[1];
+  sc_statinfo_t       stats[6];
 
-  /* Create p4est brick connectivity x times y */
-  t8_global_productionf ("Generate brick connectivity.\n");
-#if 0
-  p4est_conn = p4est_connectivity_new_brick (x, y, 0, 0);
-  /* Build t8 cmesh from connectivity. The cmesh is partitioned according
-   * to uniform level 0 refinement */
-  cmesh = t8_cmesh_new_from_p4est (p4est_conn, comm, 0, 1);
-#endif
+  /* Create a disjoint brick cmesh with x time y trees on each process */
   cmesh = t8_cmesh_new_disjoint_bricks (x, y, 0, 0, comm);
-#if 0
-  /* We do not need the p4est connectivity anymore, so we destroy it */
-  p4est_connectivity_destroy (p4est_conn);
-#endif
+  /* Allocate profiling struct */
+  profile = T8_ALLOC_ZERO (t8_cprofile_t, 1);
+
   t8_global_productionf ("Committed cmesh with"
                          " %lli global trees.\n",
                          (long long) t8_cmesh_get_num_trees (cmesh));
   /* Set up cmesh_partition to be a repartition of cmesh. */
   t8_cmesh_init (&cmesh_partition);
+  cmesh_partition->profile = profile;
   t8_cmesh_set_derive (cmesh_partition, cmesh);
   /* The new cmesh is partitioned according to a uniform level 1 refinement */
-  new_partition = t8_cmesh_offset_half (cmesh, comm);
+  new_partition = t8_cmesh_offset_percent (cmesh, comm, 50);
   t8_cmesh_set_partition_offsets (cmesh_partition, new_partition);
 
   /* Start timer */
@@ -164,9 +158,19 @@ void t8_time_cmesh_partition_brick (int x, int y, sc_MPI_Comm comm)
   t8_global_productionf ("Partitioned cmesh with"
                          " %lli global trees.\n",
                          (long long) t8_cmesh_get_num_trees (cmesh_partition));
+  sc_stats_set1 (&stats[1], cmesh_partition->profile->partition_trees_shipped,
+      "Number of trees sent.");
+  sc_stats_set1 (&stats[2], cmesh_partition->profile->partition_ghosts_shipped,
+      "Number of ghosts sent.");
+  sc_stats_set1 (&stats[3], cmesh_partition->profile->partition_bytes_sent,
+      "Number of bytes sent.");
+  sc_stats_set1 (&stats[4], cmesh_partition->profile->partition_runtime,
+      "Partition runtime (cmesh measured).");
+  sc_stats_set1 (&stats[5], cmesh_partition->profile->commit_runtime,
+      "Commit runtime (cmesh measured).");
   /* print stats */
-  sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
-  sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 1, stats, 1, 1);
+  sc_stats_compute (sc_MPI_COMM_WORLD, 6, stats);
+  sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 6, stats, 1, 1);
   /* vtk output */
   {
     char filename[BUFSIZ];

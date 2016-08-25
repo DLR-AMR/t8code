@@ -1009,6 +1009,9 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
     }
     T8_ASSERT (cmesh->set_from == NULL);
   }
+  if (cmesh->profile != NULL) {
+    T8_FREE (cmesh->profile);
+  }
 
   T8_FREE (cmesh);
   *pcmesh = NULL;

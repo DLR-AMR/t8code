@@ -566,14 +566,15 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   int                 mpiret;
   t8_cmesh_t          cmesh_temp;
-  sc_flopinfo_t       fi;
-
-  sc_flops_start (&fi);
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (comm != sc_MPI_COMM_NULL);
   T8_ASSERT (!cmesh->committed);
 
+  /* If profiling is enabled, we measure the runtime of  commit. */
+  if (cmesh->profile != NULL) {
+    cmesh->profile->commit_runtime = sc_MPI_Wtime();
+  }
   /* Get mpisize and rank */
   mpiret = sc_MPI_Comm_size (comm, &cmesh->mpisize);
   SC_CHECK_MPI (mpiret);
@@ -679,4 +680,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
              (long long) cmesh->num_trees, (long) cmesh->num_ghosts);
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  /* If profiling is enabled, we measure the runtime of  commit. */
+  if (cmesh->profile != NULL) {
+    cmesh->profile->commit_runtime = sc_MPI_Wtime() -
+        cmesh->profile->commit_runtime;
+  }
 }

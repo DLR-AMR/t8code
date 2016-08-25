@@ -1544,6 +1544,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     /* Extra space to store the number of trees and ghosts in the send buffer */
     total_alloc += 2 * sizeof (t8_locidx_t);
 
+    /* Debugging output about shipped trees and ghosts. */
     t8_debugf ("NT %i -- each %zdB\n", num_trees, sizeof (t8_ctree_struct_t));
     t8_debugf ("NGS %i - each %zdB\n", num_ghost_send,
                sizeof (t8_cghost_struct_t));
@@ -1552,6 +1553,17 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     t8_debugf ("AIB %zd\n", attr_info_bytes);
     t8_debugf ("AB %zd\n", attr_bytes);
     t8_debugf ("Ta %zd\n", total_alloc);
+    /* If profiling is enabled, we count the number of shipped trees/ghosts
+     * and processes we ship to. */
+    if (cmesh->profile) {
+      if (iproc != cmesh->mpirank) {
+        /* We do not count if we send to ourself. */
+        cmesh->profile->partition_ghosts_shipped += num_ghost_send;
+        cmesh->profile->partition_trees_shipped += num_trees;
+        cmesh->profile->partition_procs_sent++;
+        cmesh->profile->partition_bytes_sent += total_alloc;
+      }
+    }
     if (iproc != cmesh->mpirank) {
       buffer = (*send_buffer)[iproc - *send_first - flag] = T8_ALLOC (char,
                                                                       total_alloc);
@@ -2260,6 +2272,10 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   T8_ASSERT (cmesh->set_partition);
 
   t8_global_productionf ("Enter cmesh partition\n");
+  /* If profiling is enabled, we measure the runtime of this routine. */
+  if (cmesh->profile != NULL) {
+    cmesh->profile->partition_runtime = sc_MPI_Wtime ();
+  }
   cmesh_from = (t8_cmesh_t) cmesh->set_from;
   cmesh->num_trees = cmesh_from->num_trees;
 
@@ -2323,6 +2339,12 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   /*        Done with local num and tree_offset      */
   /***************************************************/
   t8_cmesh_partition_given (cmesh, cmesh->set_from, tree_offsets, comm);
+  /* If profiling is enabled, we measure the runtime of this routine. */
+  if (cmesh->profile) {
+    /* Runtime = current_time - start_time */
+    cmesh->profile->partition_runtime = sc_MPI_Wtime ()
+        - cmesh->profile->partition_runtime;
+  }
   t8_global_productionf ("Done cmesh partition\n");
 }
 
@@ -2361,6 +2383,8 @@ t8_cmesh_offset_concentrate (int proc, sc_MPI_Comm comm,
 #ifdef T8_ENABLE_DEBUG
   t8_debugf ("Partition with offsets:0,%s\n", out);
 #endif
+
+  T8_ASSERT (t8_offset_consistent (mpisize, offsets, num_trees));
   return shmem_array;
 }
 
