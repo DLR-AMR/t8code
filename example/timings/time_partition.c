@@ -120,7 +120,7 @@ void t8_time_brick_refine_half (int x, int y, int x_periodix, int y_periodic,
 #if 1
 #define NUM_STATS 9
 /* Create a cmesh from an x times y p4est box connectivity uniform level 0
- * partitioned. Repartition it shipping half of each processes quadrants to
+ * partitioned. Repartition it by shipping 43% of each processes quadrants to
  * the next process. */
 void t8_time_cmesh_partition_brick (int x, int y, sc_MPI_Comm comm)
 {
@@ -145,7 +145,7 @@ void t8_time_cmesh_partition_brick (int x, int y, sc_MPI_Comm comm)
   cmesh_partition->profile = profile;
   t8_cmesh_set_derive (cmesh_partition, cmesh);
   /* The new cmesh is partitioned according to a uniform level 1 refinement */
-  new_partition = t8_cmesh_offset_percent (cmesh, comm, 50);
+  new_partition = t8_cmesh_offset_percent (cmesh, comm, 43);
   t8_cmesh_set_partition_offsets (cmesh_partition, new_partition);
 
   /* Start timer */
