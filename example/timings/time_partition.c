@@ -118,6 +118,7 @@ void t8_time_brick_refine_half (int x, int y, int x_periodix, int y_periodic,
 #endif
 
 #if 1
+#define NUM_STATS 9
 /* Create a cmesh from an x times y p4est box connectivity uniform level 0
  * partitioned. Repartition it shipping half of each processes quadrants to
  * the next process. */
@@ -129,7 +130,7 @@ void t8_time_cmesh_partition_brick (int x, int y, sc_MPI_Comm comm)
 
   t8_cprofile_t       *profile;
   sc_flopinfo_t       fi, snapshot;
-  sc_statinfo_t       stats[6];
+  sc_statinfo_t       stats[NUM_STATS];
 
   /* Create a disjoint brick cmesh with x time y trees on each process */
   cmesh = t8_cmesh_new_disjoint_bricks (x, y, 0, 0, comm);
@@ -162,15 +163,21 @@ void t8_time_cmesh_partition_brick (int x, int y, sc_MPI_Comm comm)
       "Number of trees sent.");
   sc_stats_set1 (&stats[2], cmesh_partition->profile->partition_ghosts_shipped,
       "Number of ghosts sent.");
-  sc_stats_set1 (&stats[3], cmesh_partition->profile->partition_bytes_sent,
+  sc_stats_set1 (&stats[3], cmesh_partition->profile->partition_trees_recv,
+      "Number of trees received.");
+  sc_stats_set1 (&stats[4], cmesh_partition->profile->partition_ghosts_recv,
+      "Number of ghosts received.");
+  sc_stats_set1 (&stats[5], cmesh_partition->profile->partition_bytes_sent,
       "Number of bytes sent.");
-  sc_stats_set1 (&stats[4], cmesh_partition->profile->partition_runtime,
+  sc_stats_set1 (&stats[6], cmesh_partition->profile->partition_procs_sent,
+      "Number of processes sent to.");
+  sc_stats_set1 (&stats[7], cmesh_partition->profile->partition_runtime,
       "Partition runtime (cmesh measured).");
-  sc_stats_set1 (&stats[5], cmesh_partition->profile->commit_runtime,
+  sc_stats_set1 (&stats[8], cmesh_partition->profile->commit_runtime,
       "Commit runtime (cmesh measured).");
   /* print stats */
-  sc_stats_compute (sc_MPI_COMM_WORLD, 6, stats);
-  sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 6, stats, 1, 1);
+  sc_stats_compute (sc_MPI_COMM_WORLD, NUM_STATS, stats);
+  sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, NUM_STATS, stats, 1, 1);
   /* vtk output */
   {
     char filename[BUFSIZ];
@@ -185,6 +192,7 @@ void t8_time_cmesh_partition_brick (int x, int y, sc_MPI_Comm comm)
   t8_cmesh_destroy (&cmesh);
   t8_cmesh_destroy (&cmesh_partition);
 }
+#undef NUM_STATS
 #endif
 
 int main (int argc, char *argv[])

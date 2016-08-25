@@ -456,11 +456,6 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh_to, t8_cmesh_t cmesh_from,
     lookhere = ceil ((range[0] + range[1]) / 2.);
   }
 
-  t8_debugf("[H] To find the last process t8_offset_sendsto was called %i times\n", count_sendsto);
-#if T8_ENABLE_DEBUG
-  }
-#endif
-
   if (!receive) {
     /* Calculate the last local tree that we need to send to send_first */
     /* Set it to the last tree on send_first */
@@ -1709,6 +1704,12 @@ t8_cmesh_partition_receive_message (t8_cmesh_t cmesh, sc_MPI_Comm comm,
   t8_debugf ("Received %i trees/%i ghosts/%i bytes from %i to %i\n",
              recv_part->num_trees, recv_part->num_ghosts, recv_bytes,
              proc_recv, local_procid[proc_recv - recv_first]);
+  /* If we are profiling, we count the number of trees and ghosts that
+   * we received. */
+  if (cmesh->profile != NULL && proc_recv != cmesh->mpirank) {
+    cmesh->profile->partition_ghosts_recv += recv_part->num_ghosts;
+    cmesh->profile->partition_trees_recv += recv_part->num_trees;
+  }
 #if 0
   /* Free memory that was only used to store num_trees/ghosts */
   /* TODO: If we want to do this properly we have to realloc the memory,
