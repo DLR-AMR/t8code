@@ -2480,11 +2480,9 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared,
   return shmem_array;
 }
 
-/* Create a repartition array, where each process sends half of its
- * trees to the next process. The last process does not send any trees. */
-/* TODO: This function was not tested with shared trees yet. */
+/* TODO: Check that percent is the same on each process */
 t8_shmem_array_t
-t8_cmesh_offset_half (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+t8_cmesh_offset_percent (t8_cmesh_t cmesh, sc_MPI_Comm comm, int percent)
 {
   t8_gloidx_t         new_first_tree, old_first_tree;
   t8_locidx_t         old_num_trees_pm1;
@@ -2516,12 +2514,12 @@ t8_cmesh_offset_half (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   partition_array = t8_cmesh_alloc_offsets (mpisize, comm);
   /* get the first local tree from the current cmesh */
   old_first_tree = t8_cmesh_get_first_treeid (cmesh);
-  /* Get the number of local trees of nex smaller process, or
+  /* Get the number of local trees of next smaller process, or
    * 0 if we are rank 0. */
   old_num_trees_pm1 = t8_offset_num_trees (mpirank > 0 ? mpirank - 1 : 0,
                                            old_partition);
   /* Compute the new first local tree */
-  new_first_tree = old_first_tree - old_num_trees_pm1 / 2;
+  new_first_tree = old_first_tree - old_num_trees_pm1 * percent/100;
   /* Compute the new entry in the offset array.
    * If the old first tree was shared, then the new one will be as well
    * and if not it will not be shared. */
@@ -2541,5 +2539,18 @@ t8_cmesh_offset_half (t8_cmesh_t cmesh, sc_MPI_Comm comm)
      * again. */
     t8_shmem_array_destroy (&cmesh->tree_offsets);
   }
+  T8_ASSERT (t8_offset_consistent (mpisize,
+                                   t8_shmem_array_get_gloidx_array
+                                   (partition_array),
+                                   t8_cmesh_get_num_trees (cmesh)));
   return partition_array;
+}
+
+/* Create a repartition array, where each process sends half of its
+ * trees to the next process. The last process does not send any trees. */
+/* TODO: This function was not tested with shared trees yet. */
+t8_shmem_array_t
+t8_cmesh_offset_half (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+{
+  return t8_cmesh_offset_percent (cmesh, comm, 50);
 }
