@@ -77,7 +77,6 @@ t8_shmem_array_t    t8_cmesh_offset_random (sc_MPI_Comm comm,
                                             t8_gloidx_t num_trees,
                                             int shared, unsigned seed);
 
-
 /** Create a repartition array, where each process sends half of its
  * trees to the next process. The last process does not send any trees.
  * \param [in]      cmesh   A cmesh that is committed and partitioned.
@@ -85,7 +84,20 @@ t8_shmem_array_t    t8_cmesh_offset_random (sc_MPI_Comm comm,
  * \return                  A shared memory offset array storing the new offsets.
  *                          Its associated communicator is \a comm.
  */
-t8_shmem_array_t t8_cmesh_offset_half (t8_cmesh_t cmesh, sc_MPI_Comm comm);
+t8_shmem_array_t    t8_cmesh_offset_half (t8_cmesh_t cmesh, sc_MPI_Comm comm);
+
+/** Create a repartition array, where each process sends a percentage of its
+ * trees to the next process. The last process does not send any trees.
+ * \param [in]      cmesh   A cmesh that is committed and partitioned.
+ * \param [in]      comm    A valid MPI communicator for cmesh.
+ * \param [in]      percent The percentage of trees that this process should send
+ *                          to the next one. Must satisfy 0 <= \a percent <= 100 and
+ *                          be the same on each process.
+ * \return                  A shared memory offset array storing the new offsets.
+ *                          Its associated communicator is \a comm.
+ */
+t8_shmem_array_t    t8_cmesh_offset_percent (t8_cmesh_t cmesh,
+                                             sc_MPI_Comm comm, int percent);
 
 T8_EXTERN_C_END ();
 

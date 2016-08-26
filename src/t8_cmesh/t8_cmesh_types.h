@@ -34,6 +34,7 @@
 
 typedef struct t8_part_tree *t8_part_tree_t;
 typedef struct t8_cmesh_trees *t8_cmesh_trees_t;
+typedef struct t8_cprofile t8_cprofile_t; /* Defined below */
 
 /* TODO: no longer needed.
  *       User may use set_derived_from, then set_from is non-NULL.
@@ -134,6 +135,7 @@ typedef struct t8_cmesh
                                            check at commit if it equals the total number. */
 #endif
   t8_stash_t          stash; /**< Used as temporary storage for the trees before commit. */
+  t8_cprofile_t      *profile; /**< Used to measure runtimes and statistics of the cmesh algorithms. */
 }
 t8_cmesh_struct_t;
 
@@ -228,5 +230,32 @@ typedef struct t8_part_tree
   t8_locidx_t         num_ghosts;
 }
 t8_part_tree_struct_t;
+
+/* TODO: Extend this structure with meaningful entries.
+ *       Maybe the number of shipped trees per process is useful?
+ */
+/** This struct is used to profile cmesh algorithms.
+ * The cmesh struct stores a pointer to a profile struct, and if
+ * it is nonzero, various runtimes and data measurements are stored here.
+ * This structure must be initialized with zeros. Best by a call to T8_ALLOC_ZERO.
+ */
+typedef struct t8_cprofile
+{
+  t8_locidx_t        partition_trees_shipped; /**< The number of trees this process has
+                                                 sent to other in the last partition call. */
+  t8_locidx_t        partition_ghosts_shipped; /**< The number of ghosts this process has
+                                                 sent to other in the last partition call. */
+  t8_locidx_t        partition_trees_recv; /**< The number of trees this process has
+                                                 received from other in the last partition call. */
+  t8_locidx_t        partition_ghosts_recv; /**< The number of ghosts this process has
+                                                 received from other in the last partition call. */
+  size_t             partition_bytes_sent; /**< The total number of bytes sent to other processes in the
+                                                last partition call. */
+  int                partition_procs_sent;  /**< The number of different processes this process has send
+                                           local trees or ghosts to in the last partition call. */
+  double             partition_runtime; /**< The runtime of  the last call to \a t8_cmesh_partition. */
+  double             commit_runtime; /**< The runtim of the last call to \a t8_cmesh_commit. */
+}
+t8_cprofile_struct_t;
 
 #endif /* !T8_CMESH_TYPES_H */
