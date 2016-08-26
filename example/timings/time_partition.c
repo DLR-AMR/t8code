@@ -33,7 +33,8 @@
 #if 0
 /* Repartition a partitioned cmesh by shipping half of the local trees
  * to the next process. */
-void t8_time_half (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+void
+t8_time_half (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh_partition;
   sc_flopinfo_t       fi, snapshot;
@@ -67,12 +68,13 @@ void t8_time_half (t8_cmesh_t cmesh, sc_MPI_Comm comm)
  *
  * The half partitioning rule means that each process ships half of its
  * trees to the next process. */
-void t8_time_brick_refine_half (int x, int y, int x_periodix, int y_periodic,
-                                sc_MPI_Comm comm, int level)
+void
+t8_time_brick_refine_half (int x, int y, int x_periodix, int y_periodic,
+                           sc_MPI_Comm comm, int level)
 {
-  t8_cmesh_t    cmesh[2];
+  t8_cmesh_t          cmesh[2];
   p4est_connectivity_t *p4est_conn;
-  int           ref_level, new_ind, old_ind;
+  int                 ref_level, new_ind, old_ind;
 
   SC_ABORT ("The refine function is not implemented yet.");
   /* Create cmesh from p4est brick connectivity. */
@@ -85,7 +87,7 @@ void t8_time_brick_refine_half (int x, int y, int x_periodix, int y_periodic,
   new_ind = 0;
   t8_time_half (cmesh[new_ind], comm);
   /* The refinement and partition loop */
-  for (ref_level = 1;ref_level <= level;ref_level++) {
+  for (ref_level = 1; ref_level <= level; ref_level++) {
     new_ind = ref_level % 2;
     old_ind = 1 - ref_level % 2;
     /* Initialize the new cmesh that will be the old but refined. */
@@ -101,8 +103,8 @@ void t8_time_brick_refine_half (int x, int y, int x_periodix, int y_periodic,
     t8_cmesh_commit (cmesh[new_ind], comm);
     /* vtk output of the refined mesh */
     {
-      char filename[BUFSIZ];
-      int mpirank, mpiret;
+      char                filename[BUFSIZ];
+      int                 mpirank, mpiret;
 
       mpiret = sc_MPI_Comm_rank (comm, &mpirank);
       SC_CHECK_MPI (mpiret);
@@ -122,13 +124,14 @@ void t8_time_brick_refine_half (int x, int y, int x_periodix, int y_periodic,
 /* Create a cmesh from an x times y p4est box connectivity uniform level 0
  * partitioned. Repartition it by shipping 43% of each processes quadrants to
  * the next process. */
-void t8_time_cmesh_partition_brick (int x, int y, sc_MPI_Comm comm)
+void
+t8_time_cmesh_partition_brick (int x, int y, sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   t8_cmesh_t          cmesh_partition;
   t8_shmem_array_t    new_partition;
 
-  t8_cprofile_t       *profile;
+  t8_cprofile_t      *profile;
   sc_flopinfo_t       fi, snapshot;
   sc_statinfo_t       stats[NUM_STATS];
 
@@ -157,31 +160,33 @@ void t8_time_cmesh_partition_brick (int x, int y, sc_MPI_Comm comm)
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[0], snapshot.iwtime, "Partition");
   t8_global_productionf ("Partitioned cmesh with"
-                         " %lli global trees.\n",
-                         (long long) t8_cmesh_get_num_trees (cmesh_partition));
+                         " %lli global trees.\n", (long long)
+                         t8_cmesh_get_num_trees (cmesh_partition));
   sc_stats_set1 (&stats[1], cmesh_partition->profile->partition_trees_shipped,
-      "Number of trees sent.");
-  sc_stats_set1 (&stats[2], cmesh_partition->profile->partition_ghosts_shipped,
-      "Number of ghosts sent.");
+                 "Number of trees sent.");
+  sc_stats_set1 (&stats[2],
+                 cmesh_partition->profile->partition_ghosts_shipped,
+                 "Number of ghosts sent.");
   sc_stats_set1 (&stats[3], cmesh_partition->profile->partition_trees_recv,
-      "Number of trees received.");
+                 "Number of trees received.");
   sc_stats_set1 (&stats[4], cmesh_partition->profile->partition_ghosts_recv,
-      "Number of ghosts received.");
+                 "Number of ghosts received.");
   sc_stats_set1 (&stats[5], cmesh_partition->profile->partition_bytes_sent,
-      "Number of bytes sent.");
+                 "Number of bytes sent.");
   sc_stats_set1 (&stats[6], cmesh_partition->profile->partition_procs_sent,
-      "Number of processes sent to.");
+                 "Number of processes sent to.");
   sc_stats_set1 (&stats[7], cmesh_partition->profile->partition_runtime,
-      "Partition runtime (cmesh measured).");
+                 "Partition runtime (cmesh measured).");
   sc_stats_set1 (&stats[8], cmesh_partition->profile->commit_runtime,
-      "Commit runtime (cmesh measured).");
+                 "Commit runtime (cmesh measured).");
   /* print stats */
   sc_stats_compute (sc_MPI_COMM_WORLD, NUM_STATS, stats);
-  sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, NUM_STATS, stats, 1, 1);
+  sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, NUM_STATS, stats, 1,
+                  1);
   /* vtk output */
   {
-    char filename[BUFSIZ];
-    int mpirank, mpiret;
+    char                filename[BUFSIZ];
+    int                 mpirank, mpiret;
 
     mpiret = sc_MPI_Comm_rank (comm, &mpirank);
     SC_CHECK_MPI (mpiret);
@@ -192,10 +197,12 @@ void t8_time_cmesh_partition_brick (int x, int y, sc_MPI_Comm comm)
   t8_cmesh_destroy (&cmesh);
   t8_cmesh_destroy (&cmesh_partition);
 }
+
 #undef NUM_STATS
 #endif
 
-int main (int argc, char *argv[])
+int
+main (int argc, char *argv[])
 {
   int                 mpiret;
   int                 first_argc;
@@ -224,7 +231,8 @@ int main (int argc, char *argv[])
                       "If > 0 then we refine the coarse mesh as often as l and"
                       " partition on each level.");
 #endif
-  sc_options_add_switch (opt, 'h', "help", &help, "Display a short help message.");
+  sc_options_add_switch (opt, 'h', "help", &help,
+                         "Display a short help message.");
 
   /* parese command line options */
   first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT,
@@ -241,7 +249,8 @@ int main (int argc, char *argv[])
   }
   else {
     /* Execute this part of the code if all options are correctly set */
-    t8_global_productionf ("Starting with x-dim = %i, y-dim = %i\n", x_dim, y_dim);
+    t8_global_productionf ("Starting with x-dim = %i, y-dim = %i\n", x_dim,
+                           y_dim);
     t8_time_cmesh_partition_brick (x_dim, y_dim, sc_MPI_COMM_WORLD);
   }
   sc_options_destroy (opt);

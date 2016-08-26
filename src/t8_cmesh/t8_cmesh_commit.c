@@ -573,7 +573,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   /* If profiling is enabled, we measure the runtime of  commit. */
   if (cmesh->profile != NULL) {
-    cmesh->profile->commit_runtime = sc_MPI_Wtime();
+    cmesh->profile->commit_runtime = sc_MPI_Wtime ();
   }
   /* Get mpisize and rank */
   mpiret = sc_MPI_Comm_size (comm, &cmesh->mpisize);
@@ -682,7 +682,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   /* If profiling is enabled, we measure the runtime of  commit. */
   if (cmesh->profile != NULL) {
-    cmesh->profile->commit_runtime = sc_MPI_Wtime() -
-        cmesh->profile->commit_runtime;
+    cmesh->profile->commit_runtime = sc_MPI_Wtime () -
+      cmesh->profile->commit_runtime;
   }
 }

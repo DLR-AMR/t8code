@@ -2094,7 +2094,6 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
   T8_ASSERT (!cmesh_from->set_partition || send_last == -2
              || send_last == ls);
 
-
   /* receive all trees and ghosts */
   t8_cmesh_partition_recvloop (cmesh, cmesh_from, tree_offset, my_buffer,
                                my_buffer_bytes, comm, fr, lr);
