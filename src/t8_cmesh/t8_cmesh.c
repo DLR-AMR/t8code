@@ -759,7 +759,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     }
   }
 
-  /* partutuib stores the new partitino number for each element */
+  /* partition stores the new partition number for each element */
   partition = T8_ALLOC (idx_t, elemens);
   /* partition the elements in mpisize many partitions */
   success =

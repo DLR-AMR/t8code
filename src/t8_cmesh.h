@@ -508,6 +508,9 @@ t8_cmesh_t          t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
                                              sc_MPI_Comm comm, int do_dup,
                                              int do_partition);
 
+/* TODO: it could possibly be a problem that we do not set the dimension of
+ * the cmesh. This could i.e. be difficult when we combine an empty cmesh with
+ * a non-empty one. */
 /** Construct a cmesh that has no trees. We do not know a special use case,
  * this function is merely for debugging and to show the possibility.
  * \param [in]      comm       mpi communicator to be used with the new cmesh.
