@@ -176,15 +176,15 @@ typedef struct t8_ctree
    *       be optimized out. */
   t8_eclass_t         eclass; /**< The eclass of this tree. */
   size_t              neigh_offset;  /**< Adding this offset to the adress of the tree
-                                       yield the array of face_neighbor entries */
+                                       yields the array of face_neighbor entries */
   size_t              att_offset;    /**< Adding this offset to the adress of the tree
-                                       yield the array of attribute_info entries */
+                                       yields the array of attribute_info entries */
   /* TODO: Could be a size_t */
   int                 num_attributes; /**< The number of attributes at this tree */
 }
 t8_ctree_struct_t;
 
-/** This structure hold the information associated to an attribute of a tree.
+/** This structure holds the information associated to an attribute of a tree.
  *  The attributes of each are stored in a key-value storage, where the key consists
  *  of the two entries (package_id,key) both being integers.
  *  The package_id serves to identify the application layer that added the attribute
