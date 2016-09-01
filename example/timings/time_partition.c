@@ -125,7 +125,7 @@ t8_time_brick_refine_half (int x, int y, int x_periodix, int y_periodic,
  * partitioned. Repartition it by shipping 43% of each processes quadrants to
  * the next process. */
 void
-t8_time_cmesh_partition_brick (int x, int y, sc_MPI_Comm comm)
+t8_time_cmesh_partition_brick (int x, int y, int z, sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   t8_cmesh_t          cmesh_partition;
@@ -136,7 +136,7 @@ t8_time_cmesh_partition_brick (int x, int y, sc_MPI_Comm comm)
   sc_statinfo_t       stats[NUM_STATS];
 
   /* Create a disjoint brick cmesh with x time y trees on each process */
-  cmesh = t8_cmesh_new_disjoint_bricks (x, y, 0, 0, comm);
+  cmesh = t8_cmesh_new_disjoint_bricks (x, y, z, 1, 1, 1, comm);
   /* Allocate profiling struct */
   profile = T8_ALLOC_ZERO (t8_cprofile_t, 1);
 
@@ -206,9 +206,9 @@ main (int argc, char *argv[])
 {
   int                 mpiret;
   int                 first_argc;
-  int                 x_dim, y_dim;
+  int                 x_dim, y_dim, z_dim;
   int                 help = 0;
-  int                 refinement_level = 0;
+  int                 dim;
   sc_options_t       *opt;
 
   /* Initialize MPI, sc, p4est and t8code */
@@ -223,23 +223,24 @@ main (int argc, char *argv[])
   opt = sc_options_new (argv[0]);
 
   sc_options_add_int (opt, 'x', "x-dim", &x_dim, 1,
-                      "Number of mesh cells in x direction");
+                      "Number of mesh cells in x direction.");
   sc_options_add_int (opt, 'y', "y-dim", &y_dim, 1,
-                      "Number of mesh cells in y direction");
-#if 0
-  sc_options_add_int (opt, 'l', "level", &refinement_level, 0,
-                      "If > 0 then we refine the coarse mesh as often as l and"
-                      " partition on each level.");
-#endif
+                      "Number of mesh cells in y direction.");
+  sc_options_add_int (opt, 'z', "z-dim", &z_dim, 0,
+                      "Number of mesh cells in z direction."
+                      " If specified, then the mesh is automatically 3d.");
+  sc_options_add_int (opt, 'd', "dim", &dim, 2,
+                      "The dimension of the coarse mesh."
+                      " 2 for a quadmesh (z is ignored) and 3 for a hexmesh.");
   sc_options_add_switch (opt, 'h', "help", &help,
                          "Display a short help message.");
 
-  /* parese command line options */
+  /* parse command line options */
   first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT,
                                  opt, argc, argv);
-  /* check for wrong usae of arguments */
+  /* check for wrong usage of arguments */
   if (first_argc < 0 || first_argc != argc
-      || x_dim <= 0 || y_dim <= 0 || refinement_level < 0) {
+      || x_dim <= 0 || y_dim <= 0 || dim < 2 || dim > 3) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
@@ -248,10 +249,19 @@ main (int argc, char *argv[])
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else {
+    if (z_dim <= 0) {
+      /* For 2d problems, there are no trees in z direction. */
+      dim = 2;
+      z_dim = 0;
+    }
+    else {
+      dim = 3;
+    }
     /* Execute this part of the code if all options are correctly set */
-    t8_global_productionf ("Starting with x-dim = %i, y-dim = %i\n", x_dim,
-                           y_dim);
-    t8_time_cmesh_partition_brick (x_dim, y_dim, sc_MPI_COMM_WORLD);
+    t8_global_productionf
+      ("Starting with x-dim = %i, y-dim = %i z-dim = %i\n", x_dim, y_dim,
+       z_dim);
+    t8_time_cmesh_partition_brick (x_dim, y_dim, z_dim, sc_MPI_COMM_WORLD);
   }
   sc_options_destroy (opt);
   sc_finalize ();

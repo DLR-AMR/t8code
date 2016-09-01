@@ -1655,7 +1655,7 @@ t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees, sc_MPI_Comm comm)
   return cmesh;
 }
 
-/* On each process, create a num_x by num_y brick connectivity and
+/* On each process, create a num_x by num_y (by num_z) brick connectivity and
  * make a cmesh connectivity from the disjoint union of those.
  * Example: 2 processors,
  * On the first  num_x = 1, num_y = 1
@@ -1672,25 +1672,50 @@ t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees, sc_MPI_Comm comm)
  */
 t8_cmesh_t
 t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x, t8_gloidx_t num_y,
-                              int x_periodic, int y_periodic,
+                              t8_gloidx_t num_z, int x_periodic,
+                              int y_periodic, int z_periodic,
                               sc_MPI_Comm comm)
 {
   p4est_connectivity_t *my_brick;
+  p8est_connectivity_t *my_brick_3d;
   t8_cmesh_t          cmesh;
   t8_gloidx_t         num_trees, offset;
+  int                 dim;
 
-  T8_ASSERT (num_x >= 0 && num_y >= 0);
+  T8_ASSERT (num_x >= 0 && num_y >= 0 && num_z >= 0);
+  /* Set the dimension to 3 if num_z > 0 and 2 otherwise. */
+  if (num_z > 0) {
+    dim = 3;
+  }
+  else {
+    dim = 2;
+  }
   num_trees = num_x * num_y;
+  if (dim == 3) {
+    num_trees *= num_z;
+  }
   /* Create a p4est brick connectivity on the process with
    * num_x times num_y elements */
   if (num_trees > 0) {
-    my_brick = p4est_connectivity_new_brick (num_x, num_y, x_periodic,
-                                             y_periodic);
+    if (dim == 2) {
+      my_brick = p4est_connectivity_new_brick (num_x, num_y, x_periodic,
+                                               y_periodic);
+    }
+    else {
+      my_brick_3d = p8est_connectivity_new_brick (num_x, num_y, num_z,
+                                                  x_periodic, y_periodic,
+                                                  z_periodic);
+    }
   }
   else {
-    num_x = num_y = 0;
+    num_x = num_y = num_z = 0;
     num_trees = 0;
-    my_brick = p4est_connectivity_new (0, 0, 0, 0);
+    if (dim == 2) {
+      my_brick = p4est_connectivity_new (0, 0, 0, 0);
+    }
+    else {
+      my_brick_3d = p8est_connectivity_new (0, 0, 0, 0, 0, 0);
+    }
   }
 
   /* Calculate the x and y offset of trees */
@@ -1698,7 +1723,15 @@ t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x, t8_gloidx_t num_y,
   offset -= num_trees;
   t8_debugf ("[H] offset = %li\n", offset);
 
-  cmesh = t8_cmesh_new_from_p4est_ext (my_brick, 2, comm, 0, 1, offset + 1);
-  p4est_connectivity_destroy (my_brick);
+  if (dim == 2) {
+    cmesh = t8_cmesh_new_from_p4est_ext ((void *) my_brick,
+                                         dim, comm, 0, 1, offset + 1);
+    p4est_connectivity_destroy (my_brick);
+  }
+  else {
+    cmesh = t8_cmesh_new_from_p4est_ext ((void *) my_brick_3d,
+                                         dim, comm, 0, 1, offset + 1);
+    p8est_connectivity_destroy (my_brick_3d);
+  }
   return cmesh;
 }

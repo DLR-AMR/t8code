@@ -567,22 +567,29 @@ t8_cmesh_t          t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees,
                                           sc_MPI_Comm comm);
 
 /** Create a partitoned cmesh of quads whose local trees are given by an
- * num_x by num_y brick connectivity from p4est.
- * num_x and num_y can be different for different MPI ranks.
+ * num_x by num_y brick connectivity from p4est
+ * or a num_x by num_y by num_z brick connectivity from p8est.
+ * num_x and num_y and num_z can be different for different MPI ranks.
  * \param [in] num_x       The number of trees in x direction for this rank. Must be >= 0.
  * \param [in] num_y       The number of trees in y direction for this rank. Must be >= 0.
- * \param [in] x_periodic  If nonzero the local brick connectivity is periodic in x direction.
- * \param [in] y_periodic  If nonzero the local brick connectivity is periodic in y direction.
+ * \param [in] num_y       The number of trees in z direction for this rank. Must be >= 0.
+ *                         If nonzero, the cmesh is 3 dimensional.
+ * \param [in] x_periodic  If nonzero, the local brick connectivity is periodic in x direction.
+ * \param [in] y_periodic  If nonzero, the local brick connectivity is periodic in y direction.
+ * \param [in] y_periodic  If nonzero and \a num_z > 0, the local brick connectivity is periodic in z direction.
  * \param [in] comm        The MPI communicator used to commit the cmesh.
  * \return                 A committed and partitioned cmesh. The process local trees
- *                         form a \a num_x by \a num_y brick.
+ *                         form a \a num_x by \a num_y (by \a num_z) brick.
  * It is possible for num_x or num_y to be set to zero. In this case the local part
  * of the cmesh will be empty.
+ * If num_z is set to zero, the cmesh is 2 dimensional.
  */
 t8_cmesh_t          t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x,
                                                   t8_gloidx_t num_y,
+                                                  t8_gloidx_t num_z,
                                                   int x_periodic,
                                                   int y_periodic,
+                                                  int z_periodic,
                                                   sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
