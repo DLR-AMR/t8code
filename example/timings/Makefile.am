@@ -2,7 +2,7 @@
 # Non-recursive Makefile.am in example/basic
 # Included from toplevel directory
 
-bin_PROGRAMS += \						
+bin_PROGRAMS += \
 	example/timings/t8_time_partition
 #	example/timings/t8_time_new_refine \
 #	example/timings/t8_time_refine_type03 
