@@ -20,10 +20,48 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <t8_eclass.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_stash.h"
+
+/* The supported number of gmesh element classes.
+ * Currently, we only support first order elements.
+ */
+#define       T8_NUM_GMSH_ELEM_CLASSES  15
+/* look-up table to translate the gmsh element class to a t8code element class.
+ */
+const t8_eclass_t   t8_msh_element_type_to_eclass[T8_NUM_GMSH_ELEM_CLASSES +
+                                                  1] = {
+  T8_ECLASS_COUNT,              /* 0 is not valid */
+  T8_ECLASS_LINE,               /* 1 */
+  T8_ECLASS_TRIANGLE,
+  T8_ECLASS_QUAD,
+  T8_ECLASS_TET,
+  T8_ECLASS_HEX,                /* 5 */
+  T8_ECLASS_PRISM,
+  T8_ECLASS_PYRAMID,            /* 7 This is the last first order element type,
+                                   except the Point, which is type 15 */
+  /* We do not support type 8 to 14 */
+  T8_ECLASS_COUNT, T8_ECLASS_COUNT, T8_ECLASS_COUNT, T8_ECLASS_COUNT,
+  T8_ECLASS_COUNT, T8_ECLASS_COUNT, T8_ECLASS_COUNT,
+  T8_ECLASS_VERTEX              /* 15 */
+};
+
+/* translate the msh file vertex number to the t8code vertex number */
+/* TODO: Check if these are correct */
+const int           t8_msh_element_vertex_to_t8_vertex_num[T8_ECLASS_COUNT][8]
+  = {
+  {0},                          /* VERTEX */
+  {0, 1},                       /* LINE */
+  {0, 1, 3, 2},                 /* QUAD */
+  {0, 1, 2},                    /* TRIANGLE */
+  {0, 1, 5, 4, 2, 3, 7, 6},     /* HEX */
+  {0, 1, 2, 3},                 /* TET */
+  {0, 1, 2, 3, 4, 5, 8},        /* PRISM */
+  {0, 1, 3, 2, 4}               /* PYRAMID */
+};
 
 /* TODO: if partitioned then only add the needed face-connections to join faces
  *       maybe also only trees and ghosts to classes.
@@ -123,16 +161,17 @@ t8_msh_file_node_compare (const void *node_a, const void *node_b,
 /* Read an open .msh file and parse the nodes into a hash table.
  */
 static sc_hash_t   *
-t8_msh_file_read_nodes (FILE * fp, t8_locidx_t * num_nodes)
+t8_msh_file_read_nodes (FILE * fp, t8_locidx_t * num_nodes,
+                        sc_mempool_t ** node_mempool)
 {
   t8_msh_file_node_t *Node;
   sc_hash_t          *node_table = NULL;
   t8_locidx_t         ln, last_index;
-  char               *line = T8_ALLOC (char, 1024);
+  char               *line = malloc (1024);
   char                first_word[2048] = "\0";
   size_t              linen = 1024;
   int                 retval;
-  long                index;
+  long                index, lnum_nodes;
 
   T8_ASSERT (fp != NULL);
   /* Go to the beginning of the file */
@@ -153,14 +192,21 @@ t8_msh_file_read_nodes (FILE * fp, t8_locidx_t * num_nodes)
 
   /* Read the line containing the number of nodes */
   (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
-  retval = sscanf (line, "%i", num_nodes);
+  /* Read the number of nodes in a long int before converting it
+   * to t8_locidx_t. */
+  retval = sscanf (line, "%li", &lnum_nodes);
   /* Checking for read/write error */
   if (retval != 1) {
     t8_global_errorf ("Premature end of line while reading num nodes.\n");
     t8_debugf ("The line is %s", line);
     goto die_node;
   }
+  *num_nodes = lnum_nodes;
+  /* Check for type conversion error. */
+  T8_ASSERT (*num_nodes == lnum_nodes);
 
+  /* Create the mempool for the nodes */
+  *node_mempool = sc_mempool_new (sizeof (t8_msh_file_node_t));
   /* Create the hash table */
   node_table = sc_hash_new (t8_msh_file_node_hash, t8_msh_file_node_compare,
                             num_nodes, NULL);
@@ -176,7 +222,8 @@ t8_msh_file_read_nodes (FILE * fp, t8_locidx_t * num_nodes)
       goto die_node;
     }
     /* Allocate a new node */
-    Node = T8_ALLOC (t8_msh_file_node_t, 1);
+    Node = (t8_msh_file_node_t *) sc_mempool_alloc (*node_mempool);
+    /* Fill the node with the entries in the file */
     retval = sscanf (line, "%li %lf %lf %lf", &index,
                      &Node->coordinates[0], &Node->coordinates[1],
                      &Node->coordinates[2]);
@@ -188,17 +235,16 @@ t8_msh_file_read_nodes (FILE * fp, t8_locidx_t * num_nodes)
     Node->index = index;
     /* Check for type conversion error */
     T8_ASSERT (Node->index == index);
-    last_index = Node->index;
-    t8_debugf ("Insert node %li\n", index);
     /* Insert the node in the hash table */
-    retval = sc_hash_insert_unique (node_table, &Node, NULL);
+    retval = sc_hash_insert_unique (node_table, Node, NULL);
     /* If retval is zero then the node was already in the hash table.
      * This case should not occur. */
     T8_ASSERT (retval);
+    last_index = Node->index;
   }
 
   free (line);
-  fclose (fp);
+  t8_debugf ("Successfully read all Nodes.\n");
   return node_table;
   /* If everything went well, the function ends here. */
 
@@ -207,6 +253,8 @@ die_node:
   /* If we allocated the hash table, destroy it */
   if (node_table != NULL) {
     sc_hash_destroy (node_table);
+    sc_mempool_destroy (*node_mempool);
+    node_mempool = NULL;
   }
   /* Free memory */
   free (line);
@@ -214,236 +262,135 @@ die_node:
   return NULL;
 }
 
-#if 0
-/* Open .node file  and read node input
- * vertices is needed to temporarily store the vertex coordinates and pass
- * to t8_cmesh_triangle_read_eles.
- * memory for vertices is allocated here.
- * On succes the index of the first node is returned (0 or 1).
- * On failure -1 is returned. */
-static int
-t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename,
-                              double **vertices, t8_topidx_t * num_corners,
-                              int dim)
+/* fp should be set after the Nodes section, right before the element section. */
+int
+t8_cmesh_msh_file_read_eles (t8_cmesh_t cmesh, FILE * fp,
+                             sc_hash_t * vertices, int dim)
 {
-  FILE               *fp;
-  char               *line = T8_ALLOC (char, 1024);
+  char               *line = malloc (1024), *line_modify;
+  char                first_word[2048] = "\0";
   size_t              linen = 1024;
-  t8_topidx_t         cit;
-  t8_topidx_t         corner, corner_offset = 0;
-  double              x, y, z;
-#if 0                           /* used for currently disabeld code */
-  int                 i, bdy_marker;
-#endif
-  int                 num_attributes;
-  int                 nbdy_marker;
-  int                 retval;
-  int                 temp;
-  int                 num_read;
+  t8_locidx_t         num_elements, element_count;
+  t8_gloidx_t         tree_count;
+  t8_eclass_t         eclass;
+  t8_msh_file_node_t  Node, **found_node;
+  long                lnum_elements;
+  int                 retval, i;
+  int                 ele_type, num_tags;
+  int                 num_nodes, t8_vertex_num;
+  long                node_indices[8];
+  double              tree_vertices[24];
 
-  T8_ASSERT (filename != NULL);
-  T8_ASSERT (dim == 2 || dim == 3);
-  fp = fopen (filename, "r");
-  if (fp == NULL) {
-    t8_global_errorf ("Failed to open %s.\n", filename);
-    goto die_node;
-  }
+  T8_ASSERT (fp != NULL);
+  /* Search for the line beginning with "$Elements" */
+  while (!feof (fp) && strcmp (first_word, "$Elements")) {
+    (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
+    /* Get the first word of this line */
+    retval = sscanf (line, "%2048s", first_word);
 
-  /* read first non-comment line from .node file */
-  retval = t8_cmesh_triangle_read_next_line (&line, &linen, fp);
-  if (retval < 0) {
-    t8_global_errorf ("Failed to read first line from %s.\n", filename);
-    goto die_node;
-  }
-
-  /* read number of corners, dimension (must be 2), number of attributes
-   * and number of boundary markers (0 or 1) */
-  retval = sscanf (line, "%i %i %i %i", num_corners, &temp, &num_attributes,
-                   &nbdy_marker);
-  if (retval != 4) {
-    t8_global_errorf ("Premature end of line.\n");
-    goto die_node;
-  }
-  if (temp != dim) {
-    t8_global_errorf ("Dimension must equal %i.\n", dim);
-    goto die_node;
-  }
-  T8_ASSERT (num_attributes >= 0);
-  T8_ASSERT (nbdy_marker == 0 || nbdy_marker == 1);
-
-  *vertices = T8_ALLOC (double, dim * *num_corners);
-  /* read all vertex coordinates */
-  for (cit = 0; cit < *num_corners; cit++) {
-    retval = t8_cmesh_triangle_read_next_line (&line, &linen, fp);
-    if (retval < 0) {
-      t8_global_errorf ("Failed to read line from %s.\n", filename);
-      goto die_node;
-    }
-    /* read corner number and coordinates */
-    retval = sscanf (line, "%i %lf %lf%n", &corner, &x, &y, &num_read);
-    if (dim == 3) {
-      retval += sscanf (line + num_read, "%lf", &z);
-    }
-    if (retval != dim + 1) {
-      t8_global_errorf ("Premature end of line in %s.\n", filename);
-    }
-    /* The corners in a triangle file are indexed starting with zero or one.
-     * The corners in the cmesh always start with zero */
-    if (cit == 0) {
-      T8_ASSERT (corner == 0 || corner == 1);
-      corner_offset = corner;
-    }
-    (*vertices)[dim * cit] = x;
-    (*vertices)[dim * cit + 1] = y;
-    if (dim == 3) {
-      (*vertices)[dim * cit + 2] = z;
-    }
-
-#if 0                           /* read attributes and boundary marker. This part is currently not needed */
-    /* read attributes but do not save them */
-    for (i = 0; i < num_attributes; i++) {
-      retval = sscanf (line, "%*f ");
-      if (retval != 0) {
-        t8_global_errorf ("Premature end of line in %s.\n", filename);
-      }
-    }
-    retval = sscanf (&line, "%i", &bdy_marker);
+    /* Checking for read/write error */
     if (retval != 1) {
-      t8_global_errorf ("Premature end of line in %s.\n", filename);
+      t8_global_errorf
+        ("Premature end of line while reading num elements.\n");
+      t8_debugf ("The line is %s", line);
+      goto die_ele;
     }
-#endif /* if 0 */
   }
-  fclose (fp);
-  /* Done reading .node file */
-  T8_FREE (line);
-  return corner_offset;
-die_node:
-  /* Clean up on error. */
-  /* Close open file */
-  if (fp != NULL) {
-    fclose (fp);
-  }
-  T8_FREE (line);
-  return -1;
-}
-#endif
 
-#if 0
-/* Open .ele file and read element input
- * On succes the index of the first element is returned (0 or 1).
- * On failure -1 is returned. */
-/* TODO: We can use this file to scan for the neighbors as well
- *       for each node create a list of all nodes (with smaller index)
- *       that it shares a face with. And for each triangle face, look-up
- *       in this list.
- */
-static int
-t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
-                             char *filename, double *vertices, int dim
-#ifdef T8_ENABLE_DEBUG
-                             , t8_topidx_t num_vertices
-#endif
-  )
-{
-  FILE               *fp;
-  char               *line = T8_ALLOC (char, 1024);
-  size_t              linen = 1024;
-  t8_locidx_t         num_elems, tit;
-  t8_locidx_t         triangle, triangle_offset = 0;
-  t8_topidx_t         tcorners[4];      /* in 2d only the first 3 values are needed */
-  int                 retval;
-  int                 temp;
-  int                 i;
-  int                 num_read;
-  double              tree_vertices[9];
-
-  /* Open .ele file and read element input */
-  T8_ASSERT (filename != NULL);
-  T8_ASSERT (dim == 2 || dim == 3);
-  fp = fopen (filename, "r");
-  if (fp == NULL) {
-    t8_global_errorf ("Failed to open %s.\n", filename);
+  /* Read the line containing the number of elements */
+  (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
+  /* Since t8_locidx_t could be int32 or int64, we first read the
+   * number of elements in a long int and store it as t8_locidx_t later. */
+  retval = sscanf (line, "%li", &lnum_elements);
+  /* Checking for read/write error */
+  if (retval != 1) {
+    t8_global_errorf ("Premature end of line while reading num elements.\n");
+    t8_debugf ("The line is %s", line);
     goto die_ele;
   }
-  /* read first non-comment line from .ele file */
-  retval = t8_cmesh_triangle_read_next_line (&line, &linen, fp);
-  if (retval < 0) {
-    t8_global_errorf ("Failed to read first line from %s.\n", filename);
-    goto die_ele;
-  }
+  num_elements = lnum_elements;
+  /* Check for type conversion error */
+  T8_ASSERT (num_elements == lnum_elements);
 
-  /* get number of triangles and points per triangle */
-  retval = sscanf (line, "%i %i", &num_elems, &temp);
-  if (retval != 2) {
-    t8_global_errorf ("Premature end of line in %s.\n", filename);
-  }
-  T8_ASSERT (temp >= 3);
-  /* This step is actually only necessary if the cmesh will be bcasted and
-   * partitioned. Then we use the num_elems variable to compute the partition table
-   * on the remote processes */
-  cmesh->num_trees = num_elems;
-  /* For each triangle read the corner indices */
-  for (tit = 0; tit < num_elems; tit++) {
-    retval = t8_cmesh_triangle_read_next_line (&line, &linen, fp);
+  tree_count = 0;
+  for (element_count = 0; element_count < num_elements; element_count++) {
+    /* Read the next line containing element information */
+    retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
     if (retval < 0) {
-      t8_global_errorf ("Failed to read line from %s.\n", filename);
+      t8_global_errorf ("Premature end of line while reading elements.\n");
       goto die_ele;
     }
-    retval = sscanf (line, "%i %i %i %i%n", &triangle, tcorners, tcorners + 1,
-                     tcorners + 2, &num_read);
-    if (dim == 3) {
-      /* TODO: this is kind of unelegant, can we do it better? */
-      retval += sscanf (line + num_read, "%i", tcorners + 3);
-    }
-    if (retval != dim + 2) {
-      t8_global_errorf ("Premature end of line in %s.\n", filename);
+    /* The line describing the element looks like
+     * Element_number Element_type Number_tags tag_1 ... tag_n Node_1 ... Node_m
+     *
+     * We ignore the element number, read the type and the number of (integer) tags.
+     * We also ignore the tags and after we know the type, we read the
+     * nodes.
+     */
+    sscanf (line, "%*i %i %i", &ele_type, &num_tags);
+    /* Check if the element type is supported */
+    if (ele_type > T8_NUM_GMSH_ELEM_CLASSES || ele_type < 0
+        || t8_msh_element_type_to_eclass[ele_type] == T8_ECLASS_COUNT) {
+      t8_global_errorf ("Element type %i is not supported by t8code.\n",
+                        ele_type);
       goto die_ele;
     }
-    /* The triangles in a triangle file are indexed starting with zero or one.
-     * The triangles in the cmesh always start with zero */
-    if (tit == 0) {
-      triangle_offset = triangle;
-      T8_ASSERT (triangle == 0 || triangle == 1);
+    /* Continue if element type is supported */
+    eclass = t8_msh_element_type_to_eclass[ele_type];
+    T8_ASSERT (eclass != T8_ECLASS_COUNT);
+    /* Check if the element is of the correct dimension */
+    if (t8_eclass_to_dimension[eclass] == dim) {
+      /* The element is of the correct dimension,
+       * add it to the cmesh and read its nodes */
+      t8_cmesh_set_tree_class (cmesh, tree_count, eclass);
+      line_modify = line;
+      /* Since the tags are stored before the node indices, we need to
+       * skip them first. But since the number of them is unknown and the
+       * lenght (in characters) of them, we have to skip one by one. */
+      for (i = 0; i < 3 + num_tags; i++) {
+        T8_ASSERT (strcmp (line_modify, "\0"));
+        /* move line_modify to the next word in the line */
+        (void) strsep (&line_modify, " ");
+      }
+      /* At this point line_modify contains only the node indices. */
+      num_nodes = t8_eclass_num_vertices[eclass];
+      for (i = 0; i < num_nodes; i++) {
+        T8_ASSERT (strcmp (line_modify, "\0"));
+        retval = sscanf (line_modify, "%li", node_indices + i);
+        if (retval != 1) {
+          t8_global_errorf ("Premature end of line while reading element.\n");
+          t8_debugf ("The line is %s", line);
+          goto die_ele;
+        }
+        /* move line_modify to the next word in the line */
+        (void) strsep (&line_modify, " ");
+      }
+      /* Now the nodes are read and we get their coordinates from
+       * the stored nodes */
+      for (i = 0; i < num_nodes; i++) {
+        Node.index = node_indices[i];
+        sc_hash_lookup (vertices, (void *) &Node, (void ***) &found_node);
+        /* Add node coordinates to the tree vertices */
+        t8_vertex_num = t8_msh_element_vertex_to_t8_vertex_num[eclass][i];
+        tree_vertices[3 * t8_vertex_num] = (*found_node)->coordinates[0];
+        tree_vertices[3 * t8_vertex_num + 1] = (*found_node)->coordinates[1];
+        tree_vertices[3 * t8_vertex_num + 2] = (*found_node)->coordinates[2];
+      }
+      /* Set the vertices of this tree */
+      t8_cmesh_set_tree_vertices (cmesh, tree_count, t8_get_package_id (),
+                                  0, tree_vertices, num_nodes);
+      /* advance the tree counter */
+      tree_count++;
     }
-    T8_ASSERT (triangle - triangle_offset == tit);
-    t8_cmesh_set_tree_class (cmesh, triangle - triangle_offset,
-                             dim == 2 ? T8_ECLASS_TRIANGLE : T8_ECLASS_TET);
-    if (corner_offset != 0) {
-      tcorners[0] -= corner_offset;
-      tcorners[1] -= corner_offset;
-      tcorners[2] -= corner_offset;
-      tcorners[3] -= corner_offset;
-    }
-    T8_ASSERT (tcorners[0] < num_vertices);
-    T8_ASSERT (tcorners[1] < num_vertices);
-    T8_ASSERT (tcorners[2] < num_vertices);
-    T8_ASSERT (dim == 2 || tcorners[3] < num_vertices);
-    for (i = 0; i < dim + 1; i++) {
-      tree_vertices[3 * i] = vertices[dim * tcorners[i]];
-      tree_vertices[3 * i + 1] = vertices[dim * tcorners[i] + 1];
-      tree_vertices[3 * i + 2] =
-        dim == 2 ? 0 : vertices[dim * tcorners[i] + 2];
-    }
-    t8_cmesh_set_tree_vertices (cmesh, triangle - triangle_offset,
-                                t8_get_package_id (), 0,
-                                tree_vertices, dim + 1);
   }
-  fclose (fp);
-  T8_FREE (vertices);
-  T8_FREE (line);
-  /* Done reading .ele file */
-  return triangle_offset;
+  free (line);
+  return 0;
 die_ele:
-  /* Clean up on error. */
-  /* Close open file */
-  if (fp != NULL) {
-    fclose (fp);
-  }
-  T8_FREE (vertices);
-  T8_FREE (line);
+  /* Error handling */
+  free (line);
+  t8_cmesh_destroy (&cmesh);
   return -1;
 }
-#endif
 
 t8_cmesh_t
 t8_cmesh_from_msh_file (char *fileprefix, int partition,
@@ -453,54 +400,45 @@ t8_cmesh_from_msh_file (char *fileprefix, int partition,
   t8_cmesh_t          cmesh;
   sc_hash_t          *vertices;
   t8_locidx_t         num_vertices;
+  sc_mempool_t       *node_mempool = NULL;
+  int                 retval;
+  char                current_file[BUFSIZ];
+  FILE               *file;
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  cmesh = NULL;
   /* TODO: implement partitioned input using gmesh's
    * partitioned files.
    * Or using a single file and computing the partition on the run. */
   T8_ASSERT (partition == 0);
-#if 0
-  /* TODO: Use cmesh_bcast when scanning replicated mesh.
-   *       in that case only rank 0 will read the mesh */
-  if (mpirank == 0 || partition)
-#endif
-  {
-    int                 retval;
-    char                current_file[BUFSIZ];
-    FILE               *file;
 
-    snprintf (current_file, BUFSIZ, "%s.msh", fileprefix);
-    /* Open the file */
-    t8_debugf ("Opening file %s\n", current_file);
-    file = fopen (current_file, "r");
-    if (file == NULL) {
-      t8_global_errorf ("Could not open file %s\n", current_file);
-      return NULL;
-    }
-    /* read nodes from the file */
-    vertices = t8_msh_file_read_nodes (file, &num_vertices);
-    fclose (file);
-    {
-      t8_msh_file_node_t  Node, **pEntry, *Entry;
-      t8_locidx_t         li;
-      for (li = 0; li < num_vertices; li++) {
-        Node.index = li + 1;
-        sc_hash_lookup (vertices, &Node, (void *) &pEntry);
-        T8_ASSERT (pEntry != NULL);
-        Entry = *pEntry;
-        t8_debugf ("Node %li: %f %f %f\n", (long) Entry->index,
-                   Entry->coordinates[0], Entry->coordinates[1],
-                   Entry->coordinates[2]);
-      }
-    }
-    if (vertices != NULL) {
-      sc_hash_destroy (vertices);
-    }
+  snprintf (current_file, BUFSIZ, "%s.msh", fileprefix);
+  /* Open the file */
+  t8_debugf ("Opening file %s\n", current_file);
+  file = fopen (current_file, "r");
+  if (file == NULL) {
+    t8_global_errorf ("Could not open file %s\n", current_file);
+    return NULL;
+  }
+  /* read nodes from the file */
+  vertices = t8_msh_file_read_nodes (file, &num_vertices, &node_mempool);
+
+  /* initialize cmesh structure */
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_msh_file_read_eles (cmesh, file, vertices, dim);
+  /* close the file and free the memory for the nodes */
+  fclose (file);
+  if (vertices != NULL) {
+    sc_hash_destroy (vertices);
+  }
+  sc_mempool_destroy (node_mempool);
+  /* Commit the cmesh */
+  if (cmesh != NULL) {
+    T8_ASSERT (cmesh->dimension == dim);
+    t8_cmesh_commit (cmesh, comm);
   }
   return cmesh;
 }
