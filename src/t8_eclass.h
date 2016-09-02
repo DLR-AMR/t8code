@@ -62,6 +62,8 @@ t8_eclass_t;
 
 /** The maximum number of boundary faces an element class can have. */
 #define T8_ECLASS_MAX_FACES 6
+/** The maximum number of cornes a 2-dimensional element class can have. */
+#define T8_ECLASS_MAX_CORNERS_2D 4
 /** The maximum number of cornes an element class can have. */
 #define T8_ECLASS_MAX_CORNERS 8
 /** The maximal possible dimension for an eclass */
@@ -78,6 +80,11 @@ extern const int    t8_eclass_max_num_faces[T8_ECLASS_MAX_DIM + 1];
 
 /** For each eclass the number of children on each face when refined */
 extern const int    t8_eclass_num_face_children[T8_ECLASS_COUNT];
+
+/** For each eclass and each face f the entry i gives the vertex number
+ * of f's i-th vertex within all vertices of the tree. */
+extern const int
+t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_CORNERS_2D];
 
 /** The number of vertices of an element class. */
 extern const int    t8_eclass_num_vertices[T8_ECLASS_COUNT];

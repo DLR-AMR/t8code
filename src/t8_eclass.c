@@ -35,6 +35,19 @@ const int t8_eclass_max_num_faces[T8_ECLASS_MAX_DIM + 1] =
 const int t8_eclass_num_face_children[T8_ECLASS_COUNT] =
  { 0, 1, 2, 2, 4, 4, 4, 4};
 
+
+const int t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_CORNERS_2D] =
+{
+ {-1},   /* vertex */
+ {{0},{1}},   /* line */
+ {{0, 2},{1, 3},{0, 1}, {2, 3}},   /* quad */
+ {{1,2},{0,2},{0,1}},   /* triangle */
+ {{0,2,4,6},{1,3,5,7},{0,1,4,5},{2,3,6,7},{0,1,2,3},{4,5,6,7}},   /* hex */
+ {{1,2,3},{0,2,3},{0,1,3},{0,1,2}},   /* tet */
+ {{0,1,3,4},{0,2,3,5},{0,1,3,4},{0,1,2},{3,4,5}},   /* prism */
+ {{0,2,4},{1,3,4},{0,1,4},{2,3,4},{0,1,2,3}}/* pyramid */
+};
+
 const int    t8_eclass_num_vertices[T8_ECLASS_COUNT] =
   { 1, 2, 4, 3, 8, 4, 6, 5 };
 
