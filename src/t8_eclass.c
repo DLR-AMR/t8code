@@ -36,9 +36,10 @@ const int t8_eclass_num_face_children[T8_ECLASS_COUNT] =
  { 0, 1, 2, 2, 4, 4, 4, 4};
 
 
-const int t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_CORNERS_2D] =
+const int
+t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_CORNERS_2D] =
 {
- {-1},   /* vertex */
+ {{-1}},   /* vertex */
  {{0},{1}},   /* line */
  {{0, 2},{1, 3},{0, 1}, {2, 3}},   /* quad */
  {{1,2},{0,2},{0,1}},   /* triangle */
@@ -68,24 +69,24 @@ const int t8_eclass_vtk_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS] =
  {  0,  1,  3,  2,  4, -1, -1, -1}}; /* pyramid */
 
 const int t8_eclass_face_types[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES] =
-  {{ -1, -1, -1, -1, -1, -1 },
-   {  0,  0, -1, -1, -1, -1 },
-   {  1,  1,  1,  1, -1, -1 },
-   {  1,  1,  1, -1, -1, -1 },
-   {  2,  2,  2,  2,  2,  2 },
-   {  3,  3,  3,  3, -1, -1 },
-   {  2,  2,  2,  3,  3, -1 },
-   {  3,  3,  3,  3,  2, -1 }};
+  {{ -1, -1, -1, -1, -1, -1 },  /* vertex */
+   {  0,  0, -1, -1, -1, -1 },  /* line */
+   {  1,  1,  1,  1, -1, -1 },  /* quad */
+   {  1,  1,  1, -1, -1, -1 },  /* triangle */
+   {  2,  2,  2,  2,  2,  2 },  /* hex */
+   {  3,  3,  3,  3, -1, -1 },  /* tet */
+   {  2,  2,  2,  3,  3, -1 },  /* prism */
+   {  3,  3,  3,  3,  2, -1 }};  /* pyramid */
 
 const int t8_eclass_boundary_count[T8_ECLASS_COUNT][T8_ECLASS_COUNT] =
-  {{ 0,  0, 0, 0, 0, 0, 0, 0 },
-   { 2,  0, 0, 0, 0, 0, 0, 0 },
-   { 4,  4, 0, 0, 0, 0, 0, 0 },
-   { 3,  3, 0, 0, 0, 0, 0, 0 },
-   { 8, 12, 6, 0, 0, 0, 0, 0 },
-   { 4,  6, 0, 4, 0, 0, 0, 0 },
-   { 6,  9, 3, 2, 0, 0, 0, 0 },
-   { 5,  8, 1, 4, 0, 0, 0, 0 }};
+  {{ 0,  0, 0, 0, 0, 0, 0, 0 },  /* vertex */
+   { 2,  0, 0, 0, 0, 0, 0, 0 },  /* line */
+   { 4,  4, 0, 0, 0, 0, 0, 0 },  /* quad */
+   { 3,  3, 0, 0, 0, 0, 0, 0 },  /* triangle */
+   { 8, 12, 6, 0, 0, 0, 0, 0 },  /* hex */
+   { 4,  6, 0, 4, 0, 0, 0, 0 },  /* tet */
+   { 6,  9, 3, 2, 0, 0, 0, 0 },  /* prism */
+   { 5,  8, 1, 4, 0, 0, 0, 0 }};  /* pyramid */
 
 const char * t8_eclass_to_string[T8_ECLASS_COUNT] =
      {"Vertex",
