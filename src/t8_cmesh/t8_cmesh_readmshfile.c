@@ -481,6 +481,8 @@ t8_msh_file_face_equal (const void *facea, const void *faceb,
   return 1;
 }
 
+/* We use this function in a loop over all elements
+ * in the hash table, to free the memory of the vertices array */
 static int
 t8_msh_file_face_free (void **face, const void *data)
 {
@@ -489,6 +491,86 @@ t8_msh_file_face_free (void **face, const void *data)
   Face = *(t8_msh_file_face_t **) face;
   T8_FREE (Face->vertices);
   return 1;
+}
+
+/* Given a face and a cmesh set the face as a domain boundary.
+ * We use this function in a loop over all hashed faces.
+ */
+static int
+t8_msh_file_face_set_boundary (void **face, const void *data)
+{
+  t8_msh_file_face_t *Face;
+  t8_cmesh_t          cmesh;
+  t8_gloidx_t         gtree_id;
+
+  cmesh = (t8_cmesh_t) data;
+  Face = *(t8_msh_file_face_t **) face;
+
+  /* Get the global tree id */
+  gtree_id = Face->ltree_id;
+  /* Set the Face as a domain boundary */
+  t8_cmesh_set_join (cmesh, gtree_id, gtree_id, Face->face_number,
+                     Face->face_number, 0);
+  return 1;
+}
+
+/* Given two faces and the classes of their volume trees,
+ * compute the orientation of the faces to each other */
+static int
+t8_msh_file_face_orientation (t8_msh_file_face_t * Face_a,
+                              t8_msh_file_face_t * Face_b,
+                              t8_eclass_t tree_class_a,
+                              t8_eclass_t tree_class_b)
+{
+  long                vertex_zero;      /* The number of the first vertex of the smaller face */
+  t8_msh_file_face_t *smaller_Face, *bigger_Face;
+  int                 compare, iv;
+  t8_eclass_t         bigger_class;
+  int                 orientation = -1;
+
+  compare = t8_eclass_compare (tree_class_a, tree_class_b);
+  if (compare > 0) {
+    /* tree_class_a is bigger than tree_class_b */
+    smaller_Face = Face_b;
+    bigger_Face = Face_a;
+    bigger_class =
+      (t8_eclass_t) t8_eclass_face_types[tree_class_a][Face_a->face_number];
+  }
+  else if (compare < 0) {
+    /* tree_class_a is smaller than tree_class_b */
+    smaller_Face = Face_a;
+    bigger_Face = Face_b;
+    bigger_class =
+      (t8_eclass_t) t8_eclass_face_types[tree_class_b][Face_b->face_number];
+  }
+  else {
+    /* both classes are the same, thus
+     * the face with the smaller tree id is the smaller one */
+    if (Face_a->ltree_id < Face_b->ltree_id) {
+      smaller_Face = Face_a;
+      bigger_Face = Face_b;
+      bigger_class =
+        (t8_eclass_t) t8_eclass_face_types[tree_class_b][Face_b->face_number];
+    }
+    else {
+      smaller_Face = Face_b;
+      bigger_Face = Face_a;
+      bigger_class =
+        (t8_eclass_t) t8_eclass_face_types[tree_class_a][Face_a->face_number];
+    }
+  }
+  vertex_zero = smaller_Face->vertices[0];
+  /* Find which point in the bigger face is vertex_zero */
+  for (iv = 0; iv < t8_eclass_num_vertices[bigger_class]; iv++) {
+    if (vertex_zero == bigger_Face->vertices[iv]) {
+      /* We found the corresponding vertex */
+      orientation = iv;
+      /* set condition to break the loop */
+      iv = t8_eclass_num_vertices[bigger_class];
+    }
+  }
+  T8_ASSERT (orientation >= 0);
+  return orientation;
 }
 
 /* Given the number of vertices and for each element a list of its
@@ -502,17 +584,17 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh,
   sc_hash_t          *faces;
   t8_msh_file_face_t *Face, **pNeighbor, *Neighbor;
   sc_mempool_t       *face_mempool;
-  t8_locidx_t         ltree_it;
+  t8_gloidx_t         gtree_it;
   t8_gloidx_t         gtree_id, gtree_neighbor;
-  t8_eclass_t         eclass, face_class;
+  t8_eclass_t         eclass, face_class, neighbor_tclass;
   int                 num_face_vertices, face_it, vertex_it;
-  int                 retval;
+  int                 retval, orientation;
   long               *tree_vertices;
   t8_stash_class_struct_t *class_entry;
 
   face_mempool = sc_mempool_new (sizeof (t8_msh_file_face_t));
   faces = sc_hash_new (t8_msh_file_face_hash, t8_msh_file_face_equal,
-                       NULL, NULL);
+                       cmesh, NULL);
 
   /* TODO: Does currently not work with partitioned cmesh */
   T8_ASSERT (!cmesh->set_partition);
@@ -520,7 +602,9 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh,
   T8_ASSERT (!t8_cmesh_is_committed (cmesh));
   t8_debugf ("Starting to find tree neighbors\n");
   /* Iterate over all local trees */
-  for (ltree_it = 0; ltree_it < cmesh->stash->classes.elem_count; ltree_it++) {
+  for (gtree_it = 0;
+       gtree_it < (t8_gloidx_t) cmesh->stash->classes.elem_count;
+       gtree_it++) {
     /* We get the class of the current tree.
      * Since we know that the trees were put into the stash in order
      * of their tree id's, we can just read the correspoding entry from
@@ -530,26 +614,24 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh,
      *    Use t8_stash_class_bsearch in tat case.
      */
     class_entry = (t8_stash_class_struct_t *)
-      t8_sc_array_index_locidx (&cmesh->stash->classes, ltree_it);
-    T8_ASSERT (class_entry->id == ltree_it);
+      t8_sc_array_index_locidx (&cmesh->stash->classes, gtree_it);
+    T8_ASSERT (class_entry->id == gtree_it);
     eclass = class_entry->eclass;
     /* Get the vertices of that tree */
     tree_vertices = *(long **) t8_sc_array_index_locidx (vertex_indices,
-                                                         ltree_it);
+                                                         gtree_it);
     /* loop over all faces of the tree */
     for (face_it = 0; face_it < t8_eclass_num_faces[eclass]; face_it++) {
       /* Create the Face struct */
-      Face = sc_mempool_alloc (face_mempool);
+      Face = (t8_msh_file_face_t *) sc_mempool_alloc (face_mempool);
       /* Get its eclass and the number of vertices */
-      face_class = t8_eclass_face_types[eclass][face_it];
+      face_class = (t8_eclass_t) t8_eclass_face_types[eclass][face_it];
       num_face_vertices = t8_eclass_num_vertices[face_class];
       Face->vertices = T8_ALLOC (long, num_face_vertices);
       Face->num_vertices = num_face_vertices;
-      Face->ltree_id = ltree_it;
+      Face->ltree_id = gtree_it;
       Face->face_number = face_it;
       /* Copy the vertices of the face to the face struct */
-      t8_debugf ("[H] Adding face %i of tree %i (%i vertices)\n ", face_it,
-                 ltree_it, num_face_vertices);
       for (vertex_it = 0; vertex_it < num_face_vertices; vertex_it++) {
         Face->vertices[vertex_it] =
           tree_vertices[t8_face_vertex_to_tree_vertex[eclass][face_it]
@@ -560,22 +642,36 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh,
       if (!retval) {
         /* The face was already in the hash */
         Neighbor = *pNeighbor;
-        T8_ASSERT (Neighbor->ltree_id != ltree_it);
+        T8_ASSERT (Neighbor->ltree_id != gtree_it);
         /* The current tree is a neighbor to the tree Neighbor->ltree_id */
         /* We need to identify the face number and the orientation */
-        gtree_id = t8_cmesh_get_first_treeid (cmesh) + ltree_it;
-        gtree_neighbor =
-          t8_cmesh_get_first_treeid (cmesh) + Neighbor->ltree_id;
-        /* TODO: Compute the correct orientation */
+        gtree_id = gtree_it;
+        gtree_neighbor = Neighbor->ltree_id;
+        /* Compute the orientation of the face connection */
+        /* Get the element class of the neighbor tree */
+        class_entry = (t8_stash_class_struct_t *)
+          t8_sc_array_index_locidx (&cmesh->stash->classes,
+                                    Neighbor->ltree_id);
+        T8_ASSERT (class_entry->id == Neighbor->ltree_id);
+        neighbor_tclass = class_entry->eclass;
+        /* Calculate the orientation */
+        orientation = t8_msh_file_face_orientation (Face, Neighbor, eclass,
+                                                    neighbor_tclass);
+        /* Set the face connection */
         t8_cmesh_set_join (cmesh, gtree_id, gtree_neighbor, face_it,
-                           Neighbor->face_number, 0);
+                           Neighbor->face_number, orientation);
         T8_FREE (Face->vertices);
         sc_mempool_free (face_mempool, Face);
-        /* TODO: We can free the neighbor here as well */
+        /* We can free the neighbor here as well */
+        sc_hash_remove (faces, Neighbor, NULL);
+        T8_FREE (Neighbor->vertices);
+        sc_mempool_free (face_mempool, Neighbor);
       }
     }
   }
-  /* TODO: The remaining faces are domain boundaries */
+  /* The remaining faces are domain boundaries */
+  sc_hash_foreach (faces, t8_msh_file_face_set_boundary);
+  /* Free the faces and the hash */
   sc_hash_foreach (faces, t8_msh_file_face_free);
   sc_mempool_destroy (face_mempool);
   sc_hash_destroy (faces);
@@ -592,7 +688,6 @@ t8_cmesh_from_msh_file (char *fileprefix, int partition,
   t8_locidx_t         num_vertices;
   sc_mempool_t       *node_mempool = NULL;
   sc_array_t         *vertex_indices;
-  int                 retval;
   long               *indices_entry;
   char                current_file[BUFSIZ];
   FILE               *file;

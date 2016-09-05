@@ -84,7 +84,8 @@ extern const int    t8_eclass_num_face_children[T8_ECLASS_COUNT];
 /** For each eclass and each face f the entry i gives the vertex number
  * of f's i-th vertex within all vertices of the tree. */
 extern const int
-t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_CORNERS_2D];
+     t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES]
+  [T8_ECLASS_MAX_CORNERS_2D];
 
 /** The number of vertices of an element class. */
 extern const int    t8_eclass_num_vertices[T8_ECLASS_COUNT];
@@ -130,7 +131,7 @@ int                 t8_eclass_count_boundary (t8_eclass_t theclass,
  */
 t8_gloidx_t         t8_eclass_count_leaf (t8_eclass_t theclass, int level);
 
-/** Compare two eclasses of the sam dimension
+/** Compare two eclasses of the same dimension
  *  as necessary for face neighbor orientation.
  *  The implemented order is Triangle < Square in 2D and
  *  Tet < Hex < Prism < Pyramid in 3D.
