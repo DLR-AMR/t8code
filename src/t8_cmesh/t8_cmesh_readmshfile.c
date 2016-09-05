@@ -180,7 +180,7 @@ t8_msh_file_read_nodes (FILE * fp, t8_locidx_t * num_nodes,
   t8_msh_file_node_t *Node;
   sc_hash_t          *node_table = NULL;
   t8_locidx_t         ln, last_index;
-  char               *line = malloc (1024);
+  char               *line = (char *) malloc (1024);
   char                first_word[2048] = "\0";
   size_t              linen = 1024;
   int                 retval;
@@ -284,7 +284,7 @@ t8_cmesh_msh_file_read_eles (t8_cmesh_t cmesh, FILE * fp,
                              sc_hash_t * vertices,
                              sc_array_t ** vertex_indices, int dim)
 {
-  char               *line = malloc (1024), *line_modify;
+  char               *line = (char *) malloc (1024), *line_modify;
   char                first_word[2048] = "\0";
   size_t              linen = 1024;
   t8_locidx_t         num_trees, tree_loop;
