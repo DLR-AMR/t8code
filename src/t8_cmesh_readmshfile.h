@@ -38,9 +38,10 @@ T8_EXTERN_C_BEGIN ();
 
 /* put declarations here */
 
+/* TODO: Document */
 t8_cmesh_t
 t8_cmesh_from_msh_file (char *fileprefix, int partition,
-                        sc_MPI_Comm comm, int dim);
+                        sc_MPI_Comm comm, int dim, int master);
 
 T8_EXTERN_C_END ();
 

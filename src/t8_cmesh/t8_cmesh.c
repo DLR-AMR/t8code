@@ -484,6 +484,8 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
     /* TODO: This makes it illegal to set a tree to i.e. quad and change it
      *       to hex later. Even if we replace all trees with another dimension.
      *       We could move this check to commit. */
+    /* TODO: If cmesh is partitioned and this part has no trees then the
+     *       dimension remains unset forever. */
     T8_ASSERT (t8_eclass_to_dimension[tree_class] == cmesh->dimension);
   }
 

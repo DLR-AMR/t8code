@@ -680,7 +680,7 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh,
 
 t8_cmesh_t
 t8_cmesh_from_msh_file (char *fileprefix, int partition,
-                        sc_MPI_Comm comm, int dim)
+                        sc_MPI_Comm comm, int dim, int master)
 {
   int                 mpirank, mpisize, mpiret;
   t8_cmesh_t          cmesh;
@@ -691,6 +691,7 @@ t8_cmesh_from_msh_file (char *fileprefix, int partition,
   long               *indices_entry;
   char                current_file[BUFSIZ];
   FILE               *file;
+  t8_gloidx_t         num_trees, first_tree, last_tree;
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -700,37 +701,63 @@ t8_cmesh_from_msh_file (char *fileprefix, int partition,
   /* TODO: implement partitioned input using gmesh's
    * partitioned files.
    * Or using a single file and computing the partition on the run. */
-  T8_ASSERT (partition == 0);
-
-  snprintf (current_file, BUFSIZ, "%s.msh", fileprefix);
-  /* Open the file */
-  t8_debugf ("Opening file %s\n", current_file);
-  file = fopen (current_file, "r");
-  if (file == NULL) {
-    t8_global_errorf ("Could not open file %s\n", current_file);
-    return NULL;
-  }
-  /* read nodes from the file */
-  vertices = t8_msh_file_read_nodes (file, &num_vertices, &node_mempool);
+  T8_ASSERT (partition == 0 || (master >= 0 && master < mpisize));
 
   /* initialize cmesh structure */
   t8_cmesh_init (&cmesh);
-  t8_cmesh_msh_file_read_eles (cmesh, file, vertices, &vertex_indices, dim);
-  /* close the file and free the memory for the nodes */
-  fclose (file);
-  t8_cmesh_msh_file_find_neighbors (cmesh, vertex_indices);
-  if (vertices != NULL) {
-    sc_hash_destroy (vertices);
+  if (!partition || mpirank == master) {
+    snprintf (current_file, BUFSIZ, "%s.msh", fileprefix);
+    /* Open the file */
+    t8_debugf ("Opening file %s\n", current_file);
+    file = fopen (current_file, "r");
+    if (file == NULL) {
+      t8_global_errorf ("Could not open file %s\n", current_file);
+      return NULL;
+    }
+    /* read nodes from the file */
+    vertices = t8_msh_file_read_nodes (file, &num_vertices, &node_mempool);
+    t8_cmesh_msh_file_read_eles (cmesh, file, vertices, &vertex_indices, dim);
+    /* close the file and free the memory for the nodes */
+    fclose (file);
+    t8_cmesh_msh_file_find_neighbors (cmesh, vertex_indices);
+    if (vertices != NULL) {
+      sc_hash_destroy (vertices);
+    }
+    sc_mempool_destroy (node_mempool);
+    while (vertex_indices->elem_count > 0) {
+      indices_entry = *(long **) sc_array_pop (vertex_indices);
+      T8_FREE (indices_entry);
+    }
+    sc_array_destroy (vertex_indices);
   }
-  sc_mempool_destroy (node_mempool);
-  while (vertex_indices->elem_count > 0) {
-    indices_entry = *(long **) sc_array_pop (vertex_indices);
-    T8_FREE (indices_entry);
+  if (partition) {
+    /* The cmesh is not yet committed, since we set the partitioning before */
+    if (mpirank == master) {
+      /* The master process sends the number of trees to
+       * all processes. This is used to fill the partition table
+       * that says that all trees are on master and zero on everybody else. */
+      num_trees = cmesh->stash->classes.elem_count;
+      first_tree = 0;
+      last_tree = num_trees - 1;
+      T8_ASSERT (cmesh->dimension == dim);
+    }
+    /* bcast the global number of trees */
+    sc_MPI_Bcast (&num_trees, 1, T8_MPI_GLOIDX, master, comm);
+    /* Set the first and last trees on this rank.
+     * No rank has any trees except the master */
+    if (mpirank < master) {
+      first_tree = 0;
+      last_tree = -1;
+    }
+    else if (mpirank > master) {
+      first_tree = num_trees;
+      last_tree = num_trees - 1;
+    }
+    t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
   }
-  sc_array_destroy (vertex_indices);
   /* Commit the cmesh */
+  T8_ASSERT (cmesh != NULL);
   if (cmesh != NULL) {
-    T8_ASSERT (cmesh->dimension == dim);
     t8_cmesh_commit (cmesh, comm);
   }
   return cmesh;
