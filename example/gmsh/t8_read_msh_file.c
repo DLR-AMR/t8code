@@ -27,6 +27,9 @@
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
 
+/* Output a cmesh in .vtk format. Process i writes to the file
+ * prefix_t8_msh_i.vtk
+ */
 static void
 t8_read_msh_file_vtk (t8_cmesh_t cmesh, const char *prefix)
 {
@@ -45,7 +48,10 @@ t8_read_msh_file_vtk (t8_cmesh_t cmesh, const char *prefix)
   }
 }
 
-static              t8_cmesh_t
+/* Given a cmesh and a file prefix, partition the cmesh uniformly
+ * and write vtk files for the partitioned mesh.
+ * The original cmesh is unreffed in this function. */
+static t8_cmesh_t
 t8_read_msh_partition (t8_cmesh_t cmesh, const char *prefix)
 {
   t8_cmesh_t          p_mesh;
@@ -61,6 +67,15 @@ t8_read_msh_partition (t8_cmesh_t cmesh, const char *prefix)
   return p_mesh;
 }
 
+/* Read a .msh file and create a cmesh structure from it.
+ * parameters:
+ *  prefix      The file to read is prefix.msh.
+ *  do_partitione If true, read the cmesh only on one process and store it
+ *                partitioned.
+ *  dim         The dimension of the mesh to be read from the files.
+ *  master      If do_partition is true a valid MPI rank that will read the
+ *              file alone. The other processes will not hold any trees then.
+ */
 static t8_cmesh_t
 t8_read_msh_file_build_cmesh (const char *prefix, int do_partition, int dim,
                               int master)

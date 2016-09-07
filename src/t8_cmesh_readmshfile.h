@@ -25,8 +25,8 @@
  * GMSH and consructing a cmesh from it.
  */
 
-#ifndef T8_CMESH_TRIANGLE_H
-#define T8_CMESH_TRIANGLE_H
+#ifndef T8_CMESH_READMSHFILE_H
+#define T8_CMESH_READMSHFILE_H
 
 #include <t8.h>
 #include <t8_eclass.h>
@@ -38,11 +38,26 @@ T8_EXTERN_C_BEGIN ();
 
 /* put declarations here */
 
-/* TODO: Document */
+/** Read a .msh file and create a cmesh from it.
+ * \param [in]    fileprefix    The prefix of the mesh file.
+ *                              The file fileprefix.msh is read.
+ * \param [in]    partition     If true the file is only opened on one process
+ *                              specified by the \a master argument and saved as
+ *                              a partitioned cmesh where each other process does not
+ *                              have any trees.
+ * \param [in]    comm          The MPI communicator with which the cmesh is to be committed.
+ * \param [in]    dim           The dimension to read from the .msh files. The .msh format
+ *                              can store several dimensions of the mesh and therefore the
+ *                              dimension to read has to be set manually.
+ * \param [in]    master        If partition is true, a valid MPI rank that will
+ *                              read the file and store all the trees alone.
+ * \return        A committed cmesh holding the mesh of dimension \a dim in the
+ *                specified .msh file.
+ */
 t8_cmesh_t
 t8_cmesh_from_msh_file (char *fileprefix, int partition,
                         sc_MPI_Comm comm, int dim, int master);
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_CMESH_TRIANGLE_H */
+#endif /* !T8_CMESH_READMSHFILE_H */

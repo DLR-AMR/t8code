@@ -424,6 +424,9 @@ die_ele:
   return -1;
 }
 
+/* This struct stores all information associated to a tree's face.
+ * We need it to find neighbor trees.
+ */
 typedef struct
 {
   t8_locidx_t         ltree_id; /* The local id of the tree this face belongs to */
