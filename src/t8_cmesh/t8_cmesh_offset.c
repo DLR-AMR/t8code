@@ -163,7 +163,7 @@ t8_offset_in_range (t8_gloidx_t tree_id, int proc, t8_gloidx_t * offset)
  * TODO: In most cases the search should start with the current mpirank
  *       to optimize runtime.
  */
-static int
+int
 t8_offset_any_owner_of_tree (int mpisize, t8_gloidx_t gtree,
                              t8_gloidx_t * offset)
 {

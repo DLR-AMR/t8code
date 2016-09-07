@@ -73,6 +73,9 @@ typedef struct t8_forest
   t8_gloidx_t         first_local_tree;
   t8_gloidx_t         last_local_tree;
   sc_array_t         *trees;
+  t8_shmem_array_t    element_offsets; /**< If partitioned, for each process the global index
+                                            of its first element. Since it is memory consuming,
+                                            it is usually only constructed when needed and otherwise unallocated. */
 
   t8_locidx_t         local_num_elements;  /**< Number of elements on this processor. */
   t8_gloidx_t         global_num_elements; /**< Number of elements on all processors. */

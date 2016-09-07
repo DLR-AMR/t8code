@@ -46,6 +46,40 @@ t8_forest_init (t8_forest_t * pforest)
   forest->set_adapt_recursive = -1;
 }
 
+int
+t8_forest_is_initialized (t8_forest_t forest)
+{
+  if (!(forest != NULL && t8_refcount_is_active (&forest->rc) &&
+        !forest->committed)) {
+    return 0;
+  }
+
+#ifdef T8_ENABLE_DEBUG
+  /* TODO: check conditions that must always hold after init and before commit */
+  if (0) {
+    return 0;
+  }
+#endif
+
+  return 1;
+}
+
+int
+t8_forest_is_committed (t8_forest_t forest)
+{
+  if (!(forest != NULL && t8_refcount_is_active (&forest->rc)
+        && forest->committed)) {
+    return 0;
+  }
+#ifdef T8_ENABLE_DEBUG
+  /* TODO: check more conditions that must always hold after commit */
+  if (0) {
+    return 0;
+  }
+#endif
+  return 1;
+}
+
 static void
 t8_forest_set_mpicomm (t8_forest_t forest, sc_MPI_Comm mpicomm, int do_dup)
 {
@@ -396,6 +430,26 @@ t8_forest_commit (t8_forest_t forest)
              (long long) forest->global_num_elements,
              (long long) forest->first_local_tree,
              (long long) forest->last_local_tree);
+}
+
+/* Return the global index of the first local element */
+t8_gloidx_t
+t8_forest_get_first_local_element_id (t8_forest_t forest)
+{
+  t8_gloidx_t         first_element, local_num_elements;
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  /* Convert local_num_elements to t8_gloidx_t */
+  local_num_elements = forest->local_num_elements;
+  /* MPI Scan over local_num_elements lead the global index of the first
+   * local element */
+  sc_MPI_Scan (&local_num_elements, &first_element, 1, T8_MPI_GLOIDX,
+               sc_MPI_SUM, forest->mpicomm);
+  /* MPI_Scan is inklusive, thus it counts our own data.
+   * Therefore, we have to subtract it again */
+  first_element -= local_num_elements;
+
+  return first_element;
 }
 
 void

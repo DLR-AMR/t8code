@@ -107,6 +107,26 @@ typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
  */
 void                t8_forest_init (t8_forest_t * pforest);
 
+/** Check whether a forest is not NULL, initialized and not committed.
+ * In addition, it asserts that the forest is consistent as much as possible.
+ * \param [in] forest           This forest is examined.  May be NULL.
+ * \return                      True if forest is not NULL,
+ *                              \ref t8_forest_init has been called on it,
+ *                              but not \ref t8_forest_commit.
+ *                              False otherwise.
+ */
+int                 t8_forest_is_initialized (t8_forest_t forest);
+
+/** Check whether a forest is not NULL, initialized and committed.
+ * In addition, it asserts that the forest is consistent as much as possible.
+ * \param [in] forest           This forest is examined.  May be NULL.
+ * \return                      True if forest is not NULL and
+ *                              \ref t8_forest_init has been called on it
+ *                              as well as \ref t8_forest_commit.
+ *                              False otherwise.
+ */
+int                 t8_forest_is_committed (t8_forest_t forest);
+
 /** Set the cmesh associated to a forest.
  * By default, the forest takes ownership of the cmesh such that it will be
  * destroyed when the forest is destroyed.  To keep ownership of the cmesh,
@@ -198,6 +218,15 @@ void                t8_forest_comm_global_num_elements (t8_forest_t forest);
  *                              specialized with t8_forest_set_* calls first.
  */
 void                t8_forest_commit (t8_forest_t forest);
+
+/** Compute the global index of the first local element of a forest.
+ * This function is collective.
+ * \param [in]     forest       A committed forest, whose first element's index is computed.
+ * \return         The global index of \a forest's first local element.
+ * Forest must be committed when calling this function.
+ * This function is collective and must be called on each process.
+ */
+t8_gloidx_t         t8_forest_get_first_local_element_id (t8_forest_t forest);
 
 void                t8_forest_save (t8_forest_t forest);
 void                t8_forest_write_vtk (t8_forest_t forest,
