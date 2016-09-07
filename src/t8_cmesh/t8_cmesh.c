@@ -201,6 +201,9 @@ t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from)
   if (set_from != NULL) {
     t8_cmesh_ref (set_from);
   }
+  if (set_from != NULL) {
+    t8_cmesh_set_dimension (cmesh, set_from->dimension);
+  }
 }
 
 #if 0
@@ -466,6 +469,15 @@ t8_cmesh_tree_index (t8_cmesh_t cmesh, t8_locidx_t tree_id)
   return cmesh->set_partition ? tree_id - cmesh->first_tree : tree_id;
 }
 #endif
+
+void
+t8_cmesh_set_dimension (t8_cmesh_t cmesh, int dim)
+{
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (0 <= dim && dim <= T8_ECLASS_MAX_DIM);
+
+  cmesh->dimension = dim;
+}
 
 void
 t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,

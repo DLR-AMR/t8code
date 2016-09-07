@@ -705,6 +705,10 @@ t8_cmesh_from_msh_file (char *fileprefix, int partition,
 
   /* initialize cmesh structure */
   t8_cmesh_init (&cmesh);
+  /* Setting the dimension by hand is neccessary for partitioned
+   * commit, since there are process without any trees. So the cmesh would
+   * not know its dimension on these processes. */
+  t8_cmesh_set_dimension (cmesh, dim);
   if (!partition || mpirank == master) {
     snprintf (current_file, BUFSIZ, "%s.msh", fileprefix);
     /* Open the file */
