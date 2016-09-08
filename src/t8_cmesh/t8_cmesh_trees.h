@@ -135,12 +135,6 @@ T8_EXTERN_C_BEGIN ();
 #define T8_GHOST_TTF(g) (int8_t *) (T8_GHOST_FACE(g) + \
   t8_eclass_num_faces[(g)->eclass] * sizeof(t8_gloidx_t))
 
-#define T8_PADDING_SIZE sizeof (void*)
-/* Compute the number of bytes that have to be added to a given byte_count
- * such that it is a multiple of the padding size */
-#define T8_ADD_PADDING(_x) \
-  ((T8_PADDING_SIZE - ((_x) %  T8_PADDING_SIZE)) %  T8_PADDING_SIZE);
-
 /** Initialize a trees structure and allocate its parts.
  * This function allocates the from_procs array without filling it, it
  * also allocates the tree_to_proc and ghost_to_proc arrays.

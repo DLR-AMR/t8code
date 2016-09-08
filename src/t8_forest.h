@@ -219,6 +219,22 @@ void                t8_forest_comm_global_num_elements (t8_forest_t forest);
  */
 void                t8_forest_commit (t8_forest_t forest);
 
+/** Return the number of local trees of a given forest.
+ * \param [in]      forest      The forest.
+ * \return          The number of local trees of that forest.
+ * \a forest must be committed before calling this function.
+ */
+t8_locidx_t         t8_forest_get_num_local_trees (t8_forest_t forest);
+
+/** Return a pointer to a tree in a forest.
+ * \param [in]      forest      The forest.
+ * \param [in]      ltree_id    The local id of the tree.
+ * \return                      A pointer to the tree with local id \a ltree_id.
+ * \a forest must be committed before calling this function.
+ */
+t8_tree_t           t8_forest_get_tree (t8_forest_t forest,
+                                        t8_locidx_t ltree_id);
+
 /** Compute the global index of the first local element of a forest.
  * This function is collective.
  * \param [in]     forest       A committed forest, whose first element's index is computed.

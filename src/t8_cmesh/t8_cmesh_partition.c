@@ -1415,7 +1415,8 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                              sc_MPI_Comm comm)
 {
   size_t              attr_bytes = 0, tree_neighbor_bytes,
-    ghost_neighbor_bytes, total_alloc, attr_info_bytes;
+    ghost_neighbor_bytes, attr_info_bytes;
+  int                 total_alloc;
   int                 iproc, flag;
   int                 mpiret, num_send_mpi = 0;
   char               *buffer;
@@ -1542,7 +1543,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     t8_debugf ("TNB %zd\n", tree_neighbor_bytes);
     t8_debugf ("AIB %zd\n", attr_info_bytes);
     t8_debugf ("AB %zd\n", attr_bytes);
-    t8_debugf ("Ta %zd\n", total_alloc);
+    t8_debugf ("Ta %i\n", total_alloc);
     /* If profiling is enabled, we count the number of shipped trees/ghosts
      * and processes we ship to. */
     if (cmesh->profile) {
@@ -1583,7 +1584,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     if (iproc != cmesh->mpirank) {
       if (num_trees + num_ghost_send > 0) {
         /* send buffer to remote process */
-        t8_debugf ("Post send of %i trees/%zd bytes to %i\n",
+        t8_debugf ("Post send of %i trees/%i bytes to %i\n",
                    *(t8_locidx_t *) (buffer +
                                      total_alloc - 2 * sizeof (t8_locidx_t)),
                    total_alloc, iproc - flag);
@@ -1863,7 +1864,7 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
     /* Until there is only one sender left we iprobe for an message for each
      * sender and if there is one we receive it and remove the sender from
      * the list.
-     * The last message can be reveived via probe */
+     * The last message can be received via probe */
     while (possible_receivers->elem_count > 1) {
       iprobe_flag = 0;
       prev = NULL;

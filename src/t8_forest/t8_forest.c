@@ -432,6 +432,32 @@ t8_forest_commit (t8_forest_t forest)
              (long long) forest->last_local_tree);
 }
 
+t8_locidx_t
+t8_forest_get_num_local_trees (t8_forest_t forest)
+{
+  t8_locidx_t         num_trees;
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  num_trees = forest->last_local_tree - forest->first_local_tree - 1;
+  /* assert for possible overflow */
+  T8_ASSERT ((t8_gloidx_t) num_trees == forest->last_local_tree
+             - forest->first_local_tree - 1);
+  if (num_trees < 0) {
+    /* Set number of trees to zero if there are none */
+    num_trees = 0;
+  }
+  return num_trees;
+}
+
+t8_tree_t
+t8_forest_get_tree (t8_forest_t forest, t8_locidx_t ltree_id)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (0 <= ltree_id &&
+             ltree_id < t8_forest_get_num_local_trees (forest));
+  return (t8_tree_t) t8_sc_array_index_locidx (forest->trees, ltree_id);
+}
+
 /* Return the global index of the first local element */
 t8_gloidx_t
 t8_forest_get_first_local_element_id (t8_forest_t forest)
