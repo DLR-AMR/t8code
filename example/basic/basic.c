@@ -29,8 +29,7 @@
 #include <p8est_connectivity.h>
 #include <sc_shmem.h>
 
-#if 0
-
+#if 1
 static int
 t8_basic_adapt (t8_forest_t forest, t8_topidx_t which_tree,
                 t8_eclass_scheme_t * ts,
@@ -41,27 +40,33 @@ t8_basic_adapt (t8_forest_t forest, t8_topidx_t which_tree,
              t8_eclass_num_children[ts->eclass]);
   level = t8_element_level (ts, elements[0]);
   if (num_elements > 1) {
+    /* do not coarsen */
+#if 0
     if (level > 0)
       return -1;
+#endif
     return 0;
   }
   if (level < 3)
+    /* refine if level is smaller 3 */
     return 1;
   return 0;
 }
-
+#endif
+#if 0
 static void
 t8_basic_refine_test ()
 {
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
+  t8_cmesh_t          cmesh;
 
   t8_forest_init (&forest);
   t8_forest_init (&forest_adapt);
+  cmesh = t8_cmesh_new_from_class (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, 0);
 
-  t8_forest_set_cmesh (forest, t8_cmesh_new_from_class (T8_ECLASS_QUAD,
-                                                        sc_MPI_COMM_WORLD,
-                                                        0));
+  t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
+  t8_cmesh_unref (&cmesh);
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
   t8_forest_set_level (forest, 2);
   t8_forest_commit (forest);
@@ -72,6 +77,32 @@ t8_basic_refine_test ()
   t8_forest_unref (&forest_adapt);
 }
 #endif
+
+static void
+t8_basic_forest_partition ()
+{
+  t8_forest_t         forest, forest_adapt, forest_partition;
+  t8_cmesh_t          cmesh;
+  sc_MPI_Comm         comm;
+
+  comm = sc_MPI_COMM_WORLD;
+  cmesh = t8_cmesh_new_bigmesh (T8_ECLASS_QUAD, 4, comm);
+  t8_forest_init (&forest);
+  t8_forest_init (&forest_adapt);
+  t8_forest_init (&forest_partition);
+  t8_forest_set_cmesh (forest, cmesh, comm);
+  t8_forest_set_scheme (forest, t8_scheme_new_default ());
+  t8_forest_set_level (forest, 1);
+  t8_forest_commit (forest);
+  t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, NULL, 1);
+  t8_forest_set_partition (forest_partition, forest_adapt, 0);
+  t8_forest_commit (forest_adapt);
+  t8_forest_commit (forest_partition);
+  t8_forest_partition_cmesh (forest_partition, comm);
+  /* Clean-up */
+  t8_cmesh_unref (&cmesh);
+  t8_forest_unref (&forest_partition);
+}
 
 #if 0
 static void
@@ -316,8 +347,7 @@ main (int argc, char **argv)
   t8_global_productionf ("Done testing basic tet mesh.\n");
   t8_basic_hypercube (T8_ECLASS_QUAD, 0, 1, 1);
 #endif
-  t8_basic_p4est (1, 1, 1);
-
+  t8_basic_forest_partition ();
 #if 0
   t8_global_productionf ("Testing hypercube cmesh.\n");
 
