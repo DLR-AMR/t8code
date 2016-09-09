@@ -219,6 +219,15 @@ void                t8_forest_comm_global_num_elements (t8_forest_t forest);
  */
 void                t8_forest_commit (t8_forest_t forest);
 
+/** Change the cmesh associated to a forest to a partitioned cmesh that
+ * is partitioned according to the tree distribution in the forest.
+ * \param [in,out]   forest The forest.
+ * \param [in]       comm   The MPI communicator that is used to partition
+ *                          and commit the cmesh. \see t8_cmesh.h
+ */
+void                t8_forest_partition_cmesh (t8_forest_t forest,
+                                               sc_MPI_Comm comm);
+
 /** Return the number of local trees of a given forest.
  * \param [in]      forest      The forest.
  * \return          The number of local trees of that forest.

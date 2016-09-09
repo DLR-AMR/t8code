@@ -272,7 +272,7 @@ t8_cmesh_set_partition_range (t8_cmesh_t cmesh, int set_face_knowledge,
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
-  SC_CHECK_ABORT (set_face_knowledge == 1 || set_face_knowledge == 3,
+  SC_CHECK_ABORT (set_face_knowledge == -1 || set_face_knowledge == 3,
                   "Face knowledge other than three is not implemented yet.");
   cmesh->face_knowledge = set_face_knowledge;
   cmesh->first_tree = first_local_tree;

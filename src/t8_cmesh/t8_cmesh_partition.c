@@ -144,6 +144,95 @@ t8_cmesh_gather_treecount (t8_cmesh_t cmesh, sc_MPI_Comm comm)
                              cmesh->num_trees);
 }
 
+/* If for a cmesh set_partition_range was called, create
+ * from this information the complete partition table */
+static void
+t8_cmesh_partition_create_offsets (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+{
+  t8_gloidx_t         first_tree, *offset;
+  t8_locidx_t         num_trees_prev, recv_data[2], send_data[2];
+  int                 mpiret, first_tree_shared, proc_prev;
+  sc_MPI_Request      mpi_request;
+
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
+  T8_ASSERT (cmesh->face_knowledge == -1 || cmesh->face_knowledge == 3);
+  T8_ASSERT (cmesh->first_tree >= 0);
+  T8_ASSERT (cmesh->num_local_trees >= 0);
+  T8_ASSERT (cmesh->tree_offsets == NULL);
+
+  /* Initialize the tree offset array */
+  t8_shmem_array_init (&cmesh->tree_offsets, sizeof (t8_gloidx_t),
+                       cmesh->mpisize + 1, comm);
+  /* Store the first local tree of each process in the trees array */
+  first_tree = cmesh->first_tree;
+  t8_shmem_array_allgather (&first_tree, 1, T8_MPI_GLOIDX,
+                            cmesh->tree_offsets, 1, T8_MPI_GLOIDX);
+  t8_shmem_array_set_gloidx (cmesh->tree_offsets, cmesh->mpisize,
+                             cmesh->num_trees);
+  offset = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
+
+  /* Now we need to find out if our first tree is shared with other processes */
+  /* To achieve this, we need to now the number of trees from the previous,
+   * nonempty process */
+  num_trees_prev = 0;
+
+  if (cmesh->mpirank != 0) {
+    /* We receive the number of trees of the next nonempty process */
+    mpiret = sc_MPI_Irecv (recv_data, 2, T8_MPI_LOCIDX,
+                           cmesh->mpirank - 1, 0, comm, &mpi_request);
+    SC_CHECK_MPI (mpiret);
+  }
+  if (cmesh->num_local_trees == 0 && cmesh->mpirank > 0) {
+    /* If we do not have any tree, we wait to receive the number of trees
+     * from the previous process and send them to the next one */
+    /* Wait until the message is here */
+    mpiret = sc_MPI_Wait (&mpi_request, sc_MPI_STATUS_IGNORE);
+    SC_CHECK_MPI (mpiret);
+    mpi_request = sc_MPI_REQUEST_NULL;
+    send_data[0] = recv_data[0];
+    send_data[1] = recv_data[1];
+  }
+  else {
+    /* If we do have local trees, we send this number to the next process */
+    send_data[0] = cmesh->mpirank;
+    send_data[1] = cmesh->num_local_trees;
+  }
+  if (cmesh->mpirank != cmesh->mpisize - 1) {
+    mpiret = sc_MPI_Send (&send_data, 2, T8_MPI_LOCIDX, cmesh->mpirank + 1, 0,
+                          comm);
+    SC_CHECK_MPI (mpiret);
+  }
+  if (cmesh->mpirank > 0) {
+    /* Wait until the message is here */
+    mpiret = sc_MPI_Wait (&mpi_request, sc_MPI_STATUS_IGNORE);
+    SC_CHECK_MPI (mpiret);
+    proc_prev = recv_data[0];
+    num_trees_prev = recv_data[1];
+  }
+  else {
+    proc_prev = -1;
+    num_trees_prev = 0;
+  }
+  /* Calculate whether our first tree is shared */
+  first_tree_shared = 0;
+  t8_debugf ("proc prev %i, num_trees_prev %i\n", proc_prev, num_trees_prev);
+  if (num_trees_prev != 0) {
+    if (t8_offset_first (proc_prev, offset) + num_trees_prev > first_tree) {
+      T8_ASSERT (t8_offset_first (proc_prev, offset) + num_trees_prev
+                 == first_tree + 1);
+      first_tree_shared = 1;
+    }
+  }
+  cmesh->first_tree_shared = first_tree_shared;
+  /* Given the first_tree_shared info calculate the correct entry for
+   * this process in the offset array */
+  first_tree = t8_offset_first_tree_to_entry (first_tree, first_tree_shared);
+  /* Allgather the new first tree entries */
+  t8_shmem_array_allgather (&first_tree, 1, T8_MPI_GLOIDX,
+                            cmesh->tree_offsets, 1, T8_MPI_GLOIDX);
+}
+
 /* TODO: currently this function is unused.
  *        Also it better fits to cmesh_offset.c/h */
 #if 0
@@ -2184,7 +2273,9 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   }
   else {
     /* We compute the partition after a given partition table in cmesh->tree_offsets */
-    T8_ASSERT (cmesh->tree_offsets != NULL);
+    if (cmesh->tree_offsets == NULL) {
+      t8_cmesh_partition_create_offsets (cmesh, comm);
+    }
     tree_offsets = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
     /* Check whether the offset at mpirank is smaller 0, if so then the
      * first local tree is also the last local tree of the next smaller nonempty process. */

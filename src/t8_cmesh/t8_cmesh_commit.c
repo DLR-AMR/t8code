@@ -29,11 +29,11 @@
 #include <t8_cmesh.h>
 #include <sc_flops.h>
 #include <sc_statistics.h>
-#include "t8_cmesh_types.h"
-#include "t8_cmesh_trees.h"
-#include "t8_cmesh_partition.h"
-#include "t8_cmesh_refine.h"
-#include "t8_cmesh_copy.h"
+#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh_trees.h>
+#include <t8_cmesh/t8_cmesh_partition.h>
+#include <t8_cmesh/t8_cmesh_refine.h>
+#include <t8_cmesh/t8_cmesh_copy.h>
 
 typedef struct ghost_facejoins_struct
 {
@@ -598,7 +598,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
         t8_cmesh_init (&cmesh_temp);
         t8_cmesh_set_derive (cmesh_temp, cmesh->set_from);
         /* TODO: This code is duplicated below and may also be shorter */
-        if (cmesh->tree_offsets) {
+        if (cmesh->tree_offsets != NULL) {
           t8_cmesh_set_partition_offsets (cmesh_temp, cmesh->tree_offsets);
         }
         else if (cmesh->set_partition_level) {

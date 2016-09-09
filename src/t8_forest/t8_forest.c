@@ -449,6 +449,32 @@ t8_forest_commit (t8_forest_t forest)
              (long long) forest->last_local_tree);
 }
 
+void
+t8_forest_partition_cmesh (t8_forest_t forest, sc_MPI_Comm comm)
+{
+  t8_cmesh_t          cmesh_partition;
+  t8_gloidx_t         last_local_tree;
+
+  t8_cmesh_init (&cmesh_partition);
+  t8_cmesh_set_derive (cmesh_partition, forest->cmesh);
+  /* set partition range of new cmesh according to forest trees */
+  if (forest->local_num_elements == 0) {
+    /* If this partition is empty, set the last local tree to be less
+     * then the first_local_tree, thus the cmesh will also be empty */
+    last_local_tree = forest->first_local_tree - 1;
+  }
+  else {
+    last_local_tree = forest->last_local_tree;
+  }
+  t8_cmesh_set_partition_range (cmesh_partition, -1, forest->first_local_tree,
+                                last_local_tree);
+  /* Commit the new cmesh */
+  t8_cmesh_commit (cmesh_partition, comm);
+  /* unref the old one and set the new cmesh as the cmesh of the forest */
+  t8_cmesh_unref (&forest->cmesh);
+  forest->cmesh = cmesh_partition;
+}
+
 t8_locidx_t
 t8_forest_get_num_local_trees (t8_forest_t forest)
 {
