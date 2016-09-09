@@ -118,8 +118,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
                          t8_eclass_to_string[eclass]);
 
   cmesh =
-    t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0,
-                            do_partition);
+    t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, do_partition);
 
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -141,9 +140,9 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
     t8_forest_set_level (forest, set_level);
 
     if (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX) {
-        t8_forest_commit (forest);
-        t8_debugf ("Successfully committed forest.\n");
-        t8_forest_write_vtk (forest, "basic");    /* This does nothing right now */
+      t8_forest_commit (forest);
+      t8_debugf ("Successfully committed forest.\n");
+      t8_forest_write_vtk (forest, "basic");    /* This does nothing right now */
     }
     t8_forest_unref (&forest);
   }
@@ -168,6 +167,7 @@ t8_basic_periodic (int do_dup, int set_level, int dim)
 }
 #endif
 
+#if 0
 static void
 t8_basic_p4est (int do_partition, int create_forest, int forest_level)
 {
@@ -183,7 +183,7 @@ t8_basic_p4est (int do_partition, int create_forest, int forest_level)
     /* To make shure that the cmesh has each tree that the forest
      * needs, even if forest_level > 0, we create a new cmesh that
      * is partitioned according to uniform level refinement. */
-    t8_cmesh_t      cmesh_new;
+    t8_cmesh_t          cmesh_new;
     t8_cmesh_init (&cmesh_new);
     t8_cmesh_set_derive (cmesh_new, cmesh);
     t8_cmesh_set_partition_uniform (cmesh_new, forest_level);
@@ -199,6 +199,7 @@ t8_basic_p4est (int do_partition, int create_forest, int forest_level)
   }
   t8_cmesh_unref (&cmesh);
 }
+#endif
 
 #if 0
 static void
