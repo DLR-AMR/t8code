@@ -667,7 +667,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 #if T8_ENABLE_DEBUG
   t8_debugf ("Cmesh is %spartitioned.\n", cmesh->set_partition ? "" : "not ");
   if (cmesh->set_partition) {
-    t8_offset_print (cmesh, comm);
+    t8_cmesh_offset_print (cmesh, comm);
   }
   t8_cmesh_trees_print (cmesh, cmesh->trees);
 #endif

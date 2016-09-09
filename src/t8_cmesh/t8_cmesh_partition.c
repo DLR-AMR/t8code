@@ -144,32 +144,6 @@ t8_cmesh_gather_treecount (t8_cmesh_t cmesh, sc_MPI_Comm comm)
                              cmesh->num_trees);
 }
 
-void
-t8_offset_print (t8_cmesh_t cmesh, sc_MPI_Comm comm)
-{
-#if T8_ENABLE_DEBUG
-  char                buf[BUFSIZ] = "| ";
-  int                 i, offset_isnew = 0;
-
-  if (cmesh->tree_offsets == NULL) {
-    t8_cmesh_gather_treecount (cmesh, comm);
-    offset_isnew = 1;
-  }
-  for (i = 0; i <= cmesh->mpisize; i++) {
-    snprintf (buf + strlen (buf), BUFSIZ - strlen (buf), " % lli |",
-              (long long) t8_shmem_array_get_gloidx (cmesh->tree_offsets, i));
-  }
-  t8_debugf ("Offsets = %s\n", buf);
-  T8_ASSERT (t8_offset_consistent (cmesh->mpisize,
-                                   t8_shmem_array_get_gloidx_array
-                                   (cmesh->tree_offsets), cmesh->num_trees));
-  if (offset_isnew == 1) {
-    t8_shmem_array_destroy (&cmesh->tree_offsets);
-    T8_ASSERT (cmesh->tree_offsets == NULL);
-  }
-#endif
-}
-
 /* TODO: currently this function is unused.
  *        Also it better fits to cmesh_offset.c/h */
 #if 0
@@ -2226,9 +2200,9 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     t8_cmesh_gather_treecount (cmesh->set_from, comm);
   }
   t8_debugf ("Partition from:\n");
-  t8_offset_print (cmesh->set_from, comm);
+  t8_cmesh_offset_print (cmesh->set_from, comm);
   t8_debugf ("To:\n");
-  t8_offset_print (cmesh, comm);
+  t8_cmesh_offset_print (cmesh, comm);
   /***************************************************/
   /*        Done with local num and tree_offset      */
   /***************************************************/
@@ -2240,6 +2214,27 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
       - cmesh->profile->partition_runtime;
   }
   t8_global_productionf ("Done cmesh partition\n");
+}
+
+void
+t8_cmesh_offset_print (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+{
+#if T8_ENABLE_DEBUG
+  int                 offset_isnew = 0;
+
+  if (cmesh->tree_offsets == NULL) {
+    t8_cmesh_gather_treecount (cmesh, comm);
+    offset_isnew = 1;
+  }
+  t8_offset_print (cmesh->tree_offsets, comm);
+  T8_ASSERT (t8_offset_consistent (cmesh->mpisize,
+                                   t8_shmem_array_get_gloidx_array
+                                   (cmesh->tree_offsets), cmesh->num_trees));
+  if (offset_isnew == 1) {
+    t8_shmem_array_destroy (&cmesh->tree_offsets);
+    T8_ASSERT (cmesh->tree_offsets == NULL);
+  }
+#endif
 }
 
 /* Create a partition that concentrates everything at a given proc */

@@ -49,7 +49,8 @@ void                t8_cmesh_gather_treecount (t8_cmesh_t cmesh,
                                                sc_MPI_Comm comm);
 
 /* TODO: document, only for debug */
-void                t8_offset_print (t8_cmesh_t cmesh, sc_MPI_Comm comm);
+void                t8_cmesh_offset_print (t8_cmesh_t cmesh,
+                                           sc_MPI_Comm comm);
 
 /** Create a valid partition table that concentrates all trees at a given
  *  process.

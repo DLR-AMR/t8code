@@ -260,4 +260,11 @@ int                 t8_offset_range_send (int start, int end, int mpirank,
                                           t8_gloidx_t * offset_from,
                                           t8_gloidx_t * offset_to);
 
+/** Print an offset array. Useful for debugging.
+ * \param [in] offset    The offset to print
+ * \param [in] comm      An mpi communicator matching the offset size.
+ */
+void                t8_offset_print (t8_shmem_array_t offset,
+                                     sc_MPI_Comm comm);
+
 #endif /* !T8_CMESH_OFFSET_H */

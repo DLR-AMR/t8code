@@ -540,6 +540,23 @@ t8_offset_range_send (int start, int end, int mpirank,
   return count;
 }
 
+void
+t8_offset_print (t8_shmem_array_t offset, sc_MPI_Comm comm)
+{
+#if T8_ENABLE_DEBUG
+  char                buf[BUFSIZ] = "| ";
+  int                 i, mpiret, mpisize;
+
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  for (i = 0; i <= mpisize; i++) {
+    snprintf (buf + strlen (buf), BUFSIZ - strlen (buf), " % lli |",
+              (long long) t8_shmem_array_get_gloidx (offset, i));
+  }
+  t8_debugf ("Offsets = %s\n", buf);
+#endif
+}
+
 #if 0
 /* TODO: Do we need this function? */
 /* Determine whether a given global tree id is in the range of a given
