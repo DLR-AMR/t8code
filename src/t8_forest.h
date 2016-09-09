@@ -235,6 +235,12 @@ t8_locidx_t         t8_forest_get_num_local_trees (t8_forest_t forest);
 t8_tree_t           t8_forest_get_tree (t8_forest_t forest,
                                         t8_locidx_t ltree_id);
 
+/** Return the number of elements of a tree.
+ * \param [in]      tree       A tree in a forest.
+ * \return                     The number of elements of that tree.
+ */
+t8_locidx_t         t8_forest_get_tree_element_count (t8_tree_t tree);
+
 /** Compute the global index of the first local element of a forest.
  * This function is collective.
  * \param [in]     forest       A committed forest, whose first element's index is computed.
