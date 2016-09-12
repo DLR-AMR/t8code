@@ -237,12 +237,20 @@ t8_forest_populate (t8_forest_t forest)
   sc_array_t         *telements;
   t8_eclass_t         tree_class;
   t8_eclass_scheme_t *eclass_scheme;
+  t8_gloidx_t         cmesh_first_tree, cmesh_last_tree;
 
   /* TODO: create trees and quadrants according to uniform refinement */
   t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level,
                            &forest->first_local_tree, &child_in_tree_begin,
                            &forest->last_local_tree, &child_in_tree_end,
                            NULL);
+
+  cmesh_first_tree = t8_cmesh_get_first_treeid (forest->cmesh);
+  cmesh_last_tree = cmesh_first_tree +
+    t8_cmesh_get_num_local_trees (forest->cmesh) - 1;
+  SC_CHECK_ABORT (forest->first_local_tree >= cmesh_first_tree
+                  && forest->last_local_tree <= cmesh_last_tree,
+                  "cmesh partition does not match the planned forest partition");
 
   forest->global_num_elements = forest->local_num_elements = 0;
   /* create only the non-empty tree objects */
