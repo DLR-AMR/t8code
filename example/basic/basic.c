@@ -129,8 +129,8 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  snprintf (vtuname, BUFSIZ, "./%s_%04d", t8_eclass_to_string[eclass],
-            mpirank);
+  snprintf (vtuname, BUFSIZ, "cmesh_hypercube_%s",
+            t8_eclass_to_string[eclass]);
   if (t8_cmesh_vtk_write_file (cmesh, vtuname, 1.0) == 0) {
     t8_debugf ("Output to %s\n", vtuname);
   }
@@ -301,7 +301,7 @@ t8_basic_partition (t8_eclass_t eclass, int set_level)
 
   t8_cmesh_init (&cmesh_part);
   cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 1);
-  snprintf (file, BUFSIZ, "basic_before_partition_%04d", mpirank);
+  snprintf (file, BUFSIZ, "basic_before_partition");
   t8_cmesh_vtk_write_file (cmesh, file, 1.0);
   /* A partition that concentrates everything to proc 0 */
   offsets[0] = 0;
@@ -316,7 +316,7 @@ t8_basic_partition (t8_eclass_t eclass, int set_level)
    *       same idea for face_knowledge */
   t8_cmesh_set_partition_offsets (cmesh_part, offsets);
   t8_cmesh_commit (cmesh_part, sc_MPI_COMM_WORLD);
-  snprintf (file, BUFSIZ, "basic_partition_%04d", mpirank);
+  snprintf (file, BUFSIZ, "basic_partition");
   t8_cmesh_vtk_write_file (cmesh_part, file, 1.0);
   t8_cmesh_unref (&cmesh_part);
 }
