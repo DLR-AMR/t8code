@@ -206,6 +206,17 @@ t8_default_quad_boundary (const t8_element_t * elem,
   SC_ABORT_NOT_REACHED ();
 }
 
+static void
+t8_default_quad_anchor (const t8_element_t * elem, int coord[3])
+{
+  p4est_quadrant_t   *q;
+
+  q = (p4est_quadrant_t *) elem;
+  coord[0] = q->x;
+  coord[1] = q->y;
+  coord[2] = 0;
+}
+
 t8_eclass_scheme_t *
 t8_default_scheme_new_quad (void)
 {

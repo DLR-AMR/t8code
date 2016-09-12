@@ -126,6 +126,17 @@ t8_default_hex_successor (const t8_element_t * elem1,
   p8est_quadrant_set_morton ((p8est_quadrant_t *) elem2, level, id + 1);
 }
 
+static void
+t8_default_hex_anchor (const t8_element_t * elem, int coord[3])
+{
+  p8est_quadrant_t   *q;
+
+  q = (p8est_quadrant_t *) elem;
+  coord[0] = q->x;
+  coord[1] = q->y;
+  coord[2] = q->z;
+}
+
 t8_eclass_scheme_t *
 t8_default_scheme_new_hex (void)
 {
@@ -150,6 +161,7 @@ t8_default_scheme_new_hex (void)
   ts->elem_boundary = NULL;
   ts->elem_set_linear_id = t8_default_hex_set_linear_id;
   ts->elem_successor = t8_default_hex_successor;
+  ts->elem_anchor = t8_default_hex_anchor;
 
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;
