@@ -130,6 +130,16 @@ t8_default_tri_successor (const t8_element_t * elem1,
                      (t8_default_tri_t *) elem2, level);
 }
 
+static void
+t8_default_tri_anchor (const t8_element_t * elem, int anchor[3])
+{
+  t8_dtri_t          *tri = (t8_dtri_t *) elem;
+
+  anchor[0] = tri->x;
+  anchor[1] = tri->y;
+  anchor[2] = 0;
+}
+
 t8_eclass_scheme_t *
 t8_default_scheme_new_tri (void)
 {
@@ -152,6 +162,7 @@ t8_default_scheme_new_tri (void)
   ts->elem_nca = t8_default_tri_nca;
   ts->elem_set_linear_id = t8_default_tri_set_linear_id;
   ts->elem_successor = t8_default_tri_successor;
+  ts->elem_anchor = t8_default_tri_anchor;
 
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;

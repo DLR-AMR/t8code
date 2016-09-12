@@ -130,6 +130,16 @@ t8_default_tet_successor (const t8_element_t * elem1,
                      (t8_default_tet_t *) elem2, level);
 }
 
+static void
+t8_default_tet_anchor (const t8_element_t * elem, int anchor[3])
+{
+  t8_dtet_t          *tet = (t8_dtet_t *) elem;
+
+  anchor[0] = tet->x;
+  anchor[1] = tet->y;
+  anchor[2] = tet->z;
+}
+
 t8_eclass_scheme_t *
 t8_default_scheme_new_tet (void)
 {
@@ -152,6 +162,7 @@ t8_default_scheme_new_tet (void)
   ts->elem_nca = t8_default_tet_nca;
   ts->elem_set_linear_id = t8_default_tet_set_linear_id;
   ts->elem_successor = t8_default_tet_successor;
+  ts->elem_anchor = t8_default_tet_anchor;
 
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;
