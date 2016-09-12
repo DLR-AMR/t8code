@@ -511,6 +511,13 @@ t8_forest_get_tree (t8_forest_t forest, t8_locidx_t ltree_id)
   return (t8_tree_t) t8_sc_array_index_locidx (forest->trees, ltree_id);
 }
 
+t8_cmesh_t
+t8_forest_get_cmesh (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  return forest->cmesh;
+}
+
 t8_locidx_t
 t8_forest_get_tree_element_count (t8_tree_t tree)
 {

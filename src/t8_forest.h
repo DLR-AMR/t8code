@@ -244,6 +244,13 @@ t8_locidx_t         t8_forest_get_num_local_trees (t8_forest_t forest);
 t8_tree_t           t8_forest_get_tree (t8_forest_t forest,
                                         t8_locidx_t ltree_id);
 
+/** Return a cmesh associated to a forest.
+ * \param [in]      forest      The forest.
+ * \a forest must be committed before calling this function.
+ * \return          The cmesh associated to the forest.
+ */
+t8_cmesh_t          t8_forest_get_cmesh (t8_forest_t forest);
+
 /** Return the number of elements of a tree.
  * \param [in]      tree       A tree in a forest.
  * \return                     The number of elements of that tree.
