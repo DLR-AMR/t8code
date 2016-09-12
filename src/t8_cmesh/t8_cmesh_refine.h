@@ -34,14 +34,12 @@
 
 T8_EXTERN_C_BEGIN ();
 
-
 /* TODO: Implement cmesh_refine as follows:
  *        create a forest,
  *        refine to level 1
  *        build a ctree from each forest element
  *            this will need forest_element_transform_face (see p4est_quadrant_transform_face)
  *            which is not yet implemented */
-
 
 /* A cmesh is refined uniformly by replacing each tree with a certain number
  * of subtrees. This number depends on the element class of the tree.
