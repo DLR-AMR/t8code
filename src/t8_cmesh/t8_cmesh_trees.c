@@ -215,8 +215,8 @@ t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees, int proc)
     face_neigh_bytes += t8_eclass_num_faces[ghost->eclass] *
       (sizeof (t8_gloidx_t) + sizeof (int8_t));
     /* This is for padding, such that face_neigh_bytes %4 == 0 */
-    face_neigh_bytes += (4 - (face_neigh_bytes % 4)) % 4;
-    T8_ASSERT (face_neigh_bytes % 4 == 0);
+    face_neigh_bytes += T8_ADD_PADDING (face_neigh_bytes);
+    T8_ASSERT (face_neigh_bytes % T8_PADDING_SIZE == 0);
     temp_offset += sizeof (t8_cghost_struct_t);
   }
   /* TODO: passing through trees twice is not optimal. Can we do it all in one round?
@@ -230,9 +230,9 @@ t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees, int proc)
     face_neigh_bytes += t8_eclass_num_faces[tree->eclass] *
       (sizeof (t8_locidx_t) + sizeof (int8_t));
     num_attributes += tree->num_attributes;
-    face_neigh_bytes += (4 - (face_neigh_bytes % 4)) % 4;
+    face_neigh_bytes += T8_ADD_PADDING (face_neigh_bytes);
     /* This is for padding, such that face_neigh_bytes %4 == 0 */
-    T8_ASSERT (face_neigh_bytes % 4 == 0);
+    T8_ASSERT (face_neigh_bytes % T8_PADDING_SIZE == 0);
     temp_offset += sizeof (t8_ctree_struct_t);
   }
 #if 0

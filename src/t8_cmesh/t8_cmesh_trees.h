@@ -66,7 +66,6 @@ T8_EXTERN_C_BEGIN ();
  *
  * The data of Tree faces looks for each tree:
  *
- * TODO: use multible of sizeof (void *) bytes
  * | Treeid1 Treeid2  ... | ttf1 ttf2 ... | padding |
  *
  * Where padding is a number of unused bytes that makes the whole block a multiple
@@ -77,14 +76,12 @@ T8_EXTERN_C_BEGIN ();
  * and the offset of ttf1 can be calculated from the Tree faces offset and the
  * class of the tree.
  *
- *  TODO: Should we really keep the padding?  Yes otherwise it may crash.
- *
  * Ghost faces:
  *
  * | Treeid1 Treeid2 ... | ttf1 ttf2 ... | padding |
  *
  * Where padding is a number of unused bytes that makes the whole block a multiple
- * of 4 Bytes.
+ * of sizeof (void*) Bytes.
  * Treeidj is a t8_gloidx_t storing the global tree id for all neighbors.
  * For the encoding of ttf (tree to face) see \ref t8_ctree_struct_t, ttf entries are int8_t
  * and the offset of ttf1 can be calculated from the Tree faces offset and the
@@ -138,7 +135,7 @@ T8_EXTERN_C_BEGIN ();
 #define T8_GHOST_TTF(g) (int8_t *) (T8_GHOST_FACE(g) + \
   t8_eclass_num_faces[(g)->eclass] * sizeof(t8_gloidx_t))
 
-#define T8_PADDING_SIZE 4       /* TODO: change to sizeof (void *) */
+#define T8_PADDING_SIZE sizeof (void*)
 /* Compute the number of bytes that have to be added to a given byte_count
  * such that it is a multiple of the padding size */
 #define T8_ADD_PADDING(_x) \

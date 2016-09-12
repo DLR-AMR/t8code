@@ -201,6 +201,9 @@ t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from)
   if (set_from != NULL) {
     t8_cmesh_ref (set_from);
   }
+  if (set_from != NULL) {
+    t8_cmesh_set_dimension (cmesh, set_from->dimension);
+  }
 }
 
 #if 0
@@ -424,6 +427,19 @@ t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key,
                                        key);
 }
 
+t8_shmem_array_t
+t8_cmesh_get_partition_table (t8_cmesh_t cmesh)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  if (!cmesh->set_partition) {
+    /* The mesh is not partitioned. We return NULL. */
+    return NULL;
+  }
+  /* If the mesh is not stored, NULL is returned, otherwise the
+   * partition array. */
+  return cmesh->tree_offsets;
+}
+
 #if 0
 /* Check whether a given tree_id belongs to a tree in the cmesh.
  * If partitioned only local trees are allowed.
@@ -455,6 +471,15 @@ t8_cmesh_tree_index (t8_cmesh_t cmesh, t8_locidx_t tree_id)
 #endif
 
 void
+t8_cmesh_set_dimension (t8_cmesh_t cmesh, int dim)
+{
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (0 <= dim && dim <= T8_ECLASS_MAX_DIM);
+
+  cmesh->dimension = dim;
+}
+
+void
 t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
                          t8_eclass_t tree_class)
 {
@@ -471,6 +496,8 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
     /* TODO: This makes it illegal to set a tree to i.e. quad and change it
      *       to hex later. Even if we replace all trees with another dimension.
      *       We could move this check to commit. */
+    /* TODO: If cmesh is partitioned and this part has no trees then the
+     *       dimension remains unset forever. */
     T8_ASSERT (t8_eclass_to_dimension[tree_class] == cmesh->dimension);
   }
 
@@ -746,7 +773,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     }
   }
 
-  /* partutuib stores the new partitino number for each element */
+  /* partition stores the new partition number for each element */
   partition = T8_ALLOC (idx_t, elemens);
   /* partition the elements in mpisize many partitions */
   success =
@@ -896,7 +923,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
       }
     }
     else {
-      /* The first global children of processor p
+      /* The first global child of processor p
        * with P total processor is (the biggest int smaller than)
        * (total_num_children * p) / P
        * We cast to long double and double first to prevent integer overflow.
@@ -930,7 +957,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
       prev_last_tree = (first_global_child - 1) / children_per_tree;
       T8_ASSERT (cmesh->mpirank > 0 || prev_last_tree <= 0);
       if (cmesh->mpirank > 0 && prev_last_tree == *first_local_tree &&
-          first_global_child != last_global_child && last_global_child >= 0) {
+          first_global_child < last_global_child && last_global_child >= 0) {
         /* We exclude empty partitions here, by def their first_tree_shared flag is zero */
         /* We also exclude that the previous partition was empty at the beginning of the
          * partitions array */
@@ -950,6 +977,10 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
         *child_in_tree_end = last_global_child;
       }
     }
+    if (first_global_child >= last_global_child && cmesh->mpirank != 0) {
+      /* This process is empty */
+      *first_local_tree = prev_last_tree + 1;
+    }
   }
   else {
     SC_ABORT ("Partition does not support pyramidal elements yet.");
@@ -968,17 +999,19 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
 
   /* free tree_offset */
   if (cmesh->tree_offsets != NULL) {
+#if T8_ENABLE_DEBUG
     sc_MPI_Comm         comm;
     /* Check whether a correct communicator was stored at tree_offsets.
      * This is useful for debugging. */
     comm = t8_shmem_array_get_comm (cmesh->tree_offsets);
     T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
+#endif
     /* Destroy the shared memory array */
     t8_shmem_array_destroy (&cmesh->tree_offsets);
   }
   /*TODO: write this */
   if (!cmesh->committed) {
-    t8_stash_destroy (&cmesh->stash);    
+    t8_stash_destroy (&cmesh->stash);
     if (cmesh->set_from != NULL) {
       /* We unref our reference of set_from */
       t8_cmesh_unref (&cmesh->set_from);
@@ -989,6 +1022,9 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
       t8_cmesh_trees_destroy (&cmesh->trees);
     }
     T8_ASSERT (cmesh->set_from == NULL);
+  }
+  if (cmesh->profile != NULL) {
+    T8_FREE (cmesh->profile);
   }
 
   T8_FREE (cmesh);
@@ -1027,22 +1063,29 @@ t8_cmesh_destroy (t8_cmesh_t * pcmesh)
  *       Will we do it the same in t8code? This is not yet decided, however the
  *       function below stores these neighbourhood information in the cmesh. */
 /* TODO: Eventually we may directly partition the mesh here */
+/* Offset-1 is added to each tree_id, this is used in i.e. t8_cmesh_new_disjoint_bricks,
+ * If offset is nonzero, then set_partition must be true and the cmesh is
+ * partitioned and has all trees in conn as local trees.
+ * The offsets on the different processes must add up! */
 static              t8_cmesh_t
 t8_cmesh_new_from_p4est_ext (void *conn, int dim,
-                             sc_MPI_Comm comm, int do_dup, int set_partition)
+                             sc_MPI_Comm comm, int do_dup, int set_partition,
+                             t8_gloidx_t offset)
 {
 #define _T8_CMESH_P48_CONN(_ENTRY) \
   (dim == 2 ? ((p4est_connectivity_t *) conn)->_ENTRY \
             : ((p8est_connectivity_t *) conn)->_ENTRY)
   t8_cmesh_t          cmesh;
-  t8_locidx_t         ltree;
+  t8_gloidx_t         ltree;
   p4est_topidx_t      treevertex;
   double              vertices[24];     /* Only 4 * 3 = 12 used in 2d */
   int                 num_tvertices;
   int                 num_faces;
   int                 ivertex, iface;
+  int                 use_offset;
   int8_t              ttf;
   p4est_topidx_t      ttt;
+
   T8_ASSERT (dim == 2 || dim == 3);
   T8_ASSERT (dim == 3
              ||
@@ -1050,13 +1093,23 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim,
   T8_ASSERT (dim == 2
              ||
              p8est_connectivity_is_valid ((p8est_connectivity_t *) (conn)));
+  T8_ASSERT (offset == 0 || set_partition);
+  if (offset) {
+    offset--;
+    use_offset = 1;
+  }
+  else {
+    use_offset = 0;
+  }
+  T8_ASSERT (offset >= 0);
+  /* TODO: Check offsets for consistency */
   num_tvertices = 1 << dim;     /*vertices per tree. 4 if dim = 2 and 8 if dim = 3. */
   num_faces = dim == 2 ? 4 : 6;
   /* basic setup */
   t8_cmesh_init (&cmesh);
   /* Add each tree to cmesh and get vertex information for each tree */
   for (ltree = 0; ltree < _T8_CMESH_P48_CONN (num_trees); ltree++) {    /* loop over each tree */
-    t8_cmesh_set_tree_class (cmesh, ltree,
+    t8_cmesh_set_tree_class (cmesh, ltree + offset,
                              dim == 2 ? T8_ECLASS_QUAD : T8_ECLASS_HEX);
     for (ivertex = 0; ivertex < num_tvertices; ivertex++) {     /* loop over each tree corner */
       treevertex =
@@ -1067,7 +1120,7 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim,
       vertices[3 * ivertex + 2] =
         _T8_CMESH_P48_CONN (vertices[3 * treevertex + 2]);
     }
-    t8_cmesh_set_tree_vertices (cmesh, ltree, t8_get_package_id (),
+    t8_cmesh_set_tree_vertices (cmesh, ltree + offset, t8_get_package_id (),
                                 0, vertices, num_tvertices);
   }
   /* get face neighbor information from conn and join faces in cmesh */
@@ -1077,22 +1130,40 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim,
       ttt = _T8_CMESH_P48_CONN (tree_to_tree[num_faces * ltree + iface]);
       /* insert the face only if we did not insert it before */
       if (ltree < ttt || (ltree == ttt && iface < ttf % num_faces)) {
-        t8_cmesh_set_join (cmesh, ltree, ttt, iface, ttf % num_faces,
-                           ttf / num_faces);
+        t8_cmesh_set_join (cmesh, ltree + offset, ttt + offset, iface,
+                           ttf % num_faces, ttf / num_faces);
       }
     }
   }
   if (set_partition) {
     /* TODO: a copy of this code exists below, make it a function */
     int                 mpirank, mpisize, mpiret;
-    int                 first_tree, last_tree, num_trees;
+    t8_gloidx_t         first_tree, last_tree, num_trees, num_local_trees;
+
     mpiret = sc_MPI_Comm_rank (comm, &mpirank);
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Comm_size (comm, &mpisize);
     SC_CHECK_MPI (mpiret);
-    num_trees = _T8_CMESH_P48_CONN (num_trees);
-    first_tree = (mpirank * num_trees) / mpisize;
-    last_tree = ((mpirank + 1) * num_trees) / mpisize - 1;
+    if (use_offset == 0) {
+      /* The total number of trees is the number of trees in conn */
+      num_trees = _T8_CMESH_P48_CONN (num_trees);
+      /* First tree and last tree according to uniform level 0 partitioning */
+      first_tree = (mpirank * num_trees) / mpisize;
+      last_tree = ((mpirank + 1) * num_trees) / mpisize - 1;
+    }
+    else {
+      /* First_tree and last_tree are the first and last trees of conn plu the offset */
+      num_local_trees = _T8_CMESH_P48_CONN (num_trees);
+      first_tree = offset;
+      last_tree = offset + num_local_trees - 1;
+      /* The global number of trees is the sum over all numbers of trees
+       * in conn on each process */
+      sc_MPI_Allreduce (&num_local_trees, &num_trees, 1, T8_MPI_GLOIDX,
+                        sc_MPI_SUM, comm);
+      t8_debugf ("[H] Generating partitioned cmesh from connectivity\n"
+                 "[H] Has %li global and %li local trees.\n", num_trees,
+                 num_local_trees);
+    }
     t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
   }
   t8_cmesh_commit (cmesh, comm);
@@ -1102,16 +1173,16 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim,
 
 t8_cmesh_t
 t8_cmesh_new_from_p4est (p4est_connectivity_t * conn,
-                         sc_MPI_Comm comm, int do_dup, int set_partition)
+                         sc_MPI_Comm comm, int do_dup, int do_partition)
 {
-  return t8_cmesh_new_from_p4est_ext (conn, 2, comm, do_dup, set_partition);
+  return t8_cmesh_new_from_p4est_ext (conn, 2, comm, do_dup, do_partition, 0);
 }
 
 t8_cmesh_t
 t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
                          sc_MPI_Comm comm, int do_dup, int do_partition)
 {
-  return t8_cmesh_new_from_p4est_ext (conn, 3, comm, do_dup, 1);
+  return t8_cmesh_new_from_p4est_ext (conn, 3, comm, do_dup, do_partition, 0);
 }
 
 t8_cmesh_t
@@ -1280,6 +1351,16 @@ t8_cmesh_new_from_class (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup)
     SC_ABORT ("Invalid eclass\n");
     return NULL;
   }
+}
+
+t8_cmesh_t
+t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition)
+{
+  t8_cmesh_t          cmesh;
+
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
 }
 
 /* TODO: This is just a helper function that was needed when we changed the vertex interface
@@ -1563,21 +1644,108 @@ t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup, int dim)
 }
 
 t8_cmesh_t
-t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees, sc_MPI_Comm comm,
-                      int do_dup)
+t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees, sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
-  t8_topidx_t         num_trees_per_eclass[T8_ECLASS_COUNT] =
-    { 0, 0, 0, 0, 0, 0, 0, 0 };
   int                 i;
+  int                 dummy_data = 0;
 
   t8_cmesh_init (&cmesh);
-  num_trees_per_eclass[eclass] = num_trees;
   for (i = 0; i < num_trees; i++) {
     t8_cmesh_set_tree_class (cmesh, i, eclass);
+    /* TODO: as long as we have the bug, that each tree needs at least one
+     *       attribute, we need to set a dummy attribute to the trees */
+    t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (), 1, &dummy_data,
+                            sizeof (int), 0);
+    if (cmesh->dimension > 0) {
+      /* We join each tree with its successor along faces 0 and 1
+       * to get a nontrivial connectivity */
+      t8_cmesh_set_join (cmesh, i, (i + 1) % num_trees, 0, 1, 0);
+    }
   }
 
   t8_cmesh_commit (cmesh, comm);
 
+  return cmesh;
+}
+
+/* On each process, create a num_x by num_y (by num_z) brick connectivity and
+ * make a cmesh connectivity from the disjoint union of those.
+ * Example: 2 processors,
+ * On the first  num_x = 1, num_y = 1
+ * On the second num_x = 2, num_y = 1
+ *                            _
+ * connectivity on first:    |_|
+ *
+ *                           _ _
+ * connectivity on second:  |_|_|
+ *
+ *                     _    _ _
+ * Leads to the cmesh |_|  |_|_|
+ * which is partitioned accordingly.
+ */
+t8_cmesh_t
+t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x, t8_gloidx_t num_y,
+                              t8_gloidx_t num_z, int x_periodic,
+                              int y_periodic, int z_periodic,
+                              sc_MPI_Comm comm)
+{
+  p4est_connectivity_t *my_brick;
+  p8est_connectivity_t *my_brick_3d;
+  t8_cmesh_t          cmesh;
+  t8_gloidx_t         num_trees, offset;
+  int                 dim;
+
+  T8_ASSERT (num_x >= 0 && num_y >= 0 && num_z >= 0);
+  /* Set the dimension to 3 if num_z > 0 and 2 otherwise. */
+  if (num_z > 0) {
+    dim = 3;
+  }
+  else {
+    dim = 2;
+  }
+  num_trees = num_x * num_y;
+  if (dim == 3) {
+    num_trees *= num_z;
+  }
+  /* Create a p4est brick connectivity on the process with
+   * num_x times num_y elements */
+  if (num_trees > 0) {
+    if (dim == 2) {
+      my_brick = p4est_connectivity_new_brick (num_x, num_y, x_periodic,
+                                               y_periodic);
+    }
+    else {
+      my_brick_3d = p8est_connectivity_new_brick (num_x, num_y, num_z,
+                                                  x_periodic, y_periodic,
+                                                  z_periodic);
+    }
+  }
+  else {
+    num_x = num_y = num_z = 0;
+    num_trees = 0;
+    if (dim == 2) {
+      my_brick = p4est_connectivity_new (0, 0, 0, 0);
+    }
+    else {
+      my_brick_3d = p8est_connectivity_new (0, 0, 0, 0, 0, 0);
+    }
+  }
+
+  /* Calculate the x and y offset of trees */
+  sc_MPI_Scan (&num_trees, &offset, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
+  offset -= num_trees;
+  t8_debugf ("[H] offset = %li\n", offset);
+
+  if (dim == 2) {
+    cmesh = t8_cmesh_new_from_p4est_ext ((void *) my_brick,
+                                         dim, comm, 0, 1, offset + 1);
+    p4est_connectivity_destroy (my_brick);
+  }
+  else {
+    cmesh = t8_cmesh_new_from_p4est_ext ((void *) my_brick_3d,
+                                         dim, comm, 0, 1, offset + 1);
+    p8est_connectivity_destroy (my_brick_3d);
+  }
   return cmesh;
 }

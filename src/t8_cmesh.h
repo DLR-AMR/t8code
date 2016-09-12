@@ -146,6 +146,8 @@ void                t8_cmesh_set_partition_range (t8_cmesh_t cmesh,
                                                   t8_gloidx_t
                                                   last_local_tree);
 
+/* TODO: It is currently not possible to call this function for a non derived
+ *       cmesh. Investigate. */
 /** Declare if the cmesh is understood as a partitioned cmesh and specify
  * the first local tree for each process.
  * This call is only valid when the cmesh is not yet committed via a call
@@ -199,6 +201,17 @@ void                t8_cmesh_set_partition_given (t8_cmesh_t cmesh,
  * TODO: implement */
 /* If level = 0  then no refinement is performed */
 void                t8_cmesh_set_refine (t8_cmesh_t cmesh, int level);
+
+/** Set the dimension of a cmesh. If any tree is inserted to the cmesh
+ * via \a t8_cmesh_set_tree_class, then the dimension is set automatically
+ * to that of the inserted tree.
+ * However, if the cmesh is constructed partitioned and the part on this process
+ * is empty, it is neccessary to set the dimension by hand.
+ * \param [in,out]  cmesh The cmesh to be updated.
+ * \param [in]      dim   The dimension to be set. Must satisfy 0 <= dim <= 3.
+ * The cmesh must not be committed before calling this function.
+ */
+void                t8_cmesh_set_dimension (t8_cmesh_t cmesh, int dim);
 
 /** Set the class of a tree in the cmesh.
  * It is not allowed to call this function after \ref t8_cmesh_commit.
@@ -415,6 +428,16 @@ void               *t8_cmesh_get_attribute (t8_cmesh_t cmesh,
                                             int package_id, int key,
                                             t8_locidx_t tree_id);
 
+/** Return the shared memory array storing the partition table of
+ * a partitioned cmesh.
+ * \param [in]      cmesh       The cmesh.
+ * \return                      The partition array.
+ *                              NULL if the cmesh is not partitioned or
+ *                              the partition array is not stored in \a cmesh.
+ * \a cmesh must be committed before calling this function.
+ */
+t8_shmem_array_t    t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
+
 /* TODO: remove get_ when there is no risk of confusion? Convention?
  *       Update: use get throughout for access functions that do not change the object.
  * */
@@ -496,6 +519,17 @@ t8_cmesh_t          t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
                                              sc_MPI_Comm comm, int do_dup,
                                              int do_partition);
 
+/* TODO: it could possibly be a problem that we do not set the dimension of
+ * the cmesh. This could i.e. be difficult when we combine an empty cmesh with
+ * a non-empty one. */
+/** Construct a cmesh that has no trees. We do not know a special use case,
+ * this function is merely for debugging and to show the possibility.
+ * \param [in]      comm       mpi communicator to be used with the new cmesh.
+ * \param [in]      do_partition Flag whether the cmesh should be partitioned or not.
+ * \return                     A committed t8_cmesh structure that has no trees.
+ */
+t8_cmesh_t          t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition);
+
 /** Constructs a cmesh that consists only of one tree of a given element class.
  * \param [in]      eclass     The element class.
  * \param [in]      comm       mpi communicator to be used with the new cmesh.
@@ -537,11 +571,37 @@ t8_cmesh_t          t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup,
  * \param [in] eclass       This element class determines the dimension and
  *                          the type trees used.
  * \param [in] num_trees    The number of trees to use.
- * \param [in] comm         The MPI_Communicator associated to the cmesh.
+ * \param [in] comm         The MPI_Communicator used to commit the cmesh.
  * \return                  A valid cmesh, as if _init and _commit had been called.
  */
 t8_cmesh_t          t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees,
-                                          sc_MPI_Comm comm, int do_dup);
+                                          sc_MPI_Comm comm);
+
+/** Create a partitoned cmesh of quads whose local trees are given by an
+ * num_x by num_y brick connectivity from p4est
+ * or a num_x by num_y by num_z brick connectivity from p8est.
+ * num_x and num_y and num_z can be different for different MPI ranks.
+ * \param [in] num_x       The number of trees in x direction for this rank. Must be >= 0.
+ * \param [in] num_y       The number of trees in y direction for this rank. Must be >= 0.
+ * \param [in] num_y       The number of trees in z direction for this rank. Must be >= 0.
+ *                         If nonzero, the cmesh is 3 dimensional.
+ * \param [in] x_periodic  If nonzero, the local brick connectivity is periodic in x direction.
+ * \param [in] y_periodic  If nonzero, the local brick connectivity is periodic in y direction.
+ * \param [in] y_periodic  If nonzero and \a num_z > 0, the local brick connectivity is periodic in z direction.
+ * \param [in] comm        The MPI communicator used to commit the cmesh.
+ * \return                 A committed and partitioned cmesh. The process local trees
+ *                         form a \a num_x by \a num_y (by \a num_z) brick.
+ * It is possible for num_x or num_y to be set to zero. In this case the local part
+ * of the cmesh will be empty.
+ * If num_z is set to zero, the cmesh is 2 dimensional.
+ */
+t8_cmesh_t          t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x,
+                                                  t8_gloidx_t num_y,
+                                                  t8_gloidx_t num_z,
+                                                  int x_periodic,
+                                                  int y_periodic,
+                                                  int z_periodic,
+                                                  sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 

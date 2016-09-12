@@ -76,7 +76,7 @@ t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename,
                               int dim)
 {
   FILE               *fp;
-  char               *line = T8_ALLOC (char, 1024);
+  char               *line = (char *) malloc (1024);
   size_t              linen = 1024;
   t8_topidx_t         cit;
   t8_topidx_t         corner, corner_offset = 0;
@@ -193,7 +193,7 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
   )
 {
   FILE               *fp;
-  char               *line = T8_ALLOC (char, 1024);
+  char               *line = (char *) malloc (1024);
   size_t              linen = 1024;
   t8_locidx_t         num_elems, tit;
   t8_locidx_t         triangle, triangle_offset = 0;
@@ -299,7 +299,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
                               char *filename, int dim)
 {
   FILE               *fp;
-  char               *line = T8_ALLOC (char, 1024);
+  char               *line = (char *) malloc (1024);
   size_t              linen = 1024;
   t8_locidx_t         element, num_elems, tit;
   t8_locidx_t        *tneighbors;

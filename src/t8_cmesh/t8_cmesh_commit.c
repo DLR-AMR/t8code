@@ -76,6 +76,7 @@ static void
 t8_cmesh_set_shmem_type (sc_MPI_Comm comm)
 {
   T8_ASSERT (comm != sc_MPI_COMM_NULL);
+  /* TODO: Only set type if it is not set yet */
   sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
 }
 
@@ -202,7 +203,9 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_gloidx_t        *face_neigh_g, *face_neigh_g2;
   t8_stash_class_struct_t *classentry;
   int                 id1_istree, id2_istree;
+#if T8_ENABLE_DEBUG
   t8_cghost_t         ghost1, ghost2;
+#endif
 
   sc_flops_start (&fi);
   sc_flops_snap (&fi, &snapshot);
@@ -223,6 +226,9 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   num_hashs = cmesh->num_local_trees > 0 ? cmesh->num_local_trees : 10;
   ghost_facejoin_mempool = sc_mempool_new (sizeof (t8_ghost_facejoin_t));
+  /* TODO: There could be a mayor bug here, since the mempool given to
+   * sc_hash_new should actually allocate sc_link_t objects and not the
+   * data objects. */
   ghost_ids = sc_hash_new (t8_ghost_hash, t8_ghost_facejoin_equal,
                            &num_hashs, ghost_facejoin_mempool);
 
@@ -292,7 +298,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   if (cmesh->num_local_trees != 0 || cmesh->num_ghosts != 0) {
     /* Only do something if the partition is not empty */
     /* TODO: optimize if non-hybrid mesh */
-    /* Itterate through classes and add ghosts and trees */
+    /* Iterate through classes and add ghosts and trees */
     /* We need a temporary ghost_facejoin to check the hash for existing global ids */
     temp_facejoin->local_id = -10;
     for (iz = 0; iz < cmesh->stash->classes.elem_count; iz++) {
@@ -353,7 +359,9 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
       id2_istree = cmesh->first_tree <= id2 && last_tree >= id2;
       temp_facejoin->ghost_id = id1;
       tree1 = NULL;
+#if T8_ENABLE_DEBUG
       ghost1 = NULL;
+#endif
       /* There are the following cases:
        * Both trees are local trees.
        * One is a local tree and one a local ghost.
@@ -376,12 +384,20 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
                                (void ***) &facejoin_pp)) {
         /* id1 is a local ghost */
         ghost_facejoin = *facejoin_pp;
+#if T8_ENABLE_DEBUG
         ghost1 = t8_cmesh_trees_get_ghost_ext (cmesh->trees,
                                                ghost_facejoin->local_id,
                                                &face_neigh_g, &ttf);
+#else
+        (void) t8_cmesh_trees_get_ghost_ext (cmesh->trees,
+                                             ghost_facejoin->local_id,
+                                             &face_neigh_g, &ttf);
+#endif
         temp_local_id = ghost_facejoin->local_id;
       }
+#if T8_ENABLE_DEBUG
       ghost2 = NULL;
+#endif
       tree2 = NULL;
       temp_facejoin->ghost_id = joinface->id2;
       if (id2_istree) {
@@ -395,9 +411,15 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
                                (void ***) &facejoin_pp)) {
         /* id1 is a local ghost */
         ghost_facejoin = *facejoin_pp;
+#if T8_ENABLE_DEBUG
         ghost2 = t8_cmesh_trees_get_ghost_ext (cmesh->trees,
                                                ghost_facejoin->local_id,
                                                &face_neigh_g2, &ttf2);
+#else
+        (void) t8_cmesh_trees_get_ghost_ext (cmesh->trees,
+                                             ghost_facejoin->local_id,
+                                             &face_neigh_g2, &ttf2);
+#endif
       }
       F = t8_eclass_max_num_faces[cmesh->dimension];
       if (ttf != NULL) {
@@ -547,14 +569,18 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   int                 mpiret;
   t8_cmesh_t          cmesh_temp;
-  sc_flopinfo_t       fi;
-
-  sc_flops_start (&fi);
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (comm != sc_MPI_COMM_NULL);
   T8_ASSERT (!cmesh->committed);
+  SC_CHECK_ABORT (0 <= cmesh->dimension
+                  && cmesh->dimension <= T8_ECLASS_MAX_DIM,
+                  "Dimension of the cmesh is not set properly.\n");
 
+  /* If profiling is enabled, we measure the runtime of  commit. */
+  if (cmesh->profile != NULL) {
+    cmesh->profile->commit_runtime = sc_MPI_Wtime ();
+  }
   /* Get mpisize and rank */
   mpiret = sc_MPI_Comm_size (comm, &cmesh->mpisize);
   SC_CHECK_MPI (mpiret);
@@ -636,21 +662,15 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     }
   }
 
+  cmesh->committed = 1;
+
 #if T8_ENABLE_DEBUG
   t8_debugf ("Cmesh is %spartitioned.\n", cmesh->set_partition ? "" : "not ");
-  if (cmesh->set_partition && cmesh->tree_offsets != NULL) {
-    char                buf[BUFSIZ] = "| ";
-    int                 i;
-    for (i = 0; i <= cmesh->mpisize; i++) {
-      snprintf (buf + strlen (buf), BUFSIZ - strlen (buf), " %lli |",
-                (long long) t8_shmem_array_get_gloidx (cmesh->tree_offsets,
-                                                       i));
-    }
-    t8_debugf ("Offsets = %s\n", buf);
+  if (cmesh->set_partition) {
+    t8_offset_print (cmesh, comm);
   }
   t8_cmesh_trees_print (cmesh, cmesh->trees);
 #endif
-  cmesh->committed = 1;
 
   if (cmesh->set_from != NULL) {
     /* Unref set_from and set it to NULL */
@@ -666,4 +686,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
              (long long) cmesh->num_trees, (long) cmesh->num_ghosts);
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  /* If profiling is enabled, we measure the runtime of  commit. */
+  if (cmesh->profile != NULL) {
+    cmesh->profile->commit_runtime = sc_MPI_Wtime () -
+      cmesh->profile->commit_runtime;
+  }
 }
