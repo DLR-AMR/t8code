@@ -241,6 +241,7 @@ t8_default_scheme_new_quad (void)
   ts->elem_boundary = t8_default_quad_boundary;
   ts->elem_set_linear_id = t8_default_quad_set_linear_id;
   ts->elem_successor = t8_default_quad_successor;
+  ts->elem_anchor = t8_default_quad_anchor;
 
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;

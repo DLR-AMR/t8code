@@ -110,7 +110,7 @@ typedef void        (*t8_element_successor_t) (const t8_element_t * t,
 typedef void        (*t8_element_new_t) (void *ts_context,
                                          int length, t8_element_t ** elem);
 
-typedef void        (*t8_element_anchor_t) (const t8_element_t elem,
+typedef void        (*t8_element_anchor_t) (const t8_element_t * elem,
                                             int anchor[3]);
 
 /** Deallocate space for the codimension-one boundary elements. */
