@@ -140,6 +140,12 @@ t8_default_tri_anchor (const t8_element_t * elem, int anchor[3])
   anchor[2] = 0;
 }
 
+static int
+t8_default_tri_root_len (const t8_element_t * elem)
+{
+  return T8_DTRI_ROOT_LEN;
+}
+
 t8_eclass_scheme_t *
 t8_default_scheme_new_tri (void)
 {
@@ -163,6 +169,7 @@ t8_default_scheme_new_tri (void)
   ts->elem_set_linear_id = t8_default_tri_set_linear_id;
   ts->elem_successor = t8_default_tri_successor;
   ts->elem_anchor = t8_default_tri_anchor;
+  ts->elem_root_len = t8_default_tri_root_len;
 
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;

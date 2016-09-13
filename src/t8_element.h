@@ -110,8 +110,14 @@ typedef void        (*t8_element_successor_t) (const t8_element_t * t,
 typedef void        (*t8_element_new_t) (void *ts_context,
                                          int length, t8_element_t ** elem);
 
+/** Get the integer coordinates of the anchor node of an element */
 typedef void        (*t8_element_anchor_t) (const t8_element_t * elem,
                                             int anchor[3]);
+
+/** Get the integer root length of an element, that is the length of
+ *  the level 0 ancestor.
+ */
+typedef int         (*t8_element_root_len_t) (const t8_element_t * elem);
 
 /** Deallocate space for the codimension-one boundary elements. */
 typedef void        (*t8_element_destroy_t) (void *ts_context,
@@ -147,6 +153,7 @@ struct t8_eclass_scheme
   t8_element_successor_t elem_successor; /**< Compute the successor of a given element */
 
   t8_element_anchor_t elem_anchor; /**< Compute the anchor node of a given element */
+  t8_element_root_len_t elem_root_len; /**< Compute the root length of a given element */
   /* these element routines have a context for memory allocation */
   t8_element_new_t    elem_new;         /**< Allocate space for one or more elements. */
   t8_element_destroy_t elem_destroy;    /**< Deallocate space for one or more elements. */
@@ -388,6 +395,15 @@ void                t8_element_successor (t8_eclass_scheme_t * ts,
 void                t8_element_anchor (t8_eclass_scheme_t * ts,
                                        const t8_element_t * elem,
                                        int anchor[3]);
+
+/** Compute the root lenght of a given element, that is the length of
+ * its level 0 ancestor.
+ * \param [in] ts       The virtual table for this element class.
+ * \param [in] elem     The element whose root length should be computed.
+ * \return              The root length of \a elem
+ */
+int                 t8_element_root_len (t8_eclass_scheme_t * ts,
+                                         const t8_element_t * elem);
 
 /** Allocate memory for an array of elements of a given class.
  * \param [in] ts       The virtual table for this element class.

@@ -251,9 +251,16 @@ void
 t8_element_anchor (t8_eclass_scheme_t * ts, const t8_element_t * elem,
                    int anchor[3])
 {
-  T8_ASSERT (ts != NULL && ts->elem_successor != NULL);
+  T8_ASSERT (ts != NULL && ts->elem_anchor != NULL);
 
   ts->elem_anchor (elem, anchor);
+}
+
+int
+t8_element_root_len (t8_eclass_scheme_t * ts, const t8_element_t * elem)
+{
+  T8_ASSERT (ts != NULL && ts->elem_root_len != NULL);
+  return ts->elem_root_len (elem);
 }
 
 void

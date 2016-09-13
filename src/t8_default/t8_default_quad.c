@@ -217,6 +217,12 @@ t8_default_quad_anchor (const t8_element_t * elem, int coord[3])
   coord[2] = 0;
 }
 
+static int
+t8_default_quad_root_len (const t8_element_t * elem)
+{
+  return P4EST_ROOT_LEN;
+}
+
 t8_eclass_scheme_t *
 t8_default_scheme_new_quad (void)
 {
@@ -242,6 +248,7 @@ t8_default_scheme_new_quad (void)
   ts->elem_set_linear_id = t8_default_quad_set_linear_id;
   ts->elem_successor = t8_default_quad_successor;
   ts->elem_anchor = t8_default_quad_anchor;
+  ts->elem_root_len = t8_default_quad_root_len;
 
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;
