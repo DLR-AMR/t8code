@@ -940,6 +940,9 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     else {
       last_global_child = global_num_children;
     }
+
+    SC_CHECK_ABORT (first_global_child < last_global_child,
+                    "forest does not support empty processes yet");
     T8_ASSERT (0 <= first_global_child
                && first_global_child <= global_num_children);
     T8_ASSERT (0 <= last_global_child
