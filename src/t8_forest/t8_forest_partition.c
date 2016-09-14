@@ -221,8 +221,9 @@ t8_forest_partition_sendrange (t8_forest_t forest, int *send_first,
  * and the first tree we send elements from,
  * calculate the first and last element of this tree that we need to send.
  * The returned element indices are local to the tree.
+ * Returns true, if the last element that we send is also the last element of the tree
  */
-static void
+static int
 t8_forest_partition_tree_first_last_el (t8_tree_t tree,
                                         t8_locidx_t tree_id,
                                         t8_locidx_t first_element_send,
@@ -249,6 +250,11 @@ t8_forest_partition_tree_first_last_el (t8_tree_t tree,
     /* Else it is the last element of this tree */
     *last_tree_el = tree->elements.elem_count - 1;
   }
+  /* return true if there are no elements left on this tree */
+  if (*last_tree_el == tree->elements.elem_count - 1) {
+    return 1;
+  }
+  return 0;
 }
 
 /* Fill the send buffers for one send operation.
@@ -276,6 +282,7 @@ t8_forest_partition_fill_buffer (t8_forest_t forest_from,
   t8_locidx_t         current_element, tree_id, num_trees_send;
   t8_locidx_t         first_tree_element, last_tree_element;
   int                 element_alloc, byte_alloc, tree_info_pos, element_pos;
+  int                 last_element_is_last_tree_element;
   t8_forest_partition_tree_info_t *tree_info;
   t8_locidx_t        *pnum_trees_send;
   void               *pfirst_element;
@@ -288,11 +295,15 @@ t8_forest_partition_fill_buffer (t8_forest_t forest_from,
   while (current_element <= last_element_send) {
     /* Get the first tree that we send elements from */
     tree = t8_forest_get_tree (forest_from, tree_id);
-    t8_forest_partition_tree_first_last_el (tree, tree_id, first_element_send,
-                                            last_element_send, *current_tree,
-                                            &first_tree_element,
-                                            &last_tree_element);
-    SC_CHECK_ABORT (tree->eclass != T8_ECLASS_PYRAMID, "Forest partition"
+    last_element_is_last_tree_element =
+      t8_forest_partition_tree_first_last_el (tree, tree_id,
+                                              first_element_send,
+                                              last_element_send,
+                                              *current_tree,
+                                              &first_tree_element,
+                                              &last_tree_element);
+    SC_CHECK_ABORT (tree->eclass != T8_ECLASS_PYRAMID,
+                    "Forest partition"
                     " is not implement for pyramidal elements.");
     /* We now know how many elements this tree will send */
     num_elements_send = last_tree_element - first_tree_element + 1;
@@ -327,13 +338,18 @@ t8_forest_partition_fill_buffer (t8_forest_t forest_from,
   for (tree_id = 0; tree_id < num_trees_send; tree_id++) {
     /* Get the first tree that we send elements from */
     tree = t8_forest_get_tree (forest_from, tree_id + *current_tree);
-    t8_forest_partition_tree_first_last_el (tree, tree_id + *current_tree,
-                                            first_element_send,
-                                            last_element_send, *current_tree,
-                                            &first_tree_element,
-                                            &last_tree_element);
+    (void)
+      t8_forest_partition_tree_first_last_el (tree, tree_id + *current_tree,
+                                              first_element_send,
+                                              last_element_send,
+                                              *current_tree,
+                                              &first_tree_element,
+                                              &last_tree_element);
     /* We now know how many elements this tree will send */
+
     num_elements_send = last_tree_element - first_tree_element + 1;
+
+    T8_ASSERT (num_elements_send > 0);
     /* Get the tree info struct for this tree and fill it */
     tree_info = (t8_forest_partition_tree_info_t *)
       (*send_buffer + tree_info_pos);
@@ -349,7 +365,9 @@ t8_forest_partition_fill_buffer (t8_forest_t forest_from,
             num_elements_send * tree->elements.elem_size);
     element_pos += num_elements_send * tree->elements.elem_size;
   }
+  *current_tree += num_trees_send - 1 + last_element_is_last_tree_element;
   *buffer_alloc = byte_alloc;
+  t8_debugf ("Post send of %i trees\n", num_trees_send);
 }
 
 /* Carry out all sending of elements */
