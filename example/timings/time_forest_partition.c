@@ -33,10 +33,9 @@
 #include <t8_forest.h>
 #include <t8_default.h>
 
-
 double              x_min, x_max;
 
-static double *
+static void
 t8_anchor_element (t8_forest_t forest,
                    t8_eclass_scheme_t * ts, t8_element_t * element,
                    double elem_anchor_f[3])
@@ -86,10 +85,12 @@ t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
   t8_cmesh_t          cmesh_partition;
   char                forest_vtu[BUFSIZ], cmesh_vtu[BUFSIZ];
 
-  t8_cprofile_t      *profile;
   t8_forest_t         forest, forest_adapt, forest_partition;
+#if 0
+  t8_cprofile_t      *profile;
   sc_flopinfo_t       fi, snapshot;
   sc_statinfo_t       stats[NUM_STATS];
+#endif
 
   /* Create a cmesh from the given mesh files */
   cmesh = t8_cmesh_from_msh_file ((char *) msh_file, 1, comm, mesh_dim, 0);
