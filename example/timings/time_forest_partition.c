@@ -79,7 +79,7 @@ t8_basic_adapt (t8_forest_t forest, t8_topidx_t which_tree,
  * partitioned. */
 void
 t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
-                              sc_MPI_Comm comm, int init_level)
+                              sc_MPI_Comm comm, int init_level, int no_vtk)
 {
   t8_cmesh_t          cmesh;
   t8_cmesh_t          cmesh_partition;
@@ -124,12 +124,13 @@ t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
   t8_forest_set_partition (forest_partition, forest_adapt, 0);
   t8_forest_commit (forest_partition);
   /* Set the vtu output name */
-  snprintf (forest_vtu, BUFSIZ, "%s_forest_adapt", msh_file);
-  snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_adapt", msh_file);
-  t8_forest_write_vtk (forest_partition, forest_vtu);
-  t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_partition), cmesh_vtu,
-                           1.0);
-
+  if (!no_vtk) {
+    snprintf (forest_vtu, BUFSIZ, "%s_forest_adapt", msh_file);
+    snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_adapt", msh_file);
+    t8_forest_write_vtk (forest_partition, forest_vtu);
+    t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_partition),
+                             cmesh_vtu, 1.0);
+  }
 #if 0
   /* Allocate profiling struct */
   profile = T8_ALLOC_ZERO (t8_cprofile_t, 1);
@@ -180,7 +181,7 @@ main (int argc, char *argv[])
   int                 mpiret;
   int                 first_argc;
   int                 level;
-  int                 help = 0;
+  int                 help = 0, no_vtk;
   int                 dim;
   sc_options_t       *opt;
   const char         *fileprefix;
@@ -200,6 +201,8 @@ main (int argc, char *argv[])
                       "The dimension of the coarse mesh. 2 or 3.");
   sc_options_add_switch (opt, 'h', "help", &help,
                          "Display a short help message.");
+  sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk,
+                         "Do not write vtk output.");
   sc_options_add_string (opt, 'f', "file", &fileprefix, NULL,
                          "The input mesh "
                          "file prefix. The files must end in .msh and be "
@@ -226,7 +229,8 @@ main (int argc, char *argv[])
   }
   else {
     /* Execute this part of the code if all options are correctly set */
-    t8_time_forest_cmesh_mshfile (fileprefix, dim, sc_MPI_COMM_WORLD, level);
+    t8_time_forest_cmesh_mshfile (fileprefix, dim, sc_MPI_COMM_WORLD, level,
+                                  no_vtk);
   }
   sc_options_destroy (opt);
   sc_finalize ();
