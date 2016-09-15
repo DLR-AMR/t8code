@@ -457,6 +457,18 @@ t8_forest_commit (t8_forest_t forest)
              (long long) forest->last_local_tree);
 }
 
+static t8_element_t *
+t8_forest_get_first_element (t8_forest_t forest)
+{
+  t8_tree_t           tree;
+
+  if (forest->trees == NULL || forest->trees->elem_count == 0) {
+    return NULL;
+  }
+  tree = t8_forest_get_tree (forest, 0);
+  return (t8_element_t *) sc_array_index (&tree->elements, 0);
+}
+
 void
 t8_forest_partition_cmesh (t8_forest_t forest, sc_MPI_Comm comm)
 {
