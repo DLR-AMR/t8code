@@ -349,38 +349,39 @@ t8_forest_populate (t8_forest_t forest)
 static int
 t8_forest_first_tree_shared (t8_forest_t forest)
 {
-    t8_tree_t       first_tree;
-    t8_element_t   *first_desc, *first_element;
-    t8_eclass_t     eclass;
-    t8_eclass_scheme_t *ts;
-    int                 ret;
+  t8_tree_t           first_tree;
+  t8_element_t       *first_desc, *first_element;
+  t8_eclass_t         eclass;
+  t8_eclass_scheme_t *ts;
+  int                 ret;
 
-    T8_ASSERT (forest != NULL);
-    if (forest->trees == NULL || forest->first_local_tree > forest->last_local_tree) {
-        /* This forest is empty and therefore the first tree is not shared */
-        return 0;
-    }
-    /* Get a pointer to the first tree */
-    first_tree = (t8_tree_t) sc_array_index (forest->trees, 0);
-    /* Get the eclass scheme of the first tree */
-    eclass = first_tree->eclass;
-    /* Get the eclass scheme of the first tree */
-    ts = forest->scheme->eclass_schemes[eclass];
-    /* Calculate the first possible descendant of the first tree */
-    /* we do this by first creating a level 0 child of the tree, then
-     * calculating its first descendant */
-    t8_element_new (ts, 1, &first_element);
-    t8_element_set_linear_id (ts, first_element, 0, 0);
-    t8_element_new (ts, 1, &first_desc);
-    t8_element_first_descendant (ts, first_element, first_desc);
-    /* We can now check whether the first possible descendant matches the
-     * first local descendant */
-    ret = t8_element_compare (ts, first_desc, first_tree->first_desc);
-    t8_element_destroy (ts, 1, &first_element);
-    t8_element_destroy (ts, 1, &first_desc);
-    /* If the descendants are the same then ret is zero and we return true.
-     * We return false otherwise */
-    return ret == 0;
+  T8_ASSERT (forest != NULL);
+  if (forest->trees == NULL
+      || forest->first_local_tree > forest->last_local_tree) {
+    /* This forest is empty and therefore the first tree is not shared */
+    return 0;
+  }
+  /* Get a pointer to the first tree */
+  first_tree = (t8_tree_t) sc_array_index (forest->trees, 0);
+  /* Get the eclass scheme of the first tree */
+  eclass = first_tree->eclass;
+  /* Get the eclass scheme of the first tree */
+  ts = forest->scheme->eclass_schemes[eclass];
+  /* Calculate the first possible descendant of the first tree */
+  /* we do this by first creating a level 0 child of the tree, then
+   * calculating its first descendant */
+  t8_element_new (ts, 1, &first_element);
+  t8_element_set_linear_id (ts, first_element, 0, 0);
+  t8_element_new (ts, 1, &first_desc);
+  t8_element_first_descendant (ts, first_element, first_desc);
+  /* We can now check whether the first possible descendant matches the
+   * first local descendant */
+  ret = t8_element_compare (ts, first_desc, first_tree->first_desc);
+  t8_element_destroy (ts, 1, &first_element);
+  t8_element_destroy (ts, 1, &first_desc);
+  /* If the descendants are the same then ret is zero and we return true.
+   * We return false otherwise */
+  return ret == 0;
 }
 
 /* Allocate memory for trees and set their values as in from.
