@@ -24,6 +24,7 @@
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_partition.h>
+#include <t8_cmesh/t8_cmesh_offset.h>
 
 void
 t8_forest_init (t8_forest_t * pforest)
@@ -520,6 +521,8 @@ t8_forest_commit (t8_forest_t forest)
     /* decrease reference count of input forest, possibly destroying it */
     t8_forest_unref (&forest->set_from);
   }
+  /* Compute first and last descendant for each tree */
+  t8_forest_compute_desc (forest);
 
   /* we do not need the set parameters anymore */
   forest->set_level = 0;
@@ -534,6 +537,8 @@ t8_forest_commit (t8_forest_t forest)
              (long long) forest->last_local_tree);
 }
 
+/* Currently this function is not used */
+#if 0
 static t8_element_t *
 t8_forest_get_first_element (t8_forest_t forest)
 {
@@ -545,26 +550,43 @@ t8_forest_get_first_element (t8_forest_t forest)
   tree = t8_forest_get_tree (forest, 0);
   return (t8_element_t *) sc_array_index (&tree->elements, 0);
 }
+#endif
+
+/* Compute the offset array for a partition cmesh that should match the
+ * forest's partition.
+ */
+static t8_shmem_array_t
+t8_forest_compute_cmesh_offset (t8_forest_t forest, sc_MPI_Comm comm)
+{
+  t8_shmem_array_t    offset;
+  t8_gloidx_t         local_offset;
+  int                 first_tree_shared;
+
+  /* initialize the shared memory array */
+  t8_shmem_array_init (&offset, sizeof (t8_gloidx_t), forest->mpisize + 1,
+                       comm);
+  /* Compute whether our first local tree is shared with a smaller rank */
+  first_tree_shared = t8_forest_first_tree_shared (forest);
+  /* Calculate our entry in the offset array */
+  local_offset = t8_offset_first_tree_to_entry (forest->first_local_tree,
+                                                first_tree_shared);
+  /* allgather the local entries of the offset array */
+  t8_shmem_array_allgather (&local_offset, 1, T8_MPI_GLOIDX, offset, 1,
+                            T8_MPI_GLOIDX);
+  return offset;
+}
 
 void
 t8_forest_partition_cmesh (t8_forest_t forest, sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh_partition;
-  t8_gloidx_t         last_local_tree;
 
   t8_cmesh_init (&cmesh_partition);
   t8_cmesh_set_derive (cmesh_partition, forest->cmesh);
   /* set partition range of new cmesh according to forest trees */
-  if (forest->local_num_elements == 0) {
-    /* If this partition is empty, set the last local tree to be less
-     * then the first_local_tree, thus the cmesh will also be empty */
-    last_local_tree = forest->first_local_tree - 1;
-  }
-  else {
-    last_local_tree = forest->last_local_tree;
-  }
-  t8_cmesh_set_partition_range (cmesh_partition, -1, forest->first_local_tree,
-                                last_local_tree);
+  t8_cmesh_set_partition_offsets (cmesh_partition,
+                                  t8_forest_compute_cmesh_offset (forest,
+                                                                  comm));
   /* Commit the new cmesh */
   t8_cmesh_commit (cmesh_partition, comm);
   /* unref the old one and set the new cmesh as the cmesh of the forest */
