@@ -109,6 +109,11 @@ typedef void        (*t8_element_boundary_t) (const t8_element_t * elem,
 typedef void        (*t8_element_linear_id_t) (t8_element_t * elem,
                                                int level, uint64_t id);
 
+/** Calculate the linear id of an element */
+typedef             u_int64_t (*t8_element_get_linear_id_t) (const
+                                                             t8_element_t *
+                                                             elem, int level);
+
 /** Calculate the first descendant of a given element e. That is, the
  *  first element in a uniform refinement of e of the maximal possible level.
  */
@@ -166,6 +171,7 @@ struct t8_eclass_scheme
   t8_element_nca_t    elem_nca;         /**< Compute nearest common ancestor. */
   t8_element_boundary_t elem_boundary;  /**< Compute a set of boundary elements. */
   t8_element_linear_id_t elem_set_linear_id; /**< Initialize an element from a given linear id. */
+  t8_element_get_linear_id_t elem_get_linear_id; /**< Calculate the linear id of a given element. */
   t8_element_successor_t elem_successor; /**< Compute the successor of a given element */
   t8_element_anchor_t elem_anchor; /**< Compute the anchor node of a given element */
   t8_element_first_descendant_t elem_first_desc; /**< Compute an element's first descendant */
@@ -409,6 +415,17 @@ void                t8_element_boundary (t8_eclass_scheme_t * ts,
 void                t8_element_set_linear_id (t8_eclass_scheme_t * ts,
                                               t8_element_t * elem,
                                               int level, uint64_t id);
+
+/** Compute the linear id of a given element in a hypothetical uniform
+ * refinement of a given level.
+ * \param [in] ts       The virtual table for this element class.
+ * \param [in] elem     The element whose id we compute.
+ * \param [in] level    The level of the uniform refinement to consider.
+ * \return              The linear id of the element.
+ */
+uint64_t            t8_element_get_linear_id (t8_eclass_scheme_t * ts,
+                                              const t8_element_t * elem,
+                                              int level);
 
 /** Compute the first descendant of a given element.
  * \param [in] ts       The virtual table for this element class.

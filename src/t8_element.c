@@ -247,6 +247,15 @@ t8_element_set_linear_id (t8_eclass_scheme_t * ts,
   ts->elem_set_linear_id (elem, level, id);
 }
 
+uint64_t
+t8_element_get_linear_id (t8_eclass_scheme_t * ts,
+                          const t8_element_t * elem, int level)
+{
+  T8_ASSERT (ts != NULL && ts->elem_get_linear_id != NULL);
+
+  return ts->elem_get_linear_id (elem, level);
+}
+
 void
 t8_element_first_descendant (t8_eclass_scheme_t * ts,
                              const t8_element_t * elem, t8_element_t * desc)
