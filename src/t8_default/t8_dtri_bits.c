@@ -741,6 +741,36 @@ t8_dtri_is_ancestor (const t8_dtri_t * t, const t8_dtri_t * c)
   }
 }
 
+/* Compute the linear id of the first descendant of a triangle/tet */
+static uint64_t
+t8_dtri_linear_id_first_desc (const t8_dtri_t * t)
+{
+  /* The id of the first descendant is the id of t in a uniform maxlevel
+   * refinement */
+  return t8_dtri_linear_id (t, T8_DTRI_MAXLEVEL);
+}
+
+/* Compute the linear id of the last descendant of a triangle/tet */
+static              uint64_t
+t8_dtri_linear_id_last_desc (const t8_dtri_t * t)
+{
+  uint64_t            id = 0, t_id;
+  int                 exponent;
+
+  /* The id of the last descendant consists of the id of t in
+   * the first digits and then the local ids of all last children
+   * (3 in 2d, 7 in 3d)
+   */
+  t_id = t8_dtri_linear_id (t, t->level);
+  exponent = T8_DTRI_MAXLEVEL - t->level;
+  /* Set the last bits to the local ids of always choosing the last child
+   * of t */
+  id = (1 << T8_DTRI_DIM * exponent) - 1;
+  /* Set the first bits of id to the id of t itself */
+  id |= t_id << exponent;
+  return id;
+}
+
 uint64_t
 t8_dtri_linear_id (const t8_dtri_t * t, int level)
 {
@@ -749,9 +779,18 @@ t8_dtri_linear_id (const t8_dtri_t * t, int level)
   t8_dtri_cube_id_t   cid;
   int                 i;
   int                 exponent;
+  int                 my_level;
 
-  T8_ASSERT (0 <= level && level <= t->level);
+  T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
+  my_level = t->level;
   exponent = 0;
+  /* If the given level is bigger than t's level
+   * we first fill up with the ids of t's descendants at t's
+   * origin with the same type as t */
+  if (level > my_level) {
+    exponent = (level - my_level) * T8_DTRI_DIM;
+  }
+  level = my_level;
   type_temp = compute_type (t, level);
   for (i = level; i > 0; i--) {
     cid = compute_cubeid (t, i);
@@ -873,6 +912,28 @@ t8_dtri_successor (const t8_dtri_t * t, t8_dtri_t * s, int level)
 {
   t8_dtri_copy (t, s);
   t8_dtri_succ_pred_recursion (t, s, level, 1);
+}
+
+void
+t8_dtri_first_descendant (const t8_dtri_t * t, t8_dtri_t * s)
+{
+  uint64_t            id;
+
+  /* Compute the linear id of the first descendant */
+  id = t8_dtri_linear_id_first_desc (t);
+  /* The first descendant has exactly this id */
+  t8_dtri_init_linear_id (s, id, T8_DTRI_MAXLEVEL);
+}
+
+void
+t8_dtri_last_descendant (const t8_dtri_t * t, t8_dtri_t * s)
+{
+  uint64_t            id;
+
+  /* Compute the linear id of t's last descendant */
+  id = t8_dtri_linear_id_last_desc (t);
+  /* Set s to math this linear id */
+  t8_dtri_init_linear_id (s, id, T8_DTRI_MAXLEVEL);
 }
 
 void

@@ -80,6 +80,8 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_init_linear_id t8_dtet_init_linear_id
 #define t8_dtri_init_root t8_dtet_init_root
 #define t8_dtri_successor t8_dtet_successor
+#define t8_dtri_first_descendant t8_dtet_first_descendant
+#define t8_dtri_last_descendant t8_dtet_last_descendant
 #define t8_dtri_predecessor t8_dtet_predecessor
 #define t8_dtri_ancestor_id t8_dtet_ancestor_id
 #define t8_dtri_child_id  t8_dtet_child_id

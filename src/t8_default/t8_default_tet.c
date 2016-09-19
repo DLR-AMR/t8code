@@ -26,6 +26,11 @@
 
 typedef t8_dtet_t   t8_default_tet_t;
 
+/* This function is used by other element functions and we thus need to
+ * declare it up here */
+static uint64_t     t8_default_tet_get_linear_id (const t8_element_t * elem,
+                                                  int level);
+
 static              size_t
 t8_default_tet_size (void)
 {
@@ -48,6 +53,23 @@ static void
 t8_default_tet_copy (const t8_element_t * source, t8_element_t * dest)
 {
   t8_dtet_copy ((const t8_dtet_t *) source, (t8_dtet_t *) dest);
+}
+
+static int
+t8_default_tet_compare (const t8_element_t * elem1,
+                        const t8_element_t * elem2)
+{
+  int                 maxlvl;
+  u_int64_t           id1, id2;
+
+  /* Compute the bigger level of the two */
+  maxlvl = SC_MAX (t8_default_tet_level (elem1),
+                   t8_default_tet_level (elem2));
+  /* Compute the linear ids of the elements */
+  id1 = t8_default_tet_get_linear_id (elem1, maxlvl);
+  id2 = t8_default_tet_get_linear_id (elem2, maxlvl);
+  /* return negativ if id1 < id2, zero if id1 = id2, positive if id1 > id2 */
+  return id1 < id2 ? -1 : id1 != id2;
 }
 
 static void
@@ -120,6 +142,14 @@ t8_default_tet_set_linear_id (t8_element_t * elem, int level, uint64_t id)
   t8_dtet_init_linear_id ((t8_default_tet_t *) elem, id, level);
 }
 
+static uint64_t
+t8_default_tet_get_linear_id (const t8_element_t * elem, int level)
+{
+  T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
+
+  return t8_dtet_linear_id ((t8_default_tet_t *) elem, level);
+}
+
 static void
 t8_default_tet_successor (const t8_element_t * elem1,
                           t8_element_t * elem2, int level)
@@ -128,6 +158,20 @@ t8_default_tet_successor (const t8_element_t * elem1,
 
   t8_dtet_successor ((const t8_default_tet_t *) elem1,
                      (t8_default_tet_t *) elem2, level);
+}
+
+static void
+t8_default_tet_first_descendant (const t8_element_t * elem,
+                                 t8_element_t * desc)
+{
+  t8_dtet_first_descendant ((t8_dtet_t *) elem, (t8_dtet_t *) desc);
+}
+
+static void
+t8_default_tet_last_descendant (const t8_element_t * elem,
+                                t8_element_t * desc)
+{
+  t8_dtet_last_descendant ((t8_dtet_t *) elem, (t8_dtet_t *) desc);
 }
 
 static void
@@ -159,6 +203,7 @@ t8_default_scheme_new_tet (void)
 
   ts->elem_level = t8_default_tet_level;
   ts->elem_copy = t8_default_tet_copy;
+  ts->elem_compare = t8_default_tet_compare;
   ts->elem_parent = t8_default_tet_parent;
   ts->elem_sibling = t8_default_tet_sibling;
   ts->elem_child = t8_default_tet_child;
@@ -167,7 +212,10 @@ t8_default_scheme_new_tet (void)
   ts->elem_is_family = t8_default_tet_is_family;
   ts->elem_nca = t8_default_tet_nca;
   ts->elem_set_linear_id = t8_default_tet_set_linear_id;
+  ts->elem_get_linear_id = t8_default_tet_get_linear_id;
   ts->elem_successor = t8_default_tet_successor;
+  ts->elem_first_desc = t8_default_tet_first_descendant;
+  ts->elem_last_desc = t8_default_tet_last_descendant;
   ts->elem_anchor = t8_default_tet_anchor;
   ts->elem_root_len = t8_default_tet_root_len;
 

@@ -194,6 +194,24 @@ void                t8_dtri_init_root (t8_dtri_t * t);
 void                t8_dtri_successor (const t8_dtri_t * t, t8_dtri_t * s,
                                        int level);
 
+/** Compute the first descendant of a triangle. This is the descendant of
+ * the triangle in a uniform maxlevel refinement that has the smaller id.
+ * \param [in] t        Triangle whose descendant is computed.
+ * \param [out] s       Existing triangle whose data will be filled with the data
+ *                      of t's first descendant.
+ */
+void                t8_dtri_first_descendant (const t8_dtri_t * t,
+                                              t8_dtri_t * s);
+
+/** Compute the last descendant of a triangle. This is the descendant of
+ * the triangle in a uniform maxlevel refinement that has the bigges id.
+ * \param [in] t        Triangle whose descendant is computed.
+ * \param [out] s       Existing triangle whose data will be filled with the data
+ *                      of t's last descendant.
+ */
+void                t8_dtri_last_descendant (const t8_dtri_t * t,
+                                             t8_dtri_t * s);
+
 /** Computes the predecessor of a triangle in a uniform grid of level \a level.
  * \param [in] t  triangle whose id will be computed.
  * \param [in,out] s Existing triangle whose data will be filled with the
