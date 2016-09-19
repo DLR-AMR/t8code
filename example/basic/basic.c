@@ -29,8 +29,7 @@
 #include <p8est_connectivity.h>
 #include <sc_shmem.h>
 
-#if 0
-
+#if 1
 static int
 t8_basic_adapt (t8_forest_t forest, t8_topidx_t which_tree,
                 t8_eclass_scheme_t * ts,
@@ -40,28 +39,34 @@ t8_basic_adapt (t8_forest_t forest, t8_topidx_t which_tree,
   T8_ASSERT (num_elements == 1 || num_elements ==
              t8_eclass_num_children[ts->eclass]);
   level = t8_element_level (ts, elements[0]);
+#if 0
   if (num_elements > 1) {
+    /* Do coarsen here */
     if (level > 0)
       return -1;
     return 0;
   }
+#endif
   if (level < 3)
+    /* refine if level is smaller 3 */
     return 1;
   return 0;
 }
-
+#endif
+#if 0
 static void
 t8_basic_refine_test ()
 {
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
+  t8_cmesh_t          cmesh;
 
   t8_forest_init (&forest);
   t8_forest_init (&forest_adapt);
+  cmesh = t8_cmesh_new_from_class (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, 0);
 
-  t8_forest_set_cmesh (forest, t8_cmesh_new_from_class (T8_ECLASS_QUAD,
-                                                        sc_MPI_COMM_WORLD,
-                                                        0));
+  t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
+  t8_cmesh_unref (&cmesh);
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
   t8_forest_set_level (forest, 2);
   t8_forest_commit (forest);
@@ -72,6 +77,38 @@ t8_basic_refine_test ()
   t8_forest_unref (&forest_adapt);
 }
 #endif
+
+static void
+t8_basic_forest_partition ()
+{
+  t8_forest_t         forest, forest_adapt, forest_partition;
+  t8_cmesh_t          cmesh, cmesh_partition;
+  sc_MPI_Comm         comm;
+  int                 level = 2;        /* initial refinement level */
+
+  comm = sc_MPI_COMM_WORLD;
+  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, comm, 0, 0, 1);
+  t8_cmesh_init (&cmesh_partition);
+  t8_cmesh_set_derive (cmesh_partition, cmesh);
+  t8_cmesh_set_partition_uniform (cmesh_partition, level);
+  t8_cmesh_commit (cmesh_partition, comm);
+  t8_cmesh_unref (&cmesh);
+  t8_forest_init (&forest);
+  t8_forest_init (&forest_adapt);
+  t8_forest_init (&forest_partition);
+  t8_forest_set_cmesh (forest, cmesh_partition, comm);
+  t8_forest_set_scheme (forest, t8_scheme_new_default ());
+  t8_forest_set_level (forest, level);
+  t8_forest_commit (forest);
+  t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, NULL, 1);
+  t8_forest_set_partition (forest_partition, forest_adapt, 0);
+  t8_forest_commit (forest_adapt);
+  t8_forest_commit (forest_partition);
+  t8_forest_partition_cmesh (forest_partition, comm);
+  /* Clean-up */
+  t8_cmesh_destroy (&cmesh_partition);
+  t8_forest_unref (&forest_partition);
+}
 
 #if 0
 static void
@@ -92,8 +129,8 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  snprintf (vtuname, BUFSIZ, "./%s_%04d", t8_eclass_to_string[eclass],
-            mpirank);
+  snprintf (vtuname, BUFSIZ, "cmesh_hypercube_%s",
+            t8_eclass_to_string[eclass]);
   if (t8_cmesh_vtk_write_file (cmesh, vtuname, 1.0) == 0) {
     t8_debugf ("Output to %s\n", vtuname);
   }
@@ -111,6 +148,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
     if (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX
         || eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_TET) {
       t8_forest_commit (forest);
+      t8_debugf ("Successfully committed forest.\n");
       t8_forest_write_vtk (forest, "basic");    /* This does nothing right now */
       t8_forest_unref (&forest);
     }
@@ -137,6 +175,7 @@ t8_basic_periodic (int do_dup, int set_level, int dim)
 }
 #endif
 
+#if 0
 static void
 t8_basic_p4est (int do_partition, int create_forest, int forest_level)
 {
@@ -168,6 +207,7 @@ t8_basic_p4est (int do_partition, int create_forest, int forest_level)
   }
   t8_cmesh_unref (&cmesh);
 }
+#endif
 
 #if 0
 static void
@@ -268,7 +308,7 @@ t8_basic_partition (t8_eclass_t eclass, int set_level)
 
   t8_cmesh_init (&cmesh_part);
   cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 1);
-  snprintf (file, BUFSIZ, "basic_before_partition_%04d", mpirank);
+  snprintf (file, BUFSIZ, "basic_before_partition");
   t8_cmesh_vtk_write_file (cmesh, file, 1.0);
   /* A partition that concentrates everything to proc 0 */
   offsets[0] = 0;
@@ -283,7 +323,7 @@ t8_basic_partition (t8_eclass_t eclass, int set_level)
    *       same idea for face_knowledge */
   t8_cmesh_set_partition_offsets (cmesh_part, offsets);
   t8_cmesh_commit (cmesh_part, sc_MPI_COMM_WORLD);
-  snprintf (file, BUFSIZ, "basic_partition_%04d", mpirank);
+  snprintf (file, BUFSIZ, "basic_partition");
   t8_cmesh_vtk_write_file (cmesh_part, file, 1.0);
   t8_cmesh_unref (&cmesh_part);
 }
@@ -321,8 +361,7 @@ main (int argc, char **argv)
   t8_global_productionf ("Done testing basic tet mesh.\n");
   t8_basic_hypercube (T8_ECLASS_QUAD, 0, 1, 1);
 #endif
-  t8_basic_p4est (1, 1, 1);
-
+  t8_basic_forest_partition ();
 #if 0
   t8_global_productionf ("Testing hypercube cmesh.\n");
 

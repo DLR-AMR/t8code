@@ -39,7 +39,7 @@ t8_read_msh_file_vtk (t8_cmesh_t cmesh, const char *prefix)
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  snprintf (fileprefix, BUFSIZ, "%s_t8_msh_%04d", prefix, mpirank);
+  snprintf (fileprefix, BUFSIZ, "%s_t8_msh", prefix);
   if (!t8_cmesh_vtk_write_file (cmesh, fileprefix, 1.)) {
     t8_debugf ("Wrote to file %s\n", fileprefix);
   }

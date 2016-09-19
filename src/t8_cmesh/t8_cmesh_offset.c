@@ -163,7 +163,7 @@ t8_offset_in_range (t8_gloidx_t tree_id, int proc, t8_gloidx_t * offset)
  * TODO: In most cases the search should start with the current mpirank
  *       to optimize runtime.
  */
-static int
+int
 t8_offset_any_owner_of_tree (int mpisize, t8_gloidx_t gtree,
                              t8_gloidx_t * offset)
 {
@@ -538,6 +538,23 @@ t8_offset_range_send (int start, int end, int mpirank,
     }
   }
   return count;
+}
+
+void
+t8_offset_print (t8_shmem_array_t offset, sc_MPI_Comm comm)
+{
+#if T8_ENABLE_DEBUG
+  char                buf[BUFSIZ] = "| ";
+  int                 i, mpiret, mpisize;
+
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  for (i = 0; i <= mpisize; i++) {
+    snprintf (buf + strlen (buf), BUFSIZ - strlen (buf), " % lli |",
+              (long long) t8_shmem_array_get_gloidx (offset, i));
+  }
+  t8_debugf ("Offsets = %s\n", buf);
+#endif
 }
 
 #if 0

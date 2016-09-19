@@ -49,7 +49,7 @@ t8_random_partition (int level)
 
   cmesh = t8_cmesh_new_from_p8est (conn, sc_MPI_COMM_WORLD, 0, 1);
   p8est_connectivity_destroy (conn);
-  snprintf (file, BUFSIZ, "t8_brick_random_%04d", mpirank);
+  snprintf (file, BUFSIZ, "t8_brick_random");
   t8_cmesh_vtk_write_file (cmesh, file, 1.);
 
   t8_cmesh_init (&cmesh_part);
@@ -72,14 +72,14 @@ t8_random_partition (int level)
                                      t8_cmesh_get_num_trees (cmesh), 1, 0));
     t8_cmesh_commit (cmesh_part2, sc_MPI_COMM_WORLD);
 
-    snprintf (file, BUFSIZ, "t8_brick_partition_random2_%04d", mpirank);
+    snprintf (file, BUFSIZ, "t8_brick_partition_random2");
     t8_cmesh_vtk_write_file (cmesh_part2, file, 1.0);
   }
   else {
     cmesh_part2 = cmesh_part;
     t8_cmesh_ref (cmesh_part);
   }
-  snprintf (file, BUFSIZ, "t8_brick_partition_random_%04d", mpirank);
+  snprintf (file, BUFSIZ, "t8_brick_partition_random");
   t8_cmesh_vtk_write_file (cmesh_part, file, 1.0);
   t8_cmesh_unref (&cmesh);
   t8_cmesh_unref (&cmesh_part);
@@ -109,7 +109,7 @@ t8_partition (int level, int partition_from)
   cmesh =
     t8_cmesh_new_from_p4est (conn, sc_MPI_COMM_WORLD, 0, partition_from);
   p4est_connectivity_destroy (conn);
-  snprintf (file, BUFSIZ, "t8_brick_%04d", mpirank);
+  snprintf (file, BUFSIZ, "t8_brick");
   t8_cmesh_vtk_write_file (cmesh, file, 1.);
 
   t8_cmesh_init (&cmesh_part);
@@ -124,14 +124,14 @@ t8_partition (int level, int partition_from)
                                     (1, sc_MPI_COMM_WORLD,
                                      t8_cmesh_get_num_trees (cmesh)));
     t8_cmesh_commit (cmesh_part2, sc_MPI_COMM_WORLD);
-    snprintf (file, BUFSIZ, "t8_brick_partition2_%04d", mpirank);
+    snprintf (file, BUFSIZ, "t8_brick_partition2");
     t8_cmesh_vtk_write_file (cmesh_part2, file, 1.0);
   }
   else {
     cmesh_part2 = cmesh_part;
     t8_cmesh_ref (cmesh_part);
   }
-  snprintf (file, BUFSIZ, "t8_brick_partition_%04d", mpirank);
+  snprintf (file, BUFSIZ, "t8_brick_partition");
   t8_cmesh_vtk_write_file (cmesh_part, file, 1.0);
   t8_cmesh_unref (&cmesh);
   t8_cmesh_unref (&cmesh_part);

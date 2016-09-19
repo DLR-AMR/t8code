@@ -72,7 +72,11 @@ typedef struct t8_forest
 
   t8_gloidx_t         first_local_tree;
   t8_gloidx_t         last_local_tree;
+  t8_gloidx_t         global_num_trees; /**< The total number of global trees */
   sc_array_t         *trees;
+  t8_shmem_array_t    element_offsets; /**< If partitioned, for each process the global index
+                                            of its first element. Since it is memory consuming,
+                                            it is usually only constructed when needed and otherwise unallocated. */
 
   t8_locidx_t         local_num_elements;  /**< Number of elements on this processor. */
   t8_gloidx_t         global_num_elements; /**< Number of elements on all processors. */
@@ -85,10 +89,8 @@ typedef struct t8_tree
   sc_array_t          elements;              /**< locally stored elements */
   t8_eclass_t         eclass;                /**< The element class of this tree */
   /* TODO: We will need the *_desc variables later for shure. */
-#if 0
-  t8_element_t        first_desc,            /**< first local descendant */
-                      last_desc;             /**< last local descendant */
-#endif
+  t8_element_t       *first_desc,            /**< first local descendant */
+                     *last_desc;             /**< last local descendant */
   t8_locidx_t         elements_offset;      /**< cumulative sum over earlier
                                                   trees on this processor
                                                   (locals only) */

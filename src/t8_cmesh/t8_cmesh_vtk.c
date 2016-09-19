@@ -43,6 +43,86 @@ t8_cmesh_get_num_vertices (t8_cmesh_t cmesh)
   return num_vertices;
 }
 
+/* Writes the pvtu header file that links to the processor local files.
+ * This function should only be called by one process.
+ * Return 0 on success. */
+static int
+t8_cmesh_write_pvtu (const char *filename, int num_procs, int write_tree,
+                     int write_rank)
+{
+  char                pvtufilename[BUFSIZ];
+  FILE               *pvtufile;
+  int                 p;
+
+  snprintf (pvtufilename, BUFSIZ, "%s.pvtu", filename);
+
+  pvtufile = fopen (pvtufilename, "wb");
+  if (!pvtufile) {
+    t8_global_errorf ("Could not open %s for output\n", pvtufilename);
+    return -1;
+  }
+
+  fprintf (pvtufile, "<?xml version=\"1.0\"?>\n");
+  fprintf (pvtufile, "<VTKFile type=\"PUnstructuredGrid\" version=\"0.1\"");
+#ifdef SC_IS_BIGENDIAN
+  fprintf (pvtufile, " byte_order=\"BigEndian\">\n");
+#else
+  fprintf (pvtufile, " byte_order=\"LittleEndian\">\n");
+#endif
+
+  fprintf (pvtufile, "  <PUnstructuredGrid GhostLevel=\"0\">\n");
+  fprintf (pvtufile, "    <PPoints>\n");
+  fprintf (pvtufile, "      <PDataArray type=\"%s\" Name=\"Position\""
+           " NumberOfComponents=\"3\" format=\"%s\"/>\n",
+           T8_VTK_FLOAT_NAME, T8_VTK_FORMAT_STRING);
+  fprintf (pvtufile, "    </PPoints>\n");
+  if (write_tree || write_rank) {
+    char                vtkCellDataString[BUFSIZ] = "";
+    int                 printed = 0;
+
+    if (write_tree)
+      printed +=
+        snprintf (vtkCellDataString + printed, BUFSIZ - printed, "treeid");
+    if (write_rank)
+      printed +=
+        snprintf (vtkCellDataString + printed, BUFSIZ - printed,
+                  printed > 0 ? ",mpirank" : "mpirank");
+
+    fprintf (pvtufile, "    <PCellData Scalars=\"%s\">\n", vtkCellDataString);
+  }
+  if (write_tree) {
+    fprintf (pvtufile, "      "
+             "<PDataArray type=\"%s\" Name=\"treeid\" format=\"%s\"/>\n",
+             T8_VTK_GLOIDX, T8_VTK_FORMAT_STRING);
+  }
+  if (write_rank) {
+    fprintf (pvtufile, "      "
+             "<PDataArray type=\"%s\" Name=\"mpirank\" format=\"%s\"/>\n",
+             "Int32", T8_VTK_FORMAT_STRING);
+  }
+  if (write_tree || write_rank) {
+    fprintf (pvtufile, "    </PCellData>\n");
+  }
+
+  for (p = 0; p < num_procs; ++p) {
+    fprintf (pvtufile, "    <Piece Source=\"%s_%04d.vtu\"/>\n", filename, p);
+  }
+  fprintf (pvtufile, "  </PUnstructuredGrid>\n");
+  fprintf (pvtufile, "</VTKFile>\n");
+
+  /* Close paraview master file */
+  if (ferror (pvtufile)) {
+    t8_global_errorf ("t8_forest_vtk: Error writing parallel footer\n");
+    fclose (pvtufile);
+    return -1;
+  }
+  if (fclose (pvtufile)) {
+    t8_global_errorf ("p4est_vtk: Error closing parallel footer\n");
+    return -1;
+  }
+  return 0;
+}
+
 /* TODO: implement for replicated mesh
  * TODO: implement for scale < 1 */
 int
@@ -55,6 +135,11 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
   T8_ASSERT (fileprefix != NULL);
   T8_ASSERT (scale == 1.);      /* scale = 1 not implemented yet */
 
+  if (cmesh->mpirank == 0) {
+    if (t8_cmesh_write_pvtu (fileprefix, cmesh->mpisize, 1, 1)) {
+      SC_ABORTF ("Error when writing file %s.pvtu\n", fileprefix);
+    }
+  }
   /* If the cmesh is replicated only rank 0 prints it,
    * otherwise each process prints its part of the cmesh.*/
   if (cmesh->mpirank == 0 || cmesh->set_partition) {
@@ -71,7 +156,7 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
     num_vertices = t8_cmesh_get_num_vertices (cmesh);
     num_trees = t8_cmesh_get_num_local_trees (cmesh);
 
-    snprintf (vtufilename, BUFSIZ, "%s.vtu", fileprefix);
+    snprintf (vtufilename, BUFSIZ, "%s_%04d.vtu", fileprefix, cmesh->mpirank);
     vtufile = fopen (vtufilename, "wb");
     if (vtufile == NULL) {
       t8_global_errorf ("Could not open file %s for output.\n", vtufilename);

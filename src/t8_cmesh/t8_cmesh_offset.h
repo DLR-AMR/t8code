@@ -110,6 +110,16 @@ int                 t8_offset_consistent (int mpisize, t8_gloidx_t * offset,
 int                 t8_offset_in_range (t8_gloidx_t tree_id, int proc,
                                         t8_gloidx_t * offset);
 
+/** Find any process that has a given tree as local tree.
+ * \param [in] mpisize    The number of MPI ranks, also the number of entries in \a offset minus 1.
+ * \param [in] gtree      The global id of a tree.
+ * \param [in] offset     The partition to be considered.
+ * \return                An MPI rank that has \a gtree as a local tree.
+ */
+int                 t8_offset_any_owner_of_tree (int mpisize,
+                                                 t8_gloidx_t gtree,
+                                                 t8_gloidx_t * offset);
+
 /** Find the smallest process that has a given tree as local tree.
  * To increase the runtime, an arbitrary process having this tree as local tree
  * can be passed as an argument.
@@ -249,5 +259,12 @@ int                 t8_offset_sendstree (int proc_send, int proc_to,
 int                 t8_offset_range_send (int start, int end, int mpirank,
                                           t8_gloidx_t * offset_from,
                                           t8_gloidx_t * offset_to);
+
+/** Print an offset array. Useful for debugging.
+ * \param [in] offset    The offset to print
+ * \param [in] comm      An mpi communicator matching the offset size.
+ */
+void                t8_offset_print (t8_shmem_array_t offset,
+                                     sc_MPI_Comm comm);
 
 #endif /* !T8_CMESH_OFFSET_H */

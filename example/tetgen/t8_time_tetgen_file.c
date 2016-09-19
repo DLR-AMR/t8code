@@ -55,7 +55,7 @@ t8_read_tetgen_file_build_cmesh (const char *prefix, int do_dup,
                (long long) t8_cmesh_get_num_trees (cmesh),
                (long) t8_cmesh_get_num_local_trees (cmesh));
 #if 0
-    snprintf (fileprefix, BUFSIZ, "%s_t8_tetgen_%04d", prefix, mpirank);
+    snprintf (fileprefix, BUFSIZ, "%s_t8_tetgen", prefix);
     if (!t8_cmesh_vtk_write_file (cmesh, fileprefix, 1.)) {
       t8_debugf ("Wrote to file %s\n", fileprefix);
     }

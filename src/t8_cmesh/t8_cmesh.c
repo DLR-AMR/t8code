@@ -272,7 +272,7 @@ t8_cmesh_set_partition_range (t8_cmesh_t cmesh, int set_face_knowledge,
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
-  SC_CHECK_ABORT (set_face_knowledge == 1 || set_face_knowledge == 3,
+  SC_CHECK_ABORT (set_face_knowledge == -1 || set_face_knowledge == 3,
                   "Face knowledge other than three is not implemented yet.");
   cmesh->face_knowledge = set_face_knowledge;
   cmesh->first_tree = first_local_tree;
@@ -940,6 +940,9 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     else {
       last_global_child = global_num_children;
     }
+
+    SC_CHECK_ABORT (first_global_child < last_global_child,
+                    "forest does not support empty processes yet");
     T8_ASSERT (0 <= first_global_child
                && first_global_child <= global_num_children);
     T8_ASSERT (0 <= last_global_child
