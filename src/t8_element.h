@@ -112,12 +112,16 @@ typedef void        (*t8_element_linear_id_t) (t8_element_t * elem,
 /** Calculate the first descendant of a given element e. That is, the
  *  first element in a uniform refinement of e of the maximal possible level.
  */
-typedef t8_element_t *(*t8_element_first_descendant_t) (const t8_element_t * elem);
+typedef void        (*t8_element_first_descendant_t) (const t8_element_t *
+                                                      elem,
+                                                      t8_element_t * desc);
 
 /** Calculate the last descendant of a given element e. That is, the
  *  last element in a uniform refinement of e of the maximal possible level.
  */
-typedef t8_element_t *(*t8_element_last_descendant_t) (const t8_element_t * elem);
+typedef void        (*t8_element_last_descendant_t) (const t8_element_t *
+                                                     elem,
+                                                     t8_element_t * desc);
 
 /** Compute s as a successor of t*/
 typedef void        (*t8_element_successor_t) (const t8_element_t * t,
@@ -275,7 +279,7 @@ void                t8_element_copy (t8_eclass_scheme_t * ts,
                                      const t8_element_t * source,
                                      t8_element_t * dest);
 
-/** Compare to elements.
+/** Compare two elements.
  * \param [in] ts     The virtual table for this element class.
  * \param [in] elem1  The first element.
  * \param [in] elem2  The second element.
@@ -409,26 +413,27 @@ void                t8_element_set_linear_id (t8_eclass_scheme_t * ts,
 /** Compute the first descendant of a given element.
  * \param [in] ts       The virtual table for this element class.
  * \param [in] elem     The element whose descendant is computed.
- * \return              The first element in a uniform refinement of \a elem
+ * \param [out] desc    The first element in a uniform refinement of \a elem
  *                      of the maximum possible level.
  */
-t8_element_t       *t8_element_first_descendant (t8_eclass_scheme_t * ts,
-                                                 const t8_element_t * elem);
+void                t8_element_first_descendant (t8_eclass_scheme_t * ts,
+                                                 const t8_element_t * elem,
+                                                 t8_element_t * desc);
 
 int                 t8_element_is_first_descendant (t8_eclass_scheme_t * ts,
                                                     const t8_element_t * elem,
-                                                    const t8_element_t * desc);
+                                                    const t8_element_t *
+                                                    desc);
 
 /** Compute the last descendant of a given element.
  * \param [in] ts       The virtual table for this element class.
  * \param [in] elem     The element whose descendant is computed.
- * \return              The last element in a uniform refinement of \a elem
+ * \param [out] desc    The last element in a uniform refinement of \a elem
  *                      of the maximum possible level.
  */
-t8_element_t       *t8_element_last_descendant (t8_eclass_scheme_t * ts,
-                                                 const t8_element_t * elem);
-
-
+void                t8_element_last_descendant (t8_eclass_scheme_t * ts,
+                                                const t8_element_t * elem,
+                                                t8_element_t * desc);
 
 /** Construct the successor in a uniform refinement of a given element.
  * \param [in] ts       The virtual table for this element class.

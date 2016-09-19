@@ -158,6 +158,15 @@ t8_element_copy (t8_eclass_scheme_t * ts, const t8_element_t * source,
   ts->elem_copy (source, dest);
 }
 
+int
+t8_element_compare (t8_eclass_scheme_t * ts, const t8_element_t * elem1,
+                    const t8_element_t * elem2)
+{
+  T8_ASSERT (ts != NULL && ts->elem_compare != NULL);
+
+  return ts->elem_compare (elem1, elem2);
+}
+
 void
 t8_element_parent (t8_eclass_scheme_t * ts,
                    const t8_element_t * elem, t8_element_t * parent)
@@ -236,6 +245,24 @@ t8_element_set_linear_id (t8_eclass_scheme_t * ts,
   T8_ASSERT (ts != NULL && ts->elem_set_linear_id != NULL);
 
   ts->elem_set_linear_id (elem, level, id);
+}
+
+void
+t8_element_first_descendant (t8_eclass_scheme_t * ts,
+                             const t8_element_t * elem, t8_element_t * desc)
+{
+  T8_ASSERT (ts != NULL && ts->elem_first_desc != NULL);
+
+  ts->elem_first_desc (elem, desc);
+}
+
+void
+t8_element_last_descendant (t8_eclass_scheme_t * ts,
+                            const t8_element_t * elem, t8_element_t * desc)
+{
+  T8_ASSERT (ts != NULL && ts->elem_last_desc != NULL);
+
+  ts->elem_last_desc (elem, desc);
 }
 
 void
