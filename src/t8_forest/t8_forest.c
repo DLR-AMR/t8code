@@ -20,6 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <sc_statistics.h>
 #include <t8_refcount.h>
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_types.h>
@@ -582,7 +583,8 @@ t8_forest_compute_cmesh_offset (t8_forest_t forest, sc_MPI_Comm comm)
 }
 
 void
-t8_forest_partition_cmesh (t8_forest_t forest, sc_MPI_Comm comm)
+t8_forest_partition_cmesh (t8_forest_t forest, sc_MPI_Comm comm,
+                           int set_profiling)
 {
   t8_cmesh_t          cmesh_partition;
 
@@ -592,6 +594,8 @@ t8_forest_partition_cmesh (t8_forest_t forest, sc_MPI_Comm comm)
   t8_cmesh_set_partition_offsets (cmesh_partition,
                                   t8_forest_compute_cmesh_offset (forest,
                                                                   comm));
+  /* Set the profiling of the cmesh */
+  t8_cmesh_set_profiling (cmesh_partition, set_profiling);
   /* Commit the new cmesh */
   t8_cmesh_commit (cmesh_partition, comm);
   /* unref the old one and set the new cmesh as the cmesh of the forest */
@@ -663,6 +667,79 @@ t8_forest_get_first_local_element_id (t8_forest_t forest)
   first_element -= local_num_elements;
 
   return first_element;
+}
+
+t8_locidx_t
+t8_forest_get_num_element (t8_forest_t forest)
+{
+  return forest->local_num_elements;
+}
+
+t8_eclass_t
+t8_forest_get_eclass (t8_forest_t forest, t8_locidx_t ltreeid)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  return t8_forest_get_tree (forest, ltreeid)->eclass;
+}
+
+t8_locidx_t
+t8_forest_ltreeid_to_cmesh_ltreeid (t8_forest_t forest, t8_locidx_t ltreeid)
+{
+  t8_gloidx_t         cmesh_gfirst;
+
+  T8_ASSERT (forest->cmesh != NULL);
+
+  cmesh_gfirst = t8_cmesh_get_first_treeid (forest->cmesh);
+  return forest->first_local_tree - cmesh_gfirst + ltreeid;
+}
+
+void
+t8_forest_set_profiling (t8_forest_t forest, int set_profiling)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+
+  if (set_profiling) {
+    if (forest->profile == NULL) {
+      /* Only do something if profiling is not enabled already */
+      forest->profile = T8_ALLOC_ZERO (t8_profile_struct_t, 1);
+    }
+  }
+  else {
+    /* Free any profile that is already set */
+    if (forest->profile != NULL) {
+      T8_FREE (forest->profile);
+    }
+  }
+}
+
+void
+t8_forest_print_profile (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  if (forest->profile != NULL) {
+    /* Only print something if profiling is enabled */
+    sc_statinfo_t       stats[T8_PROFILE_NUM_STATS];
+    t8_profile_t       *profile = forest->profile;
+
+    /* Set the stats */
+    sc_stats_set1 (&stats[0], profile->partition_elements_shipped,
+                   "Number of elements sent.");
+    sc_stats_set1 (&stats[1], profile->partition_elements_recv,
+                   "Number of elements received.");
+    sc_stats_set1 (&stats[2], profile->partition_bytes_sent,
+                   "Number of bytes sent.");
+    sc_stats_set1 (&stats[3], profile->partition_procs_sent,
+                   "Number of processes sent to.");
+    sc_stats_set1 (&stats[4], profile->partition_runtime,
+                   "Partition runtime.");
+    sc_stats_set1 (&stats[5], profile->commit_runtime,
+                   "Commit runtime (cmesh measured).");
+    /* compute stats */
+    sc_stats_compute (sc_MPI_COMM_WORLD, T8_PROFILE_NUM_STATS, stats);
+    /* print stats */
+    sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS,
+                    T8_PROFILE_NUM_STATS, stats, 1, 1);
+  }
 }
 
 void
@@ -737,6 +814,9 @@ t8_forest_reset (t8_forest_t * pforest)
   /* free the memory of the offset array */
   if (forest->element_offsets != NULL) {
     t8_shmem_array_destroy (&forest->element_offsets);
+  }
+  if (forest->profile != NULL) {
+    T8_FREE (forest->profile);
   }
   T8_FREE (forest);
   *pforest = NULL;

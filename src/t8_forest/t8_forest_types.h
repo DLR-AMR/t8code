@@ -33,6 +33,8 @@
 #include <t8_element.h>
 #include <t8_forest/t8_forest_adapt.h>
 
+typedef struct t8_profile t8_profile_t; /* Defined below */
+
 typedef enum t8_forest_from
 {
   T8_FOREST_FROM_FIRST,
@@ -80,6 +82,8 @@ typedef struct t8_forest
 
   t8_locidx_t         local_num_elements;  /**< Number of elements on this processor. */
   t8_gloidx_t         global_num_elements; /**< Number of elements on all processors. */
+  t8_profile_t       *profile; /**< If not NULL, runtimes and statistics about forest_commit are stored here. */
+
 }
 t8_forest_struct_t;
 
@@ -96,5 +100,29 @@ typedef struct t8_tree
                                                   (locals only) */
 }
 t8_tree_struct_t;
+
+/** This struct is used to profile forest algorithms.
+ * The forest struct stores a pointer to a profile struct, and if
+ * it is nonzero, various runtimes and data measurements are stored here.
+ * \see t8_cmesh_set_profiling and \see t8_cmesh_print_profile
+ */
+typedef struct t8_profile
+{
+  t8_locidx_t         partition_elements_shipped; /**< The number of elements this process has
+                                                  sent to other in the last partition call. */
+  t8_locidx_t         partition_elements_recv; /**< The number of elements this process has
+                                                  received from other in the last partition call. */
+  size_t              partition_bytes_sent; /**< The total number of bytes sent to other processes in the
+                                                 last partition call. */
+  int                 partition_procs_sent;  /**< The number of different processes this process has send
+                                            local elements to in the last partition call. */
+  double              partition_runtime; /**< The runtime of  the last call to \a t8_cmesh_partition. */
+  double              commit_runtime; /**< The runtim of the last call to \a t8_cmesh_commit. */
+
+}
+t8_profile_struct_t;
+
+/** The number of statistics collected by a profile struct */
+#define T8_PROFILE_NUM_STATS 6
 
 #endif /* ! T8_FOREST_TYPES_H! */

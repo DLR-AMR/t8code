@@ -237,7 +237,7 @@ t8_part_tree_struct_t;
 /** This struct is used to profile cmesh algorithms.
  * The cmesh struct stores a pointer to a profile struct, and if
  * it is nonzero, various runtimes and data measurements are stored here.
- * This structure must be initialized with zeros. Best by a call to T8_ALLOC_ZERO.
+ * \see t8_cmesh_set_profiling and \see t8_cmesh_print_profile
  */
 typedef struct t8_cprofile
 {
@@ -257,5 +257,8 @@ typedef struct t8_cprofile
   double              commit_runtime;/**< The runtim of the last call to \a t8_cmesh_commit. */
 }
 t8_cprofile_struct_t;
+
+/** The number of entries in a cprofile struct */
+#define T8_CPROFILE_NUM_STATS 8
 
 #endif /* !T8_CMESH_TYPES_H */

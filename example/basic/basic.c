@@ -104,7 +104,8 @@ t8_basic_forest_partition ()
   t8_forest_set_partition (forest_partition, forest_adapt, 0);
   t8_forest_commit (forest_adapt);
   t8_forest_commit (forest_partition);
-  t8_forest_partition_cmesh (forest_partition, comm);
+  t8_forest_partition_cmesh (forest_partition, comm, 0);
+
   /* Clean-up */
   t8_cmesh_destroy (&cmesh_partition);
   t8_forest_unref (&forest_partition);

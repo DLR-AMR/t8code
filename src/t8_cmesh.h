@@ -271,6 +271,19 @@ void                t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t gtree1,
                                        t8_gloidx_t gtree2, int face1,
                                        int face2, int orientation);
 
+/** Enable or disable profiling for a cmesh. If profiling is enabled, runtimes
+ * and statistics are collected during cmesh_commit.
+ * \param [in,out] cmesh        The cmesh to be updated.
+ * \param [in]     set_profiling If true, profiling will be enabled, if false
+ *                              disabled.
+ *
+ * Profiling is disabled by default.
+ * The cmesh must not be committed before calling this function.
+ * \see t8_cmesh_print_profile
+ */
+void                t8_cmesh_set_profiling (t8_cmesh_t cmesh,
+                                            int set_profiling);
+
 /* returns true if cmesh_a equals cmesh_b */
 /* TODO: document
  * collective or serial */
@@ -413,6 +426,14 @@ t8_eclass_t         t8_cmesh_get_ghost_class (t8_cmesh_t cmesh,
 t8_gloidx_t         t8_cmesh_get_global_id (t8_cmesh_t cmesh,
                                             t8_locidx_t local_id);
 
+/** Print the collected statistics from a cmesh profile.
+ * \param [in]    cmesh         The cmesh.
+ *
+ * \a cmesh must be committed before calling this function.
+ * \see t8_cmesh_set_profiling
+ */
+void                t8_cmesh_print_profile (t8_cmesh_t cmesh);
+
 /** Return the attribute pointer of a tree.
  * \param [in]     cmesh        The cmesh.
  * \param [in]     package_id   The identifier of a valid software package. \see sc_package_register
@@ -538,6 +559,8 @@ t8_cmesh_t          t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition);
  */
 t8_cmesh_t          t8_cmesh_new_from_class (t8_eclass_t eclass,
                                              sc_MPI_Comm comm, int do_dup);
+
+t8_cmesh_t          t8_cmesh_new_testhybrid (sc_MPI_Comm comm, int do_dup);
 
 /** Construct a hypercube forest from one primitive tree class.
  * \param [in] eclass       This element class determines the dimension and

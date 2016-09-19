@@ -29,7 +29,6 @@
 #include <t8_cmesh_vtk.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh_readmshfile.h>
-#include "t8_cmesh/t8_cmesh_types.h"
 #include <t8_forest.h>
 #include <t8_default.h>
 
@@ -86,11 +85,6 @@ t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
   char                forest_vtu[BUFSIZ], cmesh_vtu[BUFSIZ];
 
   t8_forest_t         forest, forest_adapt, forest_partition;
-#if 0
-  t8_cprofile_t      *profile;
-  sc_flopinfo_t       fi, snapshot;
-  sc_statinfo_t       stats[NUM_STATS];
-#endif
 
   /* Create a cmesh from the given mesh files */
   cmesh = t8_cmesh_from_msh_file ((char *) msh_file, 1, comm, mesh_dim, 0);
@@ -131,8 +125,10 @@ t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
   t8_forest_init (&forest_partition);
   t8_forest_set_partition (forest_partition, forest_adapt, 0);
   t8_forest_commit (forest_partition);
+#if USE_CMESH_PARTITION
   /* Repartition the cmesh of the forest */
-  t8_forest_partition_cmesh (forest_partition, comm);
+  t8_forest_partition_cmesh (forest_partition, comm, 1);
+#endif
   /* Set the vtu output name */
   if (!no_vtk) {
     snprintf (forest_vtu, BUFSIZ, "%s_forest_partition", msh_file);
@@ -141,42 +137,15 @@ t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
     t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_partition),
                              cmesh_vtu, 1.0);
   }
-#if 0
-  /* Allocate profiling struct */
-  profile = T8_ALLOC_ZERO (t8_cprofile_t, 1);
-  /* Start timer */
-  sc_flops_start (&fi);
-  sc_flops_snap (&fi, &snapshot);
-  /* commit (= partition) the second cmesh */
-  t8_cmesh_commit (cmesh_partition, comm);
-  /* measure passed time */
-  sc_flops_shot (&fi, &snapshot);
-  sc_stats_set1 (&stats[0], snapshot.iwtime, "Partition");
-  t8_global_productionf ("Partitioned cmesh with"
-                         " %lli global trees.\n", (long long)
-                         t8_cmesh_get_num_trees (cmesh_partition));
-  sc_stats_set1 (&stats[1], cmesh_partition->profile->partition_trees_shipped,
-                 "Number of trees sent.");
-  sc_stats_set1 (&stats[2],
-                 cmesh_partition->profile->partition_ghosts_shipped,
-                 "Number of ghosts sent.");
-  sc_stats_set1 (&stats[3], cmesh_partition->profile->partition_trees_recv,
-                 "Number of trees received.");
-  sc_stats_set1 (&stats[4], cmesh_partition->profile->partition_ghosts_recv,
-                 "Number of ghosts received.");
-  sc_stats_set1 (&stats[5], cmesh_partition->profile->partition_bytes_sent,
-                 "Number of bytes sent.");
-  sc_stats_set1 (&stats[6], cmesh_partition->profile->partition_procs_sent,
-                 "Number of processes sent to.");
-  sc_stats_set1 (&stats[7], cmesh_partition->profile->partition_runtime,
-                 "Partition runtime (cmesh measured).");
-  sc_stats_set1 (&stats[8], cmesh_partition->profile->commit_runtime,
-                 "Commit runtime (cmesh measured).");
-  /* print stats */
-  sc_stats_compute (sc_MPI_COMM_WORLD, NUM_STATS, stats);
-  sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, NUM_STATS, stats, 1,
-                  1);
-#endif
+  /* Set the vtu output name */
+  snprintf (forest_vtu, BUFSIZ, "%s_forest_partition", msh_file);
+  snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_partition", msh_file);
+  t8_debugf ("Wrote partitioned forest and cmesh\n");
+  t8_forest_write_vtk (forest_partition, forest_vtu);
+  t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_partition), cmesh_vtu,
+                           1.0);
+
+  t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
   /* memory clean-up */
   t8_forest_unref (&forest_partition);
   t8_cmesh_destroy (&cmesh_partition);

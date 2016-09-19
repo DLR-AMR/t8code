@@ -20,6 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <sc_statistics.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_vtk.h>
 #include <t8_refcount.h>
@@ -531,6 +532,25 @@ t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t gtree1, t8_gloidx_t gtree2,
                          orientation);
 }
 
+void
+t8_cmesh_set_profiling (t8_cmesh_t cmesh, int set_profiling)
+{
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+
+  if (set_profiling) {
+    if (cmesh->profile == NULL) {
+      /* Only do something if profiling is not enabled already */
+      cmesh->profile = T8_ALLOC_ZERO (t8_cprofile_struct_t, 1);
+    }
+  }
+  else {
+    /* Free any profile that is already set */
+    if (cmesh->profile != NULL) {
+      T8_FREE (cmesh->profile);
+    }
+  }
+}
+
 /* returns true if cmesh_a equals cmesh_b */
 int
 t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
@@ -881,6 +901,41 @@ t8_cmesh_get_global_id (t8_cmesh_t cmesh, t8_locidx_t local_id)
     return t8_cmesh_trees_get_ghost (cmesh->trees,
                                      local_id -
                                      cmesh->num_local_trees)->treeid;
+  }
+}
+
+void
+t8_cmesh_print_profile (t8_cmesh_t cmesh)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  if (cmesh->profile != NULL) {
+    /* Only print something if profiling is enabled */
+    sc_statinfo_t       stats[T8_CPROFILE_NUM_STATS];
+    t8_cprofile_t      *profile = cmesh->profile;
+
+    /* Set the stats */
+    sc_stats_set1 (&stats[0], profile->partition_trees_shipped,
+                   "Number of trees sent.");
+    sc_stats_set1 (&stats[1],
+                   profile->partition_ghosts_shipped,
+                   "Number of ghosts sent.");
+    sc_stats_set1 (&stats[2], profile->partition_trees_recv,
+                   "Number of trees received.");
+    sc_stats_set1 (&stats[3], profile->partition_ghosts_recv,
+                   "Number of ghosts received.");
+    sc_stats_set1 (&stats[4], profile->partition_bytes_sent,
+                   "Number of bytes sent.");
+    sc_stats_set1 (&stats[5], profile->partition_procs_sent,
+                   "Number of processes sent to.");
+    sc_stats_set1 (&stats[6], profile->partition_runtime,
+                   "Partition runtime (cmesh measured).");
+    sc_stats_set1 (&stats[7], profile->commit_runtime,
+                   "Commit runtime (cmesh measured).");
+    /* compute stats */
+    sc_stats_compute (sc_MPI_COMM_WORLD, T8_CPROFILE_NUM_STATS, stats);
+    /* print stats */
+    sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS,
+                    T8_CPROFILE_NUM_STATS, stats, 1, 1);
   }
 }
 

@@ -220,14 +220,60 @@ void                t8_forest_comm_global_num_elements (t8_forest_t forest);
  */
 void                t8_forest_commit (t8_forest_t forest);
 
+t8_locidx_t         t8_forest_get_num_element (t8_forest_t forest);
+
+/** Return the element class of a forest local tree.
+ *  \param [in] forest    The forest.
+ *  \param [in] ltreeid   The local id of a tree in the forest.
+ * \return  The element class of the tree \a ltreeid.
+ * \a forest must be committed before calling this function.
+ */
+t8_eclass_t         t8_forest_get_eclass (t8_forest_t forest,
+                                          t8_locidx_t ltreeid);
+
+/** Given the local id of a tree in a forest, compute the tree's local id
+ * in the associated cmesh.
+ *  \param [in] forest    The forest.
+ *  \param [in] ltreeid   The local id of a tree in the forest.
+ * \return  The local id of the tree in the cmesh associated with the forest.
+ * \a forest must be committed before calling this function.
+ */
+t8_locidx_t         t8_forest_ltreeid_to_cmesh_ltreeid (t8_forest_t forest,
+                                                        t8_locidx_t ltreeid);
+
+/** Enable or disable profiling for a forest. If profiling is enabled, runtimes
+ * and statistics are collected during forest_commit.
+ * \param [in,out] forest        The forest to be updated.
+ * \param [in]     set_profiling If true, profiling will be enabled, if false
+ *                              disabled.
+ *
+ * Profiling is disabled by default.
+ * The forest must not be committed before calling this function.
+ * \see t8_forest_print_profile
+ */
+void                t8_forest_set_profiling (t8_forest_t forest,
+                                             int set_profiling);
+
+/** Print the collected statistics from a forest profile.
+ * \param [in]    forest        The forest.
+ *
+ * \a forest must be committed before calling this function.
+ * \see t8_forest_set_profiling
+ */
+void                t8_forest_print_profile (t8_forest_t forest);
+
 /** Change the cmesh associated to a forest to a partitioned cmesh that
  * is partitioned according to the tree distribution in the forest.
  * \param [in,out]   forest The forest.
  * \param [in]       comm   The MPI communicator that is used to partition
- *                          and commit the cmesh. \see t8_cmesh.h
+ *                          and commit the cmesh.
+ * \param [in]       set_profiling If true, profiling for the new cmesh
+ *                          will be enabled. \see t8_cmesh_set_profiling, \see t8_cmesh_print_profile
+ *  \see t8_cmesh.h
  */
 void                t8_forest_partition_cmesh (t8_forest_t forest,
-                                               sc_MPI_Comm comm);
+                                               sc_MPI_Comm comm,
+                                               int set_profiling);
 
 /** Return the number of local trees of a given forest.
  * \param [in]      forest      The forest.
