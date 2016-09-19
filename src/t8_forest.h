@@ -232,7 +232,6 @@ void                t8_forest_partition_cmesh (t8_forest_t forest,
 /** Return the number of local trees of a given forest.
  * \param [in]      forest      The forest.
  * \return          The number of local trees of that forest.
- * \a forest must be committed before calling this function.
  */
 t8_locidx_t         t8_forest_get_num_local_trees (t8_forest_t forest);
 

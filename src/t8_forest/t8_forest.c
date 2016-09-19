@@ -220,6 +220,35 @@ t8_forest_comm_global_num_elements (t8_forest_t forest)
   forest->global_num_elements = global_num_el;
 }
 
+/* For each tree in a forest compute its first descendant */
+static void
+t8_forest_compute_first_desc (t8_forest_t forest)
+{
+    t8_locidx_t         itree_id, num_trees;
+    t8_tree_t           itree;
+    t8_eclass_scheme_t *ts;
+    t8_element_t       *element;
+
+    T8_ASSERT (forest != NULL);
+    /* Iterate over all trees */
+    num_trees = t8_forest_get_num_local_trees (forest);
+    for (itree_id = 0;itree_id < num_trees; itree_id++) {
+        /* get a pointer to the tree */
+        itree = t8_forest_get_tree (forest, itree_id);
+        /* get a pointer to the first element of itree */
+        element = t8_sc_array_index_locidx (&itree->elements, 0);
+        /* get the eclass scheme associated to tree */
+        ts = forest->scheme->eclass_schemes[itree->eclass];
+        /* calculate the first descendant of the first element */
+        itree->first_desc = t8_element_first_descendant (ts, element);
+        /* get a pointer to the last element of itree */
+        element = t8_sc_array_index_locidx (&itree->elements,
+                                            itree->elements.elem_count - 1);
+        /* calculate the last descendant of the first element */
+        itree->last_desc = t8_element_last_descendant (ts, element);
+    }
+}
+
 /* Create the elements on this process given a uniform partition
  * of the coarse mesh. */
 static void
@@ -306,6 +335,48 @@ t8_forest_populate (t8_forest_t forest)
    */
   t8_forest_comm_global_num_elements (forest);
   /* TODO: figure out global_first_position, global_first_quadrant without comm */
+}
+
+/* return nonzero if the first tree of a forest is shared with a smaller
+ * process.
+ * This is the case if and only if the first descendant of the first tree that we store is
+ * not the first possible descendant of that tree.
+ */
+static int
+t8_forest_first_tree_shared (t8_forest_t forest)
+{
+    t8_tree_t       first_tree;
+    t8_element_t   *first_desc, *first_element;
+    t8_eclass_t     eclass;
+    t8_eclass_scheme_t *ts;
+    int                 ret;
+
+    T8_ASSERT (forest != NULL);
+    if (forest->trees == NULL || forest->first_local_tree > forest->last_local_tree) {
+        /* This forest is empty and therefore the first tree is not shared */
+        return 0;
+    }
+    /* Get a pointer to the first tree */
+    first_tree = sc_array_index (&forest->trees, 0);
+    /* Get the eclass scheme of the first tree */
+    eclass = first_tree->eclass;
+    /* Get the eclass scheme of the first tree */
+    ts = forest->scheme->eclass_schemes[eclass];
+    /* Calculate the first possible descendant of the first tree */
+    /* we do this by first creating a level 0 child of the tree, then
+     * calculating its first descendant */
+    t8_element_new (ts, 1, &first_element);
+    t8_element_set_linear_id (ts, first_element, 0, 0);
+    t8_element_new (ts, 1, &first_desc);
+    t8_element_first_descendant (ts, first_element, first_desc);
+    /* We can now check whether the first possible descendant matches the
+     * first local descendant */
+    ret = t8_element_compare (ts, first_desc, first_tree->first_desc);
+    t8_element_destroy (ts, first_element);
+    t8_element_destroy (ts, first_desc);
+    /* If the descendants are the same then ret is zero and we return true.
+     * We return false otherwise */
+    return ret == 0;
 }
 
 /* Allocate memory for trees and set their values as in from.
@@ -499,7 +570,6 @@ t8_locidx_t
 t8_forest_get_num_local_trees (t8_forest_t forest)
 {
   t8_locidx_t         num_trees;
-  T8_ASSERT (t8_forest_is_committed (forest));
 
   num_trees = forest->last_local_tree - forest->first_local_tree + 1;
   /* assert for possible overflow */

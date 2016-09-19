@@ -65,6 +65,13 @@ typedef int         (*t8_element_level_t) (const t8_element_t * elem);
 typedef void        (*t8_element_copy_t) (const t8_element_t * source,
                                           t8_element_t * dest);
 
+/** Compare to elements. returns negativ if elem1 < elem2, zero if elem1 equals elem2
+ *  and positiv if elem1 > elem2.
+ *  If elem2 is a copy of elem1 then the elements are equal.
+ */
+typedef int         (*t8_element_compare_t) (const t8_element_t * elem1,
+                                             const t8_element_t * elem2);
+
 /** Construct the parent of a given element. */
 typedef void        (*t8_element_parent_t) (const t8_element_t * elem,
                                             t8_element_t * parent);
@@ -102,6 +109,16 @@ typedef void        (*t8_element_boundary_t) (const t8_element_t * elem,
 typedef void        (*t8_element_linear_id_t) (t8_element_t * elem,
                                                int level, uint64_t id);
 
+/** Calculate the first descendant of a given element e. That is, the
+ *  first element in a uniform refinement of e of the maximal possible level.
+ */
+typedef t8_element_t *(*t8_element_first_descendant_t) (const t8_element_t * elem);
+
+/** Calculate the last descendant of a given element e. That is, the
+ *  last element in a uniform refinement of e of the maximal possible level.
+ */
+typedef t8_element_t *(*t8_element_last_descendant_t) (const t8_element_t * elem);
+
 /** Compute s as a successor of t*/
 typedef void        (*t8_element_successor_t) (const t8_element_t * t,
                                                t8_element_t * s, int level);
@@ -135,6 +152,7 @@ struct t8_eclass_scheme
   /* these element routines take one or more elements as input */
   t8_element_level_t  elem_level;       /**< Compute the refinement level of an element. */
   t8_element_copy_t   elem_copy;        /**< Copy the entries of one element to another */
+  t8_element_compare_t elem_compare;    /**< Compare two elements for equality */
   t8_element_parent_t elem_parent;      /**< Compute the parent element. */
   t8_element_sibling_t elem_sibling;    /**< Compute a given sibling element. */
   t8_element_child_t  elem_child;       /**< Compute a child element. */
@@ -145,8 +163,9 @@ struct t8_eclass_scheme
   t8_element_boundary_t elem_boundary;  /**< Compute a set of boundary elements. */
   t8_element_linear_id_t elem_set_linear_id; /**< Initialize an element from a given linear id. */
   t8_element_successor_t elem_successor; /**< Compute the successor of a given element */
-
   t8_element_anchor_t elem_anchor; /**< Compute the anchor node of a given element */
+  t8_element_first_descendant_t elem_first_desc; /**< Compute an element's first descendant */
+  t8_element_last_descendant_t elem_last_desc; /**< Compute an element's last descendant */
   /* these element routines have a context for memory allocation */
   t8_element_new_t    elem_new;         /**< Allocate space for one or more elements. */
   t8_element_destroy_t elem_destroy;    /**< Deallocate space for one or more elements. */
@@ -255,6 +274,18 @@ int                 t8_element_level (t8_eclass_scheme_t * ts,
 void                t8_element_copy (t8_eclass_scheme_t * ts,
                                      const t8_element_t * source,
                                      t8_element_t * dest);
+
+/** Compare to elements.
+ * \param [in] ts     The virtual table for this element class.
+ * \param [in] elem1  The first element.
+ * \param [in] elem2  The second element.
+ * \return       negativ if elem1 < elem2, zero if elem1 equals elem2
+ *               and positiv if elem1 > elem2.
+ *  If elem2 is a copy of elem1 then the elements are equal.
+ */
+int                 t8_element_compare (t8_eclass_scheme_t * ts,
+                                        const t8_element_t * elem1,
+                                        const t8_element_t * elem2);
 
 /** Compute the parent of a given element \b elem and store it in \b parent.
  *  \b parent needs to be an existing element. No memory is allocated by this function.
@@ -374,6 +405,30 @@ void                t8_element_boundary (t8_eclass_scheme_t * ts,
 void                t8_element_set_linear_id (t8_eclass_scheme_t * ts,
                                               t8_element_t * elem,
                                               int level, uint64_t id);
+
+/** Compute the first descendant of a given element.
+ * \param [in] ts       The virtual table for this element class.
+ * \param [in] elem     The element whose descendant is computed.
+ * \return              The first element in a uniform refinement of \a elem
+ *                      of the maximum possible level.
+ */
+t8_element_t       *t8_element_first_descendant (t8_eclass_scheme_t * ts,
+                                                 const t8_element_t * elem);
+
+int                 t8_element_is_first_descendant (t8_eclass_scheme_t * ts,
+                                                    const t8_element_t * elem,
+                                                    const t8_element_t * desc);
+
+/** Compute the last descendant of a given element.
+ * \param [in] ts       The virtual table for this element class.
+ * \param [in] elem     The element whose descendant is computed.
+ * \return              The last element in a uniform refinement of \a elem
+ *                      of the maximum possible level.
+ */
+t8_element_t       *t8_element_last_descendant (t8_eclass_scheme_t * ts,
+                                                 const t8_element_t * elem);
+
+
 
 /** Construct the successor in a uniform refinement of a given element.
  * \param [in] ts       The virtual table for this element class.

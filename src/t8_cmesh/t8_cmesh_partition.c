@@ -144,8 +144,19 @@ t8_cmesh_gather_treecount (t8_cmesh_t cmesh, sc_MPI_Comm comm)
                              cmesh->num_trees);
 }
 
+#if 0
 /* If for a cmesh set_partition_range was called, create
  * from this information the complete partition table */
+/* TODO: For this function each process needs to communicate with
+ *       both of its nearest nonempty neighbors.
+ *       This is too much communication.
+ *       Usually if we have shared trees then these come from an
+ *       undelying forest, and it is thus the responsibility of the
+ *       forest to set the correct offsets.
+ *       Therefore, if set_partition_range was called, we will now allways assume
+ *       that there are no trees.
+ *       This function is thus obsolete.
+ */
 static void
 t8_cmesh_partition_create_offsets (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
@@ -232,6 +243,7 @@ t8_cmesh_partition_create_offsets (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_shmem_array_allgather (&first_tree, 1, T8_MPI_GLOIDX,
                             cmesh->tree_offsets, 1, T8_MPI_GLOIDX);
 }
+#endif
 
 /* TODO: currently this function is unused.
  *        Also it better fits to cmesh_offset.c/h */
@@ -2273,9 +2285,7 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   }
   else {
     /* We compute the partition after a given partition table in cmesh->tree_offsets */
-    if (cmesh->tree_offsets == NULL) {
-      t8_cmesh_partition_create_offsets (cmesh, comm);
-    }
+    T8_ASSERT (cmesh->tree_offsets != NULL);
     tree_offsets = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
     /* Check whether the offset at mpirank is smaller 0, if so then the
      * first local tree is also the last local tree of the next smaller nonempty process. */
