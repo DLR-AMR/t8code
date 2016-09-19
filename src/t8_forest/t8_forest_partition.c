@@ -251,7 +251,7 @@ t8_forest_partition_tree_first_last_el (t8_tree_t tree,
     *last_tree_el = tree->elements.elem_count - 1;
   }
   /* return true if there are no elements left on this tree */
-  if (*last_tree_el == tree->elements.elem_count - 1) {
+  if (*last_tree_el == (t8_locidx_t) tree->elements.elem_count - 1) {
     return 1;
   }
   return 0;
@@ -568,7 +568,7 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
                  (long long) tree_info->gtree_id);
       /* Copy the elements from the receive buffer to the elements array */
       T8_ASSERT (element_cursor + tree_info->num_elements * element_size <=
-                 recv_bytes);
+                 (size_t) recv_bytes);
       memcpy (tree->elements.array, recv_buffer + element_cursor,
               tree_info->num_elements * element_size);
     }
@@ -669,7 +669,6 @@ t8_forest_partition_recvloop (t8_forest_t forest, int recv_first,
 static void
 t8_forest_partition_given (t8_forest_t forest)
 {
-  t8_forest_t         forest_from;
   int                 send_first, send_last, recv_first, recv_last;
   sc_MPI_Request     *requests = NULL;
   int                 num_request_alloc;        /* The count of elements in the request array */
@@ -679,8 +678,7 @@ t8_forest_partition_given (t8_forest_t forest)
   t8_debugf ("Start partition_given\n");
   T8_ASSERT (t8_forest_is_initialized (forest));
   T8_ASSERT (forest->set_from != NULL);
-  forest_from = forest->set_from;
-  T8_ASSERT (t8_forest_is_committed (forest_from));
+  T8_ASSERT (t8_forest_is_committed (forest->set_from));
   /* Compute the first and last rank that we send to */
   t8_forest_partition_sendrange (forest, &send_first, &send_last);
   t8_debugf ("send_first = %i\n", send_first);

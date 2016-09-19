@@ -236,7 +236,7 @@ t8_forest_compute_desc (t8_forest_t forest)
     /* get a pointer to the tree */
     itree = t8_forest_get_tree (forest, itree_id);
     /* get a pointer to the first element of itree */
-    element = t8_sc_array_index_locidx (&itree->elements, 0);
+    element = (t8_element_t *) t8_sc_array_index_locidx (&itree->elements, 0);
     /* get the eclass scheme associated to tree */
     ts = forest->scheme->eclass_schemes[itree->eclass];
     /* get memory for the trees first descendant */
@@ -244,8 +244,9 @@ t8_forest_compute_desc (t8_forest_t forest)
     /* calculate the first descendant of the first element */
     t8_element_first_descendant (ts, element, itree->first_desc);
     /* get a pointer to the last element of itree */
-    element = t8_sc_array_index_locidx (&itree->elements,
-                                        itree->elements.elem_count - 1);
+    element = (t8_element_t *)
+      t8_sc_array_index_locidx (&itree->elements,
+                                itree->elements.elem_count - 1);
     /* get memory for the trees first descendant */
     t8_element_new (ts, 1, &itree->last_desc);
     /* calculate the last descendant of the first element */
@@ -594,7 +595,8 @@ t8_tree_t
 t8_forest_get_tree (t8_forest_t forest, t8_locidx_t ltree_id)
 {
   T8_ASSERT (forest->trees != NULL);
-  T8_ASSERT (0 <= ltree_id && ltree_id < forest->trees->elem_count);
+  T8_ASSERT (0 <= ltree_id
+             && ltree_id < (t8_locidx_t) forest->trees->elem_count);
   return (t8_tree_t) t8_sc_array_index_locidx (forest->trees, ltree_id);
 }
 
