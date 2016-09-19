@@ -119,14 +119,24 @@ t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
   t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, NULL, 1);
   /* Commit the adapted forest */
   t8_forest_commit (forest_adapt);
+  /* write vtk files for adapted forest and cmesh */
+  if (!no_vtk) {
+    snprintf (forest_vtu, BUFSIZ, "%s_forest_adapt", msh_file);
+    snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_adapt", msh_file);
+    t8_forest_write_vtk (forest_adapt, forest_vtu);
+    t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_adapt),
+                             cmesh_vtu, 1.0);
+  }
   /* partition the adapted forest */
   t8_forest_init (&forest_partition);
   t8_forest_set_partition (forest_partition, forest_adapt, 0);
   t8_forest_commit (forest_partition);
+  /* Repartition the cmesh of the forest */
+  t8_forest_partition_cmesh (forest_partition, comm);
   /* Set the vtu output name */
   if (!no_vtk) {
-    snprintf (forest_vtu, BUFSIZ, "%s_forest_adapt", msh_file);
-    snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_adapt", msh_file);
+    snprintf (forest_vtu, BUFSIZ, "%s_forest_partition", msh_file);
+    snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_partition", msh_file);
     t8_forest_write_vtk (forest_partition, forest_vtu);
     t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_partition),
                              cmesh_vtu, 1.0);
