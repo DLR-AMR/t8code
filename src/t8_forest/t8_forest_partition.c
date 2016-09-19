@@ -282,7 +282,7 @@ t8_forest_partition_fill_buffer (t8_forest_t forest_from,
   t8_locidx_t         current_element, tree_id, num_trees_send;
   t8_locidx_t         first_tree_element, last_tree_element;
   int                 element_alloc, byte_alloc, tree_info_pos, element_pos;
-  int                 last_element_is_last_tree_element;
+  int                 last_element_is_last_tree_element = 0;
   t8_forest_partition_tree_info_t *tree_info;
   t8_locidx_t        *pnum_trees_send;
   void               *pfirst_element;
