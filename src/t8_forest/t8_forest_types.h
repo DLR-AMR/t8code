@@ -88,10 +88,8 @@ typedef struct t8_tree
   sc_array_t          elements;              /**< locally stored elements */
   t8_eclass_t         eclass;                /**< The element class of this tree */
   /* TODO: We will need the *_desc variables later for shure. */
-#if 0
-  t8_element_t        first_desc,            /**< first local descendant */
-                      last_desc;             /**< last local descendant */
-#endif
+  t8_element_t       *first_desc,            /**< first local descendant */
+                     *last_desc;             /**< last local descendant */
   t8_locidx_t         elements_offset;      /**< cumulative sum over earlier
                                                   trees on this processor
                                                   (locals only) */
