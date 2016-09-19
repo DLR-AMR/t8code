@@ -72,6 +72,7 @@ typedef struct t8_forest
 
   t8_gloidx_t         first_local_tree;
   t8_gloidx_t         last_local_tree;
+  t8_gloidx_t         global_num_trees; /**< The total number of global trees */
   sc_array_t         *trees;
   t8_shmem_array_t    element_offsets; /**< If partitioned, for each process the global index
                                             of its first element. Since it is memory consuming,

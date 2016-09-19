@@ -381,9 +381,9 @@ t8_forest_first_tree_shared (t8_forest_t forest)
   ret = t8_element_compare (ts, first_desc, first_tree->first_desc);
   t8_element_destroy (ts, 1, &first_element);
   t8_element_destroy (ts, 1, &first_desc);
-  /* If the descendants are the same then ret is zero and we return true.
-   * We return false otherwise */
-  return ret == 0;
+  /* If the descendants are the same then ret is zero and we return false.
+   * We return true otherwise */
+  return ret;
 }
 
 /* Allocate memory for trees and set their values as in from.
@@ -467,6 +467,7 @@ t8_forest_commit (t8_forest_t forest)
     SC_CHECK_MPI (mpiret);
     /* populate a new forest with tree and quadrant objects */
     t8_forest_populate (forest);
+    forest->global_num_trees = t8_cmesh_get_num_trees (forest->cmesh);
   }
   else {
     T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
@@ -501,6 +502,7 @@ t8_forest_commit (t8_forest_t forest)
     forest->dimension = forest->set_from->dimension;
     forest->cmesh = forest->set_from->cmesh;
     forest->scheme = forest->set_from->scheme;
+    forest->global_num_trees = forest->set_from->global_num_trees;
 
     /* TODO: currently we can only handle copy and partition */
     /* T8_ASSERT (forest->from_method == T8_FOREST_FROM_COPY); */
@@ -573,6 +575,9 @@ t8_forest_compute_cmesh_offset (t8_forest_t forest, sc_MPI_Comm comm)
   /* allgather the local entries of the offset array */
   t8_shmem_array_allgather (&local_offset, 1, T8_MPI_GLOIDX, offset, 1,
                             T8_MPI_GLOIDX);
+  /* Set the last entry of the offset array to the global number of trees */
+  t8_shmem_array_set_gloidx (offset, forest->mpisize,
+                             forest->global_num_trees);
   return offset;
 }
 
