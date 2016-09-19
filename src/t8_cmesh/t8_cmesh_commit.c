@@ -669,7 +669,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   if (cmesh->set_partition) {
     t8_cmesh_offset_print (cmesh, comm);
   }
-  t8_cmesh_trees_print (cmesh, cmesh->trees);
+  //t8_cmesh_trees_print (cmesh, cmesh->trees);
 #endif
 
   if (cmesh->set_from != NULL) {

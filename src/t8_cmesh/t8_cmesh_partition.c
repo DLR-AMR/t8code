@@ -1136,13 +1136,11 @@ t8_cmesh_send_ghost (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
     }
     /* If the receiving rank is the sending rank, we definetely send the ghost */
     if (p == cmesh_from->mpirank) {
-      t8_debugf ("Ghost %li is send\n", tree_id);
       return 1;
     }
     /* If the receiving rank did own neighbor in cmesh_from, then it will
      * send it to itself and thus also this ghost. */
     if (t8_offset_in_range (neighbor, p, from_offsets)) {
-      t8_debugf ("Ghost %li not send\n", tree_id);
       return 0;
     }
     /* We perform a binary search in the offset array to find the
@@ -1585,7 +1583,8 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 #endif
     num_trees = SC_MAX (range_end - range_start + 1, 0);
 
-#ifdef T8_ENABLE_DEBUG
+#if 0
+    /* Output of all ghosts that are send */
     {
       size_t              count;
       t8_debugf ("Send as ghosts (global):\n");

@@ -563,9 +563,12 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
       /* initialize the elements array */
       sc_array_init_size (&tree->elements, element_size,
                           tree_info->num_elements);
+#if 0
+      /* Debugging output */
       t8_debugf ("receive %li elements for tree %lli\n",
                  (long) tree_info->num_elements,
                  (long long) tree_info->gtree_id);
+#endif
       /* Copy the elements from the receive buffer to the elements array */
       T8_ASSERT (element_cursor + tree_info->num_elements * element_size <=
                  (size_t) recv_bytes);
@@ -589,9 +592,12 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
       sc_array_resize (&tree->elements, new_num_elements);
       first_new_element = t8_sc_array_index_locidx (&tree->elements,
                                                     old_num_elements);
+#if 0
+      /* Debugging output */
       t8_debugf ("receive %li elements for tree %lli\n",
                  (long) tree_info->num_elements,
                  (long long) tree_info->gtree_id);
+#endif
       /* Get the size of an element of the tree */
       element_size =
         t8_element_size (forest->scheme->eclass_schemes[tree->eclass]);
