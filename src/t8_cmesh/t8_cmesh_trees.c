@@ -451,6 +451,26 @@ t8_cmesh_trees_get_ghost_ext (t8_cmesh_trees_t trees, t8_locidx_t lghost_id,
   return ghost;
 }
 
+size_t
+t8_cmesh_trees_size (t8_cmesh_trees_t trees)
+{
+  size_t              total_bytes = 0;
+  t8_part_tree_t      part;
+  int                 ipart;
+
+  T8_ASSERT (trees != NULL);
+  if (trees->from_proc == NULL) {
+    /* This tree struct is empty */
+    return 0;
+  }
+  /* For each part, calculate its memory usage */
+  for (ipart = 0; ipart < trees->from_proc->elem_count; ipart++) {
+    part = t8_cmesh_trees_get_part (trees, ipart);
+    total_bytes += t8_cmesh_trees_get_part_alloc (trees, part);
+  }
+  return total_bytes;
+}
+
 void
 t8_cmesh_trees_copy_toproc (t8_cmesh_trees_t trees_dest,
                             t8_cmesh_trees_t trees_src,

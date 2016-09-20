@@ -326,6 +326,10 @@ t8_cghost_t         t8_cmesh_trees_get_ghost_ext (t8_cmesh_trees_t trees,
                                                   t8_gloidx_t ** face_neigh,
                                                   int8_t ** ttf);
 
+/* TODO: document.
+ * returns the complete size in bytes needed to store all information */
+size_t              t8_cmesh_trees_size (t8_cmesh_trees_t trees);
+
 /** For one tree in a trees structure set the number of attributes
  *  and temporarily store the total size of all of this tree's attributes.
  *  This temporary value is used in \ref t8_cmesh_trees_finish_part.
