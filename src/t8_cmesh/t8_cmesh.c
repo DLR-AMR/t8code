@@ -927,9 +927,11 @@ t8_cmesh_print_profile (t8_cmesh_t cmesh)
                    "cmesh: Number of bytes sent.");
     sc_stats_set1 (&stats[5], profile->partition_procs_sent,
                    "cmesh: Number of processes sent to.");
-    sc_stats_set1 (&stats[6], profile->partition_runtime,
+    sc_stats_set1 (&stats[6], profile->first_tree_shared,
+                   "cmesh: First tree is shared.");
+    sc_stats_set1 (&stats[7], profile->partition_runtime,
                    "cmesh: Partition runtime.");
-    sc_stats_set1 (&stats[7], profile->commit_runtime,
+    sc_stats_set1 (&stats[8], profile->commit_runtime,
                    "cmesh: Commit runtime.");
     /* compute stats */
     sc_stats_compute (sc_MPI_COMM_WORLD, T8_CPROFILE_NUM_STATS, stats);

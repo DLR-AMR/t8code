@@ -690,5 +690,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   if (cmesh->profile != NULL) {
     cmesh->profile->commit_runtime = sc_MPI_Wtime () -
       cmesh->profile->commit_runtime;
+    /* We also measure the number of shared trees,
+     * it is the average over all first_tree_shared*mpisize values. */
+    cmesh->profile->first_tree_shared = cmesh->first_tree_shared
+      * cmesh->mpisize;
   }
 }

@@ -253,12 +253,13 @@ typedef struct t8_cprofile
                                                 last partition call. */
   int                 partition_procs_sent; /**< The number of different processes this process has send
                                            local trees or ghosts to in the last partition call. */
+  int                 first_tree_shared; /**< 1 if this processes' first tree is shared. 0 if not. */
   double              partition_runtime;/**< The runtime of  the last call to \a t8_cmesh_partition. */
   double              commit_runtime;/**< The runtim of the last call to \a t8_cmesh_commit. */
 }
 t8_cprofile_struct_t;
 
 /** The number of entries in a cprofile struct */
-#define T8_CPROFILE_NUM_STATS 8
+#define T8_CPROFILE_NUM_STATS 9
 
 #endif /* !T8_CMESH_TYPES_H */
