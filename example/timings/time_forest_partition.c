@@ -74,6 +74,8 @@ t8_basic_adapt (t8_forest_t forest, t8_topidx_t which_tree,
 
 #if 1
 #define NUM_STATS 9
+#define USE_CMESH_PARTITION 1   /* Set this to false to use a replicated cmesh
+                                 * cmesh throughout the function */
 /* Create a cmesh from a .msh files uniform level 0
  * partitioned. */
 void
@@ -156,6 +158,7 @@ t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
 }
 
 #undef NUM_STATS
+#undef USE_CMESH_PARTITION
 #endif
 
 int
