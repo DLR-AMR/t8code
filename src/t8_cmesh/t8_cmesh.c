@@ -915,25 +915,26 @@ t8_cmesh_print_profile (t8_cmesh_t cmesh)
 
     /* Set the stats */
     sc_stats_set1 (&stats[0], profile->partition_trees_shipped,
-                   "Number of trees sent.");
+                   "cmesh: Number of trees sent.");
     sc_stats_set1 (&stats[1],
                    profile->partition_ghosts_shipped,
-                   "Number of ghosts sent.");
+                   "cmesh: Number of ghosts sent.");
     sc_stats_set1 (&stats[2], profile->partition_trees_recv,
-                   "Number of trees received.");
+                   "cmesh: Number of trees received.");
     sc_stats_set1 (&stats[3], profile->partition_ghosts_recv,
-                   "Number of ghosts received.");
+                   "cmesh: Number of ghosts received.");
     sc_stats_set1 (&stats[4], profile->partition_bytes_sent,
-                   "Number of bytes sent.");
+                   "cmesh: Number of bytes sent.");
     sc_stats_set1 (&stats[5], profile->partition_procs_sent,
-                   "Number of processes sent to.");
+                   "cmesh: Number of processes sent to.");
     sc_stats_set1 (&stats[6], profile->partition_runtime,
-                   "Partition runtime (cmesh measured).");
+                   "cmesh: Partition runtime.");
     sc_stats_set1 (&stats[7], profile->commit_runtime,
-                   "Commit runtime (cmesh measured).");
+                   "cmesh: Commit runtime.");
     /* compute stats */
     sc_stats_compute (sc_MPI_COMM_WORLD, T8_CPROFILE_NUM_STATS, stats);
     /* print stats */
+    t8_logf (SC_LC_GLOBAL, SC_LP_STATISTICS, "Printing stats for cmesh.\n");
     sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS,
                     T8_CPROFILE_NUM_STATS, stats, 1, 1);
   }

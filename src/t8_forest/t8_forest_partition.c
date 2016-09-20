@@ -467,7 +467,17 @@ t8_forest_partition_sendloop (t8_forest_t forest, int send_first,
                              T8_MPI_PARTITION_FOREST, comm,
                              *requests + iproc - send_first);
       SC_CHECK_MPI (mpiret);
-
+      if (forest->profile != NULL) {
+        if (iproc != forest->mpirank) {
+          /* If profiling is enabled we count the number of elements sent to
+           * other processes */
+          forest->profile->partition_elements_shipped += num_elements_send;
+          /* The number of procs we send to */
+          forest->profile->partition_procs_sent += 1;
+          /* The number of bytes that we send */
+          forest->profile->partition_bytes_sent += buffer_alloc;
+        }
+      }
     }
     else {
       /* We do not send any elements to iproc (iproc is empty in new partition) */
@@ -497,6 +507,7 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
   int                 recv_bytes;
   char               *recv_buffer;
   t8_locidx_t         num_trees, itree;
+  t8_locidx_t         num_elements_recv;
   t8_locidx_t         old_num_elements, new_num_elements;
   size_t              tree_cursor, element_cursor;
   t8_forest_partition_tree_info_t *tree_info;
@@ -534,7 +545,9 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
     /* In last_local_tree we keep track of the latest tree we received */
     forest->last_local_tree = tree_info->gtree_id - 1;
   }
+  num_elements_recv = 0;
   for (itree = 0; itree < num_trees; itree++) {
+    num_elements_recv += tree_info->num_elements;
     T8_ASSERT (tree_info->gtree_id >= forest->last_local_tree);
     if (tree_info->gtree_id > forest->last_local_tree) {
       /* We will insert a new tree in the forest */
@@ -612,6 +625,13 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
     tree_info += 1;
   }
   T8_FREE (recv_buffer);
+  if (forest->profile != NULL) {
+    if (proc != forest->mpirank) {
+      /* If profiling is enabled we count the number of elements received from
+       * other processes */
+      forest->profile->partition_elements_recv += num_elements_recv;
+    }
+  }
 }
 
 /* Receive the elements from all processes, we receive from.
@@ -719,6 +739,11 @@ t8_forest_partition (t8_forest_t forest)
   forest_from = forest->set_from;
   T8_ASSERT (t8_forest_is_committed (forest_from));
 
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->partition_runtime = sc_MPI_Wtime ();
+  }
+
   if (forest_from->element_offsets == NULL) {
     /* We create the partition table of forest_from */
     t8_forest_partition_create_offsets (forest_from);
@@ -728,5 +753,12 @@ t8_forest_partition (t8_forest_t forest)
   /* We now calculate the new element offsets */
   t8_forest_partition_compute_new_offset (forest);
   t8_forest_partition_given (forest);
+
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->partition_runtime = sc_MPI_Wtime () -
+      forest->profile->partition_runtime;
+  }
+
   t8_debugf ("Done forest partition\n");
 }

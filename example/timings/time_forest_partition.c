@@ -124,6 +124,8 @@ t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
   /* partition the adapted forest */
   t8_forest_init (&forest_partition);
   t8_forest_set_partition (forest_partition, forest_adapt, 0);
+  /* enable profiling for the partitioned forest */
+  t8_forest_set_profiling (forest_partition, 1);
   t8_forest_commit (forest_partition);
 #if USE_CMESH_PARTITION
   /* Repartition the cmesh of the forest */
@@ -145,6 +147,8 @@ t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
   t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_partition), cmesh_vtu,
                            1.0);
 
+  /* Print runtimes and statistics of forest and cmesh partition */
+  t8_forest_print_profile (forest_partition);
   t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
   /* memory clean-up */
   t8_forest_unref (&forest_partition);

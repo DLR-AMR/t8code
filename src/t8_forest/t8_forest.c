@@ -448,6 +448,11 @@ t8_forest_commit (t8_forest_t forest)
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
 
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of commit */
+    forest->profile->commit_runtime = sc_MPI_Wtime ();
+  }
+
   if (forest->set_from == NULL) {
     T8_ASSERT (forest->mpicomm != sc_MPI_COMM_NULL);
     T8_ASSERT (forest->cmesh != NULL);
@@ -538,6 +543,11 @@ t8_forest_commit (t8_forest_t forest)
              (long long) forest->global_num_elements,
              (long long) forest->first_local_tree,
              (long long) forest->last_local_tree);
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of commit */
+    forest->profile->commit_runtime = sc_MPI_Wtime () -
+      forest->profile->commit_runtime;
+  }
 }
 
 /* Currently this function is not used */
@@ -723,20 +733,21 @@ t8_forest_print_profile (t8_forest_t forest)
 
     /* Set the stats */
     sc_stats_set1 (&stats[0], profile->partition_elements_shipped,
-                   "Number of elements sent.");
+                   "forest: Number of elements sent.");
     sc_stats_set1 (&stats[1], profile->partition_elements_recv,
-                   "Number of elements received.");
+                   "forest: Number of elements received.");
     sc_stats_set1 (&stats[2], profile->partition_bytes_sent,
-                   "Number of bytes sent.");
+                   "forest: Number of bytes sent.");
     sc_stats_set1 (&stats[3], profile->partition_procs_sent,
-                   "Number of processes sent to.");
+                   "forest: Number of processes sent to.");
     sc_stats_set1 (&stats[4], profile->partition_runtime,
-                   "Partition runtime.");
+                   "forest: Partition runtime.");
     sc_stats_set1 (&stats[5], profile->commit_runtime,
-                   "Commit runtime (cmesh measured).");
+                   "forest: Commit runtime.");
     /* compute stats */
     sc_stats_compute (sc_MPI_COMM_WORLD, T8_PROFILE_NUM_STATS, stats);
     /* print stats */
+    t8_logf (SC_LC_GLOBAL, SC_LP_STATISTICS, "Printing stats for forest.\n");
     sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS,
                     T8_PROFILE_NUM_STATS, stats, 1, 1);
   }
