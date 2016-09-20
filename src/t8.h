@@ -189,6 +189,16 @@ void                t8_debugf (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)))
 #endif
   ;
+
+/** Log a message, no matter what rank, with priority SC_LP_ERROR.
+ * \param [in] fmt          Printf-style format string.
+ */
+void                t8_errorf (const char *fmt, ...)
+#ifndef T8_DOXYGEN
+  __attribute__ ((format (printf, 1, 2)))
+#endif
+  ;
+
 /* *INDENT-ON* */
 
 /** Register t8code with libsc and print version and variable information.
