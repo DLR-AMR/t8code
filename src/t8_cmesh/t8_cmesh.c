@@ -425,7 +425,7 @@ t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key,
 {
   T8_ASSERT (cmesh->committed);
   return t8_cmesh_trees_get_attribute (cmesh->trees, tree_id, package_id,
-                                       key);
+                                       key, NULL);
 }
 
 t8_shmem_array_t

@@ -182,7 +182,7 @@ t8_part_tree_t      t8_cmesh_trees_get_part (t8_cmesh_trees_t trees,
  *  \param [in]             num_trees The number of trees of that part.
  *  \param [in]             lfirst_ghost The local id of the first ghost of that part.
  *  \param [in]             num_ghosts The number of ghosts of that part.
- *  \param [in]             alloc   If true then tge first_tree array is allocated for
+ *  \param [in]             alloc   If true then the first_tree array is allocated for
  *                          the number of trees and ghosts.
  *                          When a cmesh is copied we do not want this, so in we pass alloc = 0 then.
  */
@@ -361,12 +361,15 @@ void                t8_cmesh_trees_attribute_info_sort (t8_cmesh_trees_t
  *  \param [in]       package_id The package identifier of the attribute.
  *  \param [in]       key       The key of the attribute within all attributes of
  *                              the same package identifier.
+ *  \param [out]      size      If not NULL, the size (in bytes) of the attribute
+ *                              will be stored here.
  *  \return           A pointer to the queried attribute, NULL if the attribute
  *                    does not exist.
  */
 void               *t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees,
                                                   t8_locidx_t ltree_id,
-                                                  int package_id, int key);
+                                                  int package_id, int key,
+                                                  size_t * size);
 
 /** Return the total size of all attributes stored at a specified tree.
  * \param [in]        tree  A tree structure.
