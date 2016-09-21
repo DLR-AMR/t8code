@@ -94,6 +94,7 @@ t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
   t8_global_productionf ("Committed cmesh with"
                          " %lli global trees.\n",
                          (long long) t8_cmesh_get_num_trees (cmesh));
+#if USE_CMESH_PARTITION
   /* Set up cmesh_partition to be a repartition of cmesh. */
   t8_cmesh_init (&cmesh_partition);
   t8_cmesh_set_derive (cmesh_partition, cmesh);
@@ -101,6 +102,9 @@ t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
   /* The new cmesh is partitioned according to a uniform init_level refinement */
   t8_cmesh_set_partition_uniform (cmesh_partition, init_level);
   t8_cmesh_commit (cmesh_partition, comm);
+#else
+  cmesh_partition = cmesh;
+#endif
   /* Initialize forest and set cmesh */
   t8_forest_init (&forest);
   t8_forest_set_cmesh (forest, cmesh_partition, comm);
