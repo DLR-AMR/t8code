@@ -474,7 +474,7 @@ t8_offset_sendsto (int proca, int procb, t8_gloidx_t * t8_offset_from,
   if (proca_first <= proca_last &&      /* There are trees to send  and... */
       proca_first <= procb_last /* The first tree on a before is smaller than
                                  * the last on b after partitioning and... */
-      && proca_last >= procb_first      /* The last tree on before is bigger than */
+      && proca_last >= procb_first      /* The last tree on a before is bigger than */
       + (keeps_first            /* the first on b after partitioning */
          && procb_first == t8_offset_first (procb, t8_offset_from))
 

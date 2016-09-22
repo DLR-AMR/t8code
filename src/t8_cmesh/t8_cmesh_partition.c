@@ -809,6 +809,7 @@ t8_cmesh_partition_recvrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 }
 #endif
 
+/* A much faster version to compute the sendrange */
 static              t8_locidx_t
 t8_cmesh_partition_alternative_sendrange (t8_cmesh_t cmesh,
                                           t8_cmesh_t cmesh_from,
@@ -969,6 +970,7 @@ t8_cmesh_partition_alternative_sendrange (t8_cmesh_t cmesh,
   return (t8_locidx_t) ret;
 }
 
+/* A much faster version to compute the receive range */
 static void
 t8_cmesh_partition_alternative_recvrange (t8_cmesh_t cmesh,
                                           t8_cmesh_t cmesh_from,
