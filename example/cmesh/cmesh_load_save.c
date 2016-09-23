@@ -20,6 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <sc_options.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_vtk.h>
 #include <t8_cmesh_readmshfile.h>
@@ -27,7 +28,32 @@
 /* TODO: rename this file to t8_something */
 
 static void
-t8_cmesh_save_cmesh (char *mshfile)
+t8_cmesh_load_distribute (const char *fileprefix, int num_files)
+{
+  t8_cmesh_t          cmesh, cmesh_partition;
+
+  cmesh = t8_cmesh_load_and_distribute (fileprefix, num_files,
+                                        sc_MPI_COMM_WORLD);
+  if (cmesh == NULL) {
+    t8_errorf ("Error when reading cmesh\n");
+    return;
+  }
+  else {
+    t8_debugf ("Successfully loaded cmesh from %s files\n", fileprefix);
+    t8_cmesh_vtk_write_file (cmesh, "cmesh_dist_loaded", 1.0);
+    t8_cmesh_init (&cmesh_partition);
+    t8_cmesh_set_derive (cmesh_partition, cmesh);
+    t8_cmesh_set_partition_uniform (cmesh_partition, 0);
+    t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
+    t8_cmesh_vtk_write_file (cmesh_partition, "cmesh_dist_loaded_partition",
+                             1.0);
+    t8_cmesh_destroy (&cmesh_partition);
+    t8_cmesh_destroy (&cmesh);
+  }
+}
+
+static void
+t8_cmesh_save_cmesh (const char *mshfile, int dim)
 {
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
@@ -39,7 +65,7 @@ t8_cmesh_save_cmesh (char *mshfile)
   }
   else {
     t8_cmesh_t          cmesh_partition;
-    cmesh = t8_cmesh_from_msh_file (mshfile, 1, sc_MPI_COMM_WORLD, 3, 0);
+    cmesh = t8_cmesh_from_msh_file (mshfile, 1, sc_MPI_COMM_WORLD, dim, 0);
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh);
     t8_cmesh_set_partition_uniform (cmesh_partition, 1);
@@ -49,7 +75,7 @@ t8_cmesh_save_cmesh (char *mshfile)
   }
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
-  snprintf (filename, BUFSIZ, "cmesh_saved_%04d.cmsh", mpirank);
+  snprintf (filename, BUFSIZ, "cmesh_saved_%04d.cmesh", mpirank);
   ret = t8_cmesh_save (cmesh, filename);
   if (ret == 0) {
     t8_errorf ("Error when writing to file\n");
@@ -69,7 +95,7 @@ t8_cmesh_load_cmesh ()
 
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
-  snprintf (filename, BUFSIZ, "cmesh_saved_%04d.cmsh", mpirank);
+  snprintf (filename, BUFSIZ, "cmesh_saved_%04d.cmesh", mpirank);
   cmesh = t8_cmesh_load (filename, sc_MPI_COMM_WORLD);
   if (cmesh != NULL) {
     t8_debugf ("Successfully loaded cmesh from %s\n", filename);
@@ -81,8 +107,20 @@ t8_cmesh_load_cmesh ()
 int
 main (int argc, char **argv)
 {
-  int                 mpiret;
-  char               *meshfile;
+  int                 mpiret, n, parsed, dim;
+  const char         *meshfile, *loadfile;
+  sc_options_t       *opt;
+  char                usage[BUFSIZ];
+  char                help[BUFSIZ];
+
+  snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>",
+            basename (argv[0]));
+  snprintf (help, BUFSIZ,
+            "This program has two modes. With argument -f <file> -d <dim> it creates a cmesh, "
+            "from the file <file>.msh, saves it to a collection of files and loads it again.\n"
+            "If the -l <string> and -n <num> arguments are given, the cmesh stored "
+            "in the num files string_0000.cmesh,... ,string_num-1.cmesh are read on n processes "
+            "and distributed among all processes.\n\n%s\n", usage);
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -90,15 +128,41 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  if (argc == 2) {
-    meshfile = argv[1];
+  opt = sc_options_new (argv[0]);
+  sc_options_add_string (opt, 'l', "load", &loadfile, "", "The prefix of the"
+                         " file to load.");
+  sc_options_add_int (opt, 'n', "num-files", &n, -1,
+                      "The total number of files.");
+  sc_options_add_string (opt, 'f', "msh-file", &meshfile, "",
+                         "The prefix of the" ".msh file.");
+  sc_options_add_int (opt, 'd', "dim", &dim, 2,
+                      "The dimension of the msh file.");
+  parsed =
+    sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
+  /* Check for wrong usage:
+   * - Neither meshfile nor loadfile specified
+   * - loadfile specified but invalid number of files */
+  if (parsed < 0 || (strcmp (meshfile, "") == 0 && strcmp (loadfile, "") == 0)
+      || (strcmp (loadfile, "") != 0 && n <= 0)
+      || dim < 2 || dim > 3) {
+    fprintf (stderr, "%s", help);
+    return 1;
   }
   else {
-    meshfile = NULL;
+    if (strcmp (meshfile, "") != 0) {
+      /* If a meshfile was specified, we load it and save the cmesh on disk */
+      t8_cmesh_save_cmesh (meshfile, dim);
+      t8_cmesh_load_cmesh ();
+    }
+    else {
+      /* A load file and a number of processes was given */
+      T8_ASSERT (strcmp (loadfile, "") != 0);
+      T8_ASSERT (n > 0);
+      t8_cmesh_load_distribute (loadfile, n);
+    }
   }
-  t8_cmesh_save_cmesh (meshfile);
-  t8_cmesh_load_cmesh ();
 
+  sc_options_destroy (opt);
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();

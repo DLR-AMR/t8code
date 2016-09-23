@@ -78,7 +78,7 @@ t8_basic_adapt (t8_forest_t forest, t8_topidx_t which_tree,
                                  * cmesh throughout the function */
 /* Create a cmesh from a .msh files uniform level 0
  * partitioned. */
-void
+static void
 t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
                               sc_MPI_Comm comm, int init_level, int no_vtk)
 {
@@ -156,6 +156,7 @@ t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
   /* Print runtimes and statistics of forest and cmesh partition */
   t8_forest_print_profile (forest_partition);
   t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
+  t8_cmesh_save (t8_forest_get_cmesh (forest_partition), "cmesh_time_forest");
   /* memory clean-up */
   t8_forest_unref (&forest_partition);
   t8_cmesh_destroy (&cmesh_partition);
