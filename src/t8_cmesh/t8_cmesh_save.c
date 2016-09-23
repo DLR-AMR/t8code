@@ -30,6 +30,8 @@
 #include <t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_save.h>
+#include <t8_cmesh/t8_cmesh_partition.h>
+#include <t8_cmesh/t8_cmesh_offset.h>
 
 /* This macro is called to check a condition and if not fulfilled
  * close the file and exit the function */
@@ -468,6 +470,10 @@ t8_cmesh_load_header (t8_cmesh_t cmesh, FILE * fp)
   T8_SAVE_CHECK_CLOSE (ret == 2, fp);
   /* Check if the rank and mpisize stored were valid */
   T8_SAVE_CHECK_CLOSE (0 <= save_rank && save_rank < save_mpisize, fp);
+  /* It does not make sense to load a cmesh on a rank smaller than the one that
+   * saved it. */
+  T8_SAVE_CHECK_CLOSE (cmesh->mpirank <= save_rank
+                       && cmesh->mpisize <= save_mpisize, fp);
   ret = fscanf (fp, "dim %i\n", &cmesh->dimension);
   T8_SAVE_CHECK_CLOSE (ret == 1, fp);
   /* Check if the read dimension is in the correct range */
@@ -623,5 +629,76 @@ t8_cmesh_load (char *filename, sc_MPI_Comm comm)
   SC_CHECK_MPI (mpiret);
   t8_stash_destroy (&cmesh->stash);
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  return cmesh;
+}
+
+/* Load the files fileprefix_0000.cmesh, ... , fileprefix_N.cmesh
+ * (N = num_files - 1)
+ * on N processes and repartition the cmesh to all calling processes.
+ */
+t8_cmesh_t
+t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
+                              sc_MPI_Comm comm)
+{
+  t8_cmesh_t          cmesh;
+  char                buffer[BUFSIZ];
+  int                 mpiret, mpirank, mpisize;
+
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+
+  T8_ASSERT (mpisize >= num_files);
+  /* First primitive loading strategy:
+   * each process with rank smaller than number of files
+   * loads a file.
+   */
+  if (mpirank < num_files) {
+    snprintf (buffer, BUFSIZ, "%s_%04d.cmesh", fileprefix, mpirank);
+    cmesh = t8_cmesh_load (buffer, comm);
+    if (num_files == mpisize) {
+      /* Each process has loaded the cmesh and we can return */
+      t8_cmesh_trees_print (cmesh, cmesh->trees);
+      return cmesh;
+    }
+  }
+  else {
+    /* On the processes that do not load the cmesh, initialize it
+     * with zero local trees and ghosts */
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_trees_init (&cmesh->trees, 0, 0, 0);
+    mpiret = sc_MPI_Comm_rank (comm, &cmesh->mpirank);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Comm_size (comm, &cmesh->mpisize);
+    SC_CHECK_MPI (mpiret);
+    t8_stash_destroy (&cmesh->stash);
+    /* There are no faces, so we know all about them */
+    cmesh->face_knowledge = 3;
+    /* There are no tree, thus the first tree is not shared */
+    cmesh->first_tree_shared = 0;
+    cmesh->committed = 1;
+    cmesh->set_partition = 1;
+  }
+  /* The cmeshes on the processes that did not load have to
+   * know the global number of trees */
+  sc_MPI_Bcast (&cmesh->num_trees, 1, T8_MPI_GLOIDX, 0, comm);
+  /* And the dimension */
+  sc_MPI_Bcast (&cmesh->dimension, 1, sc_MPI_INT, 0, comm);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  /* We now create the cmeshs offset in order to properly
+   * set the first tree for the empty processes */
+  sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
+  t8_cmesh_gather_treecount (cmesh, comm);
+  if (cmesh->mpirank >= num_files) {
+    /* Since there are no bigger processes with trees on them, we can
+     * set the first tree to the total number of trees.
+     * This is necessary, such that in partition other processes see this
+     * process as empty */
+    cmesh->first_tree = cmesh->num_trees;
+  }
+  /* Since we changed the first tree on some processes, we have to
+   * regather the first trees on each process */
+  t8_cmesh_gather_treecount (cmesh, comm);
   return cmesh;
 }

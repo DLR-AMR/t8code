@@ -341,6 +341,11 @@ int                 t8_cmesh_save (t8_cmesh_t cmesh, char *filename);
 /* TODO: Document */
 t8_cmesh_t          t8_cmesh_load (char *filename, sc_MPI_Comm comm);
 
+/* TODO: Document */
+t8_cmesh_t          t8_cmesh_load_and_distribute (const char *fileprefix,
+                                                  int num_files,
+                                                  sc_MPI_Comm comm);
+
 /** Check whether a given MPI communicator assigns the same rank and mpisize
   * as stored in a cmesh.
   * \param [in] cmesh       The cmesh to be considered.
