@@ -682,7 +682,7 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh,
 }
 
 t8_cmesh_t
-t8_cmesh_from_msh_file (char *fileprefix, int partition,
+t8_cmesh_from_msh_file (const char *fileprefix, int partition,
                         sc_MPI_Comm comm, int dim, int master)
 {
   int                 mpirank, mpisize, mpiret;
