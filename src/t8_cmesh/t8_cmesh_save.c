@@ -150,7 +150,7 @@ t8_cmesh_load_ghosts (t8_cmesh_t cmesh, FILE * fp)
     /* read the ghost's eclass */
     ret = fscanf (fp, "eclass %i\n", &eclass);
     T8_SAVE_CHECK_CLOSE (ret == 1, fp);
-    ghost->eclass = eclass;
+    ghost->eclass = (t8_eclass_t) eclass;
     /* Ignore the neighbor offset */
     ret = fscanf (fp, "neigh_offset %*i\n");
     T8_SAVE_CHECK_CLOSE (ret == 0, fp);

@@ -464,7 +464,7 @@ t8_cmesh_trees_size (t8_cmesh_trees_t trees)
     return 0;
   }
   /* For each part, calculate its memory usage */
-  for (ipart = 0; ipart < trees->from_proc->elem_count; ipart++) {
+  for (ipart = 0; ipart < (int) trees->from_proc->elem_count; ipart++) {
     part = t8_cmesh_trees_get_part (trees, ipart);
     total_bytes += t8_cmesh_trees_get_part_alloc (trees, part);
   }
