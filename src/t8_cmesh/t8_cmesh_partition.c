@@ -133,11 +133,13 @@ t8_cmesh_gather_treecount (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
-  T8_ASSERT (cmesh->tree_offsets == NULL);
 
   tree_offset = cmesh->first_tree_shared ? -cmesh->first_tree - 1 :
     cmesh->first_tree;
-  cmesh->tree_offsets = t8_cmesh_alloc_offsets (cmesh->mpisize, comm);
+  if (cmesh->tree_offsets == NULL) {
+    /* Only allocate the shmem array, if it is not already allocated */
+    cmesh->tree_offsets = t8_cmesh_alloc_offsets (cmesh->mpisize, comm);
+  }
   t8_shmem_array_allgather (&tree_offset, 1, T8_MPI_GLOIDX,
                             cmesh->tree_offsets, 1, T8_MPI_GLOIDX);
   t8_shmem_array_set_gloidx (cmesh->tree_offsets, cmesh->mpisize,
