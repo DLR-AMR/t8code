@@ -1490,12 +1490,12 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                              int *num_request_alloc, int *send_first,
                              int *send_last,
                              char ***send_buffer, char **my_buffer,
-                             int *my_buffer_bytes, sc_MPI_Request ** requests,
-                             sc_MPI_Comm comm)
+                             size_t * my_buffer_bytes,
+                             sc_MPI_Request ** requests, sc_MPI_Comm comm)
 {
   size_t              attr_bytes = 0, tree_neighbor_bytes,
     ghost_neighbor_bytes, attr_info_bytes;
-  int                 total_alloc;
+  size_t              total_alloc;
   int                 iproc, flag;
   int                 mpiret, num_send_mpi = 0;
   char               *buffer;
@@ -1622,7 +1622,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     t8_debugf ("TNB %zd\n", tree_neighbor_bytes);
     t8_debugf ("AIB %zd\n", attr_info_bytes);
     t8_debugf ("AB %zd\n", attr_bytes);
-    t8_debugf ("Ta %i\n", total_alloc);
+    t8_debugf ("Ta %zd\n", total_alloc);
     /* If profiling is enabled, we count the number of shipped trees/ghosts
      * and processes we ship to. */
     if (cmesh->profile) {
@@ -1663,7 +1663,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     if (iproc != cmesh->mpirank) {
       if (num_trees + num_ghost_send > 0) {
         /* send buffer to remote process */
-        t8_debugf ("Post send of %i trees/%i bytes to %i\n",
+        t8_debugf ("Post send of %i trees/%zd bytes to %i\n",
                    *(t8_locidx_t *) (buffer +
                                      total_alloc - 2 * sizeof (t8_locidx_t)),
                    total_alloc, iproc - flag);
@@ -1804,7 +1804,7 @@ static void
 t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
                              const struct t8_cmesh *cmesh_from,
                              t8_gloidx_t * tree_offset,
-                             char *my_buffer, int my_buffer_bytes,
+                             char *my_buffer, size_t my_buffer_bytes,
                              sc_MPI_Comm comm, int fr, int lr)
 {
   int                 num_receive, *local_procid;       /* ranks of the processor from which we will receive */
@@ -2126,7 +2126,8 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
                           t8_gloidx_t * tree_offset, sc_MPI_Comm comm)
 {
   int                 send_first, send_last, num_request_alloc; /* ranks of the processor to which we will send */
-  int                 iproc, my_buffer_bytes = 0, num_send_mpi, mpiret;
+  int                 iproc, num_send_mpi, mpiret;
+  size_t              my_buffer_bytes;
   char              **send_buffer = NULL, *my_buffer = NULL;
 
   int                 fs, ls, fr, lr;
