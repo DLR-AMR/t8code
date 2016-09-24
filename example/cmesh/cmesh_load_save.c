@@ -28,7 +28,7 @@
 /* TODO: rename this file to t8_something */
 
 static void
-t8_cmesh_load_distribute (const char *fileprefix, int num_files)
+t8_cmesh_load_distribute (const char *fileprefix, int num_files, int no_vtk)
 {
   t8_cmesh_t          cmesh, cmesh_partition;
 
@@ -40,13 +40,17 @@ t8_cmesh_load_distribute (const char *fileprefix, int num_files)
   }
   else {
     t8_debugf ("Successfully loaded cmesh from %s files\n", fileprefix);
-    t8_cmesh_vtk_write_file (cmesh, "cmesh_dist_loaded", 1.0);
+    if (!no_vtk) {
+      t8_cmesh_vtk_write_file (cmesh, "cmesh_dist_loaded", 1.0);
+    }
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh);
     t8_cmesh_set_partition_uniform (cmesh_partition, 0);
     t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
-    t8_cmesh_vtk_write_file (cmesh_partition, "cmesh_dist_loaded_partition",
-                             1.0);
+    if (!no_vtk) {
+      t8_cmesh_vtk_write_file (cmesh_partition, "cmesh_dist_loaded_partition",
+                               1.0);
+    }
     t8_cmesh_destroy (&cmesh_partition);
     t8_cmesh_destroy (&cmesh);
   }
@@ -86,6 +90,7 @@ t8_cmesh_save_cmesh (const char *mshfile, int dim)
   t8_cmesh_destroy (&cmesh);
 }
 
+#if 0
 static void
 t8_cmesh_load_cmesh ()
 {
@@ -103,18 +108,20 @@ t8_cmesh_load_cmesh ()
     t8_cmesh_destroy (&cmesh);
   }
 }
+#endif
 
 int
 main (int argc, char **argv)
 {
-  int                 mpiret, n, parsed, dim;
+  int                 mpiret, n, parsed, dim, no_vtk, helpme = 0;
   const char         *meshfile, *loadfile;
   sc_options_t       *opt;
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
 
-  snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>",
-            basename (argv[0]));
+  snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>\n\t%s -h\t"
+            "for a brief overview of all options.",
+            basename (argv[0]), basename (argv[0]));
   snprintf (help, BUFSIZ,
             "This program has two modes. With argument -f <file> -d <dim> it creates a cmesh, "
             "from the file <file>.msh, saves it to a collection of files and loads it again.\n"
@@ -129,22 +136,31 @@ main (int argc, char **argv)
   t8_init (SC_LP_DEFAULT);
 
   opt = sc_options_new (argv[0]);
+  sc_options_add_switch (opt, 'h', "help", &helpme,
+                         "Display a short help message.");
   sc_options_add_string (opt, 'l', "load", &loadfile, "", "The prefix of the"
-                         " file to load.");
+                         " .cmesh file to load.");
   sc_options_add_int (opt, 'n', "num-files", &n, -1,
-                      "The total number of files.");
+                      "The total number of .cmesh files.");
+  sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk,
+                         "Do not write vtk output.");
   sc_options_add_string (opt, 'f', "msh-file", &meshfile, "",
-                         "The prefix of the" ".msh file.");
+                         "The prefix of the .msh file.");
   sc_options_add_int (opt, 'd', "dim", &dim, 2,
                       "The dimension of the msh file.");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
+  if (helpme) {
+    /* Display help message */
+    sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
+  }
   /* Check for wrong usage:
    * - Neither meshfile nor loadfile specified
    * - loadfile specified but invalid number of files */
-  if (parsed < 0 || (strcmp (meshfile, "") == 0 && strcmp (loadfile, "") == 0)
-      || (strcmp (loadfile, "") != 0 && n <= 0)
-      || dim < 2 || dim > 3) {
+  else if (parsed < 0
+           || (strcmp (meshfile, "") == 0 && strcmp (loadfile, "") == 0)
+           || (strcmp (loadfile, "") != 0 && n <= 0)
+           || dim < 2 || dim > 3) {
     fprintf (stderr, "%s", help);
     return 1;
   }
@@ -152,13 +168,12 @@ main (int argc, char **argv)
     if (strcmp (meshfile, "") != 0) {
       /* If a meshfile was specified, we load it and save the cmesh on disk */
       t8_cmesh_save_cmesh (meshfile, dim);
-      t8_cmesh_load_cmesh ();
     }
     else {
       /* A load file and a number of processes was given */
       T8_ASSERT (strcmp (loadfile, "") != 0);
       T8_ASSERT (n > 0);
-      t8_cmesh_load_distribute (loadfile, n);
+      t8_cmesh_load_distribute (loadfile, n, no_vtk);
     }
   }
 
