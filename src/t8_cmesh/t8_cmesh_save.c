@@ -655,6 +655,7 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
    * loads a file.
    */
   if (mpirank < num_files) {
+    T8_ASSERT (fileprefix != NULL);
     snprintf (buffer, BUFSIZ, "%s_%04d.cmesh", fileprefix, mpirank);
     cmesh = t8_cmesh_load (buffer, comm);
     if (num_files == mpisize) {
