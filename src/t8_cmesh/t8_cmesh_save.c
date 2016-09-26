@@ -518,7 +518,7 @@ t8_cmesh_load_header (t8_cmesh_t cmesh, FILE * fp)
 }
 
 int
-t8_cmesh_save (t8_cmesh_t cmesh, char *filename)
+t8_cmesh_save (t8_cmesh_t cmesh, const char *filename)
 {
   FILE               *fp;
 
@@ -572,7 +572,7 @@ t8_cmesh_save (t8_cmesh_t cmesh, char *filename)
 #undef T8_SAVE_CHECK_CLOSE
 
 t8_cmesh_t
-t8_cmesh_load (char *filename, sc_MPI_Comm comm)
+t8_cmesh_load (const char *filename, sc_MPI_Comm comm)
 {
   FILE               *fp;
   t8_cmesh_t          cmesh;

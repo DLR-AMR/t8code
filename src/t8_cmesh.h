@@ -336,10 +336,10 @@ void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 void                t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
 /* TODO: Document */
-int                 t8_cmesh_save (t8_cmesh_t cmesh, char *filename);
+int                 t8_cmesh_save (t8_cmesh_t cmesh, const char *filename);
 
 /* TODO: Document */
-t8_cmesh_t          t8_cmesh_load (char *filename, sc_MPI_Comm comm);
+t8_cmesh_t          t8_cmesh_load (const char *filename, sc_MPI_Comm comm);
 
 /* TODO: Document */
 t8_cmesh_t          t8_cmesh_load_and_distribute (const char *fileprefix,
