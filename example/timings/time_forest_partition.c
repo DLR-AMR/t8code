@@ -32,7 +32,34 @@
 #include <t8_forest.h>
 #include <t8_default.h>
 
-double              x_min, x_max;
+/* This is the user defined data used to define the
+ * region in which we partition.
+ * Let E be a plane through the origin, then we define all cells
+ * in between the two planes c_min*E and c_max*E.
+ */
+typedef struct
+{
+  double              c_min, c_max;     /* constants that define the thickness of the refinement region */
+  double              normal[3];        /* normal vector to the plane E */
+} adapt_data_t;
+
+/* Simple 3 dimensional vector product */
+static double
+t8_vec3_dot (double *v1, double *v2)
+{
+  return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+}
+
+/* Set x = x - alpha*y
+ * for 2 3dim vectors x,y and a constant alpha */
+static void
+t8_vec3_xmay (double *x, double alpha, double *y)
+{
+  int                 i;
+  for (i = 0; i < 3; i++) {
+    x[i] -= alpha * y[i];
+  }
+}
 
 static void
 t8_anchor_element (t8_forest_t forest,
@@ -50,13 +77,17 @@ t8_anchor_element (t8_forest_t forest,
   }
 }
 
+/* refine the forest in a band, given by a plane E and two constants
+ * c_min, c_max. We refine the cells in the band c_min*E, c_max*E */
 static int
-t8_basic_adapt (t8_forest_t forest, t8_topidx_t which_tree,
-                t8_eclass_scheme_t * ts,
-                int num_elements, t8_element_t * elements[])
+t8_band_adapt (t8_forest_t forest, t8_topidx_t which_tree,
+               t8_eclass_scheme_t * ts,
+               int num_elements, t8_element_t * elements[])
 {
   int                 level;
   double              elem_anchor[3];
+  double             *normal;
+  adapt_data_t       *adapt_data;
 
   T8_ASSERT (num_elements == 1 || num_elements ==
              t8_eclass_num_children[ts->eclass]);
@@ -64,10 +95,23 @@ t8_basic_adapt (t8_forest_t forest, t8_topidx_t which_tree,
 
   t8_anchor_element (forest, ts, elements[0], elem_anchor);
 
-  if (level < 3 && elem_anchor[0] >= x_min && elem_anchor[0] <= x_max) {
-    /* refine if level is smaller 3 and
-     * anchor x coordinate is in correct range */
-    return 1;
+  /* Get the minimum and maximum x-coordinate from the user data pointer of forest */
+  adapt_data = (adapt_data_t *) t8_forest_get_user_data (forest);
+  normal = adapt_data->normal;
+  /* Calculate elem_anchor - c_min n */
+  t8_vec3_xmay (elem_anchor, adapt_data->c_min, normal);
+
+  if (level < 3 && t8_vec3_dot (elem_anchor, normal) >= 0) {
+    /* if level is smaller 3 and
+     * anchor node is to the right of c_min*E,
+     * check if it is to the left of c_max*E */
+
+    /* set elem_anchor to the original anchor - c_max*normal */
+    t8_vec3_xmay (elem_anchor, adapt_data->c_max - adapt_data->c_min, normal);
+    if (t8_vec3_dot (elem_anchor, normal) <= 0) {
+      /* We do refine */
+      return 1;
+    }
   }
   return 0;
 }
@@ -80,12 +124,13 @@ t8_basic_adapt (t8_forest_t forest, t8_topidx_t which_tree,
  * partitioned. */
 static void
 t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
-                              sc_MPI_Comm comm, int init_level, int no_vtk)
+                              sc_MPI_Comm comm, int init_level, int no_vtk,
+                              double x_min_max[2])
 {
   t8_cmesh_t          cmesh;
   t8_cmesh_t          cmesh_partition;
   char                forest_vtu[BUFSIZ], cmesh_vtu[BUFSIZ];
-
+  adapt_data_t        adapt_data;
   t8_forest_t         forest, forest_adapt, forest_partition;
 
   /* Create a cmesh from the given mesh files */
@@ -116,7 +161,14 @@ t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
   t8_forest_commit (forest);
   /* Adapt the forest */
   t8_forest_init (&forest_adapt);
-  t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, NULL, 1);
+  t8_forest_set_adapt (forest_adapt, forest, t8_band_adapt, NULL, 1);
+  /* Set the minimum and maximum x-coordinates as user data */
+  adapt_data.c_min = x_min_max[0];
+  adapt_data.c_max = x_min_max[1];
+  adapt_data.normal[0] = 1;
+  adapt_data.normal[0] = 0;
+  adapt_data.normal[0] = 0;
+  t8_forest_set_user_data (forest_adapt, (void *) &adapt_data);
   /* Commit the adapted forest */
   t8_forest_commit (forest_adapt);
   /* write vtk files for adapted forest and cmesh */
@@ -176,6 +228,8 @@ main (int argc, char *argv[])
   int                 dim;
   sc_options_t       *opt;
   const char         *fileprefix;
+  double              x_min_max[2];     /* At position 0 the minumum x-coordinate,
+                                           at position 1 the maximum x-coordinate. */
 
   /* Initialize MPI, sc, p4est and t8code */
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -201,9 +255,9 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The initial uniform "
                       "refinement level of the forest.");
-  sc_options_add_double (opt, 'x', "xmin", &x_min, 0,
+  sc_options_add_double (opt, 'x', "xmin", x_min_max, 0,
                          "The minimum x coordinate " "in the mesh.");
-  sc_options_add_double (opt, 'X', "xmax", &x_max, 1,
+  sc_options_add_double (opt, 'X', "xmax", x_min_max + 1, 1,
                          "The maximum x coordinate " "in the mesh.");
 
   /* parse command line options */
@@ -221,7 +275,7 @@ main (int argc, char *argv[])
   else {
     /* Execute this part of the code if all options are correctly set */
     t8_time_forest_cmesh_mshfile (fileprefix, dim, sc_MPI_COMM_WORLD, level,
-                                  no_vtk);
+                                  no_vtk, x_min_max);
   }
   sc_options_destroy (opt);
   sc_finalize ();
