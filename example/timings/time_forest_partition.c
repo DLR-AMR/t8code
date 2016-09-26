@@ -166,8 +166,8 @@ t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
   adapt_data.c_min = x_min_max[0];
   adapt_data.c_max = x_min_max[1];
   adapt_data.normal[0] = 1;
-  adapt_data.normal[0] = 0;
-  adapt_data.normal[0] = 0;
+  adapt_data.normal[1] = 0;
+  adapt_data.normal[2] = 0;
   t8_forest_set_user_data (forest_adapt, (void *) &adapt_data);
   /* Commit the adapted forest */
   t8_forest_commit (forest_adapt);
