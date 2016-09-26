@@ -209,6 +209,20 @@ t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from,
 }
 
 void
+t8_forest_set_user_data (t8_forest_t forest, void *data)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+  forest->user_data = data;
+}
+
+void *
+t8_forest_get_user_data (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+  return forest->user_data;
+}
+
+void
 t8_forest_comm_global_num_elements (t8_forest_t forest)
 {
   int                 mpiret;
@@ -510,7 +524,7 @@ t8_forest_commit (t8_forest_t forest)
     forest->scheme = forest->set_from->scheme;
     forest->global_num_trees = forest->set_from->global_num_trees;
 
-    /* TODO: currently we can only handle copy and partition */
+    /* TODO: currently we can only handle copy, adapt, and partition */
     /* T8_ASSERT (forest->from_method == T8_FOREST_FROM_COPY); */
     if (forest->from_method == T8_FOREST_FROM_ADAPT) {
       if (forest->set_adapt_fn != NULL) {

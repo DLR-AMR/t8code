@@ -193,6 +193,22 @@ void                t8_forest_set_adapt (t8_forest_t forest,
                                          t8_forest_replace_t replace_fn,
                                          int recursive);
 
+/** Set the user data of a forest. This can i.e. be used to pass user defined
+ * arguments to the adapt routine.
+ * \param [in,out] forest   The forest
+ * \param [in]     data     A pointer to user data. t8code will never touch the data.
+ * The forest must not be committed before calling this function.
+ * \see t8_forest_get_user_data
+ */
+void                t8_forest_set_user_data (t8_forest_t forest, void *data);
+
+/** Return the user data pointer associated with a forest.
+ * \param [in]     forest   The forest.
+ * \return                  The user data pointer of \a forest.
+ * \see t8_forest_set_user_data
+ */
+void               *t8_forest_get_user_data (t8_forest_t forest);
+
 /* TODO: define weight callback function */
 void                t8_forest_set_partition (t8_forest_t forest,
                                              const t8_forest_t from,

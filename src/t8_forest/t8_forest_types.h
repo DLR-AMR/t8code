@@ -68,6 +68,7 @@ typedef struct t8_forest
                                              is set to T8_FOREST_FROM_ADAPT. */
   int                 set_adapt_recursive; /**< Flag to decide whether coarsen and refine
                                                 are carried out recursive */
+  void               *user_data;        /**< Pointer for arbitrary user data. \see t8_forest_set_user_data. */
   int                 committed;        /**< \ref t8_forest_commit called? */
   int                 mpisize;          /**< Number of MPI processes. */
   int                 mpirank;          /**< Number of this MPI process. */
