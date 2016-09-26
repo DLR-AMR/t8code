@@ -31,16 +31,12 @@ static void
 t8_refine_hybrid (int level)
 {
   t8_cmesh_t          cmesh, cmesh_refine;
-  int                 dummy_data = 0;
 
   t8_cmesh_init (&cmesh);
   t8_cmesh_init (&cmesh_refine);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
   t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), 1, &dummy_data,
-                          sizeof (int), 1);
-  t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id (), 1, &dummy_data,
-                          sizeof (int), 1);
+
   t8_cmesh_set_join (cmesh, 0, 1, 2, 1, 0);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   t8_cmesh_set_derive (cmesh_refine, cmesh);

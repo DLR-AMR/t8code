@@ -1258,23 +1258,25 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
       (sizeof (t8_locidx_t) + sizeof (int8_t))
       + T8_ADD_PADDING (t8_eclass_num_faces[tree->eclass] *
                         (sizeof (t8_locidx_t) + sizeof (int8_t)));
-    /* Copy all attribute infos to send_buffer */
-    (void) memcpy (send_buffer + num_trees * sizeof (t8_ctree_struct_t) +
-                   num_ghost_send * sizeof (t8_cghost_struct_t) +
-                   ghost_neighbor_bytes + tree_neighbor_bytes +
-                   temp_offset_att, T8_TREE_ATTR_INFO (tree, 0),
-                   tree->num_attributes *
-                   sizeof (t8_attribute_info_struct_t));
-    temp_offset_att +=
-      tree->num_attributes * sizeof (t8_attribute_info_struct_t);
-    /* Copy all attribute data to send_buffer */
-    (void) memcpy (send_buffer + num_trees * sizeof (t8_ctree_struct_t) +
-                   num_ghost_send * sizeof (t8_cghost_struct_t) +
-                   ghost_neighbor_bytes + tree_neighbor_bytes +
-                   attr_info_bytes + temp_offset_data,
-                   T8_TREE_ATTR (tree, T8_TREE_ATTR_INFO (tree, 0)),
-                   t8_cmesh_trees_attribute_size (tree));
-    temp_offset_data += t8_cmesh_trees_attribute_size (tree);
+    if (tree->num_attributes > 0) {
+      /* Copy all attribute infos to send_buffer */
+      (void) memcpy (send_buffer + num_trees * sizeof (t8_ctree_struct_t) +
+                     num_ghost_send * sizeof (t8_cghost_struct_t) +
+                     ghost_neighbor_bytes + tree_neighbor_bytes +
+                     temp_offset_att, T8_TREE_ATTR_INFO (tree, 0),
+                     tree->num_attributes *
+                     sizeof (t8_attribute_info_struct_t));
+      temp_offset_att +=
+        tree->num_attributes * sizeof (t8_attribute_info_struct_t);
+      /* Copy all attribute data to send_buffer */
+      (void) memcpy (send_buffer + num_trees * sizeof (t8_ctree_struct_t) +
+                     num_ghost_send * sizeof (t8_cghost_struct_t) +
+                     ghost_neighbor_bytes + tree_neighbor_bytes +
+                     attr_info_bytes + temp_offset_data,
+                     T8_TREE_ATTR (tree, T8_TREE_ATTR_INFO (tree, 0)),
+                     t8_cmesh_trees_attribute_size (tree));
+      temp_offset_data += t8_cmesh_trees_attribute_size (tree);
+    }
   }
   /* Set new face_neighbor offsets */
   /* TODO: indent bug? */
@@ -1322,20 +1324,22 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
 
     /* new attribute offset for tree */
     tree_cpy->att_offset = temp_offset_att - temp_offset_tree;
-    attr_info = T8_TREE_ATTR_INFO (tree_cpy, 0);
-    attr_info->attribute_offset = last_offset + last_size -
-      last_num_att * sizeof (t8_attribute_info_struct_t);
-    last_offset = attr_info->attribute_offset;
-    last_size = attr_info->attribute_size;
-
-    /* set new attribtue data offsets */
-    for (iz = 1; iz < (size_t) tree_cpy->num_attributes; iz++) {
-      attr_info->attribute_offset = last_offset + last_size;
+    if (tree_cpy->num_attributes > 0) {
+      attr_info = T8_TREE_ATTR_INFO (tree_cpy, 0);
+      attr_info->attribute_offset = last_offset + last_size -
+        last_num_att * sizeof (t8_attribute_info_struct_t);
+      last_offset = attr_info->attribute_offset;
       last_size = attr_info->attribute_size;
-      attr_info++;
+
+      /* set new attribtue data offsets */
+      for (iz = 1; iz < (size_t) tree_cpy->num_attributes; iz++) {
+        attr_info->attribute_offset = last_offset + last_size;
+        last_size = attr_info->attribute_size;
+        attr_info++;
+      }
+      temp_offset_att += tree_cpy->num_attributes *
+        sizeof (t8_attribute_info_struct_t);
     }
-    temp_offset_att += tree_cpy->num_attributes *
-      sizeof (t8_attribute_info_struct_t);
     temp_offset_tree += sizeof (t8_ctree_struct_t);
     last_num_att = tree_cpy->num_attributes;
   }

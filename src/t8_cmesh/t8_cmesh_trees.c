@@ -271,10 +271,12 @@ t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees, int proc)
 #endif
   /* Set attribute first offset, works even if there are no attributes */
   /* TODO: It does not! This is a bug that should be fixed soon */
-  attr = (t8_attribute_info_struct_t *) (part->first_tree + first_face
-                                         + face_neigh_bytes);
-  attr->attribute_offset =
-    num_attributes * sizeof (t8_attribute_info_struct_t);
+  if (num_attributes > 0) {
+    attr = (t8_attribute_info_struct_t *) (part->first_tree + first_face
+                                           + face_neigh_bytes);
+    attr->attribute_offset =
+      num_attributes * sizeof (t8_attribute_info_struct_t);
+  }
 }
 
 void
