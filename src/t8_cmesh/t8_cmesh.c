@@ -1130,7 +1130,7 @@ t8_cmesh_destroy (t8_cmesh_t * pcmesh)
  * The offsets on the different processes must add up! */
 static              t8_cmesh_t
 t8_cmesh_new_from_p4est_ext (void *conn, int dim,
-                             sc_MPI_Comm comm, int do_dup, int set_partition,
+                             sc_MPI_Comm comm, int set_partition,
                              t8_gloidx_t offset)
 {
 #define _T8_CMESH_P48_CONN(_ENTRY) \
@@ -1234,20 +1234,20 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim,
 
 t8_cmesh_t
 t8_cmesh_new_from_p4est (p4est_connectivity_t * conn,
-                         sc_MPI_Comm comm, int do_dup, int do_partition)
+                         sc_MPI_Comm comm, int do_partition)
 {
-  return t8_cmesh_new_from_p4est_ext (conn, 2, comm, do_dup, do_partition, 0);
+  return t8_cmesh_new_from_p4est_ext (conn, 2, comm, do_partition, 0);
 }
 
 t8_cmesh_t
 t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
-                         sc_MPI_Comm comm, int do_dup, int do_partition)
+                         sc_MPI_Comm comm, int do_partition)
 {
-  return t8_cmesh_new_from_p4est_ext (conn, 3, comm, do_dup, do_partition, 0);
+  return t8_cmesh_new_from_p4est_ext (conn, 3, comm, do_partition, 0);
 }
 
-t8_cmesh_t
-t8_cmesh_new_vertex (sc_MPI_Comm comm, int do_dup)
+static t8_cmesh_t
+t8_cmesh_new_vertex (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[3] = {
@@ -1260,8 +1260,8 @@ t8_cmesh_new_vertex (sc_MPI_Comm comm, int do_dup)
   return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_line (sc_MPI_Comm comm, int do_dup)
+static t8_cmesh_t
+t8_cmesh_new_line (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[6] = {
@@ -1275,8 +1275,8 @@ t8_cmesh_new_line (sc_MPI_Comm comm, int do_dup)
   return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_tri (sc_MPI_Comm comm, int do_dup)
+static t8_cmesh_t
+t8_cmesh_new_tri (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[9] = {
@@ -1291,8 +1291,8 @@ t8_cmesh_new_tri (sc_MPI_Comm comm, int do_dup)
   return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_tet (sc_MPI_Comm comm, int do_dup)
+static t8_cmesh_t
+t8_cmesh_new_tet (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[12] = {
@@ -1308,8 +1308,8 @@ t8_cmesh_new_tet (sc_MPI_Comm comm, int do_dup)
   return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_quad (sc_MPI_Comm comm, int do_dup)
+static t8_cmesh_t
+t8_cmesh_new_quad (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[12] = {
@@ -1325,8 +1325,8 @@ t8_cmesh_new_quad (sc_MPI_Comm comm, int do_dup)
   return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_hex (sc_MPI_Comm comm, int do_dup)
+static t8_cmesh_t
+t8_cmesh_new_hex (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[24] = {
@@ -1346,8 +1346,8 @@ t8_cmesh_new_hex (sc_MPI_Comm comm, int do_dup)
   return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_pyramid (sc_MPI_Comm comm, int do_dup)
+static t8_cmesh_t
+t8_cmesh_new_pyramid (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[15] = {
@@ -1361,8 +1361,8 @@ t8_cmesh_new_pyramid (sc_MPI_Comm comm, int do_dup)
   return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_prism (sc_MPI_Comm comm, int do_dup)
+static t8_cmesh_t
+t8_cmesh_new_prism (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[18] = {
@@ -1381,32 +1381,32 @@ t8_cmesh_new_prism (sc_MPI_Comm comm, int do_dup)
 }
 
 t8_cmesh_t
-t8_cmesh_new_from_class (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup)
+t8_cmesh_new_from_class (t8_eclass_t eclass, sc_MPI_Comm comm)
 {
   switch (eclass) {
   case T8_ECLASS_VERTEX:
-    return t8_cmesh_new_vertex (comm, do_dup);
+    return t8_cmesh_new_vertex (comm);
     break;
   case T8_ECLASS_LINE:
-    return t8_cmesh_new_line (comm, do_dup);
+    return t8_cmesh_new_line (comm);
     break;
   case T8_ECLASS_TRIANGLE:
-    return t8_cmesh_new_tri (comm, do_dup);
+    return t8_cmesh_new_tri (comm);
     break;
   case T8_ECLASS_QUAD:
-    return t8_cmesh_new_quad (comm, do_dup);
+    return t8_cmesh_new_quad (comm);
     break;
   case T8_ECLASS_TET:
-    return t8_cmesh_new_tet (comm, do_dup);
+    return t8_cmesh_new_tet (comm);
     break;
   case T8_ECLASS_HEX:
-    return t8_cmesh_new_hex (comm, do_dup);
+    return t8_cmesh_new_hex (comm);
     break;
   case T8_ECLASS_PYRAMID:
-    return t8_cmesh_new_pyramid (comm, do_dup);
+    return t8_cmesh_new_pyramid (comm);
     break;
   case T8_ECLASS_PRISM:
-    return t8_cmesh_new_prism (comm, do_dup);
+    return t8_cmesh_new_prism (comm);
     break;
   default:
     SC_ABORT ("Invalid eclass\n");
@@ -1455,8 +1455,8 @@ t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t *
  */
 /* TODO: upgrade with int x,y,z for periodic faces */
 t8_cmesh_t
-t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm,
-                        int do_dup, int do_bcast, int do_partition)
+t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
+                        int do_partition)
 {
   t8_cmesh_t          cmesh;
   int                 num_trees_for_hypercube[T8_ECLASS_COUNT] = {
@@ -1660,7 +1660,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm,
 }
 
 t8_cmesh_t
-t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup, int dim)
+t8_cmesh_new_periodic (sc_MPI_Comm comm, int dim)
 {
   t8_cmesh_t          cmesh;
   t8_eclass_t         tree_class;
@@ -1798,12 +1798,12 @@ t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x, t8_gloidx_t num_y,
 
   if (dim == 2) {
     cmesh = t8_cmesh_new_from_p4est_ext ((void *) my_brick,
-                                         dim, comm, 0, 1, offset + 1);
+                                         dim, comm, 1, offset + 1);
     p4est_connectivity_destroy (my_brick);
   }
   else {
     cmesh = t8_cmesh_new_from_p4est_ext ((void *) my_brick_3d,
-                                         dim, comm, 0, 1, offset + 1);
+                                         dim, comm, 1, offset + 1);
     p8est_connectivity_destroy (my_brick_3d);
   }
   return cmesh;

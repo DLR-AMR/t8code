@@ -87,7 +87,7 @@ t8_basic_forest_partition ()
   int                 level = 2;        /* initial refinement level */
 
   comm = sc_MPI_COMM_WORLD;
-  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, comm, 0, 0, 1);
+  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, comm, 0, 1);
   t8_cmesh_init (&cmesh_partition);
   t8_cmesh_set_derive (cmesh_partition, cmesh);
   t8_cmesh_set_partition_uniform (cmesh_partition, level);
@@ -158,14 +158,14 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
 #endif
 #if 0
 static void
-t8_basic_periodic (int do_dup, int set_level, int dim)
+t8_basic_periodic (int set_level, int dim)
 {
   t8_forest_t         forest;
 
   t8_forest_init (&forest);
 
   t8_forest_set_cmesh (forest, t8_cmesh_new_periodic (sc_MPI_COMM_WORLD,
-                                                      do_dup, dim));
+                                                      dim));
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
 
   t8_forest_set_level (forest, set_level);
@@ -210,13 +210,13 @@ t8_basic_p4est (int do_partition, int create_forest, int forest_level)
 
 #if 0
 static void
-t8_basic_p8est (int do_dup, int x, int y, int z)
+t8_basic_p8est (int x, int y, int z)
 {
   t8_cmesh_t          cmesh;
   p8est_connectivity_t *conn;
 
   conn = p8est_connectivity_new_brick (x, y, z, 0, 0, 0);
-  cmesh = t8_cmesh_new_from_p8est (conn, sc_MPI_COMM_WORLD, do_dup, 0);
+  cmesh = t8_cmesh_new_from_p8est (conn, sc_MPI_COMM_WORLD, 0);
   p8est_connectivity_destroy (conn);
   t8_cmesh_vtk_write_file (cmesh, "t8_p8est_brick", 1.);
   t8_cmesh_unref (&cmesh);
@@ -227,7 +227,7 @@ t8_basic_p8est (int do_dup, int x, int y, int z)
     SC_CHECK_MPI (mpiret);
     p8est_connectivity_reorder (sc_MPI_COMM_WORLD,
                                 mpirank, conn, P8EST_CONNECT_FULL);
-    cmesh = t8_cmesh_new_from_p8est (conn, sc_MPI_COMM_WORLD, do_dup, 0);
+    cmesh = t8_cmesh_new_from_p8est (conn, sc_MPI_COMM_WORLD, 0);
     t8_cmesh_vtk_write_file (cmesh, "t8_p8est_brick_metis", 1.);
   }
 #endif

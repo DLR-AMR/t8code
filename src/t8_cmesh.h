@@ -529,13 +529,12 @@ void                t8_cmesh_destroy (t8_cmesh_t * pcmesh);
  *  The constructed cmesh will be replicated.
  * \param[in]       conn       The p4est connectivity.
  * \param[in]       comm       mpi communicator to be used with the new cmesh.
- * \param[in]       do_dup     Flag whether the communicator shall be duplicated or not.
  * \param[in]       do_partition Flag whether the cmesh should be partitioned or not.
  * \return          A t8_cmesh structure that holds the same connectivity information
  *                  as \a conn.
  */
 t8_cmesh_t          t8_cmesh_new_from_p4est (p4est_connectivity_t * conn,
-                                             sc_MPI_Comm comm, int do_dup,
+                                             sc_MPI_Comm comm,
                                              int do_partition);
 
 /** Constructs a cmesh from a given p8est_connectivity structure.
@@ -548,7 +547,7 @@ t8_cmesh_t          t8_cmesh_new_from_p4est (p4est_connectivity_t * conn,
  *                  as \a conn.
  */
 t8_cmesh_t          t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
-                                             sc_MPI_Comm comm, int do_dup,
+                                             sc_MPI_Comm comm,
                                              int do_partition);
 
 /* TODO: it could possibly be a problem that we do not set the dimension of
@@ -569,15 +568,14 @@ t8_cmesh_t          t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition);
  * \return          A committed t8_cmesh structure with one tree of class \a eclass.
  */
 t8_cmesh_t          t8_cmesh_new_from_class (t8_eclass_t eclass,
-                                             sc_MPI_Comm comm, int do_dup);
+                                             sc_MPI_Comm comm);
 
-t8_cmesh_t          t8_cmesh_new_testhybrid (sc_MPI_Comm comm, int do_dup);
+t8_cmesh_t          t8_cmesh_new_testhybrid (sc_MPI_Comm comm);
 
 /** Construct a hypercube forest from one primitive tree class.
  * \param [in] eclass       This element class determines the dimension and
  *                          the number of trees needed to construct a cube.
  * \param [in] comm         The mpi communicator to be used.
- * \param [in] do_dup       Whether \a comm is to be duplicated.
  * \param [in] do_bcast     If this flag is nonzero the cmesh is only constructed
  *                          on processor 0 and then broadcasted to the other
  *                          processors in \a comm.
@@ -586,7 +584,7 @@ t8_cmesh_t          t8_cmesh_new_testhybrid (sc_MPI_Comm comm, int do_dup);
  * TODO: Add periodic flags for each dimension.
  */
 t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
-                                            sc_MPI_Comm comm, int do_dup,
+                                            sc_MPI_Comm comm,
                                             int do_bcast, int do_partition);
 
 /** Construct a unit interval/square/cube forest that is periodic in each direction.
@@ -594,12 +592,10 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
  * Hypercube?
  * TODO: redundant, remove.
  * \param [in] comm         The mpi communicator to use.
- * \param [in] do_dup       Whether the mpi communicator is to be duplicated.
  * \param [in] dim          The dimension of the forest, 1, 2 or 3.
  * \return                  A valid cmesh, as if _init and _commit had been called.
  */
-t8_cmesh_t          t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup,
-                                           int dim);
+t8_cmesh_t          t8_cmesh_new_periodic (sc_MPI_Comm comm, int dim);
 
 /** Construct a mesh consisting of a given number of same type trees.
  * \param [in] eclass       This element class determines the dimension and

@@ -47,7 +47,7 @@ t8_random_partition (int level)
 
   conn = p8est_connectivity_new_brick (2, 2, 2, 0, 0, 0);
 
-  cmesh = t8_cmesh_new_from_p8est (conn, sc_MPI_COMM_WORLD, 0, 1);
+  cmesh = t8_cmesh_new_from_p8est (conn, sc_MPI_COMM_WORLD, 1);
   p8est_connectivity_destroy (conn);
   snprintf (file, BUFSIZ, "t8_brick_random");
   t8_cmesh_vtk_write_file (cmesh, file, 1.);
@@ -106,8 +106,7 @@ t8_partition (int level, int partition_from)
   SC_CHECK_MPI (mpiret);
 
   conn = p4est_connectivity_new_brick (3, 2, 0, 0);
-  cmesh =
-    t8_cmesh_new_from_p4est (conn, sc_MPI_COMM_WORLD, 0, partition_from);
+  cmesh = t8_cmesh_new_from_p4est (conn, sc_MPI_COMM_WORLD, partition_from);
   p4est_connectivity_destroy (conn);
   snprintf (file, BUFSIZ, "t8_brick");
   t8_cmesh_vtk_write_file (cmesh, file, 1.);
