@@ -589,6 +589,10 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   if (cmesh->set_from != NULL) {
     cmesh->dimension = cmesh->set_from->dimension;
+    if (cmesh->face_knowledge == -1) {
+      /* Keep the face knowledge of the from cmesh, if -1 was specified */
+      cmesh->face_knowledge = cmesh->set_from->face_knowledge;
+    }
     if (cmesh->set_partition) {
       /* The cmesh should be partitioned */
       if (cmesh->set_refine_level > 0) {

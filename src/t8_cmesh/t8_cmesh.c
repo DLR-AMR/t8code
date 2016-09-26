@@ -408,23 +408,23 @@ t8_cmesh_get_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree)
 }
 
 void
-t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t tree_id, int package_id,
-                        int key, void *data, size_t data_size,
+t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
+                        int package_id, int key, void *data, size_t data_size,
                         int data_persists)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (!cmesh->committed);
 
-  t8_stash_add_attribute (cmesh->stash, tree_id, package_id, key, data_size,
+  t8_stash_add_attribute (cmesh->stash, gtree_id, package_id, key, data_size,
                           data, data_persists);
 }
 
 void               *
 t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key,
-                        t8_locidx_t tree_id)
+                        t8_locidx_t ltree_id)
 {
   T8_ASSERT (cmesh->committed);
-  return t8_cmesh_trees_get_attribute (cmesh->trees, tree_id, package_id,
+  return t8_cmesh_trees_get_attribute (cmesh->trees, ltree_id, package_id,
                                        key, NULL);
 }
 
@@ -865,27 +865,27 @@ t8_cmesh_get_num_local_trees (t8_cmesh_t cmesh)
 }
 
 t8_eclass_t
-t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_locidx_t tree_id)
+t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_locidx_t ltree_id)
 {
   t8_ctree_t          tree;
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
 
-  tree = t8_cmesh_get_tree (cmesh, tree_id);
+  tree = t8_cmesh_get_tree (cmesh, ltree_id);
   return tree->eclass;
 }
 
 t8_eclass_t
-t8_cmesh_get_ghost_class (t8_cmesh_t cmesh, t8_locidx_t ghost_id)
+t8_cmesh_get_ghost_class (t8_cmesh_t cmesh, t8_locidx_t lghost_id)
 {
   t8_cghost_t         ghost;
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
-  T8_ASSERT (0 <= ghost_id && ghost_id < cmesh->num_ghosts);
+  T8_ASSERT (0 <= lghost_id && lghost_id < cmesh->num_ghosts);
 
-  ghost = t8_cmesh_trees_get_ghost (cmesh->trees, ghost_id);
+  ghost = t8_cmesh_trees_get_ghost (cmesh->trees, lghost_id);
   return ghost->eclass;
 }
 

@@ -43,9 +43,9 @@
 #include <p4est_connectivity.h>
 #include <p8est_connectivity.h>
 
-/* TODO: do set_mpicomm and figure out dup logic */
 /* TODO: make it legal to call cmesh_set functions multiple times,
  *       just overwrite the previous setting if no inconsistency can occur.
+ *       edit: This should be achieved now.
  */
 
 typedef struct t8_cmesh *t8_cmesh_t;
@@ -130,8 +130,6 @@ t8_shmem_array_t    t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
  *                              \ref t8_cmesh_commit.
  *                             -1: Co not change the face_knowledge level but keep any
  *                                 previously set ones. (Possibly by a previous call to \ref t8_cmesh_set_partition_range)
- *                              TODO: if -1 is given, do NOT change it?
- *                                    This may be a general convention?
  * \param [in]     first_local_tree The global index of the first tree on this process.
  * \param [in]     last_local_tree  The global index of the last tree on this process.
  *                                  If this process should be empty then \a last_local_tree
@@ -250,13 +248,12 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
  *                              In both cases a copy of the data is used by t8_code after t8_cmesh_commit.
  */
 void                t8_cmesh_set_attribute (t8_cmesh_t cmesh,
-                                            t8_gloidx_t tree_id,
+                                            t8_gloidx_t gtree_id,
                                             int package_id, int key,
                                             void *data, size_t data_size,
                                             int data_persists);
 
 /** Insert a face-connection between two trees in a cmesh.
- * TODO: Make it clear by a common convention whether tree ids are local or global.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     tree1        The tree id of the first of the two trees.
  * \param [in]     tree2        The tree id of the second of the two trees.
@@ -414,7 +411,7 @@ t8_ctree_t          t8_cmesh_get_next_tree (t8_cmesh_t cmesh,
  * \a cmesh must be committed before calling this function.
  */
 t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
-                                             t8_locidx_t tree_id);
+                                             t8_locidx_t ltree_id);
 
 /** Return the eclass of a given local ghost.
  * TODO: Should we refer to indices or consequently use cghost_t?
@@ -425,7 +422,7 @@ t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
  * \a cmesh must be committed before calling this function.
  */
 t8_eclass_t         t8_cmesh_get_ghost_class (t8_cmesh_t cmesh,
-                                              t8_locidx_t ghost_id);
+                                              t8_locidx_t lghost_id);
 
 /** Return the global id of a given local tree or ghost.
  * \param [in]    cmesh         The cmesh to be considered.
@@ -458,7 +455,7 @@ void                t8_cmesh_print_profile (t8_cmesh_t cmesh);
  */
 void               *t8_cmesh_get_attribute (t8_cmesh_t cmesh,
                                             int package_id, int key,
-                                            t8_locidx_t tree_id);
+                                            t8_locidx_t ltree_id);
 
 /** Return the shared memory array storing the partition table of
  * a partitioned cmesh.
