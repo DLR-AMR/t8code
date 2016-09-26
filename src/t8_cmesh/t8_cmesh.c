@@ -1709,13 +1709,10 @@ t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees, sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   int                 i;
-  int                 dummy_data = 0;
 
   t8_cmesh_init (&cmesh);
   for (i = 0; i < num_trees; i++) {
     t8_cmesh_set_tree_class (cmesh, i, eclass);
-    /* TODO: as long as we have the bug, that each tree needs at least one
-     *       attribute, we need to set a dummy attribute to the trees */
     if (cmesh->dimension > 0) {
       /* We join each tree with its successor along faces 0 and 1
        * to get a nontrivial connectivity */
