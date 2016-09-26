@@ -265,22 +265,20 @@ t8_basic_partitioned ()
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   t8_cmesh_unref (&cmesh);
 }
-
+#endif
+#if 1
 static void
-t8_basic (int do_dup, int set_level)
+t8_basic ()
 {
-  t8_forest_t         forest;
+  t8_cmesh_t          cmesh, cmesh_partition;
 
-  t8_forest_init (&forest);
-
-  t8_forest_set_cmesh (forest, t8_cmesh_new_from_class (T8_ECLASS_TET,
-                                                        sc_MPI_COMM_WORLD,
-                                                        do_dup));
-  t8_forest_set_scheme (forest, t8_scheme_new_default ());
-
-  t8_forest_set_level (forest, set_level);
-
-  t8_forest_unref (&forest);
+  cmesh = t8_cmesh_new_bigmesh (T8_ECLASS_TET, 190, sc_MPI_COMM_WORLD);
+  t8_cmesh_init (&cmesh_partition);
+  t8_cmesh_set_derive (cmesh_partition, cmesh);
+  t8_cmesh_unref (&cmesh);
+  t8_cmesh_set_partition_uniform (cmesh_partition, 1);
+  t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
+  t8_cmesh_destroy (&cmesh_partition);
 }
 
 #endif
@@ -355,7 +353,7 @@ main (int argc, char **argv)
   t8_global_productionf ("Done testing basic tet mesh.\n");
   t8_basic_hypercube (T8_ECLASS_QUAD, 0, 1, 1);
 #endif
-  t8_basic_forest_partition ();
+  t8_basic ();
 #if 0
   t8_global_productionf ("Testing hypercube cmesh.\n");
 
