@@ -188,8 +188,10 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   int                 F;
   size_t              si;
 
+#if T8_ENABLE_DEBUG
   sc_flopinfo_t       fi, snapshot;
   sc_statinfo_t       stats[3];
+#endif
 
   sc_hash_t          *ghost_ids;
   sc_mempool_t       *ghost_facejoin_mempool;
@@ -207,8 +209,10 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_cghost_t         ghost1, ghost2;
 #endif
 
+#if T8_ENABLE_DEBUG
   sc_flops_start (&fi);
   sc_flops_snap (&fi, &snapshot);
+#endif
 
   T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
 
@@ -220,9 +224,11 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_cmesh_set_shmem_type (comm);       /* TODO: do we actually need the shared array? */
   t8_stash_attribute_sort (cmesh->stash);
 
+#if T8_ENABLE_DEBUG
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[0], snapshot.iwtime, "cmesh_commit_sort");
   sc_flops_snap (&fi, &snapshot);
+#endif
 
   num_hashs = cmesh->num_local_trees > 0 ? cmesh->num_local_trees : 10;
   ghost_facejoin_mempool = sc_mempool_new (sizeof (t8_ghost_facejoin_t));
@@ -273,9 +279,11 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     }
   }
 
+#if T8_ENABLE_DEBUG
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[1], snapshot.iwtime, "cmesh_commit_count");
   sc_flops_snap (&fi, &snapshot);
+#endif
   /********************************************************/
   /*             END COUNTING TREES/GHOSTS                */
   /********************************************************/
@@ -477,11 +485,12 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   sc_MPI_Allreduce (&id1, &cmesh->num_trees, 1, T8_MPI_GLOIDX,
                     sc_MPI_SUM, comm);
 
+#if T8_ENABLE_DEBUG
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[2], snapshot.iwtime, "cmesh_commit_end");
-
   sc_stats_compute (comm, 3, stats);
   sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 3, stats, 1, 1);
+#endif
 }
 
 void
