@@ -277,9 +277,9 @@ t8_forest_populate (t8_forest_t forest)
 {
   t8_gloidx_t         child_in_tree_begin;
   t8_gloidx_t         child_in_tree_end;
-  t8_gloidx_t         count_elements;
-  t8_gloidx_t         num_tree_elements;
-  t8_topidx_t         num_local_trees;
+  t8_locidx_t         count_elements;
+  t8_locidx_t         num_tree_elements;
+  t8_locidx_t         num_local_trees;
   t8_gloidx_t         jt, first_ctree;
   t8_gloidx_t         start, end, et;
   t8_tree_t           tree;
@@ -319,7 +319,7 @@ t8_forest_populate (t8_forest_t forest)
     first_ctree = t8_cmesh_get_first_treeid (forest->cmesh);
     for (jt = forest->first_local_tree, count_elements = 0;
          jt <= forest->last_local_tree; jt++) {
-      tree = (t8_tree_t) t8_sc_array_index_topidx (forest->trees,
+      tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees,
                                                    jt -
                                                    forest->first_local_tree);
       tree_class = tree->eclass = t8_cmesh_get_tree_class (forest->cmesh,
@@ -337,12 +337,12 @@ t8_forest_populate (t8_forest_t forest)
       /* Allocate elements for this processor. */
       sc_array_init_size (telements, t8_element_size (eclass_scheme),
                           num_tree_elements);
-      element = (t8_element_t *) t8_sc_array_index_topidx (telements, 0);
+      element = (t8_element_t *) t8_sc_array_index_locidx (telements, 0);
       eclass_scheme->elem_set_linear_id (element, forest->set_level, start);
       count_elements++;
       for (et = start + 1; et < end; et++, count_elements++) {
         element_succ =
-          (t8_element_t *) t8_sc_array_index_topidx (telements, et - start);
+          (t8_element_t *) t8_sc_array_index_locidx (telements, et - start);
         eclass_scheme->elem_successor (element, element_succ,
                                        forest->set_level);
         /* TODO: process elements here */
@@ -410,7 +410,7 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
 {
   t8_tree_t           tree, fromtree;
   t8_gloidx_t         num_tree_elements;
-  t8_topidx_t         jt, number_of_trees;
+  t8_locidx_t         jt, number_of_trees;
   t8_eclass_scheme_t *eclass_scheme;
 
   T8_ASSERT (forest != NULL);
@@ -423,8 +423,8 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
     sc_array_new_size (sizeof (t8_tree_struct_t), number_of_trees);
   sc_array_copy (forest->trees, from->trees);
   for (jt = 0; jt < number_of_trees; jt++) {
-    tree = (t8_tree_t) t8_sc_array_index_topidx (forest->trees, jt);
-    fromtree = (t8_tree_t) t8_sc_array_index_topidx (from->trees, jt);
+    tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, jt);
+    fromtree = (t8_tree_t) t8_sc_array_index_locidx (from->trees, jt);
     tree->eclass = fromtree->eclass;
     eclass_scheme = forest->scheme->eclass_schemes[tree->eclass];
     num_tree_elements = fromtree->elements.elem_count;
@@ -782,14 +782,14 @@ static void
 t8_forest_free_trees (t8_forest_t forest)
 {
   t8_tree_t           tree;
-  t8_topidx_t         jt, number_of_trees;
+  t8_locidx_t         jt, number_of_trees;
 
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->committed);
 
   number_of_trees = forest->trees->elem_count;
   for (jt = 0; jt < number_of_trees; jt++) {
-    tree = (t8_tree_t) t8_sc_array_index_topidx (forest->trees, jt);
+    tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, jt);
     sc_array_reset (&tree->elements);
   }
   sc_array_destroy (forest->trees);

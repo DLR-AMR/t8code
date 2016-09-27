@@ -80,7 +80,7 @@ t8_anchor_element (t8_forest_t forest,
 /* refine the forest in a band, given by a plane E and two constants
  * c_min, c_max. We refine the cells in the band c_min*E, c_max*E */
 static int
-t8_band_adapt (t8_forest_t forest, t8_topidx_t which_tree,
+t8_band_adapt (t8_forest_t forest, t8_locidx_t which_tree,
                t8_eclass_scheme_t * ts,
                int num_elements, t8_element_t * elements[])
 {

@@ -50,7 +50,7 @@ T8_EXTERN_C_BEGIN ();
  * initialized elements before the elements that they replace are destroyed.
  *
  * \param [in] forest      the forest
- * \param [in] which_tree  the tree containing \a outgoing and \a incoming
+ * \param [in] which_tree  the local tree containing \a outgoing and \a incoming
  * \param [in] ts          the eclass scheme of the tree
  * \param [in] num_outgoing The number of outgoing elements.
  * \param [in] outgoing     The outgoing elements: after the callback, the
@@ -64,7 +64,7 @@ T8_EXTERN_C_BEGIN ();
  * be the number of children, and vice versa if a family is being coarsened.
  */
 typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
-                                            t8_topidx_t which_tree,
+                                            t8_locidx_t which_tree,
                                             t8_eclass_scheme_t * ts,
                                             int num_outgoing,
                                             t8_element_t * outgoing[],
@@ -79,7 +79,7 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
  * of the element array for refinement. In this case the other entries of
  * the element array are undefined.
  * \param [in] forest      the forest
- * \param [in] which_tree  the global tree containing \a elements
+ * \param [in] which_tree  the local tree containing \a elements
  * \param [in] ts          the eclass scheme of the tree
  * \param [in] num_elements the number of entries in \a elements
  * \param [in] elements    Pointers to a family or, if second entry is NULL,
@@ -88,9 +88,8 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
  *         smaller zero if the family \a elements shall be coarsened
  *         zero else.
  */
-/* TODO: Change topidx to gloidx */
 typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
-                                          t8_topidx_t which_tree,
+                                          t8_locidx_t which_tree,
                                           t8_eclass_scheme_t * ts,
                                           int num_elements,
                                           t8_element_t * elements[]);

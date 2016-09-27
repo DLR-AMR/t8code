@@ -33,7 +33,7 @@
 #include <t8_forest/t8_forest_types.h>  /* TODO: This file should not be included from an application */
 /* This function refines every element */
 static int
-t8_basic_adapt_refine (t8_forest_t forest, t8_topidx_t which_tree,
+t8_basic_adapt_refine (t8_forest_t forest, t8_locidx_t which_tree,
                        t8_eclass_scheme_t * ts,
                        int num_elements, t8_element_t * elements[])
 {
@@ -56,7 +56,7 @@ t8_basic_adapt_refine (t8_forest_t forest, t8_topidx_t which_tree,
 
 /* This function coarsens each element */
 static int
-t8_basic_adapt_coarsen (t8_forest_t forest, t8_topidx_t which_tree,
+t8_basic_adapt_coarsen (t8_forest_t forest, t8_locidx_t which_tree,
                         t8_eclass_scheme_t * ts,
                         int num_elements, t8_element_t * elements[])
 {
