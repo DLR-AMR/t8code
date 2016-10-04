@@ -101,17 +101,32 @@ t8_band_adapt (t8_forest_t forest, t8_locidx_t which_tree,
   /* Calculate elem_anchor - c_min n */
   t8_vec3_xmay (elem_anchor, adapt_data->c_min, normal);
 
-  if (level < 3 && t8_vec3_dot (elem_anchor, normal) >= 0) {
-    /* if level is smaller 3 and
-     * anchor node is to the right of c_min*E,
+  /* The purpose of the factor C*h is that the levels get smaller, the
+   * closer we get to the interface. We refine a cell if it is at most
+   * C times its own height away from the interface */
+  if (t8_vec3_dot (elem_anchor, normal) >= 0) {
+    /* if the anchor node is to the right of c_min*E,
      * check if it is to the left of c_max*E */
 
     /* set elem_anchor to the original anchor - c_max*normal */
     t8_vec3_xmay (elem_anchor, adapt_data->c_max - adapt_data->c_min, normal);
     if (t8_vec3_dot (elem_anchor, normal) <= 0) {
-      /* We do refine */
-      return 1;
+      if (level < 1) {
+        /* We do refine if level smaller 1 and the anchor is
+         * to the left of c_max*E */
+        return 1;
+      }
     }
+    else if (num_elements > 1 && level > 0) {
+      /* Otherwise, we coarse if we have a family and level is greater 0 */
+      return -1;
+    }
+  }
+  else if (num_elements > 1 && level > 0) {
+    /* If element lies out of the refinement region and a family was given
+     * as argument, we coarsen to level 0 */
+    /* set elem_midpoint to the original midpoint - c_max*normal */
+    return -1;
   }
   return 0;
 }
@@ -167,9 +182,9 @@ t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
     t8_forest_init (&forest_adapt);
     t8_forest_set_adapt (forest_adapt, forest, t8_band_adapt, NULL, 1);
     /* Set the minimum and maximum x-coordinates as user data */
-    adapt_data.c_min = x_min_max[0];
-    adapt_data.c_max = x_min_max[1];
-    adapt_data.normal[0] = t;
+    adapt_data.c_min = x_min_max[0] + t;
+    adapt_data.c_max = x_min_max[1] + t;
+    adapt_data.normal[0] = 1;
     adapt_data.normal[1] = 1;
     adapt_data.normal[2] = 0;
     t8_forest_set_user_data (forest_adapt, (void *) &adapt_data);
@@ -179,9 +194,9 @@ t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
     if (!no_vtk) {
       int                 time_step;
       time_step = t / delta_t;
-      snprintf (forest_vtu, BUFSIZ, "%s_forest_adapt_%.3d_", msh_file,
+      snprintf (forest_vtu, BUFSIZ, "%s_forest_adapt_%03d", msh_file,
                 time_step);
-      snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_adapt_%.3d_", msh_file,
+      snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_adapt_%03d", msh_file,
                 time_step);
       t8_forest_write_vtk (forest_adapt, forest_vtu);
       t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_adapt),
@@ -199,20 +214,17 @@ t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
 #endif
     /* Set the vtu output name */
     if (!no_vtk) {
-      snprintf (forest_vtu, BUFSIZ, "%s_forest_partition", msh_file);
-      snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_partition", msh_file);
+      int                 time_step;
+      time_step = t / delta_t;
+      snprintf (forest_vtu, BUFSIZ, "%s_forest_partition_%03d", msh_file,
+                time_step);
+      snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_partition_%03d", msh_file,
+                time_step);
       t8_forest_write_vtk (forest_partition, forest_vtu);
       t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_partition),
                                cmesh_vtu, 1.0);
+      t8_debugf ("Wrote partitioned forest and cmesh\n");
     }
-    /* Set the vtu output name */
-    snprintf (forest_vtu, BUFSIZ, "%s_forest_partition", msh_file);
-    snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_partition", msh_file);
-    t8_debugf ("Wrote partitioned forest and cmesh\n");
-    t8_forest_write_vtk (forest_partition, forest_vtu);
-    t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_partition),
-                             cmesh_vtu, 1.0);
-
     /* Print runtimes and statistics of forest and cmesh partition */
     t8_forest_print_profile (forest_partition);
     t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
@@ -288,7 +300,7 @@ main (int argc, char *argv[])
   else {
     /* Execute this part of the code if all options are correctly set */
     t8_time_forest_cmesh_mshfile (fileprefix, dim, sc_MPI_COMM_WORLD, level,
-                                  no_vtk, x_min_max, 0.5, 0.1);
+                                  no_vtk, x_min_max, 1, 0.08);
   }
   sc_options_destroy (opt);
   sc_finalize ();
