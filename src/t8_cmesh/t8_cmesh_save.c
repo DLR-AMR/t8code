@@ -663,6 +663,9 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
   SC_CHECK_MPI (mpiret);
 
   T8_ASSERT (mpisize >= num_files);
+  if (sc_shmem_get_type (comm) == SC_SHMEM_NOT_SET) {
+    sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
+  }
   /* First primitive loading strategy:
    * each process with rank smaller than number of files
    * loads a file.
@@ -702,7 +705,6 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   /* We now create the cmeshs offset in order to properly
    * set the first tree for the empty processes */
-  sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
   t8_cmesh_gather_treecount (cmesh, comm);
   if (cmesh->mpirank >= num_files) {
     /* Since there are no bigger processes with trees on them, we can
