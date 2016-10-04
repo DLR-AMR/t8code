@@ -125,13 +125,14 @@ t8_band_adapt (t8_forest_t forest, t8_locidx_t which_tree,
 static void
 t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
                               sc_MPI_Comm comm, int init_level, int no_vtk,
-                              double x_min_max[2])
+                              double x_min_max[2], double T, double delta_t)
 {
   t8_cmesh_t          cmesh;
   t8_cmesh_t          cmesh_partition;
   char                forest_vtu[BUFSIZ], cmesh_vtu[BUFSIZ];
   adapt_data_t        adapt_data;
   t8_forest_t         forest, forest_adapt, forest_partition;
+  double              t;
 
   /* Create a cmesh from the given mesh files */
   cmesh = t8_cmesh_from_msh_file ((char *) msh_file, 1, comm, mesh_dim, 0);
@@ -159,55 +160,67 @@ t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
   t8_forest_set_level (forest, init_level);
   /* Commit the forest */
   t8_forest_commit (forest);
-  /* Adapt the forest */
-  t8_forest_init (&forest_adapt);
-  t8_forest_set_adapt (forest_adapt, forest, t8_band_adapt, NULL, 1);
-  /* Set the minimum and maximum x-coordinates as user data */
-  adapt_data.c_min = x_min_max[0];
-  adapt_data.c_max = x_min_max[1];
-  adapt_data.normal[0] = 1;
-  adapt_data.normal[1] = 0;
-  adapt_data.normal[2] = 0;
-  t8_forest_set_user_data (forest_adapt, (void *) &adapt_data);
-  /* Commit the adapted forest */
-  t8_forest_commit (forest_adapt);
-  /* write vtk files for adapted forest and cmesh */
-  if (!no_vtk) {
-    snprintf (forest_vtu, BUFSIZ, "%s_forest_adapt", msh_file);
-    snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_adapt", msh_file);
-    t8_forest_write_vtk (forest_adapt, forest_vtu);
-    t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_adapt),
-                             cmesh_vtu, 1.0);
-  }
-  /* partition the adapted forest */
-  t8_forest_init (&forest_partition);
-  t8_forest_set_partition (forest_partition, forest_adapt, 0);
-  /* enable profiling for the partitioned forest */
-  t8_forest_set_profiling (forest_partition, 1);
-  t8_forest_commit (forest_partition);
+  /* Start the time loop, in each time step the refinement front  moves
+   * further through the domain */
+  for (t = 0; t < T; t += delta_t) {
+    /* Adapt the forest */
+    t8_forest_init (&forest_adapt);
+    t8_forest_set_adapt (forest_adapt, forest, t8_band_adapt, NULL, 1);
+    /* Set the minimum and maximum x-coordinates as user data */
+    adapt_data.c_min = x_min_max[0];
+    adapt_data.c_max = x_min_max[1];
+    adapt_data.normal[0] = t;
+    adapt_data.normal[1] = 1;
+    adapt_data.normal[2] = 0;
+    t8_forest_set_user_data (forest_adapt, (void *) &adapt_data);
+    /* Commit the adapted forest */
+    t8_forest_commit (forest_adapt);
+    /* write vtk files for adapted forest and cmesh */
+    if (!no_vtk) {
+      int                 time_step;
+      time_step = t / delta_t;
+      snprintf (forest_vtu, BUFSIZ, "%s_forest_adapt_%.3d_", msh_file,
+                time_step);
+      snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_adapt_%.3d_", msh_file,
+                time_step);
+      t8_forest_write_vtk (forest_adapt, forest_vtu);
+      t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_adapt),
+                               cmesh_vtu, 1.0);
+    }
+    /* partition the adapted forest */
+    t8_forest_init (&forest_partition);
+    t8_forest_set_partition (forest_partition, forest_adapt, 0);
+    /* enable profiling for the partitioned forest */
+    t8_forest_set_profiling (forest_partition, 1);
+    t8_forest_commit (forest_partition);
 #if USE_CMESH_PARTITION
-  /* Repartition the cmesh of the forest */
-  t8_forest_partition_cmesh (forest_partition, comm, 1);
+    /* Repartition the cmesh of the forest */
+    t8_forest_partition_cmesh (forest_partition, comm, 1);
 #endif
-  /* Set the vtu output name */
-  if (!no_vtk) {
+    /* Set the vtu output name */
+    if (!no_vtk) {
+      snprintf (forest_vtu, BUFSIZ, "%s_forest_partition", msh_file);
+      snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_partition", msh_file);
+      t8_forest_write_vtk (forest_partition, forest_vtu);
+      t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_partition),
+                               cmesh_vtu, 1.0);
+    }
+    /* Set the vtu output name */
     snprintf (forest_vtu, BUFSIZ, "%s_forest_partition", msh_file);
     snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_partition", msh_file);
+    t8_debugf ("Wrote partitioned forest and cmesh\n");
     t8_forest_write_vtk (forest_partition, forest_vtu);
     t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_partition),
                              cmesh_vtu, 1.0);
-  }
-  /* Set the vtu output name */
-  snprintf (forest_vtu, BUFSIZ, "%s_forest_partition", msh_file);
-  snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_partition", msh_file);
-  t8_debugf ("Wrote partitioned forest and cmesh\n");
-  t8_forest_write_vtk (forest_partition, forest_vtu);
-  t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_partition), cmesh_vtu,
-                           1.0);
 
-  /* Print runtimes and statistics of forest and cmesh partition */
-  t8_forest_print_profile (forest_partition);
-  t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
+    /* Print runtimes and statistics of forest and cmesh partition */
+    t8_forest_print_profile (forest_partition);
+    t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
+    /* Set forest to the partitioned forest, so it gets adapted
+     * in the next time step. */
+    forest = forest_partition;
+    /* TIME-LOOP ends here */
+  }
   t8_cmesh_save (t8_forest_get_cmesh (forest_partition), "cmesh_time_forest");
   /* memory clean-up */
   t8_forest_unref (&forest_partition);
@@ -275,7 +288,7 @@ main (int argc, char *argv[])
   else {
     /* Execute this part of the code if all options are correctly set */
     t8_time_forest_cmesh_mshfile (fileprefix, dim, sc_MPI_COMM_WORLD, level,
-                                  no_vtk, x_min_max);
+                                  no_vtk, x_min_max, 0.5, 0.1);
   }
   sc_options_destroy (opt);
   sc_finalize ();
