@@ -243,9 +243,10 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
 t8_cmesh_t
 t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
                              const char *cmesh_file, int num_files,
-                             sc_MPI_Comm comm)
+                             sc_MPI_Comm comm, int init_level)
 {
   t8_cmesh_t          cmesh;
+  t8_cmesh_t          cmesh_partition;
   T8_ASSERT (msh_file == NULL || cmesh_file == NULL);
 
   if (msh_file != NULL) {
@@ -260,7 +261,14 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
     cmesh = t8_cmesh_load_and_distribute (cmesh_file, num_files, comm);
   }
   SC_CHECK_ABORT (cmesh != NULL, "Error when creating cmesh.\n");
-  return cmesh;
+
+  /* partition the cmesh uniformly */
+  t8_cmesh_init (&cmesh_partition);
+  t8_cmesh_set_derive (cmesh_partition, cmesh);
+  t8_cmesh_set_partition_uniform (cmesh_partition, init_level);
+  t8_cmesh_commit (cmesh_partition, comm);
+  t8_cmesh_unref (&cmesh);
+  return cmesh_partition;
 }
 
 int
@@ -331,13 +339,14 @@ main (int argc, char *argv[])
     /* Execute this part of the code if all options are correctly set */
     if (mshfileprefix != NULL) {
       cmesh = t8_time_forest_create_cmesh (mshfileprefix, dim, NULL, -1,
-                                           sc_MPI_COMM_WORLD);
+                                           sc_MPI_COMM_WORLD, level);
       vtu_prefix = mshfileprefix;
     }
     else {
       T8_ASSERT (cmeshfileprefix != NULL);
       cmesh = t8_time_forest_create_cmesh (NULL, -1, cmeshfileprefix,
-                                           num_files, sc_MPI_COMM_WORLD);
+                                           num_files, sc_MPI_COMM_WORLD,
+                                           level);
       vtu_prefix = cmeshfileprefix;
     }
     t8_time_forest_cmesh_mshfile (cmesh, vtu_prefix,
