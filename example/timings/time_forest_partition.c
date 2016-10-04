@@ -131,26 +131,20 @@ t8_band_adapt (t8_forest_t forest, t8_locidx_t which_tree,
   return 0;
 }
 
-#if 1
-#define NUM_STATS 9
 #define USE_CMESH_PARTITION 1   /* Set this to false to use a replicated cmesh
                                  * cmesh throughout the function */
 /* Create a cmesh from a .msh files uniform level 0
  * partitioned. */
 static void
-t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
+t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
                               sc_MPI_Comm comm, int init_level, int no_vtk,
                               double x_min_max[2], double T, double delta_t)
 {
-  t8_cmesh_t          cmesh;
   t8_cmesh_t          cmesh_partition;
   char                forest_vtu[BUFSIZ], cmesh_vtu[BUFSIZ];
   adapt_data_t        adapt_data;
   t8_forest_t         forest, forest_adapt, forest_partition;
   double              t;
-
-  /* Create a cmesh from the given mesh files */
-  cmesh = t8_cmesh_from_msh_file ((char *) msh_file, 1, comm, mesh_dim, 0);
 
   t8_global_productionf ("Committed cmesh with"
                          " %lli global trees.\n",
@@ -194,9 +188,9 @@ t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
     if (!no_vtk) {
       int                 time_step;
       time_step = t / delta_t;
-      snprintf (forest_vtu, BUFSIZ, "%s_forest_adapt_%03d", msh_file,
+      snprintf (forest_vtu, BUFSIZ, "%s_forest_adapt_%03d", vtu_prefix,
                 time_step);
-      snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_adapt_%03d", msh_file,
+      snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_adapt_%03d", vtu_prefix,
                 time_step);
       t8_forest_write_vtk (forest_adapt, forest_vtu);
       t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_adapt),
@@ -216,9 +210,9 @@ t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
     if (!no_vtk) {
       int                 time_step;
       time_step = t / delta_t;
-      snprintf (forest_vtu, BUFSIZ, "%s_forest_partition_%03d", msh_file,
+      snprintf (forest_vtu, BUFSIZ, "%s_forest_partition_%03d", vtu_prefix,
                 time_step);
-      snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_partition_%03d", msh_file,
+      snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_partition_%03d", vtu_prefix,
                 time_step);
       t8_forest_write_vtk (forest_partition, forest_vtu);
       t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_partition),
@@ -239,9 +233,35 @@ t8_time_forest_cmesh_mshfile (const char *msh_file, int mesh_dim,
   t8_cmesh_destroy (&cmesh_partition);
 }
 
-#undef NUM_STATS
 #undef USE_CMESH_PARTITION
-#endif
+
+/* Construct a cmesh either from a .msh mesh file or from a
+ * collection of cmesh files constructed with t8_cmesh_save.
+ * If msh_file is NULL, the cmesh is loaded from the cmesh_file and num_files
+ * must be specified. If cmesh_file is NULL, mthe cmesh is loaded from the .msh
+ * file and mesh_dim must be specified. */
+t8_cmesh_t
+t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
+                             const char *cmesh_file, int num_files,
+                             sc_MPI_Comm comm)
+{
+  t8_cmesh_t          cmesh;
+  T8_ASSERT (msh_file == NULL || cmesh_file == NULL);
+
+  if (msh_file != NULL) {
+    /* Create a cmesh from the given mesh files */
+    cmesh = t8_cmesh_from_msh_file ((char *) msh_file, 1, comm, mesh_dim, 0);
+  }
+  else {
+    T8_ASSERT (cmesh_file != NULL);
+    SC_CHECK_ABORT (num_files > 0, "Must specify valid number of files.\n");
+    /* Load the cmesh from the stored files and evenly distribute it
+     * among all ranks */
+    cmesh = t8_cmesh_load_and_distribute (cmesh_file, num_files, comm);
+  }
+  SC_CHECK_ABORT (cmesh != NULL, "Error when creating cmesh.\n");
+  return cmesh;
+}
 
 int
 main (int argc, char *argv[])
@@ -250,9 +270,11 @@ main (int argc, char *argv[])
   int                 first_argc;
   int                 level;
   int                 help = 0, no_vtk;
-  int                 dim;
+  int                 dim, num_files;
   sc_options_t       *opt;
-  const char         *fileprefix;
+  t8_cmesh_t          cmesh;
+  const char         *mshfileprefix, *cmeshfileprefix;
+  const char         *vtu_prefix;
   double              x_min_max[2];     /* At position 0 the minumum x-coordinate,
                                            at position 1 the maximum x-coordinate. */
 
@@ -273,10 +295,18 @@ main (int argc, char *argv[])
                          "Display a short help message.");
   sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk,
                          "Do not write vtk output.");
-  sc_options_add_string (opt, 'f', "file", &fileprefix, NULL,
-                         "The input mesh "
-                         "file prefix. The files must end in .msh and be "
+  sc_options_add_string (opt, 'f', "mshfile", &mshfileprefix, NULL,
+                         "If specified, the cmesh is constructed from a .msh file with "
+                         "the given prefix. The files must end in .msh and be "
                          "created with gmsh.");
+  sc_options_add_string (opt, 'l', "cmeshfile", &cmeshfileprefix, NULL,
+                         "If specified, the cmesh is constructed from a collection "
+                         "of cmesh files. Created with t8_cmesh_save."
+                         "The number of files must then be specified with the -n "
+                         "option.");
+  sc_options_add_int (opt, 'n', "nfiles", &num_files, -1,
+                      "If the -l option is used, the number of cmesh files must "
+                      "be specified as an argument here.");
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The initial uniform "
                       "refinement level of the forest.");
@@ -299,7 +329,19 @@ main (int argc, char *argv[])
   }
   else {
     /* Execute this part of the code if all options are correctly set */
-    t8_time_forest_cmesh_mshfile (fileprefix, dim, sc_MPI_COMM_WORLD, level,
+    if (mshfileprefix != NULL) {
+      cmesh = t8_time_forest_create_cmesh (mshfileprefix, dim, NULL, -1,
+                                           sc_MPI_COMM_WORLD);
+      vtu_prefix = mshfileprefix;
+    }
+    else {
+      T8_ASSERT (cmeshfileprefix != NULL);
+      cmesh = t8_time_forest_create_cmesh (NULL, -1, cmeshfileprefix,
+                                           num_files, sc_MPI_COMM_WORLD);
+      vtu_prefix = cmeshfileprefix;
+    }
+    t8_time_forest_cmesh_mshfile (cmesh, vtu_prefix,
+                                  sc_MPI_COMM_WORLD, level,
                                   no_vtk, x_min_max, 1, 0.08);
   }
   sc_options_destroy (opt);
