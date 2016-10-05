@@ -327,7 +327,8 @@ main (int argc, char *argv[])
   first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT,
                                  opt, argc, argv);
   /* check for wrong usage of arguments */
-  if (first_argc < 0 || first_argc != argc || dim < 2 || dim > 3) {
+  if (first_argc < 0 || first_argc != argc || dim < 2 || dim > 3
+      || (cmeshfileprefix == NULL && mshfileprefix == NULL)) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
