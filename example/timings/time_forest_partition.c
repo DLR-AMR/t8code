@@ -41,6 +41,7 @@ typedef struct
 {
   double              c_min, c_max;     /* constants that define the thickness of the refinement region */
   double              normal[3];        /* normal vector to the plane E */
+  int                 base_level;       /* A given level that is not coarsend further, see -l argument */
 } adapt_data_t;
 
 /* Simple 3 dimensional vector product */
@@ -84,7 +85,7 @@ t8_band_adapt (t8_forest_t forest, t8_locidx_t which_tree,
                t8_eclass_scheme_t * ts,
                int num_elements, t8_element_t * elements[])
 {
-  int                 level;
+  int                 level, base_level;
   double              elem_anchor[3];
   double             *normal;
   adapt_data_t       *adapt_data;
@@ -98,6 +99,7 @@ t8_band_adapt (t8_forest_t forest, t8_locidx_t which_tree,
   /* Get the minimum and maximum x-coordinate from the user data pointer of forest */
   adapt_data = (adapt_data_t *) t8_forest_get_user_data (forest);
   normal = adapt_data->normal;
+  base_level = adapt_data->base_level;
   /* Calculate elem_anchor - c_min n */
   t8_vec3_xmay (elem_anchor, adapt_data->c_min, normal);
 
@@ -111,20 +113,21 @@ t8_band_adapt (t8_forest_t forest, t8_locidx_t which_tree,
     /* set elem_anchor to the original anchor - c_max*normal */
     t8_vec3_xmay (elem_anchor, adapt_data->c_max - adapt_data->c_min, normal);
     if (t8_vec3_dot (elem_anchor, normal) <= 0) {
-      if (level < 1) {
-        /* We do refine if level smaller 1 and the anchor is
+      if (level < 1 + base_level) {
+        /* We do refine if level smaller 1+base level and the anchor is
          * to the left of c_max*E */
         return 1;
       }
     }
-    else if (num_elements > 1 && level > 0) {
-      /* Otherwise, we coarse if we have a family and level is greater 0 */
+    else if (num_elements > 1 && level > base_level) {
+      /* Otherwise, we coarse if we have a family and level is greater
+       * than the base level. */
       return -1;
     }
   }
-  else if (num_elements > 1 && level > 0) {
+  else if (num_elements > 1 && level > base_level) {
     /* If element lies out of the refinement region and a family was given
-     * as argument, we coarsen to level 0 */
+     * as argument, we coarsen to level base level */
     /* set elem_midpoint to the original midpoint - c_max*normal */
     return -1;
   }
