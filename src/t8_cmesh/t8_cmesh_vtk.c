@@ -105,7 +105,8 @@ t8_cmesh_write_pvtu (const char *filename, int num_procs, int write_tree,
   }
 
   for (p = 0; p < num_procs; ++p) {
-    fprintf (pvtufile, "    <Piece Source=\"%s_%04d.vtu\"/>\n", filename, p);
+    fprintf (pvtufile, "    <Piece Source=\"%s_%04d.vtu\"/>\n",
+             basename (filename), p);
   }
   fprintf (pvtufile, "  </PUnstructuredGrid>\n");
   fprintf (pvtufile, "</VTKFile>\n");
