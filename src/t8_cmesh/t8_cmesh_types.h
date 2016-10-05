@@ -97,7 +97,7 @@ typedef struct t8_cmesh
 #if 0
   t8_cmesh_from_t     from_method;      /* TODO: Document */
 #endif
-  t8_cmesh_t          set_from; /**< If this cmesh shall be derived from an
+  struct t8_cmesh    *set_from; /**< If this cmesh shall be derived from an
                                   existing cmesh by copy or more elaborate
                                   modification, we store a pointer to this
                                   other cmesh here. */

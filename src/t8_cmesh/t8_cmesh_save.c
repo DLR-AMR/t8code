@@ -207,7 +207,6 @@ t8_cmesh_load_tree_attributes (t8_cmesh_t cmesh, FILE * fp)
       T8_SAVE_CHECK_CLOSE (ret == 2, fp);
       /* We currently only support vertices as attributes.
        * Those have t8 package id and key 0 */
-      t8_debugf("tree %li\n", (long)itree);
 #if 0
       /* TODO: We cannot check if the attribute package id is t8_get_package_id,
        *       since this id can change from program to program.
