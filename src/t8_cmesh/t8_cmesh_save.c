@@ -28,6 +28,7 @@
  */
 
 #include <t8_eclass.h>
+#include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_save.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
@@ -645,17 +646,89 @@ t8_cmesh_load (const char *filename, sc_MPI_Comm comm)
   return cmesh;
 }
 
+/* Query whether a given process will open a cmesh saved file.
+ * This depends on the number of processes, the number of files and
+ * the load mode.
+ * In load mode simple, if rank i is smaller than the number of files,
+ * rank i opens file number i.
+ * In load mode bgq, there must be at leas num_files compute nodes
+ * and on the i-th node exactly one process opens file i.
+ * This function returns true, if the given rank will load a file and
+ * it stores the number of the file in file_to_load.
+ */
+static int
+t8_cmesh_load_proc_loads (int mpirank, int mpisize, int num_files,
+                          sc_MPI_Comm comm, t8_load_mode_t mode,
+                          int *file_to_load)
+{
+  sc_MPI_Comm        *inter = NULL, *intra = NULL;
+  int                 mpiret, interrank, intrarank, intersize;
+
+  /* Fill with invalid value */
+  *file_to_load = -1;
+  switch (mode) {
+  case T8_LOAD_SIMPLE:
+    /* In simple mode, process i opens file i, if i < num_files */
+    if (mpirank < num_files) {
+      /* Open file mpirank */
+      *file_to_load = mpirank;
+      return 1;
+    }
+    else {
+      /* Do not open any files */
+      return 0;
+    }
+    break;
+  case T8_LOAD_BGQ:
+    /* In bgq mode on each shared memory node is one process that
+     * opens a file. */
+    /* Compute internode and intranode communicator */
+    sc_mpi_comm_attach_node_comms (comm, 0);
+    /* Store internode and intranode communicator */
+    sc_mpi_comm_get_node_comms (comm, intra, inter);
+    /* Abort if we could not compute these communicators */
+    SC_CHECK_ABORT (*intra != sc_MPI_COMM_NULL &&
+                    *inter != sc_MPI_COMM_NULL,
+                    "Could not get proper internode "
+                    "and intranode communicators.\n");
+    mpiret = sc_MPI_Comm_size (*inter, &intersize);
+    SC_CHECK_MPI (mpiret);
+    /* Check if the number of nodes is at least as big as the number of files */
+    SC_CHECK_ABORTF (intersize < num_files, "Must have more compute nodes "
+                     "than files. %i nodes and %i fields are given.\n",
+                     intersize, num_files);
+    mpiret = sc_MPI_Comm_rank (*inter, &interrank);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Comm_rank (*inter, &intrarank);
+    SC_CHECK_MPI (mpiret);
+    /* If the current node number i is smaller than the number of files
+     * than the first process on this node loads the file i */
+    if (interrank < num_files && intrarank == 0) {
+      *file_to_load = interrank;
+      return 1;
+    }
+    else {
+      return 0;
+    }
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+  SC_ABORT_NOT_REACHED ();
+}
+
 /* Load the files fileprefix_0000.cmesh, ... , fileprefix_N.cmesh
  * (N = num_files - 1)
  * on N processes and repartition the cmesh to all calling processes.
  */
 t8_cmesh_t
 t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
-                              sc_MPI_Comm comm)
+                              sc_MPI_Comm comm, t8_load_mode_t mode)
 {
   t8_cmesh_t          cmesh;
   char                buffer[BUFSIZ];
   int                 mpiret, mpirank, mpisize;
+  int                 file_to_load;
 
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -670,9 +743,11 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
    * each process with rank smaller than number of files
    * loads a file.
    */
-  if (mpirank < num_files) {
+  if (t8_cmesh_load_proc_loads (mpirank, mpisize, num_files, comm,
+                                T8_LOAD_SIMPLE, &file_to_load)) {
     T8_ASSERT (fileprefix != NULL);
-    snprintf (buffer, BUFSIZ, "%s_%04d.cmesh", fileprefix, mpirank);
+    T8_ASSERT (0 <= file_to_load && file_to_load < num_files);
+    snprintf (buffer, BUFSIZ, "%s_%04d.cmesh", fileprefix, file_to_load);
     cmesh = t8_cmesh_load (buffer, comm);
     if (num_files == mpisize) {
       /* Each process has loaded the cmesh and we can return */

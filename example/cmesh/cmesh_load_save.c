@@ -33,7 +33,7 @@ t8_cmesh_load_distribute (const char *fileprefix, int num_files, int no_vtk)
   t8_cmesh_t          cmesh, cmesh_partition;
 
   cmesh = t8_cmesh_load_and_distribute (fileprefix, num_files,
-                                        sc_MPI_COMM_WORLD);
+                                        sc_MPI_COMM_WORLD, T8_LOAD_SIMPLE);
   if (cmesh == NULL) {
     t8_errorf ("Error when reading cmesh\n");
     return;

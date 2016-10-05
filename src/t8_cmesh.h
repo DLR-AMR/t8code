@@ -29,6 +29,7 @@
 
 #include <t8.h>
 #include <t8_shmem.h>
+#include <t8_cmesh/t8_cmesh_save.h>
 
 /* TODO: If including eclass were just for the cmesh_new routines, we should
  *       move them into a different file.
@@ -341,7 +342,8 @@ t8_cmesh_t          t8_cmesh_load (const char *filename, sc_MPI_Comm comm);
 /* TODO: Document */
 t8_cmesh_t          t8_cmesh_load_and_distribute (const char *fileprefix,
                                                   int num_files,
-                                                  sc_MPI_Comm comm);
+                                                  sc_MPI_Comm comm,
+                                                  t8_load_mode_t mode);
 
 /** Check whether a given MPI communicator assigns the same rank and mpisize
   * as stored in a cmesh.

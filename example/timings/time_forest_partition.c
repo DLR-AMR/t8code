@@ -261,7 +261,8 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
     SC_CHECK_ABORT (num_files > 0, "Must specify valid number of files.\n");
     /* Load the cmesh from the stored files and evenly distribute it
      * among all ranks */
-    cmesh = t8_cmesh_load_and_distribute (cmesh_file, num_files, comm);
+    cmesh = t8_cmesh_load_and_distribute (cmesh_file, num_files, comm,
+                                          T8_LOAD_SIMPLE);
   }
   SC_CHECK_ABORT (cmesh != NULL, "Error when creating cmesh.\n");
 

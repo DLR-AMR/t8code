@@ -31,12 +31,24 @@
 #define T8_CMESH_SAVE_H
 
 #include <t8.h>
-#include <t8_cmesh.h>
-#include "t8_cmesh_types.h"
 
 /** Increment this constant each time the file format changes.
  *  We can only read files that were written in the same format. */
 #define T8_CMESH_FORMAT 0x0001
+
+/** This enumeration contains all modes in which we can open a saved cmesh.
+ * The cmesh can be loaded with more processes than it was saved and the
+ * mode controls, which of the processes open files and distribute the data.
+ */
+typedef enum t8_load_mode
+{
+  T8_LOAD_FIRST = 0,
+  /** In simple mode, the first n processes load the file */
+  T8_LOAD_SIMPLE = T8_LOAD_FIRST,
+  /** In BGQ mode, the file is loaded on n nodes and from one process of each node. */
+  T8_LOAD_BGQ,
+  T8_LOAD_COUNT
+} t8_load_mode_t;
 
 T8_EXTERN_C_BEGIN ();
 
