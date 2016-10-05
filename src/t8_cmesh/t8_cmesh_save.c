@@ -660,7 +660,7 @@ t8_cmesh_load_proc_loads (int mpirank, int mpisize, int num_files,
                           sc_MPI_Comm comm, t8_load_mode_t mode,
                           int *file_to_load)
 {
-  sc_MPI_Comm        *inter = NULL, *intra = NULL;
+  sc_MPI_Comm         inter = sc_MPI_COMM_NULL, intra = sc_MPI_COMM_NULL;
   int                 mpiret, interrank, intrarank, intersize;
 
   /* Fill with invalid value */
@@ -684,22 +684,23 @@ t8_cmesh_load_proc_loads (int mpirank, int mpisize, int num_files,
     /* Compute internode and intranode communicator */
     sc_mpi_comm_attach_node_comms (comm, 0);
     /* Store internode and intranode communicator */
-    sc_mpi_comm_get_node_comms (comm, intra, inter);
+    sc_mpi_comm_get_node_comms (comm, &intra, &inter);
     /* Abort if we could not compute these communicators */
-    SC_CHECK_ABORT (*intra != sc_MPI_COMM_NULL &&
-                    *inter != sc_MPI_COMM_NULL,
+    SC_CHECK_ABORT (intra != sc_MPI_COMM_NULL &&
+                    inter != sc_MPI_COMM_NULL,
                     "Could not get proper internode "
                     "and intranode communicators.\n");
-    mpiret = sc_MPI_Comm_size (*inter, &intersize);
+    mpiret = sc_MPI_Comm_size (inter, &intersize);
     SC_CHECK_MPI (mpiret);
     /* Check if the number of nodes is at least as big as the number of files */
-    SC_CHECK_ABORTF (intersize < num_files, "Must have more compute nodes "
+    SC_CHECK_ABORTF (intersize <= num_files, "Must have more compute nodes "
                      "than files. %i nodes and %i fields are given.\n",
                      intersize, num_files);
-    mpiret = sc_MPI_Comm_rank (*inter, &interrank);
+    mpiret = sc_MPI_Comm_rank (inter, &interrank);
     SC_CHECK_MPI (mpiret);
-    mpiret = sc_MPI_Comm_rank (*inter, &intrarank);
+    mpiret = sc_MPI_Comm_rank (intra, &intrarank);
     SC_CHECK_MPI (mpiret);
+    t8_infof ("[H] My interrank is %i, intra is %i\n", interrank, intrarank);
     /* If the current node number i is smaller than the number of files
      * than the first process on this node loads the file i */
     if (interrank < num_files && intrarank == 0) {
@@ -743,7 +744,7 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
    * loads a file.
    */
   if (t8_cmesh_load_proc_loads (mpirank, mpisize, num_files, comm,
-                                T8_LOAD_SIMPLE, &file_to_load)) {
+                                mode, &file_to_load)) {
     T8_ASSERT (fileprefix != NULL);
     T8_ASSERT (0 <= file_to_load && file_to_load < num_files);
     snprintf (buffer, BUFSIZ, "%s_%04d.cmesh", fileprefix, file_to_load);
