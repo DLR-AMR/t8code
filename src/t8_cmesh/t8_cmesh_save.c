@@ -717,6 +717,74 @@ t8_cmesh_load_proc_loads (int mpirank, int mpisize, int num_files,
   SC_ABORT_NOT_REACHED ();
 }
 
+/* After we loaded a cmesh on a part of the processes, we have to correctly
+ * set the first tree on the other, empty, cmeshes.
+ * In load mode simple, the first tree is just the global number of trees.
+ * In Load mode BGQ, we have to figure out the first tree of
+ * the next bigger nonloading process.
+ */
+static int
+t8_cmesh_load_bigger_nonloading (int mpirank, int mpisize,
+                                 int num_files, t8_load_mode_t mode,
+                                 sc_MPI_Comm comm)
+{
+  int                 next_bigger_nonloading;
+  sc_MPI_Comm         inter = sc_MPI_COMM_NULL, intra = sc_MPI_COMM_NULL;
+  sc_MPI_Group        intragroup, commgroup;
+  int                 mpiret, interrank, intrarank, intrasize, commrank;
+  int                 rankzero;
+  int                 num_procs_per_node = 16;  /* Beware: This value must be the same as in
+                                                   the function above. */
+
+  switch (mode) {
+  case T8_LOAD_SIMPLE:
+    /* In simple mode, the first num_files processes load the cmesh and
+     * the rest is empty, this the next bigger nonloading rank is allways
+     * rank mpisize. */
+    next_bigger_nonloading = mpisize;
+    break;
+  case T8_LOAD_BGQ:
+    /* In BGQ mode, on the compute nodes with node-id bigger num_files,
+     * the first rank on a node opens the file. */
+    /* Get the inter and intra comms and our rank within these comms. */
+    sc_mpi_comm_get_node_comms (comm, &intra, &inter);
+    mpiret = sc_MPI_Comm_rank (inter, &interrank);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Comm_rank (intra, &intrarank);
+    SC_CHECK_MPI (mpiret);
+
+    if (interrank >= num_files - 1) {
+      /* We are beyond all processes that loaded */
+      next_bigger_nonloading = mpisize;
+    }
+    else {
+      /* We need to get the rank in comm of the first process
+       * on the next compute node. This is the process with rank 0 in our
+       * intra communicator plus the mpisize in the intracommunicator. */
+      /* First we get the groups from the communicators */
+      mpiret = sc_MPI_Comm_group (intra, &intragroup);
+      SC_CHECK_MPI (mpiret);
+      mpiret = sc_MPI_Comm_group (comm, &commgroup);
+      SC_CHECK_MPI (mpiret);
+      /* We can now transform the rank 0 of the intragroup to get
+       * the correct rank in the commgroup */
+      rankzero = 0;
+      mpiret =
+        sc_MPI_Group_translate_ranks (intragroup, 1, &rankzero, commgroup,
+                                      &commrank);
+      SC_CHECK_MPI (mpiret);
+      /* We get the size of the intracommunicator */
+      mpiret = sc_MPI_Comm_size (intragroup, &intrasize);
+      SC_CHECK_MPI (mpiret);
+      next_bigger_nonloading = commrank + intrasize;
+    }
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+  return next_bigger_nonloading;
+}
+
 /* Load the files fileprefix_0000.cmesh, ... , fileprefix_N.cmesh
  * (N = num_files - 1)
  * on N processes and repartition the cmesh to all calling processes.
@@ -729,6 +797,8 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
   char                buffer[BUFSIZ];
   int                 mpiret, mpirank, mpisize;
   int                 file_to_load;
+  int                 next_bigger_nonloading;
+  int                 did_load;
 
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -748,22 +818,22 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
     T8_ASSERT (fileprefix != NULL);
     T8_ASSERT (0 <= file_to_load && file_to_load < num_files);
     snprintf (buffer, BUFSIZ, "%s_%04d.cmesh", fileprefix, file_to_load);
+    t8_infof ("Opening file %s\n", buffer);
     cmesh = t8_cmesh_load (buffer, comm);
     if (num_files == mpisize) {
       /* Each process has loaded the cmesh and we can return */
-      t8_cmesh_trees_print (cmesh, cmesh->trees);
       return cmesh;
     }
+    did_load = 1;
   }
   else {
+    did_load = 0;
     /* On the processes that do not load the cmesh, initialize it
      * with zero local trees and ghosts */
     t8_cmesh_init (&cmesh);
     t8_cmesh_trees_init (&cmesh->trees, 0, 0, 0);
-    mpiret = sc_MPI_Comm_rank (comm, &cmesh->mpirank);
-    SC_CHECK_MPI (mpiret);
-    mpiret = sc_MPI_Comm_size (comm, &cmesh->mpisize);
-    SC_CHECK_MPI (mpiret);
+    cmesh->mpirank = mpirank;
+    cmesh->mpisize = mpisize;
     t8_stash_destroy (&cmesh->stash);
     /* There are no faces, so we know all about them */
     cmesh->face_knowledge = 3;
@@ -771,6 +841,7 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
     cmesh->first_tree_shared = 0;
     cmesh->committed = 1;
     cmesh->set_partition = 1;
+    cmesh->num_local_trees = 0;
   }
   /* The cmeshes on the processes that did not load have to
    * know the global number of trees */
@@ -781,12 +852,16 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
   /* We now create the cmeshs offset in order to properly
    * set the first tree for the empty processes */
   t8_cmesh_gather_treecount (cmesh, comm);
-  if (cmesh->mpirank >= num_files) {
-    /* Since there are no bigger processes with trees on them, we can
-     * set the first tree to the total number of trees.
-     * This is necessary, such that in partition other processes see this
-     * process as empty */
-    cmesh->first_tree = cmesh->num_trees;
+  if (!did_load) {
+    /* Calculate the next bigger nonloading rank. */
+    next_bigger_nonloading =
+      t8_cmesh_load_bigger_nonloading (mpirank, mpisize, num_files, mode,
+                                       comm);
+    /* Set the first tree of this process to the first tree of the next nonloading
+     * rank */
+    cmesh->first_tree =
+      t8_offset_first (next_bigger_nonloading,
+                       t8_shmem_array_get_gloidx_array (cmesh->tree_offsets));
   }
   /* Since we changed the first tree on some processes, we have to
    * regather the first trees on each process */

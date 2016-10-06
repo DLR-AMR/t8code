@@ -45,7 +45,8 @@ typedef enum t8_load_mode
   T8_LOAD_FIRST = 0,
   /** In simple mode, the first n processes load the file */
   T8_LOAD_SIMPLE = T8_LOAD_FIRST,
-  /** In BGQ mode, the file is loaded on n nodes and from one process of each node. */
+  /** In BGQ mode, the file is loaded on n nodes and from one process of each node.
+    * This needs MPI Version 3.1 or higher. */
   T8_LOAD_BGQ,
   T8_LOAD_COUNT
 } t8_load_mode_t;
