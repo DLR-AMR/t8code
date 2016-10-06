@@ -736,7 +736,7 @@ t8_cmesh_load_proc_loads (int mpirank, int mpisize, int num_files,
 /* After we loaded a cmesh on a part of the processes, we have to correctly
  * set the first tree on the other, empty, cmeshes.
  * In load mode simple, the first tree is just the global number of trees.
- * In Load mode BGQ, we have to figure out the first tree of
+ * In Load mode BGQ and JUQUEEN, we have to figure out the first tree of
  * the next bigger nonloading process.
  */
 static int
@@ -793,6 +793,19 @@ t8_cmesh_load_bigger_nonloading (int mpirank, int mpisize,
       mpiret = sc_MPI_Comm_size (intragroup, &intrasize);
       SC_CHECK_MPI (mpiret);
       next_bigger_nonloading = commrank + intrasize;
+    }
+    break;
+  case T8_LOAD_JUQUEEN:
+    /* In Juqueen mode, every 16-th process has opened the file. */
+    if (mpirank / num_procs_per_node < num_files - 1) {
+      /* If we are in a multiple of 16, where a file was loaded,
+       * the first process in the next group did load it. */
+      next_bigger_nonloading = mpirank - mpirank % num_procs_per_node + num_procs_per_node;     /* This is the next number divisible by
+                                                                                                   num_procs_per_node */
+    }
+    else {
+      /* Every rank that loaded a file is smaller than ours. */
+      next_bigger_nonloading = mpisize;
     }
     break;
   default:
