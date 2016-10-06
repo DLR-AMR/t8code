@@ -48,6 +48,9 @@ typedef enum t8_load_mode
   /** In BGQ mode, the file is loaded on n nodes and from one process of each node.
     * This needs MPI Version 3.1 or higher. */
   T8_LOAD_BGQ,
+  /** Manually every 16-th process loads a file. Handle with care, we introduces
+   * it, since on Juqueen MPI-3 was not available. */
+  T8_LOAD_JUQUEEN,
   T8_LOAD_COUNT
 } t8_load_mode_t;
 

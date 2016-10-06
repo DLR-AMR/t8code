@@ -662,6 +662,8 @@ t8_cmesh_load_proc_loads (int mpirank, int mpisize, int num_files,
 {
   sc_MPI_Comm         inter = sc_MPI_COMM_NULL, intra = sc_MPI_COMM_NULL;
   int                 mpiret, interrank, intrarank, intersize;
+  int                 num_procs_per_node = 16;  /* Beware: This value must be the same as in
+                                                   the function below. */
 
   /* Fill with invalid value */
   *file_to_load = -1;
@@ -711,6 +713,20 @@ t8_cmesh_load_proc_loads (int mpirank, int mpisize, int num_files,
       return 0;
     }
     break;
+  case T8_LOAD_JUQUEEN:
+    /* In Juqueen mode, every 16-th process loads a file. The user should
+     * control, that these processes reside on different compute nodes to
+     * gain maximal efficiency. */
+    SC_CHECK_ABORT (ceil (mpisize / (double) num_procs_per_node) >= num_files,
+                    "Too many files for too few processes.\n");
+    if (mpirank % num_procs_per_node == 0
+        && mpirank / num_procs_per_node < num_files) {
+      *file_to_load = mpirank / num_procs_per_node;
+      return 1;
+    }
+    else {
+      return 0;
+    }
   default:
     SC_ABORT_NOT_REACHED ();
   }
