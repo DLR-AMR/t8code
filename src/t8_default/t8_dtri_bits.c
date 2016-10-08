@@ -765,7 +765,7 @@ t8_dtri_linear_id_last_desc (const t8_dtri_t * t)
   exponent = T8_DTRI_MAXLEVEL - t->level;
   /* Set the last bits to the local ids of always choosing the last child
    * of t */
-  id = (1 << T8_DTRI_DIM * exponent) - 1;
+  id = (((uint64_t) 1) << T8_DTRI_DIM * exponent) - 1;
   /* Set the first bits of id to the id of t itself */
   id |= t_id << exponent;
   return id;
@@ -811,7 +811,7 @@ t8_dtri_init_linear_id (t8_dtri_t * t, uint64_t id, int level)
   t8_dtri_cube_id_t   cid;
   t8_dtri_type_t      type;
 
-  T8_ASSERT (0 <= id && id <= (uint64_t) 1 << (T8_DTRI_DIM * level));
+  T8_ASSERT (0 <= id && id <= ((uint64_t) 1) << (T8_DTRI_DIM * level));
 
   t->level = level;
   t->x = 0;
