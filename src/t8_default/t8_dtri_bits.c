@@ -794,7 +794,7 @@ t8_dtri_linear_id (const t8_dtri_t * t, int level)
   type_temp = compute_type (t, level);
   for (i = level; i > 0; i--) {
     cid = compute_cubeid (t, i);
-    id |= t8_dtri_type_cid_to_Iloc[type_temp][cid] << exponent;
+    id |= ((uint64_t) t8_dtri_type_cid_to_Iloc[type_temp][cid]) << exponent;
     exponent += T8_DTRI_DIM;    /* multiply with 4 (2d) resp. 8  (3d) */
     type_temp = t8_dtri_cid_type_to_parenttype[cid][type_temp];
   }
