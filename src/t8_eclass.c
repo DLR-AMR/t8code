@@ -155,7 +155,7 @@ t8_eclass_count_leaf (t8_eclass_t theclass, int level)
     /* For each eclass that is not the pyramid the number of leafs
      * is dim^level.
      */
-    return 1 << t8_eclass_to_dimension[theclass] * level;
+    return ((uint64_t) 1) << t8_eclass_to_dimension[theclass] * level;
   }
   else {
     /* For the eclass pyramid the number of leafs is
