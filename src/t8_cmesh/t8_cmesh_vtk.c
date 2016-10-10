@@ -50,7 +50,7 @@ static int
 t8_cmesh_write_pvtu (const char *filename, int num_procs, int write_tree,
                      int write_rank)
 {
-  char                pvtufilename[BUFSIZ];
+  char                pvtufilename[BUFSIZ], Basename[BUFSIZ];
   FILE               *pvtufile;
   int                 p;
 
@@ -104,9 +104,10 @@ t8_cmesh_write_pvtu (const char *filename, int num_procs, int write_tree,
     fprintf (pvtufile, "    </PCellData>\n");
   }
 
+  strncpy (Basename, filename, BUFSIZ);
   for (p = 0; p < num_procs; ++p) {
     fprintf (pvtufile, "    <Piece Source=\"%s_%04d.vtu\"/>\n",
-             basename (filename), p);
+             basename (Basename), p);
   }
   fprintf (pvtufile, "  </PUnstructuredGrid>\n");
   fprintf (pvtufile, "</VTKFile>\n");
