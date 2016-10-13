@@ -97,7 +97,7 @@ typedef struct t8_cmesh
 #if 0
   t8_cmesh_from_t     from_method;      /* TODO: Document */
 #endif
-  t8_cmesh_t          set_from; /**< If this cmesh shall be derived from an
+  struct t8_cmesh    *set_from; /**< If this cmesh shall be derived from an
                                   existing cmesh by copy or more elaborate
                                   modification, we store a pointer to this
                                   other cmesh here. */
@@ -237,7 +237,7 @@ t8_part_tree_struct_t;
 /** This struct is used to profile cmesh algorithms.
  * The cmesh struct stores a pointer to a profile struct, and if
  * it is nonzero, various runtimes and data measurements are stored here.
- * This structure must be initialized with zeros. Best by a call to T8_ALLOC_ZERO.
+ * \see t8_cmesh_set_profiling and \see t8_cmesh_print_profile
  */
 typedef struct t8_cprofile
 {
@@ -253,9 +253,13 @@ typedef struct t8_cprofile
                                                 last partition call. */
   int                 partition_procs_sent; /**< The number of different processes this process has send
                                            local trees or ghosts to in the last partition call. */
+  int                 first_tree_shared; /**< 1 if this processes' first tree is shared. 0 if not. */
   double              partition_runtime;/**< The runtime of  the last call to \a t8_cmesh_partition. */
   double              commit_runtime;/**< The runtim of the last call to \a t8_cmesh_commit. */
 }
 t8_cprofile_struct_t;
+
+/** The number of entries in a cprofile struct */
+#define T8_CPROFILE_NUM_STATS 9
 
 #endif /* !T8_CMESH_TYPES_H */

@@ -213,7 +213,7 @@ int                 t8_offset_nosend (int proc, int mpisize,
                                       t8_gloidx_t * offset_from,
                                       t8_gloidx_t * offset_to);
 
-/** Query whether in a repartitioning setting, a given process send local trees (and then possibly ghosts) to a
+/** Query whether in a repartitioning setting, a given process sends local trees (and then possibly ghosts) to a
  * given other process.
  * \param [in] proca    Mpi rank of the possible sending process.
  * \param [in] procb    Mpi rank of the possible receiver.

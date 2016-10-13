@@ -31,16 +31,12 @@ static void
 t8_refine_hybrid (int level)
 {
   t8_cmesh_t          cmesh, cmesh_refine;
-  int                 dummy_data = 0;
 
   t8_cmesh_init (&cmesh);
   t8_cmesh_init (&cmesh_refine);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
   t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), 1, &dummy_data,
-                          sizeof (int), 1);
-  t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id (), 1, &dummy_data,
-                          sizeof (int), 1);
+
   t8_cmesh_set_join (cmesh, 0, 1, 2, 1, 0);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   t8_cmesh_set_derive (cmesh_refine, cmesh);
@@ -59,7 +55,7 @@ t8_refine_cube (t8_eclass_t eclass, int level)
 {
   t8_cmesh_t          cmesh, cmesh_refine;
 
-  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0);
   t8_cmesh_init (&cmesh_refine);
   t8_cmesh_set_derive (cmesh_refine, cmesh);
   /* We want cmesh to be destroyed as soon as possible,
@@ -79,7 +75,7 @@ t8_refine_p4est (int level)
   p4est_connectivity_t *conn;
 
   conn = p4est_connectivity_new_brick (3, 2, 0, 0);
-  cmesh = t8_cmesh_new_from_p4est (conn, sc_MPI_COMM_WORLD, 0, 0);
+  cmesh = t8_cmesh_new_from_p4est (conn, sc_MPI_COMM_WORLD, 0);
   p4est_connectivity_destroy (conn);
   t8_cmesh_init (&cmesh_refine);
   t8_cmesh_set_derive (cmesh_refine, cmesh);

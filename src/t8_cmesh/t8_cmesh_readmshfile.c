@@ -682,7 +682,7 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh,
 }
 
 t8_cmesh_t
-t8_cmesh_from_msh_file (char *fileprefix, int partition,
+t8_cmesh_from_msh_file (const char *fileprefix, int partition,
                         sc_MPI_Comm comm, int dim, int master)
 {
   int                 mpirank, mpisize, mpiret;
@@ -694,7 +694,7 @@ t8_cmesh_from_msh_file (char *fileprefix, int partition,
   long               *indices_entry;
   char                current_file[BUFSIZ];
   FILE               *file;
-  t8_gloidx_t         num_trees, first_tree, last_tree;
+  t8_gloidx_t         num_trees, first_tree, last_tree = -1;
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);

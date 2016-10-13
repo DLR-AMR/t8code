@@ -107,6 +107,16 @@ t8_debugf (const char *fmt, ...)
 }
 
 void
+t8_errorf (const char *fmt, ...)
+{
+  va_list             ap;
+
+  va_start (ap, fmt);
+  t8_logv (SC_LC_NORMAL, SC_LP_ERROR, fmt, ap);
+  va_end (ap);
+}
+
+void
 t8_init (int log_threshold)
 {
   int                 w;

@@ -29,6 +29,7 @@
 
 #include <t8.h>
 #include <t8_shmem.h>
+#include <t8_cmesh/t8_cmesh_save.h>
 
 /* TODO: If including eclass were just for the cmesh_new routines, we should
  *       move them into a different file.
@@ -43,9 +44,9 @@
 #include <p4est_connectivity.h>
 #include <p8est_connectivity.h>
 
-/* TODO: do set_mpicomm and figure out dup logic */
 /* TODO: make it legal to call cmesh_set functions multiple times,
  *       just overwrite the previous setting if no inconsistency can occur.
+ *       edit: This should be achieved now.
  */
 
 typedef struct t8_cmesh *t8_cmesh_t;
@@ -130,8 +131,6 @@ t8_shmem_array_t    t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
  *                              \ref t8_cmesh_commit.
  *                             -1: Co not change the face_knowledge level but keep any
  *                                 previously set ones. (Possibly by a previous call to \ref t8_cmesh_set_partition_range)
- *                              TODO: if -1 is given, do NOT change it?
- *                                    This may be a general convention?
  * \param [in]     first_local_tree The global index of the first tree on this process.
  * \param [in]     last_local_tree  The global index of the last tree on this process.
  *                                  If this process should be empty then \a last_local_tree
@@ -250,13 +249,12 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
  *                              In both cases a copy of the data is used by t8_code after t8_cmesh_commit.
  */
 void                t8_cmesh_set_attribute (t8_cmesh_t cmesh,
-                                            t8_gloidx_t tree_id,
+                                            t8_gloidx_t gtree_id,
                                             int package_id, int key,
                                             void *data, size_t data_size,
                                             int data_persists);
 
 /** Insert a face-connection between two trees in a cmesh.
- * TODO: Make it clear by a common convention whether tree ids are local or global.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     tree1        The tree id of the first of the two trees.
  * \param [in]     tree2        The tree id of the second of the two trees.
@@ -270,6 +268,19 @@ void                t8_cmesh_set_attribute (t8_cmesh_t cmesh,
 void                t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t gtree1,
                                        t8_gloidx_t gtree2, int face1,
                                        int face2, int orientation);
+
+/** Enable or disable profiling for a cmesh. If profiling is enabled, runtimes
+ * and statistics are collected during cmesh_commit.
+ * \param [in,out] cmesh        The cmesh to be updated.
+ * \param [in]     set_profiling If true, profiling will be enabled, if false
+ *                              disabled.
+ *
+ * Profiling is disabled by default.
+ * The cmesh must not be committed before calling this function.
+ * \see t8_cmesh_print_profile
+ */
+void                t8_cmesh_set_profiling (t8_cmesh_t cmesh,
+                                            int set_profiling);
 
 /* returns true if cmesh_a equals cmesh_b */
 /* TODO: document
@@ -321,6 +332,20 @@ void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
  *                              specialized with t8_cmesh_set_* calls first (?).
  */
 void                t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm);
+
+/* TODO: Document */
+int                 t8_cmesh_save (t8_cmesh_t cmesh, const char *filename);
+
+/* TODO: Document */
+t8_cmesh_t          t8_cmesh_load (const char *filename, sc_MPI_Comm comm);
+
+/* TODO: Document */
+/* procs_per_node is only relevant in mode==JUQUEEN */
+t8_cmesh_t          t8_cmesh_load_and_distribute (const char *fileprefix,
+                                                  int num_files,
+                                                  sc_MPI_Comm comm,
+                                                  t8_load_mode_t mode,
+                                                  int procs_per_node);
 
 /** Check whether a given MPI communicator assigns the same rank and mpisize
   * as stored in a cmesh.
@@ -390,7 +415,7 @@ t8_ctree_t          t8_cmesh_get_next_tree (t8_cmesh_t cmesh,
  * \a cmesh must be committed before calling this function.
  */
 t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
-                                             t8_locidx_t tree_id);
+                                             t8_locidx_t ltree_id);
 
 /** Return the eclass of a given local ghost.
  * TODO: Should we refer to indices or consequently use cghost_t?
@@ -401,7 +426,7 @@ t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
  * \a cmesh must be committed before calling this function.
  */
 t8_eclass_t         t8_cmesh_get_ghost_class (t8_cmesh_t cmesh,
-                                              t8_locidx_t ghost_id);
+                                              t8_locidx_t lghost_id);
 
 /** Return the global id of a given local tree or ghost.
  * \param [in]    cmesh         The cmesh to be considered.
@@ -412,6 +437,14 @@ t8_eclass_t         t8_cmesh_get_ghost_class (t8_cmesh_t cmesh,
  */
 t8_gloidx_t         t8_cmesh_get_global_id (t8_cmesh_t cmesh,
                                             t8_locidx_t local_id);
+
+/** Print the collected statistics from a cmesh profile.
+ * \param [in]    cmesh         The cmesh.
+ *
+ * \a cmesh must be committed before calling this function.
+ * \see t8_cmesh_set_profiling
+ */
+void                t8_cmesh_print_profile (t8_cmesh_t cmesh);
 
 /** Return the attribute pointer of a tree.
  * \param [in]     cmesh        The cmesh.
@@ -426,7 +459,7 @@ t8_gloidx_t         t8_cmesh_get_global_id (t8_cmesh_t cmesh,
  */
 void               *t8_cmesh_get_attribute (t8_cmesh_t cmesh,
                                             int package_id, int key,
-                                            t8_locidx_t tree_id);
+                                            t8_locidx_t ltree_id);
 
 /** Return the shared memory array storing the partition table of
  * a partitioned cmesh.
@@ -497,13 +530,12 @@ void                t8_cmesh_destroy (t8_cmesh_t * pcmesh);
  *  The constructed cmesh will be replicated.
  * \param[in]       conn       The p4est connectivity.
  * \param[in]       comm       mpi communicator to be used with the new cmesh.
- * \param[in]       do_dup     Flag whether the communicator shall be duplicated or not.
  * \param[in]       do_partition Flag whether the cmesh should be partitioned or not.
  * \return          A t8_cmesh structure that holds the same connectivity information
  *                  as \a conn.
  */
 t8_cmesh_t          t8_cmesh_new_from_p4est (p4est_connectivity_t * conn,
-                                             sc_MPI_Comm comm, int do_dup,
+                                             sc_MPI_Comm comm,
                                              int do_partition);
 
 /** Constructs a cmesh from a given p8est_connectivity structure.
@@ -516,7 +548,7 @@ t8_cmesh_t          t8_cmesh_new_from_p4est (p4est_connectivity_t * conn,
  *                  as \a conn.
  */
 t8_cmesh_t          t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
-                                             sc_MPI_Comm comm, int do_dup,
+                                             sc_MPI_Comm comm,
                                              int do_partition);
 
 /* TODO: it could possibly be a problem that we do not set the dimension of
@@ -537,13 +569,14 @@ t8_cmesh_t          t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition);
  * \return          A committed t8_cmesh structure with one tree of class \a eclass.
  */
 t8_cmesh_t          t8_cmesh_new_from_class (t8_eclass_t eclass,
-                                             sc_MPI_Comm comm, int do_dup);
+                                             sc_MPI_Comm comm);
+
+t8_cmesh_t          t8_cmesh_new_testhybrid (sc_MPI_Comm comm);
 
 /** Construct a hypercube forest from one primitive tree class.
  * \param [in] eclass       This element class determines the dimension and
  *                          the number of trees needed to construct a cube.
  * \param [in] comm         The mpi communicator to be used.
- * \param [in] do_dup       Whether \a comm is to be duplicated.
  * \param [in] do_bcast     If this flag is nonzero the cmesh is only constructed
  *                          on processor 0 and then broadcasted to the other
  *                          processors in \a comm.
@@ -552,7 +585,7 @@ t8_cmesh_t          t8_cmesh_new_from_class (t8_eclass_t eclass,
  * TODO: Add periodic flags for each dimension.
  */
 t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
-                                            sc_MPI_Comm comm, int do_dup,
+                                            sc_MPI_Comm comm,
                                             int do_bcast, int do_partition);
 
 /** Construct a unit interval/square/cube forest that is periodic in each direction.
@@ -560,12 +593,10 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
  * Hypercube?
  * TODO: redundant, remove.
  * \param [in] comm         The mpi communicator to use.
- * \param [in] do_dup       Whether the mpi communicator is to be duplicated.
  * \param [in] dim          The dimension of the forest, 1, 2 or 3.
  * \return                  A valid cmesh, as if _init and _commit had been called.
  */
-t8_cmesh_t          t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup,
-                                           int dim);
+t8_cmesh_t          t8_cmesh_new_periodic (sc_MPI_Comm comm, int dim);
 
 /** Construct a mesh consisting of a given number of same type trees.
  * \param [in] eclass       This element class determines the dimension and

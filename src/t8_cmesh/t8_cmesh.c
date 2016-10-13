@@ -20,6 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <sc_statistics.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_vtk.h>
 #include <t8_refcount.h>
@@ -407,24 +408,24 @@ t8_cmesh_get_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree)
 }
 
 void
-t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t tree_id, int package_id,
-                        int key, void *data, size_t data_size,
+t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
+                        int package_id, int key, void *data, size_t data_size,
                         int data_persists)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (!cmesh->committed);
 
-  t8_stash_add_attribute (cmesh->stash, tree_id, package_id, key, data_size,
+  t8_stash_add_attribute (cmesh->stash, gtree_id, package_id, key, data_size,
                           data, data_persists);
 }
 
 void               *
 t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key,
-                        t8_locidx_t tree_id)
+                        t8_locidx_t ltree_id)
 {
   T8_ASSERT (cmesh->committed);
-  return t8_cmesh_trees_get_attribute (cmesh->trees, tree_id, package_id,
-                                       key);
+  return t8_cmesh_trees_get_attribute (cmesh->trees, ltree_id, package_id,
+                                       key, NULL);
 }
 
 t8_shmem_array_t
@@ -529,6 +530,25 @@ t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t gtree1, t8_gloidx_t gtree2,
 
   t8_stash_add_facejoin (cmesh->stash, gtree1, gtree2, face1, face2,
                          orientation);
+}
+
+void
+t8_cmesh_set_profiling (t8_cmesh_t cmesh, int set_profiling)
+{
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+
+  if (set_profiling) {
+    if (cmesh->profile == NULL) {
+      /* Only do something if profiling is not enabled already */
+      cmesh->profile = T8_ALLOC_ZERO (t8_cprofile_struct_t, 1);
+    }
+  }
+  else {
+    /* Free any profile that is already set */
+    if (cmesh->profile != NULL) {
+      T8_FREE (cmesh->profile);
+    }
+  }
 }
 
 /* returns true if cmesh_a equals cmesh_b */
@@ -845,27 +865,27 @@ t8_cmesh_get_num_local_trees (t8_cmesh_t cmesh)
 }
 
 t8_eclass_t
-t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_locidx_t tree_id)
+t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_locidx_t ltree_id)
 {
   t8_ctree_t          tree;
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
 
-  tree = t8_cmesh_get_tree (cmesh, tree_id);
+  tree = t8_cmesh_get_tree (cmesh, ltree_id);
   return tree->eclass;
 }
 
 t8_eclass_t
-t8_cmesh_get_ghost_class (t8_cmesh_t cmesh, t8_locidx_t ghost_id)
+t8_cmesh_get_ghost_class (t8_cmesh_t cmesh, t8_locidx_t lghost_id)
 {
   t8_cghost_t         ghost;
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
-  T8_ASSERT (0 <= ghost_id && ghost_id < cmesh->num_ghosts);
+  T8_ASSERT (0 <= lghost_id && lghost_id < cmesh->num_ghosts);
 
-  ghost = t8_cmesh_trees_get_ghost (cmesh->trees, ghost_id);
+  ghost = t8_cmesh_trees_get_ghost (cmesh->trees, lghost_id);
   return ghost->eclass;
 }
 
@@ -881,6 +901,44 @@ t8_cmesh_get_global_id (t8_cmesh_t cmesh, t8_locidx_t local_id)
     return t8_cmesh_trees_get_ghost (cmesh->trees,
                                      local_id -
                                      cmesh->num_local_trees)->treeid;
+  }
+}
+
+void
+t8_cmesh_print_profile (t8_cmesh_t cmesh)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  if (cmesh->profile != NULL) {
+    /* Only print something if profiling is enabled */
+    sc_statinfo_t       stats[T8_CPROFILE_NUM_STATS];
+    t8_cprofile_t      *profile = cmesh->profile;
+
+    /* Set the stats */
+    sc_stats_set1 (&stats[0], profile->partition_trees_shipped,
+                   "cmesh: Number of trees sent.");
+    sc_stats_set1 (&stats[1],
+                   profile->partition_ghosts_shipped,
+                   "cmesh: Number of ghosts sent.");
+    sc_stats_set1 (&stats[2], profile->partition_trees_recv,
+                   "cmesh: Number of trees received.");
+    sc_stats_set1 (&stats[3], profile->partition_ghosts_recv,
+                   "cmesh: Number of ghosts received.");
+    sc_stats_set1 (&stats[4], profile->partition_bytes_sent,
+                   "cmesh: Number of bytes sent.");
+    sc_stats_set1 (&stats[5], profile->partition_procs_sent,
+                   "cmesh: Number of processes sent to.");
+    sc_stats_set1 (&stats[6], profile->first_tree_shared,
+                   "cmesh: First tree is shared.");
+    sc_stats_set1 (&stats[7], profile->partition_runtime,
+                   "cmesh: Partition runtime.");
+    sc_stats_set1 (&stats[8], profile->commit_runtime,
+                   "cmesh: Commit runtime.");
+    /* compute stats */
+    sc_stats_compute (sc_MPI_COMM_WORLD, T8_CPROFILE_NUM_STATS, stats);
+    /* print stats */
+    t8_logf (SC_LC_GLOBAL, SC_LP_STATISTICS, "Printing stats for cmesh.\n");
+    sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS,
+                    T8_CPROFILE_NUM_STATS, stats, 1, 1);
   }
 }
 
@@ -1072,7 +1130,7 @@ t8_cmesh_destroy (t8_cmesh_t * pcmesh)
  * The offsets on the different processes must add up! */
 static              t8_cmesh_t
 t8_cmesh_new_from_p4est_ext (void *conn, int dim,
-                             sc_MPI_Comm comm, int do_dup, int set_partition,
+                             sc_MPI_Comm comm, int set_partition,
                              t8_gloidx_t offset)
 {
 #define _T8_CMESH_P48_CONN(_ENTRY) \
@@ -1176,20 +1234,20 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim,
 
 t8_cmesh_t
 t8_cmesh_new_from_p4est (p4est_connectivity_t * conn,
-                         sc_MPI_Comm comm, int do_dup, int do_partition)
+                         sc_MPI_Comm comm, int do_partition)
 {
-  return t8_cmesh_new_from_p4est_ext (conn, 2, comm, do_dup, do_partition, 0);
+  return t8_cmesh_new_from_p4est_ext (conn, 2, comm, do_partition, 0);
 }
 
 t8_cmesh_t
 t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
-                         sc_MPI_Comm comm, int do_dup, int do_partition)
+                         sc_MPI_Comm comm, int do_partition)
 {
-  return t8_cmesh_new_from_p4est_ext (conn, 3, comm, do_dup, do_partition, 0);
+  return t8_cmesh_new_from_p4est_ext (conn, 3, comm, do_partition, 0);
 }
 
-t8_cmesh_t
-t8_cmesh_new_vertex (sc_MPI_Comm comm, int do_dup)
+static t8_cmesh_t
+t8_cmesh_new_vertex (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[3] = {
@@ -1202,8 +1260,8 @@ t8_cmesh_new_vertex (sc_MPI_Comm comm, int do_dup)
   return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_line (sc_MPI_Comm comm, int do_dup)
+static t8_cmesh_t
+t8_cmesh_new_line (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[6] = {
@@ -1217,8 +1275,8 @@ t8_cmesh_new_line (sc_MPI_Comm comm, int do_dup)
   return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_tri (sc_MPI_Comm comm, int do_dup)
+static t8_cmesh_t
+t8_cmesh_new_tri (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[9] = {
@@ -1233,8 +1291,8 @@ t8_cmesh_new_tri (sc_MPI_Comm comm, int do_dup)
   return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_tet (sc_MPI_Comm comm, int do_dup)
+static t8_cmesh_t
+t8_cmesh_new_tet (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[12] = {
@@ -1250,8 +1308,8 @@ t8_cmesh_new_tet (sc_MPI_Comm comm, int do_dup)
   return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_quad (sc_MPI_Comm comm, int do_dup)
+static t8_cmesh_t
+t8_cmesh_new_quad (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[12] = {
@@ -1267,8 +1325,8 @@ t8_cmesh_new_quad (sc_MPI_Comm comm, int do_dup)
   return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_hex (sc_MPI_Comm comm, int do_dup)
+static t8_cmesh_t
+t8_cmesh_new_hex (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[24] = {
@@ -1288,8 +1346,8 @@ t8_cmesh_new_hex (sc_MPI_Comm comm, int do_dup)
   return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_pyramid (sc_MPI_Comm comm, int do_dup)
+static t8_cmesh_t
+t8_cmesh_new_pyramid (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[15] = {
@@ -1303,8 +1361,8 @@ t8_cmesh_new_pyramid (sc_MPI_Comm comm, int do_dup)
   return cmesh;
 }
 
-t8_cmesh_t
-t8_cmesh_new_prism (sc_MPI_Comm comm, int do_dup)
+static t8_cmesh_t
+t8_cmesh_new_prism (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[18] = {
@@ -1323,32 +1381,32 @@ t8_cmesh_new_prism (sc_MPI_Comm comm, int do_dup)
 }
 
 t8_cmesh_t
-t8_cmesh_new_from_class (t8_eclass_t eclass, sc_MPI_Comm comm, int do_dup)
+t8_cmesh_new_from_class (t8_eclass_t eclass, sc_MPI_Comm comm)
 {
   switch (eclass) {
   case T8_ECLASS_VERTEX:
-    return t8_cmesh_new_vertex (comm, do_dup);
+    return t8_cmesh_new_vertex (comm);
     break;
   case T8_ECLASS_LINE:
-    return t8_cmesh_new_line (comm, do_dup);
+    return t8_cmesh_new_line (comm);
     break;
   case T8_ECLASS_TRIANGLE:
-    return t8_cmesh_new_tri (comm, do_dup);
+    return t8_cmesh_new_tri (comm);
     break;
   case T8_ECLASS_QUAD:
-    return t8_cmesh_new_quad (comm, do_dup);
+    return t8_cmesh_new_quad (comm);
     break;
   case T8_ECLASS_TET:
-    return t8_cmesh_new_tet (comm, do_dup);
+    return t8_cmesh_new_tet (comm);
     break;
   case T8_ECLASS_HEX:
-    return t8_cmesh_new_hex (comm, do_dup);
+    return t8_cmesh_new_hex (comm);
     break;
   case T8_ECLASS_PYRAMID:
-    return t8_cmesh_new_pyramid (comm, do_dup);
+    return t8_cmesh_new_pyramid (comm);
     break;
   case T8_ECLASS_PRISM:
-    return t8_cmesh_new_prism (comm, do_dup);
+    return t8_cmesh_new_prism (comm);
     break;
   default:
     SC_ABORT ("Invalid eclass\n");
@@ -1397,8 +1455,8 @@ t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t *
  */
 /* TODO: upgrade with int x,y,z for periodic faces */
 t8_cmesh_t
-t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm,
-                        int do_dup, int do_bcast, int do_partition)
+t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
+                        int do_partition)
 {
   t8_cmesh_t          cmesh;
   int                 num_trees_for_hypercube[T8_ECLASS_COUNT] = {
@@ -1602,7 +1660,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm,
 }
 
 t8_cmesh_t
-t8_cmesh_new_periodic (sc_MPI_Comm comm, int do_dup, int dim)
+t8_cmesh_new_periodic (sc_MPI_Comm comm, int dim)
 {
   t8_cmesh_t          cmesh;
   t8_eclass_t         tree_class;
@@ -1651,15 +1709,10 @@ t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees, sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   int                 i;
-  int                 dummy_data = 0;
 
   t8_cmesh_init (&cmesh);
   for (i = 0; i < num_trees; i++) {
     t8_cmesh_set_tree_class (cmesh, i, eclass);
-    /* TODO: as long as we have the bug, that each tree needs at least one
-     *       attribute, we need to set a dummy attribute to the trees */
-    t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (), 1, &dummy_data,
-                            sizeof (int), 0);
     if (cmesh->dimension > 0) {
       /* We join each tree with its successor along faces 0 and 1
        * to get a nontrivial connectivity */
@@ -1742,12 +1795,12 @@ t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x, t8_gloidx_t num_y,
 
   if (dim == 2) {
     cmesh = t8_cmesh_new_from_p4est_ext ((void *) my_brick,
-                                         dim, comm, 0, 1, offset + 1);
+                                         dim, comm, 1, offset + 1);
     p4est_connectivity_destroy (my_brick);
   }
   else {
     cmesh = t8_cmesh_new_from_p4est_ext ((void *) my_brick_3d,
-                                         dim, comm, 0, 1, offset + 1);
+                                         dim, comm, 1, offset + 1);
     p8est_connectivity_destroy (my_brick_3d);
   }
   return cmesh;

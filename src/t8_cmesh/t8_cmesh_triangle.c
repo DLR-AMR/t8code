@@ -72,14 +72,14 @@ t8_cmesh_triangle_read_next_line (char **line, size_t * n, FILE * fp)
  * On failure -1 is returned. */
 static int
 t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename,
-                              double **vertices, t8_topidx_t * num_corners,
-                              int dim)
+                              double **vertices, long *num_corners, int dim)
 {
   FILE               *fp;
   char               *line = (char *) malloc (1024);
   size_t              linen = 1024;
   t8_topidx_t         cit;
-  t8_topidx_t         corner, corner_offset = 0;
+  long                corner;
+  t8_topidx_t         corner_offset = 0;
   double              x, y, z;
 #if 0                           /* used for currently disabeld code */
   int                 i, bdy_marker;
@@ -107,8 +107,8 @@ t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename,
 
   /* read number of corners, dimension (must be 2), number of attributes
    * and number of boundary markers (0 or 1) */
-  retval = sscanf (line, "%i %i %i %i", num_corners, &temp, &num_attributes,
-                   &nbdy_marker);
+  retval = sscanf (line, "%li %i %i %i", num_corners, &temp,
+                   &num_attributes, &nbdy_marker);
   if (retval != 4) {
     t8_global_errorf ("Premature end of line.\n");
     goto die_node;
@@ -129,7 +129,7 @@ t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename,
       goto die_node;
     }
     /* read corner number and coordinates */
-    retval = sscanf (line, "%i %lf %lf%n", &corner, &x, &y, &num_read);
+    retval = sscanf (line, "%li %lf %lf%n", &corner, &x, &y, &num_read);
     if (dim == 3) {
       retval += sscanf (line + num_read, "%lf", &z);
     }
@@ -188,7 +188,7 @@ static int
 t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
                              char *filename, double *vertices, int dim
 #ifdef T8_ENABLE_DEBUG
-                             , t8_topidx_t num_vertices
+                             , long num_vertices
 #endif
   )
 {
@@ -197,7 +197,8 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
   size_t              linen = 1024;
   t8_locidx_t         num_elems, tit;
   t8_locidx_t         triangle, triangle_offset = 0;
-  t8_topidx_t         tcorners[4];      /* in 2d only the first 3 values are needed */
+  long                temp_triangle;
+  long                tcorners[4];      /* in 2d only the first 3 values are needed */
   int                 retval;
   int                 temp;
   int                 i;
@@ -236,11 +237,12 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
       t8_global_errorf ("Failed to read line from %s.\n", filename);
       goto die_ele;
     }
-    retval = sscanf (line, "%i %i %i %i%n", &triangle, tcorners, tcorners + 1,
-                     tcorners + 2, &num_read);
+    retval = sscanf (line, "%li %li %li %li%n", &temp_triangle, tcorners,
+                     tcorners + 1, tcorners + 2, &num_read);
+    triangle = temp_triangle;
     if (dim == 3) {
       /* TODO: this is kind of unelegant, can we do it better? */
-      retval += sscanf (line + num_read, "%i", tcorners + 3);
+      retval += sscanf (line + num_read, "%li", tcorners + 3);
     }
     if (retval != dim + 2) {
       t8_global_errorf ("Premature end of line in %s.\n", filename);
@@ -447,7 +449,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
   int                 mpirank, mpisize, mpiret;
   t8_cmesh_t          cmesh;
   double             *vertices;
-  t8_topidx_t         num_vertices;
+  long                num_vertices;
   t8_gloidx_t         first_tree, last_tree;
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
@@ -544,7 +546,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix,
   int                 mpirank, mpisize, mpiret;
   t8_cmesh_t          cmesh;
   double             *vertices;
-  t8_topidx_t         num_vertices;
+  long                num_vertices;
   t8_gloidx_t         first_tree, last_tree;
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);

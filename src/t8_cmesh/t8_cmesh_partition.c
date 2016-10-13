@@ -133,11 +133,13 @@ t8_cmesh_gather_treecount (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
-  T8_ASSERT (cmesh->tree_offsets == NULL);
 
   tree_offset = cmesh->first_tree_shared ? -cmesh->first_tree - 1 :
     cmesh->first_tree;
-  cmesh->tree_offsets = t8_cmesh_alloc_offsets (cmesh->mpisize, comm);
+  if (cmesh->tree_offsets == NULL) {
+    /* Only allocate the shmem array, if it is not already allocated */
+    cmesh->tree_offsets = t8_cmesh_alloc_offsets (cmesh->mpisize, comm);
+  }
   t8_shmem_array_allgather (&tree_offset, 1, T8_MPI_GLOIDX,
                             cmesh->tree_offsets, 1, T8_MPI_GLOIDX);
   t8_shmem_array_set_gloidx (cmesh->tree_offsets, cmesh->mpisize,
@@ -809,6 +811,7 @@ t8_cmesh_partition_recvrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
 }
 #endif
 
+/* A much faster version to compute the sendrange */
 static              t8_locidx_t
 t8_cmesh_partition_alternative_sendrange (t8_cmesh_t cmesh,
                                           t8_cmesh_t cmesh_from,
@@ -969,6 +972,7 @@ t8_cmesh_partition_alternative_sendrange (t8_cmesh_t cmesh,
   return (t8_locidx_t) ret;
 }
 
+/* A much faster version to compute the receive range */
 static void
 t8_cmesh_partition_alternative_recvrange (t8_cmesh_t cmesh,
                                           t8_cmesh_t cmesh_from,
@@ -1252,23 +1256,25 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
       (sizeof (t8_locidx_t) + sizeof (int8_t))
       + T8_ADD_PADDING (t8_eclass_num_faces[tree->eclass] *
                         (sizeof (t8_locidx_t) + sizeof (int8_t)));
-    /* Copy all attribute infos to send_buffer */
-    (void) memcpy (send_buffer + num_trees * sizeof (t8_ctree_struct_t) +
-                   num_ghost_send * sizeof (t8_cghost_struct_t) +
-                   ghost_neighbor_bytes + tree_neighbor_bytes +
-                   temp_offset_att, T8_TREE_ATTR_INFO (tree, 0),
-                   tree->num_attributes *
-                   sizeof (t8_attribute_info_struct_t));
-    temp_offset_att +=
-      tree->num_attributes * sizeof (t8_attribute_info_struct_t);
-    /* Copy all attribute data to send_buffer */
-    (void) memcpy (send_buffer + num_trees * sizeof (t8_ctree_struct_t) +
-                   num_ghost_send * sizeof (t8_cghost_struct_t) +
-                   ghost_neighbor_bytes + tree_neighbor_bytes +
-                   attr_info_bytes + temp_offset_data,
-                   T8_TREE_ATTR (tree, T8_TREE_ATTR_INFO (tree, 0)),
-                   t8_cmesh_trees_attribute_size (tree));
-    temp_offset_data += t8_cmesh_trees_attribute_size (tree);
+    if (tree->num_attributes > 0) {
+      /* Copy all attribute infos to send_buffer */
+      (void) memcpy (send_buffer + num_trees * sizeof (t8_ctree_struct_t) +
+                     num_ghost_send * sizeof (t8_cghost_struct_t) +
+                     ghost_neighbor_bytes + tree_neighbor_bytes +
+                     temp_offset_att, T8_TREE_ATTR_INFO (tree, 0),
+                     tree->num_attributes *
+                     sizeof (t8_attribute_info_struct_t));
+      temp_offset_att +=
+        tree->num_attributes * sizeof (t8_attribute_info_struct_t);
+      /* Copy all attribute data to send_buffer */
+      (void) memcpy (send_buffer + num_trees * sizeof (t8_ctree_struct_t) +
+                     num_ghost_send * sizeof (t8_cghost_struct_t) +
+                     ghost_neighbor_bytes + tree_neighbor_bytes +
+                     attr_info_bytes + temp_offset_data,
+                     T8_TREE_ATTR (tree, T8_TREE_ATTR_INFO (tree, 0)),
+                     t8_cmesh_trees_attribute_size (tree));
+      temp_offset_data += t8_cmesh_trees_attribute_size (tree);
+    }
   }
   /* Set new face_neighbor offsets */
   /* TODO: indent bug? */
@@ -1316,20 +1322,22 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
 
     /* new attribute offset for tree */
     tree_cpy->att_offset = temp_offset_att - temp_offset_tree;
-    attr_info = T8_TREE_ATTR_INFO (tree_cpy, 0);
-    attr_info->attribute_offset = last_offset + last_size -
-      last_num_att * sizeof (t8_attribute_info_struct_t);
-    last_offset = attr_info->attribute_offset;
-    last_size = attr_info->attribute_size;
-
-    /* set new attribtue data offsets */
-    for (iz = 1; iz < (size_t) tree_cpy->num_attributes; iz++) {
-      attr_info->attribute_offset = last_offset + last_size;
+    if (tree_cpy->num_attributes > 0) {
+      attr_info = T8_TREE_ATTR_INFO (tree_cpy, 0);
+      attr_info->attribute_offset = last_offset + last_size -
+        last_num_att * sizeof (t8_attribute_info_struct_t);
+      last_offset = attr_info->attribute_offset;
       last_size = attr_info->attribute_size;
-      attr_info++;
+
+      /* set new attribtue data offsets */
+      for (iz = 1; iz < (size_t) tree_cpy->num_attributes; iz++) {
+        attr_info->attribute_offset = last_offset + last_size;
+        last_size = attr_info->attribute_size;
+        attr_info++;
+      }
+      temp_offset_att += tree_cpy->num_attributes *
+        sizeof (t8_attribute_info_struct_t);
     }
-    temp_offset_att += tree_cpy->num_attributes *
-      sizeof (t8_attribute_info_struct_t);
     temp_offset_tree += sizeof (t8_ctree_struct_t);
     last_num_att = tree_cpy->num_attributes;
   }
@@ -1484,12 +1492,12 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                              int *num_request_alloc, int *send_first,
                              int *send_last,
                              char ***send_buffer, char **my_buffer,
-                             int *my_buffer_bytes, sc_MPI_Request ** requests,
-                             sc_MPI_Comm comm)
+                             size_t * my_buffer_bytes,
+                             sc_MPI_Request ** requests, sc_MPI_Comm comm)
 {
   size_t              attr_bytes = 0, tree_neighbor_bytes,
     ghost_neighbor_bytes, attr_info_bytes;
-  int                 total_alloc;
+  size_t              total_alloc;
   int                 iproc, flag;
   int                 mpiret, num_send_mpi = 0;
   char               *buffer;
@@ -1617,7 +1625,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     t8_debugf ("TNB %zd\n", tree_neighbor_bytes);
     t8_debugf ("AIB %zd\n", attr_info_bytes);
     t8_debugf ("AB %zd\n", attr_bytes);
-    t8_debugf ("Ta %i\n", total_alloc);
+    t8_debugf ("Ta %zd\n", total_alloc);
     /* If profiling is enabled, we count the number of shipped trees/ghosts
      * and processes we ship to. */
     if (cmesh->profile) {
@@ -1658,7 +1666,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     if (iproc != cmesh->mpirank) {
       if (num_trees + num_ghost_send > 0) {
         /* send buffer to remote process */
-        t8_debugf ("Post send of %i trees/%i bytes to %i\n",
+        t8_debugf ("Post send of %i trees/%zd bytes to %i\n",
                    *(t8_locidx_t *) (buffer +
                                      total_alloc - 2 * sizeof (t8_locidx_t)),
                    total_alloc, iproc - flag);
@@ -1799,7 +1807,7 @@ static void
 t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
                              const struct t8_cmesh *cmesh_from,
                              t8_gloidx_t * tree_offset,
-                             char *my_buffer, int my_buffer_bytes,
+                             char *my_buffer, size_t my_buffer_bytes,
                              sc_MPI_Comm comm, int fr, int lr)
 {
   int                 num_receive, *local_procid;       /* ranks of the processor from which we will receive */
@@ -2121,7 +2129,8 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
                           t8_gloidx_t * tree_offset, sc_MPI_Comm comm)
 {
   int                 send_first, send_last, num_request_alloc; /* ranks of the processor to which we will send */
-  int                 iproc, my_buffer_bytes = 0, num_send_mpi, mpiret;
+  int                 iproc, num_send_mpi, mpiret;
+  size_t              my_buffer_bytes;
   char              **send_buffer = NULL, *my_buffer = NULL;
 
   int                 fs, ls, fr, lr;

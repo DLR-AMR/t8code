@@ -50,7 +50,7 @@ T8_EXTERN_C_BEGIN ();
  * initialized elements before the elements that they replace are destroyed.
  *
  * \param [in] forest      the forest
- * \param [in] which_tree  the tree containing \a outgoing and \a incoming
+ * \param [in] which_tree  the local tree containing \a outgoing and \a incoming
  * \param [in] ts          the eclass scheme of the tree
  * \param [in] num_outgoing The number of outgoing elements.
  * \param [in] outgoing     The outgoing elements: after the callback, the
@@ -64,7 +64,7 @@ T8_EXTERN_C_BEGIN ();
  * be the number of children, and vice versa if a family is being coarsened.
  */
 typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
-                                            t8_topidx_t which_tree,
+                                            t8_locidx_t which_tree,
                                             t8_eclass_scheme_t * ts,
                                             int num_outgoing,
                                             t8_element_t * outgoing[],
@@ -79,7 +79,7 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
  * of the element array for refinement. In this case the other entries of
  * the element array are undefined.
  * \param [in] forest      the forest
- * \param [in] which_tree  the global tree containing \a elements
+ * \param [in] which_tree  the local tree containing \a elements
  * \param [in] ts          the eclass scheme of the tree
  * \param [in] num_elements the number of entries in \a elements
  * \param [in] elements    Pointers to a family or, if second entry is NULL,
@@ -88,9 +88,8 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
  *         smaller zero if the family \a elements shall be coarsened
  *         zero else.
  */
-/* TODO: Change topidx to gloidx */
 typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
-                                          t8_topidx_t which_tree,
+                                          t8_locidx_t which_tree,
                                           t8_eclass_scheme_t * ts,
                                           int num_elements,
                                           t8_element_t * elements[]);
@@ -193,6 +192,22 @@ void                t8_forest_set_adapt (t8_forest_t forest,
                                          t8_forest_replace_t replace_fn,
                                          int recursive);
 
+/** Set the user data of a forest. This can i.e. be used to pass user defined
+ * arguments to the adapt routine.
+ * \param [in,out] forest   The forest
+ * \param [in]     data     A pointer to user data. t8code will never touch the data.
+ * The forest must not be committed before calling this function.
+ * \see t8_forest_get_user_data
+ */
+void                t8_forest_set_user_data (t8_forest_t forest, void *data);
+
+/** Return the user data pointer associated with a forest.
+ * \param [in]     forest   The forest.
+ * \return                  The user data pointer of \a forest.
+ * \see t8_forest_set_user_data
+ */
+void               *t8_forest_get_user_data (t8_forest_t forest);
+
 /* TODO: define weight callback function */
 void                t8_forest_set_partition (t8_forest_t forest,
                                              const t8_forest_t from,
@@ -222,14 +237,58 @@ void                t8_forest_commit (t8_forest_t forest);
 
 t8_locidx_t         t8_forest_get_num_element (t8_forest_t forest);
 
+/** Return the element class of a forest local tree.
+ *  \param [in] forest    The forest.
+ *  \param [in] ltreeid   The local id of a tree in the forest.
+ * \return  The element class of the tree \a ltreeid.
+ * \a forest must be committed before calling this function.
+ */
+t8_eclass_t         t8_forest_get_eclass (t8_forest_t forest,
+                                          t8_locidx_t ltreeid);
+
+/** Given the local id of a tree in a forest, compute the tree's local id
+ * in the associated cmesh.
+ *  \param [in] forest    The forest.
+ *  \param [in] ltreeid   The local id of a tree in the forest.
+ * \return  The local id of the tree in the cmesh associated with the forest.
+ * \a forest must be committed before calling this function.
+ */
+t8_locidx_t         t8_forest_ltreeid_to_cmesh_ltreeid (t8_forest_t forest,
+                                                        t8_locidx_t ltreeid);
+
+/** Enable or disable profiling for a forest. If profiling is enabled, runtimes
+ * and statistics are collected during forest_commit.
+ * \param [in,out] forest        The forest to be updated.
+ * \param [in]     set_profiling If true, profiling will be enabled, if false
+ *                              disabled.
+ *
+ * Profiling is disabled by default.
+ * The forest must not be committed before calling this function.
+ * \see t8_forest_print_profile
+ */
+void                t8_forest_set_profiling (t8_forest_t forest,
+                                             int set_profiling);
+
+/** Print the collected statistics from a forest profile.
+ * \param [in]    forest        The forest.
+ *
+ * \a forest must be committed before calling this function.
+ * \see t8_forest_set_profiling
+ */
+void                t8_forest_print_profile (t8_forest_t forest);
+
 /** Change the cmesh associated to a forest to a partitioned cmesh that
  * is partitioned according to the tree distribution in the forest.
  * \param [in,out]   forest The forest.
  * \param [in]       comm   The MPI communicator that is used to partition
- *                          and commit the cmesh. \see t8_cmesh.h
+ *                          and commit the cmesh.
+ * \param [in]       set_profiling If true, profiling for the new cmesh
+ *                          will be enabled. \see t8_cmesh_set_profiling, \see t8_cmesh_print_profile
+ *  \see t8_cmesh.h
  */
 void                t8_forest_partition_cmesh (t8_forest_t forest,
-                                               sc_MPI_Comm comm);
+                                               sc_MPI_Comm comm,
+                                               int set_profiling);
 
 /** Return the number of local trees of a given forest.
  * \param [in]      forest      The forest.
