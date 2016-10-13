@@ -663,7 +663,7 @@ t8_cmesh_load_proc_loads (int mpirank, int mpisize, int num_files,
   sc_MPI_Comm         inter = sc_MPI_COMM_NULL, intra = sc_MPI_COMM_NULL;
   int                 mpiret, interrank, intrarank, intersize;
 
-  if (num_procs_per_node <= 0 && mode == T8_LOAD_JUQUEEN) {
+  if (num_procs_per_node <= 0 && mode == T8_LOAD_STRIDE) {
     t8_global_infof ("number of processes per node set to 16\n");
     num_procs_per_node = 16;
   }
@@ -715,7 +715,7 @@ t8_cmesh_load_proc_loads (int mpirank, int mpisize, int num_files,
       return 0;
     }
     break;
-  case T8_LOAD_JUQUEEN:
+  case T8_LOAD_STRIDE:
     /* In Juqueen mode, every 16-th process loads a file. The user should
      * control, that these processes reside on different compute nodes to
      * gain maximal efficiency. */
@@ -795,7 +795,7 @@ t8_cmesh_load_bigger_nonloading (int mpirank, int mpisize,
       next_bigger_nonloading = commrank + intrasize;
     }
     break;
-  case T8_LOAD_JUQUEEN:
+  case T8_LOAD_STRIDE:
     /* In Juqueen mode, every 16-th process has opened the file. */
     if (mpirank / num_procs_per_node < num_files - 1) {
       /* If we are in a multiple of 16, where a file was loaded,
