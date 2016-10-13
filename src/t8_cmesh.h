@@ -340,10 +340,12 @@ int                 t8_cmesh_save (t8_cmesh_t cmesh, const char *filename);
 t8_cmesh_t          t8_cmesh_load (const char *filename, sc_MPI_Comm comm);
 
 /* TODO: Document */
+/* procs_per_node is only relevant in mode==JUQUEEN */
 t8_cmesh_t          t8_cmesh_load_and_distribute (const char *fileprefix,
                                                   int num_files,
                                                   sc_MPI_Comm comm,
-                                                  t8_load_mode_t mode);
+                                                  t8_load_mode_t mode,
+                                                  int procs_per_node);
 
 /** Check whether a given MPI communicator assigns the same rank and mpisize
   * as stored in a cmesh.

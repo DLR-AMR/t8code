@@ -658,13 +658,15 @@ t8_cmesh_load (const char *filename, sc_MPI_Comm comm)
 static int
 t8_cmesh_load_proc_loads (int mpirank, int mpisize, int num_files,
                           sc_MPI_Comm comm, t8_load_mode_t mode,
-                          int *file_to_load)
+                          int *file_to_load, int num_procs_per_node)
 {
   sc_MPI_Comm         inter = sc_MPI_COMM_NULL, intra = sc_MPI_COMM_NULL;
   int                 mpiret, interrank, intrarank, intersize;
-  int                 num_procs_per_node = 16;  /* Beware: This value must be the same as in
-                                                   the function below. */
 
+  if (num_procs_per_node <= 0 && mode == T8_LOAD_JUQUEEN) {
+    t8_global_infof ("number of processes per node set to 16\n");
+    num_procs_per_node = 16;
+  }
   /* Fill with invalid value */
   *file_to_load = -1;
   switch (mode) {
@@ -742,15 +744,13 @@ t8_cmesh_load_proc_loads (int mpirank, int mpisize, int num_files,
 static int
 t8_cmesh_load_bigger_nonloading (int mpirank, int mpisize,
                                  int num_files, t8_load_mode_t mode,
-                                 sc_MPI_Comm comm)
+                                 sc_MPI_Comm comm, int num_procs_per_node)
 {
   int                 next_bigger_nonloading;
   sc_MPI_Comm         inter = sc_MPI_COMM_NULL, intra = sc_MPI_COMM_NULL;
   sc_MPI_Group        intragroup, commgroup;
   int                 mpiret, interrank, intrarank, intrasize, commrank;
   int                 rankzero;
-  int                 num_procs_per_node = 16;  /* Beware: This value must be the same as in
-                                                   the function above. */
 
   switch (mode) {
   case T8_LOAD_SIMPLE:
@@ -820,7 +820,8 @@ t8_cmesh_load_bigger_nonloading (int mpirank, int mpisize,
  */
 t8_cmesh_t
 t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
-                              sc_MPI_Comm comm, t8_load_mode_t mode)
+                              sc_MPI_Comm comm, t8_load_mode_t mode,
+                              int procs_per_node)
 {
   t8_cmesh_t          cmesh;
   char                buffer[BUFSIZ];
@@ -843,7 +844,7 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
    * loads a file.
    */
   if (t8_cmesh_load_proc_loads (mpirank, mpisize, num_files, comm,
-                                mode, &file_to_load)) {
+                                mode, &file_to_load, procs_per_node)) {
     T8_ASSERT (fileprefix != NULL);
     T8_ASSERT (0 <= file_to_load && file_to_load < num_files);
     snprintf (buffer, BUFSIZ, "%s_%04d.cmesh", fileprefix, file_to_load);
@@ -885,7 +886,7 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
     /* Calculate the next bigger nonloading rank. */
     next_bigger_nonloading =
       t8_cmesh_load_bigger_nonloading (mpirank, mpisize, num_files, mode,
-                                       comm);
+                                       comm, procs_per_node);
     /* Set the first tree of this process to the first tree of the next nonloading
      * rank */
     cmesh->first_tree =
