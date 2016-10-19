@@ -3,6 +3,11 @@
 # Included from toplevel directory
 
 bin_PROGRAMS += \
-	example/gmsh/t8_read_msh_file
+	example/gmsh/t8_read_msh_file \
+  example/gmsh/t8_load_and_refine_square_w_hole
+
+dist_t8data_DATA += \
+  example/gmsh/circlesquare_hybrid_hole.msh
 
 example_gmsh_t8_read_msh_file_SOURCES = example/gmsh/t8_read_msh_file.c
+example_gmsh_t8_load_and_refine_square_w_hole = example/gmsh/t8_load_and_refine_square_w_hole.c
