@@ -141,15 +141,17 @@ t8_load_refine_adapt (t8_forest_t forest, t8_locidx_t which_tree,
     /* Do not refine further than level 2 */
     return 0;
   }
-  /* Refine along the outside boundary */
+  /* Refine along the outside boundary.
+   * The factors in front of h control the width of the refinement region */
   if (ts->eclass == T8_ECLASS_QUAD && (fabs (elem_midpoint[0]) > 2 - 0.7 * h
                                        || fabs (elem_midpoint[1]) >
                                        2 - 0.8 * h)) {
     return 1;
   }
-  /* Refine along the inner boundary */
+  /* Refine along the inner boundary.
+   * The factor in front of h controls the width of the refinement region. */
   if (ts->eclass == T8_ECLASS_TRIANGLE &&
-      t8_vec3_dot (elem_midpoint, elem_midpoint) < 1 + 2 * h) {
+      t8_vec3_dot (elem_midpoint, elem_midpoint) < 1 + 5 * h) {
     return 1;
   }
 
@@ -160,10 +162,16 @@ void
 t8_load_refine_build_forest (t8_cmesh_t cmesh, sc_MPI_Comm comm, int level)
 {
   t8_forest_t         forest, forest_adapt;
+  t8_cmesh_t          cmesh_partition;
+
+  t8_cmesh_init (&cmesh_partition);
+  t8_cmesh_set_partition_uniform (cmesh_partition, level);
+  t8_cmesh_set_derive (cmesh_partition, cmesh);
+  t8_cmesh_commit (cmesh_partition, comm);
 
   t8_forest_init (&forest);
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
-  t8_forest_set_cmesh (forest, cmesh, comm);
+  t8_forest_set_cmesh (forest, cmesh_partition, comm);
   t8_forest_set_level (forest, level);
   t8_forest_commit (forest);
 
@@ -172,6 +180,7 @@ t8_load_refine_build_forest (t8_cmesh_t cmesh, sc_MPI_Comm comm, int level)
   t8_forest_commit (forest_adapt);
   t8_forest_write_vtk (forest_adapt, "adapted_forest");
   t8_forest_unref (&forest_adapt);
+  t8_cmesh_unref (&cmesh_partition);
   t8_cmesh_unref (&cmesh);
 }
 
