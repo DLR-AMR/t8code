@@ -118,6 +118,8 @@ t8_eclass_count_boundary (t8_eclass_t theclass, int min_dim, int *per_eclass)
   return sum;
 }
 
+#ifdef T8_ENABLE_DEBUG
+
 static              t8_gloidx_t
 t8_eclass_count_pyramid (int level)
 {
@@ -148,9 +150,13 @@ t8_eclass_count_pyramid (int level)
   return Tl;
 }
 
+#endif
+
 t8_gloidx_t
 t8_eclass_count_leaf (t8_eclass_t theclass, int level)
 {
+  T8_ASSERT (level >= 0);
+
   if (theclass != T8_ECLASS_PYRAMID) {
     /* For each eclass that is not the pyramid the number of leafs
      * is dim^level.
@@ -181,6 +187,7 @@ t8_eclass_count_leaf (t8_eclass_t theclass, int level)
     number_of_leafs *= 4;
     number_of_leafs += six_to_level;
     T8_ASSERT (number_of_leafs > 0);
+    T8_ASSERT (number_of_leafs == t8_eclass_count_pyramid (level));
     return number_of_leafs;
   }
 }
