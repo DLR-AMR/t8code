@@ -29,7 +29,7 @@
 #include <p8est_connectivity.h>
 #include <sc_shmem.h>
 
-#if 1
+#if 0
 static int
 t8_basic_adapt (t8_forest_t forest, t8_locidx_t which_tree,
                 t8_eclass_scheme_t * ts,
@@ -79,6 +79,7 @@ t8_basic_refine_test ()
 }
 #endif
 
+#if 0
 static void
 t8_basic_forest_partition ()
 {
@@ -111,6 +112,7 @@ t8_basic_forest_partition ()
   t8_cmesh_destroy (&cmesh_partition);
   t8_forest_unref (&forest_partition);
 }
+#endif
 
 #if 0
 static void
