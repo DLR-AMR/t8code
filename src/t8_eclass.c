@@ -118,9 +118,45 @@ t8_eclass_count_boundary (t8_eclass_t theclass, int min_dim, int *per_eclass)
   return sum;
 }
 
+#ifdef T8_ENABLE_DEBUG
+
+static              t8_gloidx_t
+t8_eclass_count_pyramid (int level)
+{
+  /* We like to compute the number of leaves in a uniformly refined pyramid.
+   * If T_l is this number at level l, we make use of the recursion:
+   * T_{l + 2^i} =
+   *   6^{2^i} T_l +
+   *   4 ( \Prod_{j = 0}^{i - 1} (6^{2^j} + 8^{2^j}) ) 8^l
+   */
+
+  t8_gloidx_t         Tl = 1;
+  t8_gloidx_t         sixpow2i = 6, eightpow2i = 8;
+  t8_gloidx_t         prodsumpow = 1, eightpowl = 1;
+
+  T8_ASSERT (level >= 0);
+
+  while (level > 0) {
+    if (level & 1) {
+      Tl = sixpow2i * Tl + 4 * prodsumpow * eightpowl;
+      eightpowl *= eightpow2i;
+    }
+    prodsumpow *= (sixpow2i + eightpow2i);
+    sixpow2i *= sixpow2i;
+    eightpow2i *= eightpow2i;
+    level >>= 1;
+  }
+
+  return Tl;
+}
+
+#endif
+
 t8_gloidx_t
 t8_eclass_count_leaf (t8_eclass_t theclass, int level)
 {
+  T8_ASSERT (level >= 0);
+
   if (theclass != T8_ECLASS_PYRAMID) {
     /* For each eclass that is not the pyramid the number of leafs
      * is dim^level.
@@ -151,6 +187,7 @@ t8_eclass_count_leaf (t8_eclass_t theclass, int level)
     number_of_leafs *= 4;
     number_of_leafs += six_to_level;
     T8_ASSERT (number_of_leafs > 0);
+    T8_ASSERT (number_of_leafs == t8_eclass_count_pyramid (level));
     return number_of_leafs;
   }
 }

@@ -52,6 +52,7 @@ t8_basic_adapt (t8_forest_t forest, t8_locidx_t which_tree,
     return 1;
   return 0;
 }
+
 #endif
 #if 0
 static void
