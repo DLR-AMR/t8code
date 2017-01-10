@@ -24,6 +24,11 @@
 #include "t8_default_common.h"
 #include "t8_default_quad.h"
 
+/* This function is used by other element functions and we thus need to
+ * declare it up here */
+static uint64_t     t8_default_quad_get_linear_id (const t8_element_t * elem,
+                                                   int level);
+
 #ifdef T8_ENABLE_DEBUG
 
 static int
@@ -83,6 +88,23 @@ t8_default_quad_copy (const t8_element_t * source, t8_element_t * dest)
 
   *r = *q;
   t8_default_quad_copy_surround (q, r);
+}
+
+static int
+t8_default_quad_compare (const t8_element_t * elem1,
+                         const t8_element_t * elem2)
+{
+  int                 maxlvl;
+  u_int64_t           id1, id2;
+
+  /* Compute the bigger level of the two */
+  maxlvl = SC_MAX (t8_default_quad_level (elem1),
+                   t8_default_quad_level (elem2));
+  /* Compute the linear ids of the elements */
+  id1 = t8_default_quad_get_linear_id (elem1, maxlvl);
+  id2 = t8_default_quad_get_linear_id (elem2, maxlvl);
+  /* return negativ if id1 < id2, zero if id1 = id2, positive if id1 > id2 */
+  return id1 < id2 ? -1 : id1 != id2;
 }
 
 static void
@@ -157,10 +179,35 @@ static void
 t8_default_quad_set_linear_id (t8_element_t * elem, int level, uint64_t id)
 {
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
-  T8_ASSERT (0 <= id && id < (uint64_t) 1 << P4EST_DIM * level);
+  T8_ASSERT (0 <= id && id < ((uint64_t) 1) << P4EST_DIM * level);
 
   p4est_quadrant_set_morton ((p4est_quadrant_t *) elem, level, id);
   T8_QUAD_SET_TDIM ((p4est_quadrant_t *) elem, 2);
+}
+
+static              uint64_t
+t8_default_quad_get_linear_id (const t8_element_t * elem, int level)
+{
+  T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
+
+  return p4est_quadrant_linear_id ((p4est_quadrant_t *) elem, level);
+}
+
+static void
+t8_default_quad_first_descendant (const t8_element_t * elem,
+                                  t8_element_t * desc)
+{
+  p4est_quadrant_first_descendant ((p4est_quadrant_t *) elem,
+                                   (p4est_quadrant_t *) desc,
+                                   P4EST_QMAXLEVEL);
+}
+
+static void
+t8_default_quad_last_descendant (const t8_element_t * elem,
+                                 t8_element_t * desc)
+{
+  p4est_quadrant_last_descendant ((p4est_quadrant_t *) elem,
+                                  (p4est_quadrant_t *) desc, P4EST_QMAXLEVEL);
 }
 
 static void
@@ -171,7 +218,7 @@ t8_default_quad_successor (const t8_element_t * elem1,
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
 
   id = p4est_quadrant_linear_id ((const p4est_quadrant_t *) elem1, level);
-  T8_ASSERT (id + 1 < (1 << P4EST_DIM * level));
+  T8_ASSERT (id + 1 < ((uint64_t) 1) << P4EST_DIM * level);
   p4est_quadrant_set_morton ((p4est_quadrant_t *) elem2, level, id + 1);
   t8_default_quad_copy_surround ((const p4est_quadrant_t *) elem1,
                                  (p4est_quadrant_t *) elem2);
@@ -196,7 +243,7 @@ t8_default_quad_boundary (const t8_element_t * elem,
                           int min_dim, int length, t8_element_t ** boundary)
 {
 #ifdef T8_ENABLE_DEBUG
-  int                 per_eclass[T8_ECLASS_LAST];
+  int                 per_eclass[T8_ECLASS_COUNT];
 #endif
 
   T8_ASSERT (length ==
@@ -204,6 +251,23 @@ t8_default_quad_boundary (const t8_element_t * elem,
 
   /* TODO: write this function */
   SC_ABORT_NOT_REACHED ();
+}
+
+static void
+t8_default_quad_anchor (const t8_element_t * elem, int coord[3])
+{
+  p4est_quadrant_t   *q;
+
+  q = (p4est_quadrant_t *) elem;
+  coord[0] = q->x;
+  coord[1] = q->y;
+  coord[2] = 0;
+}
+
+static int
+t8_default_quad_root_len (const t8_element_t * elem)
+{
+  return P4EST_ROOT_LEN;
 }
 
 t8_eclass_scheme_t *
@@ -220,6 +284,7 @@ t8_default_scheme_new_quad (void)
 
   ts->elem_level = t8_default_quad_level;
   ts->elem_copy = t8_default_quad_copy;
+  ts->elem_compare = t8_default_quad_compare;
   ts->elem_parent = t8_default_quad_parent;
   ts->elem_sibling = t8_default_quad_sibling;
   ts->elem_child = t8_default_quad_child;
@@ -229,7 +294,12 @@ t8_default_scheme_new_quad (void)
   ts->elem_nca = t8_default_quad_nca;
   ts->elem_boundary = t8_default_quad_boundary;
   ts->elem_set_linear_id = t8_default_quad_set_linear_id;
+  ts->elem_get_linear_id = t8_default_quad_get_linear_id;
+  ts->elem_first_desc = t8_default_quad_first_descendant;
+  ts->elem_last_desc = t8_default_quad_last_descendant;
   ts->elem_successor = t8_default_quad_successor;
+  ts->elem_anchor = t8_default_quad_anchor;
+  ts->elem_root_len = t8_default_quad_root_len;
 
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;

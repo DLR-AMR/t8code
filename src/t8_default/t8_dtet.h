@@ -40,7 +40,7 @@ T8_EXTERN_C_BEGIN ();
 #define T8_DTET_FACES 4
 
 /** The maximum refinement level allowed for a tetrahedron. */
-#define T8_DTET_MAXLEVEL 30
+#define T8_DTET_MAXLEVEL 21
 
 /** The length of the root tetrahedron in integer coordinates. */
 #define T8_DTET_ROOT_LEN (1 << (T8_DTET_MAXLEVEL))

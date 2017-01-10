@@ -32,7 +32,6 @@
 #include <t8.h>
 #include <t8_forest.h>
 
-
 /* TODO: comment */
 void                t8_forest_adapt (t8_forest_t forest);
 

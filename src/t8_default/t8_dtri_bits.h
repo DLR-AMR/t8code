@@ -46,6 +46,17 @@ void                t8_dtri_copy (const t8_dtri_t * t, t8_dtri_t * dest);
  */
 void                t8_dtri_parent (const t8_dtri_t * t, t8_dtri_t * parent);
 
+/** Compute the ancestor of a triangle at a given level.
+ * \param [in]  t   Input triangle.
+ * \param [in]  level A smaller level than \a t.
+ * \param [in,out] ancestor Existing triangle whose data will
+ *                  be filled with the data of \a t's ancestor on
+ *                  level \a level.
+ * \note The triangle \a ancestor may point to the same triangle as \a t.
+ */
+void                t8_dtri_ancestor (const t8_dtri_t * t, int level,
+                                      t8_dtri_t * ancestor);
+
 /** Compute the coordinates of a vertex of a triangle.
  * \param [in] t    Input triangle.
  * \param [out] coordinates An array of 2 t8_dtri_coord_t that
@@ -182,6 +193,24 @@ void                t8_dtri_init_root (t8_dtri_t * t);
  */
 void                t8_dtri_successor (const t8_dtri_t * t, t8_dtri_t * s,
                                        int level);
+
+/** Compute the first descendant of a triangle. This is the descendant of
+ * the triangle in a uniform maxlevel refinement that has the smaller id.
+ * \param [in] t        Triangle whose descendant is computed.
+ * \param [out] s       Existing triangle whose data will be filled with the data
+ *                      of t's first descendant.
+ */
+void                t8_dtri_first_descendant (const t8_dtri_t * t,
+                                              t8_dtri_t * s);
+
+/** Compute the last descendant of a triangle. This is the descendant of
+ * the triangle in a uniform maxlevel refinement that has the bigges id.
+ * \param [in] t        Triangle whose descendant is computed.
+ * \param [out] s       Existing triangle whose data will be filled with the data
+ *                      of t's last descendant.
+ */
+void                t8_dtri_last_descendant (const t8_dtri_t * t,
+                                             t8_dtri_t * s);
 
 /** Computes the predecessor of a triangle in a uniform grid of level \a level.
  * \param [in] t  triangle whose id will be computed.

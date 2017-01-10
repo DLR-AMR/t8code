@@ -119,6 +119,135 @@ t8_dtri_parent (const t8_dtri_t * t, t8_dtri_t * parent)
 }
 
 void
+t8_dtri_ancestor (const t8_dtri_t * t, int level, t8_dtri_t * ancestor)
+{
+  /* TODO: find out, at which level difference it is faster to use    *
+   * the arithmetic computation of ancestor type
+   * opposed to iteratively computing the parent type.
+   */
+  t8_dtri_coord_t     delta_x, delta_y, diff_xy;
+#ifdef T8_DTRI_TO_DTET
+  t8_dtri_coord_t     delta_z, diff_xz, diff_yz;
+  t8_dtet_type_t      possible_types[6] = { 1, 1, 1, 1, 1, 1 };
+  int                 i;
+#ifdef T8_ENABLE_DEBUG
+  int                 set_type = 0;
+#endif
+#endif /* T8_DTRI_TO_DTET */
+
+  /* delta_{x,y} = t->{x,y} - ancestor->{x,y}
+   * the difference of the coordinates.
+   * Needed to compute the type of the ancestor. */
+  delta_x = t->x & (T8_DTRI_LEN (level) - 1);
+  delta_y = t->y & (T8_DTRI_LEN (level) - 1);
+#ifdef T8_DTRI_TO_DTET
+  delta_z = t->z & (T8_DTRI_LEN (level) - 1);
+#endif
+
+  /* The coordinates of the ancestor. It is necessary
+   * to compute the delta first, since ancestor and t
+   * could point to the same triangle. */
+  ancestor->x = t->x & ~(T8_DTRI_LEN (level) - 1);
+  ancestor->y = t->y & ~(T8_DTRI_LEN (level) - 1);
+#ifdef T8_DTRI_TO_DTET
+  ancestor->z = t->z & ~(T8_DTRI_LEN (level) - 1);
+#endif
+
+#ifndef T8_DTRI_TO_DTET
+  /* The type of the ancestor depends on delta_x - delta_y */
+  diff_xy = delta_x - delta_y;
+  if (diff_xy > 0) {
+    ancestor->type = 0;
+  }
+  else if (diff_xy < 0) {
+    ancestor->type = 1;
+  }
+  else {
+    T8_ASSERT (diff_xy == 0);
+    ancestor->type = t->type;
+  }
+
+  ancestor->n = t->n;
+#else
+/* The sign of each diff reduces the number of possible types
+ * for the ancestor. At the end only one possible type is left,
+ * this type's entry in the possible_types array will be positive.
+ */
+
+  diff_xy = delta_x - delta_y;
+  diff_xz = delta_x - delta_z;
+  diff_yz = delta_y - delta_z;
+
+/* delta_x - delta_y */
+  if (diff_xy > 0) {
+    possible_types[2] = possible_types[3] = possible_types[4] = 0;
+  }
+  else if (diff_xy < 0) {
+    possible_types[0] = possible_types[1] = possible_types[5] = 0;
+  }
+  else {
+    T8_ASSERT (diff_xy == 0);
+    if (t->type == 0 || t->type == 1 || t->type == 5) {
+      possible_types[2] = possible_types[3] = possible_types[4] = 0;
+    }
+    else {
+      possible_types[0] = possible_types[1] = possible_types[5] = 0;
+    }
+  }
+
+/* delta_x - delta_z */
+  if (diff_xz > 0) {
+    possible_types[3] = possible_types[4] = possible_types[5] = 0;
+  }
+  else if (diff_xz < 0) {
+    possible_types[0] = possible_types[1] = possible_types[2] = 0;
+  }
+  else {
+    T8_ASSERT (diff_xz == 0);
+    if (t->type == 0 || t->type == 1 || t->type == 2) {
+      possible_types[3] = possible_types[4] = possible_types[5] = 0;
+    }
+    else {
+      possible_types[0] = possible_types[1] = possible_types[2] = 0;
+    }
+  }
+
+/* delta_y - delta_z */
+  if (diff_yz > 0) {
+    possible_types[0] = possible_types[4] = possible_types[5] = 0;
+  }
+  else if (diff_yz < 0) {
+    possible_types[1] = possible_types[2] = possible_types[3] = 0;
+  }
+  else {
+    T8_ASSERT (diff_yz == 0);
+    if (t->type == 1 || t->type == 2 || t->type == 3) {
+      possible_types[0] = possible_types[4] = possible_types[5] = 0;
+    }
+    else {
+      possible_types[1] = possible_types[2] = possible_types[3] = 0;
+    }
+  }
+
+  /* Got through possible_types array and find the only entry
+   * that is nonzero
+   */
+  for (i = 0; i < 6; i++) {
+    T8_ASSERT (possible_types[i] == 0 || possible_types[i] == 1);
+    if (possible_types[i] == 1) {
+      ancestor->type = i;
+#ifdef T8_ENABLE_DEBUG
+      T8_ASSERT (set_type != 1);
+      set_type = 1;
+#endif
+    }
+  }
+  T8_ASSERT (set_type == 1);
+#endif /* T8_DTRI_TO_DTET */
+  ancestor->level = level;
+}
+
+void
 t8_dtri_compute_coords (const t8_dtri_t * t, int vertex,
                         t8_dtri_coord_t coordinates[T8_DTRI_DIM])
 {
@@ -420,7 +549,7 @@ void
 t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
                                  const t8_dtri_t * t2, t8_dtri_t * r)
 {
-  int                 maxlevel;
+  int                 maxlevel, r_level;
   uint32_t            exclorx, exclory;
 #ifdef T8_DTRI_TO_DTET
   uint32_t            exclorz;
@@ -440,13 +569,10 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
 
   T8_ASSERT (maxlevel <= T8_DTRI_MAXLEVEL);
 
-  r->x = t1->x & ~((1 << maxlevel) - 1);
-  r->y = t1->y & ~((1 << maxlevel) - 1);
-#ifdef T8_DTRI_TO_DTET
-  r->z = t1->z & ~((1 << maxlevel) - 1);
-#endif
-  r->level = (int8_t) SC_MIN (T8_DTRI_MAXLEVEL - maxlevel,
-                              (int) SC_MIN (t1->level, t2->level));
+  r_level = (int8_t) SC_MIN (T8_DTRI_MAXLEVEL - maxlevel,
+                             (int) SC_MIN (t1->level, t2->level));
+  t8_dtri_ancestor (t1, r_level, r);
+#if 0
   /* Find the correct type of r by testing with
    * which type it becomes an ancestor of t1. */
   for (r->type = 0; r->type < 6; r->type++) {
@@ -455,6 +581,7 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
     }
   }
   SC_ABORT_NOT_REACHED ();
+#endif
 }
 
 int
@@ -614,6 +741,36 @@ t8_dtri_is_ancestor (const t8_dtri_t * t, const t8_dtri_t * c)
   }
 }
 
+/* Compute the linear id of the first descendant of a triangle/tet */
+static uint64_t
+t8_dtri_linear_id_first_desc (const t8_dtri_t * t)
+{
+  /* The id of the first descendant is the id of t in a uniform maxlevel
+   * refinement */
+  return t8_dtri_linear_id (t, T8_DTRI_MAXLEVEL);
+}
+
+/* Compute the linear id of the last descendant of a triangle/tet */
+static              uint64_t
+t8_dtri_linear_id_last_desc (const t8_dtri_t * t)
+{
+  uint64_t            id = 0, t_id;
+  int                 exponent;
+
+  /* The id of the last descendant consists of the id of t in
+   * the first digits and then the local ids of all last children
+   * (3 in 2d, 7 in 3d)
+   */
+  t_id = t8_dtri_linear_id (t, t->level);
+  exponent = T8_DTRI_MAXLEVEL - t->level;
+  /* Set the last bits to the local ids of always choosing the last child
+   * of t */
+  id = (((uint64_t) 1) << T8_DTRI_DIM * exponent) - 1;
+  /* Set the first bits of id to the id of t itself */
+  id |= t_id << exponent;
+  return id;
+}
+
 uint64_t
 t8_dtri_linear_id (const t8_dtri_t * t, int level)
 {
@@ -622,13 +779,22 @@ t8_dtri_linear_id (const t8_dtri_t * t, int level)
   t8_dtri_cube_id_t   cid;
   int                 i;
   int                 exponent;
+  int                 my_level;
 
-  T8_ASSERT (0 <= level && level <= t->level);
+  T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
+  my_level = t->level;
   exponent = 0;
+  /* If the given level is bigger than t's level
+   * we first fill up with the ids of t's descendants at t's
+   * origin with the same type as t */
+  if (level > my_level) {
+    exponent = (level - my_level) * T8_DTRI_DIM;
+  }
+  level = my_level;
   type_temp = compute_type (t, level);
   for (i = level; i > 0; i--) {
     cid = compute_cubeid (t, i);
-    id |= t8_dtri_type_cid_to_Iloc[type_temp][cid] << exponent;
+    id |= ((uint64_t) t8_dtri_type_cid_to_Iloc[type_temp][cid]) << exponent;
     exponent += T8_DTRI_DIM;    /* multiply with 4 (2d) resp. 8  (3d) */
     type_temp = t8_dtri_cid_type_to_parenttype[cid][type_temp];
   }
@@ -639,13 +805,13 @@ void
 t8_dtri_init_linear_id (t8_dtri_t * t, uint64_t id, int level)
 {
   int                 i;
-  int                 offset;
+  int                 offset_coords, offset_index;
   const int           children_m1 = T8_DTRI_CHILDREN - 1;
   uint64_t            local_index;
   t8_dtri_cube_id_t   cid;
   t8_dtri_type_t      type;
 
-  T8_ASSERT (0 <= id && id <= (uint64_t) 1 << (T8_DTRI_DIM * level));
+  T8_ASSERT (0 <= id && id <= ((uint64_t) 1) << (T8_DTRI_DIM * level));
 
   t->level = level;
   t->x = 0;
@@ -657,16 +823,17 @@ t8_dtri_init_linear_id (t8_dtri_t * t, uint64_t id, int level)
 #endif
   type = 0;                     /* This is the type of the root triangle */
   for (i = 1; i <= level; i++) {
-    offset = level - i;
+    offset_coords = T8_DTRI_MAXLEVEL - i;
+    offset_index = level - i;
     /* Get the local index of T's ancestor on level i */
-    local_index = (id >> (T8_DTRI_DIM * offset)) & children_m1;
+    local_index = (id >> (T8_DTRI_DIM * offset_index)) & children_m1;
     /* Get the type and cube-id of T's ancestor on level i */
     cid = t8_dtri_parenttype_Iloc_to_cid[type][local_index];
     type = t8_dtri_parenttype_Iloc_to_type[type][local_index];
-    t->x |= (cid & 1) ? 1 << offset : 0;
-    t->y |= (cid & 2) ? 1 << offset : 0;
+    t->x |= (cid & 1) ? 1 << offset_coords : 0;
+    t->y |= (cid & 2) ? 1 << offset_coords : 0;
 #ifdef T8_DTRI_TO_DTET
-    t->z |= (cid & 4) ? 1 << offset : 0;
+    t->z |= (cid & 4) ? 1 << offset_coords : 0;
 #endif
   }
   t->type = type;
@@ -745,6 +912,28 @@ t8_dtri_successor (const t8_dtri_t * t, t8_dtri_t * s, int level)
 {
   t8_dtri_copy (t, s);
   t8_dtri_succ_pred_recursion (t, s, level, 1);
+}
+
+void
+t8_dtri_first_descendant (const t8_dtri_t * t, t8_dtri_t * s)
+{
+  uint64_t            id;
+
+  /* Compute the linear id of the first descendant */
+  id = t8_dtri_linear_id_first_desc (t);
+  /* The first descendant has exactly this id */
+  t8_dtri_init_linear_id (s, id, T8_DTRI_MAXLEVEL);
+}
+
+void
+t8_dtri_last_descendant (const t8_dtri_t * t, t8_dtri_t * s)
+{
+  uint64_t            id;
+
+  /* Compute the linear id of t's last descendant */
+  id = t8_dtri_linear_id_last_desc (t);
+  /* Set s to math this linear id */
+  t8_dtri_init_linear_id (s, id, T8_DTRI_MAXLEVEL);
 }
 
 void

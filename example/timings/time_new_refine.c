@@ -3,8 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element types in parallel.
 
-  Copyright (C) 2010 The University of Texas System
-  Written by Carsten Burstedde, Lucas C. Wilcox, and Tobin Isaac
+  Copyright (C) 2015 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -31,12 +30,12 @@
 #include <sc_statistics.h>
 #include <sc_options.h>
 
-#include <t8_forest/t8_forest_types.h> /* TODO: This file should not be included from an application */
+#include <t8_forest/t8_forest_types.h>  /* TODO: This file should not be included from an application */
 /* This function refines every element */
 static int
-t8_basic_adapt_refine (t8_forest_t forest, t8_topidx_t which_tree,
-                t8_eclass_scheme_t * ts,
-                int num_elements, t8_element_t * elements[])
+t8_basic_adapt_refine (t8_forest_t forest, t8_locidx_t which_tree,
+                       t8_eclass_scheme_t * ts,
+                       int num_elements, t8_element_t * elements[])
 {
 #if 0
   int                 level;
@@ -57,9 +56,9 @@ t8_basic_adapt_refine (t8_forest_t forest, t8_topidx_t which_tree,
 
 /* This function coarsens each element */
 static int
-t8_basic_adapt_coarsen (t8_forest_t forest, t8_topidx_t which_tree,
-                t8_eclass_scheme_t * ts,
-                int num_elements, t8_element_t * elements[])
+t8_basic_adapt_coarsen (t8_forest_t forest, t8_locidx_t which_tree,
+                        t8_eclass_scheme_t * ts,
+                        int num_elements, t8_element_t * elements[])
 {
   if (num_elements > 1) {
     return -1;
@@ -76,14 +75,12 @@ t8_timings_adapt (int start_l, int end_l, int runs, int dim)
   sc_flopinfo_t       fi, snapshot;
   sc_statinfo_t       stats[1];
 
-
-
   num_levels = end_l - start_l + 1;
   T8_ASSERT (num_levels > 0);
   T8_ASSERT (runs > 0);
-  
-  forests = T8_ALLOC (t8_forest_t, 2*num_levels * runs);
-  
+
+  forests = T8_ALLOC (t8_forest_t, 2 * num_levels * runs);
+
   t8_forest_init (&forests[0]);
 
   eclass = dim == 2 ? T8_ECLASS_TRIANGLE : T8_ECLASS_TET;
@@ -92,33 +89,31 @@ t8_timings_adapt (int start_l, int end_l, int runs, int dim)
                        t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0));
 */
   t8_forest_set_cmesh (forests[0],
-                       t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD, 0));
+                       t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD,
+                                             0), sc_MPI_COMM_WORLD);
   t8_forest_set_scheme (forests[0], t8_scheme_new_default ());
   t8_forest_set_level (forests[0], start_l);
   t8_forest_commit (forests[0]);
 
   sc_flops_start (&fi);
   sc_flops_snap (&fi, &snapshot);
-
-
-  for (run = 0, cur_for = 1;run < runs;run++) {
+  for (run = 0, cur_for = 1; run < runs; run++) {
     for (li = 1; li < num_levels; li++, cur_for++) {
       t8_forest_init (&forests[cur_for]);
-      t8_forest_set_adapt_temp (forests[cur_for], forests[cur_for - 1], t8_basic_adapt_refine,
-                                NULL, 0);
+      t8_forest_set_adapt (forests[cur_for], forests[cur_for - 1],
+                           t8_basic_adapt_refine, NULL, 0);
       t8_forest_commit (forests[cur_for]);
     }
     for (li = 1; li < num_levels; li++, cur_for++) {
       t8_forest_init (&forests[cur_for]);
-      t8_forest_set_adapt_temp (forests[cur_for], forests[cur_for - 1], t8_basic_adapt_coarsen,
-                                NULL, 0);
+      t8_forest_set_adapt (forests[cur_for], forests[cur_for - 1],
+                           t8_basic_adapt_coarsen, NULL, 0);
       t8_forest_commit (forests[cur_for]);
     }
   }
 
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[0], snapshot.iwtime, "Adapt");
-
 
   t8_forest_unref (&forests[cur_for - 1]);
   T8_FREE (forests);
@@ -135,30 +130,31 @@ t8_timings_new (int level, int dim)
   t8_eclass_t         eclass;
   sc_flopinfo_t       fi, snapshot;
   sc_statinfo_t       stats[1];
- 
+
   T8_ASSERT (level >= 0);
   T8_ASSERT (dim == 2 || dim == 3);
 
   eclass = dim == 2 ? T8_ECLASS_TRIANGLE : T8_ECLASS_TET;
-	
-  t8_global_productionf ("=P= Starting forest_new with %.0f elements.\n", 
-			 512 * pow(2,dim*level));
+
+  t8_global_productionf ("=P= Starting forest_new with %.0f elements.\n",
+                         512 * pow (2, dim * level));
 
   sc_flops_start (&fi);
   sc_flops_snap (&fi, &snapshot);
-  
+
   t8_forest_init (&forest);
   t8_forest_set_cmesh (forest,
-                       t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0));
+                       t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0,
+                                               0, 0), sc_MPI_COMM_WORLD);
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
   t8_forest_set_level (forest, level);
   t8_forest_commit (forest);
-  
+
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[0], snapshot.iwtime, "New");
-  
+
   t8_global_productionf ("=P= Done forest_new.\n");
-  
+
   t8_forest_unref (&forest);
 
   sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
@@ -171,7 +167,7 @@ main (int argc, char **argv)
   int                 mpiret, mpisize;
   int                 start_level, end_level, dim;
   int                 first_argc;
-  int		      use_refine, use_new;
+  int                 use_refine, use_new;
   sc_options_t       *opt;
 
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -180,7 +176,7 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   p4est_init (NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
- 
+
   mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
   SC_CHECK_MPI (mpiret);
 
@@ -197,17 +193,17 @@ main (int argc, char **argv)
 
   first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT,
                                  opt, argc, argv);
-  
-  if (end_level	< start_level) {
+
+  if (end_level < start_level) {
     end_level = start_level;
-  }  
+  }
 
   if (first_argc < 0 || first_argc != argc
       || 2 > dim || dim > 3 || (use_refine && end_level < start_level)) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
-  }	
- 
+  }
+
   if (use_refine || !use_new) {
     t8_timings_adapt (start_level, end_level, 1, dim);
   }

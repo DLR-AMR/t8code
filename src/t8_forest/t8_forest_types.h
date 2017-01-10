@@ -33,6 +33,8 @@
 #include <t8_element.h>
 #include <t8_forest/t8_forest_adapt.h>
 
+typedef struct t8_profile t8_profile_t; /* Defined below */
+
 typedef enum t8_forest_from
 {
   T8_FOREST_FROM_FIRST,
@@ -66,16 +68,23 @@ typedef struct t8_forest
                                              is set to T8_FOREST_FROM_ADAPT. */
   int                 set_adapt_recursive; /**< Flag to decide whether coarsen and refine
                                                 are carried out recursive */
+  void               *user_data;        /**< Pointer for arbitrary user data. \see t8_forest_set_user_data. */
   int                 committed;        /**< \ref t8_forest_commit called? */
   int                 mpisize;          /**< Number of MPI processes. */
   int                 mpirank;          /**< Number of this MPI process. */
 
-  t8_topidx_t         first_local_tree;
-  t8_topidx_t         last_local_tree;
+  t8_gloidx_t         first_local_tree;
+  t8_gloidx_t         last_local_tree;
+  t8_gloidx_t         global_num_trees; /**< The total number of global trees */
   sc_array_t         *trees;
+  t8_shmem_array_t    element_offsets; /**< If partitioned, for each process the global index
+                                            of its first element. Since it is memory consuming,
+                                            it is usually only constructed when needed and otherwise unallocated. */
 
   t8_locidx_t         local_num_elements;  /**< Number of elements on this processor. */
   t8_gloidx_t         global_num_elements; /**< Number of elements on all processors. */
+  t8_profile_t       *profile; /**< If not NULL, runtimes and statistics about forest_commit are stored here. */
+
 }
 t8_forest_struct_t;
 
@@ -85,14 +94,36 @@ typedef struct t8_tree
   sc_array_t          elements;              /**< locally stored elements */
   t8_eclass_t         eclass;                /**< The element class of this tree */
   /* TODO: We will need the *_desc variables later for shure. */
-#if 0
-  t8_element_t        first_desc,            /**< first local descendant */
-                      last_desc;             /**< last local descendant */
-#endif
+  t8_element_t       *first_desc,            /**< first local descendant */
+                     *last_desc;             /**< last local descendant */
   t8_locidx_t         elements_offset;      /**< cumulative sum over earlier
                                                   trees on this processor
                                                   (locals only) */
 }
 t8_tree_struct_t;
+
+/** This struct is used to profile forest algorithms.
+ * The forest struct stores a pointer to a profile struct, and if
+ * it is nonzero, various runtimes and data measurements are stored here.
+ * \see t8_cmesh_set_profiling and \see t8_cmesh_print_profile
+ */
+typedef struct t8_profile
+{
+  t8_locidx_t         partition_elements_shipped; /**< The number of elements this process has
+                                                  sent to other in the last partition call. */
+  t8_locidx_t         partition_elements_recv; /**< The number of elements this process has
+                                                  received from other in the last partition call. */
+  size_t              partition_bytes_sent; /**< The total number of bytes sent to other processes in the
+                                                 last partition call. */
+  int                 partition_procs_sent;  /**< The number of different processes this process has send
+                                            local elements to in the last partition call. */
+  double              partition_runtime; /**< The runtime of  the last call to \a t8_cmesh_partition. */
+  double              commit_runtime; /**< The runtim of the last call to \a t8_cmesh_commit. */
+
+}
+t8_profile_struct_t;
+
+/** The number of statistics collected by a profile struct */
+#define T8_PROFILE_NUM_STATS 6
 
 #endif /* ! T8_FOREST_TYPES_H! */
