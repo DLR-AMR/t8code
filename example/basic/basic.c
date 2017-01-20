@@ -114,7 +114,7 @@ t8_basic_forest_partition ()
 }
 #endif
 
-#if 0
+#if 1
 static void
 t8_basic_hypercube (t8_eclass_t eclass, int set_level,
                     int create_forest, int do_partition)
@@ -128,7 +128,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
                          t8_eclass_to_string[eclass]);
 
   cmesh =
-    t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, do_partition);
+    t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, do_partition);
 
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -329,9 +329,10 @@ int
 main (int argc, char **argv)
 {
   int                 mpiret;
-#if 0
-  int                 level;
+
+  int                 level = 0;
   int                 eclass;
+#if 0
   int                 dim;
 #endif
 
@@ -341,9 +342,6 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-#if 0
-  level = 1;
-#endif
   t8_global_productionf ("Testing basic tet mesh.\n");
 
 #if 0
@@ -359,15 +357,15 @@ main (int argc, char **argv)
   t8_basic_hypercube (T8_ECLASS_QUAD, 0, 1, 1);
 #endif
   t8_basic ();
-#if 0
+#if 1
   t8_global_productionf ("Testing hypercube cmesh.\n");
 
-  for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; eclass++) {
+  for (eclass = T8_ECLASS_QUAD; eclass < T8_ECLASS_COUNT; eclass++) {
     /* Construct the mesh on each process */
-    t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 0, 0, 1);
-    t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 0, 0, 1);
-    t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 1, 0, 1);
-    t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 1, 0, 1);
+    t8_basic_hypercube ((t8_eclass_t) eclass, level, 0, 1);
+    t8_basic_hypercube ((t8_eclass_t) eclass, level, 0, 1);
+    t8_basic_hypercube ((t8_eclass_t) eclass, level, 1, 1);
+    t8_basic_hypercube ((t8_eclass_t) eclass, level, 1, 1);
     /* Construct the mesh on one process and broadcast it */
 #if 0
     t8_basic_hypercube ((t8_eclass_t) eclass, 0, level, 0, 1, 0);
@@ -376,6 +374,8 @@ main (int argc, char **argv)
     t8_basic_hypercube ((t8_eclass_t) eclass, 1, level, 1, 1, 0);
 #endif
   }
+#endif
+#if 0
   t8_global_productionf ("Done testing hypercube cmesh.\n");
 
   t8_global_productionf ("Testing periodic cmesh.\n");
