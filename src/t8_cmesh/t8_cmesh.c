@@ -368,7 +368,7 @@ t8_cmesh_get_first_treeid (t8_cmesh_t cmesh)
 /* Return a pointer to the ctree of a given global tree_id. */
 /* TODO: should get a gloidx?
  *       place after commit */
-static              t8_ctree_t
+static t8_ctree_t
 t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_locidx_t tree_id)
 {
   T8_ASSERT (cmesh != NULL);

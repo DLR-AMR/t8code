@@ -61,12 +61,13 @@ T8_EXTERN_C_BEGIN ();
 
 /* function declarations */
 /* Writes the pvtu header file that links to the processor local files.
+ * It is used by the cmesh and forest vtk routines.
  * This function should only be called by one process.
  * Return 0 on success. */
 /* TODO: document */
-int                 t8_cmesh_write_pvtu (const char *filename, int num_procs,
-                                         int write_tree, int write_rank,
-                                         int write_level, int write_id);
+int                 t8_write_pvtu (const char *filename, int num_procs,
+                                   int write_tree, int write_rank,
+                                   int write_level, int write_id);
 
 
 T8_EXTERN_C_END ();

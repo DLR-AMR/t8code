@@ -27,7 +27,7 @@
  * This function should only be called by one process.
  * Return 0 on success. */
 int
-t8_cmesh_write_pvtu (const char *filename, int num_procs, int write_tree,
+t8_write_pvtu (const char *filename, int num_procs, int write_tree,
                      int write_rank, int write_level, int write_id)
 {
   char                pvtufilename[BUFSIZ], filename_cpy[BUFSIZ];

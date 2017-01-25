@@ -53,13 +53,13 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
                          double scale)
 {
   T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
   //T8_ASSERT (!cmesh->set_partition);  /* not implemented for parallel yet */
   T8_ASSERT (fileprefix != NULL);
   T8_ASSERT (scale == 1.);      /* scale = 1 not implemented yet */
 
   if (cmesh->mpirank == 0) {
-    if (t8_cmesh_write_pvtu (fileprefix, cmesh->mpisize, 1, 1, 0, 0)) {
+    if (t8_write_pvtu (fileprefix, cmesh->mpisize, 1, 1, 0, 0)) {
       SC_ABORTF ("Error when writing file %s.pvtu\n", fileprefix);
     }
   }
