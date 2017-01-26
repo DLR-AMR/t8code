@@ -292,6 +292,15 @@ t8_element_anchor (t8_eclass_scheme_t * ts, const t8_element_t * elem,
   ts->elem_anchor (elem, anchor);
 }
 
+void
+t8_element_vertex_coords (t8_eclass_scheme_t * ts, const t8_element_t * t,
+                          int vertex, int coords[])
+{
+  T8_ASSERT (ts != NULL && ts->elem_vertex_coords != NULL);
+
+  ts->elem_vertex_coords (t, vertex, coords);
+}
+
 int
 t8_element_root_len (t8_eclass_scheme_t * ts, const t8_element_t * elem)
 {

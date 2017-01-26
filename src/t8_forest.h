@@ -333,6 +333,22 @@ void                t8_forest_write_vtk (t8_forest_t forest,
 
 void                t8_forest_iterate (t8_forest_t forest);
 
+/** Compute the coordinates of a given vertex of an element if the
+ * vertex coordinates of the surrounding tree are known.
+ * \param [in]      forest     The forest.
+ * \param [in]      ltree_id   The forest local id of the tree in which the element is.
+ * \param [in]      ts         The eclass scheme of the element.
+ * \param [in]      element    The element.
+ * \param [in]      vertices   An array storing the vertex coordinates of the tree.
+ *                             It has 3*n entries, with n being the number of vertices of the tree.
+ * \param [in]      corner_number The corner number of the vertex which should be computed.
+ * \param [out]     coordinates On input an allocated array to store 3 doubles, on output
+ *                             the x, y and z coordinates of the vertex.
+ */
+void                t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_i,
+                              t8_element_t * element, const double *vertices,
+                              int corner_number, double *coordinates);
+
 /** Increase the reference counter of a forest.
  * \param [in,out] forest       On input, this forest must exist with positive
  *                              reference count.  It may be in any state.

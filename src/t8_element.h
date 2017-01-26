@@ -132,6 +132,11 @@ typedef void        (*t8_element_last_descendant_t) (const t8_element_t *
 typedef void        (*t8_element_successor_t) (const t8_element_t * t,
                                                t8_element_t * s, int level);
 
+/** Compute the integer coordinates of an element vertex with respect to
+ *  its level 0 ancestor */
+typedef void        (*t8_element_vertex_coords_t) (const t8_element_t * t,
+                                                   int vertex, int coords[]);
+
 /** Allocate space for the codimension-one boundary elements. */
 typedef void        (*t8_element_new_t) (void *ts_context,
                                          int length, t8_element_t ** elem);
@@ -180,6 +185,7 @@ struct t8_eclass_scheme
   t8_element_get_linear_id_t elem_get_linear_id; /**< Calculate the linear id of a given element. */
   t8_element_successor_t elem_successor; /**< Compute the successor of a given element */
   t8_element_anchor_t elem_anchor; /**< Compute the anchor node of a given element */
+  t8_element_vertex_coords_t elem_vertex_coords; /**< Compute the coordinates of a vertex */
   t8_element_root_len_t elem_root_len; /**< Compute the root length of a given element */
   t8_element_first_descendant_t elem_first_desc; /**< Compute an element's first descendant */
   t8_element_last_descendant_t elem_last_desc; /**< Compute an element's last descendant */
@@ -472,6 +478,17 @@ void                t8_element_successor (t8_eclass_scheme_t * ts,
 void                t8_element_anchor (t8_eclass_scheme_t * ts,
                                        const t8_element_t * elem,
                                        int anchor[3]);
+
+/** Compute the integer coordinates of a given element vertex.
+ *   \param [in] ts     The virtual table for this element class.
+ *   \param [in] t      The element to be considered.
+ *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
+ *   \param [out] coords An array of at least as many integers as the element's dimension
+ *                      whose entries will be filled with the coordinates of \a vertex.
+ */
+void                t8_element_vertex_coords (t8_eclass_scheme_t * ts,
+                                              const t8_element_t * t,
+                                              int vertex, int coords[]);
 
 /** Compute the root lenght of a given element, that is the length of
  * its level 0 ancestor.
