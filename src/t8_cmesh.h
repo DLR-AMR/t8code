@@ -406,6 +406,18 @@ t8_ctree_t          t8_cmesh_get_first_tree (t8_cmesh_t cmesh);
 t8_ctree_t          t8_cmesh_get_next_tree (t8_cmesh_t cmesh,
                                             t8_ctree_t tree);
 
+/** Return a pointer to a given local tree.
+ * \param [in]     cmesh        The cmesh to be queried.
+ * \param [in]     ltree_id     The local id of the tree that is asked for.
+ * \return                      A pointer to tree in \a cmesh with local
+ *                              id \a ltree_id.
+ * The cmesh must have at least \a ltree_id + 1 local trees when
+ * calling this function.
+ * \a cmesh must be committed before calling this function.
+ */
+t8_ctree_t          t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_locidx_t ltree_id);
+
+
 /** Return the eclass of a given local tree.
  * TODO: Should we refer to indices or consequently use ctree_t?
  * \param [in]    cmesh         The cmesh to be considered.

@@ -71,11 +71,6 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
   return 1;
 }
 
-/* *INDENT-OFF* */
-static t8_ctree_t
-t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_locidx_t tree_id);
-/* *INDENT-ON* */
-
 #if 0
 /* Compute a hash value for a ghost tree. */
 /* deprecated */
@@ -365,17 +360,15 @@ t8_cmesh_get_first_treeid (t8_cmesh_t cmesh)
   return cmesh->first_tree;
 }
 
-/* Return a pointer to the ctree of a given global tree_id. */
 /* TODO: should get a gloidx?
  *       place after commit */
-static t8_ctree_t
-t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_locidx_t tree_id)
+t8_ctree_t
+t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_locidx_t ltree_id)
 {
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (0 <= tree_id && tree_id < cmesh->num_local_trees);
-  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (0 <= ltree_id && ltree_id < cmesh->num_local_trees);
 
-  return t8_cmesh_trees_get_tree (cmesh->trees, tree_id);
+  return t8_cmesh_trees_get_tree (cmesh->trees, ltree_id);
 }
 
 /* Returns the first local tree.
@@ -384,8 +377,7 @@ t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_locidx_t tree_id)
 t8_ctree_t
 t8_cmesh_get_first_tree (t8_cmesh_t cmesh)
 {
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
   return cmesh->num_local_trees > 0 ? t8_cmesh_get_tree (cmesh, 0) : NULL;
 }
