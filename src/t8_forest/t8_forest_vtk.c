@@ -23,6 +23,7 @@
 #include <t8_forest_vtk.h>
 #include <t8_vtk.h>
 #include <t8_cmesh.h>
+#include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_forest_types.h"
 
 
@@ -51,9 +52,12 @@ t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix,
   t8_locidx_t num_elements, num_points;
   t8_element_t *ielement;
   t8_tree_t tree;
-  t8_locidx_t itree;
+  t8_locidx_t itree, ivertex;
+  t8_locidx_t element_index;
   t8_cmesh_t cmesh;
   t8_ctree_t ctree;
+  double             *vertices, coordinates[3];
+  double              x,y,z;
   char vtufilename[BUFSIZ];
 
   T8_ASSERT (forest != NULL);
@@ -109,7 +113,6 @@ t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix,
   /* To get the point position data, we iterate over each tree and
    * over each element in this tree. For each element we compute
    * the coordinates of its corner vertices */
-#if 0
   for (itree = 0; itree < (t8_locidx_t) forest->trees->elem_count; itree++) {
     /* get the coarse mesh tree */
     ctree = t8_cmesh_get_tree (cmesh,
@@ -161,5 +164,4 @@ t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix,
     }
     /* loop over tree ends here */
   }
-#endif
 }
