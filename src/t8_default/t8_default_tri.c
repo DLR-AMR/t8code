@@ -190,6 +190,7 @@ t8_default_tri_root_len (const t8_element_t * elem)
   return T8_DTRI_ROOT_LEN;
 }
 
+static void
 t8_default_tri_vertex_coords (const t8_element_t * elem, int vertex,
                               int coords[])
 {

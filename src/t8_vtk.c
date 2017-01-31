@@ -22,13 +22,12 @@
 
 #include <t8_vtk.h>
 
-
 /* Writes the pvtu header file that links to the processor local files.
  * This function should only be called by one process.
  * Return 0 on success. */
 int
 t8_write_pvtu (const char *filename, int num_procs, int write_tree,
-                     int write_rank, int write_level, int write_id)
+               int write_rank, int write_level, int write_id)
 {
   char                pvtufilename[BUFSIZ], filename_cpy[BUFSIZ];
   FILE               *pvtufile;
@@ -75,9 +74,9 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree,
         snprintf (vtkCellDataString + printed, BUFSIZ - printed,
                   printed > 0 ? ",level" : "level");
     if (write_id)
-        printed +=
-          snprintf (vtkCellDataString + printed, BUFSIZ - printed,
-                    printed > 0 ? ",id" : "id");
+      printed +=
+        snprintf (vtkCellDataString + printed, BUFSIZ - printed,
+                  printed > 0 ? ",id" : "id");
 
     fprintf (pvtufile, "    <PCellData Scalars=\"%s\">\n", vtkCellDataString);
   }
@@ -93,13 +92,13 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree,
   }
   if (write_level) {
     fprintf (pvtufile, "      "
-             "<PDataArray type=\"%s\" Name=\"mpirank\" format=\"%s\"/>\n",
+             "<PDataArray type=\"%s\" Name=\"level\" format=\"%s\"/>\n",
              "Int32", T8_VTK_FORMAT_STRING);
   }
   if (write_id) {
     fprintf (pvtufile, "      "
-             "<PDataArray type=\"%s\" Name=\"mpirank\" format=\"%s\"/>\n",
-             "Int32", T8_VTK_FORMAT_STRING);
+             "<PDataArray type=\"%s\" Name=\"element_id\" format=\"%s\"/>\n",
+             T8_VTK_LOCIDX, T8_VTK_FORMAT_STRING);
   }
   if (write_cell_data) {
     fprintf (pvtufile, "    </PCellData>\n");
