@@ -29,7 +29,7 @@
 #include <p8est_connectivity.h>
 #include <sc_shmem.h>
 
-#if 0
+#if 1
 static int
 t8_basic_adapt (t8_forest_t forest, t8_locidx_t which_tree,
                 t8_eclass_scheme_t * ts,
@@ -47,14 +47,14 @@ t8_basic_adapt (t8_forest_t forest, t8_locidx_t which_tree,
     return 0;
   }
 #endif
-  if (level < 3)
-    /* refine if level is smaller 3 */
-    return 1;
+  if (level < 4)
+    /* refine randomly if level is smaller 3 */
+    return rand () % 2;
   return 0;
 }
 
 #endif
-#if 0
+#if 1
 static void
 t8_basic_refine_test ()
 {
@@ -64,7 +64,7 @@ t8_basic_refine_test ()
 
   t8_forest_init (&forest);
   t8_forest_init (&forest_adapt);
-  cmesh = t8_cmesh_new_from_class (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, 0);
+  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, sc_MPI_COMM_WORLD, 0, 0);
 
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_cmesh_unref (&cmesh);
@@ -74,6 +74,7 @@ t8_basic_refine_test ()
 
   t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, NULL, 1);
   t8_forest_commit (forest_adapt);
+  t8_forest_write_vtk (forest_adapt, "forest_basic_refine");
 
   t8_forest_unref (&forest_adapt);
 }
@@ -355,7 +356,8 @@ main (int argc, char **argv)
   t8_basic_hypercube (T8_ECLASS_QUAD, 0, 1, 1);
   t8_basic ();
 #endif
-  t8_basic_hypercube (T8_ECLASS_QUAD, 2, 1, 1);
+  t8_basic_hypercube (T8_ECLASS_QUAD, 2, 1, 0);
+  t8_basic_refine_test ();
 #if 0
   t8_global_productionf ("Testing hypercube cmesh.\n");
 
