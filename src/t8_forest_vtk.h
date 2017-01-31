@@ -30,12 +30,12 @@
 
 #include <t8_forest.h>
 
-
 T8_EXTERN_C_BEGIN ();
 /* function declarations */
 
-int                t8_forest_vtk_write_file (t8_forest_t forest,
-                                              const char *fileprefix, int write_id);
+int                 t8_forest_vtk_write_file (t8_forest_t forest,
+                                              const char *fileprefix,
+                                              int write_id);
 
 T8_EXTERN_C_END ();
 
