@@ -25,6 +25,7 @@
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_partition.h>
+#include <t8_forest_vtk.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 
 void
@@ -773,6 +774,8 @@ t8_forest_write_vtk (t8_forest_t forest, const char *filename)
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
+
+  t8_forest_vtk_write_file (forest, filename, 1);
 }
 
 /* Given function values at the four edge points of a unit square and
