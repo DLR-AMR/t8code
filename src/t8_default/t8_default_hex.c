@@ -174,6 +174,23 @@ t8_default_hex_successor (const t8_element_t * elem1,
 }
 
 static void
+t8_default_hex_vertex_coordinates (const t8_element_t * elem,
+                                   int vertex, int coords[])
+{
+  const p8est_quadrant_t *q1 = (const p8est_quadrant_t *) elem;
+  int                 len;
+
+  T8_ASSERT (0 <= vertex && vertex < 8);
+  /* Get the length of the quadrant */
+  len = P8EST_QUADRANT_LEN (q1->level);
+  /* Compute the x, y and z coordinates of the vertex depending on the
+   * vertex number */
+  coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
+  coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
+  coords[2] = q1->z + (vertex & 4 ? 1 : 0) * len;
+}
+
+static void
 t8_default_hex_anchor (const t8_element_t * elem, int coord[3])
 {
   p8est_quadrant_t   *q;
@@ -218,6 +235,7 @@ t8_default_scheme_new_hex (void)
   ts->elem_first_desc = t8_default_hex_first_descendant;
   ts->elem_last_desc = t8_default_hex_last_descendant;
   ts->elem_successor = t8_default_hex_successor;
+  ts->elem_vertex_coords = t8_default_hex_vertex_coordinates;
   ts->elem_anchor = t8_default_hex_anchor;
   ts->elem_root_len = t8_default_hex_root_len;
 
