@@ -35,7 +35,10 @@ T8_EXTERN_C_BEGIN ();
 
 int                 t8_forest_vtk_write_file (t8_forest_t forest,
                                               const char *fileprefix,
-                                              int write_id);
+                                              int write_treeid,
+                                              int write_mpirank,
+                                              int write_level,
+                                              int write_element_id);
 
 T8_EXTERN_C_END ();
 
