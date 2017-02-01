@@ -665,7 +665,6 @@ t8_forest_get_tree (t8_forest_t forest, t8_locidx_t ltree_id)
 t8_cmesh_t
 t8_forest_get_cmesh (t8_forest_t forest)
 {
-  T8_ASSERT (t8_forest_is_committed (forest));
   return forest->cmesh;
 }
 

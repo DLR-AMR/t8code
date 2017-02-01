@@ -307,7 +307,6 @@ t8_tree_t           t8_forest_get_tree (t8_forest_t forest,
 
 /** Return a cmesh associated to a forest.
  * \param [in]      forest      The forest.
- * \a forest must be committed before calling this function.
  * \return          The cmesh associated to the forest.
  */
 t8_cmesh_t          t8_forest_get_cmesh (t8_forest_t forest);
