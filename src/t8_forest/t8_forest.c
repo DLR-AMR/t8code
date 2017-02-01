@@ -793,7 +793,7 @@ t8_forest_bilinear_interpolation (const double *vertex,
   int                 i;
   double              temp[3] = { 0 };
 
-  for (i = 0; i < dim; i++) {
+  for (i = 0; i < 3; i++) {
     temp[i] = corner_values[0 * 3 + i] * (1 - vertex[0]) * (1 - vertex[1])      /* x=0 y=0 */
       +corner_values[1 * 3 + i] * vertex[0] * (1 - vertex[1])   /* x=1 y=0 */
       +corner_values[2 * 3 + i] * (1 - vertex[0]) * vertex[1]   /* x=0 y=1 */
