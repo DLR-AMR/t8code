@@ -779,7 +779,7 @@ t8_forest_write_vtk (t8_forest_t forest, const char *filename)
 
 /* Given function values at the four edge points of a unit square and
  * a point within that square, interpolate the function value at this point.
- * \param [in]    vertex  An array of size at least dim given the coordinates of the vertex to interpolate
+ * \param [in]    vertex  An array of size at least dim giving the coordinates of the vertex to interpolate
  * \param [in]    corner_values An array of size 2^dim * 3, giving for each corner (in zorder) of
  *                        the unit square/cube its function values in 3D space.
  * \param [out]   evaluated_function An array of size 3, on output the function values

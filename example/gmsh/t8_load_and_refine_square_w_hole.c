@@ -52,7 +52,7 @@ t8_vec3_xmay (double *x, double alpha, double *y)
   }
 }
 
-/* Compute the coordinates of the midpoint and
+/* Compute the coordinates of the midpoint
  * and a measure for the length of a  triangle or square */
 static void
 t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree,
@@ -88,11 +88,12 @@ t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree,
     /* Get the coordinates of the elements  3rd vertex */
     t8_forest_element_coordinate (forest, which_tree, element, vertices,
                                   3, corner[1]);
+
     for (j = 0; j < 3; j++) {
       elem_mid_point[j] += corner[0][j] / 2.;
       elem_mid_point[j] += corner[1][j] / 2.;
     }
-    /* Compute the lenght of the square as the length of the diagonal */
+    /* Compute the length of the square as the length of the diagonal */
     for (j = 0; j < 3; j++) {
       corner[0][j] -= elem_mid_point[j];
     }
@@ -113,7 +114,7 @@ t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree,
         elem_mid_point[j] += corner[i][j] / 3.;
       }
     }
-    /* Now that we now yhe midpoint, we can compute h */
+    /* Now that we now the midpoint, we can compute h */
     for (i = 0; i < 3; i++) {
       /* Compute the difference of the mid vertex and the i-th vertex */
       t8_vec3_xmay (corner[i], 1, elem_mid_point);
