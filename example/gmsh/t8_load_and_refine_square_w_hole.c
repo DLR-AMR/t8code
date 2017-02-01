@@ -31,7 +31,7 @@
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_forest.h>
-#include <t8_forest/t8_forest_vtk.h>
+#include <t8_forest_vtk.h>
 #include <t8_default.h>
 
 /* Simple 3 dimensional vector product */
