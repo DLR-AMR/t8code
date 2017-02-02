@@ -28,15 +28,12 @@
  * p.user_long for the p4est_qcoord_t coordinate in the normal direction.
  */
 
-#ifndef T8_DEFAULT_QUAD_CXX_H
-#define T8_DEFAULT_QUAD_CXX_H
-
-/* Only compile this file if c++ is enabled */
-#ifdef __cplusplus
+#ifndef T8_DEFAULT_QUAD_CXX_HXX
+#define T8_DEFAULT_QUAD_CXX_HXX
 
 #include <p4est.h>
-#include <t8_element_cxx.h>
-#include "t8_default_common_cxx.h"
+#include <t8_element_cxx.hxx>
+#include "t8_default_common_cxx.hxx"
 
 /** The structure holding a quadrilateral element in the default scheme.
  * We make this definition public for interoperability of element classes.
@@ -90,6 +87,7 @@ public:
    * scheme_commen destructor. */
   t8_default_scheme_quad_c ();
 
+  ~t8_default_scheme_quad_c ();
 /** Return the size of the element data type in bytes.
  * \return              Data type size in bytes.
  */
@@ -125,13 +123,11 @@ public:
 
 /** Construct the child element of a given number. */
   virtual void        t8_element_child (const t8_element_t * elem,
-                                        int childid, t8_element_t * child) =
-    0;
+                                        int childid, t8_element_t * child);
 
 /** Construct all children of a given element. */
   virtual void        t8_element_children (const t8_element_t * elem,
-                                           int length, t8_element_t * c[]) =
-    0;
+                                           int length, t8_element_t * c[]);
 
 /** Return the child id of an element */
   virtual int         t8_element_child_id (const t8_element_t * elem);
@@ -190,6 +186,4 @@ public:
   virtual void        t8_element_destroy (int length, t8_element_t ** elem);
 };
 
-#endif /* c++ */
-
-#endif /* !T8_DEFAULT_QUAD_H */
+#endif /* !T8_DEFAULT_QUAD_CXX_HXX */

@@ -20,13 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* Only compile this file if c++ is enabled */
-#ifdef __cplusplus
-
 #include <p4est_bits.h>
 #include "t8_default_common.h"
-#include "t8_default_common_cxx.h"
-#include "t8_default_quad_cxx.h"
+#include "t8_default_common_cxx.hxx"
+#include "t8_default_quad_cxx.hxx"
 
 /* This function is used by other element functions and we thus need to
  * declare it up here */
@@ -308,4 +305,11 @@ t8_default_scheme_quad_c::t8_default_scheme_quad_c (void)
   ts_context = sc_mempool_new (sizeof (t8_pquad_t));
 }
 
-#endif /* c++ */
+t8_default_scheme_quad_c::~t8_default_scheme_quad_c ()
+{
+  /* This destructor is empty since the destructor of the
+   * default_common scheme is called automatically and it
+   * suffices to destroy the quad_scheme.
+   * However we need to provide an implementation of the destructor
+   * and hence this empty function. */
+}

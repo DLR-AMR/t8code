@@ -20,22 +20,20 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* Only compile this file if c++ is enabled */
-#ifdef __cplusplus
+/** \file t8_default_common.h
+ * We provide some functions that are useful across element classes.
+ */
 
-#include "t8_default_common_cxx.h"
+#ifndef T8_DEFAULT_COMMON_CXX_HXX
+#define T8_DEFAULT_COMMON_CXX_HXX
 
-/*
-t8_default_scheme_common_c::t8_default_scheme_common_c ()
+#include <t8_element_cxx.hxx>
+
+class t8_default_scheme_common_c:public t8_eclass_scheme_c
 {
-}
-*/
+public:
+  /** Destructor for all default schemes */
+  virtual ~t8_default_scheme_common_c ();
+};
 
-/* Destructor */
-t8_default_scheme_common_c::~t8_default_scheme_common_c ()
-{
-  T8_ASSERT (ts_context != NULL);
-  sc_mempool_destroy ((sc_mempool_t *) ts_context);
-}
-
-#endif /* c++ */
+#endif /* !T8_DEFAULT_COMMON_CXX_HXX */

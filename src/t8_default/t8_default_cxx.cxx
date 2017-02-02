@@ -20,25 +20,20 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_common.h
- * We provide some functions that are useful across element classes.
- */
+#include <t8_default_cxx.hxx>
+#include <t8_refcount.h>
 
-#ifndef T8_DEFAULT_COMMON_CXX_H
-#define T8_DEFAULT_COMMON_CXX_H
+#include "t8_default_quad_cxx.hxx"
 
-/* Only compile this file if c++ is enabled */
-#ifdef __cplusplus
-
-#include <t8_element_cxx.h>
-
-class t8_default_scheme_common_c:public t8_eclass_scheme_c
+t8_scheme_cxx_t *
+t8_scheme_new_default_cxx (void)
 {
-public:
-  /** Destructor for all default schemes */
-  ~t8_default_scheme_common_c ();
-};
+  t8_scheme_cxx_t        *s;
 
-#endif /* c++ */
+  s = T8_ALLOC_ZERO (t8_scheme_cxx_t, 1);
+  t8_refcount_init (&s->rc);
 
-#endif /* !T8_DEFAULT_COMMON_H */
+  s->eclass_schemes[T8_ECLASS_QUAD] = new t8_default_scheme_quad_c ();
+
+  return s;
+}

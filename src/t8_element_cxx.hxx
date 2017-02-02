@@ -27,11 +27,8 @@
  * For each element class, one implementation of the type and virtual table is required.
  */
 
-#ifndef T8_ELEMENT_CXX_H
-#define T8_ELEMENT_CXX_H
-
-/* Only compile this if c++ is enabled */
-#ifdef __cplusplus
+#ifndef T8_ELEMENT_CXX_HXX
+#define T8_ELEMENT_CXX_HXX
 
 
 #include <sc_refcount.h>
@@ -51,6 +48,13 @@ protected:
   void               *ts_context;               /**< Anonymous implementation context. */
 
 public:
+  /** The destructor. It does nothing but has to be defined since
+   * we may want to delete an eclass_scheme that is actually inherited
+   * (for example t8_default_scheme_quad) and providing and implementation
+   * for the destructor ensures that the
+   * destructor of the child class will be executed. */
+  virtual ~t8_eclass_scheme_c () {}
+
   /** The virtual table for a particular implementation of an element class. */
 
   /** Return the size of the element data type in bytes.
@@ -168,14 +172,11 @@ typedef struct t8_scheme_cxx
 }
 t8_scheme_cxx_t;
 
-#if 0
-/* TODO: Copy the doxygen comments to the class definition above,
- * then delete all the functions below */
 /** Increase the reference counter of a scheme.
  * \param [in,out] scheme       On input, this scheme must be alive, that is,
  *                              exist with positive reference count.
  */
-void                t8_scheme_ref (t8_scheme_t * scheme);
+void                t8_scheme_cxx_ref (t8_scheme_cxx_t * scheme);
 
 /** Decrease the reference counter of a scheme.
  * If the counter reaches zero, this scheme is destroyed.
@@ -186,8 +187,11 @@ void                t8_scheme_ref (t8_scheme_t * scheme);
  *                              Otherwise, the pointer is not changed and
  *                              the scheme is not modified in other ways.
  */
-void                t8_scheme_unref (t8_scheme_t ** pscheme);
+void                t8_scheme_cxx_unref (t8_scheme_cxx_t ** pscheme);
 
+/* TODO: Copy the doxygen comments to the class definition above,
+ * then delete all the functions below */
+#if 0
 /** Destroy an implementation of a particular element class. */
 void                t8_eclass_scheme_destroy (t8_eclass_scheme_t * ts);
 
@@ -482,6 +486,4 @@ t8_element_t       *t8_element_array_index (t8_eclass_scheme_t * ts,
                                             sc_array_t * array, size_t it);
 #endif /* if 0 */
 
-#endif /* c++ */
-
-#endif /* !T8_ELEMENT_H */
+#endif /* !T8_ELEMENT_CXX_HXX */

@@ -20,15 +20,16 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* Only compile this file if c++ is enabled */
-#ifdef __cplusplus
-
-#include <t8_element_cxx.h>
-
+#include <t8_element_cxx.hxx>
 
 #if 0
+t8_eclass_scheme_c::~t8_eclass_scheme_c ()
+{
+}
+#endif
+
 static void
-t8_scheme_destroy (t8_scheme_t * s)
+t8_scheme_cxx_destroy (t8_scheme_cxx_t * s)
 {
   int                 t;
 
@@ -37,14 +38,14 @@ t8_scheme_destroy (t8_scheme_t * s)
 
   for (t = 0; t < T8_ECLASS_COUNT; ++t) {
     if (s->eclass_schemes[t] != NULL) {
-      t8_eclass_scheme_destroy (s->eclass_schemes[t]);
+      delete s->eclass_schemes[t];
     }
   }
   T8_FREE (s);
 }
 
 void
-t8_scheme_ref (t8_scheme_t * scheme)
+t8_scheme_cxx_ref (t8_scheme_cxx_t * scheme)
 {
   T8_ASSERT (scheme != NULL);
 
@@ -52,20 +53,21 @@ t8_scheme_ref (t8_scheme_t * scheme)
 }
 
 void
-t8_scheme_unref (t8_scheme_t ** pscheme)
+t8_scheme_cxx_unref (t8_scheme_cxx_t ** pscheme)
 {
-  t8_scheme_t        *scheme;
+  t8_scheme_cxx_t        *scheme;
 
   T8_ASSERT (pscheme != NULL);
   scheme = *pscheme;
   T8_ASSERT (scheme != NULL);
 
   if (sc_refcount_unref (&scheme->rc)) {
-    t8_scheme_destroy (scheme);
+    t8_scheme_cxx_destroy (scheme);
     *pscheme = NULL;
   }
 }
 
+#if 0
 void
 t8_eclass_scheme_destroy (t8_eclass_scheme_t * ts)
 {
@@ -330,5 +332,3 @@ t8_element_array_index (t8_eclass_scheme_t * ts, sc_array_t * array,
   return (t8_element_t *) (array->array + array->elem_size * it);
 }
 #endif /* if 0 */
-
-#endif /* c++ */
