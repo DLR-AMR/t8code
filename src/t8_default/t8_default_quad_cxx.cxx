@@ -183,7 +183,7 @@ t8_default_scheme_quad_c::t8_element_is_family (t8_element_t ** fam)
 }
 
 void
-t8_default_scheme_quad_c::t8_element_linear_id (t8_element_t * elem,
+t8_default_scheme_quad_c::t8_element_set_linear_id (t8_element_t * elem,
                                                 int level, uint64_t id)
 {
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);

@@ -146,8 +146,8 @@ public:
                                            t8_element_t ** boundary);
 
 /** Initialize an element according to a given linear id */
-  virtual void        t8_element_linear_id (t8_element_t * elem,
-                                            int level, uint64_t id);
+  virtual void        t8_element_set_linear_id (t8_element_t * elem,
+                                                int level, uint64_t id);
 
 /** Calculate the linear id of an element */
   virtual u_int64_t   t8_element_get_linear_id (const
