@@ -30,7 +30,6 @@
 #ifndef T8_ELEMENT_CXX_HXX
 #define T8_ELEMENT_CXX_HXX
 
-
 #include <sc_refcount.h>
 #include <t8_eclass.h>
 
@@ -53,7 +52,9 @@ public:
    * (for example t8_default_scheme_quad) and providing and implementation
    * for the destructor ensures that the
    * destructor of the child class will be executed. */
-  virtual ~t8_eclass_scheme_c () {}
+                      virtual ~ t8_eclass_scheme_c ()
+  {
+  }
 
   /** The virtual table for a particular implementation of an element class. */
 

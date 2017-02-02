@@ -32,6 +32,6 @@
 #include <t8_element_cxx.hxx>
 
 /** Return the default element implementation of t8code. */
-t8_scheme_cxx_t        *t8_scheme_new_default_cxx (void);
+t8_scheme_cxx_t    *t8_scheme_new_default_cxx (void);
 
 #endif /* !T8_DEFAULT_H */

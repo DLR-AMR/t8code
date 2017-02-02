@@ -29,11 +29,11 @@
 
 #include <t8_element_cxx.hxx>
 
-class t8_default_scheme_common_c:public t8_eclass_scheme_c
+class               t8_default_scheme_common_c:public t8_eclass_scheme_c
 {
 public:
   /** Destructor for all default schemes */
-  virtual ~t8_default_scheme_common_c ();
+  virtual ~ t8_default_scheme_common_c ();
 };
 
 #endif /* !T8_DEFAULT_COMMON_CXX_HXX */

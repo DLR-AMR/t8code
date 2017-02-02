@@ -25,10 +25,10 @@
 
 #include "t8_default_quad_cxx.hxx"
 
-t8_scheme_cxx_t *
+t8_scheme_cxx_t    *
 t8_scheme_new_default_cxx (void)
 {
-  t8_scheme_cxx_t        *s;
+  t8_scheme_cxx_t    *s;
 
   s = T8_ALLOC_ZERO (t8_scheme_cxx_t, 1);
   t8_refcount_init (&s->rc);

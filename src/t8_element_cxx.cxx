@@ -38,7 +38,7 @@ t8_scheme_cxx_destroy (t8_scheme_cxx_t * s)
 
   for (t = 0; t < T8_ECLASS_COUNT; ++t) {
     if (s->eclass_schemes[t] != NULL) {
-      delete s->eclass_schemes[t];
+      delete              s->eclass_schemes[t];
     }
   }
   T8_FREE (s);
@@ -55,7 +55,7 @@ t8_scheme_cxx_ref (t8_scheme_cxx_t * scheme)
 void
 t8_scheme_cxx_unref (t8_scheme_cxx_t ** pscheme)
 {
-  t8_scheme_cxx_t        *scheme;
+  t8_scheme_cxx_t    *scheme;
 
   T8_ASSERT (pscheme != NULL);
   scheme = *pscheme;
