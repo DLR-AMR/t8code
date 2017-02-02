@@ -33,23 +33,21 @@
 #include <t8_default_cxx.hxx>
 
 #define NUM_ELEMENTS 1e7
-#define LEVEL         12 /* Must satisfy 4^LEVEL > NUM_ELEMENTS */
+#define LEVEL         12        /* Must satisfy 4^LEVEL > NUM_ELEMENTS */
 
 #define t8_cxx_print_size(_type) t8_debugf("sizeof (" #_type ") = %lu\n", \
   sizeof (_type))
-
 
 /* The cxx version of the element refine test program */
 void
 t8_cxx_elements_test_scheme_cxx ()
 {
-  t8_scheme_cxx_t  *cxx_default_scheme = t8_scheme_new_default_cxx ();
+  t8_scheme_cxx_t    *cxx_default_scheme = t8_scheme_new_default_cxx ();
   t8_eclass_scheme_c *quad_scheme;
-  t8_element_t       **elements =
-      T8_ALLOC_ZERO (t8_element_t *, NUM_ELEMENTS);
+  t8_element_t      **elements = T8_ALLOC_ZERO (t8_element_t *, NUM_ELEMENTS);
   t8_element_t       *children[4];
-  t8_locidx_t          ielement;
-  double               time;
+  t8_locidx_t         ielement;
+  double              time;
 
   /* Measure the time */
   time = -MPI_Wtime ();
@@ -57,12 +55,12 @@ t8_cxx_elements_test_scheme_cxx ()
   /* Create the scheme class that stores the quadrant lookup functions */
   quad_scheme = cxx_default_scheme->eclass_schemes[T8_ECLASS_QUAD];
   /* Allocate memory to store the elements and 4 children */
-  quad_scheme->t8_element_new(NUM_ELEMENTS, elements);
+  quad_scheme->t8_element_new (NUM_ELEMENTS, elements);
   quad_scheme->t8_element_new (4, children);
 
   /* Initialize each element and refine it.
    * The children are overwritten in each step */
-  for (ielement = 0;ielement < NUM_ELEMENTS;ielement++) {
+  for (ielement = 0; ielement < NUM_ELEMENTS; ielement++) {
     quad_scheme->t8_element_set_linear_id (elements[ielement],
                                            LEVEL, ielement);
     quad_scheme->t8_element_children (elements[ielement], 4, children);
@@ -82,13 +80,12 @@ t8_cxx_elements_test_scheme_cxx ()
 void
 t8_cxx_elements_test_scheme_c ()
 {
-  t8_scheme_t *c_default_scheme = t8_scheme_new_default ();
+  t8_scheme_t        *c_default_scheme = t8_scheme_new_default ();
   t8_eclass_scheme_t *quad_scheme;
-  t8_element_t       **elements =
-      T8_ALLOC_ZERO (t8_element_t *, NUM_ELEMENTS);
+  t8_element_t      **elements = T8_ALLOC_ZERO (t8_element_t *, NUM_ELEMENTS);
   t8_element_t       *children[4];
-  t8_locidx_t          ielement;
-  double               time;
+  t8_locidx_t         ielement;
+  double              time;
 
   /* Measure the time */
   time = -MPI_Wtime ();
@@ -101,7 +98,7 @@ t8_cxx_elements_test_scheme_c ()
 
   /* Initialize each element and refine it.
    * The children are overwritten in each step */
-  for (ielement = 0;ielement < NUM_ELEMENTS;ielement++) {
+  for (ielement = 0; ielement < NUM_ELEMENTS; ielement++) {
     t8_element_set_linear_id (quad_scheme, elements[ielement], LEVEL,
                               ielement);
     t8_element_children (quad_scheme, elements[ielement], 4, children);
@@ -117,7 +114,8 @@ t8_cxx_elements_test_scheme_c ()
   t8_debugf ("C version used %f seconds.\n", time);
 }
 
-int main (int argc, char * argv[])
+int
+main (int argc, char *argv[])
 {
   int                 mpiret;
 
@@ -127,7 +125,7 @@ int main (int argc, char * argv[])
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEBUG);
 
-  t8_cxx_elements_test_scheme_c();
+  t8_cxx_elements_test_scheme_c ();
   t8_cxx_elements_test_scheme_cxx ();
 
   sc_finalize ();
