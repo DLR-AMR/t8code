@@ -53,11 +53,7 @@ protected:
 public:
   /** The virtual table for a particular implementation of an element class. */
 
-  /** Constructor */
-                      t8_eclass_scheme_c ();
-  /** Destructor of the class */
-                      virtual ~ t8_eclass_scheme_c () = 0;
-/** Return the size of the element data type in bytes.
+  /** Return the size of the element data type in bytes.
  * \return              Data type size in bytes.
  */
   virtual size_t      t8_element_size (void) = 0;

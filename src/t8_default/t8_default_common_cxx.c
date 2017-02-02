@@ -25,11 +25,17 @@
 
 #include "t8_default_common_cxx.h"
 
-void
-t8_default_scheme_mempool_destroy_cxx (t8_eclass_scheme_c * ts)
+/*
+t8_default_scheme_common_c::t8_default_scheme_common_c ()
 {
-  T8_ASSERT (ts->ts_context != NULL);
-  sc_mempool_destroy ((sc_mempool_t *) ts->ts_context);
+}
+*/
+
+/* Destructor */
+t8_default_scheme_common_c::~t8_default_scheme_common_c ()
+{
+  T8_ASSERT (ts_context != NULL);
+  sc_mempool_destroy ((sc_mempool_t *) ts_context);
 }
 
 #endif /* c++ */

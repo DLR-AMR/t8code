@@ -32,13 +32,12 @@
 
 #include <t8_element_cxx.h>
 
-/** This class independent function assumes an sc_mempool_t as context.
- * It is suitable as the ts_destroy callback in \ref t8_eclass_scheme_t.
- * We assume that the mempool has been created with the correct element size.
- * \param [in,out] ts           The element class scheme context is destroyed.
- */
-void                t8_default_scheme_mempool_destroy_cxx (t8_eclass_scheme_c
-                                                           * ts);
+class t8_default_scheme_common_c:public t8_eclass_scheme_c
+{
+public:
+  /** Destructor for all default schemes */
+  ~t8_default_scheme_common_c ();
+};
 
 #endif /* c++ */
 

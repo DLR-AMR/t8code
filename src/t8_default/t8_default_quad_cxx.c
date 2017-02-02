@@ -308,10 +308,4 @@ t8_default_scheme_quad_c::t8_default_scheme_quad_c (void)
   ts_context = sc_mempool_new (sizeof (t8_pquad_t));
 }
 
-/* Destructor */
-t8_default_scheme_quad_c::~t8_default_scheme_quad_c (void)
-{
-  /* TODO: write this function */
-  t8_default_scheme_mempool_destroy_cxx (this);
-}
 #endif /* c++ */

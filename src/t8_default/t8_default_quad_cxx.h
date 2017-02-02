@@ -36,6 +36,7 @@
 
 #include <p4est.h>
 #include <t8_element_cxx.h>
+#include "t8_default_common_cxx.h"
 
 /** The structure holding a quadrilateral element in the default scheme.
  * We make this definition public for interoperability of element classes.
@@ -79,15 +80,16 @@ typedef p4est_quadrant_t t8_pquad_t;
 t8_eclass_scheme_t *t8_default_scheme_new_quad (void);
 #endif
 
-class               t8_default_scheme_quad_c:public t8_eclass_scheme_c
+class               t8_default_scheme_quad_c:public t8_default_scheme_common_c
 {
 public:
   /** The virtual table for a particular implementation of an element class. */
 
-  /** Constructor */
+  /** Constructor.
+   * We do not need to implement a destrutor since we use the
+   * scheme_commen destructor. */
   t8_default_scheme_quad_c ();
-  /** Destructor of the class */
-  ~t8_default_scheme_quad_c ();
+
 /** Return the size of the element data type in bytes.
  * \return              Data type size in bytes.
  */
@@ -186,16 +188,6 @@ public:
 
 /** Deallocate space for the codimension-one boundary elements. */
   virtual void        t8_element_destroy (int length, t8_element_t ** elem);
-
-  /* TODO: figure out, how to make the default scheme common functions
-   *       friends of the quad class.
-   *       The problem is that it accepts an t8_eclass_scheme_c pointer
-   *       and it should not be a friend of t8_eclass_scheme_c.
-   *       Maybe we can put up an intermediate class t8_eclass_scheme_default
-   *       from which all default classes are derived.
-   */
-  friend void
-            t8_default_scheme_mempool_destroy_cxx (t8_eclass_scheme_c * ts);
 };
 
 #endif /* c++ */
