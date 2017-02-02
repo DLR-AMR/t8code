@@ -20,17 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/* Only compile this file if c++ is enabled */
+#ifdef __cplusplus
+
 #include <t8_element_cxx.h>
 
-t8_eclass_scheme_c::t8_eclass_scheme_c ()
-{
-
-}
-
-t8_eclass_scheme_c::~t8_eclass_scheme_c ()
-{
-
-}
 
 #if 0
 static void
@@ -335,4 +329,6 @@ t8_element_array_index (t8_eclass_scheme_t * ts, sc_array_t * array,
 
   return (t8_element_t *) (array->array + array->elem_size * it);
 }
-#endif
+#endif /* if 0 */
+
+#endif /* c++ */

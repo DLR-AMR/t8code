@@ -31,6 +31,9 @@
 #ifndef T8_DEFAULT_QUAD_CXX_H
 #define T8_DEFAULT_QUAD_CXX_H
 
+/* Only compile this file if c++ is enabled */
+#ifdef __cplusplus
+
 #include <p4est.h>
 #include <t8_element_cxx.h>
 
@@ -194,5 +197,7 @@ public:
   friend void
             t8_default_scheme_mempool_destroy_cxx (t8_eclass_scheme_c * ts);
 };
+
+#endif /* c++ */
 
 #endif /* !T8_DEFAULT_QUAD_H */

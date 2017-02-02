@@ -30,6 +30,10 @@
 #ifndef T8_ELEMENT_CXX_H
 #define T8_ELEMENT_CXX_H
 
+/* Only compile this if c++ is enabled */
+#ifdef __cplusplus
+
+
 #include <sc_refcount.h>
 #include <t8_eclass.h>
 
@@ -481,5 +485,7 @@ void                t8_element_destroy (t8_eclass_scheme_t * ts,
 t8_element_t       *t8_element_array_index (t8_eclass_scheme_t * ts,
                                             sc_array_t * array, size_t it);
 #endif /* if 0 */
+
+#endif /* c++ */
 
 #endif /* !T8_ELEMENT_H */

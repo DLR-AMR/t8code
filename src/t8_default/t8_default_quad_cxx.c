@@ -20,6 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/* Only compile this file if c++ is enabled */
+#ifdef __cplusplus
+
 #include <p4est_bits.h>
 #include "t8_default_common.h"
 #include "t8_default_common_cxx.h"
@@ -311,3 +314,4 @@ t8_default_scheme_quad_c::~t8_default_scheme_quad_c (void)
   /* TODO: write this function */
   t8_default_scheme_mempool_destroy_cxx (this);
 }
+#endif /* c++ */
