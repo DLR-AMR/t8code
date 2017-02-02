@@ -49,6 +49,7 @@ t8_cxx_elements_test_scheme_cxx ()
   t8_locidx_t         ielement;
   double              time;
 
+  t8_debugf ("Starting the C++ version.\n");
   /* Measure the time */
   time = -MPI_Wtime ();
 
@@ -87,6 +88,7 @@ t8_cxx_elements_test_scheme_c ()
   t8_locidx_t         ielement;
   double              time;
 
+  t8_debugf ("Starting the C version.\n");
   /* Measure the time */
   time = -MPI_Wtime ();
 
