@@ -117,6 +117,9 @@ main (int argc, char *argv[])
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEBUG);
 
+  /* Check if the element and levels fit together */
+  SC_CHECK_ABORT ((1 << 2 * LEVEL) > NUM_ELEMENTS, "Refinement level is too small.\n");
+
   /* Start timer */
   sc_flops_start (&fi);
   sc_flops_snap (&fi, &snapshot);
