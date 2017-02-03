@@ -31,6 +31,8 @@
 #include <t8_default.h>
 #include <t8_element_cxx.hxx>
 #include <t8_default_cxx.hxx>
+#include <sc_statistics.h>
+#include <sc_flops.h>
 
 #define NUM_ELEMENTS 1e7
 #define LEVEL         12        /* Must satisfy 4^LEVEL > NUM_ELEMENTS */
@@ -47,11 +49,8 @@ t8_cxx_elements_test_scheme_cxx ()
   t8_element_t      **elements = T8_ALLOC_ZERO (t8_element_t *, NUM_ELEMENTS);
   t8_element_t       *children[4];
   t8_locidx_t         ielement;
-  double              time;
 
   t8_debugf ("Starting the C++ version.\n");
-  /* Measure the time */
-  time = -MPI_Wtime ();
 
   /* Create the scheme class that stores the quadrant lookup functions */
   quad_scheme = cxx_default_scheme->eclass_schemes[T8_ECLASS_QUAD];
@@ -72,10 +71,6 @@ t8_cxx_elements_test_scheme_cxx ()
   quad_scheme->t8_element_destroy (4, children);
   T8_FREE (elements);
   t8_scheme_cxx_unref (&cxx_default_scheme);
-
-  /* Measure the time and print it */
-  time += MPI_Wtime ();
-  t8_debugf ("Cxx version used %f seconds.\n", time);
 }
 
 void
@@ -86,11 +81,8 @@ t8_cxx_elements_test_scheme_c ()
   t8_element_t      **elements = T8_ALLOC_ZERO (t8_element_t *, NUM_ELEMENTS);
   t8_element_t       *children[4];
   t8_locidx_t         ielement;
-  double              time;
 
   t8_debugf ("Starting the C version.\n");
-  /* Measure the time */
-  time = -MPI_Wtime ();
 
   /* Create the scheme class that stores the quadrant lookup functions */
   quad_scheme = c_default_scheme->eclass_schemes[T8_ECLASS_QUAD];
@@ -110,16 +102,14 @@ t8_cxx_elements_test_scheme_c ()
   t8_element_destroy (quad_scheme, NUM_ELEMENTS, elements);
   T8_FREE (elements);
   t8_scheme_unref (&c_default_scheme);
-
-  /* Measure the time and print it */
-  time += MPI_Wtime ();
-  t8_debugf ("C version used %f seconds.\n", time);
 }
 
 int
 main (int argc, char *argv[])
 {
   int                 mpiret;
+  sc_flopinfo_t       fi, snapshot;
+  sc_statinfo_t       stats[2];
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -127,8 +117,24 @@ main (int argc, char *argv[])
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEBUG);
 
+  /* Start timer */
+  sc_flops_start (&fi);
+  sc_flops_snap (&fi, &snapshot);
+
   t8_cxx_elements_test_scheme_c ();
+
+  sc_flops_shot (&fi, &snapshot);
+  sc_stats_set1 (&stats[0], snapshot.iwtime, "C Version");
+
+  sc_flops_snap (&fi, &snapshot);
+
   t8_cxx_elements_test_scheme_cxx ();
+
+  sc_flops_shot (&fi, &snapshot);
+  sc_stats_set1 (&stats[1], snapshot.iwtime, "C++ Version");
+
+  sc_stats_compute (sc_MPI_COMM_WORLD, 2, stats);
+  sc_stats_print (t8_get_package_id (), SC_LP_PRODUCTION, 2, stats, 1, 1);
 
   sc_finalize ();
 
