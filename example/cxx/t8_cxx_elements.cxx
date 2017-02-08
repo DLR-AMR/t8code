@@ -50,7 +50,7 @@ t8_cxx_elements_test_scheme_cxx ()
   t8_element_t       *children[4];
   t8_locidx_t         ielement;
 
-  t8_debugf ("Starting the C++ version.\n");
+  t8_global_productionf ("Starting the C++ version.\n");
 
   /* Create the scheme class that stores the quadrant lookup functions */
   quad_scheme = cxx_default_scheme->eclass_schemes[T8_ECLASS_QUAD];
@@ -82,7 +82,7 @@ t8_cxx_elements_test_scheme_c ()
   t8_element_t       *children[4];
   t8_locidx_t         ielement;
 
-  t8_debugf ("Starting the C version.\n");
+  t8_global_productionf ("Starting the C version.\n");
 
   /* Create the scheme class that stores the quadrant lookup functions */
   quad_scheme = c_default_scheme->eclass_schemes[T8_ECLASS_QUAD];
@@ -104,12 +104,44 @@ t8_cxx_elements_test_scheme_c ()
   t8_scheme_unref (&c_default_scheme);
 }
 
+void
+t8_cxx_timing ()
+{
+  sc_flopinfo_t       fi, snapshot;
+  sc_statinfo_t       stats[2];
+
+  /* Check if the element and levels fit together */
+  SC_CHECK_ABORT ((1 << 2 * LEVEL) > NUM_ELEMENTS, "Refinement level is too small.\n");
+
+  /* init timer */
+  sc_flops_start (&fi);
+  /* Start timer */
+  sc_flops_snap (&fi, &snapshot);
+
+  t8_cxx_elements_test_scheme_c ();
+
+  /* stop timer */
+  sc_flops_shot (&fi, &snapshot);
+
+  sc_stats_set1 (&stats[0], snapshot.iwtime, "C Version");
+  /* start second timer */
+  sc_flops_snap (&fi, &snapshot);
+
+  t8_cxx_elements_test_scheme_cxx ();
+
+  /* stop second timer */
+  sc_flops_shot (&fi, &snapshot);
+  sc_stats_set1 (&stats[1], snapshot.iwtime, "C++ Version");
+
+  /* compute and print stats */
+  sc_stats_compute (sc_MPI_COMM_WORLD, 2, stats);
+  sc_stats_print (t8_get_package_id (), SC_LP_PRODUCTION, 2, stats, 1, 1);
+}
+
 int
 main (int argc, char *argv[])
 {
   int                 mpiret;
-  sc_flopinfo_t       fi, snapshot;
-  sc_statinfo_t       stats[2];
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -117,27 +149,7 @@ main (int argc, char *argv[])
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEBUG);
 
-  /* Check if the element and levels fit together */
-  SC_CHECK_ABORT ((1 << 2 * LEVEL) > NUM_ELEMENTS, "Refinement level is too small.\n");
-
-  /* Start timer */
-  sc_flops_start (&fi);
-  sc_flops_snap (&fi, &snapshot);
-
-  t8_cxx_elements_test_scheme_c ();
-
-  sc_flops_shot (&fi, &snapshot);
-  sc_stats_set1 (&stats[0], snapshot.iwtime, "C Version");
-
-  sc_flops_snap (&fi, &snapshot);
-
-  t8_cxx_elements_test_scheme_cxx ();
-
-  sc_flops_shot (&fi, &snapshot);
-  sc_stats_set1 (&stats[1], snapshot.iwtime, "C++ Version");
-
-  sc_stats_compute (sc_MPI_COMM_WORLD, 2, stats);
-  sc_stats_print (t8_get_package_id (), SC_LP_PRODUCTION, 2, stats, 1, 1);
+  t8_cxx_timing ();
 
   sc_finalize ();
 
