@@ -109,9 +109,16 @@ t8_cxx_timing ()
 {
   sc_flopinfo_t       fi, snapshot;
   sc_statinfo_t       stats[2];
+  char                c_string[BUFSIZ], cxx_string[BUFSIZ];
+
 
   /* Check if the element and levels fit together */
   SC_CHECK_ABORT ((1 << 2 * LEVEL) > NUM_ELEMENTS, "Refinement level is too small.\n");
+
+  snprintf (c_string, BUFSIZ, "C Version - %g elements",
+            NUM_ELEMENTS);
+  snprintf (cxx_string, BUFSIZ, "C++ Version - %g elements",
+            NUM_ELEMENTS);
 
   /* init timer */
   sc_flops_start (&fi);
@@ -123,7 +130,7 @@ t8_cxx_timing ()
   /* stop timer */
   sc_flops_shot (&fi, &snapshot);
 
-  sc_stats_set1 (&stats[0], snapshot.iwtime, "C Version");
+  sc_stats_set1 (&stats[0], snapshot.iwtime, c_string);
   /* start second timer */
   sc_flops_snap (&fi, &snapshot);
 
@@ -131,7 +138,7 @@ t8_cxx_timing ()
 
   /* stop second timer */
   sc_flops_shot (&fi, &snapshot);
-  sc_stats_set1 (&stats[1], snapshot.iwtime, "C++ Version");
+  sc_stats_set1 (&stats[1], snapshot.iwtime, cxx_string);
 
   /* compute and print stats */
   sc_stats_compute (sc_MPI_COMM_WORLD, 2, stats);
