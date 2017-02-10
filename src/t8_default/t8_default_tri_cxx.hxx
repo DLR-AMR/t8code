@@ -53,7 +53,8 @@ public:
 /** Return the type of each child in the ordering of the implementation. */
   virtual t8_eclass_t t8_element_child_eclass (int childid)
   {
-  };
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
 
 /** Return the refinement level of an element. */
   virtual int         t8_element_level (const t8_element_t * elem);
@@ -101,7 +102,8 @@ public:
                                            int min_dim, int length,
                                            t8_element_t ** boundary)
   {
-  };
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
 
 /** Initialize an element according to a given linear id */
   virtual void        t8_element_set_linear_id (t8_element_t * elem,
