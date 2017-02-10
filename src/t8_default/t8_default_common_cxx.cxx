@@ -21,10 +21,25 @@
 */
 
 #include "t8_default_common_cxx.hxx"
+#include "t8_default_common.h"
 
 /* Destructor */
 t8_default_scheme_common_c::~t8_default_scheme_common_c ()
 {
   T8_ASSERT (ts_context != NULL);
   sc_mempool_destroy ((sc_mempool_t *) ts_context);
+}
+
+
+void
+t8_default_scheme_common_c::t8_element_new (int length, t8_element_t ** elem)
+{
+  t8_default_mempool_alloc (this->ts_context, length, elem);
+}
+
+void
+t8_default_scheme_common_c::t8_element_destroy (int length,
+                                              t8_element_t ** elem)
+{
+  t8_default_mempool_free (this->ts_context, length, elem);
 }

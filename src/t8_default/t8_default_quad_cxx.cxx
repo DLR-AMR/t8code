@@ -285,19 +285,6 @@ t8_default_scheme_quad_c::t8_element_root_len (const t8_element_t * elem)
   return P4EST_ROOT_LEN;
 }
 
-void
-t8_default_scheme_quad_c::t8_element_new (int length, t8_element_t ** elem)
-{
-  t8_default_mempool_alloc (this->ts_context, length, elem);
-}
-
-void
-t8_default_scheme_quad_c::t8_element_destroy (int length,
-                                              t8_element_t ** elem)
-{
-  t8_default_mempool_free (this->ts_context, length, elem);
-}
-
 /* Constructor */
 t8_default_scheme_quad_c::t8_default_scheme_quad_c (void)
 {

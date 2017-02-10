@@ -170,9 +170,6 @@ public:
   virtual void        t8_element_successor (const t8_element_t * t,
                                             t8_element_t * s, int level);
 
-/** Allocate space for the codimension-one boundary elements. */
-  virtual void        t8_element_new (int length, t8_element_t ** elem);
-
 /** Get the integer coordinates of the anchor node of an element */
   virtual void        t8_element_anchor (const t8_element_t * elem,
                                          int anchor[3]);
@@ -182,8 +179,6 @@ public:
  */
   virtual int         t8_element_root_len (const t8_element_t * elem);
 
-/** Deallocate space for the codimension-one boundary elements. */
-  virtual void        t8_element_destroy (int length, t8_element_t ** elem);
 };
 
 #endif /* !T8_DEFAULT_QUAD_CXX_HXX */

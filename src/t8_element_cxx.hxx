@@ -145,6 +145,7 @@ public:
   virtual void        t8_element_successor (const t8_element_t * t,
                                             t8_element_t * s, int level) = 0;
 
+  /* TODO: This comment is wrong */
 /** Allocate space for the codimension-one boundary elements. */
   virtual void        t8_element_new (int length, t8_element_t ** elem) = 0;
 
@@ -157,6 +158,7 @@ public:
  */
   virtual int         t8_element_root_len (const t8_element_t * elem) = 0;
 
+  /* TODO: This comment is wrong */
 /** Deallocate space for the codimension-one boundary elements. */
   virtual void        t8_element_destroy (int length,
                                           t8_element_t ** elem) = 0;

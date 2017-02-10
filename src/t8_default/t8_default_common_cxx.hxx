@@ -34,6 +34,14 @@ class               t8_default_scheme_common_c:public t8_eclass_scheme_c
 public:
   /** Destructor for all default schemes */
   virtual ~ t8_default_scheme_common_c ();
+
+  /** Allocate space for the codimension-one boundary elements. */
+    virtual void        t8_element_new (int length, t8_element_t ** elem);
+
+  /** Deallocate space for the codimension-one boundary elements. */
+    virtual void        t8_element_destroy (int length,
+                                            t8_element_t ** elem);
 };
+
 
 #endif /* !T8_DEFAULT_COMMON_CXX_HXX */
