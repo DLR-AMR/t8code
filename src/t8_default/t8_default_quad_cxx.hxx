@@ -82,9 +82,7 @@ class               t8_default_scheme_quad_c:public t8_default_scheme_common_c
 public:
   /** The virtual table for a particular implementation of an element class. */
 
-  /** Constructor.
-   * We do not need to implement a destrutor since we use the
-   * scheme_commen destructor. */
+  /** Constructor. */
   t8_default_scheme_quad_c ();
 
   ~t8_default_scheme_quad_c ();

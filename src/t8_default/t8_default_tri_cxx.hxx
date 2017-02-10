@@ -30,18 +30,15 @@
 #include <t8_element_cxx.hxx>
 #include "t8_default_common_cxx.hxx"
 
-class               t8_default_scheme_triangle_c:public
-  t8_default_scheme_common_c
+class               t8_default_scheme_tri_c:public t8_default_scheme_common_c
 {
 public:
   /** The virtual table for a particular implementation of an element class. */
 
-  /** Constructor.
-   * We do not need to implement a destrutor since we use the
-   * scheme_commen destructor. */
-  t8_default_scheme_triangle_c ();
+  /** Constructor. */
+  t8_default_scheme_tri_c ();
 
-  ~t8_default_scheme_triangle_c ();
+  ~t8_default_scheme_tri_c ();
 /** Return the size of the element data type in bytes.
  * \return              Data type size in bytes.
  */

@@ -32,33 +32,34 @@ typedef t8_dtri_t   t8_default_tri_t;
 static uint64_t     t8_default_tri_get_linear_id (const t8_element_t * elem,
                                                   int level);
 
-size_t t8_default_scheme_triangle_c::t8_element_size (void)
+size_t
+t8_default_scheme_tri_c::t8_element_size (void)
 {
   return sizeof (t8_default_tri_t);
 }
 
 int
-t8_default_scheme_triangle_c::t8_element_maxlevel (void)
+t8_default_scheme_tri_c::t8_element_maxlevel (void)
 {
   return T8_DTRI_MAXLEVEL;
 }
 
 int
-t8_default_scheme_triangle_c::t8_element_level (const t8_element_t * elem)
+t8_default_scheme_tri_c::t8_element_level (const t8_element_t * elem)
 {
   return t8_dtri_get_level ((t8_dtri_t *) elem);
 }
 
 void
-t8_default_scheme_triangle_c::t8_element_copy (const t8_element_t * source,
-                                               t8_element_t * dest)
+t8_default_scheme_tri_c::t8_element_copy (const t8_element_t * source,
+                                          t8_element_t * dest)
 {
   t8_dtri_copy ((const t8_dtri_t *) source, (t8_dtri_t *) dest);
 }
 
 int
-t8_default_scheme_triangle_c::t8_element_compare (const t8_element_t * elem1,
-                                                  const t8_element_t * elem2)
+t8_default_scheme_tri_c::t8_element_compare (const t8_element_t * elem1,
+                                             const t8_element_t * elem2)
 {
   int                 maxlvl;
   u_int64_t           id1, id2;
@@ -66,15 +67,15 @@ t8_default_scheme_triangle_c::t8_element_compare (const t8_element_t * elem1,
   /* Compute the bigger level of the two */
   maxlvl = SC_MAX (t8_element_level (elem1), t8_element_level (elem2));
   /* Compute the linear ids of the elements */
-  id1 = t8_element_get_linear_id (elem1, maxlvl);
-  id2 = t8_element_get_linear_id (elem2, maxlvl);
+  id1 = t8_default_scheme_tri_c::t8_element_get_linear_id (elem1, maxlvl);
+  id2 = t8_default_scheme_tri_c::t8_element_get_linear_id (elem2, maxlvl);
   /* return negativ if id1 < id2, zero if id1 = id2, positive if id1 > id2 */
   return id1 < id2 ? -1 : id1 != id2;
 }
 
 void
-t8_default_scheme_triangle_c::t8_element_parent (const t8_element_t * elem,
-                                                 t8_element_t * parent)
+t8_default_scheme_tri_c::t8_element_parent (const t8_element_t * elem,
+                                            t8_element_t * parent)
 {
   const t8_default_tri_t *t = (const t8_default_tri_t *) elem;
   t8_default_tri_t   *p = (t8_default_tri_t *) parent;
@@ -83,9 +84,9 @@ t8_default_scheme_triangle_c::t8_element_parent (const t8_element_t * elem,
 }
 
 void
-t8_default_scheme_triangle_c::t8_element_sibling (const t8_element_t * elem,
-                                                  int sibid,
-                                                  t8_element_t * sibling)
+t8_default_scheme_tri_c::t8_element_sibling (const t8_element_t * elem,
+                                             int sibid,
+                                             t8_element_t * sibling)
 {
   const t8_default_tri_t *t = (const t8_default_tri_t *) elem;
   t8_default_tri_t   *s = (t8_default_tri_t *) sibling;
@@ -94,9 +95,8 @@ t8_default_scheme_triangle_c::t8_element_sibling (const t8_element_t * elem,
 }
 
 void
-t8_default_scheme_triangle_c::t8_element_child (const t8_element_t * elem,
-                                                int childid,
-                                                t8_element_t * child)
+t8_default_scheme_tri_c::t8_element_child (const t8_element_t * elem,
+                                           int childid, t8_element_t * child)
 {
   const t8_default_tri_t *t = (const t8_default_tri_t *) elem;
   t8_default_tri_t   *c = (t8_default_tri_t *) child;
@@ -105,9 +105,8 @@ t8_default_scheme_triangle_c::t8_element_child (const t8_element_t * elem,
 }
 
 void
-t8_default_scheme_triangle_c::t8_element_children (const t8_element_t * elem,
-                                                   int length,
-                                                   t8_element_t * c[])
+t8_default_scheme_tri_c::t8_element_children (const t8_element_t * elem,
+                                              int length, t8_element_t * c[])
 {
   T8_ASSERT (length == T8_DTRI_CHILDREN);
 
@@ -115,21 +114,21 @@ t8_default_scheme_triangle_c::t8_element_children (const t8_element_t * elem,
 }
 
 int
-t8_default_scheme_triangle_c::t8_element_child_id (const t8_element_t * elem)
+t8_default_scheme_tri_c::t8_element_child_id (const t8_element_t * elem)
 {
   return t8_dtri_child_id ((t8_dtri_t *) elem);
 }
 
 int
-t8_default_scheme_triangle_c::t8_element_is_family (t8_element_t ** fam)
+t8_default_scheme_tri_c::t8_element_is_family (t8_element_t ** fam)
 {
   return t8_dtri_is_familypv ((const t8_dtri_t **) fam);
 }
 
 void
-t8_default_scheme_triangle_c::t8_element_nca (const t8_element_t * elem1,
-                                              const t8_element_t * elem2,
-                                              t8_element_t * nca)
+t8_default_scheme_tri_c::t8_element_nca (const t8_element_t * elem1,
+                                         const t8_element_t * elem2,
+                                         t8_element_t * nca)
 {
   const t8_default_tri_t *t1 = (const t8_default_tri_t *) elem1;
   const t8_default_tri_t *t2 = (const t8_default_tri_t *) elem1;
@@ -139,9 +138,8 @@ t8_default_scheme_triangle_c::t8_element_nca (const t8_element_t * elem1,
 }
 
 void
-t8_default_scheme_triangle_c::t8_element_set_linear_id (t8_element_t * elem,
-                                                        int level,
-                                                        uint64_t id)
+t8_default_scheme_tri_c::t8_element_set_linear_id (t8_element_t * elem,
+                                                   int level, uint64_t id)
 {
   T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
   T8_ASSERT (0 <= id && id < ((uint64_t) 1) << (2 * level));
@@ -150,8 +148,8 @@ t8_default_scheme_triangle_c::t8_element_set_linear_id (t8_element_t * elem,
 }
 
 uint64_t
-  t8_default_scheme_triangle_c::t8_element_get_linear_id (const t8_element_t *
-                                                          elem, int level)
+  t8_default_scheme_tri_c::t8_element_get_linear_id (const t8_element_t *
+                                                     elem, int level)
 {
   T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
 
@@ -159,25 +157,26 @@ uint64_t
 }
 
 void
-t8_default_scheme_triangle_c::
-t8_element_first_descendant (const t8_element_t * elem, t8_element_t * desc)
+t8_default_scheme_tri_c::t8_element_first_descendant (const t8_element_t *
+                                                      elem,
+                                                      t8_element_t * desc)
 {
   t8_dtri_first_descendant ((t8_dtri_t *) elem, (t8_dtri_t *) desc);
 }
 
 void
-t8_default_scheme_triangle_c::t8_element_last_descendant (const t8_element_t *
-                                                          elem,
-                                                          t8_element_t * desc)
+t8_default_scheme_tri_c::t8_element_last_descendant (const t8_element_t *
+                                                     elem,
+                                                     t8_element_t * desc)
 {
   t8_dtri_last_descendant ((t8_dtri_t *) elem, (t8_dtri_t *) desc);
 }
 
 void
-t8_default_scheme_triangle_c::t8_element_successor (const t8_element_t *
-                                                    elem1,
-                                                    t8_element_t * elem2,
-                                                    int level)
+t8_default_scheme_tri_c::t8_element_successor (const t8_element_t *
+                                               elem1,
+                                               t8_element_t * elem2,
+                                               int level)
 {
   T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
 
@@ -186,8 +185,8 @@ t8_default_scheme_triangle_c::t8_element_successor (const t8_element_t *
 }
 
 void
-t8_default_scheme_triangle_c::t8_element_anchor (const t8_element_t * elem,
-                                                 int anchor[3])
+t8_default_scheme_tri_c::t8_element_anchor (const t8_element_t * elem,
+                                            int anchor[3])
 {
   t8_dtri_t          *tri = (t8_dtri_t *) elem;
 
@@ -197,20 +196,20 @@ t8_default_scheme_triangle_c::t8_element_anchor (const t8_element_t * elem,
 }
 
 int
-t8_default_scheme_triangle_c::t8_element_root_len (const t8_element_t * elem)
+t8_default_scheme_tri_c::t8_element_root_len (const t8_element_t * elem)
 {
   return T8_DTRI_ROOT_LEN;
 }
 
 /* Constructor */
-t8_default_scheme_triangle_c::t8_default_scheme_triangle_c (void)
+t8_default_scheme_tri_c::t8_default_scheme_tri_c (void)
 {
-  eclass = T8_ECLASS_QUAD;
+  eclass = T8_ECLASS_TRIANGLE;
   ts_context = sc_mempool_new (sizeof (t8_dtri_t));
 }
 
 /* Destructor */
-t8_default_scheme_triangle_c::~t8_default_scheme_triangle_c ()
+t8_default_scheme_tri_c::~t8_default_scheme_tri_c ()
 {
   /* This destructor is empty since the destructor of the
    * default_common scheme is called automatically and it
