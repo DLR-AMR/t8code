@@ -24,6 +24,7 @@
 #include <t8_refcount.h>
 
 #include "t8_default_quad_cxx.hxx"
+#include "t8_default_hex_cxx.hxx"
 #include "t8_default_tri_cxx.hxx"
 #include "t8_default_tet_cxx.hxx"
 
