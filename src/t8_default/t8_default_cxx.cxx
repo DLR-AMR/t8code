@@ -24,6 +24,7 @@
 #include <t8_refcount.h>
 
 #include "t8_default_quad_cxx.hxx"
+#include "t8_default_tri_cxx.hxx"
 
 t8_scheme_cxx_t    *
 t8_scheme_new_default_cxx (void)
@@ -34,6 +35,7 @@ t8_scheme_new_default_cxx (void)
   t8_refcount_init (&s->rc);
 
   s->eclass_schemes[T8_ECLASS_QUAD] = new t8_default_scheme_quad_c ();
+  s->eclass_schemes[T8_ECLASS_TRIANGLE] = new t8_default_scheme_triangle_c ();
 
   return s;
 }
