@@ -32,11 +32,13 @@ typedef t8_dtri_t   t8_default_tri_t;
 static uint64_t     t8_default_tri_get_linear_id (const t8_element_t * elem,
                                                   int level);
 
+/* *INDENT-OFF* */
 size_t
 t8_default_scheme_tri_c::t8_element_size (void)
 {
   return sizeof (t8_default_tri_t);
 }
+/* *INDENT-ON* */
 
 int
 t8_default_scheme_tri_c::t8_element_maxlevel (void)
