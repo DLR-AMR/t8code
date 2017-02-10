@@ -81,6 +81,14 @@ t8_default_scheme_hex_c::t8_element_compare (const t8_element_t * elem1,
 }
 
 void
+t8_default_scheme_hex_c::t8_element_parent (const t8_element_t * elem,
+                                            t8_element_t * parent)
+{
+  p8est_quadrant_parent ((const p8est_quadrant_t *) elem,
+                         (p8est_quadrant_t *) parent);
+}
+
+void
 t8_default_scheme_hex_c::t8_element_sibling (const t8_element_t * elem,
                                              int sibid,
                                              t8_element_t * sibling)
@@ -128,6 +136,16 @@ int
 t8_default_scheme_hex_c::t8_element_is_family (t8_element_t ** fam)
 {
   return p8est_quadrant_is_familypv ((p8est_quadrant_t **) fam);
+}
+
+void
+t8_default_scheme_hex_c::t8_element_nca (const t8_element_t * elem1,
+                                         const t8_element_t * elem2,
+                                         t8_element_t * nca)
+{
+  p8est_nearest_common_ancestor ((const p8est_quadrant_t *) elem1,
+                                 (const p8est_quadrant_t *) elem2,
+                                 (p8est_quadrant_t *) nca);
 }
 
 void
