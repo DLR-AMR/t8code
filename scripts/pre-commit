@@ -29,10 +29,10 @@ nocontinue=0
 TMP_FILE=`tempfile`
 for file in `git diff --cached --name-only`
 do
-  # We only indent .c and .h files
+  # We only indent .c,.cxx,.h,.hxx files
 #-a ${file: -2} != ".h" ]
   FILE_ENDING="${file##*.}"
-  if [ $FILE_ENDING = "c" -o $FILE_ENDING = "h" ]
+  if [ $FILE_ENDING = "c" -o $FILE_ENDING = "h" -o $FILE_ENDING = "cxx" -o $FILE_ENDING = "hxx" ]
   then
     echo "Checking file $file"
     # indent the source file and store temporarily
