@@ -43,7 +43,8 @@ class               t8_eclass_scheme_c
 {
 protected:
   /** This scheme defines the operations for a particular element class. */
-  t8_eclass_t eclass;
+  t8_eclass_t eclass;         /**< The element class */
+  size_t              element_size; /**< The size in bytes of an element of class \a eclass */
   void               *ts_context;               /**< Anonymous implementation context. */
 
 public:
@@ -253,8 +254,6 @@ public:
    */
   virtual int         t8_element_root_len (const t8_element_t * elem) = 0;
 
-
-
   /** Return a pointer to a t8_element in an array indexed by a size_t.
    * \param [in] array    The \ref sc_array storing \t t8_element_t pointers.
    * \param [in] it       The index of the element that should be returned.
@@ -262,7 +261,8 @@ public:
    * We provide a default implementation of this routine that should suffice
    * for most use cases.
    */
-  virtual t8_element_t  *t8_element_array_index (sc_array_t * array, size_t it);
+  virtual t8_element_t *t8_element_array_index (sc_array_t * array,
+                                                size_t it);
 
   /** Allocate memory for an array of elements of a given class.
    * \param [in] length   The number of elements to be allocated.
