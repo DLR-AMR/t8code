@@ -27,13 +27,6 @@
 
 typedef t8_dtet_t   t8_default_tet_t;
 
-/* *INDENT-OFF* */
-size_t t8_default_scheme_tet_c::t8_element_size (void)
-{
-  return sizeof (t8_default_tet_t);
-}
-/* *INDENT-ON* */
-
 int
 t8_default_scheme_tet_c::t8_element_maxlevel (void)
 {
@@ -201,7 +194,8 @@ t8_default_scheme_tet_c::t8_element_root_len (const t8_element_t * elem)
 t8_default_scheme_tet_c::t8_default_scheme_tet_c (void)
 {
   eclass = T8_ECLASS_TET;
-  ts_context = sc_mempool_new (sizeof (t8_dtet_t));
+  element_size = sizeof (t8_dtet_t);
+  ts_context = sc_mempool_new (sizeof (element_size));
 }
 
  /* Destructor */

@@ -61,8 +61,10 @@ public:
 
   /** Return the size of any element of a given class.
    * \return                      The size of an element of class \b ts.
+   * We provide a default implementation of this routine that should suffice
+   * for most use cases.
    */
-  virtual size_t      t8_element_size (void) = 0;
+  virtual size_t      t8_element_size (void);
 
   /** Return the maximum allowed level for any element of a given class.
    * \return                      The maximum allowed level for elements of class \b ts.

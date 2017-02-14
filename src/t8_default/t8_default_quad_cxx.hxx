@@ -86,10 +86,6 @@ public:
   t8_default_scheme_quad_c ();
 
   ~t8_default_scheme_quad_c ();
-/** Return the size of the element data type in bytes.
- * \return              Data type size in bytes.
- */
-  virtual size_t      t8_element_size (void);
 
 /** Return the maximum level allowed for this element class. */
   virtual int         t8_element_maxlevel (void);

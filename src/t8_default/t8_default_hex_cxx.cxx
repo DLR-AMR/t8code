@@ -25,15 +25,6 @@
 #include "t8_default_common_cxx.hxx"
 #include "t8_default_hex_cxx.hxx"
 
-
-/* *INDENT-OFF* */
-size_t
-t8_default_scheme_hex_c::t8_element_size (void)
-{
-  return sizeof (t8_phex_t);
-}
-/* *INDENT-ON* */
-
 int
 t8_default_scheme_hex_c::t8_element_maxlevel (void)
 {
@@ -221,7 +212,8 @@ t8_default_scheme_hex_c::t8_element_root_len (const t8_element_t * elem)
 t8_default_scheme_hex_c::t8_default_scheme_hex_c (void)
 {
   eclass = T8_ECLASS_HEX;
-  ts_context = sc_mempool_new (sizeof (t8_phex_t));
+  element_size = sizeof (t8_phex_t);
+  ts_context = sc_mempool_new (sizeof (element_size));
 }
 
 t8_default_scheme_hex_c::~t8_default_scheme_hex_c ()

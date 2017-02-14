@@ -44,14 +44,6 @@ t8_element_surround_matches (const p4est_quadrant_t * q,
 
 #endif /* T8_ENABLE_DEBUG */
 
-/* *INDENT-OFF* */
-size_t
-t8_default_scheme_quad_c::t8_element_size (void)
-/* *INDENT-ON* */
-{
-  return sizeof (t8_pquad_t);
-}
-
 int
 t8_default_scheme_quad_c::t8_element_maxlevel (void)
 {
@@ -289,7 +281,8 @@ t8_default_scheme_quad_c::t8_element_root_len (const t8_element_t * elem)
 t8_default_scheme_quad_c::t8_default_scheme_quad_c (void)
 {
   eclass = T8_ECLASS_QUAD;
-  ts_context = sc_mempool_new (sizeof (t8_pquad_t));
+  element_size = sizeof (t8_pquad_t);
+  ts_context = sc_mempool_new (sizeof (element_size));
 }
 
 t8_default_scheme_quad_c::~t8_default_scheme_quad_c ()
