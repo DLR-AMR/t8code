@@ -39,7 +39,7 @@
 typedef struct t8_element t8_element_t;
 
 /** This typedef holds virtual functions for a particular element class. */
-class               t8_eclass_scheme_c
+struct t8_eclass_scheme_c
 {
 protected:
   /** This scheme defines the operations for a particular element class. */

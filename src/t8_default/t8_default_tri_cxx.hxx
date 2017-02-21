@@ -30,7 +30,7 @@
 #include <t8_element_cxx.hxx>
 #include "t8_default_common_cxx.hxx"
 
-class               t8_default_scheme_tri_c:public t8_default_scheme_common_c
+struct t8_default_scheme_tri_c:public t8_default_scheme_common_c
 {
 public:
   /** The virtual table for a particular implementation of an element class. */

@@ -35,7 +35,7 @@
  */
 typedef p8est_quadrant_t t8_phex_t;
 
-class               t8_default_scheme_hex_c:public t8_default_scheme_common_c
+struct t8_default_scheme_hex_c:public t8_default_scheme_common_c
 {
 public:
   /** The virtual table for a particular implementation of an element class. */
