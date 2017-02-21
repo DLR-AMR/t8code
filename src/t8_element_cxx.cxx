@@ -67,12 +67,16 @@ t8_scheme_cxx_unref (t8_scheme_cxx_t ** pscheme)
   }
 }
 
+/* *INDENT-OFF* */
+/* Default implementation for the element size */
 size_t
 t8_eclass_scheme_c::t8_element_size ()
 {
   return element_size;
 }
+/* *INDENT-ON* */
 
+/* Default implementation for array_index */
 t8_element_t       *
 t8_eclass_scheme_c::t8_element_array_index (sc_array_t * array, size_t it)
 {

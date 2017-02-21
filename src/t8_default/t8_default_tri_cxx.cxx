@@ -27,11 +27,6 @@
 
 typedef t8_dtri_t   t8_default_tri_t;
 
-/* This function is used by other element functions and we thus need to
- * declare it up here */
-static uint64_t     t8_default_tri_get_linear_id (const t8_element_t * elem,
-                                                  int level);
-
 int
 t8_default_scheme_tri_c::t8_element_maxlevel (void)
 {
