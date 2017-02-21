@@ -22,6 +22,8 @@
 
 #include <t8_element.h>
 
+#if 0
+
 static void
 t8_scheme_destroy (t8_scheme_t * s)
 {
@@ -324,3 +326,4 @@ t8_element_array_index (t8_eclass_scheme_t * ts, sc_array_t * array,
 
   return (t8_element_t *) (array->array + array->elem_size * it);
 }
+#endif /* if 0 */

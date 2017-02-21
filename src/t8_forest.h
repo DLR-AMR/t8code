@@ -151,7 +151,7 @@ void                t8_forest_set_cmesh (t8_forest_t forest,
  *                              This can be prevented by referencing \b scheme.
  */
 void                t8_forest_set_scheme (t8_forest_t forest,
-                                          t8_scheme_t * scheme);
+                                          t8_scheme_cxx_t * scheme);
 
 /** Set the initial refinement level to be used when \b forest is commited.
  * \param [in,out] forest      The forest whose level will be set.

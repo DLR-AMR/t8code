@@ -24,6 +24,7 @@
 #include <t8_forest/t8_forest_types.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_forest.h>
+#include <t8_element_cxx.hxx>
 
 /* For each tree that we send elements from to
  * other processes, we send this information to the
@@ -572,7 +573,7 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
       /* Done calculating the element offset */
       /* Get the size of an element of the tree */
       element_size =
-        t8_element_size (forest->scheme->eclass_schemes[tree->eclass]);
+        forest->scheme_cxx->eclass_schemes[tree->eclass]->t8_element_size ();
       /* initialize the elements array */
       sc_array_init_size (&tree->elements, element_size,
                           tree_info->num_elements);

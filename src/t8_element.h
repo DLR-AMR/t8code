@@ -43,6 +43,10 @@ typedef struct t8_element t8_element_t;
 /** This typedef holds virtual functions for a particular element class. */
 typedef struct t8_eclass_scheme t8_eclass_scheme_t;
 
+typedef struct t8_scheme_cxx_t t8_scheme_cxx_t;
+
+#if 0
+
 /* *INDENT-OFF* */
 /** Return the size of the element data type in bytes.
  * \return              Data type size in bytes.
@@ -512,6 +516,8 @@ void                t8_element_destroy (t8_eclass_scheme_t * ts,
  */
 t8_element_t       *t8_element_array_index (t8_eclass_scheme_t * ts,
                                             sc_array_t * array, size_t it);
+
+#endif /* if 0 */
 
 T8_EXTERN_C_END ();
 

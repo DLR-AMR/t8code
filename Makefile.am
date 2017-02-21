@@ -62,14 +62,17 @@ include src/Makefile.am
 include src/t8_default/Makefile.am
 include test/Makefile.am
 include example/basic/Makefile.am
-include example/timings/Makefile.am
-include example/triangle/Makefile.am
-include example/tetgen/Makefile.am
-include example/gmsh/Makefile.am
-include example/cmesh/Makefile.am
-include example/cxx/Makefile.am
-include example/ExtremeScaling/Makefile.am
-include example/timings/Makefile.am
+# TODO: commented out for testing cxx.
+# 		  very important to uncomment when done testing!!!
+# 		  !!!!!!!!!!
+#include example/timings/Makefile.am
+#include example/triangle/Makefile.am
+#include example/tetgen/Makefile.am
+#include example/gmsh/Makefile.am
+#include example/cmesh/Makefile.am
+#include example/cxx/Makefile.am
+#include example/ExtremeScaling/Makefile.am
+#include example/timings/Makefile.am
 
 # revision control and ChangeLog
 ChangeLog:

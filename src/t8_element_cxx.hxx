@@ -288,15 +288,14 @@ public:
 };
 
 /** The scheme holds implementations for one or more element classes. */
-typedef struct t8_scheme_cxx
+struct t8_scheme_cxx
 {
   /** Reference counter for this scheme. */
   sc_refcount_t       rc;
 
   /** This array holds one virtual table per element class. */
   t8_eclass_scheme_c *eclass_schemes[T8_ECLASS_COUNT];
-}
-t8_scheme_cxx_t;
+};
 
 /** Increase the reference counter of a scheme.
  * \param [in,out] scheme       On input, this scheme must be alive, that is,
