@@ -21,7 +21,6 @@
 */
 
 #include "t8_default_common_cxx.hxx"
-#include "t8_default_common.h"
 
 /* Destructor */
 t8_default_scheme_common_c::~t8_default_scheme_common_c ()
@@ -29,7 +28,6 @@ t8_default_scheme_common_c::~t8_default_scheme_common_c ()
   T8_ASSERT (ts_context != NULL);
   sc_mempool_destroy ((sc_mempool_t *) ts_context);
 }
-
 
 void
 t8_default_scheme_common_c::t8_element_new (int length, t8_element_t ** elem)
@@ -39,7 +37,35 @@ t8_default_scheme_common_c::t8_element_new (int length, t8_element_t ** elem)
 
 void
 t8_default_scheme_common_c::t8_element_destroy (int length,
-                                              t8_element_t ** elem)
+                                                t8_element_t ** elem)
 {
   t8_default_mempool_free (this->ts_context, length, elem);
+}
+
+void
+t8_default_mempool_alloc (void *ts_context, int length, t8_element_t ** elem)
+{
+  int                 i;
+
+  T8_ASSERT (ts_context != NULL);
+  T8_ASSERT (0 <= length);
+  T8_ASSERT (elem != NULL);
+
+  for (i = 0; i < length; ++i) {
+    elem[i] = (t8_element_t *) sc_mempool_alloc ((sc_mempool_t *) ts_context);
+  }
+}
+
+void
+t8_default_mempool_free (void *ts_context, int length, t8_element_t ** elem)
+{
+  int                 i;
+
+  T8_ASSERT (ts_context != NULL);
+  T8_ASSERT (0 <= length);
+  T8_ASSERT (elem != NULL);
+
+  for (i = 0; i < length; ++i) {
+    sc_mempool_free ((sc_mempool_t *) ts_context, elem[i]);
+  }
 }

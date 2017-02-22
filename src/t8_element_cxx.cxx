@@ -28,7 +28,9 @@ t8_eclass_scheme_c::~t8_eclass_scheme_c ()
 }
 #endif
 
-static void
+/* This belongs here since it uses c++ function,
+ * see t8_element.c/.h */
+void
 t8_scheme_cxx_destroy (t8_scheme_cxx_t * s)
 {
   int                 t;
@@ -44,33 +46,10 @@ t8_scheme_cxx_destroy (t8_scheme_cxx_t * s)
   T8_FREE (s);
 }
 
-void
-t8_scheme_cxx_ref (t8_scheme_cxx_t * scheme)
-{
-  T8_ASSERT (scheme != NULL);
-
-  sc_refcount_ref (&scheme->rc);
-}
-
-void
-t8_scheme_cxx_unref (t8_scheme_cxx_t ** pscheme)
-{
-  t8_scheme_cxx_t    *scheme;
-
-  T8_ASSERT (pscheme != NULL);
-  scheme = *pscheme;
-  T8_ASSERT (scheme != NULL);
-
-  if (sc_refcount_unref (&scheme->rc)) {
-    t8_scheme_cxx_destroy (scheme);
-    *pscheme = NULL;
-  }
-}
-
 /* *INDENT-OFF* */
 /* Default implementation for the element size */
 size_t
-t8_eclass_scheme_c::t8_element_size ()
+t8_eclass_scheme::t8_element_size ()
 {
   return element_size;
 }
@@ -78,7 +57,7 @@ t8_eclass_scheme_c::t8_element_size ()
 
 /* Default implementation for array_index */
 t8_element_t       *
-t8_eclass_scheme_c::t8_element_array_index (sc_array_t * array, size_t it)
+t8_eclass_scheme::t8_element_array_index (sc_array_t * array, size_t it)
 {
   T8_ASSERT (it < array->elem_count);
   T8_ASSERT (element_size == array->elem_size);

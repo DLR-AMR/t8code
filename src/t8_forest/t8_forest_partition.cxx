@@ -614,7 +614,7 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
 #endif
       /* Get the size of an element of the tree */
       element_size =
-        t8_element_size (forest->scheme->eclass_schemes[tree->eclass]);
+        forest->scheme_cxx->eclass_schemes[tree->eclass]->t8_element_size ();
       T8_ASSERT (element_size == tree->elements.elem_size);
       /* Copy the elements from the receive buffer to the elements array */
       memcpy (first_new_element, recv_buffer + element_cursor,

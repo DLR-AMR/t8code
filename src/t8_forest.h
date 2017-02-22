@@ -65,7 +65,7 @@ T8_EXTERN_C_BEGIN ();
  */
 typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
                                             t8_locidx_t which_tree,
-                                            t8_eclass_scheme_t * ts,
+                                            t8_eclass_scheme_c * ts,
                                             int num_outgoing,
                                             t8_element_t * outgoing[],
                                             int num_incoming,
@@ -90,7 +90,7 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
  */
 typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
                                           t8_locidx_t which_tree,
-                                          t8_eclass_scheme_t * ts,
+                                          t8_eclass_scheme_c * ts,
                                           int num_elements,
                                           t8_element_t * elements[]);
 

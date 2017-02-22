@@ -25,6 +25,7 @@
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_partition.h>
+#include <t8_forest/t8_forest_cxx.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 
 void
@@ -124,17 +125,17 @@ t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh, sc_MPI_Comm comm)
 }
 
 void
-t8_forest_set_scheme (t8_forest_t forest, t8_scheme_t * scheme)
+t8_forest_set_scheme (t8_forest_t forest, t8_scheme_cxx_t * scheme)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
-  T8_ASSERT (forest->scheme == NULL);
+  T8_ASSERT (forest->scheme_cxx == NULL);
   T8_ASSERT (forest->set_from == NULL);
 
   T8_ASSERT (scheme != NULL);
 
-  forest->scheme = scheme;
+  forest->scheme_cxx = scheme;
 }
 
 void
@@ -157,7 +158,7 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
   T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
-  T8_ASSERT (forest->scheme == NULL);
+  T8_ASSERT (forest->scheme_cxx == NULL);
   T8_ASSERT (forest->set_from == NULL);
 
   T8_ASSERT (set_from != NULL);
@@ -175,7 +176,7 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
   T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
-  T8_ASSERT (forest->scheme == NULL);
+  T8_ASSERT (forest->scheme_cxx == NULL);
   T8_ASSERT (forest->set_from == NULL);
 
   T8_ASSERT (set_from != NULL);
@@ -196,7 +197,7 @@ t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from,
   T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
-  T8_ASSERT (forest->scheme == NULL);
+  T8_ASSERT (forest->scheme_cxx == NULL);
   T8_ASSERT (forest->set_from == NULL);
   T8_ASSERT (forest->set_adapt_fn == NULL);
   T8_ASSERT (forest->set_adapt_recursive == -1);
@@ -236,222 +237,6 @@ t8_forest_comm_global_num_elements (t8_forest_t forest)
   forest->global_num_elements = global_num_el;
 }
 
-/* For each tree in a forest compute its first and last descendant */
-static void
-t8_forest_compute_desc (t8_forest_t forest)
-{
-  t8_locidx_t         itree_id, num_trees;
-  t8_tree_t           itree;
-  t8_eclass_scheme_t *ts;
-  t8_element_t       *element;
-
-  T8_ASSERT (forest != NULL);
-  /* Iterate over all trees */
-  num_trees = t8_forest_get_num_local_trees (forest);
-  for (itree_id = 0; itree_id < num_trees; itree_id++) {
-    /* get a pointer to the tree */
-    itree = t8_forest_get_tree (forest, itree_id);
-    /* get a pointer to the first element of itree */
-    element = (t8_element_t *) t8_sc_array_index_locidx (&itree->elements, 0);
-    /* get the eclass scheme associated to tree */
-    ts = forest->scheme->eclass_schemes[itree->eclass];
-    /* get memory for the trees first descendant */
-    t8_element_new (ts, 1, &itree->first_desc);
-    /* calculate the first descendant of the first element */
-    t8_element_first_descendant (ts, element, itree->first_desc);
-    /* get a pointer to the last element of itree */
-    element = (t8_element_t *)
-      t8_sc_array_index_locidx (&itree->elements,
-                                itree->elements.elem_count - 1);
-    /* get memory for the trees first descendant */
-    t8_element_new (ts, 1, &itree->last_desc);
-    /* calculate the last descendant of the first element */
-    t8_element_last_descendant (ts, element, itree->last_desc);
-  }
-}
-
-/* Create the elements on this process given a uniform partition
- * of the coarse mesh. */
-static void
-t8_forest_populate (t8_forest_t forest)
-{
-  t8_gloidx_t         child_in_tree_begin;
-  t8_gloidx_t         child_in_tree_end;
-  t8_locidx_t         count_elements;
-  t8_locidx_t         num_tree_elements;
-  t8_locidx_t         num_local_trees;
-  t8_gloidx_t         jt, first_ctree;
-  t8_gloidx_t         start, end, et;
-  t8_tree_t           tree;
-  t8_element_t       *element, *element_succ;
-  sc_array_t         *telements;
-  t8_eclass_t         tree_class;
-  t8_eclass_scheme_t *eclass_scheme;
-  t8_gloidx_t         cmesh_first_tree, cmesh_last_tree;
-
-  /* TODO: create trees and quadrants according to uniform refinement */
-  t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level,
-                           &forest->first_local_tree, &child_in_tree_begin,
-                           &forest->last_local_tree, &child_in_tree_end,
-                           NULL);
-
-  cmesh_first_tree = t8_cmesh_get_first_treeid (forest->cmesh);
-  cmesh_last_tree = cmesh_first_tree +
-    t8_cmesh_get_num_local_trees (forest->cmesh) - 1;
-  SC_CHECK_ABORT (forest->first_local_tree >= cmesh_first_tree
-                  && forest->last_local_tree <= cmesh_last_tree,
-                  "cmesh partition does not match the planned forest partition");
-
-  forest->global_num_elements = forest->local_num_elements = 0;
-  /* create only the non-empty tree objects */
-  if (forest->first_local_tree >= forest->last_local_tree
-      && child_in_tree_begin >= child_in_tree_end) {
-    /* This processor is empty
-     * we still set the tree array to store 0 as the number of trees here */
-    forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
-    count_elements = 0;
-  }
-  else {
-    /* for each tree, allocate elements */
-    num_local_trees = forest->last_local_tree - forest->first_local_tree + 1;
-    forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
-    sc_array_resize (forest->trees, num_local_trees);
-    first_ctree = t8_cmesh_get_first_treeid (forest->cmesh);
-    for (jt = forest->first_local_tree, count_elements = 0;
-         jt <= forest->last_local_tree; jt++) {
-      tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees,
-                                                   jt -
-                                                   forest->first_local_tree);
-      tree_class = tree->eclass = t8_cmesh_get_tree_class (forest->cmesh,
-                                                           jt - first_ctree);
-      tree->elements_offset = count_elements;
-      eclass_scheme = forest->scheme->eclass_schemes[tree_class];
-      T8_ASSERT (eclass_scheme != NULL);
-      telements = &tree->elements;
-      /* calculate first and last element on this tree */
-      start = (jt == forest->first_local_tree) ? child_in_tree_begin : 0;
-      end = (jt == forest->last_local_tree) ? child_in_tree_end :
-        t8_eclass_count_leaf (tree_class, forest->set_level);
-      num_tree_elements = end - start;
-      T8_ASSERT (num_tree_elements > 0);
-      /* Allocate elements for this processor. */
-      sc_array_init_size (telements, t8_element_size (eclass_scheme),
-                          num_tree_elements);
-      element = (t8_element_t *) t8_sc_array_index_locidx (telements, 0);
-      eclass_scheme->elem_set_linear_id (element, forest->set_level, start);
-      count_elements++;
-      for (et = start + 1; et < end; et++, count_elements++) {
-        element_succ =
-          (t8_element_t *) t8_sc_array_index_locidx (telements, et - start);
-        eclass_scheme->elem_successor (element, element_succ,
-                                       forest->set_level);
-        /* TODO: process elements here */
-        element = element_succ;
-      }
-    }
-  }
-  forest->local_num_elements = count_elements;
-  /* TODO: if no tree has pyramid type we can optimize this to
-   * global_num_elements = global_num_trees * 2^(dim*level)
-   */
-  t8_forest_comm_global_num_elements (forest);
-  /* TODO: figure out global_first_position, global_first_quadrant without comm */
-}
-
-/* return nonzero if the first tree of a forest is shared with a smaller
- * process.
- * This is the case if and only if the first descendant of the first tree that we store is
- * not the first possible descendant of that tree.
- */
-static int
-t8_forest_first_tree_shared (t8_forest_t forest)
-{
-  t8_tree_t           first_tree;
-  t8_element_t       *first_desc, *first_element;
-  t8_eclass_t         eclass;
-  t8_eclass_scheme_t *ts;
-  int                 ret;
-
-  T8_ASSERT (forest != NULL);
-  if (forest->trees == NULL
-      || forest->first_local_tree > forest->last_local_tree) {
-    /* This forest is empty and therefore the first tree is not shared */
-    return 0;
-  }
-  /* Get a pointer to the first tree */
-  first_tree = (t8_tree_t) sc_array_index (forest->trees, 0);
-  /* Get the eclass scheme of the first tree */
-  eclass = first_tree->eclass;
-  /* Get the eclass scheme of the first tree */
-  ts = forest->scheme->eclass_schemes[eclass];
-  /* Calculate the first possible descendant of the first tree */
-  /* we do this by first creating a level 0 child of the tree, then
-   * calculating its first descendant */
-  t8_element_new (ts, 1, &first_element);
-  t8_element_set_linear_id (ts, first_element, 0, 0);
-  t8_element_new (ts, 1, &first_desc);
-  t8_element_first_descendant (ts, first_element, first_desc);
-  /* We can now check whether the first possible descendant matches the
-   * first local descendant */
-  ret = t8_element_compare (ts, first_desc, first_tree->first_desc);
-  t8_element_destroy (ts, 1, &first_element);
-  t8_element_destroy (ts, 1, &first_desc);
-  /* If the descendants are the same then ret is zero and we return false.
-   * We return true otherwise */
-  return ret;
-}
-
-/* Allocate memory for trees and set their values as in from.
- * For each tree allocate enough element memory to fit the elements of from.
- * If copy_elements is true, copy the elements of from into the element memory.
- */
-static void
-t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
-{
-  t8_tree_t           tree, fromtree;
-  t8_gloidx_t         num_tree_elements;
-  t8_locidx_t         jt, number_of_trees;
-  t8_eclass_scheme_t *eclass_scheme;
-
-  T8_ASSERT (forest != NULL);
-  T8_ASSERT (from != NULL);
-  T8_ASSERT (!forest->committed);
-  T8_ASSERT (from->committed);
-
-  number_of_trees = from->trees->elem_count;
-  forest->trees =
-    sc_array_new_size (sizeof (t8_tree_struct_t), number_of_trees);
-  sc_array_copy (forest->trees, from->trees);
-  for (jt = 0; jt < number_of_trees; jt++) {
-    tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, jt);
-    fromtree = (t8_tree_t) t8_sc_array_index_locidx (from->trees, jt);
-    tree->eclass = fromtree->eclass;
-    eclass_scheme = forest->scheme->eclass_schemes[tree->eclass];
-    num_tree_elements = fromtree->elements.elem_count;
-    sc_array_init_size (&tree->elements, t8_element_size (eclass_scheme),
-                        num_tree_elements);
-    /* TODO: replace with t8_elem_copy (not existing yet), in order to
-     * eventually copy additional pointer data stored in the elements? */
-    if (copy_elements) {
-      sc_array_copy (&tree->elements, &fromtree->elements);
-      tree->elements_offset = fromtree->elements_offset;
-    }
-    else {
-      sc_array_truncate (&tree->elements);
-    }
-  }
-  forest->first_local_tree = from->first_local_tree;
-  forest->last_local_tree = from->last_local_tree;
-  if (copy_elements) {
-    forest->local_num_elements = from->local_num_elements;
-    forest->global_num_elements = from->global_num_elements;
-  }
-  else {
-    forest->local_num_elements = 0;
-    forest->global_num_elements = 0;
-  }
-}
-
 void
 t8_forest_commit (t8_forest_t forest)
 {
@@ -470,7 +255,7 @@ t8_forest_commit (t8_forest_t forest)
   if (forest->set_from == NULL) {
     T8_ASSERT (forest->mpicomm != sc_MPI_COMM_NULL);
     T8_ASSERT (forest->cmesh != NULL);
-    T8_ASSERT (forest->scheme != NULL);
+    T8_ASSERT (forest->scheme_cxx != NULL);
     T8_ASSERT (forest->from_method == T8_FOREST_FROM_LAST);
 
     /* dup communicator if requested */
@@ -492,7 +277,7 @@ t8_forest_commit (t8_forest_t forest)
   else {
     T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
     T8_ASSERT (forest->cmesh == NULL);
-    T8_ASSERT (forest->scheme == NULL);
+    T8_ASSERT (forest->scheme_cxx == NULL);
     T8_ASSERT (!forest->do_dup);
     T8_ASSERT (forest->from_method >= T8_FOREST_FROM_FIRST &&
                forest->from_method < T8_FOREST_FROM_LAST);
@@ -517,11 +302,11 @@ t8_forest_commit (t8_forest_t forest)
 
     /* increase reference count of cmesh and scheme from the input forest */
     t8_cmesh_ref (forest->cmesh = forest->set_from->cmesh);
-    t8_scheme_ref (forest->scheme = forest->set_from->scheme);
+    t8_scheme_cxx_ref (forest->scheme_cxx = forest->set_from->scheme_cxx);
     /* set the dimension, cmesh and scheme from the old forest */
     forest->dimension = forest->set_from->dimension;
     forest->cmesh = forest->set_from->cmesh;
-    forest->scheme = forest->set_from->scheme;
+    forest->scheme_cxx = forest->set_from->scheme_cxx;
     forest->global_num_trees = forest->set_from->global_num_trees;
 
     /* TODO: currently we can only handle copy, adapt, and partition */
@@ -588,7 +373,7 @@ t8_forest_get_first_element (t8_forest_t forest)
 /* Compute the offset array for a partition cmesh that should match the
  * forest's partition.
  */
-static t8_shmem_array_t
+static              t8_shmem_array_t
 t8_forest_compute_cmesh_offset (t8_forest_t forest, sc_MPI_Comm comm)
 {
   t8_shmem_array_t    offset;
@@ -829,8 +614,8 @@ t8_forest_reset (t8_forest_t * pforest)
   }
 
   /* we have taken ownership on calling t8_forest_set_* */
-  if (forest->scheme != NULL) {
-    t8_scheme_unref (&forest->scheme);
+  if (forest->scheme_cxx != NULL) {
+    t8_scheme_cxx_unref (&forest->scheme_cxx);
   }
   if (forest->cmesh != NULL) {
     t8_cmesh_unref (&forest->cmesh);

@@ -21,7 +21,6 @@
 */
 
 #include <p8est_bits.h>
-#include "t8_default_common.h"
 #include "t8_default_common_cxx.hxx"
 #include "t8_default_hex_cxx.hxx"
 

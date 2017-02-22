@@ -32,28 +32,26 @@
 
 #include <sc_refcount.h>
 #include <t8_eclass.h>
+#include <t8_element.h>
 
-/** Opaque structure for a generic element, only used as pointer.
- * Implementations are free to cast it to their internal data structure.
- */
-typedef struct t8_element t8_element_t;
-
-/** This typedef holds virtual functions for a particular element class. */
-struct t8_eclass_scheme_c
+/** This struct holds virtual functions for a particular element class. */
+struct t8_eclass_scheme
 {
-protected:
   /** This scheme defines the operations for a particular element class. */
-  t8_eclass_t eclass;         /**< The element class */
-  size_t              element_size; /**< The size in bytes of an element of class \a eclass */
+protected:
+  size_t element_size;              /**< The size in bytes of an element of class \a eclass */
   void               *ts_context;               /**< Anonymous implementation context. */
 
 public:
+                      t8_eclass_t eclass;
+                              /**< The element class */
+
   /** The destructor. It does nothing but has to be defined since
    * we may want to delete an eclass_scheme that is actually inherited
    * (for example t8_default_scheme_quad) and providing and implementation
    * for the destructor ensures that the
    * destructor of the child class will be executed. */
-                      virtual ~ t8_eclass_scheme_c ()
+                      virtual ~ t8_eclass_scheme ()
   {
   }
 
@@ -286,33 +284,6 @@ public:
   virtual void        t8_element_destroy (int length,
                                           t8_element_t ** elem) = 0;
 };
-
-/** The scheme holds implementations for one or more element classes. */
-struct t8_scheme_cxx
-{
-  /** Reference counter for this scheme. */
-  sc_refcount_t       rc;
-
-  /** This array holds one virtual table per element class. */
-  t8_eclass_scheme_c *eclass_schemes[T8_ECLASS_COUNT];
-};
-
-/** Increase the reference counter of a scheme.
- * \param [in,out] scheme       On input, this scheme must be alive, that is,
- *                              exist with positive reference count.
- */
-void                t8_scheme_cxx_ref (t8_scheme_cxx_t * scheme);
-
-/** Decrease the reference counter of a scheme.
- * If the counter reaches zero, this scheme is destroyed.
- * \param [in,out] pscheme      On input, the scheme pointed to must exist
- *                              with positive reference count.  If the
- *                              reference count reaches zero, the scheme is
- *                              destroyed and this pointer set to NULL.
- *                              Otherwise, the pointer is not changed and
- *                              the scheme is not modified in other ways.
- */
-void                t8_scheme_cxx_unref (t8_scheme_cxx_t ** pscheme);
 
 /* TODO: Copy the doxygen comments to the class definition above,
  * then delete all the functions below */
