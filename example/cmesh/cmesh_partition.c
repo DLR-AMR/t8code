@@ -21,7 +21,6 @@
 */
 
 #include <sc_refcount.h>
-#include <t8_default.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest.h>
 #include <t8_cmesh_vtk.h>

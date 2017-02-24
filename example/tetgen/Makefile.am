@@ -9,4 +9,4 @@ bin_PROGRAMS += \
 
 example_tetgen_t8_read_tetgen_SOURCES = example/tetgen/t8_read_tetgen_file.c
 example_tetgen_t8_time_tetgen_SOURCES = example/tetgen/t8_time_tetgen_file.c
-example_tetgen_t8_forest_tetgen_SOURCES = example/tetgen/t8_forest_from_tetgen.c
+example_tetgen_t8_forest_tetgen_SOURCES = example/tetgen/t8_forest_from_tetgen.cxx

@@ -33,6 +33,8 @@
 #include <t8.h>
 #include <t8_forest.h>
 
+T8_EXTERN_C_BEGIN ();
+
 /* TODO: document with doxygen */
 
 /* For each tree in a forest compute its first and last descendant */
@@ -56,5 +58,7 @@ int                 t8_forest_first_tree_shared (t8_forest_t forest);
 void                t8_forest_copy_trees (t8_forest_t forest,
                                           t8_forest_t from,
                                           int copy_elements);
+
+T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_CXX_H! */
