@@ -250,8 +250,10 @@ t8_forest_partition_tree_first_last_el (t8_tree_t tree,
     /* Else it is the last element of this tree */
     *last_tree_el = tree->elements.elem_count - 1;
   }
-  /* return true if there are no elements left on this tree */
-  if (*last_tree_el == (t8_locidx_t) tree->elements.elem_count - 1) {
+  /* return true if the last element that we send is also the last
+   * element of the tree */
+  if (last_element_send - tree->elements_offset
+      == tree->elements.elem_count - 1) {
     return 1;
   }
   return 0;
@@ -309,7 +311,7 @@ t8_forest_partition_fill_buffer (t8_forest_t forest_from,
     num_elements_send = last_tree_element - first_tree_element + 1;
     T8_ASSERT (num_elements_send > 0);
     element_alloc += num_elements_send * tree->elements.elem_size;
-    current_element += last_tree_element + 1;
+    current_element += num_elements_send;
     num_trees_send++;
     tree_id++;
   }
@@ -759,6 +761,12 @@ t8_forest_partition (t8_forest_t forest)
   /* We now calculate the new element offsets */
   t8_forest_partition_compute_new_offset (forest);
   t8_forest_partition_given (forest);
+
+
+  T8_ASSERT (t8_forest_get_num_local_trees (forest_from)
+             == forest_from->trees->elem_count);
+  T8_ASSERT (t8_forest_get_num_local_trees (forest)
+             == forest->trees->elem_count);
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of partition */
