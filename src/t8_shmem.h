@@ -123,6 +123,7 @@ t8_gloidx_t         t8_shmem_array_get_gloidx (t8_shmem_array_t array,
                                                int index);
 
 /* TODO: implement and comment */
+/* returns true if arrays are equal */
 int                 t8_shmem_array_is_equal (t8_shmem_array_t array_a,
                                              t8_shmem_array_t array_b);
 

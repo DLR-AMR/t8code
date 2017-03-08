@@ -594,8 +594,8 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
       return 0;
     }
     else {
-      is_equal = is_equal || t8_shmem_array_is_equal (cmesh_a->tree_offsets,
-                                                      cmesh_b->tree_offsets);
+      is_equal = is_equal || !t8_shmem_array_is_equal (cmesh_a->tree_offsets,
+                                                       cmesh_b->tree_offsets);
     }
   }
   if (is_equal != 0) {
