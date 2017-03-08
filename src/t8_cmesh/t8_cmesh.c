@@ -572,9 +572,15 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
     cmesh_a->num_local_trees != cmesh_b->num_local_trees ||
     cmesh_a->num_ghosts != cmesh_b->num_ghosts ||
     cmesh_a->first_tree != cmesh_b->first_tree;
+#if 0
+  /* TODO: The inserted variables are counters that are only active if the
+   * cmesh is committed from scratch. If a cmesh is commited via cmesh_copy,
+   * then these counters are not active. So even for equal cmeshes
+   * these counters must not store the same value. */
 #ifdef T8_ENABLE_DEBUG
   is_equal = is_equal || cmesh_a->inserted_trees != cmesh_b->inserted_trees ||
     cmesh_a->inserted_ghosts != cmesh_b->inserted_ghosts;
+#endif
 #endif
   if (is_equal != 0) {
     return 0;
