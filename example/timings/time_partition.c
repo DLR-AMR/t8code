@@ -197,7 +197,6 @@ t8_time_cmesh_partition_brick (int x, int y, int z, sc_MPI_Comm comm,
     t8_cmesh_vtk_write_file (cmesh_partition, "cmesh_box_partition", 1.0);
   }
   /* memory clean-up */
-  t8_cmesh_destroy (&cmesh);
   t8_cmesh_destroy (&cmesh_partition);
 }
 #endif

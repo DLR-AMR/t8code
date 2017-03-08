@@ -32,6 +32,7 @@ t8_refine_hybrid (int level)
 {
   t8_cmesh_t          cmesh, cmesh_refine;
 
+  t8_global_productionf ("Enter refine_hybrid\n");
   t8_cmesh_init (&cmesh);
   t8_cmesh_init (&cmesh_refine);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
@@ -40,12 +41,10 @@ t8_refine_hybrid (int level)
   t8_cmesh_set_join (cmesh, 0, 1, 2, 1, 0);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   t8_cmesh_set_derive (cmesh_refine, cmesh);
-  /* We want cmesh to be destroyed as soon as possible,
-   * so we claim that we do not use it anymore */
-  t8_cmesh_unref (&cmesh);
   t8_cmesh_set_refine (cmesh_refine, level);
   t8_cmesh_commit (cmesh_refine, sc_MPI_COMM_WORLD);
   t8_cmesh_destroy (&cmesh_refine);
+  t8_global_productionf ("Done refine_hybrid\n");
 }
 
 /* Create a unit cube out of a given eclass and
@@ -55,15 +54,14 @@ t8_refine_cube (t8_eclass_t eclass, int level)
 {
   t8_cmesh_t          cmesh, cmesh_refine;
 
+  t8_global_productionf ("Enter refine_cube\n");
   cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0);
   t8_cmesh_init (&cmesh_refine);
   t8_cmesh_set_derive (cmesh_refine, cmesh);
-  /* We want cmesh to be destroyed as soon as possible,
-   * so we claim that we do not use it anymore */
-  t8_cmesh_unref (&cmesh);
   t8_cmesh_set_refine (cmesh_refine, level);
   t8_cmesh_commit (cmesh_refine, sc_MPI_COMM_WORLD);
   t8_cmesh_destroy (&cmesh_refine);
+  t8_global_productionf ("Done refine_cube\n");
 }
 
 /* Create a cmesh from a p4est brick connectivity
@@ -74,17 +72,16 @@ t8_refine_p4est (int level)
   t8_cmesh_t          cmesh, cmesh_refine;
   p4est_connectivity_t *conn;
 
+  t8_global_productionf ("Enter refine_p4est\n");
   conn = p4est_connectivity_new_brick (3, 2, 0, 0);
   cmesh = t8_cmesh_new_from_p4est (conn, sc_MPI_COMM_WORLD, 0);
   p4est_connectivity_destroy (conn);
   t8_cmesh_init (&cmesh_refine);
   t8_cmesh_set_derive (cmesh_refine, cmesh);
-  /* We want cmesh to be destroyed as soon as possible,
-   * so we claim that we do not use it anymore */
-  t8_cmesh_unref (&cmesh);
   t8_cmesh_set_refine (cmesh_refine, level);
   t8_cmesh_commit (cmesh_refine, sc_MPI_COMM_WORLD);
   t8_cmesh_destroy (&cmesh_refine);
+  t8_global_productionf ("Done refine_p4est\n");
 }
 
 int

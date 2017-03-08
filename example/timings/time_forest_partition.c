@@ -156,7 +156,6 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   /* Set up cmesh_partition to be a repartition of cmesh. */
   t8_cmesh_init (&cmesh_partition);
   t8_cmesh_set_derive (cmesh_partition, cmesh);
-  t8_cmesh_unref (&cmesh);
   /* The new cmesh is partitioned according to a uniform init_level refinement */
   t8_cmesh_set_partition_uniform (cmesh_partition, init_level);
   t8_cmesh_commit (cmesh_partition, comm);
@@ -233,7 +232,6 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   t8_cmesh_save (t8_forest_get_cmesh (forest_partition), "cmesh_time_forest");
   /* memory clean-up */
   t8_forest_unref (&forest_partition);
-  t8_cmesh_destroy (&cmesh_partition);
 }
 
 #undef USE_CMESH_PARTITION
@@ -271,7 +269,6 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
   t8_cmesh_set_derive (cmesh_partition, cmesh);
   t8_cmesh_set_partition_uniform (cmesh_partition, init_level);
   t8_cmesh_commit (cmesh_partition, comm);
-  t8_cmesh_unref (&cmesh);
   return cmesh_partition;
 }
 

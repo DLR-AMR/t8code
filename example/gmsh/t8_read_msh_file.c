@@ -61,7 +61,6 @@ t8_read_msh_partition (t8_cmesh_t cmesh, const char *prefix)
   t8_cmesh_set_derive (p_mesh, cmesh);
   t8_cmesh_set_partition_uniform (p_mesh, 0);
   t8_cmesh_commit (p_mesh, sc_MPI_COMM_WORLD);
-  t8_cmesh_unref (&cmesh);
   snprintf (vtk_prefix, BUFSIZ, "%s_partition", prefix);
   t8_read_msh_file_vtk (p_mesh, vtk_prefix);
   return p_mesh;

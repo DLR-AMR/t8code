@@ -44,6 +44,7 @@ t8_read_triangle_file_build_cmesh (const char *prefix, int do_dup,
     if (do_partition) {
       t8_cmesh_t          cmesh_part;
       t8_cmesh_init (&cmesh_part);
+      t8_cmesh_ref (cmesh);
       t8_cmesh_set_derive (cmesh_part, cmesh);
       t8_cmesh_set_refine (cmesh_part, 1);
       t8_cmesh_commit (cmesh_part, sc_MPI_COMM_WORLD);
