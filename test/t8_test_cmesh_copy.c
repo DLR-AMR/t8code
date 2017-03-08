@@ -52,6 +52,8 @@ test_cmesh_copy (sc_MPI_Comm comm)
     test_cmesh_committed (cmesh_original);
     /* Set up the cmesh copy */
     t8_cmesh_init (&cmesh_copy);
+    /* We need the original cmesh later, so we ref it */
+    t8_cmesh_ref (cmesh_original);
     t8_cmesh_set_derive (cmesh_copy, cmesh_original);
     /* Commit and check commit */
     t8_cmesh_commit (cmesh_copy, comm);
@@ -60,8 +62,8 @@ test_cmesh_copy (sc_MPI_Comm comm)
     retval = t8_cmesh_is_equal (cmesh_copy, cmesh_original);
     SC_CHECK_ABORT (retval == 1, "Cmesh copy failed.");
     /* Clean-up */
-    t8_cmesh_unref (&cmesh_copy);
-    t8_cmesh_unref (&cmesh_original);
+    t8_cmesh_destroy (&cmesh_copy);
+    t8_cmesh_destroy (&cmesh_original);
   }
 }
 
