@@ -199,9 +199,7 @@ t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from)
     t8_cmesh_unref (&cmesh->set_from);
   }
   cmesh->set_from = set_from;
-  if (set_from != NULL) {
-    t8_cmesh_ref (set_from);
-  }
+
   if (set_from != NULL) {
     t8_cmesh_set_dimension (cmesh, set_from->dimension);
   }

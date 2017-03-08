@@ -530,7 +530,14 @@ t8_cmesh_commit_refine (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     return;
   }
 
-  cmesh_temp[1] = cmesh_from;
+  if (level > 1) {
+    /* We need cmesh_from later, therefore we ref it before
+     * a temporary cmesh is derived from it */
+    t8_cmesh_ref (cmesh_from);
+    cmesh_temp[1] = cmesh_from;
+  }
+
+  /* This loop is only executed if level > 1 */
   for (il = 0; il < level - 1; il++) {
     /* cmesh_temp[0] and cmesh_temp[1] are successively refined from each other,
      * starting with cmesh_temp[1] = cmesh_from */
@@ -539,15 +546,6 @@ t8_cmesh_commit_refine (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     t8_cmesh_set_refine (cmesh_temp[il % 2], 1);
     t8_cmesh_commit (cmesh_temp[il % 2], comm);
     t8_debugf ("[%i] Commited %i\n", level, il % 2);
-    if (il > 0) {
-      t8_cmesh_destroy (&cmesh_temp[1 - il % 2]);
-      t8_debugf ("[%i] Destroyed %i\n", level, 1 - il % 2);
-    }
-    /* TODO: we have to set set_from to NULL manually because we destroyed set_from
-     *       before we destroy cmesh_temp[il % 2].
-     *       This should eventually be fixed, such that set_from is automatically NULL
-     *       when the from cmesh was destroyed. */
-    cmesh_temp[il % 2]->set_from = NULL;
   }
   if (level > 1) {
     /* Refine from the last temporary cmesh */
@@ -558,11 +556,14 @@ t8_cmesh_commit_refine (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   }
   t8_cmesh_refine (cmesh);
   if (level > 1) {
-    /* Destroy the last temp cmesh and reset the refinement level and
+    /* reset the refinement level and
      * cmesh_from. */
-    t8_cmesh_destroy (&cmesh_temp[1 - il % 2]);
     cmesh->set_refine_level = level;
-    cmesh->set_from = cmesh_from;
+    /* Clean-up memory and restore old cmesh_from */
+    if (cmesh->set_from != cmesh_from) {
+      t8_cmesh_destroy (&cmesh->set_from);
+      cmesh->set_from = cmesh_from;
+    }
   }
 }
 
@@ -627,7 +628,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
         }
         t8_cmesh_partition (cmesh_temp, comm);
         t8_cmesh_set_derive (cmesh, cmesh_temp);
-        t8_cmesh_unref (&cmesh_temp);
         t8_cmesh_commit_refine (cmesh, comm);
       }
       else {
@@ -666,7 +666,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
       }
       t8_cmesh_commit_from_stash (cmesh_temp, comm);
       t8_cmesh_set_derive (cmesh, cmesh_temp);
-      t8_cmesh_unref (&cmesh_temp);
       t8_cmesh_commit_refine (cmesh, comm);
     }
     else {
