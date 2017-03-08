@@ -25,6 +25,18 @@
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_partition.h"
 
+/* We create a cmesh, partition it and repartition it several times.
+ * At the end we result in the same partition as at the beginning and we
+ * compare this cmesh with the initial one. If they are equal the test is
+ * passed.
+ *
+ * TODO: Currently the test is not passed. This is probably because the
+ *       cmesh_is_equal function is too strict and does not allow, for example,
+ *       the order of the ghosts to change.
+ *       We should implement a lighter version of cmesh_is_equal in order
+ *       to account for this.
+ */
+
 /* Test if a cmesh is committed properly and perform the
  * face consistency check. */
 static void
@@ -42,12 +54,11 @@ test_cmesh_committed (t8_cmesh_t cmesh)
  * this process and check for equality with the non-partitioned cmesh.
  */
 static void
-test_cmesh_partition_concentrate (t8_cmesh_t cmesh_original,
-                                  t8_cmesh_t cmesh_partition,
-                                  sc_MPI_Comm comm)
+test_cmesh_partition_concentrate (t8_cmesh_t cmesh_partition_uniform,
+                                  sc_MPI_Comm comm, int level)
 {
   int                 mpisize, mpirank, mpiret, irank;
-  int                 retval;
+  int                 retval, i;
   t8_cmesh_t          cmesh_partition_new1, cmesh_partition_new2;
   t8_shmem_array_t    offset_concentrate;
 
@@ -60,72 +71,124 @@ test_cmesh_partition_concentrate (t8_cmesh_t cmesh_original,
   /* Since we want to repartition the cmesh_partition in each step,
    * we need to ref it. This ensure that we can still work with it after
    * another cmesh is derived from it. */
-  t8_cmesh_ref (cmesh_partition);
+  t8_cmesh_ref (cmesh_partition_uniform);
 
-  t8_cmesh_init (&cmesh_partition_new1);
-  t8_cmesh_set_derive (cmesh_partition_new1, cmesh_partition);
-  t8_cmesh_commit (cmesh_partition_new1, comm);
-  t8_cmesh_unref (&cmesh_partition_new1);
+  cmesh_partition_new1 = cmesh_partition_uniform;
 
-#if 0
+  /* We repartition the cmesh to be concentrated on each rank once */
   for (irank = 0; irank < mpisize; irank++) {
-    t8_cmesh_init (&cmesh_concentrate);
-    t8_cmesh_set_derive (cmesh_concentrate, cmesh_partition);
+    t8_cmesh_init (&cmesh_partition_new2);
+    t8_cmesh_set_derive (cmesh_partition_new2, cmesh_partition_new1);
     /* Create an offset array where each tree resides on irank */
     offset_concentrate = t8_cmesh_offset_concentrate (irank, comm,
                                                       t8_cmesh_get_num_trees
-                                                      (cmesh_partition));
+                                                      (cmesh_partition_uniform));
     /* Set the new cmesh to be partitioned according to that offset */
-    t8_cmesh_set_partition_offsets (cmesh_concentrate, offset_concentrate);
+    t8_cmesh_set_partition_offsets (cmesh_partition_new2, offset_concentrate);
     /* Commit the cmesh and test if successful */
-    t8_cmesh_commit (cmesh_concentrate, comm);
-    test_cmesh_committed (cmesh_concentrate);
-    if (mpirank == irank) {
-      /* If all trees are concentrated on the current process, check whether
-       * this cmesh is equal to the original cmesh */
-      retval = t8_cmesh_is_equal (cmesh_concentrate, cmesh_original);
-      SC_CHECK_ABORT (retval == 1, "Cmesh equality check failed.");
-    }
-    t8_cmesh_unref (&cmesh_concentrate);
-    t8_cmesh_unref (&cmesh_partition);
+    t8_cmesh_commit (cmesh_partition_new2, comm);
+    test_cmesh_committed (cmesh_partition_new2);
+
+    /* Switch the rolls of the cmeshes */
+    cmesh_partition_new1 = cmesh_partition_new2;
+    cmesh_partition_new2 = NULL;
   }
-#endif
+  /* We partition the resulting cmesh according to a uniform level refinement.
+   * This cmesh should now be equal to the initial cmesh. */
+  for (i = 0; i < 2; i++) {
+    t8_cmesh_init (&cmesh_partition_new2);
+    t8_cmesh_set_derive (cmesh_partition_new2, cmesh_partition_new1);
+    t8_cmesh_set_partition_uniform (cmesh_partition_new2, level);
+    t8_cmesh_commit (cmesh_partition_new2, comm);
+    cmesh_partition_new1 = cmesh_partition_new2;
+  }
+  retval = t8_cmesh_is_equal (cmesh_partition_new2, cmesh_partition_uniform);
+  SC_CHECK_ABORT (retval == 1, "Cmesh equality check failed.");
+
+  /* clean-up */
+  t8_cmesh_destroy (&cmesh_partition_new2);
 }
 
 static void
 test_cmesh_partition (sc_MPI_Comm comm)
 {
-  int                 eci, level;
+  int                 eci, level, maxlevel, minlevel;
+  int                 mpisize, mpiret;
+  int                 num_children;
+  int                 forest_elements;
+  int                 i;
   t8_cmesh_t          cmesh_original, cmesh_partition;
+  const int           eclass_to_cube_cellnum[T8_ECLASS_COUNT] = {
+    1, 1, 1, 2, 1, 6, 2, 3
+  };                            /* Gives the number of coarse mesh cells of the hypercube mesh for each eclass */
 
-  for (eci = T8_ECLASS_ZERO; eci < T8_ECLASS_LINE; ++eci) {
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+
+  for (eci = T8_ECLASS_VERTEX; eci < T8_ECLASS_COUNT; ++eci) {
     t8_global_productionf ("Testing eclass %s.\n", t8_eclass_to_string[eci]);
+
     if (eci != T8_ECLASS_PYRAMID) {
       /* TODO: cmesh_partition does not work with pyramids yet.
        *       as soon as it does, activate the test for pyramids.
        */
-      for (level = 0; level < 4; level++) {
-        cmesh_original = t8_cmesh_new_hypercube (eci, comm, 0, 0);
+
+      /* We do not support empty forest processes for cmesh uniform partition
+       * yet, thus we must ensure that the number of forest elements in a
+       * uniform refinement would be equal to or exceed the number of processes.
+       * We compute here the number of forest elements per level and set as
+       * minimum refinement level the first level where the condition is
+       * fulfilled. */
+      /* For eclass vertex the forest always has 1 element when using the hypercube mesh
+       * and thus we use a disjoint copy of at least mpisize many coarse cells. */
+      if (eci != T8_ECLASS_VERTEX) {
+        num_children = t8_eclass_num_children[eci];
+        minlevel = 0;
+        forest_elements = eclass_to_cube_cellnum[eci];
+        while (forest_elements < mpisize) {
+          minlevel++;
+          forest_elements *= num_children;
+        }
+        t8_debugf
+          ("[H]\t Predict %i cells for eclass %s, thus min level %i\n",
+           forest_elements, t8_eclass_to_string[eci], minlevel);
+      }
+      else {
+        /* t8_eclass_vertex */
+        minlevel = 0;
+      }
+      maxlevel = minlevel + 8;
+      for (level = minlevel; level < maxlevel; level++) {
+        t8_global_productionf ("\tTesting refinement level %i\n", level);
+        if (eci != T8_ECLASS_VERTEX && level != maxlevel - 1) {
+          /* Take the hypercube as coarse mesh */
+          cmesh_original = t8_cmesh_new_hypercube (eci, comm, 0, 0);
+        }
+        else {
+          /* If the eclass is vertex we choose a mesh consisting of disjoint
+           * vertices. We take more than mpisize many and ensure that we do
+           * not take an integer multiple of mpisize. */
+          /* We also choose this mesh for all eclasses in the last case.
+           * We do this to test different mesh sizes. */
+          double              num_trees = mpisize * 5.73;
+          cmesh_original = t8_cmesh_new_bigmesh (eci, num_trees, comm);
+        }
         test_cmesh_committed (cmesh_original);
-        /* Set up the partitioned cmesh */
-        t8_cmesh_init (&cmesh_partition);
-        t8_debugf ("  original: %i\n", cmesh_original->rc.refcount);
-        t8_cmesh_set_derive (cmesh_partition, cmesh_original);
-        /* Uniform partition according to level */
-        t8_cmesh_set_partition_uniform (cmesh_partition, level);
-        t8_cmesh_commit (cmesh_partition, comm);
-        t8_debugf ("  original: %i\n", cmesh_original->rc.refcount);
-        test_cmesh_committed (cmesh_partition);
+        for (i = 0; i < 2; i++) {
+          /* Set up the partitioned cmesh */
+          t8_cmesh_init (&cmesh_partition);
+          t8_cmesh_set_derive (cmesh_partition, cmesh_original);
+          /* Uniform partition according to level */
+          t8_cmesh_set_partition_uniform (cmesh_partition, level);
+          t8_cmesh_commit (cmesh_partition, comm);
+          test_cmesh_committed (cmesh_partition);
+          cmesh_original = cmesh_partition;
+        }
+
         /* Perform the concentrate test */
-#if 0
-        /* TODO: fix reference counting */
-        test_cmesh_partition_concentrate (cmesh_original, cmesh_partition,
-                                          comm);
-#endif
+        test_cmesh_partition_concentrate (cmesh_partition, comm, level);
         /* Clean-up */
-        t8_cmesh_unref (&cmesh_partition);
-        t8_debugf ("  original: %i\n", cmesh_original->rc.refcount);
-        t8_cmesh_unref (&cmesh_original);
+        t8_cmesh_destroy (&cmesh_partition);
       }
     }
     else {
