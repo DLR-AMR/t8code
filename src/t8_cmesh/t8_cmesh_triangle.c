@@ -164,7 +164,7 @@ t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename,
   }
   fclose (fp);
   /* Done reading .node file */
-  T8_FREE (line);
+  free (line);
   return corner_offset;
 die_node:
   /* Clean up on error. */
@@ -172,7 +172,7 @@ die_node:
   if (fp != NULL) {
     fclose (fp);
   }
-  T8_FREE (line);
+  free (line);
   return -1;
 }
 
@@ -279,7 +279,7 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
   }
   fclose (fp);
   T8_FREE (vertices);
-  T8_FREE (line);
+  free (line);
   /* Done reading .ele file */
   return triangle_offset;
 die_ele:
@@ -289,7 +289,7 @@ die_ele:
     fclose (fp);
   }
   T8_FREE (vertices);
-  T8_FREE (line);
+  free (line);
   return -1;
 }
 
@@ -429,7 +429,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
     }
   }
   T8_FREE (tneighbors);
-  T8_FREE (line);
+  free (line);
   return 0;
 die_neigh:
   /* Clean up on error. */
@@ -437,7 +437,7 @@ die_neigh:
   if (fp != NULL) {
     fclose (fp);
   }
-  T8_FREE (line);
+  free (line);
   return -1;
 }
 
