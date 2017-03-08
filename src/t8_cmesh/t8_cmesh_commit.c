@@ -627,7 +627,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
         }
         t8_cmesh_partition (cmesh_temp, comm);
         t8_cmesh_set_derive (cmesh, cmesh_temp);
-        t8_cmesh_unref (&cmesh_temp);
         t8_cmesh_commit_refine (cmesh, comm);
       }
       else {
@@ -666,7 +665,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
       }
       t8_cmesh_commit_from_stash (cmesh_temp, comm);
       t8_cmesh_set_derive (cmesh, cmesh_temp);
-      t8_cmesh_unref (&cmesh_temp);
       t8_cmesh_commit_refine (cmesh, comm);
     }
     else {
