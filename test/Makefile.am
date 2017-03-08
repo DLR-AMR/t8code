@@ -5,7 +5,7 @@
 t8code_test_programs = \
         test/t8_test_eclass \
         test/t8_test_bcast \
-		     test/t8_test_hypercube \
+		    test/t8_test_hypercube \
         test/t8_test_cmesh_copy \
         test/t8_test_cmesh_partition
 
