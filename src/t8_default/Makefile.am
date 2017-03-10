@@ -4,6 +4,9 @@
 
 libt8_installed_headers += \
   src/t8_default.h src/t8_default/t8_default_common.h \
+	src/t8_default/t8_default_line.h \
+	src/t8_default/t8_dline_bits.h \
+	src/t8_default/t8_dline.h \
   src/t8_default/t8_default_quad.h src/t8_default/t8_default_hex.h \
   src/t8_default/t8_default_tri.h \
   src/t8_default/t8_default_tet.h \
@@ -16,6 +19,8 @@ libt8_installed_headers += \
   src/t8_default/t8_dtet_connectivity.h
 libt8_compiled_sources += \
   src/t8_default/t8_default.c src/t8_default/t8_default_common.c \
+	src/t8_default/t8_default_line.c \
+	src/t8_default/t8_dline_bits.c \
   src/t8_default/t8_default_quad.c src/t8_default/t8_default_hex.c \
   src/t8_default/t8_default_tri.c \
   src/t8_default/t8_default_tet.c \
