@@ -344,9 +344,8 @@ t8_dtri_compute_all_coords (const t8_dtri_t * t,
  * It is possible that the function is called with
  * elem = child */
 void
-t8_dtri_child (const t8_dtri_t * elem, int childid, t8_dtri_t * child)
+t8_dtri_child (const t8_dtri_t * t, int childid, t8_dtri_t * child)
 {
-  const t8_dtri_t    *t = (const t8_dtri_t *) elem;
   t8_dtri_t          *c = (t8_dtri_t *) child;
   t8_dtri_coord_t     t_coordinates[T8_DTRI_DIM];
   int                 vertex;
@@ -355,7 +354,7 @@ t8_dtri_child (const t8_dtri_t * elem, int childid, t8_dtri_t * child)
   T8_ASSERT (t->level < T8_DTRI_MAXLEVEL);
   T8_ASSERT (0 <= childid && childid < T8_DTRI_CHILDREN);
 
-  Bey_cid = t8_dtri_index_to_bey_number[elem->type][childid];
+  Bey_cid = t8_dtri_index_to_bey_number[t->type][childid];
 
   /* Compute anchor coordinates of child */
   if (Bey_cid == 0) {

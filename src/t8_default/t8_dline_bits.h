@@ -52,6 +52,44 @@ void                t8_dline_copy (const t8_dline_t * l, t8_dline_t * dest);
 void                t8_dline_parent (const t8_dline_t * l,
                                      t8_dline_t * parent);
 
+/** Compute the childid-th child in Morton order of a line.
+ * \param [in] l    Input Line.
+ * \param [in,out] childid The id of the child, 0 or 1, in Morton order.
+ * \param [out] child  Existing Line whose data will be filled
+ * 		    with the date of l's childid-th child.
+ */
+void                t8_dline_child (const t8_dline_t * l, int childid,
+                                    t8_dline_t * child);
+
+/** Initialize a line as the line with a given global id in a uniform
+ *  refinement of a given level. *
+ * \param [in,out] l  Existing line whose data will be filled.
+ * \param [in] id     Index to be considered.
+ * \param [in] level  level of uniform grid to be considered.
+ */
+void                t8_dline_init_linear_id (t8_dline_t * l, int level,
+                                             uint64_t id);
+
+/** Computes the successor of a line in a uniform grid of level \a level.
+ * \param [in] l  line whose id will be computed.
+ * \param [in,out] s Existing line whose data will be filled with the
+ *                data of \a l's successor on level \a level.
+ * \param [in] level level of uniform grid to be considered.
+ */
+void                t8_dline_successor (const t8_dline_t * l,
+                                        t8_dline_t * succ, int level);
+
+/** Compute the first descendant of a line at a given level. This is the descendant of
+ * the line in a uniform level refinement that has the smallest id.
+ * \param [in] l        Line whose descendant is computed.
+ * \param [out] s       Existing line whose data will be filled with the data
+ *                      of \a l's first descendant on level \a level.
+ * \param [in] level    The refinement level. Must be greater than \a l's refinement
+ *                      level.
+ */
+void                t8_dline_first_descendant (const t8_dline_t * l,
+                                               t8_dline_t * s, int level);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DLINE_BITS_H */

@@ -60,6 +60,43 @@ t8_default_line_parent (const t8_element_t * elem, t8_element_t * parent)
   t8_dline_parent (l, p);
 }
 
+static void
+t8_default_line_child (const t8_element_t * elem,
+                       int childid, t8_element_t * child)
+{
+  const t8_default_line_t *l = (const t8_default_line_t *) elem;
+  t8_default_line_t  *c = (t8_default_line_t *) child;
+
+  t8_dline_child (l, childid, c);
+}
+
+static void
+t8_default_line_set_linear_id (t8_element_t * elem, int level, uint64_t id)
+{
+  T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
+  T8_ASSERT (0 <= id && id < ((u_int64_t) 1) << level);
+
+  t8_dline_init_linear_id ((t8_default_line_t *) elem, level, id);
+}
+
+static void
+t8_default_line_successor (const t8_element_t * elem1,
+                           t8_element_t * elem2, int level)
+{
+  T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
+
+  t8_dline_successor ((const t8_default_line_t *) elem1,
+                      (t8_default_line_t *) elem2, level);
+}
+
+static void
+t8_default_line_first_descendant (const t8_element_t * elem,
+                                  t8_element_t * desc)
+{
+  t8_dline_first_descendant ((t8_dline_t *) elem, (t8_dline_t *) desc,
+                             T8_DLINE_MAXLEVEL);
+}
+
 t8_eclass_scheme_t *
 t8_default_scheme_new_line (void)
 {
@@ -76,16 +113,16 @@ t8_default_scheme_new_line (void)
   ts->elem_compare = NULL;
   ts->elem_parent = t8_default_line_parent;
   ts->elem_sibling = NULL;
-  ts->elem_child = NULL;
+  ts->elem_child = t8_default_line_child;
   ts->elem_children = NULL;
   ts->elem_is_family = NULL;
   ts->elem_child_id = NULL;
   ts->elem_nca = NULL;
-  ts->elem_set_linear_id = NULL;
+  ts->elem_set_linear_id = t8_default_line_set_linear_id;
   ts->elem_get_linear_id = NULL;
-  ts->elem_first_desc = NULL;
+  ts->elem_first_desc = t8_default_line_first_descendant;
   ts->elem_last_desc = NULL;
-  ts->elem_successor = NULL;
+  ts->elem_successor = t8_default_line_successor;
   ts->elem_anchor = NULL;
   ts->elem_root_len = NULL;
 
