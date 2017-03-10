@@ -41,10 +41,10 @@ T8_EXTERN_C_BEGIN ();
 #define T8_DLINE_MAXLEVEL 30
 
 /** The length of the root line in integer coordinates. */
-#define T8_DLINE_ROOT_LEN (1 << (T8_DTRI_MAXLEVEL))
+#define T8_DLINE_ROOT_LEN (1 << (T8_DLINE_MAXLEVEL))
 
 /** The length of a line at a given level in integer coordinates. */
-#define T8_DLINE_LEN(l) (1 << (T8_DTRI_MAXLEVEL - (l)))
+#define T8_DLINE_LEN(l) (1 << (T8_DLINE_MAXLEVEL - (l)))
 
 typedef int32_t     t8_dline_coord_t;
 

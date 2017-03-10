@@ -24,7 +24,7 @@
 #include "t8_dline_bits.h"
 
 int
-t8_dtri_get_level (const t8_dline_t * l)
+t8_dline_get_level (const t8_dline_t * l)
 {
   return l->level;
 }
@@ -33,4 +33,20 @@ void
 t8_dline_copy (const t8_dline_t * l, t8_dline_t * dest)
 {
   memcpy (dest, l, sizeof (t8_dline_t));
+}
+
+void
+t8_dline_parent (const t8_dline_t * l, t8_dline_t * parent)
+{
+  t8_dline_coord_t    h;
+
+  T8_ASSERT (l->level > 0);
+
+  /* Get the length of l */
+  h = T8_DLINE_LEN (l->level);
+
+  /* Set coordinates of parent */
+  parent->x = l->x & ~h;
+  /* Set the parent's level */
+  parent->level = l->level - 1;
 }

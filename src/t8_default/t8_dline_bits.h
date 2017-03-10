@@ -31,11 +31,26 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/* TODO: document */
-int                 t8_dtri_get_level (const t8_dline_t * l);
+/** Compute the level of a line.
+ * \param [in] l    Line whose level is computed.
+ * \return          The level of \a l.
+ */
+int                 t8_dline_get_level (const t8_dline_t * l);
 
-/* TODO: document */
+/** Copy all values from one line to another.
+ * \param [in] l    The line to be copied.
+ * \param [in,out] dest Existing line whose data will be filled with the data
+ *                   of \a l.
+ */
 void                t8_dline_copy (const t8_dline_t * l, t8_dline_t * dest);
+
+/** Compute the parent of a line.
+ * \param [in]  l   The input line.
+ * \param [in,out] parent Existing line whose data will be filled with the parent
+ *                  data of \a l.
+ */
+void                t8_dline_parent (const t8_dline_t * l,
+                                     t8_dline_t * parent);
 
 T8_EXTERN_C_END ();
 

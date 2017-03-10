@@ -22,20 +22,42 @@
 
 #include "t8_default_common.h"
 #include "t8_default_line.h"
+#include "t8_dline_bits.h"
 #include "t8_dline.h"
 
 typedef t8_dline_t  t8_default_line_t;
 
-static int
-t8_default_line_level (const t8_element * elem)
+static size_t
+t8_default_line_size (void)
 {
-  return t8_dine_get_level ((t8_dline_t *) elem);
+  return sizeof (t8_default_line_t);
+}
+
+static int
+t8_default_line_maxlevel (void)
+{
+  return T8_DLINE_MAXLEVEL;
+}
+
+static int
+t8_default_line_level (const t8_element_t * elem)
+{
+  return t8_dline_get_level ((t8_dline_t *) elem);
 }
 
 static void
 t8_default_tline_copy (const t8_element_t * source, t8_element_t * dest)
 {
-  t8_dline_copy ((const t8_dtri_t *) source, (t8_dtri_t *) dest);
+  t8_dline_copy ((const t8_dline_t *) source, (t8_dline_t *) dest);
+}
+
+static void
+t8_default_line_parent (const t8_element_t * elem, t8_element_t * parent)
+{
+  const t8_default_line_t *l = (const t8_default_line_t *) elem;
+  t8_default_line_t  *p = (t8_default_line_t *) parent;
+
+  t8_dline_parent (l, p);
 }
 
 t8_eclass_scheme_t *
@@ -46,13 +68,13 @@ t8_default_scheme_new_line (void)
   ts = T8_ALLOC_ZERO (t8_eclass_scheme_t, 1);
   ts->eclass = T8_ECLASS_LINE;
 
-  ts->elem_size = NULL;
-  ts->elem_maxlevel = NULL;
+  ts->elem_size = t8_default_line_size;
+  ts->elem_maxlevel = t8_default_line_maxlevel;
 
   ts->elem_level = t8_default_line_level;
   ts->elem_copy = t8_default_tline_copy;
   ts->elem_compare = NULL;
-  ts->elem_parent = NULL;
+  ts->elem_parent = t8_default_line_parent;
   ts->elem_sibling = NULL;
   ts->elem_child = NULL;
   ts->elem_children = NULL;
