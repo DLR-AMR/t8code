@@ -30,6 +30,7 @@
 #include <t8.h>
 #include <t8_shmem.h>
 #include <t8_cmesh/t8_cmesh_save.h>
+#include <t8_element.h>
 
 /* TODO: If including eclass were just for the cmesh_new routines, we should
  *       move them into a different file.
@@ -199,7 +200,8 @@ void                t8_cmesh_set_partition_given (t8_cmesh_t cmesh,
  * Thus split each tree into x^level subtrees
  * TODO: implement */
 /* If level = 0  then no refinement is performed */
-void                t8_cmesh_set_refine (t8_cmesh_t cmesh, int level);
+void                t8_cmesh_set_refine (t8_cmesh_t cmesh, int level,
+                                         t8_scheme_t * scheme);
 
 /** Set the dimension of a cmesh. If any tree is inserted to the cmesh
  * via \a t8_cmesh_set_tree_class, then the dimension is set automatically

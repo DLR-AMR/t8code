@@ -536,7 +536,9 @@ t8_cmesh_commit_refine (t8_cmesh_t cmesh, sc_MPI_Comm comm)
      * starting with cmesh_temp[1] = cmesh_from */
     t8_cmesh_init (&cmesh_temp[il % 2]);
     t8_cmesh_set_derive (cmesh_temp[il % 2], cmesh_temp[1 - il % 2]);
-    t8_cmesh_set_refine (cmesh_temp[il % 2], 1);
+    /* Since we need the scheme to refine cmesh, we ref it */
+    t8_scheme_ref (cmesh->set_refine_scheme);
+    t8_cmesh_set_refine (cmesh_temp[il % 2], 1, cmesh->set_refine_scheme);
     t8_cmesh_commit (cmesh_temp[il % 2], comm);
     t8_debugf ("[%i] Commited %i\n", level, il % 2);
     if (il > 0) {

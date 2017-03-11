@@ -27,6 +27,7 @@
 #include <t8_refcount.h>
 #include <t8_shmem.h>
 #include "t8_cmesh_stash.h"
+#include "t8_element.h"
 
 /** \file t8_cmesh_types.h
  * We define here the datatypes needed for internal cmesh routines.
@@ -92,6 +93,8 @@ typedef struct t8_cmesh
   /* TODO: Define a maximum allowed refinemet level */
   int8_t              set_refine_level; /**< If the cmesh is derived from a second cmesh, a refinement level is specified here.
                                       \ref t8_cmesh_set_derive \ref t8_cmesh_set_refine. */
+  t8_scheme_t        *set_refine_scheme; /**< If the cmesh is to be refined, the scheme that describes the
+                                           refinement patter. See \ref t8_cmesh_set_refine. */
   int8_t              set_partition_level; /**< Non-negative if the cmesh should be partition from an already existing cmesh
                                          with an assumes \a level uniform mesh underneath.  TODO: fix sentence */
 #if 0
