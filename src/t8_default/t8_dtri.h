@@ -55,9 +55,9 @@ typedef int32_t     t8_dtri_coord_t;
 typedef struct t8_dtri
 {
   int8_t              level;
-  t8_dtri_type_t type;
-  t8_dtri_coord_t x, y;
-  t8_dtri_coord_t n;
+  t8_dtri_type_t      type;
+  t8_dtri_coord_t     x, y;
+  t8_dtri_coord_t     n;
 }
 t8_dtri_t;
 
