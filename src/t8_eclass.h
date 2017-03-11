@@ -78,9 +78,6 @@ extern const int    t8_eclass_num_faces[T8_ECLASS_COUNT];
 /** For each dimension the maximum possible number of faces of an eclass of that dimension. */
 extern const int    t8_eclass_max_num_faces[T8_ECLASS_MAX_DIM + 1];
 
-/** For each eclass the number of children on each face when refined */
-extern const int    t8_eclass_num_face_children[T8_ECLASS_COUNT];
-
 /** For each eclass and each face f the entry i gives the vertex number
  * of f's i-th vertex within all vertices of the tree. */
 extern const int
@@ -89,9 +86,6 @@ extern const int
 
 /** The number of vertices of an element class. */
 extern const int    t8_eclass_num_vertices[T8_ECLASS_COUNT];
-
-/** The number of children of an element class. */
-extern const int    t8_eclass_num_children[T8_ECLASS_COUNT];
 
 /** The vtk cell type for the eclass */
 extern const int    t8_eclass_vtk_type[T8_ECLASS_COUNT];

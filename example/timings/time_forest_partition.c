@@ -91,7 +91,7 @@ t8_band_adapt (t8_forest_t forest, t8_locidx_t which_tree,
   adapt_data_t       *adapt_data;
 
   T8_ASSERT (num_elements == 1 || num_elements ==
-             t8_eclass_num_children[ts->eclass]);
+             t8_element_num_children (ts, elements[0]));
   level = t8_element_level (ts, elements[0]);
 
   t8_anchor_element (forest, ts, elements[0], elem_anchor);

@@ -45,7 +45,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   T8_ASSERT (*el_inserted == (t8_locidx_t) telement->elem_count);
   T8_ASSERT (el_coarsen >= 0);
   element = t8_element_array_index (ts, telement, *el_inserted - 1);
-  num_children = t8_eclass_num_children[ts->eclass];
+  num_children = t8_element_num_children (ts, element);
   T8_ASSERT (t8_element_child_id (ts, element) == num_children - 1);
 
   fam = el_buffer;
@@ -110,12 +110,12 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   if (elem_list->elem_count <= 0) {
     return;
   }
-  num_children = t8_eclass_num_children[ts->eclass];
   if (forest->set_replace_fn != NULL) {
     t8_element_new (ts, 1, &el_pop);
   }
   while (elem_list->elem_count > 0) {
     el_buffer[0] = (t8_element_t *) sc_list_pop (elem_list);
+    num_children = t8_element_num_children (ts, el_buffer[0]);
     if (forest->set_adapt_fn (forest, ltreeid, ts, 1, el_buffer) > 0) {
       t8_element_new (ts, num_children - 1, el_buffer + 1);
       if (forest->set_replace_fn != NULL) {
@@ -195,7 +195,10 @@ t8_forest_adapt (t8_forest_t forest)
     el_inserted = 0;
     el_coarsen = 0;
     /* TODO: this will generate problems with pyramidal elements */
-    num_children = t8_eclass_num_children[tree->eclass];
+    num_children =
+      t8_element_num_children (tscheme,
+                               t8_element_array_index (tscheme,
+                                                       telements_from, 0));
     elements = T8_ALLOC (t8_element_t *, num_children);
     elements_from = T8_ALLOC (t8_element_t *, num_children);
     while (el_considered < num_el_from) {
