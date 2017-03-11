@@ -55,7 +55,8 @@ typedef int         (*t8_element_maxlevel_t) (void);
 
 /* *INDENT-OFF* */
 /** Return the type of each child in the ordering of the implementation. */
-typedef t8_eclass_t (*t8_element_child_eclass_t) (int childid);
+typedef t8_eclass_t (*t8_element_child_eclass_t) (const t8_element_t * elem,
+                                                  int childid);
 /* *INDENT-ON* */
 
 /** Return the refinement level of an element. */
@@ -80,6 +81,13 @@ typedef void        (*t8_element_parent_t) (const t8_element_t * elem,
 typedef void        (*t8_element_sibling_t) (const t8_element_t * elem,
                                              int sibid,
                                              t8_element_t * sibling);
+
+/** Return the number of children of an element. */
+typedef int         (*t8_element_num_children_t) (const t8_element_t * elem);
+
+/** Return the number of children of a given face of an element. */
+typedef int         (*t8_element_num_face_children_t) (const t8_element_t *
+                                                       elem, int face);
 
 /** Construct the child element of a given number. */
 typedef void        (*t8_element_child_t) (const t8_element_t * elem,
@@ -170,6 +178,8 @@ struct t8_eclass_scheme
   t8_element_compare_t elem_compare;    /**< Compare two elements for equality */
   t8_element_parent_t elem_parent;      /**< Compute the parent element. */
   t8_element_sibling_t elem_sibling;    /**< Compute a given sibling element. */
+  t8_element_num_children_t elem_num_children; /**< Compute the number of children. */
+  t8_element_num_face_children_t elem_num_face_children; /**< Compute the number of children of a face. */
   t8_element_child_t  elem_child;       /**< Compute a child element. */
   t8_element_children_t elem_children;  /**< Compute all children of an element. */
   t8_element_child_id_t elem_child_id;  /**< Return the child id of an element. */
@@ -266,11 +276,13 @@ int                 t8_element_maxlevel (t8_eclass_scheme_t * ts);
 
 /** Return the type of each child in the ordering of the implementation.
  * \param [in] ts       The virtual table for this element class.
+ * \param [in] elem     The element whose children are considered.
  * \param [in] childid  Must be between 0 and the number of children (exclusive).
- *                      The number of children is defined in \a t8_eclass_num_children.
+ *                      The number of children is defined in \a t8_element_num_children.
  * \return              The type for the given child.
  */
 t8_eclass_t         t8_element_child_eclass (t8_eclass_scheme_t * ts,
+                                             const t8_element_t * elem,
                                              int childid);
 
 /** Return the level of a particular element.
@@ -339,6 +351,24 @@ void                t8_element_sibling (t8_eclass_scheme_t * ts,
                                         const t8_element_t * elem, int sibid,
                                         t8_element_t * sibling);
 
+/** Return the number of children of an element when it is refined.
+ * \param [in] ts     The virtual table for this element class.
+ * \param [in] elem   The element whose number of children is returned.
+ * \return            The number of children of \a elem if it is to be refined.
+ */
+int                 t8_element_num_children (t8_eclass_scheme_t * ts,
+                                             const t8_element_t * elem);
+
+/** Return the number of children of an element's when the element is refined.
+ * \param [in] ts     The virtual table for this element class.
+ * \param [in] elem   The element whose face is considered.
+ * \param [in] face   A face of \a elem.
+ * \return            The number of children of \a face if \a elem is to be refined.
+ */
+int                 t8_element_num_face_children (t8_eclass_scheme_t * ts,
+                                                  const t8_element_t * elem,
+                                                  int face);
+
 /** Construct the child element of a given number.
  * \param [in] ts       The virtual table for this element class.
  * \param [in] elem     This must be a valid element, bigger than maxlevel.
@@ -363,7 +393,7 @@ void                t8_element_child (t8_eclass_scheme_t * ts,
  * \param [in,out] c    The storage for these \a length elements must exist
  *                      and match the element class in the children's ordering.
  *                      On output, all children are valid.
- * \see t8_eclass_num_children
+ * \see t8_element_num_children
  * \see t8_element_child_eclass
  */
 void                t8_element_children (t8_eclass_scheme_t * ts,

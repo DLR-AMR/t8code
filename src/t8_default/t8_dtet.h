@@ -39,6 +39,9 @@ T8_EXTERN_C_BEGIN ();
 /** The number of faces of a tetrahedron. */
 #define T8_DTET_FACES 4
 
+/** The number of children that a face is refined to. */
+#define T8_DTET_FACE_CHILDREN 4
+
 /** The maximum refinement level allowed for a tetrahedron. */
 #define T8_DTET_MAXLEVEL 21
 

@@ -91,6 +91,18 @@ t8_default_tri_sibling (const t8_element_t * elem,
   t8_dtri_sibling (t, sibid, s);
 }
 
+static int
+t8_default_tri_num_children (const t8_element_t * elem)
+{
+  return T8_DTRI_CHILDREN;
+}
+
+static int
+t8_default_tri_num_face_children (const t8_element_t * elem, int face)
+{
+  return T8_DTRI_FACE_CHILDREN;
+}
+
 static void
 t8_default_tri_child (const t8_element_t * elem,
                       int childid, t8_element_t * child)
@@ -206,6 +218,8 @@ t8_default_scheme_new_tri (void)
   ts->elem_compare = t8_default_tri_compare;
   ts->elem_parent = t8_default_tri_parent;
   ts->elem_sibling = t8_default_tri_sibling;
+  ts->elem_num_children = t8_default_tri_num_children;
+  ts->elem_num_face_children = t8_default_tri_num_face_children;
   ts->elem_child = t8_default_tri_child;
   ts->elem_children = t8_default_tri_children;
   ts->elem_is_family = t8_default_tri_is_family;

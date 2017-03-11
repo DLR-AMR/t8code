@@ -56,7 +56,7 @@ t8_default_quad_maxlevel (void)
 }
 
 static              t8_eclass_t
-t8_default_quad_child_eclass (int childid)
+t8_default_quad_child_eclass (const t8_element_t * elem, int childid)
 {
   T8_ASSERT (0 <= childid && childid < P4EST_CHILDREN);
 
@@ -126,6 +126,18 @@ t8_default_quad_sibling (const t8_element_t * elem,
 
   p4est_quadrant_sibling (q, r, sibid);
   t8_default_quad_copy_surround (q, r);
+}
+
+static int
+t8_default_quad_num_children (const t8_element_t * elem)
+{
+  return P4EST_CHILDREN;
+}
+
+static int
+t8_default_quad_num_face_children (const t8_element_t * elem, int face)
+{
+  return 2;
 }
 
 static void
@@ -287,6 +299,8 @@ t8_default_scheme_new_quad (void)
   ts->elem_compare = t8_default_quad_compare;
   ts->elem_parent = t8_default_quad_parent;
   ts->elem_sibling = t8_default_quad_sibling;
+  ts->elem_num_children = t8_default_quad_num_children;
+  ts->elem_num_face_children = t8_default_quad_num_face_children;
   ts->elem_child = t8_default_quad_child;
   ts->elem_children = t8_default_quad_children;
   ts->elem_child_id = t8_default_quad_child_id;

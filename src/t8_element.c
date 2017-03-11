@@ -136,11 +136,12 @@ t8_element_maxlevel (t8_eclass_scheme_t * ts)
 }
 
 t8_eclass_t
-t8_element_child_eclass (t8_eclass_scheme_t * ts, int childid)
+t8_element_child_eclass (t8_eclass_scheme_t * ts, const t8_element_t * elem,
+                         int childid)
 {
   T8_ASSERT (ts != NULL && ts->elem_child_eclass != NULL);
-  T8_ASSERT (0 <= childid && childid < t8_eclass_num_children[ts->eclass]);
-  return ts->elem_child_eclass (childid);
+  T8_ASSERT (0 <= childid && childid < t8_element_num_children (ts, elem));
+  return ts->elem_child_eclass (elem, childid);
 }
 
 int
@@ -182,8 +183,25 @@ t8_element_sibling (t8_eclass_scheme_t * ts,
                     t8_element_t * sibling)
 {
   T8_ASSERT (ts != NULL && ts->elem_sibling != NULL);
-  T8_ASSERT (0 <= sibid && sibid < t8_eclass_num_children[ts->eclass]);
+  T8_ASSERT (0 <= sibid && sibid < t8_element_num_children (ts, elem));
   ts->elem_sibling (elem, sibid, sibling);
+}
+
+int
+t8_element_num_children (t8_eclass_scheme_t * ts, const t8_element_t * elem)
+{
+  T8_ASSERT (ts != NULL && ts->elem_num_children != NULL);
+
+  return ts->elem_num_children (elem);
+}
+
+int
+t8_element_num_face_children (t8_eclass_scheme_t * ts,
+                              const t8_element_t * elem, int face)
+{
+  T8_ASSERT (ts != NULL && ts->elem_num_face_children != NULL);
+
+  return ts->elem_num_face_children (elem, face);
 }
 
 void
@@ -192,7 +210,7 @@ t8_element_child (t8_eclass_scheme_t * ts, const t8_element_t * elem,
 {
   T8_ASSERT (ts != NULL && ts->elem_child != NULL);
   T8_ASSERT (t8_element_level (ts, elem) < t8_element_maxlevel (ts));
-  T8_ASSERT (0 <= childid && childid < t8_eclass_num_children[ts->eclass]);
+  T8_ASSERT (0 <= childid && childid < t8_element_num_children (ts, elem));
   ts->elem_child (elem, childid, child);
 }
 
@@ -202,7 +220,7 @@ t8_element_children (t8_eclass_scheme_t * ts, const t8_element_t * elem,
 {
   T8_ASSERT (ts != NULL && ts->elem_children != NULL);
   T8_ASSERT (t8_element_level (ts, elem) < t8_element_maxlevel (ts));
-  T8_ASSERT (length == t8_eclass_num_children[ts->eclass]);
+  T8_ASSERT (length == t8_element_num_children (ts, elem));
   ts->elem_children (elem, length, c);
 }
 

@@ -42,7 +42,7 @@ t8_default_hex_maxlevel (void)
 }
 
 static              t8_eclass_t
-t8_default_hex_child_eclass (int childid)
+t8_default_hex_child_eclass (const t8_element_t * elem, int childid)
 {
   T8_ASSERT (0 <= childid && childid < P8EST_CHILDREN);
 
@@ -84,6 +84,18 @@ t8_default_hex_sibling (const t8_element_t * elem,
 {
   p8est_quadrant_sibling ((const p8est_quadrant_t *) elem,
                           (p8est_quadrant_t *) sibling, sibid);
+}
+
+static int
+t8_default_hex_num_children (const t8_element_t * elem)
+{
+  return P8EST_CHILDREN;
+}
+
+static int
+t8_default_hex_num_face_children (const t8_element_t * elem, int face)
+{
+  return 4;
 }
 
 static void
@@ -207,6 +219,8 @@ t8_default_scheme_new_hex (void)
   ts->elem_compare = t8_default_hex_compare;
   ts->elem_parent = (t8_element_parent_t) p8est_quadrant_parent;
   ts->elem_sibling = t8_default_hex_sibling;
+  ts->elem_num_children = t8_default_hex_num_children;
+  ts->elem_num_face_children = t8_default_hex_num_face_children;
   ts->elem_child = t8_default_hex_child;
   ts->elem_children = t8_default_hex_children;
   ts->elem_child_id = t8_default_hex_child_id;
