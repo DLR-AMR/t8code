@@ -114,7 +114,7 @@ t8_basic_forest_partition ()
 }
 #endif
 
-#if 0
+#if 1
 static void
 t8_basic_hypercube (t8_eclass_t eclass, int set_level,
                     int create_forest, int do_partition)
@@ -127,8 +127,9 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
   t8_global_productionf ("Entering t8_basic hypercube %s\n",
                          t8_eclass_to_string[eclass]);
 
-  cmesh =
-    t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, do_partition);
+  T8_ASSERT (!do_partition || set_level == 0);  /* TODO: for different levels use new cmesh, see basic_p4est */
+
+  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, do_partition);
 
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -142,7 +143,6 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
     t8_debugf ("Error in output\n");
   }
   if (create_forest) {
-    T8_ASSERT (set_level == 0); /* TODO: for different levels use new cmesh, see basic_p4est */
     t8_forest_init (&forest);
     t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
     t8_forest_set_scheme (forest, t8_scheme_new_default ());
@@ -150,14 +150,15 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
     t8_forest_set_level (forest, set_level);
 
     if (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX
-        || eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_TET) {
+        || eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_TET
+        || eclass == T8_ECLASS_LINE) {
       t8_forest_commit (forest);
       t8_debugf ("Successfully committed forest.\n");
       t8_forest_write_vtk (forest, "basic");    /* This does nothing right now */
-      t8_forest_unref (&forest);
     }
+    t8_forest_unref (&forest);
   }
-  t8_cmesh_destroy (&cmesh);
+  t8_cmesh_unref (&cmesh);
 }
 #endif
 
@@ -359,6 +360,7 @@ main (int argc, char **argv)
   t8_basic_hypercube (T8_ECLASS_QUAD, 0, 1, 1);
 #endif
   t8_basic ();
+  t8_basic_hypercube (T8_ECLASS_LINE, 1, 1, 0);
 #if 0
   t8_global_productionf ("Testing hypercube cmesh.\n");
 
