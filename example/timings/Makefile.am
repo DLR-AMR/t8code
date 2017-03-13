@@ -11,4 +11,4 @@ bin_PROGRAMS += \
 #example_timings_t8_time_new_refine_SOURCES = example/timings/time_new_refine.c
 #example_timings_t8_time_refine_type03_SOURCES = example/timings/time_refine_type03.c
 example_timings_t8_time_partition_SOURCES = example/timings/time_partition.c
-example_timings_t8_time_forest_partition_SOURCES = example/timings/time_forest_partition.c
+example_timings_t8_time_forest_partition_SOURCES = example/timings/time_forest_partition.cxx

@@ -5,4 +5,4 @@
 bin_PROGRAMS += \
 	example/ExtremeScaling/t8_bunny 
 
-example_ExtremeScaling_t8_bunny_SOURCES = example/ExtremeScaling/bunny.c
+example_ExtremeScaling_t8_bunny_SOURCES = example/ExtremeScaling/bunny.cxx

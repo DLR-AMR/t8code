@@ -30,7 +30,7 @@
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_forest.h>
-#include <t8_default.h>
+#include <t8_default_cxx.hxx>
 
 /* This is the user defined data used to define the
  * region in which we partition.
@@ -64,14 +64,14 @@ t8_vec3_xmay (double *x, double alpha, double *y)
 
 static void
 t8_anchor_element (t8_forest_t forest,
-                   t8_eclass_scheme_t * ts, t8_element_t * element,
+                   t8_eclass_scheme_c * ts, t8_element_t * element,
                    double elem_anchor_f[3])
 {
   int                 elem_anchor[3], maxlevel, i;
 
   /* get the element anchor node */
-  t8_element_anchor (ts, element, elem_anchor);
-  maxlevel = t8_element_maxlevel (ts);
+  ts->t8_element_anchor (element, elem_anchor);
+  maxlevel = ts->t8_element_maxlevel ();
   for (i = 0; i < 3; i++) {
     /* Calculate the anchor coordinate in [0,1]^3 */
     elem_anchor_f[i] = elem_anchor[i] / (1 << maxlevel);
@@ -82,7 +82,7 @@ t8_anchor_element (t8_forest_t forest,
  * c_min, c_max. We refine the cells in the band c_min*E, c_max*E */
 static int
 t8_band_adapt (t8_forest_t forest, t8_locidx_t which_tree,
-               t8_eclass_scheme_t * ts,
+               t8_eclass_scheme_c * ts,
                int num_elements, t8_element_t * elements[])
 {
   int                 level, base_level;
@@ -92,7 +92,7 @@ t8_band_adapt (t8_forest_t forest, t8_locidx_t which_tree,
 
   T8_ASSERT (num_elements == 1 || num_elements ==
              t8_eclass_num_children[ts->eclass]);
-  level = t8_element_level (ts, elements[0]);
+  level = ts->t8_element_level (elements[0]);
 
   t8_anchor_element (forest, ts, elements[0], elem_anchor);
 
@@ -167,7 +167,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   t8_forest_init (&forest);
   t8_forest_set_cmesh (forest, cmesh_partition, comm);
   /* Set the element scheme */
-  t8_forest_set_scheme (forest, t8_scheme_new_default ());
+  t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
   /* Set the initial refinement level */
   t8_forest_set_level (forest, init_level);
   /* Commit the forest */
