@@ -27,14 +27,6 @@
 
 typedef t8_dline_t  t8_default_line_t;
 
-/* *INDENT-OFF* */
-size_t
-t8_default_scheme_line_c::t8_element_size (void)
-/* *INDENT-ON* */
-{
-  return sizeof (t8_default_line_t);
-}
-
 int
 t8_default_scheme_line_c::t8_element_maxlevel (void)
 {

@@ -145,7 +145,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
   if (create_forest) {
     t8_forest_init (&forest);
     t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
-    t8_forest_set_scheme (forest, t8_scheme_new_default ());
+    t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
 
     t8_forest_set_level (forest, set_level);
 
