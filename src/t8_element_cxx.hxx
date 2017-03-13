@@ -256,6 +256,16 @@ public:
    */
   virtual int         t8_element_root_len (const t8_element_t * elem) = 0;
 
+  /** Compute the integer coordinates of a given element vertex.
+   *   \param [in] ts     The virtual table for this element class.
+   *   \param [in] t      The element to be considered.
+   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
+   *   \param [out] coords An array of at least as many integers as the element's dimension
+   *                      whose entries will be filled with the coordinates of \a vertex.
+   */
+  virtual void        t8_element_vertex_coords (const t8_element_t * t,
+                                                int vertex, int coords[]) = 0;
+
   /** Return a pointer to a t8_element in an array indexed by a size_t.
    * \param [in] array    The \ref sc_array storing \t t8_element_t pointers.
    * \param [in] it       The index of the element that should be returned.

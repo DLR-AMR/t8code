@@ -23,8 +23,12 @@
 #include <t8_forest_vtk.h>
 #include <t8_vtk.h>
 #include <t8_cmesh.h>
+#include <t8_element_cxx.hxx>
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_forest_types.h"
+
+/* We want to export the whole implementation to be callable from "C" */
+T8_EXTERN_C_BEGIN ();
 
 /* TODO: Currently we only use ASCII mode and no data compression.
  *       We also do not use sc_io to buffer our output stream. */
@@ -395,12 +399,12 @@ t8_forest_vtk_cells_level_kernel (t8_forest_t forest,
                                   void **data, T8_VTK_KERNEL_MODUS modus)
 {
   if (modus == T8_VTK_KERNEL_EXECUTE) {
-    t8_eclass_scheme_t *ts;
+    t8_eclass_scheme_c *ts;
     t8_element_t       *element;
-    ts = forest->scheme->eclass_schemes[tree->eclass];
+    ts = forest->scheme_cxx->eclass_schemes[tree->eclass];
     element =
       (t8_element_t *) sc_array_index (&tree->elements, element_index);
-    fprintf (vtufile, "%i ", t8_element_level (ts, element));
+    fprintf (vtufile, "%i ", ts->t8_element_level (element));
     *columns += 1;
   }
   return 1;
@@ -443,19 +447,19 @@ t8_forest_vtk_cells_elementid_kernel (t8_forest_t forest,
                                       void **data, T8_VTK_KERNEL_MODUS modus)
 {
   if (modus == T8_VTK_KERNEL_EXECUTE) {
-    t8_eclass_scheme_t *ts;
+    t8_eclass_scheme_c *ts;
     t8_element_t       *element;
     int                 level;
 
     /* Get the eclass_scheme associated to the tree */
-    ts = forest->scheme->eclass_schemes[tree->eclass];
+    ts = forest->scheme_cxx->eclass_schemes[tree->eclass];
     /* Get the element */
     element =
       (t8_element_t *) sc_array_index (&tree->elements, element_index);
     /* Compute the elements level */
-    level = t8_element_level (ts, element);
+    level = ts->t8_element_level (element);
     fprintf (vtufile, "%llu ", (long long unsigned)
-             t8_element_get_linear_id (ts, element, level));
+             ts->t8_element_get_linear_id (element, level));
     *columns += 1;
   }
   return 1;
@@ -790,3 +794,5 @@ t8_forest_vtk_failure:
   t8_errorf ("Error when writing vtk file.\n");
   return 0;
 }
+
+T8_EXTERN_C_END ();

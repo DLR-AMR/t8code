@@ -192,6 +192,13 @@ t8_default_scheme_tet_c::t8_element_root_len (const t8_element_t * elem)
   return T8_DTET_ROOT_LEN;
 }
 
+void
+t8_default_scheme_tet_c::t8_element_vertex_coords (const t8_element_t * t,
+                                                   int vertex, int coords[])
+{
+  t8_dtet_compute_coords ((const t8_default_tet_t *) t, vertex, coords);
+}
+
  /* Constructor */
 t8_default_scheme_tet_c::t8_default_scheme_tet_c (void)
 {

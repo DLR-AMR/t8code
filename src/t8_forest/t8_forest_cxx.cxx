@@ -30,6 +30,96 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
+/* Given function values at the four edge points of a unit square and
+ * a point within that square, interpolate the function value at this point.
+ * \param [in]    vertex  An array of size at least dim giving the coordinates of the vertex to interpolate
+ * \param [in]    corner_values An array of size 2^dim * 3, giving for each corner (in zorder) of
+ *                        the unit square/cube its function values in 3D space.
+ * \param [out]   evaluated_function An array of size 3, on output the function values
+ *                        at \a vertex are stored here.
+ */
+static void
+t8_forest_bilinear_interpolation (const double *vertex,
+                                  const double *corner_values,
+                                  int dim, double *evaluated_function)
+{
+  int                 i;
+  double              temp[3] = { 0 };
+
+  for (i = 0; i < 3; i++) {
+    temp[i] = corner_values[0 * 3 + i] * (1 - vertex[0]) * (1 - vertex[1])      /* x=0 y=0 */
+      +corner_values[1 * 3 + i] * vertex[0] * (1 - vertex[1])   /* x=1 y=0 */
+      +corner_values[2 * 3 + i] * (1 - vertex[0]) * vertex[1]   /* x=0 y=1 */
+      +corner_values[3 * 3 + i] * vertex[0] * vertex[1];        /* x=1 y=1 */
+    if (dim == 3) {
+      temp[i] *= (1 - vertex[2]);
+      temp[i] += (corner_values[4 * 3 + i] * (1 - vertex[0]) * (1 - vertex[1])  /* x=0 y=0 z=1 */
+                  +corner_values[5 * 3 + i] * vertex[0] * (1 - vertex[1])       /* x=1 y=0 z=1 */
+                  +corner_values[6 * 3 + i] * (1 - vertex[0]) * vertex[1]       /* x=0 y=1 z=1 */
+                  +corner_values[7 * 3 + i] * vertex[0] * vertex[1])    /* x=1 y=1 z=1 */
+        *vertex[2];
+    }
+    evaluated_function[i] = temp[i];
+  }
+}
+
+/* given an element in a coarse tree, the corner coordinates of the coarse tree
+ * and a corner number of the element compute the coordinates of that corner
+ * within the coarse tree.
+ */
+void
+t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
+                              t8_element_t * element, const double *vertices,
+                              int corner_number, double *coordinates)
+{
+  int                 corner_coords[3], i;
+  double              vertex_coords[3];
+  t8_eclass_scheme_c *ts;
+  t8_eclass_t         eclass;
+  double              len;
+  int                 dim;
+
+  T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->scheme_cxx != NULL);
+  eclass = t8_forest_get_tree (forest, ltree_id)->eclass;
+  T8_ASSERT (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_TET
+             || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX);
+
+  ts = forest->scheme_cxx->eclass_schemes[eclass];
+  dim = t8_eclass_to_dimension[eclass];
+  len = 1. / ts->t8_element_root_len (element);
+  ts->t8_element_vertex_coords (element, corner_number, corner_coords);
+  switch (eclass) {
+  case T8_ECLASS_TRIANGLE:
+    corner_coords[2] = 0;
+  case T8_ECLASS_TET:
+    for (i = 0; i < 3; i++) {
+      coordinates[i] =
+        len * (vertices[3 + i] - vertices[i]) * corner_coords[0] +
+        (dim ==
+         3 ? len * (vertices[9 + i] -
+                    vertices[6 + i]) * corner_coords[1] : 0.) +
+        len * (vertices[6 + i] - vertices[3 + i]) * corner_coords[dim - 1]
+        + vertices[i];
+    }
+    break;
+  case T8_ECLASS_QUAD:
+    corner_coords[2] = 0;
+  case T8_ECLASS_HEX:
+    /* Store the coordinates of the corner scaled to the unit square/cube */
+    for (i = 0; i < 3; i++) {
+      vertex_coords[i] = len * corner_coords[i];
+    }
+    t8_forest_bilinear_interpolation ((const double *) vertex_coords,
+                                      vertices, dim, coordinates);
+    break;
+  default:
+    SC_ABORT ("Forest coordinate computation is supported only for "
+              "triangles/tets/quads/hexes.");
+  }
+  return;
+}
+
 /* For each tree in a forest compute its first and last descendant */
 void
 t8_forest_compute_desc (t8_forest_t forest)

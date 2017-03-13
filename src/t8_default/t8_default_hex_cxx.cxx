@@ -210,6 +210,23 @@ t8_default_scheme_hex_c::t8_element_root_len (const t8_element_t * elem)
   return P8EST_ROOT_LEN;
 }
 
+void
+t8_default_scheme_hex_c::t8_element_vertex_coords (const t8_element_t * t,
+                                                   int vertex, int coords[])
+{
+  const p8est_quadrant_t *q1 = (const p8est_quadrant_t *) t;
+  int                 len;
+
+  T8_ASSERT (0 <= vertex && vertex < 8);
+  /* Get the length of the quadrant */
+  len = P8EST_QUADRANT_LEN (q1->level);
+  /* Compute the x, y and z coordinates of the vertex depending on the
+   * vertex number */
+  coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
+  coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
+  coords[2] = q1->z + (vertex & 4 ? 1 : 0) * len;
+}
+
 /* Constructor */
 t8_default_scheme_hex_c::t8_default_scheme_hex_c (void)
 {

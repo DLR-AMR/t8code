@@ -134,6 +134,9 @@ public:
  */
   virtual int         t8_element_root_len (const t8_element_t * elem);
 
+  /** Compute the integer coordinates of a given element vertex. */
+  virtual void        t8_element_vertex_coords (const t8_element_t * t,
+                                                int vertex, int coords[]);
 };
 
 #endif /* !T8_DEFAULT_HEX_HXX */
