@@ -28,6 +28,7 @@
 /* TODO: could this file be part of cmesh_commit.c? */
 
 #include <t8_cmesh.h>
+#include <t8_element_cxx.hxx>
 #include "t8_cmesh_refine.h"
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_trees.h"
@@ -836,7 +837,7 @@ t8_cmesh_refine_count_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   };
   int8_t              child_counted[10] = { 0 }, *temp_child_counted;
   t8_locidx_t         next_local_id = 0;
-  t8_eclass_scheme_t *ts;
+  t8_eclass_scheme_c *ts;
   t8_element_t       *root_elem;
 
   num_ghosts = 0;
@@ -851,13 +852,13 @@ t8_cmesh_refine_count_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
      * the element_num_children function with the root element as argument.
      * Thus, we need to create this root element first. */
     ts = cmesh->set_refine_scheme->eclass_schemes[ghost->eclass];
-    t8_element_new (ts, 1, &root_elem);
+    ts->t8_element_new (1, &root_elem);
 
     num_local_children = 0;
     memset (child_counted, 0, 10 * sizeof (int8_t));
     for (iface = 0; iface < t8_eclass_num_faces[ghost->eclass]; iface++) {
       /* Compute the number of face children */
-      num_face_child = t8_element_num_face_children (ts, root_elem, iface);
+      num_face_child = ts->t8_element_num_face_children (root_elem, iface);
       neighbor = face_neighbor[iface];
       if (neighbor >= cmesh_from->first_tree &&
           neighbor < cmesh_from->first_tree + cmesh_from->num_local_trees) {
@@ -880,7 +881,7 @@ t8_cmesh_refine_count_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                                                   child_counted,
                                                   num_local_children,
                                                   next_local_id);
-    t8_element_destroy (ts, 1, &root_elem);
+    ts->t8_element_destroy (1, &root_elem);
   }
   return num_ghosts;
 }

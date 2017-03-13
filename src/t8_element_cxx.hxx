@@ -73,7 +73,7 @@ public:
 
   /** Return the type of each child in the ordering of the implementation.
    * \param [in] childid  Must be between 0 and the number of children (exclusive).
-   *                      The number of children is defined in \a t8_eclass_num_children.
+   *                      The number of children is defined in \a t8_element_num_children.
    * \return              The type for the given child.
    */
   virtual t8_eclass_t t8_element_child_eclass (int childid) = 0;
@@ -134,6 +134,21 @@ public:
   virtual void        t8_element_sibling (const t8_element_t * elem,
                                           int sibid,
                                           t8_element_t * sibling) = 0;
+  /** Return the number of children of an element when it is refined.
+   * \param [in] ts     The virtual table for this element class.
+   * \param [in] elem   The element whose number of children is returned.
+   * \return            The number of children of \a elem if it is to be refined.
+   */
+  virtual int         t8_element_num_children (const t8_element_t * elem) = 0;
+
+  /** Return the number of children of an element's face when the element is refined.
+   * \param [in] ts     The virtual table for this element class.
+   * \param [in] elem   The element whose face is considered.
+   * \param [in] face   A face of \a elem.
+   * \return            The number of children of \a face if \a elem is to be refined.
+   */
+  virtual int         t8_element_num_face_children (const t8_element_t *
+                                                    elem, int face) = 0;
 
   /** Construct the child element of a given number.
    * \param [in] elem     This must be a valid element, bigger than maxlevel.
@@ -157,7 +172,7 @@ public:
    * \param [in,out] c    The storage for these \a length elements must exist
    *                      and match the element class in the children's ordering.
    *                      On output, all children are valid.
-   * \see t8_eclass_num_children
+   * \see t8_element_num_children
    * \see t8_element_child_eclass
    */
   virtual void        t8_element_children (const t8_element_t * elem,
