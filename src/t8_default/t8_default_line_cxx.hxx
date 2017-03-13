@@ -27,7 +27,9 @@
 #ifndef T8_DEFAULT_LINE_CXX_HXX
 #define T8_DEFAULT_LINE_CXX_HXX
 
+#include <t8_element.h>
 #include <t8_element_cxx.hxx>
+#include "t8_default_common_cxx.hxx"
 
 T8_EXTERN_C_BEGIN ();
 
@@ -49,7 +51,10 @@ public:
   virtual int         t8_element_maxlevel (void);
 
 /** Return the type of each child in the ordering of the implementation. */
-  virtual t8_eclass_t t8_element_child_eclass (int childid);
+  virtual t8_eclass_t t8_element_child_eclass (int childid)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
 
 /** Return the refinement level of an element. */
   virtual int         t8_element_level (const t8_element_t * elem);
@@ -63,7 +68,10 @@ public:
  *  If elem2 is a copy of elem1 then the elements are equal.
  */
   virtual int         t8_element_compare (const t8_element_t * elem1,
-                                          const t8_element_t * elem2);
+                                          const t8_element_t * elem2)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
 
 /** Construct the parent of a given element. */
   virtual void        t8_element_parent (const t8_element_t * elem,
@@ -71,7 +79,23 @@ public:
 
 /** Construct a same-size sibling of a given element. */
   virtual void        t8_element_sibling (const t8_element_t * elem,
-                                          int sibid, t8_element_t * sibling);
+                                          int sibid, t8_element_t * sibling)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
+
+  /** Return the number of children of an element when it is refined. */
+  virtual int         t8_element_num_children (const t8_element_t * elem)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
+
+  /** Return the number of children of an element's face when the element is refined. */
+  virtual int         t8_element_num_face_children (const t8_element_t *
+                                                    elem, int face)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
 
 /** Construct the child element of a given number. */
   virtual void        t8_element_child (const t8_element_t * elem,
@@ -79,23 +103,38 @@ public:
 
 /** Construct all children of a given element. */
   virtual void        t8_element_children (const t8_element_t * elem,
-                                           int length, t8_element_t * c[]);
+                                           int length, t8_element_t * c[])
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
 
 /** Return the child id of an element */
-  virtual int         t8_element_child_id (const t8_element_t * elem);
+  virtual int         t8_element_child_id (const t8_element_t * elem)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
 
 /** Return nonzero if collection of elements is a family */
-  virtual int         t8_element_is_family (t8_element_t ** fam);
+  virtual int         t8_element_is_family (t8_element_t ** fam)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
 
 /** Construct the nearest common ancestor of two elements in the same tree. */
   virtual void        t8_element_nca (const t8_element_t * elem1,
                                       const t8_element_t * elem2,
-                                      t8_element_t * nca);
+                                      t8_element_t * nca)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
 
 /** Construct all codimension-one boundary elements of a given element. */
   virtual void        t8_element_boundary (const t8_element_t * elem,
                                            int min_dim, int length,
-                                           t8_element_t ** boundary);
+                                           t8_element_t ** boundary)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
 
 /** Initialize an element according to a given linear id */
   virtual void        t8_element_set_linear_id (t8_element_t * elem,
@@ -104,7 +143,10 @@ public:
 /** Calculate the linear id of an element */
   virtual u_int64_t   t8_element_get_linear_id (const
                                                 t8_element_t *
-                                                elem, int level);
+                                                elem, int level)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
 
 /** Calculate the first descendant of a given element e. That is, the
  *  first element in a uniform refinement of e of the maximal possible level.
@@ -116,7 +158,10 @@ public:
  *  last element in a uniform refinement of e of the maximal possible level.
  */
   virtual void        t8_element_last_descendant (const t8_element_t *
-                                                  elem, t8_element_t * desc);
+                                                  elem, t8_element_t * desc)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
 
 /** Compute s as a successor of t*/
   virtual void        t8_element_successor (const t8_element_t * t,
@@ -124,16 +169,26 @@ public:
 
 /** Get the integer coordinates of the anchor node of an element */
   virtual void        t8_element_anchor (const t8_element_t * elem,
-                                         int anchor[3]);
+                                         int anchor[3])
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
 
 /** Get the integer root length of an element, that is the length of
  *  the level 0 ancestor.
  */
-  virtual int         t8_element_root_len (const t8_element_t * elem);
+  virtual int         t8_element_root_len (const t8_element_t * elem)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
 
   /** Compute the integer coordinates of a given element vertex. */
   virtual void        t8_element_vertex_coords (const t8_element_t * t,
-                                                int vertex, int coords[]);
+                                                int vertex, int coords[])
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
+
 };
 
 T8_EXTERN_C_END ();
