@@ -32,10 +32,6 @@ const int t8_eclass_num_faces[T8_ECLASS_COUNT] =
 const int t8_eclass_max_num_faces[T8_ECLASS_MAX_DIM + 1] =
   { 0, 2, 4, 6};
 
-const int t8_eclass_num_face_children[T8_ECLASS_COUNT] =
- { 0, 1, 2, 2, 4, 4, 4, 4};
-
-
 const int
 t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_CORNERS_2D] =
 {
@@ -51,9 +47,6 @@ t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MA
 
 const int    t8_eclass_num_vertices[T8_ECLASS_COUNT] =
   { 1, 2, 4, 3, 8, 4, 6, 5 };
-
-const int t8_eclass_num_children[T8_ECLASS_COUNT] =
-  { 0, 2, 4, 4, 8, 8, 8, 10 };
 
 const int t8_eclass_vtk_type[T8_ECLASS_COUNT] =
   { 1, 3, 9, 5, 12, 10, 13, 14};

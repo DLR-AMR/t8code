@@ -22,6 +22,7 @@
 
 #include <t8_cmesh.h>
 #include <t8_cmesh_vtk.h>
+#include <t8_default.h>
 
 /* TODO: rename this file to t8_something */
 
@@ -43,7 +44,7 @@ t8_refine_hybrid (int level)
   /* We want cmesh to be destroyed as soon as possible,
    * so we claim that we do not use it anymore */
   t8_cmesh_unref (&cmesh);
-  t8_cmesh_set_refine (cmesh_refine, level);
+  t8_cmesh_set_refine (cmesh_refine, level, t8_scheme_new_default ());
   t8_cmesh_commit (cmesh_refine, sc_MPI_COMM_WORLD);
   t8_cmesh_destroy (&cmesh_refine);
 }
@@ -61,7 +62,7 @@ t8_refine_cube (t8_eclass_t eclass, int level)
   /* We want cmesh to be destroyed as soon as possible,
    * so we claim that we do not use it anymore */
   t8_cmesh_unref (&cmesh);
-  t8_cmesh_set_refine (cmesh_refine, level);
+  t8_cmesh_set_refine (cmesh_refine, level, t8_scheme_new_default ());
   t8_cmesh_commit (cmesh_refine, sc_MPI_COMM_WORLD);
   t8_cmesh_destroy (&cmesh_refine);
 }
@@ -82,7 +83,7 @@ t8_refine_p4est (int level)
   /* We want cmesh to be destroyed as soon as possible,
    * so we claim that we do not use it anymore */
   t8_cmesh_unref (&cmesh);
-  t8_cmesh_set_refine (cmesh_refine, level);
+  t8_cmesh_set_refine (cmesh_refine, level, t8_scheme_new_default ());
   t8_cmesh_commit (cmesh_refine, sc_MPI_COMM_WORLD);
   t8_cmesh_destroy (&cmesh_refine);
 }

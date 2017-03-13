@@ -159,6 +159,7 @@ t8_cmesh_refine_fill_childids (t8_eclass_t eclass, int **childidsA,
    * The encoding is such that neigh_childidsA is for child_id 0 (all iface) and child_id 1 if
    * iface = 0, neigh_childidsB is for child_id 2 (all iface) and child_id 1 if iface = 1.
    */
+  /* TODO: t8_eclass_num_children is deprecated */
   *childidsA = T8_ALLOC (int, t8_eclass_num_children[eclass] * 2);
   *childidsB = T8_ALLOC (int, t8_eclass_num_children[eclass] * 2);
   switch (eclass) {
@@ -835,6 +836,8 @@ t8_cmesh_refine_count_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
   };
   int8_t              child_counted[10] = { 0 }, *temp_child_counted;
   t8_locidx_t         next_local_id = 0;
+  t8_eclass_scheme_t *ts;
+  t8_element_t       *root_elem;
 
   num_ghosts = 0;
   for (ighost = 0; ighost < cmesh_from->num_ghosts; ighost++) {
@@ -843,10 +846,18 @@ t8_cmesh_refine_count_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
     T8_ASSERT (ghost->eclass != T8_ECLASS_PRISM &&
                ghost->eclass != T8_ECLASS_PYRAMID &&
                ghost->eclass != T8_ECLASS_VERTEX);
-    num_face_child = t8_eclass_num_face_children[ghost->eclass];
+
+    /* In order to compute the number of face children of the ghost, we need to call
+     * the element_num_children function with the root element as argument.
+     * Thus, we need to create this root element first. */
+    ts = cmesh->set_refine_scheme->eclass_schemes[ghost->eclass];
+    t8_element_new (ts, 1, &root_elem);
+
     num_local_children = 0;
     memset (child_counted, 0, 10 * sizeof (int8_t));
     for (iface = 0; iface < t8_eclass_num_faces[ghost->eclass]; iface++) {
+      /* Compute the number of face children */
+      num_face_child = t8_element_num_face_children (ts, root_elem, iface);
       neighbor = face_neighbor[iface];
       if (neighbor >= cmesh_from->first_tree &&
           neighbor < cmesh_from->first_tree + cmesh_from->num_local_trees) {
@@ -869,6 +880,7 @@ t8_cmesh_refine_count_ghost (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                                                   child_counted,
                                                   num_local_children,
                                                   next_local_id);
+    t8_element_destroy (ts, 1, &root_elem);
   }
   return num_ghosts;
 }

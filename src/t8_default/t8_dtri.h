@@ -37,6 +37,9 @@ T8_EXTERN_C_BEGIN ();
 /** The number of faces of a triangle. */
 #define T8_DTRI_FACES 3
 
+/** The number of childre that a face of a triangle is refined to. */
+#define T8_DTRI_FACE_CHILDREN 2
+
 /** The maximum refinement level allowed for a triangle. */
 #define T8_DTRI_MAXLEVEL 30
 
@@ -52,9 +55,9 @@ typedef int32_t     t8_dtri_coord_t;
 typedef struct t8_dtri
 {
   int8_t              level;
-  t8_dtri_type_t type;
-  t8_dtri_coord_t x, y;
-  t8_dtri_coord_t n;
+  t8_dtri_type_t      type;
+  t8_dtri_coord_t     x, y;
+  t8_dtri_coord_t     n;
 }
 t8_dtri_t;
 
