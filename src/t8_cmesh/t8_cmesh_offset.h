@@ -34,6 +34,8 @@
 #include <t8.h>
 #include <t8_cmesh.h>
 
+T8_EXTERN_C_BEGIN ();
+
 /** Return the global id of the first local tree
  * of a given process in a partition.
  * \param [in]  proc    The rank of the process.
@@ -266,5 +268,7 @@ int                 t8_offset_range_send (int start, int end, int mpirank,
  */
 void                t8_offset_print (t8_shmem_array_t offset,
                                      sc_MPI_Comm comm);
+
+T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_OFFSET_H */

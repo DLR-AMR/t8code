@@ -24,7 +24,11 @@
 #include <t8_refcount.h>
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_types.h>
+#include <t8_forest/t8_forest_cxx.h>
 #include <t8_element_cxx.hxx>
+
+/* We want to export the whole implementation to be callable from "C" */
+T8_EXTERN_C_BEGIN ();
 
 /* For each tree in a forest compute its first and last descendant */
 void
@@ -241,3 +245,5 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
     forest->global_num_elements = 0;
   }
 }
+
+T8_EXTERN_C_END ();

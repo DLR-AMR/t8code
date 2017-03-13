@@ -26,7 +26,7 @@
 #include <t8_forest/t8_forest_cxx.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_partition.h>
-#include <t8_forest/t8_forest_cxx.h>
+#include <t8_forest/t8_forest_adapt.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 
 void

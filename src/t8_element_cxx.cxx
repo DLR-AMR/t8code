@@ -22,6 +22,9 @@
 
 #include <t8_element_cxx.hxx>
 
+/* We want to export the whole implementation to be callable from "C" */
+T8_EXTERN_C_BEGIN ();
+
 #if 0
 t8_eclass_scheme_c::~t8_eclass_scheme_c ()
 {
@@ -64,6 +67,8 @@ t8_eclass_scheme::t8_element_array_index (sc_array_t * array, size_t it)
 
   return (t8_element_t *) sc_array_index (array, it);
 }
+
+T8_EXTERN_C_END ();
 
 #if 0
 void

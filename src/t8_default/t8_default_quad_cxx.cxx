@@ -24,6 +24,9 @@
 #include "t8_default_common_cxx.hxx"
 #include "t8_default_quad_cxx.hxx"
 
+/* We want to export the whole implementation to be callable from "C" */
+T8_EXTERN_C_BEGIN ();
+
 /* This function is used by other element functions and we thus need to
  * declare it up here */
 uint64_t            t8_element_get_linear_id (const t8_element_t * elem,
@@ -292,3 +295,5 @@ t8_default_scheme_quad_c::~t8_default_scheme_quad_c ()
    * However we need to provide an implementation of the destructor
    * and hence this empty function. */
 }
+
+T8_EXTERN_C_END ();

@@ -25,6 +25,9 @@
 #include <t8_forest.h>
 #include <t8_element_cxx.hxx>
 
+/* We want to export the whole implementation to be callable from "C" */
+T8_EXTERN_C_BEGIN ();
+
 /* The last inserted element must be the last element of a family. */
 static void
 t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
@@ -324,3 +327,5 @@ t8_forest_adapt (t8_forest_t forest)
   t8_global_productionf ("Done t8_forest_adapt with %lld total elements\n",
                          (long long) forest->global_num_elements);
 }
+
+T8_EXTERN_C_END ();

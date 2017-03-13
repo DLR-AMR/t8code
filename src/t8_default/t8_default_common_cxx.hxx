@@ -29,6 +29,8 @@
 
 #include <t8_element_cxx.hxx>
 
+T8_EXTERN_C_BEGIN ();
+
 class               t8_default_scheme_common_c:public t8_eclass_scheme_c
 {
 public:
@@ -61,5 +63,7 @@ void                t8_default_mempool_alloc (void *ts_context, int length,
  */
 void                t8_default_mempool_free (void *ts_context, int length,
                                              t8_element_t ** elem);
+
+T8_EXTERN_C_END ();
 
 #endif /* !T8_DEFAULT_COMMON_CXX_HXX */

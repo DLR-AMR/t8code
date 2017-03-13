@@ -28,6 +28,9 @@
 #include "t8_default_tri_cxx.hxx"
 #include "t8_default_tet_cxx.hxx"
 
+/* We want to export the whole implementation to be callable from "C" */
+T8_EXTERN_C_BEGIN ();
+
 t8_scheme_cxx_t    *
 t8_scheme_new_default_cxx (void)
 {
@@ -43,3 +46,5 @@ t8_scheme_new_default_cxx (void)
 
   return s;
 }
+
+T8_EXTERN_C_END ();

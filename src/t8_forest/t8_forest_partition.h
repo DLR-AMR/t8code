@@ -32,7 +32,10 @@
 #include <t8.h>
 #include <t8_forest.h>
 
+T8_EXTERN_C_BEGIN ();
 /* TODO: document */
 void                t8_forest_partition (t8_forest_t forest);
+
+T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_PARTITION_H! */

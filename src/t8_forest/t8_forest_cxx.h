@@ -25,7 +25,7 @@
  * c++ element interface.
  */
 
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_adapt */
+/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_cxx */
 
 #ifndef T8_FOREST_CXX_H
 #define T8_FOREST_CXX_H

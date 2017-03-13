@@ -22,8 +22,6 @@
 
 #include <t8_element.h>
 
-extern void         t8_scheme_cxx_destroy (t8_scheme_cxx_t * s);
-
 void
 t8_scheme_cxx_ref (t8_scheme_cxx_t * scheme)
 {

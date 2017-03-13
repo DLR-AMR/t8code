@@ -24,6 +24,9 @@
 #include "t8_default_tri_cxx.hxx"
 #include "t8_dtri_bits.h"
 
+/* We want to export the whole implementation to be callable from "C" */
+T8_EXTERN_C_BEGIN ();
+
 typedef t8_dtri_t   t8_default_tri_t;
 
 int
@@ -206,3 +209,5 @@ t8_default_scheme_tri_c::~t8_default_scheme_tri_c ()
    * However we need to provide an implementation of the destructor
    * and hence this empty function. */
 }
+
+T8_EXTERN_C_END ();

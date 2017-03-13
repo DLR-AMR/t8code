@@ -34,6 +34,8 @@
 #include <t8_eclass.h>
 #include <t8_element.h>
 
+T8_EXTERN_C_BEGIN ();
+
 /** This struct holds virtual functions for a particular element class. */
 struct t8_eclass_scheme
 {
@@ -285,6 +287,9 @@ public:
                                           t8_element_t ** elem) = 0;
 };
 
+/* TODO: document */
+void                t8_scheme_cxx_destroy (t8_scheme_cxx_t * s);
+
 /* TODO: Copy the doxygen comments to the class definition above,
  * then delete all the functions below */
 #if 0
@@ -322,5 +327,7 @@ void                t8_eclass_boundary_destroy (t8_scheme_t * scheme,
                                                 int min_dim, int length,
                                                 t8_element_t ** boundary);
 #endif /* if 0 */
+
+T8_EXTERN_C_END ();
 
 #endif /* !T8_ELEMENT_CXX_HXX */

@@ -22,6 +22,9 @@
 
 #include "t8_default_common_cxx.hxx"
 
+/* We want to export the whole implementation to be callable from "C" */
+T8_EXTERN_C_BEGIN ();
+
 /* Destructor */
 t8_default_scheme_common_c::~t8_default_scheme_common_c ()
 {
@@ -69,3 +72,5 @@ t8_default_mempool_free (void *ts_context, int length, t8_element_t ** elem)
     sc_mempool_free ((sc_mempool_t *) ts_context, elem[i]);
   }
 }
+
+T8_EXTERN_C_END ();

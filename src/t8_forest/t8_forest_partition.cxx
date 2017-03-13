@@ -26,6 +26,9 @@
 #include <t8_forest.h>
 #include <t8_element_cxx.hxx>
 
+/* We want to export the whole implementation to be callable from "C" */
+T8_EXTERN_C_BEGIN ();
+
 /* For each tree that we send elements from to
  * other processes, we send this information to the
  * other process */
@@ -769,3 +772,5 @@ t8_forest_partition (t8_forest_t forest)
 
   t8_debugf ("Done forest partition\n");
 }
+
+T8_EXTERN_C_END ();

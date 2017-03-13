@@ -20,7 +20,6 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "t8_default_common.h"
 #ifndef T8_DTRI_TO_DTET
 #include "t8_dtri_bits.h"
 #include "t8_dtri_connectivity.h"
