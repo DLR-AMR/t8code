@@ -11,7 +11,8 @@ libt8_installed_headers = \
   src/t8_cmesh_tetgen.h src/t8_cmesh_readmshfile.h \
   src/t8_cmesh_vtk.h \
   src/t8_forest.h src/t8_forest/t8_forest_types.h \
-  src/t8_forest/t8_forest_adapt.h src/t8_geometry.h
+  src/t8_forest/t8_forest_adapt.h src/t8_forest_vtk.h \
+  src/t8_geometry.h
 libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_stash.h src/t8_cmesh/t8_cmesh_trees.h \
   src/t8_cmesh/t8_cmesh_types.h src/t8_cmesh/t8_cmesh_partition.h \
@@ -19,6 +20,7 @@ libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_save.h \
   src/t8_cmesh/t8_cmesh_offset.h src/t8_forest/t8_forest_partition.h \
 	src/t8_forest/t8_forest_cxx.h
+  src/t8_vtk.h
 libt8_compiled_sources = \
   src/t8.c src/t8_eclass.c src/t8_mesh.c \
   src/t8_element.c src/t8_element_cxx.cxx \
@@ -30,7 +32,8 @@ libt8_compiled_sources = \
   src/t8_cmesh/t8_cmesh_copy.c src/t8_shmem.c \
   src/t8_cmesh/t8_cmesh_offset.c src/t8_cmesh/t8_cmesh_readmshfile.c \
   src/t8_forest/t8_forest.c src/t8_forest/t8_forest_adapt.cxx src/t8_geometry.c \
-  src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest_cxx.cxx
+  src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest_cxx.cxx \
+  src/t8_forest/t8_forest_vtk.c src/t8_vtk.c
 
 # this variable is used for headers that are not publicly installed
 T8_CPPFLAGS =

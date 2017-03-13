@@ -190,6 +190,13 @@ t8_default_tet_root_len (const t8_element_t * elem)
   return T8_DTET_ROOT_LEN;
 }
 
+static void
+t8_default_tet_vertex_coords (const t8_element_t * elem, int vertex,
+                              int coords[])
+{
+  t8_dtet_compute_coords ((const t8_default_tet_t *) elem, vertex, coords);
+}
+
 t8_eclass_scheme_t *
 t8_default_scheme_new_tet (void)
 {
@@ -218,6 +225,7 @@ t8_default_scheme_new_tet (void)
   ts->elem_last_desc = t8_default_tet_last_descendant;
   ts->elem_anchor = t8_default_tet_anchor;
   ts->elem_root_len = t8_default_tet_root_len;
+  ts->elem_vertex_coords = t8_default_tet_vertex_coords;
 
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;

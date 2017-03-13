@@ -27,6 +27,7 @@ nodist_include_HEADERS =
 noinst_HEADERS =
 noinst_PROGRAMS =
 sysconf_DATA =
+dist_t8data_DATA =
 
 # use this if you want to link in T8 without autotools
 sysconf_DATA += Makefile.t8.mk
@@ -39,6 +40,9 @@ Makefile.t8.mk : Makefile.t8.pre
 # install T8 m4 macros in the correct directory
 t8aclocaldir = $(datadir)/aclocal
 dist_t8aclocal_DATA = config/t8_include.m4
+
+# install t8 data in the correct directory
+t8datadir = $(datadir)/data
 
 # setup test environment
 if T8_MPIRUN

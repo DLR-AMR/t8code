@@ -31,27 +31,6 @@
 
 /* typedef and macros */
 
-/* TODO: these macros need to be set by configure */
-#ifndef T8_VTK_DOUBLES
-#define T8_VTK_FLOAT_NAME "Float32"
-#define T8_VTK_FLOAT_TYPE float
-#else
-#define T8_VTK_FLOAT_NAME "Float64"
-#define T8_VTK_FLOAT_TYPE double
-#endif
-
-#ifndef T8_VTK_BINARY
-#define T8_VTK_ASCII 1
-#define T8_VTK_FORMAT_STRING "ascii"
-#else
-#define T8_VTK_FORMAT_STRING "binary"
-#endif
-
-#define T8_VTK_TOPIDX "Int32"
-/* TODO: Paraview has troubles with Int64, so we switch to Int32 and be careful.
- *       Investigate this further. See also vtk makro VTK_USE_64BIT_IDS */
-#define T8_VTK_GLOIDX "Int32"
-
 T8_EXTERN_C_BEGIN ();
 /* function declarations */
 

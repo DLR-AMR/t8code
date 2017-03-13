@@ -190,6 +190,13 @@ t8_default_tri_root_len (const t8_element_t * elem)
   return T8_DTRI_ROOT_LEN;
 }
 
+static void
+t8_default_tri_vertex_coords (const t8_element_t * elem, int vertex,
+                              int coords[])
+{
+  t8_dtri_compute_coords ((const t8_default_tri_t *) elem, vertex, coords);
+}
+
 t8_eclass_scheme_t *
 t8_default_scheme_new_tri (void)
 {
@@ -218,6 +225,7 @@ t8_default_scheme_new_tri (void)
   ts->elem_successor = t8_default_tri_successor;
   ts->elem_anchor = t8_default_tri_anchor;
   ts->elem_root_len = t8_default_tri_root_len;
+  ts->elem_vertex_coords = t8_default_tri_vertex_coords;
 
   ts->elem_new = t8_default_mempool_alloc;
   ts->elem_destroy = t8_default_mempool_free;

@@ -70,8 +70,8 @@ t8_read_msh_partition (t8_cmesh_t cmesh, const char *prefix)
 /* Read a .msh file and create a cmesh structure from it.
  * parameters:
  *  prefix      The file to read is prefix.msh.
- *  do_partitione If true, read the cmesh only on one process and store it
- *                partitioned.
+ *  do_partition If true, read the cmesh only on one process and store it
+ *              partitioned.
  *  dim         The dimension of the mesh to be read from the files.
  *  master      If do_partition is true a valid MPI rank that will read the
  *              file alone. The other processes will not hold any trees then.

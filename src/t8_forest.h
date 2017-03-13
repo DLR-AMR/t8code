@@ -307,7 +307,6 @@ t8_tree_t           t8_forest_get_tree (t8_forest_t forest,
 
 /** Return a cmesh associated to a forest.
  * \param [in]      forest      The forest.
- * \a forest must be committed before calling this function.
  * \return          The cmesh associated to the forest.
  */
 t8_cmesh_t          t8_forest_get_cmesh (t8_forest_t forest);
@@ -327,11 +326,45 @@ t8_locidx_t         t8_forest_get_tree_element_count (t8_tree_t tree);
  */
 t8_gloidx_t         t8_forest_get_first_local_element_id (t8_forest_t forest);
 
+/* TODO: implement */
 void                t8_forest_save (t8_forest_t forest);
+
+/** Write the forest in a parallel vtu format. There is one master
+ * .pvtu file and each process writes in its own .vtu file.
+ * \param [in]      forest    The forest to write.
+ * \param [in]      filename  The prefix of the files where the vtk will
+ *                            be stored. The master file is then filename.pvtu
+ *                            and the process with rank r writes in the file
+ *                            filename_r.vtu.
+ * With this function the level, mpirank, treeid and element_id of each element
+ * are written. For better control of the output see \ref t8_forest_vtk.h.
+ * Forest must be committed when calling this function.
+ * This function is collective and must be called on each process.
+ */
 void                t8_forest_write_vtk (t8_forest_t forest,
                                          const char *filename);
 
+/* TODO: implement */
 void                t8_forest_iterate (t8_forest_t forest);
+
+/** Compute the coordinates of a given vertex of an element if the
+ * vertex coordinates of the surrounding tree are known.
+ * \param [in]      forest     The forest.
+ * \param [in]      ltree_id   The forest local id of the tree in which the element is.
+ * \param [in]      ts         The eclass scheme of the element.
+ * \param [in]      element    The element.
+ * \param [in]      vertices   An array storing the vertex coordinates of the tree.
+ *                             It has 3*n entries, with n being the number of vertices of the tree.
+ * \param [in]      corner_number The corner number of the vertex which should be computed.
+ * \param [out]     coordinates On input an allocated array to store 3 doubles, on output
+ *                             the x, y and z coordinates of the vertex.
+ */
+void                t8_forest_element_coordinate (t8_forest_t forest,
+                                                  t8_locidx_t ltree_i,
+                                                  t8_element_t * element,
+                                                  const double *vertices,
+                                                  int corner_number,
+                                                  double *coordinates);
 
 /** Increase the reference counter of a forest.
  * \param [in,out] forest       On input, this forest must exist with positive
