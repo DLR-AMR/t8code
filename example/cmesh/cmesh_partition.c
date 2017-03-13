@@ -52,8 +52,13 @@ t8_random_partition (int level)
   t8_cmesh_vtk_write_file (cmesh, file, 1.);
 
   t8_cmesh_init (&cmesh_part);
-  //t8_cmesh_set_partition_from (cmesh_part, cmesh, level, NULL);
 
+#if 0
+  t8_cmesh_set_partition_from (cmesh_part, cmesh, level, NULL);
+#endif
+
+  /* We still need acces to cmesh later */
+  t8_cmesh_ref (cmesh);
   t8_cmesh_set_derive (cmesh_part, cmesh);
   t8_cmesh_set_partition_offsets (cmesh_part,
                                   t8_cmesh_offset_random
@@ -63,7 +68,8 @@ t8_random_partition (int level)
 
   if (mpisize > 1 && 1) {
     t8_cmesh_init (&cmesh_part2);
-
+    /* We want to write the vtk of cmesh_part later, so we ref it here */
+    t8_cmesh_ref (cmesh_part);
     t8_cmesh_set_derive (cmesh_part2, cmesh_part);
     t8_cmesh_set_partition_offsets (cmesh_part2,
                                     t8_cmesh_offset_random
@@ -80,9 +86,9 @@ t8_random_partition (int level)
   }
   snprintf (file, BUFSIZ, "t8_brick_partition_random");
   t8_cmesh_vtk_write_file (cmesh_part, file, 1.0);
-  t8_cmesh_unref (&cmesh);
+  t8_cmesh_destroy (&cmesh);
   t8_cmesh_unref (&cmesh_part);
-  t8_cmesh_unref (&cmesh_part2);
+  t8_cmesh_destroy (&cmesh_part2);
 }
 
 /* Create a coarse mesh from a p4est brick connectivity.
@@ -111,11 +117,15 @@ t8_partition (int level, int partition_from)
   t8_cmesh_vtk_write_file (cmesh, file, 1.);
 
   t8_cmesh_init (&cmesh_part);
+  /* We still need acces to cmesh later */
+  t8_cmesh_ref (cmesh);
   t8_cmesh_set_derive (cmesh_part, cmesh);
   t8_cmesh_set_partition_uniform (cmesh_part, level);
   t8_cmesh_commit (cmesh_part, sc_MPI_COMM_WORLD);
   if (mpisize > 1 && 1) {
     t8_cmesh_init (&cmesh_part2);
+    /* We want to write the vtk of cmesh_part later, so we ref it here */
+    t8_cmesh_ref (cmesh_part);
     t8_cmesh_set_derive (cmesh_part2, cmesh_part);
     t8_cmesh_set_partition_offsets (cmesh_part2,
                                     t8_cmesh_offset_concentrate
@@ -131,9 +141,9 @@ t8_partition (int level, int partition_from)
   }
   snprintf (file, BUFSIZ, "t8_brick_partition");
   t8_cmesh_vtk_write_file (cmesh_part, file, 1.0);
-  t8_cmesh_unref (&cmesh);
+  t8_cmesh_destroy (&cmesh);
   t8_cmesh_unref (&cmesh_part);
-  t8_cmesh_unref (&cmesh_part2);
+  t8_cmesh_destroy (&cmesh_part2);
 }
 
 #if 0

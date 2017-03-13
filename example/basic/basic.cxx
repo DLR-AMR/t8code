@@ -281,7 +281,6 @@ t8_basic ()
   cmesh = t8_cmesh_new_bigmesh (T8_ECLASS_TET, 190, sc_MPI_COMM_WORLD);
   t8_cmesh_init (&cmesh_partition);
   t8_cmesh_set_derive (cmesh_partition, cmesh);
-  t8_cmesh_unref (&cmesh);
   t8_cmesh_set_partition_uniform (cmesh_partition, 1);
   t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
   t8_cmesh_destroy (&cmesh_partition);

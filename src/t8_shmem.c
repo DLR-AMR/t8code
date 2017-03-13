@@ -128,7 +128,30 @@ t8_shmem_array_set_gloidx (t8_shmem_array_t array, int index,
 int
 t8_shmem_array_is_equal (t8_shmem_array_t array_a, t8_shmem_array_t array_b)
 {
-  SC_ABORT ("t8_shmem_array_is_equal is not implemented yet.");
+  int                 retval;
+
+  /* check if direct equality holds */
+  if (array_a == array_b) {
+    return 1;
+  }
+  /* check if one or both are NULL */
+  if (array_a == NULL || array_b == NULL) {
+    return array_a == array_b;
+  }
+  /* Compare metadata */
+  retval = array_a->comm != array_b->comm ||
+    array_a->elem_count != array_b->elem_count
+    || array_a->elem_size != array_b->elem_size;
+  if (retval != 0) {
+    return 0;
+  }
+  /* Check the contents of the arrays */
+  retval = memcmp (array_a->array, array_b->array,
+                   array_a->elem_count * array_a->elem_size);
+  if (retval == 0) {
+    /* If memcmp returned 0, all checks were successful */
+    return 1;
+  }
   return 0;
 }
 

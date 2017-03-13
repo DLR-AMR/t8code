@@ -53,7 +53,6 @@ t8_cmesh_load_distribute (const char *fileprefix, int num_files, int no_vtk)
                                1.0);
     }
     t8_cmesh_destroy (&cmesh_partition);
-    t8_cmesh_destroy (&cmesh);
   }
 }
 
@@ -74,7 +73,6 @@ t8_cmesh_save_cmesh (const char *mshfile, int dim)
     t8_cmesh_set_derive (cmesh_partition, cmesh);
     t8_cmesh_set_partition_uniform (cmesh_partition, 1);
     t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
-    t8_cmesh_destroy (&cmesh);
     cmesh = cmesh_partition;
   }
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);

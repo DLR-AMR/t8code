@@ -194,9 +194,7 @@ t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from)
     t8_cmesh_unref (&cmesh->set_from);
   }
   cmesh->set_from = set_from;
-  if (set_from != NULL) {
-    t8_cmesh_ref (set_from);
-  }
+
   if (set_from != NULL) {
     t8_cmesh_set_dimension (cmesh, set_from->dimension);
   }
@@ -566,9 +564,15 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
     cmesh_a->num_local_trees != cmesh_b->num_local_trees ||
     cmesh_a->num_ghosts != cmesh_b->num_ghosts ||
     cmesh_a->first_tree != cmesh_b->first_tree;
+#if 0
+  /* TODO: The inserted variables are counters that are only active if the
+   * cmesh is committed from scratch. If a cmesh is commited via cmesh_copy,
+   * then these counters are not active. So even for equal cmeshes
+   * these counters must not store the same value. */
 #ifdef T8_ENABLE_DEBUG
   is_equal = is_equal || cmesh_a->inserted_trees != cmesh_b->inserted_trees ||
     cmesh_a->inserted_ghosts != cmesh_b->inserted_ghosts;
+#endif
 #endif
   if (is_equal != 0) {
     return 0;
@@ -584,8 +588,8 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
       return 0;
     }
     else {
-      is_equal = is_equal || t8_shmem_array_is_equal (cmesh_a->tree_offsets,
-                                                      cmesh_b->tree_offsets);
+      is_equal = is_equal || !t8_shmem_array_is_equal (cmesh_a->tree_offsets,
+                                                       cmesh_b->tree_offsets);
     }
   }
   if (is_equal != 0) {

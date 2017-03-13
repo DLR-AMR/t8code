@@ -61,9 +61,10 @@ t8_cmesh_from_tetgen (const char *prefix, int do_partition)
 }
 
 static void
-t8_forest_from_cmesh (t8_cmesh_t cmesh, int level)
+t8_forest_from_cmesh (t8_cmesh_t cmesh, int level, const char *prefix)
 {
   t8_forest_t         forest;
+  char                fileprefix[BUFSIZ];
 
   t8_debugf ("Construct Forest from Tetmesh\n");
   t8_forest_init (&forest);
@@ -73,6 +74,9 @@ t8_forest_from_cmesh (t8_cmesh_t cmesh, int level)
   t8_forest_commit (forest);
   t8_debugf ("Committed forest. Has %i elements.\n",
              t8_forest_get_num_element (forest));
+  snprintf (fileprefix, BUFSIZ, "%s_t8_tetgen_forest", prefix);
+  t8_forest_write_vtk (forest, fileprefix);
+  t8_debugf ("Wrote to file %s\n", fileprefix);
   t8_forest_unref (&forest);
 }
 
@@ -113,7 +117,8 @@ main (int argc, char *argv[])
   }
   else {
     level = 0;
-    t8_forest_from_cmesh (t8_cmesh_from_tetgen (prefix, partition), level);
+    t8_forest_from_cmesh (t8_cmesh_from_tetgen (prefix, partition), level,
+                          prefix);
     sc_options_print_summary (t8_get_package_id (), SC_LP_PRODUCTION, opt);
   }
 

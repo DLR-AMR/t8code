@@ -118,7 +118,6 @@ t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh, sc_MPI_Comm comm)
     t8_cmesh_unref (&forest->cmesh);
   }
   if (cmesh != NULL) {
-    t8_cmesh_ref (cmesh);
     T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
   }
   forest->cmesh = cmesh;
@@ -415,8 +414,7 @@ t8_forest_partition_cmesh (t8_forest_t forest, sc_MPI_Comm comm,
   t8_cmesh_set_profiling (cmesh_partition, set_profiling);
   /* Commit the new cmesh */
   t8_cmesh_commit (cmesh_partition, comm);
-  /* unref the old one and set the new cmesh as the cmesh of the forest */
-  t8_cmesh_unref (&forest->cmesh);
+  /* set the new cmesh as the cmesh of the forest */
   forest->cmesh = cmesh_partition;
 }
 
