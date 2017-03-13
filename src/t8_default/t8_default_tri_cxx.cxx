@@ -85,6 +85,19 @@ t8_default_scheme_tri_c::t8_element_sibling (const t8_element_t * elem,
   t8_dtri_sibling (t, sibid, s);
 }
 
+int
+t8_default_scheme_tri_c::t8_element_num_children (const t8_element_t * elem)
+{
+  return T8_DTRI_CHILDREN;
+}
+
+int
+t8_default_scheme_tri_c::t8_element_num_face_children (const t8_element_t *
+                                                       elem, int face)
+{
+  return T8_DTRI_FACE_CHILDREN;
+}
+
 void
 t8_default_scheme_tri_c::t8_element_child (const t8_element_t * elem,
                                            int childid, t8_element_t * child)

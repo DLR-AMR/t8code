@@ -346,7 +346,7 @@ t8_cmesh_set_partition_from (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from,
 #endif
 
 void
-t8_cmesh_set_refine (t8_cmesh_t cmesh, int level, t8_scheme_t * scheme)
+t8_cmesh_set_refine (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t * scheme)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (level >= 0);
@@ -1082,7 +1082,7 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
     T8_FREE (cmesh->profile);
   }
   if (cmesh->set_refine_scheme != NULL) {
-    t8_scheme_unref (&cmesh->set_refine_scheme);
+    t8_scheme_cxx_unref (&cmesh->set_refine_scheme);
   }
 
   T8_FREE (cmesh);

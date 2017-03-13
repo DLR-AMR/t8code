@@ -5,4 +5,4 @@
 bin_PROGRAMS += \
 	example/triangle/t8_read_triangle
 
-example_triangle_t8_read_triangle_SOURCES = example/triangle/t8_read_triangle_file.c
+example_triangle_t8_read_triangle_SOURCES = example/triangle/t8_read_triangle_file.cxx

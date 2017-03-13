@@ -115,6 +115,13 @@ public:
   virtual void        t8_element_sibling (const t8_element_t * elem,
                                           int sibid, t8_element_t * sibling);
 
+  /** Return the number of children of an element when it is refined. */
+  virtual int         t8_element_num_children (const t8_element_t * elem);
+
+  /** Return the number of children of an element's face when the element is refined. */
+  virtual int         t8_element_num_face_children (const t8_element_t *
+                                                    elem, int face);
+
 /** Construct the child element of a given number. */
   virtual void        t8_element_child (const t8_element_t * elem,
                                         int childid, t8_element_t * child);
