@@ -22,6 +22,7 @@
 */
 
 #include <t8_cmesh.h>
+#include <t8_default_cxx.hxx>
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_partition.h"
 
@@ -141,8 +142,21 @@ test_cmesh_partition (sc_MPI_Comm comm)
        * fulfilled. */
       /* For eclass vertex the forest always has 1 element when using the hypercube mesh
        * and thus we use a disjoint copy of at least mpisize many coarse cells. */
-      if (eci != T8_ECLASS_VERTEX) {
-        num_children = t8_eclass_num_children[eci];
+      /* TODO: We do the same for lines and prisms here, since the elmenent_num_children routine
+         is not yet implemented. Change as soons as lines and prism work properly. */
+      if (eci != T8_ECLASS_VERTEX && eci != T8_ECLASS_LINE
+          && eci != T8_ECLASS_PRISM) {
+        /* To compute the number of children, we first need to construct an 
+         * element of the class. We therefore create the default scheme and 
+         * create the root element of a tree with it. */
+        t8_scheme_cxx_t    *scheme = t8_scheme_new_default_cxx ();
+        t8_eclass_scheme_c *escheme = scheme->eclass_schemes[eci];
+        t8_element_t       *root;
+        escheme->t8_element_new (1, &root);
+        escheme->t8_element_set_linear_id (root, 0, 0);
+        num_children = escheme->t8_element_num_children (root);
+        escheme->t8_element_destroy (1, &root);
+        t8_scheme_cxx_unref (&scheme);
         minlevel = 0;
         forest_elements = eclass_to_cube_cellnum[eci];
         while (forest_elements < mpisize) {
@@ -154,7 +168,7 @@ test_cmesh_partition (sc_MPI_Comm comm)
            forest_elements, t8_eclass_to_string[eci], minlevel);
       }
       else {
-        /* t8_eclass_vertex */
+        /* t8_eclass_vertex and t8_eclass_line */
         minlevel = 0;
       }
       maxlevel = minlevel + 8;
@@ -162,7 +176,8 @@ test_cmesh_partition (sc_MPI_Comm comm)
         t8_global_productionf ("\tTesting refinement level %i\n", level);
         if (eci != T8_ECLASS_VERTEX && level != maxlevel - 1) {
           /* Take the hypercube as coarse mesh */
-          cmesh_original = t8_cmesh_new_hypercube (eci, comm, 0, 0);
+          cmesh_original =
+            t8_cmesh_new_hypercube ((t8_eclass_t) eci, comm, 0, 0);
         }
         else {
           /* If the eclass is vertex we choose a mesh consisting of disjoint
@@ -171,7 +186,8 @@ test_cmesh_partition (sc_MPI_Comm comm)
           /* We also choose this mesh for all eclasses in the last case.
            * We do this to test different mesh sizes. */
           double              num_trees = mpisize * 5.73;
-          cmesh_original = t8_cmesh_new_bigmesh (eci, num_trees, comm);
+          cmesh_original =
+            t8_cmesh_new_bigmesh ((t8_eclass_t) eci, num_trees, comm);
         }
         test_cmesh_committed (cmesh_original);
         for (i = 0; i < 2; i++) {

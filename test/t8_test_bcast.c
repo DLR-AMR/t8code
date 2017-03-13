@@ -22,7 +22,6 @@
 */
 
 #include <sc_refcount.h>
-#include <t8_default.h>
 #include <t8_cmesh.h>
 
 static void
