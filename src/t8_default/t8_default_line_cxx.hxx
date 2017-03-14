@@ -54,6 +54,7 @@ public:
   virtual t8_eclass_t t8_element_child_eclass (int childid)
   {
     SC_ABORT ("This function is not implemented yet.\n");
+    return T8_ECLASS_ZERO;      /* suppresses compiler warning */
   }
 
 /** Return the refinement level of an element. */
@@ -71,6 +72,7 @@ public:
                                           const t8_element_t * elem2)
   {
     SC_ABORT ("This function is not implemented yet.\n");
+    return 0;                   /* suppresses compiler warning */
   }
 
 /** Construct the parent of a given element. */
@@ -88,6 +90,7 @@ public:
   virtual int         t8_element_num_children (const t8_element_t * elem)
   {
     SC_ABORT ("This function is not implemented yet.\n");
+    return 0;                   /* suppresses compiler warning */
   }
 
   /** Return the number of children of an element's face when the element is refined. */
@@ -95,6 +98,7 @@ public:
                                                     elem, int face)
   {
     SC_ABORT ("This function is not implemented yet.\n");
+    return 0;                   /* suppresses compiler warning */
   }
 
 /** Construct the child element of a given number. */
@@ -112,12 +116,14 @@ public:
   virtual int         t8_element_child_id (const t8_element_t * elem)
   {
     SC_ABORT ("This function is not implemented yet.\n");
+    return 0;                   /* suppresses compiler warning */
   }
 
 /** Return nonzero if collection of elements is a family */
   virtual int         t8_element_is_family (t8_element_t ** fam)
   {
     SC_ABORT ("This function is not implemented yet.\n");
+    return 0;                   /* suppresses compiler warning */
   }
 
 /** Construct the nearest common ancestor of two elements in the same tree. */
@@ -146,6 +152,7 @@ public:
                                                 elem, int level)
   {
     SC_ABORT ("This function is not implemented yet.\n");
+    return 0;                   /* suppresses compiler warning */
   }
 
 /** Calculate the first descendant of a given element e. That is, the
@@ -180,6 +187,7 @@ public:
   virtual int         t8_element_root_len (const t8_element_t * elem)
   {
     SC_ABORT ("This function is not implemented yet.\n");
+    return 0;                   /* suppresses compiler warning */
   }
 
   /** Compute the integer coordinates of a given element vertex. */

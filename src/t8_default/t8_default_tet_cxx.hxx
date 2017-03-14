@@ -47,6 +47,7 @@ public:
   virtual t8_eclass_t t8_element_child_eclass (int childid)
   {
     SC_ABORT ("This function is not implemented yet.\n");
+    return T8_ECLASS_ZERO;      /* suppresses compiler warning */
   }
 
 /** Return the refinement level of an element. */
