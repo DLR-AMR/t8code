@@ -29,16 +29,16 @@
 #include <p8est_connectivity.h>
 #include <sc_shmem.h>
 
-#if 0
+#if 1
 static int
 t8_basic_adapt (t8_forest_t forest, t8_locidx_t which_tree,
-                t8_eclass_scheme_t * ts,
+                t8_eclass_scheme_c * ts,
                 int num_elements, t8_element_t * elements[])
 {
-  int                 level;
+  int                 level, mpirank, mpiret;
   T8_ASSERT (num_elements == 1 || num_elements ==
-             t8_eclass_num_children[ts->eclass]);
-  level = t8_element_level (ts, elements[0]);
+             ts->t8_element_num_children (elements[0]));
+  level = ts->t8_element_level (elements[0]);
 #if 0
   if (num_elements > 1) {
     /* Do coarsen here */
@@ -47,9 +47,11 @@ t8_basic_adapt (t8_forest_t forest, t8_locidx_t which_tree,
     return 0;
   }
 #endif
-  if (level < 3)
-    /* refine if level is smaller 3 */
-    return 1;
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  if (level < 10)
+    /* refine randomly if level is smaller 10 */
+    return (unsigned) ((mpirank + 1) * rand ()) % 7;
   return 0;
 }
 
@@ -79,37 +81,42 @@ t8_basic_refine_test ()
 }
 #endif
 
-#if 0
+#if 1
 static void
 t8_basic_forest_partition ()
 {
   t8_forest_t         forest, forest_adapt, forest_partition;
   t8_cmesh_t          cmesh, cmesh_partition;
   sc_MPI_Comm         comm;
-  int                 level = 2;        /* initial refinement level */
+  int                 level = 3;        /* initial refinement level */
 
   comm = sc_MPI_COMM_WORLD;
-  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, comm, 0, 1);
+  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, comm, 0, 1);
   t8_cmesh_init (&cmesh_partition);
   t8_cmesh_set_derive (cmesh_partition, cmesh);
   t8_cmesh_set_partition_uniform (cmesh_partition, level);
   t8_cmesh_commit (cmesh_partition, comm);
-  t8_cmesh_unref (&cmesh);
   t8_forest_init (&forest);
   t8_forest_init (&forest_adapt);
   t8_forest_init (&forest_partition);
   t8_forest_set_cmesh (forest, cmesh_partition, comm);
-  t8_forest_set_scheme (forest, t8_scheme_new_default ());
+  t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
   t8_forest_set_level (forest, level);
   t8_forest_commit (forest);
+  /* Adapt and partition forest */
   t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, NULL, 1);
   t8_forest_set_partition (forest_partition, forest_adapt, 0);
+  t8_forest_set_profiling (forest_partition, 1);
   t8_forest_commit (forest_adapt);
+  /* vtk before partition */
+  t8_forest_write_vtk (forest_adapt, "basic_forest_b4_part");
   t8_forest_commit (forest_partition);
+  /* vtk after partition */
   t8_forest_partition_cmesh (forest_partition, comm, 0);
+  t8_forest_write_vtk (forest_partition, "basic_forest_part");
+  t8_forest_print_profile (forest_partition);
 
   /* Clean-up */
-  t8_cmesh_destroy (&cmesh_partition);
   t8_forest_unref (&forest_partition);
 }
 #endif
@@ -150,15 +157,16 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
     t8_forest_set_level (forest, set_level);
 
     if (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX
-        || eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_TET
-        || eclass == T8_ECLASS_LINE) {
+        || eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_TET) {
       t8_forest_commit (forest);
       t8_debugf ("Successfully committed forest.\n");
       t8_forest_write_vtk (forest, "basic");    /* This does nothing right now */
     }
     t8_forest_unref (&forest);
   }
-  t8_cmesh_unref (&cmesh);
+  else {
+    t8_cmesh_unref (&cmesh);
+  }
 }
 #endif
 
@@ -359,7 +367,8 @@ main (int argc, char **argv)
   t8_basic_hypercube (T8_ECLASS_QUAD, 0, 1, 1);
 #endif
   t8_basic ();
-  t8_basic_hypercube (T8_ECLASS_LINE, 1, 1, 0);
+  t8_basic_hypercube (T8_ECLASS_TET, 3, 1, 0);
+  t8_basic_forest_partition ();
 #if 0
   t8_global_productionf ("Testing hypercube cmesh.\n");
 
