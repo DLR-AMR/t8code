@@ -92,7 +92,7 @@ typedef p4est_gloidx_t t8_gloidx_t;
 #define t8_compare_gloidx(v,w) p4est_gloidx_compare(v,w)
 
 #define T8_PADDING_SIZE (sizeof (void*))
-/* Compute the number of bytes that have to be added to a given byte_count
+/** Compute the number of bytes that have to be added to a given byte_count
  * such that it is a multiple of the padding size */
 #define T8_ADD_PADDING(_x) \
   ((T8_PADDING_SIZE - ((_x) %  T8_PADDING_SIZE)) %  T8_PADDING_SIZE);
