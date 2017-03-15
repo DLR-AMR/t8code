@@ -69,6 +69,13 @@ extern const int    t8_dtet_parenttype_Iloc_to_type[6][8];
 /** Store the cube-id for each (parenttype,local Index) combination. */
 extern const int    t8_dtet_parenttype_Iloc_to_cid[6][8];
 
+/** Store for each (type, face_index) the combinatino (x-coord, y-coord, type)
+ *  of the respective boundary triangle.
+ * I.e. {0, 2, 1} means the boundary triangle has x-coordinate the tet's x-coordinate,
+ *      y-coordinate the tet's z-coordinate and type 1.
+ */
+extern const int    t8_dtet_type_face_to_boundary[6][4][3];
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DTET_CONNECTIVITY_H */

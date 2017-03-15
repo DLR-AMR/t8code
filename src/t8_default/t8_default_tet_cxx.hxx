@@ -101,10 +101,7 @@ public:
   /** Construct the boundary element at a specific face. */
   virtual void        t8_element_boundary_face (const t8_element_t * elem,
                                                 int face,
-                                                t8_element_t * boundary)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                t8_element_t * boundary);
 
 /** Construct all codimension-one boundary elements of a given element. */
   virtual void        t8_element_boundary (const t8_element_t * elem,
