@@ -107,10 +107,7 @@ public:
 /** Construct all codimension-one boundary elements of a given element. */
   virtual void        t8_element_boundary (const t8_element_t * elem,
                                            int min_dim, int length,
-                                           t8_element_t ** boundary)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                           t8_element_t ** boundary);
 
 /** Initialize an element according to a given linear id */
   virtual void        t8_element_set_linear_id (t8_element_t * elem,

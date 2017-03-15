@@ -178,6 +178,19 @@ t8_default_scheme_tri_c::t8_element_boundary_face (const t8_element_t * elem,
 }
 
 void
+t8_default_scheme_tri_c::t8_element_boundary (const t8_element_t * elem,
+                                              int min_dim, int length,
+                                              t8_element_t ** boundary)
+{
+  int                 iface;
+
+  T8_ASSERT (length == T8_DTRI_FACES);
+  for (iface = 0; iface < T8_DTRI_FACES; iface++) {
+    t8_element_boundary_face (elem, iface, boundary[iface]);
+  }
+}
+
+void
 t8_default_scheme_tri_c::t8_element_set_linear_id (t8_element_t * elem,
                                                    int level, uint64_t id)
 {

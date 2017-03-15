@@ -293,12 +293,17 @@ t8_default_scheme_quad_c::t8_element_boundary (const t8_element_t * elem,
 #ifdef T8_ENABLE_DEBUG
   int                 per_eclass[T8_ECLASS_COUNT];
 #endif
+  int                 iface;
 
   T8_ASSERT (length ==
              t8_eclass_count_boundary (T8_ECLASS_QUAD, min_dim, per_eclass));
 
   /* TODO: write this function */
-  SC_ABORT_NOT_REACHED ();
+
+  T8_ASSERT (length == P4EST_FACES);
+  for (iface = 0; iface < P4EST_FACES; iface++) {
+    t8_element_boundary_face (elem, iface, boundary[iface]);
+  }
 }
 
 void
