@@ -20,8 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_DTRI_H
-#define T8_DTRI_H
+#ifndef T8_LINE_H
+#define T8_LINE_H
 
 /** \file t8_dtri.h
  * TODO: document this.
@@ -57,4 +57,4 @@ t8_dline_t;
 
 T8_EXTERN_C_END ();
 
-#endif /* T8_DTRI_H */
+#endif /* T8_DLINE_H */
