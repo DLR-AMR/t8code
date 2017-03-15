@@ -61,6 +61,9 @@ DISTCLEANFILES += \
         _configs.sed src/t8_config.h @T8_DISTCLEAN@
 .PHONY: ChangeLog
 
+nodist_EXTRA_T8_la_SOURCES = dummy.cxx
+sourcescheck_DUMMY = dummy.cxx
+
 # non-recursive build
 include src/Makefile.am
 include src/t8_default/Makefile.am
