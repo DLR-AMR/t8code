@@ -21,6 +21,7 @@
 */
 
 #include <p4est_bits.h>
+#include "t8_dline_bits.h"
 #include "t8_default_common_cxx.hxx"
 #include "t8_default_quad_cxx.hxx"
 
@@ -256,6 +257,32 @@ t8_default_scheme_quad_c::t8_element_nca (const t8_element_t * elem1,
 
   p4est_nearest_common_ancestor (q1, q2, r);
   t8_element_copy_surround (q1, r);
+}
+
+void
+t8_default_scheme_quad_c::t8_element_boundary_face (const t8_element_t * elem,
+                                                    int face,
+                                                    t8_element_t * boundary)
+{
+  const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
+  t8_dline_t         *l = (t8_dline_t *) boundary;
+
+  T8_ASSERT (0 <= face && face < P4EST_FACES);
+  /* The level of the boundary element is the same as the quadrant's level */
+  l->level = q->level;
+  /*
+   * The faces of the quadrant are enumerated like this:
+   *        f_2
+   *     x ---- x
+   *     |      |
+   * f_0 |      | f_1
+   *     x ---- x
+   *        f_3
+   *
+   * If face = 0 or face = 1 then l->x = q->y
+   * if face = 2 or face = 3 then l->x = q->x
+   */
+  l->x = face >> 1 ? q->x : q->y;
 }
 
 void

@@ -207,6 +207,20 @@ public:
   virtual void        t8_element_nca (const t8_element_t * elem1,
                                       const t8_element_t * elem2,
                                       t8_element_t * nca) = 0;
+
+  /** Construct the boundary element at a specific face.
+   * \param [in] elem     The input element.
+   * \param [in] face     The index of the face of which to construct the
+   *                      boundary element.
+   * \param [in,out] boundary An allocated element of dimension of \a element
+   *                      minus 1. The entries will be filled with the entries
+   *                      of the face of \a element.
+   * If \a elem is of class T8_ECLASS_VERTEX, then \a boundary must be NULL
+   * and will not be modified.
+   */
+  virtual void        t8_element_boundary_face (const t8_element_t * elem,
+                                                int face,
+                                                t8_element_t * boundary) = 0;
   /* TODO: document better */
 /** Construct all codimension-one boundary elements of a given element. */
   virtual void        t8_element_boundary (const t8_element_t * elem,

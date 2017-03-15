@@ -23,6 +23,7 @@
 #include "t8_default_common_cxx.hxx"
 #include "t8_default_tri_cxx.hxx"
 #include "t8_dtri_bits.h"
+#include "t8_dline_bits.h"
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -139,6 +140,41 @@ t8_default_scheme_tri_c::t8_element_nca (const t8_element_t * elem1,
   t8_default_tri_t   *c = (t8_default_tri_t *) nca;
 
   t8_dtri_nearest_common_ancestor (t1, t2, c);
+}
+
+/* Construct the boundary element at a specific face. */
+void
+t8_default_scheme_tri_c::t8_element_boundary_face (const t8_element_t * elem,
+                                                   int face,
+                                                   t8_element_t * boundary)
+{
+  const t8_default_tri_t *t = (const t8_default_tri_t *) elem;
+  t8_dline_t         *l = (t8_dline_t *) boundary;
+
+  T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
+  /* The level of the boundary element is the same as the quadrant's level */
+  l->level = t->level;
+  /*
+   * The faces of the triangle are enumerated like this
+   *        type 0                    type 1
+   *
+   *                                    f_0
+   *         x                         x--x
+   *    f_1 /|                         | /
+   *       / | f_0                 f_2 |/ f_1
+   *      x--x                         x
+   *      f_2
+   *
+   *  If face = 0, type = 0 or face = 2, type = 1 then l->x = t->y
+   *  If face = 1, face = 2, type = 0 or
+   *     face = 0, face = 1, type = 1             then l->x = t->x
+   */
+  if ((face == 0 && t->type == 0) || (face == 2 && t->type == 1)) {
+    l->x = t->y;
+  }
+  else {
+    l->x = t->x;
+  }
 }
 
 void

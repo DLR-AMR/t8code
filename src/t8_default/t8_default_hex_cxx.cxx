@@ -21,6 +21,7 @@
 */
 
 #include <p8est_bits.h>
+#include <p4est_bits.h>
 #include "t8_default_common_cxx.hxx"
 #include "t8_default_hex_cxx.hxx"
 
@@ -152,6 +153,37 @@ t8_default_scheme_hex_c::t8_element_nca (const t8_element_t * elem1,
   p8est_nearest_common_ancestor ((const p8est_quadrant_t *) elem1,
                                  (const p8est_quadrant_t *) elem2,
                                  (p8est_quadrant_t *) nca);
+}
+
+void
+t8_default_scheme_hex_c::t8_element_boundary_face (const t8_element_t * elem,
+                                                   int face,
+                                                   t8_element_t * boundary)
+{
+  const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
+  p4est_quadrant_t   *b = (p4est_quadrant_t *) boundary;
+
+  T8_ASSERT (0 <= face && face < P8EST_FACES);
+
+  /* The level of the boundary element is the same as the quadrant's level */
+  b->level = q->level;
+  /*
+   * The faces of the quadrant are enumerated like this:
+   *
+   *       x ---- x
+   *      /  f_5 /|
+   *     x ---- x |
+   * f_0 |      | x f_1
+   *     |  f_2 |/
+   *     x ---- x
+   *        f_4
+   *
+   * If face = 0 or face = 1 then b->x = q->y, b->y = q->z
+   * if face = 2 or face = 3 then b->x = q->x, b->y = q->z
+   * if face = 4 or face = 5 then b->x = q->x, b->y = q->y
+   */
+  b->x = face >> 1 ? q->x : q->y;       /* true if face >= 2 */
+  b->y = face >> 2 ? q->y : q->z;       /* true if face >= 4 */
 }
 
 void
