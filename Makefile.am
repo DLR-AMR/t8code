@@ -69,6 +69,7 @@ include src/Makefile.am
 include src/t8_default/Makefile.am
 include test/Makefile.am
 include example/basic/Makefile.am
+include example/ghost/Makefile.am
 include example/timings/Makefile.am
 include example/triangle/Makefile.am
 include example/tetgen/Makefile.am
