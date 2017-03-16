@@ -152,6 +152,50 @@ t8_default_scheme_tet_c::t8_element_tree_face (const t8_element_t * elem,
   return t8_dtet_tree_face ((t8_dtet_t *) elem, face);
 }
 
+/* Construct the inner element from a boundary element. */
+/* This function is defined here instead of in t8_dri_bits.c since
+ * the compile logic does not allow for t8_dtri_t and t8_dtet_t to exist
+ * both in t8_dtri_bits.c. This would be needed by an implementation, at least
+ * for tets. */
+void
+t8_default_scheme_tet_c::t8_element_extrude_face (const t8_element_t * face,
+                                                  t8_element_t * elem,
+                                                  int root_face)
+{
+  const t8_dtri_t    *b = (const t8_dtri_t *) face;
+  t8_dtet_t          *t = (t8_dtet_t *) elem;
+
+  T8_ASSERT (0 <= root_face && root_face < T8_DTET_FACES);
+  t->level = b->level;
+  t->eclass = T8_ECLASS_TET;
+  switch (root_face) {
+  case 0:
+    t->type = b->type == 0 ? 0 : 1;
+    t->x = T8_DTET_ROOT_LEN - T8_DTET_LEN (t->level);
+    t->y = b->x;
+    t->z = b->y;
+    break;
+  case 1:
+    t->type = b->type == 0 ? 0 : 2;
+    t->x = t->z = b->x;
+    t->y = b->y;
+    break;
+  case 2:
+    t->type = b->type == 0 ? 0 : 4;
+    t->x = b->x;
+    t->y = t->z = b->y;
+    break;
+  case 3:
+    t->type = b->type == 0 ? 0 : 5;
+    t->x = b->x;
+    t->y = 0;
+    t->z = b->y;
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+}
+
 /* Construct the boundary element at a specific face. */
 /* This function is defined here instead of in t8_dtet_bits.c since
  * the compile logic does not allow for t8_dtri_t and t8_dtet_t to exist
@@ -182,7 +226,7 @@ t8_default_scheme_tet_c::t8_element_boundary_face (const t8_element_t * elem,
   switch (face_cat) {
   case 1:
     b->x = t->z;
-    b->y = t->z - t->y;
+    b->y = t->y;
     break;
   case 2:
     b->x = t->x;

@@ -141,12 +141,22 @@ public:
     SC_ABORT ("This function is not implemented yet.\n");
   }
 
-  /** Transfor the coordinates of a line considered as boundary element
+  /** Transform the coordinates of a line considered as boundary element
    *  in a tree-tree connection. */
   virtual void        t8_element_transform_face (const t8_element_t * elem1,
                                                  t8_element_t * elem2,
                                                  int orientation,
                                                  int is_smaller_face);
+
+  /** Given a boundary face inside a root tree's face construct
+   *  the element inside the root tree that has the given face as a
+   *  face. */
+  virtual void        t8_element_extrude_face (const t8_element_t * face,
+                                               t8_element_t * elem,
+                                               int root_face)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
 
   /** Construct the boundary element at a specific face. */
   virtual void        t8_element_boundary_face (const t8_element_t * elem,

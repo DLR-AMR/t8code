@@ -150,6 +150,52 @@ t8_default_scheme_tri_c::t8_element_tree_face (const t8_element_t * elem,
   return t8_dtri_tree_face ((t8_dtri_t *) elem, face);
 }
 
+/* Construct the inner element from a boundary element. */
+/* This function is defined here instead of in t8_dri_bits.c since
+ * the compile logic does not allow for t8_dtri_t and t8_dtet_t to exist
+ * both in t8_dtri_bits.c. This would be needed by an implementation, at least
+ * for tets. */
+void
+t8_default_scheme_tri_c::t8_element_extrude_face (const t8_element_t * face,
+                                                  t8_element_t * elem,
+                                                  int root_face)
+{
+  const t8_dline_t   *l = (const t8_dline_t *) face;
+  t8_dtri_t          *t = (t8_dtri_t *) elem;
+
+  T8_ASSERT (0 <= root_face && root_face < T8_DTRI_FACES);
+  /*
+   * The faces of the root triangle are enumerated like this
+   *
+   *
+   *         x
+   *    f_1 /|
+   *       / | f_0
+   *      x--x
+   *      f_2
+   *
+   * Boundary triangles are alway of type 0.
+   */
+  t->level = l->level;
+  t->type = 0;
+  switch (root_face) {
+  case 0:
+    t->x = T8_DTRI_ROOT_LEN - T8_DTRI_LEN (t->level);
+    t->y = l->x;
+    break;
+  case 1:
+    t->x = l->x;
+    t->y = l->x;
+    break;
+  case 2:
+    t->x = l->x;
+    t->y = 0;
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+}
+
 /* Construct the boundary element at a specific face. */
 void
 t8_default_scheme_tri_c::t8_element_boundary_face (const t8_element_t * elem,

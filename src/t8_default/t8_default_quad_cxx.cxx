@@ -259,6 +259,51 @@ t8_default_scheme_quad_c::t8_element_nca (const t8_element_t * elem1,
   t8_element_copy_surround (q1, r);
 }
 
+void
+t8_default_scheme_quad_c::t8_element_extrude_face (const t8_element_t * face,
+                                                   t8_element_t * elem,
+                                                   int root_face)
+{
+  const t8_dline_t   *l = (const t8_dline_t *) face;
+  p4est_quadrant_t   *q = (p4est_quadrant_t *) elem;
+
+  T8_ASSERT (0 <= root_face && root_face < P4EST_FACES);
+  /*
+   * The faces of the root quadrant are enumerated like this:
+   *
+   *        f_2
+   *     x -->-- x
+   *     |       |
+   *     ^       ^
+   * f_0 |       | f_1
+   *     x -->-- x
+   *        f_3
+   *
+   * The arrows >,^ denote the orientation of the faces.
+   */
+  q->level = l->level;
+  switch (root_face) {
+  case 0:
+    q->x = 0;
+    q->y = l->x;
+    break;
+  case 1:
+    q->x = P4EST_ROOT_LEN - P4EST_QUADRANT_LEN (q->level);
+    q->y = l->x;
+    break;
+  case 2:
+    q->x = l->x;
+    q->y = 0;
+    break;
+  case 3:
+    q->x = l->x;
+    q->y = P4EST_ROOT_LEN - P4EST_QUADRANT_LEN (q->level);
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+}
+
 int
 t8_default_scheme_quad_c::t8_element_tree_face (const t8_element_t * elem,
                                                 int face)

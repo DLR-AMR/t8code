@@ -237,11 +237,26 @@ public:
    *                        f' of T' if either the eclass of T is smaller or if
    *                        the classes are equal and f<f'. The orientation is
    *                        defined in relation to the smaller face.
+   * \note \a elem1 and \a elem2 may point to the same element.
    */
   virtual void        t8_element_transform_face (const t8_element_t * elem1,
                                                  t8_element_t * elem2,
                                                  int orientation,
                                                  int is_smaller_face) = 0;
+
+  /** Given a boundary face inside a root tree's face construct
+   *  the element inside the root tree that has the given face as a
+   *  face.
+   * \param [in] face     A face element.
+   * \param [in,out] elem An allocated element. The entries will be filled with
+   *                      the data of the element that has \a face as a face and
+   *                      lies within the root tree.
+   * \param [in] root_face The index of the face of the root tree in which \a face
+   *                      lies.
+   */
+  virtual void        t8_element_extrude_face (const t8_element_t * face,
+                                               t8_element_t * elem,
+                                               int root_face) = 0;
 
   /** Construct the boundary element at a specific face.
    * \param [in] elem     The input element.

@@ -151,6 +151,13 @@ public:
     SC_ABORT ("This function is not implemented yet.\n");
   }
 
+  /** Given a boundary face inside a root tree's face construct
+   *  the element inside the root tree that has the given face as a
+   *  face. */
+  virtual void        t8_element_extrude_face (const t8_element_t * face,
+                                               t8_element_t * elem,
+                                               int root_face);
+
   /** Return the tree face id given a boundary face. */
   virtual int         t8_element_tree_face (const t8_element_t * elem,
                                             int face);

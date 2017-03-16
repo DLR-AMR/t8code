@@ -165,6 +165,61 @@ t8_default_scheme_hex_c::t8_element_tree_face (const t8_element_t * elem,
 }
 
 void
+t8_default_scheme_hex_c::t8_element_extrude_face (const t8_element_t * face,
+                                                  t8_element_t * elem,
+                                                  int root_face)
+{
+  const p4est_quadrant_t *b = (const p4est_quadrant_t *) face;
+  p8est_quadrant_t   *q = (p8est_quadrant_t *) elem;
+
+  T8_ASSERT (0 <= root_face && root_face < P8EST_FACES);
+  q->level = b->level;
+  /*
+   * The faces of the root quadrant are enumerated like this:
+   *
+   *       x ---- x
+   *      /  f_5 /|
+   *     x ---- x |
+   * f_0 |      | x f_1
+   *     |  f_2 |/
+   *     x ---- x
+   *        f_4
+   */
+  switch (root_face) {
+  case 0:
+    q->x = 0;
+    q->y = b->x;
+    q->z = b->y;
+    break;
+  case 1:
+    q->x = P4EST_ROOT_LEN - P4EST_QUADRANT_LEN (q->level);
+    q->y = b->x;
+    q->z = b->y;
+    break;
+  case 2:
+    q->x = b->x;
+    q->y = 0;
+    q->z = b->y;
+    break;
+  case 3:
+    q->x = b->x;
+    q->y = P4EST_ROOT_LEN - P4EST_QUADRANT_LEN (q->level);
+    q->z = b->y;
+    break;
+  case 4:
+    q->x = b->x;
+    q->y = b->y;
+    q->z = 0;
+    break;
+  case 5:
+    q->x = b->x;
+    q->y = b->y;
+    q->z = P4EST_ROOT_LEN - P4EST_QUADRANT_LEN (q->level);
+    break;
+  }
+}
+
+void
 t8_default_scheme_hex_c::t8_element_boundary_face (const t8_element_t * elem,
                                                    int face,
                                                    t8_element_t * boundary)
