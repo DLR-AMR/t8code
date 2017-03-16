@@ -246,6 +246,7 @@ t8_dtri_ancestor (const t8_dtri_t * t, int level, t8_dtri_t * ancestor)
   ancestor->level = level;
 }
 
+/* Compute the coordinates of a given vertex of a triangle/tet */
 void
 t8_dtri_compute_coords (const t8_dtri_t * t, int vertex,
                         t8_dtri_coord_t coordinates[T8_DTRI_DIM])
@@ -295,6 +296,7 @@ t8_dtri_compute_coords (const t8_dtri_t * t, int vertex,
 #endif
 }
 
+/* Compute the coordinates of each vertex of a triangle/tet */
 void
 t8_dtri_compute_all_coords (const t8_dtri_t * t,
                             t8_dtri_coord_t
@@ -335,6 +337,23 @@ t8_dtri_compute_all_coords (const t8_dtri_t * t,
 #ifdef T8_DTRI_TO_DTET
   coordinates[2][ei] += h;
   coordinates[2][ej] += h;
+#endif
+#ifdef T8_ENABLE_DEBUG
+  /* We check whether the results are the same as with the
+   * t8_dtri_compute_coords function.
+   */
+  {
+    int                 ivertex;
+    t8_dtri_coord_t     coords[T8_DTRI_DIM];
+    for (ivertex = 0; ivertex < T8_DTRI_FACES; ivertex++) {
+      t8_dtri_compute_coords (t, ivertex, coords);
+      T8_ASSERT (coords[0] == coordinates[ivertex][0]);
+      T8_ASSERT (coords[1] == coordinates[ivertex][1]);
+#ifdef T8_DTRI_TO_DTET
+      T8_ASSERT (coords[2] == coordinates[ivertex][2]);
+#endif
+    }
+  }
 #endif
 }
 
@@ -391,28 +410,51 @@ t8_dtri_childrenpv (const t8_dtri_t * t, t8_dtri_t * c[T8_DTRI_CHILDREN])
   int                 i;
   int                 Bey_cid;
   int                 vertex;
+  t8_dtri_type_t      t_type = t->type;
 
   T8_ASSERT (t->level < T8_DTRI_MAXLEVEL);
   t8_dtri_compute_all_coords (t, t_coordinates);
-  c[0]->x = t->x;
-  c[0]->y = t->y;
+  /* We use t_coordinates[0] for t->x,y,z to ensure that the function is valid
+   * if called with t = c[0]. If we would use t->x later it would be the newly
+   * computed value c[0]->x. */
+  c[0]->x = t_coordinates[0][0];        /* t->x */
+  c[0]->y = t_coordinates[0][1];        /* t->y */
 #ifdef T8_DTRI_TO_DTET
-  c[0]->z = t->z;
+  c[0]->z = t_coordinates[0][2];        /* t->z */
 #endif
-  c[0]->type = t->type;
+  c[0]->type = t_type;
   c[0]->level = level;
   for (i = 1; i < T8_DTRI_CHILDREN; i++) {
-    Bey_cid = t8_dtri_index_to_bey_number[t->type][i];
+    Bey_cid = t8_dtri_index_to_bey_number[t_type][i];
     vertex = t8_dtri_beyid_to_vertex[Bey_cid];
     /* i-th anchor coordinate of child is (X_(0,i)+X_(vertex,i))/2
      * where X_(i,j) is the j-th coordinate of t's ith node */
-    c[i]->x = (t->x + t_coordinates[vertex][0]) >> 1;
-    c[i]->y = (t->y + t_coordinates[vertex][1]) >> 1;
+    c[i]->x = (t_coordinates[0][0] + t_coordinates[vertex][0]) >> 1;
+    c[i]->y = (t_coordinates[0][1] + t_coordinates[vertex][1]) >> 1;
 #ifdef T8_DTRI_TO_DTET
-    c[i]->z = (t->z + t_coordinates[vertex][2]) >> 1;
+    c[i]->z = (t_coordinates[0][2] + t_coordinates[vertex][2]) >> 1;
 #endif
-    c[i]->type = t8_dtri_type_of_child[t->type][Bey_cid];
+    c[i]->type = t8_dtri_type_of_child[t_type][Bey_cid];
     c[i]->level = level;
+#ifdef T8_ENABLE_DEBUG
+    {
+      /* We check whether the child computed here equals to the child
+       * computed in the t8_dtri_child function. */
+      t8_dtri_t           check_child;
+      /* We use c[0] here instead of t, since we explicitly allow t=c[0] as input
+       * and thus the values of t may be already overwritten. However the only
+       * difference from c[0] to t is in the level. */
+      c[0]->level--;
+      t8_dtri_child (c[0], i, &check_child);
+      T8_ASSERT (check_child.x == c[i]->x && check_child.y == c[i]->y);
+      T8_ASSERT (check_child.type == c[i]->type
+                 && check_child.level == c[i]->level);
+#ifdef T8_DTRI_TO_DTET
+      T8_ASSERT (check_child.z == c[i]->z);
+#endif
+      c[0]->level++;
+    }
+#endif
   }
 }
 

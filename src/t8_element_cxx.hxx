@@ -159,6 +159,7 @@ public:
    *                              tetrahedron or a pyramid depending on \a childid.
    *                              This can be checked by \a t8_element_child_eclass.
    *                              On output, a valid element.
+   * It is valid to call this function with elem = child.
    * \see t8_element_child_eclass
    */
   virtual void        t8_element_child (const t8_element_t * elem,
@@ -172,6 +173,7 @@ public:
    * \param [in,out] c    The storage for these \a length elements must exist
    *                      and match the element class in the children's ordering.
    *                      On output, all children are valid.
+   * It is valid to call this function with elem = c[0].
    * \see t8_element_num_children
    * \see t8_element_child_eclass
    */
