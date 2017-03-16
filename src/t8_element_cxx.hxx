@@ -277,6 +277,24 @@ public:
                                            int min_dim, int length,
                                            t8_element_t ** boundary) = 0;
 
+    /** Construct the face neighbor of a given element if this face neighbor
+     * is inside the root tree. Return 0 otherwise.
+   * \param [in] elem The element to be considered.
+   * \param [in,out] neigh If the face neighbor of \a elem algon \a face is inside
+   *                  the root tree, this element's data is filled with the
+   *                  data of the face neighbor. Otherwise the data can be modified
+   *                  arbitrarily.
+   * \param [in] face The number of the face along which the neighbor should be
+   *                  constructed.
+   * \return          True if \a neigh is inside the root tree.
+   *                  False if not. In this case \a neigh's data can be arbitrary
+   *                  on output.
+   */
+  virtual int         t8_element_face_neighbor_inside (const t8_element_t *
+                                                       elem,
+                                                       t8_element_t * neigh,
+                                                       int face) = 0;
+
   /** Initialize the entries of an allocated element according to a
    *  given linear id in a uniform refinement.
    * \param [in,out] elem The element whose entries will be set.

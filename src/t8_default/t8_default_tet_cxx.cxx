@@ -254,6 +254,21 @@ t8_default_scheme_tet_c::t8_element_boundary (const t8_element_t * elem,
   }
 }
 
+int
+t8_default_scheme_tet_c::t8_element_face_neighbor_inside (const t8_element_t *
+                                                          elem,
+                                                          t8_element_t *
+                                                          neigh, int face)
+{
+  const t8_dtet_t    *t = (const t8_dtet_t *) elem;
+  t8_dtet_t          *n = (t8_dtet_t *) neigh;
+
+  T8_ASSERT (0 <= face && face < T8_DTET_FACES);
+  (void) t8_dtet_face_neighbour (t, face, n);
+  /* return true if neigh is inside the root */
+  return t8_dtet_is_inside_root (n);
+}
+
 void
 t8_default_scheme_tet_c::t8_element_set_linear_id (t8_element_t * elem,
                                                    int level, uint64_t id)

@@ -263,6 +263,21 @@ t8_default_scheme_hex_c::t8_element_boundary (const t8_element_t * elem,
   }
 }
 
+int
+t8_default_scheme_hex_c::t8_element_face_neighbor_inside (const t8_element_t *
+                                                          elem,
+                                                          t8_element_t *
+                                                          neigh, int face)
+{
+  const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
+  p8est_quadrant_t   *n = (p8est_quadrant_t *) neigh;
+
+  T8_ASSERT (0 <= face && face < P8EST_FACES);
+  p8est_quadrant_face_neighbor (q, face, n);
+  /* return true if neigh is inside the root */
+  return p8est_quadrant_is_inside_root (n);
+}
+
 void
 t8_default_scheme_hex_c::t8_element_set_linear_id (t8_element_t * elem,
                                                    int level, uint64_t id)

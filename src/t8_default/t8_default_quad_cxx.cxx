@@ -360,6 +360,21 @@ t8_default_scheme_quad_c::t8_element_boundary (const t8_element_t * elem,
   }
 }
 
+int
+t8_default_scheme_quad_c::t8_element_face_neighbor_inside (const t8_element_t
+                                                           * elem,
+                                                           t8_element_t *
+                                                           neigh, int face)
+{
+  const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
+  p4est_quadrant_t   *n = (p4est_quadrant_t *) neigh;
+
+  T8_ASSERT (0 <= face && face < P4EST_FACES);
+  p4est_quadrant_face_neighbor (q, face, n);
+  /* return true if neigh is inside the root */
+  return p4est_quadrant_is_inside_root (n);
+}
+
 void
 t8_default_scheme_quad_c::t8_element_anchor (const t8_element_t * elem,
                                              int coord[3])

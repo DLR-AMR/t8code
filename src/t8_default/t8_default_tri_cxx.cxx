@@ -244,6 +244,21 @@ t8_default_scheme_tri_c::t8_element_boundary (const t8_element_t * elem,
   }
 }
 
+int
+t8_default_scheme_tri_c::t8_element_face_neighbor_inside (const t8_element_t *
+                                                          elem,
+                                                          t8_element_t *
+                                                          neigh, int face)
+{
+  const t8_dtri_t    *t = (const t8_dtri_t *) elem;
+  t8_dtri_t          *n = (t8_dtri_t *) neigh;
+
+  T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
+  (void) t8_dtri_face_neighbour (t, face, n);
+  /* return true if neigh is inside the root */
+  return t8_dtri_is_inside_root (n);
+}
+
 void
 t8_default_scheme_tri_c::t8_element_set_linear_id (t8_element_t * elem,
                                                    int level, uint64_t id)

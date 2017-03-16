@@ -172,6 +172,13 @@ public:
                                            int min_dim, int length,
                                            t8_element_t ** boundary);
 
+  /** Construct the face neighbor of a given element if this face neighbor
+   * is inside the root tree. Return 0 otherwise. */
+  virtual int         t8_element_face_neighbor_inside (const t8_element_t *
+                                                       elem,
+                                                       t8_element_t * neigh,
+                                                       int face);
+
 /** Initialize an element according to a given linear id */
   virtual void        t8_element_set_linear_id (t8_element_t * elem,
                                                 int level, uint64_t id);
