@@ -83,7 +83,7 @@ t8_dline_init_linear_id (t8_dline_t * l, int level, uint64_t id)
 void
 t8_dline_successor (const t8_dline_t * l, t8_dline_t * succ, int level)
 {
-  t8_dline_coord_t    h;
+  t8_dline_coord_t    h = 0;
   int                 i;
 
   T8_ASSERT (1 <= level && level <= l->level);
