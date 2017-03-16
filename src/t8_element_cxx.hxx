@@ -210,6 +210,39 @@ public:
                                       const t8_element_t * elem2,
                                       t8_element_t * nca) = 0;
 
+  /** Given an element and a face of this element. If the face lies on the
+   *  tree boundary, return the face number of the tree face.
+   *  If not the return value is arbitrary.
+   * \param [in] elem     The element.
+   * \param [in] face     The index of a face of \a elem.
+   * \return The index of the tree face that \a face is a subface of, if
+   *         \a face is on a tree boundary.
+   *         Any arbitrary integer if \a is not at a tree boundary.
+   */
+  virtual int         t8_element_tree_face (const t8_element_t * elem,
+                                            int face) = 0;
+
+  /** Suppose we have two trees that share a common face f.
+   *  Given an element e that is a subface of f in one of the trees
+   *  and given the orientation of the tree connection, construct the face
+   *  element of the respective tree neighbor that logically coincides with e
+   *  but lies in the coordinate system of the neighbor tree.
+   *  \param [in] elem1     The face element.
+   *  \param [in,out] elem2 On return the face elment \a elem1 with respective
+   *                        to the coordinate system of the other tree.
+   *  \param [in] orientation The orientation of the tree-tree connection.
+   *                        \see t8_cmesh_set_join
+   *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
+   *                        the smaller face. A face f of tree T is smaller than
+   *                        f' of T' if either the eclass of T is smaller or if
+   *                        the classes are equal and f<f'. The orientation is
+   *                        defined in relation to the smaller face.
+   */
+  virtual void        t8_element_transform_face (const t8_element_t * elem1,
+                                                 t8_element_t * elem2,
+                                                 int orientation,
+                                                 int is_smaller_face) = 0;
+
   /** Construct the boundary element at a specific face.
    * \param [in] elem     The input element.
    * \param [in] face     The index of the face of which to construct the

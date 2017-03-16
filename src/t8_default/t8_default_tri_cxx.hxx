@@ -98,6 +98,20 @@ public:
                                       const t8_element_t * elem2,
                                       t8_element_t * nca);
 
+  /** Transform the coordinates of a triangle considered as boundary element
+   *  in a tree-tree connection. */
+  virtual void        t8_element_transform_face (const t8_element_t * elem1,
+                                                 t8_element_t * elem2,
+                                                 int orientation,
+                                                 int is_smaller_face)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
+
+  /** Return the tree face id given a boundary face. */
+  virtual int         t8_element_tree_face (const t8_element_t * elem,
+                                            int face);
+
   /** Construct the boundary element at a specific face. */
   virtual void        t8_element_boundary_face (const t8_element_t * elem,
                                                 int face,

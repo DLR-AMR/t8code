@@ -142,6 +142,14 @@ t8_default_scheme_tri_c::t8_element_nca (const t8_element_t * elem1,
   t8_dtri_nearest_common_ancestor (t1, t2, c);
 }
 
+int
+t8_default_scheme_tri_c::t8_element_tree_face (const t8_element_t * elem,
+                                               int face)
+{
+  T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
+  return t8_dtri_tree_face ((t8_dtri_t *) elem, face);
+}
+
 /* Construct the boundary element at a specific face. */
 void
 t8_default_scheme_tri_c::t8_element_boundary_face (const t8_element_t * elem,

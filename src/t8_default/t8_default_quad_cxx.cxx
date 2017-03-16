@@ -259,6 +259,15 @@ t8_default_scheme_quad_c::t8_element_nca (const t8_element_t * elem1,
   t8_element_copy_surround (q1, r);
 }
 
+int
+t8_default_scheme_quad_c::t8_element_tree_face (const t8_element_t * elem,
+                                                int face)
+{
+  T8_ASSERT (0 <= face && face < P4EST_FACES);
+  /* For quadrants the face and the tree face number are the same. */
+  return face;
+}
+
 void
 t8_default_scheme_quad_c::t8_element_boundary_face (const t8_element_t * elem,
                                                     int face,

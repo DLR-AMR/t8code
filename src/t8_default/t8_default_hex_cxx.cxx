@@ -155,6 +155,15 @@ t8_default_scheme_hex_c::t8_element_nca (const t8_element_t * elem1,
                                  (p8est_quadrant_t *) nca);
 }
 
+int
+t8_default_scheme_hex_c::t8_element_tree_face (const t8_element_t * elem,
+                                               int face)
+{
+  T8_ASSERT (0 <= face && face < P8EST_FACES);
+  /* For hexahedra the face and the tree face number are the same. */
+  return face;
+}
+
 void
 t8_default_scheme_hex_c::t8_element_boundary_face (const t8_element_t * elem,
                                                    int face,

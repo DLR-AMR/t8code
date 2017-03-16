@@ -625,6 +625,44 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
 }
 
 int
+t8_dtri_tree_face (t8_dtri_t * t, int face)
+{
+  T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
+#ifndef T8_DTRI_TO_DTET
+  /* For triangles of type 0 the face number coincides with the number of the
+   * root tree face. Triangles of type 1 cannot lie on the boundary of the
+   * tree and thus the return value can be arbitrary. */
+  return face;
+#else
+  /* For tets only tets of type not 3 can have tree boundary faces.
+   * All these tets of type not 0 (types 1, 2, 4, and 5) can only have one of
+   * their faces as boundary face. */
+  switch (face) {
+  case 0:
+    return face;
+    break;
+  case 1:
+    return 0;
+    break;                      /* face 0 of the tet is the boundary face */
+  case 2:
+    return 1;
+    break;                      /* face 2     "                "          */
+  case 3:
+    return -1;
+    break;                      /* no face                                */
+  case 4:
+    return 2;
+    break;                      /* face 1     "                "          */
+  case 5:
+    return 3;
+    break;                      /* face 3     "                "          */
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+#endif
+}
+
+int
 t8_dtri_is_inside_root (t8_dtri_t * t)
 {
   int                 is_inside;

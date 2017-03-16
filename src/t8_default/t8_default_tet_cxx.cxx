@@ -144,6 +144,14 @@ t8_default_scheme_tet_c::t8_element_nca (const t8_element_t * elem1,
   t8_dtet_nearest_common_ancestor (t1, t2, c);
 }
 
+int
+t8_default_scheme_tet_c::t8_element_tree_face (const t8_element_t * elem,
+                                               int face)
+{
+  T8_ASSERT (0 <= face && face < T8_DTET_FACES);
+  return t8_dtet_tree_face ((t8_dtet_t *) elem, face);
+}
+
 /* Construct the boundary element at a specific face. */
 /* This function is defined here instead of in t8_dtet_bits.c since
  * the compile logic does not allow for t8_dtri_t and t8_dtet_t to exist
@@ -156,49 +164,37 @@ t8_default_scheme_tet_c::t8_element_boundary_face (const t8_element_t * elem,
   const t8_default_tet_t *t = (const t8_default_tet_t *) elem;
   t8_dtri_t          *b = (t8_dtri_t *) boundary;
   t8_dtet_coord_t     tcoord[3] = { t->x, t->y, t->z };
+  int                 face_cat;
 
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
   /* The level of the boundary element is the same as the quadrant's level */
   b->level = t->level;
   /*
    * Depending on t's type and face, b's coordinates and type are defined
-   * through t's coordinates:
+   * through t's coordinates. The faces can be divided into 3 category.
+   * category 1: b.x = t.z b.y = t.x - t.y
+   * category 2: b.x = t.x b.y = t.z
+   * category 3: b.x = t.x b.y = t.y
    *
-   * t->type face ||   b->x    b->y   b->type
-   *
-   *    0      0         y       z        1
-   *           1         y       z        1
-   *           2         x       z        0
-   *           3         x       z        0
-   *
-   *    1      0         y       z        0
-   *           1         y       z        0
-   *           2         x       z        0
-   *           3         x       y        0
-   *
-   *    2      0         x       z        0
-   *           1         y       z        0
-   *           2         y       z        0
-   *           3         x       y        1
-   *
-   *    3      0         x       z        1
-   *           1         x       z        1
-   *           2         y       z        0
-   *           3         y       z        0
-   *
-   *    4      0         x       y        1
-   *           1         x       z        1
-   *           2         y       z        1
-   *           3         y       z        1
-   *
-   *    5      0         x       y        0
-   *           1         y       z        1
-   *           2         y       z        1
-   *           3         x       z        1
    */
-  b->x = t8_dtet_type_face_to_boundary[t->type][face][0];
-  b->y = t8_dtet_type_face_to_boundary[t->type][face][1];
-  b->type = t8_dtet_type_face_to_boundary[t->type][face][2];
+  face_cat = t8_dtet_type_face_to_boundary[t->type][face][0];
+  b->type = t8_dtet_type_face_to_boundary[t->type][face][1];
+  switch (face_cat) {
+  case 1:
+    b->x = t->z;
+    b->y = t->z - t->y;
+    break;
+  case 2:
+    b->x = t->x;
+    b->y = t->z;
+    break;
+  case 3:
+    b->x = t->x;
+    b->y = t->y;
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
 }
 
 void
