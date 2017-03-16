@@ -26,6 +26,7 @@
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_cxx.h>
 #include <t8_element_cxx.hxx>
+#include <t8_cmesh/t8_cmesh_trees.h>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -333,6 +334,116 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
   else {
     forest->local_num_elements = 0;
     forest->global_num_elements = 0;
+  }
+}
+
+t8_locidx_t
+t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
+                                 const t8_element_t * elem,
+                                 t8_element_t * neigh, int face)
+{
+  t8_eclass_scheme_c *ts;
+  t8_tree_t           tree;
+  t8_eclass_t         eclass;
+
+  /* Get a pointer to the tree to read its element class */
+  tree = t8_forest_get_tree (forest, ltreeid);
+  eclass = tree->eclass;
+  ts = forest->scheme_cxx->eclass_schemes[eclass];
+  if (ts->t8_element_face_neighbor_inside (elem, neigh, face)) {
+    /* The neighbor was constructed and is inside the current tree. */
+    return ltreeid;
+  }
+  else {
+    /* The neighbor does not lie inside the current tree. The content of neigh
+     * is undefined right now. */
+    t8_eclass_scheme_c *boundary_scheme;
+    t8_eclass_t         neigh_eclass;
+    t8_element_t       *face_element;
+    t8_cmesh_t          cmesh;
+    t8_locidx_t         lctree_id, lneigh_id;
+    t8_locidx_t        *face_neighbor;
+    int8_t             *ttf;
+    t8_ctree_t          elem_tree;
+    int                 tree_face, neigh_face;
+    int                 is_smaller, eclass_compare;
+    int                 F;
+
+    cmesh = forest->cmesh;
+    /* Get the scheme associated to the element class of the
+     * boundary element. */
+    boundary_scheme =
+      forest->scheme_cxx->eclass_schemes[t8_eclass_face_types[eclass][face]];
+    /* Allocate the face element */
+    boundary_scheme->t8_element_new (1, &face_element);
+    /* Compute the face element. */
+    ts->t8_element_boundary_face (elem, face, face_element);
+    /* Get the coarse tree that contains elem.
+     * Also get the face neighbor information of the coarse tree. */
+    lctree_id = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
+    elem_tree = t8_cmesh_trees_get_tree_ext (cmesh->trees,
+                                             lctree_id, &face_neighbor, &ttf);
+    /* Compute the face of elem_tree at which the face connection is. */
+    tree_face = ts->t8_element_tree_face (elem, face);
+    /* Compute the local id of the face neighbor tree. */
+    lneigh_id = face_neighbor[tree_face];
+    /* F is needed to compute the neighbor face number and the orientation.
+     * neigh_face = ttf % F
+     * or = ttf / F
+     */
+    F = t8_eclass_max_num_faces[cmesh->dimension];
+    /* compute the neighbor face */
+    neigh_face = ttf[tree_face] % F;
+    if (lneigh_id == lctree_id && tree_face == neigh_face) {
+      /* This face is a domain boundary and there is no neighbor */
+      return -1;
+    }
+    /* We now compute the eclass of the neighbor tree. */
+    if (lneigh_id < t8_cmesh_get_num_local_trees (cmesh)) {
+      /* The face neighbor is a local tree */
+      /* Get the eclass of the neighbor tree */
+      neigh_eclass = t8_cmesh_get_tree_class (cmesh, lneigh_id);
+    }
+    else {
+      /* The face neighbor is a ghost tree */
+      T8_ASSERT (cmesh->num_local_trees <= lneigh_id
+                 && lneigh_id < cmesh->num_ghosts + cmesh->num_local_trees);
+      /* Get the eclass of the neighbor tree */
+      neigh_eclass =
+        t8_cmesh_get_ghost_class (cmesh,
+                                  lneigh_id -
+                                  t8_cmesh_get_num_local_trees (cmesh));
+    }
+    /* We need to find out which face is the smaller one that is the one
+     * according to which the orientation was computed.
+     * face_a is smaller then face_b if either eclass_a < eclass_b
+     * or eclass_a = eclass_b and face_a < face_b. */
+    /* -1 eclass < neigh_eclass, 0 eclass = neigh_eclass, 1 eclass > neigh_eclass */
+    eclass_compare = t8_eclass_compare (eclass, neigh_eclass);
+    is_smaller = 0;
+    if (eclass_compare == -1) {
+      /* The face in the current tree is the smaller one */
+      is_smaller = 1;
+    }
+    else if (eclass_compare == 1) {
+      /* The face in the other tree is the smaller one */
+      is_smaller = 0;
+    }
+    else {
+
+      T8_ASSERT (eclass_compare == 0);
+      /* Check if the face of the current tree has a smaller index then
+       * the face of the neighbor tree. */
+      is_smaller = tree_face <= neigh_face;
+    }
+    /* We now transform the face element to the other tree. */
+    boundary_scheme->t8_element_transform_face (face_element, face_element,
+                                                ttf[tree_face] / F,
+                                                is_smaller);
+    /* And now we extrude the face to the new neighbor element */
+    ts->t8_element_extrude_face (face_element, neigh, neigh_face);
+
+    return lneigh_id;
   }
 }
 

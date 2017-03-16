@@ -344,6 +344,25 @@ t8_locidx_t         t8_forest_get_tree_element_count (t8_tree_t tree);
  */
 t8_gloidx_t         t8_forest_get_first_local_element_id (t8_forest_t forest);
 
+/** Construct the face neighbor of an element, possibly across tree boundaries.
+ * Returns the tree-id of the tree in which the neighbor element lies in.
+ *
+ * \param [in] elem The element to be considered.
+ * \param [in,out] neigh This element's data is filled with the
+ *                  data of the face neighbor. Otherwise the data can be modified
+ *                  arbitrarily.
+ * \param [in] face The number of the face along which the neighbor should be
+ *                  constructed.
+ * \return The local tree-id of the tree in which \a neigh is in.
+ *        -1 if there exists no neighbor across that face.
+ */
+t8_locidx_t         t8_forest_element_face_neighbor (t8_forest_t forest,
+                                                     t8_locidx_t ltreeid,
+                                                     const t8_element_t *
+                                                     elem,
+                                                     t8_element_t * neigh,
+                                                     int face);
+
 /* TODO: implement */
 void                t8_forest_save (t8_forest_t forest);
 
