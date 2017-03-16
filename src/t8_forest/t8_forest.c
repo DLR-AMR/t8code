@@ -452,6 +452,49 @@ t8_forest_get_cmesh (t8_forest_t forest)
   return forest->cmesh;
 }
 
+t8_element_t       *
+t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id)
+{
+  t8_tree_t           tree;
+  t8_locidx_t         ltree_a, ltree_b, ltree;
+
+  if (lelement_id >= t8_forest_get_num_element (forest)) {
+    return NULL;
+  }
+  ltree_a = 0;
+  ltree_b = t8_forest_get_num_local_trees (forest);
+  ltree = (ltree_a + ltree_b) / 2;
+  while (ltree_a < ltree_b) {
+    ltree = (ltree_a + ltree_b) / 2;
+    tree = t8_forest_get_tree (forest, ltree);
+    if (tree->elements_offset > lelement_id) {
+      /* We have to look further to the left */
+      ltree_b = ltree;
+    }
+    else if (tree->elements_offset + tree->elements.elem_count > lelement_id) {
+      /* We have found the tree */
+      ltree_a = ltree_b;
+    }
+    else {
+      /* We have to look further right */
+      ltree_a = ltree;
+    }
+  }
+  /* The tree that contains the element is now local tree ltree.
+   * Or the element is not a local element. */
+  tree = t8_forest_get_tree (forest, ltree);
+  if (tree->elements_offset <= lelement_id && lelement_id <
+      tree->elements_offset + tree->elements.elem_count) {
+    return (t8_element_t *)
+      t8_sc_array_index_locidx (&tree->elements, lelement_id);
+  }
+  /* The element was not found.
+   * This case is covered by the first if and should therefore
+   * never happen. */
+  SC_ABORT_NOT_REACHED ();
+  return NULL;
+}
+
 t8_locidx_t
 t8_forest_get_tree_element_count (t8_tree_t tree)
 {
@@ -495,10 +538,25 @@ t8_forest_ltreeid_to_cmesh_ltreeid (t8_forest_t forest, t8_locidx_t ltreeid)
 {
   t8_gloidx_t         cmesh_gfirst;
 
+  T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (forest->cmesh != NULL);
+  T8_ASSERT (0 <= ltreeid
+             && ltreeid < t8_forest_get_num_local_trees (forest));
 
   cmesh_gfirst = t8_cmesh_get_first_treeid (forest->cmesh);
   return forest->first_local_tree - cmesh_gfirst + ltreeid;
+}
+
+t8_ctree_t
+t8_forest_get_coarse_tree (t8_forest_t forest, t8_locidx_t ltreeid)
+{
+  t8_locidx_t         lctreeid;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  /* Compute the coarse tree's local id */
+  lctreeid = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
+  return t8_cmesh_get_tree (forest->cmesh, lctreeid);
 }
 
 void
