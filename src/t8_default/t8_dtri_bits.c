@@ -687,6 +687,7 @@ t8_dtri_transform_face (const t8_dtri_t * triangle1,
    *       / |                         |/
    *      x--x                         x
    *    v_0  v_1                      v_0
+   *
    */
   switch (orientation) {
   case 0:
@@ -707,6 +708,16 @@ int
 t8_dtri_is_inside_root (t8_dtri_t * t)
 {
   int                 is_inside;
+
+  if (t->level == 0) {
+    /* A level 0 simplex is only inside the root simplex if it
+     * is the root simplex. */
+    return t->type == 0 && t->x == 0 && t->y == 0
+#ifdef T8_DTRI_TO_DTET
+      && t->z == 0
+#endif
+      ;
+  }
   is_inside = (t->x >= 0 && t->x < T8_DTRI_ROOT_LEN) && (t->y >= 0) &&
 #ifdef T8_DTRI_TO_DTET
     (t->z >= 0) &&
@@ -716,8 +727,10 @@ t8_dtri_is_inside_root (t8_dtri_t * t)
 #else
     (t->z - t->x <= 0) &&
     (t->y - t->z <= 0) &&
-    (t->z == t->x ? (3 <= t->type && 5 <= t->type) : 1) &&
-    (t->y == t->x ? (1 <= t->type && 3 <= t->type) : 1) &&
+    (t->z == t->x ? (1 <= t->type && 3 <= t->type) : 1) &&
+    (t->y == t->x ? (3 <= t->type && 5 <= t->type) : 1) &&
+    /* If the anchor is on the x-y-z diagonal, only type 0 tets are inside root. */
+    ((t->x == t->y && t->y == t->z) ? t->type == 0 : 1) &&
 #endif
     1;
   return is_inside;
@@ -852,7 +865,10 @@ t8_dtri_is_ancestor (const t8_dtri_t * t, const t8_dtri_t * c)
              || (dir3 == n2
                  && (c->type == (type_t - sign * 1) % 6
                      || t->type == (type_t - sign * 2) % 6
-                     || t->type == (type_t - sign * 3) % 6)));
+                     || t->type == (type_t - sign * 3) % 6))
+             /* On the x-y-z diagonal only tets of the same type can be
+              * ancestor of each other. */
+             || (dir3 == n2 && n2 == n1 && type_t != c->type));
 #endif
   }
   else {
