@@ -42,7 +42,8 @@ T8_EXTERN_C_BEGIN ();
 /** The number of children that a face is refined to. */
 #define T8_DTET_FACE_CHILDREN 4
 
-/** The maximum refinement level allowed for a tetrahedron. */
+/** The maximum refinement level allowed for a tetrahedron.
+ *  Must be smaller or equal to T8_DTRI_MAXLEVEL. */
 #define T8_DTET_MAXLEVEL 21
 
 /** The length of the root tetrahedron in integer coordinates. */
@@ -50,6 +51,10 @@ T8_EXTERN_C_BEGIN ();
 
 /** The length of a tetrahedron at a given level in integer coordinates. */
 #define T8_DTET_LEN(l) (1 << (T8_DTET_MAXLEVEL - (l)))
+
+/** The length of a triangle divided by the length of a tet.
+ *  This is useful to convert boundary coordinates from tet to tri. */
+#define T8_DTRI_ROOT_BY_DTET_ROOT (1 << (T8_DTRI_MAXLEVEL - T8_DTET_MAXLEVEL))
 
 /** The type of a tetrahedron designates its position relative to the surrounding cube. */
 typedef int8_t      t8_dtet_type_t;

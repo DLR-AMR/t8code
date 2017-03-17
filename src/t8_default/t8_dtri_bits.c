@@ -23,6 +23,7 @@
 #ifndef T8_DTRI_TO_DTET
 #include "t8_dtri_bits.h"
 #include "t8_dtri_connectivity.h"
+#include "t8_dtet.h"
 #else
 #include "t8_dtet_bits.h"
 #include "t8_dtet_connectivity.h"

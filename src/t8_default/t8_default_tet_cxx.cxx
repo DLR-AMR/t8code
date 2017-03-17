@@ -169,27 +169,29 @@ t8_default_scheme_tet_c::t8_element_extrude_face (const t8_element_t * face,
   t->level = b->level;
   t->eclass = T8_ECLASS_TET;
   switch (root_face) {
+    /* Since the root triangle may have a different scale then the
+     * root tetrahedron, we have to rescale the coordinates. */
   case 0:
     t->type = b->type == 0 ? 0 : 1;
     t->x = T8_DTET_ROOT_LEN - T8_DTET_LEN (t->level);
-    t->y = b->x;
-    t->z = b->y;
+    t->y = ((int64_t) b->x * T8_DTET_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+    t->z = ((int64_t) b->y * T8_DTET_ROOT_LEN) / T8_DTRI_ROOT_LEN;
     break;
   case 1:
     t->type = b->type == 0 ? 0 : 2;
-    t->x = t->z = b->x;
-    t->y = b->y;
+    t->x = t->z = ((int64_t) b->x * T8_DTET_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+    t->y = ((int64_t) b->y * T8_DTET_ROOT_LEN) / T8_DTRI_ROOT_LEN;
     break;
   case 2:
     t->type = b->type == 0 ? 0 : 4;
-    t->x = b->x;
-    t->y = t->z = b->y;
+    t->x = ((int64_t) b->x * T8_DTET_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+    t->y = t->z = ((int64_t) b->y * T8_DTET_ROOT_LEN) / T8_DTRI_ROOT_LEN;
     break;
   case 3:
     t->type = b->type == 0 ? 0 : 5;
-    t->x = b->x;
+    t->x = ((int64_t) b->x * T8_DTET_ROOT_LEN) / T8_DTRI_ROOT_LEN;
     t->y = 0;
-    t->z = b->y;
+    t->z = ((int64_t) b->y * T8_DTET_ROOT_LEN) / T8_DTRI_ROOT_LEN;
     break;
   default:
     SC_ABORT_NOT_REACHED ();
@@ -220,21 +222,24 @@ t8_default_scheme_tet_c::t8_element_boundary_face (const t8_element_t * elem,
    * category 2: b.x = t.x b.y = t.z
    * category 3: b.x = t.x b.y = t.y
    *
+   * This coordinate then has to be rescaled, since a tet has side length
+   * T8_DTET_ROOT_LEN and a triangle T8_DTRI_ROOT_LEN
+   *
    */
   face_cat = t8_dtet_type_face_to_boundary[t->type][face][0];
   b->type = t8_dtet_type_face_to_boundary[t->type][face][1];
   switch (face_cat) {
   case 1:
-    b->x = t->z;
-    b->y = t->y;
+    b->x = t->z * T8_DTRI_ROOT_BY_DTET_ROOT;
+    b->y = t->y * T8_DTRI_ROOT_BY_DTET_ROOT;
     break;
   case 2:
-    b->x = t->x;
-    b->y = t->z;
+    b->x = t->x * T8_DTRI_ROOT_BY_DTET_ROOT;
+    b->y = t->z * T8_DTRI_ROOT_BY_DTET_ROOT;
     break;
   case 3:
-    b->x = t->x;
-    b->y = t->y;
+    b->x = t->x * T8_DTRI_ROOT_BY_DTET_ROOT;
+    b->y = t->y * T8_DTRI_ROOT_BY_DTET_ROOT;
     break;
   default:
     SC_ABORT_NOT_REACHED ();

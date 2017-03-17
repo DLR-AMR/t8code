@@ -24,6 +24,7 @@
 #include "t8_default_tri_cxx.hxx"
 #include "t8_dtri_bits.h"
 #include "t8_dline_bits.h"
+#include "t8_dtet.h"
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -186,20 +187,22 @@ t8_default_scheme_tri_c::t8_element_extrude_face (const t8_element_t * face,
    *      f_2
    *
    * Boundary triangles are alway of type 0.
+   * We have to scale the coordinates since the root triangle may
+   * have a different scale than the root line.
    */
   t->level = l->level;
   t->type = 0;
   switch (root_face) {
   case 0:
     t->x = T8_DTRI_ROOT_LEN - T8_DTRI_LEN (t->level);
-    t->y = l->x;
+    t->y = ((int64_t) l->x * T8_DTRI_ROOT_LEN) / T8_DLINE_ROOT_LEN;
     break;
   case 1:
-    t->x = l->x;
-    t->y = l->x;
+    t->x = ((int64_t) l->x * T8_DTRI_ROOT_LEN) / T8_DLINE_ROOT_LEN;
+    t->y = ((int64_t) l->x * T8_DTRI_ROOT_LEN) / T8_DLINE_ROOT_LEN;
     break;
   case 2:
-    t->x = l->x;
+    t->x = ((int64_t) l->x * T8_DTRI_ROOT_LEN) / T8_DLINE_ROOT_LEN;
     t->y = 0;
     break;
   default:
