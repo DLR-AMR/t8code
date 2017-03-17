@@ -63,35 +63,22 @@ t8_ghost_neighbor_test (t8_eclass_t eclass, sc_MPI_Comm comm)
   T8_ASSERT (elem != NULL);
   /* allocate memory for the face neighbor */
   ts->t8_element_new (1, &neigh);
-  if (eclass == T8_ECLASS_QUAD) {
+  {
     /* Iterate over all faces and create the face neighbor */
     int                 i, ret;
-    p4est_quadrant_t   *n;
+    int                 anchor_node[3];
+
     for (i = 0; i < t8_eclass_num_faces[eclass]; i++) {
       /* TODO: It does not seem to see the domain boundaries. */
       /* TODO: The domain boundaries are not set properly, investigate. */
       ret = t8_forest_element_face_neighbor (forest, 0, elem, neigh, i);
       if (ret != -1) {
-        n = (p4est_quadrant_t *) neigh;
+        ts->t8_element_anchor (neigh, anchor_node);
         t8_debugf
-          ("neighbor of 0 across face %i (in tree %i): (%i,%li,%li)\n", i,
-           ret, n->level, (long) n->x, (long) n->y);
-      }
-    }
-  }
-  else if (eclass == T8_ECLASS_TRIANGLE) {
-    /* Iterate over all faces and create the face neighbor */
-    int                 i, ret;
-    t8_dtri_t          *n;
-    for (i = 0; i < t8_eclass_num_faces[eclass]; i++) {
-      /* TODO: It does not seem to see the domain boundaries. */
-      /* TODO: The domain boundaries are not set properly, investigate. */
-      ret = t8_forest_element_face_neighbor (forest, 0, elem, neigh, i);
-      if (ret != -1) {
-        n = (t8_dtri_t *) neigh;
-        t8_debugf
-          ("neighbor of 0 across face %i (in tree %i): (%i,%li,%li)\n", i,
-           ret, n->level, (long) n->x, (long) n->y);
+          ("neighbor of 0 across face %i (in tree %i): (%i,%i,%i,%i)\n", i,
+           ret, ts->t8_element_level (neigh), anchor_node[0],
+           anchor_node[1], t8_eclass_to_dimension[eclass] > 2 ? anchor_node[2]
+           : -1);
       }
     }
   }
@@ -110,7 +97,12 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
+  t8_global_productionf ("Testing neighbors for triangle\n");
   t8_ghost_neighbor_test (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD);
+  t8_global_productionf ("Testing neighbors for tet\n");
+  t8_ghost_neighbor_test (T8_ECLASS_TET, sc_MPI_COMM_WORLD);
+  t8_global_productionf ("Testing neighbors for hex\n");
+  t8_ghost_neighbor_test (T8_ECLASS_HEX, sc_MPI_COMM_WORLD);
 
   sc_finalize ();
 
