@@ -210,7 +210,7 @@ t8_default_scheme_tet_c::t8_element_boundary_face (const t8_element_t * elem,
   t8_dtet_coord_t     tcoord[3] = { t->x, t->y, t->z };
   int                 face_cat;
 
-  T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
+  T8_ASSERT (0 <= face && face < T8_DTET_FACES);
   /* The level of the boundary element is the same as the quadrant's level */
   b->level = t->level;
   /*

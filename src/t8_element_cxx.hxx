@@ -89,6 +89,7 @@ public:
    * \param [in] source The element whose entries will be copied to \b dest.
    * \param [in,out] dest This element's entries will be overwritted with the
    *                    entries of \b source.
+   * \note \source and \dest may point to the same element.
    */
   virtual void        t8_element_copy (const t8_element_t * source,
                                        t8_element_t * dest) = 0;
