@@ -357,7 +357,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
   else {
     /* The neighbor does not lie inside the current tree. The content of neigh
      * is undefined right now. */
-    t8_eclass_scheme_c *boundary_scheme;
+    t8_eclass_scheme_c *boundary_scheme, *neighbor_scheme;
     t8_eclass_t         neigh_eclass;
     t8_element_t       *face_element;
     t8_cmesh_t          cmesh;
@@ -441,7 +441,9 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
                                                 ttf[tree_face] / F,
                                                 is_smaller);
     /* And now we extrude the face to the new neighbor element */
-    ts->t8_element_extrude_face (face_element, neigh, neigh_face);
+    neighbor_scheme = forest->scheme_cxx->eclass_schemes[neigh_eclass];
+    neighbor_scheme->t8_element_extrude_face (face_element, neigh,
+                                              neigh_face);
 
     return lneigh_id;
   }
