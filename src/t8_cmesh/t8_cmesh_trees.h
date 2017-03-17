@@ -265,6 +265,8 @@ void                t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees,
 /** Set all neighbor fields of all local trees and ghosts to boundary.
  * \param [in,out]  cmesh, The associated cmesh.
  * \param [in,out]  trees, The trees structure.
+ * A face f of tree t counts as boundary if the face-neighbor is also t
+ * at face f.
  */
 void                t8_cmesh_trees_set_all_boundary (t8_cmesh_t cmesh,
                                                      t8_cmesh_trees_t trees);

@@ -288,18 +288,25 @@ t8_cmesh_trees_set_all_boundary (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
   t8_locidx_t        *face_neighbor;
   t8_gloidx_t        *gface_neighbor;
   int                 iface;
+  int8_t             *ttf;
 
   for (ltree = 0; ltree < cmesh->num_local_trees; ltree++) {
-    tree = t8_cmesh_trees_get_tree_ext (trees, ltree, &face_neighbor, NULL);
+    tree = t8_cmesh_trees_get_tree_ext (trees, ltree, &face_neighbor, &ttf);
     for (iface = 0; iface < t8_eclass_num_faces[tree->eclass]; iface++) {
+      /* We set the face neighbor at this side to be the current tree
+       * and current face. */
       face_neighbor[iface] = ltree;
+      ttf[iface] = iface;
     }
   }
   for (lghost = 0; lghost < cmesh->num_ghosts; lghost++) {
     ghost =
-      t8_cmesh_trees_get_ghost_ext (trees, lghost, &gface_neighbor, NULL);
+      t8_cmesh_trees_get_ghost_ext (trees, lghost, &gface_neighbor, &ttf);
     for (iface = 0; iface < t8_eclass_num_faces[ghost->eclass]; iface++) {
+      /* We set the face neighbor at this side to be the current tree
+       * and current face. */
       gface_neighbor[iface] = ghost->treeid;
+      ttf[iface] = iface;
     }
   }
 }
@@ -823,8 +830,8 @@ t8_cmesh_trees_is_face_consistend (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
       neigh1 = faces1[iface];
       face1 = ttf1[iface] % F;
       orientation = ttf1[iface] / F;
-      if (neigh1 == ltree) {
-        /* This face is a boundary and therefor we do not check anything */
+      if (neigh1 == ltree && face1 == iface) {
+        /* This face is a boundary and therefore we do not check anything */
         continue;
       }
       if (neigh1 < cmesh->num_local_trees) {
@@ -862,7 +869,7 @@ t8_cmesh_trees_is_face_consistend (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
       gneigh1 = gfaces1[iface];
       face1 = ttf1[iface] % F;
       orientation = ttf1[iface] / F;
-      if (gneigh1 == ghost1->treeid) {
+      if (gneigh1 == ghost1->treeid && face1 == iface) {
         /* This face is a boundary and we do not check anything */
         continue;
       }
