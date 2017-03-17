@@ -87,6 +87,10 @@ t8_default_scheme_quad_c::t8_element_copy (const t8_element_t * source,
   const p4est_quadrant_t *q = (const p4est_quadrant_t *) source;
   p4est_quadrant_t   *r = (p4est_quadrant_t *) dest;
 
+  if (r == q) {
+    /* Do nothing if they are already the same quadrant. */
+    return;
+  }
   *r = *q;
   t8_element_copy_surround (q, r);
 }
@@ -257,6 +261,59 @@ t8_default_scheme_quad_c::t8_element_nca (const t8_element_t * elem1,
 
   p4est_nearest_common_ancestor (q1, q2, r);
   t8_element_copy_surround (q1, r);
+}
+
+void
+t8_default_scheme_quad_c::t8_element_transform_face (const t8_element_t *
+                                                     elem1,
+                                                     t8_element_t * elem2,
+                                                     int orientation,
+                                                     int is_smaller_face)
+{
+  const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem1;
+  p4est_quadrant_t   *p = (p4est_quadrant_t *) elem2;
+  p4est_qcoord_t      h = P4EST_QUADRANT_LEN (q->level);
+  T8_ASSERT (0 <= orientation && orientation < P4EST_FACES);
+
+  p->level = q->level;
+  /*
+   * The faces of the root quadrant are enumerated like this:
+   *
+   *   v_2      v_3
+   *     x -->-- x
+   *     |       |
+   *     ^       ^
+   *     |       |
+   *     x -->-- x
+   *   v_0      v_1
+   *
+   * Orientation is the corner number of the bigger face that coincides
+   * with the corner v_0 of the smaller face.
+   */
+  p->x = orientation & 1 ? P4EST_ROOT_LEN - q->x - h : q->x;
+  p->y = orientation & 2 ? P4EST_ROOT_LEN - q->y - h : q->y;
+#if 0
+  /* Below is a non-optimized version of this. Here it is more obvious
+   * what happens. */
+  switch (orientation) {
+  case 0:                      /* Nothing to do */
+    break;
+  case 1:
+    p->x = P4EST_ROOT_LEN - q->x - h;
+    /* p->y remains q->y */
+    break;
+  case 2:
+    /* p->x remains q->x */
+    p->y = P4EST_ROOT_LEN - q->y - h;
+    break;
+  case 3:
+    p->x = P4EST_ROOT_LEN - q->x - h;
+    p->y = P4EST_ROOT_LEN - q->y - h;
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+#endif
 }
 
 void

@@ -89,6 +89,10 @@ compute_type (const t8_dtri_t * t, int level)
 void
 t8_dtri_copy (const t8_dtri_t * t, t8_dtri_t * dest)
 {
+  if (t == dest) {
+    /* Do nothing if the are already the same. */
+    return;
+  }
   memcpy (dest, t, sizeof (t8_dtri_t));
 }
 
