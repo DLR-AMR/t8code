@@ -331,24 +331,26 @@ t8_default_scheme_quad_c::t8_element_extrude_face (const t8_element_t * face,
    *        f_3
    *
    * The arrows >,^ denote the orientation of the faces.
+   * We need to scale the coordinates since a root line may have a different
+   * length than a root quad.
    */
   q->level = l->level;
   switch (root_face) {
   case 0:
     q->x = 0;
-    q->y = l->x;
+    q->y = ((int64_t) l->x * P4EST_ROOT_LEN) / T8_DLINE_ROOT_LEN;
     break;
   case 1:
-    q->x = P4EST_ROOT_LEN - P4EST_QUADRANT_LEN (q->level);
-    q->y = l->x;
+    q->x = P4EST_LAST_OFFSET (q->level);
+    q->y = ((int64_t) l->x * P4EST_ROOT_LEN) / T8_DLINE_ROOT_LEN;
     break;
   case 2:
-    q->x = l->x;
+    q->x = ((int64_t) l->x * P4EST_ROOT_LEN) / T8_DLINE_ROOT_LEN;
     q->y = 0;
     break;
   case 3:
-    q->x = l->x;
-    q->y = P4EST_ROOT_LEN - P4EST_QUADRANT_LEN (q->level);
+    q->x = ((int64_t) l->x * P4EST_ROOT_LEN) / T8_DLINE_ROOT_LEN;
+    q->y = P4EST_LAST_OFFSET (q->level);
     break;
   default:
     SC_ABORT_NOT_REACHED ();
@@ -387,7 +389,8 @@ t8_default_scheme_quad_c::t8_element_boundary_face (const t8_element_t * elem,
    * If face = 0 or face = 1 then l->x = q->y
    * if face = 2 or face = 3 then l->x = q->x
    */
-  l->x = face >> 1 ? q->x : q->y;
+  l->x = ((face >> 1 ? q->x : q->y) *
+          ((int64_t) T8_DLINE_ROOT_LEN) / P4EST_ROOT_LEN);
 }
 
 void

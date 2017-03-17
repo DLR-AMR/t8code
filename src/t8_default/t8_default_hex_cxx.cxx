@@ -184,37 +184,40 @@ t8_default_scheme_hex_c::t8_element_extrude_face (const t8_element_t * face,
    *     |  f_2 |/
    *     x ---- x
    *        f_4
+   *
+   * We need to rescale the coordinates since a quadrant may have a different
+   * root lenght than an octant.
    */
   switch (root_face) {
   case 0:
     q->x = 0;
-    q->y = b->x;
-    q->z = b->y;
+    q->y = ((int64_t) b->x * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    q->z = ((int64_t) b->y * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
     break;
   case 1:
-    q->x = P4EST_ROOT_LEN - P4EST_QUADRANT_LEN (q->level);
-    q->y = b->x;
-    q->z = b->y;
+    q->x = P8EST_LAST_OFFSET (q->level);
+    q->y = ((int64_t) b->x * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    q->z = ((int64_t) b->y * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
     break;
   case 2:
-    q->x = b->x;
+    q->x = ((int64_t) b->x * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
     q->y = 0;
-    q->z = b->y;
+    q->z = ((int64_t) b->y * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
     break;
   case 3:
-    q->x = b->x;
-    q->y = P4EST_ROOT_LEN - P4EST_QUADRANT_LEN (q->level);
-    q->z = b->y;
+    q->x = ((int64_t) b->x * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    q->y = P8EST_LAST_OFFSET (q->level);
+    q->z = ((int64_t) b->y * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
     break;
   case 4:
-    q->x = b->x;
-    q->y = b->y;
+    q->x = ((int64_t) b->x * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    q->y = ((int64_t) b->y * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
     q->z = 0;
     break;
   case 5:
-    q->x = b->x;
-    q->y = b->y;
-    q->z = P4EST_ROOT_LEN - P4EST_QUADRANT_LEN (q->level);
+    q->x = ((int64_t) b->x * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    q->y = ((int64_t) b->y * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    q->z = P8EST_LAST_OFFSET (q->level);
     break;
   }
 }
@@ -245,9 +248,12 @@ t8_default_scheme_hex_c::t8_element_boundary_face (const t8_element_t * elem,
    * If face = 0 or face = 1 then b->x = q->y, b->y = q->z
    * if face = 2 or face = 3 then b->x = q->x, b->y = q->z
    * if face = 4 or face = 5 then b->x = q->x, b->y = q->y
+   *
+   * We have to scale the coordinates since a root quadrant may have
+   * different lenght than a root hex.
    */
-  b->x = face >> 1 ? q->x : q->y;       /* true if face >= 2 */
-  b->y = face >> 2 ? q->y : q->z;       /* true if face >= 4 */
+  b->x = (face >> 1 ? q->x : q->y) * (int64_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN; /* true if face >= 2 */
+  b->y = (face >> 2 ? q->y : q->z) * (int64_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN; /* true if face >= 4 */
 }
 
 void
