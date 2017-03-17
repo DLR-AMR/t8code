@@ -642,7 +642,7 @@ t8_dtri_tree_face (t8_dtri_t * t, int face)
   /* For tets only tets of type not 3 can have tree boundary faces.
    * All these tets of type not 0 (types 1, 2, 4, and 5) can only have one of
    * their faces as boundary face. */
-  switch (face) {
+  switch (t->type) {
   case 0:
     return face;
     break;
