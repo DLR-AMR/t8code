@@ -666,6 +666,42 @@ t8_dtri_tree_face (t8_dtri_t * t, int face)
 #endif
 }
 
+#ifndef T8_DTRI_TO_DTET
+/* This function has only a triangle version. */
+void
+t8_dtri_transform_face (const t8_dtri_t * triangle1,
+                        t8_dtri_t * triangle2,
+                        int orientation, int is_smaller_face)
+{
+  t8_dtri_coord_t     h = T8_DTRI_LEN (triangle1->level);
+  triangle2->level = triangle1->level;
+  triangle2->type = triangle1->type;
+  /*
+   * The corners of the triangle are enumerated like this
+   *        type 0                    type 1
+   *      also root tree
+   *         v_2                     v_1  v_2
+   *         x                         x--x
+   *        /|                         | /
+   *       / |                         |/
+   *      x--x                         x
+   *    v_0  v_1                      v_0
+   */
+  switch (orientation) {
+  case 0:
+    t8_dtri_copy (triangle1, triangle2);
+    break;
+  case 1:
+    triangle2->y = triangle1->y;
+    triangle2->x = T8_DTRI_ROOT_LEN - triangle1->x - h;
+    break;
+  case 2:
+    triangle2->x = T8_DTRI_ROOT_LEN - triangle1->y - h;
+    triangle2->y = T8_DTRI_ROOT_LEN - triangle1->x - h;
+  }
+}
+#endif
+
 int
 t8_dtri_is_inside_root (t8_dtri_t * t)
 {

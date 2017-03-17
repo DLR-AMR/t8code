@@ -290,11 +290,6 @@ t8_default_scheme_quad_c::t8_element_transform_face (const t8_element_t *
    * Orientation is the corner number of the bigger face that coincides
    * with the corner v_0 of the smaller face.
    */
-  p->x = orientation & 1 ? P4EST_ROOT_LEN - q->x - h : q->x;
-  p->y = orientation & 2 ? P4EST_ROOT_LEN - q->y - h : q->y;
-#if 0
-  /* Below is a non-optimized version of this. Here it is more obvious
-   * what happens. */
   switch (orientation) {
   case 0:                      /* Nothing to do */
     break;
@@ -307,13 +302,12 @@ t8_default_scheme_quad_c::t8_element_transform_face (const t8_element_t *
     p->y = P4EST_ROOT_LEN - q->y - h;
     break;
   case 3:
-    p->x = P4EST_ROOT_LEN - q->x - h;
-    p->y = P4EST_ROOT_LEN - q->y - h;
+    p->x = P4EST_ROOT_LEN - q->y - h;
+    p->y = P4EST_ROOT_LEN - q->x - h;
     break;
   default:
     SC_ABORT_NOT_REACHED ();
   }
-#endif
 }
 
 void

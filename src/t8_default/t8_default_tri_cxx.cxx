@@ -150,6 +150,17 @@ t8_default_scheme_tri_c::t8_element_tree_face (const t8_element_t * elem,
   return t8_dtri_tree_face ((t8_dtri_t *) elem, face);
 }
 
+void
+t8_default_scheme_tri_c::t8_element_transform_face (const t8_element_t *
+                                                    elem1,
+                                                    t8_element_t * elem2,
+                                                    int orientation,
+                                                    int is_smaller_face)
+{
+  t8_dtri_transform_face ((const t8_dtri_t *) elem1, (t8_dtri_t *) elem2,
+                          orientation, is_smaller_face);
+}
+
 /* Construct the inner element from a boundary element. */
 /* This function is defined here instead of in t8_dri_bits.c since
  * the compile logic does not allow for t8_dtri_t and t8_dtet_t to exist

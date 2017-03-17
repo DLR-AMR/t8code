@@ -136,6 +136,28 @@ void                t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
  */
 int                 t8_dtri_tree_face (t8_dtri_t * t, int face);
 
+/** Suppose we have two trees that share a common triangle f.
+ *  Given a triangle e that is a subface of f in one of the trees
+ *  and given the orientation of the tree connection, construct the face
+ *  triangle of the respective tree neighbor that logically coincides with e
+ *  but lies in the coordinate system of the neighbor tree.
+ *  \param [in] triangle1     The face triangle.
+ *  \param [in,out] triangle2 On return the face triangle \a triangle1 with respective
+ *                        to the coordinate system of the other tree.
+ *  \param [in] orientation The orientation of the tree-tree connection.
+ *                        \see t8_cmesh_set_join
+ *  \param [in] is_smaller_face Flag to declare whether \a triangle1 belongs to
+ *                        the smaller face. A face f of tree T is smaller than
+ *                        f' of T' if either the eclass of T is smaller or if
+ *                        the classes are equal and f<f'. The orientation is
+ *                        defined in relation to the smaller face.
+ * \note \a triangle1 and \a triangle2 may point to the same element.
+ */
+void                t8_dtri_transform_face (const t8_dtri_t * triangle1,
+                                            t8_dtri_t * triangle2,
+                                            int orientation,
+                                            int is_smaller_face);
+
 /** Test if a triangle lies inside of the root triangle,
  *  that is the triangle of level 0, anchor node (0,0)
  *  and type 0.
