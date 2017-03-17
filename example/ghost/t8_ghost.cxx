@@ -68,9 +68,8 @@ t8_ghost_neighbor_test (t8_eclass_t eclass, sc_MPI_Comm comm)
     int                 i, ret;
     int                 anchor_node[3];
 
+    t8_debugf ("root len = %i\n", ts->t8_element_root_len (elem));
     for (i = 0; i < t8_eclass_num_faces[eclass]; i++) {
-      /* TODO: It does not seem to see the domain boundaries. */
-      /* TODO: The domain boundaries are not set properly, investigate. */
       ret = t8_forest_element_face_neighbor (forest, 0, elem, neigh, i);
       if (ret != -1) {
         ts->t8_element_anchor (neigh, anchor_node);
