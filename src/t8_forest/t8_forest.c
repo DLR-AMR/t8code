@@ -459,10 +459,10 @@ t8_forest_get_cmesh (t8_forest_t forest)
  * smaller local tree id.
  */
 static int
-t8_forest_compare_elem_tree (const void * lelement_id,const void * ltree)
+t8_forest_compare_elem_tree (const void *lelement_id, const void *ltree)
 {
-  t8_locidx_t             leid = *(const t8_locidx_t *) lelement_id;
-  const t8_tree_t         tree = (const t8_tree_t) ltree;
+  t8_locidx_t         leid = *(const t8_locidx_t *) lelement_id;
+  const t8_tree_t     tree = (const t8_tree_t) ltree;
 
   if (tree->elements_offset > leid) {
     /* We have to look further to the left */
