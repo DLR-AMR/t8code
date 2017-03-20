@@ -452,34 +452,78 @@ t8_forest_get_cmesh (t8_forest_t forest)
   return forest->cmesh;
 }
 
+/* Compare function for the binary search in t8_forest_get_element.
+ * Given a local element id and tree, this function returns 0
+ * if the  element is inside the tree, -1 if it is inside a tree with
+ * bigger local tree id and +1 if the element is inside a tree with
+ * smaller local tree id.
+ */
+static int
+t8_forest_compare_elem_tree (const void * lelement_id,const void * ltree)
+{
+  t8_locidx_t             leid = *(const t8_locidx_t *) lelement_id;
+  const t8_tree_t         tree = (const t8_tree_t) ltree;
+
+  if (tree->elements_offset > leid) {
+    /* We have to look further to the left */
+    return -1;
+  }
+  else if (tree->elements_offset + tree->elements.elem_count > leid) {
+    /* We have found the tree */
+    return 0;
+  }
+  else {
+    /* We have to look further right */
+    return 1;
+  }
+}
+
 t8_element_t       *
 t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id)
 {
   t8_tree_t           tree;
-  t8_locidx_t         ltree_a, ltree_b, ltree;
+  t8_locidx_t         ltree;
+#ifdef T8_ENABLE_DEBUG
+  t8_locidx_t         ltreedebug;
+#endif
 
+  T8_ASSERT (lelement_id >= 0);
   if (lelement_id >= t8_forest_get_num_element (forest)) {
     return NULL;
   }
-  ltree_a = 0;
-  ltree_b = t8_forest_get_num_local_trees (forest);
-  ltree = (ltree_a + ltree_b) / 2;
-  while (ltree_a < ltree_b) {
-    ltree = (ltree_a + ltree_b) / 2;
-    tree = t8_forest_get_tree (forest, ltree);
-    if (tree->elements_offset > lelement_id) {
-      /* We have to look further to the left */
-      ltree_b = ltree;
-    }
-    else if (tree->elements_offset + tree->elements.elem_count > lelement_id) {
-      /* We have found the tree */
-      ltree_a = ltree_b;
-    }
-    else {
-      /* We have to look further right */
-      ltree_a = ltree;
+  /* We optimized the binary search out by using sc_bsearch,
+   * but keep it in for debugging. We check whether the hand-written
+   * binary search matches the sc_array_bsearch. */
+#ifdef T8_ENABLE_DEBUG
+  {
+    t8_locidx_t         ltree_a, ltree_b;
+    ltree_a = 0;
+    ltree_b = t8_forest_get_num_local_trees (forest);
+    ltreedebug = (ltree_a + ltree_b) / 2;
+    while (ltree_a < ltree_b) {
+      ltreedebug = (ltree_a + ltree_b) / 2;
+      tree = t8_forest_get_tree (forest, ltreedebug);
+      if (tree->elements_offset > lelement_id) {
+        /* We have to look further to the left */
+        ltree_b = ltreedebug;
+      }
+      else if (tree->elements_offset + tree->elements.elem_count >
+               lelement_id) {
+        /* We have found the tree */
+        ltree_a = ltree_b;
+      }
+      else {
+        /* We have to look further right */
+        ltree_a = ltreedebug;
+      }
     }
   }
+#endif
+  ltree =
+    sc_array_bsearch (forest->trees, &lelement_id,
+                      t8_forest_compare_elem_tree);
+  T8_ASSERT (ltreedebug == ltree);
+
   /* The tree that contains the element is now local tree ltree.
    * Or the element is not a local element. */
   tree = t8_forest_get_tree (forest, ltree);
