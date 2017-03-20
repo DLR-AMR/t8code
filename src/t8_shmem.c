@@ -124,6 +124,22 @@ t8_shmem_array_set_gloidx (t8_shmem_array_t array, int index,
   ((t8_gloidx_t *) array->array)[index] = value;
 }
 
+void *
+t8_shmem_array_get_array (t8_shmem_array_t array)
+{
+  T8_ASSERT (array != NULL);
+  return array->array;
+}
+
+void *
+t8_shmem_array_index (t8_shmem_array_t array, size_t index)
+{
+  T8_ASSERT (array != NULL);
+  T8_ASSERT (0 <= index && index < array->elem_count);
+
+  return array->array + index * array->elem_size;
+}
+
 /* TODO: implement */
 int
 t8_shmem_array_is_equal (t8_shmem_array_t array_a, t8_shmem_array_t array_b)

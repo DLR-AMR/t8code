@@ -122,6 +122,20 @@ t8_gloidx_t        *t8_shmem_array_get_gloidx_array (t8_shmem_array_t array);
 t8_gloidx_t         t8_shmem_array_get_gloidx (t8_shmem_array_t array,
                                                int index);
 
+/** Return a pointer to the data array of a t8_shmem_array.
+ * \param [in]          array The t8_shmem_array.
+ * \return                    A pointer to the data array of \a array.
+ */
+void               *t8_shmem_array_get_array (t8_shmem_array_t array);
+
+/** Return a pointer to an element in a t8_shmem_array.
+ * \param [in]          array The t8_shmem_array.
+ * \param [in]          index The index of an element.
+ * \return              A pointer to the element at \a index in \a array.
+ */
+void               *t8_shmem_array_index (t8_shmem_array_t array,
+                                          size_t index);
+
 /* TODO: implement and comment */
 /* returns true if arrays are equal */
 int                 t8_shmem_array_is_equal (t8_shmem_array_t array_a,
