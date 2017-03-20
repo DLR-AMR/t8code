@@ -81,6 +81,10 @@ typedef struct t8_forest
   t8_shmem_array_t    element_offsets; /**< If partitioned, for each process the global index
                                             of its first element. Since it is memory consuming,
                                             it is usually only constructed when needed and otherwise unallocated. */
+  t8_shmem_array_t    global_first_element; /**< If partitioned, for each process the linear of of its first element
+                                             \ref t8_element_set_linear_id. Stores 0 for empty processes.
+                                            Since it is memory consuming,
+                                            it is usually only constructed when needed and otherwise unallocated. */
 
   t8_locidx_t         local_num_elements;  /**< Number of elements on this processor. */
   t8_gloidx_t         global_num_elements; /**< Number of elements on all processors. */

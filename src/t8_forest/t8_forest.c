@@ -754,6 +754,10 @@ t8_forest_reset (t8_forest_t * pforest)
   if (forest->element_offsets != NULL) {
     t8_shmem_array_destroy (&forest->element_offsets);
   }
+  /* free the memory of the global_first_element array */
+  if (forest->global_first_element != NULL) {
+    t8_shmem_array_destroy (&forest->global_first_element);
+  }
   if (forest->profile != NULL) {
     T8_FREE (forest->profile);
   }

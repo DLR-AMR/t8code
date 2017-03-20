@@ -36,6 +36,17 @@ T8_EXTERN_C_BEGIN ();
 /* TODO: document */
 void                t8_forest_partition (t8_forest_t forest);
 
+/** Create the element_offset array of a partitioned forest.
+ * \param [in,out]  forest The forest.
+ */
+void                t8_forest_partition_create_offsets (t8_forest_t forest);
+
+/** Create the array of global_first_element ids of a partitioned forest.
+ * \param [in,out]  forest The forest.
+ */
+void                t8_forest_partition_create_first_elements (t8_forest_t
+                                                               forest);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_PARTITION_H! */

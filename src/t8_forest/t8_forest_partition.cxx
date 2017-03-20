@@ -70,7 +70,7 @@ t8_forest_partition_empty (t8_gloidx_t * offset, int rank)
 /* For a committed forest create the array of element_offsets
  * and store it in forest->element_offsets
  */
-static void
+void
 t8_forest_partition_create_offsets (t8_forest_t forest)
 {
   sc_MPI_Comm         comm;
@@ -94,6 +94,63 @@ t8_forest_partition_create_offsets (t8_forest_t forest)
                             forest->element_offsets, 1, T8_MPI_GLOIDX);
   t8_shmem_array_set_gloidx (forest->element_offsets, forest->mpisize,
                              forest->global_num_elements);
+}
+
+void
+t8_forest_partition_create_first_elements (t8_forest_t forest)
+{
+  sc_MPI_Comm         comm;
+  uint64_t            local_first_element;
+  t8_element_t       *first_element;
+  t8_eclass_scheme_c *ts;
+  int                 level;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  T8_ASSERT (forest->global_first_element == NULL);
+  t8_debugf ("Building global first elements for forest %p\n", forest);
+  comm = forest->mpicomm;
+
+  /* Set the shmem array type of comm */
+  sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
+  /* Initialize the offset array as a shmem array
+   * holding mpisize+1 many uint64_t to store the elements linear ids */
+  t8_shmem_array_init (&forest->global_first_element, sizeof (uint64_t),
+                       forest->mpisize, comm);
+
+  /* Get a pointer to the first local element. */
+  first_element = t8_forest_get_element (forest, 0);
+  if (first_element == NULL) {
+    /* This process is empty, we store 0 in the array */
+    local_first_element = 0;
+  }
+  else {
+    /* This process is not empty, the element was found, so we compute
+     * its linear id. */
+    /* Get the eclass_scheme of the element. */
+    ts = t8_forest_get_eclass_scheme (forest,
+                                      t8_forest_get_tree_class (forest, 0));
+    /* Get the level of the element. */
+    level = ts->t8_element_level (first_element);
+    /* Compute the linear id of the element. */
+    local_first_element = ts->t8_element_get_linear_id (first_element, level);
+  }
+  /* Collect all first global indices in the array */
+#ifdef T8_ENABLE_DEBUG
+#ifdef SC_ENABLE_MPI
+  {
+    /* We assert that we use the correct data size in the allgather call. */
+    int                 mpiret, size;
+    mpiret = MPI_Type_size (sc_MPI_UNSIGNED_LONG_LONG, &size);
+    SC_CHECK_MPI (mpiret);
+    T8_ASSERT (size == sizeof (uint64_t));
+  }
+#endif
+#endif
+  t8_shmem_array_allgather (&local_first_element, 1,
+                            sc_MPI_UNSIGNED_LONG_LONG,
+                            forest->global_first_element, 1,
+                            sc_MPI_UNSIGNED_LONG_LONG);
 }
 
 /* Calculate the new element_offset for forest from

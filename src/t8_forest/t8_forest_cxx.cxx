@@ -25,6 +25,7 @@
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_cxx.h>
+#include <t8_forest/t8_forest_partition.h>
 #include <t8_element_cxx.hxx>
 #include <t8_cmesh/t8_cmesh_trees.h>
 
