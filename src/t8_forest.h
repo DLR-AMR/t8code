@@ -335,6 +335,14 @@ t8_element_t       *t8_forest_get_element (t8_forest_t forest,
  */
 t8_locidx_t         t8_forest_get_tree_element_count (t8_tree_t tree);
 
+/** Return the eclass of a tree in a forest.
+ * \param [in]      forest    The forest.
+ * \param [in]      ltreeid   The local id of a tree in \a forest.
+ * \return                    The element class of the tree with local id \a ltreeid.
+ */
+t8_eclass_t         t8_forest_get_tree_class (t8_forest_t forest,
+                                              t8_locidx_t ltreeid);
+
 /** Compute the global index of the first local element of a forest.
  * This function is collective.
  * \param [in]     forest       A committed forest, whose first element's index is computed.
@@ -343,6 +351,23 @@ t8_locidx_t         t8_forest_get_tree_element_count (t8_tree_t tree);
  * This function is collective and must be called on each process.
  */
 t8_gloidx_t         t8_forest_get_first_local_element_id (t8_forest_t forest);
+
+/** Return the element scheme associated to a forest.
+ * \param [in]      forest.     A committed forest.
+ * \return          The element scheme of the forest.
+ * \see t8_forest_set_scheme
+ */
+t8_scheme_cxx_t    *t8_forest_get_scheme (t8_forest_t forest);
+
+/** Return the eclass scheme of a given element class associated to a forest.
+ * \param [in]      forest.     A committed forest.
+ * \param [in]      eclass.     An element class.
+ * \return          The eclass scheme of \a eclass associated to forest.
+ * \see t8_forest_set_scheme
+ * \note  The forest is not required to have trees of class \a eclass.
+ */
+t8_eclass_scheme_c *t8_forest_get_eclass_scheme (t8_forest_t forest,
+                                                 t8_eclass_t eclass);
 
 /** Construct the face neighbor of an element, possibly across tree boundaries.
  * Returns the tree-id of the tree in which the neighbor element lies in.

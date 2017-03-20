@@ -550,6 +550,13 @@ t8_forest_get_tree_element_count (t8_tree_t tree)
   return element_count;
 }
 
+t8_eclass_t
+t8_forest_get_tree_class (t8_forest_t forest, t8_locidx_t ltreeid)
+{
+  T8_ASSERT (0 <= ltreeid && ltreeid < t8_forest_get_num_local_trees (forest));
+  return t8_forest_get_tree (forest, ltreeid)->eclass;
+}
+
 /* Return the global index of the first local element */
 t8_gloidx_t
 t8_forest_get_first_local_element_id (t8_forest_t forest)
@@ -568,6 +575,25 @@ t8_forest_get_first_local_element_id (t8_forest_t forest)
   first_element -= local_num_elements;
 
   return first_element;
+}
+
+t8_scheme_cxx_t *
+t8_forest_get_scheme (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->scheme_cxx != NULL);
+
+  return forest->scheme_cxx;
+}
+
+t8_eclass_scheme_c *
+t8_forest_get_eclass_scheme (t8_forest_t forest, t8_eclass_t eclass)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->scheme_cxx != NULL);
+  T8_ASSERT (eclass != T8_ECLASS_COUNT);
+
+  return forest->scheme_cxx->eclass_schemes[eclass];
 }
 
 t8_eclass_t
