@@ -373,9 +373,11 @@ t8_eclass_scheme_c *t8_forest_get_eclass_scheme (t8_forest_t forest,
  * Returns the tree-id of the tree in which the neighbor element lies in.
  *
  * \param [in] elem The element to be considered.
- * \param [in,out] neigh This element's data is filled with the
- *                  data of the face neighbor. Otherwise the data can be modified
- *                  arbitrarily.
+ * \param [in,out] neigh On input an allocated element of the scheme of the
+ *                  face_neighbors eclass.
+ *                  On output, this element's data is filled with the
+ *                  data of the face neighbor. If the neighbor does not exist
+ *                  the data could be modified arbitrarily.
  * \param [in] face The number of the face along which the neighbor should be
  *                  constructed.
  * \return The local tree-id of the tree in which \a neigh is in.
