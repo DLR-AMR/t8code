@@ -22,8 +22,9 @@
 
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_types.h>
-#include <t8_cmesh/t8_cmesh_offset.h>
+#include <t8_forest/t8_forest_cxx.h>
 #include <t8_forest.h>
+#include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_element_cxx.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
@@ -111,13 +112,20 @@ t8_forest_partition_create_first_elements (t8_forest_t forest)
   t8_debugf ("Building global first elements for forest %p\n", forest);
   comm = forest->mpicomm;
 
-  /* Set the shmem array type of comm */
-  sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
-  /* Initialize the offset array as a shmem array
-   * holding mpisize+1 many uint64_t to store the elements linear ids */
-  t8_shmem_array_init (&forest->global_first_element, sizeof (uint64_t),
-                       forest->mpisize, comm);
-
+  if (forest->global_first_element == NULL) {
+    /* Set the shmem array type of comm */
+    sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
+    /* Initialize the offset array as a shmem array
+     * holding mpisize+1 many uint64_t to store the elements linear ids */
+    t8_shmem_array_init (&forest->global_first_element, sizeof (uint64_t),
+                         forest->mpisize, comm);
+  }
+  /* Assert whether the array is set up correctly */
+  T8_ASSERT (t8_shmem_array_get_elem_count (forest->global_first_element) ==
+             forest->mpisize);
+  T8_ASSERT (t8_shmem_array_get_elem_size (forest->global_first_element) ==
+             sizeof (uint64_t));
+  T8_ASSERT (t8_shmem_array_get_comm (forest->global_first_element) == comm);
   /* Get a pointer to the first local element. */
   first_element = t8_forest_get_element (forest, 0);
   if (first_element == NULL) {
@@ -133,7 +141,9 @@ t8_forest_partition_create_first_elements (t8_forest_t forest)
     /* Get the level of the element. */
     level = ts->t8_element_level (first_element);
     /* Compute the linear id of the element. */
-    local_first_element = ts->t8_element_get_linear_id (first_element, level);
+    local_first_element =
+      ts->t8_element_get_linear_id (first_element,
+                                    ts->t8_element_maxlevel ());
   }
   /* Collect all first global indices in the array */
 #ifdef T8_ENABLE_DEBUG
@@ -151,6 +161,42 @@ t8_forest_partition_create_first_elements (t8_forest_t forest)
                             sc_MPI_UNSIGNED_LONG_LONG,
                             forest->global_first_element, 1,
                             sc_MPI_UNSIGNED_LONG_LONG);
+}
+
+void
+t8_forest_partition_create_tree_offsets (t8_forest_t forest)
+{
+  t8_gloidx_t         tree_offset;
+  sc_MPI_Comm         comm;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  comm = forest->mpicomm;
+  /* *INDENT-OFF* */
+  /* Calculate this process's tree offset */
+  tree_offset =
+    t8_forest_first_tree_shared (forest) ?
+        -forest->first_local_tree - 1 : forest->first_local_tree;
+  /* *INDENT-ON* */
+  if (forest->tree_offsets == NULL) {
+    /* Set the shmem array type of comm */
+    sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
+    /* Only allocate the shmem array, if it is not already allocated */
+    t8_shmem_array_init (&forest->tree_offsets, sizeof (t8_gloidx_t),
+                         forest->mpisize + 1, comm);
+  }
+  /* Assert whether the array is set up correctly */
+  T8_ASSERT (t8_shmem_array_get_elem_count (forest->tree_offsets) ==
+             forest->mpisize + 1);
+  T8_ASSERT (t8_shmem_array_get_elem_size (forest->tree_offsets) ==
+             sizeof (t8_gloidx_t));
+  T8_ASSERT (t8_shmem_array_get_comm (forest->tree_offsets) == comm);
+  /* gather all tree offsets from all processes */
+  t8_shmem_array_allgather (&tree_offset, 1, T8_MPI_GLOIDX,
+                            forest->tree_offsets, 1, T8_MPI_GLOIDX);
+  /* Store the global number of trees at the entry mpisize in the array */
+  t8_shmem_array_set_gloidx (forest->tree_offsets, forest->mpisize,
+                             forest->global_num_trees);
 }
 
 /* Calculate the new element_offset for forest from
