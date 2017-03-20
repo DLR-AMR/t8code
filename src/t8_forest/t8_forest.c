@@ -553,7 +553,8 @@ t8_forest_get_tree_element_count (t8_tree_t tree)
 t8_eclass_t
 t8_forest_get_tree_class (t8_forest_t forest, t8_locidx_t ltreeid)
 {
-  T8_ASSERT (0 <= ltreeid && ltreeid < t8_forest_get_num_local_trees (forest));
+  T8_ASSERT (0 <= ltreeid
+             && ltreeid < t8_forest_get_num_local_trees (forest));
   return t8_forest_get_tree (forest, ltreeid)->eclass;
 }
 
