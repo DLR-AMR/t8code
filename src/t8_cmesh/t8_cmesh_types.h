@@ -121,16 +121,11 @@ typedef struct t8_cmesh
                                        on this process. Zero if the cmesh is not partitioned. -1 if this processor is empty. */
   int8_t              first_tree_shared;/**< If partitioned true if the first tree on this process is also the last tree on the next process.
                                              Always zero if num_local_trees = 0 */
-  /* TODO: deprecated, replaced by offset */
-  /* TODO: make t8_shmem object that stores comm, for debugging element size and
-   *       size */
-#if 0
-  t8_gloidx_t        *tree_offsets;  /**< If partitioned for each process the global index of its first local tree
+
+  t8_shmem_array_t    tree_offsets;/**< If partitioned for each process the global index of its first local tree
                                         or -(first local tree) - 1
                                         if the first tree on that process is shared.
                                         Since this is very memory consuming we only fill it when needed. */
-#endif
-  t8_shmem_array_t    tree_offsets;
 #ifdef T8_ENABLE_DEBUG
   t8_locidx_t         inserted_trees; /**< Count the number of inserted trees to
                                            check at commit if it equals the total number. */
