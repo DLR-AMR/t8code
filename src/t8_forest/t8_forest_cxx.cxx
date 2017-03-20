@@ -450,4 +450,24 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
   }
 }
 
+int
+t8_forest_element_find_owner (t8_forest_t forest,
+                              t8_gloidx_t gtreeid, t8_element_t * element)
+{
+  if (forest->element_offsets == NULL) {
+    /* If the element_offset array was not created, create it now.
+     * Once created, we do not delete it in this function, since we expect
+     * multiple calls to find_owner in a row.
+     */
+    t8_forest_partition_create_offsets (forest);
+  }
+  if (forest->global_first_element == NULL) {
+    /* If the offset of first global ids is not created, create it now.
+     * Once created, we do not delete it in this function, since we expect
+     * multiple calls to find_owner in a row.
+     */
+    t8_forest_partition_create_first_elements (forest);
+  }
+}
+
 T8_EXTERN_C_END ();
