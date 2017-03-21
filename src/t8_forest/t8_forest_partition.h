@@ -42,12 +42,12 @@ void                t8_forest_partition (t8_forest_t forest);
  */
 void                t8_forest_partition_create_offsets (t8_forest_t forest);
 
-/** Create the array of global_first_element ids of a partitioned forest.
+/** Create the array of global_first_descendant ids of a partitioned forest.
  * \param [in,out]  forest The forest.
  * \a forest must be committed before calling this function.
  */
-void                t8_forest_partition_create_first_elements (t8_forest_t
-                                                               forest);
+void                t8_forest_partition_create_first_desc (t8_forest_t
+                                                           forest);
 
 /** Create the array tree offsets of a partitioned forest.
  * This arrays stores at position p the global id of the first tree of this process.
