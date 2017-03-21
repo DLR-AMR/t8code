@@ -28,6 +28,7 @@
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_element_cxx.hxx>
 #include <t8_cmesh/t8_cmesh_trees.h>
+#include <t8_cmesh/t8_cmesh_offset.h>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -450,24 +451,155 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
   }
 }
 
+/* The data that we use as key in the binary owner search.
+ * It contains the linear id of the element that we look for and
+ * a pointer to the forest, we also store the index of the biggest
+ * owner process.
+ */
+struct find_owner_data_t
+{
+  uint64_t            linear_id;
+  t8_forest_t         forest;
+  int                 last_owner;
+};
+
+static int
+t8_forest_element_find_owner_compare (const void *find_owner_data,
+                                      const void *process)
+{
+  const struct find_owner_data_t *data =
+    (const struct find_owner_data_t *) find_owner_data;
+  uint64_t            linear_id = data->linear_id;
+  t8_forest_t         forest = data->forest;
+  int                 proc = *(int *) process;
+  uint64_t            proc_first_desc_id;
+  uint64_t            next_proc_first_desc_id;
+
+  T8_ASSERT (0 <= proc && proc < forest->mpisize);
+  /* Get the id of the first element on this process. */
+  proc_first_desc_id =
+    *(uint64_t *) t8_shmem_array_index (forest->global_first_desc,
+                                        (size_t) proc);
+
+  if (proc == data->last_owner) {
+    /* If we are the last process owning the element's tree, then
+     * we have either found the element or have to look further left. */
+    return proc_first_desc_id <= linear_id ? 0 : -1;
+  }
+  else {
+    T8_ASSERT (proc < data->last_owner);
+    if (proc_first_desc_id > linear_id) {
+      /* We have to look further left */
+      return -1;
+    }
+    /* Get the linear id of the first element on the next process. */
+    next_proc_first_desc_id =
+      *(uint64_t *) t8_shmem_array_index (forest->global_first_desc,
+                                          (size_t) proc + 1);
+    if (next_proc_first_desc_id <= linear_id) {
+      /* We have to look further right */
+      return 1;
+    }
+    /* We have found the owner process */
+    return 0;
+  }
+}
+
 int
 t8_forest_element_find_owner (t8_forest_t forest,
-                              t8_gloidx_t gtreeid, t8_element_t * element)
+                              t8_gloidx_t gtreeid, t8_element_t * element,
+                              t8_eclass_t eclass)
 {
-  if (forest->element_offsets == NULL) {
-    /* If the element_offset array was not created, create it now.
+  sc_array_t          owners_of_tree, owners_of_tree_wo_first;
+  int                 proc, proc_next;
+  uint64_t            element_desc_lin_id;
+  t8_element_t       *element_first_desc;
+  t8_eclass_scheme_c *ts;
+  ssize_t             proc_index;
+  struct find_owner_data_t find_owner_data;
+
+  if (forest->tree_offsets == NULL) {
+    /* If the offset of global tree ids is not created, create it now.
      * Once created, we do not delete it in this function, since we expect
      * multiple calls to find_owner in a row.
      */
-    t8_forest_partition_create_offsets (forest);
+    t8_forest_partition_create_tree_offsets (forest);
   }
-  if (forest->global_first_element == NULL) {
+  if (forest->global_first_desc == NULL) {
     /* If the offset of first global ids is not created, create it now.
      * Once created, we do not delete it in this function, since we expect
      * multiple calls to find_owner in a row.
      */
-    t8_forest_partition_create_first_elements (forest);
+    t8_forest_partition_create_first_desc (forest);
   }
+
+  /* In owners_of_tree we will store all processes that have elements of the
+   * tree gtreeid. */
+  sc_array_init (&owners_of_tree, sizeof (int));
+  /* Compute the owners and store them (sorted) in owners_of_tree */
+  /* *INDENT-OFF* */
+  t8_offset_all_owners_of_tree (forest->mpisize, gtreeid,
+                                t8_shmem_array_get_gloidx_array
+                                (forest->tree_offsets), &owners_of_tree);
+  /* *INDENT-ON* */
+  /* Get the eclass_scheme and the element's first descendant's linear_id */
+  ts = t8_forest_get_eclass_scheme (forest, eclass);
+  /* Compute the first descendant of the element */
+  ts->t8_element_new (1, &element_first_desc);
+  ts->t8_element_first_descendant (element, element_first_desc);
+  /* Compute the linear of the first descendant */
+  element_desc_lin_id =
+    ts->t8_element_get_linear_id (element_first_desc,
+                                  ts->t8_element_level (element_first_desc));
+
+  /* The first owner of the tree may not have the tree as its first tree and
+   * does its first_descendant entry may not relate to this tree.
+   * We thus check by hand if this process owns the element and exclude it
+   * from the array. */
+  proc = *(int *) sc_array_index (&owners_of_tree, 0);
+  if (owners_of_tree.elem_count == 1) {
+    /* There is only this proc as possible owner. */
+    ts->t8_element_destroy (1, &element_first_desc);
+    sc_array_reset (&owners_of_tree);
+    return proc;
+  }
+  else {
+    /* Get the next owning process. Its first descendant is in fact an element
+     * of the tree. If it is bigger than the descendant we look for, then
+     * proc is the owning process of element. */
+    proc_next = *(int *) sc_array_index (&owners_of_tree, 1);
+    if (*(uint64_t *)
+        t8_shmem_array_index (forest->global_first_desc, (size_t) proc_next)
+        > element_desc_lin_id) {
+      ts->t8_element_destroy (1, &element_first_desc);
+      sc_array_reset (&owners_of_tree);
+      return proc;
+    }
+  }
+  /* Exclude the first process from the array. */
+  sc_array_init_view (&owners_of_tree_wo_first, &owners_of_tree, 1,
+                      owners_of_tree.elem_count - 1);
+  /* We binary search in the owners array for the process that owns the element. */
+  find_owner_data.forest = forest;
+  find_owner_data.last_owner =
+    *(int *) sc_array_index (&owners_of_tree_wo_first,
+                             owners_of_tree_wo_first.elem_count - 1);
+  find_owner_data.linear_id = element_desc_lin_id;
+
+  proc_index = sc_array_bsearch (&owners_of_tree_wo_first, &find_owner_data,
+                                 t8_forest_element_find_owner_compare);
+  if (0 > proc_index || proc_index >= forest->mpisize) {
+    /* The element was not found */
+    SC_ABORT ("Try to find an element that does not exist in the forest.\n");
+    return -1;
+  }
+  /* Get the process and return it. */
+  proc =
+    *(int *) sc_array_index_ssize_t (&owners_of_tree_wo_first, proc_index);
+  /* clean-up */
+  ts->t8_element_destroy (1, &element_first_desc);
+  sc_array_reset (&owners_of_tree);
+  return proc;
 }
 
 T8_EXTERN_C_END ();

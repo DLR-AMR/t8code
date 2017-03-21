@@ -59,6 +59,19 @@ void                t8_forest_copy_trees (t8_forest_t forest,
                                           t8_forest_t from,
                                           int copy_elements);
 
+/** Find the owner process of a given element.
+ * \param [in]    forest  The forest.
+ * \param [in]    gtreeid The global id of the tree in which the element lies.
+ * \param [in]    element The element to look for.
+ * \param [in]    eclass  The element class of the tree \a gtreeid.
+ * \return                The mpirank of the process that owns \a element.
+ * \note The element must exist in the forest.
+ */
+int                 t8_forest_element_find_owner (t8_forest_t forest,
+                                                  t8_gloidx_t gtreeid,
+                                                  t8_element_t * element,
+                                                  t8_eclass_t eclass);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_CXX_H! */
