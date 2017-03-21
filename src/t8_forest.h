@@ -237,6 +237,8 @@ void                t8_forest_commit (t8_forest_t forest);
 
 t8_locidx_t         t8_forest_get_num_element (t8_forest_t forest);
 
+t8_gloidx_t         t8_forest_get_global_num_elements (t8_forest_t forest);
+
 /** Return the element class of a forest local tree.
  *  \param [in] forest    The forest.
  *  \param [in] ltreeid   The local id of a tree in the forest.
@@ -300,11 +302,23 @@ void                t8_forest_partition_cmesh (t8_forest_t forest,
                                                sc_MPI_Comm comm,
                                                int set_profiling);
 
+/** Return the global id of the first local tree of a forest.
+ * \param [in]      forest      The forest.
+ * \return                      The global id of the first local tree in \a forest.
+ */
+t8_gloidx_t         t8_forest_get_first_local_tree_id (t8_forest_t forest);
+
 /** Return the number of local trees of a given forest.
  * \param [in]      forest      The forest.
  * \return          The number of local trees of that forest.
  */
 t8_locidx_t         t8_forest_get_num_local_trees (t8_forest_t forest);
+
+/** Return the number of global trees of a given forest.
+ * \param [in]      forest      The forest.
+ * \return          The number of global trees of that forest.
+ */
+t8_gloidx_t         t8_forest_get_num_global_trees (t8_forest_t forest);
 
 /** Return a pointer to a tree in a forest.
  * \param [in]      forest      The forest.

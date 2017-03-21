@@ -353,7 +353,17 @@ t8_forest_commit (t8_forest_t forest)
 t8_locidx_t
 t8_forest_get_num_element (t8_forest_t forest)
 {
+  T8_ASSERT (t8_forest_is_committed (forest));
+
   return forest->local_num_elements;
+}
+
+t8_gloidx_t
+t8_forest_get_global_num_elements (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  return forest->global_num_elements;
 }
 
 /* Currently this function is not used */
@@ -418,6 +428,14 @@ t8_forest_partition_cmesh (t8_forest_t forest, sc_MPI_Comm comm,
   forest->cmesh = cmesh_partition;
 }
 
+t8_gloidx_t
+t8_forest_get_first_local_tree_id (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  return forest->first_local_tree;
+}
+
 t8_locidx_t
 t8_forest_get_num_local_trees (t8_forest_t forest)
 {
@@ -432,6 +450,14 @@ t8_forest_get_num_local_trees (t8_forest_t forest)
     num_trees = 0;
   }
   return num_trees;
+}
+
+t8_gloidx_t
+t8_forest_get_num_global_trees (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  return forest->global_num_trees;
 }
 
 /* TODO: We use this function in forest_partition when the
