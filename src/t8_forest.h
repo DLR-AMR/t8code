@@ -444,6 +444,20 @@ void                t8_forest_element_coordinate (t8_forest_t forest,
                                                   int corner_number,
                                                   double *coordinates);
 
+/** Build a uniformly refined forest on a coarse mesh.
+ * \param [in]      cmesh     A coarse mesh.
+ * \param [in]      scheme    An eclass scheme.
+ * \param [in]      level     An initial uniform refinement level.
+ * \param [in]      comm      MPI communicator to use.
+ * \return                    A uniform forest with coarse mesh \a cmesh, eclass_scheme
+ *                            \a scheme and refinement level \a level.
+ * \note This is equivalent to calling \ref t8_forest_init, \ref t8_forest_set_cmesh,
+ * \ref t8_forest_set_scheme, \ref t8_forest_set_level, and t8_forest_commit.
+ */
+t8_forest_t         t8_forest_new_uniform (t8_cmesh_t cmesh,
+                                           t8_scheme_cxx_t * scheme,
+                                           int level, sc_MPI_Comm comm);
+
 /** Increase the reference counter of a forest.
  * \param [in,out] forest       On input, this forest must exist with positive
  *                              reference count.  It may be in any state.

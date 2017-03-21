@@ -716,6 +716,28 @@ t8_forest_write_vtk (t8_forest_t forest, const char *filename)
   t8_forest_vtk_write_file (forest, filename, 1, 1, 1, 1);
 }
 
+t8_forest_t
+t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t * scheme,
+                       int level, sc_MPI_Comm comm)
+{
+  t8_forest_t         forest;
+
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (scheme != NULL);
+  T8_ASSERT (0 <= level);
+
+  /* Initialize the forest */
+  t8_forest_init (&forest);
+  /* Set the cmesh, scheme and level */
+  t8_forest_set_cmesh (forest, cmesh, comm);
+  t8_forest_set_scheme (forest, scheme);
+  t8_forest_set_level (forest, level);
+  /* commit the forest */
+  t8_forest_commit (forest);
+
+  return forest;
+}
+
 /* Iterate through all the trees and free the element memory as well as
  * the tree memory.
  */
