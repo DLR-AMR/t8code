@@ -34,6 +34,7 @@
 #include <t8_forest/t8_forest_adapt.h>
 
 typedef struct t8_profile t8_profile_t; /* Defined below */
+typedef struct t8_forest_ghost t8_forest_ghost_t;       /* Defined below */
 
 typedef enum t8_forest_from
 {
@@ -78,6 +79,7 @@ typedef struct t8_forest
   t8_gloidx_t         last_local_tree;
   t8_gloidx_t         global_num_trees; /**< The total number of global trees */
   sc_array_t         *trees;
+  t8_forest_ghost_t  *ghosts;           /**< The ghost elements. \see t8_forest_ghost.h */
   t8_shmem_array_t    element_offsets; /**< If partitioned, for each process the global index
                                             of its first element. Since it is memory consuming,
                                             it is usually only constructed when needed and otherwise unallocated. */
@@ -133,6 +135,33 @@ typedef struct t8_profile
 
 }
 t8_profile_struct_t;
+
+/* TODO: document */
+typedef struct t8_forest_ghost
+{
+#if 0
+  /* We need to store the elements in (tree,linear_id) order.
+   * We can do it by tree. */
+  sc_array_t         *ghost_trees;      /* ghost tree data:
+                                           global_id.
+                                           eclass.
+                                           elements. */
+  hash_table         *global_tree_to_ghost_tree;        /* Indexes into ghost_trees.
+                                                           Given a global tree id I give the index
+                                                           i such that the tree is in ghost_trees[i]
+                                                         */
+  hash_table         *process_offsets;  /* Given a process, return the first ghost tree and
+                                           whithin it the first element of that process. */
+  sc_array_t         *processes;        /* ranks of the processes */
+
+  sc_array_t         *remote_ghosts;    /* array of t8_element_t * pointing to the local elements
+                                           that are ghost to another process.
+                                           Sorted by process and within each process by linear id.
+                                         */
+  hash_table         *remote_offset;    /* given a process return the offset into remote_ghosts */
+  sc_array_t         *remote_processes; /* The ranks of the processes for which local elements are ghost. */
+#endif
+} t8_forest_ghost_t;
 
 /** The number of statistics collected by a profile struct */
 #define T8_PROFILE_NUM_STATS 6
