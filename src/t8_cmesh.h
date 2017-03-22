@@ -531,10 +531,10 @@ void                t8_cmesh_unref (t8_cmesh_t * pcmesh);
 /** Verify that a coarse mesh has only one reference left and destroy it.
  * This function is preferred over \ref t8_cmesh_unref when it is known
  * that the last reference is to be deleted.
- * \param [in,out]  This cmesh must have a reference count of one.
- *                  It can be in any state (committed or not).
- *                  Then it effectively calls \ref t8_cmesh_unref.
- * \param [in]      comm A mpi communicator that is valid with \a cmesh.
+ * \param [in,out]  pcmesh      This cmesh must have a reference count of one.
+ *                              It can be in any state (committed or not).
+ *                              Then it effectively calls \ref t8_cmesh_unref.
+ * \param [in]      comm        A mpi communicator that is valid with \a cmesh.
  */
 void                t8_cmesh_destroy (t8_cmesh_t * pcmesh);
 
