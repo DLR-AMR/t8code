@@ -61,6 +61,7 @@ DISTCLEANFILES += \
         _configs.sed src/t8_config.h @T8_DISTCLEAN@
 .PHONY: ChangeLog
 
+# Force libtool to link with c++
 nodist_EXTRA_T8_la_SOURCES = dummy.cxx
 sourcescheck_DUMMY = dummy.cxx
 
