@@ -26,8 +26,6 @@
 #include <t8_default_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_cmesh.h>
-#include <t8_default/t8_dtri.h>
-#include <p4est.h>
 
 /* Construct a coarse mesh of two trees that are connected to each other.
  * Build a forest on top of it and perform some element_neighbor routines.
@@ -39,14 +37,18 @@ t8_ghost_neighbor_test (t8_eclass_t eclass, sc_MPI_Comm comm, int hybrid)
   t8_forest_t         forest;
   t8_element_t       *elem, *neigh1, *neigh2, *neigh;
   t8_scheme_cxx_t    *scheme;
-  t8_eclass_scheme_c *ts, *triangle_scheme, *quad_scheme;
+  t8_eclass_scheme_c *elem_scheme, *neigh_scheme;
   int                 level = 1;
-  t8_locidx_t         element_id = 1;
+  t8_locidx_t         element_id = 0, treeid;
+  t8_eclass_t         elem_eclass, neighbor_class;
+  int                 i, ret;
+  int                 anchor_node[3];
 
   if (hybrid) {
     eclass = T8_ECLASS_QUAD;
   }
   T8_ASSERT (eclass != T8_ECLASS_VERTEX);
+
   t8_cmesh_init (&cmesh);
   /* We construct a coarse mesh of 2 trees that are connected to each other. */
   t8_cmesh_set_tree_class (cmesh, 0, eclass);
@@ -60,57 +62,42 @@ t8_ghost_neighbor_test (t8_eclass_t eclass, sc_MPI_Comm comm, int hybrid)
   t8_forest_set_level (forest, level);
   /* construct the scheme and get the eclass scheme */
   scheme = t8_scheme_new_default_cxx ();
-  ts = scheme->eclass_schemes[eclass];
+
   t8_forest_set_scheme (forest, scheme);
   t8_forest_commit (forest);
 
-  /* hybrid does only work with element 0 or 1 */
-  T8_ASSERT (!hybrid
-             || (element_id == 0 || element_id == 1 || element_id == 3)
-             && level == 1);
   /* Get the data of element number element_id */
-  elem = t8_forest_get_element (forest, element_id);
+  elem = t8_forest_get_element (forest, element_id, &treeid);
+  /* Get the scheme corresponding to the element. */
+  elem_eclass = t8_forest_get_tree_class (forest, treeid);
+  elem_scheme = t8_forest_get_eclass_scheme (forest, elem_eclass);
   T8_ASSERT (elem != NULL);
-  /* allocate memory for the face neighbor */
-  if (hybrid) {
-    triangle_scheme = scheme->eclass_schemes[T8_ECLASS_TRIANGLE];
-    ts = quad_scheme = scheme->eclass_schemes[T8_ECLASS_QUAD];
-    triangle_scheme->t8_element_new (1, &neigh2);
-  }
-  ts->t8_element_new (1, &neigh1);
-  {
-    /* Iterate over all faces and create the face neighbor */
-    int                 i, ret;
-    int                 anchor_node[3];
 
-    t8_debugf ("root len = %i\n", ts->t8_element_root_len (elem));
-    for (i = 0; i < t8_eclass_num_faces[eclass]; i++) {
-      neigh = neigh1;
-      if (hybrid && i == 1 && element_id == 1) {
-        /* face neighbor is in triangle tree */
-        ts = triangle_scheme;
-        neigh = neigh2;
-      }
-      else if (hybrid) {
-        ts = quad_scheme;
-      }
-      ret = t8_forest_element_face_neighbor (forest, 0, elem, neigh, i);
-      if (ret != -1) {
-        ts->t8_element_anchor (neigh, anchor_node);
-        t8_debugf
-          ("neighbor of %i across face %i (in tree %i): (%i,%i,%i,%i)\n",
-           element_id, i,
-           ret, ts->t8_element_level (neigh), anchor_node[0],
-           anchor_node[1], t8_eclass_to_dimension[eclass] > 2 ? anchor_node[2]
-           : -1);
-      }
+/* Iterate over all faces and create the face neighbor */
+
+  t8_debugf ("root len = %i\n", elem_scheme->t8_element_root_len (elem));
+  for (i = 0; i < t8_eclass_num_faces[elem_eclass]; i++) {
+    /* Get the eclass of the face neighbor's tree */
+    neighbor_class = t8_forest_element_neighbor_eclass (forest, treeid, elem,
+                                                        i);
+    /* Get the corresponding scheme and allocate the face neighbor */
+    neigh_scheme = t8_forest_get_eclass_scheme (forest, neighbor_class);
+    neigh_scheme->t8_element_new (1, &neigh);
+
+    ret = t8_forest_element_face_neighbor (forest, 0, elem, neigh, i);
+    if (ret != -1) {
+      neigh_scheme->t8_element_anchor (neigh, anchor_node);
+      t8_debugf
+        ("neighbor of %i across face %i (in tree %i): (%i,%i,%i,%i)\n",
+         element_id, i,
+         ret, neigh_scheme->t8_element_level (neigh), anchor_node[0],
+         anchor_node[1],
+         t8_eclass_to_dimension[elem_eclass] > 2 ? anchor_node[2]
+         : -1);
     }
+    /* free the neighbors memory */
+    neigh_scheme->t8_element_destroy (1, &neigh);
   }
-  if (hybrid) {
-    triangle_scheme->t8_element_destroy (1, &neigh2);
-    ts = quad_scheme;
-  }
-  ts->t8_element_destroy (1, &neigh1);
   t8_forest_unref (&forest);
 }
 
