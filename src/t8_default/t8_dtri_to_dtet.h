@@ -39,6 +39,8 @@ T8_EXTERN_C_BEGIN ();
 #define T8_DTRI_FACES T8_DTET_FACES
 #define T8_DTRI_DIM T8_DTET_DIM
 #define T8_DTRI_CHILDREN T8_DTET_CHILDREN
+#define T8_DTRI_FACES T8_DTET_FACES
+#define T8_DTRI_FACE_CHILDREN T8_DTET_FACE_CHILDREN
 
 /* redefine types */
 #define t8_dtri_coord_t t8_dtet_coord_t
@@ -72,6 +74,7 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_sibling t8_dtet_sibling
 #define t8_dtri_face_neighbour t8_dtet_face_neighbour
 #define t8_dtri_nearest_common_ancestor t8_dtet_nearest_common_ancestor
+#define t8_dtri_face_child_face t8_dtet_face_child_face
 #define t8_dtri_tree_face t8_dtet_tree_face
 #define t8_dtri_is_inside_root t8_dtet_is_inside_root
 #define t8_dtri_is_sibling t8_dtet_is_sibling

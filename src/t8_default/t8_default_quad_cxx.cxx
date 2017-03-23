@@ -263,6 +263,15 @@ t8_default_scheme_quad_c::t8_element_nca (const t8_element_t * elem1,
   t8_element_copy_surround (q1, r);
 }
 
+int
+t8_default_scheme_quad_c::t8_element_face_child_face (const t8_element_t *
+                                                      elem, int face,
+                                                      int face_child)
+{
+  /* For quadrants the face enumeration of children is the same as for the parent. */
+  return face;
+}
+
 void
 t8_default_scheme_quad_c::t8_element_transform_face (const t8_element_t *
                                                      elem1,

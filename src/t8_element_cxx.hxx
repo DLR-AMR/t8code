@@ -211,6 +211,27 @@ public:
                                       const t8_element_t * elem2,
                                       t8_element_t * nca) = 0;
 
+  /** Given a face of an element and a child number of a child of that face, return the face number
+   * of the child of the element that matches the child face.
+   * \verbatim
+      x ---- x   x      x           x ---- x
+      |      |   |      |           |   |  | <-- f
+      |      |   |      x           |   x--x
+      |      |   |                  |      |
+      x ---- x   x                  x ---- x
+       elem    face  face_child    Returns the face number f
+     \endverbatim
+
+   * \param [in]  elem    The element.
+   * \param [in]  face    Then number of the face.
+   * \param [in]  face_child  The child number of a child of the face element.
+   * \return              The face number of the face of a child of \a elem
+   *                      that conincides with \a face_child.
+   */
+  virtual int         t8_element_face_child_face (const t8_element_t * elem,
+                                                  int face, int face_child) =
+    0;
+
   /** Given an element and a face of this element. If the face lies on the
    *  tree boundary, return the face number of the tree face.
    *  If not the return value is arbitrary.

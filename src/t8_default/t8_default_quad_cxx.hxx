@@ -141,6 +141,11 @@ public:
                                       const t8_element_t * elem2,
                                       t8_element_t * nca);
 
+  /** Given a face of an element and a child number of a child of that face, return the face number
+   * of the child of the element that matches the child face. */
+  virtual int         t8_element_face_child_face (const t8_element_t * elem,
+                                                  int face, int face_child);
+
   /** Transform the coordinates of a quadrilateral considered as boundary element
    *  in a tree-tree connection. */
   virtual void        t8_element_transform_face (const t8_element_t * elem1,

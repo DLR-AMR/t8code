@@ -145,6 +145,16 @@ t8_default_scheme_tet_c::t8_element_nca (const t8_element_t * elem1,
 }
 
 int
+t8_default_scheme_tet_c::t8_element_face_child_face (const t8_element_t *
+                                                     elem, int face,
+                                                     int face_child)
+{
+  T8_ASSERT (0 <= face && face < T8_DTET_FACES);
+  T8_ASSERT (0 <= face && face < T8_DTET_FACE_CHILDREN);
+  return t8_dtet_face_child_face ((const t8_dtet_t *) elem, face, face_child);
+}
+
+int
 t8_default_scheme_tet_c::t8_element_tree_face (const t8_element_t * elem,
                                                int face)
 {

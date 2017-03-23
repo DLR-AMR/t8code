@@ -129,6 +129,17 @@ void                t8_dtet_nearest_common_ancestor (const t8_dtet_t * t1,
                                                      const t8_dtet_t * t2,
                                                      t8_dtet_t * r);
 
+/** Given a face of an tetrahedron and a child number of a child of that face, return the face number
+ * of the child of the tetrahedron that matches the child face.
+ * \param [in]  tet     The tetrahedron.
+ * \param [in]  face    Then number of the face.
+ * \param [in]  face_child  The child number of a child of the face tetrahedron.
+ * \return              The face number of the face of a child of \a tetrahedron
+ *                      that conincides with \a face_child.
+ */
+int                 t8_dtet_face_child_face (const t8_dtet_t * tet,
+                                             int face, int face_child);
+
 /** Given a tetrahedron and a face of this tetrahedron. If the face lies on the
  *  tree boundary, return the face number of the tree face.
  *  If not the return value is arbitrary.

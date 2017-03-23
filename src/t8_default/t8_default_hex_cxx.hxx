@@ -99,6 +99,11 @@ public:
                                       const t8_element_t * elem2,
                                       t8_element_t * nca);
 
+  /** Given a face of an element and a child number of a child of that face, return the face number
+   * of the child of the element that matches the child face. */
+  virtual int         t8_element_face_child_face (const t8_element_t * elem,
+                                                  int face, int face_child);
+
   /** Return the tree face id given a boundary face. */
   virtual int         t8_element_tree_face (const t8_element_t * elem,
                                             int face);

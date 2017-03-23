@@ -667,6 +667,42 @@ t8_dtri_tree_face (t8_dtri_t * t, int face)
 #endif
 }
 
+int
+t8_dtri_face_child_face (const t8_dtri_t * triangle, int face, int face_child)
+{
+  T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
+  T8_ASSERT (0 <= face_child && face_child < T8_DTRI_FACE_CHILDREN);
+#ifndef T8_DTRI_TO_DTET
+  /* For triangles the face number of the children is the same as the one
+   * of the parent */
+  return face;
+#else
+  {
+    t8_dtet_type_t      face_type;
+    int                 is_middle_face = 0;
+    switch (face) {
+    case 0:
+      return 0;
+    case 1:
+    case 2:
+      /* If the given face_child is at the middle of the face (child 2 for type 0
+       * triangles, child 1 for type 1 triangles), then the face number at the
+       * tetrahedron is different. */
+      face_type = t8_dtet_type_face_to_boundary[triangle->type][face][1];
+      if ((face_type == 0 && face_child == 2)
+          || (face_type == 1 && face_child == 1)) {
+        is_middle_face = 1;
+      }
+      return is_middle_face ? face ^ 2 : face;  /* face = 1 -> 2 : 1, face = 2 -> 1 : 2 */
+    case 3:
+      return 3;
+    default:
+      SC_ABORT_NOT_REACHED ();
+    }
+  }
+#endif
+}
+
 #ifndef T8_DTRI_TO_DTET
 /* This function has only a triangle version. */
 void

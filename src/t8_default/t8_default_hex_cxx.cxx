@@ -156,6 +156,15 @@ t8_default_scheme_hex_c::t8_element_nca (const t8_element_t * elem1,
 }
 
 int
+t8_default_scheme_hex_c::t8_element_face_child_face (const t8_element_t *
+                                                     elem, int face,
+                                                     int face_child)
+{
+  /* For octants the face enumeration of children is the same as for the parent. */
+  return face;
+}
+
+int
 t8_default_scheme_hex_c::t8_element_tree_face (const t8_element_t * elem,
                                                int face)
 {

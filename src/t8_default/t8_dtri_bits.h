@@ -125,6 +125,17 @@ void                t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
                                                      const t8_dtri_t * t2,
                                                      t8_dtri_t * r);
 
+/** Given a face of an triangle and a child number of a child of that face, return the face number
+ * of the child of the triangle that matches the child face.
+ * \param [in]  triangle The triangle.
+ * \param [in]  face    Then number of the face.
+ * \param [in]  face_child  The child number of a child of the face triangle.
+ * \return              The face number of the face of a child of \a triangle
+ *                      that conincides with \a face_child.
+ */
+int                 t8_dtri_face_child_face (const t8_dtri_t * triangle,
+                                             int face, int face_child);
+
 /** Given a triangle and a face of this triangle. If the face lies on the
  *  tree boundary, return the face number of the tree face.
  *  If not the return value is arbitrary.
