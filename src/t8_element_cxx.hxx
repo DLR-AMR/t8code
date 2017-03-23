@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_element.h
+/** \file t8_element_cxx.hxx
  * This file defines basic operations on an element in a refinement tree.
  *
  * All operations work for all element classes by providing a virtual function table.
@@ -89,7 +89,7 @@ public:
    * \param [in] source The element whose entries will be copied to \b dest.
    * \param [in,out] dest This element's entries will be overwritted with the
    *                    entries of \b source.
-   * \note \source and \dest may point to the same element.
+   * \note \a source and \a dest may point to the same element.
    */
   virtual void        t8_element_copy (const t8_element_t * source,
                                        t8_element_t * dest) = 0;
