@@ -501,6 +501,66 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
   }
 }
 
+t8_locidx_t
+t8_forest_element_half_face_neighbors (t8_forest_t forest,
+                                       t8_locidx_t ltreeid,
+                                       const t8_element_t * elem,
+                                       t8_element_t * neighs[], int face,
+                                       int num_neighs)
+{
+  t8_eclass_scheme_c *ts;
+  t8_tree_t           tree;
+  t8_eclass_t         eclass, boundary_class;
+  t8_eclass_scheme_c *boundary_scheme;
+  t8_element_t      **boundary_faces, *child_at_face;
+  t8_locidx_t         neighbor_tree;
+  int                 ichild;
+  int                 tree_face;
+  int                 child_face_num;
+
+  /* Get a pointer to the tree to read its element class */
+  tree = t8_forest_get_tree (forest, ltreeid);
+  eclass = tree->eclass;
+  ts = t8_forest_get_eclass_scheme (forest, eclass);
+  tree_face = ts->t8_element_tree_face (elem, face);
+
+  T8_ASSERT (t8_eclass_to_dimension[eclass] > 0);       /* Vertices do not have face neighbors. */
+
+  /* Build boundary face, refine and extrude */
+  /* Get the eclass scheme for the boundary */
+  boundary_class = (t8_eclass_t) t8_eclass_face_types[eclass][tree_face];
+  boundary_scheme = t8_forest_get_eclass_scheme (forest, boundary_class);
+  /* Check if the number of children of the boundary face is correct
+   * and allocate as many elements */
+  T8_ASSERT (num_neighs == ts->t8_element_num_face_children (elem, face));
+  boundary_scheme->t8_element_new (num_neighs, boundary_faces);
+
+  /* Store the boundary face of elem in the first of boundary_faces */
+  ts->t8_element_boundary_face (elem, face, boundary_faces[0]);
+  /* Refine this boundary face and store the children in boundary_faces */
+  boundary_scheme->t8_element_children (boundary_faces[0], num_neighs,
+                                        boundary_faces);
+  /* We now extrude the face children into elem and compute the face neighbor of
+   * the extruded face. */
+  ts->t8_element_new (1, &child_at_face);
+  for (ichild = 0; ichild < num_neighs; ichild++) {
+    /* Extrude the face. child_at_face is now a child of elem */
+    child_face_num = ts->t8_element_face_child_face (elem, face, ichild);
+    ts->t8_element_extrude_face (boundary_faces[ichild],
+                                 child_at_face, child_face_num);
+    /* Finde the face neighbor of child_at_face */
+    neighbor_tree =
+      t8_forest_element_face_neighbor (forest, ltreeid, child_at_face,
+                                       neighs[ichild], child_face_num);
+  }
+  /* clean-up */
+  ts->t8_element_destroy (1, &child_at_face);
+  boundary_scheme->t8_element_destroy (num_neighs, boundary_faces);
+
+  /* We return the local id of the tree in which the face neighbors are */
+  return neighbor_tree;
+}
+
 /* The data that we use as key in the binary owner search.
  * It contains the linear id of the element that we look for and
  * a pointer to the forest, we also store the index of the biggest

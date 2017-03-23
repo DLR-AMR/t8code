@@ -72,6 +72,27 @@ int                 t8_forest_element_find_owner (t8_forest_t forest,
                                                   t8_element_t * element,
                                                   t8_eclass_t eclass);
 
+/** Construct all face neighbors of half size of a given element.
+ * \param [in]    forest The forest.
+ * \param [in]    ltreeid The local tree id of the tree in which the element is.
+ * \param [in]    elem    The element of which to construct the neighbors.
+ * \param [in,out] neighs An array of allocated elements of the correct element class.
+ *                        On output the face neighbors of \a elem across \a face of one
+ *                        bigger refinement level are stored.
+ * \param [in]    face    The number of the face of \a elem.
+ * \param [in]    num_neighs The number of allocated element in \a neighs. Must match the
+ *                        number of face neighbors of one bigger refinement level.
+ * \return                The local id of the tree in which the neighbors are.
+ */
+t8_locidx_t         t8_forest_element_half_face_neighbors (t8_forest_t forest,
+                                                           t8_locidx_t
+                                                           ltreeid,
+                                                           const t8_element_t
+                                                           * elem,
+                                                           t8_element_t *
+                                                           neighs[], int face,
+                                                           int num_neighs);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_CXX_H! */
