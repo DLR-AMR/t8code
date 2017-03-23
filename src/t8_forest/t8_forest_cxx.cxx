@@ -400,7 +400,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
   /* Get a pointer to the tree to read its element class */
   tree = t8_forest_get_tree (forest, ltreeid);
   eclass = tree->eclass;
-  ts = forest->scheme_cxx->eclass_schemes[eclass];
+  ts = t8_forest_get_eclass_scheme (forest, eclass);
   if (ts->t8_element_face_neighbor_inside (elem, neigh, face)) {
     /* The neighbor was constructed and is inside the current tree. */
     return ltreeid;
@@ -409,7 +409,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
     /* The neighbor does not lie inside the current tree. The content of neigh
      * is undefined right now. */
     t8_eclass_scheme_c *boundary_scheme, *neighbor_scheme;
-    t8_eclass_t         neigh_eclass;
+    t8_eclass_t         neigh_eclass, boundary_class;
     t8_element_t       *face_element;
     t8_cmesh_t          cmesh;
     t8_locidx_t         lctree_id, lneigh_id;
@@ -423,8 +423,11 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
     cmesh = forest->cmesh;
     /* Get the scheme associated to the element class of the
      * boundary element. */
-    boundary_scheme =
-      forest->scheme_cxx->eclass_schemes[t8_eclass_face_types[eclass][face]];
+    /* Compute the face of elem_tree at which the face connection is. */
+    tree_face = ts->t8_element_tree_face (elem, face);
+    /* Get the eclass scheme for the boundary */
+    boundary_class = (t8_eclass_t) t8_eclass_face_types[eclass][tree_face];
+    boundary_scheme = t8_forest_get_eclass_scheme (forest, boundary_class);
     /* Allocate the face element */
     boundary_scheme->t8_element_new (1, &face_element);
     /* Compute the face element. */
@@ -434,8 +437,6 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
     lctree_id = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
     elem_tree = t8_cmesh_trees_get_tree_ext (cmesh->trees,
                                              lctree_id, &face_neighbor, &ttf);
-    /* Compute the face of elem_tree at which the face connection is. */
-    tree_face = ts->t8_element_tree_face (elem, face);
     /* Compute the local id of the face neighbor tree. */
     lneigh_id = face_neighbor[tree_face];
     /* F is needed to compute the neighbor face number and the orientation.
