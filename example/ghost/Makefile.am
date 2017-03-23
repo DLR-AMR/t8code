@@ -3,6 +3,6 @@
 # Included from toplevel directory
 
 bin_PROGRAMS += \
-	example/ghost/t8_ghost
+	example/ghost/t8_face_neighbor
 
-example_ghost_t8_ghost_SOURCES = example/ghost/t8_ghost.cxx
+example_ghost_t8_face_neighbor_SOURCES = example/ghost/t8_face_neighbor.cxx
