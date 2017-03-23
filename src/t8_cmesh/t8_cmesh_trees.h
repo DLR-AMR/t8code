@@ -303,6 +303,13 @@ t8_ctree_t          t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees,
                                                  t8_locidx_t ** face_neigh,
                                                  int8_t ** ttf);
 
+/** Given a coarse tree and a face number, return the local id of the neighbor tree.
+ * \param [in]      tree.     The coarse tree.
+ * \param [in]      face.     The face number.
+ * \return                    The local id of the neighbor tree. */
+t8_locidx_t         t8_cmesh_trees_get_face_neighbor (t8_ctree_t tree,
+                                                      int face);
+
 /* TODO: This function return NULL if the ghost is not present.
  *       So far no error checking is done here. */
 /** Return a pointer to a specific ghost in a trees struct.

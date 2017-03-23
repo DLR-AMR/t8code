@@ -431,6 +431,18 @@ t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees, t8_locidx_t ltree_id,
   return tree;
 }
 
+t8_locidx_t
+t8_cmesh_trees_get_face_neighbor (t8_ctree_t tree, int face)
+{
+  t8_locidx_t        *face_neighbors;
+
+  T8_ASSERT (tree != NULL);
+  T8_ASSERT (0 <= face && face < t8_eclass_num_faces[tree->eclass]);
+
+  face_neighbors = (t8_locidx_t *) T8_TREE_FACE (tree);
+  return face_neighbors[face];
+}
+
 t8_cghost_t
 t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees, t8_locidx_t lghost)
 {
