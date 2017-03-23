@@ -505,7 +505,8 @@ t8_forest_compare_elem_tree (const void *lelement_id, const void *ltree)
 }
 
 t8_element_t       *
-t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id)
+t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id,
+                       t8_locidx_t * ltreeid)
 {
   t8_tree_t           tree;
   t8_locidx_t         ltree;
@@ -549,6 +550,9 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id)
     sc_array_bsearch (forest->trees, &lelement_id,
                       t8_forest_compare_elem_tree);
   T8_ASSERT (ltreedebug == ltree);
+  if (ltreeid != NULL) {
+    *ltreeid = ltree;
+  }
 
   /* The tree that contains the element is now local tree ltree.
    * Or the element is not a local element. */

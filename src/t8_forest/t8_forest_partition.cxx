@@ -127,7 +127,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
              sizeof (uint64_t));
   T8_ASSERT (t8_shmem_array_get_comm (forest->global_first_desc) == comm);
   /* Get a pointer to the first local element. */
-  first_element = t8_forest_get_element (forest, 0);
+  first_element = t8_forest_get_element (forest, 0, NULL);
   if (first_element == NULL) {
     /* This process is empty, we store 0 in the array */
     local_first_desc = 0;

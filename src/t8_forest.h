@@ -338,10 +338,13 @@ t8_cmesh_t          t8_forest_get_cmesh (t8_forest_t forest);
 /** Return an element of the forest.
  * \param [in]      forest      The forest.
  * \param [in]      lelement_id The local id of an element in \a forest.
+ * \param [out]     ltreeid     If not NULL, on output the local tree id of the tree in which the
+ *                              element lies in.
  * \return          A pointer to the element. NULL if this element does not exist.
  */
 t8_element_t       *t8_forest_get_element (t8_forest_t forest,
-                                           t8_locidx_t lelement_id);
+                                           t8_locidx_t lelement_id,
+                                           t8_locidx_t * ltreeid);
 
 /** Return the number of elements of a tree.
  * \param [in]      tree       A tree in a forest.
