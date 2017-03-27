@@ -106,3 +106,12 @@ t8_dline_first_descendant (const t8_dline_t * l, t8_dline_t * s, int level)
   s->level = level;
   s->x = l->x;
 }
+
+void
+t8_dline_last_descendant (const t8_dline_t * l, t8_dline_t * s, int level)
+{
+  T8_ASSERT (level >= l->level && level <= T8_DLINE_MAXLEVEL);
+
+  s->level = level;
+  s->x = l->x + T8_DLINE_LEN (l->level) - T8_DLINE_LEN (level);
+}
