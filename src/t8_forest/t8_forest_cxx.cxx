@@ -246,46 +246,77 @@ t8_forest_populate (t8_forest_t forest)
 }
 
 /* return nonzero if the first tree of a forest is shared with a smaller
- * process.
+ * process, or if the last tree is shared with a bigger process.
+ * Which operation is performed is switched with the first_or_last parameter.
+ * first_or_last = 0  --> the first tree
+ * first_or_last = 1  --> the last tree
  * This is the case if and only if the first descendant of the first tree that we store is
  * not the first possible descendant of that tree.
  */
-int
-t8_forest_first_tree_shared (t8_forest_t forest)
+static int
+t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
 {
-  t8_tree_t           first_tree;
-  t8_element_t       *first_desc, *first_element;
+  t8_tree_t           tree;
+  t8_element_t       *desc, *element, *tree_desc;
   t8_eclass_t         eclass;
   t8_eclass_scheme_c *ts;
   int                 ret;
 
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (first_or_last == 0 || first_or_last == 1);
   T8_ASSERT (forest != NULL);
   if (forest->trees == NULL
       || forest->first_local_tree > forest->last_local_tree) {
     /* This forest is empty and therefore the first tree is not shared */
     return 0;
   }
-  /* Get a pointer to the first tree */
-  first_tree = (t8_tree_t) sc_array_index (forest->trees, 0);
+  if (first_or_last == 0) {
+    /* Get a pointer to the first tree */
+    tree = (t8_tree_t) sc_array_index (forest->trees, 0);
+  }
+  else {
+    /* Get a pointer to the last tree */
+    tree = (t8_tree_t) sc_array_index (forest->trees,
+                                       forest->trees->elem_count - 1);
+  }
   /* Get the eclass scheme of the first tree */
-  eclass = first_tree->eclass;
+  eclass = tree->eclass;
   /* Get the eclass scheme of the first tree */
-  ts = forest->scheme_cxx->eclass_schemes[eclass];
-  /* Calculate the first possible descendant of the first tree */
+  ts = t8_forest_get_eclass_scheme (forest, eclass);
+  /* Calculate the first/last possible descendant of the first/last tree */
   /* we do this by first creating a level 0 child of the tree, then
-   * calculating its first descendant */
-  ts->t8_element_new (1, &first_element);
-  ts->t8_element_set_linear_id (first_element, 0, 0);
-  ts->t8_element_new (1, &first_desc);
-  ts->t8_element_first_descendant (first_element, first_desc);
-  /* We can now check whether the first possible descendant matches the
-   * first local descendant */
-  ret = ts->t8_element_compare (first_desc, first_tree->first_desc);
-  ts->t8_element_destroy (1, &first_element);
-  ts->t8_element_destroy (1, &first_desc);
+   * calculating its first/last descendant */
+  ts->t8_element_new (1, &element);
+  ts->t8_element_set_linear_id (element, 0, 0);
+  ts->t8_element_new (1, &desc);
+  if (first_or_last == 0) {
+    ts->t8_element_first_descendant (element, desc);
+  }
+  else {
+    ts->t8_element_last_descendant (element, desc);
+  }
+  /* We can now check whether the first/last possible descendant matches the
+   * first/last local descendant */
+  tree_desc = first_or_last == 0 ? tree->first_desc : tree->last_desc;
+  ret = ts->t8_element_compare (desc, tree_desc);
+  /* clean-up */
+  ts->t8_element_destroy (1, &element);
+  ts->t8_element_destroy (1, &desc);
   /* If the descendants are the same then ret is zero and we return false.
    * We return true otherwise */
   return ret;
+}
+
+int
+t8_forest_first_tree_shared (t8_forest_t forest)
+{
+  return t8_forest_tree_shared (forest, 0);
+}
+
+int
+t8_forest_last_tree_shared (t8_forest_t forest)
+{
+  return t8_forest_tree_shared (forest, 1);
 }
 
 /* Allocate memory for trees and set their values as in from.
@@ -388,7 +419,7 @@ t8_forest_element_neighbor_eclass (t8_forest_t forest,
   }
 }
 
-t8_locidx_t
+t8_gloidx_t
 t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
                                  const t8_element_t * elem,
                                  t8_element_t * neigh, int face)
@@ -412,7 +443,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
     t8_eclass_t         neigh_eclass, boundary_class;
     t8_element_t       *face_element;
     t8_cmesh_t          cmesh;
-    t8_locidx_t         lctree_id, lneigh_id;
+    t8_locidx_t         lctree_id, lcneigh_id;
     t8_locidx_t        *face_neighbor;
     int8_t             *ttf;
     t8_ctree_t          elem_tree;
@@ -438,7 +469,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
     elem_tree = t8_cmesh_trees_get_tree_ext (cmesh->trees,
                                              lctree_id, &face_neighbor, &ttf);
     /* Compute the local id of the face neighbor tree. */
-    lneigh_id = face_neighbor[tree_face];
+    lcneigh_id = face_neighbor[tree_face];
     /* F is needed to compute the neighbor face number and the orientation.
      * neigh_face = ttf % F
      * or = ttf / F
@@ -446,24 +477,24 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
     F = t8_eclass_max_num_faces[cmesh->dimension];
     /* compute the neighbor face */
     neigh_face = ttf[tree_face] % F;
-    if (lneigh_id == lctree_id && tree_face == neigh_face) {
+    if (lcneigh_id == lctree_id && tree_face == neigh_face) {
       /* This face is a domain boundary and there is no neighbor */
       return -1;
     }
     /* We now compute the eclass of the neighbor tree. */
-    if (lneigh_id < t8_cmesh_get_num_local_trees (cmesh)) {
+    if (lcneigh_id < t8_cmesh_get_num_local_trees (cmesh)) {
       /* The face neighbor is a local tree */
       /* Get the eclass of the neighbor tree */
-      neigh_eclass = t8_cmesh_get_tree_class (cmesh, lneigh_id);
+      neigh_eclass = t8_cmesh_get_tree_class (cmesh, lcneigh_id);
     }
     else {
       /* The face neighbor is a ghost tree */
-      T8_ASSERT (cmesh->num_local_trees <= lneigh_id
-                 && lneigh_id < cmesh->num_ghosts + cmesh->num_local_trees);
+      T8_ASSERT (cmesh->num_local_trees <= lcneigh_id
+                 && lcneigh_id < cmesh->num_ghosts + cmesh->num_local_trees);
       /* Get the eclass of the neighbor tree */
       neigh_eclass =
         t8_cmesh_get_ghost_class (cmesh,
-                                  lneigh_id -
+                                  lcneigh_id -
                                   t8_cmesh_get_num_local_trees (cmesh));
     }
     /* We need to find out which face is the smaller one that is the one
@@ -497,11 +528,11 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
     neighbor_scheme->t8_element_extrude_face (face_element, neigh,
                                               neigh_face);
 
-    return lneigh_id;
+    return lcneigh_id + t8_cmesh_get_first_treeid (cmesh);
   }
 }
 
-t8_locidx_t
+t8_gloidx_t
 t8_forest_element_half_face_neighbors (t8_forest_t forest,
                                        t8_locidx_t ltreeid,
                                        const t8_element_t * elem,
@@ -513,7 +544,7 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
   t8_eclass_t         eclass, boundary_class;
   t8_eclass_scheme_c *boundary_scheme;
   t8_element_t      **boundary_faces, *child_at_face;
-  t8_locidx_t         neighbor_tree;
+  t8_gloidx_t         neighbor_tree;
   int                 ichild;
   int                 tree_face;
   int                 child_face_num;

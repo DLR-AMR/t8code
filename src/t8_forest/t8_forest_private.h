@@ -44,12 +44,27 @@ void                t8_forest_compute_desc (t8_forest_t forest);
  * of the coarse mesh. */
 void                t8_forest_populate (t8_forest_t forest);
 
-/* return nonzero if the first tree of a forest is shared with a smaller
+/** return nonzero if the first tree of a forest is shared with a smaller
  * process.
  * This is the case if and only if the first descendant of the first tree that we store is
  * not the first possible descendant of that tree.
+ * \param [in]  forest    The forest.
+ * \return                True if the first tree in the forest is shared with
+ *                        a smaller rank. False otherwise.
+ * \note \a forest must be committed before calling this function.
  */
 int                 t8_forest_first_tree_shared (t8_forest_t forest);
+
+/** return nonzero if the last tree of a forest is shared with a bigger
+ * process.
+ * This is the case if and only if the first descendant of the first tree that we store is
+ * not the first possible descendant of that tree.
+ * \param [in]  forest    The forest.
+ * \return                True if the last tree in the forest is shared with
+ *                        a bigger rank. False otherwise.
+ * \note \a forest must be committed before calling this function.
+ */
+int                 t8_forest_last_tree_shared (t8_forest_t forest);
 
 /* Allocate memory for trees and set their values as in from.
  * For each tree allocate enough element memory to fit the elements of from.
@@ -109,9 +124,10 @@ int                 t8_forest_element_find_owner (t8_forest_t forest,
  * \param [in]    face    The number of the face of \a elem.
  * \param [in]    num_neighs The number of allocated element in \a neighs. Must match the
  *                        number of face neighbors of one bigger refinement level.
- * \return                The local id of the tree in which the neighbors are.
+ * \return                The global id of the tree in which the neighbors are.
+ *        -1 if there exists no neighbor across that face.
  */
-t8_locidx_t         t8_forest_element_half_face_neighbors (t8_forest_t forest,
+t8_gloidx_t         t8_forest_element_half_face_neighbors (t8_forest_t forest,
                                                            t8_locidx_t
                                                            ltreeid,
                                                            const t8_element_t

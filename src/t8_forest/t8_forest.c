@@ -650,6 +650,26 @@ t8_forest_ltreeid_to_cmesh_ltreeid (t8_forest_t forest, t8_locidx_t ltreeid)
   return forest->first_local_tree - cmesh_gfirst + ltreeid;
 }
 
+t8_locidx_t
+t8_forest_cmesh_ltreeid_to_ltreeid (t8_forest_t forest, t8_locidx_t lctreeid)
+{
+  t8_locidx_t         ltreeid;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->cmesh != NULL);
+
+  ltreeid = t8_cmesh_get_first_treeid (forest->cmesh) -
+    t8_forest_get_first_local_tree_id (forest) + lctreeid;
+  if (0 <= ltreeid && ltreeid < t8_forest_get_num_local_trees (forest)) {
+    /* The tree is a forest local tree */
+    return ltreeid;
+  }
+  else {
+    /* The tree is not forest local */
+    return -1;
+  }
+}
+
 t8_ctree_t
 t8_forest_get_coarse_tree_ext (t8_forest_t forest,
                                t8_locidx_t ltreeid,
