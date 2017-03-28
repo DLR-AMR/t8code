@@ -376,6 +376,14 @@ t8_gloidx_t         t8_cmesh_get_num_trees (t8_cmesh_t cmesh);
  */
 t8_locidx_t         t8_cmesh_get_num_local_trees (t8_cmesh_t cmesh);
 
+/** Return the number of ghost trees of a cmesh.
+ *  If the cmesh is not partitioned this is equivalent to \ref t8_cmesh_get_num_trees.
+ * \param [in] cmesh       The cmesh to be considered.
+ * \return                 The number of ghost trees of the cmesh.
+ * \a cmesh must be committed before calling this function.
+ */
+t8_locidx_t         t8_cmesh_get_num_ghosts (t8_cmesh_t cmesh);
+
 /** Return the global index of the first local tree of a cmesh.
  * If the cmesh is not partitioned this is allways 0.
  * \param [in] cmesh       The cmesh to be considered.

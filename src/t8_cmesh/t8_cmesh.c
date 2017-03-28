@@ -857,9 +857,18 @@ t8_locidx_t
 t8_cmesh_get_num_local_trees (t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
   return cmesh->num_local_trees;
+}
+
+t8_locidx_t
+t8_cmesh_get_num_ghosts (t8_cmesh_t cmesh)
+{
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+
+  return cmesh->num_ghosts;
 }
 
 t8_eclass_t
