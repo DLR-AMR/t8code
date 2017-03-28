@@ -446,7 +446,6 @@ void                t8_forest_iterate (t8_forest_t forest);
  * vertex coordinates of the surrounding tree are known.
  * \param [in]      forest     The forest.
  * \param [in]      ltree_id   The forest local id of the tree in which the element is.
- * \param [in]      ts         The eclass scheme of the element.
  * \param [in]      element    The element.
  * \param [in]      vertices   An array storing the vertex coordinates of the tree.
  *                             It has 3*n entries, with n being the number of vertices of the tree.
@@ -455,7 +454,7 @@ void                t8_forest_iterate (t8_forest_t forest);
  *                             the x, y and z coordinates of the vertex.
  */
 void                t8_forest_element_coordinate (t8_forest_t forest,
-                                                  t8_locidx_t ltree_i,
+                                                  t8_locidx_t ltree_id,
                                                   t8_element_t * element,
                                                   const double *vertices,
                                                   int corner_number,
