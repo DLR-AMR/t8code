@@ -254,7 +254,7 @@ t8_eclass_t         t8_forest_get_eclass (t8_forest_t forest,
  *  \param [in] ltreeid   The local id of a tree in the forest.
  * \return  The local id of the tree in the cmesh associated with the forest.
  * \a forest must be committed before calling this function.
- * \note This is the inverse function of \ref t8_forest_cmesh_ltreeid_to_ltreeid.
+ * \note For forest local trees, this is the inverse function of \ref t8_forest_cmesh_ltreeid_to_ltreeid.
  */
 t8_locidx_t         t8_forest_ltreeid_to_cmesh_ltreeid (t8_forest_t forest,
                                                         t8_locidx_t ltreeid);
@@ -263,12 +263,12 @@ t8_locidx_t         t8_forest_ltreeid_to_cmesh_ltreeid (t8_forest_t forest,
  * the tree's local id in the forest.
  *  \param [in] forest    The forest.
  *  \param [in] ltreeid   The local id of a tree in the coarse mesh of \a forest.
- * \return  The local id of the tree in the forest.
+ * \return  The local id of the tree in the forest. -1 if the tree is not forest local.
  * \a forest must be committed before calling this function.
- * \note This is the inverse function of \ref t8_forest_ltreeid_to_cmesh_ltreeid.
+ * \note For forest local trees, this is the inverse function of \ref t8_forest_ltreeid_to_cmesh_ltreeid.
  */
 t8_locidx_t         t8_forest_cmesh_ltreeid_to_ltreeid (t8_forest_t forest,
-                                                        t8_locidx_t ltreeid);
+                                                        t8_locidx_t lctreeid);
 
 /** Given the local id of a tree in a forest, return the coarse tree of the
  * cmesh that corresponds to this tree.
@@ -413,7 +413,7 @@ t8_eclass_t         t8_forest_element_neighbor_eclass (t8_forest_t forest,
                                                        elem, int face);
 
 /** Construct the face neighbor of an element, possibly across tree boundaries.
- * Returns the tree-id of the tree in which the neighbor element lies in.
+ * Returns the global tree-id of the tree in which the neighbor element lies in.
  *
  * \param [in] elem The element to be considered.
  * \param [in,out] neigh On input an allocated element of the scheme of the
@@ -423,10 +423,10 @@ t8_eclass_t         t8_forest_element_neighbor_eclass (t8_forest_t forest,
  *                  the data could be modified arbitrarily.
  * \param [in] face The number of the face along which the neighbor should be
  *                  constructed.
- * \return The local tree-id of the tree in which \a neigh is in.
+ * \return The global tree-id of the tree in which \a neigh is in.
  *        -1 if there exists no neighbor across that face.
  */
-t8_locidx_t         t8_forest_element_face_neighbor (t8_forest_t forest,
+t8_gloidx_t         t8_forest_element_face_neighbor (t8_forest_t forest,
                                                      t8_locidx_t ltreeid,
                                                      const t8_element_t *
                                                      elem,
