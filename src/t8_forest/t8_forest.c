@@ -26,6 +26,7 @@
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_partition.h>
+#include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest_vtk.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
@@ -817,6 +818,10 @@ t8_forest_reset (t8_forest_t * pforest)
   }
   if (forest->profile != NULL) {
     T8_FREE (forest->profile);
+  }
+  /* Dereference the ghost layer if it exists */
+  if (forest->ghosts != NULL) {
+    t8_forest_ghost_unref (&forest->ghosts);
   }
   T8_FREE (forest);
   *pforest = NULL;

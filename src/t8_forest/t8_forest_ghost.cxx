@@ -22,6 +22,7 @@
 
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_types.h>
+#include <t8_forest/t8_forest_private.h>
 #include <t8_forest.h>
 #include <t8_element_cxx.hxx>
 
@@ -76,7 +77,7 @@ t8_ghost_gtree_hash_function (const void *ghost_gtree_hash, const void *data)
  */
 static int
 t8_ghost_gtree_equal_function (const void *ghost_gtreea,
-                               const void *ghost_gtreeb)
+                               const void *ghost_gtreeb, const void *user)
 {
   const t8_ghost_gtree_hash_t *objecta =
     (const t8_ghost_gtree_hash_t *) ghost_gtreea;
@@ -107,7 +108,7 @@ t8_ghost_process_hash_function (const void *process_data,
  * Two entries are the same if their mpiranks are equal. */
 static int
 t8_ghost_procecc_equal_function (const void *process_dataa,
-                                 const void *process_datab)
+                                 const void *process_datab, const void *user)
 {
   const t8_ghost_process_hash_t *processa =
     (const t8_ghost_process_hash_t *) process_dataa;
@@ -138,7 +139,7 @@ t8_ghost_remote_hash_function (const void *remote_data, const void *user_data)
  * Two entries are the same if they have the same rank. */
 static int
 t8_ghost_remote_equal_function (const void *remote_dataa,
-                                const void *remote_datab)
+                                const void *remote_datab, const void *user)
 {
   const t8_ghost_remote_hash_t *remotea =
     (const t8_ghost_remote_hash_t *) remote_dataa;
@@ -171,6 +172,7 @@ t8_forest_ghost_init (t8_forest_ghost_t * pghost)
   ghost->global_tree_to_ghost_tree =
     sc_hash_new (t8_ghost_gtree_hash_function, t8_ghost_gtree_equal_function,
                  NULL, ghost_gtree_mempool);
+
   /* initialize the process_offset hash table */
   ghost_process_mempool = sc_mempool_new (sizeof (t8_ghost_process_hash_t));
   ghost->process_offsets = sc_hash_new (t8_ghost_process_hash_function,
@@ -189,10 +191,91 @@ t8_forest_ghost_init (t8_forest_ghost_t * pghost)
   ghost->remote_processes = sc_array_new (sizeof (int));
 }
 
+/* Create one layer of ghost algorithms, following the algorithm
+ * in p4est: Scalable Algorithms For Parallel Adaptive
+ *           Mesh Refinement On Forests of Octrees
+ *           C. Burstedde, L. C. Wilcox, O. Ghattas
+ */
+void
+t8_forest_ghost_create (t8_forest_t forest)
+{
+  t8_element_t       *elem, *half_neighbors;
+  t8_locidx_t         num_local_trees, num_tree_elems;
+  t8_locidx_t         itree, ielem;
+  t8_tree_t           tree;
+  t8_eclass_t         tree_class, neigh_class;
+  t8_gloidx_t         neighbor_tree;
+  t8_eclass_scheme_c *ts, *neigh_scheme;
+  int                 iface, num_faces, num_face_children;
+  int                 ichild;
+
+  num_local_trees = t8_forest_get_num_local_trees (forest);
+  /* Loop over the trees of the forest */
+  for (itree = 0; itree < num_local_trees; itree++) {
+    /* Get a pointer to the tree, the class of the tree, the
+     * scheme associated to the class and the number of elements in
+     * this tree. */
+    tree = t8_forest_get_tree (forest, itree);
+    tree_class = t8_forest_get_tree_class (forest, itree);
+    ts = t8_forest_get_eclass_scheme (forest, tree_class);
+    /* Loop over the elements of this tree */
+    num_tree_elems = t8_forest_get_tree_element_count (tree);
+    for (ielem = 0; ielem < num_tree_elems; ielem++) {
+      /* Get the element of the tree */
+      elem = t8_forest_get_tree_element (tree, ielem);
+      num_faces = ts->t8_element_num_faces (elem);
+      for (iface = 0; iface < num_faces; iface++) {
+        /* Get the element class of the neighbor tree */
+        t8_forest_element_neighbor_eclass (forest, itree, elem, iface);
+        neigh_scheme = t8_forest_get_eclass_scheme (forest, neigh_class);
+        /* Get the number of face children of the element at this face */
+        num_face_children = ts->t8_element_num_face_children (elem, iface);
+        /* Allocate memory for the half size face neighbors */
+        /* TODO: allocating and deleting in each loop is only efficient if
+         *       the scheme manages the elements in a mempool (see sc_mempool_t)
+         */
+        neigh_scheme->t8_element_new (num_face_children, &half_neighbors);
+        /* Construct each half size neighbor */
+        neighbor_tree =
+          t8_forest_element_half_face_neighbors (forest, itree, elem,
+                                                 &half_neighbors, iface,
+                                                 num_face_children);
+#if 0
+        /* Find the owner process of each face_child */
+        for (ichild = 0; ichild < num_face_children; ichild++) {
+          t8_forest_element_find_owner (forest,);
+        }
+#endif
+        /* Clean-up memory */
+        neigh_scheme->t8_element_destroy (num_face_children, &half_neighbors);
+      }                         /* end face loop */
+    }                           /* end element loop */
+  }                             /* end tree loop */
+}
+
+/* Completely destroy a ghost structure */
 static void
 t8_forest_ghost_reset (t8_forest_ghost_t * pghost)
 {
-  SC_ABORT ("Not implemented\n");
+  t8_forest_ghost_t   ghost;
+  T8_ASSERT (pghost != NULL);
+  ghost = *pghost;
+  T8_ASSERT (ghost != NULL);
+  T8_ASSERT (ghost->rc.refcount == 0);
+
+  /* Clean-up the arrays */
+  sc_array_destroy (ghost->ghost_trees);
+  sc_array_destroy (ghost->processes);
+  sc_array_destroy (ghost->remote_ghosts);
+  sc_array_destroy (ghost->remote_processes);
+  /* Clean-up the hashtables */
+  sc_hash_destroy (ghost->global_tree_to_ghost_tree);
+  sc_hash_destroy (ghost->process_offsets);
+  sc_hash_destroy (ghost->remote_offset);
+
+  /* Free the ghost */
+  T8_FREE (ghost);
+  pghost = NULL;
 }
 
 void

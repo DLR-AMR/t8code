@@ -79,7 +79,7 @@ typedef struct t8_forest
   t8_gloidx_t         last_local_tree;
   t8_gloidx_t         global_num_trees; /**< The total number of global trees */
   sc_array_t         *trees;
-  t8_forest_ghost_t  *ghosts;           /**< The ghost elements. \see t8_forest_ghost.h */
+  t8_forest_ghost_t   ghosts;           /**< The ghost elements. \see t8_forest_ghost.h */
   t8_shmem_array_t    element_offsets; /**< If partitioned, for each process the global index
                                             of its first element. Since it is memory consuming,
                                             it is usually only constructed when needed and otherwise unallocated. */
@@ -120,6 +120,9 @@ t8_tree_struct_t;
  * it is nonzero, various runtimes and data measurements are stored here.
  * \see t8_cmesh_set_profiling and \see t8_cmesh_print_profile
  */
+
+/** The number of statistics collected by a profile struct. */
+#define T8_PROFILE_NUM_STATS 6
 typedef struct t8_profile
 {
   t8_locidx_t         partition_elements_shipped; /**< The number of elements this process has
@@ -135,9 +138,6 @@ typedef struct t8_profile
 
 }
 t8_profile_struct_t;
-
-/** The number of statistics collected by a profile struct */
-#define T8_PROFILE_NUM_STATS 6
 
 /* TODO: document */
 typedef struct t8_forest_ghost
