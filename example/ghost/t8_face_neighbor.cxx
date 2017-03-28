@@ -41,7 +41,8 @@ t8_ghost_neighbor_test (t8_eclass_t eclass, sc_MPI_Comm comm, int hybrid)
   int                 level = 1;
   t8_locidx_t         element_id = 0, treeid;
   t8_eclass_t         elem_eclass, neighbor_class;
-  int                 i, ret;
+  int                 i;
+  t8_gloidx_t         ret;
   int                 anchor_node[3];
 
   if (hybrid) {
@@ -88,7 +89,7 @@ t8_ghost_neighbor_test (t8_eclass_t eclass, sc_MPI_Comm comm, int hybrid)
     if (ret != -1) {
       neigh_scheme->t8_element_anchor (neigh, anchor_node);
       t8_debugf
-        ("neighbor of %i across face %i (in tree %i): (%i,%i,%i,%i)\n",
+        ("neighbor of %i across face %i (in tree %li): (%i,%i,%i,%i)\n",
          element_id, i,
          ret, neigh_scheme->t8_element_level (neigh), anchor_node[0],
          anchor_node[1],
