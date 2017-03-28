@@ -241,7 +241,7 @@ t8_gloidx_t         t8_forest_get_global_num_elements (t8_forest_t forest);
 
 /** Return the element class of a forest local tree.
  *  \param [in] forest    The forest.
- *  \param [in] ltreeid   The local id of a tree in the forest.
+ *  \param [in] ltreeid   The local id of a tree in \a forest.
  * \return  The element class of the tree \a ltreeid.
  * \a forest must be committed before calling this function.
  */
@@ -254,8 +254,20 @@ t8_eclass_t         t8_forest_get_eclass (t8_forest_t forest,
  *  \param [in] ltreeid   The local id of a tree in the forest.
  * \return  The local id of the tree in the cmesh associated with the forest.
  * \a forest must be committed before calling this function.
+ * \note This is the inverse function of \ref t8_forest_cmesh_ltreeid_to_ltreeid.
  */
 t8_locidx_t         t8_forest_ltreeid_to_cmesh_ltreeid (t8_forest_t forest,
+                                                        t8_locidx_t ltreeid);
+
+/** Given the local id of a tree in the coarse mesh of a forest, compute
+ * the tree's local id in the forest.
+ *  \param [in] forest    The forest.
+ *  \param [in] ltreeid   The local id of a tree in the coarse mesh of \a forest.
+ * \return  The local id of the tree in the forest.
+ * \a forest must be committed before calling this function.
+ * \note This is the inverse function of \ref t8_forest_ltreeid_to_cmesh_ltreeid.
+ */
+t8_locidx_t         t8_forest_cmesh_ltreeid_to_ltreeid (t8_forest_t forest,
                                                         t8_locidx_t ltreeid);
 
 /** Given the local id of a tree in a forest, return the coarse tree of the

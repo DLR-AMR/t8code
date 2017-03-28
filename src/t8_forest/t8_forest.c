@@ -30,6 +30,7 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest_vtk.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
+#include <t8_cmesh/t8_cmesh_trees.h>
 
 void
 t8_forest_init (t8_forest_t * pforest)
@@ -650,7 +651,9 @@ t8_forest_ltreeid_to_cmesh_ltreeid (t8_forest_t forest, t8_locidx_t ltreeid)
 }
 
 t8_ctree_t
-t8_forest_get_coarse_tree (t8_forest_t forest, t8_locidx_t ltreeid)
+t8_forest_get_coarse_tree_ext (t8_forest_t forest,
+                               t8_locidx_t ltreeid,
+                               t8_locidx_t ** face_neigh, int8_t ** ttf)
 {
   t8_locidx_t         lctreeid;
 
@@ -658,7 +661,15 @@ t8_forest_get_coarse_tree (t8_forest_t forest, t8_locidx_t ltreeid)
 
   /* Compute the coarse tree's local id */
   lctreeid = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
-  return t8_cmesh_get_tree (forest->cmesh, lctreeid);
+
+  return t8_cmesh_trees_get_tree_ext (forest->cmesh->trees, lctreeid,
+                                      face_neigh, ttf);
+}
+
+t8_ctree_t
+t8_forest_get_coarse_tree (t8_forest_t forest, t8_locidx_t ltreeid)
+{
+  return t8_forest_get_coarse_tree_ext (forest, ltreeid, NULL, NULL);
 }
 
 void
