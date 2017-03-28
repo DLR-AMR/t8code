@@ -63,7 +63,7 @@ t8_dline_child (const t8_dline_t * l, int childid, t8_dline_t * child)
   /* If childid = 0 then the childs x coord is the same as l's,
    * if childid = 1 then it is x + h.
    */
-  child->x = l->x + childid == 0 ? 0 : h;
+  child->x = l->x + (childid == 0 ? 0 : h);
   /* The childs level */
   child->level = l->level + 1;
 }
