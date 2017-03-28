@@ -135,6 +135,12 @@ t8_default_scheme_quad_c::t8_element_sibling (const t8_element_t * elem,
 }
 
 int
+t8_default_scheme_quad_c::t8_element_num_faces (const t8_element_t * elem)
+{
+  return P4EST_FACES;
+}
+
+int
 t8_default_scheme_quad_c::t8_element_num_children (const t8_element_t * elem)
 {
   return P4EST_CHILDREN;

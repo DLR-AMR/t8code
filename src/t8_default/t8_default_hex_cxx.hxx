@@ -73,6 +73,9 @@ public:
   virtual void        t8_element_sibling (const t8_element_t * elem,
                                           int sibid, t8_element_t * sibling);
 
+  /** Compute the number of face of a given element. */
+  virtual int         t8_element_num_faces (const t8_element_t * elem);
+
   /** Return the number of children of an element when it is refined. */
   virtual int         t8_element_num_children (const t8_element_t * elem);
 

@@ -92,6 +92,12 @@ t8_default_scheme_hex_c::t8_element_sibling (const t8_element_t * elem,
 }
 
 int
+t8_default_scheme_hex_c::t8_element_num_faces (const t8_element_t * elem)
+{
+  return P8EST_FACES;
+}
+
+int
 t8_default_scheme_hex_c::t8_element_num_children (const t8_element_t * elem)
 {
   return P8EST_CHILDREN;

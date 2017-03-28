@@ -86,6 +86,13 @@ public:
     SC_ABORT ("This function is not implemented yet.\n");
   }
 
+  /** Compute the number of face of a given element. */
+  virtual int         t8_element_num_faces (const t8_element_t * elem)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+    return 0;                   /* suppresses compiler warning */
+  }
+
   /** Return the number of children of an element when it is refined. */
   virtual int         t8_element_num_children (const t8_element_t * elem)
   {

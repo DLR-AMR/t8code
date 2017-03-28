@@ -41,7 +41,7 @@ struct t8_eclass_scheme
 {
   /** This scheme defines the operations for a particular element class. */
 protected:
-  size_t element_size;              /**< The size in bytes of an element of class \a eclass */
+  size_t element_size;                          /**< The size in bytes of an element of class \a eclass */
   void               *ts_context;               /**< Anonymous implementation context. */
 
 public:
@@ -135,6 +135,13 @@ public:
   virtual void        t8_element_sibling (const t8_element_t * elem,
                                           int sibid,
                                           t8_element_t * sibling) = 0;
+
+  /** Compute the number of face of a given element.
+   * \param [in] elem The element.
+   * \return          The number of faces of \a elem.
+   */
+  virtual int         t8_element_num_faces (const t8_element_t * elem) = 0;
+
   /** Return the number of children of an element when it is refined.
    * \param [in] ts     The virtual table for this element class.
    * \param [in] elem   The element whose number of children is returned.
