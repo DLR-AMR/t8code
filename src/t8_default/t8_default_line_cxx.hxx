@@ -157,11 +157,7 @@ public:
 /** Calculate the linear id of an element */
   virtual u_int64_t   t8_element_get_linear_id (const
                                                 t8_element_t *
-                                                elem, int level)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+                                                elem, int level);
 
 /** Calculate the first descendant of a given element e. That is, the
  *  first element in a uniform refinement of e of the maximal possible level.
@@ -173,10 +169,7 @@ public:
  *  last element in a uniform refinement of e of the maximal possible level.
  */
   virtual void        t8_element_last_descendant (const t8_element_t *
-                                                  elem, t8_element_t * desc)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                  elem, t8_element_t * desc);
 
 /** Compute s as a successor of t*/
   virtual void        t8_element_successor (const t8_element_t * t,
@@ -192,18 +185,11 @@ public:
 /** Get the integer root length of an element, that is the length of
  *  the level 0 ancestor.
  */
-  virtual int         t8_element_root_len (const t8_element_t * elem)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+  virtual int         t8_element_root_len (const t8_element_t * elem);
 
   /** Compute the integer coordinates of a given element vertex. */
   virtual void        t8_element_vertex_coords (const t8_element_t * t,
-                                                int vertex, int coords[])
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                int vertex, int coords[]);
 
 };
 

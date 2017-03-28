@@ -96,6 +96,37 @@ t8_default_scheme_line_c::t8_element_first_descendant (const t8_element_t *
                              T8_DLINE_MAXLEVEL);
 }
 
+void
+t8_default_scheme_line_c::t8_element_last_descendant (const t8_element_t *
+                                                       elem,
+                                                       t8_element_t * desc)
+{
+  t8_dline_last_descendant ((t8_dline_t *) elem, (t8_dline_t *) desc,
+                             T8_DLINE_MAXLEVEL);
+}
+
+void
+t8_default_scheme_line_c::t8_element_vertex_coords(const t8_element_t *t, int vertex, int coords[])
+{
+    t8_dline_vertex_coords((t8_dline_t *) t, vertex, coords);
+}
+
+int
+t8_default_scheme_line_c::t8_element_root_len (const t8_element_t * elem)
+{
+    return T8_DLINE_ROOT_LEN;
+}
+
+u_int64_t
+t8_default_scheme_line_c::t8_element_get_linear_id (const t8_element_t *
+                                                   elem, int level)
+{
+T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
+
+return t8_dline_linear_id ((t8_dline_t *) elem, level);
+}
+
+
 /* Constructor */
 t8_default_scheme_line_c::t8_default_scheme_line_c (void)
 {

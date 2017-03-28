@@ -101,6 +101,19 @@ void                t8_dline_first_descendant (const t8_dline_t * l,
 void                t8_dline_last_descendant (const t8_dline_t * l,
                                               t8_dline_t * s, int level);
 
+/** Compute the first or second vertex of a line.
+ * \param [in] elem     Line whose vertex is computed.
+ * \param [in] vertex   The number of the vertex of \a elem
+ * \param [out] coords   The coordinates of the computed vertex
+ */
+void                t8_dline_vertex_coords(const t8_dline_t * elem, int vertex, int coords[]);
+
+/** Computes the linear position of a line in an uniform grid.
+ * \param [in] line  Line whose id will be computed.
+ * \return Returns the linear position of this line on a grid.
+ */
+uint64_t            t8_dline_linear_id(const t8_dline_t * elem, int level);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DLINE_BITS_H */
