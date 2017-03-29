@@ -224,6 +224,8 @@ t8_forest_ghost_add_tree (t8_forest_t forest, t8_forest_ghost_t ghost,
   /* Compute the cmesh local id of the tree */
   lctreeid = gtreeid - t8_cmesh_get_first_treeid (cmesh);
   num_cmesh_local_trees = t8_cmesh_get_num_local_trees (cmesh);
+  t8_debugf ("[H] Adding global tree %li to ghost, cid %li\n", gtreeid,
+             (long) lctreeid);
   /* The tree must be a local tree or ghost tree in the cmesh */
   T8_ASSERT (0 <= lctree_id && lctree_id < num_cmesh_local_trees
              + t8_cmesh_get_num_ghosts (cmesh));
@@ -290,6 +292,7 @@ t8_forest_ghost_fill_ghost_tree_array (t8_forest_t forest,
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (ghost != NULL);
 
+  num_local_trees = t8_forest_get_num_local_trees (forest);
   /* If the first tree of the forest is shared with other
    * processes, then it must contain ghost elements */
   if (t8_forest_first_tree_shared (forest)) {
@@ -365,8 +368,12 @@ t8_forest_ghost_create (t8_forest_t forest)
   t8_eclass_t         tree_class, neigh_class;
   t8_gloidx_t         neighbor_tree;
   t8_eclass_scheme_c *ts, *neigh_scheme;
+  t8_ghost_process_hash_t *proc_entry, **pproc_entry_found, *proc_entry_found;
+  t8_ghost_gtree_hash_t proc_first_tree_hash, **pproc_first_tree_hash_found;
+  t8_ghost_tree_t    *proc_first_tree;
+  sc_array_t         *send_buffers;
   int                 iface, num_faces, num_face_children;
-  int                 ichild;
+  int                 ichild, owner, ret;
 
   num_local_trees = t8_forest_get_num_local_trees (forest);
 
@@ -375,7 +382,9 @@ t8_forest_ghost_create (t8_forest_t forest)
   ghost = forest->ghosts;
   /* Create all the ghost trees */
   t8_forest_ghost_fill_ghost_tree_array (forest, ghost);
-  return;
+
+  /* Initialize the send buffer */
+  sc_array_new_size (send_buffers, sizeof (sc_array_t));
 
   /* Loop over the trees of the forest */
   for (itree = 0; itree < num_local_trees; itree++) {
@@ -386,6 +395,10 @@ t8_forest_ghost_create (t8_forest_t forest)
     tree_class = t8_forest_get_tree_class (forest, itree);
     ts = t8_forest_get_eclass_scheme (forest, tree_class);
 
+    /* Allocate one proc_entry. We allocate a new one each time,
+     * we actually insert it in the hash table below */
+    proc_entry = (t8_ghost_process_hash_t *)
+      sc_mempool_alloc (ghost->proc_offset_mempool);
     /* Loop over the elements of this tree */
     num_tree_elems = t8_forest_get_tree_element_count (tree);
     for (ielem = 0; ielem < num_tree_elems; ielem++) {
@@ -394,9 +407,8 @@ t8_forest_ghost_create (t8_forest_t forest)
       num_faces = ts->t8_element_num_faces (elem);
       for (iface = 0; iface < num_faces; iface++) {
         /* TODO: Check whether the neighbor element is inside the forest,
-         *       if not then add the neighbor tree to the ghost trees
-         *       and find the owners of the half sized neighbors.
-         *       This will save computing time. Need an "element is in forest" function*/
+         *       if not then do not compute the half_neighbors.
+         *       This will save computing time. Needs an "element is in forest" function*/
 
         /* Get the element class of the neighbor tree */
         t8_forest_element_neighbor_eclass (forest, itree, elem, iface);
@@ -414,12 +426,44 @@ t8_forest_ghost_create (t8_forest_t forest)
                                                  &half_neighbors, iface,
                                                  num_face_children);
         /* Find the owner process of each face_child */
-#if 0
-        /* TODO: implement */
         for (ichild = 0; ichild < num_face_children; ichild++) {
-          t8_forest_element_find_owner (forest,);
+          /* find the owner */
+          owner =
+            t8_forest_element_find_owner (forest, half_neighbors[ichild],
+                                          neigh_class);
+          T8_ASSERT (0 <= owner && owner < forest->mpisize);
+          /* Add the new process to the hash table (if not already in it) */
+          /* TODO: outsource to function */
+          proc_entry->mpirank = owner;
+          if (sc_hash_insert_unique (ghost->proc_offset_mempool, proc_entry,
+                                     &pproc_entry_found)) {
+            /* The entry was added to the hash table, we thus allocate a new
+             * entry for the next time */
+            proc_entry = sc_mempool_alloc (ghost->proc_offset_mempool);
+          }
+          proc_entry_found = *pproc_entry_found;
+          T8_ASSERT (proc_entry_found->mpirank == owner);
+          /* Get a pointer to the stored process first tree data */
+          proc_first_tree =
+            (t8_ghost_tree_t *) sc_array_index (ghost->ghost_trees,
+                                                proc_entry_found->tree_index);
+          /* If the current neighbor tree is smaller than the stored neighbor
+           * tree, we need to update its index and its first element */
+          if (neighbor_tree <= proc_first_tree->global_id) {
+            /* Find the entry of the neighbor tree in the hash table */
+            proc_first_tree_hash.global_id = neighbor_tree;
+            ret = sc_hash_lookup (ghost->global_tree_to_ghost_tree,
+                                  &proc_first_tree_hash,
+                                  &pproc_first_tree_hash_found);
+            T8_ASSERT (ret);
+            /* Store the index of the neighbor tree in the new process entry */
+            proc_entry_found->tree_index =
+              (*pproc_first_tree_hash_found)->index;
+            /* Update the first_element */
+            /* TODO */
+            SC_ABORT ("Not implemented\n");
+          }
         }
-#endif
         /* Clean-up memory */
         neigh_scheme->t8_element_destroy (num_face_children, &half_neighbors);
       }                         /* end face loop */
