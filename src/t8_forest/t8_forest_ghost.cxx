@@ -99,10 +99,6 @@ t8_ghost_gtree_equal_function (const void *ghost_gtreea,
   const t8_ghost_gtree_hash_t *objectb =
     (const t8_ghost_gtree_hash_t *) ghost_gtreeb;
 
-  /* If the global treeids are the same, the indices must be the same */
-  T8_ASSERT (objecta->global_id != objectb->global_id
-             || objecta->index == objectb->index);
-
   /* return true if and only if the global_ids are the same */
   return objecta->global_id == objectb->global_id;
 }
@@ -122,7 +118,7 @@ t8_ghost_process_hash_function (const void *process_data,
 /* The equal function for the process_offsets array.
  * Two entries are the same if their mpiranks are equal. */
 static int
-t8_ghost_procecc_equal_function (const void *process_dataa,
+t8_ghost_process_equal_function (const void *process_dataa,
                                  const void *process_datab, const void *user)
 {
   const t8_ghost_process_hash_t *processa =
@@ -191,8 +187,8 @@ t8_forest_ghost_init (t8_forest_ghost_t * pghost)
   /* initialize the process_offset hash table */
   ghost_process_mempool = sc_mempool_new (sizeof (t8_ghost_process_hash_t));
   ghost->process_offsets = sc_hash_new (t8_ghost_process_hash_function,
-                                        t8_ghost_procecc_equal_function,
-                                        NULL, ghost_process_mempool);
+                                        t8_ghost_process_equal_function,
+                                        NULL, NULL);
   /* initialize the processes array */
   ghost->processes = sc_array_new (sizeof (int));
   /* initialize the remote ghosts array */
