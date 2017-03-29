@@ -162,6 +162,10 @@ typedef struct t8_forest_ghost
                                          */
   sc_hash_t          *remote_offset;    /* given a process return the offset into remote_ghosts */
   sc_array_t         *remote_processes; /* The ranks of the processes for which local elements are ghost. */
+
+  sc_mempool_t       *glo_tree_mempool;
+  sc_mempool_t       *proc_offset_mempool;
+  sc_mempool_t       *rem_offset_mempool;
 } t8_forest_ghost_struct_t;
 
 #endif /* ! T8_FOREST_TYPES_H! */

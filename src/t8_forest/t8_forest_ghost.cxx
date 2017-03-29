@@ -167,9 +167,6 @@ void
 t8_forest_ghost_init (t8_forest_ghost_t * pghost)
 {
   t8_forest_ghost_t   ghost;
-  sc_mempool_t       *ghost_gtree_mempool;
-  sc_mempool_t       *ghost_process_mempool;
-  sc_mempool_t       *ghost_remote_mempool;
 
   /* Allocate memory for ghost */
   ghost = *pghost = T8_ALLOC_ZERO (t8_forest_ghost_struct_t, 1);
@@ -179,25 +176,27 @@ t8_forest_ghost_init (t8_forest_ghost_t * pghost)
   ghost->ghost_trees = sc_array_new (sizeof (t8_ghost_tree_t));
 
   /* initialize the global_tree_to_ghost_tree hash table */
-  ghost_gtree_mempool = sc_mempool_new (sizeof (t8_ghost_gtree_hash_t));
+  ghost->glo_tree_mempool = sc_mempool_new (sizeof (t8_ghost_gtree_hash_t));
   ghost->global_tree_to_ghost_tree =
     sc_hash_new (t8_ghost_gtree_hash_function, t8_ghost_gtree_equal_function,
-                 NULL, ghost_gtree_mempool);
+                 NULL, NULL);
 
   /* initialize the process_offset hash table */
-  ghost_process_mempool = sc_mempool_new (sizeof (t8_ghost_process_hash_t));
-  ghost->process_offsets = sc_hash_new (t8_ghost_process_hash_function,
-                                        t8_ghost_process_equal_function,
-                                        NULL, NULL);
+  ghost->proc_offset_mempool =
+    sc_mempool_new (sizeof (t8_ghost_process_hash_t));
+  ghost->process_offsets =
+    sc_hash_new (t8_ghost_process_hash_function,
+                 t8_ghost_process_equal_function, NULL, NULL);
   /* initialize the processes array */
   ghost->processes = sc_array_new (sizeof (int));
   /* initialize the remote ghosts array */
   ghost->remote_ghosts = sc_array_new (sizeof (t8_element_t *));
   /* initialize the remote offset hash table */
-  ghost_remote_mempool = sc_mempool_new (sizeof (t8_ghost_remote_hash_t));
-  ghost->remote_offset = sc_hash_new (t8_ghost_remote_hash_function,
-                                      t8_ghost_remote_equal_function, NULL,
-                                      ghost_remote_mempool);
+  ghost->rem_offset_mempool =
+    sc_mempool_new (sizeof (t8_ghost_remote_hash_t));
+  ghost->remote_offset =
+    sc_hash_new (t8_ghost_remote_hash_function,
+                 t8_ghost_remote_equal_function, NULL, NULL);
   /* initialize the remote processes array */
   ghost->remote_processes = sc_array_new (sizeof (int));
 }
@@ -447,6 +446,11 @@ t8_forest_ghost_reset (t8_forest_ghost_t * pghost)
   sc_hash_destroy (ghost->global_tree_to_ghost_tree);
   sc_hash_destroy (ghost->process_offsets);
   sc_hash_destroy (ghost->remote_offset);
+  /* Clean-up the memory poolf for the data inside
+   * the hash tables */
+  sc_mempool_destroy (ghost->glo_tree_mempool);
+  sc_mempool_destroy (ghost->proc_offset_mempool);
+  sc_mempool_destroy (ghost->rem_offset_mempool);
 
   /* Free the ghost */
   T8_FREE (ghost);
