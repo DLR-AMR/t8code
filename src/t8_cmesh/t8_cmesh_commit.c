@@ -236,7 +236,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
    * sc_hash_new should actually allocate sc_link_t objects and not the
    * data objects. */
   ghost_ids = sc_hash_new (t8_ghost_hash, t8_ghost_facejoin_equal,
-                           &num_hashs, ghost_facejoin_mempool);
+                           &num_hashs, NULL);
 
   temp_facejoin =
     (t8_ghost_facejoin_t *) sc_mempool_alloc (ghost_facejoin_mempool);
