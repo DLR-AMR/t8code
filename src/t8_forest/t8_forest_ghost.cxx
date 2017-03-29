@@ -362,6 +362,7 @@ t8_forest_ghost_fill_ghost_tree_array (t8_forest_t forest,
 void
 t8_forest_ghost_create (t8_forest_t forest)
 {
+  t8_forest_ghost_t   ghost;
   t8_element_t       *elem, *neigh, *half_neighbors;
   t8_locidx_t         num_local_trees, num_tree_elems;
   t8_locidx_t         itree, ielem;
@@ -373,6 +374,14 @@ t8_forest_ghost_create (t8_forest_t forest)
   int                 ichild;
 
   num_local_trees = t8_forest_get_num_local_trees (forest);
+
+  /* Initialize the ghost structure */
+  t8_forest_ghost_init (&forest->ghosts);
+  ghost = forest->ghosts;
+  /* Create all the ghost trees */
+  t8_forest_ghost_fill_ghost_tree_array (forest, ghost);
+  return;
+
   /* Loop over the trees of the forest */
   for (itree = 0; itree < num_local_trees; itree++) {
     /* Get a pointer to the tree, the class of the tree, the

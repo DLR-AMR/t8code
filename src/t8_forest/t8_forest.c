@@ -276,6 +276,7 @@ t8_forest_commit (t8_forest_t forest)
     /* populate a new forest with tree and quadrant objects */
     t8_forest_populate (forest);
     forest->global_num_trees = t8_cmesh_get_num_trees (forest->cmesh);
+    t8_forest_ghost_create (forest);
   }
   else {
     T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
