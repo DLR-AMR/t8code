@@ -177,6 +177,13 @@ void                t8_dtri_transform_face (const t8_dtri_t * triangle1,
  */
 int                 t8_dtri_is_inside_root (t8_dtri_t * t);
 
+/** Compute whether a given triangle shares a given face with its root tree.
+ * \param [in] t        The input triangle.
+ * \param [in] face     A face of \a t.
+ * \return              True if \a face is a subface of the triangle's root element.
+ */
+int                 t8_dtri_is_root_boundary (const t8_dtri_t * t, int face);
+
 /** Test if two triangles have the same coordinates, type and level.
  * \return true if \a t1 describes the same triangle as \a t2.
  */

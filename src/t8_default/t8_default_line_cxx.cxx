@@ -66,6 +66,13 @@ t8_default_scheme_line_c::t8_element_child (const t8_element_t * elem,
   t8_dline_child (l, childid, c);
 }
 
+t8_eclass_t
+  t8_default_scheme_line_c::t8_element_face_class (const t8_element_t * elem,
+                                                   int face)
+{
+  return T8_ECLASS_VERTEX;
+}
+
 void
 t8_default_scheme_line_c::t8_element_transform_face (const t8_element_t *
                                                      elem1,

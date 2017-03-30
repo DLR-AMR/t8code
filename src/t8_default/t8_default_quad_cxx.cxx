@@ -269,6 +269,13 @@ t8_default_scheme_quad_c::t8_element_nca (const t8_element_t * elem1,
   t8_element_copy_surround (q1, r);
 }
 
+t8_eclass_t
+  t8_default_scheme_quad_c::t8_element_face_class (const t8_element_t * elem,
+                                                   int face)
+{
+  return T8_ECLASS_LINE;
+}
+
 int
 t8_default_scheme_quad_c::t8_element_face_child_face (const t8_element_t *
                                                       elem, int face,
@@ -427,6 +434,24 @@ t8_default_scheme_quad_c::t8_element_boundary (const t8_element_t * elem,
   for (iface = 0; iface < P4EST_FACES; iface++) {
     t8_element_boundary_face (elem, iface, boundary[iface]);
   }
+}
+
+int
+t8_default_scheme_quad_c::t8_element_is_root_boundary (const t8_element_t *
+                                                       elem, int face)
+{
+  const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
+  p4est_qcoord_t      coord;
+
+  T8_ASSERT (0 <= face && face < P4EST_FACES);
+
+  /* if face is 0 or 1 q->x
+   *            2 or 3 q->y
+   */
+  coord = face >> 1 ? q->y : q->x;
+  /* If face is 0 or 2 check against 0.
+   * If face is 1 or 3  check against LAST_OFFSET */
+  return coord == face & 1 ? P4EST_LAST_OFFSET (q->level) : 0;
 }
 
 int

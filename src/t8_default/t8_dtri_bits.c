@@ -773,6 +773,61 @@ t8_dtri_is_inside_root (t8_dtri_t * t)
 }
 
 int
+t8_dtri_is_root_boundary (const t8_dtri_t * t, int face)
+{
+  /* Dependend on the type and the face we have to check
+   * different conditions */
+#ifndef T8_DTRI_TO_DTET
+  switch (t->type) {
+  case 0:
+    switch (face) {
+    case 0:
+      return t->x == T8_DTET_ROOT_LEN - T8_DTET_LEN (t->level);
+    case 1:
+      return t->x == t->y;
+    case 2:
+      return t->y == 0;
+    default:
+      SC_ABORT_NOT_REACHED ();
+    }
+  case 1:
+    return 0;                   /* type 1 triangles are never at the boundary */
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+#else
+  switch (t->type) {
+  case 0:
+    switch (face) {
+    case 0:
+      return t->x == T8_DTET_ROOT_LEN - T8_DTET_LEN (t->level);
+    case 1:
+      return t->x == t->z;
+    case 2:
+      return t->y == t->z;
+    case 3:
+      return t->y == 0;
+    }
+  case 1:
+    /* type 1 tets are only boundary at face 0 */
+    return face == 0 && t->x == T8_DTET_ROOT_LEN - T8_DTET_LEN (t->level);
+  case 2:
+    /* type 1 tets are only boundary at face 2 */
+    return face == 2 && t->x == t->z;
+  case 3:
+    /* type 3 tets are never at the root boundary */
+    return 0;
+  case 4:
+    /* type 4 tets are only boundary at face 1 */
+    return face == 1 && t->y == t->z;
+  case 5:
+    /* type 5 tets are only boundary at face 3 */
+    return face == 3 && t->y == 0;
+  }
+#endif
+}
+
+int
 t8_dtri_is_equal (const t8_dtri_t * t1, const t8_dtri_t * t2)
 {
   return (t1->level == t1->level && t1->type == t2->type &&

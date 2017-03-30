@@ -150,6 +150,13 @@ t8_default_scheme_tet_c::t8_element_nca (const t8_element_t * elem1,
   t8_dtet_nearest_common_ancestor (t1, t2, c);
 }
 
+t8_eclass_t
+  t8_default_scheme_tet_c::t8_element_face_class (const t8_element_t * elem,
+                                                  int face)
+{
+  return T8_ECLASS_TRIANGLE;
+}
+
 int
 t8_default_scheme_tet_c::t8_element_face_child_face (const t8_element_t *
                                                      elem, int face,
@@ -273,6 +280,15 @@ t8_default_scheme_tet_c::t8_element_boundary (const t8_element_t * elem,
   for (iface = 0; iface < T8_DTET_FACES; iface++) {
     t8_element_boundary_face (elem, iface, boundary[iface]);
   }
+}
+
+int
+t8_default_scheme_tet_c::t8_element_is_root_boundary (const t8_element_t *
+                                                      elem, int face)
+{
+  const t8_dtet_t    *t = (const t8_dtet_t *) elem;
+
+  return t8_dtet_is_root_boundary (t, face);
 }
 
 int

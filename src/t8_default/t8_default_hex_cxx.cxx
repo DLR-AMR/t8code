@@ -161,6 +161,13 @@ t8_default_scheme_hex_c::t8_element_nca (const t8_element_t * elem1,
                                  (p8est_quadrant_t *) nca);
 }
 
+t8_eclass_t
+  t8_default_scheme_hex_c::t8_element_face_class (const t8_element_t * elem,
+                                                  int face)
+{
+  return T8_ECLASS_QUAD;
+}
+
 int
 t8_default_scheme_hex_c::t8_element_face_child_face (const t8_element_t *
                                                      elem, int face,
@@ -265,10 +272,12 @@ t8_default_scheme_hex_c::t8_element_boundary_face (const t8_element_t * elem,
    * if face = 4 or face = 5 then b->x = q->x, b->y = q->y
    *
    * We have to scale the coordinates since a root quadrant may have
-   * different lenght than a root hex.
+   * different length than a root hex.
    */
-  b->x = (face >> 1 ? q->x : q->y) * (int64_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN; /* true if face >= 2 */
-  b->y = (face >> 2 ? q->y : q->z) * (int64_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN; /* true if face >= 4 */
+  b->x = (face >> 1 ? q->x : q->y) * ((uint64_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);      /* true if face >= 2 */
+  b->y = (face >> 2 ? q->y : q->z) * ((uint64_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);      /* true if face >= 4 */
+  T8_ASSERT (!p8est_quadrant_is_extended (q)
+             || p4est_quadrant_is_extended (b));
 }
 
 void
@@ -282,6 +291,25 @@ t8_default_scheme_hex_c::t8_element_boundary (const t8_element_t * elem,
   for (iface = 0; iface < P8EST_FACES; iface++) {
     t8_element_boundary_face (elem, iface, boundary[iface]);
   }
+}
+
+int
+t8_default_scheme_hex_c::t8_element_is_root_boundary (const t8_element_t *
+                                                      elem, int face)
+{
+  const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
+  p4est_qcoord_t      coord;
+
+  T8_ASSERT (0 <= face && face < P8EST_FACES);
+
+  /* if face is 0 or 1 q->x
+   *            2 or 3 q->y
+   *            4 or 5 q->z
+   */
+  coord = face >> 2 ? q->z : face >> 1 ? q->y : q->x;
+  /* If face is 0,2 or 4 check against 0.
+   * If face is 1,3 or 5 check against LAST_OFFSET */
+  return coord == face & 1 ? P8EST_LAST_OFFSET (q->level) : 0;
 }
 
 int

@@ -159,6 +159,13 @@ int                 t8_dtet_tree_face (t8_dtet_t * t, int face);
  */
 int                 t8_dtet_is_inside_root (t8_dtet_t * t);
 
+/** Compute whether a given tetrahedron shares a given face with its root tree.
+ * \param [in] t        The input tet.
+ * \param [in] face     A face of \a t.
+ * \return              True if \a face is a subface of the tet's root element.
+ */
+int                 t8_dtet_is_root_boundary (const t8_dtet_t * t, int face);
+
 /** Test if two tetrahedra have the same coordinates, type and level.
  * \return true if \a t1 describes the same tetrahedron as \a t2.
  */

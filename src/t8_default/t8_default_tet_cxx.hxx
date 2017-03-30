@@ -101,6 +101,10 @@ public:
                                       const t8_element_t * elem2,
                                       t8_element_t * nca);
 
+  /** Compute the elmement class of the face of an element. */
+  virtual t8_eclass_t t8_element_face_class (const t8_element_t * elem,
+                                             int face);
+
   /** Given a face of an element and a child number (in Morton order)
    *  of a child of that face, return the face number
    * of the child of the element that matches the child face. */
@@ -137,6 +141,14 @@ public:
   virtual void        t8_element_boundary (const t8_element_t * elem,
                                            int min_dim, int length,
                                            t8_element_t ** boundary);
+
+  /** Compute whether a given element shares a given face with its root tree.
+   * \param [in] elem     The input element.
+   * \param [in] face     A face of \a elem.
+   * \return              True if \a face is a subface of the element's root element.
+   */
+  virtual int         t8_element_is_root_boundary (const t8_element_t * elem,
+                                                   int face);
 
   /** Construct the face neighbor of a given element if this face neighbor
    * is inside the root tree. Return 0 otherwise. */

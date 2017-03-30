@@ -218,6 +218,17 @@ public:
                                       const t8_element_t * elem2,
                                       t8_element_t * nca) = 0;
 
+  /** Compute the elmement class of the face of an element.
+   * \param [in] elem     The element.
+   * \param [in] face     A face of \a elem.
+   * \return              The element class of the face.
+   * I.e. T8_ECLASS_LINE for quads, T8_ECLASS_TRIANGLE for tets
+   *      and depending on the face number either T8_ECLASS_QUAD or
+   *      T8_ECLASS_TRIANGLE for prisms.
+   */
+  virtual t8_eclass_t t8_element_face_class (const t8_element_t * elem,
+                                             int face) = 0;
+
   /** Given a face of an element and a child number of a child of that face, return the face number
    * of the child of the element that matches the child face.
    * \verbatim
@@ -305,6 +316,14 @@ public:
   virtual void        t8_element_boundary (const t8_element_t * elem,
                                            int min_dim, int length,
                                            t8_element_t ** boundary) = 0;
+
+  /** Compute whether a given element shares a given face with its root tree.
+   * \param [in] elem     The input element.
+   * \param [in] face     A face of \a elem.
+   * \return              True if \a face is a subface of the element's root element.
+   */
+  virtual int         t8_element_is_root_boundary (const t8_element_t * elem,
+                                                   int face) = 0;
 
     /** Construct the face neighbor of a given element if this face neighbor
      * is inside the root tree. Return 0 otherwise.
