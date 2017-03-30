@@ -23,6 +23,7 @@
 #include <sc_refcount.h>
 #include <t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_adapt.h>
+#include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest.h>
 #include <t8_cmesh_vtk.h>
 #include <p4est_connectivity.h>
@@ -49,7 +50,7 @@ t8_basic_adapt (t8_forest_t forest, t8_locidx_t which_tree,
 #endif
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
-  if (level < 10)
+  if (level < 4)
     /* refine randomly if level is smaller 10 */
     return (unsigned) ((mpirank + 1) * rand ()) % 7;
   return 0;
@@ -159,6 +160,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
     if (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX
         || eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_TET) {
       t8_forest_commit (forest);
+      t8_forest_ghost_create (forest);
       t8_debugf ("Successfully committed forest.\n");
       t8_forest_write_vtk (forest, "basic");    /* This does nothing right now */
     }
@@ -365,11 +367,11 @@ main (int argc, char **argv)
   t8_basic (1, level);
   t8_global_productionf ("Done testing basic tet mesh.\n");
   t8_basic_hypercube (T8_ECLASS_QUAD, 0, 1, 1);
-#endif
   t8_basic ();
-  t8_basic_hypercube (T8_ECLASS_TET, 3, 1, 0);
-  t8_basic_forest_partition ();
+#endif
+  t8_basic_hypercube (T8_ECLASS_TET, 0, 1, 0);
 #if 0
+  t8_basic_forest_partition ();
   t8_global_productionf ("Testing hypercube cmesh.\n");
 
   for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; eclass++) {
