@@ -54,12 +54,20 @@ typedef struct
                                            of the ghost tree. */
 } t8_ghost_process_hash_t;
 
-/* The data structure stored in the remote_offset hash table */
+/* The information stored for the remote trees.
+ * Each remote process stores an array of these */
 typedef struct
 {
-  int                 mpirank;  /* a process rank */
-  size_t              index;    /* index into the remote_ghosts array */
-} t8_ghost_remote_hash_t;
+  t8_locidx_t         global_id;        /* global id of the tree */
+  t8_eclass_t         eclass;   /* The trees element class */
+  sc_array_t          elements; /* The ghost elements of that tree */
+} t8_ghost_remote_tree_t;
+
+typedef struct
+{
+  int                 remote_rank;      /* The rank of the remote process */
+  sc_array_t          remote_trees;     /* Array of the remote trees of this process */
+} t8_ghost_remote_t;
 
 /* Compare two ghost_tree entries. We need this function to sort the
  * ghost_trees array by global_id. */
@@ -135,32 +143,26 @@ t8_ghost_process_equal_function (const void *process_dataa,
   return processa->mpirank == processb->mpirank;
 }
 
-/* The hash funtion for the remote_offset array.
+/* The hash funtion for the remote_ghosts hash table.
  * The hash value for an mpirank is just the rank */
 static unsigned
 t8_ghost_remote_hash_function (const void *remote_data, const void *user_data)
 {
-  const t8_ghost_remote_hash_t *remote =
-    (const t8_ghost_remote_hash_t *) remote_data;
+  const t8_ghost_remote_t *remote = (const t8_ghost_remote_t *) remote_data;
 
-  return remote->mpirank;
+  return remote->remote_rank;
 }
 
-/* The equal function for the remote_offset hash table.
+/* The equal function for the remote hash table.
  * Two entries are the same if they have the same rank. */
 static int
 t8_ghost_remote_equal_function (const void *remote_dataa,
                                 const void *remote_datab, const void *user)
 {
-  const t8_ghost_remote_hash_t *remotea =
-    (const t8_ghost_remote_hash_t *) remote_dataa;
-  const t8_ghost_remote_hash_t *remoteb =
-    (const t8_ghost_remote_hash_t *) remote_datab;
+  const t8_ghost_remote_t *remotea = (const t8_ghost_remote_t *) remote_dataa;
+  const t8_ghost_remote_t *remoteb = (const t8_ghost_remote_t *) remote_datab;
 
-  /* If the ranks are equal then the indices must be equal as well */
-  T8_ASSERT (remotea->mpirank != remoteb->mpirank
-             || remotea->index == remoteb->index);
-  return remotea->mpirank == remoteb->mpirank;
+  return remotea->remote_rank == remoteb->remote_rank;
 }
 
 void
@@ -189,14 +191,11 @@ t8_forest_ghost_init (t8_forest_ghost_t * pghost)
                  t8_ghost_process_equal_function, NULL, NULL);
   /* initialize the processes array */
   ghost->processes = sc_array_new (sizeof (int));
-  /* initialize the remote ghosts array */
-  ghost->remote_ghosts = sc_array_new (sizeof (t8_element_t *));
-  /* initialize the remote offset hash table */
-  ghost->rem_offset_mempool =
-    sc_mempool_new (sizeof (t8_ghost_remote_hash_t));
-  ghost->remote_offset =
-    sc_hash_new (t8_ghost_remote_hash_function,
-                 t8_ghost_remote_equal_function, NULL, NULL);
+  /* initialize the remote ghosts hash table */
+  ghost->remote_ghosts =
+    sc_hash_array_new (sizeof (t8_ghost_remote_t),
+                       t8_ghost_remote_hash_function,
+                       t8_ghost_remote_equal_function, NULL);
   /* initialize the remote processes array */
   ghost->remote_processes = sc_array_new (sizeof (int));
 }
@@ -383,9 +382,6 @@ t8_forest_ghost_create (t8_forest_t forest)
   /* Create all the ghost trees */
   t8_forest_ghost_fill_ghost_tree_array (forest, ghost);
 
-  /* Initialize the send buffer */
-  sc_array_new_size (send_buffers, sizeof (sc_array_t));
-
   /* Loop over the trees of the forest */
   for (itree = 0; itree < num_local_trees; itree++) {
     /* Get a pointer to the tree, the class of the tree, the
@@ -476,6 +472,9 @@ static void
 t8_forest_ghost_reset (t8_forest_ghost_t * pghost)
 {
   t8_forest_ghost_t   ghost;
+  size_t              it;
+  t8_ghost_remote_t  *remote_entry;
+
   T8_ASSERT (pghost != NULL);
   ghost = *pghost;
   T8_ASSERT (ghost != NULL);
@@ -484,17 +483,22 @@ t8_forest_ghost_reset (t8_forest_ghost_t * pghost)
   /* Clean-up the arrays */
   sc_array_destroy (ghost->ghost_trees);
   sc_array_destroy (ghost->processes);
-  sc_array_destroy (ghost->remote_ghosts);
   sc_array_destroy (ghost->remote_processes);
   /* Clean-up the hashtables */
   sc_hash_destroy (ghost->global_tree_to_ghost_tree);
   sc_hash_destroy (ghost->process_offsets);
-  sc_hash_destroy (ghost->remote_offset);
+  /* Clean-up the remote ghost entries */
+  for (it = 0; it < ghost->remote_ghosts->a.elem_count; it++) {
+    remote_entry = (t8_ghost_remote_t *)
+      sc_array_index (&ghost->remote_ghosts->a, it);
+    sc_array_reset (&remote_entry->remote_trees);
+  }
+  sc_hash_array_destroy (ghost->remote_ghosts);
+
   /* Clean-up the memory poolf for the data inside
    * the hash tables */
   sc_mempool_destroy (ghost->glo_tree_mempool);
   sc_mempool_destroy (ghost->proc_offset_mempool);
-  sc_mempool_destroy (ghost->rem_offset_mempool);
 
   /* Free the ghost */
   T8_FREE (ghost);

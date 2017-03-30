@@ -156,16 +156,15 @@ typedef struct t8_forest_ghost
                                            whithin it the first element of that process. */
   sc_array_t         *processes;        /* ranks of the processes */
 
-  sc_array_t         *remote_ghosts;    /* array of t8_element_t * pointing to the local elements
-                                           that are ghost to another process.
+  sc_hash_array_t    *remote_ghosts;    /* array of local trees that have ghost elements for another process.
+                                           for each tree an array of t8_element_t * pointing to the local ghost elements.
                                            Sorted by process and within each process by linear id.
+                                           It is a hash table, hashed with the rank of a remote process.
                                          */
-  sc_hash_t          *remote_offset;    /* given a process return the offset into remote_ghosts */
   sc_array_t         *remote_processes; /* The ranks of the processes for which local elements are ghost. */
 
   sc_mempool_t       *glo_tree_mempool;
   sc_mempool_t       *proc_offset_mempool;
-  sc_mempool_t       *rem_offset_mempool;
 } t8_forest_ghost_struct_t;
 
 #endif /* ! T8_FOREST_TYPES_H! */
