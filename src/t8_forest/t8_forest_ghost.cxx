@@ -479,9 +479,6 @@ t8_forest_ghost_create (t8_forest_t forest)
   t8_eclass_t         tree_class, neigh_class;
   t8_gloidx_t         neighbor_tree;
   t8_eclass_scheme_c *ts, *neigh_scheme;
-  t8_ghost_process_hash_t *proc_entry, **pproc_entry_found, *proc_entry_found;
-  t8_ghost_gtree_hash_t proc_first_tree_hash, **pproc_first_tree_hash_found;
-  t8_ghost_tree_t    *proc_first_tree;
 
   int                 iface, num_faces;
   int                 num_face_children, max_num_face_children = 0;
@@ -504,10 +501,6 @@ t8_forest_ghost_create (t8_forest_t forest)
     tree_class = t8_forest_get_tree_class (forest, itree);
     ts = t8_forest_get_eclass_scheme (forest, tree_class);
 
-    /* Allocate one proc_entry. We allocate a new one each time,
-     * we actually insert it in the hash table below */
-    proc_entry = (t8_ghost_process_hash_t *)
-      sc_mempool_alloc (ghost->proc_offset_mempool);
     /* Loop over the elements of this tree */
     num_tree_elems = t8_forest_get_tree_element_count (tree);
     for (ielem = 0; ielem < num_tree_elems; ielem++) {
@@ -527,15 +520,17 @@ t8_forest_ghost_create (t8_forest_t forest)
         num_face_children = ts->t8_element_num_face_children (elem, iface);
         /* regrow the half_neighbors array if neccessary */
         if (max_num_face_children < num_face_children) {
-          max_num_face_children = num_face_children;
           half_neighbors = SC_REALLOC (half_neighbors, t8_element_t *,
                                        num_face_children);
+          if (max_num_face_children > 0) {
+            /* Clean-up memory */
+            neigh_scheme->t8_element_destroy (max_num_face_children,
+                                              half_neighbors);
+          }
+          /* Allocate memory for the half size face neighbors */
+          neigh_scheme->t8_element_new (num_face_children, half_neighbors);
+          max_num_face_children = num_face_children;
         }
-        /* Allocate memory for the half size face neighbors */
-        /* TODO: allocating and deleting in each loop is only efficient if
-         *       the scheme manages the elements in a mempool (see sc_mempool_t)
-         */
-        neigh_scheme->t8_element_new (num_face_children, half_neighbors);
         /* Construct each half size neighbor */
         neighbor_tree =
           t8_forest_element_half_face_neighbors (forest, itree, elem,
@@ -557,11 +552,12 @@ t8_forest_ghost_create (t8_forest_t forest)
             }
           }
         }
-        /* Clean-up memory */
-        neigh_scheme->t8_element_destroy (num_face_children, half_neighbors);
       }                         /* end face loop */
     }                           /* end element loop */
+
   }                             /* end tree loop */
+  /* Clean-up memory */
+  neigh_scheme->t8_element_destroy (max_num_face_children, half_neighbors);
   SC_FREE (half_neighbors);
 }
 
