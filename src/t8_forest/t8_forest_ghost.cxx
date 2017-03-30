@@ -351,7 +351,119 @@ t8_forest_ghost_fill_ghost_tree_array (t8_forest_t forest,
   }
 }
 
-/* Create one layer of ghost algorithms, following the algorithm
+/* Initialize a t8_ghost_remote_tree_t */
+static void
+t8_ghost_init_remote_tree (t8_forest_t forest, t8_gloidx_t gtreeid,
+                           t8_eclass_t eclass,
+                           t8_ghost_remote_tree_t * remote_tree)
+{
+  t8_eclass_scheme_c *ts;
+  t8_locidx_t         local_treeid;
+
+  T8_ASSERT (remote_tree != NULL);
+
+  ts = t8_forest_get_eclass_scheme (forest, eclass);
+  local_treeid = gtreeid - t8_forest_get_first_local_tree_id (forest);
+  /* Set the entries of the new remote tree */
+  remote_tree->global_id = gtreeid;
+  remote_tree->eclass = t8_forest_get_eclass (forest, local_treeid);
+  /* Initialize the array to store the element */
+  sc_array_init (&remote_tree->elements, ts->t8_element_size ());
+}
+
+/* Add a new element to the remote hash table (if not already in it).
+ * Must be called for elements in linear order */
+static void
+t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
+                     int remote_rank, t8_locidx_t ltreeid,
+                     t8_element_t * elem)
+{
+  t8_ghost_remote_t   remote_entry_lookup, *remote_entry;
+  t8_ghost_remote_tree_t *remote_tree;
+  t8_element_t       *elem_copy;
+  t8_eclass_scheme_c *ts;
+  t8_eclass_t         eclass;
+  sc_array_t         *remote_array;
+  size_t              index;
+  t8_gloidx_t         gtreeid;
+  int                *remote_process_entry;
+  int                 level, copy_level;
+
+  /* Get the tree's element class and the scheme */
+  eclass = t8_forest_get_tree_class (forest, ltreeid);
+  ts = t8_forest_get_eclass_scheme (forest, eclass);
+  gtreeid = t8_forest_get_first_local_tree_id (forest) + ltreeid;
+
+  /* Check whether the remote_rank is already present in the remote ghosts
+   * array. */
+  remote_entry_lookup.remote_rank = remote_rank;
+  remote_entry = (t8_ghost_remote_t *)
+    sc_hash_array_insert_unique (ghost->remote_ghosts,
+                                 (void *) &remote_entry_lookup, &index);
+  if (remote_entry != NULL) {
+    /* The remote rank was not in the array and was inserted now */
+    remote_entry->remote_rank = remote_rank;
+    /* Initialize the tree array of the new entry */
+    sc_array_init_size (&remote_entry->remote_trees,
+                        sizeof (t8_ghost_remote_tree_t), 1);
+    /* Get a pointer to the new entry */
+    remote_tree = (t8_ghost_remote_tree_t *)
+      sc_array_index (&remote_entry->remote_trees, 0);
+    /* initialize the remote_tree */
+    t8_ghost_init_remote_tree (forest, gtreeid, eclass, remote_tree);
+    /* Since the rank is a new remote rank, we also add it to the
+     * remote ranks array */
+    remote_process_entry = (int *) sc_array_push (ghost->remote_processes);
+    *remote_process_entry = remote_rank;
+  }
+  else {
+    /* The remote rank alrady is contained in the remotes array at
+     * position index. */
+    remote_array = &ghost->remote_ghosts->a;
+    remote_entry = (t8_ghost_remote_t *) sc_array_index (remote_array, index);
+    T8_ASSERT (remote_entry->remote_rank == remote_rank);
+    /* Check whether the tree has already an entry for this process.
+     * Since we only add in local tree order the current tree is either
+     * the last entry or does not have an entry yet. */
+    remote_tree = (t8_ghost_remote_tree_t *)
+      sc_array_index (&remote_entry->remote_trees,
+                      remote_entry->remote_trees.elem_count - 1);
+    if (remote_tree->global_id != gtreeid) {
+      /* The tree does not exist in the array. We thus need to add it and
+       * initialize it. */
+      remote_tree = (t8_ghost_remote_tree_t *)
+        sc_array_push (&remote_entry->remote_trees);
+      t8_ghost_init_remote_tree (forest, gtreeid, eclass, remote_tree);
+    }
+  }
+  /* remote_tree now points to a valid entry fore the tree.
+   * We can add a copy of the element to the elements array
+   * if it does not exist already. If it exists it is the last entry in
+   * the array. */
+  elem_copy = NULL;
+  level = ts->t8_element_level (elem);
+  if (remote_tree->elements.elem_count > 0) {
+    elem_copy =
+      (t8_element_t *) sc_array_index (&remote_tree->elements,
+                                       remote_tree->elements.elem_count - 1);
+    copy_level = ts->t8_element_level (elem_copy);
+  }
+  /* Check if the element was not contained in the array.
+   * If so, we add a copy of elem to the array.
+   * Otherwise, we do nothing. */
+  if (elem_copy == NULL ||
+      level != copy_level ||
+      ts->t8_element_get_linear_id (elem_copy, copy_level) !=
+      ts->t8_element_get_linear_id (elem, level)) {
+    elem_copy = (t8_element_t *) sc_array_push (&remote_tree->elements);
+    ts->t8_element_copy (elem, elem_copy);
+    t8_debugf ("[H] Adding element %li of tree %li to proc %i\n",
+               ts->t8_element_get_linear_id (elem, level),
+               gtreeid, remote_rank);
+  }
+}
+
+/* Create one layer of ghost elements, following the algorithm
  * in p4est: Scalable Algorithms For Parallel Adaptive
  *           Mesh Refinement On Forests of Octrees
  *           C. Burstedde, L. C. Wilcox, O. Ghattas
@@ -360,7 +472,7 @@ void
 t8_forest_ghost_create (t8_forest_t forest)
 {
   t8_forest_ghost_t   ghost;
-  t8_element_t       *elem, *neigh, *half_neighbors;
+  t8_element_t       *elem, *neigh, **half_neighbors;
   t8_locidx_t         num_local_trees, num_tree_elems;
   t8_locidx_t         itree, ielem;
   t8_tree_t           tree;
@@ -370,8 +482,9 @@ t8_forest_ghost_create (t8_forest_t forest)
   t8_ghost_process_hash_t *proc_entry, **pproc_entry_found, *proc_entry_found;
   t8_ghost_gtree_hash_t proc_first_tree_hash, **pproc_first_tree_hash_found;
   t8_ghost_tree_t    *proc_first_tree;
-  sc_array_t         *send_buffers;
-  int                 iface, num_faces, num_face_children;
+
+  int                 iface, num_faces;
+  int                 num_face_children, max_num_face_children = 0;
   int                 ichild, owner, ret;
 
   num_local_trees = t8_forest_get_num_local_trees (forest);
@@ -407,64 +520,49 @@ t8_forest_ghost_create (t8_forest_t forest)
          *       This will save computing time. Needs an "element is in forest" function*/
 
         /* Get the element class of the neighbor tree */
-        t8_forest_element_neighbor_eclass (forest, itree, elem, iface);
+        neigh_class =
+          t8_forest_element_neighbor_eclass (forest, itree, elem, iface);
         neigh_scheme = t8_forest_get_eclass_scheme (forest, neigh_class);
         /* Get the number of face children of the element at this face */
         num_face_children = ts->t8_element_num_face_children (elem, iface);
+        /* regrow the half_neighbors array if neccessary */
+        if (max_num_face_children < num_face_children) {
+          max_num_face_children = num_face_children;
+          half_neighbors = SC_REALLOC (half_neighbors, t8_element_t *,
+                                       num_face_children);
+        }
         /* Allocate memory for the half size face neighbors */
         /* TODO: allocating and deleting in each loop is only efficient if
          *       the scheme manages the elements in a mempool (see sc_mempool_t)
          */
-        neigh_scheme->t8_element_new (num_face_children, &half_neighbors);
+        neigh_scheme->t8_element_new (num_face_children, half_neighbors);
         /* Construct each half size neighbor */
         neighbor_tree =
           t8_forest_element_half_face_neighbors (forest, itree, elem,
-                                                 &half_neighbors, iface,
+                                                 half_neighbors, iface,
                                                  num_face_children);
-        /* Find the owner process of each face_child */
-        for (ichild = 0; ichild < num_face_children; ichild++) {
-          /* find the owner */
-          owner =
-            t8_forest_element_find_owner (forest, half_neighbors[ichild],
-                                          neigh_class);
-          T8_ASSERT (0 <= owner && owner < forest->mpisize);
-          /* Add the new process to the hash table (if not already in it) */
-          /* TODO: outsource to function */
-          proc_entry->mpirank = owner;
-          if (sc_hash_insert_unique (ghost->proc_offset_mempool, proc_entry,
-                                     &pproc_entry_found)) {
-            /* The entry was added to the hash table, we thus allocate a new
-             * entry for the next time */
-            proc_entry = sc_mempool_alloc (ghost->proc_offset_mempool);
-          }
-          proc_entry_found = *pproc_entry_found;
-          T8_ASSERT (proc_entry_found->mpirank == owner);
-          /* Get a pointer to the stored process first tree data */
-          proc_first_tree =
-            (t8_ghost_tree_t *) sc_array_index (ghost->ghost_trees,
-                                                proc_entry_found->tree_index);
-          /* If the current neighbor tree is smaller than the stored neighbor
-           * tree, we need to update its index and its first element */
-          if (neighbor_tree <= proc_first_tree->global_id) {
-            /* Find the entry of the neighbor tree in the hash table */
-            proc_first_tree_hash.global_id = neighbor_tree;
-            ret = sc_hash_lookup (ghost->global_tree_to_ghost_tree,
-                                  &proc_first_tree_hash,
-                                  &pproc_first_tree_hash_found);
-            T8_ASSERT (ret);
-            /* Store the index of the neighbor tree in the new process entry */
-            proc_entry_found->tree_index =
-              (*pproc_first_tree_hash_found)->index;
-            /* Update the first_element */
-            /* TODO */
-            SC_ABORT ("Not implemented\n");
+        if (neighbor_tree >= 0) {
+          /* If there exist face neighbor elements (we are not at a domain boundary */
+          /* Find the owner process of each face_child */
+          for (ichild = 0; ichild < num_face_children; ichild++) {
+            /* find the owner */
+            owner =
+              t8_forest_element_find_owner (forest, neighbor_tree,
+                                            half_neighbors[ichild],
+                                            neigh_class);
+            T8_ASSERT (0 <= owner && owner < forest->mpisize);
+            if (owner != forest->mpirank) {
+              /* Add the element as a remote element */
+              t8_ghost_add_remote (forest, ghost, owner, itree, elem);
+            }
           }
         }
         /* Clean-up memory */
-        neigh_scheme->t8_element_destroy (num_face_children, &half_neighbors);
+        neigh_scheme->t8_element_destroy (num_face_children, half_neighbors);
       }                         /* end face loop */
     }                           /* end element loop */
   }                             /* end tree loop */
+  SC_FREE (half_neighbors);
 }
 
 /* Completely destroy a ghost structure */
