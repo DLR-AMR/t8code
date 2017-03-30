@@ -553,17 +553,17 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
   tree = t8_forest_get_tree (forest, ltreeid);
   eclass = tree->eclass;
   ts = t8_forest_get_eclass_scheme (forest, eclass);
-  tree_face = ts->t8_element_tree_face (elem, face);
 
   T8_ASSERT (t8_eclass_to_dimension[eclass] > 0);       /* Vertices do not have face neighbors. */
 
   /* Build boundary face, refine and extrude */
   /* Get the eclass scheme for the boundary */
-  boundary_class = (t8_eclass_t) t8_eclass_face_types[eclass][tree_face];
+  boundary_class = ts->t8_element_face_class (elem, face);
   boundary_scheme = t8_forest_get_eclass_scheme (forest, boundary_class);
   /* Check if the number of children of the boundary face is correct
    * and allocate as many elements */
   T8_ASSERT (num_neighs == ts->t8_element_num_face_children (elem, face));
+  boundary_faces = T8_ALLOC (t8_element_t *, num_neighs);
   boundary_scheme->t8_element_new (num_neighs, boundary_faces);
 
   /* Store the boundary face of elem in the first of boundary_faces */
@@ -587,6 +587,7 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
   /* clean-up */
   ts->t8_element_destroy (1, &child_at_face);
   boundary_scheme->t8_element_destroy (num_neighs, boundary_faces);
+  T8_FREE (boundary_faces);
 
   /* We return the local id of the tree in which the face neighbors are */
   return neighbor_tree;
