@@ -63,7 +63,7 @@ t8_dline_child (const t8_dline_t * l, int childid, t8_dline_t * child)
   /* If childid = 0 then the childs x coord is the same as l's,
    * if childid = 1 then it is x + h.
    */
-  child->x = l->x + childid == 0 ? 0 : h;
+  child->x = l->x + (childid == 0 ? 0 : h);
   /* The childs level */
   child->level = l->level + 1;
 }
@@ -135,4 +135,13 @@ t8_dline_first_descendant (const t8_dline_t * l, t8_dline_t * s, int level)
 
   s->level = level;
   s->x = l->x;
+}
+
+void
+t8_dline_last_descendant (const t8_dline_t * l, t8_dline_t * s, int level)
+{
+  T8_ASSERT (level >= l->level && level <= T8_DLINE_MAXLEVEL);
+
+  s->level = level;
+  s->x = l->x + T8_DLINE_LEN (l->level) - T8_DLINE_LEN (level);
 }

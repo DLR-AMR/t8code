@@ -51,7 +51,7 @@ t8_basic_adapt (t8_forest_t forest, t8_locidx_t which_tree,
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
   if (level < 4)
-    /* refine randomly if level is smaller 10 */
+    /* refine randomly if level is smaller 4 */
     return (unsigned) ((mpirank + 1) * rand ()) % 7;
   return 0;
 }
@@ -59,30 +59,37 @@ t8_basic_adapt (t8_forest_t forest, t8_locidx_t which_tree,
 #endif
 #if 0
 static void
-t8_basic_refine_test ()
+t8_basic_refine_test (t8_eclass_t eclass)
 {
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
   t8_cmesh_t          cmesh;
+  char                filename[BUFSIZ];
 
   t8_forest_init (&forest);
   t8_forest_init (&forest_adapt);
-  cmesh = t8_cmesh_new_from_class (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, 0);
+  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0);
 
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
-  t8_cmesh_unref (&cmesh);
-  t8_forest_set_scheme (forest, t8_scheme_new_default ());
+  t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
   t8_forest_set_level (forest, 2);
   t8_forest_commit (forest);
+  /* Output to vtk */
+  snprintf (filename, BUFSIZ, "forest_uniform_%s",
+            t8_eclass_to_string[eclass]);
+  t8_forest_write_vtk (forest, filename);
 
   t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, NULL, 1);
   t8_forest_commit (forest_adapt);
+  /* Output to vtk */
+  snprintf (filename, BUFSIZ, "forest_adapt_%s", t8_eclass_to_string[eclass]);
+  t8_forest_write_vtk (forest_adapt, filename);
 
   t8_forest_unref (&forest_adapt);
 }
 #endif
 
-#if 1
+#if 0
 static void
 t8_basic_forest_partition ()
 {
@@ -158,7 +165,8 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
     t8_forest_set_level (forest, set_level);
 
     if (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX
-        || eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_TET) {
+        || eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_TET
+        || eclass == T8_ECLASS_LINE) {
       t8_forest_commit (forest);
       t8_forest_ghost_create (forest);
       t8_debugf ("Successfully committed forest.\n");
@@ -282,7 +290,7 @@ t8_basic_partitioned ()
   t8_cmesh_unref (&cmesh);
 }
 #endif
-#if 1
+#if 0
 static void
 t8_basic ()
 {
