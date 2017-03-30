@@ -825,6 +825,8 @@ t8_dtri_is_root_boundary (const t8_dtri_t * t, int face)
     return face == 3 && t->y == 0;
   }
 #endif
+  SC_ABORT_NOT_REACHED ();
+  return 0;                     /* Prevent compiler warning */
 }
 
 int
