@@ -68,6 +68,8 @@ void                t8_forest_ghost_destroy (t8_forest_ghost_t * pghost);
 /* TODO: Document */
 void                t8_forest_ghost_create (t8_forest_t forest);
 
+void                t8_forest_ghost_print (t8_forest_t forest);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_GHOST_H! */

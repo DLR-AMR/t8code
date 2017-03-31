@@ -547,8 +547,9 @@ t8_forest_ghost_create (t8_forest_t forest)
                                             neigh_class);
             T8_ASSERT (0 <= owner && owner < forest->mpisize);
             if (owner != forest->mpirank) {
-              t8_debugf ("face neighbor in tree %i of elem %i at %i belongs %i\n",
-                         itree, ielem, iface, owner);
+              t8_debugf
+                ("face neighbor in tree %i of elem %i at %i belongs %i\n",
+                 itree, ielem, iface, owner);
               /* Add the element as a remote element */
               t8_ghost_add_remote (forest, ghost, owner, itree, elem);
             }
@@ -563,7 +564,44 @@ t8_forest_ghost_create (t8_forest_t forest)
   T8_FREE (half_neighbors);
 }
 
+/* Print a forest ghost structure */
+void
+t8_forest_ghost_print (t8_forest_t forest)
+{
+  t8_forest_ghost_t   ghost;
+  t8_ghost_remote_t  *remote, remote_search, *remote_found;
+  t8_ghost_remote_tree_t *remote_tree;
+  int                 iremote, itree;
+  int                 ret;
+  size_t              index;
+  char                buffer[BUFSIZ] = "";
 
+  ghost = forest->ghosts;
+  for (iremote = 0; iremote < ghost->remote_processes->elem_count; iremote++) {
+    /* Get the rank of the remote process */
+    remote_search.remote_rank =
+      *(int *) sc_array_index_int (ghost->remote_processes, iremote);
+    /* Search for the remote process in the hash table */
+    ret = sc_hash_array_lookup (ghost->remote_ghosts, &remote_search, &index);
+    remote_found = (t8_ghost_remote_t *)
+      sc_array_index (&ghost->remote_ghosts->a, index);
+    T8_ASSERT (ret != 0);
+    /* investigate the entry of this remote process */
+    snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer),
+              "\t[Rank %i] (%li trees):\n", remote_found->remote_rank,
+              remote_found->remote_trees.elem_count);
+    for (itree = 0; itree < remote_found->remote_trees.elem_count; itree++) {
+      remote_tree = (t8_ghost_remote_tree_t *)
+        sc_array_index_int (&remote_found->remote_trees, itree);
+      snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer),
+                "\t\t[id: %lli, class: %s, #elem: %li]\n",
+                (long long) remote_tree->global_id,
+                t8_eclass_to_string[remote_tree->eclass],
+                (long) remote_tree->elements.elem_count);
+    }
+  }
+  t8_debugf ("Ghost structure:\n%s\n", buffer);
+}
 
 /* Completely destroy a ghost structure */
 static void
