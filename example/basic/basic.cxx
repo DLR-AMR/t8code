@@ -169,6 +169,8 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
         || eclass == T8_ECLASS_LINE) {
       t8_forest_commit (forest);
       t8_forest_ghost_create (forest);
+
+      t8_forest_ghost_print (forest);
       t8_debugf ("Successfully committed forest.\n");
       t8_forest_write_vtk (forest, "basic");    /* This does nothing right now */
     }
@@ -377,7 +379,7 @@ main (int argc, char **argv)
   t8_basic_hypercube (T8_ECLASS_QUAD, 0, 1, 1);
   t8_basic ();
 #endif
-  t8_basic_hypercube (T8_ECLASS_TET, 0, 1, 0);
+  t8_basic_hypercube (T8_ECLASS_TET, 1, 1, 0);
 #if 0
   t8_basic_forest_partition ();
   t8_global_productionf ("Testing hypercube cmesh.\n");
