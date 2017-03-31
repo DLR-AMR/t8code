@@ -520,13 +520,13 @@ t8_forest_ghost_create (t8_forest_t forest)
         num_face_children = ts->t8_element_num_face_children (elem, iface);
         /* regrow the half_neighbors array if neccessary */
         if (max_num_face_children < num_face_children) {
-          half_neighbors = SC_REALLOC (half_neighbors, t8_element_t *,
-                                       num_face_children);
           if (max_num_face_children > 0) {
             /* Clean-up memory */
             neigh_scheme->t8_element_destroy (max_num_face_children,
                                               half_neighbors);
+            T8_FREE (half_neighbors);
           }
+          half_neighbors = T8_ALLOC (t8_element_t *, num_face_children);
           /* Allocate memory for the half size face neighbors */
           neigh_scheme->t8_element_new (num_face_children, half_neighbors);
           max_num_face_children = num_face_children;
@@ -547,6 +547,8 @@ t8_forest_ghost_create (t8_forest_t forest)
                                             neigh_class);
             T8_ASSERT (0 <= owner && owner < forest->mpisize);
             if (owner != forest->mpirank) {
+              t8_debugf ("face neighbor in tree %i of elem %i at %i belongs %i\n",
+                         itree, ielem, iface, owner);
               /* Add the element as a remote element */
               t8_ghost_add_remote (forest, ghost, owner, itree, elem);
             }
@@ -558,16 +560,19 @@ t8_forest_ghost_create (t8_forest_t forest)
   }                             /* end tree loop */
   /* Clean-up memory */
   neigh_scheme->t8_element_destroy (max_num_face_children, half_neighbors);
-  SC_FREE (half_neighbors);
+  T8_FREE (half_neighbors);
 }
+
+
 
 /* Completely destroy a ghost structure */
 static void
 t8_forest_ghost_reset (t8_forest_ghost_t * pghost)
 {
   t8_forest_ghost_t   ghost;
-  size_t              it;
+  size_t              it, it_trees;
   t8_ghost_remote_t  *remote_entry;
+  t8_ghost_remote_tree_t *remote_tree;
 
   T8_ASSERT (pghost != NULL);
   ghost = *pghost;
@@ -585,6 +590,12 @@ t8_forest_ghost_reset (t8_forest_ghost_t * pghost)
   for (it = 0; it < ghost->remote_ghosts->a.elem_count; it++) {
     remote_entry = (t8_ghost_remote_t *)
       sc_array_index (&ghost->remote_ghosts->a, it);
+    for (it_trees = 0; it_trees < remote_entry->remote_trees.elem_count;
+         it_trees++) {
+      remote_tree = (t8_ghost_remote_tree_t *)
+        sc_array_index (&remote_entry->remote_trees, it_trees);
+      sc_array_reset (&remote_tree->elements);
+    }
     sc_array_reset (&remote_entry->remote_trees);
   }
   sc_hash_array_destroy (ghost->remote_ghosts);
