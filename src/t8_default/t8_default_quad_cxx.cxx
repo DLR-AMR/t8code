@@ -451,7 +451,7 @@ t8_default_scheme_quad_c::t8_element_is_root_boundary (const t8_element_t *
   coord = face >> 1 ? q->y : q->x;
   /* If face is 0 or 2 check against 0.
    * If face is 1 or 3  check against LAST_OFFSET */
-  return coord == face & 1 ? P4EST_LAST_OFFSET (q->level) : 0;
+  return coord == (face & 1 ? P4EST_LAST_OFFSET (q->level) : 0);
 }
 
 int

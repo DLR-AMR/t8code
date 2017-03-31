@@ -210,7 +210,7 @@ t8_forest_ghost_add_tree (t8_forest_t forest, t8_forest_ghost_t ghost,
 {
   t8_cmesh_t          cmesh;
   t8_eclass_t         eclass;
-  t8_locidx_t         lctree_id, num_cmesh_local_trees;
+  t8_locidx_t         num_cmesh_local_trees;
   t8_locidx_t         lctreeid;
   sc_mempool_t       *hash_mempool;
   t8_ghost_gtree_hash_t *global_to_index_entry;
@@ -226,11 +226,11 @@ t8_forest_ghost_add_tree (t8_forest_t forest, t8_forest_ghost_t ghost,
   t8_debugf ("[H] Adding global tree %li to ghost, cid %li\n", gtreeid,
              (long) lctreeid);
   /* The tree must be a local tree or ghost tree in the cmesh */
-  T8_ASSERT (0 <= lctree_id && lctree_id < num_cmesh_local_trees
+  T8_ASSERT (0 <= lctreeid && lctreeid < num_cmesh_local_trees
              + t8_cmesh_get_num_ghosts (cmesh));
 
   /* Get the coarse tree and its face-neighbor information */
-  if (lctree_id < num_cmesh_local_trees) {
+  if (lctreeid < num_cmesh_local_trees) {
     /* The tree is a local tree in the cmesh */
     eclass = t8_cmesh_get_tree_class (cmesh, lctreeid);
   }
@@ -472,7 +472,7 @@ void
 t8_forest_ghost_create (t8_forest_t forest)
 {
   t8_forest_ghost_t   ghost;
-  t8_element_t       *elem, *neigh, **half_neighbors;
+  t8_element_t       *elem, **half_neighbors;
   t8_locidx_t         num_local_trees, num_tree_elems;
   t8_locidx_t         itree, ielem;
   t8_tree_t           tree;
@@ -482,7 +482,7 @@ t8_forest_ghost_create (t8_forest_t forest)
 
   int                 iface, num_faces;
   int                 num_face_children, max_num_face_children = 0;
-  int                 ichild, owner, ret;
+  int                 ichild, owner;
 
   num_local_trees = t8_forest_get_num_local_trees (forest);
 
@@ -569,9 +569,9 @@ void
 t8_forest_ghost_print (t8_forest_t forest)
 {
   t8_forest_ghost_t   ghost;
-  t8_ghost_remote_t  *remote, remote_search, *remote_found;
+  t8_ghost_remote_t   remote_search, *remote_found;
   t8_ghost_remote_tree_t *remote_tree;
-  int                 iremote, itree;
+  size_t              iremote, itree;
   int                 ret;
   size_t              index;
   char                buffer[BUFSIZ] = "";
@@ -580,7 +580,7 @@ t8_forest_ghost_print (t8_forest_t forest)
   for (iremote = 0; iremote < ghost->remote_processes->elem_count; iremote++) {
     /* Get the rank of the remote process */
     remote_search.remote_rank =
-      *(int *) sc_array_index_int (ghost->remote_processes, iremote);
+      *(int *) sc_array_index (ghost->remote_processes, iremote);
     /* Search for the remote process in the hash table */
     ret = sc_hash_array_lookup (ghost->remote_ghosts, &remote_search, &index);
     remote_found = (t8_ghost_remote_t *)
@@ -592,7 +592,7 @@ t8_forest_ghost_print (t8_forest_t forest)
               remote_found->remote_trees.elem_count);
     for (itree = 0; itree < remote_found->remote_trees.elem_count; itree++) {
       remote_tree = (t8_ghost_remote_tree_t *)
-        sc_array_index_int (&remote_found->remote_trees, itree);
+        sc_array_index (&remote_found->remote_trees, itree);
       snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer),
                 "\t\t[id: %lli, class: %s, #elem: %li]\n",
                 (long long) remote_tree->global_id,

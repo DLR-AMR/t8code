@@ -104,7 +104,6 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
   uint64_t            local_first_desc;
   t8_element_t       *first_element, *first_desc;
   t8_eclass_scheme_c *ts;
-  int                 level;
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -122,7 +121,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
   }
   /* Assert whether the array is set up correctly */
   T8_ASSERT (t8_shmem_array_get_elem_count (forest->global_first_desc) ==
-             forest->mpisize);
+             (size_t) forest->mpisize);
   T8_ASSERT (t8_shmem_array_get_elem_size (forest->global_first_desc) ==
              sizeof (uint64_t));
   T8_ASSERT (t8_shmem_array_get_comm (forest->global_first_desc) == comm);
@@ -140,8 +139,6 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
                                       t8_forest_get_tree_class (forest, 0));
     ts->t8_element_new (1, &first_desc);
     ts->t8_element_first_descendant (first_element, first_desc);
-    /* Get the level of the descendant. */
-    level = ts->t8_element_level (first_desc);
     /* Compute the linear id of the descendant. */
     local_first_desc =
       ts->t8_element_get_linear_id (first_desc, ts->t8_element_maxlevel ());
@@ -165,7 +162,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
                             sc_MPI_UNSIGNED_LONG_LONG);
 #ifdef T8_ENABLE_DEBUG
   {
-    size_t              iproc;
+    int                 iproc;
     char                buffer[BUFSIZ] = { };
     uint64_t            desc_id;
 
@@ -204,7 +201,7 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
   }
   /* Assert whether the array is set up correctly */
   T8_ASSERT (t8_shmem_array_get_elem_count (forest->tree_offsets) ==
-             forest->mpisize + 1);
+             (size_t) forest->mpisize + 1);
   T8_ASSERT (t8_shmem_array_get_elem_size (forest->tree_offsets) ==
              sizeof (t8_gloidx_t));
   T8_ASSERT (t8_shmem_array_get_comm (forest->tree_offsets) == comm);
@@ -377,7 +374,7 @@ t8_forest_partition_tree_first_last_el (t8_tree_t tree,
   /* return true if the last element that we send is also the last
    * element of the tree */
   if (last_element_send - tree->elements_offset
-      == tree->elements.elem_count - 1) {
+      == (t8_locidx_t) tree->elements.elem_count - 1) {
     return 1;
   }
   return 0;
@@ -886,9 +883,9 @@ t8_forest_partition (t8_forest_t forest)
   t8_forest_partition_compute_new_offset (forest);
   t8_forest_partition_given (forest);
 
-  T8_ASSERT (t8_forest_get_num_local_trees (forest_from)
+  T8_ASSERT ((size_t) t8_forest_get_num_local_trees (forest_from)
              == forest_from->trees->elem_count);
-  T8_ASSERT (t8_forest_get_num_local_trees (forest)
+  T8_ASSERT ((size_t) t8_forest_get_num_local_trees (forest)
              == forest->trees->elem_count);
 
   if (forest->profile != NULL) {

@@ -309,7 +309,7 @@ t8_default_scheme_hex_c::t8_element_is_root_boundary (const t8_element_t *
   coord = face >> 2 ? q->z : face >> 1 ? q->y : q->x;
   /* If face is 0,2 or 4 check against 0.
    * If face is 1,3 or 5 check against LAST_OFFSET */
-  return coord == face & 1 ? P8EST_LAST_OFFSET (q->level) : 0;
+  return coord == (face & 1 ? P8EST_LAST_OFFSET (q->level) : 0);
 }
 
 int

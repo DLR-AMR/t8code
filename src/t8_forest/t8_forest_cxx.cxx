@@ -379,7 +379,6 @@ t8_forest_element_neighbor_eclass (t8_forest_t forest,
   t8_tree_t           tree;
   t8_ctree_t          coarse_tree;
   t8_eclass_t         eclass;
-  t8_element_t       *face_neighbor;
   int                 tree_face;
   t8_locidx_t         lcoarse_neighbor;
   t8_cmesh_t          cmesh;
@@ -446,7 +445,6 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
     t8_locidx_t         lctree_id, lcneigh_id;
     t8_locidx_t        *face_neighbor;
     int8_t             *ttf;
-    t8_ctree_t          elem_tree;
     int                 tree_face, neigh_face;
     int                 is_smaller, eclass_compare;
     int                 F;
@@ -466,8 +464,8 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
     /* Get the coarse tree that contains elem.
      * Also get the face neighbor information of the coarse tree. */
     lctree_id = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
-    elem_tree = t8_cmesh_trees_get_tree_ext (cmesh->trees,
-                                             lctree_id, &face_neighbor, &ttf);
+    (void) t8_cmesh_trees_get_tree_ext (cmesh->trees,
+                                        lctree_id, &face_neighbor, &ttf);
     /* Compute the local id of the face neighbor tree. */
     lcneigh_id = face_neighbor[tree_face];
     /* F is needed to compute the neighbor face number and the orientation.
@@ -546,7 +544,6 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
   t8_element_t      **boundary_faces, *child_at_face;
   t8_gloidx_t         neighbor_tree;
   int                 ichild;
-  int                 tree_face;
   int                 child_face_num;
 
   /* Get a pointer to the tree to read its element class */

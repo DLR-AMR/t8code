@@ -232,7 +232,6 @@ t8_default_scheme_tet_c::t8_element_boundary_face (const t8_element_t * elem,
 {
   const t8_default_tet_t *t = (const t8_default_tet_t *) elem;
   t8_dtri_t          *b = (t8_dtri_t *) boundary;
-  t8_dtet_coord_t     tcoord[3] = { t->x, t->y, t->z };
   int                 face_cat;
 
   T8_ASSERT (0 <= face && face < T8_DTET_FACES);
