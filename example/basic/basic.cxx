@@ -366,11 +366,11 @@ main (int argc, char **argv)
   t8_basic (1, level);
   t8_global_productionf ("Done testing basic tet mesh.\n");
   t8_basic_hypercube (T8_ECLASS_QUAD, 0, 1, 1);
-#endif
   t8_basic ();
+#endif
   t8_basic_hypercube (T8_ECLASS_LINE, 3, 1, 0);
-  t8_basic_forest_partition ();
 #if 0
+  t8_basic_forest_partition ();
   t8_global_productionf ("Testing hypercube cmesh.\n");
 
   for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; eclass++) {
