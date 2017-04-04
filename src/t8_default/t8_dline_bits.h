@@ -61,6 +61,26 @@ void                t8_dline_parent (const t8_dline_t * l,
 void                t8_dline_child (const t8_dline_t * l, int childid,
                                     t8_dline_t * child);
 
+/** Compute the position of the ancestor of this child at level \a level within
+ * its siblings.
+ * \param [in] t  line to be considered.
+ * \return Returns its child id in 0,1
+ */
+int                 t8_dline_child_id (const t8_dline_t * t);
+
+/** Compute the 2 children of a line, array version.
+ * \param [in]     t  Input line.
+ * \param [in,out] c  Pointers to the 2 computed children in Morton order.
+ *                    t may point to the same quadrant as c[0].
+ */
+void                t8_dline_childrenpv (const t8_dline_t * t, t8_dline_t * c[]);
+
+/** Check whether a collection of two lines is a family in Morton order.
+ * \param [in]     f  An array of two lines.
+ * \return            Nonzero if \a f is a family of triangles.
+ */
+int                 t8_dline_is_familypv (const t8_dline_t * f[]);
+
 /** Initialize a line as the line with a given global id in a uniform
  *  refinement of a given level. *
  * \param [in,out] l  Existing line whose data will be filled.

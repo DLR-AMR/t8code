@@ -68,6 +68,41 @@ t8_dline_child (const t8_dline_t * l, int childid, t8_dline_t * child)
   child->level = l->level + 1;
 }
 
+int
+t8_dline_child_id (const t8_dline_t * elem)
+{
+    T8_ASSERT (elem->level < T8_DLINE_MAXLEVEL);
+    /* bitshifting the Levelbit to first position & check if it is 1 or 0 */
+    return ((elem->x >> (T8_DLINE_MAXLEVEL - elem->level)) & 1);
+}
+
+void
+t8_dline_childrenpv (const t8_dline_t * elem, t8_dline_t * c[T8_DLINE_CHILDREN])
+{
+    T8_ASSERT (elem->level < T8_DLINE_MAXLEVEL);
+    /* Set the Level, Level increases */
+    const int8_t level = elem->level;
+    c[0]->level = level + 1;
+    c[1]->level = level + 1;
+    /* Set the coordinates of the children */
+    c[0]->x = elem->x;
+    c[1]->x = elem->x + T8_DLINE_LEN(c[1]->level);
+}
+
+int
+t8_dline_is_familypv (const t8_dline_t * f[])
+{
+    t8_dline_coord_t len;
+    const int8_t level = f[0]->level;
+    /*Check the level*/
+    if(level == 0 || level != f[1]->level){
+        return 0;
+    }
+    len = T8_DLINE_LEN(level);
+    /*Check the coordinate*/
+    return (f[0]->x + len == f[1]->x);
+}
+
 void
 t8_dline_init_linear_id (t8_dline_t * l, int level, uint64_t id)
 {

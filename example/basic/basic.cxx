@@ -51,7 +51,7 @@ t8_basic_adapt (t8_forest_t forest, t8_locidx_t which_tree,
   SC_CHECK_MPI (mpiret);
   if (level < 4)
     /* refine randomly if level is smaller 4 */
-    return (unsigned) ((mpirank + 1) * rand ()) % 7;
+    return (unsigned) ((mpirank + 1) * rand ()) % 2;
   return 0;
 }
 

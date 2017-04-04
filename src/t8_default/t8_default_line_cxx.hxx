@@ -87,11 +87,7 @@ public:
   }
 
   /** Return the number of children of an element when it is refined. */
-  virtual int         t8_element_num_children (const t8_element_t * elem)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+  virtual int         t8_element_num_children (const t8_element_t * elem);
 
   /** Return the number of children of an element's face when the element is refined. */
   virtual int         t8_element_num_face_children (const t8_element_t *
@@ -107,24 +103,13 @@ public:
 
 /** Construct all children of a given element. */
   virtual void        t8_element_children (const t8_element_t * elem,
-                                           int length, t8_element_t * c[])
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                           int length, t8_element_t * c[]);
 
 /** Return the child id of an element */
-  virtual int         t8_element_child_id (const t8_element_t * elem)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+  virtual int         t8_element_child_id (const t8_element_t * elem);
 
-/** Return nonzero if collection of elements is a family */
-  virtual int         t8_element_is_family (t8_element_t ** fam)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+  /** Return nonzero if collection of elements is a family */
+    virtual int         t8_element_is_family (t8_element_t ** fam);
 
 /** Construct the nearest common ancestor of two elements in the same tree. */
   virtual void        t8_element_nca (const t8_element_t * elem1,
