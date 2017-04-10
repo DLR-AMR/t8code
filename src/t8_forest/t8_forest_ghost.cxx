@@ -476,7 +476,7 @@ t8_forest_ghost_create (t8_forest_t forest)
   t8_locidx_t         num_local_trees, num_tree_elems;
   t8_locidx_t         itree, ielem;
   t8_tree_t           tree;
-  t8_eclass_t         tree_class, neigh_class;
+  t8_eclass_t         tree_class, neigh_class, last_class;
   t8_gloidx_t         neighbor_tree;
   t8_eclass_scheme_c *ts, *neigh_scheme;
 
@@ -489,8 +489,8 @@ t8_forest_ghost_create (t8_forest_t forest)
   /* Initialize the ghost structure */
   t8_forest_ghost_init (&forest->ghosts);
   ghost = forest->ghosts;
-  /* Create all the ghost trees */
-  t8_forest_ghost_fill_ghost_tree_array (forest, ghost);
+
+  last_class = T8_ECLASS_COUNT;
 
   /* Loop over the trees of the forest */
   for (itree = 0; itree < num_local_trees; itree++) {
@@ -518,8 +518,11 @@ t8_forest_ghost_create (t8_forest_t forest)
         neigh_scheme = t8_forest_get_eclass_scheme (forest, neigh_class);
         /* Get the number of face children of the element at this face */
         num_face_children = ts->t8_element_num_face_children (elem, iface);
-        /* regrow the half_neighbors array if neccessary */
-        if (max_num_face_children < num_face_children) {
+        /* regrow the half_neighbors array if neccessary.
+         * We also need to reallocate it, if the element class of the neighbor
+         * changes */
+        if (max_num_face_children < num_face_children ||
+            last_class != neigh_class) {
           if (max_num_face_children > 0) {
             /* Clean-up memory */
             neigh_scheme->t8_element_destroy (max_num_face_children,
@@ -530,6 +533,7 @@ t8_forest_ghost_create (t8_forest_t forest)
           /* Allocate memory for the half size face neighbors */
           neigh_scheme->t8_element_new (num_face_children, half_neighbors);
           max_num_face_children = num_face_children;
+          last_class = neigh_class;
         }
         /* Construct each half size neighbor */
         neighbor_tree =

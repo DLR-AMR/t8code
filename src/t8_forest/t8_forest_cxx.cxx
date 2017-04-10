@@ -546,7 +546,10 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
   t8_element_t      **boundary_faces, *child_at_face;
   t8_gloidx_t         neighbor_tree;
   int                 ichild;
-  int                 child_face_num;
+  int                 child_face_num, root_face;
+#ifdef T8_ENABLE_DEBUG
+  t8_gloidx_t         last_neighbor_tree;
+#endif
 
   /* Get a pointer to the tree to read its element class */
   tree = t8_forest_get_tree (forest, ltreeid);
@@ -573,15 +576,23 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
   /* We now extrude the face children into elem and compute the face neighbor of
    * the extruded face. */
   ts->t8_element_new (1, &child_at_face);
+
   for (ichild = 0; ichild < num_neighs; ichild++) {
     /* Extrude the face. child_at_face is now a child of elem */
     child_face_num = ts->t8_element_face_child_face (elem, face, ichild);
     ts->t8_element_extrude_face (boundary_faces[ichild],
                                  child_at_face, child_face_num);
-    /* Finde the face neighbor of child_at_face */
+    /* Find the face neighbor of child_at_face */
     neighbor_tree =
       t8_forest_element_face_neighbor (forest, ltreeid, child_at_face,
                                        neighs[ichild], child_face_num);
+    t8_debugf ("[H] neightree of child %i of face %i (child face %i) is %i\n",
+               ichild, face, child_face_num, neighbor_tree);
+    /* For each of the neighbors, the neighbor tree must be the same. */
+    T8_ASSERT (ichild == 0 || neighbor_tree == last_neighbor_tree);
+#ifdef T8_ENABLE_DEBUG
+    last_neighbor_tree = neighbor_tree;
+#endif
   }
   /* clean-up */
   ts->t8_element_destroy (1, &child_at_face);
