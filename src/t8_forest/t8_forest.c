@@ -216,6 +216,7 @@ void
 t8_forest_set_user_data (t8_forest_t forest, void *data)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
+  T8_ASSERT (!t8_forest_is_committed (forest));
   forest->user_data = data;
 }
 
