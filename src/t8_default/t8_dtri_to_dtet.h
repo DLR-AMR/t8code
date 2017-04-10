@@ -74,6 +74,7 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_sibling t8_dtet_sibling
 #define t8_dtri_face_neighbour t8_dtet_face_neighbour
 #define t8_dtri_nearest_common_ancestor t8_dtet_nearest_common_ancestor
+#define t8_dtri_children_at_face t8_dtet_children_at_face
 #define t8_dtri_face_child_face t8_dtet_face_child_face
 #define t8_dtri_tree_face t8_dtet_tree_face
 #define t8_dtri_is_inside_root t8_dtet_is_inside_root

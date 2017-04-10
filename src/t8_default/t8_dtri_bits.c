@@ -629,10 +629,40 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
 #endif
 }
 
+void
+t8_dtri_children_at_face (const t8_dtri_t * tri, int face,
+                          t8_dtri_t * children[], int num_children)
+{
+  int                 child_ids[T8_DTRI_FACE_CHILDREN], i;
+
+  T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
+  T8_ASSERT (num_children == T8_DTRI_FACE_CHILDREN);
+
+#ifndef T8_DTRI_TO_DTET
+  /* Triangle version */
+  /* The first child is '0' for faces 1 and 2 and '1+type' for face 0 */
+  child_ids[0] = face == 0 ? 1 + tri->type : 0;
+  /* The second child is '1 + type' for face 2 and '3' for faces 0 and 1 */
+  child_ids[1] = face == 2 ? 1 + tri->type : 3;
+#else
+  /* Tetrahedron version */
+  SC_ABORT ("Not implemented yet\n");
+#endif
+
+  /* Compute the children at the face.
+   * We revert the order to compute children[0] last, since the usage
+   * allows for tri == children[0].
+   */
+  for (i = T8_DTRI_FACE_CHILDREN - 1; i >= 0; i--) {
+    t8_dtri_child (tri, child_ids[i], children[i]);
+  }
+}
+
 int
 t8_dtri_tree_face (t8_dtri_t * t, int face)
 {
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
+  /* TODO: Assert if boundary */
 #ifndef T8_DTRI_TO_DTET
   /* For triangles of type 0 the face number coincides with the number of the
    * root tree face. Triangles of type 1 cannot lie on the boundary of the
@@ -782,7 +812,7 @@ t8_dtri_is_root_boundary (const t8_dtri_t * t, int face)
   case 0:
     switch (face) {
     case 0:
-      return t->x == T8_DTET_ROOT_LEN - T8_DTET_LEN (t->level);
+      return t->x == T8_DTRI_ROOT_LEN - T8_DTRI_LEN (t->level);
     case 1:
       return t->x == t->y;
     case 2:

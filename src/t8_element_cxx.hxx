@@ -229,6 +229,23 @@ public:
   virtual t8_eclass_t t8_element_face_class (const t8_element_t * elem,
                                              int face) = 0;
 
+  /** Given an element and a face of the element, compute all children of
+   * the element that touch the face.
+   * \param [in] elem     The element.
+   * \param [in] face     A face of \a elem.
+   * \param [in,out] children Allocated elements, in which the children of \a elem
+   *                      that share a face with \a face are stored.
+   *                      They will be stored in order of their child_id.
+   * \param [in] num_children The number of elements in \a children. Must match
+   *                      the number of children that touch \a face.
+   *                      \ref t8_element_num_face_children
+    * It is valid to call this function with elem = children[0].
+   */
+  virtual void        t8_element_children_at_face (const t8_element_t * elem,
+                                                   int face,
+                                                   t8_element_t * children[],
+                                                   int num_children) = 0;
+
   /** Given a face of an element and a child number of a child of that face, return the face number
    * of the child of the element that matches the child face.
    * \verbatim

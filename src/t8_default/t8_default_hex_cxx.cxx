@@ -168,6 +168,82 @@ t8_eclass_t
   return T8_ECLASS_QUAD;
 }
 
+void
+t8_default_scheme_hex_c::t8_element_children_at_face (const t8_element_t *
+                                                      elem, int face,
+                                                      t8_element_t *
+                                                      children[],
+                                                      int num_children)
+{
+  int                 child_ids[4], i;
+
+  T8_ASSERT (0 <= face && face < P8EST_FACES);
+  T8_ASSERT (num_children == t8_element_num_face_children (elem, face));
+
+  /*
+   * Compute the child id of the first and second child at the face.
+   *
+   * The faces of the quadrant are enumerated like this:
+   *
+   *          f_3
+   *       x ---- x
+   *      /  f_5 /|          z y
+   *     x ---- x |          |/
+   * f_0 |      | x f_1       -- x
+   *     |  f_2 |/
+   *     x ---- x
+   *        f_4
+   */
+
+  /* TODO: Think about a short and easy bitwise formula. */
+  switch (face) {
+  case 0:
+    child_ids[0] = 0;
+    child_ids[1] = 2;
+    child_ids[2] = 4;
+    child_ids[3] = 6;
+    break;
+  case 1:
+    child_ids[0] = 1;
+    child_ids[1] = 3;
+    child_ids[2] = 5;
+    child_ids[3] = 7;
+    break;
+  case 2:
+    child_ids[0] = 0;
+    child_ids[1] = 1;
+    child_ids[2] = 4;
+    child_ids[3] = 5;
+    break;
+  case 3:
+    child_ids[0] = 2;
+    child_ids[1] = 3;
+    child_ids[2] = 6;
+    child_ids[3] = 7;
+  case 4:
+    child_ids[0] = 0;
+    child_ids[1] = 1;
+    child_ids[2] = 2;
+    child_ids[3] = 3;
+  case 5:
+    child_ids[0] = 4;
+    child_ids[1] = 5;
+    child_ids[2] = 6;
+    child_ids[3] = 7;
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+
+  /* Create the four face children */
+  /* We have to revert the order and compute the zeroth child last, since
+   * the usage allows for elem == children[0].
+   */
+  for (i = 3; i >= 0; i--) {
+    t8_element_child (elem, child_ids[i], children[i]);
+  }
+}
+
 int
 t8_default_scheme_hex_c::t8_element_face_child_face (const t8_element_t *
                                                      elem, int face,

@@ -125,6 +125,21 @@ void                t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
                                                      const t8_dtri_t * t2,
                                                      t8_dtri_t * r);
 
+/** Given a triangle and a face of the triangle, compute all children of
+ * the triangle that touch the face.
+ * \param [in] tri      The triangle.
+ * \param [in] face     A face of \a tri.
+ * \param [in,out] children Allocated triangles, in which the children of \a tri
+ *                      that share a face with \a face are stored.
+ *                      They will be stored in order of their child_id.
+ * \param [in] num_children The number of triangles in \a children. Must match
+ *                      the number of children that touch \a face.
+ */
+void                t8_dtri_children_at_face (const t8_dtri_t * tri,
+                                              int face,
+                                              t8_dtri_t * children[],
+                                              int num_children);
+
 /** Given a face of an triangle and a child number of a child of that face, return the face number
  * of the child of the triangle that matches the child face.
  * \param [in]  triangle The triangle.

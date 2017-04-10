@@ -276,6 +276,63 @@ t8_eclass_t
   return T8_ECLASS_LINE;
 }
 
+void
+t8_default_scheme_quad_c::t8_element_children_at_face (const t8_element_t *
+                                                       elem, int face,
+                                                       t8_element_t *
+                                                       children[],
+                                                       int num_children)
+{
+  int                 first_child, second_child;
+
+  T8_ASSERT (0 <= face && face < P4EST_FACES);
+  T8_ASSERT (num_children == t8_element_num_face_children (elem, face));
+
+  /*
+   * Compute the child id of the first and second child at the face.
+   *
+   *            3
+   *
+   *      x - - x - - x           This picture shows a refined quadrant
+   *      |     |     |           with child_ids and the label for the faces.
+   *      | 2   | 3   |           For examle for face 2 (bottom face) we see
+   * 0    x - - x - - x   1       first_child = 0 and second_child = 1.
+   *      |     |     |
+   *      | 0   | 1   |
+   *      x - - x - - x
+   *
+   *            2
+   */
+  /* TODO: Think about a short and easy bitwise formula. */
+  switch (face) {
+  case 0:
+    first_child = 0;
+    second_child = 2;
+    break;
+  case 1:
+    first_child = 1;
+    second_child = 3;
+    break;
+  case 2:
+    first_child = 0;
+    second_child = 1;
+    break;
+  case 3:
+    first_child = 2;
+    second_child = 3;
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+
+  /* From the child ids we now construct the children at the faces. */
+  /* We have to revert the order and compute second child first, since
+   * the usage allows for elem == children[0].
+   */
+  t8_element_child (elem, second_child, children[1]);
+  t8_element_child (elem, first_child, children[0]);
+}
+
 int
 t8_default_scheme_quad_c::t8_element_face_child_face (const t8_element_t *
                                                       elem, int face,

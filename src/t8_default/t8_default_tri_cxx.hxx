@@ -105,6 +105,15 @@ public:
   virtual t8_eclass_t t8_element_face_class (const t8_element_t * elem,
                                              int face);
 
+  /** Given an element and a face of the element, compute all children of
+   * the element that touch the face. */
+  /** Given an element and a face of the element, compute all children of
+   * the element that touch the face. */
+  virtual void        t8_element_children_at_face (const t8_element_t * elem,
+                                                   int face,
+                                                   t8_element_t * children[],
+                                                   int num_children);
+
   /** Given a face of an element and a child number (in Morton order)
    *  of a child of that face, return the face number
    * of the child of the element that matches the child face. */

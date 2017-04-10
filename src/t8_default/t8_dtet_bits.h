@@ -129,6 +129,21 @@ void                t8_dtet_nearest_common_ancestor (const t8_dtet_t * t1,
                                                      const t8_dtet_t * t2,
                                                      t8_dtet_t * r);
 
+/** Given a tetrahedron and a face of the tetrahedron, compute all children of
+ * the tetrahedron that touch the face.
+ * \param [in] tet      The tetrahedron.
+ * \param [in] face     A face of \a tet.
+ * \param [in,out] children Allocated tetrahedra, in which the children of \a tet
+ *                      that share a face with \a face are stored.
+ *                      They will be stored in order of their child_id.
+ * \param [in] num_children The number of tetrahedra in \a children. Must match
+ *                      the number of children that touch \a face.
+ */
+void                t8_dtet_children_at_face (const t8_dtet_t * tet,
+                                              int face,
+                                              t8_dtet_t * children[],
+                                              int num_children);
+
 /** Given a face of an tetrahedron and a child number of a child of that face, return the face number
  * of the child of the tetrahedron that matches the child face.
  * \param [in]  tet     The tetrahedron.

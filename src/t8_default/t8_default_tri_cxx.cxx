@@ -156,6 +156,21 @@ t8_eclass_t
   return T8_ECLASS_LINE;
 }
 
+void
+t8_default_scheme_tri_c::t8_element_children_at_face (const t8_element_t *
+                                                      elem, int face,
+                                                      t8_element_t *
+                                                      children[],
+                                                      int num_children)
+{
+  const t8_dtri_t    *t = (const t8_dtri_t *) elem;
+  t8_dtri_t         **c = (t8_dtri_t **) children;
+  T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
+  T8_ASSERT (num_children == T8_DTRI_FACE_CHILDREN);
+
+  t8_dtri_children_at_face (t, face, c, num_children);
+}
+
 int
 t8_default_scheme_tri_c::t8_element_face_child_face (const t8_element_t *
                                                      elem, int face,
