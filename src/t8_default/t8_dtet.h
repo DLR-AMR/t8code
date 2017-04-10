@@ -65,9 +65,10 @@ typedef int32_t     t8_dtet_coord_t;
 /** This data type stores a tetrahedron. */
 typedef struct t8_dtet
 {
-  /** We store the element class for compatibility with the pyramid. */
-  int8_t              eclass;
-
+#ifdef T8_ENABLE_DEBUG
+  /* TODO: enum to int8??? #defines ?? */
+  int8_t              eclass_int8;
+#endif
   /** The refinement level of the tetrahedron relative to the root at level 0. */
   int8_t              level;
 

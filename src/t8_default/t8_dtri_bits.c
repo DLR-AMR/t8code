@@ -23,7 +23,6 @@
 #ifndef T8_DTRI_TO_DTET
 #include "t8_dtri_bits.h"
 #include "t8_dtri_connectivity.h"
-#include "t8_dtet.h"
 #else
 #include "t8_dtet_bits.h"
 #include "t8_dtet_connectivity.h"
@@ -105,8 +104,10 @@ t8_dtri_parent (const t8_dtri_t * t, t8_dtri_t * parent)
 
   T8_ASSERT (t->level > 0);
 
+#ifdef T8_ENABLE_DEBUG
 #ifdef T8_DTRI_TO_DTET
-  parent->eclass = t->eclass;
+  parent->eclass_int8 = t->eclass_int8;
+#endif
 #endif
 
   h = T8_DTRI_LEN (t->level);

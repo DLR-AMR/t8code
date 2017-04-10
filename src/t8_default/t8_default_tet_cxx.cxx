@@ -205,7 +205,9 @@ t8_default_scheme_tet_c::t8_element_extrude_face (const t8_element_t * face,
 
   T8_ASSERT (0 <= root_face && root_face < T8_DTET_FACES);
   t->level = b->level;
-  t->eclass = T8_ECLASS_TET;
+#ifdef T8_ENABLE_DEBUG
+  t->eclass_int8 = T8_ECLASS_TET;
+#endif
   switch (root_face) {
     /* Since the root triangle may have a different scale then the
      * root tetrahedron, we have to rescale the coordinates. */
