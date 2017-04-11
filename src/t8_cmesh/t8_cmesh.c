@@ -970,7 +970,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     *child_in_tree_end = 0;
   }
 
-  if (cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] == 0) {
+  if (cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] == 0 || level == 0) {
     t8_gloidx_t         global_num_children;
     t8_gloidx_t         first_global_child;
     t8_gloidx_t         last_global_child;
@@ -1051,7 +1051,8 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     }
   }
   else {
-    SC_ABORT ("Partition does not support pyramidal elements yet.");
+    SC_ABORT ("Partition with level > 0 "
+              "does not support pyramidal elements yet.");
   }
 }
 
