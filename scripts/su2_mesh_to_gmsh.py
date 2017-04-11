@@ -213,7 +213,7 @@ def write_msh_file (filename, nodes, elements):
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser (description = "Translate a .su2 \
-                                    file into a .gmsh file")
+                                    file into a .msh file")
   parser.add_argument ('-f', '--infile', help = '.su2 input file name',\
                        type = str, required = True)
   parser.add_argument ('-o', '--outfile', help = '.msh output file name',\
