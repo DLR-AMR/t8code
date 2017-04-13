@@ -435,7 +435,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
   ts = t8_forest_get_eclass_scheme (forest, eclass);
   if (ts->t8_element_face_neighbor_inside (elem, neigh, face)) {
     /* The neighbor was constructed and is inside the current tree. */
-    return ltreeid;
+    return ltreeid + t8_forest_get_first_local_tree_id (forest);
   }
   else {
     /* The neighbor does not lie inside the current tree. The content of neigh
@@ -541,6 +541,72 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
 {
   t8_eclass_scheme_c *ts;
   t8_tree_t           tree;
+  t8_eclass_t         eclass;
+  t8_element_t      **children_at_face;
+  t8_gloidx_t         neighbor_tree;
+#ifdef T8_ENABLE_DEBUG
+  t8_gloidx_t         last_neighbor_tree;
+#endif
+  int                 num_children_at_face, child_it;
+  int                 child_face;
+
+  /* Get the current tree and its element class */
+  tree = t8_forest_get_tree (forest, ltreeid);
+  eclass = tree->eclass;
+  /* The eclass scheme for the current tree */
+  ts = t8_forest_get_eclass_scheme (forest, eclass);
+  /* The number of children of elem at face */
+  T8_ASSERT (num_neighs == ts->t8_element_num_face_children (elem, face));
+  num_children_at_face = num_neighs;
+  /* Allocate memory for the children of elem that share a face with face. */
+  children_at_face = T8_ALLOC (t8_element_t *, num_children_at_face);
+  ts->t8_element_new (num_children_at_face, children_at_face);
+
+  /* Construct the children of elem at face
+   *
+   *  a-----b                     x--b
+   *  |     |           =>        |  |
+   *  |     | <- face             x--x
+   *  |     |                     |  |
+   *  c-----d                     x--d
+   *
+   */
+  ts->t8_element_children_at_face (elem, face, children_at_face,
+                                   num_children_at_face);
+  /* For each face_child build its neighbor */
+  for (child_it = 0; child_it < num_children_at_face; child_it++) {
+    /* The face number of the face of the child that coincides with face
+     * must not be the same as the face number of elem. (which is the integer face)
+     * We thus have to compute the face number of the child first.
+     */
+    child_face = ts->t8_element_face_child_face (elem, face, child_it);
+    neighbor_tree = t8_forest_element_face_neighbor (forest, ltreeid,
+                                                     children_at_face
+                                                     [child_it],
+                                                     neighs[child_it],
+                                                     child_face);
+    /* For each of the neighbors, the neighbor tree must be the same. */
+    T8_ASSERT (child_it == 0 || neighbor_tree == last_neighbor_tree);
+#ifdef T8_ENABLE_DEBUG
+    last_neighbor_tree = neighbor_tree;
+#endif
+  }
+  /* Clean-up the memory */
+  ts->t8_element_destroy (num_children_at_face, children_at_face);
+  T8_FREE (children_at_face);
+  return neighbor_tree;
+}
+
+#if 0
+t8_gloidx_t
+t8_forest_element_half_face_neighbors (t8_forest_t forest,
+                                       t8_locidx_t ltreeid,
+                                       const t8_element_t * elem,
+                                       t8_element_t * neighs[], int face,
+                                       int num_neighs)
+{
+  t8_eclass_scheme_c *ts;
+  t8_tree_t           tree;
   t8_eclass_t         eclass, boundary_class;
   t8_eclass_scheme_c *boundary_scheme;
   t8_element_t      **boundary_faces, *child_at_face;
@@ -602,6 +668,7 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
   /* We return the local id of the tree in which the face neighbors are */
   return neighbor_tree;
 }
+#endif /* if 0 */
 
 /* The data that we use as key in the binary owner search.
  * It contains the linear id of the element that we look for and
