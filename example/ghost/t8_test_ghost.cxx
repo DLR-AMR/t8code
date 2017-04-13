@@ -59,6 +59,7 @@ t8_test_ghost (t8_eclass_t eclass, int level, sc_MPI_Comm comm)
   t8_forest_commit (forest_adapt);
   t8_forest_ghost_create (forest_adapt);
   t8_forest_ghost_print (forest_adapt);
+  t8_forest_write_vtk (forest_adapt, "test_ghost_hypercube");
   t8_forest_unref (&forest_adapt);
 }
 
@@ -73,7 +74,7 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  t8_test_ghost (T8_ECLASS_TET, 0, sc_MPI_COMM_WORLD);
+  t8_test_ghost (T8_ECLASS_TRIANGLE, 1, sc_MPI_COMM_WORLD);
 
   sc_finalize ();
 
