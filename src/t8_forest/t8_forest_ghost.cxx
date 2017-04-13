@@ -37,7 +37,7 @@ typedef struct
 {
   int                 recv_rank;        /* The rank to which we send. */
   size_t              num_bytes;        /* The number of bytes that we send. */
-  sc_MPI_Request      request;  /* Commuication request */
+  sc_MPI_Request     *request;  /* Commuication request, not owned by this struct. */
   char               *buffer;   /* The send buffer. */
 } t8_ghost_mpi_send_info_t;
 
@@ -586,7 +586,8 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost)
  * Returns an array of mpi_send_info_t, one for each remote rank.
  */
 static t8_ghost_mpi_send_info_t *
-t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost)
+t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost,
+                            sc_MPI_Request ** requests)
 {
   int                 proc_index, remote_rank;
   int                 num_remotes;
@@ -600,10 +601,12 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost)
   t8_ghost_mpi_send_info_t *send_info, *current_send_info;
   char               *current_buffer;
   size_t              bytes_written, element_bytes;
+  int                 mpiret;
 
   /* Allocate a send_buffer for each remote rank */
   num_remotes = ghost->remote_processes->elem_count;
   send_info = T8_ALLOC (t8_ghost_mpi_send_info_t, num_remotes);
+  *requests = T8_ALLOC (sc_MPI_Request, num_remotes);
   /* Loop over all remote processes */
   for (proc_index = 0; proc_index < (int) ghost->remote_processes->elem_count;
        proc_index++) {
@@ -615,6 +618,7 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost)
     /* initialize the send_info for the current rank */
     current_send_info->recv_rank = remote_rank;
     current_send_info->num_bytes = 0;
+    current_send_info->request = *requests + proc_index;
     /* Lookup the ghost elements for the first tree of this remote */
     proc_hash.remote_rank = remote_rank;
     entry_is_found = sc_hash_array_lookup (ghost->remote_ghosts,
@@ -694,15 +698,20 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost)
     }                           /* End tree loop */
     T8_ASSERT (bytes_written == current_send_info->num_bytes);
     /* We can now post the MPI_Isend for the remote process */
-    t8_debugf ("[H] Post send of %i bytes to rank %i\n",
+    t8_debugf ("[H] Post send of %i bytes to rank %i.\n",
                (int) current_send_info->num_bytes, remote_rank);
+    mpiret = sc_MPI_Isend (current_buffer, bytes_written, sc_MPI_BYTE,
+                           remote_rank, T8_MPI_PARTITION_FOREST,
+                           forest->mpicomm, *requests + proc_index);
+    SC_CHECK_MPI (mpiret);
   }                             /* end process loop */
   return send_info;
 }
 
 static void
 t8_forest_ghost_send_end (t8_forest_t forest, t8_forest_ghost_t ghost,
-                          t8_ghost_mpi_send_info_t * send_info)
+                          t8_ghost_mpi_send_info_t * send_info,
+                          sc_MPI_Request * requests)
 {
   int                 num_remotes;
   int                 iproc;
@@ -713,12 +722,32 @@ t8_forest_ghost_send_end (t8_forest_t forest, t8_forest_ghost_t ghost,
   /* Get the number of remote processes */
   num_remotes = ghost->remote_processes->elem_count;
 
+  /* We wait for all communication to end. */
+  sc_MPI_Waitall (num_remotes, requests, sc_MPI_STATUSES_IGNORE);
+
   /* Clean-up */
   for (iproc = 0; iproc < num_remotes; iproc++) {
-    t8_debugf ("free buffer %i %p\n", iproc, send_info[iproc].buffer);
     T8_FREE (send_info[iproc].buffer);
   }
   T8_FREE (send_info);
+  T8_FREE (requests);
+}
+
+static void
+t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
+{
+  int                 num_remotes;
+  int                 iproc;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (ghost != NULL);
+
+  /* Get the number of remote processes */
+  num_remotes = ghost->remote_processes->elem_count;
+
+  for (iproc = 0; iproc < num_remotes; iproc++) {
+
+  }
 }
 
 /* Create one layer of ghost elements, following the algorithm
@@ -731,6 +760,7 @@ t8_forest_ghost_create (t8_forest_t forest)
 {
   t8_forest_ghost_t   ghost;
   t8_ghost_mpi_send_info_t *send_info;
+  sc_MPI_Request     *requests;
 
   /* Initialize the ghost structure */
   t8_forest_ghost_init (&forest->ghosts);
@@ -742,10 +772,10 @@ t8_forest_ghost_create (t8_forest_t forest)
   t8_forest_ghost_print (forest);
 
   /* Start sending the remote elements */
-  send_info = t8_forest_ghost_send_start (forest, ghost);
+  send_info = t8_forest_ghost_send_start (forest, ghost, &requests);
 
   /* End sending the remote elements */
-  t8_forest_ghost_send_end (forest, ghost, send_info);
+  t8_forest_ghost_send_end (forest, ghost, send_info, requests);
 }
 
 /* Print a forest ghost structure */
