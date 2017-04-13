@@ -4,6 +4,8 @@
 # mesh format. Both in ASCII.
 
 import argparse
+import sys
+import traceback
 
 # The element types in the .su2 format are defined as 
 #  3  line
@@ -221,8 +223,18 @@ if __name__ == "__main__":
   arguments = vars (parser.parse_args ())
   infile = arguments['infile']
   outfile = arguments['outfile']
-  nodes, elements = read_data (infile)
-  if nodes != False:
-    write_msh_file (outfile, nodes, elements)
-  else:
-    print 'Error while opening file ', infile
+  try:
+    nodes, elements = read_data (infile)
+    if nodes != False:
+      write_msh_file (outfile, nodes, elements)
+    else:
+      print 'Error while opening file ', infile
+  except AssertionError as assertion:
+    _, _, tb = sys.exc_info()
+    tb_info = traceback.extract_tb(tb)
+    filename, line, func, text = tb_info[-1]
+    print 'An assertion was not valid: {} in line {}.'.format(text, line)
+    traceback.print_tb(tb) # Fixed format
+   
+  except IOError as error:
+    print 'An IO-error occured.\n\t', error
