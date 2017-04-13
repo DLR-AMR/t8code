@@ -717,7 +717,7 @@ t8_forest_ghost_send_end (t8_forest_t forest, t8_forest_ghost_t ghost,
                           sc_MPI_Request * requests)
 {
   int                 num_remotes;
-  int                 iproc;
+  int                 iproc, mpiret;
 
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (ghost != NULL);
@@ -726,7 +726,8 @@ t8_forest_ghost_send_end (t8_forest_t forest, t8_forest_ghost_t ghost,
   num_remotes = ghost->remote_processes->elem_count;
 
   /* We wait for all communication to end. */
-  sc_MPI_Waitall (num_remotes, requests, sc_MPI_STATUSES_IGNORE);
+  mpiret = sc_MPI_Waitall (num_remotes, requests, sc_MPI_STATUSES_IGNORE);
+  SC_CHECK_MPI (mpiret);
 
   /* Clean-up */
   for (iproc = 0; iproc < num_remotes; iproc++) {
