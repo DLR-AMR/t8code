@@ -379,8 +379,6 @@ t8_ghost_init_remote_tree (t8_forest_t forest, t8_gloidx_t gtreeid,
 
   T8_ASSERT (remote_tree != NULL);
 
-  t8_debugf ("[H] \t\t filling remote for proc %i\n", remote_rank);
-
   ts = t8_forest_get_eclass_scheme (forest, eclass);
   local_treeid = gtreeid - t8_forest_get_first_local_tree_id (forest);
   /* Set the entries of the new remote tree */
@@ -433,8 +431,6 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
     /* initialize the remote_tree */
     t8_ghost_init_remote_tree (forest, gtreeid, remote_rank, eclass,
                                remote_tree);
-    t8_debugf ("[H] \t adding remote %p for proc %i at index %i\n",
-               remote_tree, remote_rank, (int) index);
     /* Since the rank is a new remote rank, we also add it to the
      * remote ranks array */
     remote_process_entry = (int *) sc_array_push (ghost->remote_processes);
@@ -459,8 +455,6 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
         sc_array_push (&remote_entry->remote_trees);
       t8_ghost_init_remote_tree (forest, gtreeid, remote_rank, eclass,
                                  remote_tree);
-      t8_debugf ("[H] \t adding remote %p for proc %i at index %i\n",
-                 remote_tree, remote_rank, (int) index);
     }
   }
   /* remote_tree now points to a valid entry fore the tree.
@@ -484,9 +478,6 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
       ts->t8_element_get_linear_id (elem, level)) {
     elem_copy = (t8_element_t *) sc_array_push (&remote_tree->elements);
     ts->t8_element_copy (elem, elem_copy);
-    t8_debugf ("[H] Adding element %li of tree %li to proc %i\n",
-               ts->t8_element_get_linear_id (elem, level),
-               gtreeid, remote_rank);
   }
 }
 
@@ -634,9 +625,6 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost)
     remotes = &ghost->remote_ghosts->a;
     remote_entry = (t8_ghost_remote_t *) sc_array_index (remotes,
                                                          first_remote_index);
-    t8_debugf ("Found %i tree %p at pos %i has rank %i\n", entry_is_found,
-               remote_entry,
-               (int) first_remote_index, remote_entry->remote_rank);
     T8_ASSERT (remote_entry->remote_rank == remote_rank);
     /* Loop over all trees of the remote rank and count the bytes */
     /* TODO: put this in a funtion */
@@ -648,7 +636,6 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost)
       /* Get the next remote tree. */
       remote_tree = (t8_ghost_remote_tree_t *) sc_array_index (remote_trees,
                                                                remote_index);
-      t8_debugf ("[H]\t Read tree %p\n", remote_tree);
       /* We will store the global tree id, the element class and the list
        * of elements in the send_buffer. */
       current_send_info->num_bytes += sizeof (t8_gloidx_t);
@@ -672,7 +659,6 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost)
      * allocate it. */
     current_send_info->buffer = T8_ALLOC_ZERO (char,
                                                current_send_info->num_bytes);
-    t8_debugf ("allocate at %i %p\n", proc_index, current_send_info->buffer);
     /* We iterate through the tree again and store the tree info and the elements
      * into the send_buffer.
      * We reuse the first_remote_index for this and we now that the last
