@@ -379,6 +379,8 @@ t8_ghost_init_remote_tree (t8_forest_t forest, t8_gloidx_t gtreeid,
 
   T8_ASSERT (remote_tree != NULL);
 
+  t8_debugf ("[H] \t\t filling remote for proc %i\n", remote_rank);
+
   ts = t8_forest_get_eclass_scheme (forest, eclass);
   local_treeid = gtreeid - t8_forest_get_first_local_tree_id (forest);
   /* Set the entries of the new remote tree */
@@ -607,6 +609,7 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost,
   num_remotes = ghost->remote_processes->elem_count;
   send_info = T8_ALLOC (t8_ghost_mpi_send_info_t, num_remotes);
   *requests = T8_ALLOC (sc_MPI_Request, num_remotes);
+
   /* Loop over all remote processes */
   for (proc_index = 0; proc_index < (int) ghost->remote_processes->elem_count;
        proc_index++) {
