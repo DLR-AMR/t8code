@@ -518,7 +518,6 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost)
     /* Loop over the elements of this tree */
     num_tree_elems = t8_forest_get_tree_element_count (tree);
     for (ielem = 0; ielem < num_tree_elems; ielem++) {
-      t8_debugf ("ghost for element %i\n", ielem);
       /* Get the element of the tree */
       elem = t8_forest_get_tree_element (tree, ielem);
       num_faces = ts->t8_element_num_faces (elem);
@@ -634,6 +633,11 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost,
                                                          first_remote_index);
     T8_ASSERT (remote_entry->remote_rank == remote_rank);
     /* Loop over all trees of the remote rank and count the bytes */
+    /* At first we store the number of remote trees in the buffer */
+    current_send_info->num_bytes += sizeof (size_t);
+    /* add padding before the eclass */
+    current_send_info->num_bytes +=
+      T8_ADD_PADDING (current_send_info->num_bytes);
     /* TODO: put this in a funtion */
     /* TODO: Use remote_entry to count the number of bytes while inserting
      *        the remote ghosts. */
@@ -656,6 +660,11 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost,
       /* The byte count of the elements */
       element_bytes = remote_tree->elements.elem_size
         * remote_tree->elements.elem_count;
+      /* We will store the number of elements */
+      current_send_info->num_bytes += sizeof (size_t);
+      /* add padding before the elements */
+      current_send_info->num_bytes +=
+        T8_ADD_PADDING (current_send_info->num_bytes);
       current_send_info->num_bytes += element_bytes;
       /* add padding after the elements */
       current_send_info->num_bytes +=
@@ -672,6 +681,11 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost,
      * tree is add index remote_index - 1. */
     current_buffer = current_send_info->buffer;
     bytes_written = 0;
+    /* Start with the number of remote trees in the buffer */
+    memcpy (current_buffer + bytes_written, &remote_trees->elem_count,
+            sizeof (size_t));
+    bytes_written += sizeof (size_t);
+    bytes_written += T8_ADD_PADDING (bytes_written);
     for (remote_index = 0; remote_index < remote_trees->elem_count;
          remote_index++) {
       /* Get a pointer to the tree */
@@ -688,6 +702,11 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost,
       memcpy (current_buffer + bytes_written, &remote_tree->global_id,
               sizeof (t8_eclass_t));
       bytes_written += sizeof (t8_eclass_t);
+      bytes_written += T8_ADD_PADDING (bytes_written);
+      /* Store the number of elements in the buffer */
+      memcpy (current_buffer + bytes_written,
+              &(remote_tree->elements.elem_count), sizeof (size_t));
+      bytes_written += sizeof (size_t);
       bytes_written += T8_ADD_PADDING (bytes_written);
       /* The byte count of the elements */
       element_bytes = remote_tree->elements.elem_size
