@@ -723,7 +723,7 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost,
     t8_debugf ("[H] Post send of %i bytes to rank %i.\n",
                (int) current_send_info->num_bytes, remote_rank);
     mpiret = sc_MPI_Isend (current_buffer, bytes_written, sc_MPI_BYTE,
-                           remote_rank, T8_MPI_PARTITION_FOREST,
+                           remote_rank, T8_MPI_GHOST_FOREST,
                            forest->mpicomm, *requests + proc_index);
     SC_CHECK_MPI (mpiret);
   }                             /* end process loop */
@@ -756,21 +756,134 @@ t8_forest_ghost_send_end (t8_forest_t forest, t8_forest_ghost_t ghost,
   T8_FREE (requests);
 }
 
+/* Receive a single message from a remote process, after the message was
+ * successfully probed.
+ * The message looks like:
+ * num_trees | pad | treeid 0 | pad | eclass 0 | pad | num_elems 0 | pad | elements | treeid 1 | ...
+ *  size_t   |     |t8_gloidx |     |t8_eclass |     | size_t      |     | t8_element_t |
+ *
+ * pad is paddind, see T8_ADD_PADDING
+ */
+static void
+t8_forest_ghost_receive_message (t8_forest_t forest,
+                                 t8_forest_ghost_t ghost,
+                                 int recv_rank, sc_MPI_Comm comm,
+                                 sc_MPI_Status status)
+{
+  int                 mpiret;
+  int                 recv_bytes;
+  char               *recv_buffer;
+  size_t              bytes_read;
+  t8_locidx_t         num_trees, itree;
+
+  T8_ASSERT (recv_rank == status.MPI_SOURCE);
+  T8_ASSERT (status.MPI_TAG == T8_MPI_GHOST_FOREST);
+
+  /* Get the number of bytes in the message */
+  mpiret = sc_MPI_Get_count (&status, sc_MPI_BYTE, &recv_bytes);
+
+  /* Allocate receive buffer */
+  recv_buffer = T8_ALLOC_ZERO (char, recv_bytes);
+  /* receive the message */
+  mpiret = sc_MPI_Recv (recv_buffer, recv_bytes, sc_MPI_BYTE, recv_rank,
+                        T8_MPI_GHOST_FOREST, comm, sc_MPI_STATUS_IGNORE);
+  SC_CHECK_MPI (mpiret);
+  /* read the number of trees */
+  num_trees = *(size_t *) recv_buffer;
+  bytes_read = sizeof (size_t);
+  bytes_read += T8_ADD_PADDING (bytes_read);
+
+  for (itree = 0; itree < num_trees; itree++) {
+    /* Get tree id */
+    /* search if tree was inserted */
+    /* if not: new entry, add elements */
+    /* if yes: check where to insert the elements. */
+
+    /* easy but more memory: save all buffers first,
+     *  if all messages are received then add to the ghost_trees array
+     * in order of the ranks, trees, elements. */
+
+    /* Or, receive the messages in order. */
+  }
+}
+
+/* Probe for all incoming messages from the remote ranks and receive them.
+ * We receive the message in the order in which they arrive. To achieve this,
+ * we have to use polling. */
 static void
 t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
 {
   int                 num_remotes;
   int                 iproc;
+  int                *recv_rank;
+  int                 mpiret;
+  sc_list_t          *receivers;
+  sc_link_t          *proc_it, *prev;
+  sc_MPI_Comm         comm;
+  int                 iprobe_flag;
+  sc_MPI_Status       status;
 
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (ghost != NULL);
 
+  comm = forest->mpicomm;
   /* Get the number of remote processes */
   num_remotes = ghost->remote_processes->elem_count;
 
-  for (iproc = 0; iproc < num_remotes; iproc++) {
-
+  if (num_remotes == 0) {
+    /* There is nothing to do */
+    return;
   }
+
+  /* We build a linked list of all ranks from which we receive. */
+  receivers = sc_list_new (NULL);
+  for (iproc = 0; iproc < num_remotes; iproc++) {
+    recv_rank = (int *) sc_array_index_int (ghost->remote_processes, iproc);
+    sc_list_append (receivers, recv_rank);
+  }
+  /****     Actual communication    ****/
+
+  /* Until there is only one sender left we iprobe for an message for each
+   * sender and if there is one we receive it and remove the sender from
+   * the list.
+   * The last message can be received via probe */
+  while (receivers->elem_count > 1) {
+    iprobe_flag = 0;
+    for (proc_it = receivers->first; proc_it != NULL && iprobe_flag == 0;) {
+      /* pointer to the rank of a receiver */
+      recv_rank = (int *) proc_it->data;
+      /* nonblocking probe for a message. */
+      mpiret = sc_MPI_Iprobe (*recv_rank, T8_MPI_GHOST_FOREST, comm,
+                              &iprobe_flag, &status);
+      SC_CHECK_MPI (mpiret);
+      if (iprobe_flag == 0) {
+        /* There is no message to receive, we continue */
+        proc_it = proc_it->next;
+      }
+      else {
+        /* There is a message to receive, we receive it. */
+        T8_ASSERT (*recv_rank == status.MPI_SOURCE);
+        T8_ASSERT (status.MPI_TAG == T8_MPI_GHOST_FOREST);
+        t8_forest_ghost_receive_message (forest, ghost, *recv_rank, comm,
+                                         status);
+
+        /* Remove the process from the list of receivers. */
+        prev = proc_it;
+        proc_it = proc_it->next;
+        sc_list_remove (receivers, prev);
+      }
+    }                           /* end for */
+  }                             /* end while */
+  T8_ASSERT (receivers->elem_count == 1);
+  /* Get the last rank from which we didnt receive yet */
+  recv_rank = (int *) sc_list_pop (receivers);
+  /* destroy the list */
+  sc_list_destroy (receivers);
+  /* Blocking probe for the last message */
+  mpiret = sc_MPI_Probe (*recv_rank, T8_MPI_GHOST_FOREST, comm, &status);
+  SC_CHECK_MPI (mpiret);
+  /* Receive the message */
+  t8_forest_ghost_receive_message (forest, ghost, *recv_rank, comm, status);
 }
 
 /* Create one layer of ghost elements, following the algorithm
@@ -796,6 +909,9 @@ t8_forest_ghost_create (t8_forest_t forest)
 
   /* Start sending the remote elements */
   send_info = t8_forest_ghost_send_start (forest, ghost, &requests);
+
+  /* Reveive the ghost elements from the remote processes */
+  t8_forest_ghost_receive (forest, ghost);
 
   /* End sending the remote elements */
   t8_forest_ghost_send_end (forest, ghost, send_info, requests);
