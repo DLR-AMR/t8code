@@ -81,7 +81,7 @@ t8_default_scheme_line_c::t8_element_successor (const t8_element_t * elem1,
                                                 t8_element_t * elem2,
                                                 int level)
 {
-  T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
+  T8_ASSERT (1 <= level && level <= T8_DLINE_MAXLEVEL);
 
   t8_dline_successor ((const t8_default_line_t *) elem1,
                       (t8_default_line_t *) elem2, level);

@@ -84,7 +84,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   eclass = t8_forest_get_tree (forest, ltree_id)->eclass;
   T8_ASSERT (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_TET
              || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX
-             || eclass == T8_ECLASS_LINE);
+             || eclass == T8_ECLASS_LINE || eclass == T8_ECLASS_PRISM);
 
   ts = forest->scheme_cxx->eclass_schemes[eclass];
   dim = t8_eclass_to_dimension[eclass];
@@ -113,6 +113,15 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
         + vertices[i];
     }
     break;
+  case T8_ECLASS_PRISM:
+      for(i = 0; i < 3; i++)
+      {
+          coordinates[i] =
+            len * ((vertices[3 + i] - vertices[i]) * corner_coords[0] +
+              (vertices[9 + i] - vertices[6 + i]) * corner_coords[1]  +
+             (vertices[6 + i] - vertices[3 + i]) * corner_coords[2])
+            + vertices[i];
+      }
   case T8_ECLASS_QUAD:
     corner_coords[2] = 0;
   case T8_ECLASS_HEX:

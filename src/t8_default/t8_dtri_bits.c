@@ -808,7 +808,6 @@ t8_dtri_init_linear_id (t8_dtri_t * t, uint64_t id, int level)
   uint64_t            local_index;
   t8_dtri_cube_id_t   cid;
   t8_dtri_type_t      type;
-
   T8_ASSERT (0 <= id && id <= ((uint64_t) 1) << (T8_DTRI_DIM * level));
 
   t->level = level;

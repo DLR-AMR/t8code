@@ -112,7 +112,7 @@ t8_dline_is_familypv (const t8_dline_t * f[])
 }
 
 void
-t8_dline_init_linear_id (t8_dline_t * l, int level, uint64_t id)
+t8_dline_init_linear_id (t8_dline_t *l, int level, uint64_t id)
 {
   T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
   T8_ASSERT (0 <= id && id <= ((uint64_t) 1) << level);

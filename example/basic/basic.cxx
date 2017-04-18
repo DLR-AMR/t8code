@@ -170,7 +170,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
 
     if (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX
         || eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_TET
-        || eclass == T8_ECLASS_LINE) {
+            || eclass == T8_ECLASS_LINE || eclass == T8_ECLASS_PRISM) {
       t8_forest_commit (forest);
       t8_debugf ("Successfully committed forest.\n");
       t8_forest_write_vtk (forest, "basic");    /* This does nothing right now */
@@ -380,7 +380,7 @@ main (int argc, char **argv)
   t8_basic_hypercube (T8_ECLASS_QUAD, 0, 1, 1);
   t8_basic ();
 #endif
-  t8_basic_hypercube (T8_ECLASS_LINE, 3, 1, 0);
+  t8_basic_hypercube (T8_ECLASS_PRISM, 3, 1, 0);
 
   t8_basic_refine_test (T8_ECLASS_LINE);
 
