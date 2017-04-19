@@ -41,8 +41,8 @@ t8_dprism_copy (const t8_dprism_t * l, t8_dprism_t * dest)
 void
 t8_dprism_init_linear_id (t8_dprism_t * l, int level, uint64_t id)
 {
-    t8_dline_init_linear_id(&l->line, level, id);
-    t8_dtri_init_linear_id(&l->tri, id, level);
+    t8_dline_init_linear_id(&l->line, level, id / 4);
+    t8_dtri_init_linear_id(&l->tri, id % 4, level);
 }
 
 void
@@ -54,7 +54,7 @@ t8_dprism_parent(const t8_dprism_t * l, t8_dprism_t * parent)
 
 void
 t8_dprism_successor (const t8_dprism_t * l, t8_dprism_t * succ, int level)
-{   /*TODO: Rekursiv lösen*/
+{
     const int tri_child_id = t8_dtri_child_id(&l->tri);
     const int line_child_id = t8_dline_child_id(&l->line);
 
@@ -63,7 +63,7 @@ t8_dprism_successor (const t8_dprism_t * l, t8_dprism_t * succ, int level)
     if(tri_child_id == 3 && line_child_id == 1)
     {
         t8_dtri_parent(&l->tri, &succ->tri);
-        /*Parent has also id 7, maybe it's parent, too. Have to check via recursion*/
+        /*Parent has also id 7, maybe its parent, too. Have to check via recursion*/
         if(t8_dtri_child_id(&succ->tri) == 3)
         {
             succ->tri.level = level-1;
@@ -125,7 +125,7 @@ t8_dprism_last_descendant(const t8_dprism_t * l, t8_dprism_t * s, int level)
 void
 t8_dprism_vertex_coords(const t8_dprism_t * t, int vertex,
                                            int coords[3]){
-    T8_ASSERT (vertex >= 0 || vertex <= 6);
+    T8_ASSERT (vertex >= 0 || vertex < 6);
     t8_dtri_compute_coords(&t->tri, vertex % 3, coords);
     t8_dline_vertex_coords(&t->line, vertex / 3, &coords[2]);
 
@@ -137,6 +137,6 @@ t8_dprism_linear_id(const t8_dprism_t * elem, int level)
     uint64_t            id = 0;
 
     T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
-
+    /*TODO: implement it*/
     return id;
 }
