@@ -549,7 +549,6 @@ void                t8_cmesh_destroy (t8_cmesh_t * pcmesh);
 /* Functions for construcing complete and committed cmeshes */
 
 /** Constructs a cmesh from a given p4est_connectivity structure.
- *  The constructed cmesh will be replicated.
  * \param[in]       conn       The p4est connectivity.
  * \param[in]       comm       mpi communicator to be used with the new cmesh.
  * \param[in]       do_partition Flag whether the cmesh should be partitioned or not.
@@ -561,7 +560,6 @@ t8_cmesh_t          t8_cmesh_new_from_p4est (p4est_connectivity_t * conn,
                                              int do_partition);
 
 /** Constructs a cmesh from a given p8est_connectivity structure.
- *  The constructed cmesh will be replicated.
  * \param[in]       conn       The p8est connectivity.
  * \param[in]       comm       mpi communicator to be used with the new cmesh.
  * \param[in]       do_dup     Flag whether the communicator shall be duplicated or not.
