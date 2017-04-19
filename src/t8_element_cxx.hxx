@@ -235,7 +235,8 @@ public:
    * \param [in] face     A face of \a elem.
    * \param [in,out] children Allocated elements, in which the children of \a elem
    *                      that share a face with \a face are stored.
-   *                      They will be stored in order of their child_id.
+   *                      They will be stored in order of that faces' child_id as
+   *                      a child of \a face.
    * \param [in] num_children The number of elements in \a children. Must match
    *                      the number of children that touch \a face.
    *                      \ref t8_element_num_face_children

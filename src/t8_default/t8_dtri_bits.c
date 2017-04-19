@@ -649,8 +649,6 @@ t8_dtri_children_at_face (const t8_dtri_t * tri, int face,
   /* Tetrahedron version */
   for (i = 0; i < T8_DTET_FACE_CHILDREN; i++) {
     child_ids[i] = t8_dtet_face_child_id_by_type[tri->type][face][i];
-    t8_debugf ("[H] Tet of type %i at face %i child %i\n",
-               tri->type, face, child_ids[i]);
   }
 #endif
 
@@ -728,7 +726,7 @@ t8_dtri_face_child_face (const t8_dtri_t * triangle, int face, int face_child)
           || (face_type == 1 && face_child == 1)) {
         is_middle_face = 1;
       }
-      return is_middle_face ? face ^ 2 : face;  /* face = 1 -> 2 : 1, face = 2 -> 1 : 2 */
+      return is_middle_face ? face ^ 3 : face;  /* face = 1 -> 2 : 1, face = 2 -> 1 : 2 */
     case 3:
       return 3;
     default:

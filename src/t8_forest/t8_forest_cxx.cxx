@@ -576,7 +576,7 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
   /* For each face_child build its neighbor */
   for (child_it = 0; child_it < num_children_at_face; child_it++) {
     /* The face number of the face of the child that coincides with face
-     * must not be the same as the face number of elem. (which is the integer face)
+     * is not necessarily the same as the face number of elem. (which is the integer face)
      * We thus have to compute the face number of the child first.
      */
     child_face = ts->t8_element_face_child_face (elem, face, child_it);
