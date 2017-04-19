@@ -647,7 +647,11 @@ t8_dtri_children_at_face (const t8_dtri_t * tri, int face,
   child_ids[1] = face == 2 ? 1 + tri->type : 3;
 #else
   /* Tetrahedron version */
-  SC_ABORT ("Not implemented yet\n");
+  for (i = 0; i < T8_DTET_FACE_CHILDREN; i++) {
+    child_ids[i] = t8_dtet_face_child_id_by_type[tri->type][face][i];
+    t8_debugf ("[H] Tet of type %i at face %i child %i\n",
+               tri->type, face, child_ids[i]);
+  }
 #endif
 
   /* Compute the children at the face.

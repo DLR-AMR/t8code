@@ -77,6 +77,13 @@ extern const int    t8_dtet_parenttype_Iloc_to_cid[6][8];
  */
 extern const int    t8_dtet_type_face_to_boundary[6][4][2];
 
+/** Store for each (type, face_index) the child_ids of the children of a tet of
+ * the given type that share the given face.
+ * I.e. {1,3} lists the child_ids of the children of a type 1 tetrahedron that have
+ * a subface of face 3 of this tetrahedron.
+ */
+extern const int    t8_dtet_face_child_id_by_type[6][4][4];
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DTET_CONNECTIVITY_H */
