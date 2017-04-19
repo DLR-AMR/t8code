@@ -332,6 +332,8 @@ t8_forest_commit (t8_forest_t forest)
     /* decrease reference count of input forest, possibly destroying it */
     t8_forest_unref (&forest->set_from);
   }
+  /* Compute the element offset of the trees */
+  t8_forest_compute_elements_offset (forest);
   /* Compute first and last descendant for each tree */
   t8_forest_compute_desc (forest);
 
@@ -741,6 +743,29 @@ t8_forest_print_profile (t8_forest_t forest)
     sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS,
                     T8_PROFILE_NUM_STATS, stats, 1, 1);
   }
+}
+
+void
+t8_forest_compute_elements_offset (t8_forest_t forest)
+{
+  t8_locidx_t         itree, num_trees;
+  t8_locidx_t         current_offset;
+  t8_tree_t           tree;
+
+  T8_ASSERT (t8_forest_is_initialized (forest));
+
+  /* Get the number of local trees */
+  num_trees = t8_forest_get_num_local_trees (forest);
+  current_offset = 0;
+  /* Iterate through all trees, sum up the element counts and set it as
+   * the element_offsets */
+  for (itree = 0; itree < num_trees; itree++) {
+    tree = t8_forest_get_tree (forest, itree);
+    tree->elements_offset = current_offset;
+    current_offset += t8_forest_get_tree_element_count (tree);
+  }
+  /* At the end, we counted all elements */
+  T8_ASSERT (current_offset == forest->local_num_elements);
 }
 
 void

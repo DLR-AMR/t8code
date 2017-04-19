@@ -92,6 +92,16 @@ t8_ctree_t          t8_forest_get_coarse_tree_ext (t8_forest_t forest,
                                                    t8_locidx_t ** face_neigh,
                                                    int8_t ** ttf);
 
+/** Given a forest whose trees are already filled with elements compute
+ * the element offset of each local tree.
+ * The element offset of a tree is the number of local elements of the forest
+ * that live in all the trees with a smaller treeid.
+ * \param [in,out]  forest    The forest.
+ * \a forest does not need to be committed before calling this function, but all
+ * elements must have been constructed.
+ */
+void                t8_forest_compute_elements_offset (t8_forest_t forest);
+
 /** Return an element of a tree.
  * \param [in]  tree  The tree.
  * \param [in]  elem_in_tree The index of the element within the tree.
