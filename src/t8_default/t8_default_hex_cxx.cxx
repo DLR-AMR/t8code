@@ -220,11 +220,13 @@ t8_default_scheme_hex_c::t8_element_children_at_face (const t8_element_t *
     child_ids[1] = 3;
     child_ids[2] = 6;
     child_ids[3] = 7;
+    break;
   case 4:
     child_ids[0] = 0;
     child_ids[1] = 1;
     child_ids[2] = 2;
     child_ids[3] = 3;
+    break;
   case 5:
     child_ids[0] = 4;
     child_ids[1] = 5;
