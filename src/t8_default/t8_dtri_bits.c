@@ -794,10 +794,8 @@ t8_dtri_is_inside_root (t8_dtri_t * t)
 #ifndef T8_DTRI_TO_DTET
     (t->y - t->x <= 0) && (t->y == t->x ? t->type == 0 : 1) &&
 #else
-    (t->z - t->x <= 0) &&
-    (t->y - t->z <= 0) &&
-    (t->z == t->x ? (1 <= t->type && 3 <= t->type) : 1) &&
-    (t->y == t->x ? (3 <= t->type && 5 <= t->type) : 1) &&
+    (t->z - t->x <= 0) && (t->y - t->z <= 0) && (t->z == t->x ? (0 <= t->type && t->type < 3) : 1) &&   /* types 0, 1, 2 */
+    (t->y == t->z ? (0 == t->type || 4 <= t->type) : 1) &&      /* types 0, 4, 5 */
     /* If the anchor is on the x-y-z diagonal, only type 0 tets are inside root. */
     ((t->x == t->y && t->y == t->z) ? t->type == 0 : 1) &&
 #endif
