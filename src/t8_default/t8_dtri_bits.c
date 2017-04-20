@@ -805,7 +805,7 @@ t8_dtri_is_inside_root (t8_dtri_t * t)
   {
     t8_dtri_t           root;
     t8_dtri_init_root (&root);
-    T8_ASSERT (is_inside == t8_dtri_is_ancestor (t, &root));
+    T8_ASSERT (is_inside == t8_dtri_is_ancestor (&root, t));
   }
 #endif
   return is_inside;
