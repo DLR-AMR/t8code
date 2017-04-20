@@ -3,6 +3,8 @@
 # This script translates the su2 mesh format into the .gmsh
 # mesh format. Both in ASCII.
 
+# TODO: Comments in .su2 file are lines starting with '%'. We should ignore those lines
+
 import argparse
 import sys
 import traceback
