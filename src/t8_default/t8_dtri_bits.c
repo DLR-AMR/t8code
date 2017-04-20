@@ -800,6 +800,14 @@ t8_dtri_is_inside_root (t8_dtri_t * t)
     ((t->x == t->y && t->y == t->z) ? t->type == 0 : 1) &&
 #endif
     1;
+#ifdef T8_ENABLE_DEBUG
+  /* Check if is_inside gives the same result as is_ancestor for the root element. */
+  {
+    t8_dtri_t           root;
+    t8_dtri_init_root (&root);
+    T8_ASSERT (is_inside == t8_dtri_is_ancestor (t, &root));
+  }
+#endif
   return is_inside;
 }
 
