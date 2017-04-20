@@ -23,6 +23,7 @@
 #include "t8_dprism_bits.h"
 #include "t8_dline_bits.h"
 #include "t8_dtri_bits.h"
+#include <math.h>
 
 typedef int8_t      t8_dtri_cube_id_t;
 
@@ -41,8 +42,30 @@ t8_dprism_copy (const t8_dprism_t * l, t8_dprism_t * dest)
 void
 t8_dprism_init_linear_id (t8_dprism_t * l, int level, uint64_t id)
 {
-    t8_dline_init_linear_id(&l->line, level, id / 4);
-    t8_dtri_init_linear_id(&l->tri, id % 4, level);
+    uint64_t        tri_id = 0;
+    uint64_t        line_id = 0;
+    int             i;
+    int             triangles_of_size_i = 1;
+
+    T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
+
+    for(i = 0; i <= level; i++)
+    {
+        /*Get the number of the i-th prism and get the related triangle number
+         * then multiplicate it by the number of triangles of level size.*/
+        tri_id += ((id % 8) % 4) * triangles_of_size_i;
+
+        /*If id % 8 is larger than 3, the prism is in the upper part of the
+         * parent prism. => line_id + 1*/
+        line_id += (id % 8 > 3) ? 1 : 0 ;
+
+        /*Each Prism divides into 8 children*/
+        id /= 8;
+        /*Each triangle divides into 4 children*/
+        triangles_of_size_i *= 4;
+    }
+    t8_dtri_init_linear_id(&l->tri, tri_id, level);
+    t8_dline_init_linear_id(&l->line, level, line_id);
 }
 
 void
@@ -66,16 +89,14 @@ t8_dprism_successor (const t8_dprism_t * l, t8_dprism_t * succ, int level)
         /*Parent has also id 7, maybe its parent, too. Have to check via recursion*/
         if(t8_dtri_child_id(&succ->tri) == 3)
         {
+            /*Parentprism is of level-1*/
             succ->tri.level = level-1;
             succ->line.level = level-1;
+            /*Compute the next Prism ov level-1*/
             t8_dprism_successor(succ, succ, level-1);
+            /*x,y,z coordinate are the same, but the level changes back*/
             succ->tri.level = level;
             succ->line.level = level;
-            /*
-            printf("Check\n");
-            t8_dtri_successor(&l->tri, &succ->tri, level-1);
-            succ->tri.level = level;
-            succ->line.level = level;*/
         }
         /*Successor is next triangle on "basement level" */
         else
@@ -135,8 +156,38 @@ uint64_t
 t8_dprism_linear_id(const t8_dprism_t * elem, int level)
 {
     uint64_t            id = 0;
+    uint64_t            tri_id;
+    uint64_t            line_id;
+    int                 i;
+    int                 prisms_of_size_i = 1;
+    int                 line_level = pow(2, level - 1);
+    int                 prism_shift = pow(8, level -1 );
 
     T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
-    /*TODO: implement it*/
+
+    tri_id = t8_dtri_linear_id(&elem->tri, level);
+    line_id = t8_dline_linear_id(&elem->line, level);
+
+    for(i = 0; i <= level; i++)
+    {
+        /*Compute via getting the local id of each parenttriangle in which
+         *elem->tri lies, the prism id, that elem would have, if it lies on the
+         * lowest plane of the prism of level 0*/
+        id += (tri_id % 4) * prisms_of_size_i;
+
+        tri_id /= 4;
+        prisms_of_size_i *= 8;
+    }
+    /*Now add the actual plane in which the prism is, which is computed via
+     * line_id*/
+    for(i = level - 1; i >= 0; i--)
+    {
+        /*The number to add to the id computed via the tri_id is 4*8^(level-i)
+         *for each upper half in a prism of size i*/
+        id += (line_id / line_level > 0) ? 4 * prism_shift : 0;
+        line_id = line_id % line_level;
+        prism_shift /= 8;
+        line_level /= 2;
+    }
     return id;
 }
