@@ -977,30 +977,37 @@ t8_dtri_is_ancestor (const t8_dtri_t * t, const t8_dtri_t * c)
              || (n2 == n1 && c->type == 1 - type_t));
 #else
     /* 3D */
+    /* Compute the coordinate directions according to this table:
+     *    type(t) 0  1  2  3  4  5
+     * n1         x  x  y  y  z  z
+     * n2         y  z  z  x  x  y
+     * dir3       z  y  x  z  y  x
+     */
       /* *INDENT-OFF* */
-      n1 = type_t / 2 == 0 ? c->x - t->x :
-           type_t / 2 == 2 ? c->z - t->z : c->y - t->y;
-      n2 = (type_t + 3) % 6 == 0 ? c->x - t->x :
-           (type_t + 3) % 6 == 2 ? c->z - t->z : c->y - t->y;
-      dir3 = type_t % 3 == 2 ? c->x - t->x :
-             type_t % 3 == 0 ? c->z - t->z : c->y - t->y;
+      n1 = type_t / 2 == 0 ? c->x - t->x :  /* type(t) is 0 or 1 */
+           type_t / 2 == 2 ? c->z - t->z : c->y - t->y; /* type(t) is (4 or 5) or (2 or 3) */
+      n2 = (type_t + 1) / 2 == 2 ? c->x - t->x : /* type(t) is 3 or 4 */
+           (type_t + 1) / 2 == 1 ? c->z - t->z : c->y - t->y; /* type(t) is (1 or 2) or (0 or 5) */
+      dir3 = type_t % 3 == 2 ? c->x - t->x : /* type(t) is 2 or 5 */
+             type_t % 3 == 0 ? c->z - t->z : c->y - t->y; /* type(t) is (0 or 3) or (1 or 4) */
       sign = (type_t % 2 == 0) ? 1 : -1;
       /* *INDENT-ON* */
 
     type_t += 6;                /* We need to compute modulo six and want
-                                   to avoid negative numbers when substracting from type_t. */
+                                   to avoid negative numbers when subtracting from type_t. */
+
     return !(n1 >= T8_DTRI_LEN (t->level) || n2 < 0 || dir3 - n1 > 0
-             || n2 - dir3 > 0 || (dir3 == n1
+             || n2 - dir3 > 0 || (dir3 == n2
                                   && (c->type == (type_t + sign * 1) % 6
-                                      || t->type == (type_t + sign * 2) % 6
-                                      || t->type == (type_t + sign * 3) % 6))
-             || (dir3 == n2
+                                      || c->type == (type_t + sign * 2) % 6
+                                      || c->type == (type_t + sign * 3) % 6))
+             || (dir3 == n1
                  && (c->type == (type_t - sign * 1) % 6
-                     || t->type == (type_t - sign * 2) % 6
-                     || t->type == (type_t - sign * 3) % 6))
+                     || c->type == (type_t - sign * 2) % 6
+                     || c->type == (type_t - sign * 3) % 6))
              /* On the x-y-z diagonal only tets of the same type can be
               * ancestor of each other. */
-             || (dir3 == n2 && n2 == n1 && type_t != c->type));
+             || (dir3 == n2 && n2 == n1 && type_t - 6 != c->type));
 #endif
   }
   else {
