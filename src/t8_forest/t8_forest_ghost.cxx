@@ -489,7 +489,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost)
   t8_tree_t           tree;
   t8_eclass_t         tree_class, neigh_class, last_class;
   t8_gloidx_t         neighbor_tree;
-  t8_eclass_scheme_c *ts, *neigh_scheme;
+  t8_eclass_scheme_c *ts, *neigh_scheme, *prev_neigh_scheme;
 
   int                 iface, num_faces;
   int                 num_face_children, max_num_face_children = 0;
@@ -532,8 +532,8 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost)
             last_class != neigh_class) {
           if (max_num_face_children > 0) {
             /* Clean-up memory */
-            neigh_scheme->t8_element_destroy (max_num_face_children,
-                                              half_neighbors);
+            prev_neigh_scheme->t8_element_destroy (max_num_face_children,
+                                                   half_neighbors);
             T8_FREE (half_neighbors);
           }
           half_neighbors = T8_ALLOC (t8_element_t *, num_face_children);
@@ -541,6 +541,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost)
           neigh_scheme->t8_element_new (num_face_children, half_neighbors);
           max_num_face_children = num_face_children;
           last_class = neigh_class;
+          prev_neigh_scheme = neigh_scheme;
         }
         /* Construct each half size neighbor */
         neighbor_tree =
