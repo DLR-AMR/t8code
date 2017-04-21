@@ -36,6 +36,17 @@
 typedef struct t8_forest *t8_forest_t;
 typedef struct t8_tree *t8_tree_t;
 
+/** This type controls, which neighbors count as ghost elements.
+ * Currently, we support face-neighbors. Vertex and edge neighbors
+ * will eventually be added. */
+typedef enum
+{
+  T8_GHOST_NONE = 0,  /**< Do not create ghost layer. */
+  T8_GHOST_FACES,     /**< Consider all face (codimension 1) neighbors. */
+  T8_GHOST_EDGES,     /**< Consider all edge (codimension 2) and face neighbors. */
+  T8_GHOST_VERTICES   /**< Consider all vertex (codimension 3) and edge and face neighbors. */
+} t8_ghost_type_t;
+
 T8_EXTERN_C_BEGIN ();
 
 /* TODO: There is no user_data yet */
@@ -215,7 +226,17 @@ void                t8_forest_set_partition (t8_forest_t forest,
 
 void                t8_forest_set_balance (t8_forest_t forest,
                                            int do_balance);
-void                t8_forest_set_ghost (t8_forest_t forest, int do_ghost);
+
+/** Enable or disable the creation of a layer of ghost elements.
+ * On default no ghosts are created.
+ * \param [in]      forest    The forest.
+ * \param [in]      do_ghost  If non-zero a ghost layer will be created.
+ * \param [in]      ghost_type Controls which neighbors count as ghost elements,
+ *                             currently only T8_GHOST_FACES is supported. This value
+ *                             is ignored if \a do_ghost = 0.
+ */
+void                t8_forest_set_ghost (t8_forest_t forest, int do_ghost,
+                                         t8_ghost_type_t ghost_type);
 
 /* TODO: use assertions and document that the forest_set (..., from) and
  *       set_load are mutually exclusive. */
@@ -300,6 +321,9 @@ void                t8_forest_set_profiling (t8_forest_t forest,
  * \see t8_forest_set_profiling
  */
 void                t8_forest_print_profile (t8_forest_t forest);
+
+/** Print the ghost structure of a forest. Only used for debugging. */
+void                t8_forest_ghost_print (t8_forest_t forest);
 
 /** Change the cmesh associated to a forest to a partitioned cmesh that
  * is partitioned according to the tree distribution in the forest.

@@ -191,6 +191,25 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
 }
 
 void
+t8_forest_set_ghost (t8_forest_t forest, int do_ghost,
+                     t8_ghost_type_t ghost_type)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+  /* We currently only support face ghosts */
+  SC_CHECK_ABORT (do_ghost == 0 || ghost_type == T8_GHOST_FACES,
+                  "Ghost neighbors other than face-neighbors are not supported.\n");
+
+  if (ghost_type == T8_GHOST_NONE) {
+    /* none type disables ghost */
+    forest->do_ghost = 0;
+  }
+  else {
+    forest->do_ghost = (do_ghost != 0); /* True if and only if do_ghost != 0 */
+  }
+  forest->ghost_type = ghost_type;
+}
+
+void
 t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from,
                      t8_forest_adapt_t adapt_fn,
                      t8_forest_replace_t replace_fn, int recursive)
@@ -353,6 +372,13 @@ t8_forest_commit (t8_forest_t forest)
     forest->profile->commit_runtime = sc_MPI_Wtime () -
       forest->profile->commit_runtime;
   }
+
+  /* Construct a ghost layer, if desired */
+  if (forest->do_ghost) {
+    /* TODO: ghost type */
+    t8_forest_ghost_create (forest);
+  }
+  forest->do_ghost = 0;
 }
 
 t8_locidx_t

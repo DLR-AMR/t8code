@@ -25,7 +25,6 @@
 #include <t8_eclass.h>
 #include <t8_element_cxx.hxx>
 #include <t8_default_cxx.hxx>
-#include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
@@ -54,20 +53,21 @@ t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, int level,
                                   level, comm);
   t8_forest_init (&forest_adapt);
   t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, NULL, 0);
+  t8_forest_set_ghost (forest_adapt, 1, T8_GHOST_FACES);
   t8_forest_commit (forest_adapt);
   t8_forest_write_vtk (forest_adapt, "test_ghost");
   t8_global_productionf ("Output vtk to test_ghost.pvtu\n");
-  t8_forest_ghost_create (forest_adapt);
+  /* print ghosts */
   t8_forest_ghost_print (forest_adapt);
 
   /* partition the adapted forest */
   t8_forest_init (&forest_partition);
   t8_forest_set_partition (forest_partition, forest_adapt, 0);
+  t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
   t8_forest_commit (forest_partition);
   t8_forest_write_vtk (forest_partition, "test_ghost_partition");
   t8_global_productionf ("Output vtk to test_ghost_partition.pvtu\n");
-  /* create ghosts and print */
-  t8_forest_ghost_create (forest_partition);
+  /* print ghosts */
   t8_forest_ghost_print (forest_partition);
   t8_forest_unref (&forest_partition);
 }

@@ -32,6 +32,7 @@
 #include <t8_cmesh.h>
 #include <t8_element.h>
 #include <t8_forest/t8_forest_adapt.h>
+#include <t8_forest.h>
 
 typedef struct t8_profile t8_profile_t; /* Defined below */
 typedef struct t8_forest_ghost *t8_forest_ghost_t;      /* Defined below */
@@ -66,10 +67,12 @@ typedef struct t8_forest
   t8_forest_from_t    from_method;      /**< Method to derive from \b set_from. */
   t8_forest_replace_t set_replace_fn;   /**< Replace function. Called when \b from_method
                                              is set to T8_FOREST_FROM_ADAPT. */
-  t8_forest_adapt_t   set_adapt_fn;     /** refinement and coarsen function. Called when \b from_method
+  t8_forest_adapt_t   set_adapt_fn;     /**< refinement and coarsen function. Called when \b from_method
                                              is set to T8_FOREST_FROM_ADAPT. */
   int                 set_adapt_recursive; /**< Flag to decide whether coarsen and refine
                                                 are carried out recursive */
+  int                 do_ghost;         /**< If True, a ghost layer will be created when the forest is committed. */
+  t8_ghost_type_t     ghost_type;       /**< If a ghost layer will be created, the type of neighbors that count as ghost. */
   void               *user_data;        /**< Pointer for arbitrary user data. \see t8_forest_set_user_data. */
   int                 committed;        /**< \ref t8_forest_commit called? */
   int                 mpisize;          /**< Number of MPI processes. */
@@ -144,6 +147,7 @@ typedef struct t8_forest_ghost
 {
   t8_refcount_t       rc; /**< The reference counter. */
 
+  t8_ghost_type_t     ghost_type;   /**< Describes which neighbors are considered ghosts. */
   sc_array_t         *ghost_trees;      /* ghost tree data:
                                            global_id.
                                            eclass.

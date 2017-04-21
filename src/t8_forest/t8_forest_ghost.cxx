@@ -174,14 +174,20 @@ t8_ghost_remote_equal_function (const void *remote_dataa,
 }
 
 void
-t8_forest_ghost_init (t8_forest_ghost_t * pghost)
+t8_forest_ghost_init (t8_forest_ghost_t * pghost, t8_ghost_type_t ghost_type)
 {
   t8_forest_ghost_t   ghost;
+
+  /* We currently only support face-neighbor ghosts */
+  T8_ASSERT (ghost_type == T8_GHOST_FACES);
 
   /* Allocate memory for ghost */
   ghost = *pghost = T8_ALLOC_ZERO (t8_forest_ghost_struct_t, 1);
   /* initialize the reference counter */
   t8_refcount_init (&ghost->rc);
+  /* Set the ghost type */
+  ghost->ghost_type = ghost_type;
+
   /* Allocate the trees array */
   ghost->ghost_trees = sc_array_new (sizeof (t8_ghost_tree_t));
 
@@ -1016,8 +1022,14 @@ t8_forest_ghost_create (t8_forest_t forest)
   t8_ghost_mpi_send_info_t *send_info;
   sc_MPI_Request     *requests;
 
+  if (forest->ghost_type == T8_GHOST_NONE) {
+    t8_debugf ("WARNING: Trying to construct ghosts with ghost_type NONE. "
+               "Ghost layer is not constructed.\n");
+    return;
+  }
+
   /* Initialize the ghost structure */
-  t8_forest_ghost_init (&forest->ghosts);
+  t8_forest_ghost_init (&forest->ghosts, forest->ghost_type);
   ghost = forest->ghosts;
 
   /* Construct the remote elements and processes. */

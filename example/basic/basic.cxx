@@ -23,7 +23,6 @@
 #include <sc_refcount.h>
 #include <t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_adapt.h>
-#include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest.h>
 #include <t8_cmesh_vtk.h>
 #include <p4est_connectivity.h>

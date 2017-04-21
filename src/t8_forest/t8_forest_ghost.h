@@ -35,7 +35,8 @@
 
 T8_EXTERN_C_BEGIN ();
 /* TODO: comment */
-void                t8_forest_ghost_init (t8_forest_ghost_t * pghost);
+void                t8_forest_ghost_init (t8_forest_ghost_t * pghost,
+                                          t8_ghost_type_t ghost_type);
 
 /** Increase the reference count of a ghost structure.
  * \param [in,out]  ghost     On input, this ghost structure must exist with
@@ -47,7 +48,7 @@ void                t8_forest_ghost_ref (t8_forest_ghost_t ghost);
  * If the counter reaches zero, the ghost structure is destroyed.
  * See also \ref t8_forest_ghost_destroy, which is to be preferred when it is
  * known that the last reference to a cmesh is deleted.
- * \param [in,out]  pghost      On inputt, the ghost structure pointed to must
+ * \param [in,out]  pghost      On input, the ghost structure pointed to must
  *                              exist with positive reference count.
  *                              If the reference count reaches zero, the ghost
  *                              structure is destroyed and this pointer is set
@@ -67,8 +68,6 @@ void                t8_forest_ghost_destroy (t8_forest_ghost_t * pghost);
 
 /* TODO: Document */
 void                t8_forest_ghost_create (t8_forest_t forest);
-
-void                t8_forest_ghost_print (t8_forest_t forest);
 
 T8_EXTERN_C_END ();
 
