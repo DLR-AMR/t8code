@@ -766,7 +766,7 @@ t8_forest_print_profile (t8_forest_t forest)
     sc_stats_set1 (&stats[3], profile->partition_procs_sent,
                    "forest: Number of processes sent to.");
     sc_stats_set1 (&stats[4], profile->ghosts_shipped,
-                   "forest: Number of ghost elements sent.\n");
+                   "forest: Number of ghost elements sent.");
     sc_stats_set1 (&stats[5], profile->ghosts_received,
                    "forest: Number of ghost elements received.");
     sc_stats_set1 (&stats[6], profile->ghosts_remotes,
