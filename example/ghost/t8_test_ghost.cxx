@@ -169,7 +169,7 @@ main (int argc, char **argv)
                       "Periodicity of brick mesh. A three (two) digit decimal"
                       " number zyx. If digit i is nonzero then the representative"
                       " coordinate direction of the brick mesh is periodic.");
-  sc_options_add_int (opt, 'e', "elements", &eclass_int, 0,
+  sc_options_add_int (opt, 'e', "elements", &eclass_int, 1,
                       "If neither -f nor -x,-y,-z are used a cubical mesh is"
                       " generated. This option specifies"
                       " the type of elements to use.\n"
@@ -184,7 +184,8 @@ main (int argc, char **argv)
                              opt, argc, argv);
   /* check for wrong usage of arguments */
   if (parsed < 0 || parsed != argc
-      || x_dim < 0 || y_dim < 0 || z_dim < 0 || dim < 2 || dim > 3) {
+      || x_dim < 0 || y_dim < 0 || z_dim < 0 || dim < 2 || dim > 3
+      || eclass_int < T8_ECLASS_VERTEX || eclass_int >= T8_ECLASS_COUNT) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
