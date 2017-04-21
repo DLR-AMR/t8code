@@ -459,6 +459,13 @@ t8_forest_partition_cmesh (t8_forest_t forest, sc_MPI_Comm comm,
   forest->cmesh = cmesh_partition;
 }
 
+sc_MPI_Comm
+t8_forest_get_mpicomm (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  return forest->mpicomm;
+}
+
 t8_gloidx_t
 t8_forest_get_first_local_tree_id (t8_forest_t forest)
 {

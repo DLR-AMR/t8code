@@ -338,6 +338,13 @@ void                t8_forest_partition_cmesh (t8_forest_t forest,
                                                sc_MPI_Comm comm,
                                                int set_profiling);
 
+/** Return the mpi communicator associated to a forest.
+ * \param [in]      forest      The forest.
+ * \return                      The mpi communicator of \a forest.
+ * \a forest must be committed before calling this function.
+ */
+sc_MPI_Comm         t8_forest_get_mpicomm (t8_forest_t forest);
+
 /** Return the global id of the first local tree of a forest.
  * \param [in]      forest      The forest.
  * \return                      The global id of the first local tree in \a forest.

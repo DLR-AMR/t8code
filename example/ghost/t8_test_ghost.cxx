@@ -35,9 +35,12 @@ t8_basic_adapt (t8_forest_t forest, t8_locidx_t which_tree,
                 t8_eclass_scheme_c * ts,
                 int num_elements, t8_element_t * elements[])
 {
+  int                 mpirank, mpiret;
   T8_ASSERT (num_elements == 1 || num_elements ==
              ts->t8_element_num_children (elements[0]));
-  if (which_tree == 0 && forest->mpirank == 0) {
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  if (which_tree == 0 && mpirank == 0) {
     return 1;
   }
   return 0;
