@@ -45,7 +45,7 @@ public:
   /** Constructor. */
   t8_default_scheme_prism_c (void);
 
-  ~t8_default_scheme_prism_c ();
+                     ~t8_default_scheme_prism_c ();
 
 /** Return the maximum level allowed for this element class. */
   virtual int         t8_element_maxlevel (void);
@@ -77,10 +77,11 @@ public:
 
 /** Construct the parent of a given element. */
   virtual void        t8_element_parent (const t8_element_t * elem,
-                                         t8_element_t * parent){
-      SC_ABORT ("This function is not implemented yet.\n");
-      return;      /* suppresses compiler warning */
-    }
+                                         t8_element_t * parent)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+    return;                     /* suppresses compiler warning */
+  }
 
 /** Construct a same-size sibling of a given element. */
   virtual void        t8_element_sibling (const t8_element_t * elem,
@@ -90,10 +91,7 @@ public:
   }
 
   /** Return the number of children of an element when it is refined. */
-  virtual int         t8_element_num_children (const t8_element_t * elem){
-      SC_ABORT ("This function is not implemented yet.\n");
-      return T8_ECLASS_ZERO;      /* suppresses compiler warning */
-    }
+  virtual int         t8_element_num_children (const t8_element_t * elem);
 
   /** Return the number of children of an element's face when the element is refined. */
   virtual int         t8_element_num_face_children (const t8_element_t *
@@ -105,29 +103,33 @@ public:
 
 /** Construct the child element of a given number. */
   virtual void        t8_element_child (const t8_element_t * elem,
-                                        int childid, t8_element_t * child){
-      SC_ABORT ("This function is not implemented yet.\n");
-      return;      /* suppresses compiler warning */
-    }
+                                        int childid, t8_element_t * child)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+    return;                     /* suppresses compiler warning */
+  }
 
 /** Construct all children of a given element. */
   virtual void        t8_element_children (const t8_element_t * elem,
-                                           int length, t8_element_t * c[]){
-      SC_ABORT ("This function is not implemented yet.\n");
-      return;      /* suppresses compiler warning */
-    }
+                                           int length, t8_element_t * c[])
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+    return;                     /* suppresses compiler warning */
+  }
 
 /** Return the child id of an element */
-  virtual int         t8_element_child_id (const t8_element_t * elem){
-      SC_ABORT ("This function is not implemented yet.\n");
-      return T8_ECLASS_ZERO;      /* suppresses compiler warning */
-    }
+  virtual int         t8_element_child_id (const t8_element_t * elem)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+    return T8_ECLASS_ZERO;      /* suppresses compiler warning */
+  }
 
   /** Return nonzero if collection of elements is a family */
-    virtual int         t8_element_is_family (t8_element_t ** fam){
-      SC_ABORT ("This function is not implemented yet.\n");
-      return T8_ECLASS_ZERO;      /* suppresses compiler warning */
-    }
+  virtual int         t8_element_is_family (t8_element_t ** fam)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+    return T8_ECLASS_ZERO;      /* suppresses compiler warning */
+  }
 
 /** Construct the nearest common ancestor of two elements in the same tree. */
   virtual void        t8_element_nca (const t8_element_t * elem1,

@@ -52,8 +52,8 @@ typedef int32_t     t8_dprism_coord_t;
 
 typedef struct t8_dprism
 {
-  t8_dline_t line; /*z coordinate + level*/
-  t8_dtri_t tri;   /*x,y coordinate + level*/
+  t8_dline_t          line;     /*z coordinate + level */
+  t8_dtri_t           tri;      /*x,y coordinate + level */
 }
 t8_dprism_t;
 

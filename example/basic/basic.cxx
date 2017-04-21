@@ -380,7 +380,7 @@ main (int argc, char **argv)
   t8_basic_hypercube (T8_ECLASS_QUAD, 0, 1, 1);
   t8_basic ();
 #endif
-  t8_basic_hypercube (T8_ECLASS_PRISM, 3, 1, 0);
+  t8_basic_hypercube (T8_ECLASS_PRISM, 1, 1, 0);
 
   t8_basic_refine_test (T8_ECLASS_LINE);
 

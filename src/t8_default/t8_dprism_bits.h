@@ -42,7 +42,8 @@ int                 t8_dprism_get_level (const t8_dprism_t * p);
  * \param [in,out] dest Existing prism whose data will be filled with the data
  *                   of \a l.
  */
-void                t8_dprism_copy (const t8_dprism_t * l, t8_dprism_t * dest);
+void                t8_dprism_copy (const t8_dprism_t * l,
+                                    t8_dprism_t * dest);
 
 /** Initialize a prism as the prism with a given global id in a uniform
  *  refinement of a given level. *
@@ -51,7 +52,7 @@ void                t8_dprism_copy (const t8_dprism_t * l, t8_dprism_t * dest);
  * \param [in] level  level of uniform grid to be considered.
  */
 void                t8_dprism_init_linear_id (t8_dprism_t * l, int level,
-                                             uint64_t id);
+                                              uint64_t id);
 
 /** Computes the successor of a prism in a uniform grid of level \a level.
  * \param [in] l  prism whose id will be computed.
@@ -60,7 +61,7 @@ void                t8_dprism_init_linear_id (t8_dprism_t * l, int level,
  * \param [in] level level of uniform grid to be considered.
  */
 void                t8_dprism_successor (const t8_dprism_t * l,
-                                        t8_dprism_t * succ, int level);
+                                         t8_dprism_t * succ, int level);
 
 /** Compute the parent of a prism.
  * \param [in]  elem Input prism.
@@ -68,7 +69,8 @@ void                t8_dprism_successor (const t8_dprism_t * l,
  *                  be filled with the data of elem's parent.
  * \note \a elem may point to the same triangle as \a parent.
  */
-void                t8_dprism_parent(const t8_dprism_t * l, t8_dprism_t * parent);
+void                t8_dprism_parent (const t8_dprism_t * l,
+                                      t8_dprism_t * parent);
 
 /** Compute the first descendant of a prism at a given level. This is the descendant of
  * the prism in a uniform level refinement that has the smallest id.
@@ -78,8 +80,9 @@ void                t8_dprism_parent(const t8_dprism_t * l, t8_dprism_t * parent
  * \param [in] level    The refinement level. Must be greater than \a l's refinement
  *                      level.
  */
-void                t8_dprism_first_descendant(const t8_dprism_t  *elem,
-                                               t8_dprism_t * desc, int level);
+void                t8_dprism_first_descendant (const t8_dprism_t * elem,
+                                                t8_dprism_t * desc,
+                                                int level);
 
 /** Compute the last descendant of a prism at a given level. This is the descendant of
  * the prism in a uniform level refinement that has the largest id.
@@ -90,7 +93,7 @@ void                t8_dprism_first_descendant(const t8_dprism_t  *elem,
  *                      level.
  */
 void                t8_dprism_last_descendant (const t8_dprism_t * l,
-                                              t8_dprism_t * s, int level);
+                                               t8_dprism_t * s, int level);
 
 /** Compute the coordinates of a vertex of a prism.
  * \param [in] t    Input prism.
@@ -98,13 +101,13 @@ void                t8_dprism_last_descendant (const t8_dprism_t * l,
  * 		     will be filled with the coordinates of the vertex.
  * \param [in] vertex The number of the vertex.
  */
-void                t8_dprism_vertex_coords(const t8_dprism_t * t, int vertex,
-                                            int coords[]);
+void                t8_dprism_vertex_coords (const t8_dprism_t * t,
+                                             int vertex, int coords[]);
 /** Computes the linear position of a prism in an uniform grid.
  * \param [in] line  Prism whose id will be computed.
  * \return Returns the linear position of this prism on a grid.
  */
-uint64_t            t8_dprism_linear_id(const t8_dprism_t * elem, int level);
+uint64_t            t8_dprism_linear_id (const t8_dprism_t * elem, int level);
 
 T8_EXTERN_C_END ();
 
