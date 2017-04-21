@@ -485,7 +485,7 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
  * We iterate through all elements and check if their neighbors
  * lie on remote processes. If so, we add the element to the
  * remote_ghosts array of ghost.
- * We also fill the remote_processes herhe. */
+ * We also fill the remote_processes here. */
 static void
 t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost)
 {
@@ -573,6 +573,11 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost)
       }                         /* end face loop */
     }                           /* end element loop */
   }                             /* end tree loop */
+
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we count the number of remote processes. */
+    forest->profile->ghosts_remotes = ghost->remote_processes->elem_count;
+  }
   /* Clean-up memory */
   neigh_scheme->t8_element_destroy (max_num_face_children, half_neighbors);
   T8_FREE (half_neighbors);
@@ -716,6 +721,12 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost,
       bytes_written += element_bytes;
       /* add padding after the elements */
       bytes_written += T8_ADD_PADDING (bytes_written);
+
+      if (forest->profile != NULL) {
+        /* If profiling is enabled, we count the number of ghost_elements that
+         * we send. */
+        forest->profile->ghosts_shipped += remote_tree->elements.elem_count;
+      }
     }                           /* End tree loop */
 
     T8_ASSERT (bytes_written == current_send_info->num_bytes);
@@ -826,6 +837,12 @@ t8_forest_ghost_receive_message (t8_forest_t forest,
     bytes_read += T8_ADD_PADDING (bytes_read);
     /* read the number of elements sent */
     num_elements = *(size_t *) (recv_buffer + bytes_read);
+
+    if (forest->profile != NULL) {
+      /* If profiling is enabled, we count the number of elements received. */
+      forest->profile->ghosts_received += num_elements;
+    }
+
     bytes_read += sizeof (size_t);
     bytes_read += T8_ADD_PADDING (bytes_read);
     /* Search for the tree in the ghost_trees array */
@@ -1028,6 +1045,11 @@ t8_forest_ghost_create (t8_forest_t forest)
     return;
   }
 
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of ghost_create */
+    forest->profile->ghost_runtime = -sc_MPI_Wtime ();
+  }
+
   /* Initialize the ghost structure */
   t8_forest_ghost_init (&forest->ghosts, forest->ghost_type);
   ghost = forest->ghosts;
@@ -1043,6 +1065,11 @@ t8_forest_ghost_create (t8_forest_t forest)
 
   /* End sending the remote elements */
   t8_forest_ghost_send_end (forest, ghost, send_info, requests);
+
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of ghost_create */
+    forest->profile->ghost_runtime += sc_MPI_Wtime ();
+  }
 }
 
 /* Print a forest ghost structure */

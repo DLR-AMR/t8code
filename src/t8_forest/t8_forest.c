@@ -765,10 +765,18 @@ t8_forest_print_profile (t8_forest_t forest)
                    "forest: Number of bytes sent.");
     sc_stats_set1 (&stats[3], profile->partition_procs_sent,
                    "forest: Number of processes sent to.");
-    sc_stats_set1 (&stats[4], profile->partition_runtime,
+    sc_stats_set1 (&stats[4], profile->ghosts_shipped,
+                   "forest: Number of ghost elements sent.\n");
+    sc_stats_set1 (&stats[5], profile->ghosts_received,
+                   "forest: Number of ghost elements received.");
+    sc_stats_set1 (&stats[6], profile->ghosts_remotes,
+                   "forest: Number of processes we sent ghosts to/received from.");
+    sc_stats_set1 (&stats[7], profile->partition_runtime,
                    "forest: Partition runtime.");
-    sc_stats_set1 (&stats[5], profile->commit_runtime,
+    sc_stats_set1 (&stats[8], profile->commit_runtime,
                    "forest: Commit runtime.");
+    sc_stats_set1 (&stats[9], profile->ghost_runtime,
+                   "forest: Ghost runtime.");
     /* compute stats */
     sc_stats_compute (sc_MPI_COMM_WORLD, T8_PROFILE_NUM_STATS, stats);
     /* print stats */

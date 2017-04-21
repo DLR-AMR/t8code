@@ -67,11 +67,13 @@ t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, int level,
   t8_forest_init (&forest_partition);
   t8_forest_set_partition (forest_partition, forest_adapt, 0);
   t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
+  t8_forest_set_profiling (forest_partition, 1);
   t8_forest_commit (forest_partition);
   t8_forest_write_vtk (forest_partition, "test_ghost_partition");
   t8_global_productionf ("Output vtk to test_ghost_partition.pvtu\n");
   /* print ghosts */
   t8_forest_ghost_print (forest_partition);
+  t8_forest_print_profile (forest_partition);
   t8_forest_unref (&forest_partition);
 }
 
