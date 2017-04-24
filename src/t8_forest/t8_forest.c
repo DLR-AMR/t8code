@@ -397,6 +397,19 @@ t8_forest_get_global_num_elements (t8_forest_t forest)
   return forest->global_num_elements;
 }
 
+t8_locidx_t
+t8_forest_get_num_ghosts (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  /* Return the number of ghost elements, or 0 if no ghost structure
+   * existst. */
+  if (forest->ghosts == NULL) {
+    return 0;
+  }
+  return forest->ghosts->num_ghosts_elements;
+}
+
 /* Currently this function is not used */
 #if 0
 static t8_element_t *

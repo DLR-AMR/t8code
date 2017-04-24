@@ -260,6 +260,15 @@ t8_locidx_t         t8_forest_get_num_element (t8_forest_t forest);
 
 t8_gloidx_t         t8_forest_get_global_num_elements (t8_forest_t forest);
 
+/** Return the number of ghost elements of a forest.
+ * \param [in]      forest      The forest.
+ * \return                      The number of ghost elements stored in the ghost
+ *                              structure of \a forest. 0 if no ghosts were constructed.
+ *                              \see t8_forest_set_ghost
+ * \a forest must be committed before calling this function.
+ */
+t8_locidx_t         t8_forest_get_num_ghosts (t8_forest_t forest);
+
 /** Return the element class of a forest local tree.
  *  \param [in] forest    The forest.
  *  \param [in] ltreeid   The local id of a tree in \a forest.

@@ -38,6 +38,23 @@ T8_EXTERN_C_BEGIN ();
 void                t8_forest_ghost_init (t8_forest_ghost_t * pghost,
                                           t8_ghost_type_t ghost_type);
 
+/* TODO: document */
+t8_locidx_t         t8_forest_ghost_num_trees (t8_forest_t forest);
+
+/* TODO: document */
+t8_locidx_t         t8_forest_ghost_tree_num_elements (t8_forest_t forest,
+                                                       t8_locidx_t
+                                                       lghost_tree);
+
+/* TODO: document */
+t8_eclass_t         t8_forest_ghost_get_tree_class (t8_forest_t forest,
+                                                    t8_locidx_t lghost_tree);
+
+/* TODO: document */
+t8_element_t       *t8_forest_ghost_get_element (t8_forest_t forest,
+                                                 t8_locidx_t lghost_tree,
+                                                 t8_locidx_t lelement);
+
 /** Increase the reference count of a ghost structure.
  * \param [in,out]  ghost     On input, this ghost structure must exist with
  *                            positive reference count.

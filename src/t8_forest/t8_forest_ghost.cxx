@@ -212,6 +212,78 @@ t8_forest_ghost_init (t8_forest_ghost_t * pghost, t8_ghost_type_t ghost_type)
   ghost->remote_processes = sc_array_new (sizeof (int));
 }
 
+/* return the number of trees in a ghost */
+t8_locidx_t
+t8_forest_ghost_num_trees (t8_forest_t forest)
+{
+  T8_ASSERT (forest->ghosts != NULL);
+  T8_ASSERT (forest->ghosts->ghost_trees != NULL);
+
+  return forest->ghosts->ghost_trees->elem_count;
+}
+
+/* Given an index into the ghost_trees array return the ghost tree */
+static t8_ghost_tree_t *
+t8_forest_ghost_get_tree (t8_forest_t forest, t8_locidx_t lghost_tree)
+{
+  t8_ghost_tree_t    *ghost_tree;
+  t8_forest_ghost_t   ghost;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+  ghost = forest->ghosts;
+  T8_ASSERT (ghost != NULL);
+  T8_ASSERT (ghost->ghost_trees != NULL);
+  T8_ASSERT (0 <= lghost_tree &&
+             lghost_tree < t8_forest_ghost_num_trees (forest));
+
+  ghost_tree =
+    (t8_ghost_tree_t *) t8_sc_array_index_locidx (ghost->ghost_trees,
+                                                  lghost_tree);
+  return ghost_tree;
+}
+
+/* Given an index in the ghost_tree array, return this tree's number of elements */
+t8_locidx_t
+t8_forest_ghost_tree_num_elements (t8_forest_t forest,
+                                   t8_locidx_t lghost_tree)
+{
+  t8_ghost_tree_t    *ghost_tree;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  ghost_tree = t8_forest_ghost_get_tree (forest, lghost_tree);
+  return ghost_tree->elements.elem_count;
+}
+
+/* Given an index in the ghost_tree array, return this tree's element class */
+t8_eclass_t
+t8_forest_ghost_get_tree_class (t8_forest_t forest, t8_locidx_t lghost_tree)
+{
+  t8_ghost_tree_t    *ghost_tree;
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  ghost_tree = t8_forest_ghost_get_tree (forest, lghost_tree);
+  return ghost_tree->eclass;
+}
+
+/* Given an index into the ghost_trees array and for that tree an element index,
+ * return the corresponding element. */
+t8_element_t
+  * t8_forest_ghost_get_element (t8_forest_t forest, t8_locidx_t lghost_tree,
+                                 t8_locidx_t lelement)
+{
+  t8_ghost_tree_t    *ghost_tree;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  ghost_tree = t8_forest_ghost_get_tree (forest, lghost_tree);
+  T8_ASSERT (0 <= lelement &&
+             lelement < t8_forest_ghost_tree_num_elements (forest,
+                                                           lghost_tree));
+  return (t8_element_t *) t8_sc_array_index_locidx (&ghost_tree->elements,
+                                                    lelement);
+}
+
 #if 0
 /* Given a local tree in a forest add all non-local face neighbor trees
  * to a ghost structure. If the trees already exist in the ghost structure
@@ -722,11 +794,8 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost,
       /* add padding after the elements */
       bytes_written += T8_ADD_PADDING (bytes_written);
 
-      if (forest->profile != NULL) {
-        /* If profiling is enabled, we count the number of ghost_elements that
-         * we send. */
-        forest->profile->ghosts_shipped += remote_tree->elements.elem_count;
-      }
+      /* Add to the counter of remote elements. */
+      ghost->num_remote_elements += remote_tree->elements.elem_count;
     }                           /* End tree loop */
 
     T8_ASSERT (bytes_written == current_send_info->num_bytes);
@@ -852,10 +921,8 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest,
     /* read the number of elements sent */
     num_elements = *(size_t *) (recv_buffer + bytes_read);
 
-    if (forest->profile != NULL) {
-      /* If profiling is enabled, we count the number of elements received. */
-      forest->profile->ghosts_received += num_elements;
-    }
+    /* Add to the counter of ghost elements. */
+    ghost->num_ghosts_elements += num_elements;
 
     bytes_read += sizeof (size_t);
     bytes_read += T8_ADD_PADDING (bytes_read);
@@ -1169,6 +1236,9 @@ t8_forest_ghost_create (t8_forest_t forest)
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of ghost_create */
     forest->profile->ghost_runtime += sc_MPI_Wtime ();
+    /* We also store the number of ghosts and remotes */
+    forest->profile->ghosts_received = ghost->num_ghosts_elements;
+    forest->profile->ghosts_shipped = ghost->num_remote_elements;
   }
 }
 
