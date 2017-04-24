@@ -47,10 +47,12 @@ T8_EXTERN_C_BEGIN ();
  * Furthermore we store for each tree and for each ghost to which data array they belong to.
  * So the data looks like:
  *
- * M_0:   | Trees | Ghosts | Ghost faces | Tree faces | Tree attributes |
- * M_1:   | Trees | Ghosts | Ghost faces | Tree faces | Tree attributes |
+ * TODO: would be more logical to switch Ghost and Tree faces
+ *
+ * M_0:   | Trees | Ghosts | Ghost faces | Tree faces | Tree attributes | Ghost attributes
+ * M_1:   | Trees | Ghosts | Ghost faces | Tree faces | Tree attributes | Ghost attributes
  *  .         .        .          .            .               .
- * M_n:   | Trees | Ghosts | Ghost faces | Tree faces | Tree attributes |
+ * M_n:   | Trees | Ghosts | Ghost faces | Tree faces | Tree attributes | Ghost attributes
  *
  * tree_to_proc:  | 0 | 0 | 1 | ... | n |  these are just random examples here
  * ghost_to_proc: | 0 | 1 | 2 | ... | n |
