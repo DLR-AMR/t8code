@@ -776,7 +776,7 @@ t8_forest_element_find_owner (t8_forest_t forest,
                                   ts->t8_element_level (element_first_desc));
 
   /* The first owner of the tree may not have the tree as its first tree and
-   * does its first_descendant entry may not relate to this tree.
+   * thus its first_descendant entry may not relate to this tree.
    * We thus check by hand if this process owns the element and exclude it
    * from the array. */
   proc = *(int *) sc_array_index (&owners_of_tree, 0);

@@ -658,6 +658,9 @@ t8_forest_vtk_write_cells (t8_forest_t forest, FILE * vtufile,
     }
     /* Done with writing the levels */
   }
+  /* TODO: This element_id is t8_element_get_linear_id (e,level)
+   *       we could also include a consecutive version, then also with the processes
+   *       element_offset added. */
   if (write_element_id) {
     /* Write the element ids. */
 

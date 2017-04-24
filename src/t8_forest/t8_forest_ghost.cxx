@@ -449,8 +449,6 @@ t8_ghost_init_remote_tree (t8_forest_t forest, t8_gloidx_t gtreeid,
 
   T8_ASSERT (remote_tree != NULL);
 
-  t8_debugf ("[H] \t\t filling remote for proc %i\n", remote_rank);
-
   ts = t8_forest_get_eclass_scheme (forest, eclass);
   local_treeid = gtreeid - t8_forest_get_first_local_tree_id (forest);
   /* Set the entries of the new remote tree */
