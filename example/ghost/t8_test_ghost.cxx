@@ -48,12 +48,26 @@ t8_basic_adapt (t8_forest_t forest, t8_locidx_t which_tree,
 
 static void
 t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, int level,
-                                    sc_MPI_Comm comm)
+                                    sc_MPI_Comm comm, int partition_cmesh)
 {
   t8_forest_t         forest, forest_adapt, forest_partition;
+  t8_cmesh_t          cmesh_partition;
 
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (),
-                                  level, comm);
+  if (partition_cmesh) {
+    /* partition the initial cmesh according to a uniform forest */
+    t8_cmesh_init (&cmesh_partition);
+    t8_cmesh_set_derive (cmesh_partition, cmesh);
+    t8_cmesh_set_partition_uniform (cmesh_partition, level);
+    t8_cmesh_commit (cmesh_partition, comm);
+  }
+  else {
+    /* do not partition the initial cmesh */
+    cmesh_partition = cmesh;
+  }
+  forest =
+    t8_forest_new_uniform (cmesh_partition, t8_scheme_new_default_cxx (),
+                           level, 1, comm);
+
   t8_forest_init (&forest_adapt);
   t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, NULL, 0);
   t8_forest_set_ghost (forest_adapt, 1, T8_GHOST_FACES);
@@ -69,6 +83,8 @@ t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, int level,
   t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
   t8_forest_set_profiling (forest_partition, 1);
   t8_forest_commit (forest_partition);
+  t8_debugf ("Created ghost structure with %li ghost elements.\n",
+             (long) t8_forest_get_num_ghosts (forest_partition));
   t8_forest_write_vtk (forest_partition, "test_ghost_partition");
   t8_global_productionf ("Output vtk to test_ghost_partition.pvtu\n");
   /* print ghosts */
@@ -102,7 +118,7 @@ t8_test_ghost_brick (int dim, int x, int y, int z,
     p8est_connectivity_destroy (conn8);
   }
 
-  t8_test_ghost_refine_and_partition (cmesh, level, comm);
+  t8_test_ghost_refine_and_partition (cmesh, level, comm, 1);
 }
 
 /* Build a forest on a hypercube mesh
@@ -115,7 +131,7 @@ t8_test_ghost_hypercube (t8_eclass_t eclass, int level, sc_MPI_Comm comm)
   t8_cmesh_t          cmesh;
   cmesh = t8_cmesh_new_hypercube (eclass, comm, 0, 0);
 
-  t8_test_ghost_refine_and_partition (cmesh, level, comm);
+  t8_test_ghost_refine_and_partition (cmesh, level, comm, 1);
 }
 
 /* Build a forest on a cmesh read from a .msh file.
@@ -129,7 +145,7 @@ t8_test_ghost_msh_file (const char *fileprefix, int level, int dim,
   t8_cmesh_t          cmesh;
 
   cmesh = t8_cmesh_from_msh_file (fileprefix, 0, comm, dim, 0);
-  t8_test_ghost_refine_and_partition (cmesh, level, comm);
+  t8_test_ghost_refine_and_partition (cmesh, level, comm, 1);
 }
 
 int
@@ -171,7 +187,7 @@ main (int argc, char **argv)
                       "Periodicity of brick mesh. A three (two) digit decimal"
                       " number zyx. If digit i is nonzero then the representative"
                       " coordinate direction of the brick mesh is periodic.");
-  sc_options_add_int (opt, 'e', "elements", &eclass_int, 1,
+  sc_options_add_int (opt, 'e', "elements", &eclass_int, 2,
                       "If neither -f nor -x,-y,-z are used a cubical mesh is"
                       " generated. This option specifies"
                       " the type of elements to use.\n"
