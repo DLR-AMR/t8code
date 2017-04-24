@@ -382,7 +382,7 @@ main (int argc, char **argv)
 #endif
   t8_basic_hypercube (T8_ECLASS_PRISM, 1, 1, 0);
 
-  t8_basic_refine_test (T8_ECLASS_LINE);
+  t8_basic_refine_test (T8_ECLASS_PRISM);
 
 #if 0
   t8_basic_forest_partition ();

@@ -23,13 +23,13 @@
 #include "t8_dprism_bits.h"
 #include "t8_dline_bits.h"
 #include "t8_dtri_bits.h"
-#include <math.h>
 
 typedef int8_t      t8_dtri_cube_id_t;
 
 int
 t8_dprism_get_level (const t8_dprism_t * p)
 {
+  T8_ASSERT (p->line.level == p->tri.level);
   return p->line.level;
 }
 
@@ -48,6 +48,7 @@ t8_dprism_init_linear_id (t8_dprism_t * l, int level, uint64_t id)
   int                 triangles_of_size_i = 1;
 
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
+  T8_ASSERT (id < 1 << 3 * level);
 
   for (i = 0; i <= level; i++) {
     /*Get the number of the i-th prism and get the related triangle number
@@ -55,8 +56,8 @@ t8_dprism_init_linear_id (t8_dprism_t * l, int level, uint64_t id)
     tri_id += ((id % 8) % 4) * triangles_of_size_i;
 
     /*If id % 8 is larger than 3, the prism is in the upper part of the
-     * parent prism. => line_id + 1*/
-    line_id += (id % 8 > 3) ? 1 : 0;
+     * parent prism. => line_id + 2^i*/
+    line_id += (id % 8 > 3) ? 1 << i : 0;
 
     /*Each Prism divides into 8 children */
     id /= 8;
@@ -70,6 +71,7 @@ t8_dprism_init_linear_id (t8_dprism_t * l, int level, uint64_t id)
 void
 t8_dprism_parent (const t8_dprism_t * l, t8_dprism_t * parent)
 {
+  T8_ASSERT (l->line.level > 0);
   t8_dtri_parent (&l->tri, &parent->tri);
   t8_dline_parent (&l->line, &parent->line);
 }
@@ -155,8 +157,10 @@ t8_dprism_linear_id (const t8_dprism_t * elem, int level)
   uint64_t            line_id;
   int                 i;
   int                 prisms_of_size_i = 1;
-  int                 line_level = pow (2, level - 1);
-  int                 prism_shift = pow (8, level - 1);
+  /*line_level = 2 ^ (level - 1) */
+  int                 line_level = 1 << (level - 1);
+  /*prism_shift = 8 ^ (level - 1) */
+  int                 prism_shift = 1 << (3 * (level - 1));
 
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
 
@@ -164,7 +168,7 @@ t8_dprism_linear_id (const t8_dprism_t * elem, int level)
   line_id = t8_dline_linear_id (&elem->line, level);
 
   for (i = 0; i <= level; i++) {
-    /*Compute via getting the local id of each parenttriangle in which
+    /*Compute via getting the local id of each ancestor triangle in which
      *elem->tri lies, the prism id, that elem would have, if it lies on the
      * lowest plane of the prism of level 0*/
     id += (tri_id % 4) * prisms_of_size_i;
