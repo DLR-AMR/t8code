@@ -297,7 +297,7 @@ t8_forest_commit (t8_forest_t forest)
     t8_forest_populate (forest);
     forest->global_num_trees = t8_cmesh_get_num_trees (forest->cmesh);
   }
-  else { /* set_from != NULL */
+  else {                        /* set_from != NULL */
     T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
     T8_ASSERT (forest->cmesh == NULL);
     T8_ASSERT (forest->scheme_cxx == NULL);
@@ -350,7 +350,7 @@ t8_forest_commit (t8_forest_t forest)
 
     /* decrease reference count of input forest, possibly destroying it */
     t8_forest_unref (&forest->set_from);
-  } /* end set_from != NULL */
+  }                             /* end set_from != NULL */
   /* Compute the element offset of the trees */
   t8_forest_compute_elements_offset (forest);
   /* Compute first and last descendant for each tree */

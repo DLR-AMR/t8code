@@ -488,16 +488,18 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
       /* The face neighbor is a local tree */
       /* Get the eclass of the neighbor tree */
       neigh_eclass = t8_cmesh_get_tree_class (cmesh, lcneigh_id);
+      global_neigh_id = lcneigh_id + t8_cmesh_get_first_treeid (cmesh);
     }
     else {
       /* The face neighbor is a ghost tree */
       T8_ASSERT (cmesh->num_local_trees <= lcneigh_id
                  && lcneigh_id < cmesh->num_ghosts + cmesh->num_local_trees);
       /* Get the eclass of the neighbor tree */
-      neigh_eclass =
-        t8_cmesh_get_ghost_class (cmesh,
-                                  lcneigh_id -
-                                  t8_cmesh_get_num_local_trees (cmesh));
+      ghost = t8_cmesh_trees_get_ghost (cmesh->trees,
+                                        lcneigh_id -
+                                        t8_cmesh_get_num_local_trees (cmesh));
+      neigh_eclass = ghost->eclass;
+      global_neigh_id = ghost->treeid;
     }
     /* We need to find out which face is the smaller one that is the one
      * according to which the orientation was computed.
@@ -530,7 +532,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
     neighbor_scheme->t8_element_extrude_face (face_element, neigh,
                                               neigh_face);
 
-    return lcneigh_id + t8_cmesh_get_first_treeid (cmesh);
+    return global_neigh_id;
   }
 }
 
