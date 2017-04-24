@@ -350,6 +350,21 @@ t8_cmesh_trees_attribute_size (t8_ctree_t tree)
   return total;
 }
 
+/* Return the total size of attributes of a ghost */
+size_t
+t8_cmesh_trees_ghost_attribute_size (t8_cghost_t ghost)
+{
+  t8_attribute_info_struct_t *attr_info;
+  int                 i;
+  size_t              total = 0;
+
+  for (i = 0; i < ghost->num_attributes; i++) {
+    attr_info = T8_GHOST_ATTR_INFO (ghost, i);
+    total += attr_info->attribute_size;
+  }
+  return total;
+}
+
 static              size_t
 t8_cmesh_trees_get_part_alloc (t8_cmesh_trees_t trees, t8_part_tree_t part)
 {

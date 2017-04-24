@@ -109,6 +109,7 @@ T8_EXTERN_C_BEGIN ();
  * a multiple of four.
  *
  *  TODO: maybe padding after the last Att_data is useful too
+ *  TODO: We may also need padding between the attributes.
  *
  */
 
@@ -129,6 +130,12 @@ T8_EXTERN_C_BEGIN ();
 /* Given a tree return irs tree_to_face array */
 #define T8_TREE_TTF(t) (T8_TREE_FACE(t) + \
   t8_eclass_num_faces[(t)->eclass] * sizeof(t8_locidx_t))
+/* Given a ghost return the beginning of its attribute block */
+#define T8_GHOST_FIRST_ATT(g) T8_TREE_FIRST_ATT (g)
+/* Given a ghost and an index i return the i-th attribute index of that ghost */
+#define T8_GHOST_ATTR_INFO(g,i) T8_TREE_ATTR_INFO (g, i)
+/* Given a ghost and an attribute info return the attribute */
+#define T8_GHOST_ATTR(g,ai) T8_TREE_ATTR(g,ai)
 /* Given a ghost return its face_neighbor array */
 #define T8_GHOST_FACE(g) T8_TREE_FACE(g)
 /* Given a ghost return its tree_to_face array */
@@ -382,9 +389,15 @@ void               *t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees,
 
 /** Return the total size of all attributes stored at a specified tree.
  * \param [in]        tree  A tree structure.
- * \return            The total size (in bytes) of the attribute of \a tree.
+ * \return            The total size (in bytes) of the attributes of \a tree.
  */
 size_t              t8_cmesh_trees_attribute_size (t8_ctree_t tree);
+
+/** Return the total size of all attributes stored at a specified ghost.
+ * \param [in]        ghost A ghost structure.
+ * \return            The total size (in bytes) of the attributes of \a ghost.
+ */
+size_t              t8_cmesh_trees_ghost_attribute_size (t8_cghost_t ghost);
 
 /* TODO: Currently there is a bug that forces us to give each tree an attribute */
 /* TODO: this uses char * and cmesh_set_attribute uses void *. Unify! */

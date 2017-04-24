@@ -1067,6 +1067,37 @@ t8_partition_compute_gnb (t8_cmesh_t cmesh_from, sc_array_t * send_as_ghost)
   return ghost_neighbor_bytes;
 }
 
+/* Compute the number of bytes that need to be allocated in the send buffer
+ * for the attribute entries of all ghosts. */
+static size_t
+t8_partition_compute_gab (t8_cmesh_t cmesh_from, sc_array_t * send_as_ghost)
+{
+  size_t              ghost_attribute_bytes = 0, ighost;
+  t8_locidx_t         ghost_id, ghost_id_min_offset;
+  t8_cghost_t         ghost;
+
+  for (ighost = 0; ighost < send_as_ghost->elem_count; ighost++) {
+    ghost_id = *(t8_locidx_t *) sc_array_index (send_as_ghost, ighost);
+    T8_ASSERT (ghost_id >= 0);
+    if (ghost_id < cmesh_from->num_local_trees) {
+      /* This ghost is currently a local tree */
+      ghost_attribute_bytes +=
+        t8_cmesh_trees_attribute_size (t8_cmesh_get_tree
+                                       (cmesh_from, ghost_id));
+    }
+    else {
+      /* This ghost is currently a ghost */
+      ghost_id_min_offset = ghost_id - t8_cmesh_get_first_treeid (cmesh_from);
+      T8_ASSERT (0 <= ghost_id_min_offset &&
+                 ghost_id_min_offset < t8_cmesh_get_num_ghosts (cmesh_from));
+      ghost =
+        t8_cmesh_trees_get_ghost (cmesh_from->trees, ghost_id_min_offset);
+      ghost_attribute_bytes += t8_cmesh_trees_ghost_attribute_size (ghost);
+    }
+  }
+  return ghost_attribute_bytes;
+}
+
 /* Determine whether a local tree or ghost should be send to process p as a ghost.
  * This is the case if and only if:
  *  - tree will not be a local tree on p

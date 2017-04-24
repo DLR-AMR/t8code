@@ -144,6 +144,10 @@ typedef struct t8_cghost
   t8_eclass_t         eclass; /**< The eclass of this ghost. */
   size_t              neigh_offset; /** Offset to the array of face neighbors of this ghost.
                                         This count has to be added to the address of the ghost to get its face neighbors. */
+  size_t              att_offset;    /**< Adding this offset to the adress of the ghost
+                                       yields the array of attribute_info entries */
+  /* TODO: Could be a size_t */
+  int                 num_attributes; /**< The number of attributes at this ghost */
 }
 t8_cghost_struct_t;
 

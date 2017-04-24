@@ -516,6 +516,7 @@ void                t8_forest_element_coordinate (t8_forest_t forest,
  * \param [in]      cmesh     A coarse mesh.
  * \param [in]      scheme    An eclass scheme.
  * \param [in]      level     An initial uniform refinement level.
+ * \param [in]      do_face_ghost If true, a layer of ghost elements is created for the forest.
  * \param [in]      comm      MPI communicator to use.
  * \return                    A uniform forest with coarse mesh \a cmesh, eclass_scheme
  *                            \a scheme and refinement level \a level.
