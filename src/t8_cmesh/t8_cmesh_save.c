@@ -836,9 +836,8 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
   SC_CHECK_MPI (mpiret);
 
   T8_ASSERT (mpisize >= num_files);
-  if (sc_shmem_get_type (comm) == SC_SHMEM_NOT_SET) {
-    sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
-  }
+  /* Try to set the comm type */
+  t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
   /* First primitive loading strategy:
    * each process with rank smaller than number of files
    * loads a file.

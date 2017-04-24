@@ -53,6 +53,17 @@ typedef struct t8_shmem_array *t8_shmem_array_t;
 
 T8_EXTERN_C_BEGIN ();
 
+/** Try to set a shared memory type of a communicator.
+ * If the type was set, returns true, otherwise false.
+ * This will not set the type, if ther already was a type set
+ * on this communicator. \see sc_shmem_set_type
+ * \param [in,out]      comm    The MPI Communicator
+ * \param [in]          type    A shared memory type.
+ * \return                      Non-zero if the type was set. Zero if it wasn't.
+ */
+int                 t8_shmem_set_type (sc_MPI_Comm comm,
+                                       sc_shmem_type_t type);
+
 /** Initialize and allocate a shared memory array structure.
  * \param [in,out]      parray On input this pointer must be non-NULL.
  *                             On return this pointer is set to the new t8_shmem_array.
