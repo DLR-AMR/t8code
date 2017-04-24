@@ -525,7 +525,8 @@ void                t8_forest_element_coordinate (t8_forest_t forest,
  */
 t8_forest_t         t8_forest_new_uniform (t8_cmesh_t cmesh,
                                            t8_scheme_cxx_t * scheme,
-                                           int level, sc_MPI_Comm comm);
+                                           int level, int do_face_ghost,
+                                           sc_MPI_Comm comm);
 
 /** Increase the reference counter of a forest.
  * \param [in,out] forest       On input, this forest must exist with positive

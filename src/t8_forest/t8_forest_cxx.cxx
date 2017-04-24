@@ -446,6 +446,8 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
     t8_cmesh_t          cmesh;
     t8_locidx_t         lctree_id, lcneigh_id;
     t8_locidx_t        *face_neighbor;
+    t8_gloidx_t         global_neigh_id;
+    t8_cghost_t         ghost;
     int8_t             *ttf;
     int                 tree_face, neigh_face;
     int                 is_smaller, eclass_compare;

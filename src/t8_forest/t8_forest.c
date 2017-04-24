@@ -297,7 +297,7 @@ t8_forest_commit (t8_forest_t forest)
     t8_forest_populate (forest);
     forest->global_num_trees = t8_cmesh_get_num_trees (forest->cmesh);
   }
-  else {
+  else { /* set_from != NULL */
     T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
     T8_ASSERT (forest->cmesh == NULL);
     T8_ASSERT (forest->scheme_cxx == NULL);
@@ -350,7 +350,7 @@ t8_forest_commit (t8_forest_t forest)
 
     /* decrease reference count of input forest, possibly destroying it */
     t8_forest_unref (&forest->set_from);
-  }
+  } /* end set_from != NULL */
   /* Compute the element offset of the trees */
   t8_forest_compute_elements_offset (forest);
   /* Compute first and last descendant for each tree */
@@ -373,11 +373,19 @@ t8_forest_commit (t8_forest_t forest)
       forest->profile->commit_runtime;
   }
 
+  /* From here on, the forest passes the t8_forest_is_committed check */
+  /* re-partition the cmesh */
+  if (forest->cmesh->set_partition &&
+      forest->from_method == T8_FOREST_FROM_PARTITION) {
+    t8_forest_partition_cmesh (forest, forest->mpicomm,
+                               forest->profile != NULL);
+  }
   /* Construct a ghost layer, if desired */
   if (forest->do_ghost) {
     /* TODO: ghost type */
     t8_forest_ghost_create (forest);
   }
+
   forest->do_ghost = 0;
 }
 
@@ -458,6 +466,8 @@ t8_forest_partition_cmesh (t8_forest_t forest, sc_MPI_Comm comm,
 {
   t8_cmesh_t          cmesh_partition;
 
+  t8_debugf ("Partitioning cmesh according to forest\n");
+
   t8_cmesh_init (&cmesh_partition);
   t8_cmesh_set_derive (cmesh_partition, forest->cmesh);
   /* set partition range of new cmesh according to forest trees */
@@ -470,6 +480,7 @@ t8_forest_partition_cmesh (t8_forest_t forest, sc_MPI_Comm comm,
   t8_cmesh_commit (cmesh_partition, comm);
   /* set the new cmesh as the cmesh of the forest */
   forest->cmesh = cmesh_partition;
+  t8_debugf ("Done partitioning cmesh\n");
 }
 
 sc_MPI_Comm
@@ -834,7 +845,7 @@ t8_forest_write_vtk (t8_forest_t forest, const char *filename)
 
 t8_forest_t
 t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t * scheme,
-                       int level, sc_MPI_Comm comm)
+                       int level, int do_face_ghost, sc_MPI_Comm comm)
 {
   t8_forest_t         forest;
 
@@ -848,6 +859,9 @@ t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t * scheme,
   t8_forest_set_cmesh (forest, cmesh, comm);
   t8_forest_set_scheme (forest, scheme);
   t8_forest_set_level (forest, level);
+  if (do_face_ghost) {
+    t8_forest_set_ghost (forest, 1, T8_GHOST_FACES);
+  }
   /* commit the forest */
   t8_forest_commit (forest);
 
