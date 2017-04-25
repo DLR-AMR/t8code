@@ -137,6 +137,11 @@ typedef struct t8_cmesh
 }
 t8_cmesh_struct_t;
 
+/* TODO: cghost could be the same type as ctree.
+ *       treeid for ghosts then negative?!
+ *       1. typedef cghost ctree
+ *       2. completely replace
+ */
 /* TODO: document */
 typedef struct t8_cghost
 {
