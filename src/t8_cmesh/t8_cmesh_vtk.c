@@ -154,6 +154,7 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix,
         vertices = (double *) t8_cmesh_get_attribute (cmesh,
                                                       t8_get_package_id (), 0,
                                                       ighost + num_loc_trees);
+        T8_ASSERT (vertices != NULL);
         /* TODO: This code is duplicated above */
         for (ivertex = 0; ivertex < t8_eclass_num_vertices[eclass]; ivertex++) {
           vertex = vertices +
