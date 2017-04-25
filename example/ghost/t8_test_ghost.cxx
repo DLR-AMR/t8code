@@ -28,6 +28,7 @@
 #include <t8_forest.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
+#include <t8_cmesh_vtk.h>
 
 /* Only refine the first tree on a process. */
 static int
@@ -53,6 +54,7 @@ t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, int level,
   t8_forest_t         forest, forest_adapt, forest_partition;
   t8_cmesh_t          cmesh_partition;
 
+  t8_cmesh_vtk_write_file (cmesh, "test_ghost_cmesh0", 1.0);
   if (partition_cmesh) {
     /* partition the initial cmesh according to a uniform forest */
     t8_cmesh_init (&cmesh_partition);
@@ -64,6 +66,7 @@ t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, int level,
     /* do not partition the initial cmesh */
     cmesh_partition = cmesh;
   }
+  t8_cmesh_vtk_write_file (cmesh_partition, "test_ghost_cmesh1", 1.0);
   forest =
     t8_forest_new_uniform (cmesh_partition, t8_scheme_new_default_cxx (),
                            level, 1, comm);
