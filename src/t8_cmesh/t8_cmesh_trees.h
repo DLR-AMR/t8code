@@ -381,13 +381,16 @@ void                t8_cmesh_trees_attribute_info_sort (t8_cmesh_trees_t
  *                              the same package identifier.
  *  \param [out]      size      If not NULL, the size (in bytes) of the attribute
  *                              will be stored here.
+ *  \param [in]       is_ghost  If true, then \a ltree_id is interpreted as the local_id
+ *                              of a ghost.
  *  \return           A pointer to the queried attribute, NULL if the attribute
  *                    does not exist.
  */
 void               *t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees,
                                                   t8_locidx_t ltree_id,
                                                   int package_id, int key,
-                                                  size_t * size);
+                                                  size_t * size,
+                                                  int is_ghost);
 
 /** Return the total size of all attributes stored at a specified tree.
  * \param [in]        tree  A tree structure.

@@ -281,7 +281,7 @@ t8_cmesh_save_tree_attribute (t8_cmesh_t cmesh, FILE * fp)
     /* Write the attributes that are vertices */
     vertices = (double *) t8_cmesh_trees_get_attribute (cmesh->trees, itree,
                                                         t8_get_package_id (),
-                                                        0, &att_size);
+                                                        0, &att_size, 0);
     if (vertices != NULL) {
       /* We have an attribute that is stored with key 0, we treat it as tree vertices */
       num_vertices = t8_eclass_num_vertices[tree->eclass];

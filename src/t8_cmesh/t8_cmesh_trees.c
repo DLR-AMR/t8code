@@ -669,25 +669,49 @@ t8_cmesh_trees_compare_keyattr (const void *A1, const void *A2)
 /* The size of the attribute is not returned, but would be accesible */
 void               *
 t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_locidx_t ltree_id,
-                              int package_id, int key, size_t * size)
+                              int package_id, int key, size_t * size,
+                              int is_ghost)
 {
   int                 proc;
   t8_ctree_t          tree;
+  t8_cghost_t         ghost;
   t8_attribute_info_struct_t *attr_info;
   ssize_t             index;
   sc_array_t          attr_array;
   struct t8_key_id_pair key_id;
+  t8_locidx_t         num_loc_trees;
+  int                 num_attributes;
+  void               *first_att_info, *attribute;
+
   T8_ASSERT (trees != NULL);
   T8_ASSERT (ltree_id >= 0);
-  proc = trees->tree_to_proc[ltree_id];
+
+  proc = is_ghost ? trees->ghost_to_proc[ltree_id]
+    : trees->tree_to_proc[ltree_id];
   T8_ASSERT (proc >= 0 && proc < t8_cmesh_trees_get_num_procs (trees));
-  tree = t8_part_tree_get_tree (t8_cmesh_trees_get_part (trees, proc),
-                                ltree_id);
+  if (!is_ghost) {
+    /* Get a pointer to the tree */
+    tree = t8_part_tree_get_tree (t8_cmesh_trees_get_part (trees, proc),
+                                  ltree_id);
+    ghost = NULL;
+    /* number of attributes and pointer to first att_info struct */
+    num_attributes = tree->num_attributes;
+    first_att_info = T8_TREE_FIRST_ATT (tree);
+  }
+  else {
+    /* Get a pointer to the ghost */
+    ghost = t8_part_tree_get_ghost (t8_cmesh_trees_get_part (trees, proc),
+                                    ltree_id);
+    tree = NULL;
+    /* number of attributes and pointer to first att_info struct */
+    num_attributes = ghost->num_attributes;
+    first_att_info = T8_GHOST_FIRST_ATT (ghost);
+  }
 
   key_id.key = key;
   key_id.package_id = package_id;
 
-  if (tree->num_attributes <= 0) {
+  if (num_attributes <= 0) {
     /* TODO: Error handling if attribute not found */
     t8_global_errorf ("Attribute with package id %i and key %i not found"
                       " on tree %li. This tree has no attributes at all.\n",
@@ -695,9 +719,8 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_locidx_t ltree_id,
     return NULL;
   }
 
-  sc_array_init_data (&attr_array, T8_TREE_FIRST_ATT (tree),
-                      sizeof (t8_attribute_info_struct_t),
-                      tree->num_attributes);
+  sc_array_init_data (&attr_array, first_att_info,
+                      sizeof (t8_attribute_info_struct_t), num_attributes);
   index = sc_array_bsearch (&attr_array, &key_id,
                             t8_cmesh_trees_compare_keyattr);
 
@@ -712,7 +735,15 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_locidx_t ltree_id,
   if (size != NULL) {
     *size = attr_info->attribute_size;
   }
-  return T8_TREE_ATTR (tree, attr_info);
+  /* Get a pointer to the actual attribute */
+  if (tree == NULL) {
+    attribute = T8_GHOST_ATTR (ghost, attr_info);
+  }
+  else {
+    T8_ASSERT (ghost == NULL);
+    attribute = T8_TREE_ATTR (tree, attr_info);
+  }
+  return attribute;
 }
 
 size_t

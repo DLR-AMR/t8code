@@ -415,9 +415,17 @@ void               *
 t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key,
                         t8_locidx_t ltree_id)
 {
+  int                 is_ghost;
+
   T8_ASSERT (cmesh->committed);
+  T8_ASSERT (0 <= ltree_id &&
+             ltree_id < cmesh->num_ghosts + cmesh->num_local_trees);
+  is_ghost = ltree_id >= cmesh->num_local_trees;
+  if (is_ghost) {
+    ltree_id = ltree_id - cmesh->num_local_trees;
+  }
   return t8_cmesh_trees_get_attribute (cmesh->trees, ltree_id, package_id,
-                                       key, NULL);
+                                       key, NULL, is_ghost);
 }
 
 t8_shmem_array_t
