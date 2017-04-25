@@ -1082,6 +1082,7 @@ t8_partition_compute_gab (t8_cmesh_t cmesh_from, sc_array_t * send_as_ghost,
   *attr_info_bytes = 0;
   for (ighost = 0; ighost < send_as_ghost->elem_count; ighost++) {
     ghost_id = *(t8_locidx_t *) sc_array_index (send_as_ghost, ighost);
+    t8_debugf ("[H] reading ghost_id %i\n", (int) ghost_id);
     T8_ASSERT (ghost_id >= 0);
     if (ghost_id < cmesh_from->num_local_trees) {
       /* This ghost is currently a local tree */
@@ -1092,9 +1093,13 @@ t8_partition_compute_gab (t8_cmesh_t cmesh_from, sc_array_t * send_as_ghost,
     }
     else {
       /* This ghost is currently a ghost */
-      ghost_id_min_offset = ghost_id - t8_cmesh_get_first_treeid (cmesh_from);
-      T8_ASSERT (0 <= ghost_id_min_offset &&
-                 ghost_id_min_offset < t8_cmesh_get_num_ghosts (cmesh_from));
+      ghost_id_min_offset =
+        ghost_id - t8_cmesh_get_num_local_trees (cmesh_from);
+      t8_debugf ("[H] ghost_id %i is ghost number %i\n", ghost_id,
+                 ghost_id_min_offset);
+      T8_ASSERT (0 <= ghost_id_min_offset
+                 && ghost_id_min_offset <
+                 t8_cmesh_get_num_ghosts (cmesh_from));
       ghost =
         t8_cmesh_trees_get_ghost (cmesh_from->trees, ghost_id_min_offset);
       ghost_attribute_bytes += t8_cmesh_trees_ghost_attribute_size (ghost);
@@ -1496,18 +1501,23 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
     if (num_attributes > 0) {
       size_t              this_ghosts_att_info_size, this_data_temp_offset =
         0;
+      t8_attribute_info_struct_t *first_attr_info;
+
+      t8_debugf ("[H] Copy %i atts of total size %i\n",
+                 num_attributes, ghost_att_size);
 
       /* The byte count of this ghosts attribute info structs */
       this_ghosts_att_info_size =
         num_attributes * sizeof (t8_attribute_info_struct_t);
       /* Copy all attribute info data of this ghost */
-      memcpy (send_buffer + ghost_attribute_start + temp_offset_ghost_att,
-              attr_info, this_ghosts_att_info_size);
+      first_attr_info = T8_GHOST_FIRST_ATT (ghost_cpy);
+      memcpy (first_attr_info, attr_info, this_ghosts_att_info_size);
       temp_offset_ghost_att += this_ghosts_att_info_size;
       /* Copy all attribute data of this ghost */
-      memcpy (send_buffer + ghost_attribute_start + ghost_attr_info_bytes
-              + temp_offset_ghost_data, first_attribute, ghost_att_size);
+      memcpy (T8_GHOST_ATTR (ghost_cpy, first_attr_info),
+              first_attribute, ghost_att_size);
       temp_offset_ghost_data += ghost_att_size;
+      t8_debugf ("[H] att_info has %i bytes\n", attr_info->attribute_size);
       /* Compute all new attribute data offsets */
       for (iatt = 0; iatt < num_attributes; iatt++) {
         /* Get the current attribute info */
@@ -1516,10 +1526,12 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
          * Thus, the count of the bytes occupied by the att_info (this_ghosts_att_info_size)
          * plus the count of all attributes before this attribute (this_data_temp_offset).*/
         attr_info->attribute_offset = this_ghosts_att_info_size +
-          temp_offset_ghost_data + this_data_temp_offset;
+          this_data_temp_offset;
         this_data_temp_offset += attr_info->attribute_size;
+        t8_debugf ("[H] Added %i bytes\n", this_data_temp_offset);
       }
-    }
+      T8_ASSERT (this_data_temp_offset == ghost_att_size);
+    }                           /* end num_attributes > 0 */
     /* compute new offsets */
     temp_offset += t8_eclass_num_faces[ghost_cpy->eclass] * (sizeof (t8_gloidx_t) + sizeof (int8_t))    /* offset */
       +T8_ADD_PADDING (t8_eclass_num_faces[ghost_cpy->eclass] * (sizeof (t8_gloidx_t) + sizeof (int8_t)));      /* padding */
