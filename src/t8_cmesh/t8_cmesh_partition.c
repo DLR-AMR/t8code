@@ -1855,8 +1855,10 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
       t8_gloidx_t         first_send;
 
       first_send = t8_offset_first (iproc, offset_to);
-      while (!t8_offset_sendstree (cmesh_from->mpirank, iproc,
-                                   first_send, offset_from, offset_to)) {
+      while (first_send < t8_cmesh_get_num_local_trees (cmesh_from)
+             && !t8_offset_sendstree (cmesh_from->mpirank, iproc,
+                                      first_send, offset_from, offset_to)) {
+
         first_send++;
       }
       range_start = first_send - cmesh_from->first_tree;
@@ -1881,6 +1883,12 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
           == cmesh_from->first_tree + cmesh_from->num_local_trees - 1) {
         range_end--;
         t8_debugf ("RE: %i\n", range_end);
+      }
+      if (range_end < range_start
+          || range_start >= t8_cmesh_get_num_local_trees (cmesh_from)) {
+        /* We do not send to this process and are finished */
+        iproc = *send_last + 1;
+        *send_last = -2;
       }
     }
   }                             /* sending loop ends here */
