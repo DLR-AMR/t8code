@@ -110,31 +110,26 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
          3 ? len * (vertices[9 + i] -
                     vertices[6 + i]) * corner_coords[1] : 0.) +
         len * (vertices[6 + i] - vertices[3 + i]) * corner_coords[dim - 1]
-        + vertices[i];
+        + vertices[i];+ vertices[i];
     }
     break;
   case T8_ECLASS_PRISM:
-    if (corner_number >= 3) {
-      for (i = 0; i < 3; i++) {
-        coordinates[i] =
-          len * ((vertices[12 + i] - vertices[9 + i]) * corner_coords[0] +
-                 (vertices[15 + i] - vertices[12 + i]) * corner_coords[1] +
-                 (vertices[15 + i] - vertices[9 + i]) * corner_coords[2]) +
-          +vertices[i];
+      /*Prisminterpolation, via height, and triangle*/
+      double tri_vertices[9];
+      for(i = 0; i < 9; i++)
+      {
+          tri_vertices[i] = vertices[i] + corner_coords[2] *
+                  (vertices[i + 9] - vertices[i]);
       }
-}                           /*
-   else
-   {
-       for(i = 0; i < 3; i++)
-       {
-           coordinates[i] =
-           len * ((vertices[3 + i] - vertices[i]) * corner_coords[0] +
-           (vertices[6 + i] - vertices[3 + i]) * corner_coords[1] +
-           (vertices[6 + i] - vertices[i]) * corner_coords[2]) +
-           + vertices[i];
-       }
-   } */
-    break;
+      for(i = 0; i < 3; i++)
+      {
+          coordinates[i] =
+              len * ((tri_vertices[3 + i] - tri_vertices [i]) * corner_coords[0]+
+                  (tri_vertices[6 + i] - tri_vertices[3 + i]) * corner_coords[1]);
+
+      }
+      coordinates[1] = tri_vertices[1] * len;
+      break;
   case T8_ECLASS_QUAD:
     corner_coords[2] = 0;
   case T8_ECLASS_HEX:

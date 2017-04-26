@@ -33,19 +33,19 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/** The number of children that a line is refined into. */
+/** The number of children that a prism is refined into. */
 #define T8_DPRISM_CHILDREN 8
 
-/** The number of faces of a line. */
+/** The number of faces of a prism. */
 #define T8_DPRISM_FACES 5
 
-/** The maximum refinement level allowed for a line. */
+/** The maximum refinement level allowed for a prism. */
 #define T8_DPRISM_MAXLEVEL 30
 
-/** The length of the root line in integer coordinates. */
+/** The length of the root prism in integer coordinates. */
 #define T8_DPRISM_ROOT_LEN (1 << (T8_DPRISM_MAXLEVEL))
 
-/** The length of a line at a given level in integer coordinates. */
+/** The length of a prism at a given level in integer coordinates. */
 #define T8_DPRISM_LEN(l) (1 << (T8_DPRISM_MAXLEVEL - (l)))
 
 typedef int32_t     t8_dprism_coord_t;
