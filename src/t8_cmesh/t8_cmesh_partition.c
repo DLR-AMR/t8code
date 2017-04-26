@@ -1265,7 +1265,7 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
   size_t              temp_offset_tree, temp_offset_att, iz, temp_offset,
     temp_offset_data, last_offset, last_num_att, last_size,
     temp_offset_ghost_att, temp_offset_ghost_data, temp_offset_ghost;
-  size_t              ghost_attribute_start, ghost_att_size;
+  size_t              ghost_att_size;
   //ssize_t             last_attribute_diff;
   t8_attribute_info_struct_t *attr_info;
   void               *first_attribute;
@@ -1332,11 +1332,6 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
     }
   }
   T8_ASSERT (tree_attribute_bytes == temp_offset_data);
-  /* The offset from the beginning to the first ghost attribute info */
-  ghost_attribute_start = num_trees * sizeof (t8_ctree_struct_t) +
-    num_ghost_send * sizeof (t8_cghost_struct_t) +
-    ghost_neighbor_bytes + tree_neighbor_bytes +
-    attr_info_bytes + tree_attribute_bytes;
   /* Set new face_neighbor offsets */
   /* TODO: indent bug? */
   /* Computes the offset of the face neighbors of the new trees */

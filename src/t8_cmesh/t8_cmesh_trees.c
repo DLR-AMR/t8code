@@ -679,7 +679,6 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_locidx_t ltree_id,
   ssize_t             index;
   sc_array_t          attr_array;
   struct t8_key_id_pair key_id;
-  t8_locidx_t         num_loc_trees;
   int                 num_attributes;
   void               *first_att_info, *attribute;
 
