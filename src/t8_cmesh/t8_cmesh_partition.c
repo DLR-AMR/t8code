@@ -1298,7 +1298,8 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
   int                 num_attributes;
   size_t              temp_offset_tree, temp_offset_att, iz, temp_offset,
     temp_offset_data, last_offset, last_num_att, last_size,
-    temp_offset_ghost_att, temp_offset_ghost_data, temp_offset_ghost;
+    temp_offset_ghost_att, temp_offset_ghost_data, temp_offset_ghost,
+    ghost_attr_info_bytes_sofar;
   size_t              ghost_att_size;
   //ssize_t             last_attribute_diff;
   t8_attribute_info_struct_t *attr_info;
@@ -1437,8 +1438,10 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
   /* offset from the last tree_attribute entry to the current tree_att_info entry
    * for the ghost */
   temp_offset_ghost_att = 0;
-  /* offset from the last tree_att_info entry for a ghost to the current attribute */
+  /* offset from the last tree_att_info entry to the current attribute */
   temp_offset_ghost_data = 0;
+  /* number of bytes of attribute_infos that we already counted */
+  ghost_attr_info_bytes_sofar = 0;
   for (iz = 0; iz < send_as_ghost->elem_count; iz++) {
     ghost_id = *((t8_locidx_t *) sc_array_index (send_as_ghost, iz));
     ghost_cpy = (t8_cghost_t) (send_buffer +
@@ -1459,6 +1462,7 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
                                             ghost_id -
                                             cmesh_from->num_local_trees,
                                             &face_neighbor_g, &ttf);
+      tree = NULL;
       /* Set entries of the new ghost */
       ghost_cpy->eclass = ghost->eclass;
       ghost_cpy->treeid = ghost->treeid;
@@ -1485,6 +1489,7 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
       T8_ASSERT (0 <= ghost_id && ghost_id < cmesh_from->num_local_trees);
       tree = t8_cmesh_trees_get_tree_ext (cmesh_from->trees, ghost_id,
                                           &face_neighbor, &ttf);
+      ghost = NULL;
       T8_ASSERT (ghost_id == tree->treeid);
       /* Set entries of the new ghost */
       ghost_cpy->eclass = tree->eclass;
@@ -1549,18 +1554,18 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
         /* Get the current attribute info */
         attr_info = T8_GHOST_ATTR_INFO (ghost_cpy, iatt);
         /* The new attribute offset is the offset from the first att_info to the data.
-         * Thus, the count of the bytes occupied by the att_info (this_ghosts_att_info_size)
+         * Thus, the count of the bytes occupied by the att_info (ghosts_attr_info_bytes)
          * plus the count of all attributes before this attribute (this_data_temp_offset).*/
-        attr_info->attribute_offset = this_ghosts_att_info_size +
-          this_data_temp_offset;
-        this_data_temp_offset += attr_info->attribute_size;
-        t8_debugf ("[H] Added %lu bytes\n", this_data_temp_offset);
+        /* all att info from this ghost and after. + all attributes before this attribute  */
+        attr_info->attribute_offset = ghost_attr_info_bytes -
+          ghost_attr_info_bytes_sofar + temp_offset_ghost_data;
+        temp_offset_ghost_data += attr_info->attribute_size;
       }
+      ghost_attr_info_bytes_sofar +=
+        num_attributes * sizeof (t8_attribute_info_struct_t);
       /* Copy all attribute data of this ghost */
       memcpy (T8_GHOST_ATTR (ghost_cpy, first_attr_info),
               first_attribute, ghost_att_size);
-      temp_offset_ghost_data += ghost_att_size;
-      T8_ASSERT (this_data_temp_offset == ghost_att_size);
     }                           /* end num_attributes > 0 */
     /* compute new offsets */
     temp_offset += t8_eclass_num_faces[ghost_cpy->eclass] * (sizeof (t8_gloidx_t) + sizeof (int8_t))    /* offset */
