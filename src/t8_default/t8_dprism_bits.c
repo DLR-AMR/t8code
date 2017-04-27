@@ -107,7 +107,7 @@ t8_dprism_first_descendant (const t8_dprism_t * l, t8_dprism_t * s, int level)
 {
   T8_ASSERT (level >= l->line.level && level <= T8_DPRISM_MAXLEVEL);
   /*First prism descendant = first triangle desc x first line desc */
-  t8_dtri_first_descendant (&l->tri, &s->tri);
+  t8_dtri_first_descendant (&l->tri, &s->tri, level);
   t8_dline_first_descendant (&l->line, &s->line, level);
 }
 
@@ -117,7 +117,7 @@ t8_dprism_last_descendant (const t8_dprism_t * l, t8_dprism_t * s, int level)
   T8_ASSERT (level >= l->line.level && level <= T8_DPRISM_MAXLEVEL);
   /*Last prism descendant = last triangle desc x last line desc */
   T8_ASSERT (level == T8_DTRI_MAXLEVEL);
-  t8_dtri_last_descendant (&l->tri, &s->tri);
+  t8_dtri_last_descendant (&l->tri, &s->tri, level);
   t8_dline_last_descendant (&l->line, &s->line, level);
 }
 
