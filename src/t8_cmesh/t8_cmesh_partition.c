@@ -86,6 +86,7 @@ t8_cmesh_partition_send_change_neighbor (t8_cmesh_t cmesh,
 /* After we received all parts from the other processes we have to compute
  * the new local ids of the ghosts and set those in the neighbor fields
  * of all local trees.
+ * We also insert their global ids into the hash table of global_id -> local_id
  */
 static void
 t8_partition_new_ghost_ids (t8_cmesh_t cmesh,
@@ -98,6 +99,8 @@ t8_partition_new_ghost_ids (t8_cmesh_t cmesh,
   t8_locidx_t        *tree_neighbors;
   int8_t             *ttf;
   int                 iface, face_tree;
+  t8_trees_glo_lo_hash_t *new_hash;
+  int                 ret;
 
   for (ghost_it = 0; ghost_it < recv_part->num_ghosts; ghost_it++) {
     /* loop over all ghosts of recv_part */
@@ -121,6 +124,18 @@ t8_partition_new_ghost_ids (t8_cmesh_t cmesh,
           ghost_it + first_ghost + cmesh->num_local_trees;
       }
     }
+    /* Insert this ghost's global and local id into the hash table */
+    new_hash = sc_mempool_alloc (cmesh->trees->global_local_mempool);
+    new_hash->global_id = ghost->treeid;
+    /* The new local ghost id is the concurrent id of this ghost plus the
+     * number of local trees */
+    new_hash->local_id = ghost_it + first_ghost + cmesh->num_local_trees;
+    ret = sc_hash_insert_unique (cmesh->trees->ghost_globalid_to_local_id,
+                                 new_hash, NULL);
+    t8_debugf ("[H] Added global id %li local id %i %p\n", ghost->treeid,
+               new_hash->local_id, cmesh->trees->ghost_globalid_to_local_id);
+    /* The entry must not have existed before */
+    T8_ASSERT (ret);
   }
 }
 
