@@ -255,23 +255,25 @@ void                t8_dtet_init_root (t8_dtet_t * t);
 void                t8_dtet_successor (const t8_dtet_t * t, t8_dtet_t * s,
                                        int level);
 
-/** Compute the first descendant of a tetrahedron. This is the descendant of
+/** Compute the first descendant of a tetrahedron at a given level. This is the descendant of
  * the tetrahedron in a uniform maxlevel refinement that has the smaller id.
  * \param [in] t        tetrahedron whose descendant is computed.
+ * \param [in] level    A given level. Must be greater or equal to \a t's level.
  * \param [out] s       Existing tetrahedron whose data will be filled with the data
  *                      of t's first descendant.
  */
 void                t8_dtet_first_descendant (const t8_dtet_t * t,
-                                              t8_dtet_t * s);
+                                              t8_dtet_t * s, int level);
 
-/** Compute the last descendant of a tetrahedron. This is the descendant of
+/** Compute the last descendant of a tetrahedron at a given level. This is the descendant of
  * the tetrahedron in a uniform maxlevel refinement that has the bigges id.
  * \param [in] t        tetrahedron whose descendant is computed.
+ * \param [in] level    A given level. Must be greater or equal to \a t's level.
  * \param [out] s       Existing tetrahedron whose data will be filled with the data
  *                      of t's last descendant.
  */
 void                t8_dtet_last_descendant (const t8_dtet_t * t,
-                                             t8_dtet_t * s);
+                                             t8_dtet_t * s, int level);
 
 /** Computes the predecessor of a tetrahedron in a uniform grid of level \a level.
  * \param [in] t  tetrahedron whose id will be computed.

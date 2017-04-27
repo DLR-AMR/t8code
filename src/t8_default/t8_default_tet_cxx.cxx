@@ -362,7 +362,8 @@ t8_default_scheme_tet_c::t8_element_first_descendant (const t8_element_t *
                                                       elem,
                                                       t8_element_t * desc)
 {
-  t8_dtet_first_descendant ((t8_dtet_t *) elem, (t8_dtet_t *) desc);
+  t8_dtet_first_descendant ((t8_dtet_t *) elem, (t8_dtet_t *) desc,
+                            T8_DTET_MAXLEVEL);
 }
 
 void
@@ -370,7 +371,8 @@ t8_default_scheme_tet_c::t8_element_last_descendant (const t8_element_t *
                                                      elem,
                                                      t8_element_t * desc)
 {
-  t8_dtet_last_descendant ((t8_dtet_t *) elem, (t8_dtet_t *) desc);
+  t8_dtet_last_descendant ((t8_dtet_t *) elem, (t8_dtet_t *) desc,
+                           T8_DTET_MAXLEVEL);
 }
 
 void
