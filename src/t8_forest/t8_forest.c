@@ -499,6 +499,17 @@ t8_forest_get_first_local_tree_id (t8_forest_t forest)
 }
 
 t8_locidx_t
+t8_forest_get_num_ghost_trees (t8_forest_t forest)
+{
+  if (forest->ghosts != NULL) {
+    return t8_forest_ghost_num_trees (forest);
+  }
+  else {
+    return 0;
+  }
+}
+
+t8_locidx_t
 t8_forest_get_num_local_trees (t8_forest_t forest)
 {
   t8_locidx_t         num_trees;
@@ -522,6 +533,27 @@ t8_forest_get_num_global_trees (t8_forest_t forest)
   return forest->global_num_trees;
 }
 
+t8_gloidx_t
+t8_forest_global_tree_id (t8_forest_t forest, t8_locidx_t ltreeid)
+{
+  t8_locidx_t         num_local_trees;
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (0 <= ltreeid && ltreeid < t8_forest_get_num_local_trees (forest)
+             + t8_forest_ghost_num_trees (forest));
+
+  num_local_trees = t8_forest_get_num_local_trees (forest);
+  if (ltreeid < num_local_trees) {
+    /* The tree is a local tree */
+    return ltreeid + forest->first_local_tree;
+  }
+  else {
+    T8_ASSERT (forest->ghosts != NULL);
+    /* Return the global id of the ghost tree */
+    return t8_forest_ghost_get_global_treeid (forest,
+                                              ltreeid - num_local_trees);
+  }
+}
+
 /* TODO: We use this function in forest_partition when the
  * forest is only partially committed. Thus, we cannot check whether the
  * forest is committed here. */
@@ -530,7 +562,7 @@ t8_forest_get_tree (t8_forest_t forest, t8_locidx_t ltree_id)
 {
   T8_ASSERT (forest->trees != NULL);
   T8_ASSERT (0 <= ltree_id
-             && ltree_id < (t8_locidx_t) forest->trees->elem_count);
+             && ltree_id < t8_forest_get_num_local_trees (forest));
   return (t8_tree_t) t8_sc_array_index_locidx (forest->trees, ltree_id);
 }
 
@@ -622,7 +654,8 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id,
   if (tree->elements_offset <= lelement_id && lelement_id <
       tree->elements_offset + tree->elements.elem_count) {
     return (t8_element_t *)
-      t8_sc_array_index_locidx (&tree->elements, lelement_id);
+      t8_sc_array_index_locidx (&tree->elements,
+                                lelement_id - tree->elements_offset);
   }
   /* The element was not found.
    * This case is covered by the first if and should therefore
@@ -645,9 +678,20 @@ t8_forest_get_tree_element_count (t8_tree_t tree)
 t8_eclass_t
 t8_forest_get_tree_class (t8_forest_t forest, t8_locidx_t ltreeid)
 {
+  t8_locidx_t         num_local_trees =
+    t8_forest_get_num_local_trees (forest);
+
   T8_ASSERT (0 <= ltreeid
-             && ltreeid < t8_forest_get_num_local_trees (forest));
-  return t8_forest_get_tree (forest, ltreeid)->eclass;
+             && ltreeid <
+             num_local_trees + t8_forest_get_num_ghost_trees (forest));
+  if (ltreeid < num_local_trees) {
+    /* The id belongs to a local tree */
+    return t8_forest_get_tree (forest, ltreeid)->eclass;
+  }
+  else {
+    /* The id belongs to a ghost tree */
+    return t8_forest_ghost_get_tree_class (forest, ltreeid - num_local_trees);
+  }
 }
 
 /* Return the global index of the first local element */

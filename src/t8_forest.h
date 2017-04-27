@@ -281,7 +281,7 @@ t8_eclass_t         t8_forest_get_eclass (t8_forest_t forest,
 /** Given the local id of a tree in a forest, compute the tree's local id
  * in the associated cmesh.
  *  \param [in] forest    The forest.
- *  \param [in] ltreeid   The local id of a tree in the forest.
+ *  \param [in] ltreeid   The local id of a tree or ghost in the forest.
  * \return  The local id of the tree in the cmesh associated with the forest.
  * \a forest must be committed before calling this function.
  * \note For forest local trees, this is the inverse function of \ref t8_forest_cmesh_ltreeid_to_ltreeid.
@@ -366,11 +366,27 @@ t8_gloidx_t         t8_forest_get_first_local_tree_id (t8_forest_t forest);
  */
 t8_locidx_t         t8_forest_get_num_local_trees (t8_forest_t forest);
 
+/** Return the number of ghost trees of a given forest.
+ * \param [in]      forest      The forest.
+ * \return          The number of ghost trees of that forest.
+ */
+t8_locidx_t         t8_forest_get_num_ghost_trees (t8_forest_t forest);
+
 /** Return the number of global trees of a given forest.
  * \param [in]      forest      The forest.
  * \return          The number of global trees of that forest.
  */
 t8_gloidx_t         t8_forest_get_num_global_trees (t8_forest_t forest);
+
+/** Return the global id of a local tree or a ghost tree.
+ * \param [in]      forest      The forest.
+ * \param [in]      ltreeid     An id 0 <= \a ltreeid < num_local_trees + num_ghosts
+ *                              specifying a local tree or ghost tree.
+ * \return          The global id corresponding to the tree with local id \a ltreeid.
+ * \a forest must be committed before calling this function.
+ */
+t8_gloidx_t         t8_forest_global_tree_id (t8_forest_t forest,
+                                              t8_locidx_t ltreeid);
 
 /** Return a pointer to a tree in a forest.
  * \param [in]      forest      The forest.
@@ -406,7 +422,7 @@ t8_locidx_t         t8_forest_get_tree_element_count (t8_tree_t tree);
 
 /** Return the eclass of a tree in a forest.
  * \param [in]      forest    The forest.
- * \param [in]      ltreeid   The local id of a tree in \a forest.
+ * \param [in]      ltreeid   The local id of a tree (local or ghost) in \a forest.
  * \return                    The element class of the tree with local id \a ltreeid.
  */
 t8_eclass_t         t8_forest_get_tree_class (t8_forest_t forest,
