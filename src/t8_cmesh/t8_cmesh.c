@@ -919,6 +919,24 @@ t8_cmesh_get_global_id (t8_cmesh_t cmesh, t8_locidx_t local_id)
   }
 }
 
+t8_locidx_t
+t8_cmesh_get_local_id (t8_cmesh_t cmesh, t8_gloidx_t global_id)
+{
+  t8_gloidx_t         temp_local_id;
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (0 <= global_id && global_id < cmesh->num_trees);
+
+  temp_local_id = global_id - cmesh->first_tree;
+  if (0 <= temp_local_id && temp_local_id < cmesh->num_local_trees) {
+    /* The tree is a local tree */
+    return temp_local_id;
+  }
+  else {
+    /* The tree may be a ghost tree */
+    return t8_cmesh_trees_get_ghost_local_id (cmesh->trees, global_id);
+  }
+}
+
 void
 t8_cmesh_print_profile (t8_cmesh_t cmesh)
 {

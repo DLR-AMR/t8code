@@ -460,6 +460,20 @@ t8_eclass_t         t8_cmesh_get_ghost_class (t8_cmesh_t cmesh,
 t8_gloidx_t         t8_cmesh_get_global_id (t8_cmesh_t cmesh,
                                             t8_locidx_t local_id);
 
+/** Return the local id of a give global tree.
+ * \param [in]    cmesh         The cmesh.
+ * \param [in]    global_id     A global tree id.
+ * \return                      Either a value l 0 <= \a l < num_local_trees
+ *                              if \a global_id corresponds to a local tree,
+ *                              or num_local_trees <= \a l < num_local_trees
+ *                              + num_ghosts
+ *                              if \a global_id corresponds to a ghost trees,
+ *                              or negative if \a global_id neither matches a local
+ *                              nor a ghost tree.
+ */
+t8_locidx_t         t8_cmesh_get_local_id (t8_cmesh_t cmesh,
+                                           t8_gloidx_t global_id);
+
 /** Print the collected statistics from a cmesh profile.
  * \param [in]    cmesh         The cmesh.
  *
