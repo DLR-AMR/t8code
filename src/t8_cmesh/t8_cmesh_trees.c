@@ -36,6 +36,27 @@ struct t8_key_id_pair
   int                 package_id;
 };
 
+/* The hash function for the global to local hash table.
+ * We hash the globa_id */
+static unsigned
+t8_cmesh_trees_glo_lo_hash_func (const void *v, const void *u)
+{
+  const t8_trees_glo_lo_hash_t *entry = (const t8_trees_glo_lo_hash_t *) v;
+  return (unsigned) entry->global_id;
+}
+
+/* The equality function for the global to local hash table.
+ * We consider two entries equal, if their global id's match. */
+static int
+t8_cmesh_trees_glo_lo_hash_equal (const void *v1, const void *v2,
+                                  const void *u)
+{
+  const t8_trees_glo_lo_hash_t *entry1 = (const t8_trees_glo_lo_hash_t *) v1;
+  const t8_trees_glo_lo_hash_t *entry2 = (const t8_trees_glo_lo_hash_t *) v2;
+
+  return entry1->global_id == entry2->global_id;
+}
+
 t8_part_tree_t
 t8_cmesh_trees_get_part (t8_cmesh_trees_t trees, int proc)
 {
@@ -60,6 +81,14 @@ t8_cmesh_trees_init (t8_cmesh_trees_t * ptrees, int num_procs,
   trees->tree_to_proc = T8_ALLOC_ZERO (int, num_trees);
   trees->ghost_to_proc = num_ghosts > 0 ? T8_ALLOC_ZERO (int, num_ghosts)
   :                   NULL;
+  /* Initialize the global_id mempool */
+  trees->global_local_mempool =
+    sc_mempool_new (sizeof (t8_trees_glo_lo_hash_t));
+  /* Initialize the global_id hash table */
+  trees->ghost_globalid_to_local_id =
+    sc_hash_new (t8_cmesh_trees_glo_lo_hash_func,
+                 t8_cmesh_trees_glo_lo_hash_equal, NULL, NULL);
+
 }
 
 void
@@ -86,10 +115,13 @@ t8_cmesh_trees_add_tree (t8_cmesh_trees_t trees, t8_locidx_t ltree_id,
 
 void
 t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees, t8_locidx_t lghost_index,
-                          t8_gloidx_t gtree_id, int proc, t8_eclass_t eclass)
+                          t8_gloidx_t gtree_id, int proc, t8_eclass_t eclass,
+                          t8_locidx_t num_local_trees)
 {
   t8_part_tree_t      part;
   t8_cghost_t         ghost;
+  t8_trees_glo_lo_hash_t *hash_entry;
+  int                 ret;
 
   T8_ASSERT (trees != NULL);
   T8_ASSERT (proc >= 0);
@@ -109,6 +141,17 @@ t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees, t8_locidx_t lghost_index,
   ghost->treeid = gtree_id;
   ghost->neigh_offset = 0;
   trees->ghost_to_proc[lghost_index] = proc;
+  /* Insert this ghosts global id into the hash table */
+  /* build the entry */
+  hash_entry = sc_mempool_alloc (trees->global_local_mempool);
+  hash_entry->global_id = gtree_id;
+  hash_entry->local_id =
+    lghost_index + part->first_ghost_id + num_local_trees;
+  /* insert it */
+  ret = sc_hash_insert_unique (trees->ghost_globalid_to_local_id, hash_entry,
+                               NULL);
+  /* It mus not have existed before, thus true was returned */
+  T8_ASSERT (ret);
 }
 
 #ifdef T8_ENABLE_DEBUG
@@ -485,6 +528,29 @@ t8_cmesh_trees_get_ghost_ext (t8_cmesh_trees_t trees, t8_locidx_t lghost_id,
     *ttf = (int8_t *) T8_GHOST_TTF (ghost);
   }
   return ghost;
+}
+
+t8_locidx_t
+t8_cmesh_trees_get_ghost_local_id (t8_cmesh_trees_t trees,
+                                   t8_gloidx_t global_id)
+{
+  t8_trees_glo_lo_hash_t hash_search, **phash_found, *hash_found;
+  int                 ret;
+
+  hash_search.global_id = global_id;
+  ret = sc_hash_lookup (trees->ghost_globalid_to_local_id, &hash_search,
+                        (void ***) &phash_found);
+  t8_debugf ("[H] trees looked for local id to gid %li found %i\n",
+             global_id, ret);
+  if (ret) {
+    /* The entry was found */
+    hash_found = *phash_found;
+    return hash_found->local_id;
+  }
+  else {
+    /* A ghost with this global id does not exist */
+    return -1;
+  }
 }
 
 size_t
@@ -1034,6 +1100,11 @@ t8_cmesh_trees_destroy (t8_cmesh_trees_t * ptrees)
   T8_FREE (trees->ghost_to_proc);
   T8_FREE (trees->tree_to_proc);
   sc_array_destroy (trees->from_proc);
+  /* Free the hash table */
+
+  sc_hash_destroy (trees->ghost_globalid_to_local_id);
+  sc_mempool_destroy (trees->global_local_mempool);
+
   T8_FREE (trees);
   ptrees = NULL;
 }

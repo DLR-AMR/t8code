@@ -223,6 +223,10 @@ typedef struct t8_cmesh_trees
   sc_array_t         *from_proc;        /* array of t8_part_tree, one for each process */
   int                *tree_to_proc;     /* for each tree its process */
   int                *ghost_to_proc;    /* for each ghost its process */
+  sc_hash_t          *ghost_globalid_to_local_id;       /* A hash table storing the map
+                                                           global_id -> local_id for the ghost trees.
+                                                           The local_id is the local ghost id starting at num_local_trees  */
+  sc_mempool_t       *global_local_mempool;     /* Memory pool for the entries in the hash table */
 }
 t8_cmesh_trees_struct_t;
 
@@ -232,7 +236,8 @@ typedef struct t8_part_tree
   char               *first_tree;       /* Stores the trees, the ghosts and the attributes.
                                            The last 2*sizeof(t8_topidx) bytes store num_trees and num_ghosts */
   t8_locidx_t         first_tree_id;    /* local tree_id of the first tree. -1 if num_trees = 0 */
-  t8_locidx_t         first_ghost_id;   /* TODO: document. -1 if num_ghost=0 */
+  t8_locidx_t         first_ghost_id;   /* TODO: document. -1 if num_ghost=0, 0 for the first part, (not num_local_trees!)
+                                           0 <= first_ghost_id < num_ghosts */
   t8_locidx_t         num_trees;
   t8_locidx_t         num_ghosts;
 }

@@ -144,6 +144,14 @@ T8_EXTERN_C_BEGIN ();
 #define T8_GHOST_TTF(g) (int8_t *) (T8_GHOST_FACE(g) + \
   t8_eclass_num_faces[(g)->eclass] * sizeof(t8_gloidx_t))
 
+/** This struct is an entry of the trees global_id to local_id
+ * hash table for ghost trees. */
+typedef struct
+{
+  t8_gloidx_t         global_id;/**< The global id */
+  t8_locidx_t         local_id; /**< The local id */
+} t8_trees_glo_lo_hash_t;
+
 /** Initialize a trees structure and allocate its parts.
  * This function allocates the from_procs array without filling it, it
  * also allocates the tree_to_proc and ghost_to_proc arrays.
@@ -260,16 +268,18 @@ void                t8_cmesh_trees_add_tree (t8_cmesh_trees_t trees,
 
 /** Add a ghost to a trees structure.
  * \param [in,out]  trees The trees structure to be updated.
- * \param [in]      ghost_index The local id of the ghost to be inserted.
+ * \param [in]      ghost_index The index in the part array of the ghost to be inserted.
  * \param [in]      tree_id The global index of the ghost.
  * \param [in]      proc  The mpirank of the process from which the ghost was
  *                        received.
  * \param [in]      eclass The ghost's element class.
+ * \param [in]      num_local_trees The number of local trees in the cmesh.
  */
 void                t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees,
                                               t8_locidx_t lghost_index,
                                               t8_gloidx_t gtree_id, int proc,
-                                              t8_eclass_t eclass);
+                                              t8_eclass_t eclass,
+                                              t8_locidx_t num_local_trees);
 
 /** Set all neighbor fields of all local trees and ghosts to boundary.
  * \param [in,out]  cmesh, The associated cmesh.
@@ -331,7 +341,7 @@ t8_cghost_t         t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees,
 
 /** Return a pointer to a specific ghost in a trees struct plus pointers to
  * its face_neighbor and tree_to_face arrays.
- * \param [in]      trees The tress structure where the ghost is to be looked up.
+ * \param [in]      trees The trees structure where the ghost is to be looked up.
  * \param [in]      lghost_id  The local id of the ghost.
  * \param [out]     face_neigh If not NULL a pointer to the ghosts face_neighbor
  *                             array is stored here on return.
@@ -343,6 +353,18 @@ t8_cghost_t         t8_cmesh_trees_get_ghost_ext (t8_cmesh_trees_t trees,
                                                   t8_locidx_t lghost_id,
                                                   t8_gloidx_t ** face_neigh,
                                                   int8_t ** ttf);
+
+/** Given the global tree id of a ghost tree in a trees structure,
+ * return its local ghost id.
+ * \param [in]      trees   The trees structure.
+ * \param [in]      global_id A global tree id.
+ * \return                  The local id of the tree \a global_id if it is a ghost
+ *                          in \a trees. A negative number if it isn't.
+ *                          The local id is a number l with
+ *                          num_local_trees <= \a l < num_local_trees + num_ghosts
+ */
+t8_locidx_t         t8_cmesh_trees_get_ghost_local_id (t8_cmesh_trees_t trees,
+                                                       t8_gloidx_t global_id);
 
 /* TODO: document.
  * returns the complete size in bytes needed to store all information */
