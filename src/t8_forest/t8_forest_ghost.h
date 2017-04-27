@@ -34,11 +34,25 @@
 #include <t8_forest/t8_forest_types.h>
 
 T8_EXTERN_C_BEGIN ();
+
+/* We enumerate the ghost trees by 0, 1, ..., num_ghost_trees - 1
+ * In the context of a forest we add the number of local trees as offset,
+ * so that we have a range of trees:
+ *
+ * | 0, 1, ..., num_trees - 1 | num_trees, ..., num_trees + num_ghosts - 1 |
+ *
+ *      local trees                           ghost trees
+ *
+ * For the funcions in this header an argument lghost_tree always
+ * means a number 0 <= lghost_tree < num_ghost_trees - 1
+ */
+
 /* TODO: comment */
 void                t8_forest_ghost_init (t8_forest_ghost_t * pghost,
                                           t8_ghost_type_t ghost_type);
 
 /* TODO: document */
+/* returns 0 if ghost structure doesnt exist */
 t8_locidx_t         t8_forest_ghost_num_trees (t8_forest_t forest);
 
 /* TODO: document */
@@ -49,6 +63,10 @@ t8_locidx_t         t8_forest_ghost_tree_num_elements (t8_forest_t forest,
 /* TODO: document */
 t8_eclass_t         t8_forest_ghost_get_tree_class (t8_forest_t forest,
                                                     t8_locidx_t lghost_tree);
+
+t8_gloidx_t         t8_forest_ghost_get_global_treeid (t8_forest_t forest,
+                                                       t8_locidx_t
+                                                       lghost_tree);
 
 /* TODO: document */
 t8_element_t       *t8_forest_ghost_get_element (t8_forest_t forest,

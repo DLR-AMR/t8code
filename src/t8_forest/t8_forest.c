@@ -908,7 +908,7 @@ t8_forest_write_vtk (t8_forest_t forest, const char *filename)
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
 
-  t8_forest_vtk_write_file (forest, filename, 1, 1, 1, 1);
+  t8_forest_vtk_write_file (forest, filename, 1, 1, 1, 1, 1);
 }
 
 t8_forest_t

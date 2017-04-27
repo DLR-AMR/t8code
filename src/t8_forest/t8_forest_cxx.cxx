@@ -84,7 +84,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
 
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->scheme_cxx != NULL);
-  eclass = t8_forest_get_tree (forest, ltree_id)->eclass;
+  eclass = t8_forest_get_tree_class (forest, ltree_id);
   T8_ASSERT (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_TET
              || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX);
 

@@ -216,6 +216,9 @@ t8_forest_ghost_init (t8_forest_ghost_t * pghost, t8_ghost_type_t ghost_type)
 t8_locidx_t
 t8_forest_ghost_num_trees (t8_forest_t forest)
 {
+  if (forest->ghosts == 0) {
+    return 0;
+  }
   T8_ASSERT (forest->ghosts != NULL);
   T8_ASSERT (forest->ghosts->ghost_trees != NULL);
 
@@ -264,6 +267,18 @@ t8_forest_ghost_get_tree_class (t8_forest_t forest, t8_locidx_t lghost_tree)
 
   ghost_tree = t8_forest_ghost_get_tree (forest, lghost_tree);
   return ghost_tree->eclass;
+}
+
+/* Given an index in the ghost_tree array, return this tree's global id */
+t8_gloidx_t
+t8_forest_ghost_get_global_treeid (t8_forest_t forest,
+                                   t8_locidx_t lghost_tree)
+{
+  t8_ghost_tree_t    *ghost_tree;
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  ghost_tree = t8_forest_ghost_get_tree (forest, lghost_tree);
+  return ghost_tree->global_id;
 }
 
 /* Given an index into the ghost_trees array and for that tree an element index,
