@@ -926,6 +926,10 @@ t8_cmesh_get_local_id (t8_cmesh_t cmesh, t8_gloidx_t global_id)
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (0 <= global_id && global_id < cmesh->num_trees);
 
+  if (!cmesh->set_partition) {
+    /* If the cmesh is not partitioned the local id is the global id */
+    return global_id;
+  }
   temp_local_id = global_id - cmesh->first_tree;
   if (0 <= temp_local_id && temp_local_id < cmesh->num_local_trees) {
     /* The tree is a local tree */
