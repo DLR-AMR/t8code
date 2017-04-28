@@ -753,7 +753,6 @@ t8_forest_ltreeid_to_cmesh_ltreeid (t8_forest_t forest, t8_locidx_t ltreeid)
              && ltreeid < num_local_trees
              + t8_forest_ghost_num_trees (forest));
 
-  t8_debugf ("[H] lookup local id %i\n", ltreeid);
   if (ltreeid < num_local_trees) {
     /* This a local tree and not a ghost */
 
@@ -769,9 +768,6 @@ t8_forest_ltreeid_to_cmesh_ltreeid (t8_forest_t forest, t8_locidx_t ltreeid)
                                                   ltreeid - num_local_trees);
     /* Compute the cmesh local id of the ghost */
     cmesh_local_id = t8_cmesh_get_local_id (forest->cmesh, globalid);
-    t8_debugf ("[H] is ghost with global id %li local id %i %p\n", globalid,
-               cmesh_local_id,
-               forest->cmesh->trees->ghost_globalid_to_local_id);
     /* is < 0 if this ghost does not exist */
     T8_ASSERT (cmesh_local_id >= 0);
     return cmesh_local_id;
