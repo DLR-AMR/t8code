@@ -983,11 +983,13 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest,
       T8_ASSERT (ghost_tree->elements.elem_size == ts->t8_element_size ());
 
       old_elem_count = ghost_tree->elements.elem_count;
+
       /* Grow the elements array of the tree to fit the new elements */
       sc_array_resize (&ghost_tree->elements, old_elem_count + num_elements);
       /* Get a pointer to where the new elements are to be inserted */
       element_insert =
-        (t8_element_t *) (ghost_tree->elements.array + old_elem_count);
+        (t8_element_t *) sc_array_index (&ghost_tree->elements,
+                                         old_elem_count);
     }
     if (itree == 0) {
       /* We store the index of the first tree and the first element of this
@@ -998,6 +1000,7 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest,
     /* Insert the new elements */
     memcpy (element_insert, recv_buffer + bytes_read,
             num_elements * ts->t8_element_size ());
+
     bytes_read += num_elements * ts->t8_element_size ();
     bytes_read += T8_ADD_PADDING (bytes_read);
   }
