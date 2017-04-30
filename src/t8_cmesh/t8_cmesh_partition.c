@@ -1548,8 +1548,7 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
       tree_neighbor_bytes + attr_info_bytes + tree_attribute_bytes +
       temp_offset_ghost_att;
     if (num_attributes > 0) {
-      size_t              this_ghosts_att_info_size, this_data_temp_offset =
-        0;
+      size_t              this_ghosts_att_info_size;
       t8_attribute_info_struct_t *first_attr_info;
 
       t8_debugf ("[H] Copy %i atts of total size %lu\n",
@@ -2171,7 +2170,7 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
      * the list.
      * The last message can be received via probe */
     while (num_receive > 0) {
-      t8_debugf ("Probing for %zd messages.\n", num_receive);
+      t8_debugf ("Probing for %i messages.\n", num_receive);
       mpiret = sc_MPI_Probe (sc_MPI_ANY_SOURCE, T8_MPI_PARTITION_CMESH, comm,
                              &status);
       SC_CHECK_MPI (mpiret);

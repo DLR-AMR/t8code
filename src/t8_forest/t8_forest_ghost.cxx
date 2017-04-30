@@ -1085,7 +1085,6 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
      *       We include the received data into the ghost structure in order of the
      *       ranks of the receivers and we do this as soon as the message from
      *       the next rank that we can include was received. */
-    sc_list_t          *receivers;
     char              **buffer;
     int                *recv_bytes;
     int                 received_messages = 0;
@@ -1098,6 +1097,7 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
 #if 0
     sc_link_t          *proc_it, *prev;
     int                 iprobe_flag;
+    sc_list_t          *receivers;
 #endif
 
     buffer = T8_ALLOC (char *, num_remotes);
