@@ -634,6 +634,8 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost)
           last_class = neigh_class;
           prev_neigh_scheme = neigh_scheme;
         }
+        /* TODO: We cannot construct the half neighbors, if the maximum level on
+         *      our or the neighbor side is reached! */
         /* Construct each half size neighbor */
         neighbor_tree =
           t8_forest_element_half_face_neighbors (forest, itree, elem,
