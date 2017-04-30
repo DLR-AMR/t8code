@@ -334,6 +334,31 @@ public:
   virtual void        t8_element_boundary_face (const t8_element_t * elem,
                                                 int face,
                                                 t8_element_t * boundary) = 0;
+
+  /** Construct the first descendant of an element that touches a given face.
+   * \param [in] elem      The input element.
+   * \param [in] face      A face of \a elem.
+   * \param [in, out] first_desc An allocated element. This element's data will be
+   *                       filled with the data of the first descendant of \a elem
+   *                       that shares a face with \a face.
+   */
+  virtual void        t8_element_first_descendant_face (const t8_element_t *
+                                                        elem, int face,
+                                                        t8_element_t *
+                                                        first_desc) = 0;
+
+  /** Construct the last descendant of an element that touches a given face.
+   * \param [in] elem      The input element.
+   * \param [in] face      A face of \a elem.
+   * \param [in, out] last_desc An allocated element. This element's data will be
+   *                       filled with the data of the last descendant of \a elem
+   *                       that shares a face with \a face.
+   */
+  virtual void        t8_element_last_descendant_face (const t8_element_t *
+                                                       elem, int face,
+                                                       t8_element_t *
+                                                       last_desc) = 0;
+
   /* TODO: document better */
 /** Construct all codimension-one boundary elements of a given element. */
   virtual void        t8_element_boundary (const t8_element_t * elem,
