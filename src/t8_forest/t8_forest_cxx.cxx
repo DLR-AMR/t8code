@@ -752,4 +752,93 @@ t8_forest_element_find_owner (t8_forest_t forest,
   return proc;
 }
 
+/* Recursively find all owners of descendants of a given element that touch a given face.
+ * We do this by constructing the first and last possible descendants of the element that
+ * touch the face. If those belong to different processes, we construct all children
+ * of the element that touch the face.
+ * We pass those children to the recursion in order of their linear id to be sure
+ * that we add owners in ascending order.
+ */
+static void
+t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
+                                            t8_gloidx_t gtreeid,
+                                            t8_element_t * element,
+                                            t8_eclass_t eclass,
+                                            t8_eclass_scheme_c * ts, int face,
+                                            sc_array_t * owners)
+{
+  t8_element_t       *first_face_desc, *last_face_desc, **face_children;
+  int                 first_owner, last_owner;
+  int                 num_children, ichild;
+  int                 child_face;
+  int                 last_owner_entry;
+
+  /* Create first and last descendants at face */
+  ts->t8_element_new (1, &first_face_desc);
+  ts->t8_element_new (1, &last_face_desc);
+  ts->t8_element_first_descendant_face (element, face, first_face_desc);
+  ts->t8_element_last_descendant_face (element, face, last_face_desc);
+
+  /* owner of first and last descendants */
+  first_owner =
+    t8_forest_element_find_owner (forest, gtreeid, first_face_desc, eclass);
+  last_owner =
+    t8_forest_element_find_owner (forest, gtreeid, last_face_desc, eclass);
+
+  if (first_owner == last_owner) {
+    /* This element has a unique owner, no recursion is necessary */
+    /* Add the owner to the array of owners */
+    /* TODO: check if this process is alreadt listed. If we traverse the face children
+     * in SFC order, we can just check the last entry in owners here */
+    if (owners->elem_count > 0) {
+      /* Get the last process that we added as owner */
+      last_owner_entry =
+        *(int *) sc_array_index (owners, owners->elem_count - 1);
+    }
+    else {
+      last_owner_entry = -1;
+    }
+    if (first_owner != last_owner_entry) {
+      /* We did not count this process as an owner, thus we add it */
+      *(int *) sc_array_push (owners) = first_owner;
+    }
+    return;
+  }
+  else {
+    /* This element has different owners, we have to create its face
+     * children and continue with the recursion. */
+    num_children = ts->t8_element_num_face_children (element, face);
+    /* allocate memory */
+    face_children = T8_ALLOC (t8_element_t *, num_children);
+    ts->t8_element_new (num_children, face_children);
+    /* construct the children of element that touch face */
+    ts->t8_element_children_at_face (element, face, face_children,
+                                     num_children);
+    for (ichild = 0; ichild < num_children; ichild++) {
+      /* the face number of the child may not be the same as face */
+      child_face = ts->t8_element_face_child_face (element, face, ichild);
+      /* find owners of this child */
+      t8_forest_element_owners_at_face_recursion (forest, gtreeid,
+                                                  face_children[ichild],
+                                                  eclass, ts, child_face,
+                                                  owners);
+    }
+    ts->t8_element_destroy (num_children, face_children);
+    T8_FREE (face_children);
+  }
+}
+
+void
+t8_forest_element_owners_at_face (t8_forest_t forest, t8_gloidx_t gtreeid,
+                                  t8_element_t * element, t8_eclass_t eclass,
+                                  int face, sc_array_t * owners)
+{
+  t8_eclass_scheme_c *ts;
+
+  ts = t8_forest_get_eclass_scheme (forest, eclass);
+  /* call the recursion */
+  t8_forest_element_owners_at_face_recursion (forest, gtreeid, element,
+                                              eclass, ts, face, owners);
+}
+
 T8_EXTERN_C_END ();

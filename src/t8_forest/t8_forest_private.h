@@ -124,6 +124,22 @@ int                 t8_forest_element_find_owner (t8_forest_t forest,
                                                   t8_element_t * element,
                                                   t8_eclass_t eclass);
 
+/** Find all owner processes that own descendant of a given element that
+ * touch a given face.
+ * \param [in]    forest  The forest.
+ * \param [in]    gtreeid The global id of the tree in which the element lies.
+ * \param [in]    element The element to look for.
+ * \param [in]    eclass  The element class of the tree \a gtreeid.
+ * \param [in]    face    A face of \a element.
+ * \param [in]    owners  On input an empty array of integers. On output it stores
+ *                        all owners of descendants of \a elem that touch \a face
+ *                        in ascending order.
+ */
+void
+t8_forest_element_owners_at_face (t8_forest_t forest, t8_gloidx_t gtreeid,
+                                  t8_element_t *element, t8_eclass_t eclass,
+                                  int face, sc_array_t *owners);
+
 /** Construct all face neighbors of half size of a given element.
  * \param [in]    forest The forest.
  * \param [in]    ltreeid The local tree id of the tree in which the element is.
