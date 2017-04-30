@@ -816,6 +816,10 @@ t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix,
   T8_ASSERT (forest != NULL);
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (fileprefix != NULL);
+  if (forest->ghosts == NULL) {
+    /* Never write ghost elements if there aren't any */
+    write_ghosts = 0;
+  }
   T8_ASSERT (forest->ghosts != NULL || !write_ghosts);
 
   /* Currently we only support output in ascii format, not binary */

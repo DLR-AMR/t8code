@@ -2035,13 +2035,16 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
   t8_gloidx_t        *from_offsets;
   t8_part_tree_t      recv_part;
   sc_MPI_Status       status;
+#if 0
   sc_list_t          *possible_receivers;       /* Linked list storing the ranks from which
                                                    we still expect a message */
+  /* TODO: These variables belong to the polling code */
   int                *poss_recv_data;   /* Data storage for these ranks */
   sc_link_t          *iterate;  /* Iterator through the linked list */
   sc_link_t          *prev;     /* We need to store iterates predecessor in order to
                                    be able to remove iterate when needed */
   int                 iprobe_flag;
+#endif
 
   num_trees = t8_offset_num_trees (cmesh->mpirank, tree_offset);
   /* Receive from other processes */
@@ -2128,6 +2131,8 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
   /****     Setup     ****/
 
   if (num_receive > 0) {
+#if 0
+    /* TODO: This belongs to the polling MPI communication, see below */
     /* Find first process from which we will receive */
     proc_recv = recv_first;
     /* Check whether we expect an MPI message from this process */
@@ -2157,6 +2162,7 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
         proc_recv++;
       }
     }
+#endif
 
     /****     Actual communication    ****/
 
@@ -2164,11 +2170,19 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
      * sender and if there is one we receive it and remove the sender from
      * the list.
      * The last message can be received via probe */
-    while (possible_receivers->elem_count > 1) {
-      iprobe_flag = 0;
+    while (num_receive > 0) {
+      t8_debugf ("Probing for %zd messages.\n", num_receive);
+      mpiret = sc_MPI_Probe (sc_MPI_ANY_SOURCE, T8_MPI_PARTITION_CMESH, comm,
+                             &status);
+      SC_CHECK_MPI (mpiret);
+      num_receive--;
+#if 0
       prev = NULL;
-      t8_debugf ("Probing for %zd messages.\n",
-                 possible_receivers->elem_count);
+      iprobe_flag = 0;
+      /* TODO: This part of the code uses polling to receive the
+       *       messages. Remove if the unpolling version has prooved to run
+       *       well.
+       */
       for (iterate = possible_receivers->first;
            iterate != NULL && iprobe_flag == 0;) {
         /* Iterate through all entries and probe for message */
@@ -2182,9 +2196,14 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
           iterate = iterate->next;
         }
       }
+#endif
+#if 0
+      /* polling code, see above */
       if (iprobe_flag != 0) {
+#endif
         /* There is a message to receive */
-        T8_ASSERT (proc_recv == status.MPI_SOURCE);
+        proc_recv = status.MPI_SOURCE;
+        /* TODO: assert that proc_recv is still contained in the list of receivers. */
         T8_ASSERT (status.MPI_TAG == T8_MPI_PARTITION_CMESH);
         T8_ASSERT (recv_first <= proc_recv && proc_recv <= recv_last &&
                    t8_offset_sendsto (proc_recv, cmesh->mpirank, from_offsets,
@@ -2192,12 +2211,17 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
         t8_cmesh_partition_receive_message (cmesh, comm, proc_recv, &status,
                                             local_procid, recv_first,
                                             &num_ghosts);
+#if 0
         sc_list_remove (possible_receivers, prev);
+        /* polling code, see above */
       }
+#endif
     }
 
-    /* We have one message left and does we do not need to IProbe
-     * but call the blocking Probe instead. */
+#if 0
+    /* TODO: polling code */
+    /* We have one message left and does we do not need to ause ANY_SOURCE
+     * but call the blocking Probe with the remaining process instead. */
     T8_ASSERT (possible_receivers->elem_count == 1);
     proc_recv = *(int *) sc_list_pop (possible_receivers);
     sc_list_destroy (possible_receivers);
@@ -2207,6 +2231,7 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
     t8_cmesh_partition_receive_message (cmesh, comm, proc_recv, &status,
                                         local_procid, recv_first,
                                         &num_ghosts);
+#endif
   }
 
 #if 0
