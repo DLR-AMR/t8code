@@ -1022,6 +1022,35 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest,
   T8_ASSERT (added_process);
 }
 
+/* In forest_ghost_receive we need a lookup table to give us the position
+ * of a process in the ghost->remote_processes array, given the rank of
+ * a process. We implement this via a hash table with the following struct
+ * as entry. */
+typedef struct t8_recv_list_entry_struct
+{
+  int                 rank;     /* The rank of this process */
+  int                 pos_in_remote_processes;  /* The position of this process in the remote_processes array */
+} t8_recv_list_entry_t;
+
+/* We hash these entries by their rank */
+unsigned
+t8_recv_list_entry_hash (const void *v1, const void *u)
+{
+  const t8_recv_list_entry_t *e1 = (const t8_recv_list_entry_t *) v1;
+
+  return e1->rank;
+}
+
+/* two entries are considered equal if they have the same rank. */
+int
+t8_recv_list_entry_equal (const void *v1, const void *v2, const void *u)
+{
+  const t8_recv_list_entry_t *e1 = (const t8_recv_list_entry_t *) v1;
+  const t8_recv_list_entry_t *e2 = (const t8_recv_list_entry_t *) v2;
+
+  return e1->rank == e2->rank;
+}
+
 /* Probe for all incoming messages from the remote ranks and receive them.
  * We receive the message in the order in which they arrive. To achieve this,
  * we have to use polling. */
@@ -1057,43 +1086,60 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
      *       ranks of the receivers and we do this as soon as the message from
      *       the next rank that we can include was received. */
     sc_list_t          *receivers;
-    sc_link_t          *proc_it, *prev;
     char              **buffer;
     int                *recv_bytes;
-    int                 iprobe_flag;
     int                 received_messages = 0;
     int                *received_flag;
     int                 last_rank_parsed = -1, parse_it;
-    struct t8_recv_list_entry_t
-    {
-      int                 rank;
-      int                 pos_in_remote_processes;
-    }                  *recv_list_entry, *recv_list_entries;
+    t8_recv_list_entry_t recv_list_entry, *recv_list_entries, **pfound,
+      *found;
+    int                 ret;
+    sc_hash_t          *recv_list_entries_hash;
+#if 0
+    sc_link_t          *proc_it, *prev;
+    int                 iprobe_flag;
+#endif
 
     buffer = T8_ALLOC (char *, num_remotes);
     recv_bytes = T8_ALLOC (int, num_remotes);
     received_flag = T8_ALLOC_ZERO (int, num_remotes);
+    recv_list_entries_hash = sc_hash_new (t8_recv_list_entry_hash,
+                                          t8_recv_list_entry_equal, NULL,
+                                          NULL);
     recv_list_entries = T8_ALLOC (t8_recv_list_entry_t, num_remotes);
 
     /* Sort the array of remote processes, such that the ranks are in
      * ascending order. */
     sc_array_sort (ghost->remote_processes, sc_int_compare);
 
-    /* We build a linked list of all ranks from which we receive. */
+    /* We build a hash table of all ranks from which we receive and their position
+     * in the remote_processes array. */
+#if 0                           /* polling */
     receivers = sc_list_new (NULL);
+#endif
     for (proc_pos = 0; proc_pos < num_remotes; proc_pos++) {
       recv_list_entries[proc_pos].rank =
         *(int *) sc_array_index_int (ghost->remote_processes, proc_pos);
       recv_list_entries[proc_pos].pos_in_remote_processes = proc_pos;
+      ret = sc_hash_insert_unique (recv_list_entries_hash,
+                                   recv_list_entries + proc_pos, NULL);
+      T8_ASSERT (ret == 1);
+#if 0                           /* polling */
       sc_list_append (receivers, recv_list_entries + proc_pos);
+#endif
     }
+
   /****     Actual communication    ****/
 
     /* Until there is only one sender left we iprobe for a message for each
      * sender and if there is one we receive it and remove the sender from
      * the list.
      * The last message can be received via probe */
-    while (receivers->elem_count > 1) {
+    while (received_messages < num_remotes) {
+#if 0
+      /* TODO: This part of the code using polling and IProbe to receive the
+       *       messages. We replaced with a non-polling version that uses the
+       *       blocking Probe. */
       iprobe_flag = 0;
       prev = NULL;              /* ensure that if the first receive entry is matched first,
                                    it is removed properly. */
@@ -1102,18 +1148,29 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
         recv_rank = ((t8_recv_list_entry_t *) proc_it->data)->rank;
         proc_pos =
           ((t8_recv_list_entry_t *) proc_it->data)->pos_in_remote_processes;
+#endif
         /* nonblocking probe for a message. */
-        mpiret = sc_MPI_Iprobe (recv_rank, T8_MPI_GHOST_FOREST, comm,
-                                &iprobe_flag, &status);
+        mpiret = sc_MPI_Probe (sc_MPI_ANY_SOURCE, T8_MPI_GHOST_FOREST, comm,
+                               &status);
         SC_CHECK_MPI (mpiret);
+#if 0
         if (iprobe_flag == 0) {
           /* There is no message to receive, we continue */
           prev = proc_it;
           proc_it = proc_it->next;
         }
         else {
+#endif
           /* There is a message to receive, we receive it. */
-          T8_ASSERT (recv_rank == status.MPI_SOURCE);
+          recv_rank = status.MPI_SOURCE;
+          /* Get the position of this rank in the remote processes array */
+          recv_list_entry.rank = recv_rank;
+          ret = sc_hash_lookup (recv_list_entries_hash, &recv_list_entry,
+                                (void ***) &pfound);
+          T8_ASSERT (ret != 0);
+          found = *pfound;
+          proc_pos = found->pos_in_remote_processes;
+
           T8_ASSERT (status.MPI_TAG == T8_MPI_GHOST_FOREST);
           t8_debugf ("[H] Receive message from %i [%i]\n", recv_rank,
                      proc_pos);
@@ -1138,12 +1195,16 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
             last_rank_parsed++;
           }
 
+#if 0                           /* polling */
           /* Remove the process from the list of receivers. */
           proc_it = proc_it->next;
           sc_list_remove (receivers, prev);
         }
       }                         /* end for */
+#endif
     }                           /* end while */
+#if 0
+    /* polling */
     T8_ASSERT (receivers->elem_count == 1);
     /* Get the last rank from which we didnt receive yet */
     recv_list_entry = (t8_recv_list_entry_t *) sc_list_pop (receivers);
@@ -1174,13 +1235,16 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
                                               recv_bytes[parse_it]);
       last_rank_parsed++;
     }
+#endif
 #ifdef T8_ENABLE_DEBUG
     for (parse_it = 0; parse_it < num_remotes; parse_it++) {
       T8_ASSERT (received_flag[parse_it] == 1);
     }
 #endif
     T8_ASSERT (last_rank_parsed == num_remotes - 1);
-    /* TODO: parse in order */
+
+    /* clean-up */
+    sc_hash_destroy (recv_list_entries_hash);
     T8_FREE (buffer);
     T8_FREE (received_flag);
     T8_FREE (recv_list_entries);
