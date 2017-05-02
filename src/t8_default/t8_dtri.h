@@ -40,6 +40,9 @@ T8_EXTERN_C_BEGIN ();
 /** The number of childre that a face of a triangle is refined to. */
 #define T8_DTRI_FACE_CHILDREN 2
 
+/** The number of corners of a triangle */
+#define T8_DTRI_CORNERS 3
+
 /** The maximum refinement level allowed for a triangle. */
 #define T8_DTRI_MAXLEVEL 30
 

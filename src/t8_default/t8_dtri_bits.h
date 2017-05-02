@@ -301,7 +301,7 @@ void                t8_dtri_last_descendant (const t8_dtri_t * t,
  * \param [in]  level   The refinement level of the descendant. Must be greater or
  *                      equal to \a t's level.
  */
-void                t8_dtri_corner_descendant (const t8_dtrit_t * t,
+void                t8_dtri_corner_descendant (const t8_dtri_t * t,
                                                t8_dtri_t * s, int corner,
                                                int level);
 

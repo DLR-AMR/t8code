@@ -182,6 +182,7 @@ main (int argc, char **argv)
   p4est_init (NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
+#if 0
   for (ieclass = T8_ECLASS_VERTEX; ieclass < T8_ECLASS_COUNT; ieclass++) {
     if (ieclass != T8_ECLASS_PRISM && ieclass != T8_ECLASS_PYRAMID
         && ieclass != T8_ECLASS_VERTEX && ieclass != T8_ECLASS_LINE) {
@@ -192,6 +193,7 @@ main (int argc, char **argv)
       t8_test_find_owner (mpic, (t8_eclass_t) ieclass);
     }
   }
+#endif
   t8_test_find_multiple_owners (mpic, T8_ECLASS_QUAD);
 
   sc_finalize ();

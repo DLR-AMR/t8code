@@ -1087,6 +1087,13 @@ t8_dtri_linear_id_last_desc (const t8_dtri_t * t, int level)
   return id;
 }
 
+/* Construct the linear id of a descendant in a corner of t */
+static uint64_t
+t8_dtrI_linear_id_corner_desc (const t8_dtri_t * t, int corner)
+{
+
+}
+
 uint64_t
 t8_dtri_linear_id (const t8_dtri_t * t, int level)
 {
@@ -1252,6 +1259,30 @@ t8_dtri_last_descendant (const t8_dtri_t * t, t8_dtri_t * s, int level)
   id = t8_dtri_linear_id_last_desc (t, level);
   /* Set s to math this linear id */
   t8_dtri_init_linear_id (s, id, level);
+}
+
+void
+t8_dtri_corner_descendant (const t8_dtri_t * t, t8_dtri_t * s, int corner,
+                           int level)
+{
+  T8_ASSERT (t->level <= level && level <= T8_DTRI_MAXLEVEL);
+  T8_ASSERT (0 <= corner && corner < T8_DTRI_CORNERS);
+
+  switch (corner) {
+  case 0:
+    /* The 0-the corner descendant is just the first descendant */
+    t8_dtri_first_descendant (t, s);
+    break;
+  case 1:
+
+    break;
+  case 2:
+    /* The 2nd corner descendant is just the last descendant */
+    t8_dtri_last_descendant (t, s);
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
 }
 
 void
