@@ -283,7 +283,7 @@ void                t8_dtri_first_descendant (const t8_dtri_t * t,
                                               t8_dtri_t * s);
 
 /** Compute the last descendant of a triangle. This is the descendant of
- * the triangle in a uniform maxlevel refinement that has the bigges id.
+ * the triangle in a uniform maxlevel refinement that has the biggest id.
  * \param [in] t        Triangle whose descendant is computed.
  * \param [out] s       Existing triangle whose data will be filled with the data
  *                      of t's last descendant.
