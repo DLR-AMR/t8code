@@ -29,6 +29,7 @@
 #include <t8_default_cxx.hxx>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_forest/t8_forest_partition.h>
+#include <t8_forest/t8_forest_private.h>
 
 /* Depending on an integer i create a different cmesh.
  * i = 0: cmesh_new_class
@@ -87,7 +88,7 @@ t8_test_find_owner (sc_MPI_Comm comm, t8_eclass_t eclass)
     /* We reuse the scheme for all forests and thus ref it */
     t8_scheme_cxx_ref (scheme);
     /* build the forest */
-    forest = t8_forest_new_uniform (cmesh, scheme, level, comm);
+    forest = t8_forest_new_uniform (cmesh, scheme, level, 0, comm);
     for (itree = 0, global_elem_num = 0;
          itree < t8_forest_get_num_global_trees (forest); itree++) {
       /* Iterate over all trees */
@@ -120,6 +121,52 @@ t8_test_find_owner (sc_MPI_Comm comm, t8_eclass_t eclass)
   t8_scheme_cxx_unref (&scheme);
 }
 
+static void
+t8_test_find_multiple_owners (sc_MPI_Comm comm, t8_eclass_t eclass)
+{
+  t8_cmesh_t          cmesh;
+  t8_forest_t         forest;
+  t8_scheme_cxx_t    *default_scheme;
+  t8_eclass_scheme_c *ts;
+  t8_element_t       *root_element;
+  sc_array_t          owners;
+  int                 iowner;
+  int                 face;
+  int                 level = 1;
+  char                buffer[BUFSIZ];
+
+  default_scheme = t8_scheme_new_default_cxx ();
+  /* Construct a coarse mesh of one tree */
+  cmesh = t8_cmesh_new_from_class (eclass, comm);
+  /* initialize the array of owners to store ints */
+  sc_array_init (&owners, sizeof (int));
+  /* Build a uniform forest */
+  forest = t8_forest_new_uniform (cmesh, default_scheme, level, 0, comm);
+  ts = t8_forest_get_eclass_scheme (forest, eclass);
+  /* Construct the root element */
+  ts->t8_element_new (1, &root_element);
+  ts->t8_element_set_linear_id (root_element, 0, 0);
+  /* For each face determine its owners */
+  for (face = 0; face < t8_eclass_num_faces[eclass]; face++) {
+    t8_forest_element_owners_at_face (forest, 0, root_element, eclass, face,
+                                      &owners);
+    snprintf (buffer, BUFSIZ, "Owners of root at face %i:", face);
+    for (iowner = 0; iowner < owners.elem_count; iowner++) {
+      snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer),
+                " %i,", *(int *) sc_array_index_int (&owners, iowner));
+    }
+    t8_debugf ("%s\n", buffer);
+    sc_array_truncate (&owners);
+  }
+#ifdef T8_ENABLE_DEBUG
+  /* write vtk file in debug mode */
+  t8_forest_write_vtk (forest, "test_owners_forest");
+#endif
+  ts->t8_element_destroy (1, &root_element);
+  t8_forest_unref (&forest);
+  sc_array_reset (&owners);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -145,6 +192,7 @@ main (int argc, char **argv)
       t8_test_find_owner (mpic, (t8_eclass_t) ieclass);
     }
   }
+  t8_test_find_multiple_owners (mpic, T8_ECLASS_QUAD);
 
   sc_finalize ();
 
