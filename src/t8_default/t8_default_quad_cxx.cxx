@@ -228,6 +228,7 @@ t8_default_scheme_quad_c::t8_element_first_descendant (const t8_element_t *
   p4est_quadrant_first_descendant ((p4est_quadrant_t *) elem,
                                    (p4est_quadrant_t *) desc,
                                    P4EST_QMAXLEVEL);
+  T8_QUAD_SET_TDIM ((p4est_quadrant_t *) desc, 2);
 }
 
 void
@@ -237,6 +238,7 @@ t8_default_scheme_quad_c::t8_element_last_descendant (const t8_element_t *
 {
   p4est_quadrant_last_descendant ((p4est_quadrant_t *) elem,
                                   (p4est_quadrant_t *) desc, P4EST_QMAXLEVEL);
+  T8_QUAD_SET_TDIM ((p4est_quadrant_t *) desc, 2);
 }
 
 void

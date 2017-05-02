@@ -320,6 +320,49 @@ t8_default_scheme_hex_c::t8_element_extrude_face (const t8_element_t * face,
     q->z = P8EST_LAST_OFFSET (q->level);
     break;
   }
+  /* We return the face of q at which we extruded. This is the same number
+   * as root_face. */
+  return root_face;
+}
+
+/** Construct the first descendant of an element that touches a given face.   */
+void
+t8_default_scheme_hex_c::t8_element_first_descendant_face (const t8_element_t
+                                                           * elem, int face,
+                                                           t8_element_t *
+                                                           first_desc)
+{
+  const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
+  p8est_quadrant_t   *desc = (p8est_quadrant_t *) first_desc;
+  int                 first_face_corner;
+
+  T8_ASSERT (0 <= face && face < P8EST_FACES);
+
+  /* Get the first corner of q that belongs to face */
+  first_face_corner = p8est_face_corners[face][0];
+  /* Construct the descendant of q in this corner */
+  p8est_quadrant_corner_descendant (q, desc, first_face_corner,
+                                    P8EST_QMAXLEVEL);
+}
+
+/** Construct the last descendant of an element that touches a given face. */
+void
+t8_default_scheme_hex_c::t8_element_last_descendant_face (const t8_element_t *
+                                                          elem, int face,
+                                                          t8_element_t *
+                                                          last_desc)
+{
+  const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
+  p8est_quadrant_t   *desc = (p8est_quadrant_t *) last_desc;
+  int                 last_face_corner;
+
+  T8_ASSERT (0 <= face && face < P8EST_FACES);
+
+  /* Get the last corner of q that belongs to face */
+  last_face_corner = p8est_face_corners[face][3];
+  /* Construct the descendant of q in this corner */
+  p8est_quadrant_corner_descendant (q, desc, last_face_corner,
+                                    P8EST_QMAXLEVEL);
 }
 
 void
