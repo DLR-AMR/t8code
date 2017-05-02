@@ -331,8 +331,8 @@ t8_default_scheme_quad_c::t8_element_children_at_face (const t8_element_t *
   /* We have to revert the order and compute second child first, since
    * the usage allows for elem == children[0].
    */
-  t8_element_child (elem, second_child, children[1]);
-  t8_element_child (elem, first_child, children[0]);
+  this->t8_element_child (elem, second_child, children[1]);
+  this->t8_element_child (elem, first_child, children[0]);
 }
 
 int
@@ -389,6 +389,7 @@ t8_default_scheme_quad_c::t8_element_transform_face (const t8_element_t *
   default:
     SC_ABORT_NOT_REACHED ();
   }
+  T8_QUAD_SET_TDIM (p, 2);
 }
 
 int
@@ -530,8 +531,6 @@ t8_default_scheme_quad_c::t8_element_boundary (const t8_element_t * elem,
   T8_ASSERT (length ==
              t8_eclass_count_boundary (T8_ECLASS_QUAD, min_dim, per_eclass));
 
-  /* TODO: write this function */
-
   T8_ASSERT (length == P4EST_FACES);
   for (iface = 0; iface < P4EST_FACES; iface++) {
     t8_element_boundary_face (elem, iface, boundary[iface]);
@@ -590,6 +589,7 @@ t8_default_scheme_quad_c::t8_element_anchor (const t8_element_t * elem,
   coord[0] = q->x;
   coord[1] = q->y;
   coord[2] = 0;
+  T8_QUAD_SET_TDIM (q, 2);
 }
 
 int
