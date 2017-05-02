@@ -41,7 +41,8 @@ t8_basic_adapt (t8_forest_t forest, t8_locidx_t which_tree,
              ts->t8_element_num_children (elements[0]));
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
-  if (which_tree == 0 && mpirank == 0) {
+  if (which_tree == 0 && mpirank == 0
+      && ts->t8_element_level (elements[0]) < 3) {
     return 1;
   }
   return 0;
@@ -72,7 +73,7 @@ t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, int level,
                            level, 1, comm);
 
   t8_forest_init (&forest_adapt);
-  t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, NULL, 0);
+  t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, NULL, 1);
   t8_forest_set_ghost (forest_adapt, 1, T8_GHOST_FACES);
   t8_forest_commit (forest_adapt);
   t8_forest_write_vtk (forest_adapt, "test_ghost");
