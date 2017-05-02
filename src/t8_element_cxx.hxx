@@ -240,8 +240,7 @@ public:
    * \param [in] face     A face of \a elem.
    * \param [in,out] children Allocated elements, in which the children of \a elem
    *                      that share a face with \a face are stored.
-   *                      They will be stored in order of that faces' child_id as
-   *                      a child of \a face.
+   *                      They will be stored in order of their linear id.
    * \param [in] num_children The number of elements in \a children. Must match
    *                      the number of children that touch \a face.
    *                      \ref t8_element_num_face_children
@@ -265,7 +264,10 @@ public:
 
    * \param [in]  elem    The element.
    * \param [in]  face    Then number of the face.
-   * \param [in]  face_child  The child number of a child of the face element.
+   * \param [in]  face_child A number 0 <= \a face_child < num_face_children,
+   *                      specifying a child of \a elem that shares a face with \a face.
+   *                      These children are counted in linear order. This coincides with
+   *                      the order of children from a call to \ref t8_element_children_at_face.
    * \return              The face number of the face of a child of \a elem
    *                      that conincides with \a face_child.
    */
