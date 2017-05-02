@@ -175,7 +175,7 @@ uint64_t
 t8_dline_linear_id(const t8_dline_t * elem, int level){
     uint64_t            id;
 
-    T8_ASSERT((int) elem->level >= level && level >= 0);
+    T8_ASSERT(level <= T8_DLINE_MAXLEVEL && level >= 0);
 
     /* this preserves the high bits from negative numbers */
     id = elem->x >> (T8_DLINE_MAXLEVEL - level);

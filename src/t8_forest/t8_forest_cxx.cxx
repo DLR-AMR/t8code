@@ -252,12 +252,14 @@ t8_forest_populate (t8_forest_t forest)
                                                start);
       count_elements++;
       for (et = start + 1; et < end; et++, count_elements++) {
+          t8_debugf("Element_id: %i\n", (int)eclass_scheme->t8_element_get_linear_id(element, forest->set_level));
         element_succ = eclass_scheme->t8_element_array_index (telements,
                                                               et - start);
         eclass_scheme->t8_element_successor (element, element_succ,
                                              forest->set_level);
         /* TODO: process elements here */
         element = element_succ;
+        if(et == end/2)break;
       }
     }
   }

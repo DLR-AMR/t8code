@@ -60,7 +60,7 @@ void                t8_dprism_init_linear_id (t8_dprism_t * l, int level,
  *                data of \a l's successor on level \a level.
  * \param [in] level level of uniform grid to be considered.
  */
-void                t8_dprism_successor (const t8_dprism_t * l,
+void                t8_dprism_successor (const t8_dprism_t *l,
                                          t8_dprism_t * succ, int level);
 
 /** Compute the parent of a prism.
