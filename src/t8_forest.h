@@ -479,6 +479,7 @@ t8_eclass_t         t8_forest_element_neighbor_eclass (t8_forest_t forest,
  *                  the data could be modified arbitrarily.
  * \param [in] face The number of the face along which the neighbor should be
  *                  constructed.
+ * \param [out] neigh_face The number of the face viewed from perspective of \a neigh.
  * \return The global tree-id of the tree in which \a neigh is in.
  *        -1 if there exists no neighbor across that face.
  */
@@ -487,7 +488,8 @@ t8_gloidx_t         t8_forest_element_face_neighbor (t8_forest_t forest,
                                                      const t8_element_t *
                                                      elem,
                                                      t8_element_t * neigh,
-                                                     int face);
+                                                     int face,
+                                                     int *neigh_face);
 
 /* TODO: implement */
 void                t8_forest_save (t8_forest_t forest);

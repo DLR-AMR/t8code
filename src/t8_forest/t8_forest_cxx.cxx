@@ -423,7 +423,8 @@ t8_forest_element_neighbor_eclass (t8_forest_t forest,
 t8_gloidx_t
 t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
                                  const t8_element_t * elem,
-                                 t8_element_t * neigh, int face)
+                                 t8_element_t * neigh, int face,
+                                 int *neigh_face)
 {
   t8_eclass_scheme_c *ts;
   t8_tree_t           tree;
@@ -433,7 +434,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
   tree = t8_forest_get_tree (forest, ltreeid);
   eclass = tree->eclass;
   ts = t8_forest_get_eclass_scheme (forest, eclass);
-  if (ts->t8_element_face_neighbor_inside (elem, neigh, face)) {
+  if (ts->t8_element_face_neighbor_inside (elem, neigh, face, neigh_face)) {
     /* The neighbor was constructed and is inside the current tree. */
     return ltreeid + t8_forest_get_first_local_tree_id (forest);
   }
@@ -449,7 +450,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
     t8_gloidx_t         global_neigh_id;
     t8_cghost_t         ghost;
     int8_t             *ttf;
-    int                 tree_face, neigh_face;
+    int                 tree_face, tree_neigh_face;
     int                 is_smaller, eclass_compare;
     int                 F;
 
@@ -473,13 +474,13 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
     /* Compute the local id of the face neighbor tree. */
     lcneigh_id = face_neighbor[tree_face];
     /* F is needed to compute the neighbor face number and the orientation.
-     * neigh_face = ttf % F
+     * tree_neigh_face = ttf % F
      * or = ttf / F
      */
     F = t8_eclass_max_num_faces[cmesh->dimension];
     /* compute the neighbor face */
-    neigh_face = ttf[tree_face] % F;
-    if (lcneigh_id == lctree_id && tree_face == neigh_face) {
+    tree_neigh_face = ttf[tree_face] % F;
+    if (lcneigh_id == lctree_id && tree_face == tree_neigh_face) {
       /* This face is a domain boundary and there is no neighbor */
       return -1;
     }
@@ -521,7 +522,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
       T8_ASSERT (eclass_compare == 0);
       /* Check if the face of the current tree has a smaller index then
        * the face of the neighbor tree. */
-      is_smaller = tree_face <= neigh_face;
+      is_smaller = tree_face <= tree_neigh_face;
     }
     /* We now transform the face element to the other tree. */
     boundary_scheme->t8_element_transform_face (face_element, face_element,
@@ -529,8 +530,9 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
                                                 is_smaller);
     /* And now we extrude the face to the new neighbor element */
     neighbor_scheme = forest->scheme_cxx->eclass_schemes[neigh_eclass];
-    neighbor_scheme->t8_element_extrude_face (face_element, neigh,
-                                              neigh_face);
+    *neigh_face =
+      neighbor_scheme->t8_element_extrude_face (face_element, neigh,
+                                                tree_neigh_face);
 
     return global_neigh_id;
   }
@@ -553,6 +555,7 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
 #endif
   int                 num_children_at_face, child_it;
   int                 child_face;
+  int                 neigh_face;
 
   /* Get the current tree and its element class */
   tree = t8_forest_get_tree (forest, ltreeid);
@@ -588,7 +591,7 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
                                                      children_at_face
                                                      [child_it],
                                                      neighs[child_it],
-                                                     child_face);
+                                                     child_face, &neigh_face);
     /* For each of the neighbors, the neighbor tree must be the same. */
     T8_ASSERT (child_it == 0 || neighbor_tree == last_neighbor_tree);
 #ifdef T8_ENABLE_DEBUG
