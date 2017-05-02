@@ -61,6 +61,7 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_parenttype_Iloc_to_type t8_dtet_parenttype_Iloc_to_type
 #define t8_dtri_parenttype_Iloc_to_cid t8_dtet_parenttype_Iloc_to_cid
 #define t8_dtri_type_cid_to_Iloc t8_dtet_type_cid_to_Iloc
+#define t8_dtri_face_corner t8_dtet_face_corner
 
 /* functions in d8_dtri_bits.h */
 #define t8_dtri_is_equal t8_dtet_is_equal
@@ -85,11 +86,13 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_is_parent t8_dtet_is_parent
 #define t8_dtri_is_ancestor t8_dtet_is_ancestor
 #define t8_dtri_linear_id t8_dtet_linear_id
+#define t8_dtri_linear_id_corner_desc t8_dtet_linear_id_corner_desc
 #define t8_dtri_init_linear_id t8_dtet_init_linear_id
 #define t8_dtri_init_root t8_dtet_init_root
 #define t8_dtri_successor t8_dtet_successor
 #define t8_dtri_first_descendant t8_dtet_first_descendant
 #define t8_dtri_last_descendant t8_dtet_last_descendant
+#define t8_dtri_corner_descendant t8_dtet_corner_descendant
 #define t8_dtri_predecessor t8_dtet_predecessor
 #define t8_dtri_ancestor_id t8_dtet_ancestor_id
 #define t8_dtri_child_id  t8_dtet_child_id

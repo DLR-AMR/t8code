@@ -43,7 +43,7 @@ T8_EXTERN_C_BEGIN ();
 #define T8_DTET_FACE_CHILDREN 4
 
 /** The number of corners of a tetrahedron */
-#define T8_DTRI_CORNERS 4
+#define T8_DTET_CORNERS 4
 
 /** The maximum refinement level allowed for a tetrahedron.
  *  Must be smaller or equal to T8_DTRI_MAXLEVEL. */

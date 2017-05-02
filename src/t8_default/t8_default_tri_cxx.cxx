@@ -25,6 +25,7 @@
 #include "t8_dtri_bits.h"
 #include "t8_dline_bits.h"
 #include "t8_dtet.h"
+#include "t8_dtri_connectivity.h"
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -250,6 +251,42 @@ t8_default_scheme_tri_c::t8_element_extrude_face (const t8_element_t * face,
    * Since in all cases t has type 0, the face number coincides with
    * the root face number. */
   return t8_dtri_root_face_to_face (t, root_face);
+}
+
+void
+t8_default_scheme_tri_c::t8_element_first_descendant_face (const t8_element_t
+                                                           * elem, int face,
+                                                           t8_element_t *
+                                                           first_desc)
+{
+  int                 corner;
+  T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
+
+  /* Compute the first corner of this face */
+  corner = t8_dtri_face_corner[face][0];
+  /* Compute the descendant in this corner */
+  t8_debugf ("[H] first descendant in corner %i, face is %i\n", corner, face);
+  t8_dtri_corner_descendant ((const t8_dtri_t *) elem,
+                             (t8_dtri_t *) first_desc, corner,
+                             T8_DTRI_MAXLEVEL);
+}
+
+void
+t8_default_scheme_tri_c::t8_element_last_descendant_face (const t8_element_t *
+                                                          elem, int face,
+                                                          t8_element_t *
+                                                          last_desc)
+{
+  int                 corner;
+  T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
+
+  /* Compute the last corner of this face */
+  corner = t8_dtri_face_corner[face][1];
+  /* Compute the descendant in this corner */
+  t8_debugf ("[H] last descendant in corner %i, face is %i\n", corner, face);
+  t8_dtri_corner_descendant ((const t8_dtri_t *) elem,
+                             (t8_dtri_t *) last_desc, corner,
+                             T8_DTRI_MAXLEVEL);
 }
 
 /* Construct the boundary element at a specific face. */

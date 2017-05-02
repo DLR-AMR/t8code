@@ -202,7 +202,6 @@ t8_default_scheme_tet_c::t8_element_extrude_face (const t8_element_t * face,
 {
   const t8_dtri_t    *b = (const t8_dtri_t *) face;
   t8_dtet_t          *t = (t8_dtet_t *) elem;
-  int                 tsface;
 
   T8_ASSERT (0 <= root_face && root_face < T8_DTET_FACES);
   t->level = b->level;
@@ -239,6 +238,42 @@ t8_default_scheme_tet_c::t8_element_extrude_face (const t8_element_t * face,
   }
   /* Compute the face as seen from t */
   return t8_dtet_root_face_to_face (t, root_face);
+}
+
+void
+t8_default_scheme_tet_c::t8_element_first_descendant_face (const t8_element_t
+                                                           * elem, int face,
+                                                           t8_element_t *
+                                                           first_desc)
+{
+  int                 corner;
+  T8_ASSERT (0 <= face && face < T8_DTET_FACES);
+
+  /* Compute the first corner of this face */
+  corner = t8_dtet_face_corner[face][0];
+  /* Compute the descendant in this corner */
+  t8_debugf ("[H] first descendant in corner %i, face is %i\n", corner, face);
+  t8_dtet_corner_descendant ((const t8_dtet_t *) elem,
+                             (t8_dtet_t *) first_desc, corner,
+                             T8_DTET_MAXLEVEL);
+}
+
+void
+t8_default_scheme_tet_c::t8_element_last_descendant_face (const t8_element_t *
+                                                          elem, int face,
+                                                          t8_element_t *
+                                                          last_desc)
+{
+  int                 corner;
+  T8_ASSERT (0 <= face && face < T8_DTET_FACES);
+
+  /* Compute the last corner of this face */
+  corner = t8_dtet_face_corner[face][2];
+  /* Compute the descendant in this corner */
+  t8_debugf ("[H] last descendant in corner %i, face is %i\n", corner, face);
+  t8_dtet_corner_descendant ((const t8_dtet_t *) elem,
+                             (t8_dtet_t *) last_desc, corner,
+                             T8_DTET_MAXLEVEL);
 }
 
 /* Construct the boundary element at a specific face. */

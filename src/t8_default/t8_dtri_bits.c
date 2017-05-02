@@ -1083,15 +1083,55 @@ t8_dtri_linear_id_last_desc (const t8_dtri_t * t, int level)
    * of t */
   id = (((uint64_t) 1) << T8_DTRI_DIM * exponent) - 1;
   /* Set the first bits of id to the id of t itself */
-  id |= t_id << exponent;
+  id |= t_id << T8_DTRI_DIM * exponent;
   return id;
 }
 
 /* Construct the linear id of a descendant in a corner of t */
 static uint64_t
-t8_dtrI_linear_id_corner_desc (const t8_dtri_t * t, int corner)
+t8_dtri_linear_id_corner_desc (const t8_dtri_t * t, int corner, int level)
 {
+  uint64_t            id = 0, t_id, child_id;
+  int                 it;
 
+  T8_ASSERT (0 <= corner && corner < T8_DTRI_CORNERS);
+  T8_ASSERT (t->level <= level && level <= T8_DTRI_MAXLEVEL);
+
+  switch (corner) {
+  case 0:
+    return t8_dtri_linear_id_first_desc (t, level);
+    break;
+  case 1:                      /* Falls down to case 2 in 3D */
+#ifndef T8_DTRI_TO_DTET
+    /* For type 0 triangles, the first corner descendant arises from always
+     * taking the first child. For type 1 triangles it is always the second child. */
+    child_id = t8_dtri_parenttype_beyid_to_Iloc[t->type][1];
+    break;
+#else
+  case 2:
+    /* For tets, the first corner descnendant arises from always taking the n-th
+     * child, where n is the local child id corrensponding to Bey-id corner. */
+    child_id = t8_dtet_parenttype_beyid_to_Iloc[t->type][corner];
+    break;
+#endif
+  case T8_DTRI_DIM:
+    /* In 2D the 2nd corner and in 3D the 3rd corner correspond to the last
+     * descendant of t */
+    return t8_dtri_linear_id_last_desc (t, level);
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+  /* This part is executed for corner 1 (2D) or corner 1 and 2 (3D) */
+  t_id = t8_dtri_linear_id (t, t->level);
+  for (it = 0; it < level - t->level; it++) {
+    /* Store child_id at every position of the new id after t's level and
+     * up to level */
+    id |= child_id << (T8_DTRI_DIM * it);
+  }
+  /* At the beginning add the linear id of t */
+  id |= t_id << (T8_DTRI_DIM * (level - t->level));
+  return id;
 }
 
 uint64_t
@@ -1265,20 +1305,27 @@ void
 t8_dtri_corner_descendant (const t8_dtri_t * t, t8_dtri_t * s, int corner,
                            int level)
 {
+  uint64_t            id;
   T8_ASSERT (t->level <= level && level <= T8_DTRI_MAXLEVEL);
   T8_ASSERT (0 <= corner && corner < T8_DTRI_CORNERS);
 
   switch (corner) {
   case 0:
     /* The 0-the corner descendant is just the first descendant */
-    t8_dtri_first_descendant (t, s);
+    t8_dtri_first_descendant (t, s, level);
     break;
   case 1:
-
-    break;
+#ifdef T8_DTRI_TO_DTET          /* In 3D corner 1 and 2 are handled the same */
   case 2:
-    /* The 2nd corner descendant is just the last descendant */
-    t8_dtri_last_descendant (t, s);
+#endif
+    /* Compute the linear id of the descendant and construct a triangle with
+     * this id */
+    id = t8_dtri_linear_id_corner_desc (t, corner, level);
+    t8_dtri_init_linear_id (s, id, level);
+    break;
+  case T8_DTRI_DIM:
+    /* The 2nd corner (2D) or 3rd corner (3D) descendant is just the last descendant */
+    t8_dtri_last_descendant (t, s, level);
     break;
   default:
     SC_ABORT_NOT_REACHED ();

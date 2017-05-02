@@ -275,6 +275,18 @@ void                t8_dtet_first_descendant (const t8_dtet_t * t,
 void                t8_dtet_last_descendant (const t8_dtet_t * t,
                                              t8_dtet_t * s, int level);
 
+/** Compute the descendant of a tetrahedron in a given corner.
+ * \param [in] t        Tetrahedron whose descendant is computed.
+ * \param [out] s       Existing tetrahedron whose data will be filled with the data
+ *                      of t's descendant in \a corner.
+ * \param [in]  corner  The corner in which the descendant should lie.
+ * \param [in]  level   The refinement level of the descendant. Must be greater or
+ *                      equal to \a t's level.
+ */
+void                t8_dtet_corner_descendant (const t8_dtet_t * t,
+                                               t8_dtet_t * s, int corner,
+                                               int level);
+
 /** Computes the predecessor of a tetrahedron in a uniform grid of level \a level.
  * \param [in] t  tetrahedron whose id will be computed.
  * \param [in,out] s Existing tetrahedron whose data will be filled with the
