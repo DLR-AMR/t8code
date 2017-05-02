@@ -291,6 +291,18 @@ void                t8_dtri_first_descendant (const t8_dtri_t * t,
 void                t8_dtri_last_descendant (const t8_dtri_t * t,
                                              t8_dtri_t * s);
 
+/** Compute the descendant of a triangle in a given corner.
+ * \param [in] t        Triangle whose descendant is computed.
+ * \param [out] s       Existing triangle whose data will be filled with the data
+ *                      of t's descendant in \a corner.
+ * \param [in]  corner  The corner in which the descendant should lie.
+ * \param [in]  level   The refinement level of the descendant. Must be greater or
+ *                      equal to \a t's level.
+ */
+void                t8_dtri_corner_descendant (const t8_dtrit_t * t,
+                                               t8_dtri_t * s, int corner,
+                                               int level);
+
 /** Computes the predecessor of a triangle in a uniform grid of level \a level.
  * \param [in] t  triangle whose id will be computed.
  * \param [in,out] s Existing triangle whose data will be filled with the
