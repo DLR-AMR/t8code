@@ -135,10 +135,12 @@ int                 t8_forest_element_find_owner (t8_forest_t forest,
  *                        all owners of descendants of \a elem that touch \a face
  *                        in ascending order.
  */
-void
-t8_forest_element_owners_at_face (t8_forest_t forest, t8_gloidx_t gtreeid,
-                                  t8_element_t *element, t8_eclass_t eclass,
-                                  int face, sc_array_t *owners);
+void                t8_forest_element_owners_at_face (t8_forest_t forest,
+                                                      t8_gloidx_t gtreeid,
+                                                      t8_element_t * element,
+                                                      t8_eclass_t eclass,
+                                                      int face,
+                                                      sc_array_t * owners);
 
 /** Construct all face neighbors of half size of a given element.
  * \param [in]    forest The forest.
