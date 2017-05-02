@@ -9,6 +9,8 @@ Basic standards:
 TODOs
 =================================
 
+ * Use ParMETIS to partition initial cmesh
+
  * Lassen wir Unterschiede im Level zwischen benachbarten eclasses zu?
    z.Bsp. zwischen Quads/Triangles oder Hexes/Prisms? 
    Wenn ja, wie gehen wir damit um, wenn z.Bsp. Nachbarn berechnet werden und
