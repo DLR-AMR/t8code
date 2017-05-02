@@ -323,8 +323,6 @@ t8_forest_ghost_add_tree (t8_forest_t forest, t8_forest_ghost_t ghost,
   /* Compute the cmesh local id of the tree */
   lctreeid = gtreeid - t8_cmesh_get_first_treeid (cmesh);
   num_cmesh_local_trees = t8_cmesh_get_num_local_trees (cmesh);
-  t8_debugf ("[H] Adding global tree %li to ghost, cid %li\n", gtreeid,
-             (long) lctreeid);
   /* The tree must be a local tree or ghost tree in the cmesh */
   T8_ASSERT (0 <= lctreeid && lctreeid < num_cmesh_local_trees
              + t8_cmesh_get_num_ghosts (cmesh));
@@ -599,6 +597,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
     sc_array_init (&owners, sizeof (int));
   }
 
+  t8_debugf ("[H] Start filling remotes.\n");
   /* Loop over the trees of the forest */
   for (itree = 0; itree < num_local_trees; itree++) {
     /* Get a pointer to the tree, the class of the tree, the
@@ -717,6 +716,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
   else {
     sc_array_reset (&owners);
   }
+  t8_debugf ("[H] Done filling remotes.\n");
 }
 
 /* Begin sending the ghost elements from the remote ranks
@@ -1004,8 +1004,6 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest,
        * thus has as index the number of currently inserted trees. */
       tree_hash->index = ghost->ghost_trees->elem_count;
       found_tree = tree_hash;
-      t8_debugf ("[H] Added tree %li at index %li\n",
-                 global_id, (long) tree_hash->index);
       /* We grow the array by one and initilize the entry */
       ghost_tree = (t8_ghost_tree_t *) sc_array_push (ghost->ghost_trees);
       ghost_tree->global_id = global_id;
@@ -1025,8 +1023,6 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest,
       found_tree = *pfound_tree;
       T8_ASSERT (found_tree->global_id == global_id);
       /* Get a pointer to the tree */
-      t8_debugf ("[H] Found tree %li at index %li\n",
-                 global_id, (long) found_tree->index);
       ghost_tree = (t8_ghost_tree_t *) sc_array_index (ghost->ghost_trees,
                                                        found_tree->index);
       T8_ASSERT (ghost_tree->eclass == eclass);

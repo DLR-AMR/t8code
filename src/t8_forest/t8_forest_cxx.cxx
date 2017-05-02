@@ -765,7 +765,7 @@ t8_forest_element_find_owner (t8_forest_t forest,
 static void
 t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
                                             t8_gloidx_t gtreeid,
-                                            t8_element_t * element,
+                                            const t8_element_t * element,
                                             t8_eclass_t eclass,
                                             t8_eclass_scheme_c * ts, int face,
                                             sc_array_t * owners)
@@ -787,6 +787,8 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
     t8_forest_element_find_owner (forest, gtreeid, first_face_desc, eclass);
   last_owner =
     t8_forest_element_find_owner (forest, gtreeid, last_face_desc, eclass);
+  /* It is impossible for an element with bigger id to belong to a smaller process */
+  T8_ASSERT (first_owner <= last_owner);
 
   if (first_owner == last_owner) {
     /* This element has a unique owner, no recursion is necessary */
