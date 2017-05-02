@@ -701,6 +701,47 @@ t8_dtri_tree_face (t8_dtri_t * t, int face)
 }
 
 int
+t8_dtri_root_face_to_face (t8_dtri_t * t, int root_face)
+{
+  T8_ASSERT (0 <= root_face && root_face < T8_DTRI_FACES);
+#ifndef T8_DTRI_TO_DTET
+  T8_ASSERT (t->type == 0);
+  /* For triangles of type 0 the face number coincides with the number of the
+   * root tree face. Triangles of type 1 cannot lie on the boundary of the
+   * tree and thus the return value can be arbitrary. */
+  return root_face;
+#else
+  /* For tets only tets of type not 3 can have tree boundary faces.
+   * All these tets of type not 0 (types 1, 2, 4, and 5) can only have one of
+   * their faces as boundary face. */
+  T8_ASSERT (t->type != 3);
+  switch (t->type) {
+  case 0:
+    return root_face;
+    break;
+  case 1:
+    T8_ASSERT (root_face == 0);
+    return 0;
+    break;                      /* face 0 of the tet is the boundary face */
+  case 2:
+    T8_ASSERT (root_face == 1);
+    return 2;
+    break;                      /* face 2     "                "          */
+  case 4:
+    T8_ASSERT (root_face == 2);
+    return 1;
+    break;                      /* face 1     "                "          */
+  case 5:
+    T8_ASSERT (root_face == 3);
+    return 3;
+    break;                      /* face 3     "                "          */
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+#endif
+}
+
+int
 t8_dtri_face_child_face (const t8_dtri_t * triangle, int face, int face_child)
 {
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);

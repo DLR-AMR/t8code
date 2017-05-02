@@ -391,7 +391,7 @@ t8_default_scheme_quad_c::t8_element_transform_face (const t8_element_t *
   }
 }
 
-void
+int
 t8_default_scheme_quad_c::t8_element_extrude_face (const t8_element_t * face,
                                                    t8_element_t * elem,
                                                    int root_face)
@@ -436,6 +436,9 @@ t8_default_scheme_quad_c::t8_element_extrude_face (const t8_element_t * face,
   default:
     SC_ABORT_NOT_REACHED ();
   }
+  /* We return the face of q at which we extruded. This is the same number
+   * as root_face. */
+  return root_face;
 }
 
 int
@@ -557,13 +560,22 @@ int
 t8_default_scheme_quad_c::t8_element_face_neighbor_inside (const t8_element_t
                                                            * elem,
                                                            t8_element_t *
-                                                           neigh, int face)
+                                                           neigh, int face,
+                                                           int *neigh_face)
 {
   const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
   p4est_quadrant_t   *n = (p4est_quadrant_t *) neigh;
 
   T8_ASSERT (0 <= face && face < P4EST_FACES);
+  /* Construct the face neighbor */
   p4est_quadrant_face_neighbor (q, face, n);
+  T8_QUAD_SET_TDIM (n, 2);
+  /* Compute the face number as seen from q.
+   *  0 -> 1    2 -> 3
+   *  1 -> 0    3 -> 2
+   */
+  T8_ASSERT (neigh_face != NULL);
+  *neigh_face = p4est_face_dual[face];
   /* return true if neigh is inside the root */
   return p4est_quadrant_is_inside_root (n);
 }

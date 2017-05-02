@@ -195,13 +195,14 @@ t8_default_scheme_tet_c::t8_element_tree_face (const t8_element_t * elem,
  * the compile logic does not allow for t8_dtri_t and t8_dtet_t to exist
  * both in t8_dtri_bits.c. This would be needed by an implementation, at least
  * for tets. */
-void
+int
 t8_default_scheme_tet_c::t8_element_extrude_face (const t8_element_t * face,
                                                   t8_element_t * elem,
                                                   int root_face)
 {
   const t8_dtri_t    *b = (const t8_dtri_t *) face;
   t8_dtet_t          *t = (t8_dtet_t *) elem;
+  int                 tsface;
 
   T8_ASSERT (0 <= root_face && root_face < T8_DTET_FACES);
   t->level = b->level;
@@ -236,6 +237,8 @@ t8_default_scheme_tet_c::t8_element_extrude_face (const t8_element_t * face,
   default:
     SC_ABORT_NOT_REACHED ();
   }
+  /* Compute the face as seen from t */
+  return t8_dtet_root_face_to_face (t, root_face);
 }
 
 /* Construct the boundary element at a specific face. */
@@ -311,13 +314,15 @@ int
 t8_default_scheme_tet_c::t8_element_face_neighbor_inside (const t8_element_t *
                                                           elem,
                                                           t8_element_t *
-                                                          neigh, int face)
+                                                          neigh, int face,
+                                                          int *neigh_face)
 {
   const t8_dtet_t    *t = (const t8_dtet_t *) elem;
   t8_dtet_t          *n = (t8_dtet_t *) neigh;
 
   T8_ASSERT (0 <= face && face < T8_DTET_FACES);
-  (void) t8_dtet_face_neighbour (t, face, n);
+  T8_ASSERT (neigh_face != NULL);
+  *neigh_face = t8_dtet_face_neighbour (t, face, n);
   /* return true if neigh is inside the root */
   return t8_dtet_is_inside_root (n);
 }

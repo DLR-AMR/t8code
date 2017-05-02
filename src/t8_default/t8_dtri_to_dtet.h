@@ -77,6 +77,7 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_children_at_face t8_dtet_children_at_face
 #define t8_dtri_face_child_face t8_dtet_face_child_face
 #define t8_dtri_tree_face t8_dtet_tree_face
+#define t8_dtri_root_face_to_face t8_dtet_root_face_to_face
 #define t8_dtri_is_inside_root t8_dtet_is_inside_root
 #define t8_dtri_is_root_boundary t8_dtet_is_root_boundary
 #define t8_dtri_is_sibling t8_dtet_is_sibling

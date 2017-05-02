@@ -316,8 +316,10 @@ public:
    *                      lies within the root tree.
    * \param [in] root_face The index of the face of the root tree in which \a face
    *                      lies.
+   * \return              The face number of the face of \a elem that coincides
+   *                      with \a face.
    */
-  virtual void        t8_element_extrude_face (const t8_element_t * face,
+  virtual int         t8_element_extrude_face (const t8_element_t * face,
                                                t8_element_t * elem,
                                                int root_face) = 0;
 
@@ -382,6 +384,8 @@ public:
    *                  arbitrarily.
    * \param [in] face The number of the face along which the neighbor should be
    *                  constructed.
+   * \param [out] neigh_face The number of \a face as viewed from \a neigh.
+   *                  An arbitrary value, if the neighbor is not inside the root tree.
    * \return          True if \a neigh is inside the root tree.
    *                  False if not. In this case \a neigh's data can be arbitrary
    *                  on output.
@@ -389,7 +393,8 @@ public:
   virtual int         t8_element_face_neighbor_inside (const t8_element_t *
                                                        elem,
                                                        t8_element_t * neigh,
-                                                       int face) = 0;
+                                                       int face,
+                                                       int *neigh_face) = 0;
 
   /** Initialize the entries of an allocated element according to a
    *  given linear id in a uniform refinement.

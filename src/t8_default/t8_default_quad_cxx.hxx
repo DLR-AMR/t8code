@@ -172,7 +172,7 @@ public:
   /** Given a boundary face inside a root tree's face construct
    *  the element inside the root tree that has the given face as a
    *  face. */
-  virtual void        t8_element_extrude_face (const t8_element_t * face,
+  virtual int         t8_element_extrude_face (const t8_element_t * face,
                                                t8_element_t * elem,
                                                int root_face);
 
@@ -214,7 +214,8 @@ public:
   virtual int         t8_element_face_neighbor_inside (const t8_element_t *
                                                        elem,
                                                        t8_element_t * neigh,
-                                                       int face);
+                                                       int face,
+                                                       int *neigh_face);
 
 /** Initialize an element according to a given linear id */
   virtual void        t8_element_set_linear_id (t8_element_t * elem,

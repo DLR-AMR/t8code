@@ -264,7 +264,7 @@ t8_default_scheme_hex_c::t8_element_tree_face (const t8_element_t * elem,
   return face;
 }
 
-void
+int
 t8_default_scheme_hex_c::t8_element_extrude_face (const t8_element_t * face,
                                                   t8_element_t * elem,
                                                   int root_face)
@@ -437,13 +437,25 @@ int
 t8_default_scheme_hex_c::t8_element_face_neighbor_inside (const t8_element_t *
                                                           elem,
                                                           t8_element_t *
-                                                          neigh, int face)
+                                                          neigh, int face,
+                                                          int *neigh_face)
 {
   const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
   p8est_quadrant_t   *n = (p8est_quadrant_t *) neigh;
 
   T8_ASSERT (0 <= face && face < P8EST_FACES);
+  /* Compute the face neighbor */
   p8est_quadrant_face_neighbor (q, face, n);
+
+  /* Compute the face of q that coincides with face.
+   * face   neigh_face    face      neigh_face
+   *   0        1           4           5
+   *   1        0           5           4
+   *   2        3
+   *   3        2
+   */
+  T8_ASSERT (neigh_face != NULL);
+  *neigh_face = p8est_face_dual[face];
   /* return true if neigh is inside the root */
   return p8est_quadrant_is_inside_root (n);
 }

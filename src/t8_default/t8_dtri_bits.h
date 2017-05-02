@@ -155,12 +155,25 @@ int                 t8_dtri_face_child_face (const t8_dtri_t * triangle,
  *  tree boundary, return the face number of the tree face.
  *  If not the return value is arbitrary.
  * \param [in] t        The triangle.
- * \param [in] face     The index of a face of \a elem.
+ * \param [in] face     The index of a face of \a t.
  * \return The index of the tree face that \a face is a subface of, if
  *         \a face is on a tree boundary.
- *         Any arbitrary integer if \a is not at a tree boundary.
+ *         Any arbitrary integer if \a t is not at a tree boundary.
+ * \note For boundary triangles, this function is the inverse of \ref t8_dtri_root_face_to_face
  */
 int                 t8_dtri_tree_face (t8_dtri_t * t, int face);
+
+/** Given a triangle and a face of the root triangle. If the triangle lies on the
+ *  tree boundary, return the corresponding face number of the triangle.
+ *  If not the return value is arbitrary.
+ * \param [in] t        The triangle.
+ * \param [in] face     The index of a face of the root element.
+ * \return The index of the face of \a t that is a subface of \a face, if
+ *         \a t is on the tree boundary.
+ *         Any arbitrary integer if \a t is not at a tree boundary.
+ * \note For boundary triangles, this function is the inverse of \ref t8_dtri_tree_face
+ */
+int                 t8_dtri_root_face_to_face (t8_dtri_t * t, int root_face);
 
 /** Suppose we have two trees that share a common triangle f.
  *  Given a triangle e that is a subface of f in one of the trees
