@@ -54,8 +54,8 @@ void                t8_dline_parent (const t8_dline_t * l,
 
 /** Compute the childid-th child in Morton order of a line.
  * \param [in] l    Input Line.
- * \param [in,out] childid The id of the child, 0 or 1, in Morton order.
- * \param [out] child  Existing Line whose data will be filled
+ * \param [in] childid The id of the child, 0 or 1, in Morton order.
+ * \param [in,out] child  Existing Line whose data will be filled
  * 		    with the date of l's childid-th child.
  */
 void                t8_dline_child (const t8_dline_t * l, int childid,

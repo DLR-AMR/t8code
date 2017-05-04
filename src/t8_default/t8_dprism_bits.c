@@ -87,30 +87,36 @@ t8_dprism_successor (const t8_dprism_t * l, t8_dprism_t * succ, int level)
   succ->tri.level = level;
   tri_child_id = t8_dtri_child_id(&succ->tri);
   line_child_id = t8_dline_child_id(&succ->line);
-  /*t8_debugf("l->level: %i, Level: %i tri_id: %i, line_id: %i \n", succ->line.level, level, tri_child_id, line_child_id);
-*/
   T8_ASSERT(1 <= level && level <= T8_DPRISM_MAXLEVEL);
 
+  /*The next prism is the child with local ID 0 of the next parent prism*/
   if(tri_child_id == 3 && line_child_id == 1)
   {
       t8_dprism_successor(l, succ, level - 1);
+      /*Zero out the bits of higher level, caused by recursion*/
+      succ->tri.x = (succ->tri.x >> (T8_DTRI_MAXLEVEL-level+1)) << (T8_DTRI_MAXLEVEL-level+1);
+      succ->tri.y = (succ->tri.y >> (T8_DTRI_MAXLEVEL-level+1)) << (T8_DTRI_MAXLEVEL-level+1);
+      succ->line.x = (succ->line.x >> (T8_DTRI_MAXLEVEL-level+1)) << (T8_DTRI_MAXLEVEL-level+1);
+
+      /*Set the level to the actual level*/
       succ->line.level = level;
       succ->tri.level = level;
   }
+  /*The next prism is one plane up, local_tri_id = 0*/
   else if(tri_child_id == 3 && line_child_id == 0)
   {
 
+      t8_dtri_parent(&succ->tri, &succ->tri);
+      t8_dtri_child(&succ->tri, 0,&succ->tri );
       t8_dline_successor(&l->line, &succ->line, level);
-      t8_dtri_parent(&l->tri, &succ->tri);
-      t8_dtri_child(&succ->tri, 0, &succ->tri);
-
-      t8_debugf("\nLineid: %i\n", (int)t8_dline_child_id(&succ->line));
-      t8_debugf("\nPrism_id: %i\n", (int)t8_dprism_linear_id(succ, level));
   }
+  /*The next Prism is in the same plane, but has the next base-triangle*/
   else
   {
       t8_dtri_successor(&l->tri, &succ->tri, level);
   }
+
+
 }
 
 void
@@ -159,8 +165,6 @@ t8_dprism_linear_id (const t8_dprism_t * elem, int level)
 
   tri_id = t8_dtri_linear_id (&elem->tri, level);
   line_id = t8_dline_linear_id (&elem->line, level);
-
-  printf("linear_id: line_id:%i, tri_id:%i ", (int)line_id, (int)tri_id);
   for (i = 0; i < level; i++) {
     /*Compute via getting the local id of each ancestor triangle in which
      *elem->tri lies, the prism id, that elem would have, if it lies on the
@@ -175,12 +179,10 @@ t8_dprism_linear_id (const t8_dprism_t * elem, int level)
   for (i = level - 1; i >= 0; i--) {
     /*The number to add to the id computed via the tri_id is 4*8^(level-i)
      *for each upper half in a prism of size i*/
-    if(line_id / line_level > 0)printf("shift:%i ", prism_shift);
     id += (line_id / line_level > 0) ?  prism_shift : 0;
     line_id = (uint64_t) (line_id % line_level);
     prism_shift /= 8;
     line_level /= 2;
   }
-  printf("prism_id:%i\n",(int)id);
   return id;
 }

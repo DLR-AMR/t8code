@@ -31,12 +31,14 @@
 
 T8_EXTERN_C_BEGIN ();
 
+
 /** Copy the values of one triangle to another.
  * \param [in] t Triangle whose values will be copied.
  * \param [in,out] dest Existing triangle whose data will be
  *                      filled with the data of \a t. *
  */
 void                t8_dtri_copy (const t8_dtri_t * t, t8_dtri_t * dest);
+
 
 /** Compute the parent of a triangle.
  * \param [in]  elem Input triangle.
