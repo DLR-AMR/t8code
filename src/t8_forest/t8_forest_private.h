@@ -44,6 +44,27 @@ void                t8_forest_compute_desc (t8_forest_t forest);
  * of the coarse mesh. */
 void                t8_forest_populate (t8_forest_t forest);
 
+/** Return the eclass scheme of a given element class associated to a forest.
+ * This function does not check whether the given forest is committed, use with
+ * caution and only if you are shure that the eclass_scheme was set.
+ * \param [in]      forest.     A nearly committed forest.
+ * \param [in]      eclass.     An element class.
+ * \return          The eclass scheme of \a eclass associated to forest.
+ * \see t8_forest_set_scheme
+ * \note  The forest is not required to have trees of class \a eclass.
+ */
+t8_eclass_scheme_c *t8_forest_get_eclass_scheme_before_commit (t8_forest_t
+                                                               forest,
+                                                               t8_eclass_t
+                                                               eclass);
+
+/** Compute the maximum possible refinement level in a forest.
+ * This is the minimum over all maimum refinement level of the present element
+ * classes.
+ * \param [in,out] forest The forest.
+ */
+void                t8_forest_compute_maxlevel (t8_forest_t forest);
+
 /** return nonzero if the first tree of a forest is shared with a smaller
  * process.
  * This is the case if and only if the first descendant of the first tree that we store is

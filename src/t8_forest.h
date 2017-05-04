@@ -256,6 +256,19 @@ void                t8_forest_comm_global_num_elements (t8_forest_t forest);
  */
 void                t8_forest_commit (t8_forest_t forest);
 
+/** Return the maximum allowed refinement level for any element in a forest.
+ * \param [in]  forest    A forest.
+ * \return                The maximum level of refinement that is allowed for
+ *                        an element in this forest. It is guarenteed that any tree
+ *                        in \a forest can be refined this many times and it is not
+ *                        allowed to refine further.
+ * \a forest must be committed before calling this function.
+ * For forest with a single element class (non-hybrid) maxlevel is the maximum
+ * refinement level of this element class, whilst for hybrid forests the maxlevel is
+ * the minimum of all maxlevels of the element classes in this forest.
+ */
+int                 t8_forest_get_maxlevel (t8_forest_t forest);
+
 t8_locidx_t         t8_forest_get_num_element (t8_forest_t forest);
 
 t8_gloidx_t         t8_forest_get_global_num_elements (t8_forest_t forest);

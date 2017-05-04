@@ -270,16 +270,22 @@ t8_forest_commit (t8_forest_t forest)
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
 
+  /* Compute the maximum allowed refinement level */
+  t8_forest_compute_maxlevel (forest);
+
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of commit */
     forest->profile->commit_runtime = sc_MPI_Wtime ();
   }
 
   if (forest->set_from == NULL) {
+    /* This forest is constructed solely from its cmesh as a uniform
+     * forest */
     T8_ASSERT (forest->mpicomm != sc_MPI_COMM_NULL);
     T8_ASSERT (forest->cmesh != NULL);
     T8_ASSERT (forest->scheme_cxx != NULL);
     T8_ASSERT (forest->from_method == T8_FOREST_FROM_LAST);
+    T8_ASSERT (forest->set_level <= forest->maxlevel);
 
     /* dup communicator if requested */
     if (forest->do_dup) {
@@ -727,6 +733,17 @@ t8_eclass_scheme_c *
 t8_forest_get_eclass_scheme (t8_forest_t forest, t8_eclass_t eclass)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->scheme_cxx != NULL);
+  T8_ASSERT (eclass != T8_ECLASS_COUNT);
+
+  return forest->scheme_cxx->eclass_schemes[eclass];
+}
+
+t8_eclass_scheme_c *
+t8_forest_get_eclass_scheme_before_commit (t8_forest_t forest,
+                                           t8_eclass_t eclass)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
   T8_ASSERT (forest->scheme_cxx != NULL);
   T8_ASSERT (eclass != T8_ECLASS_COUNT);
 

@@ -26,12 +26,62 @@
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_cxx.h>
 #include <t8_forest/t8_forest_partition.h>
+#include <t8_forest/t8_forest_private.h>
 #include <t8_element_cxx.hxx>
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
+
+/* Compute the maximum possible refinement level in a forest. */
+void
+t8_forest_compute_maxlevel (t8_forest_t forest)
+{
+  /* Ensure that the maxlevel does not increase the maximum level of any
+   * class in the forest */
+  int                 eclass_it;
+  int                 maxlevel;
+  t8_eclass_scheme_c *ts;
+
+  forest->maxlevel = -1;
+  for (eclass_it = 0; eclass_it < T8_ECLASS_COUNT; eclass_it++) {
+    if (forest->cmesh->num_trees_per_eclass[eclass_it] > 0) {
+      /* If there are trees of this class, compute the maxlevel of the class */
+      ts = t8_forest_get_eclass_scheme_before_commit (forest, (t8_eclass_t)
+                                                      eclass_it);
+      maxlevel = ts->t8_element_maxlevel ();
+      /* Compute the minimum of this level and the stored maxlevel */
+      if (forest->maxlevel == -1) {
+        forest->maxlevel = maxlevel;
+      }
+      else {
+        forest->maxlevel = SC_MIN (maxlevel, forest->maxlevel);
+      }
+    }
+  }
+}
+
+/* Return the maximum level of a forest */
+int
+t8_forest_get_maxlevel (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->maxlevel >= 0);
+#ifdef T8_ENABLE_DEBUG
+  /* Ensure that the maxlevel does not increase the maximum level of any
+   * class in the forest */
+  int                 eclass_it;
+  t8_eclass_scheme_c *ts;
+  for (eclass_it = 0; eclass_it < T8_ECLASS_COUNT; eclass_it++) {
+    if (forest->cmesh->num_trees_per_eclass[eclass_it] > 0) {
+      ts = t8_forest_get_eclass_scheme (forest, (t8_eclass_t) eclass_it);
+      T8_ASSERT (forest->maxlevel <= ts->t8_element_maxlevel ());
+    }
+  }
+#endif
+  return forest->maxlevel;
+}
 
 /* Given function values at the four edge points of a unit square and
  * a point within that square, interpolate the function value at this point.
@@ -175,6 +225,8 @@ t8_forest_populate (t8_forest_t forest)
   t8_eclass_scheme_c *eclass_scheme;
   t8_gloidx_t         cmesh_first_tree, cmesh_last_tree;
 
+  SC_CHECK_ABORT (forest->set_level <= forest->maxlevel,
+                  "Given refinement level exceeds the maximum.\n");
   /* TODO: create trees and quadrants according to uniform refinement */
   t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level,
                            &forest->first_local_tree, &child_in_tree_begin,
@@ -562,6 +614,9 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
   eclass = tree->eclass;
   /* The eclass scheme for the current tree */
   ts = t8_forest_get_eclass_scheme (forest, eclass);
+  SC_CHECK_ABORT (ts->t8_element_level (elem) <
+                  t8_forest_get_maxlevel (forest),
+                  "Trying to refine an element beyond its maximum allowed level.");
   /* The number of children of elem at face */
   T8_ASSERT (num_neighs == ts->t8_element_num_face_children (elem, face));
   num_children_at_face = num_neighs;
@@ -810,6 +865,8 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
     return;
   }
   else {
+    T8_ASSERT (ts->t8_element_level (element) <
+               t8_forest_get_maxlevel (forest));
     /* This element has different owners, we have to create its face
      * children and continue with the recursion. */
     num_children = ts->t8_element_num_face_children (element, face);

@@ -60,6 +60,7 @@ typedef struct t8_forest
   t8_cmesh_t          cmesh;            /**< Coarse mesh to use. */
   //t8_scheme_t        *scheme;        /**< Scheme for element types. */
   t8_scheme_cxx_t    *scheme_cxx;        /**< Scheme for element types. */
+  int                 maxlevel;         /**< The maximum allowed refinement level for elements in this forest. */
   int                 do_dup;           /**< Communicator shall be duped. */
   int                 dimension;        /**< Dimension inferred from \b cmesh. */
 
