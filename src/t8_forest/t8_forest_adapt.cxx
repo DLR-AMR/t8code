@@ -122,8 +122,7 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
     num_children = ts->t8_element_num_children (el_buffer[0]);
     if (forest->set_adapt_fn (forest, ltreeid, ts, 1, el_buffer) > 0) {
       /* The element should be refined */
-      if (ts->t8_element_level (el_buffer[0]) <
-          t8_forest_get_maxlevel (forest)) {
+      if (ts->t8_element_level (el_buffer[0]) < forest->maxlevel) {
         /* only refine, if we do not exceed the maximum allowed level */
         ts->t8_element_new (num_children - 1, el_buffer + 1);
         if (forest->set_replace_fn != NULL) {
@@ -234,7 +233,7 @@ t8_forest_adapt (t8_forest_t forest)
                                      elements_from);
       T8_ASSERT (is_family || refine >= 0);
       if (refine > 0 && tscheme->t8_element_level (elements_from[0]) >=
-          t8_forest_get_maxlevel (forest)) {
+          forest->maxlevel) {
         /* Only refine an element if it does not exceed the maximum level */
         refine = 0;
       }

@@ -270,9 +270,6 @@ t8_forest_commit (t8_forest_t forest)
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
 
-  /* Compute the maximum allowed refinement level */
-  t8_forest_compute_maxlevel (forest);
-
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of commit */
     forest->profile->commit_runtime = sc_MPI_Wtime ();
@@ -285,7 +282,6 @@ t8_forest_commit (t8_forest_t forest)
     T8_ASSERT (forest->cmesh != NULL);
     T8_ASSERT (forest->scheme_cxx != NULL);
     T8_ASSERT (forest->from_method == T8_FOREST_FROM_LAST);
-    T8_ASSERT (forest->set_level <= forest->maxlevel);
 
     /* dup communicator if requested */
     if (forest->do_dup) {
@@ -299,6 +295,9 @@ t8_forest_commit (t8_forest_t forest)
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Comm_rank (forest->mpicomm, &forest->mpirank);
     SC_CHECK_MPI (mpiret);
+    /* Compute the maximum allowed refinement level */
+    t8_forest_compute_maxlevel (forest);
+    T8_ASSERT (forest->set_level <= forest->maxlevel);
     /* populate a new forest with tree and quadrant objects */
     t8_forest_populate (forest);
     forest->global_num_trees = t8_cmesh_get_num_trees (forest->cmesh);
@@ -330,14 +329,16 @@ t8_forest_commit (t8_forest_t forest)
     SC_CHECK_MPI (mpiret);
 
     /* increase reference count of cmesh and scheme from the input forest */
-    t8_cmesh_ref (forest->cmesh = forest->set_from->cmesh);
-    t8_scheme_cxx_ref (forest->scheme_cxx = forest->set_from->scheme_cxx);
+    t8_cmesh_ref (forest->set_from->cmesh);
+    t8_scheme_cxx_ref (forest->set_from->scheme_cxx);
     /* set the dimension, cmesh and scheme from the old forest */
     forest->dimension = forest->set_from->dimension;
     forest->cmesh = forest->set_from->cmesh;
     forest->scheme_cxx = forest->set_from->scheme_cxx;
     forest->global_num_trees = forest->set_from->global_num_trees;
 
+    /* Compute the maximum allowed refinement level */
+    t8_forest_compute_maxlevel (forest);
     /* TODO: currently we can only handle copy, adapt, and partition */
     /* T8_ASSERT (forest->from_method == T8_FOREST_FROM_COPY); */
     if (forest->from_method == T8_FOREST_FROM_ADAPT) {

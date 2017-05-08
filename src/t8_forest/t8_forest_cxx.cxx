@@ -45,7 +45,7 @@ t8_forest_compute_maxlevel (t8_forest_t forest)
   t8_eclass_scheme_c *ts;
 
   forest->maxlevel = -1;
-  for (eclass_it = 0; eclass_it < T8_ECLASS_COUNT; eclass_it++) {
+  for (eclass_it = T8_ECLASS_VERTEX; eclass_it < T8_ECLASS_COUNT; eclass_it++) {
     if (forest->cmesh->num_trees_per_eclass[eclass_it] > 0) {
       /* If there are trees of this class, compute the maxlevel of the class */
       ts = t8_forest_get_eclass_scheme_before_commit (forest, (t8_eclass_t)

@@ -16,6 +16,9 @@ TODOs
    Wenn ja, wie gehen wir damit um, wenn z.Bsp. Nachbarn berechnet werden und
    dies nicht geht, da das Level des aktuellen Elementes hoeher ist als das
    Maxlevel der Nachbar-eclass?
+    -> forest hat ein maxlevel
+    * Dieses maxlevel muss auch die niederdimensionalen maxlevels mit
+      einbeziehen!
 
 Für die Berechnungen auf Juqueen:
 

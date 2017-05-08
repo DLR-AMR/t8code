@@ -111,7 +111,9 @@ typedef struct t8_cmesh
   t8_locidx_t         num_local_trees; /**< If partitioned the number of trees on this process. Otherwise the global number of trees. */
   t8_locidx_t         num_ghosts; /**< If partitioned the number of neighbor trees
                                     owned by different processes. */
-  /* TODO: wouldnt a local num_trees_per_eclass be better? */
+  /* TODO: wouldnt a local num_trees_per_eclass be better?
+   *       only as an additional info. we need the global count. i.e. for forest_maxlevel computation.
+   */
   t8_gloidx_t         num_trees_per_eclass[T8_ECLASS_COUNT]; /**< After commit the number of
                                                                  trees for each eclass. */
 
