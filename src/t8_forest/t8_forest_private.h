@@ -65,6 +65,18 @@ t8_eclass_scheme_c *t8_forest_get_eclass_scheme_before_commit (t8_forest_t
  */
 void                t8_forest_compute_maxlevel (t8_forest_t forest);
 
+/** Compute the minimum possible uniform refinement level on a cmesh such
+ * that no process is empty.
+ * \param [in]  cmesh       The cmesh.
+ * \param [in]  scheme      The element scheme for which refinement is considered.
+ * \return                  The smallest refinement level l, such that a
+ *                          uniform level \a l refined forest would have no empty
+ *                          processes.
+ * \see t8_forest_new_uniform.
+ */
+int                 t8_forest_min_nonempty_level (t8_cmesh_t cmesh,
+                                                  t8_scheme_cxx_t * scheme);
+
 /** return nonzero if the first tree of a forest is shared with a smaller
  * process.
  * This is the case if and only if the first descendant of the first tree that we store is

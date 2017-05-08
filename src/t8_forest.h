@@ -291,6 +291,17 @@ t8_locidx_t         t8_forest_get_num_ghosts (t8_forest_t forest);
 t8_eclass_t         t8_forest_get_eclass (t8_forest_t forest,
                                           t8_locidx_t ltreeid);
 
+/** Given a global tree id compute the forest local id of this tree.
+ * If the tree is a local tree, then the local id is between 0 and the number
+ * of local trees. If the tree is not a local tree, a negative number is returned.
+ * \param [in]      forest The forest.
+ * \param [in]      gtreeid The global id of a tree.
+ * \return                 The tree's local id in \a forest, if it is a local tree.
+ *                         A negative number if not.
+ */
+t8_locidx_t         t8_forest_get_local_id (t8_forest_t forest,
+                                            t8_gloidx_t gtreeid);
+
 /** Given the local id of a tree in a forest, compute the tree's local id
  * in the associated cmesh.
  *  \param [in] forest    The forest.

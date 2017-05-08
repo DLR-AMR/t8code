@@ -759,6 +759,27 @@ t8_forest_get_eclass (t8_forest_t forest, t8_locidx_t ltreeid)
 }
 
 t8_locidx_t
+t8_forest_get_local_id (t8_forest_t forest, t8_gloidx_t gtreeid)
+{
+  t8_gloidx_t         ltreeid;
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (0 <= gtreeid
+             && gtreeid < t8_forest_get_num_global_trees (forest));
+
+  /* If the tree is local then its local id is the global id minus the
+   * first global tree id on this forest. If this number if not in the
+   * range of local tree ids then the tree is not local. */
+  ltreeid = gtreeid - t8_forest_get_first_local_tree_id (forest);
+  /* Check if this tree is a local tree and if so return its local id */
+  if (0 <= ltreeid && ltreeid < t8_forest_get_num_local_trees (forest)) {
+    return ltreeid;
+  }
+  else {
+    return -1;
+  }
+}
+
+t8_locidx_t
 t8_forest_ltreeid_to_cmesh_ltreeid (t8_forest_t forest, t8_locidx_t ltreeid)
 {
   t8_gloidx_t         cmesh_gfirst;

@@ -83,6 +83,49 @@ t8_forest_get_maxlevel (t8_forest_t forest)
   return forest->maxlevel;
 }
 
+/* Compute the minimum refinement level, such that a uniform forest on a cmesh
+ * does not have empty processes */
+int
+t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_cxx_t * scheme)
+{
+  int                 level, min_num_childs, maxlevel;
+  t8_eclass_scheme_c *ts;
+  int                 eclass;
+  t8_element_t       *element;
+
+  if (cmesh->mpisize <= cmesh->num_trees) {
+    /* If there are more trees than processes, level 0 is the minimum */
+    return 0;
+  }
+
+  /* Compute the minumum number of children for a tree in the cmesh */
+  /* Also compute the maximum possible level */
+  min_num_childs = 100;
+  maxlevel = 100;
+  for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; eclass++) {
+    if (cmesh->num_trees_per_eclass[eclass] > 0) {
+      ts = scheme->eclass_schemes[eclass];
+      /* Compute the number of children of the root tree. */
+      ts->t8_element_new (1, &element);
+      ts->t8_element_set_linear_id (element, 0, 0);
+      min_num_childs =
+        SC_MIN (min_num_childs, ts->t8_element_num_children (element));
+      ts->t8_element_destroy (1, &element);
+      /* Compute the minimum possible maximum refinement level */
+      maxlevel = SC_MIN (maxlevel, ts->t8_element_maxlevel ());
+    }
+  }
+
+  /* To compute the level, we need the smallest l such that
+   * trees * min_num_child^l >= mpisize
+   *  <=>  l >= log (mpisize/trees) / log (min_num_child)
+   */
+  level =
+    ceil (log (cmesh->mpisize / (double) cmesh->num_trees) /
+          log (min_num_childs));
+  return level;
+}
+
 /* Given function values at the four edge points of a unit square and
  * a point within that square, interpolate the function value at this point.
  * \param [in]    vertex  An array of size at least dim giving the coordinates of the vertex to interpolate
