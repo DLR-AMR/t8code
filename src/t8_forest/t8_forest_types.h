@@ -171,7 +171,8 @@ typedef struct t8_forest_ghost
   sc_array_t         *processes;        /* ranks of the processes */
 #endif
   sc_hash_array_t    *remote_ghosts;    /* array of local trees that have ghost elements for another process.
-                                           for each tree an array of t8_element_t * pointing to the local ghost elements.
+                                           for each tree an array of t8_element_t * of the local ghost elements.
+                                           Also an array of t8_locidx_t of the local indices of these elements whithin the tree.
                                            It is a hash table, hashed with the rank of a remote process.
                                            Sorted within each process by linear id.
                                          */

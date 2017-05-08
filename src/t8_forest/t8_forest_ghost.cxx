@@ -72,7 +72,8 @@ typedef struct
   t8_gloidx_t         global_id;        /* global id of the tree */
   int                 mpirank;  /* The mpirank of the remote process */
   t8_eclass_t         eclass;   /* The trees element class */
-  sc_array_t          elements; /* The ghost elements of that tree */
+  sc_array_t          elements; /* The remote elements of that tree */
+  sc_array_t          element_indices;  /* The (tree) local indices of the ghost elements. */
 } t8_ghost_remote_tree_t;
 
 typedef struct
@@ -470,6 +471,8 @@ t8_ghost_init_remote_tree (t8_forest_t forest, t8_gloidx_t gtreeid,
   remote_tree->eclass = t8_forest_get_eclass (forest, local_treeid);
   /* Initialize the array to store the element */
   sc_array_init (&remote_tree->elements, ts->t8_element_size ());
+  /* Initialize the array to store the element indices. */
+  sc_array_init (&remote_tree->element_indices, sizeof (t8_locidx_t));
 }
 
 /* Add a new element to the remote hash table (if not already in it).
@@ -477,7 +480,7 @@ t8_ghost_init_remote_tree (t8_forest_t forest, t8_gloidx_t gtreeid,
 static void
 t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
                      int remote_rank, t8_locidx_t ltreeid,
-                     t8_element_t * elem)
+                     t8_element_t * elem, t8_locidx_t element_index)
 {
   t8_ghost_remote_t   remote_entry_lookup, *remote_entry;
   t8_ghost_remote_tree_t *remote_tree;
@@ -540,7 +543,7 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
                                  remote_tree);
     }
   }
-  /* remote_tree now points to a valid entry fore the tree.
+  /* remote_tree now points to a valid entry for the tree.
    * We can add a copy of the element to the elements array
    * if it does not exist already. If it exists it is the last entry in
    * the array. */
@@ -559,8 +562,12 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
       level != copy_level ||
       ts->t8_element_get_linear_id (elem_copy, copy_level) !=
       ts->t8_element_get_linear_id (elem, level)) {
+    /* Add the element */
     elem_copy = (t8_element_t *) sc_array_push (&remote_tree->elements);
     ts->t8_element_copy (elem, elem_copy);
+    /* Add the index of the element */
+    *(t8_locidx_t *) sc_array_push (&remote_tree->element_indices) =
+      element_index;
   }
 }
 
@@ -680,7 +687,8 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
               T8_ASSERT (0 <= owner && owner < forest->mpisize);
               if (owner != forest->mpirank) {
                 /* Add the element as a remote element */
-                t8_ghost_add_remote (forest, ghost, owner, itree, elem);
+                t8_ghost_add_remote (forest, ghost, owner, itree, elem,
+                                     ielem);
               }
             }
           }
@@ -709,7 +717,8 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
               T8_ASSERT (0 <= owner && owner < forest->mpisize);
               if (owner != forest->mpirank) {
                 /* Add the element as a remote element */
-                t8_ghost_add_remote (forest, ghost, owner, itree, elem);
+                t8_ghost_add_remote (forest, ghost, owner, itree, elem,
+                                     ielem);
               }
             }
             sc_array_truncate (&owners);
@@ -1482,6 +1491,7 @@ t8_forest_ghost_reset (t8_forest_ghost_t * pghost)
       remote_tree = (t8_ghost_remote_tree_t *)
         sc_array_index (&remote_entry->remote_trees, it_trees);
       sc_array_reset (&remote_tree->elements);
+      sc_array_reset (&remote_tree->element_indices);
     }
     sc_array_reset (&remote_entry->remote_trees);
   }
