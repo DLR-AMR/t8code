@@ -73,6 +73,13 @@ t8_element_t       *t8_forest_ghost_get_element (t8_forest_t forest,
                                                  t8_locidx_t lghost_tree,
                                                  t8_locidx_t lelement);
 
+/* TODO: - document
+ *       - make accesible to forest API
+ *       - make a begin and end version
+ */
+void                t8_forest_ghost_exchange_data (t8_forest_t forest,
+                                                   sc_array_t * element_data);
+
 /** Increase the reference count of a ghost structure.
  * \param [in,out]  ghost     On input, this ghost structure must exist with
  *                            positive reference count.

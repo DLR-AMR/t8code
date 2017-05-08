@@ -1247,6 +1247,12 @@ t8_forest_ghost_create (t8_forest_t forest)
   }
 }
 
+void
+t8_forest_ghost_exchange_data (t8_forest_t forest, sc_array_t * element_data)
+{
+
+}
+
 /* Print a forest ghost structure */
 void
 t8_forest_ghost_print (t8_forest_t forest)
