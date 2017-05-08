@@ -60,6 +60,7 @@ typedef struct
 typedef struct
 {
   int                 mpirank;  /* rank of the process */
+  t8_locidx_t         ghost_offset;     /* The number of ghost elements for all previous ranks */
   size_t              tree_index;       /* index of first ghost of this process in ghost_trees */
   size_t              first_element;    /* the index of the first element in the elements array
                                            of the ghost tree. */
@@ -79,6 +80,7 @@ typedef struct
 typedef struct
 {
   int                 remote_rank;      /* The rank of the remote process */
+  t8_locidx_t         num_elements;     /* The number of remote elements for this process */
   sc_array_t          remote_trees;     /* Array of the remote trees of this process */
 } t8_ghost_remote_t;
 
@@ -173,6 +175,20 @@ t8_ghost_remote_equal_function (const void *remote_dataa,
 
   return remotea->remote_rank == remoteb->remote_rank;
 }
+
+/** This struct is used during a ghost data exchange.
+ * Since we use asynchronuous communication, we store the
+ * send buffers and mpi requests until we end the communication.
+ */
+typedef struct
+{
+  int                 num_remotes;
+                    /** The number of processes, we send to */
+  char              **send_buffers;
+                      /** For each remote the send buffer */
+  sc_MPI_Request     *requests;
+                           /** For each process we send to, the MPI request used */
+} t8_ghost_data_exchange_t;
 
 void
 t8_forest_ghost_init (t8_forest_ghost_t * pghost, t8_ghost_type_t ghost_type)
@@ -356,6 +372,7 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
   if (remote_entry != NULL) {
     /* The remote rank was not in the array and was inserted now */
     remote_entry->remote_rank = remote_rank;
+    remote_entry->num_elements = 0;
     /* Initialize the tree array of the new entry */
     sc_array_init_size (&remote_entry->remote_trees,
                         sizeof (t8_ghost_remote_tree_t), 1);
@@ -418,6 +435,7 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
     *(t8_locidx_t *) sc_array_push (&remote_tree->element_indices) =
       element_index;
   }
+  remote_entry->num_elements++;
 }
 
 /* Fill the remote ghosts of a ghost structure.
@@ -824,7 +842,7 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest,
   t8_locidx_t         num_trees, itree;
   t8_gloidx_t         global_id;
   t8_eclass_t         eclass;
-  size_t              num_elements, old_elem_count;
+  size_t              num_elements, old_elem_count, ghosts_offset;
   t8_ghost_gtree_hash_t *tree_hash, **pfound_tree, *found_tree;
   t8_ghost_tree_t    *ghost_tree;
   t8_eclass_scheme_c *ts;
@@ -842,6 +860,8 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest,
   t8_debugf ("Received %li trees from %i (%i bytes)\n",
              (long) num_trees, recv_rank, recv_bytes);
 
+  /* Count the total number of ghosts that we receive from this rank */
+  ghosts_offset = ghost->num_ghosts_elements;
   for (itree = 0; itree < num_trees; itree++) {
     /* Get tree id */
     /* search if tree was inserted */
@@ -934,6 +954,7 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest,
   process_hash->mpirank = recv_rank;
   process_hash->tree_index = first_tree_index;
   process_hash->first_element = first_element_index;
+  process_hash->ghost_offset = ghosts_offset;
   /* Insert this rank into the hash table. We assert if the rank was not already
    * contained. */
   added_process = sc_hash_insert_unique (ghost->process_offsets, process_hash,
@@ -1068,7 +1089,7 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
         proc_pos =
           ((t8_recv_list_entry_t *) proc_it->data)->pos_in_remote_processes;
 #endif
-        /* nonblocking probe for a message. */
+        /* blocking probe for a message. */
         mpiret = sc_MPI_Probe (sc_MPI_ANY_SOURCE, T8_MPI_GHOST_FOREST, comm,
                                &status);
         SC_CHECK_MPI (mpiret);
@@ -1247,10 +1268,201 @@ t8_forest_ghost_create (t8_forest_t forest)
   }
 }
 
+/* Fill the send buffer for a ghost data exchange for on remote rank.
+ * returns the number of bytes in the buffer. */
+static              size_t
+t8_forest_ghost_exchange_fill_send_buffer (t8_forest_t forest, int remote,
+                                           char **pbuffer,
+                                           sc_array_t * element_data)
+{
+  char               *buffer;
+  t8_ghost_remote_t   lookup_rank, *remote_entry;
+  t8_ghost_remote_tree_t *remote_tree;
+  t8_forest_ghost_t   ghost;
+  size_t              index, element_index, data_size;
+  size_t              elements_inserted, byte_count;
+  t8_tree_t           local_tree;
+  int                 ret;
+  t8_locidx_t         itree, ielement, element_pos;
+  t8_locidx_t         ltreeid;
+
+  ghost = forest->ghosts;
+  data_size = element_data->elem_size;
+  elements_inserted = 0;
+  lookup_rank.remote_rank = remote;
+
+  /* Lookup the remote entry of this remote process */
+  ret = sc_hash_array_lookup (ghost->remote_ghosts, &lookup_rank, &index);
+  T8_ASSERT (ret != 0);
+  remote_entry =
+    (t8_ghost_remote_t *) sc_array_index (&ghost->remote_ghosts->a, index);
+  T8_ASSERT (remote_entry->remote_rank == remote);
+
+  /* allocate memory for the send buffer */
+  byte_count = data_size * remote_entry->num_elements;
+  buffer = *pbuffer = T8_ALLOC (char, byte_count);
+  t8_debugf ("[H] buffer = %p\n", buffer);
+
+  /* We now iterate over the remote trees and their elements to find the
+   * local element indices of the remote elements */
+  for (itree = 0; itree < (t8_locidx_t) remote_entry->remote_trees.elem_count;
+       itree++) {
+    /* tree loop */
+    remote_tree = (t8_ghost_remote_tree_t *)
+      t8_sc_array_index_locidx (&remote_entry->remote_trees, itree);
+    /* Get the local id of this tree */
+    /* TODO: Why does remote_tree store the global id? could be local instead */
+    ltreeid = t8_forest_get_local_id (forest, remote_tree->global_id);
+    /* Get a pointer to the forest tree */
+    local_tree = t8_forest_get_tree (forest, ltreeid);
+    for (ielement = 0;
+         ielement < (t8_locidx_t) remote_tree->elements.elem_count;
+         ielement++) {
+      /* element loop */
+      /* Get the index of this remote element in its local tree */
+      element_pos = *(t8_locidx_t *)
+        t8_sc_array_index_locidx (&remote_tree->element_indices, ielement);
+      T8_ASSERT (0 <= element_pos);
+      /* Compute the index of this element in the element_data array */
+      element_index = local_tree->elements_offset + element_pos;
+      /* Copy the data of this element from the element_data array to the send buffer */
+      memcpy (buffer + elements_inserted * data_size,
+              sc_array_index (element_data, element_index), data_size);
+      elements_inserted++;
+    }
+  }
+  return byte_count;
+}
+
+static t8_ghost_data_exchange_t *
+t8_forest_ghost_exchange_begin (t8_forest_t forest, sc_array_t * element_data)
+{
+  t8_ghost_data_exchange_t *data_exchange;
+  t8_forest_ghost_t   ghost;
+  size_t              bytes_to_send, ghost_start;
+  int                 iremote, remote_rank, received_messages;
+  int                 mpiret, recv_rank, ret, bytes_recv;
+  char              **send_buffers;
+  sc_MPI_Status       recv_status;
+  t8_ghost_process_hash_t lookup_proc, *process_entry, **pfound;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (element_data != NULL);
+  T8_ASSERT (forest->ghosts != NULL);
+
+  ghost = forest->ghosts;
+
+  /* Allocate the new exchange context */
+  data_exchange = T8_ALLOC (t8_ghost_data_exchange_t, 1);
+  /* The number of processes we need to send to */
+  data_exchange->num_remotes = ghost->remote_processes->elem_count;
+  /* Allocate MPI requests */
+  data_exchange->requests = T8_ALLOC (sc_MPI_Request,
+                                      data_exchange->num_remotes);
+  /* Allocate pointers to send buffers */
+  send_buffers = data_exchange->send_buffers =
+    T8_ALLOC (char *, data_exchange->num_remotes);
+
+  for (iremote = 0; iremote < data_exchange->num_remotes; iremote++) {
+    /* Iterate over all remote processes and fill their send buffers */
+    remote_rank =
+      *(int *) sc_array_index_int (ghost->remote_processes, iremote);
+    /* Fill the send buffers and compute the number of bytes to send */
+    bytes_to_send =
+      t8_forest_ghost_exchange_fill_send_buffer (forest, remote_rank,
+                                                 send_buffers + iremote,
+                                                 element_data);
+
+    t8_debugf ("[H] buffer = %p\n", send_buffers[iremote]);
+    /* Post the asynchronuos send */
+    sc_MPI_Isend (send_buffers[iremote], bytes_to_send, sc_MPI_BYTE,
+                  remote_rank, T8_MPI_GHOST_EXC_FOREST, forest->mpicomm,
+                  data_exchange->requests + iremote);
+  }
+
+  /* The index in element_data at which the ghost elements start */
+  ghost_start = t8_forest_get_num_element (forest);
+  /* Receive the incoming messages */
+  received_messages = 0;
+  while (received_messages < data_exchange->num_remotes) {
+    /* Blocking test for incoming message */
+    mpiret = sc_MPI_Probe (sc_MPI_ANY_SOURCE, T8_MPI_GHOST_EXC_FOREST,
+                           forest->mpicomm, &recv_status);
+    SC_CHECK_MPI (mpiret);
+    recv_rank = recv_status.MPI_SOURCE;
+    /* Get the number of bytes to receive */
+    mpiret = sc_MPI_Get_count (&recv_status, sc_MPI_BYTE, &bytes_recv);
+    SC_CHECK_MPI (mpiret);
+
+    /* We need to compute the offset in element_data to which we can receive the message */
+    /* Search for this process' entry in the ghost struct */
+    lookup_proc.mpirank = recv_rank;
+    ret =
+      sc_hash_lookup (ghost->process_offsets, &lookup_proc,
+                      (void ***) &pfound);
+    T8_ASSERT (ret);
+    process_entry = *pfound;
+    /* In process_entry we stored the offset of this ranks ghosts under all
+     * ghosts. Thus in element_data we look at the position
+     *  ghost_start + offset
+     */
+    /* receive the message */
+    t8_debugf ("[H] ghost_exchange receive %i bytes from %i to index %i\n",
+               bytes_recv, recv_rank,
+               ghost_start + process_entry->ghost_offset);
+    sc_MPI_Recv (sc_array_index
+                 (element_data, ghost_start + process_entry->ghost_offset),
+                 bytes_recv, sc_MPI_BYTE, recv_rank, T8_MPI_GHOST_EXC_FOREST,
+                 forest->mpicomm, sc_MPI_STATUS_IGNORE);
+    received_messages++;
+    t8_debugf ("[H] got %i %i\n",
+               *(int *) sc_array_index (element_data,
+                                        ghost_start +
+                                        process_entry->ghost_offset),
+               *(int *) sc_array_index (element_data,
+                                        ghost_start +
+                                        process_entry->ghost_offset + 1));
+  }
+  t8_debugf ("[H] ghost_exchange end phase1\n");
+  return data_exchange;
+}
+
+static void
+t8_forest_ghost_exchange_end (t8_ghost_data_exchange_t * data_exchange)
+{
+  int                 iproc;
+
+  T8_ASSERT (data_exchange != NULL);
+  /* Wait for all communications to end */
+  t8_debugf ("[H] ghost_exchange start phase2\n");
+  sc_MPI_Waitall (data_exchange->num_remotes, data_exchange->requests,
+                  sc_MPI_STATUSES_IGNORE);
+
+  /* Free the send buffers */
+  for (iproc = 0; iproc < data_exchange->num_remotes; iproc++) {
+    T8_FREE (data_exchange->send_buffers[iproc]);
+  }
+  T8_FREE (data_exchange->send_buffers);
+  /* free requests */
+  T8_FREE (data_exchange->requests);
+  T8_FREE (data_exchange);
+  t8_debugf ("[H] ghost_exchange end phase2\n");
+}
+
 void
 t8_forest_ghost_exchange_data (t8_forest_t forest, sc_array_t * element_data)
 {
+  t8_ghost_data_exchange_t *data_exchange;
 
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->ghosts != NULL);
+  T8_ASSERT (element_data != NULL);
+  T8_ASSERT ((t8_locidx_t) element_data->elem_count ==
+             t8_forest_get_num_element (forest)
+             + t8_forest_get_num_ghosts (forest));
+
+  data_exchange = t8_forest_ghost_exchange_begin (forest, element_data);
+  t8_forest_ghost_exchange_end (data_exchange);
 }
 
 /* Print a forest ghost structure */
@@ -1281,7 +1493,7 @@ t8_forest_ghost_print (t8_forest_t forest)
     ret = sc_hash_array_lookup (ghost->remote_ghosts, &remote_search, &index);
     remote_found = (t8_ghost_remote_t *)
       sc_array_index (&ghost->remote_ghosts->a, index);
-    T8_ASSERT (ret != 0);
+    T8_ASSERT (ret);
     /* investigate the entry of this remote process */
     snprintf (remote_buffer + strlen (remote_buffer),
               BUFSIZ - strlen (remote_buffer), "\t[Rank %i] (%li trees):\n",

@@ -101,9 +101,10 @@ typedef p4est_gloidx_t t8_gloidx_t;
 typedef enum
 {
   T8_MPI_TAG_FIRST = P4EST_COMM_TAG_FIRST,
-  T8_MPI_PARTITION_CMESH = P4EST_COMM_TAG_LAST,
-  T8_MPI_PARTITION_FOREST,
-  T8_MPI_GHOST_FOREST,
+  T8_MPI_PARTITION_CMESH = P4EST_COMM_TAG_LAST, /**< Used for coarse mesh partitioning */
+  T8_MPI_PARTITION_FOREST,  /**< Used for forest partitioning */
+  T8_MPI_GHOST_FOREST,  /**< Used for for ghost layer creation */
+  T8_MPI_GHOST_EXC_FOREST,  /**< Used for ghost data exchange */
   T8_MPI_TAG_LAST
 }
 t8_MPI_tag_t;
