@@ -252,7 +252,6 @@ t8_default_scheme_tet_c::t8_element_first_descendant_face (const t8_element_t
   /* Compute the first corner of this face */
   corner = t8_dtet_face_corner[face][0];
   /* Compute the descendant in this corner */
-  t8_debugf ("[H] first descendant in corner %i, face is %i\n", corner, face);
   t8_dtet_corner_descendant ((const t8_dtet_t *) elem,
                              (t8_dtet_t *) first_desc, corner,
                              T8_DTET_MAXLEVEL);
@@ -270,7 +269,6 @@ t8_default_scheme_tet_c::t8_element_last_descendant_face (const t8_element_t *
   /* Compute the last corner of this face */
   corner = t8_dtet_face_corner[face][2];
   /* Compute the descendant in this corner */
-  t8_debugf ("[H] last descendant in corner %i, face is %i\n", corner, face);
   t8_dtet_corner_descendant ((const t8_dtet_t *) elem,
                              (t8_dtet_t *) last_desc, corner,
                              T8_DTET_MAXLEVEL);
