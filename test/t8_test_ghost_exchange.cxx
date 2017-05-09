@@ -39,6 +39,25 @@
  * in a second test, we store the element's linear id in the data array.
  */
 
+static int
+t8_test_exchange_adapt (t8_forest_t forest, t8_locidx_t which_tree,
+                        t8_eclass_scheme_c * ts,
+                        int num_elements, t8_element_t * elements[])
+{
+  uint64_t            eid;
+  int                 level, maxlevel;
+
+  /* refine every second element up to the maximum level */
+  level = ts->t8_element_level (elements[0]);
+  eid = ts->t8_element_get_linear_id (elements[0], level);
+  maxlevel = *(int *) t8_forest_get_user_data (forest);
+
+  if (eid % 2 && level < maxlevel) {
+    return 1;
+  }
+  return 0;
+}
+
 /* Depending on an integer i create a different cmesh.
  * i = 0: cmesh_new_class
  * i = 1: cmesh_new_hypercube
@@ -169,10 +188,10 @@ t8_test_ghost_exchange_data_int (t8_forest_t forest)
 static void
 t8_test_ghost_exchange ()
 {
-  int                 ctype, level, min_level;
+  int                 ctype, level, min_level, maxlevel;
   int                 eclass;
   t8_cmesh_t          cmesh;
-  t8_forest_t         forest;
+  t8_forest_t         forest, forest_adapt;
   t8_scheme_cxx_t    *scheme;
 
   scheme = t8_scheme_new_default_cxx ();
@@ -186,17 +205,28 @@ t8_test_ghost_exchange ()
       t8_global_productionf
         ("Testing ghost exchange with eclass %s, start level %i\n",
          t8_eclass_to_string[eclass], min_level);
-      for (level = min_level; level < min_level + 1; level++) {
+      for (level = min_level; level < min_level + 3; level++) {
         /* ref the scheme since we reuse it */
         t8_scheme_cxx_ref (scheme);
-        /* Create a uniformly refinde forest */
+        /* ref the cmesh since we reuse it */
+        t8_cmesh_ref (cmesh);
+        /* Create a uniformly refined forest */
         forest = t8_forest_new_uniform (cmesh, scheme, level, 1,
                                         sc_MPI_COMM_WORLD);
+        /* exchange ghost data */
         t8_test_ghost_exchange_data_int (forest);
         sc_MPI_Barrier (sc_MPI_COMM_WORLD);
         t8_test_ghost_exchange_data_id (forest);
-        t8_forest_unref (&forest);
+        /* Adapt the forest and exchange data again */
+        maxlevel = level + 2;
+        forest_adapt = t8_forest_new_adapt (forest, t8_test_exchange_adapt,
+                                            NULL, 1, 1, &maxlevel);
+        t8_test_ghost_exchange_data_int (forest_adapt);
+        sc_MPI_Barrier (sc_MPI_COMM_WORLD);
+        t8_test_ghost_exchange_data_id (forest_adapt);
+        t8_forest_unref (&forest_adapt);
       }
+      t8_cmesh_destroy (&cmesh);
     }
   }
   t8_scheme_cxx_unref (&scheme);
