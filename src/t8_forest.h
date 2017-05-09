@@ -585,12 +585,29 @@ void                t8_forest_element_coordinate (t8_forest_t forest,
  * \return                    A uniform forest with coarse mesh \a cmesh, eclass_scheme
  *                            \a scheme and refinement level \a level.
  * \note This is equivalent to calling \ref t8_forest_init, \ref t8_forest_set_cmesh,
- * \ref t8_forest_set_scheme, \ref t8_forest_set_level, and t8_forest_commit.
+ * \ref t8_forest_set_scheme, \ref t8_forest_set_level, and \ref t8_forest_commit.
  */
 t8_forest_t         t8_forest_new_uniform (t8_cmesh_t cmesh,
                                            t8_scheme_cxx_t * scheme,
                                            int level, int do_face_ghost,
                                            sc_MPI_Comm comm);
+
+/** Build a adapted forest from another forest.
+ * \param [in]    forest_from The forest to refine
+ * \param [in]    adapt_fn    Adapt function to use
+ * \param [in]    replace_fn  Replace function to use
+ * \param [in]    recursive   If true adptation is recursive
+ * \param [in]    do_face_ghost If true, a layer of ghost elements is created for the forest.
+ * \param [in]    user_data   If not NULL, the user data pointer of the forest is set to this value.
+ * \return        A new forest that is adapted from \a forest_from.
+ * \note This is equivalent to calling \ref t8_forest_init, \ref t8_forest_set_adapt,
+ * \red t8_forest_set_ghost, and \ref t8_forest_commit
+ */
+t8_forest_t
+t8_forest_new_adapt (t8_forest_t forest_from,
+                     t8_forest_adapt_t adapt_fn,
+                     t8_forest_replace_t replace_fn,
+                     int recursive, int do_face_ghost, void *user_data);
 
 /** Increase the reference counter of a forest.
  * \param [in,out] forest       On input, this forest must exist with positive
