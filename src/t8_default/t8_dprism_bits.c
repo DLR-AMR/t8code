@@ -183,8 +183,9 @@ t8_dprism_first_descendant (const t8_dprism_t * p, t8_dprism_t * s, int level)
   T8_ASSERT (level >= p->line.level && level <= T8_DPRISM_MAXLEVEL);
   T8_ASSERT (p->line.level == p->tri.level);
   /*First prism descendant = first triangle desc x first line desc */
-  t8_dtri_first_descendant (&p->tri, &s->tri);
-  t8_dline_first_descendant (&p->line, &s->line, level);
+
+  t8_dtri_first_descendant (&l->tri, &s->tri, level);
+  t8_dline_first_descendant (&l->line, &s->line, level);
 }
 
 void
@@ -193,10 +194,15 @@ t8_dprism_last_descendant (const t8_dprism_t * p, t8_dprism_t * s, int level)
   T8_ASSERT (level >= p->line.level && level <= T8_DPRISM_MAXLEVEL);
   /*Last prism descendant = last triangle desc x last line desc */
   T8_ASSERT (level == T8_DTRI_MAXLEVEL);
+<<<<<<< HEAD
   T8_ASSERT (p->line.level == p->tri.level);
   /*TODO: MERGE mit johannes und dann level zufügen*/
   t8_dtri_last_descendant (&p->tri, &s->tri);
   t8_dline_last_descendant (&p->line, &s->line, level);
+=======
+  t8_dtri_last_descendant (&l->tri, &s->tri, level);
+  t8_dline_last_descendant (&l->line, &s->line, level);
+>>>>>>> johannes/feature-prism_elements_cxx
 }
 
 void
