@@ -222,7 +222,6 @@ t8_test_ghost_exchange ()
         forest_adapt = t8_forest_new_adapt (forest, t8_test_exchange_adapt,
                                             NULL, 1, 1, &maxlevel);
         t8_test_ghost_exchange_data_int (forest_adapt);
-        sc_MPI_Barrier (sc_MPI_COMM_WORLD);
         t8_test_ghost_exchange_data_id (forest_adapt);
         t8_forest_unref (&forest_adapt);
       }

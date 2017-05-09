@@ -1341,10 +1341,9 @@ t8_forest_ghost_exchange_begin (t8_forest_t forest, sc_array_t * element_data)
   t8_ghost_data_exchange_t *data_exchange;
   t8_forest_ghost_t   ghost;
   size_t              bytes_to_send, ghost_start;
-  int                 iremote, remote_rank, received_messages;
+  int                 iremote, remote_rank;
   int                 mpiret, recv_rank, ret, bytes_recv;
   char              **send_buffers;
-  sc_MPI_Status       recv_status;
   t8_ghost_process_hash_t lookup_proc, *process_entry, **pfound;
   t8_locidx_t         remote_offset, next_offset;
 
@@ -1453,9 +1452,6 @@ t8_forest_ghost_exchange_begin (t8_forest_t forest, sc_array_t * element_data)
     /* Calculate the number of bytes to receive */
     bytes_recv = (next_offset - remote_offset) * element_data->elem_size;
     /* receive the message */
-    t8_debugf ("[H] ghost_exchange receive %i bytes from %i to index %i\n",
-               bytes_recv, recv_rank,
-               ghost_start + process_entry->ghost_offset);
     mpiret =
       sc_MPI_Irecv (sc_array_index
                     (element_data, ghost_start + remote_offset), bytes_recv,
@@ -1463,7 +1459,6 @@ t8_forest_ghost_exchange_begin (t8_forest_t forest, sc_array_t * element_data)
                     forest->mpicomm, data_exchange->recv_requests + iremote);
     SC_CHECK_MPI (mpiret);
   }
-  t8_debugf ("[H] ghost_exchange end phase1\n");
   return data_exchange;
 }
 
