@@ -615,6 +615,7 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id,
   t8_locidx_t         ltreedebug;
 #endif
 
+  T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (lelement_id >= 0);
   if (lelement_id >= t8_forest_get_num_element (forest)) {
     return NULL;
@@ -671,6 +672,19 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id,
   return NULL;
 }
 
+t8_element_t
+  * t8_forest_get_element_in_tree (t8_forest_t forest, t8_locidx_t ltreeid,
+                                   t8_locidx_t leid_in_tree)
+{
+  t8_tree_t           tree;
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (0 <= ltreeid
+             && ltreeid < t8_forest_get_num_local_trees (forest));
+
+  tree = t8_forest_get_tree (forest, ltreeid);
+  return t8_forest_get_tree_element (tree, leid_in_tree);
+}
+
 t8_locidx_t
 t8_forest_get_tree_element_count (t8_tree_t tree)
 {
@@ -680,6 +694,17 @@ t8_forest_get_tree_element_count (t8_tree_t tree)
   element_count = tree->elements.elem_count;
   T8_ASSERT ((size_t) element_count == tree->elements.elem_count);
   return element_count;
+}
+
+t8_locidx_t
+t8_forest_get_tree_num_elements (t8_forest_t forest, t8_locidx_t ltreeid)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (0 <= ltreeid
+             && ltreeid < t8_forest_get_num_local_trees (forest));
+
+  return t8_forest_get_tree_element_count (t8_forest_get_tree (forest,
+                                                               ltreeid));
 }
 
 t8_eclass_t
