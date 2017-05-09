@@ -76,6 +76,7 @@ t8_element_t       *t8_forest_ghost_get_element (t8_forest_t forest,
 /* TODO: - document
  *       - make accesible to forest API
  *       - make a begin and end version
+ * TODO: If used multiple times, a barrier must be used in between
  */
 void                t8_forest_ghost_exchange_data (t8_forest_t forest,
                                                    sc_array_t * element_data);

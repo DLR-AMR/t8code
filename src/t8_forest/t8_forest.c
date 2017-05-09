@@ -615,6 +615,7 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id,
   t8_locidx_t         ltreedebug;
 #endif
 
+  T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (lelement_id >= 0);
   if (lelement_id >= t8_forest_get_num_element (forest)) {
     return NULL;
@@ -671,6 +672,19 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id,
   return NULL;
 }
 
+t8_element_t
+  * t8_forest_get_element_in_tree (t8_forest_t forest, t8_locidx_t ltreeid,
+                                   t8_locidx_t leid_in_tree)
+{
+  t8_tree_t           tree;
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (0 <= ltreeid
+             && ltreeid < t8_forest_get_num_local_trees (forest));
+
+  tree = t8_forest_get_tree (forest, ltreeid);
+  return t8_forest_get_tree_element (tree, leid_in_tree);
+}
+
 t8_locidx_t
 t8_forest_get_tree_element_count (t8_tree_t tree)
 {
@@ -680,6 +694,17 @@ t8_forest_get_tree_element_count (t8_tree_t tree)
   element_count = tree->elements.elem_count;
   T8_ASSERT ((size_t) element_count == tree->elements.elem_count);
   return element_count;
+}
+
+t8_locidx_t
+t8_forest_get_tree_num_elements (t8_forest_t forest, t8_locidx_t ltreeid)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (0 <= ltreeid
+             && ltreeid < t8_forest_get_num_local_trees (forest));
+
+  return t8_forest_get_tree_element_count (t8_forest_get_tree (forest,
+                                                               ltreeid));
 }
 
 t8_eclass_t
@@ -968,6 +993,24 @@ t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t * scheme,
   /* commit the forest */
   t8_forest_commit (forest);
 
+  return forest;
+}
+
+t8_forest_t
+t8_forest_new_adapt (t8_forest_t forest_from,
+                     t8_forest_adapt_t adapt_fn,
+                     t8_forest_replace_t replace_fn,
+                     int recursive, int do_face_ghost, void *user_data)
+{
+  t8_forest_t         forest;
+
+  t8_forest_init (&forest);
+  t8_forest_set_adapt (forest, forest_from, adapt_fn, replace_fn, 1);
+  t8_forest_set_ghost (forest, do_face_ghost, T8_GHOST_FACES);
+  if (user_data != NULL) {
+    t8_forest_set_user_data (forest, user_data);
+  }
+  t8_forest_commit (forest);
   return forest;
 }
 

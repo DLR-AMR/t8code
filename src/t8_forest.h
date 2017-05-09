@@ -433,10 +433,32 @@ t8_cmesh_t          t8_forest_get_cmesh (t8_forest_t forest);
  * \param [out]     ltreeid     If not NULL, on output the local tree id of the tree in which the
  *                              element lies in.
  * \return          A pointer to the element. NULL if this element does not exist.
+ * \note This function performs a binary search. For constant access, use \ref t8_forest_get_element_in_tree
+ * \a forest must be committed before calling this function.
  */
 t8_element_t       *t8_forest_get_element (t8_forest_t forest,
                                            t8_locidx_t lelement_id,
                                            t8_locidx_t * ltreeid);
+
+/** Return an element of a local tree in a forest.
+ * \param [in]      forest      The forest.
+ * \param [in]      ltreeid     An id of a local tree in the forest.
+ * \param [in]      leid_in_tree The index of an element in the tree.
+ * \return          A pointer to the element.
+ * \note If the tree id is know, this function should be preferred over \ref t8_forest_get_element.
+ * \a forest must be committed before calling this function.
+ */
+t8_element_t       *t8_forest_get_element_in_tree (t8_forest_t forest,
+                                                   t8_locidx_t ltreeid,
+                                                   t8_locidx_t leid_in_tree);
+
+/** Return the number of elements of a tree.
+ * \param [in]      forest      The forest.
+ * \param [in]      ltreeid     A local id of a tree.
+ * \return                      The number of elements in the local tree \a ltreeid.
+ */
+t8_locidx_t         t8_forest_get_tree_num_elements (t8_forest_t forest,
+                                                     t8_locidx_t ltreeid);
 
 /** Return the number of elements of a tree.
  * \param [in]      tree       A tree in a forest.
@@ -563,12 +585,29 @@ void                t8_forest_element_coordinate (t8_forest_t forest,
  * \return                    A uniform forest with coarse mesh \a cmesh, eclass_scheme
  *                            \a scheme and refinement level \a level.
  * \note This is equivalent to calling \ref t8_forest_init, \ref t8_forest_set_cmesh,
- * \ref t8_forest_set_scheme, \ref t8_forest_set_level, and t8_forest_commit.
+ * \ref t8_forest_set_scheme, \ref t8_forest_set_level, and \ref t8_forest_commit.
  */
 t8_forest_t         t8_forest_new_uniform (t8_cmesh_t cmesh,
                                            t8_scheme_cxx_t * scheme,
                                            int level, int do_face_ghost,
                                            sc_MPI_Comm comm);
+
+/** Build a adapted forest from another forest.
+ * \param [in]    forest_from The forest to refine
+ * \param [in]    adapt_fn    Adapt function to use
+ * \param [in]    replace_fn  Replace function to use
+ * \param [in]    recursive   If true adptation is recursive
+ * \param [in]    do_face_ghost If true, a layer of ghost elements is created for the forest.
+ * \param [in]    user_data   If not NULL, the user data pointer of the forest is set to this value.
+ * \return        A new forest that is adapted from \a forest_from.
+ * \note This is equivalent to calling \ref t8_forest_init, \ref t8_forest_set_adapt,
+ * \red t8_forest_set_ghost, and \ref t8_forest_commit
+ */
+t8_forest_t
+t8_forest_new_adapt (t8_forest_t forest_from,
+                     t8_forest_adapt_t adapt_fn,
+                     t8_forest_replace_t replace_fn,
+                     int recursive, int do_face_ghost, void *user_data);
 
 /** Increase the reference counter of a forest.
  * \param [in,out] forest       On input, this forest must exist with positive
