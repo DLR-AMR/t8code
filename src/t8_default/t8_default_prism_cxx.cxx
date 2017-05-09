@@ -49,7 +49,36 @@ t8_default_scheme_prism_c::t8_element_copy (const t8_element_t * source,
 int
 t8_default_scheme_prism_c::t8_element_num_children (const t8_element_t * elem)
 {
-    return T8_DPRISM_CHILDREN;
+  return T8_DPRISM_CHILDREN;
+}
+
+int
+t8_default_scheme_prism_c::t8_element_child_id (const t8_element_t * elem)
+{
+  return t8_dprism_child_id ((const t8_dprism_t *) elem);
+}
+
+void
+t8_default_scheme_prism_c::t8_element_child (const t8_element_t * elem,
+                                             int childid,
+                                             t8_element_t * child)
+{
+  t8_dprism_child ((const t8_dprism_t *) elem, childid,
+                   (t8_dprism_t *) child);
+}
+
+void
+t8_default_scheme_prism_c::t8_element_children (const t8_element_t * elem,
+                                                int length,
+                                                t8_element_t * c[])
+{
+  t8_dprism_childrenpv ((const t8_dprism_t *) elem, length, (t8_dprism_t **) c);
+}
+
+int
+t8_default_scheme_prism_c::t8_element_is_family (t8_element_t ** fam)
+{
+  return t8_dprism_is_familypv ((t8_dprism_t **) fam);
 }
 
 void

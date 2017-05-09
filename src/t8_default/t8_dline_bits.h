@@ -77,7 +77,7 @@ void                t8_dline_childrenpv (const t8_dline_t * t, t8_dline_t * c[])
 
 /** Check whether a collection of two lines is a family in Morton order.
  * \param [in]     f  An array of two lines.
- * \return            Nonzero if \a f is a family of triangles.
+ * \return            Nonzero if \a f is a family of lines.
  */
 int                 t8_dline_is_familypv (const t8_dline_t * f[]);
 

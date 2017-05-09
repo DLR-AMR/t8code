@@ -103,33 +103,17 @@ public:
 
 /** Construct the child element of a given number. */
   virtual void        t8_element_child (const t8_element_t * elem,
-                                        int childid, t8_element_t * child)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return;                     /* suppresses compiler warning */
-  }
+                                        int childid, t8_element_t * child);
 
 /** Construct all children of a given element. */
   virtual void        t8_element_children (const t8_element_t * elem,
-                                           int length, t8_element_t * c[])
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return;                     /* suppresses compiler warning */
-  }
+                                           int length, t8_element_t * c[]);
 
 /** Return the child id of an element */
-  virtual int         t8_element_child_id (const t8_element_t * elem)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return T8_ECLASS_ZERO;      /* suppresses compiler warning */
-  }
+  virtual int         t8_element_child_id (const t8_element_t * elem);
 
   /** Return nonzero if collection of elements is a family */
-  virtual int         t8_element_is_family (t8_element_t ** fam)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return T8_ECLASS_ZERO;      /* suppresses compiler warning */
-  }
+  virtual int         t8_element_is_family (t8_element_t ** fam);
 
 /** Construct the nearest common ancestor of two elements in the same tree. */
   virtual void        t8_element_nca (const t8_element_t * elem1,

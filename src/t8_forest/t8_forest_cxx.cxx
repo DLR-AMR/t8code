@@ -27,7 +27,6 @@
 #include <t8_forest/t8_forest_cxx.h>
 #include <t8_element_cxx.hxx>
 
-
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
@@ -111,26 +110,46 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
          3 ? len * (vertices[9 + i] -
                     vertices[6 + i]) * corner_coords[1] : 0.) +
         len * (vertices[6 + i] - vertices[3 + i]) * corner_coords[dim - 1]
-        + vertices[i];+ vertices[i];
+        + vertices[i];
+      +vertices[i];
     }
     break;
   case T8_ECLASS_PRISM:
-      /*Prisminterpolation, via height, and triangle*/
-      double tri_vertices[9];
-      for(i = 0; i < 9; i++)
-      {
-          tri_vertices[i] = vertices[i] + corner_coords[2] *
-                  (vertices[i + 9] - vertices[i]);
-      }
-      for(i = 0; i < 3; i++)
-      {
-          coordinates[i] =
-              len * ((tri_vertices[3 + i] - tri_vertices [i]) * corner_coords[0]+
-                  (tri_vertices[6 + i] - tri_vertices[3 + i]) * corner_coords[1]);
+    /*Prisminterpolation, via height, and triangle */
+    double              tri_vertices[9];
+    for (i = 0; i < 9; i++) {
+      tri_vertices[i] = vertices[i] + corner_coords[2] *
+        (vertices[i + 9] - vertices[i]);
+    }
+    for (i = 0; i < 3; i++) {
+      coordinates[i] =
+        len * ((tri_vertices[3 + i] - tri_vertices[i]) * corner_coords[0] +
+               (tri_vertices[6 + i] -
+                tri_vertices[3 + i]) * corner_coords[1]);
 
-      }
+    }
+    switch (corner_number) {
+    case 0:
       coordinates[1] = tri_vertices[1] * len;
       break;
+    case 1:
+      coordinates[1] = tri_vertices[4] * len;
+      break;
+    case 2:
+      coordinates[1] = tri_vertices[7] * len;
+      break;
+    case 3:
+      coordinates[1] = tri_vertices[1] * len;
+      break;
+    case 4:
+      coordinates[1] = tri_vertices[4] * len;
+      break;
+    case 5:
+      coordinates[1] = tri_vertices[7] * len;
+      break;
+    }
+
+    break;
   case T8_ECLASS_QUAD:
     corner_coords[2] = 0;
   case T8_ECLASS_HEX:
