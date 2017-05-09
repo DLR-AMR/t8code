@@ -28,6 +28,17 @@
 #include <t8_forest/t8_forest_private.h>
 #include <t8_cmesh.h>
 
+/* This test program tests the forest ghost exchange routine.
+ * Given a forest for which the ghost layer was created and an array
+ * storing data for the local elements and the ghost elements, ghost_exchange
+ * communicates the data of the local elements to the ghost entries of the
+ * processes for which these elements are ghost.
+ * We test the ghost exchange routine for several forests on different
+ * coarse meshes.
+ * One test is an integer entry '42' for each element,
+ * in a second test, we store the element's linear id in the data array.
+ */
+
 /* Depending on an integer i create a different cmesh.
  * i = 0: cmesh_new_class
  * i = 1: cmesh_new_hypercube
@@ -49,10 +60,84 @@ t8_test_create_cmesh (int i, t8_eclass_t eclass, sc_MPI_Comm comm)
   }
 }
 
+/* Construct a data array of uin64_t for all elements and all ghosts,
+ * fill the element's entries with their linear id, perform the ghost exchange and
+ * check whether the ghost's entries are their linear id.
+ */
 static void
-t8_test_ghost_exchange_data_int (t8_forest_t forest, sc_MPI_Comm comm)
+t8_test_ghost_exchange_data_id (t8_forest_t forest)
 {
-  int                 mpirank, mpiret;
+  t8_eclass_scheme_c *ts;
+
+  t8_locidx_t         num_elements, ielem, num_ghosts, itree;
+  uint64_t            ghost_id, elem_id, ghost_entry;
+  t8_element_t       *elem;
+  size_t              array_pos = 0;
+  sc_array_t          element_data;
+
+  num_elements = t8_forest_get_num_element (forest);
+  num_ghosts = t8_forest_get_num_ghosts (forest);
+  /* Allocate a uin64_t as data for each element and each ghost */
+  sc_array_init_size (&element_data, sizeof (uint64_t),
+                      num_elements + num_ghosts);
+
+  /* Fill the local element entries with their linear id */
+  for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
+    /* Get the eclass scheme for this tree */
+    ts = t8_forest_get_eclass_scheme (forest,
+                                      t8_forest_get_tree_class (forest,
+                                                                itree));
+    for (ielem = 0; ielem < t8_forest_get_tree_num_elements (forest, itree);
+         ielem++) {
+      /* Get a pointer to this element */
+      elem = t8_forest_get_element_in_tree (forest, itree, ielem);
+      /* Compute the linear id of this element */
+      elem_id = ts->t8_element_get_linear_id (elem,
+                                              ts->t8_element_level (elem));
+      /* Store this id at the element's index in the array */
+      *(uint64_t *) sc_array_index (&element_data, array_pos) = elem_id;
+      array_pos++;
+    }
+  }
+
+  /* Perform the data exchange */
+  t8_forest_ghost_exchange_data (forest, &element_data);
+
+  /* We now iterate over all ghost elements and check whether the correct
+   * id was received */
+  for (itree = 0; itree < t8_forest_get_num_ghost_trees (forest); itree++) {
+    /* Get the eclass scheme of this ghost tree */
+    ts =
+      t8_forest_get_eclass_scheme (forest,
+                                   t8_forest_ghost_get_tree_class (forest,
+                                                                   itree));
+    for (ielem = 0; ielem < t8_forest_ghost_tree_num_elements (forest, itree);
+         ielem++) {
+      /* Get a pointer to this ghost */
+      elem = t8_forest_ghost_get_element (forest, itree, ielem);
+      /* Compute its ghost_id */
+      ghost_id =
+        ts->t8_element_get_linear_id (elem, ts->t8_element_level (elem));
+      /* Compare this id with the entry in the element_data array */
+      ghost_entry = *(uint64_t *) sc_array_index (&element_data, array_pos);
+      SC_CHECK_ABORT (ghost_id == ghost_entry,
+                      "Error when exchanging ghost data. Received wrong element id.\n");
+      /* Since array pos ended with the last element in the loop above, we can
+       * continue counting for the ghost elements */
+      array_pos++;
+    }
+  }
+  /* clean-up */
+  sc_array_reset (&element_data);
+}
+
+/* Construct a data array of ints for all elements and all ghosts,
+ * fill the element's entries with '42', perform the ghost exchange and
+ * check whether the ghost's entries are '42'.
+ */
+static void
+t8_test_ghost_exchange_data_int (t8_forest_t forest)
+{
   sc_array_t          element_data;
   t8_locidx_t         num_elements, ielem, num_ghosts;
   int                 ghost_int;
@@ -62,8 +147,6 @@ t8_test_ghost_exchange_data_int (t8_forest_t forest, sc_MPI_Comm comm)
   /* Allocate an integer as data for each element and each ghost */
   sc_array_init_size (&element_data, sizeof (int), num_elements + num_ghosts);
 
-  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
-  SC_CHECK_MPI (mpiret);
   /* Fill the local element entries with the integer 42 */
   for (ielem = 0; ielem < num_elements; ielem++) {
     *(int *) t8_sc_array_index_locidx (&element_data, ielem) = 42;
@@ -79,6 +162,7 @@ t8_test_ghost_exchange_data_int (t8_forest_t forest, sc_MPI_Comm comm)
     SC_CHECK_ABORT (ghost_int == 42,
                     "Error when exchanging ghost data. Received wrong data.\n");
   }
+  /* clean-up */
   sc_array_reset (&element_data);
 }
 
@@ -108,7 +192,9 @@ t8_test_ghost_exchange ()
         /* Create a uniformly refinde forest */
         forest = t8_forest_new_uniform (cmesh, scheme, level, 1,
                                         sc_MPI_COMM_WORLD);
-        t8_test_ghost_exchange_data_int (forest, sc_MPI_COMM_WORLD);
+        t8_test_ghost_exchange_data_int (forest);
+        sc_MPI_Barrier (sc_MPI_COMM_WORLD);
+        t8_test_ghost_exchange_data_id (forest);
         t8_forest_unref (&forest);
       }
     }
