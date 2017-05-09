@@ -434,8 +434,8 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
     /* Add the index of the element */
     *(t8_locidx_t *) sc_array_push (&remote_tree->element_indices) =
       element_index;
+    remote_entry->num_elements++;
   }
-  remote_entry->num_elements++;
 }
 
 /* Fill the remote ghosts of a ghost structure.
