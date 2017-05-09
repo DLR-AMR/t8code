@@ -186,8 +186,10 @@ typedef struct
                     /** The number of processes, we send to */
   char              **send_buffers;
                       /** For each remote the send buffer */
-  sc_MPI_Request     *requests;
+  sc_MPI_Request     *send_requests;
                            /** For each process we send to, the MPI request used */
+  sc_MPI_Request     *recv_requests;
+                           /** For each process we receive from, the MPI request used */
 } t8_ghost_data_exchange_t;
 
 void
@@ -1345,6 +1347,7 @@ t8_forest_ghost_exchange_begin (t8_forest_t forest, sc_array_t * element_data)
   char              **send_buffers;
   sc_MPI_Status       recv_status;
   t8_ghost_process_hash_t lookup_proc, *process_entry, **pfound;
+  t8_locidx_t         remote_offset, next_offset;
 
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (element_data != NULL);
@@ -1357,8 +1360,10 @@ t8_forest_ghost_exchange_begin (t8_forest_t forest, sc_array_t * element_data)
   /* The number of processes we need to send to */
   data_exchange->num_remotes = ghost->remote_processes->elem_count;
   /* Allocate MPI requests */
-  data_exchange->requests = T8_ALLOC (sc_MPI_Request,
-                                      data_exchange->num_remotes);
+  data_exchange->send_requests = T8_ALLOC (sc_MPI_Request,
+                                           data_exchange->num_remotes);
+  data_exchange->recv_requests = T8_ALLOC (sc_MPI_Request,
+                                           data_exchange->num_remotes);
   /* Allocate pointers to send buffers */
   send_buffers = data_exchange->send_buffers =
     T8_ALLOC (char *, data_exchange->num_remotes);
@@ -1375,15 +1380,17 @@ t8_forest_ghost_exchange_begin (t8_forest_t forest, sc_array_t * element_data)
 
     t8_debugf ("[H] buffer = %p\n", send_buffers[iremote]);
     /* Post the asynchronuos send */
-    sc_MPI_Isend (send_buffers[iremote], bytes_to_send, sc_MPI_BYTE,
-                  remote_rank, T8_MPI_GHOST_EXC_FOREST, forest->mpicomm,
-                  data_exchange->requests + iremote);
+    mpiret = sc_MPI_Isend (send_buffers[iremote], bytes_to_send, sc_MPI_BYTE,
+                           remote_rank, T8_MPI_GHOST_EXC_FOREST,
+                           forest->mpicomm,
+                           data_exchange->send_requests + iremote);
+    SC_CHECK_MPI (mpiret);
   }
 
   /* The index in element_data at which the ghost elements start */
   ghost_start = t8_forest_get_num_element (forest);
   /* Receive the incoming messages */
-  received_messages = 0;
+#if 0
   while (received_messages < data_exchange->num_remotes) {
     /* Blocking test for incoming message */
     mpiret = sc_MPI_Probe (sc_MPI_ANY_SOURCE, T8_MPI_GHOST_EXC_FOREST,
@@ -1423,6 +1430,51 @@ t8_forest_ghost_exchange_begin (t8_forest_t forest, sc_array_t * element_data)
                                         ghost_start +
                                         process_entry->ghost_offset + 1));
   }
+#endif
+  for (iremote = 0; iremote < data_exchange->num_remotes; iremote++) {
+    /* We need to compute the offset in element_data to which we can receive the message */
+    /* Search for this process' entry in the ghost struct */
+    recv_rank =
+      *(int *) sc_array_index_int (ghost->remote_processes, iremote);
+    lookup_proc.mpirank = recv_rank;
+    ret =
+      sc_hash_lookup (ghost->process_offsets, &lookup_proc,
+                      (void ***) &pfound);
+    T8_ASSERT (ret);
+    process_entry = *pfound;
+    /* In process_entry we stored the offset of this ranks ghosts under all
+     * ghosts. Thus in element_data we look at the position
+     *  ghost_start + offset
+     */
+    remote_offset = process_entry->ghost_offset;
+    /* Compute the offset of the next remote rank */
+    if (iremote + 1 < data_exchange->num_remotes) {
+      lookup_proc.mpirank =
+        *(int *) sc_array_index_int (ghost->remote_processes, iremote + 1);
+      ret =
+        sc_hash_lookup (ghost->process_offsets, &lookup_proc,
+                        (void ***) &pfound);
+      T8_ASSERT (ret);
+      process_entry = *pfound;
+      next_offset = process_entry->ghost_offset;
+    }
+    else {
+      /* We are the last rank, the next offset is the total number of ghosts */
+      next_offset = ghost->num_ghosts_elements;
+    }
+    /* Calculate the number of bytes to receive */
+    bytes_recv = (next_offset - remote_offset) * element_data->elem_size;
+    /* receive the message */
+    t8_debugf ("[H] ghost_exchange receive %i bytes from %i to index %i\n",
+               bytes_recv, recv_rank,
+               ghost_start + process_entry->ghost_offset);
+    mpiret =
+      sc_MPI_Irecv (sc_array_index
+                    (element_data, ghost_start + remote_offset), bytes_recv,
+                    sc_MPI_BYTE, recv_rank, T8_MPI_GHOST_EXC_FOREST,
+                    forest->mpicomm, data_exchange->recv_requests + iremote);
+    SC_CHECK_MPI (mpiret);
+  }
   t8_debugf ("[H] ghost_exchange end phase1\n");
   return data_exchange;
 }
@@ -1435,7 +1487,9 @@ t8_forest_ghost_exchange_end (t8_ghost_data_exchange_t * data_exchange)
   T8_ASSERT (data_exchange != NULL);
   /* Wait for all communications to end */
   t8_debugf ("[H] ghost_exchange start phase2\n");
-  sc_MPI_Waitall (data_exchange->num_remotes, data_exchange->requests,
+  sc_MPI_Waitall (data_exchange->num_remotes, data_exchange->recv_requests,
+                  sc_MPI_STATUSES_IGNORE);
+  sc_MPI_Waitall (data_exchange->num_remotes, data_exchange->send_requests,
                   sc_MPI_STATUSES_IGNORE);
 
   /* Free the send buffers */
@@ -1444,7 +1498,8 @@ t8_forest_ghost_exchange_end (t8_ghost_data_exchange_t * data_exchange)
   }
   T8_FREE (data_exchange->send_buffers);
   /* free requests */
-  T8_FREE (data_exchange->requests);
+  T8_FREE (data_exchange->send_requests);
+  T8_FREE (data_exchange->recv_requests);
   T8_FREE (data_exchange);
   t8_debugf ("[H] ghost_exchange end phase2\n");
 }
