@@ -152,6 +152,10 @@ t8_element_t       *t8_forest_get_tree_element (t8_tree_t tree,
  * \return                The mpirank of the process that owns \a element.
  * \note The element must exist in the forest.
  */
+/* TODO: This finds the owner of the first descendant of element.
+ *       We call this in owners_at_face where element is a descendant,
+ *       add a flag that is true is element is a descendant, such that the
+ *       first desc must not be created */
 int                 t8_forest_element_find_owner (t8_forest_t forest,
                                                   t8_gloidx_t gtreeid,
                                                   t8_element_t * element,

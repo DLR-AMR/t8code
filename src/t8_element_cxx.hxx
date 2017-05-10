@@ -346,6 +346,7 @@ public:
    *                       filled with the data of the first descendant of \a elem
    *                       that shares a face with \a face.
    */
+  /* TODO: Add a level and call with forest->maxlevel */
   virtual void        t8_element_first_descendant_face (const t8_element_t *
                                                         elem, int face,
                                                         t8_element_t *
@@ -358,6 +359,7 @@ public:
    *                       filled with the data of the last descendant of \a elem
    *                       that shares a face with \a face.
    */
+  /* TODO: Add a level and call with forest->maxlevel */
   virtual void        t8_element_last_descendant_face (const t8_element_t *
                                                        elem, int face,
                                                        t8_element_t *
@@ -423,6 +425,7 @@ public:
    * \param [out] desc    The first element in a uniform refinement of \a elem
    *                      of the maximum possible level.
    */
+  /* TODO: Add a level and call with forest->maxlevel */
   virtual void        t8_element_first_descendant (const t8_element_t *
                                                    elem,
                                                    t8_element_t * desc) = 0;
@@ -432,6 +435,7 @@ public:
    * \param [out] desc    The last element in a uniform refinement of \a elem
    *                      of the maximum possible level.
    */
+  /* TODO: Add a level and call with forest->maxlevel */
   virtual void        t8_element_last_descendant (const t8_element_t *
                                                   elem,
                                                   t8_element_t * desc) = 0;
