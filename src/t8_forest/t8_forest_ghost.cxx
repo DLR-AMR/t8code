@@ -1222,23 +1222,26 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
  * in: p4est: Scalable Algorithms For Parallel Adaptive
  *     Mesh Refinement On Forests of Octrees
  *     C. Burstedde, L. C. Wilcox, O. Ghattas
- * for ghost_method 0 (balanced forest only) and
+ * for unbalanced_version = 0 (balanced forest only) or
  *     Recursive algorithms for distributed forests of octrees
  *     T. Isaac, C. Burstedde, L. C. Wilcox and O. Ghattas
- * for ghost method 1 (also unbalanced forests possible).
+ * for unbalanced_version = 1 (also unbalanced forests possible).
  */
 void
-t8_forest_ghost_create (t8_forest_t forest)
+t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
 {
   t8_forest_ghost_t   ghost;
   t8_ghost_mpi_send_info_t *send_info;
   sc_MPI_Request     *requests;
 
+  T8_ASSERT (t8_forest_is_committed (forest));
   if (forest->ghost_type == T8_GHOST_NONE) {
     t8_debugf ("WARNING: Trying to construct ghosts with ghost_type NONE. "
                "Ghost layer is not constructed.\n");
     return;
   }
+  /* Currently we only support face ghosts */
+  T8_ASSERT (forest->ghost_type == T8_GHOST_FACES);
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of ghost_create */
@@ -1250,7 +1253,7 @@ t8_forest_ghost_create (t8_forest_t forest)
   ghost = forest->ghosts;
 
   /* Construct the remote elements and processes. */
-  t8_forest_ghost_fill_remote (forest, ghost, 1);
+  t8_forest_ghost_fill_remote (forest, ghost, unbalanced_version != 0);
 
   /* Start sending the remote elements */
   send_info = t8_forest_ghost_send_start (forest, ghost, &requests);
@@ -1268,6 +1271,23 @@ t8_forest_ghost_create (t8_forest_t forest)
     forest->profile->ghosts_received = ghost->num_ghosts_elements;
     forest->profile->ghosts_shipped = ghost->num_remote_elements;
   }
+}
+
+void
+t8_forest_ghost_create (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  /* call unbalanced version of ghost algorithm */
+  t8_forest_ghost_create_ext (forest, 1);
+}
+
+void
+t8_forest_ghost_create_balanced_only (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  /* TODO: assert that forest is balanced */
+  /* Call balanced version of ghost algorithm */
+  t8_forest_ghost_create_ext (forest, 0);
 }
 
 /* Fill the send buffer for a ghost data exchange for on remote rank.

@@ -108,8 +108,22 @@ void                t8_forest_ghost_unref (t8_forest_ghost_t * pghost);
  */
 void                t8_forest_ghost_destroy (t8_forest_ghost_t * pghost);
 
-/* TODO: Document */
+/** Create one layer of ghost elements for a forest.
+ * \see t8_forest_set_ghost
+ * \param [in,out]    forest     The forest.
+ * \a forest must be committed before calling this function.
+ */
 void                t8_forest_ghost_create (t8_forest_t forest);
+
+/** Create one layer of ghost elements for a forest.
+ * This version only works with balanced forests and is the original
+ * algorithm from p4est: Scalable Algorithms For Parallel Adaptive
+ *                Mesh Refinement On Forests of Octrees
+ * \param [in,out]    forest     The balanced forest/
+ * \a forest must be committed before calling this function.
+ * \note The user should prefer \ref t8_forest_ghost_create even for balanced forests.
+ */
+void                t8_forest_ghost_create_balanced_only (t8_forest_t forest);
 
 T8_EXTERN_C_END ();
 
