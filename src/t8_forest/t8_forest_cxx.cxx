@@ -759,9 +759,10 @@ t8_forest_element_find_owner_compare (const void *find_owner_data,
 int
 t8_forest_element_find_owner (t8_forest_t forest,
                               t8_gloidx_t gtreeid, t8_element_t * element,
-                              t8_eclass_t eclass)
+                              t8_eclass_t eclass,
+                              sc_array_t * all_owners_of_tree)
 {
-  sc_array_t          owners_of_tree, owners_of_tree_wo_first;
+  sc_array_t         *owners_of_tree, owners_of_tree_wo_first;
   int                 proc, proc_next;
   uint64_t            element_desc_lin_id;
   t8_element_t       *element_first_desc;
@@ -786,13 +787,20 @@ t8_forest_element_find_owner (t8_forest_t forest,
 
   /* In owners_of_tree we will store all processes that have elements of the
    * tree gtreeid. */
-  sc_array_init (&owners_of_tree, sizeof (int));
-  /* Compute the owners and store them (sorted) in owners_of_tree */
-  /* *INDENT-OFF* */
-  t8_offset_all_owners_of_tree (forest->mpisize, gtreeid,
-                                t8_shmem_array_get_gloidx_array
-                                (forest->tree_offsets), &owners_of_tree);
-  /* *INDENT-ON* */
+  if (all_owners_of_tree == NULL) {
+    owners_of_tree = sc_array_new (sizeof (int));
+  }
+  else {
+    owners_of_tree = all_owners_of_tree;
+  }
+  if (owners_of_tree->elem_count == 0) {
+    /* Compute the owners and store them (sorted) in owners_of_tree */
+    /* *INDENT-OFF* */
+    t8_offset_all_owners_of_tree (forest->mpisize, gtreeid,
+                                  t8_shmem_array_get_gloidx_array
+                                  (forest->tree_offsets), owners_of_tree);
+    /* *INDENT-ON* */
+  }
   /* Get the eclass_scheme and the element's first descendant's linear_id */
   ts = t8_forest_get_eclass_scheme (forest, eclass);
   /* Compute the first descendant of the element */
@@ -807,29 +815,33 @@ t8_forest_element_find_owner (t8_forest_t forest,
    * thus its first_descendant entry may not relate to this tree.
    * We thus check by hand if this process owns the element and exclude it
    * from the array. */
-  proc = *(int *) sc_array_index (&owners_of_tree, 0);
-  if (owners_of_tree.elem_count == 1) {
+  proc = *(int *) sc_array_index (owners_of_tree, 0);
+  if (owners_of_tree->elem_count == 1) {
     /* There is only this proc as possible owner. */
     ts->t8_element_destroy (1, &element_first_desc);
-    sc_array_reset (&owners_of_tree);
+    if (all_owners_of_tree == NULL) {
+      sc_array_destroy (owners_of_tree);
+    }
     return proc;
   }
   else {
     /* Get the next owning process. Its first descendant is in fact an element
      * of the tree. If it is bigger than the descendant we look for, then
      * proc is the owning process of element. */
-    proc_next = *(int *) sc_array_index (&owners_of_tree, 1);
+    proc_next = *(int *) sc_array_index (owners_of_tree, 1);
     if (*(uint64_t *)
         t8_shmem_array_index (forest->global_first_desc, (size_t) proc_next)
         > element_desc_lin_id) {
       ts->t8_element_destroy (1, &element_first_desc);
-      sc_array_reset (&owners_of_tree);
+      if (all_owners_of_tree == NULL) {
+        sc_array_destroy (owners_of_tree);
+      }
       return proc;
     }
   }
   /* Exclude the first process from the array. */
-  sc_array_init_view (&owners_of_tree_wo_first, &owners_of_tree, 1,
-                      owners_of_tree.elem_count - 1);
+  sc_array_init_view (&owners_of_tree_wo_first, owners_of_tree, 1,
+                      owners_of_tree->elem_count - 1);
   /* We binary search in the owners array for the process that owns the element. */
   find_owner_data.forest = forest;
   find_owner_data.last_owner =
@@ -849,7 +861,9 @@ t8_forest_element_find_owner (t8_forest_t forest,
     *(int *) sc_array_index_ssize_t (&owners_of_tree_wo_first, proc_index);
   /* clean-up */
   ts->t8_element_destroy (1, &element_first_desc);
-  sc_array_reset (&owners_of_tree);
+  if (all_owners_of_tree == NULL) {
+    sc_array_destroy (owners_of_tree);
+  }
   return proc;
 }
 
@@ -866,7 +880,8 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
                                             const t8_element_t * element,
                                             t8_eclass_t eclass,
                                             t8_eclass_scheme_c * ts, int face,
-                                            sc_array_t * owners)
+                                            sc_array_t * owners,
+                                            sc_array_t * tree_owners)
 {
   t8_element_t       *first_face_desc, *last_face_desc, **face_children;
   int                 first_owner, last_owner;
@@ -882,9 +897,11 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
 
   /* owner of first and last descendants */
   first_owner =
-    t8_forest_element_find_owner (forest, gtreeid, first_face_desc, eclass);
+    t8_forest_element_find_owner (forest, gtreeid, first_face_desc, eclass,
+                                  tree_owners);
   last_owner =
-    t8_forest_element_find_owner (forest, gtreeid, last_face_desc, eclass);
+    t8_forest_element_find_owner (forest, gtreeid, last_face_desc, eclass,
+                                  tree_owners);
   /* It is impossible for an element with bigger id to belong to a smaller process */
   T8_ASSERT (first_owner <= last_owner);
 
@@ -926,7 +943,7 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
       t8_forest_element_owners_at_face_recursion (forest, gtreeid,
                                                   face_children[ichild],
                                                   eclass, ts, child_face,
-                                                  owners);
+                                                  owners, tree_owners);
     }
     ts->t8_element_destroy (num_children, face_children);
     T8_FREE (face_children);
@@ -936,14 +953,16 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
 void
 t8_forest_element_owners_at_face (t8_forest_t forest, t8_gloidx_t gtreeid,
                                   t8_element_t * element, t8_eclass_t eclass,
-                                  int face, sc_array_t * owners)
+                                  int face, sc_array_t * owners,
+                                  sc_array_t * tree_owners)
 {
   t8_eclass_scheme_c *ts;
 
   ts = t8_forest_get_eclass_scheme (forest, eclass);
   /* call the recursion */
   t8_forest_element_owners_at_face_recursion (forest, gtreeid, element,
-                                              eclass, ts, face, owners);
+                                              eclass, ts, face, owners,
+                                              tree_owners);
 }
 
 T8_EXTERN_C_END ();

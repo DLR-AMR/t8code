@@ -149,6 +149,11 @@ t8_element_t       *t8_forest_get_tree_element (t8_tree_t tree,
  * \param [in]    gtreeid The global id of the tree in which the element lies.
  * \param [in]    element The element to look for.
  * \param [in]    eclass  The element class of the tree \a gtreeid.
+ * \param [in,out] all_owners_of_tree If not NULL, a sc_array of integers.
+ *                        If the element count is zero then on output all owners
+ *                        of the tree are stored.
+ *                        If the element count is non-zero then it is assumed to
+ *                        be filled with all owners of the tree.
  * \return                The mpirank of the process that owns \a element.
  * \note The element must exist in the forest.
  */
@@ -159,7 +164,9 @@ t8_element_t       *t8_forest_get_tree_element (t8_tree_t tree,
 int                 t8_forest_element_find_owner (t8_forest_t forest,
                                                   t8_gloidx_t gtreeid,
                                                   t8_element_t * element,
-                                                  t8_eclass_t eclass);
+                                                  t8_eclass_t eclass,
+                                                  sc_array_t *
+                                                  all_owners_of_tree);
 
 /** Find all owner processes that own descendant of a given element that
  * touch a given face.
@@ -168,16 +175,23 @@ int                 t8_forest_element_find_owner (t8_forest_t forest,
  * \param [in]    element The element to look for.
  * \param [in]    eclass  The element class of the tree \a gtreeid.
  * \param [in]    face    A face of \a element.
- * \param [in]    owners  On input an empty array of integers. On output it stores
+ * \param [in,out] owners  On input an empty array of integers. On output it stores
  *                        all owners of descendants of \a elem that touch \a face
  *                        in ascending order.
+ * \param [in,out] tree_owners An array of integers. If element count is zero then on output the
+ *                        owners of the tree \a gtreeid are stored.
+ *                        If element count is nonzero then the entries must be the owners of
+ *                        the tree. We highly recommend using this to speed up the owner computation.
+ *                        If NULL, it is ignored. \ref t8_forest_element_find_owner.
  */
 void                t8_forest_element_owners_at_face (t8_forest_t forest,
                                                       t8_gloidx_t gtreeid,
                                                       t8_element_t * element,
                                                       t8_eclass_t eclass,
                                                       int face,
-                                                      sc_array_t * owners);
+                                                      sc_array_t * owners,
+                                                      sc_array_t *
+                                                      tree_owners);
 
 /** Construct all face neighbors of half size of a given element.
  * \param [in]    forest The forest.

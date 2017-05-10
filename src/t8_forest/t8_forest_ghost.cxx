@@ -458,13 +458,13 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
   t8_locidx_t         itree, ielem;
   t8_tree_t           tree;
   t8_eclass_t         tree_class, neigh_class, last_class;
-  t8_gloidx_t         neighbor_tree;
+  t8_gloidx_t         neighbor_tree, last_neighbor_tree;
   t8_eclass_scheme_c *ts, *neigh_scheme, *prev_neigh_scheme;
 
   int                 iface, num_faces;
   int                 num_face_children, max_num_face_children = 0;
   int                 ichild, owner;
-  sc_array_t          owners;
+  sc_array_t          owners, tree_owners;
   int                 is_atom;
 
   last_class = T8_ECLASS_COUNT;
@@ -472,9 +472,11 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
 
   if (ghost_method != 0) {
     sc_array_init (&owners, sizeof (int));
+    sc_array_init (&tree_owners, sizeof (int));
   }
 
   t8_debugf ("[H] Start filling remotes.\n");
+  last_neighbor_tree = -1;
   /* Loop over the trees of the forest */
   for (itree = 0; itree < num_local_trees; itree++) {
     /* Get a pointer to the tree, the class of the tree, the
@@ -552,7 +554,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
               owner =
                 t8_forest_element_find_owner (forest, neighbor_tree,
                                               half_neighbors[ichild],
-                                              neigh_class);
+                                              neigh_class, NULL);
               T8_ASSERT (0 <= owner && owner < forest->mpisize);
               if (owner != forest->mpirank) {
                 /* Add the element as a remote element */
@@ -577,7 +579,8 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
 
             t8_forest_element_owners_at_face (forest, neighbor_tree,
                                               face_neighbor, neigh_class,
-                                              neigh_face, &owners);
+                                              neigh_face, &owners,
+                                              &tree_owners);
             T8_ASSERT (owners.elem_count > 0);
             /* Iterate over all owners and if any is not the current process,
              * add this element as remote */
@@ -591,6 +594,11 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
               }
             }
             sc_array_truncate (&owners);
+            if (last_neighbor_tree != neighbor_tree) {
+              /* We re-use the computed tree owners if the tree did not change */
+              sc_array_truncate (&tree_owners);
+              last_neighbor_tree = neighbor_tree;
+            }
           }
           ts->t8_element_destroy (1, &face_neighbor);
         }
@@ -609,6 +617,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
   }
   else {
     sc_array_reset (&owners);
+    sc_array_reset (&tree_owners);
   }
   t8_debugf ("[H] Done filling remotes.\n");
 }
