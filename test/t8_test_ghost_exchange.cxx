@@ -215,7 +215,6 @@ t8_test_ghost_exchange ()
                                         sc_MPI_COMM_WORLD);
         /* exchange ghost data */
         t8_test_ghost_exchange_data_int (forest);
-        sc_MPI_Barrier (sc_MPI_COMM_WORLD);
         t8_test_ghost_exchange_data_id (forest);
         /* Adapt the forest and exchange data again */
         maxlevel = level + 2;
