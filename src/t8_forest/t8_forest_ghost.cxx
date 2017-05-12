@@ -554,7 +554,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
               owner =
                 t8_forest_element_find_owner (forest, neighbor_tree,
                                               half_neighbors[ichild],
-                                              neigh_class, NULL);
+                                              neigh_class);
               T8_ASSERT (0 <= owner && owner < forest->mpisize);
               if (owner != forest->mpirank) {
                 /* Add the element as a remote element */
@@ -577,10 +577,16 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
           if (neighbor_tree >= 0) {
             /* Build a list of all owners of element that touch face */
 
+            /* We re-use the computed tree owners if the tree did not change */
+            if (last_neighbor_tree != neighbor_tree) {
+              /* and reset it if the tree changed */
+              sc_array_truncate (&tree_owners);
+              last_neighbor_tree = neighbor_tree;
+            }
+
             t8_forest_element_owners_at_face (forest, neighbor_tree,
                                               face_neighbor, neigh_class,
-                                              neigh_face, &owners,
-                                              &tree_owners);
+                                              neigh_face, &owners);
             T8_ASSERT (owners.elem_count > 0);
             /* Iterate over all owners and if any is not the current process,
              * add this element as remote */
@@ -594,11 +600,6 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
               }
             }
             sc_array_truncate (&owners);
-            if (last_neighbor_tree != neighbor_tree) {
-              /* We re-use the computed tree owners if the tree did not change */
-              sc_array_truncate (&tree_owners);
-              last_neighbor_tree = neighbor_tree;
-            }
           }
           ts->t8_element_destroy (1, &face_neighbor);
         }

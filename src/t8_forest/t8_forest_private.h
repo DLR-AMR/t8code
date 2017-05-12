@@ -165,12 +165,27 @@ t8_element_t       *t8_forest_get_tree_element (t8_tree_t tree,
  *       is it really needed to construct the tree owners? Cant we just use the global
  *       offset array?
  */
+int                 t8_forest_element_find_owner_old (t8_forest_t forest,
+                                                      t8_gloidx_t gtreeid,
+                                                      t8_element_t * element,
+                                                      t8_eclass_t eclass,
+                                                      sc_array_t *
+                                                      all_owners_of_tree);
+
+/* TODO: document */
 int                 t8_forest_element_find_owner (t8_forest_t forest,
                                                   t8_gloidx_t gtreeid,
                                                   t8_element_t * element,
-                                                  t8_eclass_t eclass,
-                                                  sc_array_t *
-                                                  all_owners_of_tree);
+                                                  t8_eclass_t eclass);
+
+/* TODO: document */
+int                 t8_forest_element_find_owner_ext (t8_forest_t forest,
+                                                      t8_gloidx_t gtreeid,
+                                                      t8_element_t * element,
+                                                      t8_eclass_t eclass,
+                                                      int lower_bound,
+                                                      int upper_bound,
+                                                      int element_is_desc);
 
 /** Find all owner processes that own descendant of a given element that
  * touch a given face.
@@ -193,9 +208,7 @@ void                t8_forest_element_owners_at_face (t8_forest_t forest,
                                                       t8_element_t * element,
                                                       t8_eclass_t eclass,
                                                       int face,
-                                                      sc_array_t * owners,
-                                                      sc_array_t *
-                                                      tree_owners);
+                                                      sc_array_t * owners);
 
 /** Construct all face neighbors of half size of a given element.
  * \param [in]    forest The forest.
