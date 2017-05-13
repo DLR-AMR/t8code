@@ -36,6 +36,7 @@ t8_dprism_copy (const t8_dprism_t * p, t8_dprism_t * dest)
 {
   T8_ASSERT (p->line.level == p->tri.level);
   memcpy (dest, p, sizeof (t8_dprism_t));
+  T8_ASSERT (dest->line.level == dest->tri.level);
 }
 
 void
@@ -65,6 +66,7 @@ t8_dprism_init_linear_id (t8_dprism_t * p, int level, uint64_t id)
   }
   t8_dtri_init_linear_id (&p->tri, tri_id, level);
   t8_dline_init_linear_id (&p->line, level, line_id);
+
   T8_ASSERT (p->line.level == p->tri.level);
 }
 
@@ -73,8 +75,11 @@ t8_dprism_parent (const t8_dprism_t * p, t8_dprism_t * parent)
 {
   T8_ASSERT (p->line.level > 0);
   T8_ASSERT (p->line.level == p->tri.level);
+
   t8_dtri_parent (&p->tri, &parent->tri);
   t8_dline_parent (&p->line, &parent->line);
+
+  T8_ASSERT (parent->line.level == parent->tri.level);
 }
 
 int
@@ -95,6 +100,7 @@ t8_dprism_is_familypv (t8_dprism_t ** fam)
   t8_dtri_t         **tri_fam = malloc (4 * sizeof (t8_dtri_t *));
   t8_dline_t        **line_fam = malloc (2 * sizeof (t8_dline_t *));
   int                 is_family = 1;
+
   for (i = 0; i < 2; i++) {
     tri_fam[0] = &fam[0 + i * 4]->tri;
     tri_fam[1] = &fam[1 + i * 4]->tri;
@@ -117,8 +123,11 @@ t8_dprism_child (const t8_dprism_t * p, int childid, t8_dprism_t * child)
 {
   T8_ASSERT (0 <= childid && childid < 8);
   T8_ASSERT (p->line.level == p->tri.level);
+
   t8_dtri_child (&p->tri, childid % 4, &child->tri);
   t8_dline_child (&p->line, childid / 4, &child->line);
+
+  T8_ASSERT (child->line.level == child->tri.level);
 }
 
 void
@@ -144,6 +153,7 @@ t8_dprism_successor (const t8_dprism_t * p, t8_dprism_t * succ, int level)
   prism_child_id = t8_dprism_child_id(succ);
 
   T8_ASSERT (1 <= level && level <= T8_DPRISM_MAXLEVEL);
+  T8_ASSERT(p->line.level == p->tri.level);
 
   /*The next prism is the child with local ID 0 of the next parent prism */
   if (prism_child_id == 7) {
@@ -151,15 +161,17 @@ t8_dprism_successor (const t8_dprism_t * p, t8_dprism_t * succ, int level)
     /*Zero out the bits of higher level, caused by recursion */
 #if 1
     succ->tri.x =
-      (succ->tri.x >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL -
+      (succ->tri.x >> (T8_DPRISM_MAXLEVEL - level + 1)) << (T8_DPRISM_MAXLEVEL -
                                                           level + 1);
     succ->tri.y =
-      (succ->tri.y >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL -
+      (succ->tri.y >> (T8_DPRISM_MAXLEVEL - level + 1)) << (T8_DPRISM_MAXLEVEL -
                                                           level + 1);
 #endif
+#if 1
     succ->line.x =
-      (succ->line.x >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL -
+      (succ->line.x >> (T8_DPRISM_MAXLEVEL - level + 1)) << (T8_DPRISM_MAXLEVEL -
                                                            level + 1);
+#endif
     /*Set the level to the actual level */
     succ->line.level = level;
     succ->tri.level = level;
@@ -174,7 +186,7 @@ t8_dprism_successor (const t8_dprism_t * p, t8_dprism_t * succ, int level)
   else {
     t8_dtri_successor (&p->tri, &succ->tri, level);
   }
-
+    T8_ASSERT(succ->line.level == succ->tri.level);
 }
 
 void
@@ -186,17 +198,22 @@ t8_dprism_first_descendant (const t8_dprism_t * p, t8_dprism_t * s, int level)
 
   t8_dtri_first_descendant (&p->tri, &s->tri, level);
   t8_dline_first_descendant (&p->line, &s->line, level);
+
+  T8_ASSERT(s->line.level == s->tri.level);
 }
 
 void
 t8_dprism_last_descendant (const t8_dprism_t * p, t8_dprism_t * s, int level)
 {
   T8_ASSERT (level >= p->line.level && level <= T8_DPRISM_MAXLEVEL);
+  T8_ASSERT (p->line.level == p->tri.level);
   /*Last prism descendant = last triangle desc x last line desc */
   T8_ASSERT (level == T8_DTRI_MAXLEVEL);
 
   t8_dtri_last_descendant (&p->tri, &s->tri, level);
   t8_dline_last_descendant (&p->line, &s->line, level);
+
+  T8_ASSERT(s->line.level == s->tri.level);
 }
 
 void
