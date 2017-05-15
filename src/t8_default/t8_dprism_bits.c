@@ -112,6 +112,14 @@ t8_dprism_is_familypv (t8_dprism_t ** fam)
     line_fam[0] = &fam[i]->line;
     line_fam[1] = &fam[i + 4]->line;
     is_family =  is_family && t8_dline_is_familypv ((const t8_dline_t **) line_fam);
+    is_family = is_family && (fam[i]->tri.level == fam[i + 4]->tri.level);
+    is_family = is_family && (fam[i]->tri.type == fam[i + 4]->tri.type);
+    is_family = is_family && (fam[i]->tri.x == fam[i + 4]->tri.x);
+    is_family = is_family && (fam[i]->tri.y == fam[i + 4]->tri.y);
+
+  }
+  for(i = 0; i < 8; i++){
+      is_family = is_family && (fam[i]->line.level == fam[i]->tri.level);
   }
   free (tri_fam);
   free (line_fam);
