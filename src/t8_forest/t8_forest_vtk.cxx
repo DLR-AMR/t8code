@@ -816,7 +816,7 @@ t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix,
   T8_ASSERT (forest != NULL);
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (fileprefix != NULL);
-  if (forest->ghosts == NULL) {
+  if (forest->ghosts == NULL || forest->ghosts->num_ghosts_elements == 0) {
     /* Never write ghost elements if there aren't any */
     write_ghosts = 0;
   }
