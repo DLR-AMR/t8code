@@ -140,6 +140,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
     ts->t8_element_new (1, &first_desc);
     ts->t8_element_first_descendant (first_element, first_desc);
     /* Compute the linear id of the descendant. */
+    /* TODO: change level to forest->maxlevel */
     local_first_desc =
       ts->t8_element_get_linear_id (first_desc, ts->t8_element_maxlevel ());
     ts->t8_element_destroy (1, &first_desc);
