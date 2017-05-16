@@ -702,6 +702,86 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
   return neighbor_tree;
 }
 
+/* Check if an element is owned by a specific rank */
+int
+t8_forest_element_check_owner (t8_forest_t forest, t8_element_t * element,
+                               t8_gloidx_t gtreeid, t8_eclass_t eclass,
+                               int rank, int element_is_desc)
+{
+  t8_element_t       *first_desc;
+  t8_eclass_scheme_c *ts;
+  t8_gloidx_t        *first_global_trees;
+  uint64_t            rfirst_desc_id, rnext_desc_id, first_desc_id;
+  int                 is_first, is_last, check_next;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (element != NULL);
+  T8_ASSERT (0 <= gtreeid
+             && gtreeid < t8_forest_get_num_global_trees (forest));
+
+  /* Get a pointer to the first_global_trees array of forest */
+  first_global_trees = t8_shmem_array_get_gloidx_array (forest->tree_offsets);
+  if (t8_offset_in_range (gtreeid, rank, first_global_trees)) {
+    /* The process has elements of that tree */
+    is_first = (t8_offset_first (rank, first_global_trees) == gtreeid);
+    is_last = (gtreeid == t8_offset_last (rank, first_global_trees));
+    if (is_first || is_last) {
+      /* We need to check if element is on the next rank only if the tree is the
+       * last tree on this rank and the next rank has elements of this tree */
+      check_next = is_last && rank < forest->mpisize - 1 &&
+        t8_offset_in_range (gtreeid, rank + 1, first_global_trees);
+      /* The tree is either the first or the last tree on rank, we thus
+       * have to check whether element is in the range of the tree */
+      /* Get the eclass scheme of the tree */
+      ts = t8_forest_get_eclass_scheme (forest, eclass);
+      /* Compute the linear id of the first descendant of element */
+      if (!element_is_desc) {
+        ts->t8_element_new (1, &first_desc);
+        /* TODO: add forest->maxlevel to first_descendant */
+        ts->t8_element_first_descendant (element, first_desc);
+        /* TODO: change level to forest->maxlevel */
+        first_desc_id =
+          ts->t8_element_get_linear_id (first_desc,
+                                        ts->t8_element_maxlevel ());
+        ts->t8_element_destroy (1, &first_desc);
+      }
+      else {
+        /* The element is its own first descendant */
+        first_desc_id =
+          ts->t8_element_get_linear_id (element, ts->t8_element_maxlevel ());
+      }
+      /* Get the id of the trees first descendant and the first descendant
+       * of the next rank */
+      rfirst_desc_id =
+        *(uint64_t *) t8_shmem_array_index (forest->global_first_desc, rank);
+      if (check_next) {
+        /* Get the id of the trees first descendant on the next rank */
+        rnext_desc_id =
+          *(uint64_t *) t8_shmem_array_index (forest->global_first_desc,
+                                              rank + 1);
+      }
+      /* The element is not in the tree if and only if
+       *  is_first && first_desc_id > id (first_desc)
+       *    or
+       *  check_next && next_desc_id <= id (first_desc)
+       */
+      if ((is_first && rfirst_desc_id > first_desc_id)
+          || (check_next && rnext_desc_id <= first_desc_id)) {
+        /* The element is not on this rank */
+        return 0;
+      }
+      /* The element is on this rank */
+      return 1;
+    }
+    else {
+      /* This rank holds all elements of the tree, thus the element must
+       * belong to this rank */
+      return 1;
+    }
+  }
+  return 0;
+}
+
 /* The data that we use as key in the binary owner search.
  * It contains the linear id of the element that we look for and
  * a pointer to the forest, we also store the index of the biggest
@@ -879,7 +959,8 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
   if (!element_is_desc) {
     ts->t8_element_destroy (1, &first_desc);
   }
-
+  T8_ASSERT (t8_forest_element_check_owner (forest, element, gtreeid, eclass,
+                                            guess, element_is_desc));
   return guess;
 }
 

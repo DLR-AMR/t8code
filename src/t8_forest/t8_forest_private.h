@@ -187,6 +187,25 @@ int                 t8_forest_element_find_owner_ext (t8_forest_t forest,
                                                       int upper_bound,
                                                       int element_is_desc);
 
+/** Perform a constant runtime check if a given rank is owner of a given element.
+ * If the element is owned by more than one rank, then this check is only true
+ * for the smallest.
+ * \param [in]  forest      A forest.
+ * \param [in]  element     An element of \a forest.
+ * \param [in]  gtreeid     The global tree in which element is in.
+ * \param [in]  eclass      The element class of the tree.
+ * \param [in]  rank        An mpi rank.
+ * \param [in]  element_is_desc This should be true, if \a element is its own first_descendant at
+ *                          the maximum level. Must be false otherwise.
+ * \return      True if and only if \a rank is the (first) owner process of \a element.
+ */
+int                 t8_forest_element_check_owner (t8_forest_t forest,
+                                                   t8_element_t * element,
+                                                   t8_gloidx_t gtreeid,
+                                                   t8_eclass_t eclass,
+                                                   int rank,
+                                                   int element_is_desc);
+
 /** Find all owner processes that own descendant of a given element that
  * touch a given face.
  * \param [in]    forest  The forest.
