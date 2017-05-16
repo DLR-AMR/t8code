@@ -231,14 +231,54 @@ t8_forest_ghost_init (t8_forest_ghost_t * pghost, t8_ghost_type_t ghost_type)
   ghost->remote_processes = sc_array_new (sizeof (int));
 }
 
+/* Return the remote struct of a given remote rank */
+static t8_ghost_remote_t *
+t8_forest_ghost_get_remote (t8_forest_t forest, int remote)
+{
+  t8_ghost_remote_t   remote_search;
+  int                 ret;
+  size_t              index;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  remote_search.remote_rank = remote;
+  ret = sc_hash_array_lookup (forest->ghosts->remote_ghosts, &remote_search,
+                              &index);
+  T8_ASSERT (ret);
+  return (t8_ghost_remote_t *)
+    sc_array_index (&forest->ghosts->remote_ghosts->a, index);
+}
+
+/* Return a remote processes info about the stored ghost elements */
+static t8_ghost_process_hash_t *
+t8_forest_ghost_get_proc_info (t8_forest_t forest, int remote)
+{
+  t8_ghost_process_hash_t proc_hash_search, **pproc_hash_found,
+    *proc_hash_found;
+  int                 ret;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  proc_hash_search.mpirank = remote;
+  ret = sc_hash_lookup (forest->ghosts->process_offsets, &proc_hash_search,
+                        (void ***) &pproc_hash_found);
+  T8_ASSERT (ret);
+  proc_hash_found = *pproc_hash_found;
+  T8_ASSERT (proc_hash_found->mpirank == remote);
+  return proc_hash_found;
+}
+
 /* return the number of trees in a ghost */
 t8_locidx_t
 t8_forest_ghost_num_trees (t8_forest_t forest)
 {
-  if (forest->ghosts == 0) {
+  if (forest->ghosts == NULL) {
     return 0;
   }
   T8_ASSERT (forest->ghosts != NULL);
+  if (forest->ghosts->num_ghosts_elements <= 0) {
+    return 0;
+  }
   T8_ASSERT (forest->ghosts->ghost_trees != NULL);
 
   return forest->ghosts->ghost_trees->elem_count;
@@ -636,10 +676,7 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost,
 {
   int                 proc_index, remote_rank;
   int                 num_remotes;
-  int                 entry_is_found;
-  t8_ghost_remote_t   proc_hash;
-  size_t              remote_index, first_remote_index;
-  sc_array_t         *remotes;
+  size_t              remote_index;
   t8_ghost_remote_t  *remote_entry;
   sc_array_t         *remote_trees;
   t8_ghost_remote_tree_t *remote_tree;
@@ -666,15 +703,7 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost,
     current_send_info->num_bytes = 0;
     current_send_info->request = *requests + proc_index;
     /* Lookup the ghost elements for the first tree of this remote */
-    proc_hash.remote_rank = remote_rank;
-    entry_is_found = sc_hash_array_lookup (ghost->remote_ghosts,
-                                           &proc_hash, &first_remote_index);
-    /* There must exist remote elements for this rank. */
-    T8_ASSERT (entry_is_found);
-    /* Get a pointer to the tree entry */
-    remotes = &ghost->remote_ghosts->a;
-    remote_entry = (t8_ghost_remote_t *) sc_array_index (remotes,
-                                                         first_remote_index);
+    remote_entry = t8_forest_ghost_get_remote (forest, remote_rank);
     T8_ASSERT (remote_entry->remote_rank == remote_rank);
     /* Loop over all trees of the remote rank and count the bytes */
     /* At first we store the number of remote trees in the buffer */
@@ -1287,17 +1316,78 @@ void
 t8_forest_ghost_create (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
-  /* call unbalanced version of ghost algorithm */
-  t8_forest_ghost_create_ext (forest, 1);
+  if (forest->mpisize > 1) {
+    /* call unbalanced version of ghost algorithm */
+    t8_forest_ghost_create_ext (forest, 1);
+  }
 }
 
 void
 t8_forest_ghost_create_balanced_only (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
-  /* TODO: assert that forest is balanced */
-  /* Call balanced version of ghost algorithm */
-  t8_forest_ghost_create_ext (forest, 0);
+  if (forest->mpisize > 1) {
+    /* TODO: assert that forest is balanced */
+    /* Call balanced version of ghost algorithm */
+    t8_forest_ghost_create_ext (forest, 0);
+  }
+}
+
+/** Return the array of remote ranks.
+ * \param [in] forest   A forest with constructed ghost layer.
+ * \param [in,out] num_remotes On output the number of remote ranks is stored here.
+ * \return              The array of remote ranks in ascending order.
+ */
+int                *
+t8_forest_ghost_get_remotes (t8_forest_t forest, int *num_remotes)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  if (forest->ghosts == NULL) {
+    *num_remotes = 0;
+    return NULL;
+  }
+  T8_ASSERT (forest->ghosts != NULL);
+
+  *num_remotes = forest->ghosts->remote_processes->elem_count;
+  return (int *) forest->ghosts->remote_processes->array;
+}
+
+/** Return the first local ghost tree of a remote rank.
+ * \param [in] forest   A forest with constructed ghost layer.
+ * \param [in] remote   A remote rank of the ghost layer in \a forest.
+ * \return              The ghost tree id of the first ghost tree that stores ghost
+ *                      elements of \a remote.
+ */
+t8_locidx_t
+t8_forest_ghost_remote_first_tree (t8_forest_t forest, int remote)
+{
+  t8_ghost_process_hash_t *proc_entry;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->ghosts != NULL);
+
+  proc_entry = t8_forest_ghost_get_proc_info (forest, remote);
+  T8_ASSERT (proc_entry->mpirank == remote);
+  return proc_entry->tree_index;
+}
+
+/** Return the local index of the first ghost element that belongs to a given remote rank.
+ * \param [in] forest   A forest with constructed ghost layer.
+ * \param [in] remote   A remote rank of the ghost layer in \a forest.
+ * \return              The index i in the ghost elements of the first element of rank \a remote
+ */
+t8_locidx_t
+t8_forest_ghost_remote_first_elem (t8_forest_t forest, int remote)
+{
+  t8_ghost_process_hash_t *proc_entry;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->ghosts != NULL);
+
+  proc_entry = t8_forest_ghost_get_proc_info (forest, remote);
+  T8_ASSERT (proc_entry->mpirank == remote);
+
+  return proc_entry->ghost_offset;
 }
 
 /* Fill the send buffer for a ghost data exchange for on remote rank.

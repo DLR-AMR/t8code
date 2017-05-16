@@ -73,6 +73,31 @@ t8_element_t       *t8_forest_ghost_get_element (t8_forest_t forest,
                                                  t8_locidx_t lghost_tree,
                                                  t8_locidx_t lelement);
 
+/** Return the array of remote ranks.
+ * \param [in] forest   A forest with constructed ghost layer.
+ * \param [in,out] num_remotes On output the number of remote ranks is stored here.
+ * \return              The array of remote ranks in ascending order.
+ */
+int                *t8_forest_ghost_get_remotes (t8_forest_t forest,
+                                                 int *num_remotes);
+
+/** Return the first local ghost tree of a remote rank.
+ * \param [in] forest   A forest with constructed ghost layer.
+ * \param [in] remote   A remote rank of the ghost layer in \a forest.
+ * \return              The ghost tree id of the first ghost tree that stores ghost
+ *                      elements of \a remote.
+ */
+t8_locidx_t         t8_forest_ghost_remote_first_tree (t8_forest_t forest,
+                                                       int remote);
+
+/** Return the local index of the first ghost element that belongs to a given remote rank.
+ * \param [in] forest   A forest with constructed ghost layer.
+ * \param [in] remote   A remote rank of the ghost layer in \a forest.
+ * \return              The index i in the ghost elements of the first element of rank \a remote
+ */
+t8_locidx_t         t8_forest_ghost_remote_first_elem (t8_forest_t forest,
+                                                       int remote);
+
 /* TODO: - document
  *       - make accesible to forest API
  *       - make a begin and end version
