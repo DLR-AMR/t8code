@@ -1628,58 +1628,61 @@ void
 t8_forest_ghost_print (t8_forest_t forest)
 {
   t8_forest_ghost_t   ghost;
-  t8_ghost_remote_t   remote_search, *remote_found;
+  t8_ghost_remote_t  *remote_found;
   t8_ghost_remote_tree_t *remote_tree;
   t8_ghost_process_hash_t proc_hash, **pfound, *found;
   size_t              iremote, itree;
-  int                 ret;
-  size_t              index;
+  int                 ret, remote_rank;
   char                remote_buffer[BUFSIZ] = "";
   char                buffer[BUFSIZ] = "";
 
+  if (forest->ghosts == NULL) {
+    return;
+  }
+  T8_ASSERT (forest->ghosts != NULL);
   ghost = forest->ghosts;
   snprintf (remote_buffer + strlen (remote_buffer),
             BUFSIZ - strlen (remote_buffer), "\tRemotes:\n");
   snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer),
             "\tReceived:\n");
 
-  for (iremote = 0; iremote < ghost->remote_processes->elem_count; iremote++) {
-    /* Get the rank of the remote process */
-    remote_search.remote_rank =
-      *(int *) sc_array_index (ghost->remote_processes, iremote);
-    /* Search for the remote process in the hash table */
-    ret = sc_hash_array_lookup (ghost->remote_ghosts, &remote_search, &index);
-    remote_found = (t8_ghost_remote_t *)
-      sc_array_index (&ghost->remote_ghosts->a, index);
-    T8_ASSERT (ret);
-    /* investigate the entry of this remote process */
-    snprintf (remote_buffer + strlen (remote_buffer),
-              BUFSIZ - strlen (remote_buffer), "\t[Rank %i] (%li trees):\n",
-              remote_found->remote_rank,
-              remote_found->remote_trees.elem_count);
-    for (itree = 0; itree < remote_found->remote_trees.elem_count; itree++) {
-      remote_tree = (t8_ghost_remote_tree_t *)
-        sc_array_index (&remote_found->remote_trees, itree);
+  if (ghost->num_ghosts_elements > 0) {
+    for (iremote = 0; iremote < ghost->remote_processes->elem_count;
+         iremote++) {
+      /* Get the rank of the remote process */
+      remote_rank =
+        *(int *) sc_array_index (ghost->remote_processes, iremote);
+      /* Get this remote's entry */
+      remote_found = t8_forest_ghost_get_remote (forest, remote_rank);
+      /* investigate the entry of this remote process */
       snprintf (remote_buffer + strlen (remote_buffer),
-                BUFSIZ - strlen (remote_buffer),
-                "\t\t[id: %lli, class: %s, #elem: %li]\n",
-                (long long) remote_tree->global_id,
-                t8_eclass_to_string[remote_tree->eclass],
-                (long) remote_tree->elements.elem_count);
+                BUFSIZ - strlen (remote_buffer), "\t[Rank %i] (%li trees):\n",
+                remote_found->remote_rank,
+                remote_found->remote_trees.elem_count);
+      for (itree = 0; itree < remote_found->remote_trees.elem_count; itree++) {
+        remote_tree = (t8_ghost_remote_tree_t *)
+          sc_array_index (&remote_found->remote_trees, itree);
+        snprintf (remote_buffer + strlen (remote_buffer),
+                  BUFSIZ - strlen (remote_buffer),
+                  "\t\t[id: %lli, class: %s, #elem: %li]\n",
+                  (long long) remote_tree->global_id,
+                  t8_eclass_to_string[remote_tree->eclass],
+                  (long) remote_tree->elements.elem_count);
+      }
+
+      /* Investigate the elements that we received from this process */
+      proc_hash.mpirank = remote_rank;
+      /* look up this rank in the hash table */
+      ret = sc_hash_lookup (ghost->process_offsets, &proc_hash,
+                            (void ***) &pfound);
+
+      T8_ASSERT (ret);
+      found = *pfound;
+      snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer),
+                "\t[Rank %i] First tree: %li\n\t\t First element: %li\n",
+                remote_rank,
+                (long) found->tree_index, (long) found->first_element);
     }
-
-    /* Investigate the elements that we received from this process */
-    proc_hash.mpirank = remote_search.remote_rank;
-    /* look up this rank in the hash table */
-    ret = sc_hash_insert_unique (ghost->process_offsets, &proc_hash,
-                                 (void ***) &pfound);
-
-    T8_ASSERT (ret == 0);
-    found = *pfound;
-    snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer),
-              "\t[Rank %i] First tree: %li\n\t\t First element: %li\n",
-              remote_search.remote_rank,
-              (long) found->tree_index, (long) found->first_element);
   }
   t8_debugf ("Ghost structure:\n%s\n%s\n", remote_buffer, buffer);
 }
