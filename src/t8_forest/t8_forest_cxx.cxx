@@ -1092,6 +1092,7 @@ t8_forest_element_find_owner_old (t8_forest_t forest,
  * of the element that touch the face.
  * We pass those children to the recursion in order of their linear id to be sure
  * that we add owners in ascending order.
+ * first_desc/last_desc should either point to the first/last descendant of element or be NULL
  */
 static void
 t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
@@ -1100,7 +1101,9 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
                                             t8_eclass_t eclass,
                                             t8_eclass_scheme_c * ts, int face,
                                             sc_array_t * owners,
-                                            int lower_bound, int upper_bound)
+                                            int lower_bound, int upper_bound,
+                                            t8_element_t * first_desc,
+                                            t8_element_t * last_desc)
 {
   t8_element_t       *first_face_desc, *last_face_desc, **face_children;
   int                 first_owner, last_owner;
@@ -1109,10 +1112,20 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
   int                 last_owner_entry;
 
   /* Create first and last descendants at face */
-  ts->t8_element_new (1, &first_face_desc);
-  ts->t8_element_new (1, &last_face_desc);
-  ts->t8_element_first_descendant_face (element, face, first_face_desc);
-  ts->t8_element_last_descendant_face (element, face, last_face_desc);
+  if (first_desc == NULL) {
+    ts->t8_element_new (1, &first_face_desc);
+    ts->t8_element_first_descendant_face (element, face, first_face_desc);
+  }
+  else {
+    first_face_desc = first_desc;
+  }
+  if (last_desc == NULL) {
+    ts->t8_element_new (1, &last_face_desc);
+    ts->t8_element_last_descendant_face (element, face, last_face_desc);
+  }
+  else {
+    last_face_desc = last_desc;
+  }
 
   /* owner of first and last descendants */
   first_owner =
@@ -1142,6 +1155,9 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
       /* We did not count this process as an owner, thus we add it */
       *(int *) sc_array_push (owners) = first_owner;
     }
+    /* free memory */
+    ts->t8_element_destroy (1, &first_face_desc);
+    ts->t8_element_destroy (1, &last_face_desc);
     return;
   }
   else {
@@ -1160,11 +1176,16 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
       /* the face number of the child may not be the same as face */
       child_face = ts->t8_element_face_child_face (element, face, ichild);
       /* find owners of this child */
+      /* For the first child, we reuse the first descendant */
+      first_desc = ichild == 0 ? first_face_desc : NULL;
+      /* For the last child, we reuse the last descendant */
+      last_desc = ichild == num_children - 1 ? last_face_desc : NULL;
       t8_forest_element_owners_at_face_recursion (forest, gtreeid,
                                                   face_children[ichild],
                                                   eclass, ts, child_face,
                                                   owners,
-                                                  lower_bound, upper_bound);
+                                                  lower_bound, upper_bound,
+                                                  first_desc, last_desc);
     }
     ts->t8_element_destroy (num_children, face_children);
     T8_FREE (face_children);
@@ -1182,7 +1203,8 @@ t8_forest_element_owners_at_face (t8_forest_t forest, t8_gloidx_t gtreeid,
   /* call the recursion */
   t8_forest_element_owners_at_face_recursion (forest, gtreeid, element,
                                               eclass, ts, face, owners,
-                                              0, forest->mpisize - 1);
+                                              0, forest->mpisize - 1,
+                                              NULL, NULL);
 }
 
 T8_EXTERN_C_END ();
