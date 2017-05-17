@@ -253,12 +253,15 @@ public:
    * \param [in] num_children The number of elements in \a children. Must match
    *                      the number of children that touch \a face.
    *                      \ref t8_element_num_face_children
-    * It is valid to call this function with elem = children[0].
+   * \param [in,out] child_indices If not NULL, an array of num_children integers must be given,
+   *                      on output its i-it entry is the child_id of the i-th face_child.
+   * It is valid to call this function with elem = children[0].
    */
   virtual void        t8_element_children_at_face (const t8_element_t * elem,
                                                    int face,
                                                    t8_element_t * children[],
-                                                   int num_children) = 0;
+                                                   int num_children,
+                                                   int *child_indices) = 0;
 
   /** Given a face of an element and a child number of a child of that face, return the face number
    * of the child of the element that matches the child face.

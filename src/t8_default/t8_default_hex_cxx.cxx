@@ -180,13 +180,20 @@ t8_default_scheme_hex_c::t8_element_children_at_face (const t8_element_t *
                                                       elem, int face,
                                                       t8_element_t *
                                                       children[],
-                                                      int num_children)
+                                                      int num_children,
+                                                      int *child_indices)
 {
-  int                 child_ids[4], i;
+  int                 child_ids_local[4], i, *child_ids;
 
   T8_ASSERT (0 <= face && face < P8EST_FACES);
   T8_ASSERT (num_children == t8_element_num_face_children (elem, face));
 
+  if (child_indices != NULL) {
+    child_ids = child_indices;
+  }
+  else {
+    child_ids = child_ids_local;
+  }
   /*
    * Compute the child id of the first and second child at the face.
    *

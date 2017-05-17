@@ -169,14 +169,15 @@ t8_default_scheme_tet_c::t8_element_children_at_face (const t8_element_t *
                                                       elem, int face,
                                                       t8_element_t *
                                                       children[],
-                                                      int num_children)
+                                                      int num_children,
+                                                      int *child_indices)
 {
   const t8_dtet_t    *t = (const t8_dtet_t *) elem;
   t8_dtet_t         **c = (t8_dtet_t **) children;
   T8_ASSERT (0 <= face && face < T8_DTET_FACES);
   T8_ASSERT (num_children == T8_DTET_FACE_CHILDREN);
 
-  t8_dtet_children_at_face (t, face, c, num_children);
+  t8_dtet_children_at_face (t, face, c, num_children, child_indices);
 }
 
 int

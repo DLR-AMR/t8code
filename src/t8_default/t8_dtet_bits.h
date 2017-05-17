@@ -142,7 +142,8 @@ void                t8_dtet_nearest_common_ancestor (const t8_dtet_t * t1,
 void                t8_dtet_children_at_face (const t8_dtet_t * tet,
                                               int face,
                                               t8_dtet_t * children[],
-                                              int num_children);
+                                              int num_children,
+                                              int *child_indices);
 
 /** Given a face of an tetrahedron and a child number of a child of that face, return the face number
  * of the child of the tetrahedron that matches the child face.

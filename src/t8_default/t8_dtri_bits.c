@@ -632,13 +632,20 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
 
 void
 t8_dtri_children_at_face (const t8_dtri_t * tri, int face,
-                          t8_dtri_t * children[], int num_children)
+                          t8_dtri_t * children[], int num_children,
+                          int *child_indices)
 {
-  int                 child_ids[T8_DTRI_FACE_CHILDREN], i;
+  int                 child_ids_local[T8_DTRI_FACE_CHILDREN], i, *child_ids;
 
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
   T8_ASSERT (num_children == T8_DTRI_FACE_CHILDREN);
 
+  if (child_indices != NULL) {
+    child_ids = child_indices;
+  }
+  else {
+    child_ids = child_ids_local;
+  }
 #ifndef T8_DTRI_TO_DTET
   /* Triangle version */
   /* The first child is '0' for faces 1 and 2 and '1+type' for face 0 */

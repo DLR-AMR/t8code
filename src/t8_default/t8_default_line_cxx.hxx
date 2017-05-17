@@ -158,7 +158,8 @@ public:
   virtual void        t8_element_children_at_face (const t8_element_t * elem,
                                                    int face,
                                                    t8_element_t * children[],
-                                                   int num_children)
+                                                   int num_children,
+                                                   int *child_indices)
   {
     SC_ABORT ("This function is not implemented yet.\n");
   }

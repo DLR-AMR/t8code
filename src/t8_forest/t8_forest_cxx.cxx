@@ -677,7 +677,7 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
    *
    */
   ts->t8_element_children_at_face (elem, face, children_at_face,
-                                   num_children_at_face);
+                                   num_children_at_face, NULL);
   /* For each face_child build its neighbor */
   for (child_it = 0; child_it < num_children_at_face; child_it++) {
     /* The face number of the face of the child that coincides with face
@@ -1171,7 +1171,7 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
     ts->t8_element_new (num_children, face_children);
     /* construct the children of element that touch face */
     ts->t8_element_children_at_face (element, face, face_children,
-                                     num_children);
+                                     num_children, NULL);
     for (ichild = 0; ichild < num_children; ichild++) {
       /* the face number of the child may not be the same as face */
       child_face = ts->t8_element_face_child_face (element, face, ichild);

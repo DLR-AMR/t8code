@@ -290,7 +290,8 @@ t8_default_scheme_quad_c::t8_element_children_at_face (const t8_element_t *
                                                        elem, int face,
                                                        t8_element_t *
                                                        children[],
-                                                       int num_children)
+                                                       int num_children,
+                                                       int *child_indices)
 {
   int                 first_child, second_child;
 
@@ -340,6 +341,10 @@ t8_default_scheme_quad_c::t8_element_children_at_face (const t8_element_t *
    */
   this->t8_element_child (elem, second_child, children[1]);
   this->t8_element_child (elem, first_child, children[0]);
+  if (child_indices != NULL) {
+    child_indices[0] = first_child;
+    child_indices[1] = second_child;
+  }
 }
 
 int
