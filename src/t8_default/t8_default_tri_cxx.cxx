@@ -133,6 +133,13 @@ t8_default_scheme_tri_c::t8_element_child_id (const t8_element_t * elem)
 }
 
 int
+t8_default_scheme_tri_c::t8_element_ancestor_id (const t8_element_t * elem,
+                                                 int level)
+{
+  return t8_dtri_ancestor_id ((t8_dtri_t *) elem, level);
+}
+
+int
 t8_default_scheme_tri_c::t8_element_is_family (t8_element_t ** fam)
 {
   return t8_dtri_is_familypv ((const t8_dtri_t **) fam);
@@ -144,7 +151,7 @@ t8_default_scheme_tri_c::t8_element_nca (const t8_element_t * elem1,
                                          t8_element_t * nca)
 {
   const t8_default_tri_t *t1 = (const t8_default_tri_t *) elem1;
-  const t8_default_tri_t *t2 = (const t8_default_tri_t *) elem1;
+  const t8_default_tri_t *t2 = (const t8_default_tri_t *) elem2;
   t8_default_tri_t   *c = (t8_default_tri_t *) nca;
 
   t8_dtri_nearest_common_ancestor (t1, t2, c);

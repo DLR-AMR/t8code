@@ -200,6 +200,15 @@ public:
    */
   virtual int         t8_element_child_id (const t8_element_t * elem) = 0;
 
+  /** Compute the ancestor id of an element, that is the child id
+   * at a given level.
+   * \param [in] elem     This must be a valid element.
+   * \param [in] level    A refinement level. Must satisfy \a level < elem.level
+   * \return              The child_id of \a elem in regard to its \a level ancestor.
+   */
+  virtual int         t8_element_ancestor_id (const t8_element_t * elem,
+                                              int level) = 0;
+
   /** Query whether a given set of elements is a family or not.
    * \param [in] fam      An array of as many elements as an element of class
    *                      \b ts has children.

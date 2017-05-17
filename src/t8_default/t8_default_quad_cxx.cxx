@@ -195,6 +195,13 @@ t8_default_scheme_quad_c::t8_element_child_id (const t8_element_t * elem)
 }
 
 int
+t8_default_scheme_quad_c::t8_element_ancestor_id (const t8_element_t * elem,
+                                                  int level)
+{
+  return p4est_quadrant_ancestor_id ((p4est_quadrant_t *) elem, level);
+}
+
+int
 t8_default_scheme_quad_c::t8_element_is_family (t8_element_t ** fam)
 {
   return p4est_quadrant_is_familypv ((p4est_quadrant_t **) fam);

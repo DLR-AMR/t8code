@@ -146,6 +146,13 @@ t8_default_scheme_hex_c::t8_element_child_id (const t8_element_t * elem)
 }
 
 int
+t8_default_scheme_hex_c::t8_element_ancestor_id (const t8_element_t * elem,
+                                                 int level)
+{
+  return p8est_quadrant_ancestor_id ((p8est_quadrant_t *) elem, level);
+}
+
+int
 t8_default_scheme_hex_c::t8_element_is_family (t8_element_t ** fam)
 {
   return p8est_quadrant_is_familypv ((p8est_quadrant_t **) fam);
