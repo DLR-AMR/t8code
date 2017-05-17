@@ -165,8 +165,9 @@ t8_forest_bilinear_interpolation (const double *vertex,
  */
 void
 t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
-                              t8_element_t * element, const double *vertices,
-                              int corner_number, double *coordinates)
+                              const t8_element_t * element,
+                              const double *vertices, int corner_number,
+                              double *coordinates)
 {
   int                 corner_coords[3], i;
   double              vertex_coords[3];

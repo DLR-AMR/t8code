@@ -580,7 +580,8 @@ void                t8_forest_iterate (t8_forest_t forest);
  */
 void                t8_forest_element_coordinate (t8_forest_t forest,
                                                   t8_locidx_t ltree_id,
-                                                  t8_element_t * element,
+                                                  const t8_element_t *
+                                                  element,
                                                   const double *vertices,
                                                   int corner_number,
                                                   double *coordinates);
