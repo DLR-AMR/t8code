@@ -41,9 +41,10 @@ typedef void        (*t8_forest_iterate_face_fn) (t8_forest_t forest,
 T8_EXTERN_C_BEGIN ();
 
 /* TODO: Document */
-void
-t8_forest_split_array (t8_element_t * element, sc_array_t * leaf_elements,
-                       t8_eclass_scheme_c * ts, size_t * offsets);
+void                t8_forest_split_array (t8_element_t * element,
+                                           sc_array_t * leaf_elements,
+                                           t8_eclass_scheme_c * ts,
+                                           size_t * offsets);
 
 /* TODO: comment */
 /* Iterate over all leafs of an element that touch a given face of the element */
