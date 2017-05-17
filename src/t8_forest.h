@@ -421,6 +421,15 @@ t8_gloidx_t         t8_forest_global_tree_id (t8_forest_t forest,
 t8_tree_t           t8_forest_get_tree (t8_forest_t forest,
                                         t8_locidx_t ltree_id);
 
+/** Return the array of leaf elements of a local tree in a forest.
+ * \param [in]      forest      The forest.
+ * \param [in]      ltree_id    The local id of a local tree of \a forest.
+ * \return                      An array of t8_element_t * storing all leaf elements
+ *                              of this tree.
+ */
+sc_array_t         *t8_forest_tree_get_leafs (t8_forest_t forest,
+                                              t8_locidx_t ltree_id);
+
 /** Return a cmesh associated to a forest.
  * \param [in]      forest      The forest.
  * \return          The cmesh associated to the forest.

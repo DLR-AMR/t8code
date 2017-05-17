@@ -573,6 +573,16 @@ t8_forest_get_tree (t8_forest_t forest, t8_locidx_t ltree_id)
   return (t8_tree_t) t8_sc_array_index_locidx (forest->trees, ltree_id);
 }
 
+sc_array_t
+  * t8_forest_tree_get_leafs (t8_forest_t forest, t8_locidx_t ltree_id)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (0 <= ltree_id
+             && ltree_id < t8_forest_get_num_local_trees (forest));
+
+  return &t8_forest_get_tree (forest, ltree_id)->elements;
+}
+
 t8_cmesh_t
 t8_forest_get_cmesh (t8_forest_t forest)
 {
