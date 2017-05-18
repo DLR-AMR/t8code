@@ -207,27 +207,53 @@ int                 t8_forest_element_check_owner (t8_forest_t forest,
                                                    int element_is_desc);
 
 /** Find all owner processes that own descendant of a given element that
- * touch a given face.
+ * touch a given face. The element does not need to be a local element.
  * \param [in]    forest  The forest.
  * \param [in]    gtreeid The global id of the tree in which the element lies.
  * \param [in]    element The element to look for.
  * \param [in]    eclass  The element class of the tree \a gtreeid.
  * \param [in]    face    A face of \a element.
- * \param [in,out] owners  On input an empty array of integers. On output it stores
+ * \param [in,out] owners  On input an array of integers. Its first and last entry
+ *                        are taken as lower and upper bounds for the owner processes.
+ *                        If empty, then no bounds are taken.
+ *                        On output it stores
  *                        all owners of descendants of \a elem that touch \a face
  *                        in ascending order.
- * \param [in,out] tree_owners An array of integers. If element count is zero then on output the
- *                        owners of the tree \a gtreeid are stored.
- *                        If element count is nonzero then the entries must be the owners of
- *                        the tree. We highly recommend using this to speed up the owner computation.
- *                        If NULL, it is ignored. \ref t8_forest_element_find_owner.
  */
 void                t8_forest_element_owners_at_face (t8_forest_t forest,
                                                       t8_gloidx_t gtreeid,
-                                                      t8_element_t * element,
+                                                      const t8_element_t *
+                                                      element,
                                                       t8_eclass_t eclass,
                                                       int face,
                                                       sc_array_t * owners);
+
+/** Find all owner processes that own descendant of a face neighbor of a
+ *  given local element that touch the given face.
+ * \param [in]    forest  The forest.
+ * \param [in]    gtreeid The local id of the tree in which the element lies.
+ * \param [in]    element The element, whose neighbor's face owners should be computed.
+ * \param [in]    eclass  The element class of the tree \a gtreeid.
+ * \param [in]    face    A face of \a element.
+ * \param [in,out] owners  On input an array of integers. Its first and last entry
+ *                        are taken as lower and upper bounds for the owner processes.
+ *                        If empty, then no bounds are taken.
+ *                        On output it stores all owners of descendants of the neighbor of
+ *                        \a elem across \a face
+ *                        that touch this face. If the neighbor element does not
+ *                        exist, owners will be empty.
+ * This is equivalent to calling t8_forest_element_face_neighbor and
+ * t8_forest_element_owners_at_face for the resulting neighbor.
+ */
+void                t8_forest_element_owners_at_neigh_face (t8_forest_t
+                                                            forest,
+                                                            t8_locidx_t
+                                                            ltreeid,
+                                                            const t8_element_t
+                                                            * element,
+                                                            int face,
+                                                            sc_array_t *
+                                                            owners);
 
 /** Construct all face neighbors of half size of a given element.
  * \param [in]    forest The forest.

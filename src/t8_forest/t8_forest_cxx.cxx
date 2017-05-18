@@ -1195,17 +1195,60 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
 
 void
 t8_forest_element_owners_at_face (t8_forest_t forest, t8_gloidx_t gtreeid,
-                                  t8_element_t * element, t8_eclass_t eclass,
+                                  const t8_element_t * element, t8_eclass_t eclass,
                                   int face, sc_array_t * owners)
 {
   t8_eclass_scheme_c *ts;
+  int     lower_bound, upper_bound;
 
   ts = t8_forest_get_eclass_scheme (forest, eclass);
+  if (owners->elem_count > 0) {
+    /* Compute lower and upper bound for the owners */
+    lower_bound = *(int *) sc_array_index (owners, 0);
+    upper_bound = *(int *) sc_array_index (owners, owners->elem_count - 1);
+    sc_array_resize (owners, 0);
+  }
+  else {
+    lower_bound = 0;
+    upper_bound = forest->mpisize - 1;
+  }
   /* call the recursion */
   t8_forest_element_owners_at_face_recursion (forest, gtreeid, element,
                                               eclass, ts, face, owners,
-                                              0, forest->mpisize - 1,
+                                              lower_bound, upper_bound,
                                               NULL, NULL);
+}
+
+
+void
+t8_forest_element_owners_at_neigh_face (t8_forest_t forest, t8_locidx_t ltreeid,
+                                        const t8_element_t * element, int face,
+                                        sc_array_t * owners)
+{
+  t8_eclass_scheme_c *neigh_scheme;
+  t8_eclass_t         neigh_class;
+  t8_element_t       *face_neighbor;
+  int                 dual_face;
+  t8_gloidx_t         neigh_tree;
+
+  /* Find out the eclass of the face neighbor tree and allocate memory for
+   * the neighbor element */
+  neigh_class = t8_forest_element_neighbor_eclass (forest, ltreeid, element, face);
+  neigh_scheme = t8_forest_get_eclass_scheme (forest, neigh_class);
+  neigh_scheme->t8_element_new (1, &face_neighbor);
+  neigh_tree = t8_forest_element_face_neighbor (forest, ltreeid, element, face_neighbor,
+                                                face, &dual_face);
+  if (neigh_tree >= 0) {
+    /* There is a face neighbor */
+    t8_forest_element_owners_at_face (forest, neigh_tree, face_neighbor,
+                                      neigh_class, dual_face, owners);
+  }
+  else {
+    /* There is no face neighbor, we indicate this by setting the
+     * array to 0 */
+    sc_array_resize (owners, 0);
+  }
+  neigh_scheme->t8_element_destroy (1, &face_neighbor);
 }
 
 T8_EXTERN_C_END ();
