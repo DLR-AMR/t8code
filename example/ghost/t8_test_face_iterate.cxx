@@ -38,23 +38,29 @@ typedef struct
   t8_locidx_t         count;
 } t8_test_fiterate_udata_t;
 
-static void
+static int
 t8_test_fiterate_callback (t8_forest_t forest,
                            t8_locidx_t ltreeid,
-                           const t8_element_t * leaf,
-                           int face, void *user_data)
+                           const t8_element_t * element,
+                           int face, void *user_data, t8_locidx_t leaf_index)
 {
   double             *coords;
   double             *tree_vertices;
 
-  coords = ((t8_test_fiterate_udata_t *) user_data)->coords;
-  tree_vertices = ((t8_test_fiterate_udata_t *) user_data)->tree_vertices;
-  t8_forest_element_coordinate (forest, ltreeid, leaf, tree_vertices,
-                                0, coords);
-  t8_debugf
-    ("Leaf element in tree %i at face %i has corner 0 coords %lf %lf %lf\n",
-     ltreeid, face, coords[0], coords[1], coords[2]);
-  ((t8_test_fiterate_udata_t *) user_data)->count++;
+  if (leaf_index >= 0) {
+    coords = ((t8_test_fiterate_udata_t *) user_data)->coords;
+    tree_vertices = ((t8_test_fiterate_udata_t *) user_data)->tree_vertices;
+    t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+                                  0, coords);
+    t8_debugf
+      ("Leaf element in tree %i at face %i, tree local index %i has corner 0 coords %lf %lf %lf\n",
+       ltreeid, face, (int) leaf_index, coords[0], coords[1], coords[2]);
+    ((t8_test_fiterate_udata_t *) user_data)->count++;
+  }
+  else {
+    t8_debugf ("[H] Calling face_iterate on intermediate level\n");
+  }
+  return 1;
 }
 
 /* Only refine the first tree on a process. */
@@ -106,7 +112,7 @@ t8_test_fiterate (t8_forest_t forest)
       udata.count = 0;
       t8_debugf ("[H] Start iterate faces for face %i\n", iface);
       t8_forest_iterate_faces (forest, itree, nca, iface, leaf_elements,
-                               &udata, t8_test_fiterate_callback);
+                               &udata, 0, t8_test_fiterate_callback);
       t8_debugf ("Leaf elements at face %i:\t%i\n", iface, udata.count);
     }
     ts->t8_element_destroy (1, &nca);
