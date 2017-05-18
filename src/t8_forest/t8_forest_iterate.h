@@ -33,10 +33,13 @@
 #include <t8.h>
 #include <t8_forest.h>
 
-typedef void        (*t8_forest_iterate_face_fn) (t8_forest_t forest,
+
+typedef int         (*t8_forest_search_query_fn) (t8_forest_t forest,
                                                   t8_locidx_t ltreeid,
-                                                  const t8_element_t * leaf,
-                                                  int face, void *user_data);
+                                                  const t8_element_t *element,
+                                                  sc_array_t * leaf_elements,
+                                                  void * user_data,
+                                                  t8_locidx_t tree_leaf_index);
 
 T8_EXTERN_C_BEGIN ();
 
@@ -56,6 +59,15 @@ void                t8_forest_iterate_faces (t8_forest_t forest,
                                              void *user_data,
                                              t8_forest_iterate_face_fn
                                              callback);
+
+/* Perform a top-down search of the forest, executing a callback on each
+ * intermediate element. The search will enter each tree at least once.
+ * If the callback returns false for an element, its descendants
+ * are not further searched.
+ */
+void                t8_forest_search (t8_forest_t forest,
+                                      t8_forest_search_query_fn search_fn,
+                                      void *user_data);
 
 T8_EXTERN_C_END ();
 
