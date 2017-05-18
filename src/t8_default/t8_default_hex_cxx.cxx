@@ -61,17 +61,8 @@ int
 t8_default_scheme_hex_c::t8_element_compare (const t8_element_t * elem1,
                                              const t8_element_t * elem2)
 {
-  int                 maxlvl;
-  u_int64_t           id1, id2;
-
-  /* Compute the bigger level of the two */
-  maxlvl = SC_MAX (t8_default_scheme_hex_c::t8_element_level (elem1),
-                   t8_default_scheme_hex_c::t8_element_level (elem2));
-  /* Compute the linear ids of the elements */
-  id1 = t8_default_scheme_hex_c::t8_element_get_linear_id (elem1, maxlvl);
-  id2 = t8_default_scheme_hex_c::t8_element_get_linear_id (elem2, maxlvl);
-  /* return negativ if id1 < id2, zero if id1 = id2, positive if id1 > id2 */
-  return id1 < id2 ? -1 : id1 != id2;
+  return p8est_quadrant_compare ((const p8est_quadrant_t *) elem1,
+                                 (const p8est_quadrant_t *) elem2);
 }
 
 void

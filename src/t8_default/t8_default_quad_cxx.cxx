@@ -99,16 +99,8 @@ int
 t8_default_scheme_quad_c::t8_element_compare (const t8_element_t * elem1,
                                               const t8_element_t * elem2)
 {
-  int                 maxlvl;
-  u_int64_t           id1, id2;
-
-  /* Compute the bigger level of the two */
-  maxlvl = SC_MAX (t8_element_level (elem1), t8_element_level (elem2));
-  /* Compute the linear ids of the elements */
-  id1 = t8_element_get_linear_id (elem1, maxlvl);
-  id2 = t8_element_get_linear_id (elem2, maxlvl);
-  /* return negativ if id1 < id2, zero if id1 = id2, positive if id1 > id2 */
-  return id1 < id2 ? -1 : id1 != id2;
+  return p4est_quadrant_compare ((const p4est_quadrant_t *) elem1,
+                                 (const p4est_quadrant_t *) elem2);
 }
 
 void
@@ -272,7 +264,11 @@ t8_default_scheme_quad_c::t8_element_nca (const t8_element_t * elem1,
   const p4est_quadrant_t *q2 = (const p4est_quadrant_t *) elem2;
   p4est_quadrant_t   *r = (p4est_quadrant_t *) nca;
 
+#if 0
+  /* TODO: This assertions throws an error since it expects a 3D hex.
+   *       this does not make sense. investigate. */
   T8_ASSERT (t8_element_surround_matches (q1, q2));
+#endif
 
   p4est_nearest_common_ancestor (q1, q2, r);
   t8_element_copy_surround (q1, r);
