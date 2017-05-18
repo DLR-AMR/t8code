@@ -33,30 +33,47 @@
 #include <t8.h>
 #include <t8_forest.h>
 
+typedef int         (*t8_forest_iterate_face_fn) (t8_forest_t forest,
+                                                  t8_locidx_t ltreeid,
+                                                  const t8_element_t *
+                                                  element, int face,
+                                                  void *user_data,
+                                                  t8_locidx_t
+                                                  tree_leaf_index);
 
 typedef int         (*t8_forest_search_query_fn) (t8_forest_t forest,
                                                   t8_locidx_t ltreeid,
-                                                  const t8_element_t *element,
+                                                  const t8_element_t *
+                                                  element,
                                                   sc_array_t * leaf_elements,
-                                                  void * user_data,
-                                                  t8_locidx_t tree_leaf_index);
+                                                  void *user_data,
+                                                  t8_locidx_t
+                                                  tree_leaf_index);
 
 T8_EXTERN_C_BEGIN ();
 
 /* TODO: Document */
-void                t8_forest_split_array (t8_element_t * element,
+void                t8_forest_split_array (const t8_element_t * element,
                                            sc_array_t * leaf_elements,
                                            t8_eclass_scheme_c * ts,
                                            size_t * offsets);
 
 /* TODO: comment */
 /* Iterate over all leafs of an element that touch a given face of the element */
+/* Callback is called in each recursive step with element as input.
+ * leaf_index is only not negative if element is a leaf, in which case it indicates
+ * the index of the leaf in the leafs of the tree. If it is negative, it is
+ * - (index + 1) */
+/* Top-down iteration and callback is called on each intermediate level.
+ * It it returns false, the current element is not traversed further */
 void                t8_forest_iterate_faces (t8_forest_t forest,
                                              t8_locidx_t ltreeid,
-                                             t8_element_t * element,
+                                             const t8_element_t * element,
                                              int face,
                                              sc_array_t * leaf_elements,
                                              void *user_data,
+                                             t8_locidx_t
+                                             tree_lindex_of_first_leaf,
                                              t8_forest_iterate_face_fn
                                              callback);
 
