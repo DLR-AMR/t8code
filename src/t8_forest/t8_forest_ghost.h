@@ -150,6 +150,9 @@ void                t8_forest_ghost_create (t8_forest_t forest);
  */
 void                t8_forest_ghost_create_balanced_only (t8_forest_t forest);
 
+/* experimental version using the ghost_v3 algorithm */
+void                t8_forest_ghost_create_topdown (t8_forest_t forest);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_GHOST_H! */
