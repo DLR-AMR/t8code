@@ -1353,10 +1353,10 @@ t8_dtri_ancestor_id (const t8_dtri_t * t, int level)
   t8_dtri_type_t      type;
 
   T8_ASSERT (0 <= level && level < T8_DTRI_MAXLEVEL);
-  T8_ASSERT (level < t->level);
+  T8_ASSERT (level <= t->level);
 
-  cid = compute_cubeid (t, level + 1);
-  type = compute_type (t, level + 1);
+  cid = compute_cubeid (t, level);
+  type = compute_type (t, level);
   return t8_dtri_type_cid_to_Iloc[type][cid];
 }
 
