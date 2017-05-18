@@ -53,22 +53,14 @@ t8_forest_determine_child_type (sc_array_t * leaf_elements, size_t index,
   T8_ASSERT (query_data->level < query_data->ts->t8_element_level (element));
   /* Compute the element's ancestor id at the stored level and return it
    * as the element's type */
-  {
-    t8_dtri_t          *tri = (t8_dtri_t *) element;
-    t8_debugf ("[H] anid %i for ",
-               query_data->ts->t8_element_ancestor_id (element,
-                                                       query_data->level));
-    t8_debugf ("[H] ELEMENT %lli %lli l = %i t = %i, as anid %i\n", tri->x,
-               tri->y, tri->level, tri->type,
-               query_data->ts->t8_element_ancestor_id (element,
-                                                       query_data->level));
-  }
-  return query_data->ts->t8_element_ancestor_id (element, query_data->level);
+  return query_data->ts->t8_element_ancestor_id (element,
+                                                 query_data->level + 1);
 }
 
 void
-t8_forest_split_array (t8_element_t * element, sc_array_t * leaf_elements,
-                       t8_eclass_scheme_c * ts, size_t * offsets)
+t8_forest_split_array (const t8_element_t * element,
+                       sc_array_t * leaf_elements, t8_eclass_scheme_c * ts,
+                       size_t * offsets)
 {
   sc_array_t          offset_view;
   t8_forest_child_type_query_t query_data;
@@ -91,8 +83,9 @@ t8_forest_split_array (t8_element_t * element, sc_array_t * leaf_elements,
 
 void
 t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid,
-                         t8_element_t * element, int face,
+                         const t8_element_t * element, int face,
                          sc_array_t * leaf_elements, void *user_data,
+                         t8_locidx_t tree_lindex_of_first_leaf,
                          t8_forest_iterate_face_fn callback)
 {
   t8_eclass_scheme_c *ts;
@@ -107,7 +100,6 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid,
   T8_ASSERT (0 <= ltreeid
              && ltreeid < t8_forest_get_num_local_trees (forest));
 
-  t8_debugf ("[H] Enter with %i leafs\n", leaf_elements->elem_count);
   if (leaf_elements->elem_count == 0) {
     /* There are no leafs left, so we have nothing to do */
     return;
