@@ -802,7 +802,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
     /* The search has entered a new tree, store its eclass and element scheme */
     if (data->gtreeid >= 0) {
       t8_locidx_t         prev_tree_id =
-        t8_forest_get_local_id (forst, data->gtreeid);
+        t8_forest_get_local_id (forest, data->gtreeid);
       /* add all remote elements of the previous tree and clean the hash_array */
       t8_forest_ghost_add_remote_indices (forest, forest->ghosts,
                                           prev_tree_id, data->rem_el_indices);
