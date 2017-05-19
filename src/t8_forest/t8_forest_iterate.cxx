@@ -119,6 +119,12 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid,
       return;
     }
   }
+#ifdef T8_ENABLE_DEBUG
+  /* Check whether element has greater level than the first leaf */
+  leaf = (t8_element_t *) sc_array_index (leaf_elements, 0);
+  T8_ASSERT (ts->t8_element_level (element) < ts->t8_element_level (leaf));
+#endif
+
   /* Call the callback function element, we pass -index - 1 as index to indicate
    * element is not a leaf, if it returns true, we continue with the
    * top-down recursion */
@@ -207,9 +213,10 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid,
       return;
     }
   }
-  /* Call the callback function element, we pass -1 as index to indicate
+  /* Call the callback function element, we pass -index -1 as index to indicate
    * element is not a leaf */
-  ret = search_fn (forest, ltreeid, element, leaf_elements, user_data, -1);
+  ret = search_fn (forest, ltreeid, element, leaf_elements, user_data,
+                   -tree_lindex_of_first_leaf - 1);
 
   if (ret) {
     /* Enter the recursion */
