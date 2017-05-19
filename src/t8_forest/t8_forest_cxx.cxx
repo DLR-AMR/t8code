@@ -877,10 +877,16 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
   }
 
   if (forest->tree_offsets == NULL) {
+    /* TODO: Creating the offsets is a collective operation.
+     *       find_owner is not. If only one rank call find_owner and
+     *       the others don't, we have a deadlock. */
     /* Construct tree_offsets if not already done */
     t8_forest_partition_create_tree_offsets (forest);
   }
   if (forest->global_first_desc == NULL) {
+    /* TODO: Creating the offsets is a collective operation.
+     *       find_owner is not. If only one rank call find_owner and
+     *       the others don't, we have a deadlock. */
     /* Create first descendants, if not already done */
     t8_forest_partition_create_first_desc (forest);
   }
