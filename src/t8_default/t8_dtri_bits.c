@@ -56,6 +56,38 @@ compute_cubeid (const t8_dtri_t * t, int level)
   return id;
 }
 
+/* A routine to compute the type of t's ancestor of level "level",
+ * if its type at an intermediate level is already known.
+ * If "level" equals t's level then t's type is returned.
+ * It is not allowed to call this function with "level" greater than t->level.
+ * This method runs in O(t->level - level).
+ */
+static              t8_dtri_type_t
+compute_type_ext (const t8_dtri_t * t, int level,
+                  t8_dtri_type_t known_type, int known_level)
+{
+  int8_t              type = known_type;
+  t8_dtri_cube_id_t   cid;
+  int                 i;
+
+  T8_ASSERT (0 <= level && level <= known_level);
+  T8_ASSERT (known_level <= t->level);
+  if (level == known_level) {
+    return known_type;
+  }
+  if (level == 0) {
+    /* TODO: the type of the root tet is hardcoded to 0
+     *       maybe once we want to allow the root tet to have different types */
+    return 0;
+  }
+  for (i = known_level; i > level; i--) {
+    cid = compute_cubeid (t, i);
+    /* compute type as the type of T^{i+1}, that is T's ancestor of level i+1 */
+    type = t8_dtri_cid_type_to_parenttype[cid][type];
+  }
+  return type;
+}
+
 /* A routine to compute the type of t's ancestor of level "level".
  * If "level" equals t's level then t's type is returned.
  * It is not allowed to call this function with "level" greater than t->level.
@@ -64,26 +96,7 @@ compute_cubeid (const t8_dtri_t * t, int level)
 static              t8_dtri_type_t
 compute_type (const t8_dtri_t * t, int level)
 {
-  int8_t              type = t->type;
-  t8_dtri_cube_id_t   cid;
-  int                 tlevel = t->level;
-  int                 i;
-
-  T8_ASSERT (0 <= level && level <= tlevel);
-  if (level == tlevel) {
-    return t->type;
-  }
-  if (level == 0) {
-    /* TODO: the type of the root tet is hardcoded to 0
-     *       maybe once we want to allow the root tet to have different types */
-    return 0;
-  }
-  for (i = tlevel; i > level; i--) {
-    cid = compute_cubeid (t, i);
-    /* compute type as the type of T^{i+1}, that is T's ancestor of level i+1 */
-    type = t8_dtri_cid_type_to_parenttype[cid][type];
-  }
-  return type;
+  return compute_type_ext (t, level, t->type, t->level);
 }
 
 void
@@ -595,13 +608,15 @@ void
 t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
                                  const t8_dtri_t * t2, t8_dtri_t * r)
 {
-  int                 maxlevel, r_level;
+  int                 maxlevel, c_level, r_level;
+  t8_dtri_type_t      t1_type_at_l, t2_type_at_l;
   uint32_t            exclorx, exclory;
 #ifdef T8_DTRI_TO_DTET
   uint32_t            exclorz;
 #endif
   uint32_t            maxclor;
 
+  /* Find the level of the nca */
   exclorx = t1->x ^ t2->x;
   exclory = t1->y ^ t2->y;
 #ifdef T8_DTRI_TO_DTET
@@ -615,9 +630,23 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
 
   T8_ASSERT (maxlevel <= T8_DTRI_MAXLEVEL);
 
-  r_level = (int8_t) SC_MIN (T8_DTRI_MAXLEVEL - maxlevel,
+  c_level = (int8_t) SC_MIN (T8_DTRI_MAXLEVEL - maxlevel,
                              (int) SC_MIN (t1->level, t2->level));
+  r_level = c_level;
+  /* c_level is the level of the nca cube surrounding t1 and t2.
+   * If t1 and t2 have different types at this level, then we have to shrink this
+   * level further. */
+  t1_type_at_l = compute_type (t1, c_level);
+  t2_type_at_l = compute_type (t2, c_level);
+  while (t1_type_at_l != t2_type_at_l) {
+    r_level--;
+    t1_type_at_l = compute_type_ext (t1, r_level, t1_type_at_l, r_level + 1);
+    t2_type_at_l = compute_type_ext (t2, r_level, t2_type_at_l, r_level + 1);
+  }
+  T8_ASSERT (r_level >= 0);
+  /* Construct the ancestor of the first triangle at this leve */
   t8_dtri_ancestor (t1, r_level, r);
+  T8_ASSERT (t8_dtri_is_ancestor (r, t2));
 #if 0
   /* Find the correct type of r by testing with
    * which type it becomes an ancestor of t1. */
