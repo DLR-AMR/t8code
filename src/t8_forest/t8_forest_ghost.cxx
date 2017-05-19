@@ -731,20 +731,6 @@ t8_forest_ghost_iterate_face_add_remote (t8_forest_t forest,
     SC_ABORT_NOT_REACHED ();    /* TODO: remove if this never hits. We just keep it in as a correctness check */
     return 0;
   }
-  if (lower == upper) {
-    /* There is only one owner of the neighbor element at the face.
-     * We check if it is the current rank, if so, there is nothing left to do. */
-    if (lower == forest->mpirank) {
-      /* do not continue recursion */
-      return 0;
-    }
-    /* There is exactly one owner across the face and it is not the current rank */
-    data->neighbor_unique_owner = lower;
-    return 1;
-  }
-  /* We cannot say whether the owner of the neighbor face is unique and
-   * different from the current rank */
-  data->neighbor_unique_owner = -1;
 
   /* we now compute the owners at the neighbor face for this element */
   sc_array_init_size (&owners_at_face, sizeof (int), 2);
@@ -757,6 +743,11 @@ t8_forest_ghost_iterate_face_add_remote (t8_forest_t forest,
     /* There is no face neighbor */
     return 0;
   }
+#if 0
+  /* TODO: We used this to store the lower and upper bounds for the next
+   * level, however if the top-down search enters a new sibling, this information
+   * is not correct any longer. Now, we do not save new lower and upper bounds at
+   * all. We could store for each level the bounds, memory O (maxlevel) */
   /* Set the new lower and upper bound for the owners */
   data->face_owner_low = *(int *) sc_array_index (&owners_at_face, 0);
   if (owners_at_face.elem_count >= 2) {
@@ -765,6 +756,34 @@ t8_forest_ghost_iterate_face_add_remote (t8_forest_t forest,
   }
   else {
     data->face_owner_high = data->face_owner_low;
+  }
+#else
+  /* Set the new lower and upper bound for the owners */
+  lower = *(int *) sc_array_index (&owners_at_face, 0);
+  if (owners_at_face.elem_count >= 2) {
+    upper = *(int *)
+      sc_array_index (&owners_at_face, owners_at_face.elem_count - 1);
+  }
+  else {
+    lower = data->face_owner_low;
+  }
+#endif
+  sc_array_resize (&owners_at_face, 0);
+  if (lower == upper) {
+    /* There is only one owner of the neighbor element at the face.
+     * We check if it is the current rank, if so, there is nothing left to do. */
+    if (lower == forest->mpirank) {
+      /* do not continue recursion */
+      return 0;
+    }
+    /* There is exactly one owner across the face and it is not the current rank */
+    data->neighbor_unique_owner = lower;
+    return 1;
+  }
+  else {
+    /* We cannot say whether the owner of the neighbor face is unique and
+     * different from the current rank */
+    data->neighbor_unique_owner = -1;
   }
   data->num_face_owners = owners_at_face.elem_count;
   sc_array_reset (&owners_at_face);
