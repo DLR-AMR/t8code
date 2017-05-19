@@ -1708,20 +1708,19 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
 
   /* Sort the array of remote processes, such that the ranks are in
    * ascending order. */
-  sc_array_sort (ghost->remote_processes, sc_int_compare);
+sc_array_sort (ghost->remote_processes, sc_int_compare);
 
-  for (proc_pos = 0; proc_pos < num_remotes; proc_pos++) {
-    recv_rank =
-      (int *) sc_array_index_int (ghost->remote_processes, proc_pos);
-    /* blocking probe for a message. */
-    mpiret = sc_MPI_Probe (*recv_rank, T8_MPI_GHOST_FOREST, comm, &status);
-    SC_CHECK_MPI (mpiret);
-    /* receive message */
-    buffer =
-      t8_forest_ghost_receive_message (*recv_rank, comm, status, &recv_bytes);
-    t8_forest_ghost_parse_received_message (forest, ghost, *recv_rank, buffer,
-                                            recv_bytes);
-  }
+for (proc_pos = 0; proc_pos < num_remotes; proc_pos++) {
+  recv_rank = (int *) sc_array_index_int (ghost->remote_processes, proc_pos);
+  /* blocking probe for a message. */
+  mpiret = sc_MPI_Probe (*recv_rank, T8_MPI_GHOST_FOREST, comm, &status);
+  SC_CHECK_MPI (mpiret);
+  /* receive message */
+  buffer =
+    t8_forest_ghost_receive_message (*recv_rank, comm, status, &recv_bytes);
+  t8_forest_ghost_parse_received_message (forest, ghost, *recv_rank, buffer,
+                                          recv_bytes);
+}
 #endif
 }
 
