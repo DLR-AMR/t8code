@@ -459,6 +459,19 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
    * We can add a copy of the element to the elements array
    * if it does not exist already. If it exists it is the last entry in
    * the array. */
+  {
+    /* debugging assertion that the element is really not contained already */
+    int                 ielem;
+    t8_element_t       *test_el;
+    for (ielem = 0; ielem < ((int) remote_tree->elements.elem_count) - 1;
+         ielem++) {
+      test_el =
+        (t8_element_t *) sc_array_index_int (&remote_tree->elements, ielem);
+      SC_CHECK_ABORTF (ts->t8_element_compare (test_el, elem),
+                       "Local element %i already in remote ghosts at pos %i\n",
+                       element_index, ielem);
+    }
+  }
   elem_copy = NULL;
   level = ts->t8_element_level (elem);
   if (remote_tree->elements.elem_count > 0) {
@@ -484,11 +497,150 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
   }
 }
 
+/* In ghost version 3, the remote elements are not added in their linear order
+ * to the ghost struct, and same elements may be added more than once.
+ * Since we need to call t8_ghost_add_remote in linear order and only once per element,
+ * we temporally store the element indices in a hash_array,
+ * after all remote elements of a tree are parsed, we sort the hash_array and
+ * call t8_ghost_add_remote for each entry. */
+
+typedef struct
+{
+  t8_locidx_t         element_index;    /* The tree local index of this element */
+  sc_array_t          remote_ranks;     /* All ranks that this element is a remote of */
+} t8_forest_ghost_rem_el_index_t;
+
+/* hash function usese element_index as hash */
+static unsigned
+t8_forest_ghost_rem_el_index_hash (const void *index, const void *u)
+{
+  return ((t8_forest_ghost_rem_el_index_t *) index)->element_index;
+}
+
+/* comparison function for sorting uses element_index for equality */
+static int
+t8_forest_ghost_rem_el_index_compare (const void *indexa, const void *indexb)
+{
+  t8_forest_ghost_rem_el_index_t *Ia =
+    (t8_forest_ghost_rem_el_index_t *) indexa;
+  t8_forest_ghost_rem_el_index_t *Ib =
+    (t8_forest_ghost_rem_el_index_t *) indexb;
+
+  return Ia->element_index - Ib->element_index;
+}
+
+/* equal function uses element_index for equality */
+static int
+t8_forest_ghost_rem_el_index_eq (const void *indexa, const void *indexb,
+                                 const void *u)
+{
+  return !t8_forest_ghost_rem_el_index_compare (indexa, indexb);
+}
+
+/* Sort all added remote indices, parse them and add the elements as ghosts.
+ * This function also truncates the hash_array. */
+static void
+t8_forest_ghost_add_remote_indices (t8_forest_t forest,
+                                    t8_forest_ghost_t ghost,
+                                    t8_locidx_t ltreeid,
+                                    sc_hash_array_t * rem_el_indices)
+{
+  sc_array_t         *indices_view;
+  size_t              iremote, ielem;
+  t8_forest_ghost_rem_el_index_t *index;
+  t8_element_t       *element;
+  int                 remote_rank;
+
+  t8_debugf ("[H] Adding all remotes for tree %i\n", ltreeid);
+  /* Get a pointer to the underlying array */
+  indices_view = &rem_el_indices->a;
+  /* sort the array */
+  sc_array_sort (indices_view, t8_forest_ghost_rem_el_index_compare);
+
+  /* iterate through the element and add as remotes */
+  for (ielem = 0; ielem < indices_view->elem_count; ielem++) {
+    /* Get the element's index */
+    index =
+      (t8_forest_ghost_rem_el_index_t *) sc_array_index (indices_view, ielem);
+    t8_debugf ("[H] Looking up element index %li\n", index->element_index);
+    /* Get a pointer to the element */
+    element =
+      t8_forest_get_element_in_tree (forest, ltreeid, index->element_index);
+    /* parse all ranks that this element is a remote of and add the elemetn as
+     * remote ghost */
+    for (iremote = 0; iremote < index->remote_ranks.elem_count; iremote++) {
+      remote_rank = *(int *) sc_array_index (&index->remote_ranks, iremote);
+      t8_ghost_add_remote (forest, ghost, remote_rank, ltreeid, element,
+                           index->element_index);
+    }
+    /* Clean-up the memory for the remote ranks */
+    sc_array_reset (&index->remote_ranks);
+  }
+  /* Clean the hash_array */
+  sc_hash_array_truncate (rem_el_indices);
+}
+
+/* Add an entry to the hash_array of element indices.
+ * If this element was already considered for the remote then the element
+ * index is not added */
+static void
+t8_forest_ghost_add_remote_index (sc_hash_array_t * rem_el_indices,
+                                  t8_locidx_t element_index, int remote_rank)
+{
+  t8_forest_ghost_rem_el_index_t index_search, *index_found;
+  size_t              position, iremote;
+  int                 check_rank;
+
+  t8_debugf ("[H] Adding el %i as remote for rank %i\n",
+             element_index, remote_rank);
+  index_search.element_index = element_index;
+  /* Try to insert this entry. If this element index already has an entry,
+   * then position is set to the array position of the contained entry and
+   * index_found is NULL.
+   * otherwise to the position of the newly inserted entry, and
+   * index_found points to this entry, */
+  index_found = (t8_forest_ghost_rem_el_index_t *)
+    sc_hash_array_insert_unique (rem_el_indices, &index_search, &position);
+  if (index_found != NULL) {
+    /* This is a new index and we need to initialize it first */
+    index_found->element_index = element_index;
+    sc_array_init (&index_found->remote_ranks, sizeof (int));
+    /* we add the remote_rank to this entry */
+    *(int *) sc_array_push (&index_found->remote_ranks) = remote_rank;
+    return;
+  }
+  else {
+    /* The entry was already contained in the hash_array */
+    /* Get a pointer to the found entry */
+    index_found =
+      (t8_forest_ghost_rem_el_index_t *) sc_array_index (&rem_el_indices->a,
+                                                         position);
+    T8_ASSERT (index_found->element_index == element_index);
+    /* Search whether the remote_rank was already added as a remote rank of
+     * this element */
+    /* TODO: The number of remote ranks of an element is, in theory, not bounded,
+     *       thus this search can be very expensive. Is this a problem in praxis? */
+    for (iremote = 0; iremote < index_found->remote_ranks.elem_count;
+         iremote++) {
+      check_rank =
+        *(int *) sc_array_index (&index_found->remote_ranks, iremote);
+      if (check_rank == remote_rank) {
+        /* The rank was already stored as a remote for this element,
+         * we can abort here */
+        return;
+      }
+    }
+    /* The remote_rank was not added as a rank for this element, we add it */
+    *(int *) sc_array_push (&index_found->remote_ranks) = remote_rank;
+  }
+}
+
 typedef int8_t      t8_element_face_flag_t;
 
 typedef struct
 {
   t8_element_face_flag_t *element_face_flags;   /* TODO: is this really needed? */
+  sc_hash_array_t    *rem_el_indices;   /* The indices of the so far added remote elements of this tree */
   int                 num_face_owners;  /* The number of owners at the neighbor face for
                                            the parent element */
   int                 face_owner_low, face_owner_high;  /* The lowest and highest owner
@@ -556,23 +708,23 @@ t8_forest_ghost_iterate_face_add_remote (t8_forest_t forest,
         /* TODO: Does this still work, even though the remotes are not added in
          *       order? */
         if (remote_rank != forest->mpirank) {
-          t8_ghost_add_remote (forest, forest->ghosts, remote_rank, ltreeid,
-                               element, leaf_index);
+          t8_forest_ghost_add_remote_index (data->rem_el_indices, leaf_index,
+                                            remote_rank);
         }
       }
       sc_array_reset (&owners_at_face);
     }
     else {
       /* The owner is unique, add the leaf as remote to this owner */
-      t8_ghost_add_remote (forest, forest->ghosts,
-                           data->neighbor_unique_owner, ltreeid, element,
-                           leaf_index);
+      t8_forest_ghost_add_remote_index (data->rem_el_indices, leaf_index,
+                                        data->neighbor_unique_owner);
     }
     /* Set the face_flag of this leaf and face */
     face_flags &= 1 << face;
     return 0;                   /* return value is ignored for leafs */
   }
 
+  t8_debugf ("[H] Have low %i high %i\n", lower, upper);
   if (lower > upper) {
     /* This face does not have any neighbors (domain boundary) */
     /* Do not continue recursion */
@@ -608,20 +760,24 @@ t8_forest_ghost_iterate_face_add_remote (t8_forest_t forest,
   /* Set the new lower and upper bound for the owners */
   data->face_owner_low = *(int *) sc_array_index (&owners_at_face, 0);
   if (owners_at_face.elem_count >= 2) {
-    data->face_owner_high = *(int *) sc_array_index (&owners_at_face, 1);
+    data->face_owner_high = *(int *)
+      sc_array_index (&owners_at_face, owners_at_face.elem_count - 1);
   }
   else {
-    data->face_owner_high = lower;
+    data->face_owner_high = data->face_owner_low;
   }
   data->num_face_owners = owners_at_face.elem_count;
   sc_array_reset (&owners_at_face);
+  t8_debugf ("[H] Computed low %i high %i\n",
+             data->face_owner_low, data->face_owner_high);
   return 1;
 }
 
 typedef struct
 {
   t8_eclass_scheme_c *ts;
-  t8_element_face_flag_t *face_flags;   /* for each leaf max_faces_per_elem flags */
+  t8_element_face_flag_t *face_flags;   /* for each leaf max_faces_per_elem flags *//* TODO: still needed? */
+  sc_hash_array_t    *rem_el_indices;   /* The indices of the so far added remote elements of this tree */
   t8_gloidx_t         gtreeid;
   t8_eclass_t         eclass;
 } t8_forest_ghost_boundary_data_t;
@@ -637,9 +793,20 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
   int                 num_faces, iface, face_totally_owned, all_faces_owned;
   sc_array_t          face_owners;
   t8_forest_ghost_iterate_face_data_t face_it_data;
+  t8_locidx_t         correct_tree_leaf_index;  /* The argument tree_leaf_index is
+                                                   negativ is this is not a leaf */
 
+  correct_tree_leaf_index =
+    tree_leaf_index < 0 ? -(tree_leaf_index + 1) : tree_leaf_index;
   if (t8_forest_global_tree_id (forest, ltreeid) != data->gtreeid) {
     /* The search has entered a new tree, store its eclass and element scheme */
+    if (data->gtreeid >= 0) {
+      t8_locidx_t         prev_tree_id =
+        t8_forest_get_local_id (forst, data->gtreeid);
+      /* add all remote elements of the previous tree and clean the hash_array */
+      t8_forest_ghost_add_remote_indices (forest, forest->ghosts,
+                                          prev_tree_id, data->rem_el_indices);
+    }
     data->gtreeid = t8_forest_global_tree_id (forest, ltreeid);
     data->eclass = t8_forest_get_eclass (forest, ltreeid);
     data->ts = t8_forest_get_eclass_scheme (forest, data->eclass);
@@ -650,20 +817,37 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
     T8_FREE (data->face_flags);
     data->face_flags =
       T8_ALLOC_ZERO (t8_element_face_flag_t, leafs->elem_count);
+    t8_debugf ("[H] Start search in tree %i, has %i leafs\n",
+               ltreeid, t8_forest_get_tree_num_elements (forest, ltreeid));
   }
+  t8_debugf ("[H] enter search with level %i element lin id %li leafs %i\n",
+             data->ts->t8_element_level (element),
+             data->ts->t8_element_get_linear_id (element,
+                                                 data->ts->t8_element_level
+                                                 (element)),
+             leafs->elem_count);
 
   num_faces = data->ts->t8_element_num_faces (element);
   sc_array_init (&face_owners, sizeof (int));
   /* TODO: reuse face_owners from previous calls via ts->t8_element_at_parent_face */
+  /* TODO: do we properly exclude domanin boundaries from the search? */
+  /* TODO: use a element_owners_bounds function that does no recursion. */
   all_faces_owned = 1;
   for (iface = 0; iface < num_faces; iface++) {
     if (tree_leaf_index < 0) {
+      face_totally_owned = 0;
       sc_array_resize (&face_owners, 0);
       /* Compute the owners at this face of the element */
       t8_forest_element_owners_at_face (forest, data->gtreeid, element,
                                         data->eclass, iface, &face_owners);
       if (face_owners.elem_count == 1) {
         if (forest->mpirank == *(int *) sc_array_index (&face_owners, 0)) {
+          t8_debugf
+            ("[H] level %i element lin id %li at face %i totally pwned\n",
+             data->ts->t8_element_level (element),
+             data->ts->t8_element_get_linear_id (element,
+                                                 data->ts->t8_element_level
+                                                 (element)), iface);
           /* All leafs at this face are owned by the current rank */
           face_totally_owned = 1;
         }
@@ -672,16 +856,19 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
     if (tree_leaf_index >= 0 || face_totally_owned) {
       /* Element is either a leaf or all of its leafs at the face are
        * owned by the current rank */
-      /* TODO: 1. find out how to get to the element array
-       *       2. user_data. */
       face_it_data.element_face_flags = data->face_flags;
       face_it_data.face_owner_low = 0;
       face_it_data.face_owner_high = forest->mpisize - 1;
       face_it_data.num_face_owners = forest->mpisize;
       face_it_data.eclass = data->eclass;
       face_it_data.neighbor_unique_owner = -1;
-      t8_forest_iterate_faces (forest, ltreeid, element, iface,
-                               leafs, &face_it_data, tree_leaf_index,
+      face_it_data.rem_el_indices = data->rem_el_indices;
+      t8_debugf
+        ("[H] level %i Starting face %i iterate with %i leafs, fl %i\n",
+         data->ts->t8_element_level (element), iface, leafs->elem_count,
+         correct_tree_leaf_index);
+      t8_forest_iterate_faces (forest, ltreeid, element, iface, leafs,
+                               &face_it_data, correct_tree_leaf_index,
                                t8_forest_ghost_iterate_face_add_remote);
     }
     else {
@@ -701,7 +888,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
  * We also fill the remote_processes here.
  */
 static void
-t8_forest_ghost_fill_remote_v3 (t8_forest_t forest, t8_forest_ghost_t ghost)
+t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
 {
 
   t8_forest_ghost_boundary_data_t data;
@@ -714,9 +901,20 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest, t8_forest_ghost_t ghost)
   data.gtreeid = -1;
   data.ts = NULL;
   data.face_flags = NULL;
+  data.rem_el_indices =
+    sc_hash_array_new (sizeof (t8_forest_ghost_rem_el_index_t),
+                       t8_forest_ghost_rem_el_index_hash,
+                       t8_forest_ghost_rem_el_index_eq, NULL);
   /* Loop over the trees of the forest */
   t8_forest_search (forest, t8_forest_ghost_search_boundary, &data);
+
+  /* The remote elements of the last tree in the forest are not added
+   * during search, so we need to add them here */
+  t8_forest_ghost_add_remote_indices (forest, forest->ghosts,
+                                      t8_forest_get_num_local_trees (forest) -
+                                      1, data.rem_el_indices);
   T8_FREE (data.face_flags);
+  sc_hash_array_destroy (data.rem_el_indices);
   t8_debugf ("[H] End filling remotes v3\n");
 }
 
@@ -1535,7 +1733,7 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
   ghost = forest->ghosts;
 
   if (unbalanced_version == -1) {
-    t8_forest_ghost_fill_remote_v3 (forest, ghost);
+    t8_forest_ghost_fill_remote_v3 (forest);
   }
   else {
     /* Construct the remote elements and processes. */
