@@ -562,7 +562,7 @@ t8_forest_ghost_add_remote_indices (t8_forest_t forest,
     /* Get the element's index */
     index =
       (t8_forest_ghost_rem_el_index_t *) sc_array_index (indices_view, ielem);
-    t8_debugf ("[H] Looking up element index %li\n", index->element_index);
+    t8_debugf ("[H] Looking up element index %i\n", index->element_index);
     /* Get a pointer to the element */
     element =
       t8_forest_get_element_in_tree (forest, ltreeid, index->element_index);
@@ -639,10 +639,7 @@ typedef int8_t      t8_element_face_flag_t;
 
 typedef struct
 {
-  t8_element_face_flag_t *element_face_flags;   /* TODO: is this really needed? */
   sc_hash_array_t    *rem_el_indices;   /* The indices of the so far added remote elements of this tree */
-  int                 num_face_owners;  /* The number of owners at the neighbor face for
-                                           the parent element */
   int                 face_owner_low, face_owner_high;  /* The lowest and highest owner
                                                            at the neighbor face for the parent element */
   int                 neighbor_unique_owner;    /* If non-negative, then the owner of the neighbor face
@@ -673,7 +670,6 @@ t8_forest_ghost_iterate_face_add_remote (t8_forest_t forest,
 {
   t8_forest_ghost_iterate_face_data_t *data;
   sc_array_t          owners_at_face;   /* TODO: we could also at an sc_array to data and reuse it everytime */
-  t8_element_face_flag_t face_flags;
   int                 lower, upper;
   int                 remote_rank;
   size_t              iown;
@@ -683,12 +679,6 @@ t8_forest_ghost_iterate_face_add_remote (t8_forest_t forest,
   upper = data->face_owner_high;
 
   if (leaf_index >= 0) {
-    /* Get a pointer to this leafs face flags */
-    face_flags = data->element_face_flags[leaf_index];
-    if (face_flags & 1 << face) {
-      /* This leaf was already considered at this face */
-      return 0;                 /* return value is ignored for leafs */
-    }
     /* The element is a leaf, we compute its neighbor owners and add it
      * as a remote to the ghost struct */
     if (data->neighbor_unique_owner < 0) {
@@ -719,8 +709,6 @@ t8_forest_ghost_iterate_face_add_remote (t8_forest_t forest,
       t8_forest_ghost_add_remote_index (data->rem_el_indices, leaf_index,
                                         data->neighbor_unique_owner);
     }
-    /* Set the face_flag of this leaf and face */
-    face_flags &= 1 << face;
     return 0;                   /* return value is ignored for leafs */
   }
 
@@ -786,7 +774,6 @@ t8_forest_ghost_iterate_face_add_remote (t8_forest_t forest,
     data->neighbor_unique_owner = -1;
   }
   data->num_face_owners = owners_at_face.elem_count;
-  sc_array_reset (&owners_at_face);
   t8_debugf ("[H] Computed low %i high %i\n",
              data->face_owner_low, data->face_owner_high);
   return 1;
@@ -795,7 +782,6 @@ t8_forest_ghost_iterate_face_add_remote (t8_forest_t forest,
 typedef struct
 {
   t8_eclass_scheme_c *ts;
-  t8_element_face_flag_t *face_flags;   /* for each leaf max_faces_per_elem flags *//* TODO: still needed? */
   sc_hash_array_t    *rem_el_indices;   /* The indices of the so far added remote elements of this tree */
   t8_gloidx_t         gtreeid;
   t8_eclass_t         eclass;
