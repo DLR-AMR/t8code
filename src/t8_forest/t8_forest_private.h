@@ -228,6 +228,35 @@ void                t8_forest_element_owners_at_face (t8_forest_t forest,
                                                       int face,
                                                       sc_array_t * owners);
 
+/** Constant time algorithm to compute lower and upper bounds for the owner
+ * processes of a given element.
+ */
+/* TODO: document. lower and upper store on input known bounds and are set to better bounds.
+ *       If lower >= upper, the bounds are not changed */
+void                t8_forest_element_owners_bounds (t8_forest_t forest,
+                                                     t8_gloidx_t gtreeid,
+                                                     const t8_element_t *
+                                                     element,
+                                                     t8_eclass_t eclass,
+                                                     int *lower, int *upper);
+
+/** Constant time algorithm to compute lower and upper bounds for the owner
+ * processes of the face leafs of a given element.
+ */
+/* TODO: document. lower and upper store on input known bounds and are set to better bounds.
+ *       If lower >= upper, the bounds are not changed */
+void                t8_forest_element_owners_at_face_bounds (t8_forest_t
+                                                             forest,
+                                                             t8_gloidx_t
+                                                             gtreeid,
+                                                             const
+                                                             t8_element_t *
+                                                             element,
+                                                             t8_eclass_t
+                                                             eclass, int face,
+                                                             int *lower,
+                                                             int *upper);
+
 /** Find all owner processes that own descendant of a face neighbor of a
  *  given local element that touch the given face.
  * \param [in]    forest  The forest.
@@ -254,6 +283,19 @@ void                t8_forest_element_owners_at_neigh_face (t8_forest_t
                                                             int face,
                                                             sc_array_t *
                                                             owners);
+
+/* TODO: document */
+void                t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t
+                                                                   forest,
+                                                                   t8_locidx_t
+                                                                   ltreeid,
+                                                                   const
+                                                                   t8_element_t
+                                                                   * element,
+                                                                   int face,
+                                                                   int *lower,
+                                                                   int
+                                                                   *upper);
 
 /** Construct all face neighbors of half size of a given element.
  * \param [in]    forest The forest.

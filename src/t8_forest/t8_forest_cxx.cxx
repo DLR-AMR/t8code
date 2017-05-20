@@ -1128,7 +1128,7 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
                                           lower_bound, upper_bound, 1);
   last_owner =
     t8_forest_element_find_owner_ext (forest, gtreeid, last_face_desc, eclass,
-                                      lower_bound, upper_bound, 1);\
+                                      lower_bound, upper_bound, 1);
 
   /* It is impossible for an element with bigger id to belong to a smaller process */
   T8_ASSERT (first_owner <= last_owner);
@@ -1206,6 +1206,8 @@ t8_forest_element_owners_at_face (t8_forest_t forest, t8_gloidx_t gtreeid,
     lower_bound = 0;
     upper_bound = forest->mpisize - 1;
   }
+  T8_ASSERT (0 <= lower_bound && upper_bound < forest->mpisize);
+
   if (lower_bound == upper_bound) {
     /* There is no need to search, the owner is unique */
     T8_ASSERT (0 <= lower_bound && lower_bound < forest->mpisize);
@@ -1219,6 +1221,64 @@ t8_forest_element_owners_at_face (t8_forest_t forest, t8_gloidx_t gtreeid,
                                               NULL, NULL);
 }
 
+
+void
+t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid,
+                                 const t8_element_t * element, t8_eclass_t eclass,
+                                 int * lower, int * upper)
+{
+  t8_eclass_scheme_c * ts;
+  t8_element_t *first_desc, *last_desc;
+
+  if (*lower >= *upper) {
+    /* Either there is no owner or it is unique. */
+    return;
+  }
+
+  /* Compute the first and last descendant of element */
+  ts = t8_forest_get_eclass_scheme (forest, eclass);
+  ts->t8_element_new (1, &first_desc);
+  ts->t8_element_first_descendant (element, first_desc);
+  ts->t8_element_new (1, &last_desc);
+  ts->t8_element_last_descendant (element, last_desc);
+
+  /* Compute their owners as bounds for all of element's owners */
+  *lower = t8_forest_element_find_owner_ext (forest, gtreeid, first_desc,
+                                             eclass, *lower, *upper, 1);
+  *upper = t8_forest_element_find_owner_ext (forest, gtreeid, last_desc,
+                                             eclass, *lower, *upper, 1);
+}
+
+void
+t8_forest_element_owners_at_face_bounds (t8_forest_t forest, t8_gloidx_t gtreeid,
+                                  const t8_element_t * element,
+                                  t8_eclass_t eclass, int face, int *lower,
+                                  int * upper)
+{
+  t8_eclass_scheme_c * ts;
+  t8_element_t *first_face_desc, *last_face_desc;
+
+  if (*lower >= *upper) {
+    /* Either there is no owner or it is unique. */
+    return;
+  }
+
+  ts = t8_forest_get_eclass_scheme (forest, eclass);
+    ts->t8_element_new (1, &first_face_desc);
+    ts->t8_element_first_descendant_face (element, face, first_face_desc);
+    ts->t8_element_new (1, &last_face_desc);
+    ts->t8_element_last_descendant_face (element, face, last_face_desc);
+
+  /* owner of first and last descendants */
+  *lower =
+    t8_forest_element_find_owner_ext (forest, gtreeid, first_face_desc, eclass,
+                                          *lower, *upper, 1);
+  *upper =
+    t8_forest_element_find_owner_ext (forest, gtreeid, last_face_desc, eclass,
+                                      *lower, *upper, 1);
+    ts->t8_element_destroy (1, &first_face_desc);
+    ts->t8_element_destroy (1, &last_face_desc);
+}
 
 void
 t8_forest_element_owners_at_neigh_face (t8_forest_t forest, t8_locidx_t ltreeid,
@@ -1247,6 +1307,37 @@ t8_forest_element_owners_at_neigh_face (t8_forest_t forest, t8_locidx_t ltreeid,
     /* There is no face neighbor, we indicate this by setting the
      * array to 0 */
     sc_array_resize (owners, 0);
+  }
+  neigh_scheme->t8_element_destroy (1, &face_neighbor);
+}
+
+void
+t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t ltreeid,
+                                        const t8_element_t * element, int face,
+                                        int *lower, int *upper)
+{
+  t8_eclass_scheme_c *neigh_scheme;
+  t8_eclass_t         neigh_class;
+  t8_element_t       *face_neighbor;
+  int                 dual_face;
+  t8_gloidx_t         neigh_tree;
+
+  /* Find out the eclass of the face neighbor tree and allocate memory for
+   * the neighbor element */
+  neigh_class = t8_forest_element_neighbor_eclass (forest, ltreeid, element, face);
+  neigh_scheme = t8_forest_get_eclass_scheme (forest, neigh_class);
+  neigh_scheme->t8_element_new (1, &face_neighbor);
+  neigh_tree = t8_forest_element_face_neighbor (forest, ltreeid, element, face_neighbor,
+                                                face, &dual_face);
+  if (neigh_tree >= 0) {
+    /* There is a face neighbor */
+    t8_forest_element_owners_at_face_bounds (forest, neigh_tree, face_neighbor,
+                                      neigh_class, dual_face, lower, upper);
+  }
+  else {
+    /* There is no face neighbor */
+    *lower = 1;
+    *upper = 0;
   }
   neigh_scheme->t8_element_destroy (1, &face_neighbor);
 }
