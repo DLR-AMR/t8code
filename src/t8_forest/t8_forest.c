@@ -387,14 +387,26 @@ t8_forest_commit (t8_forest_t forest)
     t8_forest_partition_cmesh (forest, forest->mpicomm,
                                forest->profile != NULL);
   }
+
+  /* If not already done before, create the offset arrays */
+  if (forest->tree_offsets == NULL) {
+    /* Construct tree_offsets if not already done */
+    t8_forest_partition_create_tree_offsets (forest);
+  }
+  if (forest->global_first_desc == NULL) {
+    /* Create first descendants, if not already done */
+    t8_forest_partition_create_first_desc (forest);
+  }
+
   /* Construct a ghost layer, if desired */
   if (forest->do_ghost) {
-#if 0
+#if 1
     /* TODO: ghost type */
     t8_forest_ghost_create (forest);
-#endif
+#else
     /* TODO: experimental */
     t8_forest_ghost_create_topdown (forest);
+#endif
   }
 
   forest->do_ghost = 0;
