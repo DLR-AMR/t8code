@@ -156,6 +156,18 @@ void                t8_dtet_children_at_face (const t8_dtet_t * tet,
 int                 t8_dtet_face_child_face (const t8_dtet_t * tet,
                                              int face, int face_child);
 
+/** Given a face of an tet return the face number
+ * of the parent of the tet that matches the tet's face. Or return -1 if
+ * no face of the parent matches the face.
+
+ * \param [in]  elem    The tet.
+ * \param [in]  face    Then number of the face.
+ * \return              If \a face of \a elem is also a face of \a elem's parent,
+ *                      the face number of this face. Otherwise -1.
+ */
+int                 t8_dtet_face_parent_face (const t8_dtet_t * tet,
+                                              int face);
+
 /** Given a tetrahedron and a face of this tetrahedron. If the face lies on the
  *  tree boundary, return the face number of the tree face.
  *  If not the return value is arbitrary.

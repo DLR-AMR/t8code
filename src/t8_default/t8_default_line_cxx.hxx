@@ -93,6 +93,17 @@ public:
     return 0;                   /* suppresses compiler warning */
   }
 
+  /** Compute the maximum number of faces of a given element and all of its
+   *  descendants.
+   * \param [in] elem The element.
+   * \return          The maximum number of faces of \a elem and its descendants.
+   */
+  virtual int         t8_element_max_num_faces (const t8_element_t * elem)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+    return 0;                   /* suppresses compiler warning */
+  }
+
   /** Return the number of children of an element when it is refined. */
   virtual int         t8_element_num_children (const t8_element_t * elem)
   {
@@ -170,6 +181,17 @@ public:
                                                   int face, int face_child)
   {
     SC_ABORT ("This function is not implemented yet.\n");
+    return 0;                   /* suppresses compiler warning */
+  }
+
+  /** Given a face of an element return the face number
+   * of the parent of the element that matches the element's face. Or return -1 if
+   * no face of the parent matches the face. */
+  virtual int         t8_element_face_parent_face (const t8_element_t * elem,
+                                                   int face)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+    return 0;                   /* suppresses compiler warning */
   }
 
   /** Return the tree face id given a boundary face. */
@@ -177,6 +199,7 @@ public:
                                             int face)
   {
     SC_ABORT ("This function is not implemented yet.\n");
+    return 0;                   /* suppresses compiler warning */
   }
 
   /** Transform the coordinates of a line considered as boundary element

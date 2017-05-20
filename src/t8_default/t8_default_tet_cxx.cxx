@@ -95,6 +95,12 @@ t8_default_scheme_tet_c::t8_element_num_faces (const t8_element_t * elem)
 }
 
 int
+t8_default_scheme_tet_c::t8_element_max_num_faces (const t8_element_t * elem)
+{
+  return T8_DTET_FACES;
+}
+
+int
 t8_default_scheme_tet_c::t8_element_num_children (const t8_element_t * elem)
 {
   return T8_DTET_CHILDREN;
@@ -188,6 +194,15 @@ t8_default_scheme_tet_c::t8_element_face_child_face (const t8_element_t *
   T8_ASSERT (0 <= face && face < T8_DTET_FACES);
   T8_ASSERT (0 <= face && face < T8_DTET_FACE_CHILDREN);
   return t8_dtet_face_child_face ((const t8_dtet_t *) elem, face, face_child);
+}
+
+int
+t8_default_scheme_tet_c::t8_element_face_parent_face (const t8_element_t *
+                                                      elem, int face)
+{
+  T8_ASSERT (0 <= face && face < T8_DTET_FACES);
+
+  return t8_dtet_face_parent_face ((const t8_dtet_t *) elem, face);
 }
 
 int

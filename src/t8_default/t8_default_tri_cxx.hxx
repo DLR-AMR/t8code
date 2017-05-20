@@ -75,6 +75,13 @@ public:
   /** Compute the number of face of a given element. */
   virtual int         t8_element_num_faces (const t8_element_t * elem);
 
+  /** Compute the maximum number of faces of a given element and all of its
+   *  descendants.
+   * \param [in] elem The element.
+   * \return          The maximum number of faces of \a elem and its descendants.
+   */
+  virtual int         t8_element_max_num_faces (const t8_element_t * elem);
+
   /** Return the number of children of an element when it is refined. */
   virtual int         t8_element_num_children (const t8_element_t * elem);
 
@@ -124,6 +131,12 @@ public:
    * of the child of the element that matches the child face. */
   virtual int         t8_element_face_child_face (const t8_element_t * elem,
                                                   int face, int face_child);
+
+  /** Given a face of an element return the face number
+   * of the parent of the element that matches the element's face. Or return -1 if
+   * no face of the parent matches the face. */
+  virtual int         t8_element_face_parent_face (const t8_element_t * elem,
+                                                   int face);
 
   /** Return the tree face id given a boundary face. */
   virtual int         t8_element_tree_face (const t8_element_t * elem,

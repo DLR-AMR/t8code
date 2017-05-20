@@ -813,6 +813,30 @@ t8_dtri_face_child_face (const t8_dtri_t * triangle, int face, int face_child)
 #endif
 }
 
+int
+t8_dtri_face_parent_face (const t8_dtri_t * triangle, int face)
+{
+#ifndef T8_DTRI_TO_DTET
+  int                 parent_type;
+#endif
+  T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
+
+#ifndef T8_DTRI_TO_DTET
+  /* For triangles, a triangle is only at the boundary of its parent if it
+   * has the same type as the parent, in which case also the face numbers are the same */
+  parent_type =
+    t8_dtri_cid_type_to_parenttype[compute_cubeid (triangle, triangle->level)]
+    [triangle->level];
+  if (triangle->type != parent_type) {
+    return -1;
+  }
+  return face;
+#else
+  /* TODO: provide an implementation */
+  return -1;
+#endif
+}
+
 #ifndef T8_DTRI_TO_DTET
 /* This function has only a triangle version. */
 void

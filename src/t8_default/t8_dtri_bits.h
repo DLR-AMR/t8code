@@ -152,6 +152,18 @@ void                t8_dtri_children_at_face (const t8_dtri_t * tri,
 int                 t8_dtri_face_child_face (const t8_dtri_t * triangle,
                                              int face, int face_child);
 
+/** Given a face of an triangle return the face number
+ * of the parent of the triangle that matches the triangle's face. Or return -1 if
+ * no face of the parent matches the face.
+
+ * \param [in]  elem    The triangle.
+ * \param [in]  face    Then number of the face.
+ * \return              If \a face of \a elem is also a face of \a elem's parent,
+ *                      the face number of this face. Otherwise -1.
+ */
+int                 t8_dtri_face_parent_face (const t8_dtri_t * triangle,
+                                              int face);
+
 /** Given a triangle and a face of this triangle. If the face lies on the
  *  tree boundary, return the face number of the tree face.
  *  If not the return value is arbitrary.

@@ -141,11 +141,19 @@ public:
                                           int sibid,
                                           t8_element_t * sibling) = 0;
 
-  /** Compute the number of face of a given element.
+  /** Compute the number of faces of a given element.
    * \param [in] elem The element.
    * \return          The number of faces of \a elem.
    */
   virtual int         t8_element_num_faces (const t8_element_t * elem) = 0;
+
+  /** Compute the maximum number of faces of a given element and all of its
+   *  descendants.
+   * \param [in] elem The element.
+   * \return          The maximum number of faces of \a elem and its descendants.
+   */
+  virtual int         t8_element_max_num_faces (const t8_element_t * elem) =
+    0;
 
   /** Return the number of children of an element when it is refined.
    * \param [in] ts     The virtual table for this element class.
@@ -286,6 +294,18 @@ public:
   virtual int         t8_element_face_child_face (const t8_element_t * elem,
                                                   int face, int face_child) =
     0;
+
+    /** Given a face of an element return the face number
+     * of the parent of the element that matches the element's face. Or return -1 if
+     * no face of the parent matches the face.
+
+     * \param [in]  elem    The element.
+     * \param [in]  face    Then number of the face.
+     * \return              If \a face of \a elem is also a face of \a elem's parent,
+     *                      the face number of this face. Otherwise -1.
+     */
+  virtual int         t8_element_face_parent_face (const t8_element_t * elem,
+                                                   int face) = 0;
 
   /** Given an element and a face of this element. If the face lies on the
    *  tree boundary, return the face number of the tree face.

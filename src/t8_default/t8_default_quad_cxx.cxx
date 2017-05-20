@@ -133,6 +133,12 @@ t8_default_scheme_quad_c::t8_element_num_faces (const t8_element_t * elem)
 }
 
 int
+t8_default_scheme_quad_c::t8_element_max_num_faces (const t8_element_t * elem)
+{
+  return P4EST_FACES;
+}
+
+int
 t8_default_scheme_quad_c::t8_element_num_children (const t8_element_t * elem)
 {
   return P4EST_CHILDREN;
@@ -350,6 +356,21 @@ t8_default_scheme_quad_c::t8_element_face_child_face (const t8_element_t *
 {
   /* For quadrants the face enumeration of children is the same as for the parent. */
   return face;
+}
+
+int
+t8_default_scheme_quad_c::t8_element_face_parent_face (const t8_element_t *
+                                                       elem, int face)
+{
+  int                 child_id;
+  /* Determine whether face is a subface of the parent.
+   * This is the case if the child_id matches one of the faces corners */
+  child_id = p4est_quadrant_child_id ((const p4est_quadrant_t *) elem);
+  if (child_id == p4est_face_corners[face][0]
+      || child_id == p4est_face_corners[face][1]) {
+    return face;
+  }
+  return -1;
 }
 
 void
