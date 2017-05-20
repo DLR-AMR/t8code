@@ -720,17 +720,10 @@ t8_forest_ghost_iterate_face_add_remote (t8_forest_t forest,
     return 0;
   }
 
-  /* we now compute the owners at the neighbor face for this element */
-  sc_array_init_size (&owners_at_face, sizeof (int), 2);
-  /* Set the lower and upper bound of the face owners */
-  *(int *) sc_array_index (&owners_at_face, 0) = lower;
-  *(int *) sc_array_index (&owners_at_face, 1) = upper;
-  t8_forest_element_owners_at_neigh_face (forest, ltreeid, element, face,
-                                          &owners_at_face);
-  if (owners_at_face.elem_count == 0) {
-    /* There is no face neighbor */
-    return 0;
-  }
+  /* we now compute the bounds for owners at the neighbor face for this element */
+  t8_forest_element_owners_at_neigh_face_bounds (forest, ltreeid, element,
+                                                 face, &lower, &upper);
+
 #if 0
   /* TODO: We used this to store the lower and upper bounds for the next
    * level, however if the top-down search enters a new sibling, this information
@@ -745,18 +738,11 @@ t8_forest_ghost_iterate_face_add_remote (t8_forest_t forest,
   else {
     data->face_owner_high = data->face_owner_low;
   }
-#else
-  /* Set the new lower and upper bound for the owners */
-  lower = *(int *) sc_array_index (&owners_at_face, 0);
-  if (owners_at_face.elem_count >= 2) {
-    upper = *(int *)
-      sc_array_index (&owners_at_face, owners_at_face.elem_count - 1);
-  }
-  else {
-    lower = data->face_owner_low;
-  }
 #endif
-  sc_array_resize (&owners_at_face, 0);
+  if (lower > upper) {
+    /* there is no neighbor */
+    return 0;
+  }
   if (lower == upper) {
     /* There is only one owner of the neighbor element at the face.
      * We check if it is the current rank, if so, there is nothing left to do. */
@@ -773,7 +759,6 @@ t8_forest_ghost_iterate_face_add_remote (t8_forest_t forest,
      * different from the current rank */
     data->neighbor_unique_owner = -1;
   }
-  data->num_face_owners = owners_at_face.elem_count;
   t8_debugf ("[H] Computed low %i high %i\n",
              data->face_owner_low, data->face_owner_high);
   return 1;
@@ -781,9 +766,18 @@ t8_forest_ghost_iterate_face_add_remote (t8_forest_t forest,
 
 typedef struct
 {
+  sc_array_t          bounds_per_level; /* For each level from the nca to the parent of the current element
+                                           we store for each face the lower and upper bounds of the owners at
+                                           this face. We also store bounds for the element's owners.
+                                           Each entry is an array of 2 * (max_num_faces + 1) integers,
+                                           | face_0 low | face_0 high | ... | face_n low | face_n high | owner low | owner high | */
   t8_eclass_scheme_c *ts;
   sc_hash_array_t    *rem_el_indices;   /* The indices of the so far added remote elements of this tree */
   t8_gloidx_t         gtreeid;
+  int                 level_nca;        /* The refinement level of the root element in the search.
+                                           At position element_level - level_nca in bounds_per_level are the bounds
+                                           for the parent of element. */
+  int                 max_num_faces;
   t8_eclass_t         eclass;
 } t8_forest_ghost_boundary_data_t;
 
@@ -795,8 +789,11 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
 {
   t8_forest_ghost_boundary_data_t *data =
     (t8_forest_ghost_boundary_data_t *) user_data;
-  int                 num_faces, iface, face_totally_owned, all_faces_owned;
-  sc_array_t          face_owners;
+  int                 num_faces, iface, face_totally_owned, level;
+  int                 parent_face;
+  int                 lower, upper, *bounds, *new_bounds;
+  int                 el_lower, el_upper;
+  int                 element_is_owned;
   t8_forest_ghost_iterate_face_data_t face_it_data;
   t8_locidx_t         correct_tree_leaf_index;  /* The argument tree_leaf_index is
                                                    negativ is this is not a leaf */
@@ -804,6 +801,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
   correct_tree_leaf_index =
     tree_leaf_index < 0 ? -(tree_leaf_index + 1) : tree_leaf_index;
   if (t8_forest_global_tree_id (forest, ltreeid) != data->gtreeid) {
+    int                 max_num_faces;
     /* The search has entered a new tree, store its eclass and element scheme */
     if (data->gtreeid >= 0) {
       t8_locidx_t         prev_tree_id =
@@ -815,75 +813,122 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
     data->gtreeid = t8_forest_global_tree_id (forest, ltreeid);
     data->eclass = t8_forest_get_eclass (forest, ltreeid);
     data->ts = t8_forest_get_eclass_scheme (forest, data->eclass);
-    /* Allocate memory to store a flag for each leaf element stating for each face
-     * whether we already considered the owner of the face neighbor of this leaf
-     * as a remote process of the leaf */
-    /* TODO: we could also realloc and memset(0), which one is better? */
-    T8_FREE (data->face_flags);
-    data->face_flags =
-      T8_ALLOC_ZERO (t8_element_face_flag_t, leafs->elem_count);
+    data->level_nca = data->ts->t8_element_level (element);
+    data->max_num_faces = data->ts->t8_element_max_num_faces (element);
+    max_num_faces = data->max_num_faces;
+    t8_debugf ("[H] max num %i\n", max_num_faces);
+    sc_array_reset (&data->bounds_per_level);
+    sc_array_init_size (&data->bounds_per_level,
+                        2 * (max_num_faces + 1) * sizeof (int), 1);
+    /* Set the (imaginary) owner bounds for the parent of the root element */
+    bounds = (int *) sc_array_index (&data->bounds_per_level, 0);
+    for (iface = 0; iface < max_num_faces + 1; iface++) {
+      bounds[iface * 2] = 0;
+      bounds[iface * 2 + 1] = forest->mpisize - 1;
+    }
+    /* TODO: compute bounds */
     t8_debugf ("[H] Start search in tree %i, has %i leafs\n",
                ltreeid, t8_forest_get_tree_num_elements (forest, ltreeid));
   }
-  t8_debugf ("[H] enter search with level %i element lin id %li leafs %i\n",
+  t8_debugf ("[H] enter search with level %i element lin id %li leafs %zd\n",
              data->ts->t8_element_level (element),
              data->ts->t8_element_get_linear_id (element,
                                                  data->ts->t8_element_level
                                                  (element)),
              leafs->elem_count);
 
+  /* The level of the current element */
+  level = data->ts->t8_element_level (element);
+  /* Get a pointer to the owner at face bounds of this element, if there doesnt exist
+   * an entry for this in the bounds_per_level array yet, we allocate it */
+  T8_ASSERT (level >= data->level_nca);
+  if (data->bounds_per_level.elem_count <=
+      (size_t) level - data->level_nca + 1) {
+    T8_ASSERT (data->bounds_per_level.elem_count ==
+               (size_t) level - data->level_nca + 1);
+    new_bounds = (int *) sc_array_push (&data->bounds_per_level);
+  }
+  else {
+    new_bounds = (int *) sc_array_index (&data->bounds_per_level,
+                                         level - data->level_nca + 1);
+  }
+
+  /* Get a pointer to the owner bounds of the parent */
+  bounds =
+    (int *) sc_array_index (&data->bounds_per_level, level - data->level_nca);
+  /* Get bounds for the element's parent's owners */
+  el_lower = bounds[2 * data->max_num_faces];
+  el_upper = bounds[2 * data->max_num_faces + 1];
+  /* Compute bounds for the element's owners */
+  t8_forest_element_owners_bounds (forest, data->gtreeid, element,
+                                   data->eclass, &el_lower, &el_upper);
+  /* Set these as the new bounds */
+  new_bounds[2 * data->max_num_faces] = el_lower;
+  new_bounds[2 * data->max_num_faces + 1] = el_upper;
+  element_is_owned = (el_lower == el_upper);
   num_faces = data->ts->t8_element_num_faces (element);
-  sc_array_init (&face_owners, sizeof (int));
-  /* TODO: reuse face_owners from previous calls via ts->t8_element_at_parent_face */
   /* TODO: do we properly exclude domanin boundaries from the search? */
-  /* TODO: use a element_owners_bounds function that does no recursion. */
-  all_faces_owned = 1;
   for (iface = 0; iface < num_faces; iface++) {
     if (tree_leaf_index < 0) {
-      face_totally_owned = 0;
-      sc_array_resize (&face_owners, 0);
-      /* Compute the owners at this face of the element */
-      t8_forest_element_owners_at_face (forest, data->gtreeid, element,
-                                        data->eclass, iface, &face_owners);
-      if (face_owners.elem_count == 1) {
-        if (forest->mpirank == *(int *) sc_array_index (&face_owners, 0)) {
+      if (!element_is_owned) {
+        face_totally_owned = 0;
+        /* Compute the face number of the parent to reuse the bounds */
+        parent_face = data->ts->t8_element_face_parent_face (element, iface);
+        if (parent_face >= 0) {
+          /* This face was also a face of the parent, we reuse the computed bounds */
+          lower = bounds[iface * 2];
+          upper = bounds[iface * 2 + 1];
+        }
+        else {
+          lower = el_lower;
+          upper = el_upper;
+        }
+        lower = SC_MAX (lower, el_lower);
+        upper = SC_MIN (upper, el_upper);
+        t8_debugf ("[H] Enter search with bounds %i %i\n", lower, upper);
+        /* Compute the owners at this face of the element */
+        t8_forest_element_owners_at_face_bounds (forest, data->gtreeid,
+                                                 element, data->eclass, iface,
+                                                 &lower, &upper);
+        /* Store the new bounds at the entry for this element */
+        new_bounds[iface * 2] = lower;
+        new_bounds[iface * 2 + 1] = upper;
+        if (lower == upper && lower == forest->mpirank) {
+          /* All leafs at this face are owned by the current rank */
           t8_debugf
             ("[H] level %i element lin id %li at face %i totally pwned\n",
              data->ts->t8_element_level (element),
              data->ts->t8_element_get_linear_id (element,
                                                  data->ts->t8_element_level
                                                  (element)), iface);
-          /* All leafs at this face are owned by the current rank */
           face_totally_owned = 1;
         }
       }
     }
-    if (tree_leaf_index >= 0 || face_totally_owned) {
-      /* Element is either a leaf or all of its leafs at the face are
-       * owned by the current rank */
-      face_it_data.element_face_flags = data->face_flags;
+    if (element_is_owned || face_totally_owned) {
+      /* Either all descendants of element are owned by the current rank
+       * or all of its leafs at the face are. */
       face_it_data.face_owner_low = 0;
       face_it_data.face_owner_high = forest->mpisize - 1;
-      face_it_data.num_face_owners = forest->mpisize;
       face_it_data.eclass = data->eclass;
       face_it_data.neighbor_unique_owner = -1;
       face_it_data.rem_el_indices = data->rem_el_indices;
       t8_debugf
-        ("[H] level %i Starting face %i iterate with %i leafs, fl %i\n",
+        ("[H] level %i Starting face %i iterate with %zd leafs, fl %i\n",
          data->ts->t8_element_level (element), iface, leafs->elem_count,
          correct_tree_leaf_index);
       t8_forest_iterate_faces (forest, ltreeid, element, iface, leafs,
                                &face_it_data, correct_tree_leaf_index,
                                t8_forest_ghost_iterate_face_add_remote);
     }
-    else {
-      all_faces_owned = 0;
-    }
   }
-  sc_array_reset (&face_owners);
-  /* Continue the top-down search if we did not consider all faces of this
-   * element since not all are completely owned by the current process */
-  return !all_faces_owned;
+  /* TODO: This does not always work. We need to continue also if all faces
+   *       are owned but not all descendants of the element.
+   *       (consider 1:9 refinement scheme and the middle element is not owned)
+   */
+  /* Continue the top-down search if this element is not completely owned
+   * by the rank. Otherwise we added all of its face leafs.*/
+  return !element_is_owned;
 }
 
 /* Fill the remote ghosts of a ghost structure.
@@ -905,11 +950,13 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
   data.eclass = T8_ECLASS_COUNT;
   data.gtreeid = -1;
   data.ts = NULL;
-  data.face_flags = NULL;
   data.rem_el_indices =
     sc_hash_array_new (sizeof (t8_forest_ghost_rem_el_index_t),
                        t8_forest_ghost_rem_el_index_hash,
                        t8_forest_ghost_rem_el_index_eq, NULL);
+  /* This is a dummy init, since we call sc_array_reset in ghost_search_boundary
+   * and we should not call sc_array_reset on a non-initialized array */
+  sc_array_init (&data.bounds_per_level, 1);
   /* Loop over the trees of the forest */
   t8_forest_search (forest, t8_forest_ghost_search_boundary, &data);
 
@@ -918,8 +965,8 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
   t8_forest_ghost_add_remote_indices (forest, forest->ghosts,
                                       t8_forest_get_num_local_trees (forest) -
                                       1, data.rem_el_indices);
-  T8_FREE (data.face_flags);
   sc_hash_array_destroy (data.rem_el_indices);
+  sc_array_reset (&data.bounds_per_level);
   t8_debugf ("[H] End filling remotes v3\n");
 }
 
@@ -936,12 +983,12 @@ static void
 t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
                              int ghost_method)
 {
-  t8_element_t       *elem, **half_neighbors, *face_neighbor;
+  t8_element_t       *elem, **half_neighbors;
   t8_locidx_t         num_local_trees, num_tree_elems;
   t8_locidx_t         itree, ielem;
   t8_tree_t           tree;
   t8_eclass_t         tree_class, neigh_class, last_class;
-  t8_gloidx_t         neighbor_tree, last_neighbor_tree;
+  t8_gloidx_t         neighbor_tree;
   t8_eclass_scheme_c *ts, *neigh_scheme, *prev_neigh_scheme;
 
   int                 iface, num_faces;
@@ -959,7 +1006,6 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
   }
 
   t8_debugf ("[H] Start filling remotes.\n");
-  last_neighbor_tree = -1;
   /* Loop over the trees of the forest */
   for (itree = 0; itree < num_local_trees; itree++) {
     /* Get a pointer to the tree, the class of the tree, the
@@ -1049,42 +1095,21 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
         }                       /* end ghost_method 0 */
         else {
           size_t              iowner;
-          int                 neigh_face;
-          /* Use t8_forest_element_owners_at_face */
-          ts->t8_element_new (1, &face_neighbor);
-          /* Construct the face neighbor of element */
-          neighbor_tree =
-            t8_forest_element_face_neighbor (forest, itree, elem,
-                                             face_neighbor, iface,
-                                             &neigh_face);
-          if (neighbor_tree >= 0) {
-            /* Build a list of all owners of element that touch face */
-
-            /* We re-use the computed tree owners if the tree did not change */
-            if (last_neighbor_tree != neighbor_tree) {
-              /* and reset it if the tree changed */
-              sc_array_truncate (&tree_owners);
-              last_neighbor_tree = neighbor_tree;
+          /* Construc the owners at the face of the neighbor element */
+          t8_forest_element_owners_at_neigh_face (forest, itree, elem, iface,
+                                                  &owners);
+          T8_ASSERT (owners.elem_count >= 0);
+          /* Iterate over all owners and if any is not the current process,
+           * add this element as remote */
+          for (iowner = 0; iowner < owners.elem_count; iowner++) {
+            owner = *(int *) sc_array_index (&owners, iowner);
+            T8_ASSERT (0 <= owner && owner < forest->mpisize);
+            if (owner != forest->mpirank) {
+              /* Add the element as a remote element */
+              t8_ghost_add_remote (forest, ghost, owner, itree, elem, ielem);
             }
-
-            t8_forest_element_owners_at_face (forest, neighbor_tree,
-                                              face_neighbor, neigh_class,
-                                              neigh_face, &owners);
-            T8_ASSERT (owners.elem_count > 0);
-            /* Iterate over all owners and if any is not the current process,
-             * add this element as remote */
-            for (iowner = 0; iowner < owners.elem_count; iowner++) {
-              owner = *(int *) sc_array_index (&owners, iowner);
-              T8_ASSERT (0 <= owner && owner < forest->mpisize);
-              if (owner != forest->mpirank) {
-                /* Add the element as a remote element */
-                t8_ghost_add_remote (forest, ghost, owner, itree, elem,
-                                     ielem);
-              }
-            }
-            sc_array_truncate (&owners);
           }
-          ts->t8_element_destroy (1, &face_neighbor);
+          sc_array_truncate (&owners);
         }
       }                         /* end face loop */
     }                           /* end element loop */
