@@ -208,12 +208,12 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid,
     if (!ts->t8_element_compare (element, leaf)) {
       /* The element is the leaf, we are at the last stage of the recursion
        * and can call the callback. */
-      search_fn (forest, ltreeid, leaf, leaf_elements, user_data,
-                 tree_lindex_of_first_leaf);
+      (void) search_fn (forest, ltreeid, leaf, leaf_elements, user_data,
+                        tree_lindex_of_first_leaf);
       return;
     }
   }
-  /* Call the callback function element, we pass -index -1 as index to indicate
+  /* Call the callback function for the element, we pass -index -1 as index to indicate
    * element is not a leaf */
   ret = search_fn (forest, ltreeid, element, leaf_elements, user_data,
                    -tree_lindex_of_first_leaf - 1);
