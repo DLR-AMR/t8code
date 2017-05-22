@@ -144,7 +144,8 @@ void                t8_forest_compute_elements_offset (t8_forest_t forest);
 t8_element_t       *t8_forest_get_tree_element (t8_tree_t tree,
                                                 t8_locidx_t elem_in_tree);
 
-/** Find the owner process of a given element.
+/** Find the owner process of a given element, deprecated version.
+ * Use t8_forest_element_find_owner instead.
  * \param [in]    forest  The forest.
  * \param [in]    gtreeid The global id of the tree in which the element lies.
  * \param [in]    element The element to look for.
@@ -156,6 +157,7 @@ t8_element_t       *t8_forest_get_tree_element (t8_tree_t tree,
  *                        be filled with all owners of the tree.
  * \return                The mpirank of the process that owns \a element.
  * \note The element must exist in the forest.
+ * \note \a forest must be committed before calling this function.
  */
 /* TODO: This finds the owner of the first descendant of element.
  *       We call this in owners_at_face where element is a descendant,
@@ -172,19 +174,51 @@ int                 t8_forest_element_find_owner_old (t8_forest_t forest,
                                                       sc_array_t *
                                                       all_owners_of_tree);
 
-/* TODO: document */
+/** Find the owner process of a given element.
+ * \param [in]    forest  The forest.
+ * \param [in]    gtreeid The global id of the tree in which the element lies.
+ * \param [in]    element The element to look for.
+ * \param [in]    eclass  The element class of the tree \a gtreeid.
+ * \return                The mpirank of the process that owns \a element.
+ * \note The element must not exist in the forest, but an ancestor of its first
+ *       descendant has to. If the element's owner is not unique, the owner of the element's
+ *       first descendant is returned.
+ * \note \a forest must be committed before calling this function.
+ * \see t8_forest_element_find_owner_ext
+ * \see t8_forest_element_owners_bounds
+ */
 int                 t8_forest_element_find_owner (t8_forest_t forest,
                                                   t8_gloidx_t gtreeid,
                                                   t8_element_t * element,
                                                   t8_eclass_t eclass);
 
-/* TODO: document */
+/** Find the owner process of a given element, if bounds for the owner process are known.
+ * \param [in]    forest  The forest.
+ * \param [in]    gtreeid The global id of the tree in which the element lies.
+ * \param [in]    element The element to look for.
+ * \param [in]    eclass  The element class of the tree \a gtreeid.
+ * \param [in]    lower_bound A known lower bound for the owner process.
+ * \param [in]    upper_bound A known upper bound for the owner process.
+ * \param [in]    guess   An initial guess for the owner. Must satisfy
+ *                        \a lower_bound <= \a guess <= \a upper_bound
+ * \return                The mpirank of the process that owns \a element.
+ * \note If \a lower_bound = \a upper_bound, the function assumes that \a lower_bound
+ *       is the owner process and immediately returns.
+ * \note The owner p must satisfy \a lower_bound <= p <= \a upper_bound.
+ * \note The element must not exist in the forest, but an ancestor of its first
+ *       descendant has to. If the element's owner is not unique, the owner of the element's
+ *       first descendant is returned.
+ * \note \a forest must be committed before calling this function.
+ * \see t8_forest_element_find_owner
+ * \see t8_forest_element_owners_bounds
+ */
 int                 t8_forest_element_find_owner_ext (t8_forest_t forest,
                                                       t8_gloidx_t gtreeid,
                                                       t8_element_t * element,
                                                       t8_eclass_t eclass,
                                                       int lower_bound,
-                                                      int upper_bound, int guess,
+                                                      int upper_bound,
+                                                      int guess,
                                                       int element_is_desc);
 
 /** Perform a constant runtime check if a given rank is owner of a given element.
@@ -213,7 +247,7 @@ int                 t8_forest_element_check_owner (t8_forest_t forest,
  * \param [in]    element The element to look for.
  * \param [in]    eclass  The element class of the tree \a gtreeid.
  * \param [in]    face    A face of \a element.
- * \param [in,out] owners  On input an array of integers. Its first and last entry
+ * \param [in,out] owners  On input an array of integers. Its first and second entry
  *                        are taken as lower and upper bounds for the owner processes.
  *                        If empty, then no bounds are taken.
  *                        On output it stores
@@ -230,9 +264,21 @@ void                t8_forest_element_owners_at_face (t8_forest_t forest,
 
 /** Constant time algorithm to compute lower and upper bounds for the owner
  * processes of a given element.
+ ** \param [in]    forest  The forest.
+ * \param [in]    gtreeid The global id of the tree in which the element lies.
+ * \param [in]    element The element to look for.
+ * \param [in]    eclass  The element class of the tree \a gtreeid.
+ * \param [in,out] lower   On input a known lower bound for the owner process,
+ *                         on output a (better) bound.
+ * \param [in,out] upper   On input a known upper bound for the owner process,
+ *                         on output a (better) bound.
+ *
+ * \note If on input \a lower >= \a upper, then the bounds are not changed by this
+ *        algorithm. We interpret \a lower = \a such that the owner is unique and equals \a lower.
+ * \note \a forest must be committed before calling this function.
+ * \see t8_forest_element_find_owner
+ * \see t8_forest_element_owners_bounds
  */
-/* TODO: document. lower and upper store on input known bounds and are set to better bounds.
- *       If lower >= upper, the bounds are not changed */
 void                t8_forest_element_owners_bounds (t8_forest_t forest,
                                                      t8_gloidx_t gtreeid,
                                                      const t8_element_t *
@@ -242,9 +288,20 @@ void                t8_forest_element_owners_bounds (t8_forest_t forest,
 
 /** Constant time algorithm to compute lower and upper bounds for the owner
  * processes of the face leafs of a given element.
+ * \param [in]    forest  The forest.
+ * \param [in]    gtreeid The global id of the tree in which the element lies.
+ * \param [in]    element The element to look for.
+ * \param [in]    eclass  The element class of the tree \a gtreeid.
+ * \param [in]    face    The face of \a element to consider.
+ * \param [in,out] lower   On input a known lower bound for the owner process,
+ *                         on output a (better) bound.
+ * \param [in,out] upper   On input a known upper bound for the owner process,
+ *                         on output a (better) bound.
+ *
+ * \note If on input \a lower >= \a upper, then the bounds are not changed by this
+ *        algorithm. We interpret \a lower = \a such that the owner is unique and equals \a lower.
+ * \note \a forest must be committed before calling this function.
  */
-/* TODO: document. lower and upper store on input known bounds and are set to better bounds.
- *       If lower >= upper, the bounds are not changed */
 void                t8_forest_element_owners_at_face_bounds (t8_forest_t
                                                              forest,
                                                              t8_gloidx_t
@@ -260,11 +317,10 @@ void                t8_forest_element_owners_at_face_bounds (t8_forest_t
 /** Find all owner processes that own descendant of a face neighbor of a
  *  given local element that touch the given face.
  * \param [in]    forest  The forest.
- * \param [in]    gtreeid The local id of the tree in which the element lies.
+ * \param [in]    ltreeid The local id of the tree in which the element lies.
  * \param [in]    element The element, whose neighbor's face owners should be computed.
- * \param [in]    eclass  The element class of the tree \a gtreeid.
  * \param [in]    face    A face of \a element.
- * \param [in,out] owners  On input an array of integers. Its first and last entry
+ * \param [in,out] owners  On input an array of integers. Its first and second entry
  *                        are taken as lower and upper bounds for the owner processes.
  *                        If empty, then no bounds are taken.
  *                        On output it stores all owners of descendants of the neighbor of
@@ -273,6 +329,7 @@ void                t8_forest_element_owners_at_face_bounds (t8_forest_t
  *                        exist, owners will be empty.
  * This is equivalent to calling t8_forest_element_face_neighbor and
  * t8_forest_element_owners_at_face for the resulting neighbor.
+ * \note \a forest must be committed before calling this function.
  */
 void                t8_forest_element_owners_at_neigh_face (t8_forest_t
                                                             forest,
@@ -284,7 +341,24 @@ void                t8_forest_element_owners_at_neigh_face (t8_forest_t
                                                             sc_array_t *
                                                             owners);
 
-/* TODO: document */
+/** Constant time algorithm to find bounds for the owner processes
+ *  that own descendant of a face neighbor of a
+ *  given local element that touch the given face.
+ * \param [in]    forest  The forest.
+ * \param [in]    ltreeid The local id of the tree in which the element lies.
+ * \param [in]    element The element, whose neighbor's face owners should be computed.
+ * \param [in]    face    A face of \a element.
+ * \param [in,out] lower   On input a known lower bound for the owner process,
+ *                         on output a (better) bound.
+ * \param [in,out] upper   On input a known upper bound for the owner process,
+ *                         on output a (better) bound.
+ *
+ * \note If on input \a lower >= \a upper, then the bounds are not changed by this
+ *        algorithm. We interpret \a lower = \a such that the owner is unique and equals \a lower.
+ * \note \a forest must be committed before calling this function.
+ * This is equivalent to calling t8_forest_element_face_neighbor and
+ * t8_forest_element_owners_at_face_bounds for the resulting neighbor.
+ */
 void                t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t
                                                                    forest,
                                                                    t8_locidx_t
