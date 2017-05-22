@@ -497,6 +497,7 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
   }
 }
 
+#if 0
 /* In ghost version 3, the remote elements are not added in their linear order
  * to the ghost struct, and same elements may be added more than once.
  * Since we need to call t8_ghost_add_remote in linear order and only once per element,
@@ -763,6 +764,7 @@ t8_forest_ghost_iterate_face_add_remote (t8_forest_t forest,
              data->face_owner_low, data->face_owner_high);
   return 1;
 }
+#endif
 
 typedef struct
 {
