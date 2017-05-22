@@ -796,7 +796,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
     (t8_forest_ghost_boundary_data_t *) user_data;
   int                 num_faces, iface, faces_totally_owned, level;
   int                 parent_face;
-  int                 lower, upper, *bounds, *new_bounds;
+  int                 lower, upper, *bounds, *new_bounds, parent_lower, parent_upper;
   int                 el_lower, el_upper;
   int                 element_is_owned, iproc, remote_rank;
 
@@ -851,8 +851,11 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
   bounds =
     (int *) sc_array_index (&data->bounds_per_level, level - data->level_nca);
   /* Get bounds for the element's parent's owners */
-  el_lower = bounds[2 * data->max_num_faces];
-  el_upper = bounds[2 * data->max_num_faces + 1];
+  parent_lower = bounds[2 * data->max_num_faces];
+  parent_upper = bounds[2 * data->max_num_faces + 1];
+  /* Temporarily store them to serve as bounds for this element's owners */
+  el_lower = parent_lower;
+  el_upper = parent_upper;
   /* Compute bounds for the element's owners */
   t8_forest_element_owners_bounds (forest, data->gtreeid, element,
                                    data->eclass, &el_lower, &el_upper);
@@ -874,8 +877,10 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
       upper = bounds[iface * 2 + 1];
     }
     else {
-      lower = 0;
-      upper = forest->mpisize - 1;
+      /* this is an inner face, thus the face owners must be owners of the
+       * parent element */
+      lower = parent_lower;
+      upper = parent_upper;
     }
     t8_debugf ("[H] Enter search at face %i pface %i with bounds %i %i\n",
                iface, parent_face, lower, upper);
