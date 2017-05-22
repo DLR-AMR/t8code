@@ -60,6 +60,14 @@ void                t8_dtet_compute_all_coords (const t8_dtet_t * t,
  */
 void                t8_dtet_copy (const t8_dtet_t * t, t8_dtet_t * dest);
 
+/** Compare two tets in their linear order.
+ * \param [in] t1 Tetrahedron one.
+ * \param [in] t2 Tetrahedron two.
+ * \return        Returns negativ if t1 < t2, zero if t1 = t2, positive if t1 > t2
+ */
+int                 t8_dtet_compare (const t8_dtet_t * t1,
+                                     const t8_dtet_t * t2);
+
 /** Compute the parent of a tetrahedron.
  * \param [in]  elem Input tetrahedron.
  * \param [in,out] parent Existing tetrahedron whose data will

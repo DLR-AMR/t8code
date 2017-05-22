@@ -38,6 +38,14 @@ T8_EXTERN_C_BEGIN ();
  */
 void                t8_dtri_copy (const t8_dtri_t * t, t8_dtri_t * dest);
 
+/** Compare two triangle in their linear order.
+ * \param [in] t1 Triangle one.
+ * \param [in] t2 Triangle two.
+ * \return        Returns negativ if t1 < t2, zero if t1 = t2, positive if t1 > t2
+ */
+int                 t8_dtri_compare (const t8_dtri_t * t1,
+                                     const t8_dtri_t * t2);
+
 /** Compute the parent of a triangle.
  * \param [in]  elem Input triangle.
  * \param [in,out] parent Existing triangle whose data will

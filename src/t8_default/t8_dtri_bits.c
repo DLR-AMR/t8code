@@ -109,6 +109,26 @@ t8_dtri_copy (const t8_dtri_t * t, t8_dtri_t * dest)
   memcpy (dest, t, sizeof (t8_dtri_t));
 }
 
+int
+t8_dtri_compare (const t8_dtri_t * t1, const t8_dtri_t * t2)
+{
+  int                 maxlvl;
+  u_int64_t           id1, id2;
+
+  /* Compute the bigger level of the two */
+  maxlvl = SC_MAX (t1->level, t2->level);
+  /* Compute the linear ids of the elements */
+  id1 = t8_dtri_linear_id (t1, maxlvl);
+  id2 = t8_dtri_linear_id (t2, maxlvl);
+  if (id1 == id2) {
+    /* The linear ids are the same, the triangle with the smaller level
+     * is considered smaller */
+    return t1->level - t2->level;
+  }
+  /* return negativ if id1 < id2, zero if id1 = id2, positive if id1 > id2 */
+  return id1 < id2 ? -1 : id1 != id2;
+}
+
 void
 t8_dtri_parent (const t8_dtri_t * t, t8_dtri_t * parent)
 {
@@ -817,20 +837,28 @@ int
 t8_dtri_face_parent_face (const t8_dtri_t * triangle, int face)
 {
 #ifndef T8_DTRI_TO_DTET
-  int                 parent_type;
+  int                 parent_type, child_id, cid;
 #endif
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
 
 #ifndef T8_DTRI_TO_DTET
   /* For triangles, a triangle is only at the boundary of its parent if it
    * has the same type as the parent, in which case also the face numbers are the same */
-  parent_type =
-    t8_dtri_cid_type_to_parenttype[compute_cubeid (triangle, triangle->level)]
-    [triangle->level];
-  if (triangle->type != parent_type) {
+  cid = compute_cubeid (triangle, triangle->level);
+  parent_type = t8_dtri_cid_type_to_parenttype[cid][triangle->type];
+  if (parent_type != triangle->type) {
     return -1;
   }
-  return face;
+
+  /* The bey child id of the triangle,
+   * a triangle of bey id i shares the faces i+1 and i+2 (%3) with its parent */
+  child_id = t8_dtri_type_cid_to_beyid[triangle->type][cid];
+  t8_dtri_child_id (triangle);
+  t8_debugf ("[H] Child %i face %i\n", child_id, face);
+  if (face != child_id) {
+    return face;
+  }
+  return -1;
 #else
   /* TODO: provide an implementation */
   return -1;
