@@ -1214,13 +1214,16 @@ t8_forest_element_owners_at_face (t8_forest_t forest, t8_gloidx_t gtreeid,
     *(int *) sc_array_push (owners) = lower_bound;
     return;
   }
+  if (lower_bound > upper_bound) {
+    /* There is no owner */
+    return;
+  }
   /* call the recursion */
   t8_forest_element_owners_at_face_recursion (forest, gtreeid, element,
                                               eclass, ts, face, owners,
                                               lower_bound, upper_bound,
                                               NULL, NULL);
 }
-
 
 void
 t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid,
@@ -1322,6 +1325,10 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
   int                 dual_face;
   t8_gloidx_t         neigh_tree;
 
+  if (*lower >= *upper) {
+    /* There is no owner or it is unique */
+    return;
+  }
   /* Find out the eclass of the face neighbor tree and allocate memory for
    * the neighbor element */
   neigh_class = t8_forest_element_neighbor_eclass (forest, ltreeid, element, face);
