@@ -34,6 +34,22 @@ t8_dline_copy (const t8_dline_t * l, t8_dline_t * dest)
   memcpy (dest, l, sizeof (t8_dline_t));
 }
 
+int
+t8_dline_compare (const t8_dline_t * l1,
+                                             const t8_dline_t * l2)
+{
+  int                 maxlvl;
+  u_int64_t           id1, id2;
+
+  /* Compute the bigger level of the two */
+  maxlvl = SC_MAX (t8_dline_get_level (l1), t8_dline_get_level (l2));
+  /* Compute the linear ids of the elements */
+  id1 = t8_dline_linear_id (l1, maxlvl);
+  id2 = t8_dline_linear_id (l2, maxlvl);
+  /* return negativ if id1 < id2, zero if id1 = id2, positive if id1 > id2 */
+  return id1 < id2 ? -1 : id1 != id2;
+}
+
 void
 t8_dline_parent (const t8_dline_t * l, t8_dline_t * parent)
 {

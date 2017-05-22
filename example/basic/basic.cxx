@@ -93,17 +93,17 @@ t8_basic_refine_test (t8_eclass_t eclass)
 }
 #endif
 
-#if 0
+#if 1
 static void
 t8_basic_forest_partition ()
 {
   t8_forest_t         forest, forest_adapt, forest_partition;
   t8_cmesh_t          cmesh, cmesh_partition;
   sc_MPI_Comm         comm;
-  int                 level = 3;        /* initial refinement level */
+  int                 level = 5;        /* initial refinement level */
 
   comm = sc_MPI_COMM_WORLD;
-  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, comm, 0, 1);
+  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_PRISM, comm, 0, 1);
   t8_cmesh_init (&cmesh_partition);
   t8_cmesh_set_derive (cmesh_partition, cmesh);
   t8_cmesh_set_partition_uniform (cmesh_partition, level);
@@ -380,10 +380,13 @@ main (int argc, char **argv)
   t8_basic_hypercube (T8_ECLASS_QUAD, 0, 1, 1);
   t8_basic ();
 #endif
+#if 0
   t8_basic_hypercube (T8_ECLASS_PRISM, 1, 1, 0);
-
   t8_basic_refine_test (T8_ECLASS_PRISM);
+#endif
 
+
+  t8_basic_forest_partition ();
 #if 0
   t8_basic_forest_partition ();
   t8_global_productionf ("Testing hypercube cmesh.\n");

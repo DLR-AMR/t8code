@@ -44,6 +44,13 @@ int                 t8_dline_get_level (const t8_dline_t * l);
  */
 void                t8_dline_copy (const t8_dline_t * l, t8_dline_t * dest);
 
+/** Compare two elements. returns negativ if l1 < l2, zero if l1 equals l2
+ *  and positiv if l1 > l2.
+ *  If l2 is a copy of l1 then the elements are equal.
+ */
+int
+t8_dline_compare (const t8_dline_t * l1, const t8_dline_t * l2);
+
 /** Compute the parent of a line.
  * \param [in]  l   The input line.
  * \param [in,out] parent Existing line whose data will be filled with the parent

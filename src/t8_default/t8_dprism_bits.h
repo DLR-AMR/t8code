@@ -45,6 +45,13 @@ int                 t8_dprism_get_level (const t8_dprism_t * p);
 void                t8_dprism_copy (const t8_dprism_t * p,
                                     t8_dprism_t * dest);
 
+/** Compare two elements. returns negativ if p1 < p2, zero if p1 equals p2
+ *  and positiv if p1 > p2.
+ *  If p2 is a copy of p1 then the elements are equal.
+ */
+int
+t8_dprism_compare (const t8_dprism_t * p1, const t8_dprism_t * p2);
+
 /** Initialize a prism as the prism with a given global id in a uniform
  *  refinement of a given level. *
  * \param [in,out] p  Existing prism whose data will be filled.
@@ -111,7 +118,7 @@ void                t8_dprism_child (const t8_dprism_t * p, int childid,
  *                    t may point to the same quadrant as c[0].
  */
 void                t8_dprism_childrenpv (const t8_dprism_t * p,
-                                        int length, t8_dprism_t * c[]);
+                                          int length, t8_dprism_t * c[]);
 
 /** Compute the last descendant of a prism at a given level. This is the descendant of
  * the prism in a uniform level refinement that has the largest id.

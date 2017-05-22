@@ -47,6 +47,13 @@ t8_default_scheme_prism_c::t8_element_copy (const t8_element_t * source,
 }
 
 int
+t8_default_scheme_prism_c::t8_element_compare (const t8_element_t * elem1,
+                                          const t8_element_t * elem2)
+{
+    return t8_dprism_compare((const t8_dprism_t *)elem1, (const t8_dprism_t *)elem2);
+}
+
+int
 t8_default_scheme_prism_c::t8_element_num_children (const t8_element_t * elem)
 {
   return T8_DPRISM_CHILDREN;
@@ -145,7 +152,7 @@ t8_default_scheme_prism_c::t8_default_scheme_prism_c (void)
 {
   eclass = T8_ECLASS_PRISM;
   element_size = sizeof (t8_default_prism_t);
-  ts_context = sc_mempool_new (sizeof (element_size));
+  ts_context = sc_mempool_new (sizeof (t8_default_prism_t));
 }
 
 t8_default_scheme_prism_c::~t8_default_scheme_prism_c ()

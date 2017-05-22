@@ -69,11 +69,7 @@ public:
  *  If elem2 is a copy of elem1 then the elements are equal.
  */
   virtual int         t8_element_compare (const t8_element_t * elem1,
-                                          const t8_element_t * elem2)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+                                          const t8_element_t * elem2);
 
 /** Construct the parent of a given element. */
   virtual void        t8_element_parent (const t8_element_t * elem,

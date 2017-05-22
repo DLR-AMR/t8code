@@ -46,6 +46,13 @@ t8_default_scheme_line_c::t8_element_copy (const t8_element_t * source,
   t8_dline_copy ((const t8_dline_t *) source, (t8_dline_t *) dest);
 }
 
+int
+t8_default_scheme_line_c::t8_element_compare (const t8_element_t * elem1,
+                                          const t8_element_t * elem2)
+{
+    return t8_dline_compare((const t8_dline_t *)elem1, (const t8_dline_t *) elem2);
+}
+
 void
 t8_default_scheme_line_c::t8_element_parent (const t8_element_t * elem,
                                              t8_element_t * parent)
