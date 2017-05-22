@@ -1018,6 +1018,9 @@ t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t * scheme,
   }
   /* commit the forest */
   t8_forest_commit (forest);
+  t8_global_productionf
+    ("Constructed uniform forest with %lli global elements.\n",
+     (long long) forest->global_num_elements);
 
   return forest;
 }
