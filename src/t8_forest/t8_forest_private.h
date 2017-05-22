@@ -184,7 +184,7 @@ int                 t8_forest_element_find_owner_ext (t8_forest_t forest,
                                                       t8_element_t * element,
                                                       t8_eclass_t eclass,
                                                       int lower_bound,
-                                                      int upper_bound,
+                                                      int upper_bound, int guess,
                                                       int element_is_desc);
 
 /** Perform a constant runtime check if a given rank is owner of a given element.

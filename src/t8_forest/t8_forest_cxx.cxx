@@ -645,7 +645,7 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
   t8_tree_t           tree;
   t8_eclass_t         eclass;
   t8_element_t      **children_at_face;
-  t8_gloidx_t         neighbor_tree;
+  t8_gloidx_t         neighbor_tree = -1;
 #ifdef T8_ENABLE_DEBUG
   t8_gloidx_t         last_neighbor_tree;
 #endif
@@ -712,7 +712,7 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t * element,
   t8_element_t       *first_desc;
   t8_eclass_scheme_c *ts;
   t8_gloidx_t        *first_global_trees;
-  uint64_t            rfirst_desc_id, rnext_desc_id, first_desc_id;
+  uint64_t            rfirst_desc_id, rnext_desc_id = -1, first_desc_id;
   int                 is_first, is_last, check_next;
 
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -841,9 +841,9 @@ int
 t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
                                   t8_element_t * element,
                                   t8_eclass_t eclass, int lower_bound,
-                                  int upper_bound, int element_is_desc)
+                                  int upper_bound, int guess,
+                                  int element_is_desc)
 {
-  int                 guess;
   t8_element_t       *first_desc;
   t8_eclass_scheme_c *ts;
   t8_gloidx_t        *first_trees;
@@ -858,6 +858,7 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
   T8_ASSERT (element != NULL);
   T8_ASSERT (0 <= lower_bound && lower_bound <= upper_bound && upper_bound <
              forest->mpisize);
+  T8_ASSERT (lower_bound <= guess && guess <= upper_bound);
 
   /* If the upper and lower bound only leave one process left, we can immediately
    * return this process as the owner */
@@ -896,15 +897,14 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
       found = 1;
     }
     else {
-      /* guess is in the middle of both bounds */
-      guess = (upper_bound + lower_bound) / 2;
-
       /* The first tree of this process */
       current_first_tree = t8_offset_first (guess, first_trees);
 
       if (current_first_tree > gtreeid) {
         /* look further left */
         upper_bound = guess - 1;
+        /* guess is in the middle of both bounds */
+        guess = (upper_bound + lower_bound) / 2;
       }
       else {
         current_id = first_descs[guess];
@@ -913,6 +913,8 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
            * we compare the first descendant */
           /* look further left */
           upper_bound = guess - 1;
+          /* guess is in the middle of both bounds */
+          guess = (upper_bound + lower_bound) / 2;
         }
         else {
           /* check if the element is on the next higher process */
@@ -920,6 +922,8 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
           if (current_first_tree < gtreeid) {
             /* look further right */
             lower_bound = guess + 1;
+            /* guess is in the middle of both bounds */
+            guess = (upper_bound + lower_bound) / 2;
           }
           else {
             current_id = first_descs[guess + 1];
@@ -930,6 +934,8 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
               /* The process we look for is >= guess + 1
                * look further right */
               lower_bound = guess + 1;
+              /* guess is in the middle of both bounds */
+              guess = (upper_bound + lower_bound) / 2;
             }
             else {
               /* We now know:
@@ -964,7 +970,8 @@ t8_forest_element_find_owner (t8_forest_t forest, t8_gloidx_t gtreeid,
                               t8_element_t * element, t8_eclass_t eclass)
 {
   return t8_forest_element_find_owner_ext (forest, gtreeid, element, eclass,
-                                           0, forest->mpisize - 1, 0);
+                                           0, forest->mpisize - 1,
+                                           (forest->mpisize - 1) / 2, 0);
 }
 
 /* This is a deprecated version of the element_find_owner algorithm which
@@ -1125,10 +1132,10 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
   /* owner of first and last descendants */
   first_owner =
     t8_forest_element_find_owner_ext (forest, gtreeid, first_face_desc, eclass,
-                                          lower_bound, upper_bound, 1);
+                                          lower_bound, upper_bound, lower_bound, 1);
   last_owner =
     t8_forest_element_find_owner_ext (forest, gtreeid, last_face_desc, eclass,
-                                      lower_bound, upper_bound, 1);
+                                      lower_bound, upper_bound, upper_bound, 1);
 
   /* It is impossible for an element with bigger id to belong to a smaller process */
   T8_ASSERT (first_owner <= last_owner);
@@ -1247,9 +1254,9 @@ t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid,
 
   /* Compute their owners as bounds for all of element's owners */
   *lower = t8_forest_element_find_owner_ext (forest, gtreeid, first_desc,
-                                             eclass, *lower, *upper, 1);
+                                             eclass, *lower, *upper, *lower, 1);
   *upper = t8_forest_element_find_owner_ext (forest, gtreeid, last_desc,
-                                             eclass, *lower, *upper, 1);
+                                             eclass, *lower, *upper, *upper, 1);
 }
 
 void
@@ -1275,10 +1282,10 @@ t8_forest_element_owners_at_face_bounds (t8_forest_t forest, t8_gloidx_t gtreeid
   /* owner of first and last descendants */
   *lower =
     t8_forest_element_find_owner_ext (forest, gtreeid, first_face_desc, eclass,
-                                          *lower, *upper, 1);
+                                          *lower, *upper, *lower, 1);
   *upper =
     t8_forest_element_find_owner_ext (forest, gtreeid, last_face_desc, eclass,
-                                      *lower, *upper, 1);
+                                      *lower, *upper, *upper, 1);
     ts->t8_element_destroy (1, &first_face_desc);
     ts->t8_element_destroy (1, &last_face_desc);
 }

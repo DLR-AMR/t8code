@@ -248,9 +248,10 @@ t8_forest_ghost_get_remote (t8_forest_t forest, int remote)
 #ifdef T8_ENABLE_DEBUG
   ret =
 #else
-  (void) sc_hash_array_lookup (forest->ghosts->remote_ghosts, &remote_search,
-                               &index);
+  (void)
 #endif
+    sc_hash_array_lookup (forest->ghosts->remote_ghosts, &remote_search,
+                          &index);
   T8_ASSERT (ret);
   return (t8_ghost_remote_t *)
     sc_array_index (&forest->ghosts->remote_ghosts->a, index);
@@ -1518,8 +1519,9 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest,
 #ifdef T8_ENABLE_DEBUG
   added_process =
 #else
-  (void) sc_hash_insert_unique (ghost->process_offsets, process_hash, NULL);
+  (void)
 #endif
+    sc_hash_insert_unique (ghost->process_offsets, process_hash, NULL);
   T8_ASSERT (added_process);
 }
 
