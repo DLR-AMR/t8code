@@ -883,8 +883,12 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
   t8_debugf ("[H] bounds for el owners: %i %i el owned: %i\n", el_lower,
              el_upper, element_is_owned);
   num_faces = data->ts->t8_element_num_faces (element);
-  /* TODO: do we properly exclude domanin boundaries from the search? */
   faces_totally_owned = 1;
+
+  /* TODO: we may not carry on with the face computations if the element is not
+   *       totally onwed and immediately return 1. However, how do we set the bounds for
+   *       the face owners then?
+   */
   for (iface = 0; iface < num_faces; iface++) {
     /* Compute the face number of the parent to reuse the bounds */
     parent_face = data->ts->t8_element_face_parent_face (element, iface);
