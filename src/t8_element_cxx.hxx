@@ -262,7 +262,7 @@ public:
    *                      the number of children that touch \a face.
    *                      \ref t8_element_num_face_children
    * \param [in,out] child_indices If not NULL, an array of num_children integers must be given,
-   *                      on output its i-it entry is the child_id of the i-th face_child.
+   *                      on output its i-th entry is the child_id of the i-th face_child.
    * It is valid to call this function with elem = children[0].
    */
   virtual void        t8_element_children_at_face (const t8_element_t * elem,
