@@ -456,7 +456,7 @@ t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_locidx_t tree_id)
 /* Given a tree_id return the index of the specified tree in
  * cmesh's tree array
  */
-static t8_locidx_t
+static              t8_locidx_t
 t8_cmesh_tree_index (t8_cmesh_t cmesh, t8_locidx_t tree_id)
 {
   return cmesh->set_partition ? tree_id - cmesh->first_tree : tree_id;
@@ -1247,7 +1247,7 @@ t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
   return t8_cmesh_new_from_p4est_ext (conn, 3, comm, do_partition, 0);
 }
 
-static t8_cmesh_t
+static              t8_cmesh_t
 t8_cmesh_new_vertex (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -1261,7 +1261,7 @@ t8_cmesh_new_vertex (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static t8_cmesh_t
+static              t8_cmesh_t
 t8_cmesh_new_line (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -1276,7 +1276,7 @@ t8_cmesh_new_line (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static t8_cmesh_t
+static              t8_cmesh_t
 t8_cmesh_new_tri (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -1292,7 +1292,7 @@ t8_cmesh_new_tri (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static t8_cmesh_t
+static              t8_cmesh_t
 t8_cmesh_new_tet (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -1309,7 +1309,7 @@ t8_cmesh_new_tet (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static t8_cmesh_t
+static              t8_cmesh_t
 t8_cmesh_new_quad (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -1326,7 +1326,7 @@ t8_cmesh_new_quad (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static t8_cmesh_t
+static              t8_cmesh_t
 t8_cmesh_new_hex (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -1347,7 +1347,7 @@ t8_cmesh_new_hex (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static t8_cmesh_t
+static              t8_cmesh_t
 t8_cmesh_new_pyramid (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -1362,7 +1362,7 @@ t8_cmesh_new_pyramid (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static t8_cmesh_t
+static              t8_cmesh_t
 t8_cmesh_new_prism (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -1727,93 +1727,198 @@ t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees, sc_MPI_Comm comm)
 }
 
 t8_cmesh_t
-t8_cmesh_new_line_zigzag(sc_MPI_Comm comm)
+t8_cmesh_new_line_zigzag (sc_MPI_Comm comm)
 {
-    int i;
-    double vertices[18] = {1,2,0,
-                           2,4,1,
-                           1,1,2,
-                           2,4,1,
-                           1,1,2,
-                           3,2,5};
-    t8_cmesh_t cmesh;
-    t8_cmesh_init(&cmesh);
-    for (i = 0; i < 3; i++) {
-        t8_cmesh_set_tree_class (cmesh, i,T8_ECLASS_LINE);
-    }
-    /*tree_num is joined with tree_num at face_num and face_num with orientation_num*/
-    t8_cmesh_set_join(cmesh, 0, 1, 1, 1, 0);
-    t8_cmesh_set_join(cmesh, 1, 2, 0, 0, 0);
+  int                 i;
+  double              vertices[18] = { 1, 2, 0,
+    2, 4, 1,
+    1, 1, 2,
+    2, 4, 1,
+    1, 1, 2,
+    3, 2, 5
+  };
+  t8_cmesh_t          cmesh;
+  t8_cmesh_init (&cmesh);
+  for (i = 0; i < 3; i++) {
+    t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_LINE);
+  }
+  /*tree_num is joined with tree_num at face_num and face_num with orientation_num */
+  t8_cmesh_set_join (cmesh, 0, 1, 1, 1, 0);
+  t8_cmesh_set_join (cmesh, 1, 2, 0, 0, 0);
 
-    t8_cmesh_set_tree_vertices(cmesh,0,t8_get_package_id(),0,vertices,2);
-    t8_cmesh_set_tree_vertices(cmesh,1,t8_get_package_id(),0,vertices+6,2);
-    t8_cmesh_set_tree_vertices(cmesh,2,t8_get_package_id(),0,vertices+12,2);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 2);
+  t8_cmesh_set_tree_vertices (cmesh, 1, t8_get_package_id (), 0, vertices + 6,
+                              2);
+  t8_cmesh_set_tree_vertices (cmesh, 2, t8_get_package_id (), 0,
+                              vertices + 12, 2);
 
-    t8_cmesh_commit (cmesh, comm);
+  t8_cmesh_commit (cmesh, comm);
 
-    return cmesh;
+  return cmesh;
 
 }
 
 t8_cmesh_t
-t8_cmesh_prism_cake(sc_MPI_Comm comm)
+t8_cmesh_prism_cake (sc_MPI_Comm comm)
 {
-#if 0
 #define PI 3.14159265
-    int i, j;
-    /*6 Prism a 6 vertices a 3 coords*/
-    double vertices[108];
-    t8_cmesh_t cmesh;
-    t8_cmesh_init(&cmesh);
-    for( i = 0; i < 6; i++)
-    {
-        t8_cmesh_set_tree_class(cmesh, i, T8_ECLASS_PRISM);
-    }
+  int                 i, j;
+  /*6 Prism a 6 vertices a 3 coords */
+  double              vertices[108];
+  t8_cmesh_t          cmesh;
 
-    for( i = 0; i < 6; i++)
-    {
-        for(j = 0; j < 6; j++)
-        {
-            /*Get the edges at the unit circle*/
-            if(j == 0 || j == 3)
-            {
-                vertices[i * 6  * 3 + j * 3] = 0;
-                vertices[i * 6  * 3 + j * 3 + 1] = 0;
-                vertices[i * 6  * 3 + j * 3 + 2] = (j == 3 ? 1 : 0);
-            }
-            else if( j == 1 || j == 4)
-            {
-                vertices[i * 6 * 3 + j * 3] = cos(i * 60 * PI / 180);
-                vertices[i * 6  * 3 + j * 3 + 1] = sin(i * 60 * PI / 180);
-                vertices[i * 6  * 3 + j * 3 + 2] = (j == 4 ? 1 : 0);
-            }
-            else if( j == 2 || j == 5)
-            {
-                vertices[i * 6 * 3 + j * 3] = cos((i * 60 + 60)* PI / 180);
-                vertices[i * 6  * 3 + j * 3 + 1] = sin((i * 60 + 60)* PI / 180);
-                vertices[i * 6  * 3 + j * 3 + 2] = (j == 5 ? 1 : 0);
-            }
-        }
+  for (i = 0; i < 6; i++) {
+    for (j = 0; j < 6; j++) {
+      /*Get the edges at the unit circle */
+      if (j == 0 || j == 3) {
+        vertices[i * 6 * 3 + j * 3] = 0;
+        vertices[i * 6 * 3 + j * 3 + 1] = 0;
+        vertices[i * 6 * 3 + j * 3 + 2] = (j == 3 ? 1 : 0);
+      }
+      else if (j == 1 || j == 4) {
+        vertices[i * 6 * 3 + j * 3] = cos (i * 60 * PI / 180);
+        vertices[i * 6 * 3 + j * 3 + 1] = sin (i * 60 * PI / 180);
+        vertices[i * 6 * 3 + j * 3 + 2] = (j == 4 ? 1 : 0);
+      }
+      else if (j == 2 || j == 5) {
+        vertices[i * 6 * 3 + j * 3] = cos ((i * 60 + 60) * PI / 180);
+        vertices[i * 6 * 3 + j * 3 + 1] = sin ((i * 60 + 60) * PI / 180);
+        vertices[i * 6 * 3 + j * 3 + 2] = (j == 5 ? 1 : 0);
+      }
     }
-    for(i = 0; i < 5; i++){
-        t8_cmesh_set_join(cmesh, i, (i == 5 ? 0 : i+1), 2, 1, 0);
+  }
+  t8_cmesh_init (&cmesh);
+  for (i = 0; i < 6; i++) {
+    t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PRISM);
+  }
+
+  for (i = 0; i < 5; i++) {
+    t8_cmesh_set_join (cmesh, i, (i == 5 ? 0 : i + 1), 2, 1, 0);
+  }
+
+  for (i = 0; i < 6; i++) {
+    t8_cmesh_set_tree_vertices (cmesh, i, t8_get_package_id (), 0,
+                                vertices + i * 18, 6);
+  }
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_prism_cake_funny_oriented (sc_MPI_Comm comm)
+{
+#define PI 3.14159265
+  int                 i, j;
+  /*6 Prism a 6 vertices a 3 coords */
+  double              vertices[108];
+  t8_cmesh_t          cmesh;
+
+  for (i = 0; i < 6; i++) {
+    for (j = 0; j < 6; j++) {
+      /*Get the edges at the unit circle */
+      if (j == 0 || j == 3) {
+        vertices[i * 6 * 3 + j * 3] = 0;
+        vertices[i * 6 * 3 + j * 3 + 1] = 0;
+        vertices[i * 6 * 3 + j * 3 + 2] = (j == 3 ? 1 : 0);
+      }
+      else if (j == 1 || j == 4) {
+        vertices[i * 6 * 3 + j * 3] = cos (i * 60 * PI / 180);
+        vertices[i * 6 * 3 + j * 3 + 1] = sin (i * 60 * PI / 180);
+        vertices[i * 6 * 3 + j * 3 + 2] = (j == 4 ? 1 : 0);
+      }
+      else if (j == 2 || j == 5) {
+        vertices[i * 6 * 3 + j * 3] = cos ((i * 60 + 60) * PI / 180);
+        vertices[i * 6 * 3 + j * 3 + 1] = sin ((i * 60 + 60) * PI / 180);
+        vertices[i * 6 * 3 + j * 3 + 2] = (j == 5 ? 1 : 0);
+      }
     }
-    for(i = 0; i < 6; i++){
-        t8_cmesh_set_tree_vertices(cmesh, i, t8_get_package_id(), 0, vertices + i*18, 6);
+  }
+  t8_cmesh_init (&cmesh);
+  for (i = 0; i < 6; i++) {
+    t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PRISM);
+  }
+
+  t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 1);
+  t8_cmesh_set_join (cmesh, 1, 2, 1, 1, 0);
+  t8_cmesh_set_join (cmesh, 2, 3, 2, 1, 0);
+  t8_cmesh_set_join (cmesh, 3, 4, 2, 2, 0);
+  t8_cmesh_set_join (cmesh, 4, 5, 0, 0, 0);
+  t8_cmesh_set_join (cmesh, 5, 0, 1, 1, 0);
+
+  for (i = 0; i < 6; i++) {
+    t8_cmesh_set_tree_vertices (cmesh, i, t8_get_package_id (), 0,
+                                vertices + i * 18, 6);
+  }
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_prism_geometry (sc_MPI_Comm comm)
+{
+#define PI 3.14159265
+  int                 i, j;
+  /*7 Prism a 6 vertices a 3 coords */
+  double              vertices[126];
+  t8_cmesh_t          cmesh;
+
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 6; j++) {
+      /*Get the edges at the unit circle */
+      if (j == 0 || j == 3) {
+        vertices[i * 6 * 3 + j * 3] = 0;
+        vertices[i * 6 * 3 + j * 3 + 1] = 0;
+        vertices[i * 6 * 3 + j * 3 + 2] = (j == 3 ? 1 : 0);
+      }
+      else if (j == 1 || j == 4) {
+        vertices[i * 6 * 3 + j * 3] = cos (i * 60 * PI / 180);
+        vertices[i * 6 * 3 + j * 3 + 1] = sin (i * 60 * PI / 180);
+        vertices[i * 6 * 3 + j * 3 + 2] = (j == 4 ? 1 : 0);
+      }
+      else if (j == 2 || j == 5) {
+        vertices[i * 6 * 3 + j * 3] = cos ((i * 60 + 60) * PI / 180);
+        vertices[i * 6 * 3 + j * 3 + 1] = sin ((i * 60 + 60) * PI / 180);
+        vertices[i * 6 * 3 + j * 3 + 2] = (j == 5 ? 1 : 0);
+      }
     }
-#endif
-    double vertices[18]= {0,0,0,
-                          1,0,0,
-                          0.5,0.86625,0,
-                          0,0,1,
-                          1,0,1,
-                          0.5,0.86625,1};
-    t8_cmesh_t cmesh;
-    t8_cmesh_init(&cmesh);
-    t8_cmesh_set_tree_class(cmesh, 0, T8_ECLASS_PRISM);
-    t8_cmesh_set_tree_vertices(cmesh,0,t8_get_package_id(), 0, vertices, 6);
-    t8_cmesh_commit(cmesh, comm);
-    return cmesh;
+  }
+  for (i = 4; i < 7; i++) {
+    for (j = 0; j < 6; j++) {
+      /*Get the edges at the unit circle */
+      if (j == 0 || j == 3) {
+        vertices[i * 6 * 3 + j * 3] = 0;
+        vertices[i * 6 * 3 + j * 3 + 1] = 0;
+        vertices[i * 6 * 3 + j * 3 + 2] = (j == 3 ? 2 : 1);
+      }
+      else if (j == 1 || j == 4) {
+        vertices[i * 6 * 3 + j * 3] = cos (i * 60 * PI / 180);
+        vertices[i * 6 * 3 + j * 3 + 1] = sin (i * 60 * PI / 180);
+        vertices[i * 6 * 3 + j * 3 + 2] = (j == 4 ? 2 : 1);
+      }
+      else if (j == 2 || j == 5) {
+        vertices[i * 6 * 3 + j * 3] = cos ((i * 60 + 60) * PI / 180);
+        vertices[i * 6 * 3 + j * 3 + 1] = sin ((i * 60 + 60) * PI / 180);
+        vertices[i * 6 * 3 + j * 3 + 2] = (j == 5 ? 2 : 1);
+      }
+    }
+  }
+  t8_cmesh_init (&cmesh);
+  for (i = 0; i < 7; i++) {
+    t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PRISM);
+  }
+  t8_cmesh_set_join (cmesh, 0, 1, 2, 1, 0);
+  t8_cmesh_set_join (cmesh, 1, 2, 2, 1, 0);
+  t8_cmesh_set_join (cmesh, 2, 3, 4, 0, 3);
+  t8_cmesh_set_join (cmesh, 3, 4, 2, 1, 0);
+  t8_cmesh_set_join (cmesh, 4, 5, 2, 1, 0);
+  t8_cmesh_set_join (cmesh, 5, 6, 2, 1, 0);
+
+  for (i = 0; i < 7; i++) {
+    t8_cmesh_set_tree_vertices (cmesh, i, t8_get_package_id (), 0,
+                                vertices + i * 18, 6);
+  }
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
 }
 
 /* On each process, create a num_x by num_y (by num_z) brick connectivity and

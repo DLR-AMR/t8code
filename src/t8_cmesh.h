@@ -602,7 +602,6 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
                                             sc_MPI_Comm comm,
                                             int do_bcast, int do_partition);
 
-
 /** Construct a unit interval/square/cube forest that is periodic in each direction.
  * Element class?
  * Hypercube?
@@ -633,7 +632,19 @@ t8_cmesh_t          t8_cmesh_new_line_zigzag (sc_MPI_Comm comm);
   * \param [in] comm        The mpi communicator to use.
   * \return                 A valid cmesh, as if _init and _commit had been called.
   */
-t8_cmesh_t          t8_cmesh_prism_cake(sc_MPI_Comm comm);
+t8_cmesh_t          t8_cmesh_prism_cake (sc_MPI_Comm comm);
+
+/** Construct a forest of six connected noncannoical oriented prisms
+  * \param [in] comm        The mpi communicator to use.
+  * \return                 A valid cmesh, as if _init and _commit had been called.
+  */
+t8_cmesh_t          t8_cmesh_prism_cake_funny_oriented (sc_MPI_Comm comm);
+
+/** Construct a forest of six connected noncannoical oriented prisms
+  * \param [in] comm        The mpi communicator to use.
+  * \return                 A valid cmesh, as if _init and _commit had been called.
+  */
+t8_cmesh_t          t8_cmesh_prism_geometry (sc_MPI_Comm comm);
 
 /** Create a partitoned cmesh of quads whose local trees are given by an
  * num_x by num_y brick connectivity from p4est

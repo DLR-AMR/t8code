@@ -130,22 +130,22 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
     }
     switch (corner_number) {
     case 0:
-      coordinates[1] = tri_vertices[1] * len;
+      coordinates[2] = tri_vertices[2] * len;
       break;
     case 1:
-      coordinates[1] = tri_vertices[4] * len;
+      coordinates[2] = tri_vertices[5] * len;
       break;
     case 2:
-      coordinates[1] = tri_vertices[7] * len;
+      coordinates[2] = tri_vertices[8] * len;
       break;
     case 3:
-      coordinates[1] = tri_vertices[1] * len;
+      coordinates[2] = tri_vertices[2] * len;
       break;
     case 4:
-      coordinates[1] = tri_vertices[4] * len;
+      coordinates[2] = tri_vertices[5] * len;
       break;
     case 5:
-      coordinates[1] = tri_vertices[7] * len;
+      coordinates[2] = tri_vertices[8] * len;
       break;
     }
 

@@ -44,13 +44,20 @@ t8_dprism_compare (const t8_dprism_t * p1, const t8_dprism_t * p2)
 {
   int                 maxlvl;
   u_int64_t           id1, id2;
+  T8_ASSERT (p1->line.level == p1->tri.level);
+  T8_ASSERT (p2->line.level == p2->tri.level);
 
-  /* Compute the bigger level of the two */
-  maxlvl = SC_MAX (t8_dprism_get_level (p1), t8_dprism_get_level (p2));
+  maxlvl = SC_MAX (p1->line.level, p2->line.level);
   /* Compute the linear ids of the elements */
   id1 = t8_dprism_linear_id (p1, maxlvl);
   id2 = t8_dprism_linear_id (p2, maxlvl);
-  /* return negativ if id1 < id2, zero if id1 = id2, positive if id1 > id2 */
+  if (id1 == id2) {
+  /* The linear ids are the same, the triangle with the smaller level
+  * is considered smaller */
+  return p1->line.level - p2->line.level;
+  }
+  /* return negativ if id1 < id2, zero if id1 = id2, positive if id1 >
+  id2 */
   return id1 < id2 ? -1 : id1 != id2;
 }
 
