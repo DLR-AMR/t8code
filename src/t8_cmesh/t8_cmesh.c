@@ -1755,6 +1755,67 @@ t8_cmesh_new_line_zigzag(sc_MPI_Comm comm)
 
 }
 
+t8_cmesh_t
+t8_cmesh_prism_cake(sc_MPI_Comm comm)
+{
+#if 0
+#define PI 3.14159265
+    int i, j;
+    /*6 Prism a 6 vertices a 3 coords*/
+    double vertices[108];
+    t8_cmesh_t cmesh;
+    t8_cmesh_init(&cmesh);
+    for( i = 0; i < 6; i++)
+    {
+        t8_cmesh_set_tree_class(cmesh, i, T8_ECLASS_PRISM);
+    }
+
+    for( i = 0; i < 6; i++)
+    {
+        for(j = 0; j < 6; j++)
+        {
+            /*Get the edges at the unit circle*/
+            if(j == 0 || j == 3)
+            {
+                vertices[i * 6  * 3 + j * 3] = 0;
+                vertices[i * 6  * 3 + j * 3 + 1] = 0;
+                vertices[i * 6  * 3 + j * 3 + 2] = (j == 3 ? 1 : 0);
+            }
+            else if( j == 1 || j == 4)
+            {
+                vertices[i * 6 * 3 + j * 3] = cos(i * 60 * PI / 180);
+                vertices[i * 6  * 3 + j * 3 + 1] = sin(i * 60 * PI / 180);
+                vertices[i * 6  * 3 + j * 3 + 2] = (j == 4 ? 1 : 0);
+            }
+            else if( j == 2 || j == 5)
+            {
+                vertices[i * 6 * 3 + j * 3] = cos((i * 60 + 60)* PI / 180);
+                vertices[i * 6  * 3 + j * 3 + 1] = sin((i * 60 + 60)* PI / 180);
+                vertices[i * 6  * 3 + j * 3 + 2] = (j == 5 ? 1 : 0);
+            }
+        }
+    }
+    for(i = 0; i < 5; i++){
+        t8_cmesh_set_join(cmesh, i, (i == 5 ? 0 : i+1), 2, 1, 0);
+    }
+    for(i = 0; i < 6; i++){
+        t8_cmesh_set_tree_vertices(cmesh, i, t8_get_package_id(), 0, vertices + i*18, 6);
+    }
+#endif
+    double vertices[18]= {0,0,0,
+                          1,0,0,
+                          0.5,0.86625,0,
+                          0,0,1,
+                          1,0,1,
+                          0.5,0.86625,1};
+    t8_cmesh_t cmesh;
+    t8_cmesh_init(&cmesh);
+    t8_cmesh_set_tree_class(cmesh, 0, T8_ECLASS_PRISM);
+    t8_cmesh_set_tree_vertices(cmesh,0,t8_get_package_id(), 0, vertices, 6);
+    t8_cmesh_commit(cmesh, comm);
+    return cmesh;
+}
+
 /* On each process, create a num_x by num_y (by num_z) brick connectivity and
  * make a cmesh connectivity from the disjoint union of those.
  * Example: 2 processors,

@@ -629,6 +629,12 @@ t8_cmesh_t          t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees,
   */
 t8_cmesh_t          t8_cmesh_new_line_zigzag (sc_MPI_Comm comm);
 
+/** Construct a forest of six connected prism
+  * \param [in] comm        The mpi communicator to use.
+  * \return                 A valid cmesh, as if _init and _commit had been called.
+  */
+t8_cmesh_t          t8_cmesh_prism_cake(sc_MPI_Comm comm);
+
 /** Create a partitoned cmesh of quads whose local trees are given by an
  * num_x by num_y brick connectivity from p4est
  * or a num_x by num_y by num_z brick connectivity from p8est.

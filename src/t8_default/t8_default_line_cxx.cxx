@@ -48,9 +48,10 @@ t8_default_scheme_line_c::t8_element_copy (const t8_element_t * source,
 
 int
 t8_default_scheme_line_c::t8_element_compare (const t8_element_t * elem1,
-                                          const t8_element_t * elem2)
+                                              const t8_element_t * elem2)
 {
-    return t8_dline_compare((const t8_dline_t *)elem1, (const t8_dline_t *) elem2);
+  return t8_dline_compare ((const t8_dline_t *) elem1,
+                           (const t8_dline_t *) elem2);
 }
 
 void
@@ -166,7 +167,7 @@ t8_default_scheme_line_c::t8_default_scheme_line_c (void)
 {
   eclass = T8_ECLASS_LINE;
   element_size = sizeof (t8_default_line_t);
-  ts_context = sc_mempool_new (sizeof (element_size));
+  ts_context = sc_mempool_new (sizeof (t8_default_line_t));
 }
 
 t8_default_scheme_line_c::~t8_default_scheme_line_c ()

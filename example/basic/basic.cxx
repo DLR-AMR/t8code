@@ -70,6 +70,9 @@ t8_basic_refine_test (t8_eclass_t eclass)
   if(eclass == T8_ECLASS_LINE){
       cmesh = t8_cmesh_new_line_zigzag(sc_MPI_COMM_WORLD);
   }
+  else if(eclass == T8_ECLASS_PRISM){
+      cmesh = t8_cmesh_new_from_class(eclass, sc_MPI_COMM_WORLD);
+  }
   else{
     cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0);
   }
@@ -380,13 +383,14 @@ main (int argc, char **argv)
   t8_basic_hypercube (T8_ECLASS_QUAD, 0, 1, 1);
   t8_basic ();
 #endif
-#if 0
+#if 1
   t8_basic_hypercube (T8_ECLASS_PRISM, 1, 1, 0);
   t8_basic_refine_test (T8_ECLASS_PRISM);
 #endif
 
-
+#if 0
   t8_basic_forest_partition ();
+#endif
 #if 0
   t8_basic_forest_partition ();
   t8_global_productionf ("Testing hypercube cmesh.\n");

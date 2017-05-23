@@ -49,7 +49,8 @@ void                t8_dline_copy (const t8_dline_t * l, t8_dline_t * dest);
  *  If l2 is a copy of l1 then the elements are equal.
  */
 int
-t8_dline_compare (const t8_dline_t * l1, const t8_dline_t * l2);
+ 
+              t8_dline_compare (const t8_dline_t * l1, const t8_dline_t * l2);
 
 /** Compute the parent of a line.
  * \param [in]  l   The input line.
@@ -80,7 +81,8 @@ int                 t8_dline_child_id (const t8_dline_t * t);
  * \param [in,out] c  Pointers to the 2 computed children in Morton order.
  *                    t may point to the same quadrant as c[0].
  */
-void                t8_dline_childrenpv (const t8_dline_t * t, t8_dline_t * c[]);
+void                t8_dline_childrenpv (const t8_dline_t * t,
+                                         t8_dline_t * c[]);
 
 /** Check whether a collection of two lines is a family in Morton order.
  * \param [in]     f  An array of two lines.
@@ -133,13 +135,14 @@ void                t8_dline_last_descendant (const t8_dline_t * l,
  * \param [in] vertex   The number of the vertex of \a elem
  * \param [out] coords   The coordinates of the computed vertex
  */
-void                t8_dline_vertex_coords(const t8_dline_t * elem, int vertex, int coords[]);
+void                t8_dline_vertex_coords (const t8_dline_t * elem,
+                                            int vertex, int coords[]);
 
 /** Computes the linear position of a line in an uniform grid.
  * \param [in] line  Line whose id will be computed.
  * \return Returns the linear position of this line on a grid.
  */
-uint64_t            t8_dline_linear_id(const t8_dline_t * elem, int level);
+uint64_t            t8_dline_linear_id (const t8_dline_t * elem, int level);
 
 T8_EXTERN_C_END ();
 

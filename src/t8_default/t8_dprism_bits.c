@@ -40,8 +40,7 @@ t8_dprism_copy (const t8_dprism_t * p, t8_dprism_t * dest)
 }
 
 int
-t8_dprism_compare (const t8_dprism_t * p1,
-                                             const t8_dprism_t * p2)
+t8_dprism_compare (const t8_dprism_t * p1, const t8_dprism_t * p2)
 {
   int                 maxlvl;
   u_int64_t           id1, id2;
@@ -187,19 +186,19 @@ t8_dprism_successor (const t8_dprism_t * p, t8_dprism_t * succ, int level)
     /*Zero out the bits of higher level, caused by recursion */
 #if 1
     succ->tri.x =
-      (succ->tri.
-       x >> (T8_DPRISM_MAXLEVEL - level + 1)) << (T8_DPRISM_MAXLEVEL - level +
-                                                  1);
+      (succ->
+       tri.x >> (T8_DPRISM_MAXLEVEL - level + 1)) << (T8_DPRISM_MAXLEVEL -
+                                                      level + 1);
     succ->tri.y =
-      (succ->tri.
-       y >> (T8_DPRISM_MAXLEVEL - level + 1)) << (T8_DPRISM_MAXLEVEL - level +
-                                                  1);
+      (succ->
+       tri.y >> (T8_DPRISM_MAXLEVEL - level + 1)) << (T8_DPRISM_MAXLEVEL -
+                                                      level + 1);
 #endif
 #if 1
     succ->line.x =
-      (succ->line.
-       x >> (T8_DPRISM_MAXLEVEL - level + 1)) << (T8_DPRISM_MAXLEVEL - level +
-                                                  1);
+      (succ->
+       line.x >> (T8_DPRISM_MAXLEVEL - level + 1)) << (T8_DPRISM_MAXLEVEL -
+                                                       level + 1);
 #endif
     /*Set the level to the actual level */
     succ->line.level = level;
