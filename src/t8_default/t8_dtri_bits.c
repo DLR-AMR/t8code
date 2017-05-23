@@ -836,31 +836,66 @@ t8_dtri_face_child_face (const t8_dtri_t * triangle, int face, int face_child)
 int
 t8_dtri_face_parent_face (const t8_dtri_t * triangle, int face)
 {
-#ifndef T8_DTRI_TO_DTET
   int                 parent_type, child_id, cid;
-#endif
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
 
-#ifndef T8_DTRI_TO_DTET
   /* For triangles, a triangle is only at the boundary of its parent if it
    * has the same type as the parent, in which case also the face numbers are the same */
   cid = compute_cubeid (triangle, triangle->level);
   parent_type = t8_dtri_cid_type_to_parenttype[cid][triangle->type];
+
+#ifndef T8_DTRI_TO_DTET
   if (parent_type != triangle->type) {
     return -1;
   }
+#endif
 
   /* The bey child id of the triangle,
    * a triangle of bey id i shares the faces i+1 and i+2 (%3) with its parent */
   child_id = t8_dtri_type_cid_to_beyid[triangle->type][cid];
   t8_dtri_child_id (triangle);
   t8_debugf ("[H] Child %i face %i\n", child_id, face);
+#ifndef T8_DTRI_TO_DTET
   if (face != child_id) {
     return face;
   }
   return -1;
 #else
-  /* TODO: provide an implementation */
+  /* For tets, all tets that have the same type as their parent do
+   * share the all faces with number != child_id with their parent */
+  if (parent_type == triangle->type && face != child_id) {
+    return face;
+  }
+  /* For the tets whose type does not match their parent's type,
+   * we can see from the following table which type/parent_type pairs
+   * match with which face/parent_face pairs. */
+  /*     p_type type  p_face face |p_type type  p_face face
+   *       0      1     0     0   |  3      1     1     2
+   *              2     1     2   |         2     0     0
+   *              4     2     1   |         4     3     3
+   *              5     3     3   |         5     2     1
+   *       1      0     0     0   |  4      0     1     2
+   *              2     3     3   |         2     2     1
+   *              3     2     1   |         3     3     3
+   *              5     1     2   |         5     0     0
+   *       2      0     2     1   |  5      0     3     3
+   *              1     3     3   |         1     2     1
+   *              3     0     0   |         3     1     2
+   *              4     1     2   |         4     0     0
+   */
+  /* We see, that parent type i matches all types except i and i+3 (mod 6)
+   * We also see, that the faces always match in the following way: 0-0, 1-2, 2-1, 3-3
+   * The face values are stored in the table t8_dtet_parent_type_to_face
+   */
+  if (t8_dtet_parent_type_type_to_face[parent_type][triangle->type] == face) {
+    switch (face) {
+    case 1:
+    case 2:
+      return face ^ 3;          /* return 1 if face = 2, return 2 if face = 1 */
+    default:
+      return face;              /* 0 if face = 0, 3 if face = 3 */
+    }
+  }
   return -1;
 #endif
 }
