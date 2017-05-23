@@ -37,16 +37,21 @@ t8_dline_copy (const t8_dline_t * l, t8_dline_t * dest)
 int
 t8_dline_compare (const t8_dline_t * l1, const t8_dline_t * l2)
 {
-  int                 maxlvl;
-  u_int64_t           id1, id2;
+    int                 maxlvl;
+    u_int64_t           id1, id2;
 
-  /* Compute the bigger level of the two */
-  maxlvl = SC_MAX (t8_dline_get_level (l1), t8_dline_get_level (l2));
-  /* Compute the linear ids of the elements */
-  id1 = t8_dline_linear_id (l1, maxlvl);
-  id2 = t8_dline_linear_id (l2, maxlvl);
-  /* return negativ if id1 < id2, zero if id1 = id2, positive if id1 > id2 */
-  return id1 < id2 ? -1 : id1 != id2;
+    maxlvl = SC_MAX (l1->level, l2->level);
+    /* Compute the linear ids of the elements */
+    id1 = t8_dline_linear_id (l1, maxlvl);
+    id2 = t8_dline_linear_id (l2, maxlvl);
+    if (id1 == id2) {
+    /* The linear ids are the same, the triangle with the smaller level
+    * is considered smaller */
+    return l1->level - l2->level;
+    }
+    /* return negativ if id1 < id2, zero if id1 = id2, positive if id1 >
+    id2 */
+    return id1 < id2 ? -1 : id1 != id2;
 }
 
 void

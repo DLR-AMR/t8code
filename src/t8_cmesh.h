@@ -632,7 +632,7 @@ t8_cmesh_t          t8_cmesh_new_line_zigzag (sc_MPI_Comm comm);
   * \param [in] comm        The mpi communicator to use.
   * \return                 A valid cmesh, as if _init and _commit had been called.
   */
-t8_cmesh_t          t8_cmesh_prism_cake (sc_MPI_Comm comm);
+t8_cmesh_t          t8_cmesh_prism_cake (sc_MPI_Comm comm, int num_of_prisms);
 
 /** Construct a forest of six connected noncannoical oriented prisms
   * \param [in] comm        The mpi communicator to use.

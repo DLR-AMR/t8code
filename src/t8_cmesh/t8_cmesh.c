@@ -1759,15 +1759,23 @@ t8_cmesh_new_line_zigzag (sc_MPI_Comm comm)
 }
 
 t8_cmesh_t
-t8_cmesh_prism_cake (sc_MPI_Comm comm)
+t8_cmesh_prism_cake (sc_MPI_Comm comm, int num_of_prisms)
 {
 #define PI 3.14159265
   int                 i, j;
-  /*6 Prism a 6 vertices a 3 coords */
-  double              vertices[108];
+  /*num_of_prisms Prism a 6 vertices a 3 coords */
+  double               * vertices = malloc(num_of_prisms * 6 * 3 * sizeof(double));
   t8_cmesh_t          cmesh;
+  double              degrees = 360. / num_of_prisms;
 
-  for (i = 0; i < 6; i++) {
+  t8_debugf("[D] degrees %f\n", degrees);
+  T8_ASSERT(num_of_prisms > 1);
+
+  if(num_of_prisms == 2){
+      return t8_cmesh_new_hypercube(T8_ECLASS_PRISM,sc_MPI_COMM_WORLD, 0, 0);
+  }
+
+  for (i = 0; i < num_of_prisms; i++) {
     for (j = 0; j < 6; j++) {
       /*Get the edges at the unit circle */
       if (j == 0 || j == 3) {
@@ -1776,27 +1784,27 @@ t8_cmesh_prism_cake (sc_MPI_Comm comm)
         vertices[i * 6 * 3 + j * 3 + 2] = (j == 3 ? 1 : 0);
       }
       else if (j == 1 || j == 4) {
-        vertices[i * 6 * 3 + j * 3] = cos (i * 60 * PI / 180);
-        vertices[i * 6 * 3 + j * 3 + 1] = sin (i * 60 * PI / 180);
+        vertices[i * 6 * 3 + j * 3] = cos (i * degrees * PI / 180);
+        vertices[i * 6 * 3 + j * 3 + 1] = sin (i * degrees * PI / 180);
         vertices[i * 6 * 3 + j * 3 + 2] = (j == 4 ? 1 : 0);
       }
       else if (j == 2 || j == 5) {
-        vertices[i * 6 * 3 + j * 3] = cos ((i * 60 + 60) * PI / 180);
-        vertices[i * 6 * 3 + j * 3 + 1] = sin ((i * 60 + 60) * PI / 180);
+        vertices[i * 6 * 3 + j * 3] = cos ((i * degrees + degrees) * PI / 180);
+        vertices[i * 6 * 3 + j * 3 + 1] = sin ((i * degrees + degrees) * PI / 180);
         vertices[i * 6 * 3 + j * 3 + 2] = (j == 5 ? 1 : 0);
       }
     }
   }
   t8_cmesh_init (&cmesh);
-  for (i = 0; i < 6; i++) {
+  for (i = 0; i < num_of_prisms; i++) {
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PRISM);
   }
 
-  for (i = 0; i < 5; i++) {
+  for (i = 0; i < 6; i++) {
     t8_cmesh_set_join (cmesh, i, (i == 5 ? 0 : i + 1), 2, 1, 0);
   }
 
-  for (i = 0; i < 6; i++) {
+  for (i = 0; i < num_of_prisms; i++) {
     t8_cmesh_set_tree_vertices (cmesh, i, t8_get_package_id (), 0,
                                 vertices + i * 18, 6);
   }
