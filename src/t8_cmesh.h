@@ -361,6 +361,17 @@ t8_cmesh_t          t8_cmesh_load_and_distribute (const char *fileprefix,
 int                 t8_cmesh_comm_is_valid (t8_cmesh_t cmesh,
                                             sc_MPI_Comm comm);
 
+/** Check whether a given face of a local tree is a face of the domain boundary.
+ * \param [in] cmesh        The cmesh to be considered.
+ * \param [in] ltreeid      The local id of a tree or ghost.
+ * \param [in] face         A face of the tree.
+ * \return                  True if the face is a domain boundary. False if
+ *                          there is a neighbor tree (local or non-local).
+ * \a cmesh must be committed before calling this function.
+ */
+int                 t8_cmesh_face_is_boundary (t8_cmesh_t cmesh,
+                                               t8_locidx_t ltreeid, int face);
+
 /** Return the global number of trees in a cmesh.
  * \param [in] cmesh       The cmesh to be considered.
  * \return                 The number of trees associated to \a cmesh.

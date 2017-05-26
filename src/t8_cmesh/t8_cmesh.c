@@ -742,6 +742,41 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   return cmesh_in;
 }
 
+int
+t8_cmesh_face_is_boundary (t8_cmesh_t cmesh, t8_locidx_t ltreeid, int face)
+{
+  int8_t             *ttf;
+  int                 F;
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (0 <= ltreeid
+             && ltreeid < cmesh->num_ghosts + cmesh->num_local_trees);
+
+  F = t8_eclass_max_num_faces[cmesh->dimension];
+  if (ltreeid < cmesh->num_local_trees) {
+    t8_locidx_t        *neighbors;
+    /* The tree is a local tree */
+    (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, ltreeid, &neighbors,
+                                        &ttf);
+    if (neighbors[face] == ltreeid && ttf % F == face) {
+      /* This face is a boundary face */
+      return 1;
+    }
+  }
+  else if (ltreeid < cmesh->num_local_trees + cmesh->num_ghosts) {
+    /* The tree is a ghost */
+    t8_cghost_t         ghost;
+    t8_gloidx_t        *neighbors;
+    ghost = t8_cmesh_trees_get_ghost_ext (cmesh->trees,
+                                          ltreeid - cmesh->num_local_trees,
+                                          &neighbors, &ttf);
+    if (neighbors[face] == ghost->treeid && ttf % F == face) {
+      /* this is a boundary face */
+      return 1;
+    }
+  }
+  return 0;
+}
+
 #ifdef T8_WITH_METIS
 void
 t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
@@ -772,11 +807,10 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   /* Count the number of tree-to-tree connections via a face */
   num_faces = 0;
   for (itree = 0; itree < cmesh->num_trees; itree++) {
-    tree = t8_cmesh_trees_get_tree_ext (cmesh->trees, itree, &face_neighbor,
-                                        NULL);
     for (iface = 0; iface < t8_eclass_num_faces[tree->eclass]; iface++) {
-      if (face_neighbor[iface] >= 0)
+      if (!t8_cmesh_face_is_boundary (cmesh, itree, face)) {
         num_faces++;
+      }
     }
   }
 
