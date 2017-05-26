@@ -45,7 +45,7 @@ t8_dline_compare (const t8_dline_t * l1, const t8_dline_t * l2)
     id1 = t8_dline_linear_id (l1, maxlvl);
     id2 = t8_dline_linear_id (l2, maxlvl);
     if (id1 == id2) {
-    /* The linear ids are the same, the triangle with the smaller level
+    /* The linear ids are the same, the line with the smaller level
     * is considered smaller */
     return l1->level - l2->level;
     }

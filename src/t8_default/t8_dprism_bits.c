@@ -52,7 +52,7 @@ t8_dprism_compare (const t8_dprism_t * p1, const t8_dprism_t * p2)
   id1 = t8_dprism_linear_id (p1, maxlvl);
   id2 = t8_dprism_linear_id (p2, maxlvl);
   if (id1 == id2) {
-  /* The linear ids are the same, the triangle with the smaller level
+  /* The linear ids are the same, the prism with the smaller level
   * is considered smaller */
   return p1->line.level - p2->line.level;
   }

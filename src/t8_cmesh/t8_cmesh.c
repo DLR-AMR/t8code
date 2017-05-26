@@ -1764,14 +1764,14 @@ t8_cmesh_prism_cake (sc_MPI_Comm comm, int num_of_prisms)
 #define PI 3.14159265
   int                 i, j;
   /*num_of_prisms Prism a 6 vertices a 3 coords */
-  double               * vertices = malloc(num_of_prisms * 6 * 3 * sizeof(double));
+  double               * vertices = T8_ALLOC(double, num_of_prisms * 6 * 3);
   t8_cmesh_t          cmesh;
   double              degrees = 360. / num_of_prisms;
 
-  t8_debugf("[D] degrees %f\n", degrees);
   T8_ASSERT(num_of_prisms > 1);
 
   if(num_of_prisms == 2){
+      T8_FREE(vertices);
       return t8_cmesh_new_hypercube(T8_ECLASS_PRISM,sc_MPI_COMM_WORLD, 0, 0);
   }
 
@@ -1800,15 +1800,15 @@ t8_cmesh_prism_cake (sc_MPI_Comm comm, int num_of_prisms)
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PRISM);
   }
 
-  for (i = 0; i < 6; i++) {
-    t8_cmesh_set_join (cmesh, i, (i == 5 ? 0 : i + 1), 2, 1, 0);
+  for (i = 0; i < num_of_prisms; i++) {
+      t8_cmesh_set_join (cmesh, i, (i == (num_of_prisms - 1) ? 0 : i + 1), 2, 1, 0);
   }
-
   for (i = 0; i < num_of_prisms; i++) {
     t8_cmesh_set_tree_vertices (cmesh, i, t8_get_package_id (), 0,
                                 vertices + i * 18, 6);
   }
   t8_cmesh_commit (cmesh, comm);
+  T8_FREE(vertices);
   return cmesh;
 }
 
@@ -1846,8 +1846,8 @@ t8_cmesh_prism_cake_funny_oriented (sc_MPI_Comm comm)
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PRISM);
   }
 
-  t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 1);
-  t8_cmesh_set_join (cmesh, 1, 2, 1, 1, 0);
+  t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 3);
+  t8_cmesh_set_join (cmesh, 1, 2, 1, 1, 3);
   t8_cmesh_set_join (cmesh, 2, 3, 2, 1, 0);
   t8_cmesh_set_join (cmesh, 3, 4, 2, 2, 0);
   t8_cmesh_set_join (cmesh, 4, 5, 0, 0, 0);
