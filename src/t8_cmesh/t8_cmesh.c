@@ -872,9 +872,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     tree->treeid = new_number[itree];
     for (iface = 0; iface < t8_eclass_num_faces[tree->eclass]; iface++) {
       neigh_id = face_neighbor[iface];
-      if (neigh_id >= 0) {
-        face_neighbor[iface] = new_number[neigh_id];
-      }
+      face_neighbor[iface] = new_number[neigh_id];
     }
   }
   T8_FREE (partition);
