@@ -894,8 +894,8 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
     parent_face = data->ts->t8_element_face_parent_face (element, iface);
     if (parent_face >= 0) {
       /* This face was also a face of the parent, we reuse the computed bounds */
-      lower = bounds[iface * 2];
-      upper = bounds[iface * 2 + 1];
+      lower = bounds[parent_face * 2];
+      upper = bounds[parent_face * 2 + 1];
     }
     else {
       /* this is an inner face, thus the face owners must be owners of the
