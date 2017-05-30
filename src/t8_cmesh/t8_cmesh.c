@@ -1767,31 +1767,34 @@ t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees, sc_MPI_Comm comm)
 }
 
 t8_cmesh_t
-t8_cmesh_new_line_zigzag(sc_MPI_Comm comm)
+t8_cmesh_new_line_zigzag (sc_MPI_Comm comm)
 {
-    int i;
-    double vertices[18] = {1,2,0,
-                           2,4,1,
-                           1,1,2,
-                           2,4,1,
-                           1,1,2,
-                           3,2,5};
-    t8_cmesh_t cmesh;
-    t8_cmesh_init(&cmesh);
-    for (i = 0; i < 3; i++) {
-        t8_cmesh_set_tree_class (cmesh, i,T8_ECLASS_LINE);
-    }
-    /*tree_num is joined with tree_num at face_num and face_num with orientation_num*/
-    t8_cmesh_set_join(cmesh, 0, 1, 1, 1, 0);
-    t8_cmesh_set_join(cmesh, 1, 2, 0, 0, 0);
+  int                 i;
+  double              vertices[18] = { 1, 2, 0,
+    2, 4, 1,
+    1, 1, 2,
+    2, 4, 1,
+    1, 1, 2,
+    3, 2, 5
+  };
+  t8_cmesh_t          cmesh;
+  t8_cmesh_init (&cmesh);
+  for (i = 0; i < 3; i++) {
+    t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_LINE);
+  }
+  /*tree_num is joined with tree_num at face_num and face_num with orientation_num */
+  t8_cmesh_set_join (cmesh, 0, 1, 1, 1, 0);
+  t8_cmesh_set_join (cmesh, 1, 2, 0, 0, 0);
 
-    t8_cmesh_set_tree_vertices(cmesh,0,t8_get_package_id(),0,vertices,2);
-    t8_cmesh_set_tree_vertices(cmesh,1,t8_get_package_id(),0,vertices+6,2);
-    t8_cmesh_set_tree_vertices(cmesh,2,t8_get_package_id(),0,vertices+12,2);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 2);
+  t8_cmesh_set_tree_vertices (cmesh, 1, t8_get_package_id (), 0, vertices + 6,
+                              2);
+  t8_cmesh_set_tree_vertices (cmesh, 2, t8_get_package_id (), 0,
+                              vertices + 12, 2);
 
-    t8_cmesh_commit (cmesh, comm);
+  t8_cmesh_commit (cmesh, comm);
 
-    return cmesh;
+  return cmesh;
 
 }
 

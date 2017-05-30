@@ -189,14 +189,14 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   ts->t8_element_vertex_coords (element, corner_number, corner_coords);
   switch (eclass) {
   case T8_ECLASS_LINE:
-      corner_coords[2] = 0;
-      corner_coords[1] = 0;
-      for(i = 0; i < 3; i++){
-          coordinates[i] =
-                  len * (vertices[3 + i] - vertices[i]) * corner_coords[0] +
-                  vertices[i];
-      }
-      break;
+    corner_coords[2] = 0;
+    corner_coords[1] = 0;
+    for (i = 0; i < 3; i++) {
+      coordinates[i] =
+        len * (vertices[3 + i] - vertices[i]) * corner_coords[0] +
+        vertices[i];
+    }
+    break;
   case T8_ECLASS_TRIANGLE:
     corner_coords[2] = 0;
   case T8_ECLASS_TET:

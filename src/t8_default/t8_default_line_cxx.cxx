@@ -120,36 +120,37 @@ t8_default_scheme_line_c::t8_element_first_descendant (const t8_element_t *
 
 void
 t8_default_scheme_line_c::t8_element_last_descendant (const t8_element_t *
-                                                       elem,
-                                                       t8_element_t * desc)
+                                                      elem,
+                                                      t8_element_t * desc)
 {
   t8_dline_last_descendant ((const t8_dline_t *) elem, (t8_dline_t *) desc,
-                             T8_DLINE_MAXLEVEL);
+                            T8_DLINE_MAXLEVEL);
 }
 
 void
-t8_default_scheme_line_c::t8_element_vertex_coords(const t8_element_t *t, int vertex, int coords[])
+t8_default_scheme_line_c::t8_element_vertex_coords (const t8_element_t * t,
+                                                    int vertex, int coords[])
 {
-    t8_dline_vertex_coords((const t8_dline_t *) t, vertex, coords);
+  t8_dline_vertex_coords ((const t8_dline_t *) t, vertex, coords);
 }
 
 int
 t8_default_scheme_line_c::t8_element_root_len (const t8_element_t * elem)
 {
-    return T8_DLINE_ROOT_LEN;
+  return T8_DLINE_ROOT_LEN;
 }
 
 u_int64_t
-t8_default_scheme_line_c::t8_element_get_linear_id (const t8_element_t *
-                                                   elem, int level)
+  t8_default_scheme_line_c::t8_element_get_linear_id (const t8_element_t *
+                                                      elem, int level)
 {
-T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
+  T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
 
-return t8_dline_linear_id ((const t8_dline_t *) elem, level);
+  return t8_dline_linear_id ((const t8_dline_t *) elem, level);
 }
 
 int
-t8_default_scheme_line_c::t8_element_num_children(const t8_element_t * elem)
+t8_default_scheme_line_c::t8_element_num_children (const t8_element_t * elem)
 {
   return T8_DLINE_CHILDREN;
 }
@@ -162,11 +163,11 @@ t8_default_scheme_line_c::t8_element_child_id (const t8_element_t * elem)
 
 void
 t8_default_scheme_line_c::t8_element_children (const t8_element_t * elem,
-                                              int length, t8_element_t * c[])
+                                               int length, t8_element_t * c[])
 {
-    T8_ASSERT (length == T8_DLINE_CHILDREN);
+  T8_ASSERT (length == T8_DLINE_CHILDREN);
 
-    t8_dline_childrenpv ((const t8_dline_t *) elem, (t8_dline_t **) c);
+  t8_dline_childrenpv ((const t8_dline_t *) elem, (t8_dline_t **) c);
 }
 
 int
