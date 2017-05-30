@@ -51,7 +51,7 @@ t8_basic_adapt (t8_forest_t forest, t8_locidx_t which_tree,
   SC_CHECK_MPI (mpiret);
   if (level < 4)
     /* refine randomly if level is smaller 4 */
-    return (unsigned) ((mpirank + 1) * rand ()) % 7;
+    return (unsigned) ((mpirank + 1) * rand ()) % 2;
   return 0;
 }
 
@@ -67,7 +67,12 @@ t8_basic_refine_test (t8_eclass_t eclass)
 
   t8_forest_init (&forest);
   t8_forest_init (&forest_adapt);
-  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0);
+  if (eclass == T8_ECLASS_LINE) {
+    cmesh = t8_cmesh_new_line_zigzag (sc_MPI_COMM_WORLD);
+  }
+  else {
+    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0);
+  }
 
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
