@@ -35,6 +35,9 @@
 
 T8_EXTERN_C_BEGIN ();
 
+/* TODO: document */
+void                t8_forest_balance (t8_forest_t forest);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_BALANCE_H! */

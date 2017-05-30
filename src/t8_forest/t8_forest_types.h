@@ -43,6 +43,7 @@ typedef enum t8_forest_from
   T8_FOREST_FROM_COPY = T8_FOREST_FROM_FIRST,
   T8_FOREST_FROM_ADAPT,
   T8_FOREST_FROM_PARTITION,
+  T8_FOREST_FROM_BALANCE,
   T8_FOREST_FROM_LAST
 }
 t8_forest_from_t;
@@ -72,6 +73,8 @@ typedef struct t8_forest
                                              is set to T8_FOREST_FROM_ADAPT. */
   int                 set_adapt_recursive; /**< Flag to decide whether coarsen and refine
                                                 are carried out recursive */
+  int                 set_balance;      /**< Flag to decide whether to forest will be balance in \ref t8_forest_commit.
+                                             See \ref t8_forest_set_balance */
   int                 do_ghost;         /**< If True, a ghost layer will be created when the forest is committed. */
   t8_ghost_type_t     ghost_type;       /**< If a ghost layer will be created, the type of neighbors that count as ghost. */
   void               *user_data;        /**< Pointer for arbitrary user data. \see t8_forest_set_user_data. */

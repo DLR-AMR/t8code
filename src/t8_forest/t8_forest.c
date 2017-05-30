@@ -28,6 +28,7 @@
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_adapt.h>
+#include <t8_forest/t8_forest_balance.h>
 #include <t8_forest_vtk.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
@@ -191,6 +192,17 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
 }
 
 void
+t8_forest_set_balance (t8_forest_t forest, int do_balance)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+
+  forest->set_balance = do_balance;
+  if (do_balance) {
+    forest->from_method = T8_FOREST_FROM_BALANCE;
+  }
+}
+
+void
 t8_forest_set_ghost (t8_forest_t forest, int do_ghost,
                      t8_ghost_type_t ghost_type)
 {
@@ -311,7 +323,7 @@ t8_forest_commit (t8_forest_t forest)
                forest->from_method < T8_FOREST_FROM_LAST);
 
     /* TODO: optimize all this when forest->set_from has reference count one */
-
+    /* TODO: Get rid of duping the communicator */
     /* we must prevent the case that set_from frees the source communicator */
     if (!forest->set_from->do_dup) {
       forest->mpicomm = forest->set_from->mpicomm;
@@ -339,7 +351,7 @@ t8_forest_commit (t8_forest_t forest)
 
     /* Compute the maximum allowed refinement level */
     t8_forest_compute_maxlevel (forest);
-    /* TODO: currently we can only handle copy, adapt, and partition */
+    /* TODO: currently we can only handle copy, adapt, partition, and balance */
     /* T8_ASSERT (forest->from_method == T8_FOREST_FROM_COPY); */
     if (forest->from_method == T8_FOREST_FROM_ADAPT) {
       if (forest->set_adapt_fn != NULL) {
@@ -353,6 +365,9 @@ t8_forest_commit (t8_forest_t forest)
       forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
       /* partition the forest */
       t8_forest_partition (forest);
+    }
+    else if (forest->from_method == T8_FOREST_FROM_BALANCE) {
+      t8_forest_balance (forest);
     }
 
     /* decrease reference count of input forest, possibly destroying it */
