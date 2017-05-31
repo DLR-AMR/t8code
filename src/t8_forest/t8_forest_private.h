@@ -144,6 +144,15 @@ void                t8_forest_compute_elements_offset (t8_forest_t forest);
 t8_element_t       *t8_forest_get_tree_element (t8_tree_t tree,
                                                 t8_locidx_t elem_in_tree);
 
+/** Return the array of elements of a tree.
+ * \param [in]  forest   The forest.
+ * \param [in]  ltreeid  The local id of a local tree. Must be a valid local tree id.
+ * \return      Returns the array of elements of the tree.
+ * \a forest must be committed before calling this function.
+ */
+sc_array_t         *t8_forest_get_tree_element_array (t8_forest_t forest,
+                                                      t8_locidx_t ltreeid);
+
 /** Find the owner process of a given element, deprecated version.
  * Use t8_forest_element_find_owner instead.
  * \param [in]    forest  The forest.
@@ -392,6 +401,23 @@ t8_gloidx_t         t8_forest_element_half_face_neighbors (t8_forest_t forest,
                                                            t8_element_t *
                                                            neighs[], int face,
                                                            int num_neighs);
+
+/** Compute whether for a given element there exist leaf or ghost leaf elements in
+ * the local forest that are a descendant of the element but not the element itself
+ * \param [in]  forest    The forest.
+ * \param [in]  gtreeid   The global id of the tree the element is in
+ * \param [in]  element   The element
+ * \param [in]  ts        The eclass scheme of \a element.
+ * \return                True if in the forest there exists a local leaf or ghost
+ *                        leaf that is a descendant of \a element but not equal to \a element.
+ * \note If no ghost layer was created for the forest, only local elements are tested.
+ * \note \a forest must be committed before calling this function.
+ */
+int                 t8_forest_element_has_leaf_desc (t8_forest_t forest,
+                                                     t8_gloidx_t gtreeid,
+                                                     const t8_element_t *
+                                                     element,
+                                                     t8_eclass_scheme_c * ts);
 
 T8_EXTERN_C_END ();
 

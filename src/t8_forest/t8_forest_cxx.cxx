@@ -27,6 +27,7 @@
 #include <t8_forest/t8_forest_cxx.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
+#include <t8_forest/t8_forest_ghost.h>
 #include <t8_element_cxx.hxx>
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
@@ -455,10 +456,16 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
     sc_array_init_size (&tree->elements, eclass_scheme->t8_element_size (),
                         num_tree_elements);
     /* TODO: replace with t8_elem_copy (not existing yet), in order to
-     * eventually copy additional pointer data stored in the elements? */
+     * eventually copy additional pointer data stored in the elements?
+     * -> i.m.o. we should not allow such pointer data at the elements */
     if (copy_elements) {
       sc_array_copy (&tree->elements, &fromtree->elements);
       tree->elements_offset = fromtree->elements_offset;
+      /* Copy the first and last descendant */
+      eclass_scheme->t8_element_new (1, &tree->first_desc);
+      eclass_scheme->t8_element_copy (fromtree->first_desc, tree->first_desc);
+      eclass_scheme->t8_element_new (1, &tree->last_desc);
+      eclass_scheme->t8_element_copy (fromtree->last_desc, tree->last_desc);
     }
     else {
       sc_array_truncate (&tree->elements);
@@ -1365,5 +1372,126 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
   }
   neigh_scheme->t8_element_destroy (1, &face_neighbor);
 }
+
+/* Search for a linear element id (at forest->maxlevel) in a sorted array of
+ * elements. If the element does not exist, return the largest index i
+ * such that the element at position i has a smaller id than the given one.
+ * If no such i exists, return -1.
+ */
+static int
+t8_forest_bin_search_lower (sc_array_t * elements, uint64_t element_id,
+                            t8_eclass_scheme_c * ts, int maxlevel)
+{
+  t8_element_t  *query;
+  uint64_t       query_id;
+  int            low, high, guess;
+
+  /* At first, we check whether any element has smaller id than the
+   * given one. */
+  query = (t8_element_t *) sc_array_index (elements, 0);
+  query_id = ts->t8_element_get_linear_id (query, maxlevel);
+  if (query_id > element_id) {
+    /* No element has id smaller than the given one */
+    return -1;
+  }
+
+  /* We now perform the binary search */
+  low = 0;
+  high = elements->elem_count - 1;
+  while (low < high) {
+    guess = (low + high + 1) / 2;
+    query = (t8_element_t *) sc_array_index_int (elements, guess);
+    query_id = ts->t8_element_get_linear_id (query, maxlevel);
+    if (query_id == element_id) {
+      /* we are done */
+      return guess;
+    }
+    else if (query_id > element_id) {
+      /* look further left */
+      high = guess - 1;
+    }
+    else {
+      /* look further right, but keep guess in the search range */
+      low = guess;
+    }
+  }
+  T8_ASSERT (low == high);
+  return low;
+}
+
+int
+t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid,
+                                 const t8_element_t * element,
+                                 t8_eclass_scheme_c * ts)
+{
+  t8_locidx_t   ltreeid;
+  sc_array_t   *elements;
+  t8_element_t  *last_desc, *elem_found;
+  t8_locidx_t   ghost_treeid;
+  uint64_t      last_desc_id, elem_id;
+  int           index;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  /* Compute the linear id of the last descendant of element at
+   * forest maxlevel.
+   * We then check whether the forest has any element with id between
+   * the id of element and the id of the last descendant */
+  /* TODO: element interface function t8_element_last_desc_id */
+  ts->t8_element_new (1, &last_desc);
+  /* TODO: set level in last_descendant */
+  ts->t8_element_last_descendant (element, last_desc);
+  last_desc_id = ts->t8_element_get_linear_id (last_desc, forest->maxlevel);
+  /* Get the local id of the tree. If the tree is not a local tree,
+   * then the number returned is negative */
+  ltreeid = t8_forest_get_local_id (forest, gtreeid);
+  if (ltreeid >= 0) {
+    /* The tree is a local tree */
+    /* Get the elements */
+    elements = t8_forest_get_tree_element_array (forest, ltreeid);
+
+    index = t8_forest_bin_search_lower (elements, last_desc_id,ts, forest->maxlevel);
+    if (index >= 0) {
+      /* There exists an element in the array with id <= last_desc_id,
+       * If also elem_id < id, then we found a true decsendant of element */
+      elem_found = (t8_element_t *) sc_array_index_int (elements, index);
+      elem_id = ts->t8_element_get_linear_id (elem_found, forest->maxlevel);
+      if (ts->t8_element_get_linear_id (element, forest->maxlevel)
+          < elem_id) {
+        /* The element is a true descendant */
+        T8_ASSERT (ts->t8_element_level (elem_found) > ts->t8_element_level (element));
+        /* clean-up */
+        ts->t8_element_destroy (1, &last_desc);
+        return 1;
+      }
+    }
+  }
+  if (forest->ghosts != NULL) {
+    /* Check if the tree is a ghost tree and if so, check its elements
+     * as well */
+    ghost_treeid = t8_forest_ghost_get_ghost_treeid (forest, gtreeid);
+    if (ghost_treeid >= 0) {
+      /* The tree is a ghost tree */
+      elements = t8_forest_ghost_get_tree_elements (forest, ghost_treeid);
+      index = t8_forest_bin_search_lower (elements, last_desc_id, ts, forest->maxlevel);
+      if (index >= 0) {
+        /* There exists an element in the array with id <= last_desc_id,
+         * If also elem_id < id, then we found a true decsendant of element */
+        elem_found = (t8_element_t *) sc_array_index_int (elements, index);
+        elem_id = ts->t8_element_get_linear_id (elem_found, forest->maxlevel);
+        if (ts->t8_element_get_linear_id (element, forest->maxlevel)
+            < elem_id) {
+          /* The element is a true descendant */
+          T8_ASSERT (ts->t8_element_level (elem_found) > ts->t8_element_level (element));
+          /* clean-up */
+          ts->t8_element_destroy (1, &last_desc);
+          return 1;
+        }
+      }
+    }
+  }
+  return 0;
+}
+
 
 T8_EXTERN_C_END ();
