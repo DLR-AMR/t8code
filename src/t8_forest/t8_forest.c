@@ -977,6 +977,8 @@ t8_forest_print_profile (t8_forest_t forest)
                    "forest: Commit runtime.");
     sc_stats_set1 (&stats[9], profile->ghost_runtime,
                    "forest: Ghost runtime.");
+    sc_stats_set1 (&stats[10], profile->balance_runtime,
+                   "forest: Balance runtime.");
     /* compute stats */
     sc_stats_compute (sc_MPI_COMM_WORLD, T8_PROFILE_NUM_STATS, stats);
     /* print stats */

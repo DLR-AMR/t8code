@@ -94,10 +94,12 @@ t8_basic_refine_test (t8_eclass_t eclass)
 
     t8_forest_init (&f_balance);
     t8_forest_set_balance (f_balance, forest_adapt, 1);
+    t8_forest_set_profiling (f_balance, 1);
     t8_forest_commit (f_balance);
     snprintf (filename, BUFSIZ, "forest_balance_%s",
               t8_eclass_to_string[eclass]);
     t8_forest_write_vtk (f_balance, filename);
+    t8_forest_print_profile (f_balance);
     t8_forest_unref (&f_balance);
   }
 }

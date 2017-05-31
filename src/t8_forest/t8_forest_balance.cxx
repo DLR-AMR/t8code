@@ -105,6 +105,10 @@ t8_forest_balance (t8_forest_t forest)
      (long long) t8_forest_get_global_num_elements (forest->set_from));
   t8_log_indent_push ();
 
+  if (forest->profile != NULL) {
+    /* Profiling is enable, so we measure the runtime of balance */
+    forest->profile->balance_runtime = -sc_MPI_Wtime ();
+  }
 
   /* Use set_from as the first forest to adapt */
   forest_from = forest->set_from;
@@ -147,6 +151,11 @@ t8_forest_balance (t8_forest_t forest)
      (long long) t8_forest_get_global_num_elements (forest_temp));
   /* clean-up */
   t8_forest_unref (&forest_temp);
+
+  if (forest->profile != NULL) {
+    /* Profiling is enabled, so we measure the runtime of balance. */
+    forest->profile->balance_runtime += sc_MPI_Wtime ();
+  }
 }
 
 /* Check whether the local elements of a forest are balanced. */
