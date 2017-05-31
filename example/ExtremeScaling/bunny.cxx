@@ -89,6 +89,7 @@ int
 main (int argc, char **argv)
 {
   int                 mpiret;
+#if 0
   int                 mpirank;
   const char         *argbasename;
 /* char                afilename[BUFSIZ]; */
@@ -106,9 +107,12 @@ main (int argc, char **argv)
   t8_forest_t         forest_p8, forest_t8;
 
   const int           level = 4;
-
+#endif
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
+
+  printf ("This functionality is currently disabled.\n");
+#if 0
   mpicomm = sc_MPI_COMM_WORLD;
   mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
 
@@ -248,6 +252,7 @@ main (int argc, char **argv)
   sc_stats_print (p4est_package_id, SC_LP_STATISTICS, 9, stats, 1, 1);
 
   sc_finalize ();
+#endif
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
