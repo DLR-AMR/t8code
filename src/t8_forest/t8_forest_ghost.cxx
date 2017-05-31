@@ -332,6 +332,37 @@ t8_forest_ghost_tree_num_elements (t8_forest_t forest,
   return ghost_tree->elements.elem_count;
 }
 
+sc_array_t         *
+t8_forest_ghost_get_tree_elements (t8_forest_t forest,
+                                   t8_locidx_t lghost_tree)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->ghosts != NULL);
+
+  return &t8_forest_ghost_get_tree (forest, lghost_tree)->elements;
+}
+
+t8_locidx_t
+t8_forest_ghost_get_ghost_treeid (t8_forest_t forest, t8_gloidx_t gtreeid)
+{
+  t8_ghost_gtree_hash_t query, *found, **pfound;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->ghosts != NULL);
+
+  query.global_id = gtreeid;
+  if (sc_hash_lookup (forest->ghosts->global_tree_to_ghost_tree, &query,
+                      (void ***) &pfound)) {
+    /* The tree was found */
+    found = *pfound;
+    return found->index;
+  }
+  else {
+    /* The tree was not found */
+    return -1;
+  }
+}
+
 /* Given an index in the ghost_tree array, return this tree's element class */
 t8_eclass_t
 t8_forest_ghost_get_tree_class (t8_forest_t forest, t8_locidx_t lghost_tree)
@@ -1828,6 +1859,8 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
   sc_MPI_Request     *requests;
 
   T8_ASSERT (t8_forest_is_committed (forest));
+  t8_global_productionf ("Into t8_forest_ghost with %i local elements.\n",
+                         t8_forest_get_num_element (forest));
   if (forest->ghost_type == T8_GHOST_NONE) {
     t8_debugf ("WARNING: Trying to construct ghosts with ghost_type NONE. "
                "Ghost layer is not constructed.\n");
@@ -1869,6 +1902,11 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     forest->profile->ghosts_received = ghost->num_ghosts_elements;
     forest->profile->ghosts_shipped = ghost->num_remote_elements;
   }
+
+  t8_global_productionf ("Done t8_forest_ghost with %i local elements and %i"
+                         " ghost elements.\n",
+                         t8_forest_get_num_element (forest),
+                         t8_forest_get_num_ghosts (forest));
 }
 
 void

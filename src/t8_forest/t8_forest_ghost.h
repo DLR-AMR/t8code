@@ -60,6 +60,27 @@ t8_locidx_t         t8_forest_ghost_tree_num_elements (t8_forest_t forest,
                                                        t8_locidx_t
                                                        lghost_tree);
 
+/** Get a pointer to the ghost element array of a ghost tree.
+ * \param [in]  forest    The forest. Ghost layer must exist.
+ * \param [in]  lghost_tree The ghost tree id of a ghost tree.
+ * \return                A pointer to the array of ghost elements of the tree.
+ * \a forest must be committed before calling this function.
+ */
+sc_array_t         *t8_forest_ghost_get_tree_elements (t8_forest_t forest,
+                                                       t8_locidx_t
+                                                       lghost_tree);
+
+/** Given a global tree compute the ghost local tree id of it.
+ * \param [in]  forest    The forest. Ghost layer must exist.
+ * \param [in]  gtreeid   A global tree in \a forest.
+ * \return                If \a gtreeid is also a ghost tree, the index in
+ *                        the ghost->ghost_trees array of the tree.
+ *                        Otherwise a negative number.
+ * \a forest must be committed before calling this function.
+ */
+t8_locidx_t         t8_forest_ghost_get_ghost_treeid (t8_forest_t forest,
+                                                      t8_gloidx_t gtreeid);
+
 /* TODO: document */
 t8_eclass_t         t8_forest_ghost_get_tree_class (t8_forest_t forest,
                                                     t8_locidx_t lghost_tree);
