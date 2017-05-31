@@ -138,6 +138,12 @@ void                t8_logf (int category, int priority, const char *fmt, ...)
 #endif
   ;
 
+/** Add one space to the start of t8's default log format. */
+void                t8_log_indent_push (void);
+
+/** Remove one space from the start of a t8's default log format. */
+void                t8_log_indent_pop (void);
+
 /** Log a message on the root rank with priority SC_LP_ERROR.
  * \param [in] fmt          Printf-style format string.
  */

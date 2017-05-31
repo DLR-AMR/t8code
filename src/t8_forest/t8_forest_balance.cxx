@@ -103,6 +103,9 @@ t8_forest_balance (t8_forest_t forest)
   t8_global_productionf
     ("Into t8_forest_balance with %lli global elements.\n",
      (long long) t8_forest_get_global_num_elements (forest->set_from));
+  t8_log_indent_push ();
+
+
   /* Use set_from as the first forest to adapt */
   forest_from = forest->set_from;
   /* This function is reference neutral regarding forest_from */
@@ -136,7 +139,9 @@ t8_forest_balance (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_balanced (forest_temp));
   /* Forest_temp is now balanced, we copy its trees and elements to forest */
   t8_forest_copy_trees (forest, forest_temp, 1);
+  /* TODO: Also copy ghost elements if ghost creation is set */
 
+  t8_log_indent_pop ();
   t8_global_productionf
     ("Done t8_forest_balance with %lli global elements.\n",
      (long long) t8_forest_get_global_num_elements (forest_temp));
