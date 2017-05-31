@@ -192,14 +192,19 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
 }
 
 void
-t8_forest_set_balance (t8_forest_t forest, int do_balance)
+t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from,
+                       int do_balance)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
+  T8_ASSERT (!do_balance || set_from != NULL);
 
+  /* TODO: Currently we only allow one from method at a time */
+  T8_ASSERT (!do_balance || forest->from_method == T8_FOREST_FROM_LAST);
   forest->set_balance = do_balance;
   if (do_balance) {
     forest->from_method = T8_FOREST_FROM_BALANCE;
   }
+  forest->set_from = set_from;
 }
 
 void
@@ -367,6 +372,7 @@ t8_forest_commit (t8_forest_t forest)
       t8_forest_partition (forest);
     }
     else if (forest->from_method == T8_FOREST_FROM_BALANCE) {
+      /* balance the forest */
       t8_forest_balance (forest);
     }
 

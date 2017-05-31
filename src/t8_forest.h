@@ -221,10 +221,11 @@ void               *t8_forest_get_user_data (t8_forest_t forest);
 
 /* TODO: define weight callback function */
 void                t8_forest_set_partition (t8_forest_t forest,
-                                             const t8_forest_t from,
+                                             const t8_forest_t set_from,
                                              int set_for_coarsening);
 
 void                t8_forest_set_balance (t8_forest_t forest,
+                                           const t8_forest_t set_from,
                                            int do_balance);
 
 /** Enable or disable the creation of a layer of ghost elements.

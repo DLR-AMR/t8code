@@ -78,6 +78,7 @@ typedef struct t8_forest
   int                 do_ghost;         /**< If True, a ghost layer will be created when the forest is committed. */
   t8_ghost_type_t     ghost_type;       /**< If a ghost layer will be created, the type of neighbors that count as ghost. */
   void               *user_data;        /**< Pointer for arbitrary user data. \see t8_forest_set_user_data. */
+  void               *t8code_data;      /**< Pointer for arbitrary data that is used internally. */
   int                 committed;        /**< \ref t8_forest_commit called? */
   int                 mpisize;          /**< Number of MPI processes. */
   int                 mpirank;          /**< Number of this MPI process. */
