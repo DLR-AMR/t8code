@@ -447,19 +447,8 @@ t8_forest_vtk_cells_elementid_kernel (t8_forest_t forest,
                                       void **data, T8_VTK_KERNEL_MODUS modus)
 {
   if (modus == T8_VTK_KERNEL_EXECUTE) {
-    t8_eclass_scheme_c *ts;
-    t8_element_t       *element;
-    int                 level;
-
-    /* Get the eclass_scheme associated to the tree */
-    ts = forest->scheme_cxx->eclass_schemes[tree->eclass];
-    /* Get the element */
-    element =
-      (t8_element_t *) sc_array_index (&tree->elements, element_index);
-    /* Compute the elements level */
-    level = ts->t8_element_level (element);
-    fprintf (vtufile, "%llu ", (long long unsigned)
-             ts->t8_element_get_linear_id (element, level));
+    fprintf (vtufile, "%llu ", element_index + tree->elements_offset +
+             t8_forest_get_first_local_element_id (forest));
     *columns += 1;
   }
   return 1;
@@ -660,9 +649,13 @@ t8_forest_vtk_write_cells (t8_forest_t forest, FILE * vtufile,
   }
   if (write_element_id) {
     /* Write the element ids. */
+    const char         *datatype;
 
+    /* Use 32 bit ints if the global element count fits, 64 bit otherwise. */
+    datatype = forest->global_num_elements > T8_LOCIDX_MAX ? T8_VTK_GLOIDX :
+      T8_VTK_LOCIDX;
     freturn = t8_forest_vtk_write_cell_data (forest, vtufile, "element_id",
-                                             T8_VTK_LOCIDX, "", 8,
+                                             datatype, "", 8,
                                              t8_forest_vtk_cells_elementid_kernel);
     if (!freturn) {
       goto t8_forest_vtk_cell_failure;
