@@ -841,6 +841,7 @@ t8_forest_get_local_id (t8_forest_t forest, t8_gloidx_t gtreeid)
   /* If the tree is local then its local id is the global id minus the
    * first global tree id on this forest. If this number if not in the
    * range of local tree ids then the tree is not local. */
+  /* we use a gloidx for ltreeid to prevent overflow and false positives */
   ltreeid = gtreeid - t8_forest_get_first_local_tree_id (forest);
   /* Check if this tree is a local tree and if so return its local id */
   if (0 <= ltreeid && ltreeid < t8_forest_get_num_local_trees (forest)) {
