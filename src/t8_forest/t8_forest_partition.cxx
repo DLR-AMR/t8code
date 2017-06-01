@@ -67,10 +67,32 @@ t8_forest_partition_empty (t8_gloidx_t * offset, int rank)
   return 0;
 }
 
+
+/* Compute the global index of the first local element.
+ * This function is collective. */
+static t8_gloidx_t
+t8_forest_compute_first_local_element_id (t8_forest_t forest)
+{
+  t8_gloidx_t         first_element, local_num_elements;
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  /* Convert local_num_elements to t8_gloidx_t */
+  local_num_elements = forest->local_num_elements;
+  /* MPI Scan over local_num_elements lead the global index of the first
+   * local element */
+  sc_MPI_Scan (&local_num_elements, &first_element, 1, T8_MPI_GLOIDX,
+               sc_MPI_SUM, forest->mpicomm);
+  /* MPI_Scan is inklusive, thus it counts our own data.
+   * Therefore, we have to subtract it again */
+  first_element -= local_num_elements;
+
+  return first_element;
+}
+
 /* For a committed forest create the array of element_offsets
  * and store it in forest->element_offsets
  */
-static void
+void
 t8_forest_partition_create_offsets (t8_forest_t forest)
 {
   sc_MPI_Comm         comm;
@@ -88,7 +110,8 @@ t8_forest_partition_create_offsets (t8_forest_t forest)
   t8_shmem_array_init (&forest->element_offsets, sizeof (t8_gloidx_t),
                        forest->mpisize + 1, comm);
   /* Calculate the global index of the first local element */
-  first_local_element = t8_forest_get_first_local_element_id (forest);
+  first_local_element = t8_forest_compute_first_local_element_id (forest);
+
   /* Collect all first global indices in the array */
   t8_shmem_array_allgather (&first_local_element, 1, T8_MPI_GLOIDX,
                             forest->element_offsets, 1, T8_MPI_GLOIDX);

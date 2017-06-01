@@ -83,6 +83,7 @@ typedef p4est_locidx_t t8_topidx_t;
 typedef p4est_locidx_t t8_locidx_t;
 #define T8_MPI_LOCIDX P4EST_MPI_LOCIDX
 #define T8_LOCIDX_ABS(x) P4EST_LOCIDX_ABS(x)
+#define T8_LOCIDX_MAX P4EST_LOCIDX_MAX
 #define t8_compare_locidx(v,w) p4est_locidx_compare(v,w)
 
 /** A type for global indexing that holds really big numbers. */

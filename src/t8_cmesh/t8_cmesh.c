@@ -1765,6 +1765,8 @@ t8_cmesh_prism_cake (sc_MPI_Comm comm, int num_of_prisms)
 #define PI 3.14159265
   int                 i, j;
   /*num_of_prisms Prism a 6 vertices a 3 coords */
+  /* TODO: This seems too be a lot of memory, can we also get by with only
+           6 * 3 doubles? */
   double               * vertices = T8_ALLOC(double, num_of_prisms * 6 * 3);
   t8_cmesh_t          cmesh;
   double              degrees = 360. / num_of_prisms;

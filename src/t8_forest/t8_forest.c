@@ -343,6 +343,12 @@ t8_forest_commit (t8_forest_t forest)
              (long long) forest->global_num_elements,
              (long long) forest->first_local_tree,
              (long long) forest->last_local_tree);
+
+  if (forest->element_offsets == NULL) {
+    /* Create the element offsets if not already done */
+    t8_forest_partition_create_offsets (forest);
+  }
+
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of commit */
     forest->profile->commit_runtime = sc_MPI_Wtime () -
@@ -467,20 +473,13 @@ t8_forest_get_tree_element_count (t8_tree_t tree)
 t8_gloidx_t
 t8_forest_get_first_local_element_id (t8_forest_t forest)
 {
-  t8_gloidx_t         first_element, local_num_elements;
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  /* Convert local_num_elements to t8_gloidx_t */
-  local_num_elements = forest->local_num_elements;
-  /* MPI Scan over local_num_elements lead the global index of the first
-   * local element */
-  sc_MPI_Scan (&local_num_elements, &first_element, 1, T8_MPI_GLOIDX,
-               sc_MPI_SUM, forest->mpicomm);
-  /* MPI_Scan is inklusive, thus it counts our own data.
-   * Therefore, we have to subtract it again */
-  first_element -= local_num_elements;
-
-  return first_element;
+  if (forest->element_offsets != NULL) {
+    return t8_shmem_array_get_gloidx (forest->element_offsets,
+                                      forest->mpirank);
+  }
+  return -1;
 }
 
 t8_eclass_t
