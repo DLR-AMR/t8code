@@ -628,8 +628,10 @@ t8_cmesh_t          t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees,
   */
 t8_cmesh_t          t8_cmesh_new_line_zigzag (sc_MPI_Comm comm);
 
-/** Construct a forest of six connected prism
+/** Construct a forest of num_of_prisms connected prism, all with one edge in 0,
+  * except for num_of_prisms = 2, then the return is the hypercube mesh
   * \param [in] comm        The mpi communicator to use.
+  * \param [in] num_of_prisms The number of prisms to be used.
   * \return                 A valid cmesh, as if _init and _commit had been called.
   */
 t8_cmesh_t          t8_cmesh_prism_cake (sc_MPI_Comm comm, int num_of_prisms);
