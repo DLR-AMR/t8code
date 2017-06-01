@@ -59,7 +59,7 @@ typedef enum
  * The callback can run in three different modi:
  *  INIT    - Called once, to (possibly) initialize the data pointer
  *  EXECUTE - Called for each element, the actual writing happens here.
- *  CLEAUP  - Called once after all elements. Used to cleanup any memory
+ *  CLEANUP - Called once after all elements. Used to cleanup any memory
  *            allocated during INIT.
  * \param [in] forest The forest.
  * \param [in] ltree_id   A local treeid.
