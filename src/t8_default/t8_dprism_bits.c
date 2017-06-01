@@ -92,8 +92,7 @@ t8_dprism_init_linear_id (t8_dprism_t * p, int level, uint64_t id)
 
     /*If id % 8 is larger than 3, the prism is in the upper part of the
      * parent prism. => line_id + 2^i*/
-    /*TODO: What if the line does not devide into to parts?*/
-    line_id += (id % T8_DPRISM_CHILDREN > (T8_DPRISM_CHILDREN / 2) - 1) ? 1 << i : 0;
+    line_id += (id % T8_DPRISM_CHILDREN) / T8_DTRI_CHILDREN * my_pow(T8_DLINE_CHILDREN, i);
 
     /*Each Prism divides into 8 children */
     id /= T8_DPRISM_CHILDREN;
