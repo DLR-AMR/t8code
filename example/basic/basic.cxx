@@ -30,6 +30,38 @@
 #include <sc_shmem.h>
 
 #if 1
+/* Adapt a forest such that always the second child of the first
+ * tree is refined and no other elements. This results in a highly
+ * imbalanced forest. */
+static int
+t8_basic_adapt_balance (t8_forest_t forest, t8_locidx_t which_tree,
+                        t8_eclass_scheme_c * ts,
+                        int num_elements, t8_element_t * elements[])
+{
+  t8_forest_t         forest_from;
+  int                 level;
+  int                 maxlevel, child_id;
+  T8_ASSERT (num_elements == 1 || num_elements ==
+             ts->t8_element_num_children (elements[0]));
+  level = ts->t8_element_level (elements[0]);
+
+  forest_from = (t8_forest_t) t8_forest_get_user_data (forest);
+  /* we set a maximum refinement level as forest user data */
+  maxlevel = *(int *) t8_forest_get_user_data (forest_from);
+  if (level >= maxlevel) {
+    /* Do not refine after the maxlevel */
+    return 0;
+  }
+  child_id = ts->t8_element_child_id (elements[0]);
+  if (which_tree + t8_forest_get_first_local_tree_id (forest_from) == 0
+      && child_id == 2) {
+    return 1;
+  }
+  return 0;
+}
+#endif
+
+#if 1
 static int
 t8_basic_adapt (t8_forest_t forest, t8_locidx_t which_tree,
                 t8_eclass_scheme_c * ts,
@@ -64,6 +96,7 @@ t8_basic_refine_test (t8_eclass_t eclass)
   t8_forest_t         forest_adapt;
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
+  int                 maxlevel = 8;
 
   t8_forest_init (&forest);
   t8_forest_init (&forest_adapt);
@@ -76,7 +109,7 @@ t8_basic_refine_test (t8_eclass_t eclass)
 
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
-  t8_forest_set_level (forest, 2);
+  t8_forest_set_level (forest, 1);
   t8_forest_commit (forest);
   /* Output to vtk */
   snprintf (filename, BUFSIZ, "forest_uniform_%s",
@@ -88,12 +121,58 @@ t8_basic_refine_test (t8_eclass_t eclass)
   /* Output to vtk */
   snprintf (filename, BUFSIZ, "forest_adapt_%s", t8_eclass_to_string[eclass]);
   t8_forest_write_vtk (forest_adapt, filename);
+  t8_forest_unref (&forest_adapt);
+}
+
+static void
+t8_basic_balance_test (t8_eclass_t eclass)
+{
+  t8_forest_t         forest, forest_partition;
+  t8_forest_t         forest_adapt;
+  t8_cmesh_t          cmesh;
+  char                filename[BUFSIZ];
+  int                 maxlevel = 5;
+
+  t8_forest_init (&forest);
+  t8_forest_init (&forest_adapt);
+  if (eclass == T8_ECLASS_LINE) {
+    cmesh = t8_cmesh_new_line_zigzag (sc_MPI_COMM_WORLD);
+  }
+  else {
+    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0);
+  }
+
+  t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
+  t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
+  t8_forest_set_level (forest, 1);
+  t8_forest_commit (forest);
+  /* Output to vtk */
+  snprintf (filename, BUFSIZ, "forest_uniform_%s",
+            t8_eclass_to_string[eclass]);
+  t8_forest_write_vtk (forest, filename);
+
+  t8_forest_set_user_data (forest, &maxlevel);
+  t8_forest_set_user_data (forest_adapt, forest);
+  t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt_balance, NULL, 1);
+  t8_forest_commit (forest_adapt);
+  /* Output to vtk */
+  snprintf (filename, BUFSIZ, "forest_adapt_%s", t8_eclass_to_string[eclass]);
+  t8_forest_write_vtk (forest_adapt, filename);
+
+  /* partition the forest */
+  t8_forest_init (&forest_partition);
+  t8_forest_set_partition (forest_partition, forest_adapt, 0);
+  t8_forest_commit (forest_partition);
+  /* Output to vtk */
+  snprintf (filename, BUFSIZ, "forest_partition_%s",
+            t8_eclass_to_string[eclass]);
+  t8_forest_write_vtk (forest_partition, filename);
 
   {
     t8_forest_t         f_balance;
 
     t8_forest_init (&f_balance);
-    t8_forest_set_balance (f_balance, forest_adapt, 1);
+    t8_forest_set_balance (f_balance, forest_partition, 1);
     t8_forest_set_profiling (f_balance, 1);
     t8_forest_commit (f_balance);
     snprintf (filename, BUFSIZ, "forest_balance_%s",
@@ -393,7 +472,7 @@ main (int argc, char **argv)
   t8_basic ();
 #endif
   //t8_basic_hypercube (T8_ECLASS_TET, 1, 1, 0);
-  t8_basic_refine_test (T8_ECLASS_HEX);
+  t8_basic_balance_test (T8_ECLASS_TRIANGLE);
 #if 0
   t8_basic_forest_partition ();
   t8_global_productionf ("Testing hypercube cmesh.\n");
