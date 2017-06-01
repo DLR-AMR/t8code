@@ -448,7 +448,7 @@ t8_forest_vtk_cells_elementid_kernel (t8_forest_t forest,
 {
   if (modus == T8_VTK_KERNEL_EXECUTE) {
     fprintf (vtufile, "%llu ", element_index + tree->elements_offset +
-             t8_forest_get_first_local_element_id (forest));
+             (long long) t8_forest_get_first_local_element_id (forest));
     *columns += 1;
   }
   return 1;
