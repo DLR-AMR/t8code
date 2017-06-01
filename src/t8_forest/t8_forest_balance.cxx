@@ -95,10 +95,13 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_locidx_t ltree_id,
 }
 
 void
-t8_forest_balance (t8_forest_t forest)
+t8_forest_balance (t8_forest_t forest, int repartition)
 {
-  t8_forest_t         forest_temp, forest_from;
+  t8_forest_t         forest_temp, forest_from, forest_partition;
   int                 done = 0, done_global = 0;
+#ifdef T8_ENABLE_DEBUG
+  int                 count = 0;
+#endif
 
   t8_global_productionf
     ("Into t8_forest_balance with %lli global elements.\n",
@@ -135,9 +138,20 @@ t8_forest_balance (t8_forest_t forest)
     sc_MPI_Allreduce (&done, &done_global, 1, sc_MPI_INT, sc_MPI_LAND,
                       forest->mpicomm);
 
+    if (repartition && !done_global) {
+      /* If repartitioning is used, we partition the forest */
+      t8_forest_init (&forest_partition);
+      t8_forest_set_partition (forest_partition, forest_temp, 0);
+      t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
+      t8_forest_commit (forest_partition);
+      forest_temp = forest_partition;
+      forest_partition = NULL;
+    }
     /* Adapt forest_temp in the next round */
-    t8_forest_write_vtk (forest_temp, "last_temp_forest");
     forest_from = forest_temp;
+#ifdef T8_ENABLE_DEBUG
+    count++;
+#endif
   }
 
   T8_ASSERT (t8_forest_is_balanced (forest_temp));
@@ -149,6 +163,7 @@ t8_forest_balance (t8_forest_t forest)
   t8_global_productionf
     ("Done t8_forest_balance with %lli global elements.\n",
      (long long) t8_forest_get_global_num_elements (forest_temp));
+  t8_debugf ("[H] Balance needed %i rounds.\n", count);
   /* clean-up */
   t8_forest_unref (&forest_temp);
 

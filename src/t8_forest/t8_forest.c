@@ -377,7 +377,7 @@ t8_forest_commit (t8_forest_t forest)
     }
     else if (forest->from_method == T8_FOREST_FROM_BALANCE) {
       /* balance the forest */
-      t8_forest_balance (forest);
+      t8_forest_balance (forest, 1);
     }
 
     /* decrease reference count of input forest, possibly destroying it */
