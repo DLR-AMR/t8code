@@ -1809,6 +1809,32 @@ t8_cmesh_prism_cake (sc_MPI_Comm comm, int num_of_prisms)
   return cmesh;
 }
 
+void prism_rotate(double vertices[18], int rotation)
+{
+    double helper[3] = {vertices[6],vertices[7], vertices[8]};
+    int i,j;
+    T8_ASSERT(3 > rotation && rotation > 0);
+    for(i = 0; i < rotation; i++){
+        for(j = 8; j >= 0; j--){
+            vertices[j] = j >= 3 ? vertices[j - 3] : helper[j];
+        }
+        for(j = 0; j < 3; j++){
+            helper[j] = vertices[6 + j];
+        }
+    }
+    for(i = 0; i < 3; i++){
+        helper[i] = vertices[15 + i];
+    }
+    for(i = 0; i < rotation; i++){
+        for(j = 17; j >= 9; j--){
+            vertices[j] = j >= 12 ? vertices[j - 3] : helper[j - 9];
+        }
+        for(j = 0; j < 3; j++){
+            helper[j] = vertices[15 + j];
+        }
+    }
+}
+
 t8_cmesh_t
 t8_cmesh_prism_cake_funny_oriented (sc_MPI_Comm comm)
 {
@@ -1837,6 +1863,12 @@ t8_cmesh_prism_cake_funny_oriented (sc_MPI_Comm comm)
       }
     }
   }
+  prism_rotate(vertices + 18, 2);
+  prism_rotate(vertices + 36 , 1);
+  prism_rotate(vertices + 54 , 1);
+  prism_rotate(vertices + 72 , 1);
+  prism_rotate(vertices + 90 , 2);
+
   t8_cmesh_init (&cmesh);
   for (i = 0; i < 6; i++) {
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PRISM);
@@ -1862,9 +1894,8 @@ t8_cmesh_prism_cake_funny_oriented (sc_MPI_Comm comm)
 t8_cmesh_t
 t8_cmesh_prism_geometry (sc_MPI_Comm comm)
 {
-#define PI 3.14159265
   int                 i, j;
-  /*7 Prism a 6 vertices a 3 coords */
+  /*8 Prism a 6 vertices a 3 coords */
   double              vertices[126];
   t8_cmesh_t          cmesh;
 
@@ -1888,34 +1919,38 @@ t8_cmesh_prism_geometry (sc_MPI_Comm comm)
       }
     }
   }
-  for (i = 4; i < 7; i++) {
+  for (i = 2; i < 6; i++) {
     for (j = 0; j < 6; j++) {
       /*Get the edges at the unit circle */
       if (j == 0 || j == 3) {
-        vertices[i * 6 * 3 + j * 3] = 0;
-        vertices[i * 6 * 3 + j * 3 + 1] = 0;
-        vertices[i * 6 * 3 + j * 3 + 2] = (j == 3 ? 2 : 1);
+        vertices[(i + 1) * 6 * 3 + j * 3] = 0;
+        vertices[(i + 1) * 6 * 3 + j * 3 + 1] = 0;
+        vertices[(i + 1) * 6 * 3 + j * 3 + 2] = (j == 3 ? 2 : 1);
       }
       else if (j == 1 || j == 4) {
-        vertices[i * 6 * 3 + j * 3] = cos (i * 60 * M_PI / 180);
-        vertices[i * 6 * 3 + j * 3 + 1] = sin (i * 60 * M_PI / 180);
-        vertices[i * 6 * 3 + j * 3 + 2] = (j == 4 ? 2 : 1);
+        vertices[(i + 1) * 6 * 3 + j * 3] = cos (i * 60 * M_PI / 180);
+        vertices[(i + 1) * 6 * 3 + j * 3 + 1] = sin (i * 60 * M_PI / 180);
+        vertices[(i + 1) * 6 * 3 + j * 3 + 2] = (j == 4 ? 2 : 1);
       }
       else if (j == 2 || j == 5) {
-        vertices[i * 6 * 3 + j * 3] = cos ((i * 60 + 60) * M_PI / 180);
-        vertices[i * 6 * 3 + j * 3 + 1] = sin ((i * 60 + 60) * M_PI / 180);
-        vertices[i * 6 * 3 + j * 3 + 2] = (j == 5 ? 2 : 1);
+        vertices[(i + 1) * 6 * 3 + j * 3] = cos ((i * 60 + 60) * M_PI / 180);
+        vertices[(i + 1) * 6 * 3 + j * 3 + 1] = sin ((i * 60 + 60) * M_PI / 180);
+        vertices[(i + 1) * 6 * 3 + j * 3 + 2] = (j == 5 ? 2 : 1);
       }
     }
   }
+  prism_rotate(vertices + 18, 2);
+  prism_rotate(vertices + 36 , 1);
+  prism_rotate(vertices + 72 , 2);
+
   t8_cmesh_init (&cmesh);
   for (i = 0; i < 7; i++) {
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PRISM);
   }
-  t8_cmesh_set_join (cmesh, 0, 1, 2, 1, 0);
-  t8_cmesh_set_join (cmesh, 1, 2, 2, 1, 0);
-  t8_cmesh_set_join (cmesh, 2, 3, 4, 0, 3);
-  t8_cmesh_set_join (cmesh, 3, 4, 2, 1, 0);
+  t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 3);
+  t8_cmesh_set_join (cmesh, 1, 2, 1, 2, 0);
+  t8_cmesh_set_join (cmesh, 2, 3, 4, 3, 3);
+  t8_cmesh_set_join (cmesh, 3, 4, 2, 0, 3);
   t8_cmesh_set_join (cmesh, 4, 5, 2, 1, 0);
   t8_cmesh_set_join (cmesh, 5, 6, 2, 1, 0);
 
