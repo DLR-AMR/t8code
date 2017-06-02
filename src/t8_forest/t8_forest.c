@@ -53,6 +53,7 @@ t8_forest_init (t8_forest_t * pforest)
   forest->first_local_tree = -1;
   forest->global_num_elements = -1;
   forest->set_adapt_recursive = -1;
+  forest->set_balance = -1;
 }
 
 int
@@ -168,7 +169,17 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
   T8_ASSERT (set_from != NULL);
 
   forest->set_from = set_from;
+  /* Set the from_method to COPY. This overwrites any previous setting
+   * of ADAPT, PARTITION, or BALANCE */
+
   forest->from_method = T8_FOREST_FROM_COPY;
+
+  /* Overwrite any previous setting */
+  forest->set_adapt_fn = NULL;
+  forest->set_replace_fn = NULL;
+  forest->set_adapt_recursive = -1;
+  forest->set_balance = -1;
+  forest->set_for_coarsening = -1;
 }
 
 void
@@ -181,30 +192,51 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
   T8_ASSERT (forest->scheme_cxx == NULL);
-  T8_ASSERT (forest->set_from == NULL);
-
-  T8_ASSERT (set_from != NULL);
 
   forest->set_for_coarsening = set_for_coarsening;
 
-  forest->set_from = set_from;
-  forest->from_method = T8_FOREST_FROM_PARTITION;
+  if (set_from != NULL) {
+    /* If set_from = NULL, we assume a previous forest_from was set */
+    forest->set_from = set_from;
+  }
+  /* Add PARTITION to the from_method.
+   * This overwrites T8_FOREST_FROM_COPY */
+  if (forest->from_method == T8_FOREST_FROM_LAST) {
+    forest->from_method = T8_FOREST_FROM_PARTITION;
+  }
+  else {
+    forest->from_method |= T8_FOREST_FROM_PARTITION;
+  }
 }
 
 void
 t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from,
-                       int do_balance)
+                       int no_repartition)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
-  T8_ASSERT (!do_balance || set_from != NULL);
 
-  /* TODO: Currently we only allow one from method at a time */
-  T8_ASSERT (!do_balance || forest->from_method == T8_FOREST_FROM_LAST);
-  forest->set_balance = do_balance;
-  if (do_balance) {
+  if (no_repartition) {
+    /* We do not repartition the forest during balance */
+    forest->set_balance = T8_FOREST_BALANCE_NO_REPART;
+  }
+  else {
+    /* Repartition during balance */
+    forest->set_balance = T8_FOREST_BALANCE_REPART;
+  }
+
+  if (set_from != NULL) {
+    /* If set_from = NULL, we assume a previous forest_from was set */
+    forest->set_from = set_from;
+  }
+
+  /* Add BALANCE to the from_method.
+   * This overwrites T8_FOREST_FROM_COPY */
+  if (forest->from_method == T8_FOREST_FROM_LAST) {
     forest->from_method = T8_FOREST_FROM_BALANCE;
   }
-  forest->set_from = set_from;
+  else {
+    forest->from_method |= T8_FOREST_FROM_BALANCE;
+  }
 }
 
 void
@@ -237,15 +269,27 @@ t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from,
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
   T8_ASSERT (forest->scheme_cxx == NULL);
-  T8_ASSERT (forest->set_from == NULL);
   T8_ASSERT (forest->set_adapt_fn == NULL);
   T8_ASSERT (forest->set_adapt_recursive == -1);
 
   forest->set_adapt_fn = adapt_fn;
   forest->set_replace_fn = replace_fn;
   forest->set_adapt_recursive = recursive != 0;
-  forest->set_from = set_from;
-  forest->from_method = T8_FOREST_FROM_ADAPT;
+
+  if (set_from != NULL) {
+    /* If set_from = NULL, we assume a previous forest_from was set */
+    forest->set_from = set_from;
+  }
+
+  /* Add ADAPT to the from_method.
+   * This overwrites T8_FOREST_FROM_COPY */
+
+  if (forest->from_method == T8_FOREST_FROM_LAST) {
+    forest->from_method = T8_FOREST_FROM_ADAPT;
+  }
+  else {
+    forest->from_method |= T8_FOREST_FROM_ADAPT;
+  }
 }
 
 void
@@ -324,6 +368,9 @@ t8_forest_commit (t8_forest_t forest)
     forest->global_num_trees = t8_cmesh_get_num_trees (forest->cmesh);
   }
   else {                        /* set_from != NULL */
+    t8_forest_t         forest_from = forest->set_from; /* temporarily store set_from, since we may overwrite it */
+
+    t8_debugf ("[h] from method %i\n", forest->from_method);
     T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
     T8_ASSERT (forest->cmesh == NULL);
     T8_ASSERT (forest->scheme_cxx == NULL);
@@ -360,26 +407,81 @@ t8_forest_commit (t8_forest_t forest)
 
     /* Compute the maximum allowed refinement level */
     t8_forest_compute_maxlevel (forest);
+    if (forest->from_method == T8_FOREST_FROM_COPY) {
+      SC_CHECK_ABORT (forest->set_from != NULL,
+                      "No forest to copy from was specified.");
+      t8_forest_copy_trees (forest, forest->set_from, 1);
+    }
     /* TODO: currently we can only handle copy, adapt, partition, and balance */
+
     /* T8_ASSERT (forest->from_method == T8_FOREST_FROM_COPY); */
-    if (forest->from_method == T8_FOREST_FROM_ADAPT) {
-      if (forest->set_adapt_fn != NULL) {
+    if (forest->from_method & T8_FOREST_FROM_ADAPT) {
+      SC_CHECK_ABORT (forest->set_adapt_fn != NULL,
+                      "No adapt function specified");
+      forest->from_method -= T8_FOREST_FROM_ADAPT;
+      if (forest->from_method > 0) {
+        /* The forest should also be partitioned/balanced.
+         * We first adapt the forest, then balance and then partition */
+        t8_forest_t         forest_adapt;
+        t8_forest_init (&forest_adapt);
+        /* forest_adapt should not change ownership of forest->set_from */
+        t8_forest_ref (forest->set_from);
+        /* Construct an intermediate, adapted forest */
+        t8_forest_set_adapt (forest_adapt, forest->set_from,
+                             forest->set_adapt_fn, forest->set_replace_fn,
+                             forest->set_adapt_recursive);
+        t8_forest_commit (forest_adapt);
+        /* The new forest will be partitioned/balanced from forest_adapt */
+        forest->set_from = forest_adapt;
+      }
+      else {
+        /* This forest should only be adapted */
         t8_forest_copy_trees (forest, forest->set_from, 0);
         t8_forest_adapt (forest);
       }
     }
-    else if (forest->from_method == T8_FOREST_FROM_PARTITION) {
+    if (forest->from_method & T8_FOREST_FROM_BALANCE) {
+      /* balance the forest */
+      forest->from_method -= T8_FOREST_FROM_BALANCE;
+      if (forest->from_method > 0) {
+        /* The forest should also be partitioned after balance */
+        t8_forest_t         forest_balance;
+        /* we construct an intermediate, balanced forest */
+        t8_forest_init (&forest_balance);
+        t8_forest_set_balance (forest_balance, forest->set_from,
+                               forest->set_balance ==
+                               T8_FOREST_BALANCE_NO_REPART);
+        t8_forest_commit (forest_balance);
+        forest->set_from = forest_balance;
+      }
+      else {
+        /* This forest should only be balanced */
+        if (forest->set_balance == T8_FOREST_BALANCE_NO_REPART) {
+          /* balance without repartition */
+          t8_forest_balance (forest, 0);
+        }
+        else {
+          /* balance with repartition */
+          t8_forest_balance (forest, 1);
+        }
+      }
+    }
+    if (forest->from_method & T8_FOREST_FROM_PARTITION) {
+      /* Partition this forest */
+      forest->from_method -= T8_FOREST_FROM_PARTITION;
+      /* This is the last from method that we execute,
+       * nothing should be left todo */
+      T8_ASSERT (forest->from_method == 0);
+
       forest->global_num_elements = forest->set_from->global_num_elements;
       /* Initialize the trees array of the forest */
       forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
       /* partition the forest */
       t8_forest_partition (forest);
     }
-    else if (forest->from_method == T8_FOREST_FROM_BALANCE) {
-      /* balance the forest */
-      t8_forest_balance (forest, 1);
-    }
 
+    /* reset forest->set_from */
+    forest->set_from = forest_from;
     /* decrease reference count of input forest, possibly destroying it */
     t8_forest_unref (&forest->set_from);
   }                             /* end set_from != NULL */

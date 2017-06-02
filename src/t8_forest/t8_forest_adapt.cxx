@@ -177,7 +177,6 @@ t8_forest_adapt (t8_forest_t forest)
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->set_from != NULL);
   T8_ASSERT (forest->set_adapt_recursive != -1);
-  T8_ASSERT (forest->from_method == T8_FOREST_FROM_ADAPT);
 
   forest_from = forest->set_from;
   t8_global_productionf ("Into t8_forest_adapt from %lld total elements\n",

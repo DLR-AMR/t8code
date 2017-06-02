@@ -37,16 +37,27 @@
 typedef struct t8_profile t8_profile_t; /* Defined below */
 typedef struct t8_forest_ghost *t8_forest_ghost_t;      /* Defined below */
 
-typedef enum t8_forest_from
-{
-  T8_FOREST_FROM_FIRST,
-  T8_FOREST_FROM_COPY = T8_FOREST_FROM_FIRST,
-  T8_FOREST_FROM_ADAPT,
-  T8_FOREST_FROM_PARTITION,
-  T8_FOREST_FROM_BALANCE,
-  T8_FOREST_FROM_LAST
-}
-t8_forest_from_t;
+/** If a forest is to be derived from another forest, there are different
+ * possibilities how the original forest is modified.
+ * Currently we support: Copying, adapting, partitioning, and balancing
+ * a forest.
+ * The latter 3 can be combined, in which case the order is
+ * 1. Adapt, 2. Partition, 3. Balance.
+ * We store the methods in an int8_t and use these defines to
+ * distinguish between them.
+ */
+typedef int8_t      t8_forest_from_t;
+
+#define T8_FOREST_FROM_FIRST 0
+#define T8_FOREST_FROM_COPY 0   /* must be zero, such that |= with another options overwrites it  */
+#define T8_FOREST_FROM_ADAPT 0x1
+#define T8_FOREST_FROM_PARTITION 0x2
+#define T8_FOREST_FROM_BALANCE 0x4
+#define T8_FOREST_FROM_NONE 0x8 /* A value that is not reached by adding up the other values. No from method used */
+#define T8_FOREST_FROM_LAST T8_FOREST_FROM_NONE
+
+#define T8_FOREST_BALANCE_REPART 1 /**< Value of forest->set_balance if balancing with repartitioning */
+#define T8_FOREST_BALANCE_NO_REPART 2 /**< Value of forest->set_balance if balancing without repartitioning */
 
 /** This structure is private to the implementation. */
 typedef struct t8_forest
@@ -74,7 +85,9 @@ typedef struct t8_forest
   int                 set_adapt_recursive; /**< Flag to decide whether coarsen and refine
                                                 are carried out recursive */
   int                 set_balance;      /**< Flag to decide whether to forest will be balance in \ref t8_forest_commit.
-                                             See \ref t8_forest_set_balance */
+                                             See \ref t8_forest_set_balance.
+                                             If 0, no balance. If 1 balance with repartitioning, if 2 balance without
+                                             repartitioning, \see t8_forest_balance */
   int                 do_ghost;         /**< If True, a ghost layer will be created when the forest is committed. */
   t8_ghost_type_t     ghost_type;       /**< If a ghost layer will be created, the type of neighbors that count as ghost. */
   void               *user_data;        /**< Pointer for arbitrary user data. \see t8_forest_set_user_data. */

@@ -168,6 +168,11 @@ void                t8_forest_set_scheme (t8_forest_t forest,
  * \param [in,out] forest      The forest whose level will be set.
  * \param [in]     level       The initial refinement level of \b forest, when
  *                             it is commited.
+ * \note This setting cannot be combined with any of the derived forest methods
+ * (\ref t8_forest_set_copy, \ref t8_forest_set_adapt, \ref t8_forest_set_partition,
+ * and \ref t8_forest_set_balance) and overwrites any of these settings.
+ * If this function is used, then the forest is created from scratch as a uniform
+ * refinement of the specified cmesh (\ref t8_forest_set_cmesh, \ref t8_forest_set_scheme).
  */
 void                t8_forest_set_level (t8_forest_t forest, int level);
 
@@ -177,6 +182,12 @@ void                t8_forest_set_level (t8_forest_t forest, int level);
  * from, call \ref t8_forest_ref before passing it into this function.
  * This means that it is ILLEGAL to continue using \b from or dereferencing it
  * UNLESS it is referenced directly before passing it into this function.
+ * \param [in,out] forest     The forest.
+ * \param [in]     from       A second forest from which \a forest will be copied
+ *                            in \ref t8_forest_commit.
+ * \note This setting cannot be combined with \ref t8_forest_set_adapt,
+ * \ref t8_forest_set_partition, or \ref t8_forest_set_balance and overwrites these
+ * settings.
  */
 void                t8_forest_set_copy (t8_forest_t forest,
                                         const t8_forest_t from);
@@ -191,11 +202,18 @@ void                t8_forest_set_copy (t8_forest_t forest,
  * \param [in] set_from     The source forest from which \b forest will be adapted.
  *                          We take ownership. This can be prevented by
  *                          referencing \b set_from.
+ *                          If NULL, a previously (or later) set forest will
+ *                          be taken (\ref t8_forest_set_partition, \ref t8_forest_set_balance).
  * \param [in] adapt_fn     The adapt function used on commiting.
  * \param [in] replace_fn   The replace function to be used in \b adapt_fn.
- * \param [in] recursive    A flag specifying whether adaptation is to be done recursively6
+ * \param [in] recursive    A flag specifying whether adaptation is to be done recursively
  *                          or not. If the value is zero, adaptation is not recursive
  *                          and it is recursive otherwise.
+ * \note This setting can be combined with \ref t8_forest_set_partition and \ref
+ * t8_forest_set_balance. The order in which these operations are executed is always
+ * 1) Adapt 2) Balance 3) Partition
+ * \note This setting may not be combined with \ref t8_forest_set_copy and overwrites
+ * this setting.
  */
 void                t8_forest_set_adapt (t8_forest_t forest,
                                          const t8_forest_t set_from,
@@ -219,14 +237,56 @@ void                t8_forest_set_user_data (t8_forest_t forest, void *data);
  */
 void               *t8_forest_get_user_data (t8_forest_t forest);
 
-/* TODO: define weight callback function */
+/** Set a source forest to be partitioned during commit.
+ * The partitioning is done according to the SFC and each rank is assinged
+ * the same (maybe +1) number of elements.
+ * \param [in, out] forest  The forest.
+ * \param [in]      set_from A second forest that should be partitioned.
+ *                          We take ownership. This can be prevented by
+ *                          referencing \b set_from.
+ *                          If NULL, a previously (or later) set forest will
+ *                          be taken (\ref t8_forest_set_adapt, \ref t8_forest_set_balance).
+ * \param [in]      set_for_coarsening CURRENTLY DISABLED. If true, then the partitions
+ *                          are choose such that coarsening an element once is a process local
+ *                          operation.
+ * \note This setting can be combined with \ref t8_forest_set_adapt and \ref
+ * t8_forest_set_balance. The order in which these operations are executed is always
+ * 1) Adapt 2) Balance 3) Partition
+ * If \ref t8_forest_set_balance is called with the \a no_repartition parameter set as
+ * false, it is not neccessary to call \ref t8_forest_set_partition additionally.
+ * \note This setting may not be combined with \ref t8_forest_set_copy and overwrites
+ * this setting.
+ */
 void                t8_forest_set_partition (t8_forest_t forest,
                                              const t8_forest_t set_from,
                                              int set_for_coarsening);
 
+/** Set a source forest to be balanced during commit.
+ * A forest is said to be balanced if each element has face neighbors of level
+ * at most +1 or -1 of the element's level.
+ * \param [in, out] forest  The forest.
+ * \param [in]      set_from A second forest that should be balanced.
+ *                          We take ownership. This can be prevented by
+ *                          referencing \b set_from.
+ *                          If NULL, a previously (or later) set forest will
+ *                          be taken (\ref t8_forest_set_adapt, \ref t8_forest_set_partition)
+ * \param [in]      no_repartition Balance constructs several intermediate forest that
+ *                          are refined from each other. In order to maintain a balanced load
+ *                          these forest are repartitioned in each round and the resulting
+ *                          forest is load-balanced per default.
+ *                          If this behaviour is not desired, \a no_repartition should be
+ *                          set to true.
+ *                          If \a no_repartition is false, an additional call of \ref t8_forest_set_partition is not
+ *                          neccessary.
+ * \note This setting can be combined with \ref t8_forest_set_adapt and \ref
+ * t8_forest_set_balance. The order in which these operations are executed is always
+ * 1) Adapt 2) Balance 3) Partition.
+ * \note This setting may not be combined with \ref t8_forest_set_copy and overwrites
+ * this setting.
+ */
 void                t8_forest_set_balance (t8_forest_t forest,
                                            const t8_forest_t set_from,
-                                           int do_balance);
+                                           int no_repartition);
 
 /** Enable or disable the creation of a layer of ghost elements.
  * On default no ghosts are created.
@@ -587,6 +647,8 @@ void                t8_forest_element_coordinate (t8_forest_t forest,
                                                   int corner_number,
                                                   double *coordinates);
 
+/* TODO: if set level and partition/adapt/balance all give NULL, then
+ * refine uniformly and partition/adapt/balance the unfiform forest. */
 /** Build a uniformly refined forest on a coarse mesh.
  * \param [in]      cmesh     A coarse mesh.
  * \param [in]      scheme    An eclass scheme.
