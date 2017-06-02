@@ -676,11 +676,11 @@ t8_forest_t         t8_forest_new_uniform (t8_cmesh_t cmesh,
  * \note This is equivalent to calling \ref t8_forest_init, \ref t8_forest_set_adapt,
  * \red t8_forest_set_ghost, and \ref t8_forest_commit
  */
-t8_forest_t
-t8_forest_new_adapt (t8_forest_t forest_from,
-                     t8_forest_adapt_t adapt_fn,
-                     t8_forest_replace_t replace_fn,
-                     int recursive, int do_face_ghost, void *user_data);
+t8_forest_t         t8_forest_new_adapt (t8_forest_t forest_from,
+                                         t8_forest_adapt_t adapt_fn,
+                                         t8_forest_replace_t replace_fn,
+                                         int recursive, int do_face_ghost,
+                                         void *user_data);
 
 /** Increase the reference counter of a forest.
  * \param [in,out] forest       On input, this forest must exist with positive
