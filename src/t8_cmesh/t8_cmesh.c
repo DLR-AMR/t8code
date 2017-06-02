@@ -1761,7 +1761,7 @@ t8_cmesh_new_line_zigzag (sc_MPI_Comm comm)
 t8_cmesh_t
 t8_cmesh_prism_cake (sc_MPI_Comm comm, int num_of_prisms)
 {
-    /*TODO: M_PI nehmen*/
+#if 1
   int                 i, j;
   /*num_of_prisms Prism a 6 vertices a 3 coords */
   /* TODO: This seems too be a lot of memory, can we also get by with only
@@ -1806,6 +1806,21 @@ t8_cmesh_prism_cake (sc_MPI_Comm comm, int num_of_prisms)
   }
   t8_cmesh_commit (cmesh, comm);
   T8_FREE(vertices);
+#endif
+#if 0
+  t8_cmesh_t cmesh;
+  double vertices[18] = { 0, 0, 0,
+                       1, 0, 0,
+                       1, 0, 1,
+                       0, 1, 0,
+                       1, 1, 0,
+                       1, 1, 1,};
+  t8_cmesh_init(&cmesh);
+  t8_cmesh_set_tree_class(cmesh, 0, T8_ECLASS_PRISM);
+  t8_cmesh_set_tree_vertices(cmesh, 0, t8_get_package_id (), 0, vertices, 6);
+  t8_cmesh_commit(cmesh, comm);
+#endif
+
   return cmesh;
 }
 

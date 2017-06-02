@@ -24,17 +24,19 @@
 #include "t8_dline_bits.h"
 #include "t8_dtri_bits.h"
 
-int my_pow( int base, int expo){
-    int i;
-    int result = 1;
-    T8_ASSERT(base > 0 && expo >= 0);
-    if(expo == 0){
-        return result;
-    }
-    for(i = 0; i < expo; i++){
-        result *= base;
-    }
+int
+my_pow (int base, int expo)
+{
+  int                 i;
+  int                 result = 1;
+  T8_ASSERT (base > 0 && expo >= 0);
+  if (expo == 0) {
     return result;
+  }
+  for (i = 0; i < expo; i++) {
+    result *= base;
+  }
+  return result;
 }
 
 int
@@ -65,12 +67,12 @@ t8_dprism_compare (const t8_dprism_t * p1, const t8_dprism_t * p2)
   id1 = t8_dprism_linear_id (p1, maxlvl);
   id2 = t8_dprism_linear_id (p2, maxlvl);
   if (id1 == id2) {
-  /* The linear ids are the same, the prism with the smaller level
-  * is considered smaller */
-  return p1->line.level - p2->line.level;
+    /* The linear ids are the same, the prism with the smaller level
+     * is considered smaller */
+    return p1->line.level - p2->line.level;
   }
   /* return negativ if id1 < id2, zero if id1 = id2, positive if id1 >
-  id2 */
+     id2 */
   return id1 < id2 ? -1 : id1 != id2;
 }
 
@@ -83,16 +85,19 @@ t8_dprism_init_linear_id (t8_dprism_t * p, int level, uint64_t id)
   int                 triangles_of_size_i = 1;
 
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
-  T8_ASSERT (id < my_pow(T8_DPRISM_CHILDREN, level));
+  T8_ASSERT (id < my_pow (T8_DPRISM_CHILDREN, level));
 
   for (i = 0; i <= level; i++) {
     /*Get the number of the i-th prism and get the related triangle number
      * then multiplicate it by the number of triangles of level size.*/
-    tri_id += ((id % T8_DPRISM_CHILDREN) % T8_DTRI_CHILDREN) * triangles_of_size_i;
+    tri_id +=
+      ((id % T8_DPRISM_CHILDREN) % T8_DTRI_CHILDREN) * triangles_of_size_i;
 
     /*If id % 8 is larger than 3, the prism is in the upper part of the
      * parent prism. => line_id + 2^i*/
-    line_id += (id % T8_DPRISM_CHILDREN) / T8_DTRI_CHILDREN * my_pow(T8_DLINE_CHILDREN, i);
+    line_id +=
+      (id % T8_DPRISM_CHILDREN) / T8_DTRI_CHILDREN *
+      my_pow (T8_DLINE_CHILDREN, i);
 
     /*Each Prism divides into 8 children */
     id /= T8_DPRISM_CHILDREN;
@@ -131,22 +136,22 @@ t8_dprism_child_id (const t8_dprism_t * p)
 int
 t8_dprism_is_familypv (t8_dprism_t ** fam)
 {
-  int                 i,j;
-  t8_dtri_t         **tri_fam = T8_ALLOC(t8_dtri_t *, T8_DTRI_CHILDREN);
+  int                 i, j;
+  t8_dtri_t         **tri_fam = T8_ALLOC (t8_dtri_t *, T8_DTRI_CHILDREN);
   t8_dline_t        **line_fam = T8_ALLOC (t8_dline_t *, T8_DLINE_CHILDREN);
   int                 is_family = 1;
 
   for (i = 0; i < T8_DLINE_CHILDREN; i++) {
-      for(j = 0; j < T8_DTRI_CHILDREN; j++){
-          tri_fam[j] =  &fam[j + i * T8_DTRI_CHILDREN]->tri;
-      }
+    for (j = 0; j < T8_DTRI_CHILDREN; j++) {
+      tri_fam[j] = &fam[j + i * T8_DTRI_CHILDREN]->tri;
+    }
     is_family = is_family
       && t8_dtri_is_familypv ((const t8_dtri_t **) tri_fam);
   }
   for (i = 0; i < T8_DTRI_CHILDREN; i++) {
-      for(j = 0; j < T8_DLINE_CHILDREN; j++){
-          line_fam[j] = &fam[j * T8_DTRI_CHILDREN + i]->line;
-      }
+    for (j = 0; j < T8_DLINE_CHILDREN; j++) {
+      line_fam[j] = &fam[j * T8_DTRI_CHILDREN + i]->line;
+    }
     /*Proof for line_family and equality of triangles in both planes */
     is_family = is_family
       && t8_dline_is_familypv ((const t8_dline_t **) line_fam)
@@ -166,7 +171,7 @@ t8_dprism_is_familypv (t8_dprism_t ** fam)
 void
 t8_dprism_child (const t8_dprism_t * p, int childid, t8_dprism_t * child)
 {
-    T8_ASSERT (0 <= childid && childid < T8_DPRISM_CHILDREN);
+  T8_ASSERT (0 <= childid && childid < T8_DPRISM_CHILDREN);
   T8_ASSERT (p->line.level == p->tri.level);
 
   t8_dtri_child (&p->tri, childid % T8_DTRI_CHILDREN, &child->tri);
@@ -206,19 +211,19 @@ t8_dprism_successor (const t8_dprism_t * p, t8_dprism_t * succ, int level)
     /*Zero out the bits of higher level, caused by recursion */
 #if 1
     succ->tri.x =
-      (succ->
-       tri.x >> (T8_DPRISM_MAXLEVEL - level + 1)) << (T8_DPRISM_MAXLEVEL -
-                                                      level + 1);
+      (succ->tri.
+       x >> (T8_DPRISM_MAXLEVEL - level + 1)) << (T8_DPRISM_MAXLEVEL - level +
+                                                  1);
     succ->tri.y =
-      (succ->
-       tri.y >> (T8_DPRISM_MAXLEVEL - level + 1)) << (T8_DPRISM_MAXLEVEL -
-                                                      level + 1);
+      (succ->tri.
+       y >> (T8_DPRISM_MAXLEVEL - level + 1)) << (T8_DPRISM_MAXLEVEL - level +
+                                                  1);
 #endif
 #if 1
     succ->line.x =
-      (succ->
-       line.x >> (T8_DPRISM_MAXLEVEL - level + 1)) << (T8_DPRISM_MAXLEVEL -
-                                                       level + 1);
+      (succ->line.
+       x >> (T8_DPRISM_MAXLEVEL - level + 1)) << (T8_DPRISM_MAXLEVEL - level +
+                                                  1);
 #endif
     /*Set the level to the actual level */
     succ->line.level = level;
@@ -284,9 +289,10 @@ t8_dprism_linear_id (const t8_dprism_t * p, int level)
   int                 i;
   int                 prisms_of_size_i = 1;
   /*line_level = 2 ^ (level - 1) */
-  int                 line_level = my_pow(T8_DLINE_CHILDREN, level - 1);
+  int                 line_level = my_pow (T8_DLINE_CHILDREN, level - 1);
   /*prism_shift = 2 * 8 ^ (level - 1) */
-  int                 prism_shift = 4 * my_pow(T8_DPRISM_CHILDREN, level - 1);
+  int                 prism_shift =
+    4 * my_pow (T8_DPRISM_CHILDREN, level - 1);
 
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
   T8_ASSERT (p->line.level == p->tri.level);
@@ -297,7 +303,7 @@ t8_dprism_linear_id (const t8_dprism_t * p, int level)
     /*Compute via getting the local id of each ancestor triangle in which
      *elem->tri lies, the prism id, that elem would have, if it lies on the
      * lowest plane of the prism of level 0*/
-      id += (tri_id % T8_DTRI_CHILDREN) * prisms_of_size_i;
+    id += (tri_id % T8_DTRI_CHILDREN) * prisms_of_size_i;
     tri_id /= T8_DTRI_CHILDREN;
     prisms_of_size_i *= T8_DPRISM_CHILDREN;
   }
@@ -309,7 +315,7 @@ t8_dprism_linear_id (const t8_dprism_t * p, int level)
     id += line_id / line_level * prism_shift;
     line_id = (uint64_t) (line_id % line_level);
     prism_shift /= T8_DPRISM_CHILDREN;
-   line_level /= T8_DLINE_CHILDREN;
+    line_level /= T8_DLINE_CHILDREN;
   }
   return id;
 }

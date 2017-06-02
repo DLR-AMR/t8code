@@ -67,13 +67,13 @@ t8_basic_refine_test (t8_eclass_t eclass)
 
   t8_forest_init (&forest);
   t8_forest_init (&forest_adapt);
-  if(eclass == T8_ECLASS_LINE){
-      cmesh = t8_cmesh_new_line_zigzag(sc_MPI_COMM_WORLD);
+  if (eclass == T8_ECLASS_LINE) {
+    cmesh = t8_cmesh_new_line_zigzag (sc_MPI_COMM_WORLD);
   }
-  else if(eclass == T8_ECLASS_PRISM){
-      cmesh = t8_cmesh_prism_geometry(sc_MPI_COMM_WORLD);
+  else if (eclass == T8_ECLASS_PRISM) {
+    cmesh = t8_cmesh_prism_geometry (sc_MPI_COMM_WORLD);
   }
-  else{
+  else {
     cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0);
   }
 
@@ -173,7 +173,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
 
     if (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX
         || eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_TET
-            || eclass == T8_ECLASS_LINE || eclass == T8_ECLASS_PRISM) {
+        || eclass == T8_ECLASS_LINE || eclass == T8_ECLASS_PRISM) {
       t8_forest_commit (forest);
       t8_debugf ("Successfully committed forest.\n");
       t8_forest_write_vtk (forest, "basic");    /* This does nothing right now */

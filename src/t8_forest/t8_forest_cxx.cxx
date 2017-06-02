@@ -116,39 +116,22 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
     break;
   case T8_ECLASS_PRISM:
     /*Prisminterpolation, via height, and triangle */
-    double              tri_vertices[9];
-    /*Get a triangle at the specific height*/
-    for (i = 0; i < 9; i++) {
-      tri_vertices[i] = vertices[i] + corner_coords[2] *
-        (vertices[i + 9] - vertices[i]);
-    }
-    /*Triangular interpolation*/
+    /*Get a triangle at the specific height */
+    double              height[3];
+
     for (i = 0; i < 3; i++) {
       coordinates[i] =
-        len * ((tri_vertices[3 + i] - tri_vertices[i]) * corner_coords[0] +
-               (tri_vertices[6 + i] -
-                tri_vertices[3 + i]) * corner_coords[1]) + vertices[i];
-
+        len * ((vertices[3 + i] - vertices[i]) * corner_coords[0] +
+               (vertices[6 + i] - vertices[3 + i]) * corner_coords[1])
+        + vertices[i];
     }
-    switch (corner_number) {
-    case 0:
-      coordinates[2] = tri_vertices[2] * len + vertices[2];
-      break;
-    case 1:
-      coordinates[2] = tri_vertices[5] * len + vertices[2];
-      break;
-    case 2:
-      coordinates[2] = tri_vertices[8] * len + vertices[2];
-      break;
-    case 3:
-      coordinates[2] = tri_vertices[2] * len + vertices[2];
-      break;
-    case 4:
-      coordinates[2] = tri_vertices[5] * len + vertices[2];
-      break;
-    case 5:
-      coordinates[2] = tri_vertices[8] * len + vertices[2];
-      break;
+    if (corner_number > 2) {
+      for (i = 0; i < 3; i++) {
+        height[i] = vertices[9 + i] - vertices[i];
+      }
+      for (i = 0; i < 3; i++) {
+        coordinates[i] += height[i] * corner_coords[2] * len;
+      }
     }
     break;
   case T8_ECLASS_QUAD:
