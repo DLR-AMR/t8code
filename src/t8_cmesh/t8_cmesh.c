@@ -1798,7 +1798,7 @@ t8_cmesh_prism_cake (sc_MPI_Comm comm, int num_of_prisms)
   }
 
   for (i = 0; i < num_of_prisms; i++) {
-      t8_cmesh_set_join (cmesh, i, (i == (num_of_prisms - 1) ? 0 : i + 1), 2, 1, 0);
+      t8_cmesh_set_join (cmesh, i, (i == (num_of_prisms - 1) ? 0 : i + 1), 1, 2, 0);
   }
   for (i = 0; i < num_of_prisms; i++) {
     t8_cmesh_set_tree_vertices (cmesh, i, t8_get_package_id (), 0,
@@ -1810,11 +1810,11 @@ t8_cmesh_prism_cake (sc_MPI_Comm comm, int num_of_prisms)
 #if 0
   t8_cmesh_t cmesh;
   double vertices[18] = { 0, 0, 0,
-                       1, 0, 0,
-                       1, 0, 1,
-                       0, 1, 0,
-                       1, 1, 0,
-                       1, 1, 1,};
+                       12, 8, 24,
+                       -18, 9, 6,
+                       -2, -6, 3,
+                       10, 2, 7,
+                       -20, 3, 9,};
   t8_cmesh_init(&cmesh);
   t8_cmesh_set_tree_class(cmesh, 0, T8_ECLASS_PRISM);
   t8_cmesh_set_tree_vertices(cmesh, 0, t8_get_package_id (), 0, vertices, 6);
