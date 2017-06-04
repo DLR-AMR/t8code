@@ -127,6 +127,60 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_cxx_t * scheme)
   return level;
 }
 
+int
+t8_forest_is_equal (t8_forest_t forest_a, t8_forest_t forest_b)
+{
+  t8_locidx_t         num_local_trees_a, num_local_trees_b;
+  t8_locidx_t         elems_in_tree_a, elems_in_tree_b;
+  t8_locidx_t         ielem;
+  t8_locidx_t         itree;
+  t8_element_t       *elem_a, *elem_b;
+  t8_eclass_scheme_c *ts_a, *ts_b;
+
+  T8_ASSERT (t8_forest_is_committed (forest_a));
+  T8_ASSERT (t8_forest_is_committed (forest_b));
+
+  /* Check number of trees */
+  num_local_trees_a = t8_forest_get_num_local_trees (forest_a);
+  num_local_trees_b = t8_forest_get_num_local_trees (forest_b);
+  if (num_local_trees_a != num_local_trees_b) {
+    return 0;
+  }
+
+  /* Check element arrays for equality */
+  for (itree = 0; itree < num_local_trees_a; itree++) {
+    /* Check the schemes for equality */
+    ts_a =
+      t8_forest_get_eclass_scheme (forest_a,
+                                   t8_forest_get_tree_class (forest_a,
+                                                             itree));
+    ts_b =
+      t8_forest_get_eclass_scheme (forest_b,
+                                   t8_forest_get_tree_class (forest_b,
+                                                             itree));
+    if (ts_a != ts_b) {
+      return 0;
+    }
+    /* Check the elements for equality */
+    elems_in_tree_a = t8_forest_get_tree_num_elements (forest_a, itree);
+    elems_in_tree_b = t8_forest_get_tree_num_elements (forest_b, itree);
+    if (elems_in_tree_a != elems_in_tree_b) {
+      return 0;
+    }
+    for (ielem = 0; ielem < elems_in_tree_a; ielem++) {
+      /* Get pointers to both elements */
+      elem_a = t8_forest_get_element_in_tree (forest_a, itree, ielem);
+      elem_b = t8_forest_get_element_in_tree (forest_b, itree, ielem);
+      /* check for equality */
+      if (ts_a->t8_element_compare (elem_a, elem_b)) {
+        /* The elements are not equal */
+        return 0;
+      }
+    }
+  }
+  return 1;
+}
+
 /* Given function values at the four edge points of a unit square and
  * a point within that square, interpolate the function value at this point.
  * \param [in]    vertex  An array of size at least dim giving the coordinates of the vertex to interpolate

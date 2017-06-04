@@ -138,6 +138,19 @@ int                 t8_forest_is_initialized (t8_forest_t forest);
  */
 int                 t8_forest_is_committed (t8_forest_t forest);
 
+/** Check whether two committed forests have the same local elements.
+ * \param [in] forest_a The first forest.
+ * \param [in] forest_b The second forest.
+ * \return              True if \a forest_a and \a forest_b do have the same
+ *                      number of local trees and each local tree has the same
+ *                      elements, that is \ref t8_element_compare returns false
+ *                      for each pair of elements of \a forest_a and \a forest_b.
+ * \note This function is not collective. It only returns the state on the current
+ * rank.
+ */
+int                 t8_forest_is_equal (t8_forest_t forest_a,
+                                        t8_forest_t forest_b);
+
 /** Set the cmesh associated to a forest.
  * By default, the forest takes ownership of the cmesh such that it will be
  * destroyed when the forest is destroyed.  To keep ownership of the cmesh,
