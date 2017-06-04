@@ -53,6 +53,17 @@ typedef struct t8_shmem_array *t8_shmem_array_t;
 
 T8_EXTERN_C_BEGIN ();
 
+/** Try to set a shared memory type of a communicator.
+ * If the type was set, returns true, otherwise false.
+ * This will not set the type, if ther already was a type set
+ * on this communicator. \see sc_shmem_set_type
+ * \param [in,out]      comm    The MPI Communicator
+ * \param [in]          type    A shared memory type.
+ * \return                      Non-zero if the type was set. Zero if it wasn't.
+ */
+int                 t8_shmem_set_type (sc_MPI_Comm comm,
+                                       sc_shmem_type_t type);
+
 /** Initialize and allocate a shared memory array structure.
  * \param [in,out]      parray On input this pointer must be non-NULL.
  *                             On return this pointer is set to the new t8_shmem_array.
@@ -121,6 +132,20 @@ t8_gloidx_t        *t8_shmem_array_get_gloidx_array (t8_shmem_array_t array);
  */
 t8_gloidx_t         t8_shmem_array_get_gloidx (t8_shmem_array_t array,
                                                int index);
+
+/** Return a pointer to the data array of a t8_shmem_array.
+ * \param [in]          array The t8_shmem_array.
+ * \return                    A pointer to the data array of \a array.
+ */
+void               *t8_shmem_array_get_array (t8_shmem_array_t array);
+
+/** Return a pointer to an element in a t8_shmem_array.
+ * \param [in]          array The t8_shmem_array.
+ * \param [in]          index The index of an element.
+ * \return              A pointer to the element at \a index in \a array.
+ */
+void               *t8_shmem_array_index (t8_shmem_array_t array,
+                                          size_t index);
 
 /* TODO: implement and comment */
 /* returns true if arrays are equal */

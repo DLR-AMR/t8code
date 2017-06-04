@@ -127,6 +127,65 @@ void                t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
                                                      const t8_dtri_t * t2,
                                                      t8_dtri_t * r);
 
+/** Given a triangle and a face of the triangle, compute all children of
+ * the triangle that touch the face.
+ * \param [in] tri      The triangle.
+ * \param [in] face     A face of \a tri.
+ * \param [in,out] children Allocated triangles, in which the children of \a tri
+ *                      that share a face with \a face are stored.
+ *                      They will be stored in order of their child_id.
+ * \param [in] num_children The number of triangles in \a children. Must match
+ *                      the number of children that touch \a face.
+ */
+void                t8_dtri_children_at_face (const t8_dtri_t * tri,
+                                              int face,
+                                              t8_dtri_t * children[],
+                                              int num_children);
+
+/** Given a face of an triangle and a child number of a child of that face, return the face number
+ * of the child of the triangle that matches the child face.
+ * \param [in]  triangle The triangle.
+ * \param [in]  face    Then number of the face.
+ * \param [in]  face_child  The child number of a child of the face triangle.
+ * \return              The face number of the face of a child of \a triangle
+ *                      that conincides with \a face_child.
+ */
+int                 t8_dtri_face_child_face (const t8_dtri_t * triangle,
+                                             int face, int face_child);
+
+/** Given a triangle and a face of this triangle. If the face lies on the
+ *  tree boundary, return the face number of the tree face.
+ *  If not the return value is arbitrary.
+ * \param [in] t        The triangle.
+ * \param [in] face     The index of a face of \a elem.
+ * \return The index of the tree face that \a face is a subface of, if
+ *         \a face is on a tree boundary.
+ *         Any arbitrary integer if \a is not at a tree boundary.
+ */
+int                 t8_dtri_tree_face (t8_dtri_t * t, int face);
+
+/** Suppose we have two trees that share a common triangle f.
+ *  Given a triangle e that is a subface of f in one of the trees
+ *  and given the orientation of the tree connection, construct the face
+ *  triangle of the respective tree neighbor that logically coincides with e
+ *  but lies in the coordinate system of the neighbor tree.
+ *  \param [in] triangle1     The face triangle.
+ *  \param [in,out] triangle2 On return the face triangle \a triangle1 with respective
+ *                        to the coordinate system of the other tree.
+ *  \param [in] orientation The orientation of the tree-tree connection.
+ *                        \see t8_cmesh_set_join
+ *  \param [in] is_smaller_face Flag to declare whether \a triangle1 belongs to
+ *                        the smaller face. A face f of tree T is smaller than
+ *                        f' of T' if either the eclass of T is smaller or if
+ *                        the classes are equal and f<f'. The orientation is
+ *                        defined in relation to the smaller face.
+ * \note \a triangle1 and \a triangle2 may point to the same element.
+ */
+void                t8_dtri_transform_face (const t8_dtri_t * triangle1,
+                                            t8_dtri_t * triangle2,
+                                            int orientation,
+                                            int is_smaller_face);
+
 /** Test if a triangle lies inside of the root triangle,
  *  that is the triangle of level 0, anchor node (0,0)
  *  and type 0.
@@ -134,6 +193,13 @@ void                t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
  *  \return true    If \a t lies inside of the root triangle.
  */
 int                 t8_dtri_is_inside_root (t8_dtri_t * t);
+
+/** Compute whether a given triangle shares a given face with its root tree.
+ * \param [in] t        The input triangle.
+ * \param [in] face     A face of \a t.
+ * \return              True if \a face is a subface of the triangle's root element.
+ */
+int                 t8_dtri_is_root_boundary (const t8_dtri_t * t, int face);
 
 /** Test if two triangles have the same coordinates, type and level.
  * \return true if \a t1 describes the same triangle as \a t2.

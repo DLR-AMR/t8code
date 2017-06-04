@@ -129,6 +129,43 @@ void                t8_dtet_nearest_common_ancestor (const t8_dtet_t * t1,
                                                      const t8_dtet_t * t2,
                                                      t8_dtet_t * r);
 
+/** Given a tetrahedron and a face of the tetrahedron, compute all children of
+ * the tetrahedron that touch the face.
+ * \param [in] tet      The tetrahedron.
+ * \param [in] face     A face of \a tet.
+ * \param [in,out] children Allocated tetrahedra, in which the children of \a tet
+ *                      that share a face with \a face are stored.
+ *                      They will be stored in order of their child_id.
+ * \param [in] num_children The number of tetrahedra in \a children. Must match
+ *                      the number of children that touch \a face.
+ */
+void                t8_dtet_children_at_face (const t8_dtet_t * tet,
+                                              int face,
+                                              t8_dtet_t * children[],
+                                              int num_children);
+
+/** Given a face of an tetrahedron and a child number of a child of that face, return the face number
+ * of the child of the tetrahedron that matches the child face.
+ * \param [in]  tet     The tetrahedron.
+ * \param [in]  face    Then number of the face.
+ * \param [in]  face_child  The child number of a child of the face tetrahedron.
+ * \return              The face number of the face of a child of \a tetrahedron
+ *                      that conincides with \a face_child.
+ */
+int                 t8_dtet_face_child_face (const t8_dtet_t * tet,
+                                             int face, int face_child);
+
+/** Given a tetrahedron and a face of this tetrahedron. If the face lies on the
+ *  tree boundary, return the face number of the tree face.
+ *  If not the return value is arbitrary.
+ * \param [in] t        The tetrahedron.
+ * \param [in] face     The index of a face of \a elem.
+ * \return The index of the tree face that \a face is a subface of, if
+ *         \a face is on a tree boundary.
+ *         Any arbitrary integer if \a is not at a tree boundary.
+ */
+int                 t8_dtet_tree_face (t8_dtet_t * t, int face);
+
 /** Test if a tetrahedron lies inside of the root tetrahedron,
  *  that is the tetrahedron of level 0, anchor node (0,0,0)
  *  and type 0.
@@ -136,6 +173,13 @@ void                t8_dtet_nearest_common_ancestor (const t8_dtet_t * t1,
  *  \return true    If \a t lies inside of the root tetrahedron.
  */
 int                 t8_dtet_is_inside_root (t8_dtet_t * t);
+
+/** Compute whether a given tetrahedron shares a given face with its root tree.
+ * \param [in] t        The input tet.
+ * \param [in] face     A face of \a t.
+ * \return              True if \a face is a subface of the tet's root element.
+ */
+int                 t8_dtet_is_root_boundary (const t8_dtet_t * t, int face);
 
 /** Test if two tetrahedra have the same coordinates, type and level.
  * \return true if \a t1 describes the same tetrahedron as \a t2.

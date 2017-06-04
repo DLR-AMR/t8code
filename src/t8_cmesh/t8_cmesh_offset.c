@@ -345,7 +345,6 @@ t8_offset_all_owners_of_tree (int mpisize, t8_gloidx_t gtree,
   /* Add the first process to the array */
   entry = (int *) sc_array_push (owners);
   *entry = proc;
-  t8_debugf ("[H] add %i as owner\n", proc);
   /* Now we parse through all processes bigger than the first one until
    * they do not have the tree anymore. */
   while (proc >= 0) {
@@ -356,7 +355,6 @@ t8_offset_all_owners_of_tree (int mpisize, t8_gloidx_t gtree,
       /* Otherwise we found all owners */
       entry = (int *) sc_array_push (owners);
       *entry = proc;
-      t8_debugf ("[H] add %i as owner\n", proc);
     }
   }
 }

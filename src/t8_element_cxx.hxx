@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_element.h
+/** \file t8_element_cxx.hxx
  * This file defines basic operations on an element in a refinement tree.
  *
  * All operations work for all element classes by providing a virtual function table.
@@ -36,12 +36,17 @@
 
 T8_EXTERN_C_BEGIN ();
 
+/* TODO: Implement a set of rules that have to hold between different eclass,
+ *       i.e. lines must have a greater or equal maxlevel than quads and triangles.
+ *       Check whether this rules are fulfilled in the construction of a scheme.
+ */
+
 /** This struct holds virtual functions for a particular element class. */
 struct t8_eclass_scheme
 {
   /** This scheme defines the operations for a particular element class. */
 protected:
-  size_t element_size;              /**< The size in bytes of an element of class \a eclass */
+  size_t element_size;                          /**< The size in bytes of an element of class \a eclass */
   void               *ts_context;               /**< Anonymous implementation context. */
 
 public:
@@ -89,6 +94,7 @@ public:
    * \param [in] source The element whose entries will be copied to \b dest.
    * \param [in,out] dest This element's entries will be overwritted with the
    *                    entries of \b source.
+   * \note \a source and \a dest may point to the same element.
    */
   virtual void        t8_element_copy (const t8_element_t * source,
                                        t8_element_t * dest) = 0;
@@ -134,6 +140,13 @@ public:
   virtual void        t8_element_sibling (const t8_element_t * elem,
                                           int sibid,
                                           t8_element_t * sibling) = 0;
+
+  /** Compute the number of face of a given element.
+   * \param [in] elem The element.
+   * \return          The number of faces of \a elem.
+   */
+  virtual int         t8_element_num_faces (const t8_element_t * elem) = 0;
+
   /** Return the number of children of an element when it is refined.
    * \param [in] ts     The virtual table for this element class.
    * \param [in] elem   The element whose number of children is returned.
@@ -159,6 +172,7 @@ public:
    *                              tetrahedron or a pyramid depending on \a childid.
    *                              This can be checked by \a t8_element_child_eclass.
    *                              On output, a valid element.
+   * It is valid to call this function with elem = child.
    * \see t8_element_child_eclass
    */
   virtual void        t8_element_child (const t8_element_t * elem,
@@ -172,6 +186,7 @@ public:
    * \param [in,out] c    The storage for these \a length elements must exist
    *                      and match the element class in the children's ordering.
    *                      On output, all children are valid.
+   * It is valid to call this function with elem = c[0].
    * \see t8_element_num_children
    * \see t8_element_child_eclass
    */
@@ -208,6 +223,104 @@ public:
                                       const t8_element_t * elem2,
                                       t8_element_t * nca) = 0;
 
+  /** Compute the elmement class of the face of an element.
+   * \param [in] elem     The element.
+   * \param [in] face     A face of \a elem.
+   * \return              The element class of the face.
+   * I.e. T8_ECLASS_LINE for quads, T8_ECLASS_TRIANGLE for tets
+   *      and depending on the face number either T8_ECLASS_QUAD or
+   *      T8_ECLASS_TRIANGLE for prisms.
+   */
+  virtual t8_eclass_t t8_element_face_class (const t8_element_t * elem,
+                                             int face) = 0;
+
+  /** Given an element and a face of the element, compute all children of
+   * the element that touch the face.
+   * \param [in] elem     The element.
+   * \param [in] face     A face of \a elem.
+   * \param [in,out] children Allocated elements, in which the children of \a elem
+   *                      that share a face with \a face are stored.
+   *                      They will be stored in order of that faces' child_id as
+   *                      a child of \a face.
+   * \param [in] num_children The number of elements in \a children. Must match
+   *                      the number of children that touch \a face.
+   *                      \ref t8_element_num_face_children
+    * It is valid to call this function with elem = children[0].
+   */
+  virtual void        t8_element_children_at_face (const t8_element_t * elem,
+                                                   int face,
+                                                   t8_element_t * children[],
+                                                   int num_children) = 0;
+
+  /** Given a face of an element and a child number of a child of that face, return the face number
+   * of the child of the element that matches the child face.
+   * \verbatim
+      x ---- x   x      x           x ---- x
+      |      |   |      |           |   |  | <-- f
+      |      |   |      x           |   x--x
+      |      |   |                  |      |
+      x ---- x   x                  x ---- x
+       elem    face  face_child    Returns the face number f
+     \endverbatim
+
+   * \param [in]  elem    The element.
+   * \param [in]  face    Then number of the face.
+   * \param [in]  face_child  The child number of a child of the face element.
+   * \return              The face number of the face of a child of \a elem
+   *                      that conincides with \a face_child.
+   */
+  virtual int         t8_element_face_child_face (const t8_element_t * elem,
+                                                  int face, int face_child) =
+    0;
+
+  /** Given an element and a face of this element. If the face lies on the
+   *  tree boundary, return the face number of the tree face.
+   *  If not the return value is arbitrary.
+   * \param [in] elem     The element.
+   * \param [in] face     The index of a face of \a elem.
+   * \return The index of the tree face that \a face is a subface of, if
+   *         \a face is on a tree boundary.
+   *         Any arbitrary integer if \a is not at a tree boundary.
+   */
+  virtual int         t8_element_tree_face (const t8_element_t * elem,
+                                            int face) = 0;
+
+  /** Suppose we have two trees that share a common face f.
+   *  Given an element e that is a subface of f in one of the trees
+   *  and given the orientation of the tree connection, construct the face
+   *  element of the respective tree neighbor that logically coincides with e
+   *  but lies in the coordinate system of the neighbor tree.
+   *  \param [in] elem1     The face element.
+   *  \param [in,out] elem2 On return the face elment \a elem1 with respective
+   *                        to the coordinate system of the other tree.
+   *  \param [in] orientation The orientation of the tree-tree connection.
+   *                        \see t8_cmesh_set_join
+   *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
+   *                        the smaller face. A face f of tree T is smaller than
+   *                        f' of T' if either the eclass of T is smaller or if
+   *                        the classes are equal and f<f'. The orientation is
+   *                        defined in relation to the smaller face.
+   * \note \a elem1 and \a elem2 may point to the same element.
+   */
+  virtual void        t8_element_transform_face (const t8_element_t * elem1,
+                                                 t8_element_t * elem2,
+                                                 int orientation,
+                                                 int is_smaller_face) = 0;
+
+  /** Given a boundary face inside a root tree's face construct
+   *  the element inside the root tree that has the given face as a
+   *  face.
+   * \param [in] face     A face element.
+   * \param [in,out] elem An allocated element. The entries will be filled with
+   *                      the data of the element that has \a face as a face and
+   *                      lies within the root tree.
+   * \param [in] root_face The index of the face of the root tree in which \a face
+   *                      lies.
+   */
+  virtual void        t8_element_extrude_face (const t8_element_t * face,
+                                               t8_element_t * elem,
+                                               int root_face) = 0;
+
   /** Construct the boundary element at a specific face.
    * \param [in] elem     The input element.
    * \param [in] face     The index of the face of which to construct the
@@ -226,6 +339,32 @@ public:
   virtual void        t8_element_boundary (const t8_element_t * elem,
                                            int min_dim, int length,
                                            t8_element_t ** boundary) = 0;
+
+  /** Compute whether a given element shares a given face with its root tree.
+   * \param [in] elem     The input element.
+   * \param [in] face     A face of \a elem.
+   * \return              True if \a face is a subface of the element's root element.
+   */
+  virtual int         t8_element_is_root_boundary (const t8_element_t * elem,
+                                                   int face) = 0;
+
+    /** Construct the face neighbor of a given element if this face neighbor
+     * is inside the root tree. Return 0 otherwise.
+   * \param [in] elem The element to be considered.
+   * \param [in,out] neigh If the face neighbor of \a elem algon \a face is inside
+   *                  the root tree, this element's data is filled with the
+   *                  data of the face neighbor. Otherwise the data can be modified
+   *                  arbitrarily.
+   * \param [in] face The number of the face along which the neighbor should be
+   *                  constructed.
+   * \return          True if \a neigh is inside the root tree.
+   *                  False if not. In this case \a neigh's data can be arbitrary
+   *                  on output.
+   */
+  virtual int         t8_element_face_neighbor_inside (const t8_element_t *
+                                                       elem,
+                                                       t8_element_t * neigh,
+                                                       int face) = 0;
 
   /** Initialize the entries of an allocated element according to a
    *  given linear id in a uniform refinement.

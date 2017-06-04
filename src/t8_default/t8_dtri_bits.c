@@ -89,6 +89,10 @@ compute_type (const t8_dtri_t * t, int level)
 void
 t8_dtri_copy (const t8_dtri_t * t, t8_dtri_t * dest)
 {
+  if (t == dest) {
+    /* Do nothing if the are already the same. */
+    return;
+  }
   memcpy (dest, t, sizeof (t8_dtri_t));
 }
 
@@ -100,8 +104,10 @@ t8_dtri_parent (const t8_dtri_t * t, t8_dtri_t * parent)
 
   T8_ASSERT (t->level > 0);
 
+#ifdef T8_ENABLE_DEBUG
 #ifdef T8_DTRI_TO_DTET
-  parent->eclass = t->eclass;
+  parent->eclass_int8 = t->eclass_int8;
+#endif
 #endif
 
   h = T8_DTRI_LEN (t->level);
@@ -246,6 +252,7 @@ t8_dtri_ancestor (const t8_dtri_t * t, int level, t8_dtri_t * ancestor)
   ancestor->level = level;
 }
 
+/* Compute the coordinates of a given vertex of a triangle/tet */
 void
 t8_dtri_compute_coords (const t8_dtri_t * t, int vertex,
                         t8_dtri_coord_t coordinates[T8_DTRI_DIM])
@@ -295,6 +302,7 @@ t8_dtri_compute_coords (const t8_dtri_t * t, int vertex,
 #endif
 }
 
+/* Compute the coordinates of each vertex of a triangle/tet */
 void
 t8_dtri_compute_all_coords (const t8_dtri_t * t,
                             t8_dtri_coord_t
@@ -335,6 +343,23 @@ t8_dtri_compute_all_coords (const t8_dtri_t * t,
 #ifdef T8_DTRI_TO_DTET
   coordinates[2][ei] += h;
   coordinates[2][ej] += h;
+#endif
+#ifdef T8_ENABLE_DEBUG
+  /* We check whether the results are the same as with the
+   * t8_dtri_compute_coords function.
+   */
+  {
+    int                 ivertex;
+    t8_dtri_coord_t     coords[T8_DTRI_DIM];
+    for (ivertex = 0; ivertex < T8_DTRI_FACES; ivertex++) {
+      t8_dtri_compute_coords (t, ivertex, coords);
+      T8_ASSERT (coords[0] == coordinates[ivertex][0]);
+      T8_ASSERT (coords[1] == coordinates[ivertex][1]);
+#ifdef T8_DTRI_TO_DTET
+      T8_ASSERT (coords[2] == coordinates[ivertex][2]);
+#endif
+    }
+  }
 #endif
 }
 
@@ -391,28 +416,51 @@ t8_dtri_childrenpv (const t8_dtri_t * t, t8_dtri_t * c[T8_DTRI_CHILDREN])
   int                 i;
   int                 Bey_cid;
   int                 vertex;
+  t8_dtri_type_t      t_type = t->type;
 
   T8_ASSERT (t->level < T8_DTRI_MAXLEVEL);
   t8_dtri_compute_all_coords (t, t_coordinates);
-  c[0]->x = t->x;
-  c[0]->y = t->y;
+  /* We use t_coordinates[0] for t->x,y,z to ensure that the function is valid
+   * if called with t = c[0]. If we would use t->x later it would be the newly
+   * computed value c[0]->x. */
+  c[0]->x = t_coordinates[0][0];        /* t->x */
+  c[0]->y = t_coordinates[0][1];        /* t->y */
 #ifdef T8_DTRI_TO_DTET
-  c[0]->z = t->z;
+  c[0]->z = t_coordinates[0][2];        /* t->z */
 #endif
-  c[0]->type = t->type;
+  c[0]->type = t_type;
   c[0]->level = level;
   for (i = 1; i < T8_DTRI_CHILDREN; i++) {
-    Bey_cid = t8_dtri_index_to_bey_number[t->type][i];
+    Bey_cid = t8_dtri_index_to_bey_number[t_type][i];
     vertex = t8_dtri_beyid_to_vertex[Bey_cid];
     /* i-th anchor coordinate of child is (X_(0,i)+X_(vertex,i))/2
      * where X_(i,j) is the j-th coordinate of t's ith node */
-    c[i]->x = (t->x + t_coordinates[vertex][0]) >> 1;
-    c[i]->y = (t->y + t_coordinates[vertex][1]) >> 1;
+    c[i]->x = (t_coordinates[0][0] + t_coordinates[vertex][0]) >> 1;
+    c[i]->y = (t_coordinates[0][1] + t_coordinates[vertex][1]) >> 1;
 #ifdef T8_DTRI_TO_DTET
-    c[i]->z = (t->z + t_coordinates[vertex][2]) >> 1;
+    c[i]->z = (t_coordinates[0][2] + t_coordinates[vertex][2]) >> 1;
 #endif
-    c[i]->type = t8_dtri_type_of_child[t->type][Bey_cid];
+    c[i]->type = t8_dtri_type_of_child[t_type][Bey_cid];
     c[i]->level = level;
+#ifdef T8_ENABLE_DEBUG
+    {
+      /* We check whether the child computed here equals to the child
+       * computed in the t8_dtri_child function. */
+      t8_dtri_t           check_child;
+      /* We use c[0] here instead of t, since we explicitly allow t=c[0] as input
+       * and thus the values of t may be already overwritten. However the only
+       * difference from c[0] to t is in the level. */
+      c[0]->level--;
+      t8_dtri_child (c[0], i, &check_child);
+      T8_ASSERT (check_child.x == c[i]->x && check_child.y == c[i]->y);
+      T8_ASSERT (check_child.type == c[i]->type
+                 && check_child.level == c[i]->level);
+#ifdef T8_DTRI_TO_DTET
+      T8_ASSERT (check_child.z == c[i]->z);
+#endif
+      c[0]->level++;
+    }
+#endif
   }
 }
 
@@ -582,10 +630,163 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
 #endif
 }
 
+void
+t8_dtri_children_at_face (const t8_dtri_t * tri, int face,
+                          t8_dtri_t * children[], int num_children)
+{
+  int                 child_ids[T8_DTRI_FACE_CHILDREN], i;
+
+  T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
+  T8_ASSERT (num_children == T8_DTRI_FACE_CHILDREN);
+
+#ifndef T8_DTRI_TO_DTET
+  /* Triangle version */
+  /* The first child is '0' for faces 1 and 2 and '1+type' for face 0 */
+  child_ids[0] = face == 0 ? 1 + tri->type : 0;
+  /* The second child is '1 + type' for face 2 and '3' for faces 0 and 1 */
+  child_ids[1] = face == 2 ? 1 + tri->type : 3;
+#else
+  /* Tetrahedron version */
+  for (i = 0; i < T8_DTET_FACE_CHILDREN; i++) {
+    child_ids[i] = t8_dtet_face_child_id_by_type[tri->type][face][i];
+  }
+#endif
+
+  /* Compute the children at the face.
+   * We revert the order to compute children[0] last, since the usage
+   * allows for tri == children[0].
+   */
+  for (i = T8_DTRI_FACE_CHILDREN - 1; i >= 0; i--) {
+    t8_dtri_child (tri, child_ids[i], children[i]);
+  }
+}
+
+int
+t8_dtri_tree_face (t8_dtri_t * t, int face)
+{
+  T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
+  /* TODO: Assert if boundary */
+#ifndef T8_DTRI_TO_DTET
+  /* For triangles of type 0 the face number coincides with the number of the
+   * root tree face. Triangles of type 1 cannot lie on the boundary of the
+   * tree and thus the return value can be arbitrary. */
+  return face;
+#else
+  /* For tets only tets of type not 3 can have tree boundary faces.
+   * All these tets of type not 0 (types 1, 2, 4, and 5) can only have one of
+   * their faces as boundary face. */
+  switch (t->type) {
+  case 0:
+    return face;
+    break;
+  case 1:
+    return 0;
+    break;                      /* face 0 of the tet is the boundary face */
+  case 2:
+    return 1;
+    break;                      /* face 2     "                "          */
+  case 3:
+    return -1;
+    break;                      /* no face                                */
+  case 4:
+    return 2;
+    break;                      /* face 1     "                "          */
+  case 5:
+    return 3;
+    break;                      /* face 3     "                "          */
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+#endif
+}
+
+int
+t8_dtri_face_child_face (const t8_dtri_t * triangle, int face, int face_child)
+{
+  T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
+  T8_ASSERT (0 <= face_child && face_child < T8_DTRI_FACE_CHILDREN);
+#ifndef T8_DTRI_TO_DTET
+  /* For triangles the face number of the children is the same as the one
+   * of the parent */
+  return face;
+#else
+  {
+    t8_dtet_type_t      face_type;
+    int                 is_middle_face = 0;
+    switch (face) {
+    case 0:
+      return 0;
+    case 1:
+    case 2:
+      /* If the given face_child is at the middle of the face (child 2 for type 0
+       * triangles, child 1 for type 1 triangles), then the face number at the
+       * tetrahedron is different. */
+      face_type = t8_dtet_type_face_to_boundary[triangle->type][face][1];
+      if ((face_type == 0 && face_child == 2)
+          || (face_type == 1 && face_child == 1)) {
+        is_middle_face = 1;
+      }
+      return is_middle_face ? face ^ 3 : face;  /* face = 1 -> 2 : 1, face = 2 -> 1 : 2 */
+    case 3:
+      return 3;
+    default:
+      SC_ABORT_NOT_REACHED ();
+    }
+  }
+#endif
+}
+
+#ifndef T8_DTRI_TO_DTET
+/* This function has only a triangle version. */
+void
+t8_dtri_transform_face (const t8_dtri_t * triangle1,
+                        t8_dtri_t * triangle2,
+                        int orientation, int is_smaller_face)
+{
+  t8_dtri_coord_t     h = T8_DTRI_LEN (triangle1->level);
+  triangle2->level = triangle1->level;
+  triangle2->type = triangle1->type;
+  /*
+   * The corners of the triangle are enumerated like this
+   *        type 0                    type 1
+   *      also root tree
+   *         v_2                     v_1  v_2
+   *         x                         x--x
+   *        /|                         | /
+   *       / |                         |/
+   *      x--x                         x
+   *    v_0  v_1                      v_0
+   *
+   */
+  switch (orientation) {
+  case 0:
+    t8_dtri_copy (triangle1, triangle2);
+    break;
+  case 1:
+    triangle2->y = triangle1->y;
+    triangle2->x = T8_DTRI_ROOT_LEN - triangle1->x - h;
+    break;
+  case 2:
+    triangle2->x = T8_DTRI_ROOT_LEN - triangle1->y - h;
+    triangle2->y = T8_DTRI_ROOT_LEN - triangle1->x - h;
+  }
+}
+#endif
+
 int
 t8_dtri_is_inside_root (t8_dtri_t * t)
 {
   int                 is_inside;
+
+  if (t->level == 0) {
+    /* A level 0 simplex is only inside the root simplex if it
+     * is the root simplex. */
+    return t->type == 0 && t->x == 0 && t->y == 0
+#ifdef T8_DTRI_TO_DTET
+      && t->z == 0
+#endif
+      ;
+  }
   is_inside = (t->x >= 0 && t->x < T8_DTRI_ROOT_LEN) && (t->y >= 0) &&
 #ifdef T8_DTRI_TO_DTET
     (t->z >= 0) &&
@@ -593,13 +794,78 @@ t8_dtri_is_inside_root (t8_dtri_t * t)
 #ifndef T8_DTRI_TO_DTET
     (t->y - t->x <= 0) && (t->y == t->x ? t->type == 0 : 1) &&
 #else
-    (t->z - t->x <= 0) &&
-    (t->y - t->z <= 0) &&
-    (t->z == t->x ? (3 <= t->type && 5 <= t->type) : 1) &&
-    (t->y == t->x ? (1 <= t->type && 3 <= t->type) : 1) &&
+    (t->z - t->x <= 0) && (t->y - t->z <= 0) && (t->z == t->x ? (0 <= t->type && t->type < 3) : 1) &&   /* types 0, 1, 2 */
+    (t->y == t->z ? (0 == t->type || 4 <= t->type) : 1) &&      /* types 0, 4, 5 */
+    /* If the anchor is on the x-y-z diagonal, only type 0 tets are inside root. */
+    ((t->x == t->y && t->y == t->z) ? t->type == 0 : 1) &&
 #endif
     1;
+#ifdef T8_ENABLE_DEBUG
+  /* Check if is_inside gives the same result as is_ancestor for the root element. */
+  {
+    t8_dtri_t           root;
+    t8_dtri_init_root (&root);
+    T8_ASSERT (is_inside == t8_dtri_is_ancestor (&root, t));
+  }
+#endif
   return is_inside;
+}
+
+int
+t8_dtri_is_root_boundary (const t8_dtri_t * t, int face)
+{
+  /* Dependend on the type and the face we have to check
+   * different conditions */
+#ifndef T8_DTRI_TO_DTET
+  switch (t->type) {
+  case 0:
+    switch (face) {
+    case 0:
+      return t->x == T8_DTRI_ROOT_LEN - T8_DTRI_LEN (t->level);
+    case 1:
+      return t->x == t->y;
+    case 2:
+      return t->y == 0;
+    default:
+      SC_ABORT_NOT_REACHED ();
+    }
+  case 1:
+    return 0;                   /* type 1 triangles are never at the boundary */
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+#else
+  switch (t->type) {
+  case 0:
+    switch (face) {
+    case 0:
+      return t->x == T8_DTET_ROOT_LEN - T8_DTET_LEN (t->level);
+    case 1:
+      return t->x == t->z;
+    case 2:
+      return t->y == t->z;
+    case 3:
+      return t->y == 0;
+    }
+  case 1:
+    /* type 1 tets are only boundary at face 0 */
+    return face == 0 && t->x == T8_DTET_ROOT_LEN - T8_DTET_LEN (t->level);
+  case 2:
+    /* type 1 tets are only boundary at face 2 */
+    return face == 2 && t->x == t->z;
+  case 3:
+    /* type 3 tets are never at the root boundary */
+    return 0;
+  case 4:
+    /* type 4 tets are only boundary at face 1 */
+    return face == 1 && t->y == t->z;
+  case 5:
+    /* type 5 tets are only boundary at face 3 */
+    return face == 3 && t->y == 0;
+  }
+#endif
+  SC_ABORT_NOT_REACHED ();
+  return 0;                     /* Prevent compiler warning */
 }
 
 int
@@ -711,27 +977,37 @@ t8_dtri_is_ancestor (const t8_dtri_t * t, const t8_dtri_t * c)
              || (n2 == n1 && c->type == 1 - type_t));
 #else
     /* 3D */
+    /* Compute the coordinate directions according to this table:
+     *    type(t) 0  1  2  3  4  5
+     * n1         x  x  y  y  z  z
+     * n2         y  z  z  x  x  y
+     * dir3       z  y  x  z  y  x
+     */
       /* *INDENT-OFF* */
-      n1 = type_t / 2 == 0 ? c->x - t->x :
-           type_t / 2 == 2 ? c->z - t->z : c->y - t->y;
-      n2 = (type_t + 3) % 6 == 0 ? c->x - t->x :
-           (type_t + 3) % 6 == 2 ? c->z - t->z : c->y - t->y;
-      dir3 = type_t % 3 == 2 ? c->x - t->x :
-             type_t % 3 == 0 ? c->z - t->z : c->y - t->y;
+      n1 = type_t / 2 == 0 ? c->x - t->x :  /* type(t) is 0 or 1 */
+           type_t / 2 == 2 ? c->z - t->z : c->y - t->y; /* type(t) is (4 or 5) or (2 or 3) */
+      n2 = (type_t + 1) / 2 == 2 ? c->x - t->x : /* type(t) is 3 or 4 */
+           (type_t + 1) / 2 == 1 ? c->z - t->z : c->y - t->y; /* type(t) is (1 or 2) or (0 or 5) */
+      dir3 = type_t % 3 == 2 ? c->x - t->x : /* type(t) is 2 or 5 */
+             type_t % 3 == 0 ? c->z - t->z : c->y - t->y; /* type(t) is (0 or 3) or (1 or 4) */
       sign = (type_t % 2 == 0) ? 1 : -1;
       /* *INDENT-ON* */
 
     type_t += 6;                /* We need to compute modulo six and want
-                                   to avoid negative numbers when substracting from type_t. */
+                                   to avoid negative numbers when subtracting from type_t. */
+
     return !(n1 >= T8_DTRI_LEN (t->level) || n2 < 0 || dir3 - n1 > 0
-             || n2 - dir3 > 0 || (dir3 == n1
+             || n2 - dir3 > 0 || (dir3 == n2
                                   && (c->type == (type_t + sign * 1) % 6
-                                      || t->type == (type_t + sign * 2) % 6
-                                      || t->type == (type_t + sign * 3) % 6))
-             || (dir3 == n2
+                                      || c->type == (type_t + sign * 2) % 6
+                                      || c->type == (type_t + sign * 3) % 6))
+             || (dir3 == n1
                  && (c->type == (type_t - sign * 1) % 6
-                     || t->type == (type_t - sign * 2) % 6
-                     || t->type == (type_t - sign * 3) % 6)));
+                     || c->type == (type_t - sign * 2) % 6
+                     || c->type == (type_t - sign * 3) % 6))
+             /* On the x-y-z diagonal only tets of the same type can be
+              * ancestor of each other. */
+             || (dir3 == n2 && n2 == n1 && type_t - 6 != c->type));
 #endif
   }
   else {

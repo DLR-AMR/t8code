@@ -23,6 +23,8 @@
 #include "t8_default_common_cxx.hxx"
 #include "t8_default_tet_cxx.hxx"
 #include "t8_dtet_bits.h"
+#include "t8_dtri_bits.h"
+#include "t8_dtet_connectivity.h"
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -87,6 +89,12 @@ t8_default_scheme_tet_c::t8_element_sibling (const t8_element_t * elem,
 }
 
 int
+t8_default_scheme_tet_c::t8_element_num_faces (const t8_element_t * elem)
+{
+  return T8_DTET_FACES;
+}
+
+int
 t8_default_scheme_tet_c::t8_element_num_children (const t8_element_t * elem)
 {
   return T8_DTET_CHILDREN;
@@ -140,6 +148,178 @@ t8_default_scheme_tet_c::t8_element_nca (const t8_element_t * elem1,
   t8_default_tet_t   *c = (t8_default_tet_t *) nca;
 
   t8_dtet_nearest_common_ancestor (t1, t2, c);
+}
+
+t8_eclass_t
+  t8_default_scheme_tet_c::t8_element_face_class (const t8_element_t * elem,
+                                                  int face)
+{
+  return T8_ECLASS_TRIANGLE;
+}
+
+void
+t8_default_scheme_tet_c::t8_element_children_at_face (const t8_element_t *
+                                                      elem, int face,
+                                                      t8_element_t *
+                                                      children[],
+                                                      int num_children)
+{
+  const t8_dtet_t    *t = (const t8_dtet_t *) elem;
+  t8_dtet_t         **c = (t8_dtet_t **) children;
+  T8_ASSERT (0 <= face && face < T8_DTET_FACES);
+  T8_ASSERT (num_children == T8_DTET_FACE_CHILDREN);
+
+  t8_dtet_children_at_face (t, face, c, num_children);
+}
+
+int
+t8_default_scheme_tet_c::t8_element_face_child_face (const t8_element_t *
+                                                     elem, int face,
+                                                     int face_child)
+{
+  T8_ASSERT (0 <= face && face < T8_DTET_FACES);
+  T8_ASSERT (0 <= face && face < T8_DTET_FACE_CHILDREN);
+  return t8_dtet_face_child_face ((const t8_dtet_t *) elem, face, face_child);
+}
+
+int
+t8_default_scheme_tet_c::t8_element_tree_face (const t8_element_t * elem,
+                                               int face)
+{
+  T8_ASSERT (0 <= face && face < T8_DTET_FACES);
+  return t8_dtet_tree_face ((t8_dtet_t *) elem, face);
+}
+
+/* Construct the inner element from a boundary element. */
+/* This function is defined here instead of in t8_dri_bits.c since
+ * the compile logic does not allow for t8_dtri_t and t8_dtet_t to exist
+ * both in t8_dtri_bits.c. This would be needed by an implementation, at least
+ * for tets. */
+void
+t8_default_scheme_tet_c::t8_element_extrude_face (const t8_element_t * face,
+                                                  t8_element_t * elem,
+                                                  int root_face)
+{
+  const t8_dtri_t    *b = (const t8_dtri_t *) face;
+  t8_dtet_t          *t = (t8_dtet_t *) elem;
+
+  T8_ASSERT (0 <= root_face && root_face < T8_DTET_FACES);
+  t->level = b->level;
+#ifdef T8_ENABLE_DEBUG
+  t->eclass_int8 = T8_ECLASS_TET;
+#endif
+  switch (root_face) {
+    /* Since the root triangle may have a different scale then the
+     * root tetrahedron, we have to rescale the coordinates. */
+  case 0:
+    t->type = b->type == 0 ? 0 : 1;
+    t->x = T8_DTET_ROOT_LEN - T8_DTET_LEN (t->level);
+    t->y = ((int64_t) b->x * T8_DTET_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+    t->z = ((int64_t) b->y * T8_DTET_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+    break;
+  case 1:
+    t->type = b->type == 0 ? 0 : 2;
+    t->x = t->z = ((int64_t) b->x * T8_DTET_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+    t->y = ((int64_t) b->y * T8_DTET_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+    break;
+  case 2:
+    t->type = b->type == 0 ? 0 : 4;
+    t->x = ((int64_t) b->x * T8_DTET_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+    t->y = t->z = ((int64_t) b->y * T8_DTET_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+    break;
+  case 3:
+    t->type = b->type == 0 ? 0 : 5;
+    t->x = ((int64_t) b->x * T8_DTET_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+    t->y = 0;
+    t->z = ((int64_t) b->y * T8_DTET_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+}
+
+/* Construct the boundary element at a specific face. */
+/* This function is defined here instead of in t8_dtet_bits.c since
+ * the compile logic does not allow for t8_dtri_t and t8_dtet_t to exist
+ * both in t8_dtet_bits.c. */
+void
+t8_default_scheme_tet_c::t8_element_boundary_face (const t8_element_t * elem,
+                                                   int face,
+                                                   t8_element_t * boundary)
+{
+  const t8_default_tet_t *t = (const t8_default_tet_t *) elem;
+  t8_dtri_t          *b = (t8_dtri_t *) boundary;
+  int                 face_cat;
+
+  T8_ASSERT (0 <= face && face < T8_DTET_FACES);
+  /* The level of the boundary element is the same as the quadrant's level */
+  b->level = t->level;
+  /*
+   * Depending on t's type and face, b's coordinates and type are defined
+   * through t's coordinates. The faces can be divided into 3 category.
+   * category 1: b.x = t.z b.y = t.x - t.y
+   * category 2: b.x = t.x b.y = t.z
+   * category 3: b.x = t.x b.y = t.y
+   *
+   * This coordinate then has to be rescaled, since a tet has side length
+   * T8_DTET_ROOT_LEN and a triangle T8_DTRI_ROOT_LEN
+   *
+   */
+  face_cat = t8_dtet_type_face_to_boundary[t->type][face][0];
+  b->type = t8_dtet_type_face_to_boundary[t->type][face][1];
+  switch (face_cat) {
+  case 1:
+    b->x = t->z * T8_DTRI_ROOT_BY_DTET_ROOT;
+    b->y = t->y * T8_DTRI_ROOT_BY_DTET_ROOT;
+    break;
+  case 2:
+    b->x = t->x * T8_DTRI_ROOT_BY_DTET_ROOT;
+    b->y = t->z * T8_DTRI_ROOT_BY_DTET_ROOT;
+    break;
+  case 3:
+    b->x = t->x * T8_DTRI_ROOT_BY_DTET_ROOT;
+    b->y = t->y * T8_DTRI_ROOT_BY_DTET_ROOT;
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+}
+
+void
+t8_default_scheme_tet_c::t8_element_boundary (const t8_element_t * elem,
+                                              int min_dim, int length,
+                                              t8_element_t ** boundary)
+{
+  int                 iface;
+
+  T8_ASSERT (length == T8_DTET_FACES);
+  for (iface = 0; iface < T8_DTET_FACES; iface++) {
+    t8_element_boundary_face (elem, iface, boundary[iface]);
+  }
+}
+
+int
+t8_default_scheme_tet_c::t8_element_is_root_boundary (const t8_element_t *
+                                                      elem, int face)
+{
+  const t8_dtet_t    *t = (const t8_dtet_t *) elem;
+
+  return t8_dtet_is_root_boundary (t, face);
+}
+
+int
+t8_default_scheme_tet_c::t8_element_face_neighbor_inside (const t8_element_t *
+                                                          elem,
+                                                          t8_element_t *
+                                                          neigh, int face)
+{
+  const t8_dtet_t    *t = (const t8_dtet_t *) elem;
+  t8_dtet_t          *n = (t8_dtet_t *) neigh;
+
+  T8_ASSERT (0 <= face && face < T8_DTET_FACES);
+  (void) t8_dtet_face_neighbour (t, face, n);
+  /* return true if neigh is inside the root */
+  return t8_dtet_is_inside_root (n);
 }
 
 void

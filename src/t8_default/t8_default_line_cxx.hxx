@@ -82,6 +82,13 @@ public:
     SC_ABORT ("This function is not implemented yet.\n");
   }
 
+  /** Compute the number of face of a given element. */
+  virtual int         t8_element_num_faces (const t8_element_t * elem)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+    return 0;                   /* suppresses compiler warning */
+  }
+
   /** Return the number of children of an element when it is refined. */
   virtual int         t8_element_num_children (const t8_element_t * elem);
 
@@ -115,6 +122,52 @@ public:
     SC_ABORT ("This function is not implemented yet.\n");
   }
 
+  /** Compute the elmement class of the face of an element. */
+  virtual t8_eclass_t t8_element_face_class (const t8_element_t * elem,
+                                             int face);
+
+  /** Given an element and a face of the element, compute all children of
+   * the element that touch the face. */
+  virtual void        t8_element_children_at_face (const t8_element_t * elem,
+                                                   int face,
+                                                   t8_element_t * children[],
+                                                   int num_children)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
+
+  /** Given a face of an element and a child number of a child of that face, return the face number
+   * of the child of the element that matches the child face. */
+  virtual int         t8_element_face_child_face (const t8_element_t * elem,
+                                                  int face, int face_child)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
+
+  /** Return the tree face id given a boundary face. */
+  virtual int         t8_element_tree_face (const t8_element_t * elem,
+                                            int face)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
+
+  /** Transform the coordinates of a line considered as boundary element
+   *  in a tree-tree connection. */
+  virtual void        t8_element_transform_face (const t8_element_t * elem1,
+                                                 t8_element_t * elem2,
+                                                 int orientation,
+                                                 int is_smaller_face);
+
+  /** Given a boundary face inside a root tree's face construct
+   *  the element inside the root tree that has the given face as a
+   *  face. */
+  virtual void        t8_element_extrude_face (const t8_element_t * face,
+                                               t8_element_t * elem,
+                                               int root_face)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
+
   /** Construct the boundary element at a specific face. */
   virtual void        t8_element_boundary_face (const t8_element_t * elem,
                                                 int face,
@@ -127,6 +180,28 @@ public:
   virtual void        t8_element_boundary (const t8_element_t * elem,
                                            int min_dim, int length,
                                            t8_element_t ** boundary)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
+
+  /** Compute whether a given element shares a given face with its root tree.
+   * \param [in] elem     The input element.
+   * \param [in] face     A face of \a elem.
+   * \return              True if \a face is a subface of the element's root element.
+   */
+  virtual int         t8_element_is_root_boundary (const t8_element_t * elem,
+                                                   int face)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+    return 0;                   /* suppresses compiler warning */
+  }
+
+  /** Construct the face neighbor of a given element if this face neighbor
+   * is inside the root tree. Return 0 otherwise. */
+  virtual int         t8_element_face_neighbor_inside (const t8_element_t *
+                                                       elem,
+                                                       t8_element_t * neigh,
+                                                       int face)
   {
     SC_ABORT ("This function is not implemented yet.\n");
   }

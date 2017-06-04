@@ -108,6 +108,22 @@ void                t8_dline_init_linear_id (t8_dline_t * l, int level,
 void                t8_dline_successor (const t8_dline_t * l,
                                         t8_dline_t * succ, int level);
 
+/** Suppose we have two trees that share a common face f.
+ *  Given a Line e that is a subface of f in one of the trees
+ *  and given the orientation of the tree connection, construct the face
+ *  Line of the respective tree neighbor that logically coincides with e
+ *  but lies in the coordinate system of the neighbor tree.
+ *  \param [in] elem1     The face element.
+ *  \param [in,out] elem2 On return the face elment \a elem1 with respective
+ *                        to the coordinate system of the other tree.
+ *  \param [in] orientation The orientation of the tree-tree connection.
+ *                        0 if vertex 0 of face 0 coincides with vertex 0 of face 1.
+ *                        1 if vertex 0 of face 0 coincides with vertex 1 of face 1.
+ */
+void                t8_dline_transform_face (const t8_dline_t * line1,
+                                             t8_dline_t * line2,
+                                             int orientation);
+
 /** Compute the first descendant of a line at a given level. This is the descendant of
  * the line in a uniform level refinement that has the smallest id.
  * \param [in] l        Line whose descendant is computed.

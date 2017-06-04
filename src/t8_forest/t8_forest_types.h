@@ -32,8 +32,10 @@
 #include <t8_cmesh.h>
 #include <t8_element.h>
 #include <t8_forest/t8_forest_adapt.h>
+#include <t8_forest.h>
 
 typedef struct t8_profile t8_profile_t; /* Defined below */
+typedef struct t8_forest_ghost *t8_forest_ghost_t;      /* Defined below */
 
 typedef enum t8_forest_from
 {
@@ -65,10 +67,12 @@ typedef struct t8_forest
   t8_forest_from_t    from_method;      /**< Method to derive from \b set_from. */
   t8_forest_replace_t set_replace_fn;   /**< Replace function. Called when \b from_method
                                              is set to T8_FOREST_FROM_ADAPT. */
-  t8_forest_adapt_t   set_adapt_fn;     /** refinement and coarsen function. Called when \b from_method
+  t8_forest_adapt_t   set_adapt_fn;     /**< refinement and coarsen function. Called when \b from_method
                                              is set to T8_FOREST_FROM_ADAPT. */
   int                 set_adapt_recursive; /**< Flag to decide whether coarsen and refine
                                                 are carried out recursive */
+  int                 do_ghost;         /**< If True, a ghost layer will be created when the forest is committed. */
+  t8_ghost_type_t     ghost_type;       /**< If a ghost layer will be created, the type of neighbors that count as ghost. */
   void               *user_data;        /**< Pointer for arbitrary user data. \see t8_forest_set_user_data. */
   int                 committed;        /**< \ref t8_forest_commit called? */
   int                 mpisize;          /**< Number of MPI processes. */
@@ -78,9 +82,20 @@ typedef struct t8_forest
   t8_gloidx_t         last_local_tree;
   t8_gloidx_t         global_num_trees; /**< The total number of global trees */
   sc_array_t         *trees;
+  t8_forest_ghost_t   ghosts;           /**< The ghost elements. \see t8_forest_ghost.h */
   t8_shmem_array_t    element_offsets; /**< If partitioned, for each process the global index
                                             of its first element. Since it is memory consuming,
                                             it is usually only constructed when needed and otherwise unallocated. */
+  t8_shmem_array_t    global_first_desc; /**< If partitioned, for each process the linear id (at maxlevel) of its
+                                              first element's first descendant.
+                                             \ref t8_element_set_linear_id. Stores 0 for empty processes.
+                                            Since it is memory consuming,
+                                            it is usually only constructed when needed and otherwise unallocated. */
+  t8_shmem_array_t    tree_offsets; /**<  If partitioned for each process the global index of its first local tree
+                                          or -(first local tree) - 1
+                                          if the first tree on that process is shared.
+                                          Since this is memory consuming we only construct it when needed.
+                                          This array follows the same logic as \a tree_offsets in \a t8_cmesh_t */
 
   t8_locidx_t         local_num_elements;  /**< Number of elements on this processor. */
   t8_gloidx_t         global_num_elements; /**< Number of elements on all processors. */
@@ -108,6 +123,9 @@ t8_tree_struct_t;
  * it is nonzero, various runtimes and data measurements are stored here.
  * \see t8_cmesh_set_profiling and \see t8_cmesh_print_profile
  */
+
+/** The number of statistics collected by a profile struct. */
+#define T8_PROFILE_NUM_STATS 10
 typedef struct t8_profile
 {
   t8_locidx_t         partition_elements_shipped; /**< The number of elements this process has
@@ -118,13 +136,49 @@ typedef struct t8_profile
                                                  last partition call. */
   int                 partition_procs_sent;  /**< The number of different processes this process has send
                                             local elements to in the last partition call. */
+  t8_locidx_t         ghosts_shipped;       /**< The number of ghost elements this process has sent to other processes. */
+  t8_locidx_t         ghosts_received;      /**< The number of ghost elements this process has received from other processes. */
+  int                 ghosts_remotes;       /**< The number of processes this process have sent ghost elements to (and received from). */
   double              partition_runtime; /**< The runtime of  the last call to \a t8_cmesh_partition. */
-  double              commit_runtime; /**< The runtim of the last call to \a t8_cmesh_commit. */
+  double              ghost_runtime;    /**< The runtime of the last call to \a t8_forest_ghost_create. */
+  double              commit_runtime; /**< The runtime of the last call to \a t8_cmesh_commit. */
 
 }
 t8_profile_struct_t;
 
-/** The number of statistics collected by a profile struct */
-#define T8_PROFILE_NUM_STATS 6
+/* TODO: document */
+typedef struct t8_forest_ghost
+{
+  t8_refcount_t       rc; /**< The reference counter. */
+
+  t8_locidx_t         num_ghosts_elements; /**< The count of non-local ghost elements */
+  t8_locidx_t         num_remote_elements; /**< The count of local elements that are ghost to another process. */
+
+  t8_ghost_type_t     ghost_type;   /**< Describes which neighbors are considered ghosts. */
+  sc_array_t         *ghost_trees;      /* ghost tree data:
+                                           global_id.
+                                           eclass.
+                                           elements. In linear id order */
+  sc_hash_t          *global_tree_to_ghost_tree;        /* Indexes into ghost_trees.
+                                                           Given a global tree id I give the index
+                                                           i such that the tree is in ghost_trees[i]
+                                                         */
+  sc_hash_t          *process_offsets;  /* Given a process, return the first ghost tree and
+                                           whithin it the first element of that process. */
+#if 0
+  /* TODO: obsolete by remote_processes below. */
+  sc_array_t         *processes;        /* ranks of the processes */
+#endif
+  sc_hash_array_t    *remote_ghosts;    /* array of local trees that have ghost elements for another process.
+                                           for each tree an array of t8_element_t * pointing to the local ghost elements.
+                                           It is a hash table, hashed with the rank of a remote process.
+                                           Sorted within each process by linear id.
+                                         */
+  sc_array_t         *remote_processes; /* The ranks of the processes for which local elements are ghost.
+                                           Array of int's. */
+
+  sc_mempool_t       *glo_tree_mempool;
+  sc_mempool_t       *proc_offset_mempool;
+} t8_forest_ghost_struct_t;
 
 #endif /* ! T8_FOREST_TYPES_H! */

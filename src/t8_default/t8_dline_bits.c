@@ -162,6 +162,36 @@ t8_dline_successor (const t8_dline_t * l, t8_dline_t * succ, int level)
 }
 
 void
+t8_dline_transform_face (const t8_dline_t * line1, t8_dline_t * line2,
+                         int orientation)
+{
+  T8_ASSERT (orientation == 0 || orientation == 1);
+
+  /* The transformed line has the same level */
+  line2->level = line1->level;
+  if (orientation == 0) {
+    /* If orientation is zero then the transformed line is the same
+     * as the original line. */
+    line2->x = line1->x;
+  }
+  else {
+    t8_dline_coord_t    h;
+    T8_ASSERT (orientation == 1);
+    /* Otherwise the lines are placed like this;
+     *
+     * 0 ---|_|------- N
+     * N ---|_|------- 0
+     *
+     * With N = 2^maxlvl the root lenght, |_| marks the line elements within their trees.
+     * Thus, the x-coordinate of line2 is given as N-line1.x - h.
+     * Where h is the lenght of the line element.
+     */
+    h = T8_DLINE_LEN (line1->level);
+    line2->x = T8_DLINE_ROOT_LEN - line1->x - h;
+  }
+}
+
+void
 t8_dline_first_descendant (const t8_dline_t * l, t8_dline_t * s, int level)
 {
   T8_ASSERT (level >= l->level && level <= T8_DLINE_MAXLEVEL);
