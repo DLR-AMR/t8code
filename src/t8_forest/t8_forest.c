@@ -423,9 +423,13 @@ t8_forest_commit (t8_forest_t forest)
         /* The forest should also be partitioned/balanced.
          * We first adapt the forest, then balance and then partition */
         t8_forest_t         forest_adapt;
+
         t8_forest_init (&forest_adapt);
         /* forest_adapt should not change ownership of forest->set_from */
         t8_forest_ref (forest->set_from);
+        /* set user data of forest to forest_adapt */
+        t8_forest_set_user_data (forest_adapt,
+                                 t8_forest_get_user_data (forest));
         /* Construct an intermediate, adapted forest */
         t8_forest_set_adapt (forest_adapt, forest->set_from,
                              forest->set_adapt_fn, forest->set_replace_fn,
@@ -433,6 +437,9 @@ t8_forest_commit (t8_forest_t forest)
         t8_forest_commit (forest_adapt);
         /* The new forest will be partitioned/balanced from forest_adapt */
         forest->set_from = forest_adapt;
+        /* Set the user data of forest_from to forest_adapt */
+        t8_forest_set_user_data (forest_adapt,
+                                 t8_forest_get_user_data (forest_from));
       }
       else {
         /* This forest should only be adapted */
@@ -448,6 +455,10 @@ t8_forest_commit (t8_forest_t forest)
         t8_forest_t         forest_balance;
         /* we construct an intermediate, balanced forest */
         t8_forest_init (&forest_balance);
+        if (forest_from == forest->set_from) {
+          /* forest_balance should not change ownership of forest->set_from */
+          t8_forest_ref (forest->set_from);
+        }
         t8_forest_set_balance (forest_balance, forest->set_from,
                                forest->set_balance ==
                                T8_FOREST_BALANCE_NO_REPART);
@@ -480,6 +491,10 @@ t8_forest_commit (t8_forest_t forest)
       t8_forest_partition (forest);
     }
 
+    if (forest_from != forest->set_from) {
+      /* decrease reference count of intermediate input forest, possibly destroying it */
+      t8_forest_unref (&forest->set_from);
+    }
     /* reset forest->set_from */
     forest->set_from = forest_from;
     /* decrease reference count of input forest, possibly destroying it */
