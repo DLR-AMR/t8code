@@ -281,7 +281,7 @@ t8_cmesh_save_tree_attribute (t8_cmesh_t cmesh, FILE * fp)
     /* Write the attributes that are vertices */
     vertices = (double *) t8_cmesh_trees_get_attribute (cmesh->trees, itree,
                                                         t8_get_package_id (),
-                                                        0, &att_size);
+                                                        0, &att_size, 0);
     if (vertices != NULL) {
       /* We have an attribute that is stored with key 0, we treat it as tree vertices */
       num_vertices = t8_eclass_num_vertices[tree->eclass];
@@ -836,9 +836,8 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
   SC_CHECK_MPI (mpiret);
 
   T8_ASSERT (mpisize >= num_files);
-  if (sc_shmem_get_type (comm) == SC_SHMEM_NOT_SET) {
-    sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
-  }
+  /* Try to set the comm type */
+  t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
   /* First primitive loading strategy:
    * each process with rank smaller than number of files
    * loads a file.

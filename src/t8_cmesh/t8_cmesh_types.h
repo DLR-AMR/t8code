@@ -121,16 +121,11 @@ typedef struct t8_cmesh
                                        on this process. Zero if the cmesh is not partitioned. -1 if this processor is empty. */
   int8_t              first_tree_shared;/**< If partitioned true if the first tree on this process is also the last tree on the next process.
                                              Always zero if num_local_trees = 0 */
-  /* TODO: deprecated, replaced by offset */
-  /* TODO: make t8_shmem object that stores comm, for debugging element size and
-   *       size */
-#if 0
-  t8_gloidx_t        *tree_offsets;  /**< If partitioned for each process the global index of its first local tree
+
+  t8_shmem_array_t    tree_offsets;/**< If partitioned for each process the global index of its first local tree
                                         or -(first local tree) - 1
                                         if the first tree on that process is shared.
                                         Since this is very memory consuming we only fill it when needed. */
-#endif
-  t8_shmem_array_t    tree_offsets;
 #ifdef T8_ENABLE_DEBUG
   t8_locidx_t         inserted_trees; /**< Count the number of inserted trees to
                                            check at commit if it equals the total number. */
@@ -142,6 +137,11 @@ typedef struct t8_cmesh
 }
 t8_cmesh_struct_t;
 
+/* TODO: cghost could be the same type as ctree.
+ *       treeid for ghosts then negative?!
+ *       1. typedef cghost ctree
+ *       2. completely replace
+ */
 /* TODO: document */
 typedef struct t8_cghost
 {
@@ -149,6 +149,10 @@ typedef struct t8_cghost
   t8_eclass_t         eclass; /**< The eclass of this ghost. */
   size_t              neigh_offset; /** Offset to the array of face neighbors of this ghost.
                                         This count has to be added to the address of the ghost to get its face neighbors. */
+  size_t              att_offset;    /**< Adding this offset to the adress of the ghost
+                                       yields the array of attribute_info entries */
+  /* TODO: Could be a size_t */
+  int                 num_attributes; /**< The number of attributes at this ghost */
 }
 t8_cghost_struct_t;
 
@@ -219,6 +223,10 @@ typedef struct t8_cmesh_trees
   sc_array_t         *from_proc;        /* array of t8_part_tree, one for each process */
   int                *tree_to_proc;     /* for each tree its process */
   int                *ghost_to_proc;    /* for each ghost its process */
+  sc_hash_t          *ghost_globalid_to_local_id;       /* A hash table storing the map
+                                                           global_id -> local_id for the ghost trees.
+                                                           The local_id is the local ghost id starting at num_local_trees  */
+  sc_mempool_t       *global_local_mempool;     /* Memory pool for the entries in the hash table */
 }
 t8_cmesh_trees_struct_t;
 
@@ -228,7 +236,8 @@ typedef struct t8_part_tree
   char               *first_tree;       /* Stores the trees, the ghosts and the attributes.
                                            The last 2*sizeof(t8_topidx) bytes store num_trees and num_ghosts */
   t8_locidx_t         first_tree_id;    /* local tree_id of the first tree. -1 if num_trees = 0 */
-  t8_locidx_t         first_ghost_id;   /* TODO: document. -1 if num_ghost=0 */
+  t8_locidx_t         first_ghost_id;   /* TODO: document. -1 if num_ghost=0, 0 for the first part, (not num_local_trees!)
+                                           0 <= first_ghost_id < num_ghosts */
   t8_locidx_t         num_trees;
   t8_locidx_t         num_ghosts;
 }

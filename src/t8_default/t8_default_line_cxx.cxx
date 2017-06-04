@@ -74,6 +74,28 @@ t8_default_scheme_line_c::t8_element_child (const t8_element_t * elem,
   t8_dline_child (l, childid, c);
 }
 
+t8_eclass_t
+  t8_default_scheme_line_c::t8_element_face_class (const t8_element_t * elem,
+                                                   int face)
+{
+  return T8_ECLASS_VERTEX;
+}
+
+void
+t8_default_scheme_line_c::t8_element_transform_face (const t8_element_t *
+                                                     elem1,
+                                                     t8_element_t * elem2,
+                                                     int orientation,
+                                                     int is_smaller_face)
+{
+  T8_ASSERT (orientation == 0 || orientation == 1);
+
+  /* We can ignore is_smaller_face, since for lines the orientation is independent
+   * of the face. */
+  t8_dline_transform_face ((const t8_dline_t *) elem1, (t8_dline_t *) elem2,
+                           orientation);
+}
+
 void
 t8_default_scheme_line_c::t8_element_set_linear_id (t8_element_t * elem,
                                                     int level, uint64_t id)

@@ -22,8 +22,9 @@
 
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_types.h>
-#include <t8_cmesh/t8_cmesh_offset.h>
+#include <t8_forest/t8_forest_private.h>
 #include <t8_forest.h>
+#include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_element_cxx.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
@@ -104,7 +105,7 @@ t8_forest_partition_create_offsets (t8_forest_t forest)
   t8_debugf ("Building offsets for forest %p\n", forest);
   comm = forest->mpicomm;
   /* Set the shmem array type of comm */
-  sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
+  t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
   /* Initialize the offset array as a shmem array
    * holding mpisize+1 many t8_gloidx_t */
   t8_shmem_array_init (&forest->element_offsets, sizeof (t8_gloidx_t),
@@ -117,6 +118,122 @@ t8_forest_partition_create_offsets (t8_forest_t forest)
                             forest->element_offsets, 1, T8_MPI_GLOIDX);
   t8_shmem_array_set_gloidx (forest->element_offsets, forest->mpisize,
                              forest->global_num_elements);
+}
+
+void
+t8_forest_partition_create_first_desc (t8_forest_t forest)
+{
+  sc_MPI_Comm         comm;
+  uint64_t            local_first_desc;
+  t8_element_t       *first_element, *first_desc;
+  t8_eclass_scheme_c *ts;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  T8_ASSERT (forest->global_first_desc == NULL);
+  t8_debugf ("Building global first descendants for forest %p\n", forest);
+  comm = forest->mpicomm;
+
+  if (forest->global_first_desc == NULL) {
+    /* Set the shmem array type of comm */
+    t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
+    /* Initialize the offset array as a shmem array
+     * holding mpisize+1 many uint64_t to store the elements linear ids */
+    t8_shmem_array_init (&forest->global_first_desc, sizeof (uint64_t),
+                         forest->mpisize, comm);
+  }
+  /* Assert whether the array is set up correctly */
+  T8_ASSERT (t8_shmem_array_get_elem_count (forest->global_first_desc) ==
+             (size_t) forest->mpisize);
+  T8_ASSERT (t8_shmem_array_get_elem_size (forest->global_first_desc) ==
+             sizeof (uint64_t));
+  T8_ASSERT (t8_shmem_array_get_comm (forest->global_first_desc) == comm);
+  /* Get a pointer to the first local element. */
+  first_element = t8_forest_get_element (forest, 0, NULL);
+  if (first_element == NULL) {
+    /* This process is empty, we store 0 in the array */
+    local_first_desc = 0;
+  }
+  else {
+    /* This process is not empty, the element was found, so we compute
+     * its first descendant. */
+    /* Get the eclass_scheme of the element. */
+    ts = t8_forest_get_eclass_scheme (forest,
+                                      t8_forest_get_tree_class (forest, 0));
+    ts->t8_element_new (1, &first_desc);
+    ts->t8_element_first_descendant (first_element, first_desc);
+    /* Compute the linear id of the descendant. */
+    local_first_desc =
+      ts->t8_element_get_linear_id (first_desc, ts->t8_element_maxlevel ());
+    ts->t8_element_destroy (1, &first_desc);
+  }
+  /* Collect all first global indices in the array */
+#ifdef T8_ENABLE_DEBUG
+#ifdef SC_ENABLE_MPI
+  {
+    /* We assert that we use the correct data size in the allgather call. */
+    int                 mpiret, size;
+    mpiret = MPI_Type_size (sc_MPI_UNSIGNED_LONG_LONG, &size);
+    SC_CHECK_MPI (mpiret);
+    T8_ASSERT (size == sizeof (uint64_t));
+  }
+#endif
+#endif
+  t8_shmem_array_allgather (&local_first_desc, 1,
+                            sc_MPI_UNSIGNED_LONG_LONG,
+                            forest->global_first_desc, 1,
+                            sc_MPI_UNSIGNED_LONG_LONG);
+#ifdef T8_ENABLE_DEBUG
+  {
+    int                 iproc;
+    char                buffer[BUFSIZ] = { };
+    uint64_t            desc_id;
+
+    for (iproc = 0; iproc < forest->mpisize; iproc++) {
+      desc_id = *(uint64_t *) t8_shmem_array_index (forest->global_first_desc,
+                                                    iproc);
+      snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer),
+                " %llu,", (long long unsigned) desc_id);
+    }
+    t8_debugf ("[H] first_desc: %s\n", buffer);
+  }
+#endif
+}
+
+void
+t8_forest_partition_create_tree_offsets (t8_forest_t forest)
+{
+  t8_gloidx_t         tree_offset;
+  sc_MPI_Comm         comm;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  comm = forest->mpicomm;
+  /* *INDENT-OFF* */
+  /* Calculate this process's tree offset */
+  tree_offset =
+    t8_forest_first_tree_shared (forest) ?
+        -forest->first_local_tree - 1 : forest->first_local_tree;
+  /* *INDENT-ON* */
+  if (forest->tree_offsets == NULL) {
+    /* Set the shmem array type of comm */
+    t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
+    /* Only allocate the shmem array, if it is not already allocated */
+    t8_shmem_array_init (&forest->tree_offsets, sizeof (t8_gloidx_t),
+                         forest->mpisize + 1, comm);
+  }
+  /* Assert whether the array is set up correctly */
+  T8_ASSERT (t8_shmem_array_get_elem_count (forest->tree_offsets) ==
+             (size_t) forest->mpisize + 1);
+  T8_ASSERT (t8_shmem_array_get_elem_size (forest->tree_offsets) ==
+             sizeof (t8_gloidx_t));
+  T8_ASSERT (t8_shmem_array_get_comm (forest->tree_offsets) == comm);
+  /* gather all tree offsets from all processes */
+  t8_shmem_array_allgather (&tree_offset, 1, T8_MPI_GLOIDX,
+                            forest->tree_offsets, 1, T8_MPI_GLOIDX);
+  /* Store the global number of trees at the entry mpisize in the array */
+  t8_shmem_array_set_gloidx (forest->tree_offsets, forest->mpisize,
+                             forest->global_num_trees);
 }
 
 /* Calculate the new element_offset for forest from
@@ -138,7 +255,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
 
   T8_ASSERT (forest->element_offsets == NULL);
   /* Set the shmem array type to comm */
-  sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
+  t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
   /* Initialize the shmem array */
   t8_shmem_array_init (&forest->element_offsets, sizeof (t8_gloidx_t),
                        forest->mpisize + 1, comm);
@@ -280,7 +397,7 @@ t8_forest_partition_tree_first_last_el (t8_tree_t tree,
   /* return true if the last element that we send is also the last
    * element of the tree */
   if (last_element_send - tree->elements_offset
-      == tree->elements.elem_count - 1) {
+      == (t8_locidx_t) tree->elements.elem_count - 1) {
     return 1;
   }
   return 0;
@@ -789,9 +906,9 @@ t8_forest_partition (t8_forest_t forest)
   t8_forest_partition_compute_new_offset (forest);
   t8_forest_partition_given (forest);
 
-  T8_ASSERT (t8_forest_get_num_local_trees (forest_from)
+  T8_ASSERT ((size_t) t8_forest_get_num_local_trees (forest_from)
              == forest_from->trees->elem_count);
-  T8_ASSERT (t8_forest_get_num_local_trees (forest)
+  T8_ASSERT ((size_t) t8_forest_get_num_local_trees (forest)
              == forest->trees->elem_count);
 
   if (forest->profile != NULL) {

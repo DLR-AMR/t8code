@@ -92,6 +92,12 @@ t8_default_scheme_hex_c::t8_element_sibling (const t8_element_t * elem,
 }
 
 int
+t8_default_scheme_hex_c::t8_element_num_faces (const t8_element_t * elem)
+{
+  return P8EST_FACES;
+}
+
+int
 t8_default_scheme_hex_c::t8_element_num_children (const t8_element_t * elem)
 {
   return P8EST_CHILDREN;
@@ -155,6 +161,167 @@ t8_default_scheme_hex_c::t8_element_nca (const t8_element_t * elem1,
                                  (p8est_quadrant_t *) nca);
 }
 
+t8_eclass_t
+  t8_default_scheme_hex_c::t8_element_face_class (const t8_element_t * elem,
+                                                  int face)
+{
+  return T8_ECLASS_QUAD;
+}
+
+void
+t8_default_scheme_hex_c::t8_element_children_at_face (const t8_element_t *
+                                                      elem, int face,
+                                                      t8_element_t *
+                                                      children[],
+                                                      int num_children)
+{
+  int                 child_ids[4], i;
+
+  T8_ASSERT (0 <= face && face < P8EST_FACES);
+  T8_ASSERT (num_children == t8_element_num_face_children (elem, face));
+
+  /*
+   * Compute the child id of the first and second child at the face.
+   *
+   * The faces of the quadrant are enumerated like this:
+   *
+   *          f_3
+   *       x ---- x
+   *      /  f_5 /|          z y
+   *     x ---- x |          |/
+   * f_0 |      | x f_1       -- x
+   *     |  f_2 |/
+   *     x ---- x
+   *        f_4
+   */
+
+  /* TODO: Think about a short and easy bitwise formula. */
+  switch (face) {
+  case 0:
+    child_ids[0] = 0;
+    child_ids[1] = 2;
+    child_ids[2] = 4;
+    child_ids[3] = 6;
+    break;
+  case 1:
+    child_ids[0] = 1;
+    child_ids[1] = 3;
+    child_ids[2] = 5;
+    child_ids[3] = 7;
+    break;
+  case 2:
+    child_ids[0] = 0;
+    child_ids[1] = 1;
+    child_ids[2] = 4;
+    child_ids[3] = 5;
+    break;
+  case 3:
+    child_ids[0] = 2;
+    child_ids[1] = 3;
+    child_ids[2] = 6;
+    child_ids[3] = 7;
+    break;
+  case 4:
+    child_ids[0] = 0;
+    child_ids[1] = 1;
+    child_ids[2] = 2;
+    child_ids[3] = 3;
+    break;
+  case 5:
+    child_ids[0] = 4;
+    child_ids[1] = 5;
+    child_ids[2] = 6;
+    child_ids[3] = 7;
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+
+  /* Create the four face children */
+  /* We have to revert the order and compute the zeroth child last, since
+   * the usage allows for elem == children[0].
+   */
+  for (i = 3; i >= 0; i--) {
+    t8_element_child (elem, child_ids[i], children[i]);
+  }
+}
+
+int
+t8_default_scheme_hex_c::t8_element_face_child_face (const t8_element_t *
+                                                     elem, int face,
+                                                     int face_child)
+{
+  /* For octants the face enumeration of children is the same as for the parent. */
+  return face;
+}
+
+int
+t8_default_scheme_hex_c::t8_element_tree_face (const t8_element_t * elem,
+                                               int face)
+{
+  T8_ASSERT (0 <= face && face < P8EST_FACES);
+  /* For hexahedra the face and the tree face number are the same. */
+  return face;
+}
+
+void
+t8_default_scheme_hex_c::t8_element_extrude_face (const t8_element_t * face,
+                                                  t8_element_t * elem,
+                                                  int root_face)
+{
+  const p4est_quadrant_t *b = (const p4est_quadrant_t *) face;
+  p8est_quadrant_t   *q = (p8est_quadrant_t *) elem;
+
+  T8_ASSERT (0 <= root_face && root_face < P8EST_FACES);
+  q->level = b->level;
+  /*
+   * The faces of the root quadrant are enumerated like this:
+   *
+   *       x ---- x
+   *      /  f_5 /|
+   *     x ---- x |
+   * f_0 |      | x f_1
+   *     |  f_2 |/
+   *     x ---- x
+   *        f_4
+   *
+   * We need to rescale the coordinates since a quadrant may have a different
+   * root lenght than an octant.
+   */
+  switch (root_face) {
+  case 0:
+    q->x = 0;
+    q->y = ((int64_t) b->x * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    q->z = ((int64_t) b->y * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    break;
+  case 1:
+    q->x = P8EST_LAST_OFFSET (q->level);
+    q->y = ((int64_t) b->x * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    q->z = ((int64_t) b->y * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    break;
+  case 2:
+    q->x = ((int64_t) b->x * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    q->y = 0;
+    q->z = ((int64_t) b->y * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    break;
+  case 3:
+    q->x = ((int64_t) b->x * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    q->y = P8EST_LAST_OFFSET (q->level);
+    q->z = ((int64_t) b->y * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    break;
+  case 4:
+    q->x = ((int64_t) b->x * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    q->y = ((int64_t) b->y * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    q->z = 0;
+    break;
+  case 5:
+    q->x = ((int64_t) b->x * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    q->y = ((int64_t) b->y * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    q->z = P8EST_LAST_OFFSET (q->level);
+    break;
+  }
+}
+
 void
 t8_default_scheme_hex_c::t8_element_boundary_face (const t8_element_t * elem,
                                                    int face,
@@ -181,9 +348,61 @@ t8_default_scheme_hex_c::t8_element_boundary_face (const t8_element_t * elem,
    * If face = 0 or face = 1 then b->x = q->y, b->y = q->z
    * if face = 2 or face = 3 then b->x = q->x, b->y = q->z
    * if face = 4 or face = 5 then b->x = q->x, b->y = q->y
+   *
+   * We have to scale the coordinates since a root quadrant may have
+   * different length than a root hex.
    */
-  b->x = face >> 1 ? q->x : q->y;       /* true if face >= 2 */
-  b->y = face >> 2 ? q->y : q->z;       /* true if face >= 4 */
+  b->x = (face >> 1 ? q->x : q->y) * ((uint64_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);      /* true if face >= 2 */
+  b->y = (face >> 2 ? q->y : q->z) * ((uint64_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);      /* true if face >= 4 */
+  T8_ASSERT (!p8est_quadrant_is_extended (q)
+             || p4est_quadrant_is_extended (b));
+}
+
+void
+t8_default_scheme_hex_c::t8_element_boundary (const t8_element_t * elem,
+                                              int min_dim, int length,
+                                              t8_element_t ** boundary)
+{
+  int                 iface;
+
+  T8_ASSERT (length == P8EST_FACES);
+  for (iface = 0; iface < P8EST_FACES; iface++) {
+    t8_element_boundary_face (elem, iface, boundary[iface]);
+  }
+}
+
+int
+t8_default_scheme_hex_c::t8_element_is_root_boundary (const t8_element_t *
+                                                      elem, int face)
+{
+  const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
+  p4est_qcoord_t      coord;
+
+  T8_ASSERT (0 <= face && face < P8EST_FACES);
+
+  /* if face is 0 or 1 q->x
+   *            2 or 3 q->y
+   *            4 or 5 q->z
+   */
+  coord = face >> 2 ? q->z : face >> 1 ? q->y : q->x;
+  /* If face is 0,2 or 4 check against 0.
+   * If face is 1,3 or 5 check against LAST_OFFSET */
+  return coord == (face & 1 ? P8EST_LAST_OFFSET (q->level) : 0);
+}
+
+int
+t8_default_scheme_hex_c::t8_element_face_neighbor_inside (const t8_element_t *
+                                                          elem,
+                                                          t8_element_t *
+                                                          neigh, int face)
+{
+  const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
+  p8est_quadrant_t   *n = (p8est_quadrant_t *) neigh;
+
+  T8_ASSERT (0 <= face && face < P8EST_FACES);
+  p8est_quadrant_face_neighbor (q, face, n);
+  /* return true if neigh is inside the root */
+  return p8est_quadrant_is_inside_root (n);
 }
 
 void

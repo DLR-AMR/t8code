@@ -87,6 +87,10 @@ t8_default_scheme_quad_c::t8_element_copy (const t8_element_t * source,
   const p4est_quadrant_t *q = (const p4est_quadrant_t *) source;
   p4est_quadrant_t   *r = (p4est_quadrant_t *) dest;
 
+  if (r == q) {
+    /* Do nothing if they are already the same quadrant. */
+    return;
+  }
   *r = *q;
   t8_element_copy_surround (q, r);
 }
@@ -128,6 +132,12 @@ t8_default_scheme_quad_c::t8_element_sibling (const t8_element_t * elem,
 
   p4est_quadrant_sibling (q, r, sibid);
   t8_element_copy_surround (q, r);
+}
+
+int
+t8_default_scheme_quad_c::t8_element_num_faces (const t8_element_t * elem)
+{
+  return P4EST_FACES;
 }
 
 int
@@ -259,6 +269,182 @@ t8_default_scheme_quad_c::t8_element_nca (const t8_element_t * elem1,
   t8_element_copy_surround (q1, r);
 }
 
+t8_eclass_t
+  t8_default_scheme_quad_c::t8_element_face_class (const t8_element_t * elem,
+                                                   int face)
+{
+  return T8_ECLASS_LINE;
+}
+
+void
+t8_default_scheme_quad_c::t8_element_children_at_face (const t8_element_t *
+                                                       elem, int face,
+                                                       t8_element_t *
+                                                       children[],
+                                                       int num_children)
+{
+  int                 first_child, second_child;
+
+  T8_ASSERT (0 <= face && face < P4EST_FACES);
+  T8_ASSERT (num_children == t8_element_num_face_children (elem, face));
+
+  /*
+   * Compute the child id of the first and second child at the face.
+   *
+   *            3
+   *
+   *      x - - x - - x           This picture shows a refined quadrant
+   *      |     |     |           with child_ids and the label for the faces.
+   *      | 2   | 3   |           For examle for face 2 (bottom face) we see
+   * 0    x - - x - - x   1       first_child = 0 and second_child = 1.
+   *      |     |     |
+   *      | 0   | 1   |
+   *      x - - x - - x
+   *
+   *            2
+   */
+  /* TODO: Think about a short and easy bitwise formula. */
+  switch (face) {
+  case 0:
+    first_child = 0;
+    second_child = 2;
+    break;
+  case 1:
+    first_child = 1;
+    second_child = 3;
+    break;
+  case 2:
+    first_child = 0;
+    second_child = 1;
+    break;
+  case 3:
+    first_child = 2;
+    second_child = 3;
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+
+  /* From the child ids we now construct the children at the faces. */
+  /* We have to revert the order and compute second child first, since
+   * the usage allows for elem == children[0].
+   */
+  t8_element_child (elem, second_child, children[1]);
+  t8_element_child (elem, first_child, children[0]);
+}
+
+int
+t8_default_scheme_quad_c::t8_element_face_child_face (const t8_element_t *
+                                                      elem, int face,
+                                                      int face_child)
+{
+  /* For quadrants the face enumeration of children is the same as for the parent. */
+  return face;
+}
+
+void
+t8_default_scheme_quad_c::t8_element_transform_face (const t8_element_t *
+                                                     elem1,
+                                                     t8_element_t * elem2,
+                                                     int orientation,
+                                                     int is_smaller_face)
+{
+  const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem1;
+  p4est_quadrant_t   *p = (p4est_quadrant_t *) elem2;
+  p4est_qcoord_t      h = P4EST_QUADRANT_LEN (q->level);
+  T8_ASSERT (0 <= orientation && orientation < P4EST_FACES);
+
+  p->level = q->level;
+  /*
+   * The faces of the root quadrant are enumerated like this:
+   *
+   *   v_2      v_3
+   *     x -->-- x
+   *     |       |
+   *     ^       ^
+   *     |       |
+   *     x -->-- x
+   *   v_0      v_1
+   *
+   * Orientation is the corner number of the bigger face that coincides
+   * with the corner v_0 of the smaller face.
+   */
+  switch (orientation) {
+  case 0:                      /* Nothing to do */
+    break;
+  case 1:
+    p->x = P4EST_ROOT_LEN - q->x - h;
+    /* p->y remains q->y */
+    break;
+  case 2:
+    /* p->x remains q->x */
+    p->y = P4EST_ROOT_LEN - q->y - h;
+    break;
+  case 3:
+    p->x = P4EST_ROOT_LEN - q->y - h;
+    p->y = P4EST_ROOT_LEN - q->x - h;
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+}
+
+void
+t8_default_scheme_quad_c::t8_element_extrude_face (const t8_element_t * face,
+                                                   t8_element_t * elem,
+                                                   int root_face)
+{
+  const t8_dline_t   *l = (const t8_dline_t *) face;
+  p4est_quadrant_t   *q = (p4est_quadrant_t *) elem;
+
+  T8_ASSERT (0 <= root_face && root_face < P4EST_FACES);
+  /*
+   * The faces of the root quadrant are enumerated like this:
+   *
+   *        f_2
+   *     x -->-- x
+   *     |       |
+   *     ^       ^
+   * f_0 |       | f_1
+   *     x -->-- x
+   *        f_3
+   *
+   * The arrows >,^ denote the orientation of the faces.
+   * We need to scale the coordinates since a root line may have a different
+   * length than a root quad.
+   */
+  q->level = l->level;
+  switch (root_face) {
+  case 0:
+    q->x = 0;
+    q->y = ((int64_t) l->x * P4EST_ROOT_LEN) / T8_DLINE_ROOT_LEN;
+    break;
+  case 1:
+    q->x = P4EST_LAST_OFFSET (q->level);
+    q->y = ((int64_t) l->x * P4EST_ROOT_LEN) / T8_DLINE_ROOT_LEN;
+    break;
+  case 2:
+    q->x = ((int64_t) l->x * P4EST_ROOT_LEN) / T8_DLINE_ROOT_LEN;
+    q->y = 0;
+    break;
+  case 3:
+    q->x = ((int64_t) l->x * P4EST_ROOT_LEN) / T8_DLINE_ROOT_LEN;
+    q->y = P4EST_LAST_OFFSET (q->level);
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+}
+
+int
+t8_default_scheme_quad_c::t8_element_tree_face (const t8_element_t * elem,
+                                                int face)
+{
+  T8_ASSERT (0 <= face && face < P4EST_FACES);
+  /* For quadrants the face and the tree face number are the same. */
+  return face;
+}
+
 void
 t8_default_scheme_quad_c::t8_element_boundary_face (const t8_element_t * elem,
                                                     int face,
@@ -282,7 +468,8 @@ t8_default_scheme_quad_c::t8_element_boundary_face (const t8_element_t * elem,
    * If face = 0 or face = 1 then l->x = q->y
    * if face = 2 or face = 3 then l->x = q->x
    */
-  l->x = face >> 1 ? q->x : q->y;
+  l->x = ((face >> 1 ? q->x : q->y) *
+          ((int64_t) T8_DLINE_ROOT_LEN) / P4EST_ROOT_LEN);
 }
 
 void
@@ -293,12 +480,50 @@ t8_default_scheme_quad_c::t8_element_boundary (const t8_element_t * elem,
 #ifdef T8_ENABLE_DEBUG
   int                 per_eclass[T8_ECLASS_COUNT];
 #endif
+  int                 iface;
 
   T8_ASSERT (length ==
              t8_eclass_count_boundary (T8_ECLASS_QUAD, min_dim, per_eclass));
 
   /* TODO: write this function */
-  SC_ABORT_NOT_REACHED ();
+
+  T8_ASSERT (length == P4EST_FACES);
+  for (iface = 0; iface < P4EST_FACES; iface++) {
+    t8_element_boundary_face (elem, iface, boundary[iface]);
+  }
+}
+
+int
+t8_default_scheme_quad_c::t8_element_is_root_boundary (const t8_element_t *
+                                                       elem, int face)
+{
+  const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
+  p4est_qcoord_t      coord;
+
+  T8_ASSERT (0 <= face && face < P4EST_FACES);
+
+  /* if face is 0 or 1 q->x
+   *            2 or 3 q->y
+   */
+  coord = face >> 1 ? q->y : q->x;
+  /* If face is 0 or 2 check against 0.
+   * If face is 1 or 3  check against LAST_OFFSET */
+  return coord == (face & 1 ? P4EST_LAST_OFFSET (q->level) : 0);
+}
+
+int
+t8_default_scheme_quad_c::t8_element_face_neighbor_inside (const t8_element_t
+                                                           * elem,
+                                                           t8_element_t *
+                                                           neigh, int face)
+{
+  const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
+  p4est_quadrant_t   *n = (p4est_quadrant_t *) neigh;
+
+  T8_ASSERT (0 <= face && face < P4EST_FACES);
+  p4est_quadrant_face_neighbor (q, face, n);
+  /* return true if neigh is inside the root */
+  return p4est_quadrant_is_inside_root (n);
 }
 
 void

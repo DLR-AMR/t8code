@@ -22,18 +22,22 @@
 
 #include <t8_cmesh_vtk.h>
 #include <t8_vtk.h>
+#include "t8_cmesh_trees.h"
 #include "t8_cmesh_types.h"
 
 /* Return the global number of vertices in a cmesh.
  * \param [in] cmesh       The cmesh to be considered.
+ * \param [in] count_ghosts If true, we also count the vertices of the ghost trees.
  * \return                 The number of vertices associated to \a cmesh.
  * \a cmesh must be committed before calling this function.
  */
-t8_gloidx_t
-t8_cmesh_get_num_vertices (t8_cmesh_t cmesh)
+static t8_gloidx_t
+t8_cmesh_get_num_vertices (t8_cmesh_t cmesh, int count_ghosts)
 {
   int                 iclass;
+  t8_eclass_t         ghost_class;
   t8_gloidx_t         num_vertices = 0;
+  t8_locidx_t         ighost;
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
 
@@ -41,14 +45,22 @@ t8_cmesh_get_num_vertices (t8_cmesh_t cmesh)
     num_vertices += t8_eclass_num_vertices[iclass] *
       cmesh->num_trees_per_eclass[iclass];
   }
+  if (count_ghosts) {
+    /* Also count the vertices of the ghost trees */
+    for (ighost = 0; ighost < t8_cmesh_get_num_ghosts (cmesh); ighost++) {
+      ghost_class = t8_cmesh_get_ghost_class (cmesh, ighost);
+      num_vertices += t8_eclass_num_vertices[ghost_class];
+    }
+  }
+
   return num_vertices;
 }
 
 /* TODO: implement for replicated mesh
  * TODO: implement for scale < 1 */
-int
-t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
-                         double scale)
+static int
+t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix,
+                             double scale, int write_ghosts)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
@@ -73,9 +85,15 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
     double             *vertices, *vertex;
     int                 k, sk;
     long long           offset, count_vertices;
+    t8_locidx_t         ighost, num_ghosts, num_loc_trees;
+    t8_cghost_t         ghost;
+    t8_eclass_t         eclass;
 
-    num_vertices = t8_cmesh_get_num_vertices (cmesh);
+    num_vertices = t8_cmesh_get_num_vertices (cmesh, write_ghosts);
     num_trees = t8_cmesh_get_num_local_trees (cmesh);
+    if (write_ghosts) {
+      num_trees += t8_cmesh_get_num_ghosts (cmesh);
+    }
 
     snprintf (vtufilename, BUFSIZ, "%s_%04d.vtu", fileprefix, cmesh->mpirank);
     vtufile = fopen (vtufilename, "wb");
@@ -123,6 +141,34 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
         fprintf (vtufile, "          %16.8e %16.8e %16.8e\n", x, y, z);
 #endif
       }
+    }                           /* end tree loop */
+    if (write_ghosts) {
+
+      /* Write the vertices of the ghost trees */
+      num_ghosts = t8_cmesh_get_num_ghosts (cmesh);
+      num_loc_trees = t8_cmesh_get_num_local_trees (cmesh);
+      for (ighost = 0; ighost < num_ghosts; ighost++) {
+        /* Get the eclass of this ghost */
+        eclass = t8_cmesh_get_ghost_class (cmesh, ighost);
+        /* Get a pointer to this ghosts vertices */
+        vertices = (double *) t8_cmesh_get_attribute (cmesh,
+                                                      t8_get_package_id (), 0,
+                                                      ighost + num_loc_trees);
+        T8_ASSERT (vertices != NULL);
+        /* TODO: This code is duplicated above */
+        for (ivertex = 0; ivertex < t8_eclass_num_vertices[eclass]; ivertex++) {
+          vertex = vertices +
+            3 * t8_eclass_vtk_corner_number[eclass][ivertex];
+          x = vertex[0];
+          y = vertex[1];
+          z = vertex[2];
+#ifdef T8_VTK_DOUBLES
+          fprintf (vtufile, "     %24.16e %24.16e %24.16e\n", x, y, z);
+#else
+          fprintf (vtufile, "          %16.8e %16.8e %16.8e\n", x, y, z);
+#endif
+        }
+      }                         /* end ghost loop */
     }
 #else
     SC_ABORT ("Binary vtk file not implemented\n");
@@ -144,6 +190,17 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
       }
       fprintf (vtufile, "\n");
     }
+    if (write_ghosts) {
+      /* Write the ghost connectivity */
+      for (ighost = 0; ighost < num_ghosts; ighost++) {
+        eclass = t8_cmesh_get_ghost_class (cmesh, ighost);
+        fprintf (vtufile, "         ");
+        for (k = 0; k < t8_eclass_num_vertices[eclass]; ++k, count_vertices++) {
+          fprintf (vtufile, " %lld", count_vertices);
+        }
+        fprintf (vtufile, "\n");
+      }
+    }
 #else
     SC_ABORT ("Binary vtk file not implemented\n");
 #endif /* T8_VTK_ASCII */
@@ -161,6 +218,16 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
       if (!(sk % 8))
         fprintf (vtufile, "\n         ");
     }
+    if (write_ghosts) {
+      /* ghost offset data */
+      for (ighost = 0; ighost < num_ghosts; ighost++, ++sk) {
+        eclass = t8_cmesh_get_ghost_class (cmesh, ighost);
+        offset += t8_eclass_num_vertices[eclass];
+        fprintf (vtufile, " %lld", offset);
+        if (!(sk % 8))
+          fprintf (vtufile, "\n         ");
+      }
+    }
     fprintf (vtufile, "\n");
 #else
     SC_ABORT ("Binary vtk file not implemented\n");
@@ -176,6 +243,15 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
       fprintf (vtufile, " %d", t8_eclass_vtk_type[tree->eclass]);
       if (!(sk % 20) && tree->treeid != (cmesh->num_local_trees - 1))
         fprintf (vtufile, "\n         ");
+    }
+    if (write_ghosts) {
+      /* ghost offset types */
+      for (ighost = 0; ighost < num_ghosts; ighost++, ++sk) {
+        eclass = t8_cmesh_get_ghost_class (cmesh, ighost);
+        fprintf (vtufile, " %d", t8_eclass_vtk_type[eclass]);
+        if (!(sk % 20) && ighost != (num_ghosts - 1))
+          fprintf (vtufile, "\n         ");
+      }
     }
     fprintf (vtufile, "\n");
 #else
@@ -201,6 +277,22 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
       if (!(sk % 8))
         fprintf (vtufile, "\n         ");
     }
+    if (write_ghosts) {
+      /* ghost offset types */
+      for (ighost = 0; ighost < num_ghosts; ighost++, ++sk) {
+        ghost = t8_cmesh_trees_get_ghost (cmesh->trees, ighost);
+        /* Check for conversion errors */
+        T8_ASSERT (ghost->treeid == (t8_gloidx_t) ((long) ghost->treeid));
+#if 0
+        fprintf (vtufile, " %ld", (long) ghost->treeid);
+#endif
+        /* Write -1 as tree_id so that we can distinguish ghosts from normal trees
+         * in the vtk file */
+        fprintf (vtufile, " %ld", (long) -1);
+        if (!(sk % 8))
+          fprintf (vtufile, "\n         ");
+      }
+    }
     fprintf (vtufile, "\n");
 #else
     SC_ABORT ("Binary vtk file not implemented\n");
@@ -217,6 +309,14 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
       if (!(sk % 8))
         fprintf (vtufile, "\n         ");
     }
+    if (write_ghosts) {
+      /* write our rank for each ghost */
+      for (ighost = 0; ighost < num_ghosts; ighost++, ++sk) {
+        fprintf (vtufile, " %i", cmesh->mpirank);
+        if (!(sk % 8))
+          fprintf (vtufile, "\n         ");
+      }
+    }
     fprintf (vtufile, "\n");
 #else
     SC_ABORT ("Binary vtk file not implemented\n");
@@ -230,4 +330,12 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
     fclose (vtufile);
   }
   return 0;
+}
+
+int
+t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix,
+                         double scale)
+{
+  T8_ASSERT (scale == 1.0);
+  return t8_cmesh_vtk_write_file_ext (cmesh, fileprefix, 1.0, 1);
 }

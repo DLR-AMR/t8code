@@ -415,9 +415,17 @@ void               *
 t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key,
                         t8_locidx_t ltree_id)
 {
+  int                 is_ghost;
+
   T8_ASSERT (cmesh->committed);
+  T8_ASSERT (0 <= ltree_id &&
+             ltree_id < cmesh->num_ghosts + cmesh->num_local_trees);
+  is_ghost = ltree_id >= cmesh->num_local_trees;
+  if (is_ghost) {
+    ltree_id = ltree_id - cmesh->num_local_trees;
+  }
   return t8_cmesh_trees_get_attribute (cmesh->trees, ltree_id, package_id,
-                                       key, NULL);
+                                       key, NULL, is_ghost);
 }
 
 t8_shmem_array_t
@@ -857,9 +865,18 @@ t8_locidx_t
 t8_cmesh_get_num_local_trees (t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
   return cmesh->num_local_trees;
+}
+
+t8_locidx_t
+t8_cmesh_get_num_ghosts (t8_cmesh_t cmesh)
+{
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+
+  return cmesh->num_ghosts;
 }
 
 t8_eclass_t
@@ -899,6 +916,28 @@ t8_cmesh_get_global_id (t8_cmesh_t cmesh, t8_locidx_t local_id)
     return t8_cmesh_trees_get_ghost (cmesh->trees,
                                      local_id -
                                      cmesh->num_local_trees)->treeid;
+  }
+}
+
+t8_locidx_t
+t8_cmesh_get_local_id (t8_cmesh_t cmesh, t8_gloidx_t global_id)
+{
+  t8_gloidx_t         temp_local_id;
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (0 <= global_id && global_id < cmesh->num_trees);
+
+  if (!cmesh->set_partition) {
+    /* If the cmesh is not partitioned the local id is the global id */
+    return global_id;
+  }
+  temp_local_id = global_id - cmesh->first_tree;
+  if (0 <= temp_local_id && temp_local_id < cmesh->num_local_trees) {
+    /* The tree is a local tree */
+    return temp_local_id;
+  }
+  else {
+    /* The tree may be a ghost tree */
+    return t8_cmesh_trees_get_ghost_local_id (cmesh->trees, global_id);
   }
 }
 
@@ -961,7 +1000,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     *child_in_tree_end = 0;
   }
 
-  if (cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] == 0) {
+  if (cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] == 0 || level == 0) {
     t8_gloidx_t         global_num_children;
     t8_gloidx_t         first_global_child;
     t8_gloidx_t         last_global_child;
@@ -1042,7 +1081,8 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     }
   }
   else {
-    SC_ABORT ("Partition does not support pyramidal elements yet.");
+    SC_ABORT ("Partition with level > 0 "
+              "does not support pyramidal elements yet.");
   }
 }
 
@@ -1548,16 +1588,16 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
                                   attr_vertices, 3);
       break;
     case T8_ECLASS_TET:
-      t8_cmesh_set_join (cmesh, 0, 1, 1, 2, 0);
-      t8_cmesh_set_join (cmesh, 1, 2, 1, 2, 0);
-      t8_cmesh_set_join (cmesh, 2, 3, 1, 2, 0);
-      t8_cmesh_set_join (cmesh, 3, 4, 1, 2, 0);
-      t8_cmesh_set_join (cmesh, 4, 5, 1, 2, 0);
-      t8_cmesh_set_join (cmesh, 5, 0, 1, 2, 0);
+      t8_cmesh_set_join (cmesh, 0, 1, 2, 2, 0);
+      t8_cmesh_set_join (cmesh, 1, 2, 1, 1, 0);
+      t8_cmesh_set_join (cmesh, 2, 3, 2, 2, 0);
+      t8_cmesh_set_join (cmesh, 3, 4, 1, 1, 0);
+      t8_cmesh_set_join (cmesh, 4, 5, 2, 2, 0);
+      t8_cmesh_set_join (cmesh, 5, 0, 1, 1, 0);
       vertices[0] = 0;
+      vertices[1] = 1;
+      vertices[2] = 5;
       vertices[3] = 7;
-      vertices[1] = 5;
-      vertices[2] = 1;
       t8_cmesh_new_translate_vertices_to_attributes (vertices,
                                                      vertices_coords,
                                                      attr_vertices, 4);
@@ -1570,8 +1610,8 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
                                                      attr_vertices, 4);
       t8_cmesh_set_tree_vertices (cmesh, 1, t8_get_package_id (), 0,
                                   attr_vertices, 4);
-      vertices[1] = 3;
-      vertices[2] = 2;
+      vertices[1] = 2;
+      vertices[2] = 3;
       t8_cmesh_new_translate_vertices_to_attributes (vertices,
                                                      vertices_coords,
                                                      attr_vertices, 4);
@@ -1584,8 +1624,8 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
                                                      attr_vertices, 4);
       t8_cmesh_set_tree_vertices (cmesh, 3, t8_get_package_id (), 0,
                                   attr_vertices, 4);
-      vertices[1] = 6;
-      vertices[2] = 4;
+      vertices[1] = 4;
+      vertices[2] = 6;
       t8_cmesh_new_translate_vertices_to_attributes (vertices,
                                                      vertices_coords,
                                                      attr_vertices, 4);
@@ -1998,8 +2038,8 @@ t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x, t8_gloidx_t num_y,
                               int y_periodic, int z_periodic,
                               sc_MPI_Comm comm)
 {
-  p4est_connectivity_t *my_brick;
-  p8est_connectivity_t *my_brick_3d;
+  p4est_connectivity_t *my_brick = NULL;        /* pre-initialized to prevent compiler warning */
+  p8est_connectivity_t *my_brick_3d = NULL;
   t8_cmesh_t          cmesh;
   t8_gloidx_t         num_trees, offset;
   int                 dim;

@@ -115,6 +115,9 @@ public:
   virtual void        t8_element_sibling (const t8_element_t * elem,
                                           int sibid, t8_element_t * sibling);
 
+  /** Compute the number of face of a given element. */
+  virtual int         t8_element_num_faces (const t8_element_t * elem);
+
   /** Return the number of children of an element when it is refined. */
   virtual int         t8_element_num_children (const t8_element_t * elem);
 
@@ -141,6 +144,42 @@ public:
                                       const t8_element_t * elem2,
                                       t8_element_t * nca);
 
+  /** Compute the elmement class of the face of an element. */
+  virtual t8_eclass_t t8_element_face_class (const t8_element_t * elem,
+                                             int face);
+
+  /** Given an element and a face of the element, compute all children of
+   * the element that touch the face. */
+  /** Given an element and a face of the element, compute all children of
+   * the element that touch the face. */
+  virtual void        t8_element_children_at_face (const t8_element_t * elem,
+                                                   int face,
+                                                   t8_element_t * children[],
+                                                   int num_children);
+
+  /** Given a face of an element and a child number of a child of that face, return the face number
+   * of the child of the element that matches the child face. */
+  virtual int         t8_element_face_child_face (const t8_element_t * elem,
+                                                  int face, int face_child);
+
+  /** Transform the coordinates of a quadrilateral considered as boundary element
+   *  in a tree-tree connection. */
+  virtual void        t8_element_transform_face (const t8_element_t * elem1,
+                                                 t8_element_t * elem2,
+                                                 int orientation,
+                                                 int is_smaller_face);
+
+  /** Given a boundary face inside a root tree's face construct
+   *  the element inside the root tree that has the given face as a
+   *  face. */
+  virtual void        t8_element_extrude_face (const t8_element_t * face,
+                                               t8_element_t * elem,
+                                               int root_face);
+
+  /** Return the tree face id given a boundary face. */
+  virtual int         t8_element_tree_face (const t8_element_t * elem,
+                                            int face);
+
   /** Construct the boundary element at a specific face. */
   virtual void        t8_element_boundary_face (const t8_element_t * elem,
                                                 int face,
@@ -150,6 +189,21 @@ public:
   virtual void        t8_element_boundary (const t8_element_t * elem,
                                            int min_dim, int length,
                                            t8_element_t ** boundary);
+
+  /** Compute whether a given element shares a given face with its root tree.
+   * \param [in] elem     The input element.
+   * \param [in] face     A face of \a elem.
+   * \return              True if \a face is a subface of the element's root element.
+   */
+  virtual int         t8_element_is_root_boundary (const t8_element_t * elem,
+                                                   int face);
+
+  /** Construct the face neighbor of a given element if this face neighbor
+   * is inside the root tree. Return 0 otherwise. */
+  virtual int         t8_element_face_neighbor_inside (const t8_element_t *
+                                                       elem,
+                                                       t8_element_t * neigh,
+                                                       int face);
 
 /** Initialize an element according to a given linear id */
   virtual void        t8_element_set_linear_id (t8_element_t * elem,

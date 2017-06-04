@@ -69,6 +69,22 @@ extern const int    t8_dtet_parenttype_Iloc_to_type[6][8];
 /** Store the cube-id for each (parenttype,local Index) combination. */
 extern const int    t8_dtet_parenttype_Iloc_to_cid[6][8];
 
+/** Store for each (type, face_index) the combination (category, type)
+ *  of the respective boundary triangle.
+ * I.e. {2, 1} means the boundary triangle is of category 2 and type 1.
+ * The category determines how the coordinates of the triangle are computed
+ * from the parent. \see t8_default_scheme_tet_c::t8_element_boundary
+ */
+extern const int    t8_dtet_type_face_to_boundary[6][4][2];
+
+/** Store for each (type, face_index) the child_ids of the children of a tet of
+ * the given type that share the given face.
+ * I.e. [1][3] lists the child_ids of the children of a type 1 tetrahedron that have
+ * a subface of face 3 of this tetrahedron.
+ * The order of the children is given by the 2-dimensional TM-order on the face.
+ */
+extern const int    t8_dtet_face_child_id_by_type[6][4][4];
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DTET_CONNECTIVITY_H */

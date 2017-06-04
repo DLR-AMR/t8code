@@ -9,6 +9,12 @@ Basic standards:
 TODOs
 =================================
 
+ * Lassen wir Unterschiede im Level zwischen benachbarten eclasses zu?
+   z.Bsp. zwischen Quads/Triangles oder Hexes/Prisms? 
+   Wenn ja, wie gehen wir damit um, wenn z.Bsp. Nachbarn berechnet werden und
+   dies nicht geht, da das Level des aktuellen Elementes hoeher ist als das
+   Maxlevel der Nachbar-eclass?
+
 Für die Berechnungen auf Juqueen:
 
 Der Plan ist skalierungstest der cmesh_partition Funktion zu machen.

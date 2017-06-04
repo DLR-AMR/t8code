@@ -376,6 +376,14 @@ t8_gloidx_t         t8_cmesh_get_num_trees (t8_cmesh_t cmesh);
  */
 t8_locidx_t         t8_cmesh_get_num_local_trees (t8_cmesh_t cmesh);
 
+/** Return the number of ghost trees of a cmesh.
+ *  If the cmesh is not partitioned this is equivalent to \ref t8_cmesh_get_num_trees.
+ * \param [in] cmesh       The cmesh to be considered.
+ * \return                 The number of ghost trees of the cmesh.
+ * \a cmesh must be committed before calling this function.
+ */
+t8_locidx_t         t8_cmesh_get_num_ghosts (t8_cmesh_t cmesh);
+
 /** Return the global index of the first local tree of a cmesh.
  * If the cmesh is not partitioned this is allways 0.
  * \param [in] cmesh       The cmesh to be considered.
@@ -451,6 +459,20 @@ t8_eclass_t         t8_cmesh_get_ghost_class (t8_cmesh_t cmesh,
  */
 t8_gloidx_t         t8_cmesh_get_global_id (t8_cmesh_t cmesh,
                                             t8_locidx_t local_id);
+
+/** Return the local id of a give global tree.
+ * \param [in]    cmesh         The cmesh.
+ * \param [in]    global_id     A global tree id.
+ * \return                      Either a value l 0 <= \a l < num_local_trees
+ *                              if \a global_id corresponds to a local tree,
+ *                              or num_local_trees <= \a l < num_local_trees
+ *                              + num_ghosts
+ *                              if \a global_id corresponds to a ghost trees,
+ *                              or negative if \a global_id neither matches a local
+ *                              nor a ghost tree.
+ */
+t8_locidx_t         t8_cmesh_get_local_id (t8_cmesh_t cmesh,
+                                           t8_gloidx_t global_id);
 
 /** Print the collected statistics from a cmesh profile.
  * \param [in]    cmesh         The cmesh.
@@ -531,17 +553,16 @@ void                t8_cmesh_unref (t8_cmesh_t * pcmesh);
 /** Verify that a coarse mesh has only one reference left and destroy it.
  * This function is preferred over \ref t8_cmesh_unref when it is known
  * that the last reference is to be deleted.
- * \param [in,out]  This cmesh must have a reference count of one.
- *                  It can be in any state (committed or not).
- *                  Then it effectively calls \ref t8_cmesh_unref.
- * \param [in]      comm A mpi communicator that is valid with \a cmesh.
+ * \param [in,out]  pcmesh      This cmesh must have a reference count of one.
+ *                              It can be in any state (committed or not).
+ *                              Then it effectively calls \ref t8_cmesh_unref.
+ * \param [in]      comm        A mpi communicator that is valid with \a cmesh.
  */
 void                t8_cmesh_destroy (t8_cmesh_t * pcmesh);
 
 /* Functions for construcing complete and committed cmeshes */
 
 /** Constructs a cmesh from a given p4est_connectivity structure.
- *  The constructed cmesh will be replicated.
  * \param[in]       conn       The p4est connectivity.
  * \param[in]       comm       mpi communicator to be used with the new cmesh.
  * \param[in]       do_partition Flag whether the cmesh should be partitioned or not.
@@ -553,7 +574,6 @@ t8_cmesh_t          t8_cmesh_new_from_p4est (p4est_connectivity_t * conn,
                                              int do_partition);
 
 /** Constructs a cmesh from a given p8est_connectivity structure.
- *  The constructed cmesh will be replicated.
  * \param[in]       conn       The p8est connectivity.
  * \param[in]       comm       mpi communicator to be used with the new cmesh.
  * \param[in]       do_dup     Flag whether the communicator shall be duplicated or not.

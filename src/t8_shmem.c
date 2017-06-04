@@ -40,6 +40,20 @@ typedef struct t8_shmem_array
 #endif
 } t8_shmem_array_struct_t;
 
+int
+t8_shmem_set_type (sc_MPI_Comm comm, sc_shmem_type_t type)
+{
+  if (sc_shmem_get_type (comm) == SC_SHMEM_NOT_SET) {
+    /* This communicator does not have a shmem type, so we set it */
+    sc_shmem_set_type (comm, type);
+    return 1;
+  }
+  else {
+    /* There was already a type set, we do not change it */
+    return 0;
+  }
+}
+
 void
 t8_shmem_array_init (t8_shmem_array_t * parray, size_t elem_size,
                      size_t elem_count, sc_MPI_Comm comm)
@@ -122,6 +136,22 @@ t8_shmem_array_set_gloidx (t8_shmem_array_t array, int index,
   T8_ASSERT (0 <= index && (size_t) index < array->elem_count);
 
   ((t8_gloidx_t *) array->array)[index] = value;
+}
+
+void *
+t8_shmem_array_get_array (t8_shmem_array_t array)
+{
+  T8_ASSERT (array != NULL);
+  return array->array;
+}
+
+void *
+t8_shmem_array_index (t8_shmem_array_t array, size_t index)
+{
+  T8_ASSERT (array != NULL);
+  T8_ASSERT (0 <= index && index < array->elem_count);
+
+  return array->array + index * array->elem_size;
 }
 
 /* TODO: implement */

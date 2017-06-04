@@ -36,10 +36,27 @@ T8_EXTERN_C_BEGIN ();
 /* TODO: document */
 void                t8_forest_partition (t8_forest_t forest);
 
-/** Build the array of element offsets of a forest.
- * \param [in, out] forest The forest.
+/** Create the element_offset array of a partitioned forest.
+ * \param [in,out]  forest The forest.
+ * \a forest must be committed before calling this function.
  */
 void                t8_forest_partition_create_offsets (t8_forest_t forest);
+
+/** Create the array of global_first_descendant ids of a partitioned forest.
+ * \param [in,out]  forest The forest.
+ * \a forest must be committed before calling this function.
+ */
+void                t8_forest_partition_create_first_desc (t8_forest_t
+                                                           forest);
+
+/** Create the array tree offsets of a partitioned forest.
+ * This arrays stores at position p the global id of the first tree of this process.
+ * Or if this tree is shared, it stores -(global_id) - 1.
+ * \param [in,out]  forest  The forest.
+ * \a forest must be committed before calling this function.
+ */
+void                t8_forest_partition_create_tree_offsets (t8_forest_t
+                                                             forest);
 
 T8_EXTERN_C_END ();
 
