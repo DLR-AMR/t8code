@@ -634,19 +634,19 @@ t8_cmesh_t          t8_cmesh_new_line_zigzag (sc_MPI_Comm comm);
   * \param [in] num_of_prisms The number of prisms to be used.
   * \return                 A valid cmesh, as if _init and _commit had been called.
   */
-t8_cmesh_t          t8_cmesh_prism_cake (sc_MPI_Comm comm, int num_of_prisms);
+t8_cmesh_t          t8_cmesh_new_prism_cake (sc_MPI_Comm comm, int num_of_prisms);
 
 /** Construct a forest of six connected noncannoical oriented prisms
   * \param [in] comm        The mpi communicator to use.
   * \return                 A valid cmesh, as if _init and _commit had been called.
   */
-t8_cmesh_t          t8_cmesh_prism_cake_funny_oriented (sc_MPI_Comm comm);
+t8_cmesh_t          t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_Comm comm);
 
 /** Construct a forest of six connected noncannoical oriented prisms
   * \param [in] comm        The mpi communicator to use.
   * \return                 A valid cmesh, as if _init and _commit had been called.
   */
-t8_cmesh_t          t8_cmesh_prism_geometry (sc_MPI_Comm comm);
+t8_cmesh_t          t8_cmesh_new_prism_geometry (sc_MPI_Comm comm);
 
 /** Create a partitoned cmesh of quads whose local trees are given by an
  * num_x by num_y brick connectivity from p4est

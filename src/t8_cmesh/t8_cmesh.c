@@ -1759,7 +1759,7 @@ t8_cmesh_new_line_zigzag (sc_MPI_Comm comm)
 }
 
 t8_cmesh_t
-t8_cmesh_prism_cake (sc_MPI_Comm comm, int num_of_prisms)
+t8_cmesh_new_prism_cake (sc_MPI_Comm comm, int num_of_prisms)
 {
 #if 1
   int                 i, j;
@@ -1851,7 +1851,7 @@ void prism_rotate(double vertices[18], int rotation)
 }
 
 t8_cmesh_t
-t8_cmesh_prism_cake_funny_oriented (sc_MPI_Comm comm)
+t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_Comm comm)
 {
   int                 i, j;
   /*6 Prism a 6 vertices a 3 coords */
@@ -1907,7 +1907,7 @@ t8_cmesh_prism_cake_funny_oriented (sc_MPI_Comm comm)
 }
 
 t8_cmesh_t
-t8_cmesh_prism_geometry (sc_MPI_Comm comm)
+t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
 {
   int                 i, j;
   /*8 Prism a 6 vertices a 3 coords */

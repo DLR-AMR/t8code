@@ -123,10 +123,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
                (vertices[6 + i] - vertices[3 + i]) * corner_coords[1] +
                (vertices[9 + i] - vertices[i]) * corner_coords[2]) +
         vertices[i];
-    }                           /*
-                                   for(i = 0; i < 3; i++){
-                                   coordinates[i] += (vertices[9 + i] - vertices[i]) * len *corner_coords[2] + vertices[i];
-                                   } */
+    }
     break;
   case T8_ECLASS_QUAD:
     corner_coords[2] = 0;
