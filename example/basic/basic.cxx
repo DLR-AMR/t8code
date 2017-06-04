@@ -127,14 +127,12 @@ t8_basic_refine_test (t8_eclass_t eclass)
 static void
 t8_basic_balance_test (t8_eclass_t eclass)
 {
-  t8_forest_t         forest, forest_partition;
-  t8_forest_t         forest_adapt;
+  t8_forest_t         forest, forest_ada_bal_par;
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
   int                 maxlevel = 5;
 
   t8_forest_init (&forest);
-  t8_forest_init (&forest_adapt);
   if (eclass == T8_ECLASS_LINE) {
     cmesh = t8_cmesh_new_line_zigzag (sc_MPI_COMM_WORLD);
   }
@@ -151,6 +149,27 @@ t8_basic_balance_test (t8_eclass_t eclass)
             t8_eclass_to_string[eclass]);
   t8_forest_write_vtk (forest, filename);
 
+  /* Adapt, balance and partition the uniform forest */
+  t8_forest_init (&forest_ada_bal_par);
+  /* Set user data for adapt */
+  t8_forest_set_user_data (forest, &maxlevel);
+  t8_forest_set_user_data (forest_ada_bal_par, forest);
+  t8_forest_set_adapt (forest_ada_bal_par, forest, t8_basic_adapt_balance,
+                       NULL, 1);
+  t8_forest_set_balance (forest_ada_bal_par, NULL, 0);
+  t8_forest_set_partition (forest_ada_bal_par, NULL, 0);
+  t8_forest_set_profiling (forest_ada_bal_par, 1);
+  t8_forest_commit (forest_ada_bal_par);
+  /* Output to vtk */
+  snprintf (filename, BUFSIZ, "forest_adapt_balance_partition_%s",
+            t8_eclass_to_string[eclass]);
+  t8_forest_write_vtk (forest_ada_bal_par, filename);
+  t8_forest_print_profile (forest_ada_bal_par);
+  t8_forest_unref (&forest_ada_bal_par);
+
+#if 0
+
+  t8_forest_init (&forest_adapt);
   t8_forest_set_user_data (forest, &maxlevel);
   t8_forest_set_user_data (forest_adapt, forest);
   t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt_balance, NULL, 1);
@@ -181,6 +200,7 @@ t8_basic_balance_test (t8_eclass_t eclass)
     t8_forest_print_profile (f_balance);
     t8_forest_unref (&f_balance);
   }
+#endif
 }
 #endif
 
