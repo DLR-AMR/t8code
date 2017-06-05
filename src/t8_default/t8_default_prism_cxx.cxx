@@ -61,6 +61,12 @@ t8_default_scheme_prism_c::t8_element_num_children (const t8_element_t * elem)
 }
 
 int
+t8_default_scheme_prism_c::t8_element_num_face_children (const t8_element_t *
+                                                    elem, int face){
+    return t8_dprism_num_face_children((const t8_dprism_t *) elem, face);
+}
+
+int
 t8_default_scheme_prism_c::t8_element_child_id (const t8_element_t * elem)
 {
   return t8_dprism_child_id ((const t8_dprism_t *) elem);

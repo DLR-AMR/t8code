@@ -180,6 +180,16 @@ t8_dprism_child (const t8_dprism_t * p, int childid, t8_dprism_t * child)
   T8_ASSERT (child->line.level == child->tri.level);
 }
 
+int
+t8_dprism_num_face_children(const t8_dprism_t * p,
+                                                int face)
+{
+    /*Bottom and top have T8_DTRI_CHILDREN, the other three faces depend on
+      the children the triangle face has*/
+    return(face >= 3 ? T8_DTRI_CHILDREN : T8_DTRI_FACE_CHILDREN *
+                       T8_DLINE_CHILDREN);
+}
+
 void
 t8_dprism_childrenpv (const t8_dprism_t * p, int length, t8_dprism_t * c[])
 {

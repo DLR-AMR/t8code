@@ -115,6 +115,13 @@ int                 t8_dprism_is_familypv (t8_dprism_t ** fam);
 void                t8_dprism_child (const t8_dprism_t * p, int childid,
                                      t8_dprism_t * child);
 
+/** Compute the number of children at a given face.
+  * \param [in] p   Input prism.
+  * \param [in] face The Facenumer
+  * \return     Number of Children at \a face*/
+int                 t8_dprism_num_face_children(const t8_dprism_t * p,
+                                                int face);
+
 /** Compute the 8 children of a prism, array version.
  * \param [in]     p  Input prism.
  * \param [in,out] c  Pointers to the 2 computed children in Morton order.
