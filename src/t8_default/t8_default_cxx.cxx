@@ -25,7 +25,7 @@
 #include <t8_refcount.h>
 
 #include "t8_default_line_cxx.hxx"
-#include "t8_default_quad_cxx.hxx"
+#include "t8_default_quad_xy_cxx.hxx"
 #include "t8_default_hex_cxx.hxx"
 #include "t8_default_tri_cxx.hxx"
 #include "t8_default_tet_cxx.hxx"
@@ -42,7 +42,7 @@ t8_scheme_new_default_cxx (void)
   t8_refcount_init (&s->rc);
 
   s->eclass_schemes[T8_ECLASS_LINE] = new t8_default_scheme_line_c ();
-  s->eclass_schemes[T8_ECLASS_QUAD] = new t8_default_scheme_quad_c ();
+  s->eclass_schemes[T8_ECLASS_QUAD] = new t8_default_scheme_quad_xy_c ();
   s->eclass_schemes[T8_ECLASS_HEX] = new t8_default_scheme_hex_c ();
   s->eclass_schemes[T8_ECLASS_TRIANGLE] = new t8_default_scheme_tri_c ();
   s->eclass_schemes[T8_ECLASS_TET] = new t8_default_scheme_tet_c ();
