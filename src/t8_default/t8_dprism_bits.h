@@ -106,6 +106,28 @@ int                 t8_dprism_child_id (const t8_dprism_t * p);
  */
 int                 t8_dprism_is_familypv (t8_dprism_t ** fam);
 
+/** Constructs the boundary element of a prism at a given face
+  * \param [in] p       The input prism.
+  * \param [in] face    A face of \a p
+  * \param [in, out] boundary The boundary element at \a face of \a p*/
+void t8_dprism_boundary_face(const t8_dprism_t * p, int face,
+                        t8_element_t * boundary);
+
+/** Compute whether a given prism shares a given face with its root tree.
+ * \param [in] p        The input prism.
+ * \param [in] face     A face of \a p.
+ * \return              True if \a face is a subface of the triangle's root element.
+ */
+int t8_dprism_is_root_boundary(const t8_dprism_t * p,int face);
+
+/** Test if a prism lies inside of the root prism,
+ *  that is the triangle of level 0, anchor node (0,0)
+ *  and type 0.
+ *  \param [in]     p Input prism.
+ *  \return true    If \a p lies inside of the root pris.
+ */
+int t8_dprism_is_inside_root(t8_dprism_t * p);
+
 /** Compute the childid-th child in Morton order of a prism.
  * \param [in] p    Input prism.
  * \param [in] childid The id of the child, in 0 - 7, in Morton order.
@@ -121,6 +143,14 @@ void                t8_dprism_child (const t8_dprism_t * p, int childid,
   * \return     Number of Children at \a face*/
 int                 t8_dprism_num_face_children(const t8_dprism_t * p,
                                                 int face);
+/** Compute the face neighbor of a prism.
+ * \param [in]     p      Input prism.
+ * \param [in]     face   The face across which to generate the neighbor.
+ * \param [in,out] n      Existing prism whose data will be filled.
+ * \note \a p may point to the same prism as \a n.
+ */
+void t8_dprism_face_neighbour(const t8_dprism_t * p, int face,
+                              t8_dprism_t * neigh);
 
 /** Compute the 8 children of a prism, array version.
  * \param [in]     p  Input prism.
@@ -129,6 +159,42 @@ int                 t8_dprism_num_face_children(const t8_dprism_t * p,
  */
 void                t8_dprism_childrenpv (const t8_dprism_t * p,
                                           int length, t8_dprism_t * c[]);
+
+/** Given a prism and a face of the prism, compute all children of
+ * the prism that touch the face.
+ * \param [in] p      The prism.
+ * \param [in] face     A face of \a p.
+ * \param [in,out] children Allocated prism, in which the children of \a p
+ *                      that share a face with \a face are stored.
+ *                      They will be stored in order of their child_id.
+ * \param [in] num_children The number of prisms in \a children. Must match
+ *                      the number of children that touch \a face.
+ */
+void t8_dprism_children_at_face(const t8_dprism_t * p,
+                           int face, t8_dprism_t ** children,
+                           int num_children);
+
+/** Given a face of a prism and a child number of a child of that face, return the face number
+ * of the child of the prism that matches the child face.
+ * \param [in]  p The prism.
+ * \param [in]  face    The number of the face.
+ * \param [in]  face_child  The child number of a child of the face prism.
+ * \return              The face number of the face of a child of \a p
+ *                      that conincides with \a face_child.
+ */
+int t8_dprism_face_child_face(const t8_dprism_t * elem, int face,
+                              int face_child);
+
+/** Given a prism and a face of this prism. If the face lies on the
+ *  tree boundary, return the face number of the tree face.
+ *  If not the return value is arbitrary.
+ * \param [in] p        The prism.
+ * \param [in] face     The index of a face of \a elem.
+ * \return The index of the tree face that \a face is a subface of, if
+ *         \a face is on a tree boundary.
+ *         Any arbitrary integer if \a is not at a tree boundary.
+ */
+int t8_dprism_tree_face(const t8_dprism_t * p,int face);
 
 /** Compute the last descendant of a prism at a given level. This is the descendant of
  * the prism in a uniform level refinement that has the largest id.

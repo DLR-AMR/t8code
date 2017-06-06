@@ -23,6 +23,7 @@
 #include "t8_dprism_bits.h"
 #include "t8_dline_bits.h"
 #include "t8_dtri_bits.h"
+#include "p4est.h"
 
 int
 my_pow (int base, int expo)
@@ -168,6 +169,45 @@ t8_dprism_is_familypv (t8_dprism_t ** fam)
   return is_family;
 }
 
+void t8_dprism_boundary_face(const t8_dprism_t * p,int face,
+                        t8_element_t * boundary)
+{
+    T8_ASSERT(0 <= face && face < T8_DPRISM_FACES);
+    if(face < 3){
+        p4est_quadrant_t * l = (p4est_quadrant_t *) boundary;
+        l->x = p->tri.x;
+        l->y = p->tri.y;
+        l->level = p->tri.level;
+    }
+    else{
+        t8_dtri_t * l = (t8_dtri_t * ) boundary;
+        l->level = p->tri.level;
+        l->type = p->tri.type;
+        l->x = p->tri.x;
+        l->y = p->tri.y;
+    }
+}
+
+int t8_dprism_is_root_boundary(const t8_dprism_t * p,int face){
+    T8_ASSERT(0 <= face && face < T8_DPRISM_FACES);
+    /*face is not the bottom or top face of a prism*/
+    if(face < 3){
+    return t8_dtri_is_root_boundary(&p->tri, face);
+    }
+    else if(face == 3){
+        return p->line.x == (t8_dline_coord_t) 0;
+    }
+    else{
+        return p->line.x == (T8_DLINE_ROOT_LEN - T8_DLINE_LEN(p->line.level));
+    }
+}
+
+int t8_dprism_is_inside_root(t8_dprism_t * p){
+    return (p->tri.x >= 0 && p->tri.x < T8_DPRISM_ROOT_LEN) &&
+                (p->tri.y >= 0 && p->tri.y < T8_DPRISM_ROOT_LEN) &&
+                (p->line.x >= 0 && p->line.x < T8_DPRISM_ROOT_LEN);
+}
+
 void
 t8_dprism_child (const t8_dprism_t * p, int childid, t8_dprism_t * child)
 {
@@ -184,10 +224,30 @@ int
 t8_dprism_num_face_children(const t8_dprism_t * p,
                                                 int face)
 {
+    T8_ASSERT(0 <= face && face < T8_DPRISM_FACES);
     /*Bottom and top have T8_DTRI_CHILDREN, the other three faces depend on
       the children the triangle face has*/
     return(face >= 3 ? T8_DTRI_CHILDREN : T8_DTRI_FACE_CHILDREN *
                        T8_DLINE_CHILDREN);
+}
+
+void
+t8_dprism_face_neighbour(const t8_dprism_t * p, int face,
+                              t8_dprism_t * neigh)
+{
+    T8_ASSERT(0 <= face && face < T8_DPRISM_FACES);
+    if(face < 3){
+        t8_dtri_face_neighbour(&p->tri, face, &neigh->tri);
+    }
+    else if(face == 4){
+        t8_dtri_copy(&p->tri, &neigh->tri);
+        t8_dline_successor(&p->line, &neigh->line, p->line.level);
+    }
+    else{
+        t8_dtri_copy(&p->tri, &neigh->tri);
+        neigh->line.level = p->line.level;
+        neigh->line.x = p->line.x - T8_DLINE_LEN(p->line.level);
+    }
 }
 
 void
@@ -200,6 +260,63 @@ t8_dprism_childrenpv (const t8_dprism_t * p, int length, t8_dprism_t * c[])
   for (i = 7; i >= 0; i--) {
     t8_dprism_child (p, i, c[i]);
   }
+}
+
+void t8_dprism_children_at_face(const t8_dprism_t * p,
+                           int face, t8_dprism_t ** children,
+                           int num_children)
+{
+    T8_ASSERT(num_children == t8_dprism_num_face_children(p, face));
+    T8_ASSERT(0 <= face && face < T8_DPRISM_FACES);
+    switch (face){
+    case 0:
+        t8_dprism_child(p, 1, children[0]);
+        t8_dprism_child(p, 3, children[1]);
+        t8_dprism_child(p, 5, children[2]);
+        t8_dprism_child(p, 7, children[3]);
+        break;
+    case 1:
+        t8_dprism_child(p, 0, children[0]);
+        t8_dprism_child(p, 3, children[1]);
+        t8_dprism_child(p, 4, children[2]);
+        t8_dprism_child(p, 7, children[3]);
+        break;
+    case 2:
+        t8_dprism_child(p, 0, children[0]);
+        t8_dprism_child(p, 1, children[1]);
+        t8_dprism_child(p, 4, children[2]);
+        t8_dprism_child(p, 5, children[3]);
+        break;
+    case 3:
+        t8_dprism_child(p, 0, children[0]);
+        t8_dprism_child(p, 1, children[1]);
+        t8_dprism_child(p, 2, children[2]);
+        t8_dprism_child(p, 3, children[3]);
+        break;
+    case 4:
+        t8_dprism_child(p, 4, children[0]);
+        t8_dprism_child(p, 5, children[1]);
+        t8_dprism_child(p, 6, children[2]);
+        t8_dprism_child(p, 7, children[3]);
+        break;
+   }
+}
+
+int t8_dprism_face_child_face(const t8_dprism_t * elem, int face,
+                              int face_child)
+{
+    T8_ASSERT(0 <= face && face < T8_DPRISM_FACES);
+    /* For prisms the face number of the children is the same as the one
+     * of the parent */
+    return face;
+}
+
+int t8_dprism_tree_face(const t8_dprism_t *p, int face)
+{
+    T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
+    /*For prisms, the face number coincides with the number of the root
+      tree face*/
+    return face;
 }
 
 void
