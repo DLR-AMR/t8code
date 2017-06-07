@@ -757,7 +757,7 @@ t8_cmesh_face_is_boundary (t8_cmesh_t cmesh, t8_locidx_t ltreeid, int face)
     /* The tree is a local tree */
     (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, ltreeid, &neighbors,
                                         &ttf);
-    if (neighbors[face] == ltreeid && ttf % F == face) {
+    if (neighbors[face] == ltreeid && ttf[face] % F == face) {
       /* This face is a boundary face */
       return 1;
     }
@@ -769,7 +769,7 @@ t8_cmesh_face_is_boundary (t8_cmesh_t cmesh, t8_locidx_t ltreeid, int face)
     ghost = t8_cmesh_trees_get_ghost_ext (cmesh->trees,
                                           ltreeid - cmesh->num_local_trees,
                                           &neighbors, &ttf);
-    if (neighbors[face] == ghost->treeid && ttf % F == face) {
+    if (neighbors[face] == ghost->treeid && ttf[face] % F == face) {
       /* this is a boundary face */
       return 1;
     }
