@@ -223,7 +223,7 @@ t8_test_fiterate_msh_file (const char *fileprefix, int level, int dim,
 {
   t8_cmesh_t          cmesh;
 
-  cmesh = t8_cmesh_from_msh_file (fileprefix, 0, comm, dim, 0);
+  cmesh = t8_cmesh_from_msh_file (fileprefix, 0, comm, dim, 0, 0);
   t8_test_fiterate_refine_and_partition (cmesh, level, comm, 1, no_vtk);
 }
 

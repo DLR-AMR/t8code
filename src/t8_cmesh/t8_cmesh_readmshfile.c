@@ -683,7 +683,8 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh,
 
 t8_cmesh_t
 t8_cmesh_from_msh_file (const char *fileprefix, int partition,
-                        sc_MPI_Comm comm, int dim, int master)
+                        sc_MPI_Comm comm, int dim, int master,
+                        int reorder_with_metis)
 {
   int                 mpirank, mpisize, mpiret;
   t8_cmesh_t          cmesh;
@@ -695,6 +696,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   char                current_file[BUFSIZ];
   FILE               *file;
   t8_gloidx_t         num_trees, first_tree, last_tree = -1;
+
+  T8_ASSERT (!partition || !reorder_with_metis);        /* Metis only works with replicated cmeshes */
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -766,6 +769,9 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   T8_ASSERT (cmesh != NULL);
   if (cmesh != NULL) {
     t8_cmesh_commit (cmesh, comm);
+    if (reorder_with_metis) {
+      t8_cmesh_reorder (cmesh, comm);
+    }
   }
   return cmesh;
 }

@@ -57,7 +57,7 @@ t8_cmesh_load_distribute (const char *fileprefix, int num_files, int no_vtk)
 }
 
 static void
-t8_cmesh_save_cmesh (const char *mshfile, int dim)
+t8_cmesh_save_cmesh (const char *mshfile, int dim, int use_metis)
 {
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
@@ -68,7 +68,11 @@ t8_cmesh_save_cmesh (const char *mshfile, int dim)
   }
   else {
     t8_cmesh_t          cmesh_partition;
-    cmesh = t8_cmesh_from_msh_file (mshfile, 1, sc_MPI_COMM_WORLD, dim, 0);
+    /* If use_metis is true, the cmesh that we read from the file cannot be partition,
+     * we thus pass !use_metis as the partition flag. */
+    cmesh =
+      t8_cmesh_from_msh_file (mshfile, !use_metis, sc_MPI_COMM_WORLD, dim, 0,
+                              use_metis);
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh);
     t8_cmesh_set_partition_uniform (cmesh_partition, 0);
@@ -112,6 +116,7 @@ int
 main (int argc, char **argv)
 {
   int                 mpiret, n, parsed, dim, no_vtk, helpme = 0;
+  int                 use_metis;
   const char         *meshfile, *loadfile;
   sc_options_t       *opt;
   char                usage[BUFSIZ];
@@ -146,6 +151,8 @@ main (int argc, char **argv)
                          "The prefix of the .msh file.");
   sc_options_add_int (opt, 'd', "dim", &dim, 2,
                       "The dimension of the msh file.");
+  sc_options_add_switch (opt, 'm', "metis", &use_metis,
+                         "Use Metis (serial) to repartition the mesh. Only active together with -f.");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
@@ -165,7 +172,7 @@ main (int argc, char **argv)
   else {
     if (strcmp (meshfile, "") != 0) {
       /* If a meshfile was specified, we load it and save the cmesh on disk */
-      t8_cmesh_save_cmesh (meshfile, dim);
+      t8_cmesh_save_cmesh (meshfile, dim, use_metis);
     }
     else {
       /* A load file and a number of processes was given */

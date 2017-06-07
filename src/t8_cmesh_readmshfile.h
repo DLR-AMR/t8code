@@ -51,12 +51,18 @@ T8_EXTERN_C_BEGIN ();
  *                              dimension to read has to be set manually.
  * \param [in]    master        If partition is true, a valid MPI rank that will
  *                              read the file and store all the trees alone.
+ * \param [in]    reorder_with_metis If true, \a partition must be set to false and
+ *                              the cmesh is partitioned with Metis after it is read from
+ *                              the file.
  * \return        A committed cmesh holding the mesh of dimension \a dim in the
  *                specified .msh file.
+ * \note          We currently only support Metis, parMetis for partitioned cmeshes will
+ *                eventually be included.
  */
 t8_cmesh_t
 t8_cmesh_from_msh_file (const char *fileprefix, int partition,
-                        sc_MPI_Comm comm, int dim, int master);
+                        sc_MPI_Comm comm, int dim, int master,
+                        int reorder_with_metis);
 
 T8_EXTERN_C_END ();
 

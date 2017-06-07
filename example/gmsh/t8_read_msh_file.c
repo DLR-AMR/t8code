@@ -87,7 +87,7 @@ t8_read_msh_file_build_cmesh (const char *prefix, int do_partition, int dim,
   partitioned_read = master >= 0;
   cmesh =
     t8_cmesh_from_msh_file ((char *) prefix, partitioned_read,
-                            sc_MPI_COMM_WORLD, dim, master);
+                            sc_MPI_COMM_WORLD, dim, master, 0);
   if (cmesh != NULL) {
     t8_debugf ("Succesfully constructed cmesh from %s.msh file.\n", prefix);
     t8_debugf ("cmesh is of dimension %i and has %lli elements.\n",
