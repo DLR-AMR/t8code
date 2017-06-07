@@ -190,6 +190,7 @@ main (int argc, char **argv)
   t8_init (SC_LP_DEFAULT);
 
   t8_test_ghost_owner ();
+  t8_debugf ("Test successful\n");
 
   sc_finalize ();
 
