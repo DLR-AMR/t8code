@@ -53,8 +53,9 @@ t8_basic_adapt_balance (t8_forest_t forest, t8_locidx_t which_tree,
     return 0;
   }
   child_id = ts->t8_element_child_id (elements[0]);
-  if (which_tree + t8_forest_get_first_local_tree_id (forest_from) == 0
-      && child_id == 2) {
+  /* refine the last child of even trees */
+  if ((which_tree + t8_forest_get_first_local_tree_id (forest_from)) % 2 == 0
+      && child_id == ts->t8_element_num_children (elements[0]) - 1) {
     return 1;
   }
   return 0;
@@ -130,7 +131,7 @@ t8_basic_balance_test (t8_eclass_t eclass)
   t8_forest_t         forest, forest_ada_bal_par;
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
-  int                 maxlevel = 5;
+  int                 maxlevel = 6;
 
   t8_forest_init (&forest);
   if (eclass == T8_ECLASS_LINE) {
@@ -142,7 +143,7 @@ t8_basic_balance_test (t8_eclass_t eclass)
 
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
-  t8_forest_set_level (forest, 1);
+  t8_forest_set_level (forest, 2);
   t8_forest_commit (forest);
   /* Output to vtk */
   snprintf (filename, BUFSIZ, "forest_uniform_%s",
@@ -167,40 +168,6 @@ t8_basic_balance_test (t8_eclass_t eclass)
   t8_forest_print_profile (forest_ada_bal_par);
   t8_forest_unref (&forest_ada_bal_par);
 
-#if 0
-
-  t8_forest_init (&forest_adapt);
-  t8_forest_set_user_data (forest, &maxlevel);
-  t8_forest_set_user_data (forest_adapt, forest);
-  t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt_balance, NULL, 1);
-  t8_forest_commit (forest_adapt);
-  /* Output to vtk */
-  snprintf (filename, BUFSIZ, "forest_adapt_%s", t8_eclass_to_string[eclass]);
-  t8_forest_write_vtk (forest_adapt, filename);
-
-  /* partition the forest */
-  t8_forest_init (&forest_partition);
-  t8_forest_set_partition (forest_partition, forest_adapt, 0);
-  t8_forest_commit (forest_partition);
-  /* Output to vtk */
-  snprintf (filename, BUFSIZ, "forest_partition_%s",
-            t8_eclass_to_string[eclass]);
-  t8_forest_write_vtk (forest_partition, filename);
-
-  {
-    t8_forest_t         f_balance;
-
-    t8_forest_init (&f_balance);
-    t8_forest_set_balance (f_balance, forest_partition, 1);
-    t8_forest_set_profiling (f_balance, 1);
-    t8_forest_commit (f_balance);
-    snprintf (filename, BUFSIZ, "forest_balance_%s",
-              t8_eclass_to_string[eclass]);
-    t8_forest_write_vtk (f_balance, filename);
-    t8_forest_print_profile (f_balance);
-    t8_forest_unref (&f_balance);
-  }
-#endif
 }
 #endif
 
@@ -492,7 +459,7 @@ main (int argc, char **argv)
   t8_basic ();
 #endif
   //t8_basic_hypercube (T8_ECLASS_TET, 1, 1, 0);
-  t8_basic_balance_test (T8_ECLASS_TRIANGLE);
+  t8_basic_balance_test (T8_ECLASS_TET);
 #if 0
   t8_basic_forest_partition ();
   t8_global_productionf ("Testing hypercube cmesh.\n");
