@@ -1199,6 +1199,20 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
   else {
     last_face_desc = last_desc;
   }
+#ifdef T8_ENABLE_DEBUG
+    {
+      /* Check if the computed or given descendants are the correct descendant */
+      t8_element_t *test_desc;
+      uint64_t test_id;
+
+      ts->t8_element_new (1, &test_desc);
+      ts->t8_element_last_descendant_face (element, face, test_desc);
+      T8_ASSERT (!ts->t8_element_compare (test_desc, last_face_desc));
+      ts->t8_element_first_descendant_face (element, face, test_desc);
+      T8_ASSERT (!ts->t8_element_compare (test_desc, first_face_desc));
+      ts->t8_element_destroy (1, &test_desc);
+    }
+#endif
 
   /* owner of first and last descendants */
   first_owner =
@@ -1250,9 +1264,9 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
       child_face = ts->t8_element_face_child_face (element, face, ichild);
       /* find owners of this child */
       /* For the first child, we reuse the first descendant */
-      first_desc = ichild == 0 ? first_face_desc : NULL;
+      first_desc = (ichild == 0 ? first_face_desc : NULL);
       /* For the last child, we reuse the last descendant */
-      last_desc = ichild == num_children - 1 ? last_face_desc : NULL;
+      last_desc = (ichild == num_children - 1 ? last_face_desc : NULL);
       t8_forest_element_owners_at_face_recursion (forest, gtreeid,
                                                   face_children[ichild],
                                                   eclass, ts, child_face,
