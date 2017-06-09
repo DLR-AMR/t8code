@@ -844,6 +844,9 @@ t8_cmesh_trees_reorder (t8_cmesh_t cmesh, t8_cmesh_trees_t trees,
   /* Preparet the new part */
   old_part->num_trees = num_local_trees;
   old_part->num_ghosts = num_ghosts;
+  /* TODO: Currently we only accept replicated meshes.
+   *       What keeps us from using meshes with ghost trees?
+   *       They should just be copied in the memcpy step below. */
   T8_ASSERT (num_ghosts == 0);
   old_part->first_ghost_id = 0;
   old_part->first_tree_id = 0;

@@ -155,6 +155,8 @@ main (int argc, char **argv)
                          "The prefix of the .msh file.");
   sc_options_add_int (opt, 'd', "dim", &dim, 2,
                       "The dimension of the msh file.");
+
+  /* TODO: add a parameter to control the number of metis partitions. i.e. -m 4 for 4 partitions or smth. */
   sc_options_add_switch (opt, 'm', "metis", &use_metis,
                          "Use Metis (serial) to repartition the mesh. Only active together with -f.");
   parsed =
