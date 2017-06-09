@@ -57,7 +57,7 @@ t8_cmesh_load_distribute (const char *fileprefix, int num_files, int no_vtk)
 }
 
 static void
-t8_cmesh_save_cmesh (const char *mshfile, int dim, int use_metis)
+t8_cmesh_save_cmesh (const char *mshfile, int dim, int use_metis, int no_vtk)
 {
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
@@ -88,6 +88,10 @@ t8_cmesh_save_cmesh (const char *mshfile, int dim, int use_metis)
   }
   else {
     t8_debugf ("Saved cmesh to %s\n", filename);
+  }
+  if (!no_vtk) {
+    snprintf (filename, BUFSIZ, "cmesh_saved");
+    t8_cmesh_vtk_write_file (cmesh, filename, 1.0);
   }
   t8_cmesh_destroy (&cmesh);
 }
@@ -166,13 +170,18 @@ main (int argc, char **argv)
            || (strcmp (meshfile, "") == 0 && strcmp (loadfile, "") == 0)
            || (strcmp (loadfile, "") != 0 && n <= 0)
            || dim < 2 || dim > 3) {
-    fprintf (stderr, "%s", help);
-    return 1;
+    t8_global_errorf ("%s", help);
   }
+#ifndef T8_WITH_METIS
+  else if (use_metis) {
+    t8_global_errorf ("t8code is not compilled with Metis support.\n");
+    t8_global_errorf ("Link t8code with Metis to use this feature.\n");
+  }
+#endif
   else {
     if (strcmp (meshfile, "") != 0) {
       /* If a meshfile was specified, we load it and save the cmesh on disk */
-      t8_cmesh_save_cmesh (meshfile, dim, use_metis);
+      t8_cmesh_save_cmesh (meshfile, dim, use_metis, no_vtk);
     }
     else {
       /* A load file and a number of processes was given */
