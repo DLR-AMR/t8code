@@ -442,8 +442,8 @@ void                t8_cmesh_trees_add_attribute (t8_cmesh_trees_t trees,
  */
 size_t              t8_cmesh_trees_get_numproc (t8_cmesh_trees_t trees);
 
-/** Perform a permutation on the local trees in a trees struct.
- * \param [in]        cmesh The cmesh.
+/** Perform a permutation on the local trees of a replicated cmesh in a trees struct.
+ * \param [in]        cmesh The cmesh. Must be replicated.
  * \param [in]        trees The trees structure for \a cmesh.
  * \param [in, out]   new_ltreeids An array of length num_local_trees
  *                    specifying for each local tree a new local tree id.

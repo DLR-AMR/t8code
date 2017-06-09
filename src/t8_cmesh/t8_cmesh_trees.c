@@ -821,39 +821,121 @@ void
 t8_cmesh_trees_reorder (t8_cmesh_t cmesh, t8_cmesh_trees_t trees,
                         t8_locidx_t * new_ltreeids)
 {
-  /* Store the local index of the first tree that we have not
-   * moved yet. */
-  t8_locidx_t         first_untouched_tree = 0;
-  /* Store the local index of the first tree in the current cycle
-   * of the permutation. */
-  t8_locidx_t         first_tree_in_cycle = 0;
-  //t8_ctree_t temp_tree;
-  t8_part_tree_t      part, new_part;
-  t8_locidx_t         num_local_trees, num_ghosts, itree, ighost;
+  t8_part_tree_t      part, old_part;
+  t8_locidx_t         num_local_trees, num_ghosts, itree;
+  t8_locidx_t        *new_faces, *old_faces;
   size_t              memory_usage;
+  t8_ctree_struct_t  *new_trees, *old_trees;
+  t8_ctree_t          new_tree, old_tree;
+  int8_t             *new_ttf, *old_ttf;
+  int                 num_faces, iface;
+  size_t              num_attributes, iatt, att_offset, total_num_attributes;
+  t8_attribute_info_struct_t *old_att, *new_att;
 
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
   /* This algorithm supports only cmeshes with one part */
   T8_ASSERT (trees->from_proc->elem_count == 1);
   T8_ASSERT (cmesh->trees == trees);
 
-  new_part = T8_ALLOC (t8_part_tree, 1);
+  old_part = T8_ALLOC (t8_part_tree_struct_t, 1);
   num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
   num_ghosts = t8_cmesh_get_num_ghosts (cmesh);
 
-  new_part->num_trees = num_local_trees;
-  new_part->num_ghosts = num_ghosts;
-  new_part->first_ghost_id = 0;
-  new_part->first_tree_id = 0;
+  /* Preparet the new part */
+  old_part->num_trees = num_local_trees;
+  old_part->num_ghosts = num_ghosts;
+  T8_ASSERT (num_ghosts == 0);
+  old_part->first_ghost_id = 0;
+  old_part->first_tree_id = 0;
 
   /* Compute the byte count of all trees/ghosts and attributes */
   memory_usage = t8_cmesh_trees_size (trees);
   /* Allocate enough memory to store all information in one part */
-  new_part->first_tree = T8_ALLOC (char, memory_usage);
+  old_part->first_tree = T8_ALLOC (char, memory_usage);
 
-  /* Copy ghosts */
-  for (ighost = 0; ighost < num_ghosts; ighost++) {
+  /* Copy the trees/attinfos and attributes */
+  part = t8_cmesh_trees_get_part (trees, 0);
+  memcpy (old_part->first_tree, part->first_tree, memory_usage);
+  /* The trees will keep their att_offset and neigh_offset entries as well as
+   * their treeid entry.
+   * What changes are
+   *  eclass
+   *  num_attributes
+   */
+  new_trees = (t8_ctree_t) part->first_tree;
+  old_trees = (t8_ctree_t) old_part->first_tree;
 
+  total_num_attributes = 0;
+  /* Note: This loop iterates over the old trees.
+   *       The next for loop iterates over the new trees */
+  for (itree = 0; itree < num_local_trees; itree++) {
+    /* Get pointers to the new tree position and the old tree */
+    old_tree = &old_trees[itree];
+    new_tree = &new_trees[new_ltreeids[itree]];
+    /* Set the new values */
+    new_tree->eclass = old_tree->eclass;
+    new_tree->num_attributes = old_tree->num_attributes;
+    /* We temporarily store the old trees id here, we need in when
+     * we copy the attributes */
+    T8_ASSERT (new_tree->treeid == new_ltreeids[itree]);
+    new_tree->treeid = itree;
+
+    /* Copy the face neighbor values */
+    num_faces = t8_eclass_num_faces[old_tree->eclass];
+    new_faces = (t8_locidx_t *) T8_TREE_FACE (new_tree);
+    old_faces = (t8_locidx_t *) T8_TREE_FACE (old_tree);
+    new_ttf = (int8_t *) T8_TREE_TTF (new_tree);
+    old_ttf = (int8_t *) T8_TREE_TTF (old_tree);
+    /* Change the face neighbor entries to store the new treeids */
+    for (iface = 0; iface < num_faces; iface++) {
+      new_faces[iface] = new_ltreeids[old_faces[iface]];
+      new_ttf[iface] = old_ttf[iface];
+    }
+
+    /* Copy the attribute infos whithout setting the new
+     * attribute offsets. */
+    num_attributes = new_tree->num_attributes;
+    total_num_attributes += num_attributes;
+    for (iatt = 0; iatt < num_attributes; iatt++) {
+      new_att = T8_TREE_ATTR_INFO (new_tree, iatt);
+      old_att = T8_TREE_ATTR_INFO (old_tree, iatt);
+      new_att->attribute_size = old_att->attribute_size;
+      new_att->key = old_att->key;
+      new_att->package_id = old_att->package_id;
+    }
   }
+
+  /* We now iterate through the new trees and set the correct
+   * attribute offsets */
+  /* The offset of an attribute is the offset from the first att_info_struct
+   * of the current tree to the attribute.
+   * Thus, the first offset is the number of attributes for all trees multiplied
+   * with the size of the att_info_struct. */
+  att_offset = total_num_attributes * sizeof (t8_attribute_info_struct_t);
+  for (itree = 0; itree < num_local_trees; itree++) {
+    new_tree = &new_trees[itree];
+    old_tree = &old_trees[new_tree->treeid];
+    T8_ASSERT (new_ltreeids[new_tree->treeid] == itree);
+    new_tree->treeid = itree;
+
+    num_attributes = new_tree->num_attributes;
+    for (iatt = 0; iatt < num_attributes; iatt++) {
+      new_att = T8_TREE_ATTR_INFO (new_tree, iatt);
+      old_att = T8_TREE_ATTR_INFO (old_tree, iatt);
+      /* Set the new offset */
+      new_att->attribute_offset = att_offset;
+      /* Add the size of this attribute to the offset */
+      att_offset += new_att->attribute_size;
+      /* Copy this attribute over */
+      memcpy (T8_TREE_ATTR (new_tree, new_att),
+              T8_TREE_ATTR (old_tree, old_att), new_att->attribute_size);
+    }
+
+    /* subtract this trees att_info_structs from the offset */
+    att_offset -= num_attributes * sizeof (t8_attribute_info_struct_t);
+  }
+  T8_FREE (old_trees);
+  T8_FREE (old_part);
 }
 
 void
@@ -1015,6 +1097,7 @@ t8_cmesh_trees_is_face_consistend (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
         /* Check whether the ttf entry of neighbor is correct */
         ret = ttf2[face1] % F == iface && ttf2[face1] / F == orientation;
       }
+
 #ifdef T8_ENABLE_DEBUG
       if (ret != 1) {
         t8_debugf ("Face connection missmatch at tree %i face %i\n", ltree,
