@@ -770,7 +770,12 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   if (cmesh != NULL) {
     t8_cmesh_commit (cmesh, comm);
     if (reorder_with_metis) {
-      t8_cmesh_reorder (cmesh, comm);
+#if T8_WITH_METIS
+      t8_cmesh_reorder (cmesh, comm, cmesh->mpisize);
+#else
+      t8_global_errorf ("t8code was not compiled to link with Metis. "
+                        "Recompile with Metis to use its features.\n");
+#endif
     }
   }
   return cmesh;

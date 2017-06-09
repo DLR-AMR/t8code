@@ -779,10 +779,8 @@ t8_cmesh_face_is_boundary (t8_cmesh_t cmesh, t8_locidx_t ltreeid, int face)
 
 #ifdef T8_WITH_METIS
 void
-t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm, idx_t num_partitions)
 {
-  int                 mpisize, mpiret;
-  idx_t               idx_mpisize;
   idx_t               ncon = 1, elemens;
   idx_t               volume, *partition, ipart, newpart;
   int                 num_faces, iface, count_face;
@@ -791,23 +789,19 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   int                 success;
   t8_locidx_t        *new_number, itree, *tree_per_part_off, *tree_per_part;
   t8_locidx_t        *face_neighbor;
-  t8_locidx_t         neigh_id;
-  t8_ctree_t          tree;
   t8_eclass_t         tree_class;
+
+  t8_debugf ("Starting METIS\n");
 
   /* cmesh must be commited and not partitioned */
   T8_ASSERT (cmesh->committed);
   T8_ASSERT (!cmesh->set_partition);
 
-  mpiret = sc_MPI_Comm_size (comm, &mpisize);
-  idx_mpisize = mpisize;
-  SC_CHECK_MPI (mpiret);
-
   elemens = cmesh->num_trees;
   T8_ASSERT ((t8_locidx_t) elemens == cmesh->num_trees);
 
-  if (mpisize == 1) {
-    /* Only one process, no repartioning is performed */
+  if (num_partitions == 1) {
+    /* Only one partition, no repartioning is performed */
     return;
   }
   /* Count the number of tree-to-tree connections via a face */
@@ -834,28 +828,14 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, itree, &face_neighbor,
                                         NULL);
     xadj[itree + 1] = xadj[itree];
-    t8_debugf ("[H] tree %i start %i\n", itree, xadj[itree + 1]);
     for (iface = 0; iface < t8_eclass_num_faces[tree_class]; iface++) {
       if (!t8_cmesh_face_is_boundary (cmesh, itree, iface)) {
         adjncy[count_face++] = face_neighbor[iface];
         xadj[itree + 1]++;
-        t8_debugf ("[H] add 1 to get %i\n", xadj[itree + 1]);
       }
     }
   }
-  t8_debugf ("[H] %i faces\n", count_face);
-  {
-    for (itree = 0, count_face = 0; itree < cmesh->num_trees; itree++) {
-      t8_debugf ("[H] tree %i from %i:\t", itree, xadj[itree]);
-      tree_class = t8_cmesh_get_tree_class (cmesh, itree);
-      for (iface = 0; iface < t8_eclass_num_faces[tree_class]; iface++) {
-        if (!t8_cmesh_face_is_boundary (cmesh, itree, iface)) {
-          printf (" %i (%i) ", adjncy[count_face++], iface);
-        }
-      }
-      printf ("\n");
-    }
-  }
+
   T8_ASSERT (count_face == num_faces);
 
   /* partition stores the new partition number for each element */
@@ -868,7 +848,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 #if 1
   success =
     METIS_PartGraphRecursive (&elemens, &ncon, xadj, adjncy, NULL, NULL, NULL,
-                              &idx_mpisize, NULL, NULL, options, &volume,
+                              &num_partitions, NULL, NULL, options, &volume,
                               partition);
 #else
   success =
@@ -881,9 +861,9 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   /* memory to store the new treeid of a tree */
   new_number = T8_ALLOC (t8_locidx_t, cmesh->num_trees);
   /* Store the number of trees per partition */
-  tree_per_part = T8_ALLOC_ZERO (t8_locidx_t, mpisize);
+  tree_per_part = T8_ALLOC_ZERO (t8_locidx_t, num_partitions);
   /* Store the treeid offset of each partition. */
-  tree_per_part_off = T8_ALLOC_ZERO (t8_locidx_t, mpisize + 1);
+  tree_per_part_off = T8_ALLOC_ZERO (t8_locidx_t, num_partitions + 1);
   tree_per_part_off[0] = 0;
   /* compute tree_per_part and prepare tree_per_part_off */
   for (itree = 0; itree < cmesh->num_trees; itree++) {
@@ -891,7 +871,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     tree_per_part_off[partition[itree] + 1]++;
   }
   /* compute tree_per_part_off */
-  for (ipart = 1; ipart <= mpisize; ipart++) {
+  for (ipart = 1; ipart <= num_partitions; ipart++) {
     tree_per_part_off[ipart] += tree_per_part_off[ipart - 1];
   }
   /* Compute for each tree its new treeid */
@@ -901,23 +881,10 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     new_number[itree] =
       tree_per_part_off[newpart + 1] - tree_per_part[newpart];
     tree_per_part[newpart]--;
-    t8_debugf ("[H] New id of %i:\t%i\n", itree, new_number[itree]);
   }
-  /* Set for each tree its new treeid and the new ids of its neighbors */
-  for (itree = 0; itree < cmesh->num_trees; itree++) {
-    tree = t8_cmesh_trees_get_tree_ext (cmesh->trees, itree, &face_neighbor,
-                                        NULL);
-    tree->treeid = new_number[itree];
-    t8_debugf ("[H] New tree %i\t", itree);
-    for (iface = 0; iface < t8_eclass_num_faces[tree->eclass]; iface++) {
-      neigh_id = face_neighbor[iface];
-      face_neighbor[iface] = new_number[neigh_id];
-      printf ("%i ", face_neighbor[iface]);
-    }
-    printf ("\n");
-  }
-  /* Now the trees are not sorted in the cmesh->trees array. We need to sort them */
-  SC_ABORT ("Not implemented\n");
+
+  /* Reorder the trees */
+  t8_cmesh_trees_reorder (cmesh, cmesh->trees, new_number);
 
   T8_FREE (partition);
   T8_FREE (xadj);
@@ -925,6 +892,8 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   T8_FREE (new_number);
   T8_FREE (tree_per_part);
   T8_FREE (tree_per_part_off);
+
+  t8_debugf ("End METIS\n");
 }
 #endif
 

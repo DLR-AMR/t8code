@@ -31,6 +31,9 @@
 #include <t8_shmem.h>
 #include <t8_cmesh/t8_cmesh_save.h>
 #include <t8_element.h>
+#ifdef T8_WITH_METIS
+#include <metis.h>
+#endif
 
 /* TODO: If including eclass were just for the cmesh_new routines, we should
  *       move them into a different file.
@@ -322,7 +325,8 @@ t8_cmesh_t          t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root,
 #ifdef T8_WITH_METIS
 /* TODO: document this. */
 /* TODO: think about making this a pre-commit set_reorder function. */
-void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
+void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm,
+                                      idx_t num_partitions);
 
 /* TODO: think about a sensible interface for a parmetis reordering. */
 #endif
