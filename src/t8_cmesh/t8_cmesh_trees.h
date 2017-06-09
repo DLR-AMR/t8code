@@ -442,6 +442,20 @@ void                t8_cmesh_trees_add_attribute (t8_cmesh_trees_t trees,
  */
 size_t              t8_cmesh_trees_get_numproc (t8_cmesh_trees_t trees);
 
+/** Perform a permutation on the local trees in a trees struct.
+ * \param [in]        cmesh The cmesh.
+ * \param [in]        trees The trees structure for \a cmesh.
+ * \param [in, out]   new_ltreeids An array of length num_local_trees
+ *                    specifying for each local tree a new local tree id.
+ *                    This array will be modified by the function and thus
+ *                    its values cannot be reused.
+ * \note In the current implementation this funcion is only callable if trees
+ * has exactly one part.
+ */
+void                t8_cmesh_trees_reorder (t8_cmesh_t cmesh,
+                                            t8_cmesh_trees_t trees,
+                                            t8_locidx_t * new_ltreeids);
+
 /* TODO: To fit to the interface a trees struct is given as parameter here,
  *       however we could just take the one associated to the cmesh given.*/
 /** Print the trees,ghosts and their neighbors in ASCII format t stdout.

@@ -818,6 +818,45 @@ t8_cmesh_trees_get_numproc (t8_cmesh_trees_t trees)
 }
 
 void
+t8_cmesh_trees_reorder (t8_cmesh_t cmesh, t8_cmesh_trees_t trees,
+                        t8_locidx_t * new_ltreeids)
+{
+  /* Store the local index of the first tree that we have not
+   * moved yet. */
+  t8_locidx_t         first_untouched_tree = 0;
+  /* Store the local index of the first tree in the current cycle
+   * of the permutation. */
+  t8_locidx_t         first_tree_in_cycle = 0;
+  //t8_ctree_t temp_tree;
+  t8_part_tree_t      part, new_part;
+  t8_locidx_t         num_local_trees, num_ghosts, itree, ighost;
+  size_t              memory_usage;
+
+  /* This algorithm supports only cmeshes with one part */
+  T8_ASSERT (trees->from_proc->elem_count == 1);
+  T8_ASSERT (cmesh->trees == trees);
+
+  new_part = T8_ALLOC (t8_part_tree, 1);
+  num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
+  num_ghosts = t8_cmesh_get_num_ghosts (cmesh);
+
+  new_part->num_trees = num_local_trees;
+  new_part->num_ghosts = num_ghosts;
+  new_part->first_ghost_id = 0;
+  new_part->first_tree_id = 0;
+
+  /* Compute the byte count of all trees/ghosts and attributes */
+  memory_usage = t8_cmesh_trees_size (trees);
+  /* Allocate enough memory to store all information in one part */
+  new_part->first_tree = T8_ALLOC (char, memory_usage);
+
+  /* Copy ghosts */
+  for (ighost = 0; ighost < num_ghosts; ighost++) {
+
+  }
+}
+
+void
 t8_cmesh_trees_print (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
 {
 #ifdef T8_ENABLE_DEBUG
