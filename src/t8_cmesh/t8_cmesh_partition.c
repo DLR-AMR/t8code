@@ -132,8 +132,6 @@ t8_partition_new_ghost_ids (t8_cmesh_t cmesh,
     new_hash->local_id = ghost_it + first_ghost + cmesh->num_local_trees;
     ret = sc_hash_insert_unique (cmesh->trees->ghost_globalid_to_local_id,
                                  new_hash, NULL);
-    t8_debugf ("[H] Added global id %li local id %i %p\n", ghost->treeid,
-               new_hash->local_id, cmesh->trees->ghost_globalid_to_local_id);
     /* The entry must not have existed before */
     T8_ASSERT (ret);
   }
@@ -1131,7 +1129,6 @@ t8_partition_compute_gab (t8_cmesh_t cmesh_from, sc_array_t * send_as_ghost,
   *attr_info_bytes = 0;
   for (ighost = 0; ighost < send_as_ghost->elem_count; ighost++) {
     ghost_id = *(t8_locidx_t *) sc_array_index (send_as_ghost, ighost);
-    t8_debugf ("[H] reading ghost_id %i\n", (int) ghost_id);
     T8_ASSERT (ghost_id >= 0);
     if (ghost_id < cmesh_from->num_local_trees) {
       /* This ghost is currently a local tree */
@@ -1144,8 +1141,6 @@ t8_partition_compute_gab (t8_cmesh_t cmesh_from, sc_array_t * send_as_ghost,
       /* This ghost is currently a ghost */
       ghost_id_min_offset =
         ghost_id - t8_cmesh_get_num_local_trees (cmesh_from);
-      t8_debugf ("[H] ghost_id %i is ghost number %i\n", ghost_id,
-                 ghost_id_min_offset);
       T8_ASSERT (0 <= ghost_id_min_offset
                  && ghost_id_min_offset <
                  t8_cmesh_get_num_ghosts (cmesh_from));
@@ -1550,9 +1545,6 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
     if (num_attributes > 0) {
       size_t              this_ghosts_att_info_size;
       t8_attribute_info_struct_t *first_attr_info;
-
-      t8_debugf ("[H] Copy %i atts of total size %lu\n",
-                 num_attributes, ghost_att_size);
 
       /* The byte count of this ghosts attribute info structs */
       this_ghosts_att_info_size =
