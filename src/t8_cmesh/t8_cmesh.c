@@ -897,6 +897,14 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm, idx_t num_partitions)
 }
 #endif
 
+int
+t8_cmesh_first_tree_is_shared (t8_cmesh_t cmesh)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+
+  return cmesh->first_tree_shared;
+}
+
 t8_gloidx_t
 t8_cmesh_get_num_trees (t8_cmesh_t cmesh)
 {

@@ -376,6 +376,15 @@ int                 t8_cmesh_comm_is_valid (t8_cmesh_t cmesh,
 int                 t8_cmesh_face_is_boundary (t8_cmesh_t cmesh,
                                                t8_locidx_t ltreeid, int face);
 
+/** Check whether the first local tree in a cmesh is shared with the
+ * previous (non-empty) rank.
+ * \param [in] cmesh      The cmesh.
+ * \return                True if the first local tree of \a cmesh is shared
+ *                        with a previous rank. False otherwise.
+ * \a cmesh must be committed before calling this function.
+ */
+int                 t8_cmesh_first_tree_is_shared (t8_cmesh_t cmesh);
+
 /** Return the global number of trees in a cmesh.
  * \param [in] cmesh       The cmesh to be considered.
  * \return                 The number of trees associated to \a cmesh.
