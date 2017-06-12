@@ -1,0 +1,29 @@
+# This script can be used to configure the Zoltan library for use with t8code.
+# Change the directories to match your preference.
+
+# The source dir of Zoltan
+ZOLTAN_SOURCE=$HOME/source/Zoltan_v3.82
+
+# Compiler flags to be used for C and C++ compilers
+# 
+# uncomment the following line for debugging flags
+# FLAGS="-O0 -g"
+# uncomment the following line for optimized flags
+FLAGS="-O2"
+
+# Install directory
+INSTALL=$HOME/execute/Zoltan_release/build
+
+# Parmetis directory
+PARMETIS_DIR=$HOME/execute/parmetis
+
+# Metis directory
+# There is a bug in parmetis (v. 4.0.3) which prevents it from installing 
+# metis.h. We thus need to install metis manually and point to
+# the header.
+# For more details, see http://glaros.dtc.umn.edu/gkhome/node/832
+METIS_DIR=$HOME/execute/metis
+
+$ZOLTAN_SOURCE/configure --enable-mpi CFLAGS="$FLAGS" CXXFLAGS="$FLAGS" --prefix=$INSTALL \
+--with-parmetis --with-parmetis-incdir=$PARMETIS_DIR/include --with-parmetis-libdir=$PARMETIS_DIR/lib \
+--with-incdirs=-I$METIS_DIR/include --with-libdirs=-L$METIS_DIR/lib
