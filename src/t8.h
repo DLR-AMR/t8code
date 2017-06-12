@@ -91,6 +91,7 @@ typedef p4est_gloidx_t t8_gloidx_t;
 #define T8_GLOIDX_ABS(x) P4EST_GLOIDX_ABS(x)
 #define t8_compare_gloidx(v,w) p4est_gloidx_compare(v,w)
 
+/* TODO: use macro T8_SIZEOF_VOID_P or maybe SC_MEMALIGN_BYTES_LINK */
 #define T8_PADDING_SIZE (sizeof (void*))
 /** Compute the number of bytes that have to be added to a given byte_count
  * such that it is a multiple of the padding size */
