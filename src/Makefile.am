@@ -19,6 +19,7 @@ libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_refine.h src/t8_cmesh/t8_cmesh_copy.h \
   src/t8_cmesh/t8_cmesh_save.h \
   src/t8_cmesh/t8_cmesh_offset.h src/t8_forest/t8_forest_partition.h \
+  src/t8_cmesh/t8_cmesh_zoltan.h \
   src/t8_forest/t8_forest_cxx.h src/t8_forest/t8_forest_private.h \
   src/t8_forest/t8_forest_ghost.h src/t8_forest/t8_forest_iterate.h src/t8_vtk.h
 libt8_compiled_sources = \
@@ -31,6 +32,7 @@ libt8_compiled_sources = \
   src/t8_cmesh/t8_cmesh_partition.c src/t8_cmesh/t8_cmesh_refine.cxx \
   src/t8_cmesh/t8_cmesh_copy.c src/t8_shmem.c \
   src/t8_cmesh/t8_cmesh_offset.c src/t8_cmesh/t8_cmesh_readmshfile.c \
+  src/t8_cmesh/t8_cmesh_zoltan.c \
   src/t8_forest/t8_forest.c src/t8_forest/t8_forest_adapt.cxx src/t8_geometry.c \
   src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest_cxx.cxx \
   src/t8_forest/t8_forest_private.c src/t8_forest/t8_forest_vtk.cxx \
