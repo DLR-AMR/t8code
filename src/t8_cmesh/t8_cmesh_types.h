@@ -97,6 +97,10 @@ typedef struct t8_cmesh
                                            refinement patter. See \ref t8_cmesh_set_refine. */
   int8_t              set_partition_level; /**< Non-negative if the cmesh should be partition from an already existing cmesh
                                          with an assumes \a level uniform mesh underneath.  TODO: fix sentence */
+#ifdef T8_WITH_ZOLTAN
+  struct Zoltan_Struct *zoltan_struct; /**< If we compile with Zoltan support and the cmesh is to be repartitioned
+                                            using Zoltan, we store the Zoltan settings in this struct.
+#endif
 #if 0
   t8_cmesh_from_t     from_method;      /* TODO: Document */
 #endif
