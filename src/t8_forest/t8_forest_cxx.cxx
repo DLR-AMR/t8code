@@ -120,12 +120,17 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   case T8_ECLASS_PRISM:
     /*Prisminterpolation, via height, and triangle */
     /*Get a triangle at the specific height */
+    double              tri_vertices[9];
+    for (i = 0; i < 9; i++) {
+      tri_vertices[i] =
+        len * (vertices[9 + i] - vertices[i]) * corner_coords[2] +
+        vertices[i];
+    }
     for (i = 0; i < 3; i++) {
       coordinates[i] =
-        len * ((vertices[3 + i] - vertices[i]) * corner_coords[0] +
-               (vertices[6 + i] - vertices[3 + i]) * corner_coords[1] +
-               (vertices[9 + i] - vertices[i]) * corner_coords[2]) +
-        vertices[i];
+        len * (tri_vertices[3 + i] - tri_vertices[i]) * corner_coords[0] +
+        len * (tri_vertices[6 + i] - tri_vertices[3 + i]) * corner_coords[1]
+        + tri_vertices[i];
     }
     break;
   case T8_ECLASS_QUAD:

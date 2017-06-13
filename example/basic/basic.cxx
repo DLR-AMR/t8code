@@ -71,7 +71,7 @@ t8_basic_refine_test (t8_eclass_t eclass)
     cmesh = t8_cmesh_new_line_zigzag (sc_MPI_COMM_WORLD);
   }
   else if (eclass == T8_ECLASS_PRISM) {
-    cmesh = t8_cmesh_new_prism_cake (sc_MPI_COMM_WORLD, 6);
+    cmesh = t8_cmesh_new_prism_deformed (sc_MPI_COMM_WORLD);
   }
   else {
     cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0);

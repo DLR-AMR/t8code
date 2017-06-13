@@ -780,7 +780,8 @@ t8_forest_vtk_write_cells (t8_forest_t forest, FILE * vtufile,
       T8_VTK_LOCIDX;
     freturn = t8_forest_vtk_write_cell_data (forest, vtufile, "element_id",
                                              datatype, "", 8,
-                                             t8_forest_vtk_cells_elementid_kernel, 1);
+                                             t8_forest_vtk_cells_elementid_kernel,
+                                             write_ghosts);
     if (!freturn) {
       goto t8_forest_vtk_cell_failure;
     }

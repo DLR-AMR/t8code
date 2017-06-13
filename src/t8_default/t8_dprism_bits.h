@@ -110,15 +110,16 @@ int                 t8_dprism_is_familypv (t8_dprism_t ** fam);
   * \param [in] p       The input prism.
   * \param [in] face    A face of \a p
   * \param [in, out] boundary The boundary element at \a face of \a p*/
-void t8_dprism_boundary_face(const t8_dprism_t * p, int face,
-                        t8_element_t * boundary);
+void                t8_dprism_boundary_face (const t8_dprism_t * p, int face,
+                                             t8_element_t * boundary);
 
 /** Compute whether a given prism shares a given face with its root tree.
  * \param [in] p        The input prism.
  * \param [in] face     A face of \a p.
  * \return              True if \a face is a subface of the triangle's root element.
  */
-int t8_dprism_is_root_boundary(const t8_dprism_t * p,int face);
+int                 t8_dprism_is_root_boundary (const t8_dprism_t * p,
+                                                int face);
 
 /** Test if a prism lies inside of the root prism,
  *  that is the triangle of level 0, anchor node (0,0)
@@ -126,7 +127,7 @@ int t8_dprism_is_root_boundary(const t8_dprism_t * p,int face);
  *  \param [in]     p Input prism.
  *  \return true    If \a p lies inside of the root pris.
  */
-int t8_dprism_is_inside_root(t8_dprism_t * p);
+int                 t8_dprism_is_inside_root (t8_dprism_t * p);
 
 /** Compute the childid-th child in Morton order of a prism.
  * \param [in] p    Input prism.
@@ -141,16 +142,16 @@ void                t8_dprism_child (const t8_dprism_t * p, int childid,
   * \param [in] p   Input prism.
   * \param [in] face The Facenumer
   * \return     Number of Children at \a face*/
-int                 t8_dprism_num_face_children(const t8_dprism_t * p,
-                                                int face);
+int                 t8_dprism_num_face_children (const t8_dprism_t * p,
+                                                 int face);
 /** Compute the face neighbor of a prism.
  * \param [in]     p      Input prism.
  * \param [in]     face   The face across which to generate the neighbor.
  * \param [in,out] n      Existing prism whose data will be filled.
  * \note \a p may point to the same prism as \a n.
  */
-void t8_dprism_face_neighbour(const t8_dprism_t * p, int face,
-                              t8_dprism_t * neigh);
+void                t8_dprism_face_neighbour (const t8_dprism_t * p, int face,
+                                              t8_dprism_t * neigh);
 
 /** Compute the 8 children of a prism, array version.
  * \param [in]     p  Input prism.
@@ -170,9 +171,10 @@ void                t8_dprism_childrenpv (const t8_dprism_t * p,
  * \param [in] num_children The number of prisms in \a children. Must match
  *                      the number of children that touch \a face.
  */
-void t8_dprism_children_at_face(const t8_dprism_t * p,
-                           int face, t8_dprism_t ** children,
-                           int num_children);
+void                t8_dprism_children_at_face (const t8_dprism_t * p,
+                                                int face,
+                                                t8_dprism_t ** children,
+                                                int num_children);
 
 /** Given a face of a prism and a child number of a child of that face, return the face number
  * of the child of the prism that matches the child face.
@@ -182,8 +184,8 @@ void t8_dprism_children_at_face(const t8_dprism_t * p,
  * \return              The face number of the face of a child of \a p
  *                      that conincides with \a face_child.
  */
-int t8_dprism_face_child_face(const t8_dprism_t * elem, int face,
-                              int face_child);
+int                 t8_dprism_face_child_face (const t8_dprism_t * elem,
+                                               int face, int face_child);
 
 /** Given a prism and a face of this prism. If the face lies on the
  *  tree boundary, return the face number of the tree face.
@@ -194,7 +196,21 @@ int t8_dprism_face_child_face(const t8_dprism_t * elem, int face,
  *         \a face is on a tree boundary.
  *         Any arbitrary integer if \a is not at a tree boundary.
  */
-int t8_dprism_tree_face(const t8_dprism_t * p,int face);
+int                 t8_dprism_tree_face (const t8_dprism_t * p, int face);
+
+/** Given a boundary face inside a root tree's face construct
+ *  the element inside the root tree that has the given face as a
+ *  face.
+ * \param [in] face     A face element.
+ * \param [in,out] elem An allocated element. The entries will be filled with
+ *                      the data of the element that has \a face as a face and
+ *                      lies within the root tree.
+ * \param [in] root_face The index of the face of the root tree in which \a face
+ *                      lies.
+ */
+void                t8_dprism_extrude_face (const t8_element_t * face,
+                                            t8_element_t * elem,
+                                            int root_face);
 
 /** Compute the last descendant of a prism at a given level. This is the descendant of
  * the prism in a uniform level refinement that has the largest id.

@@ -1801,7 +1801,6 @@ t8_cmesh_new_line_zigzag (sc_MPI_Comm comm)
 t8_cmesh_t
 t8_cmesh_new_prism_cake (sc_MPI_Comm comm, int num_of_prisms)
 {
-#if 1
   int                 i, j;
   /*num_of_prisms Prism a 6 vertices a 3 coords */
   /* TODO: This seems too be a lot of memory, can we also get by with only
@@ -1846,24 +1845,27 @@ t8_cmesh_new_prism_cake (sc_MPI_Comm comm, int num_of_prisms)
   }
   t8_cmesh_commit (cmesh, comm);
   T8_FREE(vertices);
-#endif
-#if 0
-  t8_cmesh_t cmesh;
-  double vertices[18] = { 0, 0, 0,
-                       12, 8, 24,
-                       -18, 9, 6,
-                       -2, -6, 3,
-                       10, 2, 7,
-                       -20, 3, 9,};
-  t8_cmesh_init(&cmesh);
-  t8_cmesh_set_tree_class(cmesh, 0, T8_ECLASS_PRISM);
-  t8_cmesh_set_tree_vertices(cmesh, 0, t8_get_package_id (), 0, vertices, 6);
-  t8_cmesh_commit(cmesh, comm);
-#endif
 
   return cmesh;
 }
 
+t8_cmesh_t
+t8_cmesh_new_prism_deformed(sc_MPI_Comm comm){
+    t8_cmesh_t cmesh;
+    double vertices[18] = { -1, -0.5, 0.25,
+                            1, 0, 0,
+                            1, 1, 0,
+                            0, 0, 0.75,
+                            1.25, 0, 1,
+                            2, 2, 2};
+    t8_cmesh_init(&cmesh);
+    t8_cmesh_set_tree_class(cmesh, 0, T8_ECLASS_PRISM);
+    t8_cmesh_set_tree_vertices(cmesh, 0, t8_get_package_id (), 0, vertices, 6);
+    t8_cmesh_commit(cmesh, comm);
+    return cmesh;
+}
+
+/*rotates counterclockwise*/
 void prism_rotate(double vertices[18], int rotation)
 {
     double helper[3] = {vertices[6],vertices[7], vertices[8]};
@@ -1951,7 +1953,7 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
 {
   int                 i, j;
   /*8 Prism a 6 vertices a 3 coords */
-  double              vertices[126];
+  double              vertices[144];
   t8_cmesh_t          cmesh;
 
   for (i = 0; i < 3; i++) {
@@ -1994,12 +1996,30 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
       }
     }
   }
+  vertices[126] = cos (300 * M_PI / 180);
+  vertices[127] = sin (300 * M_PI / 180);
+  vertices[128] = 1;
+  vertices[129] = 1;
+  vertices[130] = 0;
+  vertices[131] = 1;
+  vertices[132] = cos (300 * M_PI / 180) + 1;
+  vertices[133] = sin (300 * M_PI / 180);
+  vertices[134] = 1;
+  vertices[135] = cos (300 * M_PI / 180);
+  vertices[136] = sin (300 * M_PI / 180);
+  vertices[137] = 2;
+  vertices[138] = 1;
+  vertices[139] = 0;
+  vertices[140] = 2;
+  vertices[141] = cos (300 * M_PI / 180) + 1;
+  vertices[142] = sin (300 * M_PI / 180);
+  vertices[143] = 2;
   prism_rotate(vertices + 18, 2);
   prism_rotate(vertices + 36 , 1);
   prism_rotate(vertices + 72 , 2);
 
   t8_cmesh_init (&cmesh);
-  for (i = 0; i < 7; i++) {
+  for (i = 0; i < 8; i++) {
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PRISM);
   }
   t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 3);
@@ -2008,8 +2028,9 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
   t8_cmesh_set_join (cmesh, 3, 4, 2, 0, 3);
   t8_cmesh_set_join (cmesh, 4, 5, 2, 1, 0);
   t8_cmesh_set_join (cmesh, 5, 6, 2, 1, 0);
+  t8_cmesh_set_join (cmesh, 6, 7, 0, 1, 0);
 
-  for (i = 0; i < 7; i++) {
+  for (i = 0; i < 8; i++) {
     t8_cmesh_set_tree_vertices (cmesh, i, t8_get_package_id (), 0,
                                 vertices + i * 18, 6);
   }

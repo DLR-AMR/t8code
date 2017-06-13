@@ -69,6 +69,15 @@ void                t8_dline_parent (const t8_dline_t * l,
 void                t8_dline_child (const t8_dline_t * l, int childid,
                                     t8_dline_t * child);
 
+/** Compute the face neighbor of a line.
+ * \param [in]     l      Input line.
+ * \param [in]     face   The face across which to generate the neighbor.
+ * \param [in,out] n      Existing line whose data will be filled.
+ * \note \a l may point to the same line as \a n.
+ */
+void                t8_dline_face_neighbour (const t8_dline_t * p, int face,
+                                             t8_dline_t * neigh);
+
 /** Compute the position of the ancestor of this child at level \a level within
  * its siblings.
  * \param [in] t  line to be considered.
@@ -89,6 +98,21 @@ void                t8_dline_childrenpv (const t8_dline_t * t,
  * \return            Nonzero if \a f is a family of lines.
  */
 int                 t8_dline_is_familypv (const t8_dline_t * f[]);
+
+/** Compute whether a given line shares a given face with its root tree.
+ * \param [in] p        The input line.
+ * \param [in] face     A face of \a p.
+ * \return              True if \a face is a subface of the line's root element.
+ */
+int                 t8_dline_is_root_boundary (const t8_dline_t * p,
+                                               int face);
+
+/** Test if a line lies inside of the root line,
+ *  that is the line of level 0, anchor node (0,0)
+ *  \param [in]     p Input line.
+ *  \return true    If \a p lies inside of the root line.
+ */
+int                 t8_dline_is_inside_root (const t8_dline_t * p);
 
 /** Initialize a line as the line with a given global id in a uniform
  *  refinement of a given level. *
