@@ -972,6 +972,17 @@ t8_cmesh_get_global_id (t8_cmesh_t cmesh, t8_locidx_t local_id)
   }
 }
 
+int
+t8_cmesh_tree_is_local (t8_cmesh_t cmesh, t8_locidx_t ltreeid)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+
+  if (0 <= ltreeid && ltreeid < t8_cmesh_get_num_local_trees (cmesh)) {
+    return 1;
+  }
+  return 0;
+}
+
 t8_locidx_t
 t8_cmesh_get_local_id (t8_cmesh_t cmesh, t8_gloidx_t global_id)
 {

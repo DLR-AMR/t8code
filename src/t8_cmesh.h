@@ -484,6 +484,18 @@ t8_eclass_t         t8_cmesh_get_ghost_class (t8_cmesh_t cmesh,
 t8_gloidx_t         t8_cmesh_get_global_id (t8_cmesh_t cmesh,
                                             t8_locidx_t local_id);
 
+/** Query whether a local tree id belongs to a local tree.
+ * If the local treeid is out of range of the local trees, false is
+ * returnde.
+ * \param [in]    cmesh         The cmesh.
+ * \param [in]    ltreeid       A tree index.
+ * \return        True if \a ltreeid is the index of a cmesh local tree,
+ *                thus if 0 <= \a ltreeid < num_local_trees.
+ *                False otherwise.
+ */
+int                 t8_cmesh_tree_is_local (t8_cmesh_t cmesh,
+                                            t8_locidx_t ltreeid);
+
 /** Return the local id of a give global tree.
  * \param [in]    cmesh         The cmesh.
  * \param [in]    global_id     A global tree id.
