@@ -91,7 +91,7 @@ t8_cmesh_partition_send_change_neighbor (t8_cmesh_t cmesh,
 static void
 t8_partition_new_ghost_ids (t8_cmesh_t cmesh,
                             t8_part_tree_t recv_part,
-                            t8_locidx_t first_ghost, int proc)
+                            t8_locidx_t first_ghost, int part)
 {
   t8_locidx_t         ghost_it;
   t8_cghost_t         ghost;
@@ -104,7 +104,9 @@ t8_partition_new_ghost_ids (t8_cmesh_t cmesh,
 
   for (ghost_it = 0; ghost_it < recv_part->num_ghosts; ghost_it++) {
     /* loop over all ghosts of recv_part */
-    cmesh->trees->ghost_to_proc[ghost_it + first_ghost] = proc;
+    cmesh->trees->ghost_to_proc[ghost_it + first_ghost] = part;
+    cmesh->trees->ghost_from_proc[ghost_it + first_ghost] =
+      recv_part->from_proc;
     ghost =
       t8_cmesh_trees_get_ghost_ext (cmesh->trees, first_ghost + ghost_it,
                                     &face_neighbors, &ttf);
@@ -1971,6 +1973,8 @@ t8_cmesh_partition_receive_message (t8_cmesh_t cmesh, sc_MPI_Comm comm,
   recv_part =
     t8_cmesh_trees_get_part (cmesh->trees,
                              local_procid[proc_recv - recv_first]);
+  /* Store the receivers rank */
+  recv_part->from_proc = proc_recv;
   /* take first tree of part and allocate recv_bytes */
   recv_part->first_tree = T8_ALLOC (char, recv_bytes);
   /* Receive message */
@@ -2300,6 +2304,7 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
   }
   t8_debugf ("Total number of ghosts in new partition: %i\n", num_ghosts);
   cmesh->trees->ghost_to_proc = T8_ALLOC (int, num_ghosts);
+  cmesh->trees->ghost_from_proc = T8_ALLOC (int, num_ghosts);
   cmesh->num_ghosts = num_ghosts;
   T8_FREE (local_procid);
 }
@@ -2362,7 +2367,7 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
                           t8_gloidx_t * tree_offset, sc_MPI_Comm comm)
 {
   int                 send_first, send_last, num_request_alloc; /* ranks of the processor to which we will send */
-  int                 iproc, num_send_mpi, mpiret;
+  int                 iproc, num_send_mpi, mpiret, ipart;
   size_t              my_buffer_bytes;
   char              **send_buffer = NULL, *my_buffer = NULL;
 
@@ -2452,10 +2457,10 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
     num_ghosts += recv_part->num_ghosts;
   }
   num_ghosts = 0;
-  for (iproc = 0; iproc < (int) cmesh->trees->from_proc->elem_count; iproc++) {
-    recv_part = t8_cmesh_trees_get_part (cmesh->trees, iproc);
+  for (ipart = 0; ipart < (int) cmesh->trees->from_proc->elem_count; ipart++) {
+    recv_part = t8_cmesh_trees_get_part (cmesh->trees, ipart);
     /* Assing new local ids to the ghosts of this part, also set ghost_to_proc */
-    t8_partition_new_ghost_ids (cmesh, recv_part, num_ghosts, iproc);
+    t8_partition_new_ghost_ids (cmesh, recv_part, num_ghosts, ipart);
     /* We need to do this in a second loop, since all the tree_to_proc entries have
      * to be set before. This is because we may be accessing any tree in the new cmesh.  */
     num_ghosts += recv_part->num_ghosts;

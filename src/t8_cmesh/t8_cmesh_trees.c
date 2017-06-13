@@ -81,6 +81,8 @@ t8_cmesh_trees_init (t8_cmesh_trees_t * ptrees, int num_procs,
   trees->tree_to_proc = T8_ALLOC_ZERO (int, num_trees);
   trees->ghost_to_proc = num_ghosts > 0 ? T8_ALLOC_ZERO (int, num_ghosts)
   :                   NULL;
+  trees->ghost_from_proc = num_ghosts > 0 ? T8_ALLOC_ZERO (int, num_ghosts)
+  :                   NULL;
   /* Initialize the global_id mempool */
   trees->global_local_mempool =
     sc_mempool_new (sizeof (t8_trees_glo_lo_hash_t));
@@ -115,8 +117,8 @@ t8_cmesh_trees_add_tree (t8_cmesh_trees_t trees, t8_locidx_t ltree_id,
 
 void
 t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees, t8_locidx_t lghost_index,
-                          t8_gloidx_t gtree_id, int proc, t8_eclass_t eclass,
-                          t8_locidx_t num_local_trees)
+                          t8_gloidx_t gtree_id, int to_part, int proc,
+                          t8_eclass_t eclass, t8_locidx_t num_local_trees)
 {
   t8_part_tree_t      part;
   t8_cghost_t         ghost;
@@ -124,11 +126,12 @@ t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees, t8_locidx_t lghost_index,
   int                 ret;
 
   T8_ASSERT (trees != NULL);
-  T8_ASSERT (proc >= 0);
+  T8_ASSERT (to_part >= 0);
+  T8_ASSERT (proc >= -1);       /* TODO: fix proper usage in cmesh_commit, do not pass -1 anymore */
   T8_ASSERT (gtree_id >= 0);
   T8_ASSERT (lghost_index >= 0);
 
-  part = t8_cmesh_trees_get_part (trees, proc);
+  part = t8_cmesh_trees_get_part (trees, to_part);
   T8_ASSERT (lghost_index < part->num_ghosts);
   /* From first tree we have to go num_trees to get to the first ghost.
    * From the first ghost we go by ghost_index to get to the desired ghost */
@@ -140,7 +143,8 @@ t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees, t8_locidx_t lghost_index,
   ghost->eclass = eclass;
   ghost->treeid = gtree_id;
   ghost->neigh_offset = 0;
-  trees->ghost_to_proc[lghost_index] = proc;
+  trees->ghost_to_proc[lghost_index] = to_part;
+  trees->ghost_from_proc[lghost_index] = proc;
   /* Insert this ghosts global id into the hash table */
   /* build the entry */
   hash_entry = sc_mempool_alloc (trees->global_local_mempool);
@@ -202,6 +206,8 @@ t8_cmesh_trees_start_part (t8_cmesh_trees_t trees, int proc,
   part = (t8_part_tree_t) sc_array_index_int (trees->from_proc, proc);
   part->num_ghosts = num_ghosts;
   part->num_trees = num_trees;
+  part->from_proc = -1;         /* invalid entry, from_proc only has meaning
+                                   when a\ cmesh is repartitioned. */
   /* it is important to zero the memory here in order to check
    * two arrays for equality using memcmp.
    * (since we store structs, we would not have control of the padding bytes
@@ -499,6 +505,17 @@ t8_cmesh_trees_get_face_neighbor (t8_ctree_t tree, int face)
 
   face_neighbors = (t8_locidx_t *) T8_TREE_FACE (tree);
   return face_neighbors[face];
+}
+
+int
+t8_cmesh_trees_get_ghost_from_rank (t8_cmesh_trees_t trees,
+                                    t8_locidx_t lghost)
+{
+  T8_ASSERT (trees != NULL);
+  T8_ASSERT (lghost >= 0);
+  T8_ASSERT (lghost < trees->ghost_globalid_to_local_id->elem_count);
+
+  return trees->ghost_from_proc[lghost];
 }
 
 t8_cghost_t
@@ -1177,6 +1194,8 @@ t8_cmesh_trees_is_equal (t8_cmesh_t cmesh, t8_cmesh_trees_t trees_a,
   is_equal = memcmp (trees_a->tree_to_proc, trees_b->tree_to_proc,
                      num_trees * sizeof (int))
     || memcmp (trees_a->ghost_to_proc, trees_b->ghost_to_proc,
+               num_ghost * sizeof (int))
+    || memcmp (trees_a->ghost_from_proc, trees_b->ghost_from_proc,
                num_ghost * sizeof (int));
   if (is_equal != 0) {
     return 0;
@@ -1223,6 +1242,7 @@ t8_cmesh_trees_destroy (t8_cmesh_trees_t * ptrees)
     T8_FREE (part->first_tree);
   }
   T8_FREE (trees->ghost_to_proc);
+  T8_FREE (trees->ghost_from_proc);
   T8_FREE (trees->tree_to_proc);
   sc_array_destroy (trees->from_proc);
   /* Free the hash table */

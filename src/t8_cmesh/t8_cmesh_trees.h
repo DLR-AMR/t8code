@@ -270,6 +270,7 @@ void                t8_cmesh_trees_add_tree (t8_cmesh_trees_t trees,
  * \param [in,out]  trees The trees structure to be updated.
  * \param [in]      ghost_index The index in the part array of the ghost to be inserted.
  * \param [in]      tree_id The global index of the ghost.
+ * \param [in]      part The part to which this ghost should get inserted.
  * \param [in]      proc  The mpirank of the process from which the ghost was
  *                        received.
  * \param [in]      eclass The ghost's element class.
@@ -277,7 +278,8 @@ void                t8_cmesh_trees_add_tree (t8_cmesh_trees_t trees,
  */
 void                t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees,
                                               t8_locidx_t lghost_index,
-                                              t8_gloidx_t gtree_id, int proc,
+                                              t8_gloidx_t gtree_id,
+                                              int to_part, int proc,
                                               t8_eclass_t eclass,
                                               t8_locidx_t num_local_trees);
 
@@ -328,6 +330,19 @@ t8_ctree_t          t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees,
  * \return                    The local id of the neighbor tree. */
 t8_locidx_t         t8_cmesh_trees_get_face_neighbor (t8_ctree_t tree,
                                                       int face);
+
+/** Given a local ghost id return the rank of the process that sent this ghost,
+ * resp. that owns this ghost as a local tree (not unique!).
+ * \param [in]      trees The tress structure where the ghost is to be looked up.
+ * \param [in]      lghost  The id of a ghost (0 <= \a lghost < num_ghosts)
+ * \return          A rank p such that the tree that is represented by \a lghost is
+ *                  local to \a p.
+ *                  If this trees struct was partitioned from a previous trees struct,
+ *                  then \a p sent the ghost to this rank.
+ */
+int                 t8_cmesh_trees_get_ghost_from_rank (t8_cmesh_trees_t
+                                                        trees,
+                                                        t8_locidx_t lghost);
 
 /* TODO: This function return NULL if the ghost is not present.
  *       So far no error checking is done here. */

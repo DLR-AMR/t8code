@@ -222,9 +222,14 @@ typedef struct t8_attribute_info
 /* TODO: document, process is a bad naming, since it does not refer to MPI ranks here */
 typedef struct t8_cmesh_trees
 {
-  sc_array_t         *from_proc;        /* array of t8_part_tree, one for each process */
-  int                *tree_to_proc;     /* for each tree its process */
-  int                *ghost_to_proc;    /* for each ghost its process */
+  /* TODO: rename. from_proc -> parts. tree_to_proc -> tree_to_part
+   *               ghost_to_proc -> ghost_to_part
+   */
+  sc_array_t         *from_proc;        /* array of t8_part_tree, one for each part */
+  int                *tree_to_proc;     /* for each tree its part */
+  int                *ghost_to_proc;    /* for each ghost its part */
+  int                *ghost_from_proc;  /* for each ghost, the process from which we received it,
+                                           thus one of its owning processes. */
   sc_hash_t          *ghost_globalid_to_local_id;       /* A hash table storing the map
                                                            global_id -> local_id for the ghost trees.
                                                            The local_id is the local ghost id starting at num_local_trees  */
@@ -242,6 +247,8 @@ typedef struct t8_part_tree
                                            0 <= first_ghost_id < num_ghosts */
   t8_locidx_t         num_trees;
   t8_locidx_t         num_ghosts;
+  int                 from_proc;        /* If this part resulted from a cmesh repartitioning, we store the mpirank
+                                           of the previous owner here. */
 }
 t8_part_tree_struct_t;
 

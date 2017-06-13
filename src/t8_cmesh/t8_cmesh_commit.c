@@ -327,7 +327,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
           /* The classentry belongs to a local ghost */
           ghost_facejoin = *facejoin_pp;
           t8_cmesh_trees_add_ghost (cmesh->trees, ghost_facejoin->local_id,
-                                    ghost_facejoin->ghost_id, 0,
+                                    ghost_facejoin->ghost_id, 0, -1,
                                     classentry->eclass,
                                     cmesh->num_local_trees);
         }
