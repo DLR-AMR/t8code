@@ -67,6 +67,12 @@ t8_default_scheme_prism_c::t8_element_num_face_children (const t8_element_t *
 }
 
 int
+t8_default_scheme_prism_c::t8_element_num_faces (const t8_element_t * elem)
+{
+    return T8_DPRISM_FACES;
+}
+
+int
 t8_default_scheme_prism_c::t8_element_child_id (const t8_element_t * elem)
 {
   return t8_dprism_child_id ((const t8_dprism_t *) elem);
@@ -90,10 +96,74 @@ t8_default_scheme_prism_c::t8_element_children (const t8_element_t * elem,
                         (t8_dprism_t **) c);
 }
 
+void
+t8_default_scheme_prism_c::t8_element_children_at_face (const t8_element_t * elem,
+                                                   int face,
+                                                   t8_element_t * children[],
+                                                   int num_children)
+{
+    t8_dprism_children_at_face((const t8_dprism_t *) elem,
+                               face, (t8_dprism_t **) children,
+                               num_children);
+}
+
+int
+t8_default_scheme_prism_c::t8_element_face_child_face (const t8_element_t * elem,
+                                                  int face, int face_child)
+{
+    return t8_dprism_face_child_face((const t8_dprism_t *) elem, face,
+                                     face_child);
+}
+
+int
+t8_default_scheme_prism_c::t8_element_tree_face (const t8_element_t * elem,
+                                            int face)
+{
+    return t8_dprism_tree_face((const t8_dprism_t *) elem, face);
+}
+
+void
+t8_default_scheme_prism_c::t8_element_extrude_face (const t8_element_t * face,
+                                               t8_element_t * elem,
+                                               int root_face)
+{
+    /*TODO implement it!!!*/
+}
+
 int
 t8_default_scheme_prism_c::t8_element_is_family (t8_element_t ** fam)
 {
   return t8_dprism_is_familypv ((t8_dprism_t **) fam);
+}
+
+void
+t8_default_scheme_prism_c::t8_element_boundary_face (const t8_element_t * elem,
+                                                int face,
+                                                t8_element_t * boundary)
+{
+    t8_dprism_boundary_face((const t8_dprism_t *) elem, face, boundary);
+}
+
+int
+t8_default_scheme_prism_c::t8_element_is_root_boundary (const t8_element_t * elem,
+                                                   int face)
+{
+    return t8_dprism_is_root_boundary((const t8_dprism_t *)elem, face);
+}
+
+int
+t8_default_scheme_prism_c::t8_element_face_neighbor_inside (const t8_element_t *
+                                                       elem,
+                                                       t8_element_t * neigh,
+                                                       int face)
+{
+    const t8_dprism_t    *p = (const t8_dprism_t *) elem;
+    t8_dprism_t          *n = (t8_dprism_t *) neigh;
+
+    T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
+    (void) t8_dprism_face_neighbour (p, face, n);
+    /* return true if neigh is inside the root */
+    return t8_dprism_is_inside_root (n);
 }
 
 void

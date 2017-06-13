@@ -142,7 +142,7 @@ void                t8_dtri_children_at_face (const t8_dtri_t * tri,
                                               t8_dtri_t * children[],
                                               int num_children);
 
-/** Given a face of an triangle and a child number of a child of that face, return the face number
+/** Given a face of a triangle and a child number of a child of that face, return the face number
  * of the child of the triangle that matches the child face.
  * \param [in]  triangle The triangle.
  * \param [in]  face    Then number of the face.

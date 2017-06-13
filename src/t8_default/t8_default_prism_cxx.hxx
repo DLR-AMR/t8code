@@ -101,11 +101,7 @@ public:
   virtual int         t8_element_num_face_children (const t8_element_t *
                                                     elem, int face);
 /** Return the number of faces of a given element*/
-  virtual int         t8_element_num_faces (const t8_element_t * elem)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return -1;
-  }
+  virtual int         t8_element_num_faces (const t8_element_t * elem);
 
 /** Construct the child element of a given number. */
   virtual void        t8_element_child (const t8_element_t * elem,
@@ -118,30 +114,19 @@ public:
   virtual void        t8_element_children_at_face (const t8_element_t * elem,
                                                    int face,
                                                    t8_element_t * children[],
-                                                   int num_children)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                   int num_children);
 
 /** Given a face of an element and a child number of a child of that face,
   * return the face number of the child of the element that matches the child
   * face.*/
   virtual int         t8_element_face_child_face (const t8_element_t * elem,
-                                                  int face, int face_child)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return -1;
-  }
+                                                  int face, int face_child);
 
 /** Given an element and a face of this element. If the face lies on the
    *  tree boundary, return the face number of the tree face.
    *  If not the return value is arbitrary. */
   virtual int         t8_element_tree_face (const t8_element_t * elem,
-                                            int face)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return -1;
-  }
+                                            int face);
 
   /** For an exact explaination look at t8_element_cxx.hxx. */
   virtual void        t8_element_transform_face (const t8_element_t * elem1,
@@ -157,10 +142,7 @@ public:
    *  face */
   virtual void        t8_element_extrude_face (const t8_element_t * face,
                                                t8_element_t * elem,
-                                               int root_face)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                               int root_face);
 
 /** Return the child id of an element */
   virtual int         t8_element_child_id (const t8_element_t * elem);
@@ -179,10 +161,7 @@ public:
   /** Construct the boundary element at a specific face. */
   virtual void        t8_element_boundary_face (const t8_element_t * elem,
                                                 int face,
-                                                t8_element_t * boundary)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                t8_element_t * boundary);
 
 /** Construct all codimension-one boundary elements of a given element. */
   virtual void        t8_element_boundary (const t8_element_t * elem,
@@ -194,20 +173,14 @@ public:
 
 /** Compute whether a given element shares a given face with its root tree. */
   virtual int         t8_element_is_root_boundary (const t8_element_t * elem,
-                                                   int face)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                   int face);
 
 /** Construct the face neighbor of a given element if this face neighbor
    * is inside the root tree. Return 0 otherwise.*/
   virtual int         t8_element_face_neighbor_inside (const t8_element_t *
                                                        elem,
                                                        t8_element_t * neigh,
-                                                       int face)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                       int face);
 
 /** Initialize an element according to a given linear id */
   virtual void        t8_element_set_linear_id (t8_element_t * elem,
