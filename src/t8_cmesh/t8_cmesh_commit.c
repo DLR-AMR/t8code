@@ -216,12 +216,20 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
 
+  SC_CHECK_ABORT (cmesh->set_partition_level == -1,
+                  "Cmesh construction from scratch"
+                  " does currently not work with t8_cmesh_set_partition_uniform\n");
+
+  SC_CHECK_ABORT (cmesh->tree_offsets == NULL,
+                  "Cmesh construction from scratch"
+                  " does currently not work with t8_cmesh_set_partition_offsets\n");
+
   if (cmesh->face_knowledge != 3) {
     t8_global_errorf ("Expected a face knowledge of 3.\nAbort commit.");
     /* TODO: reset cmesh */
     return;
   }
-  t8_cmesh_set_shmem_type (comm);       /* TODO: do we actually need the shared array? */
+  t8_cmesh_set_shmem_type (comm);
   t8_stash_attribute_sort (cmesh->stash);
 
 #if T8_ENABLE_DEBUG

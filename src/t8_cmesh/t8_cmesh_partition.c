@@ -2601,6 +2601,7 @@ t8_cmesh_offset_concentrate (int proc, sc_MPI_Comm comm,
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
 
+  t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
   shmem_array = t8_cmesh_alloc_offsets (mpisize, comm);
   offsets = t8_shmem_array_get_gloidx_array (shmem_array);
   offsets[0] = 0;
