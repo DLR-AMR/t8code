@@ -316,7 +316,7 @@ t8_cmesh_zoltan_compute_new_parts (t8_cmesh_t cmesh)
                          &export_procs, &export_to_part);
 #endif
   z_err = Zoltan_LB_Balance (cmesh->zoltan_struct,
-                             & changes,
+                             &changes,
                              &num_gid_entries,
                              &num_lid_entries,
                              &num_import,
