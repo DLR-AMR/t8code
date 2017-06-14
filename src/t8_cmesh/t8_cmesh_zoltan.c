@@ -146,7 +146,7 @@ t8_cmesh_zoltan_num_edges_multi (void *data, int num_gid_entries,
   cmesh = (t8_cmesh_t) data;
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
-  T8_ASSERT (0 <= num_obj && num_obj < t8_cmesh_get_num_local_trees (cmesh));
+  T8_ASSERT (0 <= num_obj && num_obj <= t8_cmesh_get_num_local_trees (cmesh));
 
   /* Iterate through the global tree ids */
   for (itree = 0; itree < num_obj; itree++) {
@@ -202,7 +202,7 @@ t8_cmesh_zoltan_edge_list_multi (void *data, int num_gid_entries,
   cmesh = (t8_cmesh_t) data;
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
-  T8_ASSERT (0 <= num_obj && num_obj < t8_cmesh_get_num_local_trees (cmesh));
+  T8_ASSERT (0 <= num_obj && num_obj <= t8_cmesh_get_num_local_trees (cmesh));
 
   num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
   /* Iterate through the global tree ids */
@@ -235,14 +235,20 @@ t8_cmesh_zoltan_edge_list_multi (void *data, int num_gid_entries,
       /* Store the procee to which this neighbor belongs */
       if (t8_cmesh_tree_is_local (cmesh, lneighid)) {
         /* The neighbor is local, it resides on this rank */
-        nbor_global_id[current_neighbor] = cmesh->mpirank;
+        rank = cmesh->mpirank;
       }
       else {
         rank = t8_cmesh_trees_get_ghost_from_rank (cmesh->trees,
-                                                   ltreeid - num_local_trees);
-        SC_CHECK_ABORT (0 <= rank && rank < cmesh->mpisize,
+                                                   lneighid -
+                                                   num_local_trees);
+        SC_CHECK_ABORT (0 <= rank
+                        && rank < cmesh->mpisize,
                         "Owner rank of ghost out of valid range.");
       }
+      nbor_procs[current_neighbor] = rank;
+      t8_debugf ("[H] Tree %i -> %i (at %i) (%i)\n", gtreeid,
+                 nbor_global_id[current_neighbor],
+                 nbor_procs[current_neighbor], current_neighbor);
     }
   }
   ierr = ZOLTAN_OK;
@@ -256,7 +262,7 @@ t8_cmesh_zoltan_setup_parmetis (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
-  T8_ASSERT (cmesh->zoltan_struct = NULL);
+  T8_ASSERT (cmesh->zoltan_struct == NULL);
   T8_ASSERT (t8_cmesh_zoltan_is_initialized ());
 
   /* Create memory for Zoltan settings */
@@ -277,14 +283,20 @@ t8_cmesh_zoltan_setup_parmetis (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   /* Set parmetis as partition method */
   Zoltan_Set_Param (Z, "LB_METHOD", "GRAPH");
+
+#ifdef T8_WITH_PARMETIS
   Zoltan_Set_Param (Z, "GRAPH_PACKAGE", "ParMetis");
+#else
+#error "t8code was configured with zoltan but without ParMetis. "\
+       "Reconfigure with ParMetis enabled."
+#endif
 
   /* Partition from scratch.
    * Slow but creates optimal partition.
    * For repartitioning with less data movement use
    * REPARTITION
    */
-  Zoltan_Set_Param (Z, "LB_METHOD", "PARTITION");
+  Zoltan_Set_Param (Z, "LB_APPROACH", "PARTITION");
 
   cmesh->zoltan_struct = Z;
 }
@@ -305,6 +317,7 @@ t8_cmesh_zoltan_compute_new_parts (t8_cmesh_t cmesh)
   T8_ASSERT (cmesh->zoltan_struct != NULL);
   T8_ASSERT (t8_cmesh_zoltan_is_initialized ());
 
+  t8_debugf ("[H] ENTER ZOLTAN PART COMPUTATION\n");
 #if 0
   /* TODO: Use this if we partition to a different number of parts than
    *       processes. LB_Balance uses the mpisize as number of parts. */
@@ -327,6 +340,14 @@ t8_cmesh_zoltan_compute_new_parts (t8_cmesh_t cmesh)
                              &export_global_ids,
                              &export_local_ids, &export_procs);
   T8_CHECK_ZOLTAN (z_err);
+
+  z_err = Zoltan_LB_Free_Data (&import_global_ids,
+                               &import_local_ids,
+                               &import_procs,
+                               &export_global_ids,
+                               &export_local_ids, &export_procs);
+  T8_CHECK_ZOLTAN (z_err);
+  t8_debugf ("[H] DONE ZOLTAN PART COMPUTATION\n");
 }
 
 void
