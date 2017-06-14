@@ -2281,6 +2281,7 @@ t8_cmesh_partition_recvloop (t8_cmesh_t cmesh,
     /* TODO: Get ghosts from myself! */
     recv_part = t8_cmesh_trees_get_part (cmesh->trees, myrank_part);
     recv_part->first_tree = my_buffer;
+    recv_part->from_proc = cmesh->mpirank;
     /* Read num trees and num ghosts */
     recv_part->num_trees = *(t8_locidx_t *) (recv_part->first_tree +
                                              my_buffer_bytes
