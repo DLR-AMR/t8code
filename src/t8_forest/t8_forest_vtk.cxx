@@ -499,11 +499,11 @@ t8_forest_vtk_cells_elementid_kernel (t8_forest_t forest,
 {
   if (modus == T8_VTK_KERNEL_EXECUTE) {
     if (!is_ghost) {
-      fprintf (vtufile, "%llu ", element_index + tree->elements_offset +
+      fprintf (vtufile, "%lli ", element_index + tree->elements_offset +
                (long long) t8_forest_get_first_local_element_id (forest));
     }
     else {
-      fprintf (vtufile, "%llu ", -1);
+      fprintf (vtufile, "%lli ", (long long) -1);
     }
     *columns += 1;
   }
