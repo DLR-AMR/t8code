@@ -40,7 +40,7 @@
 #ifdef T8_WITH_ZOLTAN
 #include <zoltan.h>
 
-#define T8_CHECK_ZOLTAN(r) SC_CHECK_ABORT ((r) == ZOLTAN_OK, "MPI error")
+#define T8_CHECK_ZOLTAN(r) SC_CHECK_ABORTF ((r) == ZOLTAN_OK, "Zoltan error %i", r)
 
 T8_EXTERN_C_BEGIN ();
 
@@ -66,6 +66,9 @@ void                t8_cmesh_zoltan_setup_parmetis (t8_cmesh_t cmesh,
  * \note  \a cmesh should have been setup for Zoltan usage with t8_cmesh_zolten_setup_parmetis.
  */
 void                t8_cmesh_zoltan_destroy (t8_cmesh_t cmesh);
+
+/* TODO: Document */
+void                t8_cmesh_zoltan_compute_new_parts (t8_cmesh_t cmesh);
 
 T8_EXTERN_C_END ();
 
