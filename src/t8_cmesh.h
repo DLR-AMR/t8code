@@ -331,6 +331,11 @@ void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm,
 /* TODO: think about a sensible interface for a parmetis reordering. */
 #endif
 
+#ifdef T8_WITH_ZOLTAN
+void                t8_cmesh_reorder_zoltan (t8_cmesh_t cmesh,
+                                             sc_MPI_Comm comm);
+#endif
+
 /** After allocating and adding properties to a cmesh, finish its construction.
  * TODO: this function is MPI collective.
  * \param [in,out] cmesh        Must be created with \ref t8_cmesh_init

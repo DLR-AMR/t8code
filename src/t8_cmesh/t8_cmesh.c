@@ -28,6 +28,9 @@
 #ifdef T8_WITH_METIS
 #include <metis.h>
 #endif
+#ifdef T8_WITH_ZOLTAN
+#include <t8_cmesh/t8_cmesh_zoltan.h>
+#endif
 #include "t8_cmesh_trees.h"
 
 /** \file t8_cmesh.c
@@ -895,6 +898,23 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm, idx_t num_partitions)
 
   t8_debugf ("End METIS\n");
 }
+#endif
+
+#ifdef T8_WITH_ZOLTAN
+
+#include <t8_cmesh/t8_cmesh_zoltan.h>
+void
+t8_cmesh_reorder_zoltan (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+{
+  if (cmesh->mpisize > 1) {
+    T8_ASSERT (cmesh->set_partition);
+    t8_cmesh_zoltan_initialize (0, NULL);
+    t8_cmesh_zoltan_setup_parmetis (cmesh, comm);
+    t8_cmesh_zoltan_compute_new_parts (cmesh);
+    t8_cmesh_zoltan_destroy (cmesh);
+  }
+}
+
 #endif
 
 int
