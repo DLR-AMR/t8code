@@ -429,6 +429,11 @@ void               *t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees,
                                                   size_t * size,
                                                   int is_ghost);
 
+/** return the total size of a trees face_neighbor entries, including padding.
+ * \param [in]    tree A tree.
+ * \return        The size (in bytes) of all of \a tree's face neighbor information. */
+size_t              t8_cmesh_trees_neighbor_bytes (t8_ctree_t tree);
+
 /** Return the total size of all attributes stored at a specified tree.
  * \param [in]        tree  A tree structure.
  * \return            The total size (in bytes) of the attributes of \a tree.
@@ -440,6 +445,12 @@ size_t              t8_cmesh_trees_attribute_size (t8_ctree_t tree);
  * \return            The total size (in bytes) of the attributes of \a ghost.
  */
 size_t              t8_cmesh_trees_ghost_attribute_size (t8_cghost_t ghost);
+
+/** Return the total size of a tree including its face neighbors and attributes.
+ * \param [in]      tree  A tree.
+ * \return            The total size (in bytes) of the tree and all its data.
+ */
+size_t              t8_cmesh_trees_get_tree_size (t8_ctree_t tree);
 
 /* TODO: Currently there is a bug that forces us to give each tree an attribute */
 /* TODO: this uses char * and cmesh_set_attribute uses void *. Unify! */

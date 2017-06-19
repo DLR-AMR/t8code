@@ -361,7 +361,7 @@ t8_cmesh_trees_set_all_boundary (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
 }
 
 /* return the total size of a trees face_neighbor entries, including padding */
-static              size_t
+size_t
 t8_cmesh_trees_neighbor_bytes (t8_ctree_t tree)
 {
   size_t              total_size;
@@ -414,6 +414,14 @@ t8_cmesh_trees_ghost_attribute_size (t8_cghost_t ghost)
   return total;
 }
 
+size_t
+t8_cmesh_trees_get_tree_size (t8_ctree_t tree)
+{
+  return sizeof (*tree) + t8_cmesh_trees_neighbor_bytes (tree)
+    + t8_cmesh_trees_attribute_size (tree)
+    + tree->num_attributes * sizeof (t8_attribute_info_struct_t);
+}
+
 static              size_t
 t8_cmesh_trees_get_part_alloc (t8_cmesh_trees_t trees, t8_part_tree_t part)
 {
@@ -432,6 +440,8 @@ t8_cmesh_trees_get_part_alloc (t8_cmesh_trees_t trees, t8_part_tree_t part)
   }
   for (lghost = 0; lghost < part->num_ghosts; lghost++) {
     ghost = t8_cmesh_trees_get_ghost (trees, lghost + part->first_ghost_id);
+    byte_alloc += t8_cmesh_trees_ghost_attribute_size (ghost);
+    byte_alloc += ghost->num_attributes * sizeof (t8_attribute_info_struct_t);
     byte_alloc += t8_cmesh_trees_gneighbor_bytes (ghost);
   }
   return byte_alloc;
