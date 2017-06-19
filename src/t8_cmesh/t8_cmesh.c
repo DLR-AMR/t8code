@@ -798,7 +798,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm, idx_t num_partitions)
 
   /* cmesh must be commited and not partitioned */
   T8_ASSERT (cmesh->committed);
-  T8_ASSERT (!cmesh->set_partition);
+  T8_ASSERT (cmesh->mpisize == 1 || !cmesh->set_partition);
 
   elemens = cmesh->num_trees;
   T8_ASSERT ((t8_locidx_t) elemens == cmesh->num_trees);

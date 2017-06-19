@@ -70,9 +70,7 @@ t8_cmesh_save_cmesh (const char *mshfile, int dim, int use_metis, int no_vtk)
     t8_cmesh_t          cmesh_partition;
     /* If use_metis is true, the cmesh that we read from the file cannot be partition,
      * we thus pass !use_metis as the partition flag. */
-    cmesh =
-      t8_cmesh_from_msh_file (mshfile, !use_metis, sc_MPI_COMM_WORLD, dim, 0,
-                              use_metis);
+    cmesh = t8_cmesh_from_msh_file (mshfile, 1, sc_MPI_COMM_WORLD, dim, 0, 1);
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh);
     t8_cmesh_set_partition_uniform (cmesh_partition, 0);

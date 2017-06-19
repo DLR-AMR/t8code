@@ -697,8 +697,6 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   FILE               *file;
   t8_gloidx_t         num_trees, first_tree, last_tree = -1;
 
-  T8_ASSERT (!partition || !reorder_with_metis);        /* Metis only works with replicated cmeshes */
-
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
@@ -770,12 +768,23 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   if (cmesh != NULL) {
     t8_cmesh_commit (cmesh, comm);
     if (reorder_with_metis) {
+      /* Use METIS (serial) or ZOLTAN (parallel) to repartition the cmesh */
+      if (cmesh->mpisize == 1) {
 #if T8_WITH_METIS
-      t8_cmesh_reorder (cmesh, comm, cmesh->mpisize);
+        t8_cmesh_reorder (cmesh, comm, cmesh->mpisize);
 #else
-      t8_global_errorf ("t8code was not compiled to link with Metis. "
-                        "Recompile with Metis to use its features.\n");
+        t8_global_errorf ("t8code was not compiled to link with Metis. "
+                          "Recompile with Metis to use its features.\n");
 #endif
+      }
+      else {                    /* mpisize > 1 */
+#if T8_WITH_ZOLTAN
+        t8_cmesh_reorder_zoltan (cmesh, comm);
+#else
+        t8_global_errorf ("t8code was not compiled to link with Zoltan. "
+                          "Recompile with Zoltan to use its features.\n");
+#endif
+      }
     }
   }
   return cmesh;
