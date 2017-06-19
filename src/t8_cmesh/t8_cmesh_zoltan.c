@@ -121,7 +121,7 @@ t8_cmesh_zoltan_obj_list (void *data, int num_gid_entries,
                     "Gloab treeid does not fit into an integer.");
     global_ids[itree] = treeid;
   }
-  ierr = ZOLTAN_OK;
+  *ierr = ZOLTAN_OK;
 }
 
 /* Zoltan requires a query function for the number of edges (= tree->tree and tree->ghost
@@ -159,7 +159,7 @@ t8_cmesh_zoltan_num_edges_multi (void *data, int num_gid_entries,
     /* Store the number of faces of this eclass in the num_edges array */
     num_edges[itree] = t8_eclass_num_faces[eclass];
   }
-  ierr = ZOLTAN_OK;
+  *ierr = ZOLTAN_OK;
 }
 
 /* Zoltan requires a query function to store the edges of a list of objects.
@@ -251,7 +251,143 @@ t8_cmesh_zoltan_edge_list_multi (void *data, int num_gid_entries,
                  nbor_procs[current_neighbor], current_neighbor);
     }
   }
-  ierr = ZOLTAN_OK;
+  *ierr = ZOLTAN_OK;
+}
+
+/* Query function to determine the size (in bytes) of all data of
+ * one tree when it is migrated to a different process. */
+#if 0
+static int
+t8_cmesh_zoltan_obj_size (void *data, int num_gid_entries,
+                          int num_lid_entries, ZOLTAN_ID_PTR global_id,
+                          ZOLTAN_ID_PTR local_id, int *ierr)
+{
+  t8_cmesh_t          cmesh;
+  t8_locidx_t         ltreeid;
+  t8_ctree_t          tree;
+  int                 size = 0;
+
+  T8_ASSERT (num_gid_entries == 1 && num_lid_entries == 1);
+  T8_ASSERT (data != NULL);
+
+  cmesh = (t8_cmesh_t) data;
+
+  /* Compute the local id of this tree */
+  ltreeid = t8_cmesh_get_local_id (cmesh, global_id);
+  T8_ASSERT (t8_cmesh_tree_is_local (cmesh, ltreeid));
+
+  tree = t8_cmesh_get_tree (cmesh, ltreeid);
+
+  size = t8_cmesh_trees_get_tree_size (tree);
+  T8_ASSERT (0 <= size);
+  *ierr = ZOLTAN_OK;
+  return size;
+}
+#endif
+
+/* Query function to determine the size (in bytes) of all data of
+ * each tree when it is migrated to a different process. */
+void
+t8_cmesh_zoltan_obj_size_multi (void *data, int num_gid_entries,
+                                int num_lid_entries, int num_ids,
+                                ZOLTAN_ID_PTR global_ids,
+                                ZOLTAN_ID_PTR local_ids, int *sizes,
+                                int *ierr)
+{
+  t8_cmesh_t          cmesh;
+  t8_locidx_t         ltreeid;
+  t8_ctree_t          tree;
+  int                 size = 0, itree;
+
+  T8_ASSERT (num_gid_entries == 1 && num_lid_entries == 1);
+  T8_ASSERT (data != NULL);
+
+  cmesh = (t8_cmesh_t) data;
+
+  for (itree = 0; itree < num_ids; itree++) {
+    /* Compute the local id of this tree */
+    ltreeid = t8_cmesh_get_local_id (cmesh, global_ids[itree]);
+    T8_ASSERT (t8_cmesh_tree_is_local (cmesh, ltreeid));
+
+    tree = t8_cmesh_get_tree (cmesh, ltreeid);
+
+    size = t8_cmesh_trees_get_tree_size (tree);
+    T8_ASSERT (0 <= size);
+    sizes[itree] = size;
+  }
+  *ierr = ZOLTAN_OK;
+}
+
+/* Query function for zoltan to tell it how to pack the data
+ * for all trees that need to be send.
+ * We pack each tree as
+ * tree | face neighbors | attribute_infos | attributes
+ *
+ *   dest 	An array of destination part numbers (i.e., the parts to which the objects are being sent)
+ *   sizes 	An array containing the per-object sizes (in bytes) of the communication buffer for each object.
+ *          Each value is at least as large as the corresponding value returned by the ZOLTAN_OBJ_SIZE_MULTI_FN
+ *          or ZOLTAN_OBJ_SIZE_FN query function; it may be slightly larger due to padding for data alignment in the buffer.
+ *   idx   	For each object, an index into the buf array giving the starting location of that object's data.
+ *          Data for the i-th object are stored in buf[idx[i]], buf[idx[i]+1], ..., buf[idx[i]+sizes[i]-1]. Because Zoltan
+ *          adds some tag information to packed data, idx[i]  !=  sum[j=0,i-1](sizes[j]).
+ *   buf   	The address of the communication buffer into which the objects' data should be packed.
+ */
+static void
+t8_cmesh_zoltan_pack_obj_multi (void *data, int num_gid_entries,
+                                int num_lid_entries, int num_ids,
+                                ZOLTAN_ID_PTR global_ids,
+                                ZOLTAN_ID_PTR local_ids, int *dest,
+                                int *sizes, int *idx, char *buf, int *ierr)
+{
+  t8_cmesh_t          cmesh;
+  t8_locidx_t         ltreeid, *face_neighbors;
+  size_t              att_size, neigh_size;
+  char               *attributes, *copy_to;
+  t8_attribute_info_struct_t *att_info;
+  int                 num_atts;
+  t8_ctree_t          tree;
+  int                 itree;
+  size_t              bytes_copied;
+
+  T8_ASSERT (num_gid_entries == 1 && num_lid_entries == 1);
+  T8_ASSERT (data != NULL);
+
+  cmesh = (t8_cmesh_t) data;
+
+  for (itree = 0; itree < num_ids; itree++) {
+    /* Compute the local id of this tree */
+    ltreeid = t8_cmesh_get_local_id (cmesh, global_ids[itree]);
+    T8_ASSERT (t8_cmesh_tree_is_local (cmesh, ltreeid));
+    /* Get the tree and its face neighbors */
+    tree = t8_cmesh_trees_get_tree_ext (cmesh, ltreeid, &face_neighbors,
+                                        NULL);
+    /* Get the number of attributes */
+    num_atts = tree->num_attributes;
+    /* Get a pointer to the trees attributes and attribute infos */
+    att_info = (t8_attribute_info_struct_t *) T8_TREE_FIRST_ATT (tree);
+    attributes = T8_TREE_ATTR (tree, att_info);
+
+    /* The start adress of this tree's buffer */
+    copy_to = buf + idx[itree];
+    /* Copy the tree */
+    memcpy (copy_to, tree, sizeof (*tree));
+    bytes_copied = sizeof (*tree);
+    /* Copy the face neighbors */
+    neigh_size = t8_cmesh_trees_neighbor_bytes (tree);
+    memcpy (copy_to + bytes_copied, face_neighbors, neigh_size);
+    bytes_copied += neigh_size;
+    /* Copy the attribute infos */
+    memcpy (copy_to + bytes_copied, att_info,
+            num_atts * sizeof (t8_attribute_info_struct_t));
+    bytes_copied += num_atts * sizeof (t8_attribute_info_struct_t);
+    /* Copy the attributes */
+    att_size = t8_cmesh_trees_attribute_size (tree);
+    memcpy (copy_to + bytes_copied, attributes, att_size);
+    bytes_copied += att_size;
+    /* Done copying */
+    T8_ASSERT (bytes_copied <= sizes[itree]);
+  }
+  *ierr = ZOLTAN_OK;
 }
 
 void
@@ -301,6 +437,8 @@ t8_cmesh_zoltan_setup_parmetis (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   cmesh->zoltan_struct = Z;
 }
 
+/* Repartition a cmesh. This computes for each tree a new process
+ * p to which it should be send. */
 void
 t8_cmesh_zoltan_compute_new_parts (t8_cmesh_t cmesh)
 {
