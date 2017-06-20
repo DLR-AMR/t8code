@@ -41,8 +41,6 @@
 #include <t8_cmesh.h>
 #include <zoltan.h>
 
-#define T8_CHECK_ZOLTAN(r) SC_CHECK_ABORTF ((r) == ZOLTAN_OK, "Zoltan error %i", r)
-
 T8_EXTERN_C_BEGIN ();
 
 /** Perform the zoltan reorder */
