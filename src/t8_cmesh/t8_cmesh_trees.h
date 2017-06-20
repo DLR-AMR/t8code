@@ -168,6 +168,17 @@ void                t8_cmesh_trees_init (t8_cmesh_trees_t * ptrees,
                                          int num_procs, t8_locidx_t num_trees,
                                          t8_locidx_t num_ghosts);
 
+#ifdef T8_WITH_ZOLTAN
+/** After a call to \ref t8_cmesh_trees_init add a new part to a trees structure
+ * if more parts are needed than specified in the \a num_procs parameter of \ref
+ * t8_cmesh_trees_init.
+ * \param [in]        trees The trees structure to be modified.
+ * \note We introduced this function for the special case where we do not know
+ * the number of parts in the initialization phase. Use with caution.
+ */
+int                 t8_cmesh_trees_add_part (t8_cmesh_trees_t trees);
+#endif
+
 #if 0
 void                t8_cmesh_trees_init_part (t8_cmesh_trees_t trees,
                                               int proc,
@@ -456,6 +467,8 @@ size_t              t8_cmesh_trees_get_tree_size (t8_ctree_t tree);
 /* TODO: this uses char * and cmesh_set_attribute uses void *. Unify! */
 /* attr_tree_index is index of attr in tree's attribute array.
  * We assume that the attributes are already sorted! */
+/* If attr->att_data == NULL then the data is not copied and only the attribute_info
+ * metadata is stored. */
 void                t8_cmesh_trees_add_attribute (t8_cmesh_trees_t trees,
                                                   int proc,
                                                   t8_stash_attribute_struct_t

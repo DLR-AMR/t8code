@@ -34,6 +34,9 @@
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_refine.h>
 #include <t8_cmesh/t8_cmesh_copy.h>
+#ifdef T8_WITH_ZOLTAN
+#include <t8_cmesh/t8_cmesh_zoltan.h>
+#endif
 
 typedef struct ghost_facejoins_struct
 {
@@ -646,6 +649,12 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
         t8_cmesh_partition (cmesh, comm);
       }
     }
+#ifdef T8_WITH_ZOLTAN
+    else if (cmesh->set_reorder == 1) {
+      /* Reorder the cmesh using Zoltan */
+      t8_cmesh_commit_zoltan (cmesh, comm);
+    }
+#endif
     else {
       /* cmesh should only be refined and not partitioned */
       t8_cmesh_commit_refine (cmesh, comm);

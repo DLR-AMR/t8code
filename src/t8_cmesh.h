@@ -115,6 +115,14 @@ void                t8_cmesh_set_derive (t8_cmesh_t cmesh,
  */
 t8_shmem_array_t    t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
 
+#ifdef T8_WITH_ZOLTAN
+/** If the cmesh is set to be derived from another cmesh, use Zoltan to
+ * reorder the trees.
+ * \param [in, out] cmesh     Must be initialized, but not committed.
+ */
+void                t8_cmesh_set_reorder_zoltan (t8_cmesh_t cmesh);
+#endif
+
 /** Declare if the cmesh is understood as a partitioned cmesh and specify
  * the processor local tree range.
  * This function should be preferred over \ref t8_cmesh_set_partition_offsets
@@ -329,11 +337,6 @@ void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm,
                                       idx_t num_partitions);
 
 /* TODO: think about a sensible interface for a parmetis reordering. */
-#endif
-
-#ifdef T8_WITH_ZOLTAN
-void                t8_cmesh_reorder_zoltan (t8_cmesh_t cmesh,
-                                             sc_MPI_Comm comm);
 #endif
 
 /** After allocating and adding properties to a cmesh, finish its construction.

@@ -70,7 +70,9 @@ t8_cmesh_save_cmesh (const char *mshfile, int dim, int use_metis, int no_vtk)
     t8_cmesh_t          cmesh_partition;
     /* If use_metis is true, the cmesh that we read from the file cannot be partition,
      * we thus pass !use_metis as the partition flag. */
-    cmesh = t8_cmesh_from_msh_file (mshfile, 1, sc_MPI_COMM_WORLD, dim, 0, 1);
+    cmesh =
+      t8_cmesh_from_msh_file (mshfile, 1, sc_MPI_COMM_WORLD, dim, 0,
+                              use_metis);
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh);
     t8_cmesh_set_partition_uniform (cmesh_partition, 0);
@@ -118,6 +120,7 @@ int
 main (int argc, char **argv)
 {
   int                 mpiret, n, parsed, dim, no_vtk, helpme = 0;
+  int                 mpisize;
   int                 use_metis;
   const char         *meshfile, *loadfile;
   sc_options_t       *opt;
@@ -135,6 +138,9 @@ main (int argc, char **argv)
             "and distributed among all processes.\n\n%s\n", usage);
 
   mpiret = sc_MPI_Init (&argc, &argv);
+  SC_CHECK_MPI (mpiret);
+
+  mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
@@ -156,7 +162,7 @@ main (int argc, char **argv)
 
   /* TODO: add a parameter to control the number of metis partitions. i.e. -m 4 for 4 partitions or smth. */
   sc_options_add_switch (opt, 'm', "metis", &use_metis,
-                         "Use Metis (serial) to repartition the mesh. Only active together with -f.");
+                         "Use Metis (serial) or Zoltan (parallel) to repartition the mesh. Only active together with -f.");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
@@ -173,8 +179,14 @@ main (int argc, char **argv)
     t8_global_errorf ("%s", help);
   }
 #ifndef T8_WITH_METIS
-  else if (use_metis) {
+  else if (mpisize == 1 && use_metis) {
     t8_global_errorf ("t8code is not compilled with Metis support.\n");
+    t8_global_errorf ("Link t8code with Zoltan to use this feature.\n");
+  }
+#endif
+#ifndef T8_WITH_ZOLTAN
+  else if (mpisize > 1 && use_metis) {
+    t8_global_errorf ("t8code is not compilled with Zoltan support.\n");
     t8_global_errorf ("Link t8code with Metis to use this feature.\n");
   }
 #endif

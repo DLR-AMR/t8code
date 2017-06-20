@@ -779,7 +779,13 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
       }
       else {                    /* mpisize > 1 */
 #if T8_WITH_ZOLTAN
-        t8_cmesh_reorder_zoltan (cmesh, comm);
+        t8_cmesh_t          cmesh_new;
+
+        t8_cmesh_init (&cmesh_new);
+        t8_cmesh_set_derive (cmesh_new, cmesh);
+        t8_cmesh_set_reorder_zoltan (cmesh_new);
+        t8_cmesh_commit (cmesh_new, comm);
+        cmesh = cmesh_new;
 #else
         t8_global_errorf ("t8code was not compiled to link with Zoltan. "
                           "Recompile with Zoltan to use its features.\n");

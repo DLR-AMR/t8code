@@ -279,6 +279,7 @@ t8_cmesh_set_partition_range (t8_cmesh_t cmesh, int set_face_knowledge,
   if (cmesh->tree_offsets != NULL) {
     t8_shmem_array_destroy (&cmesh->tree_offsets);
     cmesh->tree_offsets = NULL;
+    cmesh->set_reorder = 0;
   }
   cmesh->set_partition_level = -1;
 }
@@ -301,6 +302,7 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh,
     cmesh->first_tree = -1;
     cmesh->num_local_trees = -1;
     cmesh->set_partition_level = -1;
+    cmesh->set_reorder = 0;
   }
 }
 
@@ -320,6 +322,7 @@ t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level)
       t8_shmem_array_destroy (&cmesh->tree_offsets);
       cmesh->tree_offsets = NULL;
     }
+    cmesh->set_reorder = 0;
   }
 }
 
@@ -901,20 +904,13 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm, idx_t num_partitions)
 #endif
 
 #ifdef T8_WITH_ZOLTAN
-
-#include <t8_cmesh/t8_cmesh_zoltan.h>
 void
-t8_cmesh_reorder_zoltan (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+t8_cmesh_set_reorder_zoltan (t8_cmesh_t cmesh)
 {
-  if (cmesh->mpisize > 1) {
-    T8_ASSERT (cmesh->set_partition);
-    t8_cmesh_zoltan_initialize (0, NULL);
-    t8_cmesh_zoltan_setup_parmetis (cmesh, comm);
-    t8_cmesh_zoltan_compute_new_parts (cmesh);
-    t8_cmesh_zoltan_destroy (cmesh);
-  }
-}
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
+  cmesh->set_reorder = 1;
+}
 #endif
 
 int
@@ -1200,12 +1196,11 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
       t8_cmesh_unref (&cmesh->set_from);
     }
   }
-  else {
-    if (cmesh->trees != NULL) {
-      t8_cmesh_trees_destroy (&cmesh->trees);
-    }
-    T8_ASSERT (cmesh->set_from == NULL);
+  if (cmesh->trees != NULL) {
+    t8_cmesh_trees_destroy (&cmesh->trees);
   }
+  T8_ASSERT (cmesh->set_from == NULL);
+
   if (cmesh->profile != NULL) {
     T8_FREE (cmesh->profile);
   }

@@ -99,7 +99,9 @@ typedef struct t8_cmesh
                                          with an assumes \a level uniform mesh underneath.  TODO: fix sentence */
 #ifdef T8_WITH_ZOLTAN
   struct Zoltan_Struct *zoltan_struct; /**< If we compile with Zoltan support and the cmesh is to be repartitioned
-                                            using Zoltan, we store the Zoltan settings in this struct.
+                                            using Zoltan, we store the Zoltan settings in this struct (during \see t8_cmesh_commit). */
+  int                 set_reorder;     /**< If we compile with Zoltan, flag to decide whether this cmesh should be
+                                            calculated from reordering the trees of \a set_from during commit. */
 #endif
 #if 0
   t8_cmesh_from_t     from_method;      /* TODO: Document */

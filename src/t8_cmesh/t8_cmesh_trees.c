@@ -158,8 +158,7 @@ t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees, t8_locidx_t lghost_index,
   T8_ASSERT (ret);
 }
 
-#ifdef T8_ENABLE_DEBUG
-
+#if defined T8_ENABLE_DEBUG  || defined T8_WITH_ZOLTAN
 static int
 t8_cmesh_trees_get_num_procs (t8_cmesh_trees_t trees)
 {
@@ -167,7 +166,6 @@ t8_cmesh_trees_get_num_procs (t8_cmesh_trees_t trees)
   T8_ASSERT (trees->from_proc != NULL);
   return trees->from_proc->elem_count;
 }
-
 #endif
 
 /* Get a tree form a part given its local id */
@@ -191,6 +189,17 @@ t8_part_tree_get_ghost (t8_part_tree_t P, t8_locidx_t ghost_id)
     (P->first_tree + (P->num_trees * sizeof (t8_ctree_struct_t)));
   return first_ghost + ghost_offset;
 }
+
+#ifdef T8_WITH_ZOLTAN
+int
+t8_cmesh_trees_add_part (t8_cmesh_trees_t trees)
+{
+  T8_ASSERT (trees != NULL);
+
+  sc_array_push (trees->from_proc);
+  return t8_cmesh_trees_get_num_procs (trees);
+}
+#endif
 
 void
 t8_cmesh_trees_start_part (t8_cmesh_trees_t trees, int proc,
@@ -661,7 +670,9 @@ t8_cmesh_trees_add_attribute (t8_cmesh_trees_t trees, int proc,
   attr_info = T8_TREE_ATTR_INFO (tree, index);
   new_attr = T8_TREE_ATTR (tree, attr_info);
 
-  memcpy (new_attr, attr->attr_data, attr->attr_size);
+  if (attr->attr_data != NULL) {
+    memcpy (new_attr, attr->attr_data, attr->attr_size);
+  }
 
   /* Set new values */
   attr_info->key = attr->key;

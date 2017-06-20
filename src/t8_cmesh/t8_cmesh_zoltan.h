@@ -38,37 +38,17 @@
  * with --with-zoltan.
  */
 #ifdef T8_WITH_ZOLTAN
+#include <t8_cmesh.h>
 #include <zoltan.h>
 
 #define T8_CHECK_ZOLTAN(r) SC_CHECK_ABORTF ((r) == ZOLTAN_OK, "Zoltan error %i", r)
 
 T8_EXTERN_C_BEGIN ();
 
-/** Initialize t8code for use with Zoltan.
- * \param [in]  argc The number of command line arguments.
- * \param [in]  argc Array of command line arguments.
- * \note This function must be called once before working with Zoltan
- * routines.
- */
-void                t8_cmesh_zoltan_initialize (int argc, char **argv);
-
-/** Setup Zoltan for use with parmetis Graph partitioning methods for
- * a particular cmesh and store this settings at the cmesh.
- * \param [in,out] cmesh A committed cmesh.
- * \param [in]  comm  The MPI communicator that should be used. Must
- *                    fulfill \ref t8_cmesh_comm_is_valid.
- */
-void                t8_cmesh_zoltan_setup_parmetis (t8_cmesh_t cmesh,
-                                                    sc_MPI_Comm comm);
-
-/** Free the memory used by the Zoltan methods.
- * \param [in] cmesh  A cmesh.
- * \note  \a cmesh should have been setup for Zoltan usage with t8_cmesh_zolten_setup_parmetis.
- */
-void                t8_cmesh_zoltan_destroy (t8_cmesh_t cmesh);
-
+/** Perform the zoltan reorder */
 /* TODO: Document */
-void                t8_cmesh_zoltan_compute_new_parts (t8_cmesh_t cmesh);
+void                t8_cmesh_commit_zoltan (t8_cmesh_t cmesh_new,
+                                            sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 

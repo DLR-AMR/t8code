@@ -168,8 +168,8 @@ public:
    * \param [in] face   A face of \a elem.
    * \return            The number of children of \a face if \a elem is to be refined.
    */
-  virtual int         t8_element_num_face_children (const t8_element_t *
-                                                    elem, int face) = 0;
+  virtual int         t8_element_num_face_children (const t8_element_t * elem,
+                                                    int face) = 0;
 
   /** Construct the child element of a given number.
    * \param [in] elem     This must be a valid element, bigger than maxlevel.
