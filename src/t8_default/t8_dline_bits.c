@@ -42,8 +42,8 @@ t8_dline_compare (const t8_dline_t * l1, const t8_dline_t * l2)
 
   maxlvl = SC_MAX (l1->level, l2->level);
   /* Compute the linear ids of the elements */
-  id1 = t8_dline_linear_id (l1, maxlvl);
-  id2 = t8_dline_linear_id (l2, maxlvl);
+  id1 = l1->x >> (T8_DLINE_MAXLEVEL - maxlvl);
+  id2 = l2->x >> (T8_DLINE_MAXLEVEL - maxlvl);
   if (id1 == id2) {
     /* The linear ids are the same, the line with the smaller level
      * is considered smaller */
@@ -158,7 +158,7 @@ t8_dline_is_root_boundary (const t8_dline_t * p, int face)
 }
 
 int
-t8_dline_is_inside_root (const t8_dline_t *p)
+t8_dline_is_inside_root (const t8_dline_t * p)
 {
   return (p->x >= 0 && p->x < T8_DLINE_ROOT_LEN);
 }

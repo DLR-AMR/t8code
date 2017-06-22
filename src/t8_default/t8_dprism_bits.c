@@ -173,19 +173,41 @@ void
 t8_dprism_boundary_face (const t8_dprism_t * p, int face,
                          t8_element_t * boundary)
 {
+  /*TODO: Cases überlegen, Koordinatensystem hängt von face ab */
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
-  if (face < 3) {
-    p4est_quadrant_t   *l = (p4est_quadrant_t *) boundary;
-    l->x = p->tri.x;
-    l->y = p->line.x;
-    l->level = p->tri.level;
-  }
-  else {
+  /* if (face < 3) {
+     p4est_quadrant_t   *l = (p4est_quadrant_t *) boundary;
+     l->x = p->tri.x;
+     l->y = p->line.x;
+     l->level = p->tri.level;
+     } */
+  p4est_quadrant_t   *q = (p4est_quadrant_t *) boundary;
+  if (face >= 3) {
     t8_dtri_t          *l = (t8_dtri_t *) boundary;
     l->level = p->tri.level;
     l->type = p->tri.type;
     l->x = p->tri.x;
     l->y = p->tri.y;
+    return;
+  }
+  switch (face) {
+  case 0:
+    q->x = p->tri.y;
+    q->y = p->line.x;
+    q->level = p->tri.level;
+    break;
+  case 1:
+    q->x = p->tri.x;
+    q->y = p->line.x;
+    q->level = p->tri.level;
+    break;
+  case 2:
+    q->x = p->tri.x;
+    q->y = p->line.x;
+    q->level = p->tri.level;
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
   }
 }
 
@@ -300,6 +322,8 @@ t8_dprism_children_at_face (const t8_dprism_t * p,
     t8_dprism_child (p, 6, children[2]);
     t8_dprism_child (p, 7, children[3]);
     break;
+  default:
+    SC_ABORT_NOT_REACHED ();
   }
 }
 
@@ -336,38 +360,40 @@ t8_dprism_extrude_face (const t8_element_t * face, t8_element_t * elem,
   case 0:
     p->line.level = q->level;
     p->tri.level = q->level;
-    p->tri.x = T8_DPRISM_ROOT_LEN - T8_DPRISM_LEN (p->line.level);
-    p->tri.y = q->x * T8_DPRISM_ROOT_LEN / P4EST_ROOT_LEN;
-    p->line.x = q->y * T8_DPRISM_ROOT_LEN / P4EST_ROOT_LEN;
+    p->tri.x = (1 << T8_DPRISM_MAXLEVEL) - T8_DPRISM_LEN (p->line.level);
+    p->tri.y = q->x * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
+    p->line.x = q->y * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
     break;
   case 1:
     p->line.level = q->level;
     p->tri.level = q->level;
-    p->tri.x = q->x * T8_DPRISM_ROOT_LEN / P4EST_ROOT_LEN;
-    p->tri.y = q->x * T8_DPRISM_ROOT_LEN / P4EST_ROOT_LEN;
-    p->line.x = q->y * T8_DPRISM_ROOT_LEN / P4EST_ROOT_LEN;
+    p->tri.x = q->x * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
+    p->tri.y = q->x * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
+    p->line.x = q->y * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
     break;
   case 2:
     p->line.level = q->level;
     p->tri.level = q->level;
-    p->tri.x = q->x * T8_DPRISM_ROOT_LEN / P4EST_ROOT_LEN;
+    p->tri.x = q->x * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
     p->tri.y = 0;
-    p->line.x = q->y * T8_DPRISM_ROOT_LEN / P4EST_ROOT_LEN;
+    p->line.x = q->y * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
     break;
   case 3:
     p->line.level = t->level;
     p->tri.level = t->level;
-    p->tri.x = t->x * T8_DPRISM_ROOT_LEN / T8_DTRI_ROOT_LEN;
-    p->tri.y = t->y * T8_DPRISM_ROOT_LEN / T8_DTRI_ROOT_LEN;
+    p->tri.x = t->x * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
+    p->tri.y = t->y * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
     p->line.x = 0;
     break;
   case 4:
     p->line.level = t->level;
     p->tri.level = t->level;
-    p->tri.x = t->x * T8_DPRISM_ROOT_LEN / T8_DTRI_ROOT_LEN;
-    p->tri.y = t->y * T8_DPRISM_ROOT_LEN / T8_DTRI_ROOT_LEN;
-    p->line.x = T8_DPRISM_ROOT_LEN - T8_DPRISM_LEN (t->level);
+    p->tri.x = t->x * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
+    p->tri.y = t->y * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
+    p->line.x = (1 << T8_DPRISM_MAXLEVEL) - T8_DPRISM_LEN (t->level);
     break;
+  default:
+    SC_ABORT_NOT_REACHED ();
   }
 }
 
