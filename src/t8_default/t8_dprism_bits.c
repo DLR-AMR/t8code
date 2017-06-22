@@ -23,22 +23,9 @@
 #include "t8_dprism_bits.h"
 #include "t8_dline_bits.h"
 #include "t8_dtri_bits.h"
+#include "sc_functions.h"
 #include "p4est.h"
 
-int
-my_pow (int base, int expo)
-{
-  int                 i;
-  int                 result = 1;
-  T8_ASSERT (base > 0 && expo >= 0);
-  if (expo == 0) {
-    return result;
-  }
-  for (i = 0; i < expo; i++) {
-    result *= base;
-  }
-  return result;
-}
 
 int
 t8_dprism_get_level (const t8_dprism_t * p)
@@ -86,7 +73,7 @@ t8_dprism_init_linear_id (t8_dprism_t * p, int level, uint64_t id)
   int                 triangles_of_size_i = 1;
 
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
-  T8_ASSERT (id < my_pow (T8_DPRISM_CHILDREN, level));
+  T8_ASSERT (id < sc_intpow (T8_DPRISM_CHILDREN, level));
 
   for (i = 0; i <= level; i++) {
     /*Get the number of the i-th prism and get the related triangle number
@@ -98,7 +85,7 @@ t8_dprism_init_linear_id (t8_dprism_t * p, int level, uint64_t id)
      * parent prism. => line_id + 2^i*/
     line_id +=
       (id % T8_DPRISM_CHILDREN) / T8_DTRI_CHILDREN *
-      my_pow (T8_DLINE_CHILDREN, i);
+      sc_intpow (T8_DLINE_CHILDREN, i);
 
     /*Each Prism divides into 8 children */
     id /= T8_DPRISM_CHILDREN;
@@ -184,26 +171,26 @@ t8_dprism_boundary_face (const t8_dprism_t * p, int face,
   p4est_quadrant_t   *q = (p4est_quadrant_t *) boundary;
   if (face >= 3) {
     t8_dtri_t          *l = (t8_dtri_t *) boundary;
-    l->level = p->tri.level;
+    l->level = p->tri.level * (1 << (T8_DTRI_MAXLEVEL - T8_DPRISM_MAXLEVEL));
     l->type = p->tri.type;
-    l->x = p->tri.x;
-    l->y = p->tri.y;
+    l->x = p->tri.x * (1 << (T8_DTRI_MAXLEVEL - T8_DPRISM_MAXLEVEL));
+    l->y = p->tri.y * (1 << (T8_DTRI_MAXLEVEL - T8_DPRISM_MAXLEVEL));
     return;
   }
   switch (face) {
   case 0:
-    q->x = p->tri.y;
-    q->y = p->line.x;
+    q->x = p->tri.y * (1 << (P4EST_MAXLEVEL - T8_DPRISM_MAXLEVEL));
+    q->y = p->line.x * (1 << (P4EST_MAXLEVEL - T8_DPRISM_MAXLEVEL));
     q->level = p->tri.level;
     break;
   case 1:
-    q->x = p->tri.x;
-    q->y = p->line.x;
+    q->x = p->tri.x * (1 << (P4EST_MAXLEVEL - T8_DPRISM_MAXLEVEL));
+    q->y = p->line.x * (1 << (P4EST_MAXLEVEL - T8_DPRISM_MAXLEVEL));
     q->level = p->tri.level;
     break;
   case 2:
-    q->x = p->tri.x;
-    q->y = p->line.x;
+    q->x = p->tri.x * (1 << (P4EST_MAXLEVEL - T8_DPRISM_MAXLEVEL));
+    q->y = p->line.x * (1 << (P4EST_MAXLEVEL - T8_DPRISM_MAXLEVEL));
     q->level = p->tri.level;
     break;
   default:
@@ -352,6 +339,7 @@ t8_dprism_extrude_face (const t8_element_t * face, t8_element_t * elem,
   t8_dprism_t        *p = (t8_dprism_t *) elem;
   const t8_dtri_t    *t = (const t8_dtri_t *) face;
   const p4est_quadrant_t *q = (const p4est_quadrant_t *) face;
+  /*All boundary prisms have triangletype 0*/
   p->tri.type = 0;
 
   T8_ASSERT (0 <= root_face && root_face < T8_DPRISM_FACES);
@@ -361,35 +349,35 @@ t8_dprism_extrude_face (const t8_element_t * face, t8_element_t * elem,
     p->line.level = q->level;
     p->tri.level = q->level;
     p->tri.x = (1 << T8_DPRISM_MAXLEVEL) - T8_DPRISM_LEN (p->line.level);
-    p->tri.y = q->x * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
-    p->line.x = q->y * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
+    p->tri.y = q->x * T8_DPRISM_ROOT_BY_QUAD_ROOT;
+    p->line.x = q->y * T8_DPRISM_ROOT_BY_QUAD_ROOT;
     break;
   case 1:
     p->line.level = q->level;
     p->tri.level = q->level;
-    p->tri.x = q->x * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
-    p->tri.y = q->x * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
-    p->line.x = q->y * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
+    p->tri.x = q->x * T8_DPRISM_ROOT_BY_QUAD_ROOT;
+    p->tri.y = q->x * T8_DPRISM_ROOT_BY_QUAD_ROOT;
+    p->line.x = q->y * T8_DPRISM_ROOT_BY_QUAD_ROOT;
     break;
   case 2:
     p->line.level = q->level;
     p->tri.level = q->level;
-    p->tri.x = q->x * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
+    p->tri.x = q->x * T8_DPRISM_ROOT_BY_QUAD_ROOT;
     p->tri.y = 0;
-    p->line.x = q->y * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
+    p->line.x = q->y * T8_DPRISM_ROOT_BY_QUAD_ROOT;
     break;
   case 3:
     p->line.level = t->level;
     p->tri.level = t->level;
-    p->tri.x = t->x * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
-    p->tri.y = t->y * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
+    p->tri.x = t->x * T8_DPRISM_ROOT_BY_DTRI_ROOT;
+    p->tri.y = t->y * T8_DPRISM_ROOT_BY_DTRI_ROOT;
     p->line.x = 0;
     break;
   case 4:
     p->line.level = t->level;
     p->tri.level = t->level;
-    p->tri.x = t->x * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
-    p->tri.y = t->y * ((1 << T8_DPRISM_MAXLEVEL) >> P4EST_MAXLEVEL);
+    p->tri.x = t->x * T8_DPRISM_ROOT_BY_DTRI_ROOT;
+    p->tri.y = t->y * T8_DPRISM_ROOT_BY_DTRI_ROOT;
     p->line.x = (1 << T8_DPRISM_MAXLEVEL) - T8_DPRISM_LEN (t->level);
     break;
   default:
@@ -494,10 +482,10 @@ t8_dprism_linear_id (const t8_dprism_t * p, int level)
   int                 i;
   int                 prisms_of_size_i = 1;
   /*line_level = 2 ^ (level - 1) */
-  int                 line_level = my_pow (T8_DLINE_CHILDREN, level - 1);
+  int                 line_level = sc_intpow (T8_DLINE_CHILDREN, level - 1);
   /*prism_shift = 2 * 8 ^ (level - 1) */
   int                 prism_shift =
-    4 * my_pow (T8_DPRISM_CHILDREN, level - 1);
+    4 * sc_intpow (T8_DPRISM_CHILDREN, level - 1);
 
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
   T8_ASSERT (p->line.level == p->tri.level);
