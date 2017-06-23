@@ -408,6 +408,8 @@ t8_cmesh_zoltan_pack_obj_multi (void *data, int num_gid_entries,
 /* After the data was packed, this function is called.
  * Here we can check how many trees this process will receive and
  * set up the new cmesh.
+ * The data pointer is an array of 2 t8_cmesh_t, the first one is
+ * the new cmesh and the second one the old cmesh
  */
 void
 t8_cmesh_zoltan_mid_migrate_pp (void *data, int num_gid_entries,
@@ -421,14 +423,114 @@ t8_cmesh_zoltan_mid_migrate_pp (void *data, int num_gid_entries,
                                 int *export_procs, int *export_to_part,
                                 int *ierr)
 {
-  t8_cmesh_t          cmesh_new;
+  t8_cmesh_t          cmesh_new, cmesh_old;
+  int8_t             *exported_flag;
+  t8_locidx_t         num_local_trees, itree, ltreeid, num_trees_kept;
+  t8_locidx_t        *face_neighbors, *face_neighbors_new, new_treeid;
+  t8_ctree_t          tree;
+  int                 num_atts, iatt;
+  size_t              att_size;
+  t8_attribute_info_struct_t *att_info;
+  t8_stash_attribute_struct_t stash_att;
 
-  cmesh_new = (t8_cmesh_t) data;
+  cmesh_new = ((t8_cmesh_t *) data)[0];
   T8_ASSERT (t8_cmesh_is_initialized (cmesh_new));
+  /* We store two cmesh_t's in data:
+   *
+   * data -> | cmesh_new | cmesh_old |
+   *
+   */
+  cmesh_old = ((t8_cmesh_t *) data)[1];
+  T8_ASSERT (t8_cmesh_is_committed (cmesh_old));
 
   /* The number of parts and the number of ghost trees is not known yet. */
   t8_cmesh_trees_init (&cmesh_new->trees, 0, num_import, 0);
   /* TODO: Put the ghost trees in a seperate part after all the trees have been received. */
+
+  /* We now migrate the trees that are not exported to the new cmesh. */
+  num_local_trees = t8_cmesh_get_num_local_trees (cmesh_old);
+  if (num_export == num_local_trees) {
+    /* There are no trees that are not exported, we do not have to
+     * do anything, except cleaning up the memory. */
+    T8_FREE (data);
+    return;
+  }
+  num_trees_kept = num_local_trees - num_export;
+  T8_ASSERT (num_trees_kept > 0);
+
+  /* Allocate memory for the flags. We store for each tree whether it
+   * is exported or not. */
+  exported_flag = T8_ALLOC_ZERO (int8_t, num_local_trees);
+  for (itree = 0; itree < num_export; itree++) {
+    /* Get the local id of this exported tree */
+    ltreeid = t8_cmesh_get_local_id (cmesh_old, export_global_ids[itree]);
+    T8_ASSERT (t8_cmesh_tree_is_local (cmesh_old, ltreeid));
+    /* Set the flag that this tree is exported. */
+    exported_flag[ltreeid] = 1;
+  }
+
+  /* We now add each tree that is not exported to the new cmesh. */
+  t8_cmesh_trees_add_part (cmesh_new->trees);
+  t8_cmesh_trees_start_part (cmesh_new->trees, 0, 0, num_trees_kept, 0, 0, 1);
+
+  for (itree = 0, new_treeid = 0; itree < num_local_trees; itree++) {
+    if (exported_flag[itree] == 0) {
+      /* This tree is not exported */
+      tree = t8_cmesh_get_tree (cmesh_old, itree);
+      /* Add the tree to the new cmesh */
+      t8_cmesh_trees_add_tree (cmesh_new->trees, new_treeid, 0, tree->eclass);
+      /* We now initialize the tree's attribute infos */
+      num_atts = tree->num_attributes;
+      att_size = t8_cmesh_trees_attribute_size (tree);
+      t8_cmesh_trees_init_attributes (cmesh_new->trees, new_treeid, num_atts,
+                                      att_size);
+
+      new_treeid++;
+    }
+  }
+  T8_ASSERT (new_treeid == num_trees_kept);
+
+  /* Allocate memory for the face neighbor and attribute structs */
+  t8_cmesh_trees_finish_part (cmesh_new->trees, 0);
+  /* We now add the face neighbors and attribute information */
+  for (itree = 0, new_treeid = 0; itree < num_local_trees; itree++) {
+    if (exported_flag[itree] == 0) {
+      /* This tree is not exported */
+      tree =
+        t8_cmesh_trees_get_tree_ext (cmesh_old->trees, itree, &face_neighbors,
+                                     NULL);
+      /* Set the face neighbors of the tree */
+      (void) t8_cmesh_trees_get_tree_ext (cmesh_new->trees, new_treeid,
+                                          &face_neighbors_new, NULL);
+      memcpy (face_neighbors_new, face_neighbors,
+              t8_cmesh_trees_neighbor_bytes (tree));
+      /* Get the number of the attributes */
+      num_atts = tree->num_attributes;
+      /* Iterate over all attributes and copy their data. */
+      for (iatt = 0; iatt < num_atts; iatt++) {
+        att_info = T8_TREE_ATTR_INFO (tree, iatt);
+        /* Copy att_info to stash_att struct */
+        stash_att.attr_data = T8_TREE_ATTR (tree, att_info);
+        stash_att.attr_size = att_info->attribute_size;
+        stash_att.id = 0;       /* We do not know the new global tree id */
+        stash_att.key = att_info->key;
+        stash_att.is_owned = 0;
+        stash_att.package_id = att_info->package_id;
+
+        t8_cmesh_trees_add_attribute (cmesh_new->trees, 0, &stash_att,
+                                      new_treeid, iatt);
+      }
+      new_treeid++;
+    }
+  }
+  T8_ASSERT (new_treeid == num_trees_kept);
+
+  cmesh_new->num_local_trees = num_trees_kept;
+
+  /* clean-up */
+  T8_FREE (data);
+
+  *ierr = ZOLTAN_OK;
 }
 
 /* TODO: Use mid migration to copy the trees that stay process local.
@@ -575,6 +677,7 @@ t8_cmesh_zoltan_setup_parmetis (t8_cmesh_t cmesh_old, t8_cmesh_t cmesh_new,
 {
   int                 z_err;
   struct Zoltan_Struct *Z;
+  t8_cmesh_t         *both_cmeshes;
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh_old));
   T8_ASSERT (t8_cmesh_comm_is_valid (cmesh_old, comm));
@@ -606,9 +709,13 @@ t8_cmesh_zoltan_setup_parmetis (t8_cmesh_t cmesh_old, t8_cmesh_t cmesh_new,
     Zoltan_Set_Pack_Obj_Multi_Fn (Z, t8_cmesh_zoltan_pack_obj_multi,
                                   cmesh_old);
   T8_CHECK_ZOLTAN (z_err);
+
+  both_cmeshes = T8_ALLOC (t8_cmesh_t, 2);
+  both_cmeshes[0] = cmesh_new;
+  both_cmeshes[1] = cmesh_old;
   z_err =
     Zoltan_Set_Mid_Migrate_PP_Fn (Z, t8_cmesh_zoltan_mid_migrate_pp,
-                                  cmesh_new);
+                                  both_cmeshes);
   T8_CHECK_ZOLTAN (z_err);
   z_err = Zoltan_Set_Unpack_Obj_Multi_Fn (Z, t8_cmesh_zoltan_unpack_obj_multi,
                                           cmesh_new);
@@ -739,6 +846,12 @@ t8_cmesh_commit_zoltan (t8_cmesh_t cmesh_new, sc_MPI_Comm comm)
 
   cmesh_old = cmesh_new->set_from;
   T8_ASSERT (t8_cmesh_is_committed (cmesh_old));
+
+  SC_CHECK_ABORT (!t8_cmesh_first_tree_is_shared (cmesh_old),
+                  "Trying to repartition a coarse mesh that has shared trees "
+                  "with Zoltan.");
+
+  cmesh_new->num_trees = cmesh_old->num_trees;
 
   T8_ASSERT (cmesh_old->set_partition);
   t8_cmesh_zoltan_initialize (0, NULL);
