@@ -279,7 +279,9 @@ t8_cmesh_set_partition_range (t8_cmesh_t cmesh, int set_face_knowledge,
   if (cmesh->tree_offsets != NULL) {
     t8_shmem_array_destroy (&cmesh->tree_offsets);
     cmesh->tree_offsets = NULL;
+#ifdef T8_WITH_ZOLTAN
     cmesh->set_reorder = 0;
+#endif
   }
   cmesh->set_partition_level = -1;
 }
@@ -302,7 +304,9 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh,
     cmesh->first_tree = -1;
     cmesh->num_local_trees = -1;
     cmesh->set_partition_level = -1;
+#ifdef T8_WITH_ZOLTAN
     cmesh->set_reorder = 0;
+#endif
   }
 }
 
@@ -322,7 +326,9 @@ t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level)
       t8_shmem_array_destroy (&cmesh->tree_offsets);
       cmesh->tree_offsets = NULL;
     }
+#ifdef T8_WITH_ZOLTAN
     cmesh->set_reorder = 0;
+#endif
   }
 }
 
