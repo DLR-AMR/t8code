@@ -26,7 +26,6 @@
 #include "sc_functions.h"
 #include "p4est.h"
 
-
 int
 t8_dprism_get_level (const t8_dprism_t * p)
 {
@@ -339,7 +338,7 @@ t8_dprism_extrude_face (const t8_element_t * face, t8_element_t * elem,
   t8_dprism_t        *p = (t8_dprism_t *) elem;
   const t8_dtri_t    *t = (const t8_dtri_t *) face;
   const p4est_quadrant_t *q = (const p4est_quadrant_t *) face;
-  /*All boundary prisms have triangletype 0*/
+  /*All boundary prisms have triangletype 0 */
   p->tri.type = 0;
 
   T8_ASSERT (0 <= root_face && root_face < T8_DPRISM_FACES);
@@ -404,19 +403,19 @@ t8_dprism_successor (const t8_dprism_t * p, t8_dprism_t * succ, int level)
     /*Zero out the bits of higher level, caused by recursion */
 #if 1
     succ->tri.x =
-      (succ->
-       tri.x >> (T8_DPRISM_MAXLEVEL - level + 1)) << (T8_DPRISM_MAXLEVEL -
-                                                      level + 1);
+      (succ->tri.
+       x >> (T8_DPRISM_MAXLEVEL - level + 1)) << (T8_DPRISM_MAXLEVEL - level +
+                                                  1);
     succ->tri.y =
-      (succ->
-       tri.y >> (T8_DPRISM_MAXLEVEL - level + 1)) << (T8_DPRISM_MAXLEVEL -
-                                                      level + 1);
+      (succ->tri.
+       y >> (T8_DPRISM_MAXLEVEL - level + 1)) << (T8_DPRISM_MAXLEVEL - level +
+                                                  1);
 #endif
 #if 1
     succ->line.x =
-      (succ->
-       line.x >> (T8_DPRISM_MAXLEVEL - level + 1)) << (T8_DPRISM_MAXLEVEL -
-                                                       level + 1);
+      (succ->line.
+       x >> (T8_DPRISM_MAXLEVEL - level + 1)) << (T8_DPRISM_MAXLEVEL - level +
+                                                  1);
 #endif
     /*Set the level to the actual level */
     succ->line.level = level;
@@ -481,14 +480,20 @@ t8_dprism_linear_id (const t8_dprism_t * p, int level)
   uint64_t            line_id;
   int                 i;
   int                 prisms_of_size_i = 1;
-  /*line_level = 2 ^ (level - 1) */
-  int                 line_level = sc_intpow (T8_DLINE_CHILDREN, level - 1);
-  /*prism_shift = 2 * 8 ^ (level - 1) */
-  int                 prism_shift =
-    4 * sc_intpow (T8_DPRISM_CHILDREN, level - 1);
+  /*line_level = Num_of_Line_children ^ (level - 1) */
+  int                 line_level;
+  /*prism_shift = Num_of_Prism_children / 2 * 8 ^ (level - 1) */
+  int                 prism_shift;
 
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
   T8_ASSERT (p->line.level == p->tri.level);
+  /*id = 0 for root element */
+  if (level == 0) {
+    return 0;
+  }
+  line_level = sc_intpow (T8_DLINE_CHILDREN, level - 1);
+  prism_shift =
+    (T8_DPRISM_CHILDREN >> 1) * sc_intpow (T8_DPRISM_CHILDREN, level - 1);
 
   tri_id = t8_dtri_linear_id (&p->tri, level);
   line_id = t8_dline_linear_id (&p->line, level);
