@@ -832,6 +832,24 @@ t8_cmesh_zoltan_finish_cmesh (t8_cmesh_t cmesh_new)
   }
 }
 
+/* TODO: ghost trees and changing treeid.
+ *       each tree has an array of its neighbor's local ids.
+ *       On the owning process p, we know whether such a neighbor is local or a ghost.
+ *       When we receicve the tree on process p', we can still recover the global ids of
+ *       the previously local neighbors (id + first_tree_of (p)).
+ *       we can identify the previous ghost neighbors (if id >= num_trees_of (p)),
+ *       but we cannot compute their global id.
+ *
+ *       Idea: Store the global id of each neighbor in the buf array.
+ *       Problem: we cannot store the global ids in the trees structure and thus need
+ *                additional memory to store all global neighbor ids = O(C * num_trees) * 8 bytes
+ *                with 3 <= C <= 6.
+ *
+ *       Suppose we have a global id in the old partition, how do we compute a local id
+ *       or global id in the new partition?
+ *       Use Zoltan_invert_list?
+ */
+
 void
 t8_cmesh_commit_zoltan (t8_cmesh_t cmesh_new, sc_MPI_Comm comm)
 {
