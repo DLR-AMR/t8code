@@ -528,16 +528,11 @@ t8_cmesh_zoltan_mid_migrate_pp (void *data, int num_gid_entries,
   cmesh_new->num_local_trees = num_trees_kept;
 
   /* clean-up */
+  T8_FREE (exported_flag);
   T8_FREE (data);
 
   *ierr = ZOLTAN_OK;
 }
-
-/* TODO: Use mid migration to copy the trees that stay process local.
- *       Use array: exported[NUM_LOCAL_TREES] and set exported[ltree] = 1 if it
- *        is exported (for i < num_export: exported[export_global_ids[i]] = 1
- *       iterate over trees and add tree i if exported[i] = 0.
- */
 
 /* After we receive all tree data from the source processes, we have to unpack
  * them into the cmesh trees struct.
