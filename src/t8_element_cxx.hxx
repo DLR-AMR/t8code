@@ -463,7 +463,8 @@ public:
    * \note            We recommend to use the assertion T8_ASSERT (t8_element_is_valid (elem))
    *                  in the implementation of each of the function in this file.
    */
-  virtual int         t8_element_is_valid (const t8_element_t * elem) = 0;
+  virtual int         t8_element_is_valid (const t8_element_t * elem) const =
+    0;
 #endif
 
   /** Allocate memory for an array of elements of a given class.
