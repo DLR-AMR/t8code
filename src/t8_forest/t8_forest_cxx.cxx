@@ -491,7 +491,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
     /* Allocate the face element */
     boundary_scheme->t8_element_new (1, &face_element);
     /* Compute the face element. */
-    ts->t8_element_boundary_face (elem, face, face_element);
+    ts->t8_element_boundary_face (elem, face, face_element, boundary_scheme);
     /* Get the coarse tree that contains elem.
      * Also get the face neighbor information of the coarse tree. */
     lctree_id = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
@@ -556,8 +556,8 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
                                                 is_smaller);
     /* And now we extrude the face to the new neighbor element */
     neighbor_scheme = forest->scheme_cxx->eclass_schemes[neigh_eclass];
-    neighbor_scheme->t8_element_extrude_face (face_element, neigh,
-                                              neigh_face);
+    neighbor_scheme->t8_element_extrude_face (face_element, boundary_scheme,
+                                              neigh, neigh_face);
 
     return global_neigh_id;
   }
