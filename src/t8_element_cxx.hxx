@@ -318,6 +318,8 @@ public:
    *                      lies.
    */
   virtual void        t8_element_extrude_face (const t8_element_t * face,
+                                               const t8_eclass_scheme_c *
+                                               face_scheme,
                                                t8_element_t * elem,
                                                int root_face) = 0;
 
@@ -333,7 +335,9 @@ public:
    */
   virtual void        t8_element_boundary_face (const t8_element_t * elem,
                                                 int face,
-                                                t8_element_t * boundary) = 0;
+                                                t8_element_t * boundary,
+                                                const t8_eclass_scheme_c *
+                                                boundary_scheme) = 0;
   /* TODO: document better */
 /** Construct all codimension-one boundary elements of a given element. */
   virtual void        t8_element_boundary (const t8_element_t * elem,
@@ -443,6 +447,24 @@ public:
    */
   virtual t8_element_t *t8_element_array_index (sc_array_t * array,
                                                 size_t it);
+
+#ifdef T8_ENABLE_DEBUG
+  /** Query whether a given element can be considered as 'valid' and it is
+   *  safe to perform any of the above algorithms on it.
+   *  For example this could mean that all coordinates are in valid ranges
+   *  and other membervariables do have meaningful values.
+   * \param [in]      elem  The element to be checked.
+   * \return          True if \a elem is safe to use. False otherwise.
+   * \note            An element that is constructed with \ref t8_element_new
+   *                  must pass this test.
+   * \note            This function is used for debugging to catch certain errors.
+   *                  These can for example occur when an element points to a region
+   *                  of memory which should not be interpreted as an element.
+   * \note            We recommend to use the assertion T8_ASSERT (t8_element_is_valid (elem))
+   *                  in the implementation of each of the function in this file.
+   */
+  virtual int         t8_element_is_valid (const t8_element_t * elem) = 0;
+#endif
 
   /** Allocate memory for an array of elements of a given class.
    * \param [in] length   The number of elements to be allocated.
