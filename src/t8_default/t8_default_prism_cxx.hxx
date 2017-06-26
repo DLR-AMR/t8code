@@ -141,6 +141,8 @@ public:
    *  the element inside the root tree that has the given face as a
    *  face */
   virtual void        t8_element_extrude_face (const t8_element_t * face,
+                                               const t8_eclass_scheme_c *
+                                               face_scheme,
                                                t8_element_t * elem,
                                                int root_face);
 
@@ -161,13 +163,19 @@ public:
   /** Construct the boundary element at a specific face. */
   virtual void        t8_element_boundary_face (const t8_element_t * elem,
                                                 int face,
-                                                t8_element_t * boundary);
+                                                t8_element_t * boundary,
+                                                const t8_eclass_scheme_c *
+                                                boundary_scheme);
 
 /** Construct all codimension-one boundary elements of a given element. */
   virtual void        t8_element_boundary (const t8_element_t * elem,
                                            int min_dim, int length,
                                            t8_element_t ** boundary)
   {
+    /* TODO: We will have to change the interface for this function since
+     * for prism the boundary elements have different eclasses and thus we cannot
+     * store the in an array.
+     */
     SC_ABORT ("This function is not implemented yet.\n");
   }
 
@@ -222,6 +230,11 @@ public:
   /** Compute the integer coordinates of a given element vertex. */
   virtual void        t8_element_vertex_coords (const t8_element_t * t,
                                                 int vertex, int coords[]);
+
+#ifdef T8_ENABLE_DEBUG
+  /** Query whether an element is valid */
+  virtual int         t8_element_is_valid (const t8_element_t * t) const;
+#endif
 };
 
 T8_EXTERN_C_END ();

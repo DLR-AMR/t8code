@@ -31,14 +31,12 @@
 
 T8_EXTERN_C_BEGIN ();
 
-
 /** Copy the values of one triangle to another.
  * \param [in] t Triangle whose values will be copied.
  * \param [in,out] dest Existing triangle whose data will be
  *                      filled with the data of \a t. *
  */
 void                t8_dtri_copy (const t8_dtri_t * t, t8_dtri_t * dest);
-
 
 /** Compute the parent of a triangle.
  * \param [in]  elem Input triangle.
@@ -311,6 +309,14 @@ int                 t8_dtri_child_id (const t8_dtri_t * t);
  * \return        The level of \a t.
  */
 int                 t8_dtri_get_level (const t8_dtri_t * t);
+
+/** Query whether all entries of a triangle are in valid ranges.
+ * \param [in] t  triangle to be considered.
+ * \return        True, if \a t is a valid triangle and it is safe to call any
+ *                function on \a t.
+ *                False otherwise.
+ */
+int                 t8_dtri_is_valid (const t8_dtri_t * t);
 
 T8_EXTERN_C_END ();
 

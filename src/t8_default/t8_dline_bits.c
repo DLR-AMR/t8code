@@ -265,3 +265,12 @@ t8_dline_linear_id (const t8_dline_t * elem, int level)
 
   return id;
 }
+
+int
+t8_dline_is_valid (const t8_dline_t * l)
+{
+  /* A line is valid if its level and its x coordinates are in the
+   * correct bounds. */
+  return 0 <= l->level && l->level <= T8_DLINE_MAXLEVEL
+    && 0 <= l->x && l->x < T8_DLINE_ROOT_LEN;
+}

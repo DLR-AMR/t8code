@@ -197,12 +197,16 @@ t8_default_scheme_tet_c::t8_element_tree_face (const t8_element_t * elem,
  * for tets. */
 void
 t8_default_scheme_tet_c::t8_element_extrude_face (const t8_element_t * face,
+                                                  const t8_eclass_scheme_c *
+                                                  face_scheme,
                                                   t8_element_t * elem,
                                                   int root_face)
 {
   const t8_dtri_t    *b = (const t8_dtri_t *) face;
   t8_dtet_t          *t = (t8_dtet_t *) elem;
 
+  T8_ASSERT (face_scheme->eclass == T8_ECLASS_TRIANGLE);
+  T8_ASSERT (face_scheme->t8_element_is_valid (face));
   T8_ASSERT (0 <= root_face && root_face < T8_DTET_FACES);
   t->level = b->level;
 #ifdef T8_ENABLE_DEBUG
@@ -245,12 +249,16 @@ t8_default_scheme_tet_c::t8_element_extrude_face (const t8_element_t * face,
 void
 t8_default_scheme_tet_c::t8_element_boundary_face (const t8_element_t * elem,
                                                    int face,
-                                                   t8_element_t * boundary)
+                                                   t8_element_t * boundary,
+                                                   const t8_eclass_scheme_c *
+                                                   boundary_scheme)
 {
   const t8_default_tet_t *t = (const t8_default_tet_t *) elem;
   t8_dtri_t          *b = (t8_dtri_t *) boundary;
   int                 face_cat;
 
+  T8_ASSERT (boundary_scheme->eclass == T8_ECLASS_TRIANGLE);
+  T8_ASSERT (boundary_scheme->t8_element_is_valid (boundary));
   T8_ASSERT (0 <= face && face < T8_DTET_FACES);
   /* The level of the boundary element is the same as the quadrant's level */
   b->level = t->level;
@@ -290,12 +298,15 @@ t8_default_scheme_tet_c::t8_element_boundary (const t8_element_t * elem,
                                               int min_dim, int length,
                                               t8_element_t ** boundary)
 {
+  SC_ABORT ("Not implemented\n");
+#if 0
   int                 iface;
 
   T8_ASSERT (length == T8_DTET_FACES);
   for (iface = 0; iface < T8_DTET_FACES; iface++) {
     t8_element_boundary_face (elem, iface, boundary[iface]);
   }
+#endif
 }
 
 int
@@ -393,6 +404,18 @@ t8_default_scheme_tet_c::t8_element_vertex_coords (const t8_element_t * t,
 {
   t8_dtet_compute_coords ((const t8_default_tet_t *) t, vertex, coords);
 }
+
+#ifdef T8_ENABLE_DEBUG
+/* *INDENT-OFF* */
+/* indent bug, indent adds a second "const" modifier */
+int
+t8_default_scheme_tet_c::t8_element_is_valid (const t8_element_t * t) const
+/* *INDENT-ON* */
+
+{
+  return t8_dtet_is_valid ((const t8_dtet_t *) t);
+}
+#endif
 
  /* Constructor */
 t8_default_scheme_tet_c::t8_default_scheme_tet_c (void)

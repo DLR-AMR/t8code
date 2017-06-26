@@ -41,6 +41,7 @@ T8_EXTERN_C_BEGIN ();
 #define T8_DTRI_CHILDREN T8_DTET_CHILDREN
 #define T8_DTRI_FACES T8_DTET_FACES
 #define T8_DTRI_FACE_CHILDREN T8_DTET_FACE_CHILDREN
+#define T8_DTRI_NUM_TYPES T8_DTET_NUM_TYPES
 
 /* redefine types */
 #define t8_dtri_coord_t t8_dtet_coord_t
@@ -92,6 +93,7 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_ancestor_id t8_dtet_ancestor_id
 #define t8_dtri_child_id  t8_dtet_child_id
 #define t8_dtri_get_level t8_dtet_get_level
+#define t8_dtri_is_valid t8_dtet_is_valid
 
 T8_EXTERN_C_END ();
 

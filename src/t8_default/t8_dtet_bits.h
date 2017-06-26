@@ -292,6 +292,14 @@ int                 t8_dtet_child_id (const t8_dtet_t * t);
  */
 int                 t8_dtet_get_level (const t8_dtet_t * t);
 
+/** Query whether all entries of a tet are in valid ranges.
+ * \param [in] t  tet to be considered.
+ * \return        True, if \a t is a valid tet and it is safe to call any
+ *                function on \a t.
+ *                False otherwise.
+ */
+int                 t8_dtet_is_valid (const t8_dtet_t * t);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DTET_BITS_H */
