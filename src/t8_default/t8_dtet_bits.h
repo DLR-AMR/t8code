@@ -300,6 +300,11 @@ int                 t8_dtet_get_level (const t8_dtet_t * t);
  */
 int                 t8_dtet_is_valid (const t8_dtet_t * t);
 
+/** Set sensible default values for a tet.
+ * \param [in,out] t A tet.
+ */
+void                t8_dtet_init (t8_dtet_t * t);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DTET_BITS_H */

@@ -46,6 +46,12 @@ public:
 
   ~t8_default_scheme_hex_c ();
 
+  /** Initialize an array of allocated elements. */
+  virtual void        t8_element_init (int length, t8_element_t * elem,
+                                       int called_new)
+  {
+  };
+
 /** Return the maximum level allowed for this element class. */
   virtual int         t8_element_maxlevel (void);
 

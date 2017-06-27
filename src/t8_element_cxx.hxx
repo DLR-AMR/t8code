@@ -457,24 +457,56 @@ public:
    * \return          True if \a elem is safe to use. False otherwise.
    * \note            An element that is constructed with \ref t8_element_new
    *                  must pass this test.
+   * \note            An element for which \ref t8_element_init was called must pass
+   *                  this test.
    * \note            This function is used for debugging to catch certain errors.
    *                  These can for example occur when an element points to a region
    *                  of memory which should not be interpreted as an element.
    * \note            We recommend to use the assertion T8_ASSERT (t8_element_is_valid (elem))
-   *                  in the implementation of each of the function in this file.
+   *                  in the implementation of each of the functions in this file.
    */
   virtual int         t8_element_is_valid (const t8_element_t * elem) const =
     0;
 #endif
 
-  /** Allocate memory for an array of elements of a given class.
+  /** Allocate memory for an array of elements of a given class and initialize them.
    * \param [in] length   The number of elements to be allocated.
    * \param [in,out] elems On input an array of \b length many unallocated
    *                      element pointers.
    *                      On output all these pointers will point to an allocated
-   *                      and uninitialized element.
+   *                      and initialized element.
+   * \note Not every element that is created in t8code will be created by a call
+   * to this function. However, if an element is not created using \ref t8_element_new,
+   * then it is guaranteed that \ref t8_element_init is called on it.
+   * \note In debugging mode, an element that was created with \ref t8_element_new
+   * must pass \ref t8_element_is_valid.
+   * \note If an element was created by \ref t8_element_new then \ref t8_element_init
+   * may not be called for it. Thus, \ref t8_element_new should initialize an element
+   * in the same way as a call to \ref t8_element_init would.
+   * \see t8_element_init
+   * \see t8_element_is_valid
    */
   virtual void        t8_element_new (int length, t8_element_t ** elem) = 0;
+
+ /** Initialize an array of allocated elements.
+   * \param [in] length   The number of elements to be allocated.
+   * \param [in,out] elems On input an array of \b length many allocated
+   *                       elements.
+   * \param [in] called_new True if the elements in \a elem were created by a call
+   *                       to \ref t8_element_new. False if no element in \a elem
+   *                       was created in this way. The case that only some elements
+   *                       were created by \ref t8_element_new does never occur.
+   * \note In debugging mode, an element that was passed to \ref t8_element_init
+   * must pass \ref t8_element_is_valid.
+   * \note If an element was created by \ref t8_element_new then \ref t8_element_init
+   * may not be called for it. Thus, \ref t8_element_new should initialize an element
+   * in the same way as a call to \ref t8_element_init would.
+   * Thus, if \a called_new is true this function should usually do nothing.
+   * \see t8_element_new
+   * \see t8_element_is_valid
+   */
+  virtual void        t8_element_init (int length, t8_element_t * elem,
+                                       int called_new) = 0;
 
   /** Deallocate an array of elements.
    * \param [in] ts       The virtual table for this element class.

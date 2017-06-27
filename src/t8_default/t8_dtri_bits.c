@@ -1248,7 +1248,7 @@ t8_dtri_get_level (const t8_dtri_t * t)
 int
 t8_dtri_is_valid (const t8_dtri_t * t)
 {
-  int                 is_valid = 0;
+  int                 is_valid;
 
   /* A triangle/tet is valid if: */
   /* The level is in the valid range */
@@ -1258,8 +1258,10 @@ t8_dtri_is_valid (const t8_dtri_t * t)
   is_valid = is_valid && 0 <= t->y && t->y < T8_DTRI_ROOT_LEN;
 #ifdef T8_DTRI_TO_DTET
   is_valid = is_valid && 0 <= t->z && t->z < T8_DTRI_ROOT_LEN;
+#ifdef T8_ENABLE_DEBUG
   /* for tets the eclass is set. */
   is_valid = is_valid && t->eclass_int8 == T8_ECLASS_TET;
+#endif
 #else
   /* n is 0 (we currently do not use n) */
   is_valid = is_valid && t->n == 0;
@@ -1268,4 +1270,15 @@ t8_dtri_is_valid (const t8_dtri_t * t)
   is_valid = is_valid && 0 <= t->type && t->type < T8_DTRI_NUM_TYPES;
 
   return is_valid;
+}
+
+void
+t8_dtri_init (t8_dtri_t * t)
+{
+  /* Set all values to zero */
+  memset (t, 0, sizeof (*t));
+#ifdef T8_DTRI_TO_DTET
+  /* For tets, set the eclass */
+  t->eclass_int8 = T8_ECLASS_TET;
+#endif
 }

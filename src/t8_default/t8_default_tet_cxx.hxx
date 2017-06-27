@@ -51,6 +51,15 @@ public:
     return T8_ECLASS_ZERO;      /* suppresses compiler warning */
   }
 
+  /** Allocate memory for a given number of elements.
+   * In debugging mode, ensure that all elements are valid \ref t8_element_is_valid.
+   */
+  virtual void        t8_element_new (int length, t8_element_t ** elem);
+
+  /** Initialize an array of allocated elements. */
+  virtual void        t8_element_init (int length, t8_element_t * elem,
+                                       int called_new);
+
 /** Return the refinement level of an element. */
   virtual int         t8_element_level (const t8_element_t * elem);
 
