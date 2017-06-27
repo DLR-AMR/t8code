@@ -31,6 +31,7 @@
 #include <t8_refcount.h>
 #include <t8_cmesh.h>
 #include <t8_element.h>
+#include <t8_data/t8_containers.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest.h>
 
@@ -107,7 +108,7 @@ t8_forest_struct_t;
 /** The t8 tree datatype */
 typedef struct t8_tree
 {
-  sc_array_t          elements;              /**< locally stored elements */
+  t8_element_array_t  elements;              /**< locally stored elements */
   t8_eclass_t         eclass;                /**< The element class of this tree */
   /* TODO: We will need the *_desc variables later for shure. */
   t8_element_t       *first_desc,            /**< first local descendant */

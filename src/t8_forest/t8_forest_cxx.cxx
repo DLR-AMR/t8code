@@ -154,7 +154,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
 void
 t8_forest_compute_desc (t8_forest_t forest)
 {
-  t8_locidx_t         itree_id, num_trees;
+  t8_locidx_t         itree_id, num_trees, num_elements;
   t8_tree_t           itree;
   t8_eclass_scheme_c *ts;
   t8_element_t       *element;
@@ -168,14 +168,15 @@ t8_forest_compute_desc (t8_forest_t forest)
     /* get the eclass scheme associated to tree */
     ts = forest->scheme_cxx->eclass_schemes[itree->eclass];
     /* get a pointer to the first element of itree */
-    element = ts->t8_element_array_index (&itree->elements, 0);
+    element = t8_element_array_index_locidx (&itree->elements, 0);
     /* get memory for the trees first descendant */
     ts->t8_element_new (1, &itree->first_desc);
     /* calculate the first descendant of the first element */
     ts->t8_element_first_descendant (element, itree->first_desc);
     /* get a pointer to the last element of itree */
-    element = ts->t8_element_array_index (&itree->elements,
-                                          itree->elements.elem_count - 1);
+    num_elements = t8_element_array_get_count (&itree->elements);
+    element =
+      t8_element_array_index_locidx (&itree->elements, num_elements - 1);
     /* get memory for the trees first descendant */
     ts->t8_element_new (1, &itree->last_desc);
     /* calculate the last descendant of the first element */
@@ -197,7 +198,7 @@ t8_forest_populate (t8_forest_t forest)
   t8_gloidx_t         start, end, et;
   t8_tree_t           tree;
   t8_element_t       *element, *element_succ;
-  sc_array_t         *telements;
+  t8_element_array_t *telements;
   t8_eclass_t         tree_class;
   t8_eclass_scheme_c *eclass_scheme;
   t8_gloidx_t         cmesh_first_tree, cmesh_last_tree;
@@ -248,15 +249,14 @@ t8_forest_populate (t8_forest_t forest)
       num_tree_elements = end - start;
       T8_ASSERT (num_tree_elements > 0);
       /* Allocate elements for this processor. */
-      sc_array_init_size (telements, eclass_scheme->t8_element_size (),
-                          num_tree_elements);
-      element = eclass_scheme->t8_element_array_index (telements, 0);
+      t8_element_array_init_size (telements, eclass_scheme,
+                                  num_tree_elements);
+      element = t8_element_array_index_locidx (telements, 0);
       eclass_scheme->t8_element_set_linear_id (element, forest->set_level,
                                                start);
       count_elements++;
       for (et = start + 1; et < end; et++, count_elements++) {
-        element_succ = eclass_scheme->t8_element_array_index (telements,
-                                                              et - start);
+        element_succ = t8_element_array_index_locidx (telements, et - start);
         eclass_scheme->t8_element_successor (element, element_succ,
                                              forest->set_level);
         /* TODO: process elements here */
@@ -372,17 +372,17 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
     fromtree = (t8_tree_t) t8_sc_array_index_locidx (from->trees, jt);
     tree->eclass = fromtree->eclass;
     eclass_scheme = forest->scheme_cxx->eclass_schemes[tree->eclass];
-    num_tree_elements = fromtree->elements.elem_count;
-    sc_array_init_size (&tree->elements, eclass_scheme->t8_element_size (),
-                        num_tree_elements);
+    num_tree_elements = t8_element_array_get_count (&fromtree->elements);
+    t8_element_array_init_size (&tree->elements, eclass_scheme,
+                                num_tree_elements);
     /* TODO: replace with t8_elem_copy (not existing yet), in order to
      * eventually copy additional pointer data stored in the elements? */
     if (copy_elements) {
-      sc_array_copy (&tree->elements, &fromtree->elements);
+      t8_element_array_copy (&tree->elements, &fromtree->elements);
       tree->elements_offset = fromtree->elements_offset;
     }
     else {
-      sc_array_truncate (&tree->elements);
+      t8_element_array_truncate (&tree->elements);
     }
   }
   forest->first_local_tree = from->first_local_tree;

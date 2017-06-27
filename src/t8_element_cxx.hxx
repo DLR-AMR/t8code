@@ -438,6 +438,7 @@ public:
   virtual void        t8_element_vertex_coords (const t8_element_t * t,
                                                 int vertex, int coords[]) = 0;
 
+  /* TODO: deactivate */
   /** Return a pointer to a t8_element in an array indexed by a size_t.
    * \param [in] array    The \ref sc_array storing \t t8_element_t pointers.
    * \param [in] it       The index of the element that should be returned.

@@ -30,6 +30,5 @@ t8_forest_get_tree_element (t8_tree_t tree, t8_locidx_t elem_in_tree)
   T8_ASSERT (tree != NULL);
   T8_ASSERT (0 <= elem_in_tree
              && elem_in_tree < t8_forest_get_tree_element_count (tree));
-  return (t8_element_t *) t8_sc_array_index_locidx (&tree->elements,
-                                                    elem_in_tree);
+  return t8_element_array_index_locidx (&tree->elements, elem_in_tree);
 }
