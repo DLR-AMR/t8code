@@ -114,7 +114,6 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
                     vertices[6 + i]) * corner_coords[1] : 0.) +
         len * (vertices[6 + i] - vertices[3 + i]) * corner_coords[dim - 1]
         + vertices[i];
-      +vertices[i];
     }
     break;
   case T8_ECLASS_PRISM:
@@ -331,6 +330,7 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
   ts->t8_element_destroy (1, &desc);
   /* If the descendants are the same then ret is zero and we return false.
    * We return true otherwise */
+  t8_debugf ("[D] tree shared: %i\n", ret);
   return ret;
 }
 

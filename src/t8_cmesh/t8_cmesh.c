@@ -1866,7 +1866,7 @@ t8_cmesh_new_prism_deformed(sc_MPI_Comm comm){
 }
 
 /*rotates counterclockwise*/
-void prism_rotate(double vertices[18], int rotation)
+static void prism_rotate(double vertices[18], int rotation)
 {
     double helper[3] = {vertices[6],vertices[7], vertices[8]};
     int i,j;

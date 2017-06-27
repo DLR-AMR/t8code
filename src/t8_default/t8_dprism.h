@@ -40,7 +40,7 @@ T8_EXTERN_C_BEGIN ();
 #define T8_DPRISM_FACES 5
 
 /** The maximum refinement level allowed for a prism. */
-#define T8_DPRISM_MAXLEVEL 30
+#define T8_DPRISM_MAXLEVEL 21
 
 /** The length of the root prism in integer coordinates. */
 #define T8_DPRISM_ROOT_LEN (1 << (T8_DPRISM_MAXLEVEL))
@@ -50,11 +50,15 @@ T8_EXTERN_C_BEGIN ();
 
 /** The length of a prism divided by the length of a Quad.
  *  This is useful to convert boundary coordinates from prism to quad. */
-#define T8_DPRISM_ROOT_BY_QUAD_ROOT (1 << (T8_DPRISM_MAXLEVEL - P4EST_MAXLEVEL))
+#define T8_DPRISM_ROOT_BY_QUAD_ROOT (1 << (P4EST_QMAXLEVEL - T8_DPRISM_MAXLEVEL))
 
 /** The length of a prism divided by the length of a triangle.
  *  This is useful to convert boundary coordinates from prism to triangle. */
-#define T8_DPRISM_ROOT_BY_DTRI_ROOT (1 << (T8_DPRISM_MAXLEVEL - T8_DTRI_MAXLEVEL))
+#define T8_DPRISM_ROOT_BY_DTRI_ROOT (1 << (T8_DTRI_MAXLEVEL - T8_DPRISM_MAXLEVEL))
+
+/** The length of a prism divided by the length of a triangle.
+ *  This is useful to convert boundary coordinates from prism to triangle. */
+#define T8_DPRISM_ROOT_BY_DLINE_ROOT (1 << (T8_DLINE_MAXLEVEL - T8_DPRISM_MAXLEVEL))
 
 typedef int32_t     t8_dprism_coord_t;
 
