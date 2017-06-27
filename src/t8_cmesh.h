@@ -28,7 +28,7 @@
 #define T8_CMESH_H
 
 #include <t8.h>
-#include <t8_shmem.h>
+#include <t8_data/t8_shmem.h>
 #include <t8_cmesh/t8_cmesh_save.h>
 #include <t8_element.h>
 

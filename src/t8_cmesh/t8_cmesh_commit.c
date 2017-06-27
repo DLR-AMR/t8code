@@ -25,7 +25,7 @@
  * TODO: document this file
  */
 
-#include <t8_shmem.h>
+#include <t8_data/t8_shmem.h>
 #include <t8_cmesh.h>
 #include <sc_flops.h>
 #include <sc_statistics.h>
