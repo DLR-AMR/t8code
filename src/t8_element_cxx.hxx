@@ -487,6 +487,8 @@ public:
    * \see t8_element_init
    * \see t8_element_is_valid
    */
+  /* TODO: would it be better to directly allocate an array of elements,
+   *       not element pointers? */
   virtual void        t8_element_new (int length, t8_element_t ** elem) = 0;
 
  /** Initialize an array of allocated elements.
@@ -496,7 +498,7 @@ public:
    * \param [in] called_new True if the elements in \a elem were created by a call
    *                       to \ref t8_element_new. False if no element in \a elem
    *                       was created in this way. The case that only some elements
-   *                       were created by \ref t8_element_new does never occur.
+   *                       were created by \ref t8_element_new should never occur.
    * \note In debugging mode, an element that was passed to \ref t8_element_init
    * must pass \ref t8_element_is_valid.
    * \note If an element was created by \ref t8_element_new then \ref t8_element_init
