@@ -159,14 +159,7 @@ void
 t8_dprism_boundary_face (const t8_dprism_t * p, int face,
                          t8_element_t * boundary)
 {
-  /*TODO: Cases überlegen, Koordinatensystem hängt von face ab */
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
-  /* if (face < 3) {
-     p4est_quadrant_t   *l = (p4est_quadrant_t *) boundary;
-     l->x = p->tri.x;
-     l->y = p->line.x;
-     l->level = p->tri.level;
-     } */
   p4est_quadrant_t   *q = (p4est_quadrant_t *) boundary;
   if (face >= 3) {
     t8_dtri_t          *l = (t8_dtri_t *) boundary;
@@ -270,30 +263,32 @@ t8_dprism_childrenpv (const t8_dprism_t * p, int length, t8_dprism_t * c[])
   }
 }
 
-const int children_at_face[2][12] = {{1, 3, 5, 7,
-                                      0, 3, 4, 7,
-                                      0, 1, 4, 5},
-                                     {2, 3, 6, 7,
-                                      0, 2, 4, 6,
-                                      0, 3, 4, 7}};
+const int           children_at_face[2][12] = { {1, 3, 5, 7,
+                                                 0, 3, 4, 7,
+                                                 0, 1, 4, 5},
+{2, 3, 6, 7,
+ 0, 2, 4, 6,
+ 0, 3, 4, 7}
+};
 
 void
 t8_dprism_children_at_face (const t8_dprism_t * p,
                             int face, t8_dprism_t ** children,
                             int num_children)
 {
-    int i;
+  int                 i;
   T8_ASSERT (num_children == t8_dprism_num_face_children (p, face));
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
-  if(face < 3){
-      for( i = 0; i < 4; i++){
-          t8_dprism_child(p, children_at_face[p->tri.type][face * 4 + i], children[i]);
-      }
+  if (face < 3) {
+    for (i = 0; i < 4; i++) {
+      t8_dprism_child (p, children_at_face[p->tri.type][face * 4 + i],
+                       children[i]);
+    }
   }
-  else{
-      for(i = 0; i < 4; i++){
-          t8_dprism_child(p, (face % 3) * 4 + i, children[i]);
-      }
+  else {
+    for (i = 0; i < 4; i++) {
+      t8_dprism_child (p, (face % 3) * 4 + i, children[i]);
+    }
   }
 }
 
@@ -331,37 +326,37 @@ t8_dprism_extrude_face (const t8_element_t * face, t8_element_t * elem,
   case 0:
     p->line.level = q->level;
     p->tri.level = q->level;
-    p->tri.x = (1 << T8_DPRISM_MAXLEVEL) - T8_DPRISM_LEN (p->line.level);
-    p->tri.y = q->x * T8_DPRISM_ROOT_BY_QUAD_ROOT;
-    p->line.x = q->y * T8_DPRISM_ROOT_BY_QUAD_ROOT;
+    p->tri.x = T8_DTRI_ROOT_LEN - T8_DTRI_LEN (p->tri.level);
+    p->tri.y = q->x * T8_DTRI_ROOT_LEN / P4EST_ROOT_LEN;
+    p->line.x = q->y * T8_DLINE_ROOT_LEN / P4EST_ROOT_LEN;
     break;
   case 1:
     p->line.level = q->level;
     p->tri.level = q->level;
-    p->tri.x = q->x * T8_DPRISM_ROOT_BY_QUAD_ROOT;
-    p->tri.y = q->x * T8_DPRISM_ROOT_BY_QUAD_ROOT;
-    p->line.x = q->y * T8_DPRISM_ROOT_BY_QUAD_ROOT;
+    p->tri.x = q->x * T8_DTRI_ROOT_LEN / P4EST_ROOT_LEN;
+    p->tri.y = q->x * T8_DTRI_ROOT_LEN / P4EST_ROOT_LEN;
+    p->line.x = q->y * T8_DLINE_ROOT_LEN / P4EST_ROOT_LEN;
     break;
   case 2:
     p->line.level = q->level;
     p->tri.level = q->level;
-    p->tri.x = q->x * T8_DPRISM_ROOT_BY_QUAD_ROOT;
+    p->tri.x = q->x * T8_DTRI_ROOT_LEN / P4EST_ROOT_LEN;;
     p->tri.y = 0;
-    p->line.x = q->y * T8_DPRISM_ROOT_BY_QUAD_ROOT;
+    p->line.x = q->y * T8_DLINE_ROOT_LEN / P4EST_ROOT_LEN;
     break;
   case 3:
     p->line.level = t->level;
     p->tri.level = t->level;
-    p->tri.x = t->x * T8_DPRISM_ROOT_BY_DTRI_ROOT;
-    p->tri.y = t->y * T8_DPRISM_ROOT_BY_DTRI_ROOT;
+    p->tri.x = t->x;
+    p->tri.y = t->y;
     p->line.x = 0;
     break;
   case 4:
     p->line.level = t->level;
     p->tri.level = t->level;
-    p->tri.x = t->x * T8_DPRISM_ROOT_BY_DTRI_ROOT;
-    p->tri.y = t->y * T8_DPRISM_ROOT_BY_DTRI_ROOT;
-    p->line.x = (1 << T8_DPRISM_MAXLEVEL) - T8_DPRISM_LEN (t->level);
+    p->tri.x = t->x;
+    p->tri.y = t->y;
+    p->line.x = T8_DLINE_ROOT_LEN - T8_DLINE_LEN (p->line.level);
     break;
   default:
     SC_ABORT_NOT_REACHED ();
@@ -386,19 +381,17 @@ t8_dprism_successor (const t8_dprism_t * p, t8_dprism_t * succ, int level)
     /*Zero out the bits of higher level, caused by recursion */
 #if 1
     succ->tri.x =
-      (succ->tri.
-       x >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL - level +
-                                                  1);
+      (succ->tri.x >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL -
+                                                          level + 1);
     succ->tri.y =
-      (succ->tri.
-       y >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL - level +
-                                                  1);
+      (succ->tri.y >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL -
+                                                          level + 1);
 #endif
 #if 1
     succ->line.x =
-      (succ->line.
-       x >> (T8_DLINE_MAXLEVEL - level + 1)) << (T8_DLINE_MAXLEVEL - level +
-                                                  1);
+      (succ->
+       line.x >> (T8_DLINE_MAXLEVEL - level + 1)) << (T8_DLINE_MAXLEVEL -
+                                                      level + 1);
 #endif
     /*Set the level to the actual level */
     succ->line.level = level;
@@ -429,8 +422,8 @@ t8_dprism_first_descendant (const t8_dprism_t * p, t8_dprism_t * s, int level)
 
 #ifdef T8_ENABLE_DEBUG
   {
-    uint64_t id;
-    id = t8_dprism_linear_id(p, level);
+    uint64_t            id;
+    id = t8_dprism_linear_id (p, level);
     T8_ASSERT (t8_dprism_linear_id (s, level) == id);
   }
 #endif
