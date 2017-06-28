@@ -45,7 +45,8 @@ typedef int         (*t8_forest_search_query_fn) (t8_forest_t forest,
                                                   t8_locidx_t ltreeid,
                                                   const t8_element_t *
                                                   element,
-                                                  sc_array_t * leaf_elements,
+                                                  t8_element_array_t *
+                                                  leaf_elements,
                                                   void *user_data,
                                                   t8_locidx_t
                                                   tree_leaf_index);
@@ -54,8 +55,7 @@ T8_EXTERN_C_BEGIN ();
 
 /* TODO: Document */
 void                t8_forest_split_array (const t8_element_t * element,
-                                           sc_array_t * leaf_elements,
-                                           t8_eclass_scheme_c * ts,
+                                           t8_element_array_t * leaf_elements,
                                            size_t * offsets);
 
 /* TODO: comment */
@@ -70,8 +70,8 @@ void                t8_forest_iterate_faces (t8_forest_t forest,
                                              t8_locidx_t ltreeid,
                                              const t8_element_t * element,
                                              int face,
-                                             sc_array_t * leaf_elements,
-                                             void *user_data,
+                                             t8_element_array_t *
+                                             leaf_elements, void *user_data,
                                              t8_locidx_t
                                              tree_lindex_of_first_leaf,
                                              t8_forest_iterate_face_fn
