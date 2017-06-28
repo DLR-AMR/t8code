@@ -333,7 +333,7 @@ t8_forest_ghost_tree_num_elements (t8_forest_t forest,
   return t8_element_array_get_count (&ghost_tree->elements);
 }
 
-sc_array_t         *
+t8_element_array_t *
 t8_forest_ghost_get_tree_elements (t8_forest_t forest,
                                    t8_locidx_t lghost_tree)
 {
@@ -509,10 +509,10 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
     /* debugging assertion that the element is really not contained already */
     int                 ielem;
     t8_element_t       *test_el;
-    for (ielem = 0; ielem < ((int) remote_tree->elements.elem_count) - 1;
-         ielem++) {
-      test_el =
-        (t8_element_t *) sc_array_index_int (&remote_tree->elements, ielem);
+    int                 elem_count =
+      t8_element_array_get_count (&remote_tree->elements);
+    for (ielem = 0; ielem < elem_count - 1; ielem++) {
+      test_el = t8_element_array_index_int (&remote_tree->elements, ielem);
       SC_CHECK_ABORTF (ts->t8_element_compare (test_el, elem),
                        "Local element %i already in remote ghosts at pos %i\n",
                        element_index, ielem);
@@ -837,7 +837,7 @@ typedef struct
 static int
 t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
                                  const t8_element_t * element,
-                                 sc_array_t * leafs,
+                                 t8_element_array_t * leafs,
                                  void *user_data, t8_locidx_t tree_leaf_index)
 {
   t8_forest_ghost_boundary_data_t *data =
@@ -878,7 +878,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
              data->ts->t8_element_get_linear_id (element,
                                                  data->ts->t8_element_level
                                                  (element)),
-             leafs->elem_count);
+             t8_element_array_get_count (leafs));
 
   /* The level of the current element */
   level = data->ts->t8_element_level (element);
@@ -1006,7 +1006,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
     t8_debugf ("[H] Do not continue search\n");
 #ifdef T8_ENABLE_DEBUG
     if (tree_leaf_index < 0) {
-      data->left_out += leafs->elem_count;
+      data->left_out += t8_element_array_get_count (leafs);
     }
 #endif
     return 0;
@@ -2023,6 +2023,7 @@ t8_forest_ghost_exchange_fill_send_buffer (t8_forest_t forest, int remote,
 #endif
   t8_locidx_t         itree, ielement, element_pos;
   t8_locidx_t         ltreeid;
+  size_t              elem_count;
 
   ghost = forest->ghosts;
   data_size = element_data->elem_size;
@@ -2057,9 +2058,8 @@ t8_forest_ghost_exchange_fill_send_buffer (t8_forest_t forest, int remote,
     ltreeid = t8_forest_get_local_id (forest, remote_tree->global_id);
     /* Get a pointer to the forest tree */
     local_tree = t8_forest_get_tree (forest, ltreeid);
-    for (ielement = 0;
-         ielement < (t8_locidx_t) remote_tree->elements.elem_count;
-         ielement++) {
+    elem_count = t8_element_array_get_count (&remote_tree->elements);
+    for (ielement = 0; ielement < (t8_locidx_t) elem_count; ielement++) {
       /* element loop */
       /* Get the index of this remote element in its local tree */
       element_pos = *(t8_locidx_t *)

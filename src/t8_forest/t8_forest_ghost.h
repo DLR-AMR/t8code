@@ -66,7 +66,7 @@ t8_locidx_t         t8_forest_ghost_tree_num_elements (t8_forest_t forest,
  * \return                A pointer to the array of ghost elements of the tree.
  * \a forest must be committed before calling this function.
  */
-sc_array_t         *t8_forest_ghost_get_tree_elements (t8_forest_t forest,
+t8_element_array_t *t8_forest_ghost_get_tree_elements (t8_forest_t forest,
                                                        t8_locidx_t
                                                        lghost_tree);
 
