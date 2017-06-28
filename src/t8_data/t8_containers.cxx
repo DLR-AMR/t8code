@@ -118,6 +118,32 @@ t8_element_array_init_size (t8_element_array_t * element_array,
 }
 
 void
+t8_element_array_init_view (t8_element_array_t * view,
+                            t8_element_array_t * array,
+                            size_t offset, size_t length)
+{
+  T8_ASSERT (t8_element_array_is_valid (array));
+
+  /* Initialize the element array */
+  sc_array_init_view (&view->array, &array->array, offset, length);
+  /* Set the scheme */
+  view->scheme = array->scheme;
+  T8_ASSERT (t8_element_array_is_valid (view));
+}
+
+void
+t8_element_array_init_data (t8_element_array_t * view, t8_element_t * base,
+                            t8_eclass_scheme_c * scheme, size_t elem_count)
+{
+  /* Initialize the element array */
+  sc_array_init_data (&view->array, (void *) base, scheme->t8_element_size (),
+                      elem_count);
+  /* set the scheme */
+  view->scheme = scheme;
+  T8_ASSERT (t8_element_array_is_valid (view));
+}
+
+void
 t8_element_array_init_copy (t8_element_array_t * element_array,
                             t8_eclass_scheme_c * scheme,
                             t8_element_t * data, size_t num_elements)
@@ -213,6 +239,21 @@ t8_element_t
     t8_sc_array_index_locidx (&element_array->array, index);
 }
 
+t8_element_t
+  * t8_element_array_index_int (t8_element_array_t * element_array, int index)
+{
+  T8_ASSERT (t8_element_array_is_valid (element_array));
+  return (t8_element_t *)
+    sc_array_index_int (&element_array->array, index);
+}
+
+t8_eclass_scheme_c *
+t8_element_array_get_scheme (t8_element_array_t * element_array)
+{
+  T8_ASSERT (t8_element_array_is_valid (element_array));
+  return element_array->scheme;
+}
+
 size_t
 t8_element_array_get_count (t8_element_array_t * element_array)
 {
@@ -238,6 +279,14 @@ t8_element_array_get_data (t8_element_array_t * element_array)
   else {
     return NULL;
   }
+}
+
+sc_array_t         *
+t8_element_array_get_array (t8_element_array_t * element_array)
+{
+  T8_ASSERT (t8_element_array_is_valid (element_array));
+
+  return &element_array->array;
 }
 
 void

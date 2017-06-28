@@ -81,6 +81,36 @@ void                t8_element_array_init_size (t8_element_array_t *
                                                 t8_eclass_scheme_c * scheme,
                                                 size_t num_elements);
 
+/** Initializes an already allocated (or static) view from existing t8_element_array.
+ * The array view returned does not require t8_element_array_reset (doesn't hurt though).
+ * \param [in,out] view  Array structure to be initialized.
+ * \param [in] array     The array must not be resized while view is alive.
+ * \param [in] offset    The offset of the viewed section in element units.
+ *                       This offset cannot be changed until the view is reset.
+ * \param [in] length    The length of the view in element units.
+ *                       The view cannot be resized to exceed this length.
+ *                       It is not necessary to call sc_array_reset later.
+ */
+void                t8_element_array_init_view (t8_element_array_t * view,
+                                                t8_element_array_t * array,
+                                                size_t offset, size_t length);
+
+/** Initializes an already allocated (or static) view from given plain C data
+ * (array of t8_element_t).
+ * The array view returned does not require t8_element_array_reset (doesn't hurt though).
+ * \param [in,out] view     Array structure to be initialized.
+ * \param [in] base         The data must not be moved while view is alive.
+ *                          Must be an array of t8_element_t corresponding to \a scheme.
+ * \param [in] scheme       The eclass scheme of the elements stored in \a base.
+ * \param [in] elem_count   The length of the view in element units.
+ *                          The view cannot be resized to exceed this length.
+ *                          It is not necessary to call t8_element_array_reset later.
+ */
+void                t8_element_array_init_data (t8_element_array_t * view,
+                                                t8_element_t * base,
+                                                t8_eclass_scheme_c * scheme,
+                                                size_t elem_count);
+
 /** Initializes an already allocated (or static) array structure
  * and copy an existing array of t8_element_t into it.
  * \param [in,out]  element_array Array structure to be initialized.
@@ -142,6 +172,22 @@ t8_element_t       *t8_element_array_index_locidx (t8_element_array_t *
                                                    element_array,
                                                    t8_locidx_t index);
 
+/** Return a given element in an array.
+ * \param [in]  element_array Array of elements.
+ * \param [in]  index The index of an element whithin the array.
+ * \return            A pointer to the element stored at position \a index in
+ *                    \a element_array.
+ */
+t8_element_t       *t8_element_array_index_int (t8_element_array_t *
+                                                element_array, int index);
+
+/** Return the eclass scheme associated to a t8_element_array.
+ * \param [in]  element_array Array of elements.
+ * \return      The eclass scheme stored at \a element_array.
+ */
+t8_eclass_scheme_c *t8_element_array_get_scheme (t8_element_array_t *
+                                                 element_array);
+
 /** Return the number of elements stored in a t8_element_array_t.
  * \param [in]  element_array  Array structure.
  * \return                     The number of elements stored in \a element_array.
@@ -162,6 +208,13 @@ size_t              t8_element_array_get_size (t8_element_array_t *
  */
 t8_element_t       *t8_element_array_get_data (t8_element_array_t *
                                                element_array);
+
+/** Return a pointer to the sc_array stored in a t8_element_array.
+ * \param [in]  element_array  Array structure.
+ * \return                     A pointer to the sc_array storing the data.
+ */
+sc_array_t         *t8_element_array_get_array (t8_element_array_t *
+                                                element_array);
 
 /** Sets the array count to zero and frees all elements.
  * \param [in,out]  element_array  Array structure to be reset.
