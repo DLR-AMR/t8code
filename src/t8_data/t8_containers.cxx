@@ -39,6 +39,10 @@ t8_element_array_is_valid (t8_element_array_t * element_array)
   /* Check that all pointers are not NULL */
   is_valid = element_array != NULL && element_array->scheme != NULL;
 
+  if (!is_valid) {
+    return 0;
+  }
+
   /* Check that the element size of the scheme matches the size of data elements
    * stored in the array. */
   is_valid = is_valid
@@ -221,6 +225,19 @@ t8_element_array_get_size (t8_element_array_t * element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
   return element_array->scheme->t8_element_size ();
+}
+
+t8_element_t       *
+t8_element_array_get_data (t8_element_array_t * element_array)
+{
+  T8_ASSERT (t8_element_array_is_valid (element_array));
+
+  if (element_array->array.elem_count > 0) {
+    return (t8_element_t *) t8_element_array_index_locidx (element_array, 0);
+  }
+  else {
+    return NULL;
+  }
 }
 
 void

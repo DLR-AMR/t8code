@@ -707,12 +707,14 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
       /* Calculate the element offset of the new tree */
       if (forest->last_local_tree >= forest->first_local_tree) {
         /* If there is a previous tree, we read it */
+        T8_ASSERT (forest->trees->elem_count >= 2);     /* We added one tree and the current tree */
         last_tree =
           (t8_tree_t) t8_sc_array_index_locidx (forest->trees,
                                                 forest->trees->elem_count -
-                                                1);
+                                                2);
         /* The element offset is the offset of the previous tree plus the number of
          * elements in the previous tree */
+        t8_debugf ("[H} read tree %i\n", forest->trees->elem_count - 2);
         tree->elements_offset = last_tree->elements_offset +
           t8_forest_get_tree_element_count (last_tree);
       }
@@ -722,11 +724,13 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
       }
       /* Done calculating the element offset */
       /* Get the size of an element of the tree */
-      eclass_scheme = t8_forest_get_eclass_scheme (forest, tree->eclass);
+      eclass_scheme =
+        t8_forest_get_eclass_scheme (forest->set_from, tree->eclass);
       element_size = eclass_scheme->t8_element_size ();
       /* initialize the elements array and copy the elements from the receive buffer */
       T8_ASSERT (element_cursor + tree_info->num_elements * element_size <=
                  (size_t) recv_bytes);
+      t8_debugf ("[H} init array for tree %i\n", itree);
       t8_element_array_init_copy (&tree->elements, eclass_scheme,
                                   (t8_element_t *) (recv_buffer +
                                                     element_cursor),
@@ -762,7 +766,8 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
                  (long long) tree_info->gtree_id);
 #endif
       /* Get the size of an element of the tree */
-      eclass_scheme = t8_forest_get_eclass_scheme (forest, tree->eclass);
+      eclass_scheme =
+        t8_forest_get_eclass_scheme (forest->set_from, tree->eclass);
       element_size = eclass_scheme->t8_element_size ();
       T8_ASSERT (element_size == t8_element_array_get_size (&tree->elements));
       /* Copy the elements from the receive buffer to the elements array */
