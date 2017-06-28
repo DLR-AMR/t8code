@@ -201,6 +201,16 @@ t8_default_scheme_tet_c::t8_element_children_at_face (const t8_element_t *
   T8_ASSERT (0 <= face && face < T8_DTET_FACES);
   T8_ASSERT (num_children == T8_DTET_FACE_CHILDREN);
 
+#ifdef T8_ENABLE_DEBUG
+  /* debugging check that all children elements are valid */
+  {
+    int                 i;
+    for (i = 0; i < num_children; i++) {
+      T8_ASSERT (t8_element_is_valid (children[i]));
+    }
+  }
+#endif
+
   t8_dtet_children_at_face (t, face, c, num_children);
 }
 

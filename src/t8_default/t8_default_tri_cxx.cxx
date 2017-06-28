@@ -416,6 +416,33 @@ t8_default_scheme_tri_c::t8_element_is_valid (const t8_element_t * t) const
 }
 #endif
 
+void
+t8_default_scheme_tri_c::t8_element_new (int length, t8_element_t ** elem)
+{
+  /* allocate memory for a tet */
+  t8_default_scheme_common_c::t8_element_new (length, elem);
+
+  /* in debug mode, set sensible default values. */
+#ifdef T8_ENABLE_DEBUG
+  t8_element_init (length, *elem, 0);
+#endif
+}
+
+void
+t8_default_scheme_tri_c::t8_element_init (int length, t8_element_t * elem,
+                                          int new_called)
+{
+#ifdef T8_ENABLE_DEBUG
+  if (!new_called) {
+    int                 i;
+    t8_dtri_t          *tris = (t8_dtri_t *) elem;
+    for (i = 0; i < length; i++) {
+      t8_dtri_init (tris + i);
+    }
+  }
+#endif
+}
+
 /* Constructor */
 t8_default_scheme_tri_c::t8_default_scheme_tri_c (void)
 {
