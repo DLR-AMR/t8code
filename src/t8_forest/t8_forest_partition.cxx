@@ -715,7 +715,6 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm,
                                                 2);
         /* The element offset is the offset of the previous tree plus the number of
          * elements in the previous tree */
-        t8_debugf ("[H} read tree %i\n", forest->trees->elem_count - 2);
         tree->elements_offset = last_tree->elements_offset +
           t8_forest_get_tree_element_count (last_tree);
       }
