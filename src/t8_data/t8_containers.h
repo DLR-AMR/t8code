@@ -71,7 +71,7 @@ void                t8_element_array_init (t8_element_array_t * element_array,
                                            t8_eclass_scheme_c * scheme);
 
 /** Initializes an already allocated (or static) array structure
- * and allocates a given number of elements with \ref t8_element_new.
+ * and allocates a given number of elements and initializes them with \ref t8_element_init.
  * \param [in,out]  element_array Array structure to be initialized.
  * \param [in] scheme         The eclass scheme of which elements should be stored.
  * \param [in] num_elements   Number of initial array elements.

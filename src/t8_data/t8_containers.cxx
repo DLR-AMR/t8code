@@ -96,17 +96,20 @@ void
 t8_element_array_init_size (t8_element_array_t * element_array,
                             t8_eclass_scheme_c * scheme, size_t num_elements)
 {
-  sc_array_t         *data;
+  t8_element_t       *first_element;
   T8_ASSERT (element_array != NULL);
 
-  t8_element_array_init (element_array, scheme);
+  element_array->scheme = scheme;
+  /* allocate the elements */
+  sc_array_init_size (&element_array->array, scheme->t8_element_size (),
+                      num_elements);
 
-  /* allocate the elements by calling t8_element_new */
-  data = &element_array->array;
-  scheme->t8_element_new (num_elements, (t8_element_t **) & data->array);
-  /* Set the elem_count and byte_alloc fields of the sc_array by hand */
-  data->elem_count = num_elements;
-  data->byte_alloc = num_elements * scheme->t8_element_size ();
+  if (num_elements > 0) {
+    /* Call t8_element_init for the elements */
+    first_element =
+      (t8_element_t *) sc_array_index (&element_array->array, 0);
+    scheme->t8_element_init (num_elements, first_element, 0);
+  }
   T8_ASSERT (t8_element_array_is_valid (element_array));
 }
 
