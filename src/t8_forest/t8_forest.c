@@ -738,7 +738,7 @@ t8_forest_get_tree (t8_forest_t forest, t8_locidx_t ltree_id)
   return (t8_tree_t) t8_sc_array_index_locidx (forest->trees, ltree_id);
 }
 
-sc_array_t
+t8_element_array_t
   * t8_forest_tree_get_leafs (t8_forest_t forest, t8_locidx_t ltree_id)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -917,7 +917,7 @@ t8_forest_get_first_local_element_id (t8_forest_t forest)
   return -1;
 }
 
-t8_scheme_cxx_t *
+t8_scheme_cxx_t    *
 t8_forest_get_scheme (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));

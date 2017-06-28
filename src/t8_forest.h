@@ -31,6 +31,7 @@
 
 #include <t8_cmesh.h>
 #include <t8_element.h>
+#include <t8_data/t8_containers.h>
 
 /** Opaque pointer to a forest implementation. */
 typedef struct t8_forest *t8_forest_t;
@@ -501,7 +502,7 @@ t8_tree_t           t8_forest_get_tree (t8_forest_t forest,
  * \return                      An array of t8_element_t * storing all leaf elements
  *                              of this tree.
  */
-sc_array_t         *t8_forest_tree_get_leafs (t8_forest_t forest,
+t8_element_array_t *t8_forest_tree_get_leafs (t8_forest_t forest,
                                               t8_locidx_t ltree_id);
 
 /** Return a cmesh associated to a forest.

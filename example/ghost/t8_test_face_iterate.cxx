@@ -30,6 +30,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
+#include <t8_data/t8_containers.h>
 
 typedef struct
 {
@@ -88,7 +89,7 @@ t8_test_fiterate (t8_forest_t forest)
   t8_eclass_t         eclass;
   t8_eclass_scheme_c *ts;
   t8_element_t       *first_el, *last_el, *nca;
-  sc_array_t         *leaf_elements;
+  t8_element_array_t *leaf_elements;
   t8_test_fiterate_udata_t udata;
   int                 iface;
 

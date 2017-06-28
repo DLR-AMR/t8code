@@ -150,7 +150,7 @@ t8_element_t       *t8_forest_get_tree_element (t8_tree_t tree,
  * \return      Returns the array of elements of the tree.
  * \a forest must be committed before calling this function.
  */
-sc_array_t         *t8_forest_get_tree_element_array (t8_forest_t forest,
+t8_element_array_t *t8_forest_get_tree_element_array (t8_forest_t forest,
                                                       t8_locidx_t ltreeid);
 
 /** Find the owner process of a given element, deprecated version.
