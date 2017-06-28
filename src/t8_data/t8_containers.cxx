@@ -127,13 +127,12 @@ t8_element_array_init_copy (t8_element_array_t * element_array,
     size_t              ielem;
     const t8_element_t *element;
     size_t              size;
+
+    size = scheme->t8_element_size ();
     for (ielem = 0; ielem < num_elements; ielem++) {
       /* data is of incomplete type, we thus have to manually set the adress
        * of the ielem-th t8_element */
-      size = scheme->t8_element_size ();
-      element =
-        (const t8_element_t *) (((char *) data) +
-                                ielem * scheme->t8_element_size ());
+      element = (const t8_element_t *) (((char *) data) + ielem * size);
       T8_ASSERT (scheme->t8_element_is_valid (element));
     }
   }
@@ -160,8 +159,8 @@ t8_element_array_resize (t8_element_array_t * element_array, size_t new_count)
     /* Get the first newly allocated element */
     first_new_elem = t8_element_array_index_locidx (element_array, old_count);
     /* Call t8_element_init on all new elements */
-    element_array->scheme->t8_element_init (new_count -
-                                            old_count, first_new_elem, 0);
+    element_array->scheme->t8_element_init (new_count - old_count,
+                                            first_new_elem, 0);
   }
 }
 
@@ -179,27 +178,28 @@ t8_element_array_push (t8_element_array_t * element_array)
 {
   t8_element_t       *new_element;
   T8_ASSERT (t8_element_array_is_valid (element_array));
-  new_element = (t8_element_t *) sc_array_push (&element_array->array);
+  new_element = (t8_element_t *)
+    sc_array_push (&element_array->array);
   element_array->scheme->t8_element_init (1, new_element, 0);
   return new_element;
 }
 
-t8_element_t       *
-t8_element_array_push_count (t8_element_array_t * element_array, size_t count)
-{
+t8_element_t
+  * t8_element_array_push_count
+  (t8_element_array_t * element_array, size_t count) {
   t8_element_t       *new_elements;
   T8_ASSERT (t8_element_array_is_valid (element_array));
   /* grow the array */
-  new_elements =
-    (t8_element_t *) sc_array_push_count (&element_array->array, count);
+  new_elements = (t8_element_t *)
+    sc_array_push_count (&element_array->array, count);
   /* initialize the elements */
   element_array->scheme->t8_element_init (count, new_elements, 0);
   return new_elements;
 }
 
 t8_element_t
-  * t8_element_array_index_locidx (t8_element_array_t *
-                                   element_array, t8_locidx_t index)
+  * t8_element_array_index_locidx (t8_element_array_t * element_array,
+                                   t8_locidx_t index)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
   return (t8_element_t *)
