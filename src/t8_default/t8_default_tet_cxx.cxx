@@ -486,7 +486,12 @@ t8_default_scheme_tet_c::t8_element_new (int length, t8_element_t ** elem)
 
   /* in debug mode, set sensible default values. */
 #ifdef T8_ENABLE_DEBUG
-  t8_element_init (length, *elem, 0);
+  {
+    int                 i;
+    for (i = 0; i < length; i++) {
+      t8_element_init (1, elem[i], 0);
+    }
+  }
 #endif
 }
 
