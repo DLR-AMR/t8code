@@ -228,8 +228,8 @@ t8_forest_populate (t8_forest_t forest)
   else {
     /* for each tree, allocate elements */
     num_local_trees = forest->last_local_tree - forest->first_local_tree + 1;
-    forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
-    sc_array_resize (forest->trees, num_local_trees);
+    forest->trees =
+      sc_array_new_count (sizeof (t8_tree_struct_t), num_local_trees);
     first_ctree = t8_cmesh_get_first_treeid (forest->cmesh);
     for (jt = forest->first_local_tree, count_elements = 0;
          jt <= forest->last_local_tree; jt++) {

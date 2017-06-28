@@ -380,6 +380,7 @@ t8_forest_commit (t8_forest_t forest)
   }
 
   /* From here on, the forest passes the t8_forest_is_committed check */
+
   /* re-partition the cmesh */
   if (forest->cmesh->set_partition &&
       forest->from_method == T8_FOREST_FROM_PARTITION) {
