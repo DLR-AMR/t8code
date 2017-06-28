@@ -32,7 +32,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]     length       Non-negative number of elements to allocate.
  * \param [in,out] elem         Array of correct size whose members are filled.
  */
-void                t8_default_mempool_alloc (sc_mempool_t * ts_context,
+static void         t8_default_mempool_alloc (sc_mempool_t * ts_context,
                                               int length,
                                               t8_element_t ** elem);
 
@@ -43,7 +43,7 @@ void                t8_default_mempool_alloc (sc_mempool_t * ts_context,
  * \param [in]     length       Non-negative number of elements to destroy.
  * \param [in,out] elem         Array whose members are returned to the mempool.
  */
-void                t8_default_mempool_free (sc_mempool_t * ts_context,
+static void         t8_default_mempool_free (sc_mempool_t * ts_context,
                                              int length,
                                              t8_element_t ** elem);
 
@@ -67,7 +67,7 @@ t8_default_scheme_common_c::t8_element_destroy (int length,
   t8_default_mempool_free ((sc_mempool_t *) this->ts_context, length, elem);
 }
 
-void
+static void
 t8_default_mempool_alloc (sc_mempool_t * ts_context, int length,
                           t8_element_t ** elem)
 {
@@ -82,7 +82,7 @@ t8_default_mempool_alloc (sc_mempool_t * ts_context, int length,
   }
 }
 
-void
+static void
 t8_default_mempool_free (sc_mempool_t * ts_context, int length,
                          t8_element_t ** elem)
 {
