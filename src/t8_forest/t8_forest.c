@@ -516,6 +516,12 @@ t8_forest_commit (t8_forest_t forest)
              (long long) forest->global_num_elements,
              (long long) forest->first_local_tree,
              (long long) forest->last_local_tree);
+
+  if (forest->element_offsets == NULL) {
+    /* Create the element offsets if not already done */
+    t8_forest_partition_create_offsets (forest);
+  }
+
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of commit */
     forest->profile->commit_runtime = sc_MPI_Wtime () -
@@ -523,6 +529,7 @@ t8_forest_commit (t8_forest_t forest)
   }
 
   /* From here on, the forest passes the t8_forest_is_committed check */
+
   /* re-partition the cmesh */
   if (forest->cmesh->set_partition &&
       forest->from_method == T8_FOREST_FROM_PARTITION) {
@@ -763,7 +770,8 @@ t8_forest_compare_elem_tree (const void *lelement_id, const void *ltree)
     /* We have to look further to the left */
     return -1;
   }
-  else if (tree->elements_offset + tree->elements.elem_count > leid) {
+  else if (tree->elements_offset +
+           t8_element_array_get_count (&tree->elements) > leid) {
     /* We have found the tree */
     return 0;
   }
@@ -804,8 +812,8 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id,
         /* We have to look further to the left */
         ltree_b = ltreedebug;
       }
-      else if (tree->elements_offset + tree->elements.elem_count >
-               lelement_id) {
+      else if (tree->elements_offset +
+               t8_element_array_get_count (&tree->elements) > lelement_id) {
         /* We have found the tree */
         ltree_a = ltree_b;
       }
@@ -828,10 +836,10 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id,
    * Or the element is not a local element. */
   tree = t8_forest_get_tree (forest, ltree);
   if (tree->elements_offset <= lelement_id && lelement_id <
-      tree->elements_offset + tree->elements.elem_count) {
-    return (t8_element_t *)
-      t8_sc_array_index_locidx (&tree->elements,
-                                lelement_id - tree->elements_offset);
+      tree->elements_offset + t8_element_array_get_count (&tree->elements)) {
+    return t8_element_array_index_locidx (&tree->elements,
+                                          lelement_id -
+                                          tree->elements_offset);
   }
   /* The element was not found.
    * This case is covered by the first if and should therefore
@@ -859,8 +867,10 @@ t8_forest_get_tree_element_count (t8_tree_t tree)
   t8_locidx_t         element_count;
 
   T8_ASSERT (tree != NULL);
-  element_count = tree->elements.elem_count;
-  T8_ASSERT ((size_t) element_count == tree->elements.elem_count);
+  element_count = t8_element_array_get_count (&tree->elements);
+  /* check for type conversion errors */
+  T8_ASSERT ((size_t) element_count ==
+             t8_element_array_get_count (&tree->elements));
   return element_count;
 }
 
@@ -898,20 +908,13 @@ t8_forest_get_tree_class (t8_forest_t forest, t8_locidx_t ltreeid)
 t8_gloidx_t
 t8_forest_get_first_local_element_id (t8_forest_t forest)
 {
-  t8_gloidx_t         first_element, local_num_elements;
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  /* Convert local_num_elements to t8_gloidx_t */
-  local_num_elements = forest->local_num_elements;
-  /* MPI Scan over local_num_elements lead the global index of the first
-   * local element */
-  sc_MPI_Scan (&local_num_elements, &first_element, 1, T8_MPI_GLOIDX,
-               sc_MPI_SUM, forest->mpicomm);
-  /* MPI_Scan is inklusive, thus it counts our own data.
-   * Therefore, we have to subtract it again */
-  first_element -= local_num_elements;
-
-  return first_element;
+  if (forest->element_offsets != NULL) {
+    return t8_shmem_array_get_gloidx (forest->element_offsets,
+                                      forest->mpirank);
+  }
+  return -1;
 }
 
 t8_scheme_cxx_t *
@@ -1203,7 +1206,7 @@ t8_forest_free_trees (t8_forest_t forest)
   number_of_trees = forest->trees->elem_count;
   for (jt = 0; jt < number_of_trees; jt++) {
     tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, jt);
-    sc_array_reset (&tree->elements);
+    t8_element_array_reset (&tree->elements);
   }
   sc_array_destroy (forest->trees);
 }
@@ -1241,6 +1244,10 @@ t8_forest_reset (t8_forest_t * pforest)
     t8_forest_free_trees (forest);
   }
 
+  /* Destroy the ghost layer if it exists */
+  if (forest->ghosts != NULL) {
+    t8_forest_ghost_unref (&forest->ghosts);
+  }
   /* we have taken ownership on calling t8_forest_set_* */
   if (forest->scheme_cxx != NULL) {
     t8_scheme_cxx_unref (&forest->scheme_cxx);
@@ -1263,10 +1270,6 @@ t8_forest_reset (t8_forest_t * pforest)
   }
   if (forest->profile != NULL) {
     T8_FREE (forest->profile);
-  }
-  /* Dereference the ghost layer if it exists */
-  if (forest->ghosts != NULL) {
-    t8_forest_ghost_unref (&forest->ghosts);
   }
   T8_FREE (forest);
   *pforest = NULL;

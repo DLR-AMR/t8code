@@ -40,6 +40,7 @@ t8_default_scheme_tet_c::t8_element_maxlevel (void)
 int
 t8_default_scheme_tet_c::t8_element_level (const t8_element_t * elem)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
   return t8_dtet_get_level ((t8_dtet_t *) elem);
 }
 
@@ -47,6 +48,8 @@ void
 t8_default_scheme_tet_c::t8_element_copy (const t8_element_t * source,
                                           t8_element_t * dest)
 {
+  T8_ASSERT (t8_element_is_valid (source));
+  T8_ASSERT (t8_element_is_valid (dest));
   t8_dtet_copy ((const t8_dtet_t *) source, (t8_dtet_t *) dest);
 }
 
@@ -65,6 +68,8 @@ t8_default_scheme_tet_c::t8_element_parent (const t8_element_t * elem,
   const t8_default_tet_t *t = (const t8_default_tet_t *) elem;
   t8_default_tet_t   *p = (t8_default_tet_t *) parent;
 
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_element_is_valid (parent));
   t8_dtet_parent (t, p);
 }
 
@@ -76,12 +81,15 @@ t8_default_scheme_tet_c::t8_element_sibling (const t8_element_t * elem,
   const t8_default_tet_t *t = (const t8_default_tet_t *) elem;
   t8_default_tet_t   *s = (t8_default_tet_t *) sibling;
 
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_element_is_valid (sibling));
   t8_dtet_sibling (t, sibid, s);
 }
 
 int
 t8_default_scheme_tet_c::t8_element_num_faces (const t8_element_t * elem)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
   return T8_DTET_FACES;
 }
 
@@ -94,6 +102,7 @@ t8_default_scheme_tet_c::t8_element_max_num_faces (const t8_element_t * elem)
 int
 t8_default_scheme_tet_c::t8_element_num_children (const t8_element_t * elem)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
   return T8_DTET_CHILDREN;
 }
 
@@ -101,6 +110,7 @@ int
 t8_default_scheme_tet_c::t8_element_num_face_children (const t8_element_t *
                                                        elem, int face)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
   return T8_DTET_FACE_CHILDREN;
 }
 
@@ -110,6 +120,8 @@ t8_default_scheme_tet_c::t8_element_child (const t8_element_t * elem,
 {
   const t8_default_tet_t *t = (const t8_default_tet_t *) elem;
   t8_default_tet_t   *c = (t8_default_tet_t *) child;
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_element_is_valid (child));
 
   t8_dtet_child (t, childid, c);
 }
@@ -119,13 +131,20 @@ t8_default_scheme_tet_c::t8_element_children (const t8_element_t * elem,
                                               int length, t8_element_t * c[])
 {
   T8_ASSERT (length == T8_DTET_CHILDREN);
-
+  T8_ASSERT (t8_element_is_valid (elem));
+#ifdef T8_ENABLE_DEBUG
+  int                 i;
+  for (i = 0; i < T8_DTET_CHILDREN; i++) {
+    T8_ASSERT (t8_element_is_valid (c[i]));
+  }
+#endif
   t8_dtet_childrenpv ((const t8_dtet_t *) elem, (t8_dtet_t **) c);
 }
 
 int
 t8_default_scheme_tet_c::t8_element_child_id (const t8_element_t * elem)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
   return t8_dtet_child_id ((t8_dtet_t *) elem);
 }
 
@@ -139,6 +158,12 @@ t8_default_scheme_tet_c::t8_element_ancestor_id (const t8_element_t * elem,
 int
 t8_default_scheme_tet_c::t8_element_is_family (t8_element_t ** fam)
 {
+#ifdef T8_ENABLE_DEBUG
+  int                 i;
+  for (i = 0; i < T8_DTET_CHILDREN; i++) {
+    T8_ASSERT (t8_element_is_valid (fam[i]));
+  }
+#endif
   return t8_dtet_is_familypv ((const t8_dtet_t **) fam);
 }
 
@@ -151,6 +176,8 @@ t8_default_scheme_tet_c::t8_element_nca (const t8_element_t * elem1,
   const t8_default_tet_t *t2 = (const t8_default_tet_t *) elem2;
   t8_default_tet_t   *c = (t8_default_tet_t *) nca;
 
+  T8_ASSERT (t8_element_is_valid (elem1));
+  T8_ASSERT (t8_element_is_valid (elem2));
   t8_dtet_nearest_common_ancestor (t1, t2, c);
 }
 
@@ -158,6 +185,7 @@ t8_eclass_t
   t8_default_scheme_tet_c::t8_element_face_class (const t8_element_t * elem,
                                                   int face)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
   return T8_ECLASS_TRIANGLE;
 }
 
@@ -171,8 +199,20 @@ t8_default_scheme_tet_c::t8_element_children_at_face (const t8_element_t *
 {
   const t8_dtet_t    *t = (const t8_dtet_t *) elem;
   t8_dtet_t         **c = (t8_dtet_t **) children;
+
+  T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DTET_FACES);
   T8_ASSERT (num_children == T8_DTET_FACE_CHILDREN);
+
+#ifdef T8_ENABLE_DEBUG
+  /* debugging check that all children elements are valid */
+  {
+    int                 i;
+    for (i = 0; i < num_children; i++) {
+      T8_ASSERT (t8_element_is_valid (children[i]));
+    }
+  }
+#endif
 
   t8_dtet_children_at_face (t, face, c, num_children, child_indices);
 }
@@ -182,6 +222,7 @@ t8_default_scheme_tet_c::t8_element_face_child_face (const t8_element_t *
                                                      elem, int face,
                                                      int face_child)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DTET_FACES);
   T8_ASSERT (0 <= face && face < T8_DTET_FACE_CHILDREN);
   return t8_dtet_face_child_face ((const t8_dtet_t *) elem, face, face_child);
@@ -200,6 +241,7 @@ int
 t8_default_scheme_tet_c::t8_element_tree_face (const t8_element_t * elem,
                                                int face)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DTET_FACES);
   return t8_dtet_tree_face ((t8_dtet_t *) elem, face);
 }
@@ -211,12 +253,17 @@ t8_default_scheme_tet_c::t8_element_tree_face (const t8_element_t * elem,
  * for tets. */
 int
 t8_default_scheme_tet_c::t8_element_extrude_face (const t8_element_t * face,
+                                                  const t8_eclass_scheme_c *
+                                                  face_scheme,
                                                   t8_element_t * elem,
                                                   int root_face)
 {
   const t8_dtri_t    *b = (const t8_dtri_t *) face;
   t8_dtet_t          *t = (t8_dtet_t *) elem;
 
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (face_scheme->eclass == T8_ECLASS_TRIANGLE);
+  T8_ASSERT (face_scheme->t8_element_is_valid (face));
   T8_ASSERT (0 <= root_face && root_face < T8_DTET_FACES);
   t->level = b->level;
 #ifdef T8_ENABLE_DEBUG
@@ -295,12 +342,17 @@ t8_default_scheme_tet_c::t8_element_last_descendant_face (const t8_element_t *
 void
 t8_default_scheme_tet_c::t8_element_boundary_face (const t8_element_t * elem,
                                                    int face,
-                                                   t8_element_t * boundary)
+                                                   t8_element_t * boundary,
+                                                   const t8_eclass_scheme_c *
+                                                   boundary_scheme)
 {
   const t8_default_tet_t *t = (const t8_default_tet_t *) elem;
   t8_dtri_t          *b = (t8_dtri_t *) boundary;
   int                 face_cat;
 
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (boundary_scheme->eclass == T8_ECLASS_TRIANGLE);
+  T8_ASSERT (boundary_scheme->t8_element_is_valid (boundary));
   T8_ASSERT (0 <= face && face < T8_DTET_FACES);
   /* The level of the boundary element is the same as the quadrant's level */
   b->level = t->level;
@@ -340,12 +392,16 @@ t8_default_scheme_tet_c::t8_element_boundary (const t8_element_t * elem,
                                               int min_dim, int length,
                                               t8_element_t ** boundary)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
+  SC_ABORT ("Not implemented\n");
+#if 0
   int                 iface;
 
   T8_ASSERT (length == T8_DTET_FACES);
   for (iface = 0; iface < T8_DTET_FACES; iface++) {
     t8_element_boundary_face (elem, iface, boundary[iface]);
   }
+#endif
 }
 
 int
@@ -354,6 +410,7 @@ t8_default_scheme_tet_c::t8_element_is_root_boundary (const t8_element_t *
 {
   const t8_dtet_t    *t = (const t8_dtet_t *) elem;
 
+  T8_ASSERT (t8_element_is_valid (elem));
   return t8_dtet_is_root_boundary (t, face);
 }
 
@@ -367,6 +424,8 @@ t8_default_scheme_tet_c::t8_element_face_neighbor_inside (const t8_element_t *
   const t8_dtet_t    *t = (const t8_dtet_t *) elem;
   t8_dtet_t          *n = (t8_dtet_t *) neigh;
 
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_element_is_valid (neigh));
   T8_ASSERT (0 <= face && face < T8_DTET_FACES);
   T8_ASSERT (neigh_face != NULL);
   *neigh_face = t8_dtet_face_neighbour (t, face, n);
@@ -380,6 +439,7 @@ t8_default_scheme_tet_c::t8_element_set_linear_id (t8_element_t * elem,
 {
   T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
   T8_ASSERT (0 <= id && id < ((uint64_t) 1) << 3 * level);
+  T8_ASSERT (t8_element_is_valid (elem));
 
   t8_dtet_init_linear_id ((t8_default_tet_t *) elem, id, level);
 }
@@ -388,6 +448,7 @@ uint64_t
   t8_default_scheme_tet_c::t8_element_get_linear_id (const t8_element_t *
                                                      elem, int level)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
 
   return t8_dtet_linear_id ((t8_default_tet_t *) elem, level);
@@ -399,6 +460,8 @@ t8_default_scheme_tet_c::t8_element_successor (const t8_element_t * elem1,
                                                int level)
 {
   T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
+  T8_ASSERT (t8_element_is_valid (elem1));
+  T8_ASSERT (t8_element_is_valid (elem2));
 
   t8_dtet_successor ((const t8_default_tet_t *) elem1,
                      (t8_default_tet_t *) elem2, level);
@@ -409,6 +472,8 @@ t8_default_scheme_tet_c::t8_element_first_descendant (const t8_element_t *
                                                       elem,
                                                       t8_element_t * desc)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_element_is_valid (desc));
   t8_dtet_first_descendant ((t8_dtet_t *) elem, (t8_dtet_t *) desc,
                             T8_DTET_MAXLEVEL);
 }
@@ -418,6 +483,8 @@ t8_default_scheme_tet_c::t8_element_last_descendant (const t8_element_t *
                                                      elem,
                                                      t8_element_t * desc)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_element_is_valid (desc));
   t8_dtet_last_descendant ((t8_dtet_t *) elem, (t8_dtet_t *) desc,
                            T8_DTET_MAXLEVEL);
 }
@@ -427,6 +494,7 @@ t8_default_scheme_tet_c::t8_element_anchor (const t8_element_t * elem,
                                             int anchor[3])
 {
   t8_dtet_t          *tet = (t8_dtet_t *) elem;
+  T8_ASSERT (t8_element_is_valid (elem));
 
   anchor[0] = tet->x;
   anchor[1] = tet->y;
@@ -436,6 +504,7 @@ t8_default_scheme_tet_c::t8_element_anchor (const t8_element_t * elem,
 int
 t8_default_scheme_tet_c::t8_element_root_len (const t8_element_t * elem)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
   return T8_DTET_ROOT_LEN;
 }
 
@@ -443,7 +512,52 @@ void
 t8_default_scheme_tet_c::t8_element_vertex_coords (const t8_element_t * t,
                                                    int vertex, int coords[])
 {
+  T8_ASSERT (t8_element_is_valid (t));
   t8_dtet_compute_coords ((const t8_default_tet_t *) t, vertex, coords);
+}
+
+#ifdef T8_ENABLE_DEBUG
+/* *INDENT-OFF* */
+/* indent bug, indent adds a second "const" modifier */
+int
+t8_default_scheme_tet_c::t8_element_is_valid (const t8_element_t * t) const
+/* *INDENT-ON* */
+
+{
+  return t8_dtet_is_valid ((const t8_dtet_t *) t);
+}
+#endif
+
+void
+t8_default_scheme_tet_c::t8_element_new (int length, t8_element_t ** elem)
+{
+  /* allocate memory for a tet */
+  t8_default_scheme_common_c::t8_element_new (length, elem);
+
+  /* in debug mode, set sensible default values. */
+#ifdef T8_ENABLE_DEBUG
+  {
+    int                 i;
+    for (i = 0; i < length; i++) {
+      t8_element_init (1, elem[i], 0);
+    }
+  }
+#endif
+}
+
+void
+t8_default_scheme_tet_c::t8_element_init (int length, t8_element_t * elem,
+                                          int new_called)
+{
+#ifdef T8_ENABLE_DEBUG
+  if (!new_called) {
+    int                 i;
+    t8_dtet_t          *tets = (t8_dtet_t *) elem;
+    for (i = 0; i < length; i++) {
+      t8_dtet_init (tets + i);
+    }
+  }
+#endif
 }
 
  /* Constructor */

@@ -25,7 +25,7 @@
  * TODO: document this file
  */
 
-#include <t8_shmem.h>
+#include <t8_data/t8_shmem.h>
 #include <t8_cmesh.h>
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_trees.h"

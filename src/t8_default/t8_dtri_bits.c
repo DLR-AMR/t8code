@@ -1296,7 +1296,6 @@ t8_dtri_init_linear_id (t8_dtri_t * t, uint64_t id, int level)
   uint64_t            local_index;
   t8_dtri_cube_id_t   cid;
   t8_dtri_type_t      type;
-
   T8_ASSERT (0 <= id && id <= ((uint64_t) 1) << (T8_DTRI_DIM * level));
 
   t->level = level;
@@ -1486,4 +1485,49 @@ int
 t8_dtri_get_level (const t8_dtri_t * t)
 {
   return t->level;
+}
+
+int
+t8_dtri_is_valid (const t8_dtri_t * t)
+{
+  int                 is_valid;
+  t8_dtri_coord_t     max_coord;
+
+  /* TODO: depending on the level only certain values for the coordinates are
+   *       allowed. Check if the coordinates have these values. */
+
+  /* A triangle/tet is valid if: */
+  /* The level is in the valid range */
+  is_valid = 0 <= t->level && t->level <= T8_DTRI_MAXLEVEL;
+  /* The coordinates are in valid ranges, we allow the x,y,z coordinates
+   * to lie in the 3x3 neighborhood of the root cube. */
+  max_coord = ((int64_t) 2 * T8_DTRI_ROOT_LEN) - 1;
+  is_valid = is_valid && -T8_DTRI_ROOT_LEN <= t->x && t->x <= max_coord;
+  is_valid = is_valid && -T8_DTRI_ROOT_LEN <= t->y && t->y <= max_coord;
+#ifdef T8_DTRI_TO_DTET
+  is_valid = is_valid && -T8_DTRI_ROOT_LEN <= t->z && t->z <= max_coord;
+
+#ifdef T8_ENABLE_DEBUG
+  /* for tets the eclass is set. */
+  is_valid = is_valid && t->eclass_int8 == T8_ECLASS_TET;
+#endif
+#else
+  /* n is 0 (we currently do not use n) */
+  is_valid = is_valid && t->n == 0;
+#endif
+  /* Its type is in the valid range */
+  is_valid = is_valid && 0 <= t->type && t->type < T8_DTRI_NUM_TYPES;
+
+  return is_valid;
+}
+
+void
+t8_dtri_init (t8_dtri_t * t)
+{
+  /* Set all values to zero */
+  memset (t, 0, sizeof (*t));
+#ifdef T8_DTRI_TO_DTET
+  /* For tets, set the eclass */
+  t->eclass_int8 = T8_ECLASS_TET;
+#endif
 }

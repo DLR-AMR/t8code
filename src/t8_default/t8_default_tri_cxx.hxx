@@ -28,6 +28,7 @@
 #define T8_DEFAULT_TRI_CXX_H
 
 #include <t8_element_cxx.hxx>
+#include "t8_default_line_cxx.hxx"
 #include "t8_default_common_cxx.hxx"
 
 struct t8_default_scheme_tri_c:public t8_default_scheme_common_c
@@ -39,6 +40,15 @@ public:
   t8_default_scheme_tri_c ();
 
   ~t8_default_scheme_tri_c ();
+
+  /** Allocate memory for a given number of elements.
+   * In debugging mode, ensure that all elements are valid \ref t8_element_is_valid.
+   */
+  virtual void        t8_element_new (int length, t8_element_t ** elem);
+
+  /** Initialize an array of allocated elements. */
+  virtual void        t8_element_init (int length, t8_element_t * elem,
+                                       int called_new);
 
 /** Return the maximum level allowed for this element class. */
   virtual int         t8_element_maxlevel (void);
@@ -153,6 +163,8 @@ public:
    *  the element inside the root tree that has the given face as a
    *  face. */
   virtual int         t8_element_extrude_face (const t8_element_t * face,
+                                               const t8_eclass_scheme_c
+                                               * face_scheme,
                                                t8_element_t * elem,
                                                int root_face);
 
@@ -171,7 +183,9 @@ public:
   /** Construct the boundary element at a specific face. */
   virtual void        t8_element_boundary_face (const t8_element_t * elem,
                                                 int face,
-                                                t8_element_t * boundary);
+                                                t8_element_t * boundary,
+                                                const t8_eclass_scheme_c
+                                                * boundary_scheme);
 
 /** Construct all codimension-one boundary elements of a given element. */
   virtual void        t8_element_boundary (const t8_element_t * elem,
@@ -231,6 +245,11 @@ public:
   /** Compute the integer coordinates of a given element vertex. */
   virtual void        t8_element_vertex_coords (const t8_element_t * t,
                                                 int vertex, int coords[]);
+
+#ifdef T8_ENABLE_DEBUG
+  /** Query whether an element is valid */
+  virtual int         t8_element_is_valid (const t8_element_t * t) const;
+#endif
 };
 
 #endif /* !T8_DEFAULT_TET_H */

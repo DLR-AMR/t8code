@@ -34,6 +34,26 @@ t8_dline_copy (const t8_dline_t * l, t8_dline_t * dest)
   memcpy (dest, l, sizeof (t8_dline_t));
 }
 
+int
+t8_dline_compare (const t8_dline_t * l1, const t8_dline_t * l2)
+{
+  int                 maxlvl;
+  u_int64_t           id1, id2;
+
+  maxlvl = SC_MAX (l1->level, l2->level);
+  /* Compute the linear ids of the elements */
+  id1 = l1->x >> (T8_DLINE_MAXLEVEL - maxlvl);
+  id2 = l2->x >> (T8_DLINE_MAXLEVEL - maxlvl);
+  if (id1 == id2) {
+    /* The linear ids are the same, the line with the smaller level
+     * is considered smaller */
+    return l1->level - l2->level;
+  }
+  /* return negativ if id1 < id2, zero if id1 = id2, positive if id1 >
+     id2 */
+  return id1 < id2 ? -1 : id1 != id2;
+}
+
 void
 t8_dline_parent (const t8_dline_t * l, t8_dline_t * parent)
 {
@@ -66,6 +86,21 @@ t8_dline_child (const t8_dline_t * l, int childid, t8_dline_t * child)
   child->x = l->x + (childid == 0 ? 0 : h);
   /* The childs level */
   child->level = l->level + 1;
+}
+
+void
+t8_dline_face_neighbour (const t8_dline_t * p, int face, t8_dline_t * neigh)
+{
+  T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
+  switch (face) {
+  case 0:
+    neigh->level = p->level;
+    neigh->x = p->x - T8_DLINE_LEN (p->level);
+    break;
+  case 1:
+    t8_dline_successor (p, neigh, p->level);
+    break;
+  }
 }
 
 int
@@ -133,7 +168,7 @@ t8_dline_successor (const t8_dline_t * l, t8_dline_t * succ, int level)
 
   /* To compute the successor we zero out all bits in places bigger
    * than level and then we add the length of a line of level. */
-  for (i = level + 1; i <= l->level; i++) {
+  for (i = level + 1; i <= T8_DLINE_MAXLEVEL; i++) {
     h |= T8_DLINE_LEN (i);
   }
   succ->x = l->x & ~h;
@@ -206,10 +241,19 @@ t8_dline_linear_id (const t8_dline_t * elem, int level)
 {
   uint64_t            id;
 
-  T8_ASSERT ((int) elem->level >= level && level >= 0);
+  T8_ASSERT (level <= T8_DLINE_MAXLEVEL && level >= 0);
 
   /* this preserves the high bits from negative numbers */
   id = elem->x >> (T8_DLINE_MAXLEVEL - level);
 
   return id;
+}
+
+int
+t8_dline_is_valid (const t8_dline_t * l)
+{
+  /* A line is valid if its level and its x coordinates are in the
+   * correct bounds. */
+  return 0 <= l->level && l->level <= T8_DLINE_MAXLEVEL
+    && 0 <= l->x && l->x < T8_DLINE_ROOT_LEN;
 }

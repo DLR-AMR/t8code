@@ -423,12 +423,16 @@ t8_default_scheme_quad_c::t8_element_transform_face (const t8_element_t *
 
 int
 t8_default_scheme_quad_c::t8_element_extrude_face (const t8_element_t * face,
+                                                   const t8_eclass_scheme_c *
+                                                   face_scheme,
                                                    t8_element_t * elem,
                                                    int root_face)
 {
   const t8_dline_t   *l = (const t8_dline_t *) face;
   p4est_quadrant_t   *q = (p4est_quadrant_t *) elem;
 
+  T8_ASSERT (face_scheme->eclass == T8_ECLASS_LINE);
+  T8_ASSERT (face_scheme->t8_element_is_valid (elem));
   T8_ASSERT (0 <= root_face && root_face < P4EST_FACES);
   /*
    * The faces of the root quadrant are enumerated like this:
@@ -523,11 +527,15 @@ t8_default_scheme_quad_c::t8_element_last_descendant_face (const t8_element_t
 void
 t8_default_scheme_quad_c::t8_element_boundary_face (const t8_element_t * elem,
                                                     int face,
-                                                    t8_element_t * boundary)
+                                                    t8_element_t * boundary,
+                                                    const t8_eclass_scheme_c *
+                                                    boundary_scheme)
 {
   const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
   t8_dline_t         *l = (t8_dline_t *) boundary;
 
+  T8_ASSERT (boundary_scheme->eclass == T8_ECLASS_LINE);
+  T8_ASSERT (boundary_scheme->t8_element_is_valid (boundary));
   T8_ASSERT (0 <= face && face < P4EST_FACES);
   /* The level of the boundary element is the same as the quadrant's level */
   l->level = q->level;
@@ -552,6 +560,8 @@ t8_default_scheme_quad_c::t8_element_boundary (const t8_element_t * elem,
                                                int min_dim, int length,
                                                t8_element_t ** boundary)
 {
+  SC_ABORT ("Not implemented\n");
+#if 0
 #ifdef T8_ENABLE_DEBUG
   int                 per_eclass[T8_ECLASS_COUNT];
 #endif
@@ -564,6 +574,7 @@ t8_default_scheme_quad_c::t8_element_boundary (const t8_element_t * elem,
   for (iface = 0; iface < P4EST_FACES; iface++) {
     t8_element_boundary_face (elem, iface, boundary[iface]);
   }
+#endif
 }
 
 int
@@ -642,6 +653,19 @@ t8_default_scheme_quad_c::t8_element_vertex_coords (const t8_element_t * t,
   coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
   coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
 }
+
+#ifdef T8_ENABLE_DEBUG
+/* *INDENT-OFF* */
+/* indent bug, indent adds a second "const" modifier */
+int
+t8_default_scheme_quad_c::t8_element_is_valid (const t8_element_t * elem) const
+/* *INDENT-ON* */
+{
+  /* TODO: additional checks? do we set pad8 or similar?
+   */
+  return p4est_quadrant_is_valid ((const p4est_quadrant_t *) elem);
+}
+#endif
 
 /* Constructor */
 t8_default_scheme_quad_c::t8_default_scheme_quad_c (void)

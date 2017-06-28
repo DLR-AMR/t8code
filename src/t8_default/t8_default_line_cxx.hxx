@@ -47,6 +47,12 @@ public:
 
   ~t8_default_scheme_line_c ();
 
+  /** Initialize an array of allocated elements. */
+  virtual void        t8_element_init (int length, t8_element_t * elem,
+                                       int called_new)
+  {
+  };
+
 /** Return the maximum level allowed for this element class. */
   virtual int         t8_element_maxlevel (void);
 
@@ -69,11 +75,7 @@ public:
  *  If elem2 is a copy of elem1 then the elements are equal.
  */
   virtual int         t8_element_compare (const t8_element_t * elem1,
-                                          const t8_element_t * elem2)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+                                          const t8_element_t * elem2);
 
 /** Construct the parent of a given element. */
   virtual void        t8_element_parent (const t8_element_t * elem,
@@ -198,17 +200,25 @@ public:
    *  the element inside the root tree that has the given face as a
    *  face. */
   virtual int         t8_element_extrude_face (const t8_element_t * face,
+                                               const t8_eclass_scheme_c *
+                                               face_scheme,
                                                t8_element_t * elem,
                                                int root_face)
   {
+    /* TODO: Change the class of face_scheme to t8_default_scheme_vertex_c
+     * as soon as it is implemented. */
     SC_ABORT ("This function is not implemented yet.\n");
   }
 
   /** Construct the boundary element at a specific face. */
   virtual void        t8_element_boundary_face (const t8_element_t * elem,
                                                 int face,
-                                                t8_element_t * boundary)
+                                                t8_element_t * boundary,
+                                                const t8_eclass_scheme_c *
+                                                boundary_scheme)
   {
+    /* TODO: Change the class of boundary_scheme to t8_default_scheme_vertex_c
+     * as soon as it is implemented. */
     SC_ABORT ("This function is not implemented yet.\n");
   }
 
@@ -302,6 +312,10 @@ public:
   virtual void        t8_element_vertex_coords (const t8_element_t * t,
                                                 int vertex, int coords[]);
 
+#ifdef T8_ENABLE_DEBUG
+  /** Query whether an element is valid */
+  virtual int         t8_element_is_valid (const t8_element_t * t) const;
+#endif
 };
 
 T8_EXTERN_C_END ();

@@ -24,7 +24,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh_vtk.h>
 #include <t8_refcount.h>
-#include <t8_shmem.h>
+#include <t8_data/t8_shmem.h>
 #ifdef T8_WITH_METIS
 #include <metis.h>
 #endif
@@ -464,7 +464,7 @@ t8_cmesh_tree_id_is_owned (t8_cmesh_t cmesh, t8_locidx_t tree_id)
 /* Given a tree_id return the index of the specified tree in
  * cmesh's tree array
  */
-static t8_locidx_t
+static              t8_locidx_t
 t8_cmesh_tree_index (t8_cmesh_t cmesh, t8_locidx_t tree_id)
 {
   return cmesh->set_partition ? tree_id - cmesh->first_tree : tree_id;
@@ -1287,7 +1287,7 @@ t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
   return t8_cmesh_new_from_p4est_ext (conn, 3, comm, do_partition, 0);
 }
 
-static t8_cmesh_t
+static              t8_cmesh_t
 t8_cmesh_new_vertex (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -1301,7 +1301,7 @@ t8_cmesh_new_vertex (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static t8_cmesh_t
+static              t8_cmesh_t
 t8_cmesh_new_line (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -1316,7 +1316,7 @@ t8_cmesh_new_line (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static t8_cmesh_t
+static              t8_cmesh_t
 t8_cmesh_new_tri (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -1332,7 +1332,7 @@ t8_cmesh_new_tri (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static t8_cmesh_t
+static              t8_cmesh_t
 t8_cmesh_new_tet (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -1349,7 +1349,7 @@ t8_cmesh_new_tet (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static t8_cmesh_t
+static              t8_cmesh_t
 t8_cmesh_new_quad (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -1366,7 +1366,7 @@ t8_cmesh_new_quad (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static t8_cmesh_t
+static              t8_cmesh_t
 t8_cmesh_new_hex (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -1387,7 +1387,7 @@ t8_cmesh_new_hex (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static t8_cmesh_t
+static              t8_cmesh_t
 t8_cmesh_new_pyramid (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -1402,7 +1402,7 @@ t8_cmesh_new_pyramid (sc_MPI_Comm comm)
   return cmesh;
 }
 
-static t8_cmesh_t
+static              t8_cmesh_t
 t8_cmesh_new_prism (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -1795,7 +1795,6 @@ t8_cmesh_new_line_zigzag (sc_MPI_Comm comm)
   t8_cmesh_commit (cmesh, comm);
 
   return cmesh;
-
 }
 
 /* On each process, create a num_x by num_y (by num_z) brick connectivity and

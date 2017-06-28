@@ -46,6 +46,14 @@ t8_default_scheme_line_c::t8_element_copy (const t8_element_t * source,
   t8_dline_copy ((const t8_dline_t *) source, (t8_dline_t *) dest);
 }
 
+int
+t8_default_scheme_line_c::t8_element_compare (const t8_element_t * elem1,
+                                              const t8_element_t * elem2)
+{
+  return t8_dline_compare ((const t8_dline_t *) elem1,
+                           (const t8_dline_t *) elem2);
+}
+
 void
 t8_default_scheme_line_c::t8_element_parent (const t8_element_t * elem,
                                              t8_element_t * parent)
@@ -103,7 +111,7 @@ t8_default_scheme_line_c::t8_element_successor (const t8_element_t * elem1,
                                                 t8_element_t * elem2,
                                                 int level)
 {
-  T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
+  T8_ASSERT (1 <= level && level <= T8_DLINE_MAXLEVEL);
 
   t8_dline_successor ((const t8_default_line_t *) elem1,
                       (t8_default_line_t *) elem2, level);
@@ -176,12 +184,23 @@ t8_default_scheme_line_c::t8_element_is_family (t8_element_t ** fam)
   return t8_dline_is_familypv ((const t8_dline_t **) fam);
 }
 
+#ifdef T8_ENABLE_DEBUG
+/* *INDENT-OFF* */
+/* indent bug, indent adds a second "const" modifier */
+int
+t8_default_scheme_line_c::t8_element_is_valid (const t8_element_t * elem) const
+/* *INDENT-ON* */
+{
+  return t8_dline_is_valid ((const t8_dline_t *) elem);
+}
+#endif
+
 /* Constructor */
 t8_default_scheme_line_c::t8_default_scheme_line_c (void)
 {
   eclass = T8_ECLASS_LINE;
   element_size = sizeof (t8_default_line_t);
-  ts_context = sc_mempool_new (sizeof (element_size));
+  ts_context = sc_mempool_new (sizeof (t8_default_line_t));
 }
 
 t8_default_scheme_line_c::~t8_default_scheme_line_c ()

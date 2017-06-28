@@ -28,7 +28,7 @@
 #define T8_CMESH_H
 
 #include <t8.h>
-#include <t8_shmem.h>
+#include <t8_data/t8_shmem.h>
 #include <t8_cmesh/t8_cmesh_save.h>
 #include <t8_element.h>
 
@@ -647,6 +647,31 @@ t8_cmesh_t          t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees,
   * \return                  A valid cmesh, as if _init and _commit had been called.
   */
 t8_cmesh_t          t8_cmesh_new_line_zigzag (sc_MPI_Comm comm);
+
+/** Construct a forest of num_of_prisms connected prism, all with one edge in 0,
+  * except for num_of_prisms = 2, then the return is the hypercube mesh
+  * \param [in] comm        The mpi communicator to use.
+  * \param [in] num_of_prisms The number of prisms to be used.
+  * \return                 A valid cmesh, as if _init and _commit had been called.
+  */
+t8_cmesh_t          t8_cmesh_new_prism_cake (sc_MPI_Comm comm, int num_of_prisms);
+
+/** Construct a single deformed prism
+  * \param [in] comm        The mpi communicator to use.
+  * \return                 A valid cmesh; as if _init and _commit had been called.*/
+t8_cmesh_t          t8_cmesh_new_prism_deformed(sc_MPI_Comm comm);
+
+/** Construct a forest of six connected noncannoical oriented prisms
+  * \param [in] comm        The mpi communicator to use.
+  * \return                 A valid cmesh, as if _init and _commit had been called.
+  */
+t8_cmesh_t          t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_Comm comm);
+
+/** Construct a forest of six connected noncannoical oriented prisms
+  * \param [in] comm        The mpi communicator to use.
+  * \return                 A valid cmesh, as if _init and _commit had been called.
+  */
+t8_cmesh_t          t8_cmesh_new_prism_geometry (sc_MPI_Comm comm);
 
 /** Create a partitoned cmesh of quads whose local trees are given by an
  * num_x by num_y brick connectivity from p4est

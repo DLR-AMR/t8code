@@ -149,7 +149,7 @@ void                t8_dtri_children_at_face (const t8_dtri_t * tri,
                                               int num_children,
                                               int *child_indices);
 
-/** Given a face of an triangle and a child number of a child of that face, return the face number
+/** Given a face of a triangle and a child number of a child of that face, return the face number
  * of the child of the triangle that matches the child face.
  * \param [in]  triangle The triangle.
  * \param [in]  face    Then number of the face.
@@ -355,6 +355,21 @@ int                 t8_dtri_child_id (const t8_dtri_t * t);
  * \return        The level of \a t.
  */
 int                 t8_dtri_get_level (const t8_dtri_t * t);
+
+/** Query whether all entries of a triangle are in valid ranges.
+ * \param [in] t  triangle to be considered.
+ * \return        True, if \a t is a valid triangle and it is safe to call any
+ *                function on \a t.
+ *                False otherwise.
+ */
+int                 t8_dtri_is_valid (const t8_dtri_t * t);
+
+#ifdef T8_ENABLE_DEBUG
+/** Set sensible default values for a triangle.
+ * \param [in,out] t A triangle.
+ */
+void                t8_dtri_init (t8_dtri_t * t);
+#endif
 
 T8_EXTERN_C_END ();
 

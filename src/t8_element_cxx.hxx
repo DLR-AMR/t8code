@@ -354,6 +354,8 @@ public:
    *                      with \a face.
    */
   virtual int         t8_element_extrude_face (const t8_element_t * face,
+                                               const t8_eclass_scheme_c *
+                                               face_scheme,
                                                t8_element_t * elem,
                                                int root_face) = 0;
 
@@ -369,7 +371,9 @@ public:
    */
   virtual void        t8_element_boundary_face (const t8_element_t * elem,
                                                 int face,
-                                                t8_element_t * boundary) = 0;
+                                                t8_element_t * boundary,
+                                                const t8_eclass_scheme_c *
+                                                boundary_scheme) = 0;
 
   /** Construct the first descendant of an element that touches a given face.
    * \param [in] elem      The input element.
@@ -414,7 +418,7 @@ public:
     /** Construct the face neighbor of a given element if this face neighbor
      * is inside the root tree. Return 0 otherwise.
    * \param [in] elem The element to be considered.
-   * \param [in,out] neigh If the face neighbor of \a elem algon \a face is inside
+   * \param [in,out] neigh If the face neighbor of \a elem along \a face is inside
    *                  the root tree, this element's data is filled with the
    *                  data of the face neighbor. Otherwise the data can be modified
    *                  arbitrarily.
@@ -502,6 +506,7 @@ public:
   virtual void        t8_element_vertex_coords (const t8_element_t * t,
                                                 int vertex, int coords[]) = 0;
 
+  /* TODO: deactivate */
   /** Return a pointer to a t8_element in an array indexed by a size_t.
    * \param [in] array    The \ref sc_array storing \t t8_element_t pointers.
    * \param [in] it       The index of the element that should be returned.
@@ -512,14 +517,67 @@ public:
   virtual t8_element_t *t8_element_array_index (sc_array_t * array,
                                                 size_t it);
 
-  /** Allocate memory for an array of elements of a given class.
+#ifdef T8_ENABLE_DEBUG
+  /** Query whether a given element can be considered as 'valid' and it is
+   *  safe to perform any of the above algorithms on it.
+   *  For example this could mean that all coordinates are in valid ranges
+   *  and other membervariables do have meaningful values.
+   * \param [in]      elem  The element to be checked.
+   * \return          True if \a elem is safe to use. False otherwise.
+   * \note            An element that is constructed with \ref t8_element_new
+   *                  must pass this test.
+   * \note            An element for which \ref t8_element_init was called must pass
+   *                  this test.
+   * \note            This function is used for debugging to catch certain errors.
+   *                  These can for example occur when an element points to a region
+   *                  of memory which should not be interpreted as an element.
+   * \note            We recommend to use the assertion T8_ASSERT (t8_element_is_valid (elem))
+   *                  in the implementation of each of the functions in this file.
+   */
+  virtual int         t8_element_is_valid (const t8_element_t * elem) const =
+    0;
+#endif
+
+  /** Allocate memory for an array of elements of a given class and initialize them.
    * \param [in] length   The number of elements to be allocated.
    * \param [in,out] elems On input an array of \b length many unallocated
    *                      element pointers.
    *                      On output all these pointers will point to an allocated
-   *                      and uninitialized element.
+   *                      and initialized element.
+   * \note Not every element that is created in t8code will be created by a call
+   * to this function. However, if an element is not created using \ref t8_element_new,
+   * then it is guaranteed that \ref t8_element_init is called on it.
+   * \note In debugging mode, an element that was created with \ref t8_element_new
+   * must pass \ref t8_element_is_valid.
+   * \note If an element was created by \ref t8_element_new then \ref t8_element_init
+   * may not be called for it. Thus, \ref t8_element_new should initialize an element
+   * in the same way as a call to \ref t8_element_init would.
+   * \see t8_element_init
+   * \see t8_element_is_valid
    */
+  /* TODO: would it be better to directly allocate an array of elements,
+   *       not element pointers? */
   virtual void        t8_element_new (int length, t8_element_t ** elem) = 0;
+
+ /** Initialize an array of allocated elements.
+   * \param [in] length   The number of elements to be allocated.
+   * \param [in,out] elems On input an array of \b length many allocated
+   *                       elements.
+   * \param [in] called_new True if the elements in \a elem were created by a call
+   *                       to \ref t8_element_new. False if no element in \a elem
+   *                       was created in this way. The case that only some elements
+   *                       were created by \ref t8_element_new should never occur.
+   * \note In debugging mode, an element that was passed to \ref t8_element_init
+   * must pass \ref t8_element_is_valid.
+   * \note If an element was created by \ref t8_element_new then \ref t8_element_init
+   * may not be called for it. Thus, \ref t8_element_new should initialize an element
+   * in the same way as a call to \ref t8_element_init would.
+   * Thus, if \a called_new is true this function should usually do nothing.
+   * \see t8_element_new
+   * \see t8_element_is_valid
+   */
+  virtual void        t8_element_init (int length, t8_element_t * elem,
+                                       int called_new) = 0;
 
   /** Deallocate an array of elements.
    * \param [in] ts       The virtual table for this element class.

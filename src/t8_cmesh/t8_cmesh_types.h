@@ -25,7 +25,7 @@
 
 #include <t8.h>
 #include <t8_refcount.h>
-#include <t8_shmem.h>
+#include <t8_data/t8_shmem.h>
 #include "t8_cmesh_stash.h"
 #include "t8_element.h"
 

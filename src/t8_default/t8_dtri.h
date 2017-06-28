@@ -37,7 +37,7 @@ T8_EXTERN_C_BEGIN ();
 /** The number of faces of a triangle. */
 #define T8_DTRI_FACES 3
 
-/** The number of childre that a face of a triangle is refined to. */
+/** The number of children that a face of a triangle is refined to. */
 #define T8_DTRI_FACE_CHILDREN 2
 
 /** The number of corners of a triangle */
@@ -51,6 +51,9 @@ T8_EXTERN_C_BEGIN ();
 
 /** The length of a triangle at a given level in integer coordinates. */
 #define T8_DTRI_LEN(l) (1 << (T8_DTRI_MAXLEVEL - (l)))
+
+/** The number of different types of triangles. */
+#define T8_DTRI_NUM_TYPES 2
 
 typedef int8_t      t8_dtri_type_t;
 typedef int32_t     t8_dtri_coord_t;
