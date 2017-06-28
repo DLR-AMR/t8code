@@ -329,6 +329,7 @@ void
 t8_forest_commit (t8_forest_t forest)
 {
   int                 mpiret;
+  int                 partitioned = 0;
   sc_MPI_Comm         comm_dup;
 
   T8_ASSERT (forest != NULL);
@@ -460,7 +461,7 @@ t8_forest_commit (t8_forest_t forest)
           t8_forest_ref (forest->set_from);
         }
         t8_forest_set_balance (forest_balance, forest->set_from,
-                               forest->set_balance ==
+                               forest->set_balance !=
                                T8_FOREST_BALANCE_NO_REPART);
         t8_forest_commit (forest_balance);
         forest->set_from = forest_balance;
@@ -478,6 +479,7 @@ t8_forest_commit (t8_forest_t forest)
       }
     }
     if (forest->from_method & T8_FOREST_FROM_PARTITION) {
+      partitioned = 1;
       /* Partition this forest */
       forest->from_method -= T8_FOREST_FROM_PARTITION;
       /* This is the last from method that we execute,
@@ -531,8 +533,7 @@ t8_forest_commit (t8_forest_t forest)
   /* From here on, the forest passes the t8_forest_is_committed check */
 
   /* re-partition the cmesh */
-  if (forest->cmesh->set_partition &&
-      forest->from_method == T8_FOREST_FROM_PARTITION) {
+  if (forest->cmesh->set_partition && partitioned) {
     t8_forest_partition_cmesh (forest, forest->mpicomm,
                                forest->profile != NULL);
   }
