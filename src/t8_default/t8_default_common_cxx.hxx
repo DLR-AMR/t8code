@@ -29,6 +29,11 @@
 
 #include <t8_element_cxx.hxx>
 
+/* Macro to check whether a pointer (VAR) to a base class, comes from an
+ * implementation of a child class (TYPE). */
+#define T8_COMMON_IS_TYPE(VAR, TYPE) \
+  ((dynamic_cast<TYPE> (VAR)) != NULL)
+
 T8_EXTERN_C_BEGIN ();
 
 class               t8_default_scheme_common_c:public t8_eclass_scheme_c

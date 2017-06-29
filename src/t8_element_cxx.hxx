@@ -402,6 +402,12 @@ public:
                                                        last_desc) = 0;
 
   /* TODO: document better */
+  /* TODO: document better.
+   *        Do we need this functino at all?
+   *        If not remove it. If so, what to do with prisms and pyramids?
+   *        Here the boundary elements are of different eclasses, so we cannot
+   *        store them in an array...
+   */
 /** Construct all codimension-one boundary elements of a given element. */
   virtual void        t8_element_boundary (const t8_element_t * elem,
                                            int min_dim, int length,
