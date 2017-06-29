@@ -28,6 +28,5 @@ libt8_compiled_sources += \
   src/t8_default/t8_dline_bits.c \
   src/t8_default/t8_dtri_bits.c \
   src/t8_default/t8_dtet_bits.c \
-  src/t8_default/t8_dline_bits.c \
   src/t8_default/t8_dprism_bits.c
 
