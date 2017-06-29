@@ -94,6 +94,7 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_child_id  t8_dtet_child_id
 #define t8_dtri_get_level t8_dtet_get_level
 #define t8_dtri_is_valid t8_dtet_is_valid
+#define t8_dtri_init t8_dtet_init
 
 T8_EXTERN_C_END ();
 

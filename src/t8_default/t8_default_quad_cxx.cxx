@@ -571,6 +571,38 @@ t8_default_scheme_quad_c::t8_element_vertex_coords (const t8_element_t * t,
   coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
 }
 
+void
+t8_default_scheme_quad_c::t8_element_new (int length, t8_element_t ** elem)
+{
+  /* allocate memory for a tet */
+  t8_default_scheme_common_c::t8_element_new (length, elem);
+
+  /* in debug mode, set sensible default values. */
+#ifdef T8_ENABLE_DEBUG
+  {
+    int                 i;
+    for (i = 0; i < length; i++) {
+      t8_element_init (1, elem[i], 0);
+    }
+  }
+#endif
+}
+
+void
+t8_default_scheme_quad_c::t8_element_init (int length, t8_element_t * elem,
+                                           int new_called)
+{
+#ifdef T8_ENABLE_DEBUG
+  if (!new_called) {
+    int                 i;
+    p4est_quadrant_t   *quads = (p4est_quadrant_t *) elem;
+    for (i = 0; i < length; i++) {
+      P4EST_QUADRANT_INIT (quads + i);
+    }
+  }
+#endif
+}
+
 #ifdef T8_ENABLE_DEBUG
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */

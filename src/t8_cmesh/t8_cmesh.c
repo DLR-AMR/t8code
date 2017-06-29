@@ -24,7 +24,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh_vtk.h>
 #include <t8_refcount.h>
-#include <t8_shmem.h>
+#include <t8_data/t8_shmem.h>
 #ifdef T8_WITH_METIS
 #include <metis.h>
 #endif

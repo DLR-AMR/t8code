@@ -50,6 +50,13 @@ public:
 /** Return the maximum level allowed for this element class. */
   virtual int         t8_element_maxlevel (void);
 
+  /** Initialize an array of allocated elements. */
+  virtual void        t8_element_init (int length, t8_element_t * elem,
+                                       int called_new)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
+
 /** Return the type of each child in the ordering of the implementation. */
   virtual t8_eclass_t t8_element_child_eclass (int childid)
   {
