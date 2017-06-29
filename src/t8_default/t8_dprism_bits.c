@@ -162,27 +162,27 @@ t8_dprism_boundary_face (const t8_dprism_t * p, int face,
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   p4est_quadrant_t   *q = (p4est_quadrant_t *) boundary;
   if (face >= 3) {
-    t8_dtri_t          *l = (t8_dtri_t *) boundary;
-    l->level = p->tri.level * (1 << (T8_DTRI_MAXLEVEL - T8_DPRISM_MAXLEVEL));
-    l->type = p->tri.type;
-    l->x = p->tri.x * (1 << (T8_DTRI_MAXLEVEL - T8_DPRISM_MAXLEVEL));
-    l->y = p->tri.y * (1 << (T8_DTRI_MAXLEVEL - T8_DPRISM_MAXLEVEL));
+    t8_dtri_t          *t = (t8_dtri_t *) boundary;
+    t->level = p->tri.level;
+    t->type = p->tri.type;
+    t->x = p->tri.x;
+    t->y = p->tri.y;
     return;
   }
   switch (face) {
   case 0:
-    q->x = p->tri.y * (1 << (P4EST_MAXLEVEL - T8_DPRISM_MAXLEVEL));
-    q->y = p->line.x * (1 << (P4EST_MAXLEVEL - T8_DPRISM_MAXLEVEL));
+    q->x = p->tri.y * P4EST_MAXLEVEL / T8_DTRI_MAXLEVEL;
+    q->y = p->line.x *  P4EST_MAXLEVEL / T8_DLINE_MAXLEVEL;
     q->level = p->tri.level;
     break;
   case 1:
-    q->x = p->tri.x * (1 << (P4EST_MAXLEVEL - T8_DPRISM_MAXLEVEL));
-    q->y = p->line.x * (1 << (P4EST_MAXLEVEL - T8_DPRISM_MAXLEVEL));
+    q->x = p->tri.x *  P4EST_MAXLEVEL / T8_DTRI_MAXLEVEL;
+    q->y = p->line.x * P4EST_MAXLEVEL / T8_DLINE_MAXLEVEL;
     q->level = p->tri.level;
     break;
   case 2:
-    q->x = p->tri.x * (1 << (P4EST_MAXLEVEL - T8_DPRISM_MAXLEVEL));
-    q->y = p->line.x * (1 << (P4EST_MAXLEVEL - T8_DPRISM_MAXLEVEL));
+    q->x = p->tri.x *  P4EST_MAXLEVEL / T8_DTRI_MAXLEVEL;
+    q->y = p->line.x * P4EST_MAXLEVEL / T8_DLINE_MAXLEVEL;
     q->level = p->tri.level;
     break;
   default:
@@ -267,8 +267,8 @@ const int           children_at_face[2][12] = { {1, 3, 5, 7,
                                                  0, 3, 4, 7,
                                                  0, 1, 4, 5},
 {2, 3, 6, 7,
- 0, 2, 4, 6,
- 0, 3, 4, 7}
+ 0, 3, 4, 7,
+ 0, 2, 4, 6}
 };
 
 void
