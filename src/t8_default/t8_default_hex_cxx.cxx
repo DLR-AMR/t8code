@@ -595,8 +595,7 @@ t8_default_scheme_hex_c::t8_element_init (int length, t8_element_t * elem,
     int                 i;
     p8est_quadrant_t   *quads = (p8est_quadrant_t *) elem;
     for (i = 0; i < length; i++) {
-      /* Set all values to 0 */
-      (void) memset ((quads + i), 0, sizeof (p8est_quadrant_t));
+      p8est_quadrant_set_morton (quads + i, 0, 0);
       T8_ASSERT (p8est_quadrant_is_extended (quads + i));
     }
   }
