@@ -1285,7 +1285,9 @@ t8_dtri_init (t8_dtri_t * t)
   /* Set all values to zero */
   memset (t, 0, sizeof (*t));
 #ifdef T8_DTRI_TO_DTET
+#ifdef T8_ENABLE_DEBUG
   /* For tets, set the eclass */
   t->eclass_int8 = T8_ECLASS_TET;
+#endif
 #endif
 }

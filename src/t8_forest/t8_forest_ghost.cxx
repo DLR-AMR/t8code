@@ -575,7 +575,7 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
 static void
 t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost)
 {
-  t8_element_t       *elem, **half_neighbors;
+  t8_element_t       *elem, **half_neighbors = NULL;
   t8_locidx_t         num_local_trees, num_tree_elems;
   t8_locidx_t         itree, ielem;
   t8_tree_t           tree;
@@ -686,8 +686,10 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost)
     forest->profile->ghosts_remotes = ghost->remote_processes->elem_count;
   }
   /* Clean-up memory */
-  neigh_scheme->t8_element_destroy (max_num_face_children, half_neighbors);
-  T8_FREE (half_neighbors);
+  if (half_neighbors != NULL) {
+    neigh_scheme->t8_element_destroy (max_num_face_children, half_neighbors);
+    T8_FREE (half_neighbors);
+  }
 }
 
 /* Begin sending the ghost elements from the remote ranks
@@ -801,7 +803,9 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost,
             sizeof (size_t));
     bytes_written += sizeof (size_t);
     bytes_written += T8_ADD_PADDING (bytes_written);
+#ifdef T8_ENABLE_DEBUG
     acc_el_count = 0;
+#endif
     for (remote_index = 0; remote_index < remote_trees->elem_count;
          remote_index++) {
       /* Get a pointer to the tree */
@@ -839,15 +843,19 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost,
 
       /* Add to the counter of remote elements. */
       ghost->num_remote_elements += element_count;
+#ifdef T8_ENABLE_DEBUG
       acc_el_count += element_count;
+#endif
     }                           /* End tree loop */
 
     T8_ASSERT (bytes_written == current_send_info->num_bytes);
     /* We can now post the MPI_Isend for the remote process */
+#ifdef T8_ENABLE_DEBUG
     t8_debugf
       ("[H] Post send of %i trees  %i elements = %i (==%i) bytes to rank %i.\n",
        (int) remote_trees->elem_count, (int) acc_el_count,
        (int) current_send_info->num_bytes, (int) bytes_written, remote_rank);
+#endif
     mpiret =
       sc_MPI_Isend (current_buffer, bytes_written, sc_MPI_BYTE, remote_rank,
                     T8_MPI_GHOST_FOREST, forest->mpicomm,
