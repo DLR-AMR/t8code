@@ -141,7 +141,8 @@ t8_band_adapt (t8_forest_t forest, t8_locidx_t which_tree,
 static void
 t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
                               sc_MPI_Comm comm, int init_level, int no_vtk,
-                              double x_min_max[2], double T, double delta_t)
+                              double x_min_max[2], double T, double delta_t,
+                              int do_ghost)
 {
   t8_cmesh_t          cmesh_partition;
   char                forest_vtu[BUFSIZ], cmesh_vtu[BUFSIZ];
@@ -184,6 +185,10 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
     adapt_data.normal[1] = 1;
     adapt_data.normal[2] = 0;
     t8_forest_set_user_data (forest_adapt, (void *) &adapt_data);
+    /* If desired, create ghost elements */
+    if (do_ghost) {
+      t8_forest_set_ghost (forest_adapt, 1, T8_GHOST_FACES);
+    }
     /* Commit the adapted forest */
     t8_forest_commit (forest_adapt);
     /* write vtk files for adapted forest and cmesh */
@@ -203,6 +208,10 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
     t8_forest_set_partition (forest_partition, forest_adapt, 0);
     /* enable profiling for the partitioned forest */
     t8_forest_set_profiling (forest_partition, 1);
+    /* If desired, create ghost elements */
+    if (do_ghost) {
+      t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
+    }
     t8_forest_commit (forest_partition);
 #if USE_CMESH_PARTITION
     /* Repartition the cmesh of the forest */
@@ -278,7 +287,7 @@ main (int argc, char *argv[])
   int                 mpiret;
   int                 first_argc;
   int                 level;
-  int                 help = 0, no_vtk;
+  int                 help = 0, no_vtk, do_ghost;
   int                 dim, num_files;
   sc_options_t       *opt;
   t8_cmesh_t          cmesh;
@@ -308,7 +317,7 @@ main (int argc, char *argv[])
                          "If specified, the cmesh is constructed from a .msh file with "
                          "the given prefix. The files must end in .msh and be "
                          "created with gmsh.");
-  sc_options_add_string (opt, 'l', "cmeshfile", &cmeshfileprefix, NULL,
+  sc_options_add_string (opt, 'c', "cmeshfile", &cmeshfileprefix, NULL,
                          "If specified, the cmesh is constructed from a collection "
                          "of cmesh files. Created with t8_cmesh_save."
                          "The number of files must then be specified with the -n "
@@ -323,6 +332,8 @@ main (int argc, char *argv[])
                          "The minimum x coordinate " "in the mesh.");
   sc_options_add_double (opt, 'X', "xmax", x_min_max + 1, 1,
                          "The maximum x coordinate " "in the mesh.");
+  sc_options_add_switch (opt, 'g', "ghost", &do_ghost,
+                         "Create ghost elements.");
 
   /* parse command line options */
   first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT,
@@ -353,7 +364,7 @@ main (int argc, char *argv[])
     }
     t8_time_forest_cmesh_mshfile (cmesh, vtu_prefix,
                                   sc_MPI_COMM_WORLD, level,
-                                  no_vtk, x_min_max, 1, 0.08);
+                                  no_vtk, x_min_max, 1, 0.08, do_ghost);
   }
   sc_options_destroy (opt);
   sc_finalize ();
