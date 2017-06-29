@@ -596,8 +596,10 @@ t8_default_scheme_quad_c::t8_element_init (int length, t8_element_t * elem,
   if (!new_called) {
     int                 i;
     p4est_quadrant_t   *quads = (p4est_quadrant_t *) elem;
+    /* Set all values to 0 */
     for (i = 0; i < length; i++) {
-      P4EST_QUADRANT_INIT (quads + i);
+      p4est_quadrant_set_morton (quads + i, 0, 0);
+      T8_ASSERT (p4est_quadrant_is_extended (quads + i));
     }
   }
 #endif
@@ -612,7 +614,7 @@ t8_default_scheme_quad_c::t8_element_is_valid (const t8_element_t * elem) const
 {
   /* TODO: additional checks? do we set pad8 or similar?
    */
-  return p4est_quadrant_is_valid ((const p4est_quadrant_t *) elem);
+  return p4est_quadrant_is_extended ((const p4est_quadrant_t *) elem);
 }
 #endif
 

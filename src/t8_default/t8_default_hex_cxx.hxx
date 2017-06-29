@@ -46,11 +46,14 @@ public:
 
   ~t8_default_scheme_hex_c ();
 
+  /** Allocate memory for a given number of elements.
+   * In debugging mode, ensure that all elements are valid \ref t8_element_is_valid.
+   */
+  virtual void        t8_element_new (int length, t8_element_t ** elem);
+
   /** Initialize an array of allocated elements. */
   virtual void        t8_element_init (int length, t8_element_t * elem,
-                                       int called_new)
-  {
-  };
+                                       int called_new);
 
 /** Return the maximum level allowed for this element class. */
   virtual int         t8_element_maxlevel (void);
