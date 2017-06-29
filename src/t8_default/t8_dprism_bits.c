@@ -171,18 +171,18 @@ t8_dprism_boundary_face (const t8_dprism_t * p, int face,
   }
   switch (face) {
   case 0:
-    q->x = p->tri.y * P4EST_MAXLEVEL / T8_DTRI_MAXLEVEL;
-    q->y = p->line.x *  P4EST_MAXLEVEL / T8_DLINE_MAXLEVEL;
+    q->x = p->tri.y * P4EST_ROOT_LEN / T8_DTRI_ROOT_LEN;
+    q->y = p->line.x *  P4EST_ROOT_LEN / T8_DLINE_ROOT_LEN;
     q->level = p->tri.level;
     break;
   case 1:
-    q->x = p->tri.x *  P4EST_MAXLEVEL / T8_DTRI_MAXLEVEL;
-    q->y = p->line.x * P4EST_MAXLEVEL / T8_DLINE_MAXLEVEL;
+    q->x = p->tri.x *   P4EST_ROOT_LEN / T8_DTRI_ROOT_LEN;
+    q->y = p->line.x * P4EST_ROOT_LEN / T8_DLINE_ROOT_LEN;
     q->level = p->tri.level;
     break;
   case 2:
-    q->x = p->tri.x *  P4EST_MAXLEVEL / T8_DTRI_MAXLEVEL;
-    q->y = p->line.x * P4EST_MAXLEVEL / T8_DLINE_MAXLEVEL;
+    q->x = p->tri.x *   P4EST_ROOT_LEN / T8_DTRI_ROOT_LEN;
+    q->y = p->line.x * P4EST_ROOT_LEN / T8_DLINE_ROOT_LEN;
     q->level = p->tri.level;
     break;
   default:
