@@ -1180,7 +1180,7 @@ t8_dtri_is_ancestor (const t8_dtri_t * t, const t8_dtri_t * c)
 }
 
 /* Compute the linear id of the first descendant of a triangle/tet */
-static uint64_t
+static              uint64_t
 t8_dtri_linear_id_first_desc (const t8_dtri_t * t, int level)
 {
   /* The id of the first descendant is the id of t in a uniform level
