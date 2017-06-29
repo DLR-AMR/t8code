@@ -52,6 +52,8 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   T8_ASSERT (*el_inserted == (t8_locidx_t) elements_in_array);
   T8_ASSERT (el_coarsen >= 0);
   element = t8_element_array_index_locidx (telement, *el_inserted - 1);
+  /* TODO: This assumes that the number of children is the same for each
+   *       element in that class. This may not be the case. */
   num_children = ts->t8_element_num_children (element);
   T8_ASSERT (ts->t8_element_child_id (element) == num_children - 1);
 
@@ -64,9 +66,11 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   while (isfamily && pos >= el_coarsen && ts->t8_element_child_id (element)
          == num_children - 1) {
     isfamily = 1;
+    /* Get all elements at indices pos, pos + 1, ... ,pos + num_children - 1 */
     for (i = 0; i < num_children; i++) {
       fam[i] = t8_element_array_index_locidx (telement, pos + i);
       if (ts->t8_element_child_id (fam[i]) != i) {
+        /* These elements cannot form a family. Stop coarsening. */
         isfamily = 0;
         break;
       }
@@ -76,22 +80,22 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
                                           fam) < 0) {
       /* Coarsen the element */
       *el_inserted -= num_children - 1;
-      /* remove num_children - 1 elemnents from the array */
+      /* remove num_children - 1 elements from the array */
       T8_ASSERT (elements_in_array == t8_element_array_get_count (telement));
-      elements_in_array -= num_children - 1;
-      t8_element_array_resize (telement, elements_in_array);
       if (forest->set_replace_fn != NULL) {
         ts->t8_element_parent (fam[0], replace);
-      }
-      else {
-        ts->t8_element_parent (fam[0], fam[0]);
-      }
-      if (forest->set_replace_fn != NULL) {
         forest->set_replace_fn (forest, ltreeid, ts, num_children,
                                 fam, 1, &replace);
         ts->t8_element_copy (replace, fam[0]);
       }
-      element = fam[0];
+      else {
+        ts->t8_element_parent (fam[0], fam[0]);
+      }
+      elements_in_array -= num_children - 1;
+      t8_element_array_resize (telement, elements_in_array);
+      /* Set element to the new constructed parent. Since resizing the array
+       * may change the position in memory, we have to do it after resizing. */
+      element = t8_element_array_index_locidx (telement, pos);
     }
     else {
       /* If the elements are no family or
