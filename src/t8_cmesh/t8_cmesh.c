@@ -411,6 +411,16 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
                           data, data_persists);
 }
 
+double             *
+t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltreeid)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (0 <= ltreeid && ltreeid < cmesh->num_local_trees);
+
+  return (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), 0,
+                                            ltreeid);
+}
+
 void               *
 t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key,
                         t8_locidx_t ltree_id)

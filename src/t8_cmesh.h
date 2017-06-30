@@ -482,6 +482,15 @@ t8_locidx_t         t8_cmesh_get_local_id (t8_cmesh_t cmesh,
  */
 void                t8_cmesh_print_profile (t8_cmesh_t cmesh);
 
+/** Return a pointer to the vertex coordinates of a tree.
+ * \param [in]    cmesh         The cmesh.
+ * \param [in]    ltreeid       The id of a loca tree.
+ * \return    If stored, a pointer to the vertex coordinates of \a tree.
+ *            If no coordinates for this tree are found, NULL.
+ */
+double             *t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh,
+                                                t8_locidx_t ltreeid);
+
 /** Return the attribute pointer of a tree.
  * \param [in]     cmesh        The cmesh.
  * \param [in]     package_id   The identifier of a valid software package. \see sc_package_register
