@@ -956,10 +956,9 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
   first_descs =
     (uint64_t *) t8_shmem_array_get_array (forest->global_first_desc);
   /* Compute the linear id of the element's first descendant */
-  element_desc_id = ts->t8_element_get_linear_id (first_desc,
-                                                  ts->
-                                                  t8_element_level
-                                                  (first_desc));
+  element_desc_id =
+    ts->t8_element_get_linear_id (first_desc,
+                                  ts->t8_element_level (first_desc));
 
   /* binary search for the owner process using the first descendant and first tree array */
   while (!found) {
