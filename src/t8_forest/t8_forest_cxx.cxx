@@ -957,7 +957,9 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
     (uint64_t *) t8_shmem_array_get_array (forest->global_first_desc);
   /* Compute the linear id of the element's first descendant */
   element_desc_id = ts->t8_element_get_linear_id (first_desc,
-                                                  ts->t8_element_maxlevel ());
+                                                  ts->
+                                                  t8_element_level
+                                                  (first_desc));
 
   /* binary search for the owner process using the first descendant and first tree array */
   while (!found) {
@@ -980,7 +982,7 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
       else {
         current_id = first_descs[guess];
         if (current_first_tree == gtreeid && element_desc_id < current_id) {
-          /* This have gtreeid as first tree
+          /* This guess has gtreeid as first tree
            * we compare the first descendant */
           /* look further left */
           upper_bound = guess - 1;
@@ -1290,7 +1292,7 @@ t8_forest_element_owners_at_face (t8_forest_t forest, t8_gloidx_t gtreeid,
   if (owners->elem_count > 0) {
     /* Compute lower and upper bound for the owners */
     lower_bound = *(int *) sc_array_index (owners, 0);
-    upper_bound = *(int *) sc_array_index (owners, owners->elem_count - 1);
+    upper_bound = *(int *) sc_array_index (owners, 1);
     sc_array_resize (owners, 0);
   }
   else {
