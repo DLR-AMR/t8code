@@ -28,8 +28,9 @@
 #include <p4est_connectivity.h>
 #include <p8est_connectivity.h>
 #include <sc_shmem.h>
+#include <example/common/t8_example_common.h>
 
-#if 1
+#if 0
 /* Adapt a forest such that always the second child of the first
  * tree is refined and no other elements. This results in a highly
  * imbalanced forest. */
