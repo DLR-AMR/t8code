@@ -41,7 +41,6 @@ typedef struct
 {
   double              c_min, c_max;     /* constants that define the thickness of the refinement region */
   double              normal[3];        /* normal vector to the plane E */
-  t8_forest_t         forest_from;      /* The forest from which we adapt */
   int                 base_level;       /* A given level that is not coarsend further, see -l argument */
   int                 max_level;        /* A max level that is not refined further, see -L argument */
 } adapt_data_t;
@@ -110,8 +109,7 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from,
   base_level = adapt_data->base_level;
   max_level = adapt_data->max_level;
   /* Compute the coordinates of the anchor node. */
-  t8_anchor_element (adapt_data->forest_from, which_tree, ts,
-                     elements[0], elem_anchor);
+  t8_anchor_element (forest_from, which_tree, ts, elements[0], elem_anchor);
 
   /* Calculate elem_anchor - c_min n */
   t8_vec3_xmay (elem_anchor, adapt_data->c_min, normal);
@@ -211,7 +209,6 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
     /* Set the minimum and maximum x-coordinates as user data */
     adapt_data.c_min = x_min_max[0] + t;
     adapt_data.c_max = x_min_max[1] + t;
-    adapt_data.forest_from = forest;
     t8_forest_set_user_data (forest_adapt, (void *) &adapt_data);
     /* If desired, create ghost elements */
     if (do_ghost) {
