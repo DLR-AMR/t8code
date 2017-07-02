@@ -126,7 +126,8 @@ t8_forest_partition_create_offsets (t8_forest_t forest)
 static void
 t8_forest_partition_test_desc (t8_forest_t forest)
 {
-  t8_element_t       *element, *first_desc, *elem_desc;
+  t8_element_t       *element, *elem_desc;
+  u_int64_t           first_desc_id;
   t8_locidx_t         ielem;
   t8_eclass_scheme_c *ts;
   t8_tree_t           tree = t8_forest_get_tree (forest, 0);
@@ -134,21 +135,21 @@ t8_forest_partition_test_desc (t8_forest_t forest)
 
   ts = t8_forest_get_eclass_scheme (forest,
                                     t8_forest_get_tree_class (forest, 0));
-  /* Get the first descendant of this rank */
-  first_desc =
-    (t8_element_t *) t8_shmem_array_index (forest->global_first_desc,
-                                           forest->mpirank);
+  /* Get the first descendant id of this rank */
+  first_desc_id =
+    *(uint64_t *) t8_shmem_array_index (forest->global_first_desc,
+                                        forest->mpirank);
   ts->t8_element_new (1, &elem_desc);
   for (ielem = 0; ielem < t8_forest_get_tree_element_count (tree); ielem++) {
     /* Iterate over elems, for each one create the first descendant and check
      * its linear id versus the linear id of first_desc. */
     element = t8_element_array_index_locidx (&tree->elements, ielem);
     ts->t8_element_first_descendant (element, elem_desc);
-    level = ts->t8_element_level (first_desc);
+    level = ts->t8_element_level (elem_desc);
     T8_ASSERT (level == ts->t8_element_level (elem_desc));
 
     T8_ASSERT (ts->t8_element_get_linear_id (elem_desc, level) >=
-               ts->t8_element_get_linear_id (first_desc, level));
+               first_desc_id);
   }
 }
 #endif
