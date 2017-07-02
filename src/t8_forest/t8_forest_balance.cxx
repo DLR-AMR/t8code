@@ -36,12 +36,12 @@ T8_EXTERN_C_BEGIN ();
  */
 /* TODO: We currently do not adapt recursively since some functions such
  * as half neighbor computation require the forest to be committed. Thus,
- * we pass forest->set_from as a parameter. But doing so is not valid anymore
+ * we pass forest_from as a parameter. But doing so is not valid anymore
  * if we refine recursively. */
 static int
-t8_forest_balance_adapt (t8_forest_t forest, t8_locidx_t ltree_id,
-                         t8_eclass_scheme_c * ts, int num_elements,
-                         t8_element_t * elements[])
+t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from,
+                         t8_locidx_t ltree_id, t8_eclass_scheme_c * ts,
+                         int num_elements, t8_element_t * elements[])
 {
   int                *pdone, iface, num_faces, num_half_neighbors, ineigh;
   t8_gloidx_t         neighbor_tree;
@@ -54,17 +54,16 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_locidx_t ltree_id,
   num_faces = ts->t8_element_num_faces (element);
   for (iface = 0; iface < num_faces; iface++) {
     /* Get the element class and scheme of the face neighbor */
-    neigh_class = t8_forest_element_neighbor_eclass (forest->set_from,
+    neigh_class = t8_forest_element_neighbor_eclass (forest_from,
                                                      ltree_id, element,
                                                      iface);
-    neigh_scheme =
-      t8_forest_get_eclass_scheme (forest->set_from, neigh_class);
+    neigh_scheme = t8_forest_get_eclass_scheme (forest_from, neigh_class);
     /* Allocate memory for the number of half face neighbors */
     num_half_neighbors = ts->t8_element_num_face_children (element, iface);
     half_neighbors = T8_ALLOC (t8_element_t *, num_half_neighbors);
     ts->t8_element_new (num_half_neighbors, half_neighbors);
     /* Compute the half face neighbors of element at this face */
-    neighbor_tree = t8_forest_element_half_face_neighbors (forest->set_from,
+    neighbor_tree = t8_forest_element_half_face_neighbors (forest_from,
                                                            ltree_id, element,
                                                            half_neighbors,
                                                            iface,
@@ -74,7 +73,7 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_locidx_t ltree_id,
        * local or ghost leaf descendants in the forest.
        * If so, the element will be refined. */
       for (ineigh = 0; ineigh < num_half_neighbors; ineigh++) {
-        if (t8_forest_element_has_leaf_desc (forest->set_from, neighbor_tree,
+        if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree,
                                              half_neighbors[ineigh],
                                              neigh_scheme)) {
           /* This element should be refined */
@@ -204,7 +203,7 @@ t8_forest_is_balanced (t8_forest_t forest)
       element = t8_forest_get_element_in_tree (forest, itree, ielem);
       /* Test if this element would need to be refined in the balance step.
        * If so, the forest is not balanced locally. */
-      if (t8_forest_balance_adapt (forest, itree, ts, 1, &element)) {
+      if (t8_forest_balance_adapt (forest, forest, itree, ts, 1, &element)) {
         forest->set_from = forest_from;
         return 0;
       }

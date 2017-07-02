@@ -76,8 +76,9 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
       }
     }
     T8_ASSERT (!isfamily || ts->t8_element_is_family (fam));
-    if (isfamily && forest->set_adapt_fn (forest, ltreeid, ts, num_children,
-                                          fam) < 0) {
+    if (isfamily
+        && forest->set_adapt_fn (forest, forest->set_from, ltreeid, ts,
+                                 num_children, fam) < 0) {
       /* Coarsen the element */
       *el_inserted -= num_children - 1;
       /* remove num_children - 1 elements from the array */
@@ -131,7 +132,8 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   while (elem_list->elem_count > 0) {
     el_buffer[0] = (t8_element_t *) sc_list_pop (elem_list);
     num_children = ts->t8_element_num_children (el_buffer[0]);
-    if (forest->set_adapt_fn (forest, ltreeid, ts, 1, el_buffer) > 0) {
+    if (forest->set_adapt_fn (forest, forest->set_from, ltreeid, ts, 1,
+                              el_buffer) > 0) {
       /* The element should be refined */
       if (ts->t8_element_level (el_buffer[0]) < forest->maxlevel) {
         /* only refine, if we do not exceed the maximum allowed level */
@@ -239,8 +241,9 @@ t8_forest_adapt (t8_forest_t forest)
 #endif
       }
       T8_ASSERT (!is_family || tscheme->t8_element_is_family (elements_from));
-      refine = forest->set_adapt_fn (forest, tt, tscheme, num_elements,
-                                     elements_from);
+      refine =
+        forest->set_adapt_fn (forest, forest->set_from, tt, tscheme,
+                              num_elements, elements_from);
       T8_ASSERT (is_family || refine >= 0);
       if (refine > 0 && tscheme->t8_element_level (elements_from[0]) >=
           forest->maxlevel) {

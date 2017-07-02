@@ -90,7 +90,8 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
  * Otherwise \num_elements must equal one and we consider the first entry
  * of the element array for refinement. In this case the other entries of
  * the element array are undefined.
- * \param [in] forest      the forest
+ * \param [in] forest      the forest to which the new elements belong
+ * \param [in] forest_from the forest that is adapted.
  * \param [in] which_tree  the local tree containing \a elements
  * \param [in] ts          the eclass scheme of the tree
  * \param [in] num_elements the number of entries in \a elements
@@ -101,6 +102,7 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
  *         zero else.
  */
 typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
+                                          t8_forest_t forest_from,
                                           t8_locidx_t which_tree,
                                           t8_eclass_scheme_c * ts,
                                           int num_elements,
