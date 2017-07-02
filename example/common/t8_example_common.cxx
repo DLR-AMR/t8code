@@ -62,6 +62,75 @@ t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
   return 0;
 }
 
+/* Get the coordinates of the anchor node of an element */
+static void
+t8_common_anchor_coord (t8_forest_t forest, t8_locidx_t which_tree,
+                        t8_eclass_scheme_c * ts, t8_element_t * element,
+                        double elem_anchor_f[3])
+{
+  double             *tree_vertices;
+
+  tree_vertices = t8_cmesh_get_tree_vertices (t8_forest_get_cmesh (forest),
+                                              t8_forest_ltreeid_to_cmesh_ltreeid
+                                              (forest, which_tree));
+
+  t8_forest_element_coordinate (forest, which_tree, element, tree_vertices,
+                                0, elem_anchor_f);
+}
+
+/** Adapt a forest along a given level-set function.
+ * The user data of forest must be a pointer to a \a t8_example_level_set_struct_t.
+ * An element in the forest is refined, if it is in a band of \a band_with many
+ * \a max_level elements around the zero level-set Gamma = { x | L(x) = 0}
+ */
+/* TODO: Currently the band_width control is not working yet. */
+int
+t8_common_adapt_level_set (t8_forest_t forest,
+                           t8_forest_t forest_from,
+                           t8_locidx_t which_tree,
+                           t8_eclass_scheme_c * ts,
+                           int num_elements, t8_element_t * elements[])
+{
+  t8_example_level_set_struct_t *data;
+
+  data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest);
+  t8_example_level_set_fn L;
+  int                 level, min_level, max_level;
+  double              elem_anchor[3];
+  double              value;
+
+  T8_ASSERT (num_elements == 1 || num_elements ==
+             ts->t8_element_num_children (elements[0]));
+  level = ts->t8_element_level (elements[0]);
+
+  /* Get the minimum and maximum x-coordinate from the user data pointer of forest */
+  data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest);
+  min_level = data->min_level;
+  max_level = data->max_level;
+  L = data->L;
+  /* Compute the coordinates of the anchor node X. */
+  t8_common_anchor_coord (forest_from, which_tree, ts,
+                          elements[0], elem_anchor);
+
+  /* Compute L(X) */
+  value = L (elem_anchor[0], elem_anchor[1], elem_anchor[2], data->udata);
+#if 1
+  if (value >= -data->band_width / (5 * level)
+      && value < data->band_width / (5 * level) && level < max_level) {
+#else
+  if (value >= -0.1 && value < 0.1 && level < max_level) {
+#endif
+    /* The element is in the band that should be refined. */
+    return 1;
+  }
+  else if (num_elements > 1 && level > min_level) {
+    /* If element lies out of the refinement region and a family was given
+     * as argument, we coarsen to level base level */
+    return -1;
+  }
+  return 0;
+}
+
 #if 0
 static int
 t8_basic_adapt (t8_forest_t forest, t8_locidx_t which_tree,
