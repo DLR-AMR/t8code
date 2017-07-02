@@ -30,38 +30,24 @@
 #include <sc_shmem.h>
 #include <example/common/t8_example_common.h>
 
-#if 0
-/* Adapt a forest such that always the second child of the first
- * tree is refined and no other elements. This results in a highly
- * imbalanced forest. */
-static int
-t8_basic_adapt_balance (t8_forest_t forest, t8_locidx_t which_tree,
-                        t8_eclass_scheme_c * ts,
-                        int num_elements, t8_element_t * elements[])
+typedef struct
 {
-  t8_forest_t         forest_from;
-  int                 level;
-  int                 maxlevel, child_id;
-  T8_ASSERT (num_elements == 1 || num_elements ==
-             ts->t8_element_num_children (elements[0]));
-  level = ts->t8_element_level (elements[0]);
+  double              mid_point[3];
+  double              radius;
+} t8_basic_sphere_data_t;
 
-  forest_from = (t8_forest_t) t8_forest_get_user_data (forest);
-  /* we set a maximum refinement level as forest user data */
-  maxlevel = *(int *) t8_forest_get_user_data (forest_from);
-  if (level >= maxlevel) {
-    /* Do not refine after the maxlevel */
-    return 0;
-  }
-  child_id = ts->t8_element_child_id (elements[0]);
-  /* refine the last child of even trees */
-  if ((which_tree + t8_forest_get_first_local_tree_id (forest_from)) % 2 == 0
-      && child_id == ts->t8_element_num_children (elements[0]) - 1) {
-    return 1;
-  }
-  return 0;
+/* Compute the distance to a sphere arount a mid_point with given radius. */
+static double
+t8_basic_level_set_sphere (double x, double y, double z, void *data)
+{
+  t8_basic_sphere_data_t *sdata = (t8_basic_sphere_data_t *) data;
+  double              dist;
+  double             *M = sdata->mid_point;
+
+  dist = sqrt (pow (x - M[0], 2) + pow (y - M[1], 2) + pow (z - M[2], 2));
+
+  return dist - sdata->radius;
 }
-#endif
 
 #if 1
 static int
@@ -99,7 +85,7 @@ t8_basic_refine_test (t8_eclass_t eclass)
   t8_forest_t         forest_adapt;
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
-  int                 maxlevel = 8;
+  int                 maxlevel = 5;
 
   t8_forest_init (&forest);
   t8_forest_init (&forest_adapt);
@@ -112,14 +98,35 @@ t8_basic_refine_test (t8_eclass_t eclass)
 
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
-  t8_forest_set_level (forest, 1);
+  t8_forest_set_level (forest, 3);
   t8_forest_commit (forest);
   /* Output to vtk */
   snprintf (filename, BUFSIZ, "forest_uniform_%s",
             t8_eclass_to_string[eclass]);
   t8_forest_write_vtk (forest, filename);
 
+#if 0
   t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, NULL, 1);
+#else
+  {
+    t8_example_level_set_struct_t ls_data;
+    t8_basic_sphere_data_t sdata;
+
+    sdata.mid_point[0] = 0.5;
+    sdata.mid_point[1] = 0.5;
+    sdata.mid_point[2] = 0.5;
+    sdata.radius = 0.35;
+
+    ls_data.band_width = 2;
+    ls_data.L = t8_basic_level_set_sphere;
+    ls_data.min_level = 3;
+    ls_data.max_level = maxlevel;
+    ls_data.udata = &sdata;
+    t8_forest_set_user_data (forest_adapt, &ls_data);
+    t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set,
+                         NULL, 1);
+  }
+#endif
   t8_forest_commit (forest_adapt);
   /* Output to vtk */
   snprintf (filename, BUFSIZ, "forest_adapt_%s", t8_eclass_to_string[eclass]);
@@ -460,7 +467,8 @@ main (int argc, char **argv)
   t8_basic ();
 #endif
   //t8_basic_hypercube (T8_ECLASS_TET, 1, 1, 0);
-  t8_basic_balance_test (T8_ECLASS_TET);
+  //t8_basic_balance_test (T8_ECLASS_TET);
+  t8_basic_refine_test (T8_ECLASS_TET);
 #if 0
   t8_basic_forest_partition ();
   t8_global_productionf ("Testing hypercube cmesh.\n");
