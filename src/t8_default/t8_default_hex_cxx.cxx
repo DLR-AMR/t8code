@@ -350,7 +350,7 @@ t8_default_scheme_hex_c::t8_element_extrude_face (const t8_element_t * face,
   p8est_quadrant_t   *q = (p8est_quadrant_t *) elem;
 
   T8_ASSERT (T8_COMMON_IS_TYPE
-             (face_scheme, const t8_default_scheme_line_c *));
+             (face_scheme, const t8_default_scheme_quad_c *));
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (face_scheme->eclass == T8_ECLASS_QUAD);
   T8_ASSERT (face_scheme->t8_element_is_valid (face));
