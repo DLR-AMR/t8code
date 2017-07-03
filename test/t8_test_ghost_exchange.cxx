@@ -40,8 +40,8 @@
  */
 
 static int
-t8_test_exchange_adapt (t8_forest_t forest, t8_locidx_t which_tree,
-                        t8_eclass_scheme_c * ts,
+t8_test_exchange_adapt (t8_forest_t forest, t8_forest_t forest_from,
+                        t8_locidx_t which_tree, t8_eclass_scheme_c * ts,
                         int num_elements, t8_element_t * elements[])
 {
   uint64_t            eid;

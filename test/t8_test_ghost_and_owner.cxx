@@ -28,20 +28,15 @@
 #include <t8_forest/t8_forest_private.h>
 #include <t8_cmesh.h>
 
-/* This test program tests the forest ghost exchange routine.
- * Given a forest for which the ghost layer was created and an array
- * storing data for the local elements and the ghost elements, ghost_exchange
- * communicates the data of the local elements to the ghost entries of the
- * processes for which these elements are ghost.
- * We test the ghost exchange routine for several forests on different
- * coarse meshes.
- * One test is an integer entry '42' for each element,
- * in a second test, we store the element's linear id in the data array.
- */
+/* This test program tests the forest ghost layer.
+ * We adapt a forest and create its ghost layer. Afterwards, we
+ * parse through all ghost elements and test whether the owner of an
+ * element is in face the owner that is stored in the ghost layer.
+  */
 
 static int
-t8_test_gao_adapt (t8_forest_t forest, t8_locidx_t which_tree,
-                   t8_eclass_scheme_c * ts,
+t8_test_gao_adapt (t8_forest_t forest, t8_forest_t forest_from,
+                   t8_locidx_t which_tree, t8_eclass_scheme_c * ts,
                    int num_elements, t8_element_t * elements[])
 {
   uint64_t            eid;
