@@ -163,7 +163,7 @@ static void
 t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
                               sc_MPI_Comm comm, int init_level, int max_level,
                               int no_vtk, double x_min_max[2], double T,
-                              double delta_t, int do_ghost)
+                              double delta_t, int do_ghost, int do_balance)
 {
   t8_cmesh_t          cmesh_partition;
   char                forest_vtu[BUFSIZ], cmesh_vtu[BUFSIZ];
@@ -237,6 +237,9 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
     /* If desired, create ghost elements */
     if (do_ghost) {
       t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
+    }
+    if (do_balance) {
+      t8_forest_set_balance (forest_partition, NULL, 0);
     }
     t8_forest_commit (forest_partition);
 #if USE_CMESH_PARTITION
@@ -313,7 +316,7 @@ main (int argc, char *argv[])
   int                 mpiret;
   int                 first_argc;
   int                 level, level_diff;
-  int                 help = 0, no_vtk, do_ghost;
+  int                 help = 0, no_vtk, do_ghost, do_balance;
   int                 dim, num_files;
   sc_options_t       *opt;
   t8_cmesh_t          cmesh;
@@ -363,6 +366,8 @@ main (int argc, char *argv[])
                          "The maximum x coordinate " "in the mesh.");
   sc_options_add_switch (opt, 'g', "ghost", &do_ghost,
                          "Create ghost elements.");
+  sc_options_add_switch (opt, 'b', "balance", &do_balance,
+                         "Establish a 2:1 balance in the forest.");
 
   /* parse command line options */
   first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT,
@@ -394,7 +399,7 @@ main (int argc, char *argv[])
     t8_time_forest_cmesh_mshfile (cmesh, vtu_prefix,
                                   sc_MPI_COMM_WORLD, level,
                                   level + level_diff, no_vtk, x_min_max, 1,
-                                  0.08, do_ghost);
+                                  0.08, do_ghost, do_balance);
   }
   sc_options_destroy (opt);
   sc_finalize ();
