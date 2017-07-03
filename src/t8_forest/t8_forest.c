@@ -548,15 +548,17 @@ t8_forest_commit (t8_forest_t forest)
     t8_forest_partition_create_first_desc (forest);
   }
 
-  /* Construct a ghost layer, if desired */
-  if (forest->do_ghost) {
+  if (forest->mpisize > 1) {
+    /* Construct a ghost layer, if desired */
+    if (forest->do_ghost) {
 #if 0
-    /* TODO: ghost type */
-    t8_forest_ghost_create (forest);
+      /* TODO: ghost type */
+      t8_forest_ghost_create (forest);
 #else
-    /* TODO: experimental */
-    t8_forest_ghost_create_topdown (forest);
+      /* TODO: experimental */
+      t8_forest_ghost_create_topdown (forest);
 #endif
+    }
   }
 
   forest->do_ghost = 0;
