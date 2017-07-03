@@ -79,14 +79,14 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from,
           /* This element should be refined */
           *pdone = 0;
           /* clean-up */
-          ts->t8_element_destroy (1, half_neighbors);
+          ts->t8_element_destroy (num_half_neighbors, half_neighbors);
           T8_FREE (half_neighbors);
           return 1;
         }
       }
     }
     /* clean-up */
-    ts->t8_element_destroy (1, half_neighbors);
+    ts->t8_element_destroy (num_half_neighbors, half_neighbors);
     T8_FREE (half_neighbors);
   }
 
