@@ -908,6 +908,9 @@ t8_dtri_transform_face (const t8_dtri_t * triangle1,
                         int orientation, int is_smaller_face)
 {
   t8_dtri_coord_t     h = T8_DTRI_LEN (triangle1->level);
+  t8_dtri_coord_t     x;
+
+  T8_ASSERT (0 <= orientation && orientation <= 2);
   triangle2->level = triangle1->level;
   triangle2->type = triangle1->type;
   /*
@@ -922,17 +925,34 @@ t8_dtri_transform_face (const t8_dtri_t * triangle1,
    *    v_0  v_1                      v_0
    *
    */
+  if (!is_smaller_face && orientation != 0) {
+    /* Translate orientation if triangle1 is not on the smaller face.
+     *  0 -> 0
+     *  1 -> 2
+     *  2 -> 1
+     */
+    orientation = 3 - orientation;
+  }
+  x = triangle1->x;             /* temporary store x coord in case triangle1 = triangle2 */
   switch (orientation) {
   case 0:
     t8_dtri_copy (triangle1, triangle2);
     break;
   case 1:
     triangle2->y = triangle1->y;
-    triangle2->x = T8_DTRI_ROOT_LEN - triangle1->x - h;
+    if (triangle1->type == 0) {
+      triangle2->x = T8_DTRI_ROOT_LEN + triangle1->y - x - h;
+    }
+    else {
+      triangle2->x = T8_DTRI_ROOT_LEN + triangle1->y - x;
+    }
     break;
   case 2:
     triangle2->x = T8_DTRI_ROOT_LEN - triangle1->y - h;
-    triangle2->y = T8_DTRI_ROOT_LEN - triangle1->x - h;
+    triangle2->y = T8_DTRI_ROOT_LEN - x - h;
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
   }
 }
 #endif
