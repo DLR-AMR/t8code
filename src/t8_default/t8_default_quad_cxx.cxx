@@ -436,6 +436,7 @@ t8_default_scheme_quad_c::t8_element_transform_face (const t8_element_t *
   const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem1;
   p4est_quadrant_t   *p = (p4est_quadrant_t *) elem2;
   p4est_qcoord_t      h = P4EST_QUADRANT_LEN (q->level);
+  p4est_qcoord_t      x;
 
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
@@ -456,20 +457,34 @@ t8_default_scheme_quad_c::t8_element_transform_face (const t8_element_t *
    * Orientation is the corner number of the bigger face that coincides
    * with the corner v_0 of the smaller face.
    */
+  /* If this face is not smaller, switch the orientation:
+   *  0 -> 0
+   *  1 -> 2
+   *  2 -> 1
+   *  3 -> 3
+   */
+  if (!is_smaller_face && (orientation == 1 || orientation == 2)) {
+    orientation = 3 - orientation;
+  }
+  /* temporarily store x coordinate, in case elem2 = elem 1 */
+  x = q->x;
   switch (orientation) {
   case 0:                      /* Nothing to do */
+    p->x = q->x;
+    p->y = q->y;
     break;
   case 1:
-    p->x = P4EST_ROOT_LEN - q->x - h;
-    /* p->y remains q->y */
+    p->x = P4EST_ROOT_LEN - q->y - h;
+    p->y = x;
     break;
   case 2:
     /* p->x remains q->x */
+    p->x = q->x;
     p->y = P4EST_ROOT_LEN - q->y - h;
     break;
   case 3:
-    p->x = P4EST_ROOT_LEN - q->y - h;
-    p->y = P4EST_ROOT_LEN - q->x - h;
+    p->x = P4EST_ROOT_LEN - q->x - h;
+    p->y = P4EST_ROOT_LEN - q->y - h;
     break;
   default:
     SC_ABORT_NOT_REACHED ();
