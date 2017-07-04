@@ -31,6 +31,7 @@
 #include <t8_cmesh_readmshfile.h>
 #include <t8_forest.h>
 #include <t8_default_cxx.hxx>
+#include <example/common/t8_example_common.h>
 
 /* This is the user defined data used to define the
  * region in which we partition.
@@ -63,6 +64,8 @@ t8_vec3_xmay (double *x, double alpha, double *y)
   }
 }
 
+#if 0
+/* TODO: deprecated. was replaced by t8_common_midpoint. */
 static void
 t8_anchor_element (t8_forest_t forest, t8_locidx_t which_tree,
                    t8_eclass_scheme_c * ts, t8_element_t * element,
@@ -86,6 +89,7 @@ t8_anchor_element (t8_forest_t forest, t8_locidx_t which_tree,
   }
 #endif
 }
+#endif
 
 /* refine the forest in a band, given by a plane E and two constants
  * c_min, c_max. We refine the cells in the band c_min*E, c_max*E */
@@ -95,7 +99,7 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from,
                int num_elements, t8_element_t * elements[])
 {
   int                 level, base_level, max_level;
-  double              elem_anchor[3];
+  double              elem_midpoint[3];
   double             *normal;
   adapt_data_t       *adapt_data;
 
@@ -109,21 +113,23 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from,
   base_level = adapt_data->base_level;
   max_level = adapt_data->max_level;
   /* Compute the coordinates of the anchor node. */
-  t8_anchor_element (forest_from, which_tree, ts, elements[0], elem_anchor);
+  t8_common_midpoint (forest_from, which_tree, ts, elements[0],
+                      elem_midpoint);
 
-  /* Calculate elem_anchor - c_min n */
-  t8_vec3_xmay (elem_anchor, adapt_data->c_min, normal);
+  /* Calculate elem_midpoint - c_min n */
+  t8_vec3_xmay (elem_midpoint, adapt_data->c_min, normal);
 
   /* The purpose of the factor C*h is that the levels get smaller, the
    * closer we get to the interface. We refine a cell if it is at most
    * C times its own height away from the interface */
-  if (t8_vec3_dot (elem_anchor, normal) >= 0) {
+  if (t8_vec3_dot (elem_midpoint, normal) >= 0) {
     /* if the anchor node is to the right of c_min*E,
      * check if it is to the left of c_max*E */
 
-    /* set elem_anchor to the original anchor - c_max*normal */
-    t8_vec3_xmay (elem_anchor, adapt_data->c_max - adapt_data->c_min, normal);
-    if (t8_vec3_dot (elem_anchor, normal) <= 0) {
+    /* set elem_midpoint to the original anchor - c_max*normal */
+    t8_vec3_xmay (elem_midpoint, adapt_data->c_max - adapt_data->c_min,
+                  normal);
+    if (t8_vec3_dot (elem_midpoint, normal) <= 0) {
       if (level < max_level) {
         /* We do refine if level smaller 1+base level and the anchor is
          * to the left of c_max*E */

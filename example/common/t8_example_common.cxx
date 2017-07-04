@@ -63,7 +63,7 @@ t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
 }
 
 /* Get the coordinates of the anchor node of an element */
-static void
+void
 t8_common_midpoint (t8_forest_t forest, t8_locidx_t which_tree,
                     t8_eclass_scheme_c * ts, t8_element_t * element,
                     double elem_midpoint_f[3])
