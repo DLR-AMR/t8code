@@ -64,9 +64,9 @@ t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
 
 /* Get the coordinates of the anchor node of an element */
 static void
-t8_common_anchor_coord (t8_forest_t forest, t8_locidx_t which_tree,
-                        t8_eclass_scheme_c * ts, t8_element_t * element,
-                        double elem_anchor_f[3])
+t8_common_midpoint (t8_forest_t forest, t8_locidx_t which_tree,
+                    t8_eclass_scheme_c * ts, t8_element_t * element,
+                    double elem_midpoint_f[3])
 {
   double             *tree_vertices;
 
@@ -74,8 +74,8 @@ t8_common_anchor_coord (t8_forest_t forest, t8_locidx_t which_tree,
                                               t8_forest_ltreeid_to_cmesh_ltreeid
                                               (forest, which_tree));
 
-  t8_forest_element_coordinate (forest, which_tree, element, tree_vertices,
-                                0, elem_anchor_f);
+  t8_forest_element_centroid (forest, which_tree, element, tree_vertices,
+                              elem_midpoint_f);
 }
 
 /** Adapt a forest along a given level-set function.
@@ -96,7 +96,7 @@ t8_common_adapt_level_set (t8_forest_t forest,
   data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest);
   t8_example_level_set_fn L;
   int                 level, min_level, max_level;
-  double              elem_anchor[3];
+  double              elem_midpoint[3];
   double              value;
 
   T8_ASSERT (num_elements == 1 || num_elements ==
@@ -109,11 +109,12 @@ t8_common_adapt_level_set (t8_forest_t forest,
   max_level = data->max_level;
   L = data->L;
   /* Compute the coordinates of the anchor node X. */
-  t8_common_anchor_coord (forest_from, which_tree, ts,
-                          elements[0], elem_anchor);
+  t8_common_midpoint (forest_from, which_tree, ts,
+                      elements[0], elem_midpoint);
 
   /* Compute L(X) */
-  value = L (elem_anchor[0], elem_anchor[1], elem_anchor[2], data->udata);
+  value =
+    L (elem_midpoint[0], elem_midpoint[1], elem_midpoint[2], data->udata);
 #if 1
   if (value >= -data->band_width / (5 * level)
       && value < data->band_width / (5 * level) && level < max_level) {
