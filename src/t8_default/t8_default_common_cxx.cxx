@@ -54,6 +54,15 @@ t8_default_scheme_common_c::~t8_default_scheme_common_c ()
   sc_mempool_destroy ((sc_mempool_t *) ts_context);
 }
 
+/** Compute the number of corners of a given element. */
+int
+t8_default_scheme_common_c::t8_element_num_corners (const t8_element_t * elem)
+{
+  /* use the lookup table of the eclasses.
+   * Pyramids should implement their own version of this function. */
+  return t8_eclass_num_vertices[eclass];
+}
+
 void
 t8_default_scheme_common_c::t8_element_new (int length, t8_element_t ** elem)
 {

@@ -218,6 +218,7 @@ t8_forest_bilinear_interpolation (const double *vertex,
  * and a corner number of the element compute the coordinates of that corner
  * within the coarse tree.
  */
+/* TODO: replace ltree_id argument with ts argument. */
 void
 t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
                               const t8_element_t * element,
@@ -280,6 +281,43 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
               "triangles/tets/quads/hexes.");
   }
   return;
+}
+
+/* Compute the center of mass of an element.
+ * The center of mass of a polygon with vertices x_1, ... , x_n
+ * is given by   1/n * (x_1 + ... + x_n)
+ */
+void
+t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
+                            const t8_element_t * element,
+                            const double *vertices, double *coordinates)
+{
+  double              corner_coords[3];
+  int                 num_corners, icorner, i;
+  t8_eclass_scheme_c *ts;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+  ts =
+    t8_forest_get_eclass_scheme (forest,
+                                 t8_forest_get_tree_class (forest, ltreeid));
+  T8_ASSERT (ts->t8_element_is_valid (element));
+
+  /* initialize the centroid with 0 */
+  memset (coordinates, 0, 3 * sizeof (double));
+  /* get the number of corners of element */
+  num_corners = ts->t8_element_num_corners (element);
+  for (icorner = 0; icorner < num_corners; icorner++) {
+    /* For each corner, add its coordinates to the centroids coordinates. */
+    t8_forest_element_coordinate (forest, ltreeid, element, vertices, icorner,
+                                  corner_coords);
+    for (i = 0; i < 3; i++) {
+      coordinates[i] += corner_coords[i];
+    }
+  }
+  /* Divide each coordinate by num_corners */
+  for (i = 0; i < 3; i++) {
+    coordinates[i] *= 1. / num_corners;
+  }
 }
 
 /* For each tree in a forest compute its first and last descendant */

@@ -141,6 +141,12 @@ public:
                                           int sibid,
                                           t8_element_t * sibling) = 0;
 
+  /** Compute the number of corners of a given element.
+   * \param [in] elem The element.
+   * \return          The number of corners of \a elem.
+   */
+  virtual int         t8_element_num_corners (const t8_element_t * elem) = 0;
+
   /** Compute the number of faces of a given element.
    * \param [in] elem The element.
    * \return          The number of faces of \a elem.

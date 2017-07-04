@@ -663,6 +663,25 @@ void                t8_forest_element_coordinate (t8_forest_t forest,
                                                   int corner_number,
                                                   double *coordinates);
 
+/** Compute the coordinates of the centroid of an element if the
+ * vertex coordinates of the surrounding tree are known.
+ * The centroid is the sum of all corner vertices divided by the number of corners.
+ * The centroid can be seen as the midpoint of an element and thus can for example be used
+ * to compute level-set values or the distance between two elements.
+ * \param [in]      forest     The forest.
+ * \param [in]      ltree_id   The forest local id of the tree in which the element is.
+ * \param [in]      element    The element.
+ * \param [in]      vertices   An array storing the vertex coordinates of the tree.
+ *                             It has 3*n entries, with n being the number of vertices of the tree.
+ * \param [out]     coordinates On input an allocated array to store 3 doubles, on output
+ *                             the x, y and z coordinates of the centroid.
+ */
+void                t8_forest_element_centroid (t8_forest_t forest,
+                                                t8_locidx_t ltreeid,
+                                                const t8_element_t * element,
+                                                const double *vertices,
+                                                double *coordinates);
+
 /* TODO: if set level and partition/adapt/balance all give NULL, then
  * refine uniformly and partition/adapt/balance the unfiform forest. */
 /** Build a uniformly refined forest on a coarse mesh.
