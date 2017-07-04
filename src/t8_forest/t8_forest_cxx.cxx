@@ -316,7 +316,7 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
   }
   /* Divide each coordinate by num_corners */
   for (i = 0; i < 3; i++) {
-    coordinates[i] *= 1. / num_corners;
+    coordinates[i] /= num_corners;
   }
 }
 
