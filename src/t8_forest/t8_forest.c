@@ -435,12 +435,19 @@ t8_forest_commit (t8_forest_t forest)
         t8_forest_set_adapt (forest_adapt, forest->set_from,
                              forest->set_adapt_fn, forest->set_replace_fn,
                              forest->set_adapt_recursive);
+        /* Set profiling if enabled */
+        t8_forest_set_profiling (forest_adapt, forest->profile != NULL);
         t8_forest_commit (forest_adapt);
         /* The new forest will be partitioned/balanced from forest_adapt */
         forest->set_from = forest_adapt;
         /* Set the user data of forest_from to forest_adapt */
         t8_forest_set_user_data (forest_adapt,
                                  t8_forest_get_user_data (forest_from));
+        /* If profiling is enabled copy the runtime of adapt. */
+        if (forest->profile != NULL) {
+          forest->profile->adapt_runtime =
+            forest_adapt->profile->adapt_runtime;
+        }
       }
       else {
         /* This forest should only be adapted */
@@ -463,8 +470,15 @@ t8_forest_commit (t8_forest_t forest)
         t8_forest_set_balance (forest_balance, forest->set_from,
                                forest->set_balance !=
                                T8_FOREST_BALANCE_NO_REPART);
+        /* activate profiling, if this forest has profiling */
+        t8_forest_set_profiling (forest_balance, forest->profile != NULL);
         t8_forest_commit (forest_balance);
         forest->set_from = forest_balance;
+        if (forest->profile != NULL) {
+          /* If profiling is enable, take the runtime of balance from forest_balance. */
+          forest->profile->balance_runtime =
+            forest_balance->profile->balance_runtime;
+        }
       }
       else {
         /* This forest should only be balanced */
@@ -1098,13 +1112,15 @@ t8_forest_print_profile (t8_forest_t forest)
                    "forest: Number of ghost elements received.");
     sc_stats_set1 (&stats[6], profile->ghosts_remotes,
                    "forest: Number of processes we sent ghosts to/received from.");
-    sc_stats_set1 (&stats[7], profile->partition_runtime,
+    sc_stats_set1 (&stats[7], profile->adapt_runtime,
+                   "forest: Adapt runtime.");
+    sc_stats_set1 (&stats[8], profile->partition_runtime,
                    "forest: Partition runtime.");
-    sc_stats_set1 (&stats[8], profile->commit_runtime,
+    sc_stats_set1 (&stats[9], profile->commit_runtime,
                    "forest: Commit runtime.");
-    sc_stats_set1 (&stats[9], profile->ghost_runtime,
+    sc_stats_set1 (&stats[10], profile->ghost_runtime,
                    "forest: Ghost runtime.");
-    sc_stats_set1 (&stats[10], profile->balance_runtime,
+    sc_stats_set1 (&stats[11], profile->balance_runtime,
                    "forest: Balance runtime.");
     /* compute stats */
     sc_stats_compute (sc_MPI_COMM_WORLD, T8_PROFILE_NUM_STATS, stats);

@@ -191,6 +191,11 @@ t8_forest_adapt (t8_forest_t forest)
   T8_ASSERT (forest->set_from != NULL);
   T8_ASSERT (forest->set_adapt_recursive != -1);
 
+  /* if profiling is enabled, measure runtime */
+  if (forest->profile != NULL) {
+    forest->profile->adapt_runtime = -sc_MPI_Wtime ();
+  }
+
   forest_from = forest->set_from;
   t8_global_productionf ("Into t8_forest_adapt from %lld total elements\n",
                          (long long) forest_from->global_num_elements);
@@ -350,6 +355,11 @@ t8_forest_adapt (t8_forest_t forest)
   t8_forest_comm_global_num_elements (forest);
   t8_global_productionf ("Done t8_forest_adapt with %lld total elements\n",
                          (long long) forest->global_num_elements);
+
+  /* if profiling is enabled, measure runtime */
+  if (forest->profile != NULL) {
+    forest->profile->adapt_runtime += sc_MPI_Wtime ();
+  }
 }
 
 T8_EXTERN_C_END ();
