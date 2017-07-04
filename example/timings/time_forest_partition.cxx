@@ -318,6 +318,7 @@ main (int argc, char *argv[])
   int                 level, level_diff;
   int                 help = 0, no_vtk, do_ghost, do_balance;
   int                 dim, num_files;
+  double              T, delta_t;
   sc_options_t       *opt;
   t8_cmesh_t          cmesh;
   const char         *mshfileprefix, *cmeshfileprefix;
@@ -364,6 +365,11 @@ main (int argc, char *argv[])
                          "The minimum x coordinate " "in the mesh.");
   sc_options_add_double (opt, 'X', "xmax", x_min_max + 1, 1,
                          "The maximum x coordinate " "in the mesh.");
+  sc_options_add_double (opt, 'T', "time", &T, 1,
+                         "The simulated time span."
+                         "We simulate the time from 0 to T");
+  sc_options_add_double (opt, 'D', "delta_t", &delta_t, 0.08,
+                         "The time step in each simulation step.");
   sc_options_add_switch (opt, 'g', "ghost", &do_ghost,
                          "Create ghost elements.");
   sc_options_add_switch (opt, 'b', "balance", &do_balance,
@@ -398,8 +404,8 @@ main (int argc, char *argv[])
     }
     t8_time_forest_cmesh_mshfile (cmesh, vtu_prefix,
                                   sc_MPI_COMM_WORLD, level,
-                                  level + level_diff, no_vtk, x_min_max, 1,
-                                  0.08, do_ghost, do_balance);
+                                  level + level_diff, no_vtk, x_min_max, T,
+                                  delta_t, do_ghost, do_balance);
   }
   sc_options_destroy (opt);
   sc_finalize ();
