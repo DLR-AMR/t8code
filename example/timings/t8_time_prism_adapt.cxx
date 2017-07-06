@@ -116,9 +116,9 @@ main (int argc, char **argv)
 
   /* long help message */
   snprintf (help, BUFSIZ, "This program constructs a prism mesh of 512 prisms. "
-            "\nThe user can choose the initial refinement level and the final  "
+            "\nThe user can choose the initial refinement level and the final\n"
             "refinement level of the mesh. If not set, the initial level is 0,\n"
-            " the final level is 1.\n\n%s\n", usage);
+            "the final level is 1.\n\n%s\n", usage);
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
