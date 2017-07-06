@@ -32,7 +32,6 @@
 #include <sc_options.h>
 
 
-int                 max_ref_level = 0;
 
 static int
 t8_basic_adapt_refine_type (t8_forest_t forest, t8_locidx_t which_tree,
@@ -41,12 +40,12 @@ t8_basic_adapt_refine_type (t8_forest_t forest, t8_locidx_t which_tree,
 {
   int                 level;
   int                 type;
-/*
+
   T8_ASSERT (num_elements == 1 || num_elements ==
-             ts->t8_element_num_children (elements[0]));*/
+             ts->t8_element_num_children (elements[0]));
 
   level = ts->t8_element_level(elements[0]);
-  if (level >= max_ref_level) {
+  if (level >= *(int*)t8_forest_get_user_data(forest)) {
     return 0;
   }
   /* get the type of the current element */
@@ -59,23 +58,39 @@ t8_basic_adapt_refine_type (t8_forest_t forest, t8_locidx_t which_tree,
 }
 
 static void
-t8_time_refine(int start_level, int end_level, int create_forest){
+t8_time_refine(int start_level, int end_level, int create_forest, int cube){
   t8_forest_t         forest, forest_adapt;
   sc_flopinfo_t       fi, snapshot;
   sc_statinfo_t       stats[1];
+  char                vtuname[BUFSIZ];
 
   t8_forest_init (&forest);
 
-
+  if(cube == 0){
   t8_forest_set_cmesh (forest,
                        t8_cmesh_new_bigmesh (T8_ECLASS_PRISM, 512, sc_MPI_COMM_WORLD),
                        sc_MPI_COMM_WORLD);
+  }
+  else{
+      t8_forest_set_cmesh (forest,
+                           t8_cmesh_new_hypercube (T8_ECLASS_PRISM, sc_MPI_COMM_WORLD,0,0),
+                           sc_MPI_COMM_WORLD);
+  }
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
   t8_forest_set_level (forest, start_level);
+  t8_forest_set_profiling (forest, 1);
   t8_forest_commit (forest);
 
+  t8_forest_print_profile (forest);
+  t8_cmesh_print_profile (t8_forest_get_cmesh (forest));
+  snprintf (vtuname, BUFSIZ, "forest_hypercube_%s",
+            t8_eclass_to_string[T8_ECLASS_PRISM]);
+  t8_forest_write_vtk (forest, vtuname);
+  t8_debugf ("Output to %s\n", vtuname);
+
   t8_forest_init (&forest_adapt);
-  t8_forest_set_profiling (forest_adapt, 1);
+  t8_forest_set_user_data(forest_adapt, &end_level);
+
   t8_forest_set_adapt (forest_adapt, forest,
                        t8_basic_adapt_refine_type, NULL, 1);
 
@@ -84,8 +99,10 @@ t8_time_refine(int start_level, int end_level, int create_forest){
 
   t8_forest_commit (forest_adapt);
 
-  t8_forest_print_profile (forest_adapt);
-  t8_cmesh_print_profile (t8_forest_get_cmesh (forest_adapt));
+  snprintf (vtuname, BUFSIZ, "forest_hypercube_adapt_%s",
+            t8_eclass_to_string[T8_ECLASS_PRISM]);
+  t8_forest_write_vtk (forest_adapt, vtuname);
+  t8_debugf ("Output to %s\n", vtuname);
 
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[0], snapshot.iwtime, "New");
@@ -106,7 +123,7 @@ main (int argc, char **argv)
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
   int                 create_forest;
-  int                 start_level = 0,end_level = 1;
+  int                 start_level = 0,end_level = 1, cube = 0;
   int                 parsed, helpme;
 
   /* brief help message */
@@ -118,7 +135,8 @@ main (int argc, char **argv)
   snprintf (help, BUFSIZ, "This program constructs a prism mesh of 512 prisms. "
             "\nThe user can choose the initial refinement level and the final\n"
             "refinement level of the mesh. If not set, the initial level is 0,\n"
-            "the final level is 1.\n\n%s\n", usage);
+            "the final level is 1. The program has no visual output, if desired,\n"
+            "the user can switch to a hpyercube mesh.\n\n%s\n", usage);
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -134,6 +152,8 @@ main (int argc, char **argv)
                       "initial refine level");
   sc_options_add_int (opt, 'e', "elevel", &end_level, 0,
                       "Final refine level: greater or equal to initial refine level");
+  sc_options_add_int (opt, 'c', "cube", &cube, 0,
+                      "cube = 1 -> use the hypercube mesh and visual output.");
 
 
   parsed =
@@ -142,7 +162,6 @@ main (int argc, char **argv)
       t8_debugf("Wrong usage of end and start level, end level set to start level\n");
       end_level = start_level;
   }
-  max_ref_level = end_level;
   if (helpme) {
     /* display help message and usage */
     t8_global_productionf ("%s\n", help);
@@ -150,7 +169,7 @@ main (int argc, char **argv)
   }
   else if (parsed >= 0 && 0 <= start_level && start_level <= end_level) {
     create_forest = 1;
-    t8_time_refine(start_level, end_level, create_forest);
+    t8_time_refine(start_level, end_level, create_forest, cube);
   }
   else {
     /* wrong usage */
