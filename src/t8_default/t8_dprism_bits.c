@@ -163,11 +163,6 @@ t8_dprism_boundary_face (const t8_dprism_t * p, int face,
   p4est_quadrant_t   *q = (p4est_quadrant_t *) boundary;
   if (face >= 3) {
     t8_dtri_t          *t = (t8_dtri_t *) boundary;
-    /*
-    t->level = p->tri.level;
-    t->type = p->tri.type;
-    t->x = p->tri.x;
-    t->y = p->tri.y;*/
     t8_dtri_copy(&p->tri, t);
     return;
   }
