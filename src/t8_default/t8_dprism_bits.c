@@ -478,7 +478,7 @@ t8_dprism_linear_id (const t8_dprism_t * p, int level)
   }
   line_level = sc_intpow64u (T8_DLINE_CHILDREN, level - 1);
   prism_shift =
-    (T8_DPRISM_CHILDREN >> 1) * sc_intpow64u (T8_DPRISM_CHILDREN, level - 1);
+    (T8_DPRISM_CHILDREN / T8_DLINE_CHILDREN) * sc_intpow64u (T8_DPRISM_CHILDREN, level - 1);
 
   tri_id = t8_dtri_linear_id (&p->tri, level);
   line_id = t8_dline_linear_id (&p->line, level);
