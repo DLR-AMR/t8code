@@ -518,6 +518,84 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
 #endif
 }
 
+/* Compute erg = v_1 . v_2
+ * the 3D scalar product.
+ */
+static double
+t8_cmesh_tree_vertices_dot (double *v_1, double *v2)
+{
+  double              erg = 0;
+  int                 i;
+
+  for (i = 0; i < 3; i++) {
+    erg += v_1[i] * v_2[i];
+  }
+  return erg;
+}
+
+/* Compute erg = v_1 x v_2
+ * the 3D cross product.
+ */
+static void
+t8_cmesh_tree_vertices_cross (double *v_1, double *v2, double *erg)
+{
+  int                 i;
+
+  for (i = 0; i < 3; i++) {
+    erg[i] = v_1[(i + 1) % 3] * v_2[(i + 2) % 3]
+      - v_1[(i + 2) % 3] * v_2[(i + 1) % 3];
+  }
+}
+
+/* Given a set of vertex coordinates for a tree of a given eclass.
+ * Query whether the geometric volume of the tree with this coordinates
+ * would be negative.
+ */
+static int
+t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass,
+                                        double *vertices, int num_vertices)
+{
+  double              v_1[3], v_2[3], v_3[3], cross[3], sc_prod;
+  int                 i;
+
+  T8_ASSERT (num_vertices == t8_eclass_num_vertices[eclass]);
+
+  if (t8_eclass_to_dimension[eclass] <= 2) {
+    /* Only three dimensional eclass do have a volume */
+    return 0;
+  }
+
+  T8_ASSERT (num_vertices >= 4);
+  /* build the vectors v_i as vertices_i - vertices_0 */
+  for (i = 0; i < 3; i++) {
+    vertices[3 + i] - vertices[i];
+    vertices[6 + i] - vertices[i];
+    vertices[9 + i] - vertices[i];
+  }
+  /*
+   *      6 ______  7
+   *       /|     /
+   *    4 /_____5/|
+   *      | | _ |_|
+   *      | 2   | / 3
+   *      |/____|/
+   *     0      1
+   *
+   *
+   *    For tets, if the vertex 3 is below the 0-1-2 plane, the volume
+   *    is negative. This is the case if and only if
+   *    the scalar product of v_3 with the cross product of v_1 and v_2 is
+   *    greater 0:
+   *
+   *    < v_3, v_1 x v_2 > > 0
+   *
+   */
+  /* compute cross = v_1 x v_2 */
+  t8_cmesh_tree_vertices_cross (v_1, v_2, cross);
+  /* Compute sc_prod = <v_3, cross> */
+  sc_prod = t8_cmesh_tree_vertices_dot (v_3, cross);
+}
+
 void
 t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltree_id,
                             int package_id, int key,
