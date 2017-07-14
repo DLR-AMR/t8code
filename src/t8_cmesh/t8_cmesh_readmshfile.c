@@ -396,6 +396,22 @@ t8_cmesh_msh_file_read_eles (t8_cmesh_t cmesh, FILE * fp,
         tree_vertices[3 * t8_vertex_num + 1] = (*found_node)->coordinates[1];
         tree_vertices[3 * t8_vertex_num + 2] = (*found_node)->coordinates[2];
       }
+      if (t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices,
+                                                  num_nodes)) {
+        /* The volume described is negative. We need to switch two
+         * vertices. */
+        double              temp;
+        T8_ASSERT (t8_eclass_to_dimension[eclass] == 3);
+        t8_debugf ("Correcting negative volume of tree %li\n", tree_count);
+        /* We switch vertex 0 and vertex 1 */
+        for (i = 0; i < 3; i++) {
+          temp = tree_vertices[i];
+          tree_vertices[i] = tree_vertices[3 + i];
+          tree_vertices[3 + i] = temp;
+        }
+        T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume
+                   (eclass, tree_vertices, num_nodes));
+      }
       /* Set the vertices of this tree */
       t8_cmesh_set_tree_vertices (cmesh, tree_count, t8_get_package_id (),
                                   0, tree_vertices, num_nodes);

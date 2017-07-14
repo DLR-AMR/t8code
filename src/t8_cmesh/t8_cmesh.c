@@ -66,6 +66,7 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
    */
   if (!is_checking) {
     is_checking = 1;
+
     if (!(cmesh != NULL && t8_refcount_is_active (&cmesh->rc) &&
           cmesh->committed)) {
       return 0;
@@ -565,7 +566,7 @@ t8_cmesh_tree_vertices_cross (double *v_1, double *v_2, double *erg)
  * Returns true if a tree of the given eclass with the given vertex
  * coordinates does have negative volume.
  */
-static int
+int
 t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass,
                                         double *vertices, int num_vertices)
 {

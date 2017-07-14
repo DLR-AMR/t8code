@@ -96,6 +96,24 @@ int                 t8_cmesh_is_committed (t8_cmesh_t cmesh);
 int                 t8_cmesh_no_negative_volume (t8_cmesh_t cmesh);
 #endif
 
+/** Given a set of vertex coordinates for a tree of a given eclass.
+ * Query whether the geometric volume of the tree with this coordinates
+ * would be negative.
+ * \param [in]  eclass          The eclass of a tree.
+ * \param [in]  vertices        The coordinates of the tree's vertices.
+ * \param [in]  num_vertices    The number of vertices. \a vertices must hold
+ *                              3 * \a num_vertices many doubles.
+ *                              \a num_vertices must match \ref t8_eclass_num_vertices[\a eclass]
+ * \return                      True if the geometric volume describe by \a vertices is negative.
+ *                              Fals otherwise.
+ * Returns true if a tree of the given eclass with the given vertex
+ * coordinates does have negative volume.
+ */
+int                 t8_cmesh_tree_vertices_negative_volume (t8_eclass_t
+                                                            eclass,
+                                                            double *vertices,
+                                                            int num_vertices);
+
 /* TODO: Currently it is not possible to destroy set_from before
  *       cmesh is destroyed. */
 /** This function sets a cmesh to be derived from.

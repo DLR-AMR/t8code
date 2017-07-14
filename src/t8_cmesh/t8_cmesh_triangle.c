@@ -273,6 +273,22 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
       tree_vertices[3 * i + 2] =
         dim == 2 ? 0 : vertices[dim * tcorners[i] + 2];
     }
+    if (t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices,
+                                                dim + 1)) {
+      /* The volume described is negative. We need to switch two
+       * vertices. */
+      double              temp;
+      T8_ASSERT (t8_eclass_to_dimension[eclass] == 3);
+      t8_debugf ("Correcting negative volume of tree %li\n", tree_count);
+      /* We switch vertex 0 and vertex 1 */
+      for (i = 0; i < 3; i++) {
+        temp = tree_vertices[i];
+        tree_vertices[i] = tree_vertices[3 + i];
+        tree_vertices[3 + i] = temp;
+      }
+      T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume
+                 (eclass, tree_vertices, dim + 1));
+    }
     t8_cmesh_set_tree_vertices (cmesh, triangle - triangle_offset,
                                 t8_get_package_id (), 0,
                                 tree_vertices, dim + 1);
