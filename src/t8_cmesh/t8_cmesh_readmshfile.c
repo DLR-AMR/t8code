@@ -618,7 +618,7 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh,
   /* TODO: Does currently not work with partitioned cmesh */
   T8_ASSERT (!cmesh->set_partition);
   /* The cmesh is not allowed to be committed yet */
-  T8_ASSERT (!t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   t8_debugf ("Starting to find tree neighbors\n");
   /* Iterate over all local trees */
   for (gtree_it = 0;

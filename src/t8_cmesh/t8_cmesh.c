@@ -497,7 +497,7 @@ t8_cmesh_tree_index (t8_cmesh_t cmesh, t8_locidx_t tree_id)
 void
 t8_cmesh_set_dimension (t8_cmesh_t cmesh, int dim)
 {
-  T8_ASSERT (!t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (0 <= dim && dim <= T8_ECLASS_MAX_DIM);
 
   cmesh->dimension = dim;
