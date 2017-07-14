@@ -41,9 +41,11 @@ T8_EXTERN_C_BEGIN ();
 void                t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
 /** Create the offset array for a partitioned cmesh.
+ * Also writes the num_trees_per_eclass field from the num_local_trees_per_eclass field.
  * \param [in,out]    cmesh  The cmesh whose array should be created.
  *                           Must be partitioned and committed.
  * \param [in]        comm   Mpi communicator used to create the offset array.
+ * \note if the offset array (cmesh->tree_offsets) already exists, it is not changed.
  */
 void                t8_cmesh_gather_treecount (t8_cmesh_t cmesh,
                                                sc_MPI_Comm comm);

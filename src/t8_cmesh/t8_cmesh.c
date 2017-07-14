@@ -53,6 +53,33 @@ t8_cmesh_is_initialized (t8_cmesh_t cmesh)
   return 1;
 }
 
+/* For a committed cmesh check whether the entries of num_trees_per_eclass
+ * and num_local_trees_per_eclass are valid.
+ * Thus, num_local_trees_per_eclass[i] <= num_trees_per_eclass[i]
+ * and the sum of the local trees must match cmesh->num_local_trees
+ * and the sum of the global trees must match cmesh->num_trees.
+ *
+ * Returns true, if everything is fine.
+ */
+static int
+t8_cmesh_check_trees_per_eclass (t8_cmesh_t cmesh)
+{
+  int                 ieclass;
+  t8_gloidx_t         glo_trees;
+  t8_locidx_t         lo_trees;
+  int                 ret = 0;
+
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  for (ieclass = 0; ieclass < T8_ECLASS_COUNT; ieclass++) {
+    ret = ret && cmesh->num_local_trees_per_eclass[ieclass] <=
+      cmesh->num_trees_per_eclass[ieclass];
+    lo_trees += cmesh->num_local_trees_per_eclass[ieclass];
+    glo_trees += cmesh->num_trees_per_eclass[ieclass];
+  }
+  return !ret && lo_trees == cmesh->num_local_trees
+    && glo_trees == cmesh->num_trees;
+}
+
 int
 t8_cmesh_is_committed (t8_cmesh_t cmesh)
 {
@@ -75,7 +102,8 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
 #ifdef T8_ENABLE_DEBUG
     /* TODO: check more conditions that must always hold after commit */
     if ((!t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) ||
-        (!t8_cmesh_no_negative_volume (cmesh))) {
+        (!t8_cmesh_no_negative_volume (cmesh))
+        || t8_cmesh_check_trees_per_eclass (cmesh)) {
       return 0;
     }
 #endif
@@ -149,6 +177,8 @@ t8_cmesh_init (t8_cmesh_t * pcmesh)
   cmesh->dimension = -1;        /*< ok; force user to select dimension */
   cmesh->mpirank = -1;
   cmesh->mpisize = -1;
+  cmesh->first_tree = -1;
+  cmesh->first_tree_shared = -1;
   cmesh->face_knowledge = 3;    /*< sensible default TODO document */
   t8_stash_init (&cmesh->stash);
 
@@ -282,11 +312,22 @@ t8_cmesh_set_partition_range (t8_cmesh_t cmesh, int set_face_knowledge,
   SC_CHECK_ABORT (set_face_knowledge == -1 || set_face_knowledge == 3,
                   "Face knowledge other than three is not implemented yet.");
   cmesh->face_knowledge = set_face_knowledge;
-  cmesh->first_tree = first_local_tree;
+  if (first_local_tree < 0) {
+    /* the first tree is shared */
+    cmesh->first_tree = -first_local_tree - 1;
+    cmesh->first_tree_shared = 1;
+  }
+  else {
+    /* The first tree is not shared */
+    cmesh->first_tree = first_local_tree;
+    cmesh->first_tree_shared = 0;
+  }
   cmesh->num_local_trees = last_local_tree - first_local_tree + 1;
   cmesh->set_partition = 1;
   /* Overwrite previous partition settings */
   if (cmesh->tree_offsets != NULL) {
+    cmesh->first_tree = -1;
+    cmesh->first_tree_shared = -1;
     t8_shmem_array_destroy (&cmesh->tree_offsets);
     cmesh->tree_offsets = NULL;
   }
@@ -309,6 +350,7 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh,
   if (tree_offsets != NULL) {
     /* We overwrite any previously partition settings */
     cmesh->first_tree = -1;
+    cmesh->first_tree_shared = -1;
     cmesh->num_local_trees = -1;
     cmesh->set_partition_level = -1;
   }

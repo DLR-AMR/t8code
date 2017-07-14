@@ -29,6 +29,7 @@
 #include <t8_cmesh.h>
 #include <sc_flops.h>
 #include <sc_statistics.h>
+#include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
@@ -134,6 +135,7 @@ t8_cmesh_commit_replicated_new (t8_cmesh_t cmesh)
         t8_sc_array_index_locidx (class_entries, ltree);
       t8_cmesh_trees_add_tree (cmesh->trees, entry->id, 0, entry->eclass);
       cmesh->num_trees_per_eclass[entry->eclass]++;
+      cmesh->num_local_trees_per_eclass[entry->eclass]++;
     }
     for (si = 0; si < stash->attributes.elem_count; si++) {
       attribute = (t8_stash_attribute_struct_t *)
@@ -230,6 +232,22 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   sc_flops_snap (&fi, &snapshot);
 #endif
 
+  if (cmesh->tree_offsets != NULL) {
+    t8_gloidx_t        *tree_offsets = (t8_gloidx_t *)
+      t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
+    /* We partition using tree offsets */
+    /* Get the first tree and whether it is shared */
+    cmesh->first_tree = t8_offset_first (cmesh->mpirank, tree_offsets);
+    cmesh->first_tree_shared =
+      t8_shmem_array_get_gloidx (cmesh->tree_offsets, cmesh->mpirank) < 0;
+    /* Get the number of local trees */
+    cmesh->num_local_trees =
+      t8_offset_num_trees (cmesh->mpirank, tree_offsets);
+  }
+  /* The first_tree and first_tree_shared entries must be set by now */
+  T8_ASSERT (cmesh->first_tree >= 0);
+  T8_ASSERT (cmesh->first_tree_shared >= 0);
+
   num_hashs = cmesh->num_local_trees > 0 ? cmesh->num_local_trees : 10;
   ghost_facejoin_mempool = sc_mempool_new (sizeof (t8_ghost_facejoin_t));
   /* TODO: There could be a mayor bug here, since the mempool given to
@@ -319,7 +337,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
         t8_cmesh_trees_add_tree (cmesh->trees,
                                  classentry->id - cmesh->first_tree, 0,
                                  classentry->eclass);
-        cmesh->num_trees_per_eclass[classentry->eclass]++;
+        cmesh->num_local_trees_per_eclass[classentry->eclass]++;
       }
       else {
         if (sc_hash_lookup (ghost_ids, temp_facejoin,
@@ -623,9 +641,16 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
                                           cmesh->set_partition_level);
         }
         else {
+          t8_gloidx_t         first_tree;
           T8_ASSERT (cmesh->first_tree >= 0 && cmesh->num_local_trees >= 0);
+          if (cmesh->first_tree_shared) {
+            first_tree = -cmesh->first_tree - 1;
+          }
+          else {
+            first_tree = cmesh->first_tree;
+          }
           t8_cmesh_set_partition_range (cmesh_temp, cmesh->face_knowledge,
-                                        cmesh->first_tree,
+                                        first_tree,
                                         cmesh->num_local_trees +
                                         cmesh->first_tree);
         }
@@ -686,6 +711,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   }
   //t8_cmesh_trees_print (cmesh, cmesh->trees);
 #endif
+  if (cmesh->set_partition) {
+    t8_cmesh_gather_treecount (cmesh, comm);
+  }
 
   if (cmesh->set_from != NULL) {
     /* Unref set_from and set it to NULL */

@@ -145,6 +145,7 @@ void
 t8_cmesh_gather_treecount (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   t8_gloidx_t         tree_offset;
+  t8_gloidx_t         temp_trees_per_eclass[T8_ECLASS_COUNT];
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
@@ -154,11 +155,25 @@ t8_cmesh_gather_treecount (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   if (cmesh->tree_offsets == NULL) {
     /* Only allocate the shmem array, if it is not already allocated */
     cmesh->tree_offsets = t8_cmesh_alloc_offsets (cmesh->mpisize, comm);
+    t8_shmem_array_allgather (&tree_offset, 1, T8_MPI_GLOIDX,
+                              cmesh->tree_offsets, 1, T8_MPI_GLOIDX);
+    t8_shmem_array_set_gloidx (cmesh->tree_offsets, cmesh->mpisize,
+                               cmesh->num_trees);
   }
-  t8_shmem_array_allgather (&tree_offset, 1, T8_MPI_GLOIDX,
-                            cmesh->tree_offsets, 1, T8_MPI_GLOIDX);
-  t8_shmem_array_set_gloidx (cmesh->tree_offsets, cmesh->mpisize,
-                             cmesh->num_trees);
+  /* We now write the num_trees_per_eclass field */
+  /* Copy the local values */
+  memcpy (temp_trees_per_eclass, cmesh->num_local_trees_per_eclass,
+          T8_ECLASS_COUNT);
+  if (cmesh->first_tree_shared) {
+    t8_eclass_t         eclass;
+    T8_ASSERT (cmesh->num_local_trees > 0);
+    /* If our first tree is shared, we must not count it in the
+     * global trees_per_eclass field */
+    eclass = t8_cmesh_get_tree_class (cmesh, 0);
+    temp_trees_per_eclass[eclass]--;
+  }
+  sc_MPI_Allreduce (temp_trees_per_eclass, cmesh->num_trees_per_eclass,
+                    T8_ECLASS_COUNT, T8_MPI_ECLASS_TYPE, sc_MPI_SUM, comm);
 }
 
 #if 0
@@ -2453,7 +2468,7 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
       cmesh->trees->tree_to_proc[itree] = iproc;
       tree = t8_cmesh_trees_get_tree (cmesh->trees, itree);
       tree->treeid = itree;
-      cmesh->num_trees_per_eclass[tree->eclass]++;
+      cmesh->num_local_trees_per_eclass[tree->eclass]++;
     }
     /* Calculate num_trees and num_ghosts for next part */
     num_trees += recv_part->num_trees;
@@ -2572,17 +2587,24 @@ t8_cmesh_offset_print (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 #if T8_ENABLE_DEBUG
   int                 offset_isnew = 0;
 
-  if (cmesh->tree_offsets == NULL) {
-    t8_cmesh_gather_treecount (cmesh, comm);
-    offset_isnew = 1;
-  }
-  t8_offset_print (cmesh->tree_offsets, comm);
-  T8_ASSERT (t8_offset_consistent (cmesh->mpisize,
-                                   t8_shmem_array_get_gloidx_array
-                                   (cmesh->tree_offsets), cmesh->num_trees));
-  if (offset_isnew == 1) {
-    t8_shmem_array_destroy (&cmesh->tree_offsets);
-    T8_ASSERT (cmesh->tree_offsets == NULL);
+  if (cmesh->set_partition) {
+    if (cmesh->tree_offsets == NULL) {
+      t8_cmesh_gather_treecount (cmesh, comm);
+      offset_isnew = 1;
+    }
+    t8_offset_print (cmesh->tree_offsets, comm);
+    T8_ASSERT (t8_offset_consistent (cmesh->mpisize,
+                                     t8_shmem_array_get_gloidx_array
+                                     (cmesh->tree_offsets),
+                                     cmesh->num_trees));
+    if (offset_isnew == 1) {
+      t8_shmem_array_destroy (&cmesh->tree_offsets);
+      T8_ASSERT (cmesh->tree_offsets == NULL);
+    }
+    else {
+      t8_debugf ("Replicated cmesh with %lli trees.\n",
+                 (long long) cmesh->num_trees);
+    }
   }
 #endif
 }

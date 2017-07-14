@@ -162,7 +162,9 @@ t8_shmem_array_t    t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
  *                              \ref t8_cmesh_commit.
  *                             -1: Co not change the face_knowledge level but keep any
  *                                 previously set ones. (Possibly by a previous call to \ref t8_cmesh_set_partition_range)
- * \param [in]     first_local_tree The global index of the first tree on this process.
+ * \param [in]     first_local_tree The global index ID of the first tree on this process.
+ *                                  If this tree is also the last tree on the previous process,
+ *                                  then the argument must be -ID - 1.
  * \param [in]     last_local_tree  The global index of the last tree on this process.
  *                                  If this process should be empty then \a last_local_tree
  *                                  must be strictly smaller than \a first_local_tree.
