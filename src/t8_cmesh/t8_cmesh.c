@@ -1742,12 +1742,12 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
                                   attr_vertices, 3);
       break;
     case T8_ECLASS_TET:
-      t8_cmesh_set_join (cmesh, 0, 1, 2, 2, 0);
-      t8_cmesh_set_join (cmesh, 1, 2, 1, 1, 0);
-      t8_cmesh_set_join (cmesh, 2, 3, 2, 2, 0);
-      t8_cmesh_set_join (cmesh, 3, 4, 1, 1, 0);
-      t8_cmesh_set_join (cmesh, 4, 5, 2, 2, 0);
-      t8_cmesh_set_join (cmesh, 5, 0, 1, 1, 0);
+      t8_cmesh_set_join (cmesh, 0, 1, 2, 1, 0);
+      t8_cmesh_set_join (cmesh, 1, 2, 2, 1, 0);
+      t8_cmesh_set_join (cmesh, 2, 3, 2, 1, 0);
+      t8_cmesh_set_join (cmesh, 3, 4, 2, 1, 0);
+      t8_cmesh_set_join (cmesh, 4, 5, 2, 1, 0);
+      t8_cmesh_set_join (cmesh, 5, 0, 2, 1, 0);
       vertices[0] = 0;
       vertices[1] = 1;
       vertices[2] = 5;
@@ -1757,8 +1757,8 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
                                                      attr_vertices, 4);
       t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0,
                                   attr_vertices, 4);
-      vertices[1] = 1;
-      vertices[2] = 3;
+      vertices[1] = 3;
+      vertices[2] = 1;
       t8_cmesh_new_translate_vertices_to_attributes (vertices,
                                                      vertices_coords,
                                                      attr_vertices, 4);
@@ -1771,8 +1771,8 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
                                                      attr_vertices, 4);
       t8_cmesh_set_tree_vertices (cmesh, 2, t8_get_package_id (), 0,
                                   attr_vertices, 4);
-      vertices[1] = 2;
-      vertices[2] = 6;
+      vertices[1] = 6;
+      vertices[2] = 2;
       t8_cmesh_new_translate_vertices_to_attributes (vertices,
                                                      vertices_coords,
                                                      attr_vertices, 4);
@@ -1785,8 +1785,8 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
                                                      attr_vertices, 4);
       t8_cmesh_set_tree_vertices (cmesh, 4, t8_get_package_id (), 0,
                                   attr_vertices, 4);
-      vertices[1] = 4;
-      vertices[2] = 5;
+      vertices[1] = 5;
+      vertices[2] = 4;
       t8_cmesh_new_translate_vertices_to_attributes (vertices,
                                                      vertices_coords,
                                                      attr_vertices, 4);
