@@ -587,8 +587,8 @@ t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass,
    *      6 ______  7  For Hexes and pyramids, if the vertex 4 is below the 0-1-2-3 plane,
    *       /|     /     the volume is negative. This is the case if and only if
    *    4 /_____5/|     the scalar product of v_4 with the cross product of v_1 and v_2 is
-   *      | | _ |_|     greater 0:
-   *      | 2   | / 3   < v_4, v_1 x v_2 > > 0
+   *      | | _ |_|     smaller 0:
+   *      | 2   | / 3   < v_4, v_1 x v_2 > < 0
    *      |/____|/
    *     0      1
    *
@@ -624,7 +624,8 @@ t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass,
   sc_prod = t8_cmesh_tree_vertices_dot (v_j, cross);
 
   T8_ASSERT (sc_prod != 0);
-  return sc_prod > 0;
+  return eclass == T8_ECLASS_TET
+    || eclass == T8_ECLASS_PRISM ? sc_prod > 0 : sc_prod < 0;
 }
 
 #ifdef T8_ENABLE_DEBUG
