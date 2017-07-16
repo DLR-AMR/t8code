@@ -372,6 +372,7 @@ t8_forest_populate (t8_forest_t forest)
   t8_eclass_t         tree_class;
   t8_eclass_scheme_c *eclass_scheme;
   t8_gloidx_t         cmesh_first_tree, cmesh_last_tree;
+  int                 is_empty;
 
   SC_CHECK_ABORT (forest->set_level <= forest->maxlevel,
                   "Given refinement level exceeds the maximum.\n");
@@ -381,21 +382,34 @@ t8_forest_populate (t8_forest_t forest)
                            &forest->last_local_tree, &child_in_tree_end,
                            NULL);
 
+  /* True if the forest has no elements */
+  is_empty = forest->first_local_tree >= forest->last_local_tree &&
+    child_in_tree_begin >= child_in_tree_end;
+
   cmesh_first_tree = t8_cmesh_get_first_treeid (forest->cmesh);
   cmesh_last_tree = cmesh_first_tree +
     t8_cmesh_get_num_local_trees (forest->cmesh) - 1;
-  SC_CHECK_ABORT (forest->first_local_tree >= cmesh_first_tree
-                  && forest->last_local_tree <= cmesh_last_tree,
-                  "cmesh partition does not match the planned forest partition");
+  t8_debugf ("[H] trees: %li %li  ctrees: %li %li  els: %li %li. level %i\n",
+             (long) forest->first_local_tree, (long) forest->last_local_tree,
+             (long) cmesh_first_tree, (long) cmesh_last_tree,
+             (long) child_in_tree_begin, (long) child_in_tree_end,
+             forest->set_level);
+  if (!is_empty) {
+    SC_CHECK_ABORT (forest->first_local_tree >= cmesh_first_tree
+                    && forest->last_local_tree <= cmesh_last_tree,
+                    "cmesh partition does not match the planned forest partition");
+  }
 
   forest->global_num_elements = forest->local_num_elements = 0;
   /* create only the non-empty tree objects */
-  if (forest->first_local_tree >= forest->last_local_tree
-      && child_in_tree_begin >= child_in_tree_end) {
+  if (is_empty) {
     /* This processor is empty
      * we still set the tree array to store 0 as the number of trees here */
     forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
     count_elements = 0;
+    /* Set the first local tree larger than the last local tree to
+     * indicate empty forest */
+    forest->first_local_tree = forest->last_local_tree + 1;
   }
   else {
     /* for each tree, allocate elements */
