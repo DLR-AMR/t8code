@@ -358,7 +358,7 @@ t8_default_scheme_tet_c::t8_element_boundary_face (const t8_element_t * elem,
   b->level = t->level;
   /*
    * Depending on t's type and face, b's coordinates and type are defined
-   * through t's coordinates. The faces can be divided into 3 category.
+   * through t's coordinates. The faces can be divided into 3 categories.
    * category 1: b.x = t.z b.y = t.x - t.y
    * category 2: b.x = t.x b.y = t.z
    * category 3: b.x = t.x b.y = t.y

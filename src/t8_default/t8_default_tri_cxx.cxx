@@ -398,6 +398,7 @@ t8_default_scheme_tri_c::t8_element_boundary_face (const t8_element_t * elem,
   else {
     l->x = t->x;
   }
+  /* TODO: Take the level into account! */
 }
 
 void
