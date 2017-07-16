@@ -85,6 +85,14 @@ void                t8_shmem_array_init (t8_shmem_array_t * parray,
 void                t8_shmem_array_set_gloidx (t8_shmem_array_t array,
                                                int index, t8_gloidx_t value);
 
+/** Copy the contents of one t8_shmem array into another.
+ * \param [in,out]      dest    The array in which should be copied.
+ * \param [in]          source  The array to copy.
+ * \note \a dest must match in element size and element count to \a source.
+ */
+void                t8_shmem_array_copy (t8_shmem_array_t dest,
+                                         t8_shmem_array_t source);
+
 /** Fill a t8_shmem array with an allgather.
  *
  * \param[in] sendbuf         the source from this process
