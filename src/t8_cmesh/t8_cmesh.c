@@ -689,6 +689,7 @@ t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
   /* Iterate over all trees, get their vertices and check the volume */
   for (itree = 0; itree < cmesh->num_local_trees; itree++) {
     vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
+    ret = 1;
     if (vertices != NULL) {
       /* Vertices are set */
       eclass = t8_cmesh_get_tree_class (cmesh, itree);
