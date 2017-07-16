@@ -31,6 +31,7 @@
 #include <t8_cmesh_readmshfile.h>
 #include <t8_forest.h>
 #include <t8_default_cxx.hxx>
+#include <example/common/t8_example_common.h>
 
 /* This is the user defined data used to define the
  * region in which we partition.
@@ -63,6 +64,8 @@ t8_vec3_xmay (double *x, double alpha, double *y)
   }
 }
 
+#if 0
+/* TODO: deprecated. was replaced by t8_common_midpoint. */
 static void
 t8_anchor_element (t8_forest_t forest, t8_locidx_t which_tree,
                    t8_eclass_scheme_c * ts, t8_element_t * element,
@@ -86,6 +89,7 @@ t8_anchor_element (t8_forest_t forest, t8_locidx_t which_tree,
   }
 #endif
 }
+#endif
 
 /* refine the forest in a band, given by a plane E and two constants
  * c_min, c_max. We refine the cells in the band c_min*E, c_max*E */
@@ -95,7 +99,7 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from,
                int num_elements, t8_element_t * elements[])
 {
   int                 level, base_level, max_level;
-  double              elem_anchor[3];
+  double              elem_midpoint[3];
   double             *normal;
   adapt_data_t       *adapt_data;
 
@@ -109,21 +113,23 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from,
   base_level = adapt_data->base_level;
   max_level = adapt_data->max_level;
   /* Compute the coordinates of the anchor node. */
-  t8_anchor_element (forest_from, which_tree, ts, elements[0], elem_anchor);
+  t8_common_midpoint (forest_from, which_tree, ts, elements[0],
+                      elem_midpoint);
 
-  /* Calculate elem_anchor - c_min n */
-  t8_vec3_xmay (elem_anchor, adapt_data->c_min, normal);
+  /* Calculate elem_midpoint - c_min n */
+  t8_vec3_xmay (elem_midpoint, adapt_data->c_min, normal);
 
   /* The purpose of the factor C*h is that the levels get smaller, the
    * closer we get to the interface. We refine a cell if it is at most
    * C times its own height away from the interface */
-  if (t8_vec3_dot (elem_anchor, normal) >= 0) {
+  if (t8_vec3_dot (elem_midpoint, normal) >= 0) {
     /* if the anchor node is to the right of c_min*E,
      * check if it is to the left of c_max*E */
 
-    /* set elem_anchor to the original anchor - c_max*normal */
-    t8_vec3_xmay (elem_anchor, adapt_data->c_max - adapt_data->c_min, normal);
-    if (t8_vec3_dot (elem_anchor, normal) <= 0) {
+    /* set elem_midpoint to the original anchor - c_max*normal */
+    t8_vec3_xmay (elem_midpoint, adapt_data->c_max - adapt_data->c_min,
+                  normal);
+    if (t8_vec3_dot (elem_midpoint, normal) <= 0) {
       if (level < max_level) {
         /* We do refine if level smaller 1+base level and the anchor is
          * to the left of c_max*E */
@@ -210,6 +216,8 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
     adapt_data.c_min = x_min_max[0] + t;
     adapt_data.c_max = x_min_max[1] + t;
     t8_forest_set_user_data (forest_adapt, (void *) &adapt_data);
+
+#if 0
     /* If desired, create ghost elements */
     if (do_ghost) {
       t8_forest_set_ghost (forest_adapt, 1, T8_GHOST_FACES);
@@ -229,9 +237,11 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
       t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_adapt),
                                cmesh_vtu, 1.0);
     }
-    /* partition the adapted forest */
     t8_forest_init (&forest_partition);
-    t8_forest_set_partition (forest_partition, forest_adapt, 0);
+#endif
+    forest_partition = forest_adapt;
+    /* partition the adapted forest */
+    t8_forest_set_partition (forest_partition, NULL, 0);
     /* enable profiling for the partitioned forest */
     t8_forest_set_profiling (forest_partition, 1);
     /* If desired, create ghost elements */
@@ -260,8 +270,8 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
       t8_debugf ("Wrote partitioned forest and cmesh\n");
     }
     /* Print runtimes and statistics of forest and cmesh partition */
-    t8_forest_print_profile (forest_partition);
     t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
+    t8_forest_print_profile (forest_partition);
     /* Set forest to the partitioned forest, so it gets adapted
      * in the next time step. */
     forest = forest_partition;
@@ -318,6 +328,7 @@ main (int argc, char *argv[])
   int                 level, level_diff;
   int                 help = 0, no_vtk, do_ghost, do_balance;
   int                 dim, num_files;
+  double              T, delta_t;
   sc_options_t       *opt;
   t8_cmesh_t          cmesh;
   const char         *mshfileprefix, *cmeshfileprefix;
@@ -364,6 +375,11 @@ main (int argc, char *argv[])
                          "The minimum x coordinate " "in the mesh.");
   sc_options_add_double (opt, 'X', "xmax", x_min_max + 1, 1,
                          "The maximum x coordinate " "in the mesh.");
+  sc_options_add_double (opt, 'T', "time", &T, 1,
+                         "The simulated time span."
+                         "We simulate the time from 0 to T");
+  sc_options_add_double (opt, 'D', "delta_t", &delta_t, 0.08,
+                         "The time step in each simulation step.");
   sc_options_add_switch (opt, 'g', "ghost", &do_ghost,
                          "Create ghost elements.");
   sc_options_add_switch (opt, 'b', "balance", &do_balance,
@@ -398,8 +414,8 @@ main (int argc, char *argv[])
     }
     t8_time_forest_cmesh_mshfile (cmesh, vtu_prefix,
                                   sc_MPI_COMM_WORLD, level,
-                                  level + level_diff, no_vtk, x_min_max, 1,
-                                  0.08, do_ghost, do_balance);
+                                  level + level_diff, no_vtk, x_min_max, T,
+                                  delta_t, do_ghost, do_balance);
   }
   sc_options_destroy (opt);
   sc_finalize ();

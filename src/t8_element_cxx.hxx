@@ -40,6 +40,7 @@ T8_EXTERN_C_BEGIN ();
  *       i.e. lines must have a greater or equal maxlevel than quads and triangles.
  *       Check whether this rules are fulfilled in the construction of a scheme.
  */
+/* TODO: Implement a test that boundary and extrude leads to the original element. */
 
 /** This struct holds virtual functions for a particular element class. */
 struct t8_eclass_scheme

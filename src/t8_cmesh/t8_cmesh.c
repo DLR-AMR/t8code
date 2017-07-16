@@ -56,18 +56,31 @@ t8_cmesh_is_initialized (t8_cmesh_t cmesh)
 int
 t8_cmesh_is_committed (t8_cmesh_t cmesh)
 {
-  if (!(cmesh != NULL && t8_refcount_is_active (&cmesh->rc) &&
-        cmesh->committed)) {
-    return 0;
-  }
+  static int          is_checking = 0;
+
+  /* We run into a stackoverflow if routines that we call here,
+   * also call t8_cmesh_is_committed.
+   * We prevent this with the static variable is_checking.
+   * This variable lives beyond one execution of t8_cmesh_is_committed.
+   * We use it as a form of lock to prevent entering an infinite recursion.
+   */
+  if (!is_checking) {
+    is_checking = 1;
+
+    if (!(cmesh != NULL && t8_refcount_is_active (&cmesh->rc) &&
+          cmesh->committed)) {
+      return 0;
+    }
 
 #ifdef T8_ENABLE_DEBUG
-  /* TODO: check more conditions that must always hold after commit */
-  if ((!t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) || 0) {
-    return 0;
-  }
+    /* TODO: check more conditions that must always hold after commit */
+    if ((!t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) ||
+        (!t8_cmesh_no_negative_volume (cmesh))) {
+      return 0;
+    }
 #endif
-
+    is_checking = 0;
+  }
   return 1;
 }
 
@@ -484,7 +497,7 @@ t8_cmesh_tree_index (t8_cmesh_t cmesh, t8_locidx_t tree_id)
 void
 t8_cmesh_set_dimension (t8_cmesh_t cmesh, int dim)
 {
-  T8_ASSERT (!t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (0 <= dim && dim <= T8_ECLASS_MAX_DIM);
 
   cmesh->dimension = dim;
@@ -517,6 +530,138 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
   cmesh->inserted_trees++;
 #endif
 }
+
+/* Compute erg = v_1 . v_2
+ * the 3D scalar product.
+ */
+static double
+t8_cmesh_tree_vertices_dot (double *v_1, double *v_2)
+{
+  double              erg = 0;
+  int                 i;
+
+  for (i = 0; i < 3; i++) {
+    erg += v_1[i] * v_2[i];
+  }
+  return erg;
+}
+
+/* Compute erg = v_1 x v_2
+ * the 3D cross product.
+ */
+static void
+t8_cmesh_tree_vertices_cross (double *v_1, double *v_2, double *erg)
+{
+  int                 i;
+
+  for (i = 0; i < 3; i++) {
+    erg[i] = v_1[(i + 1) % 3] * v_2[(i + 2) % 3]
+      - v_1[(i + 2) % 3] * v_2[(i + 1) % 3];
+  }
+}
+
+/* Given a set of vertex coordinates for a tree of a given eclass.
+ * Query whether the geometric volume of the tree with this coordinates
+ * would be negative.
+ * Returns true if a tree of the given eclass with the given vertex
+ * coordinates does have negative volume.
+ */
+int
+t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass,
+                                        double *vertices, int num_vertices)
+{
+  double              v_1[3], v_2[3], v_j[3], cross[3], sc_prod;
+  int                 i, j;
+
+  T8_ASSERT (num_vertices == t8_eclass_num_vertices[eclass]);
+
+  if (t8_eclass_to_dimension[eclass] <= 2) {
+    /* Only three dimensional eclass do have a volume */
+    return 0;
+  }
+
+  T8_ASSERT (eclass == T8_ECLASS_TET || eclass == T8_ECLASS_HEX
+             || eclass == T8_ECLASS_PRISM || eclass == T8_ECLASS_PYRAMID);
+  T8_ASSERT (num_vertices >= 4);
+
+  /*
+   *      6 ______  7  For Hexes and pyramids, if the vertex 4 is below the 0-1-2-3 plane,
+   *       /|     /     the volume is negative. This is the case if and only if
+   *    4 /_____5/|     the scalar product of v_4 with the cross product of v_1 and v_2 is
+   *      | | _ |_|     smaller 0:
+   *      | 2   | / 3   < v_4, v_1 x v_2 > < 0
+   *      |/____|/
+   *     0      1
+   *
+   *
+   *    For tets and prisms, if the vertex 3 is below the 0-1-2 plane, the volume
+   *    is negative. This is the case if and only if
+   *    the scalar product of v_3 with the cross product of v_1 and v_2 is
+   *    greater 0:
+   *
+   *    < v_3, v_1 x v_2 > > 0
+   *
+   */
+
+  /* build the vectors v_i as vertices_i - vertices_0 */
+
+  if (eclass == T8_ECLASS_TET || eclass == T8_ECLASS_PRISM) {
+    /* In the tet/prism case, the third vector is v_3 */
+    j = 3;
+  }
+  else {
+    /* For pyramids an Hexes, the third vector is v_4 */
+    j = 4;
+  }
+  for (i = 0; i < 3; i++) {
+    v_1[i] = vertices[3 + i] - vertices[i];
+    v_2[i] = vertices[6 + i] - vertices[i];
+    v_j[i] = vertices[3 * j + i] - vertices[i];
+  }
+
+  /* compute cross = v_1 x v_2 */
+  t8_cmesh_tree_vertices_cross (v_1, v_2, cross);
+  /* Compute sc_prod = <v_j, cross> */
+  sc_prod = t8_cmesh_tree_vertices_dot (v_j, cross);
+
+  T8_ASSERT (sc_prod != 0);
+  return eclass == T8_ECLASS_TET
+    || eclass == T8_ECLASS_PRISM ? sc_prod > 0 : sc_prod < 0;
+}
+
+#ifdef T8_ENABLE_DEBUG
+/* After a cmesh is committed, check whether all trees in a cmesh do have positive volume.
+ * Returns true if all trees have positive volume.
+ */
+int
+t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
+{
+  t8_locidx_t         itree;
+  double             *vertices;
+  t8_eclass_t         eclass;
+  int                 ret, res = 0;
+
+  if (cmesh == NULL) {
+    return 0;
+  }
+  /* Iterate over all trees, get their vertices and check the volume */
+  for (itree = 0; itree < cmesh->num_local_trees; itree++) {
+    vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
+    if (vertices != NULL) {
+      /* Vertices are set */
+      eclass = t8_cmesh_get_tree_class (cmesh, itree);
+      ret = t8_cmesh_tree_vertices_negative_volume (eclass, vertices,
+                                                    t8_eclass_num_vertices
+                                                    [eclass]);
+      if (ret) {
+        t8_debugf ("Detected negative volume in tree %li\n", (long) itree);
+      }
+      res |= ret;               /* res is true if one ret value is true */
+    }
+  }
+  return !res;
+}
+#endif
 
 void
 t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltree_id,
@@ -1598,12 +1743,12 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
                                   attr_vertices, 3);
       break;
     case T8_ECLASS_TET:
-      t8_cmesh_set_join (cmesh, 0, 1, 2, 2, 0);
-      t8_cmesh_set_join (cmesh, 1, 2, 1, 1, 0);
-      t8_cmesh_set_join (cmesh, 2, 3, 2, 2, 0);
-      t8_cmesh_set_join (cmesh, 3, 4, 1, 1, 0);
-      t8_cmesh_set_join (cmesh, 4, 5, 2, 2, 0);
-      t8_cmesh_set_join (cmesh, 5, 0, 1, 1, 0);
+      t8_cmesh_set_join (cmesh, 0, 1, 2, 1, 0);
+      t8_cmesh_set_join (cmesh, 1, 2, 2, 1, 0);
+      t8_cmesh_set_join (cmesh, 2, 3, 2, 1, 0);
+      t8_cmesh_set_join (cmesh, 3, 4, 2, 1, 0);
+      t8_cmesh_set_join (cmesh, 4, 5, 2, 1, 0);
+      t8_cmesh_set_join (cmesh, 5, 0, 2, 1, 0);
       vertices[0] = 0;
       vertices[1] = 1;
       vertices[2] = 5;
@@ -1613,8 +1758,8 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
                                                      attr_vertices, 4);
       t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0,
                                   attr_vertices, 4);
-      vertices[1] = 1;
-      vertices[2] = 3;
+      vertices[1] = 3;
+      vertices[2] = 1;
       t8_cmesh_new_translate_vertices_to_attributes (vertices,
                                                      vertices_coords,
                                                      attr_vertices, 4);
@@ -1627,8 +1772,8 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
                                                      attr_vertices, 4);
       t8_cmesh_set_tree_vertices (cmesh, 2, t8_get_package_id (), 0,
                                   attr_vertices, 4);
-      vertices[1] = 2;
-      vertices[2] = 6;
+      vertices[1] = 6;
+      vertices[2] = 2;
       t8_cmesh_new_translate_vertices_to_attributes (vertices,
                                                      vertices_coords,
                                                      attr_vertices, 4);
@@ -1641,8 +1786,8 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
                                                      attr_vertices, 4);
       t8_cmesh_set_tree_vertices (cmesh, 4, t8_get_package_id (), 0,
                                   attr_vertices, 4);
-      vertices[1] = 4;
-      vertices[2] = 5;
+      vertices[1] = 5;
+      vertices[2] = 4;
       t8_cmesh_new_translate_vertices_to_attributes (vertices,
                                                      vertices_coords,
                                                      attr_vertices, 4);
