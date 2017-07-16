@@ -146,11 +146,16 @@ t8_forest_partition_test_desc (t8_forest_t forest)
   u_int64_t           first_desc_id;
   t8_locidx_t         ielem;
   t8_eclass_scheme_c *ts;
-  t8_tree_t           tree = t8_forest_get_tree (forest, 0);
+  t8_tree_t           tree;
   int                 level;
 
-  ts = t8_forest_get_eclass_scheme (forest,
-                                    t8_forest_get_tree_class (forest, 0));
+  if (t8_forest_get_num_local_trees (forest) == 0) {
+    /* This forest is empty, nothing to do */
+    return;
+  }
+
+  tree = t8_forest_get_tree (forest, 0);
+  ts = t8_forest_get_eclass_scheme (forest, tree->eclass);
   /* Get the first descendant id of this rank */
   first_desc_id =
     *(uint64_t *) t8_shmem_array_index (forest->global_first_desc,
@@ -933,6 +938,7 @@ t8_forest_partition_given (t8_forest_t forest)
   int                 num_request_alloc;        /* The count of elements in the request array */
   char              **send_buffer;
   int                 mpiret, i;
+  t8_locidx_t         num_new_elements;
 
   t8_debugf ("Start partition_given\n");
   T8_ASSERT (t8_forest_is_initialized (forest));
@@ -946,10 +952,23 @@ t8_forest_partition_given (t8_forest_t forest)
   /* Send all elements to other ranks */
   t8_forest_partition_sendloop (forest, send_first, send_last, &requests,
                                 &num_request_alloc, &send_buffer);
+  /* Compute the number of new elements on this forest */
+  num_new_elements =
+    t8_shmem_array_get_gloidx (forest->element_offsets, forest->mpirank + 1)
+    - t8_shmem_array_get_gloidx (forest->element_offsets, forest->mpirank);
 
-  /* Receive all element from other ranks */
-  t8_forest_partition_recvrange (forest, &recv_first, &recv_last);
-  t8_forest_partition_recvloop (forest, recv_first, recv_last);
+  if (num_new_elements > 0) {
+    /* Receive all element from other ranks */
+    t8_forest_partition_recvrange (forest, &recv_first, &recv_last);
+    t8_forest_partition_recvloop (forest, recv_first, recv_last);
+  }
+  else {
+    /* This forest is empty, set first and last local tree such
+     * that t8_forest_get_num_local_trees return 0 */
+    forest->first_local_tree = 0;
+    forest->last_local_tree = -1;
+    forest->local_num_elements = 0;
+  }
   /* Wait for all sends to complete */
   mpiret =
     sc_MPI_Waitall (num_request_alloc, requests, sc_MPI_STATUSES_IGNORE);
@@ -975,7 +994,7 @@ t8_forest_partition (t8_forest_t forest)
 
   t8_global_productionf ("Enter  forest partition.\n");
   t8_log_indent_push ();
-  T8_ASSERT (!t8_forest_is_committed (forest));
+  T8_ASSERT (t8_forest_is_initialized (forest));
   forest_from = forest->set_from;
   T8_ASSERT (t8_forest_is_committed (forest_from));
 
