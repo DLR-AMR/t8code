@@ -632,20 +632,38 @@ t8_forest_compute_cmesh_offset (t8_forest_t forest, sc_MPI_Comm comm)
   t8_gloidx_t         local_offset;
   int                 first_tree_shared;
 
+  if (forest->tree_offsets == NULL) {
+    /* Create the tree offsets if necessary */
+    t8_forest_partition_create_tree_offsets (forest);
+  }
   /* initialize the shared memory array */
   t8_shmem_array_init (&offset, sizeof (t8_gloidx_t), forest->mpisize + 1,
                        comm);
+
+  /* Copy the contents */
+  t8_shmem_array_copy (offset, forest->tree_offsets);
+#if 0
   /* Compute whether our first local tree is shared with a smaller rank */
   first_tree_shared = t8_forest_first_tree_shared (forest);
   /* Calculate our entry in the offset array */
   local_offset = t8_offset_first_tree_to_entry (forest->first_local_tree,
                                                 first_tree_shared);
+  if (t8_forest_get_num_element (forest) <= 0) {
+    /* This forest is empty */
+    /* We take the first tree of the next nonempty rank */
+    t8_gloidx_t        *tree_offsets =
+      t8_shmem_array_get_gloidx_array (forest->tree_offsets);
+    int                 next_nonempty_rank =
+      t8_forest_partition_next_nonempty_rank (forest, forest->mpirank);
+    local_offset = tree_offsets[next_nonempty_rank];
+  }
   /* allgather the local entries of the offset array */
   t8_shmem_array_allgather (&local_offset, 1, T8_MPI_GLOIDX, offset, 1,
                             T8_MPI_GLOIDX);
   /* Set the last entry of the offset array to the global number of trees */
   t8_shmem_array_set_gloidx (offset, forest->mpisize,
                              forest->global_num_trees);
+#endif
   return offset;
 }
 
