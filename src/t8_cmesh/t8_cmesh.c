@@ -1233,8 +1233,6 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
       last_global_child = global_num_children;
     }
 
-    SC_CHECK_ABORT (first_global_child < last_global_child,
-                    "forest does not support empty processes yet");
     T8_ASSERT (0 <= first_global_child
                && first_global_child <= global_num_children);
     T8_ASSERT (0 <= last_global_child
@@ -1272,10 +1270,12 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
         *child_in_tree_end = last_global_child;
       }
     }
+#if 0
     if (first_global_child >= last_global_child && cmesh->mpirank != 0) {
       /* This process is empty */
       *first_local_tree = prev_last_tree + 1;
     }
+#endif
   }
   else {
     SC_ABORT ("Partition with level > 0 "
