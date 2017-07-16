@@ -1242,9 +1242,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
       *child_in_tree_begin =
         first_global_child - *first_local_tree * children_per_tree;
     }
-    /* TODO: Just fixed this line from last_global_child -1 / cpt
-     *       Why did we not notice this error before?
-     *       Changed it back*/
+
     *last_local_tree = (last_global_child - 1) / children_per_tree;
     if (first_tree_shared != NULL) {
       prev_last_tree = (first_global_child - 1) / children_per_tree;
