@@ -1034,8 +1034,8 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
       while (t8_offset_empty (guess, element_offsets)) {
         t8_debugf ("[H] %i is empty\n", guess);
         /* skip empty processes */
-        if ((empty_dir == -1 && guess < lower_bound) ||
-            (empty_dir == +1 && guess > upper_bound)) {
+        if ((empty_dir == -1 && guess <= lower_bound) ||
+            (empty_dir == +1 && guess >= upper_bound)) {
           /* We look for smaller processes until guess = lower_bound,
            * and then look for greater processes
            * or vice versa. */
