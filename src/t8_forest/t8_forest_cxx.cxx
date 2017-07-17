@@ -144,7 +144,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
     break;
   default:
     SC_ABORT ("Forest coordinate computation is supported only for "
-              "triangles/tets/quads/hexes.");
+              "triangles/tets/quads/prisms/hexes.");
   }
   return;
 }
