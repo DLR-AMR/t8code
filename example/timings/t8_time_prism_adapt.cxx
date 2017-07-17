@@ -78,11 +78,15 @@ t8_time_refine(int start_level, int end_level, int create_forest, int cube){
   }
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
   t8_forest_set_level (forest, start_level);
-  t8_forest_set_profiling (forest, 1);
+
+  sc_flops_start (&fi);
+  sc_flops_snap (&fi, &snapshot);
+
   t8_forest_commit (forest);
 
-  t8_forest_print_profile (forest);
-  t8_cmesh_print_profile (t8_forest_get_cmesh (forest));
+  sc_flops_shot (&fi, &snapshot);
+  sc_stats_set1 (&stats[0], snapshot.iwtime, "New");
+
   if(cube == 1){
   snprintf (vtuname, BUFSIZ, "forest_hypercube_%s",
             t8_eclass_to_string[T8_ECLASS_PRISM]);
@@ -92,21 +96,21 @@ t8_time_refine(int start_level, int end_level, int create_forest, int cube){
   t8_forest_init (&forest_adapt);
   t8_forest_set_user_data(forest_adapt, &end_level);
 
+  t8_forest_set_profiling (forest_adapt, 1);
   t8_forest_set_adapt (forest_adapt, forest,
                        t8_basic_adapt_refine_type, NULL, 1);
 
-  sc_flops_start (&fi);
-  sc_flops_snap (&fi, &snapshot);
+
 
   t8_forest_commit (forest_adapt);
+  t8_forest_print_profile (forest_adapt);
     if(cube == 1){
   snprintf (vtuname, BUFSIZ, "forest_hypercube_adapt_%s",
             t8_eclass_to_string[T8_ECLASS_PRISM]);
   t8_forest_write_vtk (forest_adapt, vtuname);
   t8_debugf ("Output to %s\n", vtuname);
    }
-  sc_flops_shot (&fi, &snapshot);
-  sc_stats_set1 (&stats[0], snapshot.iwtime, "New");
+
 
 
   t8_forest_unref (&forest_adapt);
