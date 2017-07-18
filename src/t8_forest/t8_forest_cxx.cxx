@@ -386,8 +386,9 @@ t8_forest_populate (t8_forest_t forest)
                            NULL);
 
   /* True if the forest has no elements */
-  is_empty = forest->first_local_tree >= forest->last_local_tree &&
-    child_in_tree_begin >= child_in_tree_end;
+  is_empty = forest->first_local_tree > forest->last_local_tree
+    || (forest->first_local_tree == forest->last_local_tree
+        && child_in_tree_begin >= child_in_tree_end);
 
   cmesh_first_tree = t8_cmesh_get_first_treeid (forest->cmesh);
   cmesh_last_tree = cmesh_first_tree +
