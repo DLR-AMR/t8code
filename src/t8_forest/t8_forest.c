@@ -664,9 +664,10 @@ t8_forest_partition_cmesh (t8_forest_t forest, sc_MPI_Comm comm,
   t8_cmesh_init (&cmesh_partition);
   t8_cmesh_set_derive (cmesh_partition, forest->cmesh);
   /* set partition range of new cmesh according to forest trees */
-  t8_cmesh_set_partition_offsets (cmesh_partition,
-                                  t8_forest_compute_cmesh_offset (forest,
-                                                                  comm));
+  if (forest->tree_offsets == NULL) {
+    t8_forest_partition_create_tree_offsets (forest);
+  }
+  t8_cmesh_set_partition_offsets (cmesh_partition, forest->tree_offsets);
   /* Set the profiling of the cmesh */
   t8_cmesh_set_profiling (cmesh_partition, set_profiling);
   /* Commit the new cmesh */

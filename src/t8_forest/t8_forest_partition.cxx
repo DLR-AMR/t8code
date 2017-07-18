@@ -276,6 +276,8 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
   if (t8_forest_get_num_element(forest) <= 0) {
     /* This forest is empty */
     is_empty = 1;
+    /* Set the global number of trees as offset (temporarily) */
+    tree_offset = forest->global_num_trees;
   }
   else {
     is_empty = 0;
@@ -304,15 +306,29 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
   /* Communicate whether we have empty processes */
   sc_MPI_Allreduce (&is_empty, &has_empty, 1, sc_MPI_INT, sc_MPI_LOR,
                     forest->mpicomm);
+
+  t8_debugf ("[H] My entry: %i\n", tree_offset);
+
+
   if (has_empty) {
     int                 next_nonempty;
     /* there exist empty ranks, we have to recalculate the offset.
      * Each empty rank stores the offset of the next nonempty rank */
     if (is_empty) {
-      next_nonempty =
-        t8_forest_partition_next_nonempty_rank (forest, forest->mpirank);
-      tree_offset =
-        t8_shmem_array_get_gloidx (forest->tree_offsets, next_nonempty);
+      t8_gloidx_t        *tree_offset_array;
+
+      tree_offset_array =
+        t8_shmem_array_get_gloidx_array (forest->tree_offsets);
+      /* Find the next rank that is not empty */
+      next_nonempty = forest->mpirank+1;
+      while (next_nonempty < forest->mpisize && tree_offset_array[next_nonempty] >= forest->global_num_trees) {
+        next_nonempty++;
+      }
+      /* Set the tree offset to the first nonshared tree of the next rank */
+      tree_offset = t8_offset_first (next_nonempty, tree_offset_array);
+      if (tree_offset_array[next_nonempty] < 0) {
+        tree_offset++;
+      }
     }
     /* Communicate the new tree offsets */
     t8_shmem_array_allgather (&tree_offset, 1, T8_MPI_GLOIDX,
