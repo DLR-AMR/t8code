@@ -141,27 +141,62 @@ t8_partition_new_ghost_ids (t8_cmesh_t cmesh,
 
 /* From num_local_trees_per_eclass compute num_trees_per_eclass.
  * collective function */
-static void
+void
 t8_cmesh_gather_trees_per_eclass (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   t8_gloidx_t         temp_trees_per_eclass[T8_ECLASS_COUNT];
+  int                 ieclass;
 
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
 
-  /* Copy the local values */
-  memcpy (temp_trees_per_eclass, cmesh->num_local_trees_per_eclass,
-          T8_ECLASS_COUNT);
-  if (cmesh->first_tree_shared) {
-    t8_eclass_t         eclass;
-    T8_ASSERT (cmesh->num_local_trees > 0);
-    /* If our first tree is shared, we must not count it in the
-     * global trees_per_eclass field */
-    eclass = t8_cmesh_get_tree_class (cmesh, 0);
-    temp_trees_per_eclass[eclass]--;
+  if (cmesh->set_partition) {
+    /* Copy the local values */
+    /* We need to do it in a loop since we convert from locidx to gloidx.
+     * memcpy is thus not possible */
+    for (ieclass = 0; ieclass < T8_ECLASS_COUNT; ieclass++) {
+      temp_trees_per_eclass[ieclass] =
+        cmesh->num_local_trees_per_eclass[ieclass];
+      t8_debugf ("[H] %s trees %i\n", t8_eclass_to_string[ieclass],
+                 temp_trees_per_eclass[ieclass]);
+    }
+
+    if (cmesh->first_tree_shared) {
+      t8_eclass_t         eclass;
+      T8_ASSERT (cmesh->num_local_trees > 0);
+      /* If our first tree is shared, we must not count it in the
+       * global trees_per_eclass field */
+      /* We need to use t8_cmesh_trees_get_tree instead of t8_cmesh_get_tree
+       * since the latter performs a is_committed check on cmesh, but we may
+       * call t8_cmesh_gather_trees_per_eclass when the cmesh is not
+       * yet fully committed.
+       * (Since a cmesh only counts as committed if its trees_per_eclass
+       * values are set.)
+       */
+      eclass = t8_cmesh_trees_get_tree (cmesh->trees, 0)->eclass;
+      temp_trees_per_eclass[eclass]--;
+      t8_debugf ("[H] %s trees %i\n", t8_eclass_to_string[eclass],
+                 temp_trees_per_eclass[eclass]);
+    }
+    sc_MPI_Allreduce (temp_trees_per_eclass, cmesh->num_trees_per_eclass,
+                      T8_ECLASS_COUNT, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
   }
-  sc_MPI_Allreduce (temp_trees_per_eclass, cmesh->num_trees_per_eclass,
-                    T8_ECLASS_COUNT, T8_MPI_ECLASS_TYPE, sc_MPI_SUM, comm);
+  else {
+    /* The cmesh is not partitioned, we can just copy local_num_trees_per_eclass */
+    for (ieclass = 0; ieclass < T8_ECLASS_COUNT; ieclass++) {
+      cmesh->num_trees_per_eclass[ieclass] =
+        cmesh->num_local_trees_per_eclass[ieclass];
+    }
+  }
+#ifdef T8_ENABLE_DEBUG
+  /* Count the number of trees and check if it matches cmesh->num_trees */
+  {
+    t8_gloidx_t         num_trees = 0;
+    for (ieclass = 0; ieclass < T8_ECLASS_COUNT; ieclass++) {
+      num_trees += cmesh->num_trees_per_eclass[ieclass];
+    }
+    T8_ASSERT (num_trees == cmesh->num_trees);
+  }
+#endif
 }
 
 /* Given a cmesh create its tree_offsets from the local number of
@@ -171,9 +206,11 @@ t8_cmesh_gather_trees_per_eclass (t8_cmesh_t cmesh, sc_MPI_Comm comm)
  * Warning: use with caution with check_commit = 0 */
 static void
 t8_cmesh_gather_treecount_ext (t8_cmesh_t cmesh, sc_MPI_Comm comm,
-                               int check_commit, int compute_trees_per_eclass)
+                               int check_commit)
 {
   t8_gloidx_t         tree_offset;
+  t8_gloidx_t        *tree_offset_array;
+  int                 is_empty, has_empty;
 
   if (check_commit) {
     T8_ASSERT (t8_cmesh_is_committed (cmesh));
