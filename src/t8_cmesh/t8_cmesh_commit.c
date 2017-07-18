@@ -711,6 +711,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   }
   //t8_cmesh_trees_print (cmesh, cmesh->trees);
 #endif
+  /* Compute trees_per_eclass */
+  t8_cmesh_gather_trees_per_eclass (cmesh, comm);
+
   if (cmesh->set_partition) {
     t8_cmesh_gather_treecount (cmesh, comm);
   }
