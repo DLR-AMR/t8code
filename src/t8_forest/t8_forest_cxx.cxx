@@ -45,6 +45,7 @@ t8_forest_compute_maxlevel (t8_forest_t forest)
   int                 maxlevel;
   t8_eclass_scheme_c *ts;
 
+  T8_ASSERT (t8_cmesh_is_committed (forest->cmesh));
   forest->maxlevel = -1;
   for (eclass_it = T8_ECLASS_VERTEX; eclass_it < T8_ECLASS_COUNT; eclass_it++) {
     if (forest->cmesh->num_trees_per_eclass[eclass_it] > 0) {
@@ -61,6 +62,8 @@ t8_forest_compute_maxlevel (t8_forest_t forest)
       }
     }
   }
+  T8_ASSERT (forest->maxlevel >= 0);
+  t8_debugf ("[H] Computed maxlevel %i\n", forest->maxlevel);
 }
 
 /* Return the maximum level of a forest */
