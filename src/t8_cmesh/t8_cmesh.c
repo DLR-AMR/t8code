@@ -1082,8 +1082,7 @@ t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_locidx_t ltree_id)
 {
   t8_ctree_t          tree;
 
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
   tree = t8_cmesh_get_tree (cmesh, ltree_id);
   return tree->eclass;
@@ -1185,6 +1184,8 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
                          t8_gloidx_t * child_in_tree_end,
                          int8_t * first_tree_shared)
 {
+  int                 is_empty;
+
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
   T8_ASSERT (level >= 0);
@@ -1245,15 +1246,16 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     }
 
     *last_local_tree = (last_global_child - 1) / children_per_tree;
+
+    is_empty = *first_local_tree >= *last_local_tree
+      && first_global_child >= last_global_child;
     if (first_tree_shared != NULL) {
       prev_last_tree = (first_global_child - 1) / children_per_tree;
       T8_ASSERT (cmesh->mpirank > 0 || prev_last_tree <= 0);
-      if (cmesh->mpirank > 0 && prev_last_tree == *first_local_tree &&
-          first_global_child < last_global_child && last_global_child >= 0) {
+      if (!is_empty && cmesh->mpirank > 0) {
         /* We exclude empty partitions here, by def their first_tree_shared flag is zero */
         /* We also exclude that the previous partition was empty at the beginning of the
          * partitions array */
-        /* TODO: If empty partitions in the middle can occur then we have to think this over */
         *first_tree_shared = 1;
       }
       else {
@@ -1268,6 +1270,9 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
       else {
         *child_in_tree_end = last_global_child;
       }
+    }
+    if (is_empty) {
+      *last_local_tree = *first_local_tree - 1;
     }
 #if 0
     if (first_global_child >= last_global_child && cmesh->mpirank != 0) {
