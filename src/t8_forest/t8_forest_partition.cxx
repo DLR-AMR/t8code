@@ -90,22 +90,6 @@ t8_forest_compute_first_local_element_id (t8_forest_t forest)
   return first_element;
 }
 
-/* Find the next higher rank that is not empty.
- * returns mpisize if this rank does not exist. */
-int
-t8_forest_partition_next_nonempty_rank (t8_forest_t forest, int rank)
-{
-  int                 next_nonempty = rank + 1;
-  t8_gloidx_t        *element_offsets =
-    t8_shmem_array_get_gloidx_array (forest->element_offsets);
-
-  while (next_nonempty < forest->mpisize
-         && t8_offset_empty (next_nonempty, element_offsets)) {
-    next_nonempty++;
-  }
-  return next_nonempty;
-}
-
 /* For a committed forest create the array of element_offsets
  * and store it in forest->element_offsets
  */
@@ -320,8 +304,10 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
       tree_offset_array =
         t8_shmem_array_get_gloidx_array (forest->tree_offsets);
       /* Find the next rank that is not empty */
-      next_nonempty = forest->mpirank+1;
-      while (next_nonempty < forest->mpisize && tree_offset_array[next_nonempty] >= forest->global_num_trees) {
+      next_nonempty = forest->mpirank + 1;
+      while (next_nonempty < forest->mpisize
+             && tree_offset_array[next_nonempty] >=
+             forest->global_num_trees) {
         next_nonempty++;
       }
       /* Set the tree offset to the first nonshared tree of the next rank */

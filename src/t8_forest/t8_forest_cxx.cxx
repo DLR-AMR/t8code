@@ -482,7 +482,7 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (first_or_last == 0 || first_or_last == 1);
   T8_ASSERT (forest != NULL);
-  if (forest->trees == NULL
+  if (forest->local_num_elements <= 0 || forest->trees == NULL
       || forest->first_local_tree > forest->last_local_tree) {
     /* This forest is empty and therefore the first tree is not shared */
     return 0;
@@ -858,7 +858,8 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t * element,
     if (is_first || is_last) {
       /* We need to check if element is on the next rank only if the tree is the
        * last tree on this rank and the next rank has elements of this tree */
-      next_nonempty = t8_forest_partition_next_nonempty_rank (forest, rank);
+      next_nonempty = t8_offset_next_nonempty_rank (rank, forest->mpisize,
+                                                    first_global_trees);
       check_next = is_last && next_nonempty < forest->mpisize &&
         t8_offset_in_range (gtreeid, next_nonempty, first_global_trees);
       /* The tree is either the first or the last tree on rank, we thus
@@ -1087,7 +1088,8 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
         else {
           /* check if the element is on the next higher nonempty process */
           next_nonempty =
-            t8_forest_partition_next_nonempty_rank (forest, guess);
+            t8_offset_next_nonempty_rank (guess, forest->mpisize,
+                                          first_trees);
           t8_debugf ("[H] Next nonempty %i\n", next_nonempty);
           current_first_tree = t8_offset_first (next_nonempty, first_trees);
           if (current_first_tree < gtreeid) {
