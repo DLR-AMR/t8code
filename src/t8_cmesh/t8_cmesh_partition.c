@@ -227,11 +227,39 @@ t8_cmesh_gather_treecount_ext (t8_cmesh_t cmesh, sc_MPI_Comm comm,
                               cmesh->tree_offsets, 1, T8_MPI_GLOIDX);
     t8_shmem_array_set_gloidx (cmesh->tree_offsets, cmesh->mpisize,
                                cmesh->num_trees);
-  }
 
-  if (compute_trees_per_eclass) {
-    /* We now write the num_trees_per_eclass field */
-    t8_cmesh_gather_trees_per_eclass (cmesh, comm);
+    if (cmesh->num_local_trees <= 0) {
+      /* This process is empty */
+      is_empty = 1;
+    }
+    else {
+      is_empty = 0;
+    }
+    /* Communicate whether we have empty processes */
+    sc_MPI_Allreduce (&is_empty, &has_empty, 1, sc_MPI_INT, sc_MPI_LOR, comm);
+    if (has_empty) {
+      int                 next_nonempty;
+
+      tree_offset_array =
+        t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
+      /* there exist empty ranks, we have to recalculate the offset.
+       * Each empty rank stores the offset of the next nonempty rank */
+      if (is_empty) {
+        next_nonempty =
+          t8_offset_next_nonempty_rank (cmesh->mpirank, cmesh->mpisize,
+                                        tree_offset_array);
+        /* Set the tree offset to the first nonshared tree of the next rank */
+        tree_offset = t8_offset_first (next_nonempty, tree_offset_array);
+        t8_debugf ("[H] nne %i ft %i\n", next_nonempty, tree_offset);
+        if (tree_offset_array[next_nonempty] < 0) {
+          tree_offset++;
+          t8_debugf ("[H] is shared so %i\n", tree_offset);
+        }
+      }
+      /* Communicate the new tree offsets */
+      t8_shmem_array_allgather (&tree_offset, 1, T8_MPI_GLOIDX,
+                                cmesh->tree_offsets, 1, T8_MPI_GLOIDX);
+    }
   }
 }
 
@@ -240,7 +268,7 @@ t8_cmesh_gather_treecount_ext (t8_cmesh_t cmesh, sc_MPI_Comm comm,
 void
 t8_cmesh_gather_treecount (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  t8_cmesh_gather_treecount_ext (cmesh, comm, 1, 1);
+  t8_cmesh_gather_treecount_ext (cmesh, comm, 1);
 }
 
 /* Given a cmesh create its tree_offsets from the local number of
@@ -248,7 +276,7 @@ t8_cmesh_gather_treecount (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 void
 t8_cmesh_gather_treecount_nocommit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  t8_cmesh_gather_treecount_ext (cmesh, comm, 0, 0);
+  t8_cmesh_gather_treecount_ext (cmesh, comm, 0);
 }
 
 #if 0
