@@ -65,8 +65,8 @@ static int
 t8_cmesh_check_trees_per_eclass (t8_cmesh_t cmesh)
 {
   int                 ieclass;
-  t8_gloidx_t         glo_trees;
-  t8_locidx_t         lo_trees;
+  t8_gloidx_t         glo_trees = 0;
+  t8_locidx_t         lo_trees = 0;
   int                 ret = 0;
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
@@ -103,7 +103,7 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
     /* TODO: check more conditions that must always hold after commit */
     if ((!t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) ||
         (!t8_cmesh_no_negative_volume (cmesh))
-        || t8_cmesh_check_trees_per_eclass (cmesh)) {
+        || (!t8_cmesh_check_trees_per_eclass (cmesh))) {
       return 0;
     }
 #endif
