@@ -139,28 +139,16 @@ t8_partition_new_ghost_ids (t8_cmesh_t cmesh,
   }
 }
 
-/* Given a cmesh create its tree_offsets from the local number of
- * trees on each process */
-void
-t8_cmesh_gather_treecount (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+/* From num_local_trees_per_eclass compute num_trees_per_eclass.
+ * collective function */
+static void
+t8_cmesh_gather_trees_per_eclass (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  t8_gloidx_t         tree_offset;
   t8_gloidx_t         temp_trees_per_eclass[T8_ECLASS_COUNT];
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
 
-  tree_offset = cmesh->first_tree_shared ? -cmesh->first_tree - 1 :
-    cmesh->first_tree;
-  if (cmesh->tree_offsets == NULL) {
-    /* Only allocate the shmem array, if it is not already allocated */
-    cmesh->tree_offsets = t8_cmesh_alloc_offsets (cmesh->mpisize, comm);
-    t8_shmem_array_allgather (&tree_offset, 1, T8_MPI_GLOIDX,
-                              cmesh->tree_offsets, 1, T8_MPI_GLOIDX);
-    t8_shmem_array_set_gloidx (cmesh->tree_offsets, cmesh->mpisize,
-                               cmesh->num_trees);
-  }
-  /* We now write the num_trees_per_eclass field */
   /* Copy the local values */
   memcpy (temp_trees_per_eclass, cmesh->num_local_trees_per_eclass,
           T8_ECLASS_COUNT);
@@ -174,6 +162,56 @@ t8_cmesh_gather_treecount (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   }
   sc_MPI_Allreduce (temp_trees_per_eclass, cmesh->num_trees_per_eclass,
                     T8_ECLASS_COUNT, T8_MPI_ECLASS_TYPE, sc_MPI_SUM, comm);
+}
+
+/* Given a cmesh create its tree_offsets from the local number of
+ * trees on each process,
+ * additional flag whether we compute the trees per eclass or not
+ * additional flag whether to check if cmesh is committed.
+ * Warning: use with caution with check_commit = 0 */
+static void
+t8_cmesh_gather_treecount_ext (t8_cmesh_t cmesh, sc_MPI_Comm comm,
+                               int check_commit, int compute_trees_per_eclass)
+{
+  t8_gloidx_t         tree_offset;
+
+  if (check_commit) {
+    T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  }
+  T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
+
+  tree_offset = cmesh->first_tree_shared ? -cmesh->first_tree - 1 :
+    cmesh->first_tree;
+  if (cmesh->tree_offsets == NULL) {
+    t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
+    /* Only allocate the shmem array, if it is not already allocated */
+    cmesh->tree_offsets = t8_cmesh_alloc_offsets (cmesh->mpisize, comm);
+    t8_shmem_array_allgather (&tree_offset, 1, T8_MPI_GLOIDX,
+                              cmesh->tree_offsets, 1, T8_MPI_GLOIDX);
+    t8_shmem_array_set_gloidx (cmesh->tree_offsets, cmesh->mpisize,
+                               cmesh->num_trees);
+  }
+
+  if (compute_trees_per_eclass) {
+    /* We now write the num_trees_per_eclass field */
+    t8_cmesh_gather_trees_per_eclass (cmesh, comm);
+  }
+}
+
+/* Given a cmesh create its tree_offsets from the local number of
+ * trees on each process */
+void
+t8_cmesh_gather_treecount (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+{
+  t8_cmesh_gather_treecount_ext (cmesh, comm, 1, 1);
+}
+
+/* Given a cmesh create its tree_offsets from the local number of
+ * trees on each process */
+void
+t8_cmesh_gather_treecount_nocommit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+{
+  t8_cmesh_gather_treecount_ext (cmesh, comm, 0, 0);
 }
 
 #if 0
@@ -2523,28 +2561,9 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
                              &cmesh->first_tree, NULL, &last_tree, NULL,
                              &cmesh->first_tree_shared);
     cmesh->num_local_trees = last_tree - cmesh->first_tree + 1;
-    /* To compute the tree_offsets correctly we have to invert the sign on the
-     * first tree if last tree is shared, since we use it for MPI to allgather the tree_offsets */
-    if (cmesh->first_tree_shared) {
-      cmesh->first_tree = -cmesh->first_tree - 1;
-    }
-    /* allocate and fill tree_offset array with number of trees per process */
-    /* We have to be careful with shared memory in the case where cmesh comm is
-     * duplicated, since we have to use the same communicator for allocating and freeing memory.
-     * Thus this function must only be called after cmesh communicator was duplicated,
-     * so we check whether mpisize has been set */
-    T8_ASSERT (cmesh->mpisize > 0);
-    t8_shmem_array_init (&cmesh->tree_offsets, sizeof (t8_gloidx_t),
-                         cmesh->mpisize + 1, comm);
-    t8_shmem_array_allgather (&cmesh->first_tree, 1, T8_MPI_GLOIDX,
-                              cmesh->tree_offsets, 1, T8_MPI_GLOIDX);
-    t8_shmem_array_set_gloidx (cmesh->tree_offsets, cmesh->mpisize,
-                               cmesh_from->num_trees);
-    /* tree_offsets was computed, reinvert the sign */
-    if (cmesh->first_tree_shared) {
-      T8_ASSERT (cmesh->first_tree <= 0);
-      cmesh->first_tree = -cmesh->first_tree - 1;
-    }
+    /* Compute the tree offset */
+    t8_cmesh_gather_treecount_nocommit (cmesh, comm);
+    /* Set the tree offsets to the cmesh's offset array */
     tree_offsets = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
   }
   else {

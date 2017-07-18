@@ -50,6 +50,20 @@ void                t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 void                t8_cmesh_gather_treecount (t8_cmesh_t cmesh,
                                                sc_MPI_Comm comm);
 
+/** Perform the same task as \ref t8_cmesh_gather_treecount, but do
+ * not perform the debugging check whether cmesh is committed,
+ * also do not construct the num_trees_per_eclass_field.
+ * \warning Use with caution and only if you know what you are doing.
+ * Prefer \ref t8_cmesh_gather_treecount.
+ * \param [in,out]    cmesh  The cmesh whose array should be created.
+ *                           Must be partitioned and first and last local tree
+ *                           as well as the total number of tree must be set.
+ * \param [in]        comm   Mpi communicator used to create the offset array.
+ * \note if the offset array (cmesh->tree_offsets) already exists, it is not changed.
+ */
+void                t8_cmesh_gather_treecount_nocommit (t8_cmesh_t cmesh,
+                                                        sc_MPI_Comm comm);
+
 /* TODO: document, only for debug */
 void                t8_cmesh_offset_print (t8_cmesh_t cmesh,
                                            sc_MPI_Comm comm);
