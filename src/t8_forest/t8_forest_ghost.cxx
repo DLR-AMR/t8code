@@ -1879,46 +1879,49 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
   T8_ASSERT (t8_forest_is_committed (forest));
   t8_global_productionf ("Into t8_forest_ghost with %i local elements.\n",
                          t8_forest_get_num_element (forest));
-  if (forest->ghost_type == T8_GHOST_NONE) {
-    t8_debugf ("WARNING: Trying to construct ghosts with ghost_type NONE. "
-               "Ghost layer is not constructed.\n");
-    return;
-  }
-  /* Currently we only support face ghosts */
-  T8_ASSERT (forest->ghost_type == T8_GHOST_FACES);
 
-  if (forest->profile != NULL) {
-    /* If profiling is enabled, we measure the runtime of ghost_create */
-    forest->profile->ghost_runtime = -sc_MPI_Wtime ();
-  }
+  if (t8_forest_get_num_element (forest) > 0) {
+    if (forest->ghost_type == T8_GHOST_NONE) {
+      t8_debugf ("WARNING: Trying to construct ghosts with ghost_type NONE. "
+                 "Ghost layer is not constructed.\n");
+      return;
+    }
+    /* Currently we only support face ghosts */
+    T8_ASSERT (forest->ghost_type == T8_GHOST_FACES);
 
-  /* Initialize the ghost structure */
-  t8_forest_ghost_init (&forest->ghosts, forest->ghost_type);
-  ghost = forest->ghosts;
+    if (forest->profile != NULL) {
+      /* If profiling is enabled, we measure the runtime of ghost_create */
+      forest->profile->ghost_runtime = -sc_MPI_Wtime ();
+    }
 
-  if (unbalanced_version == -1) {
-    t8_forest_ghost_fill_remote_v3 (forest);
-  }
-  else {
-    /* Construct the remote elements and processes. */
-    t8_forest_ghost_fill_remote (forest, ghost, unbalanced_version != 0);
-  }
+    /* Initialize the ghost structure */
+    t8_forest_ghost_init (&forest->ghosts, forest->ghost_type);
+    ghost = forest->ghosts;
 
-  /* Start sending the remote elements */
-  send_info = t8_forest_ghost_send_start (forest, ghost, &requests);
+    if (unbalanced_version == -1) {
+      t8_forest_ghost_fill_remote_v3 (forest);
+    }
+    else {
+      /* Construct the remote elements and processes. */
+      t8_forest_ghost_fill_remote (forest, ghost, unbalanced_version != 0);
+    }
 
-  /* Reveive the ghost elements from the remote processes */
-  t8_forest_ghost_receive (forest, ghost);
+    /* Start sending the remote elements */
+    send_info = t8_forest_ghost_send_start (forest, ghost, &requests);
 
-  /* End sending the remote elements */
-  t8_forest_ghost_send_end (forest, ghost, send_info, requests);
+    /* Reveive the ghost elements from the remote processes */
+    t8_forest_ghost_receive (forest, ghost);
 
-  if (forest->profile != NULL) {
-    /* If profiling is enabled, we measure the runtime of ghost_create */
-    forest->profile->ghost_runtime += sc_MPI_Wtime ();
-    /* We also store the number of ghosts and remotes */
-    forest->profile->ghosts_received = ghost->num_ghosts_elements;
-    forest->profile->ghosts_shipped = ghost->num_remote_elements;
+    /* End sending the remote elements */
+    t8_forest_ghost_send_end (forest, ghost, send_info, requests);
+
+    if (forest->profile != NULL) {
+      /* If profiling is enabled, we measure the runtime of ghost_create */
+      forest->profile->ghost_runtime += sc_MPI_Wtime ();
+      /* We also store the number of ghosts and remotes */
+      forest->profile->ghosts_received = ghost->num_ghosts_elements;
+      forest->profile->ghosts_shipped = ghost->num_remote_elements;
+    }
   }
 
   t8_global_productionf ("Done t8_forest_ghost with %i local elements and %i"
