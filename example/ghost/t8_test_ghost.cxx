@@ -145,7 +145,13 @@ t8_test_ghost_hypercube (t8_eclass_t eclass, int level, sc_MPI_Comm comm,
   t8_cmesh_t          cmesh;
   cmesh = t8_cmesh_new_hypercube (eclass, comm, 0, 0);
 
-  t8_test_ghost_refine_and_partition (cmesh, level, comm, 1, no_vtk);
+  if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_QUAD ||
+      eclass == T8_ECLASS_TET || eclass == T8_ECLASS_HEX) {
+    t8_test_ghost_refine_and_partition (cmesh, level, comm, 1, no_vtk);
+  }
+  else {
+    t8_cmesh_destroy (&cmesh);
+  }
 }
 
 /* Build a forest on a cmesh read from a .msh file.
