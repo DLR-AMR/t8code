@@ -537,6 +537,15 @@ t8_forest_commit (t8_forest_t forest)
     /* Create the element offsets if not already done */
     t8_forest_partition_create_offsets (forest);
   }
+  if (forest->tree_offsets == NULL) {
+    /* Create the tree offsets if not already done */
+    t8_forest_partition_create_tree_offsets (forest);
+  }
+
+  t8_debugf ("Element offsets:\n");
+  t8_offset_print (forest->element_offsets, forest->mpicomm);
+  t8_debugf ("Tree offsets:\n");
+  t8_offset_print (forest->tree_offsets, forest->mpicomm);
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of commit */
