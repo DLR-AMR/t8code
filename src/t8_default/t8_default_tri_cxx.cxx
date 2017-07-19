@@ -256,13 +256,13 @@ void
 t8_default_scheme_tri_c::t8_element_transform_face (const t8_element_t *
                                                     elem1,
                                                     t8_element_t * elem2,
-                                                    int orientation,
+                                                    int orientation, int sign,
                                                     int is_smaller_face)
 {
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
   t8_dtri_transform_face ((const t8_dtri_t *) elem1, (t8_dtri_t *) elem2,
-                          orientation, is_smaller_face);
+                          orientation, sign, is_smaller_face);
 }
 
 /* Construct the inner element from a boundary element. */

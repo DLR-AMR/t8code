@@ -336,6 +336,10 @@ public:
    *                        to the coordinate system of the other tree.
    *  \param [in] orientation The orientation of the tree-tree connection.
    *                        \see t8_cmesh_set_join
+   *  \param [in] sign      Depending on the topological orientation of the two tree faces,
+   *                        either 0 (both faces have opposite orientation)
+   *                        or 1 (both faces have the same top. orientattion).
+   *                        \ref t8_eclass_face_orientation
    *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
    *                        the smaller face. A face f of tree T is smaller than
    *                        f' of T' if either the eclass of T is smaller or if
@@ -346,6 +350,7 @@ public:
   virtual void        t8_element_transform_face (const t8_element_t * elem1,
                                                  t8_element_t * elem2,
                                                  int orientation,
+                                                 int sign,
                                                  int is_smaller_face) = 0;
 
   /** Given a boundary face inside a root tree's face construct

@@ -194,7 +194,7 @@ public:
    *  in a tree-tree connection. */
   virtual void        t8_element_transform_face (const t8_element_t * elem1,
                                                  t8_element_t * elem2,
-                                                 int orientation,
+                                                 int orientation, int sign,
                                                  int is_smaller_face);
 
   /** Given a boundary face inside a root tree's face construct

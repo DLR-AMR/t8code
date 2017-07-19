@@ -45,6 +45,20 @@ t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MA
  {{0,2,4},{1,3,4},{0,1,4},{2,3,4},{0,1,2,3}}/* pyramid */
 };
 
+
+const int
+t8_eclass_face_orientation[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES] =
+{
+  {0},          /* vertex */
+  {0,0},        /* line */
+  {0,0,0,0},    /* quad */
+  {0,0,0},      /* triangle */
+  {0,1,0,1,0,1},/* hex */
+  {0,1,0,1},    /* tet */
+  {0,1,0,0,1},  /* prism */
+  {0,1,0,1,0}   /* pyramid */
+};
+
 const int    t8_eclass_num_vertices[T8_ECLASS_COUNT] =
   { 1, 2, 4, 3, 8, 4, 6, 5 };
 

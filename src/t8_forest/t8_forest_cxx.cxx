@@ -675,7 +675,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
     int8_t             *ttf;
     int                 tree_face, tree_neigh_face;
     int                 is_smaller, eclass_compare;
-    int                 F;
+    int                 F, sign;
 
     cmesh = forest->cmesh;
     /* Get the scheme associated to the element class of the
@@ -748,8 +748,11 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
       is_smaller = tree_face <= tree_neigh_face;
     }
     /* We now transform the face element to the other tree. */
+    sign =
+      t8_eclass_face_orientation[tree_face] ==
+      t8_eclass_face_orientation[tree_neigh_face];
     boundary_scheme->t8_element_transform_face (face_element, face_element,
-                                                ttf[tree_face] / F,
+                                                ttf[tree_face] / F, sign,
                                                 is_smaller);
     /* And now we extrude the face to the new neighbor element */
     neighbor_scheme = forest->scheme_cxx->eclass_schemes[neigh_eclass];

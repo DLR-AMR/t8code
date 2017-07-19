@@ -157,6 +157,7 @@ public:
   virtual void        t8_element_transform_face (const t8_element_t * elem1,
                                                  t8_element_t * elem2,
                                                  int orientation,
+                                                 int sign,
                                                  int is_smaller_face)
   {
     SC_ABORT ("This function is not implemented yet.\n");

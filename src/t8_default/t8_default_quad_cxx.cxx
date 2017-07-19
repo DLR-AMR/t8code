@@ -431,9 +431,11 @@ t8_default_scheme_quad_c::t8_element_transform_face (const t8_element_t *
                                                      elem1,
                                                      t8_element_t * elem2,
                                                      int orientation,
+                                                     int sign,
                                                      int is_smaller_face)
 {
-  const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem1;
+  const p4est_quadrant_t *qin = (const p4est_quadrant_t *) elem1;
+  const p4est_quadrant_t *q;
   p4est_quadrant_t   *p = (p4est_quadrant_t *) elem2;
   p4est_qcoord_t      h = P4EST_QUADRANT_LEN (q->level);
   p4est_qcoord_t      x;
@@ -441,6 +443,20 @@ t8_default_scheme_quad_c::t8_element_transform_face (const t8_element_t *
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
   T8_ASSERT (0 <= orientation && orientation < P4EST_FACES);
+
+  if (sign) {
+    /* The tree faces have the same topological orientation, and
+     * thus we have to perform a coordinate switch. */
+    /* We use p as storage, since elem1 and elem2 are allowed to
+     * point to the same quad */
+    q = (const p4est_quadrant_t *) p;
+    t8_element_copy_surround (qin, (p4est_quadrant_t *) q);
+    ((p4est_quadrant_t *) q)->x = qin->y;
+    ((p4est_quadrant_t *) q)->y = qin->x;
+  }
+  else {
+    q = qin;
+  }
 
   p->level = q->level;
   /*

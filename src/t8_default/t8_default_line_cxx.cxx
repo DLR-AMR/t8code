@@ -96,6 +96,7 @@ t8_default_scheme_line_c::t8_element_transform_face (const t8_element_t *
                                                      elem1,
                                                      t8_element_t * elem2,
                                                      int orientation,
+                                                     int sign,
                                                      int is_smaller_face)
 {
   T8_ASSERT (t8_element_is_valid (elem1));

@@ -903,16 +903,17 @@ t8_dtri_face_parent_face (const t8_dtri_t * triangle, int face)
 #ifndef T8_DTRI_TO_DTET
 /* This function has only a triangle version. */
 void
-t8_dtri_transform_face (const t8_dtri_t * triangle1,
+t8_dtri_transform_face (const t8_dtri_t * trianglein,
                         t8_dtri_t * triangle2,
-                        int orientation, int is_smaller_face)
+                        int orientation, int sign, int is_smaller_face)
 {
-  t8_dtri_coord_t     h = T8_DTRI_LEN (triangle1->level);
+  const t8_dtri_t    *triangle1;
+  t8_dtri_coord_t     h = T8_DTRI_LEN (trianglein->level);
   t8_dtri_coord_t     x;
 
   T8_ASSERT (0 <= orientation && orientation <= 2);
-  triangle2->level = triangle1->level;
-  triangle2->type = triangle1->type;
+  triangle2->level = trianglein->level;
+  triangle2->type = trianglein->type;
   /*
    * The corners of the triangle are enumerated like this
    *        type 0                    type 1
@@ -925,6 +926,20 @@ t8_dtri_transform_face (const t8_dtri_t * triangle1,
    *    v_0  v_1                      v_0
    *
    */
+
+  if (sign) {
+    /* The tree faces have the same topological orientation, and
+     * thus we have to perform a coordinate switch. */
+    /* We use triangl2 as storage, since trianglein and triangle2 are allowed to
+     * point to the same triangle */
+    triangle1 = triangle2;
+    t8_dtri_copy (trianglein, (t8_dtri_t *) triangle1);
+    ((t8_dtri_t *) triangle1)->y = trianglein->x - trianglein->y;
+  }
+  else {
+    triangle1 = trianglein;
+  }
+
   if (!is_smaller_face && orientation != 0) {
     /* Translate orientation if triangle1 is not on the smaller face.
      *  0 -> 0

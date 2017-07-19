@@ -88,6 +88,16 @@ extern const int
      t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES]
   [T8_ECLASS_MAX_CORNERS_2D];
 
+/** Each face is either 0 or 1 oriented, depending on the order of its vertices.
+ * We say a face is 0 oriented, if its normal vector points inwards,
+ * 1 oriented otherwise.
+ * The normal vector is computed as the cross product of v_1 - v_0 and v_2 - v_0.
+ * v_i being the i-th vertex.
+ * The faces of an eclass of dimension 2 or lower are all 0 oriented.
+ */
+extern const int
+     t8_eclass_face_orientation[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES];
+
 /** The number of vertices of an element class. */
 extern const int    t8_eclass_num_vertices[T8_ECLASS_COUNT];
 
