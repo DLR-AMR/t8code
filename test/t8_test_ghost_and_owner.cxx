@@ -142,7 +142,10 @@ t8_test_ghost_owner ()
       /* Construct a cmesh */
       cmesh =
         t8_test_create_cmesh (ctype, (t8_eclass_t) eclass, sc_MPI_COMM_WORLD);
+      /* Compute the minimum level, such that the forest is nonempty */
       min_level = t8_forest_min_nonempty_level (cmesh, scheme);
+      /* start with an empty level */
+      min_level = SC_MAX (0, min_level - 1);
       t8_global_productionf
         ("Testing ghost exchange with eclass %s, start level %i\n",
          t8_eclass_to_string[eclass], min_level);

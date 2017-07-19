@@ -154,7 +154,10 @@ t8_test_forest_commit ()
       /* Construct a cmesh */
       cmesh =
         t8_test_create_cmesh (ctype, (t8_eclass_t) eclass, sc_MPI_COMM_WORLD);
+      /* Compute the first level, such that no process is empty */
       min_level = t8_forest_min_nonempty_level (cmesh, scheme);
+      /* Use one level with empty processes */
+      min_level = SC_MAX (min_level - 1, 0);
       t8_global_productionf
         ("Testing forest commit with eclass %s, start level %i\n",
          t8_eclass_to_string[eclass], min_level);

@@ -45,6 +45,7 @@ t8_forest_compute_maxlevel (t8_forest_t forest)
   int                 maxlevel;
   t8_eclass_scheme_c *ts;
 
+  T8_ASSERT (t8_cmesh_is_committed (forest->cmesh));
   forest->maxlevel = -1;
   for (eclass_it = T8_ECLASS_VERTEX; eclass_it < T8_ECLASS_COUNT; eclass_it++) {
     if (forest->cmesh->num_trees_per_eclass[eclass_it] > 0) {
@@ -61,6 +62,8 @@ t8_forest_compute_maxlevel (t8_forest_t forest)
       }
     }
   }
+  T8_ASSERT (forest->maxlevel >= 0);
+  t8_debugf ("[H] Computed maxlevel %i\n", forest->maxlevel);
 }
 
 /* Return the maximum level of a forest */
@@ -372,6 +375,7 @@ t8_forest_populate (t8_forest_t forest)
   t8_eclass_t         tree_class;
   t8_eclass_scheme_c *eclass_scheme;
   t8_gloidx_t         cmesh_first_tree, cmesh_last_tree;
+  int                 is_empty;
 
   SC_CHECK_ABORT (forest->set_level <= forest->maxlevel,
                   "Given refinement level exceeds the maximum.\n");
@@ -381,21 +385,35 @@ t8_forest_populate (t8_forest_t forest)
                            &forest->last_local_tree, &child_in_tree_end,
                            NULL);
 
+  /* True if the forest has no elements */
+  is_empty = forest->first_local_tree > forest->last_local_tree
+    || (forest->first_local_tree == forest->last_local_tree
+        && child_in_tree_begin >= child_in_tree_end);
+
   cmesh_first_tree = t8_cmesh_get_first_treeid (forest->cmesh);
   cmesh_last_tree = cmesh_first_tree +
     t8_cmesh_get_num_local_trees (forest->cmesh) - 1;
-  SC_CHECK_ABORT (forest->first_local_tree >= cmesh_first_tree
-                  && forest->last_local_tree <= cmesh_last_tree,
-                  "cmesh partition does not match the planned forest partition");
+  t8_debugf ("[H] trees: %li %li  ctrees: %li %li  els: %li %li. level %i\n",
+             (long) forest->first_local_tree, (long) forest->last_local_tree,
+             (long) cmesh_first_tree, (long) cmesh_last_tree,
+             (long) child_in_tree_begin, (long) child_in_tree_end,
+             forest->set_level);
+  if (!is_empty) {
+    SC_CHECK_ABORT (forest->first_local_tree >= cmesh_first_tree
+                    && forest->last_local_tree <= cmesh_last_tree,
+                    "cmesh partition does not match the planned forest partition");
+  }
 
   forest->global_num_elements = forest->local_num_elements = 0;
   /* create only the non-empty tree objects */
-  if (forest->first_local_tree >= forest->last_local_tree
-      && child_in_tree_begin >= child_in_tree_end) {
+  if (is_empty) {
     /* This processor is empty
      * we still set the tree array to store 0 as the number of trees here */
     forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
     count_elements = 0;
+    /* Set the first local tree larger than the last local tree to
+     * indicate empty forest */
+    forest->first_local_tree = forest->last_local_tree + 1;
   }
   else {
     /* for each tree, allocate elements */
@@ -464,7 +482,7 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (first_or_last == 0 || first_or_last == 1);
   T8_ASSERT (forest != NULL);
-  if (forest->trees == NULL
+  if (forest->local_num_elements <= 0 || forest->trees == NULL
       || forest->first_local_tree > forest->last_local_tree) {
     /* This forest is empty and therefore the first tree is not shared */
     return 0;
@@ -823,6 +841,7 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t * element,
   t8_gloidx_t        *first_global_trees;
   uint64_t            rfirst_desc_id, rnext_desc_id = -1, first_desc_id;
   int                 is_first, is_last, check_next;
+  int                 next_nonempty;
 
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (element != NULL);
@@ -831,6 +850,7 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t * element,
 
   /* Get a pointer to the first_global_trees array of forest */
   first_global_trees = t8_shmem_array_get_gloidx_array (forest->tree_offsets);
+
   if (t8_offset_in_range (gtreeid, rank, first_global_trees)) {
     /* The process has elements of that tree */
     is_first = (t8_offset_first (rank, first_global_trees) == gtreeid);
@@ -838,8 +858,10 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t * element,
     if (is_first || is_last) {
       /* We need to check if element is on the next rank only if the tree is the
        * last tree on this rank and the next rank has elements of this tree */
-      check_next = is_last && rank < forest->mpisize - 1 &&
-        t8_offset_in_range (gtreeid, rank + 1, first_global_trees);
+      next_nonempty = t8_offset_next_nonempty_rank (rank, forest->mpisize,
+                                                    first_global_trees);
+      check_next = is_last && next_nonempty < forest->mpisize &&
+        t8_offset_in_range (gtreeid, next_nonempty, first_global_trees);
       /* The tree is either the first or the last tree on rank, we thus
        * have to check whether element is in the range of the tree */
       /* Get the eclass scheme of the tree */
@@ -861,14 +883,14 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t * element,
           ts->t8_element_get_linear_id (element, ts->t8_element_maxlevel ());
       }
       /* Get the id of the trees first descendant and the first descendant
-       * of the next rank */
+       * of the next nonempty rank */
       rfirst_desc_id =
         *(uint64_t *) t8_shmem_array_index (forest->global_first_desc, rank);
       if (check_next) {
-        /* Get the id of the trees first descendant on the next rank */
+        /* Get the id of the trees first descendant on the next nonempty rank */
         rnext_desc_id =
           *(uint64_t *) t8_shmem_array_index (forest->global_first_desc,
-                                              rank + 1);
+                                              next_nonempty);
       }
       /* The element is not in the tree if and only if
        *  is_first && first_desc_id > id (first_desc)
@@ -955,11 +977,13 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
 {
   t8_element_t       *first_desc;
   t8_eclass_scheme_c *ts;
-  t8_gloidx_t        *first_trees;
+  t8_gloidx_t        *first_trees, *element_offsets;
   t8_gloidx_t         current_first_tree;
   uint64_t            current_id, element_desc_id;
   uint64_t           *first_descs;
   int                 found = 0;
+  int                 empty_dir = 1, last_guess, reached_bound;
+  int                 next_nonempty;
 
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (0 <= gtreeid
@@ -997,7 +1021,11 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
   element_desc_id =
     ts->t8_element_get_linear_id (first_desc,
                                   ts->t8_element_level (first_desc));
+  /* Get a pointer to the element offset array */
+  element_offsets = t8_shmem_array_get_gloidx_array (forest->element_offsets);
 
+  t8_debugf ("[H] Find owner of desc %lu in tree %li\n",
+             element_desc_id, gtreeid);
   /* binary search for the owner process using the first descendant and first tree array */
   while (!found) {
     T8_ASSERT (lower_bound <= upper_bound);
@@ -1007,11 +1035,41 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
       found = 1;
     }
     else {
+      last_guess = guess;
+      while (t8_offset_empty (guess, element_offsets)) {
+        t8_debugf ("[H] %i is empty\n", guess);
+        /* skip empty processes */
+        if ((empty_dir == -1 && guess <= lower_bound) ||
+            (empty_dir == +1 && guess >= upper_bound)) {
+          /* We look for smaller processes until guess = lower_bound,
+           * and then look for greater processes
+           * or vice versa. */
+          /* we reached the top or bottom bound */
+          reached_bound = empty_dir > 0 ? 1 : -1;
+          /* change direction */
+          empty_dir *= -1;
+          /* reset guess */
+          guess = last_guess;
+          if (reached_bound > 0) {
+            /* The upper bound was reached, we ommit all empty
+             * ranks from the search. */
+            upper_bound = last_guess;
+          }
+          else {
+            /* The lower bound was reached, we ommit all empty
+             * ranks from the search. */
+            lower_bound = last_guess;
+          }
+        }
+        guess += empty_dir;
+      }
+      t8_debugf ("[H] %i is not empty\n", guess);
       /* The first tree of this process */
       current_first_tree = t8_offset_first (guess, first_trees);
 
       if (current_first_tree > gtreeid) {
         /* look further left */
+        empty_dir = -1;
         upper_bound = guess - 1;
         /* guess is in the middle of both bounds */
         guess = (upper_bound + lower_bound) / 2;
@@ -1022,27 +1080,35 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
           /* This guess has gtreeid as first tree
            * we compare the first descendant */
           /* look further left */
+          empty_dir = -1;
           upper_bound = guess - 1;
           /* guess is in the middle of both bounds */
           guess = (upper_bound + lower_bound) / 2;
         }
         else {
-          /* check if the element is on the next higher process */
-          current_first_tree = t8_offset_first (guess + 1, first_trees);
+          /* check if the element is on the next higher nonempty process */
+          next_nonempty =
+            t8_offset_next_nonempty_rank (guess, forest->mpisize,
+                                          first_trees);
+          t8_debugf ("[H] Next nonempty %i\n", next_nonempty);
+          current_first_tree = t8_offset_first (next_nonempty, first_trees);
           if (current_first_tree < gtreeid) {
             /* look further right */
-            lower_bound = guess + 1;
+            empty_dir = +1;
+            lower_bound = next_nonempty;
             /* guess is in the middle of both bounds */
             guess = (upper_bound + lower_bound) / 2;
           }
           else {
-            current_id = first_descs[guess + 1];
+            current_id = first_descs[next_nonempty];
             if (current_first_tree == gtreeid
                 && current_id <= element_desc_id) {
+              t8_debugf ("[H] look right\n");
               /* The next process has gtreeid as first tree
                * we compare the first descendants */
               /* The process we look for is >= guess + 1
                * look further right */
+              empty_dir = +1;
               lower_bound = guess + 1;
               /* guess is in the middle of both bounds */
               guess = (upper_bound + lower_bound) / 2;
@@ -1263,10 +1329,13 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
   /* It is impossible for an element with bigger id to belong to a smaller process */
   T8_ASSERT (first_owner <= last_owner);
 
+  t8_debugf ("[H] At level %i bounds: %i %i\n",
+             ts->t8_element_level (element), first_owner, last_owner);
+
   if (first_owner == last_owner) {
     /* This element has a unique owner, no recursion is necessary */
     /* Add the owner to the array of owners */
-    /* TODO: check if this process is alreadt listed. If we traverse the face children
+    /* TODO: check if this process is already listed. If we traverse the face children
      * in SFC order, we can just check the last entry in owners here */
     if (owners->elem_count > 0) {
       /* Get the last process that we added as owner */

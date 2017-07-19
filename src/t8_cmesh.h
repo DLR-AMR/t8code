@@ -162,7 +162,9 @@ t8_shmem_array_t    t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
  *                              \ref t8_cmesh_commit.
  *                             -1: Co not change the face_knowledge level but keep any
  *                                 previously set ones. (Possibly by a previous call to \ref t8_cmesh_set_partition_range)
- * \param [in]     first_local_tree The global index of the first tree on this process.
+ * \param [in]     first_local_tree The global index ID of the first tree on this process.
+ *                                  If this tree is also the last tree on the previous process,
+ *                                  then the argument must be -ID - 1.
  * \param [in]     last_local_tree  The global index of the last tree on this process.
  *                                  If this process should be empty then \a last_local_tree
  *                                  must be strictly smaller than \a first_local_tree.
@@ -556,7 +558,8 @@ t8_shmem_array_t    t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
  * \param [out]   first_local_tree  The first tree that contains elements belonging to the calling processor.
  * \param [out]   child_in_tree_begin The global index of the first element belonging to the calling processor. Not computed if NULL.
  * \param [out]   last_local_tree  The last tree that contains elements belonging to the calling processor.
- * \param [out]   child_in_tree_end The global index of the last element belonging to the calling processor. Not computed if NULL.
+ * \param [out]   child_in_tree_end The global index of the first element that does not belonging to
+ *                                  the calling processor anymore. Not computed if NULL.
  * \param [out[   first_tree_shared If not NULL, 1 or 0 is stored here depending on whether \a first_local_tree is the
  *                                 same as \a last_local_tree on the next process.
  * \a cmesh must be committed before calling this function. *

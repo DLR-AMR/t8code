@@ -60,6 +60,10 @@ typedef enum t8_eclass
 }
 t8_eclass_t;
 
+/** The MPI datatype used for t8_eclass_t */
+#define T8_MPI_ECLASS_TYPE (T8_ASSERT (sizeof (int) == sizeof (t8_eclass_t)),\
+  sc_MPI_INT)
+
 /** The maximum number of boundary faces an element class can have. */
 #define T8_ECLASS_MAX_FACES 6
 /** The maximum number of cornes a 2-dimensional element class can have. */

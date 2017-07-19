@@ -42,6 +42,17 @@ void                t8_forest_partition (t8_forest_t forest);
  */
 void                t8_forest_partition_create_offsets (t8_forest_t forest);
 
+/** If \ref t8_forest_partition_create_offsets was already called,
+ * compute for a given rank the next greater rank that is not empty.
+ * \param [in]      forest The forest.
+ * \param [in]      rank   An MPI rank.
+ * \return                 A rank q > \a rank such that the forest has
+ *                         elements on \a q. If such a \a q does not exist,
+ *                         returns mpisize.
+ */
+int                 t8_forest_partition_next_nonempty_rank (t8_forest_t
+                                                            forest, int rank);
+
 /** Create the array of global_first_descendant ids of a partitioned forest.
  * \param [in,out]  forest The forest.
  * \a forest must be committed before calling this function.

@@ -25,7 +25,7 @@
 #include "t8_cmesh_trees.h"
 #include "t8_cmesh_types.h"
 
-/* Return the global number of vertices in a cmesh.
+/* Return the local number of vertices in a cmesh.
  * \param [in] cmesh       The cmesh to be considered.
  * \param [in] count_ghosts If true, we also count the vertices of the ghost trees.
  * \return                 The number of vertices associated to \a cmesh.
@@ -43,7 +43,7 @@ t8_cmesh_get_num_vertices (t8_cmesh_t cmesh, int count_ghosts)
 
   for (iclass = T8_ECLASS_ZERO; iclass < T8_ECLASS_COUNT; iclass++) {
     num_vertices += t8_eclass_num_vertices[iclass] *
-      cmesh->num_trees_per_eclass[iclass];
+      cmesh->num_local_trees_per_eclass[iclass];
   }
   if (count_ghosts) {
     /* Also count the vertices of the ghost trees */

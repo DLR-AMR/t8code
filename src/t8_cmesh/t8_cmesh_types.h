@@ -114,7 +114,11 @@ typedef struct t8_cmesh
   /* TODO: wouldnt a local num_trees_per_eclass be better?
    *       only as an additional info. we need the global count. i.e. for forest_maxlevel computation.
    */
-  t8_gloidx_t         num_trees_per_eclass[T8_ECLASS_COUNT]; /**< After commit the number of
+  t8_locidx_t         num_local_trees_per_eclass[T8_ECLASS_COUNT]; /**< After commit the number of local
+                                                                 trees for each eclass.
+                                                                 Stores the same entries as \a num_trees_per_eclass,
+                                                                 if the cmesh is replicated. */
+  t8_gloidx_t         num_trees_per_eclass[T8_ECLASS_COUNT]; /**< After commit the number of global
                                                                  trees for each eclass. */
 
   t8_cmesh_trees_t    trees; /**< structure that holds all local trees and ghosts */

@@ -537,6 +537,15 @@ t8_forest_commit (t8_forest_t forest)
     /* Create the element offsets if not already done */
     t8_forest_partition_create_offsets (forest);
   }
+  if (forest->tree_offsets == NULL) {
+    /* Create the tree offsets if not already done */
+    t8_forest_partition_create_tree_offsets (forest);
+  }
+
+  t8_debugf ("Element offsets:\n");
+  t8_offset_print (forest->element_offsets, forest->mpicomm);
+  t8_debugf ("Tree offsets:\n");
+  t8_offset_print (forest->tree_offsets, forest->mpicomm);
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of commit */
@@ -629,23 +638,18 @@ static              t8_shmem_array_t
 t8_forest_compute_cmesh_offset (t8_forest_t forest, sc_MPI_Comm comm)
 {
   t8_shmem_array_t    offset;
-  t8_gloidx_t         local_offset;
-  int                 first_tree_shared;
 
+  if (forest->tree_offsets == NULL) {
+    /* Create the tree offsets if necessary */
+    t8_forest_partition_create_tree_offsets (forest);
+  }
   /* initialize the shared memory array */
   t8_shmem_array_init (&offset, sizeof (t8_gloidx_t), forest->mpisize + 1,
                        comm);
-  /* Compute whether our first local tree is shared with a smaller rank */
-  first_tree_shared = t8_forest_first_tree_shared (forest);
-  /* Calculate our entry in the offset array */
-  local_offset = t8_offset_first_tree_to_entry (forest->first_local_tree,
-                                                first_tree_shared);
-  /* allgather the local entries of the offset array */
-  t8_shmem_array_allgather (&local_offset, 1, T8_MPI_GLOIDX, offset, 1,
-                            T8_MPI_GLOIDX);
-  /* Set the last entry of the offset array to the global number of trees */
-  t8_shmem_array_set_gloidx (offset, forest->mpisize,
-                             forest->global_num_trees);
+
+  /* Copy the contents */
+  t8_shmem_array_copy (offset, forest->tree_offsets);
+
   return offset;
 }
 
@@ -654,15 +658,19 @@ t8_forest_partition_cmesh (t8_forest_t forest, sc_MPI_Comm comm,
                            int set_profiling)
 {
   t8_cmesh_t          cmesh_partition;
+  t8_shmem_array_t    offsets;
 
   t8_debugf ("Partitioning cmesh according to forest\n");
 
   t8_cmesh_init (&cmesh_partition);
   t8_cmesh_set_derive (cmesh_partition, forest->cmesh);
   /* set partition range of new cmesh according to forest trees */
-  t8_cmesh_set_partition_offsets (cmesh_partition,
-                                  t8_forest_compute_cmesh_offset (forest,
-                                                                  comm));
+  if (forest->tree_offsets == NULL) {
+    t8_forest_partition_create_tree_offsets (forest);
+  }
+  offsets = t8_forest_compute_cmesh_offset (forest, comm);
+
+  t8_cmesh_set_partition_offsets (cmesh_partition, offsets);
   /* Set the profiling of the cmesh */
   t8_cmesh_set_profiling (cmesh_partition, set_profiling);
   /* Commit the new cmesh */

@@ -777,10 +777,6 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_locidx_t ltree_id,
   key_id.package_id = package_id;
 
   if (num_attributes <= 0) {
-    /* TODO: Error handling if attribute not found */
-    t8_global_errorf ("Attribute with package id %i and key %i not found"
-                      " on tree %li. This tree has no attributes at all.\n",
-                      package_id, key, (long) ltree_id);
     return NULL;
   }
 
@@ -790,9 +786,6 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_locidx_t ltree_id,
                             t8_cmesh_trees_compare_keyattr);
 
   if (index < 0) {
-    /* TODO: Error handling if attribute not found */
-    t8_global_errorf ("Attribute with package id %i and key %i not found"
-                      " on tree %li.\n", package_id, key, (long) ltree_id);
     return NULL;
   }
   attr_info = (t8_attribute_info_struct_t *)

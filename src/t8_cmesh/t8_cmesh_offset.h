@@ -83,6 +83,20 @@ t8_gloidx_t         t8_offset_last (int proc, t8_gloidx_t * offset);
  */
 int                 t8_offset_empty (int proc, t8_gloidx_t * offset);
 
+/** Find the next higher rank that is not empty.
+ * returns mpisize if this rank does not exist.
+ * \param [in] proc     An MPI rank.
+ * \param [in] mpisize  The number of total MPI ranks.
+ * \param [in] offset   An array with at least \a mpisize + 1 entries.
+ * \return              A rank \a p such that \a p > \a rank and
+ *                      t8_offset_empty (\a p, \a offset) is True and
+ *                      t8_offset_empty (\a q, \a offset) is False for all
+ *                      \a rank < \a q < \a p.
+ *                      If no such \a q exists, \a mpisize is returned.
+ */
+int                 t8_offset_next_nonempty_rank (int rank, int mpisize,
+                                                  t8_gloidx_t * offset);
+
 #if T8_ENABLE_DEBUG
 /** Check whether a given offset array represents a valid
  *  partition.

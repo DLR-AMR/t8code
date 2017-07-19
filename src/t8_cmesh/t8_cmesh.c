@@ -53,6 +53,33 @@ t8_cmesh_is_initialized (t8_cmesh_t cmesh)
   return 1;
 }
 
+/* For a committed cmesh check whether the entries of num_trees_per_eclass
+ * and num_local_trees_per_eclass are valid.
+ * Thus, num_local_trees_per_eclass[i] <= num_trees_per_eclass[i]
+ * and the sum of the local trees must match cmesh->num_local_trees
+ * and the sum of the global trees must match cmesh->num_trees.
+ *
+ * Returns true, if everything is fine.
+ */
+static int
+t8_cmesh_check_trees_per_eclass (t8_cmesh_t cmesh)
+{
+  int                 ieclass;
+  t8_gloidx_t         glo_trees = 0;
+  t8_locidx_t         lo_trees = 0;
+  int                 ret = 0;
+
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  for (ieclass = 0; ieclass < T8_ECLASS_COUNT; ieclass++) {
+    ret = ret && cmesh->num_local_trees_per_eclass[ieclass] <=
+      cmesh->num_trees_per_eclass[ieclass];
+    lo_trees += cmesh->num_local_trees_per_eclass[ieclass];
+    glo_trees += cmesh->num_trees_per_eclass[ieclass];
+  }
+  return !ret && lo_trees == cmesh->num_local_trees
+    && glo_trees == cmesh->num_trees;
+}
+
 int
 t8_cmesh_is_committed (t8_cmesh_t cmesh)
 {
@@ -75,7 +102,8 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
 #ifdef T8_ENABLE_DEBUG
     /* TODO: check more conditions that must always hold after commit */
     if ((!t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) ||
-        (!t8_cmesh_no_negative_volume (cmesh))) {
+        (!t8_cmesh_no_negative_volume (cmesh))
+        || (!t8_cmesh_check_trees_per_eclass (cmesh))) {
       return 0;
     }
 #endif
@@ -149,6 +177,8 @@ t8_cmesh_init (t8_cmesh_t * pcmesh)
   cmesh->dimension = -1;        /*< ok; force user to select dimension */
   cmesh->mpirank = -1;
   cmesh->mpisize = -1;
+  cmesh->first_tree = -1;
+  cmesh->first_tree_shared = -1;
   cmesh->face_knowledge = 3;    /*< sensible default TODO document */
   t8_stash_init (&cmesh->stash);
 
@@ -282,11 +312,22 @@ t8_cmesh_set_partition_range (t8_cmesh_t cmesh, int set_face_knowledge,
   SC_CHECK_ABORT (set_face_knowledge == -1 || set_face_knowledge == 3,
                   "Face knowledge other than three is not implemented yet.");
   cmesh->face_knowledge = set_face_knowledge;
-  cmesh->first_tree = first_local_tree;
+  if (first_local_tree < 0) {
+    /* the first tree is shared */
+    cmesh->first_tree = -first_local_tree - 1;
+    cmesh->first_tree_shared = 1;
+  }
+  else {
+    /* The first tree is not shared */
+    cmesh->first_tree = first_local_tree;
+    cmesh->first_tree_shared = 0;
+  }
   cmesh->num_local_trees = last_local_tree - first_local_tree + 1;
   cmesh->set_partition = 1;
   /* Overwrite previous partition settings */
   if (cmesh->tree_offsets != NULL) {
+    cmesh->first_tree = -1;
+    cmesh->first_tree_shared = -1;
     t8_shmem_array_destroy (&cmesh->tree_offsets);
     cmesh->tree_offsets = NULL;
   }
@@ -309,6 +350,7 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh,
   if (tree_offsets != NULL) {
     /* We overwrite any previously partition settings */
     cmesh->first_tree = -1;
+    cmesh->first_tree_shared = -1;
     cmesh->num_local_trees = -1;
     cmesh->set_partition_level = -1;
   }
@@ -647,6 +689,7 @@ t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
   /* Iterate over all trees, get their vertices and check the volume */
   for (itree = 0; itree < cmesh->num_local_trees; itree++) {
     vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
+    ret = 1;
     if (vertices != NULL) {
       /* Vertices are set */
       eclass = t8_cmesh_get_tree_class (cmesh, itree);
@@ -1039,8 +1082,7 @@ t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_locidx_t ltree_id)
 {
   t8_ctree_t          tree;
 
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
   tree = t8_cmesh_get_tree (cmesh, ltree_id);
   return tree->eclass;
@@ -1142,6 +1184,8 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
                          t8_gloidx_t * child_in_tree_end,
                          int8_t * first_tree_shared)
 {
+  int                 is_empty;
+
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
   T8_ASSERT (level >= 0);
@@ -1191,8 +1235,6 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
       last_global_child = global_num_children;
     }
 
-    SC_CHECK_ABORT (first_global_child < last_global_child,
-                    "forest does not support empty processes yet");
     T8_ASSERT (0 <= first_global_child
                && first_global_child <= global_num_children);
     T8_ASSERT (0 <= last_global_child
@@ -1202,19 +1244,20 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
       *child_in_tree_begin =
         first_global_child - *first_local_tree * children_per_tree;
     }
-    /* TODO: Just fixed this line from last_global_child -1 / cpt
-     *       Why did we not notice this error before?
-     *       Changed it back*/
+
     *last_local_tree = (last_global_child - 1) / children_per_tree;
+
+    is_empty = *first_local_tree >= *last_local_tree
+      && first_global_child >= last_global_child;
     if (first_tree_shared != NULL) {
       prev_last_tree = (first_global_child - 1) / children_per_tree;
       T8_ASSERT (cmesh->mpirank > 0 || prev_last_tree <= 0);
-      if (cmesh->mpirank > 0 && prev_last_tree == *first_local_tree &&
-          first_global_child < last_global_child && last_global_child >= 0) {
+      if (!is_empty && cmesh->mpirank > 0 && first_global_child > 0) {
         /* We exclude empty partitions here, by def their first_tree_shared flag is zero */
         /* We also exclude that the previous partition was empty at the beginning of the
          * partitions array */
-        /* TODO: If empty partitions in the middle can occur then we have to think this over */
+        /* We also exclude the case that we have the first global element but
+         * are not rank 0. */
         *first_tree_shared = 1;
       }
       else {
@@ -1230,10 +1273,25 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
         *child_in_tree_end = last_global_child;
       }
     }
+    if (is_empty) {
+      /* This process is empty */
+      /* We now set the first local tree to the first local tree on the
+       * next nonempty rank, and the last local tree to first - 1 */
+      *first_local_tree = last_global_child / children_per_tree;
+      if (first_global_child % children_per_tree != 0) {
+        /* The next nonempty process shares this tree. */
+        (*first_local_tree)++;
+      }
+
+      *last_local_tree = *first_local_tree - 1;
+    }
+
+#if 0
     if (first_global_child >= last_global_child && cmesh->mpirank != 0) {
       /* This process is empty */
       *first_local_tree = prev_last_tree + 1;
     }
+#endif
   }
   else {
     SC_ABORT ("Partition with level > 0 "
