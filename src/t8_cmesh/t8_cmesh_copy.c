@@ -67,6 +67,10 @@ t8_cmesh_copy (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, sc_MPI_Comm comm)
   /* Copy the numbers of trees */
   memcpy (cmesh->num_trees_per_eclass, cmesh_from->num_trees_per_eclass,
           T8_ECLASS_COUNT * sizeof (t8_gloidx_t));
+  /* Copy the numbers of local trees */
+  memcpy (cmesh->num_local_trees_per_eclass,
+          cmesh_from->num_local_trees_per_eclass,
+          T8_ECLASS_COUNT * sizeof (t8_locidx_t));
 
   /* Copy the tree info */
   num_parts = t8_cmesh_trees_get_numproc (cmesh_from->trees);
