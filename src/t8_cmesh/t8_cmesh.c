@@ -1286,9 +1286,6 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
       *last_local_tree = *first_local_tree - 1;
     }
 
-    t8_debugf ("[H] ft %i lt %i, fc %i lc %i, empty %i\n", *first_local_tree,
-               *last_local_tree, first_global_child, last_global_child,
-               is_empty);
 #if 0
     if (first_global_child >= last_global_child && cmesh->mpirank != 0) {
       /* This process is empty */

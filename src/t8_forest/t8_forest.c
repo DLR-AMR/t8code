@@ -668,9 +668,7 @@ t8_forest_partition_cmesh (t8_forest_t forest, sc_MPI_Comm comm,
   if (forest->tree_offsets == NULL) {
     t8_forest_partition_create_tree_offsets (forest);
   }
-  t8_shmem_array_init (&offsets, sizeof (t8_gloidx_t), forest->mpisize + 1,
-                       comm);
-  t8_shmem_array_copy (offsets, forest->tree_offsets);
+  offsets = t8_forest_compute_cmesh_offset (forest, comm);
 
   t8_cmesh_set_partition_offsets (cmesh_partition, offsets);
   /* Set the profiling of the cmesh */
