@@ -2256,6 +2256,12 @@ t8_forest_ghost_exchange_data (t8_forest_t forest, sc_array_t * element_data)
 
   t8_debugf ("Entering ghost_exchange_data\n");
   T8_ASSERT (t8_forest_is_committed (forest));
+
+  if (forest->local_num_elements <= 0) {
+    /* empty process, nothing to do */
+    return;
+  }
+
   T8_ASSERT (forest->ghosts != NULL);
   T8_ASSERT (element_data != NULL);
   T8_ASSERT ((t8_locidx_t) element_data->elem_count ==
