@@ -145,7 +145,7 @@ int
 t8_default_scheme_tet_c::t8_element_child_id (const t8_element_t * elem)
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  return t8_dtet_child_id ((t8_dtet_t *) elem);
+  return t8_dtet_child_id ((const t8_dtet_t *) elem);
 }
 
 int

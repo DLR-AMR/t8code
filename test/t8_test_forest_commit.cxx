@@ -36,7 +36,7 @@
  * After these two forests are created, we check for equality.
  */
 
-/* Adapt a forest such that always the second child of a
+/* Adapt a forest such that always the first child of a
  * tree is refined and no other elements. This results in a highly
  * imbalanced forest. */
 static int
@@ -46,8 +46,10 @@ t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
 {
   int                 level;
   int                 maxlevel, child_id;
-  T8_ASSERT (num_elements == 1 || num_elements ==
-             ts->t8_element_num_children (elements[0]));
+  T8_ASSERT (num_elements == 1 || (num_elements > 1 && num_elements ==
+                                   ts->
+                                   t8_element_num_children (elements[0])));
+
   level = ts->t8_element_level (elements[0]);
 
   /* we set a maximum refinement level as forest user data */
@@ -57,7 +59,7 @@ t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
     return 0;
   }
   child_id = ts->t8_element_child_id (elements[0]);
-  if (child_id == 2) {
+  if (child_id == 1) {
     return 1;
   }
   return 0;
@@ -66,7 +68,7 @@ t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
 /* Depending on an integer i create a different cmesh.
  * i = 0: cmesh_new_class
  * i = 1: cmesh_new_hypercube
- * i = 2: cmesh_new_bigmesh (100 trees)
+ * i = 2: cmesh_new_bigmesh (2 trees)
  * else:  cmesh_new_class
  */
 static              t8_cmesh_t
@@ -78,7 +80,7 @@ t8_test_create_cmesh (int i, t8_eclass_t eclass, sc_MPI_Comm comm)
   case 1:
     return t8_cmesh_new_hypercube (eclass, comm, 0, 0);
   case 2:
-    return t8_cmesh_new_bigmesh (eclass, 100, comm);
+    return t8_cmesh_new_bigmesh (eclass, 2, comm);
   default:
     return t8_cmesh_new_from_class (eclass, comm);
   }
@@ -147,15 +149,14 @@ t8_test_forest_commit ()
 
   for (eclass = T8_ECLASS_QUAD; eclass < T8_ECLASS_PRISM; eclass++) {
     /* TODO: Activate the other eclass as soon as they support ghosts */
-    //for (ctype = 0; ctype < 3; ctype++) {
-    {
+    for (ctype = 0; ctype < 3; ctype++) {
       scheme = t8_scheme_new_default_cxx ();
-      ctype = 2;
       /* Construct a cmesh */
       cmesh =
         t8_test_create_cmesh (ctype, (t8_eclass_t) eclass, sc_MPI_COMM_WORLD);
       /* Compute the first level, such that no process is empty */
       min_level = t8_forest_min_nonempty_level (cmesh, scheme);
+      t8_scheme_cxx_unref (&scheme);
       /* Use one level with empty processes */
       min_level = SC_MAX (min_level - 1, 0);
       t8_global_productionf
@@ -163,8 +164,7 @@ t8_test_forest_commit ()
          t8_eclass_to_string[eclass], min_level);
       for (level = min_level; level < min_level + 3; level++) {
         maxlevel = level + 3;
-        /* ref the scheme since we reuse it */
-        t8_scheme_cxx_ref (scheme);
+        scheme = t8_scheme_new_default_cxx ();
         /* ref the cmesh since we reuse it */
         t8_cmesh_ref (cmesh);
         /* Create a uniformly refined forest */
@@ -183,12 +183,11 @@ t8_test_forest_commit ()
         SC_CHECK_ABORT (t8_forest_is_equal
                         (forest_abp_3part, forest_ada_bal_part),
                         "The forests are not equal");
-
         t8_forest_unref (&forest_ada_bal_part);
         t8_forest_unref (&forest_abp_3part);
       }
       t8_cmesh_destroy (&cmesh);
-      t8_scheme_cxx_unref (&scheme);
+      t8_debugf ("Done with eclass %s\n", t8_eclass_to_string[eclass]);
     }
   }
 }

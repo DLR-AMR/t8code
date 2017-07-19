@@ -164,7 +164,7 @@ int
 t8_default_scheme_hex_c::t8_element_child_id (const t8_element_t * elem)
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  return p8est_quadrant_child_id ((p8est_quadrant_t *) elem);
+  return p8est_quadrant_child_id ((const p8est_quadrant_t *) elem);
 }
 
 int
