@@ -865,15 +865,13 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 
   struct
   {
-    int                 dimension;
-    t8_locidx_t         num_trees;
+    t8_cmesh_struct_t   cmesh;
     t8_gloidx_t         num_trees_per_eclass[T8_ECLASS_COUNT];
     size_t              stash_elem_counts[3];
 #ifdef T8_ENABLE_DEBUG
-    t8_locidx_t         inserted_trees;
     sc_MPI_Comm         comm;
 #endif
-  } dimensions;
+  } meta_info;
 
   /* TODO: BUG: running with two processes and a cmesh of one T8_ECLASS_LINE,
    *       the on both processes the face_neigbors and vertices arrays of
@@ -903,40 +901,45 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 
   /* At first we broadcast all meta information. */
   if (mpirank == root) {
-    dimensions.dimension = cmesh_in->dimension;
-    dimensions.num_trees = cmesh_in->num_trees;
+    memcpy (&meta_info.cmesh, cmesh_in, sizeof (*cmesh_in));
     for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
-      dimensions.num_trees_per_eclass[iclass] =
+      meta_info.num_trees_per_eclass[iclass] =
         cmesh_in->num_trees_per_eclass[iclass];
     }
-    dimensions.stash_elem_counts[0] = cmesh_in->stash->attributes.elem_count;
-    dimensions.stash_elem_counts[1] = cmesh_in->stash->classes.elem_count;
-    dimensions.stash_elem_counts[2] = cmesh_in->stash->joinfaces.elem_count;
+    meta_info.stash_elem_counts[0] = cmesh_in->stash->attributes.elem_count;
+    meta_info.stash_elem_counts[1] = cmesh_in->stash->classes.elem_count;
+    meta_info.stash_elem_counts[2] = cmesh_in->stash->joinfaces.elem_count;
 #ifdef T8_ENABLE_DEBUG
-    dimensions.inserted_trees = cmesh_in->inserted_trees;
+    meta_info.comm = comm;
 #endif
   }
   /* TODO: we could optimize this by using IBcast */
-  mpiret = sc_MPI_Bcast (&dimensions, sizeof (dimensions), sc_MPI_BYTE, root,
+  mpiret = sc_MPI_Bcast (&meta_info, sizeof (meta_info), sc_MPI_BYTE, root,
                          comm);
   SC_CHECK_MPI (mpiret);
 
   /* If not root store information in new cmesh and allocate memory for arrays. */
   if (mpirank != root) {
     t8_cmesh_init (&cmesh_in);
-    cmesh_in->dimension = dimensions.dimension;
-    cmesh_in->num_trees = dimensions.num_trees;
+    cmesh_in->dimension = meta_info.cmesh.dimension;
+    cmesh_in->face_knowledge = meta_info.cmesh.face_knowledge;
+    cmesh_in->set_partition = meta_info.cmesh.set_partition;
+    cmesh_in->set_partition_level = meta_info.cmesh.set_partition_level;
+    cmesh_in->set_refine_level = meta_info.cmesh.set_refine_level;
+    if (meta_info.cmesh.profile != NULL) {
+      t8_cmesh_set_profiling (cmesh_in, 1);
+    }
     for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
       cmesh_in->num_trees_per_eclass[iclass] =
-        dimensions.num_trees_per_eclass[iclass];
+        meta_info.num_trees_per_eclass[iclass];
     }
 #ifdef T8_ENABLE_DEBUG
-    cmesh_in->inserted_trees = dimensions.inserted_trees;
-    T8_ASSERT (dimensions.comm == comm);
+    T8_ASSERT (meta_info.comm == comm);
+    cmesh_in->inserted_trees = meta_info.cmesh.inserted_trees;
 #endif
   }
   /* broadcast all the stashed information about trees/neighbors/attributes */
-  t8_stash_bcast (cmesh_in->stash, root, comm, dimensions.stash_elem_counts);
+  t8_stash_bcast (cmesh_in->stash, root, comm, meta_info.stash_elem_counts);
   return cmesh_in;
 }
 
