@@ -156,8 +156,6 @@ t8_cmesh_gather_trees_per_eclass (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     for (ieclass = 0; ieclass < T8_ECLASS_COUNT; ieclass++) {
       temp_trees_per_eclass[ieclass] =
         cmesh->num_local_trees_per_eclass[ieclass];
-      t8_debugf ("[H] %s trees %i\n", t8_eclass_to_string[ieclass],
-                 temp_trees_per_eclass[ieclass]);
     }
 
     if (cmesh->first_tree_shared) {
@@ -174,8 +172,6 @@ t8_cmesh_gather_trees_per_eclass (t8_cmesh_t cmesh, sc_MPI_Comm comm)
        */
       eclass = t8_cmesh_trees_get_tree (cmesh->trees, 0)->eclass;
       temp_trees_per_eclass[eclass]--;
-      t8_debugf ("[H] %s trees %i\n", t8_eclass_to_string[eclass],
-                 temp_trees_per_eclass[eclass]);
     }
     sc_MPI_Allreduce (temp_trees_per_eclass, cmesh->num_trees_per_eclass,
                       T8_ECLASS_COUNT, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
@@ -250,10 +246,8 @@ t8_cmesh_gather_treecount_ext (t8_cmesh_t cmesh, sc_MPI_Comm comm,
                                         tree_offset_array);
         /* Set the tree offset to the first nonshared tree of the next rank */
         tree_offset = t8_offset_first (next_nonempty, tree_offset_array);
-        t8_debugf ("[H] nne %i ft %i\n", next_nonempty, tree_offset);
         if (tree_offset_array[next_nonempty] < 0) {
           tree_offset++;
-          t8_debugf ("[H] is shared so %i\n", tree_offset);
         }
       }
       /* Communicate the new tree offsets */

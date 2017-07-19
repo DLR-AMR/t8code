@@ -291,9 +291,6 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
   sc_MPI_Allreduce (&is_empty, &has_empty, 1, sc_MPI_INT, sc_MPI_LOR,
                     forest->mpicomm);
 
-  t8_debugf ("[H] My entry: %i\n", tree_offset);
-
-
   if (has_empty) {
     int                 next_nonempty;
     /* there exist empty ranks, we have to recalculate the offset.
