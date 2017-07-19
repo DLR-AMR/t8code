@@ -326,7 +326,6 @@ void                t8_cmesh_set_profiling (t8_cmesh_t cmesh,
  *                              false otherwise.
  *                              TODO: define carefully.
  *                              Orders, sequences, equivalences?
- * Currently the attributes of the trees are not compared.
  * This function works on committed and uncommitted cmeshes.
  */
 int                 t8_cmesh_is_equal (t8_cmesh_t cmesh_a,
