@@ -29,17 +29,19 @@ test_hypercube (sc_MPI_Comm mpic)
 {
   int                 eci;
   int                 retval;
-  int                 partition;
+  int                 partition, bcast;
   t8_cmesh_t          cmesh;
 
   for (eci = T8_ECLASS_ZERO; eci < T8_ECLASS_COUNT; ++eci) {
     for (partition = 0; partition < 2; partition++) {
-      cmesh = t8_cmesh_new_hypercube (eci, mpic, 0, partition);
-      retval = t8_cmesh_is_committed (cmesh);
-      SC_CHECK_ABORT (retval == 1, "Cmesh commit failed.");
-      retval = t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees);
-      SC_CHECK_ABORT (retval == 1, "Cmesh face consistency failed.");
-      t8_cmesh_destroy (&cmesh);
+      for (bcast = 0; bcast < 2; bcast++) {
+        cmesh = t8_cmesh_new_hypercube (eci, mpic, bcast, partition);
+        retval = t8_cmesh_is_committed (cmesh);
+        SC_CHECK_ABORT (retval == 1, "Cmesh commit failed.");
+        retval = t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees);
+        SC_CHECK_ABORT (retval == 1, "Cmesh face consistency failed.");
+        t8_cmesh_destroy (&cmesh);
+      }
     }
   }
 }
