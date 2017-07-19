@@ -1040,7 +1040,7 @@ t8_cmesh_trees_is_equal (t8_cmesh_t cmesh, t8_cmesh_trees_t trees_a,
   if (trees_a == NULL || trees_b == NULL) {
     return 0;
   }
-  num_trees = cmesh->num_trees;
+  num_trees = cmesh->num_local_trees;
   num_ghost = cmesh->num_ghosts;
   is_equal = memcmp (trees_a->tree_to_proc, trees_b->tree_to_proc,
                      num_trees * sizeof (int))

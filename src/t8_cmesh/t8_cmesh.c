@@ -787,6 +787,9 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
   is_equal = memcmp (cmesh_a->num_trees_per_eclass,
                      cmesh_b->num_trees_per_eclass,
                      T8_ECLASS_COUNT * sizeof (t8_gloidx_t));
+  is_equal = is_equal || memcmp (cmesh_a->num_local_trees_per_eclass,
+                                 cmesh_b->num_local_trees_per_eclass,
+                                 T8_ECLASS_COUNT * sizeof (t8_locidx_t));
 
   /* check tree_offsets */
   if (cmesh_a->tree_offsets != NULL) {
