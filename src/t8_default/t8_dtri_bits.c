@@ -934,7 +934,12 @@ t8_dtri_transform_face (const t8_dtri_t * trianglein,
      * point to the same triangle */
     triangle1 = triangle2;
     t8_dtri_copy (trianglein, (t8_dtri_t *) triangle1);
-    ((t8_dtri_t *) triangle1)->y = trianglein->x - trianglein->y;
+    if (trianglein->type == 0) {
+      ((t8_dtri_t *) triangle1)->y = trianglein->x - trianglein->y;
+    }
+    else {
+      ((t8_dtri_t *) triangle1)->y = trianglein->x - trianglein->y - h;
+    }
   }
   else {
     triangle1 = trianglein;
@@ -954,17 +959,22 @@ t8_dtri_transform_face (const t8_dtri_t * trianglein,
     t8_dtri_copy (triangle1, triangle2);
     break;
   case 1:
-    triangle2->y = triangle1->y;
+    triangle2->x = T8_DTRI_ROOT_LEN - h - triangle1->y;
     if (triangle1->type == 0) {
-      triangle2->x = T8_DTRI_ROOT_LEN + triangle1->y - x - h;
+      triangle2->y = x - triangle1->y;
+    }
+    else {
+      triangle2->y = x - triangle1->y - h;
+    }
+    break;
+  case 2:
+    if (triangle1->type == 0) {
+      triangle2->x = T8_DTRI_ROOT_LEN - h + triangle1->y - x;
     }
     else {
       triangle2->x = T8_DTRI_ROOT_LEN + triangle1->y - x;
     }
-    break;
-  case 2:
-    triangle2->x = T8_DTRI_ROOT_LEN - triangle1->y - h;
-    triangle2->y = T8_DTRI_ROOT_LEN - x - h;
+    triangle2->y = T8_DTRI_ROOT_LEN - h - x;
     break;
   default:
     SC_ABORT_NOT_REACHED ();

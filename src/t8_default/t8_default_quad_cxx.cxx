@@ -437,7 +437,7 @@ t8_default_scheme_quad_c::t8_element_transform_face (const t8_element_t *
   const p4est_quadrant_t *qin = (const p4est_quadrant_t *) elem1;
   const p4est_quadrant_t *q;
   p4est_quadrant_t   *p = (p4est_quadrant_t *) elem2;
-  p4est_qcoord_t      h = P4EST_QUADRANT_LEN (q->level);
+  p4est_qcoord_t      h = P4EST_QUADRANT_LEN (qin->level);
   p4est_qcoord_t      x;
 
   T8_ASSERT (t8_element_is_valid (elem1));
