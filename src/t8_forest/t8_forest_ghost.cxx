@@ -2257,8 +2257,8 @@ t8_forest_ghost_exchange_data (t8_forest_t forest, sc_array_t * element_data)
   t8_debugf ("Entering ghost_exchange_data\n");
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  if (forest->local_num_elements <= 0) {
-    /* empty process, nothing to do */
+  if (forest->ghosts == NULL) {
+    /* This process has no ghosts */
     return;
   }
 
