@@ -103,7 +103,7 @@ void
 t8_dtri_copy (const t8_dtri_t * t, t8_dtri_t * dest)
 {
   if (t == dest) {
-    /* Do nothing if the are already the same. */
+    /* Do nothing if they are already the same. */
     return;
   }
   memcpy (dest, t, sizeof (t8_dtri_t));
@@ -123,6 +123,7 @@ t8_dtri_compare (const t8_dtri_t * t1, const t8_dtri_t * t2)
   if (id1 == id2) {
     /* The linear ids are the same, the triangle with the smaller level
      * is considered smaller */
+    T8_ASSERT (t1->level != t2->level || t8_dtri_is_equal (t1, t2));
     return t1->level - t2->level;
   }
   /* return negativ if id1 < id2, zero if id1 = id2, positive if id1 > id2 */
@@ -1080,10 +1081,10 @@ t8_dtri_is_root_boundary (const t8_dtri_t * t, int face)
 int
 t8_dtri_is_equal (const t8_dtri_t * t1, const t8_dtri_t * t2)
 {
-  return (t1->level == t1->level && t1->type == t2->type &&
-          t1->x == t1->x && t1->y == t1->y
+  return (t1->level == t2->level && t1->type == t2->type &&
+          t1->x == t2->x && t1->y == t2->y
 #ifdef T8_DTRI_TO_DTET
-          && t1->z == t1->z
+          && t1->z == t2->z
 #endif
     );
 }
