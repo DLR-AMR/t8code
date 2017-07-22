@@ -73,7 +73,7 @@ t8_basic_adapt_refine_tet (t8_forest_t forest, t8_locidx_t which_tree,
   /* get the type of the current element */
   type = ((t8_dtet_t *) elements[0])->type;
   /* refine type 0 */
-  if (type == 0 || type == 3) {
+  if (type == 0 || type == 2 || type == 4) {
     return 1;
   }
   return 0;
