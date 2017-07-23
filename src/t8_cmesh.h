@@ -740,6 +740,17 @@ t8_cmesh_t          t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x,
                                                   int z_periodic,
                                                   sc_MPI_Comm comm);
 
+/** Construct a tetrahedral cmesh that has all possible face to face
+ * connections and orientations.
+ * This cmesh is used for testing and debugging. It has no geometry information.
+ * \param [in] comm        The MPI communicator used to commit the cmesh.
+ * \return                 A committed and replicated cmesh of 24 tetrahedron trees
+ *                         in which each (face -> face, orientation) face connection
+ *                         is set at least once.
+ *                         Note that most faces in this cmesh are boundary faces.
+ */
+t8_cmesh_t          t8_cmesh_new_tet_orientation_test (sc_MPI_Comm comm);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_H */

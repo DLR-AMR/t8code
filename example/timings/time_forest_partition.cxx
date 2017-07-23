@@ -328,6 +328,7 @@ main (int argc, char *argv[])
   int                 level, level_diff;
   int                 help = 0, no_vtk, do_ghost, do_balance;
   int                 dim, num_files;
+  int                 test_tet;
   double              T, delta_t;
   sc_options_t       *opt;
   t8_cmesh_t          cmesh;
@@ -363,8 +364,12 @@ main (int argc, char *argv[])
                          "The number of files must then be specified with the -n "
                          "option.");
   sc_options_add_int (opt, 'n', "nfiles", &num_files, -1,
-                      "If the -l option is used, the number of cmesh files must "
+                      "If the -c option is used, the number of cmesh files must "
                       "be specified as an argument here.");
+  sc_options_add_switch (opt, 't', "test-tet", &test_tet,
+                         "Use a cmesh that tests all tet face-to-face connections."
+                         " If this option is used -o is enabled automatically."
+                         " Diables -f and -c.");
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The initial uniform "
                       "refinement level of the forest.");
@@ -390,7 +395,8 @@ main (int argc, char *argv[])
                                  opt, argc, argv);
   /* check for wrong usage of arguments */
   if (first_argc < 0 || first_argc != argc || dim < 2 || dim > 3
-      || (cmeshfileprefix == NULL && mshfileprefix == NULL)) {
+      || (cmeshfileprefix == NULL && mshfileprefix == NULL
+          && test_tet == 0)) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
@@ -404,6 +410,10 @@ main (int argc, char *argv[])
       cmesh = t8_time_forest_create_cmesh (mshfileprefix, dim, NULL, -1,
                                            sc_MPI_COMM_WORLD, level);
       vtu_prefix = mshfileprefix;
+    }
+    else if (test_tet) {
+      cmesh = t8_cmesh_new_tet_orientation_test (sc_MPI_COMM_WORLD);
+      vtu_prefix = "test_tet";
     }
     else {
       T8_ASSERT (cmeshfileprefix != NULL);

@@ -2096,3 +2096,102 @@ t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x, t8_gloidx_t num_y,
   }
   return cmesh;
 }
+
+static void
+t8_cmesh_translate_coordinates (const double *coords_in, double *coords_out,
+                                int num_vertices, double translate[3])
+{
+  int                 i;
+
+  for (i = 0; i < num_vertices; i++) {
+    coords_out[3 * i] = coords_in[3 * i] + translate[0];
+    coords_out[3 * i + 1] = coords_in[3 * i + 1] + translate[1];
+    coords_out[3 * i + 2] = coords_in[3 * i + 2] + translate[2];
+  }
+}
+
+/* Construct a tetrahedral cmesh that has all possible face to face
+ * connections and orientations. */
+t8_cmesh_t
+t8_cmesh_new_tet_orientation_test (sc_MPI_Comm comm)
+{
+  t8_cmesh_t          cmesh;
+  int                 i;
+
+  double              vertices_coords[12] = {
+    0, 0, 0,
+    1, 0, 0,
+    1, 0, 1,
+    1, 1, 1
+  };
+  double              translated_coords[12];
+  double              translate[3] = { 1, 0, 0 };
+  const t8_gloidx_t   num_trees = 24;
+
+  t8_cmesh_init (&cmesh);
+  /* A tet has 4 faces and each face connection has 3 possible orientations,
+   * we thus have (4+3+2+1)*3 = 30 possible face-to-face combinations.
+   * We use a cmesh of 24 tetrahedron trees. */
+  for (i = 0; i < num_trees; i++) {
+    t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_TET);
+  }
+  /* face combinations:
+   *  0 - 0 0 - 1 0 - 2 0 - 3
+   *  1 - 1 1 - 2 1 - 3
+   *  2 - 2 2 - 3
+   *  3 - 3
+   */
+  /* i iterates over the orientations */
+  for (i = 0; i < 3; i++) {
+    /* Face 0 with face k */
+    /* For trees 0 -> 1, 2 -> 3, 4 -> 5, ..., 22 -> 23 */
+    t8_cmesh_set_join (cmesh, 8 * i, 8 * i + 1, 0, 0, i);
+    t8_cmesh_set_join (cmesh, 8 * i + 2, 8 * i + 3, 0, 1, i);
+    t8_cmesh_set_join (cmesh, 8 * i + 4, 8 * i + 5, 0, 2, i);
+    t8_cmesh_set_join (cmesh, 8 * i + 6, 8 * i + 7, 0, 3, i);
+    /* Each tree with an even number has face 0 connected */
+    /* Trees 1,  9, 17 face 0
+     * Trees 3, 11, 19 face 1
+     * Trees 5, 13, 21 face 2
+     * Trees 7, 15, 23 face 3 */
+
+    /* Face 1 with face k */
+    /* Connect face 1 of trees 0 -> 1, 2 -> 3, ..., 16->17 */
+    t8_cmesh_set_join (cmesh, 6 * i, 6 * i + 1, 1, 1, i);
+    t8_cmesh_set_join (cmesh, 6 * i + 2, 6 * i + 3, 1, 2, i);
+    t8_cmesh_set_join (cmesh, 6 * i + 4, 6 * i + 5, 1, 3, i);
+    /* Each tree with even number up to 16 has face 1 connected. */
+    /* Trees 1,  7, 13 face 1
+     * Trees 3,  9, 15 face 2
+     * Trees 5, 11, 17 face 3
+     */
+
+    /* Face 2 with face k */
+    /* Connect face 2 of trees 0 -> 1, 2 -> 3,...,10 -> 11 */
+    t8_cmesh_set_join (cmesh, 4 * i, 4 * i + 12, 2, 2, i);
+    t8_cmesh_set_join (cmesh, 4 * i + 2, 4 * i + 6, 2, 3, i);
+    /* Each tree with even number up to 10 has face 2 connected */
+    /* Trees  12, 16, 20 face 2
+     * Trees   6, 10, 14 face 3
+     */
+
+    /* Face 3 with face k */
+    /* Connect face 3 of tree 0 -> 1, 2 -> 3, 4 -> 5 */
+    t8_cmesh_set_join (cmesh, 2 * i, 2 * i + 16, 3, 3, i);
+    /* Trees  0,  2,  4 have face 3 connected */
+    /* Trees 16, 18, 20 face 3 */
+  }
+  /* Set the coordinates. Each tet is just a translated version of
+   * the root tet */
+  for (i = 0; i < num_trees; i++) {
+    translate[0] = (i & 1) + ! !(i & 8);
+    translate[1] = ! !(i & 2) + ! !(i & 16);
+    translate[2] = ! !(i & 4) + ! !(i & 32);
+    t8_cmesh_translate_coordinates (vertices_coords, translated_coords, 4,
+                                    translate);
+    t8_cmesh_set_tree_vertices (cmesh, i, t8_get_package_id (), 0,
+                                translated_coords, 4);
+  }
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}

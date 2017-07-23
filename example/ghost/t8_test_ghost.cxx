@@ -168,11 +168,24 @@ t8_test_ghost_msh_file (const char *fileprefix, int level, int dim,
   t8_test_ghost_refine_and_partition (cmesh, level, comm, 1, no_vtk);
 }
 
+/* Build a forest on the tet_test cmesh that has all face-to-face combinations.
+ * This is useful for testing and debugging.
+ */
+static void
+t8_test_ghost_tet_test (int level, sc_MPI_Comm comm, int no_vtk)
+{
+  t8_cmesh_t          cmesh;
+
+  cmesh = t8_cmesh_new_tet_orientation_test (comm);
+  t8_test_ghost_refine_and_partition (cmesh, level, comm, 1, no_vtk);
+}
+
 int
 main (int argc, char **argv)
 {
   int                 mpiret, parsed, eclass_int, level, helpme;
   int                 x_dim, y_dim, z_dim, periodic;
+  int                 test_tet;
   int                 dim, no_vtk;
   sc_options_t       *opt;
   const char         *prefix;
@@ -207,8 +220,10 @@ main (int argc, char **argv)
                       "Periodicity of brick mesh. A three (two) digit decimal"
                       " number zyx. If digit i is nonzero then the representative"
                       " coordinate direction of the brick mesh is periodic.");
+  sc_options_add_switch (opt, 't', "test-tet", &test_tet,
+                         "Use a cmesh that tests all tet face-to-face connections.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, 2,
-                      "If neither -f nor -x,-y,-z are used a cubical mesh is"
+                      "If neither -f nor -x,-y,-z, or -t are used, a cubical mesh is"
                       " generated. This option specifies"
                       " the type of elements to use.\n"
                       "\t\t0 - vertex\n\t\t1 - line\n\t\t2 - quad\n"
@@ -232,7 +247,7 @@ main (int argc, char **argv)
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else {
-    if (x_dim == 0 && !strcmp (prefix, "")) {
+    if (x_dim == 0 && !strcmp (prefix, "") && test_tet == 0) {
       t8_global_productionf ("Testing ghost on a hypercube cmesh with %s "
                              "elements\n", t8_eclass_to_string[eclass_int]);
       t8_test_ghost_hypercube ((t8_eclass_t) eclass_int, level,
@@ -252,6 +267,11 @@ main (int argc, char **argv)
                              "mesh in %iD\n", x_dim, y_dim, z_dim, dim);
       t8_test_ghost_brick (dim, x_dim, y_dim, z_dim, x_per, y_per, z_per,
                            level, sc_MPI_COMM_WORLD, no_vtk);
+    }
+    else if (test_tet) {
+      t8_global_productionf ("Testing ghost on tet-test cmesh.\n");
+      t8_global_productionf ("vtk output disabled.\n");
+      t8_test_ghost_tet_test (level, sc_MPI_COMM_WORLD, no_vtk);
     }
     else {
       /* A triangle or tetgen file collection must be given. */
