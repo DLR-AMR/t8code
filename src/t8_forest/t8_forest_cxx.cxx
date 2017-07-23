@@ -1040,7 +1040,6 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
     else {
       last_guess = guess;
       while (t8_offset_empty (guess, element_offsets)) {
-        t8_debugf ("[H] %i is empty\n", guess);
         /* skip empty processes */
         if ((empty_dir == -1 && guess <= lower_bound) ||
             (empty_dir == +1 && guess >= upper_bound)) {
@@ -1066,7 +1065,6 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
         }
         guess += empty_dir;
       }
-      t8_debugf ("[H] %i is not empty\n", guess);
       /* The first tree of this process */
       current_first_tree = t8_offset_first (guess, first_trees);
 
@@ -1093,7 +1091,6 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
           next_nonempty =
             t8_offset_next_nonempty_rank (guess, forest->mpisize,
                                           first_trees);
-          t8_debugf ("[H] Next nonempty %i\n", next_nonempty);
           current_first_tree = t8_offset_first (next_nonempty, first_trees);
           if (current_first_tree < gtreeid) {
             /* look further right */
@@ -1106,7 +1103,6 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
             current_id = first_descs[next_nonempty];
             if (current_first_tree == gtreeid
                 && current_id <= element_desc_id) {
-              t8_debugf ("[H] look right\n");
               /* The next process has gtreeid as first tree
                * we compare the first descendants */
               /* The process we look for is >= guess + 1
@@ -1539,6 +1535,11 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
   neigh_tree = t8_forest_element_face_neighbor (forest, ltreeid, element, face_neighbor,
                                                 face, &dual_face);
   if (neigh_tree >= 0) {
+    if (neigh_tree != ltreeid) {
+      t8_debugf("[H] Search owner across tree bounds. From tree %i -> %li."
+                "el face %i low high %i %i\n",
+                ltreeid, (long) neigh_tree, face, *lower, *upper);
+    }
     /* There is a face neighbor */
     t8_forest_element_owners_at_face_bounds (forest, neigh_tree, face_neighbor,
                                       neigh_class, dual_face, lower, upper);
