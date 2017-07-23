@@ -56,7 +56,7 @@ t8_test_gao_adapt (t8_forest_t forest, t8_forest_t forest_from,
 /* Depending on an integer i create a different cmesh.
  * i = 0: cmesh_new_class
  * i = 1: cmesh_new_hypercube
- * i = 2: cmesh_new_bigmesh (100 trees)
+ * i = 2: cmesh_new_bigmesh (100 trees) or tet_orientation_test for tets
  * else:  cmesh_new_class
  */
 static              t8_cmesh_t
@@ -68,6 +68,9 @@ t8_test_create_cmesh (int i, t8_eclass_t eclass, sc_MPI_Comm comm)
   case 1:
     return t8_cmesh_new_hypercube (eclass, comm, 0, 0);
   case 2:
+    if (eclass == T8_ECLASS_TET) {
+      return t8_cmesh_new_tet_orientation_test (comm);
+    }
     return t8_cmesh_new_bigmesh (eclass, 100, comm);
   default:
     return t8_cmesh_new_from_class (eclass, comm);
