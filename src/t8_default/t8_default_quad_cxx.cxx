@@ -438,7 +438,7 @@ t8_default_scheme_quad_c::t8_element_transform_face (const t8_element_t *
   const p4est_quadrant_t *q;
   p4est_quadrant_t   *p = (p4est_quadrant_t *) elem2;
   p4est_qcoord_t      h = P4EST_QUADRANT_LEN (qin->level);
-  p4est_qcoord_t      x;
+  p4est_qcoord_t      x = qin->x;       /* temp storage for x coordinate in case elem1 = elem 2 */
 
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
@@ -452,7 +452,8 @@ t8_default_scheme_quad_c::t8_element_transform_face (const t8_element_t *
     q = (const p4est_quadrant_t *) p;
     t8_element_copy_surround (qin, (p4est_quadrant_t *) q);
     ((p4est_quadrant_t *) q)->x = qin->y;
-    ((p4est_quadrant_t *) q)->y = qin->x;
+    ((p4est_quadrant_t *) q)->y = x;
+    x = q->x;                   /* temp storage in case elem1 = elem 2 */
   }
   else {
     q = qin;
@@ -474,16 +475,16 @@ t8_default_scheme_quad_c::t8_element_transform_face (const t8_element_t *
    * with the corner v_0 of the smaller face.
    */
   /* If this face is not smaller, switch the orientation:
-   *  0 -> 0
-   *  1 -> 2
-   *  2 -> 1
-   *  3 -> 3
+   *  sign = 0   sign = 1
+   *  0 -> 0     0 -> 0
+   *  1 -> 2     1 -> 1
+   *  2 -> 1     2 -> 2
+   *  3 -> 3     3 -> 3
    */
-  if (!is_smaller_face && (orientation == 1 || orientation == 2)) {
+  if (!is_smaller_face && (orientation == 1 || orientation == 2) && !sign) {
     orientation = 3 - orientation;
   }
-  /* temporarily store x coordinate, in case elem2 = elem 1 */
-  x = q->x;
+
   switch (orientation) {
   case 0:                      /* Nothing to do */
     p->x = q->x;
@@ -494,9 +495,8 @@ t8_default_scheme_quad_c::t8_element_transform_face (const t8_element_t *
     p->y = x;
     break;
   case 2:
-    /* p->x remains q->x */
-    p->x = q->x;
-    p->y = P4EST_ROOT_LEN - q->y - h;
+    p->x = q->y;
+    p->y = P4EST_ROOT_LEN - x - h;
     break;
   case 3:
     p->x = P4EST_ROOT_LEN - q->x - h;

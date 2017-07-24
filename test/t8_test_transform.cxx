@@ -42,7 +42,7 @@ t8_test_transform_element (t8_eclass_scheme_c * ts, const t8_element_t * elem,
                            t8_eclass_t eclass)
 {
   t8_element_t       *transform;
-  int                 i;
+  int                 i, sign;
 
   ts->t8_element_new (1, &transform);
 
@@ -96,7 +96,7 @@ t8_test_transform_element (t8_eclass_scheme_c * ts, const t8_element_t * elem,
      * ori = 2 sign = 0, then ori = 2 sign = 0  == identity
      *
      * ori = 1 sign = 1, then ori = 1 sign = 1  == identity
-     * ori = 2 sign = 1, then ori = 2 sign = 1  == identity
+     * ori = 2 sign = 1, then ori = 1 sign = 1  == identity
      */
 
     ts->t8_element_copy (elem, transform);
@@ -105,26 +105,43 @@ t8_test_transform_element (t8_eclass_scheme_c * ts, const t8_element_t * elem,
       ts->t8_element_transform_face (transform, transform, 1, 0, 1);
     }
     SC_CHECK_ABORT (!ts->t8_element_compare (elem, transform),
-                    "Elements are not equal");
+                    "Elements are not equal. Quad. 4 times or 1.");
     /* 4 times or = 1 sign = 0, if not smaller face */
     for (i = 0; i < 4; i++) {
       ts->t8_element_transform_face (transform, transform, 1, 0, 0);
     }
     SC_CHECK_ABORT (!ts->t8_element_compare (elem, transform),
-                    "Elements are not equal");
+                    "Elements are not equal. Quad. 4 times or 1 not smaller.");
     /* or = 1 sign = 0, then or = 3 sign = 0, then ori = 1 sign = 0 */
     ts->t8_element_transform_face (transform, transform, 1, 0, 1);
     ts->t8_element_transform_face (transform, transform, 3, 0, 1);
     ts->t8_element_transform_face (transform, transform, 1, 0, 1);
     SC_CHECK_ABORT (!ts->t8_element_compare (elem, transform),
-                    "Elements are not equal");
-    /* or = 2 sign = 0, then or = 2 sign = 0 */
+                    "Elements are not equal. Quad. or 1 then or 3");
+    /* or = 2 sign = 0, then or = 1 sign = 0 */
     ts->t8_element_transform_face (transform, transform, 2, 0, 1);
-    ts->t8_element_transform_face (transform, transform, 2, 0, 1);
+    ts->t8_element_transform_face (transform, transform, 1, 0, 1);
     SC_CHECK_ABORT (!ts->t8_element_compare (elem, transform),
-                    "Elements are not equal");
+                    "Elements are not equal. Quad. or 2 then or 1");
     /* TODO: Add tests */
   }
+
+  /* Transforming back and forth must lead to the same element */
+  for (i = 0; i < t8_eclass_num_vertices[eclass]; i++) {
+    for (sign = 0; sign < 2; sign++) {
+      ts->t8_element_transform_face (elem, transform, i, sign, 1);
+      ts->t8_element_transform_face (transform, transform, i, sign, 0);
+      SC_CHECK_ABORTF (!ts->t8_element_compare (elem, transform),
+                       "Elements are not equal. %s back forth. Orientation %i smaller sign %i\n",
+                       t8_eclass_to_string[eclass], i, sign);
+      ts->t8_element_transform_face (elem, transform, i, sign, 0);
+      ts->t8_element_transform_face (transform, transform, i, sign, 1);
+      SC_CHECK_ABORTF (!ts->t8_element_compare (elem, transform),
+                       "Elements are not equal. %s back forth. Orientation %i not smaller sign %i\n",
+                       t8_eclass_to_string[eclass], i, sign);
+    }
+  }
+
   ts->t8_element_destroy (1, &transform);
 }
 

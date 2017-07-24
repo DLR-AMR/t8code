@@ -946,11 +946,12 @@ t8_dtri_transform_face (const t8_dtri_t * trianglein,
     triangle1 = trianglein;
   }
 
-  if (!is_smaller_face && orientation != 0) {
+  if (!is_smaller_face && orientation != 0 && !sign) {
     /* Translate orientation if triangle1 is not on the smaller face.
-     *  0 -> 0
-     *  1 -> 2
-     *  2 -> 1
+     *  sign = 0  sign = 1
+     *  0 -> 0    0 -> 0
+     *  1 -> 2    1 -> 1
+     *  2 -> 1    2 -> 2
      */
     orientation = 3 - orientation;
   }
