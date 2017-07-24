@@ -1349,12 +1349,8 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
       /* We did not count this process as an owner, thus we add it */
       *(int *) sc_array_push (owners) = first_owner;
     }
-    T8_ASSERT (t8_forest_element_check_owner (forest, (t8_element_t *) element,
-                                              gtreeid, eclass, first_owner, 0));
-    T8_ASSERT (t8_forest_element_check_owner (forest, (t8_element_t *)first_face_desc,
-                                              gtreeid, eclass, first_owner, 1));
-    T8_ASSERT (t8_forest_element_check_owner (forest, (t8_element_t *)last_face_desc,
-                                              gtreeid, eclass, first_owner, 1));
+    T8_ASSERT (t8_forest_element_check_owner (forest, first_face_desc, gtreeid, eclass, first_owner, 1));
+    T8_ASSERT (t8_forest_element_check_owner (forest, last_face_desc, gtreeid, eclass, first_owner, 1));
     /* free memory */
     ts->t8_element_destroy (1, &first_face_desc);
     ts->t8_element_destroy (1, &last_face_desc);
