@@ -910,7 +910,7 @@ t8_dtri_transform_face (const t8_dtri_t * trianglein,
 {
   const t8_dtri_t    *triangle1;
   t8_dtri_coord_t     h = T8_DTRI_LEN (trianglein->level);
-  t8_dtri_coord_t     x;
+  t8_dtri_coord_t     x = trianglein->x;
 
   T8_ASSERT (0 <= orientation && orientation <= 2);
   triangle2->level = trianglein->level;
