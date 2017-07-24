@@ -749,8 +749,8 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
     }
     /* We now transform the face element to the other tree. */
     sign =
-      t8_eclass_face_orientation[tree_face] ==
-      t8_eclass_face_orientation[tree_neigh_face];
+      t8_eclass_face_orientation[eclass][tree_face] ==
+      t8_eclass_face_orientation[neigh_eclass][tree_neigh_face];
     boundary_scheme->t8_element_transform_face (face_element, face_element,
                                                 ttf[tree_face] / F, sign,
                                                 is_smaller);
