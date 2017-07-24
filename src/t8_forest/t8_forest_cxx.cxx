@@ -1539,9 +1539,9 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
                                                 face, &dual_face);
   if (neigh_tree >= 0) {
     if (neigh_tree != ltreeid) {
-      t8_debugf("[H] Search owner across tree bounds. From tree %i -> %li."
+      t8_debugf("[H] Search owner across tree bounds. From tree %li -> %li."
                 "el face %i low high %i %i\n",
-                ltreeid, (long) neigh_tree, face, *lower, *upper);
+                t8_forest_global_tree_id (forest, ltreeid), (long) neigh_tree, face, *lower, *upper);
     }
     /* There is a face neighbor */
     t8_forest_element_owners_at_face_bounds (forest, neigh_tree, face_neighbor,
