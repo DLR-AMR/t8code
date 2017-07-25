@@ -1717,13 +1717,14 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
 
         mpiret = sc_MPI_Iprobe (recv_rank, T8_MPI_GHOST_FOREST, comm,
                                 &iprobe_flag, &status);
+        SC_CHECK_MPI (mpiret);
 #else
     while (received_messages < num_remotes) {
       /* blocking probe for a message. */
       mpiret = sc_MPI_Probe (sc_MPI_ANY_SOURCE, T8_MPI_GHOST_FOREST, comm,
                              &status);
-#endif
       SC_CHECK_MPI (mpiret);
+#endif
 #ifdef T8_POLLING
       if (iprobe_flag == 0) {
         /* There is no message to receive, we continue */
@@ -1736,6 +1737,7 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
       recv_rank = status.MPI_SOURCE;
       /* Get the position of this rank in the remote processes array */
       recv_list_entry.rank = recv_rank;
+      t8_debugf ("[H] Receive message from %i [%i]\n", recv_rank, proc_pos);
 #ifdef T8_ENABLE_DEBUG
       ret =
 #else
@@ -1748,7 +1750,6 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
       proc_pos = found->pos_in_remote_processes;
 #endif
       T8_ASSERT (status.MPI_TAG == T8_MPI_GHOST_FOREST);
-      t8_debugf ("[H] Receive message from %i [%i]\n", recv_rank, proc_pos);
       buffer[proc_pos] =
         t8_forest_ghost_receive_message (recv_rank, comm, status,
                                          recv_bytes + proc_pos);
