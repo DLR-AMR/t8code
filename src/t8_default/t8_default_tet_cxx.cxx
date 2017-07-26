@@ -275,8 +275,8 @@ t8_default_scheme_tet_c::t8_element_extrude_face (const t8_element_t * face,
   case 0:
     t->type = b->type == 0 ? 0 : 1;
     t->x = T8_DTET_ROOT_LEN - T8_DTET_LEN (t->level);
-    t->y = ((int64_t) b->x * T8_DTET_ROOT_LEN) / T8_DTRI_ROOT_LEN;
-    t->z = ((int64_t) b->y * T8_DTET_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+    t->y = ((int64_t) b->y * T8_DTET_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+    t->z = ((int64_t) b->x * T8_DTET_ROOT_LEN) / T8_DTRI_ROOT_LEN;
     break;
   case 1:
     t->type = b->type == 0 ? 0 : 2;
