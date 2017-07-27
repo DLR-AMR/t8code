@@ -525,21 +525,26 @@ t8_cmesh_load_header (t8_cmesh_t cmesh, FILE * fp)
   ret = fscanf (fp, "first_tree_shared %i\n", &first_shared);
   T8_SAVE_CHECK_CLOSE (ret == 1, fp);
   cmesh->first_tree_shared = first_shared;
-  T8_SAVE_CHECK_CLOSE (cmesh->first_tree_shared == 0
+  T8_SAVE_CHECK_CLOSE (!cmesh->set_partition || cmesh->first_tree_shared == 0
                        || cmesh->first_tree_shared == 1, fp);
   return 1;
 }
 
 int
-t8_cmesh_save (t8_cmesh_t cmesh, const char *filename)
+t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix)
 {
   FILE               *fp;
+  char                filename[BUFSIZ];
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   if (!cmesh->set_partition && cmesh->mpirank != 0) {
     /* If the cmesh is replicated, only rank 0 writes it */
     return 1;
   }
+
+  /* Create the output filename as fileprefix_RANK.cmesh,
+   * where we write RANK with 4 significant figures. */
+  snprintf (filename, BUFSIZ, "%s_%04i.cmesh", fileprefix, cmesh->mpirank);
 
   /* Open the file in write mode */
   fp = fopen (filename, "w");

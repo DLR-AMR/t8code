@@ -32,13 +32,16 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
 {
   t8_forest_t         forest;
   t8_cmesh_t          cmesh, cmesh_partition;
-  char                vtuname[BUFSIZ];
+  char                vtuname[BUFSIZ], cmesh_file[BUFSIZ];
   int                 mpirank, mpiret;
 
   t8_global_productionf ("Contructing hypercube mesh with element class %s\n",
                          t8_eclass_to_string[eclass]);
 
   cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, do_partition);
+  snprintf (cmesh_file, BUFSIZ, "cmesh_hcube_%s",
+            t8_eclass_to_string[eclass]);
+  t8_cmesh_save (cmesh, cmesh_file);
   if (do_partition) {
     /* repartition the cmesh to match the desired forest partition */
     t8_cmesh_init (&cmesh_partition);
