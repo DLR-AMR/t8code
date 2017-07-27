@@ -34,7 +34,7 @@
 
 /** Increment this constant each time the file format changes.
  *  We can only read files that were written in the same format. */
-#define T8_CMESH_FORMAT 0x0001
+#define T8_CMESH_FORMAT 0x0002
 
 /** This enumeration contains all modes in which we can open a saved cmesh.
  * The cmesh can be loaded with more processes than it was saved and the

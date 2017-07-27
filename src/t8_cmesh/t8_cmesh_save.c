@@ -38,7 +38,7 @@
  * close the file and exit the function */
 #define T8_SAVE_CHECK_CLOSE(x, fp) \
   if (!(x)) { t8_errorf ("file i/o error. Condition %s not fulfilled. "\
-              "Line %i\n", #x, __LINE__);\
+              "Line %i in file %s\n", #x, __LINE__, __FILE__);\
               fclose (fp); return 0;}
 
 /* Write the neighbor data of all ghosts */
@@ -432,6 +432,15 @@ t8_cmesh_save_header (t8_cmesh_t cmesh, FILE * fp)
   ret = fprintf (fp, "num_ghosts %li\n", (long) cmesh->num_ghosts);
   T8_SAVE_CHECK_CLOSE (ret > 0, fp);
 
+  /* Write the number of local trees for each eclass */
+  ret = fprintf (fp, "num_local_trees_per_eclass ");
+  T8_SAVE_CHECK_CLOSE (ret > 0, fp);
+  for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; eclass++) {
+    ret =
+      fprintf (fp, "%li%s", (long) cmesh->num_local_trees_per_eclass[eclass],
+               eclass == T8_ECLASS_COUNT - 1 ? "\n" : ", ");
+    T8_SAVE_CHECK_CLOSE (ret > 0, fp);
+  }
   /* Write the number of trees for each eclass */
   ret = fprintf (fp, "num_trees_per_eclass ");
   T8_SAVE_CHECK_CLOSE (ret > 0, fp);
@@ -508,8 +517,16 @@ t8_cmesh_load_header (t8_cmesh_t cmesh, FILE * fp)
                        local_num_ghosts < cmesh->num_trees, fp);
   cmesh->num_ghosts = local_num_ghosts;
 
+  /* Read the number of local trees per eclass */
+  ret = fscanf (fp, "num_local_trees_per_eclass");
+  T8_SAVE_CHECK_CLOSE (ret == 0, fp);
+  for (ieclass = T8_ECLASS_ZERO; ieclass < T8_ECLASS_COUNT; ieclass++) {
+    ret = fscanf (fp, "%lli,", &tree_per_class);
+    T8_SAVE_CHECK_CLOSE (ret == 1, fp);
+    cmesh->num_local_trees_per_eclass[ieclass] = (t8_locidx_t) tree_per_class;
+  }
   /* Read the number of trees per eclass */
-  ret = fscanf (fp, "num_trees_per_eclass");
+  ret = fscanf (fp, "\nnum_trees_per_eclass");
   T8_SAVE_CHECK_CLOSE (ret == 0, fp);
   for (ieclass = T8_ECLASS_ZERO; ieclass < T8_ECLASS_COUNT; ieclass++) {
     ret = fscanf (fp, "%lli,", &tree_per_class);
@@ -640,13 +657,13 @@ t8_cmesh_load (const char *filename, sc_MPI_Comm comm)
   }
   /* Close the file */
   fclose (fp);
+
   cmesh->committed = 1;
   mpiret = sc_MPI_Comm_rank (comm, &cmesh->mpirank);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_size (comm, &cmesh->mpisize);
   SC_CHECK_MPI (mpiret);
   t8_stash_destroy (&cmesh->stash);
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
   return cmesh;
 }
 
@@ -841,64 +858,79 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
   SC_CHECK_MPI (mpiret);
 
   T8_ASSERT (mpisize >= num_files);
+
+  t8_debugf ("[H] Enter cmesh load and distribute with %i files\n",
+             num_files);
   /* Try to set the comm type */
   t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
-  /* First primitive loading strategy:
-   * each process with rank smaller than number of files
-   * loads a file.
-   */
-  if (t8_cmesh_load_proc_loads (mpirank, mpisize, num_files, comm,
-                                mode, &file_to_load, procs_per_node)) {
-    T8_ASSERT (fileprefix != NULL);
-    T8_ASSERT (0 <= file_to_load && file_to_load < num_files);
-    snprintf (buffer, BUFSIZ, "%s_%04d.cmesh", fileprefix, file_to_load);
-    t8_infof ("Opening file %s\n", buffer);
-    cmesh = t8_cmesh_load (buffer, comm);
-    if (num_files == mpisize) {
-      /* Each process has loaded the cmesh and we can return */
-      return cmesh;
+
+  /* Use cmesh_bcast, if only one process loads the cmesh: */
+  if (num_files == 1) {
+    cmesh = NULL;
+    if (mpirank == 0) {
+      snprintf (buffer, BUFSIZ, "%s_%04d.cmesh", fileprefix, 0);
+      cmesh = t8_cmesh_load (buffer, comm);
     }
-    did_load = 1;
+    cmesh = t8_cmesh_bcast (cmesh, 0, comm);
   }
   else {
-    did_load = 0;
-    /* On the processes that do not load the cmesh, initialize it
-     * with zero local trees and ghosts */
-    t8_cmesh_init (&cmesh);
-    t8_cmesh_trees_init (&cmesh->trees, 0, 0, 0);
-    cmesh->mpirank = mpirank;
-    cmesh->mpisize = mpisize;
-    t8_stash_destroy (&cmesh->stash);
-    /* There are no faces, so we know all about them */
-    cmesh->face_knowledge = 3;
-    /* There are no tree, thus the first tree is not shared */
-    cmesh->first_tree_shared = 0;
-    cmesh->committed = 1;
-    cmesh->set_partition = 1;
-    cmesh->num_local_trees = 0;
+    /* More than one process loads a file */
+
+    if (t8_cmesh_load_proc_loads (mpirank, mpisize, num_files, comm,
+                                  mode, &file_to_load, procs_per_node)) {
+      T8_ASSERT (fileprefix != NULL);
+      T8_ASSERT (0 <= file_to_load && file_to_load < num_files);
+      snprintf (buffer, BUFSIZ, "%s_%04d.cmesh", fileprefix, file_to_load);
+      t8_infof ("Opening file %s\n", buffer);
+      cmesh = t8_cmesh_load (buffer, comm);
+      if (num_files == mpisize) {
+        /* Each process has loaded the cmesh and we can return */
+        return cmesh;
+      }
+      did_load = 1;
+    }
+    else {
+      did_load = 0;
+      /* On the processes that do not load the cmesh, initialize it
+       * with zero local trees and ghosts */
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_trees_init (&cmesh->trees, 0, 0, 0);
+      cmesh->mpirank = mpirank;
+      cmesh->mpisize = mpisize;
+      t8_stash_destroy (&cmesh->stash);
+      /* There are no faces, so we know all about them */
+      cmesh->face_knowledge = 3;
+      /* There are no tree, thus the first tree is not shared */
+      cmesh->first_tree_shared = 0;
+      cmesh->committed = 1;
+      cmesh->set_partition = 1;
+      cmesh->num_local_trees = 0;
+    }
+    /* The cmeshes on the processes that did not load have to
+     * know the global number of trees */
+    sc_MPI_Bcast (&cmesh->num_trees, 1, T8_MPI_GLOIDX, 0, comm);
+    /* And the dimension */
+    sc_MPI_Bcast (&cmesh->dimension, 1, sc_MPI_INT, 0, comm);
+    t8_cmesh_gather_trees_per_eclass (cmesh, comm);
+    T8_ASSERT (t8_cmesh_is_committed (cmesh));
+    /* We now create the cmeshs offset in order to properly
+     * set the first tree for the empty processes */
+    t8_cmesh_gather_treecount (cmesh, comm);
+    if (!did_load) {
+      /* Calculate the next bigger nonloading rank. */
+      next_bigger_nonloading =
+        t8_cmesh_load_bigger_nonloading (mpirank, mpisize, num_files, mode,
+                                         comm, procs_per_node);
+      /* Set the first tree of this process to the first tree of the next nonloading
+       * rank */
+      cmesh->first_tree =
+        t8_offset_first (next_bigger_nonloading,
+                         t8_shmem_array_get_gloidx_array
+                         (cmesh->tree_offsets));
+    }
+    /* Since we changed the first tree on some processes, we have to
+     * regather the first trees on each process */
+    t8_cmesh_gather_treecount (cmesh, comm);
   }
-  /* The cmeshes on the processes that did not load have to
-   * know the global number of trees */
-  sc_MPI_Bcast (&cmesh->num_trees, 1, T8_MPI_GLOIDX, 0, comm);
-  /* And the dimension */
-  sc_MPI_Bcast (&cmesh->dimension, 1, sc_MPI_INT, 0, comm);
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  /* We now create the cmeshs offset in order to properly
-   * set the first tree for the empty processes */
-  t8_cmesh_gather_treecount (cmesh, comm);
-  if (!did_load) {
-    /* Calculate the next bigger nonloading rank. */
-    next_bigger_nonloading =
-      t8_cmesh_load_bigger_nonloading (mpirank, mpisize, num_files, mode,
-                                       comm, procs_per_node);
-    /* Set the first tree of this process to the first tree of the next nonloading
-     * rank */
-    cmesh->first_tree =
-      t8_offset_first (next_bigger_nonloading,
-                       t8_shmem_array_get_gloidx_array (cmesh->tree_offsets));
-  }
-  /* Since we changed the first tree on some processes, we have to
-   * regather the first trees on each process */
-  t8_cmesh_gather_treecount (cmesh, comm);
   return cmesh;
 }
