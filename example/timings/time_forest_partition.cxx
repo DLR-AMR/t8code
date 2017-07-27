@@ -287,7 +287,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
 /* Construct a cmesh either from a .msh mesh file or from a
  * collection of cmesh files constructed with t8_cmesh_save.
  * If msh_file is NULL, the cmesh is loaded from the cmesh_file and num_files
- * must be specified. If cmesh_file is NULL, mthe cmesh is loaded from the .msh
+ * must be specified. If cmesh_file is NULL, the cmesh is loaded from the .msh
  * file and mesh_dim must be specified. */
 t8_cmesh_t
 t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
