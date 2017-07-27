@@ -908,6 +908,8 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
       meta_info.num_trees_per_eclass[iclass] =
         cmesh_in->num_trees_per_eclass[iclass];
+      T8_ASSERT (cmesh_in->num_local_trees_per_eclass[iclass] ==
+                 cmesh_in->num_trees_per_eclass[iclass]);
     }
     meta_info.stash_elem_counts[0] = cmesh_in->stash->attributes.elem_count;
     meta_info.stash_elem_counts[1] = cmesh_in->stash->classes.elem_count;
@@ -934,6 +936,8 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     }
     for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
       cmesh_in->num_trees_per_eclass[iclass] =
+        meta_info.num_trees_per_eclass[iclass];
+      cmesh_in->num_local_trees_per_eclass[iclass] =
         meta_info.num_trees_per_eclass[iclass];
     }
 #ifdef T8_ENABLE_DEBUG
