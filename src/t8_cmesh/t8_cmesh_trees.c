@@ -1044,7 +1044,8 @@ t8_cmesh_trees_is_face_consistend (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
       else {
         /* Neighbor is a ghost */
         (void) t8_cmesh_trees_get_ghost_ext (trees,
-                                             neigh1 - cmesh->num_local_trees,
+                                             neigh1 -
+                                             cmesh->num_local_trees,
                                              &gfaces2, &ttf2);
         /* Check whether the face_neighbor entry of tree2 is correct */
         ret = gfaces2[face1] == ltree + cmesh->num_local_trees;
@@ -1096,8 +1097,8 @@ t8_cmesh_trees_is_face_consistend (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
       }
 #ifdef T8_ENABLE_DEBUG
       if (ret != 1) {
-        t8_debugf ("Face connection missmatch at ghost %i face %i\n", lghost,
-                   iface);
+        t8_debugf ("Face connection missmatch at ghost %i face %i\n",
+                   lghost, iface);
       }
 #endif
     }
