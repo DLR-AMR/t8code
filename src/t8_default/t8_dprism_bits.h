@@ -49,11 +49,8 @@ void                t8_dprism_copy (const t8_dprism_t * p,
  *  and positiv if p1 > p2.
  *  If p2 is a copy of p1 then the elements are equal.
  */
-int
- 
- 
- 
-          t8_dprism_compare (const t8_dprism_t * p1, const t8_dprism_t * p2);
+int       t8_dprism_compare (const t8_dprism_t * p1, const t8_dprism_t * p2);
+
 
 /** Initialize a prism as the prism with a given global id in a uniform
  *  refinement of a given level. *
@@ -77,7 +74,7 @@ void                t8_dprism_successor (const t8_dprism_t * p,
  * \param [in]  p Input prism.
  * \param [in,out] parent Existing prism whose data will
  *                  be filled with the data of p's parent.
- * \note \a p may point to the same triangle as \a parent.
+ * \note \a p may point to the same prism as \a parent.
  */
 void                t8_dprism_parent (const t8_dprism_t * p,
                                       t8_dprism_t * parent);

@@ -54,6 +54,12 @@ t8_default_scheme_prism_c::t8_element_compare (const t8_element_t * elem1,
                             (const t8_dprism_t *) elem2);
 }
 
+void
+t8_default_scheme_prism_c::t8_element_parent (const t8_element_t * elem,
+                                       t8_element_t * parent){
+    t8_dprism_parent((const t8_dprism_t *)elem, (t8_dprism_t *)parent);
+}
+
 int
 t8_default_scheme_prism_c::t8_element_num_children (const t8_element_t * elem)
 {
@@ -204,6 +210,15 @@ t8_default_scheme_prism_c::t8_element_last_descendant (const t8_element_t *
 {
   t8_dprism_last_descendant ((const t8_default_prism_t *) elem,
                              (t8_default_prism_t *) desc, T8_DPRISM_MAXLEVEL);
+}
+
+void
+t8_default_scheme_prism_c::t8_element_anchor (const t8_element_t * elem,
+                                         int anchor[3]){
+    t8_dprism_t     *prism = (t8_dprism_t *)elem;
+    anchor[0] = prism->tri.x;
+    anchor[1] = prism->tri.y;
+    anchor[2] = prism->line.x;
 }
 
 int
