@@ -865,12 +865,14 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 {
   int                 mpirank, mpisize, mpiret;
   int                 iclass;
+  t8_cmesh_t          cmesh_out;
 
   struct
   {
     t8_cmesh_struct_t   cmesh;
     t8_gloidx_t         num_trees_per_eclass[T8_ECLASS_COUNT];
     size_t              stash_elem_counts[3];
+    int                 pre_commit;     /* True, if cmesh on root is not committed yet. */
 #ifdef T8_ENABLE_DEBUG
     sc_MPI_Comm         comm;
 #endif
@@ -911,12 +913,20 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
       T8_ASSERT (cmesh_in->num_local_trees_per_eclass[iclass] ==
                  cmesh_in->num_trees_per_eclass[iclass]);
     }
-    meta_info.stash_elem_counts[0] = cmesh_in->stash->attributes.elem_count;
-    meta_info.stash_elem_counts[1] = cmesh_in->stash->classes.elem_count;
-    meta_info.stash_elem_counts[2] = cmesh_in->stash->joinfaces.elem_count;
+    if (t8_cmesh_is_committed (cmesh_in)) {
+      meta_info.pre_commit = 0;
+    }
+    else {
+      meta_info.pre_commit = 1;
+      meta_info.stash_elem_counts[0] = cmesh_in->stash->attributes.elem_count;
+      meta_info.stash_elem_counts[1] = cmesh_in->stash->classes.elem_count;
+      meta_info.stash_elem_counts[2] = cmesh_in->stash->joinfaces.elem_count;
+    }
 #ifdef T8_ENABLE_DEBUG
     meta_info.comm = comm;
 #endif
+    /* Root returns the input cmesh */
+    cmesh_out = cmesh_in;
   }
   /* TODO: we could optimize this by using IBcast */
   mpiret = sc_MPI_Bcast (&meta_info, sizeof (meta_info), sc_MPI_BYTE, root,
@@ -925,29 +935,51 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 
   /* If not root store information in new cmesh and allocate memory for arrays. */
   if (mpirank != root) {
-    t8_cmesh_init (&cmesh_in);
-    cmesh_in->dimension = meta_info.cmesh.dimension;
-    cmesh_in->face_knowledge = meta_info.cmesh.face_knowledge;
-    cmesh_in->set_partition = meta_info.cmesh.set_partition;
-    cmesh_in->set_partition_level = meta_info.cmesh.set_partition_level;
-    cmesh_in->set_refine_level = meta_info.cmesh.set_refine_level;
+    t8_cmesh_init (&cmesh_out);
+    cmesh_out->dimension = meta_info.cmesh.dimension;
+    cmesh_out->face_knowledge = meta_info.cmesh.face_knowledge;
+    cmesh_out->set_partition = meta_info.cmesh.set_partition;
+    cmesh_out->set_partition_level = meta_info.cmesh.set_partition_level;
+    cmesh_out->set_refine_level = meta_info.cmesh.set_refine_level;
+    cmesh_out->num_trees = meta_info.cmesh.num_trees;
+    cmesh_out->num_local_trees = cmesh_out->num_trees;
+    cmesh_out->first_tree = 0;
+    cmesh_out->first_tree_shared = 0;
+    cmesh_out->num_ghosts = 0;
+    T8_ASSERT (cmesh_out->set_partition == 0);
     if (meta_info.cmesh.profile != NULL) {
       t8_cmesh_set_profiling (cmesh_in, 1);
     }
     for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
-      cmesh_in->num_trees_per_eclass[iclass] =
+      cmesh_out->num_trees_per_eclass[iclass] =
         meta_info.num_trees_per_eclass[iclass];
-      cmesh_in->num_local_trees_per_eclass[iclass] =
+      cmesh_out->num_local_trees_per_eclass[iclass] =
         meta_info.num_trees_per_eclass[iclass];
     }
 #ifdef T8_ENABLE_DEBUG
     T8_ASSERT (meta_info.comm == comm);
-    cmesh_in->inserted_trees = meta_info.cmesh.inserted_trees;
 #endif
   }
-  /* broadcast all the stashed information about trees/neighbors/attributes */
-  t8_stash_bcast (cmesh_in->stash, root, comm, meta_info.stash_elem_counts);
-  return cmesh_in;
+  if (meta_info.pre_commit) {
+    /* broadcast all the stashed information about trees/neighbors/attributes */
+    t8_stash_bcast (cmesh_in->stash, root, comm, meta_info.stash_elem_counts);
+  }
+  else {
+    /* broadcast the stored information about the trees */
+    t8_cmesh_trees_bcast (cmesh_out, root, comm);
+    if (mpirank != root) {
+      /* destroy stash and set to committed */
+      t8_stash_destroy (&cmesh_out->stash);
+      cmesh_out->committed = 1;
+    }
+  }
+
+  cmesh_out->mpirank = mpirank;
+  cmesh_out->mpisize = mpisize;
+  /* Final checks */
+  T8_ASSERT (t8_cmesh_is_committed (cmesh_out));
+  T8_ASSERT (t8_cmesh_comm_is_valid (cmesh_out, comm));
+  return cmesh_out;
 }
 
 #ifdef T8_WITH_METIS

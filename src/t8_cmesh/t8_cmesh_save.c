@@ -932,5 +932,6 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
      * regather the first trees on each process */
     t8_cmesh_gather_treecount (cmesh, comm);
   }
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
   return cmesh;
 }

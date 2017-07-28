@@ -408,6 +408,8 @@ t8_cmesh_trees_ghost_attribute_size (t8_cghost_t ghost)
   return total;
 }
 
+/* Return the number of allocated bytes for a part's
+ * first_tree array */
 static              size_t
 t8_cmesh_trees_get_part_alloc (t8_cmesh_trees_t trees, t8_part_tree_t part)
 {
@@ -921,6 +923,86 @@ t8_cmesh_trees_ghost_id (t8_cmesh_t cmesh, t8_cmesh_trees_t trees,
     }
   }
   return -1;
+}
+
+void
+t8_cmesh_trees_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
+{
+  int                 num_parts, ipart;
+  int                 mpirank, mpiret, mpisize;
+  t8_cmesh_trees_t    trees;
+  t8_part_tree_t      part;
+
+  struct
+  {
+    t8_locidx_t         num_trees;
+    t8_locidx_t         first_tree_id;
+    size_t              num_bytes;
+  } part_info;
+
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+
+#ifdef T8_ENABLE_DEBUG
+  /* Check if input cmesh is committed on root and initialized on other ranks */
+  if (mpirank == root) {
+    T8_ASSERT (t8_cmesh_is_committed (cmesh_in));
+    /* cmesh_in is replicated */
+    T8_ASSERT (cmesh_in->num_ghosts == 0);
+    T8_ASSERT (cmesh_in->set_partition == 0);
+  }
+  else {
+    T8_ASSERT (t8_cmesh_is_initialized (cmesh_in));
+  }
+#endif
+
+  if (mpirank == root) {
+    trees = cmesh_in->trees;
+    num_parts = trees->from_proc->elem_count;
+  }
+  /* Broadcast the number of parts */
+  mpiret = sc_MPI_Bcast (&num_parts, 1, sc_MPI_INT, root, comm);
+  SC_CHECK_MPI (mpiret);
+
+  if (mpirank != root) {
+    /* Init trees structure */
+    t8_cmesh_trees_init (&cmesh_in->trees, num_parts, cmesh_in->num_trees, 0);
+    trees = cmesh_in->trees;
+  }
+
+  for (ipart = 0; ipart < num_parts; ipart++) {
+    part = t8_cmesh_trees_get_part (trees, ipart);
+    if (mpirank == 0) {
+      /* Gather information about part */
+      part_info.num_trees = part->num_trees;
+      part_info.first_tree_id = part->first_tree_id;
+      part_info.num_bytes = t8_cmesh_trees_get_part_alloc (trees, part);
+      T8_ASSERT (part->num_ghosts == 0);
+    }
+    /* Bcast the meta information about part */
+    mpiret =
+      sc_MPI_Bcast (&part_info, sizeof (part_info), sc_MPI_BYTE, root, comm);
+    SC_CHECK_MPI (mpiret);
+
+    if (mpirank != root) {
+      part->first_tree_id = part_info.first_tree_id;
+      part->num_trees = part_info.num_trees;
+      /* Allocate memory for part's trees */
+      part->first_tree = T8_ALLOC (char, part_info.num_bytes);
+      part->num_ghosts = 0;
+      part->first_ghost_id = 0;
+    }
+    /* Bcast the part information */
+    mpiret =
+      sc_MPI_Bcast (part->first_tree, part_info.num_bytes, sc_MPI_BYTE, root,
+                    comm);
+    SC_CHECK_MPI (mpiret);
+  }                             /* end for */
+  /* Bcast the tree_to_proc array */
+  sc_MPI_Bcast (trees->tree_to_proc, cmesh_in->num_trees, sc_MPI_INT, root,
+                comm);
 }
 
 /* Check whether for each tree its neighbors are set consistently, that means that

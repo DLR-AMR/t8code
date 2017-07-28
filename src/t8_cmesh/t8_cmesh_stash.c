@@ -280,7 +280,7 @@ t8_stash_bcast_attributes (sc_array_t * attributes, int root,
     }
   }
   /* broadcast buffer */
-  sc_MPI_Bcast (buffer, att_size, sc_MPI_CHAR, root, comm);
+  sc_MPI_Bcast (buffer, att_size, sc_MPI_BYTE, root, comm);
   /* Copy attributes from buffer back to stash */
   if (mpirank != root) {
     copied_bytes = 0;
