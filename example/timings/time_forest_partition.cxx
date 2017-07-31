@@ -252,10 +252,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
       t8_forest_set_balance (forest_partition, NULL, 0);
     }
     t8_forest_commit (forest_partition);
-#if USE_CMESH_PARTITION
-    /* Repartition the cmesh of the forest */
-    t8_forest_partition_cmesh (forest_partition, comm, 1);
-#endif
+
     /* Set the vtu output name */
     if (!no_vtk) {
       int                 time_step;
@@ -277,7 +274,6 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
     forest = forest_partition;
     /* TIME-LOOP ends here */
   }
-  t8_cmesh_save (t8_forest_get_cmesh (forest_partition), "cmesh_time_forest");
   /* memory clean-up */
   t8_forest_unref (&forest_partition);
 }
@@ -343,7 +339,7 @@ main (int argc, char *argv[])
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   p4est_init (NULL, SC_LP_ESSENTIAL);
-  t8_init (SC_LP_INFO);
+  t8_init (SC_LP_DEBUG);
 
   /* Setup for command line options */
   opt = sc_options_new (argv[0]);
