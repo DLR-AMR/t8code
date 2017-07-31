@@ -49,8 +49,8 @@ void                t8_dprism_copy (const t8_dprism_t * p,
  *  and positiv if p1 > p2.
  *  If p2 is a copy of p1 then the elements are equal.
  */
-int       t8_dprism_compare (const t8_dprism_t * p1, const t8_dprism_t * p2);
-
+int                 t8_dprism_compare (const t8_dprism_t * p1,
+                                       const t8_dprism_t * p2);
 
 /** Initialize a prism as the prism with a given global id in a uniform
  *  refinement of a given level. *
