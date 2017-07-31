@@ -478,6 +478,8 @@ t8_forest_commit (t8_forest_t forest)
           /* If profiling is enable, take the runtime of balance from forest_balance. */
           forest->profile->balance_runtime =
             forest_balance->profile->balance_runtime;
+          forest->profile->balance_rounds =
+            forest_balance->profile->balance_rounds;
         }
       }
       else {
@@ -1130,6 +1132,8 @@ t8_forest_print_profile (t8_forest_t forest)
                    "forest: Ghost runtime.");
     sc_stats_set1 (&stats[11], profile->balance_runtime,
                    "forest: Balance runtime.");
+    sc_stats_set1 (&stats[12], profile->balance_rounds,
+                   "forest: Balance rounds.");
     /* compute stats */
     sc_stats_compute (sc_MPI_COMM_WORLD, T8_PROFILE_NUM_STATS, stats);
     /* print stats */

@@ -68,6 +68,7 @@ T8_EXTERN_C_BEGIN ();
 #define T8_ALLOC P4EST_ALLOC            /**< TODO: write proper function. */
 #define T8_ALLOC_ZERO P4EST_ALLOC_ZERO  /**< TODO: write proper function. */
 #define T8_FREE P4EST_FREE              /**< TODO: write proper function. */
+#define T8_REALLOC P4EST_REALLOC        /**< TODO: write proper function. */
 
 /** A type for counting coarse mesh related values (trees, tree vertices, ...).
  * The name topidx alludes to mesh topology as this is what cmesh defines.
