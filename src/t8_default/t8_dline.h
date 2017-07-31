@@ -20,16 +20,14 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_LINE_H
-#define T8_LINE_H
+#ifndef T8_DLINE_H
+#define T8_DLINE_H
 
-/** \file t8_dtri.h
+/** \file t8_dline.h
  * TODO: document this.
  */
 
 #include <t8.h>
-
-T8_EXTERN_C_BEGIN ();
 
 /** The number of children that a line is refined into. */
 #define T8_DLINE_CHILDREN 2
@@ -54,7 +52,5 @@ typedef struct t8_dline
   t8_dline_coord_t    x;
 }
 t8_dline_t;
-
-T8_EXTERN_C_END ();
 
 #endif /* T8_DLINE_H */

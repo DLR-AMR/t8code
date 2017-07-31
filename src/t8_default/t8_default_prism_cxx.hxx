@@ -31,8 +31,6 @@
 #include <t8_element_cxx.hxx>
 #include "t8_default_common_cxx.hxx"
 
-T8_EXTERN_C_BEGIN ();
-
 /** Provide an implementation for the prism element class.
  * It is written as a self-contained library in the t8_dprism_* files.
  */
