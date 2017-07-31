@@ -136,7 +136,9 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     t8_forest_init (&forest_temp);
     t8_forest_set_adapt (forest_temp, forest_from, t8_forest_balance_adapt,
                          NULL, 0);
-    t8_forest_set_ghost (forest_temp, 1, T8_GHOST_FACES);
+    if (!repartition) {
+      t8_forest_set_ghost (forest_temp, 1, T8_GHOST_FACES);
+    }
     forest_temp->t8code_data = &done;
     /* If profiling is enabled, measure ghost/adapt rumtimes */
     if (forest->profile != NULL) {
@@ -156,8 +158,11 @@ t8_forest_balance (t8_forest_t forest, int repartition)
       }
       sc_stats_set1 (&adap_stats[count], forest_temp->profile->adapt_runtime,
                      "forest balance: Adapt time");
-      sc_stats_set1 (&ghost_stats[count], forest_temp->profile->ghost_runtime,
-                     "forest balance: Ghost time");
+      if (!repartition) {
+        sc_stats_set1 (&ghost_stats[count],
+                       forest_temp->profile->ghost_runtime,
+                       "forest balance: Ghost time");
+      }
     }
 
     /* Compute the logical and of all process local done values, if this results
@@ -181,6 +186,9 @@ t8_forest_balance (t8_forest_t forest, int repartition)
         sc_stats_set1 (&partition_stats[count],
                        forest_partition->profile->partition_runtime,
                        "forest balance: Partition time");
+        sc_stats_set1 (&ghost_stats[count],
+                       forest_partition->profile->ghost_runtime,
+                       "forest balance: Ghost time");
       }
 
       forest_temp = forest_partition;
@@ -218,7 +226,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     t8_debugf ("ada stats %f\n", adap_stats[count].sum_values);
     for (i = 0; i < count; i++) {
       ada_time += adap_stats[i].sum_values;
-      ghost_time += adap_stats[count].sum_values;
+      ghost_time += ghost_stats[i].sum_values;
       if (repartition) {
         part_time += partition_stats[i].sum_values;
       }
