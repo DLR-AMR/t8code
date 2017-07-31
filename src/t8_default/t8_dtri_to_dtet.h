@@ -41,6 +41,8 @@ T8_EXTERN_C_BEGIN ();
 #define T8_DTRI_CHILDREN T8_DTET_CHILDREN
 #define T8_DTRI_FACES T8_DTET_FACES
 #define T8_DTRI_FACE_CHILDREN T8_DTET_FACE_CHILDREN
+#define T8_DTRI_CORNERS T8_DTET_CORNERS
+#define T8_DTRI_NUM_TYPES T8_DTET_NUM_TYPES
 
 /* redefine types */
 #define t8_dtri_coord_t t8_dtet_coord_t
@@ -60,10 +62,12 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_parenttype_Iloc_to_type t8_dtet_parenttype_Iloc_to_type
 #define t8_dtri_parenttype_Iloc_to_cid t8_dtet_parenttype_Iloc_to_cid
 #define t8_dtri_type_cid_to_Iloc t8_dtet_type_cid_to_Iloc
+#define t8_dtri_face_corner t8_dtet_face_corner
 
 /* functions in d8_dtri_bits.h */
 #define t8_dtri_is_equal t8_dtet_is_equal
 #define t8_dtri_copy t8_dtet_copy
+#define t8_dtri_compare t8_dtet_compare
 #define t8_dtri_parent t8_dtet_parent
 #define t8_dtri_ancestor t8_dtet_ancestor
 #define t8_dtri_compute_all_coords t8_dtet_compute_all_coords
@@ -76,22 +80,28 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_nearest_common_ancestor t8_dtet_nearest_common_ancestor
 #define t8_dtri_children_at_face t8_dtet_children_at_face
 #define t8_dtri_face_child_face t8_dtet_face_child_face
+#define t8_dtri_face_parent_face t8_dtet_face_parent_face
 #define t8_dtri_tree_face t8_dtet_tree_face
+#define t8_dtri_root_face_to_face t8_dtet_root_face_to_face
 #define t8_dtri_is_inside_root t8_dtet_is_inside_root
 #define t8_dtri_is_root_boundary t8_dtet_is_root_boundary
 #define t8_dtri_is_sibling t8_dtet_is_sibling
 #define t8_dtri_is_parent t8_dtet_is_parent
 #define t8_dtri_is_ancestor t8_dtet_is_ancestor
 #define t8_dtri_linear_id t8_dtet_linear_id
+#define t8_dtri_linear_id_corner_desc t8_dtet_linear_id_corner_desc
 #define t8_dtri_init_linear_id t8_dtet_init_linear_id
 #define t8_dtri_init_root t8_dtet_init_root
 #define t8_dtri_successor t8_dtet_successor
 #define t8_dtri_first_descendant t8_dtet_first_descendant
 #define t8_dtri_last_descendant t8_dtet_last_descendant
+#define t8_dtri_corner_descendant t8_dtet_corner_descendant
 #define t8_dtri_predecessor t8_dtet_predecessor
 #define t8_dtri_ancestor_id t8_dtet_ancestor_id
 #define t8_dtri_child_id  t8_dtet_child_id
 #define t8_dtri_get_level t8_dtet_get_level
+#define t8_dtri_is_valid t8_dtet_is_valid
+#define t8_dtri_init t8_dtet_init
 
 T8_EXTERN_C_END ();
 

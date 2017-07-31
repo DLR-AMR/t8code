@@ -60,6 +60,10 @@ typedef enum t8_eclass
 }
 t8_eclass_t;
 
+/** The MPI datatype used for t8_eclass_t */
+#define T8_MPI_ECLASS_TYPE (T8_ASSERT (sizeof (int) == sizeof (t8_eclass_t)),\
+  sc_MPI_INT)
+
 /** The maximum number of boundary faces an element class can have. */
 #define T8_ECLASS_MAX_FACES 6
 /** The maximum number of cornes a 2-dimensional element class can have. */
@@ -83,6 +87,16 @@ extern const int    t8_eclass_max_num_faces[T8_ECLASS_MAX_DIM + 1];
 extern const int
      t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES]
   [T8_ECLASS_MAX_CORNERS_2D];
+
+/** Each face is either 0 or 1 oriented, depending on the order of its vertices.
+ * We say a face is 0 oriented, if its normal vector points inwards,
+ * 1 oriented otherwise.
+ * The normal vector is computed as the cross product of v_1 - v_0 and v_2 - v_0.
+ * v_i being the i-th vertex.
+ * The faces of an eclass of dimension 2 or lower are all 0 oriented.
+ */
+extern const int
+     t8_eclass_face_orientation[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES];
 
 /** The number of vertices of an element class. */
 extern const int    t8_eclass_num_vertices[T8_ECLASS_COUNT];

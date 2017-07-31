@@ -60,6 +60,14 @@ void                t8_dtet_compute_all_coords (const t8_dtet_t * t,
  */
 void                t8_dtet_copy (const t8_dtet_t * t, t8_dtet_t * dest);
 
+/** Compare two tets in their linear order.
+ * \param [in] t1 Tetrahedron one.
+ * \param [in] t2 Tetrahedron two.
+ * \return        Returns negativ if t1 < t2, zero if t1 = t2, positive if t1 > t2
+ */
+int                 t8_dtet_compare (const t8_dtet_t * t1,
+                                     const t8_dtet_t * t2);
+
 /** Compute the parent of a tetrahedron.
  * \param [in]  elem Input tetrahedron.
  * \param [in,out] parent Existing tetrahedron whose data will
@@ -142,7 +150,8 @@ void                t8_dtet_nearest_common_ancestor (const t8_dtet_t * t1,
 void                t8_dtet_children_at_face (const t8_dtet_t * tet,
                                               int face,
                                               t8_dtet_t * children[],
-                                              int num_children);
+                                              int num_children,
+                                              int *child_indices);
 
 /** Given a face of an tetrahedron and a child number of a child of that face, return the face number
  * of the child of the tetrahedron that matches the child face.
@@ -155,16 +164,41 @@ void                t8_dtet_children_at_face (const t8_dtet_t * tet,
 int                 t8_dtet_face_child_face (const t8_dtet_t * tet,
                                              int face, int face_child);
 
+/** Given a face of an tet return the face number
+ * of the parent of the tet that matches the tet's face. Or return -1 if
+ * no face of the parent matches the face.
+
+ * \param [in]  elem    The tet.
+ * \param [in]  face    Then number of the face.
+ * \return              If \a face of \a elem is also a face of \a elem's parent,
+ *                      the face number of this face. Otherwise -1.
+ */
+int                 t8_dtet_face_parent_face (const t8_dtet_t * tet,
+                                              int face);
+
 /** Given a tetrahedron and a face of this tetrahedron. If the face lies on the
  *  tree boundary, return the face number of the tree face.
  *  If not the return value is arbitrary.
  * \param [in] t        The tetrahedron.
- * \param [in] face     The index of a face of \a elem.
+ * \param [in] face     The index of a face of \a t.
  * \return The index of the tree face that \a face is a subface of, if
  *         \a face is on a tree boundary.
  *         Any arbitrary integer if \a is not at a tree boundary.
+ * \note For boundary tetrahedra, this function is the inverse of \ref t8_dtet_root_face_to_face.
  */
 int                 t8_dtet_tree_face (t8_dtet_t * t, int face);
+
+/** Given a tetrahedron and a face of the root tetrahedron. If the tetrahedron lies on the
+ *  tree boundary, return the corresponding face number of the tetrahedron.
+ *  If not the return value is arbitrary.
+ * \param [in] t        The tetrahedron.
+ * \param [in] face     The index of a face of the root tetrahedron.
+ * \return The index of the face of \a t that is a subface of \a face, if
+ *         \a t is on the tree boundary.
+ *         Any arbitrary integer if \a t is not at a tree boundary.
+ * \note For boundary tetrahedra, this function is the inverse of \ref t8_dtet_tree_face.
+ */
+int                 t8_dtet_root_face_to_face (t8_dtet_t * t, int root_face);
 
 /** Test if a tetrahedron lies inside of the root tetrahedron,
  *  that is the tetrahedron of level 0, anchor node (0,0,0)
@@ -262,6 +296,18 @@ void                t8_dtet_first_descendant (const t8_dtet_t * t,
 void                t8_dtet_last_descendant (const t8_dtet_t * t,
                                              t8_dtet_t * s, int level);
 
+/** Compute the descendant of a tetrahedron in a given corner.
+ * \param [in] t        Tetrahedron whose descendant is computed.
+ * \param [out] s       Existing tetrahedron whose data will be filled with the data
+ *                      of t's descendant in \a corner.
+ * \param [in]  corner  The corner in which the descendant should lie.
+ * \param [in]  level   The refinement level of the descendant. Must be greater or
+ *                      equal to \a t's level.
+ */
+void                t8_dtet_corner_descendant (const t8_dtet_t * t,
+                                               t8_dtet_t * s, int corner,
+                                               int level);
+
 /** Computes the predecessor of a tetrahedron in a uniform grid of level \a level.
  * \param [in] t  tetrahedron whose id will be computed.
  * \param [in,out] s Existing tetrahedron whose data will be filled with the
@@ -291,6 +337,19 @@ int                 t8_dtet_child_id (const t8_dtet_t * t);
  * \return        The level of \a t.
  */
 int                 t8_dtet_get_level (const t8_dtet_t * t);
+
+/** Query whether all entries of a tet are in valid ranges.
+ * \param [in] t  tet to be considered.
+ * \return        True, if \a t is a valid tet and it is safe to call any
+ *                function on \a t.
+ *                False otherwise.
+ */
+int                 t8_dtet_is_valid (const t8_dtet_t * t);
+
+/** Set sensible default values for a tet.
+ * \param [in,out] t A tet.
+ */
+void                t8_dtet_init (t8_dtet_t * t);
 
 T8_EXTERN_C_END ();
 

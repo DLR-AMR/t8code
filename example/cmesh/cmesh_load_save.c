@@ -60,7 +60,6 @@ static void
 t8_cmesh_save_cmesh (const char *mshfile, int dim)
 {
   t8_cmesh_t          cmesh;
-  char                filename[BUFSIZ];
   int                 ret, mpirank, mpiret;
 
   if (mshfile == NULL) {
@@ -77,13 +76,12 @@ t8_cmesh_save_cmesh (const char *mshfile, int dim)
   }
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
-  snprintf (filename, BUFSIZ, "cmesh_saved_%04d.cmesh", mpirank);
-  ret = t8_cmesh_save (cmesh, filename);
+  ret = t8_cmesh_save (cmesh, "cmesh_saved");
   if (ret == 0) {
     t8_errorf ("Error when writing to file\n");
   }
   else {
-    t8_debugf ("Saved cmesh to %s\n", filename);
+    t8_debugf ("Saved cmesh to %s\n", "cmesh_saved_RANK.cmesh");
   }
   t8_cmesh_destroy (&cmesh);
 }

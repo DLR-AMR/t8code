@@ -33,6 +33,7 @@
 
 #include <p4est.h>
 #include <t8_element_cxx.hxx>
+#include "t8_default_line_cxx.hxx"
 #include "t8_default_common_cxx.hxx"
 
 /** The structure holding a quadrilateral element in the default scheme.
@@ -87,6 +88,15 @@ public:
 
   ~t8_default_scheme_quad_c ();
 
+  /** Allocate memory for a given number of elements.
+   * In debugging mode, ensure that all elements are valid \ref t8_element_is_valid.
+   */
+  virtual void        t8_element_new (int length, t8_element_t ** elem);
+
+  /** Initialize an array of allocated elements. */
+  virtual void        t8_element_init (int length, t8_element_t * elem,
+                                       int called_new);
+
 /** Return the maximum level allowed for this element class. */
   virtual int         t8_element_maxlevel (void);
 
@@ -118,6 +128,13 @@ public:
   /** Compute the number of face of a given element. */
   virtual int         t8_element_num_faces (const t8_element_t * elem);
 
+  /** Compute the maximum number of faces of a given element and all of its
+   *  descendants.
+   * \param [in] elem The element.
+   * \return          The maximum number of faces of \a elem and its descendants.
+   */
+  virtual int         t8_element_max_num_faces (const t8_element_t * elem);
+
   /** Return the number of children of an element when it is refined. */
   virtual int         t8_element_num_children (const t8_element_t * elem);
 
@@ -135,6 +152,10 @@ public:
 
 /** Return the child id of an element */
   virtual int         t8_element_child_id (const t8_element_t * elem);
+
+  /** Compute the ancestor id of an element */
+  virtual int         t8_element_ancestor_id (const t8_element_t * elem,
+                                              int level);
 
 /** Return nonzero if collection of elements is a family */
   virtual int         t8_element_is_family (t8_element_t ** fam);
@@ -155,24 +176,33 @@ public:
   virtual void        t8_element_children_at_face (const t8_element_t * elem,
                                                    int face,
                                                    t8_element_t * children[],
-                                                   int num_children);
+                                                   int num_children,
+                                                   int *child_indices);
 
   /** Given a face of an element and a child number of a child of that face, return the face number
    * of the child of the element that matches the child face. */
   virtual int         t8_element_face_child_face (const t8_element_t * elem,
                                                   int face, int face_child);
 
+  /** Given a face of an element return the face number
+   * of the parent of the element that matches the element's face. Or return -1 if
+   * no face of the parent matches the face. */
+  virtual int         t8_element_face_parent_face (const t8_element_t * elem,
+                                                   int face);
+
   /** Transform the coordinates of a quadrilateral considered as boundary element
    *  in a tree-tree connection. */
   virtual void        t8_element_transform_face (const t8_element_t * elem1,
                                                  t8_element_t * elem2,
-                                                 int orientation,
+                                                 int orientation, int sign,
                                                  int is_smaller_face);
 
   /** Given a boundary face inside a root tree's face construct
    *  the element inside the root tree that has the given face as a
    *  face. */
-  virtual void        t8_element_extrude_face (const t8_element_t * face,
+  virtual int         t8_element_extrude_face (const t8_element_t * face,
+                                               const t8_eclass_scheme_c
+                                               * face_scheme,
                                                t8_element_t * elem,
                                                int root_face);
 
@@ -180,10 +210,24 @@ public:
   virtual int         t8_element_tree_face (const t8_element_t * elem,
                                             int face);
 
+  /** Construct the first descendant of an element that touches a given face.   */
+  virtual void        t8_element_first_descendant_face (const t8_element_t *
+                                                        elem, int face,
+                                                        t8_element_t *
+                                                        first_desc);
+
+  /** Construct the last descendant of an element that touches a given face. */
+  virtual void        t8_element_last_descendant_face (const t8_element_t *
+                                                       elem, int face,
+                                                       t8_element_t *
+                                                       last_desc);
+
   /** Construct the boundary element at a specific face. */
   virtual void        t8_element_boundary_face (const t8_element_t * elem,
                                                 int face,
-                                                t8_element_t * boundary);
+                                                t8_element_t * boundary,
+                                                const t8_eclass_scheme_c *
+                                                boundary_scheme);
 
 /** Construct all codimension-one boundary elements of a given element. */
   virtual void        t8_element_boundary (const t8_element_t * elem,
@@ -203,7 +247,8 @@ public:
   virtual int         t8_element_face_neighbor_inside (const t8_element_t *
                                                        elem,
                                                        t8_element_t * neigh,
-                                                       int face);
+                                                       int face,
+                                                       int *neigh_face);
 
 /** Initialize an element according to a given linear id */
   virtual void        t8_element_set_linear_id (t8_element_t * elem,
@@ -242,6 +287,11 @@ public:
   /** Compute the integer coordinates of a given element vertex. */
   virtual void        t8_element_vertex_coords (const t8_element_t * t,
                                                 int vertex, int coords[]);
+
+#ifdef T8_ENABLE_DEBUG
+  /** Query whether an element is valid */
+  virtual int         t8_element_is_valid (const t8_element_t * t) const;
+#endif
 };
 
 #endif /* !T8_DEFAULT_QUAD_CXX_HXX */

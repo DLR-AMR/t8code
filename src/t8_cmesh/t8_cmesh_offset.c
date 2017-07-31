@@ -99,18 +99,23 @@ t8_offset_empty (int proc, t8_gloidx_t * offset)
   T8_ASSERT (proc >= 0);
   T8_ASSERT (offset != NULL);
 
-  /* proc is empty if the first tree of the next process is smaller than
-   * the "first tree" of proc.
-   * In this case the first tree of proc+1 is shared. */
-  if (t8_offset_first (proc + 1, offset) < t8_offset_first (proc, offset))
-    return 1;
-  /* Or the "first tree" of proc equals the first tree of proc+1 but the latter
-   * is not shared */
-  if (t8_offset_first (proc + 1, offset) == t8_offset_first (proc, offset)
-      && offset[proc + 1] >= 0) {
+  if (t8_offset_num_trees (proc, offset) <= 0) {
     return 1;
   }
   return 0;
+}
+
+/* Find the next higher rank that is not empty.
+ * returns mpisize if this rank does not exist. */
+int
+t8_offset_next_nonempty_rank (int rank, int mpisize, t8_gloidx_t * offset)
+{
+  int                 next_nonempty = rank + 1;
+
+  while (next_nonempty < mpisize && t8_offset_empty (next_nonempty, offset)) {
+    next_nonempty++;
+  }
+  return next_nonempty;
 }
 
 #if T8_ENABLE_DEBUG

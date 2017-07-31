@@ -29,6 +29,11 @@
 
 #include <t8_element_cxx.hxx>
 
+/* Macro to check whether a pointer (VAR) to a base class, comes from an
+ * implementation of a child class (TYPE). */
+#define T8_COMMON_IS_TYPE(VAR, TYPE) \
+  ((dynamic_cast<TYPE> (VAR)) != NULL)
+
 T8_EXTERN_C_BEGIN ();
 
 class               t8_default_scheme_common_c:public t8_eclass_scheme_c
@@ -37,32 +42,15 @@ public:
   /** Destructor for all default schemes */
   virtual ~ t8_default_scheme_common_c ();
 
-  /** Allocate space for the codimension-one boundary elements. */
+  /** Compute the number of corners of a given element. */
+  virtual int         t8_element_num_corners (const t8_element_t * elem);
+
+  /** Allocate space for a bunch of elements. */
   virtual void        t8_element_new (int length, t8_element_t ** elem);
 
-  /** Deallocate space for the codimension-one boundary elements. */
+  /** Deallocate space for a bunch of elements. */
   virtual void        t8_element_destroy (int length, t8_element_t ** elem);
 };
-
-/** This class independent function assumes an sc_mempool_t as context.
- * It is suitable as the elem_new callback in \ref t8_eclass_scheme_t.
- * We assume that the mempool has been created with the correct element size.
- * \param [in,out] ts_context   An element is allocated in this sc_mempool_t.
- * \param [in]     length       Non-negative number of elements to allocate.
- * \param [in,out] elem         Array of correct size whose members are filled.
- */
-void                t8_default_mempool_alloc (void *ts_context, int length,
-                                              t8_element_t ** elem);
-
-/** This class independent function assumes an sc_mempool_t as context.
- * It is suitable as the elem_destroy callback in \ref t8_eclass_scheme_t.
- * We assume that the mempool has been created with the correct element size.
- * \param [in,out] ts_context   An element is returned to this sc_mempool_t.
- * \param [in]     length       Non-negative number of elements to destroy.
- * \param [in,out] elem         Array whose members are returned to the mempool.
- */
-void                t8_default_mempool_free (void *ts_context, int length,
-                                             t8_element_t ** elem);
 
 T8_EXTERN_C_END ();
 

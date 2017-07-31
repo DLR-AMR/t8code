@@ -31,7 +31,6 @@
 
 T8_EXTERN_C_BEGIN ();
 
-
 /** Copy the values of one triangle to another.
  * \param [in] t Triangle whose values will be copied.
  * \param [in,out] dest Existing triangle whose data will be
@@ -39,6 +38,13 @@ T8_EXTERN_C_BEGIN ();
  */
 void                t8_dtri_copy (const t8_dtri_t * t, t8_dtri_t * dest);
 
+/** Compare two triangle in their linear order.
+ * \param [in] t1 Triangle one.
+ * \param [in] t2 Triangle two.
+ * \return        Returns negativ if t1 < t2, zero if t1 = t2, positive if t1 > t2
+ */
+int                 t8_dtri_compare (const t8_dtri_t * t1,
+                                     const t8_dtri_t * t2);
 
 /** Compute the parent of a triangle.
  * \param [in]  elem Input triangle.
@@ -140,7 +146,8 @@ void                t8_dtri_nearest_common_ancestor (const t8_dtri_t * t1,
 void                t8_dtri_children_at_face (const t8_dtri_t * tri,
                                               int face,
                                               t8_dtri_t * children[],
-                                              int num_children);
+                                              int num_children,
+                                              int *child_indices);
 
 /** Given a face of a triangle and a child number of a child of that face, return the face number
  * of the child of the triangle that matches the child face.
@@ -153,37 +160,66 @@ void                t8_dtri_children_at_face (const t8_dtri_t * tri,
 int                 t8_dtri_face_child_face (const t8_dtri_t * triangle,
                                              int face, int face_child);
 
+/** Given a face of an triangle return the face number
+ * of the parent of the triangle that matches the triangle's face. Or return -1 if
+ * no face of the parent matches the face.
+
+ * \param [in]  elem    The triangle.
+ * \param [in]  face    Then number of the face.
+ * \return              If \a face of \a elem is also a face of \a elem's parent,
+ *                      the face number of this face. Otherwise -1.
+ */
+int                 t8_dtri_face_parent_face (const t8_dtri_t * triangle,
+                                              int face);
+
 /** Given a triangle and a face of this triangle. If the face lies on the
  *  tree boundary, return the face number of the tree face.
  *  If not the return value is arbitrary.
  * \param [in] t        The triangle.
- * \param [in] face     The index of a face of \a elem.
+ * \param [in] face     The index of a face of \a t.
  * \return The index of the tree face that \a face is a subface of, if
  *         \a face is on a tree boundary.
- *         Any arbitrary integer if \a is not at a tree boundary.
+ *         Any arbitrary integer if \a t is not at a tree boundary.
+ * \note For boundary triangles, this function is the inverse of \ref t8_dtri_root_face_to_face
  */
 int                 t8_dtri_tree_face (t8_dtri_t * t, int face);
+
+/** Given a triangle and a face of the root triangle. If the triangle lies on the
+ *  tree boundary, return the corresponding face number of the triangle.
+ *  If not the return value is arbitrary.
+ * \param [in] t        The triangle.
+ * \param [in] face     The index of a face of the root element.
+ * \return The index of the face of \a t that is a subface of \a face, if
+ *         \a t is on the tree boundary.
+ *         Any arbitrary integer if \a t is not at a tree boundary.
+ * \note For boundary triangles, this function is the inverse of \ref t8_dtri_tree_face
+ */
+int                 t8_dtri_root_face_to_face (t8_dtri_t * t, int root_face);
 
 /** Suppose we have two trees that share a common triangle f.
  *  Given a triangle e that is a subface of f in one of the trees
  *  and given the orientation of the tree connection, construct the face
  *  triangle of the respective tree neighbor that logically coincides with e
  *  but lies in the coordinate system of the neighbor tree.
- *  \param [in] triangle1     The face triangle.
+ *  \param [in] trianglein     The face triangle.
  *  \param [in,out] triangle2 On return the face triangle \a triangle1 with respective
  *                        to the coordinate system of the other tree.
  *  \param [in] orientation The orientation of the tree-tree connection.
  *                        \see t8_cmesh_set_join
+ *  \param [in] sign      Depending on the topological orientation of the two tree faces,
+ *                        either 0 (both faces have opposite orientation)
+ *                        or 1 (both faces have the same top. orientattion).
+ *                        \ref t8_eclass_face_orientation
  *  \param [in] is_smaller_face Flag to declare whether \a triangle1 belongs to
  *                        the smaller face. A face f of tree T is smaller than
  *                        f' of T' if either the eclass of T is smaller or if
  *                        the classes are equal and f<f'. The orientation is
  *                        defined in relation to the smaller face.
- * \note \a triangle1 and \a triangle2 may point to the same element.
+ * \note \a trianglein and \a triangle2 may point to the same element.
  */
-void                t8_dtri_transform_face (const t8_dtri_t * triangle1,
+void                t8_dtri_transform_face (const t8_dtri_t * trianglein,
                                             t8_dtri_t * triangle2,
-                                            int orientation,
+                                            int orientation, int sign,
                                             int is_smaller_face);
 
 /** Test if a triangle lies inside of the root triangle,
@@ -273,7 +309,7 @@ void                t8_dtri_first_descendant (const t8_dtri_t * t,
                                               t8_dtri_t * s, int level);
 
 /** Compute the last descendant of a triangle at a given level. This is the descendant of
- * the triangle in a uniform maxlevel refinement that has the bigges id.
+ * the triangle in a uniform maxlevel refinement that has the biggest id.
  * \param [in] t        Triangle whose descendant is computed.
  * \param [in] level    A given level. Must be grater or equal to \a t's level.
  * \param [out] s       Existing triangle whose data will be filled with the data
@@ -281,6 +317,18 @@ void                t8_dtri_first_descendant (const t8_dtri_t * t,
  */
 void                t8_dtri_last_descendant (const t8_dtri_t * t,
                                              t8_dtri_t * s, int level);
+
+/** Compute the descendant of a triangle in a given corner.
+ * \param [in] t        Triangle whose descendant is computed.
+ * \param [out] s       Existing triangle whose data will be filled with the data
+ *                      of t's descendant in \a corner.
+ * \param [in]  corner  The corner in which the descendant should lie.
+ * \param [in]  level   The refinement level of the descendant. Must be greater or
+ *                      equal to \a t's level.
+ */
+void                t8_dtri_corner_descendant (const t8_dtri_t * t,
+                                               t8_dtri_t * s, int corner,
+                                               int level);
 
 /** Computes the predecessor of a triangle in a uniform grid of level \a level.
  * \param [in] t  triangle whose id will be computed.
@@ -311,6 +359,21 @@ int                 t8_dtri_child_id (const t8_dtri_t * t);
  * \return        The level of \a t.
  */
 int                 t8_dtri_get_level (const t8_dtri_t * t);
+
+/** Query whether all entries of a triangle are in valid ranges.
+ * \param [in] t  triangle to be considered.
+ * \return        True, if \a t is a valid triangle and it is safe to call any
+ *                function on \a t.
+ *                False otherwise.
+ */
+int                 t8_dtri_is_valid (const t8_dtri_t * t);
+
+#ifdef T8_ENABLE_DEBUG
+/** Set sensible default values for a triangle.
+ * \param [in,out] t A triangle.
+ */
+void                t8_dtri_init (t8_dtri_t * t);
+#endif
 
 T8_EXTERN_C_END ();
 

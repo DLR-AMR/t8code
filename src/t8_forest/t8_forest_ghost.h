@@ -60,6 +60,27 @@ t8_locidx_t         t8_forest_ghost_tree_num_elements (t8_forest_t forest,
                                                        t8_locidx_t
                                                        lghost_tree);
 
+/** Get a pointer to the ghost element array of a ghost tree.
+ * \param [in]  forest    The forest. Ghost layer must exist.
+ * \param [in]  lghost_tree The ghost tree id of a ghost tree.
+ * \return                A pointer to the array of ghost elements of the tree.
+ * \a forest must be committed before calling this function.
+ */
+t8_element_array_t *t8_forest_ghost_get_tree_elements (t8_forest_t forest,
+                                                       t8_locidx_t
+                                                       lghost_tree);
+
+/** Given a global tree compute the ghost local tree id of it.
+ * \param [in]  forest    The forest. Ghost layer must exist.
+ * \param [in]  gtreeid   A global tree in \a forest.
+ * \return                If \a gtreeid is also a ghost tree, the index in
+ *                        the ghost->ghost_trees array of the tree.
+ *                        Otherwise a negative number.
+ * \a forest must be committed before calling this function.
+ */
+t8_locidx_t         t8_forest_ghost_get_ghost_treeid (t8_forest_t forest,
+                                                      t8_gloidx_t gtreeid);
+
 /* TODO: document */
 t8_eclass_t         t8_forest_ghost_get_tree_class (t8_forest_t forest,
                                                     t8_locidx_t lghost_tree);
@@ -72,6 +93,38 @@ t8_gloidx_t         t8_forest_ghost_get_global_treeid (t8_forest_t forest,
 t8_element_t       *t8_forest_ghost_get_element (t8_forest_t forest,
                                                  t8_locidx_t lghost_tree,
                                                  t8_locidx_t lelement);
+
+/** Return the array of remote ranks.
+ * \param [in] forest   A forest with constructed ghost layer.
+ * \param [in,out] num_remotes On output the number of remote ranks is stored here.
+ * \return              The array of remote ranks in ascending order.
+ */
+int                *t8_forest_ghost_get_remotes (t8_forest_t forest,
+                                                 int *num_remotes);
+
+/** Return the first local ghost tree of a remote rank.
+ * \param [in] forest   A forest with constructed ghost layer.
+ * \param [in] remote   A remote rank of the ghost layer in \a forest.
+ * \return              The ghost tree id of the first ghost tree that stores ghost
+ *                      elements of \a remote.
+ */
+t8_locidx_t         t8_forest_ghost_remote_first_tree (t8_forest_t forest,
+                                                       int remote);
+
+/** Return the local index of the first ghost element that belongs to a given remote rank.
+ * \param [in] forest   A forest with constructed ghost layer.
+ * \param [in] remote   A remote rank of the ghost layer in \a forest.
+ * \return              The index i in the ghost elements of the first element of rank \a remote
+ */
+t8_locidx_t         t8_forest_ghost_remote_first_elem (t8_forest_t forest,
+                                                       int remote);
+
+/* TODO: - document
+ *       - make accesible to forest API
+ *       - make a begin and end version
+ */
+void                t8_forest_ghost_exchange_data (t8_forest_t forest,
+                                                   sc_array_t * element_data);
 
 /** Increase the reference count of a ghost structure.
  * \param [in,out]  ghost     On input, this ghost structure must exist with
@@ -101,8 +154,25 @@ void                t8_forest_ghost_unref (t8_forest_ghost_t * pghost);
  */
 void                t8_forest_ghost_destroy (t8_forest_ghost_t * pghost);
 
-/* TODO: Document */
+/** Create one layer of ghost elements for a forest.
+ * \see t8_forest_set_ghost
+ * \param [in,out]    forest     The forest.
+ * \a forest must be committed before calling this function.
+ */
 void                t8_forest_ghost_create (t8_forest_t forest);
+
+/** Create one layer of ghost elements for a forest.
+ * This version only works with balanced forests and is the original
+ * algorithm from p4est: Scalable Algorithms For Parallel Adaptive
+ *                Mesh Refinement On Forests of Octrees
+ * \param [in,out]    forest     The balanced forest/
+ * \a forest must be committed before calling this function.
+ * \note The user should prefer \ref t8_forest_ghost_create even for balanced forests.
+ */
+void                t8_forest_ghost_create_balanced_only (t8_forest_t forest);
+
+/* experimental version using the ghost_v3 algorithm */
+void                t8_forest_ghost_create_topdown (t8_forest_t forest);
 
 T8_EXTERN_C_END ();
 

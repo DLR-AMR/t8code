@@ -245,6 +245,55 @@ t8_stash_attribute_sort (t8_stash_t stash)
   sc_array_sort (&stash->attributes, t8_stash_attribute_compare);
 }
 
+static void
+t8_stash_bcast_attributes (sc_array_t * attributes, int root,
+                           sc_MPI_Comm comm)
+{
+  size_t              num_atts, iatt, att_size, copied_bytes;
+  t8_stash_attribute_struct_t *att;
+  char               *buffer;
+  int                 mpirank, mpisize, mpiret;
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+
+  T8_ASSERT (attributes != NULL);
+
+  num_atts = attributes->elem_count;
+
+  /* Count the number of byte of all attributes */
+  att_size = 0;
+  for (iatt = 0; iatt < num_atts; iatt++) {
+    att = (t8_stash_attribute_struct_t *) sc_array_index (attributes, iatt);
+    att_size += att->attr_size;
+  }
+  /* Allocat buffer */
+  buffer = T8_ALLOC_ZERO (char, att_size);
+  /* Copy all attributes to send buffer */
+  if (mpirank == root) {
+    copied_bytes = 0;
+    for (iatt = 0; iatt < num_atts; iatt++) {
+      att = (t8_stash_attribute_struct_t *) sc_array_index (attributes, iatt);
+      memcpy (buffer + copied_bytes, att->attr_data, att->attr_size);
+      copied_bytes += att->attr_size;
+    }
+  }
+  /* broadcast buffer */
+  sc_MPI_Bcast (buffer, att_size, sc_MPI_BYTE, root, comm);
+  /* Copy attributes from buffer back to stash */
+  if (mpirank != root) {
+    copied_bytes = 0;
+    for (iatt = 0; iatt < num_atts; iatt++) {
+      att = (t8_stash_attribute_struct_t *) sc_array_index (attributes, iatt);
+      att->attr_data = T8_ALLOC (char, att->attr_size);
+      memcpy (att->attr_data, buffer + copied_bytes, att->attr_size);
+      copied_bytes += att->attr_size;
+    }
+  }
+  T8_FREE (buffer);
+}
+
 /* bcast the data of stash on root to all procs.
  * On the other procs stash_init has to be called before */
 t8_stash_t
@@ -268,6 +317,7 @@ t8_stash_bcast (t8_stash_t stash, int root, sc_MPI_Comm comm,
                            sizeof (t8_stash_attribute_struct_t), sc_MPI_BYTE,
                            0, comm);
     SC_CHECK_MPI (mpiret);
+    t8_stash_bcast_attributes (&stash->attributes, root, comm);
   }
   if (elem_counts[1] > 0) {
     mpiret = sc_MPI_Bcast (stash->classes.array,

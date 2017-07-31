@@ -7,7 +7,7 @@ libt8_installed_headers = \
   src/t8.h src/t8_eclass.h src/t8_element.h src/t8_mesh.h \
   src/t8_element_cxx.hxx src/t8_element.h \
   src/t8_refcount.h src/t8_cmesh.h src/t8_cmesh_triangle.h \
-  src/t8_shmem.h \
+  src/t8_data/t8_shmem.h src/t8_data/t8_containers.h \
   src/t8_cmesh_tetgen.h src/t8_cmesh_readmshfile.h \
   src/t8_cmesh_vtk.h \
   src/t8_forest.h src/t8_forest/t8_forest_types.h \
@@ -20,7 +20,8 @@ libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_save.h \
   src/t8_cmesh/t8_cmesh_offset.h src/t8_forest/t8_forest_partition.h \
   src/t8_forest/t8_forest_cxx.h src/t8_forest/t8_forest_private.h \
-  src/t8_forest/t8_forest_ghost.h src/t8_vtk.h
+  src/t8_forest/t8_forest_ghost.h src/t8_forest/t8_forest_iterate.h src/t8_vtk.h \
+	src/t8_forest/t8_forest_balance.h
 libt8_compiled_sources = \
   src/t8.c src/t8_eclass.c src/t8_mesh.c \
   src/t8_element.c src/t8_element_cxx.cxx \
@@ -29,12 +30,14 @@ libt8_compiled_sources = \
   src/t8_cmesh/t8_cmesh_save.c \
   src/t8_cmesh/t8_cmesh_trees.c src/t8_cmesh/t8_cmesh_commit.c \
   src/t8_cmesh/t8_cmesh_partition.c src/t8_cmesh/t8_cmesh_refine.cxx \
-  src/t8_cmesh/t8_cmesh_copy.c src/t8_shmem.c \
+  src/t8_cmesh/t8_cmesh_copy.c src/t8_data/t8_shmem.c \
+  src/t8_data/t8_containers.cxx \
   src/t8_cmesh/t8_cmesh_offset.c src/t8_cmesh/t8_cmesh_readmshfile.c \
   src/t8_forest/t8_forest.c src/t8_forest/t8_forest_adapt.cxx src/t8_geometry.c \
   src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest_cxx.cxx \
   src/t8_forest/t8_forest_private.c src/t8_forest/t8_forest_vtk.cxx \
-  src/t8_forest/t8_forest_ghost.cxx src/t8_vtk.c  
+  src/t8_forest/t8_forest_ghost.cxx src/t8_forest/t8_forest_iterate.cxx \
+  src/t8_vtk.c src/t8_forest/t8_forest_balance.cxx
 
 # this variable is used for headers that are not publicly installed
 T8_CPPFLAGS =

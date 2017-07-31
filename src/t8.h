@@ -102,9 +102,10 @@ typedef p4est_gloidx_t t8_gloidx_t;
 typedef enum
 {
   T8_MPI_TAG_FIRST = P4EST_COMM_TAG_FIRST,
-  T8_MPI_PARTITION_CMESH = P4EST_COMM_TAG_LAST,
-  T8_MPI_PARTITION_FOREST,
-  T8_MPI_GHOST_FOREST,
+  T8_MPI_PARTITION_CMESH = P4EST_COMM_TAG_LAST, /**< Used for coarse mesh partitioning */
+  T8_MPI_PARTITION_FOREST,  /**< Used for forest partitioning */
+  T8_MPI_GHOST_FOREST,  /**< Used for for ghost layer creation */
+  T8_MPI_GHOST_EXC_FOREST,  /**< Used for ghost data exchange */
   T8_MPI_TAG_LAST
 }
 t8_MPI_tag_t;
@@ -137,6 +138,12 @@ void                t8_logf (int category, int priority, const char *fmt, ...)
   __attribute__ ((format (printf, 3, 4)))
 #endif
   ;
+
+/** Add one space to the start of t8's default log format. */
+void                t8_log_indent_push (void);
+
+/** Remove one space from the start of a t8's default log format. */
+void                t8_log_indent_pop (void);
 
 /** Log a message on the root rank with priority SC_LP_ERROR.
  * \param [in] fmt          Printf-style format string.

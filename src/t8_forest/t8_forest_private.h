@@ -44,6 +44,39 @@ void                t8_forest_compute_desc (t8_forest_t forest);
  * of the coarse mesh. */
 void                t8_forest_populate (t8_forest_t forest);
 
+/** Return the eclass scheme of a given element class associated to a forest.
+ * This function does not check whether the given forest is committed, use with
+ * caution and only if you are shure that the eclass_scheme was set.
+ * \param [in]      forest.     A nearly committed forest.
+ * \param [in]      eclass.     An element class.
+ * \return          The eclass scheme of \a eclass associated to forest.
+ * \see t8_forest_set_scheme
+ * \note  The forest is not required to have trees of class \a eclass.
+ */
+t8_eclass_scheme_c *t8_forest_get_eclass_scheme_before_commit (t8_forest_t
+                                                               forest,
+                                                               t8_eclass_t
+                                                               eclass);
+
+/** Compute the maximum possible refinement level in a forest.
+ * This is the minimum over all maimum refinement level of the present element
+ * classes.
+ * \param [in,out] forest The forest.
+ */
+void                t8_forest_compute_maxlevel (t8_forest_t forest);
+
+/** Compute the minimum possible uniform refinement level on a cmesh such
+ * that no process is empty.
+ * \param [in]  cmesh       The cmesh.
+ * \param [in]  scheme      The element scheme for which refinement is considered.
+ * \return                  The smallest refinement level l, such that a
+ *                          uniform level \a l refined forest would have no empty
+ *                          processes.
+ * \see t8_forest_new_uniform.
+ */
+int                 t8_forest_min_nonempty_level (t8_cmesh_t cmesh,
+                                                  t8_scheme_cxx_t * scheme);
+
 /** return nonzero if the first tree of a forest is shared with a smaller
  * process.
  * This is the case if and only if the first descendant of the first tree that we store is
@@ -111,18 +144,241 @@ void                t8_forest_compute_elements_offset (t8_forest_t forest);
 t8_element_t       *t8_forest_get_tree_element (t8_tree_t tree,
                                                 t8_locidx_t elem_in_tree);
 
+/** Return the array of elements of a tree.
+ * \param [in]  forest   The forest.
+ * \param [in]  ltreeid  The local id of a local tree. Must be a valid local tree id.
+ * \return      Returns the array of elements of the tree.
+ * \a forest must be committed before calling this function.
+ */
+t8_element_array_t *t8_forest_get_tree_element_array (t8_forest_t forest,
+                                                      t8_locidx_t ltreeid);
+
+/** Find the owner process of a given element, deprecated version.
+ * Use t8_forest_element_find_owner instead.
+ * \param [in]    forest  The forest.
+ * \param [in]    gtreeid The global id of the tree in which the element lies.
+ * \param [in]    element The element to look for.
+ * \param [in]    eclass  The element class of the tree \a gtreeid.
+ * \param [in,out] all_owners_of_tree If not NULL, a sc_array of integers.
+ *                        If the element count is zero then on output all owners
+ *                        of the tree are stored.
+ *                        If the element count is non-zero then it is assumed to
+ *                        be filled with all owners of the tree.
+ * \return                The mpirank of the process that owns \a element.
+ * \note The element must exist in the forest.
+ * \note \a forest must be committed before calling this function.
+ */
+/* TODO: This finds the owner of the first descendant of element.
+ *       We call this in owners_at_face where element is a descendant,
+ *       add a flag that is true is element is a descendant, such that the
+ *       first desc must not be created */
+/* TODO: ext  version with parameters: lower_bound, upper_bound, is_desc/is_leaf
+ *       is it really needed to construct the tree owners? Cant we just use the global
+ *       offset array?
+ */
+int                 t8_forest_element_find_owner_old (t8_forest_t forest,
+                                                      t8_gloidx_t gtreeid,
+                                                      t8_element_t * element,
+                                                      t8_eclass_t eclass,
+                                                      sc_array_t *
+                                                      all_owners_of_tree);
+
 /** Find the owner process of a given element.
  * \param [in]    forest  The forest.
  * \param [in]    gtreeid The global id of the tree in which the element lies.
  * \param [in]    element The element to look for.
  * \param [in]    eclass  The element class of the tree \a gtreeid.
  * \return                The mpirank of the process that owns \a element.
- * \note The element must exist in the forest.
+ * \note The element must not exist in the forest, but an ancestor of its first
+ *       descendant has to. If the element's owner is not unique, the owner of the element's
+ *       first descendant is returned.
+ * \note \a forest must be committed before calling this function.
+ * \see t8_forest_element_find_owner_ext
+ * \see t8_forest_element_owners_bounds
  */
 int                 t8_forest_element_find_owner (t8_forest_t forest,
                                                   t8_gloidx_t gtreeid,
                                                   t8_element_t * element,
                                                   t8_eclass_t eclass);
+
+/** Find the owner process of a given element, if bounds for the owner process are known.
+ * \param [in]    forest  The forest.
+ * \param [in]    gtreeid The global id of the tree in which the element lies.
+ * \param [in]    element The element to look for.
+ * \param [in]    eclass  The element class of the tree \a gtreeid.
+ * \param [in]    lower_bound A known lower bound for the owner process.
+ * \param [in]    upper_bound A known upper bound for the owner process.
+ * \param [in]    guess   An initial guess for the owner. Must satisfy
+ *                        \a lower_bound <= \a guess <= \a upper_bound
+ * \return                The mpirank of the process that owns \a element.
+ * \note If \a lower_bound = \a upper_bound, the function assumes that \a lower_bound
+ *       is the owner process and immediately returns.
+ * \note The owner p must satisfy \a lower_bound <= p <= \a upper_bound.
+ * \note The element must not exist in the forest, but an ancestor of its first
+ *       descendant has to. If the element's owner is not unique, the owner of the element's
+ *       first descendant is returned.
+ * \note \a forest must be committed before calling this function.
+ * \see t8_forest_element_find_owner
+ * \see t8_forest_element_owners_bounds
+ */
+int                 t8_forest_element_find_owner_ext (t8_forest_t forest,
+                                                      t8_gloidx_t gtreeid,
+                                                      t8_element_t * element,
+                                                      t8_eclass_t eclass,
+                                                      int lower_bound,
+                                                      int upper_bound,
+                                                      int guess,
+                                                      int element_is_desc);
+
+/** Perform a constant runtime check if a given rank is owner of a given element.
+ * If the element is owned by more than one rank, then this check is only true
+ * for the smallest.
+ * \param [in]  forest      A forest.
+ * \param [in]  element     An element of \a forest.
+ * \param [in]  gtreeid     The global tree in which element is in.
+ * \param [in]  eclass      The element class of the tree.
+ * \param [in]  rank        An mpi rank.
+ * \param [in]  element_is_desc This should be true, if \a element is its own first_descendant at
+ *                          the maximum level. Must be false otherwise.
+ * \return      True if and only if \a rank is the (first) owner process of \a element.
+ */
+int                 t8_forest_element_check_owner (t8_forest_t forest,
+                                                   t8_element_t * element,
+                                                   t8_gloidx_t gtreeid,
+                                                   t8_eclass_t eclass,
+                                                   int rank,
+                                                   int element_is_desc);
+
+/** Find all owner processes that own descendant of a given element that
+ * touch a given face. The element does not need to be a local element.
+ * \param [in]    forest  The forest.
+ * \param [in]    gtreeid The global id of the tree in which the element lies.
+ * \param [in]    element The element to look for.
+ * \param [in]    eclass  The element class of the tree \a gtreeid.
+ * \param [in]    face    A face of \a element.
+ * \param [in,out] owners  On input an array of integers. Its first and second entry
+ *                        are taken as lower and upper bounds for the owner processes.
+ *                        If empty, then no bounds are taken.
+ *                        On output it stores
+ *                        all owners of descendants of \a elem that touch \a face
+ *                        in ascending order.
+ */
+void                t8_forest_element_owners_at_face (t8_forest_t forest,
+                                                      t8_gloidx_t gtreeid,
+                                                      const t8_element_t *
+                                                      element,
+                                                      t8_eclass_t eclass,
+                                                      int face,
+                                                      sc_array_t * owners);
+
+/** Constant time algorithm to compute lower and upper bounds for the owner
+ * processes of a given element.
+ ** \param [in]    forest  The forest.
+ * \param [in]    gtreeid The global id of the tree in which the element lies.
+ * \param [in]    element The element to look for.
+ * \param [in]    eclass  The element class of the tree \a gtreeid.
+ * \param [in,out] lower   On input a known lower bound for the owner process,
+ *                         on output a (better) bound.
+ * \param [in,out] upper   On input a known upper bound for the owner process,
+ *                         on output a (better) bound.
+ *
+ * \note If on input \a lower >= \a upper, then the bounds are not changed by this
+ *        algorithm. We interpret \a lower = \a such that the owner is unique and equals \a lower.
+ * \note \a forest must be committed before calling this function.
+ * \see t8_forest_element_find_owner
+ * \see t8_forest_element_owners_bounds
+ */
+void                t8_forest_element_owners_bounds (t8_forest_t forest,
+                                                     t8_gloidx_t gtreeid,
+                                                     const t8_element_t *
+                                                     element,
+                                                     t8_eclass_t eclass,
+                                                     int *lower, int *upper);
+
+/** Constant time algorithm to compute lower and upper bounds for the owner
+ * processes of the face leafs of a given element.
+ * \param [in]    forest  The forest.
+ * \param [in]    gtreeid The global id of the tree in which the element lies.
+ * \param [in]    element The element to look for.
+ * \param [in]    eclass  The element class of the tree \a gtreeid.
+ * \param [in]    face    The face of \a element to consider.
+ * \param [in,out] lower   On input a known lower bound for the owner process,
+ *                         on output a (better) bound.
+ * \param [in,out] upper   On input a known upper bound for the owner process,
+ *                         on output a (better) bound.
+ *
+ * \note If on input \a lower >= \a upper, then the bounds are not changed by this
+ *        algorithm. We interpret \a lower = \a such that the owner is unique and equals \a lower.
+ * \note \a forest must be committed before calling this function.
+ */
+void                t8_forest_element_owners_at_face_bounds (t8_forest_t
+                                                             forest,
+                                                             t8_gloidx_t
+                                                             gtreeid,
+                                                             const
+                                                             t8_element_t *
+                                                             element,
+                                                             t8_eclass_t
+                                                             eclass, int face,
+                                                             int *lower,
+                                                             int *upper);
+
+/** Find all owner processes that own descendant of a face neighbor of a
+ *  given local element that touch the given face.
+ * \param [in]    forest  The forest.
+ * \param [in]    ltreeid The local id of the tree in which the element lies.
+ * \param [in]    element The element, whose neighbor's face owners should be computed.
+ * \param [in]    face    A face of \a element.
+ * \param [in,out] owners  On input an array of integers. Its first and second entry
+ *                        are taken as lower and upper bounds for the owner processes.
+ *                        If empty, then no bounds are taken.
+ *                        On output it stores all owners of descendants of the neighbor of
+ *                        \a elem across \a face
+ *                        that touch this face. If the neighbor element does not
+ *                        exist, owners will be empty.
+ * This is equivalent to calling t8_forest_element_face_neighbor and
+ * t8_forest_element_owners_at_face for the resulting neighbor.
+ * \note \a forest must be committed before calling this function.
+ */
+void                t8_forest_element_owners_at_neigh_face (t8_forest_t
+                                                            forest,
+                                                            t8_locidx_t
+                                                            ltreeid,
+                                                            const t8_element_t
+                                                            * element,
+                                                            int face,
+                                                            sc_array_t *
+                                                            owners);
+
+/** Constant time algorithm to find bounds for the owner processes
+ *  that own descendant of a face neighbor of a
+ *  given local element that touch the given face.
+ * \param [in]    forest  The forest.
+ * \param [in]    ltreeid The local id of the tree in which the element lies.
+ * \param [in]    element The element, whose neighbor's face owners should be computed.
+ * \param [in]    face    A face of \a element.
+ * \param [in,out] lower   On input a known lower bound for the owner process,
+ *                         on output a (better) bound.
+ * \param [in,out] upper   On input a known upper bound for the owner process,
+ *                         on output a (better) bound.
+ *
+ * \note If on input \a lower >= \a upper, then the bounds are not changed by this
+ *        algorithm. We interpret \a lower = \a such that the owner is unique and equals \a lower.
+ * \note \a forest must be committed before calling this function.
+ * This is equivalent to calling t8_forest_element_face_neighbor and
+ * t8_forest_element_owners_at_face_bounds for the resulting neighbor.
+ */
+void                t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t
+                                                                   forest,
+                                                                   t8_locidx_t
+                                                                   ltreeid,
+                                                                   const
+                                                                   t8_element_t
+                                                                   * element,
+                                                                   int face,
+                                                                   int *lower,
+                                                                   int
+                                                                   *upper);
 
 /** Construct all face neighbors of half size of a given element.
  * \param [in]    forest The forest.
@@ -145,6 +401,23 @@ t8_gloidx_t         t8_forest_element_half_face_neighbors (t8_forest_t forest,
                                                            t8_element_t *
                                                            neighs[], int face,
                                                            int num_neighs);
+
+/** Compute whether for a given element there exist leaf or ghost leaf elements in
+ * the local forest that are a descendant of the element but not the element itself
+ * \param [in]  forest    The forest.
+ * \param [in]  gtreeid   The global id of the tree the element is in
+ * \param [in]  element   The element
+ * \param [in]  ts        The eclass scheme of \a element.
+ * \return                True if in the forest there exists a local leaf or ghost
+ *                        leaf that is a descendant of \a element but not equal to \a element.
+ * \note If no ghost layer was created for the forest, only local elements are tested.
+ * \note \a forest must be committed before calling this function.
+ */
+int                 t8_forest_element_has_leaf_desc (t8_forest_t forest,
+                                                     t8_gloidx_t gtreeid,
+                                                     const t8_element_t *
+                                                     element,
+                                                     t8_eclass_scheme_c * ts);
 
 T8_EXTERN_C_END ();
 

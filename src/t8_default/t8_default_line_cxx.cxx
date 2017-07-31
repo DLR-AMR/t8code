@@ -36,6 +36,7 @@ t8_default_scheme_line_c::t8_element_maxlevel (void)
 int
 t8_default_scheme_line_c::t8_element_level (const t8_element_t * elem)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
   return t8_dline_get_level ((const t8_dline_t *) elem);
 }
 
@@ -43,6 +44,8 @@ void
 t8_default_scheme_line_c::t8_element_copy (const t8_element_t * source,
                                            t8_element_t * dest)
 {
+  T8_ASSERT (t8_element_is_valid (source));
+  T8_ASSERT (t8_element_is_valid (dest));
   t8_dline_copy ((const t8_dline_t *) source, (t8_dline_t *) dest);
 }
 
@@ -50,6 +53,8 @@ int
 t8_default_scheme_line_c::t8_element_compare (const t8_element_t * elem1,
                                               const t8_element_t * elem2)
 {
+  T8_ASSERT (t8_element_is_valid (elem1));
+  T8_ASSERT (t8_element_is_valid (elem2));
   return t8_dline_compare ((const t8_dline_t *) elem1,
                            (const t8_dline_t *) elem2);
 }
@@ -61,6 +66,8 @@ t8_default_scheme_line_c::t8_element_parent (const t8_element_t * elem,
   const t8_default_line_t *l = (const t8_default_line_t *) elem;
   t8_default_line_t  *p = (t8_default_line_t *) parent;
 
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_element_is_valid (parent));
   t8_dline_parent (l, p);
 }
 
@@ -71,6 +78,8 @@ t8_default_scheme_line_c::t8_element_child (const t8_element_t * elem,
   const t8_default_line_t *l = (const t8_default_line_t *) elem;
   t8_default_line_t  *c = (t8_default_line_t *) child;
 
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_element_is_valid (child));
   t8_dline_child (l, childid, c);
 }
 
@@ -78,6 +87,7 @@ t8_eclass_t
   t8_default_scheme_line_c::t8_element_face_class (const t8_element_t * elem,
                                                    int face)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
   return T8_ECLASS_VERTEX;
 }
 
@@ -86,8 +96,11 @@ t8_default_scheme_line_c::t8_element_transform_face (const t8_element_t *
                                                      elem1,
                                                      t8_element_t * elem2,
                                                      int orientation,
+                                                     int sign,
                                                      int is_smaller_face)
 {
+  T8_ASSERT (t8_element_is_valid (elem1));
+  T8_ASSERT (t8_element_is_valid (elem2));
   T8_ASSERT (orientation == 0 || orientation == 1);
 
   /* We can ignore is_smaller_face, since for lines the orientation is independent
@@ -100,6 +113,7 @@ void
 t8_default_scheme_line_c::t8_element_set_linear_id (t8_element_t * elem,
                                                     int level, uint64_t id)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
   T8_ASSERT (0 <= id && id < ((u_int64_t) 1) << level);
 
@@ -111,6 +125,8 @@ t8_default_scheme_line_c::t8_element_successor (const t8_element_t * elem1,
                                                 t8_element_t * elem2,
                                                 int level)
 {
+  T8_ASSERT (t8_element_is_valid (elem1));
+  T8_ASSERT (t8_element_is_valid (elem2));
   T8_ASSERT (1 <= level && level <= T8_DLINE_MAXLEVEL);
 
   t8_dline_successor ((const t8_default_line_t *) elem1,
@@ -122,6 +138,8 @@ t8_default_scheme_line_c::t8_element_first_descendant (const t8_element_t *
                                                        elem,
                                                        t8_element_t * desc)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_element_is_valid (desc));
   t8_dline_first_descendant ((const t8_dline_t *) elem, (t8_dline_t *) desc,
                              T8_DLINE_MAXLEVEL);
 }
@@ -131,6 +149,8 @@ t8_default_scheme_line_c::t8_element_last_descendant (const t8_element_t *
                                                       elem,
                                                       t8_element_t * desc)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_element_is_valid (desc));
   t8_dline_last_descendant ((const t8_dline_t *) elem, (t8_dline_t *) desc,
                             T8_DLINE_MAXLEVEL);
 }
@@ -139,12 +159,14 @@ void
 t8_default_scheme_line_c::t8_element_vertex_coords (const t8_element_t * t,
                                                     int vertex, int coords[])
 {
+  T8_ASSERT (t8_element_is_valid (t));
   t8_dline_vertex_coords ((const t8_dline_t *) t, vertex, coords);
 }
 
 int
 t8_default_scheme_line_c::t8_element_root_len (const t8_element_t * elem)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
   return T8_DLINE_ROOT_LEN;
 }
 
@@ -152,6 +174,7 @@ u_int64_t
   t8_default_scheme_line_c::t8_element_get_linear_id (const t8_element_t *
                                                       elem, int level)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
 
   return t8_dline_linear_id ((const t8_dline_t *) elem, level);
@@ -160,12 +183,14 @@ u_int64_t
 int
 t8_default_scheme_line_c::t8_element_num_children (const t8_element_t * elem)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
   return T8_DLINE_CHILDREN;
 }
 
 int
 t8_default_scheme_line_c::t8_element_child_id (const t8_element_t * elem)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
   return t8_dline_child_id ((const t8_dline_t *) elem);
 }
 
@@ -173,6 +198,7 @@ void
 t8_default_scheme_line_c::t8_element_children (const t8_element_t * elem,
                                                int length, t8_element_t * c[])
 {
+  T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (length == T8_DLINE_CHILDREN);
 
   t8_dline_childrenpv ((const t8_dline_t *) elem, (t8_dline_t **) c);
@@ -181,7 +207,56 @@ t8_default_scheme_line_c::t8_element_children (const t8_element_t * elem,
 int
 t8_default_scheme_line_c::t8_element_is_family (t8_element_t ** fam)
 {
+#ifdef T8_ENABLE_DEBUG
+  int                 i;
+  for (i = 0; i < T8_DLINE_CHILDREN; i++) {
+    T8_ASSERT (t8_element_is_valid (fam[i]));
+  }
+#endif
   return t8_dline_is_familypv ((const t8_dline_t **) fam);
+}
+
+#ifdef T8_ENABLE_DEBUG
+/* *INDENT-OFF* */
+/* indent bug, indent adds a second "const" modifier */
+int
+t8_default_scheme_line_c::t8_element_is_valid (const t8_element_t * elem) const
+/* *INDENT-ON* */
+{
+  return t8_dline_is_valid ((const t8_dline_t *) elem);
+}
+#endif
+
+void
+t8_default_scheme_line_c::t8_element_new (int length, t8_element_t ** elem)
+{
+  /* allocate memory for a line */
+  t8_default_scheme_common_c::t8_element_new (length, elem);
+
+  /* in debug mode, set sensible default values. */
+#ifdef T8_ENABLE_DEBUG
+  {
+    int                 i;
+    for (i = 0; i < length; i++) {
+      t8_element_init (1, elem[i], 0);
+    }
+  }
+#endif
+}
+
+void
+t8_default_scheme_line_c::t8_element_init (int length, t8_element_t * elem,
+                                           int new_called)
+{
+#ifdef T8_ENABLE_DEBUG
+  if (!new_called) {
+    int                 i;
+    t8_dline_t         *lines = (t8_dline_t *) elem;
+    for (i = 0; i < length; i++) {
+      t8_dline_init (lines + i);
+    }
+  }
+#endif
 }
 
 /* Constructor */

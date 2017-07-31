@@ -59,7 +59,7 @@ typedef enum
  * The callback can run in three different modi:
  *  INIT    - Called once, to (possibly) initialize the data pointer
  *  EXECUTE - Called for each element, the actual writing happens here.
- *  CLEAUP  - Called once after all elements. Used to cleanup any memory
+ *  CLEANUP - Called once after all elements. Used to cleanup any memory
  *            allocated during INIT.
  * \param [in] forest The forest.
  * \param [in] ltree_id   A local treeid.
@@ -107,7 +107,7 @@ t8_forest_num_points (t8_forest_t forest, int count_ghosts)
     tree = (t8_tree_t) t8_sc_array_index_topidx (forest->trees, itree);
     /* TODO: This will cause problems when pyramids are introduced. */
     num_points += t8_eclass_num_vertices[tree->eclass] *
-      tree->elements.elem_count;
+      t8_element_array_get_count (&tree->elements);
   }
   if (count_ghosts) {
     T8_ASSERT (forest->ghosts != NULL);
@@ -524,7 +524,7 @@ t8_forest_vtk_write_cell_data (t8_forest_t forest, FILE * vtufile,
   int                 countcols;
   t8_tree_t           tree;
   t8_locidx_t         itree, ighost;
-  t8_locidx_t         element_index;
+  t8_locidx_t         element_index, elems_in_tree;
   t8_locidx_t         num_local_trees, num_ghost_trees;
   t8_element_t       *element;
   t8_eclass_scheme_c *ts;
@@ -554,9 +554,9 @@ t8_forest_vtk_write_cell_data (t8_forest_t forest, FILE * vtufile,
     ts = t8_forest_get_eclass_scheme (forest,
                                       t8_forest_get_tree_class (forest,
                                                                 itree));
-    for (element_index = 0;
-         element_index < (t8_locidx_t) tree->elements.elem_count;
-         element_index++) {
+    elems_in_tree =
+      (t8_locidx_t) t8_element_array_get_count (&tree->elements);
+    for (element_index = 0; element_index < elems_in_tree; element_index++) {
       /* Get a pointer to the element */
       element =
         t8_forest_get_element (forest, tree->elements_offset + element_index,
@@ -821,7 +821,7 @@ t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix,
   T8_ASSERT (forest != NULL);
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (fileprefix != NULL);
-  if (forest->ghosts == NULL) {
+  if (forest->ghosts == NULL || forest->ghosts->num_ghosts_elements == 0) {
     /* Never write ghost elements if there aren't any */
     write_ghosts = 0;
   }

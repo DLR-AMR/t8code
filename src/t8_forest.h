@@ -31,6 +31,7 @@
 
 #include <t8_cmesh.h>
 #include <t8_element.h>
+#include <t8_data/t8_containers.h>
 
 /** Opaque pointer to a forest implementation. */
 typedef struct t8_forest *t8_forest_t;
@@ -89,7 +90,8 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
  * Otherwise \num_elements must equal one and we consider the first entry
  * of the element array for refinement. In this case the other entries of
  * the element array are undefined.
- * \param [in] forest      the forest
+ * \param [in] forest      the forest to which the new elements belong
+ * \param [in] forest_from the forest that is adapted.
  * \param [in] which_tree  the local tree containing \a elements
  * \param [in] ts          the eclass scheme of the tree
  * \param [in] num_elements the number of entries in \a elements
@@ -100,6 +102,7 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
  *         zero else.
  */
 typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
+                                          t8_forest_t forest_from,
                                           t8_locidx_t which_tree,
                                           t8_eclass_scheme_c * ts,
                                           int num_elements,
@@ -138,6 +141,19 @@ int                 t8_forest_is_initialized (t8_forest_t forest);
  */
 int                 t8_forest_is_committed (t8_forest_t forest);
 
+/** Check whether two committed forests have the same local elements.
+ * \param [in] forest_a The first forest.
+ * \param [in] forest_b The second forest.
+ * \return              True if \a forest_a and \a forest_b do have the same
+ *                      number of local trees and each local tree has the same
+ *                      elements, that is \ref t8_element_compare returns false
+ *                      for each pair of elements of \a forest_a and \a forest_b.
+ * \note This function is not collective. It only returns the state on the current
+ * rank.
+ */
+int                 t8_forest_is_equal (t8_forest_t forest_a,
+                                        t8_forest_t forest_b);
+
 /** Set the cmesh associated to a forest.
  * By default, the forest takes ownership of the cmesh such that it will be
  * destroyed when the forest is destroyed.  To keep ownership of the cmesh,
@@ -168,6 +184,11 @@ void                t8_forest_set_scheme (t8_forest_t forest,
  * \param [in,out] forest      The forest whose level will be set.
  * \param [in]     level       The initial refinement level of \b forest, when
  *                             it is commited.
+ * \note This setting cannot be combined with any of the derived forest methods
+ * (\ref t8_forest_set_copy, \ref t8_forest_set_adapt, \ref t8_forest_set_partition,
+ * and \ref t8_forest_set_balance) and overwrites any of these settings.
+ * If this function is used, then the forest is created from scratch as a uniform
+ * refinement of the specified cmesh (\ref t8_forest_set_cmesh, \ref t8_forest_set_scheme).
  */
 void                t8_forest_set_level (t8_forest_t forest, int level);
 
@@ -177,6 +198,12 @@ void                t8_forest_set_level (t8_forest_t forest, int level);
  * from, call \ref t8_forest_ref before passing it into this function.
  * This means that it is ILLEGAL to continue using \b from or dereferencing it
  * UNLESS it is referenced directly before passing it into this function.
+ * \param [in,out] forest     The forest.
+ * \param [in]     from       A second forest from which \a forest will be copied
+ *                            in \ref t8_forest_commit.
+ * \note This setting cannot be combined with \ref t8_forest_set_adapt,
+ * \ref t8_forest_set_partition, or \ref t8_forest_set_balance and overwrites these
+ * settings.
  */
 void                t8_forest_set_copy (t8_forest_t forest,
                                         const t8_forest_t from);
@@ -191,11 +218,18 @@ void                t8_forest_set_copy (t8_forest_t forest,
  * \param [in] set_from     The source forest from which \b forest will be adapted.
  *                          We take ownership. This can be prevented by
  *                          referencing \b set_from.
+ *                          If NULL, a previously (or later) set forest will
+ *                          be taken (\ref t8_forest_set_partition, \ref t8_forest_set_balance).
  * \param [in] adapt_fn     The adapt function used on commiting.
  * \param [in] replace_fn   The replace function to be used in \b adapt_fn.
- * \param [in] recursive    A flag specifying whether adaptation is to be done recursively6
+ * \param [in] recursive    A flag specifying whether adaptation is to be done recursively
  *                          or not. If the value is zero, adaptation is not recursive
  *                          and it is recursive otherwise.
+ * \note This setting can be combined with \ref t8_forest_set_partition and \ref
+ * t8_forest_set_balance. The order in which these operations are executed is always
+ * 1) Adapt 2) Balance 3) Partition
+ * \note This setting may not be combined with \ref t8_forest_set_copy and overwrites
+ * this setting.
  */
 void                t8_forest_set_adapt (t8_forest_t forest,
                                          const t8_forest_t set_from,
@@ -219,13 +253,56 @@ void                t8_forest_set_user_data (t8_forest_t forest, void *data);
  */
 void               *t8_forest_get_user_data (t8_forest_t forest);
 
-/* TODO: define weight callback function */
+/** Set a source forest to be partitioned during commit.
+ * The partitioning is done according to the SFC and each rank is assinged
+ * the same (maybe +1) number of elements.
+ * \param [in, out] forest  The forest.
+ * \param [in]      set_from A second forest that should be partitioned.
+ *                          We take ownership. This can be prevented by
+ *                          referencing \b set_from.
+ *                          If NULL, a previously (or later) set forest will
+ *                          be taken (\ref t8_forest_set_adapt, \ref t8_forest_set_balance).
+ * \param [in]      set_for_coarsening CURRENTLY DISABLED. If true, then the partitions
+ *                          are choose such that coarsening an element once is a process local
+ *                          operation.
+ * \note This setting can be combined with \ref t8_forest_set_adapt and \ref
+ * t8_forest_set_balance. The order in which these operations are executed is always
+ * 1) Adapt 2) Balance 3) Partition
+ * If \ref t8_forest_set_balance is called with the \a no_repartition parameter set as
+ * false, it is not neccessary to call \ref t8_forest_set_partition additionally.
+ * \note This setting may not be combined with \ref t8_forest_set_copy and overwrites
+ * this setting.
+ */
 void                t8_forest_set_partition (t8_forest_t forest,
-                                             const t8_forest_t from,
+                                             const t8_forest_t set_from,
                                              int set_for_coarsening);
 
+/** Set a source forest to be balanced during commit.
+ * A forest is said to be balanced if each element has face neighbors of level
+ * at most +1 or -1 of the element's level.
+ * \param [in, out] forest  The forest.
+ * \param [in]      set_from A second forest that should be balanced.
+ *                          We take ownership. This can be prevented by
+ *                          referencing \b set_from.
+ *                          If NULL, a previously (or later) set forest will
+ *                          be taken (\ref t8_forest_set_adapt, \ref t8_forest_set_partition)
+ * \param [in]      no_repartition Balance constructs several intermediate forest that
+ *                          are refined from each other. In order to maintain a balanced load
+ *                          these forest are repartitioned in each round and the resulting
+ *                          forest is load-balanced per default.
+ *                          If this behaviour is not desired, \a no_repartition should be
+ *                          set to true.
+ *                          If \a no_repartition is false, an additional call of \ref t8_forest_set_partition is not
+ *                          neccessary.
+ * \note This setting can be combined with \ref t8_forest_set_adapt and \ref
+ * t8_forest_set_balance. The order in which these operations are executed is always
+ * 1) Adapt 2) Balance 3) Partition.
+ * \note This setting may not be combined with \ref t8_forest_set_copy and overwrites
+ * this setting.
+ */
 void                t8_forest_set_balance (t8_forest_t forest,
-                                           int do_balance);
+                                           const t8_forest_t set_from,
+                                           int no_repartition);
 
 /** Enable or disable the creation of a layer of ghost elements.
  * On default no ghosts are created.
@@ -256,6 +333,19 @@ void                t8_forest_comm_global_num_elements (t8_forest_t forest);
  */
 void                t8_forest_commit (t8_forest_t forest);
 
+/** Return the maximum allowed refinement level for any element in a forest.
+ * \param [in]  forest    A forest.
+ * \return                The maximum level of refinement that is allowed for
+ *                        an element in this forest. It is guarenteed that any tree
+ *                        in \a forest can be refined this many times and it is not
+ *                        allowed to refine further.
+ * \a forest must be committed before calling this function.
+ * For forest with a single element class (non-hybrid) maxlevel is the maximum
+ * refinement level of this element class, whilst for hybrid forests the maxlevel is
+ * the minimum of all maxlevels of the element classes in this forest.
+ */
+int                 t8_forest_get_maxlevel (t8_forest_t forest);
+
 t8_locidx_t         t8_forest_get_num_element (t8_forest_t forest);
 
 t8_gloidx_t         t8_forest_get_global_num_elements (t8_forest_t forest);
@@ -277,6 +367,17 @@ t8_locidx_t         t8_forest_get_num_ghosts (t8_forest_t forest);
  */
 t8_eclass_t         t8_forest_get_eclass (t8_forest_t forest,
                                           t8_locidx_t ltreeid);
+
+/** Given a global tree id compute the forest local id of this tree.
+ * If the tree is a local tree, then the local id is between 0 and the number
+ * of local trees. If the tree is not a local tree, a negative number is returned.
+ * \param [in]      forest The forest.
+ * \param [in]      gtreeid The global id of a tree.
+ * \return                 The tree's local id in \a forest, if it is a local tree.
+ *                         A negative number if not.
+ */
+t8_locidx_t         t8_forest_get_local_id (t8_forest_t forest,
+                                            t8_gloidx_t gtreeid);
 
 /** Given the local id of a tree in a forest, compute the tree's local id
  * in the associated cmesh.
@@ -397,6 +498,15 @@ t8_gloidx_t         t8_forest_global_tree_id (t8_forest_t forest,
 t8_tree_t           t8_forest_get_tree (t8_forest_t forest,
                                         t8_locidx_t ltree_id);
 
+/** Return the array of leaf elements of a local tree in a forest.
+ * \param [in]      forest      The forest.
+ * \param [in]      ltree_id    The local id of a local tree of \a forest.
+ * \return                      An array of t8_element_t * storing all leaf elements
+ *                              of this tree.
+ */
+t8_element_array_t *t8_forest_tree_get_leafs (t8_forest_t forest,
+                                              t8_locidx_t ltree_id);
+
 /** Return a cmesh associated to a forest.
  * \param [in]      forest      The forest.
  * \return          The cmesh associated to the forest.
@@ -409,10 +519,32 @@ t8_cmesh_t          t8_forest_get_cmesh (t8_forest_t forest);
  * \param [out]     ltreeid     If not NULL, on output the local tree id of the tree in which the
  *                              element lies in.
  * \return          A pointer to the element. NULL if this element does not exist.
+ * \note This function performs a binary search. For constant access, use \ref t8_forest_get_element_in_tree
+ * \a forest must be committed before calling this function.
  */
 t8_element_t       *t8_forest_get_element (t8_forest_t forest,
                                            t8_locidx_t lelement_id,
                                            t8_locidx_t * ltreeid);
+
+/** Return an element of a local tree in a forest.
+ * \param [in]      forest      The forest.
+ * \param [in]      ltreeid     An id of a local tree in the forest.
+ * \param [in]      leid_in_tree The index of an element in the tree.
+ * \return          A pointer to the element.
+ * \note If the tree id is know, this function should be preferred over \ref t8_forest_get_element.
+ * \a forest must be committed before calling this function.
+ */
+t8_element_t       *t8_forest_get_element_in_tree (t8_forest_t forest,
+                                                   t8_locidx_t ltreeid,
+                                                   t8_locidx_t leid_in_tree);
+
+/** Return the number of elements of a tree.
+ * \param [in]      forest      The forest.
+ * \param [in]      ltreeid     A local id of a tree.
+ * \return                      The number of elements in the local tree \a ltreeid.
+ */
+t8_locidx_t         t8_forest_get_tree_num_elements (t8_forest_t forest,
+                                                     t8_locidx_t ltreeid);
 
 /** Return the number of elements of a tree.
  * \param [in]      tree       A tree in a forest.
@@ -479,6 +611,7 @@ t8_eclass_t         t8_forest_element_neighbor_eclass (t8_forest_t forest,
  *                  the data could be modified arbitrarily.
  * \param [in] face The number of the face along which the neighbor should be
  *                  constructed.
+ * \param [out] neigh_face The number of the face viewed from perspective of \a neigh.
  * \return The global tree-id of the tree in which \a neigh is in.
  *        -1 if there exists no neighbor across that face.
  */
@@ -487,7 +620,8 @@ t8_gloidx_t         t8_forest_element_face_neighbor (t8_forest_t forest,
                                                      const t8_element_t *
                                                      elem,
                                                      t8_element_t * neigh,
-                                                     int face);
+                                                     int face,
+                                                     int *neigh_face);
 
 /* TODO: implement */
 void                t8_forest_save (t8_forest_t forest);
@@ -523,11 +657,33 @@ void                t8_forest_iterate (t8_forest_t forest);
  */
 void                t8_forest_element_coordinate (t8_forest_t forest,
                                                   t8_locidx_t ltree_id,
-                                                  t8_element_t * element,
+                                                  const t8_element_t *
+                                                  element,
                                                   const double *vertices,
                                                   int corner_number,
                                                   double *coordinates);
 
+/** Compute the coordinates of the centroid of an element if the
+ * vertex coordinates of the surrounding tree are known.
+ * The centroid is the sum of all corner vertices divided by the number of corners.
+ * The centroid can be seen as the midpoint of an element and thus can for example be used
+ * to compute level-set values or the distance between two elements.
+ * \param [in]      forest     The forest.
+ * \param [in]      ltree_id   The forest local id of the tree in which the element is.
+ * \param [in]      element    The element.
+ * \param [in]      vertices   An array storing the vertex coordinates of the tree.
+ *                             It has 3*n entries, with n being the number of vertices of the tree.
+ * \param [out]     coordinates On input an allocated array to store 3 doubles, on output
+ *                             the x, y and z coordinates of the centroid.
+ */
+void                t8_forest_element_centroid (t8_forest_t forest,
+                                                t8_locidx_t ltreeid,
+                                                const t8_element_t * element,
+                                                const double *vertices,
+                                                double *coordinates);
+
+/* TODO: if set level and partition/adapt/balance all give NULL, then
+ * refine uniformly and partition/adapt/balance the unfiform forest. */
 /** Build a uniformly refined forest on a coarse mesh.
  * \param [in]      cmesh     A coarse mesh.
  * \param [in]      scheme    An eclass scheme.
@@ -537,12 +693,29 @@ void                t8_forest_element_coordinate (t8_forest_t forest,
  * \return                    A uniform forest with coarse mesh \a cmesh, eclass_scheme
  *                            \a scheme and refinement level \a level.
  * \note This is equivalent to calling \ref t8_forest_init, \ref t8_forest_set_cmesh,
- * \ref t8_forest_set_scheme, \ref t8_forest_set_level, and t8_forest_commit.
+ * \ref t8_forest_set_scheme, \ref t8_forest_set_level, and \ref t8_forest_commit.
  */
 t8_forest_t         t8_forest_new_uniform (t8_cmesh_t cmesh,
                                            t8_scheme_cxx_t * scheme,
                                            int level, int do_face_ghost,
                                            sc_MPI_Comm comm);
+
+/** Build a adapted forest from another forest.
+ * \param [in]    forest_from The forest to refine
+ * \param [in]    adapt_fn    Adapt function to use
+ * \param [in]    replace_fn  Replace function to use
+ * \param [in]    recursive   If true adptation is recursive
+ * \param [in]    do_face_ghost If true, a layer of ghost elements is created for the forest.
+ * \param [in]    user_data   If not NULL, the user data pointer of the forest is set to this value.
+ * \return        A new forest that is adapted from \a forest_from.
+ * \note This is equivalent to calling \ref t8_forest_init, \ref t8_forest_set_adapt,
+ * \red t8_forest_set_ghost, and \ref t8_forest_commit
+ */
+t8_forest_t         t8_forest_new_adapt (t8_forest_t forest_from,
+                                         t8_forest_adapt_t adapt_fn,
+                                         t8_forest_replace_t replace_fn,
+                                         int recursive, int do_face_ghost,
+                                         void *user_data);
 
 /** Increase the reference counter of a forest.
  * \param [in,out] forest       On input, this forest must exist with positive

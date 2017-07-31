@@ -146,23 +146,6 @@ t8_dline_is_familypv (const t8_dline_t * f[])
   return (f[0]->x + len == f[1]->x);
 }
 
-int
-t8_dline_is_root_boundary (const t8_dline_t * p, int face)
-{
-  if (face == 0) {
-    return p->x == 0;
-  }
-  else {
-    return p->x == T8_DLINE_ROOT_LEN - T8_DLINE_LEN (p->level);
-  }
-}
-
-int
-t8_dline_is_inside_root (const t8_dline_t * p)
-{
-  return (p->x >= 0 && p->x < T8_DLINE_ROOT_LEN);
-}
-
 void
 t8_dline_init_linear_id (t8_dline_t * l, int level, uint64_t id)
 {
@@ -216,7 +199,7 @@ t8_dline_transform_face (const t8_dline_t * line1, t8_dline_t * line2,
      *
      * With N = 2^maxlvl the root lenght, |_| marks the line elements within their trees.
      * Thus, the x-coordinate of line2 is given as N-line1.x - h.
-     * Where h is the lenght of the line element.
+     * Where h is the length of the line element.
      */
     h = T8_DLINE_LEN (line1->level);
     line2->x = T8_DLINE_ROOT_LEN - line1->x - h;
@@ -264,4 +247,22 @@ t8_dline_linear_id (const t8_dline_t * elem, int level)
   id = elem->x >> (T8_DLINE_MAXLEVEL - level);
 
   return id;
+}
+
+int
+t8_dline_is_valid (const t8_dline_t * l)
+{
+  t8_dline_coord_t    max_coord;
+
+  max_coord = ((int64_t) 2 * T8_DLINE_ROOT_LEN) - 1;
+  /* A line is valid if its level and its x coordinates are in the
+   * correct bounds of the root three and its left and right neighbor */
+  return 0 <= l->level && l->level <= T8_DLINE_MAXLEVEL
+    && -T8_DLINE_ROOT_LEN < l->x && l->x <= max_coord;
+}
+
+void
+t8_dline_init (t8_dline_t * l)
+{
+  l->level = l->x = 0;
 }

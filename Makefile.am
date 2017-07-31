@@ -76,6 +76,7 @@ include example/triangle/Makefile.am
 include example/tetgen/Makefile.am
 include example/gmsh/Makefile.am
 include example/cmesh/Makefile.am
+include example/common/Makefile.am
 #include example/cxx/Makefile.am
 #include example/ExtremeScaling/Makefile.am
 

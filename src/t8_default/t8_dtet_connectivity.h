@@ -85,6 +85,23 @@ extern const int    t8_dtet_type_face_to_boundary[6][4][2];
  */
 extern const int    t8_dtet_face_child_id_by_type[6][4][4];
 
+/** Store the indices of the corner of each face of a tetrahedron. */
+extern const int    t8_dtet_face_corner[4][3];
+
+/** For each combination parent_type, type with parent_type != type,
+ * provide the face number of the face of a tet that lies whithin a face of
+ * the parent. For each combination there is exactly one of these faces.
+ * If parent_type = type then there are multiple faces and thus this case
+ * is not covered here.
+ * If face is 0 or 3, then the corresponding parent face is also 0 resp. 3.
+ * If face is 1 or 2, then the corresponding parent face is 2 resp. 1.
+ * Some combination such as parent_type = 0 type = 3 (in general the pair (i, i+3))
+ * do not correspond to any face relations since no tet of the given type has a parent
+ * of the parent type. In these cases, the array stores -1.
+ * We also store -1 for the parent_type = type combination.
+ * \see t8_dtet_face_parent_face
+ */
+extern const int    t8_dtet_parent_type_type_to_face[6][6];
 T8_EXTERN_C_END ();
 
 #endif /* T8_DTET_CONNECTIVITY_H */

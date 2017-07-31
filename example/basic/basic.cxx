@@ -28,10 +28,31 @@
 #include <p4est_connectivity.h>
 #include <p8est_connectivity.h>
 #include <sc_shmem.h>
+#include <example/common/t8_example_common.h>
+
+typedef struct
+{
+  double              mid_point[3];
+  double              radius;
+} t8_basic_sphere_data_t;
+
+/* Compute the distance to a sphere arount a mid_point with given radius. */
+static double
+t8_basic_level_set_sphere (double x, double y, double z, void *data)
+{
+  t8_basic_sphere_data_t *sdata = (t8_basic_sphere_data_t *) data;
+  double              dist;
+  double             *M = sdata->mid_point;
+
+  dist = sqrt (pow (x - M[0], 2) + pow (y - M[1], 2) + pow (z - M[2], 2));
+
+  return dist - sdata->radius;
+}
 
 #if 1
 static int
-t8_basic_adapt (t8_forest_t forest, t8_locidx_t which_tree,
+t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
+                t8_locidx_t which_tree,
                 t8_eclass_scheme_c * ts,
                 int num_elements, t8_element_t * elements[])
 {
@@ -49,7 +70,7 @@ t8_basic_adapt (t8_forest_t forest, t8_locidx_t which_tree,
 #endif
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
-  if (level < 4)
+  if (level < 5)
     /* refine randomly if level is smaller 4 */
     return (unsigned) ((mpirank + 1) * rand ()) % 2;
   return 0;
@@ -64,6 +85,7 @@ t8_basic_refine_test (t8_eclass_t eclass)
   t8_forest_t         forest_adapt;
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
+  int                 maxlevel = 5;
 
   t8_forest_init (&forest);
   t8_forest_init (&forest_adapt);
@@ -81,6 +103,60 @@ t8_basic_refine_test (t8_eclass_t eclass)
 
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
+  t8_forest_set_level (forest, 3);
+  t8_forest_commit (forest);
+  /* Output to vtk */
+  snprintf (filename, BUFSIZ, "forest_uniform_%s",
+            t8_eclass_to_string[eclass]);
+  t8_forest_write_vtk (forest, filename);
+
+#if 0
+  t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, NULL, 1);
+#else
+  {
+    t8_example_level_set_struct_t ls_data;
+    t8_basic_sphere_data_t sdata;
+
+    sdata.mid_point[0] = 0.5;
+    sdata.mid_point[1] = 0.5;
+    sdata.mid_point[2] = 0.5;
+    sdata.radius = 0.35;
+
+    ls_data.band_width = 2;
+    ls_data.L = t8_basic_level_set_sphere;
+    ls_data.min_level = 3;
+    ls_data.max_level = maxlevel;
+    ls_data.udata = &sdata;
+    t8_forest_set_user_data (forest_adapt, &ls_data);
+    t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set,
+                         NULL, 1);
+  }
+#endif
+  t8_forest_commit (forest_adapt);
+  /* Output to vtk */
+  snprintf (filename, BUFSIZ, "forest_adapt_%s", t8_eclass_to_string[eclass]);
+  t8_forest_write_vtk (forest_adapt, filename);
+  t8_forest_unref (&forest_adapt);
+}
+
+static void
+t8_basic_balance_test (t8_eclass_t eclass)
+{
+  t8_forest_t         forest, forest_ada_bal_par;
+  t8_cmesh_t          cmesh;
+  char                filename[BUFSIZ];
+  int                 maxlevel = 6;
+
+  t8_forest_init (&forest);
+  if (eclass == T8_ECLASS_LINE) {
+    cmesh = t8_cmesh_new_line_zigzag (sc_MPI_COMM_WORLD);
+  }
+  else {
+    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0);
+  }
+
+  t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
+  t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
   t8_forest_set_level (forest, 2);
   t8_forest_commit (forest);
   /* Output to vtk */
@@ -88,13 +164,23 @@ t8_basic_refine_test (t8_eclass_t eclass)
             t8_eclass_to_string[eclass]);
   t8_forest_write_vtk (forest, filename);
 
-  t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, NULL, 1);
-  t8_forest_commit (forest_adapt);
+  /* Adapt, balance and partition the uniform forest */
+  t8_forest_init (&forest_ada_bal_par);
+  /* Set user data for adapt */
+  t8_forest_set_user_data (forest_ada_bal_par, &maxlevel);
+  t8_forest_set_adapt (forest_ada_bal_par, forest, t8_common_adapt_balance,
+                       NULL, 1);
+  t8_forest_set_balance (forest_ada_bal_par, NULL, 0);
+  t8_forest_set_partition (forest_ada_bal_par, NULL, 0);
+  t8_forest_set_profiling (forest_ada_bal_par, 1);
+  t8_forest_commit (forest_ada_bal_par);
   /* Output to vtk */
-  snprintf (filename, BUFSIZ, "forest_adapt_%s", t8_eclass_to_string[eclass]);
-  t8_forest_write_vtk (forest_adapt, filename);
+  snprintf (filename, BUFSIZ, "forest_adapt_balance_partition_%s",
+            t8_eclass_to_string[eclass]);
+  t8_forest_write_vtk (forest_ada_bal_par, filename);
+  t8_forest_print_profile (forest_ada_bal_par);
+  t8_forest_unref (&forest_ada_bal_par);
 
-  t8_forest_unref (&forest_adapt);
 }
 #endif
 
@@ -385,14 +471,9 @@ main (int argc, char **argv)
   t8_basic_hypercube (T8_ECLASS_QUAD, 0, 1, 1);
   t8_basic ();
 #endif
-#if 1
-  t8_basic_hypercube (T8_ECLASS_PRISM, 1, 1, 0);
-  t8_basic_refine_test (T8_ECLASS_PRISM);
-#endif
-
-#if 0
-  t8_basic_forest_partition ();
-#endif
+  //t8_basic_hypercube (T8_ECLASS_TET, 1, 1, 0);
+  //t8_basic_balance_test (T8_ECLASS_TET);
+  t8_basic_refine_test (T8_ECLASS_TET);
 #if 0
   t8_basic_forest_partition ();
   t8_global_productionf ("Testing hypercube cmesh.\n");

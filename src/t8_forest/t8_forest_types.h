@@ -31,21 +31,34 @@
 #include <t8_refcount.h>
 #include <t8_cmesh.h>
 #include <t8_element.h>
+#include <t8_data/t8_containers.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest.h>
 
 typedef struct t8_profile t8_profile_t; /* Defined below */
 typedef struct t8_forest_ghost *t8_forest_ghost_t;      /* Defined below */
 
-typedef enum t8_forest_from
-{
-  T8_FOREST_FROM_FIRST,
-  T8_FOREST_FROM_COPY = T8_FOREST_FROM_FIRST,
-  T8_FOREST_FROM_ADAPT,
-  T8_FOREST_FROM_PARTITION,
-  T8_FOREST_FROM_LAST
-}
-t8_forest_from_t;
+/** If a forest is to be derived from another forest, there are different
+ * possibilities how the original forest is modified.
+ * Currently we support: Copying, adapting, partitioning, and balancing
+ * a forest.
+ * The latter 3 can be combined, in which case the order is
+ * 1. Adapt, 2. Partition, 3. Balance.
+ * We store the methods in an int8_t and use these defines to
+ * distinguish between them.
+ */
+typedef int8_t      t8_forest_from_t;
+
+#define T8_FOREST_FROM_FIRST 0
+#define T8_FOREST_FROM_COPY 0   /* must be zero, such that |= with another options overwrites it  */
+#define T8_FOREST_FROM_ADAPT 0x1
+#define T8_FOREST_FROM_PARTITION 0x2
+#define T8_FOREST_FROM_BALANCE 0x4
+#define T8_FOREST_FROM_NONE 0x8 /* A value that is not reached by adding up the other values. No from method used */
+#define T8_FOREST_FROM_LAST T8_FOREST_FROM_NONE
+
+#define T8_FOREST_BALANCE_REPART 1 /**< Value of forest->set_balance if balancing with repartitioning */
+#define T8_FOREST_BALANCE_NO_REPART 2 /**< Value of forest->set_balance if balancing without repartitioning */
 
 /** This structure is private to the implementation. */
 typedef struct t8_forest
@@ -60,6 +73,7 @@ typedef struct t8_forest
   t8_cmesh_t          cmesh;            /**< Coarse mesh to use. */
   //t8_scheme_t        *scheme;        /**< Scheme for element types. */
   t8_scheme_cxx_t    *scheme_cxx;        /**< Scheme for element types. */
+  int                 maxlevel;         /**< The maximum allowed refinement level for elements in this forest. */
   int                 do_dup;           /**< Communicator shall be duped. */
   int                 dimension;        /**< Dimension inferred from \b cmesh. */
 
@@ -71,9 +85,14 @@ typedef struct t8_forest
                                              is set to T8_FOREST_FROM_ADAPT. */
   int                 set_adapt_recursive; /**< Flag to decide whether coarsen and refine
                                                 are carried out recursive */
+  int                 set_balance;      /**< Flag to decide whether to forest will be balance in \ref t8_forest_commit.
+                                             See \ref t8_forest_set_balance.
+                                             If 0, no balance. If 1 balance with repartitioning, if 2 balance without
+                                             repartitioning, \see t8_forest_balance */
   int                 do_ghost;         /**< If True, a ghost layer will be created when the forest is committed. */
   t8_ghost_type_t     ghost_type;       /**< If a ghost layer will be created, the type of neighbors that count as ghost. */
   void               *user_data;        /**< Pointer for arbitrary user data. \see t8_forest_set_user_data. */
+  void               *t8code_data;      /**< Pointer for arbitrary data that is used internally. */
   int                 committed;        /**< \ref t8_forest_commit called? */
   int                 mpisize;          /**< Number of MPI processes. */
   int                 mpirank;          /**< Number of this MPI process. */
@@ -107,7 +126,7 @@ t8_forest_struct_t;
 /** The t8 tree datatype */
 typedef struct t8_tree
 {
-  sc_array_t          elements;              /**< locally stored elements */
+  t8_element_array_t  elements;              /**< locally stored elements */
   t8_eclass_t         eclass;                /**< The element class of this tree */
   /* TODO: We will need the *_desc variables later for shure. */
   t8_element_t       *first_desc,            /**< first local descendant */
@@ -125,7 +144,7 @@ t8_tree_struct_t;
  */
 
 /** The number of statistics collected by a profile struct. */
-#define T8_PROFILE_NUM_STATS 10
+#define T8_PROFILE_NUM_STATS 12
 typedef struct t8_profile
 {
   t8_locidx_t         partition_elements_shipped; /**< The number of elements this process has
@@ -134,14 +153,16 @@ typedef struct t8_profile
                                                   received from other in the last partition call. */
   size_t              partition_bytes_sent; /**< The total number of bytes sent to other processes in the
                                                  last partition call. */
-  int                 partition_procs_sent;  /**< The number of different processes this process has send
+  int                 partition_procs_sent; /**< The number of different processes this process has send
                                             local elements to in the last partition call. */
-  t8_locidx_t         ghosts_shipped;       /**< The number of ghost elements this process has sent to other processes. */
-  t8_locidx_t         ghosts_received;      /**< The number of ghost elements this process has received from other processes. */
-  int                 ghosts_remotes;       /**< The number of processes this process have sent ghost elements to (and received from). */
-  double              partition_runtime; /**< The runtime of  the last call to \a t8_cmesh_partition. */
-  double              ghost_runtime;    /**< The runtime of the last call to \a t8_forest_ghost_create. */
-  double              commit_runtime; /**< The runtime of the last call to \a t8_cmesh_commit. */
+  t8_locidx_t         ghosts_shipped;     /**< The number of ghost elements this process has sent to other processes. */
+  t8_locidx_t         ghosts_received;    /**< The number of ghost elements this process has received from other processes. */
+  int                 ghosts_remotes;     /**< The number of processes this process have sent ghost elements to (and received from). */
+  double              adapt_runtime;      /**< The runtime of the last call to \a t8_forest_adapt (not counting adaptation in t8_forest_balance). */
+  double              partition_runtime;  /**< The runtime of  the last call to \a t8_cmesh_partition (not countint partition in t8_forest_balance). */
+  double              ghost_runtime;      /**< The runtime of the last call to \a t8_forest_ghost_create. */
+  double              balance_runtime;    /**< The runtime of the last call to \a t8_forest_balance. */
+  double              commit_runtime;     /**< The runtime of the last call to \a t8_cmesh_commit. */
 
 }
 t8_profile_struct_t;
@@ -170,7 +191,8 @@ typedef struct t8_forest_ghost
   sc_array_t         *processes;        /* ranks of the processes */
 #endif
   sc_hash_array_t    *remote_ghosts;    /* array of local trees that have ghost elements for another process.
-                                           for each tree an array of t8_element_t * pointing to the local ghost elements.
+                                           for each tree an array of t8_element_t * of the local ghost elements.
+                                           Also an array of t8_locidx_t of the local indices of these elements whithin the tree.
                                            It is a hash table, hashed with the rank of a remote process.
                                            Sorted within each process by linear id.
                                          */

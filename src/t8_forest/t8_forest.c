@@ -28,6 +28,7 @@
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_adapt.h>
+#include <t8_forest/t8_forest_balance.h>
 #include <t8_forest_vtk.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
@@ -52,6 +53,7 @@ t8_forest_init (t8_forest_t * pforest)
   forest->first_local_tree = -1;
   forest->global_num_elements = -1;
   forest->set_adapt_recursive = -1;
+  forest->set_balance = -1;
 }
 
 int
@@ -167,7 +169,17 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
   T8_ASSERT (set_from != NULL);
 
   forest->set_from = set_from;
+  /* Set the from_method to COPY. This overwrites any previous setting
+   * of ADAPT, PARTITION, or BALANCE */
+
   forest->from_method = T8_FOREST_FROM_COPY;
+
+  /* Overwrite any previous setting */
+  forest->set_adapt_fn = NULL;
+  forest->set_replace_fn = NULL;
+  forest->set_adapt_recursive = -1;
+  forest->set_balance = -1;
+  forest->set_for_coarsening = -1;
 }
 
 void
@@ -180,14 +192,51 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
   T8_ASSERT (forest->scheme_cxx == NULL);
-  T8_ASSERT (forest->set_from == NULL);
-
-  T8_ASSERT (set_from != NULL);
 
   forest->set_for_coarsening = set_for_coarsening;
 
-  forest->set_from = set_from;
-  forest->from_method = T8_FOREST_FROM_PARTITION;
+  if (set_from != NULL) {
+    /* If set_from = NULL, we assume a previous forest_from was set */
+    forest->set_from = set_from;
+  }
+  /* Add PARTITION to the from_method.
+   * This overwrites T8_FOREST_FROM_COPY */
+  if (forest->from_method == T8_FOREST_FROM_LAST) {
+    forest->from_method = T8_FOREST_FROM_PARTITION;
+  }
+  else {
+    forest->from_method |= T8_FOREST_FROM_PARTITION;
+  }
+}
+
+void
+t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from,
+                       int no_repartition)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+
+  if (no_repartition) {
+    /* We do not repartition the forest during balance */
+    forest->set_balance = T8_FOREST_BALANCE_NO_REPART;
+  }
+  else {
+    /* Repartition during balance */
+    forest->set_balance = T8_FOREST_BALANCE_REPART;
+  }
+
+  if (set_from != NULL) {
+    /* If set_from = NULL, we assume a previous forest_from was set */
+    forest->set_from = set_from;
+  }
+
+  /* Add BALANCE to the from_method.
+   * This overwrites T8_FOREST_FROM_COPY */
+  if (forest->from_method == T8_FOREST_FROM_LAST) {
+    forest->from_method = T8_FOREST_FROM_BALANCE;
+  }
+  else {
+    forest->from_method |= T8_FOREST_FROM_BALANCE;
+  }
 }
 
 void
@@ -220,29 +269,45 @@ t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from,
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
   T8_ASSERT (forest->scheme_cxx == NULL);
-  T8_ASSERT (forest->set_from == NULL);
   T8_ASSERT (forest->set_adapt_fn == NULL);
   T8_ASSERT (forest->set_adapt_recursive == -1);
 
   forest->set_adapt_fn = adapt_fn;
   forest->set_replace_fn = replace_fn;
   forest->set_adapt_recursive = recursive != 0;
-  forest->set_from = set_from;
-  forest->from_method = T8_FOREST_FROM_ADAPT;
+
+  if (set_from != NULL) {
+    /* If set_from = NULL, we assume a previous forest_from was set */
+    forest->set_from = set_from;
+  }
+
+  /* Add ADAPT to the from_method.
+   * This overwrites T8_FOREST_FROM_COPY */
+
+  if (forest->from_method == T8_FOREST_FROM_LAST) {
+    forest->from_method = T8_FOREST_FROM_ADAPT;
+  }
+  else {
+    forest->from_method |= T8_FOREST_FROM_ADAPT;
+  }
 }
 
 void
 t8_forest_set_user_data (t8_forest_t forest, void *data)
 {
+  /* TODO: we need a is_initialized and may be committed check! */
+#if 0
   T8_ASSERT (t8_forest_is_initialized (forest));
-  T8_ASSERT (!t8_forest_is_committed (forest));
+#endif
   forest->user_data = data;
 }
 
-void *
+void               *
 t8_forest_get_user_data (t8_forest_t forest)
 {
+#if 0
   T8_ASSERT (t8_forest_is_initialized (forest));
+#endif
   return forest->user_data;
 }
 
@@ -264,6 +329,7 @@ void
 t8_forest_commit (t8_forest_t forest)
 {
   int                 mpiret;
+  int                 partitioned = 0;
   sc_MPI_Comm         comm_dup;
 
   T8_ASSERT (forest != NULL);
@@ -276,6 +342,8 @@ t8_forest_commit (t8_forest_t forest)
   }
 
   if (forest->set_from == NULL) {
+    /* This forest is constructed solely from its cmesh as a uniform
+     * forest */
     T8_ASSERT (forest->mpicomm != sc_MPI_COMM_NULL);
     T8_ASSERT (forest->cmesh != NULL);
     T8_ASSERT (forest->scheme_cxx != NULL);
@@ -293,11 +361,17 @@ t8_forest_commit (t8_forest_t forest)
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Comm_rank (forest->mpicomm, &forest->mpirank);
     SC_CHECK_MPI (mpiret);
+    /* Compute the maximum allowed refinement level */
+    t8_forest_compute_maxlevel (forest);
+    T8_ASSERT (forest->set_level <= forest->maxlevel);
     /* populate a new forest with tree and quadrant objects */
     t8_forest_populate (forest);
     forest->global_num_trees = t8_cmesh_get_num_trees (forest->cmesh);
   }
   else {                        /* set_from != NULL */
+    t8_forest_t         forest_from = forest->set_from; /* temporarily store set_from, since we may overwrite it */
+
+    t8_debugf ("[h] from method %i\n", forest->from_method);
     T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
     T8_ASSERT (forest->cmesh == NULL);
     T8_ASSERT (forest->scheme_cxx == NULL);
@@ -306,7 +380,7 @@ t8_forest_commit (t8_forest_t forest)
                forest->from_method < T8_FOREST_FROM_LAST);
 
     /* TODO: optimize all this when forest->set_from has reference count one */
-
+    /* TODO: Get rid of duping the communicator */
     /* we must prevent the case that set_from frees the source communicator */
     if (!forest->set_from->do_dup) {
       forest->mpicomm = forest->set_from->mpicomm;
@@ -324,23 +398,108 @@ t8_forest_commit (t8_forest_t forest)
     SC_CHECK_MPI (mpiret);
 
     /* increase reference count of cmesh and scheme from the input forest */
-    t8_cmesh_ref (forest->cmesh = forest->set_from->cmesh);
-    t8_scheme_cxx_ref (forest->scheme_cxx = forest->set_from->scheme_cxx);
+    t8_cmesh_ref (forest->set_from->cmesh);
+    t8_scheme_cxx_ref (forest->set_from->scheme_cxx);
     /* set the dimension, cmesh and scheme from the old forest */
     forest->dimension = forest->set_from->dimension;
     forest->cmesh = forest->set_from->cmesh;
     forest->scheme_cxx = forest->set_from->scheme_cxx;
     forest->global_num_trees = forest->set_from->global_num_trees;
 
-    /* TODO: currently we can only handle copy, adapt, and partition */
+    /* Compute the maximum allowed refinement level */
+    t8_forest_compute_maxlevel (forest);
+    if (forest->from_method == T8_FOREST_FROM_COPY) {
+      SC_CHECK_ABORT (forest->set_from != NULL,
+                      "No forest to copy from was specified.");
+      t8_forest_copy_trees (forest, forest->set_from, 1);
+    }
+    /* TODO: currently we can only handle copy, adapt, partition, and balance */
+
     /* T8_ASSERT (forest->from_method == T8_FOREST_FROM_COPY); */
-    if (forest->from_method == T8_FOREST_FROM_ADAPT) {
-      if (forest->set_adapt_fn != NULL) {
+    if (forest->from_method & T8_FOREST_FROM_ADAPT) {
+      SC_CHECK_ABORT (forest->set_adapt_fn != NULL,
+                      "No adapt function specified");
+      forest->from_method -= T8_FOREST_FROM_ADAPT;
+      if (forest->from_method > 0) {
+        /* The forest should also be partitioned/balanced.
+         * We first adapt the forest, then balance and then partition */
+        t8_forest_t         forest_adapt;
+
+        t8_forest_init (&forest_adapt);
+        /* forest_adapt should not change ownership of forest->set_from */
+        t8_forest_ref (forest->set_from);
+        /* set user data of forest to forest_adapt */
+        t8_forest_set_user_data (forest_adapt,
+                                 t8_forest_get_user_data (forest));
+        /* Construct an intermediate, adapted forest */
+        t8_forest_set_adapt (forest_adapt, forest->set_from,
+                             forest->set_adapt_fn, forest->set_replace_fn,
+                             forest->set_adapt_recursive);
+        /* Set profiling if enabled */
+        t8_forest_set_profiling (forest_adapt, forest->profile != NULL);
+        t8_forest_commit (forest_adapt);
+        /* The new forest will be partitioned/balanced from forest_adapt */
+        forest->set_from = forest_adapt;
+        /* Set the user data of forest_from to forest_adapt */
+        t8_forest_set_user_data (forest_adapt,
+                                 t8_forest_get_user_data (forest_from));
+        /* If profiling is enabled copy the runtime of adapt. */
+        if (forest->profile != NULL) {
+          forest->profile->adapt_runtime =
+            forest_adapt->profile->adapt_runtime;
+        }
+      }
+      else {
+        /* This forest should only be adapted */
         t8_forest_copy_trees (forest, forest->set_from, 0);
         t8_forest_adapt (forest);
       }
     }
-    else if (forest->from_method == T8_FOREST_FROM_PARTITION) {
+    if (forest->from_method & T8_FOREST_FROM_BALANCE) {
+      /* balance the forest */
+      forest->from_method -= T8_FOREST_FROM_BALANCE;
+      if (forest->from_method > 0) {
+        /* The forest should also be partitioned after balance */
+        t8_forest_t         forest_balance;
+        /* we construct an intermediate, balanced forest */
+        t8_forest_init (&forest_balance);
+        if (forest_from == forest->set_from) {
+          /* forest_balance should not change ownership of forest->set_from */
+          t8_forest_ref (forest->set_from);
+        }
+        t8_forest_set_balance (forest_balance, forest->set_from,
+                               forest->set_balance !=
+                               T8_FOREST_BALANCE_NO_REPART);
+        /* activate profiling, if this forest has profiling */
+        t8_forest_set_profiling (forest_balance, forest->profile != NULL);
+        t8_forest_commit (forest_balance);
+        forest->set_from = forest_balance;
+        if (forest->profile != NULL) {
+          /* If profiling is enable, take the runtime of balance from forest_balance. */
+          forest->profile->balance_runtime =
+            forest_balance->profile->balance_runtime;
+        }
+      }
+      else {
+        /* This forest should only be balanced */
+        if (forest->set_balance == T8_FOREST_BALANCE_NO_REPART) {
+          /* balance without repartition */
+          t8_forest_balance (forest, 0);
+        }
+        else {
+          /* balance with repartition */
+          t8_forest_balance (forest, 1);
+        }
+      }
+    }
+    if (forest->from_method & T8_FOREST_FROM_PARTITION) {
+      partitioned = 1;
+      /* Partition this forest */
+      forest->from_method -= T8_FOREST_FROM_PARTITION;
+      /* This is the last from method that we execute,
+       * nothing should be left todo */
+      T8_ASSERT (forest->from_method == 0);
+
       forest->global_num_elements = forest->set_from->global_num_elements;
       /* Initialize the trees array of the forest */
       forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
@@ -348,6 +507,12 @@ t8_forest_commit (t8_forest_t forest)
       t8_forest_partition (forest);
     }
 
+    if (forest_from != forest->set_from) {
+      /* decrease reference count of intermediate input forest, possibly destroying it */
+      t8_forest_unref (&forest->set_from);
+    }
+    /* reset forest->set_from */
+    forest->set_from = forest_from;
     /* decrease reference count of input forest, possibly destroying it */
     t8_forest_unref (&forest->set_from);
   }                             /* end set_from != NULL */
@@ -372,6 +537,15 @@ t8_forest_commit (t8_forest_t forest)
     /* Create the element offsets if not already done */
     t8_forest_partition_create_offsets (forest);
   }
+  if (forest->tree_offsets == NULL) {
+    /* Create the tree offsets if not already done */
+    t8_forest_partition_create_tree_offsets (forest);
+  }
+
+  t8_debugf ("Element offsets:\n");
+  t8_offset_print (forest->element_offsets, forest->mpicomm);
+  t8_debugf ("Tree offsets:\n");
+  t8_offset_print (forest->tree_offsets, forest->mpicomm);
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of commit */
@@ -380,16 +554,34 @@ t8_forest_commit (t8_forest_t forest)
   }
 
   /* From here on, the forest passes the t8_forest_is_committed check */
+
   /* re-partition the cmesh */
-  if (forest->cmesh->set_partition &&
-      forest->from_method == T8_FOREST_FROM_PARTITION) {
+  if (forest->cmesh->set_partition && partitioned) {
     t8_forest_partition_cmesh (forest, forest->mpicomm,
                                forest->profile != NULL);
   }
-  /* Construct a ghost layer, if desired */
-  if (forest->do_ghost) {
-    /* TODO: ghost type */
-    t8_forest_ghost_create (forest);
+
+  /* If not already done before, create the offset arrays */
+  if (forest->tree_offsets == NULL) {
+    /* Construct tree_offsets if not already done */
+    t8_forest_partition_create_tree_offsets (forest);
+  }
+  if (forest->global_first_desc == NULL) {
+    /* Create first descendants, if not already done */
+    t8_forest_partition_create_first_desc (forest);
+  }
+
+  if (forest->mpisize > 1) {
+    /* Construct a ghost layer, if desired */
+    if (forest->do_ghost) {
+#if 0
+      /* TODO: ghost type */
+      t8_forest_ghost_create (forest);
+#else
+      /* TODO: experimental */
+      t8_forest_ghost_create_topdown (forest);
+#endif
+    }
   }
 
   forest->do_ghost = 0;
@@ -446,23 +638,18 @@ static              t8_shmem_array_t
 t8_forest_compute_cmesh_offset (t8_forest_t forest, sc_MPI_Comm comm)
 {
   t8_shmem_array_t    offset;
-  t8_gloidx_t         local_offset;
-  int                 first_tree_shared;
 
+  if (forest->tree_offsets == NULL) {
+    /* Create the tree offsets if necessary */
+    t8_forest_partition_create_tree_offsets (forest);
+  }
   /* initialize the shared memory array */
   t8_shmem_array_init (&offset, sizeof (t8_gloidx_t), forest->mpisize + 1,
                        comm);
-  /* Compute whether our first local tree is shared with a smaller rank */
-  first_tree_shared = t8_forest_first_tree_shared (forest);
-  /* Calculate our entry in the offset array */
-  local_offset = t8_offset_first_tree_to_entry (forest->first_local_tree,
-                                                first_tree_shared);
-  /* allgather the local entries of the offset array */
-  t8_shmem_array_allgather (&local_offset, 1, T8_MPI_GLOIDX, offset, 1,
-                            T8_MPI_GLOIDX);
-  /* Set the last entry of the offset array to the global number of trees */
-  t8_shmem_array_set_gloidx (offset, forest->mpisize,
-                             forest->global_num_trees);
+
+  /* Copy the contents */
+  t8_shmem_array_copy (offset, forest->tree_offsets);
+
   return offset;
 }
 
@@ -471,15 +658,19 @@ t8_forest_partition_cmesh (t8_forest_t forest, sc_MPI_Comm comm,
                            int set_profiling)
 {
   t8_cmesh_t          cmesh_partition;
+  t8_shmem_array_t    offsets;
 
   t8_debugf ("Partitioning cmesh according to forest\n");
 
   t8_cmesh_init (&cmesh_partition);
   t8_cmesh_set_derive (cmesh_partition, forest->cmesh);
   /* set partition range of new cmesh according to forest trees */
-  t8_cmesh_set_partition_offsets (cmesh_partition,
-                                  t8_forest_compute_cmesh_offset (forest,
-                                                                  comm));
+  if (forest->tree_offsets == NULL) {
+    t8_forest_partition_create_tree_offsets (forest);
+  }
+  offsets = t8_forest_compute_cmesh_offset (forest, comm);
+
+  t8_cmesh_set_partition_offsets (cmesh_partition, offsets);
   /* Set the profiling of the cmesh */
   t8_cmesh_set_profiling (cmesh_partition, set_profiling);
   /* Commit the new cmesh */
@@ -572,6 +763,16 @@ t8_forest_get_tree (t8_forest_t forest, t8_locidx_t ltree_id)
   return (t8_tree_t) t8_sc_array_index_locidx (forest->trees, ltree_id);
 }
 
+t8_element_array_t
+  * t8_forest_tree_get_leafs (t8_forest_t forest, t8_locidx_t ltree_id)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (0 <= ltree_id
+             && ltree_id < t8_forest_get_num_local_trees (forest));
+
+  return &t8_forest_get_tree (forest, ltree_id)->elements;
+}
+
 t8_cmesh_t
 t8_forest_get_cmesh (t8_forest_t forest)
 {
@@ -594,7 +795,8 @@ t8_forest_compare_elem_tree (const void *lelement_id, const void *ltree)
     /* We have to look further to the left */
     return -1;
   }
-  else if (tree->elements_offset + tree->elements.elem_count > leid) {
+  else if (tree->elements_offset +
+           t8_element_array_get_count (&tree->elements) > leid) {
     /* We have found the tree */
     return 0;
   }
@@ -614,6 +816,7 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id,
   t8_locidx_t         ltreedebug;
 #endif
 
+  T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (lelement_id >= 0);
   if (lelement_id >= t8_forest_get_num_element (forest)) {
     return NULL;
@@ -634,8 +837,8 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id,
         /* We have to look further to the left */
         ltree_b = ltreedebug;
       }
-      else if (tree->elements_offset + tree->elements.elem_count >
-               lelement_id) {
+      else if (tree->elements_offset +
+               t8_element_array_get_count (&tree->elements) > lelement_id) {
         /* We have found the tree */
         ltree_a = ltree_b;
       }
@@ -658,10 +861,10 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id,
    * Or the element is not a local element. */
   tree = t8_forest_get_tree (forest, ltree);
   if (tree->elements_offset <= lelement_id && lelement_id <
-      tree->elements_offset + tree->elements.elem_count) {
-    return (t8_element_t *)
-      t8_sc_array_index_locidx (&tree->elements,
-                                lelement_id - tree->elements_offset);
+      tree->elements_offset + t8_element_array_get_count (&tree->elements)) {
+    return t8_element_array_index_locidx (&tree->elements,
+                                          lelement_id -
+                                          tree->elements_offset);
   }
   /* The element was not found.
    * This case is covered by the first if and should therefore
@@ -670,15 +873,41 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id,
   return NULL;
 }
 
+t8_element_t
+  * t8_forest_get_element_in_tree (t8_forest_t forest, t8_locidx_t ltreeid,
+                                   t8_locidx_t leid_in_tree)
+{
+  t8_tree_t           tree;
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (0 <= ltreeid
+             && ltreeid < t8_forest_get_num_local_trees (forest));
+
+  tree = t8_forest_get_tree (forest, ltreeid);
+  return t8_forest_get_tree_element (tree, leid_in_tree);
+}
+
 t8_locidx_t
 t8_forest_get_tree_element_count (t8_tree_t tree)
 {
   t8_locidx_t         element_count;
 
   T8_ASSERT (tree != NULL);
-  element_count = tree->elements.elem_count;
-  T8_ASSERT ((size_t) element_count == tree->elements.elem_count);
+  element_count = t8_element_array_get_count (&tree->elements);
+  /* check for type conversion errors */
+  T8_ASSERT ((size_t) element_count ==
+             t8_element_array_get_count (&tree->elements));
   return element_count;
+}
+
+t8_locidx_t
+t8_forest_get_tree_num_elements (t8_forest_t forest, t8_locidx_t ltreeid)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (0 <= ltreeid
+             && ltreeid < t8_forest_get_num_local_trees (forest));
+
+  return t8_forest_get_tree_element_count (t8_forest_get_tree (forest,
+                                                               ltreeid));
 }
 
 t8_eclass_t
@@ -713,7 +942,7 @@ t8_forest_get_first_local_element_id (t8_forest_t forest)
   return -1;
 }
 
-t8_scheme_cxx_t *
+t8_scheme_cxx_t    *
 t8_forest_get_scheme (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -732,11 +961,44 @@ t8_forest_get_eclass_scheme (t8_forest_t forest, t8_eclass_t eclass)
   return forest->scheme_cxx->eclass_schemes[eclass];
 }
 
+t8_eclass_scheme_c *
+t8_forest_get_eclass_scheme_before_commit (t8_forest_t forest,
+                                           t8_eclass_t eclass)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+  T8_ASSERT (forest->scheme_cxx != NULL);
+  T8_ASSERT (eclass != T8_ECLASS_COUNT);
+
+  return forest->scheme_cxx->eclass_schemes[eclass];
+}
+
 t8_eclass_t
 t8_forest_get_eclass (t8_forest_t forest, t8_locidx_t ltreeid)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   return t8_forest_get_tree (forest, ltreeid)->eclass;
+}
+
+t8_locidx_t
+t8_forest_get_local_id (t8_forest_t forest, t8_gloidx_t gtreeid)
+{
+  t8_gloidx_t         ltreeid;
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (0 <= gtreeid
+             && gtreeid < t8_forest_get_num_global_trees (forest));
+
+  /* If the tree is local then its local id is the global id minus the
+   * first global tree id on this forest. If this number if not in the
+   * range of local tree ids then the tree is not local. */
+  /* we use a gloidx for ltreeid to prevent overflow and false positives */
+  ltreeid = gtreeid - t8_forest_get_first_local_tree_id (forest);
+  /* Check if this tree is a local tree and if so return its local id */
+  if (0 <= ltreeid && ltreeid < t8_forest_get_num_local_trees (forest)) {
+    return ltreeid;
+  }
+  else {
+    return -1;
+  }
 }
 
 t8_locidx_t
@@ -858,12 +1120,16 @@ t8_forest_print_profile (t8_forest_t forest)
                    "forest: Number of ghost elements received.");
     sc_stats_set1 (&stats[6], profile->ghosts_remotes,
                    "forest: Number of processes we sent ghosts to/received from.");
-    sc_stats_set1 (&stats[7], profile->partition_runtime,
+    sc_stats_set1 (&stats[7], profile->adapt_runtime,
+                   "forest: Adapt runtime.");
+    sc_stats_set1 (&stats[8], profile->partition_runtime,
                    "forest: Partition runtime.");
-    sc_stats_set1 (&stats[8], profile->commit_runtime,
+    sc_stats_set1 (&stats[9], profile->commit_runtime,
                    "forest: Commit runtime.");
-    sc_stats_set1 (&stats[9], profile->ghost_runtime,
+    sc_stats_set1 (&stats[10], profile->ghost_runtime,
                    "forest: Ghost runtime.");
+    sc_stats_set1 (&stats[11], profile->balance_runtime,
+                   "forest: Balance runtime.");
     /* compute stats */
     sc_stats_compute (sc_MPI_COMM_WORLD, T8_PROFILE_NUM_STATS, stats);
     /* print stats */
@@ -927,7 +1193,28 @@ t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t * scheme,
   }
   /* commit the forest */
   t8_forest_commit (forest);
+  t8_global_productionf
+    ("Constructed uniform forest with %lli global elements.\n",
+     (long long) forest->global_num_elements);
 
+  return forest;
+}
+
+t8_forest_t
+t8_forest_new_adapt (t8_forest_t forest_from,
+                     t8_forest_adapt_t adapt_fn,
+                     t8_forest_replace_t replace_fn,
+                     int recursive, int do_face_ghost, void *user_data)
+{
+  t8_forest_t         forest;
+
+  t8_forest_init (&forest);
+  t8_forest_set_adapt (forest, forest_from, adapt_fn, replace_fn, 1);
+  t8_forest_set_ghost (forest, do_face_ghost, T8_GHOST_FACES);
+  if (user_data != NULL) {
+    t8_forest_set_user_data (forest, user_data);
+  }
+  t8_forest_commit (forest);
   return forest;
 }
 
@@ -946,7 +1233,7 @@ t8_forest_free_trees (t8_forest_t forest)
   number_of_trees = forest->trees->elem_count;
   for (jt = 0; jt < number_of_trees; jt++) {
     tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, jt);
-    sc_array_reset (&tree->elements);
+    t8_element_array_reset (&tree->elements);
   }
   sc_array_destroy (forest->trees);
 }
@@ -984,6 +1271,10 @@ t8_forest_reset (t8_forest_t * pforest)
     t8_forest_free_trees (forest);
   }
 
+  /* Destroy the ghost layer if it exists */
+  if (forest->ghosts != NULL) {
+    t8_forest_ghost_unref (&forest->ghosts);
+  }
   /* we have taken ownership on calling t8_forest_set_* */
   if (forest->scheme_cxx != NULL) {
     t8_scheme_cxx_unref (&forest->scheme_cxx);
@@ -1006,10 +1297,6 @@ t8_forest_reset (t8_forest_t * pforest)
   }
   if (forest->profile != NULL) {
     T8_FREE (forest->profile);
-  }
-  /* Dereference the ghost layer if it exists */
-  if (forest->ghosts != NULL) {
-    t8_forest_ghost_unref (&forest->ghosts);
   }
   T8_FREE (forest);
   *pforest = NULL;

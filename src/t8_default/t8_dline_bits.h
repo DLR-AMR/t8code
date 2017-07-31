@@ -184,6 +184,19 @@ void                t8_dline_vertex_coords (const t8_dline_t * elem,
  */
 uint64_t            t8_dline_linear_id (const t8_dline_t * elem, int level);
 
+/** Query whether all entries of a line are in valid ranges.
+ * \param [in] l  line to be considered.
+ * \return        True, if \a l is a valid line and it is safe to call any
+ *                function in this file on \a l.
+ *                False otherwise.
+ */
+int                 t8_dline_is_valid (const t8_dline_t * l);
+
+/** Set default values for a line, such that it passes \ref t8_dline_is_valid.
+ * \param [in] l  line to be initialized
+ */
+void                t8_dline_init (t8_dline_t * l);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DLINE_BITS_H */

@@ -25,7 +25,7 @@
  * TODO: document this file
  */
 
-#include <t8_shmem.h>
+#include <t8_data/t8_shmem.h>
 
 /* TODO: Think about whether we include a reference counter */
 
@@ -71,6 +71,26 @@ t8_shmem_array_init (t8_shmem_array_t * parray, size_t elem_size,
 #ifdef T8_ENABLE_DEBUG
   array->shmem_type = T8_SHMEM_BEST_TYPE;
 #endif
+}
+
+void
+t8_shmem_array_copy (t8_shmem_array_t dest, t8_shmem_array_t source)
+{
+  size_t              bytes;
+  SC_CHECK_ABORT (t8_shmem_array_get_elem_size (dest) ==
+                  t8_shmem_array_get_elem_size (source),
+                  "Try to copy shared memory arrays of different element size.\n");
+  SC_CHECK_ABORT (t8_shmem_array_get_elem_count (dest) ==
+                  t8_shmem_array_get_elem_count (source),
+                  "Try to copy shared memory arrays of different element counts.\n");
+  SC_CHECK_ABORT (t8_shmem_array_get_comm (dest) ==
+                  t8_shmem_array_get_comm (source),
+                  "Try to copy shared memory arrays with different communicators.\n");
+  /* Get the number of bytes to copy */
+  bytes =
+    t8_shmem_array_get_elem_count (source) *
+    t8_shmem_array_get_elem_size (source);
+  sc_shmem_memcpy (dest->array, source->array, bytes, source->comm);
 }
 
 void

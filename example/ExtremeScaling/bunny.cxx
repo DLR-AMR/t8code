@@ -33,6 +33,7 @@
 #include <sc_flops.h>
 #include <sc_statistics.h>
 #include <sc_options.h>
+
 typedef struct
 {
   double              xm, xM, ym, yM, zm, zM;
@@ -59,9 +60,6 @@ bunny_get_midpoint (p8est_t * p8est, p4est_topidx_t which_tree,
                           q->z + half_length, xyz);
 }
 
-#endif
-
-#if 0
 /* Refine if we lie in a cylinder defined by a bounding box */
 static int
 bunny_refine (p8est_t * p8est, p4est_topidx_t which_tree,
@@ -109,6 +107,7 @@ main (int argc, char **argv)
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
+
   mpicomm = sc_MPI_COMM_WORLD;
   mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
 

@@ -28,17 +28,20 @@
 
 static void
 t8_basic_hypercube (t8_eclass_t eclass, int set_level,
-                    int create_forest, int do_partition)
+                    int create_forest, int do_partition, int do_balance)
 {
   t8_forest_t         forest;
   t8_cmesh_t          cmesh, cmesh_partition;
-  char                vtuname[BUFSIZ];
+  char                vtuname[BUFSIZ], cmesh_file[BUFSIZ];
   int                 mpirank, mpiret;
 
   t8_global_productionf ("Contructing hypercube mesh with element class %s\n",
                          t8_eclass_to_string[eclass]);
 
   cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, do_partition);
+  snprintf (cmesh_file, BUFSIZ, "cmesh_hcube_%s",
+            t8_eclass_to_string[eclass]);
+  t8_cmesh_save (cmesh, cmesh_file);
   if (do_partition) {
     /* repartition the cmesh to match the desired forest partition */
     t8_cmesh_init (&cmesh_partition);
@@ -75,6 +78,21 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
                 t8_eclass_to_string[eclass]);
       t8_forest_write_vtk (forest, vtuname);
       t8_debugf ("Output to %s\n", vtuname);
+      if (do_balance) {
+        t8_forest_t         forest_balance;
+
+        t8_forest_init (&forest_balance);
+        t8_forest_set_balance (forest_balance, forest, 1);
+        t8_forest_commit (forest_balance);
+
+        t8_debugf ("Successfully balanced forest.\n");
+        snprintf (vtuname, BUFSIZ, "forest_hypercube_balanced_%s",
+                  t8_eclass_to_string[eclass]);
+        t8_forest_write_vtk (forest_balance, vtuname);
+        t8_debugf ("Output to %s\n", vtuname);
+        /* Ensure that the correct forest is passed to unref later */
+        forest = forest_balance;
+      }
     }
     t8_forest_unref (&forest);
   }
@@ -90,7 +108,7 @@ main (int argc, char **argv)
   sc_options_t       *opt;
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
-  int                 level, do_partition, create_forest;
+  int                 level, do_partition, create_forest, do_balance;
   int                 eclass_int;
   int                 parsed, helpme;
   t8_eclass_t         eclass;
@@ -119,6 +137,8 @@ main (int argc, char **argv)
                       "The refinement level of the mesh.");
   sc_options_add_switch (opt, 'p', "partition", &do_partition,
                          "Enable coarse mesh partitioning.");
+  sc_options_add_switch (opt, 'b', "balance", &do_balance,
+                         "Additionally balance the forest.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, 0,
                       "The type of elements to use.\n"
                       "\t\t0 - vertex\n\t\t1 - line\n\t\t2 - quad\n"
@@ -136,7 +156,8 @@ main (int argc, char **argv)
            && eclass_int < T8_ECLASS_COUNT) {
     create_forest = 1;
     eclass = (t8_eclass_t) eclass_int;
-    t8_basic_hypercube (eclass, level, create_forest, do_partition);
+    t8_basic_hypercube (eclass, level, create_forest, do_partition,
+                        do_balance);
   }
   else {
     /* wrong usage */

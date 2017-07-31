@@ -47,6 +47,18 @@ t8_logf (int category, int priority, const char *fmt, ...)
 }
 
 void
+t8_log_indent_push (void)
+{
+  sc_log_indent_push_count (t8_get_package_id (), 1);
+}
+
+void
+t8_log_indent_pop (void)
+{
+  sc_log_indent_pop_count (t8_get_package_id (), 1);
+}
+
+void
 t8_global_errorf (const char *fmt, ...)
 {
   va_list             ap;

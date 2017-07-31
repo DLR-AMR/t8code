@@ -452,6 +452,20 @@ size_t              t8_cmesh_trees_get_numproc (t8_cmesh_trees_t trees);
 void                t8_cmesh_trees_print (t8_cmesh_t cmesh,
                                           t8_cmesh_trees_t trees);
 
+/** Brodcast an existing valid trees structure from a root rank to
+ * all other ranks.
+ * The trees structure must belong to cmeshes whose meta_information is
+ * already set. \ref t8_cmesh_bcast.
+ * \param [in]      cmesh_in    On \a root a committed, replicated cmesh.
+ *                              On the other ranks an initialized cmesh with
+ *                              the same number of trees as on \a root.
+ * \param [in]      root        The rank that broadcasts \a cmesh_in to all
+ *                              other ranks.
+ * \param [in]      comm        MPI communicator to use.
+ */
+void                t8_cmesh_trees_bcast (t8_cmesh_t cmesh_in, int root,
+                                          sc_MPI_Comm comm);
+
 /** Check whether the face connection of a trees structure are consistent.
  * That is if tree1 lists tree2 as neighbor at face i with ttf entries (or,face j),
  * then tree2 must list tree1 as neighbor at face j with ttf entries (or, face i).

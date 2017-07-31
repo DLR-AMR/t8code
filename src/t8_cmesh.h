@@ -28,7 +28,7 @@
 #define T8_CMESH_H
 
 #include <t8.h>
-#include <t8_shmem.h>
+#include <t8_data/t8_shmem.h>
 #include <t8_cmesh/t8_cmesh_save.h>
 #include <t8_element.h>
 
@@ -84,6 +84,36 @@ int                 t8_cmesh_is_initialized (t8_cmesh_t cmesh);
  */
 int                 t8_cmesh_is_committed (t8_cmesh_t cmesh);
 
+#ifdef T8_ENABLE_DEBUG
+/** After a cmesh is committed, check whether all trees in a cmesh do have positive volume.
+ * Returns true if all trees have positive volume.
+ * \param [in]  cmesh           This cmesh is examined. May be NULL.
+ * \return                      True if \a cmesh is not NULL and all trees for
+ *                              which \ref  t8_cmesh_set_tree_vertices
+ *                              was called, do have positive geometric volume.
+ *                              False otherwise.
+ */
+int                 t8_cmesh_no_negative_volume (t8_cmesh_t cmesh);
+#endif
+
+/** Given a set of vertex coordinates for a tree of a given eclass.
+ * Query whether the geometric volume of the tree with this coordinates
+ * would be negative.
+ * \param [in]  eclass          The eclass of a tree.
+ * \param [in]  vertices        The coordinates of the tree's vertices.
+ * \param [in]  num_vertices    The number of vertices. \a vertices must hold
+ *                              3 * \a num_vertices many doubles.
+ *                              \a num_vertices must match \ref t8_eclass_num_vertices[\a eclass]
+ * \return                      True if the geometric volume describe by \a vertices is negative.
+ *                              Fals otherwise.
+ * Returns true if a tree of the given eclass with the given vertex
+ * coordinates does have negative volume.
+ */
+int                 t8_cmesh_tree_vertices_negative_volume (t8_eclass_t
+                                                            eclass,
+                                                            double *vertices,
+                                                            int num_vertices);
+
 /* TODO: Currently it is not possible to destroy set_from before
  *       cmesh is destroyed. */
 /** This function sets a cmesh to be derived from.
@@ -132,7 +162,9 @@ t8_shmem_array_t    t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
  *                              \ref t8_cmesh_commit.
  *                             -1: Co not change the face_knowledge level but keep any
  *                                 previously set ones. (Possibly by a previous call to \ref t8_cmesh_set_partition_range)
- * \param [in]     first_local_tree The global index of the first tree on this process.
+ * \param [in]     first_local_tree The global index ID of the first tree on this process.
+ *                                  If this tree is also the last tree on the previous process,
+ *                                  then the argument must be -ID - 1.
  * \param [in]     last_local_tree  The global index of the last tree on this process.
  *                                  If this process should be empty then \a last_local_tree
  *                                  must be strictly smaller than \a first_local_tree.
@@ -294,7 +326,6 @@ void                t8_cmesh_set_profiling (t8_cmesh_t cmesh,
  *                              false otherwise.
  *                              TODO: define carefully.
  *                              Orders, sequences, equivalences?
- * Currently the attributes of the trees are not compared.
  * This function works on committed and uncommitted cmeshes.
  */
 int                 t8_cmesh_is_equal (t8_cmesh_t cmesh_a,
@@ -336,7 +367,7 @@ void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 void                t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
 /* TODO: Document */
-int                 t8_cmesh_save (t8_cmesh_t cmesh, const char *filename);
+int                 t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix);
 
 /* TODO: Document */
 t8_cmesh_t          t8_cmesh_load (const char *filename, sc_MPI_Comm comm);
@@ -482,6 +513,15 @@ t8_locidx_t         t8_cmesh_get_local_id (t8_cmesh_t cmesh,
  */
 void                t8_cmesh_print_profile (t8_cmesh_t cmesh);
 
+/** Return a pointer to the vertex coordinates of a tree.
+ * \param [in]    cmesh         The cmesh.
+ * \param [in]    ltreeid       The id of a loca tree.
+ * \return    If stored, a pointer to the vertex coordinates of \a tree.
+ *            If no coordinates for this tree are found, NULL.
+ */
+double             *t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh,
+                                                t8_locidx_t ltreeid);
+
 /** Return the attribute pointer of a tree.
  * \param [in]     cmesh        The cmesh.
  * \param [in]     package_id   The identifier of a valid software package. \see sc_package_register
@@ -517,7 +557,8 @@ t8_shmem_array_t    t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
  * \param [out]   first_local_tree  The first tree that contains elements belonging to the calling processor.
  * \param [out]   child_in_tree_begin The global index of the first element belonging to the calling processor. Not computed if NULL.
  * \param [out]   last_local_tree  The last tree that contains elements belonging to the calling processor.
- * \param [out]   child_in_tree_end The global index of the last element belonging to the calling processor. Not computed if NULL.
+ * \param [out]   child_in_tree_end The global index of the first element that does not belonging to
+ *                                  the calling processor anymore. Not computed if NULL.
  * \param [out[   first_tree_shared If not NULL, 1 or 0 is stored here depending on whether \a first_local_tree is the
  *                                 same as \a last_local_tree on the next process.
  * \a cmesh must be committed before calling this function. *
@@ -654,12 +695,13 @@ t8_cmesh_t          t8_cmesh_new_line_zigzag (sc_MPI_Comm comm);
   * \param [in] num_of_prisms The number of prisms to be used.
   * \return                 A valid cmesh, as if _init and _commit had been called.
   */
-t8_cmesh_t          t8_cmesh_new_prism_cake (sc_MPI_Comm comm, int num_of_prisms);
+t8_cmesh_t          t8_cmesh_new_prism_cake (sc_MPI_Comm comm,
+                                             int num_of_prisms);
 
 /** Construct a single deformed prism
   * \param [in] comm        The mpi communicator to use.
   * \return                 A valid cmesh; as if _init and _commit had been called.*/
-t8_cmesh_t          t8_cmesh_new_prism_deformed(sc_MPI_Comm comm);
+t8_cmesh_t          t8_cmesh_new_prism_deformed (sc_MPI_Comm comm);
 
 /** Construct a forest of six connected noncannoical oriented prisms
   * \param [in] comm        The mpi communicator to use.
@@ -698,6 +740,17 @@ t8_cmesh_t          t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x,
                                                   int y_periodic,
                                                   int z_periodic,
                                                   sc_MPI_Comm comm);
+
+/** Construct a tetrahedral cmesh that has all possible face to face
+ * connections and orientations.
+ * This cmesh is used for testing and debugging.
+ * \param [in] comm        The MPI communicator used to commit the cmesh.
+ * \return                 A committed and replicated cmesh of 24 tetrahedron trees
+ *                         in which each (face -> face, orientation) face connection
+ *                         is set at least once.
+ *                         Note that most faces in this cmesh are boundary faces.
+ */
+t8_cmesh_t          t8_cmesh_new_tet_orientation_test (sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 

@@ -25,7 +25,7 @@
 
 #include <t8.h>
 #include <t8_refcount.h>
-#include <t8_shmem.h>
+#include <t8_data/t8_shmem.h>
 #include "t8_cmesh_stash.h"
 #include "t8_element.h"
 
@@ -111,8 +111,14 @@ typedef struct t8_cmesh
   t8_locidx_t         num_local_trees; /**< If partitioned the number of trees on this process. Otherwise the global number of trees. */
   t8_locidx_t         num_ghosts; /**< If partitioned the number of neighbor trees
                                     owned by different processes. */
-  /* TODO: wouldnt a local num_trees_per_eclass be better? */
-  t8_gloidx_t         num_trees_per_eclass[T8_ECLASS_COUNT]; /**< After commit the number of
+  /* TODO: wouldnt a local num_trees_per_eclass be better?
+   *       only as an additional info. we need the global count. i.e. for forest_maxlevel computation.
+   */
+  t8_locidx_t         num_local_trees_per_eclass[T8_ECLASS_COUNT]; /**< After commit the number of local
+                                                                 trees for each eclass.
+                                                                 Stores the same entries as \a num_trees_per_eclass,
+                                                                 if the cmesh is replicated. */
+  t8_gloidx_t         num_trees_per_eclass[T8_ECLASS_COUNT]; /**< After commit the number of global
                                                                  trees for each eclass. */
 
   t8_cmesh_trees_t    trees; /**< structure that holds all local trees and ghosts */
