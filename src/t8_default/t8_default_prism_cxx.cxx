@@ -130,12 +130,16 @@ t8_default_scheme_prism_c::t8_element_tree_face (const t8_element_t * elem,
   return t8_dprism_tree_face ((const t8_dprism_t *) elem, face);
 }
 
-void
+int
 t8_default_scheme_prism_c::t8_element_extrude_face (const t8_element_t * face,
+                                                    const t8_eclass_scheme_c *
+                                                    face_scheme,
                                                     t8_element_t * elem,
                                                     int root_face)
 {
   t8_dprism_extrude_face (face, elem, root_face);
+  /* TODO: Fix return value */
+  return -1;
 }
 
 int
@@ -147,7 +151,9 @@ t8_default_scheme_prism_c::t8_element_is_family (t8_element_t ** fam)
 void
 t8_default_scheme_prism_c::t8_element_boundary_face (const t8_element_t *
                                                      elem, int face,
-                                                     t8_element_t * boundary)
+                                                     t8_element_t * boundary,
+                                                     const t8_eclass_scheme_c
+                                                     * boundary_scheme)
 {
   t8_dprism_boundary_face ((const t8_dprism_t *) elem, face, boundary);
 }
@@ -160,15 +166,20 @@ t8_default_scheme_prism_c::t8_element_is_root_boundary (const t8_element_t *
 }
 
 int
-t8_default_scheme_prism_c::
-t8_element_face_neighbor_inside (const t8_element_t * elem,
-                                 t8_element_t * neigh, int face)
+t8_default_scheme_prism_c::t8_element_face_neighbor_inside (const t8_element_t
+                                                            * elem,
+                                                            t8_element_t *
+                                                            neigh, int face,
+                                                            int *neigh_face)
 {
   const t8_dprism_t  *p = (const t8_dprism_t *) elem;
   t8_dprism_t        *n = (t8_dprism_t *) neigh;
 
+  /* TODO: implement neigh face return value */
+  T8_ASSERT (neigh_face == NULL);
+
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
-  (void) t8_dprism_face_neighbour (p, face, n);
+  t8_dprism_face_neighbour (p, face, n);
   /* return true if neigh is inside the root */
   return t8_dprism_is_inside_root (n);
 }

@@ -29,6 +29,7 @@
 #include "t8_default_hex_cxx.hxx"
 #include "t8_default_tri_cxx.hxx"
 #include "t8_default_tet_cxx.hxx"
+#include "t8_default_prism_cxx.hxx"
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -46,6 +47,7 @@ t8_scheme_new_default_cxx (void)
   s->eclass_schemes[T8_ECLASS_HEX] = new t8_default_scheme_hex_c ();
   s->eclass_schemes[T8_ECLASS_TRIANGLE] = new t8_default_scheme_tri_c ();
   s->eclass_schemes[T8_ECLASS_TET] = new t8_default_scheme_tet_c ();
+  s->eclass_schemes[T8_ECLASS_PRISM] = new t8_default_scheme_prism_c ();
 
   return s;
 }
