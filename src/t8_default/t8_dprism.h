@@ -20,8 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_PRISM_H
-#define T8_PRISM_H
+#ifndef T8_DPRISM_H
+#define T8_DPRISM_H
 
 /** \file t8_dprism.h
  * TODO: document this.
