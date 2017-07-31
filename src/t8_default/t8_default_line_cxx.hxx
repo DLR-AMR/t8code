@@ -31,8 +31,6 @@
 #include <t8_element_cxx.hxx>
 #include "t8_default_common_cxx.hxx"
 
-T8_EXTERN_C_BEGIN ();
-
 /** Provide an implementation for the line element class.
  * It is written as a self-contained library in the t8_dline_* files.
  */
@@ -320,7 +318,5 @@ public:
   virtual int         t8_element_is_valid (const t8_element_t * t) const;
 #endif
 };
-
-T8_EXTERN_C_END ();
 
 #endif /* !T8_DEFAULT_LINE_CXX_HXX */

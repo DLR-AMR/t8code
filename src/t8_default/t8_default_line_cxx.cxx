@@ -27,6 +27,8 @@
 
 typedef t8_dline_t  t8_default_line_t;
 
+T8_EXTERN_C_BEGIN ();
+
 int
 t8_default_scheme_line_c::t8_element_maxlevel (void)
 {
@@ -275,3 +277,5 @@ t8_default_scheme_line_c::~t8_default_scheme_line_c ()
    * However we need to provide an implementation of the destructor
    * and hence this empty function. */
 }
+
+T8_EXTERN_C_END ();
