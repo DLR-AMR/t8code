@@ -146,6 +146,23 @@ t8_dline_is_familypv (const t8_dline_t * f[])
   return (f[0]->x + len == f[1]->x);
 }
 
+int
+t8_dline_is_root_boundary (const t8_dline_t * p, int face)
+{
+  if (face == 0) {
+    return p->x == 0;
+  }
+  else {
+    return p->x == T8_DLINE_ROOT_LEN - T8_DLINE_LEN (p->level);
+  }
+}
+
+int
+t8_dline_is_inside_root (const t8_dline_t * p)
+{
+  return (p->x >= 0 && p->x < T8_DLINE_ROOT_LEN);
+}
+
 void
 t8_dline_init_linear_id (t8_dline_t * l, int level, uint64_t id)
 {

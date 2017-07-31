@@ -27,8 +27,9 @@
 #ifndef T8_DEFAULT_PRISM_CXX_HXX
 #define T8_DEFAULT_PRISM_CXX_HXX
 
-#include <t8_element.h>
 #include <t8_element_cxx.hxx>
+#include "t8_default_line_cxx.hxx"
+#include "t8_default_tri_cxx.hxx"
 #include "t8_default_common_cxx.hxx"
 
 /** Provide an implementation for the prism element class.
@@ -45,12 +46,14 @@ public:
 
                      ~t8_default_scheme_prism_c ();
 
+  /** Allocate memory for a given number of elements.
+   * In debugging mode, ensure that all elements are valid \ref t8_element_is_valid.
+   */
+  virtual void        t8_element_new (int length, t8_element_t ** elem);
+
   /** Initialize an array of allocated elements. */
   virtual void        t8_element_init (int length, t8_element_t * elem,
-                                       int called_new)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                       int called_new);
 
 /** Return the maximum level allowed for this element class. */
   virtual int         t8_element_maxlevel (void);
@@ -76,10 +79,7 @@ public:
                                                    int face,
                                                    t8_element_t * children[],
                                                    int num_children,
-                                                   int *child_indices)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                   int *child_indices);
 
 /** Return the refinement level of an element. */
   virtual int         t8_element_level (const t8_element_t * elem);
@@ -141,12 +141,6 @@ public:
     SC_ABORT ("This function is not implemented yet.\n");
     return 0;                   /* suppresses compiler warning */
   }
-
-/** Construct all children of given element that touch a given face */
-  virtual void        t8_element_children_at_face (const t8_element_t * elem,
-                                                   int face,
-                                                   t8_element_t * children[],
-                                                   int num_children);
 
 /** Given a face of an element and a child number of a child of that face,
   * return the face number of the child of the element that matches the child
@@ -289,7 +283,8 @@ public:
   /** Query whether an element is valid */
   virtual int         t8_element_is_valid (const t8_element_t * t) const
   {
-    SC_ABORT ("This function is not implemented yet.\n");
+    /* TODO: Correctly implement this function */
+    return 1;
   }
 #endif
 };

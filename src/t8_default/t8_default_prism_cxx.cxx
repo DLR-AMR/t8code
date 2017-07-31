@@ -29,6 +29,39 @@ typedef t8_dprism_t t8_default_prism_t;
 
 T8_EXTERN_C_BEGIN ();
 
+void
+t8_default_scheme_prism_c::t8_element_new (int length, t8_element_t ** elem)
+{
+  /* allocate memory for a tet */
+  t8_default_scheme_common_c::t8_element_new (length, elem);
+
+  /* in debug mode, set sensible default values. */
+#ifdef T8_ENABLE_DEBUG
+  {
+    int                 i;
+    for (i = 0; i < length; i++) {
+      t8_element_init (1, elem[i], 0);
+    }
+  }
+#endif
+}
+
+void
+t8_default_scheme_prism_c::t8_element_init (int length, t8_element_t * elem,
+                                            int new_called)
+{
+#ifdef T8_ENABLE_DEBUG
+  if (!new_called) {
+    int                 i;
+    t8_dprism_t        *prism = (t8_dprism_t *) elem;
+    /* Set all values to 0 */
+    for (i = 0; i < length; i++) {
+      t8_dprism_init_linear_id (prism + i, 0, 0);
+    }
+  }
+#endif
+}
+
 int
 t8_default_scheme_prism_c::t8_element_maxlevel (void)
 {
@@ -111,10 +144,13 @@ t8_default_scheme_prism_c::t8_element_children_at_face (const t8_element_t *
                                                         elem, int face,
                                                         t8_element_t *
                                                         children[],
-                                                        int num_children)
+                                                        int num_children,
+                                                        int *child_indices)
 {
   t8_dprism_children_at_face ((const t8_dprism_t *) elem,
                               face, (t8_dprism_t **) children, num_children);
+  /* TODO: Properly implement child_indices */
+  T8_ASSERT (child_indices == NULL);
 }
 
 int
@@ -178,11 +214,10 @@ t8_default_scheme_prism_c::t8_element_face_neighbor_inside (const t8_element_t
   const t8_dprism_t  *p = (const t8_dprism_t *) elem;
   t8_dprism_t        *n = (t8_dprism_t *) neigh;
 
-  /* TODO: implement neigh face return value */
-  T8_ASSERT (neigh_face == NULL);
-
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
-  t8_dprism_face_neighbour (p, face, n);
+  T8_ASSERT (neigh_face != NULL);
+
+  *neigh_face = t8_dprism_face_neighbour (p, face, n);
   /* return true if neigh is inside the root */
   return t8_dprism_is_inside_root (n);
 }

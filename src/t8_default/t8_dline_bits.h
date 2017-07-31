@@ -48,9 +48,8 @@ void                t8_dline_copy (const t8_dline_t * l, t8_dline_t * dest);
  *  and positiv if l1 > l2.
  *  If l2 is a copy of l1 then the elements are equal.
  */
-int
- 
-              t8_dline_compare (const t8_dline_t * l1, const t8_dline_t * l2);
+int                 t8_dline_compare (const t8_dline_t * l1,
+                                      const t8_dline_t * l2);
 
 /** Compute the parent of a line.
  * \param [in]  l   The input line.

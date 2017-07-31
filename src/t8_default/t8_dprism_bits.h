@@ -146,8 +146,9 @@ int                 t8_dprism_num_face_children (const t8_dprism_t * p,
  * \param [in]     face   The face across which to generate the neighbor.
  * \param [in,out] n      Existing prism whose data will be filled.
  * \note \a p may point to the same prism as \a n.
+ * \return  The face number of \a neigh of the respective face.
  */
-void                t8_dprism_face_neighbour (const t8_dprism_t * p, int face,
+int                 t8_dprism_face_neighbour (const t8_dprism_t * p, int face,
                                               t8_dprism_t * neigh);
 
 /** Compute the 8 children of a prism, array version.

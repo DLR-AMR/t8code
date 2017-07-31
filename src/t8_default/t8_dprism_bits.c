@@ -20,11 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "t8_dprism_bits.h"
+#include <p4est_bits.h>
+#include <sc_functions.h>
 #include "t8_dline_bits.h"
+#include "t8_dprism_bits.h"
 #include "t8_dtri_bits.h"
-#include "sc_functions.h"
-#include "p4est.h"
 
 int
 t8_dprism_get_level (const t8_dprism_t * p)
@@ -229,7 +229,7 @@ t8_dprism_num_face_children (const t8_dprism_t * p, int face)
           T8_DLINE_CHILDREN);
 }
 
-void
+int
 t8_dprism_face_neighbour (const t8_dprism_t * p, int face,
                           t8_dprism_t * neigh)
 {
@@ -237,14 +237,21 @@ t8_dprism_face_neighbour (const t8_dprism_t * p, int face,
   if (face < 3) {
     t8_dline_copy (&p->line, &neigh->line);
     t8_dtri_face_neighbour (&p->tri, face, &neigh->tri);
+    /* face neighbors face number:
+     *  0 -> 2
+     *  1 -> 1
+     *  2 -> 0 */
+    return 2 - face;
   }
   else if (face == 3) {
     t8_dtri_copy (&p->tri, &neigh->tri);
     t8_dline_face_neighbour (&p->line, 0, &neigh->line);
+    return 4;
   }
   else {
     t8_dtri_copy (&p->tri, &neigh->tri);
     t8_dline_face_neighbour (&p->line, 1, &neigh->line);
+    return 3;
   }
 }
 
