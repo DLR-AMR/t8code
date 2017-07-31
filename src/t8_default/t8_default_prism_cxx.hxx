@@ -47,10 +47,10 @@ public:
 
                      ~t8_default_scheme_prism_c ();
 
-
   /** Initialize an array of allocated elements. */
   virtual void        t8_element_init (int length, t8_element_t * elem,
-                                       int called_new) {
+                                       int called_new)
+  {
     SC_ABORT ("This function is not implemented yet.\n");
   }
 
@@ -211,7 +211,6 @@ public:
                                                 const t8_eclass_scheme_c *
                                                 boundary_scheme);
 
-
   /** Construct the first descendant of an element that touches a given face.   */
   virtual void        t8_element_first_descendant_face (const t8_element_t *
                                                         elem, int face,
@@ -229,7 +228,6 @@ public:
   {
     SC_ABORT ("This function is not implemented yet.\n");
   }
-
 
 /** Construct all codimension-one boundary elements of a given element. */
   virtual void        t8_element_boundary (const t8_element_t * elem,
@@ -249,7 +247,7 @@ public:
                                                        elem,
                                                        t8_element_t * neigh,
                                                        int face,
-                                                       int * neigh_face);
+                                                       int *neigh_face);
 
 /** Initialize an element according to a given linear id */
   virtual void        t8_element_set_linear_id (t8_element_t * elem,
