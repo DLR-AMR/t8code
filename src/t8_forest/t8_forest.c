@@ -468,7 +468,7 @@ t8_forest_commit (t8_forest_t forest)
           t8_forest_ref (forest->set_from);
         }
         t8_forest_set_balance (forest_balance, forest->set_from,
-                               forest->set_balance !=
+                               forest->set_balance ==
                                T8_FOREST_BALANCE_NO_REPART);
         /* activate profiling, if this forest has profiling */
         t8_forest_set_profiling (forest_balance, forest->profile != NULL);
