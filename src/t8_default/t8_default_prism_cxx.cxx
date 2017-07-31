@@ -216,9 +216,9 @@ void
 t8_default_scheme_prism_c::t8_element_anchor (const t8_element_t * elem,
                                          int anchor[3]){
     t8_dprism_t     *prism = (t8_dprism_t *)elem;
-    anchor[0] = prism->tri.x;
-    anchor[1] = prism->tri.y;
-    anchor[2] = prism->line.x;
+    anchor[0] = prism->tri.x / T8_DTRI_ROOT_LEN * T8_DPRISM_ROOT_LEN;
+    anchor[1] = prism->tri.y / T8_DTRI_ROOT_LEN * T8_DPRISM_ROOT_LEN;
+    anchor[2] = prism->line.x / T8_DLINE_ROOT_LEN * T8_DPRISM_ROOT_LEN;
 }
 
 int
