@@ -636,7 +636,7 @@ t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass,
    *     0      1
    *
    *
-   *    For tets and prisms, if the vertex 3 is below the 0-1-2 plane, the volume
+   *    For tets/prisms, if the vertex 3 is below/above the 0-1-2 plane, the volume
    *    is negative. This is the case if and only if
    *    the scalar product of v_3 with the cross product of v_1 and v_2 is
    *    greater 0:
@@ -667,8 +667,7 @@ t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass,
   sc_prod = t8_cmesh_tree_vertices_dot (v_j, cross);
 
   T8_ASSERT (sc_prod != 0);
-  return eclass == T8_ECLASS_TET
-    || eclass == T8_ECLASS_PRISM ? sc_prod > 0 : sc_prod < 0;
+  return eclass == T8_ECLASS_TET ? sc_prod > 0 : sc_prod < 0;
 }
 
 #ifdef T8_ENABLE_DEBUG
