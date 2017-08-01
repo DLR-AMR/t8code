@@ -179,15 +179,12 @@ void
 t8_dline_successor (const t8_dline_t * l, t8_dline_t * succ, int level)
 {
   t8_dline_coord_t    h = 0;
-  int                 i;
 
   T8_ASSERT (1 <= level && level <= l->level);
 
   /* To compute the successor we zero out all bits in places bigger
    * than level and then we add the length of a line of level. */
-  for (i = level + 1; i <= T8_DLINE_MAXLEVEL; i++) {
-    h |= T8_DLINE_LEN (i);
-  }
+  h = (1 << (T8_DLINE_MAXLEVEL -level));
   succ->x = l->x & ~h;
   succ->x += T8_DLINE_LEN (level);
   succ->level = level;
