@@ -339,7 +339,7 @@ main (int argc, char *argv[])
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   p4est_init (NULL, SC_LP_ESSENTIAL);
-  t8_init (SC_LP_DEBUG);
+  t8_init (SC_LP_STATISTICS);
 
   /* Setup for command line options */
   opt = sc_options_new (argv[0]);
