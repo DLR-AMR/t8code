@@ -247,12 +247,12 @@ t8_forest_balance (t8_forest_t forest, int repartition)
       sc_stats_compute (forest->mpicomm, count + 1, partition_stats);
     }
     sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, count + 1,
-                    adap_stats, 0, 1);
+                    adap_stats, 1, 1);
     sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, count + 1,
-                    ghost_stats, 0, 1);
+                    ghost_stats, 1, 1);
     if (repartition) {
       sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, count + 1,
-                      partition_stats, 0, 1);
+                      partition_stats, 1, 1);
     }
     T8_FREE (adap_stats);
     T8_FREE (ghost_stats);
