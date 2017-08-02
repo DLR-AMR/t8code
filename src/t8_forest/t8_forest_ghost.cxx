@@ -1893,6 +1893,12 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     if (forest->profile != NULL) {
       /* If profiling is enabled, we measure the runtime of ghost_create */
       forest->profile->ghost_runtime = -sc_MPI_Wtime ();
+      /* DO NOT DELETE THE FOLLOWING line.
+       * even if you do not want this output. It fixes a bug that occured on JUQUEEN, where the
+       * runtimes were computed to 0.
+       * Only delete the line, if you know what you are doing. */
+      t8_global_productionf ("Start ghost at %f  %f\n", sc_MPI_Wtime (), 
+			    forest->profile->ghost_runtime);
     }
 
     /* Initialize the ghost structure */
@@ -1922,6 +1928,12 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
       /* We also store the number of ghosts and remotes */
       forest->profile->ghosts_received = ghost->num_ghosts_elements;
       forest->profile->ghosts_shipped = ghost->num_remote_elements;
+      /* DO NOT DELETE THE FOLLOWING line.
+       * even if you do not want this output. It fixes a bug that occured on JUQUEEN, where the
+       * runtimes were computed to 0.
+       * Only delete the line, if you know what you are doing. */
+      t8_global_productionf ("End ghost at %f  %f\n", sc_MPI_Wtime (), 
+			      forest->profile->ghost_runtime);
     }
   }
 
