@@ -220,10 +220,6 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     /* Print the runtime of adapt/ghost/partition */
     /* Compute the overall runtime and store in last entry */
     ada_time = ghost_time = part_time = 0;
-    if (repartition) {
-      sc_stats_init (&partition_stats[count],
-                     "forest balance: Total partition time");
-    }
     t8_debugf ("ada stats %f\n", adap_stats[count].sum_values);
     for (i = 0; i < count; i++) {
       ada_time += adap_stats[i].sum_values;
