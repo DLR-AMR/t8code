@@ -96,6 +96,7 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
 
     if (!(cmesh != NULL && t8_refcount_is_active (&cmesh->rc) &&
           cmesh->committed)) {
+      is_checking = 0;
       return 0;
     }
 
@@ -104,6 +105,7 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
     if ((!t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) ||
         (!t8_cmesh_no_negative_volume (cmesh))
         || (!t8_cmesh_check_trees_per_eclass (cmesh))) {
+      is_checking = 0;
       return 0;
     }
 #endif
@@ -962,7 +964,8 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   }
   if (meta_info.pre_commit) {
     /* broadcast all the stashed information about trees/neighbors/attributes */
-    t8_stash_bcast (cmesh_in->stash, root, comm, meta_info.stash_elem_counts);
+    t8_stash_bcast (cmesh_out->stash, root, comm,
+                    meta_info.stash_elem_counts);
   }
   else {
     /* broadcast the stored information about the trees */
@@ -977,8 +980,12 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   cmesh_out->mpirank = mpirank;
   cmesh_out->mpisize = mpisize;
   /* Final checks */
-  T8_ASSERT (t8_cmesh_is_committed (cmesh_out));
-  T8_ASSERT (t8_cmesh_comm_is_valid (cmesh_out, comm));
+#ifdef T8_ENABLE_DEBUG
+  if (!meta_info.pre_commit) {
+    T8_ASSERT (t8_cmesh_is_committed (cmesh_out));
+    T8_ASSERT (t8_cmesh_comm_is_valid (cmesh_out, comm));
+  }
+#endif
   return cmesh_out;
 }
 
