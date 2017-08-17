@@ -1099,6 +1099,14 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 }
 #endif
 
+int
+t8_cmesh_is_partitioned (t8_cmesh_t cmesh)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+
+  return cmesh->set_partition != 0;
+}
+
 t8_gloidx_t
 t8_cmesh_get_num_trees (t8_cmesh_t cmesh)
 {
