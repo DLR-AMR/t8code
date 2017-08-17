@@ -373,7 +373,8 @@ int                 t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix);
 t8_cmesh_t          t8_cmesh_load (const char *filename, sc_MPI_Comm comm);
 
 /* TODO: Document */
-/* procs_per_node is only relevant in mode==JUQUEEN */
+/* procs_per_node is only relevant in mode==JUQUEEN.
+ *  num_files = 1 => replicated cmesh is constructed */
 t8_cmesh_t          t8_cmesh_load_and_distribute (const char *fileprefix,
                                                   int num_files,
                                                   sc_MPI_Comm comm,
