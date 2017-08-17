@@ -174,7 +174,8 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   adapt_data_t        adapt_data;
   t8_forest_t         forest, forest_adapt, forest_partition;
   double              t;
-  int                 partition_cmesh;
+  int                 partition_cmesh, r;
+  const int           refine_rounds = max_level - init_level;
 
   t8_global_productionf ("Committed cmesh with"
                          " %lli global trees.\n",
@@ -219,48 +220,34 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
    * further through the domain */
   for (t = 0; t < T; t += delta_t) {
     /* Adapt the forest */
-    t8_forest_init (&forest_adapt);
-    t8_forest_set_adapt (forest_adapt, forest, t8_band_adapt, NULL, 1);
-    /* Set the minimum and maximum x-coordinates as user data */
-    adapt_data.c_min = x_min_max[0] + t;
-    adapt_data.c_max = x_min_max[1] + t;
-    t8_forest_set_user_data (forest_adapt, (void *) &adapt_data);
+    for (r = 0; r < refine_rounds; r++) {
+      /* TODO: profiling */
+      t8_forest_init (&forest_adapt);
+      t8_forest_set_adapt (forest_adapt, forest, t8_band_adapt, NULL, 0);
+      /* Set the minimum and maximum x-coordinates as user data */
+      adapt_data.c_min = x_min_max[0] + t;
+      adapt_data.c_max = x_min_max[1] + t;
+      t8_forest_set_user_data (forest_adapt, (void *) &adapt_data);
+      t8_forest_commit (forest_adapt);
+      /* partition the adapted forest */
+      /* TODO: profiling */
+      t8_forest_init (&forest_partition);
+      /* partition the adapted forest */
+      t8_forest_set_partition (forest_partition, forest_adapt, 0);
 
-#if 0
-    /* If desired, create ghost elements */
-    if (do_ghost) {
-      t8_forest_set_ghost (forest_adapt, 1, T8_GHOST_FACES);
+      /* If desired, create ghost elements and balance after last step */
+      if (r == refine_rounds - 1) {
+        t8_forest_set_profiling (forest_partition, 1);
+        if (do_ghost) {
+          t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
+        }
+        if (do_balance) {
+          t8_forest_set_balance (forest_partition, NULL, 0);
+        }
+      }
+      t8_forest_commit (forest_partition);
+      forest = forest_partition;
     }
-    /* Commit the adapted forest */
-    t8_forest_commit (forest_adapt);
-
-    /* write vtk files for adapted forest and cmesh */
-    if (!no_vtk) {
-      int                 time_step;
-      time_step = t / delta_t;
-      snprintf (forest_vtu, BUFSIZ, "%s_forest_adapt_%03d", vtu_prefix,
-                time_step);
-      snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_adapt_%03d", vtu_prefix,
-                time_step);
-      t8_forest_write_vtk (forest_adapt, forest_vtu);
-      t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_adapt),
-                               cmesh_vtu, 1.0);
-    }
-    t8_forest_init (&forest_partition);
-#endif
-    forest_partition = forest_adapt;
-    /* partition the adapted forest */
-    t8_forest_set_partition (forest_partition, NULL, 0);
-    /* enable profiling for the partitioned forest */
-    t8_forest_set_profiling (forest_partition, 1);
-    /* If desired, create ghost elements */
-    if (do_ghost) {
-      t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
-    }
-    if (do_balance) {
-      t8_forest_set_balance (forest_partition, NULL, 0);
-    }
-    t8_forest_commit (forest_partition);
 
     /* Set the vtu output name */
     if (!no_vtk) {
