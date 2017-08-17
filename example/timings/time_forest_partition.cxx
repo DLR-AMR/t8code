@@ -202,7 +202,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   /* Set the permanent data for adapt. */
   adapt_data.normal[0] = 1;
   adapt_data.normal[1] = 1;
-  adapt_data.normal[2] = 0;
+  adapt_data.normal[2] = 0.5;
   t8_vec3_normalize (adapt_data.normal);
   adapt_data.base_level = init_level;
   adapt_data.max_level = max_level;
@@ -277,7 +277,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
     forest = forest_partition;
     /* TIME-LOOP ends here */
   }
-  t8_cmesh_save (t8_forest_get_cmesh (forest_partition), "cmesh_time_forest");
+
   /* memory clean-up */
   t8_forest_unref (&forest_partition);
 }
