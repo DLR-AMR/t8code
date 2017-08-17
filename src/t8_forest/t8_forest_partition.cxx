@@ -990,6 +990,7 @@ void
 t8_forest_partition (t8_forest_t forest)
 {
   t8_forest_t         forest_from;
+  int                 create_offset_from = 0;
 
   t8_global_productionf ("Enter  forest partition.\n");
   t8_log_indent_push ();
@@ -1011,6 +1012,7 @@ t8_forest_partition (t8_forest_t forest)
 
   if (forest_from->element_offsets == NULL) {
     /* We create the partition table of forest_from */
+    create_offset_from = 1;
     t8_forest_partition_create_offsets (forest_from);
   }
   /* TODO: if offsets already exist on forest_from, check it for consistency */
@@ -1023,6 +1025,15 @@ t8_forest_partition (t8_forest_t forest)
              == forest_from->trees->elem_count);
   T8_ASSERT ((size_t) t8_forest_get_num_local_trees (forest)
              == forest->trees->elem_count);
+
+  if (create_offset_from) {
+    /* Delete the offset memory that we allocated */
+    t8_shmem_array_destroy (&forest_from->element_offsets);
+  }
+
+  /* Free the element offset array (it is memory intensive, we do not want to keep
+   * it) */
+  t8_shmem_array_destroy (&forest->element_offsets);
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of partition */

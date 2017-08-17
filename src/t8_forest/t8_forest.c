@@ -542,19 +542,10 @@ t8_forest_commit (t8_forest_t forest)
              (long long) forest->first_local_tree,
              (long long) forest->last_local_tree);
 
-  if (forest->element_offsets == NULL) {
-    /* Create the element offsets if not already done */
-    t8_forest_partition_create_offsets (forest);
-  }
-  if (forest->tree_offsets == NULL) {
-    /* Create the tree offsets if not already done */
-    t8_forest_partition_create_tree_offsets (forest);
-  }
-
-  t8_debugf ("Element offsets:\n");
-  t8_offset_print (forest->element_offsets, forest->mpicomm);
-  t8_debugf ("Tree offsets:\n");
-  t8_offset_print (forest->tree_offsets, forest->mpicomm);
+  /* verify that no (memory intensive) shared memory array is active */
+  T8_ASSERT (forest->element_offsets == NULL);
+  T8_ASSERT (forest->tree_offsets == NULL);
+  T8_ASSERT (forest->global_first_desc == NULL);
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of commit */
@@ -568,16 +559,6 @@ t8_forest_commit (t8_forest_t forest)
   if (forest->cmesh->set_partition && partitioned) {
     t8_forest_partition_cmesh (forest, forest->mpicomm,
                                forest->profile != NULL);
-  }
-
-  /* If not already done before, create the offset arrays */
-  if (forest->tree_offsets == NULL) {
-    /* Construct tree_offsets if not already done */
-    t8_forest_partition_create_tree_offsets (forest);
-  }
-  if (forest->global_first_desc == NULL) {
-    /* Create first descendants, if not already done */
-    t8_forest_partition_create_first_desc (forest);
   }
 
   if (forest->mpisize > 1) {
