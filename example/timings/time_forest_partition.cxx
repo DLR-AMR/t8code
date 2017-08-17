@@ -161,8 +161,6 @@ t8_vec3_normalize (double *v)
   v[2] /= norm;
 }
 
-#define USE_CMESH_PARTITION 1   /* Set this to false to use a replicated cmesh
-                                 * cmesh throughout the function */
 /* Create a cmesh from a .msh files uniform level 0
  * partitioned. */
 static void
@@ -176,20 +174,31 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   adapt_data_t        adapt_data;
   t8_forest_t         forest, forest_adapt, forest_partition;
   double              t;
+  int                 partition_cmesh;
 
   t8_global_productionf ("Committed cmesh with"
                          " %lli global trees.\n",
                          (long long) t8_cmesh_get_num_trees (cmesh));
-#if USE_CMESH_PARTITION
-  /* Set up cmesh_partition to be a repartition of cmesh. */
-  t8_cmesh_init (&cmesh_partition);
-  t8_cmesh_set_derive (cmesh_partition, cmesh);
-  /* The new cmesh is partitioned according to a uniform init_level refinement */
-  t8_cmesh_set_partition_uniform (cmesh_partition, init_level);
-  t8_cmesh_commit (cmesh_partition, comm);
-#else
-  cmesh_partition = cmesh;
-#endif
+
+  /* If the input cmesh is partitioned then we use a partitioned cmehs
+   * and also repartition it in each timestep (happens automatically in
+   * t8_forest_commit). We have to initially start with a uniformly refined
+   * cmesh in order to be able to construct the forest on it.
+   * If on the other hand, the input cmesh was replicated, then we keep it
+   * as replicated throughout. */
+  partition_cmesh = t8_cmesh_is_partitioned (cmesh);
+  if (partition_cmesh) {
+    /* Set up cmesh_partition to be a repartition of cmesh. */
+    t8_cmesh_init (&cmesh_partition);
+    t8_cmesh_set_derive (cmesh_partition, cmesh);
+    /* The new cmesh is partitioned according to a uniform init_level refinement */
+    t8_cmesh_set_partition_uniform (cmesh_partition, init_level);
+    t8_cmesh_commit (cmesh_partition, comm);
+  }
+  else {
+    /* Use cmesh_partition as the original replicated cmesh */
+    cmesh_partition = cmesh;
+  }
   /* Initialize forest and set cmesh */
   t8_forest_init (&forest);
   t8_forest_set_cmesh (forest, cmesh_partition, comm);
@@ -266,8 +275,10 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
                                cmesh_vtu, 1.0);
       t8_debugf ("Wrote partitioned forest and cmesh\n");
     }
-    /* Print runtimes and statistics of forest and cmesh partition */
-    t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
+    if (partition_cmesh) {
+      /* Print runtimes and statistics of forest and cmesh partition */
+      t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
+    }
     t8_forest_print_profile (forest_partition);
     /* Set forest to the partitioned forest, so it gets adapted
      * in the next time step. */
@@ -288,15 +299,18 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
 t8_cmesh_t
 t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
                              const char *cmesh_file, int num_files,
-                             sc_MPI_Comm comm, int init_level)
+                             sc_MPI_Comm comm, int init_level, int stride)
 {
   t8_cmesh_t          cmesh;
   t8_cmesh_t          cmesh_partition;
+  int                 partition;
+
   T8_ASSERT (msh_file == NULL || cmesh_file == NULL);
 
   if (msh_file != NULL) {
     /* Create a cmesh from the given mesh files */
     cmesh = t8_cmesh_from_msh_file ((char *) msh_file, 1, comm, mesh_dim, 0);
+    partition = 1;
   }
   else {
     T8_ASSERT (cmesh_file != NULL);
@@ -304,27 +318,33 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
     /* Load the cmesh from the stored files and evenly distribute it
      * among all ranks */
     cmesh = t8_cmesh_load_and_distribute (cmesh_file, num_files, comm,
-                                          T8_LOAD_STRIDE, 16);
+                                          T8_LOAD_STRIDE, stride);
+    /* Partition only if more than 1 input file */
+    partition = num_files > 1;
   }
   SC_CHECK_ABORT (cmesh != NULL, "Error when creating cmesh.\n");
 
-  /* partition the cmesh uniformly */
-  t8_cmesh_init (&cmesh_partition);
-  t8_cmesh_set_derive (cmesh_partition, cmesh);
-  t8_cmesh_set_partition_uniform (cmesh_partition, init_level);
-  t8_cmesh_commit (cmesh_partition, comm);
-  return cmesh_partition;
+  if (partition) {
+    /* partition the cmesh uniformly */
+    t8_cmesh_init (&cmesh_partition);
+    t8_cmesh_set_derive (cmesh_partition, cmesh);
+    t8_cmesh_set_partition_uniform (cmesh_partition, init_level);
+    t8_cmesh_commit (cmesh_partition, comm);
+    return cmesh_partition;
+  }
+  return cmesh;
 }
 
 int
 main (int argc, char *argv[])
 {
-  int                 mpiret;
+  int                 mpiret, mpisize;
   int                 first_argc;
   int                 level, level_diff;
   int                 help = 0, no_vtk, do_ghost, do_balance;
   int                 dim, num_files;
   int                 test_tet;
+  int                 stride;
   double              T, delta_t;
   sc_options_t       *opt;
   t8_cmesh_t          cmesh;
@@ -335,6 +355,10 @@ main (int argc, char *argv[])
 
   /* Initialize MPI, sc, p4est and t8code */
   mpiret = sc_MPI_Init (&argc, &argv);
+  SC_CHECK_MPI (mpiret);
+
+  /* get mpisize */
+  mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
@@ -361,7 +385,11 @@ main (int argc, char *argv[])
                          "option.");
   sc_options_add_int (opt, 'n', "nfiles", &num_files, -1,
                       "If the -c option is used, the number of cmesh files must "
-                      "be specified as an argument here.");
+                      "be specified as an argument here. If n=1 then the cmesh "
+                      "will be replicated throughout the test.");
+  sc_options_add_int (opt, 's', "stride", &stride, 16,
+                      "If -c and -n are used, only every s-th MPI rank will "
+                      "read a .cmesh file (file number: rank/s). Default is 16.");
   sc_options_add_switch (opt, 't', "test-tet", &test_tet,
                          "Use a cmesh that tests all tet face-to-face connections."
                          " If this option is used -o is enabled automatically."
@@ -392,7 +420,8 @@ main (int argc, char *argv[])
   /* check for wrong usage of arguments */
   if (first_argc < 0 || first_argc != argc || dim < 2 || dim > 3
       || (cmeshfileprefix == NULL && mshfileprefix == NULL
-          && test_tet == 0)) {
+          && test_tet == 0) || stride <= 0
+      || (num_files - 1) * stride >= mpisize) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
@@ -404,7 +433,7 @@ main (int argc, char *argv[])
     /* Execute this part of the code if all options are correctly set */
     if (mshfileprefix != NULL) {
       cmesh = t8_time_forest_create_cmesh (mshfileprefix, dim, NULL, -1,
-                                           sc_MPI_COMM_WORLD, level);
+                                           sc_MPI_COMM_WORLD, level, stride);
       vtu_prefix = mshfileprefix;
     }
     else if (test_tet) {
@@ -415,7 +444,7 @@ main (int argc, char *argv[])
       T8_ASSERT (cmeshfileprefix != NULL);
       cmesh = t8_time_forest_create_cmesh (NULL, -1, cmeshfileprefix,
                                            num_files, sc_MPI_COMM_WORLD,
-                                           level);
+                                           level, stride);
       vtu_prefix = cmeshfileprefix;
     }
     t8_time_forest_cmesh_mshfile (cmesh, vtu_prefix,
