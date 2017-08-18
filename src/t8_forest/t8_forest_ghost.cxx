@@ -21,6 +21,7 @@
 */
 
 #include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_iterate.h>
@@ -1876,10 +1877,39 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
   t8_forest_ghost_t   ghost;
   t8_ghost_mpi_send_info_t *send_info;
   sc_MPI_Request     *requests;
+  int                 create_tree_array = 0, create_gfirst_desc_array = 0;
+  int                 create_element_array = 0;
 
   T8_ASSERT (t8_forest_is_committed (forest));
   t8_global_productionf ("Into t8_forest_ghost with %i local elements.\n",
                          t8_forest_get_num_element (forest));
+
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of ghost_create */
+    forest->profile->ghost_runtime = -sc_MPI_Wtime ();
+    /* DO NOT DELETE THE FOLLOWING line.
+     * even if you do not want this output. It fixes a bug that occured on JUQUEEN, where the
+     * runtimes were computed to 0.
+     * Only delete the line, if you know what you are doing. */
+    t8_global_productionf ("Start ghost at %f  %f\n", sc_MPI_Wtime (),
+                           forest->profile->ghost_runtime);
+  }
+
+  if (forest->element_offsets == NULL) {
+    /* create element offset array if not done already */
+    create_element_array = 1;
+    t8_forest_partition_create_offsets (forest);
+  }
+  if (forest->tree_offsets == NULL) {
+    /* Create tree offset array if not done already */
+    create_tree_array = 1;
+    t8_forest_partition_create_tree_offsets (forest);
+  }
+  if (forest->global_first_desc == NULL) {
+    /* Create global first desc array if not done already */
+    create_gfirst_desc_array = 1;
+    t8_forest_partition_create_first_desc (forest);
+  }
 
   if (t8_forest_get_num_element (forest) > 0) {
     if (forest->ghost_type == T8_GHOST_NONE) {
@@ -1889,11 +1919,6 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     }
     /* Currently we only support face ghosts */
     T8_ASSERT (forest->ghost_type == T8_GHOST_FACES);
-
-    if (forest->profile != NULL) {
-      /* If profiling is enabled, we measure the runtime of ghost_create */
-      forest->profile->ghost_runtime = -sc_MPI_Wtime ();
-    }
 
     /* Initialize the ghost structure */
     t8_forest_ghost_init (&forest->ghosts, forest->ghost_type);
@@ -1916,13 +1941,33 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     /* End sending the remote elements */
     t8_forest_ghost_send_end (forest, ghost, send_info, requests);
 
-    if (forest->profile != NULL) {
-      /* If profiling is enabled, we measure the runtime of ghost_create */
-      forest->profile->ghost_runtime += sc_MPI_Wtime ();
-      /* We also store the number of ghosts and remotes */
-      forest->profile->ghosts_received = ghost->num_ghosts_elements;
-      forest->profile->ghosts_shipped = ghost->num_remote_elements;
-    }
+  }
+
+  if (create_element_array) {
+    /* Free the offset memory, if created */
+    t8_shmem_array_destroy (&forest->element_offsets);
+  }
+  if (create_tree_array) {
+    /* Free the offset memory, if created */
+    t8_shmem_array_destroy (&forest->tree_offsets);
+  }
+  if (create_gfirst_desc_array) {
+    /* Free the offset memory, if created */
+    t8_shmem_array_destroy (&forest->global_first_desc);
+  }
+
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of ghost_create */
+    forest->profile->ghost_runtime += sc_MPI_Wtime ();
+    /* We also store the number of ghosts and remotes */
+    forest->profile->ghosts_received = ghost->num_ghosts_elements;
+    forest->profile->ghosts_shipped = ghost->num_remote_elements;
+    /* DO NOT DELETE THE FOLLOWING line.
+     * even if you do not want this output. It fixes a bug that occured on JUQUEEN, where the
+     * runtimes were computed to 0.
+     * Only delete the line, if you know what you are doing. */
+    t8_global_productionf ("End ghost at %f  %f\n", sc_MPI_Wtime (),
+                           forest->profile->ghost_runtime);
   }
 
   t8_global_productionf ("Done t8_forest_ghost with %i local elements and %i"

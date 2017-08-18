@@ -144,7 +144,7 @@ t8_tree_struct_t;
  */
 
 /** The number of statistics collected by a profile struct. */
-#define T8_PROFILE_NUM_STATS 12
+#define T8_PROFILE_NUM_STATS 13
 typedef struct t8_profile
 {
   t8_locidx_t         partition_elements_shipped; /**< The number of elements this process has
@@ -158,6 +158,7 @@ typedef struct t8_profile
   t8_locidx_t         ghosts_shipped;     /**< The number of ghost elements this process has sent to other processes. */
   t8_locidx_t         ghosts_received;    /**< The number of ghost elements this process has received from other processes. */
   int                 ghosts_remotes;     /**< The number of processes this process have sent ghost elements to (and received from). */
+  int                 balance_rounds;     /**< The number of iterations during balance. */
   double              adapt_runtime;      /**< The runtime of the last call to \a t8_forest_adapt (not counting adaptation in t8_forest_balance). */
   double              partition_runtime;  /**< The runtime of  the last call to \a t8_cmesh_partition (not countint partition in t8_forest_balance). */
   double              ghost_runtime;      /**< The runtime of the last call to \a t8_forest_ghost_create. */

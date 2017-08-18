@@ -839,6 +839,7 @@ t8_cmesh_load_bigger_nonloading (int mpirank, int mpisize,
 /* Load the files fileprefix_0000.cmesh, ... , fileprefix_N.cmesh
  * (N = num_files - 1)
  * on N processes and repartition the cmesh to all calling processes.
+ * If N = 1, the cmesh is broadcasted and not partitioned.
  */
 t8_cmesh_t
 t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,

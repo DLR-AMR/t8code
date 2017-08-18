@@ -455,56 +455,65 @@ t8_forest_commit (t8_forest_t forest)
         t8_forest_adapt (forest);
       }
     }
-    if (forest->from_method & T8_FOREST_FROM_BALANCE) {
-      /* balance the forest */
-      forest->from_method -= T8_FOREST_FROM_BALANCE;
-      if (forest->from_method > 0) {
-        /* The forest should also be partitioned after balance */
-        t8_forest_t         forest_balance;
-        /* we construct an intermediate, balanced forest */
-        t8_forest_init (&forest_balance);
-        if (forest_from == forest->set_from) {
-          /* forest_balance should not change ownership of forest->set_from */
-          t8_forest_ref (forest->set_from);
-        }
-        t8_forest_set_balance (forest_balance, forest->set_from,
-                               forest->set_balance !=
-                               T8_FOREST_BALANCE_NO_REPART);
-        /* activate profiling, if this forest has profiling */
-        t8_forest_set_profiling (forest_balance, forest->profile != NULL);
-        t8_forest_commit (forest_balance);
-        forest->set_from = forest_balance;
-        if (forest->profile != NULL) {
-          /* If profiling is enable, take the runtime of balance from forest_balance. */
-          forest->profile->balance_runtime =
-            forest_balance->profile->balance_runtime;
-        }
-      }
-      else {
-        /* This forest should only be balanced */
-        if (forest->set_balance == T8_FOREST_BALANCE_NO_REPART) {
-          /* balance without repartition */
-          t8_forest_balance (forest, 0);
-        }
-        else {
-          /* balance with repartition */
-          t8_forest_balance (forest, 1);
-        }
-      }
-    }
     if (forest->from_method & T8_FOREST_FROM_PARTITION) {
       partitioned = 1;
       /* Partition this forest */
       forest->from_method -= T8_FOREST_FROM_PARTITION;
+
+      if (forest->from_method > 0) {
+        /* The forest should also be balanced after partition */
+        t8_forest_t         forest_partition;
+
+        t8_forest_init (&forest_partition);
+        if (forest_from == forest->set_from) {
+          /* forest_partition should not change ownership of forest->set_from */
+          t8_forest_ref (forest->set_from);
+        }
+        t8_forest_set_partition (forest_partition, forest->set_from,
+                                 forest->set_for_coarsening);
+        /* activate profiling, if this forest has profiling */
+        t8_forest_set_profiling (forest_partition, forest->profile != NULL);
+        /* Commit the partitioned forest */
+        t8_forest_commit (forest_partition);
+        forest->set_from = forest_partition;
+        if (forest->profile != NULL) {
+          forest->profile->partition_bytes_sent =
+            forest_partition->profile->partition_bytes_sent;
+          forest->profile->partition_elements_recv =
+            forest_partition->profile->partition_elements_recv;
+          forest->profile->partition_elements_shipped =
+            forest_partition->profile->partition_elements_shipped;
+          forest->profile->partition_procs_sent =
+            forest_partition->profile->partition_procs_sent;
+          forest->profile->partition_runtime =
+            forest_partition->profile->partition_runtime;
+        }
+      }
+      else {
+        /* Partitioning is the last routine, no balance was set */
+        forest->global_num_elements = forest->set_from->global_num_elements;
+        /* Initialize the trees array of the forest */
+        forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
+        /* partition the forest */
+        t8_forest_partition (forest);
+      }
+    }
+    if (forest->from_method & T8_FOREST_FROM_BALANCE) {
+      /* balance the forest */
+      forest->from_method -= T8_FOREST_FROM_BALANCE;
       /* This is the last from method that we execute,
        * nothing should be left todo */
       T8_ASSERT (forest->from_method == 0);
 
-      forest->global_num_elements = forest->set_from->global_num_elements;
-      /* Initialize the trees array of the forest */
-      forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
-      /* partition the forest */
-      t8_forest_partition (forest);
+      /* This forest should only be balanced */
+      if (forest->set_balance == T8_FOREST_BALANCE_NO_REPART) {
+        /* balance without repartition */
+        t8_forest_balance (forest, 0);
+      }
+      else {
+        /* balance with repartition */
+        t8_forest_balance (forest, 1);
+      }
     }
 
     if (forest_from != forest->set_from) {
@@ -533,19 +542,10 @@ t8_forest_commit (t8_forest_t forest)
              (long long) forest->first_local_tree,
              (long long) forest->last_local_tree);
 
-  if (forest->element_offsets == NULL) {
-    /* Create the element offsets if not already done */
-    t8_forest_partition_create_offsets (forest);
-  }
-  if (forest->tree_offsets == NULL) {
-    /* Create the tree offsets if not already done */
-    t8_forest_partition_create_tree_offsets (forest);
-  }
-
-  t8_debugf ("Element offsets:\n");
-  t8_offset_print (forest->element_offsets, forest->mpicomm);
-  t8_debugf ("Tree offsets:\n");
-  t8_offset_print (forest->tree_offsets, forest->mpicomm);
+  /* verify that no (memory intensive) shared memory array is active */
+  T8_ASSERT (forest->element_offsets == NULL);
+  T8_ASSERT (forest->tree_offsets == NULL);
+  T8_ASSERT (forest->global_first_desc == NULL);
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of commit */
@@ -559,16 +559,6 @@ t8_forest_commit (t8_forest_t forest)
   if (forest->cmesh->set_partition && partitioned) {
     t8_forest_partition_cmesh (forest, forest->mpicomm,
                                forest->profile != NULL);
-  }
-
-  /* If not already done before, create the offset arrays */
-  if (forest->tree_offsets == NULL) {
-    /* Construct tree_offsets if not already done */
-    t8_forest_partition_create_tree_offsets (forest);
-  }
-  if (forest->global_first_desc == NULL) {
-    /* Create first descendants, if not already done */
-    t8_forest_partition_create_first_desc (forest);
   }
 
   if (forest->mpisize > 1) {
@@ -1130,6 +1120,8 @@ t8_forest_print_profile (t8_forest_t forest)
                    "forest: Ghost runtime.");
     sc_stats_set1 (&stats[11], profile->balance_runtime,
                    "forest: Balance runtime.");
+    sc_stats_set1 (&stats[12], profile->balance_rounds,
+                   "forest: Balance rounds.");
     /* compute stats */
     sc_stats_compute (sc_MPI_COMM_WORLD, T8_PROFILE_NUM_STATS, stats);
     /* print stats */
