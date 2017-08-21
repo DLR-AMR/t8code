@@ -268,6 +268,8 @@ t8_forest_is_balanced (t8_forest_t forest)
   t8_locidx_t         itree, ielem;
   t8_element_t       *element;
   t8_eclass_scheme_c *ts;
+  void               *data_temp;
+  int                 dummy_int;
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -275,6 +277,10 @@ t8_forest_is_balanced (t8_forest_t forest)
   forest_from = forest->set_from;
 
   forest->set_from = forest;
+
+  /* temporarily save forest t8code_data */
+  data_temp = forest->t8code_data;
+  forest->t8code_data = &dummy_int;
 
   num_trees = t8_forest_get_num_local_trees (forest);
   /* Iterate over all trees */
@@ -290,11 +296,13 @@ t8_forest_is_balanced (t8_forest_t forest)
        * If so, the forest is not balanced locally. */
       if (t8_forest_balance_adapt (forest, forest, itree, ts, 1, &element)) {
         forest->set_from = forest_from;
+        forest->t8code_data = data_temp;
         return 0;
       }
     }
   }
   forest->set_from = forest_from;
+  forest->t8code_data = data_temp;
   return 1;
 }
 
