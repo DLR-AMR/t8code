@@ -176,6 +176,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   double              t;
   int                 partition_cmesh, r;
   const int           refine_rounds = max_level - init_level;
+  int                 time_step;
 
   t8_global_productionf ("Committed cmesh with"
                          " %lli global trees.\n",
@@ -212,13 +213,13 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   /* Set the permanent data for adapt. */
   adapt_data.normal[0] = 1;
   adapt_data.normal[1] = 1;
-  adapt_data.normal[2] = 0;
+  adapt_data.normal[2] = 0.5;
   t8_vec3_normalize (adapt_data.normal);
   adapt_data.base_level = init_level;
   adapt_data.max_level = max_level;
   /* Start the time loop, in each time step the refinement front  moves
    * further through the domain */
-  for (t = 0; t < T; t += delta_t) {
+  for (t = 0, time_step = 0; t < T; t += delta_t, time_step++) {
     /* Adapt the forest */
     for (r = 0; r < refine_rounds; r++) {
       /* TODO: profiling */
@@ -251,8 +252,6 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
 
     /* Set the vtu output name */
     if (!no_vtk) {
-      int                 time_step;
-      time_step = t / delta_t;
       snprintf (forest_vtu, BUFSIZ, "%s_forest_partition_%03d", vtu_prefix,
                 time_step);
       snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_partition_%03d", vtu_prefix,
@@ -332,7 +331,7 @@ main (int argc, char *argv[])
   int                 dim, num_files;
   int                 test_tet;
   int                 stride;
-  double              T, delta_t;
+  double              T, delta_t, cfl;
   sc_options_t       *opt;
   t8_cmesh_t          cmesh;
   const char         *mshfileprefix, *cmeshfileprefix;
@@ -395,7 +394,12 @@ main (int argc, char *argv[])
                          "The simulated time span."
                          "We simulate the time from 0 to T");
   sc_options_add_double (opt, 'D', "delta_t", &delta_t, 0.08,
-                         "The time step in each simulation step.");
+                         "The time step in each simulation step. "
+                         "Deprecated, use -C instead.");
+  /* CFL number. delta_t = CFL * 0.64 / 2^level */
+  sc_options_add_double (opt, 'C', "cfl", &cfl, 0,
+                         "The CFL number. If specified, then delta_t is set to "
+                         "CFL * 0.64 / 2^level. Overwrites any other delta_t setting.");
   sc_options_add_switch (opt, 'g', "ghost", &do_ghost,
                          "Create ghost elements.");
   sc_options_add_switch (opt, 'b', "balance", &do_balance,
@@ -408,7 +412,7 @@ main (int argc, char *argv[])
   if (first_argc < 0 || first_argc != argc || dim < 2 || dim > 3
       || (cmeshfileprefix == NULL && mshfileprefix == NULL
           && test_tet == 0) || stride <= 0
-      || (num_files - 1) * stride >= mpisize) {
+      || (num_files - 1) * stride >= mpisize || cfl < 0) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
@@ -418,6 +422,14 @@ main (int argc, char *argv[])
   }
   else {
     /* Execute this part of the code if all options are correctly set */
+    /* Set correct timestep, if -C was specified with a value greater 0, then
+     * we overwrite the delta_t setting. We choose this to be backwards compatible to
+     * call that use the delta_t option. Eventually, we will remove the delta_t option
+     * completely. */
+    if (cfl > 0) {
+      delta_t = cfl * 0.64 / (1 << level);
+    }
+    t8_global_productionf ("Using delta_t = %f\n", delta_t);
     if (mshfileprefix != NULL) {
       cmesh = t8_time_forest_create_cmesh (mshfileprefix, dim, NULL, -1,
                                            sc_MPI_COMM_WORLD, level, stride);

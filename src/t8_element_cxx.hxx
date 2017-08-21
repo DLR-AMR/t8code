@@ -365,6 +365,7 @@ public:
    * \return              The face number of the face of \a elem that coincides
    *                      with \a face.
    */
+  /* TODO: update documentation with face_scheme */
   virtual int         t8_element_extrude_face (const t8_element_t * face,
                                                const t8_eclass_scheme_c *
                                                face_scheme,
@@ -381,6 +382,7 @@ public:
    * If \a elem is of class T8_ECLASS_VERTEX, then \a boundary must be NULL
    * and will not be modified.
    */
+  /* TODO: update documentation with boundary_scheme */
   virtual void        t8_element_boundary_face (const t8_element_t * elem,
                                                 int face,
                                                 t8_element_t * boundary,
