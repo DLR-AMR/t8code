@@ -184,7 +184,7 @@ t8_dline_successor (const t8_dline_t * l, t8_dline_t * succ, int level)
 
   /* To compute the successor we zero out all bits in places bigger
    * than level and then we add the length of a line of level. */
-  h = (1 << (T8_DLINE_MAXLEVEL - level));
+  h = T8_DLINE_LEN (level) - 1;
   succ->x = l->x & ~h;
   succ->x += T8_DLINE_LEN (level);
   succ->level = level;
