@@ -96,7 +96,7 @@ t8_basic_refine_test (t8_eclass_t eclass)
     //cmesh = t8_cmesh_new_prism_geometry (sc_MPI_COMM_WORLD);
     //     cmesh = t8_cmesh_new_prism_deformed (sc_MPI_COMM_WORLD);
     //    cmesh = t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_COMM_WORLD);
-      cmesh = t8_cmesh_new_prism_cake(sc_MPI_COMM_WORLD, 511);
+      cmesh = t8_cmesh_new_prism_cake(sc_MPI_COMM_WORLD, 6);
       //cmesh = t8_cmesh_new_from_class (T8_ECLASS_PRISM, sc_MPI_COMM_WORLD);
   }
   else {
@@ -154,7 +154,7 @@ t8_basic_balance_test (t8_eclass_t eclass)
     cmesh = t8_cmesh_new_line_zigzag (sc_MPI_COMM_WORLD);
   }
   else {
-    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0);
+    cmesh = t8_cmesh_new_prism_cake (sc_MPI_COMM_WORLD, 6);
   }
 
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);

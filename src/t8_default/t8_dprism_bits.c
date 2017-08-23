@@ -77,8 +77,7 @@ t8_dprism_init_linear_id (t8_dprism_t * p, int level, uint64_t id)
   for (i = 0; i <= level; i++) {
     /*Get the number of the i-th prism and get the related triangle number
      * then multiplicate it by the number of triangles of level size.*/
-    tri_id +=
-      ((id % T8_DPRISM_CHILDREN) % T8_DTRI_CHILDREN) * triangles_of_size_i;
+    tri_id += (id % T8_DTRI_CHILDREN) * triangles_of_size_i;
 
     /*If id % 8 is larger than 3, the prism is in the upper part of the
      * parent prism. => line_id + 2^i*/
