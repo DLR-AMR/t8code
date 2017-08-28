@@ -609,6 +609,7 @@ t8_eclass_t         t8_forest_element_neighbor_eclass (t8_forest_t forest,
  *                  On output, this element's data is filled with the
  *                  data of the face neighbor. If the neighbor does not exist
  *                  the data could be modified arbitrarily.
+ * \param [in] neigh_scheme The eclass scheme of \a neigh.
  * \param [in] face The number of the face along which the neighbor should be
  *                  constructed.
  * \param [out] neigh_face The number of the face viewed from perspective of \a neigh.
@@ -620,7 +621,8 @@ t8_gloidx_t         t8_forest_element_face_neighbor (t8_forest_t forest,
                                                      const t8_element_t *
                                                      elem,
                                                      t8_element_t * neigh,
-                                                     int face,
+                                                     t8_eclass_scheme_c *
+                                                     neigh_scheme, int face,
                                                      int *neigh_face);
 
 /* TODO: implement */
