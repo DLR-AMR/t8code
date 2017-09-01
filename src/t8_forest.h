@@ -315,6 +315,18 @@ void                t8_forest_set_balance (t8_forest_t forest,
 void                t8_forest_set_ghost (t8_forest_t forest, int do_ghost,
                                          t8_ghost_type_t ghost_type);
 
+/** Like \ref t8_forest_set_ghost but with the additional options to change the
+ * ghost algorithm. This is used for debugging and timing the algorithm.
+ * An application should almost always use \ref t8_forest_set_ghost.
+ * \param [in]      ghost_version If 1, the iterative ghost algorithm for balanced forests is used.
+ *                                If 2, the iterativ algorithm for unbalanced forests.
+ *                                If 3, the top-down search algorithm for unbalanced forests.
+ * \see t8_forest_set_ghost
+ */
+void                t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost,
+                                             t8_ghost_type_t ghost_type,
+                                             int ghost_version);
+
 /* TODO: use assertions and document that the forest_set (..., from) and
  *       set_load are mutually exclusive. */
 void                t8_forest_set_load (t8_forest_t forest,

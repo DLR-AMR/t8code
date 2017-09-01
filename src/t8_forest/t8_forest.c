@@ -240,13 +240,15 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from,
 }
 
 void
-t8_forest_set_ghost (t8_forest_t forest, int do_ghost,
-                     t8_ghost_type_t ghost_type)
+t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost,
+                         t8_ghost_type_t ghost_type, int ghost_version)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
   /* We currently only support face ghosts */
   SC_CHECK_ABORT (do_ghost == 0 || ghost_type == T8_GHOST_FACES,
                   "Ghost neighbors other than face-neighbors are not supported.\n");
+  SC_CHECK_ABORT (1 <= ghost_version && ghost_version <= 3,
+                  "Invalid choice for ghost version. Choose 1, 2, or 3.\n");
 
   if (ghost_type == T8_GHOST_NONE) {
     /* none type disables ghost */
@@ -255,7 +257,18 @@ t8_forest_set_ghost (t8_forest_t forest, int do_ghost,
   else {
     forest->do_ghost = (do_ghost != 0); /* True if and only if do_ghost != 0 */
   }
-  forest->ghost_type = ghost_type;
+  if (forest->do_ghost) {
+    forest->ghost_type = ghost_type;
+    forest->ghost_algorithm = ghost_version;
+  }
+}
+
+void
+t8_forest_set_ghost (t8_forest_t forest, int do_ghost,
+                     t8_ghost_type_t ghost_type)
+{
+  /* Use ghost version 3, top-down search and for unbalanced forests. */
+  t8_forest_set_ghost_ext (forest, do_ghost, ghost_type, 3);
 }
 
 void
@@ -564,13 +577,20 @@ t8_forest_commit (t8_forest_t forest)
   if (forest->mpisize > 1) {
     /* Construct a ghost layer, if desired */
     if (forest->do_ghost) {
-#if 0
       /* TODO: ghost type */
-      t8_forest_ghost_create (forest);
-#else
-      /* TODO: experimental */
-      t8_forest_ghost_create_topdown (forest);
-#endif
+      switch (forest->ghost_algorithm) {
+      case 1:
+        t8_forest_ghost_create_balanced_only (forest);
+        break;
+      case 2:
+        t8_forest_ghost_create (forest);
+        break;
+      case 3:
+        t8_forest_ghost_create_topdown (forest);
+        break;
+      default:
+        SC_ABORT ("Invalid choice of ghost algorithm");
+      }
     }
   }
 
