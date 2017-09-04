@@ -663,8 +663,9 @@ t8_forest_element_neighbor_eclass (t8_forest_t forest,
 t8_gloidx_t
 t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
                                  const t8_element_t * elem,
-                                 t8_element_t * neigh, int face,
-                                 int *neigh_face)
+                                 t8_element_t * neigh,
+                                 t8_eclass_scheme_c * neigh_scheme,
+                                 int face, int *neigh_face)
 {
   t8_eclass_scheme_c *ts;
   t8_tree_t           tree;
@@ -674,7 +675,8 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
   tree = t8_forest_get_tree (forest, ltreeid);
   eclass = tree->eclass;
   ts = t8_forest_get_eclass_scheme (forest, eclass);
-  if (ts->t8_element_face_neighbor_inside (elem, neigh, face, neigh_face)) {
+  if (neigh_scheme == ts &&
+      ts->t8_element_face_neighbor_inside (elem, neigh, face, neigh_face)) {
     /* The neighbor was constructed and is inside the current tree. */
     return ltreeid + t8_forest_get_first_local_tree_id (forest);
   }
@@ -785,8 +787,9 @@ t8_gloidx_t
 t8_forest_element_half_face_neighbors (t8_forest_t forest,
                                        t8_locidx_t ltreeid,
                                        const t8_element_t * elem,
-                                       t8_element_t * neighs[], int face,
-                                       int num_neighs)
+                                       t8_element_t * neighs[],
+                                       t8_eclass_scheme_c * neigh_scheme,
+                                       int face, int num_neighs)
 {
   t8_eclass_scheme_c *ts;
   t8_tree_t           tree;
@@ -837,6 +840,7 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
                                                      children_at_face
                                                      [child_it],
                                                      neighs[child_it],
+                                                     neigh_scheme,
                                                      child_face, &neigh_face);
     /* For each of the neighbors, the neighbor tree must be the same. */
     T8_ASSERT (child_it == 0 || neighbor_tree == last_neighbor_tree);
@@ -1518,6 +1522,7 @@ t8_forest_element_owners_at_neigh_face (t8_forest_t forest, t8_locidx_t ltreeid,
   neigh_scheme = t8_forest_get_eclass_scheme (forest, neigh_class);
   neigh_scheme->t8_element_new (1, &face_neighbor);
   neigh_tree = t8_forest_element_face_neighbor (forest, ltreeid, element, face_neighbor,
+                                                neigh_scheme,
                                                 face, &dual_face);
   if (neigh_tree >= 0) {
     /* There is a face neighbor */
@@ -1553,6 +1558,7 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
   neigh_scheme = t8_forest_get_eclass_scheme (forest, neigh_class);
   neigh_scheme->t8_element_new (1, &face_neighbor);
   neigh_tree = t8_forest_element_face_neighbor (forest, ltreeid, element, face_neighbor,
+                                                neigh_scheme,
                                                 face, &dual_face);
   if (neigh_tree >= 0) {
     if (neigh_tree != ltreeid) {

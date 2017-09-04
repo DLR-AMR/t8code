@@ -86,8 +86,9 @@ t8_ghost_neighbor_test (t8_eclass_t eclass, sc_MPI_Comm comm, int hybrid)
     neigh_scheme = t8_forest_get_eclass_scheme (forest, neighbor_class);
     neigh_scheme->t8_element_new (1, &neigh);
 
-    ret = t8_forest_element_face_neighbor (forest, 0, elem, neigh, i,
-                                           &face_neigh);
+    ret =
+      t8_forest_element_face_neighbor (forest, 0, elem, neigh, neigh_scheme,
+                                       i, &face_neigh);
     if (ret != -1) {
       neigh_scheme->t8_element_anchor (neigh, anchor_node);
       t8_debugf

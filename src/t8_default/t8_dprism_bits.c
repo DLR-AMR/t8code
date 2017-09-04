@@ -195,7 +195,10 @@ t8_dprism_is_root_boundary (const t8_dprism_t * p, int face)
     return t8_dtri_is_root_boundary (&p->tri, face);
   }
   else {
-    return t8_dline_is_inside_root (&p->line);
+    /* Check whether the line is at the boundary, either at
+     * its 0 face (face = 3) or
+     * its 1 face (face = 4) */
+    return t8_dline_is_root_boundary (&p->line, face != 3);
   }
 }
 

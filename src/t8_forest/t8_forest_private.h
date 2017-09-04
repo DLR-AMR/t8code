@@ -387,6 +387,7 @@ void                t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t
  * \param [in,out] neighs An array of allocated elements of the correct element class.
  *                        On output the face neighbors of \a elem across \a face of one
  *                        bigger refinement level are stored.
+ * \param [in]    neigh_scheme The eclass scheme of the neighbors.
  * \param [in]    face    The number of the face of \a elem.
  * \param [in]    num_neighs The number of allocated element in \a neighs. Must match the
  *                        number of face neighbors of one bigger refinement level.
@@ -399,7 +400,10 @@ t8_gloidx_t         t8_forest_element_half_face_neighbors (t8_forest_t forest,
                                                            const t8_element_t
                                                            * elem,
                                                            t8_element_t *
-                                                           neighs[], int face,
+                                                           neighs[],
+                                                           t8_eclass_scheme_c
+                                                           * neigh_scheme,
+                                                           int face,
                                                            int num_neighs);
 
 /** Compute whether for a given element there exist leaf or ghost leaf elements in
