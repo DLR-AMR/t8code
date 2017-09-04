@@ -472,7 +472,7 @@ t8_dprism_linear_id (const t8_dprism_t * p, int level)
   uint64_t            prisms_of_size_i = 1;
   /*line_level = Num_of_Line_children ^ (level - 1) */
   uint64_t            line_level;
-  /*prism_shift = Num_of_Prism_children / 2 * 8 ^ (level - 1) */
+  /*prism_shift = Num_of_Prism_children / Num_of_line-Children * 8 ^ (level - 1) */
   uint64_t            prism_shift;
 
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
