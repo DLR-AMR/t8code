@@ -30,7 +30,26 @@
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
 
+/* Refine every 0-th, 3rd, 5-th and 6-th child.
+ * This function comes from the timings2.c example of p4est.
+ */
+int
+t8_refine_p8est (t8_forest_t forest, t8_forest_t forest_from,
+                 t8_locidx_t which_tree, t8_eclass_scheme_c * ts,
+                 int num_elements, t8_element_t * elements[])
+{
+  int                 id;
+  int                 level;
+  T8_ASSERT (num_elements == 1 || num_elements ==
+             ts->t8_element_num_children (elements[0]));
+  level = ts->t8_element_level (elements[0]);
+
+  id = ts->t8_element_child_id (elements[0]);
+  return (id == 0 || id == 3 || id == 5 || id == 6);
+}
+
 /* Refine every third element. */
+/* TODO: rename */
 static int
 t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
                 t8_locidx_t which_tree, t8_eclass_scheme_c * ts,
@@ -50,10 +69,12 @@ static void
 t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, int level,
                                     sc_MPI_Comm comm, int partition_cmesh,
                                     int ghost_version,
-                                    int refine_forest, int no_vtk)
+                                    int refine_forest, int no_vtk,
+                                    int refine_p8)
 {
   t8_forest_t         forest, forest_ghost;
   t8_cmesh_t          cmesh_partition;
+  t8_forest_adapt_t   adapt_fn;
 
   if (!no_vtk) {
     t8_cmesh_vtk_write_file (cmesh, "test_ghost_cmesh0", 1.0);
@@ -81,9 +102,11 @@ t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, int level,
   if (refine_forest) {
     int                 r;
 
+    /* Use p8est adapt if specified, otherwise basic adapt */
+    adapt_fn = refine_p8 ? t8_refine_p8est : t8_basic_adapt;
     /* Refine the forest if desired */
     for (r = 0; r < refine_forest; r++) {
-      t8_forest_set_adapt (forest_ghost, forest, t8_basic_adapt, NULL, 0);
+      t8_forest_set_adapt (forest_ghost, forest, adapt_fn, NULL, 0);
       t8_forest_commit (forest_ghost);
       forest = forest_ghost;
       t8_forest_init (&forest_ghost);
@@ -112,7 +135,7 @@ static void
 t8_test_ghost_brick (int dim, int x, int y, int z,
                      int periodic_x, int periodic_y, int periodic_z,
                      int level, sc_MPI_Comm comm, int ghost_version,
-                     int refine_forest, int no_vtk)
+                     int refine_forest, int no_vtk, int refine_p8)
 {
   t8_cmesh_t          cmesh;
   p4est_connectivity_t *conn4;
@@ -132,7 +155,7 @@ t8_test_ghost_brick (int dim, int x, int y, int z,
   }
 
   t8_test_ghost_refine_and_partition (cmesh, level, comm, 1, ghost_version,
-                                      refine_forest, no_vtk);
+                                      refine_forest, no_vtk, refine_p8);
 }
 
 /* Build a forest on a hypercube mesh
@@ -141,7 +164,8 @@ t8_test_ghost_brick (int dim, int x, int y, int z,
  * partition the forest, create ghost layer and print it. */
 static void
 t8_test_ghost_hypercube (t8_eclass_t eclass, int level, sc_MPI_Comm comm,
-                         int ghost_version, int refine_forest, int no_vtk)
+                         int ghost_version, int refine_forest, int no_vtk,
+                         int refine_p8)
 {
   t8_cmesh_t          cmesh;
   cmesh = t8_cmesh_new_hypercube (eclass, comm, 0, 0);
@@ -149,7 +173,7 @@ t8_test_ghost_hypercube (t8_eclass_t eclass, int level, sc_MPI_Comm comm,
   if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_QUAD ||
       eclass == T8_ECLASS_TET || eclass == T8_ECLASS_HEX) {
     t8_test_ghost_refine_and_partition (cmesh, level, comm, 1, ghost_version,
-                                        refine_forest, no_vtk);
+                                        refine_forest, no_vtk, refine_p8);
   }
   else {
     t8_cmesh_destroy (&cmesh);
@@ -163,13 +187,13 @@ t8_test_ghost_hypercube (t8_eclass_t eclass, int level, sc_MPI_Comm comm,
 static void
 t8_test_ghost_msh_file (const char *fileprefix, int level, int dim,
                         sc_MPI_Comm comm, int ghost_version,
-                        int refine_forest, int no_vtk)
+                        int refine_forest, int no_vtk, int refine_p8)
 {
   t8_cmesh_t          cmesh;
 
   cmesh = t8_cmesh_from_msh_file (fileprefix, 0, comm, dim, 0);
   t8_test_ghost_refine_and_partition (cmesh, level, comm, 1, ghost_version,
-                                      refine_forest, no_vtk);
+                                      refine_forest, no_vtk, refine_p8);
 }
 
 /* Build a forest on the tet_test cmesh that has all face-to-face combinations.
@@ -177,13 +201,13 @@ t8_test_ghost_msh_file (const char *fileprefix, int level, int dim,
  */
 static void
 t8_test_ghost_tet_test (int level, sc_MPI_Comm comm, int ghost_version,
-                        int refine_forest, int no_vtk)
+                        int refine_forest, int no_vtk, int refine_p8)
 {
   t8_cmesh_t          cmesh;
 
   cmesh = t8_cmesh_new_tet_orientation_test (comm);
   t8_test_ghost_refine_and_partition (cmesh, level, comm, 1, ghost_version,
-                                      refine_forest, no_vtk);
+                                      refine_forest, no_vtk, refine_p8);
 }
 
 int
@@ -192,7 +216,7 @@ main (int argc, char **argv)
   int                 mpiret, parsed, eclass_int, level, helpme;
   int                 x_dim, y_dim, z_dim, periodic;
   int                 test_tet;
-  int                 dim, no_vtk, refine_forest, ghost_version;
+  int                 dim, no_vtk, refine_forest, ghost_version, refine_p8;
   sc_options_t       *opt;
   const char         *prefix;
   char                usage[BUFSIZ];
@@ -239,6 +263,11 @@ main (int argc, char **argv)
                       &refine_forest, 0,
                       "Refine <INT> times every third element in the uniform forest before creating the ghost layer."
                       "Default ist 0 (no refinement).");
+  sc_options_add_switch (opt, 'R',
+                         "refine-alternative",
+                         &refine_p8,
+                         "Use a different refinement method, where the elments "
+                         "are refined according to their child-id.");
   sc_options_add_int (opt, 'g',
                       "ghost-version",
                       &ghost_version, 3,
@@ -282,7 +311,8 @@ main (int argc, char **argv)
          "elements\n", t8_eclass_to_string[eclass_int]);
       t8_test_ghost_hypercube ((t8_eclass_t)
                                eclass_int, level, sc_MPI_COMM_WORLD,
-                               ghost_version, refine_forest, no_vtk);
+                               ghost_version, refine_forest, no_vtk,
+                               refine_p8);
     }
     else if (x_dim > 0) {
       int                 x_per, y_per, z_per;
@@ -300,13 +330,13 @@ main (int argc, char **argv)
       t8_test_ghost_brick (dim, x_dim, y_dim,
                            z_dim, x_per,
                            y_per, z_per, level, sc_MPI_COMM_WORLD,
-                           ghost_version, refine_forest, no_vtk);
+                           ghost_version, refine_forest, no_vtk, refine_p8);
     }
     else if (test_tet) {
       t8_global_productionf ("Testing ghost on tet-test cmesh.\n");
       t8_global_productionf ("vtk output disabled.\n");
       t8_test_ghost_tet_test (level, sc_MPI_COMM_WORLD, ghost_version,
-                              refine_forest, no_vtk);
+                              refine_forest, no_vtk, refine_p8);
     }
     else {
       /* A triangle or tetgen file collection must be given. */
@@ -315,7 +345,8 @@ main (int argc, char **argv)
       t8_global_productionf
         ("Testing ghost on cmesh read from %s.msh\n", prefix);
       t8_test_ghost_msh_file (prefix, level, dim, sc_MPI_COMM_WORLD,
-                              ghost_version, refine_forest, no_vtk);
+                              ghost_version, refine_forest, no_vtk,
+                              refine_p8);
     }
   }
 
