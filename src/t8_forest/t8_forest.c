@@ -575,6 +575,7 @@ t8_forest_commit (t8_forest_t forest)
   }
 
   if (forest->mpisize > 1) {
+    sc_MPI_Barrier (forest->mpicomm);
     /* Construct a ghost layer, if desired */
     if (forest->do_ghost) {
       /* TODO: ghost type */
