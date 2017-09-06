@@ -323,13 +323,12 @@ t8_dprism_extrude_face (const t8_element_t * face, t8_element_t * elem,
   t8_dprism_t        *p = (t8_dprism_t *) elem;
   const t8_dtri_t    *t = (const t8_dtri_t *) face;
   const p4est_quadrant_t *q = (const p4est_quadrant_t *) face;
-  /*All boundary prisms have triangletype 0 */
-  p->tri.type = 0;
 
   T8_ASSERT (0 <= root_face && root_face < T8_DPRISM_FACES);
 
   switch (root_face) {
   case 0:
+    p->tri.type = 0;
     p->line.level = q->level;
     p->tri.level = q->level;
     p->tri.x = T8_DTRI_ROOT_LEN - T8_DTRI_LEN (p->tri.level);
@@ -337,6 +336,7 @@ t8_dprism_extrude_face (const t8_element_t * face, t8_element_t * elem,
     p->line.x = ((int64_t) q->y * T8_DLINE_ROOT_LEN) / P4EST_ROOT_LEN;
     break;
   case 1:
+    p->tri.type = 0;
     p->line.level = q->level;
     p->tri.level = q->level;
     p->tri.x = ((int64_t) q->x * T8_DTRI_ROOT_LEN) / P4EST_ROOT_LEN;
@@ -344,6 +344,7 @@ t8_dprism_extrude_face (const t8_element_t * face, t8_element_t * elem,
     p->line.x = ((int64_t) q->y * T8_DLINE_ROOT_LEN) / P4EST_ROOT_LEN;
     break;
   case 2:
+    p->tri.type = 0;
     p->line.level = q->level;
     p->tri.level = q->level;
     p->tri.x = ((int64_t) q->x * T8_DTRI_ROOT_LEN) / P4EST_ROOT_LEN;;
@@ -351,6 +352,7 @@ t8_dprism_extrude_face (const t8_element_t * face, t8_element_t * elem,
     p->line.x = ((int64_t) q->y * T8_DLINE_ROOT_LEN) / P4EST_ROOT_LEN;
     break;
   case 3:
+    p->tri.type = t->type;
     p->line.level = t->level;
     p->tri.level = t->level;
     p->tri.x = t->x;
@@ -358,6 +360,7 @@ t8_dprism_extrude_face (const t8_element_t * face, t8_element_t * elem,
     p->line.x = 0;
     break;
   case 4:
+    p->tri.type = t->type;
     p->line.level = t->level;
     p->tri.level = t->level;
     p->tri.x = t->x;
