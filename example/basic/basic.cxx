@@ -118,7 +118,7 @@ t8_basic_refine_test (t8_eclass_t eclass)
             t8_eclass_to_string[eclass]);
   t8_forest_write_vtk (forest, filename);
 
-#if 0
+#if 1
   t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, NULL, 1);
 #else
   {
