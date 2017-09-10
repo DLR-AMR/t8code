@@ -48,8 +48,9 @@ typedef struct
 typedef struct
 {
   t8_gloidx_t         global_id;        /* global id of the tree */
-  t8_eclass_t         eclass;   /* The trees element class */
+  t8_locidx_t         element_offset;   /* The count of all ghost elements in all smaller ghost trees */
   t8_element_array_t  elements; /* The ghost elements of that tree */
+  t8_eclass_t         eclass;   /* The trees element class */
 } t8_ghost_tree_t;
 
 /* The data structure stored in the global_tree_to_ghost_tree hash table. */
@@ -75,9 +76,9 @@ typedef struct
 {
   t8_gloidx_t         global_id;        /* global id of the tree */
   int                 mpirank;  /* The mpirank of the remote process */
-  t8_eclass_t         eclass;   /* The trees element class */
   t8_element_array_t  elements; /* The remote elements of that tree */
   sc_array_t          element_indices;  /* The (tree) local indices of the ghost elements. */
+  t8_eclass_t         eclass;   /* The trees element class */
 } t8_ghost_remote_tree_t;
 
 typedef struct
@@ -319,6 +320,14 @@ t8_forest_ghost_get_tree (t8_forest_t forest, t8_locidx_t lghost_tree)
     (t8_ghost_tree_t *) t8_sc_array_index_locidx (ghost->ghost_trees,
                                                   lghost_tree);
   return ghost_tree;
+}
+
+t8_locidx_t
+t8_forest_ghost_get_tree_element_offset (t8_forest_t
+                                         forest, t8_locidx_t lghost_tree)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  return t8_forest_ghost_get_tree (forest, lghost_tree)->element_offset;
 }
 
 /* Given an index in the ghost_tree array, return this tree's number of elements */
@@ -1441,11 +1450,16 @@ t8_forest_ghost_receive_message (int recv_rank, sc_MPI_Comm comm,
  *  size_t   |     |t8_gloidx |     |t8_eclass |     | size_t      |     | t8_element_t |
  *
  * pad is paddind, see T8_ADD_PADDING
+ *
+ * current_element_offset is updated in each step to store the element offset
+ * of the next ghost tree to be inserted.
+ * When called with the first message, current_element_offset must be set to 0.
  */
 /* Currently we expect that the messages arrive in order of the sender's rank. */
 static void
 t8_forest_ghost_parse_received_message (t8_forest_t forest,
                                         t8_forest_ghost_t ghost,
+                                        t8_locidx_t * current_element_offset,
                                         int recv_rank, char *recv_buffer,
                                         int recv_bytes)
 {
@@ -1520,6 +1534,9 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest,
       t8_element_array_init_size (&ghost_tree->elements, ts, num_elements);
       /* pointer to where the elements are to be inserted */
       element_insert = t8_element_array_get_data (&ghost_tree->elements);
+      /* Compute the element offset of this new tree by adding the offset
+       * of the previous tree to the element count of the previous tree. */
+      ghost_tree->element_offset = *current_element_offset;
       /* Allocate a new tree_hash for the next search */
       old_elem_count = 0;
       tree_hash =
@@ -1557,6 +1574,7 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest,
 
     bytes_read += num_elements * ts->t8_element_size ();
     bytes_read += T8_ADD_PADDING (bytes_read);
+    *current_element_offset += num_elements;
   }
   T8_ASSERT (bytes_read == (size_t) recv_bytes);
   T8_FREE (recv_buffer);
@@ -1659,6 +1677,7 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
     sc_hash_t          *recv_list_entries_hash;
 #endif
     t8_recv_list_entry_t recv_list_entry, *recv_list_entries;
+    t8_locidx_t         current_element_offset = 0;
 
     buffer = T8_ALLOC (char *, num_remotes);
     recv_bytes = T8_ALLOC (int, num_remotes);
@@ -1766,8 +1785,9 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
            received_flag[parse_it] == 1; parse_it++) {
         recv_rank =
           *(int *) sc_array_index_int (ghost->remote_processes, parse_it);
-        t8_forest_ghost_parse_received_message (forest, ghost, recv_rank,
-                                                buffer[parse_it],
+        t8_forest_ghost_parse_received_message (forest, ghost,
+                                                &current_element_offset,
+                                                recv_rank, buffer[parse_it],
                                                 recv_bytes[parse_it]);
         last_rank_parsed++;
       }
@@ -1811,8 +1831,9 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
          received_flag[parse_it] == 1; parse_it++) {
       recv_rank =
         *(int *) sc_array_index_int (ghost->remote_processes, parse_it);
-      t8_forest_ghost_parse_received_message (forest, ghost, recv_rank,
-                                              buffer[parse_it],
+      t8_forest_ghost_parse_received_message (forest, ghost,
+                                              &current_element_offset,
+                                              recv_rank, buffer[parse_it],
                                               recv_bytes[parse_it]);
       last_rank_parsed++;
     }

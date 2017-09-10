@@ -55,6 +55,17 @@ void                t8_forest_ghost_init (t8_forest_ghost_t * pghost,
 /* returns 0 if ghost structure doesnt exist */
 t8_locidx_t         t8_forest_ghost_num_trees (t8_forest_t forest);
 
+/** Return the element offset of a ghost tree.
+ * \param [in]      forest      The forest with constructed ghost layer.
+ * \param [in]      lghost_tree A local ghost id of a ghost tree.
+ * \return                      The element offset of this ghost tree.
+ * \note forest must be committed before calling this function.
+ */
+t8_locidx_t         t8_forest_ghost_get_tree_element_offset (t8_forest_t
+                                                             forest,
+                                                             t8_locidx_t
+                                                             lghost_tree);
+
 /* TODO: document */
 t8_locidx_t         t8_forest_ghost_tree_num_elements (t8_forest_t forest,
                                                        t8_locidx_t
