@@ -436,6 +436,15 @@ void                t8_forest_leaf_face_neighbors (t8_forest_t forest,
                                                    pneigh_scheme,
                                                    int forest_is_balanced);
 
+/** Iterate over all leafs of a forest and for each face compute the face neighbor
+ * leafs with \ref t8_forest_leaf_face_neighbors and print their local element ids.
+ * This function is meant for debugging only.
+ * \param [in]    forest The forest.
+ * \note Currently \a forest must be balanced.
+ * \note \a forest must be committed before calling this function.
+ */
+void                t8_forest_print_all_leaf_neighbors (t8_forest_t forest);
+
 /** Compute whether for a given element there exist leaf or ghost leaf elements in
  * the local forest that are a descendant of the element but not the element itself
  * \param [in]  forest    The forest.

@@ -1134,6 +1134,68 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
   }
 }
 
+void
+t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
+{
+  t8_locidx_t         ltree, ielem;
+  t8_element_t       *leaf, **neighbor_leafs;
+  int                 iface, num_neighbors, ineigh;
+  t8_eclass_t         eclass;
+  t8_eclass_scheme_c *ts, *neigh_scheme;
+  t8_locidx_t        *element_indices;
+  char                buffer[BUFSIZ];
+  int                 allocate_first_desc = 0, allocate_tree_offset = 0;
+  int                 allocate_el_offset = 0;
+
+  if (forest->tree_offsets == NULL) {
+    allocate_tree_offset = 1;
+    t8_forest_partition_create_tree_offsets (forest);
+  }
+  if (forest->global_first_desc == NULL) {
+    allocate_first_desc = 1;
+    t8_forest_partition_create_first_desc (forest);
+  }
+  if (forest->element_offsets == NULL) {
+    allocate_el_offset = 1;
+    t8_forest_partition_create_offsets (forest);
+  }
+  for (ielem = 0; ielem < t8_forest_get_num_element (forest); ielem++) {
+    /* Get a pointer to the ielem-th element, its eclass, treeid and scheme */
+    leaf = t8_forest_get_element (forest, ielem, &ltree);
+    eclass = t8_forest_get_tree_class (forest, ltree);
+    ts = t8_forest_get_eclass_scheme (forest, eclass);
+    /* Iterate over all faces */
+    for (iface = 0; iface < ts->t8_element_num_faces (leaf); iface++) {
+      t8_forest_leaf_face_neighbors (forest, ltree, leaf, &neighbor_leafs,
+                                     iface, &num_neighbors, &element_indices,
+                                     &neigh_scheme, 1);
+      t8_debugf ("Element %li across face %i has %i leaf neighbors.\n",
+                 (long) ielem, iface, num_neighbors);
+      snprintf (buffer, BUFSIZ, "\tIndices:\t");
+      for (ineigh = 0; ineigh < num_neighbors; ineigh++) {
+        snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer),
+                  "%li ", (long) element_indices[ineigh]);
+      }
+      t8_debugf ("%s\n", buffer);
+      if (num_neighbors > 0) {
+        neigh_scheme->t8_element_destroy (num_neighbors, neighbor_leafs);
+
+        T8_FREE (element_indices);
+        T8_FREE (neighbor_leafs);
+      }
+    }
+  }
+  if (allocate_tree_offset) {
+    t8_shmem_array_destroy (&forest->tree_offsets);
+  }
+  if (allocate_first_desc) {
+    t8_shmem_array_destroy (&forest->global_first_desc);
+  }
+  if (allocate_el_offset) {
+    t8_shmem_array_destroy (&forest->element_offsets);
+  }
+}
+
 /* Check if an element is owned by a specific rank */
 int
 t8_forest_element_check_owner (t8_forest_t forest, t8_element_t * element,
