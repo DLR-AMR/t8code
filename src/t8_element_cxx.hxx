@@ -464,7 +464,8 @@ public:
    *                      id must fulfil 0 <= id < 'number of leafs in the uniform refinement'
    */
   virtual void        t8_element_set_linear_id (t8_element_t * elem,
-                                                int level, uint64_t id) = 0;
+                                                int level,
+                                                t8_linearidx_t id) = 0;
 
   /** Compute the linear id of a given element in a hypothetical uniform
    * refinement of a given level.
@@ -472,9 +473,9 @@ public:
    * \param [in] level    The level of the uniform refinement to consider.
    * \return              The linear id of the element.
    */
-  virtual u_int64_t   t8_element_get_linear_id (const
-                                                t8_element_t *
-                                                elem, int level) = 0;
+  virtual t8_linearidx_t t8_element_get_linear_id (const
+                                                   t8_element_t *
+                                                   elem, int level) = 0;
 
   /** Compute the first descendant of a given element.
    * \param [in] elem     The element whose descendant is computed.

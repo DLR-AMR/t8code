@@ -111,11 +111,12 @@ t8_default_scheme_line_c::t8_element_transform_face (const t8_element_t *
 
 void
 t8_default_scheme_line_c::t8_element_set_linear_id (t8_element_t * elem,
-                                                    int level, uint64_t id)
+                                                    int level,
+                                                    t8_linearidx_t id)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((u_int64_t) 1) << level);
+  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << level);
 
   t8_dline_init_linear_id ((t8_default_line_t *) elem, level, id);
 }
@@ -170,7 +171,7 @@ t8_default_scheme_line_c::t8_element_root_len (const t8_element_t * elem)
   return T8_DLINE_ROOT_LEN;
 }
 
-u_int64_t
+t8_linearidx_t
   t8_default_scheme_line_c::t8_element_get_linear_id (const t8_element_t *
                                                       elem, int level)
 {

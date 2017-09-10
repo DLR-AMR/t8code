@@ -65,7 +65,7 @@ void                t8_forest_split_array (const t8_element_t * element,
  * the index of the leaf in the leafs of the tree. If it is negative, it is
  * - (index + 1) */
 /* Top-down iteration and callback is called on each intermediate level.
- * It it returns false, the current element is not traversed further */
+ * If it returns false, the current element is not traversed further */
 void                t8_forest_iterate_faces (t8_forest_t forest,
                                              t8_locidx_t ltreeid,
                                              const t8_element_t * element,

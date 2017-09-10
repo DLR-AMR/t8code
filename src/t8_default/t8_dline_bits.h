@@ -121,7 +121,7 @@ int                 t8_dline_is_inside_root (const t8_dline_t * p);
  * \param [in] level  level of uniform grid to be considered.
  */
 void                t8_dline_init_linear_id (t8_dline_t * l, int level,
-                                             uint64_t id);
+                                             t8_linearidx_t id);
 
 /** Computes the successor of a line in a uniform grid of level \a level.
  * \param [in] l  line whose id will be computed.
@@ -182,7 +182,7 @@ void                t8_dline_vertex_coords (const t8_dline_t * elem,
  * \param [in] line  Line whose id will be computed.
  * \return Returns the linear position of this line on a grid.
  */
-uint64_t            t8_dline_linear_id (const t8_dline_t * elem, int level);
+t8_linearidx_t      t8_dline_linear_id (const t8_dline_t * elem, int level);
 
 /** Query whether all entries of a line are in valid ranges.
  * \param [in] l  line to be considered.

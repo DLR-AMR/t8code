@@ -916,7 +916,7 @@ t8_cmesh_refine (t8_cmesh_t cmesh)
    *  2         4   (quads and triangles)
    *  3         8   (Hexes, prisms, Tets)
    */
-  factor = ((uint64_t) 1) << (dim * level);
+  factor = ((t8_linearidx_t) 1) << (dim * level);
   cmesh->num_local_trees = cmesh_from->num_local_trees * factor;
   cmesh->num_trees = cmesh_from->num_trees * factor;
   for (iclass = T8_ECLASS_ZERO; iclass < T8_ECLASS_COUNT; iclass++) {

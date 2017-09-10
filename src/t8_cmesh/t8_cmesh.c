@@ -1262,7 +1262,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     t8_gloidx_t         last_global_child;
     t8_gloidx_t         children_per_tree;
     t8_gloidx_t         prev_last_tree = -1;
-    const uint64_t      one = 1;
+    const t8_linearidx_t one = 1;
 
     children_per_tree = one << cmesh->dimension * level;
     global_num_children = cmesh->num_trees * children_per_tree;

@@ -273,7 +273,7 @@ int                 t8_dtri_is_ancestor (const t8_dtri_t * t,
  * \return Returns the linear position of this triangle on a grid of level \a level.
  * \note This id is not the Morton index.
  */
-uint64_t            t8_dtri_linear_id (const t8_dtri_t * t, int level);
+t8_linearidx_t      t8_dtri_linear_id (const t8_dtri_t * t, int level);
 
 /** Initialize a triangle as the triangle with a given global id in a uniform
  *  refinement of a given level. *
@@ -281,7 +281,7 @@ uint64_t            t8_dtri_linear_id (const t8_dtri_t * t, int level);
  * \param [in] id     Index to be considered.
  * \param [in] level  level of uniform grid to be considered.
  */
-void                t8_dtri_init_linear_id (t8_dtri_t * t, uint64_t id,
+void                t8_dtri_init_linear_id (t8_dtri_t * t, t8_linearidx_t id,
                                             int level);
 
 /** Initialize a triangle as the root triangle (type 0 at level 0)

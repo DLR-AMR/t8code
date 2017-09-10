@@ -38,7 +38,7 @@ int
 t8_dline_compare (const t8_dline_t * l1, const t8_dline_t * l2)
 {
   int                 maxlvl;
-  u_int64_t           id1, id2;
+  t8_linearidx_t      id1, id2;
 
   maxlvl = SC_MAX (l1->level, l2->level);
   /* Compute the linear ids of the elements */
@@ -147,10 +147,10 @@ t8_dline_is_familypv (const t8_dline_t * f[])
 }
 
 void
-t8_dline_init_linear_id (t8_dline_t * l, int level, uint64_t id)
+t8_dline_init_linear_id (t8_dline_t * l, int level, t8_linearidx_t id)
 {
   T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
-  T8_ASSERT (0 <= id && id <= ((uint64_t) 1) << level);
+  T8_ASSERT (0 <= id && id <= ((t8_linearidx_t) 1) << level);
 
   /* Set the level */
   l->level = level;
@@ -236,10 +236,10 @@ t8_dline_vertex_coords (const t8_dline_t * elem, int vertex, int coords[])
   }
 }
 
-uint64_t
+t8_linearidx_t
 t8_dline_linear_id (const t8_dline_t * elem, int level)
 {
-  uint64_t            id;
+  t8_linearidx_t      id;
 
   T8_ASSERT (level <= T8_DLINE_MAXLEVEL && level >= 0);
 

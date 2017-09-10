@@ -68,10 +68,9 @@ t8_forest_partition_empty (t8_gloidx_t * offset, int rank)
   return 0;
 }
 
-
 /* Compute the global index of the first local element.
  * This function is collective. */
-static t8_gloidx_t
+static              t8_gloidx_t
 t8_forest_compute_first_local_element_id (t8_forest_t forest)
 {
   t8_gloidx_t         first_element, local_num_elements;
@@ -127,7 +126,7 @@ static void
 t8_forest_partition_test_desc (t8_forest_t forest)
 {
   t8_element_t       *element, *elem_desc;
-  u_int64_t           first_desc_id;
+  t8_linearidx_t      first_desc_id;
   t8_locidx_t         ielem;
   t8_eclass_scheme_c *ts;
   t8_tree_t           tree;
@@ -142,8 +141,8 @@ t8_forest_partition_test_desc (t8_forest_t forest)
   ts = t8_forest_get_eclass_scheme (forest, tree->eclass);
   /* Get the first descendant id of this rank */
   first_desc_id =
-    *(uint64_t *) t8_shmem_array_index (forest->global_first_desc,
-                                        forest->mpirank);
+    *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc,
+                                              forest->mpirank);
   ts->t8_element_new (1, &elem_desc);
   for (ielem = 0; ielem < t8_forest_get_tree_element_count (tree); ielem++) {
     /* Iterate over elems, for each one create the first descendant and check
@@ -163,7 +162,7 @@ void
 t8_forest_partition_create_first_desc (t8_forest_t forest)
 {
   sc_MPI_Comm         comm;
-  uint64_t            local_first_desc;
+  t8_linearidx_t      local_first_desc;
   t8_element_t       *first_element, *first_desc;
   t8_eclass_scheme_c *ts;
 
@@ -177,15 +176,15 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
     /* Set the shmem array type of comm */
     t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
     /* Initialize the offset array as a shmem array
-     * holding mpisize+1 many uint64_t to store the elements linear ids */
-    t8_shmem_array_init (&forest->global_first_desc, sizeof (uint64_t),
+     * holding mpisize+1 many t8_linearidx_t to store the elements linear ids */
+    t8_shmem_array_init (&forest->global_first_desc, sizeof (t8_linearidx_t),
                          forest->mpisize, comm);
   }
   /* Assert whether the array is set up correctly */
   T8_ASSERT (t8_shmem_array_get_elem_count (forest->global_first_desc) ==
              (size_t) forest->mpisize);
   T8_ASSERT (t8_shmem_array_get_elem_size (forest->global_first_desc) ==
-             sizeof (uint64_t));
+             sizeof (t8_linearidx_t));
   T8_ASSERT (t8_shmem_array_get_comm (forest->global_first_desc) == comm);
   if (forest->local_num_elements <= 0) {
     /* This process is empty, we store 0 in the array */
@@ -214,27 +213,27 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
   {
     /* We assert that we use the correct data size in the allgather call. */
     int                 mpiret, size;
-    mpiret = MPI_Type_size (sc_MPI_UNSIGNED_LONG_LONG, &size);
+    mpiret = MPI_Type_size (T8_MPI_LINEARIDX, &size);
     SC_CHECK_MPI (mpiret);
-    T8_ASSERT (size == sizeof (uint64_t));
+    T8_ASSERT (size == sizeof (t8_linearidx_t));
   }
 #endif
 #endif
   t8_shmem_array_allgather (&local_first_desc, 1,
-                            sc_MPI_UNSIGNED_LONG_LONG,
-                            forest->global_first_desc, 1,
-                            sc_MPI_UNSIGNED_LONG_LONG);
+                            T8_MPI_LINEARIDX,
+                            forest->global_first_desc, 1, T8_MPI_LINEARIDX);
 #ifdef T8_ENABLE_DEBUG
   {
     int                 iproc;
     char                buffer[BUFSIZ] = { };
-    uint64_t            desc_id;
+    t8_linearidx_t      desc_id;
 
     for (iproc = 0; iproc < forest->mpisize; iproc++) {
-      desc_id = *(uint64_t *) t8_shmem_array_index (forest->global_first_desc,
-                                                    iproc);
-      snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer),
-                " %llu,", (long long unsigned) desc_id);
+      desc_id =
+        *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc,
+                                                  iproc);
+      snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer), " %llu,",
+                (long long unsigned) desc_id);
     }
     t8_debugf ("[H] first_desc: %s\n", buffer);
   }

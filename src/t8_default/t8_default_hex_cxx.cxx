@@ -484,8 +484,8 @@ t8_default_scheme_hex_c::t8_element_boundary_face (const t8_element_t * elem,
    * We have to scale the coordinates since a root quadrant may have
    * different length than a root hex.
    */
-  b->x = (face >> 1 ? q->x : q->y) * ((uint64_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);      /* true if face >= 2 */
-  b->y = (face >> 2 ? q->y : q->z) * ((uint64_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);      /* true if face >= 4 */
+  b->x = (face >> 1 ? q->x : q->y) * ((t8_linearidx_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);        /* true if face >= 2 */
+  b->y = (face >> 2 ? q->y : q->z) * ((t8_linearidx_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);        /* true if face >= 4 */
   T8_ASSERT (!p8est_quadrant_is_extended (q)
              || p4est_quadrant_is_extended (b));
 }
@@ -558,16 +558,17 @@ t8_default_scheme_hex_c::t8_element_face_neighbor_inside (const t8_element_t *
 
 void
 t8_default_scheme_hex_c::t8_element_set_linear_id (t8_element_t * elem,
-                                                   int level, uint64_t id)
+                                                   int level,
+                                                   t8_linearidx_t id)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= P8EST_QMAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((uint64_t) 1) << P8EST_DIM * level);
+  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << P8EST_DIM * level);
 
   p8est_quadrant_set_morton ((p8est_quadrant_t *) elem, level, id);
 }
 
-uint64_t
+t8_linearidx_t
   t8_default_scheme_hex_c::t8_element_get_linear_id (const t8_element_t *
                                                      elem, int level)
 {
@@ -605,13 +606,13 @@ t8_default_scheme_hex_c::t8_element_successor (const t8_element_t * elem1,
                                                t8_element_t * elem2,
                                                int level)
 {
-  uint64_t            id;
+  t8_linearidx_t      id;
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
   T8_ASSERT (0 <= level && level <= P8EST_QMAXLEVEL);
 
   id = p8est_quadrant_linear_id ((const p8est_quadrant_t *) elem1, level);
-  T8_ASSERT (id + 1 < ((uint64_t) 1) << P8EST_DIM * level);
+  T8_ASSERT (id + 1 < ((t8_linearidx_t) 1) << P8EST_DIM * level);
   p8est_quadrant_set_morton ((p8est_quadrant_t *) elem2, level, id + 1);
 }
 

@@ -449,16 +449,17 @@ t8_default_scheme_tri_c::t8_element_face_neighbor_inside (const t8_element_t *
 
 void
 t8_default_scheme_tri_c::t8_element_set_linear_id (t8_element_t * elem,
-                                                   int level, uint64_t id)
+                                                   int level,
+                                                   t8_linearidx_t id)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((uint64_t) 1) << (2 * level));
+  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << (2 * level));
 
   t8_dtri_init_linear_id ((t8_default_tri_t *) elem, id, level);
 }
 
-uint64_t
+t8_linearidx_t
   t8_default_scheme_tri_c::t8_element_get_linear_id (const t8_element_t *
                                                      elem, int level)
 {

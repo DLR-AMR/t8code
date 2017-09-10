@@ -435,16 +435,17 @@ t8_default_scheme_tet_c::t8_element_face_neighbor_inside (const t8_element_t *
 
 void
 t8_default_scheme_tet_c::t8_element_set_linear_id (t8_element_t * elem,
-                                                   int level, uint64_t id)
+                                                   int level,
+                                                   t8_linearidx_t id)
 {
   T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((uint64_t) 1) << 3 * level);
+  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << 3 * level);
   T8_ASSERT (t8_element_is_valid (elem));
 
   t8_dtet_init_linear_id ((t8_default_tet_t *) elem, id, level);
 }
 
-uint64_t
+t8_linearidx_t
   t8_default_scheme_tet_c::t8_element_get_linear_id (const t8_element_t *
                                                      elem, int level)
 {

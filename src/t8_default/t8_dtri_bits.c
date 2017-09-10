@@ -113,7 +113,7 @@ int
 t8_dtri_compare (const t8_dtri_t * t1, const t8_dtri_t * t2)
 {
   int                 maxlvl;
-  u_int64_t           id1, id2;
+  t8_linearidx_t      id1, id2;
 
   /* Compute the bigger level of the two */
   maxlvl = SC_MAX (t1->level, t2->level);
@@ -1226,7 +1226,7 @@ t8_dtri_is_ancestor (const t8_dtri_t * t, const t8_dtri_t * c)
 }
 
 /* Compute the linear id of the first descendant of a triangle/tet */
-static              uint64_t
+static              t8_linearidx_t
 t8_dtri_linear_id_first_desc (const t8_dtri_t * t, int level)
 {
   /* The id of the first descendant is the id of t in a uniform level
@@ -1235,10 +1235,10 @@ t8_dtri_linear_id_first_desc (const t8_dtri_t * t, int level)
 }
 
 /* Compute the linear id of the last descendant of a triangle/tet */
-static              uint64_t
+static              t8_linearidx_t
 t8_dtri_linear_id_last_desc (const t8_dtri_t * t, int level)
 {
-  uint64_t            id = 0, t_id;
+  t8_linearidx_t      id = 0, t_id;
   int                 exponent;
 
   T8_ASSERT (level >= t->level);
@@ -1250,17 +1250,17 @@ t8_dtri_linear_id_last_desc (const t8_dtri_t * t, int level)
   exponent = level - t->level;
   /* Set the last bits to the local ids of always choosing the last child
    * of t */
-  id = (((uint64_t) 1) << T8_DTRI_DIM * exponent) - 1;
+  id = (((t8_linearidx_t) 1) << T8_DTRI_DIM * exponent) - 1;
   /* Set the first bits of id to the id of t itself */
   id |= t_id << T8_DTRI_DIM * exponent;
   return id;
 }
 
 /* Construct the linear id of a descendant in a corner of t */
-static uint64_t
+static              t8_linearidx_t
 t8_dtri_linear_id_corner_desc (const t8_dtri_t * t, int corner, int level)
 {
-  uint64_t            id = 0, t_id, child_id;
+  t8_linearidx_t      id = 0, t_id, child_id;
   int                 it;
 
   T8_ASSERT (0 <= corner && corner < T8_DTRI_CORNERS);
@@ -1303,10 +1303,10 @@ t8_dtri_linear_id_corner_desc (const t8_dtri_t * t, int corner, int level)
   return id;
 }
 
-uint64_t
+t8_linearidx_t
 t8_dtri_linear_id (const t8_dtri_t * t, int level)
 {
-  uint64_t            id = 0;
+  t8_linearidx_t      id = 0;
   int8_t              type_temp = 0;
   t8_dtri_cube_id_t   cid;
   int                 i;
@@ -1326,7 +1326,8 @@ t8_dtri_linear_id (const t8_dtri_t * t, int level)
   type_temp = compute_type (t, level);
   for (i = level; i > 0; i--) {
     cid = compute_cubeid (t, i);
-    id |= ((uint64_t) t8_dtri_type_cid_to_Iloc[type_temp][cid]) << exponent;
+    id |=
+      ((t8_linearidx_t) t8_dtri_type_cid_to_Iloc[type_temp][cid]) << exponent;
     exponent += T8_DTRI_DIM;    /* multiply with 4 (2d) resp. 8  (3d) */
     type_temp = t8_dtri_cid_type_to_parenttype[cid][type_temp];
   }
@@ -1334,15 +1335,15 @@ t8_dtri_linear_id (const t8_dtri_t * t, int level)
 }
 
 void
-t8_dtri_init_linear_id (t8_dtri_t * t, uint64_t id, int level)
+t8_dtri_init_linear_id (t8_dtri_t * t, t8_linearidx_t id, int level)
 {
   int                 i;
   int                 offset_coords, offset_index;
   const int           children_m1 = T8_DTRI_CHILDREN - 1;
-  uint64_t            local_index;
+  t8_linearidx_t      local_index;
   t8_dtri_cube_id_t   cid;
   t8_dtri_type_t      type;
-  T8_ASSERT (0 <= id && id <= ((uint64_t) 1) << (T8_DTRI_DIM * level));
+  T8_ASSERT (0 <= id && id <= ((t8_linearidx_t) 1) << (T8_DTRI_DIM * level));
 
   t->level = level;
   t->x = 0;
@@ -1448,7 +1449,7 @@ t8_dtri_successor (const t8_dtri_t * t, t8_dtri_t * s, int level)
 void
 t8_dtri_first_descendant (const t8_dtri_t * t, t8_dtri_t * s, int level)
 {
-  uint64_t            id;
+  t8_linearidx_t      id;
 
   T8_ASSERT (level >= t->level);
   /* Compute the linear id of the first descendant */
@@ -1460,7 +1461,7 @@ t8_dtri_first_descendant (const t8_dtri_t * t, t8_dtri_t * s, int level)
 void
 t8_dtri_last_descendant (const t8_dtri_t * t, t8_dtri_t * s, int level)
 {
-  uint64_t            id;
+  t8_linearidx_t      id;
 
   T8_ASSERT (level >= t->level);
   /* Compute the linear id of t's last descendant */
@@ -1473,7 +1474,7 @@ void
 t8_dtri_corner_descendant (const t8_dtri_t * t, t8_dtri_t * s, int corner,
                            int level)
 {
-  uint64_t            id;
+  t8_linearidx_t      id;
   T8_ASSERT (t->level <= level && level <= T8_DTRI_MAXLEVEL);
   T8_ASSERT (0 <= corner && corner < T8_DTRI_CORNERS);
 

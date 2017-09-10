@@ -210,12 +210,12 @@ public:
 
 /** Initialize an element according to a given linear id */
   virtual void        t8_element_set_linear_id (t8_element_t * elem,
-                                                int level, uint64_t id);
+                                                int level, t8_linearidx_t id);
 
 /** Calculate the linear id of an element */
-  virtual u_int64_t   t8_element_get_linear_id (const
-                                                t8_element_t *
-                                                elem, int level);
+  virtual t8_linearidx_t t8_element_get_linear_id (const
+                                                   t8_element_t *
+                                                   elem, int level);
 
 /** Calculate the first descendant of a given element e. That is, the
  *  first element in a uniform refinement of e of the maximal possible level.

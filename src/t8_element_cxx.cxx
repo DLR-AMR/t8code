@@ -250,14 +250,14 @@ t8_element_boundary (t8_eclass_scheme_t * ts,
 
 void
 t8_element_set_linear_id (t8_eclass_scheme_t * ts,
-                          t8_element_t * elem, int level, uint64_t id)
+                          t8_element_t * elem, int level, t8_linearidx_t id)
 {
   T8_ASSERT (ts != NULL && ts->elem_set_linear_id != NULL);
 
   ts->elem_set_linear_id (elem, level, id);
 }
 
-uint64_t
+t8_linearidx_t
 t8_element_get_linear_id (t8_eclass_scheme_t * ts,
                           const t8_element_t * elem, int level)
 {

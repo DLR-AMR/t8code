@@ -842,7 +842,7 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t * element,
   t8_element_t       *first_desc;
   t8_eclass_scheme_c *ts;
   t8_gloidx_t        *first_global_trees;
-  uint64_t            rfirst_desc_id, rnext_desc_id = -1, first_desc_id;
+  t8_linearidx_t      rfirst_desc_id, rnext_desc_id = -1, first_desc_id;
   int                 is_first, is_last, check_next;
   int                 next_nonempty;
 
@@ -888,12 +888,13 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t * element,
       /* Get the id of the trees first descendant and the first descendant
        * of the next nonempty rank */
       rfirst_desc_id =
-        *(uint64_t *) t8_shmem_array_index (forest->global_first_desc, rank);
+        *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc,
+                                                  rank);
       if (check_next) {
         /* Get the id of the trees first descendant on the next nonempty rank */
         rnext_desc_id =
-          *(uint64_t *) t8_shmem_array_index (forest->global_first_desc,
-                                              next_nonempty);
+          *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc,
+                                                    next_nonempty);
       }
       /* The element is not in the tree if and only if
        *  is_first && first_desc_id > id (first_desc)
@@ -924,7 +925,7 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t * element,
  */
 struct find_owner_data_t
 {
-  uint64_t            linear_id;
+  t8_linearidx_t      linear_id;
   t8_forest_t         forest;
   int                 last_owner;
 };
@@ -935,17 +936,17 @@ t8_forest_element_find_owner_compare (const void *find_owner_data,
 {
   const struct find_owner_data_t *data =
     (const struct find_owner_data_t *) find_owner_data;
-  uint64_t            linear_id = data->linear_id;
+  t8_linearidx_t      linear_id = data->linear_id;
   t8_forest_t         forest = data->forest;
   int                 proc = *(int *) process;
-  uint64_t            proc_first_desc_id;
-  uint64_t            next_proc_first_desc_id;
+  t8_linearidx_t      proc_first_desc_id;
+  t8_linearidx_t      next_proc_first_desc_id;
 
   T8_ASSERT (0 <= proc && proc < forest->mpisize);
   /* Get the id of the first element on this process. */
   proc_first_desc_id =
-    *(uint64_t *) t8_shmem_array_index (forest->global_first_desc,
-                                        (size_t) proc);
+    *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc,
+                                              (size_t) proc);
 
   if (proc == data->last_owner) {
     /* If we are the last process owning the element's tree, then
@@ -960,8 +961,8 @@ t8_forest_element_find_owner_compare (const void *find_owner_data,
     }
     /* Get the linear id of the first element on the next process. */
     next_proc_first_desc_id =
-      *(uint64_t *) t8_shmem_array_index (forest->global_first_desc,
-                                          (size_t) proc + 1);
+      *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc,
+                                                (size_t) proc + 1);
     if (next_proc_first_desc_id <= linear_id) {
       /* We have to look further right */
       return 1;
@@ -982,8 +983,8 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
   t8_eclass_scheme_c *ts;
   t8_gloidx_t        *first_trees, *element_offsets;
   t8_gloidx_t         current_first_tree;
-  uint64_t            current_id, element_desc_id;
-  uint64_t           *first_descs;
+  t8_linearidx_t      current_id, element_desc_id;
+  t8_linearidx_t     *first_descs;
   int                 found = 0;
   int                 empty_dir = 1, last_guess, reached_bound;
   int                 next_nonempty;
@@ -1019,7 +1020,7 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
   /* Get pointers to the arrays of first local trees and first local descendants */
   first_trees = t8_shmem_array_get_gloidx_array (forest->tree_offsets);
   first_descs =
-    (uint64_t *) t8_shmem_array_get_array (forest->global_first_desc);
+    (t8_linearidx_t *) t8_shmem_array_get_array (forest->global_first_desc);
   /* Compute the linear id of the element's first descendant */
   element_desc_id =
     ts->t8_element_get_linear_id (first_desc,
@@ -1159,7 +1160,7 @@ t8_forest_element_find_owner_old (t8_forest_t forest,
 {
   sc_array_t         *owners_of_tree, owners_of_tree_wo_first;
   int                 proc, proc_next;
-  uint64_t            element_desc_lin_id;
+  t8_linearidx_t      element_desc_lin_id;
   t8_element_t       *element_first_desc;
   t8_eclass_scheme_c *ts;
   ssize_t             proc_index;
@@ -1225,7 +1226,7 @@ t8_forest_element_find_owner_old (t8_forest_t forest,
      * of the tree. If it is bigger than the descendant we look for, then
      * proc is the owning process of element. */
     proc_next = *(int *) sc_array_index (owners_of_tree, 1);
-    if (*(uint64_t *)
+    if (*(t8_linearidx_t *)
         t8_shmem_array_index (forest->global_first_desc, (size_t) proc_next)
         > element_desc_lin_id) {
       ts->t8_element_destroy (1, &element_first_desc);
@@ -1561,10 +1562,10 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
  * If no such i exists, return -1.
  */
 static int
-t8_forest_bin_search_lower (t8_element_array_t * elements, uint64_t element_id, int maxlevel)
+t8_forest_bin_search_lower (t8_element_array_t * elements, t8_linearidx_t element_id, int maxlevel)
 {
   t8_element_t  *query;
-  uint64_t       query_id;
+  t8_linearidx_t       query_id;
   int            low, high, guess;
   t8_eclass_scheme_c * ts;
 
@@ -1611,7 +1612,7 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid,
   t8_element_array_t *elements;
   t8_element_t  *last_desc, *elem_found;
   t8_locidx_t   ghost_treeid;
-  uint64_t      last_desc_id, elem_id;
+  t8_linearidx_t      last_desc_id, elem_id;
   int           index;
 
   T8_ASSERT (t8_forest_is_committed (forest));
