@@ -593,6 +593,55 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
   }
 }
 
+/* Search for a linear element id (at forest->maxlevel) in a sorted array of
+ * elements. If the element does not exist, return the largest index i
+ * such that the element at position i has a smaller id than the given one.
+ * If no such i exists, return -1.
+ */
+/* TODO: should return t8_locidx_t */
+static int
+t8_forest_bin_search_lower (t8_element_array_t * elements,
+                            t8_linearidx_t element_id, int maxlevel)
+{
+  t8_element_t       *query;
+  t8_linearidx_t      query_id;
+  int                 low, high, guess;
+  t8_eclass_scheme_c *ts;
+
+  ts = t8_element_array_get_scheme (elements);
+  /* At first, we check whether any element has smaller id than the
+   * given one. */
+  query = t8_element_array_index_int (elements, 0);
+  query_id = ts->t8_element_get_linear_id (query, maxlevel);
+  if (query_id > element_id) {
+    /* No element has id smaller than the given one */
+    return -1;
+  }
+
+  /* We now perform the binary search */
+  low = 0;
+  high = t8_element_array_get_count (elements) - 1;
+  while (low < high) {
+    guess = (low + high + 1) / 2;
+    query = t8_element_array_index_int (elements, guess);
+    query_id = ts->t8_element_get_linear_id (query, maxlevel);
+    if (query_id == element_id) {
+      /* we are done */
+      return guess;
+    }
+    else if (query_id > element_id) {
+      /* look further left */
+      high = guess - 1;
+    }
+    else {
+      /* look further right, but keep guess in the search range */
+      low = guess;
+    }
+  }
+  T8_ASSERT (low == high);
+  return low;
+}
+
 t8_eclass_t
 t8_forest_element_neighbor_eclass (t8_forest_t forest,
                                    t8_locidx_t ltreeid,
@@ -1554,53 +1603,6 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
     *upper = 0;
   }
   neigh_scheme->t8_element_destroy (1, &face_neighbor);
-}
-
-/* Search for a linear element id (at forest->maxlevel) in a sorted array of
- * elements. If the element does not exist, return the largest index i
- * such that the element at position i has a smaller id than the given one.
- * If no such i exists, return -1.
- */
-static int
-t8_forest_bin_search_lower (t8_element_array_t * elements, t8_linearidx_t element_id, int maxlevel)
-{
-  t8_element_t  *query;
-  t8_linearidx_t       query_id;
-  int            low, high, guess;
-  t8_eclass_scheme_c * ts;
-
-  ts = t8_element_array_get_scheme (elements);
-  /* At first, we check whether any element has smaller id than the
-   * given one. */
-  query = t8_element_array_index_int (elements, 0);
-  query_id = ts->t8_element_get_linear_id (query, maxlevel);
-  if (query_id > element_id) {
-    /* No element has id smaller than the given one */
-    return -1;
-  }
-
-  /* We now perform the binary search */
-  low = 0;
-  high = t8_element_array_get_count (elements) - 1;
-  while (low < high) {
-    guess = (low + high + 1) / 2;
-    query = t8_element_array_index_int (elements, guess);
-    query_id = ts->t8_element_get_linear_id (query, maxlevel);
-    if (query_id == element_id) {
-      /* we are done */
-      return guess;
-    }
-    else if (query_id > element_id) {
-      /* look further left */
-      high = guess - 1;
-    }
-    else {
-      /* look further right, but keep guess in the search range */
-      low = guess;
-    }
-  }
-  T8_ASSERT (low == high);
-  return low;
 }
 
 int
