@@ -941,9 +941,8 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t * element,
                                                   rank);
       if (check_next) {
         /* Get the id of the trees first descendant on the next nonempty rank */
-        rnext_desc_id =
-          *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc,
-                                                    next_nonempty);
+        rnext_desc_id = *(t8_linearidx_t *)
+          t8_shmem_array_index (forest->global_first_desc, next_nonempty);
       }
       /* The element is not in the tree if and only if
        *  is_first && first_desc_id > id (first_desc)
@@ -1185,8 +1184,8 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
   if (!element_is_desc) {
     ts->t8_element_destroy (1, &first_desc);
   }
-  T8_ASSERT (t8_forest_element_check_owner (forest, element, gtreeid, eclass,
-                                            guess, element_is_desc));
+  T8_ASSERT (t8_forest_element_check_owner
+             (forest, element, gtreeid, eclass, guess, element_is_desc));
   return guess;
 }
 
@@ -1203,7 +1202,8 @@ t8_forest_element_find_owner (t8_forest_t forest, t8_gloidx_t gtreeid,
  * searches for the owners of the coarse tree first */
 int
 t8_forest_element_find_owner_old (t8_forest_t forest,
-                                  t8_gloidx_t gtreeid, t8_element_t * element,
+                                  t8_gloidx_t gtreeid,
+                                  t8_element_t * element,
                                   t8_eclass_t eclass,
                                   sc_array_t * all_owners_of_tree)
 {
