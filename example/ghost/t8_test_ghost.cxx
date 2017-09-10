@@ -39,10 +39,8 @@ t8_refine_p8est (t8_forest_t forest, t8_forest_t forest_from,
                  int num_elements, t8_element_t * elements[])
 {
   int                 id;
-  int                 level;
   T8_ASSERT (num_elements == 1 || num_elements ==
              ts->t8_element_num_children (elements[0]));
-  level = ts->t8_element_level (elements[0]);
 
   id = ts->t8_element_child_id (elements[0]);
   return (id == 0 || id == 3 || id == 5 || id == 6);

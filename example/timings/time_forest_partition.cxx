@@ -354,8 +354,6 @@ main (int argc, char *argv[])
   /* Setup for command line options */
   opt = sc_options_new (argv[0]);
 
-  sc_options_add_int (opt, 'd', "dim", &dim, 2,
-                      "The dimension of the coarse mesh. 2 or 3.");
   sc_options_add_switch (opt, 'h', "help", &help,
                          "Display a short help message.");
   sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk,
@@ -364,6 +362,8 @@ main (int argc, char *argv[])
                          "If specified, the cmesh is constructed from a .msh file with "
                          "the given prefix. The files must end in .msh and be "
                          "created with gmsh.");
+  sc_options_add_int (opt, 'd', "dim", &dim, 2,
+                      "Together with -f: The dimension of the coarse mesh. 2 or 3.");
   sc_options_add_string (opt, 'c', "cmeshfile", &cmeshfileprefix, NULL,
                          "If specified, the cmesh is constructed from a collection "
                          "of cmesh files. Created with t8_cmesh_save."
