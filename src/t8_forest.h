@@ -558,6 +558,17 @@ t8_element_t       *t8_forest_get_element_in_tree (t8_forest_t forest,
 t8_locidx_t         t8_forest_get_tree_num_elements (t8_forest_t forest,
                                                      t8_locidx_t ltreeid);
 
+/** Return the element offset of a local tree, that is the number of elements
+ * in all trees with smaller local treeid.
+ * \param [in]      forest      The forest.
+ * \param [in]      ltreeid     A local id of a tree.
+ * \return                      The number of leaf elements on all local tree with
+ *                              id < \a ltreeid.
+ * \note \a forest must be committed before calling this function.
+ */
+t8_locidx_t         t8_forest_get_tree_element_offset (t8_forest_t forest,
+                                                       t8_locidx_t ltreeid);
+
 /** Return the number of elements of a tree.
  * \param [in]      tree       A tree in a forest.
  * \return                     The number of elements of that tree.
