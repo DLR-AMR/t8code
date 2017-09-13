@@ -23,6 +23,7 @@
 #include <sc_options.h>
 #include <t8_default_cxx.hxx>
 #include <t8_forest.h>
+#include <t8_forest/t8_forest_ghost.h>
 #include <example/common/t8_example_common.h>
 
 typedef struct
@@ -180,6 +181,30 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
 }
 
 void
+t8_advect_print_phi (t8_advect_problem_t * problem)
+{
+  t8_locidx_t         ielement;
+  t8_locidx_t         num_local_els;
+  t8_advect_element_data_t *elem_data;
+  char                buffer[BUFSIZ] = "";
+
+  num_local_els = t8_forest_get_num_element (problem->forest);
+  for (ielement = 0;
+       ielement < (t8_locidx_t) problem->element_data.elem_count;
+       ielement++) {
+    elem_data = (t8_advect_element_data_t *)
+      t8_sc_array_index_locidx (&problem->element_data, ielement);
+    snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer),
+              "%.2f |%s ", elem_data->phi,
+              ielement == num_local_els - 1 ? "|" : "");
+
+  }
+  t8_debugf ("\t%s\n", buffer);
+  /* reset buffer */
+  buffer[0] = '\0';
+}
+
+void
 t8_advect_problem_destroy (t8_advect_problem_t ** pproblem)
 {
   t8_advect_problem_t *problem;
@@ -206,6 +231,8 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
   problem =
     t8_advect_problem_init (u, phi_0, level, maxlevel, T, delta_t, comm);
   t8_advect_problem_init_elements (problem);
+  t8_forest_ghost_exchange_data (problem->forest, &problem->element_data);
+  t8_advect_print_phi (problem);
   t8_advect_problem_destroy (&problem);
 }
 
