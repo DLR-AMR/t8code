@@ -28,9 +28,16 @@
 T8_EXTERN_C_BEGIN ();
 
 double
-constant_one (double x, double t)
+constant_one (double x[3], double t)
 {
   return 1;
+}
+
+/* This function is =1 if the 0.25 <= x <= 0.75 and 0 else */
+double
+step_function (double x[3], double t)
+{
+  return 0.25 <= x[0] && x[0] <= 0.75;
 }
 
 T8_EXTERN_C_END ();
