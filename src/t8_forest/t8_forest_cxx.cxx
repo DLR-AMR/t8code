@@ -957,7 +957,8 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
       /* Compute neighbor element and global treeid of the neighbor */
       gneigh_treeid =
         t8_forest_element_face_neighbor (forest, ltreeid, leaf,
-                                         neighbor_leafs[0], face, &dual_face);
+                                         neighbor_leafs[0], neigh_scheme,
+                                         face, &dual_face);
     }
     else {
       /* Allocate neighbor element */
@@ -968,8 +969,8 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
       /* Compute neighbor elements and global treeid of the neighbor */
       gneigh_treeid =
         t8_forest_element_half_face_neighbors (forest, ltreeid, leaf,
-                                               neighbor_leafs, face,
-                                               num_children_at_face);
+                                               neighbor_leafs, neigh_scheme,
+                                               face, num_children_at_face);
     }
     if (gneigh_treeid < 0) {
       /* There exists no face neighbor across this face, we return with this info */
