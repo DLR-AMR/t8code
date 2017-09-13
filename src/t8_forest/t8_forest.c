@@ -585,8 +585,10 @@ t8_forest_commit (t8_forest_t forest)
                                "the ghost layer can only be created for "
                                "balanced forests.\n"
                                "If the forest is not balanced, the created "
-                               "ghost layer is invalid.\n");
-        T8_ASSERT (forest->ghost_algorithm == 1);
+                               "ghost layer is invalid.\n"
+                               "The ghost algorithm was set to balanced_only.\n");
+        forest->ghost_algorithm = 1;
+        T8_ASSERT (t8_forest_is_balanced (forest));
       }
       /* TODO: ghost type */
       switch (forest->ghost_algorithm) {
