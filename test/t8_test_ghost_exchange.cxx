@@ -226,9 +226,9 @@ t8_test_ghost_exchange ()
         /* Adapt the forest and exchange data again */
         maxlevel = level + 2;
         if (eclass == T8_ECLASS_PRISM) {
-            /* Prism elements do not support unbalanced ghost yet.
-              We thus can only refine one level. */
-            maxlevel = level + 1;
+          /* Prism elements do not support unbalanced ghost yet.
+             We thus can only refine one level. */
+          maxlevel = level + 1;
         }
         forest_adapt = t8_forest_new_adapt (forest, t8_test_exchange_adapt,
                                             NULL, 1, 1, &maxlevel);
