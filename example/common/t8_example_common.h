@@ -30,6 +30,7 @@
 #define T8_EXAMPLE_COMMON_H
 
 #include <t8.h>
+#include <t8_forest.h>
 
 /** A levelset function in 3 space dimensions. */
 typedef double      (*t8_example_level_set_fn) (double, double, double,
@@ -44,6 +45,14 @@ typedef struct
   int                 min_level; /**< The minimal refinement level. Elements with this level will not be coarsened. */
   int                 max_level; /**< The maximum refinement level. Elements with this level will not be refined. */
 } t8_example_level_set_struct_t;
+
+/** Function pointer for real valued functions from d+1 space dimensions
+ * functions f: R^d x R -> R */
+typedef double      (*t8_scalar_function_1d_fn) (double x, double t);
+typedef double      (*t8_scalar_function_2d_fn) (double x, double y,
+                                                 double t);
+typedef double      (*t8_scalar_function_3d_fn) (double x, double y, double z,
+                                                 double t);
 
 T8_EXTERN_C_BEGIN ();
 
@@ -87,6 +96,9 @@ void                t8_common_midpoint (t8_forest_t forest,
                                         t8_eclass_scheme_c * ts,
                                         t8_element_t * element,
                                         double elem_midpoint_f[3]);
+
+/** Real valued functions defined in t8_example_common_functions.h */
+double              constant_one (double x, double t);
 
 T8_EXTERN_C_END ();
 
