@@ -92,6 +92,26 @@ void                t8_dline_nearest_common_ancestor (const t8_dline_t * t1,
 
 /** Compute the position of the ancestor of this child at level \a level within
  * its siblings.
+ * \param [in] l  line to be considered.
+ * \param [in] level level to be considered.
+ * \return Returns its child id 0 or 1.
+ */
+int                 t8_dline_ancestor_id (const t8_dline_t * l, int level);
+
+/** Given a face of a line return the face number
+ * of the parent of the line that matches the line's face. Or return -1 if
+ * no face of the parent matches the face.
+
+ * \param [in]  l       The line.
+ * \param [in]  face    The number of the face.
+ * \return              If \a face of \a l is also a face of \a l's parent,
+ *                      the face number of this face. Otherwise -1.
+ */
+int                 t8_dline_face_parent_face (const t8_dline_t * l,
+                                               int face);
+
+/** Compute the position of the ancestor of this child at level \a level within
+ * its siblings.
  * \param [in] t  line to be considered.
  * \return Returns its child id in 0,1
  */

@@ -119,11 +119,7 @@ public:
 
   /** Compute the ancestor id of an element */
   virtual int         t8_element_ancestor_id (const t8_element_t * elem,
-                                              int level)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+                                              int level);
 
   /** Return nonzero if collection of elements is a family */
   virtual int         t8_element_is_family (t8_element_t ** fam);
@@ -204,19 +200,13 @@ public:
   virtual void        t8_element_first_descendant_face (const t8_element_t *
                                                         elem, int face,
                                                         t8_element_t *
-                                                        first_desc)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                        first_desc);
 
   /** Construct the last descendant of an element that touches a given face. */
   virtual void        t8_element_last_descendant_face (const t8_element_t *
                                                        elem, int face,
                                                        t8_element_t *
-                                                       last_desc)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                       last_desc);
 
 /** Construct all codimension-one boundary elements of a given element. */
   virtual void        t8_element_boundary (const t8_element_t * elem,

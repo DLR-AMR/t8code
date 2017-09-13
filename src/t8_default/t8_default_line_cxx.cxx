@@ -113,7 +113,7 @@ t8_default_scheme_line_c::t8_element_face_parent_face (const t8_element_t *
   /* The number of faces does not change from parent to child */
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
-  return face;
+  return t8_dline_face_parent_face ((const t8_dline_t *) elem, face);
 }
 
 int
@@ -142,6 +142,45 @@ t8_default_scheme_line_c::t8_element_transform_face (const t8_element_t *
    * of the face. */
   t8_dline_transform_face ((const t8_dline_t *) elem1, (t8_dline_t *) elem2,
                            orientation);
+}
+
+/** Construct the first descendant of an element that touches a given face.   */
+void
+t8_default_scheme_line_c::t8_element_first_descendant_face (const t8_element_t
+                                                            * elem, int face,
+                                                            t8_element_t *
+                                                            first_desc)
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_element_is_valid (first_desc));
+  T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
+
+  /* The first descandant at the face is the first desc of elem if face = 0.
+   * If face = 1 it is the last desc of elem. */
+  if (face == 0) {
+    t8_dline_first_descendant ((const t8_dline_t *) elem,
+                               (t8_dline_t *) first_desc, T8_DLINE_MAXLEVEL);
+  }
+  else {
+    T8_ASSERT (face == 1);
+    t8_dline_last_descendant ((const t8_dline_t *) elem,
+                              (t8_dline_t *) first_desc, T8_DLINE_MAXLEVEL);
+
+  }
+}
+
+void
+t8_default_scheme_line_c::t8_element_last_descendant_face (const t8_element_t
+                                                           * elem, int face,
+                                                           t8_element_t *
+                                                           last_desc)
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_element_is_valid (last_desc));
+  T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
+
+  /* The last descendant is the same as the first descendant. */
+  t8_element_first_descendant_face (elem, face, last_desc);
 }
 
 int
@@ -287,6 +326,14 @@ t8_default_scheme_line_c::t8_element_children (const t8_element_t * elem,
   T8_ASSERT (length == T8_DLINE_CHILDREN);
 
   t8_dline_childrenpv ((const t8_dline_t *) elem, (t8_dline_t **) c);
+}
+
+int
+t8_default_scheme_line_c::t8_element_ancestor_id (const t8_element_t * elem,
+                                                  int level)
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  return t8_dline_ancestor_id ((const t8_dline_t *) elem, level);
 }
 
 int

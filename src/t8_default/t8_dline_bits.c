@@ -93,13 +93,14 @@ t8_dline_face_neighbour (const t8_dline_t * l, t8_dline_t * neigh,
                          int face, int *dual_face)
 {
   T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
+
+  neigh->level = l->level;
   switch (face) {
   case 0:
-    neigh->level = l->level;
     neigh->x = l->x - T8_DLINE_LEN (l->level);
     break;
   case 1:
-    t8_dline_successor (l, neigh, l->level);
+    neigh->x = l->x + T8_DLINE_LEN (l->level);
     break;
   }
   if (dual_face != NULL) {
@@ -125,6 +126,35 @@ t8_dline_nearest_common_ancestor (const t8_dline_t * t1,
   r->x = t1->x & ~((1 << level) - 1);
   r->level = SC_MIN (T8_DLINE_MAXLEVEL - level,
                      SC_MIN (t1->level, t2->level));
+}
+
+int
+t8_dline_ancestor_id (const t8_dline_t * l, int level)
+{
+  t8_dline_coord_t    h;
+
+  T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
+  h = T8_DLINE_LEN (level);
+
+  if (level == 0) {
+    /* The root line as id 0 */
+    return 0;
+  }
+
+  /* If the h bit is set in l's x coordinate, then acestor id is 1
+   * else 0. */
+  return (l->x & h) != 0;
+}
+
+int
+t8_dline_face_parent_face (const t8_dline_t * l, int face)
+{
+  T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
+
+  /* If the child id is 0 and face is 0, then the parent's face is 0.
+   * If the child id is 1 and face is 1, then the parent's face is 1.
+   * In the other cases, this is an inner face. */
+  return t8_dline_child_id (l) == face ? face : -1;
 }
 
 int
