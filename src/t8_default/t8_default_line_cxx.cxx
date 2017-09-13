@@ -85,12 +85,45 @@ t8_default_scheme_line_c::t8_element_child (const t8_element_t * elem,
   t8_dline_child (l, childid, c);
 }
 
+void
+t8_default_scheme_line_c::t8_element_nca (const t8_element_t * elem1,
+                                          const t8_element_t * elem2,
+                                          t8_element_t * nca)
+{
+  T8_ASSERT (t8_element_is_valid (elem1));
+  T8_ASSERT (t8_element_is_valid (elem2));
+  T8_ASSERT (t8_element_is_valid (nca));
+  t8_dline_nearest_common_ancestor ((const t8_dline_t *) elem1,
+                                    (const t8_dline_t *) elem2,
+                                    (t8_dline_t *) nca);
+}
+
 t8_eclass_t
   t8_default_scheme_line_c::t8_element_face_class (const t8_element_t * elem,
                                                    int face)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   return T8_ECLASS_VERTEX;
+}
+
+int
+t8_default_scheme_line_c::t8_element_face_parent_face (const t8_element_t *
+                                                       elem, int face)
+{
+  /* The number of faces does not change from parent to child */
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
+  return face;
+}
+
+int
+t8_default_scheme_line_c::t8_element_tree_face (const t8_element_t * elem,
+                                                int face)
+{
+  /* The number of faces does not change from tree to element */
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
+  return face;
 }
 
 void
@@ -109,6 +142,32 @@ t8_default_scheme_line_c::t8_element_transform_face (const t8_element_t *
    * of the face. */
   t8_dline_transform_face ((const t8_dline_t *) elem1, (t8_dline_t *) elem2,
                            orientation);
+}
+
+int
+t8_default_scheme_line_c::t8_element_is_root_boundary (const t8_element_t *
+                                                       elem, int face)
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
+
+  return t8_dline_is_root_boundary ((const t8_dline_t *) elem, face);
+}
+
+int
+t8_default_scheme_line_c::t8_element_face_neighbor_inside (const t8_element_t
+                                                           * elem,
+                                                           t8_element_t *
+                                                           neigh, int face,
+                                                           int *neigh_face)
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_element_is_valid (neigh));
+  T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
+
+  t8_dline_face_neighbour ((const t8_dline_t *) elem, (t8_dline_t *) neigh,
+                           face, neigh_face);
+  return t8_dline_is_inside_root ((t8_dline_t *) neigh);
 }
 
 void
@@ -183,10 +242,34 @@ u_int64_t
 }
 
 int
+t8_default_scheme_line_c::t8_element_num_faces (const t8_element_t * elem)
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  return T8_DLINE_FACES;
+}
+
+int
+t8_default_scheme_line_c::t8_element_max_num_faces (const t8_element_t * elem)
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  return T8_DLINE_FACES;
+}
+
+int
 t8_default_scheme_line_c::t8_element_num_children (const t8_element_t * elem)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   return T8_DLINE_CHILDREN;
+}
+
+int
+t8_default_scheme_line_c::t8_element_num_face_children (const t8_element_t *
+                                                        elem, int face)
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
+
+  return T8_DLINE_FACES;
 }
 
 int

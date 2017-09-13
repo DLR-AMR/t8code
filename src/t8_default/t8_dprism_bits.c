@@ -247,12 +247,12 @@ t8_dprism_face_neighbour (const t8_dprism_t * p, int face,
   }
   else if (face == 3) {
     t8_dtri_copy (&p->tri, &neigh->tri);
-    t8_dline_face_neighbour (&p->line, 0, &neigh->line);
+    t8_dline_face_neighbour (&p->line, &neigh->line, 0, NULL);
     return 4;
   }
   else {
     t8_dtri_copy (&p->tri, &neigh->tri);
-    t8_dline_face_neighbour (&p->line, 1, &neigh->line);
+    t8_dline_face_neighbour (&p->line, &neigh->line, 1, NULL);
     return 3;
   }
 }

@@ -70,12 +70,25 @@ void                t8_dline_child (const t8_dline_t * l, int childid,
 
 /** Compute the face neighbor of a line.
  * \param [in]     l      Input line.
+ * \param [in,out] neigh  Existing line whose data will be filled.
  * \param [in]     face   The face across which to generate the neighbor.
- * \param [in,out] n      Existing line whose data will be filled.
+ * \param [out]    dual_face If not NULL, the face number as seen from \a neigh
+ *                        is stored.
  * \note \a l may point to the same line as \a n.
  */
-void                t8_dline_face_neighbour (const t8_dline_t * p, int face,
-                                             t8_dline_t * neigh);
+void                t8_dline_face_neighbour (const t8_dline_t * l,
+                                             t8_dline_t * neigh, int face,
+                                             int *dual_face);
+
+/** Computes the nearest common ancestor of two lines in the same tree.
+ * \param [in]     l1 First input line.
+ * \param [in]     l2 Second input line.
+ * \param [in,out] r Existing line whose data will be filled.
+ * \note \a l1, \a l2, \a r may point to the same line.
+ */
+void                t8_dline_nearest_common_ancestor (const t8_dline_t * t1,
+                                                      const t8_dline_t * t2,
+                                                      t8_dline_t * r);
 
 /** Compute the position of the ancestor of this child at level \a level within
  * its siblings.
@@ -108,10 +121,10 @@ int                 t8_dline_is_root_boundary (const t8_dline_t * p,
 
 /** Test if a line lies inside of the root line,
  *  that is the line of level 0, anchor node (0,0)
- *  \param [in]     p Input line.
- *  \return true    If \a p lies inside of the root line.
+ *  \param [in]     l Input line.
+ *  \return true    If \a l lies inside of the root line.
  */
-int                 t8_dline_is_inside_root (const t8_dline_t * p);
+int                 t8_dline_is_inside_root (const t8_dline_t * l);
 
 /** Initialize a line as the line with a given global id in a uniform
  *  refinement of a given level. *
