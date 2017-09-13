@@ -2503,121 +2503,121 @@ t8_cmesh_new_tet_orientation_test (sc_MPI_Comm comm)
 t8_cmesh_t
 t8_cmesh_new_hybrid_gate (sc_MPI_Comm comm)
 {
-    t8_cmesh_t cmesh;
-    double vertices[32];
-    int i;
+  t8_cmesh_t          cmesh;
+  double              vertices[32];
+  int                 i;
 
-    t8_cmesh_init (&cmesh);
-    t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);
-    t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TET);
-    t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_PRISM);
-    t8_cmesh_set_tree_class (cmesh, 3, T8_ECLASS_PRISM);
-    t8_cmesh_set_tree_class (cmesh, 4, T8_ECLASS_HEX);
-    t8_cmesh_set_join (cmesh, 0, 2, 0, 4, 0);
-    t8_cmesh_set_join (cmesh, 1, 3, 0, 4, 0);
-    t8_cmesh_set_join (cmesh, 2, 4, 0, 0, 0);
-    t8_cmesh_set_join (cmesh, 3, 4, 1, 1, 0);
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);
+  t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TET);
+  t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_PRISM);
+  t8_cmesh_set_tree_class (cmesh, 3, T8_ECLASS_PRISM);
+  t8_cmesh_set_tree_class (cmesh, 4, T8_ECLASS_HEX);
+  t8_cmesh_set_join (cmesh, 0, 2, 0, 4, 0);
+  t8_cmesh_set_join (cmesh, 1, 3, 0, 4, 0);
+  t8_cmesh_set_join (cmesh, 2, 4, 0, 0, 0);
+  t8_cmesh_set_join (cmesh, 3, 4, 1, 1, 0);
 
-    /* Tetrahedron 1 vertices */
-    vertices[0] = 0.43;
-    vertices[1] = 0;
-    vertices[2] = 2;
+  /* Tetrahedron 1 vertices */
+  vertices[0] = 0.43;
+  vertices[1] = 0;
+  vertices[2] = 2;
 
-    vertices[3] = 0;
-    vertices[4] = 0;
-    vertices[5] = 1;
+  vertices[3] = 0;
+  vertices[4] = 0;
+  vertices[5] = 1;
 
-    vertices[6] = 0.86;
-    vertices[7] = -0.5;
-    vertices[8] = 1;
+  vertices[6] = 0.86;
+  vertices[7] = -0.5;
+  vertices[8] = 1;
 
-    vertices[9] = 0.86;
-    vertices[10] = 0.5;
-    vertices[11] = 1;
+  vertices[9] = 0.86;
+  vertices[10] = 0.5;
+  vertices[11] = 1;
 
-    t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id(), 0, vertices, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 4);
 
-    /* Tetrahedron 2 vertices */
-    for (i = 0;i < 3;i++) {
-        vertices[i] = vertices[i] + (i == 0 ? 1 + 0.86 : 0);
-        vertices[3 + i] = vertices[6 + i] + (i == 0 ? 1 : 0);
-        vertices[9 + i] = vertices[9 + i] + (i == 0 ? 1 : 0);
-    }
-    vertices[6] = 1 + 2 * 0.86;
-    vertices[7] = 0;
-    vertices[8] = 1;
+  /* Tetrahedron 2 vertices */
+  for (i = 0; i < 3; i++) {
+    vertices[i] = vertices[i] + (i == 0 ? 1 + 0.86 : 0);
+    vertices[3 + i] = vertices[6 + i] + (i == 0 ? 1 : 0);
+    vertices[9 + i] = vertices[9 + i] + (i == 0 ? 1 : 0);
+  }
+  vertices[6] = 1 + 2 * 0.86;
+  vertices[7] = 0;
+  vertices[8] = 1;
 
-    t8_cmesh_set_tree_vertices (cmesh, 1, t8_get_package_id(), 0, vertices, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 1, t8_get_package_id (), 0, vertices, 4);
 
-    /* Prism 1 vertices */
+  /* Prism 1 vertices */
 
-    vertices[0] = 0;
-    vertices[1] = 0;
-    vertices[2] = 0;
+  vertices[0] = 0;
+  vertices[1] = 0;
+  vertices[2] = 0;
 
-    vertices[3] = 0.86;
-    vertices[4] = -0.5;
-    vertices[5] = 0;
+  vertices[3] = 0.86;
+  vertices[4] = -0.5;
+  vertices[5] = 0;
 
-    vertices[6] = 0.86;
-    vertices[7] = 0.5;
-    vertices[8] = 0;
+  vertices[6] = 0.86;
+  vertices[7] = 0.5;
+  vertices[8] = 0;
 
-    /* Translate +1 in z-axis for the upper vertices */
-    for (i = 0; i < 3; i++) {
-        vertices[9 + 3 * i] = vertices[3 * i];
-        vertices[9 + 3 * i + 1] = vertices[3 * i + 1];
-        vertices[9 + 3 * i + 2] = vertices[3 * i + 2] + 1;
-    }
+  /* Translate +1 in z-axis for the upper vertices */
+  for (i = 0; i < 3; i++) {
+    vertices[9 + 3 * i] = vertices[3 * i];
+    vertices[9 + 3 * i + 1] = vertices[3 * i + 1];
+    vertices[9 + 3 * i + 2] = vertices[3 * i + 2] + 1;
+  }
 
-    t8_cmesh_set_tree_vertices (cmesh, 2, t8_get_package_id(), 0, vertices, 6);
+  t8_cmesh_set_tree_vertices (cmesh, 2, t8_get_package_id (), 0, vertices, 6);
 
-    /* Prism 2 vertices */
+  /* Prism 2 vertices */
 
-    for (i = 0;i < 3;i++) {
-        vertices[3 + i] = vertices[i] + (i == 0 ? 1 + 2 * 0.86 : 0);
-        vertices[6 + i] = vertices[6 + i] + (i == 0 ? 1 : 0);
-    }
+  for (i = 0; i < 3; i++) {
+    vertices[3 + i] = vertices[i] + (i == 0 ? 1 + 2 * 0.86 : 0);
+    vertices[6 + i] = vertices[6 + i] + (i == 0 ? 1 : 0);
+  }
 
-    vertices[0] = 0.86 + 1;
-    vertices[1] = -0.5;
-    vertices[2] = 0;
+  vertices[0] = 0.86 + 1;
+  vertices[1] = -0.5;
+  vertices[2] = 0;
 
-    /* Translate +1 in z-axis for the upper vertices */
-    for (i = 0; i < 3; i++) {
-        vertices[9 + 3 * i] = vertices[3 * i];
-        vertices[9 + 3 * i + 1] = vertices[3 * i + 1];
-        vertices[9 + 3 * i + 2] = vertices[3 * i + 2] + 1;
-    }
+  /* Translate +1 in z-axis for the upper vertices */
+  for (i = 0; i < 3; i++) {
+    vertices[9 + 3 * i] = vertices[3 * i];
+    vertices[9 + 3 * i + 1] = vertices[3 * i + 1];
+    vertices[9 + 3 * i + 2] = vertices[3 * i + 2] + 1;
+  }
 
-    t8_cmesh_set_tree_vertices (cmesh, 3, t8_get_package_id(), 0, vertices, 6);
+  t8_cmesh_set_tree_vertices (cmesh, 3, t8_get_package_id (), 0, vertices, 6);
 
-    /* Hex coordinates */
-    vertices[0] = 0.86;
-    vertices[1] = -0.5;
-    vertices[2] = 0;
+  /* Hex coordinates */
+  vertices[0] = 0.86;
+  vertices[1] = -0.5;
+  vertices[2] = 0;
 
-    vertices[3] = 1.86;
-    vertices[4] = -0.5;
-    vertices[5] = 0;
+  vertices[3] = 1.86;
+  vertices[4] = -0.5;
+  vertices[5] = 0;
 
-    vertices[6] = 0.86;
-    vertices[7] = 0.5;
-    vertices[8] = 0;
+  vertices[6] = 0.86;
+  vertices[7] = 0.5;
+  vertices[8] = 0;
 
-    vertices[9] = 1.86;
-    vertices[10] = 0.5;
-    vertices[11] = 0;
+  vertices[9] = 1.86;
+  vertices[10] = 0.5;
+  vertices[11] = 0;
 
-    /* Translate +1 in z-axis for the upper vertices */
-    for (i = 0; i < 4; i++) {
-        vertices[12 + 3 * i] = vertices[3 * i];
-        vertices[12 + 3 * i + 1] = vertices[3 * i + 1];
-        vertices[12 + 3 * i + 2] = vertices[3 * i + 2] + 1;
-    }
+  /* Translate +1 in z-axis for the upper vertices */
+  for (i = 0; i < 4; i++) {
+    vertices[12 + 3 * i] = vertices[3 * i];
+    vertices[12 + 3 * i + 1] = vertices[3 * i + 1];
+    vertices[12 + 3 * i + 2] = vertices[3 * i + 2] + 1;
+  }
 
-    t8_cmesh_set_tree_vertices (cmesh, 4, t8_get_package_id(), 0, vertices, 8);
+  t8_cmesh_set_tree_vertices (cmesh, 4, t8_get_package_id (), 0, vertices, 8);
 
-    t8_cmesh_commit (cmesh, comm);
-    return cmesh;
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
 }
