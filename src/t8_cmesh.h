@@ -479,6 +479,18 @@ t8_ctree_t          t8_cmesh_get_tree (t8_cmesh_t cmesh,
 t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
                                              t8_locidx_t ltree_id);
 
+/** Query whether a face of a local tree is at the domain boundary.
+ * \param [in]    cmesh         The cmesh to be considered.
+ * \param [in]    ltree_id       The local id of a tree.
+ * \param [in]    face          The number of a face of the tree.
+ * \return                      True if the face is at the domain boundary.
+ *                              False otherwise.
+ * \a cmesh must be committed before calling this function.
+ */
+int                 t8_cmesh_tree_face_is_boundary (t8_cmesh_t cmesh,
+                                                    t8_locidx_t ltree_id,
+                                                    int face);
+
 /** Return the eclass of a given local ghost.
  * TODO: Should we refer to indices or consequently use cghost_t?
  * \param [in]    cmesh         The cmesh to be considered.
@@ -760,6 +772,13 @@ t8_cmesh_t          t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x,
  *                         Note that most faces in this cmesh are boundary faces.
  */
 t8_cmesh_t          t8_cmesh_new_tet_orientation_test (sc_MPI_Comm comm);
+
+/** Construct a hybrid cmesh with 2 tets, 2 prism, 1 hex.
+ * This cmesh is used for testing and debugging.
+ * \param [in] comm        The MPI communicator used to commit the cmesh.
+ * \return                 A committed and replicated hybrid cmesh of 5 trees.
+ */
+t8_cmesh_t          t8_cmesh_new_hybrid_gate (sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 

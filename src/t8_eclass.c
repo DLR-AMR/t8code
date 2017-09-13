@@ -55,7 +55,7 @@ t8_eclass_face_orientation[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES] =
   {0,0,0},      /* triangle */
   {0,1,0,1,0,1},/* hex */
   {0,1,0,1},    /* tet */
-  {0,1,0,0,1},  /* prism */
+  {1,0,1,0,1},  /* prism */
   {0,1,0,1,0}   /* pyramid */
 };
 
@@ -72,7 +72,7 @@ const int t8_eclass_vtk_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS] =
  {  0,  1,  2, -1, -1, -1, -1, -1}, /* triangle */
  {  0,  1,  3,  2,  4,  5,  7,  6}, /* hex */
  {  0,  2,  1,  3, -1, -1, -1, -1}, /* tet */
- {  0,  1,  2,  3,  4,  5, -1, -1}, /* prism */
+ {  0,  2,  1,  3,  5,  4, -1, -1}, /* prism */
  {  0,  1,  3,  2,  4, -1, -1, -1}}; /* pyramid */
 
 const int t8_eclass_face_types[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES] =

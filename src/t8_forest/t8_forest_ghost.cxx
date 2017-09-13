@@ -958,7 +958,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
       /* Store the new bounds at the entry for this element */
       new_bounds[iface * 2] = lower;
       new_bounds[iface * 2 + 1] = upper;
-      if (lower > upper || (lower == upper && lower == forest->mpirank)) {
+      if (lower == upper && lower == forest->mpirank) {
         /* All neighbor leafs at this face are owned by the current rank */
         t8_debugf
           ("[H] level %i element lin id %li at face %i totally pwned\n",
@@ -1157,7 +1157,8 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
             /* Construct each half size neighbor */
             neighbor_tree =
               t8_forest_element_half_face_neighbors (forest, itree, elem,
-                                                     half_neighbors, iface,
+                                                     half_neighbors,
+                                                     neigh_scheme, iface,
                                                      num_face_children);
           }
           else {
@@ -1165,7 +1166,8 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
             /* This element has maximum level, we only construct its neighbor */
             neighbor_tree =
               t8_forest_element_face_neighbor (forest, itree, elem,
-                                               half_neighbors[0], iface,
+                                               half_neighbors[0],
+                                               neigh_scheme, iface,
                                                &dummy_neigh_face);
           }
           if (neighbor_tree >= 0) {

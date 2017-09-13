@@ -62,11 +62,12 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from,
     /* Allocate memory for the number of half face neighbors */
     num_half_neighbors = ts->t8_element_num_face_children (element, iface);
     half_neighbors = T8_ALLOC (t8_element_t *, num_half_neighbors);
-    ts->t8_element_new (num_half_neighbors, half_neighbors);
+    neigh_scheme->t8_element_new (num_half_neighbors, half_neighbors);
     /* Compute the half face neighbors of element at this face */
     neighbor_tree = t8_forest_element_half_face_neighbors (forest_from,
                                                            ltree_id, element,
                                                            half_neighbors,
+                                                           neigh_scheme,
                                                            iface,
                                                            num_half_neighbors);
     if (neighbor_tree >= 0) {
@@ -80,14 +81,15 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from,
           /* This element should be refined */
           *pdone = 0;
           /* clean-up */
-          ts->t8_element_destroy (num_half_neighbors, half_neighbors);
+          neigh_scheme->t8_element_destroy (num_half_neighbors,
+                                            half_neighbors);
           T8_FREE (half_neighbors);
           return 1;
         }
       }
     }
     /* clean-up */
-    ts->t8_element_destroy (num_half_neighbors, half_neighbors);
+    neigh_scheme->t8_element_destroy (num_half_neighbors, half_neighbors);
     T8_FREE (half_neighbors);
   }
 

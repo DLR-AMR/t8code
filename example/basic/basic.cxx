@@ -92,10 +92,23 @@ t8_basic_refine_test (t8_eclass_t eclass)
   if (eclass == T8_ECLASS_LINE) {
     cmesh = t8_cmesh_new_line_zigzag (sc_MPI_COMM_WORLD);
   }
+  else if (eclass == T8_ECLASS_PRISM) {
+    //cmesh = t8_cmesh_new_prism_geometry (sc_MPI_COMM_WORLD);
+    //     cmesh = t8_cmesh_new_prism_deformed (sc_MPI_COMM_WORLD);
+    //    cmesh = t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_COMM_WORLD);
+      cmesh = t8_cmesh_new_prism_cake(sc_MPI_COMM_WORLD, 6);
+      //cmesh = t8_cmesh_new_from_class (T8_ECLASS_PRISM, sc_MPI_COMM_WORLD);
+  }
+  else if (eclass == T8_ECLASS_COUNT) {
+      /* TODO: This is just temporary. Replace ECLASS_COUNT with a
+       * sensible parameter. */
+      cmesh = t8_cmesh_new_hybrid_gate (sc_MPI_COMM_WORLD);
+      eclass = T8_ECLASS_HEX;
+      t8_cmesh_save(cmesh, "hybrid_gate");
+  }
   else {
     cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0);
   }
-
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
   t8_forest_set_level (forest, 3);
@@ -105,7 +118,7 @@ t8_basic_refine_test (t8_eclass_t eclass)
             t8_eclass_to_string[eclass]);
   t8_forest_write_vtk (forest, filename);
 
-#if 0
+#if 1
   t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, NULL, 1);
 #else
   {
@@ -147,7 +160,7 @@ t8_basic_balance_test (t8_eclass_t eclass)
     cmesh = t8_cmesh_new_line_zigzag (sc_MPI_COMM_WORLD);
   }
   else {
-    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0);
+    cmesh = t8_cmesh_new_prism_cake (sc_MPI_COMM_WORLD, 6);
   }
 
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
@@ -468,7 +481,7 @@ main (int argc, char **argv)
 #endif
   //t8_basic_hypercube (T8_ECLASS_TET, 1, 1, 0);
   //t8_basic_balance_test (T8_ECLASS_TET);
-  t8_basic_refine_test (T8_ECLASS_TET);
+  t8_basic_refine_test (T8_ECLASS_COUNT);
 #if 0
   t8_basic_forest_partition ();
   t8_global_productionf ("Testing hypercube cmesh.\n");

@@ -442,6 +442,7 @@ t8_default_scheme_tri_c::t8_element_face_neighbor_inside (const t8_element_t *
   T8_ASSERT (t8_element_is_valid (neigh));
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
   T8_ASSERT (neigh_face != NULL);
+
   *neigh_face = t8_dtri_face_neighbour (t, face, n);
   /* return true if neigh is inside the root */
   return t8_dtri_is_inside_root (n);
