@@ -23,6 +23,7 @@
 #include <sc_options.h>
 #include <t8_default_cxx.hxx>
 #include <t8_forest.h>
+#include <t8_forest/t8_forest_private.h>        /* TODO: remove */
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest_vtk.h>
 #include <example/common/t8_example_common.h>
@@ -49,6 +50,7 @@ typedef struct
   double              midpoint[3]; /**< coordinates of element midpoint in R^3 */
   double              delta_x; /**< Width of this element */
   double              phi; /**< Value of solution at midpoint */
+  double              phi_new; /**< Value of solution at midpoint in next time step */
 } t8_advect_element_data_t;
 
 double
@@ -56,7 +58,7 @@ t8_advect_flux_lax_friedrich (t8_advect_problem_t * problem,
                               t8_advect_element_data_t * el_data_plus,
                               t8_advect_element_data_t * el_data_minus)
 {
-  double              alpha = 1;        /* TODO: Choose alpha according to a reasonable criterion */
+  double              alpha = 0;        /* TODO: Choose alpha according to a reasonable criterion */
   double              x_j_half[3];
   int                 idim;
   double              u_at_x_j_half;
@@ -89,7 +91,8 @@ t8_advect_advance_element (t8_advect_problem_t * problem,
                            double flux_left, double flux_right)
 {
   /* Phi^t = dt/dx * (f_(j-1/2) - f_(j+1/2)) + Phi^(t-1) */
-  elem->phi = (problem->delta_t / elem->delta_x) * (flux_left - flux_right)
+  elem->phi_new =
+    (problem->delta_t / elem->delta_x) * (flux_left - flux_right)
     + elem->phi;
 }
 
@@ -130,6 +133,25 @@ t8_advect_problem_init (t8_scalar_function_3d_fn u,
                       t8_forest_get_num_element (problem->forest) +
                       t8_forest_get_num_ghosts (problem->forest));
   return problem;
+}
+
+/* Project the solution at the last time step to the forest */
+static void
+t8_advect_project_element_data (t8_advect_problem_t * problem)
+{
+  t8_locidx_t         num_local_elements, ielem;
+  t8_advect_element_data_t *elem_data;
+
+  num_local_elements = t8_forest_get_num_element (problem->forest);
+  for (ielem = 0; ielem < num_local_elements; ielem++) {
+    elem_data = (t8_advect_element_data_t *)
+      t8_sc_array_index_locidx (&problem->element_data, ielem);
+    /* Currently the mesh does not change, thus the projected value is
+     * just the computed value */
+    elem_data->phi = elem_data->phi_new;
+  }
+  /* Exchange ghost data */
+  t8_forest_ghost_exchange_data (problem->forest, &problem->element_data);
 }
 
 void
@@ -182,6 +204,8 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
       elem_data->phi = problem->phi_0 (elem_data->midpoint, 0);
     }
   }
+  /* Exchange ghost values */
+  t8_forest_ghost_exchange_data (problem->forest, &problem->element_data);
 }
 
 void
@@ -274,12 +298,83 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
                  double delta_t, sc_MPI_Comm comm)
 {
   t8_advect_problem_t *problem;
+  int                 iface;
+  t8_locidx_t         itree, ielement, lelement;
+  t8_advect_element_data_t *elem_data, *neigh_data, *plus_data, *minus_data;
+  t8_advect_element_data_t boundary_data;
+  double              flux[2];
+
+  t8_element_t       *elem, **neighs;
+  int                 num_neighs;
+  t8_locidx_t        *el_indices;
+  t8_eclass_scheme_c *neigh_scheme;
+
+  /* Initialize problem */
   problem =
     t8_advect_problem_init (u, phi_0, level, maxlevel, T, delta_t, comm);
   t8_advect_problem_init_elements (problem);
-  t8_forest_ghost_exchange_data (problem->forest, &problem->element_data);
-  t8_advect_print_phi (problem);
+
+  for (problem->num_time_steps = 0; problem->t < problem->T;
+       problem->num_time_steps++, problem->t += problem->delta_t) {
+    /* Time loop */
+
+    for (itree = 0, lelement = 0;
+         itree < t8_forest_get_num_local_trees (problem->forest); itree++) {
+      /* tree loop */
+      /* Print vtk */
+      t8_advect_write_vtk (problem);
+      t8_advect_print_phi (problem);
+      for (ielement = 0;
+           ielement < t8_forest_get_tree_num_elements (problem->forest,
+                                                       itree);
+           ielement++, lelement++) {
+        /* element loop */
+        /* Get a pointer to the element data */
+        elem_data = (t8_advect_element_data_t *)
+          t8_sc_array_index_locidx (&problem->element_data, lelement);
+        elem =
+          t8_forest_get_element_in_tree (problem->forest, itree, lelement);
+        /* Compute left and right flux */
+        for (iface = 0; iface < 2; iface++) {
+          t8_forest_leaf_face_neighbors (problem->forest, itree, elem,
+                                         &neighs, iface, &num_neighs,
+                                         &el_indices, &neigh_scheme, 1);
+          if (num_neighs == 1) {
+            T8_ASSERT (neigh_scheme->eclass == T8_ECLASS_LINE);
+            neigh_data = (t8_advect_element_data_t *)
+              t8_sc_array_index_locidx (&problem->element_data,
+                                        el_indices[0]);
+            neigh_scheme->t8_element_destroy (num_neighs, neighs);
+            T8_FREE (neighs);
+            T8_FREE (el_indices);
+          }
+          else {
+            /* This is a boundary face, we enforce periodic boundary conditions */
+            /* TODO: Do this via cmesh periodic. Implement vertex scheme */
+            neigh_data = &boundary_data;
+            boundary_data.phi = 0;
+            boundary_data.midpoint[0] = iface;  /* 0 for left boundary, 1 for right */
+            boundary_data.midpoint[1] = 0;
+            boundary_data.midpoint[2] = 0;
+          }
+
+          plus_data = iface == 0 ? elem_data : neigh_data;
+          minus_data = iface == 0 ? neigh_data : elem_data;
+          flux[iface] =
+            t8_advect_flux_lax_friedrich (problem, plus_data, minus_data);
+        }
+        /* Compute time step */
+        t8_advect_advance_element (problem, elem_data, flux[0], flux[1]);
+      }
+    }
+    /* TODO: Change forest (adapt, partition) */
+    /* Project the computed solution to the new forest and exchange ghost values */
+    t8_advect_project_element_data (problem);
+  }
+  /* Print last time step vtk */
   t8_advect_write_vtk (problem);
+
+  /* clean-up */
   t8_advect_problem_destroy (&problem);
 }
 
@@ -326,7 +421,7 @@ main (int argc, char *argv[])
   }
   else if (parsed >= 0 && 0 <= level) {
     /* Computation */
-    t8_advect_solve (constant_one, step_function, level,
+    t8_advect_solve (constant_one, constant_one, level,
                      level + 4, T, delta_t, sc_MPI_COMM_WORLD);
   }
   else {
