@@ -106,6 +106,41 @@ t8_eclass_t
   return T8_ECLASS_VERTEX;
 }
 
+void
+t8_default_scheme_line_c::t8_element_children_at_face (const t8_element_t *
+                                                       elem, int face,
+                                                       t8_element_t *
+                                                       children[],
+                                                       int num_children,
+                                                       int *child_indices)
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
+  T8_ASSERT (num_children == 1);
+  T8_ASSERT (t8_element_is_valid (children[0]));
+
+  /* We have exactly one child at a face and this is child 0 if face = 0
+   * and child 1 if face = 1 */
+  if (child_indices != NULL) {
+    *child_indices = face;
+  }
+  t8_dline_child ((const t8_dline_t *) elem, face,
+                  (t8_dline_t *) children[0]);
+}
+
+int
+t8_default_scheme_line_c::t8_element_face_child_face (const t8_element_t *
+                                                      elem, int face,
+                                                      int face_child)
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
+  T8_ASSERT (face_child == 0);
+
+  /* The face id of the child is the same as the face */
+  return face;
+}
+
 int
 t8_default_scheme_line_c::t8_element_face_parent_face (const t8_element_t *
                                                        elem, int face)
@@ -309,7 +344,7 @@ t8_default_scheme_line_c::t8_element_num_face_children (const t8_element_t *
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
 
-  return T8_DLINE_FACES;
+  return T8_DLINE_FACE_CHILDREN;
 }
 
 int

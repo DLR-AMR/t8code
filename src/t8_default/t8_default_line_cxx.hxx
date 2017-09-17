@@ -139,19 +139,12 @@ public:
                                                    int face,
                                                    t8_element_t * children[],
                                                    int num_children,
-                                                   int *child_indices)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                   int *child_indices);
 
   /** Given a face of an element and a child number of a child of that face, return the face number
    * of the child of the element that matches the child face. */
   virtual int         t8_element_face_child_face (const t8_element_t * elem,
-                                                  int face, int face_child)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+                                                  int face, int face_child);
 
   /** Given a face of an element return the face number
    * of the parent of the element that matches the element's face. Or return -1 if
