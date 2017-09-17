@@ -539,8 +539,10 @@ t8_forest_commit (t8_forest_t forest)
     /* decrease reference count of input forest, possibly destroying it */
     t8_forest_unref (&forest->set_from);
   }                             /* end set_from != NULL */
+
   /* Compute the element offset of the trees */
   t8_forest_compute_elements_offset (forest);
+
   /* Compute first and last descendant for each tree */
   t8_forest_compute_desc (forest);
 
@@ -556,10 +558,26 @@ t8_forest_commit (t8_forest_t forest)
              (long long) forest->first_local_tree,
              (long long) forest->last_local_tree);
 
+#if 0
+  /* TODO: Do we keep the arrays or not? */
   /* verify that no (memory intensive) shared memory array is active */
   T8_ASSERT (forest->element_offsets == NULL);
   T8_ASSERT (forest->tree_offsets == NULL);
   T8_ASSERT (forest->global_first_desc == NULL);
+#else
+  if (forest->tree_offsets == NULL) {
+    /* Compute the tree offset array */
+    t8_forest_partition_create_tree_offsets (forest);
+  }
+  if (forest->element_offsets == NULL) {
+    /* Compute element offsets */
+    t8_forest_partition_create_offsets (forest);
+  }
+  if (forest->global_first_desc == NULL) {
+    /* Compute global first desc array */
+    t8_forest_partition_create_first_desc (forest);
+  }
+#endif
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of commit */
