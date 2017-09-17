@@ -24,6 +24,7 @@
 #include <t8_default_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest_vtk.h>
 #include <example/common/t8_example_common.h>
 
 typedef struct
@@ -37,6 +38,8 @@ typedef struct
   double              t; /**< Current simulation time */
   double              T; /**< End time */
   double              delta_t; /**< Current time step */
+  int                 num_time_steps; /**< Number of time steps computed so far.
+                                        (If delta_t is constant then t = num_time_steps * delta_t) */
   int                 level; /**< Initial refinement level */
   int                 maxlevel; /**< Maximum refinement level */
 } t8_advect_problem_t;
@@ -113,6 +116,7 @@ t8_advect_problem_init (t8_scalar_function_3d_fn u,
   problem->t = 0;
   problem->T = T;
   problem->delta_t = delta_t;
+  problem->num_time_steps = 0;
   problem->comm = comm;
 
   /* Contruct uniform forest with ghosts */
@@ -181,23 +185,64 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
 }
 
 void
+t8_advect_write_vtk (t8_advect_problem_t * problem)
+{
+  double             *u_and_phi_array[2];
+  t8_locidx_t         num_local_elements, ielem;
+  t8_vtk_data_field_t vtk_data[2];
+  t8_advect_element_data_t *elem_data;
+  char                fileprefix[BUFSIZ];
+
+  /* Allocate num_local_elements doubles to store u and phi values */
+  num_local_elements = t8_forest_get_num_element (problem->forest);
+  u_and_phi_array[0] = T8_ALLOC_ZERO (double, num_local_elements);
+  u_and_phi_array[1] = T8_ALLOC_ZERO (double, num_local_elements);
+  /* Fill u and phi arrays with their values */
+  for (ielem = 0; ielem < num_local_elements; ielem++) {
+    elem_data = (t8_advect_element_data_t *)
+      t8_sc_array_index_locidx (&problem->element_data, ielem);
+    u_and_phi_array[0][ielem] = problem->u (elem_data->midpoint, problem->t);
+    u_and_phi_array[1][ielem] = elem_data->phi;
+  }
+
+  /* Write meta data for vtk */
+  snprintf (vtk_data[0].description, BUFSIZ, "Flow");
+  vtk_data[0].type = T8_VTK_VECTOR;
+  vtk_data[0].data = u_and_phi_array[0];
+  snprintf (vtk_data[1].description, BUFSIZ, "Solution");
+  vtk_data[1].type = T8_VTK_SCALAR;
+  vtk_data[1].data = u_and_phi_array[1];
+  /* Write filename */
+  snprintf (fileprefix, BUFSIZ, "advection_%03i", problem->num_time_steps);
+  /* Write vtk files */
+  if (t8_forest_vtk_write_file (problem->forest, fileprefix,
+                                1, 1, 1, 1, 1, 2, vtk_data)) {
+    t8_debugf ("[Advect] Wrote pvtu to files %s\n", fileprefix);
+  }
+  else {
+    t8_errorf ("[Advect] Error writing to files %s\n", fileprefix);
+  }
+  /* clean-up */
+  T8_FREE (u_and_phi_array[0]);
+  T8_FREE (u_and_phi_array[1]);
+}
+
+void
 t8_advect_print_phi (t8_advect_problem_t * problem)
 {
   t8_locidx_t         ielement;
   t8_locidx_t         num_local_els;
   t8_advect_element_data_t *elem_data;
   char                buffer[BUFSIZ] = "";
-
   num_local_els = t8_forest_get_num_element (problem->forest);
   for (ielement = 0;
-       ielement < (t8_locidx_t) problem->element_data.elem_count;
-       ielement++) {
+       ielement <
+       (t8_locidx_t) problem->element_data.elem_count; ielement++) {
     elem_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (&problem->element_data, ielement);
-    snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer),
-              "%.2f |%s ", elem_data->phi,
-              ielement == num_local_els - 1 ? "|" : "");
-
+    snprintf (buffer + strlen (buffer),
+              BUFSIZ - strlen (buffer), "%.2f |%s ",
+              elem_data->phi, ielement == num_local_els - 1 ? "|" : "");
   }
   t8_debugf ("\t%s\n", buffer);
   /* reset buffer */
@@ -224,8 +269,9 @@ t8_advect_problem_destroy (t8_advect_problem_t ** pproblem)
 
 void
 t8_advect_solve (t8_scalar_function_3d_fn u,
-                 t8_scalar_function_3d_fn phi_0, int level, int maxlevel,
-                 double T, double delta_t, sc_MPI_Comm comm)
+                 t8_scalar_function_3d_fn phi_0,
+                 int level, int maxlevel, double T,
+                 double delta_t, sc_MPI_Comm comm)
 {
   t8_advect_problem_t *problem;
   problem =
@@ -233,6 +279,7 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
   t8_advect_problem_init_elements (problem);
   t8_forest_ghost_exchange_data (problem->forest, &problem->element_data);
   t8_advect_print_phi (problem);
+  t8_advect_write_vtk (problem);
   t8_advect_problem_destroy (&problem);
 }
 
@@ -246,23 +293,20 @@ main (int argc, char *argv[])
   int                 level;
   int                 parsed, helpme;
   double              T, delta_t;
-
   /* brief help message */
-  snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t"
+  snprintf (usage, BUFSIZ,
+            "Usage:\t%s <OPTIONS>\n\t%s -h\t"
             "for a brief overview of all options.",
             basename (argv[0]), basename (argv[0]));
-
   /* long help message */
-  snprintf (help, BUFSIZ, "This program solves the 1D advection equation on "
+  snprintf (help, BUFSIZ,
+            "This program solves the 1D advection equation on "
             "the interval [0,1].\nThe user can choose the initial uniform "
             "refinement level.\n\n%s\n", usage);
-
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
-
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEBUG);
-
   /* initialize command line argument parser */
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme,
@@ -271,9 +315,8 @@ main (int argc, char *argv[])
                       "The refinement level of the mesh.");
   sc_options_add_double (opt, 'T', "end-time", &T, 1,
                          "The duration of the simulation. Default: 1");
-  sc_options_add_double (opt, 't', "delta-t", &delta_t, 0.1,
-                         "The length of ont time-step. Default: 0.1");
-
+  sc_options_add_double (opt, 't', "delta-t", &delta_t,
+                         0.1, "The length of ont time-step. Default: 0.1");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
@@ -283,8 +326,8 @@ main (int argc, char *argv[])
   }
   else if (parsed >= 0 && 0 <= level) {
     /* Computation */
-    t8_advect_solve (constant_one, step_function, level, level + 4, T,
-                     delta_t, sc_MPI_COMM_WORLD);
+    t8_advect_solve (constant_one, step_function, level,
+                     level + 4, T, delta_t, sc_MPI_COMM_WORLD);
   }
   else {
     /* wrong usage */
@@ -294,9 +337,7 @@ main (int argc, char *argv[])
 
   sc_options_destroy (opt);
   sc_finalize ();
-
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
-
   return 0;
 }
