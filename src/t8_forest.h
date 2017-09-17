@@ -662,6 +662,8 @@ void                t8_forest_save (t8_forest_t forest);
  * are written. For better control of the output see \ref t8_forest_vtk.h.
  * Forest must be committed when calling this function.
  * This function is collective and must be called on each process.
+ * \note If you want to print additional scalar or vector valued data (such as
+ * function values), please see the functions in \ref t8_forest_vtk.h.
  */
 void                t8_forest_write_vtk (t8_forest_t forest,
                                          const char *filename);

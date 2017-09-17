@@ -27,11 +27,12 @@
  * Return 0 on success. */
 int
 t8_write_pvtu (const char *filename, int num_procs, int write_tree,
-               int write_rank, int write_level, int write_id)
+               int write_rank, int write_level, int write_id, int num_data,
+               t8_vtk_data_field_t * data)
 {
   char                pvtufilename[BUFSIZ], filename_cpy[BUFSIZ];
   FILE               *pvtufile;
-  int                 p;
+  int                 p, idata;
   int                 write_cell_data;
 
   write_cell_data = write_tree || write_rank || write_level || write_id;
@@ -99,6 +100,14 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree,
     fprintf (pvtufile, "      "
              "<PDataArray type=\"%s\" Name=\"element_id\" format=\"%s\"/>\n",
              T8_VTK_LOCIDX, T8_VTK_FORMAT_STRING);
+  }
+  /* Write data fields */
+  for (idata = 0; idata < num_data; idata++) {
+
+    fprintf (pvtufile, "      "
+             "<PDataArray type=\"%s\" Name=\"%s\" format=\"%s\"/>\n",
+             T8_VTK_FLOAT_NAME, data[idata].description,
+             T8_VTK_FORMAT_STRING);
   }
   if (write_cell_data) {
     fprintf (pvtufile, "    </PCellData>\n");

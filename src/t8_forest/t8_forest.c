@@ -368,6 +368,7 @@ t8_forest_commit (t8_forest_t forest)
       SC_CHECK_MPI (mpiret);
       forest->mpicomm = comm_dup;
     }
+    forest->dimension = forest->cmesh->dimension;
 
     /* Set mpirank and mpisize */
     mpiret = sc_MPI_Comm_size (forest->mpicomm, &forest->mpisize);
@@ -1202,7 +1203,7 @@ t8_forest_write_vtk (t8_forest_t forest, const char *filename)
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
 
-  t8_forest_vtk_write_file (forest, filename, 1, 1, 1, 1, 1);
+  t8_forest_vtk_write_file (forest, filename, 1, 1, 1, 1, 1, 0, NULL);
 }
 
 t8_forest_t

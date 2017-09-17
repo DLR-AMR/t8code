@@ -510,15 +510,67 @@ t8_forest_vtk_cells_elementid_kernel (t8_forest_t forest,
   return 1;
 }
 
+static int
+t8_forest_vtk_cells_scalar_kernel (t8_forest_t forest,
+                                   t8_locidx_t ltree_id, t8_tree_t tree,
+                                   t8_locidx_t element_index,
+                                   t8_element_t * element,
+                                   t8_eclass_scheme_c * ts,
+                                   int is_ghost,
+                                   FILE * vtufile, int *columns,
+                                   void **data, T8_VTK_KERNEL_MODUS modus)
+{
+  double              element_value = 0;
+
+  if (modus == T8_VTK_KERNEL_EXECUTE) {
+    /* For local elements access the data array, for ghosts, write 0 */
+    if (!is_ghost) {
+      element_value = ((double *) *data)[element_index];
+    }
+    fprintf (vtufile, "%g ", element_value);
+    *columns += 1;
+  }
+  return 1;
+}
+
+static int
+t8_forest_vtk_cells_vector_kernel (t8_forest_t forest,
+                                   t8_locidx_t ltree_id, t8_tree_t tree,
+                                   t8_locidx_t element_index,
+                                   t8_element_t * element,
+                                   t8_eclass_scheme_c * ts,
+                                   int is_ghost,
+                                   FILE * vtufile, int *columns,
+                                   void **data, T8_VTK_KERNEL_MODUS modus)
+{
+  double             *element_values;
+  int                 dim, idim;
+
+  if (modus == T8_VTK_KERNEL_EXECUTE) {
+    dim = forest->dimension;
+    /* For local elements access the data array, for ghosts, write 0 */
+    if (!is_ghost) {
+      /* Get a pointer to the start of the element's vector data */
+      element_values = ((double *) *data) + element_index * dim;
+    }
+    for (idim = 0; idim < dim; idim++) {
+      fprintf (vtufile, "%g ", element_values[idim]);
+    }
+    *columns += dim;
+  }
+  return 1;
+}
+
 /* Iterate over all cells and write cell data to the file using
  * the cell_data_kernel as callback */
 static int
 t8_forest_vtk_write_cell_data (t8_forest_t forest, FILE * vtufile,
-                               const char *dataname, const char *datatype,
+                               const char *dataname,
+                               const char *datatype,
                                const char *component_string,
                                int max_columns,
                                t8_forest_vtk_cell_data_kernel kernel,
-                               int write_ghosts)
+                               int write_ghosts, void *udata)
 {
   int                 freturn;
   int                 countcols;
@@ -537,6 +589,12 @@ t8_forest_vtk_write_cell_data (t8_forest_t forest, FILE * vtufile,
                      datatype, dataname, component_string);
   if (freturn <= 0) {
     return 0;
+  }
+
+  /* if udata != NULL, use it as the data pointer, in this case, the kernel
+   * should not modify it */
+  if (udata != NULL) {
+    data = udata;
   }
 
   /* Call the kernel in initilization modus to possibly initialize the
@@ -655,9 +713,11 @@ t8_forest_vtk_write_cells (t8_forest_t forest, FILE * vtufile,
                            int write_treeid,
                            int write_mpirank,
                            int write_level, int write_element_id,
-                           int write_ghosts)
+                           int write_ghosts, int num_data,
+                           t8_vtk_data_field_t * data)
 {
   int                 freturn;
+  int                 idata;
 
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (vtufile != NULL);
@@ -673,7 +733,7 @@ t8_forest_vtk_write_cells (t8_forest_t forest, FILE * vtufile,
                                            "NumberOfComponents=\"3\"",
                                            8,
                                            t8_forest_vtk_cells_vertices_kernel,
-                                           write_ghosts);
+                                           write_ghosts, NULL);
   if (!freturn) {
     goto t8_forest_vtk_cell_failure;
   }
@@ -693,7 +753,7 @@ t8_forest_vtk_write_cells (t8_forest_t forest, FILE * vtufile,
   freturn = t8_forest_vtk_write_cell_data (forest, vtufile, "connectivity",
                                            T8_VTK_LOCIDX, "", 8,
                                            t8_forest_vtk_cells_connectivity_kernel,
-                                           write_ghosts);
+                                           write_ghosts, NULL);
   if (!freturn) {
     goto t8_forest_vtk_cell_failure;
   }
@@ -708,7 +768,7 @@ t8_forest_vtk_write_cells (t8_forest_t forest, FILE * vtufile,
   freturn = t8_forest_vtk_write_cell_data (forest, vtufile, "offsets",
                                            T8_VTK_LOCIDX, "", 8,
                                            t8_forest_vtk_cells_offset_kernel,
-                                           write_ghosts);
+                                           write_ghosts, NULL);
   if (!freturn) {
     goto t8_forest_vtk_cell_failure;
   }
@@ -720,7 +780,7 @@ t8_forest_vtk_write_cells (t8_forest_t forest, FILE * vtufile,
   freturn = t8_forest_vtk_write_cell_data (forest, vtufile, "types",
                                            "Int32", "", 8,
                                            t8_forest_vtk_cells_type_kernel,
-                                           write_ghosts);
+                                           write_ghosts, NULL);
 
   if (!freturn) {
     goto t8_forest_vtk_cell_failure;
@@ -743,7 +803,7 @@ t8_forest_vtk_write_cells (t8_forest_t forest, FILE * vtufile,
     freturn = t8_forest_vtk_write_cell_data (forest, vtufile, "treeid",
                                              T8_VTK_GLOIDX, "", 8,
                                              t8_forest_vtk_cells_treeid_kernel,
-                                             write_ghosts);
+                                             write_ghosts, NULL);
     if (!freturn) {
       goto t8_forest_vtk_cell_failure;
     }
@@ -755,7 +815,7 @@ t8_forest_vtk_write_cells (t8_forest_t forest, FILE * vtufile,
     freturn = t8_forest_vtk_write_cell_data (forest, vtufile, "mpirank",
                                              "Int32", "", 8,
                                              t8_forest_vtk_cells_rank_kernel,
-                                             write_ghosts);
+                                             write_ghosts, NULL);
     if (!freturn) {
       goto t8_forest_vtk_cell_failure;
     }
@@ -767,15 +827,13 @@ t8_forest_vtk_write_cells (t8_forest_t forest, FILE * vtufile,
     freturn = t8_forest_vtk_write_cell_data (forest, vtufile, "level",
                                              "Int32", "", 8,
                                              t8_forest_vtk_cells_level_kernel,
-                                             write_ghosts);
+                                             write_ghosts, NULL);
     if (!freturn) {
       goto t8_forest_vtk_cell_failure;
     }
     /* Done with writing the levels */
   }
-  /* TODO: This element_id is t8_element_get_linear_id (e,level)
-   *       we could also include a consecutive version, then also with the processes
-   *       element_offset added. */
+
   if (write_element_id) {
     /* Write the element ids. */
     const char         *datatype;
@@ -786,13 +844,41 @@ t8_forest_vtk_write_cells (t8_forest_t forest, FILE * vtufile,
     freturn = t8_forest_vtk_write_cell_data (forest, vtufile, "element_id",
                                              datatype, "", 8,
                                              t8_forest_vtk_cells_elementid_kernel,
-                                             write_ghosts);
+                                             write_ghosts, NULL);
     if (!freturn) {
       goto t8_forest_vtk_cell_failure;
     }
 
     /* Done with writing the element ids */
   }
+  /* Write the user defined data fields per element */
+  for (idata = 0; idata < num_data; idata++) {
+    if (data[idata].type == T8_VTK_SCALAR) {
+      freturn =
+        t8_forest_vtk_write_cell_data (forest, vtufile,
+                                       data[idata].description,
+                                       T8_VTK_FLOAT_NAME, "", 8,
+                                       t8_forest_vtk_cells_scalar_kernel,
+                                       write_ghosts, data[idata].data);
+    }
+    else {
+      char                component_string[BUFSIZ];
+      snprintf (component_string, BUFSIZ, "NumberOfComponents=\"%i\"",
+                forest->dimension);
+      freturn =
+        t8_forest_vtk_write_cell_data (forest, vtufile,
+                                       data[idata].description,
+                                       T8_VTK_FLOAT_NAME,
+                                       component_string,
+                                       8 * forest->dimension,
+                                       t8_forest_vtk_cells_vector_kernel,
+                                       write_ghosts, data[idata].data);
+    }
+    if (!freturn) {
+      goto t8_forest_vtk_cell_failure;
+    }
+  }
+
   freturn = fprintf (vtufile, "      </CellData>\n");
   if (freturn <= 0) {
     goto t8_forest_vtk_cell_failure;
@@ -811,7 +897,8 @@ t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix,
                           int write_treeid,
                           int write_mpirank,
                           int write_level, int write_element_id,
-                          int write_ghosts)
+                          int write_ghosts,
+                          int num_data, t8_vtk_data_field_t * data)
 {
   FILE               *vtufile;
   t8_locidx_t         num_elements, num_points;
@@ -834,7 +921,7 @@ t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix,
   if (forest->mpirank == 0) {
     if (t8_write_pvtu
         (fileprefix, forest->mpisize, write_treeid, write_mpirank,
-         write_level, write_element_id)) {
+         write_level, write_element_id, num_data, data)) {
       t8_errorf ("Error when writing file %s.pvtu\n", fileprefix);
       goto t8_forest_vtk_failure;
     }
@@ -896,7 +983,7 @@ t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix,
   /* write the cell data */
   if (!t8_forest_vtk_write_cells
       (forest, vtufile, write_treeid, write_mpirank, write_level,
-       write_element_id, write_ghosts)) {
+       write_element_id, write_ghosts, num_data, data)) {
     /* Writing cells was not successful */
     goto t8_forest_vtk_failure;
   }
