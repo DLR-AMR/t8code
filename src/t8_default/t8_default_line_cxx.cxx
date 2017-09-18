@@ -21,7 +21,8 @@
 */
 
 #include "t8_default_common_cxx.hxx"
-#include "t8_default_line_cxx.hxx"
+#include "t8_default_vertex_cxx.hxx"
+#include "t8_dvertex_bits.h"
 #include "t8_dline_bits.h"
 #include "t8_dline.h"
 
@@ -177,6 +178,46 @@ t8_default_scheme_line_c::t8_element_transform_face (const t8_element_t *
    * of the face. */
   t8_dline_transform_face ((const t8_dline_t *) elem1, (t8_dline_t *) elem2,
                            orientation);
+}
+
+/** Given a boundary face inside a root tree's face construct
+ *  the element inside the root tree that has the given face as a
+ *  face. */
+int
+t8_default_scheme_line_c::t8_element_extrude_face (const t8_element_t * face,
+                                                   const t8_eclass_scheme_c *
+                                                   face_scheme,
+                                                   t8_element_t * elem,
+                                                   int root_face)
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (T8_COMMON_IS_TYPE
+             (face_scheme, const t8_default_scheme_vertex_c *));
+  T8_ASSERT (face_scheme->t8_element_is_valid (face));
+
+  return t8_dline_extrude_face ((const t8_dvertex_t *) face, root_face,
+                                (t8_dline_t *) elem);
+}
+
+/** Construct the boundary element at a specific face. */
+void
+t8_default_scheme_line_c::t8_element_boundary_face (const t8_element_t * elem,
+                                                    int face,
+                                                    t8_element_t * boundary,
+                                                    const t8_eclass_scheme_c *
+                                                    boundary_scheme)
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (T8_COMMON_IS_TYPE
+             (boundary_scheme, const t8_default_scheme_vertex_c *));
+  T8_ASSERT (boundary_scheme->eclass == T8_ECLASS_VERTEX);
+  T8_ASSERT (boundary_scheme->t8_element_is_valid (boundary));
+  T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
+
+  /* Since each vertex is the same, we just construc a vertex of the same level
+   * as elem. */
+  t8_dvertex_init_linear_id ((t8_dvertex_t *) boundary,
+                             t8_element_level (elem), 0);
 }
 
 /** Construct the first descendant of an element that touches a given face.   */

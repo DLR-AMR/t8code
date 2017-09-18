@@ -182,6 +182,22 @@ t8_dline_childrenpv (const t8_dline_t * elem,
 }
 
 int
+t8_dline_extrude_face (const t8_dvertex_t * face,
+                       int root_face, t8_dline_t * line)
+{
+  T8_ASSERT (root_face == 0 || root_face == 1);
+
+  /* The level of the line is the same as the level of the boundary vertex */
+  line->level = face->level;
+  /* The x-coord of the line is either 0 (face = 0) or the length of the root
+   * tree minus the length of the line */
+  line->x =
+    root_face == 0 ? 0 : T8_DLINE_ROOT_LEN - T8_DLINE_LEN (line->level);
+
+  return root_face;
+}
+
+int
 t8_dline_is_familypv (const t8_dline_t * f[])
 {
   const int8_t        level = f[0]->level;

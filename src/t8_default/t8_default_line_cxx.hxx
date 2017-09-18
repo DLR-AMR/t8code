@@ -170,24 +170,14 @@ public:
                                                const t8_eclass_scheme_c *
                                                face_scheme,
                                                t8_element_t * elem,
-                                               int root_face)
-  {
-    /* TODO: Change the class of face_scheme to t8_default_scheme_vertex_c
-     * as soon as it is implemented. */
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                               int root_face);
 
   /** Construct the boundary element at a specific face. */
   virtual void        t8_element_boundary_face (const t8_element_t * elem,
                                                 int face,
                                                 t8_element_t * boundary,
                                                 const t8_eclass_scheme_c *
-                                                boundary_scheme)
-  {
-    /* TODO: Change the class of boundary_scheme to t8_default_scheme_vertex_c
-     * as soon as it is implemented. */
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                boundary_scheme);
 
   /** Construct the first descendant of an element that touches a given face.   */
   virtual void        t8_element_first_descendant_face (const t8_element_t *

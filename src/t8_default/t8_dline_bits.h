@@ -28,6 +28,7 @@
 
 #include <t8_element.h>
 #include "t8_dline.h"
+#include "t8_dvertex.h"
 
 T8_EXTERN_C_BEGIN ();
 
@@ -179,6 +180,17 @@ void                t8_dline_successor (const t8_dline_t * l,
 void                t8_dline_transform_face (const t8_dline_t * line1,
                                              t8_dline_t * line2,
                                              int orientation);
+
+/** Given a vertex at the boundary of a line at a root tree boundary,
+ *  construct the line from it.
+ * \param [in] face     The face element (vertex).
+ * \param [in] root_face  The index of the face of the tree.
+ * \param [out] line    The line that has \a face as face element at face \a root_face
+ * \return              The face number pf \a line that coincides with \a face,
+ *                      thus \a root_face is returned.
+ */
+int                 t8_dline_extrude_face (const t8_dvertex_t * face,
+                                           int root_face, t8_dline_t * line);
 
 /** Compute the first descendant of a line at a given level. This is the descendant of
  * the line in a uniform level refinement that has the smallest id.
