@@ -49,8 +49,8 @@ typedef struct
 /** Function pointer for real valued functions from d+1 space dimensions
  * functions f: R^d x R -> R */
 typedef double      (*t8_scalar_function_1d_fn) (double x, double t);
-typedef double      (*t8_scalar_function_2d_fn) (double x[2], double t);
-typedef double      (*t8_scalar_function_3d_fn) (double x[3], double t);
+typedef double      (*t8_scalar_function_2d_fn) (const double x[2], double t);
+typedef double      (*t8_scalar_function_3d_fn) (const double x[3], double t);
 
 T8_EXTERN_C_BEGIN ();
 
@@ -96,10 +96,27 @@ void                t8_common_midpoint (t8_forest_t forest,
                                         double elem_midpoint_f[3]);
 
 /** Real valued functions defined in t8_example_common_functions.h */
-double              constant_one (double x[3], double t);
 
-/** This function is =1 if the 0.25 <= x <= 0.75 and 0 else */
-double              step_function (double x[3], double t);
+/** Returns always 1.
+ * \return 1
+ */
+double              constant_one (const double x[3], double t);
+
+/** Returns always 0.
+ * \return 0
+ */
+double              constant_zero (const double x[3], double t);
+
+/** Return the x-coordinate of the input.
+ * \return x[0]
+ */
+double              project_x (const double x[3], double t);
+
+/** This function is =1 if the 0.25 <= x <= 0.75 and 0 else. */
+double              step_function (const double x[3], double t);
+
+/** A 1-d Bell-curve centered around 0.5 */
+double              exp_distribution (const double x[3], double t);
 
 T8_EXTERN_C_END ();
 

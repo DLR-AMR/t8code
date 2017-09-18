@@ -54,9 +54,30 @@ typedef struct
 } t8_advect_element_data_t;
 
 double
-t8_advect_flux_lax_friedrich (t8_advect_problem_t * problem,
-                              t8_advect_element_data_t * el_data_plus,
-                              t8_advect_element_data_t * el_data_minus)
+t8_advect_lax_friedrich_alpha (const t8_advect_problem_t * problem,
+                               const t8_advect_element_data_t * el_data_plus,
+                               const t8_advect_element_data_t * el_data_minus)
+{
+  double              alpha;
+  double              dist;
+
+  /* We compute alpha as the derivative of u at the midpoint between
+   * the cells */
+
+  /* The distance between the two cells is the sum of their length divided by two */
+  dist = (el_data_plus->delta_x + el_data_minus->delta_x) / 2.;
+  /* Approximate the derivative of u */
+  alpha =
+    (problem->u (el_data_plus->midpoint, problem->t) -
+     problem->u (el_data_minus->midpoint, problem->t)) / dist;
+
+  return alpha;
+}
+
+double
+t8_advect_flux_lax_friedrich (const t8_advect_problem_t * problem,
+                              const t8_advect_element_data_t * el_data_plus,
+                              const t8_advect_element_data_t * el_data_minus)
 {
   double              alpha = 0;        /* TODO: Choose alpha according to a reasonable criterion */
   double              x_j_half[3];
@@ -82,6 +103,10 @@ t8_advect_flux_lax_friedrich (t8_advect_problem_t * problem,
   phi_sum = el_data_minus->phi + el_data_plus->phi;
   /* Compute the difference of both */
   phi_diff = el_data_plus->phi - el_data_minus->phi;
+
+  /* Compute alpha */
+  alpha =
+    t8_advect_lax_friedrich_alpha (problem, el_data_plus, el_data_minus);
   return .5 * (u_at_x_j_half * phi_sum - alpha * phi_diff);
 }
 
@@ -212,9 +237,9 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
 void
 t8_advect_write_vtk (t8_advect_problem_t * problem)
 {
-  double             *u_and_phi_array[2];
+  double             *u_and_phi_array[3];
   t8_locidx_t         num_local_elements, ielem;
-  t8_vtk_data_field_t vtk_data[2];
+  t8_vtk_data_field_t vtk_data[3];
   t8_advect_element_data_t *elem_data;
   char                fileprefix[BUFSIZ];
 
@@ -222,26 +247,32 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   num_local_elements = t8_forest_get_num_element (problem->forest);
   u_and_phi_array[0] = T8_ALLOC_ZERO (double, num_local_elements);
   u_and_phi_array[1] = T8_ALLOC_ZERO (double, num_local_elements);
+  u_and_phi_array[2] = T8_ALLOC_ZERO (double, num_local_elements);
   /* Fill u and phi arrays with their values */
   for (ielem = 0; ielem < num_local_elements; ielem++) {
     elem_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (&problem->element_data, ielem);
     u_and_phi_array[0][ielem] = problem->u (elem_data->midpoint, problem->t);
     u_and_phi_array[1][ielem] = elem_data->phi;
+    u_and_phi_array[2][ielem] =
+      problem->phi_0 (elem_data->midpoint, problem->t);
   }
 
   /* Write meta data for vtk */
   snprintf (vtk_data[0].description, BUFSIZ, "Flow");
   vtk_data[0].type = T8_VTK_VECTOR;
   vtk_data[0].data = u_and_phi_array[0];
-  snprintf (vtk_data[1].description, BUFSIZ, "Solution");
+  snprintf (vtk_data[1].description, BUFSIZ, "Num. Solution");
   vtk_data[1].type = T8_VTK_SCALAR;
   vtk_data[1].data = u_and_phi_array[1];
+  snprintf (vtk_data[2].description, BUFSIZ, "Ana. Solution");
+  vtk_data[2].type = T8_VTK_SCALAR;
+  vtk_data[2].data = u_and_phi_array[2];
   /* Write filename */
   snprintf (fileprefix, BUFSIZ, "advection_%03i", problem->num_time_steps);
   /* Write vtk files */
   if (t8_forest_vtk_write_file (problem->forest, fileprefix,
-                                1, 1, 1, 1, 1, 2, vtk_data)) {
+                                1, 1, 1, 1, 1, 3, vtk_data)) {
     t8_debugf ("[Advect] Wrote pvtu to files %s\n", fileprefix);
   }
   else {
@@ -250,6 +281,7 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   /* clean-up */
   T8_FREE (u_and_phi_array[0]);
   T8_FREE (u_and_phi_array[1]);
+  T8_FREE (u_and_phi_array[2]);
 }
 
 void
@@ -324,7 +356,6 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
       /* tree loop */
       /* Print vtk */
       t8_advect_write_vtk (problem);
-      t8_advect_print_phi (problem);
       for (ielement = 0;
            ielement < t8_forest_get_tree_num_elements (problem->forest,
                                                        itree);
@@ -388,7 +419,7 @@ main (int argc, char *argv[])
   char                help[BUFSIZ];
   int                 level;
   int                 parsed, helpme;
-  double              T, delta_t;
+  double              T, delta_t, cfl;
   /* brief help message */
   snprintf (usage, BUFSIZ,
             "Usage:\t%s <OPTIONS>\n\t%s -h\t"
@@ -413,6 +444,9 @@ main (int argc, char *argv[])
                          "The duration of the simulation. Default: 1");
   sc_options_add_double (opt, 't', "delta-t", &delta_t,
                          0.1, "The length of ont time-step. Default: 0.1");
+  sc_options_add_double (opt, 'C', "CFL", &cfl,
+                         0.1,
+                         "The cfl number to use. Disables -t. Default: 1");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
@@ -422,7 +456,8 @@ main (int argc, char *argv[])
   }
   else if (parsed >= 0 && 0 <= level) {
     /* Computation */
-    t8_advect_solve (constant_one, step_function, level,
+    delta_t = cfl * 1. / (1 << level);
+    t8_advect_solve (constant_zero, exp_distribution, level,
                      level + 4, T, delta_t, sc_MPI_COMM_WORLD);
   }
   else {
