@@ -107,7 +107,8 @@ t8_advect_problem_init (t8_scalar_function_3d_fn u,
   t8_scheme_cxx_t    *default_scheme;
 
   /* Construct new hypercube cmesh (unit interval) */
-  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_LINE, comm, 0, 0);
+  //cmesh = t8_cmesh_new_hypercube (T8_ECLASS_LINE, comm, 0, 0);
+  cmesh = t8_cmesh_new_periodic (comm, 1);
 
   /* allocate problem */
   problem = T8_ALLOC (t8_advect_problem_t, 1);
@@ -421,7 +422,7 @@ main (int argc, char *argv[])
   }
   else if (parsed >= 0 && 0 <= level) {
     /* Computation */
-    t8_advect_solve (constant_one, constant_one, level,
+    t8_advect_solve (constant_one, step_function, level,
                      level + 4, T, delta_t, sc_MPI_COMM_WORLD);
   }
   else {
