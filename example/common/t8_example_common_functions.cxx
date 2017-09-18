@@ -28,25 +28,25 @@
 T8_EXTERN_C_BEGIN ();
 
 double
-constant_one (const double x[3], double t)
+t8_constant_one (const double x[3], double t)
 {
   return 1;
 }
 
 double
-constant_zero (const double x[3], double t)
+t8_constant_zero (const double x[3], double t)
 {
   return 0;
 }
 
 double
-project_x (const double x[3], double t)
+t8_project_x (const double x[3], double t)
 {
   return x[0];
 }
 
 double
-exp_distribution (const double x[3], double t)
+t8_exp_distribution (const double x[3], double t)
 {
   double              dummy, X;
 
@@ -54,14 +54,20 @@ exp_distribution (const double x[3], double t)
    * mapped to the unit interval */
   t = modf (t, &dummy);
   X = x[0] - .5;
-  return exp (-2 * X * X);
+  return exp (-4 * X * X);
 }
 
 /* This function is =1 if the 0.25 <= x <= 0.75 and 0 else */
 double
-step_function (const double x[3], double t)
+t8_step_function (const double x[3], double t)
 {
   return 0.25 <= x[0] && x[0] <= 0.75;
+}
+
+double
+t8_sint (const double x[3], double t)
+{
+  return sin (2 * M_PI * t);
 }
 
 T8_EXTERN_C_END ();

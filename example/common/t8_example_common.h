@@ -100,23 +100,28 @@ void                t8_common_midpoint (t8_forest_t forest,
 /** Returns always 1.
  * \return 1
  */
-double              constant_one (const double x[3], double t);
+double              t8_constant_one (const double x[3], double t);
 
 /** Returns always 0.
  * \return 0
  */
-double              constant_zero (const double x[3], double t);
+double              t8_constant_zero (const double x[3], double t);
 
 /** Return the x-coordinate of the input.
  * \return x[0]
  */
-double              project_x (const double x[3], double t);
+double              t8_project_x (const double x[3], double t);
 
 /** This function is =1 if the 0.25 <= x <= 0.75 and 0 else. */
-double              step_function (const double x[3], double t);
+double              t8_step_function (const double x[3], double t);
 
 /** A 1-d Bell-curve centered around 0.5 */
-double              exp_distribution (const double x[3], double t);
+double              t8_exp_distribution (const double x[3], double t);
+
+/** Sinus of t
+ * \return sin (2pi t)
+ */
+double              t8_sint (const double x[3], double t);
 
 T8_EXTERN_C_END ();
 

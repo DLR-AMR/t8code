@@ -53,7 +53,7 @@ typedef struct
   double              phi_new; /**< Value of solution at midpoint in next time step */
 } t8_advect_element_data_t;
 
-double
+static double
 t8_advect_lax_friedrich_alpha (const t8_advect_problem_t * problem,
                                const t8_advect_element_data_t * el_data_plus,
                                const t8_advect_element_data_t * el_data_minus)
@@ -74,7 +74,38 @@ t8_advect_lax_friedrich_alpha (const t8_advect_problem_t * problem,
   return alpha;
 }
 
-double
+/* Compute the relative l_infty error of the stored phi values compared to a
+ * given analytical function at time problem->t */
+static double
+t8_advect_l_infty (const t8_advect_problem_t * problem,
+                   t8_scalar_function_3d_fn analytical_sol)
+{
+  t8_locidx_t         num_local_elements, ielem;
+  t8_advect_element_data_t *elem_data;
+  double              error = 0, el_error, global_error;
+
+  num_local_elements = t8_forest_get_num_element (problem->forest);
+  for (ielem = 0; ielem < num_local_elements; ielem++) {
+    elem_data = (t8_advect_element_data_t *)
+      t8_sc_array_index_locidx ((sc_array_t *) & problem->element_data,
+                                ielem);
+
+    /* Compute the error as the stored value at the midpoint of this element
+     * minus the solution at this midpoint */
+    el_error =
+      fabs ((elem_data->phi -
+             analytical_sol (elem_data->midpoint, problem->t))) /
+      analytical_sol (elem_data->midpoint, problem->t);
+    error = SC_MAX (error, el_error);
+  }
+  /* Compute the maximum of the error among all processes */
+  sc_MPI_Allreduce (&error, &global_error, 1, sc_MPI_DOUBLE, sc_MPI_MAX,
+                    problem->comm);
+
+  return global_error;
+}
+
+static double
 t8_advect_flux_lax_friedrich (const t8_advect_problem_t * problem,
                               const t8_advect_element_data_t * el_data_plus,
                               const t8_advect_element_data_t * el_data_minus)
@@ -110,7 +141,7 @@ t8_advect_flux_lax_friedrich (const t8_advect_problem_t * problem,
   return .5 * (u_at_x_j_half * phi_sum - alpha * phi_diff);
 }
 
-void
+static void
 t8_advect_advance_element (t8_advect_problem_t * problem,
                            t8_advect_element_data_t * elem,
                            double flux_left, double flux_right)
@@ -121,7 +152,7 @@ t8_advect_advance_element (t8_advect_problem_t * problem,
     + elem->phi;
 }
 
-t8_advect_problem_t *
+static t8_advect_problem_t *
 t8_advect_problem_init (t8_scalar_function_3d_fn u,
                         t8_scalar_function_3d_fn phi_0, int level,
                         int maxlevel, double T, double delta_t,
@@ -180,7 +211,7 @@ t8_advect_project_element_data (t8_advect_problem_t * problem)
   t8_forest_ghost_exchange_data (problem->forest, &problem->element_data);
 }
 
-void
+static void
 t8_advect_compute_element_data (t8_advect_problem_t * problem,
                                 t8_advect_element_data_t * elem_data,
                                 t8_element_t * element, t8_locidx_t ltreeid,
@@ -195,7 +226,7 @@ t8_advect_compute_element_data (t8_advect_problem_t * problem,
     1. / (((uint64_t) 1) << ts->t8_element_level (element));
 }
 
-void
+static void
 t8_advect_problem_init_elements (t8_advect_problem_t * problem)
 {
   t8_locidx_t         itree, ielement, idata;
@@ -234,7 +265,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   t8_forest_ghost_exchange_data (problem->forest, &problem->element_data);
 }
 
-void
+static void
 t8_advect_write_vtk (t8_advect_problem_t * problem)
 {
   double             *u_and_phi_array[3];
@@ -284,7 +315,7 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   T8_FREE (u_and_phi_array[2]);
 }
 
-void
+static void
 t8_advect_print_phi (t8_advect_problem_t * problem)
 {
   t8_locidx_t         ielement;
@@ -306,7 +337,7 @@ t8_advect_print_phi (t8_advect_problem_t * problem)
   buffer[0] = '\0';
 }
 
-void
+static void
 t8_advect_problem_destroy (t8_advect_problem_t ** pproblem)
 {
   t8_advect_problem_t *problem;
@@ -324,11 +355,11 @@ t8_advect_problem_destroy (t8_advect_problem_t ** pproblem)
   *pproblem = NULL;
 }
 
-void
+static void
 t8_advect_solve (t8_scalar_function_3d_fn u,
                  t8_scalar_function_3d_fn phi_0,
                  int level, int maxlevel, double T,
-                 double delta_t, sc_MPI_Comm comm)
+                 double delta_t, sc_MPI_Comm comm, int no_vtk)
 {
   t8_advect_problem_t *problem;
   int                 iface;
@@ -336,6 +367,8 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
   t8_advect_element_data_t *elem_data, *neigh_data, *plus_data, *minus_data;
   t8_advect_element_data_t boundary_data;
   double              flux[2];
+  double              l_infty;
+  int                 modulus, time_steps, vtk_freq = 10;
 
   t8_element_t       *elem, **neighs;
   int                 num_neighs;
@@ -347,15 +380,27 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
     t8_advect_problem_init (u, phi_0, level, maxlevel, T, delta_t, comm);
   t8_advect_problem_init_elements (problem);
 
+  time_steps = (int) (T / delta_t);
+  t8_global_productionf ("[advect] Starting with Computation. Level %i."
+                         " End time %g. delta_t %g. %i time steps.\n", level,
+                         T, delta_t, time_steps);
+  /* This is kind of dirty to find the higest power of 10 in the number of time steps */
+  modulus = time_steps / 10;
   for (problem->num_time_steps = 0; problem->t < problem->T;
        problem->num_time_steps++, problem->t += problem->delta_t) {
+    if (problem->num_time_steps % modulus == modulus - 1) {
+      t8_global_productionf ("[advect] Step %i\n",
+                             problem->num_time_steps + 1);
+    }
     /* Time loop */
 
+    /* Print vtk */
+    if (!no_vtk && problem->num_time_steps % vtk_freq == 0) {
+      t8_advect_write_vtk (problem);
+    }
     for (itree = 0, lelement = 0;
          itree < t8_forest_get_num_local_trees (problem->forest); itree++) {
       /* tree loop */
-      /* Print vtk */
-      t8_advect_write_vtk (problem);
       for (ielement = 0;
            ielement < t8_forest_get_tree_num_elements (problem->forest,
                                                        itree);
@@ -403,8 +448,14 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
     /* Project the computed solution to the new forest and exchange ghost values */
     t8_advect_project_element_data (problem);
   }
-  /* Print last time step vtk */
-  t8_advect_write_vtk (problem);
+  if (!no_vtk) {
+    /* Print last time step vtk */
+    t8_advect_write_vtk (problem);
+  }
+
+  /* Compute l_infty error */
+  l_infty = t8_advect_l_infty (problem, phi_0);
+  t8_global_productionf ("[advect] Done. l_infty error:\t%e\n", l_infty);
 
   /* clean-up */
   t8_advect_problem_destroy (&problem);
@@ -418,8 +469,9 @@ main (int argc, char *argv[])
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
   int                 level;
-  int                 parsed, helpme;
+  int                 parsed, helpme, no_vtk;
   double              T, delta_t, cfl;
+
   /* brief help message */
   snprintf (usage, BUFSIZ,
             "Usage:\t%s <OPTIONS>\n\t%s -h\t"
@@ -433,7 +485,7 @@ main (int argc, char *argv[])
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  t8_init (SC_LP_DEBUG);
+  t8_init (SC_LP_PRODUCTION);
   /* initialize command line argument parser */
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme,
@@ -447,6 +499,7 @@ main (int argc, char *argv[])
   sc_options_add_double (opt, 'C', "CFL", &cfl,
                          0.1,
                          "The cfl number to use. Disables -t. Default: 1");
+  sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk, "Suppress vtk output.");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
@@ -456,9 +509,9 @@ main (int argc, char *argv[])
   }
   else if (parsed >= 0 && 0 <= level) {
     /* Computation */
-    delta_t = cfl * 1. / (1 << level);
-    t8_advect_solve (constant_zero, exp_distribution, level,
-                     level + 4, T, delta_t, sc_MPI_COMM_WORLD);
+    delta_t = cfl / (1 << level);
+    t8_advect_solve (t8_constant_one, t8_exp_distribution, level,
+                     level + 4, T, delta_t, sc_MPI_COMM_WORLD, no_vtk);
   }
   else {
     /* wrong usage */
