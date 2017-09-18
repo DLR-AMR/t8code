@@ -40,6 +40,15 @@ t8_default_scheme_vertex_c::t8_element_level (const t8_element_t * elem)
   return t8_dvertex_get_level ((t8_dvertex_t *) elem);
 }
 
+/* *INDENT-OFF* */
+t8_eclass_t
+t8_default_scheme_vertex_c::t8_element_child_eclass (int childid)
+{
+  T8_ASSERT (childid == 0);
+  return T8_ECLASS_VERTEX;
+}
+/* *INDENT-ON* */
+
 void
 t8_default_scheme_vertex_c::t8_element_copy (const t8_element_t * source,
                                              t8_element_t * dest)
@@ -180,6 +189,23 @@ t8_default_scheme_vertex_c::t8_element_nca (const t8_element_t * elem1,
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
   t8_dvertex_nearest_common_ancestor (v1, v2, c);
+}
+
+/** Transform the coordinates of a vertex considered as boundary element
+ *  in a tree-tree connection. */
+void
+t8_default_scheme_vertex_c::t8_element_transform_face (const t8_element_t *
+                                                       elem1,
+                                                       t8_element_t * elem2,
+                                                       int orientation,
+                                                       int sign,
+                                                       int is_smaller_face)
+{
+  T8_ASSERT (t8_element_is_valid (elem1));
+  T8_ASSERT (t8_element_is_valid (elem2));
+
+  t8_dvertex_transform_face ((const t8_dvertex_t *) elem1,
+                             (t8_dvertex_t *) elem2);
 }
 
 int

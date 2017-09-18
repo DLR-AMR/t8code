@@ -42,9 +42,8 @@ t8_scheme_new_default_cxx (void)
 
   s = T8_ALLOC_ZERO (t8_scheme_cxx_t, 1);
   t8_refcount_init (&s->rc);
-#if 0
+
   s->eclass_schemes[T8_ECLASS_VERTEX] = new t8_default_scheme_vertex_c ();
-#endif
   s->eclass_schemes[T8_ECLASS_LINE] = new t8_default_scheme_line_c ();
   s->eclass_schemes[T8_ECLASS_QUAD] = new t8_default_scheme_quad_c ();
   s->eclass_schemes[T8_ECLASS_HEX] = new t8_default_scheme_hex_c ();
