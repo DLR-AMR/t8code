@@ -25,6 +25,7 @@
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_private.h>        /* TODO: remove */
 #include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest_vtk.h>
 #include <example/common/t8_example_common.h>
 
@@ -33,6 +34,7 @@ typedef struct
   t8_scalar_function_3d_fn u; /**< Fluid field */
   t8_scalar_function_3d_fn phi_0; /**< Initial condition for phi */
   t8_forest_t         forest; /**< The forest in use */
+  t8_forest_t         forest_adapt; /**< The forest after adaptation */
   sc_array            element_data; /**< Array of type t8_advect_element_data_t of length
                               num_local_elements + num_ghosts */
   sc_MPI_Comm         comm; /**< MPI communicator used */
@@ -52,6 +54,16 @@ typedef struct
   double              phi; /**< Value of solution at midpoint */
   double              phi_new; /**< Value of solution at midpoint in next time step */
 } t8_advect_element_data_t;
+
+static int
+t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
+                 t8_locidx_t ltree_id, t8_eclass_scheme_c * ts,
+                 int num_elements, t8_element_t * elements[])
+{
+  static int          count = 0;
+
+  return count++ % 2;
+}
 
 static double
 t8_advect_lax_friedrich_alpha (const t8_advect_problem_t * problem,
@@ -154,6 +166,30 @@ t8_advect_advance_element (t8_advect_problem_t * problem,
   elem->phi_new =
     (problem->delta_t / elem->delta_x) * (flux_left - flux_right)
     + elem->phi;
+}
+
+static void
+t8_advect_replace (t8_forest_t forest_old,
+                   t8_forest_t forest_new,
+                   t8_locidx_t which_tree,
+                   t8_eclass_scheme_c * ts,
+                   int num_outgoing,
+                   t8_locidx_t first_outgoing,
+                   int num_incoming, t8_locidx_t first_incoming)
+{
+  t8_debugf ("[advect] first_out %i num %i, first_in %i num %i\n",
+             first_outgoing, num_outgoing, first_incoming, num_incoming);
+}
+
+static void
+t8_advect_problem_adapt (t8_advect_problem_t * problem)
+{
+  t8_forest_ref (problem->forest);
+  problem->forest_adapt =
+    t8_forest_new_adapt (problem->forest, t8_advect_adapt, 0, 1, NULL);
+  t8_forest_iterate_replace (problem->forest_adapt, problem->forest,
+                             t8_advect_replace);
+  t8_forest_unref (&problem->forest_adapt);
 }
 
 static t8_advect_problem_t *
@@ -388,6 +424,10 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
   t8_global_productionf ("[advect] Starting with Computation. Level %i."
                          " End time %g. delta_t %g. %i time steps.\n", level,
                          T, delta_t, time_steps);
+
+  /* Testing replace */
+  t8_advect_problem_adapt (problem);
+
   /* This is kind of dirty to find the higest power of 10 in the number of time steps */
   modulus = time_steps / 10;
   for (problem->num_time_steps = 0; problem->t < problem->T;
@@ -489,7 +529,8 @@ main (int argc, char *argv[])
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  t8_init (SC_LP_PRODUCTION);
+  t8_init (SC_LP_DEBUG);
+
   /* initialize command line argument parser */
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme,
