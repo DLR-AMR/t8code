@@ -1258,7 +1258,7 @@ t8_forest_new_adapt (t8_forest_t forest_from,
   t8_forest_t         forest;
 
   t8_forest_init (&forest);
-  t8_forest_set_adapt (forest, forest_from, adapt_fn, 1);
+  t8_forest_set_adapt (forest, forest_from, adapt_fn, recursive);
   t8_forest_set_ghost (forest, do_face_ghost, T8_GHOST_FACES);
   if (user_data != NULL) {
     t8_forest_set_user_data (forest, user_data);
