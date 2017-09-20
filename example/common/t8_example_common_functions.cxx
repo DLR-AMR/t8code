@@ -65,6 +65,12 @@ t8_step_function (const double x[3], double t)
 }
 
 double
+t8_sinx (const double x[3], double t)
+{
+  return sin (2 * M_PI * x[0]);
+}
+
+double
 t8_sint (const double x[3], double t)
 {
   return sin (2 * M_PI * t);

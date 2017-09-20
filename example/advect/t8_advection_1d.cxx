@@ -77,12 +77,12 @@ t8_advect_lax_friedrich_alpha (const t8_advect_problem_t * problem,
 /* Compute the relative l_infty error of the stored phi values compared to a
  * given analytical function at time problem->t */
 static double
-t8_advect_l_infty (const t8_advect_problem_t * problem,
-                   t8_scalar_function_3d_fn analytical_sol)
+t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
+                       t8_scalar_function_3d_fn analytical_sol)
 {
   t8_locidx_t         num_local_elements, ielem;
   t8_advect_element_data_t *elem_data;
-  double              error = 0, el_error, global_error;
+  double              error[2] = { 0, 0 }, el_error, global_error[2];
 
   num_local_elements = t8_forest_get_num_element (problem->forest);
   for (ielem = 0; ielem < num_local_elements; ielem++) {
@@ -94,15 +94,19 @@ t8_advect_l_infty (const t8_advect_problem_t * problem,
      * minus the solution at this midpoint */
     el_error =
       fabs ((elem_data->phi -
-             analytical_sol (elem_data->midpoint, problem->t))) /
-      analytical_sol (elem_data->midpoint, problem->t);
-    error = SC_MAX (error, el_error);
+             analytical_sol (elem_data->midpoint, problem->t)));
+    error[0] = SC_MAX (error[0], el_error);
+    /* Compute the l_infty norm of the analytical solution */
+    error[1] =
+      SC_MAX (error[1], analytical_sol (elem_data->midpoint, problem->t));
   }
   /* Compute the maximum of the error among all processes */
-  sc_MPI_Allreduce (&error, &global_error, 1, sc_MPI_DOUBLE, sc_MPI_MAX,
+  sc_MPI_Allreduce (&error, &global_error, 2, sc_MPI_DOUBLE, sc_MPI_MAX,
                     problem->comm);
 
-  return global_error;
+  /* Return the relative error, that is the l_infty error divided by
+   * the l_infty norm of the analytical solution */
+  return global_error[0] / global_error[1];
 }
 
 static double
@@ -454,7 +458,7 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
   }
 
   /* Compute l_infty error */
-  l_infty = t8_advect_l_infty (problem, phi_0);
+  l_infty = t8_advect_l_infty_rel (problem, phi_0);
   t8_global_productionf ("[advect] Done. l_infty error:\t%e\n", l_infty);
 
   /* clean-up */
@@ -510,7 +514,7 @@ main (int argc, char *argv[])
   else if (parsed >= 0 && 0 <= level) {
     /* Computation */
     delta_t = cfl / (1 << level);
-    t8_advect_solve (t8_constant_one, t8_exp_distribution, level,
+    t8_advect_solve (t8_constant_one, t8_sinx, level,
                      level + 4, T, delta_t, sc_MPI_COMM_WORLD, no_vtk);
   }
   else {

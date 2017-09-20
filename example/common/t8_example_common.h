@@ -118,6 +118,11 @@ double              t8_step_function (const double x[3], double t);
 /** A 1-d Bell-curve centered around 0.5 */
 double              t8_exp_distribution (const double x[3], double t);
 
+/** Sinus of 2pi x_0
+ * \return sin (2pi x[0])
+ */
+double              t8_sinx (const double x[3], double t);
+
 /** Sinus of t
  * \return sin (2pi t)
  */
