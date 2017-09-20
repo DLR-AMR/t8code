@@ -234,7 +234,6 @@ void                t8_forest_set_copy (t8_forest_t forest,
 void                t8_forest_set_adapt (t8_forest_t forest,
                                          const t8_forest_t set_from,
                                          t8_forest_adapt_t adapt_fn,
-                                         t8_forest_replace_t replace_fn,
                                          int recursive);
 
 /** Set the user data of a forest. This can i.e. be used to pass user defined
@@ -740,7 +739,6 @@ t8_forest_t         t8_forest_new_uniform (t8_cmesh_t cmesh,
  */
 t8_forest_t         t8_forest_new_adapt (t8_forest_t forest_from,
                                          t8_forest_adapt_t adapt_fn,
-                                         t8_forest_replace_t replace_fn,
                                          int recursive, int do_face_ghost,
                                          void *user_data);
 

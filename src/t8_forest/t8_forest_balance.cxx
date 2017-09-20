@@ -137,7 +137,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     /* Initialize the temp forest to be adapted from forest_from */
     t8_forest_init (&forest_temp);
     t8_forest_set_adapt (forest_temp, forest_from, t8_forest_balance_adapt,
-                         NULL, 0);
+                         0);
     if (!repartition) {
       t8_forest_set_ghost (forest_temp, 1, T8_GHOST_FACES);
     }

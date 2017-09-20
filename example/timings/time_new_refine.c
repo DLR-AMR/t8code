@@ -101,13 +101,13 @@ t8_timings_adapt (int start_l, int end_l, int runs, int dim)
     for (li = 1; li < num_levels; li++, cur_for++) {
       t8_forest_init (&forests[cur_for]);
       t8_forest_set_adapt (forests[cur_for], forests[cur_for - 1],
-                           t8_basic_adapt_refine, NULL, 0);
+                           t8_basic_adapt_refine, 0);
       t8_forest_commit (forests[cur_for]);
     }
     for (li = 1; li < num_levels; li++, cur_for++) {
       t8_forest_init (&forests[cur_for]);
       t8_forest_set_adapt (forests[cur_for], forests[cur_for - 1],
-                           t8_basic_adapt_coarsen, NULL, 0);
+                           t8_basic_adapt_coarsen, 0);
       t8_forest_commit (forests[cur_for]);
     }
   }

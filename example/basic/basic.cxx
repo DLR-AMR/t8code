@@ -119,7 +119,7 @@ t8_basic_refine_test (t8_eclass_t eclass)
   t8_forest_write_vtk (forest, filename);
 
 #if 1
-  t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, NULL, 1);
+  t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, 1);
 #else
   {
     t8_example_level_set_struct_t ls_data;
@@ -136,8 +136,7 @@ t8_basic_refine_test (t8_eclass_t eclass)
     ls_data.max_level = maxlevel;
     ls_data.udata = &sdata;
     t8_forest_set_user_data (forest_adapt, &ls_data);
-    t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set,
-                         NULL, 1);
+    t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
   }
 #endif
   t8_forest_commit (forest_adapt);
@@ -177,7 +176,7 @@ t8_basic_balance_test (t8_eclass_t eclass)
   /* Set user data for adapt */
   t8_forest_set_user_data (forest_ada_bal_par, &maxlevel);
   t8_forest_set_adapt (forest_ada_bal_par, forest, t8_common_adapt_balance,
-                       NULL, 1);
+                       1);
   t8_forest_set_balance (forest_ada_bal_par, NULL, 0);
   t8_forest_set_partition (forest_ada_bal_par, NULL, 0);
   t8_forest_set_profiling (forest_ada_bal_par, 1);
@@ -215,7 +214,7 @@ t8_basic_forest_partition ()
   t8_forest_set_level (forest, level);
   t8_forest_commit (forest);
   /* Adapt and partition forest */
-  t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, NULL, 1);
+  t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, 1);
   t8_forest_set_partition (forest_partition, forest_adapt, 0);
   t8_forest_set_profiling (forest_partition, 1);
   t8_forest_commit (forest_adapt);

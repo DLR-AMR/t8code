@@ -104,7 +104,7 @@ t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, int level,
     adapt_fn = refine_p8 ? t8_refine_p8est : t8_basic_adapt;
     /* Refine the forest if desired */
     for (r = 0; r < refine_forest; r++) {
-      t8_forest_set_adapt (forest_ghost, forest, adapt_fn, NULL, 0);
+      t8_forest_set_adapt (forest_ghost, forest, adapt_fn, 0);
       t8_forest_commit (forest_ghost);
       forest = forest_ghost;
       t8_forest_init (&forest_ghost);

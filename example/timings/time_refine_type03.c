@@ -83,8 +83,7 @@ t8_timings_adapt_type (int start_l, int dim)
   t8_forest_commit (forests[0]);
 
   t8_forest_init (&forests[1]);
-  t8_forest_set_adapt (forests[1], forests[0],
-                       t8_basic_adapt_refine_type, NULL, 1);
+  t8_forest_set_adapt (forests[1], forests[0], t8_basic_adapt_refine_type, 1);
 
   sc_flops_start (&fi);
   sc_flops_snap (&fi, &snapshot);

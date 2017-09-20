@@ -128,11 +128,11 @@ t8_time_refine (int start_level, int end_level, int create_forest, int cube,
     t8_forest_set_profiling (forest_adapt, 1);
     if (eclass == T8_ECLASS_PRISM) {
       t8_forest_set_adapt (forest_adapt, forest,
-                           t8_basic_adapt_refine_type, NULL, 1);
+                           t8_basic_adapt_refine_type, 1);
     }
     else {
       t8_forest_set_adapt (forest_adapt, forest,
-                           t8_basic_adapt_refine_tet, NULL, 1);
+                           t8_basic_adapt_refine_tet, 1);
     }
     t8_forest_commit (forest_adapt);
     t8_forest_print_profile (forest_adapt);

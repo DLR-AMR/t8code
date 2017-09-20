@@ -273,8 +273,7 @@ t8_forest_set_ghost (t8_forest_t forest, int do_ghost,
 
 void
 t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from,
-                     t8_forest_adapt_t adapt_fn,
-                     t8_forest_replace_t replace_fn, int recursive)
+                     t8_forest_adapt_t adapt_fn, int recursive)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
@@ -286,7 +285,6 @@ t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from,
   T8_ASSERT (forest->set_adapt_recursive == -1);
 
   forest->set_adapt_fn = adapt_fn;
-  forest->set_replace_fn = replace_fn;
   forest->set_adapt_recursive = recursive != 0;
 
   if (set_from != NULL) {
@@ -447,7 +445,7 @@ t8_forest_commit (t8_forest_t forest)
                                  t8_forest_get_user_data (forest));
         /* Construct an intermediate, adapted forest */
         t8_forest_set_adapt (forest_adapt, forest->set_from,
-                             forest->set_adapt_fn, forest->set_replace_fn,
+                             forest->set_adapt_fn,
                              forest->set_adapt_recursive);
         /* Set profiling if enabled */
         t8_forest_set_profiling (forest_adapt, forest->profile != NULL);
@@ -1255,13 +1253,12 @@ t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t * scheme,
 t8_forest_t
 t8_forest_new_adapt (t8_forest_t forest_from,
                      t8_forest_adapt_t adapt_fn,
-                     t8_forest_replace_t replace_fn,
                      int recursive, int do_face_ghost, void *user_data)
 {
   t8_forest_t         forest;
 
   t8_forest_init (&forest);
-  t8_forest_set_adapt (forest, forest_from, adapt_fn, replace_fn, 1);
+  t8_forest_set_adapt (forest, forest_from, adapt_fn, 1);
   t8_forest_set_ghost (forest, do_face_ghost, T8_GHOST_FACES);
   if (user_data != NULL) {
     t8_forest_set_user_data (forest, user_data);

@@ -79,8 +79,11 @@ typedef struct t8_forest
 
   t8_forest_t         set_from;         /**< Temporarily store source forest. */
   t8_forest_from_t    from_method;      /**< Method to derive from \b set_from. */
+#if 0
+  /* TODO: Think about this. see t8_forest_iterate.{cxx,h} */
   t8_forest_replace_t set_replace_fn;   /**< Replace function. Called when \b from_method
                                              is set to T8_FOREST_FROM_ADAPT. */
+#endif
   t8_forest_adapt_t   set_adapt_fn;     /**< refinement and coarsen function. Called when \b from_method
                                              is set to T8_FOREST_FROM_ADAPT. */
   int                 set_adapt_recursive; /**< Flag to decide whether coarsen and refine

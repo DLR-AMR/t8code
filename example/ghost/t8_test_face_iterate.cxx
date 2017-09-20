@@ -151,7 +151,7 @@ t8_test_fiterate_refine_and_partition (t8_cmesh_t cmesh, int level,
 
   t8_test_fiterate (forest);
   t8_forest_init (&forest_adapt);
-  t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, NULL, 1);
+  t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, 1);
   t8_forest_commit (forest_adapt);
   if (!no_vtk) {
     t8_forest_write_vtk (forest_adapt, "test_fiterate");

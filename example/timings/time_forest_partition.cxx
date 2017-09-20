@@ -224,7 +224,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
     for (r = 0; r < refine_rounds; r++) {
       /* TODO: profiling */
       t8_forest_init (&forest_adapt);
-      t8_forest_set_adapt (forest_adapt, forest, t8_band_adapt, NULL, 0);
+      t8_forest_set_adapt (forest_adapt, forest, t8_band_adapt, 0);
       /* Set the minimum and maximum x-coordinates as user data */
       adapt_data.c_min = x_min_max[0] + t;
       adapt_data.c_max = x_min_max[1] + t;
