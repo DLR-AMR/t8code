@@ -86,6 +86,19 @@ void                t8_forest_search (t8_forest_t forest,
                                       t8_forest_search_query_fn search_fn,
                                       void *user_data);
 
+/** Given two forest where one resulted from the other by a non-recursive
+ * adaptation. Compare the two forests and for each refined element or coarsened
+ * family in the old one, call a callback function providing the local indices
+ * of the old and new elements.
+ * \param [in]  forest_new  A forest, \a forest_old after a non-recursive adaptation.
+ * \param [in]  forest_old  The initial forest.
+ * \param [in]  replace_fn  A replace callback function.
+ */
+void                t8_forest_iterate_replace (t8_forest_t forest_new,
+                                               t8_forest_t forest_old,
+                                               t8_forest_replace_t
+                                               replace_fn);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_ITERATE_H! */

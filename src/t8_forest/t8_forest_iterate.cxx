@@ -304,4 +304,76 @@ t8_forest_search (t8_forest_t forest, t8_forest_search_query_fn search_fn,
   }
 }
 
+void
+t8_forest_iterate_replace (t8_forest_t forest_new,
+                           t8_forest_t forest_old,
+                           t8_forest_replace_t replace_fn)
+{
+  t8_locidx_t         ielem_new, ielem_old, elems_per_tree_old,
+    elems_per_tree_new;
+  t8_locidx_t         itree, num_local_trees;
+  t8_locidx_t         family_size;
+  t8_element_t       *elem_new, *elem_old;
+  t8_eclass_scheme_c *ts;
+  t8_eclass_t         eclass;
+  int                 level_new, level_old;
+
+  T8_ASSERT (t8_forest_is_committed (forest_old));
+  T8_ASSERT (t8_forest_is_committed (forest_new));
+  T8_ASSERT (forest_new->set_from == forest_new);
+
+  num_local_trees = t8_forest_get_num_local_trees (forest_new);
+  T8_ASSERT (num_local_trees == t8_forest_get_num_local_trees (forest_old));
+
+  for (itree = 0; itree < num_local_trees; itree++) {
+    /* Loop over the trees */
+    /* Get the number of elements of this tree in old and new forest */
+    elems_per_tree_new = t8_forest_get_tree_num_elements (forest_new, itree);
+    elems_per_tree_old = t8_forest_get_tree_num_elements (forest_old, itree);
+    /* Get the eclass and scheme of the tree */
+    eclass = t8_forest_get_tree_class (forest_new, itree);
+    T8_ASSERT (eclass == t8_forest_get_tree_class (forest_old, itree));
+    ts = t8_forest_get_eclass_scheme (forest_new, eclass);
+    T8_ASSERT (ts == t8_forest_get_eclass_scheme (forest_new, eclass));
+    for (ielem_new = 0, ielem_old = 0; ielem_new < elems_per_tree_new
+         || ielem_old < elems_per_tree_old;) {
+      /* Iterate over the elements */
+      /* Get pointers to the elements */
+      elem_new = t8_forest_get_element_in_tree (forest_new, itree, ielem_new);
+      elem_old = t8_forest_get_element_in_tree (forest_old, itree, ielem_old);
+      /* Get the levels of these elements */
+      level_new = ts->t8_element_level (elem_new);
+      level_old = ts->t8_element_level (elem_old);
+      /* If the levels differ, elem_new was refined or its family coarsened */
+      if (level_old < level_new) {
+        /* elem_old was refined */
+        family_size = ts->t8_element_num_children (elem_old);
+        replace_fn (forest_old, forest_new, itree, ts, 1, ielem_old,
+                    family_size, ielem_new);
+        /* Advance to the next element */
+        ielem_new += family_size;
+        ielem_old++;
+      }
+      else if (level_old > level_new) {
+        /* elem_old was coarsened */
+        family_size = ts->t8_element_num_children (elem_new);
+        replace_fn (forest_old, forest_new, itree, ts, family_size, ielem_old,
+                    1, ielem_new);
+        /* Advance to the next element */
+        ielem_new++;
+        ielem_old += family_size;
+      }
+      else {
+        /* elem_new = elem_old */
+        T8_ASSERT (!ts->t8_element_compare (elem_new, elem_old));
+        replace_fn (forest_old, forest_new, itree, ts, 1, ielem_old, 1,
+                    ielem_new);
+        /* Advance to the next element */
+        ielem_new++;
+        ielem_old++;
+      }
+    }                           /* element loop */
+  }                             /* tree loop */
+}
+
 T8_EXTERN_C_END ();

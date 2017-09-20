@@ -65,23 +65,21 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] which_tree  the local tree containing \a outgoing and \a incoming
  * \param [in] ts          the eclass scheme of the tree
  * \param [in] num_outgoing The number of outgoing elements.
- * \param [in] outgoing     The outgoing elements: after the callback, the
- *                          user_data will be destroyed. (at the current state there is no user data)
+ * \param [in] first_outgoing  The local index of the first outgoing element.
  * \param [in] num_incoming The number of incoming elements.
- * \param [in,out] incoming The incoming elements: prior to the callback,
- *                          the user_data is allocated, and the forest_init_t callback,
- *                          if it has been provided, will be called.
+ * \param [in] first_incoming The local index of the first incoming element.
  *
  * If an element is being refined, num_outgoing will be 1 and num_incoming will
  * be the number of children, and vice versa if a family is being coarsened.
  */
-typedef void        (*t8_forest_replace_t) (t8_forest_t forest,
+typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
+                                            t8_forest_t forest_new,
                                             t8_locidx_t which_tree,
                                             t8_eclass_scheme_c * ts,
                                             int num_outgoing,
-                                            t8_element_t * outgoing[],
+                                            t8_locidx_t first_outgoing,
                                             int num_incoming,
-                                            t8_element_t * incoming[]);
+                                            t8_locidx_t first_incoming);
 
 /** Callback function prototype to decide for refining and coarsening.
  * If the \a num_elements equals the number of children then the elements
