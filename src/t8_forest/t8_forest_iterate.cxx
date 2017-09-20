@@ -318,9 +318,9 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
   t8_eclass_t         eclass;
   int                 level_new, level_old;
 
+  t8_global_productionf ("Into t8_forest_iterate_replace\n");
   T8_ASSERT (t8_forest_is_committed (forest_old));
   T8_ASSERT (t8_forest_is_committed (forest_new));
-  T8_ASSERT (forest_new->set_from == forest_new);
 
   num_local_trees = t8_forest_get_num_local_trees (forest_new);
   T8_ASSERT (num_local_trees == t8_forest_get_num_local_trees (forest_old));
@@ -374,6 +374,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
       }
     }                           /* element loop */
   }                             /* tree loop */
+  t8_global_productionf ("Done t8_forest_iterate_replace\n");
 }
 
 T8_EXTERN_C_END ();
