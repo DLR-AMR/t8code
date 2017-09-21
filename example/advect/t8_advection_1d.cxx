@@ -272,8 +272,17 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem)
 
   /* Adapt the forest, but keep the old one */
   t8_forest_ref (problem->forest);
-  problem->forest_adapt =
-    t8_forest_new_adapt (problem->forest, t8_advect_adapt, 0, 1, NULL);
+  t8_forest_init (&problem->forest_adapt);
+  /* Set the adapt function */
+  t8_forest_set_adapt (problem->forest_adapt, problem->forest,
+                       t8_advect_adapt, 0);
+  /* We also want to balance the forest */
+  t8_forest_set_balance (problem->forest_adapt, NULL, 1);
+  /* We also want ghost elements in the new forest */
+  t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
+  /* Commit the forest, adaptation and balance happens here */
+  t8_forest_commit (problem->forest_adapt);
+
   /* Set the user data pointer of the new forest */
   t8_forest_set_user_data (problem->forest_adapt, problem);
   /* Allocate new memory for the element_data of the advected forest */
@@ -283,6 +292,10 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem)
   problem->element_data_adapt =
     sc_array_new_count (sizeof (t8_advect_element_data_t),
                         num_elems_p_ghosts);
+  /* We now call iterate_replace in which we interpolate the new element data.
+   * It is necessary that the old and new forest only differ by at mose one level.
+   * We guarantee this by calling adapt non-recursively and calling balance without
+   * repartitioning. */
   t8_forest_iterate_replace (problem->forest_adapt, problem->forest,
                              t8_advect_replace);
   /* Free memory for the forest */
@@ -586,6 +599,10 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
     /* TODO: Change forest (adapt, partition) */
     /* Project the computed solution to the new forest and exchange ghost values */
     t8_advect_project_element_data (problem);
+    /* test adapt, adapt and balance 3 times during the whole computation */
+    if (problem->num_time_steps % (time_steps / 3) == (time_steps / 3) - 1) {
+      t8_advect_problem_adapt (problem);
+    }
 
   }
   if (!no_vtk) {
