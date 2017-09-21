@@ -44,6 +44,7 @@ typedef struct
   double              delta_t; /**< Current time step */
   int                 num_time_steps; /**< Number of time steps computed so far.
                                         (If delta_t is constant then t = num_time_steps * delta_t) */
+  int                 vtk_count; /**< If vtk output is enabled, count the number of pvtu files written. */
   int                 level; /**< Initial refinement level */
   int                 maxlevel; /**< Maximum refinement level */
 } t8_advect_problem_t;
@@ -335,6 +336,7 @@ t8_advect_problem_init (t8_scalar_function_3d_fn u,
   problem->delta_t = delta_t;
   problem->num_time_steps = 0;
   problem->comm = comm;
+  problem->vtk_count = 0;
 
   /* Contruct uniform forest with ghosts */
   default_scheme = t8_scheme_new_default_cxx ();
@@ -443,7 +445,7 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   vtk_data[2].type = T8_VTK_SCALAR;
   vtk_data[2].data = u_and_phi_array[2];
   /* Write filename */
-  snprintf (fileprefix, BUFSIZ, "advection_%03i", problem->num_time_steps);
+  snprintf (fileprefix, BUFSIZ, "advection_%03i", problem->vtk_count);
   /* Write vtk files */
   if (t8_forest_vtk_write_file (problem->forest, fileprefix,
                                 1, 1, 1, 1, 1, 3, vtk_data)) {
@@ -456,6 +458,7 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   T8_FREE (u_and_phi_array[0]);
   T8_FREE (u_and_phi_array[1]);
   T8_FREE (u_and_phi_array[2]);
+  problem->vtk_count++;
 }
 
 static void
@@ -505,7 +508,7 @@ static void
 t8_advect_solve (t8_scalar_function_3d_fn u,
                  t8_scalar_function_3d_fn phi_0,
                  int level, int maxlevel, double T,
-                 double delta_t, sc_MPI_Comm comm, int no_vtk)
+                 double delta_t, sc_MPI_Comm comm, int no_vtk, int vtk_freq)
 {
   t8_advect_problem_t *problem;
   int                 iface;
@@ -514,7 +517,7 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
   t8_advect_element_data_t boundary_data;
   double              flux[2];
   double              l_infty;
-  int                 modulus, time_steps, vtk_freq = 10;
+  int                 modulus, time_steps;
 
   t8_element_t       *elem, **neighs;
   int                 num_neighs;
@@ -536,7 +539,7 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
   t8_advect_problem_adapt (problem);
   t8_advect_print_phi (problem);
 
-  /* This is kind of dirty to find the higest power of 10 in the number of time steps */
+  /* Controls how often we print the time step to stdout */
   modulus = time_steps / 10;
   for (problem->num_time_steps = 0;
        problem->t < problem->T + problem->delta_t;
@@ -626,7 +629,7 @@ main (int argc, char *argv[])
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
   int                 level;
-  int                 parsed, helpme, no_vtk;
+  int                 parsed, helpme, no_vtk, vtk_freq;
   double              T, delta_t, cfl;
 
   /* brief help message */
@@ -657,7 +660,11 @@ main (int argc, char *argv[])
   sc_options_add_double (opt, 'C', "CFL", &cfl,
                          0.1,
                          "The cfl number to use. Disables -t. Default: 1");
-  sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk, "Suppress vtk output.");
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 1,
+                      "How often the vtk output is produced. "
+                      "A value of 0 is equivalent to using -o.");
+  sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk, "Suppress vtk output. "
+                         "Overwrites any -v setting.");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
@@ -669,7 +676,8 @@ main (int argc, char *argv[])
     /* Computation */
     delta_t = cfl / (1 << level);
     t8_advect_solve (t8_constant_one, t8_sinx, level,
-                     level + 4, T, delta_t, sc_MPI_COMM_WORLD, no_vtk);
+                     level + 4, T, delta_t, sc_MPI_COMM_WORLD, no_vtk,
+                     vtk_freq);
   }
   else {
     /* wrong usage */
