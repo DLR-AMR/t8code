@@ -39,7 +39,6 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
                                    t8_element_t ** el_buffer)
 {
   t8_element_t       *element;
-  t8_element_t       *replace;
   t8_element_t      **fam;
   t8_locidx_t         pos;
   size_t              elements_in_array;
@@ -60,9 +59,6 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   fam = el_buffer;
   pos = *el_inserted - num_children;
   isfamily = 1;
-  if (forest->set_replace_fn != NULL) {
-    ts->t8_element_new (1, &replace);
-  }
   while (isfamily && pos >= el_coarsen && ts->t8_element_child_id (element)
          == num_children - 1) {
     isfamily = 1;
@@ -83,13 +79,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
       *el_inserted -= num_children - 1;
       /* remove num_children - 1 elements from the array */
       T8_ASSERT (elements_in_array == t8_element_array_get_count (telement));
-      if (forest->set_replace_fn != NULL) {
-        ts->t8_element_parent (fam[0], replace);
-        ts->t8_element_copy (replace, fam[0]);
-      }
-      else {
-        ts->t8_element_parent (fam[0], fam[0]);
-      }
+      ts->t8_element_parent (fam[0], fam[0]);
       elements_in_array -= num_children - 1;
       t8_element_array_resize (telement, elements_in_array);
       /* Set element to the new constructed parent. Since resizing the array
@@ -103,9 +93,6 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
     }
     pos -= num_children - 1;
   }
-  if (forest->set_replace_fn != NULL) {
-    ts->t8_element_destroy (1, &replace);
-  }
 }
 
 static void
@@ -117,15 +104,11 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
                                   t8_element_t ** el_buffer)
 {
   t8_element_t       *insert_el;
-  t8_element_t       *el_pop;
   int                 num_children;
   int                 ci;
 
   if (elem_list->elem_count <= 0) {
     return;
-  }
-  if (forest->set_replace_fn != NULL) {
-    ts->t8_element_new (1, &el_pop);
   }
   while (elem_list->elem_count > 0) {
     el_buffer[0] = (t8_element_t *) sc_list_pop (elem_list);

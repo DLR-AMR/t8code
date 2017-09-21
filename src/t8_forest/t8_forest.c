@@ -176,7 +176,6 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
 
   /* Overwrite any previous setting */
   forest->set_adapt_fn = NULL;
-  forest->set_replace_fn = NULL;
   forest->set_adapt_recursive = -1;
   forest->set_balance = -1;
   forest->set_for_coarsening = -1;
