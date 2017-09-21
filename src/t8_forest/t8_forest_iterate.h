@@ -86,11 +86,12 @@ void                t8_forest_search (t8_forest_t forest,
                                       t8_forest_search_query_fn search_fn,
                                       void *user_data);
 
-/** Given two forest where one resulted from the other by a non-recursive
- * adaptation. Compare the two forests and for each refined element or coarsened
+/** Given two forest where the elemnts in one forest are either direct children or
+ * parents of the elements in the other forest.
+ * Compare the two forests and for each refined element or coarsened
  * family in the old one, call a callback function providing the local indices
  * of the old and new elements.
- * \param [in]  forest_new  A forest, \a forest_old after a non-recursive adaptation.
+ * \param [in]  forest_new  A forest, each element is a parent or child of an element in \a forest_old.
  * \param [in]  forest_old  The initial forest.
  * \param [in]  replace_fn  A replace callback function.
  * \note To pass a user pointer to \a replace_fn use \ref t8_forest_set_user_data
