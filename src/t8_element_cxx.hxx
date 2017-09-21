@@ -310,6 +310,7 @@ public:
      * \param [in]  face    Then number of the face.
      * \return              If \a face of \a elem is also a face of \a elem's parent,
      *                      the face number of this face. Otherwise -1.
+     * \note For the root element this function alwats returns \a face.
      */
   virtual int         t8_element_face_parent_face (const t8_element_t * elem,
                                                    int face) = 0;

@@ -151,6 +151,9 @@ t8_dline_face_parent_face (const t8_dline_t * l, int face)
 {
   T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
 
+  if (l->level == 0) {
+    return face;
+  }
   /* If the child id is 0 and face is 0, then the parent's face is 0.
    * If the child id is 1 and face is 1, then the parent's face is 1.
    * In the other cases, this is an inner face. */

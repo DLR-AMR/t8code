@@ -840,6 +840,11 @@ t8_dtri_face_parent_face (const t8_dtri_t * triangle, int face)
   int                 parent_type, child_id, cid;
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
 
+  /* By convention, the tree root triangle lies on its (non-existent)
+   * parent face. */
+  if (triangle->level == 0) {
+    return face;
+  }
   /* For triangles, a triangle is only at the boundary of its parent if it
    * has the same type as the parent, in which case also the face numbers are the same */
   cid = compute_cubeid (triangle, triangle->level);

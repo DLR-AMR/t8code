@@ -416,10 +416,16 @@ int
 t8_default_scheme_quad_c::t8_element_face_parent_face (const t8_element_t *
                                                        elem, int face)
 {
+  const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
   int                 child_id;
+
+  T8_ASSERT (t8_element_is_valid (elem));
+  if (q->level == 0) {
+    return face;
+  }
   /* Determine whether face is a subface of the parent.
    * This is the case if the child_id matches one of the faces corners */
-  child_id = p4est_quadrant_child_id ((const p4est_quadrant_t *) elem);
+  child_id = p4est_quadrant_child_id (q);
   if (child_id == p4est_face_corners[face][0]
       || child_id == p4est_face_corners[face][1]) {
     return face;
