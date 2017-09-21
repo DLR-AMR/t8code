@@ -169,8 +169,8 @@ t8_test_ghost_owner ()
              We thus can only refine one level. */
           maxlevel = level + 1;
         }
-        forest_adapt = t8_forest_new_adapt (forest, t8_test_gao_adapt,
-                                            NULL, 1, 1, &maxlevel);
+        forest_adapt =
+          t8_forest_new_adapt (forest, t8_test_gao_adapt, 1, 1, &maxlevel);
         /* Check the owners of the ghost elements */
         t8_test_gao_check (forest_adapt);
         t8_forest_unref (&forest_adapt);

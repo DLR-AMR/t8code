@@ -230,8 +230,9 @@ t8_test_ghost_exchange ()
              We thus can only refine one level. */
           maxlevel = level + 1;
         }
-        forest_adapt = t8_forest_new_adapt (forest, t8_test_exchange_adapt,
-                                            NULL, 1, 1, &maxlevel);
+        forest_adapt =
+          t8_forest_new_adapt (forest, t8_test_exchange_adapt, 1, 1,
+                               &maxlevel);
         t8_test_ghost_exchange_data_int (forest_adapt);
         t8_test_ghost_exchange_data_id (forest_adapt);
         t8_forest_unref (&forest_adapt);
