@@ -93,6 +93,8 @@ void                t8_forest_search (t8_forest_t forest,
  * \param [in]  forest_new  A forest, \a forest_old after a non-recursive adaptation.
  * \param [in]  forest_old  The initial forest.
  * \param [in]  replace_fn  A replace callback function.
+ * \note To pass a user pointer to \a replace_fn use \ref t8_forest_set_user_data
+ * and \ref t8_forest_get_user_data.
  */
 void                t8_forest_iterate_replace (t8_forest_t forest_new,
                                                t8_forest_t forest_old,
