@@ -367,8 +367,6 @@ t8_advect_project_element_data (t8_advect_problem_t * problem)
      * just the computed value */
     elem_data->phi = elem_data->phi_new;
   }
-  /* Exchange ghost data */
-  t8_forest_ghost_exchange_data (problem->forest, problem->element_data);
 }
 
 static void
@@ -537,6 +535,8 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
   /* Testing replace */
   t8_advect_print_phi (problem);
   t8_advect_problem_adapt (problem);
+  /* Exchange ghost values */
+  t8_forest_ghost_exchange_data (problem->forest, problem->element_data);
   t8_advect_print_phi (problem);
 
   /* Controls how often we print the time step to stdout */
@@ -606,7 +606,8 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
     if (problem->num_time_steps % (time_steps / 3) == (time_steps / 3) - 1) {
       t8_advect_problem_adapt (problem);
     }
-
+    /* Exchange ghost values */
+    t8_forest_ghost_exchange_data (problem->forest, problem->element_data);
   }
   if (!no_vtk) {
     /* Print last time step vtk */
