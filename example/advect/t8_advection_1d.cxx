@@ -662,7 +662,8 @@ main (int argc, char *argv[])
                          0.1,
                          "The cfl number to use. Disables -t. Default: 1");
   sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 1,
-                      "How often the vtk output is produced. "
+                      "How often the vtk output is produced "
+                      "(after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
   sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk, "Suppress vtk output. "
                          "Overwrites any -v setting.");
