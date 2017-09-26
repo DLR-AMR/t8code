@@ -102,7 +102,7 @@ typedef uint64_t    t8_linearidx_t;
 /** Compute the number of bytes that have to be added to a given byte_count
  * such that it is a multiple of the padding size */
 #define T8_ADD_PADDING(_x) \
-  ((T8_PADDING_SIZE - ((_x) %  T8_PADDING_SIZE)) %  T8_PADDING_SIZE);
+  ((T8_PADDING_SIZE - ((_x) %  T8_PADDING_SIZE)) %  T8_PADDING_SIZE)
 
 /** Communication tags used internal to t8code. */
 typedef enum
