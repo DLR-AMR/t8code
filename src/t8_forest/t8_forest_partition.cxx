@@ -626,7 +626,8 @@ t8_forest_partition_fill_buffer_data (t8_forest_t forest_from,
   T8_ASSERT (data->elem_count == (size_t) forest_from->local_num_elements);
 
   /* Calculate the byte count */
-  *buffer_alloc = (last_element_send - first_element_send) * data->elem_size;
+  *buffer_alloc =
+    (last_element_send - first_element_send + 1) * data->elem_size;
   T8_ASSERT (*buffer_alloc >= 0);
   /* Must be a multiple of T8_PADDING_SIZE */
   T8_ASSERT (T8_ADD_PADDING (*buffer_alloc) == 0);
@@ -803,7 +804,7 @@ t8_forest_partition_recv_message_data (t8_forest_t forest, sc_MPI_Comm comm,
 
   /* data_out must have the correct dimensions */
   T8_ASSERT (data_out != NULL);
-  T8_ASSERT (data_out->elem_size == (size_t) forest->local_num_elements);
+  T8_ASSERT (data_out->elem_count == (size_t) forest->local_num_elements);
 
   /* TODO: The next part is duplicated in t8_forest_partition_recv_message.
    *       Put duplicated code in function */
@@ -826,7 +827,7 @@ t8_forest_partition_recv_message_data (t8_forest_t forest, sc_MPI_Comm comm,
   /* Compute the place where to insert the data */
   data_offset = data_out->elem_size * *last_loc_elem_recvd;
   /* Copy the data */
-  memcpy (data_out + data_offset, recv_buffer, recv_bytes);
+  memcpy (data_out->array + data_offset, recv_buffer, recv_bytes);
 
   /* update the last element received */
   T8_ASSERT (recv_bytes % data_out->elem_size == 0);
@@ -1012,6 +1013,8 @@ t8_forest_partition_recvloop (t8_forest_t forest, int recv_first,
   /* Initial checks and inits */
   T8_ASSERT (recv_data || t8_forest_is_initialized (forest));
   T8_ASSERT (!recv_data || t8_forest_is_committed (forest));
+  T8_ASSERT (!recv_data
+             || data_out->elem_count == (size_t) forest->local_num_elements);
   forest_from = forest->set_from;
   T8_ASSERT (t8_forest_is_committed (forest_from));
   offset_from =
@@ -1025,7 +1028,9 @@ t8_forest_partition_recvloop (t8_forest_t forest, int recv_first,
 
   num_receive = 0;
   prev_recvd = 0;
-  forest->local_num_elements = 0;
+  if (!recv_data) {
+    forest->local_num_elements = 0;
+  }
   for (iproc = recv_first; iproc <= recv_last; iproc++) {
     if (!t8_forest_partition_empty (offset_from, iproc)) {
       /* We receive from each nonempty rank between recv_first and recv_last */
@@ -1042,6 +1047,9 @@ t8_forest_partition_recvloop (t8_forest_t forest, int recv_first,
                                           prev_recvd);
       }
       else {
+        T8_ASSERT (data_out != NULL);
+        T8_ASSERT (data_out->elem_count ==
+                   (size_t) forest->local_num_elements);
         t8_forest_partition_recv_message_data (forest, comm, iproc, &status,
                                                &last_received_local_element,
                                                data_out);
@@ -1189,7 +1197,7 @@ t8_forest_partition_data (t8_forest_t forest_from, t8_forest_t forest_to,
 {
   t8_forest_t         save_set_from;
 
-  t8_global_productionf ("Enter  forest partition data.\n");
+  t8_global_productionf ("Enter forest partition data.\n");
   t8_log_indent_push ();
 
   /* Assertions */
@@ -1214,8 +1222,9 @@ t8_forest_partition_data (t8_forest_t forest_from, t8_forest_t forest_to,
     t8_forest_partition_create_offsets (forest_to);
   }
 
-  save_set_from = forest_to->set_from;
   /* perform the actual partitioning */
+  save_set_from = forest_to->set_from;
+  forest_to->set_from = forest_from;
   t8_forest_partition_given (forest_to, 1, data_in, data_out);
   forest_to->set_from = save_set_from;
 
