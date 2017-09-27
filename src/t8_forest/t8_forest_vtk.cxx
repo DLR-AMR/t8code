@@ -527,6 +527,9 @@ t8_forest_vtk_cells_scalar_kernel (t8_forest_t forest,
     if (!is_ghost) {
       element_value = ((double *) *data)[element_index];
     }
+    else {
+      element_value = 0;
+    }
     fprintf (vtufile, "%g ", element_value);
     *columns += 1;
   }
@@ -543,15 +546,19 @@ t8_forest_vtk_cells_vector_kernel (t8_forest_t forest,
                                    FILE * vtufile, int *columns,
                                    void **data, T8_VTK_KERNEL_MODUS modus)
 {
-  double             *element_values;
+  double             *element_values, null_vec[3] = { 0, 0, 0 };
   int                 dim, idim;
 
   if (modus == T8_VTK_KERNEL_EXECUTE) {
     dim = forest->dimension;
+    T8_ASSERT (dim <= 3);
     /* For local elements access the data array, for ghosts, write 0 */
     if (!is_ghost) {
       /* Get a pointer to the start of the element's vector data */
       element_values = ((double *) *data) + element_index * dim;
+    }
+    else {
+      element_values = null_vec;
     }
     for (idim = 0; idim < dim; idim++) {
       fprintf (vtufile, "%g ", element_values[idim]);

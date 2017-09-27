@@ -419,8 +419,11 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
 
   /* Allocate num_local_elements doubles to store u and phi values */
   num_local_elements = t8_forest_get_num_element (problem->forest);
+  /* u */
   u_and_phi_array[0] = T8_ALLOC_ZERO (double, num_local_elements);
+  /* phi */
   u_and_phi_array[1] = T8_ALLOC_ZERO (double, num_local_elements);
+  /* phi_0 */
   u_and_phi_array[2] = T8_ALLOC_ZERO (double, num_local_elements);
   /* Fill u and phi arrays with their values */
   for (ielem = 0; ielem < num_local_elements; ielem++) {
