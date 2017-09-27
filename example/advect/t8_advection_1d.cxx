@@ -552,7 +552,8 @@ static void
 t8_advect_solve (t8_scalar_function_3d_fn u,
                  t8_scalar_function_3d_fn phi_0,
                  int level, int maxlevel, double T,
-                 double delta_t, sc_MPI_Comm comm, int no_vtk, int vtk_freq)
+                 double delta_t, sc_MPI_Comm comm, int adapt, int no_vtk,
+                 int vtk_freq)
 {
   t8_advect_problem_t *problem;
   int                 iface;
@@ -578,15 +579,19 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
                          " End time %g. delta_t %g. %i time steps.\n", level,
                          T, delta_t, time_steps);
 
-  /* Testing replace */
   t8_advect_print_phi (problem);
-  t8_advect_problem_adapt (problem);
+  if (adapt) {
+    /* initial adapt */
+    t8_advect_problem_adapt (problem);
+    /* repartition */
+    t8_advect_problem_partition (problem);
+  }
   /* Exchange ghost values */
   t8_forest_ghost_exchange_data (problem->forest, problem->element_data);
   t8_advect_print_phi (problem);
 
   /* Controls how often we print the time step to stdout */
-  modulus = time_steps / 10;
+  modulus = SC_MAX (1, time_steps / 10);
   for (problem->num_time_steps = 0;
        problem->t < problem->T + problem->delta_t;
        problem->num_time_steps++, problem->t += problem->delta_t) {
@@ -649,8 +654,11 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
     /* Project the computed solution to the new forest and exchange ghost values */
     t8_advect_project_element_data (problem);
     /* test adapt, adapt and balance 3 times during the whole computation */
-    if (problem->num_time_steps % (time_steps / 3) == (time_steps / 3) - 1) {
+    if (adapt && time_steps / 3 > 0
+        && problem->num_time_steps % (time_steps / 3) ==
+        (time_steps / 3) - 1) {
       t8_advect_problem_adapt (problem);
+      t8_advect_problem_partition (problem);
     }
     /* Exchange ghost values */
     t8_forest_ghost_exchange_data (problem->forest, problem->element_data);
@@ -676,7 +684,7 @@ main (int argc, char *argv[])
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
   int                 level;
-  int                 parsed, helpme, no_vtk, vtk_freq;
+  int                 parsed, helpme, no_vtk, vtk_freq, adapt;
   double              T, delta_t, cfl;
 
   /* brief help message */
@@ -707,6 +715,9 @@ main (int argc, char *argv[])
   sc_options_add_double (opt, 'C', "CFL", &cfl,
                          0.1,
                          "The cfl number to use. Disables -t. Default: 1");
+  sc_options_add_switch (opt, 'a', "adapt", &adapt,
+                         "If activated, an adaptive mesh is used instead of "
+                         "a uniform one.");
   sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 1,
                       "How often the vtk output is produced "
                       "(after how many time steps). "
@@ -724,7 +735,7 @@ main (int argc, char *argv[])
     /* Computation */
     delta_t = cfl / (1 << level);
     t8_advect_solve (t8_constant_one, t8_sinx, level,
-                     level + 4, T, delta_t, sc_MPI_COMM_WORLD, no_vtk,
+                     level + 4, T, delta_t, sc_MPI_COMM_WORLD, adapt, no_vtk,
                      vtk_freq);
   }
   else {
