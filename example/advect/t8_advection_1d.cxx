@@ -26,6 +26,7 @@
 #include <t8_forest/t8_forest_private.h>        /* TODO: remove */
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_iterate.h>
+#include <t8_forest/t8_forest_partition.h>
 #include <t8_forest_vtk.h>
 #include <example/common/t8_example_common.h>
 
@@ -308,6 +309,48 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem)
   sc_array_destroy (problem->element_data);
   problem->element_data = problem->element_data_adapt;
   problem->element_data_adapt = NULL;
+}
+
+/* Re-partition the forest and element data of a problem */
+static void
+t8_advect_problem_partition (t8_advect_problem_t * problem)
+{
+  t8_forest_t         forest_partition;
+  sc_array_t          data_view, data_view_new;
+  sc_array_t         *new_data;
+  t8_locidx_t         num_local_elements, num_local_elements_new;
+  t8_locidx_t         num_ghosts_new;
+
+  /* Partition the forest and create its ghost layer */
+  /* ref the current forest, since we still need access to it */
+  t8_forest_ref (problem->forest);
+  t8_forest_init (&forest_partition);
+  t8_forest_set_partition (forest_partition, problem->forest, 0);
+  t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
+  t8_forest_commit (forest_partition);
+
+  /* Partition the data */
+  num_local_elements = t8_forest_get_num_element (problem->forest);
+  num_local_elements_new = t8_forest_get_num_element (forest_partition);
+  num_ghosts_new = t8_forest_get_num_ghosts (forest_partition);
+  /* Create a view array of the entries for the local elements */
+  sc_array_init_view (&data_view, problem->element_data, 0,
+                      num_local_elements);
+  /* Allocate the data array for the partitioned elements */
+  new_data =
+    sc_array_new_count (sizeof (t8_advect_element_data_t),
+                        num_local_elements_new + num_ghosts_new);
+  /* Create a view array of the entries for the local elements */
+  sc_array_init_view (&data_view_new, new_data, 0, num_local_elements_new);
+  /* Perform the data partition */
+  t8_forest_partition_data (problem->forest, forest_partition, &data_view,
+                            &data_view_new);
+
+  /* destroy the old forest and the element data */
+  t8_forest_unref (&problem->forest);
+  problem->forest = forest_partition;
+  sc_array_destroy (problem->element_data);
+  problem->element_data = new_data;
 }
 
 static t8_advect_problem_t *
