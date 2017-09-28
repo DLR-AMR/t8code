@@ -61,7 +61,8 @@ T8_EXTERN_C_BEGIN ();
  *
  * initialized elements before the elements that they replace are destroyed.
  *
- * \param [in] forest      the forest
+ * \param [in] forest_old      the forest that is adapted
+ * \param [in] forest_new      the forest that is newly constructed from \a forest_old
  * \param [in] which_tree  the local tree containing \a outgoing and \a incoming
  * \param [in] ts          the eclass scheme of the tree
  * \param [in] num_outgoing The number of outgoing elements.
@@ -91,6 +92,7 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
  * \param [in] forest      the forest to which the new elements belong
  * \param [in] forest_from the forest that is adapted.
  * \param [in] which_tree  the local tree containing \a elements
+ * \param [in] lelement_id the local element id in \a forest_old of the current element
  * \param [in] ts          the eclass scheme of the tree
  * \param [in] num_elements the number of entries in \a elements
  * \param [in] elements    Pointers to a family or, if second entry is NULL,
