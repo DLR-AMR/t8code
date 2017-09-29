@@ -1332,8 +1332,9 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
   t8_debugf ("[H] At level %i bounds: %i %i\n",
              ts->t8_element_level (element), first_owner, last_owner);
 
-  if (first_owner == last_owner) {
-    /* This element has a unique owner, no recursion is necessary */
+  if (first_owner >= last_owner - 1) {
+    T8_ASSERT (first_owner == last_owner || first_owner == last_owner - 1);
+    /* The owners of this element are determined, no recursion is necessary */
     /* Add the owner to the array of owners */
     /* TODO: check if this process is already listed. If we traverse the face children
      * in SFC order, we can just check the last entry in owners here */
@@ -1345,9 +1346,14 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
     else {
       last_owner_entry = -1;
     }
-    if (first_owner != last_owner_entry) {
+
+    if (first_owner > last_owner_entry) {
       /* We did not count this process as an owner, thus we add it */
       *(int *) sc_array_push (owners) = first_owner;
+    }
+    if (last_owner > last_owner_entry) {
+      /* We did not count this process as an owner, thus we add it */
+      *(int *) sc_array_push (owners) = last_owner;
     }
     T8_ASSERT (t8_forest_element_check_owner (forest, first_face_desc, gtreeid, eclass, first_owner, 1));
     T8_ASSERT (t8_forest_element_check_owner (forest, last_face_desc, gtreeid, eclass, first_owner, 1));
