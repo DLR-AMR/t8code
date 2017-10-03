@@ -222,7 +222,8 @@ t8_advect_flux_lax_friedrich (const t8_advect_problem_t * problem,
   /* Compute x_j_half */
   for (idim = 0; idim < 3; idim++) {
     x_j_half[idim] =
-      (el_data_plus->midpoint[idim] + el_data_minus->midpoint[idim]) / 2;
+      (el_data_plus->midpoint[idim] -
+       (idim == 0 ? el_data_plus->delta_x / 2 : 0));
   }
 
   /* Compute u at the interval boundary. */
@@ -337,7 +338,7 @@ t8_advect_replace (t8_forest_t forest_old,
     for (i = 0; i < num_outgoing; i++) {
       phi += elem_data_out[i].phi;
     }
-    phi /= num_incoming;
+    phi /= num_outgoing;
     elem_data_in->phi = phi;
   }
 }
