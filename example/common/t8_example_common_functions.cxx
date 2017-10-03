@@ -57,10 +57,30 @@ t8_exp_distribution (const double x[3], double t)
   return exp (-4 * X * X);
 }
 
-/* This function is =1 if the 0.25 <= x <= 0.75 and 0 else */
+/* This function is =1 if 0.25 <= x <= 0.75 and 0 else */
 double
 t8_step_function (const double x[3], double t)
 {
+  return 0.25 <= x[0] && x[0] <= 0.75;
+}
+
+/* This function is =1 if 0.25 <= x <= 0.75,
+ * it is 0 outside of 0.25-eps and 0.75+eps,
+ * it interpolates linearly in between. */
+double
+t8_almost_step_function (const double x[3], double t)
+{
+  double              eps = 0.1;
+
+  /* interpolate in [0.25-eps,0.25+eps] */
+  if (0.25 - eps < x[0] && x[0] < 0.25) {
+    return (x[0] - 0.25 + eps) / (eps);
+  }
+  /* interpolate in [0.75-eps,0.75+eps] */
+  else if (0.75 < x[0] && x[0] < 0.75 + eps) {
+    return 1 - (x[0] - 0.75) / (eps);
+  }
+  /* 1 inside [0.25,0.75], 0 outside */
   return 0.25 <= x[0] && x[0] <= 0.75;
 }
 

@@ -116,6 +116,11 @@ double              t8_project_x (const double x[3], double t);
 /** This function is =1 if the 0.25 <= x <= 0.75 and 0 else. */
 double              t8_step_function (const double x[3], double t);
 
+/** This function is =1 if 0.25 <= x <= 0.75,
+ * it is 0 outside of 0.25-eps and 0.75+eps,
+ * it interpolates linearly in between. eps = 0.1 **/
+double              t8_almost_step_function (const double x[3], double t);
+
 /** A 1-d Bell-curve centered around 0.5 */
 double              t8_exp_distribution (const double x[3], double t);
 
