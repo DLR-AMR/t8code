@@ -143,30 +143,6 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   return 0;
 }
 
-static double
-t8_advect_lax_friedrich_alpha (const t8_advect_problem_t * problem,
-                               const t8_advect_element_data_t *
-                               el_data_plus,
-                               const t8_advect_element_data_t * el_data_minus)
-{
-  double              alpha;
-  double              dist;
-
-  /* We compute alpha as the derivative of u at the midpoint between
-   * the cells */
-
-  /* The distance between the two cells is the sum of their length divided by two */
-
-  dist = (el_data_plus->delta_x + el_data_minus->delta_x) / 2.;
-  /* Approximate the derivative of u */
-
-  alpha =
-    (problem->u (el_data_plus->midpoint, problem->t) -
-     problem->u (el_data_minus->midpoint, problem->t)) / dist;
-
-  return alpha;
-}
-
 /* Compute the relative l_infty error of the stored phi values compared to a
  * given analytical function at time problem->t */
 static double
@@ -201,6 +177,30 @@ t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
   /* Return the relative error, that is the l_infty error divided by
    * the l_infty norm of the analytical solution */
   return global_error[0] / global_error[1];
+}
+
+static double
+t8_advect_lax_friedrich_alpha (const t8_advect_problem_t * problem,
+                               const t8_advect_element_data_t *
+                               el_data_plus,
+                               const t8_advect_element_data_t * el_data_minus)
+{
+  double              alpha;
+  double              dist;
+
+  /* We compute alpha as the derivative of u at the midpoint between
+   * the cells */
+
+  /* The distance between the two cells is the sum of their length divided by two */
+
+  dist = (el_data_plus->delta_x + el_data_minus->delta_x) / 2.;
+  /* Approximate the derivative of u */
+
+  alpha =
+    fabs ((problem->u (el_data_plus->midpoint, problem->t) -
+           problem->u (el_data_minus->midpoint, problem->t)) / dist);
+
+  return alpha;
 }
 
 static double
@@ -680,9 +680,9 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
 
   time_steps = (int) (T / delta_t);
 
-  t8_global_productionf ("[advect] Starting with Computation. Level %i."
-                         " End time %g. delta_t %g. %i time steps.\n",
-                         level, T, delta_t, time_steps);
+  t8_global_essentialf ("[advect] Starting with Computation. Level %i."
+                        " End time %g. delta_t %g. %i time steps.\n",
+                        level, T, delta_t, time_steps);
 
   t8_advect_print_phi (problem);
   if (adapt) {
@@ -707,8 +707,8 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
        problem->t < problem->T + problem->delta_t;
        problem->num_time_steps++, problem->t += problem->delta_t) {
     if (problem->num_time_steps % modulus == modulus - 1) {
-      t8_global_productionf ("[advect] Step %i\n",
-                             problem->num_time_steps + 1);
+      t8_global_essentialf ("[advect] Step %i\n",
+                            problem->num_time_steps + 1);
     }
     /* Time loop */
 
@@ -789,7 +789,7 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
 
   /* Compute l_infty error */
   l_infty = t8_advect_l_infty_rel (problem, phi_0);
-  t8_global_productionf ("[advect] Done. l_infty error:\t%e\n", l_infty);
+  t8_global_essentialf ("[advect] Done. l_infty error:\t%e\n", l_infty);
 
   /* clean-up */
   t8_advect_problem_destroy (&problem);
