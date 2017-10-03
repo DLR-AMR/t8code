@@ -43,6 +43,7 @@ typedef struct
   double              t; /**< Current simulation time */
   double              T; /**< End time */
   double              delta_t; /**< Current time step */
+  double              min_grad, max_grad; /**< bounds for refinement */
   int                 num_time_steps; /**< Number of time steps computed so far.
                                         (If delta_t is constant then t = num_time_steps * delta_t) */
   int                 vtk_count; /**< If vtk output is enabled, count the number of pvtu files written. */
@@ -84,7 +85,7 @@ t8_advect_gradient_phi (t8_advect_problem_t * problem,
       /* |---x---|--x--|  (size of left element + size of right element)/2 */
       delta_x = (elem_data->delta_x + neigh->delta_x) / 2;
       /* compute the absolute value of the gradient */
-      gradient_abs = fabs ((phi_neigh + elem_data->phi) / delta_x);
+      gradient_abs = fabs ((phi_neigh - elem_data->phi) / delta_x);
       /* compute the maximum */
       max_gradient = SC_MAX (max_gradient, gradient_abs);
     }
@@ -104,14 +105,48 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
 {
   t8_advect_problem_t *problem;
   t8_advect_element_data_t *elem_data;
+  double              gradient;
+  int                 level, ielem;
 
   /* Get a pointer to the problem from the user data pointer of forest */
   problem = (t8_advect_problem_t *) t8_forest_get_user_data (forest);
+  /* Get the element's level */
+  level = ts->t8_element_level (elements[0]);
+  /* Get a pointer to the element data */
+  elem_data = (t8_advect_element_data_t *)
+    t8_sc_array_index_locidx (problem->element_data, lelement_id);
+  /* Compute the absolute value of the gradient at this element */
+  gradient = t8_advect_gradient_phi (problem, elem_data);
+
+  if (gradient > problem->max_grad && level < problem->maxlevel) {
+    /* The gradient is too large, we refine the element */
+    return 1;
+  }
+
+  if (num_elements > 1) {
+    /* This is a family, compute the maximum gradient among all elements. */
+    for (ielem = 1; ielem < num_elements; ielem++) {
+      /* Get a pointer to the element data */
+      elem_data = (t8_advect_element_data_t *)
+        t8_sc_array_index_locidx (problem->element_data, ielem);
+      /* Compute the maximum gradient */
+      gradient =
+        SC_MAX (gradient, t8_advect_gradient_phi (problem, elem_data));
+
+    }
+    if (gradient < problem->min_grad && level > problem->level) {
+      /* The maximum gradient is so small, that we can coarsen the elements */
+      return -1;
+    }
+  }
+  /* We leave the elements as they are. */
+  return 0;
 }
 
 static double
 t8_advect_lax_friedrich_alpha (const t8_advect_problem_t * problem,
-                               const t8_advect_element_data_t * el_data_plus,
+                               const t8_advect_element_data_t *
+                               el_data_plus,
                                const t8_advect_element_data_t * el_data_minus)
 {
   double              alpha;
@@ -315,6 +350,8 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem)
   /* Adapt the forest, but keep the old one */
   t8_forest_ref (problem->forest);
   t8_forest_init (&problem->forest_adapt);
+  /* Set the user data pointer of the new forest */
+  t8_forest_set_user_data (problem->forest_adapt, problem);
   /* Set the adapt function */
   t8_forest_set_adapt (problem->forest_adapt, problem->forest,
                        t8_advect_adapt, 0);
@@ -325,8 +362,6 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem)
   /* Commit the forest, adaptation and balance happens here */
   t8_forest_commit (problem->forest_adapt);
 
-  /* Set the user data pointer of the new forest */
-  t8_forest_set_user_data (problem->forest_adapt, problem);
   /* Allocate new memory for the element_data of the advected forest */
   num_elems_p_ghosts =
     t8_forest_get_num_element (problem->forest_adapt) +
@@ -394,10 +429,12 @@ t8_advect_problem_partition (t8_advect_problem_t * problem)
 }
 
 static t8_advect_problem_t *
-t8_advect_problem_init (t8_scalar_function_3d_fn u,
-                        t8_scalar_function_3d_fn phi_0, int level,
-                        int maxlevel, double T, double delta_t,
-                        sc_MPI_Comm comm)
+t8_advect_problem_init (t8_scalar_function_3d_fn
+                        u,
+                        t8_scalar_function_3d_fn
+                        phi_0, int level,
+                        int maxlevel, double T,
+                        double delta_t, sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   t8_advect_problem_t *problem;
@@ -410,23 +447,27 @@ t8_advect_problem_init (t8_scalar_function_3d_fn u,
   /* allocate problem */
   problem = T8_ALLOC (t8_advect_problem_t, 1);
   /* Fill problem parameters */
-  problem->u = u;
-  problem->phi_0 = phi_0;
-  problem->level = level;
-  problem->maxlevel = maxlevel;
-  problem->t = 0;
-  problem->T = T;
-  problem->delta_t = delta_t;
-  problem->num_time_steps = 0;
-  problem->comm = comm;
-  problem->vtk_count = 0;
+  problem->u = u;               /* flow field */
+  problem->phi_0 = phi_0;       /* initial condition */
+  problem->level = level;       /* minimum refinement level */
+  problem->maxlevel = maxlevel; /* maximum allowed refinement level */
+  problem->t = 0;               /* start time */
+  problem->T = T;               /* end time */
+  problem->min_grad = 2;        /* Coarsen an element if the gradient is smaller */
+  problem->max_grad = 4;        /* Refine an element if the gradient is larger */
+  problem->delta_t = delta_t;   /* time step */
+  problem->num_time_steps = 0;  /* current time step */
+  problem->comm = comm;         /* MPI communicator */
+  problem->vtk_count = 0;       /* number of pvtu files written */
 
   /* Contruct uniform forest with ghosts */
   default_scheme = t8_scheme_new_default_cxx ();
+
   problem->forest =
     t8_forest_new_uniform (cmesh, default_scheme, level, 1, comm);
 
   /* Initialize the element array with num_local_elements + num_ghosts entries. */
+
   problem->element_data =
     sc_array_new_count (sizeof (t8_advect_element_data_t),
                         t8_forest_get_num_element (problem->forest) +
@@ -500,6 +541,9 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
           /* boundary element */
           elem_data->neighs[iface] = -1;
         }
+        T8_FREE (el_indices);
+        neigh_scheme->t8_element_destroy (num_neighs, neighbors);
+        T8_FREE (neighbors);
       }
     }
   }
@@ -626,21 +670,29 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
   t8_eclass_scheme_c *neigh_scheme;
 
   /* Initialize problem */
+
   problem =
     t8_advect_problem_init (u, phi_0, level, maxlevel, T, delta_t, comm);
   t8_advect_problem_init_elements (problem);
 
   time_steps = (int) (T / delta_t);
+
   t8_global_productionf ("[advect] Starting with Computation. Level %i."
-                         " End time %g. delta_t %g. %i time steps.\n", level,
-                         T, delta_t, time_steps);
+                         " End time %g. delta_t %g. %i time steps.\n",
+                         level, T, delta_t, time_steps);
 
   t8_advect_print_phi (problem);
   if (adapt) {
-    /* initial adapt */
-    t8_advect_problem_adapt (problem);
-    /* repartition */
-    t8_advect_problem_partition (problem);
+    int                 ilevel;
+
+    for (ilevel = problem->level; ilevel < problem->maxlevel; ilevel++) {
+      /* initial adapt */
+      t8_advect_problem_adapt (problem);
+      /* repartition */
+      t8_advect_problem_partition (problem);
+      /* Re initialize the elements */
+      t8_advect_problem_init_elements (problem);
+    }
   }
   /* Exchange ghost values */
   t8_forest_ghost_exchange_data (problem->forest, problem->element_data);
@@ -713,10 +765,14 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
     /* TODO: Change forest (adapt, partition) */
     /* Project the computed solution to the new forest and exchange ghost values */
     t8_advect_project_element_data (problem);
+#if 0
     /* test adapt, adapt and balance 3 times during the whole computation */
     if (adapt && time_steps / 3 > 0
-        && problem->num_time_steps % (time_steps / 3) ==
-        (time_steps / 3) - 1) {
+        && problem->num_time_steps % (time_steps / 3) == (time_steps / 3) - 1)
+#else
+    if (adapt)
+#endif
+    {
       t8_advect_problem_adapt (problem);
       t8_advect_problem_partition (problem);
     }
