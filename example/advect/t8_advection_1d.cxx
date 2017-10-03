@@ -156,8 +156,10 @@ t8_advect_lax_friedrich_alpha (const t8_advect_problem_t * problem,
    * the cells */
 
   /* The distance between the two cells is the sum of their length divided by two */
+
   dist = (el_data_plus->delta_x + el_data_minus->delta_x) / 2.;
   /* Approximate the derivative of u */
+
   alpha =
     (problem->u (el_data_plus->midpoint, problem->t) -
      problem->u (el_data_minus->midpoint, problem->t)) / dist;
@@ -173,7 +175,9 @@ t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
 {
   t8_locidx_t         num_local_elements, ielem;
   t8_advect_element_data_t *elem_data;
-  double              error[2] = { 0, 0 }, el_error, global_error[2];
+  double              error[2] = {
+    0, 0
+  }, el_error, global_error[2];
 
   num_local_elements = t8_forest_get_num_element (problem->forest);
   for (ielem = 0; ielem < num_local_elements; ielem++) {
@@ -289,10 +293,8 @@ t8_advect_replace (t8_forest_t forest_old,
   t8_element_t       *element;
   int                 i;
 
-  t8_debugf ("[advect] first_out %i num %i, first_in %i num %i\n",
-             first_outgoing, num_outgoing, first_incoming, num_incoming);
-
   /* Get the problem description */
+
   problem = (t8_advect_problem_t *) t8_forest_get_user_data (forest_new);
   T8_ASSERT (forest_old == problem->forest);
   T8_ASSERT (forest_new == problem->forest_adapt);
