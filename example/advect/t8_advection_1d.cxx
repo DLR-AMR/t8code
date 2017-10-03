@@ -801,46 +801,57 @@ main (int argc, char *argv[])
   sc_options_t       *opt;
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
-  int                 level;
+  int                 level, reflevel;
   int                 parsed, helpme, no_vtk, vtk_freq, adapt;
   double              T, delta_t, cfl;
 
   /* brief help message */
+
   snprintf (usage, BUFSIZ,
             "Usage:\t%s <OPTIONS>\n\t%s -h\t"
             "for a brief overview of all options.",
             basename (argv[0]), basename (argv[0]));
   /* long help message */
+
   snprintf (help, BUFSIZ,
             "This program solves the 1D advection equation on "
             "the interval [0,1].\nThe user can choose the initial uniform "
             "refinement level.\n\n%s\n", usage);
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
+
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  t8_init (SC_LP_DEBUG);
+  t8_init (SC_LP_PRODUCTION);
 
   /* initialize command line argument parser */
   opt = sc_options_new (argv[0]);
+
   sc_options_add_switch (opt, 'h', "help", &helpme,
                          "Display a short help message.");
+
   sc_options_add_int (opt, 'l', "level", &level, 0,
-                      "The refinement level of the mesh.");
+                      "The minimum refinement level of the mesh.");
+  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 0,
+                      "The maximum number of refinement levels of the mesh.");
+
   sc_options_add_double (opt, 'T', "end-time", &T, 1,
                          "The duration of the simulation. Default: 1");
-  sc_options_add_double (opt, 't', "delta-t", &delta_t,
-                         0.1, "The length of ont time-step. Default: 0.1");
+
   sc_options_add_double (opt, 'C', "CFL", &cfl,
                          0.1,
                          "The cfl number to use. Disables -t. Default: 1");
+
   sc_options_add_switch (opt, 'a', "adapt", &adapt,
                          "If activated, an adaptive mesh is used instead of "
                          "a uniform one.");
+
   sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 1,
                       "How often the vtk output is produced "
                       "(after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
-  sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk, "Suppress vtk output. "
+
+  sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk,
+                         "Suppress vtk output. "
                          "Overwrites any -v setting.");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
@@ -849,12 +860,17 @@ main (int argc, char *argv[])
     t8_global_productionf ("%s\n ", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed >= 0 && 0 <= level) {
+  else if (parsed >= 0 && 0 <= level && 0 <= reflevel && 0 <= vtk_freq) {
     /* Computation */
-    delta_t = cfl / (1 << level);
-    t8_advect_solve (t8_constant_one, t8_sinx, level,
-                     level + 4, T, delta_t, sc_MPI_COMM_WORLD, adapt, no_vtk,
-                     vtk_freq);
+    if (!adapt) {
+      delta_t = cfl / (1 << level);
+    }
+    else {
+      delta_t = cfl / (1 << (level + reflevel));
+    }
+    t8_advect_solve (t8_constant_one, t8_step_function, level,
+                     level + reflevel, T, delta_t, sc_MPI_COMM_WORLD, adapt,
+                     no_vtk, vtk_freq);
   }
   else {
     /* wrong usage */
