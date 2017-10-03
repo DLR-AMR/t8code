@@ -50,16 +50,16 @@ typedef enum
 
 T8_EXTERN_C_BEGIN ();
 
-/* TODO: There is no user_data yet */
 /* TODO: if eclass is a vertex then num_outgoing/num_incoming are always
  *       1 and it is not possible to decide whether we are rfining or coarsening.
  *       Is this an issue? */
 /** Callback function prototype to replace one set of elements with another.
  *
- * This is used by the adapt routine when the elements of an existing, valid
- * forest are changed.  The callback allows the user to make changes to newly
- *
- * initialized elements before the elements that they replace are destroyed.
+ * This is used by the replace routine which can be called after adapt,
+ * when the elements of an existing, valid
+ * forest are changed. The callback allows the user to make changes to the elements
+ * of the new forest that are either refined, coarsened or the same as elements in the
+ * old forest.
  *
  * \param [in] forest_old      the forest that is adapted
  * \param [in] forest_new      the forest that is newly constructed from \a forest_old
@@ -72,6 +72,7 @@ T8_EXTERN_C_BEGIN ();
  *
  * If an element is being refined, num_outgoing will be 1 and num_incoming will
  * be the number of children, and vice versa if a family is being coarsened.
+ * \see t8_forest_iterate_replace
  */
 typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
                                             t8_forest_t forest_new,
@@ -104,6 +105,7 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
 typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
                                           t8_forest_t forest_from,
                                           t8_locidx_t which_tree,
+                                          t8_locidx_t lelement_id,
                                           t8_eclass_scheme_c * ts,
                                           int num_elements,
                                           t8_element_t * elements[]);

@@ -88,15 +88,17 @@ t8_advect_gradient_phi (t8_advect_problem_t * problem,
       /* compute the maximum */
       max_gradient = SC_MAX (max_gradient, gradient_abs);
     }
-    /* If there is no neighbor at this face (boundary element), we do not comput the
+    /* If there is no neighbor at this face (boundary element), we do not compute the
      * gradient. If there is no neighbor at any face, the max_gradient is 0 */
   }
   return max_gradient;
 }
 
+/* Adapt the forest. We refine if the gradient is larger than a given
+ * maximum and we coarsen if the gradient is smaller. */
 static int
 t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
-                 t8_locidx_t ltree_id,
+                 t8_locidx_t ltree_id, t8_locidx_t lelement_id,
                  t8_eclass_scheme_c * ts, int num_elements,
                  t8_element_t * elements[])
 {

@@ -41,7 +41,8 @@ T8_EXTERN_C_BEGIN ();
  * if we refine recursively. */
 static int
 t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from,
-                         t8_locidx_t ltree_id, t8_eclass_scheme_c * ts,
+                         t8_locidx_t ltree_id, t8_locidx_t lelement_id,
+                         t8_eclass_scheme_c * ts,
                          int num_elements, t8_element_t * elements[])
 {
   int                *pdone, iface, num_faces, num_half_neighbors, ineigh;
@@ -296,7 +297,8 @@ t8_forest_is_balanced (t8_forest_t forest)
       element = t8_forest_get_element_in_tree (forest, itree, ielem);
       /* Test if this element would need to be refined in the balance step.
        * If so, the forest is not balanced locally. */
-      if (t8_forest_balance_adapt (forest, forest, itree, ts, 1, &element)) {
+      if (t8_forest_balance_adapt
+          (forest, forest, itree, ielem, ts, 1, &element)) {
         forest->set_from = forest_from;
         forest->t8code_data = data_temp;
         return 0;
