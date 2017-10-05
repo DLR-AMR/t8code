@@ -986,7 +986,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
     T8_ASSERT (gneigh_treeid >= 0
                && gneigh_treeid < forest->global_num_trees);
     /* We have computed the half face neighbor elements, we now compute their owners,
-     * if they differ, we know that the hald face neighbors are the neighbor leafs.
+     * if they differ, we know that the half face neighbors are the neighbor leafs.
      * If the owners do not differ, we have to check if the neighbor leaf is their
      * parent or grandparent. */
     owners = T8_ALLOC (int, num_children_at_face);
@@ -1086,7 +1086,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
      * in the forest, or the ancestor leaf of the first half neighbor is the half
      * neighbor itself and thus all half neighbors must be leafs.
      * Since the forest is balanced, we found all neighbor leafs.
-     * It remains to compute their linear ids */
+     * It remains to compute their local ids */
     *num_neighbors = num_children_at_face;
     *pelement_indices = T8_ALLOC (t8_locidx_t, num_children_at_face);
     element_indices = *pelement_indices;
@@ -1101,7 +1101,8 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
        * in the ghost structure */
       if (owners[ineigh] == forest->mpirank) {
         /* The neighbor is a local leaf */
-        element_array = t8_forest_get_tree_element_array (forest, ltreeid);
+        element_array =
+          t8_forest_get_tree_element_array (forest, lneigh_treeid);
         /* Find the index of the neighbor in the array */
         element_indices[ineigh] =
           t8_forest_bin_search_lower (element_array, neigh_id,
