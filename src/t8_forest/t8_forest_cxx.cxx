@@ -1988,7 +1988,7 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid,
       elem_found = t8_element_array_index_locidx (elements, index);
       elem_id = ts->t8_element_get_linear_id (elem_found, forest->maxlevel);
       if (ts->t8_element_get_linear_id (element, forest->maxlevel)
-          < elem_id) {
+          <= elem_id && ts->t8_element_level(element) < ts->t8_element_level(elem_found)) {
         /* The element is a true descendant */
         T8_ASSERT (ts->t8_element_level (elem_found) > ts->t8_element_level (element));
         /* clean-up */
@@ -2011,7 +2011,7 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid,
         elem_found = t8_element_array_index_int (elements, index);
         elem_id = ts->t8_element_get_linear_id (elem_found, forest->maxlevel);
         if (ts->t8_element_get_linear_id (element, forest->maxlevel)
-            < elem_id) {
+            <= elem_id && ts->t8_element_level(element) < ts->t8_element_level (elem_found)) {
           /* The element is a true descendant */
           T8_ASSERT (ts->t8_element_level (elem_found) > ts->t8_element_level (element));
           /* clean-up */
