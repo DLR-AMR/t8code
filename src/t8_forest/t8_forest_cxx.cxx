@@ -303,6 +303,34 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   return;
 }
 
+/* Compute the diameter of an element. */
+double
+t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid,
+                        const t8_element_t * element, const double *vertices)
+{
+  double              coordinates_left[3], coordinates_right[3];
+  double              dist_sq;
+  int                 i;
+
+  SC_CHECK_ABORT (forest->dimension == 1, "Diameter computation not "
+                  "implemented for dim > 1.");
+
+  /* for lines, compute the left and right corner coordinates and compute their
+   * distance. */
+  t8_forest_element_coordinate (forest, ltreeid, element, vertices, 0,
+                                coordinates_left);
+  t8_forest_element_coordinate (forest, ltreeid, element, vertices, 1,
+                                coordinates_right);
+
+  /* Compute the euclidean distance squared */
+  dist_sq = 0;
+  for (i = 0; i < 3; i++) {
+    dist_sq += SC_SQR (coordinates_right[i] - coordinates_left[i]);
+  }
+  /* return the square root */
+  return sqrt (dist_sq);
+}
+
 /* Compute the center of mass of an element.
  * The center of mass of a polygon with vertices x_1, ... , x_n
  * is given by   1/n * (x_1 + ... + x_n)
