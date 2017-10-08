@@ -684,7 +684,7 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
                                             sc_MPI_Comm comm,
                                             int do_bcast, int do_partition);
 
-/** Construct a unit interval/square/cube forest that is periodic in each direction.
+/** Construct a unit interval/square/cube coarse mesh that is periodic in each direction.
  * Element class?
  * Hypercube?
  * TODO: redundant, remove.
@@ -693,6 +693,13 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
  * \return                  A valid cmesh, as if _init and _commit had been called.
  */
 t8_cmesh_t          t8_cmesh_new_periodic (sc_MPI_Comm comm, int dim);
+
+/** Construct a unit interval coarse mesh that consists of 3 trees and is
+ * periodic.
+ * \param [in] comm         The mpi communicator to use.
+ * \return                  A valid cmesh, as is _init and _commit had been called.
+ */
+t8_cmesh_t          t8_cmesh_new_periodic_line_more_trees (sc_MPI_Comm comm);
 
 /** Construct a mesh consisting of a given number of same type trees.
  * \param [in] eclass       This element class determines the dimension and
