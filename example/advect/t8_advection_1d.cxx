@@ -837,7 +837,6 @@ main (int argc, char *argv[])
 {
   int                 mpiret;
   sc_options_t       *opt;
-  char                usage[BUFSIZ];
   char                help[BUFSIZ];
   int                 level, reflevel;
   int                 parsed, helpme, no_vtk, vtk_freq, adapt;
@@ -845,21 +844,16 @@ main (int argc, char *argv[])
 
   /* brief help message */
 
-  snprintf (usage, BUFSIZ,
-            "Usage:\t%s <OPTIONS>\n\t%s -h\t"
-            "for a brief overview of all options.",
-            basename (argv[0]), basename (argv[0]));
   /* long help message */
 
   snprintf (help, BUFSIZ,
             "This program solves the 1D advection equation on "
-            "the interval [0,1].\nThe user can choose the initial uniform "
-            "refinement level.\n\n%s\n", usage);
+            "the interval [0,1].\n");
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  t8_init (SC_LP_PRODUCTION);
+  t8_init (SC_LP_ESSENTIAL);
 
   /* initialize command line argument parser */
   opt = sc_options_new (argv[0]);
@@ -895,7 +889,7 @@ main (int argc, char *argv[])
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
     /* display help message and usage */
-    t8_global_productionf ("%s\n ", help);
+    t8_global_essentialf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (parsed >= 0 && 0 <= level && 0 <= reflevel && 0 <= vtk_freq) {
