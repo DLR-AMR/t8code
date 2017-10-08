@@ -1960,7 +1960,7 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid,
   t8_element_t  *last_desc, *elem_found;
   t8_locidx_t   ghost_treeid;
   t8_linearidx_t      last_desc_id, elem_id;
-  int           index;
+  int           index, level, level_found;
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -1973,6 +1973,8 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid,
   /* TODO: set level in last_descendant */
   ts->t8_element_last_descendant (element, last_desc);
   last_desc_id = ts->t8_element_get_linear_id (last_desc, forest->maxlevel);
+  /* Get the level of the element */
+  level = ts->t8_element_level (element);
   /* Get the local id of the tree. If the tree is not a local tree,
    * then the number returned is negative */
   ltreeid = t8_forest_get_local_id (forest, gtreeid);
@@ -1987,8 +1989,9 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid,
        * If also elem_id < id, then we found a true decsendant of element */
       elem_found = t8_element_array_index_locidx (elements, index);
       elem_id = ts->t8_element_get_linear_id (elem_found, forest->maxlevel);
+      level_found = ts->t8_element_level (elem_found);
       if (ts->t8_element_get_linear_id (element, forest->maxlevel)
-          <= elem_id && ts->t8_element_level(element) < ts->t8_element_level(elem_found)) {
+          <= elem_id && level < level_found) {
         /* The element is a true descendant */
         T8_ASSERT (ts->t8_element_level (elem_found) > ts->t8_element_level (element));
         /* clean-up */
@@ -2010,8 +2013,9 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid,
          * If also elem_id < id, then we found a true decsendant of element */
         elem_found = t8_element_array_index_int (elements, index);
         elem_id = ts->t8_element_get_linear_id (elem_found, forest->maxlevel);
+        level_found = ts->t8_element_level (elem_found);
         if (ts->t8_element_get_linear_id (element, forest->maxlevel)
-            <= elem_id && ts->t8_element_level(element) < ts->t8_element_level (elem_found)) {
+            <= elem_id && level < level_found) {
           /* The element is a true descendant */
           T8_ASSERT (ts->t8_element_level (elem_found) > ts->t8_element_level (element));
           /* clean-up */
