@@ -163,20 +163,33 @@ public:
     0;
 
   /** Return the number of children of an element when it is refined.
-   * \param [in] ts     The virtual table for this element class.
    * \param [in] elem   The element whose number of children is returned.
    * \return            The number of children of \a elem if it is to be refined.
    */
   virtual int         t8_element_num_children (const t8_element_t * elem) = 0;
 
   /** Return the number of children of an element's face when the element is refined.
-   * \param [in] ts     The virtual table for this element class.
    * \param [in] elem   The element whose face is considered.
    * \param [in] face   A face of \a elem.
    * \return            The number of children of \a face if \a elem is to be refined.
    */
   virtual int         t8_element_num_face_children (const t8_element_t *
                                                     elem, int face) = 0;
+
+  /** Return the corner number of an element's face corner.
+   * Example quad: 2 x --- x 3
+   *                 |     |
+   *                 |     |   face 1
+   *               0 x --- x 1
+   *      Thus for face = 1 the output is: corner=0 : 1, corner=1: 3
+   * \param [in] element  The element.
+   * \param [in] face     A face index for \a element.
+   * \param [in] corner   A corner index for the face.
+   * \return              The corner number of the \a corner-th vertex of \a face.
+   */
+  virtual int         t8_element_get_face_corner (const t8_element_t *
+                                                  element, int face,
+                                                  int corner) = 0;
 
   /** Construct the child element of a given number.
    * \param [in] elem     This must be a valid element, bigger than maxlevel.

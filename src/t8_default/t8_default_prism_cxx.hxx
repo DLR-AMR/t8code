@@ -112,6 +112,15 @@ public:
   /** Return the number of children of an element's face when the element is refined. */
   virtual int         t8_element_num_face_children (const t8_element_t *
                                                     elem, int face);
+
+  virtual int         t8_element_get_face_corner (const t8_element_t *
+                                                  element, int face,
+                                                  int corner)
+  {
+    SC_ABORT ("Not implemented.\n");
+    return 0;                   /* prevents compiler warning */
+  }
+
 /** Return the number of faces of a given element*/
   virtual int         t8_element_num_faces (const t8_element_t * elem);
 

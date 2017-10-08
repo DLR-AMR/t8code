@@ -95,6 +95,14 @@ public:
   virtual int         t8_element_num_face_children (const t8_element_t *
                                                     elem, int face);
 
+  virtual int         t8_element_get_face_corner (const t8_element_t *
+                                                  element, int face,
+                                                  int corner)
+  {
+    SC_ABORT_NOT_REACHED ();    /* it is impossible to have a face of a vertex */
+    return 0;                   /* prevents compiler warning */
+  }
+
 /** Construct the child element of a given number. */
   virtual void        t8_element_child (const t8_element_t * elem,
                                         int childid, t8_element_t * child);
