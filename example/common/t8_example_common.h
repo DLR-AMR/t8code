@@ -51,6 +51,10 @@ typedef struct
 typedef double      (*t8_scalar_function_1d_fn) (double x, double t);
 typedef double      (*t8_scalar_function_2d_fn) (const double x[2], double t);
 typedef double      (*t8_scalar_function_3d_fn) (const double x[3], double t);
+/** Function pointer for a vector valued function
+ *  f: R^3 x R -> R */
+typedef void        (*t8_flow_function_3d_fn) (const double x_in[3], double t,
+                                               double x_out[3]);
 
 T8_EXTERN_C_BEGIN ();
 

@@ -49,15 +49,17 @@ typedef struct
   int                 vtk_count; /**< If vtk output is enabled, count the number of pvtu files written. */
   int                 level; /**< Initial refinement level */
   int                 maxlevel; /**< Maximum refinement level */
+  int                 dim; /**< The dimension of the mesh */
 } t8_advect_problem_t;
 
 typedef struct
 {
   double              midpoint[3]; /**< coordinates of element midpoint in R^3 */
-  double              delta_x; /**< Width of this element */
+  double              vol; /**< Volume of this element */
   double              phi; /**< Value of solution at midpoint */
   double              phi_new; /**< Value of solution at midpoint in next time step */
-  t8_locidx_t         neighs[2]; /**< Indices of the left neighbor element */
+  int                 num_neighbors[4]; /**< Number of neighbors for each face */
+  t8_locidx_t        *neighs[4]; /**< Indices of the neighbor elements */
 } t8_advect_element_data_t;
 
 /* estimate the absolute value of the gradient of phi at an element.
@@ -69,23 +71,23 @@ t8_advect_gradient_phi (t8_advect_problem_t * problem,
 {
   t8_advect_element_data_t *neigh;
   double              phi_neigh;
-  double              delta_x;
+  double              vol;
   double              max_gradient = 0, gradient_abs;
   int                 iface;
 
   for (iface = 0; iface < 2; iface++) {
-    if (elem_data->neighs[iface] >= 0) {
+    if (elem_data->num_neighbors[iface] >= 0) {
       /* Get the neighbor element */
       neigh = (t8_advect_element_data_t *)
         t8_sc_array_index_locidx (problem->element_data,
-                                  elem_data->neighs[iface]);
+                                  elem_data->neighs[iface][0]);
       /* Get the phi value of the neighbor */
       phi_neigh = neigh->phi;
       /* Compute the distance of the midpoints of the element and its neighbor */
       /* |---x---|--x--|  (size of left element + size of right element)/2 */
-      delta_x = (elem_data->delta_x + neigh->delta_x) / 2;
+      vol = (elem_data->vol + neigh->vol) / 2;
       /* compute the absolute value of the gradient */
-      gradient_abs = fabs ((phi_neigh - elem_data->phi) / delta_x);
+      gradient_abs = fabs ((phi_neigh - elem_data->phi) / vol);
       /* compute the maximum */
       max_gradient = SC_MAX (max_gradient, gradient_abs);
     }
@@ -197,15 +199,17 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
   for (idim = 0; idim < 3; idim++) {
     x_j_half[idim] =
       (el_data_plus->midpoint[idim] -
-       (idim == 0 ? el_data_plus->delta_x / 2 : 0));
+       (idim == 0 ? el_data_plus->vol / 2 : 0));
   }
   /* Compute u at the interval boundary. */
   u_at_x_j_half = problem->u (x_j_half, problem->t);
 
   if (u_at_x_j_half >= 0) {
+    /* u is positive, take phi_minus */
     return u_at_x_j_half * el_data_minus->phi;
   }
   else {
+    /* u is negative, take phi plus */
     return u_at_x_j_half * el_data_plus->phi;
   }
 }
@@ -224,7 +228,7 @@ t8_advect_lax_friedrich_alpha (const t8_advect_problem_t * problem,
 
   /* The distance between the two cells is the sum of their length divided by two */
 
-  dist = (el_data_plus->delta_x + el_data_minus->delta_x) / 2.;
+  dist = (el_data_plus->vol + el_data_minus->vol) / 2.;
   /* Approximate the derivative of u */
 
   alpha =
@@ -254,7 +258,7 @@ t8_advect_flux_lax_friedrich (const t8_advect_problem_t * problem,
   for (idim = 0; idim < 3; idim++) {
     x_j_half[idim] =
       (el_data_plus->midpoint[idim] -
-       (idim == 0 ? el_data_plus->delta_x / 2 : 0));
+       (idim == 0 ? el_data_plus->vol / 2 : 0));
   }
 
   /* Compute u at the interval boundary. */
@@ -277,12 +281,11 @@ t8_advect_advance_element (t8_advect_problem_t * problem,
                            double flux_left, double flux_right)
 {
   /* Phi^t = dt/dx * (f_(j-1/2) - f_(j+1/2)) + Phi^(t-1) */
-  elem->phi_new =
-    (problem->delta_t / elem->delta_x) * (flux_left - flux_right)
+  elem->phi_new = (problem->delta_t / elem->vol) * (flux_left - flux_right)
     + elem->phi;
 }
 
-/* Compute element midpoint and delta_x and store at element_data field.
+/* Compute element midpoint and vol and store at element_data field.
  * tree_vertices can be NULL, if not it should point to the vertex coordinates of the tree */
 static void
 t8_advect_compute_element_data (t8_advect_problem_t * problem,
@@ -301,11 +304,12 @@ t8_advect_compute_element_data (t8_advect_problem_t * problem,
   /* Compute the midpoint coordinates of element */
   t8_forest_element_centroid (problem->forest, ltreeid, element,
                               tree_vertices, elem_data->midpoint);
-  t8_debugf("[advect] elem in tree %i at: %.4f\n", ltreeid, elem_data->midpoint[0]);
+  t8_debugf ("[advect] elem in tree %i at: %.4f\n", ltreeid,
+             elem_data->midpoint[0]);
   /* Compute the length of this element */
-  elem_data->delta_x =
+  elem_data->vol =
     t8_forest_element_diam (problem->forest, ltreeid, element, tree_vertices);
-  t8_debugf("[advect] delta x %f\n", elem_data->delta_x);
+  t8_debugf ("[advect] delta x %f\n", elem_data->vol);
 }
 
 /* Replace callback to decide how to interpolate a refined or coarsened element.
@@ -338,7 +342,7 @@ t8_advect_replace (t8_forest_t forest_old,
   elem_data_in = (t8_advect_element_data_t *)
     t8_sc_array_index_locidx (problem->element_data_adapt, first_incoming);
   if (num_incoming == num_outgoing && num_incoming == 1) {
-    /* The element is not changed, copy phi and delta_x */
+    /* The element is not changed, copy phi and vol */
     memcpy (elem_data_in, elem_data_out, sizeof (t8_advect_element_data_t));
   }
   else if (num_outgoing == 1) {
@@ -349,7 +353,7 @@ t8_advect_replace (t8_forest_t forest_old,
       element =
         t8_forest_get_element (problem->forest_adapt, first_incoming + i,
                                NULL);
-      /* Compute midpoint and delta_x of the new element */
+      /* Compute midpoint and vol of the new element */
       t8_advect_compute_element_data (problem, elem_data_in + i, element,
                                       which_tree, ts, NULL);
       elem_data_in[i].phi = elem_data_out->phi;
@@ -363,7 +367,7 @@ t8_advect_replace (t8_forest_t forest_old,
     /* Get a pointer to the outgoing element */
     element =
       t8_forest_get_element (problem->forest_adapt, first_incoming, NULL);
-    /* Compute midpoint and delta_x of the new element */
+    /* Compute midpoint and vol of the new element */
     t8_advect_compute_element_data (problem, elem_data_in, element,
                                     which_tree, ts, NULL);
 
@@ -470,15 +474,16 @@ t8_advect_problem_init (t8_scalar_function_3d_fn
                         t8_scalar_function_3d_fn
                         phi_0, int level,
                         int maxlevel, double T,
-                        double delta_t, sc_MPI_Comm comm)
+                        double delta_t, sc_MPI_Comm comm, int dim)
 {
   t8_cmesh_t          cmesh;
   t8_advect_problem_t *problem;
   t8_scheme_cxx_t    *default_scheme;
 
+  T8_ASSERT (1 <= dim && dim <= 2);
+
   /* Construct new hypercube cmesh (unit interval) */
-  //cmesh = t8_cmesh_new_periodic (comm, 1);
-  cmesh = t8_cmesh_new_periodic_line_more_trees (comm);
+  cmesh = t8_cmesh_new_periodic (comm, dim);
 
   /* allocate problem */
   problem = T8_ALLOC (t8_advect_problem_t, 1);
@@ -495,6 +500,7 @@ t8_advect_problem_init (t8_scalar_function_3d_fn
   problem->num_time_steps = 0;  /* current time step */
   problem->comm = comm;         /* MPI communicator */
   problem->vtk_count = 0;       /* number of pvtu files written */
+  problem->dim = dim;           /* dimension of the mesh */
 
   /* Contruct uniform forest with ghosts */
   default_scheme = t8_scheme_new_default_cxx ();
@@ -535,8 +541,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   t8_locidx_t         itree, ielement, idata;
   t8_locidx_t         num_trees, num_elems_in_tree;
   t8_element_t       *element, **neighbors;
-  int                 iface, num_neighs;
-  t8_locidx_t        *el_indices;
+  int                 iface;
   t8_advect_element_data_t *elem_data;
   t8_eclass_scheme_c *ts, *neigh_scheme;
   double             *tree_vertices;
@@ -567,18 +572,13 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
       for (iface = 0; iface < ts->t8_element_num_faces (element); iface++) {
         /* Compute the indices of the face neighbors */
         t8_forest_leaf_face_neighbors (problem->forest, itree, element,
-                                       &neighbors, iface, &num_neighs,
-                                       &el_indices, &neigh_scheme, 1);
-        if (num_neighs == 1) {
-          elem_data->neighs[iface] = el_indices[0];
-        }
-        else {
-          T8_ASSERT (num_neighs == 0);
-          /* boundary element */
-          elem_data->neighs[iface] = -1;
-        }
-        T8_FREE (el_indices);
-        neigh_scheme->t8_element_destroy (num_neighs, neighbors);
+                                       &neighbors, iface,
+                                       &elem_data->num_neighbors[iface],
+                                       &elem_data->neighs[iface],
+                                       &neigh_scheme, 1);
+
+        neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
+                                          neighbors);
         T8_FREE (neighbors);
       }
     }
@@ -667,6 +667,10 @@ static void
 t8_advect_problem_destroy (t8_advect_problem_t ** pproblem)
 {
   t8_advect_problem_t *problem;
+  t8_locidx_t         lelement;
+  t8_advect_element_data_t *elem_data;
+  int                 iface;
+
   T8_ASSERT (pproblem != NULL);
   problem = *pproblem;
   if (problem == NULL) {
@@ -674,6 +678,17 @@ t8_advect_problem_destroy (t8_advect_problem_t ** pproblem)
   }
   /* Unref the forest */
   t8_forest_unref (&problem->forest);
+  /* destroy all elements */
+  for (lelement = 0;
+       lelement < (t8_locidx_t) problem->element_data->elem_count;
+       lelement++) {
+    elem_data = (t8_advect_element_data_t *)
+      t8_sc_array_index_locidx (problem->element_data, lelement);
+    for (iface = 0; iface < 2; iface++) {
+      /* TODO: make face number dim independent */
+      T8_FREE (elem_data->neighs[iface]);
+    }
+  }
   /* Free the element array */
   sc_array_destroy (problem->element_data);
   if (problem->element_data_adapt != NULL) {
@@ -689,7 +704,7 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
                  t8_scalar_function_3d_fn phi_0,
                  int level, int maxlevel, double T,
                  double delta_t, sc_MPI_Comm comm, int adapt, int no_vtk,
-                 int vtk_freq)
+                 int vtk_freq, int dim)
 {
   t8_advect_problem_t *problem;
   int                 iface;
@@ -701,14 +716,12 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
   int                 modulus, time_steps;
 
   t8_element_t       *elem, **neighs;
-  int                 num_neighs;
-  t8_locidx_t        *el_indices;
   t8_eclass_scheme_c *neigh_scheme;
 
   /* Initialize problem */
 
   problem =
-    t8_advect_problem_init (u, phi_0, level, maxlevel, T, delta_t, comm);
+    t8_advect_problem_init (u, phi_0, level, maxlevel, T, delta_t, comm, dim);
   t8_advect_problem_init_elements (problem);
 
   time_steps = (int) (T / delta_t);
@@ -763,18 +776,20 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
           t8_forest_get_element_in_tree (problem->forest, itree, ielement);
         /* Compute left and right flux */
         for (iface = 0; iface < 2; iface++) {
+          T8_FREE (elem_data->neighs[iface]);
           t8_forest_leaf_face_neighbors (problem->forest, itree, elem,
-                                         &neighs, iface, &num_neighs,
-                                         &el_indices, &neigh_scheme, 1);
-          if (num_neighs == 1) {
+                                         &neighs, iface,
+                                         &elem_data->num_neighbors[iface],
+                                         &elem_data->neighs[iface],
+                                         &neigh_scheme, 1);
+          if (elem_data->num_neighbors[iface] == 1) {
             T8_ASSERT (neigh_scheme->eclass == T8_ECLASS_LINE);
             neigh_data = (t8_advect_element_data_t *)
-              t8_sc_array_index_locidx (problem->element_data, el_indices[0]);
-            neigh_scheme->t8_element_destroy (num_neighs, neighs);
-            /* Set the index of the left neighbor */
-            elem_data->neighs[iface] = el_indices[0];
+              t8_sc_array_index_locidx (problem->element_data,
+                                        elem_data->neighs[iface][0]);
+            neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
+                                              neighs);
             T8_FREE (neighs);
-            T8_FREE (el_indices);
           }
           else {
             /* This is a boundary face, we enforce periodic boundary conditions */
@@ -784,8 +799,6 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
             boundary_data.midpoint[0] = iface;  /* 0 for left boundary, 1 for right */
             boundary_data.midpoint[1] = 0;
             boundary_data.midpoint[2] = 0;
-            /* Set the index of the left neighbor */
-            elem_data->neighs[iface] = -1;
           }
 
           plus_data = iface == 0 ? elem_data : neigh_data;
@@ -838,7 +851,7 @@ main (int argc, char *argv[])
   int                 mpiret;
   sc_options_t       *opt;
   char                help[BUFSIZ];
-  int                 level, reflevel;
+  int                 level, reflevel, dim;
   int                 parsed, helpme, no_vtk, vtk_freq, adapt;
   double              T, delta_t, cfl;
 
@@ -860,6 +873,9 @@ main (int argc, char *argv[])
 
   sc_options_add_switch (opt, 'h', "help", &helpme,
                          "Display a short help message.");
+
+  sc_options_add_int (opt, 'd', "dim", &dim, 1,
+                      "The dimension. 1 <= d <= 2.");
 
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The minimum refinement level of the mesh.");
@@ -902,7 +918,7 @@ main (int argc, char *argv[])
     }
     t8_advect_solve (t8_constant_one, t8_sinx, level,
                      level + reflevel, T, delta_t, sc_MPI_COMM_WORLD, adapt,
-                     no_vtk, vtk_freq);
+                     no_vtk, vtk_freq, dim);
   }
   else {
     /* wrong usage */
