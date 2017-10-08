@@ -521,11 +521,14 @@ t8_forest_vtk_cells_scalar_kernel (t8_forest_t forest,
                                    void **data, T8_VTK_KERNEL_MODUS modus)
 {
   double              element_value = 0;
+  t8_locidx_t         scalar_index;
 
   if (modus == T8_VTK_KERNEL_EXECUTE) {
     /* For local elements access the data array, for ghosts, write 0 */
     if (!is_ghost) {
-      element_value = ((double *) *data)[element_index];
+      scalar_index = t8_forest_get_tree_element_offset (forest, ltree_id)
+        + element_index;
+      element_value = ((double *) *data)[scalar_index];
     }
     else {
       element_value = 0;
