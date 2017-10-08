@@ -180,6 +180,37 @@ t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
 }
 
 static double
+t8_advect_flux_upwind (const t8_advect_problem_t * problem,
+                       const t8_advect_element_data_t * el_data_plus,
+                       const t8_advect_element_data_t * el_data_minus)
+{
+  double              x_j_half[3];
+  int                 idim;
+  double              u_at_x_j_half;
+
+  /*
+   *    | --x-- | --x-- |   Two elements, midpoints marked with 'x'
+   *       x_j     x_j+1
+   *          x_j_half
+   */
+  /* Compute x_j_half */
+  for (idim = 0; idim < 3; idim++) {
+    x_j_half[idim] =
+      (el_data_plus->midpoint[idim] -
+       (idim == 0 ? el_data_plus->delta_x / 2 : 0));
+  }
+  /* Compute u at the interval boundary. */
+  u_at_x_j_half = problem->u (x_j_half, problem->t);
+
+  if (u_at_x_j_half >= 0) {
+    return u_at_x_j_half * el_data_minus->phi;
+  }
+  else {
+    return u_at_x_j_half * el_data_plus->phi;
+  }
+}
+
+static double
 t8_advect_lax_friedrich_alpha (const t8_advect_problem_t * problem,
                                const t8_advect_element_data_t *
                                el_data_plus,
@@ -270,9 +301,11 @@ t8_advect_compute_element_data (t8_advect_problem_t * problem,
   /* Compute the midpoint coordinates of element */
   t8_forest_element_centroid (problem->forest, ltreeid, element,
                               tree_vertices, elem_data->midpoint);
+  t8_debugf("[advect] elem in tree %i at: %.4f\n", ltreeid, elem_data->midpoint[0]);
   /* Compute the length of this element */
   elem_data->delta_x =
-    1. / (((uint64_t) 1) << ts->t8_element_level (element));
+    t8_forest_element_diam (problem->forest, ltreeid, element, tree_vertices);
+  t8_debugf("[advect] delta x %f\n", elem_data->delta_x);
 }
 
 /* Replace callback to decide how to interpolate a refined or coarsened element.
@@ -343,7 +376,7 @@ t8_advect_replace (t8_forest_t forest_old,
   }
 }
 
-/* Adadt the forest and interpolate the phi values to the new grid,
+/* Adapt the forest and interpolate the phi values to the new grid,
  * compute the new u values on the grid */
 static void
 t8_advect_problem_adapt (t8_advect_problem_t * problem)
@@ -444,8 +477,8 @@ t8_advect_problem_init (t8_scalar_function_3d_fn
   t8_scheme_cxx_t    *default_scheme;
 
   /* Construct new hypercube cmesh (unit interval) */
-  //cmesh = t8_cmesh_new_hypercube (T8_ECLASS_LINE, comm, 0, 0);
-  cmesh = t8_cmesh_new_periodic (comm, 1);
+  //cmesh = t8_cmesh_new_periodic (comm, 1);
+  cmesh = t8_cmesh_new_periodic_line_more_trees (comm);
 
   /* allocate problem */
   problem = T8_ALLOC (t8_advect_problem_t, 1);
@@ -684,7 +717,6 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
                         " End time %g. delta_t %g. %i time steps.\n",
                         level, T, delta_t, time_steps);
 
-  t8_advect_print_phi (problem);
   if (adapt) {
     int                 ilevel;
 
@@ -728,7 +760,7 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
         elem_data = (t8_advect_element_data_t *)
           t8_sc_array_index_locidx (problem->element_data, lelement);
         elem =
-          t8_forest_get_element_in_tree (problem->forest, itree, lelement);
+          t8_forest_get_element_in_tree (problem->forest, itree, ielement);
         /* Compute left and right flux */
         for (iface = 0; iface < 2; iface++) {
           t8_forest_leaf_face_neighbors (problem->forest, itree, elem,
@@ -758,8 +790,13 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
 
           plus_data = iface == 0 ? elem_data : neigh_data;
           minus_data = iface == 0 ? neigh_data : elem_data;
+#if 0
           flux[iface] =
             t8_advect_flux_lax_friedrich (problem, plus_data, minus_data);
+#else
+          flux[iface] =
+            t8_advect_flux_upwind (problem, plus_data, minus_data);
+#endif
         }
         /* Compute time step */
         t8_advect_advance_element (problem, elem_data, flux[0], flux[1]);
@@ -869,7 +906,7 @@ main (int argc, char *argv[])
     else {
       delta_t = cfl / (1 << (level + reflevel));
     }
-    t8_advect_solve (t8_constant_one, t8_step_function, level,
+    t8_advect_solve (t8_constant_one, t8_sinx, level,
                      level + reflevel, T, delta_t, sc_MPI_COMM_WORLD, adapt,
                      no_vtk, vtk_freq);
   }
