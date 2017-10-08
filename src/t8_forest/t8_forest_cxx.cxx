@@ -368,6 +368,133 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
   }
 }
 
+/* Compute the length of the line from one corner to a second corner in an element */
+static double
+t8_forest_element_line_length (t8_forest_t forest, t8_locidx_t ltreeid,
+                               const t8_element_t * element,
+                               const double *vertices, int corner_a,
+                               int corner_b)
+{
+  double              coordinates_a[3], coordinates_b[3];
+  double              length;
+  int                 i;
+
+  t8_forest_element_coordinate (forest, ltreeid, element, vertices, corner_a,
+                                coordinates_a);
+  t8_forest_element_coordinate (forest, ltreeid, element, vertices, corner_b,
+                                coordinates_b);
+
+  /* Compute the euclidean distance */
+  length = 0;
+  for (i = 0; i < 3; i++) {
+    length += SC_SQR (coordinates_a[i] + coordinates_b[i]);
+  }
+  /* return the squareroot */
+  return sqrt (length);
+}
+
+/* Compute an element's volume */
+double
+t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
+                          const t8_element_t * element,
+                          const double *vertices)
+{
+  t8_eclass_t         eclass;
+  int                 i;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  /* get the eclass of the forest */
+  eclass = t8_forest_get_tree_class (forest, ltreeid);
+
+  switch (eclass) {
+  case T8_ECLASS_VERTEX:
+    /* vertices do not have any volume */
+    return 0;
+  case T8_ECLASS_LINE:
+    /* for line, the volume equals the diameter */
+    return t8_forest_element_diam (forest, ltreeid, element, vertices);
+  case T8_ECLASS_QUAD:
+    {
+      double              coordinates_0[3], coordinates_1[3],
+        coordinates_2[3];
+      double              v_1v_1 = 0, v_1v_2 = 0, v_2v_2 = 0;
+      /* TODO: This might not work with elements differente to Morton SFC, since
+       * we explicetly use corner numbers here. */
+      /* We use this formula for computing the surface area for a parallelogram
+       * (we use parallelogram as approximation for the element).
+       *
+       *  A = | det (v_1*v_1 v_1*v_2) |
+       *      |     (v_2*v_1 v_2*v_2) |
+       * v_1
+       *  x --- x
+       *  |     |
+       *  |     |
+       *  x --- x
+       * 0       v_2
+       */
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+                                    0, coordinates_0);
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+                                    1, coordinates_1);
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+                                    2, coordinates_2);
+      /* Compute vectors v_1 and v_2 */
+      for (i = 0; i < 3; i++) {
+        coordinates_1[i] -= coordinates_0[i];
+        coordinates_2[i] -= coordinates_0[i];
+        /* compute scalar products */
+        v_1v_1 += coordinates_1[i] * coordinates_1[i];
+        v_1v_2 += coordinates_1[i] * coordinates_2[i];
+        v_2v_2 += coordinates_2[i] * coordinates_2[i];
+      }
+      /* compute determinant */
+      return fabs (v_1v_1 * v_2v_2 - v_1v_2 * v_1v_2);
+    }
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+}
+
+/* Compute the area of an elements face */
+double
+t8_forest_element_face_area (t8_forest_t forest, t8_locidx_t ltreeid,
+                             const t8_element_t * element, int face,
+                             const double *vertices)
+{
+
+  t8_eclass_t         eclass, face_class;
+  t8_eclass_scheme_c *ts;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  /* get the eclass of the forest */
+  eclass = t8_forest_get_tree_class (forest, ltreeid);
+  /* get the element's scheme and the face scheme */
+  ts = t8_forest_get_eclass_scheme (forest, eclass);
+  face_class = ts->t8_element_face_class (element, face);
+
+  switch (face_class) {
+  case T8_ECLASS_VERTEX:
+    /* vertices do not have volume */
+    return 0;
+  case T8_ECLASS_LINE:
+    {
+      int                 corner_a, corner_b;
+
+      /* Compute the two endnotes of the face line */
+      corner_a = ts->t8_element_get_face_corner (element, face, 0);
+      corner_b = ts->t8_element_get_face_corner (element, face, 1);
+
+      /* Compute the length of this line */
+      return t8_forest_element_line_length (forest, ltreeid, element,
+                                            vertices, corner_a, corner_b);
+    }
+  default:
+    SC_ABORT ("Not implemented.\n");
+  }
+}
+
 /* For each tree in a forest compute its first and last descendant */
 void
 t8_forest_compute_desc (t8_forest_t forest)
