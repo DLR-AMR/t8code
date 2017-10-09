@@ -714,6 +714,7 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
   double              flux[2];
   double              l_infty;
   int                 modulus, time_steps;
+  int                 adapted_or_partitioned = 0;
 
   t8_element_t       *elem, **neighs;
   t8_eclass_scheme_c *neigh_scheme;
@@ -776,12 +777,17 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
           t8_forest_get_element_in_tree (problem->forest, itree, ielement);
         /* Compute left and right flux */
         for (iface = 0; iface < 2; iface++) {
-          T8_FREE (elem_data->neighs[iface]);
-          t8_forest_leaf_face_neighbors (problem->forest, itree, elem,
-                                         &neighs, iface,
-                                         &elem_data->num_neighbors[iface],
-                                         &elem_data->neighs[iface],
-                                         &neigh_scheme, 1);
+          if (adapted_or_partitioned) {
+            /* We changed the mesh, so that we have to calculate the neighbor
+             * indices again. */
+            T8_FREE (elem_data->neighs[iface]);
+            t8_forest_leaf_face_neighbors (problem->forest, itree, elem,
+                                           &neighs, iface,
+                                           &elem_data->num_neighbors[iface],
+                                           &elem_data->neighs[iface],
+                                           &neigh_scheme, 1);
+            adapted_or_partitioned = 0;
+          }
           if (elem_data->num_neighbors[iface] == 1) {
             T8_ASSERT (neigh_scheme->eclass == T8_ECLASS_LINE);
             neigh_data = (t8_advect_element_data_t *)
@@ -826,6 +832,7 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
     if (adapt)
 #endif
     {
+      adapted_or_partitioned = 1;
       t8_advect_problem_adapt (problem);
       t8_advect_problem_partition (problem);
     }
