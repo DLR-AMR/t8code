@@ -329,7 +329,7 @@ t8_advect_replace (t8_forest_t forest_old,
   t8_advect_problem_t *problem;
   t8_advect_element_data_t *elem_data_in, *elem_data_out;
   t8_element_t       *element;
-  int                 i;
+  int                 i, iface;
 
   /* Get the problem description */
 
@@ -344,6 +344,13 @@ t8_advect_replace (t8_forest_t forest_old,
   if (num_incoming == num_outgoing && num_incoming == 1) {
     /* The element is not changed, copy phi and vol */
     memcpy (elem_data_in, elem_data_out, sizeof (t8_advect_element_data_t));
+    /* Get a pointer to the new element */
+    element =
+      t8_forest_get_element (problem->forest_adapt, first_incoming, NULL);
+    /* Set the neighbor entries to uninitialized */
+    for (iface = 0; iface < ts->t8_element_num_faces (element); iface++) {
+      elem_data_in->num_neighbors[iface] = 0;
+    }
   }
   else if (num_outgoing == 1) {
     T8_ASSERT (num_incoming == 2);
@@ -357,6 +364,10 @@ t8_advect_replace (t8_forest_t forest_old,
       t8_advect_compute_element_data (problem, elem_data_in + i, element,
                                       which_tree, ts, NULL);
       elem_data_in[i].phi = elem_data_out->phi;
+      /* Set the neighbor entries to uninitialized */
+      for (iface = 0; iface < ts->t8_element_num_faces (element); iface++) {
+        elem_data_in[i].num_neighbors[iface] = 0;
+      }
     }
   }
   else {
@@ -377,6 +388,36 @@ t8_advect_replace (t8_forest_t forest_old,
     }
     phi /= num_outgoing;
     elem_data_in->phi = phi;
+    /* Set the neighbor entries to uninitialized */
+    for (iface = 0; iface < ts->t8_element_num_faces (element); iface++) {
+      elem_data_in->num_neighbors[iface] = 0;
+    }
+  }
+}
+
+static void
+t8_advect_problem_elements_destroy (t8_advect_problem_t * problem)
+{
+
+  t8_locidx_t         lelement, num_local_elem;
+  int                 iface;
+  t8_advect_element_data_t *elem_data;
+
+  t8_debugf ("[advect] %i elems\n", problem->element_data->elem_count);
+  num_local_elem = t8_forest_get_num_element (problem->forest);
+  /* destroy all elements */
+  for (lelement = 0; lelement < num_local_elem; lelement++) {
+    elem_data = (t8_advect_element_data_t *)
+      t8_sc_array_index_locidx (problem->element_data, lelement);
+    for (iface = 0; iface < 2; iface++) {
+      /* TODO: make face number dim independent */
+      if (elem_data->num_neighbors[iface] > 0) {
+        t8_debugf ("[advect] elem %i face %i neigh %p\n", lelement, iface,
+                   elem_data->neighs[iface]);
+        T8_FREE (elem_data->neighs[iface]);
+        elem_data->num_neighbors[iface] = 0;
+      }
+    }
   }
 }
 
@@ -420,8 +461,10 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem)
   /* Set the forest to the adapted one */
   problem->forest = problem->forest_adapt;
   problem->forest_adapt = NULL;
-  /* Set the elem data to the adapted elem data */
+  /* clean the old element data */
+  t8_advect_problem_elements_destroy (problem);
   sc_array_destroy (problem->element_data);
+  /* Set the elem data to the adapted elem data */
   problem->element_data = problem->element_data_adapt;
   problem->element_data_adapt = NULL;
 }
@@ -464,6 +507,7 @@ t8_advect_problem_partition (t8_advect_problem_t * problem)
   /* destroy the old forest and the element data */
   t8_forest_unref (&problem->forest);
   problem->forest = forest_partition;
+  t8_advect_problem_elements_destroy (problem);
   sc_array_destroy (problem->element_data);
   problem->element_data = new_data;
 }
@@ -667,33 +711,21 @@ static void
 t8_advect_problem_destroy (t8_advect_problem_t ** pproblem)
 {
   t8_advect_problem_t *problem;
-  t8_locidx_t         lelement;
-  t8_advect_element_data_t *elem_data;
-  int                 iface;
 
   T8_ASSERT (pproblem != NULL);
   problem = *pproblem;
   if (problem == NULL) {
     return;
   }
-  /* Unref the forest */
-  t8_forest_unref (&problem->forest);
-  /* destroy all elements */
-  for (lelement = 0;
-       lelement < (t8_locidx_t) problem->element_data->elem_count;
-       lelement++) {
-    elem_data = (t8_advect_element_data_t *)
-      t8_sc_array_index_locidx (problem->element_data, lelement);
-    for (iface = 0; iface < 2; iface++) {
-      /* TODO: make face number dim independent */
-      T8_FREE (elem_data->neighs[iface]);
-    }
-  }
+  /* destroy elements */
+  t8_advect_problem_elements_destroy (problem);
   /* Free the element array */
   sc_array_destroy (problem->element_data);
   if (problem->element_data_adapt != NULL) {
     sc_array_destroy (problem->element_data_adapt);
   }
+  /* Unref the forest */
+  t8_forest_unref (&problem->forest);
   /* Free the problem and set pointer to NULL */
   T8_FREE (problem);
   *pproblem = NULL;
@@ -742,6 +774,7 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
       /* Re initialize the elements */
       t8_advect_problem_init_elements (problem);
     }
+    adapted_or_partitioned = 1;
   }
   /* Exchange ghost values */
   t8_forest_ghost_exchange_data (problem->forest, problem->element_data);
@@ -780,24 +813,26 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
           if (adapted_or_partitioned) {
             /* We changed the mesh, so that we have to calculate the neighbor
              * indices again. */
-            T8_FREE (elem_data->neighs[iface]);
+            if (elem_data->num_neighbors[iface] > 0) {
+              T8_FREE (elem_data->neighs[iface]);
+            }
             t8_forest_leaf_face_neighbors (problem->forest, itree, elem,
                                            &neighs, iface,
                                            &elem_data->num_neighbors[iface],
                                            &elem_data->neighs[iface],
                                            &neigh_scheme, 1);
-            adapted_or_partitioned = 0;
-          }
-          if (elem_data->num_neighbors[iface] == 1) {
             T8_ASSERT (neigh_scheme->eclass == T8_ECLASS_LINE);
-            neigh_data = (t8_advect_element_data_t *)
-              t8_sc_array_index_locidx (problem->element_data,
-                                        elem_data->neighs[iface][0]);
             neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
                                               neighs);
             T8_FREE (neighs);
           }
+          if (elem_data->num_neighbors[iface] == 1) {
+            neigh_data = (t8_advect_element_data_t *)
+              t8_sc_array_index_locidx (problem->element_data,
+                                        elem_data->neighs[iface][0]);
+          }
           else {
+            T8_ASSERT (elem_data->num_neighbors[iface] <= 0);
             /* This is a boundary face, we enforce periodic boundary conditions */
             /* TODO: Do this via cmesh periodic. Implement vertex scheme */
             neigh_data = &boundary_data;
@@ -821,7 +856,7 @@ t8_advect_solve (t8_scalar_function_3d_fn u,
         t8_advect_advance_element (problem, elem_data, flux[0], flux[1]);
       }
     }
-    /* TODO: Change forest (adapt, partition) */
+    adapted_or_partitioned = 0;
     /* Project the computed solution to the new forest and exchange ghost values */
     t8_advect_project_element_data (problem);
 #if 0
