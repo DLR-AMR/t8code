@@ -53,6 +53,9 @@ T8_EXTERN_C_BEGIN ();
 /* TODO: if eclass is a vertex then num_outgoing/num_incoming are always
  *       1 and it is not possible to decide whether we are rfining or coarsening.
  *       Is this an issue? */
+/* TODO: We may also take the local element index within the tree as parameter.
+ *       Otherwise we have to search for the elements if we want pointers to them.
+ */
 /** Callback function prototype to replace one set of elements with another.
  *
  * This is used by the replace routine which can be called after adapt,
@@ -61,14 +64,16 @@ T8_EXTERN_C_BEGIN ();
  * of the new forest that are either refined, coarsened or the same as elements in the
  * old forest.
  *
- * \param [in] forest_old      the forest that is adapted
- * \param [in] forest_new      the forest that is newly constructed from \a forest_old
- * \param [in] which_tree  the local tree containing \a outgoing and \a incoming
- * \param [in] ts          the eclass scheme of the tree
- * \param [in] num_outgoing The number of outgoing elements.
+ * \param [in] forest_old      The forest that is adapted
+ * \param [in] forest_new      The forest that is newly constructed from \a forest_old
+ * \param [in] which_tree      The local tree containing \a outgoing and \a incoming
+ * \param [in] ts              The eclass scheme of the tree
+ * \param [in] num_outgoing    The number of outgoing elements.
  * \param [in] first_outgoing  The local index of the first outgoing element.
- * \param [in] num_incoming The number of incoming elements.
- * \param [in] first_incoming The local index of the first incoming element.
+ *                             0 <= first_outgoing < forest_old->num_elements
+ * \param [in] num_incoming    The number of incoming elements.
+ * \param [in] first_incoming  The local index of the first incoming element.
+ *                             0 <= first_incom < forest_new->num_elements
  *
  * If an element is being refined, num_outgoing will be 1 and num_incoming will
  * be the number of children, and vice versa if a family is being coarsened.
