@@ -138,6 +138,17 @@ double              t8_sinx (const double x[3], double t);
  */
 double              t8_sint (const double x[3], double t);
 
+/** Flow functions */
+
+/** Returns always 1 in each coordinate.
+ */
+void                t8_constant_one_vec (const double x[3], double t,
+                                         double x_out[3]);
+
+/** Sets the first coordinate to 1, all other to 0. */
+void                t8_constant_one_x_vec (const double x[3], double t,
+                                           double x_out[3]);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_EXAMPLE_COMMON_H */

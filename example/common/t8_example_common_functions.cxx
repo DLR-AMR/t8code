@@ -96,4 +96,17 @@ t8_sint (const double x[3], double t)
   return sin (2 * M_PI * t);
 }
 
+void
+t8_constant_one_vec (const double x[3], double t, double x_out[3])
+{
+  x_out[0] = x_out[1] = x_out[2] = 1;
+}
+
+void
+t8_constant_one_x_vec (const double x[3], double t, double x_out[3])
+{
+  x_out[0] = 1;
+  x_out[1] = x_out[2] = 0;
+}
+
 T8_EXTERN_C_END ();
