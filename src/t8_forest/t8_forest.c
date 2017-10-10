@@ -802,6 +802,14 @@ t8_forest_get_tree (t8_forest_t forest, t8_locidx_t ltree_id)
   return (t8_tree_t) t8_sc_array_index_locidx (forest->trees, ltree_id);
 }
 
+double             *
+t8_forest_get_tree_vertices (t8_forest_t forest, t8_locidx_t ltreeid)
+{
+  return t8_cmesh_get_tree_vertices (forest->cmesh,
+                                     t8_forest_ltreeid_to_cmesh_ltreeid
+                                     (forest, ltreeid));
+}
+
 t8_element_array_t
   * t8_forest_tree_get_leafs (t8_forest_t forest, t8_locidx_t ltree_id)
 {

@@ -516,6 +516,15 @@ t8_gloidx_t         t8_forest_global_tree_id (t8_forest_t forest,
 t8_tree_t           t8_forest_get_tree (t8_forest_t forest,
                                         t8_locidx_t ltree_id);
 
+/** Return a pointer to the vertex coordinates of a tree.
+ * \param [in]    forest        The forest.
+ * \param [in]    ltreeid       The id of a local tree.
+ * \return    If stored, a pointer to the vertex coordinates of \a tree.
+ *            If no coordinates for this tree are found, NULL.
+ */
+double             *t8_forest_get_tree_vertices (t8_forest_t forest,
+                                                 t8_locidx_t ltreeid);
+
 /** Return the array of leaf elements of a local tree in a forest.
  * \param [in]      forest      The forest.
  * \param [in]      ltree_id    The local id of a local tree of \a forest.
