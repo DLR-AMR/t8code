@@ -449,7 +449,7 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
         v_2v_2 += coordinates_2[i] * coordinates_2[i];
       }
       /* compute determinant */
-      return fabs (v_1v_1 * v_2v_2 - v_1v_2 * v_1v_2);
+      return sqrt (fabs (v_1v_1 * v_2v_2 - v_1v_2 * v_1v_2));
     }
   default:
     SC_ABORT_NOT_REACHED ();
@@ -490,6 +490,74 @@ t8_forest_element_face_area (t8_forest_t forest, t8_locidx_t ltreeid,
       return t8_forest_element_line_length (forest, ltreeid, element,
                                             vertices, corner_a, corner_b);
     }
+  default:
+    SC_ABORT ("Not implemented.\n");
+  }
+}
+
+void
+t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
+                               const t8_element_t * element, int face,
+                               const double *vertices, double normal[3])
+{
+  t8_eclass_t         eclass, face_class;
+  t8_eclass_scheme_c *ts;
+  int                 i;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+  /* get the eclass of the forest */
+  eclass = t8_forest_get_tree_class (forest, ltreeid);
+  /* get the element's scheme and the face scheme */
+  ts = t8_forest_get_eclass_scheme (forest, eclass);
+  face_class = ts->t8_element_face_class (element, face);
+
+  switch (face_class) {
+  case T8_ECLASS_VERTEX:
+    /* vertices do not have faces */
+    SC_ABORT_NOT_REACHED ();
+  case T8_ECLASS_LINE:
+    {
+      int                 corner_a, corner_b;
+      double              vertex_a[3], vertex_b[3], center[3];
+      double              norm;
+      /* We approximate the normal vector via this geometric construction:
+       *
+       *    x ---- x B
+       *    |      |
+       *    |   C  |-->N      N = ((A-C) + (B-C))/2
+       *    |      |
+       *    x ---- x A
+       */
+
+      /* Compute the two endnotes of the face line */
+      corner_a = ts->t8_element_get_face_corner (element, face, 0);
+      corner_b = ts->t8_element_get_face_corner (element, face, 1);
+      /* Compute the coordinates of the endnotes */
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+                                    corner_a, vertex_a);
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+                                    corner_b, vertex_b);
+      /* Compute the coordinates of the center */
+      t8_forest_element_centroid (forest, ltreeid, element, vertices, center);
+      /* Compute the difference of the two from the center.
+       * Compute the normal as the average of these two */
+      norm = 0;
+      for (i = 0; i < 3; i++) {
+        vertex_b[i] = vertex_b[i] - center[i];
+        vertex_a[i] = vertex_a[i] - center[i];
+        normal[i] = (vertex_a[i] + vertex_b[i]) / 2;
+        /* Compute the norm of the normal vector */
+        norm += SC_SQR (normal[i]);
+      }
+      T8_ASSERT (norm > 0);
+      norm = sqrt (norm);
+      /* Divide by the norm */
+      for (i = 0; i < 3; i++) {
+        normal[i] /= norm;
+      }
+      return;
+    }
+    break;
   default:
     SC_ABORT ("Not implemented.\n");
   }

@@ -753,6 +753,39 @@ double              t8_forest_element_volume (t8_forest_t forest,
                                               const t8_element_t * element,
                                               const double *vertices);
 
+/** Compute the area of an element's face.
+ * Currently implemented for 2D elements only.
+ * \param [in]      forest     The forest.
+ * \param [in]      ltree_id   The forest local id of the tree in which the element is.
+ * \param [in]      element    The element.
+ * \param [in]      face       A face of \a element.
+ * \param [in]      vertices   An array storing the vertex coordinates of the tree.
+ * \return                     The area of \a face.
+ * \a forest must be committed when calling this function.
+ */
+double              t8_forest_element_face_area (t8_forest_t forest,
+                                                 t8_locidx_t ltreeid,
+                                                 const t8_element_t * element,
+                                                 int face,
+                                                 const double *vertices);
+
+/** Compute the normal vector of an element's face.
+ * Currently implemented for 2D elements only.
+ * \param [in]      forest     The forest.
+ * \param [in]      ltree_id   The forest local id of the tree in which the element is.
+ * \param [in]      element    The element.
+ * \param [in]      face       A face of \a element.
+ * \param [in]      vertices   An array storing the vertex coordinates of the tree.
+ * \param [out]     normal     On output the normal vector of \a element at \a face.
+ * \a forest must be committed when calling this function.
+ */
+void                t8_forest_element_face_normal (t8_forest_t forest,
+                                                   t8_locidx_t ltreeid,
+                                                   const t8_element_t *
+                                                   element, int face,
+                                                   const double *vertices,
+                                                   double normal[3]);
+
 /* TODO: if set level and partition/adapt/balance all give NULL, then
  * refine uniformly and partition/adapt/balance the unfiform forest. */
 /** Build a uniformly refined forest on a coarse mesh.
