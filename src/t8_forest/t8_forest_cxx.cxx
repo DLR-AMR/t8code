@@ -623,9 +623,9 @@ t8_forest_populate (t8_forest_t forest)
                   "Given refinement level exceeds the maximum.\n");
   /* TODO: create trees and quadrants according to uniform refinement */
   t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level,
-                           &forest->first_local_tree, &child_in_tree_begin,
-                           &forest->last_local_tree, &child_in_tree_end,
-                           NULL);
+                           &forest->first_local_tree,
+                           &child_in_tree_begin, &forest->last_local_tree,
+                           &child_in_tree_end, NULL);
 
   /* True if the forest has no elements */
   is_empty = forest->first_local_tree > forest->last_local_tree
@@ -668,8 +668,8 @@ t8_forest_populate (t8_forest_t forest)
       tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees,
                                                    jt -
                                                    forest->first_local_tree);
-      tree_class = tree->eclass = t8_cmesh_get_tree_class (forest->cmesh,
-                                                           jt - first_ctree);
+      tree_class = tree->eclass =
+        t8_cmesh_get_tree_class (forest->cmesh, jt - first_ctree);
       tree->elements_offset = count_elements;
       eclass_scheme = forest->scheme_cxx->eclass_schemes[tree_class];
       T8_ASSERT (eclass_scheme != NULL);
@@ -936,7 +936,8 @@ t8_forest_element_neighbor_eclass (t8_forest_t forest,
 }
 
 t8_gloidx_t
-t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
+t8_forest_element_face_neighbor (t8_forest_t forest,
+                                 t8_locidx_t ltreeid,
                                  const t8_element_t * elem,
                                  t8_element_t * neigh,
                                  t8_eclass_scheme_c * neigh_scheme,
@@ -1051,14 +1052,16 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
     sign =
       t8_eclass_face_orientation[eclass][tree_face] ==
       t8_eclass_face_orientation[neigh_eclass][tree_neigh_face];
-    boundary_scheme->t8_element_transform_face (face_element, face_element,
+    boundary_scheme->t8_element_transform_face (face_element,
+                                                face_element,
                                                 ttf[tree_face] / F, sign,
                                                 is_smaller);
     /* And now we extrude the face to the new neighbor element */
     neighbor_scheme = forest->scheme_cxx->eclass_schemes[neigh_eclass];
     *neigh_face =
-      neighbor_scheme->t8_element_extrude_face (face_element, boundary_scheme,
-                                                neigh, tree_neigh_face);
+      neighbor_scheme->t8_element_extrude_face (face_element,
+                                                boundary_scheme, neigh,
+                                                tree_neigh_face);
 
     return global_neigh_id;
   }
@@ -1069,8 +1072,8 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
                                        t8_locidx_t ltreeid,
                                        const t8_element_t * elem,
                                        t8_element_t * neighs[],
-                                       t8_eclass_scheme_c * neigh_scheme,
-                                       int face, int num_neighs)
+                                       t8_eclass_scheme_c *
+                                       neigh_scheme, int face, int num_neighs)
 {
   t8_eclass_scheme_c *ts;
   t8_tree_t           tree;
@@ -1196,8 +1199,9 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
       /* Compute neighbor elements and global treeid of the neighbor */
       gneigh_treeid =
         t8_forest_element_half_face_neighbors (forest, ltreeid, leaf,
-                                               neighbor_leafs, neigh_scheme,
-                                               face, num_children_at_face);
+                                               neighbor_leafs,
+                                               neigh_scheme, face,
+                                               num_children_at_face);
     }
     if (gneigh_treeid < 0) {
       /* There exists no face neighbor across this face, we return with this info */
@@ -1421,8 +1425,8 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
     /* Iterate over all faces */
     for (iface = 0; iface < ts->t8_element_num_faces (leaf); iface++) {
       t8_forest_leaf_face_neighbors (forest, ltree, leaf, &neighbor_leafs,
-                                     iface, &num_neighbors, &element_indices,
-                                     &neigh_scheme, 1);
+                                     iface, &num_neighbors,
+                                     &element_indices, &neigh_scheme, 1);
       t8_debugf ("Element %li across face %i has %i leaf neighbors.\n",
                  (long) ielem, iface, num_neighbors);
       snprintf (buffer, BUFSIZ, "\tIndices:\t");
@@ -1452,7 +1456,8 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
 
 /* Check if an element is owned by a specific rank */
 int
-t8_forest_element_check_owner (t8_forest_t forest, t8_element_t * element,
+t8_forest_element_check_owner (t8_forest_t forest,
+                               t8_element_t * element,
                                t8_gloidx_t gtreeid, t8_eclass_t eclass,
                                int rank, int element_is_desc)
 {
@@ -1589,7 +1594,8 @@ t8_forest_element_find_owner_compare (const void *find_owner_data,
 }
 
 int
-t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
+t8_forest_element_find_owner_ext (t8_forest_t forest,
+                                  t8_gloidx_t gtreeid,
                                   t8_element_t * element,
                                   t8_eclass_t eclass, int lower_bound,
                                   int upper_bound, int guess,
@@ -1609,8 +1615,8 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid,
   T8_ASSERT (0 <= gtreeid
              && gtreeid < t8_forest_get_num_global_trees (forest));
   T8_ASSERT (element != NULL);
-  T8_ASSERT (0 <= lower_bound && lower_bound <= upper_bound && upper_bound <
-             forest->mpisize);
+  T8_ASSERT (0 <= lower_bound && lower_bound <= upper_bound
+             && upper_bound < forest->mpisize);
   T8_ASSERT (lower_bound <= guess && guess <= upper_bound);
 
   /* If the upper and lower bound only leave one process left, we can immediately
@@ -1761,8 +1767,8 @@ int
 t8_forest_element_find_owner (t8_forest_t forest, t8_gloidx_t gtreeid,
                               t8_element_t * element, t8_eclass_t eclass)
 {
-  return t8_forest_element_find_owner_ext (forest, gtreeid, element, eclass,
-                                           0, forest->mpisize - 1,
+  return t8_forest_element_find_owner_ext (forest, gtreeid, element,
+                                           eclass, 0, forest->mpisize - 1,
                                            (forest->mpisize - 1) / 2, 0);
 }
 
