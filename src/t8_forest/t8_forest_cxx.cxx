@@ -387,8 +387,10 @@ t8_forest_element_line_length (t8_forest_t forest, t8_locidx_t ltreeid,
   /* Compute the euclidean distance */
   length = 0;
   for (i = 0; i < 3; i++) {
-    length += SC_SQR (coordinates_a[i] + coordinates_b[i]);
+    length += SC_SQR (coordinates_a[i] - coordinates_b[i]);
   }
+  t8_debugf ("[H] line from %i to %i has len^2  %f\n", corner_a, corner_b,
+             length);
   /* return the squareroot */
   return sqrt (length);
 }
