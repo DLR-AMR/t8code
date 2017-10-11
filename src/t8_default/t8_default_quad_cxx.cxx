@@ -184,6 +184,17 @@ t8_default_scheme_quad_c::t8_element_get_face_corner (const t8_element_t *
   return p4est_face_corners[face][corner];
 }
 
+int
+t8_default_scheme_quad_c::t8_element_get_corner_face (const t8_element_t *
+                                                      element, int corner,
+                                                      int face)
+{
+  T8_ASSERT (t8_element_is_valid (element));
+  T8_ASSERT (0 <= corner && corner < P4EST_CHILDREN);
+  T8_ASSERT (0 <= face && face < 2);
+  return p4est_corner_faces[corner][face];
+}
+
 void
 t8_default_scheme_quad_c::t8_element_child (const t8_element_t * elem,
                                             int childid, t8_element_t * child)

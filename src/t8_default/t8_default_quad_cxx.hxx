@@ -142,9 +142,15 @@ public:
   virtual int         t8_element_num_face_children (const t8_element_t *
                                                     elem, int face);
 
+  /** Return the corner number of an element's face corner. */
   virtual int         t8_element_get_face_corner (const t8_element_t *
                                                   element, int face,
                                                   int corner);
+
+  /** Return the face numbers of the faces sharing an element's corner. */
+  virtual int         t8_element_get_corner_face (const t8_element_t *
+                                                  element, int corner,
+                                                  int face);
 
 /** Construct the child element of a given number. */
   virtual void        t8_element_child (const t8_element_t * elem,

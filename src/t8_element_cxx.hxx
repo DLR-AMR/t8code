@@ -191,6 +191,22 @@ public:
                                                   element, int face,
                                                   int corner) = 0;
 
+  /** Return the face numbers of the faces sharing an element's corner.
+   * Example quad: 2 x --- x 3
+   *                 |     |
+   *                 |     |   face 1
+   *               0 x --- x 1
+   *                  face 2
+   *      Thus for corner = 1 the output is: face=0 : 2, face=1: 1
+   * \param [in] element  The element.
+   * \param [in] corner   A corner index for the face.
+   * \param [in] face     A face index for \a corner.
+   * \return              The face number of the \a face-th face at \a corner.
+   */
+  virtual int         t8_element_get_corner_face (const t8_element_t *
+                                                  element, int corner,
+                                                  int face) = 0;
+
   /** Construct the child element of a given number.
    * \param [in] elem     This must be a valid element, bigger than maxlevel.
    * \param [in] childid  The number of the child to construct.
