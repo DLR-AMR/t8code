@@ -747,11 +747,11 @@ t8_forest_populate (t8_forest_t forest)
   cmesh_first_tree = t8_cmesh_get_first_treeid (forest->cmesh);
   cmesh_last_tree = cmesh_first_tree +
     t8_cmesh_get_num_local_trees (forest->cmesh) - 1;
-  t8_debugf ("[H] trees: %li %li  ctrees: %li %li  els: %li %li. level %i\n",
-             (long) forest->first_local_tree, (long) forest->last_local_tree,
-             (long) cmesh_first_tree, (long) cmesh_last_tree,
-             (long) child_in_tree_begin, (long) child_in_tree_end,
-             forest->set_level);
+  t8_debugf
+    ("[H] trees: %li %li  ctrees: %li %li  els: %li %li. level %i\n",
+     (long) forest->first_local_tree, (long) forest->last_local_tree,
+     (long) cmesh_first_tree, (long) cmesh_last_tree,
+     (long) child_in_tree_begin, (long) child_in_tree_end, forest->set_level);
   if (!is_empty) {
     SC_CHECK_ABORT (forest->first_local_tree >= cmesh_first_tree
                     && forest->last_local_tree <= cmesh_last_tree,
