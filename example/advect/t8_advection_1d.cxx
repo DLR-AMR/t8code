@@ -44,6 +44,7 @@ typedef struct
   sc_MPI_Comm         comm; /**< MPI communicator used */
   double              t; /**< Current simulation time */
   double              T; /**< End time */
+  double              cfl; /**< CFL number */
   double              delta_t; /**< Current time step */
   double              min_grad, max_grad; /**< bounds for refinement */
   int                 num_time_steps; /**< Number of time steps computed so far.
@@ -60,6 +61,7 @@ typedef struct
   double              vol; /**< Volume of this element */
   double              phi; /**< Value of solution at midpoint */
   double              phi_new; /**< Value of solution at midpoint in next time step */
+  int                 num_faces; /**< The number of faces */
   int                 num_neighbors[MAX_FACES]; /**< Number of neighbors for each face */
   t8_locidx_t        *neighs[MAX_FACES]; /**< Indices of the neighbor elements */
 } t8_advect_element_data_t;
@@ -426,7 +428,8 @@ t8_advect_replace (t8_forest_t forest_old,
     element =
       t8_forest_get_element (problem->forest_adapt, first_incoming, NULL);
     /* Set the neighbor entries to uninitialized */
-    for (iface = 0; iface < ts->t8_element_num_faces (element); iface++) {
+    T8_ASSERT (elem_data_in->num_faces == ts->t8_element_num_faces (element));
+    for (iface = 0; iface < elem_data_in->num_faces; iface++) {
       elem_data_in->num_neighbors[iface] = 0;
     }
   }
@@ -443,7 +446,10 @@ t8_advect_replace (t8_forest_t forest_old,
                                       which_tree, ts, NULL);
       elem_data_in[i].phi = elem_data_out->phi;
       /* Set the neighbor entries to uninitialized */
-      for (iface = 0; iface < ts->t8_element_num_faces (element); iface++) {
+      elem_data_in[i].num_faces = elem_data_out->num_faces;
+      T8_ASSERT (elem_data_in[i].num_faces ==
+                 ts->t8_element_num_faces (element));
+      for (iface = 0; iface < elem_data_in[i].num_faces; iface++) {
         elem_data_in[i].num_neighbors[iface] = 0;
       }
     }
@@ -467,7 +473,9 @@ t8_advect_replace (t8_forest_t forest_old,
     phi /= num_outgoing;
     elem_data_in->phi = phi;
     /* Set the neighbor entries to uninitialized */
-    for (iface = 0; iface < ts->t8_element_num_faces (element); iface++) {
+    elem_data_in->num_faces = elem_data_out[0].num_faces;
+    T8_ASSERT (elem_data_in->num_faces == ts->t8_element_num_faces (element));
+    for (iface = 0; iface < elem_data_in->num_faces; iface++) {
       elem_data_in->num_neighbors[iface] = 0;
     }
   }
@@ -488,7 +496,7 @@ t8_advect_problem_elements_destroy (t8_advect_problem_t * problem)
   for (lelement = 0; lelement < num_local_elem; lelement++) {
     elem_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data, lelement);
-    for (iface = 0; iface < MAX_FACES; iface++) {
+    for (iface = 0; iface < elem_data->num_faces; iface++) {
       /* TODO: make face number dim independent */
       if (elem_data->num_neighbors[iface] > 0) {
         T8_FREE (elem_data->neighs[iface]);
@@ -594,8 +602,8 @@ t8_advect_problem_init (t8_flow_function_3d_fn
                         u,
                         t8_scalar_function_3d_fn
                         phi_0, int level,
-                        int maxlevel, double T,
-                        double delta_t, sc_MPI_Comm comm, int dim)
+                        int maxlevel, double T, double cfl,
+                        sc_MPI_Comm comm, int dim)
 {
   t8_cmesh_t          cmesh;
   t8_advect_problem_t *problem;
@@ -617,7 +625,7 @@ t8_advect_problem_init (t8_flow_function_3d_fn
   problem->T = T;               /* end time */
   problem->min_grad = 2;        /* Coarsen an element if the gradient is smaller */
   problem->max_grad = 4;        /* Refine an element if the gradient is larger */
-  problem->delta_t = delta_t;   /* time step */
+  problem->cfl = cfl;           /* cfl number  */
   problem->num_time_steps = 0;  /* current time step */
   problem->comm = comm;         /* MPI communicator */
   problem->vtk_count = 0;       /* number of pvtu files written */
@@ -666,6 +674,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   t8_advect_element_data_t *elem_data;
   t8_eclass_scheme_c *ts, *neigh_scheme;
   double             *tree_vertices;
+  double              min_vol = -1, delta_t;
 
   num_trees = t8_forest_get_num_local_trees (problem->forest);
   for (itree = 0, idata = 0; itree < num_trees; itree++) {
@@ -685,12 +694,18 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
         t8_forest_get_element_in_tree (problem->forest, itree, ielement);
       elem_data = (t8_advect_element_data_t *)
         t8_sc_array_index_locidx (problem->element_data, idata);
-      /* Initialize the element's midpoint and length */
+      /* Initialize the element's midpoint and volume */
       t8_advect_compute_element_data (problem, elem_data, element, itree,
                                       ts, tree_vertices);
+      /* Compute the minimum volume */
+      T8_ASSERT (elem_data->vol > 0);
+      min_vol =
+        min_vol < 0 ? elem_data->vol : SC_MIN (min_vol, elem_data->vol);
       /* Set the initial condition */
       elem_data->phi = problem->phi_0 (elem_data->midpoint, 0);
-      for (iface = 0; iface < ts->t8_element_num_faces (element); iface++) {
+      /* Set the faces */
+      elem_data->num_faces = ts->t8_element_num_faces (element);
+      for (iface = 0; iface < elem_data->num_faces; iface++) {
         /* Compute the indices of the face neighbors */
         t8_forest_leaf_face_neighbors (problem->forest, itree, element,
                                        &neighbors, iface,
@@ -706,6 +721,11 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   }
   /* Exchange ghost values */
   t8_forest_ghost_exchange_data (problem->forest, problem->element_data);
+  /* Compute the timestep, this has to be done globally */
+  T8_ASSERT (min_vol > 0);      /* TODO: handle empty process? */
+  delta_t = problem->cfl * min_vol;
+  sc_MPI_Allreduce (&delta_t, &problem->delta_t, 1, sc_MPI_DOUBLE, sc_MPI_MAX,
+                    problem->comm);
 }
 
 static void
@@ -813,8 +833,8 @@ t8_advect_problem_destroy (t8_advect_problem_t ** pproblem)
 static void
 t8_advect_solve (t8_flow_function_3d_fn u,
                  t8_scalar_function_3d_fn phi_0,
-                 int level, int maxlevel, double T,
-                 double delta_t, sc_MPI_Comm comm, int adapt, int no_vtk,
+                 int level, int maxlevel, double T, double cfl,
+                 sc_MPI_Comm comm, int adapt, int no_vtk,
                  int vtk_freq, int dim)
 {
   t8_advect_problem_t *problem;
@@ -835,14 +855,8 @@ t8_advect_solve (t8_flow_function_3d_fn u,
   /* Initialize problem */
 
   problem =
-    t8_advect_problem_init (u, phi_0, level, maxlevel, T, delta_t, comm, dim);
+    t8_advect_problem_init (u, phi_0, level, maxlevel, T, cfl, comm, dim);
   t8_advect_problem_init_elements (problem);
-
-  time_steps = (int) (T / delta_t);
-
-  t8_global_essentialf ("[advect] Starting with Computation. Level %i."
-                        " End time %g. delta_t %g. %i time steps.\n",
-                        level, T, delta_t, time_steps);
 
   if (adapt) {
     int                 ilevel;
@@ -857,14 +871,16 @@ t8_advect_solve (t8_flow_function_3d_fn u,
     }
     adapted_or_partitioned = 1;
   }
-  /* Exchange ghost values */
-  t8_forest_ghost_exchange_data (problem->forest, problem->element_data);
   t8_advect_print_phi (problem);
 
+  time_steps = (int) (T / problem->delta_t);
+  t8_global_essentialf ("[advect] Starting with Computation. Level %i."
+                        " End time %g. delta_t %g. %i time steps.\n",
+                        level, T, problem->delta_t, time_steps);
   /* Controls how often we print the time step to stdout */
   modulus = SC_MAX (1, time_steps / 10);
   for (problem->num_time_steps = 0;
-       problem->t < problem->T + problem->delta_t;
+       problem->t < problem->T;
        problem->num_time_steps++, problem->t += problem->delta_t) {
     if (problem->num_time_steps % modulus == modulus - 1) {
       t8_global_essentialf ("[advect] Step %i\n",
@@ -992,7 +1008,7 @@ main (int argc, char *argv[])
   char                help[BUFSIZ];
   int                 level, reflevel, dim;
   int                 parsed, helpme, no_vtk, vtk_freq, adapt;
-  double              T, delta_t, cfl;
+  double              T, cfl;
 
   /* brief help message */
 
@@ -1025,8 +1041,7 @@ main (int argc, char *argv[])
                          "The duration of the simulation. Default: 1");
 
   sc_options_add_double (opt, 'C', "CFL", &cfl,
-                         0.1,
-                         "The cfl number to use. Disables -t. Default: 1");
+                         1, "The cfl number to use. Disables -t. Default: 1");
 
   sc_options_add_switch (opt, 'a', "adapt", &adapt,
                          "If activated, an adaptive mesh is used instead of "
@@ -1050,14 +1065,8 @@ main (int argc, char *argv[])
   else if (parsed >= 0 && 0 <= level && 0 <= reflevel && 0 <= vtk_freq
            && (dim == 1 || !adapt)) {
     /* Computation */
-    if (!adapt) {
-      delta_t = cfl / (1 << level);
-    }
-    else {
-      delta_t = cfl / (1 << (level + reflevel));
-    }
-    t8_advect_solve (t8_constant_one_x_vec, t8_sinx, level,
-                     level + reflevel, T, delta_t, sc_MPI_COMM_WORLD, adapt,
+    t8_advect_solve (t8_constant_one_xy_vec, t8_sinx_cosy, level,
+                     level + reflevel, T, cfl, sc_MPI_COMM_WORLD, adapt,
                      no_vtk, vtk_freq, dim);
   }
   else {
