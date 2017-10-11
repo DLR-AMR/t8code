@@ -1139,13 +1139,11 @@ t8_cmesh_tree_face_is_boundary (t8_cmesh_t cmesh,
 {
   t8_locidx_t        *face_neighbor;
   int8_t             *ttf;
-  t8_ctree_t          ctree;
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
-  ctree =
-    t8_cmesh_trees_get_tree_ext (cmesh->trees, ltree_id, &face_neighbor,
-                                 &ttf);
+  (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, ltree_id, &face_neighbor,
+                                      &ttf);
 
   if (face_neighbor[face] == ltree_id && ttf[face] == face) {
     /* The tree is connected to itself at the same face.
