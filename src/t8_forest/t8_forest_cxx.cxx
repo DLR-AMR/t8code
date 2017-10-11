@@ -418,11 +418,11 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
     return t8_forest_element_diam (forest, ltreeid, element, vertices);
   case T8_ECLASS_QUAD:
     {
+      int                 face_a, face_b, corner_a, corner_b;
       double              coordinates_0[3], coordinates_1[3],
         coordinates_2[3];
       double              v_1v_1 = 0, v_1v_2 = 0, v_2v_2 = 0;
-      /* TODO: This might not work with elements differente to Morton SFC, since
-       * we explicetly use corner numbers here. */
+      t8_eclass_scheme_c *ts;
       /* We use this formula for computing the surface area for a parallelogram
        * (we use parallelogram as approximation for the element).
        *
@@ -434,6 +434,52 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
        *  |     |
        *  x --- x
        * 0       v_2
+       */
+      /* Compute the faces meeting at vertex 0 */
+      ts = t8_forest_get_eclass_scheme (forest, T8_ECLASS_QUAD);
+      face_a = ts->t8_element_get_corner_face (element, 0, 0);
+      face_b = ts->t8_element_get_corner_face (element, 0, 1);
+      /* Compute the other corners of these faces */
+      corner_a = ts->t8_element_get_face_corner (element, face_a, 1);
+      corner_b = ts->t8_element_get_face_corner (element, face_b, 1);
+      T8_ASSERT (corner_a != 0 && corner_b != 0);
+      T8_ASSERT (corner_a != corner_b);
+      /* Compute the coordinates of vertex 0, a and b */
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+                                    0, coordinates_0);
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+                                    corner_a, coordinates_1);
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+                                    corner_b, coordinates_2);
+      /* Compute vectors v_1 and v_2 */
+      for (i = 0; i < 3; i++) {
+        coordinates_1[i] -= coordinates_0[i];
+        coordinates_2[i] -= coordinates_0[i];
+        /* compute scalar products */
+        v_1v_1 += coordinates_1[i] * coordinates_1[i];
+        v_1v_2 += coordinates_1[i] * coordinates_2[i];
+        v_2v_2 += coordinates_2[i] * coordinates_2[i];
+      }
+      /* compute determinant */
+      return sqrt (fabs (v_1v_1 * v_2v_2 - v_1v_2 * v_1v_2));
+    }
+    break;
+  case T8_ECLASS_TRIANGLE:
+    {
+      double              coordinates_0[3], coordinates_1[3],
+        coordinates_2[3];
+      double              v_1v_1 = 0, v_1v_2 = 0, v_2v_2 = 0;
+      /* We use the same formula as for quads but divide the result in half.
+       *    v_2
+       *    x
+       *   /  \
+       *  x -- x
+       * 0     v_1
+       *  A = | det (v_1*v_1 v_1*v_2) |
+       *      |     (v_2*v_1 v_2*v_2) |
+       *
+       * This is not an approximation as in the quad case, since a
+       * triangle always spans a parallelogram.
        */
       t8_forest_element_coordinate (forest, ltreeid, element, vertices,
                                     0, coordinates_0);
@@ -451,8 +497,9 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
         v_2v_2 += coordinates_2[i] * coordinates_2[i];
       }
       /* compute determinant */
-      return sqrt (fabs (v_1v_1 * v_2v_2 - v_1v_2 * v_1v_2));
+      return 0.5 * sqrt (fabs (v_1v_1 * v_2v_2 - v_1v_2 * v_1v_2));
     }
+    break;
   default:
     SC_ABORT_NOT_REACHED ();
   }
@@ -521,7 +568,71 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
     {
       int                 corner_a, corner_b;
       double              vertex_a[3], vertex_b[3], center[3];
+      double              vb_vb, c_vb, c_n;
       double              norm;
+
+      /* We approximate the normal vector via this geometric construction:
+       *
+       *    x ---- x V
+       *    |      |
+       *    |   C  |-->N
+       *    |      |
+       *    x ---- x 0
+       *
+       *   Since V,C in R^3, we need N perpendicular to V and N in space (C,V)
+       *   This N is given by N = C - <C,V>/<V,V> V
+       *   <.,.> being the dot product.
+       *   Since in general the corner is not 0, we consider the affine problem
+       *   with corner vectoy V_a and V_b, and shift it by -V_a.
+       */
+      /* Compute the two endnotes of the face line */
+      corner_a = ts->t8_element_get_face_corner (element, face, 0);
+      corner_b = ts->t8_element_get_face_corner (element, face, 1);
+      /* Compute the coordinates of the endnotes */
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+                                    corner_a, vertex_a);
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+                                    corner_b, vertex_b);
+      /* Compute the center */
+      t8_forest_element_centroid (forest, ltreeid, element, vertices, center);
+
+      /* Compute the difference with V_a.
+       * Compute the dot products */
+      vb_vb = c_vb = 0;
+      for (i = 0; i < 3; i++) {
+        t8_debugf ("[H] vb %f a %f c %f\n", vertex_b[i], vertex_a[i],
+                   center[i]);
+        vertex_b[i] = vertex_b[i] - vertex_a[i];
+        center[i] = center[i] - vertex_a[i];
+        vb_vb += SC_SQR (vertex_b[i]);
+        c_vb += center[i] * vertex_b[i];
+      }
+      /* Compute N = C - <C,V>/<V,V> V
+       * compute the norm of N
+       * compute N*C */
+      norm = 0;
+      c_n = 0;
+      for (i = 0; i < 3; i++) {
+        normal[i] = center[i] - c_vb / vb_vb * vertex_b[i];
+        norm += SC_SQR (normal[i]);
+        c_n += normal[i] * center[i];
+      }
+      norm = sqrt (norm);
+      T8_ASSERT (norm != 0);
+      for (i = 0; i < 3; i++) {
+        normal[i] /= norm;
+        t8_debugf ("[H] normal %f\n", normal[i]);
+      }
+      /* If N*C > 0 then N points inwards, so we have to reverse it */
+      if (c_n > 0) {
+        for (i = 0; i < 3; i++) {
+          normal[i] = -normal[i];
+        }
+      }
+
+      return;
+
+#if 0
       /* We approximate the normal vector via this geometric construction:
        *
        *    x ---- x B
@@ -558,6 +669,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
         normal[i] /= norm;
       }
       return;
+#endif
     }
     break;
   default:
