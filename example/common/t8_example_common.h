@@ -133,6 +133,11 @@ double              t8_exp_distribution (const double x[3], double t);
  */
 double              t8_sinx (const double x[3], double t);
 
+/** Sinus of x times cosinus of y
+ * \return sin (2pi x[0]) * cos (2pi y[0])
+ */
+double              t8_sinx_cosy (const double x[3], double t);
+
 /** Sinus of t
  * \return sin (2pi t)
  */
@@ -148,6 +153,10 @@ void                t8_constant_one_vec (const double x[3], double t,
 /** Sets the first coordinate to 1, all other to 0. */
 void                t8_constant_one_x_vec (const double x[3], double t,
                                            double x_out[3]);
+
+/** Sets the first and second coordinate to 1, the third to 0. */
+void                t8_constant_one_xy_vec (const double x[3], double t,
+                                            double x_out[3]);
 
 T8_EXTERN_C_END ();
 

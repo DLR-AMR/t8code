@@ -87,7 +87,13 @@ t8_almost_step_function (const double x[3], double t)
 double
 t8_sinx (const double x[3], double t)
 {
-  return sin (2 * M_PI * x[0]);
+  return sin (2 * M_PI * x[0]) + 1;
+}
+
+double
+t8_sinx_cosy (const double x[3], double t)
+{
+  return sin (2 * M_PI * x[0]) * cos (2 * M_PI * x[1]);
 }
 
 double
@@ -107,6 +113,13 @@ t8_constant_one_x_vec (const double x[3], double t, double x_out[3])
 {
   x_out[0] = 1;
   x_out[1] = x_out[2] = 0;
+}
+
+void
+t8_constant_one_xy_vec (const double x[3], double t, double x_out[3])
+{
+  x_out[0] = x_out[1] = 1;
+  x_out[2] = 0;
 }
 
 T8_EXTERN_C_END ();

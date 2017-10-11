@@ -268,18 +268,20 @@ t8_advect_flux_upwind_2d (const t8_advect_problem_t * problem,
              u_at_x_j_half[2]);
   t8_debugf ("[advect] norm t u: %f\n", normal_times_u);
   t8_debugf ("[advect] area %f\n", area);
+  t8_debugf ("[advect] phi+ %f\n", el_data_plus->phi);
+  t8_debugf ("[advect] phi- %f\n", el_data_minus->phi);
 
   if (normal_times_u >= 0) {
     /* u flows out of the element_plus */
-    t8_debugf ("[advect] flux: %f\n",
+    t8_debugf ("[advect] out flux: %f\n",
                -el_data_plus->phi * normal_times_u * area);
     return -el_data_plus->phi * normal_times_u * area;
   }
   else {
     /* u flows into the element_plus */
-    t8_debugf ("[advect] flux: %f\n",
-               el_data_minus->phi * normal_times_u * area);
-    return el_data_minus->phi * normal_times_u * area;
+    t8_debugf ("[advect] in flux: %f\n",
+               -el_data_minus->phi * normal_times_u * area);
+    return -el_data_minus->phi * normal_times_u * area;
   }
 }
 
