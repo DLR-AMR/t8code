@@ -694,6 +694,18 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
  */
 t8_cmesh_t          t8_cmesh_new_periodic (sc_MPI_Comm comm, int dim);
 
+/** Construct a unit square of two triangles that is periodic in x and y.
+ * \param [in] comm         The mpi communicator to use.
+ * \return                  A valid cmesh, as if _init and _commit had been called.
+ */
+t8_cmesh_t          t8_cmesh_new_periodic_tri (sc_MPI_Comm comm);
+
+/** Construct a unit square of two quads and four triangles that is periodic in x and y.
+ * \param [in] comm         The mpi communicator to use.
+ * \return                  A valid cmesh, as if _init and _commit had been called.
+ */
+t8_cmesh_t          t8_cmesh_new_periodic_hybrid (sc_MPI_Comm comm);
+
 /** Construct a unit interval coarse mesh that consists of 3 trees and is
  * periodic.
  * \param [in] comm         The mpi communicator to use.

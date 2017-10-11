@@ -2020,6 +2020,114 @@ t8_cmesh_new_periodic_line_more_trees (sc_MPI_Comm comm)
 }
 
 t8_cmesh_t
+t8_cmesh_new_periodic_tri (sc_MPI_Comm comm)
+{
+  double              vertices[18] = {
+    0, 0, 0,
+    1, 0, 0,
+    1, 1, 0,
+    0, 0, 0,
+    1, 1, 0,
+    0, 1, 0
+  };
+  t8_cmesh_t          cmesh;
+
+  t8_cmesh_init (&cmesh);
+
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 3);
+  t8_cmesh_set_tree_vertices (cmesh, 1, t8_get_package_id (), 0, vertices + 9,
+                              3);
+  t8_cmesh_set_join (cmesh, 0, 1, 1, 2, 0);
+  t8_cmesh_set_join (cmesh, 0, 1, 0, 1, 0);
+  t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 1);
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_new_periodic_hybrid (sc_MPI_Comm comm)
+{
+  double              vertices[60] = {  /* Just all vertices of all trees. partly duplicated */
+    0, 0, 0,                    /* tree 0, triangle */
+    0.5, 0, 0,
+    0.5, 0.5, 0,
+    0, 0, 0,                    /* tree 1, triangle */
+    0.5, 0.5, 0,
+    0, 0.5, 0,
+    0.5, 0, 0,                  /* tree 2, quad */
+    1, 0, 0,
+    0.5, 0.5, 0,
+    1, 0.5, 0,
+    0, 0.5, 0,                  /* tree 3, quad */
+    0.5, 0.5, 0,
+    0, 1, 0,
+    0.5, 1, 0,
+    0.5, 0.5, 0,                /* tree 4, triangle */
+    1, 0.5, 0,
+    1, 1, 0,
+    0.5, 0.5, 0,                /* tree 5, triangle */
+    1, 1, 0,
+    0.5, 1, 0
+  };
+  t8_cmesh_t          cmesh;
+
+  /*
+   *  This is how the cmesh looks like. The numbers are the tree numbers:
+   *
+   *   +---+---+
+   *   |   |5 /|
+   *   | 3 | / |
+   *   |   |/ 4|
+   *   +---+---+
+   *   |1 /|   |
+   *   | / | 2 |
+   *   |/0 |   |
+   *   +---+---+
+   */
+
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_QUAD);
+  t8_cmesh_set_tree_class (cmesh, 3, T8_ECLASS_QUAD);
+  t8_cmesh_set_tree_class (cmesh, 4, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_class (cmesh, 5, T8_ECLASS_TRIANGLE);
+
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 3);
+  t8_cmesh_set_tree_vertices (cmesh, 1, t8_get_package_id (), 0, vertices + 9,
+                              3);
+  t8_cmesh_set_tree_vertices (cmesh, 2, t8_get_package_id (), 0,
+                              vertices + 18, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 3, t8_get_package_id (), 0,
+                              vertices + 30, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 4, t8_get_package_id (), 0,
+                              vertices + 42, 3);
+  t8_cmesh_set_tree_vertices (cmesh, 5, t8_get_package_id (), 0,
+                              vertices + 51, 3);
+
+  t8_cmesh_set_join (cmesh, 0, 1, 1, 2, 0);
+  t8_cmesh_set_join (cmesh, 0, 2, 0, 0, 0);
+  t8_cmesh_set_join (cmesh, 0, 3, 2, 3, 0);
+
+  t8_cmesh_set_join (cmesh, 1, 3, 0, 2, 1);
+  t8_cmesh_set_join (cmesh, 1, 2, 1, 1, 0);
+
+  t8_cmesh_set_join (cmesh, 2, 4, 3, 2, 0);
+  t8_cmesh_set_join (cmesh, 2, 5, 2, 0, 1);
+
+  t8_cmesh_set_join (cmesh, 3, 5, 1, 1, 0);
+  t8_cmesh_set_join (cmesh, 3, 4, 0, 0, 0);
+
+  t8_cmesh_set_join (cmesh, 4, 5, 1, 2, 0);
+
+  t8_cmesh_commit (cmesh, comm);
+
+  return cmesh;
+}
+
+t8_cmesh_t
 t8_cmesh_new_periodic (sc_MPI_Comm comm, int dim)
 {
   t8_cmesh_t          cmesh;
