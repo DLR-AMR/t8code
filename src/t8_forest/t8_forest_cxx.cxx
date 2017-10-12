@@ -617,7 +617,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
 
   switch (face_class) {
   case T8_ECLASS_VERTEX:
-    /* vertices do not have faces */
+    /* TODO: normal of a line */
     SC_ABORT_NOT_REACHED ();
   case T8_ECLASS_LINE:
     {
