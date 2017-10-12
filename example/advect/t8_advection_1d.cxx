@@ -61,6 +61,7 @@ typedef struct
   double              vol; /**< Volume of this element */
   double              phi; /**< Value of solution at midpoint */
   double              phi_new; /**< Value of solution at midpoint in next time step */
+  int                 level; /**< The refinement level of the element. */
   int                 num_faces; /**< The number of faces */
   int                 num_neighbors[MAX_FACES]; /**< Number of neighbors for each face */
   t8_locidx_t        *neighs[MAX_FACES]; /**< Indices of the neighbor elements */
@@ -223,6 +224,8 @@ t8_advect_flux_upwind_1d (const t8_advect_problem_t * problem,
 }
 
 /* face is the face number as seen from el_data_plus */
+/* This works also if element_plus hangs on element_minus.
+ * It does not work if it hangs the other way around. */
 static double
 t8_advect_flux_upwind_2d (const t8_advect_problem_t * problem,
                           const t8_advect_element_data_t * el_data_plus,
@@ -231,25 +234,23 @@ t8_advect_flux_upwind_2d (const t8_advect_problem_t * problem,
                           const t8_element_t * element_plus,
                           const double *tree_vertices, int face)
 {
-  double              x_j_half[3];
+  double              face_center[3];
   int                 idim;
-  double              u_at_x_j_half[3];
+  double              u_at_face_center[3];
   double              normal[3], normal_times_u;
   double              area;
 
   /*
    *    | --x-- | --x-- |   Two elements, midpoints marked with 'x'
    *       x_j     x_j+1
-   *          x_j_half
+   *          face_center
    */
-  /* Compute x_j_half */
-  /* TODO: This does not work for hanging faces */
-  for (idim = 0; idim < 3; idim++) {
-    x_j_half[idim] =
-      el_data_plus->midpoint[idim] + el_data_minus->midpoint[idim] / 2;
-  }
-  /* Compute u at the interval boundary. */
-  problem->u (x_j_half, problem->t, u_at_x_j_half);
+
+  /* Compute the center coordinate of the face */
+  t8_forest_element_face_centroid (problem->forest, ltreeid, element_plus,
+                                   face, tree_vertices, face_center);
+  /* Compute u at the face center. */
+  problem->u (face_center, problem->t, u_at_face_center);
   /* Compute the normal of the element at this face */
   t8_forest_element_face_normal (problem->forest, ltreeid, element_plus, face,
                                  tree_vertices, normal);
@@ -262,10 +263,10 @@ t8_advect_flux_upwind_2d (const t8_advect_problem_t * problem,
   /* Compute the dot-product of u and the normal vector */
   normal_times_u = 0;
   for (idim = 0; idim < 3; idim++) {
-    normal_times_u += normal[idim] * u_at_x_j_half[idim];
+    normal_times_u += normal[idim] * u_at_face_center[idim];
   }
-  t8_debugf ("[advect] u %f %f %f\n", u_at_x_j_half[0], u_at_x_j_half[1],
-             u_at_x_j_half[2]);
+  t8_debugf ("[advect] u %f %f %f\n", u_at_face_center[0],
+             u_at_face_center[1], u_at_face_center[2]);
   t8_debugf ("[advect] norm t u: %f\n", normal_times_u);
   t8_debugf ("[advect] area %f\n", area);
   t8_debugf ("[advect] phi+ %f\n", el_data_plus->phi);
@@ -285,6 +286,72 @@ t8_advect_flux_upwind_2d (const t8_advect_problem_t * problem,
   }
 }
 
+/* Compute the flux if the element has hanging neighbors:
+ *
+ *  x -- x ---- x
+ *  |    |      |
+ *  x -- x      |
+ *  |    |      |
+ *  x -- x ---- x
+ *
+ * neighs  el_hang
+ *
+ */
+static double
+t8_advect_flux_upwind_2d_hanging (const t8_advect_problem_t * problem,
+                                  const t8_advect_element_data_t * el_hang,
+                                  t8_locidx_t ltreeid,
+                                  const t8_element_t * element_hang,
+                                  const double *tree_vertices, int face)
+{
+  int                 i, num_face_children, child_face;
+  t8_eclass_scheme_c *ts;
+  t8_eclass           eclass;
+  t8_element_t      **face_children;
+  t8_advect_element_data_t child_data, *neigh_data;
+  double              flux = 0;
+
+  T8_ASSERT (el_hang->num_neighbors[face] == 2);
+  /* Get the eclass and the scheme for the element */
+  eclass = t8_forest_get_tree_class (problem->forest, ltreeid);
+  ts = t8_forest_get_eclass_scheme (problem->forest, eclass);
+  /* Compute the children of the element at the face */
+  num_face_children = ts->t8_element_num_face_children (element_hang, face);
+  T8_ASSERT (num_face_children == el_hang->num_neighbors[face]);
+
+  face_children = T8_ALLOC (t8_element_t *, num_face_children);
+  ts->t8_element_new (num_face_children, face_children);
+  ts->t8_element_children_at_face (element_hang, face, face_children,
+                                   num_face_children, NULL);
+
+  /* Fill the tempory element_data field with necessary data */
+  child_data.phi = el_hang->phi;
+  child_data.level = el_hang->level + 1;
+  /* Set the other fiels to 0 values */
+  child_data.midpoint[0] = child_data.midpoint[1] = child_data.midpoint[2] =
+    0;
+  child_data.num_faces = 0;
+  child_data.vol = 0;
+  for (i = 0; i < num_face_children; i++) {
+    child_face = ts->t8_element_face_child_face (element_hang, face, i);
+    /* Get a pointer to the neighbor's element data */
+    neigh_data = (t8_advect_element_data_t *)
+      t8_sc_array_index_locidx (problem->element_data,
+                                el_hang->neighs[face][i]);
+    /* Compute the flux */
+    flux +=
+      t8_advect_flux_upwind_2d (problem, &child_data, neigh_data, ltreeid,
+                                face_children[i], tree_vertices, child_face);
+  }
+
+  /* clean-up */
+  ts->t8_element_destroy (num_face_children, face_children);
+  T8_FREE (face_children);
+
+  return flux;
+}
+
+#if 0
 static double
 t8_advect_lax_friedrich_alpha (const t8_advect_problem_t * problem,
                                const t8_advect_element_data_t *
@@ -349,6 +416,7 @@ t8_advect_flux_lax_friedrich_1d (const t8_advect_problem_t * problem,
   /* in 1D only the first coordinate of u is interesting */
   return .5 * (u_at_x_j_half[0] * phi_sum - alpha * phi_diff);
 }
+#endif
 
 static void
 t8_advect_advance_element (t8_advect_problem_t * problem,
@@ -436,7 +504,7 @@ t8_advect_replace (t8_forest_t forest_old,
     }
   }
   else if (num_outgoing == 1) {
-    T8_ASSERT (num_incoming == 2);
+    T8_ASSERT (num_incoming == 1 << problem->dim);
     /* The old element is refined, we copy the phi values and compute the new midpoints */
     for (i = 0; i < num_incoming; i++) {
       /* Get a pointer to the new element */
@@ -454,11 +522,13 @@ t8_advect_replace (t8_forest_t forest_old,
       for (iface = 0; iface < elem_data_in[i].num_faces; iface++) {
         elem_data_in[i].num_neighbors[iface] = 0;
       }
+      /* Update the level */
+      elem_data_in[i].level = elem_data_out->level + 1;
     }
   }
   else {
     double              phi = 0;
-    T8_ASSERT (num_outgoing == 2 && num_incoming == 1);
+    T8_ASSERT (num_outgoing == 1 << problem->dim && num_incoming == 1);
     /* The old elements form a family which is coarsened. We compute the average
      * phi value and set it as the new phi value */
     /* Get a pointer to the outgoing element */
@@ -480,6 +550,8 @@ t8_advect_replace (t8_forest_t forest_old,
     for (iface = 0; iface < elem_data_in->num_faces; iface++) {
       elem_data_in->num_neighbors[iface] = 0;
     }
+    /* update the level */
+    elem_data_in->level = elem_data_out->level - 1;
   }
 }
 
@@ -705,6 +777,8 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
         min_vol < 0 ? elem_data->vol : SC_MIN (min_vol, elem_data->vol);
       /* Set the initial condition */
       elem_data->phi = problem->phi_0 (elem_data->midpoint, 0);
+      /* Set the level */
+      elem_data->level = ts->t8_element_level (element);
       /* Set the faces */
       elem_data->num_faces = ts->t8_element_num_faces (element);
       for (iface = 0; iface < elem_data->num_faces; iface++) {
@@ -842,7 +916,7 @@ t8_advect_solve (t8_flow_function_3d_fn u,
   t8_advect_problem_t *problem;
   int                 iface;
   t8_locidx_t         itree, ielement, lelement;
-  t8_advect_element_data_t *elem_data, *neigh_data, *plus_data, *minus_data;
+  t8_advect_element_data_t *elem_data, *neigh_data;
   t8_advect_element_data_t boundary_data;
   double              flux[MAX_FACES];
   double              l_infty;
@@ -926,45 +1000,57 @@ t8_advect_solve (t8_flow_function_3d_fn u,
                                            &elem_data->num_neighbors[iface],
                                            &elem_data->neighs[iface],
                                            &neigh_scheme, 1);
-            T8_ASSERT (neigh_scheme->eclass == T8_ECLASS_LINE);
             neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
                                               neighs);
             T8_FREE (neighs);
           }
-          if (elem_data->num_neighbors[iface] == 1) {
-            neigh_data = (t8_advect_element_data_t *)
-              t8_sc_array_index_locidx (problem->element_data,
-                                        elem_data->neighs[iface][0]);
-          }
-          else {
-            T8_ASSERT (elem_data->num_neighbors[iface] <= 0);
-            /* This is a boundary face, we enforce periodic boundary conditions */
-            /* TODO: Do this via cmesh periodic. Implement vertex scheme */
-            neigh_data = &boundary_data;
-            boundary_data.phi = 0;
-            boundary_data.midpoint[0] = iface;  /* 0 for left boundary, 1 for right */
-            boundary_data.midpoint[1] = 0;
-            boundary_data.midpoint[2] = 0;
-          }
 
-          plus_data = elem_data;
-          minus_data = neigh_data;
           if (problem->dim == 1) {
+            if (elem_data->num_neighbors[iface] == 1) {
+              neigh_data = (t8_advect_element_data_t *)
+                t8_sc_array_index_locidx (problem->element_data,
+                                          elem_data->neighs[iface][0]);
+            }
+            else {
+              T8_ASSERT (elem_data->num_neighbors[iface] <= 0);
+              /* This is a boundary face, we enforce periodic boundary conditions */
+              /* TODO: Do this via cmesh periodic. Implement vertex scheme */
+              neigh_data = &boundary_data;
+              boundary_data.phi = 0;
+              boundary_data.midpoint[0] = iface;        /* 0 for left boundary, 1 for right */
+              boundary_data.midpoint[1] = 0;
+              boundary_data.midpoint[2] = 0;
+            }
 #if 0
             flux[iface] =
               t8_advect_flux_lax_friedrich_1d (problem, plus_data,
                                                minus_data);
 #else
             flux[iface] =
-              t8_advect_flux_upwind_1d (problem, plus_data, minus_data,
+              t8_advect_flux_upwind_1d (problem, elem_data, neigh_data,
                                         iface);
 #endif
           }
           else {
             T8_ASSERT (problem->dim == 2);
-            flux[iface] =
-              t8_advect_flux_upwind_2d (problem, plus_data, minus_data, itree,
-                                        elem, tree_vertices, iface);
+            if (elem_data->num_neighbors[iface] == 1) {
+              /* Get a pointer to the neighbor element */
+              neigh_data = (t8_advect_element_data_t *)
+                t8_sc_array_index_locidx (problem->element_data,
+                                          elem_data->neighs[iface][0]);
+              flux[iface] =
+                t8_advect_flux_upwind_2d (problem, elem_data, neigh_data,
+                                          itree, elem, tree_vertices, iface);
+            }
+            else if (elem_data->num_neighbors[iface] > 1) {
+              T8_ASSERT (elem_data->num_neighbors[iface] == 2);
+              flux[iface] =
+                t8_advect_flux_upwind_2d_hanging (problem, elem_data, itree,
+                                                  elem, tree_vertices, iface);
+            }
+            else {
+              SC_ABORT ("Element has no neighbors.\n");
+            }
           }
         }
         /* Compute time step */
@@ -1064,8 +1150,7 @@ main (int argc, char *argv[])
     t8_global_essentialf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed >= 0 && 0 <= level && 0 <= reflevel && 0 <= vtk_freq
-           && (dim == 1 || !adapt)) {
+  else if (parsed >= 0 && 0 <= level && 0 <= reflevel && 0 <= vtk_freq) {
     /* Computation */
     t8_advect_solve (t8_constant_one_xy_vec, t8_sinx_cosy, level,
                      level + reflevel, T, cfl, sc_MPI_COMM_WORLD, adapt,
