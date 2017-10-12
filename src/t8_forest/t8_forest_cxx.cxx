@@ -545,6 +545,61 @@ t8_forest_element_face_area (t8_forest_t forest, t8_locidx_t ltreeid,
 }
 
 void
+t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
+                                 const t8_element_t * element, int face,
+                                 const double *vertices, double centroid[3])
+{
+  t8_eclass_t         eclass, face_class;
+  t8_eclass_scheme_c *ts;
+  int                 i;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+  /* get the eclass of the forest */
+  eclass = t8_forest_get_tree_class (forest, ltreeid);
+  /* get the element's scheme and the face scheme */
+  ts = t8_forest_get_eclass_scheme (forest, eclass);
+  face_class = ts->t8_element_face_class (element, face);
+
+  switch (face_class) {
+  case T8_ECLASS_VERTEX:
+    {
+      /* Element is a line, the face midpoint is the vertex itself */
+      int                 corner;
+      /* Get the index of the corner that is the face */
+      corner = ts->t8_element_get_face_corner (element, face, 0);
+      /* Compute the coordinates of this corner */
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+                                    corner, centroid);
+      return;
+    }
+    break;
+  case T8_ECLASS_LINE:
+    {
+      int                 corner_a, corner_b, i;
+      double              vertex_a[3];
+
+      /* Compute the corner indices of the face */
+      corner_a = ts->t8_element_get_face_corner (element, face, 0);
+      corner_b = ts->t8_element_get_face_corner (element, face, 1);
+      /* Compute the vertex coordinates of these corners */
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+                                    corner_a, vertex_a);
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+                                    corner_b, centroid);
+
+      /* Compute the average of those coordinates */
+      for (i = 0; i < 3; i++) {
+        centroid[i] = (vertex_a[i] + centroid[i]) / 2;
+      }
+      return;
+    }
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+}
+
+void
 t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
                                const t8_element_t * element, int face,
                                const double *vertices, double normal[3])
