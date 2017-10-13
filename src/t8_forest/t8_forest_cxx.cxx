@@ -1817,8 +1817,6 @@ t8_forest_element_find_owner_ext (t8_forest_t forest,
   /* Get a pointer to the element offset array */
   element_offsets = t8_shmem_array_get_gloidx_array (forest->element_offsets);
 
-  t8_debugf ("[H] Find owner of desc %lu in tree %li\n",
-             element_desc_id, gtreeid);
   /* binary search for the owner process using the first descendant and first tree array */
   while (!found) {
     T8_ASSERT (lower_bound <= upper_bound);

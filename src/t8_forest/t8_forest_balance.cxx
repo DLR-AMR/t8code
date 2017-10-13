@@ -111,6 +111,9 @@ t8_forest_balance (t8_forest_t forest, int repartition)
      (long long) t8_forest_get_global_num_elements (forest->set_from));
   t8_log_indent_push ();
 
+  /* Set default value to prevent compiler warning */
+  adap_stats = ghost_stats = partition_stats = NULL;
+
   if (forest->profile != NULL) {
     /* Profiling is enable, so we measure the runtime of balance */
     forest->profile->balance_runtime = -sc_MPI_Wtime ();
