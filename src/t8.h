@@ -198,6 +198,8 @@ void                t8_infof (const char *fmt, ...)
 
 /** Log a message, no matter what rank, with priority SC_LP_DEBUG.
  * \param [in] fmt          Printf-style format string.
+ * \note This function does not print anything unless t8code was compiled
+ * in debug mode (--enable-debug, T8_ENABLE_DEBUG was defined).
  */
 void                t8_debugf (const char *fmt, ...)
 #ifndef T8_DOXYGEN
