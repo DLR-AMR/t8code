@@ -29,6 +29,7 @@
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest_vtk.h>
 #include <example/common/t8_example_common.h>
+#include <t8_cmesh_readmshfile.h>
 
 #define MAX_FACES 4             /* The maximum number of faces of an element */
 
@@ -695,23 +696,41 @@ t8_advect_problem_partition (t8_advect_problem_t * problem)
   problem->element_data = new_data;
 }
 
+static              t8_cmesh_t
+t8_advect_create_cmesh (sc_MPI_Comm comm, int dim, int type,
+                        const char *mshfile)
+{
+  switch (type) {
+  case 0:                      /* Unit line/square with 1 tree (line/quad) */
+    return t8_cmesh_new_periodic (comm, dim);
+    break;
+  case 1:                      /* Unit square with 2 triangles */
+    T8_ASSERT (dim == 2);
+    return t8_cmesh_new_periodic_tri (comm);
+    break;
+  case 2:                      /* Unit square with 6 trees (2 quads, 4 triangles) */
+    return t8_cmesh_new_periodic_hybrid (comm);
+    break;
+  case 3:                      /* Load from .msh file */
+    T8_ASSERT (mshfile != NULL);
+    return t8_cmesh_from_msh_file (mshfile, 0, comm, dim, 0);
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+}
+
 static t8_advect_problem_t *
-t8_advect_problem_init (t8_flow_function_3d_fn
-                        u,
+t8_advect_problem_init (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                         t8_scalar_function_3d_fn
                         phi_0, int level,
                         int maxlevel, double T, double cfl,
                         sc_MPI_Comm comm, int dim)
 {
-  t8_cmesh_t          cmesh;
   t8_advect_problem_t *problem;
   t8_scheme_cxx_t    *default_scheme;
 
   T8_ASSERT (1 <= dim && dim <= 2);
-
-  /* Construct new hypercube cmesh (unit interval) */
-  //cmesh = t8_cmesh_new_periodic_hybrid (comm);
-  cmesh = t8_cmesh_new_periodic_tri (comm);
 
   /* allocate problem */
   problem = T8_ALLOC (t8_advect_problem_t, 1);
@@ -936,7 +955,7 @@ t8_advect_problem_destroy (t8_advect_problem_t ** pproblem)
 }
 
 static void
-t8_advect_solve (t8_flow_function_3d_fn u,
+t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                  t8_scalar_function_3d_fn phi_0,
                  int level, int maxlevel, double T, double cfl,
                  sc_MPI_Comm comm, int adapt, int no_vtk,
@@ -960,7 +979,8 @@ t8_advect_solve (t8_flow_function_3d_fn u,
   /* Initialize problem */
 
   problem =
-    t8_advect_problem_init (u, phi_0, level, maxlevel, T, cfl, comm, dim);
+    t8_advect_problem_init (cmesh, u, phi_0, level, maxlevel, T, cfl, comm,
+                            dim);
   t8_advect_problem_init_elements (problem);
 
   if (adapt) {
@@ -1126,7 +1146,8 @@ main (int argc, char *argv[])
   int                 mpiret;
   sc_options_t       *opt;
   char                help[BUFSIZ];
-  int                 level, reflevel, dim;
+  const char         *mshfile = NULL;
+  int                 level, reflevel, dim, cmesh_type;
   int                 parsed, helpme, no_vtk, vtk_freq, adapt;
   double              T, cfl;
 
@@ -1141,7 +1162,7 @@ main (int argc, char *argv[])
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  t8_init (SC_LP_DEBUG);
+  t8_init (SC_LP_ESSENTIAL);
 
   /* initialize command line argument parser */
   opt = sc_options_new (argv[0]);
@@ -1156,6 +1177,16 @@ main (int argc, char *argv[])
                       "The minimum refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 0,
                       "The maximum number of refinement levels of the mesh.");
+  sc_options_add_int (opt, 'c', "cmesh", &cmesh_type, 0,
+                      "Control the coarse mesh that is used.\n"
+                      "\t\t0 - Unit cube of the specified dimension. 1 tree.\n"
+                      "\t\t1 - Unit square of 2 triangles (sets dim=2).\n"
+                      "\t\t2 - Unit square hybrid with 4 triangles and 2 quads (sets dim=2).\n"
+                      "\t\t3 - Read a .msh file. See -f.");
+  sc_options_add_string (opt, 'f', "mshfile", &mshfile, NULL,
+                         "If specified, the cmesh is constructed from a .msh file with "
+                         "the given prefix. The files must end in .msh and be "
+                         "created with gmsh.");
 
   sc_options_add_double (opt, 'T', "end-time", &T, 1,
                          "The duration of the simulation. Default: 1");
@@ -1183,8 +1214,16 @@ main (int argc, char *argv[])
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (parsed >= 0 && 0 <= level && 0 <= reflevel && 0 <= vtk_freq) {
+    t8_cmesh_t          cmesh;
+    if (cmesh_type == 1 || cmesh_type == 2) {
+      dim = 2;
+    }
+
+    cmesh =
+      t8_advect_create_cmesh (sc_MPI_COMM_WORLD, dim, cmesh_type, mshfile);
+
     /* Computation */
-    t8_advect_solve (t8_constant_one_xy_vec, t8_sinx_cosy, level,
+    t8_advect_solve (cmesh, t8_rotation_2d, t8_sinx_cosy, level,
                      level + reflevel, T, cfl, sc_MPI_COMM_WORLD, adapt,
                      no_vtk, vtk_freq, dim);
   }
