@@ -622,10 +622,7 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem)
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
-  t8_global_essentialf ("[advect] refining...\n");
   t8_forest_commit (problem->forest_adapt);
-  t8_global_essentialf ("[advect] Done\n");
-  t8_forest_write_vtk (problem->forest_adapt, "post_balance");
 
   /* Allocate new memory for the element_data of the advected forest */
   num_elems_p_ghosts =
