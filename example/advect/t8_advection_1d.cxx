@@ -834,39 +834,43 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
 {
   double             *u_and_phi_array[3], u_temp[3];
   t8_locidx_t         num_local_elements, ielem;
-  t8_vtk_data_field_t vtk_data[3];
+  t8_vtk_data_field_t vtk_data[5];
   t8_advect_element_data_t *elem_data;
   char                fileprefix[BUFSIZ];
+  int                 idim;
 
   /* Allocate num_local_elements doubles to store u and phi values */
   num_local_elements = t8_forest_get_num_element (problem->forest);
-  /* u */
-  u_and_phi_array[0] = T8_ALLOC_ZERO (double, num_local_elements);
   /* phi */
-  u_and_phi_array[1] = T8_ALLOC_ZERO (double, num_local_elements);
+  u_and_phi_array[0] = T8_ALLOC_ZERO (double, num_local_elements);
   /* phi_0 */
-  u_and_phi_array[2] = T8_ALLOC_ZERO (double, num_local_elements);
+  u_and_phi_array[1] = T8_ALLOC_ZERO (double, num_local_elements);
+  /* u */
+  u_and_phi_array[2] = T8_ALLOC_ZERO (double, 3 * num_local_elements);
+
   /* Fill u and phi arrays with their values */
   for (ielem = 0; ielem < num_local_elements; ielem++) {
     elem_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data, ielem);
-    problem->u (elem_data->midpoint, problem->t, u_temp);
-    /* In 1D we only store the first coordinate of u */
-    u_and_phi_array[0][ielem] = u_temp[0];
-    u_and_phi_array[1][ielem] = elem_data->phi;
-    u_and_phi_array[2][ielem] =
+
+    u_and_phi_array[0][ielem] = elem_data->phi;
+    u_and_phi_array[1][ielem] =
       problem->phi_0 (elem_data->midpoint, problem->t);
+    problem->u (elem_data->midpoint, problem->t, u_temp);
+    for (idim = 0; idim < 3; idim++) {
+      u_and_phi_array[2][3 * ielem + idim] = u_temp[idim];
+    }
   }
 
   /* Write meta data for vtk */
-  snprintf (vtk_data[0].description, BUFSIZ, "Flow");
-  vtk_data[0].type = T8_VTK_SCALAR;     /* TODO: Change to vector */
+  snprintf (vtk_data[0].description, BUFSIZ, "Num. Solution");
+  vtk_data[0].type = T8_VTK_SCALAR;
   vtk_data[0].data = u_and_phi_array[0];
-  snprintf (vtk_data[1].description, BUFSIZ, "Num. Solution");
+  snprintf (vtk_data[1].description, BUFSIZ, "Ana. Solution");
   vtk_data[1].type = T8_VTK_SCALAR;
   vtk_data[1].data = u_and_phi_array[1];
-  snprintf (vtk_data[2].description, BUFSIZ, "Ana. Solution");
-  vtk_data[2].type = T8_VTK_SCALAR;
+  snprintf (vtk_data[2].description, BUFSIZ, "Flow");
+  vtk_data[2].type = T8_VTK_VECTOR;
   vtk_data[2].data = u_and_phi_array[2];
   /* Write filename */
   snprintf (fileprefix, BUFSIZ, "advection_%03i", problem->vtk_count);
