@@ -120,6 +120,15 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   /* Get the element's level */
   level = ts->t8_element_level (elements[0]);
   /* Get a pointer to the element data */
+
+  if (num_elements > 1) {
+    return -(rand () % (forest->mpirank + 2));
+  }
+  if (level < problem->maxlevel) {
+    return (rand () % (forest->mpirank + 10)) < 2;
+  }
+  return 0;
+
   elem_data = (t8_advect_element_data_t *)
     t8_sc_array_index_locidx (problem->element_data, lelement_id);
   /* Compute the absolute value of the gradient at this element */
@@ -610,7 +619,10 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem)
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
+  t8_global_essentialf ("[advect] refining...\n");
   t8_forest_commit (problem->forest_adapt);
+  t8_global_essentialf ("[advect] Done\n");
+  t8_forest_write_vtk (problem->forest_adapt, "post_balance");
 
   /* Allocate new memory for the element_data of the advected forest */
   num_elems_p_ghosts =
@@ -620,7 +632,7 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem)
     sc_array_new_count (sizeof (t8_advect_element_data_t),
                         num_elems_p_ghosts);
   /* We now call iterate_replace in which we interpolate the new element data.
-   * It is necessary that the old and new forest only differ by at mose one level.
+   * It is necessary that the old and new forest only differ by at most one level.
    * We guarantee this by calling adapt non-recursively and calling balance without
    * repartitioning. */
   t8_forest_iterate_replace (problem->forest_adapt, problem->forest,
@@ -696,7 +708,8 @@ t8_advect_problem_init (t8_flow_function_3d_fn
   T8_ASSERT (1 <= dim && dim <= 2);
 
   /* Construct new hypercube cmesh (unit interval) */
-  cmesh = t8_cmesh_new_periodic (comm, dim);
+  //cmesh = t8_cmesh_new_periodic_hybrid (comm);
+  cmesh = t8_cmesh_new_periodic_tri (comm);
 
   /* allocate problem */
   problem = T8_ALLOC (t8_advect_problem_t, 1);
@@ -952,6 +965,7 @@ t8_advect_solve (t8_flow_function_3d_fn u,
       t8_advect_problem_adapt (problem);
       /* repartition */
       t8_advect_problem_partition (problem);
+      t8_forest_write_vtk (problem->forest, "test");
       /* Re initialize the elements */
       t8_advect_problem_init_elements (problem);
     }
@@ -969,8 +983,10 @@ t8_advect_solve (t8_flow_function_3d_fn u,
        problem->t < problem->T;
        problem->num_time_steps++, problem->t += problem->delta_t) {
     if (problem->num_time_steps % modulus == modulus - 1) {
-      t8_global_essentialf ("[advect] Step %i\n",
-                            problem->num_time_steps + 1);
+      t8_global_essentialf ("[advect] Step %i  %li elems\n",
+                            problem->num_time_steps + 1,
+                            t8_forest_get_global_num_elements
+                            (problem->forest));
     }
     /* Time loop */
 
@@ -1119,7 +1135,7 @@ main (int argc, char *argv[])
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  t8_init (SC_LP_ESSENTIAL);
+  t8_init (SC_LP_DEBUG);
 
   /* initialize command line argument parser */
   opt = sc_options_new (argv[0]);
