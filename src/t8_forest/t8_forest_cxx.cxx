@@ -1009,13 +1009,13 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
  * If no such i exists, return -1.
  */
 /* TODO: should return t8_locidx_t */
-static int
+static t8_locidx_t
 t8_forest_bin_search_lower (t8_element_array_t * elements,
                             t8_linearidx_t element_id, int maxlevel)
 {
   t8_element_t       *query;
   t8_linearidx_t      query_id;
-  int                 low, high, guess;
+  t8_locidx_t         low, high, guess;
   t8_eclass_scheme_c *ts;
 
   ts = t8_element_array_get_scheme (elements);
