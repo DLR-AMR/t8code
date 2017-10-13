@@ -1098,7 +1098,9 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                                                   elem, tree_vertices, iface);
             }
             else {
-              SC_ABORT ("Element has no neighbors.\n");
+              /* This element is at the domain boundary */
+              /* We enforce constant 0 neumann boundary */
+              flux[iface] = 0;
             }
           }
         }
