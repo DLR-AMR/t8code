@@ -55,6 +55,10 @@ T8_EXTERN_C_BEGIN ();
 /** The number of different types of triangles. */
 #define T8_DTRI_NUM_TYPES 2
 
+/** The length of a line divided by the length of a triangle.
+ *  This is useful to convert boundary coordinates from tri to line. */
+#define T8_DLINE_ROOT_BY_DTRI_ROOT (1 << (T8_DLINE_MAXLEVEL - T8_DTRI_MAXLEVEL))
+
 typedef int8_t      t8_dtri_type_t;
 typedef int32_t     t8_dtri_coord_t;
 

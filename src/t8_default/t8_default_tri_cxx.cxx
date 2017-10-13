@@ -415,10 +415,10 @@ t8_default_scheme_tri_c::t8_element_boundary_face (const t8_element_t * elem,
    *     face = 0, face = 1, type = 1             then l->x = t->x
    */
   if ((face == 0 && t->type == 0) || (face == 2 && t->type == 1)) {
-    l->x = t->y;
+    l->x = t->y * T8_DLINE_ROOT_BY_DTRI_ROOT;
   }
   else {
-    l->x = t->x;
+    l->x = t->x * T8_DLINE_ROOT_BY_DTRI_ROOT;
   }
   /* TODO: Take the level into account! */
 }
