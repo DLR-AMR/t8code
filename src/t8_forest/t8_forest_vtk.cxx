@@ -553,8 +553,8 @@ t8_forest_vtk_cells_vector_kernel (t8_forest_t forest,
   int                 dim, idim;
 
   if (modus == T8_VTK_KERNEL_EXECUTE) {
-    dim = forest->dimension;
-    T8_ASSERT (dim <= 3);
+    dim = 3;
+    T8_ASSERT (forest->dimension <= 3);
     /* For local elements access the data array, for ghosts, write 0 */
     if (!is_ghost) {
       /* Get a pointer to the start of the element's vector data */
@@ -873,8 +873,8 @@ t8_forest_vtk_write_cells (t8_forest_t forest, FILE * vtufile,
     }
     else {
       char                component_string[BUFSIZ];
-      snprintf (component_string, BUFSIZ, "NumberOfComponents=\"%i\"",
-                forest->dimension);
+      T8_ASSERT (data[idata].type == T8_VTK_VECTOR);
+      snprintf (component_string, BUFSIZ, "NumberOfComponents=\"3\"");
       freturn =
         t8_forest_vtk_write_cell_data (forest, vtufile,
                                        data[idata].description,

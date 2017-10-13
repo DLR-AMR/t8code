@@ -32,10 +32,12 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree,
 {
   char                pvtufilename[BUFSIZ], filename_cpy[BUFSIZ];
   FILE               *pvtufile;
-  int                 p, idata;
-  int                 write_cell_data;
+  int                 p, idata, num_scalars;
+  int                 write_cell_data, wrote_cell_data = 0;
+  int                 printed = 0;
 
-  write_cell_data = write_tree || write_rank || write_level || write_id;
+  write_cell_data = write_tree || write_rank || write_level || write_id
+    || num_data > 0;
 
   snprintf (pvtufilename, BUFSIZ, "%s.pvtu", filename);
 
@@ -61,25 +63,57 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree,
   fprintf (pvtufile, "    </PPoints>\n");
   if (write_cell_data) {
     char                vtkCellDataString[BUFSIZ] = "";
-    int                 printed = 0;
+    char                vtkCellVectorString[BUFSIZ] = "";
 
-    if (write_tree)
+    if (write_tree) {
       printed +=
         snprintf (vtkCellDataString + printed, BUFSIZ - printed, "treeid");
-    if (write_rank)
+    }
+    if (write_rank) {
       printed +=
-        snprintf (vtkCellDataString + printed, BUFSIZ - printed,
-                  printed > 0 ? ",mpirank" : "mpirank");
-    if (write_level)
+        snprintf (vtkCellDataString + printed, BUFSIZ - printed, "%s%s",
+                  printed > 0 ? "," : "", "mpirank");
+    }
+    if (write_level) {
       printed +=
-        snprintf (vtkCellDataString + printed, BUFSIZ - printed,
-                  printed > 0 ? ",level" : "level");
-    if (write_id)
+        snprintf (vtkCellDataString + printed, BUFSIZ - printed, "%s%s",
+                  printed > 0 ? "," : "", "level");
+    }
+    if (write_id) {
       printed +=
-        snprintf (vtkCellDataString + printed, BUFSIZ - printed,
-                  printed > 0 ? ",id" : "id");
-
-    fprintf (pvtufile, "    <PCellData Scalars=\"%s\">\n", vtkCellDataString);
+        snprintf (vtkCellDataString + printed, BUFSIZ - printed, "%s%s",
+                  printed > 0 ? "," : "", "element_id");
+    }
+    for (idata = 0; idata < num_data && data[idata].type == T8_VTK_SCALAR;
+         idata++) {
+      printed +=
+        snprintf (vtkCellDataString + printed, BUFSIZ - printed, "%s%s",
+                  printed > 0 ? "," : "", data[idata].description);
+    }
+    num_scalars = idata;
+    /* Write Vector fields in data */
+    if (num_scalars < num_data) {
+      printed = 0;
+      for (idata = num_scalars; idata < num_data; idata++) {
+        SC_CHECK_ABORT (data[idata].type == T8_VTK_VECTOR,
+                        "vtk data missmatch. After scalar fields only vector"
+                        " fields are allowed.");
+        printed +=
+          snprintf (vtkCellVectorString + printed, BUFSIZ - printed, "%s%s",
+                    printed > 0 ? "," : "", data[idata].description);
+      }
+    }
+    if (strcmp (vtkCellDataString, "")) {
+      fprintf (pvtufile, "    <PCellData Scalars=\"%s\"", vtkCellDataString);
+      if (num_scalars < num_data) {
+        /* Add Vector strings */
+        fprintf (pvtufile, " Vectors=\"%s\">\n", vtkCellVectorString);
+      }
+      else {
+        fprintf (pvtufile, ">\n");
+      }
+      wrote_cell_data = 1;
+    }
   }
   if (write_tree) {
     fprintf (pvtufile, "      "
@@ -102,14 +136,23 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree,
              T8_VTK_LOCIDX, T8_VTK_FORMAT_STRING);
   }
   /* Write data fields */
-  for (idata = 0; idata < num_data; idata++) {
-
+  for (idata = 0; idata < num_scalars; idata++) {
     fprintf (pvtufile, "      "
              "<PDataArray type=\"%s\" Name=\"%s\" format=\"%s\"/>\n",
              T8_VTK_FLOAT_NAME, data[idata].description,
              T8_VTK_FORMAT_STRING);
   }
-  if (write_cell_data) {
+
+  /* Write vector data fields */
+  for (idata = num_scalars; idata < num_data; idata++) {
+    T8_ASSERT (data[idata].type == T8_VTK_VECTOR);
+    fprintf (pvtufile, "      "
+             "<PDataArray type=\"%s\" Name=\"%s\" NumberOfComponents=\"3\" "
+             "format=\"%s\"/>\n",
+             T8_VTK_FLOAT_NAME, data[idata].description,
+             T8_VTK_FORMAT_STRING);
+  }
+  if (wrote_cell_data) {
     fprintf (pvtufile, "    </PCellData>\n");
   }
 

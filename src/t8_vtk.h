@@ -59,7 +59,7 @@
 typedef enum
 {
   T8_VTK_SCALAR,                /* One double value per element */
-  T8_VTK_VECTOR                 /* d double values per element, d = dimension (element) */
+  T8_VTK_VECTOR                 /* 3 double values per element */
 } t8_vtk_data_type_t;
 
 typedef struct
@@ -68,7 +68,7 @@ typedef struct
   char                description[BUFSIZ];/**< String that describes the data. */
   double             *data;
                       /**< An array of length n*num_local_elements doubles with
-                      n = 1 if type = T8_VTK_SCALAR, n = dim if type = T8_VTK_VECTOR */
+                      n = 1 if type = T8_VTK_SCALAR, n = 3 if type = T8_VTK_VECTOR */
 } t8_vtk_data_field_t;
 
 T8_EXTERN_C_BEGIN ();
