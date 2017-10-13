@@ -551,14 +551,17 @@ t8_forest_vtk_cells_vector_kernel (t8_forest_t forest,
 {
   double             *element_values, null_vec[3] = { 0, 0, 0 };
   int                 dim, idim;
+  t8_locidx_t         tree_offset;
 
   if (modus == T8_VTK_KERNEL_EXECUTE) {
     dim = 3;
     T8_ASSERT (forest->dimension <= 3);
     /* For local elements access the data array, for ghosts, write 0 */
     if (!is_ghost) {
+      tree_offset = t8_forest_get_tree_element_offset (forest, ltree_id);
       /* Get a pointer to the start of the element's vector data */
-      element_values = ((double *) *data) + element_index * dim;
+      element_values =
+        ((double *) *data) + (tree_offset + element_index) * dim;
     }
     else {
       element_values = null_vec;

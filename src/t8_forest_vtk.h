@@ -47,6 +47,8 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]  num_data  Number of user defined double valued data fields to write.
  * \param [in]  data      Array of t8_vtk_data_field_t of length \a num_data
  *                        providing the used defined per element data.
+ *                        If scalar and vector fields are used, all scalar fields
+ *                        must come first in the array.
  * \return  True if succesful, false if not (process local).
  */
 int                 t8_forest_vtk_write_file (t8_forest_t forest,
