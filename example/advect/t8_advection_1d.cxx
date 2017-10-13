@@ -115,13 +115,15 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   double              gradient;
   int                 level, ielem;
 
+  static int          seed = 10000;
+  srand (seed++);
   /* Get a pointer to the problem from the user data pointer of forest */
   problem = (t8_advect_problem_t *) t8_forest_get_user_data (forest);
   /* Get the element's level */
   level = ts->t8_element_level (elements[0]);
   /* Get a pointer to the element data */
 
-  if (num_elements > 1) {
+  if (num_elements > 1 && level > problem->level) {
     return -(rand () % (forest->mpirank + 2));
   }
   if (level < problem->maxlevel) {
@@ -1091,7 +1093,7 @@ t8_advect_solve (t8_flow_function_3d_fn u,
     if (adapt && time_steps / 3 > 0
         && problem->num_time_steps % (time_steps / 3) == (time_steps / 3) - 1)
 #else
-    if (adapt)
+    if (adapt && problem->num_time_steps % 5 == 4)
 #endif
     {
       adapted_or_partitioned = 1;
