@@ -118,7 +118,21 @@ t8_constant_one_x_vec (const double x[3], double t, double x_out[3])
 void
 t8_constant_one_xy_vec (const double x[3], double t, double x_out[3])
 {
-  x_out[0] = x_out[1] = 1;
+  x_out[0] = 1;
+  x_out[1] = 1;
+  x_out[2] = 0;
+}
+
+void
+t8_rotation_2d (const double x_in[3], double t, double x_out[3])
+{
+  double              x = x_in[0], y = x_in[1];
+
+  x -= 0.5;
+  y -= 0.5;
+
+  x_out[0] = y;
+  x_out[1] = -x;
   x_out[2] = 0;
 }
 
