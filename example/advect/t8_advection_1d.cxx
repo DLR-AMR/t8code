@@ -478,6 +478,7 @@ t8_advect_replace (t8_forest_t forest_old,
 {
   t8_advect_problem_t *problem;
   t8_advect_element_data_t *elem_data_in, *elem_data_out;
+  t8_locidx_t         first_incoming_data, first_outgoing_data;
   t8_element_t       *element;
   int                 i, iface;
 
@@ -487,16 +488,24 @@ t8_advect_replace (t8_forest_t forest_old,
   T8_ASSERT (forest_old == problem->forest);
   T8_ASSERT (forest_new == problem->forest_adapt);
   /* Get pointers to the element datas */
+  first_incoming_data =
+    first_incoming + t8_forest_get_tree_element_offset (forest_new,
+                                                        which_tree);
+  first_outgoing_data =
+    first_outgoing + t8_forest_get_tree_element_offset (forest_old,
+                                                        which_tree);
   elem_data_out = (t8_advect_element_data_t *)
-    t8_sc_array_index_locidx (problem->element_data, first_outgoing);
+    t8_sc_array_index_locidx (problem->element_data, first_outgoing_data);
   elem_data_in = (t8_advect_element_data_t *)
-    t8_sc_array_index_locidx (problem->element_data_adapt, first_incoming);
+    t8_sc_array_index_locidx (problem->element_data_adapt,
+                              first_incoming_data);
   if (num_incoming == num_outgoing && num_incoming == 1) {
     /* The element is not changed, copy phi and vol */
     memcpy (elem_data_in, elem_data_out, sizeof (t8_advect_element_data_t));
     /* Get a pointer to the new element */
     element =
-      t8_forest_get_element (problem->forest_adapt, first_incoming, NULL);
+      t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
+                                     first_incoming);
     /* Set the neighbor entries to uninitialized */
     T8_ASSERT (elem_data_in->num_faces == ts->t8_element_num_faces (element));
     for (iface = 0; iface < elem_data_in->num_faces; iface++) {
@@ -509,8 +518,8 @@ t8_advect_replace (t8_forest_t forest_old,
     for (i = 0; i < num_incoming; i++) {
       /* Get a pointer to the new element */
       element =
-        t8_forest_get_element (problem->forest_adapt, first_incoming + i,
-                               NULL);
+        t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
+                                       first_incoming + i);
       /* Compute midpoint and vol of the new element */
       t8_advect_compute_element_data (problem, elem_data_in + i, element,
                                       which_tree, ts, NULL);
@@ -533,7 +542,8 @@ t8_advect_replace (t8_forest_t forest_old,
      * phi value and set it as the new phi value */
     /* Get a pointer to the outgoing element */
     element =
-      t8_forest_get_element (problem->forest_adapt, first_incoming, NULL);
+      t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
+                                     first_incoming);
     /* Compute midpoint and vol of the new element */
     t8_advect_compute_element_data (problem, elem_data_in, element,
                                     which_tree, ts, NULL);
