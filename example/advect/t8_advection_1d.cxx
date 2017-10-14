@@ -70,6 +70,36 @@ typedef struct
   t8_locidx_t        *neighs[MAX_FACES]; /**< Indices of the neighbor elements */
 } t8_advect_element_data_t;
 
+/* Decide whether an element should be refined or coarsened to match the cfl number */
+static int
+t8_advect_adapt_cfl (t8_advect_problem_t * problem,
+                     t8_advect_element_data_t * elem_data)
+{
+  double              u[3], speed;
+  double              range = 0.2;
+  int                 i;
+
+  /* Compute the flow at this element */
+  problem->u (elem_data->midpoint, problem->t, u);
+  /* Compute the speed of the flow */
+  speed = 0;
+  for (i = 0; i < 3; i++) {
+    speed += SC_SQR (u[i]);
+  }
+  speed = sqrt (speed);
+  if (speed * problem->delta_t / elem_data->vol <=
+      problem->cfl - range * problem->cfl) {
+    /* refine if the element is too large */
+    return 1;
+  }
+  else if (speed * problem->delta_t / elem_data->vol >
+           problem->cfl + range * problem->cfl) {
+    /* coarsen if the element is too small */
+    return -1;
+  }
+  return 0;
+}
+
 /* estimate the absolute value of the gradient of phi at an element.
  * We compute the gradient as finite difference with the left and right
  * neighbor element and take the maximum (absolute value) of both values */
@@ -116,7 +146,8 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   t8_advect_problem_t *problem;
   t8_advect_element_data_t *elem_data;
   double              gradient;
-  int                 level, ielem;
+  int                 level, ielem, ret;
+  t8_locidx_t         offset;
 
   static int          seed = 10000;
   srand (seed++);
@@ -126,6 +157,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   level = ts->t8_element_level (elements[0]);
   /* Get a pointer to the element data */
 
+#if 0
   if (num_elements > 1 && level > problem->level) {
     return -(rand () % (forest->mpirank + 2));
   }
@@ -133,9 +165,22 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
     return (rand () % (forest->mpirank + 10)) < 2;
   }
   return 0;
-
+#endif
+  offset = t8_forest_get_tree_element_offset (forest_from, ltree_id);
   elem_data = (t8_advect_element_data_t *)
-    t8_sc_array_index_locidx (problem->element_data, lelement_id);
+    t8_sc_array_index_locidx (problem->element_data, lelement_id + offset);
+
+  ret = t8_advect_adapt_cfl (problem, elem_data);
+  if (num_elements > 1) {
+    /* This is a family, coarsen it? */
+    if (ret < 0) {
+      /* coarsen if not minimum level */
+      return -(level > problem->level);
+    }
+  }
+  /* refine if not maximum level */
+  return ret > 0 && level < problem->maxlevel;
+
   /* Compute the absolute value of the gradient at this element */
   gradient = t8_advect_gradient_phi (problem, elem_data);
 
@@ -750,6 +795,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   problem->maxlevel = maxlevel; /* maximum allowed refinement level */
   problem->t = 0;               /* start time */
   problem->T = T;               /* end time */
+  problem->delta_t = -1;        /* delta_t, invalid value */
   problem->min_grad = 2;        /* Coarsen an element if the gradient is smaller */
   problem->max_grad = 4;        /* Refine an element if the gradient is larger */
   problem->cfl = cfl;           /* cfl number  */
@@ -850,11 +896,13 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   }
   /* Exchange ghost values */
   t8_forest_ghost_exchange_data (problem->forest, problem->element_data);
-  /* Compute the timestep, this has to be done globally */
-  T8_ASSERT (min_vol > 0);      /* TODO: handle empty process? */
-  delta_t = problem->cfl * min_vol;
-  sc_MPI_Allreduce (&delta_t, &problem->delta_t, 1, sc_MPI_DOUBLE, sc_MPI_MAX,
-                    problem->comm);
+  if (problem->delta_t <= 0) {
+    /* Compute the timestep, this has to be done globally */
+    T8_ASSERT (min_vol > 0);    /* TODO: handle empty process? */
+    delta_t = problem->cfl * min_vol;
+    sc_MPI_Allreduce (&delta_t, &problem->delta_t, 1, sc_MPI_DOUBLE,
+                      sc_MPI_MAX, problem->comm);
+  }
 }
 
 static void
