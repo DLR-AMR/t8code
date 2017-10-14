@@ -769,6 +769,9 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, int dim, int type,
       return cmesh_partition;
     }
     break;
+  case 4:
+    return t8_cmesh_new_hypercube (T8_ECLASS_TET, comm, 0, 0);
+    break;
   default:
     SC_ABORT_NOT_REACHED ();
   }
@@ -784,7 +787,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   t8_advect_problem_t *problem;
   t8_scheme_cxx_t    *default_scheme;
 
-  T8_ASSERT (1 <= dim && dim <= 2);
+  T8_ASSERT (1 <= dim && dim <= 3);
 
   /* allocate problem */
   problem = T8_ALLOC (t8_advect_problem_t, 1);
@@ -887,10 +890,11 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
                                        &elem_data->num_neighbors[iface],
                                        &elem_data->neighs[iface],
                                        &neigh_scheme, 1);
-
-        neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
-                                          neighbors);
-        T8_FREE (neighbors);
+        if (elem_data->num_neighbors[iface] > 0) {
+          neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
+                                            neighbors);
+          T8_FREE (neighbors);
+        }
       }
     }
   }
@@ -1147,7 +1151,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 #endif
           }
           else {
-            T8_ASSERT (problem->dim == 2);
+            T8_ASSERT (problem->dim == 2 || problem->dim == 3);
             if (elem_data->num_neighbors[iface] == 1) {
               /* Get a pointer to the neighbor element */
               neigh_data = (t8_advect_element_data_t *)
@@ -1289,7 +1293,7 @@ main (int argc, char *argv[])
                               level);
 
     /* Computation */
-    t8_advect_solve (cmesh, t8_rotation_2d, t8_sinx_cosy, level,
+    t8_advect_solve (cmesh, t8_constant_one_xy_vec, t8_sinx_cosy, level,
                      level + reflevel, T, cfl, sc_MPI_COMM_WORLD, adapt,
                      no_vtk, vtk_freq, dim);
   }
