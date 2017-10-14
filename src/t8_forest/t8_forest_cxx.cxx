@@ -22,6 +22,7 @@
 
 #include <sc_statistics.h>
 #include <t8_refcount.h>
+#include <t8_vec.h>
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_cxx.h>
@@ -290,6 +291,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
     corner_coords[2] = 0;
   case T8_ECLASS_HEX:
     /* Store the coordinates of the corner scaled to the unit square/cube */
+    /* vertex_coords = len * corner_coords */
     for (i = 0; i < 3; i++) {
       vertex_coords[i] = len * corner_coords[i];
     }
@@ -309,8 +311,7 @@ t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid,
                         const t8_element_t * element, const double *vertices)
 {
   double              coordinates_left[3], coordinates_right[3];
-  double              dist_sq;
-  int                 i;
+  double              dist;
 
   SC_CHECK_ABORT (forest->dimension == 1, "Diameter computation not "
                   "implemented for dim > 1.");
@@ -322,13 +323,10 @@ t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid,
   t8_forest_element_coordinate (forest, ltreeid, element, vertices, 1,
                                 coordinates_right);
 
-  /* Compute the euclidean distance squared */
-  dist_sq = 0;
-  for (i = 0; i < 3; i++) {
-    dist_sq += SC_SQR (coordinates_right[i] - coordinates_left[i]);
-  }
-  /* return the square root */
-  return sqrt (dist_sq);
+  /* Compute the euclidean distance */
+  dist = t8_vec_dist (coordinates_right, coordinates_left);
+  /* return it */
+  return dist;
 }
 
 /* Compute the center of mass of an element.
@@ -341,7 +339,7 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
                             const double *vertices, double *coordinates)
 {
   double              corner_coords[3];
-  int                 num_corners, icorner, i;
+  int                 num_corners, icorner;
   t8_eclass_scheme_c *ts;
 
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -358,14 +356,11 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
     /* For each corner, add its coordinates to the centroids coordinates. */
     t8_forest_element_coordinate (forest, ltreeid, element, vertices, icorner,
                                   corner_coords);
-    for (i = 0; i < 3; i++) {
-      coordinates[i] += corner_coords[i];
-    }
+    /* coordinates = coordinates + corner_coords */
+    t8_vec_axpy (corner_coords, coordinates, 1);
   }
   /* Divide each coordinate by num_corners */
-  for (i = 0; i < 3; i++) {
-    coordinates[i] /= num_corners;
-  }
+  t8_vec_ax (coordinates, 1. / num_corners);
 }
 
 /* Compute the length of the line from one corner to a second corner in an element */
@@ -377,7 +372,6 @@ t8_forest_element_line_length (t8_forest_t forest, t8_locidx_t ltreeid,
 {
   double              coordinates_a[3], coordinates_b[3];
   double              length;
-  int                 i;
 
   t8_forest_element_coordinate (forest, ltreeid, element, vertices, corner_a,
                                 coordinates_a);
@@ -385,14 +379,11 @@ t8_forest_element_line_length (t8_forest_t forest, t8_locidx_t ltreeid,
                                 coordinates_b);
 
   /* Compute the euclidean distance */
-  length = 0;
-  for (i = 0; i < 3; i++) {
-    length += SC_SQR (coordinates_a[i] - coordinates_b[i]);
-  }
+  length = t8_vec_dist (coordinates_a, coordinates_b);
   t8_debugf ("[H] line from %i to %i has len^2  %f\n", corner_a, corner_b,
              length);
-  /* return the squareroot */
-  return sqrt (length);
+  /* return it */
+  return length;
 }
 
 /* Compute an element's volume */
@@ -402,7 +393,6 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
                           const double *vertices)
 {
   t8_eclass_t         eclass;
-  int                 i;
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -452,14 +442,15 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
       t8_forest_element_coordinate (forest, ltreeid, element, vertices,
                                     corner_b, coordinates_2);
       /* Compute vectors v_1 and v_2 */
-      for (i = 0; i < 3; i++) {
-        coordinates_1[i] -= coordinates_0[i];
-        coordinates_2[i] -= coordinates_0[i];
-        /* compute scalar products */
-        v_1v_1 += coordinates_1[i] * coordinates_1[i];
-        v_1v_2 += coordinates_1[i] * coordinates_2[i];
-        v_2v_2 += coordinates_2[i] * coordinates_2[i];
-      }
+      /* v_1 = v_1 - v_0 */
+      t8_vec_axpy (coordinates_0, coordinates_1, -1);
+      /* v_2 = v_2 - v_0 */
+      t8_vec_axpy (coordinates_0, coordinates_2, -1);
+      /* compute scalar products */
+      v_1v_1 = t8_vec_dot (coordinates_1, coordinates_1);
+      v_1v_2 = t8_vec_dot (coordinates_1, coordinates_2);
+      v_2v_2 = t8_vec_dot (coordinates_2, coordinates_2);
+
       /* compute determinant */
       return sqrt (fabs (v_1v_1 * v_2v_2 - v_1v_2 * v_1v_2));
     }
@@ -488,15 +479,16 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
       t8_forest_element_coordinate (forest, ltreeid, element, vertices,
                                     2, coordinates_2);
       /* Compute vectors v_1 and v_2 */
-      for (i = 0; i < 3; i++) {
-        coordinates_1[i] -= coordinates_0[i];
-        coordinates_2[i] -= coordinates_0[i];
-        /* compute scalar products */
-        v_1v_1 += coordinates_1[i] * coordinates_1[i];
-        v_1v_2 += coordinates_1[i] * coordinates_2[i];
-        v_2v_2 += coordinates_2[i] * coordinates_2[i];
-      }
-      /* compute determinant */
+      /* v_1 = v_1 - v_0 */
+      t8_vec_axpy (coordinates_0, coordinates_1, -1);
+      /* v_2 = v_2 - v_0 */
+      t8_vec_axpy (coordinates_0, coordinates_2, -1);
+      /* compute scalar products */
+      v_1v_1 = t8_vec_dot (coordinates_1, coordinates_1);
+      v_1v_2 = t8_vec_dot (coordinates_1, coordinates_2);
+      v_2v_2 = t8_vec_dot (coordinates_2, coordinates_2);
+
+      /* compute determinant and half it */
       return 0.5 * sqrt (fabs (v_1v_1 * v_2v_2 - v_1v_2 * v_1v_2));
     }
     break;
@@ -551,7 +543,6 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
 {
   t8_eclass_t         eclass, face_class;
   t8_eclass_scheme_c *ts;
-  int                 i;
 
   T8_ASSERT (t8_forest_is_committed (forest));
   /* get the eclass of the forest */
@@ -575,7 +566,7 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
     break;
   case T8_ECLASS_LINE:
     {
-      int                 corner_a, corner_b, i;
+      int                 corner_a, corner_b;
       double              vertex_a[3];
 
       /* Compute the corner indices of the face */
@@ -588,9 +579,10 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
                                     corner_b, centroid);
 
       /* Compute the average of those coordinates */
-      for (i = 0; i < 3; i++) {
-        centroid[i] = (vertex_a[i] + centroid[i]) / 2;
-      }
+      /* centroid = centroid + vertex_a */
+      t8_vec_axpy (vertex_a, centroid, 1);
+      /* centroid /= 2 */
+      t8_vec_ax (centroid, 0.5);
       return;
     }
     break;
@@ -602,11 +594,10 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
 void
 t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
                                const t8_element_t * element, int face,
-                               const double *vertices, double normal[3])
+                               const double *tree_vertices, double normal[3])
 {
   t8_eclass_t         eclass, face_class;
   t8_eclass_scheme_c *ts;
-  int                 i;
 
   T8_ASSERT (t8_forest_is_committed (forest));
   /* get the eclass of the forest */
@@ -644,46 +635,40 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
       corner_a = ts->t8_element_get_face_corner (element, face, 0);
       corner_b = ts->t8_element_get_face_corner (element, face, 1);
       /* Compute the coordinates of the endnotes */
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
                                     corner_a, vertex_a);
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
                                     corner_b, vertex_b);
       /* Compute the center */
-      t8_forest_element_centroid (forest, ltreeid, element, vertices, center);
+      t8_forest_element_centroid (forest, ltreeid, element, tree_vertices,
+                                  center);
 
       /* Compute the difference with V_a.
        * Compute the dot products */
       vb_vb = c_vb = 0;
-      for (i = 0; i < 3; i++) {
-        t8_debugf ("[H] vb %f a %f c %f\n", vertex_b[i], vertex_a[i],
-                   center[i]);
-        vertex_b[i] = vertex_b[i] - vertex_a[i];
-        center[i] = center[i] - vertex_a[i];
-        vb_vb += SC_SQR (vertex_b[i]);
-        c_vb += center[i] * vertex_b[i];
-      }
+      /* vertex_b = vertex_b - vertex_a */
+      t8_vec_axpy (vertex_a, vertex_b, -1);
+      /* center = center - vertex_a */
+      t8_vec_axpy (vertex_a, center, -1);
+      /* vertex_b * vertex_b */
+      vb_vb = t8_vec_dot (vertex_b, vertex_b);
+      /* center * vertex_b */
+      c_vb = t8_vec_dot (center, vertex_b);
+
       /* Compute N = C - <C,V>/<V,V> V
        * compute the norm of N
        * compute N*C */
-      norm = 0;
-      c_n = 0;
-      for (i = 0; i < 3; i++) {
-        normal[i] = center[i] - c_vb / vb_vb * vertex_b[i];
-        norm += SC_SQR (normal[i]);
-        c_n += normal[i] * center[i];
-      }
-      norm = sqrt (norm);
+      t8_vec_axpyz (vertex_b, center, normal, -1 * c_vb / vb_vb);
+      norm = t8_vec_norm (normal);
       T8_ASSERT (norm != 0);
-      for (i = 0; i < 3; i++) {
-        normal[i] /= norm;
-        t8_debugf ("[H] normal %f\n", normal[i]);
-      }
+      c_n = t8_vec_dot (center, normal);
+
       /* If N*C > 0 then N points inwards, so we have to reverse it */
       if (c_n > 0) {
-        for (i = 0; i < 3; i++) {
-          normal[i] = -normal[i];
-        }
+        norm *= -1;
       }
+      /* divide normal by its normal to normalize it */
+      t8_vec_ax(normal, 1./norm);
 
       return;
 
