@@ -386,6 +386,26 @@ t8_forest_element_line_length (t8_forest_t forest, t8_locidx_t ltreeid,
   return length;
 }
 
+/* Compute the area of a triangle given by 3 vectors */
+static double
+t8_forest_element_triangle_area (double coordinates[3][3])
+{
+  double              v_1v_1, v_1v_2, v_2v_2;
+
+  /* Compute vectors v_1 and v_2 */
+  /* v_1 = v_1 - v_0 */
+  t8_vec_axpy (coordinates[0], coordinates[1], -1);
+  /* v_2 = v_2 - v_0 */
+  t8_vec_axpy (coordinates[0], coordinates[2], -1);
+  /* compute scalar products */
+  v_1v_1 = t8_vec_dot (coordinates[1], coordinates[1]);
+  v_1v_2 = t8_vec_dot (coordinates[1], coordinates[2]);
+  v_2v_2 = t8_vec_dot (coordinates[2], coordinates[2]);
+
+  /* compute determinant and half it */
+  return 0.5 * sqrt (fabs (v_1v_1 * v_2v_2 - v_1v_2 * v_1v_2));
+}
+
 /* Compute an element's volume */
 double
 t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
@@ -409,9 +429,7 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
   case T8_ECLASS_QUAD:
     {
       int                 face_a, face_b, corner_a, corner_b;
-      double              coordinates_0[3], coordinates_1[3],
-        coordinates_2[3];
-      double              v_1v_1 = 0, v_1v_2 = 0, v_2v_2 = 0;
+      double              coordinates[3][3];
       t8_eclass_scheme_c *ts;
       /* We use this formula for computing the surface area for a parallelogram
        * (we use parallelogram as approximation for the element).
@@ -436,30 +454,18 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
       T8_ASSERT (corner_a != corner_b);
       /* Compute the coordinates of vertex 0, a and b */
       t8_forest_element_coordinate (forest, ltreeid, element, vertices,
-                                    0, coordinates_0);
+                                    0, coordinates[0]);
       t8_forest_element_coordinate (forest, ltreeid, element, vertices,
-                                    corner_a, coordinates_1);
+                                    corner_a, coordinates[1]);
       t8_forest_element_coordinate (forest, ltreeid, element, vertices,
-                                    corner_b, coordinates_2);
-      /* Compute vectors v_1 and v_2 */
-      /* v_1 = v_1 - v_0 */
-      t8_vec_axpy (coordinates_0, coordinates_1, -1);
-      /* v_2 = v_2 - v_0 */
-      t8_vec_axpy (coordinates_0, coordinates_2, -1);
-      /* compute scalar products */
-      v_1v_1 = t8_vec_dot (coordinates_1, coordinates_1);
-      v_1v_2 = t8_vec_dot (coordinates_1, coordinates_2);
-      v_2v_2 = t8_vec_dot (coordinates_2, coordinates_2);
-
-      /* compute determinant */
-      return sqrt (fabs (v_1v_1 * v_2v_2 - v_1v_2 * v_1v_2));
+                                    corner_b, coordinates[2]);
+      return 2 * t8_forest_element_triangle_area (coordinates);
     }
     break;
   case T8_ECLASS_TRIANGLE:
     {
-      double              coordinates_0[3], coordinates_1[3],
-        coordinates_2[3];
-      double              v_1v_1 = 0, v_1v_2 = 0, v_2v_2 = 0;
+      double              coordinates[3][3];
+      int                 i;
       /* We use the same formula as for quads but divide the result in half.
        *    v_2
        *    x
@@ -472,26 +478,41 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
        * This is not an approximation as in the quad case, since a
        * triangle always spans a parallelogram.
        */
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
-                                    0, coordinates_0);
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
-                                    1, coordinates_1);
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
-                                    2, coordinates_2);
-      /* Compute vectors v_1 and v_2 */
-      /* v_1 = v_1 - v_0 */
-      t8_vec_axpy (coordinates_0, coordinates_1, -1);
-      /* v_2 = v_2 - v_0 */
-      t8_vec_axpy (coordinates_0, coordinates_2, -1);
-      /* compute scalar products */
-      v_1v_1 = t8_vec_dot (coordinates_1, coordinates_1);
-      v_1v_2 = t8_vec_dot (coordinates_1, coordinates_2);
-      v_2v_2 = t8_vec_dot (coordinates_2, coordinates_2);
-
-      /* compute determinant and half it */
-      return 0.5 * sqrt (fabs (v_1v_1 * v_2v_2 - v_1v_2 * v_1v_2));
+      for (i = 0; i < 3; i++) {
+        t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+                                      i, coordinates[i]);
+      }
+      return t8_forest_element_triangle_area (coordinates);
     }
     break;
+  case T8_ECLASS_TET:
+    {
+      /* We compute the volume as a sixth of the determinant of the
+       * three vectors of the corners minus the forth vector.
+       * Let the corners be a, b, c, and d.
+       * V = 1/6 |det (a-d,b-d,c-d)|
+       * This can be rewritten as
+       * V = |(a-d)*((b-d) x (c-d))|/6
+       */
+      double              coordinates[4][3], cross[3];
+      int                 i;
+
+      /* Compute the 4 corner coordinates */
+      for (i = 0; i < 4; i++) {
+        t8_forest_element_coordinate (forest, ltreeid, element, vertices, i,
+                                      coordinates[i]);
+      }
+      /* subtract the 4-th vector from the other 3 */
+      for (i = 0; i < 3; i++) {
+        t8_vec_axpy (coordinates[4], coordinates[i], -1);
+      }
+
+      /* Compute the cross product of the 2nd and 3rd */
+      t8_vec_cross (coordinates[1], coordinates[2], cross);
+
+      /* return |(a-d) * ((b-d)x(c-d))| / 6 */
+      return fabs (t8_vec_dot (coordinates[0], cross)) / 6;
+    }
   default:
     SC_ABORT_NOT_REACHED ();
   }
@@ -519,6 +540,7 @@ t8_forest_element_face_area (t8_forest_t forest, t8_locidx_t ltreeid,
   case T8_ECLASS_VERTEX:
     /* vertices do not have volume */
     return 0;
+    break;
   case T8_ECLASS_LINE:
     {
       int                 corner_a, corner_b;
@@ -531,6 +553,23 @@ t8_forest_element_face_area (t8_forest_t forest, t8_locidx_t ltreeid,
       return t8_forest_element_line_length (forest, ltreeid, element,
                                             vertices, corner_a, corner_b);
     }
+    break;
+  case T8_ECLASS_TRIANGLE:
+    {
+      double              coordinates[3][3];
+      int                 i, face_corner;
+
+      /* Compute the coordinates of the triangle's vertices */
+      for (i = 0; i < 3; i++) {
+        face_corner = ts->t8_element_get_face_corner (element, face, i);
+        t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+                                      face_corner, coordinates[i]);
+      }
+
+      /* Compute the area of the triangle */
+      return t8_forest_element_triangle_area (coordinates);
+    }
+    break;
   default:
     SC_ABORT ("Not implemented.\n");
   }
@@ -583,6 +622,26 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
       t8_vec_axpy (vertex_a, centroid, 1);
       /* centroid /= 2 */
       t8_vec_ax (centroid, 0.5);
+      return;
+    }
+    break;
+  case T8_ECLASS_TRIANGLE:
+    {
+      double              coordinates[3][3];
+      int                 i, corner;
+
+      /* We compute the average of all corner coordinates */
+      for (i = 0; i < 3; i++) {
+        corner = ts->t8_element_get_face_corner (element, face, i);
+        t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+                                      corner, coordinates[i]);
+      }
+      /* centroid = coordinates[0] + coordinates[1] */
+      t8_vec_axpyz (coordinates[1], coordinates[0], centroid, 1);
+      /* centroid += coordinates[2] */
+      t8_vec_axpy (coordinates[2], centroid, 1);
+      /* divide by 3 */
+      t8_vec_ax (centroid, 1. / 3);
       return;
     }
     break;
@@ -679,7 +738,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
        * vectors for the triangle*/
       int                 corners[3], i;
       double              corner_vertices[3][3], center[3];
-      double              normal[3], norm, c_n;
+      double              norm, c_n;
 
       for (i = 0; i < 3; i++) {
         /* Compute the i-th corner */
