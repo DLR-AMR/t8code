@@ -668,48 +668,46 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
         norm *= -1;
       }
       /* divide normal by its normal to normalize it */
-      t8_vec_ax(normal, 1./norm);
+      t8_vec_ax (normal, 1. / norm);
 
       return;
+    }
+    break;
+  case T8_ECLASS_TRIANGLE:
+    {
+      /* We construct the normal as the cross product of two spanning
+       * vectors for the triangle*/
+      int                 corners[3], i;
+      double              corner_vertices[3][3], center[3];
+      double              normal[3], norm, c_n;
 
-#if 0
-      /* We approximate the normal vector via this geometric construction:
-       *
-       *    x ---- x B
-       *    |      |
-       *    |   C  |-->N      N = ((A-C) + (B-C))/2
-       *    |      |
-       *    x ---- x A
-       */
+      for (i = 0; i < 3; i++) {
+        /* Compute the i-th corner */
+        corners[i] = ts->t8_element_get_face_corner (element, face, i);
+        /* Compute the coordinates of this corner */
+        t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+                                      corners[i], corner_vertices[i]);
+      }
+      /* Subtract vertex 0 from the other two */
+      t8_vec_axpy (corner_vertices[0], corner_vertices[1], -1);
+      t8_vec_axpy (corner_vertices[0], corner_vertices[2], -1);
 
-      /* Compute the two endnotes of the face line */
-      corner_a = ts->t8_element_get_face_corner (element, face, 0);
-      corner_b = ts->t8_element_get_face_corner (element, face, 1);
-      /* Compute the coordinates of the endnotes */
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
-                                    corner_a, vertex_a);
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
-                                    corner_b, vertex_b);
-      /* Compute the coordinates of the center */
-      t8_forest_element_centroid (forest, ltreeid, element, vertices, center);
-      /* Compute the difference of the two from the center.
-       * Compute the normal as the average of these two */
-      norm = 0;
-      for (i = 0; i < 3; i++) {
-        vertex_b[i] = vertex_b[i] - center[i];
-        vertex_a[i] = vertex_a[i] - center[i];
-        normal[i] = (vertex_a[i] + vertex_b[i]) / 2;
-        /* Compute the norm of the normal vector */
-        norm += SC_SQR (normal[i]);
+      /* Compute the cross product of the two,
+       * and the norm of the cross product */
+      t8_vec_cross (corner_vertices[1], corner_vertices[2], normal);
+      norm = t8_vec_norm (normal);
+      T8_ASSERT (norm != 0);
+      /* Compute the coordinates of the center of the element */
+      t8_forest_element_centroid (forest, ltreeid, element, tree_vertices,
+                                  center);
+      /* Compute the dot-product of normal and center */
+      c_n = t8_vec_dot (center, normal);
+      /* if c_n is positiv, the computed normal points inwards, so we have to reverse it */
+      if (c_n > 0) {
+        norm = -norm;
       }
-      T8_ASSERT (norm > 0);
-      norm = sqrt (norm);
-      /* Divide by the norm */
-      for (i = 0; i < 3; i++) {
-        normal[i] /= norm;
-      }
-      return;
-#endif
+      /* Divide normal by norm to normalize it */
+      t8_vec_ax (normal, norm);
     }
     break;
   default:
