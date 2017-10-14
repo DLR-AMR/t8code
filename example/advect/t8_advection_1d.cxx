@@ -29,7 +29,9 @@
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest_vtk.h>
 #include <example/common/t8_example_common.h>
+#include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
+#include <t8_cmesh_vtk.h>
 
 #define MAX_FACES 4             /* The maximum number of faces of an element */
 
@@ -695,7 +697,7 @@ t8_advect_problem_partition (t8_advect_problem_t * problem)
 
 static              t8_cmesh_t
 t8_advect_create_cmesh (sc_MPI_Comm comm, int dim, int type,
-                        const char *mshfile)
+                        const char *mshfile, int level)
 {
   switch (type) {
   case 0:                      /* Unit line/square with 1 tree (line/quad) */
@@ -708,9 +710,19 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, int dim, int type,
   case 2:                      /* Unit square with 6 trees (2 quads, 4 triangles) */
     return t8_cmesh_new_periodic_hybrid (comm);
     break;
-  case 3:                      /* Load from .msh file */
-    T8_ASSERT (mshfile != NULL);
-    return t8_cmesh_from_msh_file (mshfile, 0, comm, dim, 0);
+  case 3:                      /* Load from .msh file and partition */
+    {
+      t8_cmesh_t          cmesh, cmesh_partition;
+      T8_ASSERT (mshfile != NULL);
+
+      cmesh = t8_cmesh_from_msh_file (mshfile, 1, comm, dim, 0);
+      /* partition this cmesh according to the initial refinement level */
+      t8_cmesh_init (&cmesh_partition);
+      t8_cmesh_set_partition_uniform (cmesh_partition, level);
+      t8_cmesh_set_derive (cmesh_partition, cmesh);
+      t8_cmesh_commit (cmesh_partition, comm);
+      return cmesh_partition;
+    }
     break;
   default:
     SC_ABORT_NOT_REACHED ();
@@ -898,6 +910,12 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   else {
     t8_errorf ("[Advect] Error writing to files %s\n", fileprefix);
   }
+#if 0
+  /* Write the cmesh as vtk file */
+  snprintf (fileprefix + strlen (fileprefix), BUFSIZ - strlen (fileprefix),
+            "_cmesh");
+  t8_cmesh_vtk_write_file (problem->forest->cmesh, fileprefix, 1);
+#endif
   /* clean-up */
   T8_FREE (u_and_phi_array[0]);
   T8_FREE (u_and_phi_array[1]);
@@ -1219,7 +1237,8 @@ main (int argc, char *argv[])
     }
 
     cmesh =
-      t8_advect_create_cmesh (sc_MPI_COMM_WORLD, dim, cmesh_type, mshfile);
+      t8_advect_create_cmesh (sc_MPI_COMM_WORLD, dim, cmesh_type, mshfile,
+                              level);
 
     /* Computation */
     t8_advect_solve (cmesh, t8_rotation_2d, t8_sinx_cosy, level,
