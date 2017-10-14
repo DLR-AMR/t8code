@@ -92,19 +92,19 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
  * If the \a num_elements equals the number of children then the elements
  * form a family and we decide whether this family should be coarsened
  * or only the first element should be refined.
- * Otherwise \num_elements must equal one and we consider the first entry
+ * Otherwise \a num_elements must equal one and we consider the first entry
  * of the element array for refinement. In this case the other entries of
  * the element array are undefined.
  * \param [in] forest      the forest to which the new elements belong
  * \param [in] forest_from the forest that is adapted.
  * \param [in] which_tree  the local tree containing \a elements
- * \param [in] lelement_id the local element id in \a forest_old of the current element
+ * \param [in] lelement_id the local element id in \a forest_old in the tree of the current element
  * \param [in] ts          the eclass scheme of the tree
  * \param [in] num_elements the number of entries in \a elements
  * \param [in] elements    Pointers to a family or, if second entry is NULL,
  *                         pointer to one element.
- * \return greater zero if the first entry in \a elements should be refined
- *         smaller zero if the family \a elements shall be coarsened
+ * \return greater zero if the first entry in \a elements should be refined,
+ *         smaller zero if the family \a elements shall be coarsened,
  *         zero else.
  */
 typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
