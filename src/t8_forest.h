@@ -799,7 +799,8 @@ void                t8_forest_element_face_normal (t8_forest_t forest,
                                                    t8_locidx_t ltreeid,
                                                    const t8_element_t *
                                                    element, int face,
-                                                   const double *vertices,
+                                                   const double
+                                                   *tree_vertices,
                                                    double normal[3]);
 
 /* TODO: if set level and partition/adapt/balance all give NULL, then
