@@ -286,12 +286,12 @@ t8_advect_flux_upwind_1d (const t8_advect_problem_t * problem,
 /* This works also if element_plus hangs on element_minus.
  * It does not work if it hangs the other way around. */
 static double
-t8_advect_flux_upwind_2d (const t8_advect_problem_t * problem,
-                          const t8_advect_element_data_t * el_data_plus,
-                          const t8_advect_element_data_t * el_data_minus,
-                          t8_locidx_t ltreeid,
-                          const t8_element_t * element_plus,
-                          const double *tree_vertices, int face)
+t8_advect_flux_upwind (const t8_advect_problem_t * problem,
+                       const t8_advect_element_data_t * el_data_plus,
+                       const t8_advect_element_data_t * el_data_minus,
+                       t8_locidx_t ltreeid,
+                       const t8_element_t * element_plus,
+                       const double *tree_vertices, int face)
 {
   double              face_center[3];
   int                 idim;
@@ -357,11 +357,11 @@ t8_advect_flux_upwind_2d (const t8_advect_problem_t * problem,
  *
  */
 static double
-t8_advect_flux_upwind_2d_hanging (const t8_advect_problem_t * problem,
-                                  const t8_advect_element_data_t * el_hang,
-                                  t8_locidx_t ltreeid,
-                                  const t8_element_t * element_hang,
-                                  const double *tree_vertices, int face)
+t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
+                               const t8_advect_element_data_t * el_hang,
+                               t8_locidx_t ltreeid,
+                               const t8_element_t * element_hang,
+                               const double *tree_vertices, int face)
 {
   int                 i, num_face_children, child_face;
   t8_eclass_scheme_c *ts;
@@ -399,8 +399,8 @@ t8_advect_flux_upwind_2d_hanging (const t8_advect_problem_t * problem,
                                 el_hang->neighs[face][i]);
     /* Compute the flux */
     flux +=
-      t8_advect_flux_upwind_2d (problem, &child_data, neigh_data, ltreeid,
-                                face_children[i], tree_vertices, child_face);
+      t8_advect_flux_upwind (problem, &child_data, neigh_data, ltreeid,
+                             face_children[i], tree_vertices, child_face);
   }
 
   /* clean-up */
@@ -1154,14 +1154,14 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                 t8_sc_array_index_locidx (problem->element_data,
                                           elem_data->neighs[iface][0]);
               flux[iface] =
-                t8_advect_flux_upwind_2d (problem, elem_data, neigh_data,
-                                          itree, elem, tree_vertices, iface);
+                t8_advect_flux_upwind (problem, elem_data, neigh_data,
+                                       itree, elem, tree_vertices, iface);
             }
             else if (elem_data->num_neighbors[iface] > 1) {
               T8_ASSERT (elem_data->num_neighbors[iface] == 2);
               flux[iface] =
-                t8_advect_flux_upwind_2d_hanging (problem, elem_data, itree,
-                                                  elem, tree_vertices, iface);
+                t8_advect_flux_upwind_hanging (problem, elem_data, itree,
+                                               elem, tree_vertices, iface);
             }
             else {
               /* This element is at the domain boundary */
