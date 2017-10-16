@@ -152,7 +152,7 @@ test_cmesh_partition (sc_MPI_Comm comm)
         if (eci != T8_ECLASS_VERTEX && level != maxlevel - 1) {
           /* Take the hypercube as coarse mesh */
           cmesh_original =
-            t8_cmesh_new_hypercube ((t8_eclass_t) eci, comm, 0, 0);
+            t8_cmesh_new_hypercube ((t8_eclass_t) eci, comm, 0, 0, 0);
         }
         else {
           /* If the eclass is vertex we choose a mesh consisting of disjoint

@@ -66,7 +66,7 @@ t8_test_create_cmesh (int i, t8_eclass_t eclass, sc_MPI_Comm comm)
   case 0:
     return t8_cmesh_new_from_class (eclass, comm);
   case 1:
-    return t8_cmesh_new_hypercube (eclass, comm, 0, 0);
+    return t8_cmesh_new_hypercube (eclass, comm, 0, 0, 0);
   case 2:
     if (eclass == T8_ECLASS_TET) {
       return t8_cmesh_new_tet_orientation_test (comm);
