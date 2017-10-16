@@ -504,7 +504,7 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
       }
       /* subtract the 4-th vector from the other 3 */
       for (i = 0; i < 3; i++) {
-        t8_vec_axpy (coordinates[4], coordinates[i], -1);
+        t8_vec_axpy (coordinates[3], coordinates[i], -1);
       }
 
       /* Compute the cross product of the 2nd and 3rd */
