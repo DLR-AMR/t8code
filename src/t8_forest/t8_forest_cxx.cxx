@@ -736,16 +736,16 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
     {
       /* We construct the normal as the cross product of two spanning
        * vectors for the triangle*/
-      int                 corners[3], i;
+      int                 corner, i;
       double              corner_vertices[3][3], center[3];
       double              norm, c_n;
 
       for (i = 0; i < 3; i++) {
         /* Compute the i-th corner */
-        corners[i] = ts->t8_element_get_face_corner (element, face, i);
+        corner = ts->t8_element_get_face_corner (element, face, i);
         /* Compute the coordinates of this corner */
         t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
-                                      corners[i], corner_vertices[i]);
+                                      corner, corner_vertices[i]);
       }
       /* Subtract vertex 0 from the other two */
       t8_vec_axpy (corner_vertices[0], corner_vertices[1], -1);
@@ -759,6 +759,8 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
       /* Compute the coordinates of the center of the element */
       t8_forest_element_centroid (forest, ltreeid, element, tree_vertices,
                                   center);
+      /* Compute center = center - vertex_0 */
+      t8_vec_axpy (corner_vertices[0], center, -1);
       /* Compute the dot-product of normal and center */
       c_n = t8_vec_dot (center, normal);
       /* if c_n is positiv, the computed normal points inwards, so we have to reverse it */
@@ -766,7 +768,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
         norm = -norm;
       }
       /* Divide normal by norm to normalize it */
-      t8_vec_ax (normal, norm);
+      t8_vec_ax (normal, 1. / norm);
     }
     break;
   default:
