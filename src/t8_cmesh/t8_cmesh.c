@@ -1786,7 +1786,7 @@ t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t *
 /* TODO: upgrade with int x,y,z for periodic faces */
 t8_cmesh_t
 t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
-                        int do_partition)
+                        int do_partition, int periodic_x)
 {
   t8_cmesh_t          cmesh;
   int                 num_trees_for_hypercube[T8_ECLASS_COUNT] = {
@@ -1806,6 +1806,10 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
     0, 1, 1,
     1, 1, 1
   };
+
+  SC_CHECK_ABORT (eclass != T8_ECLASS_PYRAMID || !periodic_x,
+                  "The pyramid cube mesh cannot be periodic in x-direction.");
+
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
   if (!do_bcast || mpirank == 0) {
@@ -1834,6 +1838,9 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
       t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0,
                                   attr_vertices,
                                   t8_eclass_num_vertices[eclass]);
+      if (periodic_x) {
+        t8_cmesh_set_join (cmesh, 0, 0, 0, 1, 0);
+      }
       break;
     case T8_ECLASS_PRISM:
       t8_cmesh_set_join (cmesh, 0, 1, 1, 2, 0);
@@ -1857,6 +1864,9 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
                                                      attr_vertices, 6);
       t8_cmesh_set_tree_vertices (cmesh, 1, t8_get_package_id (), 0,
                                   attr_vertices, 6);
+      if (periodic_x) {
+        t8_cmesh_set_join (cmesh, 0, 1, 0, 1, 0);
+      }
       break;
     case T8_ECLASS_TRIANGLE:
       t8_cmesh_set_join (cmesh, 0, 1, 1, 2, 0);
@@ -1875,6 +1885,9 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
                                                      attr_vertices, 3);
       t8_cmesh_set_tree_vertices (cmesh, 1, t8_get_package_id (), 0,
                                   attr_vertices, 3);
+      if (periodic_x) {
+        t8_cmesh_set_join (cmesh, 0, 1, 0, 1, 0);
+      }
       break;
     case T8_ECLASS_TET:
       t8_cmesh_set_join (cmesh, 0, 1, 2, 1, 0);
@@ -1927,6 +1940,10 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
                                                      attr_vertices, 4);
       t8_cmesh_set_tree_vertices (cmesh, 5, t8_get_package_id (), 0,
                                   attr_vertices, 4);
+      if (periodic_x) {
+        t8_cmesh_set_join (cmesh, 0, 4, 0, 3, 0);
+        t8_cmesh_set_join (cmesh, 1, 3, 0, 3, 2);
+      }
       break;
     case T8_ECLASS_PYRAMID:
       vertices[0] = 1;

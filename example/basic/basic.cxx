@@ -107,7 +107,7 @@ t8_basic_refine_test (t8_eclass_t eclass)
     t8_cmesh_save (cmesh, "hybrid_gate");
   }
   else {
-    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0);
+    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
   }
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
@@ -201,7 +201,7 @@ t8_basic_forest_partition ()
   int                 level = 5;        /* initial refinement level */
 
   comm = sc_MPI_COMM_WORLD;
-  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_PRISM, comm, 0, 1);
+  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_PRISM, comm, 0, 1, 0);
   t8_cmesh_init (&cmesh_partition);
   t8_cmesh_set_derive (cmesh_partition, cmesh);
   t8_cmesh_set_partition_uniform (cmesh_partition, level);
@@ -246,7 +246,8 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
 
   T8_ASSERT (!do_partition || set_level == 0);  /* TODO: for different levels use new cmesh, see basic_p4est */
 
-  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, do_partition);
+  cmesh =
+    t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, do_partition, 0);
 
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -423,7 +424,7 @@ t8_basic_partition (t8_eclass_t eclass, int set_level)
   offsets = SC_SHMEM_ALLOC (t8_gloidx_t, mpisize + 1, sc_MPI_COMM_WORLD);
 
   t8_cmesh_init (&cmesh_part);
-  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 1);
+  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 1, 0);
   snprintf (file, BUFSIZ, "basic_before_partition");
   t8_cmesh_vtk_write_file (cmesh, file, 1.0);
   /* A partition that concentrates everything to proc 0 */

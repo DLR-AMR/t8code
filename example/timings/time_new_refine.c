@@ -86,7 +86,7 @@ t8_timings_adapt (int start_l, int end_l, int runs, int dim)
   eclass = dim == 2 ? T8_ECLASS_TRIANGLE : T8_ECLASS_TET;
 /*
   t8_forest_set_cmesh (forests[0],
-                       t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0));
+                       t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0), 0);
 */
   t8_forest_set_cmesh (forests[0],
                        t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD,

@@ -103,19 +103,15 @@ t8_time_refine (int start_level, int end_level, int create_forest, int cube,
   else {
     t8_forest_set_cmesh (forest,
                          t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0,
-                                                 0), sc_MPI_COMM_WORLD);
+                                                 0, 0), sc_MPI_COMM_WORLD);
   }
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
   t8_forest_set_level (forest, start_level);
-
   sc_flops_start (&fi);
   sc_flops_snap (&fi, &snapshot);
-
   t8_forest_commit (forest);
-
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[0], snapshot.iwtime, "New");
-
   if (cube == 1) {
     snprintf (vtuname, BUFSIZ, "forest_hypercube_%s",
               t8_eclass_to_string[eclass]);

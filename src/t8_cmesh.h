@@ -678,11 +678,14 @@ t8_cmesh_t          t8_cmesh_new_testhybrid (sc_MPI_Comm comm);
  *                          processors in \a comm.
  *                          TODO: this parameter will be moved to internal.
  * \param [in] do_partition Create a partitioned cmesh.
+ * \param [in] periodic_x   If true, the coarse mesh will be periodic in x-direction.
+ *                          Not possible with \a eclass pyramid.
  * TODO: Add periodic flags for each dimension.
  */
 t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
                                             sc_MPI_Comm comm,
-                                            int do_bcast, int do_partition);
+                                            int do_bcast, int do_partition,
+                                            int periodic_x);
 
 /** Construct a unit interval/square/cube coarse mesh that is periodic in each direction.
  * Element class?

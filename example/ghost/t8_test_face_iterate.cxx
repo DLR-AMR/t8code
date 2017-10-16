@@ -210,7 +210,7 @@ t8_test_fiterate_hypercube (t8_eclass_t eclass, int level, sc_MPI_Comm comm,
                             int no_vtk)
 {
   t8_cmesh_t          cmesh;
-  cmesh = t8_cmesh_new_hypercube (eclass, comm, 0, 0);
+  cmesh = t8_cmesh_new_hypercube (eclass, comm, 0, 0, 0);
 
   t8_test_fiterate_refine_and_partition (cmesh, level, comm, 1, no_vtk);
 }
