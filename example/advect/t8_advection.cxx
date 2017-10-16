@@ -1243,7 +1243,11 @@ main (int argc, char *argv[])
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
+#ifdef T8_ENABLE_DEBUG
+  t8_init (SC_LP_DEBUG);
+#else
   t8_init (SC_LP_ESSENTIAL);
+#endif
 
   /* initialize command line argument parser */
   opt = sc_options_new (argv[0]);
