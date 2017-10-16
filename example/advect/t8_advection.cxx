@@ -1070,6 +1070,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   t8_global_essentialf ("[advect] Starting with Computation. Level %i."
                         " End time %g. delta_t %g. %i time steps.\n",
                         level, T, problem->delta_t, time_steps);
+  T8_ASSERT (problem->delta_t > 0);
+  T8_ASSERT (time_steps > 0);
   /* Controls how often we print the time step to stdout */
   modulus = SC_MAX (1, time_steps / 10);
   for (problem->num_time_steps = 0;
