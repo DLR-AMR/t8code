@@ -744,13 +744,23 @@ static              t8_cmesh_t
 t8_advect_create_cmesh (sc_MPI_Comm comm, int dim, int type,
                         const char *mshfile, int level)
 {
+  t8_eclass_t         eclass = T8_ECLASS_COUNT;
   switch (type) {
-  case 0:                      /* Unit line/square with 1 tree (line/quad) */
-    return t8_cmesh_new_periodic (comm, dim);
+  case 0:                      /* Unit line/square/cube with 1 tree (line/quad/hex) */
+    if (dim == 1) {
+      eclass = T8_ECLASS_VERTEX;
+    }
+    else
+      eclass = dim == 2 ? T8_ECLASS_QUAD : T8_ECLASS_HEX;
+    return t8_cmesh_new_hypercube (eclass, comm, 0, 0, 1);
     break;
-  case 1:                      /* Unit square with 2 triangles */
-    T8_ASSERT (dim == 2);
-    return t8_cmesh_new_periodic_tri (comm);
+  case 1:                      /* Unit line/square/cube with lines/tris/tets */
+    if (dim == 1) {
+      eclass = T8_ECLASS_VERTEX;
+    }
+    else
+      eclass = dim == 2 ? T8_ECLASS_TRIANGLE : T8_ECLASS_TET;
+    return t8_cmesh_new_hypercube (eclass, comm, 0, 0, 1);
     break;
   case 2:                      /* Unit square with 6 trees (2 quads, 4 triangles) */
     return t8_cmesh_new_periodic_hybrid (comm);
@@ -770,7 +780,7 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, int dim, int type,
     }
     break;
   case 4:
-    return t8_cmesh_new_hypercube (T8_ECLASS_TET, comm, 0, 0);
+    return t8_cmesh_new_hypercube (T8_ECLASS_TET, comm, 0, 0, 0);
     break;
   default:
     SC_ABORT_NOT_REACHED ();
@@ -1250,8 +1260,8 @@ main (int argc, char *argv[])
                       "The maximum number of refinement levels of the mesh.");
   sc_options_add_int (opt, 'c', "cmesh", &cmesh_type, 0,
                       "Control the coarse mesh that is used.\n"
-                      "\t\t0 - Unit cube of the specified dimension. 1 tree.\n"
-                      "\t\t1 - Unit square of 2 triangles (sets dim=2).\n"
+                      "\t\t0 - Unit cube of the specified dimension with either lines/quads/hexes.\n"
+                      "\t\t1 - Unit cube of the specified dimension with either lines/triangles/tets.\n"
                       "\t\t2 - Unit square hybrid with 4 triangles and 2 quads (sets dim=2).\n"
                       "\t\t3 - Read a .msh file. See -f.");
   sc_options_add_string (opt, 'f', "mshfile", &mshfile, NULL,
@@ -1286,7 +1296,7 @@ main (int argc, char *argv[])
   }
   else if (parsed >= 0 && 0 <= level && 0 <= reflevel && 0 <= vtk_freq) {
     t8_cmesh_t          cmesh;
-    if (cmesh_type == 1 || cmesh_type == 2) {
+    if (cmesh_type == 2) {
       dim = 2;
     }
 
