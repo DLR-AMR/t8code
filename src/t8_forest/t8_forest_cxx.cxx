@@ -513,6 +513,37 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
       /* return |(a-d) * ((b-d)x(c-d))| / 6 */
       return fabs (t8_vec_dot (coordinates[0], cross)) / 6;
     }
+    break;
+  case T8_ECLASS_HEX:
+    {
+      /* We compute the volume as the determinant of the three vectors
+       * from corner 0 to 1, to 2, to 4 (in Z-order).
+       */
+      double              coordinates[4][3], cross[3];
+      int                 i;
+
+      /* Get the coordinates of the four corners */
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 0,
+                                    coordinates[0]);
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 1,
+                                    coordinates[1]);
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 2,
+                                    coordinates[2]);
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 4,
+                                    coordinates[3]);
+
+      /* Compute the difference of each corner with corner 0 */
+      for (i = 1; i < 4; i++) {
+        t8_vec_axpy (coordinates[0], coordinates[i], -1);
+      }
+
+      /* Compute the cross product of the 2nd and 3rd */
+      t8_vec_cross (coordinates[2], coordinates[3], cross);
+
+      /* return |(a-d) * ((b-d)x(c-d))| */
+      return fabs (t8_vec_dot (coordinates[1], cross));
+
+    }
   default:
     SC_ABORT_NOT_REACHED ();
   }
@@ -570,6 +601,41 @@ t8_forest_element_face_area (t8_forest_t forest, t8_locidx_t ltreeid,
       return t8_forest_element_triangle_area (coordinates);
     }
     break;
+  case T8_ECLASS_QUAD:
+    /* Consider this quad face divided in two triangles:
+     * 2   3
+     *  x--x
+     *  |\ |
+     *  | \|
+     *  x--x
+     * 0    1
+     *
+     * We approximate its area as the sum of the two triangle areas. */
+    {
+      double              coordinates[3][3], area;
+      int                 i, face_corner;
+
+      /* Compute the coordinates of the first triangle's vertices */
+      for (i = 0; i < 3; i++) {
+        face_corner = ts->t8_element_get_face_corner (element, face, i);
+        t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+                                      face_corner, coordinates[i]);
+      }
+      /* Compute the first triangle's area */
+      area = 0;
+      area = t8_forest_element_triangle_area (coordinates);
+
+      /* Since the function element_triangle_are has modified coordinates,
+       * we recompute all corner coordinates for the second triangle. */
+      for (i = 0; i < 3; i++) {
+        face_corner = ts->t8_element_get_face_corner (element, face, i + 1);
+        t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+                                      face_corner, coordinates[i]);
+      }
+
+      area += t8_forest_element_triangle_area (coordinates);
+      return area;
+    }
   default:
     SC_ABORT ("Not implemented.\n");
   }
@@ -626,22 +692,25 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
     }
     break;
   case T8_ECLASS_TRIANGLE:
+  case T8_ECLASS_QUAD:
     {
-      double              coordinates[3][3];
-      int                 i, corner;
+      double              coordinates[4][3];
+      int                 i, corner, num_corners;
 
       /* We compute the average of all corner coordinates */
-      for (i = 0; i < 3; i++) {
+      num_corners = face_class == T8_ECLASS_TRIANGLE ? 3 : 4;
+      for (i = 0; i < num_corners; i++) {
         corner = ts->t8_element_get_face_corner (element, face, i);
         t8_forest_element_coordinate (forest, ltreeid, element, vertices,
                                       corner, coordinates[i]);
       }
-      /* centroid = coordinates[0] + coordinates[1] */
-      t8_vec_axpyz (coordinates[1], coordinates[0], centroid, 1);
-      /* centroid += coordinates[2] */
-      t8_vec_axpy (coordinates[2], centroid, 1);
-      /* divide by 3 */
-      t8_vec_ax (centroid, 1. / 3);
+
+      for (i = 1; i < num_corners; i++) {
+        /* centroid = SUM (coordinates[i]) */
+        t8_vec_axpyz (coordinates[i], coordinates[0], centroid, 1);
+      }
+      /* divide by num corners */
+      t8_vec_ax (centroid, 1. / num_corners);
       return;
     }
     break;
@@ -732,6 +801,18 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
       return;
     }
     break;
+  case T8_ECLASS_QUAD:
+    /* Consider this quad face divided in two triangles:
+     * 2   3
+     *  x--x
+     *  |\ |
+     *  | \|
+     *  x--x
+     * 0    1
+     *
+     * We approximate the normal of the quad face as the normal of
+     * the triangle spanned by the corners 0, 1, and 2.
+     */
   case T8_ECLASS_TRIANGLE:
     {
       /* We construct the normal as the cross product of two spanning
@@ -744,8 +825,9 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
         /* Compute the i-th corner */
         corner = ts->t8_element_get_face_corner (element, face, i);
         /* Compute the coordinates of this corner */
-        t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
-                                      corner, corner_vertices[i]);
+        t8_forest_element_coordinate (forest, ltreeid, element,
+                                      tree_vertices, corner,
+                                      corner_vertices[i]);
       }
       /* Subtract vertex 0 from the other two */
       t8_vec_axpy (corner_vertices[0], corner_vertices[1], -1);
