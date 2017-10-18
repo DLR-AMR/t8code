@@ -338,7 +338,8 @@ t8_default_scheme_tet_c::t8_element_last_descendant_face (const t8_element_t *
   T8_ASSERT (0 <= face && face < T8_DTET_FACES);
 
   /* Compute the last corner of this face */
-  corner = t8_dtet_face_corner[face][2];
+  corner =
+    SC_MAX (t8_dtet_face_corner[face][1], t8_dtet_face_corner[face][2]);
   /* Compute the descendant in this corner */
   t8_dtet_corner_descendant ((const t8_dtet_t *) elem,
                              (t8_dtet_t *) last_desc, corner,

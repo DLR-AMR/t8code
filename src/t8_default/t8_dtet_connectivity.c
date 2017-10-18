@@ -138,9 +138,9 @@ const int           t8_dtet_face_child_id_by_type[6][4][4] = {
 };
 
 const int           t8_dtet_face_corner[4][3] = {
-  {1, 2, 3},
+  {1, 3, 2},
   {0, 2, 3},
-  {0, 1, 3},
+  {0, 3, 1},
   {0, 1, 2}
 };
 
