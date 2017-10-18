@@ -120,6 +120,18 @@ t8_default_scheme_hex_c::t8_element_num_face_children (const t8_element_t *
   return 4;
 }
 
+int
+t8_default_scheme_hex_c::t8_element_get_face_corner (const t8_element_t *
+                                                     element, int face,
+                                                     int corner)
+{
+  T8_ASSERT (t8_element_is_valid (element));
+  T8_ASSERT (0 <= face && face < P8EST_FACES);
+  T8_ASSERT (0 <= corner && corner < 4);
+
+  return p8est_face_corners[face][corner];
+}
+
 void
 t8_default_scheme_hex_c::t8_element_child (const t8_element_t * elem,
                                            int childid, t8_element_t * child)
