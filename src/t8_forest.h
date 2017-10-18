@@ -693,7 +693,7 @@ void                t8_forest_iterate (t8_forest_t forest);
  * \param [in]      element    The element.
  * \param [in]      vertices   An array storing the vertex coordinates of the tree.
  *                             It has 3*n entries, with n being the number of vertices of the tree.
- * \param [in]      corner_number The corner number of the vertex which should be computed.
+ * \param [in]      corner_number The corner number, in Z-order, of the vertex which should be computed.
  * \param [out]     coordinates On input an allocated array to store 3 doubles, on output
  *                             the x, y and z coordinates of the vertex.
  */
