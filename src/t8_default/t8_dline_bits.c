@@ -37,13 +37,11 @@ t8_dline_copy (const t8_dline_t * l, t8_dline_t * dest)
 int
 t8_dline_compare (const t8_dline_t * l1, const t8_dline_t * l2)
 {
-  int                 maxlvl;
   t8_linearidx_t      id1, id2;
 
-  maxlvl = SC_MAX (l1->level, l2->level);
   /* Compute the linear ids of the elements */
-  id1 = l1->x >> (T8_DLINE_MAXLEVEL - maxlvl);
-  id2 = l2->x >> (T8_DLINE_MAXLEVEL - maxlvl);
+  id1 = l1->x;
+  id2 = l2->x;
   if (id1 == id2) {
     /* The linear ids are the same, the line with the smaller level
      * is considered smaller */
@@ -245,7 +243,7 @@ void
 t8_dline_init_linear_id (t8_dline_t * l, int level, t8_linearidx_t id)
 {
   T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
-  T8_ASSERT (0 <= id && id <= ((t8_linearidx_t) 1) << level);
+  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << level);
 
   /* Set the level */
   l->level = level;
@@ -259,6 +257,7 @@ t8_dline_successor (const t8_dline_t * l, t8_dline_t * succ, int level)
   t8_dline_coord_t    h = 0;
 
   T8_ASSERT (1 <= level && level <= l->level);
+  T8_ASSERT (l->x < T8_DLINE_ROOT_LEN - T8_DLINE_LEN (level));
 
   /* To compute the successor we zero out all bits in places bigger
    * than level and then we add the length of a line of level. */
