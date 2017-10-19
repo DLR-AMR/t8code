@@ -749,7 +749,7 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, int dim, int type,
   switch (type) {
   case 0:                      /* Unit line/square/cube with 1 tree (line/quad/hex) */
     if (dim == 1) {
-      eclass = T8_ECLASS_VERTEX;
+      eclass = T8_ECLASS_LINE;
     }
     else
       eclass = dim == 2 ? T8_ECLASS_QUAD : T8_ECLASS_HEX;
@@ -757,7 +757,7 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, int dim, int type,
     break;
   case 1:                      /* Unit line/square/cube with lines/tris/tets */
     if (dim == 1) {
-      eclass = T8_ECLASS_VERTEX;
+      eclass = T8_ECLASS_LINE;
     }
     else
       eclass = dim == 2 ? T8_ECLASS_TRIANGLE : T8_ECLASS_TET;
