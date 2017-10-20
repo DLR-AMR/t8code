@@ -26,6 +26,14 @@
 #include "t8_dprism_bits.h"
 #include "t8_dtri_bits.h"
 
+int                 t8_dprism_face_corners[5][4] = {
+  {1, 2, 4, 5},
+  {0, 2, 3, 5},
+  {0, 1, 3, 4},
+  {0, 1, 2, -1},
+  {3, 4, 5, -1}
+};
+
 int
 t8_dprism_get_level (const t8_dprism_t * p)
 {
@@ -224,6 +232,16 @@ t8_dprism_child (const t8_dprism_t * p, int childid, t8_dprism_t * child)
   T8_ASSERT (child->line.level == child->tri.level);
 }
 
+t8_eclass_t
+t8_dprism_face_class (const t8_dprism_t * p, int face)
+{
+  T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
+  if (face < 3) {
+    return T8_ECLASS_QUAD;
+  }
+  return T8_ECLASS_TRIANGLE;
+}
+
 int
 t8_dprism_num_face_children (const t8_dprism_t * p, int face)
 {
@@ -258,6 +276,17 @@ t8_dprism_face_neighbour (const t8_dprism_t * p, int face,
     t8_dline_face_neighbour (&p->line, &neigh->line, 1, NULL);
     return 3;
   }
+}
+
+int
+t8_dprism_get_face_corner (const t8_dprism_t * p, int face, int corner)
+{
+  T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
+  T8_ASSERT (0 <= corner);
+  T8_ASSERT ((corner <= 3 && face <= 2) || (corner <= 2));
+  T8_ASSERT (t8_dprism_face_corners[face][corner] >= 0);
+
+  return t8_dprism_face_corners[face][corner];
 }
 
 void
