@@ -406,6 +406,31 @@ t8_forest_element_triangle_area (double coordinates[3][3])
   return 0.5 * sqrt (fabs (v_1v_1 * v_2v_2 - v_1v_2 * v_1v_2));
 }
 
+static double
+t8_forest_element_tet_volume (double coordinates[4][3])
+{
+  /* We compute the volume as a sixth of the determinant of the
+   * three vectors of the corners minus the forth vector.
+   * Let the corners be a, b, c, and d.
+   * V = 1/6 |det (a-d,b-d,c-d)|
+   * This can be rewritten as
+   * V = |(a-d)*((b-d) x (c-d))|/6
+   */
+  double              cross[3];
+  int                 i;
+
+  /* subtract the 4-th vector from the other 3 */
+  for (i = 0; i < 3; i++) {
+    t8_vec_axpy (coordinates[3], coordinates[i], -1);
+  }
+
+  /* Compute the cross product of the 2nd and 3rd */
+  t8_vec_cross (coordinates[1], coordinates[2], cross);
+
+  /* return |(a-d) * ((b-d)x(c-d))| / 6 */
+  return fabs (t8_vec_dot (coordinates[0], cross)) / 6;
+}
+
 /* Compute an element's volume */
 double
 t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
@@ -494,7 +519,7 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
        * This can be rewritten as
        * V = |(a-d)*((b-d) x (c-d))|/6
        */
-      double              coordinates[4][3], cross[3];
+      double              coordinates[4][3];
       int                 i;
 
       /* Compute the 4 corner coordinates */
@@ -502,16 +527,8 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
         t8_forest_element_coordinate (forest, ltreeid, element, vertices, i,
                                       coordinates[i]);
       }
-      /* subtract the 4-th vector from the other 3 */
-      for (i = 0; i < 3; i++) {
-        t8_vec_axpy (coordinates[3], coordinates[i], -1);
-      }
 
-      /* Compute the cross product of the 2nd and 3rd */
-      t8_vec_cross (coordinates[1], coordinates[2], cross);
-
-      /* return |(a-d) * ((b-d)x(c-d))| / 6 */
-      return fabs (t8_vec_dot (coordinates[0], cross)) / 6;
+      return t8_forest_element_tet_volume (coordinates);
     }
     break;
   case T8_ECLASS_HEX:
@@ -542,7 +559,48 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
 
       /* return |(a-d) * ((b-d)x(c-d))| */
       return fabs (t8_vec_dot (coordinates[1], cross));
+    }
+  case T8_ECLASS_PRISM:
 
+    {
+      /* We divide the prism into 3 tetrahdra and compute their
+       * volumes. */
+      double              coordinates[4][3], volume;
+
+      /* The first tetrahedron has prism vertices 0, 1, 2, and 4 */
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 0,
+                                    coordinates[0]);
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 1,
+                                    coordinates[1]);
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 2,
+                                    coordinates[2]);
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 4,
+                                    coordinates[3]);
+      volume = t8_forest_element_tet_volume (coordinates);
+
+      /* The second tetrahedron has prism vertices 0, 2, 3, and 4 */
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 0,
+                                    coordinates[0]);
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 2,
+                                    coordinates[1]);
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 3,
+                                    coordinates[2]);
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 4,
+                                    coordinates[3]);
+      volume += t8_forest_element_tet_volume (coordinates);
+
+      /* The third tetrahedron has prism vertices 2, 3, 4, and 5 */
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 2,
+                                    coordinates[0]);
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 3,
+                                    coordinates[1]);
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 4,
+                                    coordinates[2]);
+      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 5,
+                                    coordinates[3]);
+      volume += t8_forest_element_tet_volume (coordinates);
+
+      return volume;
     }
   default:
     SC_ABORT_NOT_REACHED ();
