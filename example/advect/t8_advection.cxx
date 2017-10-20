@@ -781,7 +781,8 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, int dim, int type,
     }
     break;
   case 4:
-    return t8_cmesh_new_hypercube (T8_ECLASS_TET, comm, 0, 0, 0);
+    T8_ASSERT (dim == 3);
+    return t8_cmesh_new_hypercube (T8_ECLASS_PRISM, comm, 0, 0, 1);
     break;
   default:
     SC_ABORT_NOT_REACHED ();
@@ -1310,7 +1311,7 @@ main (int argc, char *argv[])
                               level);
 
     /* Computation */
-    t8_advect_solve (cmesh, t8_constant_one_xy_vec, t8_sinx_cosy, level,
+    t8_advect_solve (cmesh, t8_constant_one_x_vec, t8_sinx_cosy, level,
                      level + reflevel, T, cfl, sc_MPI_COMM_WORLD, adapt,
                      no_vtk, vtk_freq, dim);
   }
