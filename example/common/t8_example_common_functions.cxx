@@ -24,6 +24,7 @@
   * that are used in more than one example. */
 
 #include <example/common/t8_example_common.h>
+#include <t8_vec.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -97,9 +98,45 @@ t8_sinx_cosy (const double x[3], double t)
 }
 
 double
+t8_sinx_cosy_z (const double x[3], double t)
+{
+  return 10 * sin (2 * M_PI * x[0]) * cos (2 * M_PI * x[1]) * x[3];
+}
+
+double
 t8_sint (const double x[3], double t)
 {
   return sin (2 * M_PI * t);
+}
+
+double
+t8_sphere_75_radius (const double x[3], double t)
+{
+  return t8_vec_norm (x) - 0.75;
+}
+
+double
+t8_sphere_05_midpoint_375_radius (const double x[3], double t)
+{
+  double              M[3] = { 0.5, 0.5, 0.5 };
+
+  /* Compute M - x */
+  t8_vec_axpy (x, M, -1);
+
+  /* return |M-x| - 0.375 */
+  return t8_vec_norm (M) - 0.375;
+}
+
+double
+t8_sphere_05_0z_midpoint_375_radius (const double x[3], double t)
+{
+  double              M[3] = { 0.5, 0.5, 0 };
+
+  /* Compute M - x */
+  t8_vec_axpy (x, M, -1);
+
+  /* return |M-x| - 0.375 */
+  return t8_vec_norm (M) - 0.375;
 }
 
 void

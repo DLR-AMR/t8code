@@ -63,7 +63,7 @@ t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
   return 0;
 }
 
-/* Get the coordinates of the anchor node of an element */
+/* Get the coordinates of the midpoint of an element */
 void
 t8_common_midpoint (t8_forest_t forest, t8_locidx_t which_tree,
                     t8_eclass_scheme_c * ts, t8_element_t * element,
@@ -89,6 +89,7 @@ int
 t8_common_adapt_level_set (t8_forest_t forest,
                            t8_forest_t forest_from,
                            t8_locidx_t which_tree,
+                           t8_locidx_t lelement_id,
                            t8_eclass_scheme_c * ts,
                            int num_elements, t8_element_t * elements[])
 {
@@ -99,19 +100,69 @@ t8_common_adapt_level_set (t8_forest_t forest,
   int                 level, min_level, max_level;
   double              elem_midpoint[3];
   double              value;
+  double             *tree_vertices;
 
   T8_ASSERT (num_elements == 1 || num_elements ==
              ts->t8_element_num_children (elements[0]));
   level = ts->t8_element_level (elements[0]);
+
+  tree_vertices =
+    t8_cmesh_get_tree_vertices (t8_forest_get_cmesh (forest_from),
+                                t8_forest_ltreeid_to_cmesh_ltreeid
+                                (forest_from, which_tree));
 
   /* Get the minimum and maximum x-coordinate from the user data pointer of forest */
   data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest);
   min_level = data->min_level;
   max_level = data->max_level;
   L = data->L;
+
+  /* If maxlevel is exceeded, coarsen or do not refine */
+  if (level > data->max_level && num_elements > 1) {
+    return -1;
+  }
+  if (level >= data->max_level) {
+    return 0;
+  }
+  /* Refine at least until min level */
+  if (level < data->min_level) {
+    return 1;
+  }
+
+  if (data->band_width == 0) {
+    /* If bandwidth = 0, we only refine the element are intersected by the
+     * zero level-set */
+    int                 num_corners =
+      ts->t8_element_num_corners (elements[0]);
+    int                 sign = 1, icorner;
+    double              coords[3];
+
+    /* Compute LS function at fist corner */
+    t8_forest_element_coordinate (forest_from, which_tree, elements[0],
+                                  tree_vertices, 0, coords);
+    /* compute the level-set function at this corner */
+    value = L (coords[0], coords[1], coords[2], data->udata);
+    /* sign = 1 if value > 0, -1 if value < 0, 0 if value = 0 */
+    sign = value > 0 ? 1 : -(value < 0);
+    /* iterate over all corners */
+    for (icorner = 1; icorner < num_corners; icorner++) {
+      t8_forest_element_coordinate (forest_from, which_tree, elements[0],
+                                    tree_vertices, icorner, coords);
+      /* compute the level-set function at this corner */
+      value = L (coords[0], coords[1], coords[2], data->udata);
+      if ((value > 0 && sign <= 0)
+          || (value == 0 && sign != 0)
+          || (value < 0 && sign >= 0)) {
+        /* The sign of the LS function changes across the element, we refine it */
+        return 1;
+      }
+    }
+    return 0;
+  }
+
   /* Compute the coordinates of the anchor node X. */
-  t8_common_midpoint (forest_from, which_tree, ts,
-                      elements[0], elem_midpoint);
+  t8_forest_element_centroid (forest_from, which_tree, elements[0],
+                              tree_vertices, elem_midpoint);
 
   /* Compute L(X) */
   value =

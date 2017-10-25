@@ -77,10 +77,12 @@ int                 t8_common_adapt_balance (t8_forest_t forest,
  * An element in the forest is refined, if it is in a band of \a band_with many
  * \a max_level elements around the zero level-set Gamma = { x | L(x) = 0}
  */
-/* TODO: Currently the band_width control is not working yet. */
+/* TODO: Currently the band_width control is not working yet.
+ *        if band_with = 0, then all elements that are touched by the zero LS are refined. */
 int                 t8_common_adapt_level_set (t8_forest_t forest,
                                                t8_forest_t forest_from,
                                                t8_locidx_t which_tree,
+                                               t8_locidx_t lelement_id,
                                                t8_eclass_scheme_c * ts,
                                                int num_elements,
                                                t8_element_t * elements[]);
@@ -134,15 +136,36 @@ double              t8_exp_distribution (const double x[3], double t);
 double              t8_sinx (const double x[3], double t);
 
 /** Sinus of x times cosinus of y
- * \return sin (2pi x[0]) * cos (2pi y[0])
+ * \return sin (2pi x[0]) * cos (2pi x[1])
  */
 double              t8_sinx_cosy (const double x[3], double t);
+
+/** Sinus of 10 * x times cosinus of y times z
+ * \return 10 * sin (2pi x[0]) * cos (2pi x[1]) * x[3]
+ */
+double              t8_sinx_cosy_z (const double x[3], double t);
 
 /** Sinus of t
  * \return sin (2pi t)
  */
 double              t8_sint (const double x[3], double t);
 
+/** Level-set function of a sphere around origin with radius 0.75
+ * \return |x| - 0.75
+ */
+double              t8_sphere_75_radius (const double x[3], double t);
+
+/** Level-set function of a sphere around M = (0.5,0.5,0.5) with radius 0.375
+ * \return |x - M| - 0.375
+ */
+double              t8_sphere_05_midpoint_375_radius (const double x[3],
+                                                      double t);
+
+/** Level-set function of a sphere around M = (0.5,0.5,0) with radius 0.375
+ * \return |x - M| - 0.375
+ */
+double              t8_sphere_05_0z_midpoint_375_radius (const double x[3],
+                                                         double t);
 /** Flow functions */
 
 /** Returns always 1 in each coordinate.
