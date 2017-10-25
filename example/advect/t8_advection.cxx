@@ -32,6 +32,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
+#include <t8_vec.h>
 
 #define MAX_FACES 8             /* The maximum number of faces of an element */
 /* TODO: This is not memory efficient. If we run out of memory, we can optimize here. */
@@ -99,6 +100,16 @@ t8_advect_adapt_cfl (t8_advect_problem_t * problem,
     return -1;
   }
   return 0;
+}
+
+/* Refine if close to the zero level-set of phi.
+ * Coarsen if outside */
+static int
+t8_advect_adapt_zero_lv (t8_advect_element_data_t * elem_data)
+{
+  double              eps = 0.1;
+
+  return fabs (elem_data->phi) < eps ? 1 : -1;
 }
 
 /* estimate the absolute value of the gradient of phi at an element.
@@ -170,6 +181,17 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   offset = t8_forest_get_tree_element_offset (forest_from, ltree_id);
   elem_data = (t8_advect_element_data_t *)
     t8_sc_array_index_locidx (problem->element_data, lelement_id + offset);
+
+#if 1
+  if (t8_advect_adapt_zero_lv (elem_data) < 0) {
+    /* coarsen if this is a family and level is not too small */
+    return -(num_elements > 1 && level > problem->level);
+  }
+  else {
+    /* refine if level is not too large */
+    return level < problem->maxlevel;
+  }
+#endif
 
   ret = t8_advect_adapt_cfl (problem, elem_data);
   if (num_elements > 1) {
@@ -409,6 +431,40 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
   T8_FREE (face_children);
 
   return flux;
+}
+
+static void
+t8_advect_set_boundary_data (const t8_advect_problem_t * problem,
+                             const t8_advect_element_data_t * elem_data,
+                             t8_advect_element_data_t * boundary_data,
+                             t8_locidx_t ltreeid,
+                             const t8_element_t * element,
+                             const double *tree_vertices, int face)
+{
+  double              face_normal[3];
+  double              diam;
+
+  /* We need to build up an imaginary element that lies across the face.
+   * To do this, we compute its midpoint as the midpoint of the current element
+   * plus the face_normal times the element's diameter.
+   * We then set the phi value of the boundary element to the phi value of the element. */
+
+  /* Compute the face normal vector */
+  t8_forest_element_face_normal (problem->forest, ltreeid, element, face,
+                                 tree_vertices, face_normal);
+  diam =
+    t8_forest_element_diam (problem->forest, ltreeid, element, tree_vertices);
+
+  /* Set the boundary element's midpoint to
+   * elem_midpoint + diam * face_normal
+   */
+  t8_vec_axpyz (face_normal, elem_data->midpoint, boundary_data->midpoint,
+                diam);
+
+  /* Copy value from elem_data */
+  boundary_data->vol = elem_data->vol;
+  boundary_data->phi = elem_data->phi;
+  boundary_data->level = elem_data->level;
 }
 
 #if 0
@@ -862,7 +918,8 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   t8_advect_element_data_t *elem_data;
   t8_eclass_scheme_c *ts, *neigh_scheme;
   double             *tree_vertices;
-  double              min_vol = -1, delta_t;
+  double              min_diam = -1, delta_t;
+  double              diam;
 
   num_trees = t8_forest_get_num_local_trees (problem->forest);
   for (itree = 0, idata = 0; itree < num_trees; itree++) {
@@ -873,10 +930,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
     num_elems_in_tree =
       t8_forest_get_tree_num_elements (problem->forest, itree);
     /* TODO: A forest get tree vertices function */
-    tree_vertices =
-      t8_cmesh_get_tree_vertices (t8_forest_get_cmesh (problem->forest),
-                                  t8_forest_ltreeid_to_cmesh_ltreeid
-                                  (problem->forest, itree));
+    tree_vertices = t8_forest_get_tree_vertices (problem->forest, itree);
     for (ielement = 0; ielement < num_elems_in_tree; ielement++, idata++) {
       element =
         t8_forest_get_element_in_tree (problem->forest, itree, ielement);
@@ -885,10 +939,14 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
       /* Initialize the element's midpoint and volume */
       t8_advect_compute_element_data (problem, elem_data, element, itree,
                                       ts, tree_vertices);
-      /* Compute the minimum volume */
-      T8_ASSERT (elem_data->vol > 0);
-      min_vol =
-        min_vol < 0 ? elem_data->vol : SC_MIN (min_vol, elem_data->vol);
+      /* Compute the minimum diameter */
+      diam =
+        t8_forest_element_diam (problem->forest, itree, element,
+                                tree_vertices);
+      T8_ASSERT (diam > 0);
+      min_diam = min_diam < 0 ? diam : SC_MIN (min_diam, diam);
+      t8_debugf ("[advect] %i min diam %g\n", ielement, min_diam);
+
       /* Set the initial condition */
       elem_data->phi = problem->phi_0 (elem_data->midpoint, 0);
       /* Set the level */
@@ -914,8 +972,8 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   t8_forest_ghost_exchange_data (problem->forest, problem->element_data);
   if (problem->delta_t <= 0) {
     /* Compute the timestep, this has to be done globally */
-    T8_ASSERT (min_vol > 0);    /* TODO: handle empty process? */
-    delta_t = problem->cfl * min_vol;
+    T8_ASSERT (min_diam > 0);   /* TODO: handle empty process? */
+    delta_t = problem->cfl * min_diam;
     sc_MPI_Allreduce (&delta_t, &problem->delta_t, 1, sc_MPI_DOUBLE,
                       sc_MPI_MAX, problem->comm);
   }
@@ -1146,8 +1204,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
             }
             else {
               T8_ASSERT (elem_data->num_neighbors[iface] <= 0);
-              /* This is a boundary face, we enforce periodic boundary conditions */
-              /* TODO: Do this via cmesh periodic. Implement vertex scheme */
+              /* This is a boundary */
               neigh_data = &boundary_data;
               boundary_data.phi = 0;
               boundary_data.midpoint[0] = iface;        /* 0 for left boundary, 1 for right */
@@ -1183,8 +1240,13 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
             }
             else {
               /* This element is at the domain boundary */
-              /* We enforce constant 0 neumann boundary */
-              flux[iface] = 0;
+              /* We enforce outflow boundary conditions */
+              T8_ASSERT (elem_data->num_neighbors[iface] <= 0);
+              t8_advect_set_boundary_data (problem, elem_data, &boundary_data,
+                                           itree, elem, tree_vertices, iface);
+              flux[iface] =
+                t8_advect_flux_upwind (problem, elem_data, &boundary_data,
+                                       itree, elem, tree_vertices, iface);
             }
           }
         }
@@ -1311,7 +1373,8 @@ main (int argc, char *argv[])
                               level);
 
     /* Computation */
-    t8_advect_solve (cmesh, t8_constant_one_x_vec, t8_sinx_cosy, level,
+    t8_advect_solve (cmesh, t8_constant_one_x_vec,
+                     t8_sphere_05_0z_midpoint_375_radius, level,
                      level + reflevel, T, cfl, sc_MPI_COMM_WORLD, adapt,
                      no_vtk, vtk_freq, dim);
   }
