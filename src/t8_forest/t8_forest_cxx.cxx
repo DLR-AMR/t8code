@@ -310,23 +310,35 @@ double
 t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid,
                         const t8_element_t * element, const double *vertices)
 {
-  double              coordinates_left[3], coordinates_right[3];
+  t8_eclass_t         eclass;
+  t8_eclass_scheme_c *ts;
+
+  double              centroid[3], coordinates[3];
   double              dist;
+  int                 i, num_corners;
 
-  SC_CHECK_ABORT (forest->dimension == 1, "Diameter computation not "
-                  "implemented for dim > 1.");
+  /* Get the element's eclass and scheme */
+  eclass = t8_forest_get_tree_class (forest, ltreeid);
+  ts = t8_forest_get_eclass_scheme (forest, eclass);
 
-  /* for lines, compute the left and right corner coordinates and compute their
-   * distance. */
-  t8_forest_element_coordinate (forest, ltreeid, element, vertices, 0,
-                                coordinates_left);
-  t8_forest_element_coordinate (forest, ltreeid, element, vertices, 1,
-                                coordinates_right);
+  /* We approximate the diameter as twice the average of the distances
+   * from the vertices to the centroid. */
 
-  /* Compute the euclidean distance */
-  dist = t8_vec_dist (coordinates_right, coordinates_left);
-  /* return it */
-  return dist;
+  num_corners = ts->t8_element_num_corners (element);
+
+  /* Compute the centroid */
+  t8_forest_element_centroid (forest, ltreeid, element, vertices, centroid);
+  dist = 0;
+  for (i = 0; i < num_corners; i++) {
+    /* Compute coordinates of this corner */
+    t8_forest_element_coordinate (forest, ltreeid, element, vertices, i,
+                                  coordinates);
+    /* Compute the distance to the midpoint */
+    dist += t8_vec_dist (coordinates, centroid);
+  }
+  /* We approximate the diameter as twice the average of the distances
+   * from the vertices to the centroid. */
+  return 2 * dist / num_corners;
 }
 
 /* Compute the center of mass of an element.

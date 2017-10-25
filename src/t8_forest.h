@@ -724,13 +724,15 @@ void                t8_forest_element_centroid (t8_forest_t forest,
                                                 const double *vertices,
                                                 double *coordinates);
 
-/** Compute the diameter of an element. Currently only for lines.
+/** Compute the diameter of an element.
  * \param [in]      forest     The forest.
  * \param [in]      ltree_id   The forest local id of the tree in which the element is.
  * \param [in]      element    The element.
  * \param [in]      vertices   An array storing the vertex coordinates of the tree.
  *                             It has 3*n entries, with n being the number of vertices of the tree.
  * \return                     The diameter of the element.
+ * \note                       For lines the value is exact while for other element types it is only
+ *                             an approximation.
  */
 double              t8_forest_element_diam (t8_forest_t forest,
                                             t8_locidx_t ltreeid,
