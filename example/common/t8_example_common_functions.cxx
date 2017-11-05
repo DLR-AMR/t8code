@@ -173,4 +173,83 @@ t8_rotation_2d (const double x_in[3], double t, double x_out[3])
   x_out[2] = 0;
 }
 
+/* The following functions model a solution to the stokes equation on
+ * a spherical shell. See
+ * Analytical solution for viscous incompressible Stokes flow in a
+ * spherical shell
+ * by Cedric Thieulot
+ */
+
+static double
+t8_stokes_sphere_alpha_beta (double R_1, double R_2, double gamma, int m,
+                             double *alpha, double *beta)
+{
+  /* We define two constants alpha and beta */
+  *alpha =
+    gamma * (m + 1) * (pow (R_1, -3) - pow (R_2, -3)) / (pow (R_1, -m - 4) -
+                                                         pow (R_2, -m - 4));
+  *beta =
+    -3 * gamma * (pow (R_1, m + 1) - pow (R_2, m + 1)) / (pow (R_1, m + 4) -
+                                                          pow (R_2, m + 4));
+
+}
+
+/* A component of the flow that depends on the inner radius R_2, the outer radius R_1,
+ * a constant gamma, and a control parameter m with m != -1, m != -4 */
+static double
+t8_stokes_sphere_g_component (double radius, double alpha, double beta,
+                              double gamma, int m)
+{
+  T8_ASSERT (m != -1 && m != -4);
+
+  return -2 / (radius * radius) * (-alpha / (m + 1) * pow (radius, -m - 1) +
+                                   beta / 3 * pow (radius, 3) + gamma);
+}
+
+static double
+t8_stokes_sphere_f_component (double radius, double alpha, double beta, int m)
+{
+  return alpha * pow (radius, -m - 3) + beta * radius;
+}
+
+void
+t8_stokes_flow_sphere_shell (const double x[3], double t, double x_out[])
+{
+  double              radius;
+  double              theta, phi;
+  double              alpha, beta;
+  double              vel_r;
+  double              vel_theta;
+  double              vel_phi;
+  const double        r_1 = .5, r_2 = 1, gamma = 1, m = 3;
+
+  /* Compute spherical coordinates */
+  radius = t8_vec_norm (x);
+  theta = acos (x[2] / radius);
+  phi = atan2 (x[1], x[0]);
+
+  if (radius < r_1) {
+    /* If there are points in the geometry that lie in the inside radius,
+     * set the flow to zero. */
+    x_out[0] = x_out[1] = x_out[2] = 0;
+    return;
+  }
+
+  /* Compute alpha and beta */
+  t8_stokes_sphere_alpha_beta (r_1, r_2, gamma, m, &alpha, &beta);
+  /* Compute radial velocity and theta velocity */
+  vel_r =
+    t8_stokes_sphere_g_component (radius, alpha, beta, gamma,
+                                  m) * cos (theta);
+  vel_theta =
+    t8_stokes_sphere_f_component (radius, alpha, beta, m) * sin (theta);
+  /* Set phi velocity */
+  vel_phi = 0;
+
+  /* Compute euclidean coordinates */
+  x_out[0] = vel_r * sin (vel_theta) * cos (vel_phi);
+  x_out[1] = vel_r * sin (vel_theta) * sin (vel_phi);
+  x_out[2] = vel_r * cos (vel_theta);
+}
+
 T8_EXTERN_C_END ();

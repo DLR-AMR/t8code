@@ -185,6 +185,10 @@ void                t8_constant_one_xy_vec (const double x[3], double t,
  */
 void                t8_rotation_2d (const double x[3], double t,
                                     double x_out[3]);
+
+void                t8_stokes_flow_sphere_shell (const double x[3], double t,
+                                                 double x_out[3]);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_EXAMPLE_COMMON_H */
