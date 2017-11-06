@@ -79,15 +79,11 @@ t8_advect_adapt_cfl (t8_advect_problem_t * problem,
 {
   double              u[3], speed;
   double              range = 0.2;
-  int                 i;
 
   /* Compute the flow at this element */
   problem->u (elem_data->midpoint, problem->t, u);
   /* Compute the speed of the flow */
-  speed = 0;
-  for (i = 0; i < 3; i++) {
-    speed += SC_SQR (u[i]);
-  }
+  speed = t8_vec_norm (u);
   speed = sqrt (speed);
   if (speed * problem->delta_t / elem_data->vol <=
       problem->cfl - range * problem->cfl) {
@@ -918,7 +914,8 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   t8_advect_element_data_t *elem_data;
   t8_eclass_scheme_c *ts, *neigh_scheme;
   double             *tree_vertices;
-  double              min_diam = -1, delta_t;
+  double              max_speed = 0, min_diam = -1, delta_t;
+  double              u[3];
   double              diam;
 
   num_trees = t8_forest_get_num_local_trees (problem->forest);
@@ -945,7 +942,9 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
                                 tree_vertices);
       T8_ASSERT (diam > 0);
       min_diam = min_diam < 0 ? diam : SC_MIN (min_diam, diam);
-      t8_debugf ("[advect] %i min diam %g\n", ielement, min_diam);
+      /* Compute the maximum velocity */
+      problem->u (elem_data->midpoint, problem->t, u);
+      max_speed = SC_MAX (max_speed, t8_vec_norm (u));
 
       /* Set the initial condition */
       elem_data->phi = problem->phi_0 (elem_data->midpoint, 0);
@@ -973,7 +972,9 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   if (problem->delta_t <= 0) {
     /* Compute the timestep, this has to be done globally */
     T8_ASSERT (min_diam > 0);   /* TODO: handle empty process? */
-    delta_t = problem->cfl * min_diam;
+    delta_t = problem->cfl * min_diam / max_speed;
+    t8_global_essentialf ("[advect] min diam %g max flow %g\n", min_diam,
+                          max_speed);
     sc_MPI_Allreduce (&delta_t, &problem->delta_t, 1, sc_MPI_DOUBLE,
                       sc_MPI_MAX, problem->comm);
   }
