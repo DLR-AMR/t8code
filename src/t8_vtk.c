@@ -32,7 +32,7 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree,
 {
   char                pvtufilename[BUFSIZ], filename_cpy[BUFSIZ];
   FILE               *pvtufile;
-  int                 p, idata, num_scalars;
+  int                 p, idata, num_scalars = 0;
   int                 write_cell_data, wrote_cell_data = 0;
   int                 printed = 0;
 
@@ -61,6 +61,72 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree,
            " NumberOfComponents=\"3\" format=\"%s\"/>\n",
            T8_VTK_FLOAT_NAME, T8_VTK_FORMAT_STRING);
   fprintf (pvtufile, "    </PPoints>\n");
+
+  if (num_data > 0) {
+    /* Print point data for data fields */
+    char                vtkPointDataString[BUFSIZ] = "";
+    char                vtkPointVectorString[BUFSIZ] = "";
+    char                description[BUFSIZ];
+
+    for (idata = 0; idata < num_data && data[idata].type == T8_VTK_SCALAR;
+         idata++) {
+      snprintf (description, BUFSIZ, "%s_%s", data[idata].description,
+                "points");
+      printed +=
+        snprintf (vtkPointDataString + printed, BUFSIZ - printed, "%s%s",
+                  printed > 0 ? "," : "", description);
+    }
+    num_scalars = idata;
+    /* Write Vector fields in data */
+    if (num_scalars < num_data) {
+      printed = 0;
+      for (idata = num_scalars; idata < num_data; idata++) {
+        SC_CHECK_ABORT (data[idata].type == T8_VTK_VECTOR,
+                        "vtk data missmatch. After scalar fields only vector"
+                        " fields are allowed.");
+        snprintf (description, BUFSIZ, "%s_%s", data[idata].description,
+                  "points");
+        printed +=
+          snprintf (vtkPointVectorString + printed, BUFSIZ - printed, "%s%s",
+                    printed > 0 ? "," : "", description);
+      }
+    }
+
+    if (strcmp (vtkPointDataString, "")) {
+      fprintf (pvtufile, "    <PPointData Scalars=\"%s\"",
+               vtkPointDataString);
+      if (num_scalars < num_data) {
+        /* Add Vector strings */
+        fprintf (pvtufile, " Vectors=\"%s\">\n", vtkPointVectorString);
+      }
+      else {
+        fprintf (pvtufile, ">\n");
+      }
+      /* Write data fields */
+      for (idata = 0; idata < num_scalars; idata++) {
+        snprintf (description, BUFSIZ, "%s_%s", data[idata].description,
+                  "points");
+        fprintf (pvtufile,
+                 "      "
+                 "<PDataArray type=\"%s\" Name=\"%s\" format=\"%s\"/>\n",
+                 T8_VTK_FLOAT_NAME, description, T8_VTK_FORMAT_STRING);
+      }
+
+      /* Write vector data fields */
+      for (idata = num_scalars; idata < num_data; idata++) {
+        T8_ASSERT (data[idata].type == T8_VTK_VECTOR);
+        snprintf (description, BUFSIZ, "%s_%s", description, "points");
+        fprintf (pvtufile,
+                 "      "
+                 "<PDataArray type=\"%s\" Name=\"%s\" NumberOfComponents=\"3\" "
+                 "format=\"%s\"/>\n", T8_VTK_FLOAT_NAME, description,
+                 T8_VTK_FORMAT_STRING);
+      }
+      fprintf (pvtufile, "    </PPointData>\n");
+    }
+  }
+  /* reset counter */
+  printed = 0;
   if (write_cell_data) {
     char                vtkCellDataString[BUFSIZ] = "";
     char                vtkCellVectorString[BUFSIZ] = "";

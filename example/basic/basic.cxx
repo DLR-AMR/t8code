@@ -118,25 +118,26 @@ t8_basic_refine_test (t8_eclass_t eclass)
             t8_eclass_to_string[eclass]);
   t8_forest_write_vtk (forest, filename);
 
-#if 1
+#if 0
   t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, 1);
 #else
   {
     t8_example_level_set_struct_t ls_data;
     t8_basic_sphere_data_t sdata;
 
-    sdata.mid_point[0] = 0.5;
-    sdata.mid_point[1] = 0.5;
-    sdata.mid_point[2] = 0.5;
-    sdata.radius = 0.35;
+    sdata.mid_point[0] = 0;
+    sdata.mid_point[1] = 1;
+    sdata.mid_point[2] = 0;
+    sdata.radius = 0.85;
 
-    ls_data.band_width = 2;
+    ls_data.band_width = 1.5;
     ls_data.L = t8_basic_level_set_sphere;
     ls_data.min_level = 3;
     ls_data.max_level = maxlevel;
     ls_data.udata = &sdata;
     t8_forest_set_user_data (forest_adapt, &ls_data);
     t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
+    t8_forest_set_balance (forest_adapt, NULL, 0);
   }
 #endif
   t8_forest_commit (forest_adapt);
@@ -481,7 +482,7 @@ main (int argc, char **argv)
 #endif
   //t8_basic_hypercube (T8_ECLASS_TET, 1, 1, 0);
   //t8_basic_balance_test (T8_ECLASS_TET);
-  t8_basic_refine_test (T8_ECLASS_COUNT);
+  t8_basic_refine_test (T8_ECLASS_QUAD);
 #if 0
   t8_basic_forest_partition ();
   t8_global_productionf ("Testing hypercube cmesh.\n");

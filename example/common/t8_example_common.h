@@ -188,6 +188,9 @@ void                t8_rotation_2d (const double x[3], double t,
 
 void                t8_compressible (const double x_in[3], double t,
                                      double x_out[3]);
+/** Incompressible flow in unit cube */
+void                t8_incomp_cube_flow (const double x[3], double t,
+                                         double x_out[3]);
 
 void                t8_stokes_flow_sphere_shell (const double x[3], double t,
                                                  double x_out[3]);
