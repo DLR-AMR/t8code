@@ -1027,7 +1027,7 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   snprintf (fileprefix, BUFSIZ, "advection_%03i", problem->vtk_count);
   /* Write vtk files */
   if (t8_forest_vtk_write_file (problem->forest, fileprefix,
-                                1, 1, 1, 1, 1, 3, vtk_data)) {
+                                1, 1, 1, 1, 0, 3, vtk_data)) {
     t8_debugf ("[Advect] Wrote pvtu to files %s\n", fileprefix);
   }
   else {
