@@ -156,8 +156,16 @@ void
 t8_constant_one_xy_vec (const double x[3], double t, double x_out[3])
 {
   x_out[0] = 1;
-  x_out[1] = 1;
+  x_out[1] = 0.8;
   x_out[2] = 0;
+}
+
+void
+t8_constant_one_xyz_vec (const double x[3], double t, double x_out[3])
+{
+  x_out[0] = 1;
+  x_out[1] = 0.8;
+  x_out[2] = 0.9;
 }
 
 void
@@ -189,7 +197,7 @@ t8_compressible (const double x_in[3], double t, double x_out[3])
 static double
 t8_incomp_cube_f (double x)
 {
-  return 5 * (1. - x) * x;
+  return 2 * (1. - x) * x;
 }
 
 /* The derivative of f */
@@ -197,7 +205,7 @@ static double
 t8_incomp_cube_df (double x)
 {
 
-  return 5. - 10. * x;
+  return 2. - 4. * x;
 }
 
 void
@@ -210,9 +218,9 @@ t8_incomp_cube_flow (const double x[3], double t, double x_out[3])
   x_out[1] = -1. * f (x[1]) * df (x[0]);
   x_out[2] = f (x[2]) * df (x[0]);
 
-  x_out[0] *= cos (M_PI * t);
-  x_out[1] *= cos (M_PI * t);
-  x_out[2] *= cos (M_PI * t);
+  x_out[0] *= cos (M_PI * t / 4);
+  x_out[1] *= cos (M_PI * t / 4);
+  x_out[2] *= cos (M_PI * t / 4);
 }
 
 /* The following functions model a solution to the stokes equation on
