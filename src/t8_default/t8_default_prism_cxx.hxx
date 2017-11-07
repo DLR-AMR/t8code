@@ -124,11 +124,7 @@ public:
    * \param [in] elem The element.
    * \return          The maximum number of faces of \a elem and its descendants.
    */
-  virtual int         t8_element_max_num_faces (const t8_element_t * elem)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+  virtual int         t8_element_max_num_faces (const t8_element_t * elem);
 
 /** Construct all children of a given element. */
   virtual void        t8_element_children (const t8_element_t * elem,
@@ -152,11 +148,7 @@ public:
    * of the parent of the element that matches the element's face. Or return -1 if
    * no face of the parent matches the face. */
   virtual int         t8_element_face_parent_face (const t8_element_t * elem,
-                                                   int face)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+                                                   int face);
 
 /** Given an element and a face of this element. If the face lies on the
    *  tree boundary, return the face number of the tree face.

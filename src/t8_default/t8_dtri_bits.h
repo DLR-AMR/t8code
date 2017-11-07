@@ -164,7 +164,7 @@ int                 t8_dtri_face_child_face (const t8_dtri_t * triangle,
  * of the parent of the triangle that matches the triangle's face. Or return -1 if
  * no face of the parent matches the face.
 
- * \param [in]  elem    The triangle.
+ * \param [in]  triangle The triangle.
  * \param [in]  face    Then number of the face.
  * \return              If \a face of \a elem is also a face of \a elem's parent,
  *                      the face number of this face. Otherwise -1.

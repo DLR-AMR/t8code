@@ -110,8 +110,8 @@ int                 t8_dprism_is_familypv (t8_dprism_t ** fam);
  * \note \a t1, \a t2, \a r may point to the same tetrahedron.
  */
 void                t8_dprism_nearest_common_ancestor (const t8_dprism_t * p1,
-                                                       const t8_dprism_t *p2,
-                                                       t8_dprism_t *r);
+                                                       const t8_dprism_t * p2,
+                                                       t8_dprism_t * r);
 
 /** Constructs the boundary element of a prism at a given face
   * \param [in] p       The input prism.
@@ -186,7 +186,7 @@ void                t8_dprism_children_at_face (const t8_dprism_t * p,
 
 /** Given a face of a prism and a child number of a child of that face, return the face number
  * of the child of the prism that matches the child face.
- * \param [in]  p The prism.
+ * \param [in]  elem    The prism.
  * \param [in]  face    The number of the face.
  * \param [in]  face_child  The child number of a child of the face prism.
  * \return              The face number of the face of a child of \a p
@@ -194,6 +194,18 @@ void                t8_dprism_children_at_face (const t8_dprism_t * p,
  */
 int                 t8_dprism_face_child_face (const t8_dprism_t * elem,
                                                int face, int face_child);
+
+/** Given a face of a prism return the face number
+ * of the parent of the prism that matches the prism's face. Or return -1 if
+ * no face of the parent matches the face.
+
+ * \param [in]  prism    The prism.
+ * \param [in]  face    Then number of the face.
+ * \return              If \a face of \a prism is also a face of \a prism's parent,
+ *                      the face number of this face. Otherwise -1.
+ */
+int                 t8_dprism_face_parent_face (const t8_dprism_t * prism,
+                                                int face);
 
 /** Given a prism and a face of this prism. If the face lies on the
  *  tree boundary, return the face number of the tree face.

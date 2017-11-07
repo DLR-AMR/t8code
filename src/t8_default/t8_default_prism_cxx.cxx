@@ -130,6 +130,13 @@ t8_default_scheme_prism_c::t8_element_child (const t8_element_t * elem,
                    (t8_dprism_t *) child);
 }
 
+int
+t8_default_scheme_prism_c::t8_element_max_num_faces (const t8_element_t *
+                                                     elem)
+{
+  return T8_DPRISM_FACES;
+}
+
 void
 t8_default_scheme_prism_c::t8_element_children (const t8_element_t * elem,
                                                 int length,
@@ -163,6 +170,14 @@ t8_default_scheme_prism_c::t8_element_face_child_face (const t8_element_t *
 }
 
 int
+t8_default_scheme_prism_c::t8_element_face_parent_face (const t8_element_t *
+                                                        elem, int face)
+{
+  T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
+  return t8_dprism_face_parent_face ((const t8_dprism_t *) elem, face);
+}
+
+int
 t8_default_scheme_prism_c::t8_element_tree_face (const t8_element_t * elem,
                                                  int face)
 {
@@ -189,16 +204,16 @@ t8_default_scheme_prism_c::t8_element_is_family (t8_element_t ** fam)
 
 void
 t8_default_scheme_prism_c::t8_element_nca (const t8_element_t * elem1,
-                                      const t8_element_t * elem2,
-                                      t8_element_t * nca)
+                                           const t8_element_t * elem2,
+                                           t8_element_t * nca)
 {
-    const t8_default_prism_t *p1 = (const t8_default_prism_t *) elem1;
-    const t8_default_prism_t *p2 = (const t8_default_prism_t *) elem2;
-    t8_default_prism_t *c = (t8_default_prism_t *) nca;
+  const t8_default_prism_t *p1 = (const t8_default_prism_t *) elem1;
+  const t8_default_prism_t *p2 = (const t8_default_prism_t *) elem2;
+  t8_default_prism_t *c = (t8_default_prism_t *) nca;
 
-    T8_ASSERT (t8_element_is_valid (elem1));
-    T8_ASSERT (t8_element_is_valid (elem2));
-    t8_dprism_nearest_common_ancestor (p1, p2, c);
+  T8_ASSERT (t8_element_is_valid (elem1));
+  T8_ASSERT (t8_element_is_valid (elem2));
+  t8_dprism_nearest_common_ancestor (p1, p2, c);
 }
 
 void

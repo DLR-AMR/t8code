@@ -161,27 +161,29 @@ t8_dprism_is_familypv (t8_dprism_t ** fam)
 
 void
 t8_dprism_nearest_common_ancestor (const t8_dprism_t * p1,
-                                                       const t8_dprism_t *p2,
-                                                       t8_dprism_t * r)
+                                   const t8_dprism_t * p2, t8_dprism_t * r)
 {
-    int level;
-    t8_dtri_nearest_common_ancestor(&p1->tri, &p2->tri, &r->tri);
-    t8_dline_nearest_common_ancestor(&p1->line, &p2->line, &r->line);
+  int                 level;
+  t8_dtri_nearest_common_ancestor (&p1->tri, &p2->tri, &r->tri);
+  t8_dline_nearest_common_ancestor (&p1->line, &p2->line, &r->line);
 
-    /*if the line and the triangle don't have the same level, they don't have the
-     *same nearest ancestor. The nca is the prism of the lowest level r->line and
-     *r->tri*/
-    if(r->tri.level != r->line.level){
-        level = SC_MIN(r->tri.level, r->line.level);
-        r->tri.x = (r->tri.x >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL
-                                                                    - level + 1);
-        r->tri.y = (r->tri.y >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL
-                                                                    - level + 1);
-        r->line.x = (r->line.x >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL
-                                                                    - level + 1);
-        r->tri.level = level;
-        r->line.level = level;
-    }
+  /*if the line and the triangle don't have the same level, they don't have the
+   *same nearest ancestor. The nca is the prism of the lowest level r->line and
+   *r->tri*/
+  if (r->tri.level != r->line.level) {
+    level = SC_MIN (r->tri.level, r->line.level);
+    r->tri.x =
+      (r->tri.x >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL -
+                                                       level + 1);
+    r->tri.y =
+      (r->tri.y >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL -
+                                                       level + 1);
+    r->line.x =
+      (r->line.x >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL -
+                                                        level + 1);
+    r->tri.level = level;
+    r->line.level = level;
+  }
 }
 
 void
@@ -334,6 +336,31 @@ t8_dprism_face_child_face (const t8_dprism_t * elem, int face, int face_child)
   /* For prisms the face number of the children is the same as the one
    * of the parent */
   return face;
+}
+
+/*c child_id, f face number. In row c, column f is a one, if the child shares
+this face with its parent*/
+const int           parent_faces[8][5] = { {0, 1, 1, 1, 0},
+{1, 1, 0, 1, 0},
+{0, 0, 0, 1, 0},
+{1, 1, 0, 1, 0},
+{0, 1, 1, 0, 1},
+{1, 1, 0, 0, 1},
+{0, 0, 0, 0, 1},
+{1, 1, 0, 0, 1}
+};
+
+int
+t8_dprism_face_parent_face (const t8_dprism_t * prism, int face)
+{
+  int                 child_id;
+  T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
+  child_id = t8_dprism_child_id (prism);
+  if (parent_faces[child_id][face] != 0) {
+    return face;
+  }
+  else
+    return -1;
 }
 
 int
