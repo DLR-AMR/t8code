@@ -188,6 +188,20 @@ t8_default_scheme_prism_c::t8_element_is_family (t8_element_t ** fam)
 }
 
 void
+t8_default_scheme_prism_c::t8_element_nca (const t8_element_t * elem1,
+                                      const t8_element_t * elem2,
+                                      t8_element_t * nca)
+{
+    const t8_default_prism_t *p1 = (const t8_default_prism_t *) elem1;
+    const t8_default_prism_t *p2 = (const t8_default_prism_t *) elem2;
+    t8_default_prism_t *c = (t8_default_prism_t *) nca;
+
+    T8_ASSERT (t8_element_is_valid (elem1));
+    T8_ASSERT (t8_element_is_valid (elem2));
+    t8_dprism_nearest_common_ancestor (p1, p2, c);
+}
+
+void
 t8_default_scheme_prism_c::t8_element_boundary_face (const t8_element_t *
                                                      elem, int face,
                                                      t8_element_t * boundary,

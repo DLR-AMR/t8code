@@ -160,6 +160,31 @@ t8_dprism_is_familypv (t8_dprism_t ** fam)
 }
 
 void
+t8_dprism_nearest_common_ancestor (const t8_dprism_t * p1,
+                                                       const t8_dprism_t *p2,
+                                                       t8_dprism_t * r)
+{
+    int level;
+    t8_dtri_nearest_common_ancestor(&p1->tri, &p2->tri, &r->tri);
+    t8_dline_nearest_common_ancestor(&p1->line, &p2->line, &r->line);
+
+    /*if the line and the triangle don't have the same level, they don't have the
+     *same nearest ancestor. The nca is the prism of the lowest level r->line and
+     *r->tri*/
+    if(r->tri.level != r->line.level){
+        level = SC_MIN(r->tri.level, r->line.level);
+        r->tri.x = (r->tri.x >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL
+                                                                    - level + 1);
+        r->tri.y = (r->tri.y >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL
+                                                                    - level + 1);
+        r->line.x = (r->line.x >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL
+                                                                    - level + 1);
+        r->tri.level = level;
+        r->line.level = level;
+    }
+}
+
+void
 t8_dprism_boundary_face (const t8_dprism_t * p, int face,
                          t8_element_t * boundary)
 {

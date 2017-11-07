@@ -103,6 +103,16 @@ int                 t8_dprism_child_id (const t8_dprism_t * p);
  */
 int                 t8_dprism_is_familypv (t8_dprism_t ** fam);
 
+/** Computes the nearest common ancestor of two prisms in the same tree.
+ * \param [in]     p1 First input tetrahedron.
+ * \param [in]     p2 Second input tetrahedron.
+ * \param [in,out] r Existing tetrahedron whose data will be filled.
+ * \note \a t1, \a t2, \a r may point to the same tetrahedron.
+ */
+void                t8_dprism_nearest_common_ancestor (const t8_dprism_t * p1,
+                                                       const t8_dprism_t *p2,
+                                                       t8_dprism_t *r);
+
 /** Constructs the boundary element of a prism at a given face
   * \param [in] p       The input prism.
   * \param [in] face    A face of \a p
