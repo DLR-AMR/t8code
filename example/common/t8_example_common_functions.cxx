@@ -173,6 +173,14 @@ t8_rotation_2d (const double x_in[3], double t, double x_out[3])
   x_out[2] = 0;
 }
 
+void
+t8_compressible (const double x_in[3], double t, double x_out[3])
+{
+  x_out[0] = (1. / 2 - x_in[0]);
+  x_out[1] = 0;
+  x_out[2] = 0;
+}
+
 /* The following functions model a solution to the stokes equation on
  * a spherical shell. See
  * Analytical solution for viscous incompressible Stokes flow in a
