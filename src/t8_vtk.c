@@ -115,7 +115,8 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree,
       /* Write vector data fields */
       for (idata = num_scalars; idata < num_data; idata++) {
         T8_ASSERT (data[idata].type == T8_VTK_VECTOR);
-        snprintf (description, BUFSIZ, "%s_%s", description, "points");
+        snprintf (description, BUFSIZ, "%s_%s", data[idata].description,
+                  "points");
         fprintf (pvtufile,
                  "      "
                  "<PDataArray type=\"%s\" Name=\"%s\" NumberOfComponents=\"3\" "
