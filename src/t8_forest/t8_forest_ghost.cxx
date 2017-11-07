@@ -948,7 +948,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
       /* Store the new bounds at the entry for this element */
       new_bounds[iface * 2] = lower;
       new_bounds[iface * 2 + 1] = upper;
-      if (lower > upper || (lower == upper && lower == forest->mpirank)) {
+      if (lower == upper && lower == forest->mpirank) {
         /* All neighbor leafs at this face are owned by the current rank */
         t8_debugf
           ("[H] level %i element lin id %li at face %i totally pwned\n",

@@ -131,7 +131,7 @@ int                 t8_dtet_face_neighbour (const t8_dtet_t * t, int face,
  * \param [in]     t1 First input tetrahedron.
  * \param [in]     t2 Second input tetrahedron.
  * \param [in,out] r Existing tetrahedron whose data will be filled.
- * \note \a t1, \a t2, \a r may point to the same quadrant.
+ * \note \a t1, \a t2, \a r may point to the same tetrahedron.
  */
 void                t8_dtet_nearest_common_ancestor (const t8_dtet_t * t1,
                                                      const t8_dtet_t * t2,

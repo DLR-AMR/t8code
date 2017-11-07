@@ -145,8 +145,7 @@ t8_test_ghost_hypercube (t8_eclass_t eclass, int level, sc_MPI_Comm comm,
   t8_cmesh_t          cmesh;
   cmesh = t8_cmesh_new_hypercube (eclass, comm, 0, 0);
 
-  if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_QUAD ||
-      eclass == T8_ECLASS_TET || eclass == T8_ECLASS_HEX) {
+  if (eclass != T8_ECLASS_VERTEX && eclass != T8_ECLASS_PYRAMID) {
     t8_test_ghost_refine_and_partition (cmesh, level, comm, 1, no_vtk);
   }
   else {

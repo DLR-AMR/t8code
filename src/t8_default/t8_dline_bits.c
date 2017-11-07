@@ -37,13 +37,11 @@ t8_dline_copy (const t8_dline_t * l, t8_dline_t * dest)
 int
 t8_dline_compare (const t8_dline_t * l1, const t8_dline_t * l2)
 {
-  int                 maxlvl;
   u_int64_t           id1, id2;
 
-  maxlvl = SC_MAX (l1->level, l2->level);
   /* Compute the linear ids of the elements */
-  id1 = l1->x >> (T8_DLINE_MAXLEVEL - maxlvl);
-  id2 = l2->x >> (T8_DLINE_MAXLEVEL - maxlvl);
+  id1 = l1->x;
+  id2 = l2->x;
   if (id1 == id2) {
     /* The linear ids are the same, the line with the smaller level
      * is considered smaller */
@@ -89,18 +87,72 @@ t8_dline_child (const t8_dline_t * l, int childid, t8_dline_t * child)
 }
 
 void
-t8_dline_face_neighbour (const t8_dline_t * p, int face, t8_dline_t * neigh)
+t8_dline_face_neighbour (const t8_dline_t * l, t8_dline_t * neigh,
+                         int face, int *dual_face)
 {
   T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
+
+  neigh->level = l->level;
   switch (face) {
   case 0:
-    neigh->level = p->level;
-    neigh->x = p->x - T8_DLINE_LEN (p->level);
+    neigh->x = l->x - T8_DLINE_LEN (l->level);
     break;
   case 1:
-    t8_dline_successor (p, neigh, p->level);
+    neigh->x = l->x + T8_DLINE_LEN (l->level);
     break;
   }
+  if (dual_face != NULL) {
+    /* The dual face is 1 if face=0 and 0 if face=1 */
+    *dual_face = 1 - face;
+  }
+}
+
+void
+t8_dline_nearest_common_ancestor (const t8_dline_t * t1,
+                                  const t8_dline_t * t2, t8_dline_t * r)
+{
+  int                 level;
+  t8_dline_coord_t    exclusive_or;
+
+  /* At first we compute the first level at which the two x-coordinates differ */
+  exclusive_or = t1->x ^ t2->x;
+  level = SC_LOG2_32 (exclusive_or) + 1;
+
+  T8_ASSERT (level <= T8_DLINE_MAXLEVEL);
+
+  /* Compute the new x-coordinate by zeroing out all higher levels */
+  r->x = t1->x & ~((1 << level) - 1);
+  r->level = SC_MIN (T8_DLINE_MAXLEVEL - level,
+                     SC_MIN (t1->level, t2->level));
+}
+
+int
+t8_dline_ancestor_id (const t8_dline_t * l, int level)
+{
+  t8_dline_coord_t    h;
+
+  T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
+  h = T8_DLINE_LEN (level);
+
+  if (level == 0) {
+    /* The root line as id 0 */
+    return 0;
+  }
+
+  /* If the h bit is set in l's x coordinate, then acestor id is 1
+   * else 0. */
+  return (l->x & h) != 0;
+}
+
+int
+t8_dline_face_parent_face (const t8_dline_t * l, int face)
+{
+  T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
+
+  /* If the child id is 0 and face is 0, then the parent's face is 0.
+   * If the child id is 1 and face is 1, then the parent's face is 1.
+   * In the other cases, this is an inner face. */
+  return t8_dline_child_id (l) == face ? face : -1;
 }
 
 int
@@ -149,6 +201,11 @@ t8_dline_is_familypv (const t8_dline_t * f[])
 int
 t8_dline_is_root_boundary (const t8_dline_t * p, int face)
 {
+  /* A line is at the boundary if and only if
+   * face = 0 and x = 0
+   * or
+   * face = 1 and x = Maximum x - length of line
+   */
   if (face == 0) {
     return p->x == 0;
   }
@@ -158,16 +215,16 @@ t8_dline_is_root_boundary (const t8_dline_t * p, int face)
 }
 
 int
-t8_dline_is_inside_root (const t8_dline_t * p)
+t8_dline_is_inside_root (const t8_dline_t * l)
 {
-  return (p->x >= 0 && p->x < T8_DLINE_ROOT_LEN);
+  return (l->x >= 0 && l->x < T8_DLINE_ROOT_LEN);
 }
 
 void
 t8_dline_init_linear_id (t8_dline_t * l, int level, uint64_t id)
 {
   T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
-  T8_ASSERT (0 <= id && id <= ((uint64_t) 1) << level);
+  T8_ASSERT (0 <= id && id < ((uint64_t) 1) << level);
 
   /* Set the level */
   l->level = level;
@@ -181,6 +238,7 @@ t8_dline_successor (const t8_dline_t * l, t8_dline_t * succ, int level)
   t8_dline_coord_t    h = 0;
 
   T8_ASSERT (1 <= level && level <= l->level);
+  T8_ASSERT (l->x < T8_DLINE_ROOT_LEN - T8_DLINE_LEN (level));
 
   /* To compute the successor we zero out all bits in places bigger
    * than level and then we add the length of a line of level. */

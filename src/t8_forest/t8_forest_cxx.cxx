@@ -701,6 +701,10 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid,
      * boundary element. */
     /* Compute the face of elem_tree at which the face connection is. */
     tree_face = ts->t8_element_tree_face (elem, face);
+    if (t8_cmesh_tree_face_is_boundary (cmesh, ltreeid, tree_face)) {
+      /* This face is a domain boundary. We do not need to continue */
+      return -1;
+    }
     /* Get the eclass scheme for the boundary */
     boundary_class = (t8_eclass_t) t8_eclass_face_types[eclass][tree_face];
     boundary_scheme = t8_forest_get_eclass_scheme (forest, boundary_class);

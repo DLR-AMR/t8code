@@ -90,33 +90,21 @@ public:
   }
 
   /** Compute the number of face of a given element. */
-  virtual int         t8_element_num_faces (const t8_element_t * elem)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+  virtual int         t8_element_num_faces (const t8_element_t * elem);
 
   /** Compute the maximum number of faces of a given element and all of its
    *  descendants.
    * \param [in] elem The element.
    * \return          The maximum number of faces of \a elem and its descendants.
    */
-  virtual int         t8_element_max_num_faces (const t8_element_t * elem)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+  virtual int         t8_element_max_num_faces (const t8_element_t * elem);
 
   /** Return the number of children of an element when it is refined. */
   virtual int         t8_element_num_children (const t8_element_t * elem);
 
   /** Return the number of children of an element's face when the element is refined. */
   virtual int         t8_element_num_face_children (const t8_element_t *
-                                                    elem, int face)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+                                                    elem, int face);
 
 /** Construct the child element of a given number. */
   virtual void        t8_element_child (const t8_element_t * elem,
@@ -131,11 +119,7 @@ public:
 
   /** Compute the ancestor id of an element */
   virtual int         t8_element_ancestor_id (const t8_element_t * elem,
-                                              int level)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+                                              int level);
 
   /** Return nonzero if collection of elements is a family */
   virtual int         t8_element_is_family (t8_element_t ** fam);
@@ -143,10 +127,7 @@ public:
 /** Construct the nearest common ancestor of two elements in the same tree. */
   virtual void        t8_element_nca (const t8_element_t * elem1,
                                       const t8_element_t * elem2,
-                                      t8_element_t * nca)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                      t8_element_t * nca);
 
   /** Compute the elmement class of the face of an element. */
   virtual t8_eclass_t t8_element_face_class (const t8_element_t * elem,
@@ -176,19 +157,11 @@ public:
    * of the parent of the element that matches the element's face. Or return -1 if
    * no face of the parent matches the face. */
   virtual int         t8_element_face_parent_face (const t8_element_t * elem,
-                                                   int face)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+                                                   int face);
 
   /** Return the tree face id given a boundary face. */
   virtual int         t8_element_tree_face (const t8_element_t * elem,
-                                            int face)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+                                            int face);
 
   /** Transform the coordinates of a line considered as boundary element
    *  in a tree-tree connection. */
@@ -227,19 +200,13 @@ public:
   virtual void        t8_element_first_descendant_face (const t8_element_t *
                                                         elem, int face,
                                                         t8_element_t *
-                                                        first_desc)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                        first_desc);
 
   /** Construct the last descendant of an element that touches a given face. */
   virtual void        t8_element_last_descendant_face (const t8_element_t *
                                                        elem, int face,
                                                        t8_element_t *
-                                                       last_desc)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                       last_desc);
 
 /** Construct all codimension-one boundary elements of a given element. */
   virtual void        t8_element_boundary (const t8_element_t * elem,
@@ -255,11 +222,7 @@ public:
    * \return              True if \a face is a subface of the element's root element.
    */
   virtual int         t8_element_is_root_boundary (const t8_element_t * elem,
-                                                   int face)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+                                                   int face);
 
   /** Construct the face neighbor of a given element if this face neighbor
    * is inside the root tree. Return 0 otherwise. */
@@ -267,10 +230,7 @@ public:
                                                        elem,
                                                        t8_element_t * neigh,
                                                        int face,
-                                                       int *neigh_face)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                       int *neigh_face);
 
 /** Initialize an element according to a given linear id */
   virtual void        t8_element_set_linear_id (t8_element_t * elem,
