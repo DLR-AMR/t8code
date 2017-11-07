@@ -776,9 +776,11 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
       }
 
       for (i = 1; i < num_corners; i++) {
-        /* centroid = SUM (coordinates[i]) */
-        t8_vec_axpyz (coordinates[i], coordinates[0], centroid, 1);
+        /* coordinates[0] = SUM (coordinates[i]) */
+        t8_vec_axpy (coordinates[i], coordinates[0], 1);
       }
+      /* centroid = coordinates[0] */
+      t8_vec_axb (coordinates[0], centroid, 1, 0);
       /* divide by num corners */
       t8_vec_ax (centroid, 1. / num_corners);
       return;
