@@ -313,7 +313,6 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
                        const double *tree_vertices, int face)
 {
   double              face_center[3];
-  int                 idim;
   double              u_at_face_center[3];
   double              normal[3], normal_times_u;
   double              area;
@@ -336,13 +335,15 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
   area =
     t8_forest_element_face_area (problem->forest, ltreeid, element_plus, face,
                                  tree_vertices);
+  t8_debugf ("[advect] face %i\n", face);
   t8_debugf ("[advect] normal %f %f %f\n", normal[0], normal[1], normal[2]);
 
   /* Compute the dot-product of u and the normal vector */
-  normal_times_u = 0;
-  for (idim = 0; idim < 3; idim++) {
-    normal_times_u += normal[idim] * u_at_face_center[idim];
-  }
+  normal_times_u = t8_vec_dot (normal, u_at_face_center);
+
+  /* Output, mainly for debugging */
+  t8_debugf ("[advect] face center %f %f %f\n", face_center[0],
+             face_center[1], face_center[2]);
   t8_debugf ("[advect] u %f %f %f\n", u_at_face_center[0],
              u_at_face_center[1], u_at_face_center[2]);
   t8_debugf ("[advect] norm t u: %f\n", normal_times_u);
