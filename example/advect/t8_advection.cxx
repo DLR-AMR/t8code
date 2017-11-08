@@ -144,7 +144,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
 {
   t8_advect_problem_t *problem;
   t8_advect_element_data_t *elem_data;
-  double              gradient, band_width;
+  double              gradient, band_width, elem_diam;
   double             *tree_vertices;
   int                 level, ielem, ret;
   t8_locidx_t         offset;
@@ -172,11 +172,12 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
 
 #if 1
   /* Refine if close to levelset, coarsen if not */
-  band_width = 1;
-  tree_vertices = t8_forest_get_tree_vertices (forest, ltree_id);
-  if (t8_common_within_levelset
-      (forest_from, ltree_id, elements[0], ts, tree_vertices, problem->phi_0,
-       band_width, problem->t, problem->udata_for_phi) == 0) {
+  band_width = 2;
+  tree_vertices = t8_forest_get_tree_vertices (forest_from, ltree_id);
+  elem_diam =
+    t8_forest_element_diam (forest_from, ltree_id, elements[0],
+                            tree_vertices);
+  if (fabs (elem_data->phi) > band_width * elem_diam) {
     /* coarsen if this is a family and level is not too small */
     return -(num_elements > 1 && level > problem->level);
   }
