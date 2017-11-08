@@ -29,6 +29,15 @@
 T8_EXTERN_C_BEGIN ();
 
 double
+t8_levelset_sphere (const double x[3], double t, void *data)
+{
+  t8_levelset_sphere_data_t *ls_data = (t8_levelset_sphere_data_t *) data;
+
+  T8_ASSERT (ls_data->radius > 0);
+  return t8_vec_dist (x, ls_data->M) - ls_data->radius;
+}
+
+double
 t8_scalar3d_constant_one (const double x[3], double t)
 {
   return 1;
@@ -111,7 +120,7 @@ t8_scalar3d_sint (const double x[3], double t)
 
 /* general level set function for a sphere with given midpoint and radius. */
 static double
-t8_levelset_sphere (const double x[3], double M[3], double radius)
+t8_scalar3d_sphere (const double x[3], double M[3], double radius)
 {
 
   /* Compute M - x */
@@ -125,7 +134,8 @@ t8_levelset_sphere (const double x[3], double M[3], double radius)
 double
 t8_scalar3d_sphere_75_radius (const double x[3], double t)
 {
-  return t8_vec_norm (x) - 0.75;
+  double              M[3] = { 0, 0, 0 };
+  return t8_scalar3d_sphere (x, M, 0.75);
 }
 
 double
@@ -133,7 +143,7 @@ t8_scalar3d_sphere_05_midpoint_375_radius (const double x[3], double t)
 {
   double              M[3] = { 0.5, 0.5, 0.5 };
 
-  return t8_levelset_sphere (x, M, 0.375);
+  return t8_scalar3d_sphere (x, M, 0.375);
 }
 
 double
@@ -141,7 +151,7 @@ t8_scalar3d_sphere_03_midpoint_25_radius (const double x[3], double t)
 {
   double              M[3] = { 0.3, 0.3, 0.3 };
 
-  return t8_levelset_sphere (x, M, 0.25);
+  return t8_scalar3d_sphere (x, M, 0.25);
 }
 
 double
@@ -149,7 +159,7 @@ t8_scalar3d_sphere_05_0z_midpoint_375_radius (const double x[3], double t)
 {
   double              M[3] = { 0.5, 0.5, 0 };
 
-  return t8_levelset_sphere (x, M, 0.375);
+  return t8_scalar3d_sphere (x, M, 0.375);
 }
 
 void

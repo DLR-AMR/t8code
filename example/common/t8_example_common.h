@@ -32,8 +32,8 @@
 #include <t8.h>
 #include <t8_forest.h>
 
-/** A levelset function in 3 space dimensions. */
-typedef double      (*t8_example_level_set_fn) (double, double, double,
+/** A levelset function in 3+1 space dimensions. */
+typedef double      (*t8_example_level_set_fn) (const double[3], double,
                                                 void *);
 
 /** Struct to handle refinement around a level-set function. */
@@ -42,6 +42,7 @@ typedef struct
   t8_example_level_set_fn L;  /**< The level set function. */
   void               *udata; /**< Data pointer that is passed to L */
   double              band_width; /**< Width of max_level elements around the zero-level set */
+  double              t;         /**< Time value passed to levelset function */
   int                 min_level; /**< The minimal refinement level. Elements with this level will not be coarsened. */
   int                 max_level; /**< The maximum refinement level. Elements with this level will not be refined. */
 } t8_example_level_set_struct_t;
@@ -59,6 +60,33 @@ typedef void        (*t8_flow_function_3d_fn) (const double x_in[3], double t,
 T8_EXTERN_C_BEGIN ();
 
 /* function declarations */
+
+/** Query whether a given element is within a prescribed distance to the zero level-set
+ *  of a level-set function.
+ * \param [in]      forest      The forest.
+ * \param [in]      ltreeid     A local tree in \a forest.
+ * \param [in]      element     An element of tree \a ltreeid in \a forest.
+ * \param [in]      ts          The scheme for \a element.
+ * \param [in]      tree_vertices Array of vertex coordinates for the tree.
+ * \param [in]      levelset    The level-set function.
+ * \param [in]      band_width  Check whether the element is within a band of
+ *                              \a band_width many elements of its size.
+ * \param [in]      t           Time value passed to \a levelset.
+ * \param [in]      udata       User data passed to \a levelset.
+ * \return                      True if the absolute value of \a levelset at \a element's midpoint
+ *                              is smaller than \a band_width * \a element's diameter.
+ *                              False otherwise.
+ *                              If \a band_width = 0 then the return value is true if and only if
+ *                              the zero level-set passes through \a element.
+ */
+int                 t8_common_within_levelset (t8_forest_t forest,
+                                               t8_locidx_t ltreeid,
+                                               t8_element_t * element,
+                                               t8_eclass_scheme_c * ts,
+                                               const double *tree_vertices,
+                                               t8_example_level_set_fn
+                                               levelset, double band_width,
+                                               double t, void *udata);
 
 /** Adapt a forest such that always the second child of the first
  * tree is refined and no other elements. This results in a highly
@@ -103,6 +131,21 @@ void                t8_common_midpoint (t8_forest_t forest,
                                         double elem_midpoint_f[3]);
 
 /** Real valued functions defined in t8_example_common_functions.h */
+
+typedef struct
+{
+  double              M[3];
+                 /**< midpoint */
+  double              radius;
+                   /**< radius */
+} t8_levelset_sphere_data_t;
+
+/** Distance to a sphere with given midpoint and radius.
+  * data is interpreted as t8_levelset_sphere_data_t.
+  * \return     dist (x,data->M) - data->radius
+  */
+double              t8_levelset_sphere (const double x[3], double t,
+                                        void *data);
 
 /** Returns always 1.
  * \return 1
