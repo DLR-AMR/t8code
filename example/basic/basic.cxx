@@ -21,13 +21,14 @@
 */
 
 #include <sc_refcount.h>
+#include <sc_shmem.h>
+#include <p4est_connectivity.h>
+#include <p8est_connectivity.h>
 #include <t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest.h>
 #include <t8_cmesh_vtk.h>
-#include <p4est_connectivity.h>
-#include <p8est_connectivity.h>
-#include <sc_shmem.h>
+#include <t8_vec.h>
 #include <example/common/t8_example_common.h>
 
 typedef struct
@@ -38,15 +39,12 @@ typedef struct
 
 /* Compute the distance to a sphere arount a mid_point with given radius. */
 static double
-t8_basic_level_set_sphere (double x, double y, double z, void *data)
+t8_basic_level_set_sphere (const double x[3], double t, void *data)
 {
   t8_basic_sphere_data_t *sdata = (t8_basic_sphere_data_t *) data;
-  double              dist;
   double             *M = sdata->mid_point;
 
-  dist = sqrt (pow (x - M[0], 2) + pow (y - M[1], 2) + pow (z - M[2], 2));
-
-  return dist - sdata->radius;
+  return t8_vec_dist (M, x) - sdata->radius;
 }
 
 #if 1
