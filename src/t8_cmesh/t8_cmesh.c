@@ -1872,7 +1872,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
                                   attr_vertices, 6);
       if (periodic) {
         t8_cmesh_set_join (cmesh, 0, 1, 0, 1, 0);
-        t8_cmesh_set_join (cmesh, 0, 1, 1, 0, 0);
+        t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 0);
         t8_cmesh_set_join (cmesh, 0, 0, 3, 4, 0);
         t8_cmesh_set_join (cmesh, 1, 1, 3, 4, 0);
       }
