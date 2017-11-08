@@ -813,7 +813,12 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, t8_eclass_t eclass,
     return cmesh_partition;
   }
   else {
-    return t8_cmesh_new_hypercube (eclass, comm, 0, 0, 1);
+    if (eclass == 7) {
+      return t8_cmesh_new_periodic_hybrid (comm);
+    }
+    else {
+      return t8_cmesh_new_hypercube (eclass, comm, 0, 0, 1);
+    }
   }
 #if 0
   /* Unit square with 6 trees (2 quads, 4 triangles) */
@@ -1314,7 +1319,8 @@ main (int argc, char *argv[])
                       " following elements:\n"
                       "\t\t1 - line\n\t\t2 - quad\n"
                       "\t\t3 - triangle\n\t\t4 - hexahedron\n"
-                      "\t\t5 - tetrahedron\n\t\t6 - prism");
+                      "\t\t5 - tetrahedron\n\t\t6 - prism\n"
+                      "\t\t7 - triangle/quad hybrid.");
   sc_options_add_string (opt, 'f', "mshfile", &mshfile, NULL,
                          "If specified, the cmesh is constructed from a .msh file with "
                          "the given prefix.\n\t\t\t\t     The files must end in .msh "
@@ -1350,8 +1356,7 @@ main (int argc, char *argv[])
   }
   else if (parsed >= 0 && 0 <= level && 0 <= reflevel && 0 <= vtk_freq
            && ((mshfile != NULL && 0 < dim && dim <= 3)
-               || (T8_ECLASS_LINE <= eclass_int
-                   && eclass_int <= T8_ECLASS_PRISM))) {
+               || (1 <= eclass_int && eclass_int <= 7))) {
     t8_cmesh_t          cmesh;
     if (mshfile == NULL) {
       dim = t8_eclass_to_dimension[eclass_int];
