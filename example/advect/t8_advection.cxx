@@ -40,7 +40,8 @@
 typedef struct
 {
   t8_flow_function_3d_fn u; /**< Fluid field */
-  t8_scalar_function_3d_fn phi_0; /**< Initial condition for phi */
+  t8_example_level_set_fn phi_0; /**< Initial condition for phi */
+  void               *udata_for_phi; /**< User data passed to phi */
   t8_forest_t         forest; /**< The forest in use */
   t8_forest_t         forest_adapt; /**< The forest after adaptation */
   sc_array           *element_data; /**< Array of type t8_advect_element_data_t of length
@@ -98,16 +99,6 @@ t8_advect_adapt_cfl (t8_advect_problem_t * problem,
   return 0;
 }
 
-/* Refine if close to the zero level-set of phi.
- * Coarsen if outside */
-static int
-t8_advect_adapt_zero_lv (t8_advect_element_data_t * elem_data)
-{
-  double              eps = 0.1;
-
-  return fabs (elem_data->phi) < eps ? 1 : -1;
-}
-
 /* estimate the absolute value of the gradient of phi at an element.
  * We compute the gradient as finite difference with the left and right
  * neighbor element and take the maximum (absolute value) of both values */
@@ -153,7 +144,8 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
 {
   t8_advect_problem_t *problem;
   t8_advect_element_data_t *elem_data;
-  double              gradient;
+  double              gradient, band_width;
+  double             *tree_vertices;
   int                 level, ielem, ret;
   t8_locidx_t         offset;
 
@@ -179,7 +171,12 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
     t8_sc_array_index_locidx (problem->element_data, lelement_id + offset);
 
 #if 1
-  if (t8_advect_adapt_zero_lv (elem_data) < 0) {
+  /* Refine if close to levelset, coarsen if not */
+  band_width = 1;
+  tree_vertices = t8_forest_get_tree_vertices (forest, ltree_id);
+  if (t8_common_within_levelset
+      (forest_from, ltree_id, elements[0], ts, tree_vertices, problem->phi_0,
+       band_width, problem->t, problem->udata_for_phi) == 0) {
     /* coarsen if this is a family and level is not too small */
     return -(num_elements > 1 && level > problem->level);
   }
@@ -232,7 +229,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
  * given analytical function at time problem->t */
 static double
 t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
-                       t8_scalar_function_3d_fn analytical_sol)
+                       t8_example_level_set_fn analytical_sol)
 {
   t8_locidx_t         num_local_elements, ielem;
   t8_advect_element_data_t *elem_data;
@@ -249,11 +246,14 @@ t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
      * minus the solution at this midpoint */
     el_error =
       fabs ((elem_data->phi -
-             analytical_sol (elem_data->midpoint, problem->t)));
+             analytical_sol (elem_data->midpoint, problem->t,
+                             problem->udata_for_phi)));
     error[0] = SC_MAX (error[0], el_error);
     /* Compute the l_infty norm of the analytical solution */
     error[1] =
-      SC_MAX (error[1], analytical_sol (elem_data->midpoint, problem->t));
+      SC_MAX (error[1],
+              analytical_sol (elem_data->midpoint, problem->t,
+                              problem->udata_for_phi));
   }
   /* Compute the maximum of the error among all processes */
   sc_MPI_Allreduce (&error, &global_error, 2, sc_MPI_DOUBLE, sc_MPI_MAX,
@@ -843,8 +843,8 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, int dim, int type,
 
 static t8_advect_problem_t *
 t8_advect_problem_init (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
-                        t8_scalar_function_3d_fn
-                        phi_0, int level,
+                        t8_example_level_set_fn
+                        phi_0, void *ls_data, int level,
                         int maxlevel, double T, double cfl,
                         sc_MPI_Comm comm, int dim)
 {
@@ -858,6 +858,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   /* Fill problem parameters */
   problem->u = u;               /* flow field */
   problem->phi_0 = phi_0;       /* initial condition */
+  problem->udata_for_phi = ls_data;     /* user data pointer passed to phi */
   problem->level = level;       /* minimum refinement level */
   problem->maxlevel = maxlevel; /* maximum allowed refinement level */
   problem->t = 0;               /* start time */
@@ -947,7 +948,8 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
       max_speed = SC_MAX (max_speed, t8_vec_norm (u));
 
       /* Set the initial condition */
-      elem_data->phi = problem->phi_0 (elem_data->midpoint, 0);
+      elem_data->phi =
+        problem->phi_0 (elem_data->midpoint, 0, problem->udata_for_phi);
       /* Set the level */
       elem_data->level = ts->t8_element_level (element);
       /* Set the faces */
@@ -969,15 +971,15 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   }
   /* Exchange ghost values */
   t8_forest_ghost_exchange_data (problem->forest, problem->element_data);
-  if (problem->delta_t <= 0) {
-    /* Compute the timestep, this has to be done globally */
-    T8_ASSERT (min_diam > 0);   /* TODO: handle empty process? */
-    delta_t = problem->cfl * min_diam / max_speed;
-    t8_global_essentialf ("[advect] min diam %g max flow %g\n", min_diam,
-                          max_speed);
-    sc_MPI_Allreduce (&delta_t, &problem->delta_t, 1, sc_MPI_DOUBLE,
-                      sc_MPI_MAX, problem->comm);
-  }
+
+/* Compute the timestep, this has to be done globally */
+  T8_ASSERT (min_diam > 0);     /* TODO: handle empty process? */
+  T8_ASSERT (max_speed > 0);
+  delta_t = problem->cfl * min_diam / max_speed;
+  t8_global_essentialf ("[advect] min diam %g max flow %g\n", min_diam,
+                        max_speed);
+  sc_MPI_Allreduce (&delta_t, &problem->delta_t, 1, sc_MPI_DOUBLE,
+                    sc_MPI_MAX, problem->comm);
 }
 
 static void
@@ -1006,7 +1008,8 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
 
     u_and_phi_array[0][ielem] = elem_data->phi;
     u_and_phi_array[1][ielem] =
-      problem->phi_0 (elem_data->midpoint, problem->t);
+      problem->phi_0 (elem_data->midpoint, problem->t,
+                      problem->udata_for_phi);
     problem->u (elem_data->midpoint, problem->t, u_temp);
     for (idim = 0; idim < 3; idim++) {
       u_and_phi_array[2][3 * ielem + idim] = u_temp[idim];
@@ -1094,7 +1097,7 @@ t8_advect_problem_destroy (t8_advect_problem_t ** pproblem)
 
 static void
 t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
-                 t8_scalar_function_3d_fn phi_0,
+                 t8_example_level_set_fn phi_0, void *ls_data,
                  int level, int maxlevel, double T, double cfl,
                  sc_MPI_Comm comm, int adapt, int no_vtk,
                  int vtk_freq, int dim)
@@ -1117,8 +1120,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   /* Initialize problem */
 
   problem =
-    t8_advect_problem_init (cmesh, u, phi_0, level, maxlevel, T, cfl, comm,
-                            dim);
+    t8_advect_problem_init (cmesh, u, phi_0, ls_data, level, maxlevel, T, cfl,
+                            comm, dim);
   t8_advect_problem_init_elements (problem);
 
   if (adapt) {
@@ -1295,6 +1298,7 @@ main (int argc, char *argv[])
   int                 level, reflevel, dim, cmesh_type;
   int                 parsed, helpme, no_vtk, vtk_freq, adapt;
   double              T, cfl;
+  t8_levelset_sphere_data_t ls_data = { {.3, .3, .3}, .25 };
 
   /* brief help message */
 
@@ -1375,7 +1379,7 @@ main (int argc, char *argv[])
     /* Computation */
     t8_advect_solve (cmesh, t8_flow_incomp_cube_flow,
                      //t8_sphere_05_0z_midpoint_375_radius,
-                     t8_scalar3d_sphere_03_midpoint_25_radius,
+                     t8_levelset_sphere, &ls_data,
                      level,
                      level + reflevel, T, cfl, sc_MPI_COMM_WORLD, adapt,
                      no_vtk, vtk_freq, dim);
