@@ -390,7 +390,6 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
   t8_advect_element_data_t child_data, *neigh_data;
   double              flux = 0;
 
-  T8_ASSERT (el_hang->num_neighbors[face] == 2);
   /* Get the eclass and the scheme for the element */
   eclass = t8_forest_get_tree_class (problem->forest, ltreeid);
   ts = t8_forest_get_eclass_scheme (problem->forest, eclass);
@@ -1235,7 +1234,6 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                                        itree, elem, tree_vertices, iface);
             }
             else if (elem_data->num_neighbors[iface] > 1) {
-              T8_ASSERT (elem_data->num_neighbors[iface] == 2);
               flux[iface] =
                 t8_advect_flux_upwind_hanging (problem, elem_data, itree,
                                                elem, tree_vertices, iface);
