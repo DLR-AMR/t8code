@@ -202,6 +202,8 @@ t8_flow_rotation_2d (const double x_in[3], double t, double x_out[3])
   x_out[0] = y;
   x_out[1] = -x;
   x_out[2] = 0;
+
+  t8_vec_ax (x_out, cos (M_PI * t / 4.));
 }
 
 void
@@ -241,9 +243,7 @@ t8_flow_incomp_cube_flow (const double x[3], double t, double x_out[3])
   x_out[1] = -1. * f (x[1]) * df (x[0]);
   x_out[2] = f (x[2]) * df (x[0]);
 
-  x_out[0] *= cos (M_PI * t / 4);
-  x_out[1] *= cos (M_PI * t / 4);
-  x_out[2] *= cos (M_PI * t / 4);
+  t8_vec_ax (x_out, cos (M_PI * t / 4.));
 }
 
 /* The following functions model a solution to the stokes equation on
