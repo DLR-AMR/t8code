@@ -1364,7 +1364,7 @@ main (int argc, char *argv[])
 
     cmesh =
       t8_advect_create_cmesh (sc_MPI_COMM_WORLD, (t8_eclass_t) eclass_int,
-                              mshfile, dim, level);
+                              mshfile, level, dim);
     /* Computation */
     t8_advect_solve (cmesh, t8_flow_incomp_cube_flow,
                      //t8_sphere_05_0z_midpoint_375_radius,
