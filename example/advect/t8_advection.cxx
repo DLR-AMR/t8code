@@ -330,12 +330,12 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
   /* Compute u at the face center. */
   problem->u (face_center, problem->t, u_at_face_center);
   /* Compute the normal of the element at this face */
-  t8_forest_element_face_normal (problem->forest, ltreeid, element_plus, face,
-                                 tree_vertices, normal);
+  t8_forest_element_face_normal (problem->forest, ltreeid, element_plus,
+                                 face, tree_vertices, normal);
   /* Compute the area of the face */
   area =
-    t8_forest_element_face_area (problem->forest, ltreeid, element_plus, face,
-                                 tree_vertices);
+    t8_forest_element_face_area (problem->forest, ltreeid, element_plus,
+                                 face, tree_vertices);
   t8_debugf ("[advect] face %i\n", face);
   t8_debugf ("[advect] normal %f %f %f\n", normal[0], normal[1], normal[2]);
 
@@ -555,7 +555,8 @@ t8_advect_advance_element (t8_advect_problem_t * problem,
 static void
 t8_advect_compute_element_data (t8_advect_problem_t * problem,
                                 t8_advect_element_data_t * elem_data,
-                                t8_element_t * element, t8_locidx_t ltreeid,
+                                t8_element_t * element,
+                                t8_locidx_t ltreeid,
                                 t8_eclass_scheme_c * ts,
                                 const double *tree_vertices)
 {
@@ -821,11 +822,13 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, t8_eclass_t eclass,
 }
 
 static t8_advect_problem_t *
-t8_advect_problem_init (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
+t8_advect_problem_init (t8_cmesh_t cmesh,
+                        t8_flow_function_3d_fn
+                        u,
                         t8_example_level_set_fn
-                        phi_0, void *ls_data, int level,
-                        int maxlevel, double T, double cfl,
-                        sc_MPI_Comm comm, int dim)
+                        phi_0, void *ls_data,
+                        int level, int maxlevel,
+                        double T, double cfl, sc_MPI_Comm comm, int dim)
 {
   t8_advect_problem_t *problem;
   t8_scheme_cxx_t    *default_scheme;
@@ -1099,8 +1102,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   /* Initialize problem */
 
   problem =
-    t8_advect_problem_init (cmesh, u, phi_0, ls_data, level, maxlevel, T, cfl,
-                            comm, dim);
+    t8_advect_problem_init (cmesh, u, phi_0, ls_data, level, maxlevel, T,
+                            cfl, comm, dim);
   t8_advect_problem_init_elements (problem);
 
   if (adapt) {
@@ -1224,8 +1227,9 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
               /* This element is at the domain boundary */
               /* We enforce outflow boundary conditions */
               T8_ASSERT (elem_data->num_neighbors[iface] <= 0);
-              t8_advect_set_boundary_data (problem, elem_data, &boundary_data,
-                                           itree, elem, tree_vertices, iface);
+              t8_advect_set_boundary_data (problem, elem_data,
+                                           &boundary_data, itree, elem,
+                                           tree_vertices, iface);
               flux[iface] =
                 t8_advect_flux_upwind (problem, elem_data, &boundary_data,
                                        itree, elem, tree_vertices, iface);
