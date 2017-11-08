@@ -794,51 +794,29 @@ t8_advect_problem_partition (t8_advect_problem_t * problem)
 }
 
 static              t8_cmesh_t
-t8_advect_create_cmesh (sc_MPI_Comm comm, int dim, int type,
-                        const char *mshfile, int level)
+t8_advect_create_cmesh (sc_MPI_Comm comm, t8_eclass_t eclass,
+                        const char *mshfile, int level, int dim)
 {
-  t8_eclass_t         eclass = T8_ECLASS_COUNT;
-  switch (type) {
-  case 0:                      /* Unit line/square/cube with 1 tree (line/quad/hex) */
-    if (dim == 1) {
-      eclass = T8_ECLASS_LINE;
-    }
-    else
-      eclass = dim == 2 ? T8_ECLASS_QUAD : T8_ECLASS_HEX;
-    return t8_cmesh_new_hypercube (eclass, comm, 0, 0, 1);
-    break;
-  case 1:                      /* Unit line/square/cube with lines/tris/tets */
-    if (dim == 1) {
-      eclass = T8_ECLASS_LINE;
-    }
-    else
-      eclass = dim == 2 ? T8_ECLASS_TRIANGLE : T8_ECLASS_TET;
-    return t8_cmesh_new_hypercube (eclass, comm, 0, 0, 1);
-    break;
-  case 2:                      /* Unit square with 6 trees (2 quads, 4 triangles) */
-    return t8_cmesh_new_periodic_hybrid (comm);
-    break;
-  case 3:                      /* Load from .msh file and partition */
-    {
-      t8_cmesh_t          cmesh, cmesh_partition;
-      T8_ASSERT (mshfile != NULL);
+  if (mshfile != NULL) {
+    /* Load from .msh file and partition */
+    t8_cmesh_t          cmesh, cmesh_partition;
+    T8_ASSERT (mshfile != NULL);
 
-      cmesh = t8_cmesh_from_msh_file (mshfile, 1, comm, dim, 0);
-      /* partition this cmesh according to the initial refinement level */
-      t8_cmesh_init (&cmesh_partition);
-      t8_cmesh_set_partition_uniform (cmesh_partition, level);
-      t8_cmesh_set_derive (cmesh_partition, cmesh);
-      t8_cmesh_commit (cmesh_partition, comm);
-      return cmesh_partition;
-    }
-    break;
-  case 4:
-    T8_ASSERT (dim == 3);
-    return t8_cmesh_new_hypercube (T8_ECLASS_PRISM, comm, 0, 0, 1);
-    break;
-  default:
-    SC_ABORT_NOT_REACHED ();
+    cmesh = t8_cmesh_from_msh_file (mshfile, 1, comm, dim, 0);
+    /* partition this cmesh according to the initial refinement level */
+    t8_cmesh_init (&cmesh_partition);
+    t8_cmesh_set_partition_uniform (cmesh_partition, level);
+    t8_cmesh_set_derive (cmesh_partition, cmesh);
+    t8_cmesh_commit (cmesh_partition, comm);
+    return cmesh_partition;
   }
+  else {
+    return t8_cmesh_new_hypercube (eclass, comm, 0, 0, 1);
+  }
+#if 0
+  /* Unit square with 6 trees (2 quads, 4 triangles) */
+  return t8_cmesh_new_periodic_hybrid (comm);
+#endif
 }
 
 static t8_advect_problem_t *
@@ -1295,7 +1273,7 @@ main (int argc, char *argv[])
   sc_options_t       *opt;
   char                help[BUFSIZ];
   const char         *mshfile = NULL;
-  int                 level, reflevel, dim, cmesh_type;
+  int                 level, reflevel, dim, eclass_int;
   int                 parsed, helpme, no_vtk, vtk_freq, adapt;
   double              T, cfl;
   t8_levelset_sphere_data_t ls_data = { {.3, .3, .3}, .25 };
@@ -1322,30 +1300,28 @@ main (int argc, char *argv[])
 
   sc_options_add_switch (opt, 'h', "help", &helpme,
                          "Display a short help message.");
-
-  sc_options_add_int (opt, 'd', "dim", &dim, 1,
-                      "The dimension. 1 <= d <= 2.");
-
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The minimum refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 0,
                       "The maximum number of refinement levels of the mesh.");
-  sc_options_add_int (opt, 'c', "cmesh", &cmesh_type, 0,
-                      "Control the coarse mesh that is used.\n"
-                      "\t\t0 - Unit cube of the specified dimension with either lines/quads/hexes.\n"
-                      "\t\t1 - Unit cube of the specified dimension with either lines/triangles/tets.\n"
-                      "\t\t2 - Unit square hybrid with 4 triangles and 2 quads (sets dim=2).\n"
-                      "\t\t3 - Read a .msh file. See -f.");
+  sc_options_add_int (opt, 'e', "elements", &eclass_int, -1,
+                      "If specified the coarse mesh is a hypercube\n\t\t\t\t     consisting of the"
+                      " following elements:\n"
+                      "\t\t1 - line\n\t\t2 - quad\n"
+                      "\t\t3 - triangle\n\t\t4 - hexahedron\n"
+                      "\t\t5 - tetrahedron\n\t\t6 - prism");
   sc_options_add_string (opt, 'f', "mshfile", &mshfile, NULL,
                          "If specified, the cmesh is constructed from a .msh file with "
-                         "the given prefix. The files must end in .msh and be "
-                         "created with gmsh.");
+                         "the given prefix.\n\t\t\t\t     The files must end in .msh "
+                         "and be in ASCII format version 2. -d must be specified.");
+  sc_options_add_int (opt, 'd', "dim", &dim, -1,
+                      "In combination with -f: The dimension of the mesh. 1 <= d <= 3.");
 
   sc_options_add_double (opt, 'T', "end-time", &T, 1,
                          "The duration of the simulation. Default: 1");
 
   sc_options_add_double (opt, 'C', "CFL", &cfl,
-                         1, "The cfl number to use. Disables -t. Default: 1");
+                         1, "The cfl number to use. Default: 1");
 
   sc_options_add_switch (opt, 'a', "adapt", &adapt,
                          "If activated, an adaptive mesh is used instead of "
@@ -1353,12 +1329,13 @@ main (int argc, char *argv[])
 
   sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 1,
                       "How often the vtk output is produced "
-                      "(after how many time steps). "
+                      "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
 
   sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk,
                          "Suppress vtk output. "
                          "Overwrites any -v setting.");
+
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
@@ -1366,16 +1343,18 @@ main (int argc, char *argv[])
     t8_global_essentialf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed >= 0 && 0 <= level && 0 <= reflevel && 0 <= vtk_freq) {
+  else if (parsed >= 0 && 0 <= level && 0 <= reflevel && 0 <= vtk_freq
+           && ((mshfile != NULL && 0 < dim && dim <= 3)
+               || (T8_ECLASS_LINE <= eclass_int
+                   && eclass_int <= T8_ECLASS_PRISM))) {
     t8_cmesh_t          cmesh;
-    if (cmesh_type == 2) {
-      dim = 2;
+    if (mshfile == NULL) {
+      dim = t8_eclass_to_dimension[eclass_int];
     }
 
     cmesh =
-      t8_advect_create_cmesh (sc_MPI_COMM_WORLD, dim, cmesh_type, mshfile,
-                              level);
-
+      t8_advect_create_cmesh (sc_MPI_COMM_WORLD, (t8_eclass_t) eclass_int,
+                              mshfile, dim, level);
     /* Computation */
     t8_advect_solve (cmesh, t8_flow_incomp_cube_flow,
                      //t8_sphere_05_0z_midpoint_375_radius,
