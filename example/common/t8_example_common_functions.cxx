@@ -29,25 +29,25 @@
 T8_EXTERN_C_BEGIN ();
 
 double
-t8_constant_one (const double x[3], double t)
+t8_scalar3d_constant_one (const double x[3], double t)
 {
   return 1;
 }
 
 double
-t8_constant_zero (const double x[3], double t)
+t8_scalar3d_constant_zero (const double x[3], double t)
 {
   return 0;
 }
 
 double
-t8_project_x (const double x[3], double t)
+t8_scalar3d_project_x (const double x[3], double t)
 {
   return x[0];
 }
 
 double
-t8_exp_distribution (const double x[3], double t)
+t8_scalar3d_exp_distribution (const double x[3], double t)
 {
   double              dummy, X;
 
@@ -60,7 +60,7 @@ t8_exp_distribution (const double x[3], double t)
 
 /* This function is =1 if 0.25 <= x <= 0.75 and 0 else */
 double
-t8_step_function (const double x[3], double t)
+t8_scalar3d_step_function (const double x[3], double t)
 {
   return 0.25 <= x[0] && x[0] <= 0.75;
 }
@@ -69,7 +69,7 @@ t8_step_function (const double x[3], double t)
  * it is 0 outside of 0.25-eps and 0.75+eps,
  * it interpolates linearly in between. */
 double
-t8_almost_step_function (const double x[3], double t)
+t8_scalar3d_almost_step_function (const double x[3], double t)
 {
   double              eps = 0.1;
 
@@ -86,74 +86,87 @@ t8_almost_step_function (const double x[3], double t)
 }
 
 double
-t8_sinx (const double x[3], double t)
+t8_scalar3d_sinx (const double x[3], double t)
 {
   return sin (2 * M_PI * x[0]) + 1;
 }
 
 double
-t8_sinx_cosy (const double x[3], double t)
+t8_scalar3d_sinx_cosy (const double x[3], double t)
 {
   return sin (2 * M_PI * x[0]) * cos (2 * M_PI * x[1]);
 }
 
 double
-t8_sinx_cosy_z (const double x[3], double t)
+t8_scalar3d_sinx_cosy_z (const double x[3], double t)
 {
   return 10 * sin (2 * M_PI * x[0]) * cos (2 * M_PI * x[1]) * x[3];
 }
 
 double
-t8_sint (const double x[3], double t)
+t8_scalar3d_sint (const double x[3], double t)
 {
   return sin (2 * M_PI * t);
 }
 
+/* general level set function for a sphere with given midpoint and radius. */
+static double
+t8_levelset_sphere (const double x[3], double M[3], double radius)
+{
+
+  /* Compute M - x */
+  t8_vec_axpy (x, M, -1);
+
+  /* return |M-x| - radius */
+
+  return t8_vec_norm (M) - radius;
+}
+
 double
-t8_sphere_75_radius (const double x[3], double t)
+t8_scalar3d_sphere_75_radius (const double x[3], double t)
 {
   return t8_vec_norm (x) - 0.75;
 }
 
 double
-t8_sphere_05_midpoint_375_radius (const double x[3], double t)
+t8_scalar3d_sphere_05_midpoint_375_radius (const double x[3], double t)
 {
   double              M[3] = { 0.5, 0.5, 0.5 };
 
-  /* Compute M - x */
-  t8_vec_axpy (x, M, -1);
-
-  /* return |M-x| - 0.375 */
-  return t8_vec_norm (M) - 0.375;
+  return t8_levelset_sphere (x, M, 0.375);
 }
 
 double
-t8_sphere_05_0z_midpoint_375_radius (const double x[3], double t)
+t8_scalar3d_sphere_03_midpoint_25_radius (const double x[3], double t)
+{
+  double              M[3] = { 0.3, 0.3, 0.3 };
+
+  return t8_levelset_sphere (x, M, 0.25);
+}
+
+double
+t8_scalar3d_sphere_05_0z_midpoint_375_radius (const double x[3], double t)
 {
   double              M[3] = { 0.5, 0.5, 0 };
 
-  /* Compute M - x */
-  t8_vec_axpy (x, M, -1);
-
-  /* return |M-x| - 0.375 */
-  return t8_vec_norm (M) - 0.375;
+  return t8_levelset_sphere (x, M, 0.375);
 }
 
 void
-t8_constant_one_vec (const double x[3], double t, double x_out[3])
+t8_flow_constant_one_vec (const double x[3], double t, double x_out[3])
 {
   x_out[0] = x_out[1] = x_out[2] = 1;
 }
 
 void
-t8_constant_one_x_vec (const double x[3], double t, double x_out[3])
+t8_flow_constant_one_x_vec (const double x[3], double t, double x_out[3])
 {
   x_out[0] = 1;
   x_out[1] = x_out[2] = 0;
 }
 
 void
-t8_constant_one_xy_vec (const double x[3], double t, double x_out[3])
+t8_flow_constant_one_xy_vec (const double x[3], double t, double x_out[3])
 {
   x_out[0] = 1;
   x_out[1] = 0.8;
@@ -161,7 +174,7 @@ t8_constant_one_xy_vec (const double x[3], double t, double x_out[3])
 }
 
 void
-t8_constant_one_xyz_vec (const double x[3], double t, double x_out[3])
+t8_flow_constant_one_xyz_vec (const double x[3], double t, double x_out[3])
 {
   x_out[0] = 1;
   x_out[1] = 0.8;
@@ -169,7 +182,7 @@ t8_constant_one_xyz_vec (const double x[3], double t, double x_out[3])
 }
 
 void
-t8_rotation_2d (const double x_in[3], double t, double x_out[3])
+t8_flow_rotation_2d (const double x_in[3], double t, double x_out[3])
 {
   double              x = x_in[0], y = x_in[1];
 
@@ -182,7 +195,7 @@ t8_rotation_2d (const double x_in[3], double t, double x_out[3])
 }
 
 void
-t8_compressible (const double x_in[3], double t, double x_out[3])
+t8_flow_compressible (const double x_in[3], double t, double x_out[3])
 {
   x_out[0] = (1. / 2 - x_in[0]);
   x_out[1] = 0;
@@ -209,7 +222,7 @@ t8_incomp_cube_df (double x)
 }
 
 void
-t8_incomp_cube_flow (const double x[3], double t, double x_out[3])
+t8_flow_incomp_cube_flow (const double x[3], double t, double x_out[3])
 {
   double              (*f) (double) = t8_incomp_cube_f;
   double              (*df) (double) = t8_incomp_cube_df;
@@ -231,8 +244,8 @@ t8_incomp_cube_flow (const double x[3], double t, double x_out[3])
  */
 
 static double
-t8_stokes_sphere_alpha_beta (double R_1, double R_2, double gamma, int m,
-                             double *alpha, double *beta)
+t8_flow_stokes_sphere_alpha_beta (double R_1, double R_2, double gamma, int m,
+                                  double *alpha, double *beta)
 {
   /* We define two constants alpha and beta */
   *alpha =
@@ -247,8 +260,8 @@ t8_stokes_sphere_alpha_beta (double R_1, double R_2, double gamma, int m,
 /* A component of the flow that depends on the inner radius R_2, the outer radius R_1,
  * a constant gamma, and a control parameter m with m != -1, m != -4 */
 static double
-t8_stokes_sphere_g_component (double radius, double alpha, double beta,
-                              double gamma, int m)
+t8_flow_stokes_sphere_g_component (double radius, double alpha, double beta,
+                                   double gamma, int m)
 {
   T8_ASSERT (m != -1 && m != -4);
 
@@ -257,16 +270,17 @@ t8_stokes_sphere_g_component (double radius, double alpha, double beta,
 }
 
 static double
-t8_stokes_sphere_f_component (double radius, double alpha, double beta, int m)
+t8_flow_stokes_sphere_f_component (double radius, double alpha, double beta,
+                                   int m)
 {
   return alpha * pow (radius, -m - 3) + beta * radius;
 }
 
 void
-t8_stokes_flow_sphere_shell (const double x[3], double t, double x_out[])
+t8_flow_stokes_flow_sphere_shell (const double x[3], double t, double x_out[])
 {
   double              radius;
-  double              theta, phi;
+  double              theta;
   double              alpha, beta;
   double              vel_r;
   double              vel_theta;
@@ -276,7 +290,10 @@ t8_stokes_flow_sphere_shell (const double x[3], double t, double x_out[])
   /* Compute spherical coordinates */
   radius = t8_vec_norm (x);
   theta = acos (x[2] / radius);
+#if 0
+  /* Phi component, not used */
   phi = atan2 (x[1], x[0]);
+#endif
 
   if (radius < r_1) {
     /* If there are points in the geometry that lie in the inside radius,
@@ -286,13 +303,13 @@ t8_stokes_flow_sphere_shell (const double x[3], double t, double x_out[])
   }
 
   /* Compute alpha and beta */
-  t8_stokes_sphere_alpha_beta (r_1, r_2, gamma, m, &alpha, &beta);
+  t8_flow_stokes_sphere_alpha_beta (r_1, r_2, gamma, m, &alpha, &beta);
   /* Compute radial velocity and theta velocity */
   vel_r =
-    t8_stokes_sphere_g_component (radius, alpha, beta, gamma,
-                                  m) * cos (theta);
+    t8_flow_stokes_sphere_g_component (radius, alpha, beta, gamma,
+                                       m) * cos (theta);
   vel_theta =
-    t8_stokes_sphere_f_component (radius, alpha, beta, m) * sin (theta);
+    t8_flow_stokes_sphere_f_component (radius, alpha, beta, m) * sin (theta);
   /* Set phi velocity */
   vel_phi = 0;
 

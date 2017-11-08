@@ -107,98 +107,110 @@ void                t8_common_midpoint (t8_forest_t forest,
 /** Returns always 1.
  * \return 1
  */
-double              t8_constant_one (const double x[3], double t);
+double              t8_scalar3d_constant_one (const double x[3], double t);
 
 /** Returns always 0.
  * \return 0
  */
-double              t8_constant_zero (const double x[3], double t);
+double              t8_scalar3d_constant_zero (const double x[3], double t);
 
 /** Return the x-coordinate of the input.
  * \return x[0]
  */
-double              t8_project_x (const double x[3], double t);
+double              t8_scalar3d_project_x (const double x[3], double t);
 
 /** This function is =1 if the 0.25 <= x <= 0.75 and 0 else. */
-double              t8_step_function (const double x[3], double t);
+double              t8_scalar3d_step_function (const double x[3], double t);
 
 /** This function is =1 if 0.25 <= x <= 0.75,
  * it is 0 outside of 0.25-eps and 0.75+eps,
  * it interpolates linearly in between. eps = 0.1 **/
-double              t8_almost_step_function (const double x[3], double t);
+double              t8_scalar3d_almost_step_function (const double x[3],
+                                                      double t);
 
 /** A 1-d Bell-curve centered around 0.5 */
-double              t8_exp_distribution (const double x[3], double t);
+double              t8_scalar3d_exp_distribution (const double x[3],
+                                                  double t);
 
 /** Sinus of 2pi x_0
  * \return sin (2pi x[0])
  */
-double              t8_sinx (const double x[3], double t);
+double              t8_scalar3d_sinx (const double x[3], double t);
 
 /** Sinus of x times cosinus of y
  * \return sin (2pi x[0]) * cos (2pi x[1])
  */
-double              t8_sinx_cosy (const double x[3], double t);
+double              t8_scalar3d_sinx_cosy (const double x[3], double t);
 
 /** Sinus of 10 * x times cosinus of y times z
  * \return 10 * sin (2pi x[0]) * cos (2pi x[1]) * x[3]
  */
-double              t8_sinx_cosy_z (const double x[3], double t);
+double              t8_scalar3d_sinx_cosy_z (const double x[3], double t);
 
 /** Sinus of t
  * \return sin (2pi t)
  */
-double              t8_sint (const double x[3], double t);
+double              t8_scalar3d_sint (const double x[3], double t);
 
 /** Level-set function of a sphere around origin with radius 0.75
  * \return |x| - 0.75
  */
-double              t8_sphere_75_radius (const double x[3], double t);
+double              t8_scalar3d_sphere_75_radius (const double x[3],
+                                                  double t);
 
 /** Level-set function of a sphere around M = (0.5,0.5,0.5) with radius 0.375
  * \return |x - M| - 0.375
  */
-double              t8_sphere_05_midpoint_375_radius (const double x[3],
-                                                      double t);
+double              t8_scalar3d_sphere_05_midpoint_375_radius (const double
+                                                               x[3],
+                                                               double t);
+
+/** Level-set function of a sphere around M = (0.3,0.3,0.3) with radius 0.25
+ * \return |x - M| - 0.25
+ */
+double              t8_scalar3d_sphere_03_midpoint_25_radius (const double
+                                                              x[3], double t);
 
 /** Level-set function of a sphere around M = (0.5,0.5,0) with radius 0.375
  * \return |x - M| - 0.375
  */
-double              t8_sphere_05_0z_midpoint_375_radius (const double x[3],
-                                                         double t);
+double              t8_scalar3d_sphere_05_0z_midpoint_375_radius (const double
+                                                                  x[3],
+                                                                  double t);
 /** Flow functions */
 
 /** Returns always 1 in each coordinate.
  */
-void                t8_constant_one_vec (const double x[3], double t,
-                                         double x_out[3]);
+void                t8_flow_constant_one_vec (const double x[3], double t,
+                                              double x_out[3]);
 
 /** Sets the first coordinate to 1, all other to 0. */
-void                t8_constant_one_x_vec (const double x[3], double t,
-                                           double x_out[3]);
+void                t8_flow_constant_one_x_vec (const double x[3], double t,
+                                                double x_out[3]);
 
 /** Sets the first and second coordinate to 1, the third to 0. */
-void                t8_constant_one_xy_vec (const double x[3], double t,
-                                            double x_out[3]);
+void                t8_flow_constant_one_xy_vec (const double x[3], double t,
+                                                 double x_out[3]);
 
 /** Sets all coordinates to a nonzero constant. */
-void                t8_constant_one_xyz_vec (const double x[3], double t,
-                                             double x_out[3]);
+void                t8_flow_constant_one_xyz_vec (const double x[3], double t,
+                                                  double x_out[3]);
 
 /** Transform the unit square to [-0.5,0.5]^2 and computes
  * x = y, y = -x
  */
-void                t8_rotation_2d (const double x[3], double t,
-                                    double x_out[3]);
-
-void                t8_compressible (const double x_in[3], double t,
-                                     double x_out[3]);
-/** Incompressible flow in unit cube */
-void                t8_incomp_cube_flow (const double x[3], double t,
+void                t8_flow_rotation_2d (const double x[3], double t,
                                          double x_out[3]);
 
-void                t8_stokes_flow_sphere_shell (const double x[3], double t,
-                                                 double x_out[3]);
+void                t8_flow_compressible (const double x_in[3], double t,
+                                          double x_out[3]);
+/** Incompressible flow in unit cube */
+void                t8_flow_incomp_cube_flow (const double x[3], double t,
+                                              double x_out[3]);
+
+void                t8_flow_stokes_flow_sphere_shell (const double x[3],
+                                                      double t,
+                                                      double x_out[3]);
 
 T8_EXTERN_C_END ();
 

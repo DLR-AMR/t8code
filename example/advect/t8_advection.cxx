@@ -1373,8 +1373,10 @@ main (int argc, char *argv[])
                               level);
 
     /* Computation */
-    t8_advect_solve (cmesh, t8_constant_one_x_vec,
-                     t8_sphere_05_0z_midpoint_375_radius, level,
+    t8_advect_solve (cmesh, t8_flow_incomp_cube_flow,
+                     //t8_sphere_05_0z_midpoint_375_radius,
+                     t8_scalar3d_sphere_03_midpoint_25_radius,
+                     level,
                      level + reflevel, T, cfl, sc_MPI_COMM_WORLD, adapt,
                      no_vtk, vtk_freq, dim);
   }
