@@ -2011,6 +2011,8 @@ t8_cmesh_new_hypercube_hybrid (int dim, sc_MPI_Comm comm, int do_partition,
   t8_cmesh_set_join (cmesh, 7, 12, 0, 2, 2);
   t8_cmesh_set_join (cmesh, 8, 12, 0, 0, 0);
   t8_cmesh_set_join (cmesh, 9, 15, 0, 4, 0);
+  t8_cmesh_set_join (cmesh, 10, 13, 0, 0, 0);
+  t8_cmesh_set_join (cmesh, 11, 15, 0, 2, 1);
 #if 0
   double              vertices_coords[24] = {
     0 0, 0, 0,
