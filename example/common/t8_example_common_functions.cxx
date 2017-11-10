@@ -253,7 +253,7 @@ t8_flow_incomp_cube_flow (const double x[3], double t, double x_out[3])
  * by Cedric Thieulot
  */
 
-static double
+static void
 t8_flow_stokes_sphere_alpha_beta (double R_1, double R_2, double gamma, int m,
                                   double *alpha, double *beta)
 {
