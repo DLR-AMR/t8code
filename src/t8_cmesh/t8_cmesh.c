@@ -62,6 +62,7 @@ t8_cmesh_is_initialized (t8_cmesh_t cmesh)
  *
  * Returns true, if everything is fine.
  */
+#ifdef T8_ENABLE_DEBUG
 static int
 t8_cmesh_check_trees_per_eclass (t8_cmesh_t cmesh)
 {
@@ -80,6 +81,7 @@ t8_cmesh_check_trees_per_eclass (t8_cmesh_t cmesh)
   return !ret && lo_trees == cmesh->num_local_trees
     && glo_trees == cmesh->num_trees;
 }
+#endif
 
 int
 t8_cmesh_is_committed (t8_cmesh_t cmesh)
@@ -1281,7 +1283,9 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     t8_gloidx_t         first_global_child;
     t8_gloidx_t         last_global_child;
     t8_gloidx_t         children_per_tree;
+#ifdef T8_ENABLE_DEBUG
     t8_gloidx_t         prev_last_tree = -1;
+#endif
     const t8_linearidx_t one = 1;
 
     children_per_tree = one << cmesh->dimension * level;
@@ -1327,8 +1331,10 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     is_empty = *first_local_tree >= *last_local_tree
       && first_global_child >= last_global_child;
     if (first_tree_shared != NULL) {
+#ifdef T8_ENABLE_DEBUG
       prev_last_tree = (first_global_child - 1) / children_per_tree;
       T8_ASSERT (cmesh->mpirank > 0 || prev_last_tree <= 0);
+#endif
       if (!is_empty && cmesh->mpirank > 0 && first_global_child > 0) {
         /* We exclude empty partitions here, by def their first_tree_shared flag is zero */
         /* We also exclude that the previous partition was empty at the beginning of the
