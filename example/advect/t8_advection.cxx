@@ -817,7 +817,7 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, t8_eclass_t eclass,
       return t8_cmesh_new_periodic_hybrid (comm);
     }
     else if (eclass == 8) {
-      return t8_cmesh_new_hypercube_hybrid (3, comm, 0, 0);
+      return t8_cmesh_new_hypercube_hybrid (3, comm, 0, 1);
     }
     else {
       return t8_cmesh_new_hypercube (eclass, comm, 0, 0, 1);
