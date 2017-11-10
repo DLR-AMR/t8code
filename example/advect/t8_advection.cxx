@@ -816,6 +816,9 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, t8_eclass_t eclass,
     if (eclass == 7) {
       return t8_cmesh_new_periodic_hybrid (comm);
     }
+    else if (eclass == 8) {
+      return t8_cmesh_new_hypercube_hybrid (3, comm, 0, 0);
+    }
     else {
       return t8_cmesh_new_hypercube (eclass, comm, 0, 0, 1);
     }
@@ -1356,7 +1359,7 @@ main (int argc, char *argv[])
   }
   else if (parsed >= 0 && 0 <= level && 0 <= reflevel && 0 <= vtk_freq
            && ((mshfile != NULL && 0 < dim && dim <= 3)
-               || (1 <= eclass_int && eclass_int <= 7))) {
+               || (1 <= eclass_int && eclass_int <= 8))) {
     t8_cmesh_t          cmesh;
     if (mshfile == NULL) {
       dim = t8_eclass_to_dimension[eclass_int];
