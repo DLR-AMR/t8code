@@ -25,6 +25,7 @@
 #include <t8_cmesh_vtk.h>
 #include <t8_refcount.h>
 #include <t8_data/t8_shmem.h>
+#include <t8_vec.h>
 #ifdef T8_WITH_METIS
 #include <metis.h>
 #endif
@@ -1776,6 +1777,249 @@ t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t *
     attr_vertices[3 * i + 1] = vertices[3 * tvertices[i] + 1];
     attr_vertices[3 * i + 2] = vertices[3 * tvertices[i] + 2];
   }
+}
+
+/* Compute y = ax + b on an array of doubles, interpreting
+ * each 3 as one vector x */
+static void
+t8_cmesh_coords_axb (const double *coords_in, double *coords_out,
+                     int num_vertices, double alpha, const double b[3])
+{
+  int                 i;
+
+  for (i = 0; i < num_vertices; i++) {
+    t8_vec_axpyz (coords_in + i * 3, b, coords_out + i * 3, alpha);
+  }
+}
+
+t8_cmesh_t
+t8_cmesh_new_hypercube_hybrid (int dim, sc_MPI_Comm comm, int do_partition,
+                               int periodic)
+{
+  int                 i;
+  t8_cmesh_t          cmesh;
+  t8_topidx_t         vertices[8];
+  double              vertices_coords_temp[24];
+  double              attr_vertices[24];
+  double              null_vec[3] = { 0, 0, 0 };
+  double              shift[7][3] = { {0.5, 0, 0}, {0, 0.5, 0}, {0, 0, 0.5},
+  {0.5, 0.5}, {0.5, 0, 0.5}, {0.5, 0.5, 0.5}, {0, 0.5, 0.5}
+  };
+  double              vertices_coords[24] = {
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0,
+    1, 1, 0,
+    0, 0, 1,
+    1, 0, 1,
+    0, 1, 1,
+    1, 1, 1
+  };
+
+  if (periodic != 0) {
+    SC_ABORT ("Not implemented\n");
+  }
+
+  t8_cmesh_init (&cmesh);
+  /* This cmesh consists of 6 tets, 6 prisms and 3 hexes */
+  for (i = 0; i < 6; i++) {
+    t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_TET);
+  }
+  for (i = 6; i < 12; i++) {
+    t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PRISM);
+  }
+  for (i = 12; i < 16; i++) {
+    t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_HEX);
+  }
+
+    /************************************/
+  /*  The tetrahedra                  */
+    /************************************/
+  /* We place the tetrahedra at the origin of the unit cube.
+   * They are essentially the tetrahedral hypercube scaled by 0.5 */
+  t8_cmesh_coords_axb (vertices_coords, vertices_coords_temp, 8, 0.5,
+                       null_vec);
+  t8_cmesh_set_join (cmesh, 0, 1, 2, 1, 0);
+  t8_cmesh_set_join (cmesh, 1, 2, 2, 1, 0);
+  t8_cmesh_set_join (cmesh, 2, 3, 2, 1, 0);
+  t8_cmesh_set_join (cmesh, 3, 4, 2, 1, 0);
+  t8_cmesh_set_join (cmesh, 4, 5, 2, 1, 0);
+  t8_cmesh_set_join (cmesh, 5, 0, 2, 1, 0);
+  vertices[0] = 0;
+  vertices[1] = 1;
+  vertices[2] = 5;
+  vertices[3] = 7;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0,
+                              attr_vertices, 4);
+  vertices[1] = 3;
+  vertices[2] = 1;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 1, t8_get_package_id (), 0,
+                              attr_vertices, 4);
+  vertices[1] = 2;
+  vertices[2] = 3;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 2, t8_get_package_id (), 0,
+                              attr_vertices, 4);
+  vertices[1] = 6;
+  vertices[2] = 2;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 3, t8_get_package_id (), 0,
+                              attr_vertices, 4);
+  vertices[1] = 4;
+  vertices[2] = 6;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 4, t8_get_package_id (), 0,
+                              attr_vertices, 4);
+  vertices[1] = 5;
+  vertices[2] = 4;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 5, t8_get_package_id (), 0,
+                              attr_vertices, 4);
+
+    /************************************/
+  /*     The prisms                   */
+    /************************************/
+  /* We place the prism to the left, right, and top of the tetrahedra.
+   * They are essentially the prism hypercube scaled by 0.5 and
+   * shifted in 3 different direction. */
+  /* trees 6 and 7 */
+  t8_cmesh_coords_axb (vertices_coords, vertices_coords_temp, 8, 0.5,
+                       shift[0]);
+  vertices[0] = 0;
+  vertices[1] = 6;
+  vertices[2] = 4;
+  vertices[3] = 1;
+  vertices[4] = 7;
+  vertices[5] = 5;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 6);
+  t8_cmesh_set_tree_vertices (cmesh, 6, t8_get_package_id (), 0,
+                              attr_vertices, 6);
+  vertices[1] = 2;
+  vertices[2] = 6;
+  vertices[4] = 3;
+  vertices[5] = 7;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 6);
+  t8_cmesh_set_tree_vertices (cmesh, 7, t8_get_package_id (), 0,
+                              attr_vertices, 6);
+
+  t8_cmesh_set_join (cmesh, 6, 7, 2, 1, 0);
+  /* trees 8 and 9 */
+  t8_cmesh_coords_axb (vertices_coords, vertices_coords_temp, 8, 0.5,
+                       shift[1]);
+  vertices[0] = 0;
+  vertices[1] = 5;
+  vertices[2] = 1;
+  vertices[3] = 2;
+  vertices[4] = 7;
+  vertices[5] = 3;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 6);
+  t8_cmesh_set_tree_vertices (cmesh, 8, t8_get_package_id (), 0,
+                              attr_vertices, 6);
+  vertices[1] = 4;
+  vertices[2] = 5;
+  vertices[4] = 6;
+  vertices[5] = 7;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 6);
+  t8_cmesh_set_tree_vertices (cmesh, 9, t8_get_package_id (), 0,
+                              attr_vertices, 6);
+  t8_cmesh_set_join (cmesh, 8, 9, 1, 2, 0);
+  /* trees 10 an 11 */
+  t8_cmesh_coords_axb (vertices_coords, vertices_coords_temp, 8, 0.5,
+                       shift[2]);
+  vertices[0] = 0;
+  vertices[1] = 1;
+  vertices[2] = 3;
+  vertices[3] = 4;
+  vertices[4] = 5;
+  vertices[5] = 7;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 6);
+  t8_cmesh_set_tree_vertices (cmesh, 10, t8_get_package_id (), 0,
+                              attr_vertices, 6);
+  vertices[1] = 3;
+  vertices[2] = 2;
+  vertices[4] = 7;
+  vertices[5] = 6;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 6);
+  t8_cmesh_set_tree_vertices (cmesh, 11, t8_get_package_id (), 0,
+                              attr_vertices, 6);
+  t8_cmesh_set_join (cmesh, 10, 11, 1, 2, 0);
+
+  /* Connect prisms and tets */
+  t8_cmesh_set_join (cmesh, 0, 6, 0, 3, 0);
+  t8_cmesh_set_join (cmesh, 1, 7, 0, 3, 1);
+  t8_cmesh_set_join (cmesh, 2, 8, 0, 3, 0);
+  t8_cmesh_set_join (cmesh, 3, 9, 0, 3, 1);
+  t8_cmesh_set_join (cmesh, 4, 10, 0, 3, 1);
+  t8_cmesh_set_join (cmesh, 5, 11, 0, 3, 0);
+
+  /************************************/
+  /*  The hexahedra                   */
+  /************************************/
+
+  for (i = 0; i < 8; i++) {
+    vertices[i] = i;
+  }
+
+  for (i = 0; i < 4; i++) {
+    t8_cmesh_coords_axb (vertices_coords, vertices_coords_temp, 8, 0.5,
+                         shift[3 + i]);
+    t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                   vertices_coords_temp,
+                                                   attr_vertices, 8);
+    t8_cmesh_set_tree_vertices (cmesh, 12 + i, t8_get_package_id (), 0,
+                                attr_vertices, 8);
+  }
+  /* Join the hexes */
+  t8_cmesh_set_join (cmesh, 12, 14, 5, 4, 0);
+  t8_cmesh_set_join (cmesh, 13, 14, 3, 2, 0);
+  t8_cmesh_set_join (cmesh, 14, 15, 0, 1, 0);
+
+  /* Join the prisms and hexes */
+  t8_cmesh_set_join (cmesh, 6, 13, 0, 4, 1);
+  t8_cmesh_set_join (cmesh, 7, 12, 0, 2, 2);
+  t8_cmesh_set_join (cmesh, 8, 12, 0, 0, 0);
+  t8_cmesh_set_join (cmesh, 9, 15, 0, 4, 0);
+#if 0
+  double              vertices_coords[24] = {
+    0 0, 0, 0,
+    1 1, 0, 0,
+    2 0, 1, 0,
+    3 1, 1, 0,
+    4 0, 0, 1,
+    5 1, 0, 1,
+    6 0, 1, 1,
+    7 1, 1, 1
+  };
+#endif
+
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
 }
 
 /* The unit cube is constructed from trees of the same eclass.

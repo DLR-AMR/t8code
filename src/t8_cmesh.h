@@ -687,6 +687,12 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
                                             int do_bcast, int do_partition,
                                             int periodic);
 
+/** Hybercube with 6 Tets, 6 Prism, 4 Hex. */
+/* TODO: Document */
+t8_cmesh_t          t8_cmesh_new_hypercube_hybrid (int dim, sc_MPI_Comm comm,
+                                                   int do_partition,
+                                                   int periodic);
+
 /** Construct a unit interval/square/cube coarse mesh that is periodic in each direction.
  * Element class?
  * Hypercube?

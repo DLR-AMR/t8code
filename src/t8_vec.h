@@ -58,6 +58,7 @@ void                t8_vec_ax (double vec_x[3], double alpha);
  *                     On output set to \a alpha * \a vec_x + \a b.
  * \param [in]  alpha  A factor.
  * \param [in]  b      An offset.
+ * \note It is possible that vec_x = vec_y on input to overwrite x
  */
 void                t8_vec_axb (const double vec_x[3], double vec_y[3],
                                 double alpha, double b);
