@@ -1082,7 +1082,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
   t8_tree_t           tree;
   t8_eclass_t         tree_class, neigh_class, last_class;
   t8_gloidx_t         neighbor_tree;
-  t8_eclass_scheme_c *ts, *neigh_scheme = NULL, *prev_neigh_scheme;
+  t8_eclass_scheme_c *ts, *neigh_scheme = NULL, *prev_neigh_scheme = NULL;
 
   int                 iface, num_faces;
   int                 num_face_children, max_num_face_children = 0;

@@ -617,6 +617,7 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
   default:
     SC_ABORT_NOT_REACHED ();
   }
+  return -1;                    /* default return prevents compiler warning */
 }
 
 /* Compute the area of an elements face */
@@ -709,6 +710,7 @@ t8_forest_element_face_area (t8_forest_t forest, t8_locidx_t ltreeid,
   default:
     SC_ABORT ("Not implemented.\n");
   }
+  return -1;                    /* default return prevents compiler warning */
 }
 
 void
@@ -1446,7 +1448,7 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
   t8_element_t      **children_at_face;
   t8_gloidx_t         neighbor_tree = -1;
 #ifdef T8_ENABLE_DEBUG
-  t8_gloidx_t         last_neighbor_tree;
+  t8_gloidx_t         last_neighbor_tree = -1;
 #endif
   int                 num_children_at_face, child_it;
   int                 child_face;
