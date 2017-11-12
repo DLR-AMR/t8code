@@ -21,6 +21,7 @@
 */
 
 #include <sc_options.h>
+#include <sc_statistics.h>
 #include <t8_default_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_private.h>        /* TODO: remove */
@@ -37,6 +38,41 @@
 #define MAX_FACES 8             /* The maximum number of faces of an element */
 /* TODO: This is not memory efficient. If we run out of memory, we can optimize here. */
 
+/* Enum for statistics. */
+typedef enum
+{
+  ADVECT_ADAPT = 0,             /* adapt runtime */
+  ADVECT_PARTITION,             /* partition runtime */
+  ADVECT_PARTITION_PROCS,       /* number of processes sent to in partition */
+  ADVECT_PARTITION_DATA,        /* data partitioning runtime */
+  ADVECT_BALANCE,               /* balance runtime */
+  ADVECT_BALANCE_ROUNDS,        /* number of rounds in balance */
+  ADVECT_GHOST,                 /* ghost runtime */
+  ADVECT_GHOST_SENT,            /* number of processes sent to in ghost */
+  ADVECT_REPLACE,               /* forest_iterate_replace runtime */
+  ADVECT_IO,                    /* vtk runtime */
+  ADVECT_SOLVE,                 /* solver runtime */
+  ADVECT_TOTAL,                 /* overall runtime */
+  ADVECT_ERROR,                 /* l_infty error */
+  ADVECT_NUM_STATS              /* The number of statistics that we measure */
+} advect_stats_t;
+
+const char         *advect_stat_names[ADVECT_NUM_STATS] = {
+  "adapt",
+  "partition",
+  "partition_procs_sent",
+  "partition_data",
+  "balance",
+  "balance_rounds",
+  "ghost",
+  "ghost_sent",
+  "replace",
+  "vtk_print",
+  "solve",
+  "total",
+  "l_infty_error"
+};
+
 typedef struct
 {
   t8_flow_function_3d_fn u; /**< Fluid field */
@@ -48,6 +84,7 @@ typedef struct
                               num_local_elements + num_ghosts */
   sc_array           *element_data_adapt; /**< element_data for the adapted forest */
   sc_MPI_Comm         comm; /**< MPI communicator used */
+  sc_statinfo_t       stats[ADVECT_NUM_STATS]; /**< Runtimes and other statistics. */
   double              t; /**< Current simulation time */
   double              T; /**< End time */
   double              cfl; /**< CFL number */
@@ -710,10 +747,16 @@ static void
 t8_advect_problem_adapt (t8_advect_problem_t * problem)
 {
   t8_locidx_t         num_elems_p_ghosts;
+  double              adapt_time, balance_time, ghost_time;
+  t8_locidx_t         ghost_sent;
+  int                 balance_rounds;
+  double              replace_time;
 
   /* Adapt the forest, but keep the old one */
   t8_forest_ref (problem->forest);
   t8_forest_init (&problem->forest_adapt);
+  /* Enable profiling to measure the runtime */
+  t8_forest_set_profiling (problem->forest_adapt, 1);
   /* Set the user data pointer of the new forest */
   t8_forest_set_user_data (problem->forest_adapt, problem);
   /* Set the adapt function */
@@ -726,6 +769,21 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem)
   /* Commit the forest, adaptation and balance happens here */
   t8_forest_commit (problem->forest_adapt);
 
+  /* Store the runtimes in problems stats */
+  adapt_time = t8_forest_profile_get_adapt_time (problem->forest_adapt);
+  ghost_time =
+    t8_forest_profile_get_ghost_time (problem->forest_adapt, &ghost_sent);
+  balance_time =
+    t8_forest_profile_get_balance_time (problem->forest_adapt,
+                                        &balance_rounds);
+  sc_stats_accumulate (&problem->stats[ADVECT_ADAPT], adapt_time);
+  sc_stats_accumulate (&problem->stats[ADVECT_GHOST], ghost_time);
+  sc_stats_accumulate (&problem->stats[ADVECT_BALANCE], balance_time);
+  /* We want to count all runs over the solver time as one */
+  problem->stats[ADVECT_ADAPT].count = 1;
+  problem->stats[ADVECT_BALANCE].count = 1;
+  problem->stats[ADVECT_GHOST].count = 1;
+
   /* Allocate new memory for the element_data of the advected forest */
   num_elems_p_ghosts =
     t8_forest_get_num_element (problem->forest_adapt) +
@@ -737,8 +795,12 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem)
    * It is necessary that the old and new forest only differ by at most one level.
    * We guarantee this by calling adapt non-recursively and calling balance without
    * repartitioning. */
+  replace_time = -sc_MPI_Wtime ();
   t8_forest_iterate_replace (problem->forest_adapt, problem->forest,
                              t8_advect_replace);
+  replace_time += sc_MPI_Wtime ();
+  sc_stats_accumulate (&problem->stats[ADVECT_REPLACE], replace_time);
+  problem->stats[ADVECT_REPLACE].count = 1;
   /* clean the old element data */
   t8_advect_problem_elements_destroy (problem);
   sc_array_destroy (problem->element_data);
@@ -761,14 +823,30 @@ t8_advect_problem_partition (t8_advect_problem_t * problem)
   sc_array_t         *new_data;
   t8_locidx_t         num_local_elements, num_local_elements_new;
   t8_locidx_t         num_ghosts_new;
+  int                 procs_sent;
+  t8_locidx_t         ghost_sent;
+  double              partition_time, ghost_time;
 
   /* Partition the forest and create its ghost layer */
   /* ref the current forest, since we still need access to it */
   t8_forest_ref (problem->forest);
   t8_forest_init (&forest_partition);
+  /* Enable profiling to measure runtime */
+  t8_forest_set_profiling (forest_partition, 1);
+  /* Partition the forest and create ghosts */
   t8_forest_set_partition (forest_partition, problem->forest, 0);
   t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
   t8_forest_commit (forest_partition);
+  /* Add runtimes to internal stats */
+  partition_time =
+    t8_forest_profile_get_partition_time (forest_partition, &procs_sent);
+  ghost_time =
+    t8_forest_profile_get_ghost_time (forest_partition, &ghost_sent);
+  sc_stats_accumulate (&problem->stats[ADVECT_PARTITION], partition_time);
+  sc_stats_accumulate (&problem->stats[ADVECT_GHOST], ghost_time);
+  /* We want to count all runs over the solver time as one */
+  problem->stats[ADVECT_PARTITION].count = 1;
+  problem->stats[ADVECT_GHOST].count = 1;
 
   /* Partition the data */
   num_local_elements = t8_forest_get_num_element (problem->forest);
@@ -784,8 +862,14 @@ t8_advect_problem_partition (t8_advect_problem_t * problem)
   /* Create a view array of the entries for the local elements */
   sc_array_init_view (&data_view_new, new_data, 0, num_local_elements_new);
   /* Perform the data partition */
+  partition_time = -sc_MPI_Wtime ();
   t8_forest_partition_data (problem->forest, forest_partition, &data_view,
                             &data_view_new);
+  partition_time += sc_MPI_Wtime ();
+  sc_stats_accumulate (&problem->stats[ADVECT_PARTITION_DATA],
+                       partition_time);
+  problem->stats[ADVECT_PARTITION_DATA].count = 1;
+  t8_debugf ("statis ghost: %f\n\n", ghost_time);
 
   /* destroy the old forest and the element data */
   t8_advect_problem_elements_destroy (problem);
@@ -840,6 +924,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
 {
   t8_advect_problem_t *problem;
   t8_scheme_cxx_t    *default_scheme;
+  int                 i;
 
   T8_ASSERT (1 <= dim && dim <= 3);
 
@@ -861,6 +946,10 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
   problem->comm = comm;         /* MPI communicator */
   problem->vtk_count = 0;       /* number of pvtu files written */
   problem->dim = dim;           /* dimension of the mesh */
+
+  for (i = 0; i < ADVECT_NUM_STATS; i++) {
+    sc_stats_init (&problem->stats[i], advect_stat_names[i]);
+  }
 
   /* Contruct uniform forest with ghosts */
   default_scheme = t8_scheme_new_default_cxx ();
@@ -1106,9 +1195,12 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   t8_eclass_t         eclass;
   t8_element_t       *elem, **neighs;
   t8_eclass_scheme_c *neigh_scheme, *ts;
+  double              total_time, solve_time = 0;
+  double              vtk_time = 0;
 
   /* Initialize problem */
-
+  /* start timing */
+  total_time = -sc_MPI_Wtime ();
   problem =
     t8_advect_problem_init (cmesh, u, phi_0, ls_data, level, maxlevel, T,
                             cfl, comm, dim);
@@ -1122,7 +1214,6 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
       t8_advect_problem_adapt (problem);
       /* repartition */
       t8_advect_problem_partition (problem);
-      t8_forest_write_vtk (problem->forest, "test");
       /* Re initialize the elements */
       t8_advect_problem_init_elements (problem);
     }
@@ -1151,8 +1242,11 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 
     /* Print vtk */
     if (!no_vtk && problem->num_time_steps % vtk_freq == 0) {
+      vtk_time -= sc_MPI_Wtime ();
       t8_advect_write_vtk (problem);
+      vtk_time += sc_MPI_Wtime ();
     }
+    solve_time -= sc_MPI_Wtime ();
     for (itree = 0, lelement = 0;
          itree < t8_forest_get_num_local_trees (problem->forest); itree++) {
       /* tree loop */
@@ -1251,6 +1345,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     adapted_or_partitioned = 0;
     /* Project the computed solution to the new forest and exchange ghost values */
     t8_advect_project_element_data (problem);
+    solve_time += sc_MPI_Wtime ();
 #if 0
     /* test adapt, adapt and balance 3 times during the whole computation */
     if (adapt && time_steps / 3 > 0
@@ -1267,14 +1362,29 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     t8_forest_ghost_exchange_data (problem->forest, problem->element_data);
   }
   if (!no_vtk) {
+    vtk_time -= sc_MPI_Wtime ();
     /* Print last time step vtk */
     t8_advect_write_vtk (problem);
+    vtk_time += sc_MPI_Wtime ();
   }
+  /* Compute runtime */
+  total_time += sc_MPI_Wtime ();
+  sc_stats_set1 (&problem->stats[ADVECT_TOTAL], total_time,
+                 advect_stat_names[ADVECT_TOTAL]);
+  sc_stats_set1 (&problem->stats[ADVECT_SOLVE], solve_time,
+                 advect_stat_names[ADVECT_SOLVE]);
+  sc_stats_set1 (&problem->stats[ADVECT_IO], vtk_time,
+                 advect_stat_names[ADVECT_IO]);
 
   /* Compute l_infty error */
   l_infty = t8_advect_l_infty_rel (problem, phi_0);
   t8_global_essentialf ("[advect] Done. l_infty error:\t%e\n", l_infty);
 
+  sc_stats_set1 (&problem->stats[ADVECT_ERROR], l_infty,
+                 advect_stat_names[ADVECT_ERROR]);
+  sc_stats_compute (problem->comm, ADVECT_NUM_STATS, problem->stats);
+  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, ADVECT_NUM_STATS,
+                  problem->stats, 1, 1);
   /* clean-up */
   t8_advect_problem_destroy (&problem);
 }
