@@ -51,6 +51,7 @@ typedef enum
   ADVECT_GHOST_SENT,            /* number of processes sent to in ghost */
   ADVECT_REPLACE,               /* forest_iterate_replace runtime */
   ADVECT_IO,                    /* vtk runtime */
+  ADVECT_ELEM_AVG,              /* average global number of elements (per time step) */
   ADVECT_SOLVE,                 /* solver runtime */
   ADVECT_TOTAL,                 /* overall runtime */
   ADVECT_ERROR,                 /* l_infty error */
@@ -68,6 +69,7 @@ const char         *advect_stat_names[ADVECT_NUM_STATS] = {
   "ghost_sent",
   "replace",
   "vtk_print",
+  "number_elements",
   "solve",
   "total",
   "l_infty_error"
@@ -1248,6 +1250,10 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
       t8_advect_write_vtk (problem);
       vtk_time += sc_MPI_Wtime ();
     }
+    /* Measure element count */
+    sc_stats_accumulate (&problem->stats[ADVECT_ELEM_AVG],
+                         t8_forest_get_global_num_elements (problem->forest));
+
     solve_time -= sc_MPI_Wtime ();
     for (itree = 0, lelement = 0;
          itree < t8_forest_get_num_local_trees (problem->forest); itree++) {
