@@ -450,6 +450,57 @@ void                t8_forest_set_profiling (t8_forest_t forest,
  */
 void                t8_forest_print_profile (t8_forest_t forest);
 
+/** Get the runtime of the last call to \ref t8_forest_adapt.
+ * \param [in]   forest         The forest.
+ * \return                      The runtime of adapt if profiling was activated.
+ *                              0 otherwise.
+ * \a forest must be committed before calling this function.
+ * \see t8_forest_set_profiling
+ * \see t8_forest_set_adapt
+ */
+double              t8_forest_profile_get_adapt_time (t8_forest_t forest);
+
+/** Get the runtime of the last call to \ref t8_forest_partition.
+ * \param [in]   forest         The forest.
+ * \param [out]  procs_sent     On output the number of processes that this rank
+ *                              sent elements to in partition
+ *                              if profiling was activated.
+ * \return                      The runtime of partition if profiling was activated.
+ *                              0 otherwise.
+ * \a forest must be committed before calling this function.
+ * \see t8_forest_set_profiling
+ * \see t8_forest_set_partition
+ */
+double              t8_forest_profile_get_partition_time (t8_forest_t forest,
+                                                          int *procs_sent);
+
+/** Get the runtime of the last call to \ref t8_forest_balance.
+ * \param [in]   forest         The forest.
+ * \param [out]  balance_rounts On output the number of rounds in balance
+ *                              if profiling was activated.
+ * \return                      The runtime of balance if profiling was activated.
+ *                              0 otherwise.
+ * \a forest must be committed before calling this function.
+ * \see t8_forest_set_profiling
+ * \see t8_forest_set_balance
+ */
+double              t8_forest_profile_get_balance_time (t8_forest_t forest,
+                                                        int *balance_rounds);
+
+/** Get the runtime of the last call to \ref t8_forest_create_ghosts.
+ * \param [in]   forest         The forest.
+ * \param [out]  ghosts_sent    On output the number of ghost elements sent to other processes
+ *                              if profiling was activated.
+ * \return                      The runtime of ghost if profiling was activated.
+ *                              0 otherwise.
+ * \a forest must be committed before calling this function.
+ * \see t8_forest_set_profiling
+ * \see t8_forest_set_ghost
+ */
+double              t8_forest_profile_get_ghost_time (t8_forest_t forest,
+                                                      t8_locidx_t *
+                                                      ghosts_sent);
+
 /** Print the ghost structure of a forest. Only used for debugging. */
 void                t8_forest_ghost_print (t8_forest_t forest);
 

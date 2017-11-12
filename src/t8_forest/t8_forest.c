@@ -1196,6 +1196,61 @@ t8_forest_print_profile (t8_forest_t forest)
   }
 }
 
+double
+t8_forest_profile_get_adapt_time (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  if (forest->profile != NULL) {
+    return forest->profile->adapt_runtime;
+  }
+  return 0;
+}
+
+double
+t8_forest_profile_get_partition_time (t8_forest_t forest, int *procs_sent)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  if (forest->profile != NULL) {
+    *procs_sent = forest->profile->partition_procs_sent;
+    return forest->profile->partition_runtime;
+  }
+  return 0;
+}
+
+double
+t8_forest_profile_get_balance_time (t8_forest_t forest, int *balance_rounds)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  if (forest->profile != NULL) {
+    *balance_rounds = forest->profile->balance_rounds;
+    return forest->profile->balance_runtime;
+  }
+  return 0;
+}
+
+double
+t8_forest_profile_get_ghost_time (t8_forest_t forest,
+                                  t8_locidx_t * ghosts_sent)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  if (forest->profile != NULL) {
+    *ghosts_sent = forest->profile->ghosts_shipped;
+    return forest->profile->ghost_runtime;
+  }
+  return 0;
+}
+
+double
+t8_forest_profile_get_balance (t8_forest_t forest, int *balance_rounds)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  if (forest->profile != NULL) {
+    *balance_rounds = forest->profile->balance_rounds;
+    return forest->profile->balance_runtime;
+  }
+  return 0;
+}
+
 void
 t8_forest_compute_elements_offset (t8_forest_t forest)
 {
