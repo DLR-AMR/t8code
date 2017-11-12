@@ -1223,8 +1223,10 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 
   time_steps = (int) (T / problem->delta_t);
   t8_global_essentialf ("[advect] Starting with Computation. Level %i."
-                        " End time %g. delta_t %g. %i time steps.\n",
-                        level, T, problem->delta_t, time_steps);
+                        " Adaptive levels %i."
+                        " End time %g. delta_t %g. cfl %g. %i time steps.\n",
+                        level, maxlevel - level, T, problem->delta_t,
+                        problem->cfl, time_steps);
   T8_ASSERT (problem->delta_t > 0);
   T8_ASSERT (time_steps > 0);
   /* Controls how often we print the time step to stdout */
