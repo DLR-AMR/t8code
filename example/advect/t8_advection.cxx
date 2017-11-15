@@ -1461,8 +1461,9 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   /* Compute l_infty error */
   l_infty = t8_advect_l_infty_rel (problem, phi_0, 0.025);
   L_2 = t8_advect_l_2_rel (problem, phi_0, 0.025);
-  t8_global_essentialf ("[advect] Done. l_infty error:\t%e\tL_2:\t%e\n",
-                        l_infty, L_2);
+  t8_global_essentialf
+    ("[advect] Done. t = %g \t l_infty error:\t%e\tL_2:\t%e\n", problem->t,
+     l_infty, L_2);
 
   sc_stats_set1 (&problem->stats[ADVECT_ERROR_INF], l_infty,
                  advect_stat_names[ADVECT_ERROR_INF]);
@@ -1485,7 +1486,7 @@ main (int argc, char *argv[])
   int                 level, reflevel, dim, eclass_int;
   int                 parsed, helpme, no_vtk, vtk_freq, adapt;
   double              T, cfl;
-  t8_levelset_sphere_data_t ls_data = { {.3, .3, .3}, .25 };
+  t8_levelset_sphere_data_t ls_data = { {.5, .5, 0}, .25 };
 
   /* brief help message */
 
