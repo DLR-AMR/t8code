@@ -132,11 +132,7 @@ public:
 
   /** Compute the ancestor id of an element */
   virtual int         t8_element_ancestor_id (const t8_element_t * elem,
-                                              int level)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+                                              int level);
 
 /** Given a face of an element and a child number of a child of that face,
   * return the face number of the child of the element that matches the child

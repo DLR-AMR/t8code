@@ -146,6 +146,13 @@ t8_default_scheme_prism_c::t8_element_children (const t8_element_t * elem,
                         (t8_dprism_t **) c);
 }
 
+int
+t8_default_scheme_prism_c::t8_element_ancestor_id (const t8_element_t * elem,
+                                              int level)
+{
+    return t8_dprism_ancestor_id((t8_dprism_t *) elem, level);
+}
+
 void
 t8_default_scheme_prism_c::t8_element_children_at_face (const t8_element_t *
                                                         elem, int face,
@@ -193,7 +200,7 @@ t8_default_scheme_prism_c::t8_element_extrude_face (const t8_element_t * face,
 {
   t8_dprism_extrude_face (face, elem, root_face);
   /* TODO: Fix return value */
-  return -1;
+  return t8_dprism_root_face_to_face((const t8_dprism_t *) elem, root_face);
 }
 
 int
@@ -240,8 +247,6 @@ t8_element_first_descendant_face (const t8_element_t * elem, int face,
                                   t8_element_t * first_desc)
 {
     int corner;
-    t8_debugf("[FDF]: Loc-id: %i, face: %i\n",
-              t8_dprism_child_id((const t8_dprism_t *) elem), face);
     T8_ASSERT(0 <= face && face < T8_DPRISM_FACES);
     corner = t8_dprism_face_corner[face][0];
     t8_dprism_corner_descendant((const t8_dprism_t *) elem,

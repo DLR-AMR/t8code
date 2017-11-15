@@ -169,6 +169,15 @@ int                 t8_dprism_face_neighbour (const t8_dprism_t * p, int face,
 void                t8_dprism_childrenpv (const t8_dprism_t * p,
                                           int length, t8_dprism_t * c[]);
 
+
+/** Compute the position of the ancestor of this child at level \a level within
+ * its siblings.
+ * \param [in] p  prism to be considered.
+ * \param [in] level level to be considered.
+ * \return Returns its child id in 0..7
+ */
+int                 t8_dprism_ancestor_id(t8_dprism_t * p, int level);
+
 /** Given a prism and a face of the prism, compute all children of
  * the prism that touch the face.
  * \param [in] p      The prism.
@@ -217,6 +226,19 @@ int                 t8_dprism_face_parent_face (const t8_dprism_t * prism,
  *         Any arbitrary integer if \a is not at a tree boundary.
  */
 int                 t8_dprism_tree_face (const t8_dprism_t * p, int face);
+
+/** Given a prism and a face of the root prism. If the prism lies on the
+ *  tree boundary, return the corresponding face number of the prism.
+ *  If not the return value is arbitrary.
+ * \param [in] p        The prism.
+ * \param [in] face     The index of a face of the root element.
+ * \return The index of the face of \a p that is a subface of \a face, if
+ *         \a p is on the tree boundary.
+ *         Any arbitrary integer if \a p is not at a tree boundary.
+ * \note For boundary prism, this function is the inverse of \ref t8_dprism_tree_face
+ */
+int                 t8_dprism_root_face_to_face(const t8_dprism_t * p,
+                                                int root_face);
 
 /** Given a boundary face inside a root tree's face construct
  *  the element inside the root tree that has the given face as a

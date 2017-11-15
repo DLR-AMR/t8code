@@ -299,6 +299,13 @@ t8_dprism_childrenpv (const t8_dprism_t * p, int length, t8_dprism_t * c[])
   }
 }
 
+int
+t8_dprism_ancestor_id(t8_dprism_t * p, int level)
+{
+    return 4*t8_dline_ancestor_id(&p->line, level) +
+            t8_dtri_ancestor_id(&p->tri, level);
+}
+
 const int           children_at_face[2][12] = {
   {1, 3, 5, 7,
    0, 3, 4, 7,
@@ -342,18 +349,14 @@ int
 t8_dprism_face_parent_face (const t8_dprism_t * prism, int face)
 {
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
-  t8_debugf("[FPF]: Loc-id: %i, face: %i\n", t8_dprism_child_id(prism), face);
     if (face < 3 && t8_dtri_face_parent_face (&prism->tri, face) != -1 ){
-        t8_debugf("[face<3] face_num: %i\n", face);
           return face;
     }
     /*prism_face 3 = line_face 0, prism_face 4 = line_face 1 */
     if(face >= 3 && t8_dline_face_parent_face (&prism->line, face - 3) != -1) {
-        t8_debugf("[face>=3] face_num: %i\n", face);
         return face;
   }
   else {
-        t8_debugf("[no shared face] face: %i\n", -1);
     return -1;
   }
 }
@@ -365,6 +368,14 @@ t8_dprism_tree_face (const t8_dprism_t * p, int face)
   /*For prisms, the face number coincides with the number of the root
      tree face */
   return face;
+}
+
+int
+t8_dprism_root_face_to_face(const t8_dprism_t * p,
+                                                int root_face)
+{
+    T8_ASSERT (0 <= root_face && root_face < T8_DPRISM_FACES);
+    return root_face;
 }
 
 void
