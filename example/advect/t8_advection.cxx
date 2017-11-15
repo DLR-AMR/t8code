@@ -73,7 +73,8 @@ const char         *advect_stat_names[ADVECT_NUM_STATS] = {
   "number_elements",
   "solve",
   "total",
-  "l_infty_error"
+  "l_infty_error",
+  "L_2"
 };
 
 typedef struct
