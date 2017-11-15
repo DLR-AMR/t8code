@@ -243,6 +243,18 @@ void                t8_dprism_extrude_face (const t8_element_t * face,
 void                t8_dprism_last_descendant (const t8_dprism_t * p,
                                                t8_dprism_t * s, int level);
 
+/** Compute the descendant of a prism in a given corner.
+ * \param [in] p        Prism whose descendant is computed.
+ * \param [out] s       Existing prism whose data will be filled with the data
+ *                      of p's descendant in \a corner.
+ * \param [in]  corner  The corner in which the descendant should lie.
+ * \param [in]  level   The refinement level of the descendant. Must be greater or
+ *                      equal to \a p's level.
+ */
+void                t8_dprism_corner_descendant(const t8_dprism_t * p,
+                            t8_dprism_t * s, int corner,
+                            int level);
+
 /** Compute the coordinates of a vertex of a prism.
  * \param [in] p    Input prism.
  * \param [out] coordinates An array of 2 t8_dprism_coord_t that

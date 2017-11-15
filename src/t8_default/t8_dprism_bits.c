@@ -338,29 +338,24 @@ t8_dprism_face_child_face (const t8_dprism_t * elem, int face, int face_child)
   return face;
 }
 
-/*c child_id, f face number. In row c, column f is a one, if the child shares
-this face with its parent*/
-const int           parent_faces[8][5] = { {0, 1, 1, 1, 0},
-{1, 1, 0, 1, 0},
-{0, 0, 0, 1, 0},
-{1, 1, 0, 1, 0},
-{0, 1, 1, 0, 1},
-{1, 1, 0, 0, 1},
-{0, 0, 0, 0, 1},
-{1, 1, 0, 0, 1}
-};
-
 int
 t8_dprism_face_parent_face (const t8_dprism_t * prism, int face)
 {
-  int                 child_id;
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
-  child_id = t8_dprism_child_id (prism);
-  if (parent_faces[child_id][face] != 0) {
-    return face;
+  t8_debugf("[FPF]: Loc-id: %i, face: %i\n", t8_dprism_child_id(prism), face);
+    if (face < 3 && t8_dtri_face_parent_face (&prism->tri, face) != -1 ){
+        t8_debugf("[face<3] face_num: %i\n", face);
+          return face;
+    }
+    /*prism_face 3 = line_face 0, prism_face 4 = line_face 1 */
+    if(face >= 3 && t8_dline_face_parent_face (&prism->line, face - 3) != -1) {
+        t8_debugf("[face>=3] face_num: %i\n", face);
+        return face;
   }
-  else
+  else {
+        t8_debugf("[no shared face] face: %i\n", -1);
     return -1;
+  }
 }
 
 int
@@ -501,6 +496,20 @@ t8_dprism_last_descendant (const t8_dprism_t * p, t8_dprism_t * s, int level)
   t8_dtri_last_descendant (&p->tri, &s->tri, level);
   t8_dline_last_descendant (&p->line, &s->line, level);
   T8_ASSERT (s->line.level == s->tri.level);
+}
+
+void
+t8_dprism_corner_descendant(const t8_dprism_t * p, t8_dprism_t * s, int corner,
+                            int level){
+    T8_ASSERT(p->tri.level <= level && level <= T8_DPRISM_MAXLEVEL);
+    T8_ASSERT(0 <= corner && corner < T8_DPRISM_CORNERS);
+    t8_dtri_corner_descendant(&p->tri, &s->tri, corner % 3, level);
+    if(corner < 3){
+        t8_dline_first_descendant(&p->line, &s->line, level);
+    }
+    else{
+        t8_dline_last_descendant(&p->line, &s->line, level);
+    }
 }
 
 void

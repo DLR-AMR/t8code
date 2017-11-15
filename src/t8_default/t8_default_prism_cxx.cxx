@@ -226,6 +226,47 @@ t8_default_scheme_prism_c::t8_element_boundary_face (const t8_element_t *
   t8_dprism_boundary_face ((const t8_dprism_t *) elem, face, boundary);
 }
 
+const int   t8_dprism_face_corner[5][4] = {
+    {1, 2, 4, 5},
+    {0, 2, 3, 5},
+    {0, 1, 3, 4},
+    {0, 1, 2, -1}, /*this face is a triangle -> -1 for the 4th corner*/
+    {3, 4, 5, -1}  /*this face is a triangle -> -1 for the 4th corner*/
+};
+
+void
+t8_default_scheme_prism_c::
+t8_element_first_descendant_face (const t8_element_t * elem, int face,
+                                  t8_element_t * first_desc)
+{
+    int corner;
+    t8_debugf("[FDF]: Loc-id: %i, face: %i\n",
+              t8_dprism_child_id((const t8_dprism_t *) elem), face);
+    T8_ASSERT(0 <= face && face < T8_DPRISM_FACES);
+    corner = t8_dprism_face_corner[face][0];
+    t8_dprism_corner_descendant((const t8_dprism_t *) elem,
+                                (t8_dprism_t *) first_desc, corner,
+                                T8_DPRISM_MAXLEVEL);
+}
+
+void
+t8_default_scheme_prism_c::
+t8_element_last_descendant_face (const t8_element_t * elem, int face,
+                                  t8_element_t * first_desc)
+{
+    int corner;
+    T8_ASSERT(0 <= face && face < T8_DPRISM_FACES);
+    if(face<3){
+        corner = t8_dprism_face_corner[face][3];
+    }
+    else{
+        corner = t8_dprism_face_corner[face][2];
+    }
+    t8_dprism_corner_descendant((const t8_dprism_t *) elem,
+                                (t8_dprism_t *) first_desc, corner,
+                                T8_DPRISM_MAXLEVEL);
+}
+
 int
 t8_default_scheme_prism_c::t8_element_is_root_boundary (const t8_element_t *
                                                         elem, int face)

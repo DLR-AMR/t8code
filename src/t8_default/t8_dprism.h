@@ -37,6 +37,9 @@
 /** The number of faces of a prism. */
 #define T8_DPRISM_FACES 5
 
+/** The number of corners of a triangle */
+#define T8_DPRISM_CORNERS 6
+
 /** The maximum refinement level allowed for a prism. */
 #define T8_DPRISM_MAXLEVEL 21
 
