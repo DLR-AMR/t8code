@@ -54,7 +54,8 @@ typedef enum
   ADVECT_ELEM_AVG,              /* average global number of elements (per time step) */
   ADVECT_SOLVE,                 /* solver runtime */
   ADVECT_TOTAL,                 /* overall runtime */
-  ADVECT_ERROR,                 /* l_infty error */
+  ADVECT_ERROR_INF,             /* l_infty error */
+  ADVECT_ERROR_2,               /* L_2 error */
   ADVECT_NUM_STATS              /* The number of statistics that we measure */
 } advect_stats_t;
 
@@ -300,9 +301,53 @@ t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
   /* Compute the maximum of the error among all processes */
   sc_MPI_Allreduce (&error, &global_error, 2, sc_MPI_DOUBLE, sc_MPI_MAX,
                     problem->comm);
+
   /* Return the relative error, that is the l_infty error divided by
    * the l_infty norm of the analytical solution */
   return global_error[0] / global_error[1];
+}
+
+static double
+t8_advect_l_2_rel (const t8_advect_problem_t * problem,
+                   t8_example_level_set_fn analytical_sol, double distance)
+{
+  t8_locidx_t         num_local_elements, ielem, count = 0;
+  t8_advect_element_data_t *elem_data;
+  double              diff, ana_sol;
+  double              error[2] = {
+    0, 0
+  }, el_error, global_error[2];
+
+  num_local_elements = t8_forest_get_num_element (problem->forest);
+  for (ielem = 0; ielem < num_local_elements; ielem++) {
+    elem_data = (t8_advect_element_data_t *)
+      t8_sc_array_index_locidx (problem->element_data, ielem);
+    if (fabs (elem_data->phi) < distance) {
+      count++;
+      /* Compute the error as the stored value at the midpoint of this element
+       * minus the solution at this midpoint */
+
+      diff = fabs ((elem_data->phi -
+                    analytical_sol (elem_data->midpoint, problem->t,
+                                    problem->udata_for_phi)));
+      el_error = diff * diff * elem_data->vol;
+      error[0] += el_error;
+      /* Compute the l_infty norm of the analytical solution */
+      ana_sol =
+        analytical_sol (elem_data->midpoint, problem->t,
+                        problem->udata_for_phi);
+      error[1] += ana_sol * ana_sol * elem_data->vol;
+    }
+  }
+  t8_debugf ("[advect] L_2 %e  %e\n", error[0], error[1]);
+  t8_debugf ("[advect] L_2 %i elems\n", count);
+  /* Compute the maximum of the error among all processes */
+  sc_MPI_Allreduce (&error, &global_error, 2, sc_MPI_DOUBLE, sc_MPI_SUM,
+                    problem->comm);
+
+  /* Return the relative error, that is the l_infty error divided by
+   * the l_infty norm of the analytical solution */
+  return sqrt (global_error[0]) / sqrt (global_error[1]);
 }
 
 static double
@@ -782,6 +827,8 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem)
   sc_stats_accumulate (&problem->stats[ADVECT_ADAPT], adapt_time);
   sc_stats_accumulate (&problem->stats[ADVECT_GHOST], ghost_time);
   sc_stats_accumulate (&problem->stats[ADVECT_BALANCE], balance_time);
+  sc_stats_accumulate (&problem->stats[ADVECT_BALANCE_ROUNDS],
+                       balance_rounds);
   /* We want to count all runs over the solver time as one */
   problem->stats[ADVECT_ADAPT].count = 1;
   problem->stats[ADVECT_BALANCE].count = 1;
@@ -1190,7 +1237,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   t8_advect_element_data_t *elem_data, *neigh_data;
   t8_advect_element_data_t boundary_data;
   double              flux[MAX_FACES];
-  double              l_infty;
+  double              l_infty, L_2;
   double             *tree_vertices;
   int                 modulus, time_steps;
   int                 num_faces;
@@ -1386,11 +1433,15 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                  advect_stat_names[ADVECT_IO]);
 
   /* Compute l_infty error */
-  l_infty = t8_advect_l_infty_rel (problem, phi_0, 0.1);
-  t8_global_essentialf ("[advect] Done. l_infty error:\t%e\n", l_infty);
+  l_infty = t8_advect_l_infty_rel (problem, phi_0, 0.025);
+  L_2 = t8_advect_l_2_rel (problem, phi_0, 0.025);
+  t8_global_essentialf ("[advect] Done. l_infty error:\t%e\tL_2:\t%e\n",
+                        l_infty, L_2);
 
-  sc_stats_set1 (&problem->stats[ADVECT_ERROR], l_infty,
-                 advect_stat_names[ADVECT_ERROR]);
+  sc_stats_set1 (&problem->stats[ADVECT_ERROR_INF], l_infty,
+                 advect_stat_names[ADVECT_ERROR_INF]);
+  sc_stats_set1 (&problem->stats[ADVECT_ERROR_2], L_2,
+                 advect_stat_names[ADVECT_ERROR_2]);
   sc_stats_compute (problem->comm, ADVECT_NUM_STATS, problem->stats);
   sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, ADVECT_NUM_STATS,
                   problem->stats, 1, 1);
