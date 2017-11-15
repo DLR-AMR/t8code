@@ -1261,6 +1261,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   double             *tree_vertices;
   int                 modulus, time_steps;
   int                 num_faces;
+  int                 done = 0;
   int                 adapted_or_partitioned = 0;
   t8_eclass_t         eclass;
   t8_element_t       *elem, **neighs;
@@ -1302,8 +1303,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   /* Controls how often we print the time step to stdout */
   modulus = SC_MAX (1, time_steps / 10);
   for (problem->num_time_steps = 0;
-       problem->t < problem->T;
-       problem->num_time_steps++, problem->t += problem->delta_t) {
+       !done; problem->num_time_steps++, problem->t += problem->delta_t) {
     if (problem->num_time_steps % modulus == modulus - 1) {
       t8_global_essentialf ("[advect] Step %i  %li elems\n",
                             problem->num_time_steps + 1,
@@ -1436,7 +1436,13 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     }
     /* Exchange ghost values */
     t8_forest_ghost_exchange_data (problem->forest, problem->element_data);
-  }
+
+    if (problem->t + problem->delta_t > problem->T) {
+      /* The last time step is always the given end time */
+      problem->t = problem->T - problem->delta_t;
+      done = 1;
+    }
+  }                             /* End element loop */
   if (!no_vtk) {
     vtk_time -= sc_MPI_Wtime ();
     /* Print last time step vtk */
