@@ -669,7 +669,7 @@ t8_advect_compute_element_data (t8_advect_problem_t * problem,
 
 /* Replace callback to decide how to interpolate a refined or coarsened element.
  * If an element is refined, each child gets the phi value of its parent.
- * If 2 elements are coarsened, the parent gets the average phi value of the children.
+ * If elements are coarsened, the parent gets the average phi value of the children.
  */
 /* outgoing are the old elements and incoming the nwe ones */
 static void
