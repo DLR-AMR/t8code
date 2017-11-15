@@ -269,36 +269,37 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
  * given analytical function at time problem->t */
 static double
 t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
-                       t8_example_level_set_fn analytical_sol)
+                       t8_example_level_set_fn analytical_sol,
+                       double distance)
 {
   t8_locidx_t         num_local_elements, ielem;
   t8_advect_element_data_t *elem_data;
   double              error[2] = {
-    0, 0
+    -1, 0
   }, el_error, global_error[2];
 
   num_local_elements = t8_forest_get_num_element (problem->forest);
   for (ielem = 0; ielem < num_local_elements; ielem++) {
     elem_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data, ielem);
-
-    /* Compute the error as the stored value at the midpoint of this element
-     * minus the solution at this midpoint */
-    el_error =
-      fabs ((elem_data->phi -
-             analytical_sol (elem_data->midpoint, problem->t,
-                             problem->udata_for_phi)));
-    error[0] = SC_MAX (error[0], el_error);
-    /* Compute the l_infty norm of the analytical solution */
-    error[1] =
-      SC_MAX (error[1],
-              analytical_sol (elem_data->midpoint, problem->t,
-                              problem->udata_for_phi));
+    if (fabs (elem_data->phi) < distance) {
+      /* Compute the error as the stored value at the midpoint of this element
+       * minus the solution at this midpoint */
+      el_error =
+        fabs ((elem_data->phi -
+               analytical_sol (elem_data->midpoint, problem->t,
+                               problem->udata_for_phi)));
+      error[0] = SC_MAX (error[0], el_error);
+      /* Compute the l_infty norm of the analytical solution */
+      error[1] =
+        SC_MAX (error[1],
+                analytical_sol (elem_data->midpoint, problem->t,
+                                problem->udata_for_phi));
+    }
   }
   /* Compute the maximum of the error among all processes */
   sc_MPI_Allreduce (&error, &global_error, 2, sc_MPI_DOUBLE, sc_MPI_MAX,
                     problem->comm);
-
   /* Return the relative error, that is the l_infty error divided by
    * the l_infty norm of the analytical solution */
   return global_error[0] / global_error[1];
@@ -1385,7 +1386,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                  advect_stat_names[ADVECT_IO]);
 
   /* Compute l_infty error */
-  l_infty = t8_advect_l_infty_rel (problem, phi_0);
+  l_infty = t8_advect_l_infty_rel (problem, phi_0, 0.1);
   t8_global_essentialf ("[advect] Done. l_infty error:\t%e\n", l_infty);
 
   sc_stats_set1 (&problem->stats[ADVECT_ERROR], l_infty,
