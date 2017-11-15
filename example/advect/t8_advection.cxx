@@ -797,7 +797,7 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem)
   t8_locidx_t         num_elems_p_ghosts;
   double              adapt_time, balance_time, ghost_time;
   t8_locidx_t         ghost_sent;
-  int                 balance_rounds;
+  int                 balance_rounds, did_balance = 0;
   double              replace_time;
 
   /* Adapt the forest, but keep the old one */
@@ -810,8 +810,13 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem)
   /* Set the adapt function */
   t8_forest_set_adapt (problem->forest_adapt, problem->forest,
                        t8_advect_adapt, 0);
-  /* We also want to balance the forest */
-  t8_forest_set_balance (problem->forest_adapt, NULL, 1);
+  if (problem->maxlevel - problem->level > 1) {
+    /* We also want to balance the forest
+     * if the difference in refinement levels is
+     * greater 1 */
+    t8_forest_set_balance (problem->forest_adapt, NULL, 1);
+    did_balance = 1;
+  }
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
@@ -821,14 +826,18 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem)
   adapt_time = t8_forest_profile_get_adapt_time (problem->forest_adapt);
   ghost_time =
     t8_forest_profile_get_ghost_time (problem->forest_adapt, &ghost_sent);
-  balance_time =
-    t8_forest_profile_get_balance_time (problem->forest_adapt,
-                                        &balance_rounds);
+  if (did_balance) {
+    balance_time =
+      t8_forest_profile_get_balance_time (problem->forest_adapt,
+                                          &balance_rounds);
+  }
   sc_stats_accumulate (&problem->stats[ADVECT_ADAPT], adapt_time);
   sc_stats_accumulate (&problem->stats[ADVECT_GHOST], ghost_time);
-  sc_stats_accumulate (&problem->stats[ADVECT_BALANCE], balance_time);
-  sc_stats_accumulate (&problem->stats[ADVECT_BALANCE_ROUNDS],
-                       balance_rounds);
+  if (did_balance) {
+    sc_stats_accumulate (&problem->stats[ADVECT_BALANCE], balance_time);
+    sc_stats_accumulate (&problem->stats[ADVECT_BALANCE_ROUNDS],
+                         balance_rounds);
+  }
   /* We want to count all runs over the solver time as one */
   problem->stats[ADVECT_ADAPT].count = 1;
   problem->stats[ADVECT_BALANCE].count = 1;
