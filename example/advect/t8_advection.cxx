@@ -185,9 +185,15 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
 {
   t8_advect_problem_t *problem;
   t8_advect_element_data_t *elem_data;
-  double              gradient, band_width, elem_diam;
+#if 0
+  double              gradient;
+#endif
+  double              band_width, elem_diam;
   double             *tree_vertices;
-  int                 level, ielem, ret;
+  int                 level;
+#if 0
+  int                 ielem, ret;
+#endif
   t8_locidx_t         offset;
 
   static int          seed = 10000;
@@ -204,7 +210,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
 
 #if 1
   /* Refine if close to levelset, coarsen if not */
-  band_width = 4;
+  band_width = 3;
   tree_vertices = t8_forest_get_tree_vertices (forest_from, ltree_id);
   elem_diam =
     t8_forest_element_diam (forest_from, ltree_id, elements[0],
@@ -269,6 +275,7 @@ t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
 {
   t8_locidx_t         num_local_elements, ielem;
   t8_advect_element_data_t *elem_data;
+  double              ana_sol;
   double              error[2] = {
     -1, 0
   }, el_error, global_error[2];
@@ -277,19 +284,21 @@ t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
   for (ielem = 0; ielem < num_local_elements; ielem++) {
     elem_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data, ielem);
-    if (fabs (elem_data->phi) < distance) {
+
+    /* Compute the analytical solution */
+    ana_sol =
+      analytical_sol (elem_data->midpoint, problem->t,
+                      problem->udata_for_phi);
+#if 1
+    if (fabs (ana_sol) < distance)
+#endif
+    {
       /* Compute the error as the stored value at the midpoint of this element
        * minus the solution at this midpoint */
-      el_error =
-        fabs ((elem_data->phi -
-               analytical_sol (elem_data->midpoint, problem->t,
-                               problem->udata_for_phi)));
+      el_error = fabs ((elem_data->phi - ana_sol));
       error[0] = SC_MAX (error[0], el_error);
       /* Compute the l_infty norm of the analytical solution */
-      error[1] =
-        SC_MAX (error[1],
-                analytical_sol (elem_data->midpoint, problem->t,
-                                problem->udata_for_phi));
+      error[1] = SC_MAX (error[1], ana_sol);
     }
   }
   /* Compute the maximum of the error among all processes */
@@ -316,20 +325,21 @@ t8_advect_l_2_rel (const t8_advect_problem_t * problem,
   for (ielem = 0; ielem < num_local_elements; ielem++) {
     elem_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data, ielem);
-    if (fabs (elem_data->phi) < distance) {
+    /* Compute the analytical solution */
+    ana_sol =
+      analytical_sol (elem_data->midpoint, problem->t,
+                      problem->udata_for_phi);
+#if 1
+    if (fabs (ana_sol) < distance)
+#endif
+    {
       count++;
       /* Compute the error as the stored value at the midpoint of this element
        * minus the solution at this midpoint */
 
-      diff = fabs ((elem_data->phi -
-                    analytical_sol (elem_data->midpoint, problem->t,
-                                    problem->udata_for_phi)));
+      diff = fabs (elem_data->phi - ana_sol);
       el_error = diff * diff * elem_data->vol;
       error[0] += el_error;
-      /* Compute the l_infty norm of the analytical solution */
-      ana_sol =
-        analytical_sol (elem_data->midpoint, problem->t,
-                        problem->udata_for_phi);
       error[1] += ana_sol * ana_sol * elem_data->vol;
     }
   }
