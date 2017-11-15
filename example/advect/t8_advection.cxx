@@ -198,34 +198,22 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   level = ts->t8_element_level (elements[0]);
   /* Get a pointer to the element data */
 
-#if 0
-  if (num_elements > 1 && level > problem->level) {
-    return -(rand () % (forest->mpirank + 2));
-  }
-  if (level < problem->maxlevel) {
-    return (rand () % (forest->mpirank + 10)) < 2;
-  }
-  return 0;
-#endif
   offset = t8_forest_get_tree_element_offset (forest_from, ltree_id);
   elem_data = (t8_advect_element_data_t *)
     t8_sc_array_index_locidx (problem->element_data, lelement_id + offset);
 
 #if 1
   /* Refine if close to levelset, coarsen if not */
-  band_width = 3;
+  band_width = 4;
   tree_vertices = t8_forest_get_tree_vertices (forest_from, ltree_id);
   elem_diam =
     t8_forest_element_diam (forest_from, ltree_id, elements[0],
                             tree_vertices);
-#if 1
   if (fabs (elem_data->phi) > 2 * band_width * elem_diam) {
     /* coarsen if this is a family and level is not too small */
     return -(num_elements > 1 && level > problem->level);
   }
-  else
-#endif
-  if (fabs (elem_data->phi) < band_width * elem_diam) {
+  else if (fabs (elem_data->phi) < band_width * elem_diam) {
     /* refine if level is not too large */
     return level < problem->maxlevel;
   }
@@ -1120,16 +1108,16 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   T8_ASSERT (min_diam > 0);     /* TODO: handle empty process? */
   T8_ASSERT (max_speed > 0);
   delta_t = problem->cfl * min_diam / max_speed;
-  t8_global_essentialf ("[advect] min diam %g max flow %g\n", min_diam,
-                        max_speed);
-  sc_MPI_Allreduce (&delta_t, &problem->delta_t, 1, sc_MPI_DOUBLE,
-                    sc_MPI_MAX, problem->comm);
+  t8_global_essentialf ("[advect] min diam %g max flow %g  delt = %g\n",
+                        min_diam, max_speed, delta_t);
+  sc_MPI_Allreduce (&delta_t, &problem->delta_t, 1, sc_MPI_DOUBLE, sc_MPI_MIN,
+                    problem->comm);
 }
 
 static void
 t8_advect_write_vtk (t8_advect_problem_t * problem)
 {
-  double             *u_and_phi_array[3], u_temp[3];
+  double             *u_and_phi_array[4], u_temp[3];
   t8_locidx_t         num_local_elements, ielem;
   t8_vtk_data_field_t vtk_data[5];
   t8_advect_element_data_t *elem_data;
@@ -1142,8 +1130,10 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   u_and_phi_array[0] = T8_ALLOC_ZERO (double, num_local_elements);
   /* phi_0 */
   u_and_phi_array[1] = T8_ALLOC_ZERO (double, num_local_elements);
+  /* phi - phi_0 */
+  u_and_phi_array[2] = T8_ALLOC_ZERO (double, num_local_elements);
   /* u */
-  u_and_phi_array[2] = T8_ALLOC_ZERO (double, 3 * num_local_elements);
+  u_and_phi_array[3] = T8_ALLOC_ZERO (double, 3 * num_local_elements);
 
   /* Fill u and phi arrays with their values */
   for (ielem = 0; ielem < num_local_elements; ielem++) {
@@ -1154,9 +1144,10 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
     u_and_phi_array[1][ielem] =
       problem->phi_0 (elem_data->midpoint, problem->t,
                       problem->udata_for_phi);
+    u_and_phi_array[2][ielem] = elem_data->phi - u_and_phi_array[1][ielem];
     problem->u (elem_data->midpoint, problem->t, u_temp);
     for (idim = 0; idim < 3; idim++) {
-      u_and_phi_array[2][3 * ielem + idim] = u_temp[idim];
+      u_and_phi_array[3][3 * ielem + idim] = u_temp[idim];
     }
   }
 
@@ -1167,14 +1158,17 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   snprintf (vtk_data[1].description, BUFSIZ, "Ana. Solution");
   vtk_data[1].type = T8_VTK_SCALAR;
   vtk_data[1].data = u_and_phi_array[1];
-  snprintf (vtk_data[2].description, BUFSIZ, "Flow");
-  vtk_data[2].type = T8_VTK_VECTOR;
+  snprintf (vtk_data[2].description, BUFSIZ, "Error");
+  vtk_data[2].type = T8_VTK_SCALAR;
   vtk_data[2].data = u_and_phi_array[2];
+  snprintf (vtk_data[3].description, BUFSIZ, "Flow");
+  vtk_data[3].type = T8_VTK_VECTOR;
+  vtk_data[3].data = u_and_phi_array[3];
   /* Write filename */
   snprintf (fileprefix, BUFSIZ, "advection_%03i", problem->vtk_count);
   /* Write vtk files */
   if (t8_forest_vtk_write_file (problem->forest, fileprefix,
-                                1, 1, 1, 1, 0, 3, vtk_data)) {
+                                1, 1, 1, 1, 0, 4, vtk_data)) {
     t8_debugf ("[Advect] Wrote pvtu to files %s\n", fileprefix);
   }
   else {
@@ -1190,6 +1184,7 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   T8_FREE (u_and_phi_array[0]);
   T8_FREE (u_and_phi_array[1]);
   T8_FREE (u_and_phi_array[2]);
+  T8_FREE (u_and_phi_array[3]);
   problem->vtk_count++;
 }
 
@@ -1422,7 +1417,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     if (adapt && time_steps / 3 > 0
         && problem->num_time_steps % (time_steps / 3) == (time_steps / 3) - 1)
 #else
-    if (adapt && problem->num_time_steps % 5 == 4)
+    if (adapt)
 #endif
     {
       adapted_or_partitioned = 1;
