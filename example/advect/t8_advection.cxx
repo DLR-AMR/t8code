@@ -213,21 +213,25 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
 
 #if 1
   /* Refine if close to levelset, coarsen if not */
-  band_width = 2;
+  band_width = 3;
   tree_vertices = t8_forest_get_tree_vertices (forest_from, ltree_id);
   elem_diam =
     t8_forest_element_diam (forest_from, ltree_id, elements[0],
                             tree_vertices);
-  if (fabs (elem_data->phi) > band_width * elem_diam) {
+#if 1
+  if (fabs (elem_data->phi) > 2 * band_width * elem_diam) {
     /* coarsen if this is a family and level is not too small */
     return -(num_elements > 1 && level > problem->level);
   }
-  else {
+  else
+#endif
+  if (fabs (elem_data->phi) < band_width * elem_diam) {
     /* refine if level is not too large */
     return level < problem->maxlevel;
   }
+  return 0;
 #endif
-
+#if 0
   ret = t8_advect_adapt_cfl (problem, elem_data);
   if (num_elements > 1) {
     /* This is a family, coarsen it? */
@@ -265,6 +269,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   }
   /* We leave the elements as they are. */
   return 0;
+#endif
 }
 
 /* Compute the relative l_infty error of the stored phi values compared to a
