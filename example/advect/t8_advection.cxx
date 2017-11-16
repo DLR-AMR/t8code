@@ -76,7 +76,7 @@ const char         *advect_stat_names[ADVECT_NUM_STATS] = {
   "total",
   "l_infty_error",
   "L_2",
-  "volume_loss"
+  "volume_loss_[%]"
 };
 
 typedef struct
@@ -1522,7 +1522,7 @@ main (int argc, char *argv[])
   int                 level, reflevel, dim, eclass_int;
   int                 parsed, helpme, no_vtk, vtk_freq, adapt;
   double              T, cfl;
-  t8_levelset_sphere_data_t ls_data = { {.5, .5, 0}, .25 };
+  t8_levelset_sphere_data_t ls_data = { {.6, .6, .6}, .25 };
 
   /* brief help message */
 

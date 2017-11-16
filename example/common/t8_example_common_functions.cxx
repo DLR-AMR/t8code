@@ -255,7 +255,11 @@ t8_flow_incomp_cube_flow (const double x[3], double t, double x_out[3])
   x_out[1] = -1. * f (x[1]) * df (x[0]);
   x_out[2] = f (x[2]) * df (x[0]);
 
-  t8_vec_ax (x_out, 1. / 10 * cos (M_PI * t / 4.));
+  t8_vec_ax (x_out, 1. / 2);
+  /* We reverse the flow at time 0.5 */
+  if (t > 0.5) {
+    t8_vec_ax (x_out, -1);
+  }
 }
 
 /* The following functions model a solution to the stokes equation on
