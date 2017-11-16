@@ -1455,13 +1455,15 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     if (adapt && time_steps / 3 > 0
         && problem->num_time_steps % (time_steps / 3) == (time_steps / 3) - 1)
 #else
-    /* Adapt the mesh after adapt_freq time steps */
-    if (time_steps % adapt_freq == adapt_freq - 1)
+    if (maxlevel > level) {
+      /* Adapt the mesh after adapt_freq time steps */
+      if (time_steps % adapt_freq == adapt_freq - 1)
 #endif
-    {
-      adapted_or_partitioned = 1;
-      t8_advect_problem_adapt (problem);
-      t8_advect_problem_partition (problem);
+      {
+        adapted_or_partitioned = 1;
+        t8_advect_problem_adapt (problem);
+        t8_advect_problem_partition (problem);
+      }
     }
     /* Exchange ghost values */
     t8_forest_ghost_exchange_data (problem->forest, problem->element_data);
