@@ -56,6 +56,7 @@ typedef enum
   ADVECT_TOTAL,                 /* overall runtime */
   ADVECT_ERROR_INF,             /* l_infty error */
   ADVECT_ERROR_2,               /* L_2 error */
+  ADVECT_VOL_LOSS,              /* The loss in volume (region with LS < 0) in percent */
   ADVECT_NUM_STATS              /* The number of statistics that we measure */
 } advect_stats_t;
 
@@ -74,7 +75,8 @@ const char         *advect_stat_names[ADVECT_NUM_STATS] = {
   "solve",
   "total",
   "l_infty_error",
-  "L_2"
+  "L_2",
+  "volume_loss"
 };
 
 typedef struct
@@ -264,6 +266,28 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   /* We leave the elements as they are. */
   return 0;
 #endif
+}
+
+static double
+t8_advect_level_set_volume (const t8_advect_problem_t * problem)
+{
+  t8_locidx_t         num_local_elements, ielem;
+  t8_advect_element_data_t *elem_data;
+  double              volume = 0, global_volume = 0;
+
+  num_local_elements = t8_forest_get_num_element (problem->forest);
+
+  for (ielem = 0; ielem < num_local_elements; ielem++) {
+    elem_data = (t8_advect_element_data_t *)
+      t8_sc_array_index_locidx (problem->element_data, ielem);
+
+    if (elem_data->phi < 0) {
+      volume += elem_data->vol;
+    }
+  }
+  sc_MPI_Allreduce (&volume, &global_volume, 1, sc_MPI_DOUBLE, sc_MPI_SUM,
+                    problem->comm);
+  return global_volume;
 }
 
 /* Compute the relative l_infty error of the stored phi values compared to a
@@ -1268,6 +1292,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   t8_eclass_scheme_c *neigh_scheme, *ts;
   double              total_time, solve_time = 0;
   double              vtk_time = 0;
+  double              start_volume, end_volume;
 
   /* Initialize problem */
   /* start timing */
@@ -1290,6 +1315,9 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     }
     adapted_or_partitioned = 1;
   }
+  start_volume = t8_advect_level_set_volume (problem);
+  t8_global_essentialf ("[advect] Start volume %e\n", start_volume);
+
   t8_advect_print_phi (problem);
 
   time_steps = (int) (T / problem->delta_t);
@@ -1457,6 +1485,14 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                  advect_stat_names[ADVECT_SOLVE]);
   sc_stats_set1 (&problem->stats[ADVECT_IO], vtk_time,
                  advect_stat_names[ADVECT_IO]);
+  /* Compute volume loss */
+
+  end_volume = t8_advect_level_set_volume (problem);
+  t8_global_essentialf ("[advect] End volume %e\n", end_volume);
+
+  sc_stats_set1 (&problem->stats[ADVECT_VOL_LOSS],
+                 1 - end_volume / start_volume,
+                 advect_stat_names[ADVECT_VOL_LOSS]);
 
   /* Compute l_infty error */
   l_infty = t8_advect_l_infty_rel (problem, phi_0, 0.025);
