@@ -212,7 +212,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
 
 #if 1
   /* Refine if close to levelset, coarsen if not */
-  band_width = 3;
+  band_width = 2;
   tree_vertices = t8_forest_get_tree_vertices (forest_from, ltree_id);
   elem_diam =
     t8_forest_element_diam (forest_from, ltree_id, elements[0],
