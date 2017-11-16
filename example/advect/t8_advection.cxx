@@ -1000,6 +1000,21 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, t8_eclass_t eclass,
 #endif
 }
 
+static              t8_flow_function_3d_fn
+t8_advect_choose_flow (int flow_arg)
+{
+  switch (flow_arg) {
+  case 1:
+    return t8_flow_constant_one_x_vec;
+  case 2:
+    return t8_flow_constant_one_xyz_vec;
+  case 3:
+    return t8_flow_incomp_cube_flow;
+  default:
+    SC_ABORT ("Wrong argument for flow parameter.\n");
+  }
+}
+
 static t8_advect_problem_t *
 t8_advect_problem_init (t8_cmesh_t cmesh,
                         t8_flow_function_3d_fn
@@ -1524,16 +1539,16 @@ main (int argc, char *argv[])
   const char         *mshfile = NULL;
   int                 level, reflevel, dim, eclass_int;
   int                 parsed, helpme, no_vtk, vtk_freq, adapt_freq;
+  int                 flow_arg;
   double              T, cfl;
   t8_levelset_sphere_data_t ls_data = { {.6, .6, .6}, .25 };
-
   /* brief help message */
 
   /* long help message */
 
   snprintf (help, BUFSIZ,
-            "This program solves the 1D advection equation on "
-            "the interval [0,1].\n");
+            "This program solves the advection equation on "
+            "a given geometry.\n");
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
@@ -1549,6 +1564,12 @@ main (int argc, char *argv[])
 
   sc_options_add_switch (opt, 'h', "help", &helpme,
                          "Display a short help message.");
+  sc_options_add_int (opt, 'u', "flow", &flow_arg, 0,
+                      "Choose the flow field u.\n"
+                      "\t\t1 - Constant 1 in x-direction.\n"
+                      "\t\t2 - Constant 1 in x,y, and z.\n"
+                      "\t\t3 - A turbulent flow in a cube with zero outflow.\n"
+                      "\t\t\tIt reverses direction at t = 0.5.");
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The minimum refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 0,
@@ -1593,10 +1614,13 @@ main (int argc, char *argv[])
     t8_global_essentialf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed >= 0 && 0 <= level && 0 <= reflevel && 0 <= vtk_freq
+  else if (parsed >= 0 && 1 <= flow_arg && flow_arg <= 3 && 0 <= level
+           && 0 <= reflevel && 0 <= vtk_freq
            && ((mshfile != NULL && 0 < dim && dim <= 3)
                || (1 <= eclass_int && eclass_int <= 8))) {
     t8_cmesh_t          cmesh;
+    t8_flow_function_3d_fn u;
+
     if (mshfile == NULL) {
       dim = t8_eclass_to_dimension[eclass_int];
     }
@@ -1604,9 +1628,9 @@ main (int argc, char *argv[])
     cmesh =
       t8_advect_create_cmesh (sc_MPI_COMM_WORLD, (t8_eclass_t) eclass_int,
                               mshfile, level, dim);
+    u = t8_advect_choose_flow (flow_arg);
     /* Computation */
-    t8_advect_solve (cmesh, t8_flow_incomp_cube_flow,
-                     //t8_sphere_05_0z_midpoint_375_radius,
+    t8_advect_solve (cmesh, u,
                      t8_levelset_sphere, &ls_data,
                      level,
                      level + reflevel, T, cfl, sc_MPI_COMM_WORLD, adapt_freq,
