@@ -1272,7 +1272,7 @@ static void
 t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                  t8_example_level_set_fn phi_0, void *ls_data,
                  int level, int maxlevel, double T, double cfl,
-                 sc_MPI_Comm comm, int adapt, int no_vtk,
+                 sc_MPI_Comm comm, int adapt_freq, int no_vtk,
                  int vtk_freq, int dim)
 {
   t8_advect_problem_t *problem;
@@ -1302,7 +1302,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                             cfl, comm, dim);
   t8_advect_problem_init_elements (problem);
 
-  if (adapt) {
+  if (maxlevel > level) {
     int                 ilevel;
 
     for (ilevel = problem->level; ilevel < problem->maxlevel; ilevel++) {
@@ -1455,7 +1455,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     if (adapt && time_steps / 3 > 0
         && problem->num_time_steps % (time_steps / 3) == (time_steps / 3) - 1)
 #else
-    if (adapt)
+    /* Adapt the mesh after adapt_freq time steps */
+    if (time_steps % adapt_freq == adapt_freq - 1)
 #endif
     {
       adapted_or_partitioned = 1;
@@ -1520,7 +1521,7 @@ main (int argc, char *argv[])
   char                help[BUFSIZ];
   const char         *mshfile = NULL;
   int                 level, reflevel, dim, eclass_int;
-  int                 parsed, helpme, no_vtk, vtk_freq, adapt;
+  int                 parsed, helpme, no_vtk, vtk_freq, adapt_freq;
   double              T, cfl;
   t8_levelset_sphere_data_t ls_data = { {.6, .6, .6}, .25 };
 
@@ -1549,7 +1550,7 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The minimum refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 0,
-                      "The maximum number of refinement levels of the mesh.");
+                      "The number of adaptive refinement levels.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, -1,
                       "If specified the coarse mesh is a hypercube\n\t\t\t\t     consisting of the"
                       " following elements:\n"
@@ -1570,9 +1571,9 @@ main (int argc, char *argv[])
   sc_options_add_double (opt, 'C', "CFL", &cfl,
                          1, "The cfl number to use. Default: 1");
 
-  sc_options_add_switch (opt, 'a', "adapt", &adapt,
-                         "If activated, an adaptive mesh is used instead of "
-                         "a uniform one. (Currently only in 1D)");
+  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 1,
+                      "Controls how often the mesh is readapted. "
+                      "A value of i means, every i-th time step.");
 
   sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 1,
                       "How often the vtk output is produced "
@@ -1606,7 +1607,7 @@ main (int argc, char *argv[])
                      //t8_sphere_05_0z_midpoint_375_radius,
                      t8_levelset_sphere, &ls_data,
                      level,
-                     level + reflevel, T, cfl, sc_MPI_COMM_WORLD, adapt,
+                     level + reflevel, T, cfl, sc_MPI_COMM_WORLD, adapt_freq,
                      no_vtk, vtk_freq, dim);
   }
   else {
