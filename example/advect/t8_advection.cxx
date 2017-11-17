@@ -1183,7 +1183,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   T8_ASSERT (min_diam > 0);     /* TODO: handle empty process? */
   T8_ASSERT (max_speed > 0);
   delta_t = problem->cfl * min_diam / max_speed;
-  t8_global_essentialf ("[advect] min diam %g max flow %g  delt = %g\n",
+  t8_global_essentialf ("[advect] min diam %g max flow %g  delta_t = %g\n",
                         min_diam, max_speed, delta_t);
   sc_MPI_Allreduce (&delta_t, &problem->delta_t, 1, sc_MPI_DOUBLE, sc_MPI_MIN,
                     problem->comm);
@@ -1493,7 +1493,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
       }
     }
     adapted_or_partitioned = 0;
-    /* Project the computed solution to the new forest and exchange ghost values */
+    /* Store the advanced phi value in each element */
     t8_advect_project_element_data (problem);
     solve_time += sc_MPI_Wtime ();
 #if 0
