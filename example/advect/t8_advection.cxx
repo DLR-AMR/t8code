@@ -1521,7 +1521,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
       t8_forest_profile_get_ghostexchange_waittime (problem->forest);
     sc_stats_accumulate (&problem->stats[ADVECT_GHOST_WAIT], ghost_waittime);
     /* We want to count all runs over the solver time as one */
-    // problem->stats[ADVECT_GHOST_EXCHANGE].count = 1;
+    problem->stats[ADVECT_GHOST_EXCHANGE].count = 1;
+    problem->stats[ADVECT_GHOST_WAIT].count = 1;
 
     if (problem->t + problem->delta_t > problem->T) {
       /* The last time step is always the given end time */
