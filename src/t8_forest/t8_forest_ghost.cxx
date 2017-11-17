@@ -1654,7 +1654,7 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
   }
 
   {
-    /*       This code receives the message in order of there arrival.
+    /*       This code receives the message in order of their arrival.
      *       This is effective in terms of runtime, but makes it more difficult
      *       to store the received data, since the data has to be stored in order of
      *       ascending ranks.
@@ -2245,7 +2245,7 @@ t8_forest_ghost_exchange_begin (t8_forest_t forest, sc_array_t * element_data)
 #endif
   for (iremote = 0; iremote < data_exchange->num_remotes; iremote++) {
     /* We need to compute the offset in element_data to which we can receive the message */
-    /* Search for this process' entry in the ghost struct */
+    /* Search for this processes' entry in the ghost struct */
     recv_rank =
       *(int *) sc_array_index_int (ghost->remote_processes, iremote);
     lookup_proc.mpirank = recv_rank;
@@ -2338,7 +2338,15 @@ t8_forest_ghost_exchange_data (t8_forest_t forest, sc_array_t * element_data)
              + t8_forest_get_num_ghosts (forest));
 
   data_exchange = t8_forest_ghost_exchange_begin (forest, element_data);
+  if (forest->profile != NULL) {
+    /* Measure the time for ghost_exchange_end */
+    forest->profile->ghost_waittime = -sc_MPI_Wtime ();
+  }
   t8_forest_ghost_exchange_end (data_exchange);
+  if (forest->profile != NULL) {
+    /* Measure the time for ghost_exchange_end */
+    forest->profile->ghost_waittime += sc_MPI_Wtime ();
+  }
   t8_debugf ("Finished ghost_exchange_data\n");
 }
 

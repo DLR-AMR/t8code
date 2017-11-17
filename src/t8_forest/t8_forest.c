@@ -1237,6 +1237,18 @@ t8_forest_profile_get_ghost_time (t8_forest_t forest,
     *ghosts_sent = forest->profile->ghosts_shipped;
     return forest->profile->ghost_runtime;
   }
+  *ghosts_sent = 0;
+  return 0;
+}
+
+double
+t8_forest_profile_get_ghostexchange_waittime (t8_forest_t forest)
+{
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+  if (forest->profile != NULL) {
+    return forest->profile->ghost_waittime;
+  }
   return 0;
 }
 

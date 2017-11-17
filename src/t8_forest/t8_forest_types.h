@@ -167,6 +167,7 @@ typedef struct t8_profile
   double              adapt_runtime;      /**< The runtime of the last call to \a t8_forest_adapt (not counting adaptation in t8_forest_balance). */
   double              partition_runtime;  /**< The runtime of  the last call to \a t8_cmesh_partition (not countint partition in t8_forest_balance). */
   double              ghost_runtime;      /**< The runtime of the last call to \a t8_forest_ghost_create. */
+  double              ghost_waittime;     /**< Amount of synchronisation time in ghost. */
   double              balance_runtime;    /**< The runtime of the last call to \a t8_forest_balance. */
   double              commit_runtime;     /**< The runtime of the last call to \a t8_cmesh_commit. */
 

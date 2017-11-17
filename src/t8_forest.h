@@ -501,6 +501,18 @@ double              t8_forest_profile_get_ghost_time (t8_forest_t forest,
                                                       t8_locidx_t *
                                                       ghosts_sent);
 
+/** Get the waittime of the last call to \ref t8_forest_ghost_exchange_data.
+ * \param [in]   forest         The forest.
+ * \return                      The time of ghost_exchange_data that was spent waiting
+ *                              for other MPI processes, if profiling was activated.
+ *                              0 otherwise.
+ * \a forest must be committed before calling this function.
+ * \see t8_forest_set_profiling
+ * \see t8_forest_ghost_exchange_data
+ */
+double              t8_forest_profile_get_ghostexchange_waittime (t8_forest_t
+                                                                  forest);
+
 /** Print the ghost structure of a forest. Only used for debugging. */
 void                t8_forest_ghost_print (t8_forest_t forest);
 
