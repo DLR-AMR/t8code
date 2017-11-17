@@ -1297,7 +1297,7 @@ t8_advect_problem_destroy (t8_advect_problem_t ** pproblem)
 static void
 t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                  t8_example_level_set_fn phi_0, void *ls_data,
-                 int level, int maxlevel, double T, double cfl,
+                 const int level, const int maxlevel, double T, double cfl,
                  sc_MPI_Comm comm, int adapt_freq, int no_vtk,
                  int vtk_freq, int dim)
 {
@@ -1487,7 +1487,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 #else
     if (maxlevel > level) {
       /* Adapt the mesh after adapt_freq time steps */
-      if (time_steps % adapt_freq == adapt_freq - 1)
+      if (problem->num_time_steps % adapt_freq == adapt_freq - 1)
 #endif
       {
         adapted_or_partitioned = 1;
