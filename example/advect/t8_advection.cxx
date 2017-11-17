@@ -1034,6 +1034,7 @@ t8_advect_choose_flow (int flow_arg)
   default:
     SC_ABORT ("Wrong argument for flow parameter.\n");
   }
+  return NULL;                  /* prevents compiler warning */
 }
 
 static t8_advect_problem_t *
@@ -1511,10 +1512,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     ghost_exchange_time += sc_MPI_Wtime ();
     sc_stats_accumulate (&problem->stats[ADVECT_GHOST_EXCHANGE],
                          ghost_exchange_time);
-    sc_stats_accumulate (&problem->stats[ADVECT_AMR], ghost_exchange_time);
     /* We want to count all runs over the solver time as one */
     problem->stats[ADVECT_GHOST_EXCHANGE].count = 1;
-    problem->stats[ADVECT_AMR].count = 1;
 
     if (problem->t + problem->delta_t > problem->T) {
       /* The last time step is always the given end time */
