@@ -1124,7 +1124,7 @@ static void
 t8_advect_problem_init_elements (t8_advect_problem_t * problem)
 {
   t8_locidx_t         itree, ielement, idata;
-  t8_locidx_t         num_trees, num_elems_in_tree;
+  t8_locidx_t         num_trees, num_elems_in_tree, num_local_elems;
   t8_element_t       *element, **neighbors;
   int                 iface;
   t8_advect_element_data_t *elem_data;
@@ -1135,6 +1135,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   double              diam;
 
   num_trees = t8_forest_get_num_local_trees (problem->forest);
+  num_local_elems = t8_forest_get_num_element (problem->forest);
   for (itree = 0, idata = 0; itree < num_trees; itree++) {
     ts =
       t8_forest_get_eclass_scheme (problem->forest,
@@ -1187,14 +1188,19 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   /* Exchange ghost values */
   t8_forest_ghost_exchange_data (problem->forest, problem->element_data);
 
-/* Compute the timestep, this has to be done globally */
-  T8_ASSERT (min_diam > 0);     /* TODO: handle empty process? */
-  T8_ASSERT (max_speed > 0);
-  delta_t = problem->cfl * min_diam / max_speed;
-  t8_global_essentialf ("[advect] min diam %g max flow %g  delta_t = %g\n",
-                        min_diam, max_speed, delta_t);
+  /* Compute the timestep, this has to be done globally */
+  if (num_local_elems > 0) {
+    T8_ASSERT (min_diam > 0);
+    T8_ASSERT (max_speed > 0);
+    delta_t = problem->cfl * min_diam / max_speed;
+  }
+  else {
+    delta_t = problem->T - problem->t;
+  }
   sc_MPI_Allreduce (&delta_t, &problem->delta_t, 1, sc_MPI_DOUBLE, sc_MPI_MIN,
                     problem->comm);
+  t8_global_essentialf ("[advect] min diam %g max flow %g  delta_t = %g\n",
+                        min_diam, max_speed, problem->delta_t);
 }
 
 static void
