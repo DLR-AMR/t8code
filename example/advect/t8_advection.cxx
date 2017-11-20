@@ -56,6 +56,8 @@ typedef enum
   ADVECT_ELEM_AVG,              /* average global number of elements (per time step) */
   ADVECT_INIT,                  /* initialization runtime */
   ADVECT_AMR,                   /* AMR runtime (adapt+partition+ghost+balance) including data exchange (partition/ghost) */
+  ADVECT_NEIGHS,                /* neighbor finding runtime */
+  ADVECT_FLUX,                  /* flux computation runtime */
   ADVECT_SOLVE,                 /* solver runtime */
   ADVECT_TOTAL,                 /* overall runtime */
   ADVECT_ERROR_INF,             /* l_infty error */
@@ -80,6 +82,8 @@ const char         *advect_stat_names[ADVECT_NUM_STATS] = {
   "number_elements",
   "init",
   "AMR",
+  "neighbor_finding",
+  "flux_computation",
   "solve",
   "total",
   "l_infty_error",
@@ -104,6 +108,7 @@ typedef struct
   double              cfl; /**< CFL number */
   double              delta_t; /**< Current time step */
   double              min_grad, max_grad; /**< bounds for refinement */
+  double              band_width; /**< width of the refinement band */
   int                 num_time_steps; /**< Number of time steps computed so far.
                                         (If delta_t is constant then t = num_time_steps * delta_t) */
   int                 vtk_count; /**< If vtk output is enabled, count the number of pvtu files written. */
@@ -207,6 +212,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   t8_locidx_t         offset;
 
   static int          seed = 10000;
+
   srand (seed++);
   /* Get a pointer to the problem from the user data pointer of forest */
   problem = (t8_advect_problem_t *) t8_forest_get_user_data (forest);
@@ -220,7 +226,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
 
 #if 1
   /* Refine if close to levelset, coarsen if not */
-  band_width = 1.5;
+  band_width = problem->band_width;
   tree_vertices = t8_forest_get_tree_vertices (forest_from, ltree_id);
   elem_diam =
     t8_forest_element_diam (forest_from, ltree_id, elements[0],
@@ -1048,7 +1054,8 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
                         t8_example_level_set_fn
                         phi_0, void *ls_data,
                         int level, int maxlevel,
-                        double T, double cfl, sc_MPI_Comm comm, int dim)
+                        double T, double cfl, sc_MPI_Comm comm,
+                        double band_width, int dim)
 {
   t8_advect_problem_t *problem;
   t8_scheme_cxx_t    *default_scheme;
@@ -1073,6 +1080,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
   problem->num_time_steps = 0;  /* current time step */
   problem->comm = comm;         /* MPI communicator */
   problem->vtk_count = 0;       /* number of pvtu files written */
+  problem->band_width = band_width;     /* width of the refinemen band around 0 level-set */
   problem->dim = dim;           /* dimension of the mesh */
 
   for (i = 0; i < ADVECT_NUM_STATS; i++) {
@@ -1314,7 +1322,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                  t8_example_level_set_fn phi_0, void *ls_data,
                  const int level, const int maxlevel, double T, double cfl,
                  sc_MPI_Comm comm, int adapt_freq, int no_vtk,
-                 int vtk_freq, int dim)
+                 int vtk_freq, double band_width, int dim)
 {
   t8_advect_problem_t *problem;
   int                 iface;
@@ -1331,8 +1339,9 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   t8_eclass_t         eclass;
   t8_element_t       *elem, **neighs;
   t8_eclass_scheme_c *neigh_scheme, *ts;
-  double              total_time, solve_time =
-    0, ghost_exchange_time, ghost_waittime;
+  double              total_time, solve_time = 0;
+  double              ghost_exchange_time, ghost_waittime, neighbor_time,
+    flux_time;
   double              vtk_time = 0;
   double              start_volume, end_volume;
 
@@ -1341,7 +1350,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   total_time = -sc_MPI_Wtime ();
   problem =
     t8_advect_problem_init (cmesh, u, phi_0, ls_data, level, maxlevel, T,
-                            cfl, comm, dim);
+                            cfl, comm, band_width, dim);
   t8_advect_problem_init_elements (problem);
 
   if (maxlevel > level) {
@@ -1424,6 +1433,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
             if (elem_data->num_neighbors[iface] > 0) {
               T8_FREE (elem_data->neighs[iface]);
             }
+            neighbor_time = -sc_MPI_Wtime ();
             t8_forest_leaf_face_neighbors (problem->forest, itree, elem,
                                            &neighs, iface,
                                            &elem_data->num_neighbors[iface],
@@ -1432,8 +1442,14 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
             neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
                                               neighs);
             T8_FREE (neighs);
+            neighbor_time += sc_MPI_Wtime ();
+            sc_stats_accumulate (&problem->stats[ADVECT_NEIGHS],
+                                 neighbor_time);
+            /* We want to count all runs over the solver time as one */
+            problem->stats[ADVECT_NEIGHS].count = 1;
           }
 
+          flux_time = -sc_MPI_Wtime ();
           if (problem->dim == 1) {
             if (elem_data->num_neighbors[iface] == 1) {
               neigh_data = (t8_advect_element_data_t *)
@@ -1487,6 +1503,11 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                                        itree, elem, tree_vertices, iface);
             }
           }
+          flux_time += sc_MPI_Wtime ();
+
+          sc_stats_accumulate (&problem->stats[ADVECT_FLUX], flux_time);
+          /* We want to count all runs over the solver time as one */
+          problem->stats[ADVECT_FLUX].count = 1;
         }
         /* Compute time step */
         t8_advect_advance_element (problem, elem_data, num_faces, flux);
@@ -1581,7 +1602,7 @@ main (int argc, char *argv[])
   int                 level, reflevel, dim, eclass_int;
   int                 parsed, helpme, no_vtk, vtk_freq, adapt_freq;
   int                 flow_arg;
-  double              T, cfl;
+  double              T, cfl, band_width;
   t8_levelset_sphere_data_t ls_data = { {.6, .6, .6}, .25 };
   /* brief help message */
 
@@ -1634,6 +1655,10 @@ main (int argc, char *argv[])
 
   sc_options_add_double (opt, 'C', "CFL", &cfl,
                          1, "The cfl number to use. Default: 1");
+  sc_options_add_double (opt, 'b', "band-width", &band_width,
+                         1,
+                         "Control the width of the refinement band around\n"
+                         " the zero level-set. Default 1.");
 
   sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 1,
                       "Controls how often the mesh is readapted. "
@@ -1658,7 +1683,7 @@ main (int argc, char *argv[])
   else if (parsed >= 0 && 1 <= flow_arg && flow_arg <= 3 && 0 <= level
            && 0 <= reflevel && 0 <= vtk_freq
            && ((mshfile != NULL && 0 < dim && dim <= 3)
-               || (1 <= eclass_int && eclass_int <= 8))) {
+               || (1 <= eclass_int && eclass_int <= 8)) && band_width >= 0) {
     t8_cmesh_t          cmesh;
     t8_flow_function_3d_fn u;
 
@@ -1675,7 +1700,7 @@ main (int argc, char *argv[])
                      t8_levelset_sphere, &ls_data,
                      level,
                      level + reflevel, T, cfl, sc_MPI_COMM_WORLD, adapt_freq,
-                     no_vtk, vtk_freq, dim);
+                     no_vtk, vtk_freq, band_width, dim);
   }
   else {
     /* wrong usage */
