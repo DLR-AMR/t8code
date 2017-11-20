@@ -1440,7 +1440,8 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
                                        const t8_element_t * elem,
                                        t8_element_t * neighs[],
                                        t8_eclass_scheme_c *
-                                       neigh_scheme, int face, int num_neighs)
+                                       neigh_scheme, int face, int num_neighs,
+                                       int dual_faces[])
 {
   t8_eclass_scheme_c *ts;
   t8_tree_t           tree;
@@ -1493,6 +1494,10 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
                                                      neighs[child_it],
                                                      neigh_scheme,
                                                      child_face, &neigh_face);
+    if (dual_faces != NULL) {
+      /* Store the dual face */
+      dual_faces[child_it] = neigh_face;
+    }
     /* For each of the neighbors, the neighbor tree must be the same. */
     T8_ASSERT (child_it == 0 || neighbor_tree == last_neighbor_tree);
 #ifdef T8_ENABLE_DEBUG
@@ -1509,7 +1514,8 @@ void
 t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
                                const t8_element_t * leaf,
                                t8_element_t ** pneighbor_leafs[],
-                               int face, int *num_neighbors,
+                               int face, int *dual_faces[],
+                               int *num_neighbors,
                                t8_locidx_t ** pelement_indices,
                                t8_eclass_scheme_c ** pneigh_scheme,
                                int forest_is_balanced)
@@ -1522,7 +1528,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
   t8_element_array_t *element_array;
   t8_element_t       *ancestor, **neighbor_leafs;
   t8_linearidx_t      neigh_id;
-  int                 dual_face, num_children_at_face, at_maxlevel;
+  int                 num_children_at_face, at_maxlevel;
   int                 ineigh, *owners, different_owners, have_ghosts;
 
   /* TODO: implement is_leaf check to apply to leaf */
@@ -1550,30 +1556,35 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
     if (at_maxlevel) {
       num_children_at_face = 1;
       neighbor_leafs = *pneighbor_leafs = T8_ALLOC (t8_element_t *, 1);
+      *dual_faces = T8_ALLOC (int, 1);
       neigh_scheme->t8_element_new (num_children_at_face, neighbor_leafs);
       /* Compute neighbor element and global treeid of the neighbor */
       gneigh_treeid =
         t8_forest_element_face_neighbor (forest, ltreeid, leaf,
                                          neighbor_leafs[0], neigh_scheme,
-                                         face, &dual_face);
+                                         face, *dual_faces);
     }
     else {
       /* Allocate neighbor element */
       num_children_at_face = ts->t8_element_num_face_children (leaf, face);
       neighbor_leafs = *pneighbor_leafs =
         T8_ALLOC (t8_element_t *, num_children_at_face);
+      *dual_faces = T8_ALLOC (int, num_children_at_face);
       neigh_scheme->t8_element_new (num_children_at_face, neighbor_leafs);
       /* Compute neighbor elements and global treeid of the neighbor */
       gneigh_treeid =
         t8_forest_element_half_face_neighbors (forest, ltreeid, leaf,
                                                neighbor_leafs,
                                                neigh_scheme, face,
-                                               num_children_at_face);
+                                               num_children_at_face,
+                                               *dual_faces);
     }
     if (gneigh_treeid < 0) {
       /* There exists no face neighbor across this face, we return with this info */
       neigh_scheme->t8_element_destroy (1, neighbor_leafs);
       T8_FREE (neighbor_leafs);
+      T8_FREE (*dual_faces);
+      *dual_faces = NULL;
       *num_neighbors = 0;
       *pelement_indices = NULL;
       *pneighbor_leafs = NULL;
@@ -1663,6 +1674,38 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         /* ancestor is a real ancestor, and thus the neighbor is either the
          * parent or grandparent of the half neighbors. we can return it and
          * the indices. */
+        /* We need to determine the dual face */
+        if (neigh_scheme->t8_element_level (ancestor) ==
+            ts->t8_element_level (leaf)) {
+          /* The ancestor is the same-level neighbor of leaf */
+          if (!at_maxlevel) {
+            /* its dual face is the face of the parent of the first neighbor leaf */
+            *dual_faces[0] =
+              neigh_scheme->t8_element_face_parent_face (neighbor_leafs[0],
+                                                         *dual_faces[0]);
+
+          }
+        }
+        else {
+          /* The ancestor is the parent of the parent */
+          T8_ASSERT (neigh_scheme->t8_element_level (ancestor) ==
+                     ts->t8_element_level (leaf) - 1);
+
+          *dual_faces[0] =
+            neigh_scheme->t8_element_face_parent_face (neighbor_leafs[0],
+                                                       *dual_faces[0]);
+          if (!at_maxlevel) {
+            /* We need to compute the dual face of the grandparent. */
+            /* Construct the parent of the grand child */
+            neigh_scheme->t8_element_parent (neighbor_leafs[0],
+                                             neighbor_leafs[0]);
+            /* Compute the face id of the parent's face */
+            *dual_faces[0] =
+              neigh_scheme->t8_element_face_parent_face (neighbor_leafs[0],
+                                                         *dual_faces[0]);
+          }
+        }
+
         /* free memory */
         neigh_scheme->t8_element_destroy (num_children_at_face - 1,
                                           neighbor_leafs + 1);
@@ -1768,6 +1811,7 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
   t8_eclass_t         eclass;
   t8_eclass_scheme_c *ts, *neigh_scheme;
   t8_locidx_t        *element_indices;
+  int                *dual_faces;
   char                buffer[BUFSIZ];
   int                 allocate_first_desc = 0, allocate_tree_offset = 0;
   int                 allocate_el_offset = 0;
@@ -1792,14 +1836,16 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
     /* Iterate over all faces */
     for (iface = 0; iface < ts->t8_element_num_faces (leaf); iface++) {
       t8_forest_leaf_face_neighbors (forest, ltree, leaf, &neighbor_leafs,
-                                     iface, &num_neighbors,
+                                     iface, &dual_faces, &num_neighbors,
                                      &element_indices, &neigh_scheme, 1);
-      t8_debugf ("Element %li across face %i has %i leaf neighbors.\n",
-                 (long) ielem, iface, num_neighbors);
+      t8_debugf
+        ("Element %li across face %i has %i leaf neighbors (with dual faces).\n",
+         (long) ielem, iface, num_neighbors);
       snprintf (buffer, BUFSIZ, "\tIndices:\t");
       for (ineigh = 0; ineigh < num_neighbors; ineigh++) {
         snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer),
-                  "%li ", (long) element_indices[ineigh]);
+                  "%li  (%i)  ", (long) element_indices[ineigh],
+                  dual_faces[iface]);
       }
       t8_debugf ("%s\n", buffer);
       if (num_neighbors > 0) {
@@ -1807,6 +1853,7 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
 
         T8_FREE (element_indices);
         T8_FREE (neighbor_leafs);
+        T8_FREE (dual_faces);
       }
     }
   }

@@ -1159,7 +1159,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
               t8_forest_element_half_face_neighbors (forest, itree, elem,
                                                      half_neighbors,
                                                      neigh_scheme, iface,
-                                                     num_face_children);
+                                                     num_face_children, NULL);
           }
           else {
             int                 dummy_neigh_face;

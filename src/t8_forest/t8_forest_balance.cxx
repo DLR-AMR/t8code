@@ -70,7 +70,8 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from,
                                                            half_neighbors,
                                                            neigh_scheme,
                                                            iface,
-                                                           num_half_neighbors);
+                                                           num_half_neighbors,
+                                                           NULL);
     if (neighbor_tree >= 0) {
       /* The face neighbors do exist, check for each one, whether it has
        * local or ghost leaf descendants in the forest.

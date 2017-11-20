@@ -391,6 +391,7 @@ void                t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t
  * \param [in]    face    The number of the face of \a elem.
  * \param [in]    num_neighs The number of allocated element in \a neighs. Must match the
  *                        number of face neighbors of one bigger refinement level.
+ * \param [out]   dual_face If not NULL, on output the face id's of the neighboring elements' faces.
  * \return                The global id of the tree in which the neighbors are.
  *        -1 if there exists no neighbor across that face.
  */
@@ -404,7 +405,8 @@ t8_gloidx_t         t8_forest_element_half_face_neighbors (t8_forest_t forest,
                                                            t8_eclass_scheme_c
                                                            * neigh_scheme,
                                                            int face,
-                                                           int num_neighs);
+                                                           int num_neighs,
+                                                           int dual_faces[]);
 
 /** Compute the leaf face neighbors of a forest.
  * \param [in]    forest  The forest. Must have a valid ghost layer.
@@ -414,6 +416,7 @@ t8_gloidx_t         t8_forest_element_half_face_neighbors (t8_forest_t forest,
  *                        leafs are stored here.
  * \param [in]    face    The index of the face across which the face neighbors
  *                        are searched.
+ * \param [out]   dual_face On output the face id's of the neighboring elements' faces.
  * \param [out]   num_neighbors On output the number of neighbor leafs.
  * \param [out]   pelement_indices Unallocated on input. On outout the element indices
  *                        of the neighbor leafs are stored here.
@@ -433,6 +436,7 @@ void                t8_forest_leaf_face_neighbors (t8_forest_t forest,
                                                    t8_element_t **
                                                    pneighbor_leafs[],
                                                    int face,
+                                                   int *dual_faces[],
                                                    int *num_neighbors,
                                                    t8_locidx_t **
                                                    pelement_indices,
