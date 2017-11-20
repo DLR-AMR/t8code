@@ -160,8 +160,10 @@ t8_forest_balance (t8_forest_t forest, int repartition)
         num_stats += 2;
         adap_stats = T8_REALLOC (adap_stats, sc_statinfo_t, num_stats);
         ghost_stats = T8_REALLOC (ghost_stats, sc_statinfo_t, num_stats);
-        partition_stats =
-          T8_REALLOC (partition_stats, sc_statinfo_t, num_stats);
+        if (repartition) {
+          partition_stats =
+            T8_REALLOC (partition_stats, sc_statinfo_t, num_stats);
+        }
       }
       sc_stats_set1 (&adap_stats[count], forest_temp->profile->adapt_runtime,
                      "forest balance: Adapt time");
