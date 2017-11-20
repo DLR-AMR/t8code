@@ -1897,7 +1897,7 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
 void
 t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
 {
-  t8_forest_ghost_t   ghost;
+  t8_forest_ghost_t   ghost = NULL;
   t8_ghost_mpi_send_info_t *send_info;
   sc_MPI_Request     *requests;
   int                 create_tree_array = 0, create_gfirst_desc_array = 0;
@@ -1983,8 +1983,14 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     /* If profiling is enabled, we measure the runtime of ghost_create */
     forest->profile->ghost_runtime += sc_MPI_Wtime ();
     /* We also store the number of ghosts and remotes */
-    forest->profile->ghosts_received = ghost->num_ghosts_elements;
-    forest->profile->ghosts_shipped = ghost->num_remote_elements;
+    if (ghost != NULL) {
+      forest->profile->ghosts_received = ghost->num_ghosts_elements;
+      forest->profile->ghosts_shipped = ghost->num_remote_elements;
+    }
+    else {
+      forest->profile->ghosts_received = 0;
+      forest->profile->ghosts_shipped = 0;
+    }
     /* DO NOT DELETE THE FOLLOWING line.
      * even if you do not want this output. It fixes a bug that occured on JUQUEEN, where the
      * runtimes were computed to 0.
