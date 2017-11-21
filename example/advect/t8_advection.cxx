@@ -123,7 +123,7 @@ typedef struct
   double              vol; /**< Volume of this element */
   double              phi; /**< Value of solution at midpoint */
   double              phi_new; /**< Value of solution at midpoint in next time step */
-  double              fluxes[MAX_FACES]; /**< The fluxes at a given face */
+  double             *fluxes[MAX_FACES]; /**< The fluxes to each neeighbor at a given face */
   int                 flux_valid[MAX_FACES];  /**< If non-zero, this flux was computed */
   int                 level; /**< The refinement level of the element. */
   int                 num_faces; /**< The number of faces */
@@ -509,10 +509,11 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
  */
 static double
 t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
-                               const t8_advect_element_data_t * el_hang,
+                               t8_advect_element_data_t * el_hang,
                                t8_locidx_t ltreeid,
-                               const t8_element_t * element_hang,
-                               const double *tree_vertices, int face)
+                               t8_element_t * element_hang,
+                               const double *tree_vertices, int face,
+                               int neigh_is_ghost)
 {
   int                 i, num_face_children, child_face;
   t8_eclass_scheme_c *ts;
@@ -520,6 +521,7 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
   t8_element_t      **face_children;
   t8_advect_element_data_t child_data, *neigh_data;
   double              flux = 0;
+  int                 dual_face;
 
   /* Get the eclass and the scheme for the element */
   eclass = t8_forest_get_tree_class (problem->forest, ltreeid);
@@ -547,12 +549,27 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
     neigh_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data,
                                 el_hang->neighs[face][i]);
+
     /* Compute the flux */
-    flux +=
+    el_hang->fluxes[face][i] =
       t8_advect_flux_upwind (problem, &child_data, neigh_data, ltreeid,
                              face_children[i], tree_vertices, child_face);
+    /* Set the flux of the neighbor element */
+    dual_face = el_hang->dual_faces[face][i];
+    if (!neigh_is_ghost) {
+      if (neigh_data->flux_valid[dual_face] < 0) {
+        /* We need to allocate the fluxes */
+        neigh_data->fluxes[dual_face] = T8_ALLOC (double, 1);
+      }
+      neigh_data->num_neighbors[dual_face] = 1;
+      neigh_data->fluxes[dual_face][0] = -el_hang->fluxes[face][i];
+      neigh_data->flux_valid[dual_face] = 1;
+    }
+
+    flux += el_hang->fluxes[face][i];
   }
 
+  el_hang->flux_valid[face] = 1;
   /* clean-up */
   ts->t8_element_destroy (num_face_children, face_children);
   T8_FREE (face_children);
@@ -663,15 +680,18 @@ t8_advect_flux_lax_friedrich_1d (const t8_advect_problem_t * problem,
 
 static void
 t8_advect_advance_element (t8_advect_problem_t * problem,
-                           t8_advect_element_data_t * elem, int num_faces,
-                           double *flux)
+                           t8_advect_element_data_t * elem)
 {
-  int                 iface;
+  int                 iface, ineigh;
   double              flux_sum = 0;
+  int                 num_faces;
 
+  num_faces = elem->num_faces;
   /* Sum all the fluxes */
   for (iface = 0; iface < num_faces; iface++) {
-    flux_sum += flux[iface];
+    for (ineigh = 0; ineigh < elem->num_neighbors[iface]; ineigh++) {
+      flux_sum += elem->fluxes[iface][ineigh];
+    }
   }
   /* Phi^t = dt/dx * (f_(j-1/2) - f_(j+1/2)) + Phi^(t-1) */
   elem->phi_new = (problem->delta_t / elem->vol) * flux_sum + elem->phi;
@@ -754,6 +774,10 @@ t8_advect_replace (t8_forest_t forest_old,
     T8_ASSERT (elem_data_in->num_faces == ts->t8_element_num_faces (element));
     for (iface = 0; iface < elem_data_in->num_faces; iface++) {
       elem_data_in->num_neighbors[iface] = 0;
+      elem_data_in->flux_valid[iface] = -1;
+      elem_data_in->dual_faces[iface] = NULL;
+      elem_data_in->fluxes[iface] = NULL;
+      elem_data_in->neighs[iface] = NULL;
     }
   }
   else if (num_outgoing == 1) {
@@ -774,6 +798,10 @@ t8_advect_replace (t8_forest_t forest_old,
                  ts->t8_element_num_faces (element));
       for (iface = 0; iface < elem_data_in[i].num_faces; iface++) {
         elem_data_in[i].num_neighbors[iface] = 0;
+        elem_data_in[i].flux_valid[iface] = -1;
+        elem_data_in[i].dual_faces[iface] = NULL;
+        elem_data_in[i].fluxes[iface] = NULL;
+        elem_data_in[i].neighs[iface] = NULL;
       }
       /* Update the level */
       elem_data_in[i].level = elem_data_out->level + 1;
@@ -803,6 +831,10 @@ t8_advect_replace (t8_forest_t forest_old,
     T8_ASSERT (elem_data_in->num_faces == ts->t8_element_num_faces (element));
     for (iface = 0; iface < elem_data_in->num_faces; iface++) {
       elem_data_in->num_neighbors[iface] = 0;
+      elem_data_in->flux_valid[iface] = -1;
+      elem_data_in->dual_faces[iface] = NULL;
+      elem_data_in->fluxes[iface] = NULL;
+      elem_data_in->neighs[iface] = NULL;
     }
     /* update the level */
     elem_data_in->level = elem_data_out->level - 1;
@@ -829,6 +861,7 @@ t8_advect_problem_elements_destroy (t8_advect_problem_t * problem)
       if (elem_data->num_neighbors[iface] > 0) {
         T8_FREE (elem_data->neighs[iface]);
         T8_FREE (elem_data->dual_faces[iface]);
+        T8_FREE (elem_data->fluxes[iface]);
         elem_data->num_neighbors[iface] = 0;
       }
     }
@@ -1192,7 +1225,10 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
           neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
                                             neighbors);
           T8_FREE (neighbors);
+          elem_data->fluxes[iface] =
+            T8_ALLOC (double, elem_data->num_neighbors[iface]);
         }
+        elem_data->flux_valid[iface] = 0;
       }
     }
   }
@@ -1344,9 +1380,9 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   t8_advect_problem_t *problem;
   int                 iface;
   t8_locidx_t         itree, ielement, lelement;
-  t8_advect_element_data_t *elem_data, *neigh_data;
+  t8_advect_element_data_t *elem_data, *neigh_data = NULL;
   t8_advect_element_data_t boundary_data;
-  double              flux[MAX_FACES];
+  double              flux;
   double              l_infty, L_2;
   double             *tree_vertices;
   int                 modulus, time_steps;
@@ -1354,14 +1390,14 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   int                 done = 0;
   int                 adapted_or_partitioned = 0;
   int                 dual_face;
-  t8_eclass_t         eclass;
   t8_element_t       *elem, **neighs;
-  t8_eclass_scheme_c *neigh_scheme, *ts;
+  t8_eclass_scheme_c *neigh_scheme;
   double              total_time, solve_time = 0;
   double              ghost_exchange_time, ghost_waittime, neighbor_time,
     flux_time;
   double              vtk_time = 0;
   double              start_volume, end_volume;
+  int                 hanging, neigh_is_ghost;
 
   /* Initialize problem */
   /* start timing */
@@ -1430,8 +1466,6 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
       /* Get the vertices of this tree */
       tree_vertices = t8_forest_get_tree_vertices (problem->forest, itree);
       /* Get the scheme of this tree */
-      eclass = t8_forest_get_tree_class (problem->forest, itree);
-      ts = t8_forest_get_eclass_scheme (problem->forest, eclass);
       for (ielement = 0;
            ielement < t8_forest_get_tree_num_elements (problem->forest,
                                                        itree);
@@ -1442,87 +1476,122 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
           t8_sc_array_index_locidx (problem->element_data, lelement);
         elem =
           t8_forest_get_element_in_tree (problem->forest, itree, ielement);
-        num_faces = ts->t8_element_num_faces (elem);
+        num_faces = elem_data->num_faces;
         /* Compute left and right flux */
         for (iface = 0; iface < num_faces; iface++) {
-          if (adapted_or_partitioned) {
-            /* We changed the mesh, so that we have to calculate the neighbor
-             * indices again. */
-            if (elem_data->num_neighbors[iface] > 0) {
-              T8_FREE (elem_data->neighs[iface]);
-              T8_FREE (elem_data->dual_faces[iface]);
-            }
-            neighbor_time = -sc_MPI_Wtime ();
-            t8_forest_leaf_face_neighbors (problem->forest, itree, elem,
-                                           &neighs, iface,
-                                           &elem_data->dual_faces[iface],
-                                           &elem_data->num_neighbors[iface],
-                                           &elem_data->neighs[iface],
-                                           &neigh_scheme, 1);
-            neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
-                                              neighs);
-            T8_FREE (neighs);
-            neighbor_time += sc_MPI_Wtime ();
-            sc_stats_accumulate (&problem->stats[ADVECT_NEIGHS],
-                                 neighbor_time);
-            /* We want to count all runs over the solver time as one */
-            problem->stats[ADVECT_NEIGHS].count = 1;
-          }
+          if (elem_data->flux_valid[iface] <= 0) {
+            /* Compute flux at this face */
+            if (adapted_or_partitioned) {
+              /* We changed the mesh, so that we have to calculate the neighbor
+               * indices again. */
+              if (elem_data->num_neighbors[iface] > 0) {
+                T8_FREE (elem_data->neighs[iface]);
+                T8_FREE (elem_data->dual_faces[iface]);
+                T8_FREE (elem_data->fluxes[iface]);
+                elem_data->flux_valid[iface] = -1;
+              }
+              neighbor_time = -sc_MPI_Wtime ();
+              t8_forest_leaf_face_neighbors (problem->forest, itree, elem,
+                                             &neighs, iface,
+                                             &elem_data->dual_faces[iface],
+                                             &elem_data->num_neighbors[iface],
+                                             &elem_data->neighs[iface],
+                                             &neigh_scheme, 1);
 
-          flux_time = -sc_MPI_Wtime ();
-          if (problem->dim == 1) {
-            if (elem_data->num_neighbors[iface] == 1) {
+              /* *INDENT-OFF* */
+              neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
+                                                neighs);
+              /* *INDENT-ON* */
+
+              T8_FREE (neighs);
+
+              /* Allocate flux storage */
+              elem_data->fluxes[iface] =
+                T8_ALLOC (double, elem_data->num_neighbors[iface]);
+
+              neighbor_time += sc_MPI_Wtime ();
+              sc_stats_accumulate (&problem->stats[ADVECT_NEIGHS],
+                                   neighbor_time);
+              /* We want to count all runs over the solver time as one */
+              problem->stats[ADVECT_NEIGHS].count = 1;
+            }
+
+            /* Compute neighbor data, whether this is a hanging face
+             * and whether the first neighbor is a ghost */
+            if (elem_data->num_neighbors[iface] >= 1) {
               neigh_data = (t8_advect_element_data_t *)
                 t8_sc_array_index_locidx (problem->element_data,
                                           elem_data->neighs[iface][0]);
+              hanging = elem_data->level != neigh_data->level;
+              neigh_is_ghost =
+                elem_data->neighs[iface][0] >=
+                t8_forest_get_num_element (problem->forest);
             }
             else {
-              T8_ASSERT (elem_data->num_neighbors[iface] <= 0);
-              /* This is a boundary */
-              neigh_data = &boundary_data;
-              boundary_data.phi = 0;
-              boundary_data.midpoint[0] = iface;        /* 0 for left boundary, 1 for right */
-              boundary_data.midpoint[1] = 0;
-              boundary_data.midpoint[2] = 0;
+              hanging = 0;
+              neigh_is_ghost = 0;
             }
+
+            flux_time = -sc_MPI_Wtime ();
+            if (problem->dim == 1) {
+              if (elem_data->num_neighbors[iface] == 0) {
+                T8_ASSERT (elem_data->num_neighbors[iface] <= 0);
+                /* This is a boundary */
+                neigh_data = &boundary_data;
+                boundary_data.phi = 0;
+                boundary_data.midpoint[0] = iface;      /* 0 for left boundary, 1 for right */
+                boundary_data.midpoint[1] = 0;
+                boundary_data.midpoint[2] = 0;
+              }
 #if 0
-            flux[iface] =
-              t8_advect_flux_lax_friedrich_1d (problem, plus_data,
-                                               minus_data);
+              flux =
+                t8_advect_flux_lax_friedrich_1d (problem, plus_data,
+                                                 minus_data);
 #else
-            flux[iface] =
-              t8_advect_flux_upwind_1d (problem, elem_data, neigh_data,
-                                        iface);
+              flux =
+                t8_advect_flux_upwind_1d (problem, elem_data, neigh_data,
+                                          iface);
 #endif
-          }
-          else {
-            T8_ASSERT (problem->dim == 2 || problem->dim == 3);
-            /* Check whether the flux for the neighbor element was computed */
-            /* Get a pointer to the neighbor element */
-            neigh_data = (t8_advect_element_data_t *)
-              t8_sc_array_index_locidx (problem->element_data,
-                                        elem_data->neighs[iface][0]);
-            dual_face = elem_data->dual_faces[iface][0];
-            if (maxlevel - level > 0 && neigh_data->num_neighbors > 0
-                && neigh_data->flux_valid[dual_face]) {
-              /* The flux at the neighbor was computed */
-              flux[iface] = elem_data->fluxes[iface] =
-                -neigh_data->fluxes[dual_face];
-              t8_debugf
-                ("[advect] %i face %i neighbor is %i, dual face of %i is %i. flux %g\n",
-                 ielement, iface, elem_data->neighs[iface][0], iface,
-                 dual_face, neigh_data->fluxes[dual_face]);
+              elem_data->fluxes[iface][0] = flux;
+              elem_data->flux_valid[iface] = 1;
             }
             else {
+              T8_ASSERT (problem->dim == 2 || problem->dim == 3);
+              /* Check whether the flux for the neighbor element was computed */
+              /* Get a pointer to the neighbor element */
+              neigh_data = (t8_advect_element_data_t *)
+                t8_sc_array_index_locidx (problem->element_data,
+                                          elem_data->neighs[iface][0]);
+              dual_face = elem_data->dual_faces[iface][0];
+
               if (elem_data->num_neighbors[iface] == 1) {
-                flux[iface] =
+                flux =
                   t8_advect_flux_upwind (problem, elem_data, neigh_data,
                                          itree, elem, tree_vertices, iface);
+
+                elem_data->flux_valid[iface] = 1;
+                elem_data->fluxes[iface][0] = flux;
+
+                /* If this face is not hanging, we can set the
+                 * flux of the neighbor element as well */
+                if (!hanging && !neigh_is_ghost) {
+                  if (neigh_data->flux_valid[dual_face] < 0) {
+                    neigh_data->fluxes[dual_face] = T8_ALLOC (double, 1);
+                    neigh_data->dual_faces[dual_face] = T8_ALLOC (int, 1);
+                    neigh_data->neighs[dual_face] = T8_ALLOC (t8_locidx_t, 1);
+                  }
+                  neigh_data->num_neighbors[dual_face] = 1;
+                  neigh_data->fluxes[dual_face][0] = -flux;
+                  neigh_data->dual_faces[dual_face][0] = iface;
+                  neigh_data->neighs[dual_face][0] = lelement;
+                  neigh_data->flux_valid[dual_face] = 1;
+                }
               }
               else if (elem_data->num_neighbors[iface] > 1) {
-                flux[iface] =
+                flux =
                   t8_advect_flux_upwind_hanging (problem, elem_data, itree,
-                                                 elem, tree_vertices, iface);
+                                                 elem, tree_vertices, iface,
+                                                 neigh_is_ghost);
               }
               else {
                 /* This element is at the domain boundary */
@@ -1531,22 +1600,23 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                 t8_advect_set_boundary_data (problem, elem_data,
                                              &boundary_data, itree, elem,
                                              tree_vertices, iface);
-                flux[iface] =
+                flux =
                   t8_advect_flux_upwind (problem, elem_data, &boundary_data,
                                          itree, elem, tree_vertices, iface);
+
+                elem_data->flux_valid[iface] = 1;
+                elem_data->fluxes[iface][0] = flux;
               }
             }
-            elem_data->flux_valid[iface] = 1;
-            elem_data->fluxes[iface] = flux[iface];
-          }
-          flux_time += sc_MPI_Wtime ();
+            flux_time += sc_MPI_Wtime ();
 
-          sc_stats_accumulate (&problem->stats[ADVECT_FLUX], flux_time);
-          /* We want to count all runs over the solver time as one */
-          problem->stats[ADVECT_FLUX].count = 1;
+            sc_stats_accumulate (&problem->stats[ADVECT_FLUX], flux_time);
+            /* We want to count all runs over the solver time as one */
+            problem->stats[ADVECT_FLUX].count = 1;
+          }
         }
         /* Compute time step */
-        t8_advect_advance_element (problem, elem_data, num_faces, flux);
+        t8_advect_advance_element (problem, elem_data);
       }
     }
     adapted_or_partitioned = 0;
