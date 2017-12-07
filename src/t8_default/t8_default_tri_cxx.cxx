@@ -349,7 +349,6 @@ t8_default_scheme_tri_c::t8_element_last_descendant_face (const t8_element_t *
 {
   int                 corner;
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
-
   /* Compute the last corner of this face */
   corner = t8_dtri_face_corner[face][1];
   /* Compute the descendant in this corner */
