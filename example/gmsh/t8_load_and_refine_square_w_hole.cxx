@@ -128,8 +128,9 @@ t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree,
 
 static int
 t8_load_refine_adapt (t8_forest_t forest, t8_forest_t forest_from,
-                      t8_locidx_t which_tree, t8_eclass_scheme_c * ts,
-                      int num_elements, t8_element_t * elements[])
+                      t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                      t8_eclass_scheme_c * ts, int num_elements,
+                      t8_element_t * elements[])
 {
   int                 level;
   double              elem_midpoint[3];
@@ -177,7 +178,7 @@ t8_load_refine_build_forest (t8_cmesh_t cmesh, sc_MPI_Comm comm, int level)
   t8_forest_commit (forest);
 
   t8_forest_init (&forest_adapt);
-  t8_forest_set_adapt (forest_adapt, forest, t8_load_refine_adapt, NULL, 1);
+  t8_forest_set_adapt (forest_adapt, forest, t8_load_refine_adapt, 1);
   t8_forest_commit (forest_adapt);
   t8_forest_write_vtk (forest_adapt, "adapted_forest");
   t8_forest_unref (&forest_adapt);

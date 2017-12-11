@@ -31,6 +31,9 @@
 
 T8_EXTERN_C_BEGIN ();
 
+/** Look-up table for the corners of each face. */
+extern int          t8_dprism_face_corners[5][4];
+
 /** Compute the level of a prism.
  * \param [in] p    Line whose prism is computed.
  * \return          The level of \a p.
@@ -145,9 +148,16 @@ int                 t8_dprism_is_inside_root (t8_dprism_t * p);
 void                t8_dprism_child (const t8_dprism_t * p, int childid,
                                      t8_dprism_t * child);
 
+/** Return the element class of a face.
+ * \param [in] p    Input prism.
+ * \param [in] face A face id for \a p.
+ * \return  The element class of \a face.
+ */
+t8_eclass_t         t8_dprism_face_class (const t8_dprism_t * p, int face);
+
 /** Compute the number of children at a given face.
   * \param [in] p   Input prism.
-  * \param [in] face The Facenumer
+  * \param [in] face The face number
   * \return     Number of Children at \a face*/
 int                 t8_dprism_num_face_children (const t8_dprism_t * p,
                                                  int face);
@@ -160,6 +170,16 @@ int                 t8_dprism_num_face_children (const t8_dprism_t * p,
  */
 int                 t8_dprism_face_neighbour (const t8_dprism_t * p, int face,
                                               t8_dprism_t * neigh);
+
+/** Return the corner number of a prism corresponding to a given face corner.
+  * \param [in] p   Input prism.
+  * \param [in] face The face number.
+  * \param [in] corner A corner of \a face
+  * \return         The corner index of \a p corresponding to the \a corner-th
+  *                 corner of \a face.
+  */
+int                 t8_dprism_get_face_corner (const t8_dprism_t * p,
+                                               int face, int corner);
 
 /** Compute the 8 children of a prism, array version.
  * \param [in]     p  Input prism.

@@ -28,18 +28,38 @@
 #ifndef T8_FOREST_VTK_H
 #define T8_FOREST_VTK_H
 
+#include <t8_vtk.h>
 #include <t8_forest.h>
 
 T8_EXTERN_C_BEGIN ();
 /* function declarations */
 
+/** Write the forest in .pvtu file format. Writes one .vtu file per
+ * process and a meta .pvtu file.
+ * \param [in]  forest    The forest.
+ * \param [in]  fileprefix  The prefix of the output files.
+ * \param [in]  write_treeid If true, the global tree id is written for each element.
+ * \param [in]  write_mpirank If true, the mpirank is written for each element .
+ * \param [in]  write_level If true, the refinement level is written for each element.
+ * \param [in]  write_element_id If true, the global element id is written for each element.
+ * \param [in]  write_ghosts If true, each process additionally writes its ghost elements.
+ *                           For ghost element the treeid is -1.
+ * \param [in]  num_data  Number of user defined double valued data fields to write.
+ * \param [in]  data      Array of t8_vtk_data_field_t of length \a num_data
+ *                        providing the used defined per element data.
+ *                        If scalar and vector fields are used, all scalar fields
+ *                        must come first in the array.
+ * \return  True if succesful, false if not (process local).
+ */
 int                 t8_forest_vtk_write_file (t8_forest_t forest,
                                               const char *fileprefix,
                                               int write_treeid,
                                               int write_mpirank,
                                               int write_level,
                                               int write_element_id,
-                                              int write_ghosts);
+                                              int write_ghosts,
+                                              int num_data,
+                                              t8_vtk_data_field_t * data);
 
 T8_EXTERN_C_END ();
 

@@ -69,6 +69,15 @@ void                t8_forest_partition_create_first_desc (t8_forest_t
 void                t8_forest_partition_create_tree_offsets (t8_forest_t
                                                              forest);
 
+/* TODO: document */
+/* data_in has length forest_from->num_local_elements
+ * data_out   --  --  forest_to->num_local_elements
+ */
+void                t8_forest_partition_data (t8_forest_t forest_from,
+                                              t8_forest_t forest_to,
+                                              const sc_array_t * data_in,
+                                              sc_array_t * data_out);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_PARTITION_H! */

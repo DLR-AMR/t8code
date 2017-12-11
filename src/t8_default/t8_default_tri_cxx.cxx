@@ -117,6 +117,28 @@ t8_default_scheme_tri_c::t8_element_num_face_children (const t8_element_t *
   return T8_DTRI_FACE_CHILDREN;
 }
 
+int
+t8_default_scheme_tri_c::t8_element_get_face_corner (const t8_element_t *
+                                                     element, int face,
+                                                     int corner)
+{
+  T8_ASSERT (t8_element_is_valid (element));
+  T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
+  T8_ASSERT (0 <= corner && corner < 2);
+  return t8_dtri_face_corner[face][corner];
+}
+
+int
+t8_default_scheme_tri_c::t8_element_get_corner_face (const t8_element_t *
+                                                     element, int corner,
+                                                     int face)
+{
+  T8_ASSERT (t8_element_is_valid (element));
+  T8_ASSERT (0 <= corner && corner < T8_DTRI_CORNERS);
+  T8_ASSERT (0 <= face && face < 2);
+  return t8_dtri_corner_face[corner][face];
+}
+
 void
 t8_default_scheme_tri_c::t8_element_child (const t8_element_t * elem,
                                            int childid, t8_element_t * child)
@@ -392,10 +414,10 @@ t8_default_scheme_tri_c::t8_element_boundary_face (const t8_element_t * elem,
    *     face = 0, face = 1, type = 1             then l->x = t->x
    */
   if ((face == 0 && t->type == 0) || (face == 2 && t->type == 1)) {
-    l->x = t->y;
+    l->x = t->y * T8_DLINE_ROOT_BY_DTRI_ROOT;
   }
   else {
-    l->x = t->x;
+    l->x = t->x * T8_DLINE_ROOT_BY_DTRI_ROOT;
   }
   /* TODO: Take the level into account! */
 }
@@ -449,16 +471,17 @@ t8_default_scheme_tri_c::t8_element_face_neighbor_inside (const t8_element_t *
 
 void
 t8_default_scheme_tri_c::t8_element_set_linear_id (t8_element_t * elem,
-                                                   int level, uint64_t id)
+                                                   int level,
+                                                   t8_linearidx_t id)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((uint64_t) 1) << (2 * level));
+  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << (2 * level));
 
   t8_dtri_init_linear_id ((t8_default_tri_t *) elem, id, level);
 }
 
-uint64_t
+t8_linearidx_t
   t8_default_scheme_tri_c::t8_element_get_linear_id (const t8_element_t *
                                                      elem, int level)
 {

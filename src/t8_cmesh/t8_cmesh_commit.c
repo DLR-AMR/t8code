@@ -710,6 +710,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   if (cmesh->set_partition) {
     t8_cmesh_gather_treecount (cmesh, comm);
   }
+  T8_ASSERT (cmesh->set_partition || cmesh->tree_offsets == NULL);
 
 #if T8_ENABLE_DEBUG
   t8_debugf ("Cmesh is %spartitioned.\n", cmesh->set_partition ? "" : "not ");

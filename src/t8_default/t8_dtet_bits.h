@@ -251,7 +251,7 @@ int                 t8_dtet_is_ancestor (const t8_dtet_t * t,
  * \return Returns the linear position of this tetrahedron on a grid of level \a level.
  * \note This id is not the Morton index.
  */
-uint64_t            t8_dtet_linear_id (const t8_dtet_t * t, int level);
+t8_linearidx_t      t8_dtet_linear_id (const t8_dtet_t * t, int level);
 
 /** Initialize a tetrahedron as the tetrahedron with a given global id in a uniform
  *  refinement of a given level. *
@@ -259,7 +259,7 @@ uint64_t            t8_dtet_linear_id (const t8_dtet_t * t, int level);
  * \param [in] id     Index to be considered.
  * \param [in] level  level of uniform grid to be considered.
  */
-void                t8_dtet_init_linear_id (t8_dtet_t * t, uint64_t id,
+void                t8_dtet_init_linear_id (t8_dtet_t * t, t8_linearidx_t id,
                                             int level);
 
 /** Initialize a tetrahedron as the root tetrahedron (type 0 at level 0)

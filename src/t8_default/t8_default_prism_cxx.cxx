@@ -74,6 +74,16 @@ t8_default_scheme_prism_c::t8_element_level (const t8_element_t * elem)
   return t8_dprism_get_level ((const t8_dprism_t *) elem);
 }
 
+t8_eclass_t
+  t8_default_scheme_prism_c::t8_element_face_class (const t8_element_t * elem,
+                                                    int face)
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
+
+  return t8_dprism_face_class ((const t8_dprism_t *) elem, face);
+}
+
 void
 t8_default_scheme_prism_c::t8_element_copy (const t8_element_t * source,
                                             t8_element_t * dest)
@@ -107,6 +117,18 @@ t8_default_scheme_prism_c::t8_element_num_face_children (const t8_element_t *
                                                          elem, int face)
 {
   return t8_dprism_num_face_children ((const t8_dprism_t *) elem, face);
+}
+
+int
+t8_default_scheme_prism_c::t8_element_get_face_corner (const t8_element_t *
+                                                       element, int face,
+                                                       int corner)
+{
+  T8_ASSERT (t8_element_is_valid (element));
+  T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
+
+  return t8_dprism_get_face_corner ((const t8_dprism_t *) element, face,
+                                    corner);
 }
 
 int

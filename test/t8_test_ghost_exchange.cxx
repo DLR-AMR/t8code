@@ -44,7 +44,7 @@ t8_test_exchange_adapt (t8_forest_t forest, t8_forest_t forest_from,
                         t8_locidx_t which_tree, t8_eclass_scheme_c * ts,
                         int num_elements, t8_element_t * elements[])
 {
-  uint64_t            eid;
+  t8_linearidx_t      eid;
   int                 level, maxlevel;
 
   /* refine every second element up to the maximum level */
@@ -71,7 +71,7 @@ t8_test_create_cmesh (int i, t8_eclass_t eclass, sc_MPI_Comm comm)
   case 0:
     return t8_cmesh_new_from_class (eclass, comm);
   case 1:
-    return t8_cmesh_new_hypercube (eclass, comm, 0, 0);
+    return t8_cmesh_new_hypercube (eclass, comm, 0, 0, 0);
   case 2:
     if (eclass == T8_ECLASS_TET) {
       return t8_cmesh_new_tet_orientation_test (comm);
@@ -92,7 +92,7 @@ t8_test_ghost_exchange_data_id (t8_forest_t forest)
   t8_eclass_scheme_c *ts;
 
   t8_locidx_t         num_elements, ielem, num_ghosts, itree;
-  uint64_t            ghost_id, elem_id, ghost_entry;
+  t8_linearidx_t      ghost_id, elem_id, ghost_entry;
   t8_element_t       *elem;
   size_t              array_pos = 0;
   sc_array_t          element_data;
@@ -100,7 +100,7 @@ t8_test_ghost_exchange_data_id (t8_forest_t forest)
   num_elements = t8_forest_get_num_element (forest);
   num_ghosts = t8_forest_get_num_ghosts (forest);
   /* Allocate a uin64_t as data for each element and each ghost */
-  sc_array_init_size (&element_data, sizeof (uint64_t),
+  sc_array_init_size (&element_data, sizeof (t8_linearidx_t),
                       num_elements + num_ghosts);
 
   /* Fill the local element entries with their linear id */
@@ -117,7 +117,7 @@ t8_test_ghost_exchange_data_id (t8_forest_t forest)
       elem_id = ts->t8_element_get_linear_id (elem,
                                               ts->t8_element_level (elem));
       /* Store this id at the element's index in the array */
-      *(uint64_t *) sc_array_index (&element_data, array_pos) = elem_id;
+      *(t8_linearidx_t *) sc_array_index (&element_data, array_pos) = elem_id;
       array_pos++;
     }
   }
@@ -141,7 +141,8 @@ t8_test_ghost_exchange_data_id (t8_forest_t forest)
       ghost_id =
         ts->t8_element_get_linear_id (elem, ts->t8_element_level (elem));
       /* Compare this id with the entry in the element_data array */
-      ghost_entry = *(uint64_t *) sc_array_index (&element_data, array_pos);
+      ghost_entry =
+        *(t8_linearidx_t *) sc_array_index (&element_data, array_pos);
       SC_CHECK_ABORT (ghost_id == ghost_entry,
                       "Error when exchanging ghost data. Received wrong element id.\n");
       /* Since array pos ended with the last element in the loop above, we can
@@ -225,12 +226,13 @@ t8_test_ghost_exchange ()
         /* Adapt the forest and exchange data again */
         maxlevel = level + 2;
         if (eclass == T8_ECLASS_PRISM) {
-            /* Prism elements do not support unbalanced ghost yet.
-              We thus can only refine one level. */
-            maxlevel = level + 1;
+          /* Prism elements do not support unbalanced ghost yet.
+             We thus can only refine one level. */
+          maxlevel = level + 1;
         }
-        forest_adapt = t8_forest_new_adapt (forest, t8_test_exchange_adapt,
-                                            NULL, 1, 1, &maxlevel);
+        forest_adapt =
+          t8_forest_new_adapt (forest, t8_test_exchange_adapt, 1, 1,
+                               &maxlevel);
         t8_test_ghost_exchange_data_int (forest_adapt);
         t8_test_ghost_exchange_data_id (forest_adapt);
         t8_forest_unref (&forest_adapt);

@@ -21,6 +21,7 @@
 */
 
 #include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_iterate.h>
@@ -47,8 +48,9 @@ typedef struct
 typedef struct
 {
   t8_gloidx_t         global_id;        /* global id of the tree */
-  t8_eclass_t         eclass;   /* The trees element class */
+  t8_locidx_t         element_offset;   /* The count of all ghost elements in all smaller ghost trees */
   t8_element_array_t  elements; /* The ghost elements of that tree */
+  t8_eclass_t         eclass;   /* The trees element class */
 } t8_ghost_tree_t;
 
 /* The data structure stored in the global_tree_to_ghost_tree hash table. */
@@ -74,9 +76,9 @@ typedef struct
 {
   t8_gloidx_t         global_id;        /* global id of the tree */
   int                 mpirank;  /* The mpirank of the remote process */
-  t8_eclass_t         eclass;   /* The trees element class */
   t8_element_array_t  elements; /* The remote elements of that tree */
   sc_array_t          element_indices;  /* The (tree) local indices of the ghost elements. */
+  t8_eclass_t         eclass;   /* The trees element class */
 } t8_ghost_remote_tree_t;
 
 typedef struct
@@ -318,6 +320,14 @@ t8_forest_ghost_get_tree (t8_forest_t forest, t8_locidx_t lghost_tree)
     (t8_ghost_tree_t *) t8_sc_array_index_locidx (ghost->ghost_trees,
                                                   lghost_tree);
   return ghost_tree;
+}
+
+t8_locidx_t
+t8_forest_ghost_get_tree_element_offset (t8_forest_t
+                                         forest, t8_locidx_t lghost_tree)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  return t8_forest_ghost_get_tree (forest, lghost_tree)->element_offset;
 }
 
 /* Given an index in the ghost_tree array, return this tree's number of elements */
@@ -1072,7 +1082,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
   t8_tree_t           tree;
   t8_eclass_t         tree_class, neigh_class, last_class;
   t8_gloidx_t         neighbor_tree;
-  t8_eclass_scheme_c *ts, *neigh_scheme = NULL, *prev_neigh_scheme;
+  t8_eclass_scheme_c *ts, *neigh_scheme = NULL, *prev_neigh_scheme = NULL;
 
   int                 iface, num_faces;
   int                 num_face_children, max_num_face_children = 0;
@@ -1149,7 +1159,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
               t8_forest_element_half_face_neighbors (forest, itree, elem,
                                                      half_neighbors,
                                                      neigh_scheme, iface,
-                                                     num_face_children);
+                                                     num_face_children, NULL);
           }
           else {
             int                 dummy_neigh_face;
@@ -1442,11 +1452,16 @@ t8_forest_ghost_receive_message (int recv_rank, sc_MPI_Comm comm,
  *  size_t   |     |t8_gloidx |     |t8_eclass |     | size_t      |     | t8_element_t |
  *
  * pad is paddind, see T8_ADD_PADDING
+ *
+ * current_element_offset is updated in each step to store the element offset
+ * of the next ghost tree to be inserted.
+ * When called with the first message, current_element_offset must be set to 0.
  */
 /* Currently we expect that the messages arrive in order of the sender's rank. */
 static void
 t8_forest_ghost_parse_received_message (t8_forest_t forest,
                                         t8_forest_ghost_t ghost,
+                                        t8_locidx_t * current_element_offset,
                                         int recv_rank, char *recv_buffer,
                                         int recv_bytes)
 {
@@ -1521,6 +1536,9 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest,
       t8_element_array_init_size (&ghost_tree->elements, ts, num_elements);
       /* pointer to where the elements are to be inserted */
       element_insert = t8_element_array_get_data (&ghost_tree->elements);
+      /* Compute the element offset of this new tree by adding the offset
+       * of the previous tree to the element count of the previous tree. */
+      ghost_tree->element_offset = *current_element_offset;
       /* Allocate a new tree_hash for the next search */
       old_elem_count = 0;
       tree_hash =
@@ -1558,6 +1576,7 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest,
 
     bytes_read += num_elements * ts->t8_element_size ();
     bytes_read += T8_ADD_PADDING (bytes_read);
+    *current_element_offset += num_elements;
   }
   T8_ASSERT (bytes_read == (size_t) recv_bytes);
   T8_FREE (recv_buffer);
@@ -1635,7 +1654,7 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
   }
 
   {
-    /*       This code receives the message in order of there arrival.
+    /*       This code receives the message in order of their arrival.
      *       This is effective in terms of runtime, but makes it more difficult
      *       to store the received data, since the data has to be stored in order of
      *       ascending ranks.
@@ -1660,6 +1679,7 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
     sc_hash_t          *recv_list_entries_hash;
 #endif
     t8_recv_list_entry_t recv_list_entry, *recv_list_entries;
+    t8_locidx_t         current_element_offset = 0;
 
     buffer = T8_ALLOC (char *, num_remotes);
     recv_bytes = T8_ALLOC (int, num_remotes);
@@ -1767,8 +1787,9 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
            received_flag[parse_it] == 1; parse_it++) {
         recv_rank =
           *(int *) sc_array_index_int (ghost->remote_processes, parse_it);
-        t8_forest_ghost_parse_received_message (forest, ghost, recv_rank,
-                                                buffer[parse_it],
+        t8_forest_ghost_parse_received_message (forest, ghost,
+                                                &current_element_offset,
+                                                recv_rank, buffer[parse_it],
                                                 recv_bytes[parse_it]);
         last_rank_parsed++;
       }
@@ -1812,8 +1833,9 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
          received_flag[parse_it] == 1; parse_it++) {
       recv_rank =
         *(int *) sc_array_index_int (ghost->remote_processes, parse_it);
-      t8_forest_ghost_parse_received_message (forest, ghost, recv_rank,
-                                              buffer[parse_it],
+      t8_forest_ghost_parse_received_message (forest, ghost,
+                                              &current_element_offset,
+                                              recv_rank, buffer[parse_it],
                                               recv_bytes[parse_it]);
       last_rank_parsed++;
     }
@@ -1875,13 +1897,42 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
 void
 t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
 {
-  t8_forest_ghost_t   ghost;
+  t8_forest_ghost_t   ghost = NULL;
   t8_ghost_mpi_send_info_t *send_info;
   sc_MPI_Request     *requests;
+  int                 create_tree_array = 0, create_gfirst_desc_array = 0;
+  int                 create_element_array = 0;
 
   T8_ASSERT (t8_forest_is_committed (forest));
   t8_global_productionf ("Into t8_forest_ghost with %i local elements.\n",
                          t8_forest_get_num_element (forest));
+
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of ghost_create */
+    forest->profile->ghost_runtime = -sc_MPI_Wtime ();
+    /* DO NOT DELETE THE FOLLOWING line.
+     * even if you do not want this output. It fixes a bug that occured on JUQUEEN, where the
+     * runtimes were computed to 0.
+     * Only delete the line, if you know what you are doing. */
+    t8_global_productionf ("Start ghost at %f  %f\n", sc_MPI_Wtime (),
+                           forest->profile->ghost_runtime);
+  }
+
+  if (forest->element_offsets == NULL) {
+    /* create element offset array if not done already */
+    create_element_array = 1;
+    t8_forest_partition_create_offsets (forest);
+  }
+  if (forest->tree_offsets == NULL) {
+    /* Create tree offset array if not done already */
+    create_tree_array = 1;
+    t8_forest_partition_create_tree_offsets (forest);
+  }
+  if (forest->global_first_desc == NULL) {
+    /* Create global first desc array if not done already */
+    create_gfirst_desc_array = 1;
+    t8_forest_partition_create_first_desc (forest);
+  }
 
   if (t8_forest_get_num_element (forest) > 0) {
     if (forest->ghost_type == T8_GHOST_NONE) {
@@ -1891,11 +1942,6 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     }
     /* Currently we only support face ghosts */
     T8_ASSERT (forest->ghost_type == T8_GHOST_FACES);
-
-    if (forest->profile != NULL) {
-      /* If profiling is enabled, we measure the runtime of ghost_create */
-      forest->profile->ghost_runtime = -sc_MPI_Wtime ();
-    }
 
     /* Initialize the ghost structure */
     t8_forest_ghost_init (&forest->ghosts, forest->ghost_type);
@@ -1918,13 +1964,39 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     /* End sending the remote elements */
     t8_forest_ghost_send_end (forest, ghost, send_info, requests);
 
-    if (forest->profile != NULL) {
-      /* If profiling is enabled, we measure the runtime of ghost_create */
-      forest->profile->ghost_runtime += sc_MPI_Wtime ();
-      /* We also store the number of ghosts and remotes */
+  }
+
+  if (create_element_array) {
+    /* Free the offset memory, if created */
+    t8_shmem_array_destroy (&forest->element_offsets);
+  }
+  if (create_tree_array) {
+    /* Free the offset memory, if created */
+    t8_shmem_array_destroy (&forest->tree_offsets);
+  }
+  if (create_gfirst_desc_array) {
+    /* Free the offset memory, if created */
+    t8_shmem_array_destroy (&forest->global_first_desc);
+  }
+
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of ghost_create */
+    forest->profile->ghost_runtime += sc_MPI_Wtime ();
+    /* We also store the number of ghosts and remotes */
+    if (ghost != NULL) {
       forest->profile->ghosts_received = ghost->num_ghosts_elements;
       forest->profile->ghosts_shipped = ghost->num_remote_elements;
     }
+    else {
+      forest->profile->ghosts_received = 0;
+      forest->profile->ghosts_shipped = 0;
+    }
+    /* DO NOT DELETE THE FOLLOWING line.
+     * even if you do not want this output. It fixes a bug that occured on JUQUEEN, where the
+     * runtimes were computed to 0.
+     * Only delete the line, if you know what you are doing. */
+    t8_global_productionf ("End ghost at %f  %f\n", sc_MPI_Wtime (),
+                           forest->profile->ghost_runtime);
   }
 
   t8_global_productionf ("Done t8_forest_ghost with %i local elements and %i"
@@ -2179,7 +2251,7 @@ t8_forest_ghost_exchange_begin (t8_forest_t forest, sc_array_t * element_data)
 #endif
   for (iremote = 0; iremote < data_exchange->num_remotes; iremote++) {
     /* We need to compute the offset in element_data to which we can receive the message */
-    /* Search for this process' entry in the ghost struct */
+    /* Search for this processes' entry in the ghost struct */
     recv_rank =
       *(int *) sc_array_index_int (ghost->remote_processes, iremote);
     lookup_proc.mpirank = recv_rank;
@@ -2272,7 +2344,15 @@ t8_forest_ghost_exchange_data (t8_forest_t forest, sc_array_t * element_data)
              + t8_forest_get_num_ghosts (forest));
 
   data_exchange = t8_forest_ghost_exchange_begin (forest, element_data);
+  if (forest->profile != NULL) {
+    /* Measure the time for ghost_exchange_end */
+    forest->profile->ghost_waittime = -sc_MPI_Wtime ();
+  }
   t8_forest_ghost_exchange_end (data_exchange);
+  if (forest->profile != NULL) {
+    /* Measure the time for ghost_exchange_end */
+    forest->profile->ghost_waittime += sc_MPI_Wtime ();
+  }
   t8_debugf ("Finished ghost_exchange_data\n");
 }
 

@@ -550,6 +550,11 @@ t8_offset_print (t8_shmem_array_t offset, sc_MPI_Comm comm)
   char                buf[BUFSIZ] = "| ";
   int                 i, mpiret, mpisize;
 
+  if (offset == NULL) {
+    t8_debugf ("Offsets = NULL\n");
+    return;
+  }
+
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
   for (i = 0; i <= mpisize; i++) {

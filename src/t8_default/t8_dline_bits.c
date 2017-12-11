@@ -37,7 +37,7 @@ t8_dline_copy (const t8_dline_t * l, t8_dline_t * dest)
 int
 t8_dline_compare (const t8_dline_t * l1, const t8_dline_t * l2)
 {
-  u_int64_t           id1, id2;
+  t8_linearidx_t      id1, id2;
 
   /* Compute the linear ids of the elements */
   id1 = l1->x;
@@ -149,6 +149,9 @@ t8_dline_face_parent_face (const t8_dline_t * l, int face)
 {
   T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
 
+  if (l->level == 0) {
+    return face;
+  }
   /* If the child id is 0 and face is 0, then the parent's face is 0.
    * If the child id is 1 and face is 1, then the parent's face is 1.
    * In the other cases, this is an inner face. */
@@ -177,6 +180,22 @@ t8_dline_childrenpv (const t8_dline_t * elem,
   /* Set the coordinates of the children */
   c[0]->x = elem->x;
   c[1]->x = elem->x + T8_DLINE_LEN (c[1]->level);
+}
+
+int
+t8_dline_extrude_face (const t8_dvertex_t * face,
+                       int root_face, t8_dline_t * line)
+{
+  T8_ASSERT (root_face == 0 || root_face == 1);
+
+  /* The level of the line is the same as the level of the boundary vertex */
+  line->level = face->level;
+  /* The x-coord of the line is either 0 (face = 0) or the length of the root
+   * tree minus the length of the line */
+  line->x =
+    root_face == 0 ? 0 : T8_DLINE_ROOT_LEN - T8_DLINE_LEN (line->level);
+
+  return root_face;
 }
 
 int
@@ -221,10 +240,10 @@ t8_dline_is_inside_root (const t8_dline_t * l)
 }
 
 void
-t8_dline_init_linear_id (t8_dline_t * l, int level, uint64_t id)
+t8_dline_init_linear_id (t8_dline_t * l, int level, t8_linearidx_t id)
 {
   T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((uint64_t) 1) << level);
+  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << level);
 
   /* Set the level */
   l->level = level;
@@ -308,10 +327,10 @@ t8_dline_vertex_coords (const t8_dline_t * elem, int vertex, int coords[])
   }
 }
 
-uint64_t
+t8_linearidx_t
 t8_dline_linear_id (const t8_dline_t * elem, int level)
 {
-  uint64_t            id;
+  t8_linearidx_t      id;
 
   T8_ASSERT (level <= T8_DLINE_MAXLEVEL && level >= 0);
 
@@ -330,7 +349,7 @@ t8_dline_is_valid (const t8_dline_t * l)
   /* A line is valid if its level and its x coordinates are in the
    * correct bounds of the root three and its left and right neighbor */
   return 0 <= l->level && l->level <= T8_DLINE_MAXLEVEL
-    && -T8_DLINE_ROOT_LEN < l->x && l->x <= max_coord;
+    && -T8_DLINE_ROOT_LEN <= l->x && l->x <= max_coord;
 }
 
 void

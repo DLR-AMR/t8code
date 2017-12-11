@@ -32,6 +32,7 @@ T8_EXTERN_C_BEGIN ();
 /* The last inserted element must be the last element of a family. */
 static void
 t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
+                                   t8_locidx_t lelement_id,
                                    t8_eclass_scheme_c * ts,
                                    t8_element_array_t * telement,
                                    t8_locidx_t el_coarsen,
@@ -39,7 +40,6 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
                                    t8_element_t ** el_buffer)
 {
   t8_element_t       *element;
-  t8_element_t       *replace;
   t8_element_t      **fam;
   t8_locidx_t         pos;
   size_t              elements_in_array;
@@ -60,9 +60,6 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   fam = el_buffer;
   pos = *el_inserted - num_children;
   isfamily = 1;
-  if (forest->set_replace_fn != NULL) {
-    ts->t8_element_new (1, &replace);
-  }
   while (isfamily && pos >= el_coarsen && ts->t8_element_child_id (element)
          == num_children - 1) {
     isfamily = 1;
@@ -77,21 +74,13 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
     }
     T8_ASSERT (!isfamily || ts->t8_element_is_family (fam));
     if (isfamily
-        && forest->set_adapt_fn (forest, forest->set_from, ltreeid, ts,
-                                 num_children, fam) < 0) {
+        && forest->set_adapt_fn (forest, forest->set_from, ltreeid,
+                                 lelement_id, ts, num_children, fam) < 0) {
       /* Coarsen the element */
       *el_inserted -= num_children - 1;
       /* remove num_children - 1 elements from the array */
       T8_ASSERT (elements_in_array == t8_element_array_get_count (telement));
-      if (forest->set_replace_fn != NULL) {
-        ts->t8_element_parent (fam[0], replace);
-        forest->set_replace_fn (forest, ltreeid, ts, num_children,
-                                fam, 1, &replace);
-        ts->t8_element_copy (replace, fam[0]);
-      }
-      else {
-        ts->t8_element_parent (fam[0], fam[0]);
-      }
+      ts->t8_element_parent (fam[0], fam[0]);
       elements_in_array -= num_children - 1;
       t8_element_array_resize (telement, elements_in_array);
       /* Set element to the new constructed parent. Since resizing the array
@@ -105,13 +94,11 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
     }
     pos -= num_children - 1;
   }
-  if (forest->set_replace_fn != NULL) {
-    ts->t8_element_destroy (1, &replace);
-  }
 }
 
 static void
 t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
+                                  t8_locidx_t lelement_id,
                                   t8_eclass_scheme_c * ts,
                                   sc_list_t * elem_list,
                                   t8_element_array_t * telements,
@@ -119,33 +106,22 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
                                   t8_element_t ** el_buffer)
 {
   t8_element_t       *insert_el;
-  t8_element_t       *el_pop;
   int                 num_children;
   int                 ci;
 
   if (elem_list->elem_count <= 0) {
     return;
   }
-  if (forest->set_replace_fn != NULL) {
-    ts->t8_element_new (1, &el_pop);
-  }
   while (elem_list->elem_count > 0) {
     el_buffer[0] = (t8_element_t *) sc_list_pop (elem_list);
     num_children = ts->t8_element_num_children (el_buffer[0]);
-    if (forest->set_adapt_fn (forest, forest->set_from, ltreeid, ts, 1,
-                              el_buffer) > 0) {
+    if (forest->set_adapt_fn (forest, forest->set_from, ltreeid, lelement_id,
+                              ts, 1, el_buffer) > 0) {
       /* The element should be refined */
       if (ts->t8_element_level (el_buffer[0]) < forest->maxlevel) {
         /* only refine, if we do not exceed the maximum allowed level */
         ts->t8_element_new (num_children - 1, el_buffer + 1);
-        if (forest->set_replace_fn != NULL) {
-          ts->t8_element_copy (el_buffer[0], el_pop);
-        }
         ts->t8_element_children (el_buffer[0], num_children, el_buffer);
-        if (forest->set_replace_fn != NULL) {
-          forest->set_replace_fn (forest, ltreeid, ts, 1,
-                                  &el_pop, num_children, el_buffer);
-        }
         for (ci = num_children - 1; ci >= 0; ci--) {
           (void) sc_list_prepend (elem_list, el_buffer[ci]);
         }
@@ -158,9 +134,6 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
       (*num_inserted)++;
     }
   }
-  if (forest->set_replace_fn != NULL) {
-    ts->t8_element_destroy (1, &el_pop);
-  }
 }
 
 /* TODO: optimize this when we own forest_from */
@@ -170,7 +143,7 @@ t8_forest_adapt (t8_forest_t forest)
   t8_forest_t         forest_from;
   sc_list_t          *refine_list = NULL;       /* This is only needed when we adapt recursively */
   t8_element_array_t *telements, *telements_from;
-  size_t              tt;
+  t8_locidx_t         ltree_id, num_trees;
   t8_locidx_t         el_considered;
   t8_locidx_t         el_inserted;
   t8_locidx_t         el_coarsen;
@@ -194,6 +167,12 @@ t8_forest_adapt (t8_forest_t forest)
   /* if profiling is enabled, measure runtime */
   if (forest->profile != NULL) {
     forest->profile->adapt_runtime = -sc_MPI_Wtime ();
+    /* DO NOT DELETE THE FOLLOWING line.
+     * even if you do not want this output. It fixes a bug that occured on JUQUEEN, where the
+     * runtimes were computed to 0.
+     * Only delete the line, if you know what you are doing. */
+    t8_global_productionf ("Start adadpt %f %f\n", sc_MPI_Wtime (),
+                           forest->profile->adapt_runtime);
   }
 
   forest_from = forest->set_from;
@@ -209,9 +188,10 @@ t8_forest_adapt (t8_forest_t forest)
   }
   forest->local_num_elements = 0;
   el_offset = 0;
-  for (tt = 0; tt < forest->trees->elem_count; tt++) {
-    tree = (t8_tree_t) t8_sc_array_index_topidx (forest->trees, tt);
-    tree_from = (t8_tree_t) t8_sc_array_index_topidx (forest_from->trees, tt);
+  num_trees = t8_forest_get_num_local_trees (forest);
+  for (ltree_id = 0; ltree_id < num_trees; ltree_id++) {
+    tree = t8_forest_get_tree (forest, ltree_id);
+    tree_from = t8_forest_get_tree (forest_from, ltree_id);
     telements = &tree->elements;
     telements_from = &tree_from->elements;
     num_el_from = (t8_locidx_t) t8_element_array_get_count (telements_from);
@@ -247,8 +227,9 @@ t8_forest_adapt (t8_forest_t forest)
       }
       T8_ASSERT (!is_family || tscheme->t8_element_is_family (elements_from));
       refine =
-        forest->set_adapt_fn (forest, forest->set_from, tt, tscheme,
-                              num_elements, elements_from);
+        forest->set_adapt_fn (forest, forest->set_from, ltree_id,
+                              el_considered, tscheme, num_elements,
+                              elements_from);
       T8_ASSERT (is_family || refine >= 0);
       if (refine > 0 && tscheme->t8_element_level (elements_from[0]) >=
           forest->maxlevel) {
@@ -268,14 +249,9 @@ t8_forest_adapt (t8_forest_t forest)
           for (ci = num_children - 1; ci >= 0; ci--) {
             (void) sc_list_prepend (refine_list, elements[ci]);
           }
-          if (forest->set_replace_fn) {
-            forest->set_replace_fn (forest, tt, tscheme, 1,
-                                    elements_from, num_children, elements);
-          }
-          t8_forest_adapt_refine_recursive (forest, tt, tscheme,
-                                            refine_list,
-                                            telements, &el_inserted,
-                                            elements);
+          t8_forest_adapt_refine_recursive (forest, ltree_id, el_considered,
+                                            tscheme, refine_list, telements,
+                                            &el_inserted, elements);
         }
         else {
           /* add the children to the element array of the current tree */
@@ -286,10 +262,6 @@ t8_forest_adapt (t8_forest_t forest)
           }
           tscheme->t8_element_children (elements_from[0], num_children,
                                         elements);
-          if (forest->set_replace_fn) {
-            forest->set_replace_fn (forest, tt, tscheme, 1,
-                                    elements_from, num_children, elements);
-          }
           el_inserted += num_children;
         }
         el_considered++;
@@ -298,15 +270,12 @@ t8_forest_adapt (t8_forest_t forest)
         /* The elements form a family and are to be coarsened */
         elements[0] = t8_element_array_push (telements);
         tscheme->t8_element_parent (elements_from[0], elements[0]);
-        if (forest->set_replace_fn) {
-          forest->set_replace_fn (forest, tt, tscheme, num_children,
-                                  elements_from, 1, elements);
-        }
         el_inserted++;
         if (forest->set_adapt_recursive) {
           if ((size_t) tscheme->t8_element_child_id (elements[0])
               == num_children - 1) {
-            t8_forest_adapt_coarsen_recursive (forest, tt, tscheme,
+            t8_forest_adapt_coarsen_recursive (forest, ltree_id,
+                                               el_considered, tscheme,
                                                telements, el_coarsen,
                                                &el_inserted, elements);
           }
@@ -323,8 +292,8 @@ t8_forest_adapt (t8_forest_t forest)
         if (forest->set_adapt_recursive &&
             (size_t) tscheme->t8_element_child_id (elements[0])
             == num_children - 1) {
-          t8_forest_adapt_coarsen_recursive (forest, tt, tscheme,
-                                             telements, el_coarsen,
+          t8_forest_adapt_coarsen_recursive (forest, ltree_id, el_considered,
+                                             tscheme, telements, el_coarsen,
                                              &el_inserted, elements);
         }
         el_considered++;
@@ -359,6 +328,12 @@ t8_forest_adapt (t8_forest_t forest)
   /* if profiling is enabled, measure runtime */
   if (forest->profile != NULL) {
     forest->profile->adapt_runtime += sc_MPI_Wtime ();
+    /* DO NOT DELETE THE FOLLOWING line.
+     * even if you do not want this output. It fixes a bug that occured on JUQUEEN, where the
+     * runtimes were computed to 0.
+     * Only delete the line, if you know what you are doing. */
+    t8_global_productionf ("End adadpt %f %f\n", sc_MPI_Wtime (),
+                           forest->profile->adapt_runtime);
   }
 }
 

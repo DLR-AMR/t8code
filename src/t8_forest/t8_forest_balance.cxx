@@ -20,6 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <sc_statistics.h>
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
@@ -40,7 +41,8 @@ T8_EXTERN_C_BEGIN ();
  * if we refine recursively. */
 static int
 t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from,
-                         t8_locidx_t ltree_id, t8_eclass_scheme_c * ts,
+                         t8_locidx_t ltree_id, t8_locidx_t lelement_id,
+                         t8_eclass_scheme_c * ts,
                          int num_elements, t8_element_t * elements[])
 {
   int                *pdone, iface, num_faces, num_half_neighbors, ineigh;
@@ -68,7 +70,8 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from,
                                                            half_neighbors,
                                                            neigh_scheme,
                                                            iface,
-                                                           num_half_neighbors);
+                                                           num_half_neighbors,
+                                                           NULL);
     if (neighbor_tree >= 0) {
       /* The face neighbors do exist, check for each one, whether it has
        * local or ghost leaf descendants in the forest.
@@ -100,18 +103,28 @@ t8_forest_balance (t8_forest_t forest, int repartition)
 {
   t8_forest_t         forest_temp, forest_from, forest_partition;
   int                 done = 0, done_global = 0;
-#ifdef T8_ENABLE_DEBUG
-  int                 count = 0;
-#endif
+  int                 count = 0, num_stats, i;
+  double              ada_time, ghost_time, part_time;
+  sc_statinfo_t      *adap_stats, *ghost_stats, *partition_stats;
 
   t8_global_productionf
     ("Into t8_forest_balance with %lli global elements.\n",
      (long long) t8_forest_get_global_num_elements (forest->set_from));
   t8_log_indent_push ();
 
+  /* Set default value to prevent compiler warning */
+  adap_stats = ghost_stats = partition_stats = NULL;
+
   if (forest->profile != NULL) {
     /* Profiling is enable, so we measure the runtime of balance */
     forest->profile->balance_runtime = -sc_MPI_Wtime ();
+    /* We store the individual adapt, ghost, and partition runtimes */
+    num_stats = 5;
+    adap_stats = T8_ALLOC_ZERO (sc_statinfo_t, num_stats);
+    ghost_stats = T8_ALLOC_ZERO (sc_statinfo_t, num_stats);
+    if (repartition) {
+      partition_stats = T8_ALLOC_ZERO (sc_statinfo_t, num_stats);
+    }
   }
 
   /* Use set_from as the first forest to adapt */
@@ -129,11 +142,39 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     /* Initialize the temp forest to be adapted from forest_from */
     t8_forest_init (&forest_temp);
     t8_forest_set_adapt (forest_temp, forest_from, t8_forest_balance_adapt,
-                         NULL, 0);
-    t8_forest_set_ghost (forest_temp, 1, T8_GHOST_FACES);
+                         0);
+    if (!repartition) {
+      t8_forest_set_ghost (forest_temp, 1, T8_GHOST_FACES);
+    }
     forest_temp->t8code_data = &done;
+    /* If profiling is enabled, measure ghost/adapt rumtimes */
+    if (forest->profile != NULL) {
+      t8_forest_set_profiling (forest_temp, 1);
+    }
+    t8_global_productionf ("Profiling: %i\n", forest->profile != NULL);
     /* Adapt the forest */
     t8_forest_commit (forest_temp);
+    /* Store the runtimes of adapt and ghost */
+    if (forest->profile != NULL) {
+      while (count >= num_stats - 2) {
+        /* re-allocate memory for stats */
+        num_stats += 2;
+        adap_stats = T8_REALLOC (adap_stats, sc_statinfo_t, num_stats);
+        ghost_stats = T8_REALLOC (ghost_stats, sc_statinfo_t, num_stats);
+        if (repartition) {
+          partition_stats =
+            T8_REALLOC (partition_stats, sc_statinfo_t, num_stats);
+        }
+      }
+      sc_stats_set1 (&adap_stats[count], forest_temp->profile->adapt_runtime,
+                     "forest balance: Adapt time");
+      if (!repartition) {
+        sc_stats_set1 (&ghost_stats[count],
+                       forest_temp->profile->ghost_runtime,
+                       "forest balance: Ghost time");
+      }
+    }
+
     /* Compute the logical and of all process local done values, if this results
      * in 1 then all processes are finished */
     sc_MPI_Allreduce (&done, &done_global, 1, sc_MPI_INT, sc_MPI_LAND,
@@ -144,15 +185,28 @@ t8_forest_balance (t8_forest_t forest, int repartition)
       t8_forest_init (&forest_partition);
       t8_forest_set_partition (forest_partition, forest_temp, 0);
       t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
+      /* If profiling is enabled, measure partition rumtimes */
+      if (forest->profile != NULL) {
+        t8_forest_set_profiling (forest_partition, 1);
+      }
       t8_forest_commit (forest_partition);
+
+      /* Store the runtimes of partition */
+      if (forest->profile != NULL) {
+        sc_stats_set1 (&partition_stats[count],
+                       forest_partition->profile->partition_runtime,
+                       "forest balance: Partition time");
+        sc_stats_set1 (&ghost_stats[count],
+                       forest_partition->profile->ghost_runtime,
+                       "forest balance: Ghost time");
+      }
+
       forest_temp = forest_partition;
       forest_partition = NULL;
     }
     /* Adapt forest_temp in the next round */
     forest_from = forest_temp;
-#ifdef T8_ENABLE_DEBUG
     count++;
-#endif
   }
 
   T8_ASSERT (t8_forest_is_balanced (forest_temp));
@@ -164,15 +218,53 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   t8_global_productionf
     ("Done t8_forest_balance with %lli global elements.\n",
      (long long) t8_forest_get_global_num_elements (forest_temp));
-#ifdef T8_ENABLE_DEBUG
   t8_debugf ("[H] Balance needed %i rounds.\n", count);
-#endif
   /* clean-up */
   t8_forest_unref (&forest_temp);
 
   if (forest->profile != NULL) {
     /* Profiling is enabled, so we measure the runtime of balance. */
     forest->profile->balance_runtime += sc_MPI_Wtime ();
+    forest->profile->balance_rounds = count;
+    /* Print the runtime of adapt/ghost/partition */
+    /* Compute the overall runtime and store in last entry */
+    ada_time = ghost_time = part_time = 0;
+    t8_debugf ("ada stats %f\n", adap_stats[count].sum_values);
+    for (i = 0; i < count; i++) {
+      ada_time += adap_stats[i].sum_values;
+      ghost_time += ghost_stats[i].sum_values;
+      if (repartition) {
+        part_time += partition_stats[i].sum_values;
+      }
+    }
+    sc_stats_set1 (&adap_stats[count], ada_time,
+                   "forest balance: Total adapt time");
+    sc_stats_set1 (&ghost_stats[count], ghost_time,
+                   "forest balance: Total ghost time");
+    if (repartition) {
+      sc_stats_set1 (&partition_stats[count], part_time,
+                     "forest balance: Total partition time");
+    }
+
+    /* Compute and print the intermediate stats */
+    sc_stats_compute (forest->mpicomm, count + 1, adap_stats);
+    sc_stats_compute (forest->mpicomm, count + 1, ghost_stats);
+    if (repartition) {
+      sc_stats_compute (forest->mpicomm, count + 1, partition_stats);
+    }
+    sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, count + 1,
+                    adap_stats, 1, 1);
+    sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, count + 1,
+                    ghost_stats, 1, 1);
+    if (repartition) {
+      sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, count + 1,
+                      partition_stats, 1, 1);
+    }
+    T8_FREE (adap_stats);
+    T8_FREE (ghost_stats);
+    if (repartition) {
+      T8_FREE (partition_stats);
+    }
   }
 }
 
@@ -185,6 +277,8 @@ t8_forest_is_balanced (t8_forest_t forest)
   t8_locidx_t         itree, ielem;
   t8_element_t       *element;
   t8_eclass_scheme_c *ts;
+  void               *data_temp;
+  int                 dummy_int;
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -192,6 +286,10 @@ t8_forest_is_balanced (t8_forest_t forest)
   forest_from = forest->set_from;
 
   forest->set_from = forest;
+
+  /* temporarily save forest t8code_data */
+  data_temp = forest->t8code_data;
+  forest->t8code_data = &dummy_int;
 
   num_trees = t8_forest_get_num_local_trees (forest);
   /* Iterate over all trees */
@@ -205,13 +303,16 @@ t8_forest_is_balanced (t8_forest_t forest)
       element = t8_forest_get_element_in_tree (forest, itree, ielem);
       /* Test if this element would need to be refined in the balance step.
        * If so, the forest is not balanced locally. */
-      if (t8_forest_balance_adapt (forest, forest, itree, ts, 1, &element)) {
+      if (t8_forest_balance_adapt
+          (forest, forest, itree, ielem, ts, 1, &element)) {
         forest->set_from = forest_from;
+        forest->t8code_data = data_temp;
         return 0;
       }
     }
   }
   forest->set_from = forest_from;
+  forest->t8code_data = data_temp;
   return 1;
 }
 

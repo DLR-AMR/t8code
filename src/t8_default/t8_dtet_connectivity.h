@@ -85,7 +85,11 @@ extern const int    t8_dtet_type_face_to_boundary[6][4][2];
  */
 extern const int    t8_dtet_face_child_id_by_type[6][4][4];
 
-/** Store the indices of the corner of each face of a tetrahedron. */
+/** Store the indices of the corner of each face of a tetrahedron.
+ * face_corner[f][0] is always the lowest corner index of that face.
+ * The other 2 corner are given in counterclockwise order as seen from
+ * outside of the tet.
+ */
 extern const int    t8_dtet_face_corner[4][3];
 
 /** For each combination parent_type, type with parent_type != type,

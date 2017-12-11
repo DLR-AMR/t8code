@@ -30,7 +30,7 @@ T8_EXTERN_C_BEGIN ();
 
 /* This function is used by other element functions and we thus need to
  * declare it up here */
-uint64_t            t8_element_get_linear_id (const t8_element_t * elem,
+t8_linearidx_t      t8_element_get_linear_id (const t8_element_t * elem,
                                               int level);
 
 #ifdef T8_ENABLE_DEBUG
@@ -164,6 +164,37 @@ t8_default_scheme_quad_c::t8_element_num_face_children (const t8_element_t *
   return 2;
 }
 
+int
+t8_default_scheme_quad_c::t8_element_get_face_corner (const t8_element_t *
+                                                      element, int face,
+                                                      int corner)
+{
+  /*
+   *   2    f_2    3
+   *     x -->-- x
+   *     |       |
+   *     ^       ^
+   * f_0 |       | f_1
+   *     x -->-- x
+   *   0    f_3    1
+   */
+
+  T8_ASSERT (0 <= face && face < P4EST_FACES);
+  T8_ASSERT (0 <= corner && corner < 2);
+  return p4est_face_corners[face][corner];
+}
+
+int
+t8_default_scheme_quad_c::t8_element_get_corner_face (const t8_element_t *
+                                                      element, int corner,
+                                                      int face)
+{
+  T8_ASSERT (t8_element_is_valid (element));
+  T8_ASSERT (0 <= corner && corner < P4EST_CHILDREN);
+  T8_ASSERT (0 <= face && face < 2);
+  return p4est_corner_faces[corner][face];
+}
+
 void
 t8_default_scheme_quad_c::t8_element_child (const t8_element_t * elem,
                                             int childid, t8_element_t * child)
@@ -238,17 +269,18 @@ t8_default_scheme_quad_c::t8_element_is_family (t8_element_t ** fam)
 
 void
 t8_default_scheme_quad_c::t8_element_set_linear_id (t8_element_t * elem,
-                                                    int level, uint64_t id)
+                                                    int level,
+                                                    t8_linearidx_t id)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((uint64_t) 1) << P4EST_DIM * level);
+  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << P4EST_DIM * level);
 
   p4est_quadrant_set_morton ((p4est_quadrant_t *) elem, level, id);
   T8_QUAD_SET_TDIM ((p4est_quadrant_t *) elem, 2);
 }
 
-uint64_t
+t8_linearidx_t
   t8_default_scheme_quad_c::t8_element_get_linear_id (const t8_element_t *
                                                       elem, int level)
 {
@@ -288,14 +320,14 @@ t8_default_scheme_quad_c::t8_element_successor (const t8_element_t * elem1,
                                                 t8_element_t * elem2,
                                                 int level)
 {
-  uint64_t            id;
+  t8_linearidx_t      id;
 
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
 
   id = p4est_quadrant_linear_id ((const p4est_quadrant_t *) elem1, level);
-  T8_ASSERT (id + 1 < ((uint64_t) 1) << P4EST_DIM * level);
+  T8_ASSERT (id + 1 < ((t8_linearidx_t) 1) << P4EST_DIM * level);
   p4est_quadrant_set_morton ((p4est_quadrant_t *) elem2, level, id + 1);
   t8_element_copy_surround ((const p4est_quadrant_t *) elem1,
                             (p4est_quadrant_t *) elem2);
@@ -415,10 +447,16 @@ int
 t8_default_scheme_quad_c::t8_element_face_parent_face (const t8_element_t *
                                                        elem, int face)
 {
+  const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
   int                 child_id;
+
+  T8_ASSERT (t8_element_is_valid (elem));
+  if (q->level == 0) {
+    return face;
+  }
   /* Determine whether face is a subface of the parent.
    * This is the case if the child_id matches one of the faces corners */
-  child_id = p4est_quadrant_child_id ((const p4est_quadrant_t *) elem);
+  child_id = p4est_quadrant_child_id (q);
   if (child_id == p4est_face_corners[face][0]
       || child_id == p4est_face_corners[face][1]) {
     return face;

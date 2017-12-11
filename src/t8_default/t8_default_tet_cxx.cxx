@@ -114,6 +114,16 @@ t8_default_scheme_tet_c::t8_element_num_face_children (const t8_element_t *
   return T8_DTET_FACE_CHILDREN;
 }
 
+int
+t8_default_scheme_tet_c::t8_element_get_face_corner (const t8_element_t *
+                                                     element, int face,
+                                                     int corner)
+{
+  T8_ASSERT (0 <= face && face < T8_DTET_FACES);
+  T8_ASSERT (0 <= corner && corner < 3);
+  return t8_dtet_face_corner[face][corner];
+}
+
 void
 t8_default_scheme_tet_c::t8_element_child (const t8_element_t * elem,
                                            int childid, t8_element_t * child)
@@ -328,7 +338,8 @@ t8_default_scheme_tet_c::t8_element_last_descendant_face (const t8_element_t *
   T8_ASSERT (0 <= face && face < T8_DTET_FACES);
 
   /* Compute the last corner of this face */
-  corner = t8_dtet_face_corner[face][2];
+  corner =
+    SC_MAX (t8_dtet_face_corner[face][1], t8_dtet_face_corner[face][2]);
   /* Compute the descendant in this corner */
   t8_dtet_corner_descendant ((const t8_dtet_t *) elem,
                              (t8_dtet_t *) last_desc, corner,
@@ -435,16 +446,17 @@ t8_default_scheme_tet_c::t8_element_face_neighbor_inside (const t8_element_t *
 
 void
 t8_default_scheme_tet_c::t8_element_set_linear_id (t8_element_t * elem,
-                                                   int level, uint64_t id)
+                                                   int level,
+                                                   t8_linearidx_t id)
 {
   T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((uint64_t) 1) << 3 * level);
+  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << 3 * level);
   T8_ASSERT (t8_element_is_valid (elem));
 
   t8_dtet_init_linear_id ((t8_default_tet_t *) elem, id, level);
 }
 
-uint64_t
+t8_linearidx_t
   t8_default_scheme_tet_c::t8_element_get_linear_id (const t8_element_t *
                                                      elem, int level)
 {

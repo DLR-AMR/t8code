@@ -35,7 +35,8 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/* TODO: document */
+/* TODO: document
+ * only temporary and will be replaced in future */
 void                t8_forest_balance (t8_forest_t forest, int repartition);
 
 /* Check whether the local elements of a forest are balanced. */

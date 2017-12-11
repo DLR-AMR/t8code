@@ -120,6 +120,18 @@ t8_default_scheme_hex_c::t8_element_num_face_children (const t8_element_t *
   return 4;
 }
 
+int
+t8_default_scheme_hex_c::t8_element_get_face_corner (const t8_element_t *
+                                                     element, int face,
+                                                     int corner)
+{
+  T8_ASSERT (t8_element_is_valid (element));
+  T8_ASSERT (0 <= face && face < P8EST_FACES);
+  T8_ASSERT (0 <= corner && corner < 4);
+
+  return p8est_face_corners[face][corner];
+}
+
 void
 t8_default_scheme_hex_c::t8_element_child (const t8_element_t * elem,
                                            int childid, t8_element_t * child)
@@ -317,9 +329,15 @@ t8_default_scheme_hex_c::t8_element_face_parent_face (const t8_element_t *
                                                       elem, int face)
 {
   int                 child_id;
+  const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
+
+  T8_ASSERT (t8_element_is_valid (elem));
+  if (q->level == 0) {
+    return face;
+  }
   /* Determine whether face is a subface of the parent.
    * This is the case if the child_id matches one of the faces corners */
-  child_id = p8est_quadrant_child_id ((const p8est_quadrant_t *) elem);
+  child_id = p8est_quadrant_child_id (q);
   if (child_id == p8est_face_corners[face][0]
       || child_id == p8est_face_corners[face][1]
       || child_id == p8est_face_corners[face][2]
@@ -484,8 +502,8 @@ t8_default_scheme_hex_c::t8_element_boundary_face (const t8_element_t * elem,
    * We have to scale the coordinates since a root quadrant may have
    * different length than a root hex.
    */
-  b->x = (face >> 1 ? q->x : q->y) * ((uint64_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);      /* true if face >= 2 */
-  b->y = (face >> 2 ? q->y : q->z) * ((uint64_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);      /* true if face >= 4 */
+  b->x = (face >> 1 ? q->x : q->y) * ((t8_linearidx_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);        /* true if face >= 2 */
+  b->y = (face >> 2 ? q->y : q->z) * ((t8_linearidx_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);        /* true if face >= 4 */
   T8_ASSERT (!p8est_quadrant_is_extended (q)
              || p4est_quadrant_is_extended (b));
 }
@@ -558,16 +576,17 @@ t8_default_scheme_hex_c::t8_element_face_neighbor_inside (const t8_element_t *
 
 void
 t8_default_scheme_hex_c::t8_element_set_linear_id (t8_element_t * elem,
-                                                   int level, uint64_t id)
+                                                   int level,
+                                                   t8_linearidx_t id)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= P8EST_QMAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((uint64_t) 1) << P8EST_DIM * level);
+  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << P8EST_DIM * level);
 
   p8est_quadrant_set_morton ((p8est_quadrant_t *) elem, level, id);
 }
 
-uint64_t
+t8_linearidx_t
   t8_default_scheme_hex_c::t8_element_get_linear_id (const t8_element_t *
                                                      elem, int level)
 {
@@ -605,13 +624,13 @@ t8_default_scheme_hex_c::t8_element_successor (const t8_element_t * elem1,
                                                t8_element_t * elem2,
                                                int level)
 {
-  uint64_t            id;
+  t8_linearidx_t      id;
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
   T8_ASSERT (0 <= level && level <= P8EST_QMAXLEVEL);
 
   id = p8est_quadrant_linear_id ((const p8est_quadrant_t *) elem1, level);
-  T8_ASSERT (id + 1 < ((uint64_t) 1) << P8EST_DIM * level);
+  T8_ASSERT (id + 1 < ((t8_linearidx_t) 1) << P8EST_DIM * level);
   p8est_quadrant_set_morton ((p8est_quadrant_t *) elem2, level, id + 1);
 }
 
@@ -680,7 +699,7 @@ t8_default_scheme_hex_c::t8_element_init (int length, t8_element_t * elem,
     p8est_quadrant_t   *quads = (p8est_quadrant_t *) elem;
     for (i = 0; i < length; i++) {
       p8est_quadrant_set_morton (quads + i, 0, 0);
-      T8_QUAD_SET_TDIM (quads + i, 2);
+      T8_QUAD_SET_TDIM (quads + i, 3);
       T8_ASSERT (p8est_quadrant_is_extended (quads + i));
     }
   }

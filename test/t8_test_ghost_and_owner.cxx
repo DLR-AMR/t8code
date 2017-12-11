@@ -39,7 +39,7 @@ t8_test_gao_adapt (t8_forest_t forest, t8_forest_t forest_from,
                    t8_locidx_t which_tree, t8_eclass_scheme_c * ts,
                    int num_elements, t8_element_t * elements[])
 {
-  uint64_t            eid;
+  t8_linearidx_t      eid;
   int                 level, maxlevel;
 
   /* refine every second element up to the maximum level */
@@ -66,7 +66,7 @@ t8_test_create_cmesh (int i, t8_eclass_t eclass, sc_MPI_Comm comm)
   case 0:
     return t8_cmesh_new_from_class (eclass, comm);
   case 1:
-    return t8_cmesh_new_hypercube (eclass, comm, 0, 0);
+    return t8_cmesh_new_hypercube (eclass, comm, 0, 0, 0);
   case 2:
     if (eclass == T8_ECLASS_TET) {
       return t8_cmesh_new_tet_orientation_test (comm);
@@ -165,12 +165,12 @@ t8_test_ghost_owner ()
         /* Adapt the forest and exchange data again */
         maxlevel = level + 2;
         if (eclass == T8_ECLASS_PRISM) {
-            /* Prism elements do not support unbalanced ghost yet.
-              We thus can only refine one level. */
-            maxlevel = level + 1;
+          /* Prism elements do not support unbalanced ghost yet.
+             We thus can only refine one level. */
+          maxlevel = level + 1;
         }
-        forest_adapt = t8_forest_new_adapt (forest, t8_test_gao_adapt,
-                                            NULL, 1, 1, &maxlevel);
+        forest_adapt =
+          t8_forest_new_adapt (forest, t8_test_gao_adapt, 1, 1, &maxlevel);
         /* Check the owners of the ghost elements */
         t8_test_gao_check (forest_adapt);
         t8_forest_unref (&forest_adapt);

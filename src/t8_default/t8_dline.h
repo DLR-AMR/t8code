@@ -35,6 +35,9 @@
 /** The number of faces of a line. */
 #define T8_DLINE_FACES 2
 
+/** The number of children at a face of a line. */
+#define T8_DLINE_FACE_CHILDREN 1
+
 /** The maximum refinement level allowed for a line. */
 #define T8_DLINE_MAXLEVEL 30
 

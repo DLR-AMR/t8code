@@ -25,6 +25,7 @@
 #include <t8_cmesh_vtk.h>
 #include <t8_refcount.h>
 #include <t8_data/t8_shmem.h>
+#include <t8_vec.h>
 #ifdef T8_WITH_METIS
 #include <metis.h>
 #endif
@@ -61,6 +62,7 @@ t8_cmesh_is_initialized (t8_cmesh_t cmesh)
  *
  * Returns true, if everything is fine.
  */
+#ifdef T8_ENABLE_DEBUG
 static int
 t8_cmesh_check_trees_per_eclass (t8_cmesh_t cmesh)
 {
@@ -79,6 +81,7 @@ t8_cmesh_check_trees_per_eclass (t8_cmesh_t cmesh)
   return !ret && lo_trees == cmesh->num_local_trees
     && glo_trees == cmesh->num_trees;
 }
+#endif
 
 int
 t8_cmesh_is_committed (t8_cmesh_t cmesh)
@@ -96,6 +99,7 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
 
     if (!(cmesh != NULL && t8_refcount_is_active (&cmesh->rc) &&
           cmesh->committed)) {
+      is_checking = 0;
       return 0;
     }
 
@@ -104,6 +108,7 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
     if ((!t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) ||
         (!t8_cmesh_no_negative_volume (cmesh))
         || (!t8_cmesh_check_trees_per_eclass (cmesh))) {
+      is_checking = 0;
       return 0;
     }
 #endif
@@ -961,7 +966,8 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   }
   if (meta_info.pre_commit) {
     /* broadcast all the stashed information about trees/neighbors/attributes */
-    t8_stash_bcast (cmesh_in->stash, root, comm, meta_info.stash_elem_counts);
+    t8_stash_bcast (cmesh_out->stash, root, comm,
+                    meta_info.stash_elem_counts);
   }
   else {
     /* broadcast the stored information about the trees */
@@ -976,8 +982,12 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   cmesh_out->mpirank = mpirank;
   cmesh_out->mpisize = mpisize;
   /* Final checks */
-  T8_ASSERT (t8_cmesh_is_committed (cmesh_out));
-  T8_ASSERT (t8_cmesh_comm_is_valid (cmesh_out, comm));
+#ifdef T8_ENABLE_DEBUG
+  if (!meta_info.pre_commit) {
+    T8_ASSERT (t8_cmesh_is_committed (cmesh_out));
+    T8_ASSERT (t8_cmesh_comm_is_valid (cmesh_out, comm));
+  }
+#endif
   return cmesh_out;
 }
 
@@ -1091,6 +1101,14 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 }
 #endif
 
+int
+t8_cmesh_is_partitioned (t8_cmesh_t cmesh)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+
+  return cmesh->set_partition != 0;
+}
+
 t8_gloidx_t
 t8_cmesh_get_num_trees (t8_cmesh_t cmesh)
 {
@@ -1124,13 +1142,11 @@ t8_cmesh_tree_face_is_boundary (t8_cmesh_t cmesh,
 {
   t8_locidx_t        *face_neighbor;
   int8_t             *ttf;
-  t8_ctree_t          ctree;
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
-  ctree =
-    t8_cmesh_trees_get_tree_ext (cmesh->trees, ltree_id, &face_neighbor,
-                                 &ttf);
+  (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, ltree_id, &face_neighbor,
+                                      &ttf);
 
   if (face_neighbor[face] == ltree_id && ttf[face] == face) {
     /* The tree is connected to itself at the same face.
@@ -1267,8 +1283,10 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     t8_gloidx_t         first_global_child;
     t8_gloidx_t         last_global_child;
     t8_gloidx_t         children_per_tree;
+#ifdef T8_ENABLE_DEBUG
     t8_gloidx_t         prev_last_tree = -1;
-    const uint64_t      one = 1;
+#endif
+    const t8_linearidx_t one = 1;
 
     children_per_tree = one << cmesh->dimension * level;
     global_num_children = cmesh->num_trees * children_per_tree;
@@ -1313,8 +1331,10 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     is_empty = *first_local_tree >= *last_local_tree
       && first_global_child >= last_global_child;
     if (first_tree_shared != NULL) {
+#ifdef T8_ENABLE_DEBUG
       prev_last_tree = (first_global_child - 1) / children_per_tree;
       T8_ASSERT (cmesh->mpirank > 0 || prev_last_tree <= 0);
+#endif
       if (!is_empty && cmesh->mpirank > 0 && first_global_child > 0) {
         /* We exclude empty partitions here, by def their first_tree_shared flag is zero */
         /* We also exclude that the previous partition was empty at the beginning of the
@@ -1765,6 +1785,256 @@ t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t *
   }
 }
 
+/* Compute y = ax + b on an array of doubles, interpreting
+ * each 3 as one vector x */
+static void
+t8_cmesh_coords_axb (const double *coords_in, double *coords_out,
+                     int num_vertices, double alpha, const double b[3])
+{
+  int                 i;
+
+  for (i = 0; i < num_vertices; i++) {
+    t8_vec_axpyz (coords_in + i * 3, b, coords_out + i * 3, alpha);
+  }
+}
+
+t8_cmesh_t
+t8_cmesh_new_hypercube_hybrid (int dim, sc_MPI_Comm comm, int do_partition,
+                               int periodic)
+{
+  int                 i;
+  t8_cmesh_t          cmesh;
+  t8_topidx_t         vertices[8];
+  double              vertices_coords_temp[24];
+  double              attr_vertices[24];
+  double              null_vec[3] = { 0, 0, 0 };
+  double              shift[7][3] = { {0.5, 0, 0}, {0, 0.5, 0}, {0, 0, 0.5},
+  {0.5, 0.5}, {0.5, 0, 0.5}, {0.5, 0.5, 0.5}, {0, 0.5, 0.5}
+  };
+  double              vertices_coords[24] = {
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0,
+    1, 1, 0,
+    0, 0, 1,
+    1, 0, 1,
+    0, 1, 1,
+    1, 1, 1
+  };
+
+  t8_cmesh_init (&cmesh);
+  /* This cmesh consists of 6 tets, 6 prisms and 3 hexes */
+  for (i = 0; i < 6; i++) {
+    t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_TET);
+  }
+  for (i = 6; i < 12; i++) {
+    t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PRISM);
+  }
+  for (i = 12; i < 16; i++) {
+    t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_HEX);
+  }
+
+    /************************************/
+  /*  The tetrahedra                  */
+    /************************************/
+  /* We place the tetrahedra at the origin of the unit cube.
+   * They are essentially the tetrahedral hypercube scaled by 0.5 */
+  t8_cmesh_coords_axb (vertices_coords, vertices_coords_temp, 8, 0.5,
+                       null_vec);
+  t8_cmesh_set_join (cmesh, 0, 1, 2, 1, 0);
+  t8_cmesh_set_join (cmesh, 1, 2, 2, 1, 0);
+  t8_cmesh_set_join (cmesh, 2, 3, 2, 1, 0);
+  t8_cmesh_set_join (cmesh, 3, 4, 2, 1, 0);
+  t8_cmesh_set_join (cmesh, 4, 5, 2, 1, 0);
+  t8_cmesh_set_join (cmesh, 5, 0, 2, 1, 0);
+  vertices[0] = 0;
+  vertices[1] = 1;
+  vertices[2] = 5;
+  vertices[3] = 7;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0,
+                              attr_vertices, 4);
+  vertices[1] = 3;
+  vertices[2] = 1;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 1, t8_get_package_id (), 0,
+                              attr_vertices, 4);
+  vertices[1] = 2;
+  vertices[2] = 3;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 2, t8_get_package_id (), 0,
+                              attr_vertices, 4);
+  vertices[1] = 6;
+  vertices[2] = 2;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 3, t8_get_package_id (), 0,
+                              attr_vertices, 4);
+  vertices[1] = 4;
+  vertices[2] = 6;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 4, t8_get_package_id (), 0,
+                              attr_vertices, 4);
+  vertices[1] = 5;
+  vertices[2] = 4;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 5, t8_get_package_id (), 0,
+                              attr_vertices, 4);
+
+    /************************************/
+  /*     The prisms                   */
+    /************************************/
+  /* We place the prism to the left, right, and top of the tetrahedra.
+   * They are essentially the prism hypercube scaled by 0.5 and
+   * shifted in 3 different direction. */
+  /* trees 6 and 7 */
+  t8_cmesh_coords_axb (vertices_coords, vertices_coords_temp, 8, 0.5,
+                       shift[0]);
+  vertices[0] = 0;
+  vertices[1] = 6;
+  vertices[2] = 4;
+  vertices[3] = 1;
+  vertices[4] = 7;
+  vertices[5] = 5;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 6);
+  t8_cmesh_set_tree_vertices (cmesh, 6, t8_get_package_id (), 0,
+                              attr_vertices, 6);
+  vertices[1] = 2;
+  vertices[2] = 6;
+  vertices[4] = 3;
+  vertices[5] = 7;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 6);
+  t8_cmesh_set_tree_vertices (cmesh, 7, t8_get_package_id (), 0,
+                              attr_vertices, 6);
+
+  t8_cmesh_set_join (cmesh, 6, 7, 2, 1, 0);
+  /* trees 8 and 9 */
+  t8_cmesh_coords_axb (vertices_coords, vertices_coords_temp, 8, 0.5,
+                       shift[1]);
+  vertices[0] = 0;
+  vertices[1] = 5;
+  vertices[2] = 1;
+  vertices[3] = 2;
+  vertices[4] = 7;
+  vertices[5] = 3;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 6);
+  t8_cmesh_set_tree_vertices (cmesh, 8, t8_get_package_id (), 0,
+                              attr_vertices, 6);
+  vertices[1] = 4;
+  vertices[2] = 5;
+  vertices[4] = 6;
+  vertices[5] = 7;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 6);
+  t8_cmesh_set_tree_vertices (cmesh, 9, t8_get_package_id (), 0,
+                              attr_vertices, 6);
+  t8_cmesh_set_join (cmesh, 8, 9, 2, 1, 0);
+  /* trees 10 an 11 */
+  t8_cmesh_coords_axb (vertices_coords, vertices_coords_temp, 8, 0.5,
+                       shift[2]);
+  vertices[0] = 0;
+  vertices[1] = 1;
+  vertices[2] = 3;
+  vertices[3] = 4;
+  vertices[4] = 5;
+  vertices[5] = 7;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 6);
+  t8_cmesh_set_tree_vertices (cmesh, 10, t8_get_package_id (), 0,
+                              attr_vertices, 6);
+  vertices[1] = 3;
+  vertices[2] = 2;
+  vertices[4] = 7;
+  vertices[5] = 6;
+  t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                 vertices_coords_temp,
+                                                 attr_vertices, 6);
+  t8_cmesh_set_tree_vertices (cmesh, 11, t8_get_package_id (), 0,
+                              attr_vertices, 6);
+  t8_cmesh_set_join (cmesh, 10, 11, 1, 2, 0);
+
+  /* Connect prisms and tets */
+  t8_cmesh_set_join (cmesh, 0, 6, 0, 3, 0);
+  t8_cmesh_set_join (cmesh, 1, 7, 0, 3, 1);
+  t8_cmesh_set_join (cmesh, 2, 8, 0, 3, 0);
+  t8_cmesh_set_join (cmesh, 3, 9, 0, 3, 1);
+  t8_cmesh_set_join (cmesh, 4, 10, 0, 3, 1);
+  t8_cmesh_set_join (cmesh, 5, 11, 0, 3, 0);
+
+  /************************************/
+  /*  The hexahedra                   */
+  /************************************/
+
+  for (i = 0; i < 8; i++) {
+    vertices[i] = i;
+  }
+
+  for (i = 0; i < 4; i++) {
+    t8_cmesh_coords_axb (vertices_coords, vertices_coords_temp, 8, 0.5,
+                         shift[3 + i]);
+    t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                   vertices_coords_temp,
+                                                   attr_vertices, 8);
+    t8_cmesh_set_tree_vertices (cmesh, 12 + i, t8_get_package_id (), 0,
+                                attr_vertices, 8);
+  }
+  /* Join the hexes */
+  t8_cmesh_set_join (cmesh, 12, 14, 5, 4, 0);
+  t8_cmesh_set_join (cmesh, 13, 14, 3, 2, 0);
+  t8_cmesh_set_join (cmesh, 14, 15, 0, 1, 0);
+
+  /* Join the prisms and hexes */
+  t8_cmesh_set_join (cmesh, 6, 13, 0, 4, 1);
+  t8_cmesh_set_join (cmesh, 7, 12, 0, 2, 1);
+  t8_cmesh_set_join (cmesh, 8, 12, 0, 0, 1);
+  t8_cmesh_set_join (cmesh, 9, 15, 0, 4, 0);
+  t8_cmesh_set_join (cmesh, 10, 13, 0, 0, 0);
+  t8_cmesh_set_join (cmesh, 11, 15, 0, 2, 0);
+
+  if (periodic) {
+    /* Connect the sides of the cube to make it periodic */
+    /* tets to prisms */
+    t8_cmesh_set_join (cmesh, 0, 8, 3, 4, 0);
+    t8_cmesh_set_join (cmesh, 5, 9, 3, 4, 0);
+    t8_cmesh_set_join (cmesh, 3, 7, 3, 4, 0);
+    t8_cmesh_set_join (cmesh, 4, 6, 3, 4, 0);
+    t8_cmesh_set_join (cmesh, 1, 10, 3, 4, 0);
+    t8_cmesh_set_join (cmesh, 2, 11, 3, 4, 0);
+    /* prism to hex */
+    t8_cmesh_set_join (cmesh, 6, 12, 1, 3, 1);
+    t8_cmesh_set_join (cmesh, 9, 12, 2, 1, 0);
+    t8_cmesh_set_join (cmesh, 11, 13, 1, 1, 0);
+    t8_cmesh_set_join (cmesh, 10, 15, 2, 3, 1);
+    /* hex to hex */
+    t8_cmesh_set_join (cmesh, 12, 14, 4, 5, 0);
+    t8_cmesh_set_join (cmesh, 13, 14, 2, 3, 0);
+    t8_cmesh_set_join (cmesh, 14, 15, 1, 0, 0);
+
+  }
+
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
 /* The unit cube is constructed from trees of the same eclass.
  * For triangles the square is divided along the (0,0) -- (1,1) diagonal.
  * For prisms the front (y=0) and back (y=1) face are divided into triangles
@@ -1773,7 +2043,7 @@ t8_cmesh_new_translate_vertices_to_attributes (t8_topidx_t *
 /* TODO: upgrade with int x,y,z for periodic faces */
 t8_cmesh_t
 t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
-                        int do_partition)
+                        int do_partition, int periodic)
 {
   t8_cmesh_t          cmesh;
   int                 num_trees_for_hypercube[T8_ECLASS_COUNT] = {
@@ -1793,6 +2063,10 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
     0, 1, 1,
     1, 1, 1
   };
+
+  SC_CHECK_ABORT (eclass != T8_ECLASS_PYRAMID || !periodic,
+                  "The pyramid cube mesh cannot be periodic.");
+
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
   if (!do_bcast || mpirank == 0) {
@@ -1806,11 +2080,20 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
       vertices[5] = 5;
       vertices[6] = 6;
       vertices[7] = 7;
+      if (periodic) {
+        t8_cmesh_set_join (cmesh, 0, 0, 4, 5, 0);
+      }
     case T8_ECLASS_QUAD:
       vertices[3] = 3;
       vertices[2] = 2;
+      if (periodic) {
+        t8_cmesh_set_join (cmesh, 0, 0, 2, 3, 0);
+      }
     case T8_ECLASS_LINE:
       vertices[1] = 1;
+      if (periodic) {
+        t8_cmesh_set_join (cmesh, 0, 0, 0, 1, 0);
+      }
     case T8_ECLASS_VERTEX:
       vertices[0] = 0;
       t8_cmesh_new_translate_vertices_to_attributes (vertices,
@@ -1844,6 +2127,12 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
                                                      attr_vertices, 6);
       t8_cmesh_set_tree_vertices (cmesh, 1, t8_get_package_id (), 0,
                                   attr_vertices, 6);
+      if (periodic) {
+        t8_cmesh_set_join (cmesh, 0, 1, 0, 1, 0);
+        t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 0);
+        t8_cmesh_set_join (cmesh, 0, 0, 3, 4, 0);
+        t8_cmesh_set_join (cmesh, 1, 1, 3, 4, 0);
+      }
       break;
     case T8_ECLASS_TRIANGLE:
       t8_cmesh_set_join (cmesh, 0, 1, 1, 2, 0);
@@ -1862,6 +2151,10 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
                                                      attr_vertices, 3);
       t8_cmesh_set_tree_vertices (cmesh, 1, t8_get_package_id (), 0,
                                   attr_vertices, 3);
+      if (periodic) {
+        t8_cmesh_set_join (cmesh, 0, 1, 0, 1, 0);
+        t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 0);
+      }
       break;
     case T8_ECLASS_TET:
       t8_cmesh_set_join (cmesh, 0, 1, 2, 1, 0);
@@ -1914,6 +2207,16 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
                                                      attr_vertices, 4);
       t8_cmesh_set_tree_vertices (cmesh, 5, t8_get_package_id (), 0,
                                   attr_vertices, 4);
+      if (periodic) {
+        t8_cmesh_set_join (cmesh, 0, 4, 0, 3, 0);
+        t8_cmesh_set_join (cmesh, 1, 3, 0, 3, 2);
+
+        t8_cmesh_set_join (cmesh, 0, 2, 3, 0, 2);
+        t8_cmesh_set_join (cmesh, 3, 5, 0, 3, 2);
+
+        t8_cmesh_set_join (cmesh, 1, 5, 3, 0, 2);
+        t8_cmesh_set_join (cmesh, 2, 4, 3, 0, 2);
+      }
       break;
     case T8_ECLASS_PYRAMID:
       vertices[0] = 1;
@@ -1973,6 +2276,142 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
   }
 
   t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_new_periodic_line_more_trees (sc_MPI_Comm comm)
+{
+  t8_cmesh_t          cmesh;
+
+  double              vertices[12] = {
+    0, 0, 0,
+    0.2, 0, 0,
+    0.6, 0, 0,
+    1, 0, 0
+  };
+
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_LINE);
+  t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_LINE);
+  t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_LINE);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 2);
+  t8_cmesh_set_tree_vertices (cmesh, 1, t8_get_package_id (), 0, vertices + 3,
+                              2);
+  t8_cmesh_set_tree_vertices (cmesh, 2, t8_get_package_id (), 0, vertices + 6,
+                              2);
+  t8_cmesh_set_join (cmesh, 0, 1, 1, 0, 0);
+  t8_cmesh_set_join (cmesh, 1, 2, 1, 0, 0);
+  t8_cmesh_set_join (cmesh, 2, 0, 1, 0, 0);
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_new_periodic_tri (sc_MPI_Comm comm)
+{
+  double              vertices[18] = {
+    0, 0, 0,
+    1, 0, 0,
+    1, 1, 0,
+    0, 0, 0,
+    1, 1, 0,
+    0, 1, 0
+  };
+  t8_cmesh_t          cmesh;
+
+  t8_cmesh_init (&cmesh);
+
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 3);
+  t8_cmesh_set_tree_vertices (cmesh, 1, t8_get_package_id (), 0, vertices + 9,
+                              3);
+  t8_cmesh_set_join (cmesh, 0, 1, 1, 2, 0);
+  t8_cmesh_set_join (cmesh, 0, 1, 0, 1, 0);
+  t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 1);
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_new_periodic_hybrid (sc_MPI_Comm comm)
+{
+  double              vertices[60] = {  /* Just all vertices of all trees. partly duplicated */
+    0, 0, 0,                    /* tree 0, triangle */
+    0.5, 0, 0,
+    0.5, 0.5, 0,
+    0, 0, 0,                    /* tree 1, triangle */
+    0.5, 0.5, 0,
+    0, 0.5, 0,
+    0.5, 0, 0,                  /* tree 2, quad */
+    1, 0, 0,
+    0.5, 0.5, 0,
+    1, 0.5, 0,
+    0, 0.5, 0,                  /* tree 3, quad */
+    0.5, 0.5, 0,
+    0, 1, 0,
+    0.5, 1, 0,
+    0.5, 0.5, 0,                /* tree 4, triangle */
+    1, 0.5, 0,
+    1, 1, 0,
+    0.5, 0.5, 0,                /* tree 5, triangle */
+    1, 1, 0,
+    0.5, 1, 0
+  };
+  t8_cmesh_t          cmesh;
+
+  /*
+   *  This is how the cmesh looks like. The numbers are the tree numbers:
+   *
+   *   +---+---+
+   *   |   |5 /|
+   *   | 3 | / |
+   *   |   |/ 4|
+   *   +---+---+
+   *   |1 /|   |
+   *   | / | 2 |
+   *   |/0 |   |
+   *   +---+---+
+   */
+
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_QUAD);
+  t8_cmesh_set_tree_class (cmesh, 3, T8_ECLASS_QUAD);
+  t8_cmesh_set_tree_class (cmesh, 4, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_class (cmesh, 5, T8_ECLASS_TRIANGLE);
+
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 3);
+  t8_cmesh_set_tree_vertices (cmesh, 1, t8_get_package_id (), 0, vertices + 9,
+                              3);
+  t8_cmesh_set_tree_vertices (cmesh, 2, t8_get_package_id (), 0,
+                              vertices + 18, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 3, t8_get_package_id (), 0,
+                              vertices + 30, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 4, t8_get_package_id (), 0,
+                              vertices + 42, 3);
+  t8_cmesh_set_tree_vertices (cmesh, 5, t8_get_package_id (), 0,
+                              vertices + 51, 3);
+
+  t8_cmesh_set_join (cmesh, 0, 1, 1, 2, 0);
+  t8_cmesh_set_join (cmesh, 0, 2, 0, 0, 0);
+  t8_cmesh_set_join (cmesh, 0, 3, 2, 3, 0);
+
+  t8_cmesh_set_join (cmesh, 1, 3, 0, 2, 1);
+  t8_cmesh_set_join (cmesh, 1, 2, 1, 1, 0);
+
+  t8_cmesh_set_join (cmesh, 2, 4, 3, 2, 0);
+  t8_cmesh_set_join (cmesh, 2, 5, 2, 0, 1);
+
+  t8_cmesh_set_join (cmesh, 3, 5, 1, 1, 0);
+  t8_cmesh_set_join (cmesh, 3, 4, 0, 0, 0);
+
+  t8_cmesh_set_join (cmesh, 4, 5, 1, 2, 0);
+
+  t8_cmesh_commit (cmesh, comm);
+
   return cmesh;
 }
 

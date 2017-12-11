@@ -65,7 +65,7 @@ void                t8_forest_split_array (const t8_element_t * element,
  * the index of the leaf in the leafs of the tree. If it is negative, it is
  * - (index + 1) */
 /* Top-down iteration and callback is called on each intermediate level.
- * It it returns false, the current element is not traversed further */
+ * If it returns false, the current element is not traversed further */
 void                t8_forest_iterate_faces (t8_forest_t forest,
                                              t8_locidx_t ltreeid,
                                              const t8_element_t * element,
@@ -85,6 +85,22 @@ void                t8_forest_iterate_faces (t8_forest_t forest,
 void                t8_forest_search (t8_forest_t forest,
                                       t8_forest_search_query_fn search_fn,
                                       void *user_data);
+
+/** Given two forest where the elemnts in one forest are either direct children or
+ * parents of the elements in the other forest.
+ * Compare the two forests and for each refined element or coarsened
+ * family in the old one, call a callback function providing the local indices
+ * of the old and new elements.
+ * \param [in]  forest_new  A forest, each element is a parent or child of an element in \a forest_old.
+ * \param [in]  forest_old  The initial forest.
+ * \param [in]  replace_fn  A replace callback function.
+ * \note To pass a user pointer to \a replace_fn use \ref t8_forest_set_user_data
+ * and \ref t8_forest_get_user_data.
+ */
+void                t8_forest_iterate_replace (t8_forest_t forest_new,
+                                               t8_forest_t forest_old,
+                                               t8_forest_replace_t
+                                               replace_fn);
 
 T8_EXTERN_C_END ();
 

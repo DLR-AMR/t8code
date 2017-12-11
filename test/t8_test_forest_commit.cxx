@@ -78,7 +78,7 @@ t8_test_create_cmesh (int i, t8_eclass_t eclass, sc_MPI_Comm comm)
   case 0:
     return t8_cmesh_new_from_class (eclass, comm);
   case 1:
-    return t8_cmesh_new_hypercube (eclass, comm, 0, 0);
+    return t8_cmesh_new_hypercube (eclass, comm, 0, 0, 0);
   case 2:
     return t8_cmesh_new_bigmesh (eclass, 2, comm);
   default:
@@ -96,8 +96,7 @@ t8_test_forest_commit_abp (t8_forest_t forest, int maxlevel)
   t8_forest_init (&forest_ada_bal_par);
   /* Set user data for adapt */
   t8_forest_set_user_data (forest_ada_bal_par, &maxlevel);
-  t8_forest_set_adapt (forest_ada_bal_par, forest, t8_test_adapt_balance,
-                       NULL, 1);
+  t8_forest_set_adapt (forest_ada_bal_par, forest, t8_test_adapt_balance, 1);
   t8_forest_set_balance (forest_ada_bal_par, NULL, 0);
   t8_forest_set_partition (forest_ada_bal_par, NULL, 0);
   t8_forest_commit (forest_ada_bal_par);
@@ -121,7 +120,7 @@ t8_test_forest_commit_abp_3step (t8_forest_t forest, int maxlevel)
 
   /* adapt the forest */
   t8_forest_set_user_data (forest_adapt, &maxlevel);
-  t8_forest_set_adapt (forest_adapt, forest, t8_test_adapt_balance, NULL, 1);
+  t8_forest_set_adapt (forest_adapt, forest, t8_test_adapt_balance, 1);
   t8_forest_commit (forest_adapt);
 
   /* balance the forest */

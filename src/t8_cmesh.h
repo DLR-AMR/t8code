@@ -373,7 +373,8 @@ int                 t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix);
 t8_cmesh_t          t8_cmesh_load (const char *filename, sc_MPI_Comm comm);
 
 /* TODO: Document */
-/* procs_per_node is only relevant in mode==JUQUEEN */
+/* procs_per_node is only relevant in mode==JUQUEEN.
+ *  num_files = 1 => replicated cmesh is constructed */
 t8_cmesh_t          t8_cmesh_load_and_distribute (const char *fileprefix,
                                                   int num_files,
                                                   sc_MPI_Comm comm,
@@ -391,6 +392,14 @@ t8_cmesh_t          t8_cmesh_load_and_distribute (const char *fileprefix,
   * */
 int                 t8_cmesh_comm_is_valid (t8_cmesh_t cmesh,
                                             sc_MPI_Comm comm);
+
+/** Query whether a committed cmesh is partitioned or replicated.
+ * \param [in] cmesh       A committed cmesh.
+ * \return                 True if \a cmesh is partitioned.
+ *                         False otherwise.
+ * \a cmesh must be committed before calling this function.
+ */
+int                 t8_cmesh_is_partitioned (t8_cmesh_t cmesh);
 
 /** Return the global number of trees in a cmesh.
  * \param [in] cmesh       The cmesh to be considered.
@@ -669,13 +678,22 @@ t8_cmesh_t          t8_cmesh_new_testhybrid (sc_MPI_Comm comm);
  *                          processors in \a comm.
  *                          TODO: this parameter will be moved to internal.
  * \param [in] do_partition Create a partitioned cmesh.
+ * \param [in] periodic     If true, the coarse mesh will be periodic in each direction.
+ *                          Not possible with \a eclass pyramid.
  * TODO: Add periodic flags for each dimension.
  */
 t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
                                             sc_MPI_Comm comm,
-                                            int do_bcast, int do_partition);
+                                            int do_bcast, int do_partition,
+                                            int periodic);
 
-/** Construct a unit interval/square/cube forest that is periodic in each direction.
+/** Hybercube with 6 Tets, 6 Prism, 4 Hex. */
+/* TODO: Document */
+t8_cmesh_t          t8_cmesh_new_hypercube_hybrid (int dim, sc_MPI_Comm comm,
+                                                   int do_partition,
+                                                   int periodic);
+
+/** Construct a unit interval/square/cube coarse mesh that is periodic in each direction.
  * Element class?
  * Hypercube?
  * TODO: redundant, remove.
@@ -684,6 +702,25 @@ t8_cmesh_t          t8_cmesh_new_hypercube (t8_eclass_t eclass,
  * \return                  A valid cmesh, as if _init and _commit had been called.
  */
 t8_cmesh_t          t8_cmesh_new_periodic (sc_MPI_Comm comm, int dim);
+
+/** Construct a unit square of two triangles that is periodic in x and y.
+ * \param [in] comm         The mpi communicator to use.
+ * \return                  A valid cmesh, as if _init and _commit had been called.
+ */
+t8_cmesh_t          t8_cmesh_new_periodic_tri (sc_MPI_Comm comm);
+
+/** Construct a unit square of two quads and four triangles that is periodic in x and y.
+ * \param [in] comm         The mpi communicator to use.
+ * \return                  A valid cmesh, as if _init and _commit had been called.
+ */
+t8_cmesh_t          t8_cmesh_new_periodic_hybrid (sc_MPI_Comm comm);
+
+/** Construct a unit interval coarse mesh that consists of 3 trees and is
+ * periodic.
+ * \param [in] comm         The mpi communicator to use.
+ * \return                  A valid cmesh, as is _init and _commit had been called.
+ */
+t8_cmesh_t          t8_cmesh_new_periodic_line_more_trees (sc_MPI_Comm comm);
 
 /** Construct a mesh consisting of a given number of same type trees.
  * \param [in] eclass       This element class determines the dimension and

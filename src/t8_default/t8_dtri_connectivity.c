@@ -92,3 +92,9 @@ const int           t8_dtri_face_corner[3][2] = {
   {0, 2},
   {0, 1}
 };
+
+const int           t8_dtri_corner_face[3][2] = {
+  {1, 2},
+  {0, 2},
+  {0, 1}
+};

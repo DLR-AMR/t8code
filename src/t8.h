@@ -68,6 +68,7 @@ T8_EXTERN_C_BEGIN ();
 #define T8_ALLOC P4EST_ALLOC            /**< TODO: write proper function. */
 #define T8_ALLOC_ZERO P4EST_ALLOC_ZERO  /**< TODO: write proper function. */
 #define T8_FREE P4EST_FREE              /**< TODO: write proper function. */
+#define T8_REALLOC P4EST_REALLOC        /**< TODO: write proper function. */
 
 /** A type for counting coarse mesh related values (trees, tree vertices, ...).
  * The name topidx alludes to mesh topology as this is what cmesh defines.
@@ -92,11 +93,16 @@ typedef p4est_gloidx_t t8_gloidx_t;
 #define T8_GLOIDX_ABS(x) P4EST_GLOIDX_ABS(x)
 #define t8_compare_gloidx(v,w) p4est_gloidx_compare(v,w)
 
+/** A type for storing SFC indices */
+typedef uint64_t    t8_linearidx_t;
+/** The MPI datatype of t8_linearidx_t */
+#define T8_MPI_LINEARIDX sc_MPI_UNSIGNED_LONG_LONG
+
 #define T8_PADDING_SIZE (sizeof (void*))
 /** Compute the number of bytes that have to be added to a given byte_count
  * such that it is a multiple of the padding size */
 #define T8_ADD_PADDING(_x) \
-  ((T8_PADDING_SIZE - ((_x) %  T8_PADDING_SIZE)) %  T8_PADDING_SIZE);
+  ((T8_PADDING_SIZE - ((_x) %  T8_PADDING_SIZE)) %  T8_PADDING_SIZE)
 
 /** Communication tags used internal to t8code. */
 typedef enum
@@ -192,6 +198,8 @@ void                t8_infof (const char *fmt, ...)
 
 /** Log a message, no matter what rank, with priority SC_LP_DEBUG.
  * \param [in] fmt          Printf-style format string.
+ * \note This function does not print anything unless t8code was compiled
+ * in debug mode (--enable-debug, T8_ENABLE_DEBUG was defined).
  */
 void                t8_debugf (const char *fmt, ...)
 #ifndef T8_DOXYGEN

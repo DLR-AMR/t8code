@@ -67,8 +67,9 @@ t8_test_fiterate_callback (t8_forest_t forest,
 /* Only refine the first tree on a process. */
 static int
 t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
-                t8_locidx_t which_tree, t8_eclass_scheme_c * ts,
-                int num_elements, t8_element_t * elements[])
+                t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                t8_eclass_scheme_c * ts, int num_elements,
+                t8_element_t * elements[])
 {
   int                 mpirank, mpiret;
   T8_ASSERT (num_elements == 1 || num_elements ==
@@ -151,7 +152,7 @@ t8_test_fiterate_refine_and_partition (t8_cmesh_t cmesh, int level,
 
   t8_test_fiterate (forest);
   t8_forest_init (&forest_adapt);
-  t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, NULL, 1);
+  t8_forest_set_adapt (forest_adapt, forest, t8_basic_adapt, 1);
   t8_forest_commit (forest_adapt);
   if (!no_vtk) {
     t8_forest_write_vtk (forest_adapt, "test_fiterate");
@@ -209,7 +210,7 @@ t8_test_fiterate_hypercube (t8_eclass_t eclass, int level, sc_MPI_Comm comm,
                             int no_vtk)
 {
   t8_cmesh_t          cmesh;
-  cmesh = t8_cmesh_new_hypercube (eclass, comm, 0, 0);
+  cmesh = t8_cmesh_new_hypercube (eclass, comm, 0, 0, 0);
 
   t8_test_fiterate_refine_and_partition (cmesh, level, comm, 1, no_vtk);
 }

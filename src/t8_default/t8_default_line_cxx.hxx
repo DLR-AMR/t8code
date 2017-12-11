@@ -106,6 +106,23 @@ public:
   virtual int         t8_element_num_face_children (const t8_element_t *
                                                     elem, int face);
 
+  virtual int         t8_element_get_face_corner (const t8_element_t *
+                                                  element, int face,
+                                                  int corner)
+  {
+    SC_ABORT ("Not implemented.\n");
+    return 0;                   /* prevents compiler warning */
+  }
+
+  /** Return the face numbers of the faces sharing an element's corner. */
+  virtual int         t8_element_get_corner_face (const t8_element_t *
+                                                  element, int corner,
+                                                  int face)
+  {
+    SC_ABORT ("Not implemented.\n");
+    return 0;                   /* prevents compiler warning */
+  }
+
 /** Construct the child element of a given number. */
   virtual void        t8_element_child (const t8_element_t * elem,
                                         int childid, t8_element_t * child);
@@ -139,19 +156,12 @@ public:
                                                    int face,
                                                    t8_element_t * children[],
                                                    int num_children,
-                                                   int *child_indices)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                   int *child_indices);
 
   /** Given a face of an element and a child number of a child of that face, return the face number
    * of the child of the element that matches the child face. */
   virtual int         t8_element_face_child_face (const t8_element_t * elem,
-                                                  int face, int face_child)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+                                                  int face, int face_child);
 
   /** Given a face of an element return the face number
    * of the parent of the element that matches the element's face. Or return -1 if
@@ -177,24 +187,14 @@ public:
                                                const t8_eclass_scheme_c *
                                                face_scheme,
                                                t8_element_t * elem,
-                                               int root_face)
-  {
-    /* TODO: Change the class of face_scheme to t8_default_scheme_vertex_c
-     * as soon as it is implemented. */
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                               int root_face);
 
   /** Construct the boundary element at a specific face. */
   virtual void        t8_element_boundary_face (const t8_element_t * elem,
                                                 int face,
                                                 t8_element_t * boundary,
                                                 const t8_eclass_scheme_c *
-                                                boundary_scheme)
-  {
-    /* TODO: Change the class of boundary_scheme to t8_default_scheme_vertex_c
-     * as soon as it is implemented. */
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                boundary_scheme);
 
   /** Construct the first descendant of an element that touches a given face.   */
   virtual void        t8_element_first_descendant_face (const t8_element_t *
@@ -234,12 +234,12 @@ public:
 
 /** Initialize an element according to a given linear id */
   virtual void        t8_element_set_linear_id (t8_element_t * elem,
-                                                int level, uint64_t id);
+                                                int level, t8_linearidx_t id);
 
 /** Calculate the linear id of an element */
-  virtual u_int64_t   t8_element_get_linear_id (const
-                                                t8_element_t *
-                                                elem, int level);
+  virtual t8_linearidx_t t8_element_get_linear_id (const
+                                                   t8_element_t *
+                                                   elem, int level);
 
 /** Calculate the first descendant of a given element e. That is, the
  *  first element in a uniform refinement of e of the maximal possible level.

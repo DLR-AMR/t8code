@@ -163,20 +163,57 @@ public:
     0;
 
   /** Return the number of children of an element when it is refined.
-   * \param [in] ts     The virtual table for this element class.
    * \param [in] elem   The element whose number of children is returned.
    * \return            The number of children of \a elem if it is to be refined.
    */
   virtual int         t8_element_num_children (const t8_element_t * elem) = 0;
 
   /** Return the number of children of an element's face when the element is refined.
-   * \param [in] ts     The virtual table for this element class.
    * \param [in] elem   The element whose face is considered.
    * \param [in] face   A face of \a elem.
    * \return            The number of children of \a face if \a elem is to be refined.
    */
   virtual int         t8_element_num_face_children (const t8_element_t *
                                                     elem, int face) = 0;
+
+  /** Return the corner number of an element's face corner.
+   * Example quad: 2 x --- x 3
+   *                 |     |
+   *                 |     |   face 1
+   *               0 x --- x 1
+   *      Thus for face = 1 the output is: corner=0 : 1, corner=1: 3
+   *
+   * \param [in] element  The element.
+   * \param [in] face     A face index for \a element.
+   * \param [in] corner   A corner index for the face 0 <= \a corner < num_face_corners.
+   * \return              The corner number of the \a corner-th vertex of \a face.
+   *
+   * The order in which the corners must be given is determined by the eclass of \a element:
+   * LINE/QUAD/TRIANGLE:  No specific order.
+   * HEX               :  In Z-order of the face starting with the lowest corner number.
+   * TET               :  Starting with the lowest corner number counterclockwise as seen from
+   *                      'outside' of the element.
+   */
+  /* TODO: Prism order, Pyramid order. */
+  virtual int         t8_element_get_face_corner (const t8_element_t *
+                                                  element, int face,
+                                                  int corner) = 0;
+
+  /** Return the face numbers of the faces sharing an element's corner.
+   * Example quad: 2 x --- x 3
+   *                 |     |
+   *                 |     |   face 1
+   *               0 x --- x 1
+   *                  face 2
+   *      Thus for corner = 1 the output is: face=0 : 2, face=1: 1
+   * \param [in] element  The element.
+   * \param [in] corner   A corner index for the face.
+   * \param [in] face     A face index for \a corner.
+   * \return              The face number of the \a face-th face at \a corner.
+   */
+  virtual int         t8_element_get_corner_face (const t8_element_t *
+                                                  element, int corner,
+                                                  int face) = 0;
 
   /** Construct the child element of a given number.
    * \param [in] elem     This must be a valid element, bigger than maxlevel.
@@ -310,6 +347,7 @@ public:
      * \param [in]  face    Then number of the face.
      * \return              If \a face of \a elem is also a face of \a elem's parent,
      *                      the face number of this face. Otherwise -1.
+     * \note For the root element this function alwats returns \a face.
      */
   virtual int         t8_element_face_parent_face (const t8_element_t * elem,
                                                    int face) = 0;
@@ -365,6 +403,7 @@ public:
    * \return              The face number of the face of \a elem that coincides
    *                      with \a face.
    */
+  /* TODO: update documentation with face_scheme */
   virtual int         t8_element_extrude_face (const t8_element_t * face,
                                                const t8_eclass_scheme_c *
                                                face_scheme,
@@ -381,6 +420,7 @@ public:
    * If \a elem is of class T8_ECLASS_VERTEX, then \a boundary must be NULL
    * and will not be modified.
    */
+  /* TODO: update documentation with boundary_scheme */
   virtual void        t8_element_boundary_face (const t8_element_t * elem,
                                                 int face,
                                                 t8_element_t * boundary,
@@ -462,7 +502,8 @@ public:
    *                      id must fulfil 0 <= id < 'number of leafs in the uniform refinement'
    */
   virtual void        t8_element_set_linear_id (t8_element_t * elem,
-                                                int level, uint64_t id) = 0;
+                                                int level,
+                                                t8_linearidx_t id) = 0;
 
   /** Compute the linear id of a given element in a hypothetical uniform
    * refinement of a given level.
@@ -470,9 +511,9 @@ public:
    * \param [in] level    The level of the uniform refinement to consider.
    * \return              The linear id of the element.
    */
-  virtual u_int64_t   t8_element_get_linear_id (const
-                                                t8_element_t *
-                                                elem, int level) = 0;
+  virtual t8_linearidx_t t8_element_get_linear_id (const
+                                                   t8_element_t *
+                                                   elem, int level) = 0;
 
   /** Compute the first descendant of a given element.
    * \param [in] elem     The element whose descendant is computed.

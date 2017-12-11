@@ -79,8 +79,11 @@ typedef struct t8_forest
 
   t8_forest_t         set_from;         /**< Temporarily store source forest. */
   t8_forest_from_t    from_method;      /**< Method to derive from \b set_from. */
+#if 0
+  /* TODO: Think about this. see t8_forest_iterate.{cxx,h} */
   t8_forest_replace_t set_replace_fn;   /**< Replace function. Called when \b from_method
                                              is set to T8_FOREST_FROM_ADAPT. */
+#endif
   t8_forest_adapt_t   set_adapt_fn;     /**< refinement and coarsen function. Called when \b from_method
                                              is set to T8_FOREST_FROM_ADAPT. */
   int                 set_adapt_recursive; /**< Flag to decide whether coarsen and refine
@@ -91,6 +94,8 @@ typedef struct t8_forest
                                              repartitioning, \see t8_forest_balance */
   int                 do_ghost;         /**< If True, a ghost layer will be created when the forest is committed. */
   t8_ghost_type_t     ghost_type;       /**< If a ghost layer will be created, the type of neighbors that count as ghost. */
+  int                 ghost_algorithm;  /**< Controls the algorithm used for ghost. 1 = balanced only. 2 = also unbalanced
+                                             3 = top-down search and unbalanced. */
   void               *user_data;        /**< Pointer for arbitrary user data. \see t8_forest_set_user_data. */
   void               *t8code_data;      /**< Pointer for arbitrary data that is used internally. */
   int                 committed;        /**< \ref t8_forest_commit called? */
@@ -101,7 +106,7 @@ typedef struct t8_forest
   t8_gloidx_t         last_local_tree;
   t8_gloidx_t         global_num_trees; /**< The total number of global trees */
   sc_array_t         *trees;
-  t8_forest_ghost_t   ghosts;           /**< The ghost elements. \see t8_forest_ghost.h */
+  t8_forest_ghost_t   ghosts;           /**< If not NULL, the ghost elements. \see t8_forest_ghost.h */
   t8_shmem_array_t    element_offsets; /**< If partitioned, for each process the global index
                                             of its first element. Since it is memory consuming,
                                             it is usually only constructed when needed and otherwise unallocated. */
@@ -144,7 +149,7 @@ t8_tree_struct_t;
  */
 
 /** The number of statistics collected by a profile struct. */
-#define T8_PROFILE_NUM_STATS 12
+#define T8_PROFILE_NUM_STATS 13
 typedef struct t8_profile
 {
   t8_locidx_t         partition_elements_shipped; /**< The number of elements this process has
@@ -158,9 +163,11 @@ typedef struct t8_profile
   t8_locidx_t         ghosts_shipped;     /**< The number of ghost elements this process has sent to other processes. */
   t8_locidx_t         ghosts_received;    /**< The number of ghost elements this process has received from other processes. */
   int                 ghosts_remotes;     /**< The number of processes this process have sent ghost elements to (and received from). */
+  int                 balance_rounds;     /**< The number of iterations during balance. */
   double              adapt_runtime;      /**< The runtime of the last call to \a t8_forest_adapt (not counting adaptation in t8_forest_balance). */
   double              partition_runtime;  /**< The runtime of  the last call to \a t8_cmesh_partition (not countint partition in t8_forest_balance). */
   double              ghost_runtime;      /**< The runtime of the last call to \a t8_forest_ghost_create. */
+  double              ghost_waittime;     /**< Amount of synchronisation time in ghost. */
   double              balance_runtime;    /**< The runtime of the last call to \a t8_forest_balance. */
   double              commit_runtime;     /**< The runtime of the last call to \a t8_cmesh_commit. */
 

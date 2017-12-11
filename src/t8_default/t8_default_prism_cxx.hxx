@@ -67,11 +67,7 @@ public:
 
 /** Return the element class of the face of an element */
   virtual t8_eclass_t t8_element_face_class (const t8_element_t * elem,
-                                             int face)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return T8_ECLASS_ZERO;      /*supresses compiler warning */
-  }
+                                             int face);
 
   /** Given an element and a face of the element, compute all children of
    * the element that touch the face. */
@@ -112,6 +108,20 @@ public:
   /** Return the number of children of an element's face when the element is refined. */
   virtual int         t8_element_num_face_children (const t8_element_t *
                                                     elem, int face);
+
+  virtual int         t8_element_get_face_corner (const t8_element_t *
+                                                  element, int face,
+                                                  int corner);
+
+  /** Return the face numbers of the faces sharing an element's corner. */
+  virtual int         t8_element_get_corner_face (const t8_element_t *
+                                                  element, int corner,
+                                                  int face)
+  {
+    SC_ABORT ("Not implemented.\n");
+    return 0;                   /* prevents compiler warning */
+  }
+
 /** Return the number of faces of a given element*/
   virtual int         t8_element_num_faces (const t8_element_t * elem);
 

@@ -56,7 +56,7 @@ t8_refine_cube (t8_eclass_t eclass, int level)
   t8_cmesh_t          cmesh, cmesh_refine;
 
   t8_global_productionf ("Enter refine_cube\n");
-  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0);
+  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
   t8_cmesh_init (&cmesh_refine);
   t8_cmesh_set_derive (cmesh_refine, cmesh);
   t8_cmesh_set_refine (cmesh_refine, level, t8_scheme_new_default_cxx ());

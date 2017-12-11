@@ -33,8 +33,9 @@
 
 static int
 t8_basic_adapt_refine_type (t8_forest_t forest, t8_forest_t forest_from,
-                            t8_locidx_t which_tree, t8_eclass_scheme_c * ts,
-                            int num_elements, t8_element_t * elements[])
+                            t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                            t8_eclass_scheme_c * ts, int num_elements,
+                            t8_element_t * elements[])
 {
   int                 level;
   int                 type;
@@ -57,8 +58,9 @@ t8_basic_adapt_refine_type (t8_forest_t forest, t8_forest_t forest_from,
 
 static int
 t8_basic_adapt_refine_tet (t8_forest_t forest, t8_forest_t forest_from,
-                           t8_locidx_t which_tree, t8_eclass_scheme_c * ts,
-                           int num_elements, t8_element_t * elements[])
+                           t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                           t8_eclass_scheme_c * ts, int num_elements,
+                           t8_element_t * elements[])
 {
   int                 level;
   int                 type;
@@ -101,19 +103,15 @@ t8_time_refine (int start_level, int end_level, int create_forest, int cube,
   else {
     t8_forest_set_cmesh (forest,
                          t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0,
-                                                 0), sc_MPI_COMM_WORLD);
+                                                 0, 0), sc_MPI_COMM_WORLD);
   }
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
   t8_forest_set_level (forest, start_level);
-
   sc_flops_start (&fi);
   sc_flops_snap (&fi, &snapshot);
-
   t8_forest_commit (forest);
-
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[0], snapshot.iwtime, "New");
-
   if (cube == 1) {
     snprintf (vtuname, BUFSIZ, "forest_hypercube_%s",
               t8_eclass_to_string[eclass]);
@@ -128,11 +126,11 @@ t8_time_refine (int start_level, int end_level, int create_forest, int cube,
     t8_forest_set_profiling (forest_adapt, 1);
     if (eclass == T8_ECLASS_PRISM) {
       t8_forest_set_adapt (forest_adapt, forest,
-                           t8_basic_adapt_refine_type, NULL, 1);
+                           t8_basic_adapt_refine_type, 1);
     }
     else {
       t8_forest_set_adapt (forest_adapt, forest,
-                           t8_basic_adapt_refine_tet, NULL, 1);
+                           t8_basic_adapt_refine_tet, 1);
     }
     forest_partition = forest_adapt;
     /* partition the adapted forest */
