@@ -143,8 +143,7 @@ test_cmesh_partition (sc_MPI_Comm comm)
        * fulfilled. */
       /* For eclass vertex the forest always has 1 element when using the hypercube mesh
        * and thus we use a disjoint copy of at least mpisize many coarse cells. */
-      /* TODO: We do the same for lines and prisms here, since the elmenent_num_children routine
-         is not yet implemented. Change as soons as lines and prism work properly. */
+
       minlevel = 0;
       maxlevel = minlevel + 8;
       for (level = minlevel; level < maxlevel; level++) {
