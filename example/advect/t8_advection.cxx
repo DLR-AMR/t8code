@@ -124,7 +124,8 @@ typedef struct
   double              phi; /**< Value of solution at midpoint */
   double              phi_new; /**< Value of solution at midpoint in next time step */
   double             *fluxes[MAX_FACES]; /**< The fluxes to each neeighbor at a given face */
-  int                 flux_valid[MAX_FACES];  /**< If non-zero, this flux was computed */
+  int                 flux_valid[MAX_FACES];  /**< If > 0, this flux was computed, if 0 memory was allocated
+                                                   for this flux, but not computed. If < 0, no memory was allocated. */
   int                 level; /**< The refinement level of the element. */
   int                 num_faces; /**< The number of faces */
   int                 num_neighbors[MAX_FACES]; /**< Number of neighbors for each face */
@@ -512,8 +513,7 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
                                t8_advect_element_data_t * el_hang,
                                t8_locidx_t ltreeid,
                                t8_element_t * element_hang,
-                               const double *tree_vertices, int face,
-                               int neigh_is_ghost)
+                               const double *tree_vertices, int face)
 {
   int                 i, num_face_children, child_face;
   t8_eclass_scheme_c *ts;
@@ -522,6 +522,8 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
   t8_advect_element_data_t child_data, *neigh_data;
   double              flux = 0;
   int                 dual_face;
+  t8_locidx_t         neigh_id;
+  int                 neigh_is_ghost;
 
   /* Get the eclass and the scheme for the element */
   eclass = t8_forest_get_tree_class (problem->forest, ltreeid);
@@ -549,6 +551,8 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
     neigh_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data,
                                 el_hang->neighs[face][i]);
+    neigh_id = el_hang->neighs[face][i];
+    neigh_is_ghost = neigh_id >= t8_forest_get_num_element (problem->forest);
 
     /* Compute the flux */
     el_hang->fluxes[face][i] =
@@ -557,6 +561,7 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
     /* Set the flux of the neighbor element */
     dual_face = el_hang->dual_faces[face][i];
     if (!neigh_is_ghost) {
+
       if (neigh_data->flux_valid[dual_face] < 0) {
         /* We need to allocate the fluxes */
         neigh_data->fluxes[dual_face] = T8_ALLOC (double, 1);
@@ -1158,7 +1163,10 @@ t8_advect_project_element_data (t8_advect_problem_t * problem)
     elem_data->phi = elem_data->phi_new;
     /* Set all fluxes to invalid */
     for (iface = 0; iface < elem_data->num_faces; iface++) {
-      elem_data->flux_valid[iface] = 0;
+      if (elem_data->flux_valid[iface] >= 0) {
+        /* If they are allocated (>= 0), set to allocated and not computed (=0) */
+        elem_data->flux_valid[iface] = 0;
+      }
     }
   }
 }
@@ -1225,6 +1233,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
           neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
                                             neighbors);
           T8_FREE (neighbors);
+          //t8_global_essentialf("alloc face %i of elem %i\n", iface, ielement);
           elem_data->fluxes[iface] =
             T8_ALLOC (double, elem_data->num_neighbors[iface]);
         }
@@ -1480,6 +1489,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
         /* Compute left and right flux */
         for (iface = 0; iface < num_faces; iface++) {
           if (elem_data->flux_valid[iface] <= 0) {
+
             /* Compute flux at this face */
             if (adapted_or_partitioned) {
               /* We changed the mesh, so that we have to calculate the neighbor
@@ -1508,6 +1518,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
               /* Allocate flux storage */
               elem_data->fluxes[iface] =
                 T8_ALLOC (double, elem_data->num_neighbors[iface]);
+              elem_data->flux_valid[iface] = 0;
 
               neighbor_time += sc_MPI_Wtime ();
               sc_stats_accumulate (&problem->stats[ADVECT_NEIGHS],
@@ -1590,8 +1601,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
               else if (elem_data->num_neighbors[iface] > 1) {
                 flux =
                   t8_advect_flux_upwind_hanging (problem, elem_data, itree,
-                                                 elem, tree_vertices, iface,
-                                                 neigh_is_ghost);
+                                                 elem, tree_vertices, iface);
               }
               else {
                 /* This element is at the domain boundary */
