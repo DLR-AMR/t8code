@@ -868,6 +868,7 @@ t8_advect_problem_elements_destroy (t8_advect_problem_t * problem)
         T8_FREE (elem_data->dual_faces[iface]);
         T8_FREE (elem_data->fluxes[iface]);
         elem_data->num_neighbors[iface] = 0;
+        elem_data->flux_valid[iface] = -1;
       }
     }
   }
