@@ -54,6 +54,7 @@ t8_forest_init (t8_forest_t * pforest)
   forest->global_num_elements = -1;
   forest->set_adapt_recursive = -1;
   forest->set_balance = -1;
+  forest->maxlevel_existing = -1;
 }
 
 int
