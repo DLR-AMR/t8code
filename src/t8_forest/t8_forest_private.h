@@ -418,7 +418,7 @@ t8_gloidx_t         t8_forest_element_half_face_neighbors (t8_forest_t forest,
  *                        are searched.
  * \param [out]   dual_face On output the face id's of the neighboring elements' faces.
  * \param [out]   num_neighbors On output the number of neighbor leafs.
- * \param [out]   pelement_indices Unallocated on input. On outout the element indices
+ * \param [out]   pelement_indices Unallocated on input. On output the element indices
  *                        of the neighbor leafs are stored here.
  *                        0, 1, ... num_local_el - 1 for local leafs and
  *                        num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
