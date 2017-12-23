@@ -2211,11 +2211,11 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
         t8_cmesh_set_join (cmesh, 0, 4, 0, 3, 0);
         t8_cmesh_set_join (cmesh, 1, 3, 0, 3, 2);
 
-        t8_cmesh_set_join (cmesh, 0, 2, 3, 0, 2);
+        t8_cmesh_set_join (cmesh, 0, 2, 3, 0, 0);
         t8_cmesh_set_join (cmesh, 3, 5, 0, 3, 2);
 
         t8_cmesh_set_join (cmesh, 1, 5, 3, 0, 2);
-        t8_cmesh_set_join (cmesh, 2, 4, 3, 0, 2);
+        t8_cmesh_set_join (cmesh, 2, 4, 3, 0, 0);
       }
       break;
     case T8_ECLASS_PYRAMID:
