@@ -74,6 +74,7 @@ typedef struct t8_forest
   //t8_scheme_t        *scheme;        /**< Scheme for element types. */
   t8_scheme_cxx_t    *scheme_cxx;        /**< Scheme for element types. */
   int                 maxlevel;         /**< The maximum allowed refinement level for elements in this forest. */
+  int                 maxlevel_existing;/**< If >= 0, the maximum occurring refinemnent level of a forest element. */
   int                 do_dup;           /**< Communicator shall be duped. */
   int                 dimension;        /**< Dimension inferred from \b cmesh. */
 
