@@ -1287,7 +1287,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
       max_speed = SC_MAX (max_speed, t8_vec_norm (u));
 
       /* Set the initial condition */
-      t8_advect_element_set_phi (problem, ielement,
+      t8_advect_element_set_phi (problem, idata,
                                  problem->phi_0 (elem_data->midpoint, 0,
                                                  problem->udata_for_phi));
       /* Set the level */
