@@ -135,6 +135,7 @@ typedef struct
   int                 num_neighbors[MAX_FACES]; /**< Number of neighbors for each face */
   int                *dual_faces[MAX_FACES]; /**< The face indices of the neighbor elements */
   t8_locidx_t        *neighs[MAX_FACES]; /**< Indices of the neighbor elements */
+  int8_t              neigh_level[MAX_FACES]; /**< The level of the face neighbors at this face. */
 } t8_advect_element_data_t;
 
 /* Return the phi value of a given local or ghost element.
@@ -1249,7 +1250,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   t8_locidx_t         itree, ielement, idata;
   t8_locidx_t         num_trees, num_elems_in_tree, num_local_elems;
   t8_element_t       *element, **neighbors;
-  int                 iface;
+  int                 iface, ineigh;
   t8_advect_element_data_t *elem_data;
   t8_eclass_scheme_c *ts, *neigh_scheme;
   double             *tree_vertices;
@@ -1296,12 +1297,17 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
       elem_data->num_faces = ts->t8_element_num_faces (element);
       for (iface = 0; iface < elem_data->num_faces; iface++) {
         /* Compute the indices of the face neighbors */
+
         t8_forest_leaf_face_neighbors (problem->forest, itree, element,
                                        &neighbors, iface,
                                        &elem_data->dual_faces[iface],
                                        &elem_data->num_neighbors[iface],
                                        &elem_data->neighs[iface],
                                        &neigh_scheme, 1);
+        for (ineigh = 0; ineigh < elem_data->num_neighbors[iface]; ineigh++) {
+          elem_data->neigh_level[iface] =
+            neigh_scheme->t8_element_level (neighbors[ineigh]);
+        }
 
         if (elem_data->num_neighbors[iface] > 0) {
           neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
@@ -1466,7 +1472,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                  int vtk_freq, double band_width, int dim)
 {
   t8_advect_problem_t *problem;
-  int                 iface;
+  int                 iface, ineigh;
   t8_locidx_t         itree, ielement, lelement;
   t8_advect_element_data_t *elem_data, *neigh_data = NULL;
   double              flux;
@@ -1589,6 +1595,13 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                                              &elem_data->num_neighbors[iface],
                                              &elem_data->neighs[iface],
                                              &neigh_scheme, 1);
+              for (ineigh = 0; ineigh < elem_data->num_neighbors[iface];
+                   ineigh++) {
+                elem_data->neigh_level[iface] =
+                  neigh_scheme->t8_element_level (neighs[ineigh]);
+              }
+
+
 
               /* *INDENT-OFF* */
               neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface],
@@ -1609,17 +1622,17 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
               problem->stats[ADVECT_NEIGHS].count = 1;
             }
 
-            /* Compute neighbor data, whether this is a hanging face
+            /* sensible default */
+            neigh_data = NULL;
+            neigh_is_ghost = 0;
+            /* Compute whether this is a hanging face
              * and whether the first neighbor is a ghost */
             if (elem_data->num_neighbors[iface] >= 1) {
-              neigh_data = (t8_advect_element_data_t *)
-                t8_sc_array_index_locidx (problem->element_data,
-                                          elem_data->neighs[iface][0]);
+
               neigh_index = elem_data->neighs[iface][0];
-              hanging = elem_data->level != neigh_data->level;
-              neigh_is_ghost =
-                elem_data->neighs[iface][0] >=
+              neigh_is_ghost = neigh_index >=
                 t8_forest_get_num_element (problem->forest);
+              hanging = elem_data->level != elem_data->neigh_level[iface];
             }
             else {
               hanging = 0;
@@ -1648,8 +1661,11 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
               T8_ASSERT (problem->dim == 2 || problem->dim == 3);
               /* Check whether the flux for the neighbor element was computed */
               /* Get a pointer to the neighbor element */
-              neigh_data = (t8_advect_element_data_t *)
-                t8_sc_array_index_locidx (problem->element_data, neigh_index);
+              if (elem_data->num_neighbors[iface] >= 1 && !neigh_is_ghost) {
+                neigh_data = (t8_advect_element_data_t *)
+                  t8_sc_array_index_locidx (problem->element_data,
+                                            neigh_index);
+              }
               dual_face = elem_data->dual_faces[iface][0];
 
               /* Get the phi value at the current element */
