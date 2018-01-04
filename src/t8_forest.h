@@ -69,11 +69,11 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] which_tree      The local tree containing \a outgoing and \a incoming
  * \param [in] ts              The eclass scheme of the tree
  * \param [in] num_outgoing    The number of outgoing elements.
- * \param [in] first_outgoing  The local index of the first outgoing element.
- *                             0 <= first_outgoing < forest_old->num_elements
+ * \param [in] first_outgoing  The tree local index of the first outgoing element.
+ *                             0 <= first_outgoing < which_tree->num_elements
  * \param [in] num_incoming    The number of incoming elements.
- * \param [in] first_incoming  The local index of the first incoming element.
- *                             0 <= first_incom < forest_new->num_elements
+ * \param [in] first_incoming  The tree local index of the first incoming element.
+ *                             0 <= first_incom < new_which_tree->num_elements
  *
  * If an element is being refined, num_outgoing will be 1 and num_incoming will
  * be the number of children, and vice versa if a family is being coarsened.
