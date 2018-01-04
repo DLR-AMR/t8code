@@ -53,7 +53,9 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from,
 
   /* We only need to check an element, if its level is smaller then the maximum
    * level in the forest minus 2.
-   * Other there cannot exist neighbors of level greater than the element's level plus one.
+   * Otherwise there cannot exist neighbors of level greater than the element's level plus one.
+   * The variable maxlevel_existing is only set if we enter this function from t8_forest_balance.
+   * If we enter from the check function is_balanced, then it may not be set.
    */
 
   if (forest_from->maxlevel_existing <= 0 ||
