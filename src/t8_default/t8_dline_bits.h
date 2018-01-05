@@ -60,6 +60,17 @@ int                 t8_dline_compare (const t8_dline_t * l1,
 void                t8_dline_parent (const t8_dline_t * l,
                                      t8_dline_t * parent);
 
+/** Compute the ancestor of a line at a given level.
+ * \param [in]  t   Input line.
+ * \param [in]  level A smaller level than \a t.
+ * \param [in,out] ancestor Existing line whose data will
+ *                  be filled with the data of \a t's ancestor on
+ *                  level \a level.
+ * \note The line \a ancestor may point to the same line as \a t.
+ */
+void                t8_dline_ancestor (const t8_dline_t * t, int level,
+                                       t8_dline_t * ancestor);
+
 /** Compute the childid-th child in Morton order of a line.
  * \param [in] l    Input Line.
  * \param [in] childid The id of the child, 0 or 1, in Morton order.

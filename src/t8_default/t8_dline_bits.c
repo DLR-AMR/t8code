@@ -69,6 +69,16 @@ t8_dline_parent (const t8_dline_t * l, t8_dline_t * parent)
 }
 
 void
+t8_dline_ancestor (const t8_dline_t * l, int level, t8_dline_t * ancestor)
+{
+  /* Compute the new x-coordinate by setting all bits in positions
+   * greater than level to zero. */
+  ancestor->x = l->x & ~(T8_DLINE_LEN (level) - 1);
+  /* set the level */
+  ancestor->level = level;
+}
+
+void
 t8_dline_child (const t8_dline_t * l, int childid, t8_dline_t * child)
 {
   t8_dline_coord_t    h;
