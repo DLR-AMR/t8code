@@ -211,7 +211,12 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid,
     /* There is only one leaf left, we check whether it is the same as element
      * and if so call the callback function */
     leaf = t8_element_array_index_locidx (leaf_elements, 0);
-    if (!ts->t8_element_compare (element, leaf)) {
+
+    SC_CHECK_ABORT (ts->t8_element_level (element) <=
+                    ts->t8_element_level (leaf),
+                    "Search: element level greater than leaf level\n");
+    if (ts->t8_element_level (element) == ts->t8_element_level (leaf)) {
+      T8_ASSERT (!ts->t8_element_compare (element, leaf));
       /* The element is the leaf, we are at the last stage of the recursion
        * and can call the callback. */
       (void) search_fn (forest, ltreeid, leaf, leaf_elements, user_data,
