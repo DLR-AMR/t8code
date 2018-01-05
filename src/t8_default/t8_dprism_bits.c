@@ -175,23 +175,21 @@ t8_dprism_nearest_common_ancestor (const t8_dprism_t * p1,
   t8_dtri_nearest_common_ancestor (&p1->tri, &p2->tri, &r->tri);
   t8_dline_nearest_common_ancestor (&p1->line, &p2->line, &r->line);
 
-  /*if the line and the triangle don't have the same level, they don't have the
-   *same nearest ancestor. The nca is the prism of the lowest level r->line and
-   *r->tri*/
+  /* if the line and the triangle don't have the same level,
+   * we compute the ancestor of the one with larger level at the
+   * minumum level of the two. */
   if (r->tri.level != r->line.level) {
     level = SC_MIN (r->tri.level, r->line.level);
-    r->tri.x =
-      (r->tri.x >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL -
-                                                       level + 1);
-    r->tri.y =
-      (r->tri.y >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL -
-                                                       level + 1);
-    r->line.x =
-      (r->line.x >> (T8_DTRI_MAXLEVEL - level + 1)) << (T8_DTRI_MAXLEVEL -
-                                                        level + 1);
-    r->tri.level = level;
-    r->line.level = level;
+    if (r->tri.level > r->line.level) {
+      /* triangle has larger level, compute its ancestor */
+      t8_dtri_ancestor (&r->tri, level, &r->tri);
+    }
+    else {
+      /* line has larger level, compute its ancestor */
+      t8_dline_ancestor (&r->line, level, &r->line);
+    }
   }
+  T8_ASSERT (r->tri.level == r->line.level);
 }
 
 void
