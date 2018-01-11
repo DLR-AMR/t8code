@@ -1260,12 +1260,15 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   t8_advect_element_data_t *elem_data;
   t8_eclass_scheme_c *ts, *neigh_scheme;
   double             *tree_vertices;
-  double              max_speed = 0, min_diam = -1, delta_t;
+  double              speed, max_speed = 0, min_diam =
+    -1, delta_t, min_delta_t;
   double              u[3];
   double              diam;
 
   num_trees = t8_forest_get_num_local_trees (problem->forest);
   num_local_elems = t8_forest_get_num_element (problem->forest);
+  /* maximum possible delta_t value */
+  min_delta_t = problem->T - problem->t;
   for (itree = 0, idata = 0; itree < num_trees; itree++) {
     ts =
       t8_forest_get_eclass_scheme (problem->forest,
@@ -1291,8 +1294,15 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
       min_diam = min_diam < 0 ? diam : SC_MIN (min_diam, diam);
       /* Compute the maximum velocity */
       problem->u (elem_data->midpoint, problem->t, u);
-      max_speed = SC_MAX (max_speed, t8_vec_norm (u));
+      speed = t8_vec_norm (u);
+      max_speed = SC_MAX (max_speed, speed);
 
+      /* Compute minimum necessary time step */
+      delta_t = problem->T - problem->t;
+      if (speed > 0) {
+        delta_t = problem->cfl * diam / speed;
+      }
+      min_delta_t = SC_MIN (delta_t, min_delta_t);
       /* Set the initial condition */
       t8_advect_element_set_phi (problem, idata,
                                  problem->phi_0 (elem_data->midpoint, 0,
@@ -1331,16 +1341,8 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   t8_forest_ghost_exchange_data (problem->forest, problem->phi_values);
 
   /* Compute the timestep, this has to be done globally */
-  if (num_local_elems > 0) {
-    T8_ASSERT (min_diam > 0);
-    T8_ASSERT (max_speed > 0);
-    delta_t = problem->cfl * min_diam / max_speed;
-  }
-  else {
-    delta_t = problem->T - problem->t;
-  }
-  sc_MPI_Allreduce (&delta_t, &problem->delta_t, 1, sc_MPI_DOUBLE, sc_MPI_MIN,
-                    problem->comm);
+  sc_MPI_Allreduce (&min_delta_t, &problem->delta_t, 1, sc_MPI_DOUBLE,
+                    sc_MPI_MIN, problem->comm);
   t8_global_essentialf ("[advect] min diam %g max flow %g  delta_t = %g\n",
                         min_diam, max_speed, problem->delta_t);
 }
@@ -1786,8 +1788,11 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     problem->stats[ADVECT_GHOST_WAIT].count = 1;
 
     if (problem->t + problem->delta_t > problem->T) {
-      /* The last time step is always the given end time */
-      problem->t = problem->T - problem->delta_t;
+      /* Ensure that the last time step is always the given end time */
+      problem->delta_t = problem->T - problem->t;
+    }
+    /* Check whether we are finished */
+    if (problem->t >= problem->T) {
       done = 1;
     }
   }                             /* End element loop */
