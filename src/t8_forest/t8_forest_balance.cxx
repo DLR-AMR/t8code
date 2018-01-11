@@ -118,7 +118,7 @@ t8_forest_compute_max_element_level (t8_forest_t forest)
   t8_locidx_t         itree, num_trees;
   t8_element_t       *elem;
   t8_eclass_scheme_c *scheme;
-  int                 local_max_level = -1, elem_level;
+  int                 local_max_level = 0, elem_level;
 
   /* Iterate over all local trees and all local elements and comupte the maximum occurring level */
   num_trees = t8_forest_get_num_local_trees (forest);
