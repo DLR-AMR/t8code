@@ -524,13 +524,14 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
   area =
     t8_forest_element_face_area (problem->forest, ltreeid, element_plus,
                                  face, tree_vertices);
-  t8_debugf ("[advect] face %i\n", face);
-  t8_debugf ("[advect] normal %f %f %f\n", normal[0], normal[1], normal[2]);
 
   /* Compute the dot-product of u and the normal vector */
   normal_times_u = t8_vec_dot (normal, u_at_face_center);
 
+#if 0
   /* Output, mainly for debugging */
+  t8_debugf ("[advect] face %i\n", face);
+  t8_debugf ("[advect] normal %f %f %f\n", normal[0], normal[1], normal[2]);
   t8_debugf ("[advect] face center %f %f %f\n", face_center[0],
              face_center[1], face_center[2]);
   t8_debugf ("[advect] u %f %f %f\n", u_at_face_center[0],
@@ -539,17 +540,22 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
   t8_debugf ("[advect] area %f\n", area);
   t8_debugf ("[advect] phi+ %f\n", el_plus_phi);
   t8_debugf ("[advect] phi- %f\n", el_minus_phi);
+#endif
 
   if (normal_times_u >= 0) {
+#if 0
     /* u flows out of the element_plus */
     t8_debugf ("[advect] out flux: %f\n",
                -el_plus_phi * normal_times_u * area);
+#endif
     return -el_plus_phi * normal_times_u * area;
   }
   else {
     /* u flows into the element_plus */
+#if 0
     t8_debugf ("[advect] in flux: %f\n",
                -el_minus_phi * normal_times_u * area);
+#endif
     return -el_minus_phi * normal_times_u * area;
   }
 }
@@ -749,10 +755,11 @@ t8_advect_advance_element (t8_advect_problem_t * problem,
   }
   /* Phi^t = dt/dx * (f_(j-1/2) - f_(j+1/2)) + Phi^(t-1) */
   elem->phi_new = (problem->delta_t / elem->vol) * flux_sum + phi;
+#if 0
   t8_debugf
     ("[advect] advance el with delta_t %f vol %f phi %f  flux %f to %f\n",
      problem->delta_t, elem->vol, phi, flux_sum, elem->phi_new);
-
+#endif
 }
 
 /* Compute element midpoint and vol and store at element_data field.
@@ -1358,16 +1365,23 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   int                 idim;
   double              phi;
 
+  t8_locidx_t         num_ghosts;
+
+  num_ghosts = t8_forest_get_num_ghosts (problem->forest);
   /* Allocate num_local_elements doubles to store u and phi values */
   num_local_elements = t8_forest_get_num_element (problem->forest);
   /* phi */
-  u_and_phi_array[0] = T8_ALLOC_ZERO (double, num_local_elements);
+  u_and_phi_array[0] =
+    T8_ALLOC_ZERO (double, num_local_elements + num_ghosts);
   /* phi_0 */
-  u_and_phi_array[1] = T8_ALLOC_ZERO (double, num_local_elements);
+  u_and_phi_array[1] =
+    T8_ALLOC_ZERO (double, num_local_elements + num_ghosts);
   /* phi - phi_0 */
-  u_and_phi_array[2] = T8_ALLOC_ZERO (double, num_local_elements);
+  u_and_phi_array[2] =
+    T8_ALLOC_ZERO (double, num_local_elements + num_ghosts);
   /* u */
-  u_and_phi_array[3] = T8_ALLOC_ZERO (double, 3 * num_local_elements);
+  u_and_phi_array[3] =
+    T8_ALLOC_ZERO (double, 3 * (num_local_elements + num_ghosts));
 
   /* Fill u and phi arrays with their values */
   for (ielem = 0; ielem < num_local_elements; ielem++) {
@@ -1402,7 +1416,7 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   snprintf (fileprefix, BUFSIZ, "advection_%03i", problem->vtk_count);
   /* Write vtk files */
   if (t8_forest_vtk_write_file (problem->forest, fileprefix,
-                                1, 1, 1, 1, 0, 4, vtk_data)) {
+                                1, 1, 1, 1, 1, 4, vtk_data)) {
     t8_debugf ("[Advect] Wrote pvtu to files %s\n", fileprefix);
   }
   else {
@@ -1774,6 +1788,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
         t8_advect_problem_partition (problem, 1);
       }
     }
+    t8_advect_write_vtk (problem);
     /* Exchange ghost values */
     ghost_exchange_time = -sc_MPI_Wtime ();
     t8_forest_ghost_exchange_data (problem->forest, problem->phi_values);

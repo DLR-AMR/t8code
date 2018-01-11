@@ -1038,7 +1038,7 @@ t8_forest_vtk_write_points (t8_forest_t forest, FILE * vtufile,
                                          T8_VTK_FLOAT_NAME, component_string,
                                          8 * forest->dimension,
                                          t8_forest_vtk_vertices_vector_kernel,
-                                         0, data[idata].data);
+                                         write_ghosts, data[idata].data);
       }
       if (!freturn) {
         goto t8_forest_vtk_cell_failure;
