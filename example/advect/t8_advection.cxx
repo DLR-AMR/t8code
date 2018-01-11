@@ -58,6 +58,7 @@ typedef enum
   ADVECT_AMR,                   /* AMR runtime (adapt+partition+ghost+balance) including data exchange (partition/ghost) */
   ADVECT_NEIGHS,                /* neighbor finding runtime */
   ADVECT_FLUX,                  /* flux computation runtime */
+  ADVECT_DUMMY,                 /* dummy operations to increase load (see -s option) */
   ADVECT_SOLVE,                 /* solver runtime */
   ADVECT_TOTAL,                 /* overall runtime */
   ADVECT_ERROR_INF,             /* l_infty error */
@@ -84,6 +85,7 @@ const char         *advect_stat_names[ADVECT_NUM_STATS] = {
   "AMR",
   "neighbor_finding",
   "flux_computation",
+  "dummy_ops",
   "solve",
   "total",
   "l_infty_error",
@@ -120,6 +122,8 @@ typedef struct
   int                 level; /**< Initial refinement level */
   int                 maxlevel; /**< Maximum refinement level */
   int                 dim; /**< The dimension of the mesh */
+  int                 dummy_op; /**< If true, we carry out more (but useless) operations
+                                     per element, in order to simulate more computation load */
 } t8_advect_problem_t;
 
 typedef struct
@@ -991,7 +995,8 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time)
   problem->element_data_adapt =
     sc_array_new_count (sizeof (t8_advect_element_data_t), num_elems);
   problem->phi_values_adapt =
-    sc_array_new_count (sizeof (double), num_elems_p_ghosts);
+    sc_array_new_count ((problem->dummy_op ? 2 : 1) * sizeof (double),
+                        num_elems_p_ghosts);
   /* We now call iterate_replace in which we interpolate the new element data.
    * It is necessary that the old and new forest only differ by at most one level.
    * We guarantee this by calling adapt non-recursively and calling balance without
@@ -1164,7 +1169,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
                         phi_0, void *ls_data,
                         int level, int maxlevel,
                         double T, double cfl, sc_MPI_Comm comm,
-                        double band_width, int dim)
+                        double band_width, int dim, int dummy_op)
 {
   t8_advect_problem_t *problem;
   t8_scheme_cxx_t    *default_scheme;
@@ -1191,6 +1196,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
   problem->vtk_count = 0;       /* number of pvtu files written */
   problem->band_width = band_width;     /* width of the refinemen band around 0 level-set */
   problem->dim = dim;           /* dimension of the mesh */
+  problem->dummy_op = dummy_op; /* If true, emulate more computational load per element */
 
   for (i = 0; i < ADVECT_NUM_STATS; i++) {
     sc_stats_init (&problem->stats[i], advect_stat_names[i]);
@@ -1211,7 +1217,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
 
   /* initialize the phi array */
   problem->phi_values =
-    sc_array_new_count (sizeof (double),
+    sc_array_new_count ((dummy_op ? 2 : 1) * sizeof (double),
                         t8_forest_get_num_element (problem->forest) +
                         t8_forest_get_num_ghosts (problem->forest));
   problem->phi_values_adapt = NULL;
@@ -1469,7 +1475,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                  t8_example_level_set_fn phi_0, void *ls_data,
                  const int level, const int maxlevel, double T, double cfl,
                  sc_MPI_Comm comm, int adapt_freq, int no_vtk,
-                 int vtk_freq, double band_width, int dim)
+                 int vtk_freq, double band_width, int dim, int dummy_op)
 {
   t8_advect_problem_t *problem;
   int                 iface, ineigh;
@@ -1499,7 +1505,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   total_time = -sc_MPI_Wtime ();
   problem =
     t8_advect_problem_init (cmesh, u, phi_0, ls_data, level, maxlevel, T,
-                            cfl, comm, band_width, dim);
+                            cfl, comm, band_width, dim, dummy_op);
   t8_advect_problem_init_elements (problem);
 
   if (maxlevel > level) {
@@ -1723,6 +1729,25 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
             problem->stats[ADVECT_FLUX].count = 1;
           }
         }
+        if (problem->dummy_op) {
+          /* simulate more load per element */
+          int                 i, j;
+          double             *phi_values;
+          double              dummy_time = -sc_MPI_Wtime ();
+          phi_values =
+            (double *) t8_sc_array_index_locidx (problem->phi_values,
+                                                 ielement);
+          phi_values[1] = 0;
+          for (i = 1; i < 5; i++) {
+            phi_values[1] *= i;
+            for (j = 0; j < 5; j++) {
+              phi_values[1] += pow (i, j);
+            }
+          }
+          dummy_time += sc_MPI_Wtime ();
+          sc_stats_accumulate (&problem->stats[ADVECT_DUMMY], dummy_time);
+          problem->stats[ADVECT_DUMMY].count = 1;
+        }
         /* Compute time step */
         //      printf ("advance %i\n", ielement);
         t8_advect_advance_element (problem, lelement);
@@ -1814,7 +1839,7 @@ main (int argc, char *argv[])
   sc_options_t       *opt;
   char                help[BUFSIZ];
   const char         *mshfile = NULL;
-  int                 level, reflevel, dim, eclass_int;
+  int                 level, reflevel, dim, eclass_int, dummy_op;
   int                 parsed, helpme, no_vtk, vtk_freq, adapt_freq;
   int                 flow_arg;
   double              T, cfl, band_width;
@@ -1888,6 +1913,12 @@ main (int argc, char *argv[])
                          "Suppress vtk output. "
                          "Overwrites any -v setting.");
 
+  sc_options_add_switch (opt, 's', "simulate", &dummy_op,
+                         "Simulate more load per element. "
+                         "In each iteration, useless dummy operations\n "
+                         "\t\t\t\t     are performed per element. Decreases the "
+                         "performance!");
+
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
@@ -1915,7 +1946,7 @@ main (int argc, char *argv[])
                      t8_levelset_sphere, &ls_data,
                      level,
                      level + reflevel, T, cfl, sc_MPI_COMM_WORLD, adapt_freq,
-                     no_vtk, vtk_freq, band_width, dim);
+                     no_vtk, vtk_freq, band_width, dim, dummy_op);
   }
   else {
     /* wrong usage */
