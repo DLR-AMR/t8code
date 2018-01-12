@@ -1365,23 +1365,16 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   int                 idim;
   double              phi;
 
-  t8_locidx_t         num_ghosts;
-
-  num_ghosts = t8_forest_get_num_ghosts (problem->forest);
   /* Allocate num_local_elements doubles to store u and phi values */
   num_local_elements = t8_forest_get_num_element (problem->forest);
   /* phi */
-  u_and_phi_array[0] =
-    T8_ALLOC_ZERO (double, num_local_elements + num_ghosts);
+  u_and_phi_array[0] = T8_ALLOC_ZERO (double, num_local_elements);
   /* phi_0 */
-  u_and_phi_array[1] =
-    T8_ALLOC_ZERO (double, num_local_elements + num_ghosts);
+  u_and_phi_array[1] = T8_ALLOC_ZERO (double, num_local_elements);
   /* phi - phi_0 */
-  u_and_phi_array[2] =
-    T8_ALLOC_ZERO (double, num_local_elements + num_ghosts);
+  u_and_phi_array[2] = T8_ALLOC_ZERO (double, num_local_elements);
   /* u */
-  u_and_phi_array[3] =
-    T8_ALLOC_ZERO (double, 3 * (num_local_elements + num_ghosts));
+  u_and_phi_array[3] = T8_ALLOC_ZERO (double, 3 * (num_local_elements));
 
   /* Fill u and phi arrays with their values */
   for (ielem = 0; ielem < num_local_elements; ielem++) {
@@ -1416,7 +1409,7 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   snprintf (fileprefix, BUFSIZ, "advection_%03i", problem->vtk_count);
   /* Write vtk files */
   if (t8_forest_vtk_write_file (problem->forest, fileprefix,
-                                1, 1, 1, 1, 1, 4, vtk_data)) {
+                                1, 1, 1, 1, 0, 4, vtk_data)) {
     t8_debugf ("[Advect] Wrote pvtu to files %s\n", fileprefix);
   }
   else {
@@ -1788,7 +1781,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
         t8_advect_problem_partition (problem, 1);
       }
     }
-    t8_advect_write_vtk (problem);
+
     /* Exchange ghost values */
     ghost_exchange_time = -sc_MPI_Wtime ();
     t8_forest_ghost_exchange_data (problem->forest, problem->phi_values);
