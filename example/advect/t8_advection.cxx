@@ -792,7 +792,7 @@ t8_advect_compute_element_data (t8_advect_problem_t * problem,
  * If an element is refined, each child gets the phi value of its parent.
  * If elements are coarsened, the parent gets the average phi value of the children.
  */
-/* outgoing are the old elements and incoming the nwe ones */
+/* outgoing are the old elements and incoming the new ones */
 static void
 t8_advect_replace (t8_forest_t forest_old,
                    t8_forest_t forest_new,
@@ -880,7 +880,7 @@ t8_advect_replace (t8_forest_t forest_old,
     T8_ASSERT (num_outgoing == 1 << problem->dim && num_incoming == 1);
     /* The old elements form a family which is coarsened. We compute the average
      * phi value and set it as the new phi value */
-    /* Get a pointer to the outgoing element */
+    /* Get a pointer to the new element */
     element =
       t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
                                      first_incoming);
@@ -890,7 +890,7 @@ t8_advect_replace (t8_forest_t forest_old,
 
     /* Compute average of phi */
     for (i = 0; i < num_outgoing; i++) {
-      phi += t8_advect_element_get_phi (problem, first_outgoing + i);
+      phi += t8_advect_element_get_phi (problem, first_outgoing_data + i);
     }
     phi /= num_outgoing;
     t8_advect_element_set_phi_adapt (problem, first_incoming_data, phi);
