@@ -1949,6 +1949,13 @@ main (int argc, char *argv[])
     if (mshfile == NULL) {
       dim = t8_eclass_to_dimension[eclass_int];
     }
+    /* Set level-set midpoint coordinates to zero for unused dimensions. */
+    if (eclass_int == 2 || eclass_int == 3 || eclass_int == 7) {
+      ls_data.M[2] = 0;
+    }
+    if (eclass_int == 1) {
+      ls_data.M[1] = ls_data.M[2] = 0;
+    }
 
     cmesh =
       t8_advect_create_cmesh (sc_MPI_COMM_WORLD, (t8_eclass_t) eclass_int,
