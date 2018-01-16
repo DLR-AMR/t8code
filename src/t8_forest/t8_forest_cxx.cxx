@@ -954,7 +954,8 @@ t8_forest_compute_desc (t8_forest_t forest)
     /* get memory for the trees first descendant */
     ts->t8_element_new (1, &itree->first_desc);
     /* calculate the first descendant of the first element */
-    ts->t8_element_first_descendant (element, itree->first_desc);
+    ts->t8_element_first_descendant (element, itree->first_desc,
+                                     forest->maxlevel);
     /* get a pointer to the last element of itree */
     num_elements = t8_element_array_get_count (&itree->elements);
     element =
@@ -962,7 +963,8 @@ t8_forest_compute_desc (t8_forest_t forest)
     /* get memory for the trees first descendant */
     ts->t8_element_new (1, &itree->last_desc);
     /* calculate the last descendant of the first element */
-    ts->t8_element_last_descendant (element, itree->last_desc);
+    ts->t8_element_last_descendant (element, itree->last_desc,
+                                    forest->maxlevel);
   }
 }
 
@@ -1116,10 +1118,10 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
   ts->t8_element_set_linear_id (element, 0, 0);
   ts->t8_element_new (1, &desc);
   if (first_or_last == 0) {
-    ts->t8_element_first_descendant (element, desc);
+    ts->t8_element_first_descendant (element, desc, forest->maxlevel);
   }
   else {
-    ts->t8_element_last_descendant (element, desc);
+    ts->t8_element_last_descendant (element, desc, forest->maxlevel);
   }
   /* We can now check whether the first/last possible descendant matches the
    * first/last local descendant */
@@ -1924,18 +1926,16 @@ t8_forest_element_check_owner (t8_forest_t forest,
       /* Compute the linear id of the first descendant of element */
       if (!element_is_desc) {
         ts->t8_element_new (1, &first_desc);
-        /* TODO: add forest->maxlevel to first_descendant */
-        ts->t8_element_first_descendant (element, first_desc);
-        /* TODO: change level to forest->maxlevel */
+        ts->t8_element_first_descendant (element, first_desc,
+                                         forest->maxlevel);
         first_desc_id =
-          ts->t8_element_get_linear_id (first_desc,
-                                        ts->t8_element_maxlevel ());
+          ts->t8_element_get_linear_id (first_desc, forest->maxlevel);
         ts->t8_element_destroy (1, &first_desc);
       }
       else {
         /* The element is its own first descendant */
         first_desc_id =
-          ts->t8_element_get_linear_id (element, ts->t8_element_maxlevel ());
+          ts->t8_element_get_linear_id (element, forest->maxlevel);
       }
       /* Get the id of the trees first descendant and the first descendant
        * of the next nonempty rank */
@@ -2063,7 +2063,7 @@ t8_forest_element_find_owner_ext (t8_forest_t forest,
   else {
     /* Build the first descendant of element */
     ts->t8_element_new (1, &first_desc);
-    ts->t8_element_first_descendant (element, first_desc);
+    ts->t8_element_first_descendant (element, first_desc, forest->maxlevel);
   }
 
   T8_ASSERT (forest->tree_offsets != NULL);
@@ -2253,11 +2253,10 @@ t8_forest_element_find_owner_old (t8_forest_t forest,
   ts = t8_forest_get_eclass_scheme (forest, eclass);
   /* Compute the first descendant of the element */
   ts->t8_element_new (1, &element_first_desc);
-  ts->t8_element_first_descendant (element, element_first_desc);
+  ts->t8_element_first_descendant (element, element_first_desc, forest->maxlevel);
   /* Compute the linear of the first descendant */
   element_desc_lin_id =
-    ts->t8_element_get_linear_id (element_first_desc,
-                                  ts->t8_element_level (element_first_desc));
+    ts->t8_element_get_linear_id (element_first_desc, forest->maxlevel);
 
   /* The first owner of the tree may not have the tree as its first tree and
    * thus its first_descendant entry may not relate to this tree.
@@ -2344,14 +2343,16 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
   /* Create first and last descendants at face */
   if (first_desc == NULL) {
     ts->t8_element_new (1, &first_face_desc);
-    ts->t8_element_first_descendant_face (element, face, first_face_desc);
+    ts->t8_element_first_descendant_face (element, face, first_face_desc,
+                                          forest->maxlevel);
   }
   else {
     first_face_desc = first_desc;
   }
   if (last_desc == NULL) {
     ts->t8_element_new (1, &last_face_desc);
-    ts->t8_element_last_descendant_face (element, face, last_face_desc);
+    ts->t8_element_last_descendant_face (element, face, last_face_desc,
+                                         forest->maxlevel);
   }
   else {
     last_face_desc = last_desc;
@@ -2362,9 +2363,9 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
       t8_element_t *test_desc;
 
       ts->t8_element_new (1, &test_desc);
-      ts->t8_element_last_descendant_face (element, face, test_desc);
+      ts->t8_element_last_descendant_face (element, face, test_desc, forest->maxlevel);
       T8_ASSERT (!ts->t8_element_compare (test_desc, last_face_desc));
-      ts->t8_element_first_descendant_face (element, face, test_desc);
+      ts->t8_element_first_descendant_face (element, face, test_desc, forest->maxlevel);
       T8_ASSERT (!ts->t8_element_compare (test_desc, first_face_desc));
       ts->t8_element_destroy (1, &test_desc);
     }
@@ -2494,9 +2495,9 @@ t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid,
   /* Compute the first and last descendant of element */
   ts = t8_forest_get_eclass_scheme (forest, eclass);
   ts->t8_element_new (1, &first_desc);
-  ts->t8_element_first_descendant (element, first_desc);
+  ts->t8_element_first_descendant (element, first_desc, forest->maxlevel);
   ts->t8_element_new (1, &last_desc);
-  ts->t8_element_last_descendant (element, last_desc);
+  ts->t8_element_last_descendant (element, last_desc, forest->maxlevel);
 
   /* Compute their owners as bounds for all of element's owners */
   *lower = t8_forest_element_find_owner_ext (forest, gtreeid, first_desc,
@@ -2521,9 +2522,9 @@ t8_forest_element_owners_at_face_bounds (t8_forest_t forest, t8_gloidx_t gtreeid
 
   ts = t8_forest_get_eclass_scheme (forest, eclass);
     ts->t8_element_new (1, &first_face_desc);
-    ts->t8_element_first_descendant_face (element, face, first_face_desc);
+    ts->t8_element_first_descendant_face (element, face, first_face_desc, forest->maxlevel);
     ts->t8_element_new (1, &last_face_desc);
-    ts->t8_element_last_descendant_face (element, face, last_face_desc);
+    ts->t8_element_last_descendant_face (element, face, last_face_desc, forest->maxlevel);
 
   /* owner of first and last descendants */
   *lower =
@@ -2630,7 +2631,7 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid,
   /* TODO: element interface function t8_element_last_desc_id */
   ts->t8_element_new (1, &last_desc);
   /* TODO: set level in last_descendant */
-  ts->t8_element_last_descendant (element, last_desc);
+  ts->t8_element_last_descendant (element, last_desc, forest->maxlevel);
   last_desc_id = ts->t8_element_get_linear_id (last_desc, forest->maxlevel);
   /* Get the level of the element */
   level = ts->t8_element_level (element);

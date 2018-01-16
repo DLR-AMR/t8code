@@ -243,10 +243,12 @@ t8_linearidx_t
 void
 t8_default_scheme_vertex_c::t8_element_first_descendant (const t8_element_t *
                                                          elem,
-                                                         t8_element_t * desc)
+                                                         t8_element_t * desc,
+                                                         int level)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
+  T8_ASSERT (0 <= level && level <= T8_DVERTEX_MAXLEVEL);
   t8_dvertex_first_descendant ((t8_dvertex_t *) elem, (t8_dvertex_t *) desc,
                                T8_DVERTEX_MAXLEVEL);
 }
@@ -254,12 +256,14 @@ t8_default_scheme_vertex_c::t8_element_first_descendant (const t8_element_t *
 void
 t8_default_scheme_vertex_c::t8_element_last_descendant (const t8_element_t *
                                                         elem,
-                                                        t8_element_t * desc)
+                                                        t8_element_t * desc,
+                                                        int level)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
+  T8_ASSERT (0 <= level && level <= T8_DVERTEX_MAXLEVEL);
   t8_dvertex_last_descendant ((t8_dvertex_t *) elem, (t8_dvertex_t *) desc,
-                              T8_DVERTEX_MAXLEVEL);
+                              level);
 }
 
 void

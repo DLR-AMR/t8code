@@ -438,7 +438,8 @@ public:
   virtual void        t8_element_first_descendant_face (const t8_element_t *
                                                         elem, int face,
                                                         t8_element_t *
-                                                        first_desc) = 0;
+                                                        first_desc,
+                                                        int level) = 0;
 
   /** Construct the last descendant of an element that touches a given face.
    * \param [in] elem      The input element.
@@ -451,7 +452,8 @@ public:
   virtual void        t8_element_last_descendant_face (const t8_element_t *
                                                        elem, int face,
                                                        t8_element_t *
-                                                       last_desc) = 0;
+                                                       last_desc, int level) =
+    0;
 
   /* TODO: document better */
   /* TODO: document better.
@@ -523,17 +525,18 @@ public:
   /* TODO: Add a level and call with forest->maxlevel */
   virtual void        t8_element_first_descendant (const t8_element_t *
                                                    elem,
-                                                   t8_element_t * desc) = 0;
+                                                   t8_element_t * desc,
+                                                   int level) = 0;
 
   /** Compute the last descendant of a given element.
    * \param [in] elem     The element whose descendant is computed.
    * \param [out] desc    The last element in a uniform refinement of \a elem
    *                      of the maximum possible level.
    */
-  /* TODO: Add a level and call with forest->maxlevel */
   virtual void        t8_element_last_descendant (const t8_element_t *
                                                   elem,
-                                                  t8_element_t * desc) = 0;
+                                                  t8_element_t * desc,
+                                                  int level) = 0;
 
   /** Construct the successor in a uniform refinement of a given element.
    * \param [in] elem1    The element whose successor should be constructed.

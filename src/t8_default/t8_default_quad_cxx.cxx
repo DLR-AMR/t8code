@@ -293,25 +293,28 @@ t8_linearidx_t
 void
 t8_default_scheme_quad_c::t8_element_first_descendant (const t8_element_t *
                                                        elem,
-                                                       t8_element_t * desc)
+                                                       t8_element_t * desc,
+                                                       int level)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
+  T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
   p4est_quadrant_first_descendant ((p4est_quadrant_t *) elem,
-                                   (p4est_quadrant_t *) desc,
-                                   P4EST_QMAXLEVEL);
+                                   (p4est_quadrant_t *) desc, level);
   T8_QUAD_SET_TDIM ((p4est_quadrant_t *) desc, 2);
 }
 
 void
 t8_default_scheme_quad_c::t8_element_last_descendant (const t8_element_t *
                                                       elem,
-                                                      t8_element_t * desc)
+                                                      t8_element_t * desc,
+                                                      int level)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
+  T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
   p4est_quadrant_last_descendant ((p4est_quadrant_t *) elem,
-                                  (p4est_quadrant_t *) desc, P4EST_QMAXLEVEL);
+                                  (p4est_quadrant_t *) desc, level);
   T8_QUAD_SET_TDIM ((p4est_quadrant_t *) desc, 2);
 }
 
@@ -618,19 +621,20 @@ void
 t8_default_scheme_quad_c::t8_element_first_descendant_face (const t8_element_t
                                                             * elem, int face,
                                                             t8_element_t *
-                                                            first_desc)
+                                                            first_desc,
+                                                            int level)
 {
   const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
   p4est_quadrant_t   *desc = (p4est_quadrant_t *) first_desc;
   int                 first_face_corner;
 
   T8_ASSERT (0 <= face && face < P4EST_FACES);
+  T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
 
   /* Get the first corner of q that belongs to face */
   first_face_corner = p4est_face_corners[face][0];
   /* Construce the descendant in that corner */
-  p4est_quadrant_corner_descendant (q, desc, first_face_corner,
-                                    P4EST_QMAXLEVEL);
+  p4est_quadrant_corner_descendant (q, desc, first_face_corner, level);
 }
 
 /** Construct the last descendant of an element that touches a given face.   */
@@ -638,19 +642,20 @@ void
 t8_default_scheme_quad_c::t8_element_last_descendant_face (const t8_element_t
                                                            * elem, int face,
                                                            t8_element_t *
-                                                           last_desc)
+                                                           last_desc,
+                                                           int level)
 {
   const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
   p4est_quadrant_t   *desc = (p4est_quadrant_t *) last_desc;
   int                 last_face_corner;
 
   T8_ASSERT (0 <= face && face < P4EST_FACES);
+  T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
 
   /* Get the last corner of q that belongs to face */
   last_face_corner = p4est_face_corners[face][1];
   /* Construce the descendant in that corner */
-  p4est_quadrant_corner_descendant (q, desc, last_face_corner,
-                                    P4EST_QMAXLEVEL);
+  p4est_quadrant_corner_descendant (q, desc, last_face_corner, level);
 }
 
 void
@@ -801,9 +806,7 @@ t8_default_scheme_quad_c::t8_element_new (int length, t8_element_t ** elem)
   {
     int                 i;
     for (i = 0; i < length; i++) {
-      #ifdef T8_ENABLE_DEBUG
       t8_element_init (1, elem[i], 0);
-      #endif
       T8_QUAD_SET_TDIM ((p4est_quadrant_t *) elem[i], 2);
     }
   }

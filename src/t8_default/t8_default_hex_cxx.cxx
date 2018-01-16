@@ -430,19 +430,20 @@ void
 t8_default_scheme_hex_c::t8_element_first_descendant_face (const t8_element_t
                                                            * elem, int face,
                                                            t8_element_t *
-                                                           first_desc)
+                                                           first_desc,
+                                                           int level)
 {
   const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
   p8est_quadrant_t   *desc = (p8est_quadrant_t *) first_desc;
   int                 first_face_corner;
 
   T8_ASSERT (0 <= face && face < P8EST_FACES);
+  T8_ASSERT (0 <= level && level <= P8EST_QMAXLEVEL);
 
   /* Get the first corner of q that belongs to face */
   first_face_corner = p8est_face_corners[face][0];
   /* Construct the descendant of q in this corner */
-  p8est_quadrant_corner_descendant (q, desc, first_face_corner,
-                                    P8EST_QMAXLEVEL);
+  p8est_quadrant_corner_descendant (q, desc, first_face_corner, level);
 }
 
 /** Construct the last descendant of an element that touches a given face. */
@@ -450,19 +451,20 @@ void
 t8_default_scheme_hex_c::t8_element_last_descendant_face (const t8_element_t *
                                                           elem, int face,
                                                           t8_element_t *
-                                                          last_desc)
+                                                          last_desc,
+                                                          int level)
 {
   const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
   p8est_quadrant_t   *desc = (p8est_quadrant_t *) last_desc;
   int                 last_face_corner;
 
   T8_ASSERT (0 <= face && face < P8EST_FACES);
+  T8_ASSERT (0 <= level && level <= P8EST_QMAXLEVEL);
 
   /* Get the last corner of q that belongs to face */
   last_face_corner = p8est_face_corners[face][3];
   /* Construct the descendant of q in this corner */
-  p8est_quadrant_corner_descendant (q, desc, last_face_corner,
-                                    P8EST_QMAXLEVEL);
+  p8est_quadrant_corner_descendant (q, desc, last_face_corner, level);
 }
 
 void
@@ -599,24 +601,27 @@ t8_linearidx_t
 void
 t8_default_scheme_hex_c::t8_element_first_descendant (const t8_element_t *
                                                       elem,
-                                                      t8_element_t * desc)
+                                                      t8_element_t * desc,
+                                                      int level)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
+  T8_ASSERT (0 <= level && level <= P8EST_QMAXLEVEL);
   p8est_quadrant_first_descendant ((p8est_quadrant_t *) elem,
-                                   (p8est_quadrant_t *) desc,
-                                   P8EST_QMAXLEVEL);
+                                   (p8est_quadrant_t *) desc, level);
 }
 
 void
 t8_default_scheme_hex_c::t8_element_last_descendant (const t8_element_t *
                                                      elem,
-                                                     t8_element_t * desc)
+                                                     t8_element_t * desc,
+                                                     int level)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
+  T8_ASSERT (0 <= level && level <= P8EST_QMAXLEVEL);
   p8est_quadrant_last_descendant ((p8est_quadrant_t *) elem,
-                                  (p8est_quadrant_t *) desc, P8EST_QMAXLEVEL);
+                                  (p8est_quadrant_t *) desc, level);
 }
 
 void

@@ -148,9 +148,10 @@ t8_forest_partition_test_desc (t8_forest_t forest)
     /* Iterate over elems, for each one create the first descendant and check
      * its linear id versus the linear id of first_desc. */
     element = t8_element_array_index_locidx (&tree->elements, ielem);
-    ts->t8_element_first_descendant (element, elem_desc);
+    ts->t8_element_first_descendant (element, elem_desc, forest->maxlevel);
     level = ts->t8_element_level (elem_desc);
     T8_ASSERT (level == ts->t8_element_level (elem_desc));
+    T8_ASSERT (level == forest->maxlevel);
 
     T8_ASSERT (ts->t8_element_get_linear_id (elem_desc, level) >=
                first_desc_id);
@@ -199,12 +200,11 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
     ts = t8_forest_get_eclass_scheme (forest,
                                       t8_forest_get_tree_class (forest, 0));
     ts->t8_element_new (1, &first_desc);
-    ts->t8_element_first_descendant (first_element, first_desc);
+    ts->t8_element_first_descendant (first_element, first_desc,
+                                     forest->maxlevel);
     /* Compute the linear id of the descendant. */
-    /* TODO: change level to forest->maxlevel */
     local_first_desc =
-      ts->t8_element_get_linear_id (first_desc,
-                                    ts->t8_element_level (first_desc));
+      ts->t8_element_get_linear_id (first_desc, forest->maxlevel);
     ts->t8_element_destroy (1, &first_desc);
   }
   /* Collect all first global indices in the array */
