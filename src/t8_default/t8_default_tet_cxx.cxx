@@ -380,6 +380,8 @@ t8_default_scheme_tet_c::t8_element_boundary_face (const t8_element_t * elem,
    */
   face_cat = t8_dtet_type_face_to_boundary[t->type][face][0];
   b->type = t8_dtet_type_face_to_boundary[t->type][face][1];
+  T8_ASSERT (face_cat == 1 || face_cat == 2);
+  T8_ASSERT (b->type == 0 || b->type == 1);
   switch (face_cat) {
   case 1:
     b->x = t->z * T8_DTRI_ROOT_BY_DTET_ROOT;

@@ -1626,6 +1626,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
        * tree. */
       lghost_treeid =
         t8_forest_ghost_get_ghost_treeid (forest, gneigh_treeid);
+      T8_ASSERT (lghost_treeid >= 0);
     }
     /* TODO: Maybe we do not need to compute the owners. It suffices to know
      *       whether the neighbor is owned by mpirank or not. */
@@ -1637,6 +1638,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         neigh_scheme->t8_element_get_linear_id (neighbor_leafs[0],
                                                 forest->maxlevel);
       if (owners[0] != forest->mpirank) {
+        /* The elements are ghost elements of the same owner */
         element_array =
           t8_forest_ghost_get_tree_elements (forest, lghost_treeid);
         /* Find the index in element_array of the leaf ancestor of the first neighbor.
@@ -1651,9 +1653,17 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
          * of local elements. */
         element_index +=
           t8_forest_ghost_get_tree_element_offset (forest, lghost_treeid);
+        t8_debugf ("[H] ghost tree %i. Offset %i\n", lghost_treeid,
+                   t8_forest_ghost_get_tree_element_offset (forest,
+                                                            lghost_treeid));
         element_index += t8_forest_get_num_element (forest);
+        T8_ASSERT (forest->local_num_elements <= element_index
+                   && element_index <
+                   forest->local_num_elements +
+                   t8_forest_get_num_ghosts (forest));
       }
       else {
+        /* the elements are local elements */
         element_array =
           t8_forest_get_tree_element_array (forest, lneigh_treeid);
         /* Find the index in element_array of the leaf ancestor of the first neighbor.
@@ -1668,6 +1678,8 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         /* Add the element offset of this tree to the index */
         element_index +=
           t8_forest_get_tree_element_offset (forest, lneigh_treeid);
+        t8_debugf ("[H] local tree %i, offset %i\n", lneigh_treeid,
+                   t8_forest_get_tree_element_offset (forest, lneigh_treeid));
       }
       if (neigh_scheme->t8_element_compare (ancestor, neighbor_leafs[0]) < 0) {
         /* ancestor is a real ancestor, and thus the neighbor is either the
@@ -1719,7 +1731,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         return;
       }
     }
-    /* The face neighbors are the leafs that we are looking for. */
+    /* The leafs are the face neighbors that we are looking for. */
     /* The face neighbors either belong to different processes and thus must be leafs
      * in the forest, or the ancestor leaf of the first half neighbor is the half
      * neighbor itself and thus all half neighbors must be leafs.
@@ -1750,6 +1762,8 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
          * the actual local element id */
         element_indices[ineigh] +=
           t8_forest_get_tree_element_offset (forest, lneigh_treeid);
+        t8_debugf ("[H] local tree %i, offset %i\n", lneigh_treeid,
+                   t8_forest_get_tree_element_offset (forest, lneigh_treeid));
 #if T8_ENABLE_DEBUG
         /* We check whether the element is really the element at this local id */
         {
@@ -1774,6 +1788,9 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
           t8_forest_bin_search_lower (element_array, neigh_id,
                                       forest->maxlevel);
 
+        t8_debugf ("[H] ghost tree %i. Offset %i\n", lghost_treeid,
+                   t8_forest_ghost_get_tree_element_offset (forest,
+                                                            lghost_treeid));
 #if T8_ENABLE_DEBUG
         /* We check whether the element is really the element at this local id */
         {

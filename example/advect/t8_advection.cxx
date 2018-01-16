@@ -524,13 +524,14 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
   area =
     t8_forest_element_face_area (problem->forest, ltreeid, element_plus,
                                  face, tree_vertices);
-  t8_debugf ("[advect] face %i\n", face);
-  t8_debugf ("[advect] normal %f %f %f\n", normal[0], normal[1], normal[2]);
 
   /* Compute the dot-product of u and the normal vector */
   normal_times_u = t8_vec_dot (normal, u_at_face_center);
 
+#if 0
   /* Output, mainly for debugging */
+  t8_debugf ("[advect] face %i\n", face);
+  t8_debugf ("[advect] normal %f %f %f\n", normal[0], normal[1], normal[2]);
   t8_debugf ("[advect] face center %f %f %f\n", face_center[0],
              face_center[1], face_center[2]);
   t8_debugf ("[advect] u %f %f %f\n", u_at_face_center[0],
@@ -539,17 +540,22 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
   t8_debugf ("[advect] area %f\n", area);
   t8_debugf ("[advect] phi+ %f\n", el_plus_phi);
   t8_debugf ("[advect] phi- %f\n", el_minus_phi);
+#endif
 
   if (normal_times_u >= 0) {
+#if 0
     /* u flows out of the element_plus */
     t8_debugf ("[advect] out flux: %f\n",
                -el_plus_phi * normal_times_u * area);
+#endif
     return -el_plus_phi * normal_times_u * area;
   }
   else {
     /* u flows into the element_plus */
+#if 0
     t8_debugf ("[advect] in flux: %f\n",
                -el_minus_phi * normal_times_u * area);
+#endif
     return -el_minus_phi * normal_times_u * area;
   }
 }
@@ -749,10 +755,11 @@ t8_advect_advance_element (t8_advect_problem_t * problem,
   }
   /* Phi^t = dt/dx * (f_(j-1/2) - f_(j+1/2)) + Phi^(t-1) */
   elem->phi_new = (problem->delta_t / elem->vol) * flux_sum + phi;
+#if 0
   t8_debugf
     ("[advect] advance el with delta_t %f vol %f phi %f  flux %f to %f\n",
      problem->delta_t, elem->vol, phi, flux_sum, elem->phi_new);
-
+#endif
 }
 
 /* Compute element midpoint and vol and store at element_data field.
@@ -785,7 +792,7 @@ t8_advect_compute_element_data (t8_advect_problem_t * problem,
  * If an element is refined, each child gets the phi value of its parent.
  * If elements are coarsened, the parent gets the average phi value of the children.
  */
-/* outgoing are the old elements and incoming the nwe ones */
+/* outgoing are the old elements and incoming the new ones */
 static void
 t8_advect_replace (t8_forest_t forest_old,
                    t8_forest_t forest_new,
@@ -873,7 +880,7 @@ t8_advect_replace (t8_forest_t forest_old,
     T8_ASSERT (num_outgoing == 1 << problem->dim && num_incoming == 1);
     /* The old elements form a family which is coarsened. We compute the average
      * phi value and set it as the new phi value */
-    /* Get a pointer to the outgoing element */
+    /* Get a pointer to the new element */
     element =
       t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
                                      first_incoming);
@@ -883,7 +890,7 @@ t8_advect_replace (t8_forest_t forest_old,
 
     /* Compute average of phi */
     for (i = 0; i < num_outgoing; i++) {
-      phi += t8_advect_element_get_phi (problem, first_outgoing + i);
+      phi += t8_advect_element_get_phi (problem, first_outgoing_data + i);
     }
     phi /= num_outgoing;
     t8_advect_element_set_phi_adapt (problem, first_incoming_data, phi);
@@ -1155,6 +1162,8 @@ t8_advect_choose_flow (int flow_arg)
     return t8_flow_constant_one_xyz_vec;
   case 3:
     return t8_flow_incomp_cube_flow;
+  case 4:
+    return t8_flow_rotation_2d;
   default:
     SC_ABORT ("Wrong argument for flow parameter.\n");
   }
@@ -1260,12 +1269,15 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   t8_advect_element_data_t *elem_data;
   t8_eclass_scheme_c *ts, *neigh_scheme;
   double             *tree_vertices;
-  double              max_speed = 0, min_diam = -1, delta_t;
+  double              speed, max_speed = 0, min_diam =
+    -1, delta_t, min_delta_t;
   double              u[3];
   double              diam;
 
   num_trees = t8_forest_get_num_local_trees (problem->forest);
   num_local_elems = t8_forest_get_num_element (problem->forest);
+  /* maximum possible delta_t value */
+  min_delta_t = problem->T - problem->t;
   for (itree = 0, idata = 0; itree < num_trees; itree++) {
     ts =
       t8_forest_get_eclass_scheme (problem->forest,
@@ -1291,8 +1303,15 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
       min_diam = min_diam < 0 ? diam : SC_MIN (min_diam, diam);
       /* Compute the maximum velocity */
       problem->u (elem_data->midpoint, problem->t, u);
-      max_speed = SC_MAX (max_speed, t8_vec_norm (u));
+      speed = t8_vec_norm (u);
+      max_speed = SC_MAX (max_speed, speed);
 
+      /* Compute minimum necessary time step */
+      delta_t = problem->T - problem->t;
+      if (speed > 0) {
+        delta_t = problem->cfl * diam / speed;
+      }
+      min_delta_t = SC_MIN (delta_t, min_delta_t);
       /* Set the initial condition */
       t8_advect_element_set_phi (problem, idata,
                                  problem->phi_0 (elem_data->midpoint, 0,
@@ -1331,16 +1350,8 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   t8_forest_ghost_exchange_data (problem->forest, problem->phi_values);
 
   /* Compute the timestep, this has to be done globally */
-  if (num_local_elems > 0) {
-    T8_ASSERT (min_diam > 0);
-    T8_ASSERT (max_speed > 0);
-    delta_t = problem->cfl * min_diam / max_speed;
-  }
-  else {
-    delta_t = problem->T - problem->t;
-  }
-  sc_MPI_Allreduce (&delta_t, &problem->delta_t, 1, sc_MPI_DOUBLE, sc_MPI_MIN,
-                    problem->comm);
+  sc_MPI_Allreduce (&min_delta_t, &problem->delta_t, 1, sc_MPI_DOUBLE,
+                    sc_MPI_MIN, problem->comm);
   t8_global_essentialf ("[advect] min diam %g max flow %g  delta_t = %g\n",
                         min_diam, max_speed, problem->delta_t);
 }
@@ -1365,7 +1376,7 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   /* phi - phi_0 */
   u_and_phi_array[2] = T8_ALLOC_ZERO (double, num_local_elements);
   /* u */
-  u_and_phi_array[3] = T8_ALLOC_ZERO (double, 3 * num_local_elements);
+  u_and_phi_array[3] = T8_ALLOC_ZERO (double, 3 * (num_local_elements));
 
   /* Fill u and phi arrays with their values */
   for (ielem = 0; ielem < num_local_elements; ielem++) {
@@ -1772,6 +1783,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
         t8_advect_problem_partition (problem, 1);
       }
     }
+
     /* Exchange ghost values */
     ghost_exchange_time = -sc_MPI_Wtime ();
     t8_forest_ghost_exchange_data (problem->forest, problem->phi_values);
@@ -1786,8 +1798,11 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     problem->stats[ADVECT_GHOST_WAIT].count = 1;
 
     if (problem->t + problem->delta_t > problem->T) {
-      /* The last time step is always the given end time */
-      problem->t = problem->T - problem->delta_t;
+      /* Ensure that the last time step is always the given end time */
+      problem->delta_t = problem->T - problem->t;
+    }
+    /* Check whether we are finished */
+    if (problem->t >= problem->T) {
       done = 1;
     }
   }                             /* End element loop */
@@ -1871,7 +1886,8 @@ main (int argc, char *argv[])
                       "\t\t1 - Constant 1 in x-direction.\n"
                       "\t\t2 - Constant 1 in x,y, and z.\n"
                       "\t\t3 - A turbulent flow in a cube with zero outflow.\n"
-                      "\t\t\tIt reverses direction at t = 0.5.");
+                      "\t\t\tIt reverses direction at t = 0.5.\n"
+                      "\t\t4 - 2D rotation around (0.5,0.5).\n");
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The minimum refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 0,
@@ -1926,7 +1942,7 @@ main (int argc, char *argv[])
     t8_global_essentialf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed >= 0 && 1 <= flow_arg && flow_arg <= 3 && 0 <= level
+  else if (parsed >= 0 && 1 <= flow_arg && flow_arg <= 4 && 0 <= level
            && 0 <= reflevel && 0 <= vtk_freq
            && ((mshfile != NULL && 0 < dim && dim <= 3)
                || (1 <= eclass_int && eclass_int <= 8)) && band_width >= 0) {
@@ -1935,6 +1951,13 @@ main (int argc, char *argv[])
 
     if (mshfile == NULL) {
       dim = t8_eclass_to_dimension[eclass_int];
+    }
+    /* Set level-set midpoint coordinates to zero for unused dimensions. */
+    if (eclass_int == 2 || eclass_int == 3 || eclass_int == 7) {
+      ls_data.M[2] = 0;
+    }
+    if (eclass_int == 1) {
+      ls_data.M[1] = ls_data.M[2] = 0;
     }
 
     cmesh =
