@@ -222,7 +222,7 @@ t8_default_scheme_prism_c::t8_element_extrude_face (const t8_element_t * face,
 {
   t8_dprism_extrude_face (face, elem, root_face);
   /* TODO: Fix return value */
-  return t8_dprism_root_face_to_face((const t8_dprism_t *) elem, root_face);
+  return t8_dprism_root_face_to_face ((const t8_dprism_t *) elem, root_face);
 }
 
 int
