@@ -267,20 +267,21 @@ t8_default_scheme_prism_c::t8_element_successor (const t8_element_t * t,
 void
 t8_default_scheme_prism_c::t8_element_first_descendant (const t8_element_t *
                                                         elem,
-                                                        t8_element_t * desc)
+                                                        t8_element_t * desc,
+                                                        int level)
 {
   t8_dprism_first_descendant ((const t8_default_prism_t *) elem,
-                              (t8_default_prism_t *) desc,
-                              T8_DPRISM_MAXLEVEL);
+                              (t8_default_prism_t *) desc, level);
 }
 
 void
 t8_default_scheme_prism_c::t8_element_last_descendant (const t8_element_t *
                                                        elem,
-                                                       t8_element_t * desc)
+                                                       t8_element_t * desc,
+                                                       int level)
 {
   t8_dprism_last_descendant ((const t8_default_prism_t *) elem,
-                             (t8_default_prism_t *) desc, T8_DPRISM_MAXLEVEL);
+                             (t8_default_prism_t *) desc, level);
 }
 
 void

@@ -350,34 +350,35 @@ void
 t8_default_scheme_tri_c::t8_element_first_descendant_face (const t8_element_t
                                                            * elem, int face,
                                                            t8_element_t *
-                                                           first_desc)
+                                                           first_desc,
+                                                           int level)
 {
   int                 corner;
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
+  T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
 
   /* Compute the first corner of this face */
   corner = t8_dtri_face_corner[face][0];
   /* Compute the descendant in this corner */
   t8_dtri_corner_descendant ((const t8_dtri_t *) elem,
-                             (t8_dtri_t *) first_desc, corner,
-                             T8_DTRI_MAXLEVEL);
+                             (t8_dtri_t *) first_desc, corner, level);
 }
 
 void
 t8_default_scheme_tri_c::t8_element_last_descendant_face (const t8_element_t *
                                                           elem, int face,
                                                           t8_element_t *
-                                                          last_desc)
+                                                          last_desc,
+                                                          int level)
 {
   int                 corner;
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
-
+  T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
   /* Compute the last corner of this face */
   corner = t8_dtri_face_corner[face][1];
   /* Compute the descendant in this corner */
   t8_dtri_corner_descendant ((const t8_dtri_t *) elem,
-                             (t8_dtri_t *) last_desc, corner,
-                             T8_DTRI_MAXLEVEL);
+                             (t8_dtri_t *) last_desc, corner, level);
 }
 
 /* Construct the boundary element at a specific face. */
@@ -495,23 +496,25 @@ t8_linearidx_t
 void
 t8_default_scheme_tri_c::t8_element_first_descendant (const t8_element_t *
                                                       elem,
-                                                      t8_element_t * desc)
+                                                      t8_element_t * desc,
+                                                      int level)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
-  t8_dtri_first_descendant ((t8_dtri_t *) elem, (t8_dtri_t *) desc,
-                            T8_DTRI_MAXLEVEL);
+  T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
+  t8_dtri_first_descendant ((t8_dtri_t *) elem, (t8_dtri_t *) desc, level);
 }
 
 void
 t8_default_scheme_tri_c::t8_element_last_descendant (const t8_element_t *
                                                      elem,
-                                                     t8_element_t * desc)
+                                                     t8_element_t * desc,
+                                                     int level)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
-  t8_dtri_last_descendant ((t8_dtri_t *) elem, (t8_dtri_t *) desc,
-                           T8_DTRI_MAXLEVEL);
+  T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
+  t8_dtri_last_descendant ((t8_dtri_t *) elem, (t8_dtri_t *) desc, level);
 }
 
 void

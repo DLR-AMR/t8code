@@ -214,7 +214,7 @@ public:
   virtual void        t8_element_first_descendant_face (const t8_element_t *
                                                         elem, int face,
                                                         t8_element_t *
-                                                        first_desc)
+                                                        first_desc, int level)
   {
     /* A vertex has no faces */
     SC_ABORT ("This function is not implemented.\n");
@@ -224,7 +224,7 @@ public:
   virtual void        t8_element_last_descendant_face (const t8_element_t *
                                                        elem, int face,
                                                        t8_element_t *
-                                                       last_desc)
+                                                       last_desc, int level)
   {
     /* A vertex has no faces */
     SC_ABORT ("This function is not implemented.\n");
@@ -284,13 +284,15 @@ public:
  *  first element in a uniform refinement of e of the maximal possible level.
  */
   virtual void        t8_element_first_descendant (const t8_element_t *
-                                                   elem, t8_element_t * desc);
+                                                   elem, t8_element_t * desc,
+                                                   int level);
 
 /** Calculate the last descendant of a given element e. That is, the
  *  last element in a uniform refinement of e of the maximal possible level.
  */
   virtual void        t8_element_last_descendant (const t8_element_t *
-                                                  elem, t8_element_t * desc);
+                                                  elem, t8_element_t * desc,
+                                                  int level);
 
 /** Compute s as a successor of t*/
   virtual void        t8_element_successor (const t8_element_t * t,
