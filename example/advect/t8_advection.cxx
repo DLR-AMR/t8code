@@ -1981,6 +1981,9 @@ main (int argc, char *argv[])
       t8_advect_create_cmesh (sc_MPI_COMM_WORLD, (t8_eclass_t) eclass_int,
                               mshfile, level, dim);
     u = t8_advect_choose_flow (flow_arg);
+    if (!no_vtk) {
+      t8_cmesh_vtk_write_file (cmesh, "advection_cmesh", 1.0);
+    }
     /* Computation */
     t8_advect_solve (cmesh, u,
                      t8_levelset_sphere, &ls_data,
