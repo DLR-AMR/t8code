@@ -160,10 +160,10 @@ t8_test_forest_commit ()
       t8_scheme_cxx_unref (&scheme);
       /* Use one level with empty processes */
       min_level = SC_MAX (min_level - 1, 0);
-      t8_global_productionf
-        ("Testing forest commit with eclass %s, start level %i\n",
-         t8_eclass_to_string[eclass], min_level);
       for (level = min_level; level < min_level + 3; level++) {
+        t8_global_productionf
+          ("Testing forest commit with eclass %s, level %i\n",
+           t8_eclass_to_string[eclass], level);
         maxlevel = level + 3;
         scheme = t8_scheme_new_default_cxx ();
         /* ref the cmesh since we reuse it */
@@ -185,7 +185,9 @@ t8_test_forest_commit ()
                         (forest_abp_3part, forest_ada_bal_part),
                         "The forests are not equal");
         t8_forest_unref (&forest_ada_bal_part);
+        t8_scheme_cxx_ref (scheme);
         t8_forest_unref (&forest_abp_3part);
+        t8_scheme_cxx_unref (&scheme);
       }
       t8_cmesh_destroy (&cmesh);
       t8_debugf ("Done with eclass %s\n", t8_eclass_to_string[eclass]);

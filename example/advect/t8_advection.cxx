@@ -933,6 +933,9 @@ t8_advect_problem_elements_destroy (t8_advect_problem_t * problem)
         elem_data->num_neighbors[iface] = 0;
         elem_data->flux_valid[iface] = -1;
       }
+      else {
+        T8_FREE (elem_data->fluxes[iface]);
+      }
     }
   }
 }
@@ -1342,6 +1345,9 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
           elem_data->fluxes[iface] =
             T8_ALLOC (double, elem_data->num_neighbors[iface]);
         }
+        else {
+          elem_data->fluxes[iface] = T8_ALLOC (double, 1);
+        }
         elem_data->flux_valid[iface] = 0;
       }
     }
@@ -1602,9 +1608,9 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
               if (elem_data->num_neighbors[iface] > 0) {
                 T8_FREE (elem_data->neighs[iface]);
                 T8_FREE (elem_data->dual_faces[iface]);
-                T8_FREE (elem_data->fluxes[iface]);
                 elem_data->flux_valid[iface] = -1;
               }
+              T8_FREE (elem_data->fluxes[iface]);
               neighbor_time = -sc_MPI_Wtime ();
               t8_forest_leaf_face_neighbors (problem->forest, itree, elem,
                                              &neighs, iface,
@@ -1629,7 +1635,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 
               /* Allocate flux storage */
               elem_data->fluxes[iface] =
-                T8_ALLOC (double, elem_data->num_neighbors[iface]);
+                T8_ALLOC (double,
+                          SC_MAX (1, elem_data->num_neighbors[iface]));
               elem_data->flux_valid[iface] = 0;
 
               neighbor_time += sc_MPI_Wtime ();
@@ -1683,11 +1690,11 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                   t8_sc_array_index_locidx (problem->element_data,
                                             neigh_index);
               }
-              dual_face = elem_data->dual_faces[iface][0];
 
               /* Get the phi value at the current element */
               phi_plus = t8_advect_element_get_phi (problem, lelement);
               if (elem_data->num_neighbors[iface] == 1) {
+                dual_face = elem_data->dual_faces[iface][0];
                 /* There is exactly one face-neighbor */
                 /* get the phi value at the neighbor element */
                 phi_minus = t8_advect_element_get_phi (problem, neigh_index);
@@ -1950,7 +1957,17 @@ main (int argc, char *argv[])
     t8_flow_function_3d_fn u;
 
     if (mshfile == NULL) {
-      dim = t8_eclass_to_dimension[eclass_int];
+      switch (eclass_int) {
+      case 7:
+        dim = 2;
+        break;
+      case 8:
+        dim = 3;
+        break;
+      default:
+        dim = t8_eclass_to_dimension[eclass_int];
+        T8_ASSERT (eclass_int < 7);
+      }
     }
     /* Set level-set midpoint coordinates to zero for unused dimensions. */
     if (eclass_int == 2 || eclass_int == 3 || eclass_int == 7) {
@@ -1964,6 +1981,9 @@ main (int argc, char *argv[])
       t8_advect_create_cmesh (sc_MPI_COMM_WORLD, (t8_eclass_t) eclass_int,
                               mshfile, level, dim);
     u = t8_advect_choose_flow (flow_arg);
+    if (!no_vtk) {
+      t8_cmesh_vtk_write_file (cmesh, "advection_cmesh", 1.0);
+    }
     /* Computation */
     t8_advect_solve (cmesh, u,
                      t8_levelset_sphere, &ls_data,

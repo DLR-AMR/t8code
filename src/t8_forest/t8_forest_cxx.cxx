@@ -1680,8 +1680,6 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         /* Add the element offset of this tree to the index */
         element_index +=
           t8_forest_get_tree_element_offset (forest, lneigh_treeid);
-        t8_debugf ("[H] local tree %i, offset %i\n", lneigh_treeid,
-                   t8_forest_get_tree_element_offset (forest, lneigh_treeid));
       }
       if (neigh_scheme->t8_element_compare (ancestor, neighbor_leafs[0]) < 0) {
         /* ancestor is a real ancestor, and thus the neighbor is either the
@@ -1764,8 +1762,6 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
          * the actual local element id */
         element_indices[ineigh] +=
           t8_forest_get_tree_element_offset (forest, lneigh_treeid);
-        t8_debugf ("[H] local tree %i, offset %i\n", lneigh_treeid,
-                   t8_forest_get_tree_element_offset (forest, lneigh_treeid));
 #if T8_ENABLE_DEBUG
         /* We check whether the element is really the element at this local id */
         {
