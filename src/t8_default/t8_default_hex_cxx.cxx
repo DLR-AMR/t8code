@@ -680,7 +680,7 @@ t8_default_scheme_hex_c::t8_element_vertex_coords (const t8_element_t * t,
 void
 t8_default_scheme_hex_c::t8_element_new (int length, t8_element_t ** elem)
 {
-  /* allocate memory for a tet */
+  /* allocate memory for a hex */
   t8_default_scheme_common_c::t8_element_new (length, elem);
 
   /* in debug mode, set sensible default values. */
@@ -689,6 +689,7 @@ t8_default_scheme_hex_c::t8_element_new (int length, t8_element_t ** elem)
     int                 i;
     for (i = 0; i < length; i++) {
       t8_element_init (1, elem[i], 0);
+      T8_QUAD_SET_TDIM ((p8est_quadrant_t *) elem[i], 3);
     }
   }
 #endif
@@ -720,7 +721,8 @@ t8_default_scheme_hex_c::t8_element_is_valid (const t8_element_t *elem) const
 {
   /* TODO: additional checks? do we set pad8 or similar?
    */
-  return p8est_quadrant_is_extended ((const p8est_quadrant_t *) elem);
+  return p8est_quadrant_is_extended ((const p8est_quadrant_t *) elem)
+    && T8_QUAD_GET_TDIM ((const p8est_quadrant_t *) elem) == 3;
 }
 #endif
 

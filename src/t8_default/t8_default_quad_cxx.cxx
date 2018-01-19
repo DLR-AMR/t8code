@@ -799,7 +799,7 @@ t8_default_scheme_quad_c::t8_element_vertex_coords (const t8_element_t * t,
 void
 t8_default_scheme_quad_c::t8_element_new (int length, t8_element_t ** elem)
 {
-  /* allocate memory for a tet */
+  /* allocate memory for a quad */
   t8_default_scheme_common_c::t8_element_new (length, elem);
 
   /* in debug mode, set sensible default values. */
