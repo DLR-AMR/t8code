@@ -202,6 +202,8 @@ t8_flow_rotation_2d (const double x_in[3], double t, double x_out[3])
   x_out[0] = y;
   x_out[1] = -x;
   x_out[2] = 0;
+
+  t8_vec_ax (x_out, 2 * M_PI);
 }
 
 void
