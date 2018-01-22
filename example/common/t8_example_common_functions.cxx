@@ -262,6 +262,64 @@ t8_flow_incomp_cube_flow (const double x[3], double t, double x_out[3])
   }
 }
 
+/* Convert the first two entries of a vector into 2D polar
+ * coordinates. x = r cos(phi)
+ *              y = r sin(phi)
+ *
+ * On output: polar[0] = r, polar[1] = phi
+ */
+static void
+t8_flow_2d_polar_coords (const double x[3], double polar[2])
+{
+  polar[0] = sqrt (SC_SQR (x[0]) + SC_SQR (x[1]));
+  polar[1] = atan2 (x[1], x[0]);
+}
+
+/* Convert a 2D vector from polar coordinates to cartesian
+ * coordinates.
+ * On input: polar[0] = r, polar[1] = phi
+ *
+ * On output: cart[0] = r cos(phi)
+ *            cart[1] = r sin(phi)
+ *
+ */
+static void
+t8_flow_2d_cart_coords (const double polar_values[2],
+                        const double polar_coords[2], double cart[2])
+{
+  cart[0] = cos (polar_coords[1]) * polar_values[0]
+    - sin (polar_coords[1]) * polar_values[1];
+  cart[1] = sin (polar_coords[1]) * polar_values[0]
+    + cos (polar_coords[1]) * polar_values[1];
+}
+
+/* 2d flow around a circle with radius R = 1 and
+ * constant inflow with x-speed U = 1. */
+void
+t8_flow_around_circle (const double x[3], double t, double x_out[3])
+{
+  double              polar[2];
+  double              polar_speed[2];
+  const double        R = 0.15;
+
+  t8_vec_axb (x, x_out, 1, -0.5);
+  /* Set the z-coordinate to zero */
+  x_out[2] = 0;
+  if (t8_vec_norm (x_out) < R) {
+    /* Set the velocity inside the circle to 0 */
+    x_out[0] = x_out[1] = x_out[2] = 0;
+    return;
+  }
+  /* Convert x,y coordinates to polar r,phi coordinates */
+  t8_flow_2d_polar_coords (x_out, polar);
+  /* Compute v_r (r,phi) = U (1-R^2/r^2)cos(phi) */
+  polar_speed[0] = (1 - SC_SQR (R) / SC_SQR (polar[0])) * cos (polar[1]);
+  /* Compute v_phi(r,phi) = -U (1+ R^2/r^2) sin (phi) */
+  polar_speed[1] = -(1 + SC_SQR (R) / SC_SQR (polar[0])) * sin (polar[1]);
+  t8_flow_2d_cart_coords ((const double *) polar_speed, polar, x_out);
+  x_out[2] = 0;
+}
+
 /* The following functions model a solution to the stokes equation on
  * a spherical shell. See
  * Analytical solution for viscous incompressible Stokes flow in a
@@ -306,17 +364,26 @@ void
 t8_flow_stokes_flow_sphere_shell (const double x[3], double t, double x_out[])
 {
   double              radius;
-  double              theta;
+  double              theta, phi;
   double              alpha, beta;
   double              vel_r;
   double              vel_theta;
   double              vel_phi;
   const double        r_1 = .5, r_2 = 1, gamma = 1, m = 3;
 
+#if 1
+  /* translate unit cube to cube centered around origin */
+  ((double *) x)[0] -= 0.5;
+  ((double *) x)[1] -= 0.5;
+  ((double *) x)[2] -= 0.5;
+  ((double *) x)[0] *= 2;
+  ((double *) x)[1] *= 2;
+  ((double *) x)[2] *= 2;
+#endif
   /* Compute spherical coordinates */
   radius = t8_vec_norm (x);
   theta = acos (x[2] / radius);
-#if 0
+#if 1
   /* Phi component, not used */
   phi = atan2 (x[1], x[0]);
 #endif
@@ -340,9 +407,13 @@ t8_flow_stokes_flow_sphere_shell (const double x[3], double t, double x_out[])
   vel_phi = 0;
 
   /* Compute euclidean coordinates */
-  x_out[0] = vel_r * sin (vel_theta) * cos (vel_phi);
-  x_out[1] = vel_r * sin (vel_theta) * sin (vel_phi);
-  x_out[2] = vel_r * cos (vel_theta);
+  x_out[0] =
+    vel_r * sin (theta) * cos (phi) + vel_theta * cos (theta) * cos (phi)
+    - vel_phi * sin (phi);
+  x_out[1] =
+    vel_r * sin (theta) * sin (phi) + vel_theta * cos (theta) * sin (phi) +
+    vel_phi * cos (phi);
+  x_out[2] = vel_r * cos (theta) - vel_theta * cos (theta);
 }
 
 T8_EXTERN_C_END ();
