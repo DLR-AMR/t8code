@@ -251,6 +251,11 @@ void                t8_flow_compressible (const double x_in[3], double t,
 void                t8_flow_incomp_cube_flow (const double x[3], double t,
                                               double x_out[3]);
 
+/** 2d flow around a circle with radius R = 1 and
+ * constant inflow with x-speed U = 1. */
+void                t8_flow_around_circle (const double x[3], double t,
+                                           double x_out[3]);
+
 void                t8_flow_stokes_flow_sphere_shell (const double x[3],
                                                       double t,
                                                       double x_out[3]);

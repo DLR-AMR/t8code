@@ -1167,6 +1167,10 @@ t8_advect_choose_flow (int flow_arg)
     return t8_flow_incomp_cube_flow;
   case 4:
     return t8_flow_rotation_2d;
+  case 5:
+    return t8_flow_around_circle;
+  case 6:
+    return t8_flow_stokes_flow_sphere_shell;
   default:
     SC_ABORT ("Wrong argument for flow parameter.\n");
   }
@@ -1894,7 +1898,9 @@ main (int argc, char *argv[])
                       "\t\t2 - Constant 1 in x,y, and z.\n"
                       "\t\t3 - A turbulent flow in a cube with zero outflow.\n"
                       "\t\t\tIt reverses direction at t = 0.5.\n"
-                      "\t\t4 - 2D rotation around (0.5,0.5).\n");
+                      "\t\t4 - 2D rotation around (0.5,0.5).\n"
+                      "\t\t5 - 2D flow around circle at (0.5,0.5)"
+                      "with radius 0.15.\n)");
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The minimum refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 0,
@@ -1949,7 +1955,7 @@ main (int argc, char *argv[])
     t8_global_essentialf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed >= 0 && 1 <= flow_arg && flow_arg <= 4 && 0 <= level
+  else if (parsed >= 0 && 1 <= flow_arg && flow_arg <= 6 && 0 <= level
            && 0 <= reflevel && 0 <= vtk_freq
            && ((mshfile != NULL && 0 < dim && dim <= 3)
                || (1 <= eclass_int && eclass_int <= 8)) && band_width >= 0) {
