@@ -107,7 +107,6 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from,
   T8_ASSERT (num_elements == 1 || num_elements ==
              ts->t8_element_num_children (elements[0]));
   level = ts->t8_element_level (elements[0]);
-
   /* Get the minimum and maximum x-coordinate from the user data pointer of forest */
   adapt_data = (adapt_data_t *) t8_forest_get_user_data (forest);
   normal = adapt_data->normal;

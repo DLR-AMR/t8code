@@ -1871,7 +1871,7 @@ main (int argc, char *argv[])
   int                 parsed, helpme, no_vtk, vtk_freq, adapt_freq;
   int                 flow_arg;
   double              T, cfl, band_width;
-  t8_levelset_sphere_data_t ls_data = { {.6, .6, .6}, .25 };
+  t8_levelset_sphere_data_t ls_data;
   /* brief help message */
 
   /* long help message */
@@ -1949,6 +1949,14 @@ main (int argc, char *argv[])
                          "In each iteration, useless dummy operations\n "
                          "\t\t\t\t     are performed per element. Decreases the "
                          "performance!");
+  sc_options_add_double(opt, 'X', "Xcoord", &ls_data.M[0],0.6,"The X-Coordinate of the middlepoint"
+                           "of the sphere. Default is 0.");
+  sc_options_add_double(opt, 'Y', "Xcoord", &ls_data.M[1],0.6,"The Y-Coordinate of the middlepoint"
+                           "of the sphere. Default is 0.");
+  sc_options_add_double(opt, 'Z', "Xcoord", &ls_data.M[2],0.6,"The Z-Coordinate of the middlepoint"
+                           "of the sphere. Default is 0.");
+  sc_options_add_double(opt, 'R', "Radius", &ls_data.radius, 0.25, "The radius of the Sphere."
+                        "Default is 0.");
 
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
