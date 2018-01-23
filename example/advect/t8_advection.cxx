@@ -749,7 +749,8 @@ t8_advect_advance_element (t8_advect_problem_t * problem,
   num_faces = elem->num_faces;
   /* Sum all the fluxes */
   for (iface = 0; iface < num_faces; iface++) {
-    for (ineigh = 0; ineigh < elem->num_neighbors[iface]; ineigh++) {
+    for (ineigh = 0; ineigh < SC_MAX (1, elem->num_neighbors[iface]);
+         ineigh++) {
       flux_sum += elem->fluxes[iface][ineigh];
     }
   }
@@ -1736,6 +1737,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                 /* We enforce outflow boundary conditions */
                 T8_ASSERT (elem_data->num_neighbors[iface] <= 0);
                 t8_advect_boundary_set_phi (problem, lelement, &phi_minus);
+
                 flux =
                   t8_advect_flux_upwind (problem, phi_plus, phi_minus,
                                          itree, elem, tree_vertices, iface);
