@@ -115,12 +115,15 @@ typedef struct
   double              cfl; /**< CFL number */
   double              delta_t; /**< Current time step */
   double              min_grad, max_grad; /**< bounds for refinement */
+  double              min_vol; /**< minimum element volume at level 'level' */
   double              band_width; /**< width of the refinement band */
   int                 num_time_steps; /**< Number of time steps computed so far.
                                         (If delta_t is constant then t = num_time_steps * delta_t) */
   int                 vtk_count; /**< If vtk output is enabled, count the number of pvtu files written. */
   int                 level; /**< Initial refinement level */
   int                 maxlevel; /**< Maximum refinement level */
+  int                 volume_refine; /**< If >= refine elements only if their volume is greater
+                                       than the minimum volume at level 'level + volume_refine' */
   int                 dim; /**< The dimension of the mesh */
   int                 dummy_op; /**< If true, we carry out more (but useless) operations
                                      per element, in order to simulate more computation load */
@@ -247,8 +250,8 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
                  t8_element_t * elements[])
 {
   t8_advect_problem_t *problem;
-#if 0
   t8_advect_element_data_t *elem_data;
+#if 0
   double              gradient;
 #endif
   double              band_width, elem_diam;
@@ -259,7 +262,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
 #endif
   t8_locidx_t         offset;
   double              phi;
-
+  double              vol_thresh;
   static int          seed = 10000;
 
   srand (seed++);
@@ -267,10 +270,23 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   problem = (t8_advect_problem_t *) t8_forest_get_user_data (forest);
   /* Get the element's level */
   level = ts->t8_element_level (elements[0]);
+  if (level == problem->maxlevel && num_elements == 1) {
+    /* It is not possible to refine this level */
+    return 0;
+  }
+  /* Compute the volume threshold. Elements larger than this and
+   * close to the 0 level-set are refined */
+  if (problem->volume_refine >= 0) {
+    vol_thresh =
+      problem->min_vol / (1 << (problem->dim * problem->volume_refine));
+  }
+  else {
+    vol_thresh = 0;
+  }
   /* Get the value of phi at this element */
   offset = t8_forest_get_tree_element_offset (forest_from, ltree_id);
   phi = t8_advect_element_get_phi (problem, lelement_id + offset);
-#if 0
+#if 1
   /* Get a pointer to the element data */
   elem_data = (t8_advect_element_data_t *)
     t8_sc_array_index_locidx (problem->element_data, lelement_id + offset);
@@ -286,7 +302,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
     /* coarsen if this is a family and level is not too small */
     return -(num_elements > 1 && level > problem->level);
   }
-  else if (fabs (phi) < band_width * elem_diam) {
+  else if (fabs (phi) < band_width * elem_diam && elem_data->vol > vol_thresh) {
     /* refine if level is not too large */
     return level < problem->maxlevel;
   }
@@ -1186,7 +1202,8 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
                         phi_0, void *ls_data,
                         int level, int maxlevel,
                         double T, double cfl, sc_MPI_Comm comm,
-                        double band_width, int dim, int dummy_op)
+                        double band_width, int dim, int dummy_op,
+                        int volume_refine)
 {
   t8_advect_problem_t *problem;
   t8_scheme_cxx_t    *default_scheme;
@@ -1207,6 +1224,9 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
   problem->delta_t = -1;        /* delta_t, invalid value */
   problem->min_grad = 2;        /* Coarsen an element if the gradient is smaller */
   problem->max_grad = 4;        /* Refine an element if the gradient is larger */
+  problem->min_vol = -1;        /* Invalid start entry */
+  problem->volume_refine = volume_refine;       /* If greater or equal zero, refine elem only if
+                                                   volume is larger than min_vol. */
   problem->cfl = cfl;           /* cfl number  */
   problem->num_time_steps = 0;  /* current time step */
   problem->comm = comm;         /* MPI communicator */
@@ -1281,6 +1301,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
     -1, delta_t, min_delta_t;
   double              u[3];
   double              diam;
+  double              min_vol = 1e9;
 
   num_trees = t8_forest_get_num_local_trees (problem->forest);
   num_local_elems = t8_forest_get_num_element (problem->forest);
@@ -1320,6 +1341,10 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
         delta_t = problem->cfl * diam / speed;
       }
       min_delta_t = SC_MIN (delta_t, min_delta_t);
+      if (problem->volume_refine >= 0 && problem->min_vol <= 0) {
+        /* Compute the minimum volume */
+        min_vol = SC_MIN (min_vol, elem_data->vol);
+      }
       /* Set the initial condition */
       t8_advect_element_set_phi (problem, idata,
                                  problem->phi_0 (elem_data->midpoint, 0,
@@ -1363,6 +1388,12 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   /* Compute the timestep, this has to be done globally */
   sc_MPI_Allreduce (&min_delta_t, &problem->delta_t, 1, sc_MPI_DOUBLE,
                     sc_MPI_MIN, problem->comm);
+  if (problem->volume_refine >= 0 && problem->min_vol <= 0) {
+    /* Compute the minimum volume.
+     * Only in first run and only if volume refinement is active */
+    sc_MPI_Allreduce (&min_vol, &problem->min_vol, 1, sc_MPI_DOUBLE,
+                      sc_MPI_MIN, problem->comm);
+  }
   t8_global_essentialf ("[advect] min diam %g max flow %g  delta_t = %g\n",
                         min_diam, max_speed, problem->delta_t);
 }
@@ -1497,7 +1528,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                  t8_example_level_set_fn phi_0, void *ls_data,
                  const int level, const int maxlevel, double T, double cfl,
                  sc_MPI_Comm comm, int adapt_freq, int no_vtk,
-                 int vtk_freq, double band_width, int dim, int dummy_op)
+                 int vtk_freq, double band_width, int dim, int dummy_op,
+                 int volume_refine)
 {
   t8_advect_problem_t *problem;
   int                 iface, ineigh;
@@ -1527,7 +1559,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   total_time = -sc_MPI_Wtime ();
   problem =
     t8_advect_problem_init (cmesh, u, phi_0, ls_data, level, maxlevel, T,
-                            cfl, comm, band_width, dim, dummy_op);
+                            cfl, comm, band_width, dim, dummy_op,
+                            volume_refine);
   t8_advect_problem_init_elements (problem);
 
   if (maxlevel > level) {
@@ -1869,6 +1902,7 @@ main (int argc, char *argv[])
   const char         *mshfile = NULL;
   int                 level, reflevel, dim, eclass_int, dummy_op;
   int                 parsed, helpme, no_vtk, vtk_freq, adapt_freq;
+  int                 volume_refine;
   int                 flow_arg;
   double              T, cfl, band_width;
   t8_levelset_sphere_data_t ls_data = { {.6, .6, .6}, .25 };
@@ -1950,6 +1984,11 @@ main (int argc, char *argv[])
                          "\t\t\t\t     are performed per element. Decreases the "
                          "performance!");
 
+  sc_options_add_int (opt, 'V', "volume-refine", &volume_refine, -1,
+                      "Refine elements close to the 0 level-set only "
+                      "if their volume is smaller than the l+V-times refined\n"
+                      " smallest element int the mesh.");
+
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
@@ -1997,7 +2036,8 @@ main (int argc, char *argv[])
                      t8_levelset_sphere, &ls_data,
                      level,
                      level + reflevel, T, cfl, sc_MPI_COMM_WORLD, adapt_freq,
-                     no_vtk, vtk_freq, band_width, dim, dummy_op);
+                     no_vtk, vtk_freq, band_width, dim, dummy_op,
+                     volume_refine);
   }
   else {
     /* wrong usage */
