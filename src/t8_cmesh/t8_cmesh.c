@@ -1977,8 +1977,8 @@ t8_cmesh_new_hypercube_hybrid (int dim, sc_MPI_Comm comm, int do_partition,
   t8_cmesh_set_join (cmesh, 1, 7, 0, 3, 1);
   t8_cmesh_set_join (cmesh, 2, 8, 0, 3, 0);
   t8_cmesh_set_join (cmesh, 3, 9, 0, 3, 1);
-  t8_cmesh_set_join (cmesh, 4, 10, 0, 3, 1);
-  t8_cmesh_set_join (cmesh, 5, 11, 0, 3, 0);
+  t8_cmesh_set_join (cmesh, 4, 11, 0, 3, 0);
+  t8_cmesh_set_join (cmesh, 5, 10, 0, 3, 1);
 
   /************************************/
   /*  The hexahedra                   */
@@ -2004,11 +2004,11 @@ t8_cmesh_new_hypercube_hybrid (int dim, sc_MPI_Comm comm, int do_partition,
 
   /* Join the prisms and hexes */
   t8_cmesh_set_join (cmesh, 6, 13, 0, 4, 1);
-  t8_cmesh_set_join (cmesh, 7, 12, 0, 2, 1);
+  t8_cmesh_set_join (cmesh, 7, 12, 0, 2, 0);
   t8_cmesh_set_join (cmesh, 8, 12, 0, 0, 1);
   t8_cmesh_set_join (cmesh, 9, 15, 0, 4, 0);
   t8_cmesh_set_join (cmesh, 10, 13, 0, 0, 0);
-  t8_cmesh_set_join (cmesh, 11, 15, 0, 2, 3);
+  t8_cmesh_set_join (cmesh, 11, 15, 0, 2, 1);
 
   if (periodic) {
     /* Connect the sides of the cube to make it periodic */
@@ -2022,6 +2022,7 @@ t8_cmesh_new_hypercube_hybrid (int dim, sc_MPI_Comm comm, int do_partition,
     /* prism to hex */
     t8_cmesh_set_join (cmesh, 6, 12, 1, 3, 0);
     t8_cmesh_set_join (cmesh, 9, 12, 2, 1, 0);
+    t8_cmesh_set_join (cmesh, 7, 13, 2, 5, 0);
     t8_cmesh_set_join (cmesh, 11, 13, 1, 1, 0);
     t8_cmesh_set_join (cmesh, 8, 15, 1, 5, 0);
     t8_cmesh_set_join (cmesh, 10, 15, 2, 3, 0);
