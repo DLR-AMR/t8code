@@ -125,7 +125,8 @@ t8_partition_new_ghost_ids (t8_cmesh_t cmesh,
       }
     }
     /* Insert this ghost's global and local id into the hash table */
-    new_hash = sc_mempool_alloc (cmesh->trees->global_local_mempool);
+    new_hash = (t8_trees_glo_lo_hash_t *)
+      sc_mempool_alloc (cmesh->trees->global_local_mempool);
     new_hash->global_id = ghost->treeid;
     /* The new local ghost id is the concurrent id of this ghost plus the
      * number of local trees */

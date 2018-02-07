@@ -143,7 +143,8 @@ t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees, t8_locidx_t lghost_index,
   trees->ghost_to_proc[lghost_index] = proc;
   /* Insert this ghosts global id into the hash table */
   /* build the entry */
-  hash_entry = sc_mempool_alloc (trees->global_local_mempool);
+  hash_entry = (t8_trees_glo_lo_hash_t *)
+    sc_mempool_alloc (trees->global_local_mempool);
   hash_entry->global_id = gtree_id;
   hash_entry->local_id =
     lghost_index + part->first_ghost_id + num_local_trees;
