@@ -39,7 +39,7 @@ Makefile.t8.mk : Makefile.t8.pre
 
 # install T8 m4 macros in the correct directory
 t8aclocaldir = $(datadir)/aclocal
-dist_t8aclocal_DATA = config/t8_include.m4
+dist_t8aclocal_DATA = config/t8_include.m4 config/t8_stdpp.m4
 
 # install t8 data in the correct directory
 t8datadir = $(datadir)/data
@@ -56,14 +56,14 @@ DIST_SUBDIRS = $(SUBDIRS)
 
 # handle toplevel directory
 EXTRA_DIST += \
-  bootstrap build-aux/git-version-gen build-aux/git2cl doc
+  bootstrap build-aux/git-version-gen build-aux/git2cl scripts doc
 DISTCLEANFILES += \
         _configs.sed src/t8_config.h @T8_DISTCLEAN@
 .PHONY: ChangeLog
 
-# Force libtool to link with c++
-nodist_EXTRA_T8_la_SOURCES = dummy.cxx
-sourcescheck_DUMMY = dummy.cxx
+## # Force libtool to link with c++
+## nodist_EXTRA_T8_la_SOURCES = dummy.cxx
+## sourcescheck_DUMMY = dummy.cxx
 
 # non-recursive build
 include src/Makefile.am
