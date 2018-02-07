@@ -102,11 +102,11 @@ if T8_DIST_DENY
 	@exit 1
 endif
 
-maintainer-clean-local:
-	rm -rf doxygen
-
 clean-local:
 	rm -f ChangeLog *vtu *.visit
+
+maintainer-clean-local:
+	rm -rf doxygen
 
 doxygen: Doxyfile
 	doxygen
