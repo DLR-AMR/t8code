@@ -214,10 +214,10 @@ t8_flow_compressible (const double x_in[3], double t, double x_out[3])
   x_out[2] = 0;
 }
 
- /* The following function is a incompressible flow on the unit cube.
-  * It is constructed from any function f with f(0) = f(1) = 0.
-  */
-
+/* The following function is a incompressible flow on the unit cube.
+ * It is constructed from any function f with f(0) = f(1) = 0.
+ */
+#if 0
 /* Function with f(0) = f(1) = 0 */
 static double
 t8_incomp_cube_f (double x)
@@ -232,6 +232,7 @@ t8_incomp_cube_df (double x)
 
   return 2. - 4. * x;
 }
+#endif
 
 static double
 t8_incomp_cube_f_sin (double x)

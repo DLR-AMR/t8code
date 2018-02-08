@@ -171,7 +171,7 @@ t8_shmem_array_index (t8_shmem_array_t array, size_t index)
   T8_ASSERT (array != NULL);
   T8_ASSERT (0 <= index && index < array->elem_count);
 
-  return array->array + index * array->elem_size;
+  return ((char *) array->array) + index * array->elem_size;
 }
 
 /* TODO: implement */

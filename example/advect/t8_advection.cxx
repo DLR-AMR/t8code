@@ -1291,7 +1291,7 @@ static void
 t8_advect_problem_init_elements (t8_advect_problem_t * problem)
 {
   t8_locidx_t         itree, ielement, idata;
-  t8_locidx_t         num_trees, num_elems_in_tree, num_local_elems;
+  t8_locidx_t         num_trees, num_elems_in_tree;
   t8_element_t       *element, **neighbors;
   int                 iface, ineigh;
   t8_advect_element_data_t *elem_data;
@@ -1304,7 +1304,6 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   double              min_vol = 1e9;
 
   num_trees = t8_forest_get_num_local_trees (problem->forest);
-  num_local_elems = t8_forest_get_num_element (problem->forest);
   /* maximum possible delta_t value */
   min_delta_t = problem->T - problem->t;
   for (itree = 0, idata = 0; itree < num_trees; itree++) {

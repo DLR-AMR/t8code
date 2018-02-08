@@ -47,7 +47,7 @@ t8_basic_level_set_sphere (const double x[3], double t, void *data)
   return t8_vec_dist (M, x) - sdata->radius;
 }
 
-#if 1
+#if 0
 static int
 t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
                 t8_locidx_t which_tree, t8_locidx_t lelement_id,
@@ -145,6 +145,7 @@ t8_basic_refine_test (t8_eclass_t eclass)
   t8_forest_unref (&forest_adapt);
 }
 
+#if 0
 static void
 t8_basic_balance_test (t8_eclass_t eclass)
 {
@@ -189,8 +190,9 @@ t8_basic_balance_test (t8_eclass_t eclass)
 
 }
 #endif
+#endif
 
-#if 1
+#if 0
 static void
 t8_basic_forest_partition ()
 {
@@ -230,7 +232,7 @@ t8_basic_forest_partition ()
 }
 #endif
 
-#if 1
+#if 0
 static void
 t8_basic_hypercube (t8_eclass_t eclass, int set_level,
                     int create_forest, int do_partition)
