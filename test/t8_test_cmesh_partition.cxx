@@ -115,13 +115,8 @@ test_cmesh_partition (sc_MPI_Comm comm)
 {
   int                 eci, level, maxlevel, minlevel;
   int                 mpisize, mpiret;
-  int                 num_children;
-  int                 forest_elements;
   int                 i;
   t8_cmesh_t          cmesh_original, cmesh_partition;
-  const int           eclass_to_cube_cellnum[T8_ECLASS_COUNT] = {
-    1, 1, 1, 2, 1, 6, 2, 3
-  };                            /* Gives the number of coarse mesh cells of the hypercube mesh for each eclass */
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -157,7 +152,7 @@ test_cmesh_partition (sc_MPI_Comm comm)
         else {
           /* If the eclass is vertex we choose a mesh consisting of disjoint
            * vertices.
-           /* We also choose this mesh for all eclasses in the last case.
+           * We also choose this mesh for all eclasses in the last case.
            * We do this to test different mesh sizes. */
           double              num_trees = 11;   /* prime number */
           cmesh_original =
