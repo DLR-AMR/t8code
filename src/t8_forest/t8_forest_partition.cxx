@@ -679,7 +679,6 @@ t8_forest_partition_sendloop (t8_forest_t forest, const int send_first,
 
   comm = forest->mpicomm;
   /* Determine the number of requests for MPI communication. */
-  /* TODO: Currently we also send to ourselves via MPI. We can optimize this. */
   *num_request_alloc = send_last - send_first + 1;
   if (*num_request_alloc < 0) {
     /* If there are no processes to send to, this value could get
@@ -769,7 +768,7 @@ t8_forest_partition_sendloop (t8_forest_t forest, const int send_first,
       }
       else {
         *byte_to_self = buffer_alloc;
-        *requests[iproc - send_first] = sc_MPI_REQUEST_NULL;
+        *(*requests + iproc - send_first) = sc_MPI_REQUEST_NULL;
       }
       if (!send_data && forest->profile != NULL) {
         if (iproc != forest->mpirank) {
@@ -1162,9 +1161,12 @@ t8_forest_partition_given (t8_forest_t forest, const int send_data,
     forest->local_num_elements = 0;
   }
   /* Wait for all sends to complete */
-  mpiret =
-    sc_MPI_Waitall (num_request_alloc, requests, sc_MPI_STATUSES_IGNORE);
-  SC_CHECK_MPI (mpiret);
+  t8_debugf ("[HH] waiting...\n");
+  if (num_request_alloc > 0) {
+    mpiret =
+      sc_MPI_Waitall (num_request_alloc, requests, sc_MPI_STATUSES_IGNORE);
+    SC_CHECK_MPI (mpiret);
+  }
   T8_FREE (requests);
   for (i = 0; i < num_request_alloc; i++) {
     T8_FREE (send_buffer[i]);
