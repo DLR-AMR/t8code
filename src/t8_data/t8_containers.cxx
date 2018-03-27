@@ -30,6 +30,7 @@
 
 T8_EXTERN_C_BEGIN ();
 
+#ifdef T8_ENABLE_DEBUG
 /* Query whether an element array is initialized properly. */
 static int
 t8_element_array_is_valid (t8_element_array_t * element_array)
@@ -51,6 +52,7 @@ t8_element_array_is_valid (t8_element_array_t * element_array)
 
   return is_valid;
 }
+#endif
 
 t8_element_array_t *
 t8_element_array_new (t8_eclass_scheme_c * scheme)

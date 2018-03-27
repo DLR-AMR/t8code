@@ -1476,6 +1476,7 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   problem->vtk_count++;
 }
 
+#ifdef T8_ENABLE_DEBUG
 static void
 t8_advect_print_phi (t8_advect_problem_t * problem)
 {
@@ -1497,6 +1498,7 @@ t8_advect_print_phi (t8_advect_problem_t * problem)
   /* reset buffer */
   buffer[0] = '\0';
 }
+#endif
 
 static void
 t8_advect_problem_destroy (t8_advect_problem_t ** pproblem)
@@ -1554,7 +1556,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   double              vtk_time = 0;
   double              start_volume, end_volume;
   int                 hanging, neigh_is_ghost;
-  t8_locidx_t         neigh_index;
+  t8_locidx_t         neigh_index = -1;
   double              phi_plus, phi_minus;
 
   /* Initialize problem */
