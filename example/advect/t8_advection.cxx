@@ -810,6 +810,10 @@ t8_advect_compute_element_data (t8_advect_problem_t * problem,
  * If elements are coarsened, the parent gets the average phi value of the children.
  */
 /* outgoing are the old elements and incoming the new ones */
+/* TODO: If coarsening, weight the phi vaules by volume of the children:
+ *       phi_E = sum (phi_Ei *vol(E_i)/vol(E))
+ *       Similar formula for refining?
+ */
 static void
 t8_advect_replace (t8_forest_t forest_old,
                    t8_forest_t forest_new,
