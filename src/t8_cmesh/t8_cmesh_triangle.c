@@ -203,7 +203,7 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset,
   int                 temp;
   int                 i;
   int                 num_read;
-  double              tree_vertices[9];
+  double              tree_vertices[12];
 
   /* Open .ele file and read element input */
   T8_ASSERT (filename != NULL);

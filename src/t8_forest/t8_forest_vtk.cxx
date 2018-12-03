@@ -686,7 +686,7 @@ t8_forest_vtk_write_cell_data (t8_forest_t forest, FILE * vtufile,
   t8_locidx_t         num_local_trees, num_ghost_trees;
   t8_element_t       *element;
   t8_eclass_scheme_c *ts;
-  void               *data;
+  void               *data = NULL;
 
   /* Write the connectivity information.
    * Thus for each tree we write the indices of its corner vertices. */
