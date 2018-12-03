@@ -1905,7 +1905,8 @@ main (int argc, char *argv[])
                       "\t\t1 - line\n\t\t2 - quad\n"
                       "\t\t3 - triangle\n\t\t4 - hexahedron\n"
                       "\t\t5 - tetrahedron\n\t\t6 - prism\n"
-                      "\t\t7 - triangle/quad hybrid.");
+                      "\t\t7 - triangle/quad (hybrid 2d).\n"
+                      "\t\t8 - tet/hex/prism (hybrid 3d).");
   sc_options_add_string (opt, 'f', "mshfile", &mshfile, NULL,
                          "If specified, the cmesh is constructed from a .msh file with "
                          "the given prefix.\n\t\t\t\t     The files must end in .msh "
