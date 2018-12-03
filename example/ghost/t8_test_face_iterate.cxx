@@ -58,9 +58,6 @@ t8_test_fiterate_callback (t8_forest_t forest,
        ltreeid, face, (int) leaf_index, coords[0], coords[1], coords[2]);
     ((t8_test_fiterate_udata_t *) user_data)->count++;
   }
-  else {
-    t8_debugf ("[H] Calling face_iterate on intermediate level\n");
-  }
   return 1;
 }
 
@@ -112,7 +109,6 @@ t8_test_fiterate (t8_forest_t forest)
                                          (forest, itree));
     for (iface = 0; iface < ts->t8_element_num_faces (nca); iface++) {
       udata.count = 0;
-      t8_debugf ("[H] Start iterate faces for face %i\n", iface);
       t8_forest_iterate_faces (forest, itree, nca, iface, leaf_elements,
                                &udata, 0, t8_test_fiterate_callback);
       t8_debugf ("Leaf elements at face %i:\t%i\n", iface, udata.count);

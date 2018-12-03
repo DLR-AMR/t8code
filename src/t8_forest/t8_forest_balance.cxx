@@ -269,7 +269,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   t8_global_productionf
     ("Done t8_forest_balance with %lli global elements.\n",
      (long long) t8_forest_get_global_num_elements (forest_temp));
-  t8_debugf ("[H] Balance needed %i rounds.\n", count);
+  t8_debugf ("t8_forest_balance needed %i rounds.\n", count);
   /* clean-up */
   t8_forest_unref (&forest_temp);
 

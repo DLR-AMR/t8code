@@ -132,8 +132,6 @@ t8_partition_new_ghost_ids (t8_cmesh_t cmesh,
     new_hash->local_id = ghost_it + first_ghost + cmesh->num_local_trees;
     ret = sc_hash_insert_unique (cmesh->trees->ghost_globalid_to_local_id,
                                  new_hash, NULL);
-    t8_debugf ("[H] Added global id %li local id %i %p\n", ghost->treeid,
-               new_hash->local_id, cmesh->trees->ghost_globalid_to_local_id);
     /* The entry must not have existed before */
     T8_ASSERT (ret);
   }
@@ -492,8 +490,6 @@ t8_cmesh_partition_send_any (int proc, t8_cmesh_t cmesh_from,
      *       no process is found. We should eventually repair it. */
     int                 searcher[2];    /* We search from mpirank in both directions */
     int                 pos = 0;
-    t8_debugf
-      ("[H] Could not find any process in bin search. Start linear search.\n");
     lookhere = cmesh_from->mpirank;
     search_dir = 1;
     searcher[0] = cmesh_from->mpirank - 1;
@@ -979,7 +975,6 @@ t8_cmesh_partition_alternative_sendrange (t8_cmesh_t cmesh,
     if (t8_offset_in_range (first_tree, cmesh->mpirank, offset_to)) {
       alternative_sendfirst = cmesh->mpirank;
       flag = 1;                 /* We found the process */
-      t8_debugf ("[H] I send to myself first.\n");
     }
     else {
       /* We do not own the first tree in the new partition */
@@ -1022,7 +1017,6 @@ t8_cmesh_partition_alternative_sendrange (t8_cmesh_t cmesh,
        * and if we did not find an owner in this round,
        * then we do not send any trees to any processes. */
       if (cmesh_from->first_tree_shared && flag == 0) {
-        t8_debugf ("[H] New no send\n");
         *send_last = -2;
         *send_first = -1;
         return -1;
@@ -1034,7 +1028,6 @@ t8_cmesh_partition_alternative_sendrange (t8_cmesh_t cmesh,
 #endif
     }
     T8_ASSERT (flag == 1);      /* We must have found the process by now */
-    t8_debugf ("[H] Alternative send first = %i\n", alternative_sendfirst);
   }
   /* Get the last local tree on cmesh_from */
   last_tree = t8_cmesh_get_first_treeid (cmesh_from) +
@@ -1063,8 +1056,6 @@ t8_cmesh_partition_alternative_sendrange (t8_cmesh_t cmesh,
       alternative_sendlast =
         t8_offset_last_owner_of_tree (cmesh->mpisize, last_tree, offset_to,
                                       &some_owner);
-      t8_debugf ("[H] Last owner of %lli is %i\n", (long long) last_tree,
-                 alternative_sendlast);
       while (alternative_sendlast >= 0 && flag == 0) {
         if (alternative_sendlast == cmesh->mpirank ||
             t8_offset_empty (alternative_sendlast, offset_from) ||
@@ -1079,8 +1070,6 @@ t8_cmesh_partition_alternative_sendrange (t8_cmesh_t cmesh,
           alternative_sendlast =
             t8_offset_prev_owner_of_tree (cmesh->mpisize, last_tree,
                                           offset_to, alternative_sendlast);
-          t8_debugf ("[H] Prev owner of %lli is %i\n", (long long) last_tree,
-                     alternative_sendlast);
         }
       }
       /* If we did not found the alternative send here, then all procs
@@ -1099,11 +1088,9 @@ t8_cmesh_partition_alternative_sendrange (t8_cmesh_t cmesh,
   }
   if (flag == 0) {
     /* This should never happen */
-    t8_debugf ("[H] Could not find alternative sendlast.\n");
     T8_ASSERT (0 == 1);
   }
   else {
-    t8_debugf ("[H] Found alternative last send %i\n", alternative_sendlast);
   }
   *send_first = alternative_sendfirst;
   *send_last = alternative_sendlast;
@@ -1243,7 +1230,6 @@ t8_partition_compute_gab (t8_cmesh_t cmesh_from, sc_array_t * send_as_ghost,
   *attr_info_bytes = 0;
   for (ighost = 0; ighost < send_as_ghost->elem_count; ighost++) {
     ghost_id = *(t8_locidx_t *) sc_array_index (send_as_ghost, ighost);
-    t8_debugf ("[H] reading ghost_id %i\n", (int) ghost_id);
     T8_ASSERT (ghost_id >= 0);
     if (ghost_id < cmesh_from->num_local_trees) {
       /* This ghost is currently a local tree */
@@ -1256,8 +1242,6 @@ t8_partition_compute_gab (t8_cmesh_t cmesh_from, sc_array_t * send_as_ghost,
       /* This ghost is currently a ghost */
       ghost_id_min_offset =
         ghost_id - t8_cmesh_get_num_local_trees (cmesh_from);
-      t8_debugf ("[H] ghost_id %i is ghost number %i\n", ghost_id,
-                 ghost_id_min_offset);
       T8_ASSERT (0 <= ghost_id_min_offset
                  && ghost_id_min_offset <
                  t8_cmesh_get_num_ghosts (cmesh_from));
@@ -1663,9 +1647,6 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh,
       size_t              this_ghosts_att_info_size;
       t8_attribute_info_struct_t *first_attr_info;
 
-      t8_debugf ("[H] Copy %i atts of total size %lu\n",
-                 num_attributes, ghost_att_size);
-
       /* The byte count of this ghosts attribute info structs */
       this_ghosts_att_info_size =
         num_attributes * sizeof (t8_attribute_info_struct_t);
@@ -1864,7 +1845,6 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                                  range_start + cmesh_from->first_tree,
                                  offset_from, offset_to)) {
       /* We skip trees that we do not send */
-      t8_debugf ("[H] Skipping local tree %i\n", range_start);
       range_start++;
     }
 
@@ -2735,7 +2715,6 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared,
 {
   int                 iproc, mpisize, mpiret, random_number, mpirank;
   int                 first_shared;
-  int                 i;
   unsigned            u_seed;
   t8_gloidx_t        *offsets;
   t8_shmem_array_t    shmem_array;
@@ -2806,15 +2785,6 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared,
   }
   offsets[mpisize] = num_trees;
 
-  for (i = 0; i < mpisize; i++) {
-    sc_MPI_Barrier (comm);
-    if (i == mpirank) {
-      for (iproc = 0; iproc < mpisize + 1; iproc++) {
-        t8_debugf ("[H] %li\n", offsets[iproc]);
-      }
-    }
-    seed = -1;
-  }
   T8_ASSERT (t8_offset_consistent (mpisize, offsets, num_trees));
   return shmem_array;
 }

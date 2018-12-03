@@ -65,7 +65,7 @@ t8_forest_compute_maxlevel (t8_forest_t forest)
     }
   }
   T8_ASSERT (forest->maxlevel >= 0);
-  t8_debugf ("[H] Computed maxlevel %i\n", forest->maxlevel);
+  t8_debugf ("Computed maxlevel %i\n", forest->maxlevel);
 }
 
 /* Return the maximum level of a forest */
@@ -392,8 +392,6 @@ t8_forest_element_line_length (t8_forest_t forest, t8_locidx_t ltreeid,
 
   /* Compute the euclidean distance */
   length = t8_vec_dist (coordinates_a, coordinates_b);
-  t8_debugf ("[H] line from %i to %i has len^2  %f\n", corner_a, corner_b,
-             length);
   /* return it */
   return length;
 }
@@ -1004,11 +1002,7 @@ t8_forest_populate (t8_forest_t forest)
   cmesh_first_tree = t8_cmesh_get_first_treeid (forest->cmesh);
   cmesh_last_tree = cmesh_first_tree +
     t8_cmesh_get_num_local_trees (forest->cmesh) - 1;
-  t8_debugf
-    ("[H] trees: %li %li  ctrees: %li %li  els: %li %li. level %i\n",
-     (long) forest->first_local_tree, (long) forest->last_local_tree,
-     (long) cmesh_first_tree, (long) cmesh_last_tree,
-     (long) child_in_tree_begin, (long) child_in_tree_end, forest->set_level);
+
   if (!is_empty) {
     SC_CHECK_ABORT (forest->first_local_tree >= cmesh_first_tree
                     && forest->last_local_tree <= cmesh_last_tree,
@@ -1656,9 +1650,6 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
          * of local elements. */
         element_index +=
           t8_forest_ghost_get_tree_element_offset (forest, lghost_treeid);
-        t8_debugf ("[H] ghost tree %i. Offset %i\n", lghost_treeid,
-                   t8_forest_ghost_get_tree_element_offset (forest,
-                                                            lghost_treeid));
         element_index += t8_forest_get_num_element (forest);
         T8_ASSERT (forest->local_num_elements <= element_index
                    && element_index <
@@ -1787,9 +1778,6 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
           t8_forest_bin_search_lower (element_array, neigh_id,
                                       forest->maxlevel);
 
-        t8_debugf ("[H] ghost tree %i. Offset %i\n", lghost_treeid,
-                   t8_forest_ghost_get_tree_element_offset (forest,
-                                                            lghost_treeid));
 #if T8_ENABLE_DEBUG
         /* We check whether the element is really the element at this local id */
         {
@@ -2379,9 +2367,6 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
   /* It is impossible for an element with bigger id to belong to a smaller process */
   T8_ASSERT (first_owner <= last_owner);
 
-  t8_debugf ("[H] At level %i bounds: %i %i\n",
-             ts->t8_element_level (element), first_owner, last_owner);
-
   if (first_owner == last_owner) {
     /* This element has a unique owner, no recursion is necessary */
     /* Add the owner to the array of owners */
@@ -2590,11 +2575,6 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
                                                 neigh_scheme,
                                                 face, &dual_face);
   if (neigh_tree >= 0) {
-    if (neigh_tree != ltreeid) {
-      t8_debugf("[H] Search owner across tree bounds. From tree %li -> %li."
-                "el face %i low high %i %i\n",
-                t8_forest_global_tree_id (forest, ltreeid), (long) neigh_tree, face, *lower, *upper);
-    }
     /* There is a face neighbor */
     t8_forest_element_owners_at_face_bounds (forest, neigh_tree, face_neighbor,
                                       neigh_class, dual_face, lower, upper);

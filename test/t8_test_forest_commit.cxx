@@ -102,10 +102,6 @@ t8_test_forest_commit_abp (t8_forest_t forest, int maxlevel)
   t8_forest_set_partition (forest_ada_bal_par, NULL, 0);
   t8_forest_commit (forest_ada_bal_par);
 
-  t8_debugf ("[H] 1 step forest %i local %li global elements.\n",
-             t8_forest_get_num_element (forest_ada_bal_par),
-             t8_forest_get_global_num_elements (forest_ada_bal_par));
-
   return forest_ada_bal_par;
 }
 
@@ -131,9 +127,6 @@ t8_test_forest_commit_abp_3step (t8_forest_t forest, int maxlevel)
   /* partrition the forest */
   t8_forest_set_partition (forest_partition, forest_balance, 0);
   t8_forest_commit (forest_partition);
-  t8_debugf ("[H] 3 step forest %i local %li global elements.\n",
-             t8_forest_get_num_element (forest_partition),
-             t8_forest_get_global_num_elements (forest_partition));
 
   return forest_partition;
 }

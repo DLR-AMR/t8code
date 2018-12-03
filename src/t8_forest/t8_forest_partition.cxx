@@ -235,7 +235,6 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
       snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer), " %llu,",
                 (long long unsigned) desc_id);
     }
-    t8_debugf ("[H] first_desc: %s\n", buffer);
   }
   t8_forest_partition_test_desc (forest);
 #endif

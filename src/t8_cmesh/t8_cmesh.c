@@ -1558,8 +1558,8 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim,
        * in conn on each process */
       sc_MPI_Allreduce (&num_local_trees, &num_trees, 1, T8_MPI_GLOIDX,
                         sc_MPI_SUM, comm);
-      t8_debugf ("[H] Generating partitioned cmesh from connectivity\n"
-                 "[H] Has %li global and %li local trees.\n", num_trees,
+      t8_debugf ("Generating partitioned cmesh from connectivity\n"
+                 "Has %li global and %li local trees.\n", num_trees,
                  num_local_trees);
     }
     t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
@@ -2823,7 +2823,6 @@ t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x, t8_gloidx_t num_y,
   /* Calculate the x and y offset of trees */
   sc_MPI_Scan (&num_trees, &offset, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
   offset -= num_trees;
-  t8_debugf ("[H] offset = %li\n", offset);
 
   if (dim == 2) {
     cmesh = t8_cmesh_new_from_p4est_ext ((void *) my_brick,

@@ -1504,10 +1504,6 @@ t8_dtri_corner_descendant (const t8_dtri_t * t, t8_dtri_t * s, int corner,
   default:
     SC_ABORT_NOT_REACHED ();
   }
-#ifdef T8_DTRI_TO_DTET
-  t8_debugf ("[H] corner desc at corner %i: (%i, %i, %i) type %i\n",
-             corner, s->x, s->y, s->z, s->type);
-#endif
 }
 
 void

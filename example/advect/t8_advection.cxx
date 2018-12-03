@@ -251,15 +251,9 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
 {
   t8_advect_problem_t *problem;
   t8_advect_element_data_t *elem_data;
-#if 0
-  double              gradient;
-#endif
   double              band_width, elem_diam;
   double             *tree_vertices;
   int                 level;
-#if 0
-  int                 ielem, ret;
-#endif
   t8_locidx_t         offset;
   double              phi;
   double              vol_thresh;
@@ -286,12 +280,11 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   /* Get the value of phi at this element */
   offset = t8_forest_get_tree_element_offset (forest_from, ltree_id);
   phi = t8_advect_element_get_phi (problem, lelement_id + offset);
-#if 1
+
   /* Get a pointer to the element data */
   elem_data = (t8_advect_element_data_t *)
     t8_sc_array_index_locidx (problem->element_data, lelement_id + offset);
-#endif
-#if 1
+
   /* Refine if close to levelset, coarsen if not */
   band_width = problem->band_width;
   tree_vertices = t8_forest_get_tree_vertices (forest_from, ltree_id);
@@ -307,46 +300,6 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
     return level < problem->maxlevel;
   }
   return 0;
-#endif
-#if 0
-  ret = t8_advect_adapt_cfl (problem, elem_data);
-  if (num_elements > 1) {
-    /* This is a family, coarsen it? */
-    if (ret < 0) {
-      /* coarsen if not minimum level */
-      return -(level > problem->level);
-    }
-  }
-  /* refine if not maximum level */
-  return ret > 0 && level < problem->maxlevel;
-
-  /* Compute the absolute value of the gradient at this element */
-  gradient = t8_advect_gradient_phi (problem, elem_data);
-
-  if (gradient > problem->max_grad && level < problem->maxlevel) {
-    /* The gradient is too large, we refine the element */
-    return 1;
-  }
-
-  if (num_elements > 1) {
-    /* This is a family, compute the maximum gradient among all elements. */
-    for (ielem = 1; ielem < num_elements; ielem++) {
-      /* Get a pointer to the element data */
-      elem_data = (t8_advect_element_data_t *)
-        t8_sc_array_index_locidx (problem->element_data, ielem);
-      /* Compute the maximum gradient */
-      gradient =
-        SC_MAX (gradient, t8_advect_gradient_phi (problem, elem_data));
-
-    }
-    if (gradient < problem->min_grad && level > problem->level) {
-      /* The maximum gradient is so small, that we can coarsen the elements */
-      return -1;
-    }
-  }
-  /* We leave the elements as they are. */
-  return 0;
-#endif
 }
 
 static double

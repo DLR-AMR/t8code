@@ -726,7 +726,6 @@ t8_cmesh_load_proc_loads (int mpirank, int mpisize, int num_files,
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Comm_rank (intra, &intrarank);
     SC_CHECK_MPI (mpiret);
-    t8_infof ("[H] My interrank is %i, intra is %i\n", interrank, intrarank);
     /* If the current node number i is smaller than the number of files
      * than the first process on this node loads the file i */
     if (interrank < num_files && intrarank == 0) {
@@ -860,8 +859,6 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files,
 
   T8_ASSERT (mpisize >= num_files);
 
-  t8_debugf ("[H] Enter cmesh load and distribute with %i files\n",
-             num_files);
   /* Try to set the comm type */
   t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
 
