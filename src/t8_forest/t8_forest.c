@@ -829,7 +829,7 @@ t8_forest_compare_elem_tree (const void *lelement_id, const void *ltree)
     /* We have to look further to the left */
     return -1;
   }
-  else if (tree->elements_offset +
+  else if (tree->elements_offset + (t8_locidx_t)
            t8_element_array_get_count (&tree->elements) > leid) {
     /* We have found the tree */
     return 0;
@@ -872,7 +872,8 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id,
         ltree_b = ltreedebug;
       }
       else if (tree->elements_offset +
-               t8_element_array_get_count (&tree->elements) > lelement_id) {
+               (t8_locidx_t) t8_element_array_get_count (&tree->elements) >
+               lelement_id) {
         /* We have found the tree */
         ltree_a = ltree_b;
       }
@@ -895,7 +896,8 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id,
    * Or the element is not a local element. */
   tree = t8_forest_get_tree (forest, ltree);
   if (tree->elements_offset <= lelement_id && lelement_id <
-      tree->elements_offset + t8_element_array_get_count (&tree->elements)) {
+      tree->elements_offset +
+      (t8_locidx_t) t8_element_array_get_count (&tree->elements)) {
     return t8_element_array_index_locidx (&tree->elements,
                                           lelement_id -
                                           tree->elements_offset);

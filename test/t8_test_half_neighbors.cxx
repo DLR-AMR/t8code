@@ -31,6 +31,7 @@
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
 
+#if 0
 /* Depending on an integer i create a different cmesh.
  * i = 0: cmesh_new_class
  * i = 1: cmesh_new_hypercube
@@ -51,6 +52,7 @@ t8_test_create_cmesh (int i, t8_eclass_t eclass, sc_MPI_Comm comm)
     return t8_cmesh_new_from_class (eclass, comm);
   }
 }
+#endif
 
 static void
 t8_test_half_neighbors (sc_MPI_Comm comm, t8_eclass_t eclass)

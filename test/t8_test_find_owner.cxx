@@ -31,6 +31,7 @@
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
 
+#if 0
 /* Depending on an integer i create a different cmesh.
  * i = 0: cmesh_new_class
  * i = 1: cmesh_new_hypercube
@@ -61,7 +62,6 @@ t8_test_find_owner (sc_MPI_Comm comm, t8_eclass_t eclass)
   t8_element_t       *element;
   t8_scheme_cxx      *scheme;
   t8_eclass_scheme_c *ts;
-  t8_tree_t           tree;
   t8_gloidx_t         ielement, itree, global_elem_num;
   t8_gloidx_t         elements_per_tree;
   int                 level = 5;
@@ -120,6 +120,7 @@ t8_test_find_owner (sc_MPI_Comm comm, t8_eclass_t eclass)
   ts->t8_element_destroy (1, &element);
   t8_scheme_cxx_unref (&scheme);
 }
+#endif
 
 static void
 t8_test_find_multiple_owners (sc_MPI_Comm comm, t8_eclass_t eclass)
@@ -151,7 +152,7 @@ t8_test_find_multiple_owners (sc_MPI_Comm comm, t8_eclass_t eclass)
     t8_forest_element_owners_at_face (forest, 0, root_element, eclass, face,
                                       &owners);
     snprintf (buffer, BUFSIZ, "Owners of root at face %i:", face);
-    for (iowner = 0; iowner < owners.elem_count; iowner++) {
+    for (iowner = 0; iowner < (int) owners.elem_count; iowner++) {
       snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer),
                 " %i,", *(int *) sc_array_index_int (&owners, iowner));
     }
@@ -172,7 +173,9 @@ main (int argc, char **argv)
 {
   int                 mpiret;
   sc_MPI_Comm         mpic;
+#if 0
   int                 ieclass;
+#endif
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);

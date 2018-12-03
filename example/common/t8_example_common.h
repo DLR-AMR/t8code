@@ -240,7 +240,7 @@ void                t8_flow_constant_one_xyz_vec (const double x[3], double t,
                                                   double x_out[3]);
 
 /** Transform the unit square to [-0.5,0.5]^2 and computes
- * x = y, y = -x
+ * x = 2pi*y, y = -2pi*x
  */
 void                t8_flow_rotation_2d (const double x[3], double t,
                                          double x_out[3]);

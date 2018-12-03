@@ -121,7 +121,9 @@ t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees, t8_locidx_t lghost_index,
   t8_part_tree_t      part;
   t8_cghost_t         ghost;
   t8_trees_glo_lo_hash_t *hash_entry;
+#ifdef T8_ENABLE_DEBUG
   int                 ret;
+#endif
 
   T8_ASSERT (trees != NULL);
   T8_ASSERT (proc >= 0);
@@ -143,13 +145,17 @@ t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees, t8_locidx_t lghost_index,
   trees->ghost_to_proc[lghost_index] = proc;
   /* Insert this ghosts global id into the hash table */
   /* build the entry */
-  hash_entry = sc_mempool_alloc (trees->global_local_mempool);
+  hash_entry = (t8_trees_glo_lo_hash_t *)
+    sc_mempool_alloc (trees->global_local_mempool);
   hash_entry->global_id = gtree_id;
   hash_entry->local_id =
     lghost_index + part->first_ghost_id + num_local_trees;
   /* insert it */
-  ret = sc_hash_insert_unique (trees->ghost_globalid_to_local_id, hash_entry,
-                               NULL);
+#ifdef T8_ENABLE_DEBUG
+  ret =
+#endif
+    sc_hash_insert_unique (trees->ghost_globalid_to_local_id, hash_entry,
+                           NULL);
   /* It mus not have existed before, thus true was returned */
   T8_ASSERT (ret);
 }
@@ -930,7 +936,7 @@ t8_cmesh_trees_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 {
   int                 num_parts, ipart;
   int                 mpirank, mpiret, mpisize;
-  t8_cmesh_trees_t    trees;
+  t8_cmesh_trees_t    trees = NULL;
   t8_part_tree_t      part;
 
   struct

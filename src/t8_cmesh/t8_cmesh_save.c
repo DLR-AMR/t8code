@@ -811,7 +811,7 @@ t8_cmesh_load_bigger_nonloading (int mpirank, int mpisize,
                                       &commrank);
       SC_CHECK_MPI (mpiret);
       /* We get the size of the intracommunicator */
-      mpiret = sc_MPI_Comm_size (intragroup, &intrasize);
+      mpiret = sc_MPI_Group_size (intragroup, &intrasize);
       SC_CHECK_MPI (mpiret);
       next_bigger_nonloading = commrank + intrasize;
     }

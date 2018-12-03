@@ -192,7 +192,6 @@ main (int argc, char **argv)
 {
   int                 mpiret;
   sc_MPI_Comm         mpic;
-  int                 ieclass;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);

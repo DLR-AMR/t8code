@@ -141,7 +141,7 @@ t8_test_forest_commit ()
   t8_forest_t         forest, forest_ada_bal_part, forest_abp_3part;
   t8_scheme_cxx_t    *scheme;
 
-  for (eclass = T8_ECLASS_LINE; eclass < T8_ECLASS_PYRAMID; eclass++) {
+  for (eclass = T8_ECLASS_LINE; eclass < T8_ECLASS_PRISM; eclass++) {
     /* TODO: Activate the other eclass as soon as they support ghosts */
     for (ctype = 0; ctype < 3; ctype++) {
       scheme = t8_scheme_new_default_cxx ();
@@ -150,7 +150,6 @@ t8_test_forest_commit ()
         t8_test_create_cmesh (ctype, (t8_eclass_t) eclass, sc_MPI_COMM_WORLD);
       /* Compute the first level, such that no process is empty */
       min_level = t8_forest_min_nonempty_level (cmesh, scheme);
-      t8_scheme_cxx_unref (&scheme);
       /* Use one level with empty processes */
       min_level = SC_MAX (min_level - 1, 0);
       for (level = min_level; level < min_level + 3; level++) {
@@ -158,7 +157,6 @@ t8_test_forest_commit ()
           ("Testing forest commit with eclass %s, level %i\n",
            t8_eclass_to_string[eclass], level);
         maxlevel = level + 3;
-        scheme = t8_scheme_new_default_cxx ();
         /* ref the cmesh since we reuse it */
         t8_cmesh_ref (cmesh);
         /* Create a uniformly refined forest */
@@ -177,11 +175,12 @@ t8_test_forest_commit ()
         SC_CHECK_ABORT (t8_forest_is_equal
                         (forest_abp_3part, forest_ada_bal_part),
                         "The forests are not equal");
-        t8_forest_unref (&forest_ada_bal_part);
         t8_scheme_cxx_ref (scheme);
+        t8_forest_unref (&forest_ada_bal_part);
         t8_forest_unref (&forest_abp_3part);
-        t8_scheme_cxx_unref (&scheme);
+
       }
+      t8_scheme_cxx_unref (&scheme);
       t8_cmesh_destroy (&cmesh);
       t8_debugf ("Done with eclass %s\n", t8_eclass_to_string[eclass]);
     }

@@ -100,7 +100,9 @@ t8_partition_new_ghost_ids (t8_cmesh_t cmesh,
   int8_t             *ttf;
   int                 iface, face_tree;
   t8_trees_glo_lo_hash_t *new_hash;
+#ifdef T8_ENABLE_DEBUG
   int                 ret;
+#endif
 
   for (ghost_it = 0; ghost_it < recv_part->num_ghosts; ghost_it++) {
     /* loop over all ghosts of recv_part */
@@ -125,13 +127,17 @@ t8_partition_new_ghost_ids (t8_cmesh_t cmesh,
       }
     }
     /* Insert this ghost's global and local id into the hash table */
-    new_hash = sc_mempool_alloc (cmesh->trees->global_local_mempool);
+    new_hash = (t8_trees_glo_lo_hash_t *)
+      sc_mempool_alloc (cmesh->trees->global_local_mempool);
     new_hash->global_id = ghost->treeid;
     /* The new local ghost id is the concurrent id of this ghost plus the
      * number of local trees */
     new_hash->local_id = ghost_it + first_ghost + cmesh->num_local_trees;
-    ret = sc_hash_insert_unique (cmesh->trees->ghost_globalid_to_local_id,
-                                 new_hash, NULL);
+#ifdef T8_ENABLE_DEBUG
+    ret =
+#endif
+      sc_hash_insert_unique (cmesh->trees->ghost_globalid_to_local_id,
+                             new_hash, NULL);
     /* The entry must not have existed before */
     T8_ASSERT (ret);
   }
@@ -1711,6 +1717,7 @@ t8_cmesh_partition_sendtreeloop (t8_cmesh_t cmesh,
   t8_locidx_t         neighbor, *face_neighbor, itree;
   int8_t             *ttf;
   int                 iface;
+#ifdef T8_ENABLE_DEBUG
   t8_gloidx_t        *offset_from, *offset_to;
 
   if (cmesh_from->set_partition) {
@@ -1720,6 +1727,7 @@ t8_cmesh_partition_sendtreeloop (t8_cmesh_t cmesh,
     offset_from = NULL;
   }
   offset_to = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
+#endif
   /* loop over all trees that will be send */
   for (itree = range_start; itree <= range_end; itree++) {
     /* test if we really send the tree itree to the process iproc */
@@ -2463,7 +2471,7 @@ t8_cmesh_partition_given (t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from,
 {
   int                 send_first, send_last, num_request_alloc; /* ranks of the processor to which we will send */
   int                 iproc, num_send_mpi, mpiret;
-  size_t              my_buffer_bytes;
+  size_t              my_buffer_bytes = -1;
   char              **send_buffer = NULL, *my_buffer = NULL;
 
   int                 fs, ls, fr, lr;

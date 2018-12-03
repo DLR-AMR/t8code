@@ -763,6 +763,10 @@ t8_advect_compute_element_data (t8_advect_problem_t * problem,
  * If elements are coarsened, the parent gets the average phi value of the children.
  */
 /* outgoing are the old elements and incoming the new ones */
+/* TODO: If coarsening, weight the phi vaules by volume of the children:
+ *       phi_E = sum (phi_Ei *vol(E_i)/vol(E))
+ *       Similar formula for refining?
+ */
 static void
 t8_advect_replace (t8_forest_t forest_old,
                    t8_forest_t forest_new,
@@ -1244,7 +1248,7 @@ static void
 t8_advect_problem_init_elements (t8_advect_problem_t * problem)
 {
   t8_locidx_t         itree, ielement, idata;
-  t8_locidx_t         num_trees, num_elems_in_tree, num_local_elems;
+  t8_locidx_t         num_trees, num_elems_in_tree;
   t8_element_t       *element, **neighbors;
   int                 iface, ineigh;
   t8_advect_element_data_t *elem_data;
@@ -1257,7 +1261,6 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   double              min_vol = 1e9;
 
   num_trees = t8_forest_get_num_local_trees (problem->forest);
-  num_local_elems = t8_forest_get_num_element (problem->forest);
   /* maximum possible delta_t value */
   min_delta_t = problem->T - problem->t;
   for (itree = 0, idata = 0; itree < num_trees; itree++) {
@@ -1426,6 +1429,7 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   problem->vtk_count++;
 }
 
+#ifdef T8_ENABLE_DEBUG
 static void
 t8_advect_print_phi (t8_advect_problem_t * problem)
 {
@@ -1447,6 +1451,7 @@ t8_advect_print_phi (t8_advect_problem_t * problem)
   /* reset buffer */
   buffer[0] = '\0';
 }
+#endif
 
 static void
 t8_advect_problem_destroy (t8_advect_problem_t ** pproblem)
@@ -1504,7 +1509,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   double              vtk_time = 0;
   double              start_volume, end_volume;
   int                 hanging, neigh_is_ghost;
-  t8_locidx_t         neigh_index;
+  t8_locidx_t         neigh_index = -1;
   double              phi_plus, phi_minus;
 
   /* Initialize problem */

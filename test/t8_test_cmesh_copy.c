@@ -48,7 +48,8 @@ test_cmesh_copy (sc_MPI_Comm comm)
     t8_global_productionf ("Testing eclass %s.\n", t8_eclass_to_string[eci]);
 
     /* Create new hypercube cmesh */
-    cmesh_original = t8_cmesh_new_hypercube (eci, comm, 0, 0, 0);
+    cmesh_original =
+      t8_cmesh_new_hypercube ((t8_eclass_t) eci, comm, 0, 0, 0);
     test_cmesh_committed (cmesh_original);
     /* Set up the cmesh copy */
     t8_cmesh_init (&cmesh_copy);

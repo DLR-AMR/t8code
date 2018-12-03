@@ -86,7 +86,7 @@ t8_test_gao_check (t8_forest_t forest)
   t8_element_t       *ghost_element;
   t8_gloidx_t         gtreeid;
   t8_eclass_t         eclass;
-  int                 remote, next_remote, num_remotes, *remotes;
+  int                 remote = -1, next_remote = -1, num_remotes, *remotes;
   int                 pos = 0, is_owner, owner;
 
   num_ghost_trees = t8_forest_ghost_num_trees (forest);

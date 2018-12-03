@@ -1517,8 +1517,8 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
 {
   t8_eclass_t         neigh_class, eclass;
   t8_gloidx_t         gneigh_treeid;
-  t8_locidx_t         lneigh_treeid;
-  t8_locidx_t         lghost_treeid, *element_indices, element_index;
+  t8_locidx_t         lneigh_treeid = -1;
+  t8_locidx_t         lghost_treeid = -1, *element_indices, element_index;
   t8_eclass_scheme_c *ts, *neigh_scheme;
   t8_element_array_t *element_array;
   t8_element_t       *ancestor, **neighbor_leafs;
