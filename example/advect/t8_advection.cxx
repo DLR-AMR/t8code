@@ -1943,9 +1943,9 @@ main (int argc, char *argv[])
                          "performance!");
   sc_options_add_double(opt, 'X', "Xcoord", &ls_data.M[0],0.6,"The X-Coordinate of the middlepoint"
                            "of the sphere. Default is 0.6.");
-  sc_options_add_double(opt, 'Y', "Xcoord", &ls_data.M[1],0.6,"The Y-Coordinate of the middlepoint"
+  sc_options_add_double(opt, 'Y', "Ycoord", &ls_data.M[1],0.6,"The Y-Coordinate of the middlepoint"
                            "of the sphere. Default is 0.6.");
-  sc_options_add_double(opt, 'Z', "Xcoord", &ls_data.M[2],0.6,"The Z-Coordinate of the middlepoint"
+  sc_options_add_double(opt, 'Z', "Zcoord", &ls_data.M[2],0.6,"The Z-Coordinate of the middlepoint"
                            "of the sphere. Default is 0.6.");
   sc_options_add_double(opt, 'R', "Radius", &ls_data.radius, 0.25, "The radius of the Sphere."
                         "Default is 0.25.");
