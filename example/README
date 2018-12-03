@@ -1,0 +1,19 @@
+The programs here are a collection of examples on the usage of t8code.
+A brief description of the folders and programs:
+
+ basic  --  Programs generating and modifying a cube mesh.
+            Call './t8_basic_hcube -h' for usage details.
+ 
+ cmesh  --  Programs to read, write and partition a coarse (=input) mesh.
+
+ triangle -- Load a mesh from the TRIANGLE mesh generator
+ tetgen   -- Load a mesh from the TETGEN mesh generator
+ gmsh     -- Load a mesh from teh GMSH mesh generator
+ 
+ ghost    -- Rather involved testing programs for the ghost method.
+
+ advect   -- A finite volume advection solver. This solver either computes 
+             on a unit cube, or on a user provided gmsh mesh.
+             It works in 2D and 3D with all supported element types and
+             hybrid meshes.
+             Call './t8_advection -h' for usage details
