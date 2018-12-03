@@ -1340,8 +1340,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest,
      * boundary element. */
     /* Compute the face of elem_tree at which the face connection is. */
     tree_face = ts->t8_element_tree_face (elem, face);
-    /* Compute the local id of the tree in the cmesh (the same tree as ltreeid
-     * by maybe with a different id in cmesh) */
+    /* compute coarse tree id */
     lctree_id = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
     if (t8_cmesh_tree_face_is_boundary (cmesh, lctree_id, tree_face)) {
       /* This face is a domain boundary. We do not need to continue */

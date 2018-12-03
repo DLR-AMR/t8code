@@ -803,7 +803,6 @@ t8_default_scheme_quad_c::t8_element_new (int length, t8_element_t ** elem)
   t8_default_scheme_common_c::t8_element_new (length, elem);
 
   /* in debug mode, set sensible default values. */
-#ifdef T8_ENABLE_DEBUG
   {
     int                 i;
     for (i = 0; i < length; i++) {
@@ -811,7 +810,7 @@ t8_default_scheme_quad_c::t8_element_new (int length, t8_element_t ** elem)
       T8_QUAD_SET_TDIM ((p4est_quadrant_t *) elem[i], 2);
     }
   }
-#endif
+
 }
 
 void

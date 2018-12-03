@@ -594,19 +594,6 @@ t8_forest_commit (t8_forest_t forest)
   if (forest->mpisize > 1) {
     /* Construct a ghost layer, if desired */
     if (forest->do_ghost) {
-
-      if (forest->cmesh->num_trees_per_eclass[T8_ECLASS_PRISM] > 0) {
-        /* The forest has prism elements, we cannot create the ghost
-         * layer for unbalanced forests */
-        t8_global_productionf ("Warning: The mesh contains prisms and thus "
-                               "the ghost layer can only be created for "
-                               "balanced forests.\n"
-                               "If the forest is not balanced, the created "
-                               "ghost layer is invalid.\n"
-                               "The ghost algorithm was set to balanced_only.\n");
-        forest->ghost_algorithm = 1;
-        T8_ASSERT (t8_forest_is_balanced (forest));
-      }
       /* TODO: ghost type */
       switch (forest->ghost_algorithm) {
       case 1:
@@ -622,9 +609,8 @@ t8_forest_commit (t8_forest_t forest)
         SC_ABORT ("Invalid choice of ghost algorithm");
       }
     }
-  }
-
   forest->do_ghost = 0;
+  }
 }
 
 t8_locidx_t

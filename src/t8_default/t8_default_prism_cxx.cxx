@@ -152,6 +152,13 @@ t8_default_scheme_prism_c::t8_element_child (const t8_element_t * elem,
                    (t8_dprism_t *) child);
 }
 
+int
+t8_default_scheme_prism_c::t8_element_max_num_faces (const t8_element_t *
+                                                     elem)
+{
+  return T8_DPRISM_FACES;
+}
+
 void
 t8_default_scheme_prism_c::t8_element_children (const t8_element_t * elem,
                                                 int length,
@@ -159,6 +166,13 @@ t8_default_scheme_prism_c::t8_element_children (const t8_element_t * elem,
 {
   t8_dprism_childrenpv ((const t8_dprism_t *) elem, length,
                         (t8_dprism_t **) c);
+}
+
+int
+t8_default_scheme_prism_c::t8_element_ancestor_id (const t8_element_t * elem,
+                                                   int level)
+{
+  return t8_dprism_ancestor_id ((t8_dprism_t *) elem, level);
 }
 
 void
@@ -185,6 +199,14 @@ t8_default_scheme_prism_c::t8_element_face_child_face (const t8_element_t *
 }
 
 int
+t8_default_scheme_prism_c::t8_element_face_parent_face (const t8_element_t *
+                                                        elem, int face)
+{
+  T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
+  return t8_dprism_face_parent_face ((const t8_dprism_t *) elem, face);
+}
+
+int
 t8_default_scheme_prism_c::t8_element_tree_face (const t8_element_t * elem,
                                                  int face)
 {
@@ -200,13 +222,27 @@ t8_default_scheme_prism_c::t8_element_extrude_face (const t8_element_t * face,
 {
   t8_dprism_extrude_face (face, elem, root_face);
   /* TODO: Fix return value */
-  return -1;
+  return t8_dprism_root_face_to_face ((const t8_dprism_t *) elem, root_face);
 }
 
 int
 t8_default_scheme_prism_c::t8_element_is_family (t8_element_t ** fam)
 {
   return t8_dprism_is_familypv ((t8_dprism_t **) fam);
+}
+
+void
+t8_default_scheme_prism_c::t8_element_nca (const t8_element_t * elem1,
+                                           const t8_element_t * elem2,
+                                           t8_element_t * nca)
+{
+  const t8_default_prism_t *p1 = (const t8_default_prism_t *) elem1;
+  const t8_default_prism_t *p2 = (const t8_default_prism_t *) elem2;
+  t8_default_prism_t *c = (t8_default_prism_t *) nca;
+
+  T8_ASSERT (t8_element_is_valid (elem1));
+  T8_ASSERT (t8_element_is_valid (elem2));
+  t8_dprism_nearest_common_ancestor (p1, p2, c);
 }
 
 void
@@ -217,6 +253,50 @@ t8_default_scheme_prism_c::t8_element_boundary_face (const t8_element_t *
                                                      * boundary_scheme)
 {
   t8_dprism_boundary_face ((const t8_dprism_t *) elem, face, boundary);
+}
+
+const int           t8_dprism_face_corner[5][4] = {
+  {1, 2, 4, 5},
+  {0, 2, 3, 5},
+  {0, 1, 3, 4},
+  {0, 1, 2, -1},                /*this face is a triangle -> -1 for the 4th corner */
+  {3, 4, 5, -1}                 /*this face is a triangle -> -1 for the 4th corner */
+};
+
+void
+t8_default_scheme_prism_c::t8_element_first_descendant_face (const
+                                                             t8_element_t *
+                                                             elem, int face,
+                                                             t8_element_t *
+                                                             first_desc,
+                                                             int level)
+{
+  int                 corner;
+  T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
+  T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
+  corner = t8_dprism_face_corner[face][0];
+  t8_dprism_corner_descendant ((const t8_dprism_t *) elem,
+                               (t8_dprism_t *) first_desc, corner, level);
+}
+
+void
+t8_default_scheme_prism_c::t8_element_last_descendant_face (const t8_element_t
+                                                            * elem, int face,
+                                                            t8_element_t *
+                                                            first_desc,
+                                                            int level)
+{
+  int                 corner;
+  T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
+  T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
+  if (face < 3) {
+    corner = t8_dprism_face_corner[face][3];
+  }
+  else {
+    corner = t8_dprism_face_corner[face][2];
+  }
+  t8_dprism_corner_descendant ((const t8_dprism_t *) elem,
+                               (t8_dprism_t *) first_desc, corner, level);
 }
 
 int
@@ -270,6 +350,7 @@ t8_default_scheme_prism_c::t8_element_first_descendant (const t8_element_t *
                                                         t8_element_t * desc,
                                                         int level)
 {
+  T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
   t8_dprism_first_descendant ((const t8_default_prism_t *) elem,
                               (t8_default_prism_t *) desc, level);
 }
@@ -280,6 +361,7 @@ t8_default_scheme_prism_c::t8_element_last_descendant (const t8_element_t *
                                                        t8_element_t * desc,
                                                        int level)
 {
+  T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
   t8_dprism_last_descendant ((const t8_default_prism_t *) elem,
                              (t8_default_prism_t *) desc, level);
 }

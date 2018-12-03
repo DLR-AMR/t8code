@@ -44,6 +44,7 @@ t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
                        t8_locidx_t which_tree, t8_locidx_t lelement_id,
                        t8_eclass_scheme_c * ts, int num_elements,
                        t8_element_t * elements[])
+
 {
   int                 level;
   int                 maxlevel, child_id;
@@ -140,7 +141,7 @@ t8_test_forest_commit ()
   t8_forest_t         forest, forest_ada_bal_part, forest_abp_3part;
   t8_scheme_cxx_t    *scheme;
 
-  for (eclass = T8_ECLASS_QUAD; eclass < T8_ECLASS_PRISM; eclass++) {
+  for (eclass = T8_ECLASS_LINE; eclass < T8_ECLASS_PYRAMID; eclass++) {
     /* TODO: Activate the other eclass as soon as they support ghosts */
     for (ctype = 0; ctype < 3; ctype++) {
       scheme = t8_scheme_new_default_cxx ();

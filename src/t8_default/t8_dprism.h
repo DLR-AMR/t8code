@@ -37,6 +37,9 @@
 /** The number of faces of a prism. */
 #define T8_DPRISM_FACES 5
 
+/** The number of corners of a triangle */
+#define T8_DPRISM_CORNERS 6
+
 /** The maximum refinement level allowed for a prism. */
 #define T8_DPRISM_MAXLEVEL 21
 
@@ -63,7 +66,7 @@ typedef int32_t     t8_dprism_coord_t;
 typedef struct t8_dprism
 {
   t8_dline_t          line;     /*z coordinate + level */
-  t8_dtri_t           tri;      /*x,y coordinate + level */
+  t8_dtri_t           tri;      /*x,y coordinate + level + type*/
 }
 t8_dprism_t;
 

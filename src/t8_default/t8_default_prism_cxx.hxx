@@ -134,11 +134,7 @@ public:
    * \param [in] elem The element.
    * \return          The maximum number of faces of \a elem and its descendants.
    */
-  virtual int         t8_element_max_num_faces (const t8_element_t * elem)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+  virtual int         t8_element_max_num_faces (const t8_element_t * elem);
 
 /** Construct all children of a given element. */
   virtual void        t8_element_children (const t8_element_t * elem,
@@ -146,11 +142,7 @@ public:
 
   /** Compute the ancestor id of an element */
   virtual int         t8_element_ancestor_id (const t8_element_t * elem,
-                                              int level)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+                                              int level);
 
 /** Given a face of an element and a child number of a child of that face,
   * return the face number of the child of the element that matches the child
@@ -162,11 +154,7 @@ public:
    * of the parent of the element that matches the element's face. Or return -1 if
    * no face of the parent matches the face. */
   virtual int         t8_element_face_parent_face (const t8_element_t * elem,
-                                                   int face)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+                                                   int face);
 
 /** Given an element and a face of this element. If the face lies on the
    *  tree boundary, return the face number of the tree face.
@@ -201,10 +189,7 @@ public:
 /** Construct the nearest common ancestor of two elements in the same tree. */
   virtual void        t8_element_nca (const t8_element_t * elem1,
                                       const t8_element_t * elem2,
-                                      t8_element_t * nca)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                      t8_element_t * nca);
 
   /** Construct the boundary element at a specific face. */
   virtual void        t8_element_boundary_face (const t8_element_t * elem,
@@ -217,19 +202,14 @@ public:
   virtual void        t8_element_first_descendant_face (const t8_element_t *
                                                         elem, int face,
                                                         t8_element_t *
-                                                        first_desc, int level)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                        first_desc,
+                                                        int level);
 
   /** Construct the last descendant of an element that touches a given face. */
   virtual void        t8_element_last_descendant_face (const t8_element_t *
                                                        elem, int face,
                                                        t8_element_t *
-                                                       last_desc, int level)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                       last_desc, int level);
 
 /** Construct all codimension-one boundary elements of a given element. */
   virtual void        t8_element_boundary (const t8_element_t * elem,

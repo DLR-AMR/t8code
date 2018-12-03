@@ -51,7 +51,7 @@ t8_eclass_face_orientation[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES] = {
   {0, 0, -1, -1, -1, -1},       /* line */
   {0, 0, 0, 0, -1, -1},         /* quad */
   {0, 0, 0, -1, -1, -1},        /* triangle */
-  {0, 1, 0, 1, 0, 1},           /* hex */
+  {0, 1, 1, 0, 0, 1},           /* hex */
   {0, 1, 0, 1, -1, -1},         /* tet */
   {1, 0, 1, 0, 1, -1},          /* prism */
   {0, 1, 0, 1, 0, -1}           /* pyramid */

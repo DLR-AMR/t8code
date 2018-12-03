@@ -808,6 +808,14 @@ t8_cmesh_t          t8_cmesh_new_tet_orientation_test (sc_MPI_Comm comm);
  */
 t8_cmesh_t          t8_cmesh_new_hybrid_gate (sc_MPI_Comm comm);
 
+/** Construct a hybrid cmesh with 2 tets, 2 prism, 1 hex and all are deformed.
+ * This cmesh is used for testing and debugging.
+ * \param [in] comm        The MPI communicator used to commit the cmesh.
+ * \return                 A committed and replicated hybrid cmesh of 5 trees.
+ */
+t8_cmesh_t
+t8_cmesh_new_hybrid_gate_deformed (sc_MPI_Comm comm);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_H */

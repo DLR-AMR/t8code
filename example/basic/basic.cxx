@@ -100,9 +100,9 @@ t8_basic_refine_test (t8_eclass_t eclass)
   else if (eclass == T8_ECLASS_COUNT) {
     /* TODO: This is just temporary. Replace ECLASS_COUNT with a
      * sensible parameter. */
-    cmesh = t8_cmesh_new_hybrid_gate (sc_MPI_COMM_WORLD);
+    cmesh = t8_cmesh_new_hybrid_gate_deformed (sc_MPI_COMM_WORLD);
     eclass = T8_ECLASS_HEX;
-    t8_cmesh_save (cmesh, "hybrid_gate");
+    t8_cmesh_save (cmesh, "hybrid_gate_deformed");
   }
   else {
     cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);

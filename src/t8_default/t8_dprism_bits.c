@@ -66,7 +66,7 @@ t8_dprism_compare (const t8_dprism_t * p1, const t8_dprism_t * p2)
      * is considered smaller */
     return p1->line.level - p2->line.level;
   }
-  /* return negativ if id1 < id2, zero if id1 = id2, positive if id1 >
+  /* return negative if id1 < id2, zero if id1 = id2, positive if id1 >
      id2 */
   return id1 < id2 ? -1 : id1 != id2;
 }
@@ -165,6 +165,31 @@ t8_dprism_is_familypv (t8_dprism_t ** fam)
   T8_FREE (tri_fam);
   T8_FREE (line_fam);
   return 1;
+}
+
+void
+t8_dprism_nearest_common_ancestor (const t8_dprism_t * p1,
+                                   const t8_dprism_t * p2, t8_dprism_t * r)
+{
+  int                 level;
+  t8_dtri_nearest_common_ancestor (&p1->tri, &p2->tri, &r->tri);
+  t8_dline_nearest_common_ancestor (&p1->line, &p2->line, &r->line);
+
+  /* if the line and the triangle don't have the same level,
+   * we compute the ancestor of the one with larger level at the
+   * minumum level of the two. */
+  if (r->tri.level != r->line.level) {
+    level = SC_MIN (r->tri.level, r->line.level);
+    if (r->tri.level > r->line.level) {
+      /* triangle has larger level, compute its ancestor */
+      t8_dtri_ancestor (&r->tri, level, &r->tri);
+    }
+    else {
+      /* line has larger level, compute its ancestor */
+      t8_dline_ancestor (&r->line, level, &r->line);
+    }
+  }
+  T8_ASSERT (r->tri.level == r->line.level);
 }
 
 void
@@ -301,6 +326,13 @@ t8_dprism_childrenpv (const t8_dprism_t * p, int length, t8_dprism_t * c[])
   }
 }
 
+int
+t8_dprism_ancestor_id (t8_dprism_t * p, int level)
+{
+  return 4 * t8_dline_ancestor_id (&p->line, level) +
+    t8_dtri_ancestor_id (&p->tri, level);
+}
+
 const int           children_at_face[2][12] = {
   {1, 3, 5, 7,
    0, 3, 4, 7,
@@ -341,12 +373,35 @@ t8_dprism_face_child_face (const t8_dprism_t * elem, int face, int face_child)
 }
 
 int
+t8_dprism_face_parent_face (const t8_dprism_t * prism, int face)
+{
+  T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
+  if (face < 3 && t8_dtri_face_parent_face (&prism->tri, face) != -1) {
+    return face;
+  }
+  /*prism_face 3 = line_face 0, prism_face 4 = line_face 1 */
+  if (face >= 3 && t8_dline_face_parent_face (&prism->line, face - 3) != -1) {
+    return face;
+  }
+  else {
+    return -1;
+  }
+}
+
+int
 t8_dprism_tree_face (const t8_dprism_t * p, int face)
 {
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   /*For prisms, the face number coincides with the number of the root
      tree face */
   return face;
+}
+
+int
+t8_dprism_root_face_to_face (const t8_dprism_t * p, int root_face)
+{
+  T8_ASSERT (0 <= root_face && root_face < T8_DPRISM_FACES);
+  return root_face;
 }
 
 void
@@ -481,6 +536,21 @@ t8_dprism_last_descendant (const t8_dprism_t * p, t8_dprism_t * s, int level)
 }
 
 void
+t8_dprism_corner_descendant (const t8_dprism_t * p, t8_dprism_t * s,
+                             int corner, int level)
+{
+  T8_ASSERT (p->tri.level <= level && level <= T8_DPRISM_MAXLEVEL);
+  T8_ASSERT (0 <= corner && corner < T8_DPRISM_CORNERS);
+  t8_dtri_corner_descendant (&p->tri, &s->tri, corner % 3, level);
+  if (corner < 3) {
+    t8_dline_first_descendant (&p->line, &s->line, level);
+  }
+  else {
+    t8_dline_last_descendant (&p->line, &s->line, level);
+  }
+}
+
+void
 t8_dprism_vertex_coords (const t8_dprism_t * p, int vertex, int coords[3])
 {
   T8_ASSERT (vertex >= 0 && vertex < 6);
@@ -512,6 +582,7 @@ t8_dprism_linear_id (const t8_dprism_t * p, int level)
   if (level == 0) {
     return 0;
   }
+
   line_level = sc_intpow64u (T8_DLINE_CHILDREN, level - 1);
   /* *INDENT-OFF* */
   prism_shift =

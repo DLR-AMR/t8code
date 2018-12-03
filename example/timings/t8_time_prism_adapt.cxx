@@ -84,9 +84,9 @@ t8_basic_adapt_refine_tet (t8_forest_t forest, t8_forest_t forest_from,
 
 static void
 t8_time_refine (int start_level, int end_level, int create_forest, int cube,
-                int adapt, t8_eclass_t eclass)
+                int adapt, int do_balance, t8_eclass_t eclass)
 {
-  t8_forest_t         forest, forest_adapt;
+  t8_forest_t         forest, forest_adapt, forest_partition;
   sc_flopinfo_t       fi, snapshot;
   sc_statinfo_t       stats[1];
   char                vtuname[BUFSIZ];
@@ -132,15 +132,24 @@ t8_time_refine (int start_level, int end_level, int create_forest, int cube,
       t8_forest_set_adapt (forest_adapt, forest,
                            t8_basic_adapt_refine_tet, 1);
     }
-    t8_forest_commit (forest_adapt);
-    t8_forest_print_profile (forest_adapt);
+    forest_partition = forest_adapt;
+    /* partition the adapted forest */
+    t8_forest_set_partition (forest_partition, NULL, 0);
+    /* enable profiling for the partitioned forest */
+    t8_forest_set_profiling (forest_partition, 1);
+    /*if desired do balance*/
+    if (do_balance) {
+      t8_forest_set_balance (forest_partition, NULL, 0);
+    }
+    t8_forest_commit (forest_partition);
+    t8_forest_print_profile (forest_partition);
     if (cube == 1) {
       snprintf (vtuname, BUFSIZ, "forest_hypercube_adapt_%s",
                 t8_eclass_to_string[eclass]);
-      t8_forest_write_vtk (forest_adapt, vtuname);
+      t8_forest_write_vtk (forest_partition, vtuname);
       t8_debugf ("Output to %s\n", vtuname);
     }
-    t8_forest_unref (&forest_adapt);
+    t8_forest_unref (&forest_partition);
   }
   else {
     t8_forest_print_profile (forest);
@@ -159,7 +168,7 @@ main (int argc, char **argv)
   char                help[BUFSIZ];
   int                 create_forest;
   int                 start_level = 0, end_level = 1, cube = 0, adapt =
-    0, eclass_int;
+    0, do_balance = 0, eclass_int;
   int                 parsed, helpme;
 
   /* brief help message */
@@ -191,6 +200,8 @@ main (int argc, char **argv)
                       "Final refine level: greater or equal to initial refine level");
   sc_options_add_int (opt, 'a', "adapt", &adapt, 0,
                       "adapt = 1 -> adaptive refining is used");
+  sc_options_add_switch (opt, 'b', "balance", &do_balance,
+                         "Establish a 2:1 balance in the forest.");
   sc_options_add_int (opt, 'c', "cube", &cube, 0,
                       "cube = 1 -> use the hypercube mesh and visual output.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, 6,
@@ -217,7 +228,7 @@ main (int argc, char **argv)
   else if (parsed >= 0 && 0 <= start_level && start_level <= end_level
            && (eclass_int == 5 || eclass_int == 6)) {
     create_forest = 1;
-    t8_time_refine (start_level, end_level, create_forest, cube, adapt,
+    t8_time_refine (start_level, end_level, create_forest, cube, adapt, do_balance,
                     (t8_eclass_t) eclass_int);
   }
   else {
