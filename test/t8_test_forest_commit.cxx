@@ -141,7 +141,7 @@ t8_test_forest_commit ()
   t8_forest_t         forest, forest_ada_bal_part, forest_abp_3part;
   t8_scheme_cxx_t    *scheme;
 
-  for (eclass = T8_ECLASS_LINE; eclass < T8_ECLASS_PRISM; eclass++) {
+  for (eclass = T8_ECLASS_VERTEX; eclass < T8_ECLASS_PYRAMID; eclass++) {
     /* TODO: Activate the other eclass as soon as they support ghosts */
     for (ctype = 0; ctype < 3; ctype++) {
       scheme = t8_scheme_new_default_cxx ();
