@@ -46,7 +46,7 @@
 
 typedef struct t8_dvertex
 {
-  int8_t              level;
+  uint8_t             level;
 }
 t8_dvertex_t;
 
