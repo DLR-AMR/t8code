@@ -37,7 +37,7 @@ int
 t8_default_scheme_vertex_c::t8_element_level (const t8_element_t * elem)
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  return t8_dvertex_get_level ((t8_dvertex_t *) elem);
+  return t8_dvertex_get_level ((const t8_dvertex_t *) elem);
 }
 
 /* *INDENT-OFF* */
@@ -162,7 +162,7 @@ int
 t8_default_scheme_vertex_c::t8_element_ancestor_id (const t8_element_t * elem,
                                                     int level)
 {
-  return t8_dvertex_ancestor_id ((t8_dvertex_t *) elem, level);
+  return t8_dvertex_ancestor_id ((const t8_dvertex_t *) elem, level);
 }
 
 int
@@ -237,7 +237,7 @@ t8_linearidx_t
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= T8_DVERTEX_MAXLEVEL);
 
-  return t8_dvertex_linear_id ((t8_dvertex_t *) elem, level);
+  return t8_dvertex_linear_id ((const t8_dvertex_t *) elem, level);
 }
 
 void
@@ -249,7 +249,7 @@ t8_default_scheme_vertex_c::t8_element_first_descendant (const t8_element_t *
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
   T8_ASSERT (0 <= level && level <= T8_DVERTEX_MAXLEVEL);
-  t8_dvertex_first_descendant ((t8_dvertex_t *) elem, (t8_dvertex_t *) desc,
+  t8_dvertex_first_descendant ((const t8_dvertex_t *) elem, (t8_dvertex_t *) desc,
                                T8_DVERTEX_MAXLEVEL);
 }
 
@@ -262,7 +262,7 @@ t8_default_scheme_vertex_c::t8_element_last_descendant (const t8_element_t *
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
   T8_ASSERT (0 <= level && level <= T8_DVERTEX_MAXLEVEL);
-  t8_dvertex_last_descendant ((t8_dvertex_t *) elem, (t8_dvertex_t *) desc,
+  t8_dvertex_last_descendant ((const t8_dvertex_t *) elem, (t8_dvertex_t *) desc,
                               level);
 }
 
