@@ -402,7 +402,7 @@ t8_default_scheme_prism_c::t8_default_scheme_prism_c (void)
 {
   eclass = T8_ECLASS_PRISM;
   element_size = sizeof (t8_default_prism_t);
-  ts_context = sc_mempool_new (sizeof (t8_default_prism_t));
+  ts_context = sc_mempool_new (element_size);
 }
 
 t8_default_scheme_prism_c::~t8_default_scheme_prism_c ()

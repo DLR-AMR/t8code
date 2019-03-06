@@ -606,7 +606,7 @@ t8_default_scheme_tri_c::t8_default_scheme_tri_c (void)
 {
   eclass = T8_ECLASS_TRIANGLE;
   element_size = sizeof (t8_dtri_t);
-  ts_context = sc_mempool_new (sizeof (element_size));
+  ts_context = sc_mempool_new (element_size);
 }
 
 /* Destructor */

@@ -342,7 +342,7 @@ t8_default_scheme_vertex_c::t8_default_scheme_vertex_c (void)
 {
   eclass = T8_ECLASS_VERTEX;
   element_size = sizeof (t8_dvertex_t);
-  ts_context = sc_mempool_new (sizeof (element_size));
+  ts_context = sc_mempool_new (element_size);
 }
 
  /* Destructor */

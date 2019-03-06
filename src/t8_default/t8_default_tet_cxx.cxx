@@ -583,7 +583,7 @@ t8_default_scheme_tet_c::t8_default_scheme_tet_c (void)
 {
   eclass = T8_ECLASS_TET;
   element_size = sizeof (t8_dtet_t);
-  ts_context = sc_mempool_new (sizeof (element_size));
+  ts_context = sc_mempool_new (element_size);
 }
 
  /* Destructor */

@@ -482,7 +482,7 @@ t8_default_scheme_line_c::t8_default_scheme_line_c (void)
 {
   eclass = T8_ECLASS_LINE;
   element_size = sizeof (t8_default_line_t);
-  ts_context = sc_mempool_new (sizeof (t8_default_line_t));
+  ts_context = sc_mempool_new (element_size);
 }
 
 t8_default_scheme_line_c::~t8_default_scheme_line_c ()
