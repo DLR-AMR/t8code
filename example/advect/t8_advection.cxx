@@ -67,6 +67,7 @@ typedef enum
   ADVECT_NUM_STATS              /* The number of statistics that we measure */
 } advect_stats_t;
 
+/* Names of statistics that we measure */
 const char         *advect_stat_names[ADVECT_NUM_STATS] = {
   "adapt",
   "partition",
@@ -93,6 +94,11 @@ const char         *advect_stat_names[ADVECT_NUM_STATS] = {
   "volume_loss_[%]"
 };
 
+/** The description of the problem configuration.
+ *  We store all necessary parameters, such as the initial level-set function, the flow function,
+ *  data needed for adaptation etc.
+ *  We also store the current forest and element data here.
+ */
 typedef struct
 {
   t8_flow_function_3d_fn u; /**< Fluid field */
@@ -129,6 +135,7 @@ typedef struct
                                      per element, in order to simulate more computation load */
 } t8_advect_problem_t;
 
+/** The per element data */
 typedef struct
 {
   double              midpoint[3]; /**< coordinates of element midpoint in R^3 */
@@ -241,8 +248,8 @@ t8_advect_gradient_phi (t8_advect_problem_t * problem,
 }
 #endif
 
-/* Adapt the forest. We refine if the gradient is larger than a given
- * maximum and we coarsen if the gradient is smaller. */
+/* Adapt the forest. We refine if the level-set function is close to zero
+ * and coarsen if it is larger than a given threshhold. */
 static int
 t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
                  t8_locidx_t ltree_id, t8_locidx_t lelement_id,
@@ -302,6 +309,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   return 0;
 }
 
+/* Compute the total volume of the elements with negative phi value */
 static double
 t8_advect_level_set_volume (const t8_advect_problem_t * problem)
 {
@@ -459,6 +467,7 @@ t8_advect_flux_upwind_1d (const t8_advect_problem_t * problem,
   return u_at_x_j_half[0] * phi;
 }
 
+/* Compute the flux across a given face between two elements */
 /* face is the face number as seen from el_data_plus */
 /* This works also if element_plus hangs on element_minus.
  * It does not work if it hangs the other way around. */
