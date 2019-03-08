@@ -168,7 +168,15 @@ t8_test_ghost_hypercube (t8_eclass_t eclass, int level, sc_MPI_Comm comm,
                          int refine_p8)
 {
   t8_cmesh_t          cmesh;
-  cmesh = t8_cmesh_new_hypercube (eclass, comm, 0, 0, 0);
+
+  if (eclass < T8_ECLASS_COUNT) {
+    // Build a hypercube out of the given eclass
+    cmesh = t8_cmesh_new_hypercube (eclass, comm, 0, 0, 0);
+  }
+  else if (eclass == T8_ECLASS_COUNT) {
+    // Build a 3D hybrid hypercube with tets, hexes and prisms
+    cmesh = t8_cmesh_new_hypercube_hybrid (3, comm, 0, 0);
+  }
 
   if (eclass != T8_ECLASS_VERTEX && eclass != T8_ECLASS_PYRAMID) {
     t8_test_ghost_refine_and_partition (cmesh, level, comm, 1, ghost_version,
@@ -292,7 +300,7 @@ main (int argc, char **argv)
   if (parsed < 0 || parsed != argc
       || x_dim < 0 || y_dim < 0
       || z_dim < 0 || dim < 2 || dim > 3
-      || eclass_int < T8_ECLASS_VERTEX || eclass_int >= T8_ECLASS_COUNT
+      || eclass_int < T8_ECLASS_VERTEX || eclass_int > T8_ECLASS_COUNT
       || ghost_version < 1 || ghost_version > 3 || (ghost_version == 1
                                                     && refine_forest >= 2)) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
