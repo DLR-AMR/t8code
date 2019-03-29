@@ -29,6 +29,13 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
+#include <example/common/t8_example_common.h>
+
+typedef enum {
+    REFINE_THIRD = 0, /* Refine every third element */
+    REFINE_P8,    /* Refine every 0-th, 3rd, 5-th, and 6-th child */
+    REFINE_SPHERE /* Refine along a sphere */
+} refine_method_t;
 
 /* Refine every 0-th, 3rd, 5-th and 6-th child.
  * This function comes from the timings2.c example of p4est.
@@ -65,12 +72,53 @@ t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
   return 0;
 }
 
+/* Prepare a forest for level set controlled refinement around a sphere */
 static void
-t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, int level,
-                                    sc_MPI_Comm comm, int partition_cmesh,
-                                    int ghost_version,
-                                    int refine_forest, int no_vtk,
-                                    int refine_p8)
+t8_test_ghost_set_levelset_data (t8_forest_t forest_adapt, const int min_level, const int max_level,
+                                 const double midpoint[3], const double radius, const double band_width)
+{
+    /* Build the struct containing all information about the levelset refinement */
+    t8_example_level_set_struct_t *levelSetData;
+    t8_levelset_sphere_data_t *sphere_data;
+    /* Allocate memory */
+    levelSetData = T8_ALLOC(t8_example_level_set_struct_t, 1);
+    sphere_data = T8_ALLOC(t8_levelset_sphere_data_t, 1);
+
+    /* Set the midpount of the sphere */
+    sphere_data->M[0] = midpoint[0];
+    sphere_data->M[1] = midpoint[1];
+    sphere_data->M[2] = midpoint[2];
+    /* Set the radius */
+    sphere_data->radius = radius;
+
+    /* Set levelSetData members */
+    levelSetData->L = t8_levelset_sphere;
+    levelSetData->band_width = band_width;
+    levelSetData->max_level = max_level;
+    levelSetData->min_level = min_level;
+    levelSetData->t = 0;
+    levelSetData->udata = sphere_data;
+    /* Attach levelSetData to forest */
+    t8_forest_set_user_data(forest_adapt, levelSetData);
+}
+
+/* Clean up the data allocated in t8_test_ghost_set_levelset_data
+ * for level-set refinement */
+static void
+t8_test_ghost_clean_levelset_data(t8_forest_t forest)
+{
+    t8_example_level_set_struct_t *data = (t8_example_level_set_struct_t *)
+            t8_forest_get_user_data(forest);
+    T8_FREE (data->udata);
+    T8_FREE (data);
+}
+
+static void
+t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, const int level,
+                                    sc_MPI_Comm comm, const int partition_cmesh,
+                                    const int ghost_version,
+                                    const int max_level, const int no_vtk,
+                                    const refine_method_t refine_method)
 {
   t8_forest_t         forest, forest_ghost;
   t8_cmesh_t          cmesh_partition;
@@ -99,23 +147,54 @@ t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, int level,
 
   /* adapt (if desired), partition and create ghosts for the forest */
   t8_forest_init (&forest_ghost);
-  if (refine_forest) {
+  if (max_level > level) {
     int                 r;
 
-    /* Use p8est adapt if specified, otherwise basic adapt */
-    adapt_fn = refine_p8 ? t8_refine_p8est : t8_basic_adapt;
-    /* Refine the forest if desired */
-    for (r = 0; r < refine_forest; r++) {
+    /* Chose refinement function */
+    switch (refine_method) {
+      case REFINE_THIRD: adapt_fn = t8_basic_adapt; break;
+      case REFINE_P8: adapt_fn = t8_refine_p8est; break;
+      case REFINE_SPHERE: adapt_fn = t8_common_adapt_level_set; break;
+      default: SC_ABORT_NOT_REACHED (); /* Invalid value */
+    }
+
+    /* If the forest should be refined and refinement method is the levelset-sphere
+     * function, then we need to set the correct refinement data for the forest_ghost */
+    if (refine_method == REFINE_SPHERE) {
+      const double midpoint[3] = {0.4,0.4,0.4};
+      const double radius = 0.2;
+      const double band_width = 2;
+      /* If levelset refinement is used, we need to set the user data
+       * pointer of the forest apropriately */
+      t8_test_ghost_set_levelset_data(forest, level, max_level, midpoint, radius,
+                                      band_width);
+    }
+    /* Refine the forest */
+    for (r = level; r <= max_level; r++) {
+      if (refine_method == REFINE_SPHERE) {
+        /* Copy the user data to the forest that should be refined */
+        t8_forest_set_user_data(forest_ghost, t8_forest_get_user_data(forest));
+      }
       t8_forest_set_adapt (forest_ghost, forest, adapt_fn, 0);
       t8_forest_commit (forest_ghost);
       forest = forest_ghost;
       t8_forest_init (&forest_ghost);
     }
+
+    /* If we used a level-set function to refine, we need to clean-up our allocated data */
+    if (refine_method == REFINE_SPHERE) {
+      t8_test_ghost_clean_levelset_data(forest);
+    }
   }
+
+  /* Set the forest for partitioning */
   t8_forest_set_partition (forest_ghost, forest, 0);
+  /* Activate ghost creation */
   t8_forest_set_ghost_ext (forest_ghost, 1, T8_GHOST_FACES, ghost_version);
+  /* Activate timers */
   t8_forest_set_profiling (forest_ghost, 1);
 
+  /* partition the forest and create ghosts */
   t8_forest_commit (forest_ghost);
   if (!no_vtk) {
     t8_forest_write_vtk (forest_ghost, "test_ghost");
@@ -135,7 +214,7 @@ static void
 t8_test_ghost_brick (int dim, int x, int y, int z,
                      int periodic_x, int periodic_y, int periodic_z,
                      int level, sc_MPI_Comm comm, int ghost_version,
-                     int refine_forest, int no_vtk, int refine_p8)
+                     int max_level, int no_vtk, refine_method_t refine_method)
 {
   t8_cmesh_t          cmesh;
   p4est_connectivity_t *conn4;
@@ -155,7 +234,7 @@ t8_test_ghost_brick (int dim, int x, int y, int z,
   }
 
   t8_test_ghost_refine_and_partition (cmesh, level, comm, 1, ghost_version,
-                                      refine_forest, no_vtk, refine_p8);
+                                      max_level, no_vtk, refine_method);
 }
 
 /* Build a forest on a hypercube mesh
@@ -164,8 +243,8 @@ t8_test_ghost_brick (int dim, int x, int y, int z,
  * partition the forest, create ghost layer and print it. */
 static void
 t8_test_ghost_hypercube (t8_eclass_t eclass, int level, sc_MPI_Comm comm,
-                         int ghost_version, int refine_forest, int no_vtk,
-                         int refine_p8)
+                         int ghost_version, int max_level, int no_vtk,
+                         refine_method_t refine_method)
 {
   t8_cmesh_t          cmesh;
 
@@ -180,7 +259,7 @@ t8_test_ghost_hypercube (t8_eclass_t eclass, int level, sc_MPI_Comm comm,
 
   if (eclass != T8_ECLASS_VERTEX && eclass != T8_ECLASS_PYRAMID) {
     t8_test_ghost_refine_and_partition (cmesh, level, comm, 1, ghost_version,
-                                        refine_forest, no_vtk, refine_p8);
+                                        max_level, no_vtk, refine_method);
   }
   else {
     t8_cmesh_destroy (&cmesh);
@@ -194,13 +273,13 @@ t8_test_ghost_hypercube (t8_eclass_t eclass, int level, sc_MPI_Comm comm,
 static void
 t8_test_ghost_msh_file (const char *fileprefix, int level, int dim,
                         sc_MPI_Comm comm, int ghost_version,
-                        int refine_forest, int no_vtk, int refine_p8)
+                        int max_level, int no_vtk, refine_method_t refine_method)
 {
   t8_cmesh_t          cmesh;
 
   cmesh = t8_cmesh_from_msh_file (fileprefix, 0, comm, dim, 0);
   t8_test_ghost_refine_and_partition (cmesh, level, comm, 1, ghost_version,
-                                      refine_forest, no_vtk, refine_p8);
+                                      max_level, no_vtk, refine_method);
 }
 
 /* Build a forest on the tet_test cmesh that has all face-to-face combinations.
@@ -208,13 +287,13 @@ t8_test_ghost_msh_file (const char *fileprefix, int level, int dim,
  */
 static void
 t8_test_ghost_tet_test (int level, sc_MPI_Comm comm, int ghost_version,
-                        int refine_forest, int no_vtk, int refine_p8)
+                        int max_level, int no_vtk, refine_method_t refine_method)
 {
   t8_cmesh_t          cmesh;
 
   cmesh = t8_cmesh_new_tet_orientation_test (comm);
   t8_test_ghost_refine_and_partition (cmesh, level, comm, 1, ghost_version,
-                                      refine_forest, no_vtk, refine_p8);
+                                      max_level, no_vtk, refine_method);
 }
 
 int
@@ -223,7 +302,10 @@ main (int argc, char **argv)
   int                 mpiret, parsed, eclass_int, level, helpme;
   int                 x_dim, y_dim, z_dim, periodic;
   int                 test_tet;
-  int                 dim, no_vtk, refine_forest, ghost_version, refine_p8;
+  int                 dim, no_vtk, refine_levels, ghost_version;
+  int                 max_level;
+  int                 refine_method_int;
+  refine_method_t     refine_method;
   sc_options_t       *opt;
   const char         *prefix;
   char                usage[BUFSIZ];
@@ -235,16 +317,24 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_STATISTICS);
+  /*
+   * COMMAND LINE OPTION SETUP
+   */
   opt = sc_options_new (argv[0]);
+  /* Level -l */
   sc_options_add_int (opt, 'l', "level",
                       &level, 0, "The refinement level of the mesh.");
+  /* enable/disable vtk -o */
   sc_options_add_switch (opt, 'o', "no-vtk", &no_vtk, "disable vtk output");
+  /* input .msh file (prefix) -f */
   sc_options_add_string (opt, 'f',
                          "prefix", &prefix, "", "Prefix of a" " .msh file.");
+  /* dimension of .msh file (if -f is given) -d */
   sc_options_add_int (opt, 'd', "dim",
                       &dim, 2,
                       "If a .msh file "
                       "is read, the dimension must be specified.");
+  /* if given, create brick cmesh with x,y(,z) many quads/cubes. -x, -y, -z */
   sc_options_add_int (opt, 'x', "x-dim",
                       &x_dim, 0,
                       "Number of brick mesh cells in x direction.");
@@ -255,26 +345,33 @@ main (int argc, char **argv)
                       &z_dim, 0,
                       "Number of brick mesh cells in z direction."
                       " If specified, then the mesh is automatically 3d.");
+  /* If brick mesh is generated, define periodicity. -p */
   sc_options_add_int (opt, 'p',
                       "periodic",
                       &periodic, 0,
                       "Periodicity of brick mesh. A three (two) digit decimal"
                       " number zyx. If digit i is nonzero then the representative"
                       " coordinate direction of the brick mesh is periodic.");
+  /* Use a cmesh that tests all tet-to-tet face-connections */
   sc_options_add_switch (opt, 't',
                          "test-tet",
                          &test_tet,
                          "Use a cmesh that tests all tet face-to-face connections.");
+  /* Provide a refinement level for every third element, -r */
   sc_options_add_int (opt, 'r',
-                      "refine",
-                      &refine_forest, 0,
+                      "refine-level",
+                      &refine_levels, 0,
                       "Refine <INT> times every third element in the uniform forest before creating the ghost layer."
                       "Default ist 0 (no refinement).");
-  sc_options_add_switch (opt, 'R',
-                         "refine-alternative",
-                         &refine_p8,
-                         "Use a different refinement method, where the elments "
-                         "are refined according to their child-id.");
+  /* Change the refinement rule -R */
+  sc_options_add_int (opt, 'R',
+                         "refine-method",
+                         &refine_method_int, 0,
+                         "Chose the method of refinement.\n"
+                         "\t\t0 - Refine every third element.\n"
+                         "\t\t1 - Refine every 0-th, 3rd, 5-th, and 6-th element.\n"
+                         "\t\t2 - Refine along a spehre with midpoint (0.3, 0.3, 0.3) and radius 0.2.");
+  /* Change the version of ghost algorithm used -g */
   sc_options_add_int (opt, 'g',
                       "ghost-version",
                       &ghost_version, 3,
@@ -282,6 +379,7 @@ main (int argc, char **argv)
                       "\t\t1 - Iterative and only for balanced forests. (only if refine <= 1)\n"
                       "\t\t2 - Iterative, also for unbalanced forests.\n"
                       "\t\t3 - Top-down search, for unbalanced forests (default).");
+  /* Use a hypercube mesh -e */
   sc_options_add_int (opt, 'e',
                       "elements",
                       &eclass_int, 2,
@@ -290,44 +388,60 @@ main (int argc, char **argv)
                       " the type of elements to use.\n"
                       "\t\t0 - vertex\n\t\t1 - line\n\t\t2 - quad\n"
                       "\t\t3 - triangle\n\t\t4 - hexahedron\n"
-                      "\t\t5 - tetrahedron\n\t\t6 - prism\n\t\t7 - pyramid");
+                      "\t\t5 - tetrahedron\n\t\t6 - prism\n\t\t7 - pyramid\n"
+                      "\t\t8 - hex/tet/prism hybrid");
+  /* Print help -h */
   sc_options_add_switch (opt, 'h', "help",
                          &helpme, "Display a short help message.");
+  /*
+   * END OF COMMAND LINE OPTION SETUP
+   */
   /* parse command line options */
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
+  refine_method = (refine_method_t) refine_method_int;
   /* check for wrong usage of arguments */
   if (parsed < 0 || parsed != argc
       || x_dim < 0 || y_dim < 0
       || z_dim < 0 || dim < 2 || dim > 3
       || eclass_int < T8_ECLASS_VERTEX || eclass_int > T8_ECLASS_COUNT
+      || refine_method_int < 0 || refine_method_int > REFINE_SPHERE
       || ghost_version < 1 || ghost_version > 3 || (ghost_version == 1
-                                                    && refine_forest >= 2)) {
+                                                    && refine_levels >= 2)) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
   if (helpme) {
+    /* Print help string and then exit */
     t8_global_productionf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else {
+    max_level = level + refine_levels;
+    /* Setup coarse mesh and start computation */
     if (x_dim == 0 && !strcmp (prefix, "")
         && test_tet == 0) {
+      /* If neither of -x, -f, -t are given, we use a hypercube mesh */
       t8_global_productionf
         ("Testing ghost on a hypercube cmesh with %s "
-         "elements\n", t8_eclass_to_string[eclass_int]);
+         "elements\n", eclass_int < T8_ECLASS_COUNT ? t8_eclass_to_string[eclass_int]
+                                                      : "hybrid");
       t8_test_ghost_hypercube ((t8_eclass_t)
                                eclass_int, level, sc_MPI_COMM_WORLD,
-                               ghost_version, refine_forest, no_vtk,
-                               refine_p8);
+                               ghost_version, max_level, no_vtk,
+                               refine_method);
     }
     else if (x_dim > 0) {
+      /* If -x is given, we create a brick mesh (-y must be given as well) */
       int                 x_per, y_per, z_per;
       if (y_dim <= 0 || z_dim < 0) {
         t8_global_productionf ("\tERROR: Wrong usage\n");
         return 1;
       }
-      dim = z_dim != 0 ? 3 : 2;
+      dim = z_dim != 0 ? 3 : 2; /* Compute dimension */
+      /* Periodic is a three digit number,
+       * 000, 001, 010, 011, 100, 101, 110, 111
+       * the first digit defines the x periodicity, second y, third z */
       x_per = periodic % 10;
       y_per = periodic / 10 % 10;
       z_per = periodic / 100 % 10;
@@ -337,26 +451,28 @@ main (int argc, char **argv)
       t8_test_ghost_brick (dim, x_dim, y_dim,
                            z_dim, x_per,
                            y_per, z_per, level, sc_MPI_COMM_WORLD,
-                           ghost_version, refine_forest, no_vtk, refine_p8);
+                           ghost_version, max_level, no_vtk, refine_method);
     }
     else if (test_tet) {
+      /* Create the test tetrahedra cmesh */
       t8_global_productionf ("Testing ghost on tet-test cmesh.\n");
       t8_global_productionf ("vtk output disabled.\n");
       t8_test_ghost_tet_test (level, sc_MPI_COMM_WORLD, ghost_version,
-                              refine_forest, no_vtk, refine_p8);
+                              max_level, no_vtk, refine_method);
     }
     else {
-      /* A triangle or tetgen file collection must be given. */
+      /* A triangle or tetgen file collection must be given (-f) */
       T8_ASSERT (strcmp (prefix, ""));
       T8_ASSERT (dim == 2 || dim == 3);
       t8_global_productionf
         ("Testing ghost on cmesh read from %s.msh\n", prefix);
       t8_test_ghost_msh_file (prefix, level, dim, sc_MPI_COMM_WORLD,
-                              ghost_version, refine_forest, no_vtk,
-                              refine_p8);
+                              ghost_version, max_level, no_vtk,
+                              refine_method);
     }
   }
 
+  /* Clean-up */
   sc_options_destroy (opt);
   sc_finalize ();
   mpiret = sc_MPI_Finalize ();
