@@ -31,10 +31,11 @@
 #include <t8_cmesh_vtk.h>
 #include <example/common/t8_example_common.h>
 
-typedef enum {
-    REFINE_THIRD = 0, /* Refine every third element */
-    REFINE_P8,    /* Refine every 0-th, 3rd, 5-th, and 6-th child */
-    REFINE_SPHERE /* Refine along a sphere */
+typedef enum
+{
+  REFINE_THIRD = 0,             /* Refine every third element */
+  REFINE_P8,                    /* Refine every 0-th, 3rd, 5-th, and 6-th child */
+  REFINE_SPHERE                 /* Refine along a sphere */
 } refine_method_t;
 
 /* Refine every 0-th, 3rd, 5-th and 6-th child.
@@ -74,48 +75,51 @@ t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from,
 
 /* Prepare a forest for level set controlled refinement around a sphere */
 static void
-t8_test_ghost_set_levelset_data (t8_forest_t forest_adapt, const int min_level, const int max_level,
-                                 const double midpoint[3], const double radius, const double band_width)
+t8_test_ghost_set_levelset_data (t8_forest_t forest_adapt,
+                                 const int min_level, const int max_level,
+                                 const double midpoint[3],
+                                 const double radius, const double band_width)
 {
-    /* Build the struct containing all information about the levelset refinement */
-    t8_example_level_set_struct_t *levelSetData;
-    t8_levelset_sphere_data_t *sphere_data;
-    /* Allocate memory */
-    levelSetData = T8_ALLOC(t8_example_level_set_struct_t, 1);
-    sphere_data = T8_ALLOC(t8_levelset_sphere_data_t, 1);
+  /* Build the struct containing all information about the levelset refinement */
+  t8_example_level_set_struct_t *levelSetData;
+  t8_levelset_sphere_data_t *sphere_data;
+  /* Allocate memory */
+  levelSetData = T8_ALLOC (t8_example_level_set_struct_t, 1);
+  sphere_data = T8_ALLOC (t8_levelset_sphere_data_t, 1);
 
-    /* Set the midpount of the sphere */
-    sphere_data->M[0] = midpoint[0];
-    sphere_data->M[1] = midpoint[1];
-    sphere_data->M[2] = midpoint[2];
-    /* Set the radius */
-    sphere_data->radius = radius;
+  /* Set the midpount of the sphere */
+  sphere_data->M[0] = midpoint[0];
+  sphere_data->M[1] = midpoint[1];
+  sphere_data->M[2] = midpoint[2];
+  /* Set the radius */
+  sphere_data->radius = radius;
 
-    /* Set levelSetData members */
-    levelSetData->L = t8_levelset_sphere;
-    levelSetData->band_width = band_width;
-    levelSetData->max_level = max_level;
-    levelSetData->min_level = min_level;
-    levelSetData->t = 0;
-    levelSetData->udata = sphere_data;
-    /* Attach levelSetData to forest */
-    t8_forest_set_user_data(forest_adapt, levelSetData);
+  /* Set levelSetData members */
+  levelSetData->L = t8_levelset_sphere;
+  levelSetData->band_width = band_width;
+  levelSetData->max_level = max_level;
+  levelSetData->min_level = min_level;
+  levelSetData->t = 0;
+  levelSetData->udata = sphere_data;
+  /* Attach levelSetData to forest */
+  t8_forest_set_user_data (forest_adapt, levelSetData);
 }
 
 /* Clean up the data allocated in t8_test_ghost_set_levelset_data
  * for level-set refinement */
 static void
-t8_test_ghost_clean_levelset_data(t8_forest_t forest)
+t8_test_ghost_clean_levelset_data (t8_forest_t forest)
 {
-    t8_example_level_set_struct_t *data = (t8_example_level_set_struct_t *)
-            t8_forest_get_user_data(forest);
-    T8_FREE (data->udata);
-    T8_FREE (data);
+  t8_example_level_set_struct_t *data = (t8_example_level_set_struct_t *)
+    t8_forest_get_user_data (forest);
+  T8_FREE (data->udata);
+  T8_FREE (data);
 }
 
 static void
 t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, const int level,
-                                    sc_MPI_Comm comm, const int partition_cmesh,
+                                    sc_MPI_Comm comm,
+                                    const int partition_cmesh,
                                     const int ghost_version,
                                     const int max_level, const int no_vtk,
                                     const refine_method_t refine_method)
@@ -152,28 +156,36 @@ t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, const int level,
 
     /* Chose refinement function */
     switch (refine_method) {
-      case REFINE_THIRD: adapt_fn = t8_basic_adapt; break;
-      case REFINE_P8: adapt_fn = t8_refine_p8est; break;
-      case REFINE_SPHERE: adapt_fn = t8_common_adapt_level_set; break;
-      default: SC_ABORT_NOT_REACHED (); /* Invalid value */
+    case REFINE_THIRD:
+      adapt_fn = t8_basic_adapt;
+      break;
+    case REFINE_P8:
+      adapt_fn = t8_refine_p8est;
+      break;
+    case REFINE_SPHERE:
+      adapt_fn = t8_common_adapt_level_set;
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();  /* Invalid value */
     }
 
     /* If the forest should be refined and refinement method is the levelset-sphere
      * function, then we need to set the correct refinement data for the forest_ghost */
     if (refine_method == REFINE_SPHERE) {
-      const double midpoint[3] = {0.4,0.4,0.4};
-      const double radius = 0.2;
-      const double band_width = 2;
+      const double        midpoint[3] = { 0.4, 0.4, 0.4 };
+      const double        radius = 0.2;
+      const double        band_width = 2;
       /* If levelset refinement is used, we need to set the user data
        * pointer of the forest apropriately */
-      t8_test_ghost_set_levelset_data(forest, level, max_level, midpoint, radius,
-                                      band_width);
+      t8_test_ghost_set_levelset_data (forest, level, max_level, midpoint,
+                                       radius, band_width);
     }
     /* Refine the forest */
     for (r = level; r < max_level; r++) {
       if (refine_method == REFINE_SPHERE) {
         /* Copy the user data to the forest that should be refined */
-        t8_forest_set_user_data(forest_ghost, t8_forest_get_user_data(forest));
+        t8_forest_set_user_data (forest_ghost,
+                                 t8_forest_get_user_data (forest));
       }
       t8_forest_set_adapt (forest_ghost, forest, adapt_fn, 0);
       t8_forest_commit (forest_ghost);
@@ -183,7 +195,7 @@ t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, const int level,
 
     /* If we used a level-set function to refine, we need to clean-up our allocated data */
     if (refine_method == REFINE_SPHERE) {
-      t8_test_ghost_clean_levelset_data(forest);
+      t8_test_ghost_clean_levelset_data (forest);
     }
   }
 
@@ -273,7 +285,8 @@ t8_test_ghost_hypercube (t8_eclass_t eclass, int level, sc_MPI_Comm comm,
 static void
 t8_test_ghost_msh_file (const char *fileprefix, int level, int dim,
                         sc_MPI_Comm comm, int ghost_version,
-                        int max_level, int no_vtk, refine_method_t refine_method)
+                        int max_level, int no_vtk,
+                        refine_method_t refine_method)
 {
   t8_cmesh_t          cmesh;
 
@@ -287,7 +300,8 @@ t8_test_ghost_msh_file (const char *fileprefix, int level, int dim,
  */
 static void
 t8_test_ghost_tet_test (int level, sc_MPI_Comm comm, int ghost_version,
-                        int max_level, int no_vtk, refine_method_t refine_method)
+                        int max_level, int no_vtk,
+                        refine_method_t refine_method)
 {
   t8_cmesh_t          cmesh;
 
@@ -365,12 +379,12 @@ main (int argc, char **argv)
                       "Default ist 0 (no refinement).");
   /* Change the refinement rule -R */
   sc_options_add_int (opt, 'R',
-                         "refine-method",
-                         &refine_method_int, 0,
-                         "Chose the method of refinement.\n"
-                         "\t\t0 - Refine every third element.\n"
-                         "\t\t1 - Refine every 0-th, 3rd, 5-th, and 6-th element.\n"
-                         "\t\t2 - Refine along a spehre with midpoint (0.3, 0.3, 0.3) and radius 0.2.");
+                      "refine-method",
+                      &refine_method_int, 0,
+                      "Chose the method of refinement.\n"
+                      "\t\t0 - Refine every third element.\n"
+                      "\t\t1 - Refine every 0-th, 3rd, 5-th, and 6-th element.\n"
+                      "\t\t2 - Refine along a sphere with midpoint (0.3, 0.3, 0.3) and radius 0.2.");
   /* Change the version of ghost algorithm used -g */
   sc_options_add_int (opt, 'g',
                       "ghost-version",
@@ -424,8 +438,9 @@ main (int argc, char **argv)
       /* If neither of -x, -f, -t are given, we use a hypercube mesh */
       t8_global_productionf
         ("Testing ghost on a hypercube cmesh with %s "
-         "elements\n", eclass_int < T8_ECLASS_COUNT ? t8_eclass_to_string[eclass_int]
-                                                      : "hybrid");
+         "elements\n",
+         eclass_int < T8_ECLASS_COUNT ? t8_eclass_to_string[eclass_int]
+         : "hybrid");
       t8_test_ghost_hypercube ((t8_eclass_t)
                                eclass_int, level, sc_MPI_COMM_WORLD,
                                ghost_version, max_level, no_vtk,
