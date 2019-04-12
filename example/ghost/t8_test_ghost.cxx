@@ -170,7 +170,7 @@ t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, const int level,
                                       band_width);
     }
     /* Refine the forest */
-    for (r = level; r <= max_level; r++) {
+    for (r = level; r < max_level; r++) {
       if (refine_method == REFINE_SPHERE) {
         /* Copy the user data to the forest that should be refined */
         t8_forest_set_user_data(forest_ghost, t8_forest_get_user_data(forest));
