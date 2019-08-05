@@ -35,7 +35,7 @@ t8_linearidx_t      t8_element_get_linear_id (const t8_element_t * elem,
 
 #ifdef T8_ENABLE_DEBUG
 
-int
+static int
 t8_element_surround_matches (const p4est_quadrant_t * q,
                              const p4est_quadrant_t * r)
 {

@@ -21,7 +21,7 @@
 */
 
 #include <new>
-#include <t8_default_cxx.hxx>
+#include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_refcount.h>
 
 #include "t8_default_vertex_cxx.hxx"

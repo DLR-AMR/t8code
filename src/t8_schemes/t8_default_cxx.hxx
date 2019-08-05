@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default.h
+/** \file t8_default_cxx.hxx
  * This file is the point of entry for our default element implementation.
  *
  * This scheme points to a consistent implementation of all element classes.
