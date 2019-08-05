@@ -25,7 +25,6 @@
 #include <t8_forest.h>
 #include <t8_element_cxx.hxx>
 
-#include <t8_default/t8_dtri.h>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
