@@ -27,5 +27,21 @@ test_t8_test_forest_commit_SOURCES = test/t8_test_forest_commit.cxx
 test_t8_test_transform_SOURCES = test/t8_test_transform.cxx
 test_t8_test_half_neighbors_SOURCES = test/t8_test_half_neighbors.cxx
 
-TESTS += $(t8code_test_programs)
-check_PROGRAMS += $(t8code_test_programs)
+t8code_googletest_programs = \
+  test/t8_gtest_main
+
+test_t8_gtest_main_SOURCES = test/testmain.cxx test/simple-googletest.cxx 
+test_t8_gtest_main_LDADD = test/libgtest.la
+test_t8_gtest_main_LDFLAGS = -pthread
+test_t8_gtest_main_CPPFLAGS = -I$(top_srcdir)/thirdparty/googletest/ \
+	-pthread
+
+# Build Googletest library
+check_LTLIBRARIES = test/libgtest.la
+test_libgtest_la_SOURCES = thirdparty/googletest/gtest/gtest-all.cc
+test_libgtest_la_CPPFLAGS = -I$(top_srcdir)/thirdparty/googletest
+test_libgtest_la_LDFLAGS = -pthread
+
+
+TESTS += $(t8code_test_programs) $(t8code_googletest_programs)
+check_PROGRAMS += $(t8code_test_programs) $(t8code_googletest_programs)
