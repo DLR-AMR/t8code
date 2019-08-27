@@ -764,6 +764,7 @@ t8_cmesh_t          t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_Comm comm);
   */
 t8_cmesh_t          t8_cmesh_new_prism_geometry (sc_MPI_Comm comm);
 
+
 /** Create a partitoned cmesh of quads whose local trees are given by an
  * num_x by num_y brick connectivity from p4est
  * or a num_x by num_y by num_z brick connectivity from p8est.

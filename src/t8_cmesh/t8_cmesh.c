@@ -1688,12 +1688,16 @@ t8_cmesh_new_pyramid (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[15] = {
-    -1, -1, 0, 1, -1, 0, -1, 1, 0, 1, 1, 0, 0, 0, sqrt (2)
+    -1, -1, 0,
+      1, -1, 0,
+      -1, 1, 0,
+      1, 1, 0,
+      0, 0, sqrt (2)
   };
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);
   t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0,
-                              vertices, 15);
+                              vertices, 5);
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }
