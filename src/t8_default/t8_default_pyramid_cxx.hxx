@@ -54,11 +54,7 @@ public:
 }
 
 /** Return the maximum level allowed for this element class. */
-  virtual int         t8_element_maxlevel (void)
-  {
-      SC_ABORT ("This function is not implemented yet.\n");
-      return 0;                   /* suppresses compiler warning */
-  }
+  virtual int         t8_element_maxlevel (void);
 
 /** Compute the maximum number of faces of a given element and all of its
    *  descendants.
@@ -111,11 +107,7 @@ public:
  *  If elem2 is a copy of elem1 then the elements are equal.
  */
   virtual int         t8_element_compare (const t8_element_t * elem1,
-                                          const t8_element_t * elem2)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+                                          const t8_element_t * elem2);
 
 /** Construct the parent of a given element. */
   virtual void        t8_element_parent (const t8_element_t * elem,
@@ -179,10 +171,7 @@ public:
 
   /** Initialize an array of allocated elements. */
   virtual void        t8_element_init (int length, t8_element_t * elem,
-                                       int called_new)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                       int called_new);
 
   /** Return nonzero if collection of elements is a family */
     virtual int         t8_element_is_family (t8_element_t ** fam){
@@ -232,19 +221,12 @@ public:
 
 /** Initialize an element according to a given linear id */
   virtual void        t8_element_set_linear_id (t8_element_t * elem,
-                                                int level, uint64_t id)
-  {
-      SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                int level, uint64_t id);
 
 /** Calculate the linear id of an element */
   virtual u_int64_t   t8_element_get_linear_id (const
                                                 t8_element_t *
-                                                elem, int level)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+                                                elem, int level);
 
 /** Given a face of an element and a child number of a child of that face,
 * return the face number of the child of the element that matches the child
@@ -291,10 +273,7 @@ public:
    */
     virtual void        t8_element_first_descendant (const t8_element_t *
                                                      elem, t8_element_t * desc,
-                                                     int level)
-  {
-      SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                     int level);
 
   /** Construct the first descendant of an element that touches a given face.   */
   virtual void        t8_element_first_descendant_face (const t8_element_t *
@@ -328,10 +307,7 @@ public:
    */
     virtual void        t8_element_last_descendant (const t8_element_t *
                                                     elem, t8_element_t * desc,
-                                                    int level)
-  {
-      SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                    int level);
 
   /** Construct the last descendant of an element that touches a given face. */
   virtual void        t8_element_last_descendant_face (const t8_element_t *

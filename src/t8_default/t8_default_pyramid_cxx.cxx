@@ -29,6 +29,61 @@ typedef t8_dpyramid_t t8_default_pyramid_t;
 
 T8_EXTERN_C_BEGIN ();
 
+int
+t8_default_scheme_pyramid_c::t8_element_maxlevel(void)
+{
+    return T8_DPYRAMID_MAXLEVEL;
+}
+
+void
+t8_default_scheme_pyramid_c::t8_element_init(int length, t8_element_t *elem,
+                                             int called_new)
+{
+#ifdef T8_ENABLE_DEBUG
+  if (!called_new) {
+    int                 i;
+    t8_dpyramid_t        *pyramid = (t8_dpyramid_t *) elem;
+    /* Set all values to 0 */
+    for (i = 0; i < length; i++) {
+      t8_dpyramid_init_linear_id (pyramid + i, 0, 0);
+    }
+  }
+#endif
+}
+
+int
+t8_default_scheme_pyramid_c::t8_element_compare (const t8_element_t * elem1,
+                                                 const t8_element_t * elem2)
+{
+    t8_dpyramid_compare((const t8_dpyramid_t *) elem1, (const t8_dpyramid_t *) elem2 );
+}
+
+void
+t8_default_scheme_pyramid_c::t8_element_first_descendant(const t8_element_t *elem,
+                                                         t8_element_t *desc, int level)
+{
+    t8_dpyramid_first_descendant((const t8_dpyramid_t *) elem, (t8_dpyramid_t *) desc, level );
+}
+
+void
+t8_default_scheme_pyramid_c::t8_element_set_linear_id(t8_element_t *elem, int level, uint64_t id)
+{
+    t8_dpyramid_init_linear_id((t8_dpyramid_t *) elem, level, id);
+}
+
+u_int64_t
+t8_default_scheme_pyramid_c::t8_element_get_linear_id (const t8_element_t * elem, int level)
+{
+    t8_dpyramid_linear_id((const t8_dpyramid_t *) elem, level);
+}
+
+void
+t8_default_scheme_pyramid_c::t8_element_last_descendant(const t8_element_t *elem,
+                                                        t8_element_t *desc, int level)
+{
+    t8_dpyramid_last_descendant((const t8_dpyramid_t *) elem, (t8_dpyramid_t *) desc, level);
+}
+
 /* Constructor */
 t8_default_scheme_pyramid_c::t8_default_scheme_pyramid_c (void)
 {

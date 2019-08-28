@@ -17,7 +17,7 @@
 #define T8_DPYRAMID_CORNERS 5
 
 /** The maximum refinement level allowed for a pyramid */
-#define T8_DPYRAMID_MAXLEVEL 30
+#define T8_DPYRAMID_MAXLEVEL 21
 
 /** The length of the root pyramid in integer coordinates */
 #define T8_DPYRAMID_ROOT_LEN (1 << (T8_DPYRAMID_MAXLEVEL))

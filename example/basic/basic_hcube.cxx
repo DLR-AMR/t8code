@@ -76,7 +76,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
 
     if (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX
         || eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_TET
-        || eclass == T8_ECLASS_LINE || eclass == T8_ECLASS_PRISM) {
+        || eclass == T8_ECLASS_LINE || eclass == T8_ECLASS_PRISM || eclass == T8_ECLASS_PYRAMID) {
       t8_forest_commit (forest);
       t8_debugf ("Successfully committed forest.\n");
       snprintf (vtuname, BUFSIZ, "forest_hypercube_%s",

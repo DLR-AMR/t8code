@@ -93,6 +93,7 @@ void                t8_dprism_parent (const t8_dprism_t * p,
 void                t8_dprism_first_descendant (const t8_dprism_t * p,
                                                 t8_dprism_t * desc,
                                                 int level);
+
 /** Compute the position of the ancestor of this child at level \a level within
  * its siblings.
  * \param [in] p  prism to be considered.
