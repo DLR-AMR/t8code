@@ -243,7 +243,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   T8_ASSERT (eclass == T8_ECLASS_VERTEX || eclass == T8_ECLASS_TRIANGLE
              || eclass == T8_ECLASS_TET || eclass == T8_ECLASS_QUAD
              || eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_LINE
-             || eclass == T8_ECLASS_PRISM);
+             || eclass == T8_ECLASS_PRISM || eclass == T8_ECLASS_PYRAMID);
 
   ts = forest->scheme_cxx->eclass_schemes[eclass];
   dim = t8_eclass_to_dimension[eclass];

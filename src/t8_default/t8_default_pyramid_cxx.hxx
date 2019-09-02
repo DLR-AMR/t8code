@@ -76,11 +76,7 @@ public:
   }
 
 /** Return the refinement level of an element. */
-  virtual int         t8_element_level (const t8_element_t * elem)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+  virtual int         t8_element_level (const t8_element_t * elem);
 
 /** Copy one element to another */
   virtual void        t8_element_copy (const t8_element_t * source,
@@ -354,18 +350,11 @@ public:
 /** Get the integer root length of an element, that is the length of
  *  the level 0 ancestor.
  */
-  virtual int         t8_element_root_len (const t8_element_t * elem)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+  virtual int         t8_element_root_len (const t8_element_t * elem);
 
   /** Compute the integer coordinates of a given element vertex. */
   virtual void        t8_element_vertex_coords (const t8_element_t * t,
-                                                int vertex, int coords[])
-  {
-      SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                int vertex, int coords[]);
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether an element is valid */

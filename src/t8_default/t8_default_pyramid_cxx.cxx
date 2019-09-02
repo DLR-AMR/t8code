@@ -65,6 +65,18 @@ t8_default_scheme_pyramid_c::t8_element_first_descendant(const t8_element_t *ele
     t8_dpyramid_first_descendant((const t8_dpyramid_t *) elem, (t8_dpyramid_t *) desc, level );
 }
 
+int
+t8_default_scheme_pyramid_c::t8_element_level (const t8_element_t * elem)
+{
+    t8_dpyramid_get_level((const t8_dpyramid_t *) elem);
+}
+
+int
+t8_default_scheme_pyramid_c::t8_element_root_len (const t8_element_t * elem)
+{
+    return T8_DPYRAMID_ROOT_LEN;
+}
+
 void
 t8_default_scheme_pyramid_c::t8_element_set_linear_id(t8_element_t *elem, int level, uint64_t id)
 {
@@ -82,6 +94,13 @@ t8_default_scheme_pyramid_c::t8_element_last_descendant(const t8_element_t *elem
                                                         t8_element_t *desc, int level)
 {
     t8_dpyramid_last_descendant((const t8_dpyramid_t *) elem, (t8_dpyramid_t *) desc, level);
+}
+
+void
+t8_default_scheme_pyramid_c::t8_element_vertex_coords (const t8_element_t * t,
+                                                int vertex, int coords[])
+{
+    t8_dpyramid_compute_coords((const t8_dpyramid_t *) t, vertex, coords);
 }
 
 /* Constructor */

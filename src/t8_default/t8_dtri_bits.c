@@ -1350,6 +1350,38 @@ t8_dtri_linear_id (const t8_dtri_t * t, int level)
 }
 
 void
+t8_dtri_init_linear_id_with_level(t8_dtri_t * t, t8_linearidx_t id, int start_level,
+                                  int end_level, t8_dtri_type_t parenttype)
+{
+    int                 i;
+    int                 offset_coords, offset_index;
+    const int           children_m1 = T8_DTRI_CHILDREN - 1;
+    t8_linearidx_t      local_index;
+    t8_dtri_cube_id_t   cid;
+    t8_dtri_type_t      type;
+    T8_ASSERT (0 <= id && id <= ((t8_linearidx_t) 1) << (T8_DTRI_DIM * end_level));
+
+    t->level = end_level;
+
+    type = parenttype;                     /* This is the type of the parent triangle */
+    for (i = start_level; i <= end_level; i++) {
+      offset_coords = T8_DTRI_MAXLEVEL - i;
+      offset_index = end_level - i;
+      /* Get the local index of T's ancestor on level i */
+      local_index = (id >> (T8_DTRI_DIM * offset_index)) & children_m1;
+      /* Get the type and cube-id of T's ancestor on level i */
+      cid = t8_dtri_parenttype_Iloc_to_cid[type][local_index];
+      type = t8_dtri_parenttype_Iloc_to_type[type][local_index];
+      t->x |= (cid & 1) ? 1 << offset_coords : 0;
+      t->y |= (cid & 2) ? 1 << offset_coords : 0;
+  #ifdef T8_DTRI_TO_DTET
+      t->z |= (cid & 4) ? 1 << offset_coords : 0;
+  #endif
+    }
+    t->type = type;
+}
+
+void
 t8_dtri_init_linear_id (t8_dtri_t * t, t8_linearidx_t id, int level)
 {
   int                 i;

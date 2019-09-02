@@ -38,6 +38,13 @@ T8_EXTERN_C_BEGIN();
 void                t8_dpyramid_init_linear_id (t8_dpyramid_t * p, int level,
                                               uint64_t id);
 
+/** Compute the level of a pyramid.
+ * \param [in] p    Line whose pyramid is computed.
+ * \return          The level of \a p.
+ */
+int                 t8_dpyramid_get_level (const t8_dpyramid_t * p);
+
+
 /** Computes the linear position of a pyramid in an uniform grid.
  * \param [in] p  pyramid whose id will be computed.
  * \return Returns the linear position of this pyramid on a grid.
@@ -75,6 +82,14 @@ void
 t8_dpyramid_last_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * desc,
                              int level);
 
+/** Compute the coordinates of a vertex of a pyramid.
+ * \param [in] p    Input pyramid.
+ * \param [out] coordinates An array of 3 t8_dpyramid_coord_t that
+ * 		     will be filled with the coordinates of the vertex.
+ * \param [in] vertex The number of the vertex.
+ */
+void                t8_dpyramid_compute_coords (const t8_dpyramid_t * p,
+                                             int vertex, int coords[]);
 
 
 T8_EXTERN_C_END ();
