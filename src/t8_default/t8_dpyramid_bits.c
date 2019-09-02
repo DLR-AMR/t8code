@@ -77,7 +77,7 @@ t8_dpyramid_get_level (const t8_dpyramid_t * p)
 }
 
 void
-t8_dpyramid_init_linear_id (t8_dpyramid_t * p, int level,
+    t8_dpyramid_init_linear_id (t8_dpyramid_t * p, int level,
                                               uint64_t id)
 {
     t8_dpyramid_type_t      type;
@@ -98,7 +98,7 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t * p, int level,
     for(i = 1; i <= level; i++)
     {
         offset_coords = T8_DPYRAMID_MAXLEVEL - i;
-        offset_index = level - 1;
+        offset_index = level - i;
         local_index = id % sc_intpow64u(T8_DPYRAMID_CHILDREN, offset_index);
         type = t8_dpyramid_type_by_local_index[type-6][local_index];
         // Thy types of the tetrahedron children of pyramid are always 0 or 3
