@@ -110,14 +110,16 @@ void
              * tet given a starting level, an end level and an id?
              */
             t8_dtet_init_linear_id_with_level((t8_dtet_t *) p, (t8_linearidx_t) id, i, level, type);
-            break;
+            return;
         }
-        p->type = type;
+        else{
+            p->type = type;
 
-        cid = t8_dpyramid_parenttype_Iloc_to_cid[type][local_index];
-        p->x |= ( cid%2 == 1 ) ? 1 << offset_coords : 0;
-        p->y |= ( cid == 2 || cid == 3 || cid == 6 || cid == 7 ) ? 1 << offset_coords : 0;
-        p->z |= ( cid > 3) ? 1 << offset_coords : 0;
+            cid = t8_dpyramid_parenttype_Iloc_to_cid[type][local_index];
+            p->x |= ( cid%2 == 1 ) ? 1 << offset_coords : 0;
+            p->y |= ( cid == 2 || cid == 3 || cid == 6 || cid == 7 ) ? 1 << offset_coords : 0;
+            p->z |= ( cid > 3) ? 1 << offset_coords : 0;
+        }
     }
 }
 
@@ -183,21 +185,25 @@ t8_dpyramid_compute_coords (const t8_dpyramid_t * p,
         switch(vertex)
         {
             case 0:
+                coords[2] += (p->type == 7) ? h : 0;
                 return;
             case 1:
                 coords[0] += h;
+                coords[2] += (p->type == 7) ? h : 0;
                 return;
             case 2:
                 coords[1] += h;
+                coords[2] += (p->type == 7) ? h : 0;
                 return;
             case 3:
                 coords[0] += h;
                 coords[1] += h;
+                coords[2] += (p->type == 7) ? h : 0;
                 return;
             case 4:
                 coords[0] += (p->type == 6) ? h : 0;
                 coords[1] += (p->type == 6) ? h : 0;
-                coords[2] += (p->type == 6) ? h : -h;
+                coords[2] += (p->type == 6) ? h : 0;
                 return;
         }
     }
