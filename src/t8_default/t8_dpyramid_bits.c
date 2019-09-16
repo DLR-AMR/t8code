@@ -26,19 +26,44 @@
 
 typedef int8_t t8_dpyramid_cube_id_t;
 
-/*The type of a pyramid depending on the parent pyramid and its local index*/
+/*The type of a pyramid depending on the parent pyramid and its local index
+ *type = (parent_type, local_index)
+ */
 const int         t8_dpyramid_type_by_local_index[2][10] =
     {
     {6, 3, 6, 0, 6, 0, 3, 6, 7, 6},
-    {7, 0, 7, 7, 7, 3, 7, 0, 3, 7}
+    {7, 0, 3, 6, 7, 3, 7, 0, 7, 7}
 };
 
-/*The cube Id of a pyramid depending on its parenttype an local index*/
+/*The cube Id of a pyramid depending on its parenttype and local index*/
 const int         t8_dpyramid_parenttype_Iloc_to_cid[2][10] =
 {
   {0, 1, 1, 2, 2, 3, 3, 3, 3, 7},
-  {0, 4, 4, 4, 5, 4, 6, 6, 5, 7}
+  {0, 4, 4, 4, 4, 5, 5, 6, 6, 7}
 };
+
+static
+t8_dpyramid_cube_id_t
+compute_cubeid (const t8_dpyramid_t * p, int level)
+{
+  t8_dpyramid_cube_id_t   id = 0;
+  t8_dpyramid_coord_t     h;
+
+  /* TODO: assert that 0 < level? This may simplify code elsewhere */
+
+  T8_ASSERT (0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
+  h = T8_DPYRAMID_LEN (level);
+
+  if (level == 0) {
+    return 0;
+  }
+
+  id |= ((p->x & h) ? 0x01 : 0);
+  id |= ((p->y & h) ? 0x02 : 0);
+  id |= ((p->z & h) ? 0x04 : 0);
+
+  return id;
+}
 
 /*Copies a pyramid from p to dest*/
 void
@@ -84,7 +109,7 @@ void
     t8_linearidx_t          local_index;
     t8_dpyramid_cube_id_t   cid;
     int                     i;
-    int                     offset_coords, offset_index;
+    int                     offset_coords;
 
     T8_ASSERT(0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
     T8_ASSERT(0 <= id && id <= sc_intpow64u(T8_DPYRAMID_CHILDREN, level));
@@ -98,8 +123,8 @@ void
     for(i = 1; i <= level; i++)
     {
         offset_coords = T8_DPYRAMID_MAXLEVEL - i;
-        offset_index = level - i;
-        local_index = id % sc_intpow64u(T8_DPYRAMID_CHILDREN, offset_index);
+        local_index = id % T8_DPYRAMID_CHILDREN;
+
         type = t8_dpyramid_type_by_local_index[type-6][local_index];
         // Thy types of the tetrahedron children of pyramid are always 0 or 3
         if(0 <= type && type <= 5)
@@ -120,17 +145,38 @@ void
             p->y |= ( cid == 2 || cid == 3 || cid == 6 || cid == 7 ) ? 1 << offset_coords : 0;
             p->z |= ( cid > 3) ? 1 << offset_coords : 0;
         }
+        id /= T8_DPYRAMID_CHILDREN;
     }
 }
 
-
+/*parenttype = (cube-id, type)*/
+const int
+t8_dpyramid_cid_type_to_parenttype[8][8] = {
+    {0, 1, 2, 3, 4, 5, 6, 7},
+    {0, 1, 1, 10, 0, 0, 6, -1},
+    {20, 2, 2, 3, 3, 3, 6, -1},
+    {10, 1, 2, 20, 2, 1, 6, 6},
+    {50, 5, 4, 4, 4, 5, 7, 7},
+    {0, 0, 0, 50, 5, 5, -1, 7},
+    {4, 3, 3, 3, 4, 4, -1, 7},
+    {0, 1, 2, 3, 4, 5, 6, 7},
+ };
 
 /* TODO: What if parent is I am a tet child of a pyramid*/
 uint64_t
 t8_dpyramid_linear_id(const t8_dpyramid_t * p, int level)
 {
+    uint64_t                id = 0;
+    t8_dpyramid_type_t      temp_type = p->type;
+    t8_dpyramid_cube_id_t   cid;
+    int i;
 
-    return 0;
+    T8_ASSERT (0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
+    for(i = level; i>0; i--)
+    {
+        cid = compute_cubeid(p, i);
+    }
+    return id;
 }
 
 void
