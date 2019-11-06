@@ -297,7 +297,6 @@ t8_dtri_compute_coords (const t8_dtri_t * t, int vertex,
   int                 ej;
 #endif
   t8_dtri_coord_t     h;
-
   T8_ASSERT (0 <= vertex && vertex < T8_DTRI_FACES);
 
   type = t->type;

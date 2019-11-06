@@ -1278,7 +1278,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     *child_in_tree_end = 0;
   }
 
-  if (cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] == 0 || level == 0) {
+  //if (cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] == 0 || level == 0) {
     t8_gloidx_t         global_num_children;
     t8_gloidx_t         first_global_child;
     t8_gloidx_t         last_global_child;
@@ -1375,11 +1375,12 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
       *first_local_tree = prev_last_tree + 1;
     }
 #endif
-  }
+ /* }
+
   else {
     SC_ABORT ("Partition with level > 0 "
               "does not support pyramidal elements yet.");
-  }
+  }*/
 }
 
 static void
@@ -1684,15 +1685,34 @@ t8_cmesh_new_hex (sc_MPI_Comm comm)
 }
 
 static              t8_cmesh_t
+t8_cmesh_new_pyramid_deformed (sc_MPI_Comm comm)
+{
+  t8_cmesh_t          cmesh;
+  double              vertices[15] = {
+    -1, -2, 0.5,
+    2, -1, 0,
+    -1, 2, -0.5,
+    2, 2, 0,
+    -0.3, 0.2, sqrt(3)
+  };
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0,
+                              vertices, 5);
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
+static              t8_cmesh_t
 t8_cmesh_new_pyramid (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[15] = {
     -1, -1, 0,
-      1, -1, 0,
-      -1, 1, 0,
-      1, 1, 0,
-      0, 0, sqrt (2)
+    1, -1, 0,
+    -1, 1, 0,
+    1, 1, 0,
+    -1, -1, 1
   };
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);

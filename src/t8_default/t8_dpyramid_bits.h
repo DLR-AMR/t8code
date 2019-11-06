@@ -51,6 +51,15 @@ int                 t8_dpyramid_get_level (const t8_dpyramid_t * p);
  */
 uint64_t t8_dpyramid_linear_id(const t8_dpyramid_t * p, int level);
 
+/** Compute the childid-th child in Morton order of a pyramid.
+ * \param [in] t    Input pyramid.
+ * \param [in,out] childid The id of the child, 0..7 in Morton order.
+ * \param [out] child  Existing pyramid whose data will be filled
+ * 		    with the date of t's childid-th child.
+ */
+void
+t8_dpyramid_child(const t8_dpyramid_t * elem, int child_id, t8_dpyramid_t * child);
+
 /** Compare two elements. returns negativ if p1 < p2, zero if p1 equals p2
  *  and positiv if p1 > p2.
  *  If p2 is a copy of p1 then the elements are equal.
@@ -91,6 +100,21 @@ t8_dpyramid_last_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * desc,
 void                t8_dpyramid_compute_coords (const t8_dpyramid_t * p,
                                              int vertex, int coords[]);
 
+/**
+ * Compute the number of corners of a pyramid. If pyramid has type less than 6,
+ * it is actually a tetrahedron.
+ * \param [in] p    Input pyramid.
+ * \return          The number of corners of p.
+ */
+int                 t8_dpyramid_num_vertices(const t8_dpyramid_t * p);
+
+/** Computes the successor of a pyramid in a uniform grid of level \a level.
+ * \param [in] elem  pyramid whose id will be computed.
+ * \param [in,out] s Existing pyramid whose data will be filled with the
+ *                data of \a l's successor on level \a level.
+ * \param [in] level level of uniform grid to be considered.
+ */
+void                t8_dpyramid_succesor(const t8_dpyramid_t * elem, t8_dpyramid_t * s, int level);
 
 T8_EXTERN_C_END ();
 

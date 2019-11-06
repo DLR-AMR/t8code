@@ -249,6 +249,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   dim = t8_eclass_to_dimension[eclass];
   len = 1. / ts->t8_element_root_len (element);
   ts->t8_element_vertex_coords (element, corner_number, corner_coords);
+  /*Pyramids have to return T8_ECLASS_TET, if pyramid is a tet*/
   switch (eclass) {
   case T8_ECLASS_VERTEX:
     T8_ASSERT (corner_number == 0);
@@ -289,6 +290,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
         len * (vertices[9 + i] - vertices[i]) * corner_coords[2] +
         vertices[i];
     }
+    /*And interpolate on the triangle*/
     for (i = 0; i < 3; i++) {
       coordinates[i] =
         len * (tri_vertices[3 + i] - tri_vertices[i]) * corner_coords[0] +
@@ -307,6 +309,20 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
     t8_forest_bilinear_interpolation ((const double *) vertex_coords,
                                       vertices, dim, coordinates);
     break;
+  case T8_ECLASS_PYRAMID:
+      for(i = 0; i < 3; i++){
+          corner_coords[i] *= len;
+      }
+      for(i = 0; i < 3; i++)
+      {
+          coordinates[i] = (vertices[i] * (1 - corner_coords[0]) * (1 - corner_coords[1])* (1 - corner_coords[2])
+                  +vertices[3 + i] * corner_coords[0] * (1- corner_coords[1])* (1- corner_coords[2])
+                  +vertices[6 + i] * (1- corner_coords[0]) *  corner_coords[1]* (1- corner_coords[2])
+                  +vertices[9 + i] *  corner_coords[0] * corner_coords[1]* (1- corner_coords[2])
+                  +vertices[12 + i] *  corner_coords[0] * corner_coords[1] * corner_coords[2]);
+      }
+      break;
+
   default:
     SC_ABORT ("Forest coordinate computation is supported only for "
               "triangles/tets/quads/prisms/hexes.");

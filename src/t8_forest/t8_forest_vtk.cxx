@@ -372,8 +372,8 @@ t8_forest_vtk_cells_connectivity_kernel (t8_forest_t forest,
   count_vertices = (t8_locidx_t *) * data;
 
   /* TODO: This will definitely break with pyramids */
-  SC_CHECK_ABORT (ts->eclass != T8_ECLASS_PYRAMID,
-                  "No vtk support for pyramids.");
+  //SC_CHECK_ABORT (ts->eclass != T8_ECLASS_PYRAMID,
+  //                "No vtk support for pyramids.");
   for (ivertex = 0; ivertex < t8_eclass_num_vertices[ts->eclass];
        ++ivertex, (*count_vertices)++) {
     freturn = fprintf (vtufile, " %ld", (long) *count_vertices);
@@ -411,8 +411,9 @@ t8_forest_vtk_cells_offset_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
   offset = (long long *) *data;
 
   /* TODO: This will also break with pyramids! */
-  SC_CHECK_ABORT (ts->eclass != T8_ECLASS_PYRAMID,
-                  "Pyramids not supported in vtk");
+  //SC_CHECK_ABORT (ts->eclass != T8_ECLASS_PYRAMID,
+  //                "Pyramids not supported in vtk");
+
   *offset += t8_eclass_num_vertices[ts->eclass];
   freturn = fprintf (vtufile, " %lld", *offset);
   if (freturn <= 0) {
@@ -1141,13 +1142,14 @@ t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix,
   if (freturn <= 0) {
     goto t8_forest_vtk_failure;
   }
-
+    printf("num_points: %i\n", num_points);
   /* write the point data */
   if (!t8_forest_vtk_write_points
       (forest, vtufile, write_ghosts, num_data, data)) {
     /* writings points was not succesful */
     goto t8_forest_vtk_failure;
   }
+  printf("num_points: %i\n", num_points);
   /* write the cell data */
   if (!t8_forest_vtk_write_cells
       (forest, vtufile, write_treeid, write_mpirank, write_level,

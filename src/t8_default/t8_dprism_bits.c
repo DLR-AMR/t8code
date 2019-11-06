@@ -81,6 +81,8 @@ t8_dprism_init_linear_id (t8_dprism_t * p, int level, uint64_t id)
 
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
   T8_ASSERT (id < sc_intpow64u (T8_DPRISM_CHILDREN, level));
+  printf("Id:%i\n", (int)id);
+  printf("Init\n");
 
   for (i = 0; i <= level; i++) {
     /*Get the number of the i-th prism and get the related triangle number
@@ -102,6 +104,8 @@ t8_dprism_init_linear_id (t8_dprism_t * p, int level, uint64_t id)
   t8_dline_init_linear_id (&p->line, level, line_id);
 
   T8_ASSERT (p->line.level == p->tri.level);
+  printf(" x: %i\n y: %i\n z: %i\n type: %i\n", p->tri.x, p->tri.y, p->line.x, p->tri.type);
+  printf("Init_ende\n");
 }
 
 void

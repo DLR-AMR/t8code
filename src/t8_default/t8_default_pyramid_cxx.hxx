@@ -125,6 +125,12 @@ public:
       return T8_ECLASS_ZERO;      /* suppresses compiler warning */
     }
 
+/** Compute the number of corners of a given element.
+* \param [in] elem The element.
+* \return          The number of corners of \a elem.
+*/
+virtual int         t8_element_num_vertices (const t8_element_t * elem);
+
   /** Return the number of children of an element's face when the element is refined. */
   virtual int         t8_element_num_face_children (const t8_element_t *
                                                     elem, int face)
@@ -135,10 +141,7 @@ public:
 
 /** Construct the child element of a given number. */
   virtual void        t8_element_child (const t8_element_t * elem,
-                                        int childid, t8_element_t * child){
-      SC_ABORT ("This function is not implemented yet.\n");
-      return;      /* suppresses compiler warning */
-    }
+                                        int childid, t8_element_t * child);
 
 /** Construct all children of a given element. */
   virtual void        t8_element_children (const t8_element_t * elem,
@@ -316,10 +319,7 @@ public:
 
 /** Compute s as a successor of t*/
   virtual void        t8_element_successor (const t8_element_t * t,
-                                            t8_element_t * s, int level)
-  {
-      SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                            t8_element_t * s, int level);
 
   /** For an exact explaination look at t8_element_cxx.hxx. */
   virtual void        t8_element_transform_face (const t8_element_t * elem1,
