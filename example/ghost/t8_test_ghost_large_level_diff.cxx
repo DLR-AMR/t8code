@@ -23,29 +23,17 @@
 #include <sc_flops.h>
 #include <sc_statistics.h>
 #include <sc_options.h>
-#include <t8.h>
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
 #include <t8_default/t8_dprism.h>
-#include <t8_default/t8_dprism_bits.h>
-#include <t8_default/t8_dtri.h>
 #include <t8_default/t8_dtet.h>
 #include <t8_forest/t8_forest_adapt.h>
-#include <t8_forest.h>
 #include <t8_default_cxx.hxx>
 
-#ifndef P4_TO_P8
-#include <p4est_bits.h>
-#include <p4est_extended.h>
-#include <p4est_vtk.h>
-#else
-#include <p8est_bits.h>
-#include <p8est_extended.h>
-#include <p8est_vtk.h>
-#endif
 
+/*The refinement creterion
+ * returns 1 if we refine the element, 0 otherwise.
+ */
 static int
 t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from,
                             t8_locidx_t which_tree, t8_locidx_t lelement_id,
@@ -63,14 +51,14 @@ t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from,
   }
   if(ts->eclass == T8_ECLASS_PRISM){
       type = ((t8_dprism_t *) elements[0])->tri.type;
-      /* refine type 0 */
+      /* refine type 0 except those with child_id 3 or 4*/
       if (type == 0) {
-        child_id = (((t8_dprism_t *) elements[0])->line.level == 0) ?
-                    (which_tree % T8_DPRISM_CHILDREN):
-                    t8_dprism_child_id((t8_dprism_t *) elements[0]);
+        child_id = ts->t8_element_child_id(elements[0]);
+        /*Not refining*/
         if(child_id == 3 || child_id == 4){
             return 0;
         }
+        /*Refining*/
         else{
             return 1;
         }
@@ -79,14 +67,14 @@ t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from,
   }
   else if(ts->eclass == T8_ECLASS_TET){
       type = ((t8_dtet_t * ) elements[0])->type;
+      /*Refine tets of type 0, 3 or 5*/
       if (type == 0 || type == 3 || type == 5){
           return 1;
       }
       return 0;
   }
   else if(ts->eclass == T8_ECLASS_HEX){
-      child_id = (((p4est_quadrant_t *)elements[0])->level == 0) ? (which_tree % P4EST_CHILDREN)
-                              : p4est_quadrant_child_id((p4est_quadrant_t *)elements[0]);
+      child_id = ts->t8_element_child_id(elements[0]);
       if(child_id == 0 || child_id == 3 || child_id == 5 || child_id == 6){
           return 1;
       };
@@ -95,6 +83,18 @@ t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from,
 
 }
 
+/**
+ * Creates a forest given a meshfile. If no meshfile is given, a hypercube of
+ * two prisms is created. The forest is refined adaptively, partitioned and the
+ * ghost elements are computed.
+ *
+ * \param[in] path  The path to the meshfile
+ * @param dim       Dimension of the mesh
+ * @param level     Initial refinement level
+ * @param refine    Number of levels the forest will be refined
+ * @param no_vtk    Flag for vtk-output
+ * @param comm      The MPI-communicator
+ */
 static void
 t8_ghost_large_level_diff(const char* path, int dim, int level, int refine,
                           int no_vtk, sc_MPI_Comm comm){
@@ -103,10 +103,14 @@ t8_ghost_large_level_diff(const char* path, int dim, int level, int refine,
     sc_flopinfo_t       fi, snapshot;
     sc_statinfo_t       stats[1];
 
-    //T8_ASSERT(path == NULL);
-    //get cmesh
-    //cmesh = t8_cmesh_from_msh_file((char *) path, 1, comm, dim, 0);
-    cmesh = t8_cmesh_new_hypercube(T8_ECLASS_PRISM, comm, 0, 0, 0);
+
+    if(path != NULL){
+        cmesh = t8_cmesh_from_msh_file((char *) path, 1, comm, dim, 0);
+    }
+    /*If no path given, create hypercube*/
+    else{
+        cmesh = t8_cmesh_new_hypercube(T8_ECLASS_PRISM, comm, 0, 0, 0);
+    }
     t8_cmesh_init(&cmesh_partition);
     t8_cmesh_set_derive(cmesh_partition, cmesh);
     t8_cmesh_set_partition_uniform(cmesh_partition, level);
@@ -168,7 +172,7 @@ main (int argc, char *argv[])
 {
   int                 mpiret, parsed, dim, level, refine, mpisize, helpme, no_vtk;
   sc_options_t       *opt;
-  const char         *path;
+  const char         *path = NULL;
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
   t8_cmesh_t          cmesh;
@@ -176,10 +180,13 @@ main (int argc, char *argv[])
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>",
             basename (argv[0]));
   snprintf (help, BUFSIZ,
-            "This program reads a .msh file "
+            "This program can read a .msh file "
             "created by the GMSH program and constructs a "
-            "t8code coarse mesh from them.\n\n%s\n\nExample: %s -f A1\nTo open the file A1.ms."
-            "\n\nThe default dimension of the mesh to read is 2. Since the "
+            "t8code coarse mesh from them. If no file is given, a prism-hypercube is created."
+            " The mesh is refined adaptivly in a fractal pattern."
+            "\n\n%s\n\nExample: %s -f A1 -l1 -r2 \nTo open the file A1.msh, with initial level 1"
+            " and one refinement level."
+            "\n\nThe default dimension of the mesh to read is 3. Since the "
             ".msh format stores elements of all (lower) dimensions "
             "the user must provide the argument for a different dimension by hand, if "
             "desired.\n", usage, basename (argv[0]));
@@ -196,9 +203,10 @@ main (int argc, char *argv[])
 
   opt = sc_options_new (argv[0]);
   sc_options_add_switch(opt, 'h', "help", &helpme, "Display a short help message:");
-  sc_options_add_string (opt, 'p', "path", &path, "", "The path to the mesh-file. "
-                         "The file must end in .msh and be created with gmsh.");
-  sc_options_add_int (opt, 'd', "dim", &dim, 2, "The dimension of the mesh.");
+  sc_options_add_string (opt, 'f', "prefix", &path, NULL, "The path to the mesh-file. "
+                         "The file must end in .msh and be created with gmsh. "
+                         "If no file is given, a hypercube of prisms is created.");
+  sc_options_add_int (opt, 'd', "dim", &dim, 3, "The dimension of the mesh.");
   sc_options_add_int (opt, 'l', "level", &level, 0, "The intial refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "refine", &refine, 0, "The number of levels that the forest "
                        "is refined from the initial level.");
@@ -211,17 +219,11 @@ main (int argc, char *argv[])
   }
   else if (parsed >= 0 && 0 <= level && 0 <= refine) {
     t8_ghost_large_level_diff(path, dim, level, refine, no_vtk,sc_MPI_COMM_WORLD);
-    return 1;
   }
   else {
     /*wrong usage*/
       t8_global_productionf ("\n\t ERROR: Wrong usage.\n\n");
       sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
-    /*
-    cmesh = t8_read_msh_file_build_cmesh (path, partition, dim, master);
-    t8_cmesh_destroy (&cmesh);
-    sc_options_print_summary (t8_get_package_id (), SC_LP_PRODUCTION, opt);
-    */
   }
 
   sc_options_destroy (opt);
