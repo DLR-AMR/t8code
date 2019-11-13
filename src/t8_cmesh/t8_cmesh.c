@@ -1288,9 +1288,18 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
 #endif
     const t8_linearidx_t one = 1;
 
-    children_per_tree = one << cmesh->dimension * level;
-    global_num_children = cmesh->num_trees * children_per_tree;
-
+    if (cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] != 0){
+        if(cmesh->num_trees_per_eclass[T8_ECLASS_TET] != 0 || cmesh->num_trees_per_eclass[T8_ECLASS_HEX] != 0)
+        {
+            SC_ABORT("Different numbers of elements per tree not yet supported");
+        }
+        children_per_tree = 10;
+        global_num_children = cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] * children_per_tree;
+    }
+    else{
+        children_per_tree = one << cmesh->dimension * level;
+        global_num_children = cmesh->num_trees * children_per_tree;
+    }
     if (cmesh->mpirank == 0) {
       first_global_child = 0;
       if (child_in_tree_begin != NULL) {

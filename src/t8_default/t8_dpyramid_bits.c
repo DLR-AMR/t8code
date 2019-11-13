@@ -273,7 +273,7 @@ t8_dpyramid_parent(const t8_dpyramid_t * p, t8_dpyramid_t * parent)
     //t8_dpyramid_cube_id_t   cid;
     //t8_dpyramid_coord_t     h;
     //T8_ASSERT("Parent not implemented" && 0);
-    T8_ASSERT(p->level > 0);
+    T8_ASSERT(p->level >= 0);
     /*This assertion is just for the case, that I forgot to realy implement this function!
     * This version only works, if the pyramid is only refined once, so the parent is always
     * known. Delete this, if fully implemented.*/
@@ -303,7 +303,7 @@ t8_dpyramid_succesor(const t8_dpyramid_t * elem, t8_dpyramid_t * succ, int level
     t8_dpyramid_copy(elem, succ);
     printf("succesor: level: %i\n", level);
     printf(" x: %i\n y: %i\n z: %i\n type: %i\n", elem->x, elem->y, elem->z, elem->type);
-    T8_ASSERT(1<= level && level <= T8_DPYRAMID_MAXLEVEL);
+    T8_ASSERT(0<= level && level <= T8_DPYRAMID_MAXLEVEL);
     succ->level = level;
     pyramid_child_id = t8_dpyramid_child_id(elem);
     printf("child_id = %i\n", pyramid_child_id);
