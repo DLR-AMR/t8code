@@ -109,6 +109,7 @@ int                 t8_cmesh_no_negative_volume (t8_cmesh_t cmesh);
  * Returns true if a tree of the given eclass with the given vertex
  * coordinates does have negative volume.
  */
+/* TODO: write a test for this function */
 int                 t8_cmesh_tree_vertices_negative_volume (t8_eclass_t
                                                             eclass,
                                                             double *vertices,
