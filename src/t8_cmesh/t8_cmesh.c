@@ -657,7 +657,7 @@ t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass,
     j = 3;
   }
   else {
-    /* For pyramids an Hexes, the third vector is v_4 */
+    /* For pyramids and Hexes, the third vector is v_4 */
     j = 4;
   }
   for (i = 0; i < 3; i++) {
