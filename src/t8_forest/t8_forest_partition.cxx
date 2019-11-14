@@ -800,6 +800,10 @@ t8_forest_partition_sendloop (t8_forest_t forest, const int send_first,
  * \param [in,out] last_loc_elem_recv On input the local index of the last element
  *                          that was received by this rank. Updated on output.
  * \param [out] data_out    The received data.
+ * \param [in]  sent_to_self If proc equals the rank of this process, the message
+ *                          should be passed as this parameter.
+ * \param [in]  byte_to_self If proc equals the rank of this process, the number of
+ *                          bytes in the message.
  * It is important, that we receive the messages in order to properly fill the
  * data_out array.
  */
@@ -822,15 +826,16 @@ t8_forest_partition_recv_message_data (t8_forest_t forest, sc_MPI_Comm comm,
   /* TODO: The next part is duplicated in t8_forest_partition_recv_message.
    *       Put duplicated code in function */
   /* further assertions */
-  T8_ASSERT (proc == status->MPI_SOURCE);
-  T8_ASSERT (status->MPI_TAG == T8_MPI_PARTITION_FOREST);
 
-  /* Get the number of bytes to receive */
-  mpiret = sc_MPI_Get_count (status, sc_MPI_BYTE, &recv_bytes);
-  SC_CHECK_MPI (mpiret);
-  t8_debugf ("Receiving message of %i bytes from process %i\n", recv_bytes,
-             proc);
   if (proc != forest->mpirank) {
+    T8_ASSERT (proc == status->MPI_SOURCE);
+    T8_ASSERT (status->MPI_TAG == T8_MPI_PARTITION_FOREST);
+
+    /* Get the number of bytes to receive */
+    mpiret = sc_MPI_Get_count (status, sc_MPI_BYTE, &recv_bytes);
+    SC_CHECK_MPI (mpiret);
+    t8_debugf ("Receiving message of %i bytes from process %i\n", recv_bytes,
+               proc);
     /* allocate the receive buffer */
     recv_buffer = T8_ALLOC (char, recv_bytes);
     /* receive the message */
@@ -865,6 +870,10 @@ t8_forest_partition_recv_message_data (t8_forest_t forest, sc_MPI_Comm comm,
  * \param [in]  proc        The rank from which we receive.
  * \param [in]  status      MPI status with which we probed for the message.
  * \param [in]  prev_recvd  The count of messages that we already received.
+ * \param [in]  sent_to_self If proc equals the rank of this process, the message
+ *                          should be passed as this parameter.
+ * \param [in]  byte_to_self If proc equals the rank of this process, the number of
+ *                          bytes in the message.
  * It is important, that we receive the messages in order to properly fill the
  * forest->trees array.
  */
