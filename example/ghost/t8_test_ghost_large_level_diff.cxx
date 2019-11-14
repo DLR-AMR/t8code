@@ -20,6 +20,20 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/* In this example we create a forest either from a .msh
+ * file or a 3D cube consisting of prisms.
+ * The forest is uniformly refined to a base level L
+ * and then refined in a fractal pattern to a final level L+r.
+ * The refinement is such that large differences between the element levels
+ * are created.
+ * Additionally all possible neighbor relations of levels
+ * should occur in the mesh. I.e. for any two level l, l' with
+ * L <= l <= l' <= L+r there should be two face-neighboring elements
+ * in the mesh with levels l and l'.
+ * (This property is not tested).
+ */
+
+
 #include <sc_flops.h>
 #include <sc_statistics.h>
 #include <sc_options.h>
@@ -32,7 +46,24 @@
 
 
 /* The refinement criterion
- * returns 1 if we refine the element, 0 otherwise.
+ * returns 1 if we refine the element, -1 if we coarsen,
+ * 0 otherwise.
+ *
+ * The forest mesh is refined in a fractal pattern and never coarsened.
+ * The exact refinement pattern depends on the element
+ * class (tet/hex/etc..) as follows:
+ *
+ *  A prism is refined if it is of type 0 and its
+ *  child id is neither 3 nor 4.
+ *
+ *  A tetrahedron is refined if it is of type 0, 3, or 5.
+ *
+ *  A hexahedron is refined if its child_id is 0, 3, 5, or 6.
+ *
+ *  If the mesh is not 3D then no element is refined.
+ *
+ *  Warning: this refinement schemes only works with the default element
+ *           scheme (see t8_scheme_new_default_cxx in t8_default_cxx.hxx).
  */
 static int
 t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from,
