@@ -31,7 +31,7 @@
 #include <t8_default_cxx.hxx>
 
 
-/*The refinement creterion
+/* The refinement criterion
  * returns 1 if we refine the element, 0 otherwise.
  */
 static int
@@ -54,11 +54,11 @@ t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from,
       /* refine type 0 except those with child_id 3 or 4*/
       if (type == 0) {
         child_id = ts->t8_element_child_id(elements[0]);
-        /*Not refining*/
+        /* Not refining */
         if(child_id == 3 || child_id == 4){
             return 0;
         }
-        /*Refining*/
+        /* Refining */
         else{
             return 1;
         }
@@ -67,7 +67,7 @@ t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from,
   }
   else if(ts->eclass == T8_ECLASS_TET){
       type = ((t8_dtet_t * ) elements[0])->type;
-      /*Refine tets of type 0, 3 or 5*/
+      /* Refine tets of type 0, 3 or 5 */
       if (type == 0 || type == 3 || type == 5){
           return 1;
       }
@@ -105,9 +105,9 @@ t8_ghost_large_level_diff(const char* prefix, int dim, int level, int refine,
 
 
     if(prefix != NULL){
-        cmesh = t8_cmesh_from_msh_file((char *) prefix, 1, comm, dim, 0);
+        cmesh = t8_cmesh_from_msh_file(prefix, 1, comm, dim, 0);
     }
-    /*If no prefix given, create hypercube*/
+    /* If no prefix given, create hypercube */
     else{
         cmesh = t8_cmesh_new_hypercube(T8_ECLASS_PRISM, comm, 0, 0, 0);
     }
@@ -119,7 +119,7 @@ t8_ghost_large_level_diff(const char* prefix, int dim, int level, int refine,
         t8_cmesh_vtk_write_file(cmesh_partition, "partitioned_cmesh", 1.0);
     }
 
-    //New
+    /* New */
     t8_forest_init(&forest);
     t8_forest_set_cmesh(forest, cmesh_partition, comm);
     t8_forest_set_scheme(forest, t8_scheme_new_default_cxx() );
@@ -134,7 +134,7 @@ t8_ghost_large_level_diff(const char* prefix, int dim, int level, int refine,
     }
     t8_global_productionf("Successfully commited forest.\n");
 
-    //Adapt
+    /* Adapt */
     t8_forest_init(&forest_adapt);
     refine += level;
     t8_forest_set_user_data(forest_adapt, &refine);
@@ -146,7 +146,7 @@ t8_ghost_large_level_diff(const char* prefix, int dim, int level, int refine,
     }
     t8_global_productionf("Successfully refined forest adaptivly.\n");
 
-    //Partition
+    /* Partition */
     t8_forest_init(&forest_partition);
     t8_forest_set_partition(forest_partition, forest_adapt, 0);
     t8_forest_set_ghost_ext(forest_partition, 1, T8_GHOST_FACES, 3);
