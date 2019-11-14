@@ -75,6 +75,7 @@ t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from,
   int                   type, child_id;
   T8_ASSERT (num_elements == 1 || num_elements ==
              ts->t8_element_num_children (elements[0]));
+  T8_ASSERT (t8_eclass_scheme_is_default (ts));
 
   level = ts->t8_element_level (elements[0]);
   if (level >= *(int *) t8_forest_get_user_data (forest)) {
