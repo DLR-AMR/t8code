@@ -88,7 +88,7 @@ t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from,
  * two prisms is created. The forest is refined adaptively, partitioned and the
  * ghost elements are computed.
  *
- * \param[in] path  The path to the meshfile
+ * \param[in] prefix  The prefix to the meshfile
  * @param dim       Dimension of the mesh
  * @param level     Initial refinement level
  * @param refine    Number of levels the forest will be refined
@@ -96,7 +96,7 @@ t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from,
  * @param comm      The MPI-communicator
  */
 static void
-t8_ghost_large_level_diff(const char* path, int dim, int level, int refine,
+t8_ghost_large_level_diff(const char* prefix, int dim, int level, int refine,
                           int no_vtk, sc_MPI_Comm comm){
     t8_forest_t     forest, forest_adapt, forest_partition;
     t8_cmesh_t      cmesh, cmesh_partition;
@@ -104,10 +104,10 @@ t8_ghost_large_level_diff(const char* path, int dim, int level, int refine,
     sc_statinfo_t       stats[1];
 
 
-    if(path != NULL){
-        cmesh = t8_cmesh_from_msh_file((char *) path, 1, comm, dim, 0);
+    if(prefix != NULL){
+        cmesh = t8_cmesh_from_msh_file((char *) prefix, 1, comm, dim, 0);
     }
-    /*If no path given, create hypercube*/
+    /*If no prefix given, create hypercube*/
     else{
         cmesh = t8_cmesh_new_hypercube(T8_ECLASS_PRISM, comm, 0, 0, 0);
     }
@@ -172,7 +172,7 @@ main (int argc, char *argv[])
 {
   int                 mpiret, parsed, dim, level, refine, mpisize, helpme, no_vtk;
   sc_options_t       *opt;
-  const char         *path = NULL;
+  const char         *prefix = NULL;
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
   t8_cmesh_t          cmesh;
@@ -203,7 +203,7 @@ main (int argc, char *argv[])
 
   opt = sc_options_new (argv[0]);
   sc_options_add_switch(opt, 'h', "help", &helpme, "Display a short help message:");
-  sc_options_add_string (opt, 'f', "prefix", &path, NULL, "The path to the mesh-file. "
+  sc_options_add_string (opt, 'f', "prefix", &prefix, NULL, "The prefix to the mesh-file. "
                          "The file must end in .msh and be created with gmsh. "
                          "If no file is given, a hypercube of prisms is created.");
   sc_options_add_int (opt, 'd', "dim", &dim, 3, "The dimension of the mesh.");
@@ -218,7 +218,7 @@ main (int argc, char *argv[])
       sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (parsed >= 0 && 0 <= level && 0 <= refine) {
-    t8_ghost_large_level_diff(path, dim, level, refine, no_vtk,sc_MPI_COMM_WORLD);
+    t8_ghost_large_level_diff(prefix, dim, level, refine, no_vtk,sc_MPI_COMM_WORLD);
   }
   else {
     /*wrong usage*/
