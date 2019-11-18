@@ -48,7 +48,8 @@ const t8_eclass_t   t8_msh_tree_type_to_eclass[T8_NUM_GMSH_ELEM_CLASSES + 1] = {
   T8_ECLASS_VERTEX              /* 15 */
 };
 
-/* translate the msh file vertex number to the t8code vertex number */
+/* translate the msh file vertex number to the t8code vertex number.
+ * See also http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering */
 /* TODO: Check if these are correct */
 const int           t8_msh_tree_vertex_to_t8_vertex_num[T8_ECLASS_COUNT][8]
   = {
@@ -62,7 +63,8 @@ const int           t8_msh_tree_vertex_to_t8_vertex_num[T8_ECLASS_COUNT][8]
   {0, 1, 3, 2, 4}               /* PYRAMID */
 };
 
-/* translate the t8code vertex number to the .msh file vertex number */
+/* translate the t8code vertex number to the .msh file vertex number.
+ * See also http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering */
 /* TODO: Check if these are correct */
 const int           t8_vertex_to_msh_vertex_num[T8_ECLASS_COUNT][8]
   = {
@@ -70,7 +72,7 @@ const int           t8_vertex_to_msh_vertex_num[T8_ECLASS_COUNT][8]
   {0, 1},                       /* LINE */
   {0, 1, 3, 2},                 /* QUAD */
   {0, 1, 2},                    /* TRIANGLE */
-  {0, 1, 4, 5, 3, 2, 7, 6},     /* HEX */
+  {0, 1, 4, 5, 3, 2, 6, 7},     /* HEX */
   {0, 1, 2, 3},                 /* TET */
   {0, 1, 2, 3, 4, 5, 6},        /* PRISM */
   {0, 1, 3, 2, 4}               /* PYRAMID */
@@ -396,22 +398,59 @@ t8_cmesh_msh_file_read_eles (t8_cmesh_t cmesh, FILE * fp,
         tree_vertices[3 * t8_vertex_num + 1] = (*found_node)->coordinates[1];
         tree_vertices[3 * t8_vertex_num + 2] = (*found_node)->coordinates[2];
       }
+      /* Detect and correct negative volumes */
       if (t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices,
                                                   num_nodes)) {
-        /* The volume described is negative. We need to switch two
-         * vertices. */
+        /* The volume described is negative. We need to change vertices.
+         * For tets we switch 0 and 3.
+         * For prisms we switch 0 and 3, 1 and 4, 2 and 5.
+         * For hexahedra we switch 0 and 4, 1 and 5, 2 and 6, 3 and 7.
+         * For pyramids we switch 0 and 4 */
         double              temp;
+        int                 num_switches = 0;
+        int                 switch_indices[4] = { };
+        int                 iswitch;
         T8_ASSERT (t8_eclass_to_dimension[eclass] == 3);
         t8_debugf ("Correcting negative volume of tree %li\n", tree_count);
-        /* We switch vertex 0 and vertex 1 */
-        for (i = 0; i < 3; i++) {
-          temp = tree_vertices[i];
-          tree_vertices[i] = tree_vertices[3 + i];
-          tree_vertices[3 + i] = temp;
+        switch (eclass) {
+        case T8_ECLASS_TET:
+          /* We switch vertex 0 and vertex 3 */
+          num_switches = 1;
+          switch_indices[0] = 3;
+          break;
+        case T8_ECLASS_PRISM:
+          num_switches = 3;
+          switch_indices[0] = 3;
+          switch_indices[1] = 4;
+          switch_indices[2] = 5;
+          break;
+        case T8_ECLASS_HEX:
+          num_switches = 4;
+          switch_indices[0] = 4;
+          switch_indices[1] = 5;
+          switch_indices[2] = 6;
+          switch_indices[3] = 7;
+          break;
+        case T8_ECLASS_PYRAMID:
+          num_switches = 1;
+          switch_indices[0] = 4;
+          break;
+        default:
+          SC_ABORT_NOT_REACHED ();
+        }
+
+        for (iswitch = 0; iswitch < num_switches; ++iswitch) {
+          /* We switch vertex 0 + iswitch and vertex switch_indices[iswitch] */
+          for (i = 0; i < 3; i++) {
+            temp = tree_vertices[3 * iswitch + i];
+            tree_vertices[3 * iswitch + i] =
+              tree_vertices[3 * switch_indices[iswitch] + i];
+            tree_vertices[3 * switch_indices[iswitch] + i] = temp;
+          }
         }
         T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume
                    (eclass, tree_vertices, num_nodes));
-      }
+      }                         /* End of negative volume handling */
       /* Set the vertices of this tree */
       t8_cmesh_set_tree_vertices (cmesh, tree_count, t8_get_package_id (),
                                   0, tree_vertices, num_nodes);
