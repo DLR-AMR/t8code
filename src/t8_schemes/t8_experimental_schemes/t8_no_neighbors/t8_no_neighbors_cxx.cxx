@@ -21,10 +21,10 @@
 */
 
 #include <new>
-#include <t8_schemes/t8_no_neighbors_cxx.hxx>
+#include <t8_schemes/t8_experimental_schemes/t8_no_neighbors_cxx.hxx>
 #include <t8_refcount.h>
 
-#include "../t8_default/t8_default_line_cxx.hxx"
+#include "../../t8_default/t8_default_line_cxx.hxx"
 #include "t8_no_neighbors_quad_cxx.hxx"
 
 /* We want to export the whole implementation to be callable from "C" */

@@ -31,9 +31,8 @@
 
 #include <p4est.h>
 #include <t8_element_cxx.hxx>
-#include "../t8_default/t8_default_quad_cxx.hxx"
-#include "../t8_default/t8_default_line_cxx.hxx"
-
+#include "../../t8_default/t8_default_quad_cxx.hxx"
+#include "../../t8_default/t8_default_line_cxx.hxx"
 
 struct t8_no_neighbors_scheme_quad_c:public t8_default_scheme_quad_c
 {
