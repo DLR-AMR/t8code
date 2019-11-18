@@ -23,7 +23,7 @@
 #include <sc_refcount.h>
 #include <t8_eclass.h>
 #include <t8_element_cxx.hxx>
-#include <t8_default_cxx.hxx>
+#include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_cmesh.h>
 

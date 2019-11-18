@@ -22,7 +22,7 @@
 
 #include <sc_options.h>
 #include <sc_statistics.h>
-#include <t8_default_cxx.hxx>
+#include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_private.h>        /* TODO: remove */
 #include <t8_forest/t8_forest_ghost.h>
