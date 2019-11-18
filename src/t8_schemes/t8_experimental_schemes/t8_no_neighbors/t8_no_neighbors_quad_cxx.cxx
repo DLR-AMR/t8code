@@ -26,31 +26,29 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
+/* *INDENT-OFF* */
 void
-t8_no_neighbors_scheme_quad_c::t8_element_transform_face (const t8_element_t *
-                                                     elem1,
-                                                     t8_element_t * elem2,
-                                                     int orientation,
-                                                     int sign,
-                                                     int is_smaller_face)
+t8_no_neighbors_scheme_quad_c::
+t8_element_transform_face (const t8_element_t * elem1, t8_element_t * elem2,
+                           int orientation, int sign, int is_smaller_face)
 {
-    /* There are no face neighbors. Calling this function does not make sense. */
+  /* There are no face neighbors. Calling this function does not make sense. */
 }
 
 int
-t8_no_neighbors_scheme_quad_c::t8_element_face_neighbor_inside (const t8_element_t
-                                                           * elem,
-                                                           t8_element_t *
-                                                           neigh, int face,
-                                                           int *neigh_face)
+t8_no_neighbors_scheme_quad_c::
+t8_element_face_neighbor_inside (const t8_element_t * elem,
+                                 t8_element_t * neigh, int face,
+                                 int *neigh_face)
 {
   return 0;
 }
+/* *INDENT-ON* */
 
 /* Constructor */
 t8_no_neighbors_scheme_quad_c::t8_no_neighbors_scheme_quad_c (void)
 {
-    /* Base class constructor suffices. Hence, this constructor is empty */
+  /* Base class constructor suffices. Hence, this constructor is empty */
 }
 
 t8_no_neighbors_scheme_quad_c::~t8_no_neighbors_scheme_quad_c ()
