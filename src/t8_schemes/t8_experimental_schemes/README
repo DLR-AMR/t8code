@@ -1,0 +1,16 @@
+This is a playground for implementations of the t8_element interface.
+We collect implementations that are not recommended for production usage
+but are rather used to investigate the possibilities of the t8_element interface.
+
+So far, the following schems are implemented here:
+
+t8_no_neighbors:
+  This scheme only implements the quad element class.
+  A quad refines into 4 subquads and the SFC is the Morton SFC as in
+  the t8_default_scheme_quad.
+  In this scheme, however, the elements do not have any face-neighbors.
+  Thus, despite geometrically lying next to each other. 
+  Calling t8_element_face_neighbor_inside will never return any neighbors.
+  In particular, Ghost layers are empty for this scheme.
+
+
