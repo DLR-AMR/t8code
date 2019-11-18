@@ -39,10 +39,10 @@
 #include <sc_options.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
-#include <t8_default/t8_dprism.h>
-#include <t8_default/t8_dtet.h>
+#include <t8_schemes/t8_default/t8_dprism.h>
+#include <t8_schemes/t8_default/t8_dtet.h>
 #include <t8_forest/t8_forest_adapt.h>
-#include <t8_default_cxx.hxx>
+#include <t8_schemes/t8_default_cxx.hxx>
 
 
 /* The refinement criterion
@@ -112,7 +112,7 @@ t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from,
       };
       return 0;
   }
-
+  return 0;
 }
 
 /**
@@ -207,7 +207,6 @@ main (int argc, char *argv[])
   const char         *prefix = NULL;
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
-  t8_cmesh_t          cmesh;
 
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>",
             basename (argv[0]));
