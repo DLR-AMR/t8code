@@ -96,6 +96,12 @@ t8_default_scheme_pyramid_c::t8_element_set_linear_id(t8_element_t *elem, int le
     t8_dpyramid_init_linear_id((t8_dpyramid_t *) elem, level, id);
 }
 
+t8_eclass_t
+t8_default_scheme_pyramid_c::t8_element_shape(const t8_element_t *elem)
+{
+    return t8_dpyramid_shape((const t8_dpyramid_t *) elem);
+}
+
 u_int64_t
 t8_default_scheme_pyramid_c::t8_element_get_linear_id (const t8_element_t * elem, int level)
 {

@@ -26,6 +26,7 @@
 #include "t8_dline_bits.h"
 #include "t8_dtet.h"
 #include "t8_dtri_connectivity.h"
+#include "t8_eclass.h"
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();

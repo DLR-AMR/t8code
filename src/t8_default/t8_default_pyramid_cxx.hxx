@@ -222,6 +222,9 @@ virtual int         t8_element_num_vertices (const t8_element_t * elem);
   virtual void        t8_element_set_linear_id (t8_element_t * elem,
                                                 int level, uint64_t id);
 
+/** Return the shape of an element */
+    virtual t8_eclass_t t8_element_shape(const t8_element_t * elem);
+
 /** Calculate the linear id of an element */
   virtual u_int64_t   t8_element_get_linear_id (const
                                                 t8_element_t *

@@ -249,7 +249,8 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   dim = t8_eclass_to_dimension[eclass];
   len = 1. / ts->t8_element_root_len (element);
   ts->t8_element_vertex_coords (element, corner_number, corner_coords);
-  printf("len: %f\n", len);
+  //printf("elass %i\n", (int)ts->t8_element_shape(element));
+  eclass = ts->t8_element_shape(element);
   /*Pyramids have to return T8_ECLASS_TET, if pyramid is a tet*/
   switch (eclass) {
   case T8_ECLASS_VERTEX:
@@ -329,12 +330,6 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
           coordinates[i] = ((vertices[3 + i] - vertices[i]) * pyra_coords[0]
                   +(vertices[6 + i] - vertices[i])*pyra_coords[1]
                   +(vertices[12+i] - vertices[i])*pyra_coords[2]) + vertices[i];
-          /*
-          coordinates[i] = (vertices[i] * (1 - pyra_coords[0]) * (1 - pyra_coords[1])* (1 - pyra_coords[2])
-                  +vertices[3 + i] * pyra_coords[0] * (1- pyra_coords[1])* (1- pyra_coords[2])
-                  +vertices[6 + i] * (1- pyra_coords[0]) *  pyra_coords[1]* (1- pyra_coords[2])
-                  +vertices[9 + i] *  (1-pyra_coords[0]) * (1-pyra_coords[1])*  pyra_coords[2]
-                  +vertices[12 + i] * pyra_coords[0]* pyra_coords[1]* pyra_coords[2]);*/
          printf("%f ", coordinates[i]);
       }
       printf("\n");

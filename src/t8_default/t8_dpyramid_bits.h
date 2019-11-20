@@ -108,6 +108,12 @@ void                t8_dpyramid_compute_coords (const t8_dpyramid_t * p,
  */
 int                 t8_dpyramid_num_vertices(const t8_dpyramid_t * p);
 
+/** Returns the shape of the pyramid (pyramid or tetrahedron)
+ * \param [in] p    Input pyramid.
+ * \return          The eclass of the element
+ */
+t8_eclass_t t8_dpyramid_shape(const t8_dpyramid_t * p);
+
 /** Computes the successor of a pyramid in a uniform grid of level \a level.
  * \param [in] elem  pyramid whose id will be computed.
  * \param [in,out] s Existing pyramid whose data will be filled with the

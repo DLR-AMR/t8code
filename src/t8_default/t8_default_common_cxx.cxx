@@ -106,4 +106,9 @@ t8_default_mempool_free (sc_mempool_t * ts_context, int length,
   }
 }
 
+t8_eclass_t
+t8_default_scheme_common_c::t8_element_shape(const t8_element_t * elem){
+    return t8_eclass_shape[eclass];
+}
+
 T8_EXTERN_C_END ();

@@ -296,6 +296,19 @@ t8_dpyramid_parent(const t8_dpyramid_t * p, t8_dpyramid_t * parent)
     parent->level = p->level - 1;*/
 }
 
+t8_eclass_t
+t8_dpyramid_shape(const t8_dpyramid_t * p)
+{
+    /*The pyramid has the shape of a tetrahedron*/
+    if(p->type < 6){
+        return T8_ECLASS_TET;
+    }
+    else{
+        return T8_ECLASS_PYRAMID;
+    }
+
+}
+
 void
 t8_dpyramid_succesor(const t8_dpyramid_t * elem, t8_dpyramid_t * succ, int level)
 {
