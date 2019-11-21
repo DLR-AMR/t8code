@@ -121,25 +121,34 @@ T8_EXTERN_C_BEGIN ();
 
 /* Given a tree return the beginning of its attributes block */
 #define T8_TREE_FIRST_ATT(t) ((char *)(t) + (t)->att_offset)
+
 /* Given a tree and an index i return the i-th attribute index of that tree */
 #define T8_TREE_ATTR_INFO(t,i) ((t8_attribute_info_struct_t *) \
   ((char*)(t) + (t)->att_offset + \
   (i) * sizeof (t8_attribute_info_struct_t)))
+
 /* Given a tree and an attribute info return the attribute */
 #define T8_TREE_ATTR(t,ai) (T8_TREE_FIRST_ATT(t) + (ai)->attribute_offset)
+
 /* Given a tree return its face_neighbor array */
 #define T8_TREE_FACE(t) ((char *) (t) + (t)->neigh_offset)
+
 /* Given a tree return irs tree_to_face array */
 #define T8_TREE_TTF(t) (T8_TREE_FACE(t) + \
   t8_eclass_num_faces[(t)->eclass] * sizeof(t8_locidx_t))
+
 /* Given a ghost return the beginning of its attribute block */
 #define T8_GHOST_FIRST_ATT(g) T8_TREE_FIRST_ATT (g)
+
 /* Given a ghost and an index i return the i-th attribute index of that ghost */
 #define T8_GHOST_ATTR_INFO(g,i) T8_TREE_ATTR_INFO (g, i)
+
 /* Given a ghost and an attribute info return the attribute */
 #define T8_GHOST_ATTR(g,ai) T8_TREE_ATTR(g,ai)
+
 /* Given a ghost return its face_neighbor array */
 #define T8_GHOST_FACE(g) T8_TREE_FACE(g)
+
 /* Given a ghost return its tree_to_face array */
 #define T8_GHOST_TTF(g) (int8_t *) (T8_GHOST_FACE(g) + \
   t8_eclass_num_faces[(g)->eclass] * sizeof(t8_gloidx_t))
@@ -297,7 +306,7 @@ void                t8_cmesh_trees_get_part_data (t8_cmesh_trees_t trees,
                                                   t8_locidx_t * first_ghost,
                                                   t8_locidx_t * num_ghosts);
 
-/* TODO: This function return NULL if the tree is not present.
+/* TODO: This function returns NULL if the tree is not present.
  *       So far no error checking is done here. */
 /** Return a pointer to a specific tree in a trees struct.
  * \param [in]      trees The tress structure where the tree is to be looked up.
@@ -329,7 +338,7 @@ t8_ctree_t          t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees,
 t8_locidx_t         t8_cmesh_trees_get_face_neighbor (t8_ctree_t tree,
                                                       int face);
 
-/* TODO: This function return NULL if the ghost is not present.
+/* TODO: This function returns NULL if the ghost is not present.
  *       So far no error checking is done here. */
 /** Return a pointer to a specific ghost in a trees struct.
  * \param [in]      trees The tress structure where the tree is to be looked up.

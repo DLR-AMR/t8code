@@ -551,7 +551,7 @@ public:
   virtual void        t8_element_anchor (const t8_element_t * elem,
                                          int anchor[3]) = 0;
 
-  /** Compute the root lenght of a given element, that is the length of
+  /** Compute the root length of a given element, that is the length of
    * its level 0 ancestor.
    * \param [in] elem     The element whose root length should be computed.
    * \return              The root length of \a elem
