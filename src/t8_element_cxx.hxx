@@ -420,7 +420,12 @@ public:
    * If \a elem is of class T8_ECLASS_VERTEX, then \a boundary must be NULL
    * and will not be modified.
    */
-  /* TODO: update documentation with boundary_scheme */
+  /* TODO: update documentation with boundary_scheme
+   *        Do we need this function at all?
+   *        If not remove it. If so, what to do with prisms and pyramids?
+   *        Here the boundary elements are of different eclasses, so we cannot
+   *        store them in an array...
+   */
   virtual void        t8_element_boundary_face (const t8_element_t * elem,
                                                 int face,
                                                 t8_element_t * boundary,
@@ -457,7 +462,7 @@ public:
 
   /* TODO: document better */
   /* TODO: document better.
-   *        Do we need this functino at all?
+   *        Do we need this function at all?
    *        If not remove it. If so, what to do with prisms and pyramids?
    *        Here the boundary elements are of different eclasses, so we cannot
    *        store them in an array...
@@ -548,6 +553,8 @@ public:
 
 /** Get the integer coordinates of the anchor node of an element */
   /* TODO: better document this */
+  /* TODO: should we remove this function? Not all SFCs rely on anchor nodes.
+   *        this function is only used in examples. */
   virtual void        t8_element_anchor (const t8_element_t * elem,
                                          int anchor[3]) = 0;
 
