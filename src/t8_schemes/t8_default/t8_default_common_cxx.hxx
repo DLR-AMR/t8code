@@ -48,6 +48,9 @@ public:
 
   /** Deallocate space for a bunch of elements. */
   virtual void        t8_element_destroy (int length, t8_element_t ** elem);
+
+  /** Return the shape of an element */
+  virtual t8_element_shape_t t8_element_shape (const t8_element_t * elem);
 };
 
 #endif /* !T8_DEFAULT_COMMON_CXX_HXX */
