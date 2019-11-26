@@ -148,12 +148,12 @@ int                 t8_dprism_is_inside_root (t8_dprism_t * p);
 void                t8_dprism_child (const t8_dprism_t * p, int childid,
                                      t8_dprism_t * child);
 
-/** Return the element class of a face.
+/** Return the shape of a face.
  * \param [in] p    Input prism.
  * \param [in] face A face id for \a p.
- * \return  The element class of \a face.
+ * \return  The shape of \a face.
  */
-t8_eclass_t         t8_dprism_face_class (const t8_dprism_t * p, int face);
+t8_element_shape_t  t8_dprism_face_shape (const t8_dprism_t * p, int face);
 
 /** Compute the number of children at a given face.
   * \param [in] p   Input prism.
