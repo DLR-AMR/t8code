@@ -51,6 +51,6 @@ public:
 
   /** Return the shape of an element */
   virtual t8_element_shape_t t8_element_shape (const t8_element_t * elem);
-
+};
 
 #endif /* !T8_DEFAULT_COMMON_CXX_HXX */
