@@ -137,8 +137,8 @@ public:
                                       t8_element_t * nca);
 
   /** Compute the elmement class of the face of an element. */
-  virtual t8_eclass_t t8_element_face_class (const t8_element_t * elem,
-                                             int face);
+  virtual t8_element_shape_t t8_element_face_shape (const t8_element_t * elem,
+                                                    int face);
 
   /** Given an element and a face of the element, compute all children of
    * the element that touch the face. */

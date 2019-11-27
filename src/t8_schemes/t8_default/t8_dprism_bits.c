@@ -261,8 +261,8 @@ t8_dprism_child (const t8_dprism_t * p, int childid, t8_dprism_t * child)
   T8_ASSERT (child->line.level == child->tri.level);
 }
 
-t8_eclass_t
-t8_dprism_face_class (const t8_dprism_t * p, int face)
+t8_element_shape_t
+t8_dprism_face_shape (const t8_dprism_t * p, int face)
 {
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   if (face < 3) {

@@ -212,8 +212,8 @@ t8_default_scheme_tri_c::t8_element_nca (const t8_element_t * elem1,
   t8_dtri_nearest_common_ancestor (t1, t2, c);
 }
 
-t8_eclass_t
-  t8_default_scheme_tri_c::t8_element_face_class (const t8_element_t * elem,
+t8_element_shape_t
+  t8_default_scheme_tri_c::t8_element_face_shape (const t8_element_t * elem,
                                                   int face)
 {
   T8_ASSERT (t8_element_is_valid (elem));

@@ -225,6 +225,13 @@ virtual int         t8_element_num_vertices (const t8_element_t * elem);
 /** Return the shape of an element */
     virtual t8_eclass_t t8_element_shape(const t8_element_t * elem);
 
+/** Return the shape of an element */
+    virtual t8_element_shape_t t8_element_face_shape(const t8_element_t * elem, int face)
+  {
+      SC_ABORT("This function is not implemented yet.\n");
+      return T8_ECLASS_ZERO;
+  }
+
 /** Calculate the linear id of an element */
   virtual u_int64_t   t8_element_get_linear_id (const
                                                 t8_element_t *

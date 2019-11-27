@@ -284,16 +284,16 @@ public:
                                       const t8_element_t * elem2,
                                       t8_element_t * nca) = 0;
 
-  /** Compute the elmement class of the face of an element.
+  /** Compute the shape of the face of an element.
    * \param [in] elem     The element.
    * \param [in] face     A face of \a elem.
-   * \return              The element class of the face.
+   * \return              The element shape of the face.
    * I.e. T8_ECLASS_LINE for quads, T8_ECLASS_TRIANGLE for tets
    *      and depending on the face number either T8_ECLASS_QUAD or
    *      T8_ECLASS_TRIANGLE for prisms.
    */
-  virtual t8_eclass_t t8_element_face_class (const t8_element_t * elem,
-                                             int face) = 0;
+  virtual t8_element_shape_t t8_element_face_shape (const t8_element_t * elem,
+                                                    int face) = 0;
 
   /** Given an element and a face of the element, compute all children of
    * the element that touch the face.
