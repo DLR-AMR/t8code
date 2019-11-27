@@ -1721,7 +1721,7 @@ t8_cmesh_new_pyramid (sc_MPI_Comm comm)
     1, -1, 0,
     -1, 1, 0,
     1, 1, 0,
-    -1, -1, 1
+    1, 1, 1
   };
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);

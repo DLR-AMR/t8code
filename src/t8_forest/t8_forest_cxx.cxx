@@ -249,7 +249,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   dim = t8_eclass_to_dimension[eclass];
   len = 1. / ts->t8_element_root_len (element);
   ts->t8_element_vertex_coords (element, corner_number, corner_coords);
-  //printf("elass %i\n", (int)ts->t8_element_shape(element));
+  printf("elass %i\n", (int)ts->t8_element_shape(element));
   eclass = ts->t8_element_shape(element);
   /*Pyramids have to return T8_ECLASS_TET, if pyramid is a tet*/
   switch (eclass) {
@@ -312,8 +312,27 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
                                       vertices, dim, coordinates);
     break;
   case T8_ECLASS_PYRAMID:
-      double pyra_coords[3];
-      for(i = 0; i < 3; i++){
+      double pyra_vert[12];
+      double temp[3], temp2[3], temp3[3];
+      for(i = 0; i<3; i++){
+          vertex_coords[i] = len * corner_coords[i];
+      }
+      printf("Vertex: ");
+      for (i = 0; i < 5; i++){
+          for(j  = 0; j < 3; j++){
+              printf("%f ", vertices[i*3+j]);
+          }
+          printf("\n");
+      }
+      printf("Computed coord: ");
+      for(i = 0; i<3;i++){
+          temp[i] = (vertices[3+i] - vertices[i])*vertex_coords[0]+vertices[i];
+          temp2[i] = (vertices[9+i] - vertices[6+i])*vertex_coords[0]+vertices[6+i];
+          temp3[i] = (temp2[i] - temp[i])*vertex_coords[1]+temp[i];
+          coordinates[i] = (vertices[12 + i] - temp3[i])*vertex_coords[2] + temp3[i];
+          printf("%f ", coordinates[i]);
+      }
+      /*for(i = 0; i < 3; i++){
           pyra_coords[i] = corner_coords[i] * len;
           printf("pyra_coords %i: %i\n",i, corner_coords[i]);
       }
@@ -329,9 +348,15 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
       {
           coordinates[i] = ((vertices[3 + i] - vertices[i]) * pyra_coords[0]
                   +(vertices[6 + i] - vertices[i])*pyra_coords[1]
-                  +(vertices[12+i] - vertices[i])*pyra_coords[2]) + vertices[i];
-         printf("%f ", coordinates[i]);
-      }
+                  +(vertices[12+i] - vertices[9+i])*pyra_coords[2]) + vertices[i];
+*/
+//          coordinates[i] = (vertices[i] * (1 - pyra_coords[0]) * (1 - pyra_coords[1])* (1 - pyra_coords[2])
+//                  +vertices[3 + i] * pyra_coords[0] * (1- pyra_coords[1])* (1- pyra_coords[2])
+//                  +vertices[6 + i] * (1- pyra_coords[0]) *  pyra_coords[1]* (1- pyra_coords[2])
+//                  +vertices[9 + i] *  (1-pyra_coords[0]) * (1-pyra_coords[1])*  pyra_coords[2]
+//                  +vertices[12 + i] * pyra_coords[0]* pyra_coords[1]* pyra_coords[2]);
+//         printf("%f ", coordinates[i]);
+//      }
       printf("\n");
       printf("\n");
       break;
