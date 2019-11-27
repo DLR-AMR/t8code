@@ -109,6 +109,7 @@ int                 t8_cmesh_no_negative_volume (t8_cmesh_t cmesh);
  * Returns true if a tree of the given eclass with the given vertex
  * coordinates does have negative volume.
  */
+/* TODO: write a test for this function */
 int                 t8_cmesh_tree_vertices_negative_volume (t8_eclass_t
                                                             eclass,
                                                             double *vertices,
@@ -814,8 +815,7 @@ t8_cmesh_t          t8_cmesh_new_hybrid_gate (sc_MPI_Comm comm);
  * \param [in] comm        The MPI communicator used to commit the cmesh.
  * \return                 A committed and replicated hybrid cmesh of 5 trees.
  */
-t8_cmesh_t
-t8_cmesh_new_hybrid_gate_deformed (sc_MPI_Comm comm);
+t8_cmesh_t          t8_cmesh_new_hybrid_gate_deformed (sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 

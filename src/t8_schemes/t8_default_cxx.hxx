@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default.h
+/** \file t8_default_cxx.hxx
  * This file is the point of entry for our default element implementation.
  *
  * This scheme points to a consistent implementation of all element classes.
@@ -35,6 +35,13 @@ T8_EXTERN_C_BEGIN ();
 
 /** Return the default element implementation of t8code. */
 t8_scheme_cxx_t    *t8_scheme_new_default_cxx (void);
+
+/** Check whether a given eclass_scheme is on of the default schemes.
+ * \param [in] ts   A (pointer to a) scheme
+ * \return          True (non-zero) if \a ts is one of the default schemes,
+ *                  false (zero) otherwise.
+ */
+int                 t8_eclass_scheme_is_default (t8_eclass_scheme_c *ts);
 
 T8_EXTERN_C_END ();
 

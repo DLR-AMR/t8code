@@ -21,10 +21,10 @@
 */
 
 #include <sc_refcount.h>
-#include <t8_default_cxx.hxx>
-#include <t8_default/t8_dprism.h>
-#include <t8_default/t8_dtri.h>
-#include <t8_default/t8_dtet.h>
+#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_dprism.h>
+#include <t8_schemes/t8_default/t8_dtri.h>
+#include <t8_schemes/t8_default/t8_dtet.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest.h>
 #include <sc_flops.h>

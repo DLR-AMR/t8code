@@ -28,7 +28,7 @@
 #include <t8_vec.h>
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_forest_types.h"
-#include "t8_default/t8_dpyramid_bits.h"
+#include "t8_schemes/t8_default/t8_dpyramid_bits.h"
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
