@@ -41,13 +41,13 @@ const t8_dpyramid_cube_id_t t8_dpyramid_parenttype_Iloc_to_cid[2][10] = {
 };
 
 const int           t8_dpyramid_type_cid_to_Iloc[8][8] = {
-  {0, 1, 1, 4, 1, 4, 4, 7},
-  {0, 1, 2, 5, 2, 5, 4, 7},
-  {0, 2, 3, 4, 1, 6, 5, 7},
-  {0, 3, 1, 5, 2, 4, 6, 7},
-  {0, 2, 2, 6, 3, 5, 5, 7},
-  {0, 3, 3, 6, 3, 6, 6, 7},
-  {0, 2, 4, 7, 3, -1, -1, 9},
+  {-1, -1, 3, 5, 80, -1, 80, -1},
+  {-1,-1,-1,-1,-1,-1,-1,-1},
+  {-1,-1,-1,-1,-1,-1,-1,-1},
+  {-1, 1, -1, 6, 80, 80, -1, -1},
+  {-1,-1,-1,-1,-1,-1,-1,-1},
+  {-1,-1,-1,-1,-1,-1,-1,-1},
+  {0, 2, 4, 7, 1, -1, -1, 9},
   {0, -1, -1, 8, 3, 4, 6, 9}
 };
 
@@ -236,6 +236,7 @@ int
 t8_dpyramid_child_id (const t8_dpyramid_t * p)
 {
   int                 cube_id = compute_cubeid (p, p->level);
+  printf("In pyramid_child_id type = %i cube_id = %i\n",p->type, cube_id);
   return t8_dpyramid_type_cid_to_Iloc[p->type][cube_id];
 }
 
@@ -251,6 +252,7 @@ t8_dpyramid_child (const t8_dpyramid_t * elem, int child_id,
   }
   else {
     cube_id = t8_dpyramid_parenttype_Iloc_to_cid[elem->type - 6][child_id];
+    printf("In compute child  child_id = %i cube_id = %i\n", child_id, cube_id);
     child->level = elem->level + 1;
     h = T8_DPYRAMID_LEN (child->level);
     child->x = elem->x + (cube_id & 0x01) ? h : 0;
@@ -271,7 +273,9 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
   /*This assertion is just for the case, that I forgot to realy implement this function!
    * This version only works, if the pyramid is only refined once, so the parent is always
    * known. Delete this, if fully implemented.*/
-  t8_debugf ("t8_dpyramid_parent is not correctly implemented\n");
+  if(p->level > 1){
+      SC_ABORT("t8_dpyramid_partent does not support level > 1 yet.\n");
+  }
   T8_ASSERT (p->level < 2);
   parent->x = 0;
   parent->y = 0;
@@ -295,7 +299,7 @@ t8_eclass_t
 t8_dpyramid_shape (const t8_dpyramid_t * p)
 {
   /*The pyramid has the shape of a tetrahedron */
-  if (p->type < T8_DTET_NUM_TYPES) {
+  if (p->type < 6) {
     return T8_ECLASS_TET;
   }
   else {
@@ -329,6 +333,9 @@ t8_dpyramid_succesor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
     t8_dpyramid_parent (succ, succ);
     t8_dpyramid_child (succ, pyramid_child_id + 1, succ);
   }
+  printf("Computed child %i\n", t8_dpyramid_child_id(succ));
+  printf (" x: %i\n y: %i\n z: %i\n type: %i\n\n", succ->x, succ->y, succ->z,
+          succ->type);
 }
 
 void

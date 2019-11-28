@@ -178,9 +178,7 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
     T8_FREE (*data);
     return 1;
   }
-  num_tree_vertices = ts->eclass == T8_ECLASS_PYRAMID ?
-              t8_dpyramid_num_vertices((t8_dpyramid_t *) element):
-              t8_eclass_num_vertices[ts->eclass];
+  num_tree_vertices = t8_eclass_num_vertices[ts->t8_element_shape(element)];
   T8_ASSERT (modus == T8_VTK_KERNEL_EXECUTE);
   vertex_data = (struct t8_forest_vtk_vertices_t *) *data;
   if (ltree_id != vertex_data->ltreeid) {
@@ -217,7 +215,7 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
   for (ivertex = 0; ivertex < num_tree_vertices; ivertex++) {
     t8_forest_element_coordinate (forest, ltree_id, element,
                                   vertex_data->tree_vertices,
-                                  t8_eclass_vtk_corner_number[ts->eclass]
+                                  t8_eclass_vtk_corner_number[ts->t8_element_shape(element)]
                                   [ivertex], element_coordinates);
 #if 0
     /* if we eventually implement scaling the elements, activate this line */
@@ -390,13 +388,7 @@ t8_forest_vtk_cells_connectivity_kernel (t8_forest_t forest,
   /* TODO: This will definitely break with pyramids */
   //SC_CHECK_ABORT (ts->eclass != T8_ECLASS_PYRAMID,
   //                "No vtk support for pyramids.");
-  if(ts->eclass == T8_ECLASS_PYRAMID){
-      num_vertices = t8_dpyramid_num_vertices((t8_dpyramid_t *)elements);
-
-  }
-  else{
-      num_vertices = t8_eclass_num_vertices[ts->eclass];
-  }
+  num_vertices = t8_eclass_num_vertices[ts->t8_element_shape(elements)];
   for (ivertex = 0; ivertex < num_vertices;
        ++ivertex, (*count_vertices)++) {
     freturn = fprintf (vtufile, " %ld", (long) *count_vertices);
@@ -404,7 +396,7 @@ t8_forest_vtk_cells_connectivity_kernel (t8_forest_t forest,
       return 0;
     }
   }
-  *columns += t8_eclass_num_vertices[ts->eclass];
+  *columns += t8_eclass_num_vertices[ts->t8_element_shape(elements)];
   return 1;
 }
 
@@ -437,12 +429,7 @@ t8_forest_vtk_cells_offset_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
   /* TODO: This will also break with pyramids! */
   //SC_CHECK_ABORT (ts->eclass != T8_ECLASS_PYRAMID,
   //                "Pyramids not supported in vtk");
-  if(ts->eclass == T8_ECLASS_PYRAMID){
-      num_vertices = t8_dpyramid_num_vertices((t8_dpyramid_t *)element);
-  }
-  else{
-      num_vertices = t8_eclass_num_vertices[ts->eclass];
-  }
+  num_vertices = t8_eclass_num_vertices[ts->t8_element_shape(element)];
   *offset += num_vertices;
   freturn = fprintf (vtufile, " %lld", *offset);
   if (freturn <= 0) {
@@ -466,7 +453,7 @@ t8_forest_vtk_cells_type_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
   int                 freturn;
   if (modus == T8_VTK_KERNEL_EXECUTE) {
     /* print the vtk type of the element */
-    freturn = fprintf (vtufile, " %d", t8_eclass_vtk_type[ts->eclass]);
+    freturn = fprintf (vtufile, " %d", t8_eclass_vtk_type[ts->t8_element_shape(element)]);
     if (freturn <= 0) {
       return 0;
     }

@@ -26,8 +26,10 @@
 #include <t8_refcount.h>
 #include <t8_data/t8_shmem.h>
 #include <t8_vec.h>
+#include <sc_functions.h>
 #ifdef T8_WITH_METIS
 #include <metis.h>
+
 #endif
 #include "t8_cmesh_trees.h"
 
@@ -1293,7 +1295,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
         {
             SC_ABORT("Different numbers of elements per tree not yet supported");
         }
-        children_per_tree = 10;
+        children_per_tree = 2 * (one << 3*level) - sc_intpow64u(6,level);
         global_num_children = cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] * children_per_tree;
     }
     else{
