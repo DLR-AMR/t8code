@@ -82,6 +82,15 @@ public:
                                                    int num_children,
                                                    int *child_indices);
 
+  /** Given a face of an element return the face number
+   * of the parent of the element that matches the element's face. Or return -1 if
+   * no face of the parent matches the face. */
+  virtual int         t8_element_face_parent_face (const t8_element_t * elem,
+                                                   int face)
+  {
+    return face;                /* All faces are at their parents face boundary. */
+  }
+
   /** Return the tree face id given a boundary face. */
   virtual int         t8_element_tree_face (const t8_element_t * elem,
                                             int face);

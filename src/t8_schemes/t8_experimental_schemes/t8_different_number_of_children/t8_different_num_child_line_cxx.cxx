@@ -123,7 +123,7 @@ t8_different_num_child_scheme_line_c
 /* *INDENT-OFF* */
 void
 t8_different_num_child_scheme_line_c
-::t8_element_first_descendant_face (const *elem, int face,
+::t8_element_first_descendant_face (const t8_element_t *elem, int face,
                                     t8_element_t * first_desc, int level)
 /* *INDENT-ON* */
 {
@@ -208,6 +208,7 @@ t8_different_num_child_scheme_line_c
   T8_ASSERT (t8_element_is_valid (elem));
   /* Copy the element */
   t8_element_copy (elem, desc);
+  ((t8_default_line_t *) desc)->level = level;
 }
 
 /* *INDENT-OFF* */
@@ -221,6 +222,7 @@ t8_different_num_child_scheme_line_c
   T8_ASSERT (t8_element_is_valid (elem));
   /* Copy the element */
   t8_element_copy (elem, desc);
+  ((t8_default_line_t *) desc)->level = level;
 }
 
 /* *INDENT-OFF* */
