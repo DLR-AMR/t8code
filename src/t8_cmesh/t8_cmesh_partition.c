@@ -679,17 +679,16 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh_to, t8_cmesh_t cmesh_from,
       ret--;
     }
   }
-}
 
-t8_debugf ("%s_first = %i, %s_last = %i, last_tree = %li\n",
-           receive ? "recv" : "send", *send_first,
-           receive ? "recv" : "send", *send_last, ret);
+  t8_debugf ("%s_first = %i, %s_last = %i, last_tree = %li\n",
+             receive ? "recv" : "send", *send_first,
+             receive ? "recv" : "send", *send_last, ret);
 
-T8_ASSERT (*send_first >= 0);
+  T8_ASSERT (*send_first >= 0);
 //TODO:reactivate  T8_ASSERT (*send_last >= 0);
-T8_ASSERT (receive || (ret >= 0 && ret < cmesh_from->num_local_trees));
-T8_ASSERT (receive || ret == (t8_locidx_t) ret);
-return (t8_locidx_t) ret;
+  T8_ASSERT (receive || (ret >= 0 && ret < cmesh_from->num_local_trees));
+  T8_ASSERT (receive || ret == (t8_locidx_t) ret);
+  return (t8_locidx_t) ret;
 }
 #endif
 
