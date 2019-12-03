@@ -587,6 +587,30 @@ public:
   virtual t8_element_t *t8_element_array_index (sc_array_t * array,
                                                 size_t it);
 
+  /** Count how many leaf descendants of a given uniform level an element would produce.
+   * \param [in] t     The element to be checked.
+   * \param [in] level A refinement level.
+   * \return Suppose \a t is uniformly refined up to level \a level. The return value
+   * is the resulting number of elements (of the given level).
+   * If \a level < t8_element_level(t), the return value should be 0.
+   *
+   * Example: If \a t is a line element that refines into 2 line elements on each level,
+   *  then the return value is max(0, 2^{\a level - level(\a t)}).
+   *  Thus, if \a t's level is 0, and \a level = 3, the return value is 2^3 = 8.
+   */
+  virtual t8_gloidx_t t8_element_count_leafs (const t8_element_t * t,
+                                              int level) = 0;
+
+                      /** Count how many leaf descendants of a given uniform level the root element will produce.
+                       * \param [in] level A refinement level.
+                       * \return The value of \ref t8_element_count_leafs if the input element
+                       *      is the root (level 0) element.
+                       *
+                       * This is a convenience function, and can be implemented via
+                       * \ref t8_element_count_leafs.
+                       */
+  virtual t8_gloidx_t t8_element_count_leafs_from_root (int level) = 0;
+
 #ifdef T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
