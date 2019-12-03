@@ -1116,7 +1116,8 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, t8_eclass_t eclass,
     cmesh = t8_cmesh_from_msh_file (mshfile, 1, comm, dim, 0);
     /* partition this cmesh according to the initial refinement level */
     t8_cmesh_init (&cmesh_partition);
-    t8_cmesh_set_partition_uniform (cmesh_partition, level);
+    t8_cmesh_set_partition_uniform (cmesh_partition, level,
+                                    t8_scheme_new_default_cxx ());
     t8_cmesh_set_derive (cmesh_partition, cmesh);
     t8_cmesh_commit (cmesh_partition, comm);
     return cmesh_partition;
