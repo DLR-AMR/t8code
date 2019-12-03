@@ -1020,6 +1020,7 @@ t8_forest_populate (t8_forest_t forest)
                   "Given refinement level exceeds the maximum.\n");
   /* TODO: create trees and quadrants according to uniform refinement */
   t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level,
+                           forest->scheme_cxx,
                            &forest->first_local_tree,
                            &child_in_tree_begin, &forest->last_local_tree,
                            &child_in_tree_end, NULL);

@@ -26,6 +26,7 @@
 #include <t8_refcount.h>
 #include <t8_data/t8_shmem.h>
 #include <t8_vec.h>
+#include <t8_element_cxx.hxx>
 #ifdef T8_WITH_METIS
 #include <metis.h>
 #endif
@@ -362,13 +363,16 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh,
 }
 
 void
-t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level)
+t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level,
+                                t8_scheme_cxx_t * ts)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (element_level >= -1);
+  T8_ASSERT (ts != NULL);
 
   cmesh->set_partition = 1;
   cmesh->set_partition_level = element_level;
+  cmesh->set_partition_scheme = ts;
   if (element_level >= 0) {
     /* We overwrite any previous partition settings */
     cmesh->first_tree = -1;
@@ -1257,6 +1261,7 @@ t8_cmesh_print_profile (t8_cmesh_t cmesh)
 
 void
 t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
+                         t8_scheme_cxx_t * ts,
                          t8_gloidx_t * first_local_tree,
                          t8_gloidx_t * child_in_tree_begin,
                          t8_gloidx_t * last_local_tree,
@@ -1268,6 +1273,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
   T8_ASSERT (level >= 0);
+  T8_ASSERT (ts != NULL);
 
   *first_local_tree = 0;
   if (child_in_tree_begin != NULL) {
@@ -1283,12 +1289,37 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     t8_gloidx_t         first_global_child;
     t8_gloidx_t         last_global_child;
     t8_gloidx_t         children_per_tree;
+    t8_gloidx_t         first_class_children_per_tree = -1;
 #ifdef T8_ENABLE_DEBUG
     t8_gloidx_t         prev_last_tree = -1;
 #endif
     const t8_linearidx_t one = 1;
+    t8_eclass_t         tree_class;
+    t8_eclass_scheme_c *tree_scheme;
 
-    children_per_tree = one << cmesh->dimension * level;
+    /* Compute the number of children on level in each tree */
+    for (tree_class = T8_ECLASS_ZERO; tree_class < T8_ECLASS_COUNT;
+         ++tree_class) {
+      /* We iterate over each element class and get the number of children for this
+       * tree class.
+       * Currently we do not supported different numbers of children for different classes.
+       * Thus, if we encounter this situation, we abort with an error.
+       * Different numbers of children for different classes will be supported in the future.
+       */
+      if (cmesh->num_trees_per_eclass[tree_class] > 0) {
+        tree_scheme = ts->eclass_schemes[tree_class];
+        T8_ASSERT (tree_scheme != NULL);
+        children_per_tree =
+          tree_scheme->t8_element_count_leafs_from_root (level);
+        if (first_class_children_per_tree >= 0
+            && first_class_children_per_tree != children_per_tree) {
+          SC_ABORT
+            ("Currently t8code does not support different leaf counts per tree.");
+        }
+        first_class_children_per_tree = children_per_tree;
+      }
+    }
+
     global_num_children = cmesh->num_trees * children_per_tree;
 
     if (cmesh->mpirank == 0) {

@@ -27,6 +27,7 @@
 
 #include <t8_data/t8_shmem.h>
 #include <t8_cmesh.h>
+#include <t8_element.h>
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_trees.h"
 #include "t8_cmesh_partition.h"
@@ -2583,6 +2584,7 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh_from;
   t8_gloidx_t         last_tree, *tree_offsets;
+  t8_scheme_cxx_t    *ts;
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh->set_from));
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
@@ -2604,7 +2606,10 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   if (cmesh->set_partition_level >= 0) {
     /* Compute first and last tree index */
     T8_ASSERT (cmesh->tree_offsets == NULL);
+    ts = cmesh->set_partition_scheme;   /* The refinement scheme */
+    T8_ASSERT (ts != NULL);
     t8_cmesh_uniform_bounds (cmesh_from, cmesh->set_partition_level,
+                             ts,
                              &cmesh->first_tree, NULL, &last_tree, NULL,
                              &cmesh->first_tree_shared);
     cmesh->num_local_trees = last_tree - cmesh->first_tree + 1;
