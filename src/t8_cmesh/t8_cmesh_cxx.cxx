@@ -56,11 +56,11 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     *child_in_tree_end = 0;
   }
 
-  if (cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] == 0 || level == 0) {
+  if (cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] == 0) {
     t8_gloidx_t         global_num_children;
     t8_gloidx_t         first_global_child;
     t8_gloidx_t         last_global_child;
-    t8_gloidx_t         children_per_tree;
+    t8_gloidx_t         children_per_tree = 0;
     t8_gloidx_t         first_class_children_per_tree = -1;
 #ifdef T8_ENABLE_DEBUG
     t8_gloidx_t         prev_last_tree = -1;
@@ -90,6 +90,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
         first_class_children_per_tree = children_per_tree;
       }
     }
+    T8_ASSERT (children_per_tree != 0);
 
     global_num_children = cmesh->num_trees * children_per_tree;
 
