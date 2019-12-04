@@ -203,6 +203,8 @@ void                t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh,
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     element_level The refinement_level.
  * \param [in]     ts           The element scheme describing the refinement pattern.
+ *                              We take ownership. This can be prevented by
+ *                              referencing \b ts before calling this function.
  */
 void                t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh,
                                                     int element_level,

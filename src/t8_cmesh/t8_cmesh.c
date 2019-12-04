@@ -1297,8 +1297,15 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
   if (cmesh->profile != NULL) {
     T8_FREE (cmesh->profile);
   }
+
+  /* unref the refine scheme (if set) */
   if (cmesh->set_refine_scheme != NULL) {
     t8_scheme_cxx_unref (&cmesh->set_refine_scheme);
+  }
+
+  /* unref the partition scheme (if set) */
+  if (cmesh->set_partition_scheme != NULL) {
+    t8_scheme_cxx_unref (&cmesh->set_partition_scheme);
   }
 
   T8_FREE (cmesh);
