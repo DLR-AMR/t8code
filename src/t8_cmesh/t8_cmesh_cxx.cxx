@@ -65,7 +65,6 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
 #ifdef T8_ENABLE_DEBUG
     t8_gloidx_t         prev_last_tree = -1;
 #endif
-    const t8_linearidx_t one = 1;
     int                 tree_class;
     t8_eclass_scheme_c *tree_scheme;
 
