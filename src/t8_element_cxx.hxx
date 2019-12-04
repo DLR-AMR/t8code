@@ -601,14 +601,14 @@ public:
   virtual t8_gloidx_t t8_element_count_leafs (const t8_element_t * t,
                                               int level) = 0;
 
-                      /** Count how many leaf descendants of a given uniform level the root element will produce.
-                       * \param [in] level A refinement level.
-                       * \return The value of \ref t8_element_count_leafs if the input element
-                       *      is the root (level 0) element.
-                       *
-                       * This is a convenience function, and can be implemented via
-                       * \ref t8_element_count_leafs.
-                       */
+  /** Count how many leaf descendants of a given uniform level the root element will produce.
+   * \param [in] level A refinement level.
+   * \return The value of \ref t8_element_count_leafs if the input element
+   *      is the root (level 0) element.
+   *
+   * This is a convenience function, and can be implemented via
+   * \ref t8_element_count_leafs.
+   */
   virtual t8_gloidx_t t8_element_count_leafs_from_root (int level) = 0;
 
 #ifdef T8_ENABLE_DEBUG
