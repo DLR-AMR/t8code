@@ -1704,7 +1704,7 @@ t8_cmesh_new_pyramid_deformed (sc_MPI_Comm comm)
     2, -1, 0,
     -1, 2, -0.5,
     2, 2, 0,
-    -0.3, 0.2, sqrt(3)
+    3, 3, sqrt(3)
   };
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);

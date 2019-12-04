@@ -253,7 +253,8 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
              || tree_class == T8_ECLASS_QUAD
              || tree_class == T8_ECLASS_HEX
              || tree_class == T8_ECLASS_LINE
-             || tree_class == T8_ECLASS_PRISM);
+             || tree_class == T8_ECLASS_PRISM
+             || tree_class == T8_ECLASS_PYRAMID);
   /* Compute the coordinates, depending on the class of the tree */
   switch (tree_class) {
   case T8_ECLASS_VERTEX:
@@ -276,10 +277,6 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   case T8_ECLASS_TRIANGLE:
     corner_coords[2] = 0;
   case T8_ECLASS_TET:
-    for(i = 0; i < 4; i++){
-        printf("x: %f y: %f z: %f\n", vertices[4*i], vertices[4*i] +1, vertices[4*i +2]);
-    }
-    printf("computed coords: \n");
     for (i = 0; i < 3; i++) {
       coordinates[i] =
         len * (vertices[3 + i] - vertices[i]) * corner_coords[0] +
@@ -288,10 +285,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
                     vertices[6 + i]) * corner_coords[1] : 0.) +
         len * (vertices[6 + i] - vertices[3 + i]) * corner_coords[dim - 1]
         + vertices[i];
-        printf("%f ", coordinates[i]);
     }
-    printf("\n");
-    printf("\n");
     break;
   case T8_ECLASS_PRISM:
     /*Prisminterpolation, via height, and triangle */
@@ -322,24 +316,27 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
                                       vertices, dim, coordinates);
     break;
   case T8_ECLASS_PYRAMID:
-      double temp[3], temp2[3], temp3[3];
+      double interpol_x, interpol_x1, interpol_y;
+      printf("Print vertex_coords:  \n");
       for(i = 0; i<3; i++){
           vertex_coords[i] = len * corner_coords[i];
+          printf("%f\n", vertex_coords[i]);
       }
+      printf("\n");
       for(i = 0; i<3;i++){
           /*Interpolation in x direction*/
-          temp[i] = (vertices[3+i] - vertices[i])*vertex_coords[0]+vertices[i];
-          temp2[i] = (vertices[9+i] - vertices[6+i])*vertex_coords[0]+vertices[6+i];
+          interpol_x = (vertices[3+i] - vertices[i])*vertex_coords[0]+vertices[i];
+          interpol_x1 = (vertices[9+i] - vertices[6+i])*vertex_coords[0]+vertices[6+i];
           /*Interpolation in y direction*/
-          temp3[i] = (temp2[i] - temp[i])*vertex_coords[1]+temp[i];
+          interpol_y = (interpol_x1 - interpol_x)*vertex_coords[1]+interpol_x;
           /*Interpolation on z-direction*/
-          coordinates[i] = (vertices[12 + i] - vertices[9+i])*vertex_coords[2] + temp3[i];
+          coordinates[i] = (vertices[12+i] - vertices[9+i])*vertex_coords[2] + interpol_y;
       }
       break;
 
   default:
     SC_ABORT ("Forest coordinate computation is supported only for "
-              "vertices/lines/triangles/tets/quads/prisms/hexes.");
+              "vertices/lines/triangles/tets/quads/prisms/hexes/pyramids.");
   }
   return;
 }
