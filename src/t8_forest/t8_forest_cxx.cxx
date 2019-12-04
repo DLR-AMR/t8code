@@ -234,7 +234,6 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   double              vertex_coords[3];
   t8_eclass_scheme_c *ts;
   t8_eclass_t         tree_class;
-  t8_element_shape_t  element_shape;
   double              len;
   int                 dim;
 
@@ -247,20 +246,16 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   dim = t8_eclass_to_dimension[tree_class];
   len = 1. / ts->t8_element_root_len (element);
   ts->t8_element_vertex_coords (element, corner_number, corner_coords);
-  /* Get the element's shape */
-  element_shape = ts->t8_element_shape (element);
-  /* Check whether we support this element shape */
-  T8_ASSERT (element_shape == T8_ECLASS_VERTEX
-             || element_shape == T8_ECLASS_TRIANGLE
-             || element_shape == T8_ECLASS_TET
-             || element_shape == T8_ECLASS_QUAD
-             || element_shape == T8_ECLASS_HEX
-             || element_shape == T8_ECLASS_LINE
-             || element_shape == T8_ECLASS_PRISM
-             || element_shape == T8_ECLASS_PYRAMID);
-  /* Compute the coordinates, depending on the shape of the element */
-  t8_debugf("element shape: %i\n", (int)element_shape);
-  switch (element_shape) {
+  /* Check whether we support this tree_class */
+  T8_ASSERT (tree_class == T8_ECLASS_VERTEX
+             || tree_class == T8_ECLASS_TRIANGLE
+             || tree_class == T8_ECLASS_TET
+             || tree_class == T8_ECLASS_QUAD
+             || tree_class == T8_ECLASS_HEX
+             || tree_class == T8_ECLASS_LINE
+             || tree_class == T8_ECLASS_PRISM);
+  /* Compute the coordinates, depending on the class of the tree */
+  switch (tree_class) {
   case T8_ECLASS_VERTEX:
     T8_ASSERT (corner_number == 0);
     /* A vertex has exactly one corner, and we already know its coordinates, since they are
