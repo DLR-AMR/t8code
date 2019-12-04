@@ -119,7 +119,8 @@ static inline       t8_gloidx_t
 count_leafs_from_level (int element_level, int refinement_level,
                         int dimension)
 {
-  return sc_intpow64 (2, dimension * (refinement_level - element_level));
+  return element_level > refinement_level ? 0
+    : sc_intpow64 (2, dimension * (refinement_level - element_level));
 }
 
 t8_gloidx_t
