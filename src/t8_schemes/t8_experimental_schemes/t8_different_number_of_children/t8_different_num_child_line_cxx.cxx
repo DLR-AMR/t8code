@@ -299,6 +299,22 @@ t8_different_num_child_scheme_line_c::t8_element_is_family (t8_element_t **
   return 1;
 }
 
+t8_gloidx_t
+  t8_different_num_child_scheme_line_c::t8_element_count_leafs (const
+                                                                t8_element_t *
+                                                                t, int level)
+{
+  T8_ASSERT (t8_element_is_valid (t));
+  return 1;
+}
+
+t8_gloidx_t
+  t8_different_num_child_scheme_line_c::t8_element_count_leafs_from_root (int
+                                                                          level)
+{
+  return 1;
+}
+
 #ifdef T8_ENABLE_DEBUG
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */

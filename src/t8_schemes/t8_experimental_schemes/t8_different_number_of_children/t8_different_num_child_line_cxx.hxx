@@ -185,6 +185,24 @@ public:
   /** Query whether an element is valid */
   virtual int         t8_element_is_valid (const t8_element_t * t) const;
 #endif
+
+  /** Count how many leaf descendants of a given uniform level an element would produce.
+   * \param [in] t     The element to be checked.
+   * \param [in] level A refinement level.
+   * \return Suppose \a t is uniformly refined up to level \a level. The return value
+   * is the resulting number of elements (of the given level).
+   * If \a level < t8_element_level(t), the return value should be 0.
+   * The return value for this line scheme i allways 1 (if level >= level(t))
+   */
+  virtual t8_gloidx_t t8_element_count_leafs (const t8_element_t * t,
+                                              int level);
+
+  /** Count how many leaf descendants of a given uniform level the root element will produce.
+   * \param [in] level A refinement level.
+   * \return The value of \ref t8_element_count_leafs if the input element
+   *      is the root (level 0) element. Thus, 1 for this line scheme.
+   */
+  virtual t8_gloidx_t t8_element_count_leafs_from_root (int level);
 };
 
 #endif /* !T8_different_num_child_LINE_CXX_HXX */
