@@ -362,13 +362,16 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh,
 }
 
 void
-t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level)
+t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level,
+                                t8_scheme_cxx_t * ts)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (element_level >= -1);
+  T8_ASSERT (ts != NULL);
 
   cmesh->set_partition = 1;
   cmesh->set_partition_level = element_level;
+  cmesh->set_partition_scheme = ts;
   if (element_level >= 0) {
     /* We overwrite any previous partition settings */
     cmesh->first_tree = -1;
@@ -1255,133 +1258,6 @@ t8_cmesh_print_profile (t8_cmesh_t cmesh)
   }
 }
 
-void
-t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
-                         t8_gloidx_t * first_local_tree,
-                         t8_gloidx_t * child_in_tree_begin,
-                         t8_gloidx_t * last_local_tree,
-                         t8_gloidx_t * child_in_tree_end,
-                         int8_t * first_tree_shared)
-{
-  int                 is_empty;
-
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
-  T8_ASSERT (level >= 0);
-
-  *first_local_tree = 0;
-  if (child_in_tree_begin != NULL) {
-    *child_in_tree_begin = 0;
-  }
-  *last_local_tree = 0;
-  if (child_in_tree_end != NULL) {
-    *child_in_tree_end = 0;
-  }
-
-  if (cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] == 0 || level == 0) {
-    t8_gloidx_t         global_num_children;
-    t8_gloidx_t         first_global_child;
-    t8_gloidx_t         last_global_child;
-    t8_gloidx_t         children_per_tree;
-#ifdef T8_ENABLE_DEBUG
-    t8_gloidx_t         prev_last_tree = -1;
-#endif
-    const t8_linearidx_t one = 1;
-
-    children_per_tree = one << cmesh->dimension * level;
-    global_num_children = cmesh->num_trees * children_per_tree;
-
-    if (cmesh->mpirank == 0) {
-      first_global_child = 0;
-      if (child_in_tree_begin != NULL) {
-        *child_in_tree_begin = 0;
-      }
-    }
-    else {
-      /* The first global child of processor p
-       * with P total processor is (the biggest int smaller than)
-       * (total_num_children * p) / P
-       * We cast to long double and double first to prevent integer overflow.
-       */
-      first_global_child =
-        ((long double) global_num_children *
-         cmesh->mpirank) / (double) cmesh->mpisize;
-    }
-    if (cmesh->mpirank != cmesh->mpisize - 1) {
-      last_global_child =
-        ((long double) global_num_children *
-         (cmesh->mpirank + 1)) / (double) cmesh->mpisize;
-    }
-    else {
-      last_global_child = global_num_children;
-    }
-
-    T8_ASSERT (0 <= first_global_child
-               && first_global_child <= global_num_children);
-    T8_ASSERT (0 <= last_global_child
-               && last_global_child <= global_num_children);
-    *first_local_tree = first_global_child / children_per_tree;
-    if (child_in_tree_begin != NULL) {
-      *child_in_tree_begin =
-        first_global_child - *first_local_tree * children_per_tree;
-    }
-
-    *last_local_tree = (last_global_child - 1) / children_per_tree;
-
-    is_empty = *first_local_tree >= *last_local_tree
-      && first_global_child >= last_global_child;
-    if (first_tree_shared != NULL) {
-#ifdef T8_ENABLE_DEBUG
-      prev_last_tree = (first_global_child - 1) / children_per_tree;
-      T8_ASSERT (cmesh->mpirank > 0 || prev_last_tree <= 0);
-#endif
-      if (!is_empty && cmesh->mpirank > 0 && first_global_child > 0) {
-        /* We exclude empty partitions here, by def their first_tree_shared flag is zero */
-        /* We also exclude that the previous partition was empty at the beginning of the
-         * partitions array */
-        /* We also exclude the case that we have the first global element but
-         * are not rank 0. */
-        *first_tree_shared = 1;
-      }
-      else {
-        *first_tree_shared = 0;
-      }
-    }
-    if (child_in_tree_end != NULL) {
-      if (*last_local_tree > 0) {
-        *child_in_tree_end =
-          last_global_child - *last_local_tree * children_per_tree;
-      }
-      else {
-        *child_in_tree_end = last_global_child;
-      }
-    }
-    if (is_empty) {
-      /* This process is empty */
-      /* We now set the first local tree to the first local tree on the
-       * next nonempty rank, and the last local tree to first - 1 */
-      *first_local_tree = last_global_child / children_per_tree;
-      if (first_global_child % children_per_tree != 0) {
-        /* The next nonempty process shares this tree. */
-        (*first_local_tree)++;
-      }
-
-      *last_local_tree = *first_local_tree - 1;
-    }
-
-#if 0
-    if (first_global_child >= last_global_child && cmesh->mpirank != 0) {
-      /* This process is empty */
-      *first_local_tree = prev_last_tree + 1;
-    }
-#endif
-  }
-  else {
-    SC_ABORT ("Partition with level > 0 "
-              "does not support pyramidal elements yet.");
-  }
-}
-
 static void
 t8_cmesh_reset (t8_cmesh_t * pcmesh)
 {
@@ -1421,8 +1297,15 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
   if (cmesh->profile != NULL) {
     T8_FREE (cmesh->profile);
   }
+
+  /* unref the refine scheme (if set) */
   if (cmesh->set_refine_scheme != NULL) {
     t8_scheme_cxx_unref (&cmesh->set_refine_scheme);
+  }
+
+  /* unref the partition scheme (if set) */
+  if (cmesh->set_partition_scheme != NULL) {
+    t8_scheme_cxx_unref (&cmesh->set_partition_scheme);
   }
 
   T8_FREE (cmesh);

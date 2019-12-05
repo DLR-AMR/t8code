@@ -46,7 +46,8 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
   if (do_partition) {
     /* repartition the cmesh to match the desired forest partition */
     t8_cmesh_init (&cmesh_partition);
-    t8_cmesh_set_partition_uniform (cmesh_partition, set_level);
+    t8_cmesh_set_partition_uniform (cmesh_partition, set_level,
+                                    t8_scheme_new_default_cxx ());
     t8_cmesh_set_derive (cmesh_partition, cmesh);
     t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
     cmesh = cmesh_partition;

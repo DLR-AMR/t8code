@@ -74,14 +74,14 @@ t8_default_scheme_prism_c::t8_element_level (const t8_element_t * elem)
   return t8_dprism_get_level ((const t8_dprism_t *) elem);
 }
 
-t8_eclass_t
-  t8_default_scheme_prism_c::t8_element_face_class (const t8_element_t * elem,
+t8_element_shape_t
+  t8_default_scheme_prism_c::t8_element_face_shape (const t8_element_t * elem,
                                                     int face)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
 
-  return t8_dprism_face_class ((const t8_dprism_t *) elem, face);
+  return t8_dprism_face_shape ((const t8_dprism_t *) elem, face);
 }
 
 void

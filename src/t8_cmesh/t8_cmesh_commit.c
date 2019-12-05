@@ -637,8 +637,10 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
           t8_cmesh_set_partition_offsets (cmesh_temp, cmesh->tree_offsets);
         }
         else if (cmesh->set_partition_level) {
+          T8_ASSERT (cmesh->set_partition_scheme != NULL);
           t8_cmesh_set_partition_uniform (cmesh_temp,
-                                          cmesh->set_partition_level);
+                                          cmesh->set_partition_level,
+                                          cmesh->set_partition_scheme);
         }
         else {
           t8_gloidx_t         first_tree;
@@ -681,8 +683,10 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
           t8_cmesh_set_partition_offsets (cmesh_temp, cmesh->tree_offsets);
         }
         else if (cmesh->set_partition_level) {
+          T8_ASSERT (cmesh->set_partition_scheme != NULL);
           t8_cmesh_set_partition_uniform (cmesh_temp,
-                                          cmesh->set_partition_level);
+                                          cmesh->set_partition_level,
+                                          cmesh->set_partition_scheme);
         }
         else {
           T8_ASSERT (cmesh->first_tree >= 0 && cmesh->num_local_trees >= 0);
