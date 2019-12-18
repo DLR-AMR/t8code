@@ -67,6 +67,13 @@ t8_dpyramid_child(const t8_dpyramid_t * elem, int child_id, t8_dpyramid_t * chil
 int                 t8_dpyramid_compare (const t8_dpyramid_t * p1,
                                        const t8_dpyramid_t * p2);
 
+/** Compute the position of the ancestor of this child at level \a level within
+ * its siblings.
+ * \param [in] p  pyramid to be considered.
+ * \return Returns its child id in 0..9
+ */
+int                 t8_dpyramid_child_id (const t8_dpyramid_t * p);
+
 /** Compute the first descendant of a pyramid at a given level. This is the descendant of
  * the pyramid in a uniform level refinement that has the smallest id.
  * \param [in] p        pyramid whose descendant is computed.

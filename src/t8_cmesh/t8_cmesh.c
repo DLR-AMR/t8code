@@ -1719,11 +1719,14 @@ t8_cmesh_new_pyramid (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[15] = {
+    #if 0
     -1, -1, 0,
     1, -1, 0,
     -1, 1, 0,
     1, 1, 0,
-    1, 1, 1
+    1, 1, 2
+    #endif
+      0,0,0, 1,0,0 ,0,1,0, 1,1,0, 1,1,1
   };
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);
@@ -1775,7 +1778,7 @@ t8_cmesh_new_from_class (t8_eclass_t eclass, sc_MPI_Comm comm)
     return t8_cmesh_new_hex (comm);
     break;
   case T8_ECLASS_PYRAMID:
-    return t8_cmesh_new_pyramid (comm);
+    return t8_cmesh_new_pyramid_deformed (comm);
     break;
   case T8_ECLASS_PRISM:
     return t8_cmesh_new_prism (comm);

@@ -1158,14 +1158,12 @@ t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix,
   if (freturn <= 0) {
     goto t8_forest_vtk_failure;
   }
-    printf("num_points: %i\n", num_points);
   /* write the point data */
   if (!t8_forest_vtk_write_points
       (forest, vtufile, write_ghosts, num_data, data)) {
     /* writings points was not succesful */
     goto t8_forest_vtk_failure;
   }
-  printf("num_points: %i\n", num_points);
   /* write the cell data */
   if (!t8_forest_vtk_write_cells
       (forest, vtufile, write_treeid, write_mpirank, write_level,

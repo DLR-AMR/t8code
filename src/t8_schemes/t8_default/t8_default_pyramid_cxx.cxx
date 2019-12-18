@@ -75,6 +75,12 @@ t8_default_scheme_pyramid_c::t8_element_child (const t8_element_t * elem,
                      (t8_dpyramid_t *) child);
 }
 
+int
+t8_default_scheme_pyramid_c::t8_element_child_id (const t8_element_t * p)
+{
+    return t8_dpyramid_child_id((const t8_dpyramid_t *) p);
+}
+
 void
 t8_default_scheme_pyramid_c::t8_element_first_descendant (const t8_element_t *
                                                           elem,

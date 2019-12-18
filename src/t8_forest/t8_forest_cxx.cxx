@@ -256,6 +256,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
              || tree_class == T8_ECLASS_PRISM
              || tree_class == T8_ECLASS_PYRAMID);
   /* Compute the coordinates, depending on the class of the tree */
+
   switch (tree_class) {
   case T8_ECLASS_VERTEX:
     T8_ASSERT (corner_number == 0);
@@ -316,21 +317,44 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
                                       vertices, dim, coordinates);
     break;
   case T8_ECLASS_PYRAMID:
-      double interpol_x, interpol_x1, interpol_y;
-      printf("Print vertex_coords:  \n");
+      double ray[3], lambda, quad_coords[3], length, length2;
+      length = 0;
+      length2 = 0;
+
+
       for(i = 0; i<3; i++){
-          vertex_coords[i] = len * corner_coords[i];
-          printf("%f\n", vertex_coords[i]);
+          vertex_coords[i] =  len * corner_coords[i];
       }
-      printf("\n");
-      for(i = 0; i<3;i++){
-          /*Interpolation in x direction*/
-          interpol_x = (vertices[3+i] - vertices[i])*vertex_coords[0]+vertices[i];
-          interpol_x1 = (vertices[9+i] - vertices[6+i])*vertex_coords[0]+vertices[6+i];
-          /*Interpolation in y direction*/
-          interpol_y = (interpol_x1 - interpol_x)*vertex_coords[1]+interpol_x;
-          /*Interpolation on z-direction*/
-          coordinates[i] = (vertices[12+i] - vertices[9+i])*vertex_coords[2] + interpol_y;
+      /*In this case, thex vertex is the tip of the parentpyramid and we don't have to compute
+       * anything.*/
+      if(vertex_coords[0] == 1. && vertex_coords[1] == 1. && vertex_coords[2] == 1.){
+          for(i = 0; i<3; i++){
+              coordinates[i] = vertices[12 + i];
+          }
+          break;
+      }
+       /* Project vertex_coord onto x-y-plane*/
+      for(i = 0; i < 3; i++){
+          ray[i] = 1-vertex_coords[i];
+      }
+      lambda = vertex_coords[2] / ray[2];
+      for(i = 0; i < 2; i++){
+          /*Compute coords of vertex in the plane*/
+          quad_coords[i] = vertex_coords[i] - lambda * ray[i];
+      }
+      quad_coords[2] = 0;
+
+      /*compute y-axis section of the ray*/
+      for(i = 0; i<3; i++){
+          length += (1-quad_coords[i]) * (1-quad_coords[i]);
+          length2 += (vertex_coords[i]-quad_coords[i]) *(vertex_coords[i]-quad_coords[i]);
+      }
+      lambda = sqrt(length2) / sqrt(length);
+      /*Interpolate on quad*/
+      t8_forest_bilinear_interpolation((const double *) quad_coords, vertices, 2, coordinates);
+      /*Project it back*/
+      for(i = 0; i<3; i++){
+          coordinates[i] += (vertices[12 + i] - coordinates[i]) * lambda;
       }
       break;
 

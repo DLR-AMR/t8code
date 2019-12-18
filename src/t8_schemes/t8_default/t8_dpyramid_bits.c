@@ -235,8 +235,8 @@ t8_dpyramid_num_vertices (const t8_dpyramid_t * p)
 int
 t8_dpyramid_child_id (const t8_dpyramid_t * p)
 {
+  T8_ASSERT("Not implemented for level > 1" && p->level < 2);
   int                 cube_id = compute_cubeid (p, p->level);
-  printf("In pyramid_child_id type = %i cube_id = %i\n",p->type, cube_id);
   return t8_dpyramid_type_cid_to_Iloc[p->type][cube_id];
 }
 
@@ -252,7 +252,6 @@ t8_dpyramid_child (const t8_dpyramid_t * elem, int child_id,
   }
   else {
     cube_id = t8_dpyramid_parenttype_Iloc_to_cid[elem->type - 6][child_id];
-    printf("In compute child  child_id = %i cube_id = %i\n", child_id, cube_id);
     child->level = elem->level + 1;
     h = T8_DPYRAMID_LEN (child->level);
     child->x = elem->x + (cube_id & 0x01) ? h : 0;
@@ -262,6 +261,11 @@ t8_dpyramid_child (const t8_dpyramid_t * elem, int child_id,
       t8_dpyramid_parenttype_Iloc_to_type[elem->type - 6][child_id];
   }
 }
+
+const t8_dpyramid_type_t t8_dpyramid_type_Iloc_to_parenttype[2][10] = {
+    {6,6,6,6,6,6,6,6,7,6},
+    {7,7,7,7,7,7,7,7,6,7}
+};
 
 void
 t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
@@ -282,17 +286,23 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
   parent->z = 0;
   parent->type = 6;
   parent->level = 0;
-  /*
-     h = T8_DPYRAMID_LEN(p->level);
-     TODO: Type of the parent??
-     cid = compute_cubeid(p, p->level);
+  /*if(t8_dpyramid_shape(p) == T8_ECLASS_PYRAMID){
+        h = T8_DPYRAMID_LEN(p->level);
+        parent->x = p->x & ~h;
+        parent->y = p->x & ~h;
+        parent->z = p->x & ~h;
+        child_id = t8_dpyramid_child_id(p);
+        parent->type = t8_dpyramid_type_Iloc_to_parenttype[p->type - 6][child_id];
+        parent->level = p->level - 1;
+    }
+    else if(t8_dpyramid_shape(p) == T8_ECLASS_TET){
+        if(p->type != 0 && p->type != 3) {
+            t8_dtet_parent((t8_dtet_t *)p, (t8_dtet_t *)parent);
+        }
+        else{
 
-     int iloc = t8_dpyramid_type_cid_to_Iloc[p->type][cid];
-     parent->type = t8_dpyramid_parenttype_Iloc_to_type[0][iloc];
-     parent->x = p->x & ~h;
-     parent->y = p->y & ~h;
-     parent->z = p->z & ~h;
-     parent->level = p->level - 1; */
+        }
+    }*/
 }
 
 t8_eclass_t
@@ -314,13 +324,11 @@ t8_dpyramid_succesor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
 {
   int                 pyramid_child_id;
   t8_dpyramid_copy (elem, succ);
-  printf ("succesor: level: %i\n", level);
-  printf (" x: %i\n y: %i\n z: %i\n type: %i\n", elem->x, elem->y, elem->z,
-          elem->type);
+
   T8_ASSERT (1 <= level && level <= T8_DPYRAMID_MAXLEVEL);
   succ->level = level;
   pyramid_child_id = t8_dpyramid_child_id (elem);
-  printf ("child_id = %i\n", pyramid_child_id);
+
 
   T8_ASSERT (0 <= pyramid_child_id
              && pyramid_child_id < T8_DPYRAMID_CHILDREN);
@@ -333,18 +341,13 @@ t8_dpyramid_succesor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
     t8_dpyramid_parent (succ, succ);
     t8_dpyramid_child (succ, pyramid_child_id + 1, succ);
   }
-  printf("Computed child %i\n", t8_dpyramid_child_id(succ));
-  printf (" x: %i\n y: %i\n z: %i\n type: %i\n\n", succ->x, succ->y, succ->z,
-          succ->type);
+
 }
 
 void
 t8_dpyramid_compute_coords (const t8_dpyramid_t * p, int vertex, int coords[])
 {
   t8_dpyramid_coord_t h;
-  printf ("pyra vertex = %i\n", vertex);
-  printf ("pyra: x=%i y=%i z=%i t=%i l=%i\n", p->x, p->y, p->z, p->type,
-          p->level);
   T8_ASSERT (0 <= vertex && vertex < T8_DPYRAMID_VERTICES);
 
   if (p->type == 6 || p->type == 7) {
@@ -377,9 +380,7 @@ t8_dpyramid_compute_coords (const t8_dpyramid_t * p, int vertex, int coords[])
     }
   }
   else {
-    printf ("vnum = %i, max = %i\n", vertex, T8_DTET_CORNERS);
     T8_ASSERT (vertex < T8_DTET_CORNERS);
     t8_dtet_compute_coords ((const t8_dtet_t *) p, vertex, coords);
   }
-  printf ("Computed vertex: %i %i %i\n", coords[0], coords[1], coords[2]);
 }

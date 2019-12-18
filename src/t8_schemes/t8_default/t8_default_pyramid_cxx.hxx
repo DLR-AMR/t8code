@@ -163,10 +163,7 @@ virtual int         t8_element_num_vertices (const t8_element_t * elem);
       }
 
 /** Return the child id of an element */
-  virtual int         t8_element_child_id (const t8_element_t * elem){
-      SC_ABORT ("This function is not implemented yet.\n");
-      return T8_ECLASS_ZERO;      /* suppresses compiler warning */
-    }
+  virtual int         t8_element_child_id (const t8_element_t * elem);
 
   /** Initialize an array of allocated elements. */
   virtual void        t8_element_init (int length, t8_element_t * elem,
