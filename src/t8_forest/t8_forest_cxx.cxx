@@ -342,14 +342,13 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
           /*Compute coords of vertex in the plane*/
           quad_coords[i] = vertex_coords[i] - lambda * ray[i];
       }
-      quad_coords[2] = 0;
-
-      /*compute y-axis section of the ray*/
+      /*compute the ratio*/
       for(i = 0; i<3; i++){
           length += (1-quad_coords[i]) * (1-quad_coords[i]);
           length2 += (vertex_coords[i]-quad_coords[i]) *(vertex_coords[i]-quad_coords[i]);
       }
       lambda = sqrt(length2) / sqrt(length);
+
       /*Interpolate on quad*/
       t8_forest_bilinear_interpolation((const double *) quad_coords, vertices, 2, coordinates);
       /*Project it back*/

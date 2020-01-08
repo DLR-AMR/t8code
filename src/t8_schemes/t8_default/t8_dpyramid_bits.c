@@ -270,9 +270,6 @@ const t8_dpyramid_type_t t8_dpyramid_type_Iloc_to_parenttype[2][10] = {
 void
 t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
 {
-  //t8_dpyramid_cube_id_t   cid;
-  //t8_dpyramid_coord_t     h;
-  //T8_ASSERT("Parent not implemented" && 0);
   T8_ASSERT (p->level >= 0);
   /*This assertion is just for the case, that I forgot to realy implement this function!
    * This version only works, if the pyramid is only refined once, so the parent is always
@@ -280,29 +277,33 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
   if(p->level > 1){
       SC_ABORT("t8_dpyramid_partent does not support level > 1 yet.\n");
   }
-  T8_ASSERT (p->level < 2);
-  parent->x = 0;
-  parent->y = 0;
-  parent->z = 0;
-  parent->type = 6;
-  parent->level = 0;
-  /*if(t8_dpyramid_shape(p) == T8_ECLASS_PYRAMID){
-        h = T8_DPYRAMID_LEN(p->level);
+  if(t8_dpyramid_shape(p) == T8_ECLASS_PYRAMID){
+      t8_debugf("pyramid_case\n");
+        t8_dpyramid_coord_t h = T8_DPYRAMID_LEN(p->level);
+        int child_id = t8_dpyramid_child_id(p);
+        T8_ASSERT(child_id >=0);
         parent->x = p->x & ~h;
         parent->y = p->x & ~h;
         parent->z = p->x & ~h;
-        child_id = t8_dpyramid_child_id(p);
+
         parent->type = t8_dpyramid_type_Iloc_to_parenttype[p->type - 6][child_id];
         parent->level = p->level - 1;
     }
     else if(t8_dpyramid_shape(p) == T8_ECLASS_TET){
+        t8_debugf("tet_case\n");
         if(p->type != 0 && p->type != 3) {
             t8_dtet_parent((t8_dtet_t *)p, (t8_dtet_t *)parent);
         }
         else{
-
+            t8_debugf("uncertain\n");
+            T8_ASSERT (p->level < 2);
+            parent->x = 0;
+            parent->y = 0;
+            parent->z = 0;
+            parent->type = 6;
+            parent->level = 0;
         }
-    }*/
+    }
 }
 
 t8_eclass_t
