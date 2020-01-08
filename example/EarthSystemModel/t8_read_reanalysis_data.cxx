@@ -35,8 +35,8 @@
   t8_debugf("Error in file %s - %s - %s\n", filename, description, nc_strerror(errorcode))
 
 /* Close an opened netcdf file */
-static void
-closeFile (const char *filename, int ncid)
+static int
+t8_netcdf_close_file (const char *filename, int ncid)
 {
   int                 retval;
 
@@ -47,23 +47,152 @@ closeFile (const char *filename, int ncid)
     /* Could not close the file */
     T8_NETCDF_ERROR (filename, "closing file", retval);
   }
+  return retval;
+}
+
+/**
+ * From an opened netcdf file read the names and lengths of the stored dimensions.
+ * \param[in] filename            The filename of the opened netcdf file (used only for error output)
+ * \param[in] ncid                The file id
+ * \param[out] pnumber_of_dims    On output the number of dimensions in the file
+ * \param[out] pdimension_names   On output allocated to \a *pnumber_of_dims entries and stores the names of the dimensions
+ * \param[out] pdimension_lengths On output allocated to \a *pnumber_of_dims entries and stores the lengths of the dimensions
+ * \return                        netcdf error value. 0 on success.
+ */
+static int
+t8_netcdf_read_dimensions (const char *filename, const int ncid,
+                           int *pnumber_of_dims,
+                           char (**pdimension_names)[BUFSIZ],
+                           size_t ** pdimension_lengths)
+{
+  int                 dimension_id;
+  int                 retval;
+  int                 number_of_dims;
+  char                (*dimension_names)[BUFSIZ];
+  size_t             *dimension_lengths;
+
+  /* read the number of dimension ids */
+  retval = nc_inq_ndims (ncid, pnumber_of_dims);
+  if (retval) {
+    T8_NETCDF_ERROR (filename, "reading number of dimensions", retval);
+    t8_netcdf_close_file (filename, ncid);
+    return retval;
+  }
+  number_of_dims = *pnumber_of_dims;
+  /* Allocate dimension_names and length arrays */
+  *pdimension_names =
+    (char (*)[BUFSIZ]) malloc (number_of_dims * sizeof (*dimension_names));
+  dimension_names = *pdimension_names;
+  *pdimension_lengths =
+    (size_t *) malloc (number_of_dims * sizeof (*pdimension_lengths));
+  dimension_lengths = *pdimension_lengths;
+  if (dimension_names == NULL || dimension_lengths == NULL) {
+    t8_global_errorf ("Could not allocate memory for %i dimension names\n",
+                      number_of_dims);
+    t8_netcdf_close_file (filename, ncid);
+    free (dimension_names);
+    free (dimension_lengths);
+    return retval;
+  }
+  t8_debugf ("Reading %i dimensions...\n", number_of_dims);
+
+  /* Read the names and length of the dimensions */
+  for (dimension_id = 0; dimension_id < number_of_dims; ++dimension_id) {
+    retval =
+      nc_inq_dim (ncid, dimension_id, dimension_names[dimension_id],
+                  dimension_lengths + dimension_id);
+    if (retval) {
+      T8_NETCDF_ERROR (filename, "reading dimension names and lengths",
+                       retval);
+      t8_netcdf_close_file (filename, ncid);
+      return retval;
+    }
+    t8_debugf ("Read dimension [%s] of length %zu\n",
+               dimension_names[dimension_id],
+               dimension_lengths[dimension_id]);
+  }
+  /* return success */
+  return 0;
+}
+
+static int
+t8_netcdf_read_double_data (const char *filename, const int ncid,
+                            const char *varname,
+                            const int expected_number_of_dims,
+                            const int number_of_entries, double **pdata)
+{
+  int                 varid;
+  int                 dimension_id;
+  int                 retval;
+  double             *data;
+
+  /* Get the varid of the longitude data variable, based on its name. */
+  t8_debugf ("Reading data info for '%s'\n", varname);
+  retval = nc_inq_varid (ncid, varname, &varid);
+  if (retval) {
+    T8_NETCDF_ERROR (filename, "reading data info", retval);
+    t8_netcdf_close_file (filename, ncid);
+    return retval;
+  }
+
+#ifdef T8_ENABLE_DEBUG
+  /* Ensure that the variable has the expected number of dimensions */
+  {
+    int                 ndims;
+    retval = nc_inq_varndims (ncid, varid, &ndims);
+    if (retval) {
+      T8_NETCDF_ERROR (filename, "reading number of dimensions", retval);
+    }
+    if (ndims != expected_number_of_dims) {
+      t8_global_errorf
+        ("Error: '%s' variable has more than %i dimension\n",
+         varname, expected_number_of_dims);
+      t8_netcdf_close_file (filename, ncid);
+      return retval;
+    }
+    else {
+      t8_debugf ("'%s' has exactly 1 dimension as expected\n", varname);
+    }
+  }
+#endif
+
+  /* Read the number of entries */
+  retval = nc_inq_vardimid (ncid, varid, &dimension_id);
+  if (retval) {
+    T8_NETCDF_ERROR (filename, "reading dimension id", retval);
+    t8_netcdf_close_file (filename, ncid);
+    return retval;
+  }
+
+  *pdata = (double *) malloc (number_of_entries * sizeof (**pdata));
+  data = *pdata;
+  if (data == NULL) {
+    t8_global_errorf ("Could not allocate memory for %i data items\n",
+                      number_of_entries);
+    t8_netcdf_close_file (filename, ncid);
+  }
+  t8_debugf ("'%s' has %i entries\n", varname, number_of_entries);
+
+  /* Read the longitude data. */
+  t8_debugf ("Reading '%s' data\n", varname);
+  retval = nc_get_var_double (ncid, varid, data);
+  if (retval) {
+    T8_NETCDF_ERROR (filename, "reading data", retval);
+    t8_netcdf_close_file (filename, ncid);
+    return retval;
+  }
+  /* return success */
+  return 0;
 }
 
 static void
-openFile ()
+t8_netcdf_open_file (const char *filename)
 {
-  /* This currently fails since the file does not exist yet.
-   * We currently use this call to calibrate the linker settings
-   * for netcdf. */
-  int                 ncid, retval, varid;
-  const char          filename[BUFSIZ] = "./July2019_12_SurfaceUVSnow.nc";
-#define NUM_LONGITUDE 480
-  int                 number_of_entries = 0;
+  int                 ncid, retval;
   int                 number_of_dims;
   char                (*dimension_names)[BUFSIZ];
-  size_t             *dimension_length;
-  int                 dimension_id;
-  double             *data_in;  /* TODO: Read number of entries from file. Currently hardcoded */
+  size_t             *dimension_lengths;
+  double             *data_in[3];
 
   /* Open the file */
   t8_debugf ("Opening file %s\n", filename);
@@ -74,122 +203,60 @@ openFile ()
     return;
   }
 
-  /* read the number of dimension ids */
-  retval = nc_inq_ndims (ncid, &number_of_dims);
+  /* read the dimensions */
+  retval =
+    t8_netcdf_read_dimensions (filename, ncid, &number_of_dims,
+                               &dimension_names, &dimension_lengths);
   if (retval) {
-    T8_NETCDF_ERROR (filename, "reading number of dimensions", retval);
-    closeFile (filename, ncid);
+    /* An error occured and was printed,
+     * the file is closed and we exit. */
     return;
   }
-  /* Allocate dimension_names and lenght arrays */
-  dimension_names =
-    (char (*)[BUFSIZ]) malloc (number_of_dims * sizeof (*dimension_names));
-  dimension_length =
-    (size_t *) malloc (number_of_dims * sizeof (*dimension_length));
-  if (dimension_names == NULL || dimension_length == NULL) {
-    t8_global_errorf ("Could not allocate memory for %i dimension names\n",
+
+  if (number_of_dims < 3) {
+    t8_global_errorf ("Expected at least 3 dimensions. Only %i found.\n",
                       number_of_dims);
-    closeFile (filename, ncid);
-    free (dimension_names);
-    free (dimension_length);
-    return;
+    t8_netcdf_close_file (filename, ncid);
   }
-  t8_debugf ("Reading %i dimensions...\n", number_of_dims);
-
-  /* Read the names and length of the dimensions */
-  for (dimension_id = 0; dimension_id < number_of_dims; ++dimension_id) {
+  for (int i = 0; i < 3; ++i) {
     retval =
-      nc_inq_dim (ncid, dimension_id, dimension_names[dimension_id],
-                  dimension_length + dimension_id);
+      t8_netcdf_read_double_data (filename, ncid, dimension_names[i], 1,
+                                  dimension_lengths[i], &data_in[i]);
     if (retval) {
-      T8_NETCDF_ERROR (filename, "reading dimension names and lengths",
-                       retval);
-      closeFile (filename, ncid);
+      /* An error occured and was printed,
+       * the file is closed and we exit. */
       return;
     }
-    t8_debugf ("Read dimension [%s] of length %zu\n",
-               dimension_names[dimension_id], dimension_length[dimension_id]);
-  }
-
-  /* Get the varid of the longitude data variable, based on its name. */
-  t8_debugf ("Reading longitude info\n");
-  retval = nc_inq_varid (ncid, "longitude", &varid);
-  if (retval) {
-    T8_NETCDF_ERROR (filename, "reading longitude info", retval);
-    closeFile (filename, ncid);
-    return;
-  }
-
-#ifdef T8_ENABLE_DEBUG
-  /* Ensure that the variable has exaclty one dimension */
-  {
-    int                 ndims;
-    retval = nc_inq_varndims (ncid, varid, &ndims);
-    if (retval) {
-      T8_NETCDF_ERROR (filename, "reading number of dimensions", retval);
-    }
-    if (ndims != 1) {
-      t8_global_errorf
-        ("Error: longitude variable has more than 1 dimension\n");
-      closeFile (filename, ncid);
-      return;
-    }
-    else {
-      t8_debugf ("longitude has exactly 1 dimension as expected\n");
-    }
-  }
-#endif
-
-  /* Read the number of entries */
-  retval = nc_inq_vardimid (ncid, varid, &dimension_id);
-  if (retval) {
-    T8_NETCDF_ERROR (filename, "reading dimension id", retval);
-    closeFile (filename, ncid);
-    return;
-  }
-
-  number_of_entries = dimension_length[dimension_id];
-  data_in = (double *) malloc (number_of_entries * sizeof (*data_in));
-  if (data_in == NULL) {
-    t8_global_errorf ("Could not allocate memory for %i data items\n",
-                      number_of_entries);
-    closeFile (filename, ncid);
-  }
-  t8_debugf ("longitude has %i entries\n", number_of_entries);
-
-  /* Read the longitude data. */
-  t8_debugf ("Reading longitude data\n");
-  retval = nc_get_var_double (ncid, varid, data_in);
-  if (retval) {
-    T8_NETCDF_ERROR (filename, "reading longitude data", retval);
-    closeFile (filename, ncid);
-    return;
   }
 
   /* Close the opened file */
-  closeFile (filename, ncid);
+  t8_netcdf_close_file (filename, ncid);
 
 #ifdef T8_ENABLE_DEBUG
   /* Output the read data */
   {
-    int                 i;
-    char                output[BUFSIZ] = "";
-    char                number[20];
-    for (i = 0; i < NUM_LONGITUDE; ++i) {
-      /* TODO: Use more sophisticated version to append to the string
-       *       Using the same buffer as in and output in snprintf causes undefined behaviour */
-      snprintf (number, 20, " %.2f", data_in[i]);
-      if (strlen (output) < BUFSIZ - 21) {
-        strcat (output, number);
+    for (int i = 0; i < 3; ++i) {
+      size_t              j;
+      char                output[BUFSIZ] = "";
+      char                number[20];
+      for (j = 0; j < dimension_lengths[i]; ++j) {
+        snprintf (number, 20, " %.2f", data_in[i][j]);
+        if (strlen (output) < BUFSIZ - 21) {
+          strcat (output, number);
+        }
       }
+      t8_debugf ("Read data from '%s' with %zd entries:\n",
+                 dimension_names[i], dimension_lengths[i]);
+      t8_debugf ("%s\n", output);
     }
-    t8_debugf ("%s\n", output);
   }
 #endif
 
   /* Clean-up memory */
-  free (data_in);
-  free (dimension_length);
+  for (int i = 0; i < 3; ++i) {
+    free (data_in[i]);
+  }
+  free (dimension_lengths);
   free (dimension_names);
 }
 
@@ -197,15 +264,56 @@ int
 main (int argc, char **argv)
 {
   int                 mpiret;
+  sc_options_t       *opt;
+  char                help[BUFSIZ];
+  const char         *netcdf_filename = NULL;
+  int                 parsed, helpme;
 
+  /* help message, prints when called with '-h' option */
+  snprintf (help, BUFSIZ, "This program reads data from a netcdf file.\n");
+
+  /* Initialize MPI */
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
+  /* Initialize libsc */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  t8_init (SC_LP_DEFAULT);
+  /* Initialize t8code */
+#ifdef T8_ENABLE_DEBUG
+  t8_init (SC_LP_DEBUG);
+#else
+  t8_init (SC_LP_ESSENTIAL);
+#endif
 
-  openFile ();
+  /* initialize command line argument parser */
+  opt = sc_options_new (argv[0]);
+  /* Add command line arguments */
+  sc_options_add_switch (opt, 'h', "help", &helpme,
+                         "Display a short help message.");
+  sc_options_add_string (opt, 'f', "netcdffile", &netcdf_filename, NULL,
+                         "The netcdf-file that should be read.");
 
+  /* Parse the command line arguments from the input */
+  parsed =
+    sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
+
+  if (helpme) {
+    /* display help message and usage */
+    t8_global_essentialf ("%s\n", help);
+    sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
+  }
+  else if (parsed >= 0 && netcdf_filename != NULL) {
+
+    t8_netcdf_open_file (netcdf_filename);
+  }
+  else {
+    /* Error when parsing the arguments */
+    /* wrong usage */
+    t8_global_essentialf ("\n\tERROR: Wrong usage.\n\n");
+    sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
+  }
+
+  sc_options_destroy (opt);
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();
