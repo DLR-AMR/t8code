@@ -47,6 +47,7 @@ dnl link to T8 to add appropriate options to LIBS.
 dnl
 AC_DEFUN([T8_CHECK_LIBRARIES],
 [
+T8_CHECK_NETCDF([$1])
 T8_CHECK_CPPSTD([$1])
 ])
 
