@@ -24,7 +24,7 @@
 #include <sc_refcount.h>
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest.h>
-#include <t8_cmesh_vtk.h>
+#include <t8_cmesh_readmshfile.h>
 #if T8_WITH_NETCDF
 #include <netcdf.h>
 #endif
@@ -263,6 +263,43 @@ t8_netcdf_open_file (const char *filename)
 }
 #endif
 
+/* Read msh-file and build a uniform forest on it.
+ * Return 0 on success */
+int
+t8_reanalysis_build_forest (const char *mesh_filename, double radius,
+                            int dimension, sc_MPI_Comm comm)
+{
+  const int           level = 0;
+  const int           do_ghosts = 1;
+  /* read the coarse mesh from the .msh file */
+  t8_cmesh_t          cmesh =
+    t8_cmesh_from_msh_file (mesh_filename, 0, comm, dimension, 0);
+  if (cmesh == NULL) {
+    /* cmesh could not be built */
+    t8_global_errorf ("Error when openening file %s\n", mesh_filename);
+    return 1;
+  }
+  /* build a uniform forest from the coarse mesh */
+  t8_forest_t         forest =
+    t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (),
+                           level, do_ghosts, comm);
+
+#ifdef T8_ENABLE_DEBUG
+  /* in debug mode, write the forest to vtk */
+  {
+    char                output_file_prefix[BUFSIZ];
+    snprintf (output_file_prefix, BUFSIZ, "forest_uniform_l%i_%s",
+              level, mesh_filename);
+    t8_forest_write_vtk (forest, output_file_prefix);
+  }
+#endif
+
+  t8_forest_unref (&forest);
+
+  /* return sucess */
+  return 0;
+}
+
 int
 main (int argc, char **argv)
 {
@@ -270,7 +307,11 @@ main (int argc, char **argv)
   sc_options_t       *opt;
   char                help[BUFSIZ];
   const char         *netcdf_filename = NULL;
+  const char         *mesh_filename = NULL;
   int                 parsed, helpme;
+  int                 sphere_dim;
+  double              sphere_radius;
+  const sc_MPI_Comm   comm = sc_MPI_COMM_WORLD; /* The mpi communicator used throughout */
 
   /* help message, prints when called with '-h' option */
   snprintf (help, BUFSIZ, "This program reads data from a netcdf file.\n");
@@ -280,7 +321,7 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   /* Initialize libsc */
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
+  sc_init (comm, 1, 1, NULL, SC_LP_ESSENTIAL);
   /* Initialize t8code */
 #ifdef T8_ENABLE_DEBUG
   t8_init (SC_LP_DEBUG);
@@ -293,27 +334,39 @@ main (int argc, char **argv)
   /* Add command line arguments */
   sc_options_add_switch (opt, 'h', "help", &helpme,
                          "Display a short help message.");
-  sc_options_add_string (opt, 'f', "netcdffile", &netcdf_filename, NULL,
+  sc_options_add_string (opt, 'n', "netcdffile", &netcdf_filename, NULL,
                          "The netcdf-file that should be read.");
+  sc_options_add_string (opt, 'f', "meshfile", &mesh_filename, NULL,
+                         "The msh-file of a sphere that should be read (without the '.msh').");
+  sc_options_add_double (opt, 'r', "radius", &sphere_radius, 1.0,
+                         "The radius of the sphere in the msh file. Default = 1");
+  sc_options_add_int (opt, 'd', "dim", &sphere_dim, 2,
+                      "The dimension of the mesh. Default = 2");
 
   /* Parse the command line arguments from the input */
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
-#if T8_WTIH_NETCDF
-  if (helpme) {
+  if (parsed >= 0 && helpme) {
     /* display help message and usage */
     t8_global_essentialf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed >= 0 && netcdf_filename != NULL) {
-
-    t8_netcdf_open_file (netcdf_filename);
+#if T8_WITH_NETCDF
+  else if (parsed >= 0 && netcdf_filename != NULL && mesh_filename != NULL) {
+    int                 retval;
+    retval =
+      t8_reanalysis_build_forest (mesh_filename, sphere_radius, sphere_dim,
+                                  comm);
+    if (!retval) {
+      t8_netcdf_open_file (netcdf_filename);
+    }
   }
   else {
     /* Error when parsing the arguments */
     /* wrong usage */
     t8_global_essentialf ("\n\tERROR: Wrong usage.\n\n");
+    t8_global_essentialf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
 #else
