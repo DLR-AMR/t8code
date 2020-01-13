@@ -4,6 +4,14 @@ dnl
 
 dnl Documentation for macro names: brackets indicate optional arguments
 
+dnl T8_CHECK_LIB(LIBRARY LIST, FUNCTION, TOKEN)
+dnl Check for FUNCTION first as is, then in each of the libraries.
+dnl Set shell variable T8_HAVE_TOKEN to nonempty if found.
+dnl Call AM_CONDITIONAL with T8_HAVE_TOKEN.
+dnl Call AC_DEFINE with HAVE_TOKEN if found.
+AC_DEFUN([T8_CHECK_LIB],
+         [SC_CHECL_LIB([$1], [$2], [$3], [T8])])
+
 dnl T8_ARG_ENABLE(NAME, COMMENT, TOKEN)
 dnl Check for --enable/disable-NAME using shell variable T8_ENABLE_TOKEN
 dnl If shell variable is set beforehand it overrides the option
