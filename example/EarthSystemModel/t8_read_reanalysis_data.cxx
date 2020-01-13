@@ -20,16 +20,19 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <netcdf.h>
 #include <sc_options.h>
 #include <sc_refcount.h>
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_cmesh_vtk.h>
+#if T8_WITH_NETCDF
+#include <netcdf.h>
+#endif
 
-/* TOOD: Need T8_WITH_NETCDF macro? */
 /* TODO: Use T8_ALLOC instead of malloc */
 
+
+#if T8_WITH_NETCDF
 /* Print an error message using the netcdf errorcode */
 #define T8_NETCDF_ERROR(filename, description, errorcode) \
   t8_debugf("Error in file %s - %s - %s\n", filename, description, nc_strerror(errorcode))
@@ -259,6 +262,7 @@ t8_netcdf_open_file (const char *filename)
   free (dimension_lengths);
   free (dimension_names);
 }
+#endif
 
 int
 main (int argc, char **argv)
@@ -297,6 +301,7 @@ main (int argc, char **argv)
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
+#if T8_WTIH_NETCDF
   if (helpme) {
     /* display help message and usage */
     t8_global_essentialf ("%s\n", help);
@@ -312,6 +317,14 @@ main (int argc, char **argv)
     t8_global_essentialf ("\n\tERROR: Wrong usage.\n\n");
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
+#else
+  /* If t8code is not linked against netcdf, we cannot execute the code */
+  /* Print help message and exit */
+  t8_global_essentialf ("%s\n", help);
+  t8_global_essentialf ("t8code is not linked against netcdf.\n");
+  t8_global_essentialf
+    ("To run this example configure t8code with '--with-netcdf'.\n");
+#endif
 
   sc_options_destroy (opt);
   sc_finalize ();
