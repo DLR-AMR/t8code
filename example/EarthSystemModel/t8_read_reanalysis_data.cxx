@@ -31,11 +31,10 @@
 
 /* TODO: Use T8_ALLOC instead of malloc */
 
-
 #if T8_WITH_NETCDF
 /* Print an error message using the netcdf errorcode */
 #define T8_NETCDF_ERROR(filename, description, errorcode) \
-  t8_debugf("Error in file %s - %s - %s\n", filename, description, nc_strerror(errorcode))
+  t8_errorf("Error in file %s - %s - %s\n", filename, description, nc_strerror(errorcode))
 
 /* Close an opened netcdf file */
 static int
@@ -286,7 +285,7 @@ main (int argc, char **argv)
 #ifdef T8_ENABLE_DEBUG
   t8_init (SC_LP_DEBUG);
 #else
-  t8_init (SC_LP_ESSENTIAL);
+  t8_init (SC_LP_PRODUCTION);
 #endif
 
   /* initialize command line argument parser */
