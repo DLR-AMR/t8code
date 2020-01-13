@@ -138,7 +138,7 @@ main (int argc, char *argv[])
 
   opt = sc_options_new (argv[0]);
   sc_options_add_string (opt, 'f', "prefix", &prefix, "", "The prefix of the"
-                         "tetgen files.");
+                         "msh files.");
   sc_options_add_bool (opt, 'p', "Partition", &partition, 0, "If true "
                        "the generated cmesh is repartitioned uniformly.");
   sc_options_add_int (opt, 'd', "dim", &dim, 2, "The dimension of the mesh");
