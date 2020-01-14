@@ -194,7 +194,8 @@ t8_netcdf_open_file (const char *filename)
   int                 number_of_dims;
   char                (*dimension_names)[BUFSIZ];
   size_t             *dimension_lengths;
-  double             *data_in[3];
+#define NUM_DATA 3
+  double             *data_in[NUM_DATA];
 
   /* Open the file */
   t8_debugf ("Opening file %s\n", filename);
@@ -215,12 +216,12 @@ t8_netcdf_open_file (const char *filename)
     return;
   }
 
-  if (number_of_dims < 3) {
+  if (number_of_dims < NUM_DATA) {
     t8_global_errorf ("Expected at least 3 dimensions. Only %i found.\n",
                       number_of_dims);
     t8_netcdf_close_file (filename, ncid);
   }
-  for (int i = 0; i < 3; ++i) {
+  for (int i = 0; i < NUM_DATA; ++i) {
     retval =
       t8_netcdf_read_double_data (filename, ncid, dimension_names[i], 1,
                                   dimension_lengths[i], &data_in[i]);
@@ -237,7 +238,7 @@ t8_netcdf_open_file (const char *filename)
 #ifdef T8_ENABLE_DEBUG
   /* Output the read data */
   {
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < NUM_DATA; ++i) {
       size_t              j;
       char                output[BUFSIZ] = "";
       char                number[20];
@@ -255,11 +256,12 @@ t8_netcdf_open_file (const char *filename)
 #endif
 
   /* Clean-up memory */
-  for (int i = 0; i < 3; ++i) {
+  for (int i = 0; i < NUM_DATA; ++i) {
     free (data_in[i]);
   }
   free (dimension_lengths);
   free (dimension_names);
+#undef NUM_DATA
 }
 #endif
 
