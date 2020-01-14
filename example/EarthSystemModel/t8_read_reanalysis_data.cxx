@@ -25,9 +25,26 @@
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_cmesh_readmshfile.h>
+#include <t8_vec.h>
 #if T8_WITH_NETCDF
 #include <netcdf.h>
 #endif
+
+/* Convert longitude and latitude coordinates to x,y,z coordinates */
+void
+t8_reanalysis_long_lat_to_euclid (const double longitude,
+                                  const double latitude, const double R,
+                                  double euclidean[3])
+{
+  const double        sinlong = sin (longitude);
+  const double        coslong = cos (longitude);
+  const double        sinlat = sin (latitude);
+  const double        coslat = cos (latitude);
+
+  euclidean[0] = R * sinlong * coslat;
+  euclidean[1] = R * sinlong * sinlat;
+  euclidean[2] = R * coslong;
+}
 
 /* TODO: Use T8_ALLOC instead of malloc */
 
@@ -188,10 +205,11 @@ t8_netcdf_read_double_data (const char *filename, const int ncid,
 }
 
 static void
-t8_netcdf_open_file (const char *filename)
+t8_netcdf_open_file (const char *filename, const double radius)
 {
   int                 ncid, retval;
   int                 number_of_dims;
+  int                 longitude_pos, latitude_pos;
   char                (*dimension_names)[BUFSIZ];
   size_t             *dimension_lengths;
 #define NUM_DATA 3
@@ -254,6 +272,43 @@ t8_netcdf_open_file (const char *filename)
     }
   }
 #endif
+
+  /* Find the position of the longitude and latitude entries */
+  latitude_pos = -1;
+  longitude_pos = -1;
+  for (int i = 0; i < NUM_DATA; ++i) {
+    if (!strcmp (dimension_names[i], "longitude")) {
+      longitude_pos = i;
+    }
+    else if (!strcmp (dimension_names[i], "latitude")) {
+      latitude_pos = i;
+    }
+  }
+  if (latitude_pos < 0 || longitude_pos < 0) {
+    t8_errorf
+      ("ERROR: The fields 'longitute' and 'latitude' were not found in %s\n",
+       filename);
+  }
+#ifdef T8_ENABLE_DEBUG
+  else {
+    t8_debugf ("'longitude' at pos %i, 'latitude' at pos %i\n", longitude_pos,
+               latitude_pos);
+  }
+#endif
+
+  /* Convert longitude and latitude to x,y,z */
+  const size_t        num_long = dimension_lengths[longitude_pos];
+  const size_t        num_lat = dimension_lengths[latitude_pos];
+  for (size_t ilong = 0; ilong < num_long; ++ilong) {
+    const double        longitude = data_in[longitude_pos][ilong];
+    for (size_t ilat = 0; ilat < num_lat; ++ilat) {
+      const double        latitude = data_in[latitude_pos][ilat];
+      double              xyz[3];
+      t8_reanalysis_long_lat_to_euclid (longitude, latitude, radius, xyz);
+      t8_debugf ("%.3f %.3f %.3f - %.2f\n", xyz[0], xyz[1], xyz[2],
+                 t8_vec_norm (xyz));
+    }
+  }
 
   /* Clean-up memory */
   for (int i = 0; i < NUM_DATA; ++i) {
@@ -361,7 +416,7 @@ main (int argc, char **argv)
       t8_reanalysis_build_forest (mesh_filename, sphere_radius, sphere_dim,
                                   comm);
     if (!retval) {
-      t8_netcdf_open_file (netcdf_filename);
+      t8_netcdf_open_file (netcdf_filename, sphere_radius);
     }
   }
   else {
