@@ -25,7 +25,6 @@
 #include <t8_forest.h>
 #include <t8_element_cxx.hxx>
 
-
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
@@ -186,8 +185,7 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid,
                             t8_eclass_scheme_c * ts,
                             t8_element_array_t * leaf_elements,
                             t8_locidx_t tree_lindex_of_first_leaf,
-                            t8_forest_search_query_fn search_fn,
-                            void *user_data)
+                            t8_forest_search_query_fn search_fn)
 {
   t8_element_t       *leaf, **children;
   int                 num_children, ichild;
@@ -218,14 +216,14 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid,
       T8_ASSERT (!ts->t8_element_compare (element, leaf));
       /* The element is the leaf, we are at the last stage of the recursion
        * and can call the callback. */
-      (void) search_fn (forest, ltreeid, leaf, leaf_elements, user_data,
+      (void) search_fn (forest, ltreeid, leaf, leaf_elements,
                         tree_lindex_of_first_leaf);
       return;
     }
   }
   /* Call the callback function for the element, we pass -index -1 as index to indicate
    * element is not a leaf */
-  ret = search_fn (forest, ltreeid, element, leaf_elements, user_data,
+  ret = search_fn (forest, ltreeid, element, leaf_elements,
                    -tree_lindex_of_first_leaf - 1);
 
   if (ret) {
@@ -255,7 +253,7 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid,
         t8_forest_search_recursion (forest, ltreeid, eclass, children[ichild],
                                     ts, &child_leafs,
                                     indexa + tree_lindex_of_first_leaf,
-                                    search_fn, user_data);
+                                    search_fn);
       }
     }
     /* clean-up */
@@ -268,7 +266,7 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid,
 /* Perform a top-down search in one tree of the forest */
 static void
 t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid,
-                       t8_forest_search_query_fn search_fn, void *user_data)
+                       t8_forest_search_query_fn search_fn)
 {
   t8_eclass_t         eclass;
   t8_eclass_scheme_c *ts;
@@ -293,18 +291,17 @@ t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid,
   ts->t8_element_nca (first_el, last_el, nca);
   /* Start the top-down search */
   t8_forest_search_recursion (forest, ltreeid, eclass, nca, ts, leaf_elements,
-                              0, search_fn, user_data);
+                              0, search_fn);
 }
 
 void
-t8_forest_search (t8_forest_t forest, t8_forest_search_query_fn search_fn,
-                  void *user_data)
+t8_forest_search (t8_forest_t forest, t8_forest_search_query_fn search_fn)
 {
   t8_locidx_t         num_local_trees, itree;
 
   num_local_trees = t8_forest_get_num_local_trees (forest);
   for (itree = 0; itree < num_local_trees; itree++) {
-    t8_forest_search_tree (forest, itree, search_fn, user_data);
+    t8_forest_search_tree (forest, itree, search_fn);
   }
 }
 
