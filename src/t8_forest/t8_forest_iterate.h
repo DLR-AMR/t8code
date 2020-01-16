@@ -41,6 +41,20 @@ typedef int         (*t8_forest_iterate_face_fn) (t8_forest_t forest,
                                                   t8_locidx_t
                                                   tree_leaf_index);
 
+/*
+ * forest          the forest
+ * ltreeid         the local tree id of the current tree
+ * element         the element for which the query is executed
+ * is_leaf         true if and only if \a element is a leaf element
+ * leaf_elements   the leaf elements in \a forest that are descendants of \a element
+ *                 (or the element itself if \a is_leaf is true)
+ * tree_leaf_index the local index of the first leaf in \a leaf_elements
+ * query           if not NULL, a query that is passed through from the search function
+ *
+ * return          if \a query is not NULL: true if and only if the element 'matches' the query
+ *                 if \a query is NULL: true if and only if the search should continue withe the
+ *                 children of \a element and the queries should be performed for this element.
+ */
 typedef int         (*t8_forest_search_query_fn) (t8_forest_t forest,
                                                   t8_locidx_t ltreeid,
                                                   const t8_element_t *
@@ -49,7 +63,8 @@ typedef int         (*t8_forest_search_query_fn) (t8_forest_t forest,
                                                   t8_element_array_t *
                                                   leaf_elements,
                                                   t8_locidx_t
-                                                  tree_leaf_index);
+                                                  tree_leaf_index,
+                                                  void *query);
 
 T8_EXTERN_C_BEGIN ();
 
@@ -84,7 +99,9 @@ void                t8_forest_iterate_faces (t8_forest_t forest,
  * To pass user data to the search_fn function use \ref t8_forest_set_user_data
  */
 void                t8_forest_search (t8_forest_t forest,
-                                      t8_forest_search_query_fn search_fn);
+                                      t8_forest_search_query_fn search_fn,
+                                      t8_forest_search_query_fn query_fn,
+                                      sc_array_t * queries);
 
 /** Given two forest where the elemnts in one forest are either direct children or
  * parents of the elements in the other forest
