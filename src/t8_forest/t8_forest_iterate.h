@@ -45,6 +45,7 @@ typedef int         (*t8_forest_search_query_fn) (t8_forest_t forest,
                                                   t8_locidx_t ltreeid,
                                                   const t8_element_t *
                                                   element,
+                                                  const int is_leaf,
                                                   t8_element_array_t *
                                                   leaf_elements,
                                                   t8_locidx_t

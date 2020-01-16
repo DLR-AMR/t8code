@@ -837,8 +837,10 @@ typedef struct
 static int
 t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
                                  const t8_element_t * element,
+                                 const int is_leaf,
                                  t8_element_array_t * leafs,
-                                 t8_locidx_t tree_leaf_index)
+                                 t8_locidx_t tree_leaf_index,
+                                 void * query)
 {
   t8_forest_ghost_boundary_data_t *data =
     (t8_forest_ghost_boundary_data_t *) t8_forest_get_user_data (forest);
@@ -925,7 +927,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
       upper = parent_upper;
     }
 
-    if (tree_leaf_index < 0) {
+    if (!is_leaf) {
       /* The element is not a leaf, we compute bounds for the face neighbor owners,
        * if all face neighbors are owned by this rank, and the element is completely
        * owned, then we do not continue the search. */
@@ -964,6 +966,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
     }
   }                             /* end face loop */
 #if 0
+  /* TODO: can we remove this code? */
   if (element_is_owned || face_totally_owned) {
     /* Either all descendants of element are owned by the current rank
      * or all of its leafs at the face are. */
