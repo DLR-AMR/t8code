@@ -51,9 +51,9 @@ t8_test_search_all_fn (t8_forest_t forest,
     t8_locidx_t         tree_offset;
     t8_locidx_t         test_ltreeid;
     t8_element_t       *test_element;
-    t8_eclass_scheme_c *ts;
     t8_eclass_t         tree_class =
       t8_forest_get_tree_class (forest, ltreeid);
+    t8_eclass_scheme_c *ts;
     ts = t8_forest_get_eclass_scheme (forest, tree_class);
 
     tree_offset = t8_forest_get_tree_element_offset (forest, ltreeid);
@@ -94,6 +94,7 @@ t8_test_search_query_all_fn (t8_forest_t forest,
     t8_element_t       *test_element;
     t8_eclass_t         tree_class =
       t8_forest_get_tree_class (forest, ltreeid);
+    t8_eclass_scheme_c *ts;
     ts = t8_forest_get_eclass_scheme (forest, tree_class);
 
     tree_offset = t8_forest_get_tree_element_offset (forest, ltreeid);
