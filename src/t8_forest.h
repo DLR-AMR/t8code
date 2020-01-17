@@ -851,7 +851,6 @@ void                t8_forest_element_face_centroid (t8_forest_t forest,
                                                      double centroid[3]);
 
 /** Compute the normal vector of an element's face.
- * Currently implemented for 2D elements only.
  * \param [in]      forest     The forest.
  * \param [in]      ltree_id   The forest local id of the tree in which the element is.
  * \param [in]      element    The element.
