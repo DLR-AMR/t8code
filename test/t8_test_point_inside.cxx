@@ -81,6 +81,22 @@ t8_test_point_inside_level0 (sc_MPI_Comm comm, t8_eclass_t eclass)
 
           /* We now manually check whether the point is inside the element or not. */
           switch (eclass) {
+          case T8_ECLASS_LINE:
+            /* The point is inside if all its x coordinate is in [0, 1] and y = z = 0 */
+            if (test_point[0] >= 0 && test_point[1] == 0 && test_point[2] == 0
+                && test_point[0] <= 1) {
+              /* The point should be inside */
+              SC_CHECK_ABORTF (point_is_inside,
+                               "The point (%g,%g,%g) should be inside the unit line, but isn't detected.",
+                               test_point[0], test_point[1], test_point[2]);
+            }
+            else {
+              /* The point should not be inside */
+              SC_CHECK_ABORTF (!point_is_inside,
+                               "The point (%g,%g,%g) should not be inside the unit line, but is detected.",
+                               test_point[0], test_point[1], test_point[2]);
+            }
+            break;
           case T8_ECLASS_QUAD:
             /* The point is inside if all its x and y coordinates are in [0, 1] and z = 0 */
             if (test_point[0] >= 0 && test_point[1] >= 0 && test_point[2] == 0
@@ -195,8 +211,7 @@ main (int argc, char **argv)
   p4est_init (NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  /* TODO: Activate test for lines when point inside is implemented for lines */
-  for (ieclass = T8_ECLASS_QUAD; ieclass < T8_ECLASS_COUNT; ieclass++) {
+  for (ieclass = T8_ECLASS_LINE; ieclass < T8_ECLASS_COUNT; ieclass++) {
     if (ieclass != T8_ECLASS_PYRAMID) {
       /* TODO: does not work with pyramids yet */
       t8_global_productionf
