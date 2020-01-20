@@ -27,6 +27,16 @@
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default_cxx.hxx>
 
+/* This function creates a single element of the specified element class.
+ * It the creates a bunch of points, some of which lie whithin the element, some
+ * not. For each point we call t8_forest_element_point_inside and check whether
+ * it gives the correct result. */
+/*
+ * TODO: - Use more than one refinement level.
+ *       - Use barycentric coordinates to create the points, this
+ *         spares us to manually check whether a point is inside or not.
+ *         (0 <= x_i <= 1 and sum x_i = 1    <=> Point is inside)
+ */
 static void
 t8_test_point_inside_level0 (sc_MPI_Comm comm, t8_eclass_t eclass)
 {
