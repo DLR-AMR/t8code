@@ -1516,10 +1516,10 @@ t8_cmesh_new_tet (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[12] = {
-    1, 1, 1,
-    1, -1, -1,
-    -1, 1, -1,
-    -1, -1, 1
+    0, 0, 0,
+    1, 0, 0,
+    1, 0, 1,
+    1, 1, 1
   };
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);
