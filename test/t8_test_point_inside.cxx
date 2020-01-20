@@ -101,17 +101,70 @@ t8_test_point_inside_level0 (sc_MPI_Comm comm, t8_eclass_t eclass)
           case T8_ECLASS_TRIANGLE:
             /* The point is inside if all its x,y coordinates are in [0, 1], z = 0, and y <= x */
             if (test_point[0] >= 0 && test_point[1] >= 0 && test_point[2] == 0
-                && test_point[0] <= 1 && test_point[1] <= 1
-                && test_point[2] == 0 && test_point[1] <= test_point[0]) {
+                && test_point[0] <= 1 && test_point[1] <= test_point[0]) {
               /* The point should be inside */
               SC_CHECK_ABORTF (point_is_inside,
-                               "The point (%g,%g,%g) should be inside the unit triangle, but isn't detected.",
+                               "The point (%g,%g,%g) should be inside the triangle, but isn't detected.",
                                test_point[0], test_point[1], test_point[2]);
             }
             else {
               /* The point should not be inside */
               SC_CHECK_ABORTF (!point_is_inside,
-                               "The point (%g,%g,%g) should not be inside the unit triangle, but is detected.",
+                               "The point (%g,%g,%g) should not be inside the triangle, but is detected.",
+                               test_point[0], test_point[1], test_point[2]);
+            }
+            break;
+          case T8_ECLASS_HEX:
+            /* The point is inside if all its x,y,z coordinates are in [0, 1] */
+            if (test_point[0] >= 0 && test_point[1] >= 0 && test_point[2] >= 0
+                && test_point[0] <= 1 && test_point[1] <= 1
+                && test_point[2] <= 1) {
+              /* The point should be inside */
+              SC_CHECK_ABORTF (point_is_inside,
+                               "The point (%g,%g,%g) should be inside the unit hex, but isn't detected.",
+                               test_point[0], test_point[1], test_point[2]);
+            }
+            else {
+              /* The point should not be inside */
+              SC_CHECK_ABORTF (!point_is_inside,
+                               "The point (%g,%g,%g) should not be inside the unit hex, but is detected.",
+                               test_point[0], test_point[1], test_point[2]);
+            }
+            break;
+          case T8_ECLASS_TET:
+            /* The point is inside if all its x,y, z coordinates are in [0, 1], and y <= z and x >= z */
+            if (test_point[0] >= 0 && test_point[1] >= 0 && test_point[2] >= 0  /* x,y,z >= 0 */
+                && test_point[0] <= 1   /* x <= 1 */
+                && test_point[2] <= 1   /* z <= 1 */
+                && test_point[1] <= test_point[2]       /* y <= z and x >= z */
+                &&test_point[0] >= test_point[2]) {
+              /* The point should be inside */
+              SC_CHECK_ABORTF (point_is_inside,
+                               "The point (%g,%g,%g) should be inside the tetrahedron, but isn't detected.",
+                               test_point[0], test_point[1], test_point[2]);
+            }
+            else {
+              /* The point should not be inside */
+              SC_CHECK_ABORTF (!point_is_inside,
+                               "The point (%g,%g,%g) should not be inside the tetrahedron, but is detected.",
+                               test_point[0], test_point[1], test_point[2]);
+            }
+            break;
+          case T8_ECLASS_PRISM:
+            /* The point is inside if x and y are inside the triangle (x,y in [0,1], y <= x)
+             * and if z in [0, 1] */
+            if (test_point[0] >= 0 && test_point[1] >= 0 && test_point[2] >= 0
+                && test_point[0] <= 1 && test_point[1] <= 1
+                && test_point[2] <= 1 && test_point[1] <= test_point[0]) {
+              /* The point should be inside */
+              SC_CHECK_ABORTF (point_is_inside,
+                               "The point (%g,%g,%g) should be inside the prism, but isn't detected.",
+                               test_point[0], test_point[1], test_point[2]);
+            }
+            else {
+              /* The point should not be inside */
+              SC_CHECK_ABORTF (!point_is_inside,
+                               "The point (%g,%g,%g) should not be inside the prism, but is detected.",
                                test_point[0], test_point[1], test_point[2]);
             }
             break;
@@ -133,7 +186,6 @@ main (int argc, char **argv)
   int                 mpiret;
   sc_MPI_Comm         mpic;
   int                 ieclass;
-  int                 ilevel;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
