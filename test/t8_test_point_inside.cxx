@@ -43,13 +43,17 @@ t8_test_point_inside_level0 (sc_MPI_Comm comm, t8_eclass_t eclass)
   t8_cmesh_t          cmesh;
   t8_forest_t         forest;
   t8_scheme_cxx_t    *default_scheme;
+  t8_eclass_scheme_c *eclass_scheme;
   t8_element_t       *element;
   double              test_point[3];
   int                 ipoint, jpoint, kpoint;   /* loop variables */
   const int           num_points_per_dim = 5;   /* we construct num_points_per_dim^3 many test points */
   const double        offset = 2.2 / (num_points_per_dim - 1);  /* used to calculate the coordinates of the test points */
   int                 point_is_inside;
+  int                 num_corners, icorner;
   double             *tree_vertices;
+  double              element_vertices[T8_ECLASS_MAX_CORNERS][3];
+  double             *barycentric_coordinates;
 
   default_scheme = t8_scheme_new_default_cxx ();
   /* Construct a cube coarse mesh */
@@ -63,6 +67,21 @@ t8_test_point_inside_level0 (sc_MPI_Comm comm, t8_eclass_t eclass)
     element = t8_forest_get_element (forest, 0, NULL);
     /* Get the vertices of the tree */
     tree_vertices = t8_forest_get_tree_vertices (forest, 0);
+
+    /* Get the associated eclass scheme */
+    eclass_scheme = t8_forest_get_eclass_scheme (forest, eclass);
+
+    /* Compute the corner coordinates of the element */
+    num_corners = eclass_scheme->t8_element_num_corners (element);
+    T8_ASSERT (0 <= num_corners && num_corners < T8_ECLASS_MAX_CORNERS);        /* Everything else is impossible */
+    /* For each corner get its coordinates */
+    for (icorner = 0; icorner < num_corners; ++icorner) {
+      eclass_scheme->t8_element_vertex_coords (element, icorner,
+                                               element_vertices[icorner]);
+    }
+
+    /* Allocate the barycentric coordinates */
+    barycentric_coordinates = T8_ALLOC (double, num_corners + 1);
 
     /* Create a bunch of points and check whether they are inside the element */
     for (ipoint = 0; ipoint < num_points_per_dim; ++ipoint) {
