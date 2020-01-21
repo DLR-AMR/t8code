@@ -378,6 +378,52 @@ t8_reanalysis_build_forest (const char *mesh_filename, double radius,
   return 0;
 }
 
+/* search callback function that identifies elements that contain a point.
+ * This function returns true if a given point is contained in the element.
+ * If the element is a leaf, we use this function to associate the element's index
+ * with the point, such that we can access it later.
+ * A point may be contained in multiple elements (boundaries, round-off errors,
+ * or a given search tolerance (to be implemented later))
+ */
+typedef struct
+{
+  double              xyz[3];   /* The coordinates of the point */
+} t8_netcdf_search_point_t;
+
+typedef struct
+{
+  double             *coordinates;      /* The array of coordinates of all points */
+  sc_array_t         *matching_elements;        /* For each point an array of the elment indices
+                                                   that contain this point. (filled in the search query callback)
+                                                 */
+} t8_netcdf_search_user_data_t;
+
+static int
+t8_netcdf_find_mesh_elements_query (t8_forest_t forest,
+                                    t8_locidx_t ltreeid,
+                                    const t8_element_t *
+                                    element,
+                                    const int is_leaf,
+                                    t8_element_array_t *
+                                    leaf_elements,
+                                    t8_locidx_t tree_leaf_index, void *point)
+{
+
+}
+
+/* Given a forest and an array of points, identify the elements that contain
+ * the points.
+ * The points are given as one coordinate array in the format (x_0 y_0 z_0 x_1 y_1 z_1 ... )
+ */
+void
+t8_netcdf_find_mesh_elements (forest, points, num_points)
+{
+  struct find_mesh_elements_struct
+  {
+
+  };
+}
+
 int
 main (int argc, char **argv)
 {
@@ -441,6 +487,8 @@ main (int argc, char **argv)
       size_t              num_coordinates;
       t8_netcdf_open_file (netcdf_filename, sphere_radius,
                            &coordinates_euclidean, &num_coordinates);
+      t8_netcdf_find_mesh_elements (forest, coordinates_euclidean,
+                                    num_coordinates);
       /* Clean-up */
       T8_FREE (coordinates_euclidean);
     }
