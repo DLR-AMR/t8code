@@ -209,7 +209,7 @@ t8_netcdf_read_double_data (const char *filename, const int ncid,
 static int
 t8_netcdf_open_file (const char *filename, const double radius,
                      double **pcoordinates_euclidean,
-                     size_t * num_coordinates)
+                     size_t * pnum_coordinates)
 {
   int                 ncid, retval;
   int                 number_of_dims;
@@ -218,7 +218,7 @@ t8_netcdf_open_file (const char *filename, const double radius,
   size_t             *dimension_lengths;
 #define NUM_DATA 3
   double             *data_in[NUM_DATA];
-  double             *coordinates_euclidean = *pcoordinates_euclidean;
+  double             *coordinates_euclidean;
 
   /* Open the file */
   t8_debugf ("Opening file %s\n", filename);
@@ -305,9 +305,11 @@ t8_netcdf_open_file (const char *filename, const double radius,
   const size_t        num_long = dimension_lengths[longitude_pos];
   const size_t        num_lat = dimension_lengths[latitude_pos];
   /* Compute the number of coordinates */
-  *num_coordinates = num_long * num_lat;
+  size_t              num_coordinates = *pnum_coordinates =
+    num_long * num_lat;
   /* Allocate array to store all x,y,z coordinates */
-  coordinates_euclidean = T8_ALLOC (double, 3 * *num_coordinates);
+  coordinates_euclidean = *pcoordinates_euclidean =
+    T8_ALLOC (double, 3 * num_coordinates);
 
   /* Loop over all longitudes and all latitudes and compute the euclidean
    * coordinates for each point. */
@@ -338,7 +340,6 @@ t8_netcdf_open_file (const char *filename, const double radius,
   T8_FREE (dimension_lengths);
   free (dimension_names);
 
-  T8_FREE (coordinates_euclidean);
   /* Return success */
   return 0;
 #undef NUM_DATA
