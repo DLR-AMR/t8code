@@ -246,7 +246,7 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid,
   }
   /* Call the callback function for the element */
   ret = search_fn (forest, ltreeid, element, is_leaf, leaf_elements,
-                   tree_lindex_of_first_leaf, NULL);
+                   tree_lindex_of_first_leaf, NULL, 0);
 
   if (!ret) {
     /* The function returned false. We abort the recursion */
@@ -267,7 +267,7 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid,
     current_query = sc_array_index (queries, query_index);
     query_ret =
       query_fn (forest, ltreeid, element, is_leaf, leaf_elements,
-                tree_lindex_of_first_leaf, current_query);
+                tree_lindex_of_first_leaf, current_query, query_index);
     if (!is_leaf && query_ret) {
       /* If element is not a leaf and this query returned true, we add this
        * query to the new active queries */

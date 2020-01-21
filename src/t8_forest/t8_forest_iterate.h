@@ -50,6 +50,8 @@ typedef int         (*t8_forest_iterate_face_fn) (t8_forest_t forest,
  *                 (or the element itself if \a is_leaf is true)
  * tree_leaf_index the local index of the first leaf in \a leaf_elements
  * query           if not NULL, a query that is passed through from the search function
+ * query_index     if \a query is not NULL the index of \a query in the queries array from
+ *                 \ref t8_forest_search
  *
  * return          if \a query is not NULL: true if and only if the element 'matches' the query
  *                 if \a query is NULL: true if and only if the search should continue withe the
@@ -64,7 +66,8 @@ typedef int         (*t8_forest_search_query_fn) (t8_forest_t forest,
                                                   leaf_elements,
                                                   t8_locidx_t
                                                   tree_leaf_index,
-                                                  void *query);
+                                                  void *query,
+                                                  size_t query_index);
 
 T8_EXTERN_C_BEGIN ();
 
