@@ -99,11 +99,11 @@ t8_netcdf_read_dimensions (const char *filename, const int ncid,
   }
   number_of_dims = *pnumber_of_dims;
   /* Allocate dimension_names and length arrays */
+  /* TODO: switch to T8_ALLOC */
   *pdimension_names =
     (char (*)[BUFSIZ]) malloc (number_of_dims * sizeof (*dimension_names));
   dimension_names = *pdimension_names;
-  *pdimension_lengths =
-    (size_t *) malloc (number_of_dims * sizeof (*pdimension_lengths));
+  *pdimension_lengths = T8_ALLOC (size_t, number_of_dims);
   dimension_lengths = *pdimension_lengths;
   if (dimension_names == NULL || dimension_lengths == NULL) {
     t8_global_errorf ("Could not allocate memory for %i dimension names\n",
@@ -183,7 +183,7 @@ t8_netcdf_read_double_data (const char *filename, const int ncid,
     return retval;
   }
 
-  *pdata = (double *) malloc (number_of_entries * sizeof (**pdata));
+  *pdata = T8_ALLOC (double, number_of_entries);
   data = *pdata;
   if (data == NULL) {
     t8_global_errorf ("Could not allocate memory for %i data items\n",
@@ -312,9 +312,9 @@ t8_netcdf_open_file (const char *filename, const double radius)
 
   /* Clean-up memory */
   for (int i = 0; i < NUM_DATA; ++i) {
-    free (data_in[i]);
+    T8_FREE (data_in[i]);
   }
-  free (dimension_lengths);
+  T8_FREE (dimension_lengths);
   free (dimension_names);
 #undef NUM_DATA
 }
