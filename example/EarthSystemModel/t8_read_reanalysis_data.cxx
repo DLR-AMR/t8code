@@ -20,10 +20,12 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <t8.h>
 #include <sc_options.h>
 #include <sc_refcount.h>
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest.h>
+#include <t8_forest/t8_forest_iterate.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_vec.h>
 #if T8_WITH_NETCDF
@@ -343,7 +345,7 @@ t8_netcdf_open_file (const char *filename, const double radius,
 
 /* Read msh-file and build a uniform forest on it.
  * Return 0 on success */
-int
+t8_forest_t
 t8_reanalysis_build_forest (const char *mesh_filename, double radius,
                             int dimension, sc_MPI_Comm comm)
 {
@@ -355,7 +357,7 @@ t8_reanalysis_build_forest (const char *mesh_filename, double radius,
   if (cmesh == NULL) {
     /* cmesh could not be built */
     t8_global_errorf ("Error when openening file %s\n", mesh_filename);
-    return 1;
+    return NULL;
   }
   /* build a uniform forest from the coarse mesh */
   t8_forest_t         forest =
@@ -375,7 +377,7 @@ t8_reanalysis_build_forest (const char *mesh_filename, double radius,
   t8_forest_unref (&forest);
 
   /* return sucess */
-  return 0;
+  return forest;
 }
 
 /* search callback function that identifies elements that contain a point.
@@ -385,17 +387,17 @@ t8_reanalysis_build_forest (const char *mesh_filename, double radius,
  * A point may be contained in multiple elements (boundaries, round-off errors,
  * or a given search tolerance (to be implemented later))
  */
-typedef struct
-{
-  double              xyz[3];   /* The coordinates of the point */
-} t8_netcdf_search_point_t;
 
 typedef struct
 {
-  double             *coordinates;      /* The array of coordinates of all points */
-  sc_array_t         *matching_elements;        /* For each point an array of the elment indices
+  const double       *coordinates;      /* The array of coordinates of all points */
+  sc_array_t         *matching_elements;        /* For each point an array of the element indices
                                                    that contain this point. (filled in the search query callback)
                                                  */
+#ifdef T8_ENABLE_DEBUG
+  int                 matched_elements; /* In debug mode, count how many matching elements we find. */
+  int                 matched_points;   /* In debug mode, count for how many elements */
+#endif
 } t8_netcdf_search_user_data_t;
 
 static int
@@ -406,9 +408,48 @@ t8_netcdf_find_mesh_elements_query (t8_forest_t forest,
                                     const int is_leaf,
                                     t8_element_array_t *
                                     leaf_elements,
-                                    t8_locidx_t tree_leaf_index, void *point)
+                                    t8_locidx_t tree_leaf_index, void *point,
+                                    size_t point_index)
 {
-
+  if (point == NULL) {
+    /* The callback is called in element mode, and not in query mode.
+     * We have to decide with which elements we continue the search.
+     * Since we continue with every element that has matching points, we
+     * do not exclude any element in this stage. Elements that do not match
+     * any queries in the query stage are excluded from the search automatically */
+    return 1;
+  }
+  double             *tree_vertices =
+    t8_forest_get_tree_vertices (forest, ltreeid);
+  if (t8_forest_element_point_inside
+      (forest, ltreeid, element, tree_vertices, (const double *) point)) {
+    /* This point is contained in this element */
+    if (is_leaf) {
+      /* This element is a leaf element, we add its index to the list of
+       * elements that contain this point */
+      t8_netcdf_search_user_data_t *user_data =
+        (t8_netcdf_search_user_data_t *) t8_forest_get_user_data (forest);
+#ifdef T8_ENABLE_DEBUG
+      user_data->matched_elements++;
+      if (user_data->matching_elements[point_index].elem_count == 0) {
+        /* This point was not found inside an element yet, we add to the counter of matched points */
+        user_data->matched_points++;
+      }
+#endif
+      /* Compute the forest local index of the element */
+      t8_locidx_t         element_index =
+        t8_forest_get_tree_element_offset (forest, ltreeid) + tree_leaf_index;
+      /* Add this index to the array of found elements */
+      *(t8_locidx_t *) sc_array_push (user_data->matching_elements +
+                                      point_index) = element_index;
+    }
+    /* Since the point is contained in the element, we return 1 */
+    return 1;
+  }
+  else {
+    /* This point is not contained in this element, return 0 */
+    return 0;
+  }
 }
 
 /* Given a forest and an array of points, identify the elements that contain
@@ -416,12 +457,36 @@ t8_netcdf_find_mesh_elements_query (t8_forest_t forest,
  * The points are given as one coordinate array in the format (x_0 y_0 z_0 x_1 y_1 z_1 ... )
  */
 void
-t8_netcdf_find_mesh_elements (forest, points, num_points)
+t8_netcdf_find_mesh_elements (t8_forest_t forest, double *points,
+                              const size_t num_points)
 {
-  struct find_mesh_elements_struct
-  {
+  sc_array_t         *matching_elements;
+  t8_netcdf_search_user_data_t coords_and_matching_elements;
+  size_t              ipoint;
+  sc_array_t         *queries;
 
-  };
+  /* Allocate as many arrays as we have points to store the
+   * matching elements for each point */
+  matching_elements = T8_ALLOC (sc_array_t, num_points);
+  /* Initialize these arrays */
+  for (ipoint = 0; ipoint < num_points; ++ipoint) {
+    sc_array_init (matching_elements + ipoint, sizeof (t8_locidx_t));
+  }
+  /* Init user data for the search routine */
+  coords_and_matching_elements.coordinates = points;
+  coords_and_matching_elements.matching_elements = matching_elements;
+#ifdef T8_ENABLE_DEBUG
+  coords_and_matching_elements.matched_elements = 0;
+  coords_and_matching_elements.matched_points = 0;
+#endif
+  /* Set this data as the forests user pointer */
+  t8_forest_set_user_data (forest, &coords_and_matching_elements);
+
+  /* Initialize the array of points to be passed to the search function.
+   * Each entry is one point, thus 3 doubles */
+  queries = sc_array_new_data (points, 3 * sizeof (double), num_points);
+  t8_forest_search (forest, t8_netcdf_find_mesh_elements_query,
+                    t8_netcdf_find_mesh_elements_query, queries);
 }
 
 int
@@ -479,10 +544,10 @@ main (int argc, char **argv)
 #if T8_WITH_NETCDF
   else if (parsed >= 0 && netcdf_filename != NULL && mesh_filename != NULL) {
     int                 retval;
-    retval =
+    t8_forest_t         forest =
       t8_reanalysis_build_forest (mesh_filename, sphere_radius, sphere_dim,
                                   comm);
-    if (!retval) {
+    if (forest != NULL) {
       double             *coordinates_euclidean;
       size_t              num_coordinates;
       t8_netcdf_open_file (netcdf_filename, sphere_radius,
