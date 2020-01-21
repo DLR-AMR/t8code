@@ -40,7 +40,8 @@ t8_test_search_all_fn (t8_forest_t forest,
                        const int is_leaf,
                        t8_element_array_t *
                        leaf_elements,
-                       t8_locidx_t tree_leaf_index, void *query)
+                       t8_locidx_t tree_leaf_index, void *query,
+                       size_t query_index)
 {
   SC_CHECK_ABORT (query == NULL,
                   "Search callback must not be called with query argument.");
