@@ -205,7 +205,9 @@ t8_netcdf_read_double_data (const char *filename, const int ncid,
 }
 
 static void
-t8_netcdf_open_file (const char *filename, const double radius)
+t8_netcdf_open_file (const char *filename, const double radius,
+                     double **pcoordinates_euclidean,
+                     size_t * num_coordinates)
 {
   int                 ncid, retval;
   int                 number_of_dims;
@@ -214,6 +216,7 @@ t8_netcdf_open_file (const char *filename, const double radius)
   size_t             *dimension_lengths;
 #define NUM_DATA 3
   double             *data_in[NUM_DATA];
+  double             *coordinates_euclidean = *pcoordinates_euclidean;
 
   /* Open the file */
   t8_debugf ("Opening file %s\n", filename);
@@ -299,14 +302,30 @@ t8_netcdf_open_file (const char *filename, const double radius)
   /* Convert longitude and latitude to x,y,z */
   const size_t        num_long = dimension_lengths[longitude_pos];
   const size_t        num_lat = dimension_lengths[latitude_pos];
+  /* Compute the number of coordinates */
+  *num_coordinates = num_long * num_lat;
+  /* Allocate array to store all x,y,z coordinates */
+  coordinates_euclidean = T8_ALLOC (double, 3 * *num_coordinates);
+
+  /* Loop over all longitudes and all latitudes and compute the euclidean
+   * coordinates for each point. */
   for (size_t ilong = 0; ilong < num_long; ++ilong) {
     const double        longitude = data_in[longitude_pos][ilong];
     for (size_t ilat = 0; ilat < num_lat; ++ilat) {
       const double        latitude = data_in[latitude_pos][ilat];
       double              xyz[3];
+      /* Compute the current position in the euclidean array */
+      const size_t        position = 3 * (num_lat * ilong + ilat);
+
+      /* Compute euclidean coordinates of this point */
       t8_reanalysis_long_lat_to_euclid (longitude, latitude, radius, xyz);
-      t8_debugf ("%.3f %.3f %.3f - %.2f\n", xyz[0], xyz[1], xyz[2],
-                 t8_vec_norm (xyz));
+
+      /* Store into the array */
+      coordinates_euclidean[position] = xyz[0];
+      coordinates_euclidean[position + 1] = xyz[1];
+      coordinates_euclidean[position + 2] = xyz[2];
+      //     t8_debugf ("%.3f %.3f %.3f - %.2f\n", xyz[0], xyz[1], xyz[2],
+      //                t8_vec_norm (xyz));
     }
   }
 
@@ -316,6 +335,8 @@ t8_netcdf_open_file (const char *filename, const double radius)
   }
   T8_FREE (dimension_lengths);
   free (dimension_names);
+
+  T8_FREE (coordinates_euclidean);
 #undef NUM_DATA
 }
 #endif
@@ -416,7 +437,12 @@ main (int argc, char **argv)
       t8_reanalysis_build_forest (mesh_filename, sphere_radius, sphere_dim,
                                   comm);
     if (!retval) {
-      t8_netcdf_open_file (netcdf_filename, sphere_radius);
+      double             *coordinates_euclidean;
+      size_t              num_coordinates;
+      t8_netcdf_open_file (netcdf_filename, sphere_radius,
+                           &coordinates_euclidean, &num_coordinates);
+      /* Clean-up */
+      T8_FREE (coordinates_euclidean);
     }
   }
   else {
