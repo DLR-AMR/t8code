@@ -79,7 +79,8 @@ t8_test_search_query_all_fn (t8_forest_t forest,
                              const int is_leaf,
                              t8_element_array_t *
                              leaf_elements,
-                             t8_locidx_t tree_leaf_index, void *query)
+                             t8_locidx_t tree_leaf_index, void *query,
+                             size_t query_index)
 {
   /* The query callback is allways called with a query */
   SC_CHECK_ABORT (query != NULL,
@@ -87,6 +88,11 @@ t8_test_search_query_all_fn (t8_forest_t forest,
   /* The query is an int with value 42 (see below) */
   SC_CHECK_ABORT (*(int *) query == 42,
                   "Wrong query argument passed to query callback.");
+  /* The query index gives the position of the query in the queries array
+   * of the calling search forest_search. Since there is only one query in the
+   * array in this test, the index must always be 0. */
+  SC_CHECK_ABORT (query_index == 0,
+                  "Wrong query index passed to query callback.");
   if (is_leaf) {
     /* Test whether tree_leaf_index is actually the index of the element */
     t8_locidx_t         tree_offset;
