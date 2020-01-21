@@ -838,8 +838,37 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
 
   switch (face_shape) {
   case T8_ECLASS_VERTEX:
-    /* TODO: normal of a line */
-    SC_ABORT_NOT_REACHED ();
+    /* Let our line be between the vertices v_0 and v_1:
+     *   x ----- x
+     *  v_0      v_1
+     *
+     * Then the outward pointing normal vector at v_0 is v_0-v_1
+     * and the one at v_1 is v_1-v_0
+     * (divided by their norm.)
+     */
+    double              v_0[3];
+    double              norm;
+    int                 sign;
+
+    /* Get the coordinates of v_0 and v_1 */
+    t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+                                  0, v_0);
+    t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+                                  1, normal);
+
+    /* Compute normal = v_1 - v_0 */
+    t8_vec_axpy (v_0, normal, -1);
+
+    /* Compute the norm */
+    norm = t8_vec_norm (normal);
+
+    /* Compute normal =  normal/norm if face = 1
+     *         normal = -normal/norm if face = 0
+     */
+    sign = face == 0 ? -1 : 1;
+    t8_vec_ax (normal, sign / norm);
+
+    return;
   case T8_ECLASS_LINE:
     {
       int                 corner_a, corner_b;
@@ -958,6 +987,56 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
   default:
     SC_ABORT ("Not implemented.\n");
   }
+}
+
+int
+t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
+                                const t8_element_t * element,
+                                const double *tree_vertices,
+                                const double point[3])
+{
+  t8_eclass_t         tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree_class);
+  int                 num_faces = ts->t8_element_num_faces (element);
+  int                 iface;
+  double              face_normal[3];
+  double              dot_product;
+  double              point_on_face[3];
+
+  /* For bilinearly interpolated elements, a point is inside an element
+   * if and only if it lies on the inner side of each face.
+   * The inner side is defined as the side where the outside normal vector does not
+   * point to.
+   * The point is on this inner side if and only if the scalar product of
+   * a point on the plane minus the point
+   *                with
+   * the outer normal of the face
+   * is >= 0.
+   *
+   * In other words, let p be the point to check, n the outer normal and x a point
+   * on the plane, then p is on the inner side if and only if
+   *  <x - p, n> >= 0
+   **/
+
+  for (iface = 0; iface < num_faces; ++iface) {
+    /* Compute the outer normal n of the face */
+    t8_forest_element_face_normal (forest, ltreeid, element, iface,
+                                   tree_vertices, face_normal);
+    /* Compute a point x on the face */
+    t8_forest_element_face_centroid (forest, ltreeid, element, iface,
+                                     tree_vertices, point_on_face);
+    /* Set x = x - p */
+    t8_vec_axpy (point, point_on_face, -1);
+    /* Compute <x-p,n> */
+    dot_product = t8_vec_dot (point_on_face, face_normal);
+    if (dot_product < 0) {
+      /* The point is outside of the element */
+      return 0;
+    }
+  }
+  /* For all faces the dot product with the outer normal is <= 0.
+   * The point is inside the element. */
+  return 1;
 }
 
 /* For each tree in a forest compute its first and last descendant */

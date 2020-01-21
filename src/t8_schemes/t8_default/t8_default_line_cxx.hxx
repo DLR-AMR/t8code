@@ -108,11 +108,7 @@ public:
 
   virtual int         t8_element_get_face_corner (const t8_element_t *
                                                   element, int face,
-                                                  int corner)
-  {
-    SC_ABORT ("Not implemented.\n");
-    return 0;                   /* prevents compiler warning */
-  }
+                                                  int corner);
 
   /** Return the face numbers of the faces sharing an element's corner. */
   virtual int         t8_element_get_corner_face (const t8_element_t *
