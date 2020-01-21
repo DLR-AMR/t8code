@@ -206,7 +206,7 @@ t8_netcdf_read_double_data (const char *filename, const int ncid,
   return 0;
 }
 
-static void
+static int
 t8_netcdf_open_file (const char *filename, const double radius,
                      double **pcoordinates_euclidean,
                      size_t * num_coordinates)
@@ -226,7 +226,7 @@ t8_netcdf_open_file (const char *filename, const double radius,
   if (retval) {
     /* Could not open the file */
     T8_NETCDF_ERROR (filename, "opening file", retval);
-    return;
+    return retval;
   }
 
   /* read the dimensions */
@@ -236,7 +236,7 @@ t8_netcdf_open_file (const char *filename, const double radius,
   if (retval) {
     /* An error occured and was printed,
      * the file is closed and we exit. */
-    return;
+    return retval;
   }
 
   if (number_of_dims < NUM_DATA) {
@@ -251,7 +251,7 @@ t8_netcdf_open_file (const char *filename, const double radius,
     if (retval) {
       /* An error occured and was printed,
        * the file is closed and we exit. */
-      return;
+      return retval;
     }
   }
 
@@ -339,6 +339,8 @@ t8_netcdf_open_file (const char *filename, const double radius,
   free (dimension_names);
 
   T8_FREE (coordinates_euclidean);
+  /* Return success */
+  return 0;
 #undef NUM_DATA
 }
 #endif
