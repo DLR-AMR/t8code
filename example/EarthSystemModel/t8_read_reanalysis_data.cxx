@@ -377,8 +377,6 @@ t8_reanalysis_build_forest (const char *mesh_filename, double radius,
   }
 #endif
 
-  t8_forest_unref (&forest);
-
   /* return sucess */
   return forest;
 }
@@ -433,6 +431,7 @@ t8_netcdf_find_mesh_elements_query (t8_forest_t forest,
       t8_netcdf_search_user_data_t *user_data =
         (t8_netcdf_search_user_data_t *) t8_forest_get_user_data (forest);
 #ifdef T8_ENABLE_DEBUG
+      /* In debugging mode we count how many points and elements we match */
       user_data->matched_elements++;
       if (user_data->matching_elements[point_index].elem_count == 0) {
         /* This point was not found inside an element yet, we add to the counter of matched points */
@@ -466,7 +465,7 @@ t8_netcdf_find_mesh_elements (t8_forest_t forest, double *points,
   sc_array_t         *matching_elements;
   t8_netcdf_search_user_data_t coords_and_matching_elements;
   size_t              ipoint;
-  sc_array_t         *queries;
+  sc_array_t          queries;
 
   /* Allocate as many arrays as we have points to store the
    * matching elements for each point */
@@ -487,9 +486,16 @@ t8_netcdf_find_mesh_elements (t8_forest_t forest, double *points,
 
   /* Initialize the array of points to be passed to the search function.
    * Each entry is one point, thus 3 doubles */
-  queries = sc_array_new_data (points, 3 * sizeof (double), num_points);
+  sc_array_init_data (&queries, points, 3 * sizeof (double), num_points);
+  t8_debugf ("Starting search with %zd points\n", num_points);
   t8_forest_search (forest, t8_netcdf_find_mesh_elements_query,
-                    t8_netcdf_find_mesh_elements_query, queries);
+                    t8_netcdf_find_mesh_elements_query, &queries);
+
+  t8_debugf ("Finished search. Found %i points and matched %i elements\n",
+             coords_and_matching_elements.matched_points,
+             coords_and_matching_elements.matched_elements);
+
+  T8_FREE (matching_elements);
 }
 
 int
@@ -553,12 +559,15 @@ main (int argc, char **argv)
     if (forest != NULL) {
       double             *coordinates_euclidean;
       size_t              num_coordinates;
-      t8_netcdf_open_file (netcdf_filename, sphere_radius,
-                           &coordinates_euclidean, &num_coordinates);
-      t8_netcdf_find_mesh_elements (forest, coordinates_euclidean,
-                                    num_coordinates);
-      /* Clean-up */
-      T8_FREE (coordinates_euclidean);
+      retval = t8_netcdf_open_file (netcdf_filename, sphere_radius,
+                                    &coordinates_euclidean, &num_coordinates);
+      if (!retval) {
+        t8_netcdf_find_mesh_elements (forest, coordinates_euclidean,
+                                      num_coordinates);
+        /* Clean-up */
+        T8_FREE (coordinates_euclidean);
+      }
+      t8_forest_unref (&forest);
     }
   }
   else {
