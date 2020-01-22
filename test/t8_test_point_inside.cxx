@@ -21,11 +21,13 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <sc_functions.h>
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_element_cxx.hxx>
 
 /* This function creates a single element of the specified element class.
  * It the creates a bunch of points, some of which lie whithin the element, some
@@ -46,14 +48,19 @@ t8_test_point_inside_level0 (sc_MPI_Comm comm, t8_eclass_t eclass)
   t8_eclass_scheme_c *eclass_scheme;
   t8_element_t       *element;
   double              test_point[3];
-  int                 ipoint, jpoint, kpoint;   /* loop variables */
+  int                 ipoint, icoord;   /* loop variables */
   const int           num_points_per_dim = 5;   /* we construct num_points_per_dim^3 many test points */
   const double        offset = 2.2 / (num_points_per_dim - 1);  /* used to calculate the coordinates of the test points */
-  int                 point_is_inside;
+  int                 point_is_recognized_as_inside;
   int                 num_corners, icorner;
   double             *tree_vertices;
   double              element_vertices[T8_ECLASS_MAX_CORNERS][3];
   double             *barycentric_coordinates;
+  const double        barycentric_range_lower_bound = 0.001;    /* Must be > 0 */
+  const double        barycentric_range_upper_bound = 1.1;      /* Should be > 1 */
+  int                 num_steps;
+  double              step;
+  int                 num_points;
 
   default_scheme = t8_scheme_new_default_cxx ();
   /* Construct a cube coarse mesh */
@@ -73,154 +80,110 @@ t8_test_point_inside_level0 (sc_MPI_Comm comm, t8_eclass_t eclass)
 
     /* Compute the corner coordinates of the element */
     num_corners = eclass_scheme->t8_element_num_corners (element);
-    T8_ASSERT (0 <= num_corners && num_corners < T8_ECLASS_MAX_CORNERS);        /* Everything else is impossible */
+    T8_ASSERT (0 <= num_corners && num_corners <= T8_ECLASS_MAX_CORNERS);       /* Everything else is impossible */
     /* For each corner get its coordinates */
     for (icorner = 0; icorner < num_corners; ++icorner) {
-      eclass_scheme->t8_element_vertex_coords (element, icorner,
-                                               element_vertices[icorner]);
+      t8_forest_element_coordinate (forest, 0, element, tree_vertices,
+                                    icorner, element_vertices[icorner]);
     }
 
     /* Allocate the barycentric coordinates */
-    barycentric_coordinates = T8_ALLOC (double, num_corners + 1);
+    barycentric_coordinates = T8_ALLOC (double, num_corners);
 
-    /* Create a bunch of points and check whether they are inside the element */
-    for (ipoint = 0; ipoint < num_points_per_dim; ++ipoint) {
-      test_point[0] = 1.101 - ipoint * offset;  /* we add 0.001 in order to avoid boundary cases where the
-                                                   inside check may give a different result than our own check
-                                                   du to rounding errors. */
-      for (jpoint = 0; jpoint < num_points_per_dim; ++jpoint) {
-        if (t8_eclass_to_dimension[eclass] >= 2) {
-          /* Only set the y coordinate to non-zero if we test elements of dimension 2 or 3 */
-          test_point[1] = 1.102 - jpoint * offset;
-        }
-        else {
-          test_point[1] = 0.0;
-        }
-        for (kpoint = 0; kpoint < num_points_per_dim; ++kpoint) {
-          if (t8_eclass_to_dimension[eclass] == 3) {
-            /* only set the z coordinate to non-zero if we test elements of dimension 3 */
-            test_point[2] = 1.103 - kpoint * offset;
-          }
-          else {
-            test_point[2] = 0.0;
-          }
-          point_is_inside =
-            t8_forest_element_point_inside (forest, 0, element, tree_vertices,
-                                            test_point);
+    /* Fill the barycentric coordinates with test values */
+    /* 1-Sum 0 0 0  ... start
+     * 1-Sum 0 0 0  ... start + step
+     *   .
+     *   .
+     * 1-Sum 0 0 0  ... end
+     * 1-Sum 0 0 0    start start
+     * 1-Sum 0 0 0    start + step start
+     *  .
+     *  .
+     *  .
+     *
+     * Thus, we have num_steps^(num_corners - 1) many points.
+     * if 0 <= i < num_points then the j-th coordinate has to be
+     * set to start + (i / num_steps^j) % num_steps * step
+     *
+     * We multiply this entry with a dampening factor that is smaller the smaller
+     * the sum of the already set entries is.
+     * This dampening increases the percentage of points that lie inside the element.
+     *
+     * The number of steps depends on the number of corners.
+     * The more corners the smaller the number of stepes in order to limit the
+     * number of points that we generate.
+     */
+    num_points = 10000;         /* Desired number of points */
+    /* Compute the number of steps needed */
+    num_steps = pow (num_points, 1. / (num_corners - 1));
+    /* Corrected number of points due to possible rounding errors in pow */
+    num_points = sc_intpow (num_steps, num_corners - 1);
+    step =
+      (barycentric_range_upper_bound -
+       barycentric_range_lower_bound) / (num_steps - 1);
+    t8_debugf ("step size %g, steps %i, points %i (corners %i)\n", step,
+               num_steps, num_points, num_corners);
+    int                 num_in = 0;
+    double              dampening;
+    for (ipoint = 0; ipoint < num_points; ++ipoint) {
+      double              Sum = 0;
+      int                 point_is_inside = 1;
 
-          /* We now manually check whether the point is inside the element or not. */
-          switch (eclass) {
-          case T8_ECLASS_LINE:
-            /* The point is inside if all its x coordinate is in [0, 1] and y = z = 0 */
-            if (test_point[0] >= 0 && test_point[1] == 0 && test_point[2] == 0
-                && test_point[0] <= 1) {
-              /* The point should be inside */
-              SC_CHECK_ABORTF (point_is_inside,
-                               "The point (%g,%g,%g) should be inside the unit line, but isn't detected.",
-                               test_point[0], test_point[1], test_point[2]);
-            }
-            else {
-              /* The point should not be inside */
-              SC_CHECK_ABORTF (!point_is_inside,
-                               "The point (%g,%g,%g) should not be inside the unit line, but is detected.",
-                               test_point[0], test_point[1], test_point[2]);
-            }
-            break;
-          case T8_ECLASS_QUAD:
-            /* The point is inside if all its x and y coordinates are in [0, 1] and z = 0 */
-            if (test_point[0] >= 0 && test_point[1] >= 0 && test_point[2] == 0
-                && test_point[0] <= 1 && test_point[1] <= 1
-                && test_point[2] == 0) {
-              /* The point should be inside */
-              SC_CHECK_ABORTF (point_is_inside,
-                               "The point (%g,%g,%g) should be inside the unit quad, but isn't detected.",
-                               test_point[0], test_point[1], test_point[2]);
-            }
-            else {
-              /* The point should not be inside */
-              SC_CHECK_ABORTF (!point_is_inside,
-                               "The point (%g,%g,%g) should not be inside the unit quad, but is detected.",
-                               test_point[0], test_point[1], test_point[2]);
-            }
-            break;
-          case T8_ECLASS_TRIANGLE:
-            /* The point is inside if all its x,y coordinates are in [0, 1], z = 0, and y <= x */
-            if (test_point[0] >= 0 && test_point[1] >= 0 && test_point[2] == 0
-                && test_point[0] <= 1 && test_point[1] <= test_point[0]) {
-              /* The point should be inside */
-              SC_CHECK_ABORTF (point_is_inside,
-                               "The point (%g,%g,%g) should be inside the triangle, but isn't detected.",
-                               test_point[0], test_point[1], test_point[2]);
-            }
-            else {
-              /* The point should not be inside */
-              SC_CHECK_ABORTF (!point_is_inside,
-                               "The point (%g,%g,%g) should not be inside the triangle, but is detected.",
-                               test_point[0], test_point[1], test_point[2]);
-            }
-            break;
-          case T8_ECLASS_HEX:
-            /* The point is inside if all its x,y,z coordinates are in [0, 1] */
-            if (test_point[0] >= 0 && test_point[1] >= 0 && test_point[2] >= 0
-                && test_point[0] <= 1 && test_point[1] <= 1
-                && test_point[2] <= 1) {
-              /* The point should be inside */
-              SC_CHECK_ABORTF (point_is_inside,
-                               "The point (%g,%g,%g) should be inside the unit hex, but isn't detected.",
-                               test_point[0], test_point[1], test_point[2]);
-            }
-            else {
-              /* The point should not be inside */
-              SC_CHECK_ABORTF (!point_is_inside,
-                               "The point (%g,%g,%g) should not be inside the unit hex, but is detected.",
-                               test_point[0], test_point[1], test_point[2]);
-            }
-            break;
-          case T8_ECLASS_TET:
-            /* The point is inside if all its x,y, z coordinates are in [0, 1], and y <= z and x >= z */
-            if (test_point[0] >= 0 && test_point[1] >= 0 && test_point[2] >= 0  /* x,y,z >= 0 */
-                && test_point[0] <= 1   /* x <= 1 */
-                && test_point[2] <= 1   /* z <= 1 */
-                && test_point[1] <= test_point[2]       /* y <= z and x >= z */
-                &&test_point[0] >= test_point[2]) {
-              /* The point should be inside */
-              SC_CHECK_ABORTF (point_is_inside,
-                               "The point (%g,%g,%g) should be inside the tetrahedron, but isn't detected.",
-                               test_point[0], test_point[1], test_point[2]);
-            }
-            else {
-              /* The point should not be inside */
-              SC_CHECK_ABORTF (!point_is_inside,
-                               "The point (%g,%g,%g) should not be inside the tetrahedron, but is detected.",
-                               test_point[0], test_point[1], test_point[2]);
-            }
-            break;
-          case T8_ECLASS_PRISM:
-            /* The point is inside if x and y are inside the triangle (x,y in [0,1], y <= x)
-             * and if z in [0, 1] */
-            if (test_point[0] >= 0 && test_point[1] >= 0 && test_point[2] >= 0
-                && test_point[0] <= 1 && test_point[1] <= 1
-                && test_point[2] <= 1 && test_point[1] <= test_point[0]) {
-              /* The point should be inside */
-              SC_CHECK_ABORTF (point_is_inside,
-                               "The point (%g,%g,%g) should be inside the prism, but isn't detected.",
-                               test_point[0], test_point[1], test_point[2]);
-            }
-            else {
-              /* The point should not be inside */
-              SC_CHECK_ABORTF (!point_is_inside,
-                               "The point (%g,%g,%g) should not be inside the prism, but is detected.",
-                               test_point[0], test_point[1], test_point[2]);
-            }
-            break;
-          default:
-            SC_ABORTF ("Point inside test not implemented for class %s.",
-                       t8_eclass_to_string[eclass]);
-          }
-        }
+      /* Set the coordinates of the test point to 0 */
+      for (icoord = 0; icoord < 3; ++icoord) {
+        test_point[icoord] = 0;
       }
+      for (icorner = 0; icorner < num_corners - 1; ++icorner) {
+        int                 this_step =
+          (ipoint / sc_intpow (num_steps, icorner)) % num_steps;
+        barycentric_coordinates[icorner] =
+          barycentric_range_lower_bound + this_step * step;
+        dampening = (1 - Sum) * (1 - Sum);
+        barycentric_coordinates[icorner] *= dampening;
+        Sum += barycentric_coordinates[icorner];
+
+        /* Construct the actual test point */
+        for (icoord = 0; icoord < 3; ++icoord) {
+          test_point[icoord] +=
+            barycentric_coordinates[icorner] *
+            element_vertices[icorner][icoord];
+        }
+
+        point_is_inside = point_is_inside
+          && barycentric_coordinates[icorner] <= 1;
+      }
+      barycentric_coordinates[num_corners - 1] = 1 - Sum;
+
+      /* Add the last barycentric coordinate to the test point */
+      for (icoord = 0; icoord < 3; ++icoord) {
+        test_point[icoord] +=
+          barycentric_coordinates[num_corners -
+                                  1] * element_vertices[num_corners -
+                                                        1][icoord];
+      }
+
+      point_is_inside = point_is_inside && 1 - Sum >= 0 && 1 - Sum <= 1;
+      num_in += point_is_inside ? 1 : 0;
+
+      /* We now check whether the point inside function correctly sees whether
+       * the point is inside the element or not. */
+      point_is_recognized_as_inside =
+        t8_forest_element_point_inside (forest, 0, element, tree_vertices,
+                                        test_point);
+
+      SC_CHECK_ABORTF (!point_is_recognized_as_inside == !point_is_inside,
+                       "The point (%g,%g,%g) should %s be inside the %s element, but isn't detected as such.",
+                       test_point[0], test_point[1], test_point[2],
+                       point_is_inside ? "" : "not",
+                       t8_eclass_to_string[eclass]);
+
     }
-  }
+    t8_debugf ("%i (%.2f%%) of test points are inside the element\n", num_in,
+               (100.0 * num_in) / num_points);
+
+    T8_FREE (barycentric_coordinates);
+  }                             /* Skip empty forest if */
 
   t8_forest_unref (&forest);
 }
