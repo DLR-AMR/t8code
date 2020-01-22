@@ -32,6 +32,17 @@
 #include <netcdf.h>
 #endif
 
+
+/* TODO: - Document properly
+ *       - move some netcdf routines to internal netcdf header
+ *       - refine those elements that have more than one point and search again (with only the
+ *         new points).
+ *       - We need a quick coarse check whether a point is inside an element.
+ *         Otherwise the runtime is too slow
+ *       - Point search needs a range in which to look, since the geometry of
+ *         the forest does not exactly match the input geometry
+ */
+
 /* Convert longitude and latitude coordinates to x,y,z coordinates */
 void
 t8_reanalysis_long_lat_to_euclid (const double longitude,
@@ -491,9 +502,11 @@ t8_netcdf_find_mesh_elements (t8_forest_t forest, double *points,
   t8_forest_search (forest, t8_netcdf_find_mesh_elements_query,
                     t8_netcdf_find_mesh_elements_query, &queries);
 
+#ifdef T8_ENABLE_DEBUG
   t8_debugf ("Finished search. Found %i points and matched %i elements\n",
              coords_and_matching_elements.matched_points,
              coords_and_matching_elements.matched_elements);
+#endif
 
   T8_FREE (matching_elements);
 }
