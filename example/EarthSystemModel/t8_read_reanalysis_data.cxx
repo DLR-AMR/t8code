@@ -32,13 +32,10 @@
 #include <netcdf.h>
 #endif
 
-
 /* TODO: - Document properly
  *       - move some netcdf routines to internal netcdf header
  *       - refine those elements that have more than one point and search again (with only the
  *         new points).
- *       - We need a quick coarse check whether a point is inside an element.
- *         Otherwise the runtime is too slow
  *       - Point search needs a range in which to look, since the geometry of
  *         the forest does not exactly match the input geometry
  */
@@ -433,6 +430,19 @@ t8_netcdf_find_mesh_elements_query (t8_forest_t forest,
   }
   double             *tree_vertices =
     t8_forest_get_tree_vertices (forest, ltreeid);
+  /* Do a quick estimate. This returns true if the point is definitely
+   * outside of the element. */
+  int                 is_definitely_outside =
+    t8_forest_element_point_outside_quick_estimate (forest, ltreeid, element,
+                                                    tree_vertices,
+                                                    (const double *) point);
+
+  if (is_definitely_outside) {
+    /* This point is not contained in this element, return 0 */
+    return 0;
+  }
+
+  /* The point may be inside the element. Do a proper check. */
   if (t8_forest_element_point_inside
       (forest, ltreeid, element, tree_vertices, (const double *) point)) {
     /* This point is contained in this element */
