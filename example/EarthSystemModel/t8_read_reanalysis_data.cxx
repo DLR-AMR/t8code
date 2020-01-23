@@ -585,6 +585,15 @@ main (int argc, char **argv)
       retval = t8_netcdf_open_file (netcdf_filename, sphere_radius,
                                     &coordinates_euclidean, &num_coordinates);
       if (!retval) {
+#ifdef T8_ENABLE_DEBUG
+        size_t              new_num_coordinates =
+          SC_MIN (num_coordinates, 3000);
+        t8_debugf
+          ("Debugging mode detected. Search only for %zd of the %zd points"
+           " in order to reduce the runtime (debugging mode is slow).\n",
+           new_num_coordinates, num_coordinates);
+        num_coordinates = new_num_coordinates;
+#endif
         t8_netcdf_find_mesh_elements (forest, coordinates_euclidean,
                                       num_coordinates);
         /* Clean-up */
