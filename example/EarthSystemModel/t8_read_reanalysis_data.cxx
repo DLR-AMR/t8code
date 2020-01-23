@@ -449,14 +449,13 @@ t8_netcdf_find_mesh_elements_query (t8_forest_t forest,
        * elements that contain this point */
       t8_netcdf_search_user_data_t *user_data =
         (t8_netcdf_search_user_data_t *) t8_forest_get_user_data (forest);
-#ifdef T8_ENABLE_DEBUG
       /* In debugging mode we count how many points and elements we match */
       user_data->matched_elements++;
       if (user_data->matching_elements[point_index].elem_count == 0) {
         /* This point was not found inside an element yet, we add to the counter of matched points */
         user_data->matched_points++;
       }
-#endif
+
       /* Compute the forest local index of the element */
       t8_locidx_t         element_index =
         t8_forest_get_tree_element_offset (forest, ltreeid) + tree_leaf_index;
