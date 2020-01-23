@@ -206,6 +206,155 @@ t8_test_point_inside_level0 (sc_MPI_Comm comm, t8_eclass_t eclass)
   t8_forest_unref (&forest);
 }
 
+/* This function creates a single element of the specified element class.
+ * It the creates a bunch of points, some of which lie whithin the element, some
+ * not. For each point we call t8_forest_element_point_outside_quick_estimate
+ * and check whether it gives the correct result.
+ * This function mat return true on points lying outside the element and
+ * will definitely return false for points inside the element.
+ * Thus, we can only check whether points inside are also seen as inside. */
+/*
+ * TODO: - Use more than one refinement level.
+ *       - Use barycentric coordinates to create the points, this
+ *         spares us to manually check whether a point is inside or not.
+ *         (0 <= x_i <= 1 and sum x_i = 1    <=> Point is inside)
+ */
+static void
+t8_test_point_outside_quick_check_level0 (sc_MPI_Comm comm,
+                                          t8_eclass_t eclass)
+{
+  t8_cmesh_t          cmesh;
+  t8_forest_t         forest;
+  t8_scheme_cxx_t    *default_scheme;
+  t8_element_t       *element;
+  double              test_point[3];
+  int                 ipoint, jpoint, kpoint;   /* loop variables */
+  const int           num_points_per_dim = 100; /* we construct num_points_per_dim^3 many test points */
+  const double        offset = 2.2 / (num_points_per_dim - 1);  /* used to calculate the coordinates of the test points */
+  int                 point_is_definitely_outside;
+  double             *tree_vertices;
+
+  default_scheme = t8_scheme_new_default_cxx ();
+  /* Construct a cube coarse mesh */
+  cmesh = t8_cmesh_new_from_class (eclass, comm);
+  /* Build a uniform level 0 forest */
+  forest = t8_forest_new_uniform (cmesh, default_scheme, 0, 0, comm);
+
+  if (t8_forest_get_num_element (forest) > 0) { /* Skip empty forests (occur when executed in parallel) */
+
+    /* Get a pointer to the single element */
+    element = t8_forest_get_element (forest, 0, NULL);
+    /* Get the vertices of the tree */
+    tree_vertices = t8_forest_get_tree_vertices (forest, 0);
+
+    /* Create a bunch of points and check whether they are inside the element */
+    for (ipoint = 0; ipoint < num_points_per_dim; ++ipoint) {
+      test_point[0] = 1.101 - ipoint * offset;  /* we add 0.001 in order to avoid boundary cases where the
+                                                   inside check may give a different result than our own check
+                                                   du to rounding errors. */
+      for (jpoint = 0; jpoint < num_points_per_dim; ++jpoint) {
+        if (t8_eclass_to_dimension[eclass] >= 2) {
+          /* Only set the y coordinate to non-zero if we test elements of dimension 2 or 3 */
+          test_point[1] = 1.102 - jpoint * offset;
+        }
+        else {
+          test_point[1] = 0.0;
+        }
+        for (kpoint = 0; kpoint < num_points_per_dim; ++kpoint) {
+          if (t8_eclass_to_dimension[eclass] == 3) {
+            /* only set the z coordinate to non-zero if we test elements of dimension 3 */
+            test_point[2] = 1.103 - kpoint * offset;
+          }
+          else {
+            test_point[2] = 0.0;
+          }
+          point_is_definitely_outside =
+            t8_forest_element_point_outside_quick_estimate (forest, 0,
+                                                            element,
+                                                            tree_vertices,
+                                                            test_point);
+
+          /* We now manually check whether the point is inside the element or not. */
+          switch (eclass) {
+          case T8_ECLASS_LINE:
+            /* The point is inside if all its x coordinate is in [0, 1] and y = z = 0 */
+            if (test_point[0] >= 0 && test_point[1] == 0 && test_point[2] == 0
+                && test_point[0] <= 1) {
+              /* The point should be inside */
+              SC_CHECK_ABORTF (!point_is_definitely_outside,
+                               "The point (%g,%g,%g) should be inside the unit line, but isn't detected.",
+                               test_point[0], test_point[1], test_point[2]);
+            }
+            break;
+          case T8_ECLASS_QUAD:
+            /* The point is inside if all its x and y coordinates are in [0, 1] and z = 0 */
+            if (test_point[0] >= 0 && test_point[1] >= 0 && test_point[2] == 0
+                && test_point[0] <= 1 && test_point[1] <= 1
+                && test_point[2] == 0) {
+              /* The point should be inside */
+              SC_CHECK_ABORTF (!point_is_definitely_outside,
+                               "The point (%g,%g,%g) should be inside the unit quad, but isn't detected.",
+                               test_point[0], test_point[1], test_point[2]);
+            }
+            break;
+          case T8_ECLASS_TRIANGLE:
+            /* The point is inside if all its x,y coordinates are in [0, 1], z = 0, and y <= x */
+            if (test_point[0] >= 0 && test_point[1] >= 0 && test_point[2] == 0
+                && test_point[0] <= 1 && test_point[1] <= test_point[0]) {
+              /* The point should be inside */
+              SC_CHECK_ABORTF (!point_is_definitely_outside,
+                               "The point (%g,%g,%g) should be inside the triangle, but isn't detected.",
+                               test_point[0], test_point[1], test_point[2]);
+            }
+            break;
+          case T8_ECLASS_HEX:
+            /* The point is inside if all its x,y,z coordinates are in [0, 1] */
+            if (test_point[0] >= 0 && test_point[1] >= 0 && test_point[2] >= 0
+                && test_point[0] <= 1 && test_point[1] <= 1
+                && test_point[2] <= 1) {
+              /* The point should be inside */
+              SC_CHECK_ABORTF (!point_is_definitely_outside,
+                               "The point (%g,%g,%g) should be inside the unit hex, but isn't detected.",
+                               test_point[0], test_point[1], test_point[2]);
+            }
+            break;
+          case T8_ECLASS_TET:
+            /* The point is inside if all its x,y, z coordinates are in [0, 1], and y <= z and x >= z */
+            if (test_point[0] >= 0 && test_point[1] >= 0 && test_point[2] >= 0  /* x,y,z >= 0 */
+                && test_point[0] <= 1   /* x <= 1 */
+                && test_point[2] <= 1   /* z <= 1 */
+                && test_point[1] <= test_point[2]       /* y <= z and x >= z */
+                &&test_point[0] >= test_point[2]) {
+              /* The point should be inside */
+              SC_CHECK_ABORTF (!point_is_definitely_outside,
+                               "The point (%g,%g,%g) should be inside the tetrahedron, but isn't detected.",
+                               test_point[0], test_point[1], test_point[2]);
+            }
+            break;
+          case T8_ECLASS_PRISM:
+            /* The point is inside if x and y are inside the triangle (x,y in [0,1], y <= x)
+             * and if z in [0, 1] */
+            if (test_point[0] >= 0 && test_point[1] >= 0 && test_point[2] >= 0
+                && test_point[0] <= 1 && test_point[1] <= 1
+                && test_point[2] <= 1 && test_point[1] <= test_point[0]) {
+              /* The point should be inside */
+              SC_CHECK_ABORTF (!point_is_definitely_outside,
+                               "The point (%g,%g,%g) should be inside the prism, but isn't detected.",
+                               test_point[0], test_point[1], test_point[2]);
+            }
+            break;
+          default:
+            SC_ABORTF ("Point inside test not implemented for class %s.",
+                       t8_eclass_to_string[eclass]);
+          }
+        }
+      }
+    }
+  }
+
+  t8_forest_unref (&forest);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -228,6 +377,10 @@ main (int argc, char **argv)
         ("Testing point finding with eclass %s\n",
          t8_eclass_to_string[ieclass]);
       t8_test_point_inside_level0 (mpic, (t8_eclass_t) ieclass);
+      t8_global_productionf
+        ("Testing quick point is outside check with eclass %s\n",
+         t8_eclass_to_string[ieclass]);
+      t8_test_point_outside_quick_check_level0 (mpic, (t8_eclass_t) ieclass);
     }
   }
 
