@@ -873,7 +873,7 @@ void                t8_forest_element_face_normal (t8_forest_t forest,
  * \param [in]      element    The element.
  * \param [in]      vertices   An array storing the vertex coordinates of the tree.
  * \param [in]      point      3-dimensional coordinates of the point to check
- * \return          True (non-zero) if \point lies within \a element, false otherwise.
+ * \return          True (non-zero) if \a point lies within \a element, false otherwise.
  *                  The return value is also true if the point lies on the element boundary.
  *                  Thus, this function may return true for different leaf elements, if they
  *                  are neighbors and the point lies on the common boundary.
@@ -885,6 +885,28 @@ int                 t8_forest_element_point_inside (t8_forest_t forest,
                                                     const double
                                                     *tree_vertices,
                                                     const double point[3]);
+
+/** A fast estimate whether a given point lies outside of an element. This routine
+ * can be used to exclude points from a search for a containing element.
+ * If it returns false it is guaranteed that the point does not lie inside the element.
+ * If it returns true the point may lie inside the element or not.
+ * For an exact check, see \ref t8_forest_element_point_inside
+ * \param [in]      forest     The forest.
+ * \param [in]      ltree_id   The forest local id of the tree in which the element is.
+ * \param [in]      element    The element.
+ * \param [in]      vertices   An array storing the vertex coordinates of the tree.
+ * \param [in]      point      3-dimensional coordinates of the point to check
+ * \return          True (non-zero) if \a point lies definitely outside of \a element, false otherwise.
+ *                  A false return value does not guarantee that the point lies inside of \a element.
+ */
+/* *INDENT-OFF* */
+int                
+t8_forest_element_point_outside_quick_estimate (t8_forest_t forest,
+                                                t8_locidx_t ltreeid,
+                                                const t8_element_t * element,
+                                                const double *tree_vertices,
+                                                const double point[3]);
+/* *INDENT-ON* */
 
 /* TODO: if set level and partition/adapt/balance all give NULL, then
  * refine uniformly and partition/adapt/balance the unfiform forest. */

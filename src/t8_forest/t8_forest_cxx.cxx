@@ -1039,6 +1039,57 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
   return 1;
 }
 
+int
+t8_forest_element_point_outside_quick_estimate (t8_forest_t forest,
+                                                t8_locidx_t ltreeid,
+                                                const t8_element_t *
+                                                element,
+                                                const double
+                                                *tree_vertices,
+                                                const double point[3])
+{
+  t8_eclass_t         tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree_class);
+  double              centroid[3];
+  double              corner_coordinates[3];
+  int                 num_corners, icorner;
+  const double        stretch_factor = 1.05;
+  double              max_dist = 0;
+  double              dist;
+  int                 point_is_outside;
+  double              radius;
+
+  /* For bilinearly interpolated elements, a point is definitely
+   * not inside the element if it is outside of a circumscribed
+   * sphere.
+   *
+   * We find such a sphere by using the first corner as midpoint of the
+   * sphere and the distance between this point and the farthest point
+   * of the element as radius.
+   * We multiply this radius with (1 + eps) to exclude any points lying
+   * on the boundary of the sphere.
+   **/
+
+  /* Compute the coordinates of the centroid */
+  t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+                                0, centroid);
+
+  num_corners = ts->t8_element_num_corners (element);
+
+  for (icorner = 1; icorner < num_corners; ++icorner) {
+    t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+                                  icorner, corner_coordinates);
+    dist = t8_vec_dist (centroid, corner_coordinates);
+    max_dist = SC_MAX (dist, max_dist);
+  }
+
+  radius = max_dist * stretch_factor;
+
+  point_is_outside = t8_vec_dist (centroid, point) > radius;
+
+  return point_is_outside;
+}
+
 /* For each tree in a forest compute its first and last descendant */
 void
 t8_forest_compute_desc (t8_forest_t forest)
