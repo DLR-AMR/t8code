@@ -1000,6 +1000,7 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
   t8_element_shape_t  element_shape = ts->t8_element_shape (element);
   int                 num_faces = ts->t8_element_num_faces (element);
   int                 iface;
+  int                 afacecorner;
   double              face_normal[3];
   double              dot_product;
   double              point_on_face[3];
@@ -1175,8 +1176,10 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
       t8_forest_element_face_normal (forest, ltreeid, element, iface,
                                      tree_vertices, face_normal);
       /* Compute a point x on the face */
-      t8_forest_element_face_centroid (forest, ltreeid, element, iface,
-                                       tree_vertices, point_on_face);
+      afacecorner = ts->t8_element_get_face_corner (element, iface, 0);
+      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+                                    afacecorner, point_on_face);
+
       /* Set x = x - p */
       t8_vec_axpy (point, point_on_face, -1);
       /* Compute <x-p,n> */
