@@ -163,7 +163,9 @@ t8_test_point_inside_level0 (sc_MPI_Comm comm, t8_eclass_t eclass)
                                                         1][icoord];
       }
 
-      point_is_inside = point_is_inside && 1 - Sum >= 0 && 1 - Sum <= 1;
+      point_is_inside = point_is_inside
+        && barycentric_coordinates[num_corners - 1] >= 0
+        && barycentric_coordinates[num_corners - 1] <= 1;
       num_in += point_is_inside ? 1 : 0;
 
       /* We now check whether the point inside function correctly sees whether
