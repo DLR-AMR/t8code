@@ -873,7 +873,7 @@ void                t8_forest_element_face_normal (t8_forest_t forest,
  * \param [in]      element    The element.
  * \param [in]      vertices   An array storing the vertex coordinates of the tree.
  * \param [in]      point      3-dimensional coordinates of the point to check
- * \return          True (non-zero) if \point lies within \a element, false otherwise.
+ * \return          True (non-zero) if \a point lies within \a element, false otherwise.
  *                  The return value is also true if the point lies on the element boundary.
  *                  Thus, this function may return true for different leaf elements, if they
  *                  are neighbors and the point lies on the common boundary.
