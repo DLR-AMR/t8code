@@ -403,10 +403,8 @@ typedef struct
   sc_array_t         *matching_elements;        /* For each point an array of the element indices
                                                    that contain this point. (filled in the search query callback)
                                                  */
-#ifdef T8_ENABLE_DEBUG
-  int                 matched_elements; /* In debug mode, count how many matching elements we find. */
-  int                 matched_points;   /* In debug mode, count for how many elements */
-#endif
+  int                 matched_elements; /* Count how many matching elements we find. */
+  int                 matched_points;   /* Count for how many points we find at least one element. */
 } t8_netcdf_search_user_data_t;
 
 static int
@@ -487,6 +485,7 @@ t8_netcdf_find_mesh_elements (t8_forest_t forest, double *points,
   t8_netcdf_search_user_data_t coords_and_matching_elements;
   size_t              ipoint;
   sc_array_t          queries;
+  double              search_runtime;
 
   /* Allocate as many arrays as we have points to store the
    * matching elements for each point */
@@ -498,10 +497,9 @@ t8_netcdf_find_mesh_elements (t8_forest_t forest, double *points,
   /* Init user data for the search routine */
   coords_and_matching_elements.coordinates = points;
   coords_and_matching_elements.matching_elements = matching_elements;
-#ifdef T8_ENABLE_DEBUG
   coords_and_matching_elements.matched_elements = 0;
   coords_and_matching_elements.matched_points = 0;
-#endif
+
   /* Set this data as the forests user pointer */
   t8_forest_set_user_data (forest, &coords_and_matching_elements);
 
@@ -509,14 +507,16 @@ t8_netcdf_find_mesh_elements (t8_forest_t forest, double *points,
    * Each entry is one point, thus 3 doubles */
   sc_array_init_data (&queries, points, 3 * sizeof (double), num_points);
   t8_debugf ("Starting search with %zd points\n", num_points);
+  search_runtime = -sc_MPI_Wtime ();
   t8_forest_search (forest, t8_netcdf_find_mesh_elements_query,
                     t8_netcdf_find_mesh_elements_query, &queries);
+  search_runtime += sc_MPI_Wtime ();
 
-#ifdef T8_ENABLE_DEBUG
-  t8_debugf ("Finished search. Found %i points and matched %i elements\n",
-             coords_and_matching_elements.matched_points,
-             coords_and_matching_elements.matched_elements);
-#endif
+  t8_global_productionf
+    ("Finished search. Found %i points and matched %i elements\n",
+     coords_and_matching_elements.matched_points,
+     coords_and_matching_elements.matched_elements);
+  t8_global_productionf ("Search runtime: %.3fs\n", search_runtime);
 
   T8_FREE (matching_elements);
 }
