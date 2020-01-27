@@ -28,6 +28,7 @@
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_vec.h>
+#define T8_WITH_NETCDF 1        // DO NOT COMMIT THIS LINE
 #if T8_WITH_NETCDF
 #include <netcdf.h>
 #endif
@@ -435,10 +436,12 @@ t8_netcdf_find_mesh_elements_query (t8_forest_t forest,
                                                     tree_vertices,
                                                     (const double *) point);
 
+#if 0
   if (is_definitely_outside) {
     /* This point is not contained in this element, return 0 */
     return 0;
   }
+#endif
 
   /* The point may be inside the element. Do a proper check. */
   if (t8_forest_element_point_inside
@@ -459,9 +462,21 @@ t8_netcdf_find_mesh_elements_query (t8_forest_t forest,
       /* Compute the forest local index of the element */
       t8_locidx_t         element_index =
         t8_forest_get_tree_element_offset (forest, ltreeid) + tree_leaf_index;
+
       /* Add this index to the array of found elements */
       *(t8_locidx_t *) sc_array_push (user_data->matching_elements +
                                       point_index) = element_index;
+      if (is_definitely_outside) {
+        t8_debugf ("This should not happen\n");
+        {
+          double             *Point = (double *) point;
+          t8_debugf ("Searching for point %zd: %g %g %g\n", point_index,
+                     Point[0], Point[1], Point[2]);
+
+        }
+        t8_debugf ("Found point %zd in element %i\n", point_index,
+                   element_index);
+      }
     }
     /* Since the point is contained in the element, we return 1 */
     return 1;
