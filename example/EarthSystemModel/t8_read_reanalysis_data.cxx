@@ -26,6 +26,7 @@
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_iterate.h>
+#include <t8_forest_vtk.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_vec.h>
 #define T8_WITH_NETCDF 1        // DO NOT COMMIT THIS LINE
@@ -228,7 +229,7 @@ t8_netcdf_read_data (const char *filename, const int ncid,
 static int
 t8_netcdf_open_file (const char *filename, const double radius,
                      double **pcoordinates_euclidean,
-                     size_t * pnum_coordinates)
+                     size_t * pnum_latitude, size_t * pnum_longitude)
 {
   int                 ncid, retval;
   int                 number_of_dims;
@@ -236,7 +237,7 @@ t8_netcdf_open_file (const char *filename, const double radius,
   char                (*dimension_names)[BUFSIZ];
   size_t             *dimension_lengths;
 #define NUM_DATA 3
-  double             *data_in[NUM_DATA];
+  float              *data_in[NUM_DATA];
   double             *coordinates_euclidean;
 
   /* Open the file */
@@ -324,9 +325,10 @@ t8_netcdf_open_file (const char *filename, const double radius,
   /* Convert longitude and latitude to x,y,z */
   const size_t        num_long = dimension_lengths[longitude_pos];
   const size_t        num_lat = dimension_lengths[latitude_pos];
+  *pnum_latitude = num_lat;
+  *pnum_longitude = num_long;
   /* Compute the number of coordinates */
-  size_t              num_coordinates = *pnum_coordinates =
-    num_long * num_lat;
+  const size_t        num_coordinates = num_long * num_lat;
   /* Allocate array to store all x,y,z coordinates */
   coordinates_euclidean = *pcoordinates_euclidean =
     T8_ALLOC (double, 3 * num_coordinates);
@@ -355,7 +357,7 @@ t8_netcdf_open_file (const char *filename, const double radius,
 
   /* Clean-up memory */
   for (int i = 0; i < NUM_DATA; ++i) {
-    T8_FREE (data_in[i]);
+    free (data_in[i]);
   }
   T8_FREE (dimension_lengths);
   free (dimension_names);
@@ -387,15 +389,13 @@ t8_reanalysis_build_forest (const char *mesh_filename, double radius,
     t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (),
                            level, do_ghosts, comm);
 
-#ifdef T8_ENABLE_DEBUG
-  /* in debug mode, write the forest to vtk */
+  /* write the forest to vtk */
   {
     char                output_file_prefix[BUFSIZ];
     snprintf (output_file_prefix, BUFSIZ, "forest_uniform_l%i_%s",
               level, mesh_filename);
     t8_forest_write_vtk (forest, output_file_prefix);
   }
-#endif
 
   /* return sucess */
   return forest;
@@ -415,9 +415,29 @@ typedef struct
   sc_array_t         *matching_elements;        /* For each point an array of the element indices
                                                    that contain this point. (filled in the search query callback)
                                                  */
+  size_t              num_points;       /* The number of points. coordinates has 3 * num_points entries
+                                           and matching_elements has num_points entries. */
   int                 matched_elements; /* Count how many matching elements we find. */
   int                 matched_points;   /* Count for how many points we find at least one element. */
 } t8_netcdf_search_user_data_t;
+
+static void
+t8_netcdf_destroy_search_data (t8_netcdf_search_user_data_t ** psearch_data)
+{
+  t8_netcdf_search_user_data_t *search_data;
+  T8_ASSERT (psearch_data != NULL);
+  search_data = *psearch_data;
+  if (search_data != NULL) {
+    size_t              ipoint;
+
+    for (ipoint = 0; ipoint < search_data->num_points; ++ipoint) {
+      sc_array_reset (search_data->matching_elements + ipoint);
+    }
+    T8_FREE (search_data->matching_elements);
+  }
+  T8_FREE (search_data);
+  *psearch_data = NULL;
+}
 
 static int
 t8_netcdf_find_mesh_elements_query (t8_forest_t forest,
@@ -438,16 +458,19 @@ t8_netcdf_find_mesh_elements_query (t8_forest_t forest,
      * any queries in the query stage are excluded from the search automatically */
     return 1;
   }
-  double             *tree_vertices =
-    t8_forest_get_tree_vertices (forest, ltreeid);
+  double             *tree_vertices;
+  int                 is_definitely_outside;
+
+  /* Get a pointer to the vertex coordinates of the tree */
+  tree_vertices = t8_forest_get_tree_vertices (forest, ltreeid);
   /* Do a quick estimate. This returns true if the point is definitely
    * outside of the element. */
-  int                 is_definitely_outside =
+  is_definitely_outside =
     t8_forest_element_point_outside_quick_estimate (forest, ltreeid, element,
                                                     tree_vertices,
                                                     (const double *) point);
 
-#if 0
+#if 1
   if (is_definitely_outside) {
     /* This point is not contained in this element, return 0 */
     return 0;
@@ -502,16 +525,18 @@ t8_netcdf_find_mesh_elements_query (t8_forest_t forest,
  * the points.
  * The points are given as one coordinate array in the format (x_0 y_0 z_0 x_1 y_1 z_1 ... )
  */
-void
+t8_netcdf_search_user_data_t *
 t8_netcdf_find_mesh_elements (t8_forest_t forest, double *points,
                               const size_t num_points)
 {
   sc_array_t         *matching_elements;
-  t8_netcdf_search_user_data_t coords_and_matching_elements;
+  t8_netcdf_search_user_data_t *coords_and_matching_elements;
   size_t              ipoint;
   sc_array_t          queries;
   double              search_runtime;
 
+  /* Allocate search data */
+  coords_and_matching_elements = T8_ALLOC (t8_netcdf_search_user_data_t, 1);
   /* Allocate as many arrays as we have points to store the
    * matching elements for each point */
   matching_elements = T8_ALLOC (sc_array_t, num_points);
@@ -520,18 +545,19 @@ t8_netcdf_find_mesh_elements (t8_forest_t forest, double *points,
     sc_array_init (matching_elements + ipoint, sizeof (t8_locidx_t));
   }
   /* Init user data for the search routine */
-  coords_and_matching_elements.coordinates = points;
-  coords_and_matching_elements.matching_elements = matching_elements;
-  coords_and_matching_elements.matched_elements = 0;
-  coords_and_matching_elements.matched_points = 0;
+  coords_and_matching_elements->num_points = num_points;
+  coords_and_matching_elements->coordinates = points;
+  coords_and_matching_elements->matching_elements = matching_elements;
+  coords_and_matching_elements->matched_elements = 0;
+  coords_and_matching_elements->matched_points = 0;
 
   /* Set this data as the forests user pointer */
-  t8_forest_set_user_data (forest, &coords_and_matching_elements);
+  t8_forest_set_user_data (forest, coords_and_matching_elements);
 
   /* Initialize the array of points to be passed to the search function.
    * Each entry is one point, thus 3 doubles */
   sc_array_init_data (&queries, points, 3 * sizeof (double), num_points);
-  t8_debugf ("Starting search with %zd points\n", num_points);
+  t8_global_productionf ("Starting search with %zd points\n", num_points);
   search_runtime = -sc_MPI_Wtime ();
   t8_forest_search (forest, t8_netcdf_find_mesh_elements_query,
                     t8_netcdf_find_mesh_elements_query, &queries);
@@ -539,11 +565,152 @@ t8_netcdf_find_mesh_elements (t8_forest_t forest, double *points,
 
   t8_global_productionf
     ("Finished search. Found %i points and matched %i elements\n",
-     coords_and_matching_elements.matched_points,
-     coords_and_matching_elements.matched_elements);
+     coords_and_matching_elements->matched_points,
+     coords_and_matching_elements->matched_elements);
   t8_global_productionf ("Search runtime: %.3fs\n", search_runtime);
 
-  T8_FREE (matching_elements);
+  return coords_and_matching_elements;
+}
+
+static int
+t8_netcdf_read_data_to_forest (const char *filename, t8_forest_t forest,
+                               const size_t num_latitude,
+                               const size_t num_longitude,
+                               const size_t num_timesteps,
+                               const t8_netcdf_search_user_data_t *
+                               search_results)
+{
+  double             *u10_data_per_element;
+  short              *u10_data_from_file;
+  int                 retval;
+  int                 ncid, varid;
+  const size_t        startp[3] = { 0, 0, 0 };
+  const size_t        countp[3] =
+    { num_timesteps, num_latitude, num_longitude };
+  const size_t        num_data = num_longitude * num_latitude * num_timesteps;
+  const size_t        num_points = num_longitude * num_latitude;
+  t8_locidx_t         element_index, num_elements;
+  size_t              ipoint;
+  double              scaling = 1;      /* TODO: Read this from file */
+  double              offset = 0;       /* TODO: Read this from file */
+  size_t              time_step;
+
+  T8_ASSERT (num_points <= num_data);
+
+  /* Open the file */
+  t8_debugf ("Opening file %s\n", filename);
+  retval = nc_open (filename, NC_NOWRITE, &ncid);
+  if (retval) {
+    /* Could not open the file */
+    T8_NETCDF_ERROR (filename, "opening file", retval);
+    return retval;
+  }
+
+  /* Get the varid of u10 */
+  retval = nc_inq_varid (ncid, "u10", &varid);
+  if (retval) {
+    /* Error */
+    T8_NETCDF_ERROR (filename, "reading variable id of u10", retval);
+    /* close the file */
+    t8_netcdf_close_file (filename, ncid);
+    return retval;
+  }
+
+  retval =
+    t8_netcdf_read_data (filename, ncid, "u10", 3, num_data,
+                         (void **) &u10_data_from_file,
+                         sizeof (*u10_data_from_file), startp, countp);
+  if (retval) {
+    /* Could not read the data.
+     * The file was closed in the error handling of t8_netcdf_read_data. */
+    T8_NETCDF_ERROR (filename, "reading u10 data", retval);
+    return retval;
+  }
+
+  /* Read the scaling and offset attributes */
+  retval = nc_get_att (ncid, varid, "scale_factor", &scaling);
+  if (retval) {
+    /* Error */
+    T8_NETCDF_ERROR (filename, "reading u10:scale_factor attribute", retval);
+    /* close the file */
+    t8_netcdf_close_file (filename, ncid);
+    return retval;
+  }
+  /* offset */
+  //retval = nc_read_att (ncid, varid, "add_offset", &offset);
+  if (retval) {
+    /* Error */
+    T8_NETCDF_ERROR (filename, "reading u10:add_offset attribute", retval);
+    /* close the file */
+    t8_netcdf_close_file (filename, ncid);
+    return retval;
+  }
+
+  /* We are done reading from the file and thus close it */
+  t8_netcdf_close_file (filename, ncid);
+
+  t8_debugf ("Read u10 data with scaling %g and offset %g\n", scaling,
+             offset);
+#ifdef T8_ENABLE_DEBUG
+  size_t              num_print_data = 100;     // only print the first 1000 values
+  /* Output the read data */
+  {
+    size_t              j;
+    char                output[BUFSIZ] = "";
+    char                number[20];
+    t8_debugf ("Read data from 'u10' with %zd entries:\n", num_data);
+    for (j = 0; j < num_print_data; ++j) {
+      snprintf (number, 20, " %i", u10_data_from_file[j]);
+      if (strlen (output) < BUFSIZ - 21) {
+        strcat (output, number);
+      }
+      else {
+        t8_debugf ("%s\n", output);
+        /* Overwrite output */
+        strcpy (output, number);
+      }
+    }
+    t8_debugf ("%s\n", output);
+  }
+#endif
+
+  /* We now fill the per element array with the data */
+  num_elements = t8_forest_get_num_element (forest);
+  u10_data_per_element = T8_ALLOC_ZERO (double, num_elements);
+
+  t8_debugf ("Projecting data to %i elements\n", num_elements);
+
+  time_step = 0;
+  for (ipoint = 0; ipoint < num_points; ipoint++) {
+    if (search_results->matching_elements[ipoint].elem_count > 0) {
+      /* This point was found in an element.
+       * We pick the first element where it was found in and store this
+       * points u10 data at that element. */
+      element_index =
+        *(t8_locidx_t *) sc_array_index (search_results->matching_elements +
+                                         ipoint, 0);
+      t8_debugf ("Writing to element %i from point %zd of %zd\n",
+                 element_index, ipoint, num_points);
+      T8_ASSERT (0 <= element_index && element_index < num_elements);
+      u10_data_per_element[element_index] =
+        u10_data_from_file[time_step * num_points + ipoint] * scaling +
+        offset;
+    }
+  }
+  {
+    /* VTK output */
+    t8_vtk_data_field_t u10_vtk_data;
+    u10_vtk_data.data = u10_data_per_element;
+    strcpy (u10_vtk_data.description, "u10");
+    u10_vtk_data.type = T8_VTK_SCALAR;
+    t8_forest_vtk_write_file (forest, "test", 1, 1, 1, 1, 0, 1,
+                              &u10_vtk_data);
+  }
+  /* clean-up */
+  free (u10_data_from_file);
+  T8_FREE (u10_data_per_element);
+
+  return 0;
 }
 
 int
@@ -607,22 +774,40 @@ main (int argc, char **argv)
     if (forest != NULL) {
       double             *coordinates_euclidean;
       size_t              num_coordinates;
+      size_t              num_latitude, num_longitude;
+      t8_netcdf_search_user_data_t *search_result;
+
       retval = t8_netcdf_open_file (netcdf_filename, sphere_radius,
-                                    &coordinates_euclidean, &num_coordinates);
+                                    &coordinates_euclidean, &num_latitude,
+                                    &num_longitude);
+      num_coordinates = num_latitude * num_longitude;
       if (!retval) {
+#if 1
 #ifdef T8_ENABLE_DEBUG
+        size_t              max_num_coordinates = 30;
         size_t              new_num_coordinates =
-          SC_MIN (num_coordinates, 3000);
+          SC_MIN (num_coordinates, max_num_coordinates);
         t8_debugf
           ("Debugging mode detected. Search only for %zd of the %zd points"
            " in order to reduce the runtime (debugging mode is slow).\n",
            new_num_coordinates, num_coordinates);
         num_coordinates = new_num_coordinates;
+        if (new_num_coordinates == max_num_coordinates) {
+          num_latitude = max_num_coordinates / 10;
+          num_longitude = 10;
+        }
 #endif
-        t8_netcdf_find_mesh_elements (forest, coordinates_euclidean,
-                                      num_coordinates);
+#endif
+        search_result =
+          t8_netcdf_find_mesh_elements (forest, coordinates_euclidean,
+                                        num_coordinates);
+
+        t8_netcdf_read_data_to_forest (netcdf_filename, forest,
+                                       num_latitude, num_longitude, 1,
+                                       search_result);
         /* Clean-up */
         T8_FREE (coordinates_euclidean);
+        t8_netcdf_destroy_search_data (&search_result);
       }
       t8_forest_unref (&forest);
     }
