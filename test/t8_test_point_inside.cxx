@@ -24,6 +24,7 @@
 #include <sc_functions.h>
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
+#include <t8_cmesh_vtk.h>
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default_cxx.hxx>
@@ -190,6 +191,52 @@ t8_test_point_inside_level0 (sc_MPI_Comm comm, t8_eclass_t eclass)
   t8_forest_unref (&forest);
 }
 
+/* In this test we define a triangle in the x-y plane
+ * and a point that lies in a triangle that is parallel
+ * to this triangle on the z-axis.
+ * The point must be correctly identified as lying outside
+ * of the triangle.
+ */
+static void
+t8_test_point_inside_specific_triangle ()
+{
+  t8_cmesh_t          cmesh;
+  t8_forest_t         forest;
+  t8_element_t       *element;
+  double              vertices[9] = {
+    0., 0., 0.,
+    1., 0., 0.,
+    1., 1., 0.
+  };
+  double              test_point[3] = {
+    0.3, 0.3, 1
+  };
+  int                 point_is_inside;
+  double             *tree_vertices;
+
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 3);
+
+  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+  forest =
+    t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0,
+                           sc_MPI_COMM_WORLD);
+  element = t8_forest_get_element (forest, 0, NULL);
+
+  /* Get the vertices of the tree */
+  tree_vertices = t8_forest_get_tree_vertices (forest, 0);
+
+  point_is_inside =
+    t8_forest_element_point_inside (forest, 0,
+                                    element, tree_vertices, test_point);
+
+  SC_CHECK_ABORT (!point_is_inside,
+                  "The point is wrongly detected as inside the triangle.");
+
+  t8_forest_unref (&forest);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -205,6 +252,9 @@ main (int argc, char **argv)
   p4est_init (NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
+  t8_global_productionf
+    ("Testing one specific point with one specific triangle.\n");
+  t8_test_point_inside_specific_triangle ();
   for (ieclass = T8_ECLASS_LINE; ieclass < T8_ECLASS_COUNT; ieclass++) {
     if (ieclass != T8_ECLASS_PYRAMID) {
       /* TODO: does not work with pyramids yet */
