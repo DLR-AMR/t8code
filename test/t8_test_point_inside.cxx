@@ -39,6 +39,7 @@
  *       - Use barycentric coordinates to create the points, this
  *         spares us to manually check whether a point is inside or not.
  *         (0 <= x_i <= 1 and sum x_i = 1    <=> Point is inside)
+ *       - Does the new barycentric coordinate test work with HEX and PRISM?
  */
 static void
 t8_test_point_inside_level0 (sc_MPI_Comm comm, t8_eclass_t eclass)
