@@ -222,6 +222,12 @@ t8_test_point_inside_specific_triangle ()
   forest =
     t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0,
                            sc_MPI_COMM_WORLD);
+
+  if (t8_forest_get_num_element (forest) <= 0) {        /* Skip empty forests (occur when executed in parallel) */
+    t8_forest_unref (&forest);
+    return;
+  }
+
   element = t8_forest_get_element (forest, 0, NULL);
 
   /* Get the vertices of the tree */
