@@ -40,6 +40,8 @@
  *         new points).
  *       - Point search needs a range in which to look, since the geometry of
  *         the forest does not exactly match the input geometry
+ *       - Do not store the point coordinates explicitely but pass longitude and
+ *         latitude to the search and compute the point coordinates when needed.
  */
 
 /* Convert longitude and latitude coordinates to x,y,z coordinates */
