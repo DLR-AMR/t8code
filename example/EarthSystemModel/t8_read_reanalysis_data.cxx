@@ -145,16 +145,23 @@ t8_netcdf_read_dimensions (const char *filename, const int ncid,
   return 0;
 }
 
+/* If startp and countp are not NULL the specify a
+ * hyperslab of the variable to read.
+ * startp gives the start index in each dimension
+ * countp gives the number of entries in each dimension
+ * If provided they must match with number_of_entries.
+ */
 static int
-t8_netcdf_read_double_data (const char *filename, const int ncid,
-                            const char *varname,
-                            const int expected_number_of_dims,
-                            const int number_of_entries, double **pdata)
+t8_netcdf_read_data (const char *filename, const int ncid,
+                     const char *varname,
+                     const int expected_number_of_dims,
+                     const int number_of_entries, void **pdata,
+                     size_t size_of_one_data_item,
+                     const size_t * startp, const size_t * countp)
 {
   int                 varid;
-  int                 dimension_id;
   int                 retval;
-  double             *data;
+  void               *data;
 
   /* Get the varid of the longitude data variable, based on its name. */
   t8_debugf ("Reading data info for '%s'\n", varname);
@@ -165,7 +172,6 @@ t8_netcdf_read_double_data (const char *filename, const int ncid,
     return retval;
   }
 
-#ifdef T8_ENABLE_DEBUG
   /* Ensure that the variable has the expected number of dimensions */
   {
     int                 ndims;
@@ -175,26 +181,18 @@ t8_netcdf_read_double_data (const char *filename, const int ncid,
     }
     if (ndims != expected_number_of_dims) {
       t8_global_errorf
-        ("Error: '%s' variable has more than %i dimension\n",
+        ("Error: '%s' variable does not have %i dimension(s)\n",
          varname, expected_number_of_dims);
       t8_netcdf_close_file (filename, ncid);
       return retval;
     }
     else {
-      t8_debugf ("'%s' has exactly 1 dimension as expected\n", varname);
+      t8_debugf ("'%s' has exactly %i dimension(s) as expected\n", varname,
+                 expected_number_of_dims);
     }
   }
-#endif
 
-  /* Read the number of entries */
-  retval = nc_inq_vardimid (ncid, varid, &dimension_id);
-  if (retval) {
-    T8_NETCDF_ERROR (filename, "reading dimension id", retval);
-    t8_netcdf_close_file (filename, ncid);
-    return retval;
-  }
-
-  *pdata = T8_ALLOC (double, number_of_entries);
+  *pdata = malloc (size_of_one_data_item * number_of_entries);
   data = *pdata;
   if (data == NULL) {
     t8_global_errorf ("Could not allocate memory for %i data items\n",
@@ -203,9 +201,21 @@ t8_netcdf_read_double_data (const char *filename, const int ncid,
   }
   t8_debugf ("'%s' has %i entries\n", varname, number_of_entries);
 
-  /* Read the longitude data. */
+  /* Read the data. */
   t8_debugf ("Reading '%s' data\n", varname);
-  retval = nc_get_var_double (ncid, varid, data);
+
+  if (startp == NULL) {
+    /* No hyperslab specified, read all data */
+    T8_ASSERT (countp == NULL);
+    t8_debugf ("reading all data\n");
+    retval = nc_get_var (ncid, varid, data);
+  }
+  else {
+    /* Read specified hyperslab of data */
+    T8_ASSERT (startp != NULL && countp != NULL);
+    t8_debugf ("reading hyperslab of data\n");
+    retval = nc_get_vara (ncid, varid, startp, countp, data);
+  }
   if (retval) {
     T8_NETCDF_ERROR (filename, "reading data", retval);
     t8_netcdf_close_file (filename, ncid);
@@ -255,8 +265,9 @@ t8_netcdf_open_file (const char *filename, const double radius,
   }
   for (int i = 0; i < NUM_DATA; ++i) {
     retval =
-      t8_netcdf_read_double_data (filename, ncid, dimension_names[i], 1,
-                                  dimension_lengths[i], &data_in[i]);
+      t8_netcdf_read_data (filename, ncid, dimension_names[i], 1,
+                           dimension_lengths[i], (void **) &data_in[i],
+                           sizeof (float), NULL, NULL);
     if (retval) {
       /* An error occured and was printed,
        * the file is closed and we exit. */
