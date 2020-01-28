@@ -281,6 +281,7 @@ t8_forest_search_recursion (t8_forest_t forest, t8_locidx_t ltreeid,
 
   if (num_active > 0 && new_active_queries->elem_count == 0) {
     /* No queries returned true for this element. We abort the recursion */
+    sc_array_destroy (new_active_queries);
     return;
   }
 
