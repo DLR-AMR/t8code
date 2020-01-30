@@ -267,6 +267,45 @@ const t8_dpyramid_type_t t8_dpyramid_type_Iloc_to_parenttype[2][10] = {
     {7,7,7,7,7,7,7,7,6,7}
 };
 
+/* Compute the next possible "significant point" to reach from the ankercoord of p
+ * If this point is reachable, return true, else return false */
+int
+t8_dpyramid_hit_point(const t8_dpyramid_t * p){
+    T8_ASSERT(t8_dpyramid_shape(p) == T8_ECLASS_TET);
+    T8_ASSERT(p->type == 0 || p->type == 3);
+    t8_dpyramid_coord_t x = p->x, y = p->y, h = T8_DPYRAMID_LEN(p->level);
+    /*Compute nearest possible hit-point*/
+    if((p->x>>(T8_DPYRAMID_MAXLEVEL-p->level))%2 == 0){
+        x+=h;
+    }
+    if((p->y>>(T8_DPYRAMID_MAXLEVEL-p->level))%2 == 0)  {
+        y+=h;
+    }
+    /*Detect hit*/
+    if(p->x == x && p->y == y){
+        return 1;
+    }
+    else if(p->x == x-h && p->y == y && p->type == 0){
+        return 1;
+    }
+    else if(p->y == y-h && p->x == x && p->type == 3){
+        return 1;
+    }
+    else return 0;
+
+}
+
+void
+t8_dpyramid_tetparent_type(const t8_dpyramid_t * p, t8_dpyramid_t * parent){
+    if((p->z>>(T8_DPYRAMID_MAXLEVEL - p->level)) % 2 == 0){
+        parent->type = 6;
+    }
+    else {
+        parent->type = 7;
+    }
+}
+
+
 void
 t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
 {
@@ -278,7 +317,7 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
       SC_ABORT("t8_dpyramid_partent does not support level > 1 yet.\n");
   }
   if(t8_dpyramid_shape(p) == T8_ECLASS_PYRAMID){
-      t8_debugf("pyramid_case\n");
+      /*The parent of a pyramid is a pyramid, maybe of different type*/
         t8_dpyramid_coord_t h = T8_DPYRAMID_LEN(p->level);
         int child_id = t8_dpyramid_child_id(p);
         T8_ASSERT(child_id >=0);
@@ -290,18 +329,28 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
         parent->level = p->level - 1;
     }
     else if(t8_dpyramid_shape(p) == T8_ECLASS_TET){
-        t8_debugf("tet_case\n");
         if(p->type != 0 && p->type != 3) {
+            /* The direct tet-child of a pyra has type 0 or type 3, therefore
+             * in this case the parent is a tetrahedron*/
             t8_dtet_parent((t8_dtet_t *)p, (t8_dtet_t *)parent);
         }
         else{
-            t8_debugf("uncertain\n");
             T8_ASSERT (p->level < 2);
-            parent->x = 0;
-            parent->y = 0;
-            parent->z = 0;
-            parent->type = 6;
-            parent->level = 0;
+            /*Pyramid- / tetparent detection*/
+            /*If a tetrahedron does not reach a "significant point" its parent is a tet*/
+            if(t8_dpyramid_hit_point(p) == 0){
+                /*Tetcase*/
+                t8_dtet_parent((t8_dtet_t*)p, (t8_dtet_t *)parent);
+            }
+            else{
+                /*Significant point reached => parent is pyra*/
+                t8_dpyramid_coord_t h = T8_DPYRAMID_LEN(p->level);
+                parent->x = p->x & ~h;
+                parent->y = p->y & ~h;
+                parent->z = p->z & ~h;
+                t8_dpyramid_tetparent_type(p, parent);
+                parent->level = p->level - 1;
+            }
         }
     }
 }
@@ -329,7 +378,6 @@ t8_dpyramid_succesor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
   T8_ASSERT (1 <= level && level <= T8_DPYRAMID_MAXLEVEL);
   succ->level = level;
   pyramid_child_id = t8_dpyramid_child_id (elem);
-
 
   T8_ASSERT (0 <= pyramid_child_id
              && pyramid_child_id < T8_DPYRAMID_CHILDREN);
