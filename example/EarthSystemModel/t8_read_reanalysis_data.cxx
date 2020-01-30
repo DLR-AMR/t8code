@@ -124,7 +124,7 @@ t8_netcdf_read_dimensions (const char *filename, const int ncid,
                       number_of_dims);
     t8_netcdf_close_file (filename, ncid);
     free (dimension_names);
-    free (dimension_lengths);
+    T8_FREE (dimension_lengths);
     return retval;
   }
   t8_debugf ("Reading %i dimensions...\n", number_of_dims);
@@ -138,6 +138,8 @@ t8_netcdf_read_dimensions (const char *filename, const int ncid,
       T8_NETCDF_ERROR (filename, "reading dimension names and lengths",
                        retval);
       t8_netcdf_close_file (filename, ncid);
+      free (dimension_names);
+      T8_FREE (dimension_lengths);
       return retval;
     }
     t8_debugf ("Read dimension [%s] of length %zu\n",
@@ -148,23 +150,32 @@ t8_netcdf_read_dimensions (const char *filename, const int ncid,
   return 0;
 }
 
-/* If startp and countp are not NULL the specify a
+/* If startp and countp are not NULL they specify a
  * hyperslab of the variable to read.
  * startp gives the start index in each dimension
  * countp gives the number of entries in each dimension
- * If provided they must match with number_of_entries.
+ * If provided they must match with number_of_entries_per_dimension.
+ *
+ * pdata must point to an num_of_entries dimensional array of
+ * unallocated data with size size_of_one_data_item.
+ * The data will be allocated in this function.
+ *
+ * For example if number_of_dimensions = 2 and the type of data is double,
+ * then pdata must be a double *** since it points to a double **.
  */
 static int
 t8_netcdf_read_data (const char *filename, const int ncid,
                      const char *varname,
-                     const int expected_number_of_dims,
-                     const int number_of_entries, void **pdata,
-                     size_t size_of_one_data_item,
+                     const size_t number_of_dimensions,
+                     const size_t * number_of_entries_per_dimension,
+                     void **pdata, const size_t size_of_one_data_item,
                      const size_t * startp, const size_t * countp)
 {
   int                 varid;
   int                 retval;
-  void               *data;
+  int                 number_of_entries;
+  size_t              idim;
+  void               *data, **pdata_temp;
 
   /* Get the varid of the longitude data variable, based on its name. */
   t8_debugf ("Reading data info for '%s'\n", varname);
@@ -177,26 +188,64 @@ t8_netcdf_read_data (const char *filename, const int ncid,
 
   /* Ensure that the variable has the expected number of dimensions */
   {
-    int                 ndims;
-    retval = nc_inq_varndims (ncid, varid, &ndims);
+    int                 ndims_in_file;
+    retval = nc_inq_varndims (ncid, varid, &ndims_in_file);
     if (retval) {
       T8_NETCDF_ERROR (filename, "reading number of dimensions", retval);
     }
-    if (ndims != expected_number_of_dims) {
+    if (ndims_in_file != (int) number_of_dimensions) {
       t8_global_errorf
-        ("Error: '%s' variable does not have %i dimension(s)\n",
-         varname, expected_number_of_dims);
+        ("Error: '%s' variable does not have %zd dimension(s)\n",
+         varname, number_of_dimensions);
       t8_netcdf_close_file (filename, ncid);
       return retval;
     }
     else {
-      t8_debugf ("'%s' has exactly %i dimension(s) as expected\n", varname,
-                 expected_number_of_dims);
+      t8_debugf ("'%s' has exactly %zd dimension(s) as expected\n", varname,
+                 number_of_dimensions);
     }
   }
 
-  *pdata = malloc (size_of_one_data_item * number_of_entries);
-  data = *pdata;
+#if 0
+  /* TODO: - comment
+   *       - move before file open
+   *       - error handling
+   */
+  pdata_temp = pdata;
+  number_of_entries = 1;
+  for (idim = 0; idim < number_of_dimensions - 1; ++idim) {
+    *pdata_temp =
+      malloc (sizeof (void *) * number_of_entries_per_dimension[idim]);
+    SC_CHECK_ABORT (*pdata_temp != NULL, "Could not allocate memory.");
+    t8_debugf ("Allocated %zd void* on dim %zd\n",
+               number_of_entries_per_dimension[idim], idim);
+    pdata_temp = (void **) *pdata_temp;
+    number_of_entries *= number_of_entries_per_dimension[idim];
+  }
+  *pdata_temp =
+    malloc (size_of_one_data_item * number_of_entries_per_dimension[idim]);
+  SC_CHECK_ABORT (*pdata_temp != NULL, "Could not allocate memory.");
+  data = *pdata_temp;
+  number_of_entries *= number_of_entries_per_dimension[idim];
+  t8_debugf ("Allocated %zd data of size %zd on dim %zd\n",
+             number_of_entries_per_dimension[idim], size_of_one_data_item,
+             idim);
+
+  if (data == NULL) {
+    t8_global_errorf ("Could not allocate memory for %i data items\n",
+                      number_of_entries);
+    t8_netcdf_close_file (filename, ncid);
+  }
+  t8_debugf ("'%s' has %i entries\n", varname, number_of_entries);
+#endif
+
+  pdata_temp = pdata;
+  number_of_entries = 1;
+  for (idim = 0; idim < number_of_dimensions; ++idim) {
+    number_of_entries *= number_of_entries_per_dimension[idim];
+  }
+  *pdata_temp = malloc (size_of_one_data_item * number_of_entries);
+  data = *pdata_temp;
   if (data == NULL) {
     t8_global_errorf ("Could not allocate memory for %i data items\n",
                       number_of_entries);
@@ -238,8 +287,8 @@ t8_netcdf_open_file (const char *filename, const double radius,
   int                 longitude_pos, latitude_pos;
   char                (*dimension_names)[BUFSIZ];
   size_t             *dimension_lengths;
-#define NUM_DATA 3
-  float              *data_in[NUM_DATA];
+  float              *latitude_data, *longitude_data;
+  int                *time;
   double             *coordinates_euclidean;
 
   /* Open the file */
@@ -258,24 +307,65 @@ t8_netcdf_open_file (const char *filename, const double radius,
   if (retval) {
     /* An error occured and was printed,
      * the file is closed and we exit. */
+    free (dimension_names);
+    T8_FREE (dimension_lengths);
     return retval;
   }
 
-  if (number_of_dims < NUM_DATA) {
-    t8_global_errorf ("Expected at least 3 dimensions. Only %i found.\n",
-                      number_of_dims);
+  if (number_of_dims != 3) {
+    t8_global_errorf ("Expected 3 dimensions. %i found.\n", number_of_dims);
     t8_netcdf_close_file (filename, ncid);
+    free (dimension_names);
+    T8_FREE (dimension_lengths);
+    return 1;
   }
-  for (int i = 0; i < NUM_DATA; ++i) {
-    retval =
-      t8_netcdf_read_data (filename, ncid, dimension_names[i], 1,
-                           dimension_lengths[i], (void **) &data_in[i],
-                           sizeof (float), NULL, NULL);
-    if (retval) {
-      /* An error occured and was printed,
-       * the file is closed and we exit. */
-      return retval;
-    }
+
+  /* Check the position of the longitude and latitude entries */
+  longitude_pos = 0;
+  latitude_pos = 1;
+  T8_ASSERT (!strcmp (dimension_names[longitude_pos], "longitude"));
+  T8_ASSERT (!strcmp (dimension_names[latitude_pos], "latitude"));
+  T8_ASSERT (!strcmp (dimension_names[2], "time"));
+
+  /* Read latitude data */
+  retval =
+    t8_netcdf_read_data (filename, ncid, "latitude", 1,
+                         dimension_lengths + latitude_pos,
+                         (void **) &latitude_data, sizeof (float), NULL,
+                         NULL);
+  if (retval) {
+    /* An error occured and was printed,
+     * the file is closed and we exit. */
+    free (dimension_names);
+    T8_FREE (dimension_lengths);
+    return retval;
+  }
+
+  /* Read longitude data */
+  retval =
+    t8_netcdf_read_data (filename, ncid, "longitude", 1,
+                         dimension_lengths + longitude_pos,
+                         (void **) &longitude_data, sizeof (float), NULL,
+                         NULL);
+  if (retval) {
+    /* An error occured and was printed,
+     * the file is closed and we exit. */
+    free (dimension_names);
+    T8_FREE (dimension_lengths);
+    return retval;
+  }
+
+  /* Read time data */
+  retval =
+    t8_netcdf_read_data (filename, ncid, "time", 1,
+                         dimension_lengths + 2, (void **) &time,
+                         sizeof (int), NULL, NULL);
+  if (retval) {
+    /* An error occured and was printed,
+     * the file is closed and we exit. */
+    free (dimension_names);
+    T8_FREE (dimension_lengths);
+    return retval;
   }
 
   /* Close the opened file */
@@ -284,43 +374,42 @@ t8_netcdf_open_file (const char *filename, const double radius,
 #ifdef T8_ENABLE_DEBUG
   /* Output the read data */
   {
-    for (int i = 0; i < NUM_DATA; ++i) {
-      size_t              j;
-      char                output[BUFSIZ] = "";
-      char                number[20];
-      for (j = 0; j < dimension_lengths[i]; ++j) {
-        snprintf (number, 20, " %.2f", data_in[i][j]);
-        if (strlen (output) < BUFSIZ - 21) {
-          strcat (output, number);
-        }
+    size_t              j;
+    char                output[BUFSIZ] = "";
+    char                number[20];
+    for (j = 0; j < dimension_lengths[latitude_pos]; ++j) {
+      snprintf (number, 20, " %.2f", latitude_data[j]);
+      if (strlen (output) < BUFSIZ - 21) {
+        strcat (output, number);
       }
-      t8_debugf ("Read data from '%s' with %zd entries:\n",
-                 dimension_names[i], dimension_lengths[i]);
-      t8_debugf ("%s\n", output);
     }
-  }
-#endif
+    t8_debugf ("Read data from '%s' with %zd entries:\n",
+               dimension_names[latitude_pos],
+               dimension_lengths[latitude_pos]);
+    t8_debugf ("%s\n", output);
 
-  /* Find the position of the longitude and latitude entries */
-  latitude_pos = -1;
-  longitude_pos = -1;
-  for (int i = 0; i < NUM_DATA; ++i) {
-    if (!strcmp (dimension_names[i], "longitude")) {
-      longitude_pos = i;
+    strcpy (output, "");
+    for (j = 0; j < dimension_lengths[longitude_pos]; ++j) {
+      snprintf (number, 20, " %.2f", longitude_data[j]);
+      if (strlen (output) < BUFSIZ - 21) {
+        strcat (output, number);
+      }
     }
-    else if (!strcmp (dimension_names[i], "latitude")) {
-      latitude_pos = i;
+    t8_debugf ("Read data from '%s' with %zd entries:\n",
+               dimension_names[longitude_pos],
+               dimension_lengths[longitude_pos]);
+    t8_debugf ("%s\n", output);
+
+    strcpy (output, "");
+    for (j = 0; j < dimension_lengths[2]; ++j) {
+      snprintf (number, 20, " %i", time[j]);
+      if (strlen (output) < BUFSIZ - 21) {
+        strcat (output, number);
+      }
     }
-  }
-  if (latitude_pos < 0 || longitude_pos < 0) {
-    t8_errorf
-      ("ERROR: The fields 'longitute' and 'latitude' were not found in %s\n",
-       filename);
-  }
-#ifdef T8_ENABLE_DEBUG
-  else {
-    t8_debugf ("'longitude' at pos %i, 'latitude' at pos %i\n", longitude_pos,
-               latitude_pos);
+    t8_debugf ("Read data from '%s' with %zd entries:\n",
+               dimension_names[2], dimension_lengths[2]);
+    t8_debugf ("%s\n", output);
   }
 #endif
 
