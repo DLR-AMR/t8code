@@ -277,6 +277,24 @@ t8_netcdf_read_data (const char *filename, const int ncid,
   return 0;
 }
 
+static inline       size_t
+t8_netcdf_lat_long_to_point_index (const size_t lat_idx,
+                                   const size_t long_idx,
+                                   const size_t num_longitude_ixd)
+{
+  return num_longitude_ixd * lat_idx + long_idx;
+}
+
+static void
+t8_netcdf_point_index_to_lat_long (const size_t point_idx,
+                                   const size_t num_longitude_ixd,
+                                   size_t * lat_idx_out,
+                                   size_t * long_idx_out)
+{
+  *long_idx_out = point_idx % num_longitude_ixd;
+  *lat_idx_out = point_idx / num_longitude_ixd;
+}
+
 static int
 t8_netcdf_open_file (const char *filename, const double radius,
                      double **pcoordinates_euclidean,
@@ -426,13 +444,14 @@ t8_netcdf_open_file (const char *filename, const double radius,
 
   /* Loop over all longitudes and all latitudes and compute the euclidean
    * coordinates for each point. */
-  for (size_t ilong = 0; ilong < num_long; ++ilong) {
-    const double        longitude = data_in[longitude_pos][ilong];
-    for (size_t ilat = 0; ilat < num_lat; ++ilat) {
-      const double        latitude = data_in[latitude_pos][ilat];
+  for (size_t ilat = 0; ilat < num_lat; ++ilat) {
+    const double        latitude = latitude_data[ilat];
+    for (size_t ilong = 0; ilong < num_long; ++ilong) {
+      const double        longitude = longitude_data[ilong];
       double              xyz[3];
       /* Compute the current position in the euclidean array */
-      const size_t        position = 3 * (num_lat * ilong + ilat);
+      const size_t        position =
+        3 * t8_netcdf_lat_long_to_point_index (ilat, ilong, num_long);
 
       /* Compute euclidean coordinates of this point */
       t8_reanalysis_long_lat_to_euclid (longitude, latitude, radius, xyz);
