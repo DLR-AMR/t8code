@@ -466,9 +466,9 @@ t8_netcdf_open_file (const char *filename, const double radius,
   }
 
   /* Clean-up memory */
-  for (int i = 0; i < NUM_DATA; ++i) {
-    free (data_in[i]);
-  }
+  free (latitude_data);
+  free (longitude_data);
+  free (time);
   T8_FREE (dimension_lengths);
   free (dimension_names);
 
@@ -482,9 +482,8 @@ t8_netcdf_open_file (const char *filename, const double radius,
  * Return 0 on success */
 t8_forest_t
 t8_reanalysis_build_forest (const char *mesh_filename, double radius,
-                            int dimension, sc_MPI_Comm comm)
+                            int dimension, int level, sc_MPI_Comm comm)
 {
-  const int           level = 0;
   const int           do_ghosts = 1;
   /* read the coarse mesh from the .msh file */
   t8_cmesh_t          cmesh =
@@ -570,6 +569,7 @@ t8_netcdf_find_mesh_elements_query (t8_forest_t forest,
   }
   double             *tree_vertices;
   int                 is_definitely_outside;
+  const double       *double_point = (const double *) point;
 
   /* Get a pointer to the vertex coordinates of the tree */
   tree_vertices = t8_forest_get_tree_vertices (forest, ltreeid);
@@ -578,7 +578,7 @@ t8_netcdf_find_mesh_elements_query (t8_forest_t forest,
   is_definitely_outside =
     t8_forest_element_point_outside_quick_estimate (forest, ltreeid, element,
                                                     tree_vertices,
-                                                    (const double *) point);
+                                                    double_point);
 
 #if 1
   if (is_definitely_outside) {
@@ -589,7 +589,8 @@ t8_netcdf_find_mesh_elements_query (t8_forest_t forest,
 
   /* The point may be inside the element. Do a proper check. */
   if (t8_forest_element_point_inside
-      (forest, ltreeid, element, tree_vertices, (const double *) point)) {
+      (forest, ltreeid, element, tree_vertices, double_point)) {
+    T8_ASSERT (!is_definitely_outside); /* Should never happen */
     /* This point is contained in this element */
     if (is_leaf) {
       /* This element is a leaf element, we add its index to the list of
@@ -607,20 +608,11 @@ t8_netcdf_find_mesh_elements_query (t8_forest_t forest,
       t8_locidx_t         element_index =
         t8_forest_get_tree_element_offset (forest, ltreeid) + tree_leaf_index;
 
+      t8_debugf ("Pushing index %i to point %zd\n", element_index,
+                 point_index);
       /* Add this index to the array of found elements */
       *(t8_locidx_t *) sc_array_push (user_data->matching_elements +
                                       point_index) = element_index;
-      if (is_definitely_outside) {
-        t8_debugf ("This should not happen\n");
-        {
-          double             *Point = (double *) point;
-          t8_debugf ("Searching for point %zd: %g %g %g\n", point_index,
-                     Point[0], Point[1], Point[2]);
-
-        }
-        t8_debugf ("Found point %zd in element %i\n", point_index,
-                   element_index);
-      }
     }
     /* Since the point is contained in the element, we return 1 */
     return 1;
@@ -697,15 +689,18 @@ t8_netcdf_read_data_to_forest (const char *filename, t8_forest_t forest,
   const size_t        startp[3] = { 0, 0, 0 };
   const size_t        countp[3] =
     { num_timesteps, num_latitude, num_longitude };
-  const size_t        num_data = num_longitude * num_latitude * num_timesteps;
+  const size_t        num_data_per_dimension[3] =
+    { num_timesteps, num_latitude, num_longitude };
   const size_t        num_points = num_longitude * num_latitude;
-  t8_locidx_t         element_index, num_elements;
-  size_t              ipoint;
+  t8_locidx_t         element_index, num_elements, matched_elements;
   double              scaling = 1;      /* TODO: Read this from file */
   double              offset = 0;       /* TODO: Read this from file */
   size_t              time_step;
+  size_t              ilat, ilong;
 
-  T8_ASSERT (num_points <= num_data);
+  T8_ASSERT (num_points <=
+             num_data_per_dimension[0] * num_data_per_dimension[1]
+             * num_data_per_dimension[2]);
 
   /* Open the file */
   t8_debugf ("Opening file %s\n", filename);
@@ -727,7 +722,7 @@ t8_netcdf_read_data_to_forest (const char *filename, t8_forest_t forest,
   }
 
   retval =
-    t8_netcdf_read_data (filename, ncid, "u10", 3, num_data,
+    t8_netcdf_read_data (filename, ncid, "u10", 3, num_data_per_dimension,
                          (void **) &u10_data_from_file,
                          sizeof (*u10_data_from_file), startp, countp);
   if (retval) {
@@ -761,14 +756,15 @@ t8_netcdf_read_data_to_forest (const char *filename, t8_forest_t forest,
 
   t8_debugf ("Read u10 data with scaling %g and offset %g\n", scaling,
              offset);
-#ifdef T8_ENABLE_DEBUG
-  size_t              num_print_data = 100;     // only print the first 1000 values
+#if 1
+//#ifdef T8_ENABLE_DEBUG
+  size_t              num_print_data = 100;     // only print the first N values
   /* Output the read data */
   {
     size_t              j;
     char                output[BUFSIZ] = "";
     char                number[20];
-    t8_debugf ("Read data from 'u10' with %zd entries:\n", num_data);
+    t8_debugf ("Read data from 'u10' with %zd entries:\n", num_points);
     for (j = 0; j < num_print_data; ++j) {
       snprintf (number, 20, " %i", u10_data_from_file[j]);
       if (strlen (output) < BUFSIZ - 21) {
@@ -782,6 +778,7 @@ t8_netcdf_read_data_to_forest (const char *filename, t8_forest_t forest,
     }
     t8_debugf ("%s\n", output);
   }
+//#endif
 #endif
 
   /* We now fill the per element array with the data */
@@ -791,22 +788,37 @@ t8_netcdf_read_data_to_forest (const char *filename, t8_forest_t forest,
   t8_debugf ("Projecting data to %i elements\n", num_elements);
 
   time_step = 0;
-  for (ipoint = 0; ipoint < num_points; ipoint++) {
-    if (search_results->matching_elements[ipoint].elem_count > 0) {
-      /* This point was found in an element.
-       * We pick the first element where it was found in and store this
-       * points u10 data at that element. */
-      element_index =
-        *(t8_locidx_t *) sc_array_index (search_results->matching_elements +
-                                         ipoint, 0);
-      t8_debugf ("Writing to element %i from point %zd of %zd\n",
-                 element_index, ipoint, num_points);
-      T8_ASSERT (0 <= element_index && element_index < num_elements);
-      u10_data_per_element[element_index] =
-        u10_data_from_file[time_step * num_points + ipoint] * scaling +
-        offset;
+  matched_elements = 0;
+  for (ilat = 0; ilat < countp[1]; ++ilat) {
+    for (ilong = 0; ilong < countp[2]; ++ilong) {
+      size_t              point_idx =
+        t8_netcdf_lat_long_to_point_index (ilat, ilong, countp[2]);
+      if (search_results->matching_elements[point_idx].elem_count > 0) {
+        /* This point was found in an element.
+         * We pick the first element where it was found in and store this
+         * points u10 data at that element. */
+        element_index =
+          *(t8_locidx_t *) sc_array_index (search_results->matching_elements +
+                                           point_idx, 0);
+        T8_ASSERT (0 <= element_index && element_index < num_elements);
+        T8_ASSERT (time_step == 0);     /* Currently time_step = 0 since we know better */
+
+        /* TODO: remove this if later, it is only for debugging */
+        if (u10_data_per_element[element_index] == 0) {
+          /* This element was (probably) not touched before, count it to the matched elements */
+          matched_elements++;
+        }
+        u10_data_per_element[element_index] =
+          //u10_data_from_file[time_step][ilat][ilong] * scaling + offset;
+          u10_data_from_file[point_idx] * scaling + offset;
+        //u10_data_per_element[num_latitude * ilong + ilat] * scaling + offset;
+        t8_debugf ("Writing %g to element %i from point %zd of %zd\n",
+                   u10_data_per_element[element_index],
+                   element_index, point_idx, num_points);
+      }
     }
   }
+  t8_global_productionf ("Interpolated to %i elements.\n", matched_elements);
   {
     /* VTK output */
     t8_vtk_data_field_t u10_vtk_data;
@@ -832,7 +844,7 @@ main (int argc, char **argv)
   const char         *netcdf_filename = NULL;
   const char         *mesh_filename = NULL;
   int                 parsed, helpme;
-  int                 sphere_dim;
+  int                 sphere_dim, level;
   double              sphere_radius;
   const sc_MPI_Comm   comm = sc_MPI_COMM_WORLD; /* The mpi communicator used throughout */
 
@@ -865,6 +877,8 @@ main (int argc, char **argv)
                          "The radius of the sphere in the msh file. Default = 1");
   sc_options_add_int (opt, 'd', "dim", &sphere_dim, 2,
                       "The dimension of the mesh. Default = 2");
+  sc_options_add_int (opt, 'l', "level", &level, 0,
+                      "The uniform refinement level of the mesh. Default = 0");
 
   /* Parse the command line arguments from the input */
   parsed =
@@ -876,10 +890,12 @@ main (int argc, char **argv)
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
 #if T8_WITH_NETCDF
-  else if (parsed >= 0 && netcdf_filename != NULL && mesh_filename != NULL) {
+  else if (parsed >= 0 && netcdf_filename != NULL && mesh_filename != NULL
+           && 0 <= level) {
     int                 retval;
     t8_forest_t         forest =
       t8_reanalysis_build_forest (mesh_filename, sphere_radius, sphere_dim,
+                                  level,
                                   comm);
     if (forest != NULL) {
       double             *coordinates_euclidean;
@@ -894,7 +910,7 @@ main (int argc, char **argv)
       if (!retval) {
 #if 1
 #ifdef T8_ENABLE_DEBUG
-        size_t              max_num_coordinates = 30;
+        size_t              max_num_coordinates = num_latitude;
         size_t              new_num_coordinates =
           SC_MIN (num_coordinates, max_num_coordinates);
         t8_debugf
@@ -903,8 +919,7 @@ main (int argc, char **argv)
            new_num_coordinates, num_coordinates);
         num_coordinates = new_num_coordinates;
         if (new_num_coordinates == max_num_coordinates) {
-          num_latitude = max_num_coordinates / 10;
-          num_longitude = 10;
+          num_longitude = 1;
         }
 #endif
 #endif
