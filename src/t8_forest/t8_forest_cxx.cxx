@@ -1006,7 +1006,7 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
   double              point_on_face[3];
   /* numerical tolerance. If this value is larger we detect more points.
    * If it is zero we probably do not detect points even if they are inside. */
-  const double        tolerance = 1e-10;
+  const double        tolerance = 1e-6;
 
   switch (element_shape) {
   case T8_ECLASS_VERTEX:
