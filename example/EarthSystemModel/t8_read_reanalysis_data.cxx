@@ -50,14 +50,16 @@ t8_reanalysis_long_lat_to_euclid (const double longitude,
                                   const double latitude, const double R,
                                   double euclidean[3])
 {
-  const double        sinlong = sin (longitude);
-  const double        coslong = cos (longitude);
-  const double        sinlat = sin (latitude);
-  const double        coslat = cos (latitude);
+  T8_ASSERT (-90 <= latitude && latitude <= 90);
+  T8_ASSERT (0 <= longitude && longitude <= 360);
+  const double        sinlong = sin (longitude / 180 * M_PI);
+  const double        coslong = cos (longitude / 180 * M_PI);
+  const double        sinlat = sin (latitude / 180 * M_PI);
+  const double        coslat = cos (latitude / 180 * M_PI);
 
-  euclidean[0] = R * sinlong * coslat;
-  euclidean[1] = R * sinlong * sinlat;
-  euclidean[2] = R * coslong;
+  euclidean[0] = R * coslat * coslong;
+  euclidean[1] = R * coslat * sinlong;
+  euclidean[2] = R * sinlat;
 }
 
 /* TODO: Use T8_ALLOC instead of malloc */
