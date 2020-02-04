@@ -39,9 +39,18 @@
  *       - refine those elements that have more than one point and search again (with only the
  *         new points).
  *       - Point search needs a range in which to look, since the geometry of
- *         the forest does not exactly match the input geometry
+ *         the forest does not exactly match the input geometry -> tolerance of point search as parameter
  *       - Do not store the point coordinates explicitely but pass longitude and
  *         latitude to the search and compute the point coordinates when needed.
+ *       - Read v10 data
+ *       - u10 and v10 veocities are tangential to longitude and latitude, we need to transform these
+ *         into cartesian bases if we want to use our advection solver
+ *       - use u10 and v10 as vector field for advection solver
+ *       - distribute the mesh (before search)
+ *       - for each element store a list of the points that match it, refine the element and
+ *         search again for the children and store the new points (use forest_replace)
+ *       - Refine the mesh where the gradient of u10/v10 is large
+ *       - Use search to find the point with the minimal distance to an element?
  */
 
 /* Convert longitude and latitude coordinates to x,y,z coordinates */
