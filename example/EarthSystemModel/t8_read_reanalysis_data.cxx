@@ -694,9 +694,11 @@ t8_netcdf_read_data_to_forest (const char *filename, t8_forest_t forest,
                                search_results)
 {
   double             *u10_data_per_element;
+  double             *v10_data_per_element;
   short              *u10_data_from_file;
+  short              *v10_data_from_file;
   int                 retval;
-  int                 ncid, varid;
+  int                 ncid, u10varid, v10varid;
   const size_t        startp[3] = { 0, 0, 0 };
   const size_t        countp[3] =
     { num_timesteps, num_latitude, num_longitude };
@@ -704,8 +706,8 @@ t8_netcdf_read_data_to_forest (const char *filename, t8_forest_t forest,
     { num_timesteps, num_latitude, num_longitude };
   const size_t        num_points = num_longitude * num_latitude;
   t8_locidx_t         element_index, num_elements, matched_elements;
-  double              scaling = 1;      /* TODO: Read this from file */
-  double              offset = 0;       /* TODO: Read this from file */
+  double              u10_scaling, v10_scaling;
+  double              u10_offset, v10_offset;
   size_t              time_step;
   size_t              ilat, ilong;
 
@@ -723,7 +725,7 @@ t8_netcdf_read_data_to_forest (const char *filename, t8_forest_t forest,
   }
 
   /* Get the varid of u10 */
-  retval = nc_inq_varid (ncid, "u10", &varid);
+  retval = nc_inq_varid (ncid, "u10", &u10varid);
   if (retval) {
     /* Error */
     T8_NETCDF_ERROR (filename, "reading variable id of u10", retval);
@@ -744,7 +746,7 @@ t8_netcdf_read_data_to_forest (const char *filename, t8_forest_t forest,
   }
 
   /* Read the scaling and offset attributes */
-  retval = nc_get_att (ncid, varid, "scale_factor", &scaling);
+  retval = nc_get_att (ncid, u10varid, "scale_factor", &u10_scaling);
   if (retval) {
     /* Error */
     T8_NETCDF_ERROR (filename, "reading u10:scale_factor attribute", retval);
@@ -753,7 +755,7 @@ t8_netcdf_read_data_to_forest (const char *filename, t8_forest_t forest,
     return retval;
   }
   /* offset */
-  //retval = nc_read_att (ncid, varid, "add_offset", &offset);
+  retval = nc_get_att (ncid, u10varid, "add_offset", &u10_offset);
   if (retval) {
     /* Error */
     T8_NETCDF_ERROR (filename, "reading u10:add_offset attribute", retval);
@@ -762,11 +764,53 @@ t8_netcdf_read_data_to_forest (const char *filename, t8_forest_t forest,
     return retval;
   }
 
+  /* Get the varid of v10 */
+  retval = nc_inq_varid (ncid, "v10", &v10varid);
+  if (retval) {
+    /* Error */
+    T8_NETCDF_ERROR (filename, "reading variable id of v10", retval);
+    /* close the file */
+    t8_netcdf_close_file (filename, ncid);
+    return retval;
+  }
+
+  retval =
+    t8_netcdf_read_data (filename, ncid, "v10", 3, num_data_per_dimension,
+                         (void **) &v10_data_from_file,
+                         sizeof (*v10_data_from_file), startp, countp);
+  if (retval) {
+    /* Could not read the data.
+     * The file was closed in the error handling of t8_netcdf_read_data. */
+    T8_NETCDF_ERROR (filename, "reading u10 data", retval);
+    return retval;
+  }
+
+  /* Read the scaling and offset attributes */
+  retval = nc_get_att (ncid, v10varid, "scale_factor", &v10_scaling);
+  if (retval) {
+    /* Error */
+    T8_NETCDF_ERROR (filename, "reading v10:scale_factor attribute", retval);
+    /* close the file */
+    t8_netcdf_close_file (filename, ncid);
+    return retval;
+  }
+  /* offset */
+  retval = nc_get_att (ncid, v10varid, "add_offset", &v10_offset);
+  if (retval) {
+    /* Error */
+    T8_NETCDF_ERROR (filename, "reading v10:add_offset attribute", retval);
+    /* close the file */
+    t8_netcdf_close_file (filename, ncid);
+    return retval;
+  }
+
   /* We are done reading from the file and thus close it */
   t8_netcdf_close_file (filename, ncid);
 
-  t8_debugf ("Read u10 data with scaling %g and offset %g\n", scaling,
-             offset);
+  t8_debugf ("Read u10 data with scaling %g and offset %g\n", u10_scaling,
+             u10_offset);
+  t8_debugf ("Read v10 data with scaling %g and offset %g\n", v10_scaling,
+             v10_offset);
 #if 1
 //#ifdef T8_ENABLE_DEBUG
   size_t              num_print_data = 100;     // only print the first N values
@@ -788,6 +832,20 @@ t8_netcdf_read_data_to_forest (const char *filename, t8_forest_t forest,
       }
     }
     t8_debugf ("%s\n", output);
+    output[0] = '\0';
+    t8_debugf ("Read data from 'v10' with %zd entries:\n", num_points);
+    for (j = 0; j < num_print_data; ++j) {
+      snprintf (number, 20, " %i", v10_data_from_file[j]);
+      if (strlen (output) < BUFSIZ - 21) {
+        strcat (output, number);
+      }
+      else {
+        t8_debugf ("%s\n", output);
+        /* Overwrite output */
+        strcpy (output, number);
+      }
+    }
+    t8_debugf ("%s\n", output);
   }
 //#endif
 #endif
@@ -795,6 +853,7 @@ t8_netcdf_read_data_to_forest (const char *filename, t8_forest_t forest,
   /* We now fill the per element array with the data */
   num_elements = t8_forest_get_num_element (forest);
   u10_data_per_element = T8_ALLOC_ZERO (double, num_elements);
+  v10_data_per_element = T8_ALLOC_ZERO (double, num_elements);
 
   t8_debugf ("Projecting data to %i elements\n", num_elements);
 
@@ -820,9 +879,9 @@ t8_netcdf_read_data_to_forest (const char *filename, t8_forest_t forest,
           matched_elements++;
         }
         u10_data_per_element[element_index] =
-          //u10_data_from_file[time_step][ilat][ilong] * scaling + offset;
-          u10_data_from_file[point_idx] * scaling + offset;
-        //u10_data_per_element[num_latitude * ilong + ilat] * scaling + offset;
+          u10_data_from_file[point_idx] * u10_scaling + u10_offset;
+        v10_data_per_element[element_index] =
+          v10_data_from_file[point_idx] * v10_scaling + v10_offset;
         t8_debugf ("Writing %g to element %i from point %zd of %zd\n",
                    u10_data_per_element[element_index],
                    element_index, point_idx, num_points);
@@ -832,16 +891,20 @@ t8_netcdf_read_data_to_forest (const char *filename, t8_forest_t forest,
   t8_global_productionf ("Interpolated to %i elements.\n", matched_elements);
   {
     /* VTK output */
-    t8_vtk_data_field_t u10_vtk_data;
-    u10_vtk_data.data = u10_data_per_element;
-    strcpy (u10_vtk_data.description, "u10");
-    u10_vtk_data.type = T8_VTK_SCALAR;
-    t8_forest_vtk_write_file (forest, "test", 1, 1, 1, 1, 0, 1,
-                              &u10_vtk_data);
+    t8_vtk_data_field_t vtk_data[2];
+    vtk_data[0].data = u10_data_per_element;
+    vtk_data[1].data = v10_data_per_element;
+    strcpy (vtk_data[0].description, "u10");
+    strcpy (vtk_data[1].description, "v10");
+    vtk_data[0].type = T8_VTK_SCALAR;
+    vtk_data[1].type = T8_VTK_SCALAR;
+    t8_forest_vtk_write_file (forest, "test", 1, 1, 1, 1, 0, 2, vtk_data);
   }
   /* clean-up */
   free (u10_data_from_file);
   T8_FREE (u10_data_per_element);
+  free (v10_data_from_file);
+  T8_FREE (v10_data_per_element);
 
   return 0;
 }
