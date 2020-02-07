@@ -470,6 +470,7 @@ t8_dprism_successor (const t8_dprism_t * p, t8_dprism_t * succ, int level)
   /*update the level */
   succ->line.level = level;
   succ->tri.level = level;
+  /*TODO: implement compute type*/
   prism_child_id = t8_dprism_child_id (succ);
   T8_ASSERT (1 <= level && level <= T8_DPRISM_MAXLEVEL);
   T8_ASSERT (p->line.level == p->tri.level);

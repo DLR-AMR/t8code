@@ -106,6 +106,12 @@ t8_dpyramid_last_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * desc,
  */
 void                t8_dpyramid_compute_coords (const t8_dpyramid_t * p,
                                              int vertex, int coords[]);
+/** Compute the parent of a given pyramid
+ * \param [in] p        Input pyramid.
+ * \param [out] parent  The parent of \a p.
+ */
+void                t8_dpyramid_parent (const t8_dpyramid_t * p,
+                                        t8_dpyramid_t * parent);
 
 /**
  * Compute the number of corners of a pyramid. If pyramid has type less than 6,

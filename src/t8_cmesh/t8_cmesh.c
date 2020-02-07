@@ -1298,6 +1298,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
         children_per_tree = 2 * (one << 3*level) - sc_intpow64u(6,level);
         global_num_children = cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] * children_per_tree;
     }
+
     else{
         children_per_tree = one << cmesh->dimension * level;
         global_num_children = cmesh->num_trees * children_per_tree;
@@ -1326,7 +1327,6 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     else {
       last_global_child = global_num_children;
     }
-
     T8_ASSERT (0 <= first_global_child
                && first_global_child <= global_num_children);
     T8_ASSERT (0 <= last_global_child

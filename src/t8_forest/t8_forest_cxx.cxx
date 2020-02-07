@@ -321,7 +321,6 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
       length = 0;
       length2 = 0;
 
-
       for(i = 0; i<3; i++){
           vertex_coords[i] =  len * corner_coords[i];
       }
@@ -341,13 +340,14 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
       for(i = 0; i < 2; i++){
           /*Compute coords of vertex in the plane*/
           quad_coords[i] = vertex_coords[i] - lambda * ray[i];
+          length += (1-quad_coords[i]) * (1-quad_coords[i]);
       }
+      length += 1;
       /*compute the ratio*/
       for(i = 0; i<3; i++){
-          length += (1-quad_coords[i]) * (1-quad_coords[i]);
           length2 += (vertex_coords[i]-quad_coords[i]) *(vertex_coords[i]-quad_coords[i]);
       }
-      lambda = sqrt(length2) / sqrt(length);
+      lambda = sqrt(length2) / sqrt(length);;
 
       /*Interpolate on quad*/
       t8_forest_bilinear_interpolation((const double *) quad_coords, vertices, 2, coordinates);
