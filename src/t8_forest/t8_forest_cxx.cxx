@@ -993,7 +993,7 @@ int
 t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
                                 const t8_element_t * element,
                                 const double *tree_vertices,
-                                const double point[3])
+                                const double point[3], const double tolerance)
 {
   t8_eclass_t         tree_class = t8_forest_get_tree_class (forest, ltreeid);
   t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree_class);
@@ -1004,9 +1004,6 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
   double              face_normal[3];
   double              dot_product;
   double              point_on_face[3];
-  /* numerical tolerance. If this value is larger we detect more points.
-   * If it is zero we probably do not detect points even if they are inside. */
-  const double        tolerance = 1e-10;
 
   switch (element_shape) {
   case T8_ECLASS_VERTEX:

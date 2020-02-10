@@ -63,6 +63,7 @@ t8_test_point_inside_level0 (sc_MPI_Comm comm, t8_eclass_t eclass)
   int                 num_steps;
   double              step;
   int                 num_points;
+  const double        tolerance = 1e-12;        /* Numerical tolerance that we allow in the point inside check */
 
   default_scheme = t8_scheme_new_default_cxx ();
   /* Construct a cube coarse mesh */
@@ -174,7 +175,7 @@ t8_test_point_inside_level0 (sc_MPI_Comm comm, t8_eclass_t eclass)
        * the point is inside the element or not. */
       point_is_recognized_as_inside =
         t8_forest_element_point_inside (forest, 0, element, tree_vertices,
-                                        test_point);
+                                        test_point, tolerance);
 
       SC_CHECK_ABORTF (!point_is_recognized_as_inside == !point_is_inside,
                        "The point (%g,%g,%g) should %s be inside the %s element, but isn't detected as such.",
@@ -214,6 +215,7 @@ t8_test_point_inside_specific_triangle ()
   };
   int                 point_is_inside;
   double             *tree_vertices;
+  const double        tolerance = 1e-12;        /* Numerical tolerance that we allow for the point inside check */
 
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
@@ -236,7 +238,8 @@ t8_test_point_inside_specific_triangle ()
 
   point_is_inside =
     t8_forest_element_point_inside (forest, 0,
-                                    element, tree_vertices, test_point);
+                                    element, tree_vertices, test_point,
+                                    tolerance);
 
   SC_CHECK_ABORT (!point_is_inside,
                   "The point is wrongly detected as inside the triangle.");
