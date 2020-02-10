@@ -876,6 +876,10 @@ void                t8_forest_element_face_normal (t8_forest_t forest,
  * \param [in]      element    The element.
  * \param [in]      vertices   An array storing the vertex coordinates of the tree.
  * \param [in]      point      3-dimensional coordinates of the point to check
+ * \param [in]      tolerance  tolerance that we allow the point to not exactly match the element.
+ *                             If this value is larger we detect more points.
+ *                             If it is zero we probably do not detect points even if they are inside
+ *                             due to rounding errors.
  * \return          True (non-zero) if \a point lies within \a element, false otherwise.
  *                  The return value is also true if the point lies on the element boundary.
  *                  Thus, this function may return true for different leaf elements, if they
@@ -887,7 +891,8 @@ int                 t8_forest_element_point_inside (t8_forest_t forest,
                                                     element,
                                                     const double
                                                     *tree_vertices,
-                                                    const double point[3]);
+                                                    const double point[3],
+                                                    const double tolerance);
 
 /** A fast estimate whether a given point lies outside of an element. This routine
  * can be used to exclude points from a search for a containing element.
