@@ -298,6 +298,7 @@ t8_netcdf_lat_long_to_point_index (const size_t lat_idx,
   return num_longitude_ixd * lat_idx + long_idx;
 }
 
+#if 0                           /* Currently not needed */
 static void
 t8_netcdf_point_index_to_lat_long (const size_t point_idx,
                                    const size_t num_longitude_ixd,
@@ -307,6 +308,7 @@ t8_netcdf_point_index_to_lat_long (const size_t point_idx,
   *long_idx_out = point_idx % num_longitude_ixd;
   *lat_idx_out = point_idx / num_longitude_ixd;
 }
+#endif
 
 static int
 t8_netcdf_open_file (const char *filename, const double radius,
