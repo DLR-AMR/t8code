@@ -397,60 +397,6 @@ t8_test_point_outside_quick_check_level0 (sc_MPI_Comm comm,
   t8_forest_unref (&forest);
 }
 
-static void
-t8_test_point_inside_specific_triangle ()
-{
-  t8_cmesh_t          cmesh;
-  t8_forest_t         forest;
-  t8_element_t       *element;
-  double              vertices[9] = {
-    -0.353553, 0, 0.353553,
-    -0.46194, 0, 0.191342,
-    -0.326641, 0.191342, 0.326641
-  };
-  double              test_point[3] = {
-    0.358595, -0.150861, -0.314087
-  };
-  int                 point_is_definitely_outside;
-  int                 point_is_inside;
-  double             *tree_vertices;
-
-  t8_cmesh_init (&cmesh);
-  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
-  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 3);
-
-  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
-  forest =
-    t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0,
-                           sc_MPI_COMM_WORLD);
-  element = t8_forest_get_element (forest, 0, NULL);
-
-  /* Get the vertices of the tree */
-  tree_vertices = t8_forest_get_tree_vertices (forest, 0);
-
-  point_is_definitely_outside =
-    t8_forest_element_point_outside_quick_estimate (forest, 0,
-                                                    element,
-                                                    tree_vertices,
-                                                    test_point);
-
-  point_is_inside =
-    t8_forest_element_point_inside (forest, 0,
-                                    element, tree_vertices, test_point);
-
-  t8_debugf ("is_def_out: %i   is_ins: %i\n", point_is_definitely_outside,
-             point_is_inside);
-  if (point_is_definitely_outside) {
-    SC_CHECK_ABORT (!point_is_inside,
-                    "The outside estimate said the point is outside, but "
-                    "the inside check says the point is inside.");
-  }
-  SC_CHECK_ABORT (!point_is_inside,
-                  "The point is wrongly detected as inside the triangle.");
-
-  t8_forest_unref (&forest);
-}
-
 int
 main (int argc, char **argv)
 {
