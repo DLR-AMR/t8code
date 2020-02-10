@@ -66,7 +66,7 @@ typedef struct
 {
   t8_vtk_data_type_t  type; /**< Describes of which type the data array is */
   char                description[BUFSIZ];/**< String that describes the data. */
-  double             *data;
+  double             *data;     /* TODO: make this const */
                       /**< An array of length n*num_local_elements doubles with
                       n = 1 if type = T8_VTK_SCALAR, n = 3 if type = T8_VTK_VECTOR */
 } t8_vtk_data_field_t;
