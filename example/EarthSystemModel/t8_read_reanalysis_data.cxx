@@ -26,6 +26,7 @@
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_iterate.h>
+#include <t8_forest/t8_forest_partition.h>
 #include <t8_forest_vtk.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_vec.h>
@@ -535,29 +536,49 @@ t8_reanalysis_build_forest (const char *mesh_filename, double radius,
 
 typedef struct
 {
-  const double       *coordinates;      /* The array of coordinates of all points */
+  const double       *coordinates;      /* The array of coordinates of all points. 
+                                         * We assume that it is owned from outside and will not be destroyed if the search_data is destroyed. */
   sc_array_t         *matching_elements;        /* For each point an array of the element indices
                                                    that contain this point. (filled in the search query callback)
                                                  */
+  sc_array_t         *points_per_element;       /* For each element an array of the point indices
+                                                   of the points inside this elemnet (filled in the search query callback)
+                                                 */
   size_t              num_points;       /* The number of points. coordinates has 3 * num_points entries
                                            and matching_elements has num_points entries. */
+  t8_locidx_t         num_elements;     /* The number of elements. 
+                                           points_per_element has num_elements entries. */
   int                 matched_elements; /* Count how many matching elements we find. */
   int                 matched_points;   /* Count for how many points we find at least one element. */
-} t8_netcdf_search_user_data_t;
+  double              point_finding_tolerance;  /* Numerical tolerance used for finding the points. 
+                                                   The larger this value, the more points are found, 
+                                                   even if they may not directly lie in the element, but are just close. */
+  const double       *u10_data_per_element;     /* Interpolated u10 speed per element or NULL */
+  const double       *v10_data_per_element;     /* Interpolated v10 speed per element or NULL */
+  double              threshold;        /* Refinement threshold for refinement at u10v10 */
+} t8_netcdf_search_data_t;
 
 static void
-t8_netcdf_destroy_search_data (t8_netcdf_search_user_data_t ** psearch_data)
+t8_netcdf_destroy_search_data (t8_netcdf_search_data_t ** psearch_data)
 {
-  t8_netcdf_search_user_data_t *search_data;
+  t8_netcdf_search_data_t *search_data;
   T8_ASSERT (psearch_data != NULL);
   search_data = *psearch_data;
   if (search_data != NULL) {
     size_t              ipoint;
+    t8_locidx_t         ielement;
 
+    /* Free the matching_elements array */
     for (ipoint = 0; ipoint < search_data->num_points; ++ipoint) {
       sc_array_reset (search_data->matching_elements + ipoint);
     }
     T8_FREE (search_data->matching_elements);
+
+    /* Free the points_per_element array */
+    for (ielement = 0; ielement < search_data->num_elements; ielement++) {
+      sc_array_reset (search_data->points_per_element + ielement);
+    }
+    T8_FREE (search_data->points_per_element);
   }
   T8_FREE (search_data);
   *psearch_data = NULL;
@@ -600,18 +621,21 @@ t8_netcdf_find_mesh_elements_query (t8_forest_t forest,
     /* This point is not contained in this element, return 0 */
     return 0;
   }
+#else
+  is_definitely_outside = 0;
 #endif
 
+  t8_netcdf_search_data_t *user_data =
+    (t8_netcdf_search_data_t *) t8_forest_get_user_data (forest);
   /* The point may be inside the element. Do a proper check. */
   if (t8_forest_element_point_inside
-      (forest, ltreeid, element, tree_vertices, double_point)) {
+      (forest, ltreeid, element, tree_vertices, double_point,
+       user_data->point_finding_tolerance)) {
     T8_ASSERT (!is_definitely_outside); /* Should never happen */
     /* This point is contained in this element */
     if (is_leaf) {
       /* This element is a leaf element, we add its index to the list of
        * elements that contain this point */
-      t8_netcdf_search_user_data_t *user_data =
-        (t8_netcdf_search_user_data_t *) t8_forest_get_user_data (forest);
       /* In debugging mode we count how many points and elements we match */
       user_data->matched_elements++;
       if (user_data->matching_elements[point_index].elem_count == 0) {
@@ -628,6 +652,9 @@ t8_netcdf_find_mesh_elements_query (t8_forest_t forest,
       /* Add this index to the array of found elements */
       *(t8_locidx_t *) sc_array_push (user_data->matching_elements +
                                       point_index) = element_index;
+      /* Add the point's index to the array of points matching this element */
+      *(size_t *) sc_array_push (user_data->points_per_element +
+                                 element_index) = point_index;
     }
     /* Since the point is contained in the element, we return 1 */
     return 1;
@@ -638,22 +665,16 @@ t8_netcdf_find_mesh_elements_query (t8_forest_t forest,
   }
 }
 
-/* Given a forest and an array of points, identify the elements that contain
- * the points.
- * The points are given as one coordinate array in the format (x_0 y_0 z_0 x_1 y_1 z_1 ... )
- */
-t8_netcdf_search_user_data_t *
-t8_netcdf_find_mesh_elements (t8_forest_t forest, double *points,
-                              const size_t num_points)
+static void
+t8_netcdf_init_search_data (t8_forest_t forest, const double *points,
+                            const size_t num_points, const double tolerance,
+                            t8_netcdf_search_data_t * search_data)
 {
   sc_array_t         *matching_elements;
-  t8_netcdf_search_user_data_t *coords_and_matching_elements;
+  sc_array_t         *points_per_elements;
+  t8_locidx_t         num_elements, ielement;
   size_t              ipoint;
-  sc_array_t          queries;
-  double              search_runtime;
 
-  /* Allocate search data */
-  coords_and_matching_elements = T8_ALLOC (t8_netcdf_search_user_data_t, 1);
   /* Allocate as many arrays as we have points to store the
    * matching elements for each point */
   matching_elements = T8_ALLOC (sc_array_t, num_points);
@@ -661,12 +682,47 @@ t8_netcdf_find_mesh_elements (t8_forest_t forest, double *points,
   for (ipoint = 0; ipoint < num_points; ++ipoint) {
     sc_array_init (matching_elements + ipoint, sizeof (t8_locidx_t));
   }
+  /* Allocate the points per element arrays */
+  num_elements = t8_forest_get_num_element (forest);
+  points_per_elements = T8_ALLOC (sc_array_t, num_elements);
+  /* Initialize these arrays */
+  for (ielement = 0; ielement < num_elements; ++ielement) {
+    sc_array_init (points_per_elements + ielement, sizeof (size_t));
+  }
+
   /* Init user data for the search routine */
-  coords_and_matching_elements->num_points = num_points;
-  coords_and_matching_elements->coordinates = points;
-  coords_and_matching_elements->matching_elements = matching_elements;
-  coords_and_matching_elements->matched_elements = 0;
-  coords_and_matching_elements->matched_points = 0;
+  search_data->num_points = num_points;
+  search_data->num_elements = num_elements;
+  search_data->coordinates = points;
+  search_data->matching_elements = matching_elements;
+  search_data->points_per_element = points_per_elements;
+  search_data->point_finding_tolerance = tolerance;
+  /* Set start/default values */
+  search_data->matched_elements = 0;
+  search_data->matched_points = 0;
+  search_data->u10_data_per_element = NULL;
+  search_data->v10_data_per_element = NULL;
+  search_data->threshold = 0;
+}
+
+/* Given a forest and an array of points, identify the elements that contain
+ * the points.
+ * The points are given as one coordinate array in the format (x_0 y_0 z_0 x_1 y_1 z_1 ... )
+ */
+t8_netcdf_search_data_t *
+t8_netcdf_find_mesh_elements (t8_forest_t forest, double *points,
+                              const size_t num_points, const double tolerance)
+{
+  t8_netcdf_search_data_t *coords_and_matching_elements;
+  sc_array_t          queries;
+  double              search_runtime;
+
+  /* Allocate search data */
+  coords_and_matching_elements = T8_ALLOC (t8_netcdf_search_data_t, 1);
+
+  /* Initialize search data */
+  t8_netcdf_init_search_data (forest, points, num_points, tolerance,
+                              coords_and_matching_elements);
 
   /* Set this data as the forests user pointer */
   t8_forest_set_user_data (forest, coords_and_matching_elements);
@@ -689,13 +745,235 @@ t8_netcdf_find_mesh_elements (t8_forest_t forest, double *points,
   return coords_and_matching_elements;
 }
 
+typedef struct
+{
+  double             *u10_data_per_element;
+  double             *v10_data_per_element;
+} t8_netcdf_u10v10data_t;
+
+/* Refine callback that refines an element if its combined u10 and v10
+ * speed is larger (in absolute value) than a threshold. */
+static              t8_locidx_t
+t8_netcdf_refine_if_u10v10_large (t8_forest_t forest,
+                                  t8_forest_t forest_from,
+                                  t8_locidx_t which_tree,
+                                  t8_locidx_t lelement_id,
+                                  t8_eclass_scheme_c * ts,
+                                  int num_elements, t8_element_t * elements[])
+{
+  const t8_netcdf_search_data_t *u10v10data =
+    (const t8_netcdf_search_data_t *) t8_forest_get_user_data (forest);
+  t8_locidx_t         element_index;
+  const double        threshold = u10v10data->threshold;        /* Refine if absolute value is larger */
+  double              absolute_val;
+
+  /* Compute the index of the current element */
+  element_index =
+    t8_forest_get_tree_element_offset (forest_from, which_tree) + lelement_id;
+
+  absolute_val = fabs (u10v10data->u10_data_per_element[element_index])
+    + fabs (u10v10data->v10_data_per_element[element_index]);
+
+  if (absolute_val > threshold) {
+    /* Refine this element */
+    return 1;
+  }
+  return 0;
+}
+
+static              t8_locidx_t
+t8_netcdf_count_double_matched_elements (const t8_netcdf_search_data_t *
+                                         search_result)
+{
+  t8_locidx_t         ielement, num_double_matched = 0;
+
+  for (ielement = 0; ielement < search_result->num_elements; ++ielement) {
+    if (search_result->points_per_element[ielement].elem_count > 1) {
+      num_double_matched++;
+    }
+  }
+  return num_double_matched;
+}
+
+/* Refine callback that refines an element if multiple points were found
+ * for it. */
+static              t8_locidx_t
+t8_netcdf_refine_if_multiple_match (t8_forest_t forest,
+                                    t8_forest_t forest_from,
+                                    t8_locidx_t which_tree,
+                                    t8_locidx_t lelement_id,
+                                    t8_eclass_scheme_c * ts,
+                                    int num_elements,
+                                    t8_element_t * elements[])
+{
+  t8_netcdf_search_data_t *search_result;
+  t8_locidx_t         element_index;
+
+  /* Get the result of the last search */
+  search_result =
+    (t8_netcdf_search_data_t *) t8_forest_get_user_data (forest_from);
+  /* Compute the index of the current element */
+  element_index =
+    t8_forest_get_tree_element_offset (forest_from, which_tree) + lelement_id;
+
+  if (search_result->points_per_element[element_index].elem_count > 1) {
+    /* This element matched more than one point, we refine it */
+    return 1;
+  }
+  return 0;
+}
+
+/* Refine the forest in the elements that have multiple points found */
+static              t8_forest_t
+t8_netcdf_refine (t8_forest_t forest)
+{
+  t8_forest_t         forest_refine =
+    t8_forest_new_adapt (forest, t8_netcdf_refine_if_multiple_match,
+                         0, 0, NULL);
+
+  return forest_refine;
+}
+
+static void
+t8_netcdf_interpolate_to_refined_forest (t8_forest_t forest_old,
+                                         t8_forest_t forest_new,
+                                         t8_locidx_t which_tree,
+                                         t8_eclass_scheme_c * ts,
+                                         int num_outgoing,
+                                         t8_locidx_t first_outgoing,
+                                         int num_incoming,
+                                         t8_locidx_t first_incoming)
+{
+  t8_netcdf_search_data_t *search_data_old;
+  t8_netcdf_search_data_t *search_data_new;
+  t8_locidx_t         element_index_old, element_index_new;
+  sc_array_t         *points_per_element_old;
+  sc_array_t         *points_per_element_new;
+  t8_locidx_t         ichild;
+
+  search_data_old =
+    (t8_netcdf_search_data_t *) t8_forest_get_user_data (forest_old);
+  search_data_new =
+    (t8_netcdf_search_data_t *) t8_forest_get_user_data (forest_new);
+
+  element_index_old =
+    t8_forest_get_tree_element_offset (forest_old,
+                                       which_tree) + first_outgoing;
+  element_index_new =
+    t8_forest_get_tree_element_offset (forest_new,
+                                       which_tree) + first_incoming;
+
+  /* Get a pointer to the points per element array of the old and new element */
+  points_per_element_old =
+    &search_data_old->points_per_element[element_index_old];
+  points_per_element_new =
+    &search_data_new->points_per_element[element_index_new];
+
+  size_t              ipoint, point_index;
+  const double       *point;
+  t8_element_t       *child, *element;
+  double             *tree_vertices =
+    t8_forest_get_tree_vertices (forest_new, which_tree);
+
+  /* Loop over all points */
+  for (ipoint = 0; ipoint < points_per_element_old->elem_count; ++ipoint) {
+    /* Get the position of the point and get its coordinates */
+    point_index = *(size_t *) sc_array_index (points_per_element_old, ipoint);
+    point = &search_data_old->coordinates[3 * point_index];
+    t8_debugf ("Searching point %zd in children of elem %i\n", point_index,
+               element_index_old);
+
+    if (num_incoming == num_outgoing) {
+      T8_ASSERT (num_incoming == 1);
+      /* This element was not refined, we search again for
+       * the points that we initially found, but with the new tolerande. */
+      element =
+        t8_forest_get_element_in_tree (forest_new, which_tree,
+                                       first_incoming);
+      if (t8_forest_element_point_inside
+          (forest_new, which_tree, element, tree_vertices, point,
+           search_data_new->point_finding_tolerance)) {
+        /* This point is in this element, we add it to the new list */
+        *(size_t *) sc_array_push (points_per_element_new) = point_index;
+      }
+    }
+    else if (num_incoming > 1) {
+      /* This element is refined into num_incoming children */
+      /* For each point and each child we check whether the point is within the child. */
+
+      /* Loop over all children */
+      for (ichild = 0; ichild < num_incoming; ++ichild) {
+        t8_debugf ("child %i\n", ichild);
+        child =
+          t8_forest_get_element_in_tree (forest_new, which_tree,
+                                         first_incoming + ichild);
+        if (t8_forest_element_point_inside
+            (forest_new, which_tree, child, tree_vertices, point,
+             search_data_new->point_finding_tolerance)) {
+          t8_debugf ("found on child %i\n", ichild);
+          /* This point is in this element, we add it to the new list */
+          *(size_t *) sc_array_push (points_per_element_new + ichild) =
+            point_index;
+        }
+      }
+    }
+#if T8_ENABLE_DEBUG
+    else {
+      /* The element is coarsened. This should not happen. */
+      T8_ASSERT (0 && "Element is coarsened. This should not happen");
+    }
+#endif
+  }
+  for (ichild = 0; ichild < num_incoming; ++ichild) {
+    if ((points_per_element_new + ichild)->elem_count == 0
+        && points_per_element_old->elem_count > 0) {
+      /* There were points on this element before, but we did not find any now.
+       * In this case, we copy all points of the old element. */
+      sc_array_copy (points_per_element_new + ichild, points_per_element_old);
+    }
+  }
+}
+
+/* Given the original forest and a refined forest, we allocate
+ * new search data for the refined forest and interpolate the 
+ * data from the non refined forest.
+ * In particular for the elements that matched multiple points in the
+ * first forest we refined them and try to map the resulting points to
+ * the newly refined elements. */
+static void
+t8_netcdf_interpolate_data (t8_forest_t forest_refined,
+                            t8_forest_t forest_not_refined)
+{
+  t8_netcdf_search_data_t *search_data_old;
+  t8_netcdf_search_data_t *search_data_new;
+
+  search_data_old =
+    (t8_netcdf_search_data_t *) t8_forest_get_user_data (forest_not_refined);
+  /* Allocate new search data */
+  search_data_new = T8_ALLOC (t8_netcdf_search_data_t, 1);
+  /* Initialize new search data.
+   * We use the coordinates array of the old search data here. 
+   * We also use a smaller numerical tolerance. */
+  t8_netcdf_init_search_data (forest_refined, search_data_old->coordinates,
+                              search_data_old->num_points,
+                              search_data_old->point_finding_tolerance * .7,
+                              search_data_new);
+
+  /* Set this new search data as the user pointer of the refined forest */
+  t8_forest_set_user_data (forest_refined, search_data_new);
+
+  t8_forest_iterate_replace (forest_refined, forest_not_refined,
+                             t8_netcdf_interpolate_to_refined_forest);
+
+}
+
 static int
 t8_netcdf_read_data_to_forest (const char *filename, t8_forest_t forest,
                                const size_t num_latitude,
                                const size_t num_longitude,
                                const size_t num_timesteps,
-                               const t8_netcdf_search_user_data_t *
-                               search_results)
+                               t8_netcdf_search_data_t *
+                               search_results, sc_MPI_Comm comm)
 {
   double             *u10_data_per_element;
   double             *v10_data_per_element;
@@ -709,11 +987,12 @@ t8_netcdf_read_data_to_forest (const char *filename, t8_forest_t forest,
   const size_t        num_data_per_dimension[3] =
     { num_timesteps, num_latitude, num_longitude };
   const size_t        num_points = num_longitude * num_latitude;
-  t8_locidx_t         element_index, num_elements, matched_elements;
+  t8_locidx_t         num_elements, matched_elements, global_matched_elements;
   double              u10_scaling, v10_scaling;
   double              u10_offset, v10_offset;
   size_t              time_step;
-  size_t              ilat, ilong;
+  t8_locidx_t         ielement;
+  size_t              ipoint;
 
   T8_ASSERT (num_points <=
              num_data_per_dimension[0] * num_data_per_dimension[1]
@@ -863,54 +1142,96 @@ t8_netcdf_read_data_to_forest (const char *filename, t8_forest_t forest,
 
   time_step = 0;
   matched_elements = 0;
-  for (ilat = 0; ilat < countp[1]; ++ilat) {
-    for (ilong = 0; ilong < countp[2]; ++ilong) {
-      size_t              point_idx =
-        t8_netcdf_lat_long_to_point_index (ilat, ilong, countp[2]);
-      if (search_results->matching_elements[point_idx].elem_count > 0) {
-        /* This point was found in an element.
-         * We pick the first element where it was found in and store this
-         * points u10 data at that element. */
-        element_index =
-          *(t8_locidx_t *) sc_array_index (search_results->matching_elements +
-                                           point_idx, 0);
-        T8_ASSERT (0 <= element_index && element_index < num_elements);
-        T8_ASSERT (time_step == 0);     /* Currently time_step = 0 since we know better */
+  T8_ASSERT (num_elements == search_results->num_elements);
+  for (ielement = 0; ielement < num_elements; ++ielement) {
+    if (search_results->points_per_element[ielement].elem_count > 0) {
+      /* We found a point for this element */
+      /* We average the values of all these points and add them to the data. */
+      size_t              num_points_in_element =
+        search_results->points_per_element[ielement].elem_count;
+      for (ipoint = 0; ipoint < num_points_in_element; ++ipoint) {
+        size_t              point_idx = *(size_t *)
+          sc_array_index (&search_results->points_per_element[ielement],
+                          ipoint);
 
-        /* TODO: remove this if later, it is only for debugging */
-        if (u10_data_per_element[element_index] == 0) {
-          /* This element was (probably) not touched before, count it to the matched elements */
-          matched_elements++;
-        }
-        u10_data_per_element[element_index] =
+        /* Add all these values up */
+        u10_data_per_element[ielement] +=
           u10_data_from_file[point_idx] * u10_scaling + u10_offset;
-        v10_data_per_element[element_index] =
+        v10_data_per_element[ielement] +=
           v10_data_from_file[point_idx] * v10_scaling + v10_offset;
-        t8_debugf ("Writing %g to element %i from point %zd of %zd\n",
-                   u10_data_per_element[element_index],
-                   element_index, point_idx, num_points);
       }
+      /* Divdie by the number of values */
+      u10_data_per_element[ielement] /= num_points_in_element;
+      v10_data_per_element[ielement] /= num_points_in_element;
+      T8_ASSERT (time_step == 0);       /* Currently time_step = 0 is fixed */
+      matched_elements++;       /* Count this element as matched */
+
+      t8_debugf ("Writing %g to element %i from %zd points of %zd\n",
+                 u10_data_per_element[ielement],
+                 ielement, num_points_in_element, num_points);
+    }
+    else {
+      /* There is no point on this element. We store a large negative value in v10,
+         such that we can identify the element in the vtk. */
+      v10_data_per_element[ielement] = -10000;
     }
   }
-  t8_global_productionf ("Interpolated to %i elements.\n", matched_elements);
+
+  sc_MPI_Reduce (&matched_elements, &global_matched_elements, 1, sc_MPI_INT,
+                 sc_MPI_SUM, 0, comm);
+  t8_global_productionf ("Interpolated to %i elements.\n",
+                         global_matched_elements);
+
+  /* Store the interpolated u10 and v10 values in the search result */
+  search_results->u10_data_per_element = u10_data_per_element;
+  search_results->v10_data_per_element = v10_data_per_element;
+
+  t8_global_productionf ("Stored at %p\n", search_results);
+  t8_global_productionf ("At 100: %g  %g\n", u10_data_per_element[100],
+                         v10_data_per_element[100]);
+
+#if 0
+  /* Refine */
+  t8_forest_t         forest_refine;
   {
-    /* VTK output */
-    t8_vtk_data_field_t vtk_data[2];
-    vtk_data[0].data = u10_data_per_element;
-    vtk_data[1].data = v10_data_per_element;
-    strcpy (vtk_data[0].description, "u10");
-    strcpy (vtk_data[1].description, "v10");
-    vtk_data[0].type = T8_VTK_SCALAR;
-    vtk_data[1].type = T8_VTK_SCALAR;
-    t8_forest_vtk_write_file (forest, "test", 1, 1, 1, 1, 0, 2, vtk_data);
+    t8_netcdf_u10v10data_t refine_data =
+      { u10_data_per_element, v10_data_per_element };
+
+    t8_forest_ref (forest);
+    forest_refine =
+      t8_forest_new_adapt (forest, t8_netcdf_refine_if_u10v10_large, 0, 0,
+                           &refine_data);
+
+    t8_netcdf_interpolate_data (forest_refine, forest);
+    //t8_forest_write_vtk (forest_refine, "test_u10v10_refined");
+    //t8_forest_unref (&forest_refine);
+    forest = forest_refine;
   }
+#endif
+
   /* clean-up */
   free (u10_data_from_file);
-  T8_FREE (u10_data_per_element);
   free (v10_data_from_file);
-  T8_FREE (v10_data_per_element);
 
   return 0;
+}
+
+    /* VTK output
+     * We assume that a search_data object is set as the forest's user data */
+static void
+t8_netcdf_write_vtk (t8_forest_t forest, const char *fileprefix)
+{
+  t8_netcdf_search_data_t *search_result =
+    (t8_netcdf_search_data_t *) t8_forest_get_user_data (forest);
+  t8_vtk_data_field_t vtk_data[2];
+  vtk_data[0].data = (double *) search_result->u10_data_per_element;
+  vtk_data[1].data = (double *) search_result->v10_data_per_element;
+  T8_ASSERT (vtk_data[0].data != NULL && vtk_data[1].data != NULL);
+  strcpy (vtk_data[0].description, "u10");
+  strcpy (vtk_data[1].description, "v10");
+  vtk_data[0].type = T8_VTK_SCALAR;
+  vtk_data[1].type = T8_VTK_SCALAR;
+  t8_forest_vtk_write_file (forest, fileprefix, 1, 1, 1, 1, 0, 2, vtk_data);
 }
 
 int
@@ -975,11 +1296,14 @@ main (int argc, char **argv)
       t8_reanalysis_build_forest (mesh_filename, sphere_radius, sphere_dim,
                                   level,
                                   comm);
+    t8_forest_t         forest_refined;
+
     if (forest != NULL) {
       double             *coordinates_euclidean;
       size_t              num_coordinates;
       size_t              num_latitude, num_longitude;
-      t8_netcdf_search_user_data_t *search_result;
+      t8_netcdf_search_data_t *search_result;
+      const double        tolerance = 1e-1;
 
       retval = t8_netcdf_open_file (netcdf_filename, sphere_radius,
                                     &coordinates_euclidean, &num_latitude,
@@ -1003,14 +1327,155 @@ main (int argc, char **argv)
 #endif
         search_result =
           t8_netcdf_find_mesh_elements (forest, coordinates_euclidean,
-                                        num_coordinates);
+                                        num_coordinates, tolerance);
 
-        t8_netcdf_read_data_to_forest (netcdf_filename, forest,
+        /* Print double matched elements */
+        t8_global_productionf ("Matched %i elements at least twice\n",
+                               t8_netcdf_count_double_matched_elements
+                               (search_result));
+        /* We now refine the forest */
+        t8_forest_ref (forest); /* Ref the original forest since we need to use it after refinement */
+        /* Refine the forest in the elements that match multiple points */
+        forest_refined = t8_netcdf_refine (forest);
+        t8_netcdf_interpolate_data (forest_refined, forest);
+        t8_forest_write_vtk (forest, "test_prerefine");
+        /* Print double matched elements */
+        search_result = (t8_netcdf_search_data_t *)
+          t8_forest_get_user_data (forest_refined);
+        t8_global_productionf ("Matched %i elements at least twice\n",
+                               t8_netcdf_count_double_matched_elements
+                               (search_result));
+#if 0
+        /* Do a second run, refine/interpolate */
+        t8_forest_unref (&forest);
+        forest = forest_refined;
+        t8_forest_ref (forest);
+        forest_refined = t8_netcdf_refine (forest);
+        t8_netcdf_interpolate_data (forest_refined, forest);
+        t8_forest_write_vtk (forest, "test_prerefine2");
+        /* Print double matched elements */
+        search_result = (t8_netcdf_search_data_t *)
+          t8_forest_get_user_data (forest_refined);
+        t8_global_productionf ("Matched %i elements at least twice\n",
+                               t8_netcdf_count_double_matched_elements
+                               (search_result));
+#endif
+        /* Do a third run */
+        t8_forest_unref (&forest);
+        forest = forest_refined;
+        t8_forest_ref (forest);
+        forest_refined = t8_netcdf_refine (forest);
+        t8_netcdf_interpolate_data (forest_refined, forest);
+        t8_forest_write_vtk (forest, "test_prerefine3");
+
+        /* The old search_result was destroyed in the interpolate routine.
+         * Instead the updated search result is stored at the refined forest. */
+        search_result = (t8_netcdf_search_data_t *)
+          t8_forest_get_user_data (forest_refined);
+
+        t8_netcdf_read_data_to_forest (netcdf_filename, forest_refined,
                                        num_latitude, num_longitude, 1,
-                                       search_result);
+                                       search_result, comm);
+
+        t8_global_productionf ("Matched %i elements at least twice\n",
+                               t8_netcdf_count_double_matched_elements
+                               (search_result));
+
+        t8_netcdf_write_vtk (forest_refined, "test");
+
+        /* Refine the forest where u10 and v10 are large */
+        t8_global_productionf ("Start refining at u10v10\n");
+        /* Set threshold for refinement */
+        search_result->threshold = 6;
+        t8_forest_ref (forest_refined);
+        t8_forest_t         forest_refineu10v10 =
+          t8_forest_new_adapt (forest_refined,
+                               t8_netcdf_refine_if_u10v10_large,
+                               0, 0, search_result);
+        t8_netcdf_interpolate_data (forest_refineu10v10, forest_refined);
+        /* The old search_result was destroyed in the interpolate routine.
+         * Instead the updated search result is stored at the refined forest. */
+        search_result = (t8_netcdf_search_data_t *)
+          t8_forest_get_user_data (forest_refineu10v10);
+        /* Clean up the old element data */
+        T8_FREE ((void *) search_result->u10_data_per_element);
+        T8_FREE ((void *) search_result->v10_data_per_element);
+
+        t8_netcdf_read_data_to_forest (netcdf_filename, forest_refineu10v10,
+                                       num_latitude, num_longitude, 1,
+                                       search_result, comm);
+        /* Do another run */ t8_forest_ref (forest_refined);
+        /* Set threshold for refinement */
+        search_result->threshold = 15;
+        t8_forest_ref (forest_refineu10v10);
+        t8_forest_t         forest_refineu10v102 =
+          t8_forest_new_adapt (forest_refineu10v10,
+                               t8_netcdf_refine_if_u10v10_large,
+                               0, 0, search_result);
+        t8_netcdf_interpolate_data (forest_refineu10v102,
+                                    forest_refineu10v10);
+        /* The old search_result was destroyed in the interpolate routine.
+         * Instead the updated search result is stored at the refined forest. */
+        search_result = (t8_netcdf_search_data_t *)
+          t8_forest_get_user_data (forest_refineu10v102);
+        /* Clean up the old element data */
+        T8_FREE ((void *) search_result->u10_data_per_element);
+        T8_FREE ((void *) search_result->v10_data_per_element);
+
+        t8_netcdf_read_data_to_forest (netcdf_filename, forest_refineu10v102,
+                                       num_latitude, num_longitude, 1,
+                                       search_result, comm);
+        /* Repartition */
+        t8_forest_ref (forest_refineu10v102);
+        t8_forest_t         forest_partition;
+        sc_array_t          u10data_old_view;
+        sc_array_t          v10data_old_view;
+        sc_array_t          u10data_new_view;
+        sc_array_t          v10data_new_view;
+        t8_locidx_t         num_elements_partitioned;
+        double             *u10data_new, *v10data_new;
+        t8_netcdf_search_data_t search_result_partiioned;
+        sc_array_init_data (&u10data_old_view,
+                            (void *) search_result->u10_data_per_element,
+                            sizeof (*search_result->u10_data_per_element),
+                            search_result->num_elements);
+        sc_array_init_data (&v10data_old_view,
+                            (void *) search_result->u10_data_per_element,
+                            sizeof (*search_result->u10_data_per_element),
+                            search_result->num_elements);
+        t8_forest_init (&forest_partition);
+        t8_forest_set_partition (forest_partition, forest_refineu10v102, 0);
+        t8_forest_commit (forest_partition);
+        num_elements_partitioned =
+          t8_forest_get_num_element (forest_partition);
+        u10data_new = T8_ALLOC (double, num_elements_partitioned);
+        v10data_new = T8_ALLOC (double, num_elements_partitioned);
+        sc_array_init_data (&u10data_new_view, u10data_new, sizeof (double),
+                            num_elements_partitioned);
+        sc_array_init_data (&v10data_new_view, v10data_new, sizeof (double),
+                            num_elements_partitioned);
+        t8_forest_partition_data (forest_refineu10v102, forest_partition,
+                                  &u10data_old_view, &u10data_new_view);
+        t8_forest_partition_data (forest_refineu10v102, forest_partition,
+                                  &v10data_old_view, &v10data_new_view);
+        search_result->u10_data_per_element = u10data_new;
+        search_result->v10_data_per_element = v10data_new;
+        /* TODO: Careful, search_result does now only partly match the new forest.
+           the num_elements and matched_elements etc. arrays are still with the old forest. */
+        t8_forest_set_user_data (forest_partition, search_result);
+        t8_netcdf_write_vtk (forest_partition,
+                             "test_refinedu10v10_partitioned");
+
+        /* TODO: Store indices instead of values? interpolate must interpolated values to? */
+
         /* Clean-up */
         T8_FREE (coordinates_euclidean);
+        T8_FREE ((void *) search_result->u10_data_per_element);
+        T8_FREE ((void *) search_result->v10_data_per_element);
         t8_netcdf_destroy_search_data (&search_result);
+        t8_forest_unref (&forest_refined);
+        t8_forest_unref (&forest_refineu10v10);
+        t8_forest_unref (&forest_refineu10v102);
       }
       t8_forest_unref (&forest);
     }

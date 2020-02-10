@@ -52,7 +52,10 @@ T8_EXTERN_C_BEGIN ();
 
 /* TODO: if eclass is a vertex then num_outgoing/num_incoming are always
  *       1 and it is not possible to decide whether we are rfining or coarsening.
- *       Is this an issue? */
+ *       Is this an issue? Yes. We should use a flag -1,0,1 instead to
+ *        declare coarsening, nothing, refinement.
+ *       This is not limited to vertices. Since non-default schemes
+ *        may have elements with only 1 child. */
 /* TODO: We may also take the local element index within the tree as parameter.
  *       Otherwise we have to search for the elements if we want pointers to them.
  */
