@@ -337,4 +337,71 @@ t8_forest_adapt (t8_forest_t forest)
   }
 }
 
+/* A refinement callback function that works with a marker array.
+ * We expect the forest user_data pointer to point to an sc_array of short ints.
+ * We expect one int per element, which is interpreted as follows:
+ *    0 - this element should neither be refined nor coarsened
+ *    1 - refine this element
+ *   -1 - coarsen this elements (must be set for the whole family)
+ * other values are invalid.
+ */
+int
+t8_forest_adapt_marker_array_callback (t8_forest_t forest,
+                                       t8_forest_t forest_from,
+                                       t8_locidx_t which_tree,
+                                       t8_locidx_t lelement_id,
+                                       t8_eclass_scheme_c * ts,
+                                       int num_elements,
+                                       t8_element_t * elements[])
+{
+  T8_ASSERT (t8_forest_is_committed (forest_from));
+  /* Get a pointer to the user data. */
+  sc_array_t         *markers =
+    (sc_array_t *) t8_forest_get_user_data (forest);
+  /* The element has to have (at least) as many entries as elements.
+   * We allow additional entries, since they may be used outside this 
+   * function. For example for marker values for the ghost elements.
+   */
+  T8_ASSERT (markers->elem_count >= t8_forest_get_num_element (forest_from));
+  T8_ASSERT (markers->elem_size == sizeof (short));
+
+  /* Get the (process local) index of the current element by adding the tree offset
+   * to the tree local index. */
+  t8_locidx_t         element_index =
+    t8_forest_get_tree_element_offset (forest_from, which_tree) + lelement_id;
+  /* Get the marker value for this element */
+  short               marker_value =
+    *(short *) (t8_sc_array_index_locidx (markers, element_index));
+  T8_ASSERT (marker_value == 0 || marker_value == 1 || marker_value == -1);
+
+#ifdef T8_ENABLE_DEBUG
+  /* In debugging mode we check that
+   * if one member of a family is marked -1, then all are
+   */
+  if (num_elements > 1) {
+    int                 ielem;
+    int                 oneisminusone = 0;
+    int                 oneisnotminusone = 0;
+    short               temp_marker_value;
+    /* Iterate over elements and store if any element is -1
+     * and if any element is not -1. */
+    for (ielem = 0; ielem < num_elements; ++ielem) {
+      temp_marker_value =
+        *(short *) (t8_sc_array_index_locidx (markers, element_index));
+      if (temp_marker_value == -1) {
+        oneisminusone = 1;
+      }
+      else {
+        oneisnotminusone = 1;
+      }
+    }
+    /* If any element is -1, then all elements must be -1, thus
+     * no element is allowed to be not -1. */
+    T8_ASSERT (!(oneisminusone && oneisnotminusone));
+  }
+#endif
+  /* Return the marker of this element */
+  return marker_value;
+}
+
 T8_EXTERN_C_END ();
