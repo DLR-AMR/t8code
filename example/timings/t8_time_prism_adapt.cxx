@@ -137,7 +137,7 @@ t8_time_refine (int start_level, int end_level, int create_forest, int cube,
     t8_forest_set_partition (forest_partition, NULL, 0);
     /* enable profiling for the partitioned forest */
     t8_forest_set_profiling (forest_partition, 1);
-    /*if desired do balance*/
+    /*if desired do balance */
     if (do_balance) {
       t8_forest_set_balance (forest_partition, NULL, 0);
     }

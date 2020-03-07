@@ -20,6 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/* TODO: Document what this example does */
+
 #include <t8_forest/t8_forest_iterate.h>
 #include <sc_options.h>
 #include <sc_refcount.h>
