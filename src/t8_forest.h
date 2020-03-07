@@ -368,6 +368,16 @@ t8_locidx_t         t8_forest_get_num_element (t8_forest_t forest);
 
 t8_gloidx_t         t8_forest_get_global_num_elements (t8_forest_t forest);
 
+/** Query which type of ghost elements a forest has
+ * \param [in] forest The forest. Must be committed.
+ * \return            One of the possible ghost types. \see t8_ghost_type_t
+ *                    T8_GHOST_NONE     No ghosts.
+ *                    T8_GHOST_FACES    Ghosts across faces (= edges in 2D, = vertices in 1D).
+ *                    T8_GHOST_EDGES    3D only. Ghosts across edges (Currently not supported).
+ *                    T8_GHOST_VERTICES 2D/3D only. Ghosts across vertices (Currently not supported).
+ */
+t8_ghost_type_t     t8_forest_get_ghost_type (const t8_forest_t forest);
+
 /** Return the number of ghost elements of a forest.
  * \param [in]      forest      The forest.
  * \return                      The number of ghost elements stored in the ghost
