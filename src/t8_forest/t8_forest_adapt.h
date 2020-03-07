@@ -69,6 +69,25 @@ int                 t8_forest_adapt_marker_array_callback (t8_forest_t forest,
                                                            t8_element_t *
                                                            elements[]);
 
+/** Given a forest that is to be adapted, we fill an array with refinement
+ * markers. Thus, for each element we store either 0, 1, or -1, depending
+ * on what will happen with the element during refinement.
+ *  0 - nothing
+ *  1 - refine this element
+ * -1 - coarsen this element and all its siblings.
+ * \param [in] forest The forest to be adapted
+ * \param [in,out] markers An array of short ints with as many entries as local elements and ghosts.
+ *                         On return the entries of \a markers for the local elements (not the ghosts)
+ *                         will be set to 0, 1, or -1.
+ * \note This function is not used by the normal adapt function, but by \ref t8_forest_balance_and_adapt.
+ * We use this function if we want to adapt the forest but maybe adapt more (or less) then what the refinement
+ * function specifies. In \ref t8_forest_balance_and_adapt we adapt more elements until the resulting forest is balanced.
+ * \note The combination of \ref t8_forest_adapt_build_marker_array and an adapt call with \ref t8_forest_adapt_marker_array_callback
+ * as adapt function has the same result as using \ref t8_forest_adapt with the original adapt function. 
+ */
+void                t8_forest_adapt_build_marker_array (t8_forest_t forest,
+                                                        sc_array_t * markers);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_ADAPT_H! */

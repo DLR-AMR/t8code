@@ -407,4 +407,55 @@ t8_forest_adapt_marker_array_callback (t8_forest_t forest,
   return marker_value;
 }
 
+/* Given a forest that is to be adapted, we fill an array with refinement
+ * markers. Thus, for each element we store either 0, 1, or -1, depending
+ * on what will happen with the element during refinement.
+ *  0 - nothing
+ *  1 - refine this element
+ * -1 - coarsen this element and all its siblings.
+ */
+void
+t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers)
+{
+  t8_forest_t         forest_from = forest->set_from;
+  T8_ASSERT (t8_forest_is_committed (forest_from));
+  const t8_locidx_t   num_trees = t8_forest_get_num_local_trees (forest_from);
+  t8_locidx_t         ltreeid, ielement;
+  const t8_locidx_t   num_elements = t8_forest_get_num_element (forest_from);
+  t8_tree_t           tree;
+  for (ltreeid = 0; ltreeid < num_trees; ltreeid++) {
+    /* Get the tree's class, number of elements and scheme */
+    const t8_eclass_t   tree_class =
+      t8_forest_get_tree_class (forest_from, ltreeid);
+    const t8_locidx_t   elements_in_tree =
+      t8_forest_get_tree_num_elements (forest_from, ltreeid);
+    const t8_eclass_scheme_c *ts =
+      t8_forest_get_eclass_scheme (forest_from, tree_class);
+    /* Iterate over all elements of this tree and call the refinement function */
+    for (ielement = 0; ielement < elements_in_tree; ++ielement) {
+      /* Get a pointer to the element */
+      const t8_element_t *element =
+        t8_forest_get_element_in_tree (forest_from, ltreeid, ielement);
+      /* Compute the number of siblings */
+      const int           num_siblings =
+        ts->t8_element_num_siblings (element);
+      /* Compute whether this element and its next num_siblings followers are a family */
+      const int           is_family =
+        ielement + num_siblings <
+        elements_in_tree ? ts->t8_element_is_family (&element) : 0;
+      /* TODO: Use const in t8_element functions for element parameter. */
+      const int           adapt_value =
+        forest->set_adapt_fn (forest, forest->set_from, ltreeid,
+                              ielement, (t8_eclass_scheme_c *) ts,
+                              num_elements, &element);
+      /* TODO: Use const in parameters of adapt_fn and get rid of the type casts here. */
+      const t8_locidx_t   element_index =
+        ielement + t8_forest_get_tree_element_offset (forest_from, ltreeid);
+      /* Set the marker to 1, 0, or -1 depending on whether adapt_value is >0, 0, <0 */
+      *(short *) t8_sc_array_index_locidx (markers, element_index) =
+        adapt_value > 0 ? 1 : adapt_value == 0 ? 0 : -1;
+    }                           /* End of element loop */
+  }                             /* End of tree loop */
+}
+
 T8_EXTERN_C_END ();
