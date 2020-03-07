@@ -128,7 +128,7 @@ public:
                                               int level);
 
 /** Return nonzero if collection of elements is a family */
-  virtual int         t8_element_is_family (t8_element_t ** fam);
+  virtual int         t8_element_is_family (const t8_element_t ** fam) const;
 
 /** Construct the nearest common ancestor of two elements in the same tree. */
   virtual void        t8_element_nca (const t8_element_t * elem1,

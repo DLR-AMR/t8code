@@ -266,7 +266,8 @@ public:
    *                      \b ts has children.
    * \return              Zero if \b fam is not a family, nonzero if it is.
    */
-  virtual int         t8_element_is_family (t8_element_t ** fam) = 0;
+  virtual int         t8_element_is_family (const t8_element_t ** fam) const =
+    0;
 
   /* TODO: This could be problematic for pyramids, since elem1 and elem2
    *       could be of different classes. Would need two eclass_schemes as input */

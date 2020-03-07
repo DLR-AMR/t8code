@@ -113,7 +113,7 @@ typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
                                           t8_locidx_t lelement_id,
                                           t8_eclass_scheme_c * ts,
                                           int num_elements,
-                                          t8_element_t * elements[]);
+                                          const t8_element_t * elements[]);
 
   /** Create a new forest with reference count one.
  * This forest needs to be specialized with the t8_forest_set_* calls.

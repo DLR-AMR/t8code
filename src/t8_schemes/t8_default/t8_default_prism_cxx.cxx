@@ -225,8 +225,12 @@ t8_default_scheme_prism_c::t8_element_extrude_face (const t8_element_t * face,
   return t8_dprism_root_face_to_face ((const t8_dprism_t *) elem, root_face);
 }
 
+/* *INDENT-OFF* */
+/* indent bug, indent adds a second "const" modifier */
 int
-t8_default_scheme_prism_c::t8_element_is_family (t8_element_t ** fam)
+t8_default_scheme_prism_c::t8_element_is_family (const t8_element_t ** fam) const
+/* *INDENT-ON* */
+
 {
   return t8_dprism_is_familypv ((t8_dprism_t **) fam);
 }

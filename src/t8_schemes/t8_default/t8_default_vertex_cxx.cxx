@@ -165,8 +165,12 @@ t8_default_scheme_vertex_c::t8_element_ancestor_id (const t8_element_t * elem,
   return t8_dvertex_ancestor_id ((const t8_dvertex_t *) elem, level);
 }
 
+/* *INDENT-OFF* */
+/* indent bug, indent adds a second "const" modifier */
 int
-t8_default_scheme_vertex_c::t8_element_is_family (t8_element_t ** fam)
+t8_default_scheme_vertex_c::t8_element_is_family (const t8_element_t ** fam) const
+/* *INDENT-ON* */
+
 {
 #ifdef T8_ENABLE_DEBUG
   int                 i;

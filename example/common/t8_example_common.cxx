@@ -40,7 +40,7 @@ int
 t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
                          t8_locidx_t which_tree, t8_locidx_t lelement_id,
                          t8_eclass_scheme_c * ts, int num_elements,
-                         t8_element_t * elements[])
+                         const t8_element_t * elements[])
 {
   int                 level;
   int                 maxlevel, child_id;
@@ -66,7 +66,7 @@ t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
 /* Get the coordinates of the midpoint of an element */
 void
 t8_common_midpoint (t8_forest_t forest, t8_locidx_t which_tree,
-                    t8_eclass_scheme_c * ts, t8_element_t * element,
+                    t8_eclass_scheme_c * ts, const t8_element_t * element,
                     double elem_midpoint_f[3])
 {
   double             *tree_vertices;
@@ -81,7 +81,7 @@ t8_common_midpoint (t8_forest_t forest, t8_locidx_t which_tree,
 
 int
 t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid,
-                           t8_element_t * element,
+                           const t8_element_t * element,
                            t8_eclass_scheme_c * ts,
                            const double *tree_vertices,
                            t8_example_level_set_fn levelset,
@@ -149,7 +149,7 @@ t8_common_adapt_level_set (t8_forest_t forest,
                            t8_locidx_t which_tree,
                            t8_locidx_t lelement_id,
                            t8_eclass_scheme_c * ts,
-                           int num_elements, t8_element_t * elements[])
+                           int num_elements, const t8_element_t * elements[])
 {
   t8_example_level_set_struct_t *data;
   int                 within_band;
