@@ -320,6 +320,43 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   }
 }
 
+/* Adapt and balance a forest in the same step.
+ * We do not create any new elemnts until the final step.
+ * We perform these steps:
+ *  - Create an array of refinement markers from the adapt function.
+ *    Stating for each element whether it will get refined, coarsened or unchanged.
+ *  - Iterate through all elements that will be unchanged or coarsened and check whether the balance
+ *    condition will break. If so, change their refinement marker appropiately.
+ *  - Repeat step 2 until no marker changes.
+ *  - Carry out the refinement via the markers.
+ */
+void
+t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
+{
+  t8_forest_t         forest_from = forest->set_from;
+  /* The forest from must be committed and balanced */
+  T8_ASSERT (t8_forest_is_committed (forest_from));
+  T8_ASSERT (t8_forest_is_balanced (forest_from));
+
+  /* We assume that we have ghost elements in forest_from. */
+  T8_ASSERT (t8_forest_get_ghost_type (forest_from) == T8_GHOST_FACES);
+  const t8_locidx_t   num_local_elements =
+    t8_forest_get_num_element (forest_from);
+  const t8_locidx_t   num_ghosts = t8_forest_get_num_ghosts (forest_from);
+  sc_array_t          markers;
+
+  sc_array_init_size (&markers, sizeof (short),
+                      num_local_elements + num_ghosts);
+
+  /* We now create the refinement markers.
+   * +1 means refine the element
+   *  0 means do nothing
+   * -1 means coarsen the family (must be set for all members of the family)
+   */
+  t8_locidx_t         ielement;
+  /* TODO: Continue */
+}
+
 /* Check whether the local elements of a forest are balanced. */
 int
 t8_forest_is_balanced (t8_forest_t forest)
