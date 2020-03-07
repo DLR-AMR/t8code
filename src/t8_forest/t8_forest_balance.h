@@ -21,7 +21,7 @@
 */
 
 /** \file t8_forest_balance.h
- * We define the balance routine to establish a 1:2 balance among the elements
+ * We define the balance routine to establish a 2:1 balance among the elements
  * in a forest.
  */
 
