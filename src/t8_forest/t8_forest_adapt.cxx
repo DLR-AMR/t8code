@@ -227,9 +227,8 @@ t8_forest_adapt (t8_forest_t forest)
 #endif
       }
       T8_ASSERT (!is_family
-                 || tscheme->
-                 t8_element_is_family ((const t8_element_t **)
-                                       elements_from));
+                 || tscheme->t8_element_is_family ((const t8_element_t **)
+                                                   elements_from));
       refine =
         forest->set_adapt_fn (forest, forest->set_from, ltree_id,
                               el_considered, tscheme, num_elements,

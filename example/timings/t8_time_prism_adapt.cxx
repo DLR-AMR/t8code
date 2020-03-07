@@ -228,8 +228,8 @@ main (int argc, char **argv)
   else if (parsed >= 0 && 0 <= start_level && start_level <= end_level
            && (eclass_int == 5 || eclass_int == 6)) {
     create_forest = 1;
-    t8_time_refine (start_level, end_level, create_forest, cube, adapt, do_balance,
-                    (t8_eclass_t) eclass_int);
+    t8_time_refine (start_level, end_level, create_forest, cube, adapt,
+                    do_balance, (t8_eclass_t) eclass_int);
   }
   else {
     /* wrong usage */
