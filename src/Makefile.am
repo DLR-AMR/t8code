@@ -54,7 +54,7 @@ LDADD += @top_builddir@/src/libt8.la \
 EXTRA_src_libt8_la_DEPENDENCIES = @T8_P4EST_LDADD@ @T8_SC_LDADD@
 
 nodist_include_HEADERS += $(libt8_generated_headers)
-include_HEADERS += $(libt8_installed_headers)
+nobase_dist_include_HEADERS += $(libt8_installed_headers)
 
 AM_CPPFLAGS += -I@top_srcdir@/src \
         @T8_SC_CPPFLAGS@ @T8_P4EST_CPPFLAGS@
