@@ -20,7 +20,7 @@ jobs:
 # Setup and bootstrap
     - uses: actions/checkout@v1
     - name: Install mpich
-      run: sudo apt-get install libmpich-dev
+      run: sudo apt-get update && sudo apt-get install libmpich-dev
     - name: init submodules
       run: git submodule init
     - name: update submodules
