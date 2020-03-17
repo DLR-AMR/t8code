@@ -23,9 +23,11 @@ jobs:
       run: git submodule init
     - name: update submodules
       run: git submodule update
+    - name: install indent
+      run: sudo apt-get install indent
     - name: indent check
       run: cd scripts && ./check_if_all_files_indented.scp > allFilesIndented.out
-    - name: OnFailPrintOutpu
+    - name: OnFailPrintOutput
       if: failure()
       run: cat scripts/allFilesIndented.out
     - name: bootstrap
