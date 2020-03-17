@@ -19,19 +19,20 @@ jobs:
     steps:
 # Setup and bootstrap
     - uses: actions/checkout@v1
-    - name: Install mpich
-      run: sudo apt-get update && sudo apt-get install libmpich-dev
     - name: init submodules
       run: git submodule init
     - name: update submodules
       run: git submodule update
     - name: indent check
-      run: ./scripts/check_if_all_files_indented.scp > allFilesIndented.out
+      run: cd scripts && ./check_if_all_files_indented.scp > allFilesIndented.out
     - name: OnFailPrintOutpu
       if: failure()
-      run: cat allFilesIndented.out
+      run: cat scripts/allFilesIndented.out
     - name: bootstrap
       run: ./bootstrap
+# install MPI
+    - name: Install mpich
+      run: sudo apt-get update && sudo apt-get install libmpich-dev
 # configure and test with MPI (release mode)
     - name: check release mode
       run: echo "Checking release mode (MPI)"
