@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# This script checks whether all .c .h .cxx and .hxx
+# files in t8code are properly indented.
+#
+# Returns 0 if yes and not 0 if not.
+#
+# Copyright Johannes Holke 2020
+
+
+# All valid file suffixes.
+# Seperated by '|' in order to be directly used
+# as a regex in the find command.
+
+# suffixes="c|cxx|h|hxx"
+suffixes="c"
+
+# Find all files with the appropriate suffix.
+# Excluding the sc/ and p4est/ subfolders.
+files=`find .. -regextype egrep -iregex ".*\.($suffixes)" -o -type d \( -path ../sc -o -path ../p4est \) -prune`
+
+notallindented=0
+for file in $files
+do
+  # Find also give as directories,
+  # so we ensure that $file is a proper
+  # file before checking for indentation.
+  if [ -f $file ]
+  then
+    ./check_if_file_indented.scp $file
+    status=$?
+    if test $status -ne 0 
+    then
+      echo "File $file is not indented."
+      notallindented=1
+    fi
+  fi
+done
+
+exit $notallindented
