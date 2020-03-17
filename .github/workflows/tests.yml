@@ -25,6 +25,11 @@ jobs:
       run: git submodule init
     - name: update submodules
       run: git submodule update
+    - name: indent check
+      run: ./scripts/check_if_all_files_indented.scp > allFilesIndented.out
+    - name: OnFailPrintOutpu
+      if: failure()
+      run: cat allFilesIndented.out
     - name: bootstrap
       run: ./bootstrap
 # configure and test with MPI (release mode)
