@@ -43,11 +43,7 @@ do
   if [ $FILE_ENDING = "c" -o $FILE_ENDING = "h" -o $FILE_ENDING = "cxx" -o $FILE_ENDING = "hxx" ]
   then
     echo "Checking file $file"
-    # indent the source file and store temporarily
-    $INDENT -o $TMP_FILE $file 
-    # Check whether the indented file and the original differ
-    # We are only interested in the exit status of diff so we throw away its output.
-    diff -q $TMP_FILE $file > /dev/null
+    scripts/check_if_file_indented.scp $file $INDENT
     status=$?
     if test $status -ne 0 
     then

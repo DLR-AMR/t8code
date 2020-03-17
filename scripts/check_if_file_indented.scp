@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# Give a filename as input this script checks
+# whether the file is correctly indented.
+# Optionally we can provide the inden script
+# as second argument.
+#
+# The return value of this script is 0 if the 
+# file is properly indented and not 0 if it is not.
+#
+# Copyright Johannes Holke 2020
+
+
+usage="$0 FILENAME [INDENT_SCRIPT]"
+
+# Check if first argument given
+if [ x$1 = x ]
+then
+  echo ERROR: Need to provide a file as first argument.
+  echo $usage
+  exit 1
+fi
+
+# Check if first argument is a file and store it in variable
+if [ -f $1 ]
+  then
+  file=$1
+else
+  echo ERROR: Non existing file.
+  echo $usage
+  exit 1
+fi
+
+# Check if second argument given and set indent script
+if [ x$2 = x ]
+then
+  # Set default indent script
+  INDENT=./t8indent
+else
+  # Set second argument as indent script
+  INDENT=$2
+fi
+
+# Here is the actual checking part
+#
+# We only check files with .c, .h, .cxx, .hxx suffix
+FILE_SUFFIX="${file##*.}"
+if [ $FILE_SUFFIX = "c" -o $FILE_SUFFIX = "h" -o $FILE_SUFFIX = "cxx" -o $FILE_SUFFIX = "hxx" ]
+  then
+  # Create temp file
+  TMP_FILE=`mktemp`
+  # indent the source file and store temporarily
+  $INDENT -o $TMP_FILE $file
+  # Check whether the indented file and the original differ
+  # We are only interested in the exit status of diff so we throw away its output.
+  diff -q $TMP_FILE $file > /dev/null
+  status=$?
+  exit $status
+else
+  echo "ERROR: File does not have valid suffix (.c .h .cxx .hxx)."
+fi
