@@ -66,9 +66,12 @@ jobs:
       run: echo "Checking debug mode"
     - name: configure
       run: ./configure --enable-mpi --without-blas --enable-debug
-    - name: OnFailPrintLog
+    - name: OnFailUploadLog
       if: failure()
-      run: cat config.log
+      uses: actions/upload-artifact@v1
+      with:
+        name: config.log
+        path: config.log
     - name: make
       run: make -j V=0
     - name: make check
@@ -80,13 +83,22 @@ jobs:
       run: echo "Checking C++, release mode (MPI)"
     - name: configure
       run: ./configure CC=mpicxx CXX=mpicxx --enable-mpi --without-blas --enable-debug
-    - name: OnFailPrintLog
+    - name: OnFailUploadLog
       if: failure()
-      run: cat config.log
+      uses: actions/upload-artifact@v1
+      with:
+        name: config.log
+        path: config.log
     - name: make
       run: make -j V=0
     - name: make check
       run: make check -j4 V=0
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v1
+      with:
+        name: test-suite.log
+        path: test-suite.log
     - name: clean up
       run: make distclean
 # configure and test serial (release mode)
@@ -94,13 +106,22 @@ jobs:
       run: echo "Checking serial release mode"
     - name: configure
       run: ./configure --without-blas
-    - name: OnFailPrintLog
+    - name: OnFailUploadLog
       if: failure()
-      run: cat config.log
+      uses: actions/upload-artifact@v1
+      with:
+        name: config.log
+        path: config.log
     - name: make
       run: make -j V=0
     - name: make check
       run: make check -j4 V=0
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v1
+      with:
+        name: test-suite.log
+        path: test-suite.log
     - name: clean up
       run: make distclean
 # configure and test serial (debug mode)
@@ -108,12 +129,21 @@ jobs:
       run: echo "Checking debugging mode"
     - name: configure
       run: ./configure --without-blas --enable-debug
-    - name: OnFailPrintLog
+    - name: OnFailUploadLog
       if: failure()
-      run: cat config.log
+      uses: actions/upload-artifact@v1
+      with:
+        name: config.log
+        path: config.log
     - name: make
       run: make -j V=0
     - name: make check
       run: make check -j4 V=0
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v1
+      with:
+        name: test-suite.log
+        path: test-suite.log
     - name: clean up
       run: make distclean
