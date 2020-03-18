@@ -46,8 +46,6 @@ main (int argc, char **argv)
   int                 mpiret;
   int                 eclass;
 
-  return 1;                     /* Create temp  failure */
-
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
