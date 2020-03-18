@@ -42,7 +42,7 @@ jobs:
     - name: check release mode
       run: echo "Checking release mode (MPI)"
     - name: configure
-      run: ./configure --enable-mpi --without-blas
+      run: ./configure --enable-mpi --without-blas CC=blub
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v1
