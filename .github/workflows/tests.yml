@@ -47,7 +47,7 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v1
       with:
-        name: config.log
+        name: config_release_MPI.log
         path: config.log
     - name: make
       run: make -j V=0
@@ -57,7 +57,7 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v1
       with:
-        name: test-suite.log
+        name: test-suite_release_MPI.log
         path: test-suite.log
     - name: clean up
       run: make distclean
@@ -70,12 +70,18 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v1
       with:
-        name: config.log
+        name: config_debug_MPI.log
         path: config.log
     - name: make
       run: make -j V=0
     - name: make check
       run: make check -j4 V=0
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v1
+      with:
+        name: test-suite_debug_MPI.log
+        path: test-suite.log
     - name: clean up
       run: make distclean
 # configure and test with MPI (C++ compiler only, release mode)
@@ -87,7 +93,7 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v1
       with:
-        name: config.log
+        name: config_release_MPI_CXX.log
         path: config.log
     - name: make
       run: make -j V=0
@@ -97,7 +103,7 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v1
       with:
-        name: test-suite.log
+        name: test-suite_release_MPI_cxx.log
         path: test-suite.log
     - name: clean up
       run: make distclean
@@ -110,7 +116,7 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v1
       with:
-        name: config.log
+        name: config_release_serial.log
         path: config.log
     - name: make
       run: make -j V=0
@@ -120,7 +126,7 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v1
       with:
-        name: test-suite.log
+        name: test-suite_release_serial.log
         path: test-suite.log
     - name: clean up
       run: make distclean
@@ -133,7 +139,7 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v1
       with:
-        name: config.log
+        name: config_debug_serial.log
         path: config.log
     - name: make
       run: make -j V=0
@@ -143,7 +149,7 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v1
       with:
-        name: test-suite.log
+        name: test-suite_debug_serial.log
         path: test-suite.log
     - name: clean up
       run: make distclean
