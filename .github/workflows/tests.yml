@@ -26,13 +26,13 @@ jobs:
     - name: install indent
       run: sudo apt-get install indent
     - name: indent check
-      run: cd scripts && ./check_if_all_files_indented.scp > allFilesIndented.out
+      run: cd scripts && ./check_if_all_files_indented.scp > indentErrorLog.txt
     - name: OnFailUploadOutput
       if: failure()
-      uses: actions/upload-artifact@v1
-      with:
-        name: allFilesIndented.out
-        path: scripts/allFilesIndented.out
+        uses: actions/upload-artifact@v1
+        with:
+          name: indentErrorLog.txt
+          path: scripts/indentErrorLog.txt
     - name: bootstrap
       run: ./bootstrap
 # install MPI
