@@ -27,9 +27,12 @@ jobs:
       run: sudo apt-get install indent
     - name: indent check
       run: cd scripts && ./check_if_all_files_indented.scp > allFilesIndented.out
-    - name: OnFailPrintOutput
+    - name: OnFailUploadOutput
       if: failure()
-      run: cat scripts/allFilesIndented.out
+      uses: actions/upload-artifact@v1
+      with:
+        name: allFilesIndented.out
+        path: scripts/allFilesIndented.out
     - name: bootstrap
       run: ./bootstrap
 # install MPI
