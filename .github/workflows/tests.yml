@@ -26,7 +26,7 @@ jobs:
     - name: install indent
       run: sudo apt-get install indent
     - name: indent check
-      run: cd . # scripts && ./check_if_all_files_indented.scp > indentErrorLog.txt
+      run: cd scripts && ./check_if_all_files_indented.scp > indentErrorLog.txt
     - name: OnFailUploadOutput
       if: failure()
       uses: actions/upload-artifact@v1
