@@ -29,10 +29,10 @@ jobs:
       run: cd . # scripts && ./check_if_all_files_indented.scp > indentErrorLog.txt
     - name: OnFailUploadOutput
       if: failure()
-        uses: actions/upload-artifact@v1
-        with:
-          name: indentErrorLog.txt
-          path: scripts/indentErrorLog.txt
+      uses: actions/upload-artifact@v1
+      with:
+        name: indentErrorLog.txt
+        path: scripts/indentErrorLog.txt
     - name: bootstrap
       run: ./bootstrap
 # install MPI
@@ -45,8 +45,9 @@ jobs:
       run: ./configure --enable-mpi --without-blas
     - name: OnFailUploadLog
       if: failure()
-        uses: actions/upload-artifact@v1
-        with: config.log
+      uses: actions/upload-artifact@v1
+      with:
+        name: config.log
         path: config.log
     - name: make
       run: make -j V=0
@@ -54,8 +55,9 @@ jobs:
       run: make check -j4 V=0
     - name: OnFailUploadLog
       if: failure()
-        uses: actions/upload-artifact@v1
-        with: test-suite.log
+      uses: actions/upload-artifact@v1
+      with:
+        name: test-suite.log
         path: test-suite.log
     - name: clean up
       run: make distclean
