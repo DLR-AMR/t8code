@@ -358,7 +358,7 @@ t8_forest_adapt_marker_array_callback (t8_forest_t forest,
                                        t8_locidx_t lelement_id,
                                        t8_eclass_scheme_c * ts,
                                        int num_elements,
-                                       t8_element_t * elements[])
+                                       const t8_element_t * elements[])
 {
   T8_ASSERT (t8_forest_is_committed (forest_from));
   /* Get a pointer to the user data. */

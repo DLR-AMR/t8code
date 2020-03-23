@@ -363,7 +363,7 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
   /* We can now finally refine and coarsen the elements according to the markers.
    * In order to do so, we use the existing adapt functions and have the 
    * t8_forest_adapt_marker_array_callback function as adapt callback. */
-  forest->set_adapt_fn = t8_forest_adapt_marker_array_callback ();
+  forest->set_adapt_fn = t8_forest_adapt_marker_array_callback;
 
   /* Temporarily store the current user data in order to set
    * the markers array as user data for adaptation. */

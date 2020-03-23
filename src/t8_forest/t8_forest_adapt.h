@@ -66,8 +66,8 @@ int                 t8_forest_adapt_marker_array_callback (t8_forest_t forest,
                                                            t8_eclass_scheme_c
                                                            * ts,
                                                            int num_elements,
-                                                           t8_element_t *
-                                                           elements[]);
+                                                           const t8_element_t
+                                                           * elements[]);
 
 /** Given a forest that is to be adapted, we fill an array with refinement
  * markers. Thus, for each element we store either 0, 1, or -1, depending
