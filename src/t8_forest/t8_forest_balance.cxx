@@ -337,6 +337,8 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
   /* The forest from must be committed and balanced */
   T8_ASSERT (t8_forest_is_committed (forest_from));
   T8_ASSERT (t8_forest_is_balanced (forest_from));
+  /* This technique does not allow for recursive adaptation. */
+  T8_ASSERT (forest->set_adapt_recursive == 0);
 
   /* We assume that we have ghost elements in forest_from. */
   T8_ASSERT (t8_forest_get_ghost_type (forest_from) == T8_GHOST_FACES);
@@ -345,6 +347,7 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
   const t8_locidx_t   num_ghosts = t8_forest_get_num_ghosts (forest_from);
   sc_array_t          markers;
 
+  /* Initialize refinement markers for all elements and ghosts */
   sc_array_init_size (&markers, sizeof (short),
                       num_local_elements + num_ghosts);
 
@@ -353,8 +356,23 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
    *  0 means do nothing
    * -1 means coarsen the family (must be set for all members of the family)
    */
-  t8_locidx_t         ielement;
-  /* TODO: Continue */
+  t8_forest_adapt_build_marker_array (forest, &markers);
+
+  /* TODO: iterate through marker array and restore balance condition */
+
+  /* We can now finally refine and coarsen the elements according to the markers.
+   * In order to do so, we use the existing adapt functions and have the 
+   * t8_forest_adapt_marker_array_callback function as adapt callback. */
+  forest->set_adapt_fn = t8_forest_adapt_marker_array_callback ();
+
+  /* Temporarily store the current user data in order to set
+   * the markers array as user data for adaptation. */
+  void               *user_pointer_safe = t8_forest_get_user_data (forest);
+  t8_forest_set_user_data (forest, &markers);
+  /* TODO: Adapt the forest */
+  t8_forest_adapt (forest);
+  /* Restore the user data */
+  t8_forest_set_user_data (user_pointer_safe);
 }
 
 /* Check whether the local elements of a forest are balanced. */

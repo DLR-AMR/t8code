@@ -348,6 +348,8 @@ t8_forest_adapt (t8_forest_t forest)
  *    1 - refine this element
  *   -1 - coarsen this elements (must be set for the whole family)
  * other values are invalid.
+ * The array may be longer (to include ghosts for example), but the additional
+ * entries are ignored.
  */
 int
 t8_forest_adapt_marker_array_callback (t8_forest_t forest,
@@ -420,6 +422,7 @@ t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers)
 {
   t8_forest_t         forest_from = forest->set_from;
   T8_ASSERT (t8_forest_is_committed (forest_from));
+  T8_ASSERT (forest->set_adapt_fn != NULL);
   const t8_locidx_t   num_trees = t8_forest_get_num_local_trees (forest_from);
   t8_locidx_t         ltreeid, ielement;
   const t8_locidx_t   num_elements = t8_forest_get_num_element (forest_from);
