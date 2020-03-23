@@ -163,7 +163,8 @@ t8_forest_adapt (t8_forest_t forest)
 
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->set_from != NULL);
-  T8_ASSERT (forest->set_adapt_recursive != -1);
+  T8_ASSERT (forest->set_adapt_recursive == 0
+             || forest->set_adapt_recursive == 1);
 
   /* if profiling is enabled, measure runtime */
   if (forest->profile != NULL) {

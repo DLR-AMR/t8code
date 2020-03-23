@@ -230,8 +230,9 @@ void                t8_forest_set_copy (t8_forest_t forest,
  * \param [in] adapt_fn     The adapt function used on commiting.
  * \param [in] replace_fn   The replace function to be used in \b adapt_fn.
  * \param [in] recursive    A flag specifying whether adaptation is to be done recursively
- *                          or not. If the value is zero, adaptation is not recursive
- *                          and it is recursive otherwise.
+ *                          or not. If the value is zero, adaptation is not recursive.
+ *                          If the value is greater than zero, adaptation is recursive.
+ *                          Negative values are not valid.
  * \note This setting can be combined with \ref t8_forest_set_partition and \ref
  * t8_forest_set_balance. The order in which these operations are executed is always
  * 1) Adapt 2) Balance 3) Partition

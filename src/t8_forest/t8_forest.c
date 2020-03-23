@@ -283,9 +283,10 @@ t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from,
   T8_ASSERT (forest->scheme_cxx == NULL);
   T8_ASSERT (forest->set_adapt_fn == NULL);
   T8_ASSERT (forest->set_adapt_recursive == -1);
+  T8_ASSERT (adapt_fn != NULL);
 
   forest->set_adapt_fn = adapt_fn;
-  forest->set_adapt_recursive = recursive != 0;
+  forest->set_adapt_recursive = recursive != 0 ? 1 : 0;
 
   if (set_from != NULL) {
     /* If set_from = NULL, we assume a previous forest_from was set */
