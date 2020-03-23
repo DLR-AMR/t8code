@@ -372,7 +372,7 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
   /* TODO: Adapt the forest */
   t8_forest_adapt (forest);
   /* Restore the user data */
-  t8_forest_set_user_data (user_pointer_safe);
+  t8_forest_set_user_data (forest, user_pointer_safe);
 }
 
 /* Check whether the local elements of a forest are balanced. */
