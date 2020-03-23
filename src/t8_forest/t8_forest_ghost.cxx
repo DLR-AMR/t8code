@@ -837,11 +837,13 @@ typedef struct
 static int
 t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
                                  const t8_element_t * element,
+                                 const int is_leaf,
                                  t8_element_array_t * leafs,
-                                 void *user_data, t8_locidx_t tree_leaf_index)
+                                 t8_locidx_t tree_leaf_index, void *query,
+                                 size_t query_index)
 {
   t8_forest_ghost_boundary_data_t *data =
-    (t8_forest_ghost_boundary_data_t *) user_data;
+    (t8_forest_ghost_boundary_data_t *) t8_forest_get_user_data (forest);
   int                 num_faces, iface, faces_totally_owned, level;
   int                 parent_face;
   int                 lower, upper, *bounds, *new_bounds, parent_lower,
@@ -925,7 +927,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
       upper = parent_upper;
     }
 
-    if (tree_leaf_index < 0) {
+    if (!is_leaf) {
       /* The element is not a leaf, we compute bounds for the face neighbor owners,
        * if all face neighbors are owned by this rank, and the element is completely
        * owned, then we do not continue the search. */
@@ -964,6 +966,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
     }
   }                             /* end face loop */
 #if 0
+  /* TODO: can we remove this code? */
   if (element_is_owned || face_totally_owned) {
     /* Either all descendants of element are owned by the current rank
      * or all of its leafs at the face are. */
@@ -1001,8 +1004,8 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
 static void
 t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
 {
-
   t8_forest_ghost_boundary_data_t data;
+  void               *store_user_data = NULL;
 
   /* Start with invalid entries in the user data.
    * These are set in t8_forest_ghost_search_boundary each time
@@ -1017,9 +1020,17 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
   /* This is a dummy init, since we call sc_array_reset in ghost_search_boundary
    * and we should not call sc_array_reset on a non-initialized array */
   sc_array_init (&data.bounds_per_level, 1);
+  /* Store any user data that may reside on the forest */
+  store_user_data = t8_forest_get_user_data (forest);
+  /* Set the user data for the search routine */
+  t8_forest_set_user_data (forest, &data);
   /* Loop over the trees of the forest */
-  t8_forest_search (forest, t8_forest_ghost_search_boundary, &data);
+  t8_forest_search (forest, t8_forest_ghost_search_boundary, NULL, NULL);
 
+  /* Reset the user data from before search */
+  t8_forest_set_user_data (forest, store_user_data);
+
+  /* Reset the data arrays */
   sc_array_reset (&data.face_owners);
   sc_array_reset (&data.bounds_per_level);
 #ifdef T8_ENABLE_DEBUG

@@ -171,6 +171,7 @@ t8_shmem_array_t    t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
  *                                  must be strictly smaller than \a first_local_tree.
  *
  * \see t8_cmesh_set_partition_offset \see t8_cmesh_set_partition_uniform
+ * \note A value of \a set_face_knowledge other than -1 or 3 is not yet supported.
  */
 void                t8_cmesh_set_partition_range (t8_cmesh_t cmesh,
                                                   int set_face_knowledge,
