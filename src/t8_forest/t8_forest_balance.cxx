@@ -373,6 +373,13 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
   t8_forest_adapt (forest);
   /* Restore the user data */
   t8_forest_set_user_data (forest, user_pointer_safe);
+  /* TODO: Write a test for this function.
+   *       - First test: a mesh that does not need to be balanced,
+   *                     verify that this function does the same as adapt.
+   *       - second test: a mesh that does need to be balanced,
+   *                     verify that this function  produces the same forest
+   *                     as doing first adapt and then balance.
+   */
 }
 
 /* Check whether the local elements of a forest are balanced. */
