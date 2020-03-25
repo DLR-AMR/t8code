@@ -346,19 +346,32 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
     t8_forest_get_num_element (forest_from);
   const t8_locidx_t   num_ghosts = t8_forest_get_num_ghosts (forest_from);
   sc_array_t          markers;
+  sc_list_t           elements_that_do_not_refine;
 
   /* Initialize refinement markers for all elements and ghosts */
   sc_array_init_size (&markers, sizeof (short),
                       num_local_elements + num_ghosts);
+
+  /* Initialize a list of the element indices that do not get refined (markes[i] != 1).
+   * These are the elements for which we have to check whether they need to get refined
+   * (or not coarsened) in order to preserve the balance condition.
+   * We need to check these elements repeatedly until nothing changes anymore. */
+
+  /* initialize the linked list */
+  sc_list_init (&elements_that_do_not_refine, NULL);
 
   /* We now create the refinement markers.
    * +1 means refine the element
    *  0 means do nothing
    * -1 means coarsen the family (must be set for all members of the family)
    */
-  t8_forest_adapt_build_marker_array (forest, &markers);
+  t8_forest_adapt_build_marker_array (forest, &markers,
+                                      &elements_that_do_not_refine);
 
-  /* TODO: iterate through marker array and restore balance condition */
+  /* TODO: Iterate through marker array and restore balance condition */
+
+  /* clean-up the indices that we allocated for the list */
+  sc_mempool_reset (&index_mempool);
 
   /* We can now finally refine and coarsen the elements according to the markers.
    * In order to do so, we use the existing adapt functions and have the 
@@ -369,7 +382,7 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
    * the markers array as user data for adaptation. */
   void               *user_pointer_safe = t8_forest_get_user_data (forest);
   t8_forest_set_user_data (forest, &markers);
-  /* TODO: Adapt the forest */
+  /* Adapt the forest */
   t8_forest_adapt (forest);
   /* Restore the user data */
   t8_forest_set_user_data (forest, user_pointer_safe);

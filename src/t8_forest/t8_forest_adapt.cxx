@@ -418,7 +418,8 @@ t8_forest_adapt_marker_array_callback (t8_forest_t forest,
  * -1 - coarsen this element and all its siblings.
  */
 void
-t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers)
+t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers,
+                                    sc_list_t * elements_that_do_not_refine)
 {
   t8_forest_t         forest_from = forest->set_from;
   T8_ASSERT (t8_forest_is_committed (forest_from));
@@ -427,6 +428,17 @@ t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers)
   t8_locidx_t         ltreeid, ielement;
   const t8_locidx_t   num_elements = t8_forest_get_num_element (forest_from);
   t8_tree_t           tree;
+
+  /* check correct markers array size */
+  T8_ASSERT (markers != NULL);
+  T8_ASSERT (markers->elem_count >= num_elements);
+  T8_ASSERT (markers->elem_size == sizeof (short));
+  /* Check correct list size */
+  T8_ASSERT (elements_that_do_not_refine != NULL);
+  T8_ASSERT (elements_that_do_not_refine->elem_count == 0);
+  T8_ASSERT (elements_that_do_not_refine->allocator->elem_size ==
+             sizeof (t8_locidx_t));
+
   for (ltreeid = 0; ltreeid < num_trees; ltreeid++) {
     /* Get the tree's class, number of elements and scheme */
     const t8_eclass_t   tree_class =
@@ -458,6 +470,10 @@ t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers)
       /* Set the marker to 1, 0, or -1 depending on whether adapt_value is >0, 0, <0 */
       *(short *) t8_sc_array_index_locidx (markers, element_index) =
         adapt_value > 0 ? 1 : adapt_value == 0 ? 0 : -1;
+      if (adapt_value <= 0) {
+        /* This element does not get refined, we add it to the list of unrefined element */
+        sc_list_append (elements_that_do_not_refine, &element_index);
+      }
     }                           /* End of element loop */
   }                             /* End of tree loop */
 }
