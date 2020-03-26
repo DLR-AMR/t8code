@@ -370,8 +370,8 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
 
   /* TODO: Iterate through marker array and restore balance condition */
 
-  /* clean-up the indices that we allocated for the list */
-  sc_mempool_reset (&index_mempool);
+  /* clean-up the list */
+  sc_list_reset (&elements_that_do_not_refine);
 
   /* We can now finally refine and coarsen the elements according to the markers.
    * In order to do so, we use the existing adapt functions and have the 
