@@ -19,14 +19,17 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_containers.cxx
+/** \file t8_element_array.cxx
  *
- * TODO: document this file
+ * The implementation of the t8_element_array_t struct and 
+ * modifying functions.
+ * t8_element_array_t is based on sc_array and is an array to
+ * store t8_element_t * associated to a specific eclass_scheme implementation.
  */
 
 #include <t8_element_cxx.hxx>
 #include <sc_containers.h>
-#include <t8_data/t8_containers.h>
+#include <t8_data/t8_element_array.h>
 
 T8_EXTERN_C_BEGIN ();
 

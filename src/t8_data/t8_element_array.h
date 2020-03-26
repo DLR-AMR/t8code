@@ -20,13 +20,13 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_containers.h
+/** \file t8_element_array.h
  * We define the t8_element_array that stores elements of a given
  * eclass scheme.
  */
 
-#ifndef T8_CONTAINERS_H
-#define T8_CONTAINERS_H
+#ifndef T8_ELEMENT_ARRAY_H
+#define T8_ELEMENT_ARRAY_H
 
 #include <t8.h>
 #include <t8_element.h>
@@ -235,4 +235,4 @@ void                t8_element_array_truncate (t8_element_array_t *
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_CONTAINERS_HXX */
+#endif /* !T8_ELEMENT_ARRAY_H */
