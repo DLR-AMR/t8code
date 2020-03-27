@@ -460,11 +460,15 @@ t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers,
       const int           is_family =
         ielement + num_siblings <
         elements_in_tree ? ts->t8_element_is_family (&element) : 0;
+      /* If this is a family we pass the element and all siblings to the adapt_fn,
+       * otherwise only the element. */
+      const int           num_elements_to_adapt =
+        is_family ? num_siblings : 1;
       /* TODO: Use const in t8_element functions for element parameter. */
       const int           adapt_value =
         forest->set_adapt_fn (forest, forest->set_from, ltreeid,
                               ielement, (t8_eclass_scheme_c *) ts,
-                              num_elements, &element);
+                              num_elements_to_adapt, &element);
       /* TODO: Use const in parameters of adapt_fn and get rid of the type casts here. */
       const t8_locidx_t   element_index =
         ielement + t8_forest_get_tree_element_offset (forest_from, ltreeid);
