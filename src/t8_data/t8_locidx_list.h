@@ -28,7 +28,6 @@
 #define T8_LOCIDX_LIST_H
 
 #include <t8.h>
-#include <sc_shmem.h>
 
 typedef struct t8_shmem_array *t8_shmem_array_t;
 
@@ -64,10 +63,10 @@ void                t8_locidx_list_init (t8_locidx_list_t * list);
 int                 t8_locidx_list_is_initialized (const t8_locidx_list_t *
                                                    list);
 
-/** Remove the last element in a list and return its entry.
+/** Remove the first element in a list and return its entry.
  * \param [in,out] list An initliazed list with at least one entry.
- *                      On return its last entry will have been removed.
- * \return  The last entry of \a list.
+ *                      On return its first entry will have been removed.
+ * \return              The first entry of \a list.
  * \note It is illegal to call this function if \a list does not have any elements.
  */
 t8_locidx_t         t8_locidx_list_pop (t8_locidx_list_t * list);
@@ -87,10 +86,19 @@ void                t8_locidx_list_append (t8_locidx_list_t * list,
 
 /** Free all elements of a list.
  * \param [in, out] list An initialized list.
- * After calling this function \a list will still be initialized but
+ * After calling this function \a list will not be initialized and
  * all its elements will have been free'd and its count will be zero.
+ * \note Use this to free a list that was initialized with \ref t8_locidx_list_init
  */
 void                t8_locidx_list_reset (t8_locidx_list_t * list);
+
+/** Free all elements of a list and free the list pointer.
+ * \param [in, out] list An initialized list.
+ * After calling this function \a list will be the NULL pointer
+ * and all the elements will be freed.
+ * \note Use this to free a list that was allocated with \ref t8_locidx_list_new
+ */
+void                t8_locidx_list_destroy (t8_locidx_list_t ** plist);
 
 T8_EXTERN_C_END ();
 

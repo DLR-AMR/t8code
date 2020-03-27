@@ -37,7 +37,7 @@ t8_locidx_list_new ()
   t8_locidx_list_t   *list;
 
   /* Allocate memory for our list */
-  list = T8_ALLOC (t8_locidx_list_t, list);
+  list = T8_ALLOC (t8_locidx_list_t, 1);
 
   /* initialize the new list */
   t8_locidx_list_init (list);
@@ -55,10 +55,14 @@ t8_locidx_list_new ()
 void
 t8_locidx_list_init (t8_locidx_list_t * list)
 {
+  /* Allocate a new mempool for the list links */
+  sc_mempool_t       *link_mempool = sc_mempool_new (sizeof (sc_link_t));
+
+  /* Check that list is not NULL */
   T8_ASSERT (list != NULL);
 
   /* Initialize the data list */
-  sc_list_init (&list->list, NULL);
+  sc_list_init (&list->list, link_mempool);
 
   /* Initialize the mempool to store the t8_locidx_t */
   sc_mempool_init (&list->indices, sizeof (t8_locidx_t));
@@ -95,10 +99,10 @@ t8_locidx_list_is_initialized (const t8_locidx_list_t * list)
   return 1;
 }
 
-/* Remove the last element in a list and return its entry.
+/* Remove the first element in a list and return its entry.
  * \param [in,out] list An initliazed list with at least one entry.
- *                      On return its last entry will have been removed.
- * \return  The last entry of \a list.
+ *                      On return its first entry will have been removed.
+ * \return              The first entry of \a list.
  * \note It is illegal to call this function if \a list does not have any elements.
  */
 t8_locidx_t
@@ -108,11 +112,12 @@ t8_locidx_list_pop (t8_locidx_list_t * list)
   T8_ASSERT (t8_locidx_list_is_initialized (list));
   T8_ASSERT (t8_locidx_list_count (list) > 0);
   /* Pop the last item from the internal list */
-  t8_locidx_t        *ppopped_index = sc_list_pop (list->list);
+  t8_locidx_t        *ppopped_index =
+    (t8_locidx_t *) sc_list_pop (&list->list);
   t8_locidx_t         popped_index = *ppopped_index;
 
   /* Free the memory associated to the popped index */
-  sc_mempool_free (list->indices, ppopped_index);
+  sc_mempool_free (&list->indices, ppopped_index);
 
   /* return the index */
   return popped_index;
@@ -142,14 +147,17 @@ t8_locidx_list_append (t8_locidx_list_t * list, const t8_locidx_t entry)
   T8_ASSERT (t8_locidx_list_is_initialized (list));
 
   /* Allocated an element in the mempool. */
-  void               *allocated_entry = sc_mempool_alloc (list->indices);
+  t8_locidx_t        *allocated_entry =
+    (t8_locidx_t *) sc_mempool_alloc (&list->indices);
+  /* Add the data to the allocated element. */
+  *allocated_entry = entry;
   /* Append this element to the list */
-  sc_list_append (list->list, (void *) allocated_entry);
+  sc_list_append (&list->list, (void *) allocated_entry);
 }
 
 /* Free all elements of a list.
  * \param [in, out] list An initialized list.
- * After calling this function \a list will still be initialized but
+ * After calling this function \a list will not be initialized and
  * all its elements will have been free'd and its count will be zero.
  */
 void
@@ -158,6 +166,30 @@ t8_locidx_list_reset (t8_locidx_list_t * list)
   /* Assert that this list is initialized */
   T8_ASSERT (t8_locidx_list_is_initialized (list));
 
-  sc_list_reset (list->list);
-  sc_mempool_reset (list->indices);
+  sc_list_reset (&list->list);
+  sc_mempool_reset (&list->indices);
+  /* Destroy the link mempool */
+  sc_mempool_destroy (list->list.allocator);
+}
+
+/** Free all elements of a list and free the list pointer.
+ * \param [in, out] list An initialized list.
+ * After calling this function \a list will be the NULL pointer
+ * and all the elements will be freed.
+ */
+void
+t8_locidx_list_destroy (t8_locidx_list_t ** plist)
+{
+  T8_ASSERT (plist != NULL);
+  t8_locidx_list_t   *list = *plist;
+  /* Assert that this list is initialized */
+  T8_ASSERT (t8_locidx_list_is_initialized (list));
+
+  /* Reset the list */
+  t8_locidx_list_reset (list);
+
+  /* Free the pointer */
+  T8_FREE (list);
+  /* Set the pointer to NULL */
+  *plist = NULL;
 }
