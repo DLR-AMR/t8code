@@ -32,7 +32,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
-#include <t8_data/t8_containers.h>
+#include <t8_data/t8_element_array.h>
 
 typedef struct
 {
