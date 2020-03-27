@@ -473,7 +473,7 @@ t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers,
         adapt_value > 0 ? 1 : adapt_value == 0 ? 0 : -1;
       if (adapt_value <= 0) {
         /* This element does not get refined, we add it to the list of unrefined element */
-        sc_list_append (elements_that_do_not_refine, (void *) &element_index);
+        // sc_list_append (elements_that_do_not_refine, &element_index);
       }
     }                           /* End of element loop */
   }                             /* End of tree loop */
