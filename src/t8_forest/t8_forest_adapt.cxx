@@ -368,7 +368,8 @@ t8_forest_adapt_marker_array_callback (t8_forest_t forest,
    * We allow additional entries, since they may be used outside this 
    * function. For example for marker values for the ghost elements.
    */
-  T8_ASSERT (markers->elem_count >= t8_forest_get_num_element (forest_from));
+  T8_ASSERT ((t8_locidx_t) markers->elem_count >=
+             t8_forest_get_num_element (forest_from));
   T8_ASSERT (markers->elem_size == sizeof (short));
 
   /* Get the (process local) index of the current element by adding the tree offset
@@ -431,7 +432,7 @@ t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers,
 
   /* check correct markers array size */
   T8_ASSERT (markers != NULL);
-  T8_ASSERT (markers->elem_count >= num_elements);
+  T8_ASSERT ((t8_locidx_t) markers->elem_count >= num_elements);
   T8_ASSERT (markers->elem_size == sizeof (short));
   /* Check correct list size */
   T8_ASSERT (elements_that_do_not_refine != NULL);
