@@ -420,7 +420,8 @@ t8_forest_adapt_marker_array_callback (t8_forest_t forest,
  */
 void
 t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers,
-                                    sc_list_t * elements_that_do_not_refine)
+                                    t8_locidx_list_t *
+                                    elements_that_do_not_refine)
 {
   t8_forest_t         forest_from = forest->set_from;
   T8_ASSERT (t8_forest_is_committed (forest_from));
@@ -436,9 +437,8 @@ t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers,
   T8_ASSERT (markers->elem_size == sizeof (short));
   /* Check correct list size */
   T8_ASSERT (elements_that_do_not_refine != NULL);
-  T8_ASSERT (elements_that_do_not_refine->elem_count == 0);
-  T8_ASSERT (elements_that_do_not_refine->allocator->elem_size ==
-             sizeof (t8_locidx_t));
+  T8_ASSERT (t8_locidx_list_is_initialized (elements_that_do_not_refine));
+  T8_ASSERT (t8_locidx_list_count (elements_that_do_not_refine) == 0);
 
   for (ltreeid = 0; ltreeid < num_trees; ltreeid++) {
     /* Get the tree's class, number of elements and scheme */
@@ -473,7 +473,7 @@ t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers,
         adapt_value > 0 ? 1 : adapt_value == 0 ? 0 : -1;
       if (adapt_value <= 0) {
         /* This element does not get refined, we add it to the list of unrefined element */
-        // sc_list_append (elements_that_do_not_refine, &element_index);
+        t8_locidx_list_append (elements_that_do_not_refine, element_index);
       }
     }                           /* End of element loop */
   }                             /* End of tree loop */

@@ -346,7 +346,7 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
     t8_forest_get_num_element (forest_from);
   const t8_locidx_t   num_ghosts = t8_forest_get_num_ghosts (forest_from);
   sc_array_t          markers;
-  sc_list_t           elements_that_do_not_refine;
+  t8_locidx_list_t    elements_that_do_not_refine;
 
   /* Initialize refinement markers for all elements and ghosts */
   sc_array_init_size (&markers, sizeof (short),
@@ -358,7 +358,7 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
    * We need to check these elements repeatedly until nothing changes anymore. */
 
   /* initialize the linked list */
-  sc_list_init (&elements_that_do_not_refine, NULL);
+  t8_locidx_list_init (&elements_that_do_not_refine);
 
   /* We now create the refinement markers.
    * +1 means refine the element
@@ -371,7 +371,7 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
   /* TODO: Iterate through marker array and restore balance condition */
 
   /* clean-up the list */
-  sc_list_reset (&elements_that_do_not_refine);
+  t8_locidx_list_reset (&elements_that_do_not_refine);
 
   /* We can now finally refine and coarsen the elements according to the markers.
    * In order to do so, we use the existing adapt functions and have the 

@@ -31,6 +31,7 @@
 
 #include <t8.h>
 #include <t8_forest.h>
+#include <t8_data/t8_locidx_list.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -79,8 +80,8 @@ int                 t8_forest_adapt_marker_array_callback (t8_forest_t forest,
  * \param [in,out] markers An array of short ints with as many entries as local elements and ghosts.
  *                         On return the entries of \a markers for the local elements (not the ghosts)
  *                         will be set to 0, 1, or -1.
- * \param [in,out] elements_that_do_not_refine An empty list of t8_locidx_t. On output this will be filled with
- *                         then indices (into \a markers) of those elements that do not get refined (thus, markers[i] != 1).
+ * \param [in,out] elements_that_do_not_refine An empty but initialized list of t8_locidx_t. On output this will be filled with
+ *                         the indices (into \a markers) of those elements that do not get refined (thus, markers[i] != 1).
  * \note This function is not used by the normal adapt function, but by \ref t8_forest_balance_and_adapt.
  * We use this function if we want to adapt the forest but maybe adapt more (or less) elements than what the refinement
  * function specifies. In \ref t8_forest_balance_and_adapt we refine more elements until the resulting forest is balanced.
@@ -90,7 +91,7 @@ int                 t8_forest_adapt_marker_array_callback (t8_forest_t forest,
  */
 void                t8_forest_adapt_build_marker_array (t8_forest_t forest,
                                                         sc_array_t * markers,
-                                                        sc_list_t *
+                                                        t8_locidx_list_t *
                                                         elements_that_do_not_refine);
 
 T8_EXTERN_C_END ();
