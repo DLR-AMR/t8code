@@ -85,7 +85,7 @@ t8_locidx_list_is_initialized (const t8_locidx_list_t * list)
 
   /* A list is initialized if 
    * - its mempool has the proper size associated to it. 
-   * - its list stores sc_lint_t objects
+   * - its list stores sc_link_t objects
    */
   if (list->indices.elem_size != sizeof (t8_locidx_t)
       || list->list.allocator == NULL
@@ -121,6 +121,29 @@ t8_locidx_list_pop (t8_locidx_list_t * list)
 
   /* return the index */
   return popped_index;
+}
+
+/* Remove an item after a given list position.
+ * \param [in,out] list An initliazed nonempty list.
+ * \param [in]     link The predecessor of the element to be removed.
+ *                      If \a pred == NULL, the first element is removed,
+ *                      which is equivalent to calling \ref t8_locidx_list_pop.
+ * \return              The value stored at \a link.
+ */
+t8_locidx_t
+t8_locidx_list_remove (t8_locidx_list_t * list, sc_link_t * pred)
+{
+  T8_ASSERT (t8_locidx_list_is_initialized (list));
+
+  /* remove the data and store a pointer to it */
+  t8_locidx_t        *pdata =
+    (t8_locidx_t *) sc_list_remove (&list->list, pred);
+  /* Store the value that the data points to */
+  t8_locidx_t         data = *pdata;
+  /* Free the data pointer */
+  sc_mempool_free (&list->indices, pdata);
+
+  return data;
 }
 
 /* Returns the number of entries in a list.
@@ -192,4 +215,111 @@ t8_locidx_list_destroy (t8_locidx_list_t ** plist)
   T8_FREE (list);
   /* Set the pointer to NULL */
   *plist = NULL;
+}
+
+/* Initialize an allocated iterator for a list.
+ *  The iterator will start at the first item in the list.
+ * \param [in]  An initialized list.
+ */
+void
+t8_locidx_list_iterator_init (t8_locidx_list_t * list,
+                              t8_locidx_list_iterator_t * it)
+{
+  T8_ASSERT (t8_locidx_list_is_initialized (list));
+  T8_ASSERT (it != NULL);
+
+  /* Set the list pointer */
+  it->list = list;
+  /* Set the current entry to the first list entry */
+  it->current = list->list.first;
+  /* Set the prev pointer to NULL */
+  it->prev = NULL;
+}
+
+/* Check whether an iterator ist valid and associated to a given list.
+ * \param [in] iterator The iterator to check.
+ * \param [in] list     The list to which to \a iterator is expected to be associated to.
+ * \return              True (non-zero) if \a iterator is valid and points to an element in \a list.
+ *                      False if either \a iterator points to the end of \a list (all items have been
+ *                      iterated through.) or \a iterator is not initialized.
+ */
+int
+t8_locidx_list_iterator_is_valid (const t8_locidx_list_iterator_t * it,
+                                  const t8_locidx_list_t * list)
+{
+  /* Can't be valid if we are NULL */
+  if (it == NULL || list == NULL) {
+    return 0;
+  }
+  /* Cannot be valid if the list is not initialized */
+  if (!t8_locidx_list_is_initialized (list)) {
+    return 0;
+  }
+
+  /* The list should be the list of the iterator */
+  if (it->list != list) {
+    return 0;
+  }
+
+  /* If we are at the end of the list, return 0 */
+  if (it->current == NULL) {
+    return 0;
+  }
+
+  /* The next pointer of prev must be current */
+  if (it->prev->next != it->current) {
+    return 0;
+  }
+
+  return 1;
+}
+
+/* Let an iterator point to the next entry of its list.
+ * \param [in, out] it  The iterator.
+ */
+void
+t8_locidx_list_iterator_next (t8_locidx_list_iterator_t * it)
+{
+  T8_ASSERT (it != NULL);
+  T8_ASSERT (t8_locidx_list_iterator_is_valid (it, it->list));
+
+  /* Store the current pointer */
+  sc_link_t          *temp = it->current;
+  /* Advance the current pointer */
+  it->current = it->prev->next;
+  /* Reset the prev pointer */
+  it->prev = temp;
+}
+
+/* Return the value of the item that an iterator currently points to.
+ * \param [in] it   The iterator.
+ * \return          The value of the t8_locidx_t in the iterator's associated
+ *                  list that it currently points to.
+ */
+t8_locidx_t
+t8_locidx_list_iterator_get_value (const t8_locidx_list_iterator_t * it)
+{
+  T8_ASSERT (it != NULL);
+  T8_ASSERT (t8_locidx_list_iterator_is_valid (it, it->list));
+  T8_ASSERT (it->current->data != NULL);
+
+  return *(t8_locidx_t *) it->current->data;
+}
+
+/* Remove the entry that an iterator points to from the list.
+ * \param [in] it   The iterator.
+ */
+void
+t8_locidx_list_iterator_remove_entry (t8_locidx_list_iterator_t * it)
+{
+  T8_ASSERT (it != NULL);
+  T8_ASSERT (t8_locidx_list_iterator_is_valid (it, it->list));
+
+  t8_locidx_list_remove (it->list, it->prev);
+  /* Set the new current pointer */
+  if (it->prev == NULL) {
+    /* Removed the first list item. Set current to the new first item. */
+    it->current = it->list->list.first;
+  }
+  it->current = it->prev->next;
 }
