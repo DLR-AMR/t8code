@@ -21,7 +21,7 @@
 #define T8_DPYRAMID_VERTICES 8
 
 /** The maximum refinement level allowed for a pyramid */
-#define T8_DPYRAMID_MAXLEVEL 2
+#define T8_DPYRAMID_MAXLEVEL 21
 
 /** The length of the root pyramid in integer coordinates */
 #define T8_DPYRAMID_ROOT_LEN (1 << (T8_DPYRAMID_MAXLEVEL))
@@ -39,7 +39,7 @@
  */
 /** The coordinates of a pyramid are integers relative to the maximum refinement. */
 typedef int32_t     t8_dpyramid_coord_t;
-/** The type of pyramid*/
+/** The type of pyramid in 0, ...,7. The first 6 types describe tetrahedra*/
 typedef int8_t      t8_dpyramid_type_t;
 
 

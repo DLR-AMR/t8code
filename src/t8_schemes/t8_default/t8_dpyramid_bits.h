@@ -67,12 +67,23 @@ t8_dpyramid_child(const t8_dpyramid_t * elem, int child_id, t8_dpyramid_t * chil
 int                 t8_dpyramid_compare (const t8_dpyramid_t * p1,
                                        const t8_dpyramid_t * p2);
 
+int
+t8_dpyramid_is_equal(const t8_dpyramid_t* p, const t8_dpyramid_t* q);
+
 /** Compute the position of the ancestor of this child at level \a level within
  * its siblings.
  * \param [in] p  pyramid to be considered.
  * \return Returns its child id in 0..9
  */
 int                 t8_dpyramid_child_id (const t8_dpyramid_t * p);
+
+/** Check, if the input pyramid with shape of a tet is inside of a tetrahedron
+ * \param [in]  pyramid with tet shape
+ * \return      0, if the pyramid is insed of a tetrahedron
+ */
+int
+t8_dpyramid_is_inside_tet(const t8_dpyramid_t * p);
+
 
 /** Compute the first descendant of a pyramid at a given level. This is the descendant of
  * the pyramid in a uniform level refinement that has the smallest id.

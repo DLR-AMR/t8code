@@ -45,7 +45,7 @@
 
 /** The maximum refinement level allowed for a tetrahedron.
  *  Must be smaller or equal to T8_DTRI_MAXLEVEL. */
-#define T8_DTET_MAXLEVEL 2
+#define T8_DTET_MAXLEVEL 21
 
 /** The length of the root tetrahedron in integer coordinates. */
 #define T8_DTET_ROOT_LEN (1 << (T8_DTET_MAXLEVEL))

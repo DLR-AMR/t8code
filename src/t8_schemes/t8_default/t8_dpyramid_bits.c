@@ -47,7 +47,7 @@ const int           t8_dpyramid_type_cid_to_Iloc[8][8] = {
   {1, 1, -1, 6, -1, -1, 6, 7},
   {-1,2,2,-1,-1,-1,-1,-1},
   {-1,3,3,-1,-1,-1,-1,-1},
-  {0, 2, 4, 7, 1, -1, -1, 9},
+  {0, 2, 4, 7, 3, -1, -1, 9},
   {0, -1, -1, 8, 3, 4, 6, 9}
 };
 
@@ -71,6 +71,17 @@ compute_cubeid (const t8_dpyramid_t * p, int level)
   id |= ((p->z & h) ? 0x04 : 0);
 
   return id;
+}
+
+int
+t8_dpyramid_is_equal(const t8_dpyramid_t* p, const t8_dpyramid_t *q)
+{
+    if(p->x == q->x && p->y == q->y && p->z == q->z && p->type == q->type && p->level == q->level){
+        return 0;
+    }
+    else{
+        return 1;
+    }
 }
 
 /*Copies a pyramid from p to dest*/
@@ -224,7 +235,7 @@ t8_dpyramid_child_id (const t8_dpyramid_t * p)
 {
   //T8_ASSERT("Not implemented for level > 1" && p->level < 2);
   int                 cube_id = compute_cubeid (p, p->level);
-  //printf("t: %i, c: %i, id: %i\n", p->type, cube_id, t8_dpyramid_type_cid_to_Iloc[p->type][cube_id]);
+  printf("t: %i, c: %i, id: %i\n", p->type, cube_id, t8_dpyramid_type_cid_to_Iloc[p->type][cube_id]);
   return t8_dpyramid_type_cid_to_Iloc[p->type][cube_id];
 }
 
@@ -242,46 +253,155 @@ t8_dpyramid_child (const t8_dpyramid_t * elem, int child_id,
     cube_id = t8_dpyramid_parenttype_Iloc_to_cid[elem->type - 6][child_id];
     child->level = elem->level + 1;
     h = T8_DPYRAMID_LEN (child->level);
-    child->x = elem->x + (cube_id & 0x01) ? h : 0;
-    child->y = elem->y + (cube_id & 0x02) ? h : 0;
-    child->z = elem->z + (cube_id & 0x04) ? h : 0;
+    child->x = elem->x + ((cube_id & 0x01) ? h : 0);
+    child->y = elem->y + ((cube_id & 0x02) ? h : 0);
+    child->z = elem->z + ((cube_id & 0x04) ? h : 0);
     child->type =
       t8_dpyramid_parenttype_Iloc_to_type[elem->type - 6][child_id];
   }
+  printf("Compute child %i\n", child_id);
 }
 
 const t8_dpyramid_type_t t8_dpyramid_type_Iloc_to_parenttype[2][10] = {
-    {6,6,6,6,6,6,6,6,7,6},
-    {7,7,7,7,7,7,7,7,6,7}
+    {6,-1,6,7,6,-1,-1,6,-1,6},
+    {7,-1,-1,7,7,-1,7,-1,6,7}
 };
+
+
+const int t8_dpyramid_trailing_zeroes_lookup[37] = {32, 0, 1,
+     26, 2, 23, 27, 0, 3, 16, 24, 30, 28, 11,
+     0, 13, 4, 7, 17, 0, 25, 22, 31, 15, 29,
+     10, 12, 6, 0, 21, 14, 9, 5, 20, 8, 19,
+     18};
+
+/*Get the number of trailing 0 of an 32 bit integer*/
+/*Uses the fact, that the values corresponding to the 32 positions are relatively prime to 37
+ *thus we can use a lookup-table*/
+int
+t8_dpyramid_trailing_zeroes(t8_dpyramid_coord_t x){
+    return t8_dpyramid_trailing_zeroes_lookup[(-x & x) % 37];
+}
 
 /* Compute the next possible "significant point" to reach from the ankercoord of p
  * If this point is reachable, return true, else return false */
+
 int
-t8_dpyramid_hit_point(const t8_dpyramid_t * p){
+t8_dpyramid_hit_point(const t8_dpyramid_t *p){
     T8_ASSERT(t8_dpyramid_shape(p) == T8_ECLASS_TET);
     T8_ASSERT(p->type == 0 || p->type == 3);
-    t8_dpyramid_coord_t x = p->x, y = p->y, h = T8_DPYRAMID_LEN(p->level);
-    /*Compute nearest possible hit-point*/
-    if((p->x>>(T8_DPYRAMID_MAXLEVEL-p->level))%2 == 0){
-        x+=h;
+    t8_dpyramid_coord_t x = p->x, y = p->y, h = T8_DPYRAMID_LEN(p->level), n,shift;
+    int even = (p->z>>(T8_DPYRAMID_MAXLEVEL-p->level))%2;
+    printf("hitIN: %i %i %i %i %i\n", p->x, p->y, p->z, p->type, p->level);
+
+    if(even == 0){
+        if((p->x>>(T8_DPYRAMID_MAXLEVEL-p->level))%2 == 0){
+            x += h;
+        }
+        if((p->y>>(T8_DPYRAMID_MAXLEVEL-p->level))%2 == 0){
+            y += h;
+        }
+        printf("intermediate hit-point: %i %i\n", x, y);
+        if((p->z>>(T8_DPYRAMID_MAXLEVEL-p->level+1)) % 2 == 1 ){
+            printf("correction\n");
+            if((y&11)==3 && (x&11)!=3){
+                x = x|(1<<1);
+            }
+            if((y&11)!=3 && (x&11)==3){
+                y = y|(1<<1);
+            }
+        }
+        if(x <= p->z ||  y <= p->z){
+            printf("no hit 0\n");
+            return 0;
+        }
+        printf("even: %i hitpoint: %i %i\n", even, x, y);
+        if(p->x == x && p->y == y){
+            printf("hit0.1\n");
+            return 1;
+        }
+        else if(p->x+h == x && p->y == y && p->type == 0 ){
+            printf("hit0.2\n");
+            return 1;
+        }
+        else if( p->y+h == y && p->x == x && p->type == 3){
+            printf("hit0.3\n");
+            return 1;
+        }
+        else{
+            return 0;
+        }
     }
-    if((p->y>>(T8_DPYRAMID_MAXLEVEL-p->level))%2 == 0)  {
-        y+=h;
+    else{/*
+        x = x>>(T8_DPYRAMID_MAXLEVEL - p->level + 1);
+        y = y>>(T8_DPYRAMID_MAXLEVEL - p->level + 1);
+        if(x%2 != y%2 && x%4 != 0){
+            x = x|1;
+            y = y|1;
+        }
+        x = x<<(T8_DPYRAMID_MAXLEVEL - p->level + 1);
+        y = y<<(T8_DPYRAMID_MAXLEVEL - p->level + 1);*/
+        x = (p->x>>(T8_DPYRAMID_MAXLEVEL-p->level + 1))<<(T8_DPYRAMID_MAXLEVEL-p->level + 1);
+        n = t8_dpyramid_trailing_zeroes(x);
+        y = (p->y>>(n))<<(n);
+        printf("shift1: %i %i\n", x, y);
+
+
+        shift = 1<<(n);
+        y = y|shift;
+        printf("zeroes: %i, shift: %i, y: %i\n", n, shift, y);
+
+        printf("hitPoint: %i %i\n", x, y);
+        if(x <= p->z || y <= p->z){
+            return 0;
+        }
+        if(p->x == x && p->y == y ){
+            printf("hit2.1\n");
+            return 1;
+        }
+        else if((p->x-h) == x && p->y == y && p->type == 3){
+            printf("hit2.2\n");
+            return 1;
+        }
+        else if(p->x == x && (p->y-h) == y  && p->type == 0){
+            printf("hit2.3\n");
+            return 1;
+        }
+        else {
+            printf("no hit 2\n");
+            return 0;
+        }
     }
-    /*Detect hit*/
-    if(p->x == x && p->y == y){
-        return 1;
-    }
-    else if(p->x == x-h && p->y == y && p->type == 0){
-        return 1;
-    }
-    else if(p->y == y-h && p->x == x && p->type == 3){
-        return 1;
-    }
-    else return 0;
 
 }
+
+int t8_dpyramid_is_inside_tet(const t8_dpyramid_t * p){
+    T8_ASSERT(t8_dpyramid_shape(p) == T8_ECLASS_TET);
+    T8_ASSERT(p->type == 0 || p->type == 3);
+    int i;
+    t8_dtet_t tet,ancestor;
+    tet.x = 0;
+    tet.y = 0;
+    tet.z = 0;
+    for(i = 1; i<p->level; i++){
+        tet.x =  (p->x>>(T8_DPYRAMID_MAXLEVEL-i)) <<(T8_DPYRAMID_MAXLEVEL-i);
+        tet.y = tet.y | (p->y & (1<<(T8_DPYRAMID_MAXLEVEL-i)));
+        tet.z = tet.z | (p->z & (1<<(T8_DPYRAMID_MAXLEVEL-i)));
+        tet.level = i;
+        tet.type = 0;
+
+        t8_dtet_ancestor((const t8_dtet_t *)p,i, &ancestor);
+        if(t8_dtet_is_equal(&tet, &ancestor)){
+            return 0;
+        }
+        tet.type = 3;
+        if(t8_dtet_is_equal(&tet, &ancestor)){
+            return 0;
+        }
+
+    }
+    return 1;
+}
+
 
 void
 t8_dpyramid_tetparent_type(const t8_dpyramid_t * p, t8_dpyramid_t * parent){
@@ -297,9 +417,11 @@ t8_dpyramid_tetparent_type(const t8_dpyramid_t * p, t8_dpyramid_t * parent){
 void
 t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
 {
+
   printf("Input x: %i, y: %i, z: %i, t: %i, l: %i\n", p->x, p->y, p->z,
          p->type, p->level);
   T8_ASSERT (p->level >= 0);
+  T8_ASSERT (T8_DPYRAMID_MAXLEVEL == T8_DTET_MAXLEVEL);
   /*This assertion is just for the case, that I forgot to realy implement this function!
    * This version only works, if the pyramid is only refined once, so the parent is always
    * known. Delete this, if fully implemented.*/
@@ -316,8 +438,9 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
         parent->x = p->x & ~h;
         parent->y = p->y & ~h;
         parent->z = p->z & ~h;
-
+        printf("t: %i, c: %i", p->type, child_id);
         parent->type = t8_dpyramid_type_Iloc_to_parenttype[p->type - 6][child_id];
+        T8_ASSERT(parent->type >= 0);
         parent->level = p->level - 1;
     }
     else if(t8_dpyramid_shape(p) == T8_ECLASS_TET){
@@ -327,7 +450,7 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
              * in this case the parent is a tetrahedron*/
             t8_dtet_parent((t8_dtet_t *)p, (t8_dtet_t *)parent);
         }
-        else if(t8_dpyramid_hit_point(p) == 0){
+        else if(t8_dpyramid_is_inside_tet(p) == 0){
         /*Pyramid- / tetparent detection*/
         /*If a tetrahedron does not reach a "significant point" its parent is a tet*/
         /*Tetcase*/
@@ -432,6 +555,7 @@ t8_dpyramid_succesor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
   else {
     t8_dpyramid_parent (succ, succ);
     t8_dpyramid_child (succ, pyramid_child_id + 1, succ);
+    succ->level = level;
   }
   printf("SuccOUT: %i %i %i, t: %i, l:%i\n", succ->x, succ->y, succ->z, succ->type, succ->level);
 }
