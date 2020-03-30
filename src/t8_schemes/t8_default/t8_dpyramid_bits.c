@@ -231,11 +231,21 @@ t8_dpyramid_num_vertices (const t8_dpyramid_t * p)
 }
 
 int
+t8_dpyramid_num_children (const t8_dpyramid_t * p)
+{
+  if (p->type < 6) {
+    return T8_DTET_CHILDREN;
+  }
+  else {
+    return T8_DPYRAMID_CHILDREN;
+  }
+}
+
+int
 t8_dpyramid_child_id (const t8_dpyramid_t * p)
 {
-  //T8_ASSERT("Not implemented for level > 1" && p->level < 2);
+  T8_ASSERT(p->level>0);
   int                 cube_id = compute_cubeid (p, p->level);
-  printf("t: %i, c: %i, id: %i\n", p->type, cube_id, t8_dpyramid_type_cid_to_Iloc[p->type][cube_id]);
   return t8_dpyramid_type_cid_to_Iloc[p->type][cube_id];
 }
 
@@ -259,7 +269,6 @@ t8_dpyramid_child (const t8_dpyramid_t * elem, int child_id,
     child->type =
       t8_dpyramid_parenttype_Iloc_to_type[elem->type - 6][child_id];
   }
-  printf("Compute child %i\n", child_id);
 }
 
 const t8_dpyramid_type_t t8_dpyramid_type_Iloc_to_parenttype[2][10] = {
@@ -374,31 +383,37 @@ t8_dpyramid_hit_point(const t8_dpyramid_t *p){
 
 }
 
+/* Check, if a pyramid in the shape of a tet lies inside a tetrahedron
+ * The i first bits give the anchorcoordinate for a possible ancestor of level i
+ * for p. */
 int t8_dpyramid_is_inside_tet(const t8_dpyramid_t * p){
     T8_ASSERT(t8_dpyramid_shape(p) == T8_ECLASS_TET);
     T8_ASSERT(p->type == 0 || p->type == 3);
     int i;
+    /*the tet is initialized, the ancestor will be computed*/
     t8_dtet_t tet,ancestor;
     tet.x = 0;
     tet.y = 0;
     tet.z = 0;
     for(i = 1; i<p->level; i++){
-        tet.x =  (p->x>>(T8_DPYRAMID_MAXLEVEL-i)) <<(T8_DPYRAMID_MAXLEVEL-i);
+        /*Update the coordinate of tet to i first bits*/
+        tet.x = tet.x | (p->x & (1<<(T8_DPYRAMID_MAXLEVEL-i)));
         tet.y = tet.y | (p->y & (1<<(T8_DPYRAMID_MAXLEVEL-i)));
         tet.z = tet.z | (p->z & (1<<(T8_DPYRAMID_MAXLEVEL-i)));
         tet.level = i;
-        tet.type = 0;
-
+        /*Compute the ancestor*/
         t8_dtet_ancestor((const t8_dtet_t *)p,i, &ancestor);
-        if(t8_dtet_is_equal(&tet, &ancestor)){
-            return 0;
+        /*Only compare, if the ancestor has type 0 or 3*/
+        if(ancestor.type == 0 || ancestor.type == 3){
+            /*Set tet.type to the type of the possible ancestor*/
+            tet.type = ancestor.type;
+            /*Compare*/
+            if(t8_dtet_is_equal(&tet, &ancestor)){
+                return 0;
+            }
         }
-        tet.type = 3;
-        if(t8_dtet_is_equal(&tet, &ancestor)){
-            return 0;
-        }
-
     }
+    /*No matching tet-ancestor was found, the parent is a pyramid*/
     return 1;
 }
 
@@ -417,35 +432,25 @@ t8_dpyramid_tetparent_type(const t8_dpyramid_t * p, t8_dpyramid_t * parent){
 void
 t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
 {
-
-  printf("Input x: %i, y: %i, z: %i, t: %i, l: %i\n", p->x, p->y, p->z,
-         p->type, p->level);
   T8_ASSERT (p->level >= 0);
   T8_ASSERT (T8_DPYRAMID_MAXLEVEL == T8_DTET_MAXLEVEL);
   /*This assertion is just for the case, that I forgot to realy implement this function!
    * This version only works, if the pyramid is only refined once, so the parent is always
    * known. Delete this, if fully implemented.*/
-  /*if(p->level > 1){
-      SC_ABORT("t8_dpyramid_partent does not support level > 1 yet.\n");
-  }*/
   if(t8_dpyramid_shape(p) == T8_ECLASS_PYRAMID){
-      printf("easy-pyramid\n");
       /*The parent of a pyramid is a pyramid, maybe of different type*/
         t8_dpyramid_coord_t h = T8_DPYRAMID_LEN(p->level);
-        printf("length: %i\n", h);
         int child_id = t8_dpyramid_child_id(p);
         T8_ASSERT(child_id >=0);
         parent->x = p->x & ~h;
         parent->y = p->y & ~h;
         parent->z = p->z & ~h;
-        printf("t: %i, c: %i", p->type, child_id);
         parent->type = t8_dpyramid_type_Iloc_to_parenttype[p->type - 6][child_id];
         T8_ASSERT(parent->type >= 0);
         parent->level = p->level - 1;
     }
     else if(t8_dpyramid_shape(p) == T8_ECLASS_TET){
         if(p->type != 0 && p->type != 3) {
-            printf("easy-tet\n");
             /* The direct tet-child of a pyra has type 0 or type 3, therefore
              * in this case the parent is a tetrahedron*/
             t8_dtet_parent((t8_dtet_t *)p, (t8_dtet_t *)parent);
@@ -454,12 +459,10 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
         /*Pyramid- / tetparent detection*/
         /*If a tetrahedron does not reach a "significant point" its parent is a tet*/
         /*Tetcase*/
-            printf("tricky-tet\n");
             t8_dtet_parent((t8_dtet_t*)p, (t8_dtet_t *)parent);
         }
         else{
-            /*Significant point reached => parent is pyra*/
-            printf("tricky-pyra\n");
+            /*p does not lie in larger tet => parent is pyra*/
             t8_dpyramid_coord_t h = T8_DPYRAMID_LEN(p->level);
             parent->x = p->x & ~h;
             parent->y = p->y & ~h;
@@ -468,8 +471,6 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
             parent->level = p->level - 1;
         }
     }
-    printf("PARENT x: %i, y: %i, z: %i, t: %i, l: %i\n\n", parent->x, parent->y,
-           parent->z, parent->type, parent->level);
 }
 
 t8_eclass_t

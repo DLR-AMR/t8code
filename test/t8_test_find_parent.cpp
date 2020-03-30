@@ -21,6 +21,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <t8_eclass.h>
+#include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_schemes/t8_default/t8_dpyramid_bits.h>
 #include <t8_schemes/t8_default/t8_dpyramid.h>
 #include <t8_schemes/t8_default/t8_dtet.h>
@@ -57,10 +59,45 @@ t8_recursive_child_find_parent(t8_dpyramid_t *parent,
         }
     }
 }
+/*
+static void
+t8_recursive_child_find_parent(t8_element_t *element, t8_eclass_scheme_c *ts,
+                               int level, int maxlvl){
+    T8_ASSERT(level <= maxlvl || maxlvl < ts->t8_element_num_children(element));
+    int num_children, i;
+    t8_element_t *child, *test_parent;
+    num_children = ts->t8_element_num_children(element);
+    ts->t8_element_new(1, &child);
+    ts->t8_element_new(1, &test_parent);
+    if(level == maxlvl) return;
+    for(i = 0; i < num_children; i++){
+        ts->t8_element_child(element, i, child);
+        ts->t8_element_parent(child, test_parent);
+        if(ts->t8_element_compare(element, test_parent)){
+            SC_ABORT("Computed child_parent is not the parent");
+        }
+        else{
+            t8_recursive_child_find_parent(child, ts, level+1, maxlvl);
+        }
+    }
+}*/
 
 
 static void
 t8_compute_child_find_parent(int maxlvl){
+    /*t8_element_t        *element;
+    t8_scheme_cxx       *scheme;
+    t8_eclass_scheme_c  *ts;
+    int                 eclassi;
+    t8_eclass_t         eclass;
+    scheme = t8_scheme_new_default_cxx();
+    for(eclassi = T8_ECLASS_LINE; eclassi <=T8_ECLASS_COUNT; eclassi++){
+        eclass = (t8_eclass_t) eclassi;
+        ts=scheme->eclass_schemes[eclass];
+        ts->t8_element_new(1, &element);
+        t8_recursive_child_find_parent(element, ts, 0, maxlvl);
+        printf("%s: Success\n", t8_eclass_to_string[eclass]);;
+    }*/
     t8_dpyramid_t pyra;
     t8_dpyramid_init_linear_id(&pyra, 0, 0);
     t8_recursive_child_find_parent(&pyra, 0, maxlvl);

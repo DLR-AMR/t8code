@@ -107,10 +107,7 @@ public:
 
 /** Construct the parent of a given element. */
   virtual void        t8_element_parent (const t8_element_t * elem,
-                                         t8_element_t * parent){
-      SC_ABORT ("This function is not implemented yet.\n");
-      return;      /* suppresses compiler warning */
-    }
+                                         t8_element_t * parent);
 
 /** Construct a same-size sibling of a given element. */
   virtual void        t8_element_sibling (const t8_element_t * elem,
@@ -120,10 +117,7 @@ public:
   }
 
   /** Return the number of children of an element when it is refined. */
-  virtual int         t8_element_num_children (const t8_element_t * elem){
-      SC_ABORT ("This function is not implemented yet.\n");
-      return T8_ECLASS_ZERO;      /* suppresses compiler warning */
-    }
+  virtual int         t8_element_num_children (const t8_element_t * elem);
 
 /** Compute the number of corners of a given element.
 * \param [in] elem The element.
