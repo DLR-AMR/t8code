@@ -31,6 +31,7 @@
 
 #include <t8.h>
 #include <t8_forest.h>
+#include <t8_data/t8_locidx_list.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -90,7 +91,7 @@ int                 t8_forest_adapt_marker_array_callback (t8_forest_t forest,
  */
 void                t8_forest_adapt_build_marker_array (t8_forest_t forest,
                                                         sc_array_t * markers,
-                                                        sc_list_t *
+                                                        t8_locidx_list_t *
                                                         elements_that_do_not_refine);
 
 T8_EXTERN_C_END ();
