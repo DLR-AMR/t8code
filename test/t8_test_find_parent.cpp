@@ -31,48 +31,26 @@
 /* Build every child for the parent element and check wether the computed parent is
  * again the input element. Then call this function for every child, until maxlevel is
  * reached.
- * TODO: Implement this function for general element.*/
-static void
-t8_recursive_child_find_parent(t8_dpyramid_t *parent,
-                               int level, int maxlevel){
-    T8_ASSERT(maxlevel < T8_DPYRAMID_MAXLEVEL ||
-              level <= maxlevel);
-    int num_children,i;
-    t8_dpyramid_t child, test_parent;
-    if(t8_dpyramid_shape(parent) == T8_ECLASS_TET){
-        num_children = T8_DTET_CHILDREN;
-    }
-    else{
-        num_children = T8_DPYRAMID_CHILDREN;
-    }
-    if(level == maxlevel) return;
-    for(i = 0; i < num_children; i++){
-        t8_dpyramid_child(parent, i, &child);
-        t8_dpyramid_parent(&child, &test_parent);
-        if(t8_dpyramid_is_equal(parent, &test_parent) != 0){
-
-            SC_ABORT("Computed child_parent is not the parent");
-        }
-        else{
-
-            t8_recursive_child_find_parent(&child, level + 1, maxlevel);
-        }
-    }
-}
-/*
+ */
 static void
 t8_recursive_child_find_parent(t8_element_t *element, t8_eclass_scheme_c *ts,
                                int level, int maxlvl){
     T8_ASSERT(level <= maxlvl || maxlvl < ts->t8_element_num_children(element));
     int num_children, i;
     t8_element_t *child, *test_parent;
+    /*Get number of children*/
     num_children = ts->t8_element_num_children(element);
+    /*Get child and test_parent, to check if test_parent = parent of child*/
     ts->t8_element_new(1, &child);
     ts->t8_element_new(1, &test_parent);
     if(level == maxlvl) return;
     for(i = 0; i < num_children; i++){
+        /*Compute child i*/
         ts->t8_element_child(element, i, child);
+        /*Compute parent of child*/
         ts->t8_element_parent(child, test_parent);
+        /*If its equal, call child_find_parent, to check if parent-child relation
+         * is correct in next level until maxlvl is reached*/
         if(ts->t8_element_compare(element, test_parent)){
             SC_ABORT("Computed child_parent is not the parent");
         }
@@ -80,28 +58,33 @@ t8_recursive_child_find_parent(t8_element_t *element, t8_eclass_scheme_c *ts,
             t8_recursive_child_find_parent(child, ts, level+1, maxlvl);
         }
     }
-}*/
+}
 
 
 static void
 t8_compute_child_find_parent(int maxlvl){
-    /*t8_element_t        *element;
+    t8_element_t        *element;
     t8_scheme_cxx       *scheme;
     t8_eclass_scheme_c  *ts;
     int                 eclassi;
     t8_eclass_t         eclass;
     scheme = t8_scheme_new_default_cxx();
-    for(eclassi = T8_ECLASS_LINE; eclassi <=T8_ECLASS_COUNT; eclassi++){
+    for(eclassi = T8_ECLASS_ZERO; eclassi < T8_ECLASS_COUNT; eclassi++){
         eclass = (t8_eclass_t) eclassi;
+        /*Get scheme for eclass*/
         ts=scheme->eclass_schemes[eclass];
+        /*Get element and initialize it*/
         ts->t8_element_new(1, &element);
+        ts->t8_element_set_linear_id(element, 0, 0);
+        /*Check for correct parent-child relation*/
         t8_recursive_child_find_parent(element, ts, 0, maxlvl);
-        printf("%s: Success\n", t8_eclass_to_string[eclass]);;
-    }*/
-    t8_dpyramid_t pyra;
-    t8_dpyramid_init_linear_id(&pyra, 0, 0);
-    t8_recursive_child_find_parent(&pyra, 0, maxlvl);
+        printf("%s: Success\n", t8_eclass_to_string[eclass]);
+        /*Destroy element*/
+        ts->t8_element_destroy(1, &element);
 
+    }
+    /*Destroy scheme*/
+    t8_scheme_cxx_unref(&scheme);
 }
 
 int main(){
