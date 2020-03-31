@@ -41,10 +41,10 @@ const t8_dpyramid_cube_id_t t8_dpyramid_parenttype_Iloc_to_cid[2][10] = {
 };
 
 const int           t8_dpyramid_type_cid_to_Iloc[8][8] = {
-  {0, 1, 3, 5, -1, 4, -1, 7},
+  {0, 1, 3, 5, 1, 4, 5, 7},
   {-1, -1, -1, -1, -1, 5, 4, -1},
   {-1, -1, -1, -1, -1, 6, 5, -1},
-  {1, 1, -1, 6, -1, -1, 6, 7},
+  {1, 1, 2, 6, 2, 4, 6, 7},
   {-1, 2, 2, -1, -1, -1, -1, -1},
   {-1, 3, 3, -1, -1, -1, -1, -1},
   {0, 2, 4, 7, 3, -1, -1, 9},
@@ -234,7 +234,7 @@ t8_dpyramid_num_vertices (const t8_dpyramid_t * p)
 int
 t8_dpyramid_num_children (const t8_dpyramid_t * p)
 {
-  if (p->type < 6) {
+  if (t8_dpyramid_shape(p) == T8_ECLASS_TET) {
     return T8_DTET_CHILDREN;
   }
   else {
@@ -247,6 +247,7 @@ t8_dpyramid_child_id (const t8_dpyramid_t * p)
 {
   T8_ASSERT (p->level > 0);
   int                 cube_id = compute_cubeid (p, p->level);
+  printf("type: %i, cube_id: %i\n", p->type, cube_id);
   return t8_dpyramid_type_cid_to_Iloc[p->type][cube_id];
 }
 
@@ -529,7 +530,7 @@ void
 t8_dpyramid_succesor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
                       int level)
 {
-  int                 pyramid_child_id;
+  int                 pyramid_child_id, num_children;
   t8_dpyramid_copy (elem, succ);
   printf ("level: %i SuccIN: %i %i %i, t: %i, l:%i\n", level, elem->x,
           elem->y, elem->z, elem->type, elem->level);
@@ -539,30 +540,28 @@ t8_dpyramid_succesor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
   succ->level = level;
   T8_ASSERT (succ->type >= 0);
   pyramid_child_id = t8_dpyramid_child_id (succ);
-  printf ("child_id:%i\n", pyramid_child_id);
-
+  num_children = t8_dpyramid_num_children(elem);
   T8_ASSERT (0 <= pyramid_child_id
-             && pyramid_child_id < T8_DPYRAMID_CHILDREN);
-  if (pyramid_child_id == T8_DPYRAMID_CHILDREN - 1) {
+             && pyramid_child_id < num_children);
+  if (pyramid_child_id == num_children - 1) {
+    printf("last pyramid\n");
     t8_dpyramid_succesor (elem, succ, level - 1);
     succ->level = level;
     /* bits auf level auf child 0 setzen */
     succ->x =
-      (succ->
-       x >> (T8_DPYRAMID_MAXLEVEL - level + 1)) << (T8_DPYRAMID_MAXLEVEL -
-                                                    level + 1);
+     (succ->x >> (T8_DPYRAMID_MAXLEVEL - level + 1))<< (T8_DPYRAMID_MAXLEVEL
+                                                        - level + 1);
     succ->y =
-      (succ->
-       y >> (T8_DPYRAMID_MAXLEVEL - level + 1)) << (T8_DPYRAMID_MAXLEVEL -
+      (succ->y >> (T8_DPYRAMID_MAXLEVEL - level + 1)) << (T8_DPYRAMID_MAXLEVEL -
                                                     level + 1);
     succ->z =
-      (succ->
-       z >> (T8_DPYRAMID_MAXLEVEL - level + 1)) << (T8_DPYRAMID_MAXLEVEL -
+      (succ->z >> (T8_DPYRAMID_MAXLEVEL - level + 1)) << (T8_DPYRAMID_MAXLEVEL -
                                                     level + 1);
 
   }
   //not the last pyramid
   else {
+    printf("not last\n");
     t8_dpyramid_parent (succ, succ);
     t8_dpyramid_child (succ, pyramid_child_id + 1, succ);
     succ->level = level;
