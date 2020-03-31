@@ -396,6 +396,20 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
      *       are done locally, but not globally, we can optimize by
      *       checking only the neighbors of the updated ghost elements. */
 
+    for (t8_locidx_list_iterator_init
+         (&elements_that_do_not_refine, &list_iterator);
+         t8_locidx_list_iterator_is_valid (&list_iterator,
+                                           &elements_that_do_not_refine);
+         t8_locidx_list_iterator_next (&list_iterator)) {
+      /* Get the index of the next non-refined element */
+      const t8_locidx_t   element_index =
+        t8_locidx_list_iterator_get_value (&list_iterator);
+      const short         current_marker =
+        *(short *) t8_sc_array_index_locidx (&markers, element_index);
+      /* TODO: Check whether the balance condition will be broken by this element. */
+      /* TODO: Depending on the current marker, update the marker of this element. */
+    }
+
     if (!changed_a_marker) {
       /* We did not change anything and thus, this process is done. */
       done_locally = 1;
