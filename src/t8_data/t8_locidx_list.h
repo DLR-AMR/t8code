@@ -71,6 +71,16 @@ int                 t8_locidx_list_is_initialized (const t8_locidx_list_t *
  */
 t8_locidx_t         t8_locidx_list_pop (t8_locidx_list_t * list);
 
+/** Remove an item after a given list position.
+ * \param [in,out] list An initliazed nonempty list.
+ * \param [in]     link The predecessor of the element to be removed.
+ *                      If \a pred == NULL, the first element is removed,
+ *                      which is equivalent to calling \ref t8_locidx_list_pop.
+ * \return              The value stored at \a link.
+ */
+t8_locidx_t         t8_locidx_list_remove (t8_locidx_list_t * list,
+                                           sc_link_t * pred);
+
 /** Returns the number of entries in a list.
  * \param [in] list An initialized list.
  * \return          The number of entries in \a list.
@@ -99,6 +109,71 @@ void                t8_locidx_list_reset (t8_locidx_list_t * list);
  * \note Use this to free a list that was allocated with \ref t8_locidx_list_new
  */
 void                t8_locidx_list_destroy (t8_locidx_list_t ** plist);
+
+/** The t8_locidx_list_iterator_t can be used to iterat through the 
+ *  entries of a t8_locidx_list_t.
+ *  The workflow should be:
+ *  \ref t8_locidx_list_iterator_init
+ *  while \ref t8_locidx_list_iterator_is_valid repeat
+ *  \ref t8_locidx_list_iterator_get_value
+ *  maybe \ref t8_locidx_list_iterator_remove_entry
+ *  \ref t8_locidx_list_iterator_next
+ */
+typedef struct
+{
+  t8_locidx_list_t   *list;
+                          /**< The linked list to which this iterator belongs to */
+  sc_link_t          *current;
+                      /**< The currently active list entry. */
+  sc_link_t          *prev;
+                   /**< The previously active link entry. */
+} t8_locidx_list_iterator_t;
+
+/** Initialize an allocated iterator for a list.
+ *  The iterator will start at the first item in the list.
+ * \param [in]  An initialized list.
+ */
+void                t8_locidx_list_iterator_init (t8_locidx_list_t * list,
+                                                  t8_locidx_list_iterator_t *
+                                                  it);
+
+/** Check whether an iterator ist valid and associated to a given list.
+ * \param [in] iterator The iterator to check.
+ * \param [in] list     The list to which to \a iterator is expected to be associated to.
+ * \return              True (non-zero) if \a iterator is valid and points to an element in \a list.
+ *                      False if either \a iterator points to the end of \a list (all items have been
+ *                      iterated through.) or \a iterator is not initialized.
+ * \note After calling \ref t8_locidx_list_iterator_remove_entry the iterator is not valid until
+ * \ref t8_locidx_list_iterator_next was called.
+ */
+int                 t8_locidx_list_iterator_is_valid (const
+                                                      t8_locidx_list_iterator_t
+                                                      * it,
+                                                      const t8_locidx_list_t *
+                                                      list);
+
+/** Let an iterator point to the next entry of its list.
+ * \param [in, out] it  The iterator.
+ */
+void                t8_locidx_list_iterator_next (t8_locidx_list_iterator_t *
+                                                  it);
+
+/** Return the value of the item that an iterator currently points to.
+ * \param [in] it   The iterator.
+ * \return          The value of the t8_locidx_t in the iterator's associated
+ *                  list that it currently points to.
+ */
+t8_locidx_t         t8_locidx_list_iterator_get_value (const
+                                                       t8_locidx_list_iterator_t
+                                                       * it);
+
+/* *INDENT-OFF* */
+/** Remove the entry that an iterator points to from the list.
+ * \param [in] it   The iterator.
+ */
+void                t8_locidx_list_iterator_remove_entry (t8_locidx_list_iterator_t 
+                                                          * it);
+/* *INDENT-ON* */
 
 T8_EXTERN_C_END ();
 

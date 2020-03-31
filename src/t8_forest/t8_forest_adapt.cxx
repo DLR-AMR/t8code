@@ -24,6 +24,7 @@
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest.h>
 #include <t8_data/t8_element_array.h>
+#include <t8_data/t8_locidx_list.h>
 #include <t8_element_cxx.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
@@ -436,7 +437,6 @@ t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers,
   T8_ASSERT ((t8_locidx_t) markers->elem_count >= num_elements);
   T8_ASSERT (markers->elem_size == sizeof (short));
   /* Check correct list size */
-  T8_ASSERT (elements_that_do_not_refine != NULL);
   T8_ASSERT (t8_locidx_list_is_initialized (elements_that_do_not_refine));
   T8_ASSERT (t8_locidx_list_count (elements_that_do_not_refine) == 0);
 
