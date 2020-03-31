@@ -20,14 +20,13 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-
 #ifndef T8_DPYRAMID_BITS_H
 #define T8_DPYRAMID_BITS_H
 
 #include "t8_element.h"
 #include "t8_dpyramid.h"
 
-T8_EXTERN_C_BEGIN();
+T8_EXTERN_C_BEGIN ();
 
 /** Initialize a pyramid as the pyramid with a given global id in a uniform
  *  refinement of a given level. *
@@ -36,7 +35,7 @@ T8_EXTERN_C_BEGIN();
  * \param [in] level  level of uniform grid to be considered.
  */
 void                t8_dpyramid_init_linear_id (t8_dpyramid_t * p, int level,
-                                              uint64_t id);
+                                                uint64_t id);
 
 /** Compute the level of a pyramid.
  * \param [in] p    Line whose pyramid is computed.
@@ -44,12 +43,12 @@ void                t8_dpyramid_init_linear_id (t8_dpyramid_t * p, int level,
  */
 int                 t8_dpyramid_get_level (const t8_dpyramid_t * p);
 
-
 /** Computes the linear position of a pyramid in an uniform grid.
  * \param [in] p  pyramid whose id will be computed.
  * \return Returns the linear position of this pyramid on a grid.
  */
-uint64_t t8_dpyramid_linear_id(const t8_dpyramid_t * p, int level);
+uint64_t            t8_dpyramid_linear_id (const t8_dpyramid_t * p,
+                                           int level);
 
 /** Compute the childid-th child in Morton order of a pyramid.
  * \param [in] t    Input pyramid.
@@ -58,17 +57,30 @@ uint64_t t8_dpyramid_linear_id(const t8_dpyramid_t * p, int level);
  * 		    with the date of t's childid-th child.
  */
 void
-t8_dpyramid_child(const t8_dpyramid_t * elem, int child_id, t8_dpyramid_t * child);
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ t8_dpyramid_child (const t8_dpyramid_t * elem, int child_id,
+                    t8_dpyramid_t * child);
 
 /** Compare two elements. returns negativ if p1 < p2, zero if p1 equals p2
  *  and positiv if p1 > p2.
  *  If p2 is a copy of p1 then the elements are equal.
  */
 int                 t8_dpyramid_compare (const t8_dpyramid_t * p1,
-                                       const t8_dpyramid_t * p2);
+                                         const t8_dpyramid_t * p2);
 
 int
-t8_dpyramid_is_equal(const t8_dpyramid_t* p, const t8_dpyramid_t* q);
+ 
+ 
+ 
+ 
+ 
+      t8_dpyramid_is_equal (const t8_dpyramid_t * p, const t8_dpyramid_t * q);
 
 /** Compute the position of the ancestor of this child at level \a level within
  * its siblings.
@@ -81,9 +93,7 @@ int                 t8_dpyramid_child_id (const t8_dpyramid_t * p);
  * \param [in]  pyramid with tet shape
  * \return      0, if the pyramid is insed of a tetrahedron
  */
-int
-t8_dpyramid_is_inside_tet(const t8_dpyramid_t * p);
-
+int                 t8_dpyramid_is_inside_tet (const t8_dpyramid_t * p);
 
 /** Compute the first descendant of a pyramid at a given level. This is the descendant of
  * the pyramid in a uniform level refinement that has the smallest id.
@@ -94,8 +104,8 @@ t8_dpyramid_is_inside_tet(const t8_dpyramid_t * p);
  *                      level.
  */
 void                t8_dpyramid_first_descendant (const t8_dpyramid_t * p,
-                                                t8_dpyramid_t * desc,
-                                                int level);
+                                                  t8_dpyramid_t * desc,
+                                                  int level);
 
 /** Compute the last descendant of a pyramid at a given level. This is the descendant of
  * the pyramid in a uniform level refinement that has the largest id.
@@ -106,8 +116,15 @@ void                t8_dpyramid_first_descendant (const t8_dpyramid_t * p,
  *                      level.
  */
 void
-t8_dpyramid_last_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * desc,
-                             int level);
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ t8_dpyramid_last_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * desc,
+                              int level);
 
 /** Compute the coordinates of a vertex of a pyramid.
  * \param [in] p    Input pyramid.
@@ -116,7 +133,7 @@ t8_dpyramid_last_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * desc,
  * \param [in] vertex The number of the vertex.
  */
 void                t8_dpyramid_compute_coords (const t8_dpyramid_t * p,
-                                             int vertex, int coords[]);
+                                                int vertex, int coords[]);
 /** Compute the parent of a given pyramid
  * \param [in] p        Input pyramid.
  * \param [out] parent  The parent of \a p.
@@ -130,19 +147,19 @@ void                t8_dpyramid_parent (const t8_dpyramid_t * p,
  * \param [in] p    Input pyramid.
  * \return          The number of corners of p.
  */
-int                 t8_dpyramid_num_vertices(const t8_dpyramid_t * p);
+int                 t8_dpyramid_num_vertices (const t8_dpyramid_t * p);
 
 /** Compute the number of children of p
  * \param [in] p    Input pyramid.
  * \return          The number of children of p.
  */
-int                 t8_dpyramid_num_children(const t8_dpyramid_t * p);
+int                 t8_dpyramid_num_children (const t8_dpyramid_t * p);
 
 /** Returns the shape of the pyramid (pyramid or tetrahedron)
  * \param [in] p    Input pyramid.
  * \return          The eclass of the element
  */
-t8_eclass_t t8_dpyramid_shape(const t8_dpyramid_t * p);
+t8_eclass_t         t8_dpyramid_shape (const t8_dpyramid_t * p);
 
 /** Computes the successor of a pyramid in a uniform grid of level \a level.
  * \param [in] elem  pyramid whose id will be computed.
@@ -150,9 +167,9 @@ t8_eclass_t t8_dpyramid_shape(const t8_dpyramid_t * p);
  *                data of \a l's successor on level \a level.
  * \param [in] level level of uniform grid to be considered.
  */
-void                t8_dpyramid_succesor(const t8_dpyramid_t * elem, t8_dpyramid_t * s, int level);
+void                t8_dpyramid_succesor (const t8_dpyramid_t * elem,
+                                          t8_dpyramid_t * s, int level);
 
 T8_EXTERN_C_END ();
 
 #endif /* T8_DPYRAMID_BITS_H */
-
