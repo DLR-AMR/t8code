@@ -266,9 +266,11 @@ t8_locidx_list_iterator_is_valid (const t8_locidx_list_iterator_t * it,
     return 0;
   }
 
-  /* The next pointer of prev must be current */
-  if (it->prev->next != it->current) {
-    return 0;
+  if (it->prev != NULL) {
+    /* The next pointer of prev must be current */
+    if (it->prev->next != it->current) {
+      return 0;
+    }
   }
 
   return 1;
@@ -285,8 +287,9 @@ t8_locidx_list_iterator_next (t8_locidx_list_iterator_t * it)
 
   /* Store the current pointer */
   sc_link_t          *temp = it->current;
+
   /* Advance the current pointer */
-  it->current = it->prev->next;
+  it->current = it->current->next;
   /* Reset the prev pointer */
   it->prev = temp;
 }
@@ -315,11 +318,12 @@ t8_locidx_list_iterator_remove_entry (t8_locidx_list_iterator_t * it)
   T8_ASSERT (it != NULL);
   T8_ASSERT (t8_locidx_list_iterator_is_valid (it, it->list));
 
+  /* Store the link after current */
+  sc_link_t          *next = it->current->next;
+
+  /* Remove the current link from the list */
   t8_locidx_list_remove (it->list, it->prev);
+
   /* Set the new current pointer */
-  if (it->prev == NULL) {
-    /* Removed the first list item. Set current to the new first item. */
-    it->current = it->list->list.first;
-  }
-  it->current = it->prev->next;
+  it->current = next;
 }
