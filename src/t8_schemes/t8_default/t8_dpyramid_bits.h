@@ -56,16 +56,8 @@ uint64_t            t8_dpyramid_linear_id (const t8_dpyramid_t * p,
  * \param [out] child  Existing pyramid whose data will be filled
  * 		    with the date of t's childid-th child.
  */
-void
- 
- 
- 
- 
- 
- 
- 
- t8_dpyramid_child (const t8_dpyramid_t * elem, int child_id,
-                    t8_dpyramid_t * child);
+void                t8_dpyramid_child (const t8_dpyramid_t * elem, int child_id,
+                                        t8_dpyramid_t * child);
 
 /** Compare two elements. returns negativ if p1 < p2, zero if p1 equals p2
  *  and positiv if p1 > p2.
@@ -74,13 +66,13 @@ void
 int                 t8_dpyramid_compare (const t8_dpyramid_t * p1,
                                          const t8_dpyramid_t * p2);
 
-int
- 
- 
- 
- 
- 
-      t8_dpyramid_is_equal (const t8_dpyramid_t * p, const t8_dpyramid_t * q);
+/** Checks if two pyramids have the same coordinates, same type and same level.
+ * \param [in]  p   first input pyramid
+ * \param [in]  q   second input pyramid
+ * \return          0, if they are equal, 1 ow.
+ */
+int                 t8_dpyramid_is_equal (const t8_dpyramid_t * p,
+                                          const t8_dpyramid_t * q);
 
 /** Compute the position of the ancestor of this child at level \a level within
  * its siblings.
@@ -115,16 +107,9 @@ void                t8_dpyramid_first_descendant (const t8_dpyramid_t * p,
  * \param [in] level    The refinement level. Must be greater than \a p's refinement
  *                      level.
  */
-void
- 
- 
- 
- 
- 
- 
- 
- t8_dpyramid_last_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * desc,
-                              int level);
+void                t8_dpyramid_last_descendant (const t8_dpyramid_t * p,
+                                                 t8_dpyramid_t * desc,
+                                                 int level);
 
 /** Compute the coordinates of a vertex of a pyramid.
  * \param [in] p    Input pyramid.

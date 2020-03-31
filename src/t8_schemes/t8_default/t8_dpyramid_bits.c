@@ -532,8 +532,6 @@ t8_dpyramid_succesor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
 {
   int                 pyramid_child_id, num_children;
   t8_dpyramid_copy (elem, succ);
-  printf ("level: %i SuccIN: %i %i %i, t: %i, l:%i\n", level, elem->x,
-          elem->y, elem->z, elem->type, elem->level);
   T8_ASSERT (1 <= level && level <= T8_DPYRAMID_MAXLEVEL);
   /* typ auf level herausfinden und in succ speichern */
   succ->type = compute_type (succ, level);
@@ -544,7 +542,6 @@ t8_dpyramid_succesor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
   T8_ASSERT (0 <= pyramid_child_id
              && pyramid_child_id < num_children);
   if (pyramid_child_id == num_children - 1) {
-    printf("last pyramid\n");
     t8_dpyramid_succesor (elem, succ, level - 1);
     succ->level = level;
     /* bits auf level auf child 0 setzen */
@@ -557,17 +554,13 @@ t8_dpyramid_succesor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
     succ->z =
       (succ->z >> (T8_DPYRAMID_MAXLEVEL - level + 1)) << (T8_DPYRAMID_MAXLEVEL -
                                                     level + 1);
-
   }
   //not the last pyramid
   else {
-    printf("not last\n");
     t8_dpyramid_parent (succ, succ);
     t8_dpyramid_child (succ, pyramid_child_id + 1, succ);
     succ->level = level;
   }
-  printf ("SuccOUT: %i %i %i, t: %i, l:%i\n", succ->x, succ->y, succ->z,
-          succ->type, succ->level);
 }
 
 void
