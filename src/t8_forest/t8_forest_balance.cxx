@@ -347,6 +347,12 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
   const t8_locidx_t   num_ghosts = t8_forest_get_num_ghosts (forest_from);
   sc_array_t          markers;
   t8_locidx_list_t    elements_that_do_not_refine;
+  t8_locidx_list_iterator_t list_iterator;
+  /* Keeping track of whether this process is finished and
+   * whether all processes are finished. */
+  int                 done_locally = 0, done_globally = 0;
+  /* The current communicator */
+  const sc_MPI_Comm   comm = t8_forest_get_mpicomm (forest_from);
 
   /* Initialize refinement markers for all elements and ghosts */
   sc_array_init_size (&markers, sizeof (short),
@@ -368,7 +374,37 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
   t8_forest_adapt_build_marker_array (forest, &markers,
                                       &elements_that_do_not_refine);
 
-  /* TODO: Iterate through marker array and restore balance condition */
+  /* Communicate ghost values for the markers array */
+  t8_forest_ghost_exchange_data (forest_from, &markers);
+
+  /* We now iterate through the not refined elements and check
+   * whether the balance condition will be broken for them.
+   * If so we change there marker to refinement or do nothing,
+   * whichever is appropriate. 
+   * If an element that was not tagged for refinement gets tagged
+   * for refinement in the process, we remove it from the
+   * list of unrefined elements. */
+  /* We have to repeat this iteration, updating the ghost markers
+   * everytime in between, until no process updates its markers 
+   * anymore. */
+  while (!done_globally) {
+    int                 changed_a_marker = 0;   /* Keep track if we change a marker. */
+    /* This process is not done yet */
+    done_locally = 0;
+    /* TODO: If we know that we checked all local elements, are
+     *       are done locally, but not globally, we can optimize by
+     *       checking only the neighbors of the updated ghost elements. */
+
+    if (!changed_a_marker) {
+      /* We did not change anything and thus, this process is done. */
+      done_locally = 1;
+    }
+    /* Update the done_globally flag */
+    sc_MPI_Allreduce (&done_locally, &done_globally, 1, sc_MPI_INT,
+                      sc_MPI_BOR, comm);
+  }
+
+  /* We are now done with the iterations and updated all markers. */
 
   /* clean-up the list */
   t8_locidx_list_reset (&elements_that_do_not_refine);
