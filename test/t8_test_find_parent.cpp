@@ -34,30 +34,27 @@ t8_recursive_child_find_parent (t8_element_t * element,
                                 t8_eclass_scheme_c * ts, int level,
                                 int maxlvl)
 {
-  T8_ASSERT (level <= maxlvl
-             || maxlvl < ts->t8_element_num_children (element));
+  T8_ASSERT (level <= maxlvl &&
+             maxlvl <= ts->t8_element_maxlevel() - 1);
   int                 num_children, i;
   t8_element_t       *child, *test_parent;
-  /*Get number of children */
+  /* Get number of children */
   num_children = ts->t8_element_num_children (element);
-  /*Get child and test_parent, to check if test_parent = parent of child */
+  /* Get child and test_parent, to check if test_parent = parent of child */
   ts->t8_element_new (1, &child);
   ts->t8_element_new (1, &test_parent);
   if (level == maxlvl)
     return;
   for (i = 0; i < num_children; i++) {
-    /*Compute child i */
+    /* Compute child i */
     ts->t8_element_child (element, i, child);
-    /*Compute parent of child */
+    /* Compute parent of child */
     ts->t8_element_parent (child, test_parent);
-    /*If its equal, call child_find_parent, to check if parent-child relation
+    /* If its equal, call child_find_parent, to check if parent-child relation
      * is correct in next level until maxlvl is reached*/
-    if (ts->t8_element_compare (element, test_parent)) {
-      SC_ABORT ("Computed child_parent is not the parent");
-    }
-    else {
-      t8_recursive_child_find_parent (child, ts, level + 1, maxlvl);
-    }
+    SC_CHECK_ABORT (!ts->t8_element_compare (element, test_parent),
+                    "Computed child_parent is not the parent");
+    t8_recursive_child_find_parent (child, ts, level + 1, maxlvl);
   }
 }
 
@@ -71,26 +68,39 @@ t8_compute_child_find_parent (int maxlvl)
   t8_eclass_t         eclass;
   scheme = t8_scheme_new_default_cxx ();
   for (eclassi = T8_ECLASS_ZERO; eclassi < T8_ECLASS_PYRAMID; eclassi++) {
+    /* TODO: Include pyramids as soon as they are supported. */
     eclass = (t8_eclass_t) eclassi;
-    /*Get scheme for eclass */
+    /* Get scheme for eclass */
     ts = scheme->eclass_schemes[eclass];
-    /*Get element and initialize it */
+    /* Get element and initialize it */
     ts->t8_element_new (1, &element);
     ts->t8_element_set_linear_id (element, 0, 0);
-    /*Check for correct parent-child relation */
+    /* Check for correct parent-child relation */
     t8_recursive_child_find_parent (element, ts, 0, maxlvl);
-    printf ("%s: Success\n", t8_eclass_to_string[eclass]);
-    /*Destroy element */
+    /* Destroy element */
     ts->t8_element_destroy (1, &element);
 
   }
-  /*Destroy scheme */
+  /* Destroy scheme */
   t8_scheme_cxx_unref (&scheme);
 }
 
 int
-main ()
+main (int argc, char **argv)
 {
+  int     mpiret;
+
+  mpiret = sc_MPI_Init(&argc, &argv);
+  SC_CHECK_MPI(mpiret);
+  sc_init(sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
+  p4est_init(NULL, SC_LP_ESSENTIAL);
+  t8_init(SC_LP_DEFAULT);
+
   t8_compute_child_find_parent (4);
+
+  sc_finalize();
+
+  mpiret = sc_MPI_Finalize();
+  SC_CHECK_MPI(mpiret);
   return 0;
 }
