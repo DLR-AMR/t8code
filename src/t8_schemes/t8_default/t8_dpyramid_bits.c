@@ -525,7 +525,7 @@ compute_type (const t8_dpyramid_t * p, int level)
 }
 
 void
-t8_dpyramid_succesor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
+t8_dpyramid_successor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
                       int level)
 {
   int                 pyramid_child_id, num_children;
@@ -540,7 +540,7 @@ t8_dpyramid_succesor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
   T8_ASSERT (0 <= pyramid_child_id
              && pyramid_child_id < num_children);
   if (pyramid_child_id == num_children - 1) {
-    t8_dpyramid_succesor (elem, succ, level - 1);
+    t8_dpyramid_successor (elem, succ, level - 1);
     succ->level = level;
     /* bits auf level auf child 0 setzen */
     succ->x =

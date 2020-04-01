@@ -157,7 +157,7 @@ t8_default_scheme_pyramid_c::t8_element_successor (const t8_element_t * elem,
                                                    t8_element_t * s,
                                                    int level)
 {
-  t8_dpyramid_succesor ((const t8_dpyramid_t *) elem, (t8_dpyramid_t *) s,
+  t8_dpyramid_successor ((const t8_dpyramid_t *) elem, (t8_dpyramid_t *) s,
                         level);
 }
 

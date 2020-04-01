@@ -159,7 +159,7 @@ t8_eclass_t         t8_dpyramid_shape (const t8_dpyramid_t * p);
  *                data of \a l's successor on level \a level.
  * \param [in] level level of uniform grid to be considered.
  */
-void                t8_dpyramid_succesor (const t8_dpyramid_t * elem,
+void                t8_dpyramid_successor (const t8_dpyramid_t * elem,
                                           t8_dpyramid_t * s, int level);
 
 T8_EXTERN_C_END ();
