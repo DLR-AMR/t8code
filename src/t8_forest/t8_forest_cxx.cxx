@@ -320,6 +320,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
       double ray[3], lambda, quad_coords[3], length, length2;
       length = 0;
       length2 = 0;
+      quad_coords[2] = 0;
 
       for(i = 0; i<3; i++){
           vertex_coords[i] =  len * corner_coords[i];

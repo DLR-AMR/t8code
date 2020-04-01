@@ -43,6 +43,13 @@ void                t8_dpyramid_init_linear_id (t8_dpyramid_t * p, int level,
  */
 int                 t8_dpyramid_get_level (const t8_dpyramid_t * p);
 
+/** Copy the data from source to dest
+ * \param[in] source    The source-pyramid
+ * \param[in/out] dest  The destination
+ */
+void                t8_dpyramid_copy(const t8_dpyramid_t * source,
+                 t8_dpyramid_t * dest);
+
 /** Computes the linear position of a pyramid in an uniform grid.
  * \param [in] p  pyramid whose id will be computed.
  * \return Returns the linear position of this pyramid on a grid.

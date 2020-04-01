@@ -80,10 +80,7 @@ public:
 
 /** Copy one element to another */
   virtual void        t8_element_copy (const t8_element_t * source,
-                                       t8_element_t * dest)
-  {
-    SC_ABORT ("This function is not implemented yet.\n"); /* suppresses compiler warning */
-  }
+                                       t8_element_t * dest);
 
 /** Given a boundary face inside a root tree's face construct
  *  the element inside the root tree that has the given face as a

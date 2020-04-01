@@ -85,14 +85,14 @@ t8_dpyramid_is_equal (const t8_dpyramid_t * p, const t8_dpyramid_t * q)
   }
 }
 
-/*Copies a pyramid from p to dest*/
+/*Copies a pyramid from source to dest*/
 void
-t8_dpyramid_copy (const t8_dpyramid_t * p, t8_dpyramid_t * dest)
+t8_dpyramid_copy (const t8_dpyramid_t * source, t8_dpyramid_t * dest)
 {
-  if (p == dest) {
+  if (source == dest) {
     return;
   }
-  memcpy (dest, p, sizeof (t8_dpyramid_t));
+  memcpy (dest, source, sizeof (t8_dpyramid_t));
 }
 
 int
@@ -113,6 +113,7 @@ t8_dpyramid_compare (const t8_dpyramid_t * p1, const t8_dpyramid_t * p2)
      id2 */
   return id1 < id2 ? -1 : id1 != id2;
 }
+
 
 int
 t8_dpyramid_get_level (const t8_dpyramid_t * p)
@@ -247,7 +248,6 @@ t8_dpyramid_child_id (const t8_dpyramid_t * p)
 {
   T8_ASSERT (p->level > 0);
   int                 cube_id = compute_cubeid (p, p->level);
-  printf("type: %i, cube_id: %i\n", p->type, cube_id);
   return t8_dpyramid_type_cid_to_Iloc[p->type][cube_id];
 }
 
@@ -516,11 +516,9 @@ compute_type (const t8_dpyramid_t * p, int level)
     /*Type of the root pyra */
     return 0;
   }
-  printf ("type: %i\n", type);
   for (i = p->level; i > level; i--) {
     cid = compute_cubeid (p, i);
     type = t8_dpyramid_cid_type_to_parenttype[cid][type];
-    printf ("type: %i\n", type);
   }
 
   return type;

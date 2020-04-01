@@ -73,6 +73,13 @@ t8_default_scheme_pyramid_c::t8_element_compare (const t8_element_t * elem1,
 }
 
 void
+t8_default_scheme_pyramid_c::t8_element_copy (const t8_element_t * source,
+                                       t8_element_t * dest){
+    t8_dpyramid_copy((const t8_dpyramid_t *) source,
+                     (t8_dpyramid_t *) dest);
+}
+
+void
 t8_default_scheme_pyramid_c::t8_element_child (const t8_element_t * elem,
                                                int childid,
                                                t8_element_t * child)

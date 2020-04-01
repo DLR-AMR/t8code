@@ -25,7 +25,7 @@
 #include <t8_schemes/t8_default/t8_dpyramid.h>
 #include <t8_schemes/t8_default/t8_dtet.h>
 
-
+/*
 static void
 t8_check_succesor(){
     t8_dpyramid_t pyra, pyra_child, pyra_child_child, pyra_succesor;
@@ -50,7 +50,7 @@ t8_check_succesor(){
                    pyra_succesor.z, pyra_succesor.type, pyra_succesor.level);
             printf("soll: %i %i %i %i %i\n\n", pyra_child_child.x, pyra_child_child.y,
                    pyra_child_child.z, pyra_child_child.type, pyra_child_child.level);
-            if(t8_dpyramid_compare(&pyra_child_child, &pyra_succesor) != 0){
+            if(t8_dpyramid_is_equal(&pyra_child_child, &pyra_succesor) != 0){
                 SC_ABORT("Computed succesor is not correct on level 2\n");
             }
         }
@@ -58,6 +58,24 @@ t8_check_succesor(){
         t8_dpyramid_child(&pyra, i, &pyra_child);
         if(t8_dpyramid_compare(&pyra_succesor, &pyra_child) != 0){
             SC_ABORT("Computed succesor is not correct\n");
+        }
+    }
+}*/
+
+static void
+t8_check_succesor(){
+    t8_dpyramid_t pyra, child, child_child;
+    int i, j , num_children;
+    t8_dpyramid_init_linear_id(&pyra, 0, 0);
+
+    for(i = 0; i< T8_DPYRAMID_CHILDREN;i++){
+        t8_dpyramid_child(&pyra, i, &child);
+        num_children = t8_dpyramid_num_children(&child);
+        for(j = 0; j<num_children; j++){
+            t8_dpyramid_child(&child, j, &child_child);
+            /*
+            printf("%i %i %i %i %i\n", child_child.x, child_child.y, child_child.z,
+                   child_child.type, child_child.level);*/
         }
     }
 }
