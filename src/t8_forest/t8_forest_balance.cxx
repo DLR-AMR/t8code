@@ -409,6 +409,18 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
         *(short *) t8_sc_array_index_locidx (&markers, element_index);
       /* TODO: Check whether the balance condition will be broken by this element. */
       /* TODO: Depending on the current marker, update the marker of this element. */
+      /*
+         for (each face f) {
+         get face neighbor indices at f.
+         get their levels and their markers.
+         if new_level_this_element < new_level_neighbor + 1 {
+         mark this element for 'not coarsening' or 'refined'
+         depends on the current marker and the level difference
+         }
+         // We could optimize: If i change my marker, change also the marker of my neighbors if necessary
+         // (only handle the faces once, not once per element)
+         }
+       */
     }
 
     if (!changed_a_marker) {
