@@ -390,8 +390,9 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
    * anymore. */
   while (!done_globally) {
     int                 changed_a_marker = 0;   /* Keep track if we change a marker. */
-    /* This process is not done yet */
-    done_locally = 0;
+    /* We set done_locally to 1 and if we need to change any elements
+     * we will set it to 0. */
+    done_locally = 1;
     /* TODO: If we know that we checked all local elements, are
      *       are done locally, but not globally, we can optimize by
      *       checking only the neighbors of the updated ghost elements. */
