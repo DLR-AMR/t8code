@@ -30,38 +30,41 @@
  * reached.
  */
 static void
-t8_recursive_child_find_parent (t8_element_t * element,
-                                t8_eclass_scheme_c * ts, int level,
-                                int maxlvl)
+t8_recursive_child_find_parent (t8_element_t * element, t8_element_t * child,
+                                t8_element_t * test_parent, t8_eclass_scheme_c * ts,
+                                int level, int maxlvl)
 {
   T8_ASSERT (level <= maxlvl &&
              maxlvl <= ts->t8_element_maxlevel() - 1);
   int                 num_children, i;
-  t8_element_t       *child, *test_parent;
+  t8_element_t       *parent;
   /* Get number of children */
   num_children = ts->t8_element_num_children (element);
   /* Get child and test_parent, to check if test_parent = parent of child */
-  ts->t8_element_new (1, &child);
-  ts->t8_element_new (1, &test_parent);
+  ts->t8_element_new (1, &parent);
+  ts->t8_element_copy(element, parent);
   if (level == maxlvl)
     return;
   for (i = 0; i < num_children; i++) {
     /* Compute child i */
-    ts->t8_element_child (element, i, child);
+    ts->t8_element_child (parent, i, child);
     /* Compute parent of child */
     ts->t8_element_parent (child, test_parent);
     /* If its equal, call child_find_parent, to check if parent-child relation
      * is correct in next level until maxlvl is reached*/
-    SC_CHECK_ABORT (!ts->t8_element_compare (element, test_parent),
+    SC_CHECK_ABORT (!ts->t8_element_compare (parent, test_parent),
                     "Computed child_parent is not the parent");
-    t8_recursive_child_find_parent (child, ts, level + 1, maxlvl);
+
+    t8_recursive_child_find_parent (child, element, test_parent, ts, level + 1,
+                                    maxlvl);
   }
+  ts->t8_element_destroy(1, &parent);
 }
 
 static void
 t8_compute_child_find_parent (int maxlvl)
 {
-  t8_element_t       *element;
+  t8_element_t       *element, *child, *test_parent;
   t8_scheme_cxx      *scheme;
   t8_eclass_scheme_c *ts;
   int                 eclassi;
@@ -74,11 +77,16 @@ t8_compute_child_find_parent (int maxlvl)
     ts = scheme->eclass_schemes[eclass];
     /* Get element and initialize it */
     ts->t8_element_new (1, &element);
+    ts->t8_element_new (1, &child);
+    ts->t8_element_new (1, &test_parent);
+
     ts->t8_element_set_linear_id (element, 0, 0);
     /* Check for correct parent-child relation */
-    t8_recursive_child_find_parent (element, ts, 0, maxlvl);
+    t8_recursive_child_find_parent (element, child, test_parent, ts, 0, maxlvl);
     /* Destroy element */
     ts->t8_element_destroy (1, &element);
+    ts->t8_element_destroy(1, &child);
+    ts->t8_element_destroy(1, &test_parent);
 
   }
   /* Destroy scheme */
