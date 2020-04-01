@@ -32,7 +32,7 @@
 static void
 t8_recursive_child_find_parent (t8_element_t * element, t8_element_t * child,
                                 t8_element_t * test_parent, t8_eclass_scheme_c * ts,
-                                int level, int maxlvl)
+                                int level, const int maxlvl)
 {
   T8_ASSERT (level <= maxlvl &&
              maxlvl <= ts->t8_element_maxlevel() - 1);
@@ -62,7 +62,7 @@ t8_recursive_child_find_parent (t8_element_t * element, t8_element_t * child,
 }
 
 static void
-t8_compute_child_find_parent (int maxlvl)
+t8_compute_child_find_parent (const int maxlvl)
 {
   t8_element_t       *element, *child, *test_parent;
   t8_scheme_cxx      *scheme;
@@ -97,6 +97,12 @@ int
 main (int argc, char **argv)
 {
   int     mpiret;
+#ifdef T8_ENABLE_DEBUG
+  const int maxlvl = 8;
+#else
+  const int maxlvl = 12;
+#endif
+
 
   mpiret = sc_MPI_Init(&argc, &argv);
   SC_CHECK_MPI(mpiret);
@@ -104,7 +110,7 @@ main (int argc, char **argv)
   p4est_init(NULL, SC_LP_ESSENTIAL);
   t8_init(SC_LP_DEFAULT);
 
-  t8_compute_child_find_parent (4);
+  t8_compute_child_find_parent (maxlvl);
 
   sc_finalize();
 
