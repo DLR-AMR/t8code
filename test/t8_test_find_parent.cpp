@@ -99,7 +99,7 @@ main (int argc, char **argv)
 #ifdef T8_ENABLE_DEBUG
   const int maxlvl = 8;
 #else
-  const int maxlvl = 10;
+  const int maxlvl = 9;
 #endif
 
 
