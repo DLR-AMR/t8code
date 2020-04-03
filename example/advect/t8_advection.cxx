@@ -25,7 +25,6 @@
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_private.h>        /* TODO: remove */
-#include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest_vtk.h>

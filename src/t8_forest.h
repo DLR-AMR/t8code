@@ -429,6 +429,22 @@ t8_locidx_t         t8_forest_cmesh_ltreeid_to_ltreeid (t8_forest_t forest,
 t8_ctree_t          t8_forest_get_coarse_tree (t8_forest_t forest,
                                                t8_locidx_t ltreeid);
 
+/** Exchange ghost information of user defined element data.
+ * \param[in] forest       The forest. Must be committed.
+ * \param[in] element_data An array of length num_local_elements + num_ghosts
+ *                         storing one value for each local element and ghost in \a forest.
+ *                         After calling this function the entries for the ghost elements
+ *                         are update with the entries in the \a element_data array of
+ *                         the corresponding owning process.
+ * \note This function is collective and hence must be called by all processes in the forest's
+ *       MPI Communicator.
+ */
+/* TODO: In \ref t8_forest_ghost_cxx we already implemented a begin and end function
+ *       that allow for overlapping communication and computation. We will make them
+ *       available in this interface in the future. */
+void                t8_forest_ghost_exchange_data (t8_forest_t forest,
+                                                   sc_array_t * element_data);
+
 /** Enable or disable profiling for a forest. If profiling is enabled, runtimes
  * and statistics are collected during forest_commit.
  * \param [in,out] forest        The forest to be updated.
