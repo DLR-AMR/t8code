@@ -275,7 +275,12 @@ t8_dpyramid_child (const t8_dpyramid_t * elem, int child_id,
 
 const t8_dpyramid_type_t t8_dpyramid_type_Iloc_to_parenttype[2][10] = {
   {6, -1, 6, 7, 6, -1, -1, 6, -1, 6},
-  {7, -1, -1, 7, 7, -1, 7, -1, 6, 7}
+  {7, -1, -1, 7, 7, -1, 7, -1, 7, 7}
+};
+
+const t8_dpyramid_type_t t8_dpyramid_type_cid_to_parenttype[2][8] = {
+  {6, 6, 6, 6, 7, -1, -1, 6},
+  {7, -1, -1, 6, 7, 7, 7, 7}
 };
 
 const int           t8_dpyramid_trailing_zeroes_lookup[37] = { 32, 0, 1,
@@ -435,23 +440,25 @@ t8_dpyramid_tetparent_type (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
   }
 }
 
+
+
 void
 t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
 {
   T8_ASSERT (p->level >= 0);
   T8_ASSERT (T8_DPYRAMID_MAXLEVEL == T8_DTET_MAXLEVEL);
-  /*This assertion is just for the case, that I forgot to realy implement this function!
-   * This version only works, if the pyramid is only refined once, so the parent is always
-   * known. Delete this, if fully implemented.*/
+
+  t8_dpyramid_coord_t h = T8_DPYRAMID_LEN (p->level);
+
   if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID) {
     /*The parent of a pyramid is a pyramid, maybe of different type */
-    t8_dpyramid_coord_t h = T8_DPYRAMID_LEN (p->level);
-    int                 child_id = t8_dpyramid_child_id (p);
-    T8_ASSERT (child_id >= 0);
+
+    int                 cube_id = compute_cubeid(p, p->level);
+
+    parent->type = t8_dpyramid_type_cid_to_parenttype[p->type - 6][cube_id];
     parent->x = p->x & ~h;
     parent->y = p->y & ~h;
     parent->z = p->z & ~h;
-    parent->type = t8_dpyramid_type_Iloc_to_parenttype[p->type - 6][child_id];
     T8_ASSERT (parent->type >= 0);
     parent->level = p->level - 1;
   }
@@ -464,16 +471,16 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
     else if (t8_dpyramid_is_inside_tet (p) == 0) {
       /*Pyramid- / tetparent detection */
       /*If a tetrahedron does not reach a "significant point" its parent is a tet */
-      /*Tetcase */
+      /*Tetcase */;
       t8_dtet_parent ((t8_dtet_t *) p, (t8_dtet_t *) parent);
     }
     else {
       /*p does not lie in larger tet => parent is pyra */
-      t8_dpyramid_coord_t h = T8_DPYRAMID_LEN (p->level);
+
+      t8_dpyramid_tetparent_type (p, parent);
       parent->x = p->x & ~h;
       parent->y = p->y & ~h;
       parent->z = p->z & ~h;
-      t8_dpyramid_tetparent_type (p, parent);
       parent->level = p->level - 1;
     }
   }
@@ -514,7 +521,7 @@ compute_type (const t8_dpyramid_t * p, int level)
   }
   if (level == 0) {
     /*Type of the root pyra */
-    return 0;
+    return T8_DPYRAMID_ROOT_TPYE;
   }
   for (i = p->level; i > level; i--) {
     cid = compute_cubeid (p, i);

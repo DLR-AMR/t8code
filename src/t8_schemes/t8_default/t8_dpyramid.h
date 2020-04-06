@@ -30,8 +30,10 @@
 #define T8_DPYRAMID_LEN(l) (1 << (T8_DPYRAMID_MAXLEVEL- (l)))
 
 /** The number of types of a pyramid */
-
 #define T8_DPYRAMID_NUM_TYPES 8
+
+/** The type of the root pyramid*/
+#define T8_DPYRAMID_ROOT_TPYE 6
 /*
  * In this case type 0-5 are the six types of tets and
  * type 6 is an upward facing pyramid
