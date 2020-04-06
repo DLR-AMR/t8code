@@ -942,6 +942,8 @@ t8_locidx_t
 t8_forest_get_tree_element_offset (t8_forest_t forest, t8_locidx_t ltreeid)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (0 <= ltreeid
+             && ltreeid < t8_forest_get_num_local_trees (forest));
 
   return t8_forest_get_tree (forest, ltreeid)->elements_offset;
 }
