@@ -25,63 +25,38 @@
 #include <t8_schemes/t8_default/t8_dpyramid.h>
 #include <t8_schemes/t8_default/t8_dtet.h>
 
-/*
+
+/*TODO: Make this test recursive. Furthermore adapt to every element-class.*/
 static void
 t8_check_successor(){
-    t8_dpyramid_t pyra, pyra_child, pyra_child_child, pyra_succesor;
-    int i, j, num_children;
-
-    t8_dpyramid_init_linear_id(&pyra, 0,0);
-    t8_dpyramid_child(&pyra, 0, &pyra_child);
-    for(i = 1; i<T8_DPYRAMID_CHILDREN; i++){
-        if(t8_dpyramid_shape(&pyra_child) == T8_ECLASS_TET){
-            num_children = T8_DTET_CHILDREN;
-        }
-        else{
-            num_children = T8_DPYRAMID_CHILDREN;
-        }
-        printf("chil: %i %i %i %i %i\n", pyra_child.x, pyra_child.y,
-               pyra_child.z, pyra_child.type, pyra_child.level);
-        t8_dpyramid_child(&pyra_child, 0, &pyra_child_child);
-        for(j = 1; j<num_children; j++){
-            t8_dpyramid_succesor(&pyra_child_child, &pyra_succesor, 2);
-            t8_dpyramid_child(&pyra_child, j, &pyra_child_child);
-            printf("succ: %i %i %i %i %i\n", pyra_succesor.x, pyra_succesor.y,
-                   pyra_succesor.z, pyra_succesor.type, pyra_succesor.level);
-            printf("soll: %i %i %i %i %i\n\n", pyra_child_child.x, pyra_child_child.y,
-                   pyra_child_child.z, pyra_child_child.type, pyra_child_child.level);
-            if(t8_dpyramid_is_equal(&pyra_child_child, &pyra_succesor) != 0){
-                SC_ABORT("Computed succesor is not correct on level 2\n");
-            }
-        }
-        t8_dpyramid_succesor(&pyra_child, &pyra_succesor, 1);
-        t8_dpyramid_child(&pyra, i, &pyra_child);
-        if(t8_dpyramid_compare(&pyra_succesor, &pyra_child) != 0){
-            SC_ABORT("Computed succesor is not correct\n");
-        }
-    }
-}*/
-
-static void
-t8_check_successor(){
-    t8_dpyramid_t pyra, child, child_child, iterator, successor;
-    int i, j , num_children;
+    t8_dpyramid_t pyra, child, child_child, next_child, iterator, successor, test;
+    int i, j, k, num_children, num_children2;
     t8_dpyramid_init_linear_id(&pyra, 0, 0);
-    t8_dpyramid_init_linear_id(&successor, 2, 0);
+    t8_dpyramid_init_linear_id(&successor, 3, 0);
 
     for(i = 0; i< T8_DPYRAMID_CHILDREN;i++){
         t8_dpyramid_child(&pyra, i, &child);
+
         num_children = t8_dpyramid_num_children(&child);
         for(j = 0; j<num_children; j++){
             t8_dpyramid_child(&child, j, &child_child);
-            t8_dpyramid_copy(&successor, &iterator);
-            printf("SOLL %i %i %i %i %i\n", child_child.x, child_child.y, child_child.z,
-                   child_child.type, child_child.level);
-            printf("IS   %i %i %i %i %i\n \n", iterator.x, iterator.y, iterator.z,
-                   iterator.type, iterator.level);
-            SC_CHECK_ABORT(!t8_dpyramid_is_equal(&child_child, &iterator),
-                      "Wrong Successor\n");
-            t8_dpyramid_successor(&iterator, &successor,2);
+            num_children2 = t8_dpyramid_num_children(&child_child);
+
+            for(k = 0; k<num_children2; k++){
+                printf("Test computes child %i\n", k);
+                t8_dpyramid_child(&child_child,k,&next_child);
+                t8_dpyramid_copy(&successor, &iterator);
+
+                printf("SOLL %i %i %i %i %i\n", next_child.x, next_child.y, next_child.z,
+                       next_child.type, next_child.level);
+                printf("IS   %i %i %i %i %i\n \n", iterator.x, iterator.y, iterator.z,
+                       iterator.type, iterator.level);
+
+                SC_CHECK_ABORT(!t8_dpyramid_is_equal(&next_child, &iterator),
+                               "Wrong Successor\n");
+                if(i == T8_DPYRAMID_CHILDREN -1 && i == j && i == k)break;
+                t8_dpyramid_successor(&iterator, &successor, 3);
+            }
         }
     }
 }

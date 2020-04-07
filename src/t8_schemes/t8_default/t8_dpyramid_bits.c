@@ -39,14 +39,9 @@ const t8_dpyramid_cube_id_t t8_dpyramid_parenttype_Iloc_to_cid[2][10] = {
   {0, 1, 1, 2, 2, 3, 3, 3, 3, 7},
   {0, 4, 4, 4, 4, 5, 5, 6, 6, 7}
 };
-/*
-{0, 1, 3, 5, 1, 4, 7, 7},
-{-1, -1, -1, -1, -1, 5, 4, -1},
-{-1, -1, -1, -1, -1, 6, 5, -1},
-{0, 1, 1, 6, 2, 5, 6, 7},
-{0, 2, 2, -1, -1, -1, -1, -1},
-{-1, 3, 3, -1, -1, -1, -1, -1},*/
 
+/* The local ID of an element in a pyramid. This is important!
+ * The local ID is different, if the element is in a tet*/
 const int           t8_dpyramid_type_cid_to_Iloc[8][8] = {
     {0, 1, 3, 5, 1, 4, 7, 7},
     {0, 1, 2, 5, 2, 5, 4, 7},
@@ -75,7 +70,6 @@ compute_cubeid (const t8_dpyramid_t * p, int level)
   t8_dpyramid_cube_id_t id = 0;
   t8_dpyramid_coord_t h;
 
-  /* TODO: assert that 0 < level? This may simplify code elsewhere */
 
   T8_ASSERT (0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
   h = T8_DPYRAMID_LEN (level);
@@ -266,7 +260,6 @@ t8_dpyramid_child_id (const t8_dpyramid_t * p)
 {
   T8_ASSERT (p->level > 0);
   int                 cube_id = compute_cubeid (p, p->level);
-  printf("type: %i, cid: %i\n", p->type, cube_id);
   return t8_dpyramid_type_cid_to_Iloc[p->type][cube_id];
 }
 
@@ -277,13 +270,10 @@ t8_dpyramid_child (const t8_dpyramid_t * elem, int child_id,
   t8_dpyramid_cube_id_t cube_id;
   t8_dpyramid_coord_t h;
   T8_ASSERT (0 <= child_id && child_id < T8_DPYRAMID_CHILDREN);
-  printf("Compute child %i\n", child_id);
   if (t8_dpyramid_shape(elem) == T8_ECLASS_TET) {
-    printf("tet-case\n");
     t8_dtet_child ((t8_dtet_t *) elem, child_id, (t8_dtet_t *) child);
   }
   else {
-    printf("pyra-case\n");
     cube_id = t8_dpyramid_parenttype_Iloc_to_cid[elem->type - 6][child_id];
     child->level = elem->level + 1;
     h = T8_DPYRAMID_LEN (child->level);
@@ -548,25 +538,30 @@ t8_dpyramid_successor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
                       int level)
 {
   int                 child_id, num_children;
+  t8_dpyramid_t       parent;
   t8_dpyramid_copy (elem, succ);
   T8_ASSERT (1 <= level && level <= T8_DPYRAMID_MAXLEVEL);
   /* typ auf level herausfinden und in succ speichern */
   /*succ->type = compute_type (succ, level);*/
-  printf("start successor at level %i\n",  level);
-  printf("in: %i %i %i %i %i\n", elem->x, elem->y, elem->z, elem->type, elem->level);
   succ->level = level;
   T8_ASSERT (succ->type >= 0);
-  child_id = t8_dpyramid_child_id (succ);
-  printf("child_id %i\n", child_id);
-  t8_dpyramid_parent(succ, succ);
-  printf("Parent: %i %i %i %i %i\n", succ->x, succ->y, succ->z, succ->type,
-         succ->level);
+  /*TODO: Find a work-around, such that we don't need parent*/
+  t8_dpyramid_parent(succ, &parent);
+  /*Compute the local ID (depends on parent-shape)*/
+  if(t8_dpyramid_shape(&parent) == T8_ECLASS_TET){
+    child_id = t8_dtet_child_id((const t8_dtet_t *) elem);
+  }
+  else{
+      child_id = t8_dpyramid_child_id (elem);
+  }
+  t8_dpyramid_copy(&parent, succ);
+  /*Compute number of children*/
   num_children = t8_dpyramid_num_children(succ);
   T8_ASSERT (0 <= child_id
              && child_id < num_children);
   if (child_id == num_children - 1) {
-    printf("last element\n");
-
+    /* Last-child-case. The successor is the successor of the parent element,
+     * but with the given level */
     t8_dpyramid_successor (succ, succ, level - 1);
     succ->level = level;
     /* bits auf level auf child 0 setzen */
@@ -579,22 +574,12 @@ t8_dpyramid_successor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
     succ->z =
       (succ->z >> (T8_DPYRAMID_MAXLEVEL - level + 1)) << (T8_DPYRAMID_MAXLEVEL -
                                                     level + 1);
-    printf("last element Iloc %i\n", t8_dpyramid_child_id(succ));
   }
-  //not the last pyramid
   else {
-    printf("not the last element\n");
-    printf("Successor computes child %i\n", child_id+1);
-    /*t8_dpyramid_parent (succ, succ);*/
-
-    printf("Parent: %i %i %i %i %i\n", succ->x, succ->y, succ->z, succ->type,
-           succ->level);
+    /* Not the last element. Compute child with local ID child_id+1*/
     t8_dpyramid_child (succ, child_id + 1, succ);
     succ->level = level;
   }
-  printf("finished successor at level %i\n", level);
-  printf("successor is %i %i %i %i %i\n\n", succ->x, succ->y, succ->z, succ->type,
-         succ->level);
 }
 
 void
