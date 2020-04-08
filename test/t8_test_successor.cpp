@@ -30,7 +30,7 @@
  */
 static void
 t8_recursive_successor (t8_element_t * element, t8_element_t * successor,
-                        t8_element_t * child, t8_element_t * iterator,
+                        t8_element_t * child,
                         t8_element_t * last, t8_eclass_scheme_c * ts,
                         int level, const int maxlvl)
 {
@@ -41,24 +41,24 @@ t8_recursive_successor (t8_element_t * element, t8_element_t * successor,
     /* Check, if the successor of the last recursion is the first child of
      * of this element.
      */
-    ts->t8_element_child (element, 0, iterator);
-    SC_CHECK_ABORT (!ts->t8_element_compare (iterator, successor),
+    ts->t8_element_child (element, 0, child);
+    SC_CHECK_ABORT (!ts->t8_element_compare (child, successor),
                     "Wrong Successor, Case1\n");
     num_children = ts->t8_element_num_children (element);
     /*Check if the successor in this element is computed correctly */
     for (i = 1; i < num_children; i++) {
-      ts->t8_element_successor (iterator, successor, maxlvl);
-      ts->t8_element_child (element, i, iterator);
-      SC_CHECK_ABORT (!ts->t8_element_compare (iterator, successor),
+      ts->t8_element_successor (child, successor, maxlvl);
+      ts->t8_element_child (element, i, child);
+      SC_CHECK_ABORT (!ts->t8_element_compare (child, successor),
                       "Wrong Succesor, Case2\n");
     }
     /*If the iterator is the last element, the test can finish */
-    if (!ts->t8_element_compare (last, iterator)) {
+    if (!ts->t8_element_compare (last, child)) {
       return;
     }
     /*Compute the next successor / "jump" out of the current element */
     else {
-      ts->t8_element_successor (iterator, successor, maxlvl);
+      ts->t8_element_successor (child, successor, maxlvl);
     }
   }
   else {
@@ -67,7 +67,7 @@ t8_recursive_successor (t8_element_t * element, t8_element_t * successor,
     for (i = 0; i < num_children; i++) {
       ts->t8_element_child (element, i, child);
       t8_recursive_successor (child, successor, element,
-                              iterator, last, ts, level + 1, maxlvl);
+                               last, ts, level + 1, maxlvl);
       ts->t8_element_parent (child, element);
     }
   }
@@ -76,7 +76,7 @@ t8_recursive_successor (t8_element_t * element, t8_element_t * successor,
 static void
 t8_compute_successor (const int level)
 {
-  t8_element_t       *element, *successor, *iterator, *child, *last;
+  t8_element_t       *element, *successor, *child, *last;
   t8_scheme_cxx      *scheme;
   t8_eclass_scheme_c *ts;
   int                 eclassi;
@@ -88,7 +88,6 @@ t8_compute_successor (const int level)
     ts = scheme->eclass_schemes[eclass];
     ts->t8_element_new (1, &element);
     ts->t8_element_new (1, &successor);
-    ts->t8_element_new (1, &iterator);
     ts->t8_element_new (1, &child);
     ts->t8_element_new (1, &last);
 
@@ -96,12 +95,11 @@ t8_compute_successor (const int level)
     ts->t8_element_set_linear_id (successor, level, 0);
     ts->t8_element_last_descendant (element, last, level);
 
-    t8_recursive_successor (element, successor, child, iterator, last, ts, 0,
+    t8_recursive_successor (element, successor, child, last, ts, 0,
                             level);
 
     ts->t8_element_destroy (1, &element);
     ts->t8_element_destroy (1, &successor);
-    ts->t8_element_destroy (1, &iterator);
     ts->t8_element_destroy (1, &child);
     ts->t8_element_destroy (1, &last);
   }
