@@ -24,101 +24,111 @@
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default_cxx.hxx>
 
-
+/* Check the computation of the successor recursively. Iterate through the elements
+ * via DFS. On the given maxlvl-1 the children are computeted iteratively. For
+ * each child, the successor is checked.
+ */
 static void
-t8_recursive_successor(t8_element_t * element, t8_element_t * successor,
-                       t8_element_t * test, t8_element_t * iterator,
-                       t8_eclass_scheme_c *ts,
-                       int level, const int maxlvl)
+t8_recursive_successor (t8_element_t * element, t8_element_t * successor,
+                        t8_element_t * child, t8_element_t * iterator,
+                        t8_element_t * last, t8_eclass_scheme_c * ts,
+                        int level, const int maxlvl)
 {
-    T8_ASSERT(level <= maxlvl && maxlvl <= ts->t8_element_maxlevel() - 1);
-    int         num_children, i;
-    num_children = ts->t8_element_num_children(element);
-    if(level == maxlvl-1){
-        //ts->t8_element_last_descendant(element, test, maxlvl);
-        ts->t8_element_child(element, 0, iterator);
-        SC_CHECK_ABORT(!ts->t8_element_compare(successor, iterator),
-                       "Wrong successor\n");
-        for(i = 1; i < num_children; i++){
-            ts->t8_element_successor(iterator,successor, maxlvl);
-            ts->t8_element_child(element, i, iterator);
-
-            SC_CHECK_ABORT(!ts->t8_element_compare(successor, iterator),
-                           "Wrong successor\n");
-        }
-        if(ts->t8_element_compare(test, iterator)){
-            return;
-        }
-        else{
-            ts->t8_element_successor(iterator, successor, maxlvl);
-        }
+  T8_ASSERT (level <= maxlvl && maxlvl <= ts->t8_element_maxlevel () - 1);
+  int                 num_children, i;
+  num_children = ts->t8_element_num_children (element);
+  if (level == maxlvl - 1) {
+    /* Check, if the successor of the last recursion is the first child of
+     * of this element.
+     */
+    ts->t8_element_child (element, 0, iterator);
+    SC_CHECK_ABORT (!ts->t8_element_compare (iterator, successor),
+                    "Wrong Successor, Case1\n");
+    num_children = ts->t8_element_num_children (element);
+    /*Check if the successor in this element is computed correctly */
+    for (i = 1; i < num_children; i++) {
+      ts->t8_element_successor (iterator, successor, maxlvl);
+      ts->t8_element_child (element, i, iterator);
+      SC_CHECK_ABORT (!ts->t8_element_compare (iterator, successor),
+                      "Wrong Succesor, Case2\n");
     }
-    else{
-        for(i = 0; i < num_children; i++){
-            printf("hier\n");
-            ts->t8_element_child(element, i, test);
-            t8_recursive_successor(test, successor, element, iterator, ts, level+1,
-                                   maxlvl);
-            ts->t8_element_parent(test, element);
-        }
+    /*If the iterator is the last element, the test can finish */
+    if (!ts->t8_element_compare (last, iterator)) {
+      return;
     }
+    /*Compute the next successor / "jump" out of the current element */
+    else {
+      ts->t8_element_successor (iterator, successor, maxlvl);
+    }
+  }
+  else {
+    /*DFS run through the elements */
+    num_children = ts->t8_element_num_children (element);
+    for (i = 0; i < num_children; i++) {
+      ts->t8_element_child (element, i, child);
+      t8_recursive_successor (child, successor, element,
+                              iterator, last, ts, level + 1, maxlvl);
+      ts->t8_element_parent (child, element);
+    }
+  }
 }
 
-
 static void
-t8_compute_successor(const int level)
+t8_compute_successor (const int level)
 {
-    t8_element_t        *element, *successor, *iterator, *test;
-    t8_scheme_cxx       *scheme;
-    t8_eclass_scheme_c  *ts;
-    int                 eclassi;
-    t8_eclass_t         eclass;
-    scheme = t8_scheme_new_default_cxx();
-    for(eclassi = T8_ECLASS_LINE; eclassi < T8_ECLASS_PYRAMID; eclassi++){
-        eclass = (t8_eclass_t) eclassi;
-        ts = scheme->eclass_schemes[eclass];
-        ts->t8_element_new(1, &element);
-        ts->t8_element_new(1, &successor);
-        ts->t8_element_new(1, &iterator);
-        ts->t8_element_new(1, &test);
+  t8_element_t       *element, *successor, *iterator, *child, *last;
+  t8_scheme_cxx      *scheme;
+  t8_eclass_scheme_c *ts;
+  int                 eclassi;
+  t8_eclass_t         eclass;
+  scheme = t8_scheme_new_default_cxx ();
+  for (eclassi = T8_ECLASS_LINE; eclassi < T8_ECLASS_PYRAMID; eclassi++) {
+    /*TODO: Include Pyramids, as soon as they are supported */
+    eclass = (t8_eclass_t) eclassi;
+    ts = scheme->eclass_schemes[eclass];
+    ts->t8_element_new (1, &element);
+    ts->t8_element_new (1, &successor);
+    ts->t8_element_new (1, &iterator);
+    ts->t8_element_new (1, &child);
+    ts->t8_element_new (1, &last);
 
-        ts->t8_element_set_linear_id(element, 0,0);
-        ts->t8_element_set_linear_id(successor, level, 0);
+    ts->t8_element_set_linear_id (element, 0, 0);
+    ts->t8_element_set_linear_id (successor, level, 0);
+    ts->t8_element_last_descendant (element, last, level);
 
-        t8_recursive_successor(element, successor, test, iterator, ts, 0, level);
-        t8_debugf("%s: Success\n", t8_eclass_to_string[eclass]);
+    t8_recursive_successor (element, successor, child, iterator, last, ts, 0,
+                            level);
 
-        ts->t8_element_destroy(1, &element);
-        ts->t8_element_destroy(1, &successor);
-        ts->t8_element_destroy(1, &iterator);
-        ts->t8_element_destroy(1, &test);
-    }
-    t8_scheme_cxx_unref(&scheme);
+    ts->t8_element_destroy (1, &element);
+    ts->t8_element_destroy (1, &successor);
+    ts->t8_element_destroy (1, &iterator);
+    ts->t8_element_destroy (1, &child);
+    ts->t8_element_destroy (1, &last);
+  }
+  t8_scheme_cxx_unref (&scheme);
 }
 
 int
 main (int argc, char **argv)
 {
-  int     mpiret;
+  int                 mpiret;
 #ifdef T8_ENABLE_DEBUG
-  const int maxlvl = 2;
+  const int           maxlvl = 8;
 #else
-  const int maxlvl = 2;
+  const int           maxlvl = 9;
 #endif
 
-
-  mpiret = sc_MPI_Init(&argc, &argv);
-  SC_CHECK_MPI(mpiret);
-  sc_init(sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  p4est_init(NULL, SC_LP_ESSENTIAL);
-  t8_init(SC_LP_DEFAULT);
+  mpiret = sc_MPI_Init (&argc, &argv);
+  SC_CHECK_MPI (mpiret);
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
+  p4est_init (NULL, SC_LP_ESSENTIAL);
+  t8_init (SC_LP_DEFAULT);
 
   t8_compute_successor (maxlvl);
 
+  sc_finalize ();
 
-  sc_finalize();
-
-  mpiret = sc_MPI_Finalize();
-  SC_CHECK_MPI(mpiret);
+  mpiret = sc_MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
   return 0;
 }
