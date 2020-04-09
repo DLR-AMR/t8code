@@ -434,7 +434,6 @@ t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers,
   const t8_locidx_t   num_trees = t8_forest_get_num_local_trees (forest_from);
   t8_locidx_t         ltreeid, ielement;
   const t8_locidx_t   num_elements = t8_forest_get_num_element (forest_from);
-  t8_tree_t           tree;
 
   /* check correct markers array size */
   T8_ASSERT (markers != NULL);
@@ -457,18 +456,30 @@ t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers,
       /* Get a pointer to the element */
       const t8_element_t *element =
         t8_forest_get_element_in_tree (forest_from, ltreeid, ielement);
+      t8_element_t      **siblings;
       /* Compute the number of siblings */
       const int           num_siblings =
         ts->t8_element_num_siblings (element);
+      int                 isib;
+      int                 is_family = 0;
       /* Compute whether this element and its next num_siblings followers are a family */
-      const int           is_family =
-        ielement + num_siblings <
-        elements_in_tree ? ts->t8_element_is_family (&element) : 0;
+      if (ielement + num_siblings <
+          elements_in_tree && ts->t8_element_child_id (element) == 0) {
+        siblings = T8_ALLOC (t8_element_t *, num_siblings);
+        /* Gather the siblings in an array */
+        for (isib = 0; isib < num_siblings; ++isib) {
+          siblings[isib] =
+            t8_forest_get_element_in_tree (forest_from, ltreeid,
+                                           ielement + isib);
+        }
+        is_family =
+          ts->t8_element_is_family ((const t8_element_t **) siblings);
+        T8_FREE (siblings);
+      }
       /* If this is a family we pass the element and all siblings to the adapt_fn,
        * otherwise only the element. */
       const int           num_elements_to_adapt =
         is_family ? num_siblings : 1;
-      /* TODO: Use const in t8_element functions for element parameter. */
       const int           adapt_value =
         forest->set_adapt_fn (forest, forest->set_from, ltreeid,
                               ielement, (t8_eclass_scheme_c *) ts,
