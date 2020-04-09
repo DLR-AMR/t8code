@@ -27,6 +27,7 @@
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
+#include <t8_forest/t8_forest_balance.h>
 
 /* In this test, we adapt, balance and partition a uniform forest.
  * We do this in two ways:
@@ -87,9 +88,9 @@ t8_test_create_cmesh (int i, t8_eclass_t eclass, sc_MPI_Comm comm)
   }
 }
 
-/* adapt, balance and partition a given forest in one step */
+/* (recursive) adapt, balance and partition a given forest in one step */
 static              t8_forest_t
-t8_test_forest_commit_abp (t8_forest_t forest, int maxlevel)
+t8_test_forest_commit_abp_recursive (t8_forest_t forest, int maxlevel)
 {
   t8_forest_t         forest_ada_bal_par;
 
@@ -101,6 +102,30 @@ t8_test_forest_commit_abp (t8_forest_t forest, int maxlevel)
   t8_forest_set_balance (forest_ada_bal_par, NULL, 0);
   t8_forest_set_partition (forest_ada_bal_par, NULL, 0);
   t8_forest_commit (forest_ada_bal_par);
+  /* Check that the forest is balanced */
+  SC_CHECK_ABORT (t8_forest_is_balanced (forest_ada_bal_par),
+                  "The forest is not balanced.");
+
+  return forest_ada_bal_par;
+}
+
+/* (nonrecursive) adapt, balance and partition a given forest in one step */
+static              t8_forest_t
+t8_test_forest_commit_abp_nonrecursive (t8_forest_t forest, int maxlevel)
+{
+  t8_forest_t         forest_ada_bal_par;
+
+  /* Adapt, balance and partition the uniform forest */
+  t8_forest_init (&forest_ada_bal_par);
+  /* Set user data for adapt */
+  t8_forest_set_user_data (forest_ada_bal_par, &maxlevel);
+  t8_forest_set_adapt (forest_ada_bal_par, forest, t8_test_adapt_balance, 0);
+  t8_forest_set_balance (forest_ada_bal_par, NULL, 0);
+  t8_forest_set_partition (forest_ada_bal_par, NULL, 0);
+  t8_forest_commit (forest_ada_bal_par);
+  /* Check that the forest is balanced */
+  SC_CHECK_ABORT (t8_forest_is_balanced (forest_ada_bal_par),
+                  "The forest is not balanced.");
 
   return forest_ada_bal_par;
 }
@@ -123,6 +148,9 @@ t8_test_forest_commit_abp_3step (t8_forest_t forest, int maxlevel)
   /* balance the forest */
   t8_forest_set_balance (forest_balance, forest_adapt, 0);
   t8_forest_commit (forest_balance);
+  /* Check that the forest is balanced */
+  SC_CHECK_ABORT (t8_forest_is_balanced (forest_balance),
+                  "The forest is not balanced.");
 
   /* partrition the forest */
   t8_forest_set_partition (forest_partition, forest_balance, 0);
@@ -137,11 +165,12 @@ t8_test_forest_commit ()
   int                 ctype, level, min_level, maxlevel;
   int                 eclass;
   t8_cmesh_t          cmesh;
-  t8_forest_t         forest, forest_ada_bal_part, forest_abp_3part;
+  t8_forest_t         forest, forest_ada_bal_part_rec, forest_abp_3part,
+    forest_ada_bal_part_nonrec;
   t8_scheme_cxx_t    *scheme;
 
-  for (eclass = T8_ECLASS_VERTEX; eclass < T8_ECLASS_PYRAMID; eclass++) {
-    /* TODO: Activate the other eclass as soon as they support ghosts */
+  for (eclass = T8_ECLASS_VERTEX; eclass < T8_ECLASS_QUAD; eclass++) {
+    /* TODO: Activate pyramids as soon as they support ghosts */
     for (ctype = 0; ctype < 3; ctype++) {
       scheme = t8_scheme_new_default_cxx ();
       /* Construct a cmesh */
@@ -161,21 +190,33 @@ t8_test_forest_commit ()
         /* Create a uniformly refined forest */
         forest = t8_forest_new_uniform (cmesh, scheme, level, 1,
                                         sc_MPI_COMM_WORLD);
-        /* We need to use forest twice, so we ref it */
+        /* We need to use forest three times, so we ref it twice */
+        t8_forest_ref (forest);
         t8_forest_ref (forest);
         /* Adapt, balance and partition the forest */
-        forest_ada_bal_part = t8_test_forest_commit_abp (forest, maxlevel);
+
+        if (ctype != 2 && eclass > T8_ECLASS_VERTEX) {
+          t8_forest_write_vtk (forest, "test_b4abprec");
+        }
+        forest_ada_bal_part_rec =
+          t8_test_forest_commit_abp_recursive (forest, maxlevel);
+        if (ctype != 2 && eclass > T8_ECLASS_VERTEX) {
+          t8_forest_write_vtk (forest, "test_afterabprec");
+        }
+        forest_ada_bal_part_nonrec =
+          t8_test_forest_commit_abp_nonrecursive (forest, maxlevel);
         /* Adapt, balance and partition the forest using three seperate steps */
         forest_abp_3part = t8_test_forest_commit_abp_3step (forest, maxlevel);
-        if (ctype != 2) {
-          t8_forest_write_vtk (forest_ada_bal_part, "test_1step");
+        if (ctype != 2 && eclass > T8_ECLASS_VERTEX) {
+          t8_forest_write_vtk (forest_ada_bal_part_rec, "test_1step");
           t8_forest_write_vtk (forest_abp_3part, "test_3step");
         }
         SC_CHECK_ABORT (t8_forest_is_equal
-                        (forest_abp_3part, forest_ada_bal_part),
+                        (forest_abp_3part, forest_ada_bal_part_rec),
                         "The forests are not equal");
         t8_scheme_cxx_ref (scheme);
-        t8_forest_unref (&forest_ada_bal_part);
+        t8_forest_unref (&forest_ada_bal_part_rec);
+        t8_forest_unref (&forest_ada_bal_part_nonrec);
         t8_forest_unref (&forest_abp_3part);
 
       }
