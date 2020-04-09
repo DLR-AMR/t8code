@@ -101,6 +101,10 @@ typedef struct t8_forest
   void               *user_data;        /**< Pointer for arbitrary user data. \see t8_forest_set_user_data. */
   void               *t8code_data;      /**< Pointer for arbitrary data that is used internally. */
   int                 committed;        /**< \ref t8_forest_commit called? */
+  int                 is_balanced;      /**< After commit true if this forest is definitely balanced. 
+                                             \note May be false even if the forest is balanced.
+                                             We set it to true for uniform forests and forests for which
+                                             balance was called. Is also set after a call to \ref t8_forest_is_balanced */
   int                 mpisize;          /**< Number of MPI processes. */
   int                 mpirank;          /**< Number of this MPI process. */
 

@@ -380,6 +380,8 @@ t8_forest_commit (t8_forest_t forest)
     /* populate a new forest with tree and quadrant objects */
     t8_forest_populate (forest);
     forest->global_num_trees = t8_cmesh_get_num_trees (forest->cmesh);
+    /* This forest is definitely balanced */
+    forest->is_balanced = 1;
   }
   else {                        /* set_from != NULL */
     t8_forest_t         forest_from = forest->set_from; /* temporarily store set_from, since we may overwrite it */
@@ -557,6 +559,8 @@ t8_forest_commit (t8_forest_t forest)
         forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
         /* partition the forest */
         t8_forest_partition (forest);
+        /* The new forest is balanced if and only if the old one is */
+        forest->is_balanced = forest->set_from->is_balanced;
       }
     }
     if (forest->from_method & T8_FOREST_FROM_BALANCE) {
@@ -575,6 +579,8 @@ t8_forest_commit (t8_forest_t forest)
         /* balance with repartition */
         t8_forest_balance (forest, 1);
       }
+      /* This forest is now definitely balanced */
+      forest->is_balanced = 1;
     }
 
     if (forest_from != forest->set_from) {

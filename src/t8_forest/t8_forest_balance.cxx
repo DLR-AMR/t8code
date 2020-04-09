@@ -319,6 +319,8 @@ t8_forest_balance (t8_forest_t forest, int repartition)
       T8_FREE (partition_stats);
     }
   }
+  /* The forest is now balanced */
+  forest->is_balanced = 1;
 }
 
 /* Adapt and balance a forest in the same step.
@@ -601,6 +603,8 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
   t8_forest_adapt (forest);
   /* Restore the user data */
   t8_forest_set_user_data (forest, user_pointer_safe);
+  /* The forest is now balanced */
+  forest->is_balanced = 1;
   /* TODO: Write a test for this function.
    *       - First test: a mesh that does not need to be balanced,
    *                     verify that this function does the same as adapt.
@@ -622,6 +626,14 @@ t8_forest_is_balanced (t8_forest_t forest)
   int                 dummy_int;
 
   T8_ASSERT (t8_forest_is_committed (forest));
+
+#ifndef T8_ENABLE_DEBUG
+  /* If the is_balanced flag is set, we assume that the forest is balanced.
+   * In debugging mode, we check anyways */
+  if (forest->is_balanced) {
+    return 1;
+  }
+#endif
 
   /* temporarily save forest_from */
   forest_from = forest->set_from;
@@ -647,14 +659,20 @@ t8_forest_is_balanced (t8_forest_t forest)
        * If so, the forest is not balanced locally. */
       if (t8_forest_balance_adapt
           (forest, forest, itree, ielem, ts, 1, &element)) {
+        /* The forest is not balanced */
         forest->set_from = forest_from;
         forest->t8code_data = data_temp;
+        /* Check whether the is_balanced flag was set correctly */
+        T8_ASSERT (forest->is_balanced == 0);
         return 0;
       }
     }
   }
+  /* The forest is balanced */
   forest->set_from = forest_from;
   forest->t8code_data = data_temp;
+  /* Set the is_balanced flag */
+  forest->is_balanced = 1;
   return 1;
 }
 
