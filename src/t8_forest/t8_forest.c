@@ -424,17 +424,44 @@ t8_forest_commit (t8_forest_t forest)
       SC_CHECK_ABORT (forest->set_from != NULL,
                       "No forest to copy from was specified.");
       t8_forest_copy_trees (forest, forest->set_from, 1);
+      /* This forest is balanced if and only if the set_from is balanced */
+      forest->is_balanced = forest->set_from->is_balanced;
     }
     /* TODO: currently we can only handle copy, adapt, partition, and balance */
 
     /* T8_ASSERT (forest->from_method == T8_FOREST_FROM_COPY); */
     if (forest->from_method & T8_FOREST_FROM_ADAPT) {
+      int                 adapt_with_balance = 0, only_adapt = 0;
+      int                 only_adapt_with_balance = 0;
       SC_CHECK_ABORT (forest->set_adapt_fn != NULL,
                       "No adapt function specified");
+      /* If only adapt and balance are set and adapt is not recursive, 
+       * and the set_from forest is balanced, then we continue below 
+       * with t8_forest_balance_and_adapt */
       forest->from_method -= T8_FOREST_FROM_ADAPT;
-      if (forest->from_method > 0) {
+      if (forest->from_method <= 0) {
+        /* If this is true, we only need to adapt the forest */
+        only_adapt = 1;
+      }
+      else if (forest->from_method & T8_FOREST_FROM_BALANCE
+               && forest->set_from->is_balanced
+               && forest->set_adapt_recursive == 0) {
+        /* If this is true, we can use the balance_and_adapt function */
+        adapt_with_balance = 1;
+        forest->from_method -= T8_FOREST_FROM_BALANCE;
+        if (forest->from_method == 0) {
+          /* We only need the balance_and_adapt function */
+          only_adapt_with_balance = 1;
+        }
+      }
+      if (!only_adapt && !only_adapt_with_balance) {
         /* The forest should also be partitioned/balanced.
-         * We first adapt the forest, then balance and then partition */
+         * We first adapt the forest, then balance and then partition.
+         * In the special case that the forest is balanced and it should
+         * be adapted non-recursively and balanced, we alse set it
+         * for balancing here and use the
+         * t8_forest_balance_and_adapt function below.
+         */
         t8_forest_t         forest_adapt;
 
         t8_forest_init (&forest_adapt);
@@ -447,6 +474,16 @@ t8_forest_commit (t8_forest_t forest)
         t8_forest_set_adapt (forest_adapt, forest->set_from,
                              forest->set_adapt_fn,
                              forest->set_adapt_recursive);
+        /* If the original forest was balanced, and the new forest should
+         * be balanced and adaptation is non-recursively, we additionally
+         * set the new forest for balance here. */
+        if (adapt_with_balance) {
+          const int           no_repartition =
+            (forest->set_balance == T8_FOREST_BALANCE_NO_REPART);
+          t8_forest_set_balance (forest_adapt, forest->set_from,
+                                 no_repartition);
+        }
+
         /* Set profiling if enabled */
         t8_forest_set_profiling (forest_adapt, forest->profile != NULL);
         t8_forest_commit (forest_adapt);
@@ -461,10 +498,22 @@ t8_forest_commit (t8_forest_t forest)
             forest_adapt->profile->adapt_runtime;
         }
       }
+      else if (only_adapt_with_balance) {
+        t8_debugf ("[H] Adapt with balance\n");
+        /* This forest should only be adapted non-recursively and balanced */
+        t8_forest_copy_trees (forest, forest->set_from, 0);
+        t8_forest_balance_and_adapt (forest);
+        /* The forest is now definitely balanced */
+        forest->is_balanced = 1;
+      }
       else {
+        T8_ASSERT (only_adapt);
         /* This forest should only be adapted */
         t8_forest_copy_trees (forest, forest->set_from, 0);
         t8_forest_adapt (forest);
+        /* We cannot say whether the forest is now balanced.
+         * So we set the flag to 0 */
+        forest->is_balanced = 0;
       }
     }
     if (forest->from_method & T8_FOREST_FROM_PARTITION) {
