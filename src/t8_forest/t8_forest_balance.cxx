@@ -337,7 +337,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
  *       we can spare this by storing the leaf face neighbors.
  */
 void
-t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
+t8_forest_balance_and_adapt (t8_forest_t forest)
 {
   t8_forest_t         forest_from = forest->set_from;
   /* The forest from must be committed and balanced */
@@ -489,88 +489,94 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
            *       actually only have one face neighbor but nevertheless it has a larger level.
            *       A simple example is the default line refinement scheme.
            */
-          for (ineigh = 0; ineigh < num_face_neighbors; ++ineigh) {
-            /* Get the level of this neighbor */
-            neigh_level =
-              neigh_scheme->t8_element_level (face_neighbors[ineigh]);
-            /* Get the refinement marker of this neighbor */
-            neigh_marker =
-              *(short *) t8_sc_array_index_locidx (&markers,
-                                                   neighbor_indices[ineigh]);
-            /* Compute the level that the neighbor will have after adapting the mesh */
-            neigh_level_after_adapt = neigh_level + neigh_marker;
-            level_diff = neigh_level_after_adapt - element_level_after_adapt;
-            if (level_diff > 1) {
-              T8_ASSERT (level_diff == 2 || level_diff == 3);
-              /* After adaptation the current element's level would be smaller
-               * than the neighbors level.
-               * Thus, the balance condition would be broken.
-               * Depending on the element's marker, we do:
-               *   If the marker is 0:
-               *      - mark this element for adaptation (with 1) and remove from the list.
-               *      - Stop checking its face neighbors.
-               *   If the marker is -1:
-               *      If the level difference is 2:
-               *        - mark this element and all its siblings with 0
-               *        - Continue checking its face neighbors
-               *      If the level difference is 3:
-               *        - mark this element's siblings with 0
-               *        - mark this element with 1 and remove from the list
-               *        - Stop checking its face neighbors
-               */
-              if (current_marker == -1) {
-                /* If the marker is -1, we mark all siblings with 0 */
-                /* If the level difference is 2, then nothing else is to be done. */
-
-                /* To identify the indices of this element's siblings,
-                 * we need its sibid and the number of siblings. */
-                const t8_locidx_t   childid =
-                  eclass_scheme->t8_element_child_id (element);
-                const t8_locidx_t   num_siblings =
-                  eclass_scheme->t8_element_num_siblings (element);
-                t8_locidx_t         isib;
-                /* The index of the first sibling in the family is this neighbor's index minus its child id */
-                const t8_locidx_t   first_sibling = element_index - childid;
-#ifdef T8_ENABLE_DEBUG
-                /* Check whether first_sibling is indeed the first sibling */
-                t8_element_t       *first_sib =
-                  t8_forest_get_element_in_tree (forest_from, current_tree,
-                                                 first_sibling);
-                t8_element_t       *test_element;
-                neigh_scheme->t8_element_new (1, &test_element);
-                neigh_scheme->t8_element_child (first_sib, childid,
-                                                test_element);
-                T8_ASSERT (neigh_scheme->t8_element_child_id (first_sib) ==
-                           0);
-                T8_ASSERT (neigh_scheme->t8_element_compare (test_element,
-                                                             face_neighbors
-                                                             [ineigh]));
-                neigh_scheme->t8_element_destroy (1, &test_element);
-#endif
-                /* Mark all sibliblings with 0 (do not coarsen or refine). */
-                for (isib = 0; isib < num_siblings; ++isib) {
-                  *(short *) t8_sc_array_index_locidx (&markers,
-                                                       first_sibling + isib) =
-                    0;
-                }
-              }
-              if (level_diff == 3 || current_marker == 0) {
-                /* If the level difference is 3 or the marker is 0 (and level difference is 2),
-                 * we mark this element for refinement and stop checking its neighbor. */
-                T8_ASSERT (current_marker == -1 || level_diff == 2);
-                /* Mark this element for refinement */
+          if (face_neighbors != NULL) {
+            for (ineigh = 0; ineigh < num_face_neighbors; ++ineigh) {
+              /* Get the level of this neighbor */
+              neigh_level =
+                neigh_scheme->t8_element_level (face_neighbors[ineigh]);
+              /* Get the refinement marker of this neighbor */
+              neigh_marker =
                 *(short *) t8_sc_array_index_locidx (&markers,
-                                                     element_index) = 1;
-                /* Remove this element from the list */
-                t8_locidx_list_iterator_remove_entry (&list_iterator);
-                /* Do not continue checking the neighbors. */
-                continue_neigh_check = 0;
-              }
-            }                   /* End if (level_diff > 1) */
-          }                     /* End neighbor for-loop */
-          /* Free the allocated memory */
-          neigh_scheme->t8_element_destroy (num_face_neighbors,
-                                            face_neighbors);
+                                                     neighbor_indices
+                                                     [ineigh]);
+              /* Compute the level that the neighbor will have after adapting the mesh */
+              neigh_level_after_adapt = neigh_level + neigh_marker;
+              level_diff =
+                neigh_level_after_adapt - element_level_after_adapt;
+              if (level_diff > 1) {
+                T8_ASSERT (level_diff == 2 || level_diff == 3);
+                /* After adaptation the current element's level would be smaller
+                 * than the neighbors level.
+                 * Thus, the balance condition would be broken.
+                 * Depending on the element's marker, we do:
+                 *   If the marker is 0:
+                 *      - mark this element for adaptation (with 1) and remove from the list.
+                 *      - Stop checking its face neighbors.
+                 *   If the marker is -1:
+                 *      If the level difference is 2:
+                 *        - mark this element and all its siblings with 0
+                 *        - Continue checking its face neighbors
+                 *      If the level difference is 3:
+                 *        - mark this element's siblings with 0
+                 *        - mark this element with 1 and remove from the list
+                 *        - Stop checking its face neighbors
+                 */
+                if (current_marker == -1) {
+                  /* If the marker is -1, we mark all siblings with 0 */
+                  /* If the level difference is 2, then nothing else is to be done. */
+
+                  /* To identify the indices of this element's siblings,
+                   * we need its sibid and the number of siblings. */
+                  const t8_locidx_t   childid =
+                    eclass_scheme->t8_element_child_id (element);
+                  const t8_locidx_t   num_siblings =
+                    eclass_scheme->t8_element_num_siblings (element);
+                  t8_locidx_t         isib;
+                  /* The index of the first sibling in the family is this neighbor's index minus its child id */
+                  const t8_locidx_t   first_sibling = element_index - childid;
+#ifdef T8_ENABLE_DEBUG
+                  /* Check whether first_sibling is indeed the first sibling */
+                  t8_element_t       *first_sib =
+                    t8_forest_get_element_in_tree (forest_from, current_tree,
+                                                   first_sibling);
+                  t8_element_t       *test_element;
+                  neigh_scheme->t8_element_new (1, &test_element);
+                  neigh_scheme->t8_element_child (first_sib, childid,
+                                                  test_element);
+                  T8_ASSERT (neigh_scheme->t8_element_child_id (first_sib) ==
+                             0);
+                  T8_ASSERT (neigh_scheme->t8_element_compare (test_element,
+                                                               face_neighbors
+                                                               [ineigh]));
+                  neigh_scheme->t8_element_destroy (1, &test_element);
+#endif
+                  /* Mark all sibliblings with 0 (do not coarsen or refine). */
+                  for (isib = 0; isib < num_siblings; ++isib) {
+                    *(short *) t8_sc_array_index_locidx (&markers,
+                                                         first_sibling +
+                                                         isib) = 0;
+                  }
+                }
+                if (level_diff == 3 || current_marker == 0) {
+                  /* If the level difference is 3 or the marker is 0 (and level difference is 2),
+                   * we mark this element for refinement and stop checking its neighbor. */
+                  T8_ASSERT (current_marker == -1 || level_diff == 2);
+                  /* Mark this element for refinement */
+                  *(short *) t8_sc_array_index_locidx (&markers,
+                                                       element_index) = 1;
+                  /* Remove this element from the list */
+                  t8_locidx_list_iterator_remove_entry (&list_iterator);
+                  /* Do not continue checking the neighbors. */
+                  continue_neigh_check = 0;
+                }
+              }                 /* End if (level_diff > 1) */
+            }                   /* End neighbor for-loop */
+            /* Free the allocated memory */
+            T8_ASSERT (face_neighbors != NULL);
+            neigh_scheme->t8_element_destroy (num_face_neighbors,
+                                              face_neighbors);
+            T8_FREE (face_neighbors);
+          }                     /* End face_neighbors != NULL */
           T8_FREE (dual_faces);
           T8_FREE (neighbor_indices);
         }                       /* End face neighbor loop */
@@ -587,7 +593,7 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
 
   /* We are now done with the iterations and updated all markers. */
 
-  /* clean-up the list */
+  /* clean up the list */
   t8_locidx_list_reset (&elements_that_do_not_refine);
 
   /* We can now finally refine and coarsen the elements according to the markers.
@@ -603,6 +609,8 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
   t8_forest_adapt (forest);
   /* Restore the user data */
   t8_forest_set_user_data (forest, user_pointer_safe);
+  /* Clean up the markers */
+  sc_array_reset (&markers);
   /* The forest is now balanced */
   forest->is_balanced = 1;
   /* TODO: Write a test for this function.
@@ -612,6 +620,7 @@ t8_forest_balance_and_adapt (t8_forest_t forest, const int repartition)
    *                     verify that this function  produces the same forest
    *                     as doing first adapt and then balance.
    */
+  /* TODO: Add a new timer to the profile that times the runtime of this function. */
 }
 
 /* Check whether the local elements of a forest are balanced. */

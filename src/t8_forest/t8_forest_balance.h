@@ -49,11 +49,9 @@ void                t8_forest_balance (t8_forest_t forest, int repartition);
  * The initial forest (the forest_from pointer of the forest argument) must be already balanced.
  * 
  * \param [in, out] forest  The forest to create. Its forest_from pointer must be a committed forest which will get adapted and balanced.
- * \param [in]      repartition Flag to specify whether the forest should be additionally repartitioned after balance.
  * TODO: Will ghost values be created during the algorithm? If so, we must declare it here in the documentation.
  */
-void                t8_forest_balance_and_adapt (t8_forest_t forest,
-                                                 const int repartition);
+void                t8_forest_balance_and_adapt (t8_forest_t forest);
 
 /* Check whether the local elements of a forest are balanced. */
 int                 t8_forest_is_balanced (t8_forest_t forest);
