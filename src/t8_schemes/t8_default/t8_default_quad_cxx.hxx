@@ -161,7 +161,7 @@ public:
                                            int length, t8_element_t * c[]);
 
 /** Return the child id of an element */
-  virtual int         t8_element_child_id (const t8_element_t * elem);
+  virtual int         t8_element_child_id (const t8_element_t * elem) const;
 
   /** Compute the ancestor id of an element */
   virtual int         t8_element_ancestor_id (const t8_element_t * elem,

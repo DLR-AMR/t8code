@@ -137,8 +137,12 @@ t8_default_scheme_prism_c::t8_element_num_faces (const t8_element_t * elem)
   return T8_DPRISM_FACES;
 }
 
+/* *INDENT-OFF* */
+/* indent bug, indent adds a second "const" modifier */
 int
-t8_default_scheme_prism_c::t8_element_child_id (const t8_element_t * elem)
+t8_default_scheme_prism_c::t8_element_child_id (const t8_element_t * elem) const
+/* *INDENT-ON* */
+
 {
   return t8_dprism_child_id ((const t8_dprism_t *) elem);
 }

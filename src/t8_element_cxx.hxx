@@ -259,7 +259,8 @@ public:
    * \param [in] elem     This must be a valid element.
    * \return              The child id of elem.
    */
-  virtual int         t8_element_child_id (const t8_element_t * elem) = 0;
+  virtual int         t8_element_child_id (const t8_element_t * elem) const =
+    0;
 
   /** Compute the ancestor id of an element, that is the child id
    * at a given level.

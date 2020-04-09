@@ -151,8 +151,12 @@ t8_default_scheme_vertex_c::t8_element_children (const t8_element_t * elem,
   t8_dvertex_childrenpv ((const t8_dvertex_t *) elem, (t8_dvertex_t **) c);
 }
 
+/* *INDENT-OFF* */
+/* indent bug, indent adds a second "const" modifier */
 int
-t8_default_scheme_vertex_c::t8_element_child_id (const t8_element_t * elem)
+t8_default_scheme_vertex_c::t8_element_child_id (const t8_element_t * elem) const
+/* *INDENT-ON* */
+
 {
   T8_ASSERT (t8_element_is_valid (elem));
   return t8_dvertex_child_id ((const t8_dvertex_t *) elem);

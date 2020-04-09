@@ -181,7 +181,7 @@ public:
                                                int root_face);
 
 /** Return the child id of an element */
-  virtual int         t8_element_child_id (const t8_element_t * elem);
+  virtual int         t8_element_child_id (const t8_element_t * elem) const;
 
   /** Return nonzero if collection of elements is a family */
   virtual int         t8_element_is_family (const t8_element_t ** fam) const;
