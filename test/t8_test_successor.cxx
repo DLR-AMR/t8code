@@ -32,9 +32,10 @@ static void
 t8_recursive_successor (t8_element_t * element, t8_element_t * successor,
                         t8_element_t * child,
                         t8_element_t * last, t8_eclass_scheme_c * ts,
-                        int level, const int maxlvl)
+                        const int maxlvl)
 {
-  T8_ASSERT (level <= maxlvl && maxlvl <= ts->t8_element_maxlevel () - 1);
+  int level = ts->t8_element_level(element);
+  T8_ASSERT (ts->t8_element_level(element) <= maxlvl && maxlvl <= ts->t8_element_maxlevel () - 1);
   int                 num_children, i;
   num_children = ts->t8_element_num_children (element);
   if (level == maxlvl - 1) {
@@ -67,7 +68,7 @@ t8_recursive_successor (t8_element_t * element, t8_element_t * successor,
     for (i = 0; i < num_children; i++) {
       ts->t8_element_child (element, i, child);
       t8_recursive_successor (child, successor, element,
-                               last, ts, level + 1, maxlvl);
+                               last, ts, maxlvl);
       ts->t8_element_parent (child, element);
     }
   }
@@ -95,8 +96,7 @@ t8_compute_successor (const int level)
     ts->t8_element_set_linear_id (successor, level, 0);
     ts->t8_element_last_descendant (element, last, level);
 
-    t8_recursive_successor (element, successor, child, last, ts, 0,
-                            level);
+    t8_recursive_successor (element, successor, child, last, ts, level);
 
     ts->t8_element_destroy (1, &element);
     ts->t8_element_destroy (1, &successor);
