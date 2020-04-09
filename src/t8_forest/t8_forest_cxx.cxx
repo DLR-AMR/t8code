@@ -1607,7 +1607,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
     }
     if (gneigh_treeid < 0) {
       /* There exists no face neighbor across this face, we return with this info */
-      neigh_scheme->t8_element_destroy (1, neighbor_leafs);
+      neigh_scheme->t8_element_destroy (num_children_at_face, neighbor_leafs);
       T8_FREE (neighbor_leafs);
       T8_FREE (*dual_faces);
       *dual_faces = NULL;
