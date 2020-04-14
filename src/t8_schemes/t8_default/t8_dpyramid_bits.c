@@ -255,6 +255,23 @@ t8_dpyramid_num_children (const t8_dpyramid_t * p)
   }
 }
 
+
+int t8_dpyramid_child_id_unknown_parent(const t8_dpyramid_t * p,
+                                        t8_dpyramid_t * parent)
+{
+    t8_dpyramid_cube_id_t   cid = compute_cubeid(p, p->level);
+    t8_dpyramid_type_t      type = p->type;
+    T8_ASSERT(p->level > 0);
+    t8_dpyramid_parent(p, parent);
+    if(t8_dpyramid_shape(parent) == T8_ECLASS_PYRAMID){
+       return t8_dpyramid_type_cid_to_Iloc[type][cid];
+    }
+    else{
+        return t8_dtet_child_id((const t8_dtet_t *) p);
+    }
+
+}
+
 int
 t8_dpyramid_child_id (const t8_dpyramid_t * p)
 {
@@ -534,35 +551,26 @@ compute_type (const t8_dpyramid_t * p, int level)
 }
 
 void
-t8_dpyramid_successor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
-                       int level)
+t8_dpyramid_successor_recursion (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
+                       t8_dpyramid_t * parent, int level)
 {
   int                 child_id, num_children;
-  t8_dpyramid_t       parent;
   t8_dpyramid_copy (elem, succ);
   T8_ASSERT (1 <= level && level <= T8_DPYRAMID_MAXLEVEL);
   /* typ auf level herausfinden und in succ speichern */
   /*succ->type = compute_type (succ, level);*/
   succ->level = level;
   T8_ASSERT (succ->type >= 0);
-  /*TODO: Find a work-around, such that we don't need parent*/
-  t8_dpyramid_parent(succ, &parent);
-  /*Compute the local ID (depends on parent-shape)*/
-  if(t8_dpyramid_shape(&parent) == T8_ECLASS_TET){
-    child_id = t8_dtet_child_id((const t8_dtet_t *) elem);
-  }
-  else{
-      child_id = t8_dpyramid_child_id (elem);
-  }
-  t8_dpyramid_copy(&parent, succ);
+  child_id = t8_dpyramid_child_id_unknown_parent(elem, parent);
+  //t8_dpyramid_copy(parent, succ);
   /*Compute number of children*/
-  num_children = t8_dpyramid_num_children(succ);
+  num_children = t8_dpyramid_num_children(parent);
   T8_ASSERT (0 <= child_id
              && child_id < num_children);
   if (child_id == num_children - 1) {
     /* Last-child-case. The successor is the successor of the parent element,
      * but with the given level */
-    t8_dpyramid_successor (succ, succ, level - 1);
+    t8_dpyramid_successor_recursion(succ, succ, parent, level - 1);
     succ->level = level;
     /* bits auf level auf child 0 setzen */
     succ->x =
@@ -577,9 +585,17 @@ t8_dpyramid_successor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
   }
   else {
     /* Not the last element. Compute child with local ID child_id+1*/
-    t8_dpyramid_child (succ, child_id + 1, succ);
+    t8_dpyramid_child (parent, child_id + 1, succ);
     succ->level = level;
   }
+}
+
+void
+t8_dpyramid_successor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
+                       int level)
+{
+    t8_dpyramid_t       parent;
+    t8_dpyramid_successor_recursion(elem, succ, &parent, level);
 }
 
 void
