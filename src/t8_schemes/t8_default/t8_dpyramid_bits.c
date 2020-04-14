@@ -535,7 +535,7 @@ compute_type (const t8_dpyramid_t * p, int level)
 
 void
 t8_dpyramid_successor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
-                      int level)
+                       int level)
 {
   int                 child_id, num_children;
   t8_dpyramid_t       parent;
