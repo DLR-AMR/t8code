@@ -80,7 +80,7 @@ t8_compute_successor (const int level)
   t8_element_t       *element, *successor, *child, *last;
   t8_scheme_cxx      *scheme;
   t8_eclass_scheme_c *ts;
-  int                 eclassi;
+  int                 eclassi, i;
   t8_eclass_t         eclass;
   scheme = t8_scheme_new_default_cxx ();
   for (eclassi = T8_ECLASS_LINE; eclassi < T8_ECLASS_PYRAMID; eclassi++) {
@@ -93,10 +93,12 @@ t8_compute_successor (const int level)
     ts->t8_element_new (1, &last);
 
     ts->t8_element_set_linear_id (element, 0, 0);
-    ts->t8_element_set_linear_id (successor, level, 0);
-    ts->t8_element_last_descendant (element, last, level);
 
-    t8_recursive_successor (element, successor, child, last, ts, level);
+    for(i = 2; i<= level; i++){
+        ts->t8_element_set_linear_id (successor, i, 0);
+        ts->t8_element_last_descendant (element, last, i);
+        t8_recursive_successor (element, successor, child, last, ts, i);
+    }
 
     ts->t8_element_destroy (1, &element);
     ts->t8_element_destroy (1, &successor);
