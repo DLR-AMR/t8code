@@ -94,9 +94,11 @@ typedef struct t8_cmesh
   int8_t              set_refine_level; /**< If the cmesh is derived from a second cmesh, a refinement level is specified here.
                                       \ref t8_cmesh_set_derive \ref t8_cmesh_set_refine. */
   t8_scheme_cxx_t    *set_refine_scheme; /**< If the cmesh is to be refined, the scheme that describes the
-                                           refinement patter. See \ref t8_cmesh_set_refine. */
-  int8_t              set_partition_level; /**< Non-negative if the cmesh should be partition from an already existing cmesh
-                                         with an assumes \a level uniform mesh underneath.  TODO: fix sentence */
+                                           refinement pattern. See \ref t8_cmesh_set_refine. */
+  t8_scheme_cxx_t    *set_partition_scheme; /**< If the cmesh is to be partitioned according to a uniform level,
+                                                the scheme that describes the refinement pattern. See \ref t8_cmesh_set_partition. */
+  int8_t              set_partition_level; /**< Non-negative if the cmesh should be partitioned from an already existing cmesh
+                                         with an assumed \a level uniform mesh underneath. */
 #if 0
   t8_cmesh_from_t     from_method;      /* TODO: Document */
 #endif

@@ -99,7 +99,8 @@ test_cmesh_partition_concentrate (t8_cmesh_t cmesh_partition_uniform,
   for (i = 0; i < 2; i++) {
     t8_cmesh_init (&cmesh_partition_new2);
     t8_cmesh_set_derive (cmesh_partition_new2, cmesh_partition_new1);
-    t8_cmesh_set_partition_uniform (cmesh_partition_new2, level);
+    t8_cmesh_set_partition_uniform (cmesh_partition_new2, level,
+                                    t8_scheme_new_default_cxx ());
     t8_cmesh_commit (cmesh_partition_new2, comm);
     cmesh_partition_new1 = cmesh_partition_new2;
   }
@@ -163,7 +164,8 @@ test_cmesh_partition (sc_MPI_Comm comm)
           t8_cmesh_init (&cmesh_partition);
           t8_cmesh_set_derive (cmesh_partition, cmesh_original);
           /* Uniform partition according to level */
-          t8_cmesh_set_partition_uniform (cmesh_partition, level);
+          t8_cmesh_set_partition_uniform (cmesh_partition, level,
+                                          t8_scheme_new_default_cxx ());
           t8_cmesh_commit (cmesh_partition, comm);
           test_cmesh_committed (cmesh_partition);
           cmesh_original = cmesh_partition;

@@ -364,13 +364,16 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh,
 }
 
 void
-t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level)
+t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level,
+                                t8_scheme_cxx_t * ts)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (element_level >= -1);
+  T8_ASSERT (ts != NULL);
 
   cmesh->set_partition = 1;
   cmesh->set_partition_level = element_level;
+  cmesh->set_partition_scheme = ts;
   if (element_level >= 0) {
     /* We overwrite any previous partition settings */
     cmesh->first_tree = -1;
@@ -1257,8 +1260,11 @@ t8_cmesh_print_profile (t8_cmesh_t cmesh)
   }
 }
 
+/*Can this be deleted?*/
+#if 0
 void
 t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
+                         t8_scheme_cxx_t * ts,
                          t8_gloidx_t * first_local_tree,
                          t8_gloidx_t * child_in_tree_begin,
                          t8_gloidx_t * last_local_tree,
@@ -1393,6 +1399,8 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
               "does not support pyramidal elements yet.");
   }*/
 }
+#endif
+
 
 static void
 t8_cmesh_reset (t8_cmesh_t * pcmesh)
@@ -1433,8 +1441,15 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
   if (cmesh->profile != NULL) {
     T8_FREE (cmesh->profile);
   }
+
+  /* unref the refine scheme (if set) */
   if (cmesh->set_refine_scheme != NULL) {
     t8_scheme_cxx_unref (&cmesh->set_refine_scheme);
+  }
+
+  /* unref the partition scheme (if set) */
+  if (cmesh->set_partition_scheme != NULL) {
+    t8_scheme_cxx_unref (&cmesh->set_partition_scheme);
   }
 
   T8_FREE (cmesh);

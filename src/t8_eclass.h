@@ -135,14 +135,6 @@ extern const char  *t8_eclass_to_string[T8_ECLASS_COUNT];
 int                 t8_eclass_count_boundary (t8_eclass_t theclass,
                                               int min_dim, int *per_eclass);
 
-/** Compute the number of leafs in a uniform refinement of one tree at given level.
- * \param [in] theclass         We consider this element type.
- * \param [in] level            The refinement level to be considered.
- * \return                      The number of leafs in a uniform refinement
- *                              of the given level.
- */
-t8_gloidx_t         t8_eclass_count_leaf (t8_eclass_t theclass, int level);
-
 /** Compare two eclasses of the same dimension
  *  as necessary for face neighbor orientation.
  *  The implemented order is Triangle < Square in 2D and

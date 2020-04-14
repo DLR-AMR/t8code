@@ -1062,6 +1062,7 @@ t8_forest_populate (t8_forest_t forest)
                   "Given refinement level exceeds the maximum.\n");
   /* TODO: create trees and quadrants according to uniform refinement */
   t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level,
+                           forest->scheme_cxx,
                            &forest->first_local_tree,
                            &child_in_tree_begin, &forest->last_local_tree,
                            &child_in_tree_end, NULL);
@@ -1112,7 +1113,7 @@ t8_forest_populate (t8_forest_t forest)
       /* calculate first and last element on this tree */
       start = (jt == forest->first_local_tree) ? child_in_tree_begin : 0;
       end = (jt == forest->last_local_tree) ? child_in_tree_end :
-        t8_eclass_count_leaf (tree_class, forest->set_level);
+        eclass_scheme->t8_element_count_leafs_from_root (forest->set_level);
       num_tree_elements = end - start;
       T8_ASSERT (num_tree_elements > 0);
       /* Allocate elements for this processor. */

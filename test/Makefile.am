@@ -14,8 +14,10 @@ t8code_test_programs = \
 	test/t8_test_forest_commit \
 	test/t8_test_transform \
 	test/t8_test_half_neighbors \
-	test/t8_test_find_parent \
-	test/t8_test_pyramid_succesor
+  test/t8_test_element_count_leafs \
+  test/t8_test_search \
+    test/t8_test_find_parent \
+    test/t8_test_successor
 
 test_t8_test_eclass_SOURCES = test/t8_test_eclass.c
 test_t8_test_bcast_SOURCES = test/t8_test_bcast.c
@@ -28,8 +30,11 @@ test_t8_test_ghost_and_owner_SOURCES = test/t8_test_ghost_and_owner.cxx
 test_t8_test_forest_commit_SOURCES = test/t8_test_forest_commit.cxx
 test_t8_test_transform_SOURCES = test/t8_test_transform.cxx
 test_t8_test_half_neighbors_SOURCES = test/t8_test_half_neighbors.cxx
-test_t8_test_find_parent_SOURCES = test/t8_test_find_parent.cpp
-test_t8_test_pyramid_succesor_SOURCES = test/t8_test_pyramid_succesor.cpp
+test_t8_test_element_count_leafs_SOURCES = test/t8_test_element_count_leafs.cxx
+test_t8_test_search_SOURCES = test/t8_test_search.cxx
+test_t8_test_find_parent_SOURCES = test/t8_test_find_parent.cxx
+test_t8_test_successor_SOURCES = test/t8_test_successor.cxx
+
 
 TESTS += $(t8code_test_programs)
 check_PROGRAMS += $(t8code_test_programs)
