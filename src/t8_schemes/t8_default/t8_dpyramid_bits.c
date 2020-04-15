@@ -275,8 +275,9 @@ int t8_dpyramid_child_id_unknown_parent(const t8_dpyramid_t * p,
 int t8_dpyrmaid_child_id_known_parent(const t8_dpyramid_t * p,
                                        t8_dpyramid_t * parent)
 {
+    t8_dpyramid_cube_id_t   cid = compute_cubeid(p, p->level);
     if(t8_dpyramid_shape(parent) == T8_ECLASS_PYRAMID){
-       return t8_dpyramid_type_cid_to_Iloc[type][cid];
+       return t8_dpyramid_type_cid_to_Iloc[p->type][cid];
     }
     else{
         return t8_dtet_child_id((const t8_dtet_t *) p);
