@@ -136,10 +136,7 @@ virtual int         t8_element_num_vertices (const t8_element_t * elem);
 
 /** Construct all children of a given element. */
   virtual void        t8_element_children (const t8_element_t * elem,
-                                           int length, t8_element_t * c[]){
-      SC_ABORT ("This function is not implemented yet.\n");
-      return;      /* suppresses compiler warning */
-    }
+                                           int length, t8_element_t * c[]);
 
   /** Given an element and a face of the element, compute all children of
    * the element that touch the face. */
@@ -161,10 +158,7 @@ virtual int         t8_element_num_vertices (const t8_element_t * elem);
                                        int called_new);
 
   /** Return nonzero if collection of elements is a family */
-    virtual int         t8_element_is_family (t8_element_t ** fam){
-      SC_ABORT ("This function is not implemented yet.\n");
-      return T8_ECLASS_ZERO;      /* suppresses compiler warning */
-    }
+    virtual int         t8_element_is_family (t8_element_t ** fam);
 
   /** Compute whether a given element shares a given face with its root tree. */
     virtual int         t8_element_is_root_boundary (const t8_element_t * elem,
@@ -221,7 +215,7 @@ virtual int         t8_element_num_vertices (const t8_element_t * elem);
   }
 
 /** Calculate the linear id of an element */
-  virtual u_int64_t   t8_element_get_linear_id (const
+  virtual t8_linearidx_t t8_element_get_linear_id(const
                                                 t8_element_t *
                                                 elem, int level);
 

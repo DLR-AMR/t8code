@@ -88,6 +88,14 @@ t8_default_scheme_pyramid_c::t8_element_child (const t8_element_t * elem,
                      (t8_dpyramid_t *) child);
 }
 
+void
+t8_default_scheme_pyramid_c::t8_element_children (const t8_element_t * elem,
+                                           int length, t8_element_t * c[])
+{
+    t8_dpyramid_children((const t8_dpyramid_t *) elem, length,
+                         (t8_dpyramid_t **) c);
+}
+
 int
 t8_default_scheme_pyramid_c::t8_element_child_id (const t8_element_t * p)
 {
@@ -123,13 +131,19 @@ t8_default_scheme_pyramid_c::t8_element_set_linear_id (t8_element_t * elem,
   t8_dpyramid_init_linear_id ((t8_dpyramid_t *) elem, level, id);
 }
 
+int
+t8_default_scheme_pyramid_c::t8_element_is_family (t8_element_t ** fam)
+{
+    t8_dpyramid_is_family((const t8_dpyramid_t **) fam);
+}
+
 t8_eclass_t
   t8_default_scheme_pyramid_c::t8_element_shape (const t8_element_t * elem)
 {
   return t8_dpyramid_shape ((const t8_dpyramid_t *) elem);
 }
 
-u_int64_t
+t8_linearidx_t
   t8_default_scheme_pyramid_c::t8_element_get_linear_id (const t8_element_t *
                                                          elem, int level)
 {

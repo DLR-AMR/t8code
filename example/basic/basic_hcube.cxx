@@ -38,7 +38,7 @@ t8_basic_hypercube_refine(t8_forest_t forest, t8_forest_t forest_from,
 {
     int         type, level;
     level = ts->t8_element_level(elements[0]);
-    if (level >= *(int *) t8_forest_get_user_data (forest)) {
+    if (level >= *(int *) t8_forest_get_user_data (forest) || level == 0) {
       return 0;
     }
     switch(ts->t8_element_shape(elements[0])){
@@ -69,7 +69,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level, int do_adapt,
   t8_forest_t         forest, forest_adapt, forest_coarsen;
   t8_cmesh_t          cmesh, cmesh_partition;
   char                vtuname[BUFSIZ], cmesh_file[BUFSIZ];
-  int                 mpirank, mpiret, endlvl = set_level+3;
+  int                 mpirank, mpiret, endlvl = set_level+1;
 
   t8_global_productionf ("Contructing hypercube mesh with element class %s\n",
                          t8_eclass_to_string[eclass]);

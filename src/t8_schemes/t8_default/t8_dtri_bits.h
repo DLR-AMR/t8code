@@ -275,6 +275,16 @@ int                 t8_dtri_is_ancestor (const t8_dtri_t * t,
  */
 t8_linearidx_t      t8_dtri_linear_id (const t8_dtri_t * t, int level);
 
+/** Computes the linear position of a triangle in a uniform grid up to a given level.
+ * \param [in] t  triangle whose id will be computed.
+ * \param [in] level level of uniform grid to be considered.
+ * \param [in] stop  level, where the computation should stop.
+ * \return Returns the linear position of this triangle on a grid of level \a level.
+ * \note This id is not the Morton index.
+ */
+t8_linearidx_t
+t8_dtri_linear_id_with_level (const t8_dtri_t * t, int level, int stop);
+
 
 /**
  * Same as init_linear_id, but we only consider the subtree. Used for computing the index of a
