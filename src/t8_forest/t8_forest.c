@@ -696,6 +696,13 @@ t8_forest_commit (t8_forest_t forest)
   /* Set the do_ghost variable to 0, since the forest will now be committed.
    * Thus, the precommit settings are invalid. */
   forest->do_ghost = 0;
+
+  /* Double check that the forest is balanced, if we balanced it */
+#ifdef T8_ENABLE_DEBUG
+  if (forest->is_balanced) {
+    T8_ASSERT (t8_forest_is_balanced (forest));
+  }
+#endif
 }
 
 t8_locidx_t
