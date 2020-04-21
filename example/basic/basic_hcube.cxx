@@ -91,6 +91,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level, int do_adapt,
     cmesh = cmesh_partition;
   }
 
+
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
 
@@ -125,7 +126,6 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level, int do_adapt,
           t8_forest_set_profiling(forest_adapt, 1);
           t8_forest_set_adapt(forest_adapt, forest, t8_basic_hypercube_refine, 1);
           t8_forest_commit(forest_adapt);
-          printf("no problem\n");
           t8_debugf ("Successfully adapted forest.\n");
           snprintf (vtuname, BUFSIZ, "forest_hypercube_adapt_%s",
                     t8_eclass_to_string[eclass]);

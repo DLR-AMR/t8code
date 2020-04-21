@@ -178,7 +178,6 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t * p, int level, uint64_t id)
   int                 offset_coords;
   T8_ASSERT (0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
   T8_ASSERT (0 <= id && id <= sc_intpow64u (T8_DPYRAMID_CHILDREN, level));
-
   p->level = level;
   p->x = 0;
   p->y = 0;
@@ -215,48 +214,45 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t * p, int level, uint64_t id)
   p->type = type;
 }
 
+const int t8_dpyramid_parenttype_iloc_pyra_w_lower_id[2][10] =
+{
+  {0,1,1,2,2,3,3,3,4,5},
+  {0,1,1,1,2,2,3,3,4,5}
+};
+
 /* TODO: What if I am a tet child of a pyramid*/
 t8_linearidx_t
 t8_dpyramid_linear_id (const t8_dpyramid_t * p, int level)
 {
   T8_ASSERT(level <= T8_DPYRAMID_MAXLEVEL);
-  t8_linearidx_t      id = 0, pyra_shift, tet_shift, local_id;
+  t8_linearidx_t      id = 0, pyra_shift, tet_shift = 1,
+          sum_1 = 1, sum_2 = 1 ,local_id;
   t8_dpyramid_t parent, copy;
-  int i, cid, tet_at_level = level;
+  int i, num_pyra, num_tet;
+
   t8_dpyramid_copy(p, &copy);
-  t8_dpyramid_copy(p, &parent);
-
-  if(t8_dpyramid_shape(p) == T8_ECLASS_TET){
-      tet_at_level = t8_dpyramid_is_inside_tet(p, level);
-      if(tet_at_level != 0){
-          id = t8_dtet_linear_id_with_level((t8_dtet_t *)p,level, tet_at_level);
+  copy.level = level;
+  for(i = level; i>0; i--)
+  {
+      pyra_shift = 2 * sum_1 - sum_2;
+      t8_dpyramid_parent(&copy, &parent);
+      local_id = t8_dpyramid_child_id_known_parent(&copy, &parent);
+      if(t8_dpyramid_shape(&parent) == T8_ECLASS_TET)
+      {
+        num_pyra = 0;
       }
-      else{
-          tet_at_level = level;
-    }
-    t8_dtet_ancestor((t8_dtet_t *)p, tet_at_level, &parent);
+      else
+      {
+        num_pyra = t8_dpyramid_parenttype_iloc_pyra_w_lower_id[parent.type-6][local_id];
+      }
+      num_tet = local_id - num_pyra;
+      id += num_pyra * pyra_shift + num_tet * tet_shift;
+
+      t8_dpyramid_copy(&parent, &copy);
+      sum_1 = sum_1 << 3;
+      sum_2 *=6;
+      tet_shift = tet_shift << 3;
   }
-  t8_dpyramid_parent(&parent, &parent);
-
-  for(i = tet_at_level ; i > 0; i--){
-        /*TODO: Implement the shift cause by the tetrahedra*/
-        pyra_shift = 2 * sc_intpow64(8, level - i) - sc_intpow64(6, level - i);
-        tet_shift = sc_intpow64(8, level - i);
-        copy.level = i;
-
-        parent.x = (p->x >> (T8_DPYRAMID_MAXLEVEL - i))<<(T8_DPYRAMID_MAXLEVEL - i);
-        parent.y = (p->y >> (T8_DPYRAMID_MAXLEVEL - i))<<(T8_DPYRAMID_MAXLEVEL - i);
-        parent.z = (p->z >> (T8_DPYRAMID_MAXLEVEL - i))<<(T8_DPYRAMID_MAXLEVEL - i);
-
-        local_id = t8_dpyramid_child_id_known_parent(&copy, &parent);
-        printf("loc_ID %i\n", local_id);
-        id += local_id * pyra_shift;
-
-        cid = compute_cubeid(&parent, parent.level);
-        parent.type = t8_dpyramid_type_cid_to_parenttype[parent.type - 6][cid];
-        parent.level -= 1;
-  }
-  printf("Id %i for %i %i %i %i %i\n", id, p->x, p->y, p->z, p->type, p->level);
   return id;
 }
 
@@ -264,15 +260,15 @@ void
 t8_dpyramid_first_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * desc,
                               int level)
 {
-  if (p->type == 6 || p->type == 7) {
+  t8_linearidx_t id;
+  if (t8_dpyramid_shape(p) == T8_ECLASS_PYRAMID) {
     /*The first descendant of a pyramid has the same anchor coords, but another level */
     t8_dpyramid_copy (p, desc);
     desc->level = level;
   }
   else {
-
-    t8_dtet_first_descendant ((const t8_dtet_t *) p, (t8_dtet_t *) desc,
-                              level);
+    id = t8_dpyramid_linear_id(p, level);
+    t8_dpyramid_init_linear_id(desc, level, id);
   }
 }
 
@@ -281,7 +277,6 @@ t8_dpyramid_last_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * desc,
                              int level)
 {
   if (p->type == 6 || p->type == 7) {
-    /*The last descendant of a pyramid has a shifted anchor coord and another level */
     t8_dpyramid_copy (p, desc);
     desc->level = level;
     int                 coord_offset =
@@ -291,6 +286,7 @@ t8_dpyramid_last_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * desc,
     desc->z |= coord_offset;
   }
   else {
+      /*TODO: Solve bug here*/
     t8_dtet_last_descendant ((const t8_dtet_t *) p, (t8_dtet_t *) desc,
                              level);
   }
