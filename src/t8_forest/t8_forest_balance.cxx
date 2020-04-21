@@ -360,6 +360,18 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
   /* The current communicator */
   const sc_MPI_Comm   comm = t8_forest_get_mpicomm (forest_from);
 
+  t8_global_productionf
+    ("Into t8_forest_balance_and_adapt with %lli global elements.\n",
+     (long long) t8_forest_get_global_num_elements (forest_from));
+  t8_log_indent_push ();
+
+  if (forest->profile != NULL) {
+    /* Profiling is enabled, we measure the runtime of this function. */
+    forest->profile->balance_runtime -= sc_MPI_Wtime ();
+    /* We increment balance_rounds in each round */
+    forest->profile->balance_rounds = 0;
+  }
+
   /* Initialize refinement markers for all elements and ghosts */
   sc_array_init_size (&markers, sizeof (short),
                       num_local_elements + num_ghosts);
@@ -410,6 +422,10 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
      *       are done locally, but not globally, we can optimize by
      *       checking only the neighbors of the updated ghost elements. */
 
+    if (forest->profile != NULL) {
+      /* Increase the balance_rounds counter */
+      forest->profile->balance_rounds++;
+    }
     if (num_local_elements > 0) {
       /* We only need to iterate over the elements if there are any. */
       /* Init next tree_offset as the offset of tree 1
@@ -613,6 +629,18 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
   sc_array_reset (&markers);
   /* The forest is now balanced */
   forest->is_balanced = 1;
+
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of this function */
+    forest->profile->balance_runtime += sc_MPI_Wtime ();
+  }
+
+  t8_log_indent_pop ();
+
+  t8_global_productionf
+    ("Done t8_forest_balance_and_adapt with %lli global elements.\n",
+     (long long) forest->global_num_elements);
+
   /* TODO: Write a test for this function.
    *       - First test: a mesh that does not need to be balanced,
    *                     verify that this function does the same as adapt.
