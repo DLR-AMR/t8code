@@ -109,7 +109,8 @@ t8_test_forest_commit_abp_recursive (t8_forest_t forest, int maxlevel)
   return forest_ada_bal_par;
 }
 
-/* (nonrecursive) adapt, balance and partition a given forest in one step */
+/* (nonrecursive) adapt, balance and partition a given forest in one step.
+ * This tests the t8_forest_balance_and_adapt functionality */
 static              t8_forest_t
 t8_test_forest_commit_abp_nonrecursive (t8_forest_t forest, int maxlevel)
 {
