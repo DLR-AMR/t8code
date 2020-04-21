@@ -60,6 +60,9 @@ typedef int8_t      t8_forest_from_t;
 #define T8_FOREST_BALANCE_REPART 1 /**< Value of forest->set_balance if balancing with repartitioning */
 #define T8_FOREST_BALANCE_NO_REPART 2 /**< Value of forest->set_balance if balancing without repartitioning */
 
+#define T8_FOREST_BALANCE_NO_ADAPT 1 /**< Value of forest->set_balance_and_adapt if balancing and adaptation should not be performed simultaneously */
+#define T8_FOREST_BALANCE_AND_ADAPT 2 /**< Value of forest->set_balance_and_adapt if balancing and adaptation are allowed to be performed simultaneously */
+
 /** This structure is private to the implementation. */
 typedef struct t8_forest
 {
@@ -94,6 +97,11 @@ typedef struct t8_forest
                                              See \ref t8_forest_set_balance.
                                              If 0, no balance. If 1 balance with repartitioning, if 2 balance without
                                              repartitioning, \see t8_forest_balance */
+  int                 set_balance_and_adapt; /**< If \a set_balance is true, this flag is true adaptation and
+                                             balance are allowed to be performed simultaneously. False otherwise.
+                                             If this flag is true, other conditions may prevent adapt and balance
+                                             to be performed simulataneously (i.e. if adapt is recursive). \see t8_forest_balance_and_adapt.
+                                             In production runs \a set_balance_and_adapt should be true. */
   int                 do_ghost;         /**< If True, a ghost layer will be created when the forest is committed. */
   t8_ghost_type_t     ghost_type;       /**< If a ghost layer will be created, the type of neighbors that count as ghost. */
   int                 ghost_algorithm;  /**< Controls the algorithm used for ghost. 1 = balanced only. 2 = also unbalanced

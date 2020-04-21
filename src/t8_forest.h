@@ -311,6 +311,22 @@ void                t8_forest_set_balance (t8_forest_t forest,
                                            const t8_forest_t set_from,
                                            int no_repartition);
 
+/** Like \ref t8_forest_set_balance but with the additional option to disable
+ * balancing and adapting in the same step. This is used for debugging and timing the algorithm.
+ * An application should always use \ref t8_forest_set_balance.
+ * \param [in]      no_balance_with_adapt If true (non-zero) then the balance and adapt steps
+ *                                        will be considered seperately. If false (zero) then
+ *                                        adaptation and balance may be performed simulataneously.
+ * \note Setting \a no_balance_with_adapt to 0 has the same effect as calling \ref t8_forest_set_balance.
+ * \note If \a no_balance_with_adapt is 0, adaptation and balance will only be performed
+ *  simultaneously if adaptation is not recursive and \a set_from is known to be balanced.
+ * \note See also \ref t8_forest_balance_and_adapt.
+ */
+void                t8_forest_set_balance_ext (t8_forest_t forest,
+                                               const t8_forest_t set_from,
+                                               int no_repartition,
+                                               int no_balance_with_adapt);
+
 /** Enable or disable the creation of a layer of ghost elements.
  * On default no ghosts are created.
  * \param [in]      forest    The forest.
@@ -324,7 +340,7 @@ void                t8_forest_set_ghost (t8_forest_t forest, int do_ghost,
 
 /** Like \ref t8_forest_set_ghost but with the additional options to change the
  * ghost algorithm. This is used for debugging and timing the algorithm.
- * An application should almost always use \ref t8_forest_set_ghost.
+ * An application should always use \ref t8_forest_set_ghost.
  * \param [in]      ghost_version If 1, the iterative ghost algorithm for balanced forests is used.
  *                                If 2, the iterativ algorithm for unbalanced forests.
  *                                If 3, the top-down search algorithm for unbalanced forests.

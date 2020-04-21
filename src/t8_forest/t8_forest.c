@@ -210,8 +210,9 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
 }
 
 void
-t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from,
-                       int no_repartition)
+t8_forest_set_balance_ext (t8_forest_t forest,
+                           const t8_forest_t set_from,
+                           int no_repartition, int no_balance_with_adapt)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
 
@@ -222,6 +223,15 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from,
   else {
     /* Repartition during balance */
     forest->set_balance = T8_FOREST_BALANCE_REPART;
+  }
+
+  if (no_balance_with_adapt) {
+    /* Never allow balance and adapt to be done simultaneously */
+    forest->set_balance_and_adapt = T8_FOREST_BALANCE_NO_ADAPT;
+  }
+  else {
+    /* Allow balance and adapt to be done simultaneously */
+    forest->set_balance_and_adapt = T8_FOREST_BALANCE_AND_ADAPT;
   }
 
   if (set_from != NULL) {
@@ -237,6 +247,14 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from,
   else {
     forest->from_method |= T8_FOREST_FROM_BALANCE;
   }
+}
+
+void
+t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from,
+                       int no_repartition)
+{
+  /* We call the extended set balance function with balance_and_adapt enabled. */
+  t8_forest_set_balance_ext (forest, set_from, no_repartition, 0);
 }
 
 void
@@ -433,19 +451,22 @@ t8_forest_commit (t8_forest_t forest)
 
     /* T8_ASSERT (forest->from_method == T8_FOREST_FROM_COPY); */
     if (forest->from_method & T8_FOREST_FROM_ADAPT) {
+      /* The forest should be adapted */
       int                 adapt_with_balance = 0, only_adapt = 0;
       int                 only_adapt_with_balance = 0;
       SC_CHECK_ABORT (forest->set_adapt_fn != NULL,
                       "No adapt function specified");
       /* If only adapt and balance are set and adapt is not recursive, 
-       * and the set_from forest is balanced, then we continue below 
-       * with t8_forest_balance_and_adapt */
+       * and the set_from forest is balanced, then we can continue below 
+       * with t8_forest_balance_and_adapt, 
+       * but not if the forest settings explicitely forbid it */
       forest->from_method -= T8_FOREST_FROM_ADAPT;
       if (forest->from_method <= 0) {
         /* If this is true, we only need to adapt the forest */
         only_adapt = 1;
       }
       else if (forest->from_method & T8_FOREST_FROM_BALANCE
+               && forest->set_balance_and_adapt == T8_FOREST_BALANCE_AND_ADAPT
                && forest->set_from->is_balanced
                && forest->set_adapt_recursive == 0) {
         /* If this is true, we can use the balance_and_adapt function */
