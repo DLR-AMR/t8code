@@ -133,6 +133,9 @@ typedef struct
   int                 dim; /**< The dimension of the mesh */
   int                 dummy_op; /**< If true, we carry out more (but useless) operations
                                      per element, in order to simulate more computation load */
+  int                 no_balance_with_adapt; /**< If true, we do not use the optimize balance with adapt
+                                                  feature. We need this for comparing the runtimes of the different
+                                                  Balance versions. */
 } t8_advect_problem_t;
 
 /** The per element data */
@@ -948,7 +951,8 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time)
     /* We also want to balance the forest
      * if the difference in refinement levels is
      * greater 1 */
-    t8_forest_set_balance (problem->forest_adapt, NULL, 1);
+    t8_forest_set_balance_ext (problem->forest_adapt, NULL, 1,
+                               problem->no_balance_with_adapt);
     did_balance = 1;
   }
   /* We also want ghost elements in the new forest */
@@ -1170,7 +1174,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
                         int level, int maxlevel,
                         double T, double cfl, sc_MPI_Comm comm,
                         double band_width, int dim, int dummy_op,
-                        int volume_refine)
+                        int volume_refine, int no_balance_with_adapt)
 {
   t8_advect_problem_t *problem;
   t8_scheme_cxx_t    *default_scheme;
@@ -1201,6 +1205,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
   problem->band_width = band_width;     /* width of the refinemen band around 0 level-set */
   problem->dim = dim;           /* dimension of the mesh */
   problem->dummy_op = dummy_op; /* If true, emulate more computational load per element */
+  problem->no_balance_with_adapt = no_balance_with_adapt;       /* If true, we do not use the Balance version that also adapts. */
 
   for (i = 0; i < ADVECT_NUM_STATS; i++) {
     sc_stats_init (&problem->stats[i], advect_stat_names[i]);
@@ -1497,7 +1502,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                  const int level, const int maxlevel, double T, double cfl,
                  sc_MPI_Comm comm, int adapt_freq, int no_vtk,
                  int vtk_freq, double band_width, int dim, int dummy_op,
-                 int volume_refine)
+                 int volume_refine, int no_balance_with_adapt)
 {
   t8_advect_problem_t *problem;
   int                 iface, ineigh;
@@ -1528,7 +1533,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   problem =
     t8_advect_problem_init (cmesh, u, phi_0, ls_data, level, maxlevel, T,
                             cfl, comm, band_width, dim, dummy_op,
-                            volume_refine);
+                            volume_refine, no_balance_with_adapt);
   t8_advect_problem_init_elements (problem);
 
   if (maxlevel > level) {
@@ -1870,6 +1875,7 @@ main (int argc, char *argv[])
   const char         *mshfile = NULL;
   int                 level, reflevel, dim, eclass_int, dummy_op;
   int                 parsed, helpme, no_vtk, vtk_freq, adapt_freq;
+  int                 no_balance_with_adapt;
   int                 volume_refine;
   int                 flow_arg;
   double              T, cfl, band_width;
@@ -1947,6 +1953,12 @@ main (int argc, char *argv[])
                          "Suppress vtk output. "
                          "Overwrites any -v setting.");
 
+  sc_options_add_switch (opt, 'B', "deactivate balance with adapt",
+                         &no_balance_with_adapt,
+                         "Do not use the optimized balance with adapt feature. "
+                         "We use this option for comparing the runtimes of different balance versions. "
+                         "For optimal perfomance we recommend not using this option.");
+
   sc_options_add_switch (opt, 's', "simulate", &dummy_op,
                          "Simulate more load per element. "
                          "In each iteration, useless dummy operations\n "
@@ -2017,7 +2029,7 @@ main (int argc, char *argv[])
                      level,
                      level + reflevel, T, cfl, sc_MPI_COMM_WORLD, adapt_freq,
                      no_vtk, vtk_freq, band_width, dim, dummy_op,
-                     volume_refine);
+                     volume_refine, no_balance_with_adapt);
   }
   else {
     /* wrong usage */
