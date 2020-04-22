@@ -110,6 +110,17 @@ void                t8_locidx_list_reset (t8_locidx_list_t * list);
  */
 void                t8_locidx_list_destroy (t8_locidx_list_t ** plist);
 
+#ifdef T8_ENABLE_DEBUG
+/** Convert a list to a string for (debug) output.
+ * \param [in]      list An initialized list.
+ * \return               An allocated string that shows the contents of the list.
+ * \note The user is responsible for deallocating the memory of the string with
+ * T8_FREE.
+ * \note The string will look like this: "NULL -> Entry0 -> Entry1 ... -> EntryN -> NULL"
+ * If it is truncated then the list was too large to fit into the string. */
+char               *t8_locidx_list_to_string (t8_locidx_list_t * list);
+#endif
+
 /** The t8_locidx_list_iterator_t can be used to iterat through the 
  *  entries of a t8_locidx_list_t.
  *  The workflow should be:

@@ -217,6 +217,50 @@ t8_locidx_list_destroy (t8_locidx_list_t ** plist)
   *plist = NULL;
 }
 
+#ifdef T8_ENABLE_DEBUG
+/** Convert a list to a string for (debug) output.
+ * \param [in]      list An initialized list.
+ * \return               An allocated string that shows the contents of the list.
+ * \note The user is responsible for deallocating the memory of the string with
+ * T8_FREE.
+ * \note The string will look like this: "NULL -> Entry0 -> Entry1 ... -> EntryN -> NULL"
+ * If it is truncated then the list was too large to fit into the string. */
+char               *
+t8_locidx_list_to_string (t8_locidx_list_t * list)
+{
+  /* We will build a string in the following format:
+   * "NULL -> Entry0 -> Entry1 ... -> EntryN -> NULL"
+   */
+
+  /* Calculate the length of the string */
+  const size_t        num_entries = t8_locidx_list_count (list);
+  const size_t        string_len = 12   /* "NULL ->" + " NULL" */
+    + num_entries * 20;         /* Reserve 20 chars per entry */
+  char               *string = T8_ALLOC (char, string_len);
+
+  size_t              bytes_written = 0;
+  snprintf (string, string_len + 1, "NULL ->");
+
+  /* Iterate through the list and write the contents to the string */
+  t8_locidx_list_iterator_t it;
+  for (t8_locidx_list_iterator_init (list, &it);
+       t8_locidx_list_iterator_is_valid (&it, list);
+       t8_locidx_list_iterator_next (&it)) {
+    t8_locidx_t         entry = t8_locidx_list_iterator_get_value (&it);
+    bytes_written = strlen (string);
+    snprintf (string + bytes_written, string_len - bytes_written, " %i ->",
+              entry);
+  }
+  bytes_written = strlen (string);
+  snprintf (string + bytes_written, string_len - bytes_written, " NULL");
+  bytes_written = strlen (string);
+  /* Set terminating zero */
+  string[bytes_written] = '\0';
+
+  return string;
+}
+#endif /* T8_ENABLE_DEBUG */
+
 /* Initialize an allocated iterator for a list.
  *  The iterator will start at the first item in the list.
  * \param [in]  An initialized list.
