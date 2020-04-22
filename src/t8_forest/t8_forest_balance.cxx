@@ -398,6 +398,26 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
   /* Communicate ghost values for the markers array */
   t8_forest_ghost_exchange_data (forest_from, &markers);
 
+  /* TODO: We used these for debugging. Reactivated if needed. Delete eventually. */
+#if 0
+#ifdef T8_ENABLE_DEBUG
+  {
+    /* Print vtk and marker array */
+    t8_locidx_t         ielement;
+    char                output[BUFSIZ];
+
+    t8_forest_write_vtk (forest_from, "t8_DEBUG_forest_From_balance_adapt");
+
+    for (ielement = 0; ielement < num_local_elements + num_ghosts; ++ielement) {
+      snprintf (output + strlen (output), BUFSIZ - strlen (output),
+                " | %hi |", *(short *) t8_sc_array_index_locidx (&markers,
+                                                                 ielement));
+    }
+    t8_debugf ("[H] Markers: %s\n", output);
+  }
+#endif
+#endif
+
   /* We now iterate through the not refined elements and check
    * whether the balance condition will be broken for them.
    * If so we change there marker to refinement or do nothing,
@@ -426,6 +446,19 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
       /* Increase the balance_rounds counter */
       forest->profile->balance_rounds++;
     }
+
+    /* TODO: We used these for debugging. Reactivated if needed. Delete eventually. */
+#if 0
+#ifdef T8_ENABLE_DEBUG
+    {
+      char               *not_refined_string =
+        t8_locidx_list_to_string (&elements_that_do_not_refine);
+      t8_debugf ("[H] New balance_adapt round:\n\t%s\n", not_refined_string);
+      T8_FREE (not_refined_string);
+    }
+#endif
+#endif
+
     if (num_local_elements > 0) {
       /* We only need to iterate over the elements if there are any. */
       /* Init next tree_offset as the offset of tree 1
@@ -700,6 +733,12 @@ t8_forest_is_balanced (t8_forest_t forest)
         forest->set_from = forest_from;
         forest->t8code_data = data_temp;
         /* Check whether the is_balanced flag was set correctly */
+#ifdef T8_ENABLE_DEBUG
+        /* In debugging mode and if forest->is_balnced is true, print the forest */
+        if (forest->is_balanced != 0) {
+          t8_forest_write_vtk (forest, "t8_DEBUG_forest_not_balanced");
+        }
+#endif
         T8_ASSERT (forest->is_balanced == 0);
         return 0;
       }
