@@ -494,6 +494,22 @@ t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers,
         /* This element does not get refined, we add it to the list of unrefined element */
         t8_locidx_list_append (elements_that_do_not_refine, element_index);
       }
+      if (adapt_value < 0) {
+        /* This is a family that will get coarsened. At the marker value to all siblings.
+         * and add all siblings to the list of not refined elements. */
+
+        T8_ASSERT (is_family);
+        for (isib = 1; isib < num_siblings; ++isib) {
+          *(short *) t8_sc_array_index_locidx (markers,
+                                               element_index + isib) = -1;
+          t8_locidx_list_append (elements_that_do_not_refine,
+                                 element_index + isib);
+        }
+        /* We have to skip the siblings from the adapt check, since we know that they
+         * will be coarsened. However, calling the adapt function for the seperately
+         * will return 0 or 1 and result in false markers. */
+        ielement += num_siblings - 1;
+      }
     }                           /* End of element loop */
   }                             /* End of tree loop */
 }
