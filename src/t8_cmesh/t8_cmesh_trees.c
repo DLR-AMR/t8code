@@ -498,14 +498,47 @@ t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees, t8_locidx_t ltree_id,
 }
 
 t8_locidx_t
-t8_cmesh_trees_get_face_neighbor (t8_ctree_t tree, int face)
+t8_cmesh_trees_get_face_neighbor_ext (const t8_ctree_t tree, const int face,
+                                      int8_t * ttf)
 {
   t8_locidx_t        *face_neighbors;
 
   T8_ASSERT (tree != NULL);
   T8_ASSERT (0 <= face && face < t8_eclass_num_faces[tree->eclass]);
 
+  if (ttf != NULL) {
+    /* Get the ttf value */
+    *ttf = ((int8_t *) T8_TREE_TTF (tree))[face];
+  }
+
+  /* Gt the face neighbor array */
   face_neighbors = (t8_locidx_t *) T8_TREE_FACE (tree);
+  return face_neighbors[face];
+}
+
+t8_locidx_t
+t8_cmesh_trees_get_face_neighbor (const t8_ctree_t tree, const int face)
+{
+  /* We just pass this through to get_face_neighbor_ext without the ttf argument */
+  t8_cmesh_trees_get_face_neighbor_ext (tree, face, NULL);
+}
+
+t8_gloidx_t
+t8_cmesh_trees_get_ghost_face_neighbor_ext (const t8_cghost_t ghost,
+                                            const int face, int8_t * ttf)
+{
+  t8_locidx_t        *face_neighbors;
+
+  T8_ASSERT (ghost != NULL);
+  T8_ASSERT (0 <= face && face < t8_eclass_num_faces[ghost->eclass]);
+
+  if (ttf != NULL) {
+    /* Get the ttf value */
+    *ttf = ((int8_t *) T8_GHOST_TTF (ghost))[face];
+  }
+
+  /* Gt the face neighbor array */
+  face_neighbors = (t8_locidx_t *) T8_GHOST_FACE (ghost);
   return face_neighbors[face];
 }
 

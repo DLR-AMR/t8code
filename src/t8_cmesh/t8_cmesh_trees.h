@@ -322,12 +322,49 @@ t8_ctree_t          t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees,
                                                  t8_locidx_t ** face_neigh,
                                                  int8_t ** ttf);
 
+/** Return the face neigbor of a tree at a given face and return the tree_to_face info
+ * \param [in]      trees The trees structure where the tree is to be looked up.
+ * \param [in]      ltreeid  The local id of the tree.
+ * \param [in]      face  A face of the tree.
+ * \param [out]     ttf   If not NULL the tree_to_face value of the face connection.
+ * \return          The face neighbor that is stored for this face
+ */
+t8_locidx_t         t8_cmesh_trees_get_face_info (t8_cmesh_trees_t trees,
+                                                  t8_locidx_t ltreeid,
+                                                  int face, int8_t * ttf);
+
 /** Given a coarse tree and a face number, return the local id of the neighbor tree.
  * \param [in]      tree.     The coarse tree.
  * \param [in]      face.     The face number.
  * \return                    The local id of the neighbor tree. */
-t8_locidx_t         t8_cmesh_trees_get_face_neighbor (t8_ctree_t tree,
-                                                      int face);
+t8_locidx_t         t8_cmesh_trees_get_face_neighbor (const t8_ctree_t tree,
+                                                      const int face);
+
+/** Given a coarse tree and a face number, return the local id of the neighbor tree
+ * together with its tree-to-face info.
+ * \param [in]   tree         The coarse tree.
+ * \param [in]   face         The face number.
+ * \param [out]  ttf          If not NULL it is filled with the tree-to-face value
+ *                            for this face.
+ * \return                    The local id of the neighbor tree. */
+t8_locidx_t         t8_cmesh_trees_get_face_neighbor_ext (const t8_ctree_t
+                                                          tree,
+                                                          const int face,
+                                                          int8_t * ttf);
+
+/** Given a coarse ghost and a face number, return the local id of the neighbor tree
+ * together with its tree-to-face info.
+ * \param [in]   ghost        The coarse ghost.
+ * \param [in]   face         The face number.
+ * \param [out]  ttf          If not NULL it is filled with the tree-to-face value
+ *                            for this face.
+ * \return                    The global id of the neighbor tree. */
+t8_gloidx_t         t8_cmesh_trees_get_ghost_face_neighbor_ext (const
+                                                                t8_cghost_t
+                                                                ghost,
+                                                                const int
+                                                                face,
+                                                                int8_t * ttf);
 
 /* TODO: This function return NULL if the ghost is not present.
  *       So far no error checking is done here. */
