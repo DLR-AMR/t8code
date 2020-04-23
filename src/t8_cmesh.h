@@ -532,6 +532,26 @@ t8_gloidx_t         t8_cmesh_get_global_id (t8_cmesh_t cmesh,
 t8_locidx_t         t8_cmesh_get_local_id (t8_cmesh_t cmesh,
                                            t8_gloidx_t global_id);
 
+/** Given a local tree id and a face number, get information about the face neighbor tree.
+ * \param [in]      cmesh     The cmesh to be considered.
+ * \param [in]      ltreeid   The local id of a tree or a ghost.
+ * \param [in]      face      A face number of the tree/ghost.
+ * \param [out]     dual_face If not NULL, the face number of the neighbor tree at this connection.
+ * \param [out]     orientation If not NULL, the face orientation of the connection.
+ * \return                    If non-negative: The local id of the neighbor tree or ghost.
+ *                            If negative: There is no neighbor across this face. \a dual_face and
+ *                            \a orientation remain unchanged.
+ * \note If \a ltreeid is a ghost and it has a neighbor which is neither a local tree or ghost,
+ *       then the return value will be negative.
+ *       This, a negative return value does not necessarily mean that this is a domain boundary.
+ *       To find out whether a tree is a domain boundary or not \see t8_cmesh_tree_face_is_boundary.
+ */
+t8_locidx_t         t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh,
+                                                const t8_locidx_t ltreeid,
+                                                const int face,
+                                                int *dual_face,
+                                                int *orientation);
+
 /** Print the collected statistics from a cmesh profile.
  * \param [in]    cmesh         The cmesh.
  *

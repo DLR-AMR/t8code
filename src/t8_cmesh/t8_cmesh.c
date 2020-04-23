@@ -1220,6 +1220,95 @@ t8_cmesh_get_local_id (t8_cmesh_t cmesh, t8_gloidx_t global_id)
   }
 }
 
+/* Given a local tree id and a face number, get information about the face neighbor tree.
+ * \param [in]      cmesh     The cmesh to be considered.
+ * \param [in]      ltreeid   The local id of a tree or a ghost.
+ * \param [in]      face      A face number of the tree/ghost.
+ * \param [out]     dual_face If not NULL, the face number of the neighbor tree at this connection.
+ * \param [out]     orientation If not NULL, the face orientation of the connection.
+ * \return                    If non-negative: The local id of the neighbor tree or ghost.
+ *                            If negative: There is no neighbor across this face. \a dual_face and
+ *                            \a orientation remain unchanged.
+ * \note If \a ltreeid is a ghost and it has a neighbor which is neither a local tree or ghost,
+ *       then the return value will be negative.
+ *       This, a negative return value does not necessarily mean that this is a domain boundary.
+ *       To find out whether a tree is a domain boundary or not \see t8_cmesh_tree_face_is_boundary.
+ */
+t8_locidx_t
+t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid,
+                            const int face, int *dual_face, int *orientation)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (0 <= ltreeid
+             && ltreeid <
+             t8_cmesh_get_num_local_trees (cmesh) +
+             t8_cmesh_get_num_ghosts (cmesh));
+  const int           is_ghost =
+    ltreeid >= t8_cmesh_get_num_local_trees (cmesh) ? 1 : 0;
+  int8_t              ttf;
+  t8_locidx_t         face_neigh;
+  int                 dual_face_temp, orientation_temp;
+
+  if (!is_ghost) {
+    /* The local tree id belongs to a local tree (not a ghost) */
+    /* Get the tree */
+    const t8_ctree_t    tree = t8_cmesh_get_tree (cmesh, ltreeid);
+
+#ifdef T8_ENABLE_DEBUG
+    /* Get the eclass */
+    t8_eclass_t         eclass = tree->eclass;
+    /* Check that face is valid */
+    T8_ASSERT (0 <= face && face < t8_eclass_num_faces[eclass]);
+#endif
+
+    /* If this is a domain boundary, return -1 */
+    if (t8_cmesh_tree_face_is_boundary (cmesh, ltreeid, face)) {
+      return -1;
+    }
+    /* Get the local id of the face neighbor */
+    face_neigh = t8_cmesh_trees_get_face_neighbor_ext (tree, face, &ttf);
+  }
+  else {
+    /* The local tree id belongs to a ghost */
+    const t8_locidx_t   lghostid =
+      ltreeid - t8_cmesh_get_num_local_trees (cmesh);
+    /* Get the ghost */
+    const t8_cghost_t   ghost =
+      t8_cmesh_trees_get_ghost (cmesh->trees, lghostid);
+
+    t8_gloidx_t         ghost_face_neigh;
+#ifdef T8_ENABLE_DEBUG
+    /* Get the eclass */
+    t8_eclass_t         eclass = ghost->eclass;
+    /* Check that face is valid */
+    T8_ASSERT (0 <= face && face < t8_eclass_num_faces[eclass]);
+#endif
+
+    /* Get the global id of the face neighbor */
+    ghost_face_neigh =
+      t8_cmesh_trees_get_ghost_face_neighbor_ext (ghost, face, &ttf);
+    /* Convert it into a local id */
+    face_neigh = t8_cmesh_get_local_id (cmesh, ghost_face_neigh);
+
+    if (face_neigh < 0) {
+      /* The neighbor is not local, return -1 */
+      return -1;
+    }
+  }
+
+  /* Decode the ttf information to get the orientation and the dual face */
+  t8_cmesh_tree_to_face_decode (cmesh->dimension, ttf, &dual_face_temp,
+                                &orientation_temp);
+  if (dual_face != NULL) {
+    *dual_face = dual_face_temp;
+  }
+  if (orientation != NULL) {
+    *orientation = orientation_temp;
+  }
+  /* Return the face neighbor */
+  return face_neigh;
+}
+
 void
 t8_cmesh_print_profile (t8_cmesh_t cmesh)
 {
