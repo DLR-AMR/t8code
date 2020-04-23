@@ -151,10 +151,12 @@ t8_forest_partition_test_desc (t8_forest_t forest)
     ts->t8_element_first_descendant (element, elem_desc, forest->maxlevel);
     level = ts->t8_element_level (elem_desc);
     T8_ASSERT (level == ts->t8_element_level (elem_desc));
+    printf("checked level\n");
     T8_ASSERT (level == forest->maxlevel);
-
+    printf("checked maxlevel\n");
     T8_ASSERT (ts->t8_element_get_linear_id (elem_desc, level) >=
                first_desc_id);
+    printf("checked linear id\n");
   }
 }
 #endif
