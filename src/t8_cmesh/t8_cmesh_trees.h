@@ -442,6 +442,33 @@ void                t8_cmesh_trees_add_attribute (t8_cmesh_trees_t trees,
  */
 size_t              t8_cmesh_trees_get_numproc (t8_cmesh_trees_t trees);
 
+/** Compute the tree-to-face information given a face and orientation value
+ *  of a face connection.
+ * \param [in]        dimension The dimension of the corresponding eclasses.
+ * \param [in]        face      A face number
+ * \param [in]        orientation A face-to-face orientation.
+ * \return            The tree-to-face entry corresponding to the face/orientation combination.
+ * It is computed as t8_eclass_max_num_faces[dimension] * orientation + face
+ */
+int8_t              t8_cmesh_tree_to_face_encode (const int dimension,
+                                                  const t8_locidx_t face,
+                                                  const int orientation);
+
+/** Given a tree-to-face value, get its encoded face number and orientation.
+ * \param [in]        dimension The dimension of the corresponding eclasses.
+ * \param [in]        tree_to_face A tree-to-face value
+ * \param [out]       face      On output filled with the stored face value.
+ * \param [out]       orientation On output filled with the stored orientation value.
+ * \note This function is the invers operation of \ref t8_cmesh_tree_to_face_encode
+ * If F = t8_eclass_max_num_faces[dimension], we get
+ *  orientation = tree_to_face / F
+ *  face = tree_to_face % F
+ */
+void                t8_cmesh_tree_to_face_decode (const int dimension,
+                                                  const int8_t tree_to_face,
+                                                  int *face,
+                                                  int *orientation);
+
 /* TODO: To fit to the interface a trees struct is given as parameter here,
  *       however we could just take the one associated to the cmesh given.*/
 /** Print the trees,ghosts and their neighbors in ASCII format t stdout.

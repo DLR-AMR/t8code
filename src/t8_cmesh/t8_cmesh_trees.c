@@ -818,6 +818,53 @@ t8_cmesh_trees_get_numproc (t8_cmesh_trees_t trees)
   return trees->from_proc->elem_count;
 }
 
+/* Compute the tree-to-face information given a face and orientation value
+ *  of a face connection.
+ * \param [in]        dimension The dimension of the corresponding eclasses.
+ * \param [in]        face      A face number
+ * \param [in]        orientation A face-to-face orientation.
+ * \return            The tree-to-face entry corresponding to the face/orientation combination.
+ * It is computed as t8_eclass_max_num_faces[dimension] * orientation + face
+ */
+int8_t
+t8_cmesh_tree_to_face_encode (const int dimension, const t8_locidx_t face,
+                              const int orientation)
+{
+  const int           F = t8_eclass_max_num_faces[dimension];
+
+  /* Check that face is valid */
+  T8_ASSERT (0 <= face && face < F);
+  /* Check for overflow error */
+  T8_ASSERT ((int) orientation * F + face ==
+             (int8_t) (orientation * F + face));
+
+  /* Compute and return the tree to face value */
+  return orientation * F + face;
+}
+
+/* Given a tree-to-face value, get its encoded face number and orientation.
+ * \param [in]        dimension The dimension of the corresponding eclasses.
+ * \param [in]        tree_to_face A tree-to-face value
+ * \param [out]       face      On output filled with the stored face value.
+ * \param [out]       orientation On output filled with the stored orientation value.
+ * \note This function is the invers operation of \ref t8_cmesh_tree_to_face_encode
+ * If F = t8_eclass_max_num_faces[dimension], we get
+ *  orientation = tree_to_face / F
+ *  face = tree_to_face % F
+ */
+void
+t8_cmesh_tree_to_face_decode (const int dimension, const int8_t tree_to_face,
+                              int *face, int *orientation)
+{
+  T8_ASSERT (face != NULL);
+  T8_ASSERT (orientation != NULL);
+  const int           F = t8_eclass_max_num_faces[dimension];
+
+  /* Performs the inverse operation to tree_to_face = orientation * F + face */
+  *face = tree_to_face % F;
+  *orientation = tree_to_face / F;
+}
+
 void
 t8_cmesh_trees_print (t8_cmesh_t cmesh, t8_cmesh_trees_t trees)
 {

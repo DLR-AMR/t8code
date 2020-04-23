@@ -171,9 +171,15 @@ t8_cmesh_commit_replicated_new (t8_cmesh_t cmesh)
       (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, joinface->id2,
                                           &face_neigh2, &ttf2);
       face_neigh[joinface->face1] = (t8_locidx_t) joinface->id2;
-      ttf[joinface->face1] = joinface->orientation * F + joinface->face2;
+      ttf[joinface->face1] =
+        t8_cmesh_tree_to_face_encode (cmesh->dimension,
+                                      (t8_locidx_t) joinface->face2,
+                                      joinface->orientation);
       face_neigh2[joinface->face2] = (t8_locidx_t) joinface->id1;
-      ttf2[joinface->face2] = joinface->orientation * F + joinface->face1;
+      ttf2[joinface->face2] =
+        t8_cmesh_tree_to_face_encode (cmesh->dimension,
+                                      (t8_locidx_t) joinface->face1,
+                                      joinface->orientation);
     }
   }
 }
