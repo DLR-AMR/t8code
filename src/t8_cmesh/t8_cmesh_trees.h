@@ -309,7 +309,7 @@ t8_ctree_t          t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees,
 
 /** Return a pointer to a specific tree in a trees struct plus pointers to
  * its face_neighbor and tree_to_face arrays.
- * \param [in]      trees The tress structure where the tree is to be looked up.
+ * \param [in]      trees The trees structure where the tree is to be looked up.
  * \param [in]      ltree_id  The local id of the tree.
  * \param [out]     face_neigh If not NULL a pointer to the trees face_neighbor
  *                             array is stored here on return.
