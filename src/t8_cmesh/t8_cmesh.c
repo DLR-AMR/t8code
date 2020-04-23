@@ -1290,6 +1290,7 @@ t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid,
     /* Convert it into a local id */
     face_neigh = t8_cmesh_get_local_id (cmesh, ghost_face_neigh);
 
+    /* TODO: Check whether this face is a boundary face */
     if (face_neigh < 0) {
       /* The neighbor is not local, return -1 */
       return -1;

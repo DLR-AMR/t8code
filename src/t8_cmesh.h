@@ -496,6 +496,7 @@ t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
 int                 t8_cmesh_tree_face_is_boundary (t8_cmesh_t cmesh,
                                                     t8_locidx_t ltree_id,
                                                     int face);
+/* TODO: Add a t8_cmesh_tree_face_is_boundary function for ghosts (or make the function work for ghosts too) */
 
 /** Return the eclass of a given local ghost.
  * TODO: Should we refer to indices or consequently use cghost_t?
