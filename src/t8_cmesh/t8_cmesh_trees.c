@@ -527,7 +527,7 @@ t8_gloidx_t
 t8_cmesh_trees_get_ghost_face_neighbor_ext (const t8_cghost_t ghost,
                                             const int face, int8_t * ttf)
 {
-  t8_locidx_t        *face_neighbors;
+  t8_gloidx_t        *face_neighbors;
 
   T8_ASSERT (ghost != NULL);
   T8_ASSERT (0 <= face && face < t8_eclass_num_faces[ghost->eclass]);
@@ -538,7 +538,7 @@ t8_cmesh_trees_get_ghost_face_neighbor_ext (const t8_cghost_t ghost,
   }
 
   /* Gt the face neighbor array */
-  face_neighbors = (t8_locidx_t *) T8_GHOST_FACE (ghost);
+  face_neighbors = (t8_gloidx_t *) T8_GHOST_FACE (ghost);
   return face_neighbors[face];
 }
 
