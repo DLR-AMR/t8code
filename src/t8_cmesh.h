@@ -438,6 +438,37 @@ t8_locidx_t         t8_cmesh_get_num_ghosts (t8_cmesh_t cmesh);
  */
 t8_gloidx_t         t8_cmesh_get_first_treeid (t8_cmesh_t cmesh);
 
+/** Query whether a given t8_locidx_t belongs to a local tree of a cmesh.
+ * \param [in] cmesh       The cmesh to be considered.
+ * \param [in] ltreeid     An (possible) tree index.
+ * \return                 True if \a ltreeid matches the range of local trees of \a cmesh.
+ *                         False if not.
+ * \a cmesh must be committed before calling this function.
+ */
+int                 t8_cmesh_treeid_is_local_tree (const t8_cmesh_t cmesh,
+                                                   const t8_locidx_t ltreeid);
+
+/** Query whether a given t8_locidx_t belongs to a ghost of a cmesh.
+ * \param [in] cmesh       The cmesh to be considered.
+ * \param [in] ltreeid     An (possible) ghost index.
+ * \return                 True if \a ltreeid matches the range of ghost trees of \a cmesh.
+ *                         False if not.
+ * \a cmesh must be committed before calling this function.
+ */
+int                 t8_cmesh_treeid_is_ghost (const t8_cmesh_t cmesh,
+                                              const t8_locidx_t ltreeid);
+
+/** Given a local tree id that belongs to a ghost, return the index of the ghost.
+ * \param [in] cmesh       The cmesh to be considered.
+ * \param [in] ltreeid     The local id of a ghost, satisfying \ref t8_cmesh_treeid_is_ghost,
+ *                         thus num_trees <= \a ltreeid < num_trees + num_ghosts
+ * \return                 The index of the ghost whithin all ghosts, thus an index
+ *                         0 <= index < num_ghosts
+ * \a cmesh must be committed before calling this function.
+ */
+t8_locidx_t         t8_cmesh_ltreeid_to_ghostid (const t8_cmesh_t cmesh,
+                                                 const t8_locidx_t ltreeid);
+
 /* TODO: Replace this iterator with a new one that does not need the
  *        treeid to be part of the ctree struct */
 /* TODO: should this and the next function be part of the interface? */
@@ -485,7 +516,7 @@ t8_ctree_t          t8_cmesh_get_tree (t8_cmesh_t cmesh,
 t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
                                              t8_locidx_t ltree_id);
 
-/** Query whether a face of a local tree is at the domain boundary.
+/** Query whether a face of a local tree or ghost is at the domain boundary.
  * \param [in]    cmesh         The cmesh to be considered.
  * \param [in]    ltree_id       The local id of a tree.
  * \param [in]    face          The number of a face of the tree.
@@ -531,6 +562,26 @@ t8_gloidx_t         t8_cmesh_get_global_id (t8_cmesh_t cmesh,
  */
 t8_locidx_t         t8_cmesh_get_local_id (t8_cmesh_t cmesh,
                                            t8_gloidx_t global_id);
+
+/** Given a local tree id and a face number, get information about the face neighbor tree.
+ * \param [in]      cmesh     The cmesh to be considered.
+ * \param [in]      ltreeid   The local id of a tree or a ghost.
+ * \param [in]      face      A face number of the tree/ghost.
+ * \param [out]     dual_face If not NULL, the face number of the neighbor tree at this connection.
+ * \param [out]     orientation If not NULL, the face orientation of the connection.
+ * \return                    If non-negative: The local id of the neighbor tree or ghost.
+ *                            If negative: There is no neighbor across this face. \a dual_face and
+ *                            \a orientation remain unchanged.
+ * \note If \a ltreeid is a ghost and it has a neighbor which is neither a local tree or ghost,
+ *       then the return value will be negative.
+ *       Thus, a negative return value does not necessarily mean that this is a domain boundary.
+ *       To find out whether a tree is a domain boundary or not \see t8_cmesh_tree_face_is_boundary.
+ */
+t8_locidx_t         t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh,
+                                                const t8_locidx_t ltreeid,
+                                                const int face,
+                                                int *dual_face,
+                                                int *orientation);
 
 /** Print the collected statistics from a cmesh profile.
  * \param [in]    cmesh         The cmesh.
