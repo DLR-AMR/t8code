@@ -42,6 +42,8 @@ t8_test_face_is_boundary_one_tree (sc_MPI_Comm comm)
     for (iface = 0; iface < num_faces; ++iface) {
       SC_CHECK_ABORT (t8_cmesh_tree_face_is_boundary (cmesh, 0, iface),
                       "Face is not detected as a boundary.");
+      SC_CHECK_ABORT (t8_cmesh_get_face_neighbor (cmesh, 0, iface, NULL, NULL)
+                      < 0, "Face neighbor on boundary face detected.");
     }
 
     t8_cmesh_destroy (&cmesh);
@@ -56,7 +58,6 @@ t8_test_compute_parallel_bounds (sc_MPI_Comm comm, t8_gloidx_t * first_tree,
                                  t8_gloidx_t * last_tree)
 {
   int                 mpirank, mpisize, mpiret;
-  int                 num_lower_half, num_upper_half;
   int                 first_tree_shared = 0;
 
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
@@ -97,44 +98,108 @@ t8_test_face_is_boundary_two_tree (sc_MPI_Comm comm)
   int                 num_faces, iface, checkface;
   t8_cmesh_t          cmesh;
   t8_gloidx_t         first_tree, last_tree;
+  int                 do_partition;
 
   t8_test_compute_parallel_bounds (comm, &first_tree, &last_tree);
   for (eci = T8_ECLASS_LINE; eci < T8_ECLASS_COUNT; ++eci) {
     num_faces = t8_eclass_num_faces[eci];
     for (iface = 0; iface < num_faces; ++iface) {
-      /* For each face of the eclass we construct one cmesh having
-       * this face as a connecting face. */
-      t8_cmesh_init (&cmesh);
-      t8_cmesh_set_tree_class (cmesh, 0, (t8_eclass_t) eci);
-      t8_cmesh_set_tree_class (cmesh, 1, (t8_eclass_t) eci);
-      /* Connect face iface of tree 0 with face iface of tree 1 with orientation 0 */
-      t8_cmesh_set_join (cmesh, 0, 1, iface, iface, 0);
-      /* Set the cmesh to be partitioned.
-       * We do it in such a way that each process has one local and one ghost tree. */
-      t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
-      t8_cmesh_commit (cmesh, comm);
-      SC_CHECK_ABORT (t8_cmesh_is_committed (cmesh), "Cmesh commit failed.");
-      for (checkface = 0; checkface < num_faces; ++checkface) {
-        if (iface != checkface) {
-          SC_CHECK_ABORT (t8_cmesh_tree_face_is_boundary
-                          (cmesh, 0, checkface),
-                          "Face is not detected as a boundary.");
-          SC_CHECK_ABORT (t8_cmesh_tree_face_is_boundary
-                          (cmesh, 1, checkface),
-                          "Face is not detected as a boundary.");
+      for (do_partition = 0; do_partition < 2; ++do_partition) {
+        /* For each face of the eclass we construct one cmesh having
+         * this face as a connecting face.
+         * Once partitioned and once replicated */
+        t8_cmesh_init (&cmesh);
+        t8_cmesh_set_tree_class (cmesh, 0, (t8_eclass_t) eci);
+        t8_cmesh_set_tree_class (cmesh, 1, (t8_eclass_t) eci);
+        /* Connect face iface of tree 0 with face iface of tree 1 with orientation 0 */
+        t8_cmesh_set_join (cmesh, 0, 1, iface, iface, 0);
+        t8_debugf ("Connecting tree 0 to tree 1 via face %i\n", iface);
+
+        if (do_partition) {
+          /* Set the cmesh to be partitioned.
+           * We do it in such a way that each process has one local and one ghost tree. */
+          t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
         }
-        else {
-          SC_CHECK_ABORT (!t8_cmesh_tree_face_is_boundary
-                          (cmesh, 0, checkface),
-                          "Face is wrongly detected as a boundary.");
-          SC_CHECK_ABORT (!t8_cmesh_tree_face_is_boundary
-                          (cmesh, 1, checkface),
-                          "Face is wrongly detected as a boundary.");
+        t8_cmesh_commit (cmesh, comm);
+        SC_CHECK_ABORT (t8_cmesh_is_committed (cmesh),
+                        "Cmesh commit failed.");
+        for (checkface = 0; checkface < num_faces; ++checkface) {
+          if (iface != checkface) {
+            /* The face checkface is a boundary face for tree 0 and tree 1 */
+            /* Check that tree 0 face is a boundary */
+            SC_CHECK_ABORT (t8_cmesh_tree_face_is_boundary
+                            (cmesh, 0, checkface),
+                            "Face is not detected as a boundary.");
+            /* Check that tree 1 face is a boundary */
+            SC_CHECK_ABORT (t8_cmesh_tree_face_is_boundary
+                            (cmesh, 1, checkface),
+                            "Face is not detected as a boundary.");
+            /* Check that we do not detect a face neighbor for tree 0 or tree 1 at this face */
+            SC_CHECK_ABORTF (t8_cmesh_get_face_neighbor
+                             (cmesh, 0, checkface, NULL, NULL) < 0,
+                             "Face neighbor on boundary face detected. Tree %i face %i.",
+                             0, checkface);
+            SC_CHECK_ABORTF (t8_cmesh_get_face_neighbor
+                             (cmesh, 1, checkface, NULL, NULL) < 0,
+                             "Face neighbor on boundary face detected. Tree %i face %i.",
+                             1, checkface);
+          }
+          else {
+            /* checkface == iface 
+             * Thus, tree 0 is connected to tree 1 across this face */
+            t8_locidx_t         face_neighbor;
+            int                 dual_face = -1, orientation = -1;
+            /* Check that tree 0 face is not a boundary */
+            SC_CHECK_ABORT (!t8_cmesh_tree_face_is_boundary
+                            (cmesh, 0, checkface),
+                            "Face is wrongly detected as a boundary.");
+            /* Compute the face neighbor info */
+            t8_debugf
+              ("Checking face neighbor of local tree 0 across face %i.\n",
+               checkface);
+            face_neighbor =
+              t8_cmesh_get_face_neighbor (cmesh, 0, iface, &dual_face,
+                                          &orientation);
+            /* Check the face_neighbor info */
+            SC_CHECK_ABORTF (face_neighbor == 1,
+                             "Wrong face neighbor computed. Expected %i got %i.",
+                             1, face_neighbor);
+            SC_CHECK_ABORTF (dual_face == checkface,
+                             "Wrong dual face. Expected %i got %i.",
+                             checkface, dual_face);
+            SC_CHECK_ABORTF (orientation == 0,
+                             "Wrong orientation. Expected %i got %i.", 0,
+                             orientation);
+            /* Check that tree 1 face is not a boundary */
+            SC_CHECK_ABORT (!t8_cmesh_tree_face_is_boundary
+                            (cmesh, 1, checkface),
+                            "Face is wrongly detected as a boundary.");
+            /* Reset the dual face and orientation to catch false positives (when the get_face_neighbor
+             * function does not touch dual_face and orientation) */
+            dual_face = orientation = -1;
+            /* Compute the face neighbor info */
+            t8_debugf
+              ("Checking face neighbor of local tree 1 across face %i.\n",
+               checkface);
+            face_neighbor =
+              t8_cmesh_get_face_neighbor (cmesh, 1, checkface, &dual_face,
+                                          &orientation);
+            /* Check the face_neighbor info */
+            SC_CHECK_ABORTF (face_neighbor == 0,
+                             "Wrong face neighbor computed. Expected %i got %i.",
+                             0, face_neighbor);
+            SC_CHECK_ABORTF (dual_face == checkface,
+                             "Wrong dual face. Expected %i got %i.",
+                             checkface, dual_face);
+            SC_CHECK_ABORTF (orientation == 0,
+                             "Wrong orientation. Expected %i got %i.", 0,
+                             orientation);
+          }
         }
-      }
-      t8_cmesh_destroy (&cmesh);
-    }
-  }
+        t8_cmesh_destroy (&cmesh);
+      }                         /* End do_partition loop */
+    }                           /* End iface loop */
+  }                             /* End eclass loop */
 }
 
 int
