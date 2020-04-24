@@ -423,13 +423,42 @@ t8_cmesh_get_first_treeid (t8_cmesh_t cmesh)
   return cmesh->first_tree;
 }
 
+int
+t8_cmesh_treeid_is_local_tree (const t8_cmesh_t cmesh,
+                               const t8_locidx_t ltreeid)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+
+  return 0 <= ltreeid && ltreeid < t8_cmesh_get_num_local_trees (cmesh);
+}
+
+int
+t8_cmesh_treeid_is_ghost (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  const t8_locidx_t   num_trees = t8_cmesh_get_num_local_trees (cmesh);
+  const t8_locidx_t   num_ghosts = t8_cmesh_get_num_ghosts (cmesh);
+
+  return num_trees <= ltreeid && ltreeid < num_trees + num_ghosts;
+}
+
+t8_locidx_t
+t8_cmesh_ltreeid_to_ghostid (const t8_cmesh_t cmesh,
+                             const t8_locidx_t ltreeid)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
+
+  return ltreeid - t8_cmesh_get_num_local_trees (cmesh);
+}
+
 /* TODO: should get a gloidx?
  *       place after commit */
 t8_ctree_t
 t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_locidx_t ltree_id)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  T8_ASSERT (0 <= ltree_id && ltree_id < cmesh->num_local_trees);
+  T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltree_id));
 
   return t8_cmesh_trees_get_tree (cmesh->trees, ltree_id);
 }
@@ -455,7 +484,7 @@ t8_cmesh_get_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (tree != NULL);
-  T8_ASSERT (0 <= tree->treeid && tree->treeid < cmesh->num_local_trees);
+  T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, tree->treeid));
   T8_ASSERT (cmesh->committed);
   return tree->treeid <
     cmesh->num_local_trees -
@@ -478,7 +507,7 @@ double             *
 t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltreeid)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  T8_ASSERT (0 <= ltreeid && ltreeid < cmesh->num_local_trees);
+  T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid));
 
   return (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), 0,
                                             ltreeid);
@@ -491,11 +520,12 @@ t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key,
   int                 is_ghost;
 
   T8_ASSERT (cmesh->committed);
-  T8_ASSERT (0 <= ltree_id &&
-             ltree_id < cmesh->num_ghosts + cmesh->num_local_trees);
-  is_ghost = ltree_id >= cmesh->num_local_trees;
+  T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltree_id)
+             || t8_cmesh_treeid_is_ghost (cmesh, ltree_id));
+  is_ghost = t8_cmesh_treeid_is_ghost (cmesh, ltree_id);
+
   if (is_ghost) {
-    ltree_id = ltree_id - cmesh->num_local_trees;
+    ltree_id = t8_cmesh_ltreeid_to_ghostid (cmesh, ltree_id);
   }
   return t8_cmesh_trees_get_attribute (cmesh->trees, ltree_id, package_id,
                                        key, NULL, is_ghost);
@@ -1165,6 +1195,7 @@ t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_locidx_t ltree_id)
   t8_ctree_t          tree;
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltree_id));
 
   tree = t8_cmesh_get_tree (cmesh, ltree_id);
   return tree->eclass;
@@ -1239,12 +1270,9 @@ t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid,
                             const int face, int *dual_face, int *orientation)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  T8_ASSERT (0 <= ltreeid
-             && ltreeid <
-             t8_cmesh_get_num_local_trees (cmesh) +
-             t8_cmesh_get_num_ghosts (cmesh));
-  const int           is_ghost =
-    ltreeid >= t8_cmesh_get_num_local_trees (cmesh) ? 1 : 0;
+  T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid)
+             || t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
+  const int           is_ghost = t8_cmesh_treeid_is_ghost (cmesh, ltreeid);
   int8_t              ttf;
   t8_locidx_t         face_neigh;
   int                 dual_face_temp, orientation_temp;

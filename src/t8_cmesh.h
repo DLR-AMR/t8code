@@ -438,6 +438,37 @@ t8_locidx_t         t8_cmesh_get_num_ghosts (t8_cmesh_t cmesh);
  */
 t8_gloidx_t         t8_cmesh_get_first_treeid (t8_cmesh_t cmesh);
 
+/** Query whether a given t8_locidx_t belongs to a local tree of a cmesh.
+ * \param [in] cmesh       The cmesh to be considered.
+ * \param [in] ltreeid     An (possible) tree index.
+ * \return                 True if \a ltreeid matches the range of local trees of \a cmesh.
+ *                         False if not.
+ * \a cmesh must be committed before calling this function.
+ */
+int                 t8_cmesh_treeid_is_local_tree (const t8_cmesh_t cmesh,
+                                                   const t8_locidx_t ltreeid);
+
+/** Query whether a given t8_locidx_t belongs to a ghost of a cmesh.
+ * \param [in] cmesh       The cmesh to be considered.
+ * \param [in] ltreeid     An (possible) ghost index.
+ * \return                 True if \a ltreeid matches the range of ghost trees of \a cmesh.
+ *                         False if not.
+ * \a cmesh must be committed before calling this function.
+ */
+int                 t8_cmesh_treeid_is_ghost (const t8_cmesh_t cmesh,
+                                              const t8_locidx_t ltreeid);
+
+/** Given a local tree id that belongs to a ghost, return the index of the ghost.
+ * \param [in] cmesh       The cmesh to be considered.
+ * \param [in] ltreeid     The local id of a ghost, satisfying \ref t8_cmesh_treeid_is_ghost,
+ *                         thus num_trees <= \a ltreeid < num_trees + num_ghosts
+ * \return                 The index of the ghost whithin all ghosts, thus an index
+ *                         0 <= index < num_ghosts
+ * \a cmesh must be committed before calling this function.
+ */
+t8_locidx_t         t8_cmesh_ltreeid_to_ghostid (const t8_cmesh_t cmesh,
+                                                 const t8_locidx_t ltreeid);
+
 /* TODO: Replace this iterator with a new one that does not need the
  *        treeid to be part of the ctree struct */
 /* TODO: should this and the next function be part of the interface? */
