@@ -507,6 +507,13 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   sc_mempool_destroy (ghost_facejoin_mempool);
 
   id1 = cmesh->num_local_trees;
+  /* We must not count shared trees. Thus, we subtract one if
+   * the first tree is shared. However, we exclude the case where
+   * this cmesh has no trees but nevertheless the first tree is marked
+   * as shared. */
+  if (cmesh->first_tree_shared && id1 > 0) {
+    id1--;
+  }
   sc_MPI_Allreduce (&id1, &cmesh->num_trees, 1, T8_MPI_GLOIDX,
                     sc_MPI_SUM, comm);
 

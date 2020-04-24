@@ -327,12 +327,10 @@ t8_cmesh_set_partition_range (t8_cmesh_t cmesh, int set_face_knowledge,
     cmesh->first_tree = first_local_tree;
     cmesh->first_tree_shared = 0;
   }
-  cmesh->num_local_trees = last_local_tree - first_local_tree + 1;
+  cmesh->num_local_trees = last_local_tree - cmesh->first_tree + 1;
   cmesh->set_partition = 1;
   /* Overwrite previous partition settings */
   if (cmesh->tree_offsets != NULL) {
-    cmesh->first_tree = -1;
-    cmesh->first_tree_shared = -1;
     t8_shmem_array_destroy (&cmesh->tree_offsets);
     cmesh->tree_offsets = NULL;
   }
