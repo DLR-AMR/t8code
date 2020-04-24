@@ -574,7 +574,7 @@ t8_locidx_t         t8_cmesh_get_local_id (t8_cmesh_t cmesh,
  *                            \a orientation remain unchanged.
  * \note If \a ltreeid is a ghost and it has a neighbor which is neither a local tree or ghost,
  *       then the return value will be negative.
- *       This, a negative return value does not necessarily mean that this is a domain boundary.
+ *       Thus, a negative return value does not necessarily mean that this is a domain boundary.
  *       To find out whether a tree is a domain boundary or not \see t8_cmesh_tree_face_is_boundary.
  */
 t8_locidx_t         t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh,
