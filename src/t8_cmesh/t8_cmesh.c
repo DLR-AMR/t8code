@@ -1170,22 +1170,43 @@ t8_cmesh_get_num_ghosts (t8_cmesh_t cmesh)
 }
 
 int
-t8_cmesh_tree_face_is_boundary (t8_cmesh_t cmesh,
-                                t8_locidx_t ltree_id, int face)
+t8_cmesh_tree_face_is_boundary (const t8_cmesh_t cmesh,
+                                const t8_locidx_t ltreeid, const int face)
 {
-  t8_locidx_t        *face_neighbor;
   int8_t             *ttf;
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
-  (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, ltree_id, &face_neighbor,
-                                      &ttf);
+  if (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid)) {
+    /* The local tree id belongs to a tree */
+    t8_locidx_t        *face_neighbor;
+    (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, ltreeid, &face_neighbor,
+                                        &ttf);
 
-  if (face_neighbor[face] == ltree_id && ttf[face] == face) {
-    /* The tree is connected to itself at the same face.
-     * Thus this is a domain boundary */
-    return 1;
+    if (face_neighbor[face] == ltreeid && ttf[face] == face) {
+      /* The tree is connected to itself at the same face.
+       * Thus this is a domain boundary */
+      return 1;
+    }
   }
+  else {
+    /* The local tree id belongs to a ghost */
+    T8_ASSERT (t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
+
+    t8_gloidx_t        *face_neighbor;
+    const t8_locidx_t   lghostid =
+      t8_cmesh_ltreeid_to_ghostid (cmesh, ltreeid);
+    (void) t8_cmesh_trees_get_ghost_ext (cmesh->trees, lghostid,
+                                         &face_neighbor, &ttf);
+
+    if (face_neighbor[face] == t8_cmesh_get_global_id (cmesh, ltreeid)
+        && ttf[face] == face) {
+      /* The ghost is connected to itself at the same face.
+       * Thus this is a domain boundary */
+      return 1;
+    }
+  }
+
   return 0;
 }
 
