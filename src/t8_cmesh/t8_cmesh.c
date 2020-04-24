@@ -1260,7 +1260,9 @@ t8_cmesh_get_local_id (t8_cmesh_t cmesh, t8_gloidx_t global_id)
     return global_id;
   }
   temp_local_id = global_id - cmesh->first_tree;
-  if (0 <= temp_local_id && temp_local_id < cmesh->num_local_trees) {
+  /* Check that we do not get wrong numbers when converting to locidx */
+  T8_ASSERT ((t8_locidx_t) temp_local_id == temp_local_id);
+  if (t8_cmesh_treeid_is_local_tree (cmesh, temp_local_id)) {
     /* The tree is a local tree */
     return temp_local_id;
   }
