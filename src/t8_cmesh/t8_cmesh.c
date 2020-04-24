@@ -1298,6 +1298,11 @@ t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid,
   t8_locidx_t         face_neigh;
   int                 dual_face_temp, orientation_temp;
 
+  /* If this is a domain boundary, return -1 */
+  if (t8_cmesh_tree_face_is_boundary (cmesh, ltreeid, face)) {
+    return -1;
+  }
+
   if (!is_ghost) {
     /* The local tree id belongs to a local tree (not a ghost) */
     /* Get the tree */
@@ -1310,10 +1315,6 @@ t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid,
     T8_ASSERT (0 <= face && face < t8_eclass_num_faces[eclass]);
 #endif
 
-    /* If this is a domain boundary, return -1 */
-    if (t8_cmesh_tree_face_is_boundary (cmesh, ltreeid, face)) {
-      return -1;
-    }
     /* Get the local id of the face neighbor */
     face_neigh = t8_cmesh_trees_get_face_neighbor_ext (tree, face, &ttf);
   }
@@ -1325,7 +1326,8 @@ t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid,
     const t8_cghost_t   ghost =
       t8_cmesh_trees_get_ghost (cmesh->trees, lghostid);
 
-    t8_gloidx_t         ghost_face_neigh;
+    t8_gloidx_t         global_face_neigh;
+
 #ifdef T8_ENABLE_DEBUG
     /* Get the eclass */
     t8_eclass_t         eclass = ghost->eclass;
@@ -1334,10 +1336,10 @@ t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid,
 #endif
 
     /* Get the global id of the face neighbor */
-    ghost_face_neigh =
+    global_face_neigh =
       t8_cmesh_trees_get_ghost_face_neighbor_ext (ghost, face, &ttf);
     /* Convert it into a local id */
-    face_neigh = t8_cmesh_get_local_id (cmesh, ghost_face_neigh);
+    face_neigh = t8_cmesh_get_local_id (cmesh, global_face_neigh);
 
     /* TODO: Check whether this face is a boundary face */
     if (face_neigh < 0) {
