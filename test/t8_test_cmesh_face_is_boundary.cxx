@@ -26,7 +26,7 @@
 /* Createsa coarse mesh with one tree for each eclass, where each
  * face is a boundary face. */
 static void
-t8_test_face_is_boundary_one_tree (sc_MPI_Comm mpic)
+t8_test_face_is_boundary_one_tree (sc_MPI_Comm comm)
 {
   int                 eci;
   int                 num_faces, iface;
@@ -35,7 +35,7 @@ t8_test_face_is_boundary_one_tree (sc_MPI_Comm mpic)
   for (eci = T8_ECLASS_ZERO; eci < T8_ECLASS_COUNT; ++eci) {
     /* For each eclass create a cmesh consisting only of one tree.
      * We then check whether all faces of this tree are a boundary face. */
-    cmesh = t8_cmesh_new_from_class ((t8_eclass_t) eci, mpic);
+    cmesh = t8_cmesh_new_from_class ((t8_eclass_t) eci, comm);
     SC_CHECK_ABORT (t8_cmesh_is_committed (cmesh), "Cmesh commit failed.");
     /* We now check each face */
     num_faces = t8_eclass_num_faces[eci];
