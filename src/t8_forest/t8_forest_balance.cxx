@@ -478,8 +478,7 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
       /* Iterate over all elements that do not yet refine */
       for (t8_locidx_list_iterator_init
            (&elements_that_do_not_refine, &list_iterator);
-           t8_locidx_list_iterator_is_valid (&list_iterator,
-                                             &elements_that_do_not_refine);
+           !t8_locidx_list_iterator_is_end (&list_iterator);
            t8_locidx_list_iterator_next (&list_iterator)) {
         /* Get the index of the next non-refined element */
         const t8_locidx_t   element_index =
