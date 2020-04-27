@@ -745,7 +745,7 @@ t8_forest_is_balanced (t8_forest_t forest)
         forest->t8code_data = data_temp;
         /* Check whether the is_balanced flag was set correctly */
 #ifdef T8_ENABLE_DEBUG
-        /* In debugging mode and if forest->is_balnced is true, print the forest */
+        /* In debugging mode and if forest->is_balanced is true, print the forest */
         if (forest->is_balanced != 0) {
           t8_forest_write_vtk (forest, "t8_DEBUG_forest_not_balanced");
         }
