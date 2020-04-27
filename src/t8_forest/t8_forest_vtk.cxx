@@ -183,6 +183,7 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
     temp_vertices = ((double *) t8_cmesh_get_attribute (cmesh,
                                                         t8_get_package_id (),
                                                         0, cmesh_local_id));
+    T8_ASSERT (temp_vertices != NULL);
 
     /* Copy the tree's vertex coordinates into the struct of the data pointer */
     num_tree_vertices = t8_eclass_num_vertices[ts->eclass];
