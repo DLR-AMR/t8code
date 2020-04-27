@@ -398,22 +398,25 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
   /* Communicate ghost values for the markers array */
   t8_forest_ghost_exchange_data (forest_from, &markers);
 
-  /* TODO: We used these for debugging. Reactivated if needed. Delete eventually. */
+  /* TODO: We used these for debugging. Reactivate if needed. Delete eventually. */
 #if 0
 #ifdef T8_ENABLE_DEBUG
   {
     /* Print vtk and marker array */
     t8_locidx_t         ielement;
-    char                output[BUFSIZ];
+    char                output[BUFSIZ + 1] = "";
 
-    t8_forest_write_vtk (forest_from, "t8_DEBUG_forest_From_balance_adapt");
+    if (forest->dimension > 0) {
+      t8_forest_write_vtk (forest_from, "t8_DEBUG_forest_From_balance_adapt");
+    }
 
     for (ielement = 0; ielement < num_local_elements + num_ghosts; ++ielement) {
       snprintf (output + strlen (output), BUFSIZ - strlen (output),
                 " | %hi |", *(short *) t8_sc_array_index_locidx (&markers,
                                                                  ielement));
     }
-    t8_debugf ("[H] Markers: %s\n", output);
+    t8_debugf ("[H] Markers for %i element(s): %s\n",
+               num_local_elements + num_ghosts, output);
   }
 #endif
 #endif
@@ -447,13 +450,16 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
       forest->profile->balance_rounds++;
     }
 
-    /* TODO: We used these for debugging. Reactivated if needed. Delete eventually. */
+    /* TODO: We used these for debugging. Reactivate if needed. Delete eventually. */
 #if 0
 #ifdef T8_ENABLE_DEBUG
     {
       char               *not_refined_string =
         t8_locidx_list_to_string (&elements_that_do_not_refine);
-      t8_debugf ("[H] New balance_adapt round:\n\t%s\n", not_refined_string);
+      t8_debugf
+        ("[H] New balance_adapt round:\nUnrefined elements (num = %zd)\t%s\n",
+         t8_locidx_list_count (&elements_that_do_not_refine),
+         not_refined_string);
       T8_FREE (not_refined_string);
     }
 #endif
