@@ -85,14 +85,16 @@ test_locidx_list_iterator_iterate ()
     /* Check whether the iterator is valid */
     SC_CHECK_ABORT (t8_locidx_list_iterator_is_valid (&it, list),
                     "Iterator is not valid.");
-    for (i = 0; t8_locidx_list_iterator_is_valid (&it, list);
+    for (i = 0; !t8_locidx_list_iterator_is_end (&it);
          t8_locidx_list_iterator_next (&it), ++i) {
       returned_value = t8_locidx_list_iterator_get_value (&it);
       SC_CHECK_ABORTF (returned_value == i, "Got wrong value. Expected %i "
                        "got %i.", i, returned_value);
     }
-    SC_CHECK_ABORT (!t8_locidx_list_iterator_is_valid (&it, list),
-                    "iterator should not be valid, but is.");
+    SC_CHECK_ABORT (t8_locidx_list_iterator_is_end (&it),
+                    "iterator should be at end, but is not.");
+    SC_CHECK_ABORT (t8_locidx_list_iterator_is_valid (&it, list),
+                    "iterator should be valid, but is not.");
     SC_CHECK_ABORT (i == num_values,
                     "Number of items that we iterated through"
                     " does not match.");
@@ -141,6 +143,44 @@ test_locidx_list_iterator_remove ()
   SC_CHECK_ABORT (t8_locidx_list_count (list) == num_values - 2,
                   "list has invalid number of entries.");
 
+  /* Remove all items until the list is empty */
+  /* Initialize the iterator to start at the beginning */
+  t8_locidx_list_iterator_init (list, &it);
+  while (t8_locidx_list_count (list) > 0) {
+    t8_locidx_list_iterator_remove_entry (&it);
+  }
+  /* Check whether the iterator is valid */
+  SC_CHECK_ABORT (t8_locidx_list_iterator_is_valid (&it, list),
+                  "Iterator is not valid.");
+  /* Check whether the iterator is at the end */
+  SC_CHECK_ABORT (t8_locidx_list_iterator_is_end (&it),
+                  "Iterator is not at the end.");
+  /* Check that the list is empty */
+  SC_CHECK_ABORT (t8_locidx_list_count (list) == 0, "list is not empty.");
+
+  /* clean-up */
+  t8_locidx_list_destroy (&list);
+}
+
+/* Allocate an empty list and iterator and check whether the iterator
+ * behaves correctly. */
+static void
+test_locidx_list_iterator_empty_list ()
+{
+  t8_locidx_list_t   *list = t8_locidx_list_new ();
+
+  t8_locidx_list_iterator_t it;
+
+  /* Initialize the iterator */
+  t8_locidx_list_iterator_init (list, &it);
+
+  /* Check whether the iterator is valid */
+  SC_CHECK_ABORT (t8_locidx_list_iterator_is_valid (&it, list),
+                  "Iterator is not valid.");
+  /* Check whether the iterator is at the end */
+  SC_CHECK_ABORT (t8_locidx_list_iterator_is_end (&it),
+                  "Iterator is not at the end.");
+
   /* clean-up */
   t8_locidx_list_destroy (&list);
 }
@@ -162,6 +202,7 @@ main (int argc, char **argv)
   test_locidx_list_iterator_init ();
   test_locidx_list_iterator_iterate ();
   test_locidx_list_iterator_remove ();
+  test_locidx_list_iterator_empty_list ();
 
   sc_finalize ();
 
