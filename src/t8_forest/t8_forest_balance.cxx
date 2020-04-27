@@ -609,6 +609,7 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
                     *(short *) t8_sc_array_index_locidx (&markers,
                                                          first_sibling +
                                                          isib) = 0;
+                    changed_a_marker = 1;
                   }
                 }
                 if (level_diff == 3 || current_marker == 0) {
@@ -618,6 +619,7 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
                   /* Mark this element for refinement */
                   *(short *) t8_sc_array_index_locidx (&markers,
                                                        element_index) = 1;
+                  changed_a_marker = 1;
                   /* Remove this element from the list */
                   t8_locidx_list_iterator_remove_entry (&list_iterator);
                   /* Do not continue checking the neighbors. */
@@ -639,6 +641,10 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
     if (!changed_a_marker) {
       /* We did not change anything and thus, this process is done. */
       done_locally = 1;
+    }
+    else {
+      /* We changed a marker and thus this process is not done yet. */
+      done_locally = 0;
     }
     /* Update the done_globally flag */
     sc_MPI_Allreduce (&done_locally, &done_globally, 1, sc_MPI_INT,
