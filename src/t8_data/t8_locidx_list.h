@@ -121,11 +121,11 @@ void                t8_locidx_list_destroy (t8_locidx_list_t ** plist);
 char               *t8_locidx_list_to_string (t8_locidx_list_t * list);
 #endif
 
-/** The t8_locidx_list_iterator_t can be used to iterat through the 
+/** The t8_locidx_list_iterator_t can be used to iterate through the 
  *  entries of a t8_locidx_list_t.
  *  The workflow should be:
  *  \ref t8_locidx_list_iterator_init
- *  while \ref t8_locidx_list_iterator_is_valid repeat
+ *  while not \ref t8_locidx_list_iterator_is_end repeat
  *  \ref t8_locidx_list_iterator_get_value
  *  maybe \ref t8_locidx_list_iterator_remove_entry
  *  \ref t8_locidx_list_iterator_next
@@ -148,14 +148,12 @@ void                t8_locidx_list_iterator_init (t8_locidx_list_t * list,
                                                   t8_locidx_list_iterator_t *
                                                   it);
 
-/** Check whether an iterator ist valid and associated to a given list.
+/** Check whether an iterator is valid and associated to a given list.
  * \param [in] iterator The iterator to check.
  * \param [in] list     The list to which to \a iterator is expected to be associated to.
  * \return              True (non-zero) if \a iterator is valid and points to an element in \a list.
  *                      False if either \a iterator points to the end of \a list (all items have been
  *                      iterated through.) or \a iterator is not initialized.
- * \note After calling \ref t8_locidx_list_iterator_remove_entry the iterator is not valid until
- * \ref t8_locidx_list_iterator_next was called.
  */
 int                 t8_locidx_list_iterator_is_valid (const
                                                       t8_locidx_list_iterator_t
@@ -165,9 +163,20 @@ int                 t8_locidx_list_iterator_is_valid (const
 
 /** Let an iterator point to the next entry of its list.
  * \param [in, out] it  The iterator.
+ * \note If the iterator already is at the end (\ref t8_locidx_list_iterator_is_end) nothing happens.
  */
 void                t8_locidx_list_iterator_next (t8_locidx_list_iterator_t *
                                                   it);
+
+/* Check whether a valid iterator is at the end of its list.
+ * \param [in] iterator The iterator to check.
+ * \return              True (non-zero) if \a iterator points to the end of its list.
+ *                      That is, all elements have beed iterated through.
+ * \note \a iterator must be valid before calling this function.
+ */
+int                 t8_locidx_list_iterator_is_end (const
+                                                    t8_locidx_list_iterator_t
+                                                    * it);
 
 /** Return the value of the item that an iterator currently points to.
  * \param [in] it   The iterator.

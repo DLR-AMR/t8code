@@ -244,7 +244,7 @@ t8_locidx_list_to_string (t8_locidx_list_t * list)
   /* Iterate through the list and write the contents to the string */
   t8_locidx_list_iterator_t it;
   for (t8_locidx_list_iterator_init (list, &it);
-       t8_locidx_list_iterator_is_valid (&it, list);
+       !t8_locidx_list_iterator_is_end (&it);
        t8_locidx_list_iterator_next (&it)) {
     t8_locidx_t         entry = t8_locidx_list_iterator_get_value (&it);
     bytes_written = strlen (string);
@@ -305,11 +305,6 @@ t8_locidx_list_iterator_is_valid (const t8_locidx_list_iterator_t * it,
     return 0;
   }
 
-  /* If we are at the end of the list, return 0 */
-  if (it->current == NULL) {
-    return 0;
-  }
-
   if (it->prev != NULL) {
     /* The next pointer of prev must be current */
     if (it->prev->next != it->current) {
@@ -318,6 +313,26 @@ t8_locidx_list_iterator_is_valid (const t8_locidx_list_iterator_t * it,
   }
 
   return 1;
+}
+
+/* Check whether a valid iterator is at the end of its list.
+ * \param [in] iterator The iterator to check.
+ * \return              True (non-zero) if \a iterator points to the end of \a list.
+ *                      That is, all elements have beed iterated through.
+ * \note \a iterator must be valid before calling this function.
+ */
+int
+t8_locidx_list_iterator_is_end (const t8_locidx_list_iterator_t * it)
+{
+  T8_ASSERT (t8_locidx_list_iterator_is_valid (it, it->list));
+
+  /* Check whether we are at the end of the list */
+  if (it->current == NULL) {
+    return 1;
+  }
+
+  /* Iterator is not at end */
+  return 0;
 }
 
 /* Let an iterator point to the next entry of its list.
@@ -331,6 +346,11 @@ t8_locidx_list_iterator_next (t8_locidx_list_iterator_t * it)
 
   /* Store the current pointer */
   sc_link_t          *temp = it->current;
+
+  if (t8_locidx_list_iterator_is_end (it)) {
+    /* If this iterator already is at the end, do nothing. */
+    return;
+  }
 
   /* Advance the current pointer */
   it->current = it->current->next;
@@ -348,6 +368,8 @@ t8_locidx_list_iterator_get_value (const t8_locidx_list_iterator_t * it)
 {
   T8_ASSERT (it != NULL);
   T8_ASSERT (t8_locidx_list_iterator_is_valid (it, it->list));
+  T8_ASSERT (!t8_locidx_list_iterator_is_end (it));
+  T8_ASSERT (it->current != NULL);
   T8_ASSERT (it->current->data != NULL);
 
   return *(t8_locidx_t *) it->current->data;
@@ -361,6 +383,7 @@ t8_locidx_list_iterator_remove_entry (t8_locidx_list_iterator_t * it)
 {
   T8_ASSERT (it != NULL);
   T8_ASSERT (t8_locidx_list_iterator_is_valid (it, it->list));
+  T8_ASSERT (!t8_locidx_list_iterator_is_end (it));
 
   /* Store the link after current */
   sc_link_t          *next = it->current->next;
