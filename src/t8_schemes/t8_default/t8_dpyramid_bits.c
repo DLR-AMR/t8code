@@ -29,13 +29,25 @@ typedef int8_t      t8_dpyramid_cube_id_t;
 /*The type of a pyramid depending on the parent pyramid and its local index
  *type = (parent_type, local_index)
  */
-const t8_dpyramid_type_t t8_dpyramid_parenttype_Iloc_to_type[2][10] = {
+const t8_dpyramid_type_t t8_dpyramid_parenttype_Iloc_to_type[8][10] = {
+    {0, 0, 4, 5, 0, 1, 2, 0, -1, -1},
+    {1, 1, 2, 3, 0, 1, 5, 1, -1, -1},
+    {2, 0, 1, 2, 2, 3, 4, 2, -1, -1},
+    {3, 3, 4, 5, 1, 2, 3, 3, -1, -1},
+    {4, 2, 3, 4, 0, 4, 5, 4, -1, -1},
+    {5, 0, 1, 5, 3, 4, 5, 5, -1, -1},
   {6, 3, 6, 0, 6, 0, 3, 6, 7, 6},
   {7, 0, 3, 6, 7, 3, 7, 0, 7, 7}
 };
 
 /*The cube Id of a pyramid depending on its parenttype and local index*/
-const t8_dpyramid_cube_id_t t8_dpyramid_parenttype_Iloc_to_cid[2][10] = {
+const t8_dpyramid_cube_id_t t8_dpyramid_parenttype_Iloc_to_cid[8][10] = {
+    {0, 1, 1, 1, 5, 5, 5, 7,-1,-1},
+    {0, 1, 1, 1, 3, 3, 3, 7,-1,-1},
+    {0, 2, 2, 2, 3, 3, 3, 7,-1,-1},
+    {0, 2, 2, 2, 6, 6, 6, 7,-1,-1},
+    {0, 4, 4, 4, 6, 6, 6, 7,-1,-1},
+    {0, 4, 4, 4, 5, 5, 5, 7,-1,-1},
   {0, 1, 1, 2, 2, 3, 3, 3, 3, 7},
   {0, 4, 4, 4, 4, 5, 5, 6, 6, 7}
 };
@@ -168,51 +180,63 @@ t8_dpyramid_get_level (const t8_dpyramid_t * p)
   return p->level;
 }
 
+
+
+int
+t8_dpyramid_custom_mod(t8_linearidx_t * id, t8_dpyramid_type_t type,
+                       t8_linearidx_t pyra, t8_linearidx_t tet)
+{
+    t8_linearidx_t  test = 0, shift;
+    T8_ASSERT(id >= 0);
+    int remain = -1, i = 0;
+    do{
+        shift= t8_dpyramid_parenttype_Iloc_to_type[type][i] >= 6? pyra : tet;
+        test += shift;
+        i++;
+        remain++;
+    }while(test <= (*id));
+    test -= shift;
+    (*id) -= test;
+    return remain;
+}
+
 void
 t8_dpyramid_init_linear_id (t8_dpyramid_t * p, int level, uint64_t id)
 {
   t8_dpyramid_type_t  type;
-  t8_linearidx_t      local_index;
+  t8_linearidx_t      local_index, p_sum1 = 1<< 3*level,
+          p_sum2 = sc_intpow64u(6, level);
   t8_dpyramid_cube_id_t cid;
   int                 i;
   int                 offset_coords;
   T8_ASSERT (0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
-  T8_ASSERT (0 <= id && id <= sc_intpow64u (T8_DPYRAMID_CHILDREN, level));
+  T8_ASSERT (0 <= id && id <= 2*p_sum1 - p_sum2);
   p->level = level;
   p->x = 0;
   p->y = 0;
   p->z = 0;
   type = 6;                     /*This is the type of the root pyramid */
- printf("id %i level %i\n", (int) id, level);
   for (i = 1; i <= level; i++) {
     offset_coords = T8_DPYRAMID_MAXLEVEL - i;
-    local_index = id % T8_DPYRAMID_CHILDREN;
-    printf("loc-id: %i\n", local_index);
-    type = t8_dpyramid_parenttype_Iloc_to_type[type - 6][local_index];
-    T8_ASSERT(type >= 0);
+    p_sum1  >>= 3;
+    p_sum2 /= 6;
     // Thy types of the tetrahedron children of pyramid are always 0 or 3
-    if (0 <= type && type < T8_DTET_NUM_TYPES) {
-       T8_ASSERT(type == 0 || type == 3);
-      /* IDEA: After this step, the pyra and the tet index match.
-       * Therefore it is sufficient to compute the tet by the remaining
-       * digits of the index. Is there a tet function that computes the
-       * tet given a starting level, an end level and an id?
-       */
-      printf("remaining id %i\n", (int) id);
-      t8_dtet_init_linear_id_with_level ((t8_dtet_t *) p, (t8_linearidx_t) id,
-                                         i, level, type);
-      return;
+    if(type == 0 || type == 3)
+    {
+        t8_dtet_init_linear_id_with_level((t8_dtet_t *)p, id, i, level, type);
+        return;
     }
-    else {
-      cid = t8_dpyramid_parenttype_Iloc_to_cid[T8_DPYRAMID_NUM_TYPES
-                                               - type - 1][local_index];
+
+      local_index = t8_dpyramid_custom_mod(&id, type, 2*p_sum1 - p_sum2,
+                                           p_sum1);
+      cid = t8_dpyramid_parenttype_Iloc_to_cid[type][local_index];
+      T8_ASSERT(cid >= 0);
       p->x |= (cid % 2 == 1) ? 1 << offset_coords : 0;
       p->y |= (cid == 2 || cid == 3 || cid == 6
                || cid == 7) ? 1 << offset_coords : 0;
       p->z |= (cid > 3) ? 1 << offset_coords : 0;
-    }
-    id /= T8_DPYRAMID_CHILDREN;
-    printf("id %i\n", (int) id);
+    type = t8_dpyramid_parenttype_Iloc_to_type[type][local_index];
+    T8_ASSERT(type >= 0);
   }
   p->type = type;
 }
@@ -227,7 +251,7 @@ const int t8_dpyramid_parenttype_iloc_pyra_w_lower_id[2][10] =
 t8_linearidx_t
 t8_dpyramid_linear_id (const t8_dpyramid_t * p, int level)
 {
-  printf("lid-in: %i %i %i %i %i level %i\n", p->x, p->y, p->z, p->type, p->level, level);
+  //t8_debugf("lid-in: %i %i %i %i %i level %i\n", p->x, p->y, p->z, p->type, p->level, level);
   T8_ASSERT(level <= T8_DPYRAMID_MAXLEVEL);
   t8_linearidx_t      id = 0, pyra_shift, tet_shift = 1,
           sum_1 = 1, sum_2 = 1 ,local_id;
@@ -257,7 +281,7 @@ t8_dpyramid_linear_id (const t8_dpyramid_t * p, int level)
       sum_2 *=6;
       tet_shift = tet_shift << 3;
   }
-  printf("lid: %i\n", (int) id);
+  //t8_debugf("lid-out: %i\n", (int) id);
   return id;
 }
 
@@ -265,8 +289,8 @@ void
 t8_dpyramid_first_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * desc,
                               int level)
 {
-  printf("F-D in: %i %i %i %i %i\n", p->x, p->y, p->z, p->type, p->level);
-  printf("level %i\n", level);
+  t8_debugf("F-D in: %i %i %i %i %i\n", p->x, p->y, p->z, p->type, p->level);
+  t8_debugf("level %i\n", level);
   t8_linearidx_t id;
   if (t8_dpyramid_shape(p) == T8_ECLASS_PYRAMID) {
     /*The first descendant of a pyramid has the same anchor coords, but another level */
@@ -275,10 +299,10 @@ t8_dpyramid_first_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * desc,
   }
   else {
     id = t8_dpyramid_linear_id(p, level);
-    printf("F-D id %i\n", (int) id);
+    t8_debugf("F-D id %i\n", (int) id);
     t8_dpyramid_init_linear_id(desc, level, id);
   }
-  printf("F-D out: %i %i %i %i %i\n", desc->x, desc->y, desc->z, desc->type, desc->level);
+  t8_debugf("F-D out: %i %i %i %i %i\n", desc->x, desc->y, desc->z, desc->type, desc->level);
 }
 
 void
@@ -332,16 +356,9 @@ t8_dpyramid_num_children (const t8_dpyramid_t * p)
 int t8_dpyramid_child_id_unknown_parent(const t8_dpyramid_t * p,
                                         t8_dpyramid_t * parent)
 {
-    t8_dpyramid_cube_id_t   cid = compute_cubeid(p, p->level);
-    t8_dpyramid_type_t      type = p->type;
     T8_ASSERT(p->level > 0);
     t8_dpyramid_parent(p, parent);
-    if(t8_dpyramid_shape(parent) == T8_ECLASS_PYRAMID){
-       return t8_dpyramid_type_cid_to_Iloc[type][cid];
-    }
-    else{
-        return t8_dtet_child_id((const t8_dtet_t *) p);
-    }
+    return t8_dpyramid_child_id_known_parent(p, parent);
 
 }
 
@@ -378,14 +395,15 @@ t8_dpyramid_child (const t8_dpyramid_t * elem, int child_id,
     t8_dtet_child ((t8_dtet_t *) elem, child_id, (t8_dtet_t *) child);
   }
   else {
-    cube_id = t8_dpyramid_parenttype_Iloc_to_cid[elem->type - 6][child_id];
+    cube_id = t8_dpyramid_parenttype_Iloc_to_cid[elem->type][child_id];
+    T8_ASSERT(cube_id >= 0);
     child->level = elem->level + 1;
     h = T8_DPYRAMID_LEN (child->level);
     child->x = elem->x + ((cube_id & 0x01) ? h : 0);
     child->y = elem->y + ((cube_id & 0x02) ? h : 0);
     child->z = elem->z + ((cube_id & 0x04) ? h : 0);
     child->type =
-      t8_dpyramid_parenttype_Iloc_to_type[elem->type - 6][child_id];
+      t8_dpyramid_parenttype_Iloc_to_type[elem->type][child_id];
   }
   T8_ASSERT(child->type >= 0);
 }
@@ -504,6 +522,7 @@ int
 t8_dpyramid_is_inside_tet (const t8_dpyramid_t * p, int level)
 {
   T8_ASSERT (t8_dpyramid_shape (p) == T8_ECLASS_TET);
+  T8_ASSERT(p->type == 0 || p->type == 3);
   int                 i;
   /*the tet is initialized, the ancestor will be computed */
   t8_dtet_t           tet, ancestor;
@@ -553,19 +572,19 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
 
   t8_dpyramid_coord_t h = T8_DPYRAMID_LEN (p->level);
 
-  printf("pa-in: %i %i %i %i %i\n", p->x, p->y, p->z, p->type, p->level);
+  //t8_debugf("pa-in: %i %i %i %i %i\n", p->x, p->y, p->z, p->type, p->level);
   if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID) {
     /*The parent of a pyramid is a pyramid, maybe of different type */
 
     int                 cube_id = compute_cubeid(p, p->level);
-    printf("cid: %i\n", cube_id);
+    //t8_debugf("cid: %i\n", cube_id);
 
     parent->type = t8_dpyramid_type_cid_to_parenttype[p->type - 6][cube_id];
     parent->x = p->x & ~h;
     parent->y = p->y & ~h;
     parent->z = p->z & ~h;
-    printf("pa-out: %i %i %i %i %i\n\n", parent->x, parent->y, parent->z, parent->type,
-           p->level-1);
+    //t8_debugf("pa-out: %i %i %i %i %i\n\n", parent->x, parent->y, parent->z, parent->type,
+    //       p->level-1);
     T8_ASSERT (parent->type >= 0);
     parent->level = p->level - 1;
   }
@@ -573,16 +592,16 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
       /* The direct tet-child of a pyra has type 0 or type 3, therefore
        * in this case the parent is a tetrahedron*/
       t8_dtet_parent ((t8_dtet_t *) p, (t8_dtet_t *) parent);
-      printf("etet pa-out: %i %i %i %i %i\n\n", parent->x, parent->y, parent->z, parent->type,
-             parent->level);
+      //t8_debugf("etet pa-out: %i %i %i %i %i\n\n", parent->x, parent->y, parent->z, parent->type,
+             //parent->level);
   }
   else if (t8_dpyramid_is_inside_tet (p, p->level) != 0) {
       /*Pyramid- / tetparent detection */
       /*If a tetrahedron does not reach a "significant point" its parent is a tet */
       /*Tetcase */;
       t8_dtet_parent ((t8_dtet_t *) p, (t8_dtet_t *) parent);
-      printf("dtet pa-out: %i %i %i %i %i\n\n", parent->x, parent->y, parent->z, parent->type,
-             parent->level);
+      //t8_debugf("dtet pa-out: %i %i %i %i %i\n\n", parent->x, parent->y, parent->z, parent->type,
+            // parent->level);
    }
    else {
       /*p does not lie in larger tet => parent is pyra */
@@ -591,8 +610,8 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
       parent->y = p->y & ~h;
       parent->z = p->z & ~h;
       parent->level = p->level - 1;
-      printf("dpa-out: %i %i %i %i %i\n\n", parent->x, parent->y, parent->z, parent->type,
-             parent->level);
+      //t8_debugf("dpa-out: %i %i %i %i %i\n\n", parent->x, parent->y, parent->z, parent->type,
+            // parent->level);
    }
    T8_ASSERT(parent->level >= 0);
 }

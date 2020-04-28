@@ -24,6 +24,7 @@
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default_cxx.hxx>
 
+
 static void
 t8_recursive_linear_id (t8_element_t * element, t8_element_t * child,
                         t8_element_t * test, t8_eclass_scheme_c * ts,
@@ -36,6 +37,7 @@ t8_recursive_linear_id (t8_element_t * element, t8_element_t * child,
     for (i = 0; i < num_children; i++) {
     ts->t8_element_child (element, i, child);
     ts->t8_element_set_linear_id (test, maxlvl, *id);
+
       SC_CHECK_ABORT (!ts->t8_element_compare (child, test),
                       "Wrong linear id\n");
       (*id)++;
@@ -59,8 +61,7 @@ t8_check_linear_id (const int maxlvl)
   int                 eclassi, id, level;
   t8_eclass_t         eclass;
   scheme = t8_scheme_new_default_cxx ();
-  for (eclassi = T8_ECLASS_ZERO; eclassi < T8_ECLASS_PYRAMID; eclassi++) {
-    /* TODO: Include pyramids as soon as they are supported. */
+  for (eclassi = T8_ECLASS_ZERO; eclassi < T8_ECLASS_COUNT; eclassi++) {
     eclass = (t8_eclass_t) eclassi;
     /* Get scheme for eclass */
     ts = scheme->eclass_schemes[eclass];
