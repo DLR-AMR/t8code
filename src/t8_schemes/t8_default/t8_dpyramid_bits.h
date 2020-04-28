@@ -47,14 +47,14 @@ int                 t8_dpyramid_get_level (const t8_dpyramid_t * p);
  * \param[in] source    The source-pyramid
  * \param[in/out] dest  The destination
  */
-void                t8_dpyramid_copy(const t8_dpyramid_t * source,
-                 t8_dpyramid_t * dest);
+void                t8_dpyramid_copy (const t8_dpyramid_t * source,
+                                      t8_dpyramid_t * dest);
 
 /** Computes the linear position of a pyramid in an uniform grid.
  * \param [in] p  pyramid whose id will be computed.
  * \return Returns the linear position of this pyramid on a grid.
  */
-t8_linearidx_t t8_dpyramid_linear_id(const t8_dpyramid_t * p,
+t8_linearidx_t      t8_dpyramid_linear_id (const t8_dpyramid_t * p,
                                            int level);
 
 /** Compute the childid-th child in Morton order of a pyramid.
@@ -63,15 +63,15 @@ t8_linearidx_t t8_dpyramid_linear_id(const t8_dpyramid_t * p,
  * \param [out] child  Existing pyramid whose data will be filled
  * 		    with the date of t's childid-th child.
  */
-void                t8_dpyramid_child (const t8_dpyramid_t * elem, int child_id,
-                                        t8_dpyramid_t * child);
+void                t8_dpyramid_child (const t8_dpyramid_t * elem,
+                                       int child_id, t8_dpyramid_t * child);
 
 /** Compute the children of a pyramid, array version
  * \param [in] p        Input pyramid
  * \param [in, out] c   Pointers to the computed children in Morton order
  */
-void                t8_dpyramid_children(const t8_dpyramid_t * p, int length,
-                     t8_dpyramid_t ** c);
+void                t8_dpyramid_children (const t8_dpyramid_t * p, int length,
+                                          t8_dpyramid_t ** c);
 
 /** Compare two elements. returns negativ if p1 < p2, zero if p1 equals p2
  *  and positiv if p1 > p2.
@@ -92,7 +92,7 @@ int                 t8_dpyramid_is_equal (const t8_dpyramid_t * p,
  * \param [in]  fam A collection of pyramids
  * \return      Nonzero if \a fam is a family of pyramids
  */
-int                 t8_dpyramid_is_family(const t8_dpyramid_t ** fam);
+int                 t8_dpyramid_is_family (const t8_dpyramid_t ** fam);
 
 /** Compute the position of the ancestor of this child at level \a level within
  * its siblings.
@@ -107,14 +107,17 @@ int                 t8_dpyramid_child_id (const t8_dpyramid_t * p);
  * \param [in] parent The parent of \a p.
  * \return Returns its child id in 0..9
  */
-int                 t8_dpyramid_child_id_known_parent(const t8_dpyramid_t * p,
-                                       t8_dpyramid_t * parent);
+int                 t8_dpyramid_child_id_known_parent (const t8_dpyramid_t *
+                                                       p,
+                                                       t8_dpyramid_t *
+                                                       parent);
 
 /** Check, if the input pyramid with shape of a tet is inside of a tetrahedron
  * \param [in]  pyramid with tet shape
  * \return      0, if the pyramid is insed of a tetrahedron
  */
-int                 t8_dpyramid_is_inside_tet (const t8_dpyramid_t * p, int level);
+int                 t8_dpyramid_is_inside_tet (const t8_dpyramid_t * p,
+                                               int level);
 
 /** Compute the first descendant of a pyramid at a given level. This is the descendant of
  * the pyramid in a uniform level refinement that has the smallest id.
@@ -190,7 +193,7 @@ t8_eclass_t         t8_dpyramid_shape (const t8_dpyramid_t * p);
  * \param [in] level level of uniform grid to be considered.
  */
 void                t8_dpyramid_successor (const t8_dpyramid_t * elem,
-                                          t8_dpyramid_t * s, int level);
+                                           t8_dpyramid_t * s, int level);
 
 T8_EXTERN_C_END ();
 

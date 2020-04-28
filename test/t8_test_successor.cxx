@@ -89,7 +89,7 @@ t8_deep_successor (t8_element_t * element, t8_element_t * successor,
     ts->t8_element_child (element, i, child);
     /*Go to the children at maximum level */
     num_children_child = ts->t8_element_num_children (child);
-    for (j = 0; j < num_children; j++) {
+    for (j = 0; j < num_children_child; j++) {
       ts->t8_element_child (child, j, element);
       /*Check the computation of the successor */
       SC_CHECK_ABORT (!ts->t8_element_compare (element, successor)
