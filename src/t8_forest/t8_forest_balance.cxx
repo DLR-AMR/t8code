@@ -352,11 +352,15 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
     t8_forest_get_num_element (forest_from);
   const t8_locidx_t   num_ghosts = t8_forest_get_num_ghosts (forest_from);
   sc_array_t          markers;
+  sc_array_t          face_neighbor_indices;
+  size_t             *face_neighbor_offsets;
+  size_t              face_neighbor_offsets_count;
   t8_locidx_list_t    elements_that_do_not_refine;
   t8_locidx_list_iterator_t list_iterator;
   /* Keeping track of whether this process is finished and
    * whether all processes are finished. */
   int                 done_locally = 0, done_globally = 0;
+  int                 balance_rounds = 0;
   /* The current communicator */
   const sc_MPI_Comm   comm = t8_forest_get_mpicomm (forest_from);
 
@@ -398,6 +402,14 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
   /* Communicate ghost values for the markers array */
   t8_forest_ghost_exchange_data (forest_from, &markers);
 
+  /* Initialize face neighbor storage for non_refined elements */
+  face_neighbor_offsets_count =
+    t8_locidx_list_count (&elements_that_do_not_refine);
+  face_neighbor_offsets = T8_ALLOC (size_t, face_neighbor_offsets_count + 1);
+  /* The offset of the first element is zero. */
+  face_neighbor_offsets[0] = 0;
+  sc_array_init (&face_neighbor_indices, sizeof (t8_locidx_t));
+
   /* TODO: We used these for debugging. Reactivate if needed. Delete eventually. */
 #if 0
 #ifdef T8_ENABLE_DEBUG
@@ -438,6 +450,7 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
     t8_locidx_t         next_tree_offset;       /* The element offset of the next tree */
     t8_eclass_scheme_c *eclass_scheme;  /* The element scheme of the current tree */
     t8_eclass_t         tree_class;     /* The element class of the current tree */
+    t8_locidx_t         element_in_list;        /* Counts how many elements in the list we already handled */
     /* We set done_locally to 1 and if we need to change any elements
      * we will set it to 0. */
     done_locally = 1;
@@ -445,10 +458,7 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
      *       are done locally, but not globally, we can optimize by
      *       checking only the neighbors of the updated ghost elements. */
 
-    if (forest->profile != NULL) {
-      /* Increase the balance_rounds counter */
-      forest->profile->balance_rounds++;
-    }
+    balance_rounds++;
 
     /* TODO: We used these for debugging. Reactivate if needed. Delete eventually. */
 #if 0
@@ -476,10 +486,10 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
       tree_class = t8_forest_get_tree_class (forest_from, current_tree);
       eclass_scheme = t8_forest_get_eclass_scheme (forest_from, tree_class);
       /* Iterate over all elements that do not yet refine */
-      for (t8_locidx_list_iterator_init
+      for (element_in_list = 0, t8_locidx_list_iterator_init
            (&elements_that_do_not_refine, &list_iterator);
            !t8_locidx_list_iterator_is_end (&list_iterator);
-           t8_locidx_list_iterator_next (&list_iterator)) {
+           t8_locidx_list_iterator_next (&list_iterator), ++element_in_list) {
         /* Get the index of the next non-refined element */
         const t8_locidx_t   element_index =
           t8_locidx_list_iterator_get_value (&list_iterator);
@@ -532,27 +542,71 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
           t8_locidx_t        *neighbor_indices;
           t8_element_t      **face_neighbors;
           t8_eclass_scheme_c *neigh_scheme;
-          /* Compute the leaf face neighbors at this face */
-          t8_forest_leaf_face_neighbors (forest_from, current_tree, element,
-                                         &face_neighbors, iface, &dual_faces,
-                                         &num_face_neighbors,
-                                         &neighbor_indices, &neigh_scheme, 1);
-          /* Note: You may think here "Wait, i am smart. If there is only one neighbor I can skip all the checks
-           *       since then the neighbor cannot have a level greater than this element's level."
-           *       But you would be mistaken, since there may exist refinement schemes where we
-           *       actually only have one face neighbor but nevertheless it has a larger level.
-           *       A simple example is the default line refinement scheme.
-           */
+
+          if (balance_rounds == 1) {
+            /* In the first round, we compute the face neighbors. For future
+             * rounds, we store their indices, so that we do not have to recompute. */
+            /* Compute the leaf face neighbors at this face */
+            t8_forest_leaf_face_neighbors (forest_from, current_tree, element,
+                                           &face_neighbors, iface,
+                                           &dual_faces, &num_face_neighbors,
+                                           &neighbor_indices, &neigh_scheme,
+                                           1);
+            /* Note: You may think here "Wait, i am smart. If there is only one neighbor I can skip all the checks
+             *       since then the neighbor cannot have a level greater than this element's level."
+             *       But you would be mistaken, since there may exist refinement schemes where we
+             *       actually only have one face neighbor but nevertheless it has a larger level.
+             *       A simple example is the default line refinement scheme.
+             */
+            /* Store the offset of the next element in face_neighbor_offsets.
+             * The next index minus the current index will give the number of faces. */
+            face_neighbor_offsets[element_in_list + 1] =
+              face_neighbor_offsets[element_in_list]
+              + num_face_neighbors;
+            for (ineigh = 0; ineigh < num_face_neighbors; ++ineigh) {
+              /* Store the neighbor indices in the index array */
+              *(t8_locidx_t *) sc_array_push (&face_neighbor_indices) =
+                neighbor_indices[ineigh];
+            }
+          }
+          else {
+            /* We do not need to compute the face neighbor indices, since we stored them.
+             * We get pointers to the elements. */
+            /* TODO: better move this part down in the next for loop? */
+            size_t              neigh_offset =
+              face_neighbor_offsets[element_in_list];
+            num_face_neighbors =
+              face_neighbor_offsets[element_in_list + 1] - neigh_offset;
+            face_neighbors = T8_ALLOC (t8_element_t *, num_face_neighbors);
+            for (ineigh = 0; ineigh < num_face_neighbors; ++ineigh) {
+              t8_locidx_t         neigh_index =
+                *(t8_locidx_t *) sc_array_index (&face_neighbor_indices,
+                                                 neigh_offset + ineigh);
+              /* TODO: Get neighbor tree id and use get_element_in_tree */
+              face_neighbors[ineigh] =
+                t8_forest_get_element (forest_from, neigh_index, NULL);
+            }
+          }
           if (face_neighbors != NULL) {
             for (ineigh = 0; ineigh < num_face_neighbors; ++ineigh) {
+              t8_locidx_t         neighbor_index;
+              if (balance_rounds == 1) {
+                neighbor_index = neighbor_indices[ineigh];
+              }
+              else {
+                size_t              neigh_offset =
+                  face_neighbor_offsets[element_in_list];
+                neighbor_index =
+                  *(t8_locidx_t *) sc_array_index (&face_neighbor_indices,
+                                                   neigh_offset + ineigh);
+              }
               /* Get the level of this neighbor */
               neigh_level =
                 neigh_scheme->t8_element_level (face_neighbors[ineigh]);
               /* Get the refinement marker of this neighbor */
               neigh_marker =
                 *(short *) t8_sc_array_index_locidx (&markers,
-                                                     neighbor_indices
-                                                     [ineigh]);
+                                                     neighbor_index);
               /* Compute the level that the neighbor will have after adapting the mesh */
               neigh_level_after_adapt = neigh_level + neigh_marker;
               level_diff =
@@ -629,12 +683,18 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
             }                   /* End neighbor for-loop */
             /* Free the allocated memory */
             T8_ASSERT (face_neighbors != NULL);
-            neigh_scheme->t8_element_destroy (num_face_neighbors,
-                                              face_neighbors);
+            if (balance_rounds == 1) {
+              /* We computed the leaf face neighbors in this round, so we need to destroy them */
+              neigh_scheme->t8_element_destroy (num_face_neighbors,
+                                                face_neighbors);
+            }
             T8_FREE (face_neighbors);
           }                     /* End face_neighbors != NULL */
-          T8_FREE (dual_faces);
-          T8_FREE (neighbor_indices);
+          if (balance_rounds == 1) {
+            /* We computed the leaf face neighbors in this round, do we need to destroy the helper arrays. */
+            T8_FREE (dual_faces);
+            T8_FREE (neighbor_indices);
+          }
         }                       /* End face neighbor loop */
       }                         /* End element iteration */
     }                           /* if (num_local_elements > 0) ends here */
@@ -655,6 +715,10 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
 
   /* clean up the list */
   t8_locidx_list_reset (&elements_that_do_not_refine);
+
+  /* Clean up the face neighbor indices */
+  sc_array_reset (&face_neighbor_indices);
+  T8_FREE (face_neighbor_offsets);
 
   /* We can now finally refine and coarsen the elements according to the markers.
    * In order to do so, we use the existing adapt functions and have the 
@@ -677,6 +741,8 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of this function */
     forest->profile->balance_runtime += sc_MPI_Wtime ();
+    /* And set the number of rounds */
+    forest->profile->balance_rounds = balance_rounds;
   }
 
   t8_log_indent_pop ();
