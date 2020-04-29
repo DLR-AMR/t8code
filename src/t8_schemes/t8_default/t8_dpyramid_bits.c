@@ -236,7 +236,7 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t * p, int level, uint64_t id)
 
 const int           t8_dpyramid_parenttype_iloc_pyra_w_lower_id[2][10] = {
   {0, 1, 1, 2, 2, 3, 3, 3, 4, 5},
-  {0, 1, 1, 1, 2, 2, 3, 3, 4, 5}
+  {0, 1, 1, 1, 2, 3, 3, 4, 4, 5}
 };
 
 /* TODO: What if I am a tet child of a pyramid*/
@@ -244,11 +244,9 @@ t8_linearidx_t
 t8_dpyramid_linear_id (const t8_dpyramid_t * p, int level)
 {
   T8_ASSERT (level <= T8_DPYRAMID_MAXLEVEL);
-  t8_linearidx_t      id = 0, pyra_shift, tet_shift = 1,
-    sum_1 = 1, sum_2 = 1, local_id;
+  t8_linearidx_t      id = 0, pyra_shift, sum_1 = 1, sum_2 = 1, local_id;
   t8_dpyramid_t       parent, copy;
   int                 i, num_pyra, num_tet;
-
   t8_dpyramid_copy (p, &copy);
   copy.level = level;
   for (i = level; i > 0; i--) {
@@ -264,12 +262,11 @@ t8_dpyramid_linear_id (const t8_dpyramid_t * p, int level)
                                                     6][local_id];
     }
     num_tet = local_id - num_pyra;
-    id += num_pyra * pyra_shift + num_tet * tet_shift;
+    id += num_pyra * pyra_shift + num_tet * sum_1;
 
     t8_dpyramid_copy (&parent, &copy);
     sum_1 = sum_1 << 3;
     sum_2 *= 6;
-    tet_shift = tet_shift << 3;
   }
   return id;
 }

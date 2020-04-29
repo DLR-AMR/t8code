@@ -39,7 +39,9 @@ t8_recursive_linear_id (t8_element_t * element, t8_element_t * child,
     ts->t8_element_set_linear_id (test, maxlvl, *id);
 
       SC_CHECK_ABORT (!ts->t8_element_compare (child, test),
-                      "Wrong linear id\n");
+                      "Wrong element\n");
+      SC_CHECK_ABORT(ts->t8_element_get_linear_id(test, maxlvl) == (*id),
+                     "Wrong linear id\n");
       (*id)++;
     }
   }
