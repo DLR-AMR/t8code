@@ -520,7 +520,7 @@ t8_locidx_t
 t8_cmesh_trees_get_face_neighbor (const t8_ctree_t tree, const int face)
 {
   /* We just pass this through to get_face_neighbor_ext without the ttf argument */
-  t8_cmesh_trees_get_face_neighbor_ext (tree, face, NULL);
+  return t8_cmesh_trees_get_face_neighbor_ext (tree, face, NULL);
 }
 
 t8_gloidx_t
