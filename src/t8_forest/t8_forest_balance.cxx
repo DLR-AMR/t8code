@@ -532,7 +532,7 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
               current_tree_offset +
               t8_forest_get_tree_num_elements (forest_from, current_tree);
           }
-          T8_ASSERT (element_index <= current_tree_offset
+          T8_ASSERT (current_tree_offset <= element_index
                      && element_index < next_tree_offset);
           /* We can now update the eclass and eclass scheme */
           tree_class = t8_forest_get_tree_class (forest_from, current_tree);
