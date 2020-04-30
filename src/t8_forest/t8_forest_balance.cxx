@@ -335,6 +335,12 @@ t8_forest_balance (t8_forest_t forest, int repartition)
  */
 /* TODO: We currenly recompute the leaf face neighbors in every step.
  *       we can spare this by storing the leaf face neighbors.
+ *       Possibly with two arrays: t8_locidx_t *face_neighbors;
+ *                                 size_t *offsets_into_face_neighbors;
+ *       Or both sc_arrays.
+ * TODO: Can we extend this function to also work when forest_from is not balanced?
+ *       Does it suffice to also add refinement markers in the first round for all elements
+ *       that need to get refined in order to restore balance?
  */
 void
 t8_forest_balance_and_adapt (t8_forest_t forest)
