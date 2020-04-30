@@ -78,20 +78,20 @@ T8_EXTERN_C_BEGIN ();
 typedef p4est_locidx_t t8_topidx_t;
 #define T8_MPI_TOPIDX P4EST_MPI_LOCIDX
 #define T8_TOPIDX_ABS(x) P4EST_LOCIDX_ABS(x)
-#define t8_compare_topidx(v,w) p4est_locidx_compare(v,w)
+#define t8_compare_topidx p4est_locidx_compare
 
 /** A type for processor-local indexing. */
 typedef p4est_locidx_t t8_locidx_t;
 #define T8_MPI_LOCIDX P4EST_MPI_LOCIDX
 #define T8_LOCIDX_ABS(x) P4EST_LOCIDX_ABS(x)
 #define T8_LOCIDX_MAX P4EST_LOCIDX_MAX
-#define t8_compare_locidx(v,w) p4est_locidx_compare(v,w)
+#define t8_compare_locidx p4est_locidx_compare
 
 /** A type for global indexing that holds really big numbers. */
 typedef p4est_gloidx_t t8_gloidx_t;
 #define T8_MPI_GLOIDX P4EST_MPI_GLOIDX
 #define T8_GLOIDX_ABS(x) P4EST_GLOIDX_ABS(x)
-#define t8_compare_gloidx(v,w) p4est_gloidx_compare(v,w)
+#define t8_compare_gloidx p4est_gloidx_compare
 
 /** A type for storing SFC indices */
 typedef uint64_t    t8_linearidx_t;
