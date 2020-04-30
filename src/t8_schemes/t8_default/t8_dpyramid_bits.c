@@ -26,6 +26,8 @@
 
 typedef int8_t      t8_dpyramid_cube_id_t;
 
+/*TODO: Put the look-up charts into a seperate file*/
+
 /*The type of a pyramid depending on the parent pyramid and its local index
  *type = (parent_type, local_index)
  */
@@ -65,6 +67,8 @@ const int           t8_dpyramid_type_cid_to_Iloc[8][8] = {
   {0, -1, -1, 8, 4, 6, 8, 9}
 };
 
+/* The type of the parent, dependant of the cube id and its own type
+ */
 const t8_dpyramid_type_t t8_dpyramid_cid_type_to_parenttype[8][8] = {
   {0, 1, 2, 3, 4, 5, 6, 7},
   {0, 1, 1, 1, 0, 0, 6, -1},
@@ -76,15 +80,26 @@ const t8_dpyramid_type_t t8_dpyramid_cid_type_to_parenttype[8][8] = {
   {0, 1, 2, 3, 4, 5, 6, 7}
 };
 
+/* The parenttype of a pyramid, computed by its won type and local ID*/
 const t8_dpyramid_type_t t8_dpyramid_type_Iloc_to_parenttype[2][10] = {
   {6, -1, 6, 7, 6, -1, -1, 6, -1, 6},
   {7, -1, -1, 7, 7, -1, 7, -1, 7, 7}
 };
 
+/*The type of the parent of a pyramid, computed by its own type and cube-id*/
 const t8_dpyramid_type_t t8_dpyramid_type_cid_to_parenttype[2][8] = {
   {6, 6, 6, 6, 7, -1, -1, 6},
   {7, -1, -1, 6, 7, 7, 7, 7}
 };
+
+/*The number of local pyramid-siblings with lower id. This is computed with
+ * help of the type of the parent and its own local id. A tetrahedron has
+ * no pyramid-children, therefore this makes sense only for pyramidparents*/
+const int           t8_dpyramid_parenttype_iloc_pyra_w_lower_id[2][10] = {
+  {0, 1, 1, 2, 2, 3, 3, 3, 4, 5},
+  {0, 1, 1, 1, 2, 3, 3, 4, 4, 5}
+};
+
 
 static              t8_dpyramid_cube_id_t
 compute_cubeid (const t8_dpyramid_t * p, int level)
@@ -234,12 +249,6 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t * p, int level, uint64_t id)
   p->type = type;
 }
 
-const int           t8_dpyramid_parenttype_iloc_pyra_w_lower_id[2][10] = {
-  {0, 1, 1, 2, 2, 3, 3, 3, 4, 5},
-  {0, 1, 1, 1, 2, 3, 3, 4, 4, 5}
-};
-
-/* TODO: What if I am a tet child of a pyramid*/
 t8_linearidx_t
 t8_dpyramid_linear_id (const t8_dpyramid_t * p, int level)
 {
@@ -293,6 +302,7 @@ t8_dpyramid_last_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * desc,
 {
   t8_linearidx_t      id = 0, t_id;
   int                 exponent;
+  T8_ASSERT(level >= p->level);
   if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID) {
     t8_dpyramid_copy (p, desc);
     desc->level = level;
@@ -303,11 +313,10 @@ t8_dpyramid_last_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * desc,
     desc->z |= coord_offset;
   }
   else {
-    /*TODO: Solve bug here */
-    t_id = t8_dpyramid_linear_id (p, p->level);
+    t_id = t8_dpyramid_linear_id (p, level);
     exponent = level - p->level;
     id = (((t8_linearidx_t) 1) << 3 * exponent) - 1;
-    id |= t_id << 3 * exponent;
+    id += t_id;
     t8_dpyramid_init_linear_id (desc, level, id);
   }
 }
