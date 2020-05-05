@@ -111,4 +111,12 @@ maintainer-clean-local:
 doxygen: Doxyfile
 	doxygen
 
+gtest: 
+	make check
+	@echo -e "\e[32m============================================================================\e[0m"
+	@echo -e "\e[32mGoogleTest summary\e[0m"
+	@echo -e "\e[32m============================================================================\e[0m"
+	@grep "gtest" test/t8_gtest_main.log
+	
+
 .PHONY: doxygen
