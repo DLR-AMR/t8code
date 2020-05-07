@@ -48,10 +48,10 @@ test_element_count_leafs_one_level ()
   /* We iterate over all classes and all refinement levels and compute the
    * leafs of this refinement level. */
   for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; ++eclass) {
-    if (eclass == T8_ECLASS_PYRAMID) {
+    //if (eclass == T8_ECLASS_PYRAMID) {
       /* TODO: Add pyramid test, as soon as pyramids are supported */
-      continue;
-    }
+    //  continue;
+    //}
     class_scheme = ts->eclass_schemes[eclass];
     int                 maxlevel = class_scheme->t8_element_maxlevel ();
     class_scheme->t8_element_new (1, &element);
@@ -89,10 +89,6 @@ test_element_count_leafs_less_level ()
   /* We iterate over all classes and all refinement levels and compute the
    * leafs of this refinement level. */
   for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; ++eclass) {
-    if (eclass == T8_ECLASS_PYRAMID) {
-      /* TODO: Add pyramid test, as soon as pyramids are supported */
-      continue;
-    }
     class_scheme = ts->eclass_schemes[eclass];
     int                 maxlevel = class_scheme->t8_element_maxlevel ();
     /* Allocate memory for an element */
@@ -136,13 +132,10 @@ test_element_count_leafs_root ()
   /* We iterate over all classes and all refinement levels and compute the
    * leafs of this refinement level. */
   for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; ++eclass) {
-    if (eclass == T8_ECLASS_PYRAMID) {
-      /* TODO: Add pyramid test, as soon as pyramids are supported */
-      continue;
-    }
+
     class_scheme = ts->eclass_schemes[eclass];
     int                 maxlevel = class_scheme->t8_element_maxlevel ();
-    t8_gloidx_t         compare_value = 1;
+    t8_gloidx_t         compare_value = 1, sum1 = 1, sum2 = 1;
     for (level = 0; level <= maxlevel; ++level) {
       t8_gloidx_t         leaf_count =
         class_scheme->t8_element_count_leafs_from_root (level);
@@ -151,8 +144,16 @@ test_element_count_leafs_root ()
                        " (expecting %li)", leaf_count,
                        t8_eclass_to_string[eclass], level, compare_value);
       /* Multiply the compare_value with 2^dim (= number of children per element) */
-      /* TODO: Use a differente formula for pyramids */
-      compare_value *= 1 << t8_eclass_to_dimension[eclass];
+      if(eclass == T8_ECLASS_PYRAMID){
+         sum1 *= 8;
+         sum2 *= 6;
+         compare_value = 2*sum1 - sum2;
+      }
+      else
+      {
+          compare_value *= 1 << t8_eclass_to_dimension[eclass];
+
+      }
     }
   }
   t8_scheme_cxx_unref (&ts);

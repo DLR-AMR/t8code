@@ -184,10 +184,8 @@ main (int argc, char **argv)
   t8_init (SC_LP_DEFAULT);
 
   for (ieclass = T8_ECLASS_VERTEX; ieclass < T8_ECLASS_COUNT; ieclass++) {
-    if (ieclass != T8_ECLASS_PYRAMID) {
       /* TODO: does not work with pyramids yet */
       t8_test_find_multiple_owners (mpic, (t8_eclass_t) ieclass);
-    }
   }
 
   sc_finalize ();

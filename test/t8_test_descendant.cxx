@@ -112,7 +112,7 @@ t8_check_descendant(const int maxlvl)
     t8_eclass_t         eclass;
     t8_element_t        *elem, *desc, *test;
     scheme = t8_scheme_new_default_cxx();
-    for(eclassi = T8_ECLASS_LINE; eclassi < T8_ECLASS_COUNT; eclassi++)
+    for(eclassi = T8_ECLASS_PYRAMID; eclassi < T8_ECLASS_COUNT; eclassi++)
     {
         eclass = (t8_eclass_t) eclassi;
         ts = scheme->eclass_schemes[eclass];

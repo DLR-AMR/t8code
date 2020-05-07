@@ -184,13 +184,13 @@ t8_dpyramid_linear_id (const t8_dpyramid_t * p, int level)
   t8_dpyramid_t       parent, copy;
   int                 i, num_pyra, num_tet;
   t8_dpyramid_copy (p, &copy);
+  //t8_debugf("lid-In: %i %i %i %i %i\n", copy.x, copy.y, copy.z, copy.type, copy.level);
   copy.level = level;
   for (i = level; i > 0; i--) {
-    pyra_shift = 2 * sum_1 - sum_2;
-    t8_debugf("lid-In: %i %i %i %i %i\n", copy.x, copy.y, copy.z, copy.type, copy.level);
+    pyra_shift = (sum_1 << 1) - sum_2;
     t8_dpyramid_parent (&copy, &parent);
     local_id = t8_dpyramid_child_id_known_parent (&copy, &parent);
-    t8_debugf("parent: %i %i %i %i %i\n", parent.x, parent.y, parent.z, parent.type, parent.level);
+    //t8_debugf("parent: %i %i %i %i %i\n", parent.x, parent.y, parent.z, parent.type, parent.level);
     if (t8_dpyramid_shape (&parent) == T8_ECLASS_TET) {
       num_pyra = 0;
     }
@@ -214,12 +214,12 @@ t8_dpyramid_first_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * desc,
                               int level)
 {
   t8_linearidx_t      id;
-  t8_debugf("level %i, p->level: %i\n", level, p->level);
+  //t8_debugf("level %i, p->level: %i\n", level, p->level);
   T8_ASSERT(level >= p->level);
   T8_ASSERT(0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
   if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID) {
     /*The first descendant of a pyramid has the same anchor coords, but another level */
-    t8_dpyramid_copy (p, desc);
+    t8_dpyramid_copy(p, desc);
     desc->level = level;
   }
   else {
@@ -492,6 +492,11 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
   T8_ASSERT (T8_DPYRAMID_MAXLEVEL == T8_DTET_MAXLEVEL);
 
   t8_dpyramid_coord_t h = T8_DPYRAMID_LEN (p->level);
+  //t8_debugf("p: %i %i %i %i %i\n", p->x, p->y, p->z, p->type, p->level);
+  if(p->x == 1048576 && p->y == 1048576 && p->z == 0
+          && p->type == 3 &&  p->level == 1){
+  //t8_debugf("focus\n");
+  }
 
   if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID) {
     /*The parent of a pyramid is a pyramid, maybe of different type */
@@ -502,8 +507,6 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
     parent->x = p->x & ~h;
     parent->y = p->y & ~h;
     parent->z = p->z & ~h;
-    t8_debugf("p: %i %i %i %i %i\n", p->x, p->y, p->z, p->type, p->level);
-    t8_debugf("cube_id: %i\n", cube_id);
     T8_ASSERT (parent->type >= 0);
     parent->level = p->level - 1;
   }
@@ -528,6 +531,8 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
     parent->level = p->level - 1;
   }
   T8_ASSERT (parent->level >= 0);
+  //t8_debugf("P out: %i %i %i %i %i\n", parent->x, parent->y, parent->z, parent->type,
+  //          parent->level);
 }
 
 t8_eclass_t
