@@ -492,16 +492,17 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
   T8_ASSERT (T8_DPYRAMID_MAXLEVEL == T8_DTET_MAXLEVEL);
 
   t8_dpyramid_coord_t h = T8_DPYRAMID_LEN (p->level);
-  //t8_debugf("p: %i %i %i %i %i\n", p->x, p->y, p->z, p->type, p->level);
+  t8_debugf("p: %i %i %i %i %i\n", p->x, p->y, p->z, p->type, p->level);
   if(p->x == 1048576 && p->y == 1048576 && p->z == 0
           && p->type == 3 &&  p->level == 1){
-  //t8_debugf("focus\n");
+  t8_debugf("focus\n");
   }
 
   if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID) {
     /*The parent of a pyramid is a pyramid, maybe of different type */
 
     int                 cube_id = compute_cubeid (p, p->level);
+    t8_debugf("cube_id %i\n", cube_id);
 
     parent->type = t8_dpyramid_type_cid_to_parenttype[p->type - 6][cube_id];
     parent->x = p->x & ~h;
