@@ -51,6 +51,24 @@ t8_recursive_linear_id (t8_element_t * element, t8_element_t * child,
 }
 
 static void
+t8_serial_linear_id(t8_element_t * element, t8_eclass_scheme_c * ts,
+                    int maxlvl)
+{
+    t8_linearidx_t num_leafs , id, check_id;
+    int i;
+    for(i = 0; i <= maxlvl; i++)
+    {
+        num_leafs = ts->t8_element_count_leafs_from_root(i);
+        for(id = 0; id < num_leafs; id++)
+        {
+            ts->t8_element_set_linear_id(element, i, id);
+            check_id = ts->t8_element_get_linear_id(element, i);
+            SC_CHECK_ABORT(check_id == id, "Wrong ID\n");
+        }
+    }
+}
+
+static void
 t8_check_linear_id (const int maxlvl)
 {
   t8_element_t       *element, *child, *test;
@@ -71,10 +89,11 @@ t8_check_linear_id (const int maxlvl)
 
     ts->t8_element_set_linear_id (element, 0, 0);
     /* Check for correct parent-child relation */
-    for (level = 1; level <= maxlvl; level++) {
+    /*for (level = 1; level <= maxlvl; level++) {
       id = 0;
       t8_recursive_linear_id (element, child, test, ts, level, &id);
-    }
+    }*/
+    t8_serial_linear_id(element, ts, maxlvl);
     /* Destroy element */
     ts->t8_element_destroy (1, &element);
     ts->t8_element_destroy (1, &child);
