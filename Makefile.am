@@ -113,10 +113,14 @@ doxygen: Doxyfile
 
 gtest: 
 	make check
+	@grep "gtest" test/t8_gtest_main.log
 	@echo -e "\e[32m============================================================================\e[0m"
 	@echo -e "\e[32mGoogleTest summary\e[0m"
 	@echo -e "\e[32m============================================================================\e[0m"
-	@grep "gtest" test/t8_gtest_main.log
+	@echo "# Total:"; grep -c "RUN" test/t8_gtest_main.log
+	@echo -e "\e[32m# PASS:"
+	@grep -c "OK" test/t8_gtest_main.log
+	@echo -e "\e[32m============================================================================\e[0m"	
 	
 
 .PHONY: doxygen
