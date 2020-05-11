@@ -327,12 +327,10 @@ t8_cmesh_set_partition_range (t8_cmesh_t cmesh, int set_face_knowledge,
     cmesh->first_tree = first_local_tree;
     cmesh->first_tree_shared = 0;
   }
-  cmesh->num_local_trees = last_local_tree - first_local_tree + 1;
+  cmesh->num_local_trees = last_local_tree - cmesh->first_tree + 1;
   cmesh->set_partition = 1;
   /* Overwrite previous partition settings */
   if (cmesh->tree_offsets != NULL) {
-    cmesh->first_tree = -1;
-    cmesh->first_tree_shared = -1;
     t8_shmem_array_destroy (&cmesh->tree_offsets);
     cmesh->tree_offsets = NULL;
   }
@@ -423,13 +421,42 @@ t8_cmesh_get_first_treeid (t8_cmesh_t cmesh)
   return cmesh->first_tree;
 }
 
+int
+t8_cmesh_treeid_is_local_tree (const t8_cmesh_t cmesh,
+                               const t8_locidx_t ltreeid)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+
+  return 0 <= ltreeid && ltreeid < t8_cmesh_get_num_local_trees (cmesh);
+}
+
+int
+t8_cmesh_treeid_is_ghost (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  const t8_locidx_t   num_trees = t8_cmesh_get_num_local_trees (cmesh);
+  const t8_locidx_t   num_ghosts = t8_cmesh_get_num_ghosts (cmesh);
+
+  return num_trees <= ltreeid && ltreeid < num_trees + num_ghosts;
+}
+
+t8_locidx_t
+t8_cmesh_ltreeid_to_ghostid (const t8_cmesh_t cmesh,
+                             const t8_locidx_t ltreeid)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
+
+  return ltreeid - t8_cmesh_get_num_local_trees (cmesh);
+}
+
 /* TODO: should get a gloidx?
  *       place after commit */
 t8_ctree_t
 t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_locidx_t ltree_id)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  T8_ASSERT (0 <= ltree_id && ltree_id < cmesh->num_local_trees);
+  T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltree_id));
 
   return t8_cmesh_trees_get_tree (cmesh->trees, ltree_id);
 }
@@ -455,7 +482,7 @@ t8_cmesh_get_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (tree != NULL);
-  T8_ASSERT (0 <= tree->treeid && tree->treeid < cmesh->num_local_trees);
+  T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, tree->treeid));
   T8_ASSERT (cmesh->committed);
   return tree->treeid <
     cmesh->num_local_trees -
@@ -478,7 +505,7 @@ double             *
 t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltreeid)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  T8_ASSERT (0 <= ltreeid && ltreeid < cmesh->num_local_trees);
+  T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid));
 
   return (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), 0,
                                             ltreeid);
@@ -491,11 +518,12 @@ t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key,
   int                 is_ghost;
 
   T8_ASSERT (cmesh->committed);
-  T8_ASSERT (0 <= ltree_id &&
-             ltree_id < cmesh->num_ghosts + cmesh->num_local_trees);
-  is_ghost = ltree_id >= cmesh->num_local_trees;
+  T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltree_id)
+             || t8_cmesh_treeid_is_ghost (cmesh, ltree_id));
+  is_ghost = t8_cmesh_treeid_is_ghost (cmesh, ltree_id);
+
   if (is_ghost) {
-    ltree_id = ltree_id - cmesh->num_local_trees;
+    ltree_id = t8_cmesh_ltreeid_to_ghostid (cmesh, ltree_id);
   }
   return t8_cmesh_trees_get_attribute (cmesh->trees, ltree_id, package_id,
                                        key, NULL, is_ghost);
@@ -1140,22 +1168,43 @@ t8_cmesh_get_num_ghosts (t8_cmesh_t cmesh)
 }
 
 int
-t8_cmesh_tree_face_is_boundary (t8_cmesh_t cmesh,
-                                t8_locidx_t ltree_id, int face)
+t8_cmesh_tree_face_is_boundary (const t8_cmesh_t cmesh,
+                                const t8_locidx_t ltreeid, const int face)
 {
-  t8_locidx_t        *face_neighbor;
   int8_t             *ttf;
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
-  (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, ltree_id, &face_neighbor,
-                                      &ttf);
+  if (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid)) {
+    /* The local tree id belongs to a tree */
+    t8_locidx_t        *face_neighbor;
+    (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, ltreeid, &face_neighbor,
+                                        &ttf);
 
-  if (face_neighbor[face] == ltree_id && ttf[face] == face) {
-    /* The tree is connected to itself at the same face.
-     * Thus this is a domain boundary */
-    return 1;
+    if (face_neighbor[face] == ltreeid && ttf[face] == face) {
+      /* The tree is connected to itself at the same face.
+       * Thus this is a domain boundary */
+      return 1;
+    }
   }
+  else {
+    /* The local tree id belongs to a ghost */
+    T8_ASSERT (t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
+
+    t8_gloidx_t        *face_neighbor;
+    const t8_locidx_t   lghostid =
+      t8_cmesh_ltreeid_to_ghostid (cmesh, ltreeid);
+    (void) t8_cmesh_trees_get_ghost_ext (cmesh->trees, lghostid,
+                                         &face_neighbor, &ttf);
+
+    if (face_neighbor[face] == t8_cmesh_get_global_id (cmesh, ltreeid)
+        && ttf[face] == face) {
+      /* The ghost is connected to itself at the same face.
+       * Thus this is a domain boundary */
+      return 1;
+    }
+  }
+
   return 0;
 }
 
@@ -1165,6 +1214,7 @@ t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_locidx_t ltree_id)
   t8_ctree_t          tree;
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltree_id));
 
   tree = t8_cmesh_get_tree (cmesh, ltree_id);
   return tree->eclass;
@@ -1210,7 +1260,9 @@ t8_cmesh_get_local_id (t8_cmesh_t cmesh, t8_gloidx_t global_id)
     return global_id;
   }
   temp_local_id = global_id - cmesh->first_tree;
-  if (0 <= temp_local_id && temp_local_id < cmesh->num_local_trees) {
+  /* Check that we do not get wrong numbers when converting to locidx */
+  T8_ASSERT ((t8_locidx_t) temp_local_id == temp_local_id);
+  if (t8_cmesh_treeid_is_local_tree (cmesh, temp_local_id)) {
     /* The tree is a local tree */
     return temp_local_id;
   }
@@ -1218,6 +1270,95 @@ t8_cmesh_get_local_id (t8_cmesh_t cmesh, t8_gloidx_t global_id)
     /* The tree may be a ghost tree */
     return t8_cmesh_trees_get_ghost_local_id (cmesh->trees, global_id);
   }
+}
+
+/* Given a local tree id and a face number, get information about the face neighbor tree.
+ * \param [in]      cmesh     The cmesh to be considered.
+ * \param [in]      ltreeid   The local id of a tree or a ghost.
+ * \param [in]      face      A face number of the tree/ghost.
+ * \param [out]     dual_face If not NULL, the face number of the neighbor tree at this connection.
+ * \param [out]     orientation If not NULL, the face orientation of the connection.
+ * \return                    If non-negative: The local id of the neighbor tree or ghost.
+ *                            If negative: There is no neighbor across this face. \a dual_face and
+ *                            \a orientation remain unchanged.
+ * \note If \a ltreeid is a ghost and it has a neighbor which is neither a local tree or ghost,
+ *       then the return value will be negative.
+ *       This, a negative return value does not necessarily mean that this is a domain boundary.
+ *       To find out whether a tree is a domain boundary or not \see t8_cmesh_tree_face_is_boundary.
+ */
+t8_locidx_t
+t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid,
+                            const int face, int *dual_face, int *orientation)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid)
+             || t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
+  const int           is_ghost = t8_cmesh_treeid_is_ghost (cmesh, ltreeid);
+  int8_t              ttf;
+  t8_locidx_t         face_neigh;
+  int                 dual_face_temp, orientation_temp;
+
+  /* If this is a domain boundary, return -1 */
+  if (t8_cmesh_tree_face_is_boundary (cmesh, ltreeid, face)) {
+    return -1;
+  }
+
+  if (!is_ghost) {
+    /* The local tree id belongs to a local tree (not a ghost) */
+    /* Get the tree */
+    const t8_ctree_t    tree = t8_cmesh_get_tree (cmesh, ltreeid);
+
+#ifdef T8_ENABLE_DEBUG
+    /* Get the eclass */
+    t8_eclass_t         eclass = tree->eclass;
+    /* Check that face is valid */
+    T8_ASSERT (0 <= face && face < t8_eclass_num_faces[eclass]);
+#endif
+
+    /* Get the local id of the face neighbor */
+    face_neigh = t8_cmesh_trees_get_face_neighbor_ext (tree, face, &ttf);
+  }
+  else {
+    /* The local tree id belongs to a ghost */
+    const t8_locidx_t   lghostid =
+      ltreeid - t8_cmesh_get_num_local_trees (cmesh);
+    /* Get the ghost */
+    const t8_cghost_t   ghost =
+      t8_cmesh_trees_get_ghost (cmesh->trees, lghostid);
+
+    t8_gloidx_t         global_face_neigh;
+
+#ifdef T8_ENABLE_DEBUG
+    /* Get the eclass */
+    t8_eclass_t         eclass = ghost->eclass;
+    /* Check that face is valid */
+    T8_ASSERT (0 <= face && face < t8_eclass_num_faces[eclass]);
+#endif
+
+    /* Get the global id of the face neighbor */
+    global_face_neigh =
+      t8_cmesh_trees_get_ghost_face_neighbor_ext (ghost, face, &ttf);
+    /* Convert it into a local id */
+    face_neigh = t8_cmesh_get_local_id (cmesh, global_face_neigh);
+
+    /* TODO: Check whether this face is a boundary face */
+    if (face_neigh < 0) {
+      /* The neighbor is not local, return -1 */
+      return -1;
+    }
+  }
+
+  /* Decode the ttf information to get the orientation and the dual face */
+  t8_cmesh_tree_to_face_decode (cmesh->dimension, ttf, &dual_face_temp,
+                                &orientation_temp);
+  if (dual_face != NULL) {
+    *dual_face = dual_face_temp;
+  }
+  if (orientation != NULL) {
+    *orientation = orientation_temp;
+  }
+  /* Return the face neighbor */
+  return face_neigh;
 }
 
 void
