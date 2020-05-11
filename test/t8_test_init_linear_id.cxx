@@ -59,11 +59,11 @@ t8_check_uniform_forest(t8_eclass_scheme_c * ts, t8_scheme_cxx_t * scheme,
     t8_locidx_t         first_id, last_id, j, id;
     t8_locidx_t         first_tid, last_tid, tree_id;
     t8_element_t        *element;
-    int                 i, min_level;
+    int                 i;
 
     cmesh = t8_cmesh_new_from_class(ts->eclass, comm);
     t8_cmesh_ref(cmesh);
-    for(i = min_level; i < maxlvl; i++)
+    for(i = 0; i < maxlvl; i++)
     {
         forest = t8_forest_new_uniform(cmesh, scheme, i, 0, comm);
         /*Reuse the forest*/
