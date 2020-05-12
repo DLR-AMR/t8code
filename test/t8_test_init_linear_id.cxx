@@ -66,8 +66,10 @@ t8_check_uniform_forest(t8_eclass_scheme_c * ts, t8_scheme_cxx_t * scheme,
     for(i = 0; i < maxlvl; i++)
     {
         forest = t8_forest_new_uniform(cmesh, scheme, i, 0, comm);
+        t8_debugf("new forest\n");
         /*Reuse the forest*/
         t8_forest_ref(forest);
+        t8_debugf("ref\n");
         /*Get the id of the first and last tree on this process*/
         first_tid = t8_forest_get_first_local_tree_id(forest);
         last_tid = first_tid + t8_forest_get_num_local_trees(forest);
@@ -81,6 +83,7 @@ t8_check_uniform_forest(t8_eclass_scheme_c * ts, t8_scheme_cxx_t * scheme,
             for(j = first_id; j < last_id; j++){
                 /*Get the j-th element and check the computed linear id*/
                 element = t8_forest_get_element(forest, j, &tree_id);
+                /*Get the ID of the element at current level*/
                 id = ts->t8_element_get_linear_id(element, i);
                 SC_CHECK_ABORT(id == j, "Wrong ID\n");
             }
@@ -89,8 +92,9 @@ t8_check_uniform_forest(t8_eclass_scheme_c * ts, t8_scheme_cxx_t * scheme,
         t8_debugf("Done with eclass %s at level %i\n",
                   t8_eclass_to_string[ts->eclass], i);
     }
-    t8_cmesh_unref(&cmesh);
+    t8_forest_unref(&forest);
     t8_cmesh_destroy(&cmesh);
+    t8_debugf("Done uniform forest\n");
 }
 
 static void
@@ -102,8 +106,8 @@ t8_check_linear_id (const int maxlvl)
   int                 eclassi;
   t8_eclass_t         eclass;
 
-  scheme = t8_scheme_new_default_cxx ();
-  for (eclassi = T8_ECLASS_ZERO; eclassi < T8_ECLASS_PYRAMID; eclassi++) {
+  for (eclassi = T8_ECLASS_VERTEX; eclassi < T8_ECLASS_LINE; eclassi++) {
+    scheme = t8_scheme_new_default_cxx ();
     /* TODO: Include pyramids as soon as they are supported. */
     eclass = (t8_eclass_t) eclassi;
     /* Get scheme for eclass */
@@ -124,9 +128,10 @@ t8_check_linear_id (const int maxlvl)
     ts->t8_element_destroy (1, &child);
     ts->t8_element_destroy (1, &test);
 
+    t8_scheme_cxx_unref (&scheme);
   }
   /* Destroy scheme */
-  t8_scheme_cxx_unref (&scheme);
+
 }
 
 int
