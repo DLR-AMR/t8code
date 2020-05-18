@@ -145,7 +145,7 @@ void
 t8_dpyramid_init_linear_id (t8_dpyramid_t * p, int level, uint64_t id)
 {
   t8_dpyramid_type_t  type;
-  t8_linearidx_t      local_index, p_sum1 = sc_intpow64u(8,level),
+  t8_linearidx_t      local_index, p_sum1 = ((t8_linearidx_t)1)<< (3*level),
     p_sum2 = sc_intpow64u (6, level);
   t8_dpyramid_cube_id_t cid;
   int                 i;
@@ -224,6 +224,7 @@ t8_dpyramid_linear_id (const t8_dpyramid_t * p, int level)
     sum_1 = sum_1 << 3;
     sum_2 *= 6;
   }
+  T8_ASSERT(p->level >= 0);
   return id;
 }
 
