@@ -188,7 +188,7 @@ t8_default_scheme_pyramid_c::t8_default_scheme_pyramid_c (void)
 {
   eclass = T8_ECLASS_PYRAMID;
   element_size = sizeof (t8_default_pyramid_t);
-  ts_context = sc_mempool_new (sizeof (element_size));
+  ts_context = sc_mempool_new (element_size);
 }
 
 t8_default_scheme_pyramid_c::~t8_default_scheme_pyramid_c ()
