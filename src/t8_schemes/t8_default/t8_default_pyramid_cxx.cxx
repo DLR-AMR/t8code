@@ -134,7 +134,7 @@ t8_default_scheme_pyramid_c::t8_element_set_linear_id (t8_element_t * elem,
 int
 t8_default_scheme_pyramid_c::t8_element_is_family (t8_element_t ** fam)
 {
-    t8_dpyramid_is_family((const t8_dpyramid_t **) fam);
+    return t8_dpyramid_is_family((const t8_dpyramid_t **) fam);
 }
 
 t8_eclass_t

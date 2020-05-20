@@ -114,6 +114,7 @@ t8_dpyramid_compare (const t8_dpyramid_t * p1, const t8_dpyramid_t * p2)
 int
 t8_dpyramid_get_level (const t8_dpyramid_t * p)
 {
+  t8_debugf("[D] getlevel %i %i %i %i %i\n", p->x, p->y, p->z, p->type, p->level);
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
   return p->level;
 }
@@ -145,7 +146,7 @@ void
 t8_dpyramid_init_linear_id (t8_dpyramid_t * p, int level, uint64_t id)
 {
   t8_dpyramid_type_t  type;
-  t8_linearidx_t      local_index, p_sum1 = ((t8_linearidx_t)1)<< (3*level),
+  t8_linearidx_t      local_index, p_sum1 = (1)<< (3*level),
     p_sum2 = sc_intpow64u (6, level);
   t8_dpyramid_cube_id_t cid;
   int                 i;
@@ -182,6 +183,7 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t * p, int level, uint64_t id)
     type = t8_dpyramid_parenttype_Iloc_to_type[type][local_index];
     T8_ASSERT (type >= 0);
   }
+  T8_ASSERT(id == 0);
   p->type = type;
 }
 
@@ -286,6 +288,10 @@ t8_dpyramid_num_vertices (const t8_dpyramid_t * p)
 int
 t8_dpyramid_num_children (const t8_dpyramid_t * p)
 {
+  t8_debugf("[D]p-nc %i %i %i %i %i\n", p->x, p->y, p->z, p->type, p->level);
+  if(p->x == -1 && p->y == 0 && p->z == 0 && p->type == -1 && p->level == -1){
+      t8_debugf("[D] focus\n");
+  }
   if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
     return T8_DTET_CHILDREN;
   }
@@ -354,108 +360,14 @@ t8_dpyramid_children (const t8_dpyramid_t * p, int length, t8_dpyramid_t ** c)
 {
   int                 i, num_children;
   num_children = t8_dpyramid_num_children (p);
-  for (i = 0; i < num_children; i++) {
+  t8_debugf("[D] p: %i %i %i %i %i, nc %i\n", p->x, p->y, p->z, p->type, p->level, num_children);
+  t8_debugf("[D] children of type %i\n", p->type);
+  for (i = num_children - 1; i >= 0; i--) {
     t8_dpyramid_child (p, i, c[i]);
+    t8_debugf("[D] %i %i %i %i %i\n", c[i]->x, c[i]->y, c[i]->z, c[i]->type, c[i]->level);
   }
 
 }
-
-/* Compute the next possible "significant point" to reach from the ankercoord of p
- * If this point is reachable, return true, else return false */
-#if 0
-int
-t8_dpyramid_hit_point (const t8_dpyramid_t * p)
-{
-  T8_ASSERT (t8_dpyramid_shape (p) == T8_ECLASS_TET);
-  T8_ASSERT (p->type == 0 || p->type == 3);
-  t8_dpyramid_coord_t x = p->x, y = p->y, h =
-    T8_DPYRAMID_LEN (p->level), n, shift;
-  int                 even = (p->z >> (T8_DPYRAMID_MAXLEVEL - p->level)) % 2;
-  printf ("hitIN: %i %i %i %i %i\n", p->x, p->y, p->z, p->type, p->level);
-
-  if (even == 0) {
-    if ((p->x >> (T8_DPYRAMID_MAXLEVEL - p->level)) % 2 == 0) {
-      x += h;
-    }
-    if ((p->y >> (T8_DPYRAMID_MAXLEVEL - p->level)) % 2 == 0) {
-      y += h;
-    }
-    printf ("intermediate hit-point: %i %i\n", x, y);
-    if ((p->z >> (T8_DPYRAMID_MAXLEVEL - p->level + 1)) % 2 == 1) {
-      printf ("correction\n");
-      if ((y & 11) == 3 && (x & 11) != 3) {
-        x = x | (1 << 1);
-      }
-      if ((y & 11) != 3 && (x & 11) == 3) {
-        y = y | (1 << 1);
-      }
-    }
-    if (x <= p->z || y <= p->z) {
-      printf ("no hit 0\n");
-      return 0;
-    }
-    printf ("even: %i hitpoint: %i %i\n", even, x, y);
-    if (p->x == x && p->y == y) {
-      printf ("hit0.1\n");
-      return 1;
-    }
-    else if (p->x + h == x && p->y == y && p->type == 0) {
-      printf ("hit0.2\n");
-      return 1;
-    }
-    else if (p->y + h == y && p->x == x && p->type == 3) {
-      printf ("hit0.3\n");
-      return 1;
-    }
-    else {
-      return 0;
-    }
-  }
-  else {                        /*
-                                   x = x>>(T8_DPYRAMID_MAXLEVEL - p->level + 1);
-                                   y = y>>(T8_DPYRAMID_MAXLEVEL - p->level + 1);
-                                   if(x%2 != y%2 && x%4 != 0){
-                                   x = x|1;
-                                   y = y|1;
-                                   }
-                                   x = x<<(T8_DPYRAMID_MAXLEVEL - p->level + 1);
-                                   y = y<<(T8_DPYRAMID_MAXLEVEL - p->level + 1); */
-    x =
-      (p->
-       x >> (T8_DPYRAMID_MAXLEVEL - p->level + 1)) << (T8_DPYRAMID_MAXLEVEL -
-                                                       p->level + 1);
-    n = t8_dpyramid_trailing_zeroes (x);
-    y = (p->y >> (n)) << (n);
-    printf ("shift1: %i %i\n", x, y);
-
-    shift = 1 << (n);
-    y = y | shift;
-    printf ("zeroes: %i, shift: %i, y: %i\n", n, shift, y);
-
-    printf ("hitPoint: %i %i\n", x, y);
-    if (x <= p->z || y <= p->z) {
-      return 0;
-    }
-    if (p->x == x && p->y == y) {
-      printf ("hit2.1\n");
-      return 1;
-    }
-    else if ((p->x - h) == x && p->y == y && p->type == 3) {
-      printf ("hit2.2\n");
-      return 1;
-    }
-    else if (p->x == x && (p->y - h) == y && p->type == 0) {
-      printf ("hit2.3\n");
-      return 1;
-    }
-    else {
-      printf ("no hit 2\n");
-      return 0;
-    }
-  }
-
-}
-#endif
 
 /* Check, if a pyramid in the shape of a tet lies inside a tetrahedron
  * The i first bits give the anchorcoordinate for a possible ancestor of level i
@@ -477,7 +389,7 @@ t8_dpyramid_is_inside_tet (const t8_dpyramid_t * p, int level)
     tet.y = tet.y | (p->y & (1 << (T8_DPYRAMID_MAXLEVEL - i)));
     tet.z = tet.z | (p->z & (1 << (T8_DPYRAMID_MAXLEVEL - i)));
     tet.level = i;
-    /*Compute the ancestor */
+    /*Compute the tet-ancestor */
     t8_dtet_ancestor ((const t8_dtet_t *) p, i, &ancestor);
     /*Only compare, if the ancestor has type 0 or 3 */
     if (ancestor.type == 0 || ancestor.type == 3) {

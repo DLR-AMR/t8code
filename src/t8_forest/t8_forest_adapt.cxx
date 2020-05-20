@@ -25,6 +25,7 @@
 #include <t8_forest.h>
 #include <t8_data/t8_containers.h>
 #include <t8_element_cxx.hxx>
+#include <t8_schemes/t8_default/t8_dpyramid.h>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -114,7 +115,15 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   }
   while (elem_list->elem_count > 0) {
     el_buffer[0] = (t8_element_t *) sc_list_pop (elem_list);
+    if(((t8_dpyramid_t *)el_buffer[0])->x == -1)
+    {
+        t8_debugf("Focus\n");
+    }
+    t8_debugf("[D] current element %i %i %i %i %i\n", ((t8_dpyramid_t *)el_buffer[0])->x,
+              ((t8_dpyramid_t *)el_buffer[0])->y, ((t8_dpyramid_t *)el_buffer[0])->z,
+              ((t8_dpyramid_t *)el_buffer[0])->type, ((t8_dpyramid_t *)el_buffer[0])->level);
     num_children = ts->t8_element_num_children (el_buffer[0]);
+    t8_debugf("[D] forest adapt recursive num_children: %i\n", num_children);
     if (forest->set_adapt_fn (forest, forest->set_from, ltreeid, lelement_id,
                               ts, 1, el_buffer) > 0) {
       /* The element should be refined */
@@ -124,6 +133,10 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
         ts->t8_element_children (el_buffer[0], num_children, el_buffer);
         for (ci = num_children - 1; ci >= 0; ci--) {
           (void) sc_list_prepend (elem_list, el_buffer[ci]);
+            t8_debugf("[D] add to el_buffer\n");
+            t8_debugf("[D] %i %i %i %i %i\n", ((t8_dpyramid_t *)el_buffer[ci])->x,
+                      ((t8_dpyramid_t *)el_buffer[ci])->y, ((t8_dpyramid_t *)el_buffer[ci])->z,
+                      ((t8_dpyramid_t *)el_buffer[ci])->type, ((t8_dpyramid_t *)el_buffer[ci])->level);
         }
       }
     }
