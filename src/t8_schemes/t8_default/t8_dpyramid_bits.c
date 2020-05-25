@@ -63,11 +63,22 @@ t8_dpyramid_is_equal (const t8_dpyramid_t * p, const t8_dpyramid_t * q)
 int
 t8_dpyramid_is_family (const t8_dpyramid_t ** fam)
 {
+  int i;
   /*TODO: This can be implemented better! */
   if (t8_dpyramid_shape (fam[0]) == T8_ECLASS_TET) {
+    for(i = 0; i< T8_DTET_CHILDREN; i++)
+    {
+        t8_debugf("[D] family %i %i %i %i %i\n", fam[i]->x, fam[i]->y, fam[i]->z,
+                  fam[i]->type, fam[i]->level);
+    }
     return t8_dtet_is_familypv ((const t8_dtet_t **) fam);
   }
   else {
+      for(i = 0; i< T8_DPYRAMID_CHILDREN; i++)
+      {
+          t8_debugf("[D] family %i %i %i %i %i\n", fam[i]->x, fam[i]->y, fam[i]->z,
+                    fam[i]->type, fam[i]->level);
+      }
     t8_dpyramid_t       parent, test;
     int                 i;
     t8_dpyramid_parent (fam[0], &parent);
@@ -421,9 +432,9 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
 {
   T8_ASSERT (p->level > 0);
   T8_ASSERT (T8_DPYRAMID_MAXLEVEL == T8_DTET_MAXLEVEL);
+  t8_debugf("[D] parent-in: %i %i %i %i %i\n", p->x, p->y, p->z, p->type, p->level);
 
   t8_dpyramid_coord_t h = T8_DPYRAMID_LEN (p->level);
-
 
   if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID) {
     /*The parent of a pyramid is a pyramid, maybe of different type */

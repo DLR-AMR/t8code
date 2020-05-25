@@ -40,7 +40,8 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
                                    t8_locidx_t * el_inserted,
                                    t8_element_t ** el_buffer)
 {
-  t8_element_t       *element;
+  t8_debugf("[D] coarsen\n");
+  t8_element_t       *element, *parent;
   t8_element_t      **fam;
   t8_locidx_t         pos;
   size_t              elements_in_array;
@@ -55,8 +56,13 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   element = t8_element_array_index_locidx (telement, *el_inserted - 1);
   /* TODO: This assumes that the number of children is the same for each
    *       element in that class. This may not be the case. */
-  num_children = ts->t8_element_num_children (element);
+  ts->t8_element_new(1, &parent);
+  ts->t8_element_parent(element, parent);
+  num_children = ts->t8_element_num_children (parent);
+  t8_debugf("[D] child_id: %i, num_children %i\n", ts->t8_element_child_id(element), num_children);
+  t8_debugf("[D] elements in array %i, index in array%i\n", elements_in_array, *el_inserted);
   T8_ASSERT (ts->t8_element_child_id (element) == num_children - 1);
+  ts->t8_element_destroy(1, &parent);
 
   fam = el_buffer;
   pos = *el_inserted - num_children;
@@ -95,6 +101,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
     }
     pos -= num_children - 1;
   }
+  t8_debugf("[D] finished coarsen\n");
 }
 
 static void
@@ -113,17 +120,10 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   if (elem_list->elem_count <= 0) {
     return;
   }
+
   while (elem_list->elem_count > 0) {
     el_buffer[0] = (t8_element_t *) sc_list_pop (elem_list);
-    if(((t8_dpyramid_t *)el_buffer[0])->x == -1)
-    {
-        t8_debugf("Focus\n");
-    }
-    t8_debugf("[D] current element %i %i %i %i %i\n", ((t8_dpyramid_t *)el_buffer[0])->x,
-              ((t8_dpyramid_t *)el_buffer[0])->y, ((t8_dpyramid_t *)el_buffer[0])->z,
-              ((t8_dpyramid_t *)el_buffer[0])->type, ((t8_dpyramid_t *)el_buffer[0])->level);
     num_children = ts->t8_element_num_children (el_buffer[0]);
-    t8_debugf("[D] forest adapt recursive num_children: %i\n", num_children);
     if (forest->set_adapt_fn (forest, forest->set_from, ltreeid, lelement_id,
                               ts, 1, el_buffer) > 0) {
       /* The element should be refined */
@@ -133,10 +133,6 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
         ts->t8_element_children (el_buffer[0], num_children, el_buffer);
         for (ci = num_children - 1; ci >= 0; ci--) {
           (void) sc_list_prepend (elem_list, el_buffer[ci]);
-            t8_debugf("[D] add to el_buffer\n");
-            t8_debugf("[D] %i %i %i %i %i\n", ((t8_dpyramid_t *)el_buffer[ci])->x,
-                      ((t8_dpyramid_t *)el_buffer[ci])->y, ((t8_dpyramid_t *)el_buffer[ci])->z,
-                      ((t8_dpyramid_t *)el_buffer[ci])->type, ((t8_dpyramid_t *)el_buffer[ci])->level);
         }
       }
     }
@@ -216,6 +212,7 @@ t8_forest_adapt (t8_forest_t forest)
     num_children =
       tscheme->t8_element_num_children (t8_element_array_index_locidx
                                         (telements_from, 0));
+    t8_debugf("[D] num_children forest 1: %i\n", num_children);
     elements = T8_ALLOC (t8_element_t *, num_children);
     elements_from = T8_ALLOC (t8_element_t *, num_children);
     while (el_considered < num_el_from) {
@@ -255,10 +252,12 @@ t8_forest_adapt (t8_forest_t forest)
           /* el_coarsen is the index of the first element in the new element
            * array which could be coarsened recursively.
            * We can set this here, since a family that emerges from a refinement will never be coarsened */
+          num_children = tscheme->t8_element_num_children(elements_from[0]);
           el_coarsen = el_inserted + num_children;
           tscheme->t8_element_new (num_children, elements);
           tscheme->t8_element_children (elements_from[0], num_children,
                                         elements);
+          t8_debugf("[D] num_children forest_adapt %i\n", num_children);
           for (ci = num_children - 1; ci >= 0; ci--) {
             (void) sc_list_prepend (refine_list, elements[ci]);
           }
@@ -273,6 +272,7 @@ t8_forest_adapt (t8_forest_t forest)
             elements[zz] =
               t8_element_array_index_locidx (telements, el_inserted + zz);
           }
+          num_children = tscheme->t8_element_num_children(elements_from[0]);
           tscheme->t8_element_children (elements_from[0], num_children,
                                         elements);
           el_inserted += num_children;
