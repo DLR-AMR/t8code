@@ -40,7 +40,6 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
                                    t8_locidx_t * el_inserted,
                                    t8_element_t ** el_buffer)
 {
-  t8_debugf("[D] coarsen\n");
   t8_element_t       *element, *parent;
   t8_element_t      **fam;
   t8_locidx_t         pos;
@@ -59,8 +58,6 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   ts->t8_element_new(1, &parent);
   ts->t8_element_parent(element, parent);
   num_children = ts->t8_element_num_children (parent);
-  t8_debugf("[D] child_id: %i, num_children %i\n", ts->t8_element_child_id(element), num_children);
-  t8_debugf("[D] elements in array %i, index in array%i\n", elements_in_array, *el_inserted);
   T8_ASSERT (ts->t8_element_child_id (element) == num_children - 1);
   ts->t8_element_destroy(1, &parent);
 
@@ -88,6 +85,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
       /* remove num_children - 1 elements from the array */
       T8_ASSERT (elements_in_array == t8_element_array_get_count (telement));
       ts->t8_element_parent (fam[0], fam[0]);
+      num_children = ts->t8_element_num_children(fam[0]);
       elements_in_array -= num_children - 1;
       t8_element_array_resize (telement, elements_in_array);
       /* Set element to the new constructed parent. Since resizing the array
@@ -212,13 +210,14 @@ t8_forest_adapt (t8_forest_t forest)
     num_children =
       tscheme->t8_element_num_children (t8_element_array_index_locidx
                                         (telements_from, 0));
-    t8_debugf("[D] num_children forest 1: %i\n", num_children);
     elements = T8_ALLOC (t8_element_t *, num_children);
     elements_from = T8_ALLOC (t8_element_t *, num_children);
     while (el_considered < num_el_from) {
 #ifdef T8_ENABLE_DEBUG
       is_family = 1;
 #endif
+      num_children = tscheme->t8_element_num_children(t8_element_array_index_locidx
+                                                      (telements_from, 0));
       num_elements = num_children;
       for (zz = 0; zz < num_children &&
            el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
@@ -257,7 +256,6 @@ t8_forest_adapt (t8_forest_t forest)
           tscheme->t8_element_new (num_children, elements);
           tscheme->t8_element_children (elements_from[0], num_children,
                                         elements);
-          t8_debugf("[D] num_children forest_adapt %i\n", num_children);
           for (ci = num_children - 1; ci >= 0; ci--) {
             (void) sc_list_prepend (refine_list, elements[ci]);
           }

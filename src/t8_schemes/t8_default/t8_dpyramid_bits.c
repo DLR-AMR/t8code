@@ -63,22 +63,11 @@ t8_dpyramid_is_equal (const t8_dpyramid_t * p, const t8_dpyramid_t * q)
 int
 t8_dpyramid_is_family (const t8_dpyramid_t ** fam)
 {
-  int i;
   /*TODO: This can be implemented better! */
   if (t8_dpyramid_shape (fam[0]) == T8_ECLASS_TET) {
-    for(i = 0; i< T8_DTET_CHILDREN; i++)
-    {
-        t8_debugf("[D] family %i %i %i %i %i\n", fam[i]->x, fam[i]->y, fam[i]->z,
-                  fam[i]->type, fam[i]->level);
-    }
     return t8_dtet_is_familypv ((const t8_dtet_t **) fam);
   }
   else {
-      for(i = 0; i< T8_DPYRAMID_CHILDREN; i++)
-      {
-          t8_debugf("[D] family %i %i %i %i %i\n", fam[i]->x, fam[i]->y, fam[i]->z,
-                    fam[i]->type, fam[i]->level);
-      }
     t8_dpyramid_t       parent, test;
     int                 i;
     t8_dpyramid_parent (fam[0], &parent);
@@ -125,7 +114,6 @@ t8_dpyramid_compare (const t8_dpyramid_t * p1, const t8_dpyramid_t * p2)
 int
 t8_dpyramid_get_level (const t8_dpyramid_t * p)
 {
-  t8_debugf("[D] getlevel %i %i %i %i %i\n", p->x, p->y, p->z, p->type, p->level);
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
   return p->level;
 }
@@ -299,10 +287,6 @@ t8_dpyramid_num_vertices (const t8_dpyramid_t * p)
 int
 t8_dpyramid_num_children (const t8_dpyramid_t * p)
 {
-  t8_debugf("[D]p-nc %i %i %i %i %i\n", p->x, p->y, p->z, p->type, p->level);
-  if(p->x == -1 && p->y == 0 && p->z == 0 && p->type == -1 && p->level == -1){
-      t8_debugf("[D] focus\n");
-  }
   if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
     return T8_DTET_CHILDREN;
   }
@@ -371,11 +355,8 @@ t8_dpyramid_children (const t8_dpyramid_t * p, int length, t8_dpyramid_t ** c)
 {
   int                 i, num_children;
   num_children = t8_dpyramid_num_children (p);
-  t8_debugf("[D] p: %i %i %i %i %i, nc %i\n", p->x, p->y, p->z, p->type, p->level, num_children);
-  t8_debugf("[D] children of type %i\n", p->type);
   for (i = num_children - 1; i >= 0; i--) {
     t8_dpyramid_child (p, i, c[i]);
-    t8_debugf("[D] %i %i %i %i %i\n", c[i]->x, c[i]->y, c[i]->z, c[i]->type, c[i]->level);
   }
 
 }
@@ -432,7 +413,6 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
 {
   T8_ASSERT (p->level > 0);
   T8_ASSERT (T8_DPYRAMID_MAXLEVEL == T8_DTET_MAXLEVEL);
-  t8_debugf("[D] parent-in: %i %i %i %i %i\n", p->x, p->y, p->z, p->type, p->level);
 
   t8_dpyramid_coord_t h = T8_DPYRAMID_LEN (p->level);
 
