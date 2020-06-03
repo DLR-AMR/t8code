@@ -17,7 +17,8 @@ t8code_test_programs = \
 	test/t8_test_element_count_leafs \
 	test/t8_test_search \
 	test/t8_test_find_parent \
-	test/t8_test_cmesh_face_is_boundary
+	test/t8_test_cmesh_face_is_boundary \
+	test/t8_test_element_general_function
 
 test_t8_test_eclass_SOURCES = test/t8_test_eclass.c
 test_t8_test_bcast_SOURCES = test/t8_test_bcast.c
@@ -34,6 +35,7 @@ test_t8_test_element_count_leafs_SOURCES = test/t8_test_element_count_leafs.cxx
 test_t8_test_search_SOURCES = test/t8_test_search.cxx
 test_t8_test_find_parent_SOURCES = test/t8_test_find_parent.cpp
 test_t8_test_cmesh_face_is_boundary_SOURCES = test/t8_test_cmesh_face_is_boundary.cxx
+test_t8_test_element_general_function_SOURCES = test/t8_test_element_general_function.cxx
 
 TESTS += $(t8code_test_programs)
 check_PROGRAMS += $(t8code_test_programs)
