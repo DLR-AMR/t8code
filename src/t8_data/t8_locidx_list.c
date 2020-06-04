@@ -178,6 +178,38 @@ t8_locidx_list_append (t8_locidx_list_t * list, const t8_locidx_t entry)
   sc_list_append (&list->list, (void *) allocated_entry);
 }
 
+int
+t8_locidx_list_has_duplicate_entries (t8_locidx_list_t * list)
+{
+  t8_locidx_list_iterator_t it;
+  t8_locidx_t        *array, i;
+  size_t              num_items;
+
+  T8_ASSERT (t8_locidx_list_is_initialized (list));
+
+  /* We store all values in an array, sort it and check for duplicates. */
+  num_items = t8_locidx_list_count (list);
+  array = T8_ALLOC (t8_locidx_t, num_items);
+  for (i = 0, t8_locidx_list_iterator_init (list, &it);
+       !t8_locidx_list_iterator_is_end (&it);
+       t8_locidx_list_iterator_next (&it), ++i) {
+    array[i] = t8_locidx_list_iterator_get_value (&it);
+  }
+  T8_ASSERT (i == num_items);
+  qsort (array, sizeof (t8_locidx_t), num_items, t8_compare_locidx);
+
+  for (i = 0; i < num_items - 1; ++i) {
+    if (array[i] == array[i + 1]) {
+      /* Found a duplicate */
+      T8_FREE (array);
+      return 1;
+    }
+  }
+  /* No duplicate found */
+  T8_FREE (array);
+  return 0;
+}
+
 /* Free all elements of a list.
  * \param [in, out] list An initialized list.
  * After calling this function \a list will not be initialized and

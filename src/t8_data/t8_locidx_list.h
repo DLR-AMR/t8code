@@ -94,6 +94,13 @@ size_t              t8_locidx_list_count (const t8_locidx_list_t * list);
 void                t8_locidx_list_append (t8_locidx_list_t * list,
                                            const t8_locidx_t entry);
 
+/** Check a list for duplicate entries.
+ * \param [in] list An initialized list.
+ * \return          True (non-zero) if there are duplicate entries in \a list.
+ */
+int                 t8_locidx_list_has_duplicate_entries (t8_locidx_list_t *
+                                                          list);
+
 /** Free all elements of a list.
  * \param [in, out] list An initialized list.
  * After calling this function \a list will not be initialized and

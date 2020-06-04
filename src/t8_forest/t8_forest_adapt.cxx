@@ -512,6 +512,9 @@ t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers,
       }
     }                           /* End of element loop */
   }                             /* End of tree loop */
+  /* We expect that no element was put twice into the list. */
+  T8_ASSERT (!t8_locidx_list_has_duplicate_entries
+             (elements_that_do_not_refine));
 }
 
 T8_EXTERN_C_END ();
