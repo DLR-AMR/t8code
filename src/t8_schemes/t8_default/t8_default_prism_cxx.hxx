@@ -284,11 +284,7 @@ public:
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether an element is valid */
-  virtual int         t8_element_is_valid (const t8_element_t * t) const
-  {
-    /* TODO: Correctly implement this function */
-    return 1;
-  }
+  virtual int         t8_element_is_valid (const t8_element_t * elem) const;
 #endif
 };
 

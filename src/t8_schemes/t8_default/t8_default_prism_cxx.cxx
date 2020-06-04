@@ -409,6 +409,17 @@ u_int64_t
   return t8_dprism_linear_id ((const t8_dprism_t *) elem, level);
 }
 
+/* *INDENT-OFF* */
+/* Indent bug, indent adds an additional const modifier at the end */
+int
+t8_default_scheme_prism_c::t8_element_is_valid (const t8_element_t * elem) const
+{
+  T8_ASSERT (elem != NULL);
+
+  return t8_dprism_is_valid ((const t8_dprism_t *) elem);
+}
+/* *INDENT-ON* */
+
 /* Constructor */
 t8_default_scheme_prism_c::t8_default_scheme_prism_c (void)
 {
