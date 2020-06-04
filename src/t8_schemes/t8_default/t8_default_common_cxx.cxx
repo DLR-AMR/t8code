@@ -151,4 +151,13 @@ t8_gloidx_t
   return count_leafs_from_level (0, level, dim);
 }
 
+void
+t8_default_scheme_common_c::t8_element_general_function (const t8_element_t *
+                                                         elem,
+                                                         const void *indata,
+                                                         void *outdata)
+{
+  /* This function is intentionally left blank. */
+}
+
 T8_EXTERN_C_END ();
