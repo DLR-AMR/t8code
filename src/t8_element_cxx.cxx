@@ -22,9 +22,6 @@
 
 #include <t8_element_cxx.hxx>
 
-/* We want to export the whole implementation to be callable from "C" */
-T8_EXTERN_C_BEGIN ();
-
 #if 0
 t8_eclass_scheme_c::~t8_eclass_scheme_c ()
 {
@@ -52,7 +49,7 @@ t8_scheme_cxx_destroy (t8_scheme_cxx_t * s)
 /* *INDENT-OFF* */
 /* Default implementation for the element size */
 size_t
-t8_eclass_scheme::t8_element_size ()
+t8_eclass_scheme::t8_element_size () const
 {
   return element_size;
 }
@@ -60,15 +57,13 @@ t8_eclass_scheme::t8_element_size ()
 
 /* Default implementation for array_index */
 t8_element_t       *
-t8_eclass_scheme::t8_element_array_index (sc_array_t * array, size_t it)
+t8_eclass_scheme::t8_element_array_index (sc_array_t * array, size_t it) const
 {
   T8_ASSERT (it < array->elem_count);
   T8_ASSERT (element_size == array->elem_size);
 
   return (t8_element_t *) sc_array_index (array, it);
 }
-
-T8_EXTERN_C_END ();
 
 #if 0
 void
