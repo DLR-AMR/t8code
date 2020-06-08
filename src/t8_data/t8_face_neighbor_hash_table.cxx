@@ -33,7 +33,8 @@ T8_EXTERN_C_BEGIN ();
 
 typedef struct
 {
-  t8_locidx_t         element_index;    /* Local index of this element */
+  t8_locidx_t         element_index;    /* Local index of this element in its tree */
+  t8_locidx_t         ltree_id; /* The local tree of this element */
   t8_locidx_t       **face_neighbor_indices;    /* One entry for each face neighbor. Has length num_faces */
   size_t             *number_of_neighbors;      /* Number of face neighbors per face. */
   t8_element_t     ***face_neighbors;   /* The face neighbors of the element. Has dimensions num_faces x neighbors_of_face */
@@ -60,7 +61,8 @@ typedef struct
  */
 
 /* The hash function for face neighbor hash entries.
- * It simply returns the element index. */
+ * It simply returns the index of the element, that is
+ * hash->element_index + the element offset of the local tree. */
 unsigned
 t8_face_neighbor_hash_function (const void *face_neighbor_hash,
                                 const void *data)
@@ -71,10 +73,12 @@ t8_face_neighbor_hash_function (const void *face_neighbor_hash,
   T8_ASSERT (hash != NULL);
   /* The index must be >= 0, otherwise it is invalid. */
   T8_ASSERT (hash->element_index >= 0);
-  return hash->element_index;
+  return hash->element_index +
+    t8_forest_get_tree_element_offset (forest, hash->ltree_id);
 }
 
-/* Two face neighbor hashes are equal if they have the same element id */
+/* Two face neighbor hashes are equal if they have the same element index
+ * and local tree. */
 int
 t8_face_neighbor_hash_equal_function (const void *face_neigh_hasha,
                                       const void *face_neigh_hashb,
@@ -87,7 +91,8 @@ t8_face_neighbor_hash_equal_function (const void *face_neigh_hasha,
 
   T8_ASSERT (hasha != NULL);
   T8_ASSERT (hashb != NULL);
-  return hasha->element_index == hashb->element_index;
+  return hasha->element_index == hashb->element_index
+    && hasha->ltree_id == hashb->ltree_id;
 }
 
 /* Allocates a new t8_face_neighbor_hash_table_t and returns it. */
@@ -119,6 +124,42 @@ t8_face_neighbor_hash_table_is_valid (const t8_face_neighbor_hash_table_t *
     && table->user_data == NULL;
 }
 
+void
+t8_face_neighbor_hash_table_destroy_hash (t8_face_neighbor_hash_t ** phash)
+{
+  T8_ASSERT (phash != NULL);
+  T8_ASSERT (*phash != NULL);
+  t8_face_neighbor_hash_t *hash = *phash;
+
+  int                 iface;
+  const t8_element_t *element =
+    t8_forest_get_element_in_tree (forest, hash->ltree_id,
+                                   hash->element_index);
+  for (iface = 0; iface < hash->num_faces; ++iface) {
+    /* Get this neighbors class and scheme */
+    const t8_eclass_t   neigh_class =
+      t8_forest_element_neighbor_eclass (forest, hash->ltree_id, element,
+                                         iface);
+    t8_eclass_scheme_c *neigh_scheme =
+      t8_forest_get_eclass_scheme (forest, neigh_class);
+    /* Free the face neighbor indices */
+    T8_FREE (hash->face_neighbor_indices[iface]);
+    /* Free the dual faces */
+    T8_FREE (hash->dual_faces[iface]);
+    /* Free the neighbor elements */
+    neigh_scheme->t8_element_destroy (hash->number_of_neighbors[iface],
+                                      hash->face_neighbors[iface]);
+  }
+  /* Free the arrays */
+  T8_FREE (hash->number_of_neighbors);
+  T8_FREE (hash->dual_faces);
+  T8_FREE (hash->face_neighbor_indices);
+  T8_FREE (hash->face_neighbors);
+  T8_FREE (hash);
+  /* Set pointer to point to NULL */
+  *phash = NULL;
+}
+
 int
 t8_face_neighbor_hash_table_insert_element (const
                                             t8_face_neighbor_hash_table_t *
@@ -139,6 +180,9 @@ t8_face_neighbor_hash_table_insert_element (const
   t8_element_t       *element =
     t8_forest_get_element_in_tree (forest, ltreeid, element_in_tree);
 
+  /* Set tree id and index in tree */
+  hash->ltree_id = ltreeid;
+  hash->element_index = element_in_tree;
   /* Compute the number of faces of this element */
   hash->num_faces = scheme->t8_element_num_faces (element);
 
@@ -147,6 +191,8 @@ t8_face_neighbor_hash_table_insert_element (const
   hash->face_neighbor_indices =
     T8_ALLOC (*hash->face_neighbor_indices, hash->num_faces);
   hash->dual_faces = T8_ALLOC (*hash->dual_faces, hash->num_faces);
+  hash->number_of_neighbors =
+    T8_ALLOC (*hash->number_of_neighbors, hash->num_faces);
   /* Loop over all faces and compute the face neighbors */
   for (iface = 0; iface < hash->num_faces; ++iface) {
     /* Compute the leaf face neighbors at this face */
@@ -154,16 +200,33 @@ t8_face_neighbor_hash_table_insert_element (const
                                    &hash->face_neighbors[iface], iface,
                                    &hash->dual_faces[iface],
                                    &hash->num_face_neighbors[iface],
-                                   &hash->neighbor_indices[iface],
+                                   &hash->face_neighbor_indices[iface],
                                    &neigh_scheme, forest_is_balanced);
   }
-  sc_hash_insert_unique ()
+  if (!sc_hash_insert_unique (table, hash, NULL)) {
+    /* This element was already contained in the list.
+     * We free the allocated memory and return 0 */
+    t8_face_neighbor_hash_table_destroy_hash (hash);
+    return 0;
+  }
+  /* The element was successfully inserted. */
+  return 1;
+}
+
+/* Wrapper to expose the t8_face_neighbor_hash_table_destroy_hash function
+ * to a sc_hash_foreach call. */
+static void
+foreach_destroy_element (void **hash, const void ***used_data)
+{
+  t8_face_neighbor_hash_t **phash = (t8_face_neighbor_hash_t **) hash;
+  t8_face_neighbor_hash_table_destroy_hash (phash);
 }
 
 /* Destroys a hash table and frees all used memory. */
 t8_face_neighbor_hash_table_destroy (t8_face_neighbor_hash_table_t * table)
 {
   T8_ASSERT (t8_face_neighbor_hash_table_is_valid (table));
+  sc_hash_foreach (table, foreach_destroy_element ());
   sc_hash_destroy (table);
 }
 
