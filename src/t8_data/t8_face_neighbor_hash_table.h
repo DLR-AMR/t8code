@@ -29,19 +29,45 @@
 #define T8_FACE_NEIGHBOR_HASH_TABLE_H
 
 #include <t8.h>
+#include <t8_forest.h>
 #include <sc_containers.h>
 
 T8_EXTERN_C_BEGIN ();
 
-/* TODO: make it such that we cannot use a sc_hash function with a t8_face_neighbor_hash_table_t */
+/* TODO: What about ghosts? */
+
+/* TODO: make this opaque to prevent misusage */
 typedef sc_hash_t   t8_face_neighbor_hash_table_t;
+
+typedef struct
+{
+  t8_locidx_t         element_index;    /* Local index of this element in its tree */
+  t8_locidx_t         ltree_id; /* The local tree of this element */
+  t8_locidx_t       **face_neighbor_indices;    /* One entry for each face neighbor. Has length num_faces */
+  int                *number_of_neighbors;      /* Number of face neighbors per face. */
+  t8_element_t     ***face_neighbors;   /* The face neighbors of the element. Has dimensions num_faces x neighbors_of_face */
+  int               **dual_faces;       /* The dual faces of the neighbors, has the same length as \a face_neighbor_indices */
+  int                 num_faces;        /* Number of faces of this element. */
+} t8_face_neighbor_hash_t;
+
+/* Allocates a new t8_face_neighbor_hash_table_t and returns it. */
+t8_face_neighbor_hash_table_t *t8_face_neighbor_hash_table_new (const
+                                                                t8_forest_t
+                                                                forest);
+
+/* *INDENT-OFF* */
+int
+t8_face_neighbor_hash_table_insert_element (t8_face_neighbor_hash_table_t *
+                                            table, const t8_locidx_t ltreeid,
+                                            const t8_locidx_t element_in_tree,
+                                            const int forest_is_balanced);
+/* *INDENT-ON* */
 
 /* Checks whether a given hash table is a valid face neighbor hash, that is
  * it was created by t8_face_neighbor_hash_table_new */
 int                 t8_face_neighbor_hash_table_is_valid (const
-                                                          t8_face_neighbor_hash_table_t *
-                                                          table);
-
+                                                          t8_face_neighbor_hash_table_t
+                                                          * table);
 
 /** Check if an element is contained in the hash table and return its entry.
  * \param [in]  table  The table to be searched.
@@ -50,13 +76,15 @@ int                 t8_face_neighbor_hash_table_is_valid (const
  * \return Returns a pointer to the hash entry if found and NULL if not found.
  */
 t8_face_neighbor_hash_t
-  *t8_face_neighbor_hash_table_lookup (t8_face_neighbor_hash_table_t * table,
-                                       t8_locidx_t ltreeid,
-                                       t8_locidx_t element_index);
+  * t8_face_neighbor_hash_table_lookup (t8_face_neighbor_hash_table_t * table,
+                                        t8_locidx_t ltreeid,
+                                        t8_locidx_t element_index);
 
+/* *INDENT-OFF* */
 /* Destroys a hash table and frees all used memory. */
-void               
+void
 t8_face_neighbor_hash_table_destroy (t8_face_neighbor_hash_table_t * table);
+/* *INDENT-ON* */
 
 T8_EXTERN_C_END ();
 
