@@ -212,18 +212,20 @@ t8_face_neighbor_hash_table_insert_element (t8_face_neighbor_hash_table_t *
   return 1;
 }
 
-t8_face_neighbor_hash_t*
-t8_face_neighbor_hash_table_lookup (t8_face_neighbor_hash_table_t *table, t8_locidx_t ltreeid, t8_locidx_t element_index)
+t8_face_neighbor_hash_t *
+t8_face_neighbor_hash_table_lookup (t8_face_neighbor_hash_table_t * table,
+                                    t8_locidx_t ltreeid,
+                                    t8_locidx_t element_index)
 {
   t8_face_neighbor_hash_t hash;
   t8_face_neighbor_hash_t **found;
 
   /* Build a hash with the entries of the element in order to be able 
-   * to search. */  
+   * to search. */
   hash.ltree_id = ltreeid;
   hash.element_index = element_index;
   /* Search for the hash */
-  if (sc_hash_lookup (table, &hash, (void ***)&found)) {
+  if (sc_hash_lookup (table, &hash, (void ***) &found)) {
     /* Found and return it */
     return *found;
   }

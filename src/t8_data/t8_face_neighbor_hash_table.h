@@ -39,8 +39,24 @@ typedef sc_hash_t   t8_face_neighbor_hash_table_t;
 /* Checks whether a given hash table is a valid face neighbor hash, that is
  * it was created by t8_face_neighbor_hash_table_new */
 int                 t8_face_neighbor_hash_table_is_valid (const
-                                                          t8_face_neighbor_hash_table_t
-                                                          * table);
+                                                          t8_face_neighbor_hash_table_t *
+                                                          table);
+
+
+/** Check if an element is contained in the hash table and return its entry.
+ * \param [in]  table  The table to be searched.
+ * \param [in]  ltreeid The local tree id of the tree containing the element.
+ * \param [in]  element_index The index of the element in the tree.
+ * \return Returns a pointer to the hash entry if found and NULL if not found.
+ */
+t8_face_neighbor_hash_t
+  *t8_face_neighbor_hash_table_lookup (t8_face_neighbor_hash_table_t * table,
+                                       t8_locidx_t ltreeid,
+                                       t8_locidx_t element_index);
+
+/* Destroys a hash table and frees all used memory. */
+void               
+t8_face_neighbor_hash_table_destroy (t8_face_neighbor_hash_table_t * table);
 
 T8_EXTERN_C_END ();
 
