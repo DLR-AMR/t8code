@@ -66,6 +66,8 @@ t8_face_neighbor_hash_table_t *t8_face_neighbor_hash_table_new (const
  * \param [in] forest_is_balanced Set this to true (non-zero) if you know 
  *                      that the forest is balanced to increase performance.
  *                      Currently setting \a forest_is_balanced to false is not supported.
+ * \param [out] hash_out If not NULL on input: If the element was inserted successfully, \a *phash
+ *                       will point to the inserted hash. If not, it remains unchanged.
  * \return True if the element was succesfully inserted. False if the element was already contained in
  *         the table.
  */
@@ -74,7 +76,8 @@ int
 t8_face_neighbor_hash_table_insert_element (t8_face_neighbor_hash_table_t *
                                             table, const t8_locidx_t ltreeid,
                                             const t8_locidx_t element_in_tree,
-                                            const int forest_is_balanced);
+                                            const int forest_is_balanced,
+                                            t8_face_neighbor_hash_t **phash_out);
 /* *INDENT-ON* */
 
 /** Checks whether a given hash table is a valid face neighbor hash table, that is

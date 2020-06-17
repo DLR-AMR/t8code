@@ -161,7 +161,9 @@ t8_face_neighbor_hash_table_insert_element (t8_face_neighbor_hash_table_t *
                                             table,
                                             const t8_locidx_t ltreeid,
                                             const t8_locidx_t element_in_tree,
-                                            const int forest_is_balanced)
+                                            const int forest_is_balanced,
+                                            t8_face_neighbor_hash_t **
+                                            phash_out)
 {
   int                 iface;
 
@@ -214,6 +216,9 @@ t8_face_neighbor_hash_table_insert_element (t8_face_neighbor_hash_table_t *
   }
 
   /* The element was successfully inserted. */
+  if (phash_out != NULL) {
+    *phash_out = hash;
+  }
   return 1;
 }
 
