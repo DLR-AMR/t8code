@@ -182,6 +182,16 @@ t8_face_neighbor_hash_table_insert_element (t8_face_neighbor_hash_table_t *
   /* Set tree id and index in tree */
   hash->ltree_id = ltreeid;
   hash->element_index = element_in_tree;
+
+  /* Try to insert the hash into the table, if this fails, it was already included
+   * and we do not need to continue. */
+  if (!sc_hash_insert_unique (table, hash, NULL)) {
+    /* This element was already contained in the list.
+     * We free the allocated memory and return 0 */
+    T8_FREE (hash);
+    return 0;
+  }
+
   /* Compute the number of faces of this element */
   /* TODO: delete casting away const after making the element functions const. */
   hash->num_faces =
@@ -202,12 +212,7 @@ t8_face_neighbor_hash_table_insert_element (t8_face_neighbor_hash_table_t *
                                    &hash->face_neighbor_indices[iface],
                                    &neigh_scheme, forest_is_balanced);
   }
-  if (!sc_hash_insert_unique (table, hash, NULL)) {
-    /* This element was already contained in the list.
-     * We free the allocated memory and return 0 */
-    t8_face_neighbor_hash_table_destroy_hash (&hash, forest);
-    return 0;
-  }
+
   /* The element was successfully inserted. */
   return 1;
 }
