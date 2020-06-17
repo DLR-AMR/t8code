@@ -37,17 +37,21 @@ T8_EXTERN_C_BEGIN ();
 /* TODO: What about ghosts? */
 
 /* TODO: make this opaque to prevent misusage */
+/** A hash table for storage of face neighbor data. */
 typedef sc_hash_t   t8_face_neighbor_hash_table_t;
 
+/** The data stored in one entry of a face neihgbor hash table.
+ *  An element stores information about its face neighbors here.
+ */
 typedef struct
 {
-  t8_locidx_t         element_index;    /* Local index of this element in its tree */
-  t8_locidx_t         ltree_id; /* The local tree of this element */
-  t8_locidx_t       **face_neighbor_indices;    /* One entry for each face neighbor. Has length num_faces */
-  int                *number_of_neighbors;      /* Number of face neighbors per face. */
-  t8_element_t     ***face_neighbors;   /* The face neighbors of the element. Has dimensions num_faces x neighbors_of_face */
-  int               **dual_faces;       /* The dual faces of the neighbors, has the same length as \a face_neighbor_indices */
-  int                 num_faces;        /* Number of faces of this element. */
+  t8_locidx_t         element_index; /**< Local index of this element in its tree */
+  t8_locidx_t         ltree_id; /**< The local tree of this element */
+  t8_locidx_t       **face_neighbor_indices; /**< One entry for each face neighbor. Has length num_faces */
+  int                *number_of_neighbors; /**< Number of face neighbors per face. */
+  t8_element_t     ***face_neighbors; /**< The face neighbors of the element. Has dimensions num_faces x neighbors_of_face */
+  int               **dual_faces;     /**< The dual faces of the neighbors, has the same length as \a face_neighbor_indices */
+  int                 num_faces;      /**< Number of faces of this element. */
 } t8_face_neighbor_hash_t;
 
 /* Allocates a new t8_face_neighbor_hash_table_t and returns it. */
@@ -55,7 +59,17 @@ t8_face_neighbor_hash_table_t *t8_face_neighbor_hash_table_new (const
                                                                 t8_forest_t
                                                                 forest);
 
-/* *INDENT-OFF* */
+/** Insert a forest local element into a hash table.
+ * \param [in] table   A valid hash table.
+ * \param [in] ltreeid The local tree id of the element.
+ * \param [in] element_in_tree The index of the element in its local tree.
+ * \param [in] forest_is_balanced Set this to true (non-zero) if you know 
+ *                      that the forest is balanced to increase performance.
+ *                      Currently setting \a forest_is_balanced to false is not supported.
+ * \return True if the element was succesfully inserted. False if the element was already contained in
+ *         the table.
+ */
+ /* *INDENT-OFF* */
 int
 t8_face_neighbor_hash_table_insert_element (t8_face_neighbor_hash_table_t *
                                             table, const t8_locidx_t ltreeid,
@@ -63,8 +77,11 @@ t8_face_neighbor_hash_table_insert_element (t8_face_neighbor_hash_table_t *
                                             const int forest_is_balanced);
 /* *INDENT-ON* */
 
-/* Checks whether a given hash table is a valid face neighbor hash, that is
- * it was created by t8_face_neighbor_hash_table_new */
+/** Checks whether a given hash table is a valid face neighbor hash table, that is
+ * it was created by t8_face_neighbor_hash_table_new.
+ * \param [in] table  A hash table.
+ * \return True (non-zero) if the table is valid and can be used. Fals otherwise.
+ */
 int                 t8_face_neighbor_hash_table_is_valid (const
                                                           t8_face_neighbor_hash_table_t
                                                           * table);
@@ -80,8 +97,10 @@ t8_face_neighbor_hash_t
                                         t8_locidx_t ltreeid,
                                         t8_locidx_t element_index);
 
+/** Destroys a hash table and frees all used memory.
+ * \param [in] table   A valid hash table.
+ */
 /* *INDENT-OFF* */
-/* Destroys a hash table and frees all used memory. */
 void
 t8_face_neighbor_hash_table_destroy (t8_face_neighbor_hash_table_t * table);
 /* *INDENT-ON* */

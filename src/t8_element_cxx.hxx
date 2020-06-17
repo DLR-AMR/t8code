@@ -686,9 +686,9 @@ public:
 
   /** Deallocate an array of elements.
    * \param [in] ts       The virtual table for this element class.
-   * \param [in] length   The number of elements in the array.
+   * \param [in] length   The number of elements in the array. 0 <= \a length
    * \param [in,out] elems On input an array of \b length many allocated
-   *                      element pointers.
+   *                      element pointers. May be NULL if \a length is 0.
    *                      On output all these pointers will be freed.
    *                      \b elem itself will not be freed by this function.
    */
