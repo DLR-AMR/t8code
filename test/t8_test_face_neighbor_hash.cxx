@@ -23,24 +23,19 @@
 #include <t8_data/t8_face_neighbor_hash_table.h>
 #include <t8_cmesh.h>
 
-/* Build a uniform level 1 quad forest:
-  *    __ __
-  *   |_2|_3|
-  *   |_0|_1|
-  * 
-  */
+/* Build a uniform level 1 quad forest.
+ *    __ __
+ *   |_2|_3|
+ *   |_0|_1|
+ * 
+ */
 static              t8_forest_t
-test_build_quad_forest ()
+test_build_quad_forest (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   t8_eclass_t         eclass = T8_ECLASS_QUAD;
   t8_forest_t         forest;
   t8_scheme_cxx_t    *scheme = t8_scheme_new_default_cxx ();
-
-  /* We use the self communicator in order to have the same
-   * mesh on every process. So we can better predict the expected
-   * results and they do not depend on a partition. */
-  sc_MPI_Comm         comm = sc_MPI_COMM_SELF;
 
   /* Build a square cmesh */
   cmesh = t8_cmesh_new_hypercube (eclass, comm, 0, 0, 0);
@@ -54,7 +49,11 @@ test_build_quad_forest ()
 static void
 test_face_neighbor_hash_new ()
 {
-  t8_forest_t         forest = test_build_quad_forest ();
+  /* We use the self communicator in order to have the same
+   * mesh on every process. So we can better predict the expected
+   * results and they do not depend on a partition. */
+  sc_MPI_Comm         comm = sc_MPI_COMM_SELF;
+  t8_forest_t         forest = test_build_quad_forest (comm);
   t8_face_neighbor_hash_table_t *hashtable =
     t8_face_neighbor_hash_table_new (forest);
 
@@ -70,19 +69,29 @@ test_face_neighbor_hash_new ()
 static void
 test_face_neighbor_hash_one_element ()
 {
-  t8_forest_t         forest = test_build_quad_forest ();
+  /* We use the self communicator in order to have the same
+   * mesh on every process. So we can better predict the expected
+   * results and they do not depend on a partition. */
+  sc_MPI_Comm         comm = sc_MPI_COMM_SELF;
+  t8_forest_t         forest = test_build_quad_forest (comm);
   t8_eclass_scheme_c *scheme;
   /* Create an empty hash table */
   t8_face_neighbor_hash_table_t *hashtable =
     t8_face_neighbor_hash_table_new (forest);
   t8_face_neighbor_hash_t *hash;
+  t8_face_neighbor_hash_t *hash_inserted;
+  int                 retval;
 
   /* Insert the first element in the hash table */
-  t8_face_neighbor_hash_table_insert_element (hashtable, 0, 0, 1);
+  retval =
+    t8_face_neighbor_hash_table_insert_element (hashtable, 0, 0, 1,
+                                                &hash_inserted);
+  SC_CHECK_ABORT (retval, "Could not insert element.");
 
   /* Find the element in the table */
   hash = t8_face_neighbor_hash_table_lookup (hashtable, 0, 0);
   SC_CHECK_ABORT (hash != NULL, "Could not find element in hash table.");
+  SC_CHECK_ABORT (hash == hash_inserted, "Did not find correct hash entry.");
 
   /* Check hash for correct tree and element index */
   SC_CHECK_ABORT (hash->ltree_id == 0, "Incorrect tree id.");
@@ -118,15 +127,21 @@ test_face_neighbor_hash_one_element ()
     scheme = t8_forest_get_eclass_scheme (forest, eclass);
     /* Get the neighbor at face 1 */
     neighbor = t8_forest_get_element_in_tree (forest, 0, 1);
-    SC_CHECK_ABORT (!scheme->
-                    t8_element_compare (hash->face_neighbors[1][0], neighbor),
+    SC_CHECK_ABORT (!scheme->t8_element_compare
+                    (hash->face_neighbors[1][0], neighbor),
                     "Incorrect face neighbor at face 1.");
     /* Get the neighbor at face 3 */
     neighbor = t8_forest_get_element_in_tree (forest, 0, 2);
-    SC_CHECK_ABORT (!scheme->
-                    t8_element_compare (hash->face_neighbors[3][0], neighbor),
+    SC_CHECK_ABORT (!scheme->t8_element_compare
+                    (hash->face_neighbors[3][0], neighbor),
                     "Incorrect face neighbor at face 3.");
   }
+
+  /* Try to insert the same element. We expect that this returns 0. */
+  retval =
+    t8_face_neighbor_hash_table_insert_element (hashtable, 0, 0, 1, NULL);
+  SC_CHECK_ABORT (retval == 0,
+                  "Could insert element even though already contained.");
 
   /* Destroy the table */
   t8_face_neighbor_hash_table_destroy (hashtable);
