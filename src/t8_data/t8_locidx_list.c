@@ -189,6 +189,11 @@ t8_locidx_list_has_duplicate_entries (t8_locidx_list_t * list)
 
   /* We store all values in an array, sort it and check for duplicates. */
   num_items = t8_locidx_list_count (list);
+  if (num_items <= 1) {
+    /* Lists with 1 item and emty lists cannot contain duplicate
+     * entries. No need to check further. */
+    return 0;
+  }
   array = T8_ALLOC (t8_locidx_t, num_items);
   for (i = 0, t8_locidx_list_iterator_init (list, &it);
        !t8_locidx_list_iterator_is_end (&it);
