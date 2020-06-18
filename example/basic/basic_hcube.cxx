@@ -55,7 +55,7 @@ t8_basic_hypercube_refine(t8_forest_t forest, t8_forest_t forest_from,
         type = ((t8_dpyramid_t *)elements[0])->type;
         break;
     }
-
+/*TODO: Implement a better refinement argument, one that effects all elements*/
     if(type == 6){
         return 1;
     }
@@ -69,7 +69,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level, int do_adapt,
   t8_forest_t         forest, forest_adapt, forest_coarsen;
   t8_cmesh_t          cmesh, cmesh_partition;
   char                vtuname[BUFSIZ], cmesh_file[BUFSIZ];
-  int                 mpirank, mpiret, endlvl = set_level+5;
+  int                 mpirank, mpiret, endlvl = set_level+2;
 
   t8_global_productionf ("Contructing hypercube mesh with element class %s\n",
                          t8_eclass_to_string[eclass]);
@@ -124,7 +124,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level, int do_adapt,
           t8_forest_init(&forest_adapt);
           t8_forest_set_user_data(forest_adapt, &endlvl);
           t8_forest_set_profiling(forest_adapt, 1);
-          t8_forest_set_adapt(forest_adapt, forest, t8_basic_hypercube_refine, 1);
+          t8_forest_set_adapt(forest_adapt, forest, t8_basic_hypercube_refine, 0);
           t8_forest_commit(forest_adapt);
           t8_debugf ("Successfully adapted forest.\n");
           snprintf (vtuname, BUFSIZ, "forest_hypercube_adapt_%s",

@@ -73,7 +73,7 @@ t8_dpyramid_is_family (const t8_dpyramid_t ** fam)
     t8_dpyramid_parent (fam[0], &parent);
     for (i = 1; i < T8_DPYRAMID_CHILDREN; i++) {
       t8_dpyramid_child (&parent, i, &test);
-      if (t8_dpyramid_is_equal (fam[i], &test)) {
+      if (t8_dpyramid_is_equal (fam[i], &test) != 0) {
         return 0;
       }
     }
@@ -324,6 +324,7 @@ t8_dpyramid_child_id (const t8_dpyramid_t * p)
 {
   T8_ASSERT (p->level > 0);
   t8_dpyramid_t       parent;
+  t8_debugf("[D] type %i\n", p->type);
   return t8_dpyramid_child_id_unknown_parent (p, &parent);
 }
 
@@ -331,21 +332,26 @@ void
 t8_dpyramid_child (const t8_dpyramid_t * elem, int child_id,
                    t8_dpyramid_t * child)
 {
+
   t8_dpyramid_cube_id_t cube_id;
   t8_dpyramid_coord_t h;
   T8_ASSERT (0 <= child_id && child_id < T8_DPYRAMID_CHILDREN);
+
   if (t8_dpyramid_shape (elem) == T8_ECLASS_TET) {
     t8_dtet_child ((t8_dtet_t *) elem, child_id, (t8_dtet_t *) child);
   }
   else {
     cube_id = t8_dpyramid_parenttype_Iloc_to_cid[elem->type][child_id];
     T8_ASSERT (cube_id >= 0);
+    t8_debugf("[D] child start childx: %i\n", child->x);
     child->level = elem->level + 1;
+    t8_debugf("[D] child end\n");
     h = T8_DPYRAMID_LEN (child->level);
     child->x = elem->x + ((cube_id & 0x01) ? h : 0);
     child->y = elem->y + ((cube_id & 0x02) ? h : 0);
     child->z = elem->z + ((cube_id & 0x04) ? h : 0);
     child->type = t8_dpyramid_parenttype_Iloc_to_type[elem->type][child_id];
+
   }
   T8_ASSERT (child->type >= 0);
 }
@@ -354,10 +360,15 @@ void
 t8_dpyramid_children (const t8_dpyramid_t * p, int length, t8_dpyramid_t ** c)
 {
   int                 i, num_children;
+  t8_debugf("[D] children of %i %i %i %i %i\n", p->x, p->y, p->z,p->type, p->level);
   num_children = t8_dpyramid_num_children (p);
+  t8_debugf("[D] nc: %i length %i\n", num_children, length);
   for (i = num_children - 1; i >= 0; i--) {
+    t8_debugf("[D] compute %i\n", i);
     t8_dpyramid_child (p, i, c[i]);
+    t8_debugf("[D] children of %i %i %i %i %i\n",c[i]->x, c[i]->y, c[i]->z,c[i]->type, c[i]->level);
   }
+  t8_debugf("[D] children of %i %i %i %i %i\n", p->x, p->y, p->z,p->type, p->level);
 
 }
 
@@ -531,7 +542,7 @@ void
 t8_dpyramid_compute_coords (const t8_dpyramid_t * p, int vertex, int coords[])
 {
   t8_dpyramid_coord_t h;
-  T8_ASSERT (0 <= vertex && vertex < T8_DPYRAMID_VERTICES);
+  T8_ASSERT (0 <= vertex && vertex < T8_DPYRAMID_CORNERS);
 
   if (p->type == 6 || p->type == 7) {
     h = T8_DPYRAMID_LEN (p->level);

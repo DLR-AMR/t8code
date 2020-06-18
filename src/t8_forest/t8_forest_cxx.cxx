@@ -356,7 +356,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
       for(i = 0; i<3; i++){
           coordinates[i] += (vertices[12 + i] - coordinates[i]) * lambda;
       }
-      break;
+       break;
 
   default:
     SC_ABORT ("Forest coordinate computation is supported only for "

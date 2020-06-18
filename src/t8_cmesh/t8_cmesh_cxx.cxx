@@ -65,10 +65,11 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
 #ifdef T8_ENABLE_DEBUG
     t8_gloidx_t         prev_last_tree = -1;
 #endif
-    int                 tree_class;
+    int                 tree_class, i;
     t8_eclass_scheme_c *tree_scheme;
 
     /* Compute the number of children on level in each tree */
+    global_num_children = 0;
     for (tree_class = T8_ECLASS_ZERO; tree_class < T8_ECLASS_COUNT;
          ++tree_class) {
       /* We iterate over each element class and get the number of children for this
@@ -88,11 +89,13 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
             ("Currently t8code does not support different leaf counts per tree.");
         }
         first_class_children_per_tree = children_per_tree;
+        global_num_children += cmesh->num_trees_per_eclass[tree_class] * children_per_tree;
       }
     }
     T8_ASSERT (children_per_tree != 0);
+    /*t8_debugf("[D] old %i new %i\n",  cmesh->num_trees * children_per_tree, global_num_children);
+    global_num_children = cmesh->num_trees * children_per_tree;*/
 
-    global_num_children = cmesh->num_trees * children_per_tree;
 
     if (cmesh->mpirank == 0) {
       first_global_child = 0;

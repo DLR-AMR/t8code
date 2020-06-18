@@ -163,7 +163,7 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
   double              midpoint[3];
 #endif
   double              element_coordinates[3];
-  int                 num_tree_vertices, ivertex;
+  int                 num_tree_vertices, num_el_vertices, ivertex;
   int                 freturn;
 
   if (modus == T8_VTK_KERNEL_INIT) {
@@ -178,7 +178,7 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
     T8_FREE (*data);
     return 1;
   }
-  num_tree_vertices = t8_eclass_num_vertices[ts->t8_element_shape(element)];
+  num_tree_vertices = t8_eclass_num_vertices[ts->eclass];
   T8_ASSERT (modus == T8_VTK_KERNEL_EXECUTE);
   vertex_data = (struct t8_forest_vtk_vertices_t *) *data;
   if (ltree_id != vertex_data->ltreeid) {
@@ -212,7 +212,8 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
   t8_forest_element_centroid (forest, ltree_id, element,
                               vertex_data->tree_vertices, midpoint);
 #endif
-  for (ivertex = 0; ivertex < num_tree_vertices; ivertex++) {
+  num_el_vertices = t8_eclass_num_vertices[ts->t8_element_shape(element)];
+  for (ivertex = 0; ivertex < num_el_vertices; ivertex++) {
     t8_forest_element_coordinate (forest, ltree_id, element,
                                   vertex_data->tree_vertices,
                                   t8_eclass_vtk_corner_number[ts->t8_element_shape(element)]
