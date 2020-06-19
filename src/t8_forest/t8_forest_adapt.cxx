@@ -236,7 +236,7 @@ t8_forest_adapt (t8_forest_t forest)
     T8_ASSERT (num_el_from ==
                t8_forest_get_tree_num_elements (forest_from, ltree_id));
     /* Get the element scheme for this tree */
-    tscheme = t8_forest_get_eclass_scheme (forest, tree->eclass);
+    tscheme = t8_forest_get_eclass_scheme (forest_from, tree->eclass);
     /* Index of the element we currently consider for refinement/coarsening. */
     el_considered = 0;
     /* Index into the newly inserted elements */
