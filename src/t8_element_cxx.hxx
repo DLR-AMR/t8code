@@ -622,6 +622,21 @@ public:
    */
   virtual t8_gloidx_t t8_element_count_leafs_from_root (int level) = 0;
 
+  /** This function has no defined effect but each implementation is free to
+   *  provide its own meaning of it. Thus this function can be used to compute or
+   *  lookup very scheme implementation specific data.
+   *  \param [in] elem An valid element
+   *  \param [in] indata Pointer to input data
+   *  \param [out] outdata Pointer to output data.
+   *  For the correct usage of \a indata and \a outdata see the specific implementations
+   *  of the scheme.
+   *  For example the default scheme triangle and tetrahedron implementations use 
+   *  this function to return the type of a tri/tet to the caller.
+   */
+  virtual void        t8_element_general_function (const t8_element_t * elem,
+                                                   const void *indata,
+                                                   void *outdata) = 0;
+
 #ifdef T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.

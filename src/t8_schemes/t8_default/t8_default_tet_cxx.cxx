@@ -542,6 +542,19 @@ t8_default_scheme_tet_c::t8_element_vertex_coords (const t8_element_t * t,
   t8_dtet_compute_coords ((const t8_default_tet_t *) t, vertex, coords);
 }
 
+void
+t8_default_scheme_tet_c::t8_element_general_function (const t8_element_t *
+                                                      elem,
+                                                      const void *indata,
+                                                      void *outdata)
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (outdata != NULL);
+  *((int8_t *) outdata) = ((const t8_dtet_t *) elem)->type;
+  /* Safety check to catch datatype conversion errors */
+  T8_ASSERT (*((int8_t *) outdata) == ((const t8_dtet_t *) elem)->type);
+}
+
 #ifdef T8_ENABLE_DEBUG
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */

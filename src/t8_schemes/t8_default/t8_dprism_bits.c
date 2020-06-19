@@ -618,3 +618,15 @@ t8_dprism_linear_id (const t8_dprism_t * p, int level)
 
   return id;
 }
+
+/* Returns true if and only if p is a valid prism,
+ * that is its triangle and line part are valid, and they have the same
+ * refinement level. */
+int
+t8_dprism_is_valid (const t8_dprism_t * p)
+{
+  const t8_dline_t   *line = &p->line;
+  const t8_dtri_t    *tri = &p->tri;
+  const int           same_level = line->level == tri->level;
+  return t8_dtri_is_valid (tri) && t8_dline_is_valid (line) && same_level;
+}
