@@ -125,6 +125,15 @@ public:
   virtual void        t8_element_parent (const t8_element_t * elem,
                                          t8_element_t * parent) = 0;
 
+  /** Compute the number of siblings of an element. That is the number of 
+   * Children of its parent.
+   * \param [in] elem The element.
+   * \return          The number of siblings of \a element.
+   * Note that this number is >= 1, since we count the element itself as a sibling.
+   */
+  virtual int         t8_element_num_siblings (const t8_element_t *
+                                               elem) const = 0;
+
   /** Compute a specific sibling of a given element \b elem and store it in \b sibling.
    *  \b sibling needs to be an existing element. No memory is allocated by this function.
    *  \b elem and \b sibling can point to the same element, then the entries of
