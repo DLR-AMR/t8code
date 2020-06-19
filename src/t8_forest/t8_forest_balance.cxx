@@ -666,7 +666,8 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
                   /* Check whether first_sibling is indeed the first sibling */
                   t8_element_t       *first_sib =
                     t8_forest_get_element_in_tree (forest_from, current_tree,
-                                                   first_sibling);
+                                                   first_sibling -
+                                                   current_tree_offset);
                   t8_element_t       *test_element;
                   neigh_scheme->t8_element_new (1, &test_element);
                   neigh_scheme->t8_element_child (first_sib, childid,
