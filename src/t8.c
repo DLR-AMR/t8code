@@ -159,7 +159,6 @@ t8_sc_array_index_topidx (sc_array_t * array, t8_topidx_t it)
 void               *
 t8_sc_array_index_locidx (sc_array_t * array, t8_locidx_t it)
 {
-  t8_debugf("[D] it: %i, elem_count: %i\n", it, array->elem_count);
   P4EST_ASSERT (it >= 0 && (size_t) it < array->elem_count);
 
   return array->array + array->elem_size * (size_t) it;

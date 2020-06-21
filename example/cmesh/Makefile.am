@@ -2,7 +2,7 @@
 # Non-recursive Makefile.am in example/cmesh
 # Included from toplevel directory
 
-bin_PROGRAMS += \
+#bin_PROGRAMS += \
   example/cmesh/t8_cmesh_partition \
   example/cmesh/t8_cmesh_refine \
   example/cmesh/t8_cmesh_load_save \

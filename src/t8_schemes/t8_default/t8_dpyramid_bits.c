@@ -64,6 +64,7 @@ int
 t8_dpyramid_is_family (const t8_dpyramid_t ** fam)
 {
   /*TODO: This can be implemented better! */
+  t8_debugf("[D] is_family %i %i %i %i %i\n", fam[0]->x, fam[0]->y, fam[0]->z, fam[0]->type, fam[0]->level);
   if (t8_dpyramid_shape (fam[0]) == T8_ECLASS_TET) {
     return t8_dtet_is_familypv ((const t8_dtet_t **) fam);
   }
@@ -72,6 +73,7 @@ t8_dpyramid_is_family (const t8_dpyramid_t ** fam)
     int                 i;
     t8_dpyramid_parent (fam[0], &parent);
     for (i = 1; i < T8_DPYRAMID_CHILDREN; i++) {
+      t8_debugf("[D] %i check %i %i %i %i %i\n", i, fam[i]->x, fam[i]->y, fam[i]->z, fam[i]->type, fam[i]->level);
       t8_dpyramid_child (&parent, i, &test);
       if (t8_dpyramid_is_equal (fam[i], &test) != 0) {
         return 0;
@@ -324,7 +326,6 @@ t8_dpyramid_child_id (const t8_dpyramid_t * p)
 {
   T8_ASSERT (p->level > 0);
   t8_dpyramid_t       parent;
-  t8_debugf("[D] type %i\n", p->type);
   return t8_dpyramid_child_id_unknown_parent (p, &parent);
 }
 
@@ -342,10 +343,8 @@ t8_dpyramid_child (const t8_dpyramid_t * elem, int child_id,
   }
   else {
     cube_id = t8_dpyramid_parenttype_Iloc_to_cid[elem->type][child_id];
-    T8_ASSERT (cube_id >= 0);
-    t8_debugf("[D] child start childx: %i\n", child->x);
+    T8_ASSERT (cube_id >= 0);;
     child->level = elem->level + 1;
-    t8_debugf("[D] child end\n");
     h = T8_DPYRAMID_LEN (child->level);
     child->x = elem->x + ((cube_id & 0x01) ? h : 0);
     child->y = elem->y + ((cube_id & 0x02) ? h : 0);
@@ -360,15 +359,10 @@ void
 t8_dpyramid_children (const t8_dpyramid_t * p, int length, t8_dpyramid_t ** c)
 {
   int                 i, num_children;
-  t8_debugf("[D] children of %i %i %i %i %i\n", p->x, p->y, p->z,p->type, p->level);
   num_children = t8_dpyramid_num_children (p);
-  t8_debugf("[D] nc: %i length %i\n", num_children, length);
   for (i = num_children - 1; i >= 0; i--) {
-    t8_debugf("[D] compute %i\n", i);
     t8_dpyramid_child (p, i, c[i]);
-    t8_debugf("[D] children of %i %i %i %i %i\n",c[i]->x, c[i]->y, c[i]->z,c[i]->type, c[i]->level);
   }
-  t8_debugf("[D] children of %i %i %i %i %i\n", p->x, p->y, p->z,p->type, p->level);
 
 }
 

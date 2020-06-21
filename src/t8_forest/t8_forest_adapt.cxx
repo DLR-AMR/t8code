@@ -158,10 +158,10 @@ t8_forest_adapt (t8_forest_t forest)
   size_t              num_children, zz;
   t8_tree_t           tree, tree_from;
   t8_eclass_scheme_c *tscheme;
-  t8_element_t      **elements, **elements_from, *elpop;
+  t8_element_t      **elements, **elements_from, *elpop, *parent;
   int                 refine;
   int                 ci;
-  int                 num_elements, old_num_elements;
+  int                 num_elements, num_siblings;
 #ifdef T8_ENABLE_DEBUG
   int                 is_family;
 #endif
@@ -206,12 +206,13 @@ t8_forest_adapt (t8_forest_t forest)
     el_inserted = 0;
     el_coarsen = 0;
     /* TODO: this will generate problems with pyramidal elements */
-    num_children =
-      tscheme->t8_element_num_children (t8_element_array_index_locidx
-                                        (telements_from, 0));
-    old_num_elements = num_children;
-    elements = T8_ALLOC (t8_element_t *, num_children);
-    elements_from = T8_ALLOC (t8_element_t *, num_children);
+    tscheme->t8_element_new(1, &parent);
+    tscheme->t8_element_parent(t8_element_array_index_locidx
+                               (telements_from, 0), parent);
+    num_siblings =
+      tscheme->t8_element_num_children (parent);
+    elements = T8_ALLOC (t8_element_t *, num_siblings);
+    elements_from = T8_ALLOC (t8_element_t *, num_siblings);
     while (el_considered < num_el_from) {
 #ifdef T8_ENABLE_DEBUG
       is_family = 1;
@@ -254,7 +255,6 @@ t8_forest_adapt (t8_forest_t forest)
           num_children = tscheme->t8_element_num_children(elements_from[0]);
           el_coarsen = el_inserted + num_children;
           tscheme->t8_element_new (num_children, elements);
-          t8_debugf("[D] num_children: %i\n", num_children);
           tscheme->t8_element_children (elements_from[0], num_children,
                                         elements);
           for (ci = num_children - 1; ci >= 0; ci--) {
@@ -269,25 +269,12 @@ t8_forest_adapt (t8_forest_t forest)
           /* add the children to the element array of the current tree */
             num_children = tscheme->t8_element_num_children(elements_from[0]);
           (void) t8_element_array_push_count (telements, num_children);
-            t8_debugf("[D] push count num_children %i\n", num_children);
-
           for (zz = 0; zz < num_children; zz++) {
             elements[zz] =
               t8_element_array_index_locidx (telements, el_inserted + zz);
-            t8_debugf("[D] Error after zz= %i / %i\n", zz, num_children);
           }
-          /*num_children = tscheme->t8_element_num_children(elements_from[0]);
-          if(num_children - old_num_elements > 0)
-          {
-              t8_debugf("[D] Realloc, num_children: %i\n", num_children);
-                elements = T8_REALLOC( elements, t8_element_t *,num_children);
-                tscheme->t8_element_new (num_children-old_num_elements, &elements[old_num_elements]);
-          }*/
-          t8_debugf("[D] num_children from[0]: %i, old: %i\n",
-                    num_children, old_num_elements);
           tscheme->t8_element_children (elements_from[0], num_children,
                                         elements);
-          t8_debugf("[D] was this really the bug?\n");
           el_inserted += num_children;
         }
         el_considered++;
