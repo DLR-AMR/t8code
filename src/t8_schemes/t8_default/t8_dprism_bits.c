@@ -138,6 +138,8 @@ t8_dprism_is_familypv (t8_dprism_t ** fam)
       tri_fam[j] = &fam[j + i * T8_DTRI_CHILDREN]->tri;
     }
     if (!t8_dtri_is_familypv ((const t8_dtri_t **) tri_fam)) {
+      T8_FREE (tri_fam);
+      T8_FREE (line_fam);
       return 0;
     }
   }
@@ -152,12 +154,16 @@ t8_dprism_is_familypv (t8_dprism_t ** fam)
           && (fam[i]->tri.type == fam[i + T8_DTRI_CHILDREN]->tri.type)
           && (fam[i]->tri.x == fam[i + T8_DTRI_CHILDREN]->tri.x)
           && (fam[i]->tri.y == fam[i + T8_DTRI_CHILDREN]->tri.y))) {
+      T8_FREE (tri_fam);
+      T8_FREE (line_fam);
       return 0;
     }
   }
 
   for (i = 0; i < T8_DPRISM_CHILDREN; i++) {
     if (fam[i]->line.level != fam[i]->tri.level) {
+      T8_FREE (tri_fam);
+      T8_FREE (line_fam);
       return 0;
     }
   }
@@ -611,4 +617,16 @@ t8_dprism_linear_id (const t8_dprism_t * p, int level)
   }
 
   return id;
+}
+
+/* Returns true if and only if p is a valid prism,
+ * that is its triangle and line part are valid, and they have the same
+ * refinement level. */
+int
+t8_dprism_is_valid (const t8_dprism_t * p)
+{
+  const t8_dline_t   *line = &p->line;
+  const t8_dtri_t    *tri = &p->tri;
+  const int           same_level = line->level == tri->level;
+  return t8_dtri_is_valid (tri) && t8_dline_is_valid (line) && same_level;
 }
