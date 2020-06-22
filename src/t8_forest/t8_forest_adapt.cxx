@@ -193,11 +193,10 @@ t8_forest_adapt (t8_forest_t forest)
   size_t              num_children, zz;
   t8_tree_t           tree, tree_from;
   t8_eclass_scheme_c *tscheme;
-<<<<<<< HEAD
+/*<<<<<<< HEAD
   t8_element_t      **elements, **elements_from, *elpop, *parent;
-=======
+=======*/
   t8_element_t      **elements, **elements_from;
->>>>>>> develop
   int                 refine;
   int                 ci;
   int                 num_elements, num_siblings;
