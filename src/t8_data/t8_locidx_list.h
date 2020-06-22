@@ -145,6 +145,7 @@ typedef struct
                       /**< The currently active list entry. */
   sc_link_t          *prev;
                    /**< The previously active link entry. */
+  int                 is_end; /**< True if this iterator has reached its end. */
 } t8_locidx_list_iterator_t;
 
 /** Initialize an allocated iterator for a list.

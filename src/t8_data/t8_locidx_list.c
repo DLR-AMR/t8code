@@ -315,6 +315,9 @@ t8_locidx_list_iterator_init (t8_locidx_list_t * list,
   it->current = list->list.first;
   /* Set the prev pointer to NULL */
   it->prev = NULL;
+  /* Set the is end flag. If the list is empty, we are at the end.
+   * If the list is not empty, we are not at the end. */
+  it->is_end = t8_locidx_list_count (list) == 0;
 }
 
 /* Check whether an iterator ist valid and associated to a given list.
@@ -363,13 +366,7 @@ t8_locidx_list_iterator_is_end (const t8_locidx_list_iterator_t * it)
 {
   T8_ASSERT (t8_locidx_list_iterator_is_valid (it, it->list));
 
-  /* Check whether we are at the end of the list */
-  if (it->current == NULL) {
-    return 1;
-  }
-
-  /* Iterator is not at end */
-  return 0;
+  return it->is_end;
 }
 
 /* Let an iterator point to the next entry of its list.
@@ -389,10 +386,22 @@ t8_locidx_list_iterator_next (t8_locidx_list_iterator_t * it)
     return;
   }
 
-  /* Advance the current pointer */
-  it->current = it->current->next;
+  if (it->current == NULL) {
+    /* The first item was removed and thus we point to NULL.
+     * We need to advance the iterator to the first item in the list. */
+    it->current = it->list->list.first;
+  }
+  else {
+    /* The current pointer is not NULL, we can just advance it
+     * to its next item. */
+    it->current = it->current->next;
+  }
   /* Reset the prev pointer */
   it->prev = temp;
+  if (it->current == NULL) {
+    /* We have reached the end of the list */
+    it->is_end = 1;
+  }
 }
 
 /* Return the value of the item that an iterator currently points to.
@@ -422,12 +431,13 @@ t8_locidx_list_iterator_remove_entry (t8_locidx_list_iterator_t * it)
   T8_ASSERT (t8_locidx_list_iterator_is_valid (it, it->list));
   T8_ASSERT (!t8_locidx_list_iterator_is_end (it));
 
-  /* Store the link after current */
-  sc_link_t          *next = it->current->next;
-
   /* Remove the current link from the list */
   t8_locidx_list_remove (it->list, it->prev);
 
-  /* Set the new current pointer */
-  it->current = next;
+  /* Set the new current pointer to the previous value */
+  it->current = it->prev;
+  /* If the list is now empty, we are at the end. */
+  if (t8_locidx_list_count (it->list) == 0) {
+    it->is_end = 1;
+  }
 }
