@@ -506,6 +506,9 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
          * neighbors. We keep track of whether to continue or not in this variable. */
         int                 continue_neigh_check = 1;
         t8_face_neighbor_hash_t *face_neighbor_hash_entry;
+        /* Flag that we activate when this element unmarked its family
+         * for coarsening, so that we do not do it more than once per element. */
+        int                 unmarked_family_for_coarsen = 0;
 
         /* Check whether this element is still in the current tree.
          * If not, update the current tree. */
@@ -615,7 +618,9 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
 #endif
 
           if (face_neighbors != NULL) {
-            for (ineigh = 0; ineigh < num_face_neighbors; ++ineigh) {
+            for (ineigh = 0;
+                 ineigh < num_face_neighbors && continue_neigh_check;
+                 ++ineigh) {
               t8_locidx_t         neighbor_index;
               neighbor_index = neighbor_indices[ineigh];
               T8_ASSERT (face_neighbors[ineigh] != NULL);
@@ -655,38 +660,60 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
 
                   /* To identify the indices of this element's siblings,
                    * we need its sibid and the number of siblings. */
-                  const t8_locidx_t   childid =
-                    eclass_scheme->t8_element_child_id (element);
-                  const t8_locidx_t   num_siblings =
-                    eclass_scheme->t8_element_num_siblings (element);
-                  t8_locidx_t         isib;
-                  /* The index of the first sibling in the family is this neighbor's index minus its child id */
-                  const t8_locidx_t   first_sibling = element_index - childid;
+                  if (!unmarked_family_for_coarsen) {
+                    /* We may have already done this for a previous neighbor of this
+                     * element, and this can skip this if we did already unmark the family. */
+                    const t8_locidx_t   childid =
+                      eclass_scheme->t8_element_child_id (element);
+                    const t8_locidx_t   num_siblings =
+                      eclass_scheme->t8_element_num_siblings (element);
+                    t8_locidx_t         isib;
+                    /* The index of the first sibling in the family is this neighbor's index minus its child id */
+                    const t8_locidx_t   first_sibling =
+                      element_index - childid;
+                    /* NOTE: We know that the whole family are local elements, since our 
+                     *       marker is -1. Thus the current elements' whole family is local and was
+                     *       marker for coarsening. */
 #ifdef T8_ENABLE_DEBUG
-                  /* Check whether first_sibling is indeed the first sibling */
-                  t8_element_t       *first_sib =
-                    t8_forest_get_element_in_tree (forest_from, current_tree,
-                                                   first_sibling -
-                                                   current_tree_offset);
-                  t8_element_t       *test_element;
-                  neigh_scheme->t8_element_new (1, &test_element);
-                  neigh_scheme->t8_element_child (first_sib, childid,
-                                                  test_element);
-                  T8_ASSERT (neigh_scheme->t8_element_child_id (first_sib) ==
-                             0);
-                  T8_ASSERT (neigh_scheme->t8_element_compare (test_element,
-                                                               face_neighbors
-                                                               [ineigh]));
-                  neigh_scheme->t8_element_destroy (1, &test_element);
+                    /* Check whether first_sibling is indeed the first sibling */
+                    const t8_locidx_t   first_sibling_in_tree =
+                      first_sibling - current_tree_offset;
+                    const t8_element_t *first_sib =
+                      t8_forest_get_element_in_tree (forest_from,
+                                                     current_tree,
+                                                     first_sibling_in_tree);
+                    t8_element_t       *test_sib, *test_parent;
+                    T8_ASSERT (first_sibling_in_tree ==
+                               element_index_in_tree - childid);
+
+                    T8_ASSERT (eclass_scheme->t8_element_child_id (first_sib)
+                               == 0);
+                    /* Construct the sibling and check whether it matches first_sib */
+                    eclass_scheme->t8_element_new (1, &test_sib);
+                    eclass_scheme->t8_element_new (1, &test_parent);
+                    eclass_scheme->t8_element_parent (element, test_parent);
+                    eclass_scheme->t8_element_child (test_parent, 0,
+                                                     test_sib);
+                    /* Check that fist_sib and test_sib are the same element. */
+                    T8_ASSERT (!eclass_scheme->t8_element_compare
+                               (test_sib, first_sib));
+                    eclass_scheme->t8_element_destroy (1, &test_sib);
+                    eclass_scheme->t8_element_destroy (1, &test_parent);
 #endif
-                  /* Mark all siblings with 0 (do not coarsen or refine). */
-                  for (isib = 0; isib < num_siblings; ++isib) {
-                    *(short *) t8_sc_array_index_locidx (&markers,
-                                                         first_sibling +
-                                                         isib) = 0;
-                    changed_a_marker = 1;
+                    /* Mark all siblings with 0 (do not coarsen or refine). */
+                    for (isib = 0; isib < num_siblings; ++isib) {
+                      short              *sibs_marker =
+                        (short *) t8_sc_array_index_locidx (&markers,
+                                                            first_sibling +
+                                                            isib);
+                      /* The family must have been marked for coarsening. */
+                      T8_ASSERT (*sibs_marker == -1);
+                      *sibs_marker = 0;
+                      changed_a_marker = 1;
+                    }
+                    unmarked_family_for_coarsen = 1;
                   }
-                }
+                }               /* End if (current_marker == -1) */
                 if (level_diff == 3 || current_marker == 0) {
                   /* If the level difference is 3 or the marker is 0 (and level difference is 2),
                    * we mark this element for refinement and stop checking its neighbor. */

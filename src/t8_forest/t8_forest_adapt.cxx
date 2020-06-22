@@ -94,7 +94,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
       /* Coarsen the element */
       *el_inserted -= num_children - 1;
       /* remove num_children - 1 elements from the array */
-      T8_ASSERT (elements_in_array == t8_element_array_get_count (telement));
+      T8_ASSERT (elements_in_array == t8_element_array_get_count (telements));
       ts->t8_element_parent (constfam[0], fam[0]);
       elements_in_array -= num_children - 1;
       t8_element_array_resize (telements, elements_in_array);
