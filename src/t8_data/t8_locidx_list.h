@@ -190,6 +190,8 @@ int                 t8_locidx_list_iterator_is_end (const
  * \param [in] it   The iterator.
  * \return          The value of the t8_locidx_t in the iterator's associated
  *                  list that it currently points to.
+ * NOTE: The iterator must not point to NULL, as could happen after removing its first entry.
+ *       This function will crash if you call it while the iterator is pointing to NULL.
  */
 t8_locidx_t         t8_locidx_list_iterator_get_value (const
                                                        t8_locidx_list_iterator_t
@@ -197,7 +199,11 @@ t8_locidx_t         t8_locidx_list_iterator_get_value (const
 
 /* *INDENT-OFF* */
 /** Remove the entry that an iterator points to from the list.
- * \param [in] it   The iterator.
+ * \param [in,out] it   The iterator.
+ * After removing the entry, the iterator will point to the previous entry.
+ * Thus, using remove and then next will point to the same entry as using next
+ * without a remove.
+ * NOTE: The previous entry may be NULL, in which case it is illegal to call \a t8_locidx_list_iterator_get_value
  */
 void                t8_locidx_list_iterator_remove_entry (t8_locidx_list_iterator_t 
                                                           * it);
