@@ -1093,7 +1093,7 @@ t8_advect_problem_partition (t8_advect_problem_t * problem, int measure_time)
     sc_stats_accumulate (&problem->stats[ADVECT_AMR], partition_time);
     problem->stats[ADVECT_PARTITION_DATA].count = 1;
     problem->stats[ADVECT_AMR].count = 1;
-    t8_debugf ("statis ghost: %f\n\n", ghost_time);
+    t8_debugf ("ghost runtime: %f\n\n", ghost_time);
   }
 
   /* destroy the old forest and the element data */
