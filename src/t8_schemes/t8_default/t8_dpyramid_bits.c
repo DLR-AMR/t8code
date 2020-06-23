@@ -64,7 +64,6 @@ int
 t8_dpyramid_is_family (const t8_dpyramid_t ** fam)
 {
   /*TODO: This can be implemented better! */
-  t8_debugf("[D] is_family %i %i %i %i %i\n", fam[0]->x, fam[0]->y, fam[0]->z, fam[0]->type, fam[0]->level);
   if (t8_dpyramid_shape (fam[0]) == T8_ECLASS_TET) {
     return t8_dtet_is_familypv ((const t8_dtet_t **) fam);
   }
@@ -73,7 +72,6 @@ t8_dpyramid_is_family (const t8_dpyramid_t ** fam)
     int                 i;
     t8_dpyramid_parent (fam[0], &parent);
     for (i = 1; i < T8_DPYRAMID_CHILDREN; i++) {
-      t8_debugf("[D] %i check %i %i %i %i %i\n", i, fam[i]->x, fam[i]->y, fam[i]->z, fam[i]->type, fam[i]->level);
       t8_dpyramid_child (&parent, i, &test);
       if (t8_dpyramid_is_equal (fam[i], &test) != 0) {
         return 0;
@@ -289,12 +287,21 @@ t8_dpyramid_num_vertices (const t8_dpyramid_t * p)
 int
 t8_dpyramid_num_children (const t8_dpyramid_t * p)
 {
+    t8_debugf("[D] nc-in: %i %i %i %i %i\n", p->x, p->y, p->z, p->type, p->level);
   if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
     return T8_DTET_CHILDREN;
   }
   else {
     return T8_DPYRAMID_CHILDREN;
   }
+}
+
+int
+t8_dpyramid_num_siblings(const t8_dpyramid_t * p)
+{
+    t8_dpyramid_t parent;
+    t8_dpyramid_parent(p, &parent);
+    return t8_dpyramid_num_children(&parent);
 }
 
 int

@@ -69,7 +69,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level, int do_adapt,
   t8_forest_t         forest, forest_adapt, forest_coarsen;
   t8_cmesh_t          cmesh, cmesh_partition;
   char                vtuname[BUFSIZ], cmesh_file[BUFSIZ];
-  int                 mpirank, mpiret, endlvl = set_level+5;
+  int                 mpirank, mpiret, endlvl = set_level+3;
 
   t8_global_productionf ("Contructing hypercube mesh with element class %s\n",
                          t8_eclass_to_string[eclass]);

@@ -70,7 +70,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   ts->t8_element_new(1, &parent);
   ts->t8_element_parent(element, parent);
   num_children = ts->t8_element_num_children (parent);
-  t8_debugf("[D] nc: %i, ch-id %i\n", num_children-1, ts->t8_element_child_id (element));
+  t8_debugf("[D] num_c %i, child-id: %i\n", num_children, ts->t8_element_child_id (element));
   T8_ASSERT (ts->t8_element_child_id (element) == num_children - 1);
   ts->t8_element_destroy(1, &parent);
 
@@ -111,7 +111,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
       isfamily = 0;
     }
     pos -= num_children - 1;
-  }
+  };
 }
 
 /* Check the lastly inserted element of an array for recursive refining.
@@ -190,16 +190,13 @@ t8_forest_adapt (t8_forest_t forest)
   t8_locidx_t         el_coarsen;
   t8_locidx_t         num_el_from;
   t8_locidx_t         el_offset;
-  size_t              num_children, zz;
+  size_t              num_children, zz, num_siblings;
   t8_tree_t           tree, tree_from;
   t8_eclass_scheme_c *tscheme;
-/*<<<<<<< HEAD
-  t8_element_t      **elements, **elements_from, *elpop, *parent;
-=======*/
   t8_element_t      **elements, **elements_from;
   int                 refine;
   int                 ci;
-  int                 num_elements, num_siblings;
+  int                 num_elements;
 #ifdef T8_ENABLE_DEBUG
   int                 is_family;
 #endif
@@ -259,10 +256,12 @@ t8_forest_adapt (t8_forest_t forest)
     num_children =
       tscheme->t8_element_num_children (t8_element_array_index_locidx
                                         (telements_from, 0));
+    num_siblings = tscheme->t8_element_num_siblings(t8_element_array_index_locidx
+                                                   (telements_from, 0));
     /* Buffer for a family of new elements */
-    elements = T8_ALLOC (t8_element_t *, num_children);
+    elements = T8_ALLOC (t8_element_t *, num_siblings);
     /* Buffer for a family of old elements */
-    elements_from = T8_ALLOC (t8_element_t *, num_children);
+    elements_from = T8_ALLOC (t8_element_t *, num_siblings);
     /* We now iterate over all elements in this tree and check them for refinement/coarsening. */
     while (el_considered < num_el_from) {
 #ifdef T8_ENABLE_DEBUG
@@ -276,9 +275,11 @@ t8_forest_adapt (t8_forest_t forest)
        * At the end is_family will be true, if these elements form a family.
        */
 
+
       num_elements = num_children; /*This has to remain num_children t8_element_array_index_locidx
                                                       (telements_from, 0)*/
-      for (zz = 0; zz < num_children &&
+      /*change: num_children into num_siblings*/
+      for (zz = 0; zz < (unsigned int)num_siblings &&
            el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
         elements_from[zz] = t8_element_array_index_locidx (telements_from,
                                                            el_considered +
@@ -287,7 +288,9 @@ t8_forest_adapt (t8_forest_t forest)
           break;
         }
       }
-      if (zz != num_children) {
+
+
+      if (zz != num_siblings) {
         /* We are certain that the elements do not form a family.
          * So we will only pass the first element to the adapt callback. */
         num_elements = 1;
@@ -316,7 +319,7 @@ t8_forest_adapt (t8_forest_t forest)
         if (forest->set_adapt_recursive) {
 
           /* Create the children of this element */
-
+          num_children = tscheme->t8_element_num_children(elements_from[0]);
           tscheme->t8_element_new (num_children, elements); /*num_children or num_siblings?*/
           tscheme->t8_element_children (elements_from[0], num_children,
                                         elements);
@@ -336,7 +339,6 @@ t8_forest_adapt (t8_forest_t forest)
           el_coarsen = el_inserted + num_children;
         }
         else {
-            /*Pyramid-error*/
           /* The element should be refined and refinement is not recursive. */
           /* We add the children to the element array of the current tree. */
           (void) t8_element_array_push_count (telements, num_children); /*num_children or num_siblings?*/

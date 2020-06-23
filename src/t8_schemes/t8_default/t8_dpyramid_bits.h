@@ -180,6 +180,12 @@ int                 t8_dpyramid_num_vertices (const t8_dpyramid_t * p);
  */
 int                 t8_dpyramid_num_children (const t8_dpyramid_t * p);
 
+/** Compute the number of siblings of p
+ * \param [in] p    Input pyramid
+ * \return          The number of siblings of p.
+ */
+int                 t8_dpyramid_num_siblings(const t8_dpyramid_t * p);
+
 /** Returns the shape of the pyramid (pyramid or tetrahedron)
  * \param [in] p    Input pyramid.
  * \return          The eclass of the element

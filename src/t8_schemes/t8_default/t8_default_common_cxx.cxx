@@ -151,6 +151,9 @@ t8_default_scheme_common_c::t8_element_num_siblings (const t8_element_t * elem) 
 /* *INDENT-ON* */
 {
   const int           dim = t8_eclass_to_dimension[eclass];
+  if(eclass == T8_ECLASS_PYRAMID){
+      return 10;
+  }
   return sc_intpow (2, dim);
 }
 

@@ -182,6 +182,15 @@ virtual int         t8_element_num_vertices (const t8_element_t * elem);
       return T8_ECLASS_ZERO;      /* suppresses compiler warning */
   }
 
+  /** Compute the number of siblings of an element. That is the number of
+   * Children of its parent.
+   * \param [in] elem The element.
+   * \return          The number of siblings of \a element.
+   * Note that this number is >= 1, since we count the element itself as a sibling.
+   */
+  virtual int         t8_element_num_siblings (const t8_element_t *
+                                               elem);
+
   /** Construct the boundary element at a specific face. */
   virtual void        t8_element_boundary_face (const t8_element_t * elem,
                                                 int face,
