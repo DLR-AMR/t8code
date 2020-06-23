@@ -83,6 +83,8 @@ int                 t8_forest_adapt_marker_array_callback (t8_forest_t forest,
  *                         levels.
  * \param [in,out] elements_that_do_not_refine An empty but initialized list of t8_locidx_t. On output this will be filled with
  *                         the indices (into \a markers) of those elements that do not get refined (thus, markers[i] != 1).
+ * \param [in]     maxlevel_existing The (global) maximum refinement level in the forest.
+ * \param [out]    new_maxlevel The larger one of the new (local) maximum refinement level,or \a maxlevel_existing - 2.
  * \note This function is not used by the normal adapt function, but by \ref t8_forest_balance_and_adapt.
  * We use this function if we want to adapt the forest but maybe adapt more (or less) elements than what the refinement
  * function specifies. In \ref t8_forest_balance_and_adapt we refine more elements until the resulting forest is balanced.
@@ -93,7 +95,9 @@ int                 t8_forest_adapt_marker_array_callback (t8_forest_t forest,
 void                t8_forest_adapt_build_marker_array (t8_forest_t forest,
                                                         sc_array_t * markers,
                                                         t8_locidx_list_t *
-                                                        elements_that_do_not_refine);
+                                                        elements_that_do_not_refine,
+                                                        int maxlevel_existing,
+                                                        int *new_maxlevel);
 
 T8_EXTERN_C_END ();
 

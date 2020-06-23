@@ -501,15 +501,20 @@ t8_forest_adapt_marker_array_callback (t8_forest_t forest,
 void
 t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers,
                                     t8_locidx_list_t *
-                                    elements_that_do_not_refine)
+                                    elements_that_do_not_refine,
+                                    int maxlevel_existing, int *new_maxlevel)
 {
   t8_forest_t         forest_from = forest->set_from;
   T8_ASSERT (t8_forest_is_committed (forest_from));
   T8_ASSERT (forest->set_adapt_fn != NULL);
   T8_ASSERT (forest->set_adapt_recursive == 0);
+  T8_ASSERT (forest_from->maxlevel_existing == maxlevel_existing);
   const t8_locidx_t   num_trees = t8_forest_get_num_local_trees (forest_from);
   t8_locidx_t         ltreeid, ielement;
   const t8_locidx_t   num_elements = t8_forest_get_num_element (forest_from);
+  /* Flags that we need to compute the new maxlevel in the forest. */
+  int                 have_element_at_maxlevelp1 = 0;
+  int                 have_element_at_maxlevel = 0;
 
   /* check correct markers array size */
   T8_ASSERT (markers != NULL);
@@ -582,12 +587,50 @@ t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers,
                                  element_index + isib);
         }
         /* We have to skip the siblings from the adapt check, since we know that they
-         * will be coarsened. However, calling the adapt function for the seperately
+         * will be coarsened. However, calling the adapt function for them seperately
          * will return 0 or 1 and result in false markers. */
         ielement += num_siblings - 1;
       }
+      {
+        /* Depending on the element's level and its adapt marker, we
+         * set the maxlevel flags in order to be able to compute the new maxlevel. */
+        /* TODO: Remove the cast as soon as t8_element_level is const */
+        int                 level =
+          ((t8_eclass_scheme_c *) ts)->t8_element_level (element);
+        if (level == maxlevel_existing) {
+          if (adapt_value > 0) {
+            have_element_at_maxlevelp1 = 1;
+          }
+          else if (adapt_value == 0) {
+            have_element_at_maxlevel;
+          }
+        }                       /* End if (level == maxlevel_existing) */
+        else if (level == maxlevel_existing - 1) {
+          if (adapt_value > 0) {
+            have_element_at_maxlevel = 1;
+          }
+        }                       /* End if (level == maxlevel_existing - 1) */
+      }
     }                           /* End of element loop */
   }                             /* End of tree loop */
+  if (have_element_at_maxlevelp1) {
+    /* We refined an element of the finest level.
+     * The new maxlevel is increased. */
+    *new_maxlevel = maxlevel_existing + 1;
+  }
+  else if (have_element_at_maxlevel) {
+    /* We did not refine any fine level element, but we keep
+     * (or refined a coarser element) at least one. */
+    *new_maxlevel = maxlevel_existing;
+  }
+  else {
+    /* We have no elements of level maxlevel_existing + 1or maxlevel_existing left.
+     * We thus know that the new maxlevel must be maxlevel_existing - 1.
+     * This local partition of the forest may have a lower maxlevel, but globally it
+     * cannot be smaller than maxlevel_existing - 1, since we only refine non-recursively.
+     */
+    *new_maxlevel = maxlevel_existing - 1;
+  }
   /* We expect that no element was put twice into the list. */
   T8_ASSERT (!t8_locidx_list_has_duplicate_entries
              (elements_that_do_not_refine));
