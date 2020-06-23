@@ -462,21 +462,6 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
 
     balance_rounds++;
 
-    /* TODO: We used these for debugging. Reactivate if needed. Delete eventually. */
-#if 0
-#ifdef T8_ENABLE_DEBUG
-    {
-      char               *not_refined_string =
-        t8_locidx_list_to_string (&elements_that_do_not_refine);
-      t8_debugf
-        ("[H] New balance_adapt round:\nUnrefined elements (num = %zd)\t%s\n",
-         t8_locidx_list_count (&elements_that_do_not_refine),
-         not_refined_string);
-      T8_FREE (not_refined_string);
-    }
-#endif
-#endif
-
     if (num_local_elements > 0) {
       /* We only need to iterate over the elements if there are any. */
       /* Init next tree_offset as the offset of tree 1
@@ -532,7 +517,6 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
         }
         /* Compute the index of the element in this tree */
         element_index_in_tree = element_index - current_tree_offset;
-
         /* Get the element */
         element =
           t8_forest_get_element_in_tree (forest_from, current_tree,
@@ -551,8 +535,7 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
                                                         1,
                                                         &face_neighbor_hash_entry);
           /* Check that we could insert the element. */
-          SC_CHECK_ABORT (retval,
-                          "Could not insert element into hash table.");
+          T8_ASSERT (retval);
         }
         else {
           /* The element must be contained in the hash table, we look for it. */
@@ -563,7 +546,6 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
           /* The element must have been found. */
           T8_ASSERT (face_neighbor_hash_entry != NULL);
         }
-        t8_debugf ("Got faces of %u\n", element_index);
         for (iface = 0;
              iface < face_neighbor_hash_entry->num_faces
              && continue_neigh_check; ++iface) {
@@ -717,11 +699,6 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
                 if (level_diff == 3 || current_marker == 0) {
                   /* If the level difference is 3 or the marker is 0 (and level difference is 2),
                    * we mark this element for refinement and stop checking its neighbor. */
-                  if (!((current_marker == -1 && level_diff == 3)
-                        || (current_marker == 0 && level_diff == 2))) {
-                    t8_debugf ("current_marker %i, level_diff %i\n",
-                               current_marker, level_diff);
-                  }
                   T8_ASSERT ((current_marker == -1 && level_diff == 3)
                              || (current_marker == 0 && level_diff == 2));
                   /* Mark this element for refinement */
@@ -850,12 +827,6 @@ t8_forest_is_balanced (t8_forest_t forest)
         forest->set_from = forest_from;
         forest->t8code_data = data_temp;
         /* Check whether the is_balanced flag was set correctly */
-#ifdef T8_ENABLE_DEBUG
-        /* In debugging mode and if forest->is_balanced is true, print the forest */
-        if (forest->is_balanced != 0) {
-          t8_forest_write_vtk (forest, "t8_DEBUG_forest_not_balanced");
-        }
-#endif
         T8_ASSERT (forest->is_balanced == 0);
         return 0;
       }
