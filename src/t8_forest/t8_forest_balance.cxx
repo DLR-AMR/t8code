@@ -365,6 +365,7 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
    * whether all processes are finished. */
   int                 done_locally = 0, done_globally = 0;
   int                 balance_rounds = 0;
+  int                 new_maxlevel, new_maxlevel_local; /* Will store the maximum refinement level in the new forest. */
   /* The current communicator */
   const sc_MPI_Comm   comm = t8_forest_get_mpicomm (forest_from);
   /* A hash table to store the once computed face neighbors. */
@@ -381,6 +382,11 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
     /* We increment balance_rounds in each round */
     forest->profile->balance_rounds = 0;
   }
+
+  /* Compute the maximum occurring refinement level in the forest */
+  t8_forest_compute_max_element_level (forest_from);
+  t8_global_productionf ("Computed maximum occurring level:\t%i\n",
+                         forest_from->maxlevel_existing);
 
   /* Initialize refinement markers for all elements and ghosts */
   sc_array_init_size (&markers, sizeof (short),
@@ -403,7 +409,16 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
    * levels.
    */
   t8_forest_adapt_build_marker_array (forest, &markers,
-                                      &elements_that_do_not_refine);
+                                      &elements_that_do_not_refine,
+                                      forest_from->maxlevel_existing,
+                                      &new_maxlevel_local);
+
+  /* Communitcate the maxlevel (may have change +-1 ) */
+  T8_ASSERT (new_maxlevel_local <= forest_from->maxlevel_existing + 1 &&
+             new_maxlevel_local >= forest_from->maxlevel_existing - 1);
+  /* Communicate the local maximum levels */
+  sc_MPI_Allreduce (&new_maxlevel_local, &new_maxlevel, 1,
+                    sc_MPI_INT, sc_MPI_MAX, forest_from->mpicomm);
 
   /* Communicate ghost values for the markers array */
   t8_forest_ghost_exchange_data (forest_from, &markers);
@@ -524,196 +539,213 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
         /* Get the level of the element and compute its level after adaptation. */
         element_level = eclass_scheme->t8_element_level (element);
         element_level_after_adapt = element_level + current_marker;
-        if (balance_rounds == 1) {
-          /* This is the first time that we visit this element. We compute its face
-           * neighbors and store them in the hash table.
-           * This will also set the face_neighbor_hash_entry to point to the inserted values. */
-          int                 retval =
-            t8_face_neighbor_hash_table_insert_element (face_neighbor_table,
-                                                        current_tree,
-                                                        element_index_in_tree,
-                                                        1,
-                                                        &face_neighbor_hash_entry);
-          /* Check that we could insert the element. */
-          T8_ASSERT (retval);
+
+        /* If the element's new level is either new maxlevel or new maxlevel - 1,
+         * we can skip the checking. 
+         * Since then, there cannot exist any neighbor with a finer refinement
+         * level that breaks the balance condition.
+         */
+        if (element_level_after_adapt == new_maxlevel ||
+            element_level_after_adapt == new_maxlevel - 1) {
+          /* Remove the element from the iterator. */
+          t8_locidx_list_iterator_remove_entry (&list_iterator);
+          /* We will skip the further computations and go directly back to the 
+           * next element. */
         }
         else {
-          /* The element must be contained in the hash table, we look for it. */
-          face_neighbor_hash_entry =
-            t8_face_neighbor_hash_table_lookup (face_neighbor_table,
-                                                current_tree,
-                                                element_index_in_tree);
-          /* The element must have been found. */
-          T8_ASSERT (face_neighbor_hash_entry != NULL);
-        }
-        for (iface = 0;
-             iface < face_neighbor_hash_entry->num_faces
-             && continue_neigh_check; ++iface) {
-          const int           num_face_neighbors =
-            face_neighbor_hash_entry->number_of_neighbors[iface];
-          int                 ineigh;
-          int                 neigh_level, neigh_level_after_adapt,
-            level_diff;
-          short               neigh_marker;
-          const t8_locidx_t  *neighbor_indices =
-            face_neighbor_hash_entry->face_neighbor_indices[iface];
-          const t8_element_t **face_neighbors = (const t8_element_t **)
-            face_neighbor_hash_entry->face_neighbors[iface];
-
-          /* Get this neighbors class and scheme */
-          const t8_eclass_t   neigh_class =
-            t8_forest_element_neighbor_eclass (forest_from, current_tree,
-                                               element,
-                                               iface);
-          t8_eclass_scheme_c *neigh_scheme =
-            t8_forest_get_eclass_scheme (forest_from, neigh_class);
-
-#ifdef T8_ENABLE_DEBUG
-          /* In debugging mode check that the face neighbors we get from the 
-           * offsets are actually the correct face neighbors */
-          {
-            t8_element_t      **face_neighbors_debug;
-            t8_eclass_scheme_c *neigh_scheme_debug;
-            int                 iface_debug;
-            int                 num_face_neighbors_debug;
-            int                *dual_faces_debug;
-            t8_locidx_t        *face_neighbor_indices_debug;
-            t8_forest_leaf_face_neighbors (forest_from, current_tree, element,
-                                           &face_neighbors_debug, iface,
-                                           &dual_faces_debug,
-                                           &num_face_neighbors_debug,
-                                           &face_neighbor_indices_debug,
-                                           &neigh_scheme_debug, 1);
-            T8_ASSERT (neigh_scheme == neigh_scheme_debug);
-            for (iface_debug = 0; iface_debug < num_face_neighbors;
-                 ++iface_debug) {
-              T8_ASSERT (!neigh_scheme->t8_element_compare
-                         (face_neighbors_debug[iface_debug],
-                          face_neighbors[iface_debug]));
-            }
-            T8_FREE (face_neighbor_indices_debug);
-            T8_FREE (dual_faces_debug);
-            neigh_scheme->t8_element_destroy (num_face_neighbors_debug,
-                                              face_neighbors_debug);
-            T8_FREE (face_neighbors_debug);
+          /* This element may have face neighbors with larger refinement level that
+           * break the balance condition. */
+          if (balance_rounds == 1) {
+            /* This is the first time that we visit this element. We compute its face
+             * neighbors and store them in the hash table.
+             * This will also set the face_neighbor_hash_entry to point to the inserted values. */
+            int                 retval =
+              t8_face_neighbor_hash_table_insert_element (face_neighbor_table,
+                                                          current_tree,
+                                                          element_index_in_tree,
+                                                          1,
+                                                          &face_neighbor_hash_entry);
+            /* Check that we could insert the element. */
+            T8_ASSERT (retval);
           }
-#endif
+          else {
+            /* The element must be contained in the hash table, we look for it. */
+            face_neighbor_hash_entry =
+              t8_face_neighbor_hash_table_lookup (face_neighbor_table,
+                                                  current_tree,
+                                                  element_index_in_tree);
+            /* The element must have been found. */
+            T8_ASSERT (face_neighbor_hash_entry != NULL);
+          }
+          for (iface = 0;
+               iface < face_neighbor_hash_entry->num_faces
+               && continue_neigh_check; ++iface) {
+            const int           num_face_neighbors =
+              face_neighbor_hash_entry->number_of_neighbors[iface];
+            int                 ineigh;
+            int                 neigh_level, neigh_level_after_adapt,
+              level_diff;
+            short               neigh_marker;
+            const t8_locidx_t  *neighbor_indices =
+              face_neighbor_hash_entry->face_neighbor_indices[iface];
+            const t8_element_t **face_neighbors = (const t8_element_t **)
+              face_neighbor_hash_entry->face_neighbors[iface];
 
-          if (face_neighbors != NULL) {
-            for (ineigh = 0;
-                 ineigh < num_face_neighbors && continue_neigh_check;
-                 ++ineigh) {
-              t8_locidx_t         neighbor_index;
-              neighbor_index = neighbor_indices[ineigh];
-              T8_ASSERT (face_neighbors[ineigh] != NULL);
+            /* Get this neighbors class and scheme */
+            const t8_eclass_t   neigh_class =
+              t8_forest_element_neighbor_eclass (forest_from, current_tree,
+                                                 element,
+                                                 iface);
+            t8_eclass_scheme_c *neigh_scheme =
+              t8_forest_get_eclass_scheme (forest_from, neigh_class);
 
-              /* Get the level of this neighbor */
-              neigh_level =
-                neigh_scheme->t8_element_level (face_neighbors[ineigh]);
-              /* Get the refinement marker of this neighbor */
-              neigh_marker =
-                *(short *) t8_sc_array_index_locidx (&markers,
-                                                     neighbor_index);
-              /* Compute the level that the neighbor will have after adapting the mesh */
-              neigh_level_after_adapt = neigh_level + neigh_marker;
-              level_diff =
-                neigh_level_after_adapt - element_level_after_adapt;
-              if (level_diff > 1) {
-                T8_ASSERT (level_diff == 2 || level_diff == 3);
-                /* After adaptation the current element's level would be smaller
-                 * than the neighbors level.
-                 * Thus, the balance condition would be broken.
-                 * Depending on the element's marker, we do:
-                 *   If the marker is 0:
-                 *      - mark this element for adaptation (with 1) and remove from the list.
-                 *      - Stop checking its face neighbors.
-                 *   If the marker is -1:
-                 *      If the level difference is 2:
-                 *        - mark this element and all its siblings with 0
-                 *        - Continue checking its face neighbors
-                 *      If the level difference is 3:
-                 *        - mark this element's siblings with 0
-                 *        - mark this element with 1 and remove from the list
-                 *        - Stop checking its face neighbors
-                 */
-                if (current_marker == -1) {
-                  /* If the marker is -1, we mark all siblings with 0 */
-                  /* If the level difference is 2, then nothing else is to be done. */
-
-                  /* To identify the indices of this element's siblings,
-                   * we need its sibid and the number of siblings. */
-                  if (!unmarked_family_for_coarsen) {
-                    /* We may have already done this for a previous neighbor of this
-                     * element, and this can skip this if we did already unmark the family. */
-                    const t8_locidx_t   childid =
-                      eclass_scheme->t8_element_child_id (element);
-                    const t8_locidx_t   num_siblings =
-                      eclass_scheme->t8_element_num_siblings (element);
-                    t8_locidx_t         isib;
-                    /* The index of the first sibling in the family is this neighbor's index minus its child id */
-                    const t8_locidx_t   first_sibling =
-                      element_index - childid;
-                    /* NOTE: We know that the whole family are local elements, since our 
-                     *       marker is -1. Thus the current elements' whole family is local and was
-                     *       marker for coarsening. */
 #ifdef T8_ENABLE_DEBUG
-                    /* Check whether first_sibling is indeed the first sibling */
-                    const t8_locidx_t   first_sibling_in_tree =
-                      first_sibling - current_tree_offset;
-                    const t8_element_t *first_sib =
-                      t8_forest_get_element_in_tree (forest_from,
-                                                     current_tree,
-                                                     first_sibling_in_tree);
-                    t8_element_t       *test_sib, *test_parent;
-                    T8_ASSERT (first_sibling_in_tree ==
-                               element_index_in_tree - childid);
-
-                    T8_ASSERT (eclass_scheme->t8_element_child_id (first_sib)
-                               == 0);
-                    /* Construct the sibling and check whether it matches first_sib */
-                    eclass_scheme->t8_element_new (1, &test_sib);
-                    eclass_scheme->t8_element_new (1, &test_parent);
-                    eclass_scheme->t8_element_parent (element, test_parent);
-                    eclass_scheme->t8_element_child (test_parent, 0,
-                                                     test_sib);
-                    /* Check that fist_sib and test_sib are the same element. */
-                    T8_ASSERT (!eclass_scheme->t8_element_compare
-                               (test_sib, first_sib));
-                    eclass_scheme->t8_element_destroy (1, &test_sib);
-                    eclass_scheme->t8_element_destroy (1, &test_parent);
+            /* In debugging mode check that the face neighbors we get from the 
+             * offsets are actually the correct face neighbors */
+            {
+              t8_element_t      **face_neighbors_debug;
+              t8_eclass_scheme_c *neigh_scheme_debug;
+              int                 iface_debug;
+              int                 num_face_neighbors_debug;
+              int                *dual_faces_debug;
+              t8_locidx_t        *face_neighbor_indices_debug;
+              t8_forest_leaf_face_neighbors (forest_from, current_tree,
+                                             element, &face_neighbors_debug,
+                                             iface, &dual_faces_debug,
+                                             &num_face_neighbors_debug,
+                                             &face_neighbor_indices_debug,
+                                             &neigh_scheme_debug, 1);
+              T8_ASSERT (neigh_scheme == neigh_scheme_debug);
+              for (iface_debug = 0; iface_debug < num_face_neighbors;
+                   ++iface_debug) {
+                T8_ASSERT (!neigh_scheme->t8_element_compare
+                           (face_neighbors_debug[iface_debug],
+                            face_neighbors[iface_debug]));
+              }
+              T8_FREE (face_neighbor_indices_debug);
+              T8_FREE (dual_faces_debug);
+              neigh_scheme->t8_element_destroy (num_face_neighbors_debug,
+                                                face_neighbors_debug);
+              T8_FREE (face_neighbors_debug);
+            }
 #endif
-                    /* Mark all siblings with 0 (do not coarsen or refine). */
-                    for (isib = 0; isib < num_siblings; ++isib) {
-                      short              *sibs_marker =
-                        (short *) t8_sc_array_index_locidx (&markers,
-                                                            first_sibling +
-                                                            isib);
-                      /* The family must have been marked for coarsening. */
-                      T8_ASSERT (*sibs_marker == -1);
-                      *sibs_marker = 0;
-                      changed_a_marker = 1;
-                    }
-                    unmarked_family_for_coarsen = 1;
-                  }
-                }               /* End if (current_marker == -1) */
-                if (level_diff == 3 || current_marker == 0) {
-                  /* If the level difference is 3 or the marker is 0 (and level difference is 2),
-                   * we mark this element for refinement and stop checking its neighbor. */
-                  T8_ASSERT ((current_marker == -1 && level_diff == 3)
-                             || (current_marker == 0 && level_diff == 2));
-                  /* Mark this element for refinement */
+
+            if (face_neighbors != NULL) {
+              for (ineigh = 0;
+                   ineigh < num_face_neighbors && continue_neigh_check;
+                   ++ineigh) {
+                t8_locidx_t         neighbor_index;
+                neighbor_index = neighbor_indices[ineigh];
+                T8_ASSERT (face_neighbors[ineigh] != NULL);
+
+                /* Get the level of this neighbor */
+                neigh_level =
+                  neigh_scheme->t8_element_level (face_neighbors[ineigh]);
+                /* Get the refinement marker of this neighbor */
+                neigh_marker =
                   *(short *) t8_sc_array_index_locidx (&markers,
-                                                       element_index) = 1;
-                  changed_a_marker = 1;
-                  /* Remove this element from the list */
-                  t8_locidx_list_iterator_remove_entry (&list_iterator);
-                  /* Do not continue checking the neighbors. */
-                  continue_neigh_check = 0;
-                }
-              }                 /* End if (level_diff > 1) */
-            }                   /* End neighbor for-loop */
-          }                     /* End face_neighbors != NULL */
-        }                       /* End face neighbor loop */
+                                                       neighbor_index);
+                /* Compute the level that the neighbor will have after adapting the mesh */
+                neigh_level_after_adapt = neigh_level + neigh_marker;
+                level_diff =
+                  neigh_level_after_adapt - element_level_after_adapt;
+                if (level_diff > 1) {
+                  T8_ASSERT (level_diff == 2 || level_diff == 3);
+                  /* After adaptation the current element's level would be smaller
+                   * than the neighbors level.
+                   * Thus, the balance condition would be broken.
+                   * Depending on the element's marker, we do:
+                   *   If the marker is 0:
+                   *      - mark this element for adaptation (with 1) and remove from the list.
+                   *      - Stop checking its face neighbors.
+                   *   If the marker is -1:
+                   *      If the level difference is 2:
+                   *        - mark this element and all its siblings with 0
+                   *        - Continue checking its face neighbors
+                   *      If the level difference is 3:
+                   *        - mark this element's siblings with 0
+                   *        - mark this element with 1 and remove from the list
+                   *        - Stop checking its face neighbors
+                   */
+                  if (current_marker == -1) {
+                    /* If the marker is -1, we mark all siblings with 0 */
+                    /* If the level difference is 2, then nothing else is to be done. */
+
+                    /* To identify the indices of this element's siblings,
+                     * we need its sibid and the number of siblings. */
+                    if (!unmarked_family_for_coarsen) {
+                      /* We may have already done this for a previous neighbor of this
+                       * element, and this can skip this if we did already unmark the family. */
+                      const t8_locidx_t   childid =
+                        eclass_scheme->t8_element_child_id (element);
+                      const t8_locidx_t   num_siblings =
+                        eclass_scheme->t8_element_num_siblings (element);
+                      t8_locidx_t         isib;
+                      /* The index of the first sibling in the family is this neighbor's index minus its child id */
+                      const t8_locidx_t   first_sibling =
+                        element_index - childid;
+                      /* NOTE: We know that the whole family are local elements, since our 
+                       *       marker is -1. Thus the current elements' whole family is local and was
+                       *       marker for coarsening. */
+#ifdef T8_ENABLE_DEBUG
+                      /* Check whether first_sibling is indeed the first sibling */
+                      const t8_locidx_t   first_sibling_in_tree =
+                        first_sibling - current_tree_offset;
+                      const t8_element_t *first_sib =
+                        t8_forest_get_element_in_tree (forest_from,
+                                                       current_tree,
+                                                       first_sibling_in_tree);
+                      t8_element_t       *test_sib, *test_parent;
+                      T8_ASSERT (first_sibling_in_tree ==
+                                 element_index_in_tree - childid);
+
+                      T8_ASSERT (eclass_scheme->t8_element_child_id
+                                 (first_sib) == 0);
+                      /* Construct the sibling and check whether it matches first_sib */
+                      eclass_scheme->t8_element_new (1, &test_sib);
+                      eclass_scheme->t8_element_new (1, &test_parent);
+                      eclass_scheme->t8_element_parent (element, test_parent);
+                      eclass_scheme->t8_element_child (test_parent, 0,
+                                                       test_sib);
+                      /* Check that fist_sib and test_sib are the same element. */
+                      T8_ASSERT (!eclass_scheme->t8_element_compare
+                                 (test_sib, first_sib));
+                      eclass_scheme->t8_element_destroy (1, &test_sib);
+                      eclass_scheme->t8_element_destroy (1, &test_parent);
+#endif
+                      /* Mark all siblings with 0 (do not coarsen or refine). */
+                      for (isib = 0; isib < num_siblings; ++isib) {
+                        short              *sibs_marker =
+                          (short *) t8_sc_array_index_locidx (&markers,
+                                                              first_sibling +
+                                                              isib);
+                        /* The family must have been marked for coarsening. */
+                        T8_ASSERT (*sibs_marker == -1);
+                        *sibs_marker = 0;
+                        changed_a_marker = 1;
+                      }
+                      unmarked_family_for_coarsen = 1;
+                    }
+                  }             /* End if (current_marker == -1) */
+                  if (level_diff == 3 || current_marker == 0) {
+                    /* If the level difference is 3 or the marker is 0 (and level difference is 2),
+                     * we mark this element for refinement and stop checking its neighbor. */
+                    T8_ASSERT ((current_marker == -1 && level_diff == 3)
+                               || (current_marker == 0 && level_diff == 2));
+                    /* Mark this element for refinement */
+                    *(short *) t8_sc_array_index_locidx (&markers,
+                                                         element_index) = 1;
+                    changed_a_marker = 1;
+                    /* Remove this element from the list */
+                    t8_locidx_list_iterator_remove_entry (&list_iterator);
+                    /* Do not continue checking the neighbors. */
+                    continue_neigh_check = 0;
+                  }
+                }               /* End if (level_diff > 1) */
+              }                 /* End neighbor for-loop */
+            }                   /* End face_neighbors != NULL */
+          }                     /* End face neighbor loop */
+        }                       /* End of if element level check */
       }                         /* End element iteration */
     }                           /* if (num_local_elements > 0) ends here */
     if (!changed_a_marker) {
