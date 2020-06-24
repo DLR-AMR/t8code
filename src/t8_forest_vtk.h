@@ -51,7 +51,7 @@ T8_EXTERN_C_BEGIN ();
  *                        must come first in the array.
  * \return  True if succesful, false if not (process local).
  */
-int                 t8_forest_vtk_write_file (t8_forest_t forest,
+int                 t8_forest_vtk_write_file (t8_const_forest_t forest,
                                               const char *fileprefix,
                                               int write_treeid,
                                               int write_mpirank,

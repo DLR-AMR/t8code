@@ -214,7 +214,7 @@ void                t8_forest_set_level (t8_forest_t forest, int level);
  * settings.
  */
 void                t8_forest_set_copy (t8_forest_t forest,
-                                        const t8_forest_t from);
+                                        t8_const_forest_t from);
 
 /** Set a source forest with an adapt function to be adapted on commiting.
  * By default, the forest takes ownership of the source \b set_from such that it will
@@ -240,7 +240,7 @@ void                t8_forest_set_copy (t8_forest_t forest,
  * this setting.
  */
 void                t8_forest_set_adapt (t8_forest_t forest,
-                                         const t8_forest_t set_from,
+                                         t8_const_forest_t set_from,
                                          t8_forest_adapt_t adapt_fn,
                                          int recursive);
 
@@ -281,7 +281,7 @@ void               *t8_forest_get_user_data (t8_const_forest_t forest);
  * this setting.
  */
 void                t8_forest_set_partition (t8_forest_t forest,
-                                             const t8_forest_t set_from,
+                                             t8_const_forest_t set_from,
                                              int set_for_coarsening);
 
 /** Set a source forest to be balanced during commit.
@@ -308,7 +308,7 @@ void                t8_forest_set_partition (t8_forest_t forest,
  * this setting.
  */
 void                t8_forest_set_balance (t8_forest_t forest,
-                                           const t8_forest_t set_from,
+                                           t8_const_forest_t set_from,
                                            int no_repartition);
 
 /** Enable or disable the creation of a layer of ghost elements.

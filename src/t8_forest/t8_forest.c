@@ -157,7 +157,7 @@ t8_forest_set_level (t8_forest_t forest, int level)
 }
 
 void
-t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
+t8_forest_set_copy (t8_forest_t forest, t8_const_forest_t set_from)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
@@ -183,7 +183,7 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
 }
 
 void
-t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
+t8_forest_set_partition (t8_forest_t forest, t8_const_forest_t set_from,
                          int set_for_coarsening)
 {
   T8_ASSERT (forest != NULL);
@@ -210,7 +210,7 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from,
 }
 
 void
-t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from,
+t8_forest_set_balance (t8_forest_t forest, t8_const_forest_t set_from,
                        int no_repartition)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
@@ -272,7 +272,7 @@ t8_forest_set_ghost (t8_forest_t forest, int do_ghost,
 }
 
 void
-t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from,
+t8_forest_set_adapt (t8_forest_t forest, t8_const_forest_t set_from,
                      t8_forest_adapt_t adapt_fn, int recursive)
 {
   T8_ASSERT (forest != NULL);
