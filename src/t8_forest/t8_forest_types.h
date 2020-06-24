@@ -70,6 +70,7 @@ typedef struct t8_forest
                                                      for one round of coarsening */
 
   sc_MPI_Comm         mpicomm;          /**< MPI communicator to use. */
+  /* TODO: make cmesh const */
   t8_cmesh_t          cmesh;            /**< Coarse mesh to use. */
   //t8_scheme_t        *scheme;        /**< Scheme for element types. */
   t8_scheme_cxx_t    *scheme_cxx;        /**< Scheme for element types. */
@@ -78,6 +79,7 @@ typedef struct t8_forest
   int                 do_dup;           /**< Communicator shall be duped. */
   int                 dimension;        /**< Dimension inferred from \b cmesh. */
 
+  /* TODO: make set_from const */
   t8_forest_t         set_from;         /**< Temporarily store source forest. */
   t8_forest_from_t    from_method;      /**< Method to derive from \b set_from. */
 #if 0
