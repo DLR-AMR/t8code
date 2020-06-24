@@ -53,7 +53,7 @@ void                t8_forest_ghost_init (t8_forest_ghost_t * pghost,
 
 /* TODO: document */
 /* returns 0 if ghost structure doesnt exist */
-t8_locidx_t         t8_forest_ghost_num_trees (t8_forest_t forest);
+t8_locidx_t         t8_forest_ghost_num_trees (t8_const_forest_t forest);
 
 /** Return the element offset of a ghost tree.
  * \param [in]      forest      The forest with constructed ghost layer.
@@ -61,13 +61,14 @@ t8_locidx_t         t8_forest_ghost_num_trees (t8_forest_t forest);
  * \return                      The element offset of this ghost tree.
  * \note forest must be committed before calling this function.
  */
-t8_locidx_t         t8_forest_ghost_get_tree_element_offset (t8_forest_t
+t8_locidx_t         t8_forest_ghost_get_tree_element_offset (t8_const_forest_t
                                                              forest,
                                                              t8_locidx_t
                                                              lghost_tree);
 
 /* TODO: document */
-t8_locidx_t         t8_forest_ghost_tree_num_elements (t8_forest_t forest,
+t8_locidx_t         t8_forest_ghost_tree_num_elements (t8_const_forest_t
+                                                       forest,
                                                        t8_locidx_t
                                                        lghost_tree);
 
@@ -77,7 +78,8 @@ t8_locidx_t         t8_forest_ghost_tree_num_elements (t8_forest_t forest,
  * \return                A pointer to the array of ghost elements of the tree.
  * \a forest must be committed before calling this function.
  */
-t8_element_array_t *t8_forest_ghost_get_tree_elements (t8_forest_t forest,
+t8_element_array_t *t8_forest_ghost_get_tree_elements (t8_const_forest_t
+                                                       forest,
                                                        t8_locidx_t
                                                        lghost_tree);
 
@@ -89,19 +91,21 @@ t8_element_array_t *t8_forest_ghost_get_tree_elements (t8_forest_t forest,
  *                        Otherwise a negative number.
  * \a forest must be committed before calling this function.
  */
-t8_locidx_t         t8_forest_ghost_get_ghost_treeid (t8_forest_t forest,
+t8_locidx_t         t8_forest_ghost_get_ghost_treeid (t8_const_forest_t
+                                                      forest,
                                                       t8_gloidx_t gtreeid);
 
 /* TODO: document */
-t8_eclass_t         t8_forest_ghost_get_tree_class (t8_forest_t forest,
+t8_eclass_t         t8_forest_ghost_get_tree_class (t8_const_forest_t forest,
                                                     t8_locidx_t lghost_tree);
 
-t8_gloidx_t         t8_forest_ghost_get_global_treeid (t8_forest_t forest,
+t8_gloidx_t         t8_forest_ghost_get_global_treeid (t8_const_forest_t
+                                                       forest,
                                                        t8_locidx_t
                                                        lghost_tree);
 
 /* TODO: document */
-t8_element_t       *t8_forest_ghost_get_element (t8_forest_t forest,
+t8_element_t       *t8_forest_ghost_get_element (t8_const_forest_t forest,
                                                  t8_locidx_t lghost_tree,
                                                  t8_locidx_t lelement);
 
@@ -110,7 +114,7 @@ t8_element_t       *t8_forest_ghost_get_element (t8_forest_t forest,
  * \param [in,out] num_remotes On output the number of remote ranks is stored here.
  * \return              The array of remote ranks in ascending order.
  */
-int                *t8_forest_ghost_get_remotes (t8_forest_t forest,
+int                *t8_forest_ghost_get_remotes (t8_const_forest_t forest,
                                                  int *num_remotes);
 
 /** Return the first local ghost tree of a remote rank.
@@ -119,16 +123,16 @@ int                *t8_forest_ghost_get_remotes (t8_forest_t forest,
  * \return              The ghost tree id of the first ghost tree that stores ghost
  *                      elements of \a remote.
  */
-t8_locidx_t         t8_forest_ghost_remote_first_tree (t8_forest_t forest,
-                                                       int remote);
+t8_locidx_t         t8_forest_ghost_remote_first_tree (t8_const_forest_t
+                                                       forest, int remote);
 
 /** Return the local index of the first ghost element that belongs to a given remote rank.
  * \param [in] forest   A forest with constructed ghost layer.
  * \param [in] remote   A remote rank of the ghost layer in \a forest.
  * \return              The index i in the ghost elements of the first element of rank \a remote
  */
-t8_locidx_t         t8_forest_ghost_remote_first_elem (t8_forest_t forest,
-                                                       int remote);
+t8_locidx_t         t8_forest_ghost_remote_first_elem (t8_const_forest_t
+                                                       forest, int remote);
 
 /** Increase the reference count of a ghost structure.
  * \param [in,out]  ghost     On input, this ghost structure must exist with

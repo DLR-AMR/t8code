@@ -37,10 +37,11 @@ T8_EXTERN_C_BEGIN ();
  * The user data of forest must an integer set to the maximum refinement level.
  */
 int
-t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
+t8_common_adapt_balance (t8_const_forest_t forest,
+                         t8_const_forest_t forest_from,
                          t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                         t8_eclass_scheme_c * ts, int num_elements,
-                         t8_element_t * elements[])
+                         const t8_eclass_scheme_c * ts, int num_elements,
+                         const t8_element_t * elements[])
 {
   int                 level;
   int                 maxlevel, child_id;
@@ -65,9 +66,9 @@ t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
 
 /* Get the coordinates of the midpoint of an element */
 void
-t8_common_midpoint (t8_forest_t forest, t8_locidx_t which_tree,
-                    t8_eclass_scheme_c * ts, t8_element_t * element,
-                    double elem_midpoint_f[3])
+t8_common_midpoint (t8_const_forest_t forest, t8_locidx_t which_tree,
+                    const t8_eclass_scheme_c * ts,
+                    const t8_element_t * element, double elem_midpoint_f[3])
 {
   double             *tree_vertices;
 
@@ -80,9 +81,9 @@ t8_common_midpoint (t8_forest_t forest, t8_locidx_t which_tree,
 }
 
 int
-t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid,
-                           t8_element_t * element,
-                           t8_eclass_scheme_c * ts,
+t8_common_within_levelset (t8_const_forest_t forest, t8_locidx_t ltreeid,
+                           const t8_element_t * element,
+                           const t8_eclass_scheme_c * ts,
                            const double *tree_vertices,
                            t8_example_level_set_fn levelset,
                            double band_width, double t, void *udata)
@@ -144,12 +145,12 @@ t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid,
  */
 /* TODO: Currently the band_width control is not working yet. */
 int
-t8_common_adapt_level_set (t8_forest_t forest,
-                           t8_forest_t forest_from,
+t8_common_adapt_level_set (t8_const_forest_t forest,
+                           t8_const_forest_t forest_from,
                            t8_locidx_t which_tree,
                            t8_locidx_t lelement_id,
-                           t8_eclass_scheme_c * ts,
-                           int num_elements, t8_element_t * elements[])
+                           const t8_eclass_scheme_c * ts,
+                           int num_elements, const t8_element_t * elements[])
 {
   t8_example_level_set_struct_t *data;
   int                 within_band;
@@ -199,9 +200,9 @@ t8_common_adapt_level_set (t8_forest_t forest,
 
 #if 0
 static int
-t8_basic_adapt (t8_forest_t forest, t8_locidx_t which_tree,
-                t8_eclass_scheme_c * ts,
-                int num_elements, t8_element_t * elements[])
+t8_basic_adapt (t8_const_forest_t forest, t8_const_forest_t which_tree,
+                const t8_eclass_scheme_c * ts,
+                int num_elements, const t8_element_t * elements[])
 {
   int                 level, mpirank, mpiret;
   T8_ASSERT (num_elements == 1 || num_elements ==

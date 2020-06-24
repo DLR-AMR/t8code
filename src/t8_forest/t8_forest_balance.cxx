@@ -40,16 +40,18 @@ T8_EXTERN_C_BEGIN ();
  * we pass forest_from as a parameter. But doing so is not valid anymore
  * if we refine recursively. */
 static int
-t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from,
-                         t8_locidx_t ltree_id, t8_locidx_t lelement_id,
-                         t8_eclass_scheme_c * ts,
-                         int num_elements, t8_element_t * elements[])
+t8_forest_balance_adapt (t8_const_forest_t forest,
+                         t8_const_forest_t forest_from, t8_locidx_t ltree_id,
+                         t8_locidx_t lelement_id,
+                         const t8_eclass_scheme_c * ts, int num_elements,
+                         const t8_element_t * elements[])
 {
   int                *pdone, iface, num_faces, num_half_neighbors, ineigh;
   t8_gloidx_t         neighbor_tree;
   t8_eclass_t         neigh_class;
   t8_eclass_scheme_c *neigh_scheme;
-  t8_element_t       *element = elements[0], **half_neighbors;
+  const t8_element_t *element = elements[0];
+  t8_element_t      **half_neighbors;
 
   /* We only need to check an element, if its level is smaller then the maximum
    * level in the forest minus 2.
@@ -321,26 +323,23 @@ t8_forest_balance (t8_forest_t forest, int repartition)
 
 /* Check whether the local elements of a forest are balanced. */
 int
-t8_forest_is_balanced (t8_forest_t forest)
+t8_forest_is_balanced (t8_const_forest_t forest)
 {
-  t8_forest_t         forest_from;
   t8_locidx_t         num_trees, num_elements;
   t8_locidx_t         itree, ielem;
-  t8_element_t       *element;
+  const t8_element_t *element;
   t8_eclass_scheme_c *ts;
   void               *data_temp;
   int                 dummy_int;
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  /* temporarily save forest_from */
-  forest_from = forest->set_from;
-
-  forest->set_from = forest;
-
   /* temporarily save forest t8code_data */
   data_temp = forest->t8code_data;
-  forest->t8code_data = &dummy_int;
+  /* We restore this later, so overwriting this here will not break
+   * the const promise of the forest input parameter.
+   * It is thus 'legal' that we cast away the constness. */
+  ((t8_forest_t) forest)->t8code_data = &dummy_int;
 
   num_trees = t8_forest_get_num_local_trees (forest);
   /* Iterate over all trees */
@@ -354,16 +353,17 @@ t8_forest_is_balanced (t8_forest_t forest)
       element = t8_forest_get_element_in_tree (forest, itree, ielem);
       /* Test if this element would need to be refined in the balance step.
        * If so, the forest is not balanced locally. */
+      /* TODO: Eliminate the forest casts as soon as adapt callback accepts const forest. */
       if (t8_forest_balance_adapt
           (forest, forest, itree, ielem, ts, 1, &element)) {
-        forest->set_from = forest_from;
-        forest->t8code_data = data_temp;
+        /* See comment above on casting away the constness. */
+        ((t8_forest_t) forest)->t8code_data = data_temp;
         return 0;
       }
     }
   }
-  forest->set_from = forest_from;
-  forest->t8code_data = data_temp;
+  /* See comment above on casting away the constness. */
+  ((t8_forest_t) forest)->t8code_data = data_temp;
   return 1;
 }
 

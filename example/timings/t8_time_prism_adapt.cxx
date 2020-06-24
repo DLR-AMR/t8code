@@ -32,10 +32,11 @@
 #include <sc_options.h>
 
 static int
-t8_basic_adapt_refine_type (t8_forest_t forest, t8_forest_t forest_from,
+t8_basic_adapt_refine_type (t8_const_forest_t forest,
+                            t8_const_forest_t forest_from,
                             t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                            t8_eclass_scheme_c * ts, int num_elements,
-                            t8_element_t * elements[])
+                            const t8_eclass_scheme_c * ts, int num_elements,
+                            const t8_element_t * elements[])
 {
   int                 level;
   int                 type;
@@ -57,10 +58,11 @@ t8_basic_adapt_refine_type (t8_forest_t forest, t8_forest_t forest_from,
 }
 
 static int
-t8_basic_adapt_refine_tet (t8_forest_t forest, t8_forest_t forest_from,
+t8_basic_adapt_refine_tet (t8_const_forest_t forest,
+                           t8_const_forest_t forest_from,
                            t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                           t8_eclass_scheme_c * ts, int num_elements,
-                           t8_element_t * elements[])
+                           const t8_eclass_scheme_c * ts, int num_elements,
+                           const t8_element_t * elements[])
 {
   int                 level;
   int                 type;
@@ -137,7 +139,7 @@ t8_time_refine (int start_level, int end_level, int create_forest, int cube,
     t8_forest_set_partition (forest_partition, NULL, 0);
     /* enable profiling for the partitioned forest */
     t8_forest_set_profiling (forest_partition, 1);
-    /*if desired do balance*/
+    /*if desired do balance */
     if (do_balance) {
       t8_forest_set_balance (forest_partition, NULL, 0);
     }
@@ -228,8 +230,8 @@ main (int argc, char **argv)
   else if (parsed >= 0 && 0 <= start_level && start_level <= end_level
            && (eclass_int == 5 || eclass_int == 6)) {
     create_forest = 1;
-    t8_time_refine (start_level, end_level, create_forest, cube, adapt, do_balance,
-                    (t8_eclass_t) eclass_int);
+    t8_time_refine (start_level, end_level, create_forest, cube, adapt,
+                    do_balance, (t8_eclass_t) eclass_int);
   }
   else {
     /* wrong usage */

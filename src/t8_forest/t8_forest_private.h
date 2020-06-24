@@ -53,10 +53,9 @@ void                t8_forest_populate (t8_forest_t forest);
  * \see t8_forest_set_scheme
  * \note  The forest is not required to have trees of class \a eclass.
  */
-t8_eclass_scheme_c *t8_forest_get_eclass_scheme_before_commit (t8_forest_t
-                                                               forest,
-                                                               t8_eclass_t
-                                                               eclass);
+t8_eclass_scheme_c
+  * t8_forest_get_eclass_scheme_before_commit (t8_const_forest_t forest,
+                                               t8_eclass_t eclass);
 
 /** Compute the maximum possible refinement level in a forest.
  * This is the minimum over all maimum refinement level of the present element
@@ -86,7 +85,7 @@ int                 t8_forest_min_nonempty_level (t8_cmesh_t cmesh,
  *                        a smaller rank. False otherwise.
  * \note \a forest must be committed before calling this function.
  */
-int                 t8_forest_first_tree_shared (t8_forest_t forest);
+int                 t8_forest_first_tree_shared (t8_const_forest_t forest);
 
 /** return nonzero if the last tree of a forest is shared with a bigger
  * process.
@@ -97,14 +96,14 @@ int                 t8_forest_first_tree_shared (t8_forest_t forest);
  *                        a bigger rank. False otherwise.
  * \note \a forest must be committed before calling this function.
  */
-int                 t8_forest_last_tree_shared (t8_forest_t forest);
+int                 t8_forest_last_tree_shared (t8_const_forest_t forest);
 
 /* Allocate memory for trees and set their values as in from.
  * For each tree allocate enough element memory to fit the elements of from.
  * If copy_elements is true, copy the elements of from into the element memory.
  */
 void                t8_forest_copy_trees (t8_forest_t forest,
-                                          t8_forest_t from,
+                                          t8_const_forest_t from,
                                           int copy_elements);
 
 /** Given the local id of a tree in a forest, return the coarse tree of the
@@ -120,7 +119,7 @@ void                t8_forest_copy_trees (t8_forest_t forest,
  *                         id \a ltreeid.
  * \see t8_cmesh_trees_get_tree_ext
  */
-t8_ctree_t          t8_forest_get_coarse_tree_ext (t8_forest_t forest,
+t8_ctree_t          t8_forest_get_coarse_tree_ext (t8_const_forest_t forest,
                                                    t8_locidx_t ltreeid,
                                                    t8_locidx_t ** face_neigh,
                                                    int8_t ** ttf);
@@ -150,7 +149,8 @@ t8_element_t       *t8_forest_get_tree_element (t8_tree_t tree,
  * \return      Returns the array of elements of the tree.
  * \a forest must be committed before calling this function.
  */
-t8_element_array_t *t8_forest_get_tree_element_array (t8_forest_t forest,
+t8_element_array_t *t8_forest_get_tree_element_array (t8_const_forest_t
+                                                      forest,
                                                       t8_locidx_t ltreeid);
 
 /** Find the owner process of a given element, deprecated version.
@@ -196,7 +196,7 @@ int                 t8_forest_element_find_owner_old (t8_forest_t forest,
  * \see t8_forest_element_find_owner_ext
  * \see t8_forest_element_owners_bounds
  */
-int                 t8_forest_element_find_owner (t8_forest_t forest,
+int                 t8_forest_element_find_owner (t8_const_forest_t forest,
                                                   t8_gloidx_t gtreeid,
                                                   t8_element_t * element,
                                                   t8_eclass_t eclass);
@@ -221,7 +221,8 @@ int                 t8_forest_element_find_owner (t8_forest_t forest,
  * \see t8_forest_element_find_owner
  * \see t8_forest_element_owners_bounds
  */
-int                 t8_forest_element_find_owner_ext (t8_forest_t forest,
+int                 t8_forest_element_find_owner_ext (t8_const_forest_t
+                                                      forest,
                                                       t8_gloidx_t gtreeid,
                                                       t8_element_t * element,
                                                       t8_eclass_t eclass,
@@ -242,7 +243,7 @@ int                 t8_forest_element_find_owner_ext (t8_forest_t forest,
  *                          the maximum level. Must be false otherwise.
  * \return      True if and only if \a rank is the (first) owner process of \a element.
  */
-int                 t8_forest_element_check_owner (t8_forest_t forest,
+int                 t8_forest_element_check_owner (t8_const_forest_t forest,
                                                    t8_element_t * element,
                                                    t8_gloidx_t gtreeid,
                                                    t8_eclass_t eclass,
@@ -263,7 +264,8 @@ int                 t8_forest_element_check_owner (t8_forest_t forest,
  *                        all owners of descendants of \a elem that touch \a face
  *                        in ascending order.
  */
-void                t8_forest_element_owners_at_face (t8_forest_t forest,
+void                t8_forest_element_owners_at_face (t8_const_forest_t
+                                                      forest,
                                                       t8_gloidx_t gtreeid,
                                                       const t8_element_t *
                                                       element,
@@ -288,7 +290,7 @@ void                t8_forest_element_owners_at_face (t8_forest_t forest,
  * \see t8_forest_element_find_owner
  * \see t8_forest_element_owners_bounds
  */
-void                t8_forest_element_owners_bounds (t8_forest_t forest,
+void                t8_forest_element_owners_bounds (t8_const_forest_t forest,
                                                      t8_gloidx_t gtreeid,
                                                      const t8_element_t *
                                                      element,
@@ -311,7 +313,7 @@ void                t8_forest_element_owners_bounds (t8_forest_t forest,
  *        algorithm. We interpret \a lower = \a such that the owner is unique and equals \a lower.
  * \note \a forest must be committed before calling this function.
  */
-void                t8_forest_element_owners_at_face_bounds (t8_forest_t
+void                t8_forest_element_owners_at_face_bounds (t8_const_forest_t
                                                              forest,
                                                              t8_gloidx_t
                                                              gtreeid,
@@ -340,7 +342,7 @@ void                t8_forest_element_owners_at_face_bounds (t8_forest_t
  * t8_forest_element_owners_at_face for the resulting neighbor.
  * \note \a forest must be committed before calling this function.
  */
-void                t8_forest_element_owners_at_neigh_face (t8_forest_t
+void                t8_forest_element_owners_at_neigh_face (t8_const_forest_t
                                                             forest,
                                                             t8_locidx_t
                                                             ltreeid,
@@ -368,17 +370,12 @@ void                t8_forest_element_owners_at_neigh_face (t8_forest_t
  * This is equivalent to calling t8_forest_element_face_neighbor and
  * t8_forest_element_owners_at_face_bounds for the resulting neighbor.
  */
-void                t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t
-                                                                   forest,
-                                                                   t8_locidx_t
-                                                                   ltreeid,
-                                                                   const
-                                                                   t8_element_t
-                                                                   * element,
-                                                                   int face,
-                                                                   int *lower,
-                                                                   int
-                                                                   *upper);
+void               
+t8_forest_element_owners_at_neigh_face_bounds (t8_const_forest_t forest,
+                                               t8_locidx_t ltreeid,
+                                               const t8_element_t * element,
+                                               int face, int *lower,
+                                               int *upper);
 
 /** Construct all face neighbors of half size of a given element.
  * \param [in]    forest The forest.
@@ -395,7 +392,8 @@ void                t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t
  * \return                The global id of the tree in which the neighbors are.
  *        -1 if there exists no neighbor across that face.
  */
-t8_gloidx_t         t8_forest_element_half_face_neighbors (t8_forest_t forest,
+t8_gloidx_t         t8_forest_element_half_face_neighbors (t8_const_forest_t
+                                                           forest,
                                                            t8_locidx_t
                                                            ltreeid,
                                                            const t8_element_t
@@ -428,7 +426,7 @@ void                t8_forest_print_all_leaf_neighbors (t8_forest_t forest);
  * \note If no ghost layer was created for the forest, only local elements are tested.
  * \note \a forest must be committed before calling this function.
  */
-int                 t8_forest_element_has_leaf_desc (t8_forest_t forest,
+int                 t8_forest_element_has_leaf_desc (t8_const_forest_t forest,
                                                      t8_gloidx_t gtreeid,
                                                      const t8_element_t *
                                                      element,

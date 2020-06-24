@@ -70,7 +70,7 @@ t8_forest_compute_maxlevel (t8_forest_t forest)
 
 /* Return the maximum level of a forest */
 int
-t8_forest_get_maxlevel (t8_forest_t forest)
+t8_forest_get_maxlevel (t8_const_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (forest->maxlevel >= 0);
@@ -133,7 +133,7 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_cxx_t * scheme)
 }
 
 int
-t8_forest_is_equal (t8_forest_t forest_a, t8_forest_t forest_b)
+t8_forest_is_equal (t8_const_forest_t forest_a, t8_const_forest_t forest_b)
 {
   t8_locidx_t         num_local_trees_a, num_local_trees_b;
   t8_locidx_t         elems_in_tree_a, elems_in_tree_b;
@@ -225,7 +225,7 @@ t8_forest_bilinear_interpolation (const double *vertex,
  */
 /* TODO: replace ltree_id argument with ts argument. */
 void
-t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
+t8_forest_element_coordinate (t8_const_forest_t forest, t8_locidx_t ltree_id,
                               const t8_element_t * element,
                               const double *vertices, int corner_number,
                               double *coordinates)
@@ -325,7 +325,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
 
 /* Compute the diameter of an element. */
 double
-t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid,
+t8_forest_element_diam (t8_const_forest_t forest, t8_locidx_t ltreeid,
                         const t8_element_t * element, const double *vertices)
 {
   t8_eclass_t         tree_class;
@@ -366,7 +366,7 @@ t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid,
  * is given by   1/n * (x_1 + ... + x_n)
  */
 void
-t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
+t8_forest_element_centroid (t8_const_forest_t forest, t8_locidx_t ltreeid,
                             const t8_element_t * element,
                             const double *vertices, double *coordinates)
 {
@@ -399,7 +399,7 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
 
 /* Compute the length of the line from one corner to a second corner in an element */
 static double
-t8_forest_element_line_length (t8_forest_t forest, t8_locidx_t ltreeid,
+t8_forest_element_line_length (t8_const_forest_t forest, t8_locidx_t ltreeid,
                                const t8_element_t * element,
                                const double *vertices, int corner_a,
                                int corner_b)
@@ -465,7 +465,7 @@ t8_forest_element_tet_volume (double coordinates[4][3])
 
 /* Compute an element's volume */
 double
-t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
+t8_forest_element_volume (t8_const_forest_t forest, t8_locidx_t ltreeid,
                           const t8_element_t * element,
                           const double *vertices)
 {
@@ -647,7 +647,7 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
 
 /* Compute the area of an element's face */
 double
-t8_forest_element_face_area (t8_forest_t forest, t8_locidx_t ltreeid,
+t8_forest_element_face_area (t8_const_forest_t forest, t8_locidx_t ltreeid,
                              const t8_element_t * element, int face,
                              const double *vertices)
 {
@@ -740,7 +740,8 @@ t8_forest_element_face_area (t8_forest_t forest, t8_locidx_t ltreeid,
 }
 
 void
-t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
+t8_forest_element_face_centroid (t8_const_forest_t forest,
+                                 t8_locidx_t ltreeid,
                                  const t8_element_t * element, int face,
                                  const double *vertices, double centroid[3])
 {
@@ -821,7 +822,7 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
 }
 
 void
-t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
+t8_forest_element_face_normal (t8_const_forest_t forest, t8_locidx_t ltreeid,
                                const t8_element_t * element, int face,
                                const double *tree_vertices, double normal[3])
 {
@@ -1107,7 +1108,7 @@ t8_forest_populate (t8_forest_t forest)
  * not the first possible descendant of that tree.
  */
 static int
-t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
+t8_forest_tree_shared (t8_const_forest_t forest, int first_or_last)
 {
   t8_tree_t           tree;
   t8_element_t       *desc, *element, *tree_desc;
@@ -1162,13 +1163,13 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
 }
 
 int
-t8_forest_first_tree_shared (t8_forest_t forest)
+t8_forest_first_tree_shared (t8_const_forest_t forest)
 {
   return t8_forest_tree_shared (forest, 0);
 }
 
 int
-t8_forest_last_tree_shared (t8_forest_t forest)
+t8_forest_last_tree_shared (t8_const_forest_t forest)
 {
   return t8_forest_tree_shared (forest, 1);
 }
@@ -1178,7 +1179,8 @@ t8_forest_last_tree_shared (t8_forest_t forest)
  * If copy_elements is true, copy the elements of from into the element memory.
  */
 void
-t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
+t8_forest_copy_trees (t8_forest_t forest, t8_const_forest_t from,
+                      int copy_elements)
 {
   t8_tree_t           tree, fromtree;
   t8_gloidx_t         num_tree_elements;
@@ -1280,7 +1282,7 @@ t8_forest_bin_search_lower (t8_element_array_t * elements,
 }
 
 t8_eclass_t
-t8_forest_element_neighbor_eclass (t8_forest_t forest,
+t8_forest_element_neighbor_eclass (t8_const_forest_t forest,
                                    t8_locidx_t ltreeid,
                                    const t8_element_t * elem, int face)
 {
@@ -1330,7 +1332,7 @@ t8_forest_element_neighbor_eclass (t8_forest_t forest,
 }
 
 t8_gloidx_t
-t8_forest_element_face_neighbor (t8_forest_t forest,
+t8_forest_element_face_neighbor (t8_const_forest_t forest,
                                  t8_locidx_t ltreeid,
                                  const t8_element_t * elem,
                                  t8_element_t * neigh,
@@ -1461,7 +1463,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest,
 }
 
 t8_gloidx_t
-t8_forest_element_half_face_neighbors (t8_forest_t forest,
+t8_forest_element_half_face_neighbors (t8_const_forest_t forest,
                                        t8_locidx_t ltreeid,
                                        const t8_element_t * elem,
                                        t8_element_t * neighs[],
@@ -1537,12 +1539,12 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
 }
 
 void
-t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
+t8_forest_leaf_face_neighbors (t8_const_forest_t forest, t8_locidx_t ltreeid,
                                const t8_element_t * leaf,
                                t8_element_t ** pneighbor_leafs[],
                                int face, int *dual_faces[],
                                int *num_neighbors,
-                               t8_locidx_t ** pelement_indices,
+                               t8_locidx_t **pelement_indices,
                                t8_eclass_scheme_c ** pneigh_scheme,
                                int forest_is_balanced)
 {
@@ -1903,7 +1905,7 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
 
 /* Check if an element is owned by a specific rank */
 int
-t8_forest_element_check_owner (t8_forest_t forest,
+t8_forest_element_check_owner (t8_const_forest_t forest,
                                t8_element_t * element,
                                t8_gloidx_t gtreeid, t8_eclass_t eclass,
                                int rank, int element_is_desc)
@@ -2039,7 +2041,7 @@ t8_forest_element_find_owner_compare (const void *find_owner_data,
 }
 
 int
-t8_forest_element_find_owner_ext (t8_forest_t forest,
+t8_forest_element_find_owner_ext (t8_const_forest_t forest,
                                   t8_gloidx_t gtreeid,
                                   t8_element_t * element,
                                   t8_eclass_t eclass, int lower_bound,
@@ -2207,7 +2209,7 @@ t8_forest_element_find_owner_ext (t8_forest_t forest,
 }
 
 int
-t8_forest_element_find_owner (t8_forest_t forest, t8_gloidx_t gtreeid,
+t8_forest_element_find_owner (t8_const_forest_t forest, t8_gloidx_t gtreeid,
                               t8_element_t * element, t8_eclass_t eclass)
 {
   return t8_forest_element_find_owner_ext (forest, gtreeid, element,
@@ -2338,7 +2340,7 @@ t8_forest_element_find_owner_old (t8_forest_t forest,
  * first_desc/last_desc should either point to the first/last descendant of element or be NULL
  */
 static void
-t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
+t8_forest_element_owners_at_face_recursion (t8_const_forest_t forest,
                                             t8_gloidx_t gtreeid,
                                             const t8_element_t * element,
                                             t8_eclass_t eclass,
@@ -2454,7 +2456,7 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
 }
 
 void
-t8_forest_element_owners_at_face (t8_forest_t forest, t8_gloidx_t gtreeid,
+t8_forest_element_owners_at_face (t8_const_forest_t forest, t8_gloidx_t gtreeid,
                                   const t8_element_t * element, t8_eclass_t eclass,
                                   int face, sc_array_t * owners)
 {
@@ -2492,7 +2494,7 @@ t8_forest_element_owners_at_face (t8_forest_t forest, t8_gloidx_t gtreeid,
 }
 
 void
-t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid,
+t8_forest_element_owners_bounds (t8_const_forest_t forest, t8_gloidx_t gtreeid,
                                  const t8_element_t * element, t8_eclass_t eclass,
                                  int * lower, int * upper)
 {
@@ -2519,7 +2521,7 @@ t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid,
 }
 
 void
-t8_forest_element_owners_at_face_bounds (t8_forest_t forest, t8_gloidx_t gtreeid,
+t8_forest_element_owners_at_face_bounds (t8_const_forest_t forest, t8_gloidx_t gtreeid,
                                   const t8_element_t * element,
                                   t8_eclass_t eclass, int face, int *lower,
                                   int * upper)
@@ -2550,7 +2552,7 @@ t8_forest_element_owners_at_face_bounds (t8_forest_t forest, t8_gloidx_t gtreeid
 }
 
 void
-t8_forest_element_owners_at_neigh_face (t8_forest_t forest, t8_locidx_t ltreeid,
+t8_forest_element_owners_at_neigh_face (t8_const_forest_t forest, t8_locidx_t ltreeid,
                                         const t8_element_t * element, int face,
                                         sc_array_t * owners)
 {
@@ -2582,7 +2584,7 @@ t8_forest_element_owners_at_neigh_face (t8_forest_t forest, t8_locidx_t ltreeid,
 }
 
 void
-t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t ltreeid,
+t8_forest_element_owners_at_neigh_face_bounds (t8_const_forest_t forest, t8_locidx_t ltreeid,
                                         const t8_element_t * element, int face,
                                         int *lower, int *upper)
 {
@@ -2618,7 +2620,7 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
 }
 
 int
-t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid,
+t8_forest_element_has_leaf_desc (t8_const_forest_t forest, t8_gloidx_t gtreeid,
                                  const t8_element_t * element,
                                  t8_eclass_scheme_c * ts)
 {

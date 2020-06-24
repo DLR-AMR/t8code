@@ -40,7 +40,7 @@ T8_EXTERN_C_BEGIN ();
 void                t8_forest_balance (t8_forest_t forest, int repartition);
 
 /* Check whether the local elements of a forest are balanced. */
-int                 t8_forest_is_balanced (t8_forest_t forest);
+int                 t8_forest_is_balanced (t8_const_forest_t forest);
 
 T8_EXTERN_C_END ();
 

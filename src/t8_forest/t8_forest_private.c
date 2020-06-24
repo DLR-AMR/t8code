@@ -34,7 +34,8 @@ t8_forest_get_tree_element (t8_tree_t tree, t8_locidx_t elem_in_tree)
 }
 
 t8_element_array_t *
-t8_forest_get_tree_element_array (t8_forest_t forest, t8_locidx_t ltreeid)
+t8_forest_get_tree_element_array (t8_const_forest_t forest,
+                                  t8_locidx_t ltreeid)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (0 <= ltreeid

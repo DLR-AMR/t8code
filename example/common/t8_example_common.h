@@ -79,10 +79,10 @@ T8_EXTERN_C_BEGIN ();
  *                              If \a band_width = 0 then the return value is true if and only if
  *                              the zero level-set passes through \a element.
  */
-int                 t8_common_within_levelset (t8_forest_t forest,
+int                 t8_common_within_levelset (t8_const_forest_t forest,
                                                t8_locidx_t ltreeid,
-                                               t8_element_t * element,
-                                               t8_eclass_scheme_c * ts,
+                                               const t8_element_t * element,
+                                               const t8_eclass_scheme_c * ts,
                                                const double *tree_vertices,
                                                t8_example_level_set_fn
                                                levelset, double band_width,
@@ -92,13 +92,13 @@ int                 t8_common_within_levelset (t8_forest_t forest,
  * tree is refined and no other elements. This results in a highly
  * imbalanced forest.
  */
-int                 t8_common_adapt_balance (t8_forest_t forest,
-                                             t8_forest_t forest_from,
+int                 t8_common_adapt_balance (t8_const_forest_t forest,
+                                             t8_const_forest_t forest_from,
                                              t8_locidx_t which_tree,
                                              t8_locidx_t lelement_id,
-                                             t8_eclass_scheme_c * ts,
+                                             const t8_eclass_scheme_c * ts,
                                              int num_elements,
-                                             t8_element_t * elements[]);
+                                             const t8_element_t * elements[]);
 
 /** Adapt a forest along a given level-set function.
  * The user data of forest must be a pointer to a \a t8_example_level_set_struct_t.
@@ -107,13 +107,14 @@ int                 t8_common_adapt_balance (t8_forest_t forest,
  */
 /* TODO: Currently the band_width control is not working yet.
  *        if band_with = 0, then all elements that are touched by the zero LS are refined. */
-int                 t8_common_adapt_level_set (t8_forest_t forest,
-                                               t8_forest_t forest_from,
+int                 t8_common_adapt_level_set (t8_const_forest_t forest,
+                                               t8_const_forest_t forest_from,
                                                t8_locidx_t which_tree,
                                                t8_locidx_t lelement_id,
-                                               t8_eclass_scheme_c * ts,
+                                               const t8_eclass_scheme_c * ts,
                                                int num_elements,
-                                               t8_element_t * elements[]);
+                                               const t8_element_t *
+                                               elements[]);
 
 /** Compute the coordinates of the midpoint of an element.
  * \param [in]  forest  The forest in which the element is in (must be committed).
@@ -124,10 +125,10 @@ int                 t8_common_adapt_level_set (t8_forest_t forest,
  *              of the midpoint of \a element are stored.
  * \note \a forest must be committed before calling this function.
  */
-void                t8_common_midpoint (t8_forest_t forest,
+void                t8_common_midpoint (t8_const_forest_t forest,
                                         t8_locidx_t which_tree,
-                                        t8_eclass_scheme_c * ts,
-                                        t8_element_t * element,
+                                        const t8_eclass_scheme_c * ts,
+                                        const t8_element_t * element,
                                         double elem_midpoint_f[3]);
 
 /** Real valued functions defined in t8_example_common_functions.h */
