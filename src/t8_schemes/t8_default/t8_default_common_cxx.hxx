@@ -63,6 +63,9 @@ public:
   virtual t8_gloidx_t t8_element_count_leafs (const t8_element_t * t,
                                               int level) const;
 
+  virtual int         t8_element_num_siblings (const t8_element_t *
+                                               elem) const;
+
   /** Count how many leaf descendants of a given uniform level the root element will produce.
    * \param [in] level A refinement level.
    * \return The value of \ref t8_element_count_leafs if the input element
