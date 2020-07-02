@@ -392,7 +392,6 @@ t8_forest_adapt (t8_forest_t forest)
         /* The considered elements are neither to be coarsened nor is the first
          * one to be refined.
          * We copy the element to the new element array. */
-          refine = 0;
         T8_ASSERT (refine == 0);
         elements[0] = t8_element_array_push (telements);
         tscheme->t8_element_copy (elements_from[0], elements[0]);
