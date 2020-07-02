@@ -62,6 +62,18 @@ t8_basic_hypercube_refine(t8_forest_t forest, t8_forest_t forest_from,
     return 0;
 }
 
+static int
+t8_basic_hypercube_coarsen(t8_forest_t forest, t8_forest_t forest_from,
+                          t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                          t8_eclass_scheme_c * ts, int num_elements,
+                          t8_element_t * elements[])
+{
+    int         type, level;
+    level = ts->t8_element_level(elements[0]);
+    if(level > 1 && num_elements >1) return -1;
+    return 0;
+}
+
 static void
 t8_basic_hypercube (t8_eclass_t eclass, int set_level, int do_adapt,
                     int create_forest, int do_partition, int do_balance)
@@ -132,6 +144,17 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level, int do_adapt,
           t8_forest_write_vtk (forest_adapt, vtuname);
           t8_debugf ("Output to %s\n", vtuname);
           /* Ensure that the correct forest is passed to unref later */
+
+          t8_forest_init(&forest_coarsen);
+          t8_forest_set_user_data(forest_coarsen, &endlvl);
+          t8_forest_set_profiling(forest_coarsen, 1);
+          t8_forest_set_adapt(forest_coarsen, forest_adapt, t8_basic_hypercube_coarsen, 0);
+          t8_forest_commit(forest_coarsen);
+          t8_debugf ("Successfully coarsened forest.\n");
+          snprintf (vtuname, BUFSIZ, "forest_hypercube_coarsen_%s",
+                    t8_eclass_to_string[eclass]);
+          t8_forest_write_vtk (forest_coarsen, vtuname);
+          t8_debugf ("Output to %s\n", vtuname);
       }
       if (do_balance) {
         t8_forest_t         forest_balance;
@@ -150,7 +173,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level, int do_adapt,
       }
     }
     if(do_adapt){
-        t8_forest_unref(&forest_adapt);
+        t8_forest_unref(&forest_coarsen);
     }
     else{
         t8_forest_unref (&forest);

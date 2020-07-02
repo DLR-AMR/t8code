@@ -131,7 +131,7 @@ public:
    * \return          The number of siblings of \a element.
    * Note that this number is >= 1, since we count the element itself as a sibling.
    */
-  virtual int         t8_element_num_siblings (const t8_element_t *
+  virtual int         t8_element_max_num_siblings (const t8_element_t *
                                                elem) const = 0;
 
   /** Compute a specific sibling of a given element \b elem and store it in \b sibling.

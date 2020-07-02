@@ -147,7 +147,7 @@ t8_gloidx_t
 /* *INDENT-OFF* */
 /* Indent bug: indent adds an additional const */
 int
-t8_default_scheme_common_c::t8_element_num_siblings (const t8_element_t * elem) const
+t8_default_scheme_common_c::t8_element_max_num_siblings (const t8_element_t * elem) const
 /* *INDENT-ON* */
 {
   const int           dim = t8_eclass_to_dimension[eclass];
