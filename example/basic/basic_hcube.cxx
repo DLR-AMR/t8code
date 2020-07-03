@@ -56,7 +56,7 @@ t8_basic_hypercube_refine(t8_forest_t forest, t8_forest_t forest_from,
         break;
     }
 /*TODO: Implement a better refinement argument, one that effects all elements*/
-    if(type == 6){
+    if(type == 7){
         return 1;
     }
     return 0;
@@ -148,7 +148,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level, int do_adapt,
           t8_forest_init(&forest_coarsen);
           t8_forest_set_user_data(forest_coarsen, &endlvl);
           t8_forest_set_profiling(forest_coarsen, 1);
-          t8_forest_set_adapt(forest_coarsen, forest_adapt, t8_basic_hypercube_coarsen, 0);
+          t8_forest_set_adapt(forest_coarsen, forest_adapt, t8_basic_hypercube_coarsen, 1);
           t8_forest_commit(forest_coarsen);
           t8_debugf ("Successfully coarsened forest.\n");
           snprintf (vtuname, BUFSIZ, "forest_hypercube_coarsen_%s",

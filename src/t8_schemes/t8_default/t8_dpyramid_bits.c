@@ -64,23 +64,61 @@ int
 t8_dpyramid_is_family (const t8_dpyramid_t ** fam)
 {
   /*TODO: This can be implemented better! */
+  const int level = fam[0]->level;
+  int i, ptype;
+  t8_dpyramid_coord_t inc = T8_DPYRAMID_LEN(level), x_inc, y_inc;
   if (t8_dpyramid_shape (fam[0]) == T8_ECLASS_TET) {
     return t8_dtet_is_familypv ((const t8_dtet_t **) fam);
   }
   else {
-    t8_dpyramid_t       parent, test;
-    int                 i;
-    t8_dpyramid_parent (fam[0], &parent);
-    for (i = 1; i < T8_DPYRAMID_CHILDREN; i++) {
-      t8_dpyramid_child (&parent, i, &test);
-      if (t8_dpyramid_is_equal (fam[i], &test) != 0) {
-        return 0;
+      if(level == 0){
+          return 0;
+      }
+
+      ptype = fam[0]->type;
+      T8_ASSERT(ptype == 6 || ptype == 7);
+      for(i = 1; i<T8_DPYRAMID_CHILDREN; i++){
+          /*All elements must have the same level to be a family*/
+          if(fam[i]->level != level)
+          {
+              return 0;
+          }
+          /*The type of parent is the type of the first child in z-curve-order*/
+          if(t8_dpyramid_parenttype_Iloc_to_type[ptype][i] != fam[i]->type){
+              return 0;
+          }
+      }
+
+      x_inc = fam[0]->x + inc;
+      y_inc = fam[0]->y + inc;
+      /*Check the coordinates of the anchor-coordinate*/
+      if(ptype == 6){
+          return fam[0]->z == fam[1]->z && fam[0]->z == fam[2]->z && fam[0]->z == fam[3]->z &&
+               fam[0]->z == fam[4]->z && fam[0]->z == fam[5]->z && fam[0]->z == fam[6]->z &&
+               fam[0]->z == fam[7]->z && fam[0]->z == fam[8]->z &&
+               fam[0]->z == (fam[9]->z - inc) &&
+               fam[0]->x == fam[3]->x && fam[0]->x == fam[4]->x && x_inc == fam[1]->x &&
+               x_inc == fam[2]->x && x_inc == fam[5]->x && x_inc == fam[6]->x &&
+               x_inc == fam[7]->x &&x_inc == fam[8]->x && x_inc == fam[9]->x &&
+               fam[0]->y == fam[1]->y && fam[0]->y == fam[2]->y && y_inc == fam[3]->y &&
+               y_inc == fam[4]->y && y_inc == fam[5]->y && y_inc == fam[6]->y &&
+               y_inc == fam[7]->y && y_inc == fam[8]->y && y_inc == fam[9]->y;
+      }
+      else{
+           return fam[1]->z == fam[0]->z + inc && fam[1]->z == fam[2]->z &&
+                 fam[1]->z == fam[3]->z && fam[1]->z == fam[4]->z && fam[1]->z == fam[5]->z &&
+                 fam[1]->z == fam[6]->z && fam[1]->z == fam[7]->z && fam[1]->z == fam[8]->z &&
+                 fam[1]->z == fam[9]->z &&
+                 fam[0]->x == fam[1]->x && fam[0]->x == fam[2]->x && fam[0]->x == fam[3]->x &&
+                 fam[0]->x == fam[4]->x && fam[0]->x == fam[7]->x && fam[0]->x == fam[8]->x &&
+                 x_inc == fam[5]->x && x_inc == fam[6]->x && x_inc == fam[9]->x &&
+                 fam[0]->y == fam[1]->y && fam[0]->y == fam[2]->y && fam[0]->y == fam[3]->y &&
+                 fam[0]->y == fam[4]->y && fam[0]->y == fam[5]->y && fam[0]->y == fam[6]->y &&
+                 y_inc == fam[7]->y && y_inc == fam[8]->y && y_inc == fam[9]->y;
       }
     }
-    return 1;
-  }
-
 }
+
 
 /*Copies a pyramid from source to dest*/
 void
