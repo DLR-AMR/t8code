@@ -74,7 +74,7 @@ t8_dpyramid_is_family (const t8_dpyramid_t ** fam)
       if(level == 0){
           return 0;
       }
-
+      /*The type of parent is the type of the first child in z-curve-order*/
       ptype = fam[0]->type;
       T8_ASSERT(ptype == 6 || ptype == 7);
       for(i = 1; i<T8_DPYRAMID_CHILDREN; i++){
@@ -83,7 +83,7 @@ t8_dpyramid_is_family (const t8_dpyramid_t ** fam)
           {
               return 0;
           }
-          /*The type of parent is the type of the first child in z-curve-order*/
+          /*Check if every family-member has the correct type*/
           if(t8_dpyramid_parenttype_Iloc_to_type[ptype][i] != fam[i]->type){
               return 0;
           }
@@ -116,6 +116,52 @@ t8_dpyramid_is_family (const t8_dpyramid_t ** fam)
                  fam[0]->y == fam[4]->y && fam[0]->y == fam[5]->y && fam[0]->y == fam[6]->y &&
                  y_inc == fam[7]->y && y_inc == fam[8]->y && y_inc == fam[9]->y;
       }
+    }
+}
+
+
+
+int
+t8_dpyramid_is_root_boundary(const t8_dpyramid_t * p, int face)
+{
+    T8_ASSERT(0 <= face && face <= T8_DPYRAMID_FACES);
+    switch(p->type){
+    /*Doublecheck the tet-part*/
+    case 0:
+        return  (face == 1 && p->x == p->z) ||
+                (face == 0 && p->x == T8_DPYRAMID_ROOT_LEN - T8_DPYRAMID_LEN(p->level));
+    case 1:
+        return  (face == 2 && p->y == p->z) ||
+                (face == 0 && p->x == T8_DPYRAMID_ROOT_LEN - T8_DPYRAMID_LEN(p->level));
+    case 2:
+        return  (face == 2 && p->x == p->z) ||
+                (face == 3 && p->y == T8_DPYRAMID_ROOT_LEN - T8_DPYRAMID_LEN(p->level));
+    case 3:
+        return  (face == 1 && p->y == p->z) ||
+                (face == 3 && p->y == T8_DPYRAMID_ROOT_LEN - T8_DPYRAMID_LEN(p->level));
+    case 4:
+        return 0; /*type 4 tets never touch a root boundary*/
+    case 5:
+        return 0; /*type 5 tets never touch a root boundary*/
+    case 6:
+        switch (face) {
+        case 0:
+            return p->x == p->z;
+        case 1:
+            return p->x == T8_DPYRAMID_ROOT_LEN - T8_DPYRAMID_LEN(p->level);
+        case 2:
+            return p->y == T8_DPYRAMID_ROOT_LEN - T8_DPYRAMID_LEN(p->level);
+        case 3:
+            return p->y == p->z;
+        case 4:
+            return p->z == 0;
+        default:
+            SC_ABORT_NOT_REACHED();
+        }
+    case 7:
+        return 0;   /*type 7 pyramids are never at the root boundary*/
+    default:
+        SC_ABORT_NOT_REACHED();
     }
 }
 
@@ -265,6 +311,14 @@ t8_dpyramid_linear_id (const t8_dpyramid_t * p, int level)
   }
   T8_ASSERT(p->level >= 0);
   return id;
+}
+
+int
+t8_dpramid_face_neighbor_inside (const t8_dpyramid_t *p,
+                                            const t8_dpyramid_t * neigh,
+                                            int face, int *neigh_face)
+{
+    return 0;
 }
 
 void

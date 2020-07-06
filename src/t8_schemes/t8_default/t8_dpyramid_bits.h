@@ -94,6 +94,20 @@ int                 t8_dpyramid_is_equal (const t8_dpyramid_t * p,
  */
 int                 t8_dpyramid_is_family (const t8_dpyramid_t ** fam);
 
+
+
+/** Copmute whether a given pyramid shares a given face with its root tree.
+ * \param [in]  p       The input pyramid
+ * \param [in]  face    A face of \a p
+ * \return              True, if \a is a subface of the pyramid root element.
+ */
+int                 t8_dpyramid_is_root_boundary(const t8_dpyramid_t * p,
+                                        int face);
+
+int                 t8_dpramid_face_neighbor_inside (const t8_dpyramid_t *p,
+                                            const t8_dpyramid_t * neigh,
+                                            int face, int *neigh_face);
+
 /** Compute the position of the ancestor of this child at level \a level within
  * its siblings.
  * \param [in] p  pyramid to be considered.

@@ -398,7 +398,8 @@ t8_forest_adapt (t8_forest_t forest)
         tscheme->t8_element_parent(elements[0], parent);
         num_siblings = tscheme->t8_element_num_children(parent);
         el_inserted++;
-        t8_debugf("[D] 2: ns: %i, c-id: %i\n", num_siblings,  tscheme->t8_element_child_id (elements[0]));
+        t8_debugf("[D] 2: ns: %i, c-id: %i, set_rec: %i\n", num_siblings,
+                  tscheme->t8_element_child_id (elements[0]), forest->set_adapt_recursive);
         if (forest->set_adapt_recursive &&
             (size_t) tscheme->t8_element_child_id (elements[0])
             == num_siblings - 1) {

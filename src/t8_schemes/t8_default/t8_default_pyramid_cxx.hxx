@@ -162,10 +162,7 @@ virtual int         t8_element_num_vertices (const t8_element_t * elem);
 
   /** Compute whether a given element shares a given face with its root tree. */
     virtual int         t8_element_is_root_boundary (const t8_element_t * elem,
-                                                     int face){
-      SC_ABORT ("This function is not implemented yet.\n");
-      return T8_ECLASS_ZERO;      /* suppresses compiler warning */
-    }
+                                                     int face);
 
 /** Construct the nearest common ancestor of two elements in the same tree. */
   virtual void        t8_element_nca (const t8_element_t * elem1,
@@ -252,11 +249,7 @@ virtual int         t8_element_num_vertices (const t8_element_t * elem);
                                                          elem,
                                                          t8_element_t * neigh,
                                                          int face,
-                                                         int *neigh_face)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return T8_ECLASS_ZERO;      /* suppresses compiler warning */
-  }
+                                                         int *neigh_face);
 
 /** Given a face of an element return the face number
 * of the parent of the element that matches the element's face. Or return -1 if

@@ -124,6 +124,8 @@ main (int argc, char **argv)
   t8_ghost_neighbor_test (T8_ECLASS_TET, sc_MPI_COMM_WORLD, 0);
   t8_global_productionf ("Testing neighbors for hex\n");
   t8_ghost_neighbor_test (T8_ECLASS_HEX, sc_MPI_COMM_WORLD, 0);
+  t8_global_productionf ("Testing neighbors for pyramid\n");
+  t8_ghost_neighbor_test (T8_ECLASS_PYRAMID, sc_MPI_COMM_WORLD, 0);
   t8_global_productionf ("Testing neighbors for hybrid_mesh\n");
   t8_ghost_neighbor_test (T8_ECLASS_HEX, sc_MPI_COMM_WORLD, 1);
 
