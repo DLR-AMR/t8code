@@ -52,5 +52,9 @@ extern const int t8_dpyramid_type_cid_to_parenttype[2][8];
  * no pyramid-children, therefore this makes sense only for pyramidparents*/
 extern const int           t8_dpyramid_parenttype_iloc_pyra_w_lower_id[2][10];
 
+/* Returns the facenumber of the neighbour touching the current pyramid.
+ * The facenumber depends on the type of the pyramid*/
+extern const int t8_dpyramid_type_face_to_nface[2][5];
+
 #endif // T8_DPYRAMID_CONNECTIVITY_H
 

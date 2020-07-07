@@ -314,6 +314,86 @@ t8_dpyramid_linear_id (const t8_dpyramid_t * p, int level)
 }
 
 int
+t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * neigh)
+{
+    T8_ASSERT(0 <= face && face < T8_DPYRAMID_FACES);
+    t8_dpyramid_coord_t len = T8_DPYRAMID_LEN(p->level);
+    t8_dpyramid_cube_id_t cid;
+    int ptype, maxtetlvl, i, pyra_neigh = 0;
+    if(t8_dpyramid_shape(p) == T8_ECLASS_PYRAMID)
+    /*pyramid touches tet or pyra*/
+    {
+        if(face == 0 || face == 1){
+            neigh->type =  0;
+        }
+        else if(face == 2 || face == 3){
+            neigh->type = 3;
+        }
+        else
+        {
+            /*face == 4*/
+            neigh->type = (p->type == 6)? 7: 6;
+        }
+        if(face == 0 || face == 3){
+            neigh->x = p->x;
+            neigh->y = p->y;
+            neigh->z = p->z;
+        }
+        else if(face == 1){
+            neigh->x = p->x + (p->type == 6)?0 : - len;
+            neigh->y = p->y + (p->type == 6)?len : 0;
+            neigh->z = p->z;
+        }
+        else if(face == 2){
+            neigh->x = p->x+ (p->type == 6)?len : 0;
+            neigh->y = p->y+ (p->type == 6)?0 : - len;
+            neigh->z = p->z;
+        }
+        else{
+            /*face == 4*/
+            neigh->x = p->x;
+            neigh->y = p->y;
+            neigh->z = p->z + (p->type == 6) ? - len: len;
+        }
+        neigh->level = p->level;
+        return t8_dpyramid_type_face_to_nface[p->type - 7][face];
+    }
+    else{
+        /* If p is a tet for every ancestor p is in the corner of this
+         * ancestor, one of the faces touches a pyramid. Due to the fact, that cornertet
+         * have the same type as their parent, only tets of type 0 or 3 have neighbouring
+         * pyramids.*/
+        if(p->type != 0 && p->type != 3){
+            return t8_dtet_face_neighbour(p, face, neigh);
+        }
+        else{
+            maxtetlvl = t8_dpyramid_is_inside_tet(p, p->level);
+            if(maxtetlvl == 0);/*Compute neighbouring pyra*/
+            else
+            {
+                for(i = maxtetlvl; i<p->level; i++)
+                {
+                    cid = compute_cubeid(p, i);
+                    ptype = t8_dpyramid_cid_type_to_parenttype[cid][p->type];
+                    if(p->type != ptype){
+                        pyra_neigh = 1;
+                        break;
+                    }
+                }
+                if(pyra_neigh == 1)
+                {
+                    return t8_dtet_face_neighbour(p, face,neigh);
+                }
+                else
+                {
+                    /*compute pyra*/
+                }
+            }
+        }
+    }
+}
+
+int
 t8_dpramid_face_neighbor_inside (const t8_dpyramid_t *p,
                                             const t8_dpyramid_t * neigh,
                                             int face, int *neigh_face)

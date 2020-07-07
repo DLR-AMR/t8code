@@ -56,7 +56,7 @@ t8_basic_hypercube_refine(t8_forest_t forest, t8_forest_t forest_from,
         break;
     }
 /*TODO: Implement a better refinement argument, one that effects all elements*/
-    if(type == 6){
+    if(type == 0){
         return 1;
     }
     return 0;
