@@ -368,7 +368,102 @@ t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * nei
         }
         else{
             maxtetlvl = t8_dpyramid_is_inside_tet(p, p->level);
-            if(maxtetlvl == 0);/*Compute neighbouring pyra*/
+            if(maxtetlvl == 0)
+            {
+                /*Compute neighbouring pyra*/
+                cid = compute_cubeid(p, p->level);
+                ptype = t8_dpyramid_cid_type_to_parenttype[cid][p->type];
+                neigh->x = p->x;
+                neigh->y = p->y;
+                neigh->z = p->z;
+                switch (face) {
+                case 0:
+                    switch (cid) {
+                    case 1:
+                        /*pyra-type 3*/
+                        neigh->x += len;
+                        neigh->type = 7;
+                        return 2;
+                    case 2:
+                        /*pyra-type 0*/
+                        neigh->x += len;
+                        neigh->type = 7;
+                        return 3;
+                    case 3:
+                        /*for both types face 0 matches a tet face*/
+                        return t8_dtet_face_neighbour(p, face, neigh);
+                    case 4:
+                        neigh->x += (p->type == 0)?len:0;
+                        neigh->y += (p->type == 3)?len:0;
+                        neigh->type = 7;
+                        return (p->type == 0) ? 1: 2;
+                    case 5:
+                        /*pyra-type 3*/
+                        neigh->y += len;
+                        neigh->type = 7;
+                        return 2;
+                    case 6:
+                        /*pyra-type 0*/
+                        neigh->x += len;
+                        neigh->type = 7;
+                        return 1;
+                    default:
+                        SC_ABORT_NOT_REACHED();
+                    }
+                    break;
+                case 1:
+                    if(cid < 3){
+                        return t8_dtet_face_neighbour(p, face, neigh);
+                    }
+                    else{
+                        neigh->type = 7;
+                        return (p->type == 0) ? 0:3;
+                    }
+                case 2:
+                    if(cid == 5 || cid == 6){
+                        neigh->type = 6;
+                        return (p->type == 0)?0:3;
+                    }
+                    else return t8_dtet_face_neighbour(p, face, neigh);
+                case 3:
+                    switch (cid) {
+                    case 1:
+                        /*pyra-type 3*/
+                        neigh->x -= len;
+                        neigh->type = 6;
+                        return 2;
+                    case 2:
+                        /*pyra-type 0*/
+                        neigh->y -= len;
+                        neigh->type = 6;
+                        return 1;
+                    case 3:
+                        /*for both types face 1 matches a pyra face*/
+                        neigh->x -= (p->type == 3)? len : 0;
+                        neigh->y -= (p->type == 0)? len : 0;
+                        neigh->type = 6;
+                        return (p->type == 0) ? 1:2;
+                    case 4:
+                        return t8_dtet_face_neighbour(p, face, neigh);
+                    case 5:
+                        /*pyra-type 3*/
+                        neigh->x -= len;
+                        neigh->type = 6;
+                        return 2;
+                    case 6:
+                        /*pyra-type 0*/
+                        neigh->y -= len;
+                        neigh->type = 6;
+                        return 1;
+                    default:
+                        SC_ABORT_NOT_REACHED();
+                    }
+                    break;
+                default:
+                    SC_ABORT_NOT_REACHED();
+                }
+
+            }
             else
             {
                 for(i = maxtetlvl; i<p->level; i++)
@@ -384,10 +479,7 @@ t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * nei
                 {
                     return t8_dtet_face_neighbour(p, face,neigh);
                 }
-                else
-                {
-                    /*compute pyra*/
-                }
+                else return -1; /*Implement lower tet level to pyra*/
             }
         }
     }
