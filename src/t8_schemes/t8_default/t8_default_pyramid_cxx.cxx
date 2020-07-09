@@ -116,7 +116,7 @@ t8_default_scheme_pyramid_c::t8_element_face_neighbor_inside (const t8_element_t
                                                          int face,
                                                          int *neigh_face)
 {
-    return t8_dpramid_face_neighbor_inside ((const t8_dpyramid_t *)elem,
+    return t8_dpyramid_face_neighbor_inside ((const t8_dpyramid_t *)elem,
                                             (const t8_dpyramid_t *) neigh,
                                             face, neigh_face);
 }

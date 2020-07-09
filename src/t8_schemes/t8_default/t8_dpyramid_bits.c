@@ -485,11 +485,13 @@ t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * nei
     }
 }
 
+
 int
-t8_dpramid_face_neighbor_inside (const t8_dpyramid_t *p,
+t8_dpyramid_face_neighbor_inside (const t8_dpyramid_t *p,
                                             const t8_dpyramid_t * neigh,
                                             int face, int *neigh_face)
 {
+    *neigh_face = t8_dpyramid_face_neighbour(p,  face, neigh);
     return 0;
 }
 

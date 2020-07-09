@@ -104,7 +104,7 @@ int                 t8_dpyramid_is_family (const t8_dpyramid_t ** fam);
 int                 t8_dpyramid_is_root_boundary(const t8_dpyramid_t * p,
                                         int face);
 
-int                 t8_dpramid_face_neighbor_inside (const t8_dpyramid_t *p,
+int                 t8_dpyramid_face_neighbor_inside (const t8_dpyramid_t *p,
                                             const t8_dpyramid_t * neigh,
                                             int face, int *neigh_face);
 
