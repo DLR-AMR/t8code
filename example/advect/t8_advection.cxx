@@ -121,8 +121,9 @@ typedef struct
   double              min_grad, max_grad; /**< bounds for refinement */
   double              min_vol; /**< minimum element volume at level 'level' */
   double              band_width; /**< width of the refinement band */
-  int                 num_time_steps; /**< Number of time steps computed so far.
-                                        (If delta_t is constant then t = num_time_steps * delta_t) */
+  int                 current_time_step; /**< Number of time steps computed so far.
+                                        (If delta_t is constant then t = current_time_step * delta_t) */
+  int                 num_time_steps; /**< The total number of time steps that we will compute (if provided, otherwise -1). */
   int                 vtk_count; /**< If vtk output is enabled, count the number of pvtu files written. */
   int                 level; /**< Initial refinement level */
   int                 maxlevel; /**< Maximum refinement level */
@@ -1170,9 +1171,10 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
                         t8_example_level_set_fn
                         phi_0, void *ls_data,
                         int level, int maxlevel,
-                        double T, double cfl, sc_MPI_Comm comm,
-                        double band_width, int dim, int dummy_op,
-                        int volume_refine, int no_balance_with_adapt)
+                        double T, int num_time_steps, double cfl,
+                        sc_MPI_Comm comm, double band_width, int dim,
+                        int dummy_op, int volume_refine,
+                        int no_balance_with_adapt)
 {
   t8_advect_problem_t *problem;
   t8_scheme_cxx_t    *default_scheme;
@@ -1189,7 +1191,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
   problem->level = level;       /* minimum refinement level */
   problem->maxlevel = maxlevel; /* maximum allowed refinement level */
   problem->t = 0;               /* start time */
-  problem->T = T;               /* end time */
+  problem->T = T;               /* end time (if num_time_steps is provided by the user, T is ignored) */
   problem->delta_t = -1;        /* delta_t, invalid value */
   problem->min_grad = 2;        /* Coarsen an element if the gradient is smaller */
   problem->max_grad = 4;        /* Refine an element if the gradient is larger */
@@ -1197,7 +1199,8 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
   problem->volume_refine = volume_refine;       /* If greater or equal zero, refine elem only if
                                                    volume is larger than min_vol. */
   problem->cfl = cfl;           /* cfl number  */
-  problem->num_time_steps = 0;  /* current time step */
+  problem->current_time_step = 0;       /* current time step */
+  problem->num_time_steps = num_time_steps;     /* Provided by user or -1 (then the end time T is used) */
   problem->comm = comm;         /* MPI communicator */
   problem->vtk_count = 0;       /* number of pvtu files written */
   problem->band_width = band_width;     /* width of the refinemen band around 0 level-set */
@@ -1497,10 +1500,11 @@ t8_advect_problem_destroy (t8_advect_problem_t ** pproblem)
 static void
 t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                  t8_example_level_set_fn phi_0, void *ls_data,
-                 const int level, const int maxlevel, double T, double cfl,
-                 sc_MPI_Comm comm, int adapt_freq, int no_vtk,
-                 int vtk_freq, double band_width, int dim, int dummy_op,
-                 int volume_refine, int no_balance_with_adapt)
+                 const int level, const int maxlevel, double end_time,
+                 int num_time_steps, double cfl, sc_MPI_Comm comm,
+                 int adapt_freq, int no_vtk, int vtk_freq, double band_width,
+                 int dim, int dummy_op, int volume_refine,
+                 int no_balance_with_adapt)
 {
   t8_advect_problem_t *problem;
   int                 iface, ineigh;
@@ -1529,9 +1533,10 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   /* start timing */
   total_time = -sc_MPI_Wtime ();
   problem =
-    t8_advect_problem_init (cmesh, u, phi_0, ls_data, level, maxlevel, T,
-                            cfl, comm, band_width, dim, dummy_op,
-                            volume_refine, no_balance_with_adapt);
+    t8_advect_problem_init (cmesh, u, phi_0, ls_data, level, maxlevel,
+                            end_time, num_time_steps, cfl, comm, band_width,
+                            dim, dummy_op, volume_refine,
+                            no_balance_with_adapt);
   t8_advect_problem_init_elements (problem);
 
   if (maxlevel > level) {
@@ -1558,28 +1563,38 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   sc_stats_set1 (&problem->stats[ADVECT_INIT], total_time + sc_MPI_Wtime (),
                  advect_stat_names[ADVECT_INIT]);
 
-  time_steps = (int) (T / problem->delta_t);
+  if (num_time_steps <= 0) {
+    /* If num_time_steps was not provided by the user, we calculate the number
+     * of time steps according to the given end time. */
+    time_steps = (int) (problem->T / problem->delta_t);
+  }
+  else {
+    /* If num_time_steps was provided, we calculated the end Time according to
+     * the given number of time steps. */
+    time_steps = num_time_steps;
+    problem->T = (time_steps - 1) * problem->delta_t;
+  }
   t8_global_essentialf ("[advect] Starting with Computation. Level %i."
                         " Adaptive levels %i."
                         " End time %g. delta_t %g. cfl %g. %i time steps.\n",
-                        level, maxlevel - level, T, problem->delta_t,
+                        level, maxlevel - level, problem->T, problem->delta_t,
                         problem->cfl, time_steps);
   T8_ASSERT (problem->delta_t > 0);
   T8_ASSERT (time_steps > 0);
   /* Controls how often we print the time step to stdout */
   modulus = SC_MAX (1, time_steps / 10);
-  for (problem->num_time_steps = 0;
-       !done; problem->num_time_steps++, problem->t += problem->delta_t) {
-    if (problem->num_time_steps % modulus == modulus - 1) {
+  for (problem->current_time_step = 0;
+       !done; problem->current_time_step++, problem->t += problem->delta_t) {
+    if (problem->current_time_step % modulus == modulus - 1) {
       t8_global_essentialf ("[advect] Step %i  %li elems\n",
-                            problem->num_time_steps + 1,
+                            problem->current_time_step + 1,
                             t8_forest_get_global_num_elements
                             (problem->forest));
     }
     /* Time loop */
 
     /* Print vtk */
-    if (!no_vtk && problem->num_time_steps % vtk_freq == 0) {
+    if (!no_vtk && problem->current_time_step % vtk_freq == 0) {
       vtk_time -= sc_MPI_Wtime ();
       t8_advect_write_vtk (problem);
       vtk_time += sc_MPI_Wtime ();
@@ -1788,11 +1803,12 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 #if 0
     /* test adapt, adapt and balance 3 times during the whole computation */
     if (adapt && time_steps / 3 > 0
-        && problem->num_time_steps % (time_steps / 3) == (time_steps / 3) - 1)
+        && problem->current_time_step % (time_steps / 3) ==
+        (time_steps / 3) - 1)
 #else
     if (maxlevel > level) {
       /* Adapt the mesh after adapt_freq time steps */
-      if (problem->num_time_steps % adapt_freq == adapt_freq - 1)
+      if (problem->current_time_step % adapt_freq == adapt_freq - 1)
 #endif
       {
         adapted_or_partitioned = 1;
@@ -1819,7 +1835,14 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
       problem->delta_t = problem->T - problem->t;
     }
     /* Check whether we are finished */
-    if (problem->t >= problem->T) {
+    if (problem->num_time_steps > 0) {
+      /* We are finished after a given time step number was reached. */
+      if (problem->current_time_step >= problem->num_time_steps - 1) {
+        done = 1;
+      }
+    }
+    else if (problem->t >= problem->T) {
+      /* We are finished after a given end time was reached. */
       done = 1;
     }
   }                             /* End element loop */
@@ -1876,6 +1899,7 @@ main (int argc, char *argv[])
   int                 no_balance_with_adapt;
   int                 volume_refine;
   int                 flow_arg;
+  int                 num_time_steps;
   double              T, cfl, band_width;
   t8_levelset_sphere_data_t ls_data;
   /* brief help message */
@@ -1929,7 +1953,12 @@ main (int argc, char *argv[])
                       "In combination with -f: The dimension of the mesh. 1 <= d <= 3.");
 
   sc_options_add_double (opt, 'T', "end-time", &T, 1,
-                         "The duration of the simulation. Default: 1");
+                         "The duration of the simulation in simulated time. Default: 1. "
+                         "Mutually exclusive with 'time-steps'.");
+  sc_options_add_int (opt, 'N', "time-steps", &num_time_steps, -1,
+                      "The number of simulated time steps. Default: Computed from 'end-time' and 'CFL'.\n"
+                      "\t\t\t\t     Provide this instead of -T/--end-time in order to determine the precise number of time steps to take.\n"
+                      "\t\t\t\t     Providing this option will override any -T/--end-time option.");
 
   sc_options_add_double (opt, 'C', "CFL", &cfl,
                          1, "The cfl number to use. Default: 1");
@@ -1989,7 +2018,8 @@ main (int argc, char *argv[])
   else if (parsed >= 0 && 1 <= flow_arg && flow_arg <= 6 && 0 <= level
            && 0 <= reflevel && 0 <= vtk_freq
            && ((mshfile != NULL && 0 < dim && dim <= 3)
-               || (1 <= eclass_int && eclass_int <= 8)) && band_width >= 0) {
+               || (1 <= eclass_int && eclass_int <= 8)) && band_width >= 0
+           && (num_time_steps == -1 || num_time_steps > 0)) {
     t8_cmesh_t          cmesh;
     t8_flow_function_3d_fn u;
 
@@ -2025,9 +2055,10 @@ main (int argc, char *argv[])
     t8_advect_solve (cmesh, u,
                      t8_levelset_sphere, &ls_data,
                      level,
-                     level + reflevel, T, cfl, sc_MPI_COMM_WORLD, adapt_freq,
-                     no_vtk, vtk_freq, band_width, dim, dummy_op,
-                     volume_refine, no_balance_with_adapt);
+                     level + reflevel, T, num_time_steps, cfl,
+                     sc_MPI_COMM_WORLD, adapt_freq, no_vtk, vtk_freq,
+                     band_width, dim, dummy_op, volume_refine,
+                     no_balance_with_adapt);
   }
   else {
     /* wrong usage */
