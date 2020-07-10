@@ -71,7 +71,7 @@ void                t8_forest_compute_maxlevel (t8_forest_t forest);
  * \param [in]  scheme      The element scheme for which refinement is considered.
  * \return                  The smallest refinement level l, such that a
  *                          uniform level \a l refined forest would have no empty
- *                          processes.
+ *                          processes. -1 if such a level may not exist.
  * \see t8_forest_new_uniform.
  */
 int                 t8_forest_min_nonempty_level (t8_cmesh_t cmesh,

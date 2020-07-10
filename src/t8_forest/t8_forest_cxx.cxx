@@ -126,6 +126,10 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_cxx_t * scheme)
    * trees * min_num_child^l >= mpisize
    *  <=>  l >= log (mpisize/trees) / log (min_num_child)
    */
+  if (min_num_childs == 1) {
+    /* It may be impossible to reach a nonempty uniform refinement */
+    return -1;
+  }
   level =
     ceil (log (cmesh->mpisize / (double) cmesh->num_trees) /
           log (min_num_childs));
