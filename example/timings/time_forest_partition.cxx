@@ -243,8 +243,15 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
         if (do_ghost) {
           t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
         }
-        if (do_balance) {
-          t8_forest_set_balance (forest_partition, NULL, 0);
+        if (do_balance == 1) {
+          /* Balance the forest with the algorithm that runs together
+           * with adapt. */
+          t8_forest_set_balance_ext (forest_partition, NULL, 0, 0);
+        }
+        else if (do_balance == 2) {
+          /* Balance the forest with the classical ripple algorithm
+           * (The forest will get adapted and afterwards balanced). */
+          t8_forest_set_balance_ext (forest_partition, NULL, 0, 1);
         }
       }
       t8_forest_commit (forest_partition);
@@ -458,7 +465,8 @@ main (int argc, char *argv[])
   else if (first_argc < 0 || first_argc != argc || dim < 2 || dim > 3
            || (cmeshfileprefix == NULL && mshfileprefix == NULL
                && test_tet == 0 && (1 > eclass_int || eclass_int > 8))
-           || stride <= 0 || (num_files - 1) * stride >= mpisize || cfl < 0) {
+           || stride <= 0 || (num_files - 1) * stride >= mpisize || cfl < 0
+           || do_balance < 0 || do_balance > 2) {
     t8_global_productionf ("\n");
     t8_global_productionf
       ("Error: You specified wrong or insufficient options.\n");
