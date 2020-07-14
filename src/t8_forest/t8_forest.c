@@ -515,10 +515,16 @@ t8_forest_commit (t8_forest_t forest)
         /* Set the user data of forest_from to forest_adapt */
         t8_forest_set_user_data (forest_adapt,
                                  t8_forest_get_user_data (forest_from));
-        /* If profiling is enabled copy the runtime of adapt. */
+        /* If profiling is enabled copy the runtime of adapt and balance. */
         if (forest->profile != NULL) {
           forest->profile->adapt_runtime =
             forest_adapt->profile->adapt_runtime;
+          if (adapt_with_balance) {
+            forest->profile->balance_runtime =
+              forest_adapt->profile->balance_runtime;
+            forest->profile->balance_rounds =
+              forest_adapt->profile->balance_rounds;
+          }
         }
       }
       else if (only_adapt_with_balance) {

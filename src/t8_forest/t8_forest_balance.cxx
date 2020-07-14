@@ -807,7 +807,6 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
    *                     verify that this function  produces the same forest
    *                     as doing first adapt and then balance.
    */
-  /* TODO: Add a new timer to the profile that times the runtime of this function. */
 }
 
 /* Check whether the local elements of a forest are balanced. */
