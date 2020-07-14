@@ -182,7 +182,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
                          " %lli global trees.\n",
                          (long long) t8_cmesh_get_num_trees (cmesh));
 
-  /* If the input cmesh is partitioned then we use a partitioned cmehs
+  /* If the input cmesh is partitioned then we use a partitioned cmesh
    * and also repartition it in each timestep (happens automatically in
    * t8_forest_commit). We have to initially start with a uniformly refined
    * cmesh in order to be able to construct the forest on it.
@@ -209,6 +209,12 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
   /* Set the initial refinement level */
   t8_forest_set_level (forest, init_level);
+  if (do_balance == 1) {
+    /* If we want to balance while adapting the mesh, we need to have ghosts
+     * in the forest. */
+    t8_forest_set_ghost (forest, 1, T8_GHOST_FACES);
+    do_ghost = 1;
+  }
   /* Commit the forest */
   t8_forest_commit (forest);
   /* Set the permanent data for adapt. */
@@ -230,32 +236,32 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
       adapt_data.c_min = x_min_max[0] + t;
       adapt_data.c_max = x_min_max[1] + t;
       t8_forest_set_user_data (forest_adapt, (void *) &adapt_data);
-      t8_forest_commit (forest_adapt);
       /* partition the adapted forest */
-      /* TODO: profiling */
-      t8_forest_init (&forest_partition);
-      /* partition the adapted forest */
-      t8_forest_set_partition (forest_partition, forest_adapt, 0);
+      t8_forest_set_partition (forest_adapt, forest, 0);
 
       /* If desired, create ghost elements and balance after last step */
-      if (r == refine_rounds - 1) {
-        t8_forest_set_profiling (forest_partition, 1);
+      if (r == refine_rounds - 1 || do_balance == 1) {
+        t8_forest_set_profiling (forest_adapt, 1);
         if (do_ghost) {
-          t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
+          t8_forest_set_ghost (forest_adapt, 1, T8_GHOST_FACES);
         }
         if (do_balance == 1) {
           /* Balance the forest with the algorithm that runs together
            * with adapt. */
-          t8_forest_set_balance_ext (forest_partition, NULL, 0, 0);
+          t8_forest_set_balance_ext (forest_adapt, NULL, 0, 0);
         }
         else if (do_balance == 2) {
           /* Balance the forest with the classical ripple algorithm
            * (The forest will get adapted and afterwards balanced). */
-          t8_forest_set_balance_ext (forest_partition, NULL, 0, 1);
+          t8_forest_set_balance_ext (forest_adapt, NULL, 0, 1);
         }
       }
-      t8_forest_commit (forest_partition);
-      forest = forest_partition;
+      t8_forest_commit (forest_adapt);
+      if (do_balance == 1) {
+        /* Print the timings if we balance with adapt. */
+        t8_forest_print_profile (forest_adapt);
+      }
+      forest = forest_adapt;
     }
 
     /* Set the vtu output name */
@@ -264,23 +270,23 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
                 time_step);
       snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_partition_%03d", vtu_prefix,
                 time_step);
-      t8_forest_write_vtk (forest_partition, forest_vtu);
-      t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_partition),
-                               cmesh_vtu, 1.0);
+      t8_forest_write_vtk (forest, forest_vtu);
+      t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest), cmesh_vtu, 1.0);
       t8_debugf ("Wrote partitioned forest and cmesh\n");
     }
     if (partition_cmesh) {
       /* Print runtimes and statistics of forest and cmesh partition */
-      t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
+      t8_cmesh_print_profile (t8_forest_get_cmesh (forest));
     }
-    t8_forest_print_profile (forest_partition);
-    /* Set forest to the partitioned forest, so it gets adapted
-     * in the next time step. */
-    forest = forest_partition;
+    if (do_balance != 1) {
+      /* Print the timings of the last step.
+       * If do_balance == 1, we printed them already. */
+      t8_forest_print_profile (forest);
+    }
     /* TIME-LOOP ends here */
   }
   /* memory clean-up */
-  t8_forest_unref (&forest_partition);
+  t8_forest_unref (&forest);
 }
 
 #undef USE_CMESH_PARTITION
@@ -310,7 +316,7 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
 {
   t8_cmesh_t          cmesh;
   t8_cmesh_t          cmesh_partition;
-  int                 partition;
+  int                 partition = 0;
 
   T8_ASSERT (msh_file == NULL || cmesh_file == NULL);
 
@@ -327,6 +333,8 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
       cmesh =
         t8_cmesh_new_hypercube ((t8_eclass_t) eclass_int, comm, 0, 0, 1);
     }
+    /* No need to partition a cube cmesh, since it has max 16 trees. */
+    partition = 0;
   }
   else if (msh_file != NULL) {
     /* Create a cmesh from the given mesh files */
