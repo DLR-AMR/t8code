@@ -227,6 +227,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   /* Start the time loop, in each time step the refinement front  moves
    * further through the domain */
   for (t = 0, time_step = 0; t < T; t += delta_t, time_step++) {
+    t8_global_productionf ("Starting Time step %i, time %g\n", time_step, t);
     /* Adapt the forest */
     for (r = 0; r < refine_rounds; r++) {
       /* TODO: profiling */
