@@ -108,7 +108,7 @@ main (int argc, char **argv)
 
   cmesh = t8_step1_build_tetcube_coarse_mesh (sc_MPI_COMM_WORLD);
   t8_global_productionf ("Created cmesh with 6 tetrahedra.\n");
-  t8_step1_write_cmesh_vtk (cmesh, "t8_step1_tetcube");
+  t8_step1_write_cmesh_vtk (cmesh, prefix);
   t8_global_productionf ("Wrote cmesh to vtu files: %s*\n", prefix);
   t8_step1_destroy_cmesh (cmesh);
   t8_global_productionf ("Destroyed cmesh.\n");

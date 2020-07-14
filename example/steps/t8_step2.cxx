@@ -47,13 +47,12 @@
 #include <t8_forest.h>
 #include <t8_schemes/t8_default_cxx.hxx>
 
-
 /* Builds cmesh of 2 prisms that build up a unit cube. 
  * See step1 for a detailed description.
  * \param [in] comm   MPI Communicator to use.
  * \return            The coarse mesh.
  */
-t8_cmesh_t
+static t8_cmesh_t
 t8_step2_build_tetcube_coarse_mesh (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
