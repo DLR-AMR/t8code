@@ -25,6 +25,7 @@
  * We then output it in vtu format and destroy it.
  * 
  * How you can experiment here:
+ *  - Use Paraview to visualize the output files.
  *  - Change the parameters of t8_cmesh_new_hypercube
  *    You can change the element shape or switch to a partitioned cmesh or use
  *    periodic boundaries.
