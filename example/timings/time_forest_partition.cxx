@@ -381,6 +381,7 @@ main (int argc, char *argv[])
   t8_cmesh_t          cmesh;
   const char         *mshfileprefix, *cmeshfileprefix;
   const char         *vtu_prefix;
+  double              total_runtime;
   double              x_min_max[2];     /* At position 0 the minumum x-coordinate,
                                            at position 1 the maximum x-coordinate. */
 
@@ -546,10 +547,15 @@ main (int argc, char *argv[])
         SC_ABORT_NOT_REACHED ();
       }
     }
+    t8_global_productionf ("Starting computation.\n");
+    total_runtime = -sc_MPI_Wtime ();
     t8_time_forest_cmesh_mshfile (cmesh, vtu_prefix,
                                   sc_MPI_COMM_WORLD, level,
                                   level + level_diff, no_vtk, x_min_max, T,
                                   delta_t, do_ghost, do_balance);
+    total_runtime += sc_MPI_Wtime ();
+    t8_global_productionf ("Finished computation. Total runtime: %e sec.\n",
+                           total_runtime);
   }
   sc_options_destroy (opt);
   sc_finalize ();
