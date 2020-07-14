@@ -3,7 +3,10 @@
 # Included from toplevel directory
 
 bin_PROGRAMS += \
-	example/steps/t8_step0
+	example/steps/t8_step0 \
+	example/steps/t8_step1
 
 example_advect_t8_advection_SOURCES = \
 	example/steps/t8_step0.c
+example_advect_t8_advection_SOURCES = \
+	example/steps/t8_step1.c

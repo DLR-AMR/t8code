@@ -2,3 +2,4 @@ The steps examples lead step by step
 through building an application with t8code.
 
 step0 - Initialize t8code and print a welcome message.
+step1 - Create a coarse mesh, output it to vtk and destroy it.
