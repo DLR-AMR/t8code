@@ -79,7 +79,7 @@ include example/gmsh/Makefile.am
 include example/cmesh/Makefile.am
 include example/common/Makefile.am
 include example/advect/Makefile.am
-include example/steps/Makefile.am
+include example/tutorials/Makefile.am
 #include example/cxx/Makefile.am
 #include example/ExtremeScaling/Makefile.am
 
