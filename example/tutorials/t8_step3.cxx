@@ -237,6 +237,10 @@ main (int argc, char **argv)
    * Note that the adapted forest is a new forest, though. */
   forest = t8_step3_adapt_forest (forest);
 
+  /*
+   *  Output.
+   */
+
   /* Print information of our new forest. */
   t8_global_productionf (" [step3] Adapted forest.\n");
   t8_step3_print_forest_information (forest);
