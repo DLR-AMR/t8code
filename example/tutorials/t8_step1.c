@@ -104,14 +104,19 @@ main (int argc, char **argv)
   t8_init (SC_LP_PRODUCTION);
 
   /* Print a message on the master process. */
-  t8_global_productionf ("Hello, this is t8code :)\n");
+  t8_global_productionf (" [step1] \n");
+  t8_global_productionf
+    (" [step1] Hello, this is the step1 example of t8code.\n");
+  t8_global_productionf
+    (" [step1] In this example we build our first coarse mesh and output it to vtu files.\n");
+  t8_global_productionf (" [step1] \n");
 
   cmesh = t8_step1_build_tetcube_coarse_mesh (sc_MPI_COMM_WORLD);
-  t8_global_productionf ("Created cmesh with 6 tetrahedra.\n");
+  t8_global_productionf (" [step1] Created cmesh with 6 tetrahedra.\n");
   t8_step1_write_cmesh_vtk (cmesh, prefix);
-  t8_global_productionf ("Wrote cmesh to vtu files: %s*\n", prefix);
+  t8_global_productionf (" [step1] Wrote cmesh to vtu files: %s*\n", prefix);
   t8_step1_destroy_cmesh (cmesh);
-  t8_global_productionf ("Destroyed cmesh.\n");
+  t8_global_productionf (" [step1] Destroyed cmesh.\n");
 
   sc_finalize ();
 

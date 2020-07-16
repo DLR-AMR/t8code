@@ -59,6 +59,8 @@ t8_step2_build_tetcube_coarse_mesh (sc_MPI_Comm comm)
 
   /* Build a coarse mesh of 2 prism trees that form a cube. */
   cmesh = t8_cmesh_new_hypercube (T8_ECLASS_PRISM, comm, 0, 0, 0);
+  t8_global_productionf
+    (" [step2] Constructed coarse mesh with 2 prism trees.\n");
 
   return cmesh;
 }
@@ -135,8 +137,13 @@ main (int argc, char **argv)
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the leg levels. */
   t8_init (SC_LP_PRODUCTION);
 
-  /* Print a message on the master process. */
-  t8_global_productionf ("Hello, this is t8code :)\n");
+  /* Print a message on the root process. */
+  t8_global_productionf (" [step2] \n");
+  t8_global_productionf
+    (" [step2] Hello, this is the step2 example of t8code.\n");
+  t8_global_productionf
+    (" [step2] In this example we build our first uniform forest and output it to vtu files.\n");
+  t8_global_productionf (" [step2] \n");
 
   /* We will use MPI_COMM_WORLD as a communicator. */
   comm = sc_MPI_COMM_WORLD;
@@ -151,20 +158,21 @@ main (int argc, char **argv)
   global_num_elements = t8_forest_get_global_num_elements (forest);
 
   /* Print information on the forest. */
-  t8_global_productionf ("Created uniform forest.\n");
-  t8_global_productionf ("Refinement level:\t%i\n", level);
-  t8_global_productionf ("Local number of elements:\t%i\n",
+  t8_global_productionf (" [step2] Created uniform forest.\n");
+  t8_global_productionf (" [step2] Refinement level:\t\t\t%i\n", level);
+  t8_global_productionf (" [step2] Local number of elements:\t\t%i\n",
                          local_num_elements);
-  t8_global_productionf ("Global number of elements:\t%li\n",
+  t8_global_productionf (" [step2] Global number of elements:\t%li\n",
                          global_num_elements);
 
   /* Write forest to vtu files. */
   t8_step2_write_forest_vtk (forest, prefix);
-  t8_global_productionf ("Wrote forest to vtu files: %s*\n", prefix);
+  t8_global_productionf (" [step2] Wrote forest to vtu files:\t%s*\n",
+                         prefix);
 
   /* Destroy the forest. */
   t8_step2_destroy_forest (forest);
-  t8_global_productionf ("Destroyed forest.\n");
+  t8_global_productionf (" [step2] Destroyed forest.\n");
 
   sc_finalize ();
 

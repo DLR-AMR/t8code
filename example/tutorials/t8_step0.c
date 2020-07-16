@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* In this example we setup t8code and print a small welcome message.
+/* In this example we initialize t8code and print a small welcome message.
  * This is the t8code equivalent of HelloWorld. */
 
 #include <t8.h>
@@ -41,7 +41,9 @@ main (int argc, char **argv)
   t8_init (SC_LP_PRODUCTION);
 
   /* Print a message on the master process. */
-  t8_global_productionf ("Hello, this is t8code :)\n");
+  t8_global_productionf (" [step0] \n");
+  t8_global_productionf (" [step0] Hello, this is t8code :)\n");
+  t8_global_productionf (" [step0] \n");
 
   sc_finalize ();
 
