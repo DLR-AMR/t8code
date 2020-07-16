@@ -53,7 +53,7 @@
  * \return            The coarse mesh.
  */
 static t8_cmesh_t
-t8_step2_build_tetcube_coarse_mesh (sc_MPI_Comm comm)
+t8_step2_build_prismcube_coarse_mesh (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
 
@@ -148,7 +148,7 @@ main (int argc, char **argv)
   /* We will use MPI_COMM_WORLD as a communicator. */
   comm = sc_MPI_COMM_WORLD;
   /* Create the cmesh from step1 */
-  cmesh = t8_step2_build_tetcube_coarse_mesh (comm);
+  cmesh = t8_step2_build_prismcube_coarse_mesh (comm);
 
   /* Build the uniform forest, it is automatically partitioned among the processes. */
   forest = t8_step2_build_uniform_forest (comm, cmesh, level);

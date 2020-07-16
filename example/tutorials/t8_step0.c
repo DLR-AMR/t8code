@@ -40,7 +40,7 @@ main (int argc, char **argv)
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the leg levels. */
   t8_init (SC_LP_PRODUCTION);
 
-  /* Print a message on the master process. */
+  /* Print a message on the root process. */
   t8_global_productionf (" [step0] \n");
   t8_global_productionf (" [step0] Hello, this is t8code :)\n");
   t8_global_productionf (" [step0] \n");
