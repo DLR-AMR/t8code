@@ -2,6 +2,11 @@
 # Non-recursive Makefile.am in example/advect
 # Included from toplevel directory
 
+libt8_compiled_sources += \
+        example/tutorials/t8_step3.cxx
+libt8_installed_headers += \
+	example/tutorials/t8_step3.h
+
 bin_PROGRAMS += \
 	example/tutorials/t8_step0 \
 	example/tutorials/t8_step1 \
@@ -15,5 +20,6 @@ example_tutorials_t8_step1_SOURCES = \
 example_tutorials_t8_step2_SOURCES = \
 	example/tutorials/t8_step2.cxx
 example_tutorials_t8_step3_SOURCES = \
-	example/tutorials/t8_step3.cxx
+	example/tutorials/t8_step3.cxx \
+	example/tutorials/t8_step3_main.cxx
 

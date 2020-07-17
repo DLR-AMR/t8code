@@ -55,6 +55,8 @@
 #include <t8_schemes/t8_default_cxx.hxx>        /* default refinement scheme. */
 #include <t8_vec.h>             /* Basic operations on 3D vectors. */
 
+T8_EXTERN_C_BEGIN ();
+
 /* This is our own defined data that we will pass on to the
  * adaptation callback. */
 struct t8_step3_adapt_data
@@ -173,7 +175,7 @@ t8_step3_print_forest_information (t8_forest_t forest)
 }
 
 int
-main (int argc, char **argv)
+t8_step3_main (int argc, char **argv)
 {
   int                 mpiret;
   sc_MPI_Comm         comm;
@@ -265,3 +267,5 @@ main (int argc, char **argv)
 
   return 0;
 }
+
+T8_EXTERN_C_END ();
