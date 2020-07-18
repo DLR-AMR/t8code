@@ -367,8 +367,8 @@ t8_forest_adapt (t8_forest_t forest)
         /* Compute the parent of the current family.
          * This parent is now inserted in telements. */
         tscheme->t8_element_parent (elements_from[0], elements[0]);
-        num_siblings = tscheme->t8_element_num_children(elements[0]);
         el_inserted++;
+        num_siblings = tscheme->t8_element_num_children(elements[0]);
         if (forest->set_adapt_recursive) {
           /* Adaptation is recursive.
            * We check whether the just generated parent is the last in its

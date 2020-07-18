@@ -466,6 +466,7 @@ t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * nei
             }
             else
             {
+                /* Check, if the tet always lies in the corner of its parenttet*/
                 for(i = maxtetlvl; i<p->level; i++)
                 {
                     cid = compute_cubeid(p, i);
@@ -479,8 +480,66 @@ t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * nei
                 {
                     return t8_dtet_face_neighbour(p, face,neigh);
                 }
-                else return -1; /*Implement lower tet level to pyra*/
+                else {
+                    /*Implement lower tet level to pyra*/
+                    if(t8_dpyramid_tet_boundary(p, maxtetlvl, face) == 0)
+                    {
+                        return t8_dtet_face_neighbour(p, face, neigh);
+                    }
+                    else{
+                        /*implement last cases :)*/
+                        return -1;
+                    }
+                }
             }
+        }
+    }
+}
+
+int
+t8_dpyramid_tet_boundary(const t8_dpyramid_t *p, int level, int face)
+{
+    T8_ASSERT(p->type == 0 || p->type == 3);
+    t8_dpyramid_t anc;
+    t8_dpyramid_coord_t p_len = T8_DPYRAMID_LEN(p->level),
+            a_len = T8_DPYRAMID_LEN(level), len_diff;
+    t8_dtet_ancestor(p, level, &anc);
+    if(p->type != anc.type)return 0;
+    len_diff = anc.z - p->level;
+    if(p->type == 0){
+        switch(face){
+        case 0:
+            return  p->x == (anc.x + a_len - p_len);
+        case 1:
+
+            return  (p->x == anc.x + len_diff) &&
+                    (p->y >= anc.y + len_diff) && (p->y <= anc.y + a_len - p_len);
+        case 2:
+            return  (p->y == (anc.y + len_diff)) &&
+                    (p->x >= (anc.x + len_diff)) && (p->x <= (anc.x + a_len - p_len));
+        case 3:
+            return  (p->y == anc.y) &&
+                    (p->x >= (anc.x + len_diff)) && (p->x <= (anc.x + a_len - p_len));
+        default:
+            SC_ABORT_NOT_REACHED();
+        }
+    }
+    else{
+        switch(face){
+        case 0:
+            return  (p->y == anc.y + a_len - p_len) &&
+                    (p->x >= anc.x) && (p->x <= anc.x + len_diff);
+        case 1:
+            return  (p->y == anc.y + len_diff) &&
+                    (p->x >= anc.x) && (p->x <= anc.x + len_diff);
+        case 2:
+            return  (p->x == anc.x + len_diff) &&
+                    (p->y >= anc.y) && (p->y <= anc.y + len_diff);
+        case 3:
+            return  (p->x == anc.x) &&
+                    (p->y >= anc.y + len_diff) && (p->y <= anc.y + a_len - p_len);
+        default:
+            SC_ABORT_NOT_REACHED();
         }
     }
 }
@@ -488,7 +547,7 @@ t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * nei
 
 int
 t8_dpyramid_face_neighbor_inside (const t8_dpyramid_t *p,
-                                            const t8_dpyramid_t * neigh,
+                                            t8_dpyramid_t * neigh,
                                             int face, int *neigh_face)
 {
     *neigh_face = t8_dpyramid_face_neighbour(p,  face, neigh);
