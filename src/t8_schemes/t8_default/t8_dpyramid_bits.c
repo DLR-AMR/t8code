@@ -488,7 +488,34 @@ t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * nei
                     }
                     else{
                         /*implement last cases :)*/
-                        return -1;
+                        switch (face) {
+                        case 0:
+                            neigh->x = p->x + (p->type == 0)?len:0;
+                            neigh->y = p->y + (p->type == 3)?len:0;
+                            neigh->z = p->z;
+                            neigh->type = 7;
+                            return (p->type == 0)?1:2;
+                        case 1:
+                            neigh->x = p->x;
+                            neigh->y = p->y;
+                            neigh->z = p->z;
+                            neigh->type = 7;
+                            return (p->type == 0)?0:3;
+                        case 2:
+                            neigh->x = p->x;
+                            neigh->y = p->y;
+                            neigh->z = p->z;
+                            neigh->type = 6;
+                            return (p->type == 0)?0:3;
+                        case 3:
+                            neigh->x = p->x - (p->type == 3)?len:0;
+                            neigh->y = p->y - (p->type == 0)?len:0;
+                            neigh->z = p->z;
+                            neigh->type = 6;
+                            return (p->type == 0)?1:2;
+                        default:
+                            SC_ABORT_NOT_REACHED();
+                        }
                     }
                 }
             }
@@ -544,6 +571,16 @@ t8_dpyramid_tet_boundary(const t8_dpyramid_t *p, int level, int face)
     }
 }
 
+int
+t8_dpyramid_is_inside_root(t8_dpyramid_t * p)
+{
+    if(p->level == 0){
+        return p->type == T8_DPYRAMID_ROOT_TPYE && p->x == 0 && p->y == 0 && p->z == 0;
+    }
+    return (0 <= p->z) && (p->z < T8_DPYRAMID_ROOT_LEN) &&
+                    (p->x >= p->z) && (p->x < T8_DPYRAMID_ROOT_LEN) &&
+                    (p->y >= p->z) && (p->y < T8_DPYRAMID_ROOT_LEN);
+}
 
 int
 t8_dpyramid_face_neighbor_inside (const t8_dpyramid_t *p,
