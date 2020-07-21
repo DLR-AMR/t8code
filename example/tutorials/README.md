@@ -11,7 +11,7 @@ step2 - Create a uniform forest,
 	get its number of local and global elements,
 	output it to vtk and destroy it.
 
-step3 - Adapt a forest.
+step3 - Adapt a forest according to a user defined criterion.
 
-
-
+step4 - Partitioning, balancing and creating ghost layer for forest.
+        Explains the forest creation process in more detail.
