@@ -54,17 +54,23 @@
 #include <t8_forest.h>          /* forest definition and basic interface. */
 #include <t8_schemes/t8_default_cxx.hxx>        /* default refinement scheme. */
 #include <t8_vec.h>             /* Basic operations on 3D vectors. */
+#include <example/tutorials/t8_step3.h>
 
 T8_EXTERN_C_BEGIN ();
 
 /* This is our own defined data that we will pass on to the
  * adaptation callback. */
+#if 0
+/* Commented out, since it is actually defined in t8_step3.h.
+ * We put a copy here for explanation.
+ */
 struct t8_step3_adapt_data
 {
   double              midpoint[3];      /* The midpoint of our sphere. */
   double              refine_if_inside_radius;  /* if an element's center is smaller than this value, we refine the element. */
   double              coarsen_if_outside_radius;        /* if an element's center is larger this value, we coarsen its family. */
 };
+#endif
 
 /* The adaptation callback function. This function will be called once for each element
  * and the return value decides whether this element should be refined or not.
@@ -85,7 +91,7 @@ struct t8_step3_adapt_data
  * \param [in] num_elements The number of elements. If this is > 1 we know that we look at a family.
  * \param [in] elements The element or family of elements to consider for refinement/coarsening.
  */
-static int
+int
 t8_step3_adapt_callback (t8_forest_t forest,
                          t8_forest_t forest_from,
                          t8_locidx_t which_tree,
@@ -102,6 +108,13 @@ t8_step3_adapt_callback (t8_forest_t forest,
   const struct t8_step3_adapt_data *adapt_data =
     (const struct t8_step3_adapt_data *) t8_forest_get_user_data (forest);
   double              dist;     /* Will store the distance of the element's midpoint and the sphere midpoint. */
+
+  /* You can use T8_ASSERT for assertions that are active in debug mode (when configured with --enable-debug).
+   * If the condition is not true, then the code will abort.
+   * In this case, we want to make sure that we actually did set a user pointer to forest and thus
+   * did not get the NULL pointer from t8_forest_get_user_data.
+   */
+  T8_ASSERT (adapt_data != NULL);
 
   /* In order to compute the coordinates of the element, we first need to get the coordinates of
    * the tree. t8code does not store the element's coordinates, since they can be interpolated from the
@@ -130,7 +143,7 @@ t8_step3_adapt_callback (t8_forest_t forest,
 
 /* Adapt a forest according to our t8_step3_adapt_callback function.
  * This will create a new forest and return it. */
-static t8_forest_t
+t8_forest_t
 t8_step3_adapt_forest (t8_forest_t forest)
 {
   t8_forest_t         forest_adapt;
@@ -139,6 +152,9 @@ t8_step3_adapt_forest (t8_forest_t forest)
     0.2,                        /* Refine if inside this radius. */
     0.4                         /* Coarsen if outside this radius. */
   };
+
+  /* Check that forest is a committed, that is valid and usable, forest. */
+  T8_ASSERT (t8_forest_is_committed (forest));
 
   /* Create a new forest that is adapted from \a forest with our adaptation callback.
    * We provide the adapt_data as user data that is stored as the used_data pointer of the
@@ -158,11 +174,14 @@ t8_step3_adapt_forest (t8_forest_t forest)
 }
 
 /* Print the local and global number of elements of a forest. */
-static void
+void
 t8_step3_print_forest_information (t8_forest_t forest)
 {
   t8_locidx_t         local_num_elements;
   t8_gloidx_t         global_num_elements;
+
+  /* Check that forest is a committed, that is valid and usable, forest. */
+  T8_ASSERT (t8_forest_is_committed (forest));
 
   /* Get the local number of elements. */
   local_num_elements = t8_forest_get_num_element (forest);
