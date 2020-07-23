@@ -94,8 +94,8 @@ t8_step5_create_element_data (t8_forest_t forest)
   element_data =
     T8_ALLOC (struct t8_step5_data_per_element,
               num_local_elements + num_ghost_elements);
-  /* Note: We will later need to associate this data with an sc_array which we can do with sc_array_init_data
-   *       or sc_array_new_data.
+  /* Note: We will later need to associate this data with an sc_array in order to exchange the values for
+   *       the ghost elements, which we can do with sc_array_new_data (see t8_step5_exchange_ghost_data).
    *       We could also have directly allocated the data here in an sc_array with
    *       sc_array_new_count (sizeof (struct data_per_element), num_local_elements + num_ghost_elements);
    */
@@ -154,6 +154,10 @@ t8_step5_create_element_data (t8_forest_t forest)
   return element_data;
 }
 
+/* Each process has computed the data entries for its local elements.
+ * In order to get the values for the ghost elements, we use t8_forest_ghost_exchange_data.
+ * Calling this function will fill all the ghost entries of our element data array with the
+ * value on the process that owns the corresponding element. */
 static void
 t8_step5_exchange_ghost_data (t8_forest_t forest,
                               struct t8_step5_data_per_element *data)
@@ -162,32 +166,55 @@ t8_step5_exchange_ghost_data (t8_forest_t forest,
   t8_locidx_t         num_elements = t8_forest_get_num_element (forest);
   t8_locidx_t         num_ghosts = t8_forest_get_num_ghosts (forest);
 
+  /* t8_forest_ghost_exchange_data expects an sc_array (of length num_local_elements + num_ghosts).
+   * We wrap our data array to an sc_array. */
   sc_array_wrapper =
     sc_array_new_data (data, sizeof (struct t8_step5_data_per_element),
                        num_elements + num_ghosts);
 
+  /* Carry out the data exchange. The entries with indices > num_local_elements will get overwritten.
+   */
   t8_forest_ghost_exchange_data (forest, sc_array_wrapper);
 
+  /* Destroy the wrapper array. This will not free the data memory since we used sc_array_new_data. */
   sc_array_destroy (sc_array_wrapper);
 }
 
+/* Write the forest as vtu and also write the element's volumes in the file.
+ * 
+ * t8code supports writing element based data to vtu as long as its stored
+ * as doubles. Each of the data fields to write has to be provided in its own
+ * array of length num_local_elements.
+ * We support two types: T8_VTK_SCALAR - One double per element
+ *                  and  T8_VTK_VECTOR - 3 doubles per element
+ */
 static void
 t8_step5_output_data_to_vtu (t8_forest_t forest,
-                             struct t8_step5_data_per_element *data)
+                             struct t8_step5_data_per_element *data,
+                             const char *prefix)
 {
-  const char         *prefix = "t8_step5_forest_with_volume_data";
   t8_locidx_t         num_elements = t8_forest_get_num_element (forest);
   t8_locidx_t         ielem;
+  /* We need to allocate a new array to store the volumes on their own.
+   * This array has one entry per local element. */
   double             *element_volumes = T8_ALLOC (double, num_elements);
+  /* The number of user defined data fields to write. */
   int                 num_data = 1;
+  /* For each user defined data field we need one t8_vtk_data_field_t variable */
   t8_vtk_data_field_t vtk_data;
+  /* Set the type of this variable. Since we have one value per element, we pick T8_VTK_SCALAR */
   vtk_data.type = T8_VTK_SCALAR;
-  strcpy (vtk_data.description, "Volume");
+  /* The name of the field as should be written to the file. */
+  strcpy (vtk_data.description, "Element volume");
   vtk_data.data = element_volumes;
+  /* Copy the elment's volumes from our data array to the output array. */
   for (ielem = 0; ielem < num_elements; ++ielem) {
     element_volumes[ielem] = data[ielem].volume;
   }
   {
+    /* To write user defined data, we need to extended output function t8_forest_vtk_write_file
+     * from t8_forest_vtk.h. Despite writin user data, it also offers more control over which 
+     * properties of the forest to write. */
     int                 write_treeid = 1;
     int                 write_mpirank = 1;
     int                 write_level = 1;
@@ -209,6 +236,8 @@ t8_step5_main (int argc, char **argv)
   t8_forest_t         forest;
   /* The prefix for our output files. */
   const char         *prefix_forest = "t8_step5_forest";
+  const char         *prefix_forest_with_data =
+    "t8_step5_forest_with_volume_data";
   /* The uniform refinement level of the forest. */
   const int           level = 3;
   /* The array that will hold our per element data. */
@@ -263,6 +292,9 @@ t8_step5_main (int argc, char **argv)
                            data[0].level, data[0].volume);
   }
 
+  /*
+   * Exchange the data values of the ghost elements
+   */
   t8_step5_exchange_ghost_data (forest, data);
   t8_global_productionf (" [step5] Exchanged ghost data.\n");
 
@@ -275,7 +307,12 @@ t8_step5_main (int argc, char **argv)
                            data[first_ghost_index].volume);
   }
 
-  t8_step5_output_data_to_vtu (forest, data);
+  /*
+   * Output the volume data to vtu.
+   */
+  t8_step5_output_data_to_vtu (forest, data, prefix_forest_with_data);
+  t8_global_productionf (" [step5] Wrote forest and volume data to %s*.\n",
+                         prefix_forest_with_data);
 
   /*
    * clean-up
