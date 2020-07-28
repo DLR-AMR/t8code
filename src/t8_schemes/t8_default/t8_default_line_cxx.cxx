@@ -398,6 +398,16 @@ t8_default_scheme_line_c::t8_element_num_face_children (const t8_element_t *
 }
 
 int
+t8_default_scheme_line_c::t8_element_get_face_corner (const t8_element_t *
+                                                      element, int face,
+                                                      int corner)
+{
+  T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
+  T8_ASSERT (corner == 0);      /* The 'faces' are vertices and thus only have one corner */
+  return face;                  /* The element's corner conincides with the face number */
+}
+
+int
 t8_default_scheme_line_c::t8_element_child_id (const t8_element_t * elem)
 {
   T8_ASSERT (t8_element_is_valid (elem));
