@@ -18,3 +18,6 @@ step4 - Partitioning, balancing and creating ghost layer for forest.
 
 step5 - Associating user data with a forest's elements. Exchanging
 	ghost values for element user data. Writing element user data to vtu.
+
+step6 - Changing a mesh with element data on it: Partitioning element data and
+	interpolating data after adaptation.
