@@ -33,8 +33,8 @@
  *            In our example we start with a uniform forest from a cmesh. This forest is constructed
  *            such that each process has the same number of elements. 
  *            We then adapt this forest, thus refining and coarsening its elements. This changes the
- *            number of elements on each process and will almost allways result in a load imbalance.
- *            You can verify this yourself by priting the process local number on each process for the 
+ *            number of elements on each process and will almost always result in a load imbalance.
+ *            You can verify this yourself by printing the process local number on each process for the 
  *            adapted forest (for example with t8_productionf).
  *            In order to reestablish a load balance, we will construct a new forest from the adapted
  *            one via the partition feature.
@@ -55,14 +55,14 @@
  *            Our initial uniform forest is balanced since every element has the same refinement level l.
  *            Our adaptation criterion is such that (usually) after one step of adaptation the forest will still be balanced,
  *            since we have level l+1 elements in the inner sphere, level l elements in the middle and level l+1 elements
- *            outside. This may not be the case for very small initial refinement levels (why don't you try it out?).
+ *            outside. This may not be the case for very small initial refinement levels levels or with different radius thresholds (why don't you try it out?).
  *            Therefore, in this example we will apply the adaptation two times, resulting in level l+2 elements
  *            in the inner sphere, level l elements in the middle and level l - 2 element in the outher sphere
  *            (and probably some, but not many, level l-1 and level l+1 elements in between).
  *            This forest will be unbalanced and we will then apply the balance routine to it.
- *            Note that balance changes the local number of elements and thus may also change the
+ *            Note that balance changes the local number of elements and thus may also change the load balance
+ *            and hence require repartitioning.
  *            Balance is usually the most expensive of t8code's mesh manipulation algorithms.
- *            load balancing.
  * 
  * How you can experiment here:
  *    Partition:
@@ -94,7 +94,7 @@ T8_EXTERN_C_BEGIN ();
   /* So far we have seen t8_forest_new_* functions to create forests.
    * These directly returned a new forest.
    * However, t8code offers us more control over the creation of forests.
-   * For example we can control whether or not a forest should have a ghost layer,
+   * For example we can control wether or not a forest should have a ghost layer,
    * be balanced/partitioned from another forest, etc.
    * 
    * Usually, there are three steps involved in creating a forest:
@@ -108,7 +108,7 @@ T8_EXTERN_C_BEGIN ();
    *      The order in which you call the set functions does not matter.
    * 3. Commit the forest with t8_forest_commit. 
    *      In this step the forest is actually created after setting all
-   *      desired properties. The forest cannot be changed after it was commited.   
+   *      desired properties. The forest cannot be changed after it was committed.   
    * 
    * The t8_forest_new functions are just wrappers around this process.
    */
