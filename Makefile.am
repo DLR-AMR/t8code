@@ -24,6 +24,7 @@ check_PROGRAMS =
 include_HEADERS =
 lib_LTLIBRARIES =
 nodist_include_HEADERS =
+nobase_dist_include_HEADERS =
 noinst_HEADERS =
 noinst_PROGRAMS =
 sysconf_DATA =
@@ -78,6 +79,7 @@ include example/gmsh/Makefile.am
 include example/cmesh/Makefile.am
 include example/common/Makefile.am
 include example/advect/Makefile.am
+include example/tutorials/Makefile.am
 #include example/cxx/Makefile.am
 #include example/ExtremeScaling/Makefile.am
 

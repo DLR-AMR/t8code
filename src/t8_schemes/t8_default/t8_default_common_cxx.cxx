@@ -138,6 +138,19 @@ t8_gloidx_t
   return count_leafs_from_level (element_level, level, dim);
 }
 
+/* Count the number of siblings.
+ * The number of children is 2^dim for each element, except for pyramids.
+ * TODO: For pyramids we will have to implement a standalone version in the pyramid scheme. */
+/* *INDENT-OFF* */
+/* Indent bug: indent adds an additional const */
+int
+t8_default_scheme_common_c::t8_element_num_siblings (const t8_element_t * elem) const
+/* *INDENT-ON* */
+{
+  const int           dim = t8_eclass_to_dimension[eclass];
+  return sc_intpow (2, dim);
+}
+
 t8_gloidx_t
   t8_default_scheme_common_c::t8_element_count_leafs_from_root (int level)
 {
@@ -149,6 +162,15 @@ t8_gloidx_t
 #endif
   int                 dim = t8_eclass_to_dimension[eclass];
   return count_leafs_from_level (0, level, dim);
+}
+
+void
+t8_default_scheme_common_c::t8_element_general_function (const t8_element_t *
+                                                         elem,
+                                                         const void *indata,
+                                                         void *outdata)
+{
+  /* This function is intentionally left blank. */
 }
 
 T8_EXTERN_C_END ();

@@ -107,6 +107,8 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
  *         smaller zero if the family \a elements shall be coarsened,
  *         zero else.
  */
+/* TODO: Do we really need the forest argument? Since the forest is not committed yet it
+ *       seems dangerous to expose to the user. */
 typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
                                           t8_forest_t forest_from,
                                           t8_locidx_t which_tree,
@@ -126,7 +128,7 @@ typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
  * \param [in,out] pforest      On input, this pointer must be non-NULL.
  *                              On return, this pointer set to the new forest.
  */
-void                t8_forest_init (t8_forest_t * pforest);
+void                t8_forest_init (t8_forest_t *pforest);
 
 /** Check whether a forest is not NULL, initialized and not committed.
  * In addition, it asserts that the forest is consistent as much as possible.
@@ -238,6 +240,7 @@ void                t8_forest_set_copy (t8_forest_t forest,
  * \note This setting may not be combined with \ref t8_forest_set_copy and overwrites
  * this setting.
  */
+/* TODO: make recursive flag to int specifying the number of recursions? */
 void                t8_forest_set_adapt (t8_forest_t forest,
                                          const t8_forest_t set_from,
                                          t8_forest_adapt_t adapt_fn,
@@ -428,6 +431,58 @@ t8_locidx_t         t8_forest_cmesh_ltreeid_to_ltreeid (t8_forest_t forest,
  */
 t8_ctree_t          t8_forest_get_coarse_tree (t8_forest_t forest,
                                                t8_locidx_t ltreeid);
+
+/** Compute the leaf face neighbors of a forest.
+ * \param [in]    forest  The forest. Must have a valid ghost layer.
+ * \param [in]    ltreeid A local tree id.
+ * \param [in]    leaf    A leaf in tree \a ltreeid of \a forest.
+ * \param [out]   neighbor_leafs Unallocated on input. On output the neighbor
+ *                        leafs are stored here.
+ * \param [in]    face    The index of the face across which the face neighbors
+ *                        are searched.
+ * \param [out]   dual_face On output the face id's of the neighboring elements' faces.
+ * \param [out]   num_neighbors On output the number of neighbor leafs.
+ * \param [out]   pelement_indices Unallocated on input. On output the element indices
+ *                        of the neighbor leafs are stored here.
+ *                        0, 1, ... num_local_el - 1 for local leafs and
+ *                        num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
+ * \param [out]   pneigh_scheme On output the eclass scheme of the neighbor elements.
+ * \param [in]    forest_is_balanced True if we know that \a forest is balanced, false
+ *                        otherwise.
+ * \note If there are no face neighbors, then *neighbor_leafs = NULL, num_neighbors = 0,
+ * and *pelement_indices = NULL on output.
+ * \note Currently \a forest must be balanced.
+ * \note \a forest must be committed before calling this function.
+ */
+void                t8_forest_leaf_face_neighbors (t8_forest_t forest,
+                                                   t8_locidx_t ltreeid,
+                                                   const t8_element_t * leaf,
+                                                   t8_element_t **
+                                                   pneighbor_leafs[],
+                                                   int face,
+                                                   int *dual_faces[],
+                                                   int *num_neighbors,
+                                                   t8_locidx_t **
+                                                   pelement_indices,
+                                                   t8_eclass_scheme_c **
+                                                   pneigh_scheme,
+                                                   int forest_is_balanced);
+
+/** Exchange ghost information of user defined element data.
+ * \param[in] forest       The forest. Must be committed.
+ * \param[in] element_data An array of length num_local_elements + num_ghosts
+ *                         storing one value for each local element and ghost in \a forest.
+ *                         After calling this function the entries for the ghost elements
+ *                         are update with the entries in the \a element_data array of
+ *                         the corresponding owning process.
+ * \note This function is collective and hence must be called by all processes in the forest's
+ *       MPI Communicator.
+ */
+/* TODO: In \ref t8_forest_ghost_cxx we already implemented a begin and end function
+ *       that allow for overlapping communication and computation. We will make them
+ *       available in this interface in the future. */
+void                t8_forest_ghost_exchange_data (t8_forest_t forest,
+                                                   sc_array_t * element_data);
 
 /** Enable or disable profiling for a forest. If profiling is enabled, runtimes
  * and statistics are collected during forest_commit.
@@ -920,6 +975,7 @@ t8_forest_t         t8_forest_new_uniform (t8_cmesh_t cmesh,
  * \note This is equivalent to calling \ref t8_forest_init, \ref t8_forest_set_adapt,
  * \red t8_forest_set_ghost, and \ref t8_forest_commit
  */
+/* TODO: make user_data const. */
 t8_forest_t         t8_forest_new_adapt (t8_forest_t forest_from,
                                          t8_forest_adapt_t adapt_fn,
                                          int recursive, int do_face_ghost,
@@ -942,7 +998,7 @@ void                t8_forest_ref (t8_forest_t forest);
  *                              Otherwise, the pointer is not changed and
  *                              the forest is not modified in other ways.
  */
-void                t8_forest_unref (t8_forest_t * pforest);
+void                t8_forest_unref (t8_forest_t *pforest);
 
 T8_EXTERN_C_END ();
 

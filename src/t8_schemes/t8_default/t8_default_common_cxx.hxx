@@ -63,12 +63,29 @@ public:
   virtual t8_gloidx_t t8_element_count_leafs (const t8_element_t * t,
                                               int level);
 
+  virtual int         t8_element_num_siblings (const t8_element_t *
+                                               elem) const;
+
   /** Count how many leaf descendants of a given uniform level the root element will produce.
    * \param [in] level A refinement level.
    * \return The value of \ref t8_element_count_leafs if the input element
    *      is the root (level 0) element.
    */
   virtual t8_gloidx_t t8_element_count_leafs_from_root (int level);
+
+  /** The common implementation of the general function for the default scheme
+   * has no effect. This function literally does nothing.
+   * The tri, tet and prism scheme override this implementation with a function that
+   * stores the type of the element in \a outdata.
+   *  \param [in] elem A valid element
+   *  \param [in] indata Is ignored. Can be NULL.
+   *  \param [out] outdata Is ignored. Can be NULL.
+   * \note Calling this function has no effect. See the specialized implementations in
+   * t8_default_tri_cxx.hxx, t8_default_tet_cxx.hxx and t8_default_prism_cxx.hxx.
+   */
+  virtual void        t8_element_general_function (const t8_element_t * elem,
+                                                   const void *indata,
+                                                   void *outdata);
 };
 
 #endif /* !T8_DEFAULT_COMMON_CXX_HXX */

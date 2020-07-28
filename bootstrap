@@ -12,6 +12,9 @@ if test -n "$1" ; then
   SC_CONFIG="$1"
   if test ! -d "$SC_CONFIG" ; then
     echo "Cannot find directory $SC_CONFIG"
+    echo "   If you just called ./bootstrap from a fresh clone of t8code"
+    echo "   you may need to checkout the submodules sc and p4est:"
+    echo "   \$ git submodule init && git submodule update"
     exit 1
   fi
 fi
@@ -31,6 +34,9 @@ if test -n "$2" ; then
   P4EST_CONFIG="$2"
   if test ! -d "$P4EST_CONFIG" ; then
     echo "Cannot find directory $P4EST_CONFIG"
+    echo "   If you just called ./bootstrap from a fresh clone of t8code"
+    echo "   you may need to checkout the submodules sc and p4est:"
+    echo "   \$ git submodule init && git submodule update"
     exit 
   fi
 fi
