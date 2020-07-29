@@ -323,10 +323,10 @@ t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * nei
     {
         /*Compute the type of the neighbour*/
         if(face == 0 || face == 1){
-            neigh->type =  0;
+            neigh->type =  3;
         }
         else if(face == 2 || face == 3){
-            neigh->type = 3;
+            neigh->type = 0;
         }
         else
         {
@@ -356,7 +356,9 @@ t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * nei
             neigh->z = p->z + (p->type == 6) ? - len: len;
         }
         neigh->level = p->level;
-        return t8_dpyramid_type_face_to_nface[p->type - 7][face];
+        t8_debugf("[D] t: %i f: %i, nf: %i\n", p->type, face,
+                  t8_dpyramid_type_face_to_nface[p->type - 6][face]);
+        return t8_dpyramid_type_face_to_nface[p->type - 6][face];
     }
     else{
         if(p->type != 0 && p->type != 3){
@@ -426,6 +428,18 @@ t8_dpyramid_tet_boundary(const t8_dpyramid_t *p, int face)
             a_len = T8_DPYRAMID_LEN(level), len_diff;
     T8_ASSERT(anc.type == 0 || anc.type == 3);
     len_diff = anc.z - p->level;
+    if(p->level == 1){
+        if(p->type == 0){
+            return (p->x == 0 && (face != 1)) ||
+                   (p->x != 0 && (face != 3));
+        }
+        else{
+            /*p->type == 3*/
+            T8_ASSERT(p->type == 3);
+            return (p->y == 0 && (face != 1)) ||
+                   (p->y != 0 && (face != 3));
+        }
+    }
     if(anc.type == 0){
         if(p->type == 0){
             switch(face){
