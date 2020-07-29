@@ -318,11 +318,10 @@ t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * nei
 {
     T8_ASSERT(0 <= face && face < T8_DPYRAMID_FACES);
     t8_dpyramid_coord_t len = T8_DPYRAMID_LEN(p->level);
-    t8_dpyramid_cube_id_t cid;
-    int ptype, maxtetlvl, i, pyra_neigh = 0;
     if(t8_dpyramid_shape(p) == T8_ECLASS_PYRAMID)
     /*pyramid touches tet or pyra*/
     {
+        /*Compute the type of the neighbour*/
         if(face == 0 || face == 1){
             neigh->type =  0;
         }
@@ -334,6 +333,7 @@ t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * nei
             /*face == 4*/
             neigh->type = (p->type == 6)? 7: 6;
         }
+        /*Compute the coords of the neighbour*/
         if(face == 0 || face == 3){
             neigh->x = p->x;
             neigh->y = p->y;
@@ -359,214 +359,118 @@ t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * nei
         return t8_dpyramid_type_face_to_nface[p->type - 7][face];
     }
     else{
-        /* If p is a tet for every ancestor p is in the corner of this
-         * ancestor, one of the faces touches a pyramid. Due to the fact, that cornertet
-         * have the same type as their parent, only tets of type 0 or 3 have neighbouring
-         * pyramids.*/
         if(p->type != 0 && p->type != 3){
             return t8_dtet_face_neighbour(p, face, neigh);
         }
-        else{
-            maxtetlvl = t8_dpyramid_is_inside_tet(p, p->level);
-            if(maxtetlvl == 0)
-            {
-                /*Compute neighbouring pyra*/
-                cid = compute_cubeid(p, p->level);
-                ptype = t8_dpyramid_cid_type_to_parenttype[cid][p->type];
-                neigh->x = p->x;
-                neigh->y = p->y;
-                neigh->z = p->z;
-                switch (face) {
+        if(t8_dpyramid_tet_boundary(p, face)){
+            /*tet touches pyra*/
+            neigh->x = p->x;
+            neigh->y = p->y;
+            neigh->z = p->z;
+            neigh->level = p->level;
+            if(p->type == 0){
+                switch(face){
                 case 0:
-                    switch (cid) {
-                    case 1:
-                        /*pyra-type 3*/
-                        neigh->x += len;
-                        neigh->type = 7;
-                        return 2;
-                    case 2:
-                        /*pyra-type 0*/
-                        neigh->x += len;
-                        neigh->type = 7;
-                        return 3;
-                    case 3:
-                        /*for both types face 0 matches a tet face*/
-                        return t8_dtet_face_neighbour(p, face, neigh);
-                    case 4:
-                        neigh->x += (p->type == 0)?len:0;
-                        neigh->y += (p->type == 3)?len:0;
-                        neigh->type = 7;
-                        return (p->type == 0) ? 1: 2;
-                    case 5:
-                        /*pyra-type 3*/
-                        neigh->y += len;
-                        neigh->type = 7;
-                        return 2;
-                    case 6:
-                        /*pyra-type 0*/
-                        neigh->x += len;
-                        neigh->type = 7;
-                        return 1;
-                    default:
-                        SC_ABORT_NOT_REACHED();
-                    }
-                    break;
+                    neigh->x += len;
+                    neigh->type = 7;
+                    return 3;
                 case 1:
-                    if(cid < 3){
-                        return t8_dtet_face_neighbour(p, face, neigh);
-                    }
-                    else{
-                        neigh->type = 7;
-                        return (p->type == 0) ? 0:3;
-                    }
+                    neigh->type = 7;
+                    return 2;
                 case 2:
-                    if(cid == 5 || cid == 6){
-                        neigh->type = 6;
-                        return (p->type == 0)?0:3;
-                    }
-                    else return t8_dtet_face_neighbour(p, face, neigh);
+                    neigh->type = 6;
+                    return 2;
                 case 3:
-                    switch (cid) {
-                    case 1:
-                        /*pyra-type 3*/
-                        neigh->x -= len;
-                        neigh->type = 6;
-                        return 2;
-                    case 2:
-                        /*pyra-type 0*/
-                        neigh->y -= len;
-                        neigh->type = 6;
-                        return 1;
-                    case 3:
-                        /*for both types face 1 matches a pyra face*/
-                        neigh->x -= (p->type == 3)? len : 0;
-                        neigh->y -= (p->type == 0)? len : 0;
-                        neigh->type = 6;
-                        return (p->type == 0) ? 1:2;
-                    case 4:
-                        return t8_dtet_face_neighbour(p, face, neigh);
-                    case 5:
-                        /*pyra-type 3*/
-                        neigh->x -= len;
-                        neigh->type = 6;
-                        return 2;
-                    case 6:
-                        /*pyra-type 0*/
-                        neigh->y -= len;
-                        neigh->type = 6;
-                        return 1;
-                    default:
-                        SC_ABORT_NOT_REACHED();
-                    }
-                    break;
+                    neigh->y -=len;
+                    neigh->type = 6;
+                    return 3;
                 default:
                     SC_ABORT_NOT_REACHED();
                 }
-
             }
-            else
-            {
-                /* Check, if the tet always lies in the corner of its parenttet*/
-                for(i = maxtetlvl; i<p->level; i++)
-                {
-                    cid = compute_cubeid(p, i);
-                    ptype = t8_dpyramid_cid_type_to_parenttype[cid][p->type];
-                    if(p->type != ptype){
-                        pyra_neigh = 1;
-                        break;
-                    }
-                }
-                if(pyra_neigh == 1)
-                {
-                    return t8_dtet_face_neighbour(p, face,neigh);
-                }
-                else {
-                    /*Implement lower tet level to pyra*/
-                    if(t8_dpyramid_tet_boundary(p, maxtetlvl, face) == 0)
-                    {
-                        return t8_dtet_face_neighbour(p, face, neigh);
-                    }
-                    else{
-                        /*implement last cases :)*/
-                        switch (face) {
-                        case 0:
-                            neigh->x = p->x + (p->type == 0)?len:0;
-                            neigh->y = p->y + (p->type == 3)?len:0;
-                            neigh->z = p->z;
-                            neigh->type = 7;
-                            return (p->type == 0)?1:2;
-                        case 1:
-                            neigh->x = p->x;
-                            neigh->y = p->y;
-                            neigh->z = p->z;
-                            neigh->type = 7;
-                            return (p->type == 0)?0:3;
-                        case 2:
-                            neigh->x = p->x;
-                            neigh->y = p->y;
-                            neigh->z = p->z;
-                            neigh->type = 6;
-                            return (p->type == 0)?0:3;
-                        case 3:
-                            neigh->x = p->x - (p->type == 3)?len:0;
-                            neigh->y = p->y - (p->type == 0)?len:0;
-                            neigh->z = p->z;
-                            neigh->type = 6;
-                            return (p->type == 0)?1:2;
-                        default:
-                            SC_ABORT_NOT_REACHED();
-                        }
-                    }
+            else{
+                /*p->type == 3*/
+                switch (face) {
+                case 0:
+                    neigh->y += len;
+                    neigh->type = 7;
+                    return 1;
+                case 1:
+                    neigh->type = 7;
+                    return 0;
+                case 2:
+                    neigh->type = 6;
+                    return 0;
+                case 3:
+                    neigh->x -= len;
+                    neigh->type = 6;
+                    return 1;
+                default:
+                    SC_ABORT_NOT_REACHED();
                 }
             }
+        }
+        else{
+            /*tet touches tet*/
+            return t8_dtet_face_neighbour(p, face, neigh);
         }
     }
 }
 
 int
-t8_dpyramid_tet_boundary(const t8_dpyramid_t *p, int level, int face)
+t8_dpyramid_tet_boundary(const t8_dpyramid_t *p, int face)
 {
-    T8_ASSERT(p->type == 0 || p->type == 3);
     t8_dpyramid_t anc;
+    int level = t8_dpyramid_is_inside_tet(p, p->level, &anc);
     t8_dpyramid_coord_t p_len = T8_DPYRAMID_LEN(p->level),
             a_len = T8_DPYRAMID_LEN(level), len_diff;
-    t8_dtet_ancestor(p, level, &anc);
-    if(p->type != anc.type)return 0;
+    T8_ASSERT(anc.type == 0 || anc.type == 3);
     len_diff = anc.z - p->level;
-    if(p->type == 0){
-        switch(face){
-        case 0:
-            return  p->x == (anc.x + a_len - p_len);
-        case 1:
-
-            return  (p->x == anc.x + len_diff) &&
-                    (p->y >= anc.y + len_diff) && (p->y <= anc.y + a_len - p_len);
-        case 2:
-            return  (p->y == (anc.y + len_diff)) &&
-                    (p->x >= (anc.x + len_diff)) && (p->x <= (anc.x + a_len - p_len));
-        case 3:
-            return  (p->y == anc.y) &&
-                    (p->x >= (anc.x + len_diff)) && (p->x <= (anc.x + a_len - p_len));
-        default:
-            SC_ABORT_NOT_REACHED();
+    if(anc.type == 0){
+        if(p->type == 0){
+            switch(face){
+            case 0:
+                return  p->x == (anc.x + a_len - p_len);
+            case 1:
+                return  (p->x == anc.x + len_diff) &&
+                        (p->y >= anc.y + len_diff) && (p->y <= anc.y + a_len - p_len);
+            case 2:
+                return  (p->y == (anc.y + len_diff)) &&
+                        (p->x >= (anc.x + len_diff)) && (p->x <= (anc.x + a_len - p_len));
+            case 3:
+                return  (p->y == anc.y) &&
+                        (p->x >= (anc.x + len_diff)) && (p->x <= (anc.x + a_len - p_len));
+            default:
+                SC_ABORT_NOT_REACHED();
+            }
         }
+        else{
+            return 0;
+        }
+
     }
-    else{
-        switch(face){
-        case 0:
-            return  (p->y == anc.y + a_len - p_len) &&
-                    (p->x >= anc.x) && (p->x <= anc.x + len_diff);
-        case 1:
-            return  (p->y == anc.y + len_diff) &&
-                    (p->x >= anc.x) && (p->x <= anc.x + len_diff);
-        case 2:
-            return  (p->x == anc.x + len_diff) &&
-                    (p->y >= anc.y) && (p->y <= anc.y + len_diff);
-        case 3:
-            return  (p->x == anc.x) &&
-                    (p->y >= anc.y + len_diff) && (p->y <= anc.y + a_len - p_len);
-        default:
-            SC_ABORT_NOT_REACHED();
+    else {
+        /*anc.type == 3*/
+        if(p->type == 3){
+            switch(face){
+            case 0:
+                return  (p->y == anc.y + a_len - p_len) &&
+                        (p->x >= anc.x) && (p->x <= anc.x + len_diff);
+            case 1:
+                return  (p->y == anc.y + len_diff) &&
+                        (p->x >= anc.x) && (p->x <= anc.x + len_diff);
+            case 2:
+                return  (p->x == anc.x + len_diff) &&
+                        (p->y >= anc.y) && (p->y <= anc.y + len_diff);
+            case 3:
+                return  (p->x == anc.x) &&
+                        (p->y >= anc.y + len_diff) && (p->y <= anc.y + a_len - p_len);
+            default:
+                SC_ABORT_NOT_REACHED();
+            }
+        }
+        else{
+            return 0;
         }
     }
 }
@@ -588,7 +492,7 @@ t8_dpyramid_face_neighbor_inside (const t8_dpyramid_t *p,
                                             int face, int *neigh_face)
 {
     *neigh_face = t8_dpyramid_face_neighbour(p,  face, neigh);
-    return 0;
+    return t8_dpyramid_is_inside_root(neigh);
 }
 
 void
@@ -739,7 +643,7 @@ t8_dpyramid_children (const t8_dpyramid_t * p, int length, t8_dpyramid_t ** c)
  * The i first bits give the anchorcoordinate for a possible ancestor of level i
  * for p. */
 int
-t8_dpyramid_is_inside_tet (const t8_dpyramid_t * p, int level)
+t8_dpyramid_is_inside_tet (const t8_dpyramid_t * p, int level, t8_dpyramid_t *anc)
 {
   T8_ASSERT (t8_dpyramid_shape (p) == T8_ECLASS_TET);
   T8_ASSERT (p->type == 0 || p->type == 3);
@@ -763,6 +667,9 @@ t8_dpyramid_is_inside_tet (const t8_dpyramid_t * p, int level)
       tet.type = ancestor.type;
       /*Compare */
       if (t8_dtet_is_equal (&tet, &ancestor)) {
+          if(anc != NULL){
+              t8_dpyramid_copy(&ancestor, anc);
+          }
         return i;
       }
     }
@@ -808,7 +715,7 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
     t8_dtet_parent ((t8_dtet_t *) p, (t8_dtet_t *) parent);
 
   }
-  else if (t8_dpyramid_is_inside_tet (p, p->level) != 0) {
+  else if (t8_dpyramid_is_inside_tet (p, p->level, NULL) != 0) {
     /*Pyramid- / tetparent detection */
     /*If a tetrahedron does not reach a "significant point" its parent is a tet */
     /*Tetcase */ ;

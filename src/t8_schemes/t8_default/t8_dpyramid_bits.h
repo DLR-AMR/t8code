@@ -131,7 +131,7 @@ int                 t8_dpyramid_child_id_known_parent (const t8_dpyramid_t *
  * \return      0, if the pyramid is insed of a tetrahedron
  */
 int                 t8_dpyramid_is_inside_tet (const t8_dpyramid_t * p,
-                                               int level);
+                                               int level, t8_dpyramid_t *anc);
 
 /** Check, if a tet of type 0 or 3 has a common face with its ancestor at a given level
  * \param [in]  input pyramid
@@ -140,7 +140,7 @@ int                 t8_dpyramid_is_inside_tet (const t8_dpyramid_t * p,
  * \return      false if they don't share a face, true otherwise
  */
 int
-t8_dpyramid_tet_boundary(const t8_dpyramid_t *p, int level, int face);
+t8_dpyramid_tet_boundary(const t8_dpyramid_t *p, int face);
 
 /** Compute the first descendant of a pyramid at a given level. This is the descendant of
  * the pyramid in a uniform level refinement that has the smallest id.
