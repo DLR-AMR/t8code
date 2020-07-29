@@ -114,7 +114,7 @@ t8_tutorial_search_vtk (t8_forest_t forest, sc_array * element_has_particles,
   t8_vtk_data_field_t vtk_data;
 
   vtk_data.data = (double *) element_has_particles->array;
-  strcpy (vtk_data.description, "Particles Indicator");
+  strcpy (vtk_data.description, "Number of Particles");
   vtk_data.type = T8_VTK_SCALAR;
   t8_forest_vtk_write_file (forest, prefix, 1, 1, 1, 1, 0, 1, &vtk_data);
 }
@@ -146,6 +146,9 @@ t8_tutorial_search_for_particles (t8_forest_t forest, sc_array * particles)
   const char         *prefix = "t8_tutorial_search_with_particles";
   t8_tutorial_search_user_data_t user_data;
 
+  t8_global_productionf (" [search] Starting search for %zd particles.\n",
+                         particles->elem_count);
+
   sc_array_init_count (&element_has_particles, sizeof (double),
                        num_local_elements);
   for (ielement = 0; ielement < num_local_elements; ++ielement) {
@@ -173,7 +176,7 @@ t8_tutorial_search_for_particles (t8_forest_t forest, sc_array * particles)
 }
 
 static sc_array    *
-t8_tutorial_search_build_particles (int num_particles, unsigned int seed,
+t8_tutorial_search_build_particles (size_t num_particles, unsigned int seed,
                                     sc_MPI_Comm comm)
 {
   /* Specify lower and upper bounds for the coordinates in each dimension. */
@@ -229,6 +232,7 @@ main (int argc, char **argv)
   const char         *prefix_adapt = "t8_search_adapted_forest";
   /* The uniform refinement level of the forest. */
   const int           level = 5;
+  const size_t        num_particles = 2000;
 
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -244,7 +248,7 @@ main (int argc, char **argv)
   comm = sc_MPI_COMM_WORLD;
 
   sc_array_t         *particles =
-    t8_tutorial_search_build_particles (1000, 0, comm);
+    t8_tutorial_search_build_particles (num_particles, 0, comm);
 
   /* Print a message on the root process. */
   t8_global_productionf (" [search] \n");
@@ -271,11 +275,6 @@ main (int argc, char **argv)
   t8_global_productionf (" [search] Refinement level:\t%i\n", level);
   t8_step3_print_forest_information (forest);
 
-  /* Write forest to vtu files. */
-  t8_forest_write_vtk (forest, prefix_uniform);
-  t8_global_productionf (" [search] Wrote uniform forest to vtu files: %s*\n",
-                         prefix_uniform);
-
   /*
    *  Adapt the forest.
    */
@@ -293,11 +292,7 @@ main (int argc, char **argv)
   t8_global_productionf (" [search] Adapted forest.\n");
   t8_step3_print_forest_information (forest);
 
-  /* Write forest to vtu files. */
-  t8_forest_write_vtk (forest, prefix_adapt);
-  t8_global_productionf (" [search] Wrote adapted forest to vtu files: %s*\n",
-                         prefix_adapt);
-
+  /* Search for particles */
   t8_tutorial_search_for_particles (forest, particles);
 
   /*
