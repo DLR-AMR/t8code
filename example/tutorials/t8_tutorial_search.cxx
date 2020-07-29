@@ -29,6 +29,7 @@
 #include <t8_schemes/t8_default_cxx.hxx>        /* default refinement scheme. */
 #include <t8_vec.h>             /* Basic operations on 3D vectors. */
 #include <t8_forest/t8_forest_iterate.h>        /* For the search algorithm. */
+#include <t8_forest_vtk.h>      /* Additional vtk functions to output arbitrary user data. */
 #include <example/tutorials/t8_step3.h>
 
 T8_EXTERN_C_BEGIN ();
@@ -38,6 +39,12 @@ typedef struct
   double              coordinates[3];
   int                 is_inside_domain;
 } t8_tutorial_search_particle_t;
+
+typedef struct
+{
+  sc_array           *element_has_particles;
+  t8_locidx_t         num_elements_searched;
+} t8_tutorial_search_user_data_t;
 
 /*
  * forest          the forest
@@ -67,6 +74,9 @@ t8_tutorial_search_callback (t8_forest_t forest,
                              tree_leaf_index, void *query, size_t query_index)
 {
   if (query == NULL) {
+    t8_tutorial_search_user_data_t *user_data =
+      (t8_tutorial_search_user_data_t *) t8_forest_get_user_data (forest);
+    user_data->num_elements_searched++;
     return 1;
   }
   int                 particle_is_inside_element;
@@ -75,51 +85,38 @@ t8_tutorial_search_callback (t8_forest_t forest,
   const double       *tree_vertices =
     t8_forest_get_tree_vertices (forest, ltreeid);
   const double        tolerance = 1e-4;
+  t8_tutorial_search_user_data_t *user_data =
+    (t8_tutorial_search_user_data_t *) t8_forest_get_user_data (forest);
+  sc_array           *element_has_particles =
+    user_data->element_has_particles;
+  T8_ASSERT (element_has_particles != NULL);
 
   particle_is_inside_element =
     t8_forest_element_point_inside (forest, ltreeid, element, tree_vertices,
                                     particle->coordinates, tolerance);
   if (particle_is_inside_element) {
     if (is_leaf) {
-      t8_global_productionf
-        ("Element %i in tree %i has particle (%f, %f, %f)\n", tree_leaf_index,
-         ltreeid, particle->coordinates[0], particle->coordinates[1],
-         particle->coordinates[2]);
+      t8_locidx_t         element_index =
+        t8_forest_get_tree_element_offset (forest, ltreeid) + tree_leaf_index;
       particle->is_inside_domain = 1;
+      *(double *) t8_sc_array_index_locidx (element_has_particles,
+                                            element_index) += 1;
     }
     return 1;
   }
   return 0;
 }
 
-static sc_array    *
-t8_tutorial_search_build_particles (int num_particles, unsigned int seed)
+static void
+t8_tutorial_search_vtk (t8_forest_t forest, sc_array * element_has_particles,
+                        const char *prefix)
 {
-  /* Specify lower and upper bounds for the coordinates in each dimension. */
-  double              boundary_low[3] = { -0.1, -0.1, -0.1 };
-  double              boundary_high[3] = { 1.1, 1.1, 1.1 };
+  t8_vtk_data_field_t vtk_data;
 
-  /* Create sc_array with space for num_particle many particles. */
-  sc_array           *particles =
-    sc_array_new_count (sizeof (t8_tutorial_search_particle_t),
-                        num_particles);
-
-  srand (seed);
-  int                 iparticle;
-  for (iparticle = 0; iparticle < num_particles; ++iparticle) {
-    int                 dim;
-    t8_tutorial_search_particle_t *particle =
-      (t8_tutorial_search_particle_t *) sc_array_index_int (particles,
-                                                            iparticle);
-    for (dim = 0; dim < 3; ++dim) {
-      /* Create a random value betwenn boundary_low[dim] and boundary_high[dim] */
-      particle->coordinates[dim] =
-        (double) rand () / RAND_MAX * (boundary_high[dim] -
-                                       boundary_low[dim]) + boundary_low[dim];
-      particle->is_inside_domain = 0;
-    }
-  }
-  return particles;
+  vtk_data.data = (double *) element_has_particles->array;
+  strcpy (vtk_data.description, "Particles Indicator");
+  vtk_data.type = T8_VTK_SCALAR;
+  t8_forest_vtk_write_file (forest, prefix, 1, 1, 1, 1, 0, 1, &vtk_data);
 }
 
 static void
@@ -138,6 +135,88 @@ t8_tutorial_search_print_particles (sc_array_t * particles)
   }
 }
 
+static void
+t8_tutorial_search_for_particles (t8_forest_t forest, sc_array * particles)
+{
+  sc_array            element_has_particles;
+  t8_locidx_t         num_local_elements = t8_forest_get_num_element (forest);
+  t8_locidx_t         ielement;
+  t8_locidx_t         global_num_searched_elements;
+  t8_gloidx_t         global_num_elements;
+  const char         *prefix = "t8_tutorial_search_with_particles";
+  t8_tutorial_search_user_data_t user_data;
+
+  sc_array_init_count (&element_has_particles, sizeof (double),
+                       num_local_elements);
+  for (ielement = 0; ielement < num_local_elements; ++ielement) {
+    *(double *) t8_sc_array_index_locidx (&element_has_particles, ielement) =
+      0;
+  }
+  user_data.element_has_particles = &element_has_particles;
+  user_data.num_elements_searched = 0;
+  t8_forest_set_user_data (forest, &user_data);
+  t8_forest_search (forest, t8_tutorial_search_callback,
+                    t8_tutorial_search_callback, particles);
+  t8_tutorial_search_vtk (forest, &element_has_particles, prefix);
+  /* Compute the process global number of searched elements. */
+  sc_MPI_Reduce (&user_data.num_elements_searched,
+                 &global_num_searched_elements, 1, T8_MPI_LOCIDX, sc_MPI_SUM,
+                 0, t8_forest_get_mpicomm (forest));
+
+  /* Output */
+  global_num_elements = t8_forest_get_global_num_elements (forest);
+  t8_global_productionf
+    (" [search] Searched forest with %li global elements. Looked at %i elements during search.\n",
+     global_num_elements, global_num_searched_elements);
+  /* Clean up */
+  sc_array_reset (&element_has_particles);
+}
+
+static sc_array    *
+t8_tutorial_search_build_particles (int num_particles, unsigned int seed,
+                                    sc_MPI_Comm comm)
+{
+  /* Specify lower and upper bounds for the coordinates in each dimension. */
+  double              boundary_low[3] = { 0.2, 0.3, 0.1 };
+  double              boundary_high[3] = { 0.8, 0.75, 0.9 };
+  int                 mpirank;
+  int                 mpiret;
+  sc_array           *particles;
+
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+
+  particles = sc_array_new_count (sizeof (t8_tutorial_search_particle_t),
+                                  num_particles);
+  if (mpirank == 0) {
+    /* Create sc_array with space for num_particle many particles. */
+
+    srand (seed);
+    int                 iparticle;
+    for (iparticle = 0; iparticle < num_particles; ++iparticle) {
+      int                 dim;
+      t8_tutorial_search_particle_t *particle =
+        (t8_tutorial_search_particle_t *) sc_array_index_int (particles,
+                                                              iparticle);
+      for (dim = 0; dim < 3; ++dim) {
+        /* Create a random value betwenn boundary_low[dim] and boundary_high[dim] */
+        particle->coordinates[dim] =
+          (double) rand () / RAND_MAX * (boundary_high[dim] -
+                                         boundary_low[dim]) +
+          boundary_low[dim];
+        particle->is_inside_domain = 0;
+      }
+    }
+  }
+  mpiret =
+    sc_MPI_Bcast (particles->array,
+                  sizeof (t8_tutorial_search_particle_t) * num_particles,
+                  sc_MPI_BYTE, 0, comm);
+  SC_CHECK_MPI (mpiret);
+
+  return particles;
+}
+
 int
 main (int argc, char **argv)
 {
@@ -149,7 +228,7 @@ main (int argc, char **argv)
   const char         *prefix_uniform = "t8_search_uniform_forest";
   const char         *prefix_adapt = "t8_search_adapted_forest";
   /* The uniform refinement level of the forest. */
-  const int           level = 3;
+  const int           level = 5;
 
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -161,8 +240,11 @@ main (int argc, char **argv)
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the leg levels. */
   t8_init (SC_LP_PRODUCTION);
 
-  sc_array_t         *particles = t8_tutorial_search_build_particles (10, 0);
-  t8_tutorial_search_print_particles (particles);
+  /* We will use MPI_COMM_WORLD as a communicator. */
+  comm = sc_MPI_COMM_WORLD;
+
+  sc_array_t         *particles =
+    t8_tutorial_search_build_particles (1000, 0, comm);
 
   /* Print a message on the root process. */
   t8_global_productionf (" [search] \n");
@@ -171,9 +253,6 @@ main (int argc, char **argv)
   t8_global_productionf
     (" [search] In this example we will refine and coarsen a forest.\n");
   t8_global_productionf (" [search] \n");
-
-  /* We will use MPI_COMM_WORLD as a communicator. */
-  comm = sc_MPI_COMM_WORLD;
 
   /*
    * Setup.
@@ -219,9 +298,7 @@ main (int argc, char **argv)
   t8_global_productionf (" [search] Wrote adapted forest to vtu files: %s*\n",
                          prefix_adapt);
 
-  t8_forest_search (forest, t8_tutorial_search_callback,
-                    t8_tutorial_search_callback, particles);
-  t8_tutorial_search_print_particles (particles);
+  t8_tutorial_search_for_particles (forest, particles);
 
   /*
    * clean-up
