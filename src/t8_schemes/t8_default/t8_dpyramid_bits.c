@@ -318,9 +318,10 @@ t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * nei
 {
     T8_ASSERT(0 <= face && face < T8_DPYRAMID_FACES);
     t8_dpyramid_coord_t len = T8_DPYRAMID_LEN(p->level);
+    t8_debugf("[D] neigh in: %i %i %i %i %i\n", p->x, p->y, p->z, p->type, p->level);
     if(t8_dpyramid_shape(p) == T8_ECLASS_PYRAMID)
-    /*pyramid touches tet or pyra*/
     {
+    /*pyramid touches tet or pyra*/
         /*Compute the type of the neighbour*/
         if(face == 0 || face == 1){
             neigh->type =  3;
@@ -340,21 +341,23 @@ t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * nei
             neigh->z = p->z;
         }
         else if(face == 1){
-            neigh->x = p->x + (p->type == 6)?0 : - len;
-            neigh->y = p->y + (p->type == 6)?len : 0;
+            neigh->x = p->x + ((p->type == 6)?0 : - len);
+            neigh->y = p->y + ((p->type == 6)?len : 0);
             neigh->z = p->z;
         }
         else if(face == 2){
-            neigh->x = p->x+ (p->type == 6)?len : 0;
-            neigh->y = p->y+ (p->type == 6)?0 : - len;
+            neigh->x = p->x+ ((p->type == 6)?len : 0);
+            neigh->y = p->y+ ((p->type == 6)?0 : - len);
             neigh->z = p->z;
         }
         else{
             /*face == 4*/
+
             neigh->x = p->x;
             neigh->y = p->y;
-            neigh->z = p->z + (p->type == 6) ? - len: len;
+            neigh->z = p->z + ((p->type == 6)?-len:len);
         }
+        t8_debugf("[D] p-z: %i, neigh-comp-z %i, len %i\n", p->z, neigh->z, len);
         neigh->level = p->level;
         t8_debugf("[D] t: %i f: %i, nf: %i\n", p->type, face,
                   t8_dpyramid_type_face_to_nface[p->type - 6][face]);
@@ -364,6 +367,7 @@ t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * nei
         if(p->type != 0 && p->type != 3){
             return t8_dtet_face_neighbour(p, face, neigh);
         }
+        t8_debugf("[D] result_boundary(0 no b): %i\n", t8_dpyramid_tet_boundary(p, face));
         if(t8_dpyramid_tet_boundary(p, face)){
             /*tet touches pyra*/
             neigh->x = p->x;
@@ -373,19 +377,19 @@ t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * nei
             if(p->type == 0){
                 switch(face){
                 case 0:
-                    neigh->x += len;
+                    neigh->y += len;
                     neigh->type = 7;
-                    return 3;
+                    return 2;
                 case 1:
                     neigh->type = 7;
-                    return 2;
+                    return 3;
                 case 2:
                     neigh->type = 6;
-                    return 2;
-                case 3:
-                    neigh->y -=len;
-                    neigh->type = 6;
                     return 3;
+                case 3:
+                    neigh->x -=len;
+                    neigh->type = 6;
+                    return 2;
                 default:
                     SC_ABORT_NOT_REACHED();
                 }
@@ -394,7 +398,7 @@ t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * nei
                 /*p->type == 3*/
                 switch (face) {
                 case 0:
-                    neigh->y += len;
+                    neigh->x += len;
                     neigh->type = 7;
                     return 1;
                 case 1:
@@ -404,7 +408,7 @@ t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * nei
                     neigh->type = 6;
                     return 0;
                 case 3:
-                    neigh->x -= len;
+                    neigh->y -= len;
                     neigh->type = 6;
                     return 1;
                 default:
@@ -424,10 +428,16 @@ t8_dpyramid_tet_boundary(const t8_dpyramid_t *p, int face)
 {
     t8_dpyramid_t anc;
     int level = t8_dpyramid_is_inside_tet(p, p->level, &anc);
+    if(level == 0){
+        return 1;
+    }
     t8_dpyramid_coord_t p_len = T8_DPYRAMID_LEN(p->level),
             a_len = T8_DPYRAMID_LEN(level), len_diff;
+    t8_debugf("[D] p: %i %i %i %i %i, face %i\n", p->x, p->y, p->z, p->type, p->level, face);
+    t8_debugf("[D] anc: %i %i %i %i %i\n", anc.x, anc.y, anc.z, anc.type, anc.level);
     T8_ASSERT(anc.type == 0 || anc.type == 3);
-    len_diff = anc.z - p->level;
+    len_diff = p->z - anc.z;
+    t8_debugf("[D] len_diff: %i, a_len: %i, p_len: %i\n", len_diff, a_len, p_len);
     if(p->level == 1){
         if(p->type == 0){
             return (p->x == 0 && (face != 1)) ||
@@ -447,18 +457,19 @@ t8_dpyramid_tet_boundary(const t8_dpyramid_t *p, int face)
                 return  p->x == (anc.x + a_len - p_len);
             case 1:
                 return  (p->x == anc.x + len_diff) &&
-                        (p->y >= anc.y + len_diff) && (p->y <= anc.y + a_len - p_len);
+                        (p->y >= anc.y) && (p->y <= anc.y + a_len - p_len);
             case 2:
                 return  (p->y == (anc.y + len_diff)) &&
-                        (p->x >= (anc.x + len_diff)) && (p->x <= (anc.x + a_len - p_len));
+                        (p->x >= (anc.x)) && (p->x <= (anc.x + a_len - p_len));
             case 3:
-                return  (p->y == anc.y) &&
+                return  (p->y >= anc.y) && (p->y <= anc.y + a_len - p_len) &&
                         (p->x >= (anc.x + len_diff)) && (p->x <= (anc.x + a_len - p_len));
             default:
                 SC_ABORT_NOT_REACHED();
             }
         }
         else{
+            /**/
             return 0;
         }
 
@@ -468,16 +479,15 @@ t8_dpyramid_tet_boundary(const t8_dpyramid_t *p, int face)
         if(p->type == 3){
             switch(face){
             case 0:
-                return  (p->y == anc.y + a_len - p_len) &&
-                        (p->x >= anc.x) && (p->x <= anc.x + len_diff);
+                return  (p->y == anc.y + a_len - p_len);
             case 1:
                 return  (p->y == anc.y + len_diff) &&
-                        (p->x >= anc.x) && (p->x <= anc.x + len_diff);
+                        (p->x >= anc.x) && (p->x <= anc.x + a_len - p_len);
             case 2:
                 return  (p->x == anc.x + len_diff) &&
-                        (p->y >= anc.y) && (p->y <= anc.y + len_diff);
+                        (p->y >= anc.y) && (p->y <= anc.y + a_len - p_len);
             case 3:
-                return  (p->x == anc.x) &&
+                return  (p->x >= anc.x) && (p->x <= anc.x + a_len - p_len) &&
                         (p->y >= anc.y + len_diff) && (p->y <= anc.y + a_len - p_len);
             default:
                 SC_ABORT_NOT_REACHED();

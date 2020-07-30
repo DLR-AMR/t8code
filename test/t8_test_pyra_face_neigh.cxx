@@ -25,14 +25,83 @@
 #include <t8_schemes/t8_default/t8_default_pyramid_cxx.hxx>
 #include <t8_schemes/t8_default/t8_dpyramid.h>
 
+void
+t8_recursive_check_diff(t8_element_t * element, t8_element_t * child,
+                        t8_element_t * neigh, t8_eclass_scheme_c *ts,
+                        int maxlvl, int level)
+{
+    int i, j, num_face, num_children, face_num;
+    t8_debugf("[D] l %i m %i\n", level, maxlvl);
+    T8_ASSERT (level <= maxlvl &&
+               maxlvl <= ts->t8_element_maxlevel() - 1);
+    if(level == maxlvl){
+        return;
+    }
+    if(ts->t8_element_shape(element) == T8_ECLASS_PYRAMID){
+        num_face = T8_DPYRAMID_FACES;
+    }
+    else{
+        num_face = T8_DTET_FACES;
+    }
+    for(i = 0; i < num_face; i++){
+        t8_debugf("[D]source: %i %i %i %i %i\n", ((t8_dpyramid_t *)element)->x, ((t8_dpyramid_t *)element)->y,
+                  ((t8_dpyramid_t *)element)->z, ((t8_dpyramid_t *)element)->type, ((t8_dpyramid_t *)element)->level);
+
+        ts->t8_element_face_neighbor_inside(element, neigh, i, &face_num);
+        t8_debugf("[D] neigh at face %i\n", i);
+        t8_debugf("[D]neigh: %i %i %i %i %i\n", ((t8_dpyramid_t *)neigh)->x, ((t8_dpyramid_t *)neigh)->y,
+                  ((t8_dpyramid_t *)neigh)->z, ((t8_dpyramid_t *)neigh)->type, ((t8_dpyramid_t *)neigh)->level);
+
+        t8_debugf("[D] neigh_neigh at face %i\n", face_num);
+        ts->t8_element_face_neighbor_inside(neigh, child, face_num, &j);
+        t8_debugf("[D]neigh_neigh: %i %i %i %i %i\n", ((t8_dpyramid_t *)child)->x, ((t8_dpyramid_t *)child)->y,
+                  ((t8_dpyramid_t *)child)->z, ((t8_dpyramid_t *)child)->type, ((t8_dpyramid_t *)child)->level);
+        t8_debugf("check %i face %i\n", i,j);
+        SC_CHECK_ABORT(!ts->t8_element_compare(child, element) && i == j,
+                "Wrong face neighbor\n");
+        t8_debugf("\n");
+    }
+    num_children = ts->t8_element_num_children(element);
+    for(i = 0; i < num_children; i++){
+        ts->t8_element_child(element, i, child);
+        t8_recursive_check_diff(child, element, neigh, ts, maxlvl, level + 1);
+        ts->t8_element_parent(child, element);
+    }
+}
+
 
 void
-t8_face_check(){
+t8_face_check_diff(int level){
     t8_element_t        *element, *child, *neigh;
     t8_scheme_cxx       *scheme;
     t8_eclass_scheme_c  *ts;
     t8_eclass_t         eclass = T8_ECLASS_PYRAMID;
-    int                 i, face_num, check;
+    int                 i,j, face_num, check, num_faces;
+
+    scheme = t8_scheme_new_default_cxx();
+
+    ts = scheme->eclass_schemes[eclass];
+    ts->t8_element_new(1, &element);
+    ts->t8_element_new(1, &child);
+    ts->t8_element_new(1, &neigh);
+
+    ts->t8_element_set_linear_id(element, 0,0);
+    ts->t8_element_child(element, 8, child);
+    t8_recursive_check_diff(child, element, neigh, ts, level, 1);
+
+    ts->t8_element_destroy(1, &element);
+    ts->t8_element_destroy(1, &child);
+    ts->t8_element_destroy(1, &neigh);
+    t8_scheme_cxx_unref(&scheme);
+}
+
+void
+t8_face_check_easy(){
+    t8_element_t        *element, *child, *neigh;
+    t8_scheme_cxx       *scheme;
+    t8_eclass_scheme_c  *ts;
+    t8_eclass_t         eclass = T8_ECLASS_PYRAMID;
+    int                 i,j, face_num, check, num_faces;
 
     scheme = t8_scheme_new_default_cxx();
 
@@ -50,20 +119,68 @@ t8_face_check(){
         t8_debugf("[D] neigh at face %i\n", i);
         t8_debugf("neigh: %i %i %i %i %i\n", ((t8_dpyramid_t *)neigh)->x, ((t8_dpyramid_t *)neigh)->y,
                   ((t8_dpyramid_t *)neigh)->z, ((t8_dpyramid_t *)neigh)->type, ((t8_dpyramid_t *)neigh)->level);
+
         ts->t8_element_face_neighbor_inside(neigh, element, face_num, &check);
         t8_debugf("[D] neigh_neigh at face %i\n", face_num);
         t8_debugf("neigh_neigh: %i %i %i %i %i\n", ((t8_dpyramid_t *)element)->x, ((t8_dpyramid_t *)element)->y,
                   ((t8_dpyramid_t *)element)->z, ((t8_dpyramid_t *)element)->type, ((t8_dpyramid_t *)element)->level);
+        t8_debugf("[D]check %i, face %i\n", check, i);
         t8_debugf("\n");
         SC_CHECK_ABORT(!ts->t8_element_compare(child, element) && check == i,
-                       "Wrong face neighbour\n");
+                       "Wrong face neighbor\n");
     }
+    ts->t8_element_child(element, 3, child);
+    for(i = 0; i<5; i++){
+        t8_debugf("[D]source: %i %i %i %i %i\n", ((t8_dpyramid_t *)child)->x, ((t8_dpyramid_t *)child)->y,
+                  ((t8_dpyramid_t *)child)->z, ((t8_dpyramid_t *)child)->type, ((t8_dpyramid_t *)child)->level);
+        t8_debugf("[D] neigh at face %i\n", i);
+        ts->t8_element_face_neighbor_inside(child, neigh, i, &face_num);
+        t8_debugf("neigh: %i %i %i %i %i\n", ((t8_dpyramid_t *)neigh)->x, ((t8_dpyramid_t *)neigh)->y,
+                  ((t8_dpyramid_t *)neigh)->z, ((t8_dpyramid_t *)neigh)->type, ((t8_dpyramid_t *)neigh)->level);
+
+        t8_debugf("[D] neigh_neigh at face %i\n", face_num);
+        ts->t8_element_face_neighbor_inside(neigh, element, face_num, &check);
+        t8_debugf("neigh_neigh: %i %i %i %i %i\n", ((t8_dpyramid_t *)element)->x, ((t8_dpyramid_t *)element)->y,
+                  ((t8_dpyramid_t *)element)->z, ((t8_dpyramid_t *)element)->type, ((t8_dpyramid_t *)element)->level);
+        t8_debugf("[D]check %i, face %i\n", check, i);
+        t8_debugf("\n");
+        SC_CHECK_ABORT(!ts->t8_element_compare(child, element) && check == i,
+                       "Wrong face neighbor\n");
+    }
+    for(i = 0; i<T8_DPYRAMID_CHILDREN; i++){
+        ts->t8_element_child(element, i, child);
+        if(ts->t8_element_shape(child) == T8_ECLASS_PYRAMID){
+            num_faces = T8_DPYRAMID_FACES;
+        }
+        else{
+            num_faces = T8_DTET_FACES;
+        }
+        for(j = 0; j<num_faces; j++){
+            t8_debugf("[D] Round %i %i\n", i, j);
+            t8_debugf("[D]source: %i %i %i %i %i\n", ((t8_dpyramid_t *)child)->x, ((t8_dpyramid_t *)child)->y,
+                      ((t8_dpyramid_t *)child)->z, ((t8_dpyramid_t *)child)->type, ((t8_dpyramid_t *)child)->level);
+            t8_debugf("[D] neigh at face %i\n", j);
+            ts->t8_element_face_neighbor_inside(child, neigh, j, &face_num);
+            t8_debugf("neigh: %i %i %i %i %i\n", ((t8_dpyramid_t *)neigh)->x, ((t8_dpyramid_t *)neigh)->y,
+                      ((t8_dpyramid_t *)neigh)->z, ((t8_dpyramid_t *)neigh)->type, ((t8_dpyramid_t *)neigh)->level);
+
+            t8_debugf("[D] neigh_neigh at face %i\n", face_num);
+            ts->t8_element_face_neighbor_inside(neigh, element, face_num, &check);
+            t8_debugf("neigh_neigh: %i %i %i %i %i\n", ((t8_dpyramid_t *)element)->x, ((t8_dpyramid_t *)element)->y,
+                      ((t8_dpyramid_t *)element)->z, ((t8_dpyramid_t *)element)->type, ((t8_dpyramid_t *)element)->level);
+            t8_debugf("[D]check %i, face %i\n", check, j);
+            t8_debugf("\n");
+            SC_CHECK_ABORT(!ts->t8_element_compare(child, element) && check == j,
+                           "Wrong face neighbor\n");
+        }
+        ts->t8_element_parent(child, element);
+    }
+
 
     ts->t8_element_destroy(1, &element);
     ts->t8_element_destroy(1, &child);
     ts->t8_element_destroy(1, &neigh);
-
-
+    t8_scheme_cxx_unref(&scheme);
 }
 
 int
@@ -83,7 +200,8 @@ main (int argc, char **argv)
   p4est_init(NULL, SC_LP_ESSENTIAL);
   t8_init(SC_LP_DEFAULT);
 
-  t8_face_check();
+  t8_face_check_easy();
+  t8_face_check_diff(4);
 
 
   sc_finalize();

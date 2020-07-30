@@ -95,6 +95,6 @@ const int           t8_dpyramid_parenttype_iloc_pyra_w_lower_id[2][10] = {
 };
 
 const int t8_dpyramid_type_face_to_nface[2][5]= {
-    {2,3,3,2,4},
-    {1,0,0,1,4}
+    {2, 3, 3, 2, 4},
+    {1, 0, 0, 1, 4}
 };
