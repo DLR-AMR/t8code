@@ -433,18 +433,31 @@ int
 t8_dpyramid_tet_boundary(const t8_dpyramid_t *p, int face)
 {
     t8_dpyramid_t anc;
+    t8_debugf("[D] p: %i %i %i %i %i, face %i\n", p->x, p->y, p->z, p->type, p->level, face);
     int level = t8_dpyramid_is_inside_tet(p, p->level, &anc);
+    t8_debugf("[D] anc: %i %i %i %i %i\n", anc.x, anc.y, anc.z, anc.type, anc.level);
     if(level == 0){
-        if(p->type == 0){
-            if((p->y >> (T8_DPYRAMID_MAXLEVEL - p->level))%2 == 0){
-                return 0;
-            }
+        int x = (p->x >>(T8_DPYRAMID_MAXLEVEL - p->level)) % 2;
+        int y = (p->y >>(T8_DPYRAMID_MAXLEVEL - p->level)) % 2;
+        t8_debugf("x: %i, y:%i, face %i\n", x,y, face);
+        if(x== 0 && y == 1){
+            return (p->type == 0 && (face != 1));
         }
+        else if(x == 1 && y == 0){
+            return (p->type == 3 && (face != 1));
+        }
+        else if(x == 1 && y == 1){
+            return (p->type == 0 && (face != 0)) ||
+                    ((p->type == 3) && (face != 0));
+        }
+        else{
+            /*Need to continue here!*/
+            return 0;
+        }
+
     }
     t8_dpyramid_coord_t p_len = T8_DPYRAMID_LEN(p->level),
             a_len = T8_DPYRAMID_LEN(level), len_diff;
-    t8_debugf("[D] p: %i %i %i %i %i, face %i\n", p->x, p->y, p->z, p->type, p->level, face);
-    t8_debugf("[D] anc: %i %i %i %i %i\n", anc.x, anc.y, anc.z, anc.type, anc.level);
     T8_ASSERT(anc.type == 0 || anc.type == 3);
     len_diff = p->z - anc.z;
     t8_debugf("[D] len_diff: %i, a_len: %i, p_len: %i\n", len_diff, a_len, p_len);
