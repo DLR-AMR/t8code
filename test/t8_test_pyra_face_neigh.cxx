@@ -47,8 +47,8 @@ t8_recursive_check_diff(t8_element_t * element, t8_element_t * child,
         t8_debugf("[D]source: %i %i %i %i %i\n", ((t8_dpyramid_t *)element)->x, ((t8_dpyramid_t *)element)->y,
                   ((t8_dpyramid_t *)element)->z, ((t8_dpyramid_t *)element)->type, ((t8_dpyramid_t *)element)->level);
 
-        ts->t8_element_face_neighbor_inside(element, neigh, i, &face_num);
         t8_debugf("[D] neigh at face %i\n", i);
+        ts->t8_element_face_neighbor_inside(element, neigh, i, &face_num);
         t8_debugf("[D]neigh: %i %i %i %i %i\n", ((t8_dpyramid_t *)neigh)->x, ((t8_dpyramid_t *)neigh)->y,
                   ((t8_dpyramid_t *)neigh)->z, ((t8_dpyramid_t *)neigh)->type, ((t8_dpyramid_t *)neigh)->level);
 
