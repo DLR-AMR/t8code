@@ -56,5 +56,7 @@ extern const int           t8_dpyramid_parenttype_iloc_pyra_w_lower_id[2][10];
  * The facenumber depends on the type of the pyramid*/
 extern const int t8_dpyramid_type_face_to_nface[2][5];
 
+extern const int t8_dpyramid_face_childid_to_is_inside[4][8];
+
 #endif // T8_DPYRAMID_CONNECTIVITY_H
 

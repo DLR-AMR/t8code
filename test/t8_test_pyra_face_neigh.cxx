@@ -201,7 +201,7 @@ main (int argc, char **argv)
   t8_init(SC_LP_DEFAULT);
 
   t8_face_check_easy();
-  t8_face_check_diff(4);
+  t8_face_check_diff(7);
 
 
   sc_finalize();

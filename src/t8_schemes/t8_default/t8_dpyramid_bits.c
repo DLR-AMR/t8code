@@ -23,6 +23,7 @@
 #include "t8_dpyramid_bits.h"
 #include "t8_dtet_bits.h"
 #include "t8_dpyramid_connectivity.h"
+#include "t8_dtet_connectivity.h"
 #include <sc_functions.h>
 
 typedef int8_t      t8_dpyramid_cube_id_t;
@@ -318,7 +319,10 @@ t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * nei
 {
     T8_ASSERT(0 <= face && face < T8_DPYRAMID_FACES);
     t8_dpyramid_coord_t len = T8_DPYRAMID_LEN(p->level);
-    t8_debugf("[D] neigh in: %i %i %i %i %i\n", p->x, p->y, p->z, p->type, p->level);
+    neigh->x = p->x;
+    neigh->y = p->y;
+    neigh->z = p->z;
+    neigh->level = p->level;
     if(t8_dpyramid_shape(p) == T8_ECLASS_PYRAMID)
     {
     /*pyramid touches tet or pyra*/
@@ -335,51 +339,30 @@ t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * nei
             neigh->type = ((p->type == 6)? 7: 6);
         }
         /*Compute the coords of the neighbour*/
-        if(face == 0){
-            neigh->x = p->x;
-            neigh->y = p->y;
-            neigh->z = p->z;
-        }
-        else if(face == 1){
-            neigh->x = p->x + ((p->type == 6)?len : 0);
-            neigh->y = p->y + ((p->type == 6)?0 : -len);
-            neigh->z = p->z;
-        }
-        else if(face == 2){
-            neigh->x = p->x;
-            neigh->y = p->y;
-            neigh->z = p->z;
+        /*Do nothing for face == 0 || face == 2*/
+        if(face == 1){
+            neigh->x += ((p->type == 6)?len : 0);
+            neigh->y += ((p->type == 6)?0 : -len);
         }
         else if(face == 3)
         {
-            neigh->x = p->x + ((p->type == 6)?0:-len);
-            neigh->y = p->y + ((p->type == 6)?len:0);
-            neigh->z = p->z;
+            neigh->x += ((p->type == 6)?0:-len);
+            neigh->y += ((p->type == 6)?len:0);
         }
-        else{
-            /*face == 4*/
+        else if(face == 4){
+            neigh->z += ((p->type == 6)?-len:len);
+        }
 
-            neigh->x = p->x;
-            neigh->y = p->y;
-            neigh->z = p->z + ((p->type == 6)?-len:len);
-        }
-        t8_debugf("[D] p-z: %i, neigh-comp-z %i, len %i\n", p->z, neigh->z, len);
-        neigh->level = p->level;
-        t8_debugf("[D] t: %i f: %i, nf: %i\n", p->type, face,
-                  t8_dpyramid_type_face_to_nface[p->type - 6][face]);
         return t8_dpyramid_type_face_to_nface[p->type - 6][face];
     }
     else{
+        /*Check if the neighbor is a tet, or a pyra*/
         if(p->type != 0 && p->type != 3){
+            /*tets of these types never have a pyra-neighbor*/
             return t8_dtet_face_neighbour(p, face, neigh);
         }
-        t8_debugf("[D] result_boundary(0 no b): %i\n", t8_dpyramid_tet_boundary(p, face));
         if(t8_dpyramid_tet_boundary(p, face)){
-            /*tet touches pyra*/
-            neigh->x = p->x;
-            neigh->y = p->y;
-            neigh->z = p->z;
-            neigh->level = p->level;
+            /*tet touches pyra, compute the pyra*/
             if(p->type == 0){
                 switch(face){
                 case 0:
@@ -430,96 +413,53 @@ t8_dpyramid_face_neighbour(const t8_dpyramid_t *p, int face, t8_dpyramid_t * nei
 }
 
 int
+t8_dpyramid_tet_pyra_face_connection(const t8_dpyramid_t * p, int face)
+{
+    T8_ASSERT(p->type == 0 || p->type == 3);
+    int x = (p->x >>(T8_DPYRAMID_MAXLEVEL - p->level)) % 2;
+    int y = (p->y >>(T8_DPYRAMID_MAXLEVEL - p->level)) % 2;
+    int z = (p->z >>(T8_DPYRAMID_MAXLEVEL - p->level)) %2;;
+    if(x== 0 && y == 1){
+        return p->type == 0 && ((face != 1 && z == 0) ||
+                                (face != 2 && z == 1));
+    }
+    else if(x == 1 && y == 0){
+        return p->type == 3 && ((face != 1 && z == 0) ||
+                                 (face != 2 && z == 1));
+    }
+    else if(x == 1 && y == 1 && z == 0){
+        return (face != 0);
+    }
+    else if(x == 0 && y== 0 && z == 1){
+        return (face != 3);
+    }
+    else{
+        return 0;
+    }
+}
+
+int
 t8_dpyramid_tet_boundary(const t8_dpyramid_t *p, int face)
 {
     t8_dpyramid_t anc;
-    t8_debugf("[D] p: %i %i %i %i %i, face %i\n", p->x, p->y, p->z, p->type, p->level, face);
     int level = t8_dpyramid_is_inside_tet(p, p->level, &anc);
-    t8_debugf("[D] anc: %i %i %i %i %i\n", anc.x, anc.y, anc.z, anc.type, anc.level);
+    int cid, id, i, type_temp, valid_touch;
     if(level == 0){
-        int x = (p->x >>(T8_DPYRAMID_MAXLEVEL - p->level)) % 2;
-        int y = (p->y >>(T8_DPYRAMID_MAXLEVEL - p->level)) % 2;
-        t8_debugf("x: %i, y:%i, face %i\n", x,y, face);
-        if(x== 0 && y == 1){
-            return (p->type == 0 && (face != 1));
-        }
-        else if(x == 1 && y == 0){
-            return (p->type == 3 && (face != 1));
-        }
-        else if(x == 1 && y == 1){
-            return (p->type == 0 && (face != 0)) ||
-                    ((p->type == 3) && (face != 0));
-        }
-        else{
-            /*Need to continue here!*/
-            return 0;
-        }
-
+        return t8_dpyramid_tet_pyra_face_connection(p, face);
     }
-    t8_dpyramid_coord_t p_len = T8_DPYRAMID_LEN(p->level),
-            a_len = T8_DPYRAMID_LEN(level), len_diff;
-    T8_ASSERT(anc.type == 0 || anc.type == 3);
-    len_diff = p->z - anc.z;
-    t8_debugf("[D] len_diff: %i, a_len: %i, p_len: %i\n", len_diff, a_len, p_len);
-    if(p->level == 1){
-        if(p->type == 0){
-            return (p->x == 0 && (face != 1)) ||
-                   (p->x != 0 && (face != 3));
-        }
-        else{
-            /*p->type == 3*/
-            T8_ASSERT(p->type == 3);
-            return (p->y == 0 && (face != 1)) ||
-                   (p->y != 0 && (face != 3));
-        }
-    }
-    if(anc.type == 0){
-        if(p->type == 0){
-            switch(face){
-            case 0:
-                return  (p->x == anc.x + a_len - p_len);
-            case 1:
-                return  (p->x == anc.x + len_diff) &&
-                        (p->y >= anc.y) && (p->y <= anc.y + a_len - p_len);
-            case 2:
-                return  (p->y == (anc.y + len_diff)) &&
-                        (p->x >= (anc.x)) && (p->x <= (anc.x + a_len - p_len));
-            case 3:
-                return  (p->y >= anc.y) && (p->y <= anc.y + a_len - p_len) &&
-                        (p->x >= (anc.x + len_diff)) && (p->x <= (anc.x + a_len - p_len));
-            default:
-                SC_ABORT_NOT_REACHED();
+    valid_touch = t8_dpyramid_tet_pyra_face_connection(&anc, face);
+    if(valid_touch){
+        type_temp = p->type;
+        for(i = p->level; i>anc.level; i--){;
+            cid = compute_cubeid(p,i);
+            id = t8_dtet_type_cid_to_beyid[type_temp][cid];
+            if(t8_dpyramid_face_childid_to_is_inside[face][id] == -1){
+                return 0;
             }
-        }
-        else{
-            /**/
-            return 0;
-        }
-
-    }
-    else {
-        /*anc.type == 3*/
-        if(p->type == 3){
-            switch(face){
-            case 0:
-                return  (p->y == anc.y + a_len - p_len);
-            case 1:
-                return  (p->y == anc.y + len_diff) &&
-                        (p->x >= anc.x) && (p->x <= anc.x + a_len - p_len);
-            case 2:
-                return  (p->x == anc.x + len_diff) &&
-                        (p->y >= anc.y) && (p->y <= anc.y + a_len - p_len);
-            case 3:
-                return  (p->x >= anc.x) && (p->x <= anc.x + a_len - p_len) &&
-                        (p->y >= anc.y + len_diff) && (p->y <= anc.y + a_len - p_len);
-            default:
-                SC_ABORT_NOT_REACHED();
-            }
-        }
-        else{
-            return 0;
+            type_temp = t8_dtet_cid_type_to_parenttype[cid][type_temp];
         }
     }
+    return valid_touch;
 }
 
 int
