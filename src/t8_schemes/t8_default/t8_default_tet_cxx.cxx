@@ -547,6 +547,15 @@ t8_default_scheme_tet_c::t8_element_general_function (const t8_element_t *
   T8_ASSERT (*((int8_t *) outdata) == ((const t8_dtet_t *) elem)->type);
 }
 
+t8_default_scheme_tet_c::t8_element_vertex_reference_coords (const
+                                                             t8_element_t * t,
+                                                             int vertex,
+                                                             double coords[])
+{
+  T8_ASSERT (t8_element_is_valid (t));
+  t8_dtet_compute_ref_coords ((const t8_default_tet_t *) t, vertex, coords);
+}
+
 #ifdef T8_ENABLE_DEBUG
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */

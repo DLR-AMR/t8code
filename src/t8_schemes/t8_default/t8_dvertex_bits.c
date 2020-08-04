@@ -165,6 +165,15 @@ t8_dvertex_vertex_coords (const t8_dvertex_t * elem, int vertex, int coords[])
   coords[0] = 0;
 }
 
+void
+t8_dvertex_vertex_ref_coords (const t8_dvertex_t * elem, int vertex,
+                              double coords[])
+{
+  T8_ASSERT (vertex == 0);
+
+  coords[0] = 0;
+}
+
 t8_linearidx_t
 t8_dvertex_linear_id (const t8_dvertex_t * elem, int level)
 {

@@ -249,8 +249,8 @@ t8_default_scheme_vertex_c::t8_element_first_descendant (const t8_element_t *
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
   T8_ASSERT (0 <= level && level <= T8_DVERTEX_MAXLEVEL);
-  t8_dvertex_first_descendant ((const t8_dvertex_t *) elem, (t8_dvertex_t *) desc,
-                               T8_DVERTEX_MAXLEVEL);
+  t8_dvertex_first_descendant ((const t8_dvertex_t *) elem,
+                               (t8_dvertex_t *) desc, T8_DVERTEX_MAXLEVEL);
 }
 
 void
@@ -262,8 +262,8 @@ t8_default_scheme_vertex_c::t8_element_last_descendant (const t8_element_t *
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
   T8_ASSERT (0 <= level && level <= T8_DVERTEX_MAXLEVEL);
-  t8_dvertex_last_descendant ((const t8_dvertex_t *) elem, (t8_dvertex_t *) desc,
-                              level);
+  t8_dvertex_last_descendant ((const t8_dvertex_t *) elem,
+                              (t8_dvertex_t *) desc, level);
 }
 
 void
@@ -291,6 +291,27 @@ t8_default_scheme_vertex_c::t8_element_vertex_coords (const t8_element_t *
 {
   T8_ASSERT (t8_element_is_valid (elem));
   t8_dvertex_vertex_coords ((const t8_dvertex_t *) elem, vertex, coords);
+}
+
+  /** Compute the coordinates of a given element vertex inside a reference tree
+   *  that is embedded into [0,1]^d (d = dimension).
+   *   \param [in] t      The element to be considered.
+   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
+   *   \param [out] coords An array of at least as many doubles as the element's dimension
+   *                      whose entries will be filled with the coordinates of \a vertex.
+   */
+void
+t8_default_scheme_vertex_c::t8_element_vertex_reference_coords (const
+                                                                t8_element_t *
+                                                                elem,
+                                                                int vertex,
+                                                                double
+                                                                coords[])
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (vertex == 0);
+
+  t8_dvertex_vertex_ref_coords ((const t8_dvertex_t *) elem, vertex, coords);
 }
 
 #ifdef T8_ENABLE_DEBUG

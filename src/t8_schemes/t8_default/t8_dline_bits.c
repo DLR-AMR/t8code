@@ -337,6 +337,19 @@ t8_dline_vertex_coords (const t8_dline_t * elem, int vertex, int coords[])
   }
 }
 
+void
+t8_dline_vertex_ref_coords (const t8_dline_t * elem, int vertex,
+                            double coordinates[1])
+{
+  T8_ASSERT (vertex == 0 || vertex == 1);
+
+  int                 coords_int;
+
+  /* Compute integere coordinates and divide by root length. */
+  t8_dline_vertex_coords (elem, vertex, &coords_int);
+  coordinates[0] = coords_int / (double) T8_DLINE_ROOT_LEN;
+}
+
 t8_linearidx_t
 t8_dline_linear_id (const t8_dline_t * elem, int level)
 {

@@ -336,6 +336,24 @@ t8_dtri_compute_coords (const t8_dtri_t * t, int vertex,
 #endif
 }
 
+void
+t8_dtri_compute_ref_coords (const t8_dtri_t * t, int vertex,
+                            double coordinates[T8_DTRI_DIM])
+{
+  int                 coords_int[T8_DTRI_DIM];
+  T8_ASSERT (0 <= vertex && vertex <= T8_DTRI_CORNERS);
+
+  t8_dtri_compute_coords (t, vertex, coords_int);
+  /* Since the integer coordinates are coordinates w.r.t to
+   * the embedding into [0,T8_DTRI_ROOT_LEN]^d, we just need
+   * to divide them by the root length. */
+  coordinates[0] = coords_int[0] / (double) T8_DTRI_ROOT_LEN;
+  coordinates[1] = coords_int[1] / (double) T8_DTRI_ROOT_LEN;
+#ifdef T8_DTRI_TO_DTET
+  coordinates[2] = coords_int[2] / (double) T8_DTRI_ROOT_LEN;
+#endif
+}
+
 /* Compute the coordinates of each vertex of a triangle/tet */
 void
 t8_dtri_compute_all_coords (const t8_dtri_t * t,
