@@ -44,28 +44,39 @@
  * |__|__|__|__|
  * 
  */
-static t8_element_t *
+static void
 t8_latlon_to_element (int x, int y, int x_length, int y_length, int level,
-                      t8_eclass_scheme_c * quad_scheme)
+                      t8_element_t * quad_element)
 {
-  t8_element_t       *element;
   p4est_quadrant_t   *quad;
-  quad_scheme->t8_element_new (1, &element);
+  t8_default_scheme_quad_c quad_scheme;
 
-  quad = (p4est_quadrant_t *) (element);
+  quad = (p4est_quadrant_t *) (quad_element);
   quad->level = level;
   quad->x = x << (P4EST_MAXLEVEL - level);
   quad->y = y << (P4EST_MAXLEVEL - level);
+}
 
-  t8_debugf ("%i %i: %li\n", x, y,
-             quad_scheme->t8_element_get_linear_id (element, level));
-  return element;
+static              t8_linearidx_t
+t8_latlon_to_linear_id (int x, int y, int x_length, int y_length, int level)
+{
+  t8_element_t       *elem;
+  t8_linearidx_t      linear_id;
+  t8_default_scheme_quad_c quad_scheme;
+
+  quad_scheme.t8_element_new (1, &elem);
+
+  t8_latlon_to_element (x, y, x_length, y_length, level, elem);
+  linear_id = quad_scheme.t8_element_get_linear_id (elem, level);
+  quad_scheme.t8_element_destroy (1, &elem);
+
+  return linear_id;
 }
 
 /* We offer two modes to construct the mesh.
  * T8_LATLON_REFINE: Start with a level 0 mesh and refine it until
  *                   the grid mesh on level L is reached.
- * T8_LATLON_COARSE: Start with the level L uniform mesh an coarsen all
+ * T8_LATLON_COARSE: Start with the level L uniform mesh and coarsen all
  *                   elements that do not belong to the grid.
  */
 enum T8_LATLON_ADAPT_MODE
@@ -108,7 +119,7 @@ t8_latlon_refine_grid_cuts_elements (const t8_element_t * element,
   int                 anchor_max_level;
   int                 i;
   /* This function relies heavily on implementation details of the 
-   * Morton curve. Hence we need to ensure that the element's scheme
+   * Morton curve. Hence we ensure that the element's scheme
    * is of default_quad type.
    */
   T8_ASSERT (static_cast < t8_default_scheme_quad_c * >(ts));
@@ -280,12 +291,11 @@ t8_latlon_refine (int x_length, int y_length, enum T8_LATLON_ADAPT_MODE mode,
   t8_forest_unref (&forest_adapt);
 #ifdef T8_ENABLE_DEBUG
   {
-    t8_default_scheme_quad_c quad_scheme;
-
     for (int y = 0; y < y_length; ++y) {
       for (int x = 0; x < x_length; ++x) {
-        t8_latlon_to_element (x, y, x_length, y_length, adapt_data.max_level,
-                              &quad_scheme);
+        t8_debugf ("%i %i: %lu\n", x, y,
+                   t8_latlon_to_linear_id (x, y, x_length, y_length,
+                                           adapt_data.max_level));
       }
     }
   }
