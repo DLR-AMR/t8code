@@ -564,6 +564,22 @@ t8_dprism_vertex_coords (const t8_dprism_t * p, int vertex, int coords[3])
   coords[2] /= T8_DPRISM_ROOT_BY_DLINE_ROOT;
 }
 
+void
+t8_dprism_vertex_ref_coords (const t8_dprism_t * p, int vertex,
+                             double coords[3])
+{
+  int                 coords_int[3];
+  T8_ASSERT (vertex >= 0 && vertex < 6);
+
+  /* Compute the integere coordinates in [0, root_len]^3 */
+  t8_dprism_vertex_coords (p, vertex, coords_int);
+
+  /* Divide by the root length. */
+  coords[0] = coords_int[0] / (double) T8_DPRISM_ROOT_LEN;
+  coords[1] = coords_int[1] / (double) T8_DPRISM_ROOT_LEN;
+  coords[2] = coords_int[2] / (double) T8_DPRISM_ROOT_LEN;
+}
+
 uint64_t
 t8_dprism_linear_id (const t8_dprism_t * p, int level)
 {

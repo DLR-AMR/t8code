@@ -558,6 +558,16 @@ t8_default_scheme_tri_c::t8_element_vertex_coords (const t8_element_t * t,
   t8_dtri_compute_coords ((const t8_default_tri_t *) t, vertex, coords);
 }
 
+void
+t8_default_scheme_tri_c::t8_element_vertex_reference_coords (const
+                                                             t8_element_t * t,
+                                                             int vertex,
+                                                             double coords[])
+{
+  T8_ASSERT (t8_element_is_valid (t));
+  t8_dtri_compute_ref_coords ((const t8_default_tri_t *) t, vertex, coords);
+}
+
 #ifdef T8_ENABLE_DEBUG
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */
