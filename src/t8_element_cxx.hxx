@@ -554,12 +554,7 @@ public:
   virtual void        t8_element_successor (const t8_element_t * t,
                                             t8_element_t * s, int level) = 0;
 
-/** Get the integer coordinates of the anchor node of an element */
-  /* TODO: better document this */
-  virtual void        t8_element_anchor (const t8_element_t * elem,
-                                         int anchor[3]) = 0;
-
-  /** Compute the root lenght of a given element, that is the length of
+  /** Compute the root length of a given element, that is the length of
    * its level 0 ancestor.
    * \param [in] elem     The element whose root length should be computed.
    * \return              The root length of \a elem

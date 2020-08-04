@@ -69,6 +69,19 @@ public:
    *      is the root (level 0) element.
    */
   virtual t8_gloidx_t t8_element_count_leafs_from_root (int level);
+
+  /** Get the integer coordinates of the anchor node of an element.
+   * The default scheme implements the Morton type SFCs. In these SFCs the
+   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 
+   * L the maximum refinement level. 
+   * All element vertices have integer coordinates in this cube and the anchor
+   * node is the first of all vertices (index 0). It also has the lowest x,y and z
+   * coordinates.
+   * \param [in] elem   The element.
+   * \param [out] anchor The integer coordinates of the anchor node in the cube [0,1]^(dL)
+   */
+  virtual void        t8_element_anchor (const t8_element_t * elem,
+                                         int anchor[3]) = 0;
 };
 
 #endif /* !T8_DEFAULT_COMMON_CXX_HXX */
