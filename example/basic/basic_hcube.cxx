@@ -86,8 +86,8 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level, int do_adapt,
   t8_global_productionf ("Contructing hypercube mesh with element class %s\n",
                          t8_eclass_to_string[eclass]);
   cmesh =
-        t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, do_partition, 0);
-        //t8_cmesh_new_from_class(eclass, sc_MPI_COMM_WORLD);
+        //t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, do_partition, 0);
+        t8_cmesh_new_from_class(eclass, sc_MPI_COMM_WORLD);
 
   snprintf (cmesh_file, BUFSIZ, "cmesh_hcube_%s",
             t8_eclass_to_string[eclass]);
@@ -137,6 +137,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level, int do_adapt,
           t8_forest_set_user_data(forest_adapt, &endlvl);
           t8_forest_set_profiling(forest_adapt, 1);
           t8_forest_set_adapt(forest_adapt, forest, t8_basic_hypercube_refine, 1);
+          t8_forest_set_ghost_ext(forest_adapt, 1, T8_GHOST_FACES, 1);
           t8_forest_commit(forest_adapt);
           t8_debugf ("Successfully adapted forest.\n");
           snprintf (vtuname, BUFSIZ, "forest_hypercube_adapt_%s",

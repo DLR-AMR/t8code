@@ -14,6 +14,9 @@
 /** The number of faces of a pyramid. */
 #define T8_DPYRAMID_FACES 5
 
+/** The number of children at a face*/
+#define T8_DPYRAMID_FACE_CHILDREN 4
+
 /** The number of corners of a pyramid */
 #define T8_DPYRAMID_CORNERS 5
 

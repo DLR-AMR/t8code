@@ -94,19 +94,18 @@ int                 t8_dpyramid_is_equal (const t8_dpyramid_t * p,
  */
 int                 t8_dpyramid_is_family (const t8_dpyramid_t ** fam);
 
-
-
 /** Copmute whether a given pyramid shares a given face with its root tree.
  * \param [in]  p       The input pyramid
  * \param [in]  face    A face of \a p
  * \return              True, if \a is a subface of the pyramid root element.
  */
-int                 t8_dpyramid_is_root_boundary(const t8_dpyramid_t * p,
-                                        int face);
+int                 t8_dpyramid_is_root_boundary (const t8_dpyramid_t * p,
+                                                  int face);
 
-int                 t8_dpyramid_face_neighbor_inside (const t8_dpyramid_t *p,
-                                            t8_dpyramid_t *neigh,
-                                            int face, int *neigh_face);
+int                 t8_dpyramid_face_neighbor_inside (const t8_dpyramid_t * p,
+                                                      t8_dpyramid_t * neigh,
+                                                      int face,
+                                                      int *neigh_face);
 
 /** Compute the position of the ancestor of this child at level \a level within
  * its siblings.
@@ -127,20 +126,28 @@ int                 t8_dpyramid_child_id_known_parent (const t8_dpyramid_t *
                                                        parent);
 
 /** Check, if the input pyramid with shape of a tet is inside of a tetrahedron
- * \param [in]  pyramid with tet shape
+ * \param [in] p  pyramid with tet shape
  * \return      0, if the pyramid is insed of a tetrahedron
  */
 int                 t8_dpyramid_is_inside_tet (const t8_dpyramid_t * p,
-                                               int level, t8_dpyramid_t *anc);
+                                               int level,
+                                               t8_dpyramid_t * anc);
 
 /** Check, if a tet of type 0 or 3 has a common face with its ancestor at a given level
- * \param [in]  input pyramid
+ * \param [in]p  input pyramid
  * \level [in]  The level of the ancestor
- * \face [in]   A face of \a p.
+ * \face [in] face  A face of \a p.
  * \return      false if they don't share a face, true otherwise
  */
-int
-t8_dpyramid_tet_boundary(const t8_dpyramid_t *p, int face);
+int                 t8_dpyramid_tet_boundary (const t8_dpyramid_t * p, int face);
+
+/** compute if a given element lies on the tree boundary and return the face number
+ * of the tree face. If not the return value is arbitrary
+ * \param [in] elem     pyramid
+ * \param [in] face     a face of \a elem
+ * \return              See discription
+ */
+int                 t8_dpyramid_tree_face(const t8_dpyramid_t * p , int face);
 
 /** Compute the first descendant of a pyramid at a given level. This is the descendant of
  * the pyramid in a uniform level refinement that has the smallest id.
@@ -207,7 +214,14 @@ int                 t8_dpyramid_num_children (const t8_dpyramid_t * p);
  * \param [in] p    Input pyramid
  * \return          The number of siblings of p.
  */
-int                 t8_dpyramid_num_siblings(const t8_dpyramid_t * p);
+int                 t8_dpyramid_num_siblings (const t8_dpyramid_t * p);
+
+/** Return the number of faces of p
+ * \param [in] p    Input pyramid
+ * \return          The number of faces of p
+ */
+int                 t8_dpyramid_num_faces(const t8_dpyramid_t *p);
+
 
 /** Returns the shape of the pyramid (pyramid or tetrahedron)
  * \param [in] p    Input pyramid.
