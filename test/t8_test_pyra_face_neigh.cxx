@@ -31,7 +31,6 @@ t8_recursive_check_diff(t8_element_t * element, t8_element_t * child,
                         int maxlvl, int level)
 {
     int i, j, num_face, num_children, face_num;
-    t8_debugf("[D] l %i m %i\n", level, maxlvl);
     T8_ASSERT (level <= maxlvl &&
                maxlvl <= ts->t8_element_maxlevel() - 1);
     if(level == maxlvl){
@@ -44,22 +43,10 @@ t8_recursive_check_diff(t8_element_t * element, t8_element_t * child,
         num_face = T8_DTET_FACES;
     }
     for(i = 0; i < num_face; i++){
-        t8_debugf("[D]source: %i %i %i %i %i\n", ((t8_dpyramid_t *)element)->x, ((t8_dpyramid_t *)element)->y,
-                  ((t8_dpyramid_t *)element)->z, ((t8_dpyramid_t *)element)->type, ((t8_dpyramid_t *)element)->level);
-
-        t8_debugf("[D] neigh at face %i\n", i);
         ts->t8_element_face_neighbor_inside(element, neigh, i, &face_num);
-        t8_debugf("[D]neigh: %i %i %i %i %i\n", ((t8_dpyramid_t *)neigh)->x, ((t8_dpyramid_t *)neigh)->y,
-                  ((t8_dpyramid_t *)neigh)->z, ((t8_dpyramid_t *)neigh)->type, ((t8_dpyramid_t *)neigh)->level);
-
-        t8_debugf("[D] neigh_neigh at face %i\n", face_num);
-        ts->t8_element_face_neighbor_inside(neigh, child, face_num, &j);
-        t8_debugf("[D]neigh_neigh: %i %i %i %i %i\n", ((t8_dpyramid_t *)child)->x, ((t8_dpyramid_t *)child)->y,
-                  ((t8_dpyramid_t *)child)->z, ((t8_dpyramid_t *)child)->type, ((t8_dpyramid_t *)child)->level);
-        t8_debugf("check %i face %i\n", i,j);
+        ts->t8_element_face_neighbor_inside(neigh, child, face_num, &j);;
         SC_CHECK_ABORT(!ts->t8_element_compare(child, element) && i == j,
                 "Wrong face neighbor\n");
-        t8_debugf("\n");
     }
     num_children = ts->t8_element_num_children(element);
     for(i = 0; i < num_children; i++){
@@ -112,38 +99,19 @@ t8_face_check_easy(){
 
     ts->t8_element_set_linear_id(element, 0,0);
     ts->t8_element_child(element, 8, child);
-    t8_debugf("[D]source: %i %i %i %i %i\n", ((t8_dpyramid_t *)child)->x, ((t8_dpyramid_t *)child)->y,
-              ((t8_dpyramid_t *)child)->z, ((t8_dpyramid_t *)child)->type, ((t8_dpyramid_t *)child)->level);
+
     for(i = 0; i<5; i++){
         ts->t8_element_face_neighbor_inside(child, neigh, i, &face_num);
-        t8_debugf("[D] neigh at face %i\n", i);
-        t8_debugf("neigh: %i %i %i %i %i\n", ((t8_dpyramid_t *)neigh)->x, ((t8_dpyramid_t *)neigh)->y,
-                  ((t8_dpyramid_t *)neigh)->z, ((t8_dpyramid_t *)neigh)->type, ((t8_dpyramid_t *)neigh)->level);
 
         ts->t8_element_face_neighbor_inside(neigh, element, face_num, &check);
-        t8_debugf("[D] neigh_neigh at face %i\n", face_num);
-        t8_debugf("neigh_neigh: %i %i %i %i %i\n", ((t8_dpyramid_t *)element)->x, ((t8_dpyramid_t *)element)->y,
-                  ((t8_dpyramid_t *)element)->z, ((t8_dpyramid_t *)element)->type, ((t8_dpyramid_t *)element)->level);
-        t8_debugf("[D]check %i, face %i\n", check, i);
-        t8_debugf("\n");
+
         SC_CHECK_ABORT(!ts->t8_element_compare(child, element) && check == i,
                        "Wrong face neighbor\n");
     }
     ts->t8_element_child(element, 3, child);
     for(i = 0; i<5; i++){
-        t8_debugf("[D]source: %i %i %i %i %i\n", ((t8_dpyramid_t *)child)->x, ((t8_dpyramid_t *)child)->y,
-                  ((t8_dpyramid_t *)child)->z, ((t8_dpyramid_t *)child)->type, ((t8_dpyramid_t *)child)->level);
-        t8_debugf("[D] neigh at face %i\n", i);
         ts->t8_element_face_neighbor_inside(child, neigh, i, &face_num);
-        t8_debugf("neigh: %i %i %i %i %i\n", ((t8_dpyramid_t *)neigh)->x, ((t8_dpyramid_t *)neigh)->y,
-                  ((t8_dpyramid_t *)neigh)->z, ((t8_dpyramid_t *)neigh)->type, ((t8_dpyramid_t *)neigh)->level);
-
-        t8_debugf("[D] neigh_neigh at face %i\n", face_num);
         ts->t8_element_face_neighbor_inside(neigh, element, face_num, &check);
-        t8_debugf("neigh_neigh: %i %i %i %i %i\n", ((t8_dpyramid_t *)element)->x, ((t8_dpyramid_t *)element)->y,
-                  ((t8_dpyramid_t *)element)->z, ((t8_dpyramid_t *)element)->type, ((t8_dpyramid_t *)element)->level);
-        t8_debugf("[D]check %i, face %i\n", check, i);
-        t8_debugf("\n");
         SC_CHECK_ABORT(!ts->t8_element_compare(child, element) && check == i,
                        "Wrong face neighbor\n");
     }
@@ -156,20 +124,9 @@ t8_face_check_easy(){
             num_faces = T8_DTET_FACES;
         }
         for(j = 0; j<num_faces; j++){
-            t8_debugf("[D] Round %i %i\n", i, j);
-            t8_debugf("[D]source: %i %i %i %i %i\n", ((t8_dpyramid_t *)child)->x, ((t8_dpyramid_t *)child)->y,
-                      ((t8_dpyramid_t *)child)->z, ((t8_dpyramid_t *)child)->type, ((t8_dpyramid_t *)child)->level);
-            t8_debugf("[D] neigh at face %i\n", j);
-            ts->t8_element_face_neighbor_inside(child, neigh, j, &face_num);
-            t8_debugf("neigh: %i %i %i %i %i\n", ((t8_dpyramid_t *)neigh)->x, ((t8_dpyramid_t *)neigh)->y,
-                      ((t8_dpyramid_t *)neigh)->z, ((t8_dpyramid_t *)neigh)->type, ((t8_dpyramid_t *)neigh)->level);
 
-            t8_debugf("[D] neigh_neigh at face %i\n", face_num);
+            ts->t8_element_face_neighbor_inside(child, neigh, j, &face_num);
             ts->t8_element_face_neighbor_inside(neigh, element, face_num, &check);
-            t8_debugf("neigh_neigh: %i %i %i %i %i\n", ((t8_dpyramid_t *)element)->x, ((t8_dpyramid_t *)element)->y,
-                      ((t8_dpyramid_t *)element)->z, ((t8_dpyramid_t *)element)->type, ((t8_dpyramid_t *)element)->level);
-            t8_debugf("[D]check %i, face %i\n", check, j);
-            t8_debugf("\n");
             SC_CHECK_ABORT(!ts->t8_element_compare(child, element) && check == j,
                            "Wrong face neighbor\n");
         }
@@ -188,9 +145,9 @@ main (int argc, char **argv)
 {
   int     mpiret;
 #ifdef T8_ENABLE_DEBUG
-  const int maxlvl = 8;
-#else
   const int maxlvl = 9;
+#else
+  const int maxlvl = 10;
 #endif
 
 
@@ -201,7 +158,7 @@ main (int argc, char **argv)
   t8_init(SC_LP_DEFAULT);
 
   t8_face_check_easy();
-  t8_face_check_diff(7);
+  t8_face_check_diff(maxlvl);
 
 
   sc_finalize();
