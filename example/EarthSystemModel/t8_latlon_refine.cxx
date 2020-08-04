@@ -23,22 +23,116 @@
 #include <sc_options.h>
 #include <sc_refcount.h>
 #include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_common_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_cmesh_vtk.h>
+#ifdef T8_ENABLE_DEBUG
+/* In debugging mode, we check whether we use the correct scheme.
+ * To do so, we have to include the quad default scheme directly. */
+#include <t8_schemes/t8_default/t8_default_quad_cxx.hxx>
+#endif
+#include <p4est_bits.h>
 
+/* Given x and y coordinates in a X by Y grid compute the quad
+ * element that contains these coordinates when the grid is embedded
+ * in the lower left of a quad tree.
+ *  _ _ _ _ _ _
+ * |           |
+ * |           |  X = 3, Y = 2  
+ * |_____ __   |  * = (0, 1) x and y coordinates
+ * |_*|__|__|  |
+ * |__|__|__|__|
+ * 
+ */
+static t8_element_t *
+t8_latlon_to_element (int x, int y, int x_length, int y_length, int level,
+                      t8_eclass_scheme_c * quad_scheme)
+{
+  t8_element_t       *element;
+  p4est_quadrant_t   *quad;
+  quad_scheme->t8_element_new (1, &element);
+
+  quad = (p4est_quadrant_t *) (element);
+  quad->level = level;
+  quad->x = x << (P4EST_MAXLEVEL - level);
+  quad->y = y << (P4EST_MAXLEVEL - level);
+
+  t8_debugf ("%i %i: %li\n", x, y,
+             quad_scheme->t8_element_get_linear_id (element, level));
+  return element;
+}
+
+/* We offer two modes to construct the mesh.
+ * T8_LATLON_REFINE: Start with a level 0 mesh and refine it until
+ *                   the grid mesh on level L is reached.
+ * T8_LATLON_COARSE: Start with the level L uniform mesh an coarsen all
+ *                   elements that do not belong to the grid.
+ */
 enum T8_LATLON_ADAPT_MODE
 {
   T8_LATLON_REFINE,
   T8_LATLON_COARSEN
 };
 
+/* The data that we pass on to our adapt function and
+ * describes the layout of the grid plus adaptation mode.
+ */
 typedef struct
 {
-  int                 x_length;
-  int                 y_length;
-  int                 max_level;
-  enum T8_LATLON_ADAPT_MODE mode;
+  int                 x_length; /* Number of cells in x dimension. */
+  int                 y_length; /* Number of cells in y dimension. */
+  int                 max_level;        /* The computed refinement level of a uniform forest to contain an x by y grid. */
+  enum T8_LATLON_ADAPT_MODE mode;       /* The adaptation mode to use. */
 } t8_latlon_adapt_data_t;
+
+/* Given a quad element of a quad tree, decide whether elements of
+ * an x by y grid of given level that is embedded in the lower left corner
+ * of the tree overlap the element.
+ * We use this to decide whether or not to refine the given element
+ * in order to build the coarsest forest mesh that contains the grid
+ * as submesh.
+ * This check uses the lat/lon coordinates of the grid to determine
+ * the Morton code of elements that would be inside it.
+ * Thus, it is crucial to use the Morton order (default quad/hex)
+ * schemes as schemes in the forest.
+ * It would also be possible to implement this check via coordinates,
+ * but this would not be as efficient.
+ */
+static int
+t8_latlon_refine_grid_cuts_elements (const t8_element_t * element,
+                                     t8_default_scheme_common_c * ts,
+                                     const t8_latlon_adapt_data_t *
+                                     adapt_data)
+{
+  int                 anchor[3];
+  int                 anchor_max_level;
+  int                 i;
+  /* This function relies heavily on implementation details of the 
+   * Morton curve. Hence we need to ensure that the element's scheme
+   * is of default_quad type.
+   */
+  T8_ASSERT (static_cast < t8_default_scheme_quad_c * >(ts));
+
+  /* If the lower left corner x/y-coordinate of the element as seen in the
+   * max_level refined uniform forest is smaller than the x/y-length, 
+   * the grid overlaps the element.
+   */
+  ts->t8_element_anchor (element, anchor);
+  anchor_max_level = P4EST_MAXLEVEL;
+
+  t8_debugf ("Achor: %i %i\n", anchor[0], anchor[1]);
+  /* Shift x and y coordinates to match max_level. */
+  for (i = 0; i < 2; ++i) {
+    anchor[i] >>= (anchor_max_level - adapt_data->max_level);
+  }
+  t8_debugf ("Shifted by: %i\n", anchor_max_level - adapt_data->max_level);
+  t8_debugf ("Achor: %i %i\n", anchor[0], anchor[1]);
+
+  if (anchor[0] < adapt_data->x_length && anchor[1] < adapt_data->y_length) {
+    return 1;
+  }
+  return 0;
+}
 
 static              t8_locidx_t
 t8_latlon_adapt_callback (t8_forest_t forest,
@@ -52,32 +146,37 @@ t8_latlon_adapt_callback (t8_forest_t forest,
     (t8_latlon_adapt_data_t *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
   int                 level = ts->t8_element_level (elements[0]);
-  int                 anchor[3];
-  int                 element_max_level;
-  int                 i;
+  /* This callback relies on the implementation details of the Morton SFC.
+   * Hence, we expect a default scheme as input. */
+  t8_default_scheme_common_c *ts_common =
+    static_cast < t8_default_scheme_common_c * >(ts);
+  T8_ASSERT (ts_common != NULL);
 
   if (adapt_data->mode == T8_LATLON_REFINE && level >= adapt_data->max_level) {
     /* Do not refine deeper than the maximum level needed. */
     return 0;
   }
-  /* If the lower left corner x/y-coordinate of the element as seen in the
-   * max_level refined uniform forest is smaller than the x/y-length, we need to refine.
-   */
-  ts->t8_element_anchor (elements[0], anchor);
-  element_max_level = ts->t8_element_maxlevel ();
-  /* Shift coordinate to match max_level. */
-  for (i = 0; i < 2; ++i) {
-    anchor[i] >>= (element_max_level - adapt_data->max_level + 1);
-  }
 
-  if (anchor[0] < adapt_data->x_length && anchor[1] < adapt_data->y_length) {
-    if (adapt_data->mode == T8_LATLON_REFINE) {
+  if (adapt_data->mode == T8_LATLON_REFINE) {
+    /* Check if element cuts grid and if so return 1 (refine the element). */
+    if (t8_latlon_refine_grid_cuts_elements
+        (elements[0], ts_common, adapt_data)) {
       return 1;
     }
   }
   else if (adapt_data->mode == T8_LATLON_COARSEN && num_elements > 1) {
-    /* We are in coarsen mode and this is a family. */
-    return -1;
+    /* Check if any element in the family cuts grid. 
+     * If not return -1 (coarsen the family). */
+    int                 ielem;
+    for (ielem = 0; ielem < num_elements; ++ielem) {
+      if (t8_latlon_refine_grid_cuts_elements
+          (elements[ielem], ts_common, adapt_data)) {
+        /* This element cuts the grid. We do not coarsen and can abort the checks. */
+        return 0;
+      }
+      /* No element cuts the grid, we can coarsen. */
+      return -1;
+    }
   }
   return 0;
 }
@@ -179,6 +278,18 @@ t8_latlon_refine (int x_length, int y_length, enum T8_LATLON_ADAPT_MODE mode,
   t8_global_productionf ("Wrote adapted forest to %s* files.\n", vtu_prefix);
 
   t8_forest_unref (&forest_adapt);
+#ifdef T8_ENABLE_DEBUG
+  {
+    t8_default_scheme_quad_c quad_scheme;
+
+    for (int y = 0; y < y_length; ++y) {
+      for (int x = 0; x < x_length; ++x) {
+        t8_latlon_to_element (x, y, x_length, y_length, adapt_data.max_level,
+                              &quad_scheme);
+      }
+    }
+  }
+#endif
 }
 
 int
