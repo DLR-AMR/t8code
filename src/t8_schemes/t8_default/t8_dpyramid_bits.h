@@ -73,6 +73,13 @@ void                t8_dpyramid_child (const t8_dpyramid_t * elem,
 void                t8_dpyramid_children (const t8_dpyramid_t * p, int length,
                                           t8_dpyramid_t ** c);
 
+void                t8_dpyramid_children_at_face(const t8_dpyramid_t * p, int face,
+                             t8_dpyramid_t * children[], int num_children,
+                             int *child_indices);
+
+int                 t8_dpyramid_face_child_face(const t8_dpyramid_t * p,
+                                       int face, int face_child);
+
 /** Compare two elements. returns negativ if p1 < p2, zero if p1 equals p2
  *  and positiv if p1 > p2.
  *  If p2 is a copy of p1 then the elements are equal.
@@ -161,6 +168,11 @@ void                t8_dpyramid_first_descendant (const t8_dpyramid_t * p,
                                                   t8_dpyramid_t * desc,
                                                   int level);
 
+void                t8_dpyramid_first_descendant_face(const t8_dpyramid_t * p,
+                                                      int face,
+                                                      t8_dpyramid_t * first_desc,
+                                                      int level);
+
 /** Compute the last descendant of a pyramid at a given level. This is the descendant of
  * the pyramid in a uniform level refinement that has the largest id.
  * \param [in] p        pyramid whose descendant is computed.
@@ -172,6 +184,10 @@ void                t8_dpyramid_first_descendant (const t8_dpyramid_t * p,
 void                t8_dpyramid_last_descendant (const t8_dpyramid_t * p,
                                                  t8_dpyramid_t * desc,
                                                  int level);
+
+void                t8_dpyramid_last_descendant_face(const t8_dpyramid_t * p,
+                                 int face, t8_dpyramid_t * last_desc,
+                                 int level);
 
 /** Compute the coordinates of a vertex of a pyramid.
  * \param [in] p    Input pyramid.

@@ -70,7 +70,6 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   ts->t8_element_new(1, &parent);
   ts->t8_element_parent(element, parent);
   num_children = ts->t8_element_num_children (parent);
-  t8_debugf("[D] num_c %i, child-id: %i\n", num_children, ts->t8_element_child_id (element));
   //T8_ASSERT (ts->t8_element_child_id (element) == num_children - 1);
   ts->t8_element_destroy(1, &parent);
 
@@ -312,7 +311,6 @@ t8_forest_adapt (t8_forest_t forest)
         forest->set_adapt_fn (forest, forest->set_from, ltree_id,
                               el_considered, tscheme, num_elements,
                               elements_from);
-      t8_debugf("[D] refine %i\n", refine);
       T8_ASSERT (is_family || refine >= 0);
       if (refine > 0 && tscheme->t8_element_level (elements_from[0]) >=
           forest->maxlevel) {
@@ -374,11 +372,9 @@ t8_forest_adapt (t8_forest_t forest)
            * We check whether the just generated parent is the last in its
            * family.
            * If so, we check this family for recursive coarsening. */
-            t8_debugf("[D] 1: ns: %i, c-id: %i\n", num_siblings,  tscheme->t8_element_child_id (elements[0]));
 
           if ((size_t) tscheme->t8_element_child_id (elements[0])
-              == num_siblings - 1) {
-               t8_debugf("[D] coarsen 1\n");
+              == num_siblings - 1) {;
             t8_forest_adapt_coarsen_recursive (forest, ltree_id,
                                                el_considered, tscheme,
                                                telements, el_coarsen,
@@ -398,12 +394,9 @@ t8_forest_adapt (t8_forest_t forest)
         tscheme->t8_element_parent(elements[0], parent);
         num_siblings = tscheme->t8_element_num_children(parent);
         el_inserted++;
-        t8_debugf("[D] 2: ns: %i, c-id: %i, set_rec: %i\n", num_siblings,
-                  tscheme->t8_element_child_id (elements[0]), forest->set_adapt_recursive);
         if (forest->set_adapt_recursive &&
             (size_t) tscheme->t8_element_child_id (elements[0])
             == num_siblings - 1) {
-            t8_debugf("[D] coarsen 2\n");
           /* If adaptation is recursive and this was the last element in its
            * family, we need to check for recursive coarsening. */
           t8_forest_adapt_coarsen_recursive (forest, ltree_id, el_considered,

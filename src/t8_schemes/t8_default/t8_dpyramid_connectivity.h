@@ -58,5 +58,11 @@ extern const int t8_dpyramid_type_face_to_nface[2][5];
 
 extern const int t8_dpyramid_face_childid_to_is_inside[4][8];
 
+/*The child ids of children touching a given face of a pyramid*/
+extern const int t8_dpyramid_type_face_to_children_at_face[2][5][4];
+
+/*Return the face-number of a children at a face of a pyramid*/
+extern const int t8_dpyramid_type_face_to_child_face[2][5][10];
+
 #endif // T8_DPYRAMID_CONNECTIVITY_H
 

@@ -22,6 +22,7 @@
 
 #include "t8_default_common_cxx.hxx"
 #include "t8_default_pyramid_cxx.hxx"
+#include "t8_default_tet_cxx.hxx"
 #include "t8_dpyramid_bits.h"
 #include "t8_dpyramid.h"
 
@@ -112,6 +113,26 @@ t8_default_scheme_pyramid_c::t8_element_children (const t8_element_t * elem,
                         (t8_dpyramid_t **) c);
 }
 
+void
+t8_default_scheme_pyramid_c::t8_element_children_at_face (const t8_element_t * elem,
+                                                   int face,
+                                                   t8_element_t * children[],
+                                                   int num_children,
+                                                   int *child_indices)
+{
+    t8_dpyramid_children_at_face((const t8_dpyramid_t *) elem, face,
+                                 (t8_dpyramid_t **) children, num_children,
+                                 child_indices);
+}
+
+int
+t8_default_scheme_pyramid_c::t8_element_face_child_face (const t8_element_t * elem,
+                                                  int face, int face_child)
+{
+    return t8_dpyramid_face_child_face((const t8_dpyramid_t *) elem,
+                                       face, face_child);
+}
+
 int
 t8_default_scheme_pyramid_c::t8_element_child_id (const t8_element_t * p)
 {
@@ -137,6 +158,16 @@ t8_default_scheme_pyramid_c::t8_element_first_descendant (const t8_element_t *
 {
   t8_dpyramid_first_descendant ((const t8_dpyramid_t *) elem,
                                 (t8_dpyramid_t *) desc, level);
+}
+
+void
+t8_default_scheme_pyramid_c::t8_element_first_descendant_face (const t8_element_t *
+                                                        elem, int face,
+                                                        t8_element_t *
+                                                        first_desc, int level)
+{
+    t8_dpyramid_first_descendant_face((const t8_dpyramid_t *) elem, face,
+                                      (t8_dpyramid_t *) first_desc, level);
 }
 
 int
@@ -205,6 +236,17 @@ t8_default_scheme_pyramid_c::t8_element_last_descendant (const t8_element_t *
 {
   t8_dpyramid_last_descendant ((const t8_dpyramid_t *) elem,
                                (t8_dpyramid_t *) desc, level);
+}
+
+void
+t8_default_scheme_pyramid_c::t8_element_last_descendant_face (const t8_element_t *
+                                                       elem, int face,
+                                                       t8_element_t *
+                                                       last_desc, int level)
+{
+    t8_dpyramid_last_descendant_face((const t8_dpyramid_t *) elem,
+                                     face, (t8_dpyramid_t *) last_desc,
+                                     level);
 }
 
 void

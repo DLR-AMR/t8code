@@ -137,7 +137,8 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level, int do_adapt,
           t8_forest_set_user_data(forest_adapt, &endlvl);
           t8_forest_set_profiling(forest_adapt, 1);
           t8_forest_set_adapt(forest_adapt, forest, t8_basic_hypercube_refine, 1);
-          t8_forest_set_ghost_ext(forest_adapt, 1, T8_GHOST_FACES, 1);
+          t8_forest_set_ghost_ext(forest_adapt, 1, T8_GHOST_FACES, 2);
+          t8_debugf("Ghost done\n");
           t8_forest_commit(forest_adapt);
           t8_debugf ("Successfully adapted forest.\n");
           snprintf (vtuname, BUFSIZ, "forest_hypercube_adapt_%s",
@@ -145,7 +146,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level, int do_adapt,
           t8_forest_write_vtk (forest_adapt, vtuname);
           t8_debugf ("Output to %s\n", vtuname);
           /* Ensure that the correct forest is passed to unref later */
-
+            /*
           t8_forest_init(&forest_coarsen);
           t8_forest_set_user_data(forest_coarsen, &endlvl);
           t8_forest_set_profiling(forest_coarsen, 1);
@@ -155,7 +156,7 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level, int do_adapt,
           snprintf (vtuname, BUFSIZ, "forest_hypercube_coarsen_%s",
                     t8_eclass_to_string[eclass]);
           t8_forest_write_vtk (forest_coarsen, vtuname);
-          t8_debugf ("Output to %s\n", vtuname);
+          t8_debugf ("Output to %s\n", vtuname);*/
       }
       if (do_balance) {
         t8_forest_t         forest_balance;

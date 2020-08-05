@@ -138,11 +138,7 @@ public:
                                                    int face,
                                                    t8_element_t * children[],
                                                    int num_children,
-                                                   int *child_indices)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return;                     /* suppresses compiler warning */
-  }
+                                                   int *child_indices);
 
 /** Return the child id of an element */
   virtual int         t8_element_child_id (const t8_element_t * elem);
@@ -219,11 +215,7 @@ public:
 * return the face number of the child of the element that matches the child
 * face.*/
   virtual int         t8_element_face_child_face (const t8_element_t * elem,
-                                                  int face, int face_child)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return T8_ECLASS_ZERO;      /* suppresses compiler warning */
-  }
+                                                  int face, int face_child);
 
 /** Return the element class of the face of an element */
   virtual t8_eclass_t t8_element_face_class (const t8_element_t * elem,
@@ -262,10 +254,7 @@ public:
   virtual void        t8_element_first_descendant_face (const t8_element_t *
                                                         elem, int face,
                                                         t8_element_t *
-                                                        first_desc, int level)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                        first_desc, int level);
 
 /** Return the face numbers of the faces sharing an element's corner. */
   virtual int         t8_element_get_corner_face (const t8_element_t *
@@ -295,10 +284,7 @@ public:
   virtual void        t8_element_last_descendant_face (const t8_element_t *
                                                        elem, int face,
                                                        t8_element_t *
-                                                       last_desc, int level)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                       last_desc, int level);
 
 /** Compute s as a successor of t*/
   virtual void        t8_element_successor (const t8_element_t * t,
