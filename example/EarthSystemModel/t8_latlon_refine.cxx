@@ -225,16 +225,6 @@ t8_latlon_refine (int x_length, int y_length, enum T8_LATLON_ADAPT_MODE mode,
   t8_global_productionf ("Wrote adapted forest to %s* files.\n", vtu_prefix);
 
   t8_forest_unref (&forest_adapt);
-#ifdef T8_ENABLE_DEBUG
-  {
-    for (int y = 0; y < y_length; ++y) {
-      for (int x = 0; x < x_length; ++x) {
-        t8_debugf ("%i %i: %lu\n", x, y,
-                   t8_latlon_to_linear_id (x, y, adapt_data.max_level));
-      }
-    }
-  }
-#endif
-  t8_latlon_data_test (0, 0, x_length, y_length, 1, adapt_data.max_level,
-                       T8_LATLON_DATA_XSTRIPE, x_length, y_length);
+  t8_latlon_data_test (0, 0, x_length, y_length, 3, adapt_data.max_level,
+                       T8_LATLON_DATA_YSTRIPE, x_length, y_length);
 }

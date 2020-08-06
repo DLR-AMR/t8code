@@ -205,10 +205,9 @@ t8_latlon_compare_indices (const void *index1, const void *index2,
     ? 0 : 1;
 }
 
+/* Change the numebring of a data chunk to morton numbering. */
 void
-t8_latlon_data_apply_morton_order (t8_latlon_data_chunk_t * data_chunk,
-                                   t8_gloidx_t x_length_global,
-                                   t8_gloidx_t y_length_global)
+t8_latlon_data_apply_morton_order (t8_latlon_data_chunk_t * data_chunk)
 {
   t8_locidx_t         num_grid_elements =
     data_chunk->x_length * data_chunk->y_length;
@@ -318,8 +317,7 @@ t8_latlon_data_test (t8_locidx_t x_start, t8_locidx_t y_start,
     for (index = 0; index < num_grid_items; ++index) {
       t8_debugf ("%.2f\n", chunk->data[index]);
     }
-    t8_latlon_data_apply_morton_order (chunk, x_length_global,
-                                       y_length_global);
+    t8_latlon_data_apply_morton_order (chunk);
     t8_debugf ("Applied Morton order:\n");
     for (index = 0; index < num_grid_items; ++index) {
       t8_debugf ("%.2f  (%li)\n", chunk->data[index], chunk->data_ids[index]);
