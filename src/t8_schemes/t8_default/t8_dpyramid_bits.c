@@ -579,20 +579,18 @@ t8_dpyramid_first_descendant_face(const t8_dpyramid_t * p,int face,
     int corner;
     T8_ASSERT(0<= face && face < T8_DPYRAMID_FACES);
     T8_ASSERT(0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
+    T8_ASSERT(p->level <= level);
     if(t8_dpyramid_shape(p) == T8_ECLASS_TET){
         corner = t8_dtet_face_corner[face][0];
         t8_dtet_corner_descendant(p, first_desc, corner, level);
     }
-    else
-    {
-        if(level == T8_DPYRAMID_MAXLEVEL){
-            t8_dpyramid_copy(p, first_desc);
-        }
-        else{
-            corner = t8_dpyramid_type_face_to_children_at_face[p->type-6][face][0];
-            t8_dpyramid_child(p, corner, first_desc);
-            first_desc->level = level;
-        }
+    else if(p->level == T8_DPYRAMID_MAXLEVEL){
+        t8_dpyramid_copy(p, first_desc);
+    }
+    else{
+        corner = t8_dpyramid_type_face_to_children_at_face[p->type-6][face][0];
+        t8_dpyramid_child(p, corner, first_desc);
+        first_desc->level = level;
     }
 }
 
@@ -630,21 +628,19 @@ t8_dpyramid_last_descendant_face(const t8_dpyramid_t * p,
     int corner, id_at_corner;
     T8_ASSERT(0<= face && face < T8_DPYRAMID_FACES);
     T8_ASSERT(0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
+    T8_ASSERT(p->level <= level);
     t8_debugf("[D] ldf-in %i %i %i %i %i\n", p->x, p->y, p->z, p->type, p->level);
     if(t8_dpyramid_shape(p) == T8_ECLASS_TET){
         corner = SC_MAX(t8_dtet_face_corner[face][1], t8_dtet_face_corner[face][2]);
         t8_dtet_corner_descendant(p, last_desc, corner, level);
     }
-    else
-    {
-        if(level == T8_DPYRAMID_MAXLEVEL){
-            t8_dpyramid_copy(p, last_desc);
-        }
-        else{
+    else if(p->level == T8_DPYRAMID_MAXLEVEL){
+        t8_dpyramid_copy(p, last_desc);
+    }
+    else{
         id_at_corner = t8_dpyramid_type_face_to_children_at_face[p->type-6][face][3];
         t8_dpyramid_child(p, id_at_corner, last_desc);
         last_desc->level = level;
-        }
     }
     t8_debugf("[D] ldf-out %i %i %i %i %i\n", last_desc->x, last_desc->y, last_desc->z,
               last_desc->type, last_desc->level);
