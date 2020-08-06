@@ -301,10 +301,10 @@ t8_latlon_data_test (t8_locidx_t x_start, t8_locidx_t y_start,
     for (index = 0; index < num_grid_items; ++index) {
       chunk->data[dimension * index] = dimension * index;
       if (dimension > 1) {
-        chunk->data[dimension * index + 1] = dimension * index + 1;
+        chunk->data[dimension * index + 1] = dimension * index;
       }
       if (dimension > 2) {
-        chunk->data[dimension * index + 2] = dimension * index + 2;
+        chunk->data[dimension * index + 2] = dimension * index;
       }
     }
   }
@@ -320,7 +320,10 @@ t8_latlon_data_test (t8_locidx_t x_start, t8_locidx_t y_start,
     t8_latlon_data_apply_morton_order (chunk);
     t8_debugf ("Applied Morton order:\n");
     for (index = 0; index < num_grid_items; ++index) {
-      t8_debugf ("%.2f  (%li)\n", chunk->data[index], chunk->data_ids[index]);
+      t8_debugf ("%.2f %.2f %.2f (%li)\n", chunk->data[dimension * index],
+                 dimension > 1 ? chunk->data[dimension * index + 1] : -1,
+                 dimension > 2 ? chunk->data[dimension * index + 2] : -1,
+                 chunk->data_ids[index]);
     }
   }
   t8_latlon_chunk_destroy (&chunk);
