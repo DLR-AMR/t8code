@@ -283,6 +283,41 @@ t8_latlon_data_apply_morton_order (t8_latlon_data_chunk_t * data_chunk)
   T8_FREE (permutation);
 }
 
+/* Given a subgrid in a global grid that is represented in a partitioned forest,
+ * determine those processes that have elements in the forest that lie in the
+ * subgrid.
+ * The subgrid data will be ordered in Morton order (if not already on input)
+ * and we will return the indices of the process bounds.
+ *         _ _ _ _ _ _
+ * data:  |_|_|_|_|_|_|
+ * 
+ * procs:  p_0|p_1  | p_3
+ * 
+ * Will create 
+ *  num_processes: 3
+ *  process_bounds: 0, 2, 5, 6
+ *  process_ranks:  0, 1, 3
+ */
+void
+t8_latlon_data_determine_process_bounds (t8_forest_t forest,
+                                         t8_latlon_data_chunk_t * chunk,
+                                         t8_gloidx_t x_length_global,
+                                         t8_gloidx_t y_length_global,
+                                         int *num_processes,
+                                         size_t * process_offsets,
+                                         int *process_ranks)
+{
+  if (chunk->numbering != T8_LATLON_DATA_MORTON) {
+    /* Apply Morton order if not already set. */
+    t8_latlon_data_apply_morton_order (chunk);
+  }
+  /* TODO: We need to perform a multiple binary search to identify
+   * the process borders.
+   * Alternatively, we could try to find them while we establish
+   * the Morton order and copy the arrays in the correct order.
+   */
+}
+
 void
 t8_latlon_data_test (t8_locidx_t x_start, t8_locidx_t y_start,
                      t8_locidx_t x_length, t8_locidx_t y_length,
