@@ -32,69 +32,8 @@
 #include <t8_schemes/t8_default/t8_default_quad_cxx.hxx>
 #endif
 #include <p4est_bits.h>
-
-/* Given x and y coordinates in a X by Y grid compute the quad
- * element that contains these coordinates when the grid is embedded
- * in the lower left of a quad tree.
- *  _ _ _ _ _ _
- * |           |
- * |           |  X = 3, Y = 2  
- * |_____ __   |  * = (0, 1) x and y coordinates
- * |_*|__|__|  |
- * |__|__|__|__|
- * 
- */
-static void
-t8_latlon_to_element (int x, int y, int x_length, int y_length, int level,
-                      t8_element_t * quad_element)
-{
-  p4est_quadrant_t   *quad;
-  t8_default_scheme_quad_c quad_scheme;
-
-  quad = (p4est_quadrant_t *) (quad_element);
-  quad->level = level;
-  quad->x = x << (P4EST_MAXLEVEL - level);
-  quad->y = y << (P4EST_MAXLEVEL - level);
-}
-
-static              t8_linearidx_t
-t8_latlon_to_linear_id (int x, int y, int x_length, int y_length, int level)
-{
-  t8_element_t       *elem;
-  t8_linearidx_t      linear_id;
-  t8_default_scheme_quad_c quad_scheme;
-
-  quad_scheme.t8_element_new (1, &elem);
-
-  t8_latlon_to_element (x, y, x_length, y_length, level, elem);
-  linear_id = quad_scheme.t8_element_get_linear_id (elem, level);
-  quad_scheme.t8_element_destroy (1, &elem);
-
-  return linear_id;
-}
-
-/* We offer two modes to construct the mesh.
- * T8_LATLON_REFINE: Start with a level 0 mesh and refine it until
- *                   the grid mesh on level L is reached.
- * T8_LATLON_COARSE: Start with the level L uniform mesh and coarsen all
- *                   elements that do not belong to the grid.
- */
-enum T8_LATLON_ADAPT_MODE
-{
-  T8_LATLON_REFINE,
-  T8_LATLON_COARSEN
-};
-
-/* The data that we pass on to our adapt function and
- * describes the layout of the grid plus adaptation mode.
- */
-typedef struct
-{
-  int                 x_length; /* Number of cells in x dimension. */
-  int                 y_length; /* Number of cells in y dimension. */
-  int                 max_level;        /* The computed refinement level of a uniform forest to contain an x by y grid. */
-  enum T8_LATLON_ADAPT_MODE mode;       /* The adaptation mode to use. */
-} t8_latlon_adapt_data_t;
+#include "t8_latlon_refine.h"
+#include "t8_latlon_data.h"
 
 /* Given a quad element of a quad tree, decide whether elements of
  * an x by y grid of given level that is embedded in the lower left corner
@@ -109,7 +48,7 @@ typedef struct
  * It would also be possible to implement this check via coordinates,
  * but this would not be as efficient.
  */
-static int
+int
 t8_latlon_refine_grid_cuts_elements (const t8_element_t * element,
                                      t8_default_scheme_common_c * ts,
                                      const t8_latlon_adapt_data_t *
@@ -131,13 +70,10 @@ t8_latlon_refine_grid_cuts_elements (const t8_element_t * element,
   ts->t8_element_anchor (element, anchor);
   anchor_max_level = P4EST_MAXLEVEL;
 
-  t8_debugf ("Achor: %i %i\n", anchor[0], anchor[1]);
   /* Shift x and y coordinates to match max_level. */
   for (i = 0; i < 2; ++i) {
     anchor[i] >>= (anchor_max_level - adapt_data->max_level);
   }
-  t8_debugf ("Shifted by: %i\n", anchor_max_level - adapt_data->max_level);
-  t8_debugf ("Achor: %i %i\n", anchor[0], anchor[1]);
 
   if (anchor[0] < adapt_data->x_length && anchor[1] < adapt_data->y_length) {
     return 1;
@@ -145,7 +81,7 @@ t8_latlon_refine_grid_cuts_elements (const t8_element_t * element,
   return 0;
 }
 
-static              t8_locidx_t
+t8_locidx_t
 t8_latlon_adapt_callback (t8_forest_t forest,
                           t8_forest_t forest_from,
                           t8_locidx_t which_tree,
@@ -192,7 +128,7 @@ t8_latlon_adapt_callback (t8_forest_t forest,
   return 0;
 }
 
-static void
+void
 t8_latlon_refine (int x_length, int y_length, enum T8_LATLON_ADAPT_MODE mode,
                   int repartition)
 {
@@ -294,82 +230,11 @@ t8_latlon_refine (int x_length, int y_length, enum T8_LATLON_ADAPT_MODE mode,
     for (int y = 0; y < y_length; ++y) {
       for (int x = 0; x < x_length; ++x) {
         t8_debugf ("%i %i: %lu\n", x, y,
-                   t8_latlon_to_linear_id (x, y, x_length, y_length,
-                                           adapt_data.max_level));
+                   t8_latlon_to_linear_id (x, y, adapt_data.max_level));
       }
     }
   }
 #endif
-}
-
-int
-main (int argc, char **argv)
-{
-  int                 mpiret;
-  sc_options_t       *opt;
-  char                usage[BUFSIZ];
-  char                help[BUFSIZ];
-  int                 x_length, y_length;
-  int                 parsed, helpme;
-  int                 mode_int;
-  int                 partition;
-  enum T8_LATLON_ADAPT_MODE mode;
-
-  /* brief help message */
-  snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t"
-            "for a brief overview of all options.",
-            basename (argv[0]), basename (argv[0]));
-
-  /* long help message */
-  snprintf (help, BUFSIZ, "Given input dimension x and y, we construct a\n"
-            "forest on the unit square that is the coarsest forest such\n"
-            "that an x times y grid fits in the lower left corner.\n%s\n",
-            usage);
-
-  mpiret = sc_MPI_Init (&argc, &argv);
-  SC_CHECK_MPI (mpiret);
-
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  t8_init (SC_LP_DEFAULT);
-
-  /* initialize command line argument parser */
-  opt = sc_options_new (argv[0]);
-  sc_options_add_switch (opt, 'h', "help", &helpme,
-                         "Display a short help message.");
-  sc_options_add_int (opt, 'x', "x-length", &x_length, 10,
-                      "The type of elements to use.\n");
-  sc_options_add_int (opt, 'y', "y-length", &y_length, 10,
-                      "The type of elements to use.\n");
-  sc_options_add_switch (opt, 'p', "partition", &partition,
-                         "Repartition the forest after each level of refinement/coarsening.\n");
-  sc_options_add_int (opt, 'm', "modus", &mode_int, 0,
-                      "The adaptation modus to use\n"
-                      "\t\t0 - refine modus: We start with level 0 and refine until the final forest ist constructed.\n"
-                      "\t\t1 - coarsen modus: We start with the final uniform level and coarsen elements until the final forest ist constructed.\n");
-
-  parsed =
-    sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
-  if (helpme) {
-    /* display help message and usage */
-    t8_global_productionf ("%s\n", help);
-    sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
-  }
-  else if (parsed >= 0 && 0 < x_length && 0 < y_length && mode_int >= 0
-           && mode_int <= 1) {
-    mode = mode_int == 0 ? T8_LATLON_REFINE : T8_LATLON_COARSEN;
-    t8_latlon_refine (x_length, y_length, mode, partition);
-  }
-  else {
-    /* wrong usage */
-    t8_global_productionf ("\n\t ERROR: Wrong usage.\n\n");
-    sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
-  }
-
-  sc_options_destroy (opt);
-  sc_finalize ();
-
-  mpiret = sc_MPI_Finalize ();
-  SC_CHECK_MPI (mpiret);
-
-  return 0;
+  t8_latlon_data_test (0, 0, x_length, y_length, 2, adapt_data.max_level,
+                       T8_LATLON_DATA_XSTRIPE, x_length, y_length);
 }
