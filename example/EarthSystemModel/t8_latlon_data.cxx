@@ -217,9 +217,6 @@ t8_latlon_data_apply_morton_order (t8_latlon_data_chunk_t * data_chunk,
     return;
   }
   size_t             *permutation;
-  sc_array           *data_ids_wrapper;
-  sc_array           *permutation_wrapper;
-  sc_array           *data_wrapper;
   /* Allocate array to store morton indices of the data items. */
   T8_ASSERT (data_chunk->data_ids == NULL);
   data_chunk->data_ids = T8_ALLOC (t8_linearidx_t, num_grid_elements);
@@ -249,10 +246,6 @@ t8_latlon_data_apply_morton_order (t8_latlon_data_chunk_t * data_chunk,
    * data_ids[permutation[1]]
    * data_ids[permutation[2]]
    *    ...
-   * 
-   * The sc_array_permute does:
-   * array[i] -> array[permutation[i]];
-   * which is the inverse operation.+
    */
   {
     t8_locidx_t         index;
@@ -261,29 +254,33 @@ t8_latlon_data_apply_morton_order (t8_latlon_data_chunk_t * data_chunk,
       t8_debugf ("%zd\n", permutation[index]);
     }
   }
-  /* Wrap an sc_array around the data_ids. */
-  data_ids_wrapper =
-    sc_array_new_data (data_chunk->data_ids, sizeof (t8_linearidx_t),
-                       num_grid_elements);
-  /* Wrap an sc_array around the data. */
-  data_wrapper =
-    sc_array_new_data (data_chunk->data,
-                       sizeof (double) * data_chunk->dimension,
-                       num_grid_elements);
-  /* Wrap an sc_array around the permutation array. */
-  permutation_wrapper =
-    sc_array_new_data (permutation, sizeof (size_t), num_grid_elements);
+  {
+    /* Reorder the data and the ids.
+     * To do so, we create a new array and copy the data 
+     * over in the correct order. */
+    /* NOTE: We could use sc_array_permute, but this would require the inverse of
+     *       permutation and currently we did not figure out how to compute it.
+     */
+    t8_locidx_t         index;
+    int                 dim = data_chunk->dimension;
+    double             *data_new = T8_ALLOC (double, dim * num_grid_elements);
+    t8_linearidx_t     *data_ids_new =
+      T8_ALLOC (t8_linearidx_t, num_grid_elements);
+    /* Copy the data */
+    for (index = 0; index < num_grid_elements; ++index) {
+      data_ids_new[index] = data_chunk->data_ids[permutation[index]];
+      /* Copy dim many doubles over */
+      memcpy (data_new + dim * index,
+              data_chunk->data + dim * permutation[index],
+              dim * sizeof (double));
+    }
+    /* Replace the original arrays */
+    T8_FREE (data_chunk->data);
+    T8_FREE (data_chunk->data_ids);
+    data_chunk->data_ids = data_ids_new;
+    data_chunk->data = data_new;
+  }
 
-  /* Apply permutation to data_ids and data. */
-  sc_array_permute (data_ids_wrapper, permutation_wrapper, 1);
-  /* Last argument is 0 since we do not need to keep the permutation in order
-   * after this operation (and it speeds up the calculation). */
-  sc_array_permute (data_wrapper, permutation_wrapper, 0);
-
-  /* Clean up */
-  sc_array_destroy (data_wrapper);
-  sc_array_destroy (data_ids_wrapper);
-  sc_array_destroy (permutation_wrapper);
   T8_FREE (permutation);
 }
 

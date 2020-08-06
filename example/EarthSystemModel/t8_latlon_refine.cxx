@@ -235,6 +235,6 @@ t8_latlon_refine (int x_length, int y_length, enum T8_LATLON_ADAPT_MODE mode,
     }
   }
 #endif
-  t8_latlon_data_test (0, 0, x_length, y_length, 2, adapt_data.max_level,
+  t8_latlon_data_test (0, 0, x_length, y_length, 1, adapt_data.max_level,
                        T8_LATLON_DATA_XSTRIPE, x_length, y_length);
 }
