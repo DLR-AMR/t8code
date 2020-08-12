@@ -134,6 +134,9 @@ typedef struct t8_cmesh
                                         or -(first local tree) - 1
                                         if the first tree on that process is shared.
                                         Since this is very memory consuming we only fill it when needed. */
+
+  sc_array_t          geometries; /**< Array of t8_geometry pointers that stores all geometries that
+                                       are used for trees in this cmesh. */
 #ifdef T8_ENABLE_DEBUG
   t8_locidx_t         inserted_trees; /**< Count the number of inserted trees to
                                            check at commit if it equals the total number. */

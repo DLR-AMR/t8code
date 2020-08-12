@@ -31,6 +31,7 @@
 #include <t8_data/t8_shmem.h>
 #include <t8_cmesh/t8_cmesh_save.h>
 #include <t8_element.h>
+#include <t8_geometry/t8_geometry.h>
 
 /* TODO: If including eclass were just for the cmesh_new routines, we should
  *       move them into a different file.
@@ -363,6 +364,10 @@ void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
 /* TODO: think about a sensible interface for a parmetis reordering. */
 #endif
+
+/* TODO: comment */
+void                t8_cmesh_register_geometry (t8_cmesh_t cmesh,
+                                                t8_geometry_c * geometry);
 
 /** After allocating and adding properties to a cmesh, finish its construction.
  * TODO: this function is MPI collective.
