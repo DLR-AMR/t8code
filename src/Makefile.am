@@ -13,7 +13,8 @@ libt8_installed_headers = \
   src/t8_cmesh/t8_cmesh_save.h \
   src/t8_forest.h \
   src/t8_forest/t8_forest_adapt.h src/t8_forest_vtk.h \
-  src/t8_geometry.h \
+  src/t8_geometry/t8_geometry_base.hxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_identity.hxx \
   src/t8_vec.h src/t8_vtk.h \
   src/t8_forest/t8_forest_iterate.h src/t8_forest/t8_forest_partition.h
 libt8_internal_headers = \
@@ -37,7 +38,9 @@ libt8_compiled_sources = \
   src/t8_cmesh/t8_cmesh_copy.c src/t8_data/t8_shmem.c \
   src/t8_data/t8_containers.cxx \
   src/t8_cmesh/t8_cmesh_offset.c src/t8_cmesh/t8_cmesh_readmshfile.c \
-  src/t8_forest/t8_forest.c src/t8_forest/t8_forest_adapt.cxx src/t8_geometry.c \
+  src/t8_forest/t8_forest.c src/t8_forest/t8_forest_adapt.cxx \
+  src/t8_geometry/t8_geometry_base.cxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_identity.cxx \
   src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest_cxx.cxx \
   src/t8_forest/t8_forest_private.c src/t8_forest/t8_forest_vtk.cxx \
   src/t8_forest/t8_forest_ghost.cxx src/t8_forest/t8_forest_iterate.cxx \
