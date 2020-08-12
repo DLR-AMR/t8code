@@ -803,6 +803,46 @@ t8_dpyramid_face_child_face(const t8_dpyramid_t * p, int face, int face_child)
     }
 }
 
+int
+t8_dpyramid_is_inside_pyra(const t8_dpyramid_t *p, const t8_dpyramid_t *check)
+{
+    int len= T8_DPYRAMID_LEN(check->level);
+    int diff = p->z - check->z;
+    /*test if p is inside check of type 6*/
+    if(((check->x + diff )<= p->x && p->x < (check->x + len)) &&
+       ((check->y + diff) <= p->y && p->y < (check->y + len)) &&
+        (check->z <= p->z && p->z < (check->z + len)))
+    {
+        if((check->x + diff == p->x && p->type == 3)||
+                (check->y + diff == p->y && p->type == 0)){
+            /*tet touches face of pyra but is outside of pyra*/
+            return 0;
+        }
+        else{
+            /*tet is inside pyra of type 6*/
+            return 1;
+        }
+    }
+    else if((check->x <= p->x && p->x <= (check->x + diff)) &&
+           (check->y <= p->y && p->y <= (check->y + diff)) &&
+                (check->z <= p->z && p->z < (check->z + len)))
+    {
+        if((check->x + diff == p->x && p->type == 0)||
+                (check->y + diff == p->y && p->type == 3)){
+            /*tet touches face of pyra, but is outside of pyra*/
+            return 0;
+        }
+        else{
+            /*tet is inside pyra of type 7*/
+            return 1;
+        }
+    }
+    else{
+        /*tet is inside tet*/
+        return 0;
+    }
+}
+
 /* Check, if a pyramid in the shape of a tet lies inside a tetrahedron
  * The i first bits give the anchorcoordinate for a possible ancestor of level i
  * for p. */
@@ -814,7 +854,7 @@ t8_dpyramid_is_inside_tet (const t8_dpyramid_t * p, int level,
   T8_ASSERT (p->type == 0 || p->type == 3);
   int                 i;
   /*the tet is initialized, the ancestor will be computed */
-  t8_dtet_t           tet, ancestor;
+  t8_dtet_t           tet;
   tet.x = 0;
   tet.y = 0;
   tet.z = 0;
@@ -824,6 +864,14 @@ t8_dpyramid_is_inside_tet (const t8_dpyramid_t * p, int level,
     tet.y = tet.y | (p->y & (1 << (T8_DPYRAMID_MAXLEVEL - i)));
     tet.z = tet.z | (p->z & (1 << (T8_DPYRAMID_MAXLEVEL - i)));
     tet.level = i;
+    if(t8_dpyramid_is_inside_pyra(p, &tet) == 0){
+        /*p is inside a tet*/
+        if(anc != NULL){
+            t8_dtet_ancestor((const t8_dtet_t *)p, i, anc);
+        }
+        return i;
+    }
+#if 0
     /*Compute the tet-ancestor */
     t8_dtet_ancestor ((const t8_dtet_t *) p, i, &ancestor);
     /*Only compare, if the ancestor has type 0 or 3 */
@@ -838,6 +886,7 @@ t8_dpyramid_is_inside_tet (const t8_dpyramid_t * p, int level,
         return i;
       }
     }
+#endif
   }
   /*No matching tet-ancestor was found, the parent is a pyramid */
   return 0;
@@ -859,7 +908,6 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
 {
   T8_ASSERT (p->level > 0);
   T8_ASSERT (T8_DPYRAMID_MAXLEVEL == T8_DTET_MAXLEVEL);
-
   t8_dpyramid_coord_t h = T8_DPYRAMID_LEN (p->level);
 
   if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID) {
