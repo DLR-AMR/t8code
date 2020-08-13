@@ -245,7 +245,7 @@ t8_dpyramid_custom_mod (uint64_t * id, t8_dpyramid_type_t type,
   t8_linearidx_t      test = 0, shift;
   T8_ASSERT (id >= 0);
   int                 remain = -1;
-  do {;
+  do {
     /* Iterate through the local-id. Get the current shift by the type of the
      * current element*/
     shift =
@@ -334,8 +334,7 @@ t8_dpyramid_linear_id (const t8_dpyramid_t * p, int level)
     else {
       /* The number of pyramid-predecessors */
       num_pyra =
-        t8_dpyramid_parenttype_iloc_pyra_w_lower_id[parent.type -
-                                                    6][local_id];
+        t8_dpyramid_parenttype_iloc_pyra_w_lower_id[parent.type - 6][local_id];
     }
     /* The number of tets is the local-id minus the number of pyramid-predecessors */
     num_tet = local_id - num_pyra;
@@ -450,27 +449,23 @@ int
 t8_dpyramid_tet_pyra_face_connection (const t8_dpyramid_t * p, int face)
 {
   T8_ASSERT (p->type == 0 || p->type == 3);
-  /* Depending on its last coordinate at its level and its type,
+  /* Depending on its cube-id at its level and its type,
    * 3 faces of a tet connect to a pyramid, one is connecting to a tet*/
-  /*Get position in the pyra*/
-  int                 x = (p->x >> (T8_DPYRAMID_MAXLEVEL - p->level)) % 2;
-  int                 y = (p->y >> (T8_DPYRAMID_MAXLEVEL - p->level)) % 2;
-  /*To check, if parent is type 6 or type 7*/
-  int                 z = (p->z >> (T8_DPYRAMID_MAXLEVEL - p->level)) % 2;;
-  if (x == 0 && y == 1) {
-    return p->type == 0 && ((face != 1 && z == 0) || (face != 2 && z == 1));
+  int cid = compute_cubeid(p, p->level);
+  if((cid == 2 && face != 1) || (cid == 6 && face != 2)){
+      return p->type == 0;
   }
-  else if (x == 1 && y == 0) {
-    return p->type == 3 && ((face != 1 && z == 0) || (face != 2 && z == 1));
+  else if ((cid == 1 && face != 1) || (cid == 5 && face != 2)){
+      return p->type == 3;
   }
-  else if (x == 1 && y == 1 && z == 0) {
-    return (face != 0);
+  else if(cid == 3){
+      return face != 0;
   }
-  else if (x == 0 && y == 0 && z == 1) {
-    return (face != 3);
+  else if(cid == 4){
+      return face != 3;
   }
-  else {
-    return 0;
+  else{
+      return 0;
   }
 }
 
@@ -796,7 +791,7 @@ t8_dpyramid_face_child_face(const t8_dpyramid_t * p, int face, int face_child)
     }
     else{
         int i = t8_dpyramid_type_face_to_child_face[p->type-6][face][face_child];
-        t8_debugf("type %i, face %i, face_child %i, result: %i\n", p->type-6, face,
+        t8_debugf("[D] type %i, face %i, face_child %i, result: %i\n", p->type-6, face,
                   face_child, i);
         T8_ASSERT(i >= 0 && i <= T8_DPYRAMID_FACES);
         return i;
@@ -806,6 +801,7 @@ t8_dpyramid_face_child_face(const t8_dpyramid_t * p, int face, int face_child)
 int
 t8_dpyramid_is_inside_pyra(const t8_dpyramid_t *p, const t8_dpyramid_t *check)
 {
+    T8_ASSERT(p->type == 0 || p->type == 3);
     int len= T8_DPYRAMID_LEN(check->level);
     int diff = p->z - check->z;
     /*test if p is inside check of type 6*/
