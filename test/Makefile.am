@@ -22,7 +22,8 @@ t8code_test_programs = \
         test/t8_test_descendant \
 	test/t8_test_cmesh_face_is_boundary \
         test/t8_test_element_general_function \
-        test/t8_test_pyra_face_neigh
+        test/t8_test_pyra_face_neigh \
+        test/t8_test_pyra_face_descendant
 
 
 test_t8_test_eclass_SOURCES = test/t8_test_eclass.c
@@ -45,6 +46,7 @@ test_t8_test_descendant_SOURCES = test/t8_test_descendant.cxx
 test_t8_test_cmesh_face_is_boundary_SOURCES = test/t8_test_cmesh_face_is_boundary.cxx
 test_t8_test_element_general_function_SOURCES = test/t8_test_element_general_function.cxx
 test_t8_test_pyra_face_neigh_SOURCES = test/t8_test_pyra_face_neigh.cxx
+test_t8_test_pyra_face_descendant_SOURCES = test/t8_test_pyra_face_descendant.cxx
 
 
 TESTS += $(t8code_test_programs)

@@ -132,6 +132,9 @@ int                 t8_dpyramid_child_id_known_parent (const t8_dpyramid_t *
                                                        t8_dpyramid_t *
                                                        parent);
 
+int
+t8_dpyramid_is_inside_pyra(const t8_dpyramid_t *p, const t8_dpyramid_t *check);
+
 /** Check, if the input pyramid with shape of a tet is inside of a tetrahedron
  * \param [in] p  pyramid with tet shape
  * \return      0, if the pyramid is insed of a tetrahedron
