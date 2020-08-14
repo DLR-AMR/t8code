@@ -2422,24 +2422,11 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest,
       ts->t8_element_new (1, &test_desc);
       ts->t8_element_last_descendant_face (element, face, test_desc, forest->maxlevel);
       /*Delete this line!*/
-      t8_debugf("[D] ldf error-finder, face: %i\n", face);
-      t8_debugf("[D] lfd: %i %i %i %i %i\n",((t8_dpyramid_t *)last_face_desc)->x,
-                ((t8_dpyramid_t *)last_face_desc)->y,((t8_dpyramid_t *)last_face_desc)->z,
-                ((t8_dpyramid_t *)last_face_desc)->type,((t8_dpyramid_t *)last_face_desc)->level);
-      t8_debugf("[D] test: %i %i %i %i %i\n",((t8_dpyramid_t *)test_desc)->x,
-                ((t8_dpyramid_t *)test_desc)->y,((t8_dpyramid_t *)test_desc)->z,
-                ((t8_dpyramid_t *)test_desc)->type,((t8_dpyramid_t *)test_desc)->level);
       T8_ASSERT (!ts->t8_element_compare (test_desc, last_face_desc));
 
       ts->t8_element_first_descendant_face (element, face, test_desc, forest->maxlevel);
       /*Delete this line!*/
-      t8_debugf("[D] fdf error-finder, face: %i\n", face);
-      t8_debugf("[D] ffd: %i %i %i %i %i\n",((t8_dpyramid_t *)first_face_desc)->x,
-                ((t8_dpyramid_t *)first_face_desc)->y,((t8_dpyramid_t *)first_face_desc)->z,
-                ((t8_dpyramid_t *)first_face_desc)->type,((t8_dpyramid_t *)first_face_desc)->level);
-      t8_debugf("[D] test: %i %i %i %i %i\n\n",((t8_dpyramid_t *)test_desc)->x,
-                ((t8_dpyramid_t *)test_desc)->y,((t8_dpyramid_t *)test_desc)->z,
-                ((t8_dpyramid_t *)test_desc)->type,((t8_dpyramid_t *)test_desc)->level);
+
       T8_ASSERT (!ts->t8_element_compare (test_desc, first_face_desc));
       ts->t8_element_destroy (1, &test_desc);
     }

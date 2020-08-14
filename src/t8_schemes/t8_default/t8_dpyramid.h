@@ -24,6 +24,7 @@
 #define T8_DPYRAMID_VERTICES 8
 
 /** The maximum refinement level allowed for a pyramid */
+/*The tetrahedral elements are linked with pyra-elements*/
 #define T8_DPYRAMID_MAXLEVEL T8_DTET_MAXLEVEL
 
 /** The length of the root pyramid in integer coordinates */

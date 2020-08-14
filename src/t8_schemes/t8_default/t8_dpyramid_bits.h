@@ -73,10 +73,22 @@ void                t8_dpyramid_child (const t8_dpyramid_t * elem,
 void                t8_dpyramid_children (const t8_dpyramid_t * p, int length,
                                           t8_dpyramid_t ** c);
 
+/** Given a pyramid and a face, compute all children touching this face
+ * \param [in] p        Input pyramid
+ * \param [in] face     The face to compute the childran at
+ * \param [in, out] children    The children of \a p at \a face
+ * \param [in] num_childrem     The number of children at this face
+ */
 void                t8_dpyramid_children_at_face(const t8_dpyramid_t * p, int face,
                              t8_dpyramid_t * children[], int num_children,
                              int *child_indices);
 
+/** Given a face of a pyramid and a child number of a child of that face,
+ * return the face number of the child of the pyramid that matches the child
+ * face.
+ * \param[in] p         Input pyramid
+ * \param[in] face      A face of \a p
+ * \param [out] face_child  The number of the matching child face*/
 int                 t8_dpyramid_face_child_face(const t8_dpyramid_t * p,
                                        int face, int face_child);
 
@@ -109,6 +121,13 @@ int                 t8_dpyramid_is_family (const t8_dpyramid_t ** fam);
 int                 t8_dpyramid_is_root_boundary (const t8_dpyramid_t * p,
                                                   int face);
 
+/** Compute the neighbor of p along a given face and the number of the dual face if
+ * the neighbor is inside the root pyramid. Return 0 if the neighbor is not inside, 1 ow.
+ * \param[in] p     Input pyramid
+ * \param[in, out] neigh    The neighbor of \a p
+ * \param[in] face          The face of \a p along which \a neigh is computed
+ * \param [in, out] neigh_face  The dual face
+ * */
 int                 t8_dpyramid_face_neighbor_inside (const t8_dpyramid_t * p,
                                                       t8_dpyramid_t * neigh,
                                                       int face,
@@ -132,6 +151,14 @@ int                 t8_dpyramid_child_id_known_parent (const t8_dpyramid_t *
                                                        t8_dpyramid_t *
                                                        parent);
 
+/** Returns zero if p is not inside root, 1 ow
+ \param[in] p       Pyramid to check
+ \returns 0 if p is inside root, 1, ow*/
+int                 t8_dpyramid_is_inside_root (const t8_dpyramid_t *p);
+
+/** Check, if a given pyramid is inside another pyramid
+ * \param[in] p     Pyramid to check
+ * \param[in] check The outer pyramid in which \a p might lie*/
 int
 t8_dpyramid_is_inside_pyra(const t8_dpyramid_t *p, const t8_dpyramid_t *check);
 
@@ -171,6 +198,13 @@ void                t8_dpyramid_first_descendant (const t8_dpyramid_t * p,
                                                   t8_dpyramid_t * desc,
                                                   int level);
 
+/** Construct the first descendant of a pyramid touching a given face
+ * \param [in] p        pyramid whose descendant is computed.
+ * \param [in] face     The face at which the descendant is computed
+ * \param [out] first_desc       Existing pyramid whose data will be filled with the data
+ *                      of \a p's first descendant on level \a level.
+ * \param [in] level    The refinement level. Must be greater than \a p's refinement
+ *                      level.*/
 void                t8_dpyramid_first_descendant_face(const t8_dpyramid_t * p,
                                                       int face,
                                                       t8_dpyramid_t * first_desc,
@@ -188,6 +222,14 @@ void                t8_dpyramid_last_descendant (const t8_dpyramid_t * p,
                                                  t8_dpyramid_t * desc,
                                                  int level);
 
+
+/** Construct the last descendant of a pyramid touching a given face
+ * \param [in] p        pyramid whose descendant is computed.
+ * \param [in] face     The face at which the descendant is computed
+ * \param [out] last_desc       Existing pyramid whose data will be filled with the data
+ *                      of \a p's first descendant on level \a level.
+ * \param [in] level    The refinement level. Must be greater than \a p's refinement
+ *                      level.*/
 void                t8_dpyramid_last_descendant_face(const t8_dpyramid_t * p,
                                  int face, t8_dpyramid_t * last_desc,
                                  int level);

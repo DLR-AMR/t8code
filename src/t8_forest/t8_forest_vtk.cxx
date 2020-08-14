@@ -104,6 +104,7 @@ t8_forest_num_points (t8_forest_t forest, int count_ghosts)
   t8_eclass_t         ghost_class;
   size_t              num_elements;
   t8_dpyramid_t *      pyra;
+  t8_element_array_t * ghost_elem;
 
   num_points = 0;
   for (itree = 0; itree < (t8_locidx_t) forest->trees->elem_count; itree++) {
@@ -131,11 +132,19 @@ t8_forest_num_points (t8_forest_t forest, int count_ghosts)
     for (itree = 0; itree < num_ghosts; itree++) {
       /* Get the element class of the ghost */
       ghost_class = t8_forest_ghost_get_tree_class (forest, itree);
-      /* TODO: does not work with pyramids */
-      SC_CHECK_ABORT (ghost_class != T8_ECLASS_PYRAMID,
-                      "Pyramids are not supported in vtk output");
-      num_points += t8_eclass_num_vertices[ghost_class]
-        * t8_forest_ghost_tree_num_elements (forest, itree);
+      if(ghost_class == T8_ECLASS_PYRAMID){
+            ghost_elem = t8_forest_ghost_get_tree_elements(forest, itree);
+            num_elements = t8_forest_ghost_tree_num_elements(forest, itree);
+            for(ielem = 0; ielem < (t8_locidx_t) num_elements; ielem ++)
+            {
+                pyra = (t8_dpyramid_t *)t8_element_array_index_locidx(ghost_elem, ielem);
+                num_points += t8_dpyramid_num_vertices(pyra);
+            }
+      }
+      else{
+          num_points += t8_eclass_num_vertices[ghost_class]
+            * t8_forest_ghost_tree_num_elements (forest, itree);
+      }
     }
   }
   return num_points;

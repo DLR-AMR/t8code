@@ -150,7 +150,8 @@ public:
   /** Return nonzero if collection of elements is a family */
   virtual int         t8_element_is_family (t8_element_t ** fam);
 
-  /** Compute whether a given element shares a given face with its root tree. */
+  /** Compute whether a given element shares a given face of this element
+   *  with its root tree. */
   virtual int         t8_element_is_root_boundary (const t8_element_t * elem,
                                                    int face);
 
