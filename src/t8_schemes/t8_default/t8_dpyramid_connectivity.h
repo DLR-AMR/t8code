@@ -64,5 +64,8 @@ extern const int t8_dpyramid_type_face_to_children_at_face[2][5][4];
 /*Return the face-number of a children at a face of a pyramid*/
 extern const int t8_dpyramid_type_face_to_child_face[2][5][10];
 
+/*Return the boundary-type given the element-type and a face-number*/
+extern const int t8_dpyramid_type_face_to_boundary[8][4];
+
 #endif // T8_DPYRAMID_CONNECTIVITY_H
 

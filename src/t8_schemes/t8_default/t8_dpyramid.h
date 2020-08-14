@@ -38,6 +38,10 @@
 
 /** The type of the root pyramid*/
 #define T8_DPYRAMID_ROOT_TPYE 6
+
+/** The length of a triangle divided by the length of a pyramid.
+ * This is useful to convert boundary coordinates from pyra to tri*/
+#define T8_DTRI_ROOT_BY_DPYRAMID_ROOT (1 <<(T8_DTRI_MAXLEVEL - T8_DPYRAMID_MAXLEVEL))
 /*
  * In this case type 0-5 are the six types of tets and
  * type 6 is an upward facing pyramid

@@ -87,11 +87,7 @@ public:
                                                const t8_eclass_scheme_c *
                                                face_scheme,
                                                t8_element_t * elem,
-                                               int root_face)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+                                               int root_face);
 
 /** Compare to elements. returns negativ if elem1 < elem2, zero if elem1 equals elem2
  *  and positiv if elem1 > elem2.
@@ -179,10 +175,7 @@ public:
                                                 int face,
                                                 t8_element_t * boundary,
                                                 const t8_eclass_scheme_c *
-                                                boundary_scheme)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+                                                boundary_scheme);
 
 /** Construct all codimension-one boundary elements of a given element. */
   virtual void        t8_element_boundary (const t8_element_t * elem,

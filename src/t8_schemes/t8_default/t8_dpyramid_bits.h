@@ -92,6 +92,12 @@ void                t8_dpyramid_children_at_face(const t8_dpyramid_t * p, int fa
 int                 t8_dpyramid_face_child_face(const t8_dpyramid_t * p,
                                        int face, int face_child);
 
+void                t8_dpyramid_boundary_face(const t8_dpyramid_t * p,
+                                              int face, t8_element_t * boundary);
+
+int                 t8_dpyramid_extrude_face(const t8_element_t *face,
+                                             t8_dpyramid_t * p, int root_face);
+
 /** Compare two elements. returns negativ if p1 < p2, zero if p1 equals p2
  *  and positiv if p1 > p2.
  *  If p2 is a copy of p1 then the elements are equal.

@@ -25,6 +25,8 @@
 #include "t8_dpyramid_connectivity.h"
 #include "t8_dtet_connectivity.h"
 #include <sc_functions.h>
+#include <p4est_bits.h>
+#include "t8_dtri_bits.h"
 
 typedef int8_t      t8_dpyramid_cube_id_t;
 
@@ -758,6 +760,82 @@ t8_dpyramid_num_faces(const t8_dpyramid_t * p)
     }
     else{
         return T8_DPYRAMID_FACES;
+    }
+}
+
+void
+t8_dpyramid_boundary_face(const t8_dpyramid_t * p, int face,
+                          t8_element_t * boundary)
+{
+    /*face is face of root, or face of p??? DOCUMENTATION!!!*/
+    T8_ASSERT(0 <= face && face < T8_DPYRAMID_FACES);
+    if(face == 4){
+        p4est_quadrant_t *q = (p4est_quadrant_t *) boundary;
+        q->x = ((int64_t)p->x * P4EST_ROOT_LEN) / T8_DPYRAMID_ROOT_LEN;
+        q->y = ((int64_t)p->y * P4EST_ROOT_LEN) / T8_DPYRAMID_ROOT_LEN;
+        q->level = p->level;
+    }
+    else{
+        t8_dtri_t   *t = (t8_dtri_t *) boundary;
+        t->level = p->level;
+        t->y = p->z * T8_DTRI_ROOT_BY_DPYRAMID_ROOT;
+        t->type = t8_dpyramid_type_face_to_boundary[p->type][face];
+        T8_ASSERT(t->type == 0 || t->type == 1);
+        switch (face) {
+        case 0:
+            t->x = p->y * T8_DTRI_ROOT_BY_DPYRAMID_ROOT;
+            break;
+        case 1:
+            t->x = p->y * T8_DTRI_ROOT_BY_DPYRAMID_ROOT;
+            break;
+        case 2:
+            t->x = p->x * T8_DTRI_ROOT_BY_DPYRAMID_ROOT;
+            break;
+        case 3:
+            t->x = p->x * T8_DTRI_ROOT_BY_DPYRAMID_ROOT;
+            break;
+        default:
+            SC_ABORT_NOT_REACHED();
+        }
+    }
+}
+
+int
+t8_dpyramid_extrude_face(const t8_element_t * face, t8_dpyramid_t * p, int root_face)
+{
+    if(root_face == 4){
+        p4est_quadrant_t *q = (p4est_quadrant_t *) face;
+        p->x = ((int64_t)q->x * T8_DPYRAMID_ROOT_LEN) / P4EST_ROOT_LEN;
+        p->y = ((int64_t)q->y * T8_DPYRAMID_ROOT_LEN) / P4EST_ROOT_LEN;
+        p->z = 0;
+        p->type = T8_DPYRAMID_ROOT_TPYE;
+        p->level = q->level;
+    }
+    else{
+       t8_dtri_t   *t = (t8_dtri_t *) face;
+       p->z = ((int64_t)t->y * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+       p->level = t->level;
+       switch (root_face) {
+       case 0:
+           p->x = p->z;
+           p->y = ((int64_t)t->x * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+           break;
+       case 1:
+           p->x = T8_DPYRAMID_ROOT_LEN - T8_DPYRAMID_LEN(p->level);
+           p->y = ((int64_t)t->y * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+           break;
+       case 2:
+           p->x = ((int64_t)t->y * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+           p->y = p->z;
+           break;
+       case 3:
+           p->x = ((int64_t)t->y * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+           p->y = T8_DPYRAMID_ROOT_LEN - T8_DPYRAMID_LEN(p->level);
+           break;
+       default:
+           SC_ABORT_NOT_REACHED();
+       }
+       /*TODO: type-computation for p!*/
     }
 }
 

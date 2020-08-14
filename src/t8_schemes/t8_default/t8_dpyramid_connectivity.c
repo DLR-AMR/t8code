@@ -135,4 +135,16 @@ const int t8_dpyramid_type_face_to_child_face[2][5][10] =
      {4,4,4,4}}
 };
 
+const int t8_dpyramid_type_face_to_boundary[8][4] =
+{
+    {1,1,-1,-1}, /*type 0*/
+    {-1,0,0,-1}, /*type 1*/
+    {0,-1,-1,0}, /*type 2*/
+    {-1,-1,1,1}, /*type 3*/
+    {-1,-1,-1,-1}, /*type 4 never touches boundary*/
+    {-1,-1,-1,-1}, /*type 5 never touches boundary*/
+    {0,0,0,0}, /*type 6*/
+    {-1,-1,-1,-1}, /*type 7 never touches boundary*/
+};
+
 

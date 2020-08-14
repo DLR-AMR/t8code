@@ -202,6 +202,26 @@ t8_default_scheme_pyramid_c::t8_element_is_root_boundary (const t8_element_t *
   return t8_dpyramid_is_root_boundary ((const t8_dpyramid_t *) elem, face);
 }
 
+void
+t8_default_scheme_pyramid_c::t8_element_boundary_face (const t8_element_t * elem,
+                                                int face,
+                                                t8_element_t * boundary,
+                                                const t8_eclass_scheme_c *
+                                                boundary_scheme)
+{
+    t8_dpyramid_boundary_face((const t8_dpyramid_t *) elem, face, boundary);
+}
+
+int
+t8_default_scheme_pyramid_c::t8_element_extrude_face (const t8_element_t * face,
+                                               const t8_eclass_scheme_c *
+                                               face_scheme,
+                                               t8_element_t * elem,
+                                               int root_face)
+{
+    return t8_dpyramid_extrude_face(face, (t8_dpyramid_t *)elem, root_face);
+}
+
 t8_eclass_t
   t8_default_scheme_pyramid_c::t8_element_shape (const t8_element_t * elem)
 {

@@ -86,8 +86,8 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level, int do_adapt,
   t8_global_productionf ("Contructing hypercube mesh with element class %s\n",
                          t8_eclass_to_string[eclass]);
   cmesh =
-        //t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, do_partition, 0);
-        t8_cmesh_new_from_class(eclass, sc_MPI_COMM_WORLD);
+        t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, do_partition, 0);
+        //t8_cmesh_new_from_class(eclass, sc_MPI_COMM_WORLD);
 
   snprintf (cmesh_file, BUFSIZ, "cmesh_hcube_%s",
             t8_eclass_to_string[eclass]);
