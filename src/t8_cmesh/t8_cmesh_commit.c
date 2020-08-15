@@ -35,6 +35,7 @@
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_refine.h>
 #include <t8_cmesh/t8_cmesh_copy.h>
+#include <t8_cmesh/t8_cmesh_geometry.h>
 
 typedef struct ghost_facejoins_struct
 {
@@ -636,6 +637,16 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
       /* Keep the face knowledge of the from cmesh, if -1 was specified */
       cmesh->face_knowledge = cmesh->set_from->face_knowledge;
     }
+
+    /* If present, unref the current geometry handler, since 
+     * we take over the one from set_from. */
+    if (cmesh->geometry_handler != NULL) {
+      t8_geom_handler_unref (&cmesh->geometry_handler);
+    }
+    /* Reference and copy the geometry handler. */
+    t8_geom_handler_ref (cmesh->set_from->geometry_handler);
+    cmesh->geometry_handler = cmesh->set_from->geometry_handler;
+
     if (cmesh->set_partition) {
       /* The cmesh should be partitioned */
       if (cmesh->set_refine_level > 0) {
@@ -716,6 +727,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
       /* cmesh should not be refined. Partitioned or replicated commit from stash */
       t8_cmesh_commit_from_stash (cmesh, comm);
     }
+    /* Commit the geometry handler. */
+    t8_geom_handler_commit (cmesh->geometry_handler);
   }
 
   cmesh->committed = 1;

@@ -26,6 +26,7 @@
 #include <t8.h>
 #include <t8_refcount.h>
 #include <t8_data/t8_shmem.h>
+#include <t8_geometry/t8_geometry.h>
 #include "t8_cmesh_stash.h"
 #include "t8_element.h"
 
@@ -135,8 +136,8 @@ typedef struct t8_cmesh
                                         if the first tree on that process is shared.
                                         Since this is very memory consuming we only fill it when needed. */
 
-  sc_array_t          geometries; /**< Array of t8_geometry pointers that stores all geometries that
-                                       are used for trees in this cmesh. */
+  t8_geometry_handler_t *geometry_handler;  /**< Handles all geometries that are used by trees in this cmesh. */
+
 #ifdef T8_ENABLE_DEBUG
   t8_locidx_t         inserted_trees; /**< Count the number of inserted trees to
                                            check at commit if it equals the total number. */

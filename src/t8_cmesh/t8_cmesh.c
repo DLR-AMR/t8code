@@ -23,6 +23,7 @@
 #include <sc_statistics.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_vtk.h>
+#include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_refcount.h>
 #include <t8_data/t8_shmem.h>
 #include <t8_vec.h>
@@ -186,6 +187,8 @@ t8_cmesh_init (t8_cmesh_t * pcmesh)
   cmesh->first_tree_shared = -1;
   cmesh->face_knowledge = 3;    /*< sensible default TODO document */
   t8_stash_init (&cmesh->stash);
+  /* Initialize the geometry handler */
+  t8_geom_handler_init (&cmesh->geometry_handler);
 
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 }
@@ -1448,6 +1451,9 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
   if (cmesh->set_partition_scheme != NULL) {
     t8_scheme_cxx_unref (&cmesh->set_partition_scheme);
   }
+
+  /* Unref the geometry handler. */
+  t8_geom_handler_unref (&cmesh->geometry_handler);
 
   T8_FREE (cmesh);
   *pcmesh = NULL;
