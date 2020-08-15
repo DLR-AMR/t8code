@@ -24,6 +24,7 @@
 #include "t8_dtet_bits.h"
 #include "t8_dpyramid_connectivity.h"
 #include "t8_dtet_connectivity.h"
+#include "t8_dtri_connectivity.h"
 #include <sc_functions.h>
 #include <p4est_bits.h>
 #include "t8_dtri_bits.h"
@@ -779,30 +780,85 @@ t8_dpyramid_boundary_face(const t8_dpyramid_t * p, int face,
         t8_dtri_t   *t = (t8_dtri_t *) boundary;
         t->level = p->level;
         t->y = p->z * T8_DTRI_ROOT_BY_DPYRAMID_ROOT;
-        t->type = t8_dpyramid_type_face_to_boundary[p->type][face];
-        T8_ASSERT(t->type == 0 || t->type == 1);
-        switch (face) {
-        case 0:
-            t->x = p->y * T8_DTRI_ROOT_BY_DPYRAMID_ROOT;
-            break;
-        case 1:
-            t->x = p->y * T8_DTRI_ROOT_BY_DPYRAMID_ROOT;
-            break;
-        case 2:
-            t->x = p->x * T8_DTRI_ROOT_BY_DPYRAMID_ROOT;
-            break;
-        case 3:
-            t->x = p->x * T8_DTRI_ROOT_BY_DPYRAMID_ROOT;
-            break;
-        default:
-            SC_ABORT_NOT_REACHED();
+        t8_debugf("[D] b-in: %i %i %i %i %i, f: %i\n",
+                  p->x, p->y, p->z, p->type, p->level, face);
+        if(t8_dpyramid_shape(p) == T8_ECLASS_PYRAMID){
+            t->type = 0;
+            switch (face) {
+            case 0:
+                t->x = p->y * T8_DTRI_ROOT_BY_DPYRAMID_ROOT;
+                break;
+            case 1:
+                t->x = p->y * T8_DTRI_ROOT_BY_DPYRAMID_ROOT;
+                break;
+            case 2:
+                t->x = p->x * T8_DTRI_ROOT_BY_DPYRAMID_ROOT;
+                break;
+            case 3:
+                t->x = p->x * T8_DTRI_ROOT_BY_DPYRAMID_ROOT;
+                break;
+            default:
+                SC_ABORT_NOT_REACHED();
+            }
         }
+        else{
+            if((face == 1 && p->type == 0) || (face == 2 && p->type == 2)){
+                t->x = p->y * T8_DTRI_ROOT_BY_DPYRAMID_ROOT;
+                t->type = p->type == 0 ? 1 : 0;
+            }
+            else if(face == 0 && (p->type == 0 || p->type == 1))
+            {
+                t->x = p->y * T8_DTRI_ROOT_BY_DPYRAMID_ROOT;
+                t->type = p->type == 0 ? 1 : 0;
+            }
+            else if((face == 1 && p->type == 3) || (face == 2 && p->type == 1))
+            {
+                t->x = p->x * T8_DTRI_ROOT_BY_DPYRAMID_ROOT;
+                t->type = p->type == 3 ? 1 : 0;
+            }
+            else{
+                t->x = p->x * T8_DTRI_ROOT_BY_DPYRAMID_ROOT;
+                t->type = p->type == 3 ? 1 : 0;
+            }
+        }
+        T8_ASSERT(t->type == 0 || t->type == 1);
+        t8_debugf("[D] bout: %i %i %i\n", t->x, t->y, t->type);
     }
+}
+
+int
+t8_dpyramid_extrude_in_pyra(const t8_dtri_t * t)
+{
+    int i;
+    t8_dpyramid_cube_id_t cid = 0;
+    t8_dpyramid_coord_t h = T8_DTRI_LEN(t->level);
+    int id, type = t->type, check = (t->type == 0)? 1:0;
+    for(i = t->level; i > 0; i--)
+    {
+        cid |= ((t->x & h) ? 0x01 : 0);
+        cid |= ((t->y & h) ? 0x02 : 0);
+        id = t8_dtri_type_cid_to_beyid[type][cid];
+        t8_debugf("[D] id is: %i\n", id);
+        if(id == 3){
+            check ++;
+            if(check == 2){
+                return 0;
+            }
+        }
+
+        type = t8_dtri_cid_type_to_parenttype[cid][type];
+        cid = 0;
+        h = h >> 1;
+    }
+    t8_debugf("[D] is inside pyra\n");
+    return 1;
 }
 
 int
 t8_dpyramid_extrude_face(const t8_element_t * face, t8_dpyramid_t * p, int root_face)
 {
+    T8_ASSERT(0 <= root_face && root_face < T8_DPYRAMID_FACES);
+    int p_face;
     if(root_face == 4){
         p4est_quadrant_t *q = (p4est_quadrant_t *) face;
         p->x = ((int64_t)q->x * T8_DPYRAMID_ROOT_LEN) / P4EST_ROOT_LEN;
@@ -810,9 +866,11 @@ t8_dpyramid_extrude_face(const t8_element_t * face, t8_dpyramid_t * p, int root_
         p->z = 0;
         p->type = T8_DPYRAMID_ROOT_TPYE;
         p->level = q->level;
+        return root_face;
     }
     else{
        t8_dtri_t   *t = (t8_dtri_t *) face;
+       t8_debugf("[D] e-in: %i %i %i, rf: %i\n", t->x, t->y, t->type, root_face);
        p->z = ((int64_t)t->y * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
        p->level = t->level;
        switch (root_face) {
@@ -822,21 +880,35 @@ t8_dpyramid_extrude_face(const t8_element_t * face, t8_dpyramid_t * p, int root_
            break;
        case 1:
            p->x = T8_DPYRAMID_ROOT_LEN - T8_DPYRAMID_LEN(p->level);
-           p->y = ((int64_t)t->y * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+           p->y = ((int64_t)t->x * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
            break;
        case 2:
-           p->x = ((int64_t)t->y * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+           p->x = ((int64_t)t->x * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
            p->y = p->z;
            break;
        case 3:
-           p->x = ((int64_t)t->y * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+           p->x = ((int64_t)t->x * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
            p->y = T8_DPYRAMID_ROOT_LEN - T8_DPYRAMID_LEN(p->level);
            break;
        default:
            SC_ABORT_NOT_REACHED();
        }
        /*TODO: type-computation for p!*/
+       if(t8_dpyramid_extrude_in_pyra(t)){
+           t8_debugf("[D] extrude to: pyra\n");
+           p->type = t8_dpyramid_tritype_rootface_to_pyratype[t->type][root_face];
+           p_face = root_face;
+       }
+       else{
+           t8_debugf("[D] extrude to: tet\n");
+           p->type = t8_dpyramid_tritype_rootface_to_tettype[t->type][root_face];
+           p_face = t8_dpyramid_tritype_rootface_to_face[t->type][root_face];
+       }
     }
+    t8_debugf("[D] e-face: %i %i %i %i %i\n", p->x, p->y, p->z, p->type, p->level);
+    t8_debugf("[D]\n");
+    /*return the face-number of the extruded face*/
+    return p_face;
 }
 
 int
