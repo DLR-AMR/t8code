@@ -62,6 +62,7 @@ t8_cmesh_from_t;
 /* Definitions for attribute identifiers that are reserved 
  * for a special purpose. */
 #define T8_CMESH_VERTICES_ATTRIBUTE_KEY 0       /* Used to store vertex coordinates. */
+#define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY 1       /* Used to store the name of a tree's geometry. */
 
 /** This structure holds the connectivity data of the coarse mesh.
  *  It can either be replicated, then each process stores a copy of the whole

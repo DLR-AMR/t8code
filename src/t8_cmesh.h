@@ -31,6 +31,12 @@
 #include <t8_data/t8_shmem.h>
 #include <t8_cmesh/t8_cmesh_save.h>
 #include <t8_element.h>
+
+/* Forward pointer reference to hidden cmesh implementation.
+ * This reference needs to be known by t8_geometry, hence we 
+ * put it before the include. */
+typedef struct t8_cmesh *t8_cmesh_t;
+
 #include <t8_geometry/t8_geometry.h>
 
 /* TODO: If including eclass were just for the cmesh_new routines, we should
@@ -51,7 +57,8 @@
  *       edit: This should be achieved now.
  */
 
-typedef struct t8_cmesh *t8_cmesh_t;
+/* Forward pointer references to hidden implementations of
+ * tree and ghost tree. */
 typedef struct t8_ctree *t8_ctree_t;
 typedef struct t8_cghost *t8_cghost_t;
 
@@ -365,7 +372,18 @@ void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
 /* TODO: comment */
 void                t8_cmesh_register_geometry (t8_cmesh_t cmesh,
-                                                t8_geometry_c * geometry);
+                                                const t8_geometry_c *
+                                                geometry);
+
+/** Set the geometry for a tree, thus specify which geometry to use for this tree.
+ * \param [in] cmesh     A non-committed cmesh.
+ * \param [in] gtreeid   A global tree id in \a cmesh.
+ * \param [in] geom_name The name of the geometry to use for this tree.
+ * See also \ref t8_cmesh_get_tree_geometry
+ */
+void                t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh,
+                                                t8_gloidx_t gtreeid,
+                                                const char *geom_name);
 
 /** After allocating and adding properties to a cmesh, finish its construction.
  * TODO: this function is MPI collective.
@@ -440,6 +458,10 @@ t8_locidx_t         t8_cmesh_get_num_ghosts (t8_cmesh_t cmesh);
  * \a cmesh must be committed before calling this function.
  */
 t8_gloidx_t         t8_cmesh_get_first_treeid (t8_cmesh_t cmesh);
+
+/* TODO: Comment */
+const t8_geometry_c *t8_cmesh_get_tree_geometry (t8_cmesh_t cmesh,
+                                                 t8_gloidx_t gtreeid);
 
 /** Query whether a given t8_locidx_t belongs to a local tree of a cmesh.
  * \param [in] cmesh       The cmesh to be considered.
