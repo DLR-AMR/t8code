@@ -300,6 +300,22 @@ void                t8_cmesh_set_attribute (t8_cmesh_t cmesh,
                                             void *data, size_t data_size,
                                             int data_persists);
 
+/** Store a string as an attribute at a trree in a cmesh.
+ * \param [in, out] cmesh       The cmesh to be updated.
+ * \param [in]      tree_id     The global id of the tree.
+ * \param [in]      package_id  Unique identifier of a valid software package. \see sc_package_register
+ * \param [in]      key         An integer key used to identify this attribute under all
+ *                              attributes with the same package_id.
+ *                              \a key must be a unique value for this tree and package_id.
+ * \param [in]      string      The string to store as attribute.
+ * \note You can also use \ref t8_cmesh_set_attribute, but we recommend using this
+ *       specialized function for strings.
+ */
+void                t8_cmesh_set_attribute_string (t8_cmesh_t cmesh,
+                                                   t8_gloidx_t gtree_id,
+                                                   int package_id, int key,
+                                                   const char *string);
+
 /** Insert a face-connection between two trees in a cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     tree1        The tree id of the first of the two trees.

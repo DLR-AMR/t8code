@@ -504,6 +504,20 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
                           data, data_persists);
 }
 
+void
+t8_cmesh_set_attribute_string (t8_cmesh_t cmesh, t8_gloidx_t gtree_id,
+                               int package_id, int key, const char *string)
+{
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (!cmesh->committed);
+
+  /* The size is the string's length + the terminating '\0' */
+  size_t              size = strlen (string) + 1;
+  /* Add the string as an attribute. */
+  t8_cmesh_set_attribute (cmesh, gtree_id, package_id, key, (void *) string,
+                          size, 0);
+}
+
 double             *
 t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltreeid)
 {
