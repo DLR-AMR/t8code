@@ -452,8 +452,8 @@ t8_cmesh_msh_file_read_eles (t8_cmesh_t cmesh, FILE * fp,
                    (eclass, tree_vertices, num_nodes));
       }                         /* End of negative volume handling */
       /* Set the vertices of this tree */
-      t8_cmesh_set_tree_vertices (cmesh, tree_count, t8_get_package_id (),
-                                  0, tree_vertices, num_nodes);
+      t8_cmesh_set_tree_vertices (cmesh, tree_count, tree_vertices,
+                                  num_nodes);
       /* If wished, we store the vertex indices of that tree. */
       if (vertex_indices != NULL) {
         /* Allocate memory for the inices */

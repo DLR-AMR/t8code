@@ -59,6 +59,10 @@ typedef enum t8_cmesh_from
 t8_cmesh_from_t;
 #endif
 
+/* Definitions for attribute identifiers that are reserved 
+ * for a special purpose. */
+#define T8_CMESH_VERTICES_ATTRIBUTE_KEY 0       /* Used to store vertex coordinates. */
+
 /** This structure holds the connectivity data of the coarse mesh.
  *  It can either be replicated, then each process stores a copy of the whole
  *  mesh, or partitioned. In the latter case, each process only stores a local

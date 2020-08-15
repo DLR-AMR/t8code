@@ -269,9 +269,6 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
  *  associated to the tree.
  *  Each application can set multiple attributes and attributes are distinguished
  *  by an interger key, where each application can use any integer as key.
- *  TODO: What to do if attribute exists already?
- *        update: Just replace the existing attribute. Our philosophy is that
- *                it is legal to call set functions multiple times.
  *
  * \param [in, out] cmesh       The cmesh to be updated.
  * \param [in]      tree_id     The global id of the tree.
@@ -288,6 +285,7 @@ void                t8_cmesh_set_tree_class (t8_cmesh_t cmesh,
  *                              If the flag is false an internal copy of the data is created
  *                              immediately and this copy is used at commit.
  *                              In both cases a copy of the data is used by t8_code after t8_cmesh_commit.
+ * \note If an attribute with the given package_id and key already exists, then it will get overwritten.
  */
 void                t8_cmesh_set_attribute (t8_cmesh_t cmesh,
                                             t8_gloidx_t gtree_id,
@@ -612,7 +610,7 @@ double             *t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh,
  *                              attributes of this tree with the same \a package_id.
  * \param [in]     tree_id      The local number of the tree.
  * \param [out]    data_size    The size of the attribute in bytes.
- * \return         The attribute pointer of the tree \a tree_id.
+ * \return         The attribute pointer of the tree \a ltree_id or NULL if the attribute is not found.
  * \a cmesh must be committed before calling this function.
  * \see t8_cmesh_set_attribute
  */
