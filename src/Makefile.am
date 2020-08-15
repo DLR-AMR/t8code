@@ -42,7 +42,6 @@ libt8_compiled_sources = \
   src/t8_cmesh/t8_cmesh_offset.c src/t8_cmesh/t8_cmesh_readmshfile.c \
   src/t8_forest/t8_forest.c src/t8_forest/t8_forest_adapt.cxx \
   src/t8_geometry/t8_geometry.cxx \
-  src/t8_geometry/t8_geometry_base.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_identity.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.cxx \
   src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest_cxx.cxx \
