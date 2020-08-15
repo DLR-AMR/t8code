@@ -28,7 +28,7 @@ t8_geometry_identity::t8_geometry_identity (int dim)
   size_t              num_chars = 100;
   char               *name_tmp = T8_ALLOC (char, num_chars);
 
-  snprintf (name_tmp, num_chars, "t8_geom_identity_%i", dimension);
+  snprintf (name_tmp, num_chars, "t8_geom_identity_%i", dim);
   name = name_tmp;
   dimension = dim;
 }
@@ -43,17 +43,23 @@ t8_geometry_identity::~t8_geometry_identity ()
  * \param [in]  ltree_id    The local tree (of the cmesh) in which the reference point is.
  * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
  * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
- * \note Since this is the identity geometry, \a out_coords will be equal to \a ref_coords.
+ * \note Since this is the identity geometry, \a out_coords will be equal to \a ref_coords in
+ *       the first d entries and 0 in the remaining 3-d entries.
  */
 void
-t8_geometry_identity::t8_geom_evaluate (t8_locidx_t ltree_id,
+t8_geometry_identity::t8_geom_evaluate (t8_gloidx_t ltree_id,
                                         const double *ref_coords,
-                                        double out_coords[3])
+                                        double out_coords[3]) const
 {
   int                 idim;
 
+  /* Copy the first dim coordinates. */
   for (idim = 0; idim < dimension; ++idim) {
     out_coords[idim] = ref_coords[idim];
+  }
+  /* Set the remaining coordinates to 0 */
+  for (; idim < 3; ++idim) {
+    out_coords[idim] = 0;
   }
 }
 
@@ -66,9 +72,9 @@ t8_geometry_identity::t8_geom_evaluate (t8_locidx_t ltree_id,
  * \note Since this is the identity geometry, the jacobian will be the identity matrix.
  */
 void
-t8_geometry_identity::t8_geom_evalute_jacobian (t8_locidx_t ltree_id,
+t8_geometry_identity::t8_geom_evalute_jacobian (t8_gloidx_t ltree_id,
                                                 const double *ref_coords,
-                                                double *jacobian)
+                                                double *jacobian) const
 {
   int                 idim;
 

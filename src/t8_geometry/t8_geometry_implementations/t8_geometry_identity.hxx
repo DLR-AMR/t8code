@@ -48,11 +48,12 @@ public:
    * \param [in]  ltree_id    The local tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
-   * \note Since this is the identity geometry, \a out_coords will be equal to \a ref_coords.
+   * \note Since this is the identity geometry, \a out_coords will be equal to \a ref_coords in
+ *       the first d entries and 0 in the remaining 3-d entries.
    */
-  virtual void        t8_geom_evaluate (t8_locidx_t ltree_id,
+  virtual void        t8_geom_evaluate (t8_gloidx_t ltree_id,
                                         const double *ref_coords,
-                                        double out_coords[3]);
+                                        double out_coords[3]) const;
 
   /**
    * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space $$[0,1]^dimension$$.
@@ -65,35 +66,15 @@ public:
    * dim 1: J = (0)   dim 2: J = (0 1)  dim 3: J = (0 1 0)
    *            (0)              (0 0)             (0 0 1)
    */
-  virtual void        t8_geom_evalute_jacobian (t8_locidx_t ltree_id,
+  virtual void        t8_geom_evalute_jacobian (t8_gloidx_t ltree_id,
                                                 const double *ref_coords,
-                                                double *jacobian);
+                                                double *jacobian) const;
 
-  /**
-   * Get the dimension of this geometry.
-   * \return The dimension.
-   */
-  int                 t8_geom_get_dimension ()
+  virtual inline void t8_geom_load_tree_data (t8_cmesh_t cmesh,
+                                              t8_gloidx_t gtreeid) const
   {
-    return dimension;
+    /* This geometry does not need any data. */
   }
-
-  /**
-   * Get the name of this geometry.
-   * \return The name.
-   */
-  const char         *t8_geom_get_name ()
-  {
-    return name;
-  }
-
-private:
-
-  int                 dimension;
-                 /**< The dimension of reference space for which this is a geometry. */
-
-  const char         *name;
-                    /**< The name of this geometry. */
 };
 
 #endif /* !T8_GEOMETRY_IDENTITY_HXX! */
