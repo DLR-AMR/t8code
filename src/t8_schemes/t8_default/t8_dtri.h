@@ -44,8 +44,7 @@ T8_EXTERN_C_BEGIN ();
 #define T8_DTRI_CORNERS 3
 
 /** The maximum refinement level allowed for a triangle. */
-/*29*/
-#define T8_DTRI_MAXLEVEL 7
+#define T8_DTRI_MAXLEVEL 29
 
 /** The length of the root triangle in integer coordinates. */
 #define T8_DTRI_ROOT_LEN (1 << (T8_DTRI_MAXLEVEL))
