@@ -91,3 +91,17 @@ t8_geometry_identity::t8_geom_evalute_jacobian (t8_gloidx_t ltree_id,
     }
   }
 }
+
+/* This part should be callable from C */
+T8_EXTERN_C_BEGIN ();
+
+/* Satisfy the C interface from t8_geometry_identity.h.
+ * Create a new geometry with given dimension. */
+t8_geometry_c      *
+t8_geometry_identitiy_new (int dimension)
+{
+  t8_geometry_identity *geom = new t8_geometry_identity (dimension);
+  return (t8_geometry_c *) geom;
+}
+
+T8_EXTERN_C_END ();
