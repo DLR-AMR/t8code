@@ -247,8 +247,7 @@ t8_geom_handler_find_geometry (const t8_geometry_handler_t * geom_handler,
     return NULL;
   }
   /* The geometry was found, return it. */
-  return *(t8_geometry_c **) sc_array_index_ssize_t (geometries,
-                                                           found_index);
+  return *(t8_geometry_c **) sc_array_index_ssize_t (geometries, found_index);
 }
 
 static inline void
