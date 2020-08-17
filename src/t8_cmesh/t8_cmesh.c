@@ -1641,7 +1641,11 @@ t8_cmesh_new_vertex (sc_MPI_Comm comm)
   double              vertices[3] = {
     0, 0, 0
   };
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (0);
+
   t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_VERTEX);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 1);
   t8_cmesh_commit (cmesh, comm);
@@ -1656,7 +1660,11 @@ t8_cmesh_new_line (sc_MPI_Comm comm)
     0, 0, 0,
     1, 0, 0
   };
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (1);
+
   t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_LINE);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 2);
   t8_cmesh_commit (cmesh, comm);
@@ -1672,7 +1680,11 @@ t8_cmesh_new_tri (sc_MPI_Comm comm)
     1, 0, 0,
     1, 1, 0
   };
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (2);
+
   t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 3);
   t8_cmesh_commit (cmesh, comm);
@@ -1689,7 +1701,11 @@ t8_cmesh_new_tet (sc_MPI_Comm comm)
     -1, 1, -1,
     -1, -1, 1
   };
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
+
   t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 4);
   t8_cmesh_commit (cmesh, comm);
@@ -1706,7 +1722,11 @@ t8_cmesh_new_quad (sc_MPI_Comm comm)
     0, 1, 0,
     1, 1, 0,
   };
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (2);
+
   t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 4);
   t8_cmesh_commit (cmesh, comm);
@@ -1727,7 +1747,11 @@ t8_cmesh_new_hex (sc_MPI_Comm comm)
     0, 1, 1,
     1, 1, 1
   };
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
+
   t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 8);
   t8_cmesh_commit (cmesh, comm);
@@ -1741,7 +1765,11 @@ t8_cmesh_new_pyramid (sc_MPI_Comm comm)
   double              vertices[15] = {
     -1, -1, 0, 1, -1, 0, -1, 1, 0, 1, 1, 0, 0, 0, sqrt (2)
   };
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
+
   t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 15);
   t8_cmesh_commit (cmesh, comm);
@@ -1760,7 +1788,11 @@ t8_cmesh_new_prism (sc_MPI_Comm comm)
     1, 0, 1,
     1, 1, 1
   };
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
+
   t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PRISM);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 6);
   t8_cmesh_commit (cmesh, comm);

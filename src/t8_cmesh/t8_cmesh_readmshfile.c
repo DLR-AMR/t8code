@@ -23,6 +23,7 @@
 #include <t8_eclass.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_stash.h"
 
@@ -750,6 +751,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   char                current_file[BUFSIZ];
   FILE               *file;
   t8_gloidx_t         num_trees, first_tree, last_tree = -1;
+  t8_geometry_c      *geom_linear = t8_geometry_linear_new (dim);
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -763,6 +765,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
 
   /* initialize cmesh structure */
   t8_cmesh_init (&cmesh);
+  /* We will use linear geometry. */
+  t8_cmesh_register_geometry (cmesh, geom_linear);
   /* Setting the dimension by hand is neccessary for partitioned
    * commit, since there are process without any trees. So the cmesh would
    * not know its dimension on these processes. */
