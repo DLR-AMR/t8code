@@ -533,9 +533,9 @@ t8_forest_partition_fill_buffer (t8_forest_t forest_from,
                                               *current_tree,
                                               &first_tree_element,
                                               &last_tree_element);
-    SC_CHECK_ABORT (tree->eclass != T8_ECLASS_PYRAMID,
+    /*SC_CHECK_ABORT (tree->eclass != T8_ECLASS_PYRAMID,
                     "Forest partition"
-                    " is not implement for pyramidal elements.");
+                    " is not implement for pyramidal elements.");*/
     /* We now know how many elements this tree will send */
     num_elements_send = last_tree_element - first_tree_element + 1;
     T8_ASSERT (num_elements_send > 0);

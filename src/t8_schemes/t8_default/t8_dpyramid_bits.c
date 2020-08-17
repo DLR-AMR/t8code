@@ -768,15 +768,20 @@ void
 t8_dpyramid_boundary_face(const t8_dpyramid_t * p, int face,
                           t8_element_t * boundary)
 {
-    /*face is face of root, or face of p??? DOCUMENTATION!!!*/
+    /*face is face of of p*/
     T8_ASSERT(0 <= face && face < T8_DPYRAMID_FACES);
     if(face == 4){
+        /*On the bottom every face is a quad*/
+        /*Coordinates are scaled, because quad and pyra might have different root-len*/
         p4est_quadrant_t *q = (p4est_quadrant_t *) boundary;
         q->x = ((int64_t)p->x * P4EST_ROOT_LEN) / T8_DPYRAMID_ROOT_LEN;
         q->y = ((int64_t)p->y * P4EST_ROOT_LEN) / T8_DPYRAMID_ROOT_LEN;
         q->level = p->level;
     }
     else{
+        /* Boundary-face is a triangle.*/
+        /* p-x give t->x for root-face 2,3 and p->y gives t->x for 0,1.
+         * t->y is determined by p->z*/
         t8_dtri_t   *t = (t8_dtri_t *) boundary;
         t->level = p->level;
         t->y = p->z * T8_DTRI_ROOT_BY_DPYRAMID_ROOT;
@@ -800,6 +805,8 @@ t8_dpyramid_boundary_face(const t8_dpyramid_t * p, int face,
             }
         }
         else{
+            /*Boundary is given by a tet-surface. The cases are ordered by root-face-
+             * enumeration*/
             if((face == 1 && p->type == 0) || (face == 2 && p->type == 2)){
                 t->x = p->y * T8_DTRI_ROOT_BY_DPYRAMID_ROOT;
                 t->type = p->type == 0 ? 1 : 0;
@@ -823,21 +830,20 @@ t8_dpyramid_boundary_face(const t8_dpyramid_t * p, int face,
     }
 }
 
+/*test if the extruded triangle has a pyramid parent*/
 int
 t8_dpyramid_extrude_to_pyra(const t8_dtri_t * t)
 {
-    int i;
-    t8_dtri_coord_t h, len = T8_DTRI_LEN(1), x = 0,y = 0;
-    for(i = 1; i < t->level; i++){
-        x = x | (t->x & (1 << (T8_DTRI_MAXLEVEL - i)));
-        y = y | (t->y & (1 << (T8_DTRI_MAXLEVEL - i)));
-        h = t->y - y;
-        if(y <= t->y && t->y < y + len && x <= t->x && t->x < x + h)
-        {
-            return 0;
-        }
+    t8_dtri_coord_t x = 0,y = 0;
+    y = ~t->y;
+    x = t->x & y;
+    x = t->y + x;
+    if(x == t->x){
+        return 1;
     }
-    return 1;
+    else{
+        return 0;
+    }
 }
 
 int
@@ -846,6 +852,9 @@ t8_dpyramid_extrude_face(const t8_element_t * face, t8_dpyramid_t * p, int root_
     T8_ASSERT(0 <= root_face && root_face < T8_DPYRAMID_FACES);
     int p_face;
     if(root_face == 4){
+        /* Pyramids on the bottom are always type 6 pyramids at the bottom. We need to
+         * scale the coordinates, since a quad and a pyra can have different root-len,
+         * depending on their maxlvl.*/
         p4est_quadrant_t *q = (p4est_quadrant_t *) face;
         p->x = ((int64_t)q->x * T8_DPYRAMID_ROOT_LEN) / P4EST_ROOT_LEN;
         p->y = ((int64_t)q->y * T8_DPYRAMID_ROOT_LEN) / P4EST_ROOT_LEN;
@@ -855,8 +864,11 @@ t8_dpyramid_extrude_face(const t8_element_t * face, t8_dpyramid_t * p, int root_
         return root_face;
     }
     else{
+       /*t->y gives the height of the pyramid, t->x gives the p->x or p->y, depending on
+        * the root_face. The other coordinate is determined by the root_face.*/
        t8_dtri_t   *t = (t8_dtri_t *) face;
        p->z = ((int64_t)t->y * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+       /* level is the same*/
        p->level = t->level;
        switch (root_face) {
        case 0:
@@ -878,16 +890,18 @@ t8_dpyramid_extrude_face(const t8_element_t * face, t8_dpyramid_t * p, int root_
        default:
            SC_ABORT_NOT_REACHED();
        }
-       /*TODO: type-computation for p!*/
        if(t->type == 1){
+           /*type one tri always extend to a tetrahedron*/
            p->type = t8_dpyramid_tritype_rootface_to_tettype[t->type][root_face];
            p_face = t8_dpyramid_tritype_rootface_to_face[t->type][root_face];
        }
        else if(t8_dpyramid_extrude_to_pyra(t) == 1 && t->type == 0){
+           /*type zero in a pyramid extend to a pyramid*/
            p->type = t8_dpyramid_tritype_rootface_to_pyratype[t->type][root_face];
            p_face = root_face;
        }
        else{
+           /*type 0 not in a pyramid extend to a tetrahedron*/
            p->type = t8_dpyramid_tritype_rootface_to_tettype[t->type][root_face];
            p_face = t8_dpyramid_tritype_rootface_to_face[t->type][root_face];
        }
