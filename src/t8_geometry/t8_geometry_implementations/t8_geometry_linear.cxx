@@ -105,7 +105,6 @@ t8_geometry_linear::t8_geom_evaluate (t8_gloidx_t ltree_id,
     }
     break;
   case T8_ECLASS_QUAD:
-    T8_ASSERT (ref_coords[2] == 0);
   case T8_ECLASS_HEX:
     t8_geom_bilinear_interpolation (ref_coords,
                                     active_tree_vertices, dimension,
@@ -115,7 +114,6 @@ t8_geometry_linear::t8_geom_evaluate (t8_gloidx_t ltree_id,
     SC_ABORT ("Linear geometry coordinate computation is supported only for "
               "vertices/lines/triangles/tets/quads/prisms/hexes.");
   }
-  SC_ABORT ("Not implemented.");
 }
 
 /**
@@ -144,6 +142,8 @@ t8_geometry_linear::t8_geom_load_tree_data (t8_cmesh_t cmesh,
   active_tree_class = t8_cmesh_get_tree_class (cmesh, ltreeid);
   /* Load this trees vertices. */
   active_tree_vertices = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
+
+  T8_ASSERT (t8_eclass_to_dimension[active_tree_class] == dimension);
 
   /* Check whether we support this class */
   T8_ASSERT (active_tree_class == T8_ECLASS_VERTEX
