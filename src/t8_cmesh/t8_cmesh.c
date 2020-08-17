@@ -960,6 +960,8 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 
   /* At first we broadcast all meta information. */
   if (mpirank == root) {
+    SC_CHECK_ABORT (cmesh_in->geometry_handler == NULL,
+                    "Broadcast of geom handler not implemented\n");
     memcpy (&meta_info.cmesh, cmesh_in, sizeof (*cmesh_in));
     for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
       meta_info.num_trees_per_eclass[iclass] =
