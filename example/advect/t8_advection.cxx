@@ -257,7 +257,6 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   t8_advect_problem_t *problem;
   t8_advect_element_data_t *elem_data;
   double              band_width, elem_diam;
-  double             *tree_vertices;
   int                 level;
   t8_locidx_t         offset;
   double              phi;
@@ -292,10 +291,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
 
   /* Refine if close to levelset, coarsen if not */
   band_width = problem->band_width;
-  tree_vertices = t8_forest_get_tree_vertices (forest_from, ltree_id);
-  elem_diam =
-    t8_forest_element_diam (forest_from, ltree_id, elements[0],
-                            tree_vertices);
+  elem_diam = t8_forest_element_diam (forest_from, ltree_id, elements[0]);
   if (fabs (phi) > 2 * band_width * elem_diam) {
     /* coarsen if this is a family and level is not too small */
     return -(num_elements > 1 && level > problem->level);
@@ -474,8 +470,7 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
                        double el_plus_phi,
                        double el_minus_phi,
                        t8_locidx_t ltreeid,
-                       const t8_element_t * element_plus,
-                       const double *tree_vertices, int face)
+                       const t8_element_t * element_plus, int face)
 {
   double              face_center[3];
   double              u_at_face_center[3];
@@ -490,16 +485,16 @@ t8_advect_flux_upwind (const t8_advect_problem_t * problem,
 
   /* Compute the center coordinate of the face */
   t8_forest_element_face_centroid (problem->forest, ltreeid, element_plus,
-                                   face, tree_vertices, face_center);
+                                   face, face_center);
   /* Compute u at the face center. */
   problem->u (face_center, problem->t, u_at_face_center);
   /* Compute the normal of the element at this face */
   t8_forest_element_face_normal (problem->forest, ltreeid, element_plus,
-                                 face, tree_vertices, normal);
+                                 face, normal);
   /* Compute the area of the face */
   area =
     t8_forest_element_face_area (problem->forest, ltreeid, element_plus,
-                                 face, tree_vertices);
+                                 face);
 
   /* Compute the dot-product of u and the normal vector */
   normal_times_u = t8_vec_dot (normal, u_at_face_center);
@@ -553,8 +548,7 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
                                t8_locidx_t iel_hang,
                                t8_locidx_t ltreeid,
                                t8_element_t * element_hang,
-                               const double *tree_vertices, int face,
-                               int adapted_or_partitioned)
+                               int face, int adapted_or_partitioned)
 {
   int                 i, num_face_children, child_face;
   t8_eclass_scheme_c *ts;
@@ -598,7 +592,7 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
     /* Compute the flux */
     el_hang->fluxes[face][i] =
       t8_advect_flux_upwind (problem, phi_plus, phi_minus, ltreeid,
-                             face_children[i], tree_vertices, child_face);
+                             face_children[i], child_face);
     // if (a == 1) printf  ("%i %i %f\n",face, i, el_hang->fluxes[face][i]);
     /* Set the flux of the neighbor element */
     dual_face = el_hang->dual_faces[face][i];
@@ -739,30 +733,19 @@ t8_advect_advance_element (t8_advect_problem_t * problem,
 #endif
 }
 
-/* Compute element midpoint and vol and store at element_data field.
- * tree_vertices can be NULL, if not it should point to the vertex coordinates of the tree */
+/* Compute element midpoint and vol and store at element_data field. */
 static void
 t8_advect_compute_element_data (t8_advect_problem_t * problem,
                                 t8_advect_element_data_t * elem_data,
                                 t8_element_t * element,
-                                t8_locidx_t ltreeid,
-                                t8_eclass_scheme_c * ts,
-                                const double *tree_vertices)
+                                t8_locidx_t ltreeid, t8_eclass_scheme_c * ts)
 {
-  if (tree_vertices == NULL) {
-    /* Get the vertices of the coarse tree */
-    tree_vertices =
-      t8_cmesh_get_tree_vertices (t8_forest_get_cmesh (problem->forest),
-                                  t8_forest_ltreeid_to_cmesh_ltreeid
-                                  (problem->forest, ltreeid));
-  }
   /* Compute the midpoint coordinates of element */
   t8_forest_element_centroid (problem->forest, ltreeid, element,
-                              tree_vertices, elem_data->midpoint);
+                              elem_data->midpoint);
   /* Compute the length of this element */
   elem_data->vol =
-    t8_forest_element_volume (problem->forest, ltreeid, element,
-                              tree_vertices);
+    t8_forest_element_volume (problem->forest, ltreeid, element);
 }
 
 /* Replace callback to decide how to interpolate a refined or coarsened element.
@@ -838,7 +821,7 @@ t8_advect_replace (t8_forest_t forest_old,
                                        first_incoming + i);
       /* Compute midpoint and vol of the new element */
       t8_advect_compute_element_data (problem, elem_data_in + i, element,
-                                      which_tree, ts, NULL);
+                                      which_tree, ts);
       t8_advect_element_set_phi_adapt (problem, first_incoming_data + i,
                                        phi_old);
       /* Set the neighbor entries to uninitialized */
@@ -867,7 +850,7 @@ t8_advect_replace (t8_forest_t forest_old,
                                      first_incoming);
     /* Compute midpoint and vol of the new element */
     t8_advect_compute_element_data (problem, elem_data_in, element,
-                                    which_tree, ts, NULL);
+                                    which_tree, ts);
 
     /* Compute average of phi */
     for (i = 0; i < num_outgoing; i++) {
@@ -1261,7 +1244,6 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
   int                 iface, ineigh;
   t8_advect_element_data_t *elem_data;
   t8_eclass_scheme_c *ts, *neigh_scheme;
-  double             *tree_vertices;
   double              speed, max_speed = 0, min_diam =
     -1, delta_t, min_delta_t;
   double              u[3];
@@ -1278,20 +1260,15 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
                                                              itree));
     num_elems_in_tree =
       t8_forest_get_tree_num_elements (problem->forest, itree);
-    /* TODO: A forest get tree vertices function */
-    tree_vertices = t8_forest_get_tree_vertices (problem->forest, itree);
     for (ielement = 0; ielement < num_elems_in_tree; ielement++, idata++) {
       element =
         t8_forest_get_element_in_tree (problem->forest, itree, ielement);
       elem_data = (t8_advect_element_data_t *)
         t8_sc_array_index_locidx (problem->element_data, idata);
       /* Initialize the element's midpoint and volume */
-      t8_advect_compute_element_data (problem, elem_data, element, itree,
-                                      ts, tree_vertices);
+      t8_advect_compute_element_data (problem, elem_data, element, itree, ts);
       /* Compute the minimum diameter */
-      diam =
-        t8_forest_element_diam (problem->forest, itree, element,
-                                tree_vertices);
+      diam = t8_forest_element_diam (problem->forest, itree, element);
       T8_ASSERT (diam > 0);
       min_diam = min_diam < 0 ? diam : SC_MIN (min_diam, diam);
       /* Compute the maximum velocity */
@@ -1503,7 +1480,6 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
   t8_advect_element_data_t *elem_data, *neigh_data = NULL;
   double              flux;
   double              l_infty, L_2;
-  double             *tree_vertices;
   int                 modulus, time_steps;
   int                 num_faces;
   int                 done = 0;
@@ -1587,8 +1563,6 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     for (itree = 0, lelement = 0;
          itree < t8_forest_get_num_local_trees (problem->forest); itree++) {
       /* tree loop */
-      /* Get the vertices of this tree */
-      tree_vertices = t8_forest_get_tree_vertices (problem->forest, itree);
       /* Get the scheme of this tree */
       for (ielement = 0;
            ielement < t8_forest_get_tree_num_elements (problem->forest,
@@ -1704,7 +1678,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                 phi_minus = t8_advect_element_get_phi (problem, neigh_index);
                 flux =
                   t8_advect_flux_upwind (problem, phi_plus, phi_minus,
-                                         itree, elem, tree_vertices, iface);
+                                         itree, elem, iface);
 
                 elem_data->flux_valid[iface] = 1;
                 elem_data->fluxes[iface][0] = flux;
@@ -1728,7 +1702,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
               else if (elem_data->num_neighbors[iface] > 1) {
                 flux =
                   t8_advect_flux_upwind_hanging (problem, lelement, itree,
-                                                 elem, tree_vertices, iface,
+                                                 elem, iface,
                                                  adapted_or_partitioned);
               }
               else {
@@ -1739,7 +1713,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 
                 flux =
                   t8_advect_flux_upwind (problem, phi_plus, phi_minus,
-                                         itree, elem, tree_vertices, iface);
+                                         itree, elem, iface);
 
                 elem_data->flux_valid[iface] = 1;
                 elem_data->fluxes[iface][0] = flux;

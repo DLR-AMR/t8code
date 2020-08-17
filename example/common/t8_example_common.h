@@ -67,7 +67,6 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]      ltreeid     A local tree in \a forest.
  * \param [in]      element     An element of tree \a ltreeid in \a forest.
  * \param [in]      ts          The scheme for \a element.
- * \param [in]      tree_vertices Array of vertex coordinates for the tree.
  * \param [in]      levelset    The level-set function.
  * \param [in]      band_width  Check whether the element is within a band of
  *                              \a band_width many elements of its size.
@@ -83,7 +82,6 @@ int                 t8_common_within_levelset (t8_forest_t forest,
                                                t8_locidx_t ltreeid,
                                                t8_element_t * element,
                                                t8_eclass_scheme_c * ts,
-                                               const double *tree_vertices,
                                                t8_example_level_set_fn
                                                levelset, double band_width,
                                                double t, void *udata);
