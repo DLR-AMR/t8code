@@ -49,7 +49,7 @@ t8_geometry_linear::~t8_geometry_linear ()
 void
 t8_geometry_linear::t8_geom_evaluate (t8_gloidx_t ltree_id,
                                       const double *ref_coords,
-                                      double out_coords[3]) const
+                                      double out_coords[3])
 {
   SC_ABORT ("Not implemented.");
 }
@@ -65,14 +65,14 @@ t8_geometry_linear::t8_geom_evaluate (t8_gloidx_t ltree_id,
 void
 t8_geometry_linear::t8_geom_evalute_jacobian (t8_gloidx_t ltree_id,
                                               const double *ref_coords,
-                                              double *jacobian) const
+                                              double *jacobian)
 {
   SC_ABORT ("Not implemented.");
 }
 
 inline void
 t8_geometry_linear::t8_geom_load_tree_data (t8_cmesh_t cmesh,
-                                            t8_gloidx_t gtreeid) const
+                                            t8_gloidx_t gtreeid)
 {
   /* Set active id and eclass */
   t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
