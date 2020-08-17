@@ -830,22 +830,6 @@ t8_dpyramid_boundary_face(const t8_dpyramid_t * p, int face,
     }
 }
 
-/*test if the extruded triangle has a pyramid parent*/
-int
-t8_dpyramid_extrude_to_pyra(const t8_dtri_t * t)
-{
-    t8_dtri_coord_t x = 0,y = 0;
-    y = ~t->y;
-    x = t->x & y;
-    x = t->y + x;
-    if(x == t->x){
-        return 1;
-    }
-    else{
-        return 0;
-    }
-}
-
 int
 t8_dpyramid_extrude_face(const t8_element_t * face, t8_dpyramid_t * p, int root_face)
 {
@@ -895,7 +879,8 @@ t8_dpyramid_extrude_face(const t8_element_t * face, t8_dpyramid_t * p, int root_
            p->type = t8_dpyramid_tritype_rootface_to_tettype[t->type][root_face];
            p_face = t8_dpyramid_tritype_rootface_to_face[t->type][root_face];
        }
-       else if(t8_dpyramid_extrude_to_pyra(t) == 1 && t->type == 0){
+       /*Description of triangles extruding to a pyramid*/
+       else if((t->y == (t->x & t->y)) && t->type == 0){
            /*type zero in a pyramid extend to a pyramid*/
            p->type = t8_dpyramid_tritype_rootface_to_pyratype[t->type][root_face];
            p_face = root_face;
