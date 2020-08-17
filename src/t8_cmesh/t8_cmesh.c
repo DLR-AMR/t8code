@@ -24,6 +24,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh_vtk.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_refcount.h>
 #include <t8_data/t8_shmem.h>
 #include <t8_vec.h>
@@ -1528,6 +1529,7 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim,
   int                 use_offset;
   int8_t              ttf;
   p4est_topidx_t      ttt;
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
 
   T8_ASSERT (dim == 2 || dim == 3);
   T8_ASSERT (dim == 3
@@ -1550,6 +1552,8 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim,
   num_faces = dim == 2 ? 4 : 6;
   /* basic setup */
   t8_cmesh_init (&cmesh);
+  /* We use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   /* Add each tree to cmesh and get vertex information for each tree */
   for (ltree = 0; ltree < _T8_CMESH_P48_CONN (num_trees); ltree++) {    /* loop over each tree */
     t8_cmesh_set_tree_class (cmesh, ltree + offset,
@@ -1865,6 +1869,7 @@ t8_cmesh_new_hypercube_hybrid (int dim, sc_MPI_Comm comm, int do_partition,
     0, 1, 1,
     1, 1, 1
   };
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
 
   t8_cmesh_init (&cmesh);
   /* This cmesh consists of 6 tets, 6 prisms and 3 hexes */
@@ -1878,6 +1883,8 @@ t8_cmesh_new_hypercube_hybrid (int dim, sc_MPI_Comm comm, int do_partition,
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_HEX);
   }
 
+  /* We use standard linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
     /************************************/
   /*  The tetrahedra                  */
     /************************************/
@@ -2096,6 +2103,8 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
     0, 1, 1,
     1, 1, 1
   };
+  int                 dim = t8_eclass_to_dimension[eclass];
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
 
   SC_CHECK_ABORT (eclass != T8_ECLASS_PYRAMID || !periodic,
                   "The pyramid cube mesh cannot be periodic.");
@@ -2104,6 +2113,8 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
   SC_CHECK_MPI (mpiret);
   if (!do_bcast || mpirank == 0) {
     t8_cmesh_init (&cmesh);
+    /* Use linear geometry */
+    t8_cmesh_register_geometry (cmesh, linear_geom);
     for (i = 0; i < num_trees_for_hypercube[eclass]; i++) {
       t8_cmesh_set_tree_class (cmesh, i, eclass);
     }
@@ -2309,8 +2320,11 @@ t8_cmesh_new_periodic_line_more_trees (sc_MPI_Comm comm)
     0.6, 0, 0,
     1, 0, 0
   };
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (1);
 
   t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_LINE);
   t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_LINE);
   t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_LINE);
@@ -2336,8 +2350,11 @@ t8_cmesh_new_periodic_tri (sc_MPI_Comm comm)
     0, 1, 0
   };
   t8_cmesh_t          cmesh;
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (2);
 
   t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
 
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
   t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
@@ -2376,6 +2393,7 @@ t8_cmesh_new_periodic_hybrid (sc_MPI_Comm comm)
     0.5, 1, 0
   };
   t8_cmesh_t          cmesh;
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (2);
 
   /*
    *  This is how the cmesh looks like. The numbers are the tree numbers:
@@ -2392,6 +2410,8 @@ t8_cmesh_new_periodic_hybrid (sc_MPI_Comm comm)
    */
 
   t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
   t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
   t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_QUAD);
@@ -2441,8 +2461,12 @@ t8_cmesh_new_periodic (sc_MPI_Comm comm, int dim)
     0, 1, 1,
     1, 1, 1
   };
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
+
   T8_ASSERT (dim == 1 || dim == 2 || dim == 3);
   t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   switch (dim) {
   case 1:
     tree_class = T8_ECLASS_LINE;
@@ -2503,7 +2527,11 @@ t8_cmesh_new_line_zigzag (sc_MPI_Comm comm)
     3, 2, 5
   };
   t8_cmesh_t          cmesh;
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (1);
+
   t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   for (i = 0; i < 3; i++) {
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_LINE);
   }
@@ -2530,6 +2558,7 @@ t8_cmesh_new_prism_cake (sc_MPI_Comm comm, int num_of_prisms)
   double             *vertices = T8_ALLOC (double, num_of_prisms * 6 * 3);
   t8_cmesh_t          cmesh;
   double              degrees = 360. / num_of_prisms;
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
 
   T8_ASSERT (num_of_prisms > 2);
 
@@ -2556,6 +2585,8 @@ t8_cmesh_new_prism_cake (sc_MPI_Comm comm, int num_of_prisms)
     }
   }
   t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   for (i = 0; i < num_of_prisms; i++) {
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PRISM);
   }
@@ -2584,7 +2615,11 @@ t8_cmesh_new_prism_deformed (sc_MPI_Comm comm)
     1.25, 0, 1,
     2, 2, 2
   };
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
+
   t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PRISM);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 6);
   t8_cmesh_commit (cmesh, comm);
@@ -2626,6 +2661,7 @@ t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_Comm comm)
   /*6 Prism a 6 vertices a 3 coords */
   double              vertices[108];
   t8_cmesh_t          cmesh;
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
 
   for (i = 0; i < 6; i++) {
     for (j = 0; j < 6; j++) {
@@ -2654,6 +2690,8 @@ t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_Comm comm)
   prism_rotate (vertices + 90, 2);
 
   t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   for (i = 0; i < 6; i++) {
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PRISM);
   }
@@ -2679,6 +2717,7 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
   /*8 Prism a 6 vertices a 3 coords */
   double              vertices[144];
   t8_cmesh_t          cmesh;
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
 
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 6; j++) {
@@ -2744,6 +2783,8 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
   prism_rotate (vertices + 72, 2);
 
   t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   for (i = 0; i < 8; i++) {
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PRISM);
   }
@@ -2872,8 +2913,11 @@ t8_cmesh_new_tet_orientation_test (sc_MPI_Comm comm)
   double              translated_coords[12];
   double              translate[3] = { 1, 0, 0 };
   const t8_gloidx_t   num_trees = 24;
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
 
   t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   /* A tet has 4 faces and each face connection has 3 possible orientations,
    * we thus have (4+3+2+1)*3 = 30 possible face-to-face combinations.
    * We use a cmesh of 24 tetrahedron trees. */
@@ -2948,8 +2992,11 @@ t8_cmesh_new_hybrid_gate (sc_MPI_Comm comm)
   t8_cmesh_t          cmesh;
   double              vertices[32];
   int                 i;
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
 
   t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);
   t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TET);
   t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_PRISM);
@@ -3070,8 +3117,11 @@ t8_cmesh_new_hybrid_gate_deformed (sc_MPI_Comm comm)
   t8_cmesh_t          cmesh;
   double              vertices[32];
   int                 i;
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
 
   t8_cmesh_init (&cmesh);
+  /* Use linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);
   t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TET);
   t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_PRISM);
