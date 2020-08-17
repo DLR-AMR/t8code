@@ -222,11 +222,37 @@ t8_geom_handler_commit (t8_geometry_handler_t * geom_handler)
   T8_ASSERT (t8_geom_handler_is_initialized (geom_handler));
   /* Must not be committed */
   T8_ASSERT (!t8_geom_handler_is_committed (geom_handler));
-  /* Sort the geometry array. */
-  sc_array_sort (&geom_handler->registered_geometries,
-                 t8_geom_handler_compare_names);
+  /* If we only have one geometry (which is a standard use case).
+   * We set this to be the active geometry and now that we will not
+   * have to look for any other geometry in t8_geom_handler_update_tree.
+   * If we have more than one geometry, we set the active geometry to
+   * NULL, sort the geometries array and will search for a tree's geometry
+   * if it is not the active one in t8_geom_handler_update_tree.
+   */
+  if (geom_handler->registered_geometries.elem_count == 1) {
+    /* Set the active geometry to the only geometry. */
+    /* *INDENT-OFF* */
+    geom_handler->active_geometry =
+      *(t8_geometry_c **)
+      sc_array_index (&geom_handler->registered_geometries, 0);
+    /* *INDENT-ON* */
+    t8_debugf ("active geom at %p is %s\n", geom_handler->active_geometry,
+               geom_handler->active_geometry->t8_geom_get_name ());
+  }
+  else {
+    /* Sort the geometry array. */
+    sc_array_sort (&geom_handler->registered_geometries,
+                   t8_geom_handler_compare_names);
+    /* Set the active geometry to NULL */
+    geom_handler->active_geometry = NULL;
+  }
+  /* Set the active tree to an invalid value such that
+   * the first call with any tree will trigger t8_geom_handler_update_tree. */
+  geom_handler->active_tree = -1;
   /* Set committed flag. */
   geom_handler->is_committed = 1;
+  /* Final Check that we are now committed. */
+  T8_ASSERT (t8_geom_handler_is_committed (geom_handler));
 }
 
 t8_geometry_c *
