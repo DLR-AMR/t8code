@@ -262,9 +262,15 @@ t8_geom_handler_update_tree (t8_geometry_handler_t * geom_handler,
      * active tree, its geometry and its data. */
     /* Set the new tree as active. */
     geom_handler->active_tree = gtreeid;
-    /* Get the geometry of that tree. */
-    geom_handler->active_geometry =
-      (t8_geometry_c *) t8_cmesh_get_tree_geometry (cmesh, gtreeid);
+    if (geom_handler->registered_geometries.elem_count > 1) {
+      /* Find and load the geometry of that tree. 
+       * Only necessary if we have more than one geometry. */
+      geom_handler->active_geometry =
+        (t8_geometry_c *) t8_cmesh_get_tree_geometry (cmesh, gtreeid);
+    }
+    SC_CHECK_ABORTF (geom_handler->active_geometry != NULL,
+                     "Could not find geometry for tree with global id %li.\n",
+                     gtreeid);
     /* Get the user data for this geometry and this tree. */
     geom_handler->active_geometry->t8_geom_load_tree_data (cmesh, gtreeid);
   }
@@ -284,6 +290,8 @@ t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
   /* Detect whether we call this function for the first time in a row for 
    * this tree and if so update the active tree and geometry. */
   t8_geom_handler_update_tree (geom_handler, cmesh, gtreeid);
+
+  T8_ASSERT (geom_handler->active_geometry != NULL);
 
   /* Evaluate the geometry. */
   geom_handler->active_geometry->t8_geom_evaluate (geom_handler->active_tree,
