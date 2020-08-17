@@ -33,6 +33,7 @@
 #include <t8_element_cxx.hxx>
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
+#include <t8_geometry/t8_geometry_base.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -186,39 +187,6 @@ t8_forest_is_equal (t8_forest_t forest_a, t8_forest_t forest_b)
   return 1;
 }
 
-/* Given function values at the four edge points of a unit square and
- * a point within that square, interpolate the function value at this point.
- * \param [in]    vertex  An array of size at least dim giving the coordinates of the vertex to interpolate
- * \param [in]    corner_values An array of size 2^dim * 3, giving for each corner (in zorder) of
- *                        the unit square/cube its function values in 3D space.
- * \param [out]   evaluated_function An array of size 3, on output the function values
- *                        at \a vertex are stored here.
- */
-static void
-t8_forest_bilinear_interpolation (const double *vertex,
-                                  const double *corner_values,
-                                  int dim, double *evaluated_function)
-{
-  int                 i;
-  double              temp[3] = { 0 };
-
-  for (i = 0; i < 3; i++) {
-    temp[i] = corner_values[0 * 3 + i] * (1 - vertex[0]) * (1 - vertex[1])      /* x=0 y=0 */
-      +corner_values[1 * 3 + i] * vertex[0] * (1 - vertex[1])   /* x=1 y=0 */
-      +corner_values[2 * 3 + i] * (1 - vertex[0]) * vertex[1]   /* x=0 y=1 */
-      +corner_values[3 * 3 + i] * vertex[0] * vertex[1];        /* x=1 y=1 */
-    if (dim == 3) {
-      temp[i] *= (1 - vertex[2]);
-      temp[i] += (corner_values[4 * 3 + i] * (1 - vertex[0]) * (1 - vertex[1])  /* x=0 y=0 z=1 */
-                  +corner_values[5 * 3 + i] * vertex[0] * (1 - vertex[1])       /* x=1 y=0 z=1 */
-                  +corner_values[6 * 3 + i] * (1 - vertex[0]) * vertex[1]       /* x=0 y=1 z=1 */
-                  +corner_values[7 * 3 + i] * vertex[0] * vertex[1])    /* x=1 y=1 z=1 */
-        *vertex[2];
-    }
-    evaluated_function[i] = temp[i];
-  }
-}
-
 /* given an element in a coarse tree, the corner coordinates of the coarse tree
  * and a corner number of the element compute the coordinates of that corner
  * within the coarse tree.
@@ -236,6 +204,9 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   t8_eclass_t         tree_class;
   t8_element_shape_t  element_shape;
   int                 dim;
+  t8_gloidx_t         gtreeid;
+  t8_geometry_c      *geometry;
+  t8_cmesh_t          cmesh;
 
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->scheme_cxx != NULL);
@@ -247,69 +218,13 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   /* Compute the vertex coordinates inside [0,1]^dim reference cube. */
   ts->t8_element_vertex_reference_coords (element, corner_number,
                                           vertex_coords);
-  /* Get the element's shape */
-  element_shape = ts->t8_element_shape (element);
-  /* Check whether we support this element shape */
-  T8_ASSERT (element_shape == T8_ECLASS_VERTEX
-             || element_shape == T8_ECLASS_TRIANGLE
-             || element_shape == T8_ECLASS_TET
-             || element_shape == T8_ECLASS_QUAD
-             || element_shape == T8_ECLASS_HEX
-             || element_shape == T8_ECLASS_LINE
-             || element_shape == T8_ECLASS_PRISM);
-  /* Compute the coordinates, depending on the shape of the element */
-  switch (element_shape) {
-  case T8_ECLASS_VERTEX:
-    T8_ASSERT (corner_number == 0);
-    /* A vertex has exactly one corner, and we already know its coordinates, since they are
-     * the same as the trees coordinates. */
-    for (i = 0; i < 3; i++) {
-      coordinates[i] = vertices[i];
-    }
-    break;
-  case T8_ECLASS_LINE:
-    for (i = 0; i < 3; i++) {
-      coordinates[i] =
-        (vertices[3 + i] - vertices[i]) * vertex_coords[0] + vertices[i];
-    }
-    break;
-  case T8_ECLASS_TRIANGLE:
-  case T8_ECLASS_TET:
-    for (i = 0; i < 3; i++) {
-      coordinates[i] =
-        (vertices[3 + i] - vertices[i]) * vertex_coords[0] +
-        (dim == 3 ? (vertices[9 + i] - vertices[6 + i]) * vertex_coords[1]
-         : 0.)
-        + (vertices[6 + i] - vertices[3 + i]) * vertex_coords[dim - 1]
-        + vertices[i];
-    }
-    break;
-  case T8_ECLASS_PRISM:
-    /*Prisminterpolation, via height, and triangle */
-    /*Get a triangle at the specific height */
-    double              tri_vertices[9];
-    for (i = 0; i < 9; i++) {
-      tri_vertices[i] =
-        (vertices[9 + i] - vertices[i]) * vertex_coords[2] + vertices[i];
-    }
-    for (i = 0; i < 3; i++) {
-      coordinates[i] =
-        (tri_vertices[3 + i] - tri_vertices[i]) * vertex_coords[0] +
-        (tri_vertices[6 + i] - tri_vertices[3 + i]) * vertex_coords[1]
-        + tri_vertices[i];
-    }
-    break;
-  case T8_ECLASS_QUAD:
-    vertex_coords[2] = 0;
-  case T8_ECLASS_HEX:
-    t8_forest_bilinear_interpolation ((const double *) vertex_coords,
-                                      vertices, dim, coordinates);
-    break;
-  default:
-    SC_ABORT ("Forest coordinate computation is supported only for "
-              "vertices/lines/triangles/tets/quads/prisms/hexes.");
-  }
-  return;
+
+  /* Compute the global tree id */
+  gtreeid = t8_forest_global_tree_id (forest, ltree_id);
+  /* Get the cmesh */
+  cmesh = t8_forest_get_cmesh (forest);
+  /* Evalute the geometry */
+  t8_geometry_evaluate (cmesh, gtreeid, vertex_coords, coordinates);
 }
 
 /* Compute the diameter of an element. */
