@@ -229,7 +229,7 @@ t8_geom_handler_commit (t8_geometry_handler_t * geom_handler)
   geom_handler->is_committed = 1;
 }
 
-const t8_geometry_c *
+t8_geometry_c *
 t8_geom_handler_find_geometry (const t8_geometry_handler_t * geom_handler,
                                const char *name)
 {
@@ -247,7 +247,7 @@ t8_geom_handler_find_geometry (const t8_geometry_handler_t * geom_handler,
     return NULL;
   }
   /* The geometry was found, return it. */
-  return *(const t8_geometry_c **) sc_array_index_ssize_t (geometries,
+  return *(t8_geometry_c **) sc_array_index_ssize_t (geometries,
                                                            found_index);
 }
 

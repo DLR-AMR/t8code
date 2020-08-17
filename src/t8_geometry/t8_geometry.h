@@ -120,7 +120,7 @@ int                 t8_geom_handler_is_committed (const t8_geometry_handler_t
  * \param [in] name         The name of a geometry.
  * \return                  A pointer to the geomery or NULL if it was not found.
  */
-const t8_geometry_c *t8_geom_handler_find_geometry (const
+t8_geometry_c *t8_geom_handler_find_geometry (const
                                                     t8_geometry_handler_t *
                                                     geom_handler,
                                                     const char *name);
