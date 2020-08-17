@@ -49,7 +49,7 @@ t8_geometry_identity::~t8_geometry_identity ()
 void
 t8_geometry_identity::t8_geom_evaluate (t8_gloidx_t ltree_id,
                                         const double *ref_coords,
-                                        double out_coords[3])
+                                        double out_coords[3]) const
 {
   int                 idim;
 
@@ -74,7 +74,7 @@ t8_geometry_identity::t8_geom_evaluate (t8_gloidx_t ltree_id,
 void
 t8_geometry_identity::t8_geom_evalute_jacobian (t8_gloidx_t ltree_id,
                                                 const double *ref_coords,
-                                                double *jacobian)
+                                                double *jacobian) const
 {
   int                 idim;
 

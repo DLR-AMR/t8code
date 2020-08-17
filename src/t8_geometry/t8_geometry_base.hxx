@@ -65,7 +65,7 @@ public:
    */
   virtual void        t8_geom_evaluate (t8_gloidx_t gtree_id,
                                         const double *ref_coords,
-                                        double out_coords[3]) = 0;
+                                        double out_coords[3]) const = 0;
 
   /**
    * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space $$[0,1]^dimension$$.
@@ -76,7 +76,7 @@ public:
    */
   virtual void        t8_geom_evalute_jacobian (t8_gloidx_t gtree_id,
                                                 const double *ref_coords,
-                                                double *jacobian) = 0;
+                                                double *jacobian) const = 0;
 
   virtual void        t8_geom_load_tree_data (t8_cmesh_t cmesh,
                                               t8_gloidx_t gtreeid) = 0;

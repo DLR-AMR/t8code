@@ -50,7 +50,7 @@ t8_geometry_linear::~t8_geometry_linear ()
 void
 t8_geometry_linear::t8_geom_evaluate (t8_gloidx_t ltree_id,
                                       const double *ref_coords,
-                                      double out_coords[3])
+                                      double out_coords[3]) const
 {
   int                 i;
   /* Compute the coordinates, depending on the shape of the element */
@@ -129,7 +129,7 @@ t8_geometry_linear::t8_geom_evaluate (t8_gloidx_t ltree_id,
 void
 t8_geometry_linear::t8_geom_evalute_jacobian (t8_gloidx_t ltree_id,
                                               const double *ref_coords,
-                                              double *jacobian)
+                                              double *jacobian) const
 {
   SC_ABORT ("Not implemented.");
 }
