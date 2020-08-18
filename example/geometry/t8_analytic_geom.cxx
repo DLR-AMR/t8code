@@ -41,7 +41,12 @@ t8_analytic_sincos (int dim, t8_gloidx_t gtreeid, const double *ref_coords,
                     double out_coords[3])
 {
   T8_ASSERT (dim == 2);
-  out_coords[0] = ref_coords[0];
+  double              x = ref_coords[0];
+  if (gtreeid == 1) {
+    /* Translate ref coordinates by +1 in x direction. */
+    x += 1;
+  }
+  out_coords[0] = x;
   out_coords[1] = ref_coords[1];
   out_coords[2] =
     0.2 * sin (ref_coords[0] * 2 * M_PI) * cos (ref_coords[1] * 2 * M_PI);
@@ -100,11 +105,13 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
    * and set the output file name. */
   switch (geom_type) {
   case T8_GEOM_SINCOS:
-    /* Sin/cos geometry. Has one quad tree. */
+    /* Sin/cos geometry. Has two quad trees. */
     geometry =
       new t8_geometry_analytic (2, "analytic sinus cosinus dim=2",
                                 t8_analytic_sincos, NULL);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
+    t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_QUAD);
+    t8_cmesh_set_join (cmesh, 0, 1, 1, 0, 0);
     snprintf (vtuname, BUFSIZ, "forest_analytic_sincos_lvl_%i", level);
     break;
   case T8_GEOM_CYLINDER:
@@ -147,6 +154,8 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
 
   /* Write to vtk */
   t8_forest_write_vtk (forest, vtuname);
+  /* Output */
+  t8_global_productionf ("Wrote forest to vtu files %s.*\n", vtuname);
 
   t8_forest_unref (&forest);
 }
@@ -168,7 +177,10 @@ main (int argc, char **argv)
             basename (argv[0]), basename (argv[0]));
 
   /* long help message */
-  snprintf (help, BUFSIZ, "", usage);
+  snprintf (help, BUFSIZ,
+            "Demonstrates the analytic geometry capabitlities of t8code.\n"
+            "You can choose from different geometries on which to build a uniform forest.\n"
+            "Usage: %s\n", usage);
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -183,7 +195,11 @@ main (int argc, char **argv)
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The refinement level of the mesh.");
   sc_options_add_int (opt, 'g', "geometry", &geom_type, 0,
-                      "The geometry to use.");
+                      "Specify the geometry to use.\n"
+                      "\t\t0 - The graph of sin(x) * cos (y) with two 2D quad trees.\n"
+                      "\t\t1 - A cylinder with one 2D quad tree.\n"
+                      "\t\t2 - A moebius strip with one 2D quad tree.\n"
+                      "\t\t3 - A cube that is distorted in z-direction with one 3D cube tree.\n");
 
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
