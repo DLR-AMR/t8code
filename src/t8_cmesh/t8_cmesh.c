@@ -3425,7 +3425,7 @@ t8_cmesh_new_full_hybrid(sc_MPI_Comm comm)
     t8_cmesh_set_tree_class(cmesh, 3, T8_ECLASS_PRISM);
     t8_cmesh_set_join(cmesh, 0,1,5,4,0);
     t8_cmesh_set_join(cmesh, 1,2,0,1,0);
-    t8_cmesh_set_join(cmesh, 1,3,1,3,0);
+    t8_cmesh_set_join(cmesh, 3,1,4,1,0);
 
     /*Hex vertices*/
     vertices[0] = 0;
@@ -3515,6 +3515,7 @@ t8_cmesh_new_full_hybrid(sc_MPI_Comm comm)
     vertices[15] = 2;
     vertices[16] = 1;
     vertices[17] = 2;
+
     t8_cmesh_set_tree_vertices(cmesh, 3, t8_get_package_id(), 0, vertices, 6);
 
     t8_cmesh_commit(cmesh, comm);
