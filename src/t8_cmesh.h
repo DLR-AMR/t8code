@@ -875,6 +875,13 @@ t8_cmesh_t          t8_cmesh_new_hybrid_gate (sc_MPI_Comm comm);
  */
 t8_cmesh_t          t8_cmesh_new_hybrid_gate_deformed (sc_MPI_Comm comm);
 
+/** Construct a full hybrig cmesh, with 1 hex, 1 pyra, 1 prism and 1 tet
+ * This cmesh is used for testing and debugging.
+ * \param [in] comm        The MPI communicator used to commit the cmesh.
+ * \return                 A committed and replicated hybrid cmesh of 4 trees.
+ */
+t8_cmesh_t          t8_cmesh_new_full_hybrid(sc_MPI_Comm comm);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_H */

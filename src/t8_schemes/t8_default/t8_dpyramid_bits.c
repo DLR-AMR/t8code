@@ -874,15 +874,10 @@ t8_dpyramid_extrude_face(const t8_element_t * face, t8_dpyramid_t * p, int root_
        default:
            SC_ABORT_NOT_REACHED();
        }
-       if(t->type == 1){
-           /*type one tri always extend to a tetrahedron*/
-           p->type = t8_dpyramid_tritype_rootface_to_tettype[t->type][root_face];
-           p_face = t8_dpyramid_tritype_rootface_to_face[t->type][root_face];
-       }
        /*Description of triangles extruding to a pyramid*/
-       else if((t->y == (t->x & t->y)) && t->type == 0){
+       if((t->y == (t->x & t->y)) && t->type == 0){
            /*type zero in a pyramid extend to a pyramid*/
-           p->type = t8_dpyramid_tritype_rootface_to_pyratype[t->type][root_face];
+           p->type = 6;
            p_face = root_face;
        }
        else{

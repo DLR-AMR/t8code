@@ -3134,6 +3134,7 @@ t8_cmesh_new_tet_orientation_test (sc_MPI_Comm comm)
   return cmesh;
 }
 
+
 t8_cmesh_t
 t8_cmesh_new_hybrid_gate (sc_MPI_Comm comm)
 {
@@ -3408,4 +3409,114 @@ t8_cmesh_new_hybrid_gate_deformed (sc_MPI_Comm comm)
 
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_new_full_hybrid(sc_MPI_Comm comm)
+{
+    t8_cmesh_t      cmesh;
+    double          vertices[24];
+    int             i;
+
+    t8_cmesh_init(&cmesh);
+    t8_cmesh_set_tree_class(cmesh, 0, T8_ECLASS_HEX);
+    t8_cmesh_set_tree_class(cmesh, 1, T8_ECLASS_PYRAMID);
+    t8_cmesh_set_tree_class(cmesh, 2, T8_ECLASS_TET);
+    t8_cmesh_set_tree_class(cmesh, 3, T8_ECLASS_PRISM);
+    t8_cmesh_set_join(cmesh, 0,1,5,4,0);
+    t8_cmesh_set_join(cmesh, 1,2,0,1,0);
+    t8_cmesh_set_join(cmesh, 1,3,1,3,0);
+
+    /*Hex vertices*/
+    vertices[0] = 0;
+    vertices[1] = 0;
+    vertices[2] = 0;
+
+    vertices[3] = 1;
+    vertices[4] = 0;
+    vertices[5] = 0;
+
+    vertices[6] = 0;
+    vertices[7] = 1;
+    vertices[8] = 0;
+
+    vertices[9] = 1;
+    vertices[10] = 1;
+    vertices[11] = 0;
+
+    vertices[12] = 0;
+    vertices[13] = 0;
+    vertices[14] = 1;
+
+    vertices[15] = 1;
+    vertices[16] = 0;
+    vertices[17] = 1;
+
+    vertices[18] = 0;
+    vertices[19] = 1;
+    vertices[20] = 1;
+
+    vertices[21] = 1;
+    vertices[22] = 1;
+    vertices[23] = 1;
+    t8_cmesh_set_tree_vertices(cmesh, 0,t8_get_package_id(),0,vertices,8);
+
+    /*pyra vertices*/
+    for(i = 0; i<4; i++)
+    {
+        vertices[i*3] = vertices[i*3 + 12];
+        vertices[i*3+1] = vertices[i*3 + 12+1];
+        vertices[i*3+2] = vertices[i*3 + 12+2];
+    }
+    vertices[12] = 1;
+    vertices[13] = 1;
+    vertices[14] = 2;
+    t8_cmesh_set_tree_vertices(cmesh, 1, t8_get_package_id(), 0, vertices, 5);
+
+     /*tet vertices*/
+    vertices[0] = 0;
+    vertices[1] = 0;
+    vertices[2] = 1;
+
+    vertices[3] = 0;
+    vertices[4] = 1;
+    vertices[5] = 2;
+
+    vertices[6] = 0;
+    vertices[7] = 1;
+    vertices[8] = 1;
+
+    vertices[9] = 1;
+    vertices[10] = 1;
+    vertices[11] = 2;
+    t8_cmesh_set_tree_vertices(cmesh, 2, t8_get_package_id(), 0, vertices, 4);
+
+    /*prism vertices*/
+    vertices[0] = 1;
+    vertices[1] = 0;
+    vertices[2] = 1;
+
+    vertices[3] = 1;
+    vertices[4] = 1;
+    vertices[5] = 1;
+
+    vertices[6] = 1;
+    vertices[7] = 1;
+    vertices[8] = 2;
+
+    vertices[9] = 2;
+    vertices[10] = 0;
+    vertices[11] = 1;
+
+    vertices[12] = 2;
+    vertices[13] = 1;
+    vertices[14] = 1;
+
+    vertices[15] = 2;
+    vertices[16] = 1;
+    vertices[17] = 2;
+    t8_cmesh_set_tree_vertices(cmesh, 3, t8_get_package_id(), 0, vertices, 6);
+
+    t8_cmesh_commit(cmesh, comm);
+    return cmesh;
 }
