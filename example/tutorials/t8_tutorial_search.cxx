@@ -49,8 +49,7 @@
  * 
  * In each (process local) tree of the forest, search will create the level 0 element that
  * coincides with the tree and call the search-callback function on it.
- * In the callback the user decides whether to continue the search -- in this case if any of
- * our particles are inside this tree -- or not.
+ * In the callback the user decides whether to continue the search or not.
  * If we continue the search, the children of this level 0 element are created and the
  * search callback will be called for them -- again deciding whether to continue or not.
  * This process repeats recursively and stops at those fine elements that are actually contained
@@ -62,7 +61,7 @@
  * is called to decide whether or not to continue searching. If it returns true, the query-callback
  * will be called once for each active query object. 
  * If the query object returns 0, this query object will get deactivated for this element and its
- * recursive children. The recursion if then also stop when no queries are active anymore.
+ * recursive children. The recursion stops when no queries are active anymore.
  * 
  * It is probably best to illustrate this with an example. Let the following forest
  * with 2 quad trees be given.
