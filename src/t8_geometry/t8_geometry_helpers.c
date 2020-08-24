@@ -20,6 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <t8_eclass.h>
+#include <t8_geometry/t8_geometry_helpers.h>
+
 /* Given function values at the four edge points of a unit square and
  * a point within that square, interpolate the function value at this point.
  * \param [in]    vertex  An array of size at least dim giving the coordinates of the vertex to interpolate
@@ -50,5 +53,75 @@ t8_geom_bilinear_interpolation (const double *vertex,
         *vertex[2];
     }
     evaluated_function[i] = temp[i];
+  }
+}
+
+void
+t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
+                                 const double *tree_vertices,
+                                 const double *ref_coords,
+                                 double out_coords[3])
+{
+  int                 i;
+  int                 dimension = t8_eclass_to_dimension[tree_class];
+  /* Compute the coordinates, depending on the shape of the element */
+  switch (tree_class) {
+  case T8_ECLASS_VERTEX:
+    /* A vertex has exactly one corner, and we already know its coordinates, since they are
+     * the same as the trees coordinates. */
+    for (i = 0; i < 3; i++) {
+      out_coords[i] = tree_vertices[i];
+    }
+    break;
+  case T8_ECLASS_LINE:
+    for (i = 0; i < 3; i++) {
+      out_coords[i] =
+        (tree_vertices[3 + i] -
+         tree_vertices[i]) * ref_coords[0] + tree_vertices[i];
+    }
+    break;
+  case T8_ECLASS_TRIANGLE:
+  case T8_ECLASS_TET:
+    for (i = 0; i < 3; i++) {
+      out_coords[i] =
+        (tree_vertices[3 + i] -
+         tree_vertices[i]) * ref_coords[0] + (dimension ==
+                                              3
+                                              ? (tree_vertices
+                                                 [9 + i] -
+                                                 tree_vertices[6 + i])
+                                              * ref_coords[1]
+                                              : 0.)
+        + (tree_vertices[6 + i] -
+           tree_vertices[3 + i]) * ref_coords[dimension - 1]
+        + tree_vertices[i];
+    }
+    break;
+  case T8_ECLASS_PRISM:
+    {
+      /* Prisminterpolation, via height, and triangle */
+      /* Get a triangle at the specific height */
+      double              tri_vertices[9];
+      for (i = 0; i < 9; i++) {
+        tri_vertices[i] =
+          (tree_vertices[9 + i] -
+           tree_vertices[i]) * ref_coords[2] + tree_vertices[i];
+      }
+      for (i = 0; i < 3; i++) {
+        out_coords[i] =
+          (tri_vertices[3 + i] - tri_vertices[i]) * ref_coords[0] +
+          (tri_vertices[6 + i] - tri_vertices[3 + i]) * ref_coords[1]
+          + tri_vertices[i];
+      }
+    }
+    break;
+  case T8_ECLASS_QUAD:
+  case T8_ECLASS_HEX:
+    t8_geom_bilinear_interpolation (ref_coords,
+                                    tree_vertices, dimension, out_coords);
+    break;
+  default:
+    SC_ABORT ("Linear geometry coordinate computation is supported only for "
+              "vertices/lines/triangles/tets/quads/prisms/hexes.");
   }
 }
