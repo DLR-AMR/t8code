@@ -25,22 +25,23 @@
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
+#include <t8_geometry/t8_geometry_helpers.h>
 
 typedef enum
 {
-  T8_GEOM_FIRST = 0,
-  T8_GEOM_SINCOS = T8_GEOM_FIRST,
+  T8_GEOM_ZERO = 0,
+  T8_GEOM_SINCOS = T8_GEOM_ZERO,
   T8_GEOM_CYLINDER,
   T8_GEOM_MOEBIUS,
   T8_GEOM_3D,
-  T8_GEOM_LAST
+  T8_GEOM_COUNT
 } t8_analytic_geom_type;
 
 static void
-t8_analytic_sincos (int dim, t8_gloidx_t gtreeid, const double *ref_coords,
-                    double out_coords[3])
+t8_analytic_sincos (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
+                    const double *ref_coords, double out_coords[3],
+                    const void *tree_data)
 {
-  T8_ASSERT (dim == 2);
   double              x = ref_coords[0];
   if (gtreeid == 1) {
     /* Translate ref coordinates by +1 in x direction. */
@@ -53,38 +54,47 @@ t8_analytic_sincos (int dim, t8_gloidx_t gtreeid, const double *ref_coords,
 }
 
 static void
-t8_analytic_cylinder (int dim, t8_gloidx_t gtreeid, const double *ref_coords,
-                      double out_coords[3])
+t8_analytic_cylinder (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
+                      const double *ref_coords, double out_coords[3],
+                      const void *tree_data)
 {
-  T8_ASSERT (dim == 2);
-
   out_coords[0] = cos (ref_coords[0] * 2 * M_PI);
   out_coords[1] = ref_coords[1];
   out_coords[2] = sin (ref_coords[0] * 2 * M_PI);
 }
 
 static void
-t8_analytic_moebius (int dim, t8_gloidx_t gtreeid, const double *ref_coords,
-                     double out_coords[3])
+t8_analytic_moebius (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
+                     const double *ref_coords, double out_coords[3],
+                     const void *tree_vertices)
 {
-  T8_ASSERT (dim == 2);
   /* At first, we map x from [0,1] to [-.5,.5]
    * and y to [0, 2*PI] */
-  double              t = ref_coords[0] - .5;
-  double              phi = ref_coords[1] * 2 * M_PI;
+  const double       *tree_v = (const double *) tree_vertices;
+  double              t;
+  double              phi;
+
+  t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+  t8_eclass_t         tree_class = t8_cmesh_get_tree (cmesh, ltreeid);
+  /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store
+   * in out_coords. */
+  t8_geom_compute_linear_geometry (tree_class, tree_vertices, ref_coords,
+                                   out_coords);
 
   /* We now apply the parametrization for the moebius strip. */
+  t = ref_coords[0] - .5;
+  phi = ref_coords[1] * 2 * M_PI;
+
   out_coords[0] = (1 - t * sin (phi / 2)) * cos (phi);
   out_coords[1] = (1 - t * sin (phi / 2)) * sin (phi);
   out_coords[2] = t * cos (phi / 2);
 }
 
 static void
-t8_analytic_3D_cube (int dim, t8_gloidx_t gtreeid, const double *ref_coords,
-                     double out_coords[3])
+t8_analytic_3D_cube (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
+                     const double *ref_coords, double out_coords[3],
+                     const void *tree_data)
 {
-  T8_ASSERT (dim == 3);
-
   out_coords[0] = ref_coords[0];
   out_coords[1] = ref_coords[1];
   out_coords[2] = ref_coords[2] * (0.8 +
@@ -108,7 +118,7 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     /* Sin/cos geometry. Has two quad trees. */
     geometry =
       new t8_geometry_analytic (2, "analytic sinus cosinus dim=2",
-                                t8_analytic_sincos, NULL);
+                                t8_analytic_sincos, NULL, NULL);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_QUAD);
     t8_cmesh_set_join (cmesh, 0, 1, 1, 0, 0);
@@ -118,7 +128,7 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     /* Cylinder geometry. Has one quad tree that is periodic in x direction. */
     geometry =
       new t8_geometry_analytic (2, "analytic geometry cylinder",
-                                t8_analytic_cylinder, NULL);
+                                t8_analytic_cylinder, NULL, NULL);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     t8_cmesh_set_join (cmesh, 0, 0, 0, 1, 0);
     snprintf (vtuname, BUFSIZ, "forest_analytic_cylinder_lvl_%i", level);
@@ -127,7 +137,7 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     /* Moebius geometry. Has one quad tree that is periodic in x direction with inverted orientation */
     geometry =
       new t8_geometry_analytic (2, "analytic moebius", t8_analytic_moebius,
-                                NULL);
+                                NULL, NULL);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     t8_cmesh_set_join (cmesh, 0, 0, 0, 1, 1);
     snprintf (vtuname, BUFSIZ, "forest_analytic_moebius_lvl_%i", level);
@@ -135,7 +145,8 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
   case T8_GEOM_3D:
     /* Cube geometry with sincos on top. Has one hexahedron tree. */
     geometry =
-      new t8_geometry_analytic (3, "cube geom", t8_analytic_3D_cube, NULL);
+      new t8_geometry_analytic (3, "cube geom", t8_analytic_3D_cube, NULL,
+                                NULL);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
     snprintf (vtuname, BUFSIZ, "forest_analytic_3D_lvl_%i", level);
     break;
@@ -208,8 +219,8 @@ main (int argc, char **argv)
     t8_global_productionf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed >= 0 && 0 <= level && T8_GEOM_FIRST <= geom_type
-           && geom_type < T8_GEOM_LAST) {
+  else if (parsed >= 0 && 0 <= level && T8_GEOM_ZERO <= geom_type
+           && geom_type < T8_GEOM_COUNT) {
     t8_analytic_geom (level, (t8_analytic_geom_type) geom_type);
   }
   else {
