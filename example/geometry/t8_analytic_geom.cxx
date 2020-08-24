@@ -75,15 +75,15 @@ t8_analytic_moebius (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
   double              phi;
 
   t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
-  t8_eclass_t         tree_class = t8_cmesh_get_tree (cmesh, ltreeid);
+  t8_eclass_t         tree_class = t8_cmesh_get_tree_class (cmesh, ltreeid);
   /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store
    * in out_coords. */
-  t8_geom_compute_linear_geometry (tree_class, tree_vertices, ref_coords,
+  t8_geom_compute_linear_geometry (tree_class, tree_v, ref_coords,
                                    out_coords);
 
   /* We now apply the parametrization for the moebius strip. */
-  t = ref_coords[0] - .5;
-  phi = ref_coords[1] * 2 * M_PI;
+  t = out_coords[0] - .5;
+  phi = out_coords[1] * 2 * M_PI;
 
   out_coords[0] = (1 - t * sin (phi / 2)) * cos (phi);
   out_coords[1] = (1 - t * sin (phi / 2)) * sin (phi);
@@ -134,13 +134,16 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     snprintf (vtuname, BUFSIZ, "forest_analytic_cylinder_lvl_%i", level);
     break;
   case T8_GEOM_MOEBIUS:
-    /* Moebius geometry. Has one quad tree that is periodic in x direction with inverted orientation */
-    geometry =
-      new t8_geometry_analytic (2, "analytic moebius", t8_analytic_moebius,
-                                NULL, NULL);
-    t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
-    t8_cmesh_set_join (cmesh, 0, 0, 0, 1, 1);
-    snprintf (vtuname, BUFSIZ, "forest_analytic_moebius_lvl_%i", level);
+    {
+      /* Moebius geometry on unit square. */
+      t8_cmesh_t          hybrid_square =
+        t8_cmesh_new_periodic_hybrid (sc_MPI_COMM_WORLD);
+      t8_cmesh_set_derive (cmesh, hybrid_square);
+      geometry =
+        new t8_geometry_analytic (2, "analytic moebius", t8_analytic_moebius,
+                                  NULL, t8_geom_load_tree_data_vertices);
+      snprintf (vtuname, BUFSIZ, "forest_analytic_moebius_lvl_%i", level);
+    }
     break;
   case T8_GEOM_3D:
     /* Cube geometry with sincos on top. Has one hexahedron tree. */
