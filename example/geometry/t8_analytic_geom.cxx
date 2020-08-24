@@ -33,6 +33,7 @@ typedef enum
   T8_GEOM_SINCOS = T8_GEOM_ZERO,
   T8_GEOM_CYLINDER,
   T8_GEOM_MOEBIUS,
+  T8_GEOM_CIRCLE,
   T8_GEOM_3D,
   T8_GEOM_COUNT
 } t8_analytic_geom_type;
@@ -68,8 +69,6 @@ t8_analytic_moebius (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
                      const double *ref_coords, double out_coords[3],
                      const void *tree_vertices)
 {
-  /* At first, we map x from [0,1] to [-.5,.5]
-   * and y to [0, 2*PI] */
   const double       *tree_v = (const double *) tree_vertices;
   double              t;
   double              phi;
@@ -81,13 +80,41 @@ t8_analytic_moebius (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
   t8_geom_compute_linear_geometry (tree_class, tree_v, ref_coords,
                                    out_coords);
 
-  /* We now apply the parametrization for the moebius strip. */
+  /* At first, we map x from [0,1] to [-.5,.5]
+   * and y to [0, 2*PI] */
   t = out_coords[0] - .5;
   phi = out_coords[1] * 2 * M_PI;
 
+  /* We now apply the parametrization for the moebius strip. */
   out_coords[0] = (1 - t * sin (phi / 2)) * cos (phi);
   out_coords[1] = (1 - t * sin (phi / 2)) * sin (phi);
   out_coords[2] = t * cos (phi / 2);
+}
+
+static void
+t8_analytic_circle (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
+                    const double *ref_coords, double out_coords[3],
+                    const void *tree_vertices)
+{
+  const double       *tree_v = (const double *) tree_vertices;
+  double              x;
+  double              y;
+
+  t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+  t8_eclass_t         tree_class = t8_cmesh_get_tree_class (cmesh, ltreeid);
+  /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store
+   * in out_coords. */
+  t8_geom_compute_linear_geometry (tree_class, tree_v, ref_coords,
+                                   out_coords);
+
+  /* We now remap the coords to match the square [-1,1]^2 */
+  x = out_coords[0] * 2 - 1;
+  y = out_coords[1] * 2 - 1;
+
+  /* An now we apply the formula that projects the square to the circle. */
+  out_coords[0] = x * sqrt (1 - y * y / 2);
+  out_coords[1] = y * sqrt (1 - x * x / 2);
+  out_coords[2] = 0;
 }
 
 static void
@@ -135,7 +162,7 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     break;
   case T8_GEOM_MOEBIUS:
     {
-      /* Moebius geometry on unit square. */
+      /* Moebius geometry on hybrid unit square. */
       t8_cmesh_t          hybrid_square =
         t8_cmesh_new_periodic_hybrid (sc_MPI_COMM_WORLD);
       t8_cmesh_set_derive (cmesh, hybrid_square);
@@ -143,6 +170,19 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
         new t8_geometry_analytic (2, "analytic moebius", t8_analytic_moebius,
                                   NULL, t8_geom_load_tree_data_vertices);
       snprintf (vtuname, BUFSIZ, "forest_analytic_moebius_lvl_%i", level);
+    }
+    break;
+  case T8_GEOM_CIRCLE:
+    {
+      /* Circle geometry on triangulated unit square. */
+      t8_cmesh_t          tri_square =
+        t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0,
+                                0);
+      t8_cmesh_set_derive (cmesh, tri_square);
+      geometry =
+        new t8_geometry_analytic (2, "analytic circle", t8_analytic_circle,
+                                  NULL, t8_geom_load_tree_data_vertices);
+      snprintf (vtuname, BUFSIZ, "forest_analytic_circle_lvl_%i", level);
     }
     break;
   case T8_GEOM_3D:
@@ -212,8 +252,9 @@ main (int argc, char **argv)
                       "Specify the geometry to use.\n"
                       "\t\t0 - The graph of sin(x) * cos (y) with two 2D quad trees.\n"
                       "\t\t1 - A cylinder with one 2D quad tree.\n"
-                      "\t\t2 - A moebius strip with one 2D quad tree.\n"
-                      "\t\t3 - A cube that is distorted in z-direction with one 3D cube tree.\n");
+                      "\t\t2 - A moebius strip on a hybrid mesh with 4 triangles and 2 quads.\n"
+                      "\t\t3 - A square of two triangles that is mapped into a circle.\n"
+                      "\t\t4 - A cube that is distorted in z-direction with one 3D cube tree.\n");
 
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
