@@ -387,6 +387,8 @@ void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 #endif
 
 /* TODO: comment */
+/* If no geometry is registered and cmesh is modified from another cmesh then
+ * the other cmesh's geometries are used. */
 void                t8_cmesh_register_geometry (t8_cmesh_t cmesh,
                                                 const t8_geometry_c *
                                                 geometry);

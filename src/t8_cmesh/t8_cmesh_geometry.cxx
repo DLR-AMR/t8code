@@ -34,6 +34,10 @@ t8_cmesh_register_geometry (t8_cmesh_t cmesh, const t8_geometry_c * geometry)
 {
   /* Must be called before cmesh is committed. */
   T8_ASSERT (!t8_cmesh_is_committed (cmesh));
+  if (cmesh->geometry_handler == NULL) {
+    /* The handler was not initialized, do it now. */
+    t8_geom_handler_init (&cmesh->geometry_handler);
+  }
 
   t8_geom_handler_register_geometry (cmesh->geometry_handler, geometry);
 }

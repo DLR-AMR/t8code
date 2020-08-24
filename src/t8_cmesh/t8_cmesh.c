@@ -188,8 +188,10 @@ t8_cmesh_init (t8_cmesh_t * pcmesh)
   cmesh->first_tree_shared = -1;
   cmesh->face_knowledge = 3;    /*< sensible default TODO document */
   t8_stash_init (&cmesh->stash);
-  /* Initialize the geometry handler */
-  t8_geom_handler_init (&cmesh->geometry_handler);
+  /* Set the geometry handler to NULL.
+   * It will get initialized either when a geometry is registered
+   * or when the cmesh gets committed. */
+  cmesh->geometry_handler = NULL;
 
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 }
