@@ -319,7 +319,8 @@ t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
   T8_ASSERT (geom_handler->active_geometry != NULL);
 
   /* Evaluate the geometry. */
-  geom_handler->active_geometry->t8_geom_evaluate (geom_handler->active_tree,
+  geom_handler->active_geometry->t8_geom_evaluate (cmesh,
+                                                   geom_handler->active_tree,
                                                    ref_coords, out_coords);
 }
 
@@ -341,7 +342,7 @@ t8_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
   /* Evaluate the jacobian. */
   /* *INDENT-OFF* */
   geom_handler->active_geometry->
-    t8_geom_evalute_jacobian (geom_handler->active_tree, ref_coords,
+    t8_geom_evalute_jacobian (cmesh, geom_handler->active_tree, ref_coords,
                               jacobian);
   /* *INDENT-ON* */
 }

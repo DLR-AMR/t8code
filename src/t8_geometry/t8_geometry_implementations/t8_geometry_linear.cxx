@@ -41,93 +41,38 @@ t8_geometry_linear::~t8_geometry_linear ()
 
 /**
  * Map a point in the reference space $$[0,1]^dimension$$ to $$\mathbb R^3$$
- * \param [in]  ltree_id    The local tree (of the cmesh) in which the reference point is.
+ * \param [in]  cmesh      The cmesh in which the point lies.
+ * \param [in]  gtreeid    The glocal tree (of the cmesh) in which the reference point is.
  * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
  * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
  * \note Since this is the identity geometry, \a out_coords will be equal to \a ref_coords in
  *       the first d entries and 0 in the remaining 3-d entries.
  */
 void
-t8_geometry_linear::t8_geom_evaluate (t8_gloidx_t ltree_id,
-                                      const double *ref_coords,
-                                      double out_coords[3]) const
+t8_geometry_linear::t8_geom_evaluate (t8_cmesh_t cmesh,
+                                t8_gloidx_t gtreeid,
+                                const double *ref_coords,
+                                double out_coords[3]) const
 {
-  int                 i;
-  /* Compute the coordinates, depending on the shape of the element */
-  switch (active_tree_class) {
-  case T8_ECLASS_VERTEX:
-    /* A vertex has exactly one corner, and we already know its coordinates, since they are
-     * the same as the trees coordinates. */
-    for (i = 0; i < 3; i++) {
-      out_coords[i] = active_tree_vertices[i];
-    }
-    break;
-  case T8_ECLASS_LINE:
-    for (i = 0; i < 3; i++) {
-      out_coords[i] =
-        (active_tree_vertices[3 + i] -
-         active_tree_vertices[i]) * ref_coords[0] + active_tree_vertices[i];
-    }
-    break;
-  case T8_ECLASS_TRIANGLE:
-  case T8_ECLASS_TET:
-    for (i = 0; i < 3; i++) {
-      out_coords[i] =
-        (active_tree_vertices[3 + i] -
-         active_tree_vertices[i]) * ref_coords[0] + (dimension ==
-                                                     3
-                                                     ? (active_tree_vertices
-                                                        [9 + i] -
-                                                        active_tree_vertices[6
-                                                                             +
-                                                                             i])
-                                                     * ref_coords[1]
-                                                     : 0.)
-        + (active_tree_vertices[6 + i] -
-           active_tree_vertices[3 + i]) * ref_coords[dimension - 1]
-        + active_tree_vertices[i];
-    }
-    break;
-  case T8_ECLASS_PRISM:
-    /* Prisminterpolation, via height, and triangle */
-    /* Get a triangle at the specific height */
-    double              tri_vertices[9];
-    for (i = 0; i < 9; i++) {
-      tri_vertices[i] =
-        (active_tree_vertices[9 + i] -
-         active_tree_vertices[i]) * ref_coords[2] + active_tree_vertices[i];
-    }
-    for (i = 0; i < 3; i++) {
-      out_coords[i] =
-        (tri_vertices[3 + i] - tri_vertices[i]) * ref_coords[0] +
-        (tri_vertices[6 + i] - tri_vertices[3 + i]) * ref_coords[1]
-        + tri_vertices[i];
-    }
-    break;
-  case T8_ECLASS_QUAD:
-  case T8_ECLASS_HEX:
-    t8_geom_bilinear_interpolation (ref_coords,
-                                    active_tree_vertices, dimension,
-                                    out_coords);
-    break;
-  default:
-    SC_ABORT ("Linear geometry coordinate computation is supported only for "
-              "vertices/lines/triangles/tets/quads/prisms/hexes.");
-  }
+  t8_geom_compute_linear_geometry (active_tree_class,
+                                  active_tree_vertices, ref_coords,
+                                  out_coords);
 }
 
 /**
  * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space $$[0,1]^dimension$$.
- * \param [in]  ltree_id    The local tree (of the cmesh) in which the reference point is.
+ * \param [in]  cmesh      The cmesh in which the point lies.
+ * \param [in]  gtreeid    The glocal tree (of the cmesh) in which the reference point is.
  * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
  * \param [out] jacobian    The jacobian at \a ref_coords. Array of size dimension x 3. Indices 3*i, 3*i+1, 3*i+2
  *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
- * \note Since this is the identity geometry, the jacobian will be the identity matrix.
  */
-void
-t8_geometry_linear::t8_geom_evalute_jacobian (t8_gloidx_t ltree_id,
-                                              const double *ref_coords,
-                                              double *jacobian) const
+ void
+ t8_geometry_linear::t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
+                                                      t8_gloidx_t gtreeid,
+                                                      const double
+                                                      *ref_coords,
+                                                      double *jacobian) const
 {
   SC_ABORT ("Not implemented.");
 }
