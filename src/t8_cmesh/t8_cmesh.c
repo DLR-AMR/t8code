@@ -1883,7 +1883,7 @@ t8_cmesh_coords_axb (const double *coords_in, double *coords_out,
 }
 
 t8_cmesh_t
-t8_cmesh_new_hypercube_hybrid (int dim, sc_MPI_Comm comm, int do_partition,
+t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, int do_partition,
                                int periodic)
 {
   int                 i;
@@ -1905,7 +1905,7 @@ t8_cmesh_new_hypercube_hybrid (int dim, sc_MPI_Comm comm, int do_partition,
     0, 1, 1,
     1, 1, 1
   };
-  t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
+  t8_geometry_c      *linear_geom = t8_geometry_linear_new (3);
 
   t8_cmesh_init (&cmesh);
   /* This cmesh consists of 6 tets, 6 prisms and 3 hexes */
