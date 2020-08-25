@@ -75,7 +75,6 @@ t8_geom_handler_init (t8_geometry_handler_t ** pgeom_handler)
 {
   T8_ASSERT (pgeom_handler != NULL);
   t8_geometry_handler_t *geom_handler = T8_ALLOC (t8_geometry_handler_t, 1);
-  t8_debugf ("init %p\n", geom_handler);
   /* Initialize array of geometries. */
   sc_array_init (&geom_handler->registered_geometries,
                  sizeof (t8_geometry_c *));
@@ -109,7 +108,6 @@ t8_geom_handler_reset (t8_geometry_handler_t ** pgeom_handler)
   /* Reset the geometries array. */
   sc_array_reset (&geom_handler->registered_geometries);
   /* Free the memory of the geometry handler. */
-  t8_debugf ("free %p\n", geom_handler);
   T8_FREE (geom_handler);
   /* Set the pointer to NULL */
   *pgeom_handler = NULL;
@@ -121,7 +119,6 @@ t8_geom_handler_ref (t8_geometry_handler_t * geom_handler)
 {
   T8_ASSERT (t8_geom_handler_is_initialized (geom_handler));
   t8_refcount_ref (&geom_handler->rc);
-  t8_debugf ("reffed geom to %i\n", geom_handler->rc.refcount);
 }
 
 /* unref a geometry handler */
@@ -132,9 +129,7 @@ t8_geom_handler_unref (t8_geometry_handler_t ** pgeom_handler)
   T8_ASSERT (t8_geom_handler_is_initialized (*pgeom_handler));
   /* If this is the last reference that we unref, we reset 
    * the handler. */
-  t8_debugf ("unreffing geom\n");
   if (t8_refcount_unref (&(*pgeom_handler)->rc)) {
-    t8_debugf ("unreffed geom to %i\n", (*pgeom_handler)->rc.refcount);
     t8_geom_handler_reset (pgeom_handler);
   }
 }
@@ -177,7 +172,6 @@ t8_geom_handler_find_geometry_non_sorted (t8_geometry_handler_t *
   size_t              found_index;
   T8_ASSERT (t8_geom_handler_is_initialized (geom_handler));
 
-  t8_debugf ("Searching for geometry %s.\n", name);
   for (found_index = 0;
        found_index < geom_handler->registered_geometries.elem_count;
        ++found_index) {
@@ -186,9 +180,6 @@ t8_geom_handler_find_geometry_non_sorted (t8_geometry_handler_t *
       sc_array_index (&geom_handler->registered_geometries, found_index);
     /* Compare this geometry's name with the given name. */
     if (!t8_geom_handler_compare_key (name, pgeom)) {
-      t8_debugf ("Found geom %s at %zd\n",
-                 (*((t8_geometry_c **) pgeom))->t8_geom_get_name (),
-                 found_index);
       /* Found a geometry with the given name. */
       return *(const t8_geometry_c **)
         sc_array_index_ssize_t (&geom_handler->registered_geometries,
@@ -235,9 +226,9 @@ t8_geom_handler_commit (t8_geometry_handler_t * geom_handler)
     geom_handler->active_geometry =
       *(t8_geometry_c **)
       sc_array_index (&geom_handler->registered_geometries, 0);
+      t8_debugf ("Commiting geom handler. Set '%s' as active geometry.\n",
+       geom_handler->active_geometry->t8_geom_get_name());
     /* *INDENT-ON* */
-    t8_debugf ("active geom at %p is %s\n", geom_handler->active_geometry,
-               geom_handler->active_geometry->t8_geom_get_name ());
   }
   else {
     /* Sort the geometry array. */
@@ -259,7 +250,6 @@ t8_geometry_c *
 t8_geom_handler_find_geometry (const t8_geometry_handler_t * geom_handler,
                                const char *name)
 {
-  t8_debugf ("Geom handler find: %s\n", name);
   /* Must be committed */
   T8_ASSERT (t8_geom_handler_is_committed (geom_handler));
   sc_array           *geometries =
