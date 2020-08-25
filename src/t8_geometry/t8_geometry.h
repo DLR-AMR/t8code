@@ -113,6 +113,25 @@ void                t8_geom_handler_commit (t8_geometry_handler_t *
 int                 t8_geom_handler_is_committed (const t8_geometry_handler_t
                                                   * geom_handler);
 
+/** Return the number of registered geometries.
+ * \param [in] geom_handler A geometry handler (must be initialized and may or may not be committed).
+ * \return  The number of registered geometries in \a geom_handler.
+ */
+size_t              t8_geom_handler_get_num_geometries (const
+                                                        t8_geometry_handler_t
+                                                        * geom_handler);
+
+/** If a geometry handler only has one registered geometry, get a pointer to
+ *  this geometry.
+ * \param [in] geom_handler Must be committed and have exactly one geometry registered.
+ * \return     The only registered geometry of \a geom_handler.
+ * \note  Most cmeshes will have only one geometry and this function is an optimization
+ *        for that special case. It is used for example in \ref t8_cmesh_get_tree_geometry.
+ */
+const t8_geometry_c *t8_geom_handler_get_unique_geometry (const
+                                                          t8_geometry_handler_t
+                                                          * geom_handler);
+
 /**
  * Given a geometries name find that geometry in the geometry handler
  * and return it.
@@ -120,10 +139,10 @@ int                 t8_geom_handler_is_committed (const t8_geometry_handler_t
  * \param [in] name         The name of a geometry.
  * \return                  A pointer to the geomery or NULL if it was not found.
  */
-t8_geometry_c *t8_geom_handler_find_geometry (const
-                                                    t8_geometry_handler_t *
-                                                    geom_handler,
-                                                    const char *name);
+t8_geometry_c      *t8_geom_handler_find_geometry (const
+                                                   t8_geometry_handler_t *
+                                                   geom_handler,
+                                                   const char *name);
 
 void                t8_geometry_evaluate (t8_cmesh_t cmesh,
                                           t8_gloidx_t gtreeid,

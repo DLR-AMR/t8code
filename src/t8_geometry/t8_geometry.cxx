@@ -173,7 +173,7 @@ t8_geom_handler_find_geometry_non_sorted (t8_geometry_handler_t *
   T8_ASSERT (t8_geom_handler_is_initialized (geom_handler));
 
   for (found_index = 0;
-       found_index < geom_handler->registered_geometries.elem_count;
+       found_index < t8_geom_handler_get_num_geometries (geom_handler);
        ++found_index) {
     /* Get the pointer to this geoemtry */
     const void         *pgeom =
@@ -220,7 +220,7 @@ t8_geom_handler_commit (t8_geometry_handler_t * geom_handler)
    * NULL, sort the geometries array and will search for a tree's geometry
    * if it is not the active one in t8_geom_handler_update_tree.
    */
-  if (geom_handler->registered_geometries.elem_count == 1) {
+  if (t8_geom_handler_get_num_geometries (geom_handler) == 1) {
     /* Set the active geometry to the only geometry. */
     /* *INDENT-OFF* */
     geom_handler->active_geometry =
@@ -266,6 +266,26 @@ t8_geom_handler_find_geometry (const t8_geometry_handler_t * geom_handler,
   return *(t8_geometry_c **) sc_array_index_ssize_t (geometries, found_index);
 }
 
+size_t
+t8_geom_handler_get_num_geometries (const t8_geometry_handler_t *
+                                    geom_handler)
+{
+  T8_ASSERT (t8_geom_handler_is_initialized (geom_handler));
+  return geom_handler->registered_geometries.elem_count;
+}
+
+const t8_geometry_c *
+t8_geom_handler_get_unique_geometry (const t8_geometry_handler_t *
+                                     geom_handler)
+{
+  T8_ASSERT (t8_geom_handler_is_committed (geom_handler));
+  T8_ASSERT (t8_geom_handler_get_num_geometries (geom_handler) == 1);
+  sc_array           *geometries =
+    (sc_array *) & geom_handler->registered_geometries;
+
+  return *(const t8_geometry_c **) sc_array_index_int (geometries, 0);
+}
+
 static inline void
 t8_geom_handler_update_tree (t8_geometry_handler_t * geom_handler,
                              t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
@@ -273,11 +293,13 @@ t8_geom_handler_update_tree (t8_geometry_handler_t * geom_handler,
   /* Must be committed */
   T8_ASSERT (t8_geom_handler_is_committed (geom_handler));
   if (geom_handler->active_tree != gtreeid) {
+    int                 num_geoms =
+      t8_geom_handler_get_num_geometries (geom_handler);
     /* This tree is not the active tree. We need to update the 
      * active tree, its geometry and its data. */
     /* Set the new tree as active. */
     geom_handler->active_tree = gtreeid;
-    if (geom_handler->registered_geometries.elem_count > 1) {
+    if (num_geoms > 1) {
       /* Find and load the geometry of that tree. 
        * Only necessary if we have more than one geometry. */
       geom_handler->active_geometry =
