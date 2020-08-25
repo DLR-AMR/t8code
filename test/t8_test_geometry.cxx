@@ -23,71 +23,144 @@
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_geometry/t8_geometry.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx>
 
-/* Check whether the identity geometry map and jacobian are correct. */
+/* Check that the linear geometry for dimensions 0,1,2,3
+ * has the correct name and dimension. */
 static void
-t8_test_geometry_identity ()
+t8_test_geometry_linear ()
+{
+  int                 dim;
+  t8_debugf ("Testing linear geometry dim and name.\n");
+  for (dim = 0; dim < 3; ++dim) {
+    t8_geometry_linear  linear_geom (dim);
+    char                name[BUFSIZ];
+    snprintf (name, BUFSIZ, "t8_geom_linear_%i", dim);
+    SC_CHECK_ABORTF (!strcmp (linear_geom.t8_geom_get_name (), name),
+                     "Linear geometry of dim %i has wrong name."
+                     "Expected '%s', got '%s'", dim, name,
+                     linear_geom.t8_geom_get_name ());
+    SC_CHECK_ABORTF (dim == linear_geom.t8_geom_get_dimension (),
+                     "Linear geometry of dim %i has wrong dimension: %i.",
+                     dim, linear_geom.t8_geom_get_dimension ());
+  }
+}
+
+/* Check that the zero geometry for dimensions 0,1,2,3
+ * has the correct name and dimension. */
+static void
+t8_test_geometry_zero ()
+{
+  int                 dim;
+  t8_debugf ("Testing zero geometry dim and name.\n");
+  for (dim = 0; dim < 3; ++dim) {
+    t8_geometry_zero    zero_geom (dim);
+    char                name[BUFSIZ];
+    snprintf (name, BUFSIZ, "t8_geom_zero_%i", dim);
+    SC_CHECK_ABORTF (!strcmp (zero_geom.t8_geom_get_name (), name),
+                     "Linear geometry of dim %i has wrong name."
+                     "Expected '%s', got '%s'", dim, name,
+                     zero_geom.t8_geom_get_name ());
+    SC_CHECK_ABORTF (dim == zero_geom.t8_geom_get_dimension (),
+                     "Linear geometry of dim %i has wrong dimension: %i.",
+                     dim, zero_geom.t8_geom_get_dimension ());
+  }
+}
+
+/* Check whether the linear geometry map is correct.
+ * We create a cmesh of one tree and unit point/line/square/cube
+ * geometry. We then create random points in a reference tree and
+ * check whether the evaluation is correct. */
+static void
+t8_test_cmesh_geometry_linear (sc_MPI_Comm comm)
 {
   int                 dim;
 
-  t8_debugf ("Testing identity geometry map and jacobian.\n");
-  SC_ABORT ("Test not implemented.");
-  /* TODO: We need to use a different geometry since we remove the identity geomeytry. */
-
-#if 0
+  t8_debugf ("Testing linear geometry evaluation.\n");
+  /* TODO: Add a test for the jacobian, as soon as its implemented. */
 
   /* Create random points in [0,1]^d and check if they are mapped correctly. */
   for (dim = 0; dim < 3; ++dim) {
-    t8_geometry_identity id_geom (dim);
+    t8_geometry_linear  linear_geom (dim);
+    t8_cmesh_t          cmesh;
 
     int                 num_points = 10000;
     int                 ipoint, idim;
     double              point[3];
     double              point_mapped[3];
-    double              jacobian[9];
     int                 seed = 0;       /* RNG seed */
+    t8_eclass_t         tree_class;
+    const t8_geometry_c *cmesh_geom;
+    int                 has_same_name;
+
+    /* Build a one tree cmesh on the unit square with linear geometry. */
+    switch (dim) {
+    case 0:
+      tree_class = T8_ECLASS_VERTEX;
+      break;
+    case 1:
+      tree_class = T8_ECLASS_LINE;
+      break;
+    case 2:
+      tree_class = T8_ECLASS_QUAD;
+      break;
+    case 3:
+      tree_class = T8_ECLASS_HEX;
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();
+    }
+    cmesh = t8_cmesh_new_hypercube (tree_class, comm, 0, 0, 0);
+
+    /* Double check that the geometry is the linear geometry. */
+    cmesh_geom = t8_cmesh_get_tree_geometry (cmesh, 0);
+    SC_CHECK_ABORT (cmesh_geom != NULL, "Could not get cmesh's geometry.");
+    has_same_name =
+      !strcmp (cmesh_geom->t8_geom_get_name (),
+               linear_geom.t8_geom_get_name ());
+    SC_CHECK_ABORT (has_same_name,
+                    "cmesh's geometry is not the linear geometry.");
 
     srand (seed);
     for (ipoint = 0; ipoint < num_points; ++ipoint) {
-      /* Compute random coordinates in [0,1] */
+      /* Compute random coordinates in [0,1].
+       * These are seen as reference coordinates in the single
+       * cmesh tree. Our geometry will map them into the physical
+       * space. Since this space is also [0,1] and the cmesh only
+       * has one tree, the mapped coordinates must be the same as the 
+       * reference coordinates. */
       point[0] = (double) rand () / RAND_MAX;
       point[1] = (double) rand () / RAND_MAX;
       point[2] = (double) rand () / RAND_MAX;
+
       /* Evaluate the geometry */
-      id_geom.t8_geom_evaluate (0, point, point_mapped);
+      t8_geometry_evaluate (cmesh, 0, point, point_mapped);
       /* Check that the first dim coordinates are the same */
       for (idim = 0; idim < dim; ++idim) {
-        SC_CHECK_ABORT (fabs (point[idim] - point_mapped[idim]) < 1e-12,
-                        "Identity geometry computed wrong value.");
+        const double        tolerance = 1e-14;
+        SC_CHECK_ABORT (fabs (point[idim] - point_mapped[idim]) < tolerance,
+                        "Linear geometry computed wrong value.");
       }
       /* Check that the remaining entries are 0. */
       for (; idim < 3; ++idim) {
         SC_CHECK_ABORT (point_mapped[idim] == 0,
-                        "Identity geometry computed wrong value.");
-      }
-      /* Evaluate the jacobian */
-      id_geom.t8_geom_evalute_jacobian (0, point, jacobian);
-      /* Check the jacobian. */
-      for (idim = 0; idim < dim; ++idim) {
-        int                 j;
-        for (j = 0; j < 3; ++j) {
-          SC_CHECK_ABORT (jacobian[3 * idim + j] == (idim == j ? 1 : 0),
-                          "Jacobian of identity geometry not correct.");
-        }
+                        "Linear geometry computed wrong value.");
       }
     }
+    /* Destroy the cmesh */
+    t8_cmesh_destroy (&cmesh);
   }
-#endif
 }
 
 static void
 t8_test_cmesh_geometry (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
-  SC_ABORT ("Test not implemented.");
   /* TODO: We need to use a different geometry since we remove the identity geomeytry. */
-#if 0
-  t8_geometry_identity *id_geom = new t8_geometry_identity (2);
+
+  t8_geometry_linear *linear_geom = new t8_geometry_linear (2);
+  t8_geometry_zero   *zero_geom = new t8_geometry_zero (2);
   const t8_geometry_c *found_geom;
 
   t8_debugf ("Testing cmesh tree geometry set/get.\n");
@@ -95,27 +168,59 @@ t8_test_cmesh_geometry (sc_MPI_Comm comm)
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
   t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
-  /* Register the id_geometry to this cmesh. */
-  t8_cmesh_register_geometry (cmesh, id_geom);
+  /* Register the linear geometry and zero geometry to this cmesh. */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+  t8_cmesh_register_geometry (cmesh, zero_geom);
   /* Set the id geometry for the trees. */
-  t8_cmesh_set_tree_geometry (cmesh, 0, id_geom->t8_geom_get_name ());
-  t8_cmesh_set_tree_geometry (cmesh, 1, id_geom->t8_geom_get_name ());
+  t8_cmesh_set_tree_geometry (cmesh, 0, linear_geom->t8_geom_get_name ());
+  t8_cmesh_set_tree_geometry (cmesh, 1, zero_geom->t8_geom_get_name ());
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, comm);
 
   /* Check that we can get the geometry back over the tree id. */
   found_geom = t8_cmesh_get_tree_geometry (cmesh, 0);
-  SC_CHECK_ABORT (found_geom != NULL, "Could not find any geometry.");
-  SC_CHECK_ABORT (found_geom == id_geom,
-                  "Could not find cmesh tree geometry.");
+  SC_CHECK_ABORT (found_geom != NULL,
+                  "Could not find any geometry at tree 0.");
+  SC_CHECK_ABORT (found_geom == linear_geom,
+                  "Could not find linear tree geometry at tree 0.");
   found_geom = t8_cmesh_get_tree_geometry (cmesh, 1);
+  SC_CHECK_ABORT (found_geom != NULL,
+                  "Could not find any geometry at tree 1.");
+  SC_CHECK_ABORT (found_geom == zero_geom,
+                  "Could not find zero tree geometry at tree 1.");
+
+  /* clean-up */
+  t8_cmesh_destroy (&cmesh);
+}
+
+static void
+t8_test_cmesh_geometry_unique (sc_MPI_Comm comm)
+{
+  t8_cmesh_t          cmesh;
+  /* TODO: We need to use a different geometry since we remove the identity geomeytry. */
+
+  t8_geometry_linear *linear_geom = new t8_geometry_linear (2);
+  const t8_geometry_c *found_geom;
+
+  t8_debugf ("Testing cmesh tree geometry get with unique geometry.\n");
+  /* Build a simple 2 tree cmesh and set geometries for the trees. */
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
+  /* Register the id_geometry to this cmesh. */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
+  /* Commit the cmesh */
+  t8_cmesh_commit (cmesh, comm);
+
+  /* Check that we can get the geometry back over the tree id.
+   * This must now work even though we did not register the geometry for 
+   * this tree. Since we only have one geometry. */
+  found_geom = t8_cmesh_get_tree_geometry (cmesh, 0);
   SC_CHECK_ABORT (found_geom != NULL, "Could not find any geometry.");
-  SC_CHECK_ABORT (found_geom == id_geom,
+  SC_CHECK_ABORT (found_geom == linear_geom,
                   "Could not find cmesh tree geometry.");
 
   /* clean-up */
   t8_cmesh_destroy (&cmesh);
-#endif
 }
 
 static void
@@ -183,8 +288,11 @@ main (int argc, char **argv)
   p4est_init (NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  t8_test_geometry_identity ();
+  t8_test_geometry_linear ();
+  t8_test_geometry_zero ();
+  t8_test_cmesh_geometry_linear (mpic);
   t8_test_cmesh_geometry (mpic);
+  t8_test_cmesh_geometry_unique (mpic);
   t8_test_geom_handler_register (mpic);
 
   sc_finalize ();
