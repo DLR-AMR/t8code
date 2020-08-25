@@ -23,7 +23,6 @@
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_geometry/t8_geometry.h>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_identity.hxx>
 
 /* Check whether the identity geometry map and jacobian are correct. */
 static void
@@ -32,6 +31,10 @@ t8_test_geometry_identity ()
   int                 dim;
 
   t8_debugf ("Testing identity geometry map and jacobian.\n");
+  SC_ABORT ("Test not implemented.");
+  /* TODO: We need to use a different geometry since we remove the identity geomeytry. */
+
+#if 0
 
   /* Create random points in [0,1]^d and check if they are mapped correctly. */
   for (dim = 0; dim < 3; ++dim) {
@@ -74,12 +77,16 @@ t8_test_geometry_identity ()
       }
     }
   }
+#endif
 }
 
 static void
 t8_test_cmesh_geometry (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
+  SC_ABORT ("Test not implemented.");
+  /* TODO: We need to use a different geometry since we remove the identity geomeytry. */
+#if 0
   t8_geometry_identity *id_geom = new t8_geometry_identity (2);
   const t8_geometry_c *found_geom;
 
@@ -108,6 +115,7 @@ t8_test_cmesh_geometry (sc_MPI_Comm comm)
 
   /* clean-up */
   t8_cmesh_destroy (&cmesh);
+#endif
 }
 
 static void
@@ -118,6 +126,9 @@ t8_test_geom_handler_register (sc_MPI_Comm comm)
   const t8_geometry_c *found_geom;
 
   t8_debugf ("Testing geometry handler register.\n");
+  SC_ABORT ("Test not implemented.");
+  /* TODO: We need to use a different geometry since we remove the identity geomeytry. */
+#if 0
   /* Initialize a geometry handler. */
   t8_geom_handler_init (&geom_handler);
 
@@ -155,6 +166,7 @@ t8_test_geom_handler_register (sc_MPI_Comm comm)
   t8_geom_handler_destroy (&geom_handler);
   SC_CHECK_ABORT (geom_handler == NULL,
                   "Geometry handler was not destroyed properly.");
+#endif
 }
 
 int
