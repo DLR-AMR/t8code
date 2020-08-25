@@ -129,6 +129,47 @@ t8_analytic_3D_cube (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
                                    cos (ref_coords[1] * 2 * M_PI));
 }
 
+/* This adapt callback function will refine all elements at the
+ * domain boundary up to a given maximum refinement level. */
+static int
+t8_geom_adapt_boundary (t8_forest_t forest, t8_forest_t forest_from,
+                        t8_locidx_t ltree_id, t8_locidx_t lelement_id,
+                        t8_eclass_scheme_c * ts, int num_elements,
+                        t8_element_t * elements[])
+{
+  t8_cmesh_t          cmesh = t8_forest_get_cmesh (forest_from);
+  /* Get the number of faces of the element. */
+  int                 num_faces = ts->t8_element_num_faces (elements[0]);
+  int                 iface;
+  /* Get the maximum level from the forest's user data 
+   * (must be set before using the callback). */
+  int                 maxlevel = *(int *) t8_forest_get_user_data (forest);
+
+  /* We do not refine more then the given maximum level. */
+  if (ts->t8_element_level (elements[0]) >= maxlevel) {
+    return 0;
+  }
+
+  /* Check for each face of the element whether it lies on the 
+   * domain boundary. If so, the element is refined. */
+  for (iface = 0; iface < num_faces; ++iface) {
+    if (ts->t8_element_is_root_boundary (elements[0], iface)) {
+      /* This element's face is at its tree boundary. Check whether
+         the tree's face is at the domain boundary. */
+      int                 tree_face =
+        ts->t8_element_tree_face (elements[0], iface);
+      t8_locidx_t         lctreeid =
+        t8_forest_ltreeid_to_cmesh_ltreeid (forest_from, ltree_id);
+      if (t8_cmesh_tree_face_is_boundary (cmesh, lctreeid, tree_face)) {
+        /* The tree's face is at the domain boundary, we refine the element. */
+        return 1;
+      }
+    }
+  }
+  /* All other elements remain unchanged. */
+  return 0;
+}
+
 static void
 t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
 {
@@ -136,6 +177,7 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
   t8_cmesh_t          cmesh;
   char                vtuname[BUFSIZ];
   t8_geometry_c      *geometry;
+  int                 uniform_level;
 
   t8_cmesh_init (&cmesh);
   /* Depending on the geometry type, add the tree, set the geometry
@@ -201,10 +243,23 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
+  /* The initial uniform refinement level is the input level except
+   * when geom_type is T8_GEOM_CIRCLE. In that case we start with level
+   * 2 and refine recursively only along the boundary. */
+  uniform_level = geom_type == T8_GEOM_CIRCLE ? SC_MIN (2, level) : level;
   /* Create a uniform forest */
   forest =
-    t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0,
-                           sc_MPI_COMM_WORLD);
+    t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), uniform_level,
+                           0, sc_MPI_COMM_WORLD);
+  if (geom_type == T8_GEOM_CIRCLE) {
+    t8_forest_t         forest_adapt;
+    /* Create a forest that is only refined at the tree boundaries. 
+     * We pass the input level as user pointer and use it in the adapt 
+     * callback to stop refinement after this level. */
+    forest_adapt =
+      t8_forest_new_adapt (forest, t8_geom_adapt_boundary, 1, 1, &level);
+    forest = forest_adapt;
+  }
 
   /* Write to vtk */
   t8_forest_write_vtk (forest, vtuname);
@@ -254,6 +309,7 @@ main (int argc, char **argv)
                       "\t\t1 - A cylinder with one 2D quad tree.\n"
                       "\t\t2 - A moebius strip on a hybrid mesh with 4 triangles and 2 quads.\n"
                       "\t\t3 - A square of two triangles that is mapped into a circle.\n"
+                      "\t\t    The mesh will not be uniform. Instead it is refined at the domain boundary.\n"
                       "\t\t4 - A cube that is distorted in z-direction with one 3D cube tree.\n");
 
   parsed =
