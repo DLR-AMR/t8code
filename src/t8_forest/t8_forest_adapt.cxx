@@ -68,6 +68,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
   /* TODO: This assumes that the number of children is the same for each
    *       element in that class. This may not be the case. */
   ts->t8_element_new(1, &parent);
+  T8_ASSERT(ts->t8_element_level(element)> 0);
   ts->t8_element_parent(element, parent);
   num_children = ts->t8_element_num_children (parent);
   //T8_ASSERT (ts->t8_element_child_id (element) == num_children - 1);
@@ -96,6 +97,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid,
       *el_inserted -= num_children - 1;
       /* remove num_children - 1 elements from the array */
       T8_ASSERT (elements_in_array == t8_element_array_get_count (telements));
+      T8_ASSERT(ts->t8_element_level(element)> 0);
       ts->t8_element_parent (fam[0], fam[0]);
       num_children = ts->t8_element_num_children(fam[0]);
       elements_in_array -= num_children - 1;
@@ -278,9 +280,19 @@ t8_forest_adapt (t8_forest_t forest)
 
       num_elements = num_children; /*This has to remain num_children t8_element_array_index_locidx
                                                       (telements_from, 0)*/
-      tscheme->t8_element_parent(t8_element_array_index_locidx (telements_from,
-                                                                 el_considered), parent);
-      num_siblings = tscheme->t8_element_num_children(parent);
+      /*T8_ASSERT(tscheme->t8_element_level(t8_element_array_index_locidx (telements_from,
+                                                                    el_considered))> 0);*/
+      if(tscheme->t8_element_level(t8_element_array_index_locidx (telements_from,
+                                                                  el_considered))> 0)
+      {
+          tscheme->t8_element_parent(t8_element_array_index_locidx (telements_from,
+                                                                     el_considered), parent);
+          num_siblings = tscheme->t8_element_num_children(parent);
+      }
+      else{
+          num_siblings = tscheme->t8_element_num_children(t8_element_array_index_locidx (telements_from,
+                                                                                         el_considered));
+      }
       /*change: num_children into num_siblings*/
       for (zz = 0; zz < (unsigned int)num_siblings &&
            el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
@@ -344,7 +356,10 @@ t8_forest_adapt (t8_forest_t forest)
         else {
           /* The element should be refined and refinement is not recursive. */
           /* We add the children to the element array of the current tree. */
-           tscheme->t8_element_parent(t8_element_array_index_locidx (telements, el_inserted), parent);
+            T8_ASSERT(tscheme->t8_element_level(
+                          t8_element_array_index_locidx (telements, el_inserted))> 0);
+           tscheme->t8_element_parent(t8_element_array_index_locidx (telements, el_inserted),
+                                      parent);
           num_siblings = tscheme->t8_element_num_children(parent);
           (void) t8_element_array_push_count (telements, num_siblings); /*num_children or num_siblings?*/
           for (zz = 0; zz < num_siblings; zz++) {
@@ -364,6 +379,7 @@ t8_forest_adapt (t8_forest_t forest)
         elements[0] = t8_element_array_push (telements);
         /* Compute the parent of the current family.
          * This parent is now inserted in telements. */
+        T8_ASSERT(tscheme->t8_element_level(elements_from[0])> 0);
         tscheme->t8_element_parent (elements_from[0], elements[0]);
         el_inserted++;
         num_siblings = tscheme->t8_element_num_children(elements[0]);
@@ -391,8 +407,15 @@ t8_forest_adapt (t8_forest_t forest)
         T8_ASSERT (refine == 0);
         elements[0] = t8_element_array_push (telements);
         tscheme->t8_element_copy (elements_from[0], elements[0]);
-        tscheme->t8_element_parent(elements[0], parent);
-        num_siblings = tscheme->t8_element_num_children(parent);
+        /*T8_ASSERT(tscheme->t8_element_level(elements[0])> 0);*/
+        if(tscheme->t8_element_level(elements[0])> 0){
+
+            tscheme->t8_element_parent(elements[0], parent);
+            num_siblings = tscheme->t8_element_num_children(parent);
+        }
+        else{
+            num_siblings = tscheme->t8_element_num_children(elements[0]);
+        }
         el_inserted++;
         if (forest->set_adapt_recursive &&
             (size_t) tscheme->t8_element_child_id (elements[0])

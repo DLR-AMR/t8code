@@ -698,7 +698,6 @@ t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass,
     v_2[i] = vertices[6 + i] - vertices[i];
     v_j[i] = vertices[3 * j + i] - vertices[i];
   }
-
   /* compute cross = v_1 x v_2 */
   t8_cmesh_tree_vertices_cross (v_1, v_2, cross);
   /* Compute sc_prod = <v_j, cross> */
@@ -3425,7 +3424,7 @@ t8_cmesh_new_full_hybrid(sc_MPI_Comm comm)
     t8_cmesh_set_tree_class(cmesh, 3, T8_ECLASS_PRISM);
     t8_cmesh_set_join(cmesh, 0,1,5,4,0);
     t8_cmesh_set_join(cmesh, 1,2,0,1,0);
-    t8_cmesh_set_join(cmesh, 3,1,4,1,0);
+    t8_cmesh_set_join(cmesh, 1,3,3,3,0);
 
     /*Hex vertices*/
     vertices[0] = 0;
@@ -3493,10 +3492,10 @@ t8_cmesh_new_full_hybrid(sc_MPI_Comm comm)
 
     /*prism vertices*/
     vertices[0] = 1;
-    vertices[1] = 0;
+    vertices[1] = 1;
     vertices[2] = 1;
 
-    vertices[3] = 1;
+    vertices[3] = 0;
     vertices[4] = 1;
     vertices[5] = 1;
 
@@ -3504,20 +3503,74 @@ t8_cmesh_new_full_hybrid(sc_MPI_Comm comm)
     vertices[7] = 1;
     vertices[8] = 2;
 
-    vertices[9] = 2;
-    vertices[10] = 0;
+    vertices[9] = 1;
+    vertices[10] = 2;
     vertices[11] = 1;
 
-    vertices[12] = 2;
-    vertices[13] = 1;
+    vertices[12] = 0;
+    vertices[13] = 2;
     vertices[14] = 1;
 
-    vertices[15] = 2;
-    vertices[16] = 1;
+    vertices[15] = 1;
+    vertices[16] = 2;
     vertices[17] = 2;
 
     t8_cmesh_set_tree_vertices(cmesh, 3, t8_get_package_id(), 0, vertices, 6);
 
     t8_cmesh_commit(cmesh, comm);
     return cmesh;
+}
+
+t8_cmesh_t
+t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra)
+{
+    /*num_of_pyra pyras a 5 vertices a 3 coords */
+    /* TODO: This seems too be a lot of memory, can we also get by with only
+    5 * 3 doubles? */
+    int                 i, j;
+  double             *vertices = T8_ALLOC (double, num_of_pyra * 5 * 3);
+  t8_cmesh_t          cmesh;
+  double              degrees = 360. / num_of_pyra;
+  if(vertices )
+  T8_ASSERT (num_of_pyra > 2);
+
+  for (i = 0; i < num_of_pyra; i++) {
+    for (j = 0; j < 5; j++) {
+      /*Get the edges at the unit circle */
+        if(j == 4){
+            vertices[i*5*3 + j*3] = 0;
+            vertices[i*5*3 + j*3+1] = 0;
+            vertices[i*5*3 + j*3+2] = 0;
+        }
+        else if (j == 1 || j == 3) {
+          vertices[i * 5 * 3 + j * 3] = cos (i * degrees * M_PI / 180);
+          vertices[i * 5 * 3 + j * 3 + 1] = sin (i * degrees * M_PI / 180);
+          vertices[i * 5 * 3 + j * 3 + 2] = (j == 3 ? 0.5 : -0.5);
+        }
+        else if(j == 0 || j == 2){
+            vertices[i * 5 * 3 + j * 3] =
+              cos ((i * degrees + degrees) * M_PI / 180);
+            vertices[i * 5 * 3 + j * 3 + 1] =
+              sin ((i * degrees + degrees) * M_PI / 180);
+            vertices[i * 5 * 3 + j * 3 + 2] = (j == 2 ? 0.5 : -0.5);
+        }
+    }
+  }
+  t8_cmesh_init (&cmesh);
+  for (i = 0; i < num_of_pyra; i++) {
+    t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PYRAMID);
+  }
+
+  for (i = 0; i < num_of_pyra; i++) {
+    t8_cmesh_set_join (cmesh, i, (i == (num_of_pyra - 1) ? 0 : i + 1), 0, 1,
+                       0);
+  }
+  for (i = 0; i < num_of_pyra; i++) {
+    t8_cmesh_set_tree_vertices (cmesh, i, t8_get_package_id (), 0,
+                                vertices + i * 15, 5);
+  }
+  t8_cmesh_commit (cmesh, comm);
+  T8_FREE (vertices);
+
+  return cmesh;
 }

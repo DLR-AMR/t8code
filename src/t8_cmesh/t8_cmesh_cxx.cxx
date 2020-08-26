@@ -90,6 +90,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
             ("Currently t8code does not support different leaf counts per tree.");*/
         }
         first_class_children_per_tree = children_per_tree;
+        t8_debugf("[D] class: %i, children_per_tree: %i\n", tree_class, children_per_tree);
         global_num_children += cmesh->num_trees_per_eclass[tree_class] * children_per_tree;
       }
     }

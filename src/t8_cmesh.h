@@ -882,6 +882,14 @@ t8_cmesh_t          t8_cmesh_new_hybrid_gate_deformed (sc_MPI_Comm comm);
  */
 t8_cmesh_t          t8_cmesh_new_full_hybrid(sc_MPI_Comm comm);
 
+/** Construct a mesh out of num_of_pyra many pyramids. They form a circle, face 0 is
+ * connected with face 1 of the next pyramid.
+ * \param [in] comm         The MPI communicator used to commit the cmesh
+ * \param [in] num_of_pyra  The number of pyramids to construct. Should be larger than 2
+ * \return                  A cmesh with num_of_pyra many pyramids
+*/
+t8_cmesh_t          t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_H */
