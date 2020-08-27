@@ -25,6 +25,7 @@ libt8_internal_headers = \
   src/t8_geometry/t8_geometry_helpers.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx \
   src/t8_forest/t8_forest_cxx.h  \
   src/t8_forest/t8_forest_ghost.h \
   src/t8_forest/t8_forest_balance.h src/t8_forest/t8_forest_types.h \
@@ -47,6 +48,7 @@ libt8_compiled_sources = \
   src/t8_geometry/t8_geometry_helpers.c \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.cxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.cxx \
   src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest_cxx.cxx \
   src/t8_forest/t8_forest_private.c src/t8_forest/t8_forest_vtk.cxx \
   src/t8_forest/t8_forest_ghost.cxx src/t8_forest/t8_forest_iterate.cxx \
