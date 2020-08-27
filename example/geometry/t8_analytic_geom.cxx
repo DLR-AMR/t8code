@@ -184,6 +184,9 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
    * and set the output file name. */
   switch (geom_type) {
   case T8_GEOM_SINCOS:
+    t8_global_productionf
+      ("Creating uniform level %i forest with a sinus/cosinus geometry.\n",
+       level);
     /* Sin/cos geometry. Has two quad trees. */
     geometry =
       new t8_geometry_analytic (2, "analytic sinus cosinus dim=2",
@@ -194,6 +197,8 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     snprintf (vtuname, BUFSIZ, "forest_analytic_sincos_lvl_%i", level);
     break;
   case T8_GEOM_CYLINDER:
+    t8_global_productionf
+      ("Creating uniform level %i forest with a cylinder geometry.\n", level);
     /* Cylinder geometry. Has one quad tree that is periodic in x direction. */
     geometry =
       new t8_geometry_analytic (2, "analytic geometry cylinder",
@@ -203,6 +208,8 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     snprintf (vtuname, BUFSIZ, "forest_analytic_cylinder_lvl_%i", level);
     break;
   case T8_GEOM_MOEBIUS:
+    t8_global_productionf
+      ("Creating uniform level %i forest with a moebius geometry.\n", level);
     {
       /* Moebius geometry on hybrid unit square. */
       t8_cmesh_t          hybrid_square =
@@ -215,6 +222,9 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     }
     break;
   case T8_GEOM_CIRCLE:
+    t8_global_productionf ("Creating forest with a circle geometry.\n");
+    t8_global_productionf
+      ("This forest will get refined at the boundary to level %i.\n", level);
     {
       /* Circle geometry on triangulated unit square. */
       t8_cmesh_t          tri_square =
@@ -228,6 +238,9 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     }
     break;
   case T8_GEOM_3D:
+    t8_global_productionf
+      ("Creating uniform level %i forest with a 3D function graph geometry.\n",
+       level);
     /* Cube geometry with sincos on top. Has one hexahedron tree. */
     geometry =
       new t8_geometry_analytic (3, "cube geom", t8_analytic_3D_cube, NULL,
@@ -265,6 +278,14 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
   t8_forest_write_vtk (forest, vtuname);
   /* Output */
   t8_global_productionf ("Wrote forest to vtu files %s.*\n", vtuname);
+  if (geom_type == T8_GEOM_CIRCLE) {
+    t8_global_productionf
+      ("\tNote that this mesh is heavily distorted and we do not\n");
+    t8_global_productionf
+      ("\trecommend using such a mesh in a production code.\n");
+    t8_global_productionf
+      ("\tThis example is for demonstrative purposes only.\n");
+  }
 
   t8_forest_unref (&forest);
 }
