@@ -21,6 +21,7 @@
 */
 
 #include <sc_options.h>
+#include <sc_flops.h>
 #include <sc_refcount.h>
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_schemes/t8_default/t8_dtet.h>
@@ -66,19 +67,19 @@ t8_basic_hybrid_refine(t8_forest_t forest, t8_forest_t forest_from,
 }
 
 static void
-t8_basic_hybrid(int level, int endlvl, const char *mshfile)
+t8_basic_hybrid(int level, int endlvl)
 {
     t8_forest_t forest, forest_adapt, forest_partition;
     t8_cmesh_t  cmesh, cmesh_partition;
     char        vtuname[BUFSIZ], cmesh_file[BUFSIZ];
     int         mpirank, mpiret;
     char        prefix[BUFSIZ];
-
-    cmesh = //t8_cmesh_new_from_class(T8_ECLASS_PRISM, sc_MPI_COMM_WORLD);
+    snprintf(prefix, BUFSIZ,"");
+    cmesh = t8_cmesh_new_from_class(T8_ECLASS_PYRAMID, sc_MPI_COMM_WORLD);
             //t8_cmesh_new_hybrid_gate(sc_MPI_COMM_WORLD);
             //t8_cmesh_new_full_hybrid(sc_MPI_COMM_WORLD);
             //t8_cmesh_from_msh_file((char *) prefix, 1, sc_MPI_COMM_WORLD, 3, 0);
-            t8_cmesh_new_pyramid_cake(sc_MPI_COMM_WORLD, 100);
+            //t8_cmesh_new_pyramid_cake(sc_MPI_COMM_WORLD, 100);
 
     snprintf(cmesh_file, BUFSIZ,"cmesh_hybrid");
     t8_cmesh_save(cmesh, cmesh_file);
@@ -100,6 +101,7 @@ t8_basic_hybrid(int level, int endlvl, const char *mshfile)
     cmesh = cmesh_partition;
 
     t8_forest_init(&forest);
+    t8_forest_set_profiling(forest, 1);
     t8_forest_set_cmesh(forest, cmesh, sc_MPI_COMM_WORLD);
     t8_forest_set_scheme(forest, t8_scheme_new_default_cxx());
     t8_forest_set_level(forest, level);
@@ -127,7 +129,7 @@ t8_basic_hybrid(int level, int endlvl, const char *mshfile)
     snprintf (vtuname, BUFSIZ, "forest_hybrid_partition");
     t8_forest_write_vtk (forest_partition, vtuname);
     t8_debugf ("Output to %s\n", vtuname);
-
+    t8_forest_print_profile(forest_partition);
 
 
     t8_forest_unref(&forest_partition);

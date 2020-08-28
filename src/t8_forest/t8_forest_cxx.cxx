@@ -1117,6 +1117,10 @@ t8_forest_populate (t8_forest_t forest)
       end = (jt == forest->last_local_tree) ? child_in_tree_end :
         eclass_scheme->t8_element_count_leafs_from_root (forest->set_level);
       num_tree_elements = end - start;
+      t8_debugf("[D] forest, child_in_tree_end: %i leafs: %i\n", child_in_tree_end,
+                eclass_scheme->t8_element_count_leafs_from_root (forest->set_level));
+      t8_debugf("[D] start: %i, end: %i, num_tree_elements: %i\n", start, end,
+                num_tree_elements);
       T8_ASSERT (num_tree_elements > 0);
       /* Allocate elements for this processor. */
       t8_element_array_init_size (telements, eclass_scheme,
