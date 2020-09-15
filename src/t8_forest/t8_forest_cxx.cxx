@@ -430,6 +430,9 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
   memset (coordinates, 0, 3 * sizeof (double));
   /* get the number of corners of element */
   num_corners = ts->t8_element_num_corners (element);
+  if(ts->t8_element_shape(element) == T8_ECLASS_TET){
+      num_corners = 4;
+  }
   for (icorner = 0; icorner < num_corners; icorner++) {
     /* For each corner, add its coordinates to the centroids coordinates. */
     t8_forest_element_coordinate (forest, ltreeid, element, vertices, icorner,

@@ -890,6 +890,11 @@ t8_cmesh_t          t8_cmesh_new_full_hybrid(sc_MPI_Comm comm);
 */
 t8_cmesh_t          t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra);
 
+/** Construct a bigger mesh, consisting of many cubes made by pyramids
+ * \param [in] comm         The MPI communicator used to commit the cmesh
+ * \param [in] num_cubes    The number of cubes of pyramids
+ * return                   A cmesh with \a num_cubes many hypercubes*/
+t8_cmesh_t          t8_cmesh_new_long_brick_pyramid(sc_MPI_Comm comm, int num_cubes);
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_H */

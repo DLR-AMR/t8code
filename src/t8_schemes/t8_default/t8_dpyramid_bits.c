@@ -736,7 +736,7 @@ t8_dpyramid_last_descendant_face(const t8_dpyramid_t * p,
 int
 t8_dpyramid_num_vertices (const t8_dpyramid_t * p)
 {
-  if (p->type < 6) {
+  if (t8_dpyramid_shape(p) == T8_ECLASS_TET) {
     return T8_DTET_CORNERS;
   }
   else {
@@ -1225,7 +1225,7 @@ t8_dpyramid_compute_coords (const t8_dpyramid_t * p, int vertex, int coords[])
   t8_dpyramid_coord_t h;
   T8_ASSERT (0 <= vertex && vertex < T8_DPYRAMID_CORNERS);
 
-  if (p->type == 6 || p->type == 7) {
+  if (t8_dpyramid_shape(p) == T8_ECLASS_PYRAMID) {
     h = T8_DPYRAMID_LEN (p->level);
     coords[0] = p->x;
     coords[1] = p->y;
@@ -1255,7 +1255,7 @@ t8_dpyramid_compute_coords (const t8_dpyramid_t * p, int vertex, int coords[])
     }
   }
   else {
-    T8_ASSERT (vertex < T8_DTET_CORNERS);
+    T8_ASSERT (0 <= vertex && vertex < T8_DTET_CORNERS);
     t8_dtet_compute_coords ((const t8_dtet_t *) p, vertex, coords);
   }
 }

@@ -365,6 +365,7 @@ t8_forest_adapt (t8_forest_t forest)
           for (zz = 0; zz < num_siblings; zz++) {
             elements[zz] =
               t8_element_array_index_locidx (telements, el_inserted + zz);
+
           }
           tscheme->t8_element_children (elements_from[0], num_siblings,
                                         elements);

@@ -64,7 +64,6 @@ t8_eclass_scheme::t8_element_array_index (sc_array_t * array, size_t it)
 {
   T8_ASSERT (it < array->elem_count);
   T8_ASSERT (element_size == array->elem_size);
-
   return (t8_element_t *) sc_array_index (array, it);
 }
 

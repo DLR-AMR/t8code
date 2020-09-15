@@ -39,27 +39,61 @@ t8_basic_hybrid_refine(t8_forest_t forest, t8_forest_t forest_from,
                           t8_eclass_scheme_c * ts, int num_elements,
                           t8_element_t * elements[])
 {
-    int         level, type;
+    int         level, id;
     level = ts->t8_element_level(elements[0]);
     if (level >= *(int *) t8_forest_get_user_data (forest)) {
       return 0;
     }
     else{
         switch (ts->t8_element_shape(elements[0])) {
+        case T8_ECLASS_HEX:
+            id=ts->t8_element_child_id(elements[0]);
+            return id%2==0?1:0;
         case T8_ECLASS_TET:
-            type = ((t8_dtri_t *)elements[0])->type;
-            if(type == 0 || type == 4){
+            id=ts->t8_element_child_id(elements[0]);
+            return id%2==0?1:0;
+        case T8_ECLASS_PRISM:
+            id=ts->t8_element_child_id(elements[0]);
+            return id%2==0?1:0;
+        case T8_ECLASS_PYRAMID:
+            return 1;
+        default:
+            return 1;
+        }
+    }
+}
+
+static int
+t8_basic_cake_refine(t8_forest_t forest, t8_forest_t forest_from,
+                          t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                          t8_eclass_scheme_c * ts, int num_elements,
+                          t8_element_t * elements[])
+{
+    int         level, type;
+    level = ts->t8_element_level(elements[0]);
+    if (level >= *(int *) t8_forest_get_user_data (forest)) {
+      return 0;
+    }
+    else{
+        int32_t h = T8_DPYRAMID_LEN(level);
+        switch (ts->t8_element_shape(elements[0])) {
+        case T8_ECLASS_TET:
+            type = ((t8_dtet_t *)elements[0])->type;
+            if(type == 0 || type == 2 || type == 4){
                 return 1;
             }
-            else {
+            else{
                 return 0;
             }
-        case T8_ECLASS_PRISM:
-            type = ((t8_dprism_t *)elements[0])->tri.type;
-            return type == 0 ? 1: 0;
         case T8_ECLASS_PYRAMID:
-            type = ((t8_dpyramid_t *)elements[0])->type;
-            return type == 6 ? 1 : 0;
+
+            if(!(((t8_dpyramid_t *) elements[0])->x & h)){
+                type = ((t8_dpyramid_t *) elements[0])->type;
+                return type == 6 ? 1:0;
+            }
+            else{
+                return 0;
+            }
         default:
             return 1;
         }
@@ -67,19 +101,37 @@ t8_basic_hybrid_refine(t8_forest_t forest, t8_forest_t forest_from,
 }
 
 static void
-t8_basic_hybrid(int level, int endlvl)
+t8_basic_hybrid(int level, int endlvl, int do_vtk, t8_eclass_t eclass,
+                int num_elements, int mesh, const char* prefix)
 {
     t8_forest_t forest, forest_adapt, forest_partition;
     t8_cmesh_t  cmesh, cmesh_partition;
     char        vtuname[BUFSIZ], cmesh_file[BUFSIZ];
     int         mpirank, mpiret;
-    char        prefix[BUFSIZ];
-    snprintf(prefix, BUFSIZ,"");
-    cmesh = t8_cmesh_new_from_class(T8_ECLASS_PYRAMID, sc_MPI_COMM_WORLD);
-            //t8_cmesh_new_hybrid_gate(sc_MPI_COMM_WORLD);
-            //t8_cmesh_new_full_hybrid(sc_MPI_COMM_WORLD);
-            //t8_cmesh_from_msh_file((char *) prefix, 1, sc_MPI_COMM_WORLD, 3, 0);
-            //t8_cmesh_new_pyramid_cake(sc_MPI_COMM_WORLD, 100);
+
+    switch (mesh) {
+    case 0:
+        t8_global_productionf ("Contructing cake mesh with %i pyramids.\n",
+                               num_elements);
+        cmesh = t8_cmesh_new_pyramid_cake(sc_MPI_COMM_WORLD, num_elements);
+        break;
+    case 1:
+        t8_global_productionf ("Contructing full hybrid mesh.\n");
+        cmesh = t8_cmesh_new_full_hybrid(sc_MPI_COMM_WORLD);
+        break;
+    case 2:
+        t8_global_productionf ("Contructing long brick out of %i pyramids.\n",
+                               num_elements);
+        cmesh = t8_cmesh_new_long_brick_pyramid(sc_MPI_COMM_WORLD, num_elements);
+        break;
+    case 3:
+        t8_global_productionf ("Contructing mesh from: %s.\n", prefix);
+        cmesh = t8_cmesh_from_msh_file((char *) prefix, 1, sc_MPI_COMM_WORLD, 3, 0);
+    default:
+        t8_global_productionf ("Contructing a single %s.\n", t8_eclass_to_string[eclass]);
+        cmesh = t8_cmesh_new_from_class(eclass, sc_MPI_COMM_WORLD);
+        break;
+    }
 
     snprintf(cmesh_file, BUFSIZ,"cmesh_hybrid");
     t8_cmesh_save(cmesh, cmesh_file);
@@ -112,7 +164,12 @@ t8_basic_hybrid(int level, int endlvl)
     t8_forest_init(&forest_adapt);
     t8_forest_set_user_data(forest_adapt, &endlvl);
     t8_forest_set_profiling(forest_adapt, 1);
-    t8_forest_set_adapt(forest_adapt, forest, t8_basic_hybrid_refine, 1);
+    if(eclass == T8_ECLASS_PYRAMID){
+        t8_debugf("Use cake-adapt\n");
+         t8_forest_set_adapt(forest_adapt, forest, t8_basic_cake_refine, 1);
+    }else{
+        t8_forest_set_adapt(forest_adapt, forest, t8_basic_hybrid_refine, 1);
+    }
     t8_forest_set_ghost_ext(forest_adapt, 1, T8_GHOST_FACES, 2);
     //t8_forest_commit(forest_adapt);
     /*t8_debugf ("Successfully adapted forest.\n");
@@ -126,9 +183,11 @@ t8_basic_hybrid(int level, int endlvl)
     t8_forest_set_partition(forest_partition, NULL, 0);
     t8_forest_set_profiling(forest_partition, 1);
     t8_forest_commit(forest_partition);
-    snprintf (vtuname, BUFSIZ, "forest_hybrid_partition");
-    t8_forest_write_vtk (forest_partition, vtuname);
-    t8_debugf ("Output to %s\n", vtuname);
+    if(do_vtk){
+        snprintf (vtuname, BUFSIZ, "forest_hybrid_partition");
+        t8_forest_write_vtk (forest_partition, vtuname);
+        t8_debugf ("Output to %s\n", vtuname);
+    }
     t8_forest_print_profile(forest_partition);
 
 
@@ -139,10 +198,12 @@ int
 main (int argc, char **argv)
 {
   int                 mpiret, parsed;
-  int                 level, endlvl, helpme;
+  int                 level, endlvl, helpme, do_vtk, eclass_int, mesh, elements;
+  t8_eclass_t         eclass;
   sc_options_t        *opt;
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
+  const char          *file;
 
   /* brief help message */
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t"
@@ -164,6 +225,21 @@ main (int argc, char **argv)
                       "The refinement level of the mesh.");
   sc_options_add_int (opt, 'f', "final-level", &endlvl, 1,
                       "The final refinement level of the mesh.");
+  sc_options_add_switch(opt, 'v', "vtk", &do_vtk, "Enable vtk-output.");
+  sc_options_add_int(opt, 'e', "element", &eclass_int, 4, "Given an element-class, the programm will "
+                    " construct a single element of this class. Is ignored, if the option cake is chosen."
+                  "The type of elements to use.\n"
+                    "\t\t4 - hexahedron\n"
+                  "\t\t5 - tetrahedron\n\t\t6 - prism\n\t\t7 - pyramid");
+  sc_options_add_int(opt, 'm', "mesh", &mesh, 4,"A mesh to choose from."
+                     " The meshes to chose from are: \n"
+                     "\t\t0 - cake of pyramids\n\t\t1 - hybrid mesh with all 3D elements"
+                     "\n\t\t2 - a long row of bricks out ot pyramids"
+                     "\n\t\t3 - user-specific mesh-file"
+                     "\n\t\tdefault - a single cube. The element can be changed with option -e");
+  sc_options_add_int(opt, 'n', "num_elements", &elements, 3, "The number of elements to use"
+                     " if a cake is build. Has to be larger than 2.");
+  sc_options_add_string(opt, 'f', "file", &file, "", "Prefix of the msh-file.");
 
   parsed = sc_options_parse(t8_get_package_id(), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
@@ -171,8 +247,10 @@ main (int argc, char **argv)
     t8_global_productionf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if(parsed >= 0 && 0 <= level){
-      t8_basic_hybrid (level, endlvl);
+  else if(parsed >= 0 && 0 <= level && 4 <= eclass_int && eclass_int < T8_ECLASS_COUNT &&
+          elements > 2 && 0 <=mesh && mesh < 5){
+      eclass = (t8_eclass_t) eclass_int;
+      t8_basic_hybrid (level, endlvl, do_vtk, eclass, elements, mesh, file);
   }
   else {
     /* wrong usage */

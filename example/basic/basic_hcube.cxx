@@ -46,17 +46,18 @@ t8_basic_hypercube_refine(t8_forest_t forest, t8_forest_t forest_from,
         type = ((t8_dtri_t *)elements[0])->type;
         break;
     case T8_ECLASS_TET:
-        type = ((t8_dtet_t *)elements[0])->type;
-        break;
+        if(type == 0 || type == 2 || type == 4){
+            return 1;
+        }
     case T8_ECLASS_PRISM:
         type = ((t8_dprism_t *)elements[0])->tri.type;
         break;
     case T8_ECLASS_PYRAMID:
-        type = ((t8_dpyramid_t *)elements[0])->type;
+        return 1;
         break;
     }
 /*TODO: Implement a better refinement argument, one that effects all elements*/
-    if(type == 6){
+    if(type == 0 || type == 2 || type == 4){
         return 1;
     }
     return 0;
