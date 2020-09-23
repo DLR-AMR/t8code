@@ -231,12 +231,15 @@ t8_forest_adapt (t8_forest_t forest)
   forest->local_num_elements = 0;
   el_offset = 0;
   num_trees = t8_forest_get_num_local_trees (forest);
+  t8_debugf("[D] num_trees: %i\n", num_trees);
   /* Iterate over the trees and build the new element arrays for each one. */
   for (ltree_id = 0; ltree_id < num_trees; ltree_id++) {
     /* Get the new and old tree and the new and old element arrays */
     tree = t8_forest_get_tree (forest, ltree_id);
     tree_from = t8_forest_get_tree (forest_from, ltree_id);
+    t8_debugf("[D] tree-elements: %i\n", tree->elements.array.elem_count);
     telements = &tree->elements;
+    t8_debugf("[D]0 telements_length: %i\n", telements->array.elem_count);
     telements_from = &tree_from->elements;
     /* Number of elements in the old tree */
     num_el_from = (t8_locidx_t) t8_element_array_get_count (telements_from);
@@ -282,6 +285,8 @@ t8_forest_adapt (t8_forest_t forest)
                                                       (telements_from, 0)*/
       /*T8_ASSERT(tscheme->t8_element_level(t8_element_array_index_locidx (telements_from,
                                                                     el_considered))> 0);*/
+      t8_debugf("[D]0 el_from array-index: %i length: %i\n", el_considered,
+                telements_from->array.elem_count);
       if(tscheme->t8_element_level(t8_element_array_index_locidx (telements_from,
                                                                   el_considered))> 0)
       {
@@ -294,8 +299,11 @@ t8_forest_adapt (t8_forest_t forest)
                                                                                          el_considered));
       }
       /*change: num_children into num_siblings*/
+      t8_debugf("num_siblings-loop: %i, sec_bound: %i\n", num_siblings, num_el_from);
       for (zz = 0; zz < (unsigned int)num_siblings &&
            el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
+          t8_debugf("[D]1 el_from array-index: %i length: %i\n", el_considered+zz,
+                    telements_from->array.elem_count);
         elements_from[zz] = t8_element_array_index_locidx (telements_from,
                                                            el_considered +
                                                            zz);
@@ -348,6 +356,7 @@ t8_forest_adapt (t8_forest_t forest)
           t8_forest_adapt_refine_recursive (forest, ltree_id, el_considered,
                                             tscheme, refine_list, telements,
                                             &el_inserted, elements);
+          t8_debugf("[D]1 telements_length: %i\n", telements->array.elem_count);
           /* el_coarsen is the index of the first element in the new element
            * array which could be coarsened recursively.
            * We can set this here to the next element after the current family, since a family that emerges from a refinement will never be coarsened */
@@ -356,13 +365,17 @@ t8_forest_adapt (t8_forest_t forest)
         else {
           /* The element should be refined and refinement is not recursive. */
           /* We add the children to the element array of the current tree. */
+           /* printf("[D]2 array-index: %i length: %i\n", el_inserted,
+                   telements->array.elem_count);
+            fflush(stdout);
             T8_ASSERT(tscheme->t8_element_level(
                           t8_element_array_index_locidx (telements, el_inserted))> 0);
            tscheme->t8_element_parent(t8_element_array_index_locidx (telements, el_inserted),
                                       parent);
-          num_siblings = tscheme->t8_element_num_children(parent);
+          num_siblings = tscheme->t8_element_num_children(parent);*/
           (void) t8_element_array_push_count (telements, num_siblings); /*num_children or num_siblings?*/
           for (zz = 0; zz < num_siblings; zz++) {
+              t8_debugf("[D]3 array-index: %i\n", el_inserted + zz);
             elements[zz] =
               t8_element_array_index_locidx (telements, el_inserted + zz);
 

@@ -160,7 +160,7 @@ t8_basic_hybrid(int level, int endlvl, int do_vtk, t8_eclass_t eclass,
     t8_forest_commit(forest);
     snprintf (vtuname, BUFSIZ, "forest_hybrid");
     t8_forest_write_vtk (forest, vtuname);
-
+    t8_debugf("[D] output to %s\n", vtuname);
     t8_forest_init(&forest_adapt);
     t8_forest_set_user_data(forest_adapt, &endlvl);
     t8_forest_set_profiling(forest_adapt, 1);
@@ -170,16 +170,16 @@ t8_basic_hybrid(int level, int endlvl, int do_vtk, t8_eclass_t eclass,
     }else{
         t8_forest_set_adapt(forest_adapt, forest, t8_basic_hybrid_refine, 1);
     }
-    t8_forest_set_ghost_ext(forest_adapt, 1, T8_GHOST_FACES, 2);
-    //t8_forest_commit(forest_adapt);
-    /*t8_debugf ("Successfully adapted forest.\n");
+    //t8_forest_set_ghost_ext(forest_adapt, 1, T8_GHOST_FACES, 2);
+    t8_forest_commit(forest_adapt);
+    t8_debugf ("Successfully adapted forest.\n");
     snprintf (vtuname, BUFSIZ, "forest_hybrid_refine");
     t8_forest_write_vtk (forest_adapt, vtuname);
     t8_debugf ("Output to %s\n", vtuname);
     t8_forest_unref(&forest_adapt);
-     Ensure that the correct forest is passed to unref later */
+    /* Ensure that the correct forest is passed to unref later */
 
-    forest_partition = forest_adapt;
+    /*Üforest_partition = forest_adapt;
     t8_forest_set_partition(forest_partition, NULL, 0);
     t8_forest_set_profiling(forest_partition, 1);
     t8_forest_commit(forest_partition);
@@ -187,11 +187,11 @@ t8_basic_hybrid(int level, int endlvl, int do_vtk, t8_eclass_t eclass,
         snprintf (vtuname, BUFSIZ, "forest_hybrid_partition");
         t8_forest_write_vtk (forest_partition, vtuname);
         t8_debugf ("Output to %s\n", vtuname);
-    }
-    t8_forest_print_profile(forest_partition);
+    }*/
+    //t8_forest_print_profile(forest_partition);
 
 
-    t8_forest_unref(&forest_partition);
+   // t8_forest_unref(&forest_partition);
 }
 
 int

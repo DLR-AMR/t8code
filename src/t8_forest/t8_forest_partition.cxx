@@ -152,6 +152,8 @@ t8_forest_partition_test_desc (t8_forest_t forest)
     level = ts->t8_element_level (elem_desc);
     T8_ASSERT (level == ts->t8_element_level (elem_desc));
     T8_ASSERT (level == forest->maxlevel);
+    t8_debugf("[D] %i lid %i\n", first_desc_id,
+               ts->t8_element_get_linear_id (elem_desc, level));
     T8_ASSERT (ts->t8_element_get_linear_id (elem_desc, level) >=
                first_desc_id);
   }

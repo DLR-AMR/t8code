@@ -394,12 +394,25 @@ t8_forest_commit (t8_forest_t forest)
     }
     else{
         t8_forest_t     forest_tmp;
+        t8_forest_t     forest_zero;
+        t8_forest_init(&forest_zero);
+        t8_forest_set_cmesh(forest_zero, forest->cmesh, forest->mpicomm);
+        t8_forest_set_level(forest_zero, 0);
+        t8_forest_set_scheme(forest_zero, forest->scheme_cxx);
+        t8_forest_commit(forest_zero);
 
-        t8_forest_init(&forest_tmp);
-        t8_forest_set_user_data(forest_tmp, t8_forest_get_user_data(forest));
-        t8_forest_set_adapt(forest_tmp, NULL, t8_forest_new_refine, 0);
-        t8_forest_commit(forest_tmp);
+        for(i = 1; i<=forest->set_level; i++){
+            t8_forest_init(&forest_tmp);
+            t8_forest_set_level(forest_tmp, i);
+            t8_forest_set_adapt(forest_tmp, forest_zero, t8_forest_new_refine, 0);
+            t8_forest_set_partition(forest_tmp, forest_zero,0);
+            t8_forest_commit(forest_tmp);
+            forest_zero = forest_tmp;
+            //t8_forest_ref(forest);
+            //t8_forest_copy_trees(forest_tmp, forest_zero,1);
+        }
         t8_forest_copy_trees(forest, forest_tmp, 1);
+        //t8_forest_unref(&forest_tmp);
     }
     forest->global_num_trees = t8_cmesh_get_num_trees (forest->cmesh);
   }
