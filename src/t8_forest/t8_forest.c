@@ -395,6 +395,10 @@ t8_forest_commit (t8_forest_t forest)
     else{
         t8_forest_t     forest_tmp;
         t8_forest_t     forest_zero;
+
+        t8_cmesh_ref(forest->cmesh);
+        t8_scheme_cxx_ref(forest->scheme_cxx);
+
         t8_forest_init(&forest_zero);
         t8_forest_set_cmesh(forest_zero, forest->cmesh, forest->mpicomm);
         t8_forest_set_level(forest_zero, 0);
@@ -412,7 +416,7 @@ t8_forest_commit (t8_forest_t forest)
             //t8_forest_copy_trees(forest_tmp, forest_zero,1);
         }
         t8_forest_copy_trees(forest, forest_tmp, 1);
-        //t8_forest_unref(&forest_tmp);
+        t8_forest_unref(&forest_tmp);
     }
     forest->global_num_trees = t8_cmesh_get_num_trees (forest->cmesh);
   }
