@@ -59,13 +59,13 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     t8_gloidx_t         global_num_children;
     t8_gloidx_t         first_global_child;
     t8_gloidx_t         last_global_child;
-    t8_gloidx_t         children_per_tree = 0, passed_children = 0, shift=0;
+    t8_gloidx_t         children_per_tree = 0;
     t8_gloidx_t         first_class_children_per_tree = -1;
     t8_locidx_t         trees;
 #ifdef T8_ENABLE_DEBUG
     t8_gloidx_t         prev_last_tree = -1;
 #endif
-    int                 tree_class, i;
+    int                 tree_class;
     t8_eclass_scheme_c *tree_scheme;
 
     /* Compute the number of children on level in each tree */
@@ -85,14 +85,11 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
           tree_scheme->t8_element_count_leafs_from_root (level);
         if (first_class_children_per_tree >= 0
             && first_class_children_per_tree != children_per_tree) {
-            t8_debugf("[D] is this necessary?\n");
          /* SC_ABORT
             ("Currently t8code does not support different leaf counts per tree.");*/
         }
         first_class_children_per_tree = children_per_tree;
-        t8_debugf("[D] class: %i, children_per_tree: %i\n", tree_class, children_per_tree);
         global_num_children += cmesh->num_trees_per_eclass[tree_class] * children_per_tree;
-        t8_debugf("[D] global_num_children: %i\n", global_num_children);
       }
     }
     T8_ASSERT (children_per_tree != 0);
@@ -128,46 +125,15 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
                && first_global_child <= global_num_children);
     T8_ASSERT (0 <= last_global_child
                && last_global_child <= global_num_children);
-    t8_debugf("[D] first_global_child: %i\n", first_global_child);
-    t8_debugf("[D] last_global_child: %i\n", last_global_child);
 
-    /*trees = -1;
-    do{
-        tree_class = t8_cmesh_get_tree_class(cmesh, trees + 1);
-        tree_scheme = ts->eclass_schemes[tree_class];
-        shift = tree_scheme->t8_element_count_leafs_from_root(level);
-        passed_children += shift;
-        trees++;
-        t8_debugf("[D] trees: %i localTrees: %i\n", trees,
-                  t8_cmesh_get_num_local_trees(cmesh));
-    } while (passed_children < first_global_child);
-    passed_children-=shift;
-
-    t8_debugf("[D] trees: %i, passed_children: %i\n", trees, passed_children);*/
 
     *first_local_tree = trees;
     *first_local_tree = first_global_child / children_per_tree;
     if (child_in_tree_begin != NULL) {
        *child_in_tree_begin =
         first_global_child - *first_local_tree * children_per_tree;
-        //*child_in_tree_begin = first_global_child - passed_children;
     }
-    /*t8_debugf("[D] last_global_child: %i\n", last_global_child);
-    trees = -1;
-    passed_children = 0;
-    do{
-        tree_class = t8_cmesh_get_tree_class(cmesh,trees+1);
-        tree_scheme = ts->eclass_schemes[tree_class];
-        shift = tree_scheme->t8_element_count_leafs_from_root(level);
-        passed_children += shift;
-        trees++;
-        t8_debugf("[D] trees: %i localTrees: %i\n", trees,
-                  t8_cmesh_get_num_local_trees(cmesh));
-    }while(passed_children < last_global_child &&
-           trees+1 < t8_cmesh_get_num_local_trees(cmesh));
-    passed_children-=shift;
-    t8_debugf("[D]llt: %i, passed: %i\n", trees, passed_children);*/
-    //*last_local_tree = trees;
+
     *last_local_tree = (last_global_child - 1) / children_per_tree;
 
     is_empty = *first_local_tree >= *last_local_tree
@@ -193,13 +159,10 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
       if (*last_local_tree > 0) {
         *child_in_tree_end =
           last_global_child - *last_local_tree * children_per_tree;
-          //*child_in_tree_end = last_global_child - passed_children;
       }
       else {
         *child_in_tree_end = last_global_child;
       }
-      t8_debugf("[D] llt: %i, child_in_tree_end: %i\n", *last_local_tree,
-                *child_in_tree_end);
     }
     if (is_empty) {
       /* This process is empty */
