@@ -103,9 +103,8 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from,
   double              elem_midpoint[3];
   double             *normal;
   adapt_data_t       *adapt_data;
-
-  T8_ASSERT (num_elements == 1 || num_elements ==
-             ts->t8_element_num_children (elements[0]));
+  /*T8_ASSERT (num_elements == 1 || num_elements ==
+             ts->t8_element_num_children (elements[0]));*/
   level = ts->t8_element_level (elements[0]);
   /* Get the minimum and maximum x-coordinate from the user data pointer of forest */
   adapt_data = (adapt_data_t *) t8_forest_get_user_data (forest);
@@ -241,7 +240,8 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
       if (r == refine_rounds - 1) {
         t8_forest_set_profiling (forest_partition, 1);
         if (do_ghost) {
-          t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
+          t8_debugf("[D] Use fast ghost, as soon as nca is implemented for pyramid\n");
+          t8_forest_set_ghost_ext (forest_partition, 1, T8_GHOST_FACES, 2);
         }
         if (do_balance) {
           t8_forest_set_balance (forest_partition, NULL, 0);
