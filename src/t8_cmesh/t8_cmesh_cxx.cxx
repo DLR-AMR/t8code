@@ -85,7 +85,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
           tree_scheme->t8_element_count_leafs_from_root (level);
         if (first_class_children_per_tree >= 0
             && first_class_children_per_tree != children_per_tree) {
-         /* SC_ABORT
+          /*SC_ABORT
             ("Currently t8code does not support different leaf counts per tree.");*/
         }
         first_class_children_per_tree = children_per_tree;

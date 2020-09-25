@@ -211,9 +211,9 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   /* Commit the forest */
   t8_forest_commit (forest);
   /* Set the permanent data for adapt. */
-  adapt_data.normal[0] = 1;
-  adapt_data.normal[1] = 1;
-  adapt_data.normal[2] = 0.5;
+  adapt_data.normal[0] = 0.8;
+  adapt_data.normal[1] = 0.3;
+  adapt_data.normal[2] = 0.0;
   t8_vec3_normalize (adapt_data.normal);
   adapt_data.base_level = init_level;
   adapt_data.max_level = max_level;

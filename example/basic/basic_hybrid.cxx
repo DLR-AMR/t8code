@@ -127,6 +127,7 @@ t8_basic_hybrid(int level, int endlvl, int do_vtk, t8_eclass_t eclass,
     case 3:
         t8_global_productionf ("Contructing mesh from: %s.\n", prefix);
         cmesh = t8_cmesh_from_msh_file((char *) prefix, 1, sc_MPI_COMM_WORLD, 3, 0);
+        break;
     default:
         t8_global_productionf ("Contructing a single %s.\n", t8_eclass_to_string[eclass]);
         cmesh = t8_cmesh_new_from_class(eclass, sc_MPI_COMM_WORLD);
@@ -241,7 +242,7 @@ main (int argc, char **argv)
                      "\n\t\tdefault - a single cube. The element can be changed with option -e");
   sc_options_add_int(opt, 'n', "num_elements", &elements, 3, "The number of elements to use"
                      " if a cake is build. Has to be larger than 2.");
-  sc_options_add_string(opt, 'f', "file", &file, "", "Prefix of the msh-file.");
+  sc_options_add_string(opt, 'f', "mshfile", &file, "NULL", "Prefix of the msh-file.");
 
   parsed = sc_options_parse(t8_get_package_id(), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
