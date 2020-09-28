@@ -101,6 +101,24 @@ t8_basic_cake_refine(t8_forest_t forest, t8_forest_t forest_from,
     }
 }
 
+static int
+t8_basic_only_pyramid(t8_forest_t forest, t8_forest_t forest_from,
+                          t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                          t8_eclass_scheme_c * ts, int num_elements,
+                          t8_element_t * elements[])
+{
+    int         level, type;
+    level = ts->t8_element_level(elements[0]);
+    if (level >= *(int *) t8_forest_get_user_data (forest)) {
+      return 0;
+    }
+    else if(ts->t8_element_shape(elements[0]) == T8_ECLASS_PYRAMID){
+        return 1;
+    }
+    else{
+        return 0;
+    }
+}
 static void
 t8_basic_hybrid(int level, int endlvl, int do_vtk, t8_eclass_t eclass,
                 int num_elements, int mesh, const char* prefix)
@@ -181,7 +199,7 @@ t8_basic_hybrid(int level, int endlvl, int do_vtk, t8_eclass_t eclass,
     t8_forest_set_profiling(forest_adapt, 1);
     if(eclass == T8_ECLASS_PYRAMID){
         t8_debugf("Use cake-adapt\n");
-         t8_forest_set_adapt(forest_adapt, forest, t8_basic_cake_refine, 1);
+         t8_forest_set_adapt(forest_adapt, forest, t8_basic_only_pyramid, 1);
     }else{
         t8_forest_set_adapt(forest_adapt, forest, t8_basic_hybrid_refine, 1);
     }
