@@ -96,6 +96,43 @@ t8_dpyramid_is_equal (const t8_dpyramid_t * p, const t8_dpyramid_t * q)
 }
 
 int
+t8_dpyramid_ancestor_id(const t8_dpyramid_t * p, int level)
+{
+    t8_dpyramid_t helper;
+    int i,cid;
+    helper.x = (p->x >> (T8_DPYRAMID_MAXLEVEL - level))<<(T8_DPYRAMID_MAXLEVEL-level);
+    helper.y = (p->y >> (T8_DPYRAMID_MAXLEVEL - level))<<(T8_DPYRAMID_MAXLEVEL-level);
+    helper.z = (p->z >> (T8_DPYRAMID_MAXLEVEL - level))<<(T8_DPYRAMID_MAXLEVEL-level);
+    helper.level = level;
+    t8_debugf("[D] anc-id. level: %i, p.level: %i\n", level, p->level);
+    if(t8_dpyramid_shape(p) == T8_ECLASS_PYRAMID){
+
+        helper.type = p->type;
+        for(i = level; i>p->level; i--)
+        {
+            cid = compute_cubeid(p, i);
+            helper.type = t8_dpyramid_cid_type_to_parenttype[cid][helper.type];
+        }
+        return t8_dpyramid_child_id(&helper);
+    }
+    else{
+        t8_dpyramid_t   helper;
+        int max_tet_lvl = t8_dpyramid_is_inside_tet(p, p->level, NULL);
+        for(i = max_tet_lvl; i > p->level; i--)
+        {
+            cid = compute_cubeid(p, i);
+            helper.type = t8_dtet_cid_type_to_parenttype[cid][helper.type];
+        }
+        for(i = level; i>max_tet_lvl; i--)
+        {
+            cid = compute_cubeid(p,i);
+            helper.type = t8_dpyramid_cid_type_to_parenttype[cid][helper.type];
+        }
+        return t8_dpyramid_child_id(&helper);
+    }
+}
+
+int
 t8_dpyramid_is_family (const t8_dpyramid_t ** fam)
 {
 
@@ -460,6 +497,70 @@ t8_dpyramid_face_neighbour (const t8_dpyramid_t * p, int face,
 }
 
 int
+t8_dpyramid_face_parent_face(const t8_dpyramid_t * elem, int face)
+{
+    if(t8_dpyramid_shape(elem) == T8_ECLASS_PYRAMID)
+    {
+        t8_debugf("[D] fpf elem-level: %i, face: %i\n", elem->level, face);
+        int chid = t8_dpyramid_child_id(elem);
+        int i;
+        for(i = 0; i<4; i++){
+            if(t8_dpyramid_type_face_to_children_at_face[elem->type-6][face][i] == chid){
+                return face;
+            }
+        }
+        return -1;
+    }
+    else{
+        t8_dpyramid_t   parent;
+        int             chid;
+        chid = t8_dpyramid_child_id_unknown_parent(elem, &parent);
+        if(t8_dpyramid_shape(&parent) == T8_ECLASS_TET){
+            return t8_dtet_face_parent_face(elem, face);
+        }
+        else{
+            if(elem->type == 0 && parent.type == 6){
+                if(chid == 3 && face == 0){
+                    return 1;
+                }
+                else if(chid == 4 && face ==1){
+                    return 0;
+                }
+                else return -1;
+            }
+            else if(elem->type == 3 && parent.type == 6){
+                if(chid == 1 && face == 1){
+                    return 2;
+                }
+                else if(chid == 4 && face == 0){
+                    return 3;
+                }
+                else return -1;
+            }
+            else if(elem->type == 0 && parent.type == 7){
+                if(chid == 1 && face ==3){
+                    return 1;
+                }
+                else if(chid == 7 && face ==2){
+                    return 0;
+                }
+                else return -1;
+            }
+            else if(elem->type == 3 && parent.type == 7){
+                if(chid == 2 && face == 3){
+                    return 3;
+                }
+                else if(chid == 5  && face == 2){
+                    return 2;
+                }
+                else return -1;
+            }
+            return -1;
+        }
+    }
+}
+
+int
 t8_dpyramid_tet_pyra_face_connection (const t8_dpyramid_t * p, int face)
 {
   T8_ASSERT (p->type == 0 || p->type == 3);
@@ -766,6 +867,17 @@ t8_dpyramid_num_siblings (const t8_dpyramid_t * p)
 
 int
 t8_dpyramid_num_faces(const t8_dpyramid_t * p)
+{
+    if(t8_dpyramid_shape(p) == T8_ECLASS_TET){
+        return T8_DTET_FACES;
+    }
+    else{
+        return T8_DPYRAMID_FACES;
+    }
+}
+
+int
+t8_dpyramid_max_num_faces(const t8_dpyramid_t * p)
 {
     if(t8_dpyramid_shape(p) == T8_ECLASS_TET){
         return T8_DTET_FACES;

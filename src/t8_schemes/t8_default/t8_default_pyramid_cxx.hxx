@@ -46,11 +46,7 @@ public:
 
 /** Compute the ancestor id of an element */
   virtual int         t8_element_ancestor_id (const t8_element_t * elem,
-                                              int level)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+                                              int level);
 
 /** Return the maximum level allowed for this element class. */
   virtual int         t8_element_maxlevel (void);
@@ -60,11 +56,7 @@ public:
    * \param [in] elem The element.
    * \return          The maximum number of faces of \a elem and its descendants.
    */
-  virtual int         t8_element_max_num_faces (const t8_element_t * elem)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+  virtual int         t8_element_max_num_faces (const t8_element_t * elem);
 
 /** Return the type of each child in the ordering of the implementation. */
   virtual t8_eclass_t t8_element_child_eclass (int childid)
@@ -231,11 +223,7 @@ public:
 * of the parent of the element that matches the element's face. Or return -1 if
 * no face of the parent matches the face. */
   virtual int         t8_element_face_parent_face (const t8_element_t * elem,
-                                                   int face)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;                   /* suppresses compiler warning */
-  }
+                                                   int face);
 
   /** Calculate the first descendant of a given element e. That is, the
    *  first element in a uniform refinement of e of the maximal possible level.

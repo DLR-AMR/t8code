@@ -36,6 +36,18 @@ t8_default_scheme_pyramid_c::t8_element_maxlevel (void)
   return T8_DPYRAMID_MAXLEVEL;
 }
 
+int
+t8_default_scheme_pyramid_c::t8_element_max_num_faces (const t8_element_t * elem)
+{
+    return t8_dpyramid_max_num_faces((const t8_dpyramid_t *)elem);
+}
+
+int
+t8_default_scheme_pyramid_c::t8_element_ancestor_id (const t8_element_t * elem,
+                                                     int level){
+    return t8_dpyramid_ancestor_id((const t8_dpyramid_t *) elem, level);
+}
+
 void
 t8_default_scheme_pyramid_c::t8_element_init (int length, t8_element_t * elem,
                                               int called_new)
@@ -148,6 +160,13 @@ t8_element_face_neighbor_inside (const t8_element_t * elem,
   return t8_dpyramid_face_neighbor_inside ((const t8_dpyramid_t *) elem,
                                            (t8_dpyramid_t *) neigh,
                                            face, neigh_face);
+}
+
+int
+t8_default_scheme_pyramid_c::t8_element_face_parent_face (const t8_element_t * elem,
+                                                   int face)
+{
+    return t8_dpyramid_face_parent_face((const t8_dpyramid_t *) elem, face);
 }
 
 void

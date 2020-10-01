@@ -48,6 +48,7 @@ t8_forest_determine_child_type (sc_array_t * leaf_elements,
 
   /* Get a pointer to the element */
   element = (t8_element_t *) t8_sc_array_index_locidx (leaf_elements, index);
+  t8_debugf("[D] dct: %i < %i\n", query_data->level, query_data->ts->t8_element_level(element));
   T8_ASSERT (query_data->level < query_data->ts->t8_element_level (element));
   /* Compute the element's ancestor id at the stored level and return it
    * as the element's type */
@@ -352,7 +353,8 @@ t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid,
                                    - 1);
   /* Compute their nearest common ancestor */
   ts->t8_element_new (1, &nca);
-  ts->t8_element_nca (first_el, last_el, nca);
+  //ts->t8_element_nca (first_el, last_el, nca);
+  ts->t8_element_set_linear_id(nca,0,0);
 
   /* If we have queries build a list of all active queries,
    * thus all queries in the array */

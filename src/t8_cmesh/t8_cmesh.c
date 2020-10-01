@@ -1933,7 +1933,7 @@ t8_cmesh_new_from_class (t8_eclass_t eclass, sc_MPI_Comm comm)
     return t8_cmesh_new_hex (comm);
     break;
   case T8_ECLASS_PYRAMID:
-    return t8_cmesh_new_pyramid_deformed (comm);
+    return t8_cmesh_new_pyramid (comm);
     break;
   case T8_ECLASS_PRISM:
     return t8_cmesh_new_prism (comm);

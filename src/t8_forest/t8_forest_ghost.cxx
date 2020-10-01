@@ -29,6 +29,7 @@
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_element_cxx.hxx>
 #include <t8_data/t8_containers.h>
+#include <sc_statistics.h>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -1066,7 +1067,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
 
   last_class = T8_ECLASS_COUNT;
   num_local_trees = t8_forest_get_num_local_trees (forest);
-
+    t8_debugf("[D] ghost-method: %i\n", ghost_method);
   if (ghost_method != 0) {
     sc_array_init (&owners, sizeof (int));
     sc_array_init (&tree_owners, sizeof (int));
@@ -1864,8 +1865,17 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
   sc_MPI_Request     *requests;
   int                 create_tree_array = 0, create_gfirst_desc_array = 0;
   int                 create_element_array = 0;
+  sc_statinfo_t       times[4];
+  double              init_time = 0, fill_time = 0, send_time = 0, recv_time =0;
+
 
   T8_ASSERT (t8_forest_is_committed (forest));
+
+  sc_stats_init(&times[0], "init");
+  sc_stats_init(&times[1], "fill");
+  sc_stats_init(&times[2], "send");
+  sc_stats_init(&times[3], "recv");
+
   t8_global_productionf ("Into t8_forest_ghost with %i local elements.\n",
                          t8_forest_get_num_element (forest));
 
@@ -1906,9 +1916,12 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     T8_ASSERT (forest->ghost_type == T8_GHOST_FACES);
 
     /* Initialize the ghost structure */
+    init_time -= sc_MPI_Wtime();
     t8_forest_ghost_init (&forest->ghosts, forest->ghost_type);
+    init_time += sc_MPI_Wtime();
     ghost = forest->ghosts;
 
+    fill_time -= sc_MPI_Wtime();
     if (unbalanced_version == -1) {
       t8_forest_ghost_fill_remote_v3 (forest);
     }
@@ -1916,15 +1929,22 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
       /* Construct the remote elements and processes. */
       t8_forest_ghost_fill_remote (forest, ghost, unbalanced_version != 0);
     }
+    fill_time += sc_MPI_Wtime();
 
     /* Start sending the remote elements */
+    send_time -= sc_MPI_Wtime();
     send_info = t8_forest_ghost_send_start (forest, ghost, &requests);
+    send_time += sc_MPI_Wtime();
 
     /* Reveive the ghost elements from the remote processes */
+    recv_time -= sc_MPI_Wtime();
     t8_forest_ghost_receive (forest, ghost);
+    recv_time += sc_MPI_Wtime();
 
     /* End sending the remote elements */
+    send_time -= sc_MPI_Wtime();
     t8_forest_ghost_send_end (forest, ghost, send_info, requests);
+    send_time += sc_MPI_Wtime();
 
   }
 
@@ -1965,6 +1985,12 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
                          " ghost elements.\n",
                          t8_forest_get_num_element (forest),
                          t8_forest_get_num_ghosts (forest));
+  sc_stats_accumulate(&times[0], init_time);
+  sc_stats_accumulate(&times[1], fill_time);
+  sc_stats_accumulate(&times[2], send_time);
+  sc_stats_accumulate(&times[3], recv_time);
+  sc_stats_compute(forest->mpicomm, 4, times);
+  sc_stats_print(t8_get_package_id(), SC_LP_ESSENTIAL, 4, times, 1,1);
 }
 
 void

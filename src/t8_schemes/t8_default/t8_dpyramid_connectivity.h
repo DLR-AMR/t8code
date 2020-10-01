@@ -62,7 +62,7 @@ extern const int t8_dpyramid_face_childid_to_is_inside[4][8];
 extern const int t8_dpyramid_type_face_to_children_at_face[2][5][4];
 
 /*Return the face-number of a children at a face of a pyramid*/
-extern const int t8_dpyramid_type_face_to_child_face[2][5][10];
+extern const int t8_dpyramid_type_face_to_child_face[2][5][4];
 
 /*Return the type of a boundary element which has a pyramidparent, depending on
  * the type of the boundary triangle and the face number of root*/

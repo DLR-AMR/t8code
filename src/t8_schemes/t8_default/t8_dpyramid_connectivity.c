@@ -121,7 +121,7 @@ const int t8_dpyramid_type_face_to_children_at_face[2][5][4] =
      {4,6,8,9}}
 };
 
-const int t8_dpyramid_type_face_to_child_face[2][5][10] =
+const int t8_dpyramid_type_face_to_child_face[2][5][4] =
 {
     {{0,1,0,0},
      {1,0,1,1},

@@ -139,6 +139,9 @@ int                 t8_dpyramid_face_neighbor_inside (const t8_dpyramid_t * p,
                                                       int face,
                                                       int *neigh_face);
 
+int                 t8_dpyramid_child_id_unknown_parent (const t8_dpyramid_t * p,
+                                     t8_dpyramid_t * parent);
+
 /** Compute the position of the ancestor of this child at level \a level within
  * its siblings.
  * \param [in] p  pyramid to be considered.
@@ -288,6 +291,12 @@ int                 t8_dpyramid_num_siblings (const t8_dpyramid_t * p);
  * \return          The number of faces of p
  */
 int                 t8_dpyramid_num_faces(const t8_dpyramid_t *p);
+
+int                 t8_dpyramid_max_num_faces(const t8_dpyramid_t * p);
+
+int                 t8_dpyramid_face_parent_face(const t8_dpyramid_t * elem, int face);
+
+int                 t8_dpyramid_ancestor_id(const t8_dpyramid_t * p, int level);
 
 
 /** Returns the shape of the pyramid (pyramid or tetrahedron)
