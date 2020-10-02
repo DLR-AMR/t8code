@@ -100,6 +100,7 @@ t8_dpyramid_ancestor_id(const t8_dpyramid_t * p, int level)
 {
     t8_dpyramid_t helper;
     int i,cid;
+    /*helper is the anc of p at level level. */
     helper.x = (p->x >> (T8_DPYRAMID_MAXLEVEL - level))<<(T8_DPYRAMID_MAXLEVEL-level);
     helper.y = (p->y >> (T8_DPYRAMID_MAXLEVEL - level))<<(T8_DPYRAMID_MAXLEVEL-level);
     helper.z = (p->z >> (T8_DPYRAMID_MAXLEVEL - level))<<(T8_DPYRAMID_MAXLEVEL-level);
@@ -110,21 +111,27 @@ t8_dpyramid_ancestor_id(const t8_dpyramid_t * p, int level)
         helper.type = p->type;
         for(i = level; i>p->level; i--)
         {
+            /*compute anc type*/
             cid = compute_cubeid(p, i);
             helper.type = t8_dpyramid_cid_type_to_parenttype[cid][helper.type];
         }
         return t8_dpyramid_child_id(&helper);
     }
     else{
-        t8_dpyramid_t   helper;
         int max_tet_lvl = t8_dpyramid_is_inside_tet(p, p->level, NULL);
+        if(level < max_tet_lvl){
+            /*all ancestor up to level are tetrahedra*/
+            max_tet_lvl = level;
+        }
         for(i = max_tet_lvl; i > p->level; i--)
         {
+            /*run through tetrahedra ancestor*/
             cid = compute_cubeid(p, i);
             helper.type = t8_dtet_cid_type_to_parenttype[cid][helper.type];
         }
         for(i = level; i>max_tet_lvl; i--)
         {
+            /*run through pyra ancestor*/
             cid = compute_cubeid(p,i);
             helper.type = t8_dpyramid_cid_type_to_parenttype[cid][helper.type];
         }
@@ -499,32 +506,39 @@ t8_dpyramid_face_neighbour (const t8_dpyramid_t * p, int face,
 int
 t8_dpyramid_face_parent_face(const t8_dpyramid_t * elem, int face)
 {
+    /*parent is a pyramid*/
     if(t8_dpyramid_shape(elem) == T8_ECLASS_PYRAMID)
     {
         t8_debugf("[D] fpf elem-level: %i, face: %i\n", elem->level, face);
         int chid = t8_dpyramid_child_id(elem);
         int i;
+        /*If the pyramid is one the children in the array, its face-num and the face-num
+         * of the parent are the same*/
         for(i = 0; i<4; i++){
             if(t8_dpyramid_type_face_to_children_at_face[elem->type-6][face][i] == chid){
                 return face;
             }
         }
+        /*No matching face*/
         return -1;
     }
     else{
         t8_dpyramid_t   parent;
         int             chid;
         chid = t8_dpyramid_child_id_unknown_parent(elem, &parent);
+        /*Parent is also a tet, we can call the tet-routine*/
         if(t8_dpyramid_shape(&parent) == T8_ECLASS_TET){
             return t8_dtet_face_parent_face(elem, face);
         }
+        /*tet with a pyramid-parent*/
         else{
+            /*Only tets of type 0 or 3 have a pyra-parent. Parent can have type 6 or 7*/
             if(elem->type == 0 && parent.type == 6){
-                if(chid == 3 && face == 0){
-                    return 1;
-                }
-                else if(chid == 4 && face ==1){
+                if(chid == 3 && face == 1){
                     return 0;
+                }
+                else if(chid == 5 && face == 0){
+                    return 1;
                 }
                 else return -1;
             }
@@ -532,7 +546,7 @@ t8_dpyramid_face_parent_face(const t8_dpyramid_t * elem, int face)
                 if(chid == 1 && face == 1){
                     return 2;
                 }
-                else if(chid == 4 && face == 0){
+                else if(chid == 6 && face == 0){
                     return 3;
                 }
                 else return -1;
