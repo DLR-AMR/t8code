@@ -159,7 +159,8 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
   t8_forest_element_centroid (forest, ltree_id, element, midpoint);
 #endif
 /* TODO: THis will break if we have an element that is not the same shape as its tree. 
- *       Maybe this was fixed in the pyramid branch. */
+ *       Maybe this was fixed in the pyramid branch. (Need number of vertices of the element, not
+ *        of the tree) */
   for (ivertex = 0; ivertex < t8_eclass_num_vertices[ts->eclass]; ivertex++) {
     t8_forest_element_coordinate (forest, ltree_id, element,
                                   t8_eclass_vtk_corner_number[ts->eclass]
