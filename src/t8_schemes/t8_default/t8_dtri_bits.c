@@ -858,7 +858,6 @@ t8_dtri_face_parent_face (const t8_dtri_t * triangle, int face)
   /* The bey child id of the triangle,
    * a triangle of bey id i shares the faces i+1 and i+2 (%3) with its parent */
   child_id = t8_dtri_type_cid_to_beyid[triangle->type][cid];
-  t8_debugf("[D] tfpf %i\n", triangle->level);
   t8_dtri_child_id (triangle);
 #ifndef T8_DTRI_TO_DTET
   if (face != child_id) {
