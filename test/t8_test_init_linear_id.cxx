@@ -23,6 +23,7 @@
 
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default_cxx.hxx>
+#include <sc_functions.h>
 
 
 
@@ -55,13 +56,56 @@ t8_recursive_linear_id (t8_element_t * element, t8_element_t * child,
   }
 }
 
+int t8_num_descendants(t8_element_t * element, int level, t8_eclass_scheme_c * ts){
+    int level_diff = level - ts->t8_element_level(element);
+    int shape = ts->t8_element_shape(element);
+    switch (shape) {
+    case T8_ECLASS_VERTEX:
+       return 1;
+    case T8_ECLASS_LINE:
+        return sc_intpow(2, level_diff);
+    case T8_ECLASS_QUAD:
+        return sc_intpow(4, level_diff);
+    case T8_ECLASS_TRIANGLE:
+        return sc_intpow(4, level_diff);
+    case T8_ECLASS_HEX:
+        return sc_intpow(8, level_diff);
+    case T8_ECLASS_TET:
+        return sc_intpow(8, level_diff);
+    case T8_ECLASS_PRISM:
+        return sc_intpow(8, level_diff);
+    case T8_ECLASS_PYRAMID:
+        return 2*sc_intpow(8, level_diff) - sc_intpow(6, level_diff);
+    default:
+        break;
+    }
+}
+
+static void
+t8_id_at_other_lvl_check(t8_element_t * element, t8_element * child,
+                         t8_eclass_scheme_c * ts, int maxlvl)
+{
+    int         level = ts->t8_element_level(element);
+    int         num_descendants = t8_num_descendants(element, maxlvl, ts);
+    uint64_t         current_id = ts->t8_element_get_linear_id(element, level);
+    uint64_t i, j, id, id_at_lvl = ts->t8_element_get_linear_id(element, maxlvl);
+    for(i = 0; i < num_descendants; i++)
+    {
+        ts->t8_element_set_linear_id(child, maxlvl, id_at_lvl + i);
+        id = ts->t8_element_get_linear_id(child, level);
+        SC_CHECK_ABORT(id == current_id, "Wrong id");
+    }
+
+}
+
+
 static void
 t8_check_linear_id (const int maxlvl)
 {
   t8_element_t       *element, *child, *test;
   t8_scheme_cxx      *scheme;
   t8_eclass_scheme_c *ts;
-  int                 eclassi, id, level;
+  int                 eclassi, id, level, num_desc, i,j;
   t8_eclass_t         eclass;
   scheme = t8_scheme_new_default_cxx ();
   for (eclassi = T8_ECLASS_ZERO; eclassi < T8_ECLASS_COUNT; eclassi++) {
@@ -78,6 +122,17 @@ t8_check_linear_id (const int maxlvl)
     for (level = 1; level <= maxlvl; level++) {
       id = 0;
       t8_recursive_linear_id (element, child, test, ts, level, &id);
+    }
+    if(eclassi == T8_ECLASS_PYRAMID){
+        ts->t8_element_set_linear_id(element, 0, 0);
+        for(j = 0; j < maxlvl-4; j++){
+            num_desc = t8_num_descendants(element, j, ts);
+            for(i = 0; i < num_desc; i++)
+            {
+                ts->t8_element_set_linear_id(child, j, i);
+                t8_id_at_other_lvl_check(child, test, ts, maxlvl);
+            }
+        }
     }
     /* Destroy element */
     ts->t8_element_destroy (1, &element);

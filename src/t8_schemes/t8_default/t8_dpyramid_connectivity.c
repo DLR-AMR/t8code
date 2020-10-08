@@ -86,6 +86,15 @@ const int t8_dpyramid_type_cid_to_parenttype[2][8] = {
   {7, -1, -1, 6, 7, 7, 7, 7}
 };
 
+const int t8_dtet_type_cid_to_pyramid_parenttype[6][8]={
+    {-1, -1, 6, 6, 7, -1, 7, -1},
+    {-1, -1, -1, -1, -1, -1, -1, -1},
+    {-1, -1, -1, -1, -1, -1, -1, -1},
+    {-1, 6, -1, 6, 7, 7, -1, -1},
+    {-1, -1, -1, -1, -1, -1, -1, -1},
+    {-1, -1, -1, -1, -1, -1, -1, -1},
+};
+
 /*The number of local pyramid-siblings with lower id. This is computed with
  * help of the type of the parent and its own local id. A tetrahedron has
  * no pyramid-children, therefore this makes sense only for pyramidparents*/

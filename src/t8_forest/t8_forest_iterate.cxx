@@ -48,7 +48,6 @@ t8_forest_determine_child_type (sc_array_t * leaf_elements,
 
   /* Get a pointer to the element */
   element = (t8_element_t *) t8_sc_array_index_locidx (leaf_elements, index);
-  t8_debugf("[D] dct: %i < %i\n", query_data->level, query_data->ts->t8_element_level(element));
   T8_ASSERT (query_data->level < query_data->ts->t8_element_level (element));
   /* Compute the element's ancestor id at the stored level and return it
    * as the element's type */

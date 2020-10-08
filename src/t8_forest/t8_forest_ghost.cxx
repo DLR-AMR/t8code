@@ -1067,7 +1067,6 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost,
 
   last_class = T8_ECLASS_COUNT;
   num_local_trees = t8_forest_get_num_local_trees (forest);
-    t8_debugf("[D] ghost-method: %i\n", ghost_method);
   if (ghost_method != 0) {
     sc_array_init (&owners, sizeof (int));
     sc_array_init (&tree_owners, sizeof (int));
