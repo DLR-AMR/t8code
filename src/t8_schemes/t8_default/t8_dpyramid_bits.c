@@ -591,12 +591,13 @@ t8_dpyramid_face_parent_face(const t8_dpyramid_t * elem, int face)
     /*parent is a pyramid*/
     if(t8_dpyramid_shape(elem) == T8_ECLASS_PYRAMID)
     {
-        int chid = t8_dpyramid_child_id(elem);
+        t8_dpyramid_t   parent;
+        int chid = t8_dpyramid_child_id_unknown_parent(elem, &parent);
         int i;
-        /*If the pyramid is one the children in the array, its face-num and the face-num
+        /*If the pyramid is one of the children in the array, its face-num and the face-num
          * of the parent are the same*/
         for(i = 0; i<4; i++){
-            if(t8_dpyramid_type_face_to_children_at_face[elem->type-6][face][i] == chid){
+            if(t8_dpyramid_type_face_to_children_at_face[parent.type-6][face][i] == chid){
                 return face;
             }
         }
@@ -1115,7 +1116,8 @@ int
 t8_dpyramid_child_id_unknown_parent (const t8_dpyramid_t * p,
                                      t8_dpyramid_t * parent)
 {
-  T8_ASSERT (p->level > 0);
+  T8_ASSERT (p->level >= 0);
+  if(p->level == 0) return 0;
   t8_dpyramid_parent (p, parent);
   return t8_dpyramid_child_id_known_parent (p, parent);
 

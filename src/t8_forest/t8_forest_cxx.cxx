@@ -2522,7 +2522,6 @@ t8_forest_element_owners_at_face (t8_forest_t forest, t8_gloidx_t gtreeid,
     upper_bound = forest->mpisize - 1;
   }
   T8_ASSERT (0 <= lower_bound && upper_bound < forest->mpisize);
-
   if (lower_bound == upper_bound) {
     /* There is no need to search, the owner is unique */
     T8_ASSERT (0 <= lower_bound && lower_bound < forest->mpisize);
