@@ -399,8 +399,8 @@ t8_forest_commit (t8_forest_t forest)
         t8_scheme_cxx_ref(forest->scheme_cxx);
 
         t8_forest_init(&forest_zero);
-        t8_forest_set_cmesh(forest_zero, forest->cmesh, forest->mpicomm);
         t8_forest_set_level(forest_zero, 0);
+        t8_forest_set_cmesh(forest_zero, forest->cmesh, forest->mpicomm);
         t8_forest_set_scheme(forest_zero, forest->scheme_cxx);
         t8_forest_commit(forest_zero);
 

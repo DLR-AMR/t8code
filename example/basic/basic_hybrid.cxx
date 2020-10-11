@@ -154,7 +154,7 @@ t8_basic_hybrid(int level, int endlvl, int do_vtk, t8_eclass_t eclass,
         break;
     case 3:
         t8_global_productionf ("Contructing mesh from: %s.\n", prefix);
-        cmesh = t8_cmesh_from_msh_file((char *) prefix, 1, sc_MPI_COMM_WORLD, 3, 0);
+        cmesh = t8_cmesh_from_msh_file((char *) prefix, 0, sc_MPI_COMM_WORLD, 3, 0);
         break;
     default:
         t8_global_productionf ("Contructing a single %s.\n", t8_eclass_to_string[eclass]);
@@ -199,7 +199,7 @@ t8_basic_hybrid(int level, int endlvl, int do_vtk, t8_eclass_t eclass,
     t8_forest_set_profiling(forest_adapt, 1);
     if(eclass == T8_ECLASS_PYRAMID){
         t8_debugf("Use cake-adapt\n");
-         t8_forest_set_adapt(forest_adapt, forest, t8_basic_only_pyramid, 1);
+         t8_forest_set_adapt(forest_adapt, forest, t8_basic_cake_refine, 1);
     }else{
         t8_forest_set_adapt(forest_adapt, forest, t8_basic_hybrid_refine, 1);
     }
@@ -285,9 +285,9 @@ main (int argc, char **argv)
                      "\n\t\tdefault - a single cube. The element can be changed with option -e");
   sc_options_add_int(opt, 'n', "num_elements", &elements, 3, "The number of elements to use"
                      " if a cake is build. Has to be larger than 2.");
-  sc_options_add_string(opt, 'f', "mshfile", &file, "NULL", "Prefix of the msh-file.");
+  sc_options_add_string(opt, 'p', "mshfile", &file, "NULL", "Prefix of the msh-file.");
 
-  parsed = sc_options_parse(t8_get_package_id(), SC_LP_ERROR, opt, argc, argv);
+  parsed = sc_options_parse(t8_get_package_id(), SC_LP_DEFAULT, opt, argc, argv);
   if (helpme) {
     /* display help message and usage */
     t8_global_productionf ("%s\n", help);

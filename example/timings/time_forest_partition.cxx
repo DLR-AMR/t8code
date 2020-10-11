@@ -196,6 +196,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   sc_stats_init(&times[3], "partition");
   sc_stats_init(&times[4], "total");
   total_time -= sc_MPI_Wtime();
+
   partition_cmesh = t8_cmesh_is_partitioned (cmesh);
   if (partition_cmesh) {
     /* Set up cmesh_partition to be a repartition of cmesh. */
@@ -210,6 +211,8 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
     /* Use cmesh_partition as the original replicated cmesh */
     cmesh_partition = cmesh;
   }
+
+  cmesh_partition = cmesh;
   /* Initialize forest and set cmesh */
   t8_forest_init (&forest);
   t8_forest_set_cmesh (forest, cmesh_partition, comm);
@@ -255,7 +258,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
         t8_forest_set_profiling (forest_partition, 1);
         if (do_ghost) {
           t8_debugf("[D] Use fast ghost, as soon as nca is implemented for pyramid\n");
-          t8_forest_set_ghost_ext (forest_partition, 1, T8_GHOST_FACES, 2);
+          t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
         }
         if (do_balance) {
           t8_forest_set_balance (forest_partition, NULL, 0);
@@ -320,7 +323,7 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
 
   if (msh_file != NULL) {
     /* Create a cmesh from the given mesh files */
-    cmesh = t8_cmesh_from_msh_file ((char *) msh_file, 1, comm, mesh_dim, 0);
+    cmesh = t8_cmesh_from_msh_file ((char *) msh_file, 0, comm, mesh_dim, 0);
     partition = 1;
   }
   else {
@@ -334,7 +337,7 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
     partition = num_files > 1;
   }
   SC_CHECK_ABORT (cmesh != NULL, "Error when creating cmesh.\n");
-
+#if 0
   if (partition) {
     /* partition the cmesh uniformly */
     t8_cmesh_init (&cmesh_partition);
@@ -344,6 +347,7 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
     t8_cmesh_commit (cmesh_partition, comm);
     return cmesh_partition;
   }
+#endif
   return cmesh;
 }
 
