@@ -312,7 +312,7 @@ main (int argc, char **argv)
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if(parsed >= 0 && 0 <= level && 4 <= eclass_int && eclass_int < T8_ECLASS_COUNT &&
-          elements > 2 && 0 <=mesh && mesh < 6){
+          elements >= 2 && 0 <=mesh && mesh < 6){
       eclass = (t8_eclass_t) eclass_int;
       t8_basic_hybrid (level, endlvl, do_vtk, eclass, elements, mesh, balance, file);
   }
