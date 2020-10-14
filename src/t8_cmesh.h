@@ -417,6 +417,7 @@ void                t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh,
 void                t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
 /* TODO: Document */
+/* Currently, it is only legal to save cmeshes that use the linear geometry. */
 int                 t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix);
 
 /* TODO: Document */
