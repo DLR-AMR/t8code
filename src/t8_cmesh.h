@@ -374,6 +374,8 @@ int                 t8_cmesh_is_equal (t8_cmesh_t cmesh_a,
  *                      Else, a pointer to a newly allocated cmesh
  *                      structure with the same values as \a conn_in on the
  *                      root process.
+ * \note It is illegal to broadcast a cmesh with a registered geometry (\ref t8_cmesh_register_geometry).
+ *       All geometries must be registered after the broadcast (You can set tree attributes before bcast, though).
  */
 t8_cmesh_t          t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root,
                                     sc_MPI_Comm comm);
@@ -388,7 +390,10 @@ void                t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
 /* TODO: comment */
 /* If no geometry is registered and cmesh is modified from another cmesh then
- * the other cmesh's geometries are used. */
+ * the other cmesh's geometries are used.
+ * \note If you need to use \ref t8_cmesh_bcast, then all geometries must be
+ *       registerd \a after the bcast operation, not before.
+ */
 void                t8_cmesh_register_geometry (t8_cmesh_t cmesh,
                                                 const t8_geometry_c *
                                                 geometry);
