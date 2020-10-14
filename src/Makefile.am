@@ -14,6 +14,7 @@ libt8_installed_headers = \
   src/t8_forest.h \
   src/t8_forest/t8_forest_adapt.h src/t8_forest_vtk.h \
   src/t8_geometry/t8_geometry_base.hxx \
+  src/t8_geometry/t8_geometry_base.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.h \
   src/t8_vec.h src/t8_vtk.h \
   src/t8_forest/t8_forest_iterate.h src/t8_forest/t8_forest_partition.h
@@ -46,6 +47,7 @@ libt8_compiled_sources = \
   src/t8_forest/t8_forest.c src/t8_forest/t8_forest_adapt.cxx \
   src/t8_geometry/t8_geometry.cxx \
   src/t8_geometry/t8_geometry_helpers.c \
+  src/t8_geometry/t8_geometry_base.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.cxx \
