@@ -962,8 +962,12 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 
   /* At first we broadcast all meta information. */
   if (mpirank == root) {
+    /* Check whether geometries are set. If so, abort.
+     * We cannot broadcast he geometries, since they are pointers to derived 
+     * classes that we cannot know of on the receiving process.
+     * Geometries must therefore be added after broadcasting. */
     SC_CHECK_ABORT (cmesh_in->geometry_handler == NULL,
-                    "Broadcast of geom handler not implemented\n");
+                    "Error: Broadcasting a cmesh with registerd geometries is not possible.\n");
     memcpy (&meta_info.cmesh, cmesh_in, sizeof (*cmesh_in));
     for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
       meta_info.num_trees_per_eclass[iclass] =
@@ -2149,8 +2153,6 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
   SC_CHECK_MPI (mpiret);
   if (!do_bcast || mpirank == 0) {
     t8_cmesh_init (&cmesh);
-    /* Use linear geometry */
-    t8_cmesh_register_geometry (cmesh, linear_geom);
     for (i = 0; i < num_trees_for_hypercube[eclass]; i++) {
       t8_cmesh_set_tree_class (cmesh, i, eclass);
     }
@@ -2327,6 +2329,11 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
     }
     cmesh = t8_cmesh_bcast (cmesh, 0, comm);
   }
+
+  /* Use linear geometry */
+  /* We need to set the geometry after broadcasting, since we
+   * cannot bcast he geometries. */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
 
   if (do_partition) {
     int                 mpirank, mpisize, mpiret;

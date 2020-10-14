@@ -580,11 +580,8 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix,
   if (mpirank == 0 || partition) {
     int                 retval, corner_offset;
     char                current_file[BUFSIZ];
-    t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
 
     t8_cmesh_init (&cmesh);
-    /* Use linear geometry */
-    t8_cmesh_register_geometry (cmesh, linear_geom);
     /* read .node file */
     snprintf (current_file, BUFSIZ, "%s.node", fileprefix);
     retval =
@@ -631,6 +628,10 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix,
   }
 
   if (cmesh != NULL) {
+    /* Use linear geometry */
+    t8_geometry_c      *linear_geom = t8_geometry_linear_new (dim);
+    /* We need to set the geometry after the broadcast. */
+    t8_cmesh_register_geometry (cmesh, linear_geom);
     if (partition) {
       first_tree = (mpirank * cmesh->num_trees) / mpisize;
       last_tree = ((mpirank + 1) * cmesh->num_trees) / mpisize - 1;
