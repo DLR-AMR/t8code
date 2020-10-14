@@ -112,4 +112,16 @@ t8_geometry_linear_new (int dimension)
   return (t8_geometry_c *) geom;
 }
 
+void
+t8_geometry_linear_destroy (t8_geometry_c ** geom)
+{
+#ifdef T8_ENABLE_DEBUG
+  t8_geometry_c      *pgeom = *geom;
+  T8_ASSERT (dynamic_cast < t8_geometry_linear * >(pgeom) != NULL);
+#endif
+
+  delete             *geom;
+  *geom = NULL;
+}
+
 T8_EXTERN_C_END ();

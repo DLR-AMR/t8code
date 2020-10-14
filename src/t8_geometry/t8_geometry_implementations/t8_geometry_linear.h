@@ -32,12 +32,17 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/* Create a new linear geometry of a given dimension.
+/** Create a new linear geometry of a given dimension.
  * \param [in] dimension  0 <= \a dimension <= 3. The dimension.
  * \return          A pointer to an allocated t8_geometry_linear struct, as
  *                  if the t8_geometry_linear (int dimension) constructor was called.
  */
 t8_geometry_c      *t8_geometry_linear_new (int dimension);
+
+/** Destroy a linear geometry that was created with \ref t8_geometry_linear_new.
+ * \param [in,out] geom A linear geometry. Set to NULL on output.
+ */
+void                t8_geometry_linear_destroy (t8_geometry_c ** geom);
 
 T8_EXTERN_C_END ();
 
