@@ -935,7 +935,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   } meta_info;
 
   /* TODO: BUG: running with two processes and a cmesh of one T8_ECLASS_LINE,
-   *       the on both processes the face_neigbors and vertices arrays of
+   *       then on both processes the face_neigbors and vertices arrays of
    *       the single tree point to the same physical memory.
    *       (face_neighbors on both processes are equal and vertices on both
    *        processes are equal)
