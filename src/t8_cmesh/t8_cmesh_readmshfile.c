@@ -173,6 +173,63 @@ t8_msh_file_node_compare (const void *node_a, const void *node_b,
   return Node_a->index == Node_b->index;
 }
 
+/* Read an open msh-file and checks whether the MeshFormat-Version is supported by t8code or not. */
+static void
+t8_cmesh_check_version_of_msh_file (FILE * fp)
+{
+
+  char               *line = (char *) malloc (1024);
+  char                first_word[2048] = "\0";
+  T8_ASSERT (fp != NULL);
+  size_t              linen = 1024;
+  int                 retval;
+  int                 max_version_supported = 2;
+  int                 version_number, sub_version_number;
+
+  /* Go to the beginning of the file. */
+  fseek (fp, 0, SEEK_SET);
+
+  /* Search for the line starting with "$MeshFormat". */
+  while (!feof (fp) && strcmp (first_word, "$MeshFormat")) {
+    (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
+    retval = sscanf (line, "%2048s", first_word);
+
+    /* Checking for read/write error */
+    if (retval != 1) {
+      t8_global_errorf
+        ("Reading the msh-file in order to check the MeshFormat-number failed.\n");
+      t8_debugf ("The line is %s", line);
+    }
+  }
+
+  /* Got to the next line containing the MeshFormat. */
+  (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
+  /* Get the MeshFormat number of the file */
+  retval = sscanf (line, "%d.%d", &version_number, &sub_version_number);
+
+  /*Checking for read/write error. */
+  if (retval != 2) {
+    t8_global_errorf ("The MeshFormat-number was not read correctly.\n");
+    t8_debugf ("Reading of the MeshFormat-number failed.\n");
+  }
+
+  /* Check if MeshFormat-number is compatible. */
+  if (version_number <= max_version_supported) {
+    t8_debugf ("Succesfully read the MeshFormat-Number.\n");
+    t8_debugf ("This version of msh-file (%d.%d) is supported.\n",
+               version_number, sub_version_number);
+
+  }
+  else {
+    t8_debugf
+      ("This version of msh-file is currently not supported by t8code.\n");
+    t8_global_errorf
+      ("This version of msh-file (%d.%d) is currently not supported by t8code, please provide a msh-file of version %d.X or lower.\n",
+       version_number, sub_version_number, max_version_supported);
+  }
+
+}
+
 /* Read an open .msh file and parse the nodes into a hash table.
  */
 static sc_hash_t   *
@@ -776,6 +833,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
       t8_global_errorf ("Could not open file %s\n", current_file);
       return NULL;
     }
+    /* Check if msh-file version is compatible. */
+    t8_cmesh_check_version_of_msh_file (file);
     /* read nodes from the file */
     vertices = t8_msh_file_read_nodes (file, &num_vertices, &node_mempool);
     t8_cmesh_msh_file_read_eles (cmesh, file, vertices, &vertex_indices, dim);
