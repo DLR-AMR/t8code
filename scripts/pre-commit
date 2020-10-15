@@ -10,7 +10,6 @@
 #
 
 # This is the indent script in the project's directory
-
 INDENT=./p4estindent
 
 if git rev-parse --verify HEAD >/dev/null 2>&1
