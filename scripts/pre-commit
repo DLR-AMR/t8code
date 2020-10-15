@@ -11,7 +11,7 @@
 
 # This is the indent script in the project's directory
 
-INDENT=./t8indent
+INDENT=./p4estindent
 
 if git rev-parse --verify HEAD >/dev/null 2>&1
 then
