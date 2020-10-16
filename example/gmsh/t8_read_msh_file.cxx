@@ -154,7 +154,9 @@ main (int argc, char *argv[])
   }
   else {
     cmesh = t8_read_msh_file_build_cmesh (prefix, partition, dim, master);
-    t8_cmesh_destroy (&cmesh);
+    if (cmesh != NULL) {
+      t8_cmesh_destroy (&cmesh);
+    }
     sc_options_print_summary (t8_get_package_id (), SC_LP_PRODUCTION, opt);
   }
 
