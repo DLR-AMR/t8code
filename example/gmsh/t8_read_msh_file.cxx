@@ -154,6 +154,7 @@ main (int argc, char *argv[])
   }
   else {
     cmesh = t8_read_msh_file_build_cmesh (prefix, partition, dim, master);
+    /* Check whether we could properly read the cmesh and if so, destroy it. */
     if (cmesh != NULL) {
       t8_cmesh_destroy (&cmesh);
     }
