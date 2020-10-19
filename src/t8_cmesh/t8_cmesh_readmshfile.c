@@ -173,7 +173,7 @@ t8_msh_file_node_compare (const void *node_a, const void *node_b,
   return Node_a->index == Node_b->index;
 }
 
-/* Read an open msh-file and checks whether the MeshFormat-Version is supported by t8code or not. */
+/* Reads an open msh-file and checks whether the MeshFormat-Version is supported by t8code or not. */
 static int
 t8_cmesh_check_version_of_msh_file (FILE * fp)
 {
@@ -848,6 +848,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
     file = fopen (current_file, "r");
     if (file == NULL) {
       t8_global_errorf ("Could not open file %s\n", current_file);
+      t8_cmesh_destroy (&cmesh);
       return NULL;
     }
     /* Check if msh-file version is compatible. */
@@ -856,6 +857,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
       fclose (file);
       t8_debugf
         ("The reading process of the msh-file has failed and the file has been closed.\n");
+      t8_cmesh_destroy (&cmesh);
       return NULL;
     }
     /* read nodes from the file */
