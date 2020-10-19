@@ -27,11 +27,12 @@
 
 #ifndef T8_CMESH_READMSHFILE_H
 #define T8_CMESH_READMSHFILE_H
-#define T8_CMESH_MAX_SUPPORTED_FILE_VERSION 2
 
 #include <t8.h>
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
+
+#define T8_CMESH_MAX_SUPPORTED_FILE_VERSION 2
 
 /* put typedefs here */
 
