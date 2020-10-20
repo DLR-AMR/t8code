@@ -392,17 +392,18 @@ t8_forest_commit (t8_forest_t forest)
         t8_forest_populate (forest);
     }
     else{
-        t8_forest_t     forest_tmp;
+        t8_forest_t     forest_tmp, forest_tmp_partition;
         t8_forest_t     forest_zero;
-        double      adapt_time = 0, part_time = 0;
-        int         procs_sent;
-        sc_statinfo_t   times[2];
+        double      adapt_time = 0, part_time = 0, copy_time = 0, total = 0;
+        sc_statinfo_t   times[4];
         sc_stats_init(&times[0], "adapt");
         sc_stats_init(&times[1], "partition");
+        sc_stats_init(&times[2], "copy");
+        sc_stats_init(&times[3], "total");
 
+        total -= sc_MPI_Wtime();
         t8_cmesh_ref(forest->cmesh);
         t8_scheme_cxx_ref(forest->scheme_cxx);
-
         t8_forest_init(&forest_zero);
         t8_forest_set_level(forest_zero, 0);
         t8_forest_set_cmesh(forest_zero, forest->cmesh, forest->mpicomm);
@@ -411,23 +412,31 @@ t8_forest_commit (t8_forest_t forest)
 
         for(i = 1; i<=forest->set_level; i++){
             t8_forest_init(&forest_tmp);
-            t8_forest_set_profiling(forest_tmp,1);
             t8_forest_set_level(forest_tmp, i);
             t8_forest_set_adapt(forest_tmp, forest_zero, t8_forest_new_refine, 0);
-            t8_forest_set_partition(forest_tmp, forest_zero,0);
+            adapt_time -= sc_MPI_Wtime();
             t8_forest_commit(forest_tmp);
-            part_time += t8_forest_profile_get_partition_time(forest_tmp, &procs_sent);
-            adapt_time += t8_forest_profile_get_adapt_time(forest_tmp);
-            forest_zero = forest_tmp;
+            adapt_time += sc_MPI_Wtime();
+            t8_forest_init(&forest_tmp_partition);
+            t8_forest_set_partition(forest_tmp_partition, forest_tmp, 0);
+            part_time -= sc_MPI_Wtime();
+            t8_forest_commit(forest_tmp_partition);
+            part_time+=sc_MPI_Wtime();
+            forest_zero = forest_tmp_partition;
             //t8_forest_ref(forest);
             //t8_forest_copy_trees(forest_tmp, forest_zero,1);
         }
+        copy_time -= sc_MPI_Wtime();
+        t8_forest_copy_trees(forest, forest_tmp_partition, 1);
+        copy_time += sc_MPI_Wtime();
+        total += sc_MPI_Wtime();
         sc_stats_accumulate(&times[0], adapt_time);
         sc_stats_accumulate(&times[1], part_time);
-        sc_stats_compute(forest->mpicomm, 2, times);
-        sc_stats_print(t8_get_package_id(), SC_LP_ESSENTIAL, 2, times, 1,1);
-        t8_forest_copy_trees(forest, forest_tmp, 1);
-        t8_forest_unref(&forest_tmp);
+        sc_stats_accumulate(&times[2], copy_time);
+        sc_stats_accumulate(&times[3], total);
+        sc_stats_compute(sc_MPI_COMM_WORLD, 4, times);
+        sc_stats_print(t8_get_package_id(), SC_LP_ESSENTIAL, 4, times, 1,1);
+        t8_forest_unref(&forest_tmp_partition);
     }
     forest->global_num_trees = t8_cmesh_get_num_trees (forest->cmesh);
   }
