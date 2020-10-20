@@ -323,7 +323,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
   char               *line = (char *) malloc (1024);
   size_t              linen = 1024;
   t8_locidx_t         element, num_elems, tit;
-  t8_locidx_t        *tneighbors;
+  t8_locidx_t        *tneighbors = NULL;
   int                 retval;
   int                 temp;
   int                 orientation = 0, face1, face2;
@@ -382,6 +382,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
   }
   /* We are done reading the file. */
   fclose (fp);
+  fp = NULL;
 
   /* To compute the face neighbor orientations it is necessary to look up the
    * vertices of a given tree_id. This is only possible if the attribute array
@@ -395,7 +396,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
        * or -1 if there is no neighbor */
       if (element != -1 - element_offset && tit < element) {
         for (face2 = 0; face2 < 3; face2++) {
-          /* Finde the face number of triangle which is connected to tit */
+          /* Find the face number of triangle which is connected to it */
           if (tneighbors[num_faces * element + face2] == tit + element_offset) {
             break;
           }
@@ -414,29 +415,46 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
           orientation = (face1 + face2 + 1) % 2;
         }
         else {
-          /* TODO: compute correct orientation in 3d
-             or do we do this here? */
+          /* dim == 3 */
+          int                 found_orientation = 0;
+          /* Error tolerance for vertex coordinate equality.
+           * We consider vertices to be equal if all their coordinates
+           * are within this tolerance. Thus, A == B if |A[i] - B[i]| < tolerance
+           * for all i = 0, 1 ,2
+           */
+          const double        tolerance = 1e-12;
           firstvertex = face1 == 0 ? 1 : 0;
           el_vertices1 =
             (double *) t8_stash_get_attribute (cmesh->stash, tit);
           el_vertices2 =
             (double *) t8_stash_get_attribute (cmesh->stash, element);
           el_vertices1 += 3 * firstvertex;
-          for (ivertex = 1; ivertex <= 3; ivertex++) {
+          for (ivertex = 1; ivertex <= 3 && !found_orientation; ivertex++) {
             /* The face with number k consists of the vertices with numbers
              * k+1, k+2, k+3 (mod 4)
              * in el_vertices are the coordinates of these vertices in order
              * v_0x v_0y v_0z v_1x v_1y ... */
-            if (el_vertices1[0] == el_vertices2[3 * ((face2 + ivertex) % 4)]
-                && el_vertices1[1] ==
-                el_vertices2[3 * ((face2 + ivertex) % 4) + 1]
-                && el_vertices1[2] ==
-                el_vertices2[3 * ((face2 + ivertex) % 4) + 2]) {
+            if (fabs
+                (el_vertices1[0] -
+                 el_vertices2[3 * ((face2 + ivertex) % 4)]) < tolerance
+                && fabs (el_vertices1[1] -
+                         el_vertices2[3 * ((face2 + ivertex) % 4) + 1]) <
+                tolerance
+                && fabs (el_vertices1[2] -
+                         el_vertices2[3 * ((face2 + ivertex) % 4) + 2]) <
+                tolerance) {
               orientation = ivertex;
-              ivertex = 4;      /* Abort loop */
+              found_orientation = 1;    /* We found an orientation and can stop the loop */
             }
           }
-          T8_ASSERT (ivertex == 5);     /* asserts if an orientation was successfully found */
+          if (!found_orientation) {
+            /* We could not find an orientation */
+            t8_global_errorf
+              ("Could not detect the orientation of the face connection of elements %i and %i\n"
+               "across faces %i and %i when reading from file %s.\n", tit,
+               element, face1, face2, filename);
+            goto die_neigh;
+          }
         }
         /* Insert this face connection if we did not insert it before */
         if (tit < element || face1 <= face2) {
@@ -452,6 +470,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
   return 0;
 die_neigh:
   /* Clean up on error. */
+  T8_FREE (tneighbors);
   /* Close open file */
   if (fp != NULL) {
     fclose (fp);
@@ -498,6 +517,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
     if (retval != 0 && retval != 1) {
       t8_global_errorf ("Error while parsing file %s.\n", current_file);
       t8_cmesh_unref (&cmesh);
+      return NULL;
     }
     else {
       /* read .ele file */
@@ -513,6 +533,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
       if (retval != 0 && retval != 1) {
         t8_global_errorf ("Error while parsing file %s.\n", current_file);
         t8_cmesh_unref (&cmesh);
+        return NULL;
       }
       else {
         /* read .neigh file */
@@ -522,6 +543,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition,
         if (retval != 0) {
           t8_global_errorf ("Error while parsing file %s.\n", current_file);
           t8_cmesh_unref (&cmesh);
+          return NULL;
         }
       }
     }
@@ -590,6 +612,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix,
     if (retval != 0 && retval != 1) {
       t8_global_errorf ("Error while parsing file %s.\n", current_file);
       t8_cmesh_unref (&cmesh);
+      return NULL;
     }
     else {
       /* read .ele file */
@@ -605,6 +628,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix,
       if (retval != 0 && retval != 1) {
         t8_global_errorf ("Error while parsing file %s.\n", current_file);
         t8_cmesh_unref (&cmesh);
+        return NULL;
       }
       else {
         /* read .neigh file */
