@@ -32,6 +32,11 @@
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 
+/* The maximum supported .msh file version.
+ * Currently, we support gmsh's file version 2 in ASCII format.
+ */
+#define T8_CMESH_MAX_SUPPORTED_FILE_VERSION 2
+
 /* put typedefs here */
 
 T8_EXTERN_C_BEGIN ();
