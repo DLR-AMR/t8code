@@ -26,6 +26,19 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx>
 
+/* In this file we collect tests for t8code's cmesh geometry module.
+ * These tests are
+ *  - t8_test_geometry_linear:  Check that linear geometry has correct name and dimension.
+ *  - t8_test_geometry_zero:    Check that zero geometry has correct name and dimension. 
+ *  - t8_test_cmesh_geometry_linear: For each dimension create a cmesh with linear geometry.
+ *                                   We then create random points and check whether their geometry
+ *                                   is computed correctly.
+ *  - t8_test_cmesh_geometry_unique: Check that we can acces the geometry via the tree id if
+ *                                   we only use one geometry and did not specify tree ids for it.
+ *                                   In this case t8code should automatically associate this geometry to all tree.
+ *  - t8_test_geom_handler_register: Tests the geometry_handler register and find interface.
+ */
+
 /* Check that the linear geometry for dimensions 0,1,2,3
  * has the correct name and dimension. */
 static void
@@ -231,29 +244,27 @@ t8_test_geom_handler_register (sc_MPI_Comm comm)
   const t8_geometry_c *found_geom;
 
   t8_debugf ("Testing geometry handler register.\n");
-  SC_ABORT ("Test not implemented.");
-  /* TODO: We need to use a different geometry since we remove the identity geomeytry. */
-#if 0
+
   /* Initialize a geometry handler. */
   t8_geom_handler_init (&geom_handler);
 
-  /* For each dimension build the identity geometry and register it.
+  /* For each dimension build the zero geometry and register it.
    * We then commit the handler and check that we can find the geometries. */
   for (idim = 0; idim < 3; ++idim) {
-    t8_geometry_identity *id_geom = new t8_geometry_identity (idim);
+    t8_geometry_zero   *zero_geom = new t8_geometry_zero (idim);
     /* Register the geometry. */
-    t8_geom_handler_register_geometry (geom_handler, id_geom);
+    t8_geom_handler_register_geometry (geom_handler, zero_geom);
   }
   /* Commit the handler */
   t8_geom_handler_commit (geom_handler);
 
   /* Check find geometry. */
   for (idim = 0; idim < 3; ++idim) {
-    t8_geometry_identity id_geom (idim);
+    t8_geometry_zero    zero_geom (idim);
     const char         *name;
 
     /* Get the name of this geometry. */
-    name = id_geom.t8_geom_get_name ();
+    name = zero_geom.t8_geom_get_name ();
     t8_debugf ("Name of geometry: %s.\n", name);
     /* Find the geometry by name. */
     found_geom = t8_geom_handler_find_geometry (geom_handler, name);
@@ -271,7 +282,6 @@ t8_test_geom_handler_register (sc_MPI_Comm comm)
   t8_geom_handler_destroy (&geom_handler);
   SC_CHECK_ABORT (geom_handler == NULL,
                   "Geometry handler was not destroyed properly.");
-#endif
 }
 
 int
