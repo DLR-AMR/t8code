@@ -1477,7 +1477,9 @@ t8_cmesh_reset (t8_cmesh_t * pcmesh)
   }
 
   /* Unref the geometry handler. */
-  t8_geom_handler_unref (&cmesh->geometry_handler);
+  if (cmesh->geometry_handler != NULL) {
+    t8_geom_handler_unref (&cmesh->geometry_handler);
+  }
 
   T8_FREE (cmesh);
   *pcmesh = NULL;
