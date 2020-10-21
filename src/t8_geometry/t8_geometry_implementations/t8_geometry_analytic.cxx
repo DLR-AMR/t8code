@@ -27,7 +27,8 @@ t8_geometry_analytic::t8_geometry_analytic (int dim, const char *name_in,
                                             t8_geom_analytic_jacobian_fn
                                             jacobian_in,
                                             t8_geom_load_tree_data_fn
-                                            load_tree_data_in)
+                                            load_tree_data_in,
+                                            const void *user_data_in)
 {
   T8_ASSERT (0 <= dim && dim <= 3);
 
@@ -37,6 +38,7 @@ t8_geometry_analytic::t8_geometry_analytic (int dim, const char *name_in,
   analytical_function = analytical;
   jacobian = jacobian_in;
   load_tree_data = load_tree_data_in;
+  user_data = user_data_in;
 }
 
 /**
@@ -45,15 +47,15 @@ t8_geometry_analytic::t8_geometry_analytic (int dim, const char *name_in,
  * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
  * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
  */
-void inline
+void
 t8_geometry_analytic::t8_geom_evaluate (t8_cmesh_t cmesh,
-                                t8_gloidx_t gtreeid,
-                                const double *ref_coords,
-                                double out_coords[3]) const
+                                        t8_gloidx_t gtreeid,
+                                        const double *ref_coords,
+                                        double out_coords[3]) const
 {
   T8_ASSERT (analytical_function != NULL);
   analytical_function (cmesh, gtreeid, ref_coords, out_coords,
-                      tree_data);
+                       tree_data, user_data);
 }
 
 /**
@@ -63,15 +65,15 @@ t8_geometry_analytic::t8_geom_evaluate (t8_cmesh_t cmesh,
  * \param [out] jacobian    The jacobian at \a ref_coords. Array of size dimension x 3. Indices 3*i, 3*i+1, 3*i+2
  *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
  */
-void inline
+void
 t8_geometry_analytic::t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
-                                                  t8_gloidx_t gtreeid,
-                                                  const double
-                                                  *ref_coords,
-                                                  double *jacobian_out) const
+                                                t8_gloidx_t gtreeid,
+                                                const double
+                                                *ref_coords,
+                                                double *jacobian_out) const
 {
   T8_ASSERT (jacobian != NULL);
-  jacobian (cmesh, gtreeid, ref_coords, jacobian_out, tree_data);
+  jacobian (cmesh, gtreeid, ref_coords, jacobian_out, tree_data, user_data);
 }
 
 void
