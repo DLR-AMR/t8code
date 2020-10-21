@@ -292,6 +292,7 @@ t8_geom_handler_update_tree (t8_geometry_handler_t * geom_handler,
 {
   /* Must be committed */
   T8_ASSERT (t8_geom_handler_is_committed (geom_handler));
+  T8_ASSERT (0 <= gtreeid && gtreeid < t8_cmesh_get_num_trees (cmesh));
   if (geom_handler->active_tree != gtreeid) {
     int                 num_geoms =
       t8_geom_handler_get_num_geometries (geom_handler);
