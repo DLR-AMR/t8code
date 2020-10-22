@@ -35,13 +35,14 @@ typedef enum
   T8_GEOM_MOEBIUS,
   T8_GEOM_CIRCLE,
   T8_GEOM_3D,
+  T8_GEOM_MOVING,
   T8_GEOM_COUNT
 } t8_analytic_geom_type;
 
 static void
 t8_analytic_sincos (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
                     const double *ref_coords, double out_coords[3],
-                    const void *tree_data)
+                    const void *tree_data, const void *user_data)
 {
   double              x = ref_coords[0];
   if (gtreeid == 1) {
@@ -57,7 +58,7 @@ t8_analytic_sincos (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
 static void
 t8_analytic_cylinder (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
                       const double *ref_coords, double out_coords[3],
-                      const void *tree_data)
+                      const void *tree_data, const void *user_data)
 {
   out_coords[0] = cos (ref_coords[0] * 2 * M_PI);
   out_coords[1] = ref_coords[1];
@@ -67,7 +68,7 @@ t8_analytic_cylinder (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
 static void
 t8_analytic_moebius (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
                      const double *ref_coords, double out_coords[3],
-                     const void *tree_vertices)
+                     const void *tree_vertices, const void *user_data)
 {
   const double       *tree_v = (const double *) tree_vertices;
   double              t;
@@ -94,7 +95,7 @@ t8_analytic_moebius (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
 static void
 t8_analytic_circle (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
                     const double *ref_coords, double out_coords[3],
-                    const void *tree_vertices)
+                    const void *tree_vertices, const void *user_data)
 {
   const double       *tree_v = (const double *) tree_vertices;
   double              x;
@@ -117,10 +118,48 @@ t8_analytic_circle (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
   out_coords[2] = 0;
 }
 
+/* This geometry rotates with time around the origin.
+ * The rotation direction is reversed after 2 seconds.
+ * Additionally, the z coordinate is modifyied according to the
+ * sincos function and multiplied with the current time.
+ * To use this, a double variable time has to be set as the geometries
+ * user data.
+ */
+static void
+t8_analytic_moving (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
+                    const double *ref_coords, double out_coords[3],
+                    const void *tree_data, const void *user_data)
+{
+  double              x = ref_coords[0] - .5;
+  double              y = ref_coords[1] - .5;
+  T8_ASSERT (tree_data == NULL);
+  T8_ASSERT (user_data != NULL);
+  const double        time = *(double *) user_data;
+  double              radius_sqr = x * x + y * y;
+  double              phi = radius_sqr * (time > 2 ? 4 - time : time);
+
+  /* Change gridlines by applying a 4th order polynomial mapping
+   * [0,1]^2 -> [0,1]^2.
+   * And then map this to [-0.5,-0.5]^2 */
+  //x = x*x*x*x - 3.5*x*x*x + 3.5 * x;
+  int                 sign = x < 0 ? 1 : -1;
+  double              rho = 0.5 - time / 10;
+  x = sign * (1 - exp (-fabs (-x) / rho)) / (2 * (1 - exp (-0.5 / rho)));
+  sign = y < 0 ? 1 : -1;
+  y = sign * (1 - exp (-fabs (-y) / rho)) / (2 * (1 - exp (-0.5 / rho)));
+  //y = y*y*y - 3.5*y*y + 2.5 * y - 0.5;
+
+  /* Rotate the x-y axis and add sincon in z axis. */
+  out_coords[0] = x * (cos (phi)) - y * sin (phi);
+  out_coords[1] = y * (cos (phi)) + x * sin (phi);
+  out_coords[2] = 0;
+  //sin(2*M_PI * time) * 0.2 * sin (out_coords[0] * 2 * M_PI) * cos (out_coords[1] * 2 * M_PI);
+}
+
 static void
 t8_analytic_3D_cube (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
                      const double *ref_coords, double out_coords[3],
-                     const void *tree_data)
+                     const void *tree_data, const void *user_data)
 {
   out_coords[0] = ref_coords[0];
   out_coords[1] = ref_coords[1];
@@ -178,6 +217,7 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
   char                vtuname[BUFSIZ];
   t8_geometry_c      *geometry;
   int                 uniform_level;
+  double              time = 0; /* used for moving geometry */
 
   t8_cmesh_init (&cmesh);
   /* Depending on the geometry type, add the tree, set the geometry
@@ -190,7 +230,7 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     /* Sin/cos geometry. Has two quad trees. */
     geometry =
       new t8_geometry_analytic (2, "analytic sinus cosinus dim=2",
-                                t8_analytic_sincos, NULL, NULL);
+                                t8_analytic_sincos, NULL, NULL, NULL);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_QUAD);
     t8_cmesh_set_join (cmesh, 0, 1, 1, 0, 0);
@@ -202,7 +242,7 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     /* Cylinder geometry. Has one quad tree that is periodic in x direction. */
     geometry =
       new t8_geometry_analytic (2, "analytic geometry cylinder",
-                                t8_analytic_cylinder, NULL, NULL);
+                                t8_analytic_cylinder, NULL, NULL, NULL);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     t8_cmesh_set_join (cmesh, 0, 0, 0, 1, 0);
     snprintf (vtuname, BUFSIZ, "forest_analytic_cylinder_lvl_%i", level);
@@ -217,7 +257,8 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
       t8_cmesh_set_derive (cmesh, hybrid_square);
       geometry =
         new t8_geometry_analytic (2, "analytic moebius", t8_analytic_moebius,
-                                  NULL, t8_geom_load_tree_data_vertices);
+                                  NULL, t8_geom_load_tree_data_vertices,
+                                  NULL);
       snprintf (vtuname, BUFSIZ, "forest_analytic_moebius_lvl_%i", level);
     }
     break;
@@ -233,7 +274,8 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
       t8_cmesh_set_derive (cmesh, tri_square);
       geometry =
         new t8_geometry_analytic (2, "analytic circle", t8_analytic_circle,
-                                  NULL, t8_geom_load_tree_data_vertices);
+                                  NULL, t8_geom_load_tree_data_vertices,
+                                  NULL);
       snprintf (vtuname, BUFSIZ, "forest_analytic_circle_lvl_%i", level);
     }
     break;
@@ -244,9 +286,19 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     /* Cube geometry with sincos on top. Has one hexahedron tree. */
     geometry =
       new t8_geometry_analytic (3, "cube geom", t8_analytic_3D_cube, NULL,
-                                NULL);
+                                NULL, NULL);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
     snprintf (vtuname, BUFSIZ, "forest_analytic_3D_lvl_%i", level);
+    break;
+  case T8_GEOM_MOVING:
+    t8_global_productionf
+      ("Creating uniform level %i forest with a moving geometry.\n", level);
+    /* Quad geometry that rotates with time. */
+    geometry =
+      new t8_geometry_analytic (2, "analytic moving dim=2",
+                                t8_analytic_moving, NULL, NULL, &time);
+    t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
+    snprintf (vtuname, BUFSIZ, "forest_moving_lvl_%i", level);
     break;
   default:
     SC_ABORT_NOT_REACHED ();
@@ -285,6 +337,23 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
       ("\trecommend using such a mesh in a production code.\n");
     t8_global_productionf
       ("\tThis example is for demonstrative purposes only.\n");
+  }
+  if (geom_type == T8_GEOM_MOVING) {
+    /* Moving geometry, we start a time simulation and write out the mesh
+     * after each time step. */
+    int                 timestep = 0;
+    const int           num_timesteps = 100;
+    const int           end_time = 4;
+    char                vtuname_with_timestep[BUFSIZ];
+
+    for (timestep = 0; timestep < num_timesteps; ++timestep) {
+      /* Modify the time. Note that the user_data pointer of our
+       * geometry points to this entry, which changes the shape of the tree. */
+      time += ((double) end_time) / num_timesteps;
+      /* At the time step to the output filename */
+      snprintf (vtuname_with_timestep, BUFSIZ, "%s_%04i", vtuname, timestep);
+      t8_forest_write_vtk (forest, vtuname_with_timestep);
+    }
   }
 
   t8_forest_unref (&forest);
@@ -331,7 +400,8 @@ main (int argc, char **argv)
                       "\t\t2 - A moebius strip on a hybrid mesh with 4 triangles and 2 quads.\n"
                       "\t\t3 - A square of two triangles that is mapped into a circle.\n"
                       "\t\t    The mesh will not be uniform. Instead it is refined at the domain boundary.\n"
-                      "\t\t4 - A cube that is distorted in z-direction with one 3D cube tree.\n");
+                      "\t\t4 - A cube that is distorted in z-direction with one 3D cube tree.\n"
+                      "\t\t5 - A moving mesh consisting of a single 2D quad tree.\n");
 
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
