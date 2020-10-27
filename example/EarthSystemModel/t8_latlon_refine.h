@@ -56,7 +56,6 @@ T8_EXTERN_C_BEGIN ();
 
 /* function declarations */
 
-
 /** The adaptation callback that decides when to refine or coarsen an element.
  * In refine mode, we refine all elements that cut a given x times y grid.
  * In coarsen mode, we coarsen all elements that do not cut the grid.
@@ -80,7 +79,6 @@ t8_locidx_t         t8_latlon_adapt_callback (t8_forest_t forest,
                                               t8_eclass_scheme_c * ts,
                                               int num_elements,
                                               t8_element_t * elements[]);
-
 
 /** Given x and y dimensions build the smalles one-tree quad forest that
  * contains an x times y grid in its lower left corner and write it to vtk.

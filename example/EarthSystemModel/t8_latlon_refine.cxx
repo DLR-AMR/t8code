@@ -101,8 +101,7 @@ t8_latlon_adapt_callback (t8_forest_t forest,
                           int num_elements, t8_element_t * elements[])
 {
   /* Get the user data pointer of forest, it points to a t8_latlon_adapt_data_t */
-    *adapt_data =
-    (t8_latlon_adapt_data_t *) t8_forest_get_user_data (forest);
+  *adapt_data = (t8_latlon_adapt_data_t *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
   /* Get the refinement level of the element. */
   int                 level = ts->t8_element_level (elements[0]);
