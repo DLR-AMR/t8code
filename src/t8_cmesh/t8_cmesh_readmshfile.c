@@ -219,12 +219,12 @@ t8_cmesh_check_version_of_msh_file (FILE * fp)
   if (check_format) {
     t8_global_errorf
       ("Incompatible file-type. t8code works with ASCII-type msh-files of version %d.\n",
-       T8_CMESH_MAX_SUPPORTED_FILE_VERSION);
+       T8_CMESH_SUPPORTED_FILE_VERSION);
     goto die_format;
   }
 
   /* Check if MeshFormat-number is compatible. */
-  if (version_number <= T8_CMESH_MAX_SUPPORTED_FILE_VERSION) {
+  if (version_number == T8_CMESH_SUPPORTED_FILE_VERSION) {
     t8_debugf ("This version of msh-file (%d.%d) is supported.\n",
                version_number, sub_version_number);
     free (line);
@@ -232,9 +232,8 @@ t8_cmesh_check_version_of_msh_file (FILE * fp)
   }
   else {
     t8_global_errorf
-      ("This version of msh-file (%d.%d) is currently not supported by t8code, please provide an ASCII-type msh-file of version %d.X or lower.\n",
-       version_number, sub_version_number,
-       T8_CMESH_MAX_SUPPORTED_FILE_VERSION);
+      ("This version of msh-file (%d.%d) is currently not supported by t8code, please provide an ASCII-type msh-file of version %d.X.\n",
+       version_number, sub_version_number, T8_CMESH_SUPPORTED_FILE_VERSION);
     free (line);
     return 0;
   }
