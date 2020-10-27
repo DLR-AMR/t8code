@@ -357,8 +357,8 @@ t8_latlon_data_test (t8_locidx_t x_start, t8_locidx_t y_start,
                      T8_LATLON_DATA_NUMBERING numbering,
                      t8_gloidx_t x_length_global, t8_gloidx_t y_length_global)
 {
-  T8_ASSERT (x_start + x_length < x_length_global);
-  T8_ASSERT (y_start + y_length < y_length_global);
+  T8_ASSERT (x_start + x_length <= x_length_global);
+  T8_ASSERT (y_start + y_length <= y_length_global);
   t8_latlon_data_chunk_t *chunk =
     t8_latlon_new_chunk (x_start, y_start, x_length, y_length, dimension,
                          level, numbering, "test_chunk");
