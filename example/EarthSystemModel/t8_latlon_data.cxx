@@ -41,6 +41,8 @@
  * |_*|__|__|  |
  * |__|__|__|__|
  * 
+ * 
+ * Note: This is essentially the invers of the t8_latlon_refine_grid_cuts_elements check.
  */
 static void
 t8_latlon_to_element (t8_gloidx_t x, t8_gloidx_t y, int level,
@@ -50,11 +52,18 @@ t8_latlon_to_element (t8_gloidx_t x, t8_gloidx_t y, int level,
   t8_default_scheme_quad_c quad_scheme;
 
   quad = (p4est_quadrant_t *) (quad_element);
+  /* The level of the quad is the given level.
+   * Its x and y coordinates are the given x and y coordinates in the grid,
+   * shifted to be in the range [0,2^L], L = P4EST_MAXLEVEL. */
   quad->level = level;
   quad->x = x << (P4EST_MAXLEVEL - level);
   quad->y = y << (P4EST_MAXLEVEL - level);
 }
 
+/* Given x and y coordinates in an X by Y grid compute
+ * the Morton linear id according to a given level of the 
+ * element associated with (x,y).
+ */
 t8_linearidx_t
 t8_latlon_to_linear_id (t8_gloidx_t x, t8_gloidx_t y, int level)
 {
@@ -62,15 +71,24 @@ t8_latlon_to_linear_id (t8_gloidx_t x, t8_gloidx_t y, int level)
   t8_linearidx_t      linear_id;
   t8_default_scheme_quad_c quad_scheme;
 
+  /* Allocate memory for a new quad */
   quad_scheme.t8_element_new (1, &elem);
 
+  /* Initialize the quad to match the x,y coordinates */
   t8_latlon_to_element (x, y, level, elem);
+  /* Compute the linear id of the quad. */
   linear_id = quad_scheme.t8_element_get_linear_id (elem, level);
+
+  /* Destroy the quad. */
   quad_scheme.t8_element_destroy (1, &elem);
 
+  /* Return the linear id. */
   return linear_id;
 }
 
+/* The inverse operation to t8_latlon_to_linear_id.
+ * Given a linear id and a refinement level compute the 
+ * x and y coordinates of the corresponding grid cell. */
 void
 t8_latlon_linear_id_to_latlon (t8_linearidx_t linear_id, int level,
                                t8_gloidx_t * x, t8_gloidx_t * y)
@@ -78,17 +96,25 @@ t8_latlon_linear_id_to_latlon (t8_linearidx_t linear_id, int level,
   t8_element_t       *elem;
   p4est_quadrant_t   *quad;
   t8_default_scheme_quad_c quad_scheme;
+
+  /* Allocate memory for a new quad */
   quad_scheme.t8_element_new (1, &elem);
 
+  /* Initialize it according to the linear id. */
   quad_scheme.t8_element_set_linear_id (elem, level, linear_id);
 
+  /* Compute x and y from the linear id. */
   quad = (p4est_quadrant_t *) (elem);
   *x = quad->x >> (P4EST_MAXLEVEL - level);
   *y = quad->y >> (P4EST_MAXLEVEL - level);
 
+  /* Clean-up memory. */
   quad_scheme.t8_element_destroy (1, &elem);
 }
 
+/* Given a data chunk (in xstripe, ystripe or Morton order)
+ * and an array index into its data array compute the corresponding
+ * x and y coordinates in the grid. */
 void
 t8_latlon_data_index_to_latloan (t8_latlon_data_chunk_t * data_chunk,
                                  t8_locidx_t array_index,
@@ -129,7 +155,9 @@ t8_latlon_data_index_to_latloan (t8_latlon_data_chunk_t * data_chunk,
     *y_coord = data_chunk->y_start + y_offset;
     return;
   case T8_LATLON_DATA_MORTON:
+    /* Get the Morton index of the corresponding element. */
     data_id = data_chunk->data_ids[array_index];
+    /* Compute the lat/lon coordinates from the index. */
     t8_latlon_linear_id_to_latlon (data_id, data_chunk->level, x_coord,
                                    y_coord);
     return;
@@ -140,6 +168,7 @@ t8_latlon_data_index_to_latloan (t8_latlon_data_chunk_t * data_chunk,
   }
 }
 
+/* Create a new data chunk with given dimensions and numbering. */
 t8_latlon_data_chunk_t *
 t8_latlon_new_chunk (t8_locidx_t x_start, t8_locidx_t y_start,
                      t8_locidx_t x_length, t8_locidx_t y_length,
@@ -153,6 +182,8 @@ t8_latlon_new_chunk (t8_locidx_t x_start, t8_locidx_t y_start,
    * beforehand, we cannot fill a chunk in morton order without knowing
    * also the ids. */
   T8_ASSERT (numbering != T8_LATLON_DATA_MORTON);
+
+  /* Initialize all values and allocate data array */
   chunk->x_start = x_start;
   chunk->y_start = y_start;
   chunk->x_length = x_length;
@@ -167,6 +198,7 @@ t8_latlon_new_chunk (t8_locidx_t x_start, t8_locidx_t y_start,
   return chunk;
 }
 
+/* Destroy a data chunk */
 void
 t8_latlon_chunk_destroy (t8_latlon_data_chunk_t ** pchunk)
 {
@@ -205,7 +237,7 @@ t8_latlon_compare_indices (const void *index1, const void *index2,
     ? 0 : 1;
 }
 
-/* Change the numebring of a data chunk to morton numbering. */
+/* Change the numbering of a data chunk to morton numbering. */
 void
 t8_latlon_data_apply_morton_order (t8_latlon_data_chunk_t * data_chunk)
 {
@@ -283,7 +315,7 @@ t8_latlon_data_apply_morton_order (t8_latlon_data_chunk_t * data_chunk)
   T8_FREE (permutation);
 }
 
-/* Given a subgrid in a global grid that is represented in a partitioned forest,
+/* WIP: Given a subgrid in a global grid that is represented in a partitioned forest,
  * determine those processes that have elements in the forest that lie in the
  * subgrid.
  * The subgrid data will be ordered in Morton order (if not already on input)
@@ -325,6 +357,8 @@ t8_latlon_data_test (t8_locidx_t x_start, t8_locidx_t y_start,
                      T8_LATLON_DATA_NUMBERING numbering,
                      t8_gloidx_t x_length_global, t8_gloidx_t y_length_global)
 {
+  T8_ASSERT (x_start + x_length < x_length_global);
+  T8_ASSERT (y_start + y_length < y_length_global);
   t8_latlon_data_chunk_t *chunk =
     t8_latlon_new_chunk (x_start, y_start, x_length, y_length, dimension,
                          level, numbering, "test_chunk");
@@ -352,6 +386,7 @@ t8_latlon_data_test (t8_locidx_t x_start, t8_locidx_t y_start,
     for (index = 0; index < num_grid_items; ++index) {
       t8_debugf ("%.2f\n", chunk->data[index]);
     }
+    /* Change to Morton order */
     t8_latlon_data_apply_morton_order (chunk);
     t8_debugf ("Applied Morton order:\n");
     for (index = 0; index < num_grid_items; ++index) {
