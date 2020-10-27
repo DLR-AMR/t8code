@@ -70,17 +70,28 @@ t8_latlon_refine_grid_cuts_elements (const t8_element_t * element,
   ts->t8_element_anchor (element, anchor);
   anchor_max_level = P4EST_MAXLEVEL;
 
-  /* Shift x and y coordinates to match max_level. */
+  /* Shift x and y coordinates to match max_level.
+   * Thus, we cut of trailing zeroes of the anchor coordinates 
+   * in the range [0,2^L] to get them in the range [0, 2^max_level]. 
+   */
   for (i = 0; i < 2; ++i) {
     anchor[i] >>= (anchor_max_level - adapt_data->max_level);
   }
 
+  /* We now know that the grid cuts our element if and only if the shifted anchor
+   * coordinates are smaller then the given x and y dimensions. */
   if (anchor[0] < adapt_data->x_length && anchor[1] < adapt_data->y_length) {
+    /* The grid cuts the element, return true. */
     return 1;
   }
+  /* The grid does not cut the element, return false. */
   return 0;
 }
 
+/* The adaptation callback that decides when to refine or coarsen an element.
+ * In refine mode, we refine all elements that cut a given x times y grid.
+ * In coarsen mode, we coarsen all elements that do not cut the grid.
+ */
 t8_locidx_t
 t8_latlon_adapt_callback (t8_forest_t forest,
                           t8_forest_t forest_from,
@@ -89,9 +100,11 @@ t8_latlon_adapt_callback (t8_forest_t forest,
                           t8_eclass_scheme_c * ts,
                           int num_elements, t8_element_t * elements[])
 {
-  t8_latlon_adapt_data_t *adapt_data =
+  /* Get the user data pointer of forest, it points to a t8_latlon_adapt_data_t */
+    *adapt_data =
     (t8_latlon_adapt_data_t *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
+  /* Get the refinement level of the element. */
   int                 level = ts->t8_element_level (elements[0]);
   /* This callback relies on the implementation details of the Morton SFC.
    * Hence, we expect a default scheme as input. */
@@ -112,7 +125,7 @@ t8_latlon_adapt_callback (t8_forest_t forest,
     }
   }
   else if (adapt_data->mode == T8_LATLON_COARSEN && num_elements > 1) {
-    /* Check if any element in the family cuts grid. 
+    /* Check if any element in the family cuts the grid. 
      * If not return -1 (coarsen the family). */
     int                 ielem;
     for (ielem = 0; ielem < num_elements; ++ielem) {
@@ -128,6 +141,9 @@ t8_latlon_adapt_callback (t8_forest_t forest,
   return 0;
 }
 
+/* Given x and y dimensions build the smalles one-tree quad forest that
+ * contains an x times y grid in its lower left corner.
+ */
 void
 t8_latlon_refine (int x_length, int y_length, enum T8_LATLON_ADAPT_MODE mode,
                   int repartition)
@@ -161,8 +177,12 @@ t8_latlon_refine (int x_length, int y_length, enum T8_LATLON_ADAPT_MODE mode,
              x_length, y_length, max_length, adapt_data.max_level,
              adapt_data.max_level, 1 << adapt_data.max_level);
 
+  /* Determine the initial uniform level of the forest.
+   * If mode is T8_LATLON_REFINE we start at level 0 (and then refine),
+   * if mode is T8_LATLON_COARSEN we start at the computed maximum level (and then coarsen). */
   forest_uniform_level = mode == T8_LATLON_REFINE ? 0 : adapt_data.max_level;
 
+  /* Create the initial uniform forest */
   forest =
     t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (),
                            forest_uniform_level, 0, sc_MPI_COMM_WORLD);
@@ -198,6 +218,7 @@ t8_latlon_refine (int x_length, int y_length, enum T8_LATLON_ADAPT_MODE mode,
       t8_forest_set_partition (forest_adapt, NULL, 0);
       t8_forest_commit (forest_adapt);
 #ifdef T8_ENABLE_DEBUG
+      /* In debugging mode write the forest to vtk for each level. */
       snprintf (vtu_prefix, BUFSIZ, "t8_latlon_%i_%i_%s_%i", x_length,
                 y_length, mode == T8_LATLON_REFINE ? "refine" : "coarsen",
                 level);
@@ -219,12 +240,16 @@ t8_latlon_refine (int x_length, int y_length, enum T8_LATLON_ADAPT_MODE mode,
      x_length, y_length, x_length * y_length,
      (1 - x_length * y_length / (double) num_elements) * 100);
 
+  /* Write forest to vtk file with name "t8_latlon_XLENGTH_YLENGTH_REFINEMODE". */
   snprintf (vtu_prefix, BUFSIZ, "t8_latlon_%i_%i_%s", x_length, y_length,
             mode == T8_LATLON_REFINE ? "refine" : "coarsen");
   t8_forest_write_vtk (forest_adapt, vtu_prefix);
   t8_global_productionf ("Wrote adapted forest to %s* files.\n", vtu_prefix);
 
+  /* Destroy the forest */
   t8_forest_unref (&forest_adapt);
+
+  /* This is only temporarily here.  WIP. */
   t8_latlon_data_test (0, 0, x_length, y_length, 3, adapt_data.max_level,
                        T8_LATLON_DATA_YSTRIPE, x_length, y_length);
 }
