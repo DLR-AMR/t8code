@@ -73,8 +73,8 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] level The given refinement level
  * \return        Linear id of the quad the corresponds to the x,y coordinates at \a level.
  */
-t8_linearidx_t
-t8_latlon_to_linear_id (t8_gloidx_t x, t8_gloidx_t y, int level);
+t8_linearidx_t      t8_latlon_to_linear_id (t8_gloidx_t x, t8_gloidx_t y,
+                                            int level);
 
 /** The inverse operation to t8_latlon_to_linear_id.
  * Given a linear id and a refinement level compute the 
@@ -84,9 +84,9 @@ t8_latlon_to_linear_id (t8_gloidx_t x, t8_gloidx_t y, int level);
  * \param [out] x         On output filled with the grid x coordinate.
  * \param [out] y         On output filled with the grid y coordinate.
  */
-void
-t8_latlon_linear_id_to_latlon (t8_linearidx_t linear_id, int level,
-                               t8_gloidx_t * x, t8_gloidx_t * y)
+void                t8_latlon_linear_id_to_latlon (t8_linearidx_t linear_id,
+                                                   int level, t8_gloidx_t * x,
+                                                   t8_gloidx_t * y);
 
 /* Create a data chunk with given dimensions and numbering,
  * fill it with data and then change the numbering to Morton.
@@ -94,9 +94,10 @@ t8_latlon_linear_id_to_latlon (t8_linearidx_t linear_id, int level,
 void                t8_latlon_data_test (t8_locidx_t x_start,
                                          t8_locidx_t y_start,
                                          t8_locidx_t x_length,
-                                         t8_locidx_t y_length, int dimension,
-                                         int level,
-                                         T8_LATLON_DATA_NUMBERING numbering,
+                                         t8_locidx_t y_length,
+                                         int dimension, int level,
+                                         T8_LATLON_DATA_NUMBERING
+                                         numbering,
                                          t8_gloidx_t x_length_global,
                                          t8_gloidx_t y_length_global);
 
