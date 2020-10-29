@@ -3,12 +3,6 @@
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include <t8_cmesh_readmshfile.h>
 
-/* Define constants for the properties of the example test case of the tested files. eher als onstante integer*/
-#if 0
-#define T8_TEST_READING_MSH_FILE_DIM 2
-#define T8_TEST_READING_MSH_FILE_NUM_ELEM 3
-#define T8_TEST_READING_MSH_FILE_ELEM_TYPE 3
-#endif
 static int
 t8_test_supported_msh_file (t8_cmesh_t cmesh)
 {
@@ -36,7 +30,7 @@ t8_test_supported_msh_file (t8_cmesh_t cmesh)
                        {3, 2},
                        {2, 4} };
 
-  int elements[4][3] ={
+  int elements[4][3] = {
                         {0, 1, 3},
                         {1, 4, 3},
                         {1, 2, 4},
@@ -81,11 +75,14 @@ t8_test_supported_msh_file (t8_cmesh_t cmesh)
         if (!((vertex[elements[ltree_it][i]][0] == (int) vertices[3 * i])
               && (vertex[elements[ltree_it][i]][1] ==
                   (int) vertices[(3 * i) + 1]))) {
-          t8_debugf ("Real:Elementknoten x: %d , Elementknoten y: %d\n",
-                     vertex[elements[ltree_it][i]][0],
-                     vertex[elements[ltree_it][i]][1]);
+#if 0
+          t8_debugf
+            ("Real in Mesh:Elementknoten x: %d , Elementknoten y: %d\n",
+             vertex[elements[ltree_it][i]][0],
+             vertex[elements[ltree_it][i]][1]);
           t8_debugf ("Pointer:Elementknoten x: %d , Elementknoten y: %d\n",
                      (int) vertices[3 * i], (int) vertices[(3 * i) + 1]);
+#endif
           read_node = 0;
           SC_CHECK_ABORT (read_node == 1, "Node was read incorrectly.");
           /* Return error code, if the nodes are not read correctly. */
@@ -112,14 +109,8 @@ int
 main (int argc, char **argv)
 {
 
-  int                 mpiret;
-  int                 partition, dim, master, retval;
+  int                 mpiret, retval;
   t8_cmesh_t          cmesh;
-
-/* Declaration of test variables. */
-  partition = 1;
-  dim = 2;
-  master = 0;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -142,6 +133,7 @@ main (int argc, char **argv)
     goto end_test;
   }
 
+#if 0
   /* Testing unsupported version of msh-files (bin-format). */
   cmesh =
     t8_cmesh_from_msh_file ("./test_msh_file_vers2_bin", 1,
@@ -161,7 +153,7 @@ main (int argc, char **argv)
     t8_global_errorf ("Rejecting of unsupported msh-files failed.\n");
     goto end_test;
   }
-
+#endif
   t8_global_productionf ("Done testing reading of msh-files\n");
 
   sc_finalize ();
