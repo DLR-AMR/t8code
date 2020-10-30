@@ -75,14 +75,6 @@ t8_test_supported_msh_file (t8_cmesh_t cmesh)
         if (!((vertex[elements[ltree_it][i]][0] == (int) vertices[3 * i])
               && (vertex[elements[ltree_it][i]][1] ==
                   (int) vertices[(3 * i) + 1]))) {
-#if 0
-          t8_debugf
-            ("Real in Mesh:Elementknoten x: %d , Elementknoten y: %d\n",
-             vertex[elements[ltree_it][i]][0],
-             vertex[elements[ltree_it][i]][1]);
-          t8_debugf ("Pointer:Elementknoten x: %d , Elementknoten y: %d\n",
-                     (int) vertices[3 * i], (int) vertices[(3 * i) + 1]);
-#endif
           read_node = 0;
           SC_CHECK_ABORT (read_node == 1, "Node was read incorrectly.");
           /* Return error code, if the nodes are not read correctly. */
@@ -133,7 +125,7 @@ main (int argc, char **argv)
     goto end_test;
   }
 
-#if 0
+#if 1
   /* Testing unsupported version of msh-files (bin-format). */
   cmesh =
     t8_cmesh_from_msh_file ("test/test_msh_file_vers2_bin", 1,
