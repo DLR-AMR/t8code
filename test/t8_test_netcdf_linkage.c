@@ -51,7 +51,7 @@ t8_test_netcdf_linkage ()
   nc_error = nc_close (ncid);
   /* Check for error */
   SC_CHECK_ABORTF (nc_error == NC_NOERR,
-                   "netcdf error when closing in memory " "file: %s\n",
+                   "netcdf error when closing in memory file: %s\n",
                    nc_strerror (nc_error));
 
   t8_global_productionf
