@@ -125,7 +125,7 @@ main (int argc, char **argv)
 
   /* Testing supported msh-file version 2 (as example). */
   cmesh =
-    t8_cmesh_from_msh_file ("test_msh_file_vers2_ascii", 1,
+    t8_cmesh_from_msh_file ("test/test_msh_file_vers2_ascii", 1,
                             sc_MPI_COMM_WORLD, 2, 0);
   retval = t8_test_supported_msh_file (cmesh);
   if (retval != 1) {
@@ -136,7 +136,7 @@ main (int argc, char **argv)
 #if 0
   /* Testing unsupported version of msh-files (bin-format). */
   cmesh =
-    t8_cmesh_from_msh_file ("./test_msh_file_vers2_bin", 1,
+    t8_cmesh_from_msh_file ("test/test_msh_file_vers2_bin", 1,
                             sc_MPI_COMM_WORLD, 2, 0);
   retval = t8_test_supported_msh_file (cmesh);
   if (retval != 0) {
@@ -146,7 +146,7 @@ main (int argc, char **argv)
 
   /* Testing unsupported version of msh-files (version 4). */
   cmesh =
-    t8_cmesh_from_msh_file ("./test_msh_file_vers4_ascii", 1,
+    t8_cmesh_from_msh_file ("test/test_msh_file_vers4_ascii", 1,
                             sc_MPI_COMM_WORLD, 2, 0);
   retval = t8_test_supported_msh_file (cmesh);
   if (retval != 0) {
