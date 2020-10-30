@@ -99,7 +99,7 @@ jobs:
       run: make distclean
 # configure and test with MPI and netcdf
     - name: Install netcdf
-      run: sudo apt-get install libnetcdf
+      run: sudo apt-get install libnetcdf-dev
     - name: configure
       run: ./configure --without-blas --with-netcdf --enable-mpi
     - name: OnFailPrintLog
