@@ -97,3 +97,17 @@ jobs:
       run: make check -j4 V=0
     - name: clean up
       run: make distclean
+# configure and test with MPI and netcdf
+    - name: Install netcdf
+      run: sudo apt-get install libnetcdf
+    - name: configure
+      run: ./configure --without-blas --with-netcdf --enable-mpi
+    - name: OnFailPrintLog
+      if: failure()
+      run: cat config.log
+    - name: make
+      run: make -j V=0
+    - name: make check
+      run: make check -j4 V=0
+    - name: clean up
+      run: make distclean
