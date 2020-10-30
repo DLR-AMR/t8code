@@ -46,7 +46,7 @@ main (int argc, char **argv)
 
   /* Initialize sc */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  /* Initliaze t8code */
+  /* Initialize t8code */
   t8_init (SC_LP_PRODUCTION);
 
   /* Check netcdf compilation */
