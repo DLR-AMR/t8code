@@ -34,8 +34,7 @@
  */
 typedef enum
 {
-  T8_LATLON_DATA_XSTRIPE,       /* Row-wise storage data[y * X + x] gives data of (x,y). */
-  T8_LATLON_DATA_YSTRIPE,       /* Column-wise storage data[x * Y + y] gives data of (x,y). */
+  T8_LATLON_DATA_MESSY,       /* Row-wise storage data[y * X + x] gives data of (x,y). */
   T8_LATLON_DATA_MORTON         /* Morton SFC storage. The data is sorted according to the 
                                  * Morton SFC index in the surrounding quad forest (not the subgrid). */
 } T8_LATLON_DATA_NUMBERING;
@@ -48,10 +47,15 @@ typedef struct
   t8_locidx_t         y_start;  /* Starting y coordinate. */
   t8_locidx_t         x_length; /* Number of subgrid cells in x dimension. */
   t8_locidx_t         y_length; /* Number of subgrid cells in y dimension. */
+  int                 axis;
+  int                 x_axis;   /* X axis index in data vector */
+  int                 y_axis;   /* Y axis index in data vector */
+  int                 z_axis;   /* Z axis index in data vector */
   int                 dimension;        /* Dimensionality of the data (1, 2, 3). */
   int                 level;    /* The smallest uniform refinement level of a forest that can have the
                                  * grid (not the subgrid) as submesh. */
-  T8_LATLON_DATA_NUMBERING numbering;   /* Numbering scheme of data. */
+  T8_LATLON_DATA_NUMBERING numbering;
+  double             ***in;
   double             *data;     /* x_length x y_length x dimension many data items.
                                    for each data item dimension many entries. */
   t8_linearidx_t     *data_ids; /* If numbering is T8_LATLON_DATA_MORTON then for
@@ -95,7 +99,8 @@ void                t8_latlon_data_test (t8_locidx_t x_start,
                                          t8_locidx_t y_start,
                                          t8_locidx_t x_length,
                                          t8_locidx_t y_length,
-                                         int dimension, int level,
+                                         int dimension, int x_axis, 
+                                         int y_axis, int z_axis, int level,
                                          T8_LATLON_DATA_NUMBERING
                                          numbering,
                                          t8_gloidx_t x_length_global,

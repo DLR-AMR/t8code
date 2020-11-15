@@ -250,6 +250,6 @@ t8_latlon_refine (int x_length, int y_length, enum T8_LATLON_ADAPT_MODE mode,
   t8_forest_unref (&forest_adapt);
 
   /* This is only temporarily here for testing.  WIP. */
-  t8_latlon_data_test (0, 0, x_length, y_length, 3, adapt_data.max_level,
-                       T8_LATLON_DATA_YSTRIPE, x_length, y_length);
+  t8_latlon_data_test (0, 0, x_length, y_length, 3, 0, 1, 2, adapt_data.max_level,
+                       T8_LATLON_DATA_MESSY, x_length, y_length);
 }
