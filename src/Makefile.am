@@ -15,7 +15,8 @@ libt8_installed_headers = \
   src/t8_forest/t8_forest_adapt.h src/t8_forest_vtk.h \
   src/t8_geometry.h \
   src/t8_vec.h src/t8_vtk.h \
-  src/t8_forest/t8_forest_iterate.h src/t8_forest/t8_forest_partition.h
+  src/t8_forest/t8_forest_iterate.h src/t8_forest/t8_forest_partition.h \
+  src/t8_fortran_interface/t8_fortran_interface.h
 libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_stash.h src/t8_cmesh/t8_cmesh_trees.h \
   src/t8_cmesh/t8_cmesh_types.h src/t8_cmesh/t8_cmesh_partition.h \
@@ -41,7 +42,8 @@ libt8_compiled_sources = \
   src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest_cxx.cxx \
   src/t8_forest/t8_forest_private.c src/t8_forest/t8_forest_vtk.cxx \
   src/t8_forest/t8_forest_ghost.cxx src/t8_forest/t8_forest_iterate.cxx \
-  src/t8_vtk.c src/t8_forest/t8_forest_balance.cxx src/t8_vec.c
+  src/t8_vtk.c src/t8_forest/t8_forest_balance.cxx src/t8_vec.c \
+  src/t8_fortran_interface/t8_fortran_interface.c
 
 # this variable is used for headers that are not publicly installed
 T8_CPPFLAGS =
