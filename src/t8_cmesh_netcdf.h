@@ -31,9 +31,13 @@
 
 T8_EXTERN_C_BEGIN ();
 
-int                 t8_cmesh_write_netcdf3D (t8_cmesh_t cmesh);
+int                 t8_cmesh_write_netcdf3D (t8_cmesh_t cmesh,
+                                             const char *fileprefix,
+                                             const char *filetitle);
 
-int                 t8_cmesh_write_netcdf2D (t8_cmesh_t cmesh);
+int                 t8_cmesh_write_netcdf2D (t8_cmesh_t cmesh,
+                                             const char *fileprefix,
+                                             const char *filetitle);
 
 T8_EXTERN_C_END ();
 
