@@ -33,6 +33,12 @@
 #define T8_FORTRAN_INTERFACE_H
 
 #include <t8.h>
+#include <t8_cmesh.h>
+#include <t8_forest.h>
+
+typedef int         (*t8_fortran_adapt_coordinate_callback) (double x,
+                                                             double y,
+                                                             double z);
 
 /** Initialize sc and t8code with SC_MPI_COMM_WORLD communicator
  * and SC_LP_DEFAULT logging.
@@ -67,5 +73,25 @@ sc_MPI_Comm        *t8_fortran_MPI_Comm_new (MPI_Fint Fcomm);
 void                t8_fortran_MPI_Comm_delete (sc_MPI_Comm * Ccomm);
 
 t8_cmesh_t          t8_cmesh_new_periodic_tri_wrap (sc_MPI_Comm * Ccomm);
+
+/** Wraps \ref t8_forest_new_uniform with the default scheme as scheme
+ * and passes MPI communicator as pointer instead of by value.
+ * Build a uniformly refined forest on a coarse mesh.
+ * \param [in]      cmesh     A coarse mesh.
+ * \param [in]      level     An initial uniform refinement level.
+ * \param [in]      do_face_ghost If true, a layer of ghost elements is created for the forest.
+ * \param [in]      comm      MPI communicator to use.
+ * \return                    A uniform forest with coarse mesh \a cmesh, eclass_scheme
+ *                            \a scheme and refinement level \a level.
+ */
+t8_forest_t         t8_forest_new_uniform_default (t8_cmesh_t cmesh,
+                                                   int level,
+                                                   int do_face_ghost,
+                                                   sc_MPI_Comm * comm);
+
+t8_forest_t         t8_fortran_adapt_by_coordinates (t8_forest_t forest,
+                                                     int recursive,
+                                                     t8_fortran_adapt_coordinate_callback
+                                                     callback);
 
 #endif /* !T8_FORTRAN_INTERFACE_H */
