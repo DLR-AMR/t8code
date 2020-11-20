@@ -31,10 +31,16 @@
 
 T8_EXTERN_C_BEGIN ();
 
+/* TODO: Depending on dim call 2D/3D version.
+ *        Error message 1D/0D. */
+int                 t8_cmesh_write_netcdf ();
+
+/* TODO: comment */
 int                 t8_cmesh_write_netcdf3D (t8_cmesh_t cmesh,
                                              const char *fileprefix,
                                              const char *filetitle);
 
+/* TODO: comment */
 int                 t8_cmesh_write_netcdf2D (t8_cmesh_t cmesh,
                                              const char *fileprefix,
                                              const char *filetitle);

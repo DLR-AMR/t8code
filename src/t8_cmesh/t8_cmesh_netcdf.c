@@ -87,7 +87,7 @@ t8_cmesh_write_netcdf2D (t8_cmesh_t cmesh, const char *fileprefix,
   t8_eclass_t         tree_class;
   t8_gloidx_t         num_gtree;
   t8_gloidx_t         gtree_id;
-  t8_locidx_t         num_ltree;
+  t8_locidx_t         num_local_trees;
   t8_locidx_t         ltree_id = 0;
   t8_ctree_t          next_ltree;
 
@@ -109,14 +109,13 @@ t8_cmesh_write_netcdf2D (t8_cmesh_t cmesh, const char *fileprefix,
   const char          convention[] = "UGRID v1.0";
   char                file_name[BUFSIZ];
 
-
   t8_global_productionf ("Starting coarse mesh netcdf output.\n");
 
   /* Check whether the cmesh is partiioned.
    * We currently support only replicated cmesh. */
   if (t8_cmesh_is_partitioned (cmesh)) {
     t8_global_errorf ("Netcdf output for cmesh currently not implemented for "
-    "partiioned cmesh.\n");
+                      "partiioned cmesh.\n");
     return 0;
   }
 
@@ -135,15 +134,13 @@ t8_cmesh_write_netcdf2D (t8_cmesh_t cmesh, const char *fileprefix,
   /* Variables describing the dimension in the NetCDF-file. */
   /* 'nMesh2D_face' assigned constantly later on. */
   /* 'nMesh2D_node' assigned constantly later on. */
-  const int           nMaxMesh2D_face_nodes = 4;
-
-  t8_global_productionf ("Function starts.\n");
+  const int           nMaxMesh2D_face_nodes = T8_ECLASS_MAX_CORNERS_2D;
 
   /* Check if the cmesh was committed. */
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
   /* Get number of local trees. */
-  num_ltree = t8_cmesh_get_num_local_trees (cmesh);
+  num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
 
   /* *Query the elements* */
 
@@ -169,7 +166,7 @@ t8_cmesh_write_netcdf2D (t8_cmesh_t cmesh, const char *fileprefix,
     ERR (retval);
   }
 
-  t8_global_productionf ("NetCDf-file has been created.\n");
+  t8_debugf ("NetCDf-file has been created.\n");
 
   /* *Define dimensions in the NetCDF file.* */
 
@@ -179,7 +176,7 @@ t8_cmesh_write_netcdf2D (t8_cmesh_t cmesh, const char *fileprefix,
     ERR (retval);
   }
 
-  /* Define dimesnion: maximum node number per element */
+  /* Define dimension: maximum node number per element */
   if ((retval =
        nc_def_dim (ncid, "nMaxMesh2_face_nodes", nMaxMesh2D_face_nodes,
                    &nMaxMesh2_face_nodes_dimid))) {
@@ -190,7 +187,7 @@ t8_cmesh_write_netcdf2D (t8_cmesh_t cmesh, const char *fileprefix,
   dimids[0] = nMesh2_face_dimid;
   dimids[1] = nMaxMesh2_face_nodes_dimid;
 
-  t8_global_productionf ("NetCDF-dimensions were defined.\n");
+  t8_debugf ("NetCDF-dimensions were defined.\n");
 
          /*********************************************/
 
@@ -392,7 +389,7 @@ t8_cmesh_write_netcdf2D (t8_cmesh_t cmesh, const char *fileprefix,
 
   /* Determine the number of nodes. */
   num = 0;
-  for (ltree_id = 0; ltree_id < num_ltree; ltree_id++) {
+  for (ltree_id = 0; ltree_id < num_local_trees; ltree_id++) {
     tree_class = t8_cmesh_get_tree_class (cmesh, ltree_id);
     num += t8_eclass_num_vertices[tree_class];
     /* Store the element class of the cmesh-element at the global_id position. */
@@ -441,7 +438,7 @@ t8_cmesh_write_netcdf2D (t8_cmesh_t cmesh, const char *fileprefix,
     ERR (retval);
   }
 
-  /* Define dimesnion: number of nodes */
+  /* Define dimension: number of nodes */
   if ((retval =
        nc_def_dim (ncid, "nMesh2_node", nMesh2D_node, &nMesh2_node_dimid))) {
     ERR (retval);
@@ -551,10 +548,8 @@ t8_cmesh_write_netcdf2D (t8_cmesh_t cmesh, const char *fileprefix,
 
   /* Iterate over all local trees. */
   /* Corners should be stored in the same order as in a vtk-file (read that somewehere on a netcdf page). */
-  ltree_id = 0;
   int                 i;
-  for (next_ltree = t8_cmesh_get_first_tree (cmesh); next_ltree != NULL;
-       next_ltree = t8_cmesh_get_next_tree (cmesh, next_ltree)) {
+  for (ltree_id = 0; ltree_id < num_local_trees; ++ltree_id) {
     gtree_id = t8_cmesh_get_global_id (cmesh, ltree_id);
     tree_class = t8_cmesh_get_tree_class (cmesh, ltree_id);
     vertices = t8_cmesh_get_tree_vertices (cmesh, ltree_id);
@@ -576,7 +571,6 @@ t8_cmesh_write_netcdf2D (t8_cmesh_t cmesh, const char *fileprefix,
       /* Pre-fills the the elements corresponding nodes, if it is an element having less than nMaxMesh2D_face_nodes. */
       Mesh2D_face_nodes[((int) gtree_id) * nMaxMesh2D_face_nodes + i] = -1;
     }
-    ltree_id++;
   }
 
   /* Write the data into the NetCDF coordinate variables. */
@@ -611,12 +605,12 @@ t8_cmesh_write_netcdf2D (t8_cmesh_t cmesh, const char *fileprefix,
   T8_FREE (Mesh2D_node_z);
   T8_FREE (Mesh2D_face_nodes);
 
-  return 0;
+  return 1;
 
 #else /* Without netcdf */
   t8_global_productionf
     ("This version of t8code is not compiled with netcdf support.\n");
-  return 1;
+  return 0;
 #endif
 
 }
@@ -632,7 +626,7 @@ t8_cmesh_write_netcdf3D (t8_cmesh_t cmesh, const char *fileprefix,
   t8_eclass_t         tree_class;
   t8_gloidx_t         num_gtree;
   t8_gloidx_t         gtree_id;
-  t8_locidx_t         num_ltree;
+  t8_locidx_t         num_local_trees;
   t8_locidx_t         ltree_id = 0;
   t8_ctree_t          next_ltree;
 
@@ -654,12 +648,11 @@ t8_cmesh_write_netcdf3D (t8_cmesh_t cmesh, const char *fileprefix,
   const char          convention[] = "UGRID v1.0";
   char                file_name[BUFSIZ];
 
- 
   /* Check whether the cmesh is partiioned.
    * We currently support only replicated cmesh. */
   if (t8_cmesh_is_partitioned (cmesh)) {
     t8_global_errorf ("Netcdf output for cmesh currently not implemented for "
-    "partiioned cmesh.\n");
+                      "partiioned cmesh.\n");
     return 0;
   }
 
@@ -684,7 +677,7 @@ t8_cmesh_write_netcdf3D (t8_cmesh_t cmesh, const char *fileprefix,
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
   /* Get number of local trees. */
-  num_ltree = t8_cmesh_get_num_local_trees (cmesh);
+  num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
 
   /* *Query the elements* */
   /* Global number of trees - equals the number of elements in a cmesh. */
@@ -714,7 +707,7 @@ t8_cmesh_write_netcdf3D (t8_cmesh_t cmesh, const char *fileprefix,
     ERR (retval);
   }
 
-  /* Define dimesnion: maximum node number per element */
+  /* Define dimension: maximum node number per element */
   if ((retval =
        nc_def_dim (ncid, "nMaxMesh3D_vol_nodes", nMaxMesh3D_vol_nodes,
                    &nMaxMesh3D_vol_nodes_dimid))) {
@@ -925,7 +918,7 @@ t8_cmesh_write_netcdf3D (t8_cmesh_t cmesh, const char *fileprefix,
 
   /* Determine number of nodes. */
   num = 0;
-  for (ltree_id = 0; ltree_id < num_ltree; ltree_id++) {
+  for (ltree_id = 0; ltree_id < num_local_trees; ltree_id++) {
     tree_class = t8_cmesh_get_tree_class (cmesh, ltree_id);
     num += t8_eclass_num_vertices[tree_class];
     /* Store the element class of the cmesh-element at the global_id position. */
@@ -973,7 +966,7 @@ t8_cmesh_write_netcdf3D (t8_cmesh_t cmesh, const char *fileprefix,
     ERR (retval);
   }
 
-  /* Define dimesnion: number of nodes */
+  /* Define dimension: number of nodes */
   if ((retval =
        nc_def_dim (ncid, "nMesh3D_node", nMesh3D_node,
                    &nMesh3D_node_dimid))) {
@@ -1139,7 +1132,7 @@ t8_cmesh_write_netcdf3D (t8_cmesh_t cmesh, const char *fileprefix,
   T8_FREE (Mesh3D_node_z);
   T8_FREE (Mesh3D_vol_nodes);
 
-  return 0;
+  return 1;
 #else /* Without netcdf */
   t8_global_productionf
     ("This version of t8code is not compiled with netcdf support.\n");
