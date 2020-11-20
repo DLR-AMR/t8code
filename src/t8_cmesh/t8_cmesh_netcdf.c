@@ -70,6 +70,22 @@ t8_cmesh_write_netcdf2D (t8_cmesh_t cmesh, const char *fileprefix,
   const char          convention[] = "UGRID v1.0";
   char                file_name[BUFSIZ];
 
+
+  t8_global_productionf ("Starting coarse mesh netcdf output.\n");
+
+  /* Check whether the cmesh is partiioned.
+   * We currently support only replicated cmesh. */
+  if (t8_cmesh_is_partitioned (cmesh)) {
+    t8_global_errorf ("Netcdf output for cmesh currently not implemented for "
+    "partiioned cmesh.\n");
+    return 0;
+  }
+
+  if (cmesh->mpirank != 0) {
+    /* Only process 0 writes the file. The other do nothing. */
+    return 1;
+  }
+
   /* Create a NetCDF filename */
   T8_ASSERT (fileprefix != NULL);
   snprintf (file_name, BUFSIZ, "%s.nc", fileprefix);
@@ -598,6 +614,20 @@ t8_cmesh_write_netcdf3D (t8_cmesh_t cmesh, const char *fileprefix,
   const int           dim = 3;
   const char          convention[] = "UGRID v1.0";
   char                file_name[BUFSIZ];
+
+ 
+  /* Check whether the cmesh is partiioned.
+   * We currently support only replicated cmesh. */
+  if (t8_cmesh_is_partitioned (cmesh)) {
+    t8_global_errorf ("Netcdf output for cmesh currently not implemented for "
+    "partiioned cmesh.\n");
+    return 0;
+  }
+
+  if (cmesh->mpirank != 0) {
+    /* Only process 0 writes the file. The other do nothing. */
+    return 1;
+  }
 
   /* Create a NetCDF filename */
   T8_ASSERT (fileprefix != NULL);
