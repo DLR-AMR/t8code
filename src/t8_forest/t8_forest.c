@@ -306,19 +306,16 @@ t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from,
 void
 t8_forest_set_user_data (t8_forest_t forest, void *data)
 {
-  /* TODO: we need a is_initialized and may be committed check! */
-#if 0
-  T8_ASSERT (t8_forest_is_initialized (forest));
-#endif
+  T8_ASSERT (t8_forest_is_initialized (forest)
+             || t8_forest_is_committed (forest));
   forest->user_data = data;
 }
 
 void               *
 t8_forest_get_user_data (t8_forest_t forest)
 {
-#if 0
-  T8_ASSERT (t8_forest_is_initialized (forest));
-#endif
+  T8_ASSERT (t8_forest_is_initialized (forest)
+             || t8_forest_is_committed (forest));
   return forest->user_data;
 }
 
