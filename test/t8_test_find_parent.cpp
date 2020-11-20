@@ -22,6 +22,7 @@
 
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_element_cxx.hxx>
 
 
 /* Build every child for the parent element and check wether the computed parent is

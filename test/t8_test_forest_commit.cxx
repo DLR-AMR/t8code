@@ -26,6 +26,7 @@
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
+#include <t8_element_cxx.hxx>
 
 /* In this test, we adapt, balance and partition a uniform forest.
  * We do this in two ways:

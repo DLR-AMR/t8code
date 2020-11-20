@@ -35,6 +35,7 @@
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
+#include <t8_element_cxx.hxx>
 
 static void
 t8_test_transform_element (t8_eclass_scheme_c * ts, const t8_element_t * elem,
