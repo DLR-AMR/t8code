@@ -20,14 +20,14 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_cmesh.h>
 #include <t8_fortran_interface/t8_fortran_interface.h>
+#include <t8_schemes/t8_default_cxx.hxx>
 
 /* Wrapper around sc_init (...), t8_init (...) */
 void
 t8_fortran_init_all_ (sc_MPI_Comm * comm)
 {
-#if T8_ENABLE_MPI
+  T8_ASSERT (comm != NULL);
   /* Initialize sc */
   printf ("Sc init Start\n");
   sc_init (*comm, 1, 1, NULL, SC_LP_DEFAULT);
@@ -35,9 +35,6 @@ t8_fortran_init_all_ (sc_MPI_Comm * comm)
   /* Initialize t8code */
   t8_init (SC_LP_DEFAULT);
   printf ("t8 init\n");
-#else
-  SC_ABORT ("t8code was not configured with MPI support.")
-#endif
 }
 
 void
@@ -64,30 +61,76 @@ t8_fortran_finalize ()
 sc_MPI_Comm        *
 t8_fortran_MPI_Comm_new (MPI_Fint Fcomm)
 {
-#if T8_ENABLE_MPI
-  sc_MPI_Comm        *Ccomm = malloc (sizeof (*Ccomm));
-  *Ccomm = MPI_Comm_f2c (Fcomm);
-  printf ("Created comm %lu\n", (long unsigned) Ccomm);
-  return Ccomm;
-#else
+#if !T8_ENABLE_MPI
   SC_ABORT ("t8code was not configured with MPI support.")
     return NULL;
 #endif
+  /* We use malloc instead of T8_ALLOC since t8code may not be initialized
+   * yet. */
+  sc_MPI_Comm        *Ccomm = (sc_MPI_Comm *) malloc (sizeof (*Ccomm));
+  *Ccomm = MPI_Comm_f2c (Fcomm);
+  printf ("Created comm %lu\n", (long unsigned) Ccomm);
+  return Ccomm;
 }
 
 /* Delete C MPI Comm. */
 void
 t8_fortran_MPI_Comm_delete (sc_MPI_Comm * Ccomm)
 {
-#if T8_ENABLE_MPI
-  free (Ccomm);
-#else
+#if! T8_ENABLE_MPI
   SC_ABORT ("t8code was not configured with MPI support.")
 #endif
+    free (Ccomm);
 }
 
 t8_cmesh_t
 t8_cmesh_new_periodic_tri_wrap (sc_MPI_Comm * Ccomm)
 {
   return t8_cmesh_new_periodic_tri (*Ccomm);
+}
+
+t8_forest_t
+t8_forest_new_uniform_default (t8_cmesh_t cmesh,
+                               int level, int do_face_ghost,
+                               sc_MPI_Comm * comm)
+{
+  t8_scheme_cxx_t    *default_scheme = t8_scheme_new_default_cxx ();
+
+  T8_ASSERT (comm != NULL);
+  return t8_forest_new_uniform (cmesh, default_scheme, level, do_face_ghost,
+                                *comm);
+}
+
+int
+t8_fortran_adapt_by_coordinates_callback (t8_forest_t forest,
+                                          t8_forest_t forest_from,
+                                          t8_locidx_t which_tree,
+                                          t8_locidx_t lelement_id,
+                                          t8_eclass_scheme_c * ts,
+                                          int num_elements,
+                                          t8_element_t * elements[])
+{
+  return 0;
+}
+
+t8_forest_t
+t8_fortran_adapt_by_coordinates (t8_forest_t forest, int recursive,
+                                 t8_fortran_adapt_coordinate_callback
+                                 callback)
+{
+  t8_forest_t         forest_new;
+
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (callback != NULL);
+
+  /* Initialze new forest */
+  t8_forest_init (&forest_new);
+  /* Set the callback as user data */
+  t8_forest_set_user_data (forest_new, (void *) callback);
+  /* Call set adapt  */
+  t8_forest_set_adapt (forest_new, forest,
+                       t8_fortran_adapt_by_coordinates_callback, recursive);
+  /* Commit the forest */
+  t8_forest_commit (forest_new);
+  return forest_new;
 }
