@@ -35,7 +35,46 @@ These functions write a file in the NetCDF-format which represents the given 2D-
 #include <t8_eclass.h>
 #include <t8_cmesh_netcdf.h>
 #include <t8_cmesh.h>
-#include <t8_cmesh_readmshfile.h>
+#include <t8_cmesh/t8_cmesh_types.h>
+
+typedef struct
+{
+  const char         *filename;
+  const char         *filetitle;
+  int                 nMesh2_face_dimid;
+  int                 nMaxMesh2_face_nodes_dimid;
+  int
+     
+     
+     
+     
+     
+     
+     
+     
+    nMesh2_node_dimid, var_face_properties_id, var_face_types_id,
+    var_face_nodes_id, var_mesh_id, var_node_x_id, var_node_y_id,
+    var_node_z_id;
+  /* data */
+} t8_cmesh_netcdf_context_t;
+
+static int
+t8_cmesh_write_netcdf2D_dimensions (t8_cmesh_t cmesh,
+                                    t8_cmesh_netcdf_context_t * context)
+{
+}
+
+static int
+t8_cmesh_write_netcdf2D_variables (t8_cmesh_t cmesh,
+                                   t8_cmesh_netcdf_context_t * context)
+{
+}
+
+static int
+t8_cmesh_write_netcdf2D_data (t8_cmesh_t cmesh,
+                              t8_cmesh_netcdf_context_t * context)
+{
+}
 
 int
 t8_cmesh_write_netcdf2D (t8_cmesh_t cmesh, const char *fileprefix,
