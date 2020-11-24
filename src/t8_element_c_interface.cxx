@@ -126,15 +126,6 @@ t8_element_nca (t8_eclass_scheme_c * ts, const t8_element_t * elem1,
 }
 
 void
-t8_element_boundary (t8_eclass_scheme_c * ts,
-                     const t8_element_t * elem,
-                     int min_dim, int length, t8_element_t ** boundary)
-{
-  T8_ASSERT (ts != NULL);
-  ts->t8_element_boundary (elem, min_dim, length, boundary);
-}
-
-void
 t8_element_set_linear_id (t8_eclass_scheme_c * ts,
                           t8_element_t * elem, int level, t8_linearidx_t id)
 {
@@ -181,15 +172,6 @@ t8_element_successor (t8_eclass_scheme_c * ts, const t8_element_t * elem1,
   ts->t8_element_successor (elem1, elem2, level);
 }
 
-void
-t8_element_anchor (t8_eclass_scheme_c * ts, const t8_element_t * elem,
-                   int anchor[3])
-{
-  T8_ASSERT (ts != NULL);
-
-  ts->t8_element_anchor (elem, anchor);
-}
-
 int
 t8_element_root_len (t8_eclass_scheme_c * ts, const t8_element_t * elem)
 {
@@ -210,13 +192,4 @@ t8_element_destroy (t8_eclass_scheme_c * ts, int length,
 {
   T8_ASSERT (ts != NULL);
   ts->t8_element_destroy (length, elems);
-}
-
-t8_element_t       *
-t8_element_array_index (t8_eclass_scheme_c * ts, sc_array_t * array,
-                        size_t it)
-{
-  T8_ASSERT (ts != NULL);
-
-  return ts->t8_element_array_index (array, it);
 }
