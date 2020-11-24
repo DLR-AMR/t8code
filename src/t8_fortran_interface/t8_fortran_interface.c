@@ -21,6 +21,7 @@
 */
 
 #include <t8_fortran_interface/t8_fortran_interface.h>
+#include <t8_element_c_interface.h>
 #include <t8_schemes/t8_default_cxx.hxx>
 
 /* Wrapper around sc_init (...), t8_init (...) */
@@ -101,6 +102,7 @@ t8_forest_new_uniform_default (t8_cmesh_t cmesh,
                                 *comm);
 }
 
+/* TODO: If family given pass midpoint coordinates of parent */
 int
 t8_fortran_adapt_by_coordinates_callback (t8_forest_t forest,
                                           t8_forest_t forest_from,
@@ -110,22 +112,59 @@ t8_fortran_adapt_by_coordinates_callback (t8_forest_t forest,
                                           int num_elements,
                                           t8_element_t * elements[])
 {
-  return 0;
+  t8_fortran_adapt_coordinate_callback callback =
+    (t8_fortran_adapt_coordinate_callback) t8_forest_get_user_data (forest);
+  const double       *tree_vertices =
+    t8_forest_get_tree_vertices (forest_from, which_tree);
+  double              midpoint[3];
+  t8_forest_element_centroid (forest_from, which_tree, elements[0],
+                              tree_vertices, midpoint);
+  t8_debugf ("Coord: %.2f\n", midpoint[0]);
+  int                 ret =
+    callback (midpoint[0], midpoint[1], midpoint[2], num_elements > 0);
+
+  /* Coarsen if a family was given and return value is negative. */
+  if (num_elements == t8_element_num_siblings (ts, elements[0])) {
+    /* The elements form a family */
+    T8_ASSERT (t8_element_is_family (ts, elements));
+    /* Build the parent. */
+    t8_element_t       *parent;
+    t8_element_new (ts, 1, &parent);
+    t8_element_parent (ts, elements[0], parent);
+    /* Get the coordinates of the parent. */
+    t8_forest_element_centroid (forest_from, which_tree, parent,
+                                tree_vertices, midpoint);
+
+    ret = callback (midpoint[0], midpoint[1], midpoint[2], 1);
+  }
+  else {
+    /* The elements do not form a family. */
+    /* Get the coordinates of the first element and call callback */
+    t8_forest_element_centroid (forest_from, which_tree, elements[0],
+                                tree_vertices, midpoint);
+    ret = callback (midpoint[0], midpoint[1], midpoint[2], 0);
+    T8_ASSERT (ret >= 0);
+  }
+  return ret;
 }
 
 t8_forest_t
-t8_fortran_adapt_by_coordinates (t8_forest_t forest, int recursive,
-                                 t8_fortran_adapt_coordinate_callback
-                                 callback)
+t8_forest_adapt_by_coordinates (t8_forest_t forest,
+                                int recursive,
+                                t8_fortran_adapt_coordinate_callback callback)
 {
   t8_forest_t         forest_new;
 
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (callback != NULL);
 
+  t8_debugf ("Starting t8_fortran_adapt_by_coordinates\n");
+
   /* Initialze new forest */
   t8_forest_init (&forest_new);
   /* Set the callback as user data */
+  /* TODO: This is forbidden by ISO_C. We cannot pass a function pointer as a void *.
+     We need an additional function t8_forest_set_user_fun_pointer. */
   t8_forest_set_user_data (forest_new, (void *) callback);
   /* Call set adapt  */
   t8_forest_set_adapt (forest_new, forest,

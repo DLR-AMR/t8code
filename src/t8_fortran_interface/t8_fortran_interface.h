@@ -38,7 +38,10 @@
 
 typedef int         (*t8_fortran_adapt_coordinate_callback) (double x,
                                                              double y,
-                                                             double z);
+                                                             double z,
+                                                             int is_family);
+
+T8_EXTERN_C_BEGIN ();
 
 /** Initialize sc and t8code with SC_MPI_COMM_WORLD communicator
  * and SC_LP_DEFAULT logging.
@@ -89,9 +92,11 @@ t8_forest_t         t8_forest_new_uniform_default (t8_cmesh_t cmesh,
                                                    int do_face_ghost,
                                                    sc_MPI_Comm * comm);
 
-t8_forest_t         t8_fortran_adapt_by_coordinates (t8_forest_t forest,
-                                                     int recursive,
-                                                     t8_fortran_adapt_coordinate_callback
-                                                     callback);
+t8_forest_t         t8_forest_adapt_by_coordinates (t8_forest_t forest,
+                                                    int recursive,
+                                                    t8_fortran_adapt_coordinate_callback
+                                                    callback);
+
+T8_EXTERN_C_END ();
 
 #endif /* !T8_FORTRAN_INTERFACE_H */
