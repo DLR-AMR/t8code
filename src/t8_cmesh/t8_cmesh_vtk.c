@@ -85,7 +85,7 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix,
     double             *vertices, *vertex;
     int                 k, sk;
     long long           offset, count_vertices;
-    t8_locidx_t         ighost, num_ghosts, num_loc_trees;
+    t8_locidx_t         ighost, num_ghosts = 0, num_loc_trees;
 #ifdef T8_ENABLE_DEBUG
     t8_cghost_t         ghost;
 #endif
