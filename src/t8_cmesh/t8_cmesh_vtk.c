@@ -68,7 +68,8 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix,
 
   if (cmesh->mpirank == 0) {
     /* Write the pvtu header file. */
-    int num_ranks_that_write = cmesh->set_partition ? cmesh->mpisize : 1;
+    int                 num_ranks_that_write =
+      cmesh->set_partition ? cmesh->mpisize : 1;
     if (t8_write_pvtu (fileprefix, num_ranks_that_write, 1, 1, 0, 0, 0, NULL)) {
       SC_ABORTF ("Error when writing file %s.pvtu\n", fileprefix);
     }
