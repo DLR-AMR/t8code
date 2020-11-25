@@ -170,19 +170,30 @@ main (int argc, char **argv)
   int                 start_level = 0, end_level = 1, cube = 0, adapt =
     0, do_balance = 0, eclass_int;
   int                 parsed, helpme;
+  int                 sreturnA, sreturnB;
 
   /* brief help message */
-  snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t"
-            "for a brief overview of all options.",
-            basename (argv[0]), basename (argv[0]));
+  sreturnA = snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t"
+                       "for a brief overview of all options.",
+                       basename (argv[0]), basename (argv[0]));
 
   /* long help message */
-  snprintf (help, BUFSIZ,
-            "This program constructs a prism mesh of 512 prisms. "
-            "\nThe user can choose the initial refinement level and the final\n"
-            "refinement level of the mesh. If not set, the initial level is 0,\n"
-            "the final level is 1. The program has no visual output, if desired,\n"
-            "the user can switch to a hpyercube mesh.\n\n%s\n", usage);
+  sreturnB = snprintf (help, BUFSIZ,
+                       "This program constructs a prism mesh of 512 prisms. "
+                       "\nThe user can choose the initial refinement level and the final\n"
+                       "refinement level of the mesh. If not set, the initial level is 0,\n"
+                       "the final level is 1. The program has no visual output, if desired,\n"
+                       "the user can switch to a hpyercube mesh.\n\n%s\n",
+                       usage);
+
+  if (sreturnA > BUFSIZ || sreturnB > BUFSIZ) {
+    /* The usage string or help message was truncated */
+    /* Note: gcc >= 7.1 prints a warning if we 
+     * do not check the return value of snprintf. */
+    t8_debugf
+      ("Warning: Truncated usage string and help message to '%s' and '%s'\n",
+       usage, help);
+  }
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
