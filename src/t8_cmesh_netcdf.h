@@ -20,8 +20,6 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** file t8_cmesh_vtk.h
- */
 /* TODO: document this file */
 
 #ifndef T8_CMESH_NETCDF_H
@@ -31,19 +29,10 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/* TODO: Depending on dim call 2D/3D version.
- *        Error message 1D/0D. */
-int                 t8_cmesh_write_netcdf ();
-
-/* TODO: comment */
-int                 t8_cmesh_write_netcdf3D (t8_cmesh_t cmesh,
-                                             const char *fileprefix,
-                                             const char *filetitle);
-
-/* TODO: comment */
-int                 t8_cmesh_write_netcdf2D (t8_cmesh_t cmesh,
-                                             const char *fileprefix,
-                                             const char *filetitle);
+/* TODO: Comment */
+void                t8_cmesh_write_netcdf (t8_cmesh_t cmesh,
+                                           const char *file_prefix,
+                                           const char *file_title, int dim);
 
 T8_EXTERN_C_END ();
 
