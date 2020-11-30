@@ -37,514 +37,467 @@ These functions write a file in the NetCDF-format which represents the given 2D-
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 
+/* Contains all Variables used in order to work with the NetCDF-File */
 typedef struct
 {
-  const char         *filename;
-  const char         *filetitle;
-  int                 nMesh2_face_dimid;
-  int                 nMaxMesh2_face_nodes_dimid;
-  int
-     
-     
-     
-     
-     
-     
-     
-     
-    nMesh2_node_dimid, var_face_properties_id, var_face_types_id,
-    var_face_nodes_id, var_mesh_id, var_node_x_id, var_node_y_id,
-    var_node_z_id;
-  /* data */
+  char               *filename;
+  char               *filetitle;
+  int                 dim;
+  int                 nMesh_elem;
+  int                 nMesh_node;
+  int                 nMaxMesh_elem_nodes;
+  /* Declaring NetCDF-dimension ids */
+  int                 nMesh_elem_dimid;
+  int                 nMaxMesh_elem_nodes_dimid;
+  int                 nMesh_node_dimid;
+  /* Declaring NetCDF-variables ids */
+  int                 ncid;
+  int                 var_elem_tree_id;
+  int                 var_elem_types_id;
+  int                 var_elem_nodes_id;
+  int                 var_mesh_id;
+  int                 var_node_x_id;
+  int                 var_node_y_id;
+  int                 var_node_z_id;
+  int                 dimids[2];        /* contains two NetCDF-dimensions in order to declare two-dimensional NetCDF-variables */
+  /* Variables used for default NetCDF purposes */
+  int                 fillvalue;
+  int                 start_index;
+  char               *convention;
+  /* Stores the old NetCDF-FillMode if it gets changed */
+  int                 old_fill_mode;
+
 } t8_cmesh_netcdf_context_t;
 
-static int
-t8_cmesh_write_netcdf2D_dimensions (t8_cmesh_t cmesh,
-                                    t8_cmesh_netcdf_context_t * context)
+/* Contains the Definitions for the NetCDF-dimensions/-variables/-attributes (vary whether a 2D or 3D Mesh will be outputted) */
+typedef struct
 {
+  char               *mesh;
+  char               *dim_nMesh_node;
+  char               *dim_nMesh_elem;
+  char               *dim_nMaxMesh_elem_nodes;
+  char               *var_Mesh_node_x;
+  char               *var_Mesh_node_y;
+  char               *var_Mesh_node_z;
+  char               *var_Mesh_elem_types;
+  char               *var_Mesh_elem_tree_id;
+  char               *var_Mesh_elem_node;
+  char               *att_elem_shape_type;
+  char               *att_elem_node_connectivity;
+  char               *att_elem_tree_id;
+  char               *att_elem_node;
+} t8_cmesh_netcdf_ugrid_namespace_t;
+
+static void
+t8_cmesh_init_ugrid_namespace_context (t8_cmesh_netcdf_ugrid_namespace_t *
+                                       namespace, int dim)
+{
+  if (dim == 2) {
+    namespace->mesh = "Mesh2";
+    namespace->dim_nMesh_node = "nMesh2_node";
+    namespace->dim_nMesh_elem = "nMesh2_face";
+    namespace->dim_nMaxMesh_elem_nodes = "nMaxMesh2_face_nodes";
+    namespace->var_Mesh_node_x = "Mesh2_node_x";
+    namespace->var_Mesh_node_y = "Mesh2_node_y";
+    namespace->var_Mesh_node_z = "Mesh2_node_z";
+    namespace->var_Mesh_elem_types = "Mesh2_face_types";
+    namespace->var_Mesh_elem_tree_id = "Mesh2_face_tree_id";
+    namespace->var_Mesh_elem_node = "Mesh2_face_nodes";
+    namespace->att_elem_shape_type = "face_shape_type";
+    namespace->att_elem_node_connectivity = "face_node_conectivity";
+    namespace->att_elem_tree_id = "face_tree_id";
+    namespace->att_elem_node = "Mesh2_node_x Mesh2_node_y Mesh2_node_z";
+
+  }
+  else if (dim == 3) {
+    namespace->mesh = "Mesh3D";
+    namespace->dim_nMesh_node = "nMesh3D_node";
+    namespace->dim_nMesh_elem = "nMesh3D_vol";
+    namespace->dim_nMaxMesh_elem_nodes = "nMaxMesh3D_vol_nodes";
+    namespace->var_Mesh_node_x = "Mesh3D_node_x";
+    namespace->var_Mesh_node_y = "Mesh3D_node_y";
+    namespace->var_Mesh_node_z = "Mesh3D_node_z";
+    namespace->var_Mesh_elem_types = "Mesh3D_vol_types";
+    namespace->var_Mesh_elem_tree_id = "Mesh3D_vol_tree_id";
+    namespace->var_Mesh_elem_node = "Mesh3D_vol_nodes";
+    namespace->att_elem_shape_type = "volume_shape_type";
+    namespace->att_elem_node_connectivity = "volume_node_connectivity";
+    namespace->att_elem_tree_id = "volume_tree_id";
+    namespace->att_elem_node = "Mesh3D_node_x Mesh3D_node_y Mesh3D_node_z";
+  }
 }
 
-static int
-t8_cmesh_write_netcdf2D_variables (t8_cmesh_t cmesh,
-                                   t8_cmesh_netcdf_context_t * context)
+/* Define  NetCDF-coordinate-dimension 2D */
+static void
+t8_cmesh_write_netcdf_coordinate_dimension (t8_cmesh_netcdf_context_t *
+                                            context,
+                                            t8_cmesh_netcdf_ugrid_namespace_t
+                                            * namespace_context)
 {
-}
-
-static int
-t8_cmesh_write_netcdf2D_data (t8_cmesh_t cmesh,
-                              t8_cmesh_netcdf_context_t * context)
-{
-}
-
-int
-t8_cmesh_write_netcdf2D (t8_cmesh_t cmesh, const char *fileprefix,
-                         const char *filetitle)
-{
-
-#if T8_WITH_NETCDF
-
-  double             *vertices;
-  t8_eclass_t         tree_class;
-  t8_gloidx_t         num_gtree;
-  t8_gloidx_t         gtree_id;
-  t8_locidx_t         num_local_trees;
-  t8_locidx_t         ltree_id = 0;
-  t8_ctree_t          next_ltree;
-
-  int                 num;
-  int                 num_it = 0;
-
-  /* Variables used for NetCDF-purposes. */
-  int                 ncid;
-  int                 nMesh2_face_dimid, nMaxMesh2_face_nodes_dimid,
-    nMesh2_node_dimid, var_face_properties_id, var_face_types_id,
-    var_face_nodes_id, var_mesh_id, var_node_x_id, var_node_y_id,
-    var_node_z_id;
-  int                 dimids[2];        /* contains ID for two dimensional netcdf variables */
-  int                 old_fill_mode;
-  int                 retval;
-  const int           fillvalue = -1;
-  const int           start_index = 0;
-  const int           dim = 2;
-  const char          convention[] = "UGRID v1.0";
-  char                file_name[BUFSIZ];
-
-  t8_global_productionf ("Starting coarse mesh netcdf output.\n");
-
-  /* Check whether the cmesh is partiioned.
-   * We currently support only replicated cmesh. */
-  if (t8_cmesh_is_partitioned (cmesh)) {
-    t8_global_errorf ("Netcdf output for cmesh currently not implemented for "
-                      "partiioned cmesh.\n");
-    return 0;
-  }
-
-  if (cmesh->mpirank != 0) {
-    /* Only process 0 writes the file. The other do nothing. */
-    return 1;
-  }
-
-  /* Create a NetCDF filename */
-  T8_ASSERT (fileprefix != NULL);
-  snprintf (file_name, BUFSIZ, "%s.nc", fileprefix);
-
-  /* Checks if a title is given */
-  T8_ASSERT (filetitle != NULL);
-
-  /* Variables describing the dimension in the NetCDF-file. */
-  /* 'nMesh2D_face' assigned constantly later on. */
-  /* 'nMesh2D_node' assigned constantly later on. */
-  const int           nMaxMesh2D_face_nodes = T8_ECLASS_MAX_CORNERS_2D;
-
-  /* Check if the cmesh was committed. */
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
-
-  /* Get number of local trees. */
-  num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
-
-  /* *Query the elements* */
-
-  /* Global number of trees - equals the number of elements in a cmesh. */
-  num_gtree = t8_cmesh_get_num_trees (cmesh);
-
-  /* Assign number of elements. */
-  const int           nMesh2D_face = (int) num_gtree;
-
-  /* Declare variables with their proper dimensions. */
-  int                *Mesh2D_face_nodes =
-    (int *) T8_ALLOC (int, nMesh2D_face * nMaxMesh2D_face_nodes);
-  int                *Mesh2D_face_types =
-    (int *) T8_ALLOC (int, nMesh2D_face);
-  int                *Mesh2D_face_properties = (int *) T8_ALLOC (int, nMesh2D_face);    /* Holds the elements tree_id */
-
-  /* Check if the pointers are not NULL */
-  T8_ASSERT (Mesh2D_face_types != NULL && Mesh2D_face_nodes != NULL
-             && Mesh2D_face_properties != NULL);
-
-  /* Create the NetCDF file, the NC_CLOBBER parameter tells netCDF to overwrite this file, if it already exists. Leaves the file in 'define-mode'. */
-  if ((retval = nc_create (file_name, NC_CLOBBER, &ncid))) {
-    ERR (retval);
-  }
-
-  t8_debugf ("NetCDf-file has been created.\n");
-
-  /* *Define dimensions in the NetCDF file.* */
-
-  /* Define dimension: number of elements */
-  if ((retval =
-       nc_def_dim (ncid, "nMesh2_face", nMesh2D_face, &nMesh2_face_dimid))) {
-    ERR (retval);
-  }
-
-  /* Define dimension: maximum node number per element */
-  if ((retval =
-       nc_def_dim (ncid, "nMaxMesh2_face_nodes", nMaxMesh2D_face_nodes,
-                   &nMaxMesh2_face_nodes_dimid))) {
-    ERR (retval);
-  }
-
-  /* Store the ID of the dimension(s). */
-  dimids[0] = nMesh2_face_dimid;
-  dimids[1] = nMaxMesh2_face_nodes_dimid;
-
-  t8_debugf ("NetCDF-dimensions were defined.\n");
-
-         /*********************************************/
-
-  /* Define a general describing Mesh-variable */
-  if ((retval = nc_def_var (ncid, "Mesh2", NC_INT, 0, 0, &var_mesh_id))) {
-    ERR (retval);
-  }
-
-  /* Define cf_role attribute */
-  const char         *role_mesh = "mesh_topology";
-  if ((retval =
-       nc_put_att_text (ncid, var_mesh_id, "cf_role", strlen (role_mesh),
-                        role_mesh))) {
-    ERR (retval);
-  }
-
-  /* Define long_name attribute. */
-  const char         *long_mesh =
-    "Topology data of 2D unstructured tree-based mesh";
-  if ((retval =
-       nc_put_att_text (ncid, var_mesh_id, "long_name", strlen (long_mesh),
-                        long_mesh))) {
-    ERR (retval);
-  }
-
-  /* Define topology_dimension attribute */
-  if ((retval =
-       nc_put_att_int (ncid, var_mesh_id, "topology_dimension", NC_INT, 1,
-                       &dim))) {
-    ERR (retval);
-  }
-
-  /* Define node_coordinates attribute */
-  const char         *prop_one = "Mesh2_node_x Mesh2_node_y Mesh2_node_z";
-  if ((retval =
-       nc_put_att_text (ncid, var_mesh_id, "node_coordinates",
-                        strlen (prop_one), prop_one))) {
-    ERR (retval);
-  }
-  /* Define face_shape_type attribute */
-  const char         *prop_two = "Mesh2_face_type";
-  if ((retval =
-       nc_put_att_text (ncid, var_mesh_id, "face_shape_type",
-                        strlen (prop_two), prop_two))) {
-    ERR (retval);
-  }
-  /* Define face_node_connectivity attribute */
-  const char         *prop_three = "Mesh2_face_nodes";
-  if ((retval =
-       nc_put_att_text (ncid, var_mesh_id, "face_node_connectivity",
-                        strlen (prop_three), prop_three))) {
-    ERR (retval);
-  }
-  /* Define face_properties attribute */
-  const char         *prop_four = "Mesh2_face_properties";
-  if ((retval =
-       nc_put_att_text (ncid, var_mesh_id, "face_properties",
-                        strlen (prop_four), prop_four))) {
-    ERR (retval);
-  }
-
-        /*********************************************/
-
-  /* Define the element-type variable in the NetCDF-file. */
-  if ((retval =
-       nc_def_var (ncid, "Mesh2_face_types", NC_INT, 1, &nMesh2_face_dimid,
-                   &var_face_types_id))) {
-    ERR (retval);
-  }
-  /* Define cf_role attribute */
-  const char         *role_face_types = "face_shape_type";
-  if ((retval =
-       nc_put_att_text (ncid, var_face_types_id, "cf_role",
-                        strlen (role_face_types), role_face_types))) {
-    ERR (retval);
-  }
-  /* Define long_name attribute. */
-  const char         *long_face_types = "Specifies the shape of the elements";
-  if ((retval =
-       nc_put_att_text (ncid, var_face_types_id, "long_name",
-                        strlen (long_face_types), long_face_types))) {
-    ERR (retval);
-  }
-  /* Define _FillValue attribute */
-  if ((retval =
-       nc_put_att_int (ncid, var_face_types_id, "_FillValue", NC_INT, 1,
-                       &fillvalue))) {
-    ERR (retval);
-  }
-  /* Define start_index attribute. */
-  if ((retval =
-       nc_put_att_int (ncid, var_face_types_id, "start_index", NC_INT, 1,
-                       &start_index))) {
-    ERR (retval);
-  }
-
-        /*********************************************/
-
-  /* Define the element-properties variable (currently just contains the elements' tree_id). */
-  if ((retval =
-       nc_def_var (ncid, "Mesh2_face_properties", NC_INT, 1,
-                   &nMesh2_face_dimid, &var_face_properties_id))) {
-    ERR (retval);
-  }
-  /* Define cf_role attribute */
-  const char         *role_face_prop = "face_properties";
-  if ((retval =
-       nc_put_att_text (ncid, var_face_properties_id, "cf_role",
-                        strlen (role_face_prop), role_face_prop))) {
-    ERR (retval);
-  }
-  /* Define long_name attribute. */
-  const char         *long_face_prop =
-    "Further Information that specifies the elements; first column: tree_id";
-  if ((retval =
-       nc_put_att_text (ncid, var_face_properties_id, "long_name",
-                        strlen (long_face_prop), long_face_prop))) {
-    ERR (retval);
-  }
-  /* Define _FillValue attribute */
-  if ((retval =
-       nc_put_att_int (ncid, var_face_properties_id, "_FillValue", NC_INT, 1,
-                       &fillvalue))) {
-    ERR (retval);
-  }
-  /* Define start_index attribute. */
-  if ((retval =
-       nc_put_att_int (ncid, var_face_properties_id, "start_index", NC_INT, 1,
-                       &start_index))) {
-    ERR (retval);
-  }
-
-        /*********************************************/
-
-  /* Define the face-nodes variable. */
-  if ((retval =
-       nc_def_var (ncid, "Mesh2_face_nodes", NC_INT, 2, dimids,
-                   &var_face_nodes_id))) {
-    ERR (retval);
-  }
-  /* Define cf_role attribute */
-  const char         *role_face_nodes = "face_node_connectivity";
-  if ((retval =
-       nc_put_att_text (ncid, var_face_nodes_id, "cf_role",
-                        strlen (role_face_nodes), role_face_nodes))) {
-    ERR (retval);
-  }
-  /* Define long_name attribute. */
-  const char         *long_face_nodes =
-    "Lists the corresponding nodes to each element";
-  if ((retval =
-       nc_put_att_text (ncid, var_face_nodes_id, "long_name",
-                        strlen (long_face_nodes), long_face_nodes))) {
-    ERR (retval);
-  }
-  /* Define _FillValue attribute */
-  if ((retval =
-       nc_put_att_int (ncid, var_face_nodes_id, "_FillValue", NC_INT, 1,
-                       &fillvalue))) {
-    ERR (retval);
-  }
-  /* Define start_index attribute. */
-  if ((retval =
-       nc_put_att_int (ncid, var_face_nodes_id, "start_index", NC_INT, 1,
-                       &start_index))) {
-    ERR (retval);
-  }
-
-  t8_global_productionf ("NetCDF-variables were defined.\n");
-
-        /*********************************************/
-
-  /* Disable the default fill-value-mode. */
-  if ((retval = nc_set_fill (ncid, NC_NOFILL, &old_fill_mode))) {
-    ERR (retval);
-  }
-
-  /* *Define global attributes* */
-
-  /* Define title attribute */
-  if ((retval =
-       nc_put_att_text (ncid, NC_GLOBAL, "title", strlen (filetitle),
-                        filetitle))) {
-    ERR (retval);
-  }
-  /* Define convention attribute */
-  if ((retval =
-       nc_put_att_text (ncid, NC_GLOBAL, "convention", strlen (convention),
-                        convention))) {
-    ERR (retval);
-  }
-
-  /* End define-mode. NetCDF-file enters data-mode. */
-  if ((retval = nc_enddef (ncid))) {
-    ERR (retval);
-  }
-
-  t8_global_productionf ("Nodes are getting counted.\n");
-
-  /* Determine the number of nodes. */
-  num = 0;
-  for (ltree_id = 0; ltree_id < num_local_trees; ltree_id++) {
-    tree_class = t8_cmesh_get_tree_class (cmesh, ltree_id);
-    num += t8_eclass_num_vertices[tree_class];
-    /* Store the element class of the cmesh-element at the global_id position. */
-    gtree_id = t8_cmesh_get_global_id (cmesh, ltree_id);
-    /* Getting the integer element class (in vtk_type), might not be conform with UGRID? */
-    Mesh2D_face_types[(int) gtree_id] = t8_eclass_vtk_type[tree_class];
-    /* The number trees equals the number of elements in the cmesh. */
-    Mesh2D_face_properties[(int) gtree_id] = (int) gtree_id;
-  }
-
-  /* Write the data in the corresponding NetCDF-variable. */
-  /* Fill the 'Mesh2_face_types'-variable. */
-  if ((retval =
-       nc_put_var_int (ncid, var_face_types_id, &Mesh2D_face_types[0]))) {
-    ERR (retval);
-  }
-  /* Fill the 'Mesh2_face_properties'-variable. */
-  if ((retval =
-       nc_put_var_int (ncid, var_face_properties_id,
-                       &Mesh2D_face_properties[0]))) {
-    ERR (retval);
-  }
-
-  /* Free the allocated memory */
-  T8_FREE (Mesh2D_face_types);
-  T8_FREE (Mesh2D_face_properties);
-
-  /* After counting the number of nodes, the  NetCDF-dimension 'nMesh2D_node' can be created. */
-  const int           nMesh2D_node = num;
-
-  /* Declare NetCDF coordinate variables. */
-  //double *Mesh2D_node_x = (double *)malloc(nMesh2D_node*sizeof(double));
-  double             *Mesh2D_node_x =
-    (double *) T8_ALLOC (double, nMesh2D_node);
-  double             *Mesh2D_node_y =
-    (double *) T8_ALLOC (double, nMesh2D_node);
-  double             *Mesh2D_node_z =
-    (double *) T8_ALLOC (double, nMesh2D_node);
-
-  /* Check if pointers are not NULL. */
-  T8_ASSERT (Mesh2D_node_x != NULL && Mesh2D_node_y != NULL
-             && Mesh2D_node_z != NULL);
-
-  /* Leave the NetCDF-data-mode and re-enter the define-mode. */
-  if ((retval = nc_redef (ncid))) {
-    ERR (retval);
-  }
-
   /* Define dimension: number of nodes */
+  int                 retval;
   if ((retval =
-       nc_def_dim (ncid, "nMesh2_node", nMesh2D_node, &nMesh2_node_dimid))) {
+       nc_def_dim (context->ncid, namespace_context->dim_nMesh_node,
+                   context->nMesh_node, &context->nMesh_node_dimid))) {
     ERR (retval);
   }
+}
 
-  /* *Define the NetCDF coordinate variables* */
-
+/* Define NetCDF-coordinate-variables */
+static void
+t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t *
+                                            context,
+                                            t8_cmesh_netcdf_ugrid_namespace_t
+                                            * namespace_context)
+{
   /* Define the Mesh2_node_x  variable. */
+  int                 retval;
   if ((retval =
-       nc_def_var (ncid, "Mesh2_node_x", NC_DOUBLE, 1, &nMesh2_node_dimid,
-                   &var_node_x_id))) {
+       nc_def_var (context->ncid, namespace_context->var_Mesh_node_x,
+                   NC_DOUBLE, 1, &context->nMesh_node_dimid,
+                   &context->var_node_x_id))) {
     ERR (retval);
   }
   /* Define standard_name attribute. */
   const char         *standard_node_x = "Longitude";
   if ((retval =
-       nc_put_att_text (ncid, var_node_x_id, "standard_name",
-                        strlen (standard_node_x), standard_node_x))) {
+       nc_put_att_text (context->ncid, context->var_node_x_id,
+                        "standard_name", strlen (standard_node_x),
+                        standard_node_x))) {
     ERR (retval);
   }
   /* Define long_name attribute. */
-  const char         *long_node_x = "Longitude of 2D mesh nodes";
+  const char         *long_node_x = "Longitude of mesh nodes";
   if ((retval =
-       nc_put_att_text (ncid, var_node_x_id, "long_name",
+       nc_put_att_text (context->ncid, context->var_node_x_id, "long_name",
                         strlen (long_node_x), long_node_x))) {
     ERR (retval);
   }
   /* Define units attribute. */
   const char         *units_node_x = "degrees_east";
   if ((retval =
-       nc_put_att_text (ncid, var_node_x_id, "units", strlen (units_node_x),
-                        units_node_x))) {
+       nc_put_att_text (context->ncid, context->var_node_x_id, "units",
+                        strlen (units_node_x), units_node_x))) {
     ERR (retval);
   }
 
         /*********************************************/
 
-  /* Define the Mesh2_node_y  variable. */
+  /* Define the Mesh2_node_y variable. */
   if ((retval =
-       nc_def_var (ncid, "Mesh2_node_y", NC_DOUBLE, 1, &nMesh2_node_dimid,
-                   &var_node_y_id))) {
+       nc_def_var (context->ncid, namespace_context->var_Mesh_node_y,
+                   NC_DOUBLE, 1, &context->nMesh_node_dimid,
+                   &context->var_node_y_id))) {
     ERR (retval);
   }
   /* Define standard_name attribute. */
   const char         *standard_node_y = "Latitude";
   if ((retval =
-       nc_put_att_text (ncid, var_node_y_id, "standard_name",
-                        strlen (standard_node_y), standard_node_y))) {
+       nc_put_att_text (context->ncid, context->var_node_y_id,
+                        "standard_name", strlen (standard_node_y),
+                        standard_node_y))) {
     ERR (retval);
   }
   /* Define long_name attribute. */
-  const char         *long_node_y = "Latitude of 2D mesh nodes";
+  const char         *long_node_y = "Latitude of mesh nodes";
   if ((retval =
-       nc_put_att_text (ncid, var_node_y_id, "long_name",
+       nc_put_att_text (context->ncid, context->var_node_y_id, "long_name",
                         strlen (long_node_y), long_node_y))) {
     ERR (retval);
   }
   /* Define units attribute. */
   const char         *units_node_y = "degrees_north";
   if ((retval =
-       nc_put_att_text (ncid, var_node_y_id, "units", strlen (units_node_y),
-                        units_node_y))) {
+       nc_put_att_text (context->ncid, context->var_node_y_id, "units",
+                        strlen (units_node_y), units_node_y))) {
     ERR (retval);
   }
 
         /*********************************************/
 
-  /* Define the Mesh2_node_z  variable. */
+  /* Define the Mesh2_node_z variable. */
   if ((retval =
-       nc_def_var (ncid, "Mesh2_node_z", NC_DOUBLE, 1, &nMesh2_node_dimid,
-                   &var_node_z_id))) {
+       nc_def_var (context->ncid, namespace_context->var_Mesh_node_z,
+                   NC_DOUBLE, 1, &context->nMesh_node_dimid,
+                   &context->var_node_z_id))) {
     ERR (retval);
   }
   /* Define standard_name attribute. */
   const char         *standard_node_z = "Height";
   if ((retval =
-       nc_put_att_text (ncid, var_node_z_id, "standard_name",
-                        strlen (standard_node_z), standard_node_z))) {
+       nc_put_att_text (context->ncid, context->var_node_z_id,
+                        "standard_name", strlen (standard_node_z),
+                        standard_node_z))) {
     ERR (retval);
   }
   /* Define long_name attribute. */
-  const char         *long_node_z = "Elevation of 2D mesh nodes";
+  const char         *long_node_z = "Elevation of mesh nodes";
   if ((retval =
-       nc_put_att_text (ncid, var_node_z_id, "long_name",
+       nc_put_att_text (context->ncid, context->var_node_z_id, "long_name",
                         strlen (long_node_z), long_node_z))) {
     ERR (retval);
   }
   /* Define units attribute. */
   const char         *units_node_z = "m";
   if ((retval =
-       nc_put_att_text (ncid, var_node_z_id, "units", strlen (units_node_z),
-                        units_node_z))) {
+       nc_put_att_text (context->ncid, context->var_node_z_id, "units",
+                        strlen (units_node_z), units_node_z))) {
+    ERR (retval);
+  }
+}
+
+/* Define NetCDF-dimesnions */
+static void
+t8_cmesh_write_netcdf_dimensions (t8_cmesh_netcdf_context_t * context,
+                                  t8_cmesh_netcdf_ugrid_namespace_t *
+                                  namespace_context)
+{
+  /* *Define dimensions in the NetCDF file.* */
+
+  /* Return value in order to check NetCDF commands */
+  int                 retval;
+  /* Define dimension: number of elements */
+  if ((retval =
+       nc_def_dim (context->ncid, namespace_context->dim_nMesh_elem,
+                   context->nMesh_elem, &context->nMesh_elem_dimid))) {
     ERR (retval);
   }
 
-        /*********************************************/
-
-  /* Disable the default fill-value-mode. */
-  if ((retval = nc_set_fill (ncid, NC_NOFILL, &old_fill_mode))) {
+  /* Define dimension: maximum node number per element */
+  if ((retval =
+       nc_def_dim (context->ncid, namespace_context->dim_nMaxMesh_elem_nodes,
+                   context->nMaxMesh_elem_nodes,
+                   &context->nMaxMesh_elem_nodes_dimid))) {
     ERR (retval);
   }
 
-  /* Leave the define-mode and re-enter the data-mode in order to fill the coordinate variables. */
-  if ((retval = nc_enddef (ncid))) {
+  /* Store the ID of the dimensions. */
+  context->dimids[0] = context->nMesh_elem_dimid;
+  context->dimids[1] = context->nMaxMesh_elem_nodes_dimid;
+
+  t8_debugf ("First NetCDF-dimensions were defined.\n");
+}
+
+/* Define NetCDF-variables */
+static void
+t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t * context,
+                                 t8_cmesh_netcdf_ugrid_namespace_t *
+                                 namespace_context)
+{
+  /* *Define variables in the NetCDF file.* */
+
+  /* Return value in order to check NetCDF commands */
+  int                 retval;
+
+  /* Define a general describing Mesh-variable */
+  if ((retval =
+       nc_def_var (context->ncid, namespace_context->mesh, NC_INT, 0, 0,
+                   &context->var_mesh_id))) {
     ERR (retval);
   }
+
+  /* Define cf_role attribute */
+  const char         *role_mesh = "mesh_topology";
+  if ((retval =
+       nc_put_att_text (context->ncid, context->var_mesh_id, "cf_role",
+                        strlen (role_mesh), role_mesh))) {
+    ERR (retval);
+  }
+
+  /* Define long_name attribute. */
+  const char         *long_mesh =
+    "Topology data of unstructured tree-based mesh";
+  if ((retval =
+       nc_put_att_text (context->ncid, context->var_mesh_id, "long_name",
+                        strlen (long_mesh), long_mesh))) {
+    ERR (retval);
+  }
+
+  /* Define topology_dimension attribute */
+  if ((retval =
+       nc_put_att_int (context->ncid, context->var_mesh_id,
+                       "topology_dimension", NC_INT, 1, &context->dim))) {
+    ERR (retval);
+  }
+
+  /* Define node_coordinates attribute */
+  if ((retval =
+       nc_put_att_text (context->ncid, context->var_mesh_id,
+                        "node_coordinates",
+                        strlen (namespace_context->att_elem_node),
+                        namespace_context->att_elem_node))) {
+    ERR (retval);
+  }
+  /* Define elem_shape_type attribute */
+  if ((retval =
+       nc_put_att_text (context->ncid, context->var_mesh_id,
+                        namespace_context->att_elem_shape_type,
+                        strlen (namespace_context->var_Mesh_elem_types),
+                        namespace_context->var_Mesh_elem_types))) {
+    ERR (retval);
+  }
+  /* Define elem_node_connectivity attribute */
+  if ((retval =
+       nc_put_att_text (context->ncid, context->var_mesh_id,
+                        namespace_context->att_elem_node_connectivity,
+                        strlen (namespace_context->var_Mesh_elem_node),
+                        namespace_context->var_Mesh_elem_node))) {
+    ERR (retval);
+  }
+  /* Define elem_tree_id attribute */
+  if ((retval =
+       nc_put_att_text (context->ncid, context->var_mesh_id,
+                        namespace_context->att_elem_tree_id,
+                        strlen (namespace_context->var_Mesh_elem_tree_id),
+                        namespace_context->var_Mesh_elem_tree_id))) {
+    ERR (retval);
+  }
+  /*************************************************************************/
+
+  /* Define the element-type variable in the NetCDF-file. */
+  if ((retval =
+       nc_def_var (context->ncid, namespace_context->var_Mesh_elem_types,
+                   NC_INT, 1, &context->nMesh_elem_dimid,
+                   &context->var_elem_types_id))) {
+    ERR (retval);
+  }
+  /* Define cf_role attribute */
+  if ((retval =
+       nc_put_att_text (context->ncid, context->var_elem_types_id, "cf_role",
+                        strlen (namespace_context->att_elem_shape_type),
+                        namespace_context->att_elem_shape_type))) {
+    ERR (retval);
+  }
+  /* Define long_name attribute. */
+  const char         *long_elem_types = "Specifies the shape of the elements";
+  if ((retval =
+       nc_put_att_text (context->ncid, context->var_elem_types_id,
+                        "long_name", strlen (long_elem_types),
+                        long_elem_types))) {
+    ERR (retval);
+  }
+  /* Define _FillValue attribute */
+  if ((retval =
+       nc_put_att_int (context->ncid, context->var_elem_types_id,
+                       "_FillValue", NC_INT, 1, &context->fillvalue))) {
+    ERR (retval);
+  }
+  /* Define start_index attribute. */
+  if ((retval =
+       nc_put_att_int (context->ncid, context->var_elem_types_id,
+                       "start_index", NC_INT, 1, &context->start_index))) {
+    ERR (retval);
+  }
+
+  /*************************************************************************/
+
+  /* Define the element-tree_id variable. */
+  if ((retval =
+       nc_def_var (context->ncid, namespace_context->var_Mesh_elem_tree_id,
+                   NC_INT, 1, &context->nMesh_elem_dimid,
+                   &context->var_elem_tree_id))) {
+    ERR (retval);
+  }
+  /* Define cf_role attribute */
+  if ((retval =
+       nc_put_att_text (context->ncid, context->var_elem_tree_id, "cf_role",
+                        strlen (namespace_context->att_elem_tree_id),
+                        namespace_context->att_elem_tree_id))) {
+    ERR (retval);
+  }
+  /* Define long_name attribute. */
+  const char         *long_elem_prop = "Lists each elements tree_id";
+  if ((retval =
+       nc_put_att_text (context->ncid, context->var_elem_tree_id, "long_name",
+                        strlen (long_elem_prop), long_elem_prop))) {
+    ERR (retval);
+  }
+  /* Define _FillValue attribute */
+  if ((retval =
+       nc_put_att_int (context->ncid, context->var_elem_tree_id, "_FillValue",
+                       NC_INT, 1, &context->fillvalue))) {
+    ERR (retval);
+  }
+  /* Define start_index attribute. */
+  if ((retval =
+       nc_put_att_int (context->ncid, context->var_elem_tree_id,
+                       "start_index", NC_INT, 1, &context->start_index))) {
+    ERR (retval);
+  }
+
+  /*************************************************************************/
+
+  /* Define the element-nodes variable. */
+  if ((retval =
+       nc_def_var (context->ncid, namespace_context->var_Mesh_elem_node,
+                   NC_INT, 2, context->dimids,
+                   &context->var_elem_nodes_id))) {
+    ERR (retval);
+  }
+  /* Define cf_role attribute */
+  if ((retval =
+       nc_put_att_text (context->ncid, context->var_elem_nodes_id, "cf_role",
+                        strlen
+                        (namespace_context->att_elem_node_connectivity),
+                        namespace_context->att_elem_node_connectivity))) {
+    ERR (retval);
+  }
+  /* Define long_name attribute. */
+  const char         *long_elem_nodes =
+    "Lists the corresponding nodes to each element";
+  if ((retval =
+       nc_put_att_text (context->ncid, context->var_elem_nodes_id,
+                        "long_name", strlen (long_elem_nodes),
+                        long_elem_nodes))) {
+    ERR (retval);
+  }
+  /* Define _FillValue attribute */
+  if ((retval =
+       nc_put_att_int (context->ncid, context->var_elem_nodes_id,
+                       "_FillValue", NC_INT, 1, &context->fillvalue))) {
+    ERR (retval);
+  }
+  /* Define start_index attribute. */
+  if ((retval =
+       nc_put_att_int (context->ncid, context->var_elem_nodes_id,
+                       "start_index", NC_INT, 1, &context->start_index))) {
+    ERR (retval);
+  }
+}
+
+/* Write NetCDF-coordinate data */
+static void
+t8_cmesh_write_netcdf_coordinate_data (t8_cmesh_t cmesh,
+                                       t8_cmesh_netcdf_context_t * context)
+{
+
+  double             *vertices;
+  t8_eclass_t         tree_class;
+  t8_gloidx_t         gtree_id;
+  t8_locidx_t         num_local_trees;
+  t8_locidx_t         ltree_id = 0;
+
+  int                 num_it = 0;
+  int                 retval;
+
+  /* Get number of local trees. */
+  num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
+
+  /* Allocate the Variable-data that will be put out in the NetCDF variables */
+  size_t              num_elements = (size_t) (context->nMesh_elem);
+  size_t              num_max_nodes_per_elem =
+    (size_t) (context->nMaxMesh_elem_nodes);
+  size_t              num_nodes = (size_t) (context->nMesh_node);
+
+  int                *Mesh_elem_nodes =
+    (int *) T8_ALLOC (int, num_elements * num_max_nodes_per_elem);
+  double             *Mesh_node_x = (double *) T8_ALLOC (double, num_nodes);
+  double             *Mesh_node_y = (double *) T8_ALLOC (double, num_nodes);
+  double             *Mesh_node_z = (double *) T8_ALLOC (double, num_nodes);
+
+  /* Check if pointers are not NULL. */
+  T8_ASSERT (Mesh_node_x != NULL && Mesh_node_y != NULL
+             && Mesh_node_z != NULL && Mesh_elem_nodes != NULL);
 
   /* Iterate over all local trees. */
   /* Corners should be stored in the same order as in a vtk-file (read that somewehere on a netcdf page). */
@@ -556,343 +509,154 @@ t8_cmesh_write_netcdf2D (t8_cmesh_t cmesh, const char *fileprefix,
     i = 0;
     for (; i < t8_eclass_num_vertices[tree_class]; i++) {
       /* Stores the x-, y- and z- coordinate of the nodes */
-      Mesh2D_node_x[num_it] =
+      Mesh_node_x[num_it] =
         vertices[3 * (t8_eclass_vtk_corner_number[tree_class][i])];
-      Mesh2D_node_y[num_it] =
+      Mesh_node_y[num_it] =
         vertices[3 * (t8_eclass_vtk_corner_number[tree_class][i]) + 1];
-      Mesh2D_node_z[num_it] =
+      Mesh_node_z[num_it] =
         vertices[3 * (t8_eclass_vtk_corner_number[tree_class][i]) + 2];
       /* Stores the the nodes which correspond to this element. */
-      Mesh2D_face_nodes[((int) gtree_id) * nMaxMesh2D_face_nodes + i] =
+      Mesh_elem_nodes[((int) gtree_id) * context->nMaxMesh_elem_nodes + i] =
         num_it;
       num_it++;
     }
-    for (; i < nMaxMesh2D_face_nodes; i++) {
-      /* Pre-fills the the elements corresponding nodes, if it is an element having less than nMaxMesh2D_face_nodes. */
-      Mesh2D_face_nodes[((int) gtree_id) * nMaxMesh2D_face_nodes + i] = -1;
+    for (; i < context->nMaxMesh_elem_nodes; i++) {
+      /* Pre-fills the the elements corresponding nodes, if it is an element having less than nMaxMesh_elem_nodes. */
+      Mesh_elem_nodes[((int) gtree_id) * (context->nMaxMesh_elem_nodes) + i] =
+        -1;
     }
   }
 
   /* Write the data into the NetCDF coordinate variables. */
   /* Fill the 'Mesh2_face_node'-variable. */
   if ((retval =
-       nc_put_var_int (ncid, var_face_nodes_id, &Mesh2D_face_nodes[0]))) {
+       nc_put_var_int (context->ncid, context->var_elem_nodes_id,
+                       &Mesh_elem_nodes[0]))) {
     ERR (retval);
   }
-  /* Fill the 'Mesh2_node_x'-variable. */
-  if ((retval = nc_put_var_double (ncid, var_node_x_id, &Mesh2D_node_x[0]))) {
+  /* Fill the 'Mesh_node_x'-variable. */
+  if ((retval =
+       nc_put_var_double (context->ncid, context->var_node_x_id,
+                          &Mesh_node_x[0]))) {
     ERR (retval);
   }
-  /* Fill the 'Mesh2_node_x'-variable. */
-  if ((retval = nc_put_var_double (ncid, var_node_y_id, &Mesh2D_node_y[0]))) {
+  /* Fill the 'Mesh_node_y'-variable. */
+  if ((retval =
+       nc_put_var_double (context->ncid, context->var_node_y_id,
+                          &Mesh_node_y[0]))) {
     ERR (retval);
   }
-  /* Fill the 'Mesh2_node_z'-variable. */
-  if ((retval = nc_put_var_double (ncid, var_node_z_id, &Mesh2D_node_z[0]))) {
+  /* Fill the 'Mesh_node_z'-variable. */
+  if ((retval =
+       nc_put_var_double (context->ncid, context->var_node_z_id,
+                          &Mesh_node_z[0]))) {
     ERR (retval);
   }
-
-  /* All data has been written to the NetCDF-file, therefore, close the file. */
-  if ((retval = nc_close (ncid))) {
-    ERR (retval);
-  }
-
-  t8_global_productionf ("An example netcdf-file has been created\n");
 
   /* Free the allocated memory */
-  T8_FREE (Mesh2D_node_x);
-  T8_FREE (Mesh2D_node_y);
-  T8_FREE (Mesh2D_node_z);
-  T8_FREE (Mesh2D_face_nodes);
-
-  return 1;
-
-#else /* Without netcdf */
-  t8_global_productionf
-    ("This version of t8code is not compiled with netcdf support.\n");
-  return 0;
-#endif
+  T8_FREE (Mesh_node_x);
+  T8_FREE (Mesh_node_y);
+  T8_FREE (Mesh_node_z);
+  T8_FREE (Mesh_elem_nodes);
 
 }
 
-/* 3D Case */
-int
-t8_cmesh_write_netcdf3D (t8_cmesh_t cmesh, const char *fileprefix,
-                         const char *filetitle)
+static void
+t8_cmesh_write_netcdf_data (t8_cmesh_t cmesh,
+                            t8_cmesh_netcdf_context_t * context)
 {
-#if T8_WITH_NETCDF
 
-  double             *vertices;
   t8_eclass_t         tree_class;
-  t8_gloidx_t         num_gtree;
   t8_gloidx_t         gtree_id;
   t8_locidx_t         num_local_trees;
   t8_locidx_t         ltree_id = 0;
-  t8_ctree_t          next_ltree;
 
   int                 num;
-  int                 num_it = 0;
-
-  /* Variables used for NetCDF-purposes. */
-  int                 ncid;
-  int                 nMesh3D_vol_dimid, nMaxMesh3D_vol_nodes_dimid,
-    nMesh3D_node_dimid, var_vol_properties_id, var_vol_types_id,
-    var_vol_nodes_id, var_mesh_id, var_node_x_id, var_node_y_id,
-    var_node_z_id;
-  int                 dimids[2];        /* contains ID for two dimensional netcdf variables */
-  int                 old_fill_mode;
   int                 retval;
-  const int           fillvalue = -1;
-  const int           start_index = 0;
-  const int           dim = 3;
-  const char          convention[] = "UGRID v1.0";
-  char                file_name[BUFSIZ];
 
-  /* Check whether the cmesh is partiioned.
-   * We currently support only replicated cmesh. */
-  if (t8_cmesh_is_partitioned (cmesh)) {
-    t8_global_errorf ("Netcdf output for cmesh currently not implemented for "
-                      "partiioned cmesh.\n");
-    return 0;
-  }
+  /* Declare variables with their proper dimensions. */
+  int                *Mesh_elem_types =
+    (int *) T8_ALLOC (int, context->nMesh_elem);
+  int                *Mesh_elem_tree_id =
+    (int *) T8_ALLOC (int, context->nMesh_elem);
 
-  if (cmesh->mpirank != 0) {
-    /* Only process 0 writes the file. The other do nothing. */
-    return 1;
-  }
-
-  /* Create a NetCDF filename */
-  T8_ASSERT (fileprefix != NULL);
-  snprintf (file_name, BUFSIZ, "%s.nc", fileprefix);
-
-  /* Checks if a title is given */
-  T8_ASSERT (filetitle != NULL);
-
-  /* Variables describing the dimension in the NetCDF-file. */
-  /* 'nMesh3_vol' assigned constantly later on. */
-  /* 'nMesh3D_node' assigned constantly later on. */
-  const int           nMaxMesh3D_vol_nodes = 8;
-
-  /* Check if the cmesh was committed. */
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  /* Check if pointers are not NULL. */
+  T8_ASSERT (Mesh_elem_types != NULL && Mesh_elem_tree_id != NULL);
 
   /* Get number of local trees. */
   num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
 
-  /* *Query the elements* */
+  /* Determine the number of nodes. */
+  num = 0;
+  for (ltree_id = 0; ltree_id < num_local_trees; ltree_id++) {
+    tree_class = t8_cmesh_get_tree_class (cmesh, ltree_id);
+    num += t8_eclass_num_vertices[tree_class];
+    /* Store the element class of the cmesh-element at the global_id position. */
+    gtree_id = t8_cmesh_get_global_id (cmesh, ltree_id);
+    /* Getting the integer element class (in vtk_type), might not be conform with UGRID? */
+    Mesh_elem_types[(int) gtree_id] = t8_eclass_vtk_type[tree_class];
+    /* The number trees equals the number of elements in the cmesh. */
+    Mesh_elem_tree_id[(int) gtree_id] = (int) gtree_id;
+  }
+
+  /* Write the data in the corresponding NetCDF-variable. */
+  /* Fill the 'Mesh_elem_types'-variable. */
+  if ((retval =
+       nc_put_var_int (context->ncid, context->var_elem_types_id,
+                       &Mesh_elem_types[0]))) {
+    ERR (retval);
+  }
+  /* Fill the 'Mesh_elem_tree_id'-variable. */
+  if ((retval =
+       nc_put_var_int (context->ncid, context->var_elem_tree_id,
+                       &Mesh_elem_tree_id[0]))) {
+    ERR (retval);
+  }
+
+  /* Free the allocated memory */
+  T8_FREE (Mesh_elem_types);
+  T8_FREE (Mesh_elem_tree_id);
+
+  /* After counting the number of nodes, the  NetCDF-dimension 'nMesh_node' can be created => Store the 'nMesh_node' dimension */
+  context->nMesh_node = num;
+
+}
+
+/* Function that creates the NetCDF-File and fills it  */
+static void
+t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
+                            t8_cmesh_netcdf_context_t * context,
+                            t8_cmesh_netcdf_ugrid_namespace_t *
+                            namespace_context)
+{
+  t8_gloidx_t         num_global_trees;
+  int                 retval;
+
+  /* Check if the cmesh was committed. */
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+
   /* Global number of trees - equals the number of elements in a cmesh. */
-  num_gtree = t8_cmesh_get_num_trees (cmesh);
+  num_global_trees = t8_cmesh_get_num_trees (cmesh);
 
-  /* Assign number of elements. */
-  const int           nMesh3D_vol = (int) num_gtree;
-
-  /* Declare netcdf-variables with their proper dimensions. */
-  int                *Mesh3D_vol_nodes =
-    (int *) T8_ALLOC (int, nMesh3D_vol * nMaxMesh3D_vol_nodes);
-  int                *Mesh3D_vol_types = (int *) T8_ALLOC (int, nMesh3D_vol);
-  int                *Mesh3D_vol_properties = (int *) T8_ALLOC (int, nMesh3D_vol);      /* Holds the elements tree_id */
+  /* Store the number of elements in the NetCDF-Context */
+  context->nMesh_elem = (int) num_global_trees;
 
   /* Create the NetCDF file, the NC_CLOBBER parameter tells netCDF to overwrite this file, if it already exists. Leaves the file in 'define-mode'. */
-  if ((retval = nc_create (file_name, NC_CLOBBER, &ncid))) {
+  if ((retval = nc_create (context->filename, NC_CLOBBER, &context->ncid))) {
     ERR (retval);
   }
 
-  t8_global_productionf ("NetCDf-file has been created.\n");
+  t8_debugf ("NetCDf-file has been created.\n");
 
-  /* *Define dimensions in the NetCDF file.* */
+  /* Define the first NetCDF-dimensions (nMesh_node is not known yet) */
+  t8_cmesh_write_netcdf_dimensions (context, namespace_context);
 
-  /* Define dimension: number of elements */
-  if ((retval =
-       nc_def_dim (ncid, "nMesh3D_vol", nMesh3D_vol, &nMesh3D_vol_dimid))) {
-    ERR (retval);
-  }
-
-  /* Define dimension: maximum node number per element */
-  if ((retval =
-       nc_def_dim (ncid, "nMaxMesh3D_vol_nodes", nMaxMesh3D_vol_nodes,
-                   &nMaxMesh3D_vol_nodes_dimid))) {
-    ERR (retval);
-  }
-
-  /* Store the ID of the dimension(s). */
-  dimids[0] = nMesh3D_vol_dimid;
-  dimids[1] = nMaxMesh3D_vol_nodes_dimid;
-
-  t8_global_productionf ("NetCDF-dimensions were defined.\n");
-
-         /*********************************************/
-
-  /* Define a general describing Mesh-variable */
-  if ((retval = nc_def_var (ncid, "Mesh3D", NC_INT, 0, 0, &var_mesh_id))) {
-    ERR (retval);
-  }
-
-  /* Define cf_role attribute */
-  const char         *role_mesh = "mesh_topology";
-  if ((retval =
-       nc_put_att_text (ncid, var_mesh_id, "cf_role", strlen (role_mesh),
-                        role_mesh))) {
-    ERR (retval);
-  }
-
-  /* Define long_name attribute. */
-  const char         *long_mesh =
-    "Topology data of 3D unstructured tree-based mesh";
-  if ((retval =
-       nc_put_att_text (ncid, var_mesh_id, "long_name", strlen (long_mesh),
-                        long_mesh))) {
-    ERR (retval);
-  }
-
-  /* Define topology_dimension attribute */
-  if ((retval =
-       nc_put_att_int (ncid, var_mesh_id, "topology_dimension", NC_INT, 1,
-                       &dim))) {
-    ERR (retval);
-  }
-
-  /* Define node_coordinates attribute */
-  const char         *prop_one = "Mesh3D_node_x Mesh3D_node_y Mesh3D_node_z";
-  if ((retval =
-       nc_put_att_text (ncid, var_mesh_id, "node_coordinates",
-                        strlen (prop_one), prop_one))) {
-    ERR (retval);
-  }
-  /* Define volume_shape_type attribute */
-  const char         *prop_two = "Mesh3D_vol_types";
-  if ((retval =
-       nc_put_att_text (ncid, var_mesh_id, "volume_shape_type",
-                        strlen (prop_two), prop_two))) {
-    ERR (retval);
-  }
-  /* Define volume_node_connectivity attribute */
-  const char         *prop_three = "Mesh3D_vol_nodes";
-  if ((retval =
-       nc_put_att_text (ncid, var_mesh_id, "volume_node_connectivity",
-                        strlen (prop_three), prop_three))) {
-    ERR (retval);
-  }
-  /* Define node_coordinates attribute */
-  const char         *prop_four = "Mesh3D_vol_properties";
-  if ((retval =
-       nc_put_att_text (ncid, var_mesh_id, "volume_properties",
-                        strlen (prop_four), prop_four))) {
-    ERR (retval);
-  }
-
-        /*********************************************/
-
-  /* Define the element-type variable in the NetCDF-file. */
-  if ((retval =
-       nc_def_var (ncid, "Mesh3D_vol_types", NC_INT, 1, &nMesh3D_vol_dimid,
-                   &var_vol_types_id))) {
-    ERR (retval);
-  }
-  /* Define cf_role attribute */
-  const char         *role_vol_types = "volume_shape_type";
-  if ((retval =
-       nc_put_att_text (ncid, var_vol_types_id, "cf_role",
-                        strlen (role_vol_types), role_vol_types))) {
-    ERR (retval);
-  }
-  /* Define long_name attribute. */
-  const char         *long_vol_types = "Specifies the shape of the elements";
-  if ((retval =
-       nc_put_att_text (ncid, var_vol_types_id, "long_name",
-                        strlen (long_vol_types), long_vol_types))) {
-    ERR (retval);
-  }
-  /* Define _FillValue attribute */
-  if ((retval =
-       nc_put_att_int (ncid, var_vol_types_id, "_FillValue", NC_INT, 1,
-                       &fillvalue))) {
-    ERR (retval);
-  }
-  /* Define start_index attribute. */
-  if ((retval =
-       nc_put_att_int (ncid, var_vol_types_id, "start_index", NC_INT, 1,
-                       &start_index))) {
-    ERR (retval);
-  }
-
-        /*********************************************/
-
-  /* Define the element-properties variable (currently just contains the elements' tree_id). */
-  if ((retval =
-       nc_def_var (ncid, "Mesh3D_vol_properties", NC_INT, 1,
-                   &nMesh3D_vol_dimid, &var_vol_properties_id))) {
-    ERR (retval);
-  }
-  /* Define cf_role attribute */
-  const char         *role_vol_prop = "volume_properties";
-  if ((retval =
-       nc_put_att_text (ncid, var_vol_properties_id, "cf_role",
-                        strlen (role_vol_prop), role_vol_prop))) {
-    ERR (retval);
-  }
-  /* Define long_name attribute. */
-  const char         *long_vol_prop =
-    "Further Information that specifies the elements; first column: tree_id";
-  if ((retval =
-       nc_put_att_text (ncid, var_vol_properties_id, "long_name",
-                        strlen (long_vol_prop), long_vol_prop))) {
-    ERR (retval);
-  }
-  /* Define _FillValue attribute */
-  if ((retval =
-       nc_put_att_int (ncid, var_vol_properties_id, "_FillValue", NC_INT, 1,
-                       &fillvalue))) {
-    ERR (retval);
-  }
-  /* Define start_index attribute. */
-  if ((retval =
-       nc_put_att_int (ncid, var_vol_properties_id, "start_index", NC_INT, 1,
-                       &start_index))) {
-    ERR (retval);
-  }
-
-        /*********************************************/
-
-  /* Define the volume_nodes variable. */
-  if ((retval =
-       nc_def_var (ncid, "Mesh3D_vol_nodes", NC_INT, 2, dimids,
-                   &var_vol_nodes_id))) {
-    ERR (retval);
-  }
-  /* Define cf_role attribute */
-  const char         *role_vol_nodes = "volume_node_connectivity";
-  if ((retval =
-       nc_put_att_text (ncid, var_vol_nodes_id, "cf_role",
-                        strlen (role_vol_nodes), role_vol_nodes))) {
-    ERR (retval);
-  }
-  /* Define long_name attribute. */
-  const char         *long_vol_nodes =
-    "Lists the corresponding nodes to each element";
-  if ((retval =
-       nc_put_att_text (ncid, var_vol_nodes_id, "long_name",
-                        strlen (long_vol_nodes), long_vol_nodes))) {
-    ERR (retval);
-  }
-  /* Define _FillValue attribute */
-  if ((retval =
-       nc_put_att_int (ncid, var_vol_nodes_id, "_FillValue", NC_INT, 1,
-                       &fillvalue))) {
-    ERR (retval);
-  }
-  /* Define start_index attribute. */
-  if ((retval =
-       nc_put_att_int (ncid, var_vol_nodes_id, "start_index", NC_INT, 1,
-                       &start_index))) {
-    ERR (retval);
-  }
-
-  t8_global_productionf ("NetCDF-variables were defined.\n");
-
-        /*********************************************/
+  /* Define NetCDF-variables */
+  t8_cmesh_write_netcdf_variables (context, namespace_context);
 
   /* Disable the default fill-value-mode. */
-  if ((retval = nc_set_fill (ncid, NC_NOFILL, &old_fill_mode))) {
+  if ((retval =
+       nc_set_fill (context->ncid, NC_NOFILL, &context->old_fill_mode))) {
     ERR (retval);
   }
 
@@ -900,243 +664,100 @@ t8_cmesh_write_netcdf3D (t8_cmesh_t cmesh, const char *fileprefix,
 
   /* Define title attribute */
   if ((retval =
-       nc_put_att_text (ncid, NC_GLOBAL, "title", strlen (filetitle),
-                        filetitle))) {
+       nc_put_att_text (context->ncid, NC_GLOBAL, "title",
+                        strlen (context->filetitle), context->filetitle))) {
     ERR (retval);
   }
   /* Define convention attribute */
   if ((retval =
-       nc_put_att_text (ncid, NC_GLOBAL, "convention", strlen (convention),
-                        convention))) {
+       nc_put_att_text (context->ncid, NC_GLOBAL, "convention",
+                        strlen (context->convention), context->convention))) {
     ERR (retval);
   }
 
   /* End define-mode. NetCDF-file enters data-mode. */
-  if ((retval = nc_enddef (ncid))) {
+  if ((retval = nc_enddef (context->ncid))) {
     ERR (retval);
   }
 
-  /* Determine number of nodes. */
-  num = 0;
-  for (ltree_id = 0; ltree_id < num_local_trees; ltree_id++) {
-    tree_class = t8_cmesh_get_tree_class (cmesh, ltree_id);
-    num += t8_eclass_num_vertices[tree_class];
-    /* Store the element class of the cmesh-element at the global_id position. */
-    gtree_id = t8_cmesh_get_global_id (cmesh, ltree_id);
-    //may not be conform to the UGRID conevntion?
-    Mesh3D_vol_types[(int) gtree_id] = t8_eclass_vtk_type[tree_class];
-    /* The number trees equals the number of elements in the cmesh. */
-    Mesh3D_vol_properties[(int) gtree_id] = (int) gtree_id;
-  }
-
-  /* Write the collected data to the NetCDF-variables. */
-  /* Fill the Mesh3D_vol_types variable. */
-  if ((retval =
-       nc_put_var_int (ncid, var_vol_types_id, &Mesh3D_vol_types[0]))) {
-    ERR (retval);
-  }
-  /* Fill the Mesh3D_vol_properties variable. */
-  if ((retval =
-       nc_put_var_int (ncid, var_vol_properties_id,
-                       &Mesh3D_vol_properties[0]))) {
-    ERR (retval);
-  }
-
-  /* Free the allocated memory */
-  T8_FREE (Mesh3D_vol_types);
-  T8_FREE (Mesh3D_vol_properties);
-
-  /* After counting the nodes assign the nMesh3D_node dimension constantly. */
-  const int           nMesh3D_node = num;
-
-  /* Declare netdcf coordinate variables. */
-  double             *Mesh3D_node_x =
-    (double *) T8_ALLOC (double, nMesh3D_node);
-  double             *Mesh3D_node_y =
-    (double *) T8_ALLOC (double, nMesh3D_node);
-  double             *Mesh3D_node_z =
-    (double *) T8_ALLOC (double, nMesh3D_node);
-
-  /* Checks if the poitner are not NULL */
-  T8_ASSERT (Mesh3D_node_x != NULL && Mesh3D_node_y != NULL
-             && Mesh3D_node_z != NULL);
+  /* Fill the already defined NetCDF-variables and calculate the 'nMesh_node' (global number of nodes) -dimension */
+  t8_cmesh_write_netcdf_data (cmesh, context);
 
   /* Leave the NetCDF-data-mode and re-enter the define-mode. */
-  if ((retval = nc_redef (ncid))) {
+  if ((retval = nc_redef (context->ncid))) {
     ERR (retval);
   }
 
-  /* Define dimension: number of nodes */
-  if ((retval =
-       nc_def_dim (ncid, "nMesh3D_node", nMesh3D_node,
-                   &nMesh3D_node_dimid))) {
-    ERR (retval);
-  }
+  /* Define the NetCDF-dimension 'nMesh_node' */
+  t8_cmesh_write_netcdf_coordinate_dimension (context, namespace_context);
 
-  /* *Define the NetCDF coordinate variables* */
-
-  /* Define the Mesh3D_node_x  variable. */
-  if ((retval =
-       nc_def_var (ncid, "Mesh3D_node_x", NC_DOUBLE, 1, &nMesh3D_node_dimid,
-                   &var_node_x_id))) {
-    ERR (retval);
-  }
-  /* Define standard_name attribute. */
-  const char         *standard_node_x = "Longitude";
-  if ((retval =
-       nc_put_att_text (ncid, var_node_x_id, "standard_name",
-                        strlen (standard_node_x), standard_node_x))) {
-    ERR (retval);
-  }
-  /* Define long_name attribute. */
-  const char         *long_node_x = "Longitude of 3D mesh nodes";
-  if ((retval =
-       nc_put_att_text (ncid, var_node_x_id, "long_name",
-                        strlen (long_node_x), long_node_x))) {
-    ERR (retval);
-  }
-  /* Define units attribute. */
-  const char         *units_node_x = "degrees_east";
-  if ((retval =
-       nc_put_att_text (ncid, var_node_x_id, "units", strlen (units_node_x),
-                        units_node_x))) {
-    ERR (retval);
-  }
-
-        /*********************************************/
-  /* Define the Mesh3D_node_y  variable. */
-  if ((retval =
-       nc_def_var (ncid, "Mesh3D_node_y", NC_DOUBLE, 1, &nMesh3D_node_dimid,
-                   &var_node_y_id))) {
-    ERR (retval);
-  }
-  /* Define standard_name attribute. */
-  const char         *standard_node_y = "Latitude";
-  if ((retval =
-       nc_put_att_text (ncid, var_node_y_id, "standard_name",
-                        strlen (standard_node_y), standard_node_y))) {
-    ERR (retval);
-  }
-  /* Define long_name attribute. */
-  const char         *long_node_y = "Latitude of 3D mesh nodes";
-  if ((retval =
-       nc_put_att_text (ncid, var_node_y_id, "long_name",
-                        strlen (long_node_y), long_node_y))) {
-    ERR (retval);
-  }
-  /* Define units attribute. */
-  const char         *units_node_y = "degrees_north";
-  if ((retval =
-       nc_put_att_text (ncid, var_node_y_id, "units", strlen (units_node_y),
-                        units_node_y))) {
-    ERR (retval);
-  }
-
-        /*********************************************/
-
-  /* Define the Mesh2_node_z  variable. */
-  if ((retval =
-       nc_def_var (ncid, "Mesh3D_node_z", NC_DOUBLE, 1, &nMesh3D_node_dimid,
-                   &var_node_z_id))) {
-    ERR (retval);
-  }
-  /* Define standard_name attribute. */
-  const char         *standard_node_z = "Height";
-  if ((retval =
-       nc_put_att_text (ncid, var_node_z_id, "standard_name",
-                        strlen (standard_node_z), standard_node_z))) {
-    ERR (retval);
-  }
-  /* Define long_name attribute. */
-  const char         *long_node_z = "Elevation of 3D mesh nodes";
-  if ((retval =
-       nc_put_att_text (ncid, var_node_z_id, "long_name",
-                        strlen (long_node_z), long_node_z))) {
-    ERR (retval);
-  }
-  /* Define units attribute. */
-  const char         *units_node_z = "m";
-  if ((retval =
-       nc_put_att_text (ncid, var_node_z_id, "units", strlen (units_node_z),
-                        units_node_z))) {
-    ERR (retval);
-  }
-
-        /*********************************************/
+  /* Define the NetCDF-coordinate variables */
+  t8_cmesh_write_netcdf_coordinate_variables (context, namespace_context);
 
   /* Disable the default fill-value-mode. */
-  if ((retval = nc_set_fill (ncid, NC_NOFILL, &old_fill_mode))) {
-    ERR (retval);
-  }
-
-  /* Leave the define-mode and re-enter the data-mode in order to fill the coordinate variables. */
-  if ((retval = nc_enddef (ncid))) {
-    ERR (retval);
-  }
-
-  /* Iterate over all local trees. */
-  /* Corners should be stored in the same order as in a vtk-file (read that somewehere on a netcdf page). */
-  ltree_id = 0;
-  int                 i;
-  for (next_ltree = t8_cmesh_get_first_tree (cmesh); next_ltree != NULL;
-       next_ltree = t8_cmesh_get_next_tree (cmesh, next_ltree)) {
-    gtree_id = t8_cmesh_get_global_id (cmesh, ltree_id);
-    tree_class = t8_cmesh_get_tree_class (cmesh, ltree_id);
-    vertices = t8_cmesh_get_tree_vertices (cmesh, ltree_id);
-    i = 0;
-    for (; i < t8_eclass_num_vertices[tree_class]; i++) {
-      Mesh3D_node_x[num_it] =
-        vertices[3 * (t8_eclass_vtk_corner_number[tree_class][i])];
-      Mesh3D_node_y[num_it] =
-        vertices[3 * (t8_eclass_vtk_corner_number[tree_class][i]) + 1];
-      Mesh3D_node_z[num_it] =
-        vertices[3 * (t8_eclass_vtk_corner_number[tree_class][i]) + 2];
-      /* Store the elements' corresponding node */
-      Mesh3D_vol_nodes[((int) gtree_id) * nMaxMesh3D_vol_nodes + i] = num_it;
-      num_it++;
-    }
-    for (; i < nMaxMesh3D_vol_nodes; i++) {
-      /* Prefills the node entries if the elements' number of nodes is less than nMaxMesh3D_vol_nodes */
-      Mesh3D_vol_nodes[((int) gtree_id) * nMaxMesh3D_vol_nodes + i] = -1;
-    }
-    ltree_id++;
-  }
-
-  /* Write the data into the NetCDF coordinate variables. */
-  /* Fill the 'Mesh3D_vol_nodes'-variable. */
   if ((retval =
-       nc_put_var_int (ncid, var_vol_nodes_id, &Mesh3D_vol_nodes[0]))) {
+       nc_set_fill (context->ncid, NC_NOFILL, &context->old_fill_mode))) {
     ERR (retval);
   }
-  /* Fill the 'Mesh3D_node_x'-variable. */
-  if ((retval = nc_put_var_double (ncid, var_node_x_id, &Mesh3D_node_x[0]))) {
+
+  /* End define-mode. NetCDF-file enters data-mode. */
+  if ((retval = nc_enddef (context->ncid))) {
     ERR (retval);
   }
-  /* Fill the 'Mesh3D_node_x'-variable. */
-  if ((retval = nc_put_var_double (ncid, var_node_y_id, &Mesh3D_node_y[0]))) {
-    ERR (retval);
-  }
-  /* Fill the 'Mesh3D_node_z'-variable. */
-  if ((retval = nc_put_var_double (ncid, var_node_z_id, &Mesh3D_node_z[0]))) {
-    ERR (retval);
-  }
+
+  /* Write the NetCDF-coordinate variable data */
+  t8_cmesh_write_netcdf_coordinate_data (cmesh, context);
 
   /* All data has been written to the NetCDF-file, therefore, close the file. */
-  if ((retval = nc_close (ncid))) {
+  if ((retval = nc_close (context->ncid))) {
     ERR (retval);
   }
 
-  /* Free allocated memory */
-  T8_FREE (Mesh3D_node_x);
-  T8_FREE (Mesh3D_node_y);
-  T8_FREE (Mesh3D_node_z);
-  T8_FREE (Mesh3D_vol_nodes);
+  t8_debugf ("The NetCDF-File has been written and closed.\n");
 
-  return 1;
-#else /* Without netcdf */
-  t8_global_productionf
+}
+
+/* Function that gets called if a cmesh schould be written in NetCDF-Format */
+void
+t8_cmesh_write_netcdf (t8_cmesh_t cmesh, const char *file_prefix,
+                       const char *file_title, int dim)
+{
+#if T8_WITH_NETCDF
+  t8_cmesh_netcdf_context_t context;
+  /* Check whether pointers are not NULL */
+  T8_ASSERT (file_title != NULL);
+  T8_ASSERT (file_prefix != NULL);
+  char                file_name[BUFSIZ];
+  /* Create the NetCDF-Filname */
+  snprintf (file_name, BUFSIZ, "%s.nc", file_prefix);
+  /* Initialize first variables for NetCDF purposes. */
+  context.filename = file_name;
+  context.filetitle = file_title;
+  context.dim = dim;
+  context.fillvalue = -1;
+  context.start_index = 0;
+  context.convention = "UGRID v1.0";
+  t8_cmesh_netcdf_ugrid_namespace_t namespace_context;
+  t8_cmesh_init_ugrid_namespace_context (&namespace_context, dim);
+  /* Check which dimension of cmesh should be written. */
+  switch (dim) {
+  case 2:
+    context.nMaxMesh_elem_nodes = T8_ECLASS_MAX_CORNERS_2D;
+    t8_debugf ("Writing 2D cmesh to NetCDF.\n");
+    t8_cmesh_write_netcdf_file (cmesh, &context, &namespace_context);
+    break;
+  case 3:
+    context.nMaxMesh_elem_nodes = T8_ECLASS_MAX_CORNERS;
+    t8_debugf ("Writing 3D cmesh to NetCDF.\n");
+    t8_cmesh_write_netcdf_file (cmesh, &context, &namespace_context);
+    break;
+  default:
+    t8_global_errorf
+      ("Only writing 2D and 3D NetCDF cmesh data is supported.\n");
+    break;
+  }
+#else
+  t8_global_errorf
     ("This version of t8code is not compiled with netcdf support.\n");
-  return 0;
 #endif
-
 }
