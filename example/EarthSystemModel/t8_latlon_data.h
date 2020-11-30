@@ -55,7 +55,7 @@ typedef struct
   int                 level;    /* The smallest uniform refinement level of a forest that can have the
                                  * grid (not the subgrid) as submesh. */
   T8_LATLON_DATA_NUMBERING numbering;
-  double             ***in;
+  double             ***in;     /* 3D input data*/
   double             *data;     /* x_length x y_length x dimension many data items.
                                    for each data item dimension many entries. */
   t8_linearidx_t     *data_ids; /* If numbering is T8_LATLON_DATA_MORTON then for

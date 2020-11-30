@@ -69,9 +69,9 @@ main (int argc, char **argv)
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme,
                          "Display a short help message.");
-  sc_options_add_int (opt, 'x', "x-length", &x_length, 10,
+  sc_options_add_int (opt, 'x', "x-length", &x_length, 64,
                       "The type of elements to use.\n");
-  sc_options_add_int (opt, 'y', "y-length", &y_length, 10,
+  sc_options_add_int (opt, 'y', "y-length", &y_length, 32,
                       "The type of elements to use.\n");
   sc_options_add_switch (opt, 'p', "partition", &partition,
                          "Repartition the forest after each level of refinement/coarsening.\n");
