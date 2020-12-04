@@ -331,6 +331,8 @@ t8_forest_write_netcdf_data (t8_forest_t forest,
   t8_locidx_t         ltree_id;
   t8_locidx_t         local_elem_id;
   t8_locidx_t         num_local_tree_elem;
+  t8_element_shape_t  element_shape;
+  t8_element_t       *element;
 
   int                 num_nodes;
   int                 retval;
@@ -355,10 +357,18 @@ t8_forest_write_netcdf_data (t8_forest_t forest,
   /* Iterate over all local trees and their respective elements */
   for (ltree_id = 0; ltree_id < num_local_trees; ltree_id++) {
     num_local_tree_elem = t8_forest_get_tree_num_elements (forest, ltree_id);
+    tree_class = t8_forest_get_tree_class (forest, ltree_id);
     for (local_elem_id = 0; local_elem_id < num_local_tree_elem;
          local_elem_id++) {
-
+      t8_eclass_scheme_c *scheme =
+        t8_forest_get_eclass_scheme (forest, tree_class);
+      element =
+        t8_forest_get_element_in_tree (forest, ltree_id, local_elem_id);
+      element_shape = scheme->t8_element_shape (element);
+      num_nodes = t8_element_shape_num_vertices[element_shape];
     }
+    /* Fuer Coordinates: */
+    t8_forest_element_coordinate ();
     /********************** weitermachen ********************************************************/
 
   }
