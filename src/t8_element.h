@@ -32,6 +32,7 @@
 
 #include <sc_refcount.h>
 #include <t8_eclass.h>
+#include <t8_element_shape.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -44,11 +45,6 @@ typedef struct t8_element t8_element_t;
 typedef struct t8_eclass_scheme t8_eclass_scheme_c;
 
 typedef struct t8_scheme_cxx t8_scheme_cxx_t;
-
-/** Type definition for the geometric shape of an element.
- * Currently the possible shapes are the same as the possible element classes.
- * I.e. T8_ECLASS_VERTEX, T8_ECLASS_TET, etc... */
-typedef t8_eclass_t t8_element_shape_t;
 
 /** The scheme holds implementations for one or more element classes. */
 struct t8_scheme_cxx
