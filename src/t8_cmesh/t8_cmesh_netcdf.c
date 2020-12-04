@@ -127,7 +127,7 @@ t8_cmesh_init_ugrid_namespace_context (t8_cmesh_netcdf_ugrid_namespace_t *
   }
 }
 
-/* Define  NetCDF-coordinate-dimension 2D */
+/* Define  NetCDF-coordinate-dimension */
 static void
 t8_cmesh_write_netcdf_coordinate_dimension (t8_cmesh_netcdf_context_t *
                                             context,
@@ -150,7 +150,7 @@ t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t *
                                             t8_cmesh_netcdf_ugrid_namespace_t
                                             * namespace_context)
 {
-  /* Define the Mesh2_node_x  variable. */
+  /* Define the Mesh_node_x  variable. */
   int                 retval;
   if ((retval =
        nc_def_var (context->ncid, namespace_context->var_Mesh_node_x,
@@ -183,7 +183,7 @@ t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t *
 
         /*********************************************/
 
-  /* Define the Mesh2_node_y variable. */
+  /* Define the Mesh_node_y variable. */
   if ((retval =
        nc_def_var (context->ncid, namespace_context->var_Mesh_node_y,
                    NC_DOUBLE, 1, &context->nMesh_node_dimid,
@@ -215,7 +215,7 @@ t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t *
 
         /*********************************************/
 
-  /* Define the Mesh2_node_z variable. */
+  /* Define the Mesh_node_z variable. */
   if ((retval =
        nc_def_var (context->ncid, namespace_context->var_Mesh_node_z,
                    NC_DOUBLE, 1, &context->nMesh_node_dimid,
