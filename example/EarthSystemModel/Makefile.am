@@ -9,6 +9,8 @@ bin_PROGRAMS += \
 example_EarthSystemModel_t8_read_reanalysis_data_SOURCES = \
 	example/EarthSystemModel/t8_read_reanalysis_data.cxx
 example_EarthSystemModel_t8_latlon_refine_SOURCES = \
+	example/EarthSystemModel/t8_messy_coupler.cxx \
 	example/EarthSystemModel/t8_latlon_refine.cxx \
 	example/EarthSystemModel/t8_latlon_data.cxx \
 	example/EarthSystemModel/t8_latlon_main.cxx
+	
