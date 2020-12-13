@@ -21,46 +21,100 @@
 */
 
 #include <t8.h>
+#include <t8_forest.h>
 #include "t8_latlon_refine.h"
+#include "t8_latlon_data.h"
 #include "t8_messy_coupler.h"
 
+
 t8_messy_data* t8_messy_initialize(
-  char* name,
-  char* axis,
-  t8_locidx_t x_start, 
-  t8_locidx_t y_start, 
-  t8_locidx_t x_length, 
-  t8_locidx_t y_length, 
+  const char* description,
+  const char* axis,
+  int x_start, 
+  int y_start, 
+  int x_length, 
+  int y_length, 
   int dimension) {
 
-  t8_messy_data messy_data;
-  t8_messy_repr repr;
+  t8_global_productionf("Initializing MESSy coupler\n");
 
-  repr.name = name;
-  repr.x_length = x_length;
-  repr.y_length = y_length;
-  repr.x_start = x_start;
-  repr.y_start = y_start;
-  repr.dimension = dimension;
-
+  // create forest for smallest mesh which completely contains given messy mesh
+  t8_forest_t forest = t8_latlon_refine(x_length, y_length, T8_LATLON_COARSEN, 0);
+  t8_latlon_adapt_data_t *adapt_data =
+    (t8_latlon_adapt_data_t *) t8_forest_get_user_data (forest);
+  
   // determine axes
-  char *c;
   int x, y, z;
 
-  c = strchr(name, 'x');
-  x = (int)(c - name);
+  const char *c = strchr(axis, 'X');
+  x = c - axis;
 
-  c = strchr(name, 'y');
-  y = (int)(c - name);
+  const char *d = strchr(axis, 'Y');
+  y = d - axis;
 
-  c = strchr(name, 'z');
-  z = (int)(c - name);
+  const char *e = strchr(axis, 'Z');
+  z = e - axis;
 
-  repr.x_axis = x;
-  repr.y_axis = y;
-  repr.z_axis = z;
+  /* create data chunk */
+  t8_latlon_data_chunk_t *chunk = t8_latlon_new_chunk(
+    x_start, y_start,
+    x_length, y_length,
+    dimension, x, y, z, adapt_data->max_level,
+    T8_LATLON_DATA_MESSY,
+    description);
 
-  messy_data.repr = *repr;
+  t8_messy_data* messy_data = T8_ALLOC(t8_messy_data, 1);
+  messy_data->chunk = chunk;
+  messy_data->forest = forest;
 
-  return *messy_data;
+  t8_global_productionf("MESSy coupler initialized\n");
+
+  return messy_data;
+}
+
+
+void t8_messy_set_dimension(t8_messy_data *messy_data, double ***data, int dimension) {
+  t8_latlon_data_chunk_t *chunk = messy_data->chunk;
+
+  // TODO: add safe guards
+
+  int axis = chunk->axis;
+  int x, y;
+  double value;
+  for(x=0; x < chunk->x_length; ++x) {
+    for(y=0; y < chunk->y_length; ++y) {
+      value = t8_latlon_get_dimension_value(axis, data, x, y, 0);
+      t8_latlon_set_dimension_value(axis, chunk->in, x, y, dimension, value);
+    }
+  }
+}
+
+void t8_messy_apply_sfc(t8_messy_data *messy_data) {
+  t8_latlon_data_apply_morton_order(messy_data->chunk);
+}
+
+void t8_messy_coarsen(t8_messy_data *messy_data, t8_forest_adapt_t adapt_callback) {
+  t8_global_productionf("MESSy coarsen grid \n");
+  t8_latlon_data_chunk_t *chunk = messy_data->chunk;
+
+  t8_forest_t forest = messy_data->forest;
+  t8_forest_t forest_adapt = messy_data->forest_adapt;
+
+  t8_forest_ref(forest);
+  t8_forest_init(&forest_adapt);
+
+  t8_forest_set_user_data(forest_adapt, chunk);
+  t8_forest_set_adapt(forest_adapt, forest, adapt_callback, 0);
+
+  t8_forest_set_partition (forest_adapt, NULL, 0);
+
+  t8_forest_commit(forest_adapt);
+  t8_global_productionf("MESSy coarsen done\n");
+
+  #ifdef T8_ENABLE_DEBUG
+    /* In debugging mode write the forest to vtk for each level. */
+    char vtu_prefix[BUFSIZ];
+    snprintf (vtu_prefix, BUFSIZ, "t8_messy_%i_%i", chunk->x_length, chunk->y_length);
+    t8_forest_write_vtk (forest_adapt, vtu_prefix);
+  #endif
 }

@@ -68,6 +68,21 @@ T8_EXTERN_C_BEGIN ();
 
 /* function declarations */
 
+/**
+ * TODO: add doc
+ */
+t8_latlon_data_chunk_t *
+t8_latlon_new_chunk (t8_locidx_t x_start, t8_locidx_t y_start,
+                     t8_locidx_t x_length, t8_locidx_t y_length,
+                     int dimension, int x_axis, int y_axis, int z_axis, int level,
+                     T8_LATLON_DATA_NUMBERING numbering,
+                     const char *description);
+
+/**
+ * TODO: add doc
+ */
+void t8_latlon_chunk_destroy (t8_latlon_data_chunk_t ** pchunk);
+
 /** Given x and y coordinates in an X by Y grid compute
  * the Morton linear id according to a given level of the 
  * element associated with (x,y).
@@ -91,6 +106,14 @@ t8_linearidx_t      t8_latlon_to_linear_id (t8_gloidx_t x, t8_gloidx_t y,
 void                t8_latlon_linear_id_to_latlon (t8_linearidx_t linear_id,
                                                    int level, t8_gloidx_t * x,
                                                    t8_gloidx_t * y);
+
+double t8_latlon_get_dimension_value(int axis, double ***data, int x_coord, int y_coord, int dim);
+
+void t8_latlon_set_dimension_value(int axis, double ***data, int x_coord, int y_coord, int dim, double value);
+
+
+void
+t8_latlon_data_apply_morton_order (t8_latlon_data_chunk_t * data_chunk);
 
 /* Create a data chunk with given dimensions and numbering,
  * fill it with data and then change the numbering to Morton.

@@ -24,44 +24,36 @@
 
 #include <t8.h>
 #include <t8_forest.h>
-
-
-/* MESSy representation */
-typedef struct
-{
-  const char         *name;       /* The name of this dataset. */
-  t8_locidx_t         x_start;    /* Starting x coordinate. */
-  t8_locidx_t         y_start;    /* Starting y coordinate. */
-  t8_locidx_t         x_length;   /* Number of subgrid cells in x dimension. */
-  t8_locidx_t         y_length;   /* Number of subgrid cells in y dimension. */
-  int                 dimension;  /* Dimensionality of the data (1, 2, 3). */
-  int                 axis;       /* Flag combining x, y and z axis */
-  int                 x_axis;     /* X axis index in data vector */
-  int                 y_axis;     /* Y axis index in data vector */
-  int                 z_axis;     /* Z axis index in data vector */
-} t8_messy_repr;
-
+#include "t8_latlon_data.h"
 
 /* MESSy coupling object */
 typedef struct {
-  t8_messy_repr* repr
+  t8_latlon_data_chunk_t *chunk;
+  t8_forest_t forest;
+  t8_forest_t forest_adapt;
 } t8_messy_data;
-
-
-T8_EXTERN_C_BEGIN ();
 
 /* Initialize forest for messy reprensentation */
 t8_messy_data* t8_messy_initialize(
-  const char* name,
+  const char* description,
   const char* axis,
-  t8_locidx_t x_start, 
-  t8_locidx_t y_start, 
-  t8_locidx_t x_length, 
-  t8_locidx_t y_length, 
+  int x_start, 
+  int y_start, 
+  int x_length, 
+  int y_length, 
   int dimension);
 
+T8_EXTERN_C_BEGIN ();
+
 /* Add channel object data to forest */
-void t8_messy_add_object();
+void t8_messy_set_dimension(t8_messy_data *messy_data, double ***data, int dimension);
+
+
+/* Bring input data into SFC format */
+void t8_messy_apply_sfc(t8_messy_data *messy_data);
+
+/* coarsen grid with given callback */
+void t8_messy_coarsen(t8_messy_data *messy_data, t8_forest_adapt_t adapt_callback);
 
 T8_EXTERN_C_END ();
 

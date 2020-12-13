@@ -20,8 +20,12 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <sc_options.h>
 #include <sc_refcount.h>
+#include <t8.h>
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_common_cxx.hxx>
 #include <t8_forest.h>
@@ -32,8 +36,65 @@
 #include <t8_schemes/t8_default/t8_default_quad_cxx.hxx>
 #endif
 #include <p4est_bits.h>
+#include "t8_messy_coupler.h"
 #include "t8_latlon_refine.h"
 #include "t8_latlon_data.h"
+
+/* generate a random floating point number from min to max */
+double randfrom(double min, double max) {
+    double range = (max - min); 
+    double div = RAND_MAX / range;
+    return min + (rand() / div);
+}
+
+/**
+ * Function filling data array with random values
+ */
+void generate_data(double ***data, int x_length, int y_length, double value) {
+  int x, y;
+  for(y=0; y<y_length; ++y) {
+    for(x=0; x<x_length; ++x) {
+      data[x][y][0] = randfrom(y * x_length, (y + 1) * x_length);
+    }
+  }
+}
+
+
+/**
+ * Simple coarsening test.
+ * If the AVG of the first dimension of all four cells is even we coarsen.
+ */
+int
+t8_messy_adapt_callback (t8_forest_t forest,
+                          t8_forest_t forest_from,
+                          int which_tree,
+                          int lelement_id,
+                          t8_eclass_scheme_c * ts,
+                          int num_elements, t8_element_t * elements[])
+{
+
+
+  t8_latlon_data_chunk_t *chunk = (t8_latlon_data_chunk_t*) t8_forest_get_user_data(forest);
+  
+  /* since we don't want to refine, 
+     we can stop if we only have one element */
+  if (num_elements == 1) {
+    return 0;
+  }
+
+  double avg = 0.0;
+  for (int i=0; i < num_elements; ++i) {
+    int offset = (lelement_id + i) * chunk->dimension;
+    avg += chunk->data[offset];
+  }
+  avg /= num_elements;
+
+  bool isEven = (((int)avg) % 2) == 0;
+
+  t8_debugf ("lelement_id %d avg %.4f, is even? %s \n", lelement_id, avg, (isEven ? "yes" : "no"));
+
+  return isEven ? -1 : 0;
+}
 
 int
 main (int argc, char **argv)
@@ -46,7 +107,7 @@ main (int argc, char **argv)
   int                 parsed, helpme;
   int                 mode_int;
   int                 partition;
-  enum T8_LATLON_ADAPT_MODE mode;
+  //enum T8_LATLON_ADAPT_MODE mode;
 
   /* brief help message */
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t"
@@ -69,7 +130,7 @@ main (int argc, char **argv)
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme,
                          "Display a short help message.");
-  sc_options_add_int (opt, 'x', "x-length", &x_length, 64,
+  sc_options_add_int (opt, 'x', "x-length", &x_length, 32,
                       "The type of elements to use.\n");
   sc_options_add_int (opt, 'y', "y-length", &y_length, 32,
                       "The type of elements to use.\n");
@@ -89,8 +150,42 @@ main (int argc, char **argv)
   }
   else if (parsed >= 0 && 0 < x_length && 0 < y_length && mode_int >= 0
            && mode_int <= 1) {
-    mode = mode_int == 0 ? T8_LATLON_REFINE : T8_LATLON_COARSEN;
-    t8_latlon_refine_test(x_length, y_length, mode, partition);
+
+
+    // number of datapoints per grid cell
+    int num_dims = 3, x, y, z;
+
+
+    // allocate data array
+    double ***data = T8_ALLOC(double**, x_length);
+    for(x=0; x<x_length; ++x) {
+      data[x] = T8_ALLOC(double*, y_length);
+      for(y=0; y<y_length; ++y) {
+        data[x][y] = T8_ALLOC(double, 1);
+      }
+    }
+
+    // initialize forest and data chunk
+    t8_messy_data* messy = t8_messy_initialize("test", "XYZ", 0, 0, x_length, y_length, num_dims);
+
+    // set data for every dimension
+    for (int dim=0; dim<num_dims; ++dim) {
+      // generate dummy data
+      generate_data(data, x_length, y_length, dim * 1.0);
+      t8_messy_set_dimension(messy, data, dim);
+    }
+
+    // bring input data into SFC format
+    t8_messy_apply_sfc(messy);
+
+    // coarsen data
+    t8_messy_coarsen(messy, t8_messy_adapt_callback);
+
+    t8_forest_unref (&(messy->forest));
+    //t8_forest_unref (&(messy->forest_adapt));
+    t8_latlon_chunk_destroy(&(messy->chunk));
+
+
   }
   else {
     /* wrong usage */
@@ -106,3 +201,8 @@ main (int argc, char **argv)
 
   return 0;
 }
+
+
+
+
+
