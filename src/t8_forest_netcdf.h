@@ -22,8 +22,8 @@
 
 /* TODO: document this file */
 
-#ifndef T8_T8_FOREST_NETCDF_H
-#define T8_T8_FOREST_NETCDF_H
+#ifndef T8_FOREST_NETCDF_H
+#define T8_FOREST_NETCDF_H
 
 #include <t8_forest.h>
 
