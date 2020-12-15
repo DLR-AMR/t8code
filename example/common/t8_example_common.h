@@ -32,6 +32,17 @@
 #include <t8.h>
 #include <t8_forest.h>
 
+/** A simple struct managing a sphere. We use it to define
+ *  adapt functions inside or outside of spheres and a union of them.
+ */
+typedef struct
+{
+  double              midpoint[3];      /*< Midpoint of sphere */
+  double              radius;   /*< Radius of sphere */
+  int                 refine_outside;   /*< If non-zero the forest shall be refined outside of the sphere. */
+  int                 max_level;        /*< The maximum refinement level for this sphere. */
+} t8_example_sphere_t;
+
 /** A levelset function in 3+1 space dimensions. */
 typedef double      (*t8_example_level_set_fn) (const double[3], double,
                                                 void *);
@@ -129,6 +140,19 @@ void                t8_common_midpoint (t8_forest_t forest,
                                         t8_eclass_scheme_c * ts,
                                         t8_element_t * element,
                                         double elem_midpoint_f[3]);
+
+/** Adapt function to refine according to a union of given spheres.
+ * \note The user data pointer of \a forest must be set to an sc_array of t8_example_sphere_t.
+ */
+
+int                 t8_common_adapt_union_of_spheres (t8_forest_t forest_from,
+                                                      t8_forest_t forest,
+                                                      t8_locidx_t which_tree,
+                                                      t8_locidx_t lelement_id,
+                                                      t8_eclass_scheme_c * ts,
+                                                      int num_elements,
+                                                      t8_element_t *
+                                                      elements[]);
 
 /** Real valued functions defined in t8_example_common_functions.h */
 

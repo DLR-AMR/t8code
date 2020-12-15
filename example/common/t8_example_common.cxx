@@ -27,6 +27,7 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_element_cxx.hxx>
 #include <t8_forest.h>
+#include <t8_vec.h>
 #include <example/common/t8_example_common.h>
 
 T8_EXTERN_C_BEGIN ();
@@ -194,6 +195,58 @@ t8_common_adapt_level_set (t8_forest_t forest,
      * as argument, we coarsen to level base level */
     return -1;
   }
+  return 0;
+}
+
+/** Returns true if given coordinates are inside (or outside) a given sphere. */
+static int
+t8_common_adapt_check_sphere (const double elem_midpoint[3],
+                              const t8_example_sphere_t * sphere)
+{
+  T8_ASSERT (sphere != NULL);
+  /* Compute whether the midpoint is inside the sphere */
+  int                 inside =
+    t8_vec_dist (elem_midpoint, sphere->midpoint) <= sphere->radius ? 1 : 0;
+  /* Refine if inside is true and refine_outside false
+   * or if inside is false and refine_outside true. */
+  return sphere->refine_outside ? !inside : inside;
+}
+
+int
+t8_common_adapt_union_of_spheres (t8_forest_t forest,
+                                  t8_forest_t forest_from,
+                                  t8_locidx_t which_tree,
+                                  t8_locidx_t lelement_id,
+                                  t8_eclass_scheme_c * ts,
+                                  int num_elements, t8_element_t * elements[])
+{
+  size_t              isphere;
+  /* Get the array of spheres stored as user data */
+  const sc_array_t   *spheres =
+    (const sc_array_t *) t8_forest_get_user_data (forest);
+  /* Check whether it really points to spheres */
+  T8_ASSERT (spheres != NULL);
+  T8_ASSERT (spheres->elem_size == sizeof (t8_example_sphere_t));
+
+  const double       *tree_vertices =
+    t8_forest_get_tree_vertices (forest_from, which_tree);
+  double              elem_midpoint[3];
+  /* get the element's level */
+  int                 level = ts->t8_element_level (elements[0]);
+  t8_forest_element_centroid (forest_from, which_tree, elements[0],
+                              tree_vertices, elem_midpoint);
+  for (isphere = 0; isphere < spheres->elem_count; isphere++) {
+    const t8_example_sphere_t *sphere =
+      (const t8_example_sphere_t *) sc_array_index ((sc_array_t *) spheres,
+                                                    isphere);
+    /* Check the adapt function for this sphere, if the elements level is below the refinement level of this sphere */
+    if (level < sphere->max_level
+        && t8_common_adapt_check_sphere (elem_midpoint, sphere)) {
+      /* The element is inside the refine area of this sphere, we refine it. */
+      return 1;
+    }
+  }
+  /* The element was in no refine area, we do not refine it. */
   return 0;
 }
 
