@@ -30,6 +30,7 @@
 #include <t8_forest_vtk.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_vec.h>
+#include <example/common/t8_example_common.h>
 #define T8_WITH_NETCDF 1        // DO NOT COMMIT THIS LINE
 #if T8_WITH_NETCDF
 #include <netcdf.h>
@@ -319,8 +320,8 @@ t8_netcdf_open_file (const char *filename, const double radius,
   int                 ncid, retval;
   int                 number_of_dims;
   int                 longitude_pos, latitude_pos;
-  char                (*dimension_names)[BUFSIZ];
-  size_t             *dimension_lengths;
+  char                (*dimension_names)[BUFSIZ] = NULL;
+  size_t             *dimension_lengths = NULL;
   float              *latitude_data, *longitude_data;
   int                *time;
   double             *coordinates_euclidean;
@@ -1186,7 +1187,7 @@ t8_netcdf_read_data_to_forest (const char *filename, t8_forest_t forest,
   search_results->u10_data_per_element = u10_data_per_element;
   search_results->v10_data_per_element = v10_data_per_element;
 
-  t8_global_productionf ("Stored at %p\n", search_results);
+  t8_global_productionf ("Stored at %p\n", (void *) search_results);
   t8_global_productionf ("At 100: %g  %g\n", u10_data_per_element[100],
                          v10_data_per_element[100]);
 
@@ -1234,6 +1235,324 @@ t8_netcdf_write_vtk (t8_forest_t forest, const char *fileprefix)
   t8_forest_vtk_write_file (forest, fileprefix, 1, 1, 1, 1, 0, 2, vtk_data);
 }
 
+static void
+t8_netcdf_adapt_spheres (const char *mesh_filename, const int sphere_radius,
+                         const int sphere_dim, const int level,
+                         const int refine_levels, sc_MPI_Comm comm)
+{
+  /* Build uniform forest from mesh file */
+  t8_forest_t         forest =
+    t8_reanalysis_build_forest (mesh_filename, sphere_radius, sphere_dim,
+                                level,
+                                comm);
+  t8_forest_t         forest_adapt = NULL;
+  int                 ref_level;
+
+  /* Define Spheres to refine along */
+  int                 num_spheres = 8;  /* Number of spheres */
+  /* Initialize spheres array */
+  t8_example_sphere_t *sphere;
+  sc_array_t         *spheres =
+    sc_array_new_count (sizeof (t8_example_sphere_t), num_spheres);
+  /* Set sphere 1 (island) */
+  sphere = (t8_example_sphere_t *) sc_array_index (spheres, 0);
+  sphere->midpoint[0] = 0.225;
+  sphere->midpoint[1] = -0.07;
+  sphere->midpoint[2] = 0.45;
+  sphere->radius = 0.06;
+  sphere->max_level = level + refine_levels;
+  sphere->refine_outside = 0;
+
+  /* Set sphere 2 (close to island) */
+  sphere = (t8_example_sphere_t *) sc_array_index (spheres, 1);
+  sphere->midpoint[0] = 0.245;
+  sphere->midpoint[1] = -0.07;
+  sphere->midpoint[2] = 0.435;
+  sphere->radius = 0.06;
+  sphere->max_level = level + refine_levels;
+  sphere->refine_outside = 0;
+
+  /* Set sphere 3 (away to the left 1) */
+  sphere = (t8_example_sphere_t *) sc_array_index (spheres, 2);
+  sphere->midpoint[0] = 0.255;
+  sphere->midpoint[1] = -0.1;
+  sphere->midpoint[2] = 0.42;
+  sphere->radius = 0.04;
+  sphere->max_level = level + refine_levels;
+  sphere->refine_outside = 0;
+
+  /* Set sphere 4 (away to the left 2) */
+  sphere = (t8_example_sphere_t *) sc_array_index (spheres, 3);
+  sphere->midpoint[0] = 0.26;
+  sphere->midpoint[1] = -0.115;
+  sphere->midpoint[2] = 0.415;
+  sphere->radius = 0.05;
+  sphere->max_level = level + refine_levels;
+  sphere->refine_outside = 0;
+
+  /* Set sphere 5 (away to the left 3) */
+  sphere = (t8_example_sphere_t *) sc_array_index (spheres, 4);
+  sphere->midpoint[0] = 0.27;
+  sphere->midpoint[1] = -0.15;
+  sphere->midpoint[2] = 0.4;
+  sphere->radius = 0.06;
+  sphere->max_level = level + refine_levels;
+  sphere->refine_outside = 0;
+
+  /* Set sphere 6 (coarse ocean) */
+  sphere = (t8_example_sphere_t *) sc_array_index (spheres, 5);
+  sphere->midpoint[0] = 0.33;
+  sphere->midpoint[1] = -0.08;
+  sphere->midpoint[2] = 0.39;
+  sphere->radius = 0.095;
+  sphere->max_level = level + refine_levels - 1;
+  sphere->refine_outside = 0;
+
+  /* Set sphere 7 (France 1) */
+  sphere = (t8_example_sphere_t *) sc_array_index (spheres, 6);
+  sphere->midpoint[0] = 0.33;
+  sphere->midpoint[1] = 0.01;
+  sphere->midpoint[2] = 0.38;
+  sphere->radius = 0.05;
+  sphere->max_level = level + refine_levels;
+  sphere->refine_outside = 0;
+
+  /* Set sphere 8 (France 2) */
+  sphere = (t8_example_sphere_t *) sc_array_index (spheres, 7);
+  sphere->midpoint[0] = 0.34;
+  sphere->midpoint[1] = 0.03;
+  sphere->midpoint[2] = 0.37;
+  sphere->radius = 0.07;
+  sphere->max_level = level + refine_levels;
+  sphere->refine_outside = 0;
+
+  for (ref_level = level; ref_level < refine_levels + level; ++ref_level) {
+    forest_adapt =
+      t8_forest_new_adapt (forest, t8_common_adapt_union_of_spheres, 0, 0,
+                           spheres);
+
+    /* Scale the spheres */
+    size_t              isphere;
+    for (isphere = 0; isphere < spheres->elem_count; ++isphere) {
+      t8_example_sphere_t *sphere =
+        (t8_example_sphere_t *) sc_array_index (spheres, isphere);
+      sphere->radius *= ref_level == level ? 0.9 : 0.5;
+    }
+    forest = forest_adapt;
+  }
+
+  t8_forest_init (&forest);
+  t8_forest_set_balance (forest, forest_adapt, 0);
+  t8_forest_commit (forest);
+
+  /* write vtk */
+  t8_forest_write_vtk (forest, "adapt_spheres");
+  /* clean up */
+  sc_array_destroy (spheres);
+  t8_forest_unref (&forest);
+}
+
+static void
+t8_netcdf_read_data_and_adapt (const char *netcdf_filename,
+                               const char *mesh_filename,
+                               const double sphere_radius,
+                               const int sphere_dim, const int level,
+                               sc_MPI_Comm comm)
+{
+  int                 retval;
+  t8_forest_t         forest =
+    t8_reanalysis_build_forest (mesh_filename, sphere_radius, sphere_dim,
+                                level,
+                                comm);
+  t8_forest_t         forest_refined;
+
+  if (forest != NULL) {
+    double             *coordinates_euclidean;
+    size_t              num_coordinates;
+    size_t              num_latitude, num_longitude;
+    t8_netcdf_search_data_t *search_result;
+    const double        tolerance = 1e-1;
+
+    retval = t8_netcdf_open_file (netcdf_filename, sphere_radius,
+                                  &coordinates_euclidean, &num_latitude,
+                                  &num_longitude);
+    num_coordinates = num_latitude * num_longitude;
+    if (!retval) {
+#if 1
+#ifdef T8_ENABLE_DEBUG
+      size_t              max_num_coordinates = num_latitude;
+      size_t              new_num_coordinates =
+        SC_MIN (num_coordinates, max_num_coordinates);
+      t8_debugf
+        ("Debugging mode detected. Search only for %zd of the %zd points"
+         " in order to reduce the runtime (debugging mode is slow).\n",
+         new_num_coordinates, num_coordinates);
+      num_coordinates = new_num_coordinates;
+      if (new_num_coordinates == max_num_coordinates) {
+        num_longitude = 1;
+      }
+#endif
+#endif
+      search_result =
+        t8_netcdf_find_mesh_elements (forest, coordinates_euclidean,
+                                      num_coordinates, tolerance);
+
+      /* Print double matched elements */
+      t8_global_productionf ("Matched %i elements at least twice\n",
+                             t8_netcdf_count_double_matched_elements
+                             (search_result));
+      /* We now refine the forest */
+      t8_forest_ref (forest);   /* Ref the original forest since we need to use it after refinement */
+      /* Refine the forest in the elements that match multiple points */
+      forest_refined = t8_netcdf_refine (forest);
+      t8_netcdf_interpolate_data (forest_refined, forest);
+      t8_forest_write_vtk (forest, "test_prerefine");
+      /* Print double matched elements */
+      search_result = (t8_netcdf_search_data_t *)
+        t8_forest_get_user_data (forest_refined);
+      t8_global_productionf ("Matched %i elements at least twice\n",
+                             t8_netcdf_count_double_matched_elements
+                             (search_result));
+#if 0
+      /* Do a second run, refine/interpolate */
+      t8_forest_unref (&forest);
+      forest = forest_refined;
+      t8_forest_ref (forest);
+      forest_refined = t8_netcdf_refine (forest);
+      t8_netcdf_interpolate_data (forest_refined, forest);
+      t8_forest_write_vtk (forest, "test_prerefine2");
+      /* Print double matched elements */
+      search_result = (t8_netcdf_search_data_t *)
+        t8_forest_get_user_data (forest_refined);
+      t8_global_productionf ("Matched %i elements at least twice\n",
+                             t8_netcdf_count_double_matched_elements
+                             (search_result));
+#endif
+      /* Do a third run */
+      t8_forest_unref (&forest);
+      forest = forest_refined;
+      t8_forest_ref (forest);
+      forest_refined = t8_netcdf_refine (forest);
+      t8_netcdf_interpolate_data (forest_refined, forest);
+      t8_forest_write_vtk (forest, "test_prerefine3");
+
+      /* The old search_result was destroyed in the interpolate routine.
+       * Instead the updated search result is stored at the refined forest. */
+      search_result = (t8_netcdf_search_data_t *)
+        t8_forest_get_user_data (forest_refined);
+
+      t8_netcdf_read_data_to_forest (netcdf_filename, forest_refined,
+                                     num_latitude, num_longitude, 1,
+                                     search_result, comm);
+
+      t8_global_productionf ("Matched %i elements at least twice\n",
+                             t8_netcdf_count_double_matched_elements
+                             (search_result));
+
+      t8_netcdf_write_vtk (forest_refined, "test");
+
+      /* Refine the forest where u10 and v10 are large */
+      t8_global_productionf ("Start refining at u10v10\n");
+      /* Set threshold for refinement */
+      search_result->threshold = 6;
+      t8_forest_ref (forest_refined);
+      t8_forest_t         forest_adapt;
+      forest_adapt =
+        t8_forest_new_adapt (forest_refined,
+                             t8_netcdf_refine_if_u10v10_large,
+                             0, 0, search_result);
+
+      t8_netcdf_interpolate_data (forest_adapt, forest_refined);
+      /* The old search_result was destroyed in the interpolate routine.
+       * Instead the updated search result is stored at the refined forest. */
+      search_result = (t8_netcdf_search_data_t *)
+        t8_forest_get_user_data (forest_adapt);
+      /* Clean up the old element data */
+      T8_FREE ((void *) search_result->u10_data_per_element);
+      T8_FREE ((void *) search_result->v10_data_per_element);
+
+      t8_netcdf_read_data_to_forest (netcdf_filename, forest_adapt,
+                                     num_latitude, num_longitude, 1,
+                                     search_result, comm);
+      /* Do another run */
+      t8_forest_ref (forest_refined);
+      t8_forest_ref (forest_adapt);
+      t8_forest_t         forest_adapt2;
+      /* Set threshold for refinement */
+      search_result->threshold = 15;
+      forest_adapt2 =
+        t8_forest_new_adapt (forest_adapt,
+                             t8_netcdf_refine_if_u10v10_large,
+                             0, 0, search_result);
+
+      t8_netcdf_interpolate_data (forest_adapt2, forest_adapt);
+      /* The old search_result was destroyed in the interpolate routine.
+       * Instead the updated search result is stored at the refined forest. */
+      search_result = (t8_netcdf_search_data_t *)
+        t8_forest_get_user_data (forest_adapt2);
+      /* Clean up the old element data */
+      T8_FREE ((void *) search_result->u10_data_per_element);
+      T8_FREE ((void *) search_result->v10_data_per_element);
+
+      t8_netcdf_read_data_to_forest (netcdf_filename, forest_adapt2,
+                                     num_latitude, num_longitude, 1,
+                                     search_result, comm);
+      /* Repartition */
+      t8_forest_ref (forest_adapt2);
+      t8_forest_t         forest_partition;
+      sc_array_t          u10data_old_view;
+      sc_array_t          v10data_old_view;
+      sc_array_t          u10data_new_view;
+      sc_array_t          v10data_new_view;
+      t8_locidx_t         num_elements_partitioned;
+      double             *u10data_new, *v10data_new;
+      t8_netcdf_search_data_t search_result_partiioned;
+      sc_array_init_data (&u10data_old_view,
+                          (void *) search_result->u10_data_per_element,
+                          sizeof (*search_result->u10_data_per_element),
+                          search_result->num_elements);
+      sc_array_init_data (&v10data_old_view,
+                          (void *) search_result->u10_data_per_element,
+                          sizeof (*search_result->u10_data_per_element),
+                          search_result->num_elements);
+      t8_forest_init (&forest_partition);
+      t8_forest_set_partition (forest_partition, forest_adapt2, 0);
+      t8_forest_commit (forest_partition);
+      num_elements_partitioned = t8_forest_get_num_element (forest_partition);
+      u10data_new = T8_ALLOC (double, num_elements_partitioned);
+      v10data_new = T8_ALLOC (double, num_elements_partitioned);
+      sc_array_init_data (&u10data_new_view, u10data_new, sizeof (double),
+                          num_elements_partitioned);
+      sc_array_init_data (&v10data_new_view, v10data_new, sizeof (double),
+                          num_elements_partitioned);
+      t8_forest_partition_data (forest_adapt2, forest_partition,
+                                &u10data_old_view, &u10data_new_view);
+      t8_forest_partition_data (forest_adapt2, forest_partition,
+                                &v10data_old_view, &v10data_new_view);
+      search_result->u10_data_per_element = u10data_new;
+      search_result->v10_data_per_element = v10data_new;
+      /* TODO: Careful, search_result does now only partly match the new forest.
+         the num_elements and matched_elements etc. arrays are still with the old forest. */
+      t8_forest_set_user_data (forest_partition, search_result);
+      t8_netcdf_write_vtk (forest_partition,
+                           "test_refinedu10v10_partitioned");
+
+      /* TODO: Store indices instead of values? interpolate must interpolated values to? */
+
+      /* Clean-up */
+      T8_FREE (coordinates_euclidean);
+      T8_FREE ((void *) search_result->u10_data_per_element);
+      T8_FREE ((void *) search_result->v10_data_per_element);
+      t8_netcdf_destroy_search_data (&search_result);
+      t8_forest_unref (&forest_refined);
+      t8_forest_unref (&forest_adapt);
+      t8_forest_unref (&forest_adapt2);
+      t8_forest_unref (&forest_partition);
+    }
+    t8_forest_unref (&forest);
+  }
+}
+
 int
 main (int argc, char **argv)
 {
@@ -1244,6 +1563,7 @@ main (int argc, char **argv)
   const char         *mesh_filename = NULL;
   int                 parsed, helpme;
   int                 sphere_dim, level;
+  int                 adapt_spheres;
   double              sphere_radius;
   const sc_MPI_Comm   comm = sc_MPI_COMM_WORLD; /* The mpi communicator used throughout */
 
@@ -1278,6 +1598,8 @@ main (int argc, char **argv)
                       "The dimension of the mesh. Default = 2");
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The uniform refinement level of the mesh. Default = 0");
+  sc_options_add_int (opt, 's', "s", &adapt_spheres, 0,
+                      "Adapt the given number of levels according to given sphere coordinates (experimental). Deactivates data interpolation. Default = 0");
 
   /* Parse the command line arguments from the input */
   parsed =
@@ -1290,194 +1612,14 @@ main (int argc, char **argv)
   }
 #if T8_WITH_NETCDF
   else if (parsed >= 0 && netcdf_filename != NULL && mesh_filename != NULL
-           && 0 <= level) {
-    int                 retval;
-    t8_forest_t         forest =
-      t8_reanalysis_build_forest (mesh_filename, sphere_radius, sphere_dim,
-                                  level,
-                                  comm);
-    t8_forest_t         forest_refined;
-
-    if (forest != NULL) {
-      double             *coordinates_euclidean;
-      size_t              num_coordinates;
-      size_t              num_latitude, num_longitude;
-      t8_netcdf_search_data_t *search_result;
-      const double        tolerance = 1e-1;
-
-      retval = t8_netcdf_open_file (netcdf_filename, sphere_radius,
-                                    &coordinates_euclidean, &num_latitude,
-                                    &num_longitude);
-      num_coordinates = num_latitude * num_longitude;
-      if (!retval) {
-#if 1
-#ifdef T8_ENABLE_DEBUG
-        size_t              max_num_coordinates = num_latitude;
-        size_t              new_num_coordinates =
-          SC_MIN (num_coordinates, max_num_coordinates);
-        t8_debugf
-          ("Debugging mode detected. Search only for %zd of the %zd points"
-           " in order to reduce the runtime (debugging mode is slow).\n",
-           new_num_coordinates, num_coordinates);
-        num_coordinates = new_num_coordinates;
-        if (new_num_coordinates == max_num_coordinates) {
-          num_longitude = 1;
-        }
-#endif
-#endif
-        search_result =
-          t8_netcdf_find_mesh_elements (forest, coordinates_euclidean,
-                                        num_coordinates, tolerance);
-
-        /* Print double matched elements */
-        t8_global_productionf ("Matched %i elements at least twice\n",
-                               t8_netcdf_count_double_matched_elements
-                               (search_result));
-        /* We now refine the forest */
-        t8_forest_ref (forest); /* Ref the original forest since we need to use it after refinement */
-        /* Refine the forest in the elements that match multiple points */
-        forest_refined = t8_netcdf_refine (forest);
-        t8_netcdf_interpolate_data (forest_refined, forest);
-        t8_forest_write_vtk (forest, "test_prerefine");
-        /* Print double matched elements */
-        search_result = (t8_netcdf_search_data_t *)
-          t8_forest_get_user_data (forest_refined);
-        t8_global_productionf ("Matched %i elements at least twice\n",
-                               t8_netcdf_count_double_matched_elements
-                               (search_result));
-#if 0
-        /* Do a second run, refine/interpolate */
-        t8_forest_unref (&forest);
-        forest = forest_refined;
-        t8_forest_ref (forest);
-        forest_refined = t8_netcdf_refine (forest);
-        t8_netcdf_interpolate_data (forest_refined, forest);
-        t8_forest_write_vtk (forest, "test_prerefine2");
-        /* Print double matched elements */
-        search_result = (t8_netcdf_search_data_t *)
-          t8_forest_get_user_data (forest_refined);
-        t8_global_productionf ("Matched %i elements at least twice\n",
-                               t8_netcdf_count_double_matched_elements
-                               (search_result));
-#endif
-        /* Do a third run */
-        t8_forest_unref (&forest);
-        forest = forest_refined;
-        t8_forest_ref (forest);
-        forest_refined = t8_netcdf_refine (forest);
-        t8_netcdf_interpolate_data (forest_refined, forest);
-        t8_forest_write_vtk (forest, "test_prerefine3");
-
-        /* The old search_result was destroyed in the interpolate routine.
-         * Instead the updated search result is stored at the refined forest. */
-        search_result = (t8_netcdf_search_data_t *)
-          t8_forest_get_user_data (forest_refined);
-
-        t8_netcdf_read_data_to_forest (netcdf_filename, forest_refined,
-                                       num_latitude, num_longitude, 1,
-                                       search_result, comm);
-
-        t8_global_productionf ("Matched %i elements at least twice\n",
-                               t8_netcdf_count_double_matched_elements
-                               (search_result));
-
-        t8_netcdf_write_vtk (forest_refined, "test");
-
-        /* Refine the forest where u10 and v10 are large */
-        t8_global_productionf ("Start refining at u10v10\n");
-        /* Set threshold for refinement */
-        search_result->threshold = 6;
-        t8_forest_ref (forest_refined);
-        t8_forest_t         forest_refineu10v10 =
-          t8_forest_new_adapt (forest_refined,
-                               t8_netcdf_refine_if_u10v10_large,
-                               0, 0, search_result);
-        t8_netcdf_interpolate_data (forest_refineu10v10, forest_refined);
-        /* The old search_result was destroyed in the interpolate routine.
-         * Instead the updated search result is stored at the refined forest. */
-        search_result = (t8_netcdf_search_data_t *)
-          t8_forest_get_user_data (forest_refineu10v10);
-        /* Clean up the old element data */
-        T8_FREE ((void *) search_result->u10_data_per_element);
-        T8_FREE ((void *) search_result->v10_data_per_element);
-
-        t8_netcdf_read_data_to_forest (netcdf_filename, forest_refineu10v10,
-                                       num_latitude, num_longitude, 1,
-                                       search_result, comm);
-        /* Do another run */ t8_forest_ref (forest_refined);
-        /* Set threshold for refinement */
-        search_result->threshold = 15;
-        t8_forest_ref (forest_refineu10v10);
-        t8_forest_t         forest_refineu10v102 =
-          t8_forest_new_adapt (forest_refineu10v10,
-                               t8_netcdf_refine_if_u10v10_large,
-                               0, 0, search_result);
-        t8_netcdf_interpolate_data (forest_refineu10v102,
-                                    forest_refineu10v10);
-        /* The old search_result was destroyed in the interpolate routine.
-         * Instead the updated search result is stored at the refined forest. */
-        search_result = (t8_netcdf_search_data_t *)
-          t8_forest_get_user_data (forest_refineu10v102);
-        /* Clean up the old element data */
-        T8_FREE ((void *) search_result->u10_data_per_element);
-        T8_FREE ((void *) search_result->v10_data_per_element);
-
-        t8_netcdf_read_data_to_forest (netcdf_filename, forest_refineu10v102,
-                                       num_latitude, num_longitude, 1,
-                                       search_result, comm);
-        /* Repartition */
-        t8_forest_ref (forest_refineu10v102);
-        t8_forest_t         forest_partition;
-        sc_array_t          u10data_old_view;
-        sc_array_t          v10data_old_view;
-        sc_array_t          u10data_new_view;
-        sc_array_t          v10data_new_view;
-        t8_locidx_t         num_elements_partitioned;
-        double             *u10data_new, *v10data_new;
-        t8_netcdf_search_data_t search_result_partiioned;
-        sc_array_init_data (&u10data_old_view,
-                            (void *) search_result->u10_data_per_element,
-                            sizeof (*search_result->u10_data_per_element),
-                            search_result->num_elements);
-        sc_array_init_data (&v10data_old_view,
-                            (void *) search_result->u10_data_per_element,
-                            sizeof (*search_result->u10_data_per_element),
-                            search_result->num_elements);
-        t8_forest_init (&forest_partition);
-        t8_forest_set_partition (forest_partition, forest_refineu10v102, 0);
-        t8_forest_commit (forest_partition);
-        num_elements_partitioned =
-          t8_forest_get_num_element (forest_partition);
-        u10data_new = T8_ALLOC (double, num_elements_partitioned);
-        v10data_new = T8_ALLOC (double, num_elements_partitioned);
-        sc_array_init_data (&u10data_new_view, u10data_new, sizeof (double),
-                            num_elements_partitioned);
-        sc_array_init_data (&v10data_new_view, v10data_new, sizeof (double),
-                            num_elements_partitioned);
-        t8_forest_partition_data (forest_refineu10v102, forest_partition,
-                                  &u10data_old_view, &u10data_new_view);
-        t8_forest_partition_data (forest_refineu10v102, forest_partition,
-                                  &v10data_old_view, &v10data_new_view);
-        search_result->u10_data_per_element = u10data_new;
-        search_result->v10_data_per_element = v10data_new;
-        /* TODO: Careful, search_result does now only partly match the new forest.
-           the num_elements and matched_elements etc. arrays are still with the old forest. */
-        t8_forest_set_user_data (forest_partition, search_result);
-        t8_netcdf_write_vtk (forest_partition,
-                             "test_refinedu10v10_partitioned");
-
-        /* TODO: Store indices instead of values? interpolate must interpolated values to? */
-
-        /* Clean-up */
-        T8_FREE (coordinates_euclidean);
-        T8_FREE ((void *) search_result->u10_data_per_element);
-        T8_FREE ((void *) search_result->v10_data_per_element);
-        t8_netcdf_destroy_search_data (&search_result);
-        t8_forest_unref (&forest_refined);
-        t8_forest_unref (&forest_refineu10v10);
-        t8_forest_unref (&forest_refineu10v102);
-      }
-      t8_forest_unref (&forest);
+           && 0 <= level && 0 <= adapt_spheres) {
+    if (!adapt_spheres) {
+      t8_netcdf_read_data_and_adapt (netcdf_filename, mesh_filename,
+                                     sphere_radius, sphere_dim, level, comm);
+    }
+    else {
+      t8_netcdf_adapt_spheres (mesh_filename, sphere_radius, sphere_dim,
+                               level, adapt_spheres, comm);
     }
   }
   else {
