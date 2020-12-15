@@ -736,6 +736,7 @@ t8_netcdf_find_mesh_elements (t8_forest_t forest, double *points,
   t8_forest_search (forest, t8_netcdf_find_mesh_elements_query,
                     t8_netcdf_find_mesh_elements_query, &queries);
   search_runtime += sc_MPI_Wtime ();
+  sc_array_reset (&queries);
 
   t8_global_productionf
     ("Finished search. Found %i points and matched %i elements\n",
