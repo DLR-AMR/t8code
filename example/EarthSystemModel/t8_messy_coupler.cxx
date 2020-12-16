@@ -22,6 +22,7 @@
 
 #include <t8.h>
 #include <t8_forest.h>
+#include <t8_forest/t8_forest_iterate.h>
 #include "t8_latlon_refine.h"
 #include "t8_latlon_data.h"
 #include "t8_messy_coupler.h"
@@ -33,8 +34,9 @@ t8_messy_data* t8_messy_initialize(
   int x_start, 
   int y_start, 
   int x_length, 
-  int y_length, 
-  int dimension) {
+  int y_length,
+  int z_length, 
+  int dimensions) {
 
   t8_global_productionf("Initializing MESSy coupler\n");
 
@@ -57,11 +59,11 @@ t8_messy_data* t8_messy_initialize(
 
   /* create data chunk */
   t8_latlon_data_chunk_t *chunk = t8_latlon_new_chunk(
+    description,
     x_start, y_start,
-    x_length, y_length,
-    dimension, x, y, z, adapt_data->max_level,
-    T8_LATLON_DATA_MESSY,
-    description);
+    x_length, y_length, z_length,
+    dimensions, x, y, z, adapt_data->max_level,
+    T8_LATLON_DATA_MESSY);
 
   t8_messy_data* messy_data = T8_ALLOC(t8_messy_data, 1);
   messy_data->chunk = chunk;
@@ -73,18 +75,18 @@ t8_messy_data* t8_messy_initialize(
 }
 
 
-void t8_messy_set_dimension(t8_messy_data *messy_data, double ***data, int dimension) {
+void t8_messy_set_dimension(t8_messy_data *messy_data, double ****data, int dimension) {
   t8_latlon_data_chunk_t *chunk = messy_data->chunk;
 
-  // TODO: add safe guards
+  /* TODO: add safe guards */
 
   int axis = chunk->axis;
   int x, y;
   double value;
   for(x=0; x < chunk->x_length; ++x) {
     for(y=0; y < chunk->y_length; ++y) {
-      value = t8_latlon_get_dimension_value(axis, data, x, y, 0);
-      t8_latlon_set_dimension_value(axis, chunk->in, x, y, dimension, value);
+      value = t8_latlon_get_dimension_value(axis, data, x, y, 0, 0);
+      t8_latlon_set_dimension_value(axis, chunk->in, x, y, 0, dimension, value);
     }
   }
 }
@@ -93,8 +95,9 @@ void t8_messy_apply_sfc(t8_messy_data *messy_data) {
   t8_latlon_data_apply_morton_order(messy_data->chunk);
 }
 
-void t8_messy_coarsen(t8_messy_data *messy_data, t8_forest_adapt_t adapt_callback) {
+void t8_messy_coarsen(t8_messy_data *messy_data, t8_forest_adapt_t coarsen_callback, t8_forest_replace_t interpolate_callback) {
   t8_global_productionf("MESSy coarsen grid \n");
+
   t8_latlon_data_chunk_t *chunk = messy_data->chunk;
 
   t8_forest_t forest = messy_data->forest;
@@ -104,7 +107,7 @@ void t8_messy_coarsen(t8_messy_data *messy_data, t8_forest_adapt_t adapt_callbac
   t8_forest_init(&forest_adapt);
 
   t8_forest_set_user_data(forest_adapt, chunk);
-  t8_forest_set_adapt(forest_adapt, forest, adapt_callback, 0);
+  t8_forest_set_adapt(forest_adapt, forest, coarsen_callback, 0);
 
   t8_forest_set_partition (forest_adapt, NULL, 0);
 
@@ -117,4 +120,11 @@ void t8_messy_coarsen(t8_messy_data *messy_data, t8_forest_adapt_t adapt_callbac
     snprintf (vtu_prefix, BUFSIZ, "t8_messy_%i_%i", chunk->x_length, chunk->y_length);
     t8_forest_write_vtk (forest_adapt, vtu_prefix);
   #endif
+
+  t8_global_productionf("MESSy interpolate grid \n");
+
+  t8_forest_iterate_replace(forest_adapt, forest, interpolate_callback);
+
+  t8_global_productionf("MESSy grid interpolated \n");
+
 }

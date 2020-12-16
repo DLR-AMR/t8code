@@ -40,20 +40,21 @@ t8_messy_data* t8_messy_initialize(
   int x_start, 
   int y_start, 
   int x_length, 
-  int y_length, 
-  int dimension);
+  int y_length,
+  int z_length,
+  int dimensions);
 
 T8_EXTERN_C_BEGIN ();
 
 /* Add channel object data to forest */
-void t8_messy_set_dimension(t8_messy_data *messy_data, double ***data, int dimension);
+void t8_messy_set_dimension(t8_messy_data *messy_data, double ****data, int dimension);
 
 
 /* Bring input data into SFC format */
 void t8_messy_apply_sfc(t8_messy_data *messy_data);
 
 /* coarsen grid with given callback */
-void t8_messy_coarsen(t8_messy_data *messy_data, t8_forest_adapt_t adapt_callback);
+void t8_messy_coarsen(t8_messy_data *messy_data, t8_forest_adapt_t coarsen_callback, t8_forest_replace_t interpolate_callback);
 
 T8_EXTERN_C_END ();
 

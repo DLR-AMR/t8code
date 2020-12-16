@@ -50,11 +50,11 @@ double randfrom(double min, double max) {
 /**
  * Function filling data array with random values
  */
-void generate_data(double ***data, int x_length, int y_length, double value) {
+void generate_data(double ****data, int x_length, int y_length, double value) {
   int x, y;
   for(y=0; y<y_length; ++y) {
     for(x=0; x<x_length; ++x) {
-      data[x][y][0] = randfrom(y * x_length, (y + 1) * x_length);
+      data[x][y][0][0] = randfrom(y * x_length, (y + 1) * x_length);
     }
   }
 }
@@ -65,7 +65,7 @@ void generate_data(double ***data, int x_length, int y_length, double value) {
  * If the AVG of the first dimension of all four cells is even we coarsen.
  */
 int
-t8_messy_adapt_callback (t8_forest_t forest,
+t8_messy_coarsen_callback (t8_forest_t forest,
                           t8_forest_t forest_from,
                           int which_tree,
                           int lelement_id,
@@ -95,6 +95,20 @@ t8_messy_adapt_callback (t8_forest_t forest,
 
   return isEven ? -1 : 0;
 }
+
+static void
+t8_messy_replace_callback (t8_forest_t forest_old,
+                   t8_forest_t forest_new,
+                   t8_locidx_t which_tree,
+                   t8_eclass_scheme_c * ts,
+                   int num_outgoing, /* previously number of cells, only interesting when 4 */
+                   t8_locidx_t first_outgoing, /* index  of first cell in forest_old */
+                   int num_incoming, /* number of cells to be.., should be 1 */
+                   t8_locidx_t first_incoming) /* index of new cell in forest_new */
+{
+
+}
+
 
 int
 main (int argc, char **argv)
@@ -157,16 +171,17 @@ main (int argc, char **argv)
 
 
     // allocate data array
-    double ***data = T8_ALLOC(double**, x_length);
+    double ****data = T8_ALLOC(double***, x_length);
     for(x=0; x<x_length; ++x) {
-      data[x] = T8_ALLOC(double*, y_length);
+      data[x] = T8_ALLOC(double**, y_length);
       for(y=0; y<y_length; ++y) {
-        data[x][y] = T8_ALLOC(double, 1);
+        data[x][y] = T8_ALLOC(double*, 1);
+        data[x][y][0] = T8_ALLOC(double, 1);
       }
     }
 
     // initialize forest and data chunk
-    t8_messy_data* messy = t8_messy_initialize("test", "XYZ", 0, 0, x_length, y_length, num_dims);
+    t8_messy_data* messy = t8_messy_initialize("test", "XYZ", 0, 0, x_length, y_length, 1, num_dims);
 
     // set data for every dimension
     for (int dim=0; dim<num_dims; ++dim) {
@@ -179,7 +194,7 @@ main (int argc, char **argv)
     t8_messy_apply_sfc(messy);
 
     // coarsen data
-    t8_messy_coarsen(messy, t8_messy_adapt_callback);
+    t8_messy_coarsen(messy, t8_messy_coarsen_callback, t8_messy_replace_callback);
 
     t8_forest_unref (&(messy->forest));
     //t8_forest_unref (&(messy->forest_adapt));
