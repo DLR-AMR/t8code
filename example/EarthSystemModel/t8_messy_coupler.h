@@ -56,6 +56,8 @@ void t8_messy_apply_sfc(t8_messy_data *messy_data);
 /* coarsen grid with given callback */
 void t8_messy_coarsen(t8_messy_data *messy_data, t8_forest_adapt_t coarsen_callback, t8_forest_replace_t interpolate_callback);
 
+void t8_messy_write_forest(t8_forest_t forest, const char* prefix, t8_latlon_data_chunk_t *chunk);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_MESSY_COUPLER_H */

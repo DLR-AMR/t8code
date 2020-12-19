@@ -107,6 +107,40 @@ t8_messy_replace_callback (t8_forest_t forest_old,
                    t8_locidx_t first_incoming) /* index of new cell in forest_new */
 {
 
+  t8_latlon_data_chunk_t *data_chunk = (t8_latlon_data_chunk_t *) t8_forest_get_user_data(forest_new);
+  int dimensions, z_length, element_data_length;
+  dimensions = data_chunk->dimension;
+  z_length = data_chunk->z_length;
+  element_data_length = dimensions * z_length;
+
+  int index_incoming = first_incoming * element_data_length;
+  int index_outgoing = first_outgoing * element_data_length;
+
+  if(num_outgoing > num_incoming) {
+  /* when the number of previous elements (num_outgoing) is larger than the number of created cell from it (num_incoming)
+   * we interpolate,
+   */
+
+    int d, z, e, offset;
+    double value;
+    for(z = 0; z < z_length; ++z) {
+      for(d = 0; d < dimensions; ++d) {
+        offset = z * d + d;
+        value = 0.0;
+        for(e = 0; e < num_outgoing; ++e) {
+          value += data_chunk->data[index_outgoing + e * element_data_length + offset];
+        }
+        value /= num_outgoing;
+        data_chunk->data_adapt[index_incoming + offset] = value;
+      }
+    }
+  } else {
+    /* else just copy data over to new array */
+    memcpy (data_chunk->data_adapt + index_incoming,
+            data_chunk->data       + index_outgoing,
+              element_data_length * sizeof (double));
+  }
+
 }
 
 
@@ -121,7 +155,7 @@ main (int argc, char **argv)
   int                 parsed, helpme;
   int                 mode_int;
   int                 partition;
-  //enum T8_LATLON_ADAPT_MODE mode;
+  
 
   /* brief help message */
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t"
@@ -166,11 +200,11 @@ main (int argc, char **argv)
            && mode_int <= 1) {
 
 
-    // number of datapoints per grid cell
+    /* number of datapoints per grid cell */
     int num_dims = 3, x, y, z;
 
 
-    // allocate data array
+    /* allocate data array */
     double ****data = T8_ALLOC(double***, x_length);
     for(x=0; x<x_length; ++x) {
       data[x] = T8_ALLOC(double**, y_length);
@@ -180,24 +214,24 @@ main (int argc, char **argv)
       }
     }
 
-    // initialize forest and data chunk
+    /* initialize forest and data chunk */
     t8_messy_data* messy = t8_messy_initialize("test", "XYZ", 0, 0, x_length, y_length, 1, num_dims);
 
-    // set data for every dimension
+    /* set data for every dimension */
     for (int dim=0; dim<num_dims; ++dim) {
-      // generate dummy data
+      /* generate dummy data */
       generate_data(data, x_length, y_length, dim * 1.0);
       t8_messy_set_dimension(messy, data, dim);
     }
 
-    // bring input data into SFC format
+    /* bring input data into SFC format */
     t8_messy_apply_sfc(messy);
 
-    // coarsen data
+    /* coarsen data */
     t8_messy_coarsen(messy, t8_messy_coarsen_callback, t8_messy_replace_callback);
 
     t8_forest_unref (&(messy->forest));
-    //t8_forest_unref (&(messy->forest_adapt));
+    /* t8_forest_unref (&(messy->forest_adapt)); */
     t8_latlon_chunk_destroy(&(messy->chunk));
 
 

@@ -22,6 +22,7 @@
 
 #include <t8.h>
 #include <t8_forest.h>
+#include <t8_forest_vtk.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include "t8_latlon_refine.h"
 #include "t8_latlon_data.h"
@@ -96,6 +97,8 @@ void t8_messy_apply_sfc(t8_messy_data *messy_data) {
 }
 
 void t8_messy_coarsen(t8_messy_data *messy_data, t8_forest_adapt_t coarsen_callback, t8_forest_replace_t interpolate_callback) {
+  char vtu_prefix[BUFSIZ];
+
   t8_global_productionf("MESSy coarsen grid \n");
 
   t8_latlon_data_chunk_t *chunk = messy_data->chunk;
@@ -106,6 +109,12 @@ void t8_messy_coarsen(t8_messy_data *messy_data, t8_forest_adapt_t coarsen_callb
   t8_forest_ref(forest);
   t8_forest_init(&forest_adapt);
 
+  #ifdef T8_ENABLE_DEBUG
+    /* In debugging mode write the forest */
+    snprintf (vtu_prefix, BUFSIZ, "t8_messy_grid");
+    t8_messy_write_forest(forest, vtu_prefix, chunk);
+  #endif
+
   t8_forest_set_user_data(forest_adapt, chunk);
   t8_forest_set_adapt(forest_adapt, forest, coarsen_callback, 0);
 
@@ -114,17 +123,58 @@ void t8_messy_coarsen(t8_messy_data *messy_data, t8_forest_adapt_t coarsen_callb
   t8_forest_commit(forest_adapt);
   t8_global_productionf("MESSy coarsen done\n");
 
-  #ifdef T8_ENABLE_DEBUG
-    /* In debugging mode write the forest to vtk for each level. */
-    char vtu_prefix[BUFSIZ];
-    snprintf (vtu_prefix, BUFSIZ, "t8_messy_%i_%i", chunk->x_length, chunk->y_length);
-    t8_forest_write_vtk (forest_adapt, vtu_prefix);
-  #endif
-
   t8_global_productionf("MESSy interpolate grid \n");
+
+  int num_element = t8_forest_get_num_element(forest_adapt);
+
+  chunk->data_ids_adapt = T8_ALLOC(t8_linearidx_t, num_element);
+  chunk->data_adapt = T8_ALLOC(double, num_element * chunk->z_length * chunk->dimension);
 
   t8_forest_iterate_replace(forest_adapt, forest, interpolate_callback);
 
+  T8_FREE(chunk->data_ids);
+  T8_FREE(chunk->data);
+
+  chunk->data_ids = chunk->data_ids_adapt;
+  chunk->data = chunk->data_adapt;
+
+  chunk->data_ids_adapt = NULL;
+  chunk->data_adapt = NULL;
+
+  #ifdef T8_ENABLE_DEBUG
+    /* In debugging mode write the forest */
+    snprintf (vtu_prefix, BUFSIZ, "t8_messy_grid_interpolated");
+    t8_messy_write_forest(forest_adapt, vtu_prefix, chunk);
+  #endif
+
   t8_global_productionf("MESSy grid interpolated \n");
 
+}
+
+void t8_messy_write_forest(t8_forest_t forest, const char* prefix, t8_latlon_data_chunk_t *chunk) {
+
+  int num_elements = t8_forest_get_num_element(forest);
+  int num_data = chunk->dimension * chunk->z_length;
+  t8_vtk_data_field_t vtk_data[num_data];
+  double *dim_data_array[num_data];
+
+  int z, d, e, offset;
+  for(z = 0; z < chunk->z_length; ++z) {
+    for(d = 0; d < chunk->dimension; ++d) {
+      offset = z * d + d;
+      dim_data_array[offset] = T8_ALLOC_ZERO (double, num_elements);
+      for(e = 0; e < num_elements; ++e) {
+        dim_data_array[offset][e] = chunk->data[e * num_data + z * chunk->dimension + d];
+      }
+      snprintf (vtk_data[offset].description, BUFSIZ, "Z %d Dim %d", z, d);
+      vtk_data[offset].type = T8_VTK_SCALAR;
+      vtk_data[offset].data = (double*) dim_data_array[offset];
+    }
+  }
+
+  t8_forest_vtk_write_file (forest, prefix, 1, 1, 1, 1, 0, num_data, vtk_data);
+
+  for(offset = 0; offset < num_data; ++offset) {
+    T8_FREE(dim_data_array[offset]);
+  }
 }

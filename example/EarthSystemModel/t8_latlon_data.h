@@ -59,6 +59,9 @@ typedef struct
   double             *data;         /* x_length x y_length x z_length x dimension many data items. For each data item dimension many entries. */
   t8_linearidx_t     *data_ids;     /* Morton index for each grid cells. 
                                      * At first we have (x_lenght x y_length) elements, but when coarsening the number of elements  reduce. */
+
+  double             *data_adapt;
+  t8_linearidx_t     *data_ids_adapt;
   T8_LATLON_DATA_NUMBERING numbering; /* Numbering scheme */
 } t8_latlon_data_chunk_t;
 

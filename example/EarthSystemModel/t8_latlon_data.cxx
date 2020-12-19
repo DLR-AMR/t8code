@@ -208,11 +208,14 @@ t8_latlon_new_chunk (const char *description, t8_locidx_t x_start, t8_locidx_t y
 
   chunk->data = NULL;
   chunk->data_ids = NULL;
-
+  chunk->data_adapt = NULL;
+  chunk->data_ids_adapt = NULL;
+  
+  
   /* bit concatenate axis configuration
-     e.g. x = 0 = 00, y = 1 = 01, z = 2 = 10 => 000110
-          x = 2 = 10, y = 0 = 00, z = 1 = 01 => 100001
-     ...
+   * e.g. x = 0 = 00, y = 1 = 01, z = 2 = 10 => 000110
+   *      x = 2 = 10, y = 0 = 00, z = 1 = 01 => 100001
+   * ...
    */
   chunk->axis = x_axis << 4 | y_axis << 2 | z_axis;
 
