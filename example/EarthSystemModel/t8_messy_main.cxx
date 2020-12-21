@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include <sc_options.h>
 #include <sc_refcount.h>
@@ -59,6 +60,35 @@ void generate_data(double ****data, int x_length, int y_length, double value) {
   }
 }
 
+void sine_2d(double ****data, int x_length, int y_length) {
+  double T_x = x_length / 5.0;
+  double T_y = y_length / 5.0;
+  int x, y;
+  for(y=0; y<y_length; ++y) {
+    for(x=0; x<x_length; ++x) {
+      data[x][y][0][0] = sin( (2 * M_PI * x) / T_x + (2 * M_PI* y) / T_y );
+    }
+  }
+}
+
+void gaussian(double ****data, int x_length, int y_length) {
+  double x0 = x_length * 1.0 / 2.0;
+  double y0 = y_length * 1.0 / 2.0;
+  double xd, yd, A, ox, oy;
+  int x, y;
+  
+  ox = x0;
+  oy = y0;
+  A = 100;
+  for(y=0; y<y_length; ++y) {
+    for(x=0; x<x_length; ++x) {
+      xd = x - x0;
+      yd = y - y0;
+      t8_debugf("%f\n", A * exp(- (((xd*xd) / (2.0 * (ox * ox)) + ((yd*yd)/ (2.0 * (oy * oy) ))))));
+      data[x][y][0][0] = A * exp(- (((xd*xd) / (2.0 * (ox * ox)) + ((yd*yd)/ (2.0 * (oy * oy) )))));
+    }
+  }
+}
 
 /**
  * Simple coarsening test.
@@ -116,7 +146,9 @@ t8_messy_replace_callback (t8_forest_t forest_old,
   int index_incoming = first_incoming * element_data_length;
   int index_outgoing = first_outgoing * element_data_length;
 
+  t8_debugf("num_out %i, num_in %i\n", num_outgoing, num_incoming);
   if(num_outgoing > num_incoming) {
+    t8_debugf("interpolating\n");
   /* when the number of previous elements (num_outgoing) is larger than the number of created cell from it (num_incoming)
    * we interpolate,
    */
@@ -135,6 +167,7 @@ t8_messy_replace_callback (t8_forest_t forest_old,
       }
     }
   } else {
+    t8_debugf("not interpolating\n");
     /* else just copy data over to new array */
     memcpy (data_chunk->data_adapt + index_incoming,
             data_chunk->data       + index_outgoing,
@@ -201,7 +234,7 @@ main (int argc, char **argv)
 
 
     /* number of datapoints per grid cell */
-    int num_dims = 3, x, y, z;
+    int num_dims = 1, x, y, z;
 
 
     /* allocate data array */
@@ -220,7 +253,9 @@ main (int argc, char **argv)
     /* set data for every dimension */
     for (int dim=0; dim<num_dims; ++dim) {
       /* generate dummy data */
-      generate_data(data, x_length, y_length, dim * 1.0);
+      // generate_data(data, x_length, y_length, dim * 1.0);
+      // sine_2d(data, x_length, y_length);
+      gaussian(data, x_length, y_length);
       t8_messy_set_dimension(messy, data, dim);
     }
 
