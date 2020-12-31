@@ -26,12 +26,16 @@
 #define T8_FOREST_NETCDF_H
 
 #include <t8_forest.h>
+#include <t8_netcdf.h>
 
 T8_EXTERN_C_BEGIN ();
 
 void                t8_forest_write_netcdf (t8_forest_t forest,
                                             const char *file_prefix,
-                                            const char *file_title, int dim);
+                                            const char *file_title, int dim,
+                                            int num_extern_netcdf_vars,
+                                            t8_netcdf_variable_t *
+                                            ext_variables[]);
 
 T8_EXTERN_C_END ();
 
