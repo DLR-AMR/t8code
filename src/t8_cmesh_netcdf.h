@@ -26,13 +26,17 @@
 #define T8_CMESH_NETCDF_H
 
 #include <t8_cmesh.h>
+#include <t8_netcdf.h>
 
 T8_EXTERN_C_BEGIN ();
 
 /* TODO: Comment */
 void                t8_cmesh_write_netcdf (t8_cmesh_t cmesh,
                                            const char *file_prefix,
-                                           const char *file_title, int dim);
+                                           const char *file_title, int dim,
+                                           int num_extern_netcdf_vars,
+                                           t8_netcdf_variable_t *
+                                           variables[]);
 
 T8_EXTERN_C_END ();
 
