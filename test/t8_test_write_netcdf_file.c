@@ -30,7 +30,6 @@
 #include <t8.h>
 #if T8_WITH_NETCDF
 #include <netcdf.h>
-#include <netcdf_par.h>
 /* Standard netcdf error function */
 #define ERRCODE 2
 #define ERR(e) {t8_global_productionf("Error: %s\n", nc_strerror(e)); exit(ERRCODE);}
@@ -39,81 +38,64 @@
 #include <t8_cmesh_netcdf.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_eclass.h>
-
-typedef struct
-{
-  int                 ncidp;
-  int                 dim_id;
-  int                 elem_id;
-} just_data_t;
+#include <t8_netcdf.h>
 
 void
-t8_cmesh_write_netcdf_parallel_try (t8_cmesh_t cmesh, sc_MPI_Comm comm,
-                                    just_data_t * context, int rank)
+t8_example_netcdf_write_cmesh (int mpirank)
 {
-  //int ncidp;
-  int                 retval;
-  //int nMesh_elem_dimid;
-  int                 nMesh_elem = 6;
-  const char         *filename = "try_parallelJetzt.nc";
 
-  if ((retval =
-       nc_create_par (filename, NC_CLOBBER | NC_NETCDF4, comm,
-                      sc_MPI_INFO_NULL, &context->ncidp))) {
-    ERR (retval);
+  t8_cmesh_t          cmesh;
+
+  /* Construct a (partitioned) cmesh */
+  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TET, sc_MPI_COMM_WORLD, 0, 1, 0);
+  //cmesh = t8_cmesh_new_hypercube_hybrid(3, sc_MPI_COMM_WORLD, 1, 0);
+
+  /* Number of process local elements */
+  printf ("Number of local trees on process %d : %d\n", mpirank,
+          t8_cmesh_get_num_local_trees (cmesh));
+
+  /* *Example user-defined NetCDF variable* */
+  /* Allocate the data which lays on the several processes */
+  /* Those user-defined variables are currently only meant to maintain a single value per (process-local) element */
+  int                *var_rank =
+    (int *) T8_ALLOC (int, t8_cmesh_get_num_local_trees (cmesh));
+  for (int j = 0; j < t8_cmesh_get_num_local_trees (cmesh); j++) {
+    var_rank[j] = mpirank;
   }
-  if ((retval =
-       nc_def_dim (context->ncidp, "number_elements", nMesh_elem,
-                   &context->dim_id))) {
-    ERR (retval);
-  }
-  if ((retval =
-       nc_def_var (context->ncidp, "elements",
-                   NC_DOUBLE, 1, &context->dim_id, &context->elem_id))) {
-    ERR (retval);
-  }
-#if 0
-  if ((retval =
-       nc_var_par_access (context->ncidp, context->elem_id, NC_COLLECTIVE))) {
-    ERR (retval);
-  }
-#endif
-  if ((retval = nc_enddef (context->ncidp))) {
-    ERR (retval);
-  }
-  if (rank == 0) {
-    int                 daten[3] = { 1, 2, 3 };
-    size_t              startp = 0;
-    size_t              countp = 3;
-    if ((retval =
-         nc_put_vara_int (context->ncidp, context->elem_id, &startp, &countp,
-                          &daten[0]))) {
-      ERR (retval);
-    }
-  }
-  else if (rank == 2) {
-    int                 daten2[3] = { 4, 5, 6 };
-    size_t              startp2 = 3;
-    size_t              countp2 = 2;
-    if ((retval =
-         nc_put_vara_int (context->ncidp, context->elem_id, &startp2,
-                          &countp2, &daten2[0]))) {
-      ERR (retval);
-    }
-  }
-  if ((retval = nc_close (context->ncidp))) {
-    ERR (retval);
-  }
+  /* Create an extern INT -NetCDF variable and receive the pointer to it */
+  /* Currently INT-NetCDF and DOUBLE-NetCDF variables are possible */
+  t8_netcdf_variable_t *ext_var_mpirank =
+    t8_netcdf_variable_int_init ("mpirank",
+                                 "Mpirank which the element lays on",
+                                 "integer", var_rank);
+
+  /* Create an array of pointers to extern NetCDF-variables, further extern NetCDF-Variables could be created and appended to the array */
+  t8_netcdf_variable_t *ext_vars[1] = { ext_var_mpirank };
+
+  char               *mesh_name = "NewCmesh3DParallel";
+
+  /* Write the cmesh to NetCDF */
+  t8_cmesh_write_netcdf (cmesh, mesh_name, "Beispiel 3D Parallel Cmesh", 3, 1,
+                         ext_vars);
+  t8_global_productionf ("NetCDF output of the cmesh has been written\n");
+
+  /* Destroy the cmesh */
+  t8_cmesh_destroy (&cmesh);
+
+  /* Free the allocated memory of the extern NetCDF-variables which was created by calling the 'destroy' function */
+  t8_netcdf_variable_destroy (ext_var_mpirank);
+
+  /* Free the data of the user-defined variable */
+  T8_FREE (var_rank);
 
 }
 
 int
 main (int argc, char **argv)
 {
-  int                 mpiret, mpisize, mpirank;
-  t8_cmesh_t          cmesh;
+#if T8_WITH_NETCDF
+  int                 mpiret, mpirank;
 
-#if 1
   /* Initialize MPI */
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -123,48 +105,12 @@ main (int argc, char **argv)
   /* Initialize t8code */
   t8_init (SC_LP_PRODUCTION);
 
-  mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
-  SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
-#endif
 
-#if 0
-  if (mpirank == 0) {
-#if 0
-    char               *mesh_name2 = "NewTry2DVersion2";
-    cmesh =
-      t8_cmesh_from_msh_file ("test/test_msh_file_vers2_ascii", 0,
-                              sc_MPI_COMM_WORLD, 2, 0);
-    t8_cmesh_write_netcdf (cmesh, mesh_name2, "BeispielDaten", 2);
-    retval = t8_cmesh_write_netcdf2D (cmesh, mesh_name2, "BeispielDaten");
-#endif
-#if 0
-    //try_netcdf_other_format();
-    cmesh =
-      t8_cmesh_from_msh_file ("test/test_msh_file_vers2_ascii", 0,
-                              sc_MPI_COMM_WORLD, 2, 0);
-    char               *mesh_name = "NewTry2DWithChangesJetzt";
-    t8_cmesh_write_netcdf (cmesh, mesh_name, "Beispiel 2D", 2);
-    t8_global_productionf ("NetCDF output\n");
-    t8_cmesh_destroy (&cmesh);
-#endif
+  /* An example function that outputs a cmesh in NetCDF-Format */
+  t8_example_netcdf_write_cmesh (mpirank);
 
-  }
-#endif
-
-#if 1
-  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TET, sc_MPI_COMM_WORLD, 0, 1, 0);
-
-  printf ("Number of local trees on process %d : %d\n", mpirank,
-          (int) t8_cmesh_get_num_local_trees (cmesh));
-//t8_cmesh_write_netcdf_parallel_try(cmesh, sc_MPI_COMM_WORLD, &content, mpirank);
-  char               *mesh_name = "NewTry3DParallel";
-  t8_cmesh_write_netcdf (cmesh, mesh_name, "Beispiel 3D Parallel", 3);
-  t8_global_productionf ("NetCDF output\n");
-  t8_cmesh_destroy (&cmesh);
-#endif
-#if 1
   /* Finalize sc */
   sc_finalize ();
 
