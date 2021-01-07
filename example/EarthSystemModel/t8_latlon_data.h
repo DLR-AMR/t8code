@@ -53,8 +53,10 @@ typedef struct
   int                 x_axis;       /* X axis index in data vector */
   int                 y_axis;       /* Y axis index in data vector */
   int                 z_axis;       /* Z axis index in data vector */
-  int                 dimension;    /* Dimensionality of the data (1, 2, 3). */
+  int                 dimensions;    /* Dimensionality of the data (1, 2, 3). */
   int                 level;        /* The smallest uniform refinement level of a forest that can have the grid (not the subgrid) as submesh. */
+  int                dimension_names_size;
+  char               **dimension_names;
   double             ****in;        /* 4D input data  TODO: rename!! */
   double             *data;         /* x_length x y_length x z_length x dimension many data items. For each data item dimension many entries. */
   t8_linearidx_t     *data_ids;     /* Morton index for each grid cells. 
@@ -75,7 +77,7 @@ T8_EXTERN_C_BEGIN ();
 t8_latlon_data_chunk_t *
 t8_latlon_new_chunk (const char *description, t8_locidx_t x_start, t8_locidx_t y_start,
                      t8_locidx_t x_length, t8_locidx_t y_length, t8_locidx_t z_length,
-                     int dimension, int x_axis, int y_axis, int z_axis, int level,
+                     int dimensions, int x_axis, int y_axis, int z_axis, int level,
                      T8_LATLON_DATA_NUMBERING numbering);
 
 /**
@@ -107,6 +109,10 @@ void                t8_latlon_linear_id_to_latlon (t8_linearidx_t linear_id,
                                                    int level, t8_gloidx_t * x,
                                                    t8_gloidx_t * y);
 
+int t8_latlon_get_dimension_idx(t8_latlon_data_chunk_t * data_chunk, char* dimension, bool add_if_missing);
+
+void  t8_latlon_set_dimension(t8_latlon_data_chunk_t * data_chunk, char* dimension, double**** data);
+
 double t8_latlon_get_dimension_value(int axis, double ****data, int x_coord, int y_coord, int z_coord, int dimension);
 
 void t8_latlon_set_dimension_value(int axis, double ****data, int x_coord, int y_coord, int z_coord, int dimension, double value);
@@ -114,6 +120,7 @@ void t8_latlon_set_dimension_value(int axis, double ****data, int x_coord, int y
 
 void
 t8_latlon_data_apply_morton_order (t8_latlon_data_chunk_t * data_chunk);
+
 
 /* Create a data chunk with given dimensions and numbering,
  * fill it with data and then change the numbering to Morton.

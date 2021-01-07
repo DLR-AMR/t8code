@@ -79,103 +79,25 @@ void gaussian(double ****data, int x_length, int y_length) {
   
   ox = x0;
   oy = y0;
-  A = 100;
+  A = 1;
   for(y=0; y<y_length; ++y) {
     for(x=0; x<x_length; ++x) {
       xd = x - x0;
       yd = y - y0;
-      t8_debugf("%f\n", A * exp(- (((xd*xd) / (2.0 * (ox * ox)) + ((yd*yd)/ (2.0 * (oy * oy) ))))));
       data[x][y][0][0] = A * exp(- (((xd*xd) / (2.0 * (ox * ox)) + ((yd*yd)/ (2.0 * (oy * oy) )))));
     }
   }
 }
 
-/**
- * Simple coarsening test.
- * If the AVG of the first dimension of all four cells is even we coarsen.
- */
-int
-t8_messy_coarsen_callback (t8_forest_t forest,
-                          t8_forest_t forest_from,
-                          int which_tree,
-                          int lelement_id,
-                          t8_eclass_scheme_c * ts,
-                          int num_elements, t8_element_t * elements[])
-{
-
-
-  t8_latlon_data_chunk_t *chunk = (t8_latlon_data_chunk_t*) t8_forest_get_user_data(forest);
-  
-  /* since we don't want to refine, 
-     we can stop if we only have one element */
-  if (num_elements == 1) {
-    return 0;
-  }
-
-  double avg = 0.0;
-  for (int i=0; i < num_elements; ++i) {
-    int offset = (lelement_id + i) * chunk->dimension;
-    avg += chunk->data[offset];
-  }
-  avg /= num_elements;
-
-  bool isEven = (((int)avg) % 2) == 0;
-
-  t8_debugf ("lelement_id %d avg %.4f, is even? %s \n", lelement_id, avg, (isEven ? "yes" : "no"));
-
-  return isEven ? -1 : 0;
+int custom_coarsening(t8_messy_custom_func_t* arguments) {
+  t8_debugf("custom coarsening\n");
+  return -1;
 }
 
-static void
-t8_messy_replace_callback (t8_forest_t forest_old,
-                   t8_forest_t forest_new,
-                   t8_locidx_t which_tree,
-                   t8_eclass_scheme_c * ts,
-                   int num_outgoing, /* previously number of cells, only interesting when 4 */
-                   t8_locidx_t first_outgoing, /* index  of first cell in forest_old */
-                   int num_incoming, /* number of cells to be.., should be 1 */
-                   t8_locidx_t first_incoming) /* index of new cell in forest_new */
-{
-
-  t8_latlon_data_chunk_t *data_chunk = (t8_latlon_data_chunk_t *) t8_forest_get_user_data(forest_new);
-  int dimensions, z_length, element_data_length;
-  dimensions = data_chunk->dimension;
-  z_length = data_chunk->z_length;
-  element_data_length = dimensions * z_length;
-
-  int index_incoming = first_incoming * element_data_length;
-  int index_outgoing = first_outgoing * element_data_length;
-
-  t8_debugf("num_out %i, num_in %i\n", num_outgoing, num_incoming);
-  if(num_outgoing > num_incoming) {
-    t8_debugf("interpolating\n");
-  /* when the number of previous elements (num_outgoing) is larger than the number of created cell from it (num_incoming)
-   * we interpolate,
-   */
-
-    int d, z, e, offset;
-    double value;
-    for(z = 0; z < z_length; ++z) {
-      for(d = 0; d < dimensions; ++d) {
-        offset = z * d + d;
-        value = 0.0;
-        for(e = 0; e < num_outgoing; ++e) {
-          value += data_chunk->data[index_outgoing + e * element_data_length + offset];
-        }
-        value /= num_outgoing;
-        data_chunk->data_adapt[index_incoming + offset] = value;
-      }
-    }
-  } else {
-    t8_debugf("not interpolating\n");
-    /* else just copy data over to new array */
-    memcpy (data_chunk->data_adapt + index_incoming,
-            data_chunk->data       + index_outgoing,
-              element_data_length * sizeof (double));
-  }
-
+double custom_interpolation(t8_messy_custom_func_t* arguments) {
+  t8_debugf("custom interpolating\n");
+  return 100.0;
 }
-
 
 int
 main (int argc, char **argv)
@@ -234,7 +156,7 @@ main (int argc, char **argv)
 
 
     /* number of datapoints per grid cell */
-    int num_dims = 1, x, y, z;
+    int num_dims = 2, x, y, z;
 
 
     /* allocate data array */
@@ -248,22 +170,41 @@ main (int argc, char **argv)
     }
 
     /* initialize forest and data chunk */
-    t8_messy_data* messy = t8_messy_initialize("test", "XYZ", 0, 0, x_length, y_length, 1, num_dims);
+    t8_messy_data_t* messy = t8_messy_initialize("test", "XYZ", 0, 0, x_length, y_length, 1, num_dims);
 
     /* set data for every dimension */
-    for (int dim=0; dim<num_dims; ++dim) {
-      /* generate dummy data */
-      // generate_data(data, x_length, y_length, dim * 1.0);
-      // sine_2d(data, x_length, y_length);
-      gaussian(data, x_length, y_length);
-      t8_messy_set_dimension(messy, data, dim);
-    }
+    //char name[BUFSIZ];
+
+    gaussian(data, x_length, y_length);
+    //sprintf(name, "gaussian");
+    t8_messy_add_dimension(messy, "gaussian", data);
+    
+    sine_2d(data, x_length, y_length);
+    //sprintf(name, );
+    t8_messy_add_dimension(messy, "sine_2d", data);
 
     /* bring input data into SFC format */
     t8_messy_apply_sfc(messy);
 
+    t8_messy_coarsen_t *coarsen_config = T8_ALLOC(t8_messy_coarsen_t, 1);
+    t8_messy_interpolate_t *interpolate_config = T8_ALLOC(t8_messy_interpolate_t, 1);
+
+    // coarsen_config->method = T8_MESSY_COARSEN_FUNCTION;
+    // coarsen_config->func = custom_coarsening;
+    coarsen_config->method = T8_MESSY_COARSEN_THRESHOLD_MIN_HIGHER;
+    coarsen_config->z_layer = 0;
+    coarsen_config->dimension = "gaussian";
+    coarsen_config->threshold = 0.8;
+
+    //interpolate_config->method = T8_MESSY_INTERPOLATE_MEAN;
+    interpolate_config->method = T8_MESSY_INTERPOLATE_FUNCTION;
+    interpolate_config->func = custom_interpolation;
+
+    messy->coarsen = coarsen_config;
+    messy->interpolation = interpolate_config;
+
     /* coarsen data */
-    t8_messy_coarsen(messy, t8_messy_coarsen_callback, t8_messy_replace_callback);
+    t8_messy_coarsen(messy);
 
     t8_forest_unref (&(messy->forest));
     /* t8_forest_unref (&(messy->forest_adapt)); */

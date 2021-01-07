@@ -54,7 +54,7 @@ main (int argc, char **argv)
             basename (argv[0]), basename (argv[0]));
 
   /* long help message */
-  snprintf (help, BUFSIZ, "Given input dimension x and y, we construct a\n"
+  snprintf (help, BUFSIZ, "Given input dimensions x and y, we construct a\n"
             "forest on the unit square that is the coarsest forest such\n"
             "that an x times y grid fits in the lower left corner.\n%s\n",
             usage);

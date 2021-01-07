@@ -26,15 +26,69 @@
 #include <t8_forest.h>
 #include "t8_latlon_data.h"
 
-/* MESSy coupling object */
 typedef struct {
+  int     num_elements;
+  int     z_layer;
+  int*    x_coords;
+  int*    y_coords;
+  double* latitudes;
+  double* longitudes;
+  double* values;
+  char*   dimension;
+} t8_messy_custom_func_t;
+
+typedef enum {
+  T8_MESSY_COARSEN_THRESHOLD_MIN_LOWER,
+  T8_MESSY_COARSEN_THRESHOLD_MIN_HIGHER,
+  T8_MESSY_COARSEN_THRESHOLD_MAX_LOWER,
+  T8_MESSY_COARSEN_THRESHOLD_MAX_HIGHER,
+  T8_MESSY_COARSEN_THRESHOLD_MEAN_LOWER,
+  T8_MESSY_COARSEN_THRESHOLD_MEAN_HIGHER,
+  T8_MESSY_COARSEN_AREA_INSIDE,
+  T8_MESSY_COARSEN_AREA_OUTSIDE,
+  /* custom function determine weather to coarsen or not
+   * @param t8_messy_custom_func_t* 
+   * @return -1 (coarsen) or 0 (not coarsen) 
+   */
+  T8_MESSY_COARSEN_FUNCTION 
+} T8_MESSY_COARSEN_METHOD;
+
+typedef struct {
+  T8_MESSY_COARSEN_METHOD method; /* method used for coarsen */
+  char* dimension;  /* dimension by which to coarsen */
+  int z_layer;
+  double threshold; /* threshold for threshold coarsening */
+  double *points;   /* points array for area coarsening */
+  int (*func)(t8_messy_custom_func_t *) = NULL;
+} t8_messy_coarsen_t;
+
+typedef enum {
+  /* custom function calculating interpolatet value
+   * @param  t8_messy_custom_func_t*
+   * @return (double) interpolated value
+   */
+  T8_MESSY_INTERPOLATE_FUNCTION,
+  T8_MESSY_INTERPOLATE_MIN,
+  T8_MESSY_INTERPOLATE_MAX,
+  T8_MESSY_INTERPOLATE_MEAN
+} T8_MESSY_INTERPOLATE_METHOD;
+
+typedef struct {
+  T8_MESSY_INTERPOLATE_METHOD method; /* method used for interpolation */
+  double (*func)(t8_messy_custom_func_t *) = NULL;
+} t8_messy_interpolate_t;
+
+/* MESSy coupling object */
+typedef struct t8_messy_data {
   t8_latlon_data_chunk_t *chunk;
+  t8_messy_coarsen_t *coarsen;
+  t8_messy_interpolate_t *interpolation;
   t8_forest_t forest;
   t8_forest_t forest_adapt;
-} t8_messy_data;
+} t8_messy_data_t;
 
 /* Initialize forest for messy reprensentation */
-t8_messy_data* t8_messy_initialize(
+t8_messy_data_t* t8_messy_initialize(
   const char* description,
   const char* axis,
   int x_start, 
@@ -46,15 +100,19 @@ t8_messy_data* t8_messy_initialize(
 
 T8_EXTERN_C_BEGIN ();
 
+t8_messy_custom_func_t* t8_messy_new_custom_func(int num_elements);
+
+void t8_messy_destroy_custom_func(t8_messy_custom_func_t* custom);
+
 /* Add channel object data to forest */
-void t8_messy_set_dimension(t8_messy_data *messy_data, double ****data, int dimension);
+void t8_messy_add_dimension(t8_messy_data_t *messy_data, char *dimension_name, double ****data);
 
 
 /* Bring input data into SFC format */
-void t8_messy_apply_sfc(t8_messy_data *messy_data);
+void t8_messy_apply_sfc(t8_messy_data_t *messy_data);
 
 /* coarsen grid with given callback */
-void t8_messy_coarsen(t8_messy_data *messy_data, t8_forest_adapt_t coarsen_callback, t8_forest_replace_t interpolate_callback);
+void t8_messy_coarsen(t8_messy_data_t *messy_data);
 
 void t8_messy_write_forest(t8_forest_t forest, const char* prefix, t8_latlon_data_chunk_t *chunk);
 
