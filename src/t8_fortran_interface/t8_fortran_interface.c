@@ -113,7 +113,8 @@ t8_fortran_adapt_by_coordinates_callback (t8_forest_t forest,
                                           t8_element_t * elements[])
 {
   t8_fortran_adapt_coordinate_callback callback =
-    (t8_fortran_adapt_coordinate_callback) t8_forest_get_user_data (forest);
+    (t8_fortran_adapt_coordinate_callback)
+    t8_forest_get_user_function (forest);
   const double       *tree_vertices =
     t8_forest_get_tree_vertices (forest_from, which_tree);
   double              midpoint[3];
@@ -165,7 +166,8 @@ t8_forest_adapt_by_coordinates (t8_forest_t forest,
   /* Set the callback as user data */
   /* TODO: This is forbidden by ISO_C. We cannot pass a function pointer as a void *.
      We need an additional function t8_forest_set_user_fun_pointer. */
-  t8_forest_set_user_data (forest_new, (void *) callback);
+  t8_forest_set_user_function (forest_new,
+                               (t8_generic_function_pointer) callback);
   /* Call set adapt  */
   t8_forest_set_adapt (forest_new, forest,
                        t8_fortran_adapt_by_coordinates_callback, recursive);
