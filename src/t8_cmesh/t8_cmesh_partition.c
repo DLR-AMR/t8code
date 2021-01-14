@@ -2418,7 +2418,7 @@ t8_cmesh_partition_debug_listprocs (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from,
                                     int *fr, int *lr)
 {
   int                 mpiret, mpisize, mpirank, p;
-  char                out[BUFSIZ] = { };
+  char                out[BUFSIZ] = "";
   t8_gloidx_t        *from, *to;
 
   if (cmesh_from->set_partition) {

@@ -114,17 +114,25 @@ main (int argc, char *argv[])
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
   t8_cmesh_t          cmesh;
+  int                 sreturn;
 
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>",
             basename (argv[0]));
-  snprintf (help, BUFSIZ,
-            "This program reads a .msh file "
-            "created by the GMSH program and constructs a "
-            "t8code coarse mesh from them.\n\n%s\n\nExample: %s -f A1\nTo open the file A1.ms."
-            "\n\nThe default dimension of the mesh to read is 2. Since the "
-            ".msh format stores elements of all (lower) dimensions "
-            "the user must provide the argument for a different dimension by hand, if "
-            "desired.\n", usage, basename (argv[0]));
+  sreturn = snprintf (help, BUFSIZ,
+                      "This program reads a .msh file "
+                      "created by the GMSH program and constructs a "
+                      "t8code coarse mesh from them.\n\n%s\n\nExample: %s -f A1\nTo open the file A1.ms."
+                      "\n\nThe default dimension of the mesh to read is 2. Since the "
+                      ".msh format stores elements of all (lower) dimensions "
+                      "the user must provide the argument for a different dimension by hand, if "
+                      "desired.\n", usage, basename (argv[0]));
+
+  if (sreturn >= BUFSIZ) {
+    /* The help message was truncated */
+    /* Note: gcc >= 7.1 prints a warning if we 
+     * do not check the return value of snprintf. */
+    t8_debugf ("Warning: Truncated help message to '%s'\n", help);
+  }
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);

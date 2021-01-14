@@ -48,6 +48,12 @@ typedef enum
   T8_GHOST_VERTICES   /**< Consider all vertex (codimension 3) and edge and face neighbors. */
 } t8_ghost_type_t;
 
+/** This typedef is needed as a helper construct to 
+ * properly be able to define a function that returns
+ * a pointer to a void fun(void) function. \see t8_forest_get_user_function.
+ */
+typedef void        (*t8_generic_function_pointer) (void);
+
 T8_EXTERN_C_BEGIN ();
 
 /* TODO: if eclass is a vertex then num_outgoing/num_incoming are always
@@ -247,7 +253,11 @@ void                t8_forest_set_adapt (t8_forest_t forest,
  * arguments to the adapt routine.
  * \param [in,out] forest   The forest
  * \param [in]     data     A pointer to user data. t8code will never touch the data.
+<<<<<<< HEAD
  * The forest does not need to be committed before calling this function.
+=======
+ * The forest does not need be committed before calling this function.
+>>>>>>> develop
  * \see t8_forest_get_user_data
  */
 void                t8_forest_set_user_data (t8_forest_t forest, void *data);
@@ -255,9 +265,32 @@ void                t8_forest_set_user_data (t8_forest_t forest, void *data);
 /** Return the user data pointer associated with a forest.
  * \param [in]     forest   The forest.
  * \return                  The user data pointer of \a forest.
+ * The forest does not need be committed before calling this function.
  * \see t8_forest_set_user_data
  */
 void               *t8_forest_get_user_data (t8_forest_t forest);
+
+/** Set the user function pointer of a forest. This can i.e. be used to pass user defined
+ * functions to the adapt routine.
+ * \param [in,out] forest   The forest
+ * \param [in]     function A pointer to a user defined function. t8code will never touch the function.
+ * The forest does not need be committed before calling this function.
+ * \note \a function can be an arbitrary function with return value and parameters of
+ * your choice. When accessing it with \ref t8_forest_get_user_function you should cast
+ * it into the proper type.
+ * \see t8_forest_get_user_function
+ */
+void                t8_forest_set_user_function (t8_forest_t forest,
+                                                 t8_generic_function_pointer
+                                                 functrion);
+
+/** Return the user function pointer associated with a forest.
+ * \param [in]     forest   The forest.
+ * \return                  The user function pointer of \a forest.
+ * The forest does not need be committed before calling this function.
+ * \see t8_forest_set_user_function
+ */
+t8_generic_function_pointer t8_forest_get_user_function (t8_forest_t forest);
 
 /** Set a source forest to be partitioned during commit.
  * The partitioning is done according to the SFC and each rank is assinged

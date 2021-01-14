@@ -481,7 +481,7 @@ t8_cmesh_msh_file_read_eles (t8_cmesh_t cmesh, FILE * fp,
          * For pyramids we switch 0 and 4 */
         double              temp;
         int                 num_switches = 0;
-        int                 switch_indices[4] = { };
+        int                 switch_indices[4] = { 0 };
         int                 iswitch;
         T8_ASSERT (t8_eclass_to_dimension[eclass] == 3);
         t8_debugf ("Correcting negative volume of tree %li\n", tree_count);
