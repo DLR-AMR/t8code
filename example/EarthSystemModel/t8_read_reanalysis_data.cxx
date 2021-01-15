@@ -31,10 +31,9 @@
 #include <t8_cmesh_readmshfile.h>
 #include <t8_vec.h>
 #include <example/common/t8_example_common.h>
-#define T8_WITH_NETCDF 1        // DO NOT COMMIT THIS LINE
-#if T8_WITH_NETCDF
+#if !T8_WITH_NETCDF
+#else
 #include <netcdf.h>
-#endif
 
 /* TODO: - Document properly
  *       - move some netcdf routines to internal netcdf header
@@ -77,7 +76,6 @@ t8_reanalysis_long_lat_to_euclid (const double longitude,
 
 /* TODO: Use T8_ALLOC instead of malloc */
 
-#if T8_WITH_NETCDF
 /* Print an error message using the netcdf errorcode */
 #define T8_NETCDF_ERROR(filename, description, errorcode) \
   t8_errorf("Error in file %s - %s - %s\n", filename, description, nc_strerror(errorcode))
@@ -493,7 +491,6 @@ t8_netcdf_open_file (const char *filename, const double radius,
   return 0;
 #undef NUM_DATA
 }
-#endif
 
 /* Read msh-file and build a uniform forest on it.
  * Return 0 on success */
@@ -1553,6 +1550,7 @@ t8_netcdf_read_data_and_adapt (const char *netcdf_filename,
     t8_forest_unref (&forest);
   }
 }
+#endif
 
 int
 main (int argc, char **argv)
