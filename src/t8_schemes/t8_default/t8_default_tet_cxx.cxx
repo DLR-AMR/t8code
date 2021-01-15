@@ -531,7 +531,7 @@ t8_default_scheme_tet_c::t8_element_vertex_coords (const t8_element_t * t,
                                                    int vertex, int coords[])
 {
   T8_ASSERT (t8_element_is_valid (t));
-  t8_dtet_compute_coords ((const t8_default_tet_t *) t, vertex, coords);
+  t8_dtet_compute_coords ((const t8_dtet_t *) t, vertex, coords);
 }
 
 void
@@ -541,7 +541,20 @@ t8_default_scheme_tet_c::t8_element_vertex_reference_coords (const
                                                              double coords[])
 {
   T8_ASSERT (t8_element_is_valid (t));
-  t8_dtet_compute_ref_coords ((const t8_default_tet_t *) t, vertex, coords);
+  t8_dtet_compute_ref_coords ((const t8_dtet_t *) t, vertex, coords);
+}
+
+void
+t8_default_scheme_tet_c::t8_element_general_function (const t8_element_t *
+                                                      elem,
+                                                      const void *indata,
+                                                      void *outdata)
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (outdata != NULL);
+  *((int8_t *) outdata) = ((const t8_dtet_t *) elem)->type;
+  /* Safety check to catch datatype conversion errors */
+  T8_ASSERT (*((int8_t *) outdata) == ((const t8_dtet_t *) elem)->type);
 }
 
 #ifdef T8_ENABLE_DEBUG

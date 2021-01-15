@@ -322,6 +322,15 @@ void                t8_dprism_vertex_ref_coords (const t8_dprism_t * p,
  */
 uint64_t            t8_dprism_linear_id (const t8_dprism_t * p, int level);
 
+/** Query whether all entries of a prism are in valid ranges.
+ * A prism is valid if and only if its triangle and line member are valid.
+ * \param [in] p  prism to be considered.
+ * \return        True, if \a p is a valid prism and it is safe to call any
+ *                function in this file on \a p.
+ *                False otherwise.
+ */
+int                 t8_dprism_is_valid (const t8_dprism_t * p);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DPRISM_BITS_H */

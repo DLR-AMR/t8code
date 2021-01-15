@@ -101,7 +101,7 @@ t8_forest_partition_create_offsets (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   T8_ASSERT (forest->element_offsets == NULL);
-  t8_debugf ("Building offsets for forest %p\n", forest);
+  t8_debugf ("Building offsets for forest %p\n", (void *) forest);
   comm = forest->mpicomm;
   /* Set the shmem array type of comm */
   t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
@@ -170,7 +170,8 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   T8_ASSERT (forest->global_first_desc == NULL);
-  t8_debugf ("Building global first descendants for forest %p\n", forest);
+  t8_debugf ("Building global first descendants for forest %p\n",
+             (void *) forest);
   comm = forest->mpicomm;
 
   if (forest->global_first_desc == NULL) {

@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: Tests
 
 on:
   push:
@@ -14,13 +14,13 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     
     steps:
 # Setup and bootstrap
     - uses: actions/checkout@v1
     - name: Install mpich
-      run: sudo apt-get install libmpich-dev
+      run: sudo apt-get update && sudo apt-get install libmpich-dev
     - name: init submodules
       run: git submodule init
     - name: update submodules
@@ -88,6 +88,20 @@ jobs:
       run: echo "Checking debugging mode"
     - name: configure
       run: ./configure --without-blas --enable-debug
+    - name: OnFailPrintLog
+      if: failure()
+      run: cat config.log
+    - name: make
+      run: make -j V=0
+    - name: make check
+      run: make check -j4 V=0
+    - name: clean up
+      run: make distclean
+# configure and test with MPI and netcdf
+    - name: Install netcdf
+      run: sudo apt-get install libnetcdf-dev
+    - name: configure
+      run: ./configure --without-blas --with-netcdf --enable-mpi
     - name: OnFailPrintLog
       if: failure()
       run: cat config.log

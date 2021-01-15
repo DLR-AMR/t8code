@@ -1,7 +1,7 @@
 /*
   This file is part of t8code.
   t8code is a C library to manage a collection (a forest) of multiple
-  connected adaptive space-trees of general element classes in parallel.
+  connected adaptive space-trees of general element types in parallel.
 
   Copyright (C) 2015 the developers
 
@@ -20,38 +20,42 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_eclass.h>
+#include <t8.h>
 
+/* This code prints a global message describing the netcdf compilation status. */
 static void
-test_eclass (sc_MPI_Comm mpic)
+t8_check_netcdf_compilation ()
 {
-  int                 eci;
-  int                 retval;
-
-  for (eci = T8_ECLASS_ZERO; eci < T8_ECLASS_COUNT; ++eci) {
-    retval = t8_eclass_compare ((t8_eclass_t) eci, (t8_eclass_t) eci);
-    SC_CHECK_ABORT (retval == 0, "Eclass identity failed");
-  }
+#ifdef T8_WITH_NETCDF
+  t8_global_productionf
+    ("This version of t8code is compiled with netcdf support.\n");
+#else
+  t8_global_productionf
+    ("This version of t8code is not compiled with netcdf support.\n");
+#endif
 }
 
 int
 main (int argc, char **argv)
 {
   int                 mpiret;
-  sc_MPI_Comm         mpic;
 
+  /* Initialize MPI */
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
-  mpic = sc_MPI_COMM_WORLD;
-  sc_init (mpic, 1, 1, NULL, SC_LP_PRODUCTION);
-  p4est_init (NULL, SC_LP_ESSENTIAL);
-  t8_init (SC_LP_DEFAULT);
+  /* Initialize sc */
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
+  /* Initialize t8code */
+  t8_init (SC_LP_PRODUCTION);
 
-  test_eclass (mpic);
+  /* Check netcdf compilation */
+  t8_check_netcdf_compilation ();
 
+  /* Finalize sc */
   sc_finalize ();
 
+  /* Finalize MPI */
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
