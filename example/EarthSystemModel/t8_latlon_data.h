@@ -34,8 +34,7 @@
  */
 typedef enum
 {
-  T8_LATLON_DATA_XSTRIPE,       /* Row-wise storage data[y * X + x] gives data of (x,y). */
-  T8_LATLON_DATA_YSTRIPE,       /* Column-wise storage data[x * Y + y] gives data of (x,y). */
+  T8_LATLON_DATA_MESSY,       /* Row-wise storage data[y * X + x] gives data of (x,y). */
   T8_LATLON_DATA_MORTON         /* Morton SFC storage. The data is sorted according to the 
                                  * Morton SFC index in the surrounding quad forest (not the subgrid). */
 } T8_LATLON_DATA_NUMBERING;
@@ -44,25 +43,47 @@ typedef enum
  * data on it. */
 typedef struct
 {
-  t8_locidx_t         x_start;  /* Starting x coordinate. */
-  t8_locidx_t         y_start;  /* Starting y coordinate. */
-  t8_locidx_t         x_length; /* Number of subgrid cells in x dimension. */
-  t8_locidx_t         y_length; /* Number of subgrid cells in y dimension. */
-  int                 dimension;        /* Dimensionality of the data (1, 2, 3). */
-  int                 level;    /* The smallest uniform refinement level of a forest that can have the
-                                 * grid (not the subgrid) as submesh. */
-  T8_LATLON_DATA_NUMBERING numbering;   /* Numbering scheme of data. */
-  double             *data;     /* x_length x y_length x dimension many data items.
-                                   for each data item dimension many entries. */
-  t8_linearidx_t     *data_ids; /* If numbering is T8_LATLON_DATA_MORTON then for
-                                   each data item (x_lenght x y_length) its element's 
-                                   Morton index. */
-  const char         *description;      /* The name of this dataset. */
+  const char         *description;  /* The name of this dataset. */
+  t8_locidx_t         x_start;      /* Starting x coordinate. */
+  t8_locidx_t         y_start;      /* Starting y coordinate. */
+  t8_locidx_t         x_length;     /* Number of subgrid cells in x dimension. */
+  t8_locidx_t         y_length;     /* Number of subgrid cells in y dimension. */
+  t8_locidx_t         z_length;     /* Number of subgrid cells in z dimension. */
+  int                 axis;         /* Internal flag to distinguish between different axis configurations e.g. XYZ, YZX, ... */
+  int                 x_axis;       /* X axis index in data vector */
+  int                 y_axis;       /* Y axis index in data vector */
+  int                 z_axis;       /* Z axis index in data vector */
+  int                 dimensions;    /* Dimensionality of the data (1, 2, 3). */
+  int                 level;        /* The smallest uniform refinement level of a forest that can have the grid (not the subgrid) as submesh. */
+  int                dimension_names_size;
+  char               **dimension_names;
+  double             ****in;        /* 4D input data  TODO: rename!! */
+  double             *data;         /* x_length x y_length x z_length x dimension many data items. For each data item dimension many entries. */
+  t8_linearidx_t     *data_ids;     /* Morton index for each grid cells. 
+                                     * At first we have (x_lenght x y_length) elements, but when coarsening the number of elements  reduce. */
+
+  double             *data_adapt;
+  t8_linearidx_t     *data_ids_adapt;
+  T8_LATLON_DATA_NUMBERING numbering; /* Numbering scheme */
 } t8_latlon_data_chunk_t;
 
 T8_EXTERN_C_BEGIN ();
 
 /* function declarations */
+
+/**
+ * TODO: add doc
+ */
+t8_latlon_data_chunk_t *
+t8_latlon_new_chunk (const char *description, t8_locidx_t x_start, t8_locidx_t y_start,
+                     t8_locidx_t x_length, t8_locidx_t y_length, t8_locidx_t z_length,
+                     int dimensions, int x_axis, int y_axis, int z_axis, int level,
+                     T8_LATLON_DATA_NUMBERING numbering);
+
+/**
+ * TODO: add doc
+ */
+void t8_latlon_chunk_destroy (t8_latlon_data_chunk_t ** pchunk);
 
 /** Given x and y coordinates in an X by Y grid compute
  * the Morton linear id according to a given level of the 
@@ -88,6 +109,19 @@ void                t8_latlon_linear_id_to_latlon (t8_linearidx_t linear_id,
                                                    int level, t8_gloidx_t * x,
                                                    t8_gloidx_t * y);
 
+int t8_latlon_get_dimension_idx(t8_latlon_data_chunk_t * data_chunk, char* dimension, bool add_if_missing);
+
+void  t8_latlon_set_dimension(t8_latlon_data_chunk_t * data_chunk, char* dimension, double**** data);
+
+double t8_latlon_get_dimension_value(int axis, double ****data, int x_coord, int y_coord, int z_coord, int dimension);
+
+void t8_latlon_set_dimension_value(int axis, double ****data, int x_coord, int y_coord, int z_coord, int dimension, double value);
+
+
+void
+t8_latlon_data_apply_morton_order (t8_latlon_data_chunk_t * data_chunk);
+
+
 /* Create a data chunk with given dimensions and numbering,
  * fill it with data and then change the numbering to Morton.
  */
@@ -95,7 +129,8 @@ void                t8_latlon_data_test (t8_locidx_t x_start,
                                          t8_locidx_t y_start,
                                          t8_locidx_t x_length,
                                          t8_locidx_t y_length,
-                                         int dimension, int level,
+                                         int dimension, int x_axis, 
+                                         int y_axis, int z_axis, int level,
                                          T8_LATLON_DATA_NUMBERING
                                          numbering,
                                          t8_gloidx_t x_length_global,

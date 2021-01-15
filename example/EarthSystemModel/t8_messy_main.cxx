@@ -20,8 +20,13 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
 #include <sc_options.h>
 #include <sc_refcount.h>
+#include <t8.h>
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_common_cxx.hxx>
 #include <t8_forest.h>
@@ -32,8 +37,67 @@
 #include <t8_schemes/t8_default/t8_default_quad_cxx.hxx>
 #endif
 #include <p4est_bits.h>
+#include "t8_messy_coupler.h"
 #include "t8_latlon_refine.h"
 #include "t8_latlon_data.h"
+
+/* generate a random floating point number from min to max */
+double randfrom(double min, double max) {
+    double range = (max - min); 
+    double div = RAND_MAX / range;
+    return min + (rand() / div);
+}
+
+/**
+ * Function filling data array with random values
+ */
+void generate_data(double ****data, int x_length, int y_length, double value) {
+  int x, y;
+  for(y=0; y<y_length; ++y) {
+    for(x=0; x<x_length; ++x) {
+      data[x][y][0][0] = randfrom(y * x_length, (y + 1) * x_length);
+    }
+  }
+}
+
+void sine_2d(double ****data, int x_length, int y_length) {
+  double T_x = x_length / 5.0;
+  double T_y = y_length / 5.0;
+  int x, y;
+  for(y=0; y<y_length; ++y) {
+    for(x=0; x<x_length; ++x) {
+      data[x][y][0][0] = sin( (2 * M_PI * x) / T_x + (2 * M_PI* y) / T_y );
+    }
+  }
+}
+
+void gaussian(double ****data, int x_length, int y_length) {
+  double x0 = x_length * 1.0 / 2.0;
+  double y0 = y_length * 1.0 / 2.0;
+  double xd, yd, A, ox, oy;
+  int x, y;
+  
+  ox = x0;
+  oy = y0;
+  A = 1;
+  for(y=0; y<y_length; ++y) {
+    for(x=0; x<x_length; ++x) {
+      xd = x - x0;
+      yd = y - y0;
+      data[x][y][0][0] = A * exp(- (((xd*xd) / (2.0 * (ox * ox)) + ((yd*yd)/ (2.0 * (oy * oy) )))));
+    }
+  }
+}
+
+int custom_coarsening(t8_messy_custom_func_t* arguments) {
+  t8_debugf("custom coarsening\n");
+  return -1;
+}
+
+double custom_interpolation(t8_messy_custom_func_t* arguments) {
+  t8_debugf("custom interpolating\n");
+  return 100.0;
+}
 
 int
 main (int argc, char **argv)
@@ -46,7 +110,7 @@ main (int argc, char **argv)
   int                 parsed, helpme;
   int                 mode_int;
   int                 partition;
-  enum T8_LATLON_ADAPT_MODE mode;
+  
 
   /* brief help message */
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t"
@@ -54,7 +118,7 @@ main (int argc, char **argv)
             basename (argv[0]), basename (argv[0]));
 
   /* long help message */
-  snprintf (help, BUFSIZ, "Given input dimensions x and y, we construct a\n"
+  snprintf (help, BUFSIZ, "Given input dimension x and y, we construct a\n"
             "forest on the unit square that is the coarsest forest such\n"
             "that an x times y grid fits in the lower left corner.\n%s\n",
             usage);
@@ -69,7 +133,7 @@ main (int argc, char **argv)
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme,
                          "Display a short help message.");
-  sc_options_add_int (opt, 'x', "x-length", &x_length, 64,
+  sc_options_add_int (opt, 'x', "x-length", &x_length, 32,
                       "The type of elements to use.\n");
   sc_options_add_int (opt, 'y', "y-length", &y_length, 32,
                       "The type of elements to use.\n");
@@ -89,8 +153,64 @@ main (int argc, char **argv)
   }
   else if (parsed >= 0 && 0 < x_length && 0 < y_length && mode_int >= 0
            && mode_int <= 1) {
-    mode = mode_int == 0 ? T8_LATLON_REFINE : T8_LATLON_COARSEN;
-    t8_latlon_refine_test(x_length, y_length, mode, partition);
+
+
+    /* number of datapoints per grid cell */
+    int num_dims = 2, x, y, z;
+
+
+    /* allocate data array */
+    double ****data = T8_ALLOC(double***, x_length);
+    for(x=0; x<x_length; ++x) {
+      data[x] = T8_ALLOC(double**, y_length);
+      for(y=0; y<y_length; ++y) {
+        data[x][y] = T8_ALLOC(double*, 1);
+        data[x][y][0] = T8_ALLOC(double, 1);
+      }
+    }
+
+    /* initialize forest and data chunk */
+    t8_messy_data_t* messy = t8_messy_initialize("test", "XYZ", 0, 0, x_length, y_length, 1, num_dims);
+
+    /* set data for every dimension */
+    //char name[BUFSIZ];
+
+    gaussian(data, x_length, y_length);
+    //sprintf(name, "gaussian");
+    t8_messy_add_dimension(messy, "gaussian", data);
+    
+    sine_2d(data, x_length, y_length);
+    //sprintf(name, );
+    t8_messy_add_dimension(messy, "sine_2d", data);
+
+    /* bring input data into SFC format */
+    t8_messy_apply_sfc(messy);
+
+    t8_messy_coarsen_t *coarsen_config = T8_ALLOC(t8_messy_coarsen_t, 1);
+    t8_messy_interpolate_t *interpolate_config = T8_ALLOC(t8_messy_interpolate_t, 1);
+
+    // coarsen_config->method = T8_MESSY_COARSEN_FUNCTION;
+    // coarsen_config->func = custom_coarsening;
+    coarsen_config->method = T8_MESSY_COARSEN_THRESHOLD_MIN_HIGHER;
+    coarsen_config->z_layer = 0;
+    coarsen_config->dimension = "gaussian";
+    coarsen_config->threshold = 0.8;
+
+    //interpolate_config->method = T8_MESSY_INTERPOLATE_MEAN;
+    interpolate_config->method = T8_MESSY_INTERPOLATE_FUNCTION;
+    interpolate_config->func = custom_interpolation;
+
+    messy->coarsen = coarsen_config;
+    messy->interpolation = interpolate_config;
+
+    /* coarsen data */
+    t8_messy_coarsen(messy);
+
+    t8_forest_unref (&(messy->forest));
+    /* t8_forest_unref (&(messy->forest_adapt)); */
+    t8_latlon_chunk_destroy(&(messy->chunk));
+
+
   }
   else {
     /* wrong usage */
@@ -106,3 +226,8 @@ main (int argc, char **argv)
 
   return 0;
 }
+
+
+
+
+

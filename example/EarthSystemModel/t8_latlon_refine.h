@@ -28,6 +28,7 @@
 
 #include <t8.h>
 #include <t8_forest.h>
+#include <t8_schemes/t8_default/t8_default_common_cxx.hxx>
 
 /* We offer two modes to construct the mesh.
  * T8_LATLON_REFINE: Start with a level 0 mesh and refine it until
@@ -92,7 +93,11 @@ t8_locidx_t         t8_latlon_adapt_callback (t8_forest_t forest,
  * \param [in]    repartition If true, the forest is repartitioned after each
  *                           level of adaptation.
  */
-void                t8_latlon_refine (int x_length, int y_length,
+t8_forest_t        t8_latlon_refine (int x_length, int y_length,
+                                      enum T8_LATLON_ADAPT_MODE mode,
+                                      int repartition);
+
+void                t8_latlon_refine_test (int x_length, int y_length,
                                       enum T8_LATLON_ADAPT_MODE mode,
                                       int repartition);
 

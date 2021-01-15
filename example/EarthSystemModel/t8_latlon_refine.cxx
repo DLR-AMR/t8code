@@ -144,7 +144,7 @@ t8_latlon_adapt_callback (t8_forest_t forest,
 /* Given x and y dimensions build the smalles one-tree quad forest that
  * contains an x times y grid in its lower left corner.
  */
-void
+t8_forest_t
 t8_latlon_refine (int x_length, int y_length, enum T8_LATLON_ADAPT_MODE mode,
                   int repartition)
 {
@@ -240,16 +240,28 @@ t8_latlon_refine (int x_length, int y_length, enum T8_LATLON_ADAPT_MODE mode,
      x_length, y_length, x_length * y_length,
      (1 - x_length * y_length / (double) num_elements) * 100);
 
+#ifdef T8_ENABLE_DEBUG
   /* Write forest to vtk file with name "t8_latlon_XLENGTH_YLENGTH_REFINEMODE". */
   snprintf (vtu_prefix, BUFSIZ, "t8_latlon_%i_%i_%s", x_length, y_length,
             mode == T8_LATLON_REFINE ? "refine" : "coarsen");
   t8_forest_write_vtk (forest_adapt, vtu_prefix);
   t8_global_productionf ("Wrote adapted forest to %s* files.\n", vtu_prefix);
+#endif
+
+  return forest_adapt;
+}
+
+void t8_latlon_refine_test (int x_length, int y_length, enum T8_LATLON_ADAPT_MODE mode, int repartition) {
+
+  t8_forest_t forest_adapt = t8_latlon_refine(x_length, y_length, mode, repartition);
 
   /* Destroy the forest */
   t8_forest_unref (&forest_adapt);
 
+  int max_length = SC_MAX (x_length, y_length);
+  int max_level = SC_LOG2_32 (max_length - 1) + 1;
+
   /* This is only temporarily here for testing.  WIP. */
-  t8_latlon_data_test (0, 0, x_length, y_length, 3, adapt_data.max_level,
-                       T8_LATLON_DATA_YSTRIPE, x_length, y_length);
+  t8_latlon_data_test (0, 0, x_length, y_length, 3, 0, 1, 2, max_level,
+                       T8_LATLON_DATA_MESSY, x_length, y_length);
 }
