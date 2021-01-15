@@ -575,7 +575,7 @@ t8_default_scheme_tri_c::t8_element_vertex_reference_coords (const
                                                              double coords[])
 {
   T8_ASSERT (t8_element_is_valid (t));
-  t8_dtri_compute_ref_coords ((const t8_default_tri_t *) t, vertex, coords);
+  t8_dtri_compute_ref_coords ((const t8_dtri_t *) t, vertex, coords);
 }
 
 #ifdef T8_ENABLE_DEBUG
