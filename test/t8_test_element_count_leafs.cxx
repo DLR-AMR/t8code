@@ -21,6 +21,7 @@
 */
 
 #include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_element_cxx.hxx>
 
 /*
  * In this file we test whether the t8_element_count_leafs{_from_root}

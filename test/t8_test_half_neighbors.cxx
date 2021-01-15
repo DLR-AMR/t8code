@@ -29,6 +29,7 @@
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
+#include <t8_element_cxx.hxx>
 
 #if 0
 /* Depending on an integer i create a different cmesh.

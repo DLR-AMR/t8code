@@ -25,6 +25,7 @@
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_private.h>
+#include <t8_element_cxx.hxx>
 #include <t8_cmesh.h>
 
 /* This test program tests the forest ghost layer.

@@ -25,6 +25,7 @@
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_element_cxx.hxx>
 
 /* A search function that matches all elements.
  * This function assumes that the forest user pointer is an sc_array

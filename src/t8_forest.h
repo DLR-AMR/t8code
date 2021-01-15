@@ -256,7 +256,11 @@ void                t8_forest_set_adapt (t8_forest_t forest,
  * arguments to the adapt routine.
  * \param [in,out] forest   The forest
  * \param [in]     data     A pointer to user data. t8code will never touch the data.
+<<<<<<< HEAD
+ * The forest does not need to be committed before calling this function.
+=======
  * The forest does not need be committed before calling this function.
+>>>>>>> develop
  * \see t8_forest_get_user_data
  */
 void                t8_forest_set_user_data (t8_forest_t forest, void *data);

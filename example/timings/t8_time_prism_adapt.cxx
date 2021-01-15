@@ -21,15 +21,16 @@
 */
 
 #include <sc_refcount.h>
+#include <sc_flops.h>
+#include <sc_statistics.h>
+#include <sc_options.h>
+#include <t8_forest/t8_forest_adapt.h>
+#include <t8_forest.h>
+#include <t8_element_cxx.hxx>
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_schemes/t8_default/t8_dprism.h>
 #include <t8_schemes/t8_default/t8_dtri.h>
 #include <t8_schemes/t8_default/t8_dtet.h>
-#include <t8_forest/t8_forest_adapt.h>
-#include <t8_forest.h>
-#include <sc_flops.h>
-#include <sc_statistics.h>
-#include <sc_options.h>
 
 static int
 t8_basic_adapt_refine_type (t8_forest_t forest, t8_forest_t forest_from,
