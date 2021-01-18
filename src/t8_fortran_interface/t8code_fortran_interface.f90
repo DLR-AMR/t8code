@@ -102,6 +102,22 @@ module t8code_fortran_interface
             end function t8_forest_write_vtk_f
       end Interface
 
+      Interface
+            subroutine t8_global_productionf_noargs_f (string) &
+                                    bind (c, name = 't8_global_productionf_noargs')
+                  use, intrinsic :: ISO_C_BINDING, only: c_char
+                  IMPLICIT NONE
+                  character (c_char) :: string
+            end subroutine t8_global_productionf_noargs_f
+      end Interface
+      
+      Interface
+            subroutine t8_fortran_finalize_f () &
+                                    bind (c, name = 't8_fortran_finalize')
+                  IMPLICIT NONE
+            end subroutine t8_fortran_finalize_f
+      end Interface
+
       ! Interface 
       !       type (c_ptr) function t8_fortran_adapt_by_coordinates_f (forest, forest_from, recursive, callback) &
       !                               bind (c, name = 't8_fortran_adapt_by_coordinates')

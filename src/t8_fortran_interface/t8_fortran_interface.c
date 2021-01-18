@@ -175,3 +175,9 @@ t8_forest_adapt_by_coordinates (t8_forest_t forest,
   t8_forest_commit (forest_new);
   return forest_new;
 }
+
+void
+t8_global_productionf_noargs (const char *string)
+{
+  t8_global_productionf ("%s", string);
+}

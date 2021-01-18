@@ -97,6 +97,8 @@ t8_forest_t         t8_forest_adapt_by_coordinates (t8_forest_t forest,
                                                     t8_fortran_adapt_coordinate_callback
                                                     callback);
 
+void                t8_global_productionf_noargs (const char *string);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FORTRAN_INTERFACE_H */
