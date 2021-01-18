@@ -79,9 +79,11 @@ void                t8_dpyramid_children (const t8_dpyramid_t * p, int length,
  * \param [in, out] children    The children of \a p at \a face
  * \param [in] num_childrem     The number of children at this face
  */
-void                t8_dpyramid_children_at_face(const t8_dpyramid_t * p, int face,
-                             t8_dpyramid_t * children[], int num_children,
-                             int *child_indices);
+void                t8_dpyramid_children_at_face (const t8_dpyramid_t * p,
+                                                  int face,
+                                                  t8_dpyramid_t * children[],
+                                                  int num_children,
+                                                  int *child_indices);
 
 /** Given a face of a pyramid and a child number of a child of that face,
  * return the face number of the child of the pyramid that matches the child
@@ -89,18 +91,20 @@ void                t8_dpyramid_children_at_face(const t8_dpyramid_t * p, int fa
  * \param[in] p         Input pyramid
  * \param[in] face      A face of \a p
  * \param [out] face_child  The number of the matching child face*/
-int                 t8_dpyramid_face_child_face(const t8_dpyramid_t * p,
-                                       int face, int face_child);
+int                 t8_dpyramid_face_child_face (const t8_dpyramid_t * p,
+                                                 int face, int face_child);
 
 /** Given a boundary element and a facenumber of this element, compute the boundary face
  * \param[in] p          Input pyramid
  * \param[in] face       The face number of an element
  * \param[in, out]       The boundary face*/
-void                t8_dpyramid_boundary_face(const t8_dpyramid_t * p,
-                                              int face, t8_element_t * boundary);
+void                t8_dpyramid_boundary_face (const t8_dpyramid_t * p,
+                                               int face,
+                                               t8_element_t * boundary);
 
-int                 t8_dpyramid_extrude_face(const t8_element_t *face,
-                                             t8_dpyramid_t * p, int root_face);
+int                 t8_dpyramid_extrude_face (const t8_element_t * face,
+                                              t8_dpyramid_t * p,
+                                              int root_face);
 
 /** Compare two elements. returns negativ if p1 < p2, zero if p1 equals p2
  *  and positiv if p1 > p2.
@@ -143,8 +147,10 @@ int                 t8_dpyramid_face_neighbor_inside (const t8_dpyramid_t * p,
                                                       int face,
                                                       int *neigh_face);
 
-int                 t8_dpyramid_child_id_unknown_parent (const t8_dpyramid_t * p,
-                                     t8_dpyramid_t * parent);
+int                 t8_dpyramid_child_id_unknown_parent (const t8_dpyramid_t *
+                                                         p,
+                                                         t8_dpyramid_t *
+                                                         parent);
 
 /** Compute the position of the ancestor of this child at level \a level within
  * its siblings.
@@ -167,13 +173,13 @@ int                 t8_dpyramid_child_id_known_parent (const t8_dpyramid_t *
 /** Returns zero if p is not inside root, 1 ow
  \param[in] p       Pyramid to check
  \returns 0 if p is inside root, 1, ow*/
-int                 t8_dpyramid_is_inside_root (const t8_dpyramid_t *p);
+int                 t8_dpyramid_is_inside_root (const t8_dpyramid_t * p);
 
 /** Check, if a given pyramid is inside another pyramid
  * \param[in] p     Pyramid to check
  * \param[in] check The outer pyramid in which \a p might lie*/
-int                 t8_dpyramid_is_inside_pyra(const t8_dpyramid_t *p,
-                                               const t8_dpyramid_t *check);
+int                 t8_dpyramid_is_inside_pyra (const t8_dpyramid_t * p,
+                                                const t8_dpyramid_t * check);
 
 /** Check, if the input pyramid with shape of a tet is inside of a tetrahedron
  * \param [in] p  pyramid with tet shape
@@ -189,7 +195,8 @@ int                 t8_dpyramid_is_inside_tet (const t8_dpyramid_t * p,
  * \face [in] face  A face of \a p.
  * \return      false if they don't share a face, true otherwise
  */
-int                 t8_dpyramid_tet_boundary (const t8_dpyramid_t * p, int face);
+int                 t8_dpyramid_tet_boundary (const t8_dpyramid_t * p,
+                                              int face);
 
 /** compute if a given element lies on the tree boundary and return the face number
  * of the tree face. If not the return value is arbitrary
@@ -197,7 +204,7 @@ int                 t8_dpyramid_tet_boundary (const t8_dpyramid_t * p, int face)
  * \param [in] face     a face of \a elem
  * \return              See discription
  */
-int                 t8_dpyramid_tree_face(const t8_dpyramid_t * p , int face);
+int                 t8_dpyramid_tree_face (const t8_dpyramid_t * p, int face);
 
 /** Compute the first descendant of a pyramid at a given level. This is the descendant of
  * the pyramid in a uniform level refinement that has the smallest id.
@@ -218,10 +225,10 @@ void                t8_dpyramid_first_descendant (const t8_dpyramid_t * p,
  *                      of \a p's first descendant on level \a level.
  * \param [in] level    The refinement level. Must be greater than \a p's refinement
  *                      level.*/
-void                t8_dpyramid_first_descendant_face(const t8_dpyramid_t * p,
-                                                      int face,
-                                                      t8_dpyramid_t * first_desc,
-                                                      int level);
+void                t8_dpyramid_first_descendant_face (const t8_dpyramid_t *
+                                                       p, int face,
+                                                       t8_dpyramid_t *
+                                                       first_desc, int level);
 
 /** Compute the last descendant of a pyramid at a given level. This is the descendant of
  * the pyramid in a uniform level refinement that has the largest id.
@@ -235,7 +242,6 @@ void                t8_dpyramid_last_descendant (const t8_dpyramid_t * p,
                                                  t8_dpyramid_t * desc,
                                                  int level);
 
-
 /** Construct the last descendant of a pyramid touching a given face
  * \param [in] p        pyramid whose descendant is computed.
  * \param [in] face     The face at which the descendant is computed
@@ -243,9 +249,10 @@ void                t8_dpyramid_last_descendant (const t8_dpyramid_t * p,
  *                      of \a p's first descendant on level \a level.
  * \param [in] level    The refinement level. Must be greater than \a p's refinement
  *                      level.*/
-void                t8_dpyramid_last_descendant_face(const t8_dpyramid_t * p,
-                                 int face, t8_dpyramid_t * last_desc,
-                                 int level);
+void                t8_dpyramid_last_descendant_face (const t8_dpyramid_t * p,
+                                                      int face,
+                                                      t8_dpyramid_t *
+                                                      last_desc, int level);
 
 /** Compute the coordinates of a vertex of a pyramid.
  * \param [in] p    Input pyramid.
@@ -294,13 +301,12 @@ int                 t8_dpyramid_num_siblings (const t8_dpyramid_t * p);
  * \param [in] p    Input pyramid
  * \return          The number of faces of p
  */
-int                 t8_dpyramid_num_faces(const t8_dpyramid_t *p);
+int                 t8_dpyramid_num_faces (const t8_dpyramid_t * p);
 
 /** Return the maximal number of faces of an element p
  * \param [in] p    Input pyramid
  * \return          The maximal number of faces of p*/
-int                 t8_dpyramid_max_num_faces(const t8_dpyramid_t * p);
-
+int                 t8_dpyramid_max_num_faces (const t8_dpyramid_t * p);
 
 /** Given a face of an element return the face number
  * of the parent of the element that matches the element's face. Or return -1 if
@@ -308,14 +314,15 @@ int                 t8_dpyramid_max_num_faces(const t8_dpyramid_t * p);
  * \param [in] elem Input pyramid
  * \param [in] face a face of \a elem
  * \return          the facenumber of the parent of \a elem matching \a face or -1*/
-int                 t8_dpyramid_face_parent_face(const t8_dpyramid_t * elem, int face);
+int                 t8_dpyramid_face_parent_face (const t8_dpyramid_t * elem,
+                                                  int face);
 
 /** Return the child-id of the ancestor of p at level level
  * \param [in] p    Input pyramid
  * \param [in] level The ancestor-level
  * \return          The child-id of the ancestor*/
-int                 t8_dpyramid_ancestor_id(const t8_dpyramid_t * p, int level);
-
+int                 t8_dpyramid_ancestor_id (const t8_dpyramid_t * p,
+                                             int level);
 
 /** Returns the shape of the pyramid (pyramid or tetrahedron)
  * \param [in] p    Input pyramid.
