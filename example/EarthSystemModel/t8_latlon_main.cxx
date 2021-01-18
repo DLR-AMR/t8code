@@ -32,8 +32,8 @@
 #include <t8_schemes/t8_default/t8_default_quad_cxx.hxx>
 #endif
 #include <p4est_bits.h>
-#include "t8_latlon_refine.h"
-#include "t8_latlon_data.h"
+#include <t8_messy/t8_latlon_refine.h>
+#include <t8_messy/t8_latlon_data.h>
 
 int
 main (int argc, char **argv)

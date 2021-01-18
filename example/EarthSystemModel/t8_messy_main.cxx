@@ -37,57 +37,12 @@
 #include <t8_schemes/t8_default/t8_default_quad_cxx.hxx>
 #endif
 #include <p4est_bits.h>
-#include "t8_messy_coupler.h"
-#include "t8_latlon_refine.h"
-#include "t8_latlon_data.h"
+#include <t8_messy/t8_messy_helper.h>
+#include <t8_messy/t8_messy_coupler.h>
+#include <t8_messy/t8_latlon_refine.h>
+#include <t8_messy/t8_latlon_data.h>
 
-/* generate a random floating point number from min to max */
-double randfrom(double min, double max) {
-    double range = (max - min); 
-    double div = RAND_MAX / range;
-    return min + (rand() / div);
-}
-
-/**
- * Function filling data array with random values
- */
-void generate_data(double ****data, int x_length, int y_length, double value) {
-  int x, y;
-  for(y=0; y<y_length; ++y) {
-    for(x=0; x<x_length; ++x) {
-      data[x][y][0][0] = randfrom(y * x_length, (y + 1) * x_length);
-    }
-  }
-}
-
-void sine_2d(double ****data, int x_length, int y_length) {
-  double T_x = x_length / 5.0;
-  double T_y = y_length / 5.0;
-  int x, y;
-  for(y=0; y<y_length; ++y) {
-    for(x=0; x<x_length; ++x) {
-      data[x][y][0][0] = sin( (2 * M_PI * x) / T_x + (2 * M_PI* y) / T_y );
-    }
-  }
-}
-
-void gaussian(double ****data, int x_length, int y_length) {
-  double x0 = x_length * 1.0 / 2.0;
-  double y0 = y_length * 1.0 / 2.0;
-  double xd, yd, A, ox, oy;
-  int x, y;
-  
-  ox = x0;
-  oy = y0;
-  A = 1;
-  for(y=0; y<y_length; ++y) {
-    for(x=0; x<x_length; ++x) {
-      xd = x - x0;
-      yd = y - y0;
-      data[x][y][0][0] = A * exp(- (((xd*xd) / (2.0 * (ox * ox)) + ((yd*yd)/ (2.0 * (oy * oy) )))));
-    }
-  }
-}
+/* TODO: Rename those functions to t8_messy_NAME */
 
 int custom_coarsening(t8_messy_custom_func_t* arguments) {
   t8_debugf("custom coarsening\n");
@@ -175,11 +130,11 @@ main (int argc, char **argv)
     /* set data for every dimension */
     //char name[BUFSIZ];
 
-    gaussian(data, x_length, y_length);
+    t8_messy_gaussian(data, x_length, y_length);
     //sprintf(name, "gaussian");
     t8_messy_add_dimension(messy, "gaussian", data);
     
-    sine_2d(data, x_length, y_length);
+    t8_messy_sine_2d(data, x_length, y_length);
     //sprintf(name, );
     t8_messy_add_dimension(messy, "sine_2d", data);
 
