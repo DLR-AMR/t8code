@@ -1018,7 +1018,7 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
        * has a solution x with 0 <= x <= 1
        */
       double              p_0[3], v[3], b[3];
-      double              x;
+      double              x = -1; /* Default value that definitely fails the check later. */
       int                 i;
 
       /* Compute the vertex coordinates of the line */
