@@ -38,7 +38,7 @@ void                t8_dpyramid_init_linear_id (t8_dpyramid_t * p, int level,
                                                 uint64_t id);
 
 /** Compute the level of a pyramid.
- * \param [in] p    Line whose pyramid is computed.
+ * \param [in] p    Pyramid whose level is computed.
  * \return          The level of \a p.
  */
 int                 t8_dpyramid_get_level (const t8_dpyramid_t * p);
@@ -92,6 +92,10 @@ void                t8_dpyramid_children_at_face(const t8_dpyramid_t * p, int fa
 int                 t8_dpyramid_face_child_face(const t8_dpyramid_t * p,
                                        int face, int face_child);
 
+/** Given a boundary element and a facenumber of this element, compute the boundary face
+ * \param[in] p          Input pyramid
+ * \param[in] face       The face number of an element
+ * \param[in, out]       The boundary face*/
 void                t8_dpyramid_boundary_face(const t8_dpyramid_t * p,
                                               int face, t8_element_t * boundary);
 
@@ -110,8 +114,8 @@ int                 t8_dpyramid_compare (const t8_dpyramid_t * p1,
  * \param [in]  q   second input pyramid
  * \return          0, if they are equal, 1 ow.
  */
-int                 t8_dpyramid_is_equal (const t8_dpyramid_t * p,
-                                          const t8_dpyramid_t * q);
+/*int                 t8_dpyramid_is_equal (const t8_dpyramid_t * p,
+                                          const t8_dpyramid_t * q);*/
 
 /** Check wether a collection of 10 pyramids is a family in Morton order.
  * \param [in]  fam A collection of pyramids
@@ -168,8 +172,8 @@ int                 t8_dpyramid_is_inside_root (const t8_dpyramid_t *p);
 /** Check, if a given pyramid is inside another pyramid
  * \param[in] p     Pyramid to check
  * \param[in] check The outer pyramid in which \a p might lie*/
-int
-t8_dpyramid_is_inside_pyra(const t8_dpyramid_t *p, const t8_dpyramid_t *check);
+int                 t8_dpyramid_is_inside_pyra(const t8_dpyramid_t *p,
+                                               const t8_dpyramid_t *check);
 
 /** Check, if the input pyramid with shape of a tet is inside of a tetrahedron
  * \param [in] p  pyramid with tet shape
@@ -292,10 +296,24 @@ int                 t8_dpyramid_num_siblings (const t8_dpyramid_t * p);
  */
 int                 t8_dpyramid_num_faces(const t8_dpyramid_t *p);
 
+/** Return the maximal number of faces of an element p
+ * \param [in] p    Input pyramid
+ * \return          The maximal number of faces of p*/
 int                 t8_dpyramid_max_num_faces(const t8_dpyramid_t * p);
 
+
+/** Given a face of an element return the face number
+ * of the parent of the element that matches the element's face. Or return -1 if
+ * no face of the parent matches the face.
+ * \param [in] elem Input pyramid
+ * \param [in] face a face of \a elem
+ * \return          the facenumber of the parent of \a elem matching \a face or -1*/
 int                 t8_dpyramid_face_parent_face(const t8_dpyramid_t * elem, int face);
 
+/** Return the child-id of the ancestor of p at level level
+ * \param [in] p    Input pyramid
+ * \param [in] level The ancestor-level
+ * \return          The child-id of the ancestor*/
 int                 t8_dpyramid_ancestor_id(const t8_dpyramid_t * p, int level);
 
 
