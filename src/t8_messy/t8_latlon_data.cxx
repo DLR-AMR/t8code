@@ -337,6 +337,7 @@ double t8_latlon_get_dimension_value(int axis, double ****data, int x_coord,
     case ZYX:
     value = data[z_coord][y_coord][x_coord][dimension];
     break;
+    /* TODO: Add default label with SC_ABORT */
   }
 
   return value;

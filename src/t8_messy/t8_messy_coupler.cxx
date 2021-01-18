@@ -416,6 +416,7 @@ void t8_messy_coarsen(t8_messy_data_t *messy_data) {
     t8_messy_write_forest(forest_adapt, vtu_prefix, data_chunk);
   #endif
 
+  t8_forest_unref (&forest);
   t8_global_productionf("MESSy grid interpolated \n");
 
 }
@@ -424,6 +425,7 @@ void t8_messy_write_forest(t8_forest_t forest, const char* prefix, t8_latlon_dat
 
   int num_elements = t8_forest_get_num_element(forest);
   int num_data = data_chunk->dimensions * data_chunk->z_length;
+  /* TODO: Do not use static array with variable as length */
   t8_vtk_data_field_t vtk_data[num_data];
   double *dim_data_array[num_data];
 

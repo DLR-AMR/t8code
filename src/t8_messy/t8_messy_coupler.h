@@ -87,6 +87,9 @@ typedef struct t8_messy_data {
   t8_forest_t forest_adapt;
 } t8_messy_data_t;
 
+
+T8_EXTERN_C_BEGIN ();
+
 /* Initialize forest for messy reprensentation */
 t8_messy_data_t* t8_messy_initialize(
   const char* description,
@@ -98,7 +101,6 @@ t8_messy_data_t* t8_messy_initialize(
   int z_length,
   int dimensions);
 
-T8_EXTERN_C_BEGIN ();
 
 t8_messy_custom_func_t* t8_messy_new_custom_func(int num_elements);
 
