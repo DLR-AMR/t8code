@@ -51,6 +51,12 @@ t8_fortran_init_all (sc_MPI_Comm * comm)
   t8_fortran_init_all_ (&comm2);
 }
 
+void
+t8_fortran_init_all_noMPI ()
+{
+  t8_fortran_init_all (sc_MPI_COMM_NULL);
+}
+
 /* Wrapper around sc_finalize */
 void
 t8_fortran_finalize ()

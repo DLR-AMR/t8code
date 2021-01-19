@@ -40,6 +40,13 @@ module t8code_fortran_interface
             END subroutine t8_fortran_init_all_f
       end Interface
 
+            !!! Initialize sc and t8code with a given C MPI Communicator
+      Interface
+            subroutine t8_fortran_init_all_noMPI_f ()         &
+                        BIND(C, NAME='t8_fortran_init_all_noMPI')
+            END subroutine t8_fortran_init_all_noMPI_f
+      end Interface
+
       Interface
             type (c_ptr) function t8_cmesh_new_periodic_tri_f (Ccomm) &
                                     bind (c, name = 't8_cmesh_new_periodic_tri_wrap')
