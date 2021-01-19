@@ -1,4 +1,6 @@
+#ifdef T8_ENABLE_MPI
 #include <mpi.h>
+#endif
 #include <gtest/gtest.h>
 #include <t8.h>
 
@@ -23,7 +25,8 @@ int main(int argc, char** argv)
   int retval = RUN_ALL_TESTS ();
 
   sc_finalize ();
+#ifdef T8_ENABLE_MPI
   MPI_Finalize ();
-
+#endif
   return retval;
 }
