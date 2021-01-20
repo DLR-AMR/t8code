@@ -218,6 +218,7 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
   t8_geometry_c      *geometry;
   int                 uniform_level;
   double              time = 0; /* used for moving geometry */
+  int                 sreturn;
 
   t8_cmesh_init (&cmesh);
   /* Depending on the geometry type, add the tree, set the geometry
@@ -351,7 +352,17 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
        * geometry points to this entry, which changes the shape of the tree. */
       time += ((double) end_time) / num_timesteps;
       /* At the time step to the output filename */
-      snprintf (vtuname_with_timestep, BUFSIZ, "%s_%04i", vtuname, timestep);
+      sreturn =
+        snprintf (vtuname_with_timestep, BUFSIZ, "%s_%04i", vtuname,
+                  timestep);
+      if (sreturn >= BUFSIZ) {
+        /* The vtu name message was truncated */
+        /* Note: gcc >= 7.1 prints a warning if we
+         * do not check the return value of snprintf. */
+        t8_debugf ("Warning: Truncated vtu name to '%s'\n",
+                   vtuname_with_timestep);
+      }
+
       t8_forest_write_vtk (forest, vtuname_with_timestep);
     }
   }
@@ -369,6 +380,7 @@ main (int argc, char **argv)
   int                 level;
   int                 parsed, helpme;
   int                 geom_type;
+  int                 sreturn;
 
   /* brief help message */
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t"
@@ -376,10 +388,17 @@ main (int argc, char **argv)
             basename (argv[0]), basename (argv[0]));
 
   /* long help message */
-  snprintf (help, BUFSIZ,
-            "Demonstrates the analytic geometry capabitlities of t8code.\n"
-            "You can choose from different geometries on which to build a uniform forest.\n"
-            "Usage: %s\n", usage);
+  sreturn = snprintf (help, BUFSIZ,
+                      "Demonstrates the analytic geometry capabitlities of t8code.\n"
+                      "You can choose from different geometries on which to build a uniform forest.\n"
+                      "Usage: %s\n", usage);
+
+  if (sreturn >= BUFSIZ) {
+    /* The help message was truncated */
+    /* Note: gcc >= 7.1 prints a warning if we
+     * do not check the return value of snprintf. */
+    t8_debugf ("Warning: Truncated help message to '%s'\n", help);
+  }
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
