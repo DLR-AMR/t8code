@@ -33,7 +33,6 @@
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
 #include <t8_vec.h>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
 
 #define MAX_FACES 8             /* The maximum number of faces of an element */
 /* TODO: This is not memory efficient. If we run out of memory, we can optimize here. */
@@ -1088,28 +1087,6 @@ t8_advect_problem_partition (t8_advect_problem_t * problem, int measure_time)
   problem->phi_values = new_phi;
 }
 
-static void
-t8_analytic_geom_stretch (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
-                          const double *ref_coords, double out_coords[3],
-                          const void *tree_data, const void *user_data)
-{
-  T8_ASSERT (gtreeid == 0);
-  out_coords[0] = ref_coords[0];
-  out_coords[1] = ref_coords[1];
-  out_coords[2] =
-    0.2 * sin (ref_coords[0] * M_PI) * cos (ref_coords[1] * M_PI);
-}
-
-static void
-t8_analytic_cylinder (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
-                      const double *ref_coords, double out_coords[3],
-                      const void *tree_data, const void *user_data)
-{
-  out_coords[0] = cos (ref_coords[0] * 2 * M_PI);
-  out_coords[1] = sin (ref_coords[0] * 2 * M_PI);
-  out_coords[2] = 4 * ref_coords[1];
-}
-
 static              t8_cmesh_t
 t8_advect_create_cmesh (sc_MPI_Comm comm, int cube_type,
                         const char *mshfile, int level, int dim)
@@ -1134,20 +1111,6 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, int cube_type,
     }
     else if (cube_type == 8) {
       return t8_cmesh_new_hypercube_hybrid (comm, 0, 1);
-    }
-    else if (cube_type == 9) {
-      /* Cmesh with analytical geometry */
-      t8_cmesh_t          cmesh;
-      t8_geometry_c      *geometry =
-        new t8_geometry_analytic (2, "geometry cylinder",
-                                  t8_analytic_cylinder, NULL, NULL, NULL);
-      t8_cmesh_init (&cmesh);
-      t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
-      t8_cmesh_set_join (cmesh, 0, 0, 0, 1, 0);
-      t8_cmesh_set_join (cmesh, 0, 0, 2, 3, 0);
-      t8_cmesh_register_geometry (cmesh, geometry);
-      t8_cmesh_commit (cmesh, comm);
-      return cmesh;
     }
     else {
       T8_ASSERT (T8_ECLASS_ZERO <= cube_type && cube_type < T8_ECLASS_COUNT);
@@ -1991,7 +1954,7 @@ main (int argc, char *argv[])
   else if (parsed >= 0 && 1 <= flow_arg && flow_arg <= 6 && 0 <= level
            && 0 <= reflevel && 0 <= vtk_freq
            && ((mshfile != NULL && 0 < dim && dim <= 3)
-               || (1 <= cube_type && cube_type <= 9)) && band_width >= 0) {
+               || (1 <= cube_type && cube_type <= 8)) && band_width >= 0) {
     t8_cmesh_t          cmesh;
     t8_flow_function_3d_fn u;
 
