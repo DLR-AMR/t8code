@@ -29,161 +29,133 @@
 #include <t8_schemes/t8_default/t8_dpyramid_connectivity.h>
 
 void
-t8_linear_face_descendant(t8_element_t * elem, t8_element_t* tmp, t8_element_t* test,
-                          t8_eclass_scheme_c *ts, int maxlvl){
-    int i,j,k, level = ts->t8_element_level(elem), child_id, type;
-    type = ((t8_dpyramid_t *)elem)->type;
-    int num_faces;
-    if(type < 6){
-        num_faces = T8_DTET_FACES;
-    }
-    else{
-        num_faces = T8_DPYRAMID_FACES;
-    }
-    for(i = level+1; i< maxlvl; i++){
-        for(j = 0; j<num_faces; j++)
-        {
-            if(type >= 6){
-                child_id = t8_dpyramid_type_face_to_children_at_face[type-6][j][0];
-            }
-            else{
-                child_id = t8_dtet_face_corner[j][0];
-                child_id = t8_dtet_parenttype_beyid_to_Iloc[type][child_id];
-            }
-            t8_debugf("[D] child_id %i\n", child_id);
-            ts->t8_element_copy(elem,tmp);
-            for(k = level; k<i; k++)
-            {
-                ts->t8_element_child(tmp, child_id,test);
-                ts->t8_element_copy(test,tmp);
-            }
-            t8_debugf("[D] LEVEL: %i\n", i);
-            t8_debugf("[D] elemlen %i, lvllen %i\n", T8_DPYRAMID_LEN(i),
-                      T8_DPYRAMID_LEN(maxlvl));
-            ts->t8_element_first_descendant_face(elem, j, tmp, i);
-            t8_debugf("[D] elem: %i %i %i %i %i\n", ((t8_dpyramid_t *)elem)->x,
-                      ((t8_dpyramid_t *)elem)->y, ((t8_dpyramid_t *)elem)->z,
-                      ((t8_dpyramid_t *)elem)->type, ((t8_dpyramid_t *)elem)->level);
-            t8_debugf("[D] fdf: %i %i %i %i %i\n", ((t8_dpyramid_t *)tmp)->x,
-                      ((t8_dpyramid_t *)tmp)->y, ((t8_dpyramid_t *)tmp)->z,
-                      ((t8_dpyramid_t *)tmp)->type, ((t8_dpyramid_t *)tmp)->level);
-            t8_debugf("[D] test: %i %i %i %i %i\n", ((t8_dpyramid_t *)test)->x,
-                      ((t8_dpyramid_t *)test)->y, ((t8_dpyramid_t *)test)->z,
-                      ((t8_dpyramid_t *)test)->type, ((t8_dpyramid_t *)test)->level);
-            SC_CHECK_ABORT(!ts->t8_element_compare(test, tmp),
-                           "Wrong first descendant face\n");
+t8_linear_face_descendant (t8_element_t * elem, t8_element_t * tmp,
+                           t8_element_t * test, t8_eclass_scheme_c * ts,
+                           int maxlvl)
+{
+  int                  level = ts->t8_element_level (elem),
+                       type = ((t8_dpyramid_t *) elem)->type,
+                       child_id,i, j, k, num_faces;
+  if (type < 6) {
+    num_faces = T8_DTET_FACES;
+  }
+  else {
+    num_faces = T8_DPYRAMID_FACES;
+  }
+  for (i = level + 1; i < maxlvl; i++) {
+    for (j = 0; j < num_faces; j++) {
+      /*Compute the child-id of the first-descendant */
+      if (type >= 6) {
+        child_id = t8_dpyramid_type_face_to_children_at_face[type - 6][j][0];
+      }
+      else {
+        child_id = t8_dtet_face_corner[j][0];
+        child_id = t8_dtet_parenttype_beyid_to_Iloc[type][child_id];
+      }
+      /*Manually computing the first_descendant */
+      ts->t8_element_copy (elem, tmp);
+      for (k = level; k < i; k++) {
+        ts->t8_element_child (tmp, child_id, test);
+        ts->t8_element_copy (test, tmp);
+      }
 
+      ts->t8_element_first_descendant_face (elem, j, tmp, i);
+      SC_CHECK_ABORT (!ts->t8_element_compare (test, tmp),
+                      "Wrong first descendant face\n");
 
-            if(type >= 6){
-                child_id = t8_dpyramid_type_face_to_children_at_face[type-6][j][3];
-            }
-            else{
-                child_id = SC_MAX(t8_dtet_face_corner[j][1], t8_dtet_face_corner[j][2]);
-                child_id = t8_dtet_parenttype_beyid_to_Iloc[type][child_id];
-            }
-            ts->t8_element_copy(elem,tmp);
-            for(k = level; k<i; k++)
-            {
-                ts->t8_element_child(tmp, child_id,test);
-                ts->t8_element_copy(test,tmp);
-            }
-            t8_debugf("[D] LEVEL: %i\n", i);
-            ts->t8_element_last_descendant_face(elem, j, tmp, i);
-            t8_debugf("[D] ldf: %i %i %i %i %i\n", ((t8_dpyramid_t *)tmp)->x,
-                      ((t8_dpyramid_t *)tmp)->y, ((t8_dpyramid_t *)tmp)->z,
-                      ((t8_dpyramid_t *)tmp)->type, ((t8_dpyramid_t *)tmp)->level);
-            t8_debugf("[D] test: %i %i %i %i %i\n\n", ((t8_dpyramid_t *)test)->x,
-                      ((t8_dpyramid_t *)test)->y, ((t8_dpyramid_t *)test)->z,
-                      ((t8_dpyramid_t *)test)->type, ((t8_dpyramid_t *)test)->level);
-            SC_CHECK_ABORT(!ts->t8_element_compare(test, tmp),
-                           "Wrong last descendant face\n");
+      /*Computing the child-id of the last descendant */
+      if (type >= 6) {
+        child_id = t8_dpyramid_type_face_to_children_at_face[type - 6][j][3];
+      }
+      else {
+        child_id =
+          SC_MAX (t8_dtet_face_corner[j][1], t8_dtet_face_corner[j][2]);
+        child_id = t8_dtet_parenttype_beyid_to_Iloc[type][child_id];
+      }
+      /*Manually computing the last_descendant */
+      ts->t8_element_copy (elem, tmp);
+      for (k = level; k < i; k++) {
+        ts->t8_element_child (tmp, child_id, test);
+        ts->t8_element_copy (test, tmp);
+      }
+      ts->t8_element_last_descendant_face (elem, j, tmp, i);
 
-        }
+      SC_CHECK_ABORT (!ts->t8_element_compare (test, tmp),
+                      "Wrong last descendant face\n");
+
     }
+  }
 }
 
+/*Recursivly check the first and last descendant along a face*/
 void
-t8_recursive_face_desendant(t8_element_t * elem, t8_element_t * test, t8_element_t * tmp,
-                            t8_element_t * child, t8_eclass_scheme_c *ts, int maxlvl){
-    int level = ts->t8_element_level(elem);
-    int i,j,k, child_id, type, num_faces, num_children;
-    T8_ASSERT (level <= maxlvl &&
-               maxlvl <= ts->t8_element_maxlevel() - 1);
-    if(level == maxlvl) return;
-    if(ts->t8_element_shape(elem) == T8_ECLASS_PYRAMID){
-        num_faces = T8_DPYRAMID_FACES;
-    }
-    else{
-        num_faces = T8_DTET_FACES;
-    }
-    type = ((t8_dpyramid_t *)elem)->type;
-    for(i = level+1; i< maxlvl; i++){
-        for(j = 0; j<num_faces; j++)
-        {
-            if(type >= 6){
-                child_id = t8_dpyramid_type_face_to_children_at_face[type-6][j][0];
-            }
-            else{
-                child_id = t8_dtet_face_corner[j][0];
-                child_id = t8_dtet_parenttype_beyid_to_Iloc[type][child_id];
-            }
-            t8_debugf("[R] child_id %i\n", child_id);
-            ts->t8_element_copy(elem,tmp);
-            for(k = level; k<i; k++)
-            {
-                ts->t8_element_child(tmp, child_id,test);
-                ts->t8_element_copy(test,tmp);
-            }
-            t8_debugf("[R] LEVEL: %i\n", i);
-            t8_debugf("[R] elemlen %i, lvllen %i\n", T8_DPYRAMID_LEN(i),
-                      T8_DPYRAMID_LEN(maxlvl));
-            ts->t8_element_first_descendant_face(elem, j, tmp, i);
-            t8_debugf("[R] elem: %i %i %i %i %i\n", ((t8_dpyramid_t *)elem)->x,
-                      ((t8_dpyramid_t *)elem)->y, ((t8_dpyramid_t *)elem)->z,
-                      ((t8_dpyramid_t *)elem)->type, ((t8_dpyramid_t *)elem)->level);
-            t8_debugf("[R] fdf: %i %i %i %i %i\n", ((t8_dpyramid_t *)tmp)->x,
-                      ((t8_dpyramid_t *)tmp)->y, ((t8_dpyramid_t *)tmp)->z,
-                      ((t8_dpyramid_t *)tmp)->type, ((t8_dpyramid_t *)tmp)->level);
-            t8_debugf("[R] test: %i %i %i %i %i\n", ((t8_dpyramid_t *)test)->x,
-                      ((t8_dpyramid_t *)test)->y, ((t8_dpyramid_t *)test)->z,
-                      ((t8_dpyramid_t *)test)->type, ((t8_dpyramid_t *)test)->level);
-            SC_CHECK_ABORT(!ts->t8_element_compare(test, tmp),
-                           "Wrong first descendant face\n");
+t8_recursive_face_desendant (t8_element_t * elem, t8_element_t * test,
+                             t8_element_t * tmp, t8_element_t * child,
+                             t8_eclass_scheme_c * ts, int maxlvl)
+{
+  int                 level = ts->t8_element_level (elem),
+                      i, j, k, child_id, type, num_faces, num_children;
+  T8_ASSERT (level <= maxlvl && maxlvl <= ts->t8_element_maxlevel () - 1);
+  if (level == maxlvl)
+    return;
+  /* Get the number of faces of the current element */
+  if (ts->t8_element_shape (elem) == T8_ECLASS_PYRAMID) {
+    num_faces = T8_DPYRAMID_FACES;
+  }
+  else {
+    num_faces = T8_DTET_FACES;
+  }
+  type = ((t8_dpyramid_t *) elem)->type;
+  /* Check face descendants from current-level + 1 to given maximum level */
+  for (i = level + 1; i < maxlvl; i++) {
+    for (j = 0; j < num_faces; j++) {
+      /*Get the id of the child at the face */
+      if (type >= 6) {
+        child_id = t8_dpyramid_type_face_to_children_at_face[type - 6][j][0];
+      }
+      else {
+        child_id = t8_dtet_face_corner[j][0];
+        child_id = t8_dtet_parenttype_beyid_to_Iloc[type][child_id];
+      }
 
+      ts->t8_element_copy (elem, tmp);
+      /*The child-id of the descendant is always the same over the level. */
+      for (k = level; k < i; k++) {
+        ts->t8_element_child (tmp, child_id, test);
+        ts->t8_element_copy (test, tmp);
+      }
 
-            if(type >= 6){
-                child_id = t8_dpyramid_type_face_to_children_at_face[type-6][j][3];
-            }
-            else{
-                child_id = SC_MAX(t8_dtet_face_corner[j][1], t8_dtet_face_corner[j][2]);
-                child_id = t8_dtet_parenttype_beyid_to_Iloc[type][child_id];
-            }
-            ts->t8_element_copy(elem,tmp);
-            for(k = level; k<i; k++)
-            {
-                ts->t8_element_child(tmp, child_id,test);
-                ts->t8_element_copy(test,tmp);
-            }
-            t8_debugf("[R] LEVEL: %i\n", i);
-            ts->t8_element_last_descendant_face(elem, j, tmp, i);
-            t8_debugf("[R] ldf: %i %i %i %i %i\n", ((t8_dpyramid_t *)tmp)->x,
-                      ((t8_dpyramid_t *)tmp)->y, ((t8_dpyramid_t *)tmp)->z,
-                      ((t8_dpyramid_t *)tmp)->type, ((t8_dpyramid_t *)tmp)->level);
-            t8_debugf("[R] test: %i %i %i %i %i\n\n", ((t8_dpyramid_t *)test)->x,
-                      ((t8_dpyramid_t *)test)->y, ((t8_dpyramid_t *)test)->z,
-                      ((t8_dpyramid_t *)test)->type, ((t8_dpyramid_t *)test)->level);
-            SC_CHECK_ABORT(!ts->t8_element_compare(test, tmp),
-                           "Wrong last descendant face\n");
+      ts->t8_element_first_descendant_face (elem, j, tmp, i);
+      SC_CHECK_ABORT (!ts->t8_element_compare (test, tmp),
+                      "Wrong first descendant face\n");
 
-        }
+      /*Analogously check the last facedescendant */
+      if (type >= 6) {
+        child_id = t8_dpyramid_type_face_to_children_at_face[type - 6][j][3];
+      }
+      else {
+        child_id =
+          SC_MAX (t8_dtet_face_corner[j][1], t8_dtet_face_corner[j][2]);
+        child_id = t8_dtet_parenttype_beyid_to_Iloc[type][child_id];
+      }
+      ts->t8_element_copy (elem, tmp);
+      for (k = level; k < i; k++) {
+        ts->t8_element_child (tmp, child_id, test);
+        ts->t8_element_copy (test, tmp);
+      }
+      ts->t8_element_last_descendant_face (elem, j, tmp, i);
+      SC_CHECK_ABORT (!ts->t8_element_compare (test, tmp),
+                      "Wrong last descendant face\n");
+
     }
+  }
 
-    num_children = ts->t8_element_num_children(elem);
-    for(i = 0; i < num_children; i++){
-        ts->t8_element_child(elem, i, child);
-        t8_recursive_face_desendant(child, test,tmp,elem, ts, maxlvl);
-        ts->t8_element_parent(child, elem);
-    }
+  num_children = ts->t8_element_num_children (elem);
+  for (i = 0; i < num_children; i++) {
+    ts->t8_element_child (elem, i, child);
+    t8_recursive_face_desendant (child, test, tmp, elem, ts, maxlvl);
+    ts->t8_element_parent (child, elem);
+  }
 }
 
 static void
@@ -192,8 +164,9 @@ t8_check_face_desc (const int maxlvl)
   t8_element_t       *element, *child, *test, *tmp;
   t8_scheme_cxx      *scheme;
   t8_eclass_scheme_c *ts;
-  int                 eclassi, id, level, i,j;
+  int                 eclassi;
   t8_eclass_t         eclass;
+
   scheme = t8_scheme_new_default_cxx ();
   for (eclassi = T8_ECLASS_PYRAMID; eclassi < T8_ECLASS_COUNT; eclassi++) {
     eclass = (t8_eclass_t) eclassi;
@@ -207,9 +180,9 @@ t8_check_face_desc (const int maxlvl)
 
     ts->t8_element_set_linear_id (element, 0, 0);
     /* Check for correct parent-child relation */
-    t8_linear_face_descendant(element, child, test, ts,  maxlvl);
+    t8_linear_face_descendant (element, child, test, ts, maxlvl);
 
-    t8_recursive_face_desendant(element,test,tmp,child,ts,maxlvl);
+    t8_recursive_face_desendant (element, test, tmp, child, ts, maxlvl);
 
     /* Destroy element */
     ts->t8_element_destroy (1, &element);
@@ -238,7 +211,7 @@ main (int argc, char **argv)
   p4est_init (NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  t8_check_face_desc(maxlvl);
+  t8_check_face_desc (maxlvl);
 
   sc_finalize ();
 
