@@ -871,7 +871,7 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
   if (t8_cmesh_is_partitioned (cmesh)) {
     if ((retval =
          nc_create_par (context->filename, NC_CLOBBER | NC_NETCDF4
-                        || NC_MPIIO, sc_MPI_COMM_WORLD, sc_MPI_INFO_NULL,
+                        | NC_MPIIO, sc_MPI_COMM_WORLD, sc_MPI_INFO_NULL,
                         &context->ncid))) {
       ERR (retval);
     }

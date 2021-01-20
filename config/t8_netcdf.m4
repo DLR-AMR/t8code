@@ -13,7 +13,7 @@ dnl This link test changes the LIBS variable in place for posterity
 dnl SAVE_LIBS="$LIBS"
 dnl T8_CHECK_LIB([netcdf], [nc_open], [NETCDF])
 dnl LIBS="$SAVE_LIBS"
-dnl AC_MSG_CHECKING([for netcdf linkage])
+AC_MSG_CHECKING([for netcdf linkage])
 
 T8_ARG_WITH([netcdf],
   [netcdf library (optionally use --with-netcdf=<NETCDF_LIBS>)],
@@ -30,9 +30,11 @@ if test "x$T8_WITH_NETCDF" != xno ; then
 [[
 ]],[[
   #include <netcdf.h>
+  #include <netcdf_par.h>
+  #include <mpi.h>
 
   int ncid;
-  nc_open (NULL, NC_NOWRITE, &ncid);
+  nc_open_par (NULL, NC_NOWRITE, MPI_COMM_SELF, MPI_INFO_NULL, &ncid);
 ]])],,
                  [AC_MSG_ERROR([Unable to link with netcdf library])])
 dnl Keep the variables changed as done above

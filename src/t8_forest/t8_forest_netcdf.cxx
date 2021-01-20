@@ -937,7 +937,7 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
   /* Create a parallel NetCDF-File */
   if ((retval =
        nc_create_par (context->filename, NC_CLOBBER | NC_NETCDF4
-                      || NC_MPIIO, sc_MPI_COMM_WORLD, sc_MPI_INFO_NULL,
+                      | NC_MPIIO, sc_MPI_COMM_WORLD, sc_MPI_INFO_NULL,
                       &context->ncid))) {
     ERR (retval);
   }
