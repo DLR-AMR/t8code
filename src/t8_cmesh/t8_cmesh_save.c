@@ -225,7 +225,7 @@ t8_cmesh_load_tree_attributes (t8_cmesh_t cmesh, FILE * fp)
       att_struct.package_id = t8_get_package_id ();
 
       /* read the size of the attribute */
-      ret = fscanf (fp, "size %zd\n", &att_struct.attr_size);
+      ret = fscanf (fp, "size %zu\n", &att_struct.attr_size);
       T8_SAVE_CHECK_CLOSE (ret == 1, fp);
       /* Read the vertices */
       for (i = 0; i < num_vertices; i++) {
@@ -367,7 +367,7 @@ t8_cmesh_load_trees (t8_cmesh_t cmesh, FILE * fp)
   long                num_trees;
 
   ret =
-    fscanf (fp, "Total bytes for trees and ghosts %zd\n", &bytes_for_trees);
+    fscanf (fp, "Total bytes for trees and ghosts %zu\n", &bytes_for_trees);
   T8_SAVE_CHECK_CLOSE (ret == 1, fp);   /* The bytes_for_trees data is currently not used */
   ret = fscanf (fp, "\n--- Tree section ---\n");
   T8_SAVE_CHECK_CLOSE (ret == 0, fp);
@@ -390,7 +390,7 @@ t8_cmesh_load_trees (t8_cmesh_t cmesh, FILE * fp)
     (void) t8_cmesh_trees_get_tree (cmesh->trees, itree);
     /* Check whether the number of attribute is really 1 */
     ret =
-      fscanf (fp, "num_attributes %i\nSize of attributes %zd\n", &num_atts,
+      fscanf (fp, "num_attributes %i\nSize of attributes %zu\n", &num_atts,
               &att_bytes);
     T8_SAVE_CHECK_CLOSE (ret == 2, fp);
     T8_SAVE_CHECK_CLOSE (num_atts == 1, fp);

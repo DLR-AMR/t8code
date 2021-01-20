@@ -695,7 +695,6 @@ public:
                                        int called_new) = 0;
 
   /** Deallocate an array of elements.
-   * \param [in] ts       The virtual table for this element class.
    * \param [in] length   The number of elements in the array.
    * \param [in,out] elems On input an array of \b length many allocated
    *                      element pointers.

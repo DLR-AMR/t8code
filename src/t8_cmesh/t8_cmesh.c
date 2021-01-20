@@ -921,7 +921,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 {
   int                 mpirank, mpisize, mpiret;
   int                 iclass;
-  t8_cmesh_t          cmesh_out;
+  t8_cmesh_t          cmesh_out = NULL; /* NULL initializer prevents compiler warning. */
 
   struct
   {

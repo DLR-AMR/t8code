@@ -35,11 +35,19 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree,
   int                 p, idata, num_scalars = 0;
   int                 write_cell_data, wrote_cell_data = 0;
   int                 printed = 0;
+  int                 sreturn;
 
   write_cell_data = write_tree || write_rank || write_level || write_id
     || num_data > 0;
 
-  snprintf (pvtufilename, BUFSIZ, "%s.pvtu", filename);
+  sreturn = snprintf (pvtufilename, BUFSIZ, "%s.pvtu", filename);
+
+  if (sreturn >= BUFSIZ) {
+    /* The filename was truncated */
+    /* Note: gcc >= 7.1 prints a warning if we 
+     * do not check the return value of snprintf. */
+    t8_debugf ("Warning: Truncated vtk file name to '%s'\n", pvtufilename);
+  }
 
   pvtufile = fopen (pvtufilename, "wb");
   if (!pvtufile) {
@@ -70,8 +78,18 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree,
 
     for (idata = 0; idata < num_data && data[idata].type == T8_VTK_SCALAR;
          idata++) {
-      snprintf (description, BUFSIZ, "%s_%s", data[idata].description,
-                "points");
+      sreturn =
+        snprintf (description, BUFSIZ, "%s_%s", data[idata].description,
+                  "points");
+
+      if (sreturn >= BUFSIZ) {
+        /* The output was truncated */
+        /* Note: gcc >= 7.1 prints a warning if we 
+         * do not check the return value of snprintf. */
+        t8_debugf ("Warning: Truncated vtk point data description to '%s'\n",
+                   description);
+      }
+
       printed +=
         snprintf (vtkPointDataString + printed, BUFSIZ - printed, "%s%s",
                   printed > 0 ? "," : "", description);
@@ -84,8 +102,18 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree,
         SC_CHECK_ABORT (data[idata].type == T8_VTK_VECTOR,
                         "vtk data missmatch. After scalar fields only vector"
                         " fields are allowed.");
-        snprintf (description, BUFSIZ, "%s_%s", data[idata].description,
-                  "points");
+        sreturn =
+          snprintf (description, BUFSIZ, "%s_%s", data[idata].description,
+                    "points");
+
+        if (sreturn >= BUFSIZ) {
+          /* The output was truncated */
+          /* Note: gcc >= 7.1 prints a warning if we 
+           * do not check the return value of snprintf. */
+          t8_debugf
+            ("Warning: Truncated vtk point data description to '%s'\n",
+             description);
+        }
         printed +=
           snprintf (vtkPointVectorString + printed, BUFSIZ - printed, "%s%s",
                     printed > 0 ? "," : "", description);
@@ -104,8 +132,19 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree,
       }
       /* Write data fields */
       for (idata = 0; idata < num_scalars; idata++) {
-        snprintf (description, BUFSIZ, "%s_%s", data[idata].description,
-                  "points");
+        sreturn =
+          snprintf (description, BUFSIZ, "%s_%s", data[idata].description,
+                    "points");
+
+        if (sreturn >= BUFSIZ) {
+          /* The output was truncated */
+          /* Note: gcc >= 7.1 prints a warning if we 
+           * do not check the return value of snprintf. */
+          t8_debugf
+            ("Warning: Truncated vtk point data description to '%s'\n",
+             description);
+        }
+
         fprintf (pvtufile,
                  "      "
                  "<PDataArray type=\"%s\" Name=\"%s\" format=\"%s\"/>\n",
@@ -115,8 +154,19 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree,
       /* Write vector data fields */
       for (idata = num_scalars; idata < num_data; idata++) {
         T8_ASSERT (data[idata].type == T8_VTK_VECTOR);
-        snprintf (description, BUFSIZ, "%s_%s", data[idata].description,
-                  "points");
+        sreturn =
+          snprintf (description, BUFSIZ, "%s_%s", data[idata].description,
+                    "points");
+
+        if (sreturn >= BUFSIZ) {
+          /* The output was truncated */
+          /* Note: gcc >= 7.1 prints a warning if we 
+           * do not check the return value of snprintf. */
+          t8_debugf
+            ("Warning: Truncated vtk point data description to '%s'\n",
+             description);
+        }
+
         fprintf (pvtufile,
                  "      "
                  "<PDataArray type=\"%s\" Name=\"%s\" NumberOfComponents=\"3\" "
@@ -223,7 +273,14 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree,
     fprintf (pvtufile, "    </PCellData>\n");
   }
 
-  snprintf (filename_cpy, BUFSIZ, "%s", filename);
+  sreturn = snprintf (filename_cpy, BUFSIZ, "%s", filename);
+  if (sreturn >= BUFSIZ) {
+    /* The filname was truncated */
+    /* Note: gcc >= 7.1 prints a warning if we 
+     * do not check the return value of snprintf. */
+    t8_debugf ("Warning: Truncated vtk file name cpy to '%s'\n",
+               filename_cpy);
+  }
   for (p = 0; p < num_procs; ++p) {
     fprintf (pvtufile, "    <Piece Source=\"%s_%04d.vtu\"/>\n",
              basename (filename_cpy), p);
