@@ -569,7 +569,7 @@ t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix)
     /* Get the stored geometry and the linear geometry and compare their names. */
     const t8_geometry_c *geom =
       t8_geom_handler_get_unique_geometry (cmesh->geometry_handler);
-    const t8_geometry_c *linear_geom =
+    t8_geometry_c      *linear_geom =
       t8_geometry_linear_new (cmesh->dimension);
 
     if (!strcmp (t8_geom_get_name (geom), t8_geom_get_name (linear_geom))) {
