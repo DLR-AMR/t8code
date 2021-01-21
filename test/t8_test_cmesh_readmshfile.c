@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <unistd.h> /* Needed to check for file access */
+#include <unistd.h>             /* Needed to check for file access */
 #include <t8.h>
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
@@ -33,7 +33,6 @@
  * We also try to read version 2 binary, version 4 ascii and version 4 binary
  * formats. All are not supported and we expect the reader to catch this.
  */
-
 
 /* Check whether the input cmesh matches a given coarse mesh.
  * Returns 1 on success, -1 on failure, 0 if cmesh is NULL.
@@ -139,11 +138,20 @@ t8_test_cmesh_readmshfile_version2_ascii ()
 {
   int                 retval;
   t8_cmesh_t          cmesh;
+  const char          fileprefix[BUFSIZ - 4] =
+    "test/testfiles/test_msh_file_vers2_ascii";
+  char                filename[BUFSIZ];
+
+  snprintf (filename, BUFSIZ, "%s.msh", fileprefix);
 
   t8_global_productionf ("Checking msh file version 2 ascii...\n");
-  cmesh =
-    t8_cmesh_from_msh_file ("test/testfiles/test_msh_file_vers2_ascii", 1,
-                            sc_MPI_COMM_WORLD, 2, 0);
+
+  /* Check if file exists. */
+  SC_CHECK_ABORTF (access (filename, R_OK) == 0, "Could not open file %s.\n",
+                   filename);
+
+  /* Try to read cmesh */
+  cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0);
   SC_CHECK_ABORT (cmesh != NULL,
                   "Could not read cmesh from ascii version 2, but should be able to.");
   retval = t8_test_supported_msh_file (cmesh);
@@ -161,11 +169,20 @@ t8_test_cmesh_readmshfile_version2_bin ()
 {
   int                 retval;
   t8_cmesh_t          cmesh;
+  const char          fileprefix[BUFSIZ - 4] =
+    "test/testfiles/test_msh_file_vers2_bin";
+  char                filename[BUFSIZ];
+
+  snprintf (filename, BUFSIZ, "%s.msh", fileprefix);
 
   t8_global_productionf ("Checking msh file version 2 binary...\n");
-  cmesh =
-    t8_cmesh_from_msh_file ("test/testfiles/test_msh_file_vers2_bin", 1,
-                            sc_MPI_COMM_WORLD, 2, 0);
+
+  /* Check if file exists. */
+  SC_CHECK_ABORTF (access (filename, R_OK) == 0, "Could not open file %s.\n",
+                   filename);
+
+  /* Try to read cmesh */
+  cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0);
   SC_CHECK_ABORT (cmesh == NULL,
                   "Expected fail of reading binary msh file v.2, but did not fail.");
   retval = t8_test_supported_msh_file (cmesh);
@@ -181,11 +198,20 @@ t8_test_cmesh_readmshfile_version4_ascii ()
 {
   int                 retval;
   t8_cmesh_t          cmesh;
+  const char          fileprefix[BUFSIZ - 4] =
+    "test/testfiles/test_msh_file_vers4_ascii";
+  char                filename[BUFSIZ];
+
+  snprintf (filename, BUFSIZ, "%s.msh", fileprefix);
 
   t8_global_productionf ("Checking msh file version 4 ascii...\n");
-  cmesh =
-    t8_cmesh_from_msh_file ("test/testfiles/test_msh_file_vers4_ascii", 1,
-                            sc_MPI_COMM_WORLD, 2, 0);
+
+  /* Check if file exists. */
+  SC_CHECK_ABORTF (access (filename, R_OK) == 0, "Could not open file %s.\n",
+                   filename);
+
+  /* Try to read cmesh */
+  cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0);
   SC_CHECK_ABORT (cmesh == NULL,
                   "Expected fail of reading ascii msh file v4, but did not fail.");
   retval = t8_test_supported_msh_file (cmesh);
@@ -200,11 +226,20 @@ t8_test_cmesh_readmshfile_version4_bin ()
 {
   int                 retval;
   t8_cmesh_t          cmesh;
+  const char          fileprefix[BUFSIZ - 4] =
+    "test/testfiles/test_msh_file_vers4_bin";
+  char                filename[BUFSIZ];
+
+  snprintf (filename, BUFSIZ, "%s.msh", fileprefix);
 
   t8_global_productionf ("Checking msh file version 4 binary...\n");
-  cmesh =
-    t8_cmesh_from_msh_file ("test/testfiles/test_msh_file_vers4_bin", 1,
-                            sc_MPI_COMM_WORLD, 2, 0);
+
+  /* Check if file exists. */
+  SC_CHECK_ABORTF (access (filename, R_OK) == 0, "Could not open file %s.\n",
+                   filename);
+
+  /* Try to read cmesh */
+  cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0);
   SC_CHECK_ABORT (cmesh == NULL,
                   "Expected fail of reading binary msh file v4, but did not fail.");
   retval = t8_test_supported_msh_file (cmesh);
