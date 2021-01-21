@@ -3,6 +3,11 @@
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include <t8_cmesh_readmshfile.h>
 
+/* Check whether the input cmesh matches a given coarse mesh.
+ * Returns 1 on success, -1 on failure, 0 if cmesh is NULL.
+ * We use this function to check whether the cmesh was read correctly from
+ * the file test_msh_file_vers2_ascii.msh
+ */
 static int
 t8_test_supported_msh_file (t8_cmesh_t cmesh)
 {
@@ -19,7 +24,6 @@ t8_test_supported_msh_file (t8_cmesh_t cmesh)
 
   /* Description of the properties of the example msh-files. */
   const int           number_elements = 4;
-  const int           dimension = 2;
   const t8_eclass_t   elem_type = T8_ECLASS_TRIANGLE;
   /* *INDENT-OFF* */
   int vertex[6][2] = {
@@ -97,12 +101,91 @@ t8_test_supported_msh_file (t8_cmesh_t cmesh)
   }
 }
 
+/* Read the version 2 ascii file. This should work. */
+static void
+t8_test_cmesh_readmshfile_version2_ascii ()
+{
+  int                 retval;
+  t8_cmesh_t          cmesh;
+
+  t8_global_productionf ("Checking msh file version 2 ascii...\n");
+  cmesh =
+    t8_cmesh_from_msh_file ("test/testfiles/test_msh_file_vers2_ascii", 1,
+                            sc_MPI_COMM_WORLD, 2, 0);
+  SC_CHECK_ABORT (cmesh != NULL,
+                  "Could not read cmesh from ascii version 2, but should be able to.");
+  retval = t8_test_supported_msh_file (cmesh);
+  SC_CHECK_ABORT (retval == 1, "Cmesh incorrectly read from file.");
+
+  /* The cmesh was read sucessfully and we need to destroy it. */
+  t8_cmesh_destroy (&cmesh);
+
+  t8_global_productionf ("Could successfully read.\n");
+}
+
+/* Read version 2 binary file. We expect this to fail. */
+static void
+t8_test_cmesh_readmshfile_version2_bin ()
+{
+  int                 retval;
+  t8_cmesh_t          cmesh;
+
+  t8_global_productionf ("Checking msh file version 2 binary...\n");
+  cmesh =
+    t8_cmesh_from_msh_file ("test/testfiles/test_msh_file_vers2_bin", 1,
+                            sc_MPI_COMM_WORLD, 2, 0);
+  SC_CHECK_ABORT (cmesh == NULL,
+                  "Expected fail of reading binary msh file v.2, but did not fail.");
+  retval = t8_test_supported_msh_file (cmesh);
+  SC_CHECK_ABORT (retval == 0,
+                  "Unexpected return from t8_test_supported_msh_file.");
+
+  t8_global_productionf ("Error handling successfull.\n");
+}
+
+/* Read version 4 ascii file. We expect this to fail. */
+static void
+t8_test_cmesh_readmshfile_version4_ascii ()
+{
+  int                 retval;
+  t8_cmesh_t          cmesh;
+
+  t8_global_productionf ("Checking msh file version 4 ascii...\n");
+  cmesh =
+    t8_cmesh_from_msh_file ("test/testfiles/test_msh_file_vers4_ascii", 1,
+                            sc_MPI_COMM_WORLD, 2, 0);
+  SC_CHECK_ABORT (cmesh == NULL,
+                  "Expected fail of reading ascii msh file v4, but did not fail.");
+  retval = t8_test_supported_msh_file (cmesh);
+  SC_CHECK_ABORT (retval == 0,
+                  "Unexpected return from t8_test_supported_msh_file.");
+  t8_global_productionf ("Error handling successfull.\n");
+}
+
+/* Read version 4 bin file. We expect this to fail. */
+static void
+t8_test_cmesh_readmshfile_version4_bin ()
+{
+  int                 retval;
+  t8_cmesh_t          cmesh;
+
+  t8_global_productionf ("Checking msh file version 4 binary...\n");
+  cmesh =
+    t8_cmesh_from_msh_file ("test/testfiles/test_msh_file_vers4_bin", 1,
+                            sc_MPI_COMM_WORLD, 2, 0);
+  SC_CHECK_ABORT (cmesh == NULL,
+                  "Expected fail of reading binary msh file v4, but did not fail.");
+  retval = t8_test_supported_msh_file (cmesh);
+  SC_CHECK_ABORT (retval == 0,
+                  "Unexpected return from t8_test_supported_msh_file.");
+  t8_global_productionf ("Error handling successfull.\n");
+}
+
 int
 main (int argc, char **argv)
 {
 
-  int                 mpiret, retval;
-  t8_cmesh_t          cmesh;
+  int                 mpiret;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -116,49 +199,22 @@ main (int argc, char **argv)
   t8_global_productionf ("Testing: Reading of msh-files.\n");
 
   /* Testing supported msh-file version 2 (as example). */
-  cmesh =
-    t8_cmesh_from_msh_file ("test/testfiles/test_msh_file_vers2_ascii", 1,
-                            sc_MPI_COMM_WORLD, 2, 0);
-  retval = t8_test_supported_msh_file (cmesh);
-  if (retval != 1) {
-    t8_global_errorf ("Reading of supported msh-file version failed.\n");
-    goto end_test;
-  }
+  t8_test_cmesh_readmshfile_version2_ascii ();
 
-#if 1
-  /* Testing unsupported version of msh-files (bin-format). */
-  cmesh =
-    t8_cmesh_from_msh_file ("test/testfiles/test_msh_file_vers2_bin", 1,
-                            sc_MPI_COMM_WORLD, 2, 0);
-  retval = t8_test_supported_msh_file (cmesh);
-  if (retval != 0) {
-    t8_global_errorf ("Rejecting of unsupported msh-files failed.\n");
-    goto end_test;
-  }
+  /* Testing unsupported msh-file version 2 binary. */
+  t8_test_cmesh_readmshfile_version2_bin ();
 
-  /* Testing unsupported version of msh-files (version 4). */
-  cmesh =
-    t8_cmesh_from_msh_file ("test/testfiles/test_msh_file_vers4_ascii", 1,
-                            sc_MPI_COMM_WORLD, 2, 0);
-  retval = t8_test_supported_msh_file (cmesh);
-  if (retval != 0) {
-    t8_global_errorf ("Rejecting of unsupported msh-files failed.\n");
-    goto end_test;
-  }
-#endif
-  t8_global_productionf ("Done testing reading of msh-files\n");
+  /* Testing unsupported msh-file version 4 ascii. */
+  t8_test_cmesh_readmshfile_version4_ascii ();
+
+  /* Testing unsupported msh-file version 4 binary. */
+  t8_test_cmesh_readmshfile_version4_bin ();
+
+  t8_debugf ("Test successfull\n");
 
   sc_finalize ();
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
-/* If the test was succesful. */
-  return 0;
 
-/* In case anything failed, the test is going to be closed. */
-end_test:
-  t8_debugf ("The test was not succesful.\n");
-  if (t8_cmesh_is_committed (cmesh)) {
-    t8_cmesh_destroy (&cmesh);
-  }
-  return 1;
+  return 0;
 }
