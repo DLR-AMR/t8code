@@ -1846,6 +1846,9 @@ t8_cmesh_new_hypercube_hybrid (int dim, sc_MPI_Comm comm, int do_partition,
     1, 1, 1
   };
 
+  SC_CHECK_ABORT (do_partition == 0,
+                  "Partition not implemented for t8_cmesh_new_hypercube_hybrid\n");
+
   t8_cmesh_init (&cmesh);
   /* This cmesh consists of 6 tets, 6 prisms and 3 hexes */
   for (i = 0; i < 6; i++) {
