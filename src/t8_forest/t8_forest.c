@@ -625,7 +625,7 @@ t8_forest_commit (t8_forest_t forest)
         SC_ABORT ("Invalid choice of ghost algorithm");
       }
     }
-  forest->do_ghost = 0;
+    forest->do_ghost = 0;
   }
 }
 
