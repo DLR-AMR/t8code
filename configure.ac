@@ -20,7 +20,7 @@ echo "o---------------------------------------"
 echo "| Checking options"
 echo "o---------------------------------------"
 
-P4EST_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
+T8_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
                  [DEBUG])
 
 echo "o---------------------------------------"
@@ -28,7 +28,7 @@ echo "| Checking MPI and related programs"
 echo "o---------------------------------------"
 
 dnl A nonempty second/third argument causes to enable F77+F90/CXX, respectively.
-SC_MPI_CONFIG([T8], [yes], [yes])
+SC_MPI_CONFIG([T8], [], [yes])
 SC_MPI_ENGAGE([T8])
 # This is needed for compatibility with automake >= 1.12
 m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
@@ -67,6 +67,15 @@ export P4EST_SC_SOURCE=../sc
 P4EST_AS_SUBPACKAGE([T8])
 AM_CONDITIONAL([T8_DIST_DENY], [test "x$T8_DIST_DENY" != x])
 AC_SUBST([T8_DISTCLEAN])
+
+echo "o---------------------------------------"
+echo "| Copying files"
+echo "o---------------------------------------"
+
+AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers2_ascii.msh:test/testfiles/test_msh_file_vers2_ascii.msh])
+AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers2_bin.msh:test/testfiles/test_msh_file_vers2_bin.msh])
+AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers4_ascii.msh:test/testfiles/test_msh_file_vers4_ascii.msh])
+AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers4_bin.msh:test/testfiles/test_msh_file_vers4_bin.msh])
 
 # Print summary.
 

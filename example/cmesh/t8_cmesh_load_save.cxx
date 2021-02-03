@@ -24,6 +24,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh_vtk.h>
 #include <t8_cmesh_readmshfile.h>
+#include <t8_schemes/t8_default_cxx.hxx>
 
 /* TODO: rename this file to t8_something */
 
@@ -46,7 +47,8 @@ t8_cmesh_load_distribute (const char *fileprefix, int num_files, int no_vtk)
     }
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh);
-    t8_cmesh_set_partition_uniform (cmesh_partition, 0);
+    t8_cmesh_set_partition_uniform (cmesh_partition, 0,
+                                    t8_scheme_new_default_cxx ());
     t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
     if (!no_vtk) {
       t8_cmesh_vtk_write_file (cmesh_partition, "cmesh_dist_loaded_partition",
@@ -71,7 +73,8 @@ t8_cmesh_save_cmesh (const char *mshfile, int dim)
     cmesh = t8_cmesh_from_msh_file (mshfile, 1, sc_MPI_COMM_WORLD, dim, 0);
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh);
-    t8_cmesh_set_partition_uniform (cmesh_partition, 0);
+    t8_cmesh_set_partition_uniform (cmesh_partition, 0,
+                                    t8_scheme_new_default_cxx ());
     t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
     cmesh = cmesh_partition;
   }
@@ -115,16 +118,24 @@ main (int argc, char **argv)
   sc_options_t       *opt;
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
+  int                 sreturn;
 
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>\n\t%s -h\t"
             "for a brief overview of all options.",
             basename (argv[0]), basename (argv[0]));
-  snprintf (help, BUFSIZ,
-            "This program has two modes. With argument -f <file> -d <dim> it creates a cmesh, "
-            "from the file <file>.msh, saves it to a collection of files and loads it again.\n"
-            "If the -l <string> and -n <num> arguments are given, the cmesh stored "
-            "in the num files string_0000.cmesh,... ,string_num-1.cmesh are read on n processes "
-            "and distributed among all processes.\n\n%s\n", usage);
+  sreturn = snprintf (help, BUFSIZ,
+                      "This program has two modes. With argument -f <file> -d <dim> it creates a cmesh, "
+                      "from the file <file>.msh, saves it to a collection of files and loads it again.\n"
+                      "If the -l <string> and -n <num> arguments are given, the cmesh stored "
+                      "in the num files string_0000.cmesh,... ,string_num-1.cmesh are read on n processes "
+                      "and distributed among all processes.\n\n%s\n", usage);
+
+  if (sreturn >= BUFSIZ) {
+    /* The help message was truncated */
+    /* Note: gcc >= 7.1 prints a warning if we 
+     * do not check the return value of snprintf. */
+    t8_debugf ("Warning: Truncated help message to '%s'\n", help);
+  }
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);

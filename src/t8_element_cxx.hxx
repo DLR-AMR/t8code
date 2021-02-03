@@ -125,6 +125,15 @@ public:
   virtual void        t8_element_parent (const t8_element_t * elem,
                                          t8_element_t * parent) = 0;
 
+  /** Compute the number of siblings of an element. That is the number of 
+   * Children of its parent.
+   * \param [in] elem The element.
+   * \return          The number of siblings of \a element.
+   * Note that this number is >= 1, since we count the element itself as a sibling.
+   */
+  virtual int         t8_element_num_siblings (const t8_element_t *
+                                               elem) const = 0;
+
   /** Compute a specific sibling of a given element \b elem and store it in \b sibling.
    *  \b sibling needs to be an existing element. No memory is allocated by this function.
    *  \b elem and \b sibling can point to the same element, then the entries of
@@ -284,16 +293,16 @@ public:
                                       const t8_element_t * elem2,
                                       t8_element_t * nca) = 0;
 
-  /** Compute the elmement class of the face of an element.
+  /** Compute the shape of the face of an element.
    * \param [in] elem     The element.
    * \param [in] face     A face of \a elem.
-   * \return              The element class of the face.
+   * \return              The element shape of the face.
    * I.e. T8_ECLASS_LINE for quads, T8_ECLASS_TRIANGLE for tets
    *      and depending on the face number either T8_ECLASS_QUAD or
    *      T8_ECLASS_TRIANGLE for prisms.
    */
-  virtual t8_eclass_t t8_element_face_class (const t8_element_t * elem,
-                                             int face) = 0;
+  virtual t8_element_shape_t t8_element_face_shape (const t8_element_t * elem,
+                                                    int face) = 0;
 
   /** Given an element and a face of the element, compute all children of
    * the element that touch the face.
@@ -507,6 +516,14 @@ public:
                                                 int level,
                                                 t8_linearidx_t id) = 0;
 
+   /** Return the shape of an allocated element according its type.
+    *  For example, a child of an element can be an element of a different shape
+    *  and has to be handled differently - according to its shape.
+    *  \param [in] elem     The element to be considered
+    *  \return              The shape of the element as an eclass
+   */
+  virtual t8_element_shape_t t8_element_shape (const t8_element_t * elem) = 0;
+
   /** Compute the linear id of a given element in a hypothetical uniform
    * refinement of a given level.
    * \param [in] elem     The element whose id we compute.
@@ -559,7 +576,6 @@ public:
   virtual int         t8_element_root_len (const t8_element_t * elem) = 0;
 
   /** Compute the integer coordinates of a given element vertex.
-   *   \param [in] ts     The virtual table for this element class.
    *   \param [in] t      The element to be considered.
    *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords An array of at least as many integers as the element's dimension
@@ -578,6 +594,45 @@ public:
    */
   virtual t8_element_t *t8_element_array_index (sc_array_t * array,
                                                 size_t it);
+
+  /** Count how many leaf descendants of a given uniform level an element would produce.
+   * \param [in] t     The element to be checked.
+   * \param [in] level A refinement level.
+   * \return Suppose \a t is uniformly refined up to level \a level. The return value
+   * is the resulting number of elements (of the given level).
+   * If \a level < t8_element_level(t), the return value should be 0.
+   *
+   * Example: If \a t is a line element that refines into 2 line elements on each level,
+   *  then the return value is max(0, 2^{\a level - level(\a t)}).
+   *  Thus, if \a t's level is 0, and \a level = 3, the return value is 2^3 = 8.
+   */
+  virtual t8_gloidx_t t8_element_count_leafs (const t8_element_t * t,
+                                              int level) = 0;
+
+  /** Count how many leaf descendants of a given uniform level the root element will produce.
+   * \param [in] level A refinement level.
+   * \return The value of \ref t8_element_count_leafs if the input element
+   *      is the root (level 0) element.
+   *
+   * This is a convenience function, and can be implemented via
+   * \ref t8_element_count_leafs.
+   */
+  virtual t8_gloidx_t t8_element_count_leafs_from_root (int level) = 0;
+
+  /** This function has no defined effect but each implementation is free to
+   *  provide its own meaning of it. Thus this function can be used to compute or
+   *  lookup very scheme implementation specific data.
+   *  \param [in] elem An valid element
+   *  \param [in] indata Pointer to input data
+   *  \param [out] outdata Pointer to output data.
+   *  For the correct usage of \a indata and \a outdata see the specific implementations
+   *  of the scheme.
+   *  For example the default scheme triangle and tetrahedron implementations use 
+   *  this function to return the type of a tri/tet to the caller.
+   */
+  virtual void        t8_element_general_function (const t8_element_t * elem,
+                                                   const void *indata,
+                                                   void *outdata) = 0;
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
@@ -642,7 +697,6 @@ public:
                                        int called_new) = 0;
 
   /** Deallocate an array of elements.
-   * \param [in] ts       The virtual table for this element class.
    * \param [in] length   The number of elements in the array.
    * \param [in,out] elems On input an array of \b length many allocated
    *                      element pointers.

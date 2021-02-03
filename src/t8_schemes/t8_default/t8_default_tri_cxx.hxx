@@ -131,9 +131,9 @@ public:
                                       const t8_element_t * elem2,
                                       t8_element_t * nca);
 
-  /** Compute the elmement class of the face of an element. */
-  virtual t8_eclass_t t8_element_face_class (const t8_element_t * elem,
-                                             int face);
+  /** Compute the element shape of the face of an element. */
+  virtual t8_element_shape_t t8_element_face_shape (const t8_element_t * elem,
+                                                    int face);
 
   /** Given an element and a face of the element, compute all children of
    * the element that touch the face. */
@@ -257,6 +257,17 @@ public:
   /** Compute the integer coordinates of a given element vertex. */
   virtual void        t8_element_vertex_coords (const t8_element_t * t,
                                                 int vertex, int coords[]);
+
+  /** The triangle schemes uses the general function to return the type of
+   * a triangle.
+   *  \param [in] elem An valid element
+   *  \param [in] indata Is ignored. Can be NULL.
+   *  \param [out] outdata Pointer to an int8_t. The type of \a elem will be stored here.
+   *  On output the type of the triangle will be stored in \a outdata
+   */
+  virtual void        t8_element_general_function (const t8_element_t * elem,
+                                                   const void *indata,
+                                                   void *outdata);
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether an element is valid */

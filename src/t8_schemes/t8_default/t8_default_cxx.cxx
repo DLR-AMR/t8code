@@ -54,4 +54,30 @@ t8_scheme_new_default_cxx (void)
   return s;
 }
 
+int
+t8_eclass_scheme_is_default (t8_eclass_scheme_c * ts)
+{
+  switch (ts->eclass) {
+  case T8_ECLASS_VERTEX:
+    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_vertex_c *);
+  case T8_ECLASS_LINE:
+    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_line_c *);
+  case T8_ECLASS_QUAD:
+    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_quad_c *);
+  case T8_ECLASS_TRIANGLE:
+    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_tri_c *);
+  case T8_ECLASS_HEX:
+    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_hex_c *);
+  case T8_ECLASS_TET:
+    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_tet_c *);
+  case T8_ECLASS_PRISM:
+    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_prism_c *);
+  default:
+    SC_ABORT_NOT_REACHED ();
+    /* TODO: Add pyramid as soon as pyramid scheme is implemented */
+    /* TODO: Add a test for this function */
+  }
+  return 0;                     /* Default return value false */
+}
+
 T8_EXTERN_C_END ();

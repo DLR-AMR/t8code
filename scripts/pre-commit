@@ -26,7 +26,7 @@ exec 1>&2
 
 nocontinue=0
 # create a temporary file
-TMP_FILE=`tempfile`
+TMP_FILE=`mktemp`
 for file in `git diff --cached --name-only`
 do
   # only indent existing files, this is necessary since if we rename or delete

@@ -74,14 +74,14 @@ t8_default_scheme_prism_c::t8_element_level (const t8_element_t * elem)
   return t8_dprism_get_level ((const t8_dprism_t *) elem);
 }
 
-t8_eclass_t
-  t8_default_scheme_prism_c::t8_element_face_class (const t8_element_t * elem,
+t8_element_shape_t
+  t8_default_scheme_prism_c::t8_element_face_shape (const t8_element_t * elem,
                                                     int face)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
 
-  return t8_dprism_face_class ((const t8_dprism_t *) elem, face);
+  return t8_dprism_face_shape ((const t8_dprism_t *) elem, face);
 }
 
 void
@@ -390,12 +390,37 @@ t8_default_scheme_prism_c::t8_element_vertex_coords (const t8_element_t * t,
   t8_dprism_vertex_coords ((const t8_dprism_t *) t, vertex, coords);
 }
 
+void
+t8_default_scheme_prism_c::t8_element_general_function (const t8_element_t *
+                                                        elem,
+                                                        const void *indata,
+                                                        void *outdata)
+{
+  T8_ASSERT (outdata != NULL);
+  *((int8_t *) outdata) = ((const t8_dprism_t *) elem)->tri.type;
+  /* Safety check to catch datatype conversion errors */
+  T8_ASSERT (*((int8_t *) outdata) == ((const t8_dprism_t *) elem)->tri.type);
+}
+
 u_int64_t
   t8_default_scheme_prism_c::t8_element_get_linear_id (const t8_element_t *
                                                        elem, int level)
 {
   return t8_dprism_linear_id ((const t8_dprism_t *) elem, level);
 }
+
+#ifdef T8_ENABLE_DEBUG
+/* *INDENT-OFF* */
+/* Indent bug, indent adds an additional const modifier at the end */
+int
+t8_default_scheme_prism_c::t8_element_is_valid (const t8_element_t * elem) const
+{
+  T8_ASSERT (elem != NULL);
+
+  return t8_dprism_is_valid ((const t8_dprism_t *) elem);
+}
+/* *INDENT-ON* */
+#endif /* T8_ENABLE_DEBUG */
 
 /* Constructor */
 t8_default_scheme_prism_c::t8_default_scheme_prism_c (void)

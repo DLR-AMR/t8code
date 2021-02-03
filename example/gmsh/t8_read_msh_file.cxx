@@ -26,6 +26,7 @@
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
+#include <t8_schemes/t8_default_cxx.hxx>
 
 /* Output a cmesh in .vtk format. Process i writes to the file
  * prefix_t8_msh_i.vtk
@@ -59,7 +60,7 @@ t8_read_msh_partition (t8_cmesh_t cmesh, const char *prefix)
 
   t8_cmesh_init (&p_mesh);
   t8_cmesh_set_derive (p_mesh, cmesh);
-  t8_cmesh_set_partition_uniform (p_mesh, 0);
+  t8_cmesh_set_partition_uniform (p_mesh, 0, t8_scheme_new_default_cxx ());
   t8_cmesh_commit (p_mesh, sc_MPI_COMM_WORLD);
   snprintf (vtk_prefix, BUFSIZ, "%s_partition", prefix);
   t8_read_msh_file_vtk (p_mesh, vtk_prefix);
@@ -113,17 +114,25 @@ main (int argc, char *argv[])
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
   t8_cmesh_t          cmesh;
+  int                 sreturn;
 
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>",
             basename (argv[0]));
-  snprintf (help, BUFSIZ,
-            "This program reads a .msh file "
-            "created by the GMSH program and constructs a "
-            "t8code coarse mesh from them.\n\n%s\n\nExample: %s -f A1\nTo open the file A1.ms."
-            "\n\nThe default dimension of the mesh to read is 2. Since the "
-            ".msh format stores elements of all (lower) dimensions "
-            "the user must provide the argument for a different dimension by hand, if "
-            "desired.\n", usage, basename (argv[0]));
+  sreturn = snprintf (help, BUFSIZ,
+                      "This program reads a .msh file "
+                      "created by the GMSH program and constructs a "
+                      "t8code coarse mesh from them.\n\n%s\n\nExample: %s -f A1\nTo open the file A1.ms."
+                      "\n\nThe default dimension of the mesh to read is 2. Since the "
+                      ".msh format stores elements of all (lower) dimensions "
+                      "the user must provide the argument for a different dimension by hand, if "
+                      "desired.\n", usage, basename (argv[0]));
+
+  if (sreturn >= BUFSIZ) {
+    /* The help message was truncated */
+    /* Note: gcc >= 7.1 prints a warning if we 
+     * do not check the return value of snprintf. */
+    t8_debugf ("Warning: Truncated help message to '%s'\n", help);
+  }
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -153,7 +162,10 @@ main (int argc, char *argv[])
   }
   else {
     cmesh = t8_read_msh_file_build_cmesh (prefix, partition, dim, master);
-    t8_cmesh_destroy (&cmesh);
+    /* Check whether we could properly read the cmesh and if so, destroy it. */
+    if (cmesh != NULL) {
+      t8_cmesh_destroy (&cmesh);
+    }
     sc_options_print_summary (t8_get_package_id (), SC_LP_PRODUCTION, opt);
   }
 

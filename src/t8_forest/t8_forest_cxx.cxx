@@ -233,28 +233,37 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   int                 corner_coords[3], i;
   double              vertex_coords[3];
   t8_eclass_scheme_c *ts;
-  t8_eclass_t         eclass;
+  t8_eclass_t         tree_class;
+  t8_element_shape_t  element_shape;
   double              len;
   int                 dim;
 
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->scheme_cxx != NULL);
-  eclass = t8_forest_get_tree_class (forest, ltree_id);
-  T8_ASSERT (eclass == T8_ECLASS_VERTEX || eclass == T8_ECLASS_TRIANGLE
-             || eclass == T8_ECLASS_TET || eclass == T8_ECLASS_QUAD
-             || eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_LINE
-             || eclass == T8_ECLASS_PRISM);
-
-  ts = forest->scheme_cxx->eclass_schemes[eclass];
-  dim = t8_eclass_to_dimension[eclass];
+  /* Get the tree's class and scheme */
+  tree_class = t8_forest_get_tree_class (forest, ltree_id);
+  ts = t8_forest_get_eclass_scheme (forest, tree_class);
+  /* Get the dimension */
+  dim = t8_eclass_to_dimension[tree_class];
   len = 1. / ts->t8_element_root_len (element);
   ts->t8_element_vertex_coords (element, corner_number, corner_coords);
-  switch (eclass) {
+  /* Get the element's shape */
+  element_shape = ts->t8_element_shape (element);
+  /* Check whether we support this element shape */
+  T8_ASSERT (element_shape == T8_ECLASS_VERTEX
+             || element_shape == T8_ECLASS_TRIANGLE
+             || element_shape == T8_ECLASS_TET
+             || element_shape == T8_ECLASS_QUAD
+             || element_shape == T8_ECLASS_HEX
+             || element_shape == T8_ECLASS_LINE
+             || element_shape == T8_ECLASS_PRISM);
+  /* Compute the coordinates, depending on the shape of the element */
+  switch (element_shape) {
   case T8_ECLASS_VERTEX:
     T8_ASSERT (corner_number == 0);
     /* A vertex has exactly one corner, and we already know its coordinates, since they are
      * the same as the trees coordinates. */
-    for (i = 0;i < 3;i++) {
+    for (i = 0; i < 3; i++) {
       coordinates[i] = corner_coords[i];
     }
     break;
@@ -309,7 +318,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
     break;
   default:
     SC_ABORT ("Forest coordinate computation is supported only for "
-              "triangles/tets/quads/prisms/hexes.");
+              "vertices/lines/triangles/tets/quads/prisms/hexes.");
   }
   return;
 }
@@ -319,7 +328,7 @@ double
 t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid,
                         const t8_element_t * element, const double *vertices)
 {
-  t8_eclass_t         eclass;
+  t8_eclass_t         tree_class;
   t8_eclass_scheme_c *ts;
 
   double              centroid[3], coordinates[3];
@@ -327,8 +336,10 @@ t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid,
   int                 i, num_corners;
 
   /* Get the element's eclass and scheme */
-  eclass = t8_forest_get_tree_class (forest, ltreeid);
-  ts = t8_forest_get_eclass_scheme (forest, eclass);
+  tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  ts = t8_forest_get_eclass_scheme (forest, tree_class);
+  /* validity check */
+  T8_ASSERT (ts->t8_element_is_valid (element));
 
   /* We approximate the diameter as twice the average of the distances
    * from the vertices to the centroid. */
@@ -361,12 +372,14 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
 {
   double              corner_coords[3];
   int                 num_corners, icorner;
+  t8_eclass_t         tree_class;
   t8_eclass_scheme_c *ts;
 
   T8_ASSERT (t8_forest_is_committed (forest));
-  ts =
-    t8_forest_get_eclass_scheme (forest,
-                                 t8_forest_get_tree_class (forest, ltreeid));
+
+  /* Get the tree's eclass and scheme */
+  tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  ts = t8_forest_get_eclass_scheme (forest, tree_class);
   T8_ASSERT (ts->t8_element_is_valid (element));
 
   /* initialize the centroid with 0 */
@@ -456,14 +469,19 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
                           const t8_element_t * element,
                           const double *vertices)
 {
-  t8_eclass_t         eclass;
+  t8_eclass_t         tree_class;
+  t8_element_shape_t  element_shape;
+  t8_eclass_scheme_c *ts;
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
   /* get the eclass of the forest */
-  eclass = t8_forest_get_tree_class (forest, ltreeid);
+  tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  ts = t8_forest_get_eclass_scheme (forest, tree_class);
+  /* Get the geometrical shape of the element */
+  element_shape = ts->t8_element_shape (element);
 
-  switch (eclass) {
+  switch (element_shape) {
   case T8_ECLASS_VERTEX:
     /* vertices do not have any volume */
     return 0;
@@ -627,25 +645,26 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
   return -1;                    /* default return prevents compiler warning */
 }
 
-/* Compute the area of an elements face */
+/* Compute the area of an element's face */
 double
 t8_forest_element_face_area (t8_forest_t forest, t8_locidx_t ltreeid,
                              const t8_element_t * element, int face,
                              const double *vertices)
 {
 
-  t8_eclass_t         eclass, face_class;
+  t8_eclass_t         tree_class;
+  t8_element_shape_t  face_shape;
   t8_eclass_scheme_c *ts;
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
   /* get the eclass of the forest */
-  eclass = t8_forest_get_tree_class (forest, ltreeid);
+  tree_class = t8_forest_get_tree_class (forest, ltreeid);
   /* get the element's scheme and the face scheme */
-  ts = t8_forest_get_eclass_scheme (forest, eclass);
-  face_class = ts->t8_element_face_class (element, face);
+  ts = t8_forest_get_eclass_scheme (forest, tree_class);
+  face_shape = ts->t8_element_face_shape (element, face);
 
-  switch (face_class) {
+  switch (face_shape) {
   case T8_ECLASS_VERTEX:
     /* vertices do not have volume */
     return 0;
@@ -725,17 +744,18 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
                                  const t8_element_t * element, int face,
                                  const double *vertices, double centroid[3])
 {
-  t8_eclass_t         eclass, face_class;
+  t8_eclass_t         tree_class;
+  t8_element_shape_t  face_shape;
   t8_eclass_scheme_c *ts;
 
   T8_ASSERT (t8_forest_is_committed (forest));
   /* get the eclass of the forest */
-  eclass = t8_forest_get_tree_class (forest, ltreeid);
-  /* get the element's scheme and the face scheme */
-  ts = t8_forest_get_eclass_scheme (forest, eclass);
-  face_class = ts->t8_element_face_class (element, face);
+  tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  /* get the element's scheme and the face shape */
+  ts = t8_forest_get_eclass_scheme (forest, tree_class);
+  face_shape = ts->t8_element_face_shape (element, face);
 
-  switch (face_class) {
+  switch (face_shape) {
   case T8_ECLASS_VERTEX:
     {
       /* Element is a line, the face midpoint is the vertex itself */
@@ -777,7 +797,7 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
       int                 i, corner, num_corners;
 
       /* We compute the average of all corner coordinates */
-      num_corners = face_class == T8_ECLASS_TRIANGLE ? 3 : 4;
+      num_corners = face_shape == T8_ECLASS_TRIANGLE ? 3 : 4;
       for (i = 0; i < num_corners; i++) {
         corner = ts->t8_element_get_face_corner (element, face, i);
         t8_forest_element_coordinate (forest, ltreeid, element, vertices,
@@ -805,17 +825,18 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
                                const t8_element_t * element, int face,
                                const double *tree_vertices, double normal[3])
 {
-  t8_eclass_t         eclass, face_class;
+  t8_eclass_t         tree_class;
+  t8_element_shape_t  face_shape;
   t8_eclass_scheme_c *ts;
 
   T8_ASSERT (t8_forest_is_committed (forest));
   /* get the eclass of the forest */
-  eclass = t8_forest_get_tree_class (forest, ltreeid);
+  tree_class = t8_forest_get_tree_class (forest, ltreeid);
   /* get the element's scheme and the face scheme */
-  ts = t8_forest_get_eclass_scheme (forest, eclass);
-  face_class = ts->t8_element_face_class (element, face);
+  ts = t8_forest_get_eclass_scheme (forest, tree_class);
+  face_shape = ts->t8_element_face_shape (element, face);
 
-  switch (face_class) {
+  switch (face_shape) {
   case T8_ECLASS_VERTEX:
     /* TODO: normal of a line */
     SC_ABORT_NOT_REACHED ();
@@ -999,6 +1020,7 @@ t8_forest_populate (t8_forest_t forest)
                   "Given refinement level exceeds the maximum.\n");
   /* TODO: create trees and quadrants according to uniform refinement */
   t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level,
+                           forest->scheme_cxx,
                            &forest->first_local_tree,
                            &child_in_tree_begin, &forest->last_local_tree,
                            &child_in_tree_end, NULL);
@@ -1049,7 +1071,7 @@ t8_forest_populate (t8_forest_t forest)
       /* calculate first and last element on this tree */
       start = (jt == forest->first_local_tree) ? child_in_tree_begin : 0;
       end = (jt == forest->last_local_tree) ? child_in_tree_end :
-        t8_eclass_count_leaf (tree_class, forest->set_level);
+        eclass_scheme->t8_element_count_leafs_from_root (forest->set_level);
       num_tree_elements = end - start;
       T8_ASSERT (num_tree_elements > 0);
       /* Allocate elements for this processor. */
