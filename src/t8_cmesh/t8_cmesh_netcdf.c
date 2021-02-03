@@ -65,8 +65,9 @@ typedef struct
   int                 var_node_z_id;
   int                 dimids[2];        /* contains two NetCDF-dimensions in order to declare two-dimensional NetCDF-variables */
   /* Variables used for default NetCDF purposes */
-  int                 fillvalue;
-  int                 start_index;
+  t8_nc_int32_t       fillvalue32;
+  t8_nc_int64_t       fillvalue64;
+  t8_nc_int32_t       start_index;
   char               *convention;
   /* Stores the old NetCDF-FillMode if it gets changed */
   int                 old_fill_mode;
@@ -390,7 +391,7 @@ t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t * context,
   /* Define _FillValue attribute */
   if ((retval =
        nc_put_att_int (context->ncid, context->var_elem_types_id,
-                       "_FillValue", NC_INT, 1, &context->fillvalue))) {
+                       "_FillValue", NC_INT, 1, &context->fillvalue32))) {
     ERR (retval);
   }
   /* Define start_index attribute. */
@@ -405,7 +406,7 @@ t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t * context,
   /* Define the element-tree_id variable. */
   if ((retval =
        nc_def_var (context->ncid, namespace_context->var_Mesh_elem_tree_id,
-                   NC_INT, 1, &context->nMesh_elem_dimid,
+                   NC_INT64, 1, &context->nMesh_elem_dimid,
                    &context->var_elem_tree_id))) {
     ERR (retval);
   }
@@ -425,8 +426,8 @@ t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t * context,
   }
   /* Define _FillValue attribute */
   if ((retval =
-       nc_put_att_int (context->ncid, context->var_elem_tree_id, "_FillValue",
-                       NC_INT, 1, &context->fillvalue))) {
+       nc_put_att_long (context->ncid, context->var_elem_tree_id,
+                        "_FillValue", NC_INT64, 1, &context->fillvalue64))) {
     ERR (retval);
   }
   /* Define start_index attribute. */
@@ -441,7 +442,7 @@ t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t * context,
   /* Define the element-nodes variable. */
   if ((retval =
        nc_def_var (context->ncid, namespace_context->var_Mesh_elem_node,
-                   NC_INT, 2, context->dimids,
+                   NC_INT64, 2, context->dimids,
                    &context->var_elem_nodes_id))) {
     ERR (retval);
   }
@@ -464,8 +465,8 @@ t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t * context,
   }
   /* Define _FillValue attribute */
   if ((retval =
-       nc_put_att_int (context->ncid, context->var_elem_nodes_id,
-                       "_FillValue", NC_INT, 1, &context->fillvalue))) {
+       nc_put_att_long (context->ncid, context->var_elem_nodes_id,
+                        "_FillValue", NC_INT64, 1, &context->fillvalue64))) {
     ERR (retval);
   }
   /* Define start_index attribute. */
@@ -483,21 +484,56 @@ t8_cmesh_write_user_netcdf_vars (t8_cmesh_netcdf_context_t * context,
                                  t8_cmesh_netcdf_ugrid_namespace_t *
                                  namespace_context,
                                  int num_extern_netcdf_vars,
-                                 t8_netcdf_variable_t * ext_variables[])
+                                 t8_netcdf_variable_t * ext_variables[],
+                                 sc_MPI_Comm comm)
 {
 #if T8_WITH_NETCDF
-  int                 retval;
-  /* Check wheter user-defined variables should be written */
+  /* Check whether user-defined variables should be written */
   if (num_extern_netcdf_vars > 0 && ext_variables != NULL) {
-    for (int i = 0; i < num_extern_netcdf_vars; i++) {
+    int                 retval, i, int_mode;
+    int                 mpirank, mpisize;
+
+    retval = sc_MPI_Comm_size (comm, &mpisize);
+    SC_CHECK_MPI (retval);
+    retval = sc_MPI_Comm_rank (comm, &mpirank);
+    SC_CHECK_MPI (retval);
+
+    /* Iterate over the amount of user-defined variables */
+    for (i = 0; i < num_extern_netcdf_vars; i++) {
       switch (ext_variables[i]->datatype) {
       case 0:
         /* A NetCDF Integer-Variable will be declared */
-        if ((retval =
-             nc_def_var (context->ncid, ext_variables[i]->variable_name,
-                         NC_INT, 1, &context->nMesh_elem_dimid,
-                         &(ext_variables[i]->var_user_dimid)))) {
-          ERR (retval);
+        /* Check whether the data is corresponding to either a NC_INT variable (32bit) or a NC_INT64 variable (64bit) */
+        if (mpirank == 0) {
+          int_mode = (int) ext_variables[i]->var_user_data->elem_size;
+        }
+        retval = sc_MPI_Bcast (&int_mode, 1, sc_MPI_INT, 0, comm);
+        SC_CHECK_MPI (retval);
+        T8_ASSERT (int_mode ==
+                   (int) ext_variables[i]->var_user_data->elem_size);
+
+        if (int_mode == 4) {
+          /* In case it is a 32bit integer variable */
+          if ((retval =
+               nc_def_var (context->ncid, ext_variables[i]->variable_name,
+                           NC_INT, 1, &context->nMesh_elem_dimid,
+                           &(ext_variables[i]->var_user_dimid)))) {
+            ERR (retval);
+          }
+        }
+        else if (int_mode == 8) {
+          /* In case it is a 64bit integer variable */
+          if ((retval =
+               nc_def_var (context->ncid, ext_variables[i]->variable_name,
+                           NC_INT64, 1, &context->nMesh_elem_dimid,
+                           &(ext_variables[i]->var_user_dimid)))) {
+            ERR (retval);
+          }
+        }
+        else {
+          t8_errorf
+            ("The extern NetCDF integer variable %s does not solely contain 32bit or 64bit data which are represented by NC_INT or NC_INT64 variables.\n",
+             ext_variables[i]->variable_name);
         }
         break;
       case 1:
@@ -510,7 +546,6 @@ t8_cmesh_write_user_netcdf_vars (t8_cmesh_netcdf_context_t * context,
         }
         break;
       default:
-        //this variable is set internally and not by the user
         break;
       }
       /* Attach the user-defined 'long_name' attribute to the variable */
@@ -525,8 +560,8 @@ t8_cmesh_write_user_netcdf_vars (t8_cmesh_netcdf_context_t * context,
       if ((retval =
            nc_put_att_text (context->ncid, (ext_variables[i]->var_user_dimid),
                             "units",
-                            strlen (ext_variables[i]->variable_long_name),
-                            ext_variables[i]->variable_long_name))) {
+                            strlen (ext_variables[i]->variable_units),
+                            ext_variables[i]->variable_units))) {
         ERR (retval);
       }
     }
@@ -537,40 +572,46 @@ t8_cmesh_write_user_netcdf_vars (t8_cmesh_netcdf_context_t * context,
 /* Write NetCDF-coordinate data */
 static void
 t8_cmesh_write_netcdf_coordinate_data (t8_cmesh_t cmesh,
-                                       t8_cmesh_netcdf_context_t * context)
+                                       t8_cmesh_netcdf_context_t * context,
+                                       sc_MPI_Comm comm)
 {
 #if T8_WITH_NETCDF
   double             *vertices;
   t8_eclass_t         tree_class;
-  t8_gloidx_t         gtree_id;
   t8_locidx_t         num_local_trees;
   t8_locidx_t         ltree_id = 0;
   t8_gloidx_t         local_tree_offset;
-  t8_locidx_t         num_it = 0;
+  t8_gloidx_t         num_it = 0;
   int                 retval;
   int                 mpirank, mpisize;
+  size_t              num_elements;
+  size_t              num_max_nodes_per_elem;
+  size_t              num_nodes;
+  t8_nc_int64_t      *Mesh_elem_nodes;
+  double             *Mesh_node_x;
+  double             *Mesh_node_y;
+  double             *Mesh_node_z;
+  size_t              start_ptr;
+  size_t              count_ptr;
+  int                 i, j;
 
-  if (t8_cmesh_is_partitioned (cmesh)) {
-    retval = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
-    SC_CHECK_MPI (retval);
-    retval = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
-    SC_CHECK_MPI (retval);
-  }
+  retval = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (retval);
+  retval = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (retval);
+
   /* Get number of local trees. */
   num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
 
   /* Allocate the Variable-data that will be put out in the NetCDF variables */
-  size_t              num_elements = (size_t) num_local_trees;
-  size_t              num_max_nodes_per_elem =
-    (size_t) (context->nMaxMesh_elem_nodes);
-  size_t              num_nodes = (size_t) (context->nMesh_local_node);
-  t8_global_productionf ("nMesh_local_node ist : %d",
-                         (int) context->nMesh_local_node);
-  int                *Mesh_elem_nodes =
-    (int *) T8_ALLOC (int, num_elements * num_max_nodes_per_elem);
-  double             *Mesh_node_x = (double *) T8_ALLOC (double, num_nodes);
-  double             *Mesh_node_y = (double *) T8_ALLOC (double, num_nodes);
-  double             *Mesh_node_z = (double *) T8_ALLOC (double, num_nodes);
+  num_elements = (size_t) num_local_trees;
+  num_max_nodes_per_elem = (size_t) (context->nMaxMesh_elem_nodes);
+  num_nodes = (size_t) (context->nMesh_local_node);
+  Mesh_elem_nodes =
+    T8_ALLOC (t8_nc_int64_t, num_elements * num_max_nodes_per_elem);
+  Mesh_node_x = T8_ALLOC (double, num_nodes);
+  Mesh_node_y = T8_ALLOC (double, num_nodes);
+  Mesh_node_z = T8_ALLOC (double, num_nodes);
 
   /* Check if pointers are not NULL. */
   T8_ASSERT (Mesh_node_x != NULL && Mesh_node_y != NULL
@@ -579,10 +620,7 @@ t8_cmesh_write_netcdf_coordinate_data (t8_cmesh_t cmesh,
   /* Iterate over all local trees. */
   /* Corners should be stored in the same order as in a vtk-file (read that somewehere on a netcdf page). */
   local_tree_offset = t8_cmesh_get_first_treeid (cmesh);
-  printf ("Local_tree_offset ist gleich: %d\n", (int) local_tree_offset);
-  int                 i;
   for (ltree_id = 0; ltree_id < num_local_trees; ++ltree_id) {
-    gtree_id = t8_cmesh_get_global_id (cmesh, ltree_id);
     tree_class = t8_cmesh_get_tree_class (cmesh, ltree_id);
     vertices = t8_cmesh_get_tree_vertices (cmesh, ltree_id);
     i = 0;
@@ -596,7 +634,7 @@ t8_cmesh_write_netcdf_coordinate_data (t8_cmesh_t cmesh,
         vertices[3 * (t8_eclass_vtk_corner_number[tree_class][i]) + 2];
       /* Stores the the nodes which correspond to this element. */
       Mesh_elem_nodes[(ltree_id) * context->nMaxMesh_elem_nodes + i] =
-        (int) local_tree_offset + (int) num_it;
+        local_tree_offset + num_it;
       num_it++;
     }
     for (; i < context->nMaxMesh_elem_nodes; i++) {
@@ -604,79 +642,48 @@ t8_cmesh_write_netcdf_coordinate_data (t8_cmesh_t cmesh,
       Mesh_elem_nodes[(ltree_id) * (context->nMaxMesh_elem_nodes) + i] = -1;
     }
   }
-  t8_global_productionf ("Calculations were made\n");
+
   /* Write the data into the NetCDF coordinate variables. */
   /* Fill the 'Mesh_elem_node'-variable. */
 
-  if (t8_cmesh_is_partitioned (cmesh)) {
-    /* Allocate memory for node offsets */
-    t8_gloidx_t        *node_offset[mpisize];
+  /* Allocate memory for node offsets */
+  t8_gloidx_t        *node_offset[mpisize];
 
-    retval =
-      sc_MPI_Allgather (&context->nMesh_local_node, 1, sc_MPI_LONG_LONG_INT,
-                        node_offset, 1, sc_MPI_LONG_LONG_INT,
-                        sc_MPI_COMM_WORLD);
-    SC_CHECK_MPI (retval);
+  retval =
+    sc_MPI_Allgather (&context->nMesh_local_node, 1, T8_MPI_GLOIDX,
+                      node_offset, 1, T8_MPI_GLOIDX, comm);
+  SC_CHECK_MPI (retval);
 
-    /* Define a (2D) NetCDF-Hyperslab for filling the variable */
-    const size_t        start_ptr_var[2] = { local_tree_offset, 0 };
-    const size_t        count_ptr_var[2] =
-      { num_local_trees, context->nMaxMesh_elem_nodes };
-    if ((retval =
-         nc_put_vara_int (context->ncid, context->var_elem_nodes_id,
-                          start_ptr_var, count_ptr_var,
-                          &Mesh_elem_nodes[0]))) {
-      ERR (retval);
-    }
-
-    size_t              start_ptr = 0;
-    for (int j = 0; j < mpirank; j++) {
-      start_ptr += (size_t) node_offset[j];
-    }
-    size_t              count_ptr = (size_t) context->nMesh_local_node;
-    printf ("Nodes: On rank %d is start_ptr = %d and count_ptr = %d\n",
-            mpirank, (int) start_ptr, (int) count_ptr);
-    if ((retval =
-         nc_put_vara_double (context->ncid, context->var_node_x_id,
-                             &start_ptr, &count_ptr, &Mesh_node_x[0]))) {
-      ERR (retval);
-    }
-    if ((retval =
-         nc_put_vara_double (context->ncid, context->var_node_y_id,
-                             &start_ptr, &count_ptr, &Mesh_node_y[0]))) {
-      ERR (retval);
-    }
-    if ((retval =
-         nc_put_vara_double (context->ncid, context->var_node_z_id,
-                             &start_ptr, &count_ptr, &Mesh_node_z[0]))) {
-      ERR (retval);
-    }
-
-  }
-  else {
-    if ((retval =
-         nc_put_var_int (context->ncid, context->var_elem_nodes_id,
+  /* Define a (2D) NetCDF-Hyperslab for filling the variable */
+  const size_t        start_ptr_var[2] = { local_tree_offset, 0 };
+  const size_t        count_ptr_var[2] =
+    { num_local_trees, context->nMaxMesh_elem_nodes };
+  if ((retval =
+       nc_put_vara_long (context->ncid, context->var_elem_nodes_id,
+                         start_ptr_var, count_ptr_var,
                          &Mesh_elem_nodes[0]))) {
-      ERR (retval);
-    }
-    /* Fill the 'Mesh_node_x'-variable. */
-    if ((retval =
-         nc_put_var_double (context->ncid, context->var_node_x_id,
-                            &Mesh_node_x[0]))) {
-      ERR (retval);
-    }
-    /* Fill the 'Mesh_node_y'-variable. */
-    if ((retval =
-         nc_put_var_double (context->ncid, context->var_node_y_id,
-                            &Mesh_node_y[0]))) {
-      ERR (retval);
-    }
-    /* Fill the 'Mesh_node_z'-variable. */
-    if ((retval =
-         nc_put_var_double (context->ncid, context->var_node_z_id,
-                            &Mesh_node_z[0]))) {
-      ERR (retval);
-    }
+    ERR (retval);
+  }
+
+  start_ptr = 0;
+  for (j = 0; j < mpirank; j++) {
+    start_ptr += (size_t) node_offset[j];
+  }
+  count_ptr = (size_t) context->nMesh_local_node;
+  if ((retval =
+       nc_put_vara_double (context->ncid, context->var_node_x_id,
+                           &start_ptr, &count_ptr, &Mesh_node_x[0]))) {
+    ERR (retval);
+  }
+  if ((retval =
+       nc_put_vara_double (context->ncid, context->var_node_y_id,
+                           &start_ptr, &count_ptr, &Mesh_node_y[0]))) {
+    ERR (retval);
+  }
+  if ((retval =
+       nc_put_vara_double (context->ncid, context->var_node_z_id,
+                           &start_ptr, &count_ptr, &Mesh_node_z[0]))) {
+    ERR (retval);
   }
 
   /* Free the allocated memory */
@@ -689,31 +696,28 @@ t8_cmesh_write_netcdf_coordinate_data (t8_cmesh_t cmesh,
 
 static void
 t8_cmesh_write_netcdf_data (t8_cmesh_t cmesh,
-                            t8_cmesh_netcdf_context_t * context)
+                            t8_cmesh_netcdf_context_t * context,
+                            sc_MPI_Comm comm)
 {
 #if T8_WITH_NETCDF
   t8_eclass_t         tree_class;
   t8_gloidx_t         gtree_id;
   t8_locidx_t         num_local_trees;
   t8_locidx_t         ltree_id = 0;
-
+  t8_nc_int64_t      *Mesh_elem_tree_id;
+  t8_nc_int32_t      *Mesh_elem_types;
   t8_gloidx_t         num;
+  t8_gloidx_t         num_nodes;
+  size_t              start_ptr;
+  size_t              count_ptr;
   int                 retval;
 
   /* Get number of local trees. */
   num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
 
   /* Declare variables with their proper dimensions. */
-  int                *Mesh_elem_types =
-    (int *) T8_ALLOC (int, num_local_trees);
-#if 0
-  /* Variable muesste als longlong definiert werden bei Deklaration */
-  t8_gloidx_t        *Mesh_elem_tree_id =
-    (t8_gloidx_t *) T8_ALLOC (t8_gloidx_t, num_local_trees);
-#else
-  int                *Mesh_elem_tree_id =
-    (int *) T8_ALLOC (int, num_local_trees);
-#endif
+  Mesh_elem_types = T8_ALLOC (t8_nc_int32_t, num_local_trees);
+  Mesh_elem_tree_id = T8_ALLOC (t8_nc_int64_t, num_local_trees);
 
   /* Check if pointers are not NULL. */
   T8_ASSERT (Mesh_elem_types != NULL && Mesh_elem_tree_id != NULL);
@@ -728,39 +732,23 @@ t8_cmesh_write_netcdf_data (t8_cmesh_t cmesh,
     /* Getting the integer element class (in vtk_type), might not be conform with UGRID? */
     Mesh_elem_types[ltree_id] = t8_eclass_vtk_type[tree_class];
     /* The number trees equals the number of elements in the cmesh. */
-    Mesh_elem_tree_id[ltree_id] = (int) gtree_id;
+    Mesh_elem_tree_id[ltree_id] = gtree_id;
   }
 
   /* Write the data in the corresponding NetCDF-variable. */
   /* Fill the 'Mesh_elem_types'-variable. */
-  if (t8_cmesh_is_partitioned (cmesh)) {
-    /* Define the pointer where to write the data an how much entries */
-    size_t              start_ptr =
-      (size_t) t8_cmesh_get_first_treeid (cmesh);
-    size_t              count_ptr = (size_t) num_local_trees;
-    if ((retval =
-         nc_put_vara_int (context->ncid, context->var_elem_types_id,
-                          &start_ptr, &count_ptr, &Mesh_elem_types[0]))) {
-      ERR (retval);
-    }
-    if ((retval =
-         nc_put_vara_int (context->ncid, context->var_elem_tree_id,
-                          &start_ptr, &count_ptr, &Mesh_elem_tree_id[0]))) {
-      ERR (retval);
-    }
+  /* Define the pointer where to write the data an how much entries */
+  start_ptr = (size_t) t8_cmesh_get_first_treeid (cmesh);
+  count_ptr = (size_t) num_local_trees;
+  if ((retval =
+       nc_put_vara_int (context->ncid, context->var_elem_types_id,
+                        &start_ptr, &count_ptr, &Mesh_elem_types[0]))) {
+    ERR (retval);
   }
-  else {
-    if ((retval =
-         nc_put_var_int (context->ncid, context->var_elem_types_id,
-                         &Mesh_elem_types[0]))) {
-      ERR (retval);
-    }
-    /* Fill the 'Mesh_elem_tree_id'-variable. */
-    if ((retval =
-         nc_put_var_int (context->ncid, context->var_elem_tree_id,
-                         &Mesh_elem_tree_id[0]))) {
-      ERR (retval);
-    }
+  if ((retval =
+       nc_put_vara_long (context->ncid, context->var_elem_tree_id,
+                         &start_ptr, &count_ptr, &Mesh_elem_tree_id[0]))) {
+    ERR (retval);
   }
 
   /* Free the allocated memory */
@@ -768,19 +756,12 @@ t8_cmesh_write_netcdf_data (t8_cmesh_t cmesh,
   T8_FREE (Mesh_elem_tree_id);
 
   /* After counting the number of nodes, the  NetCDF-dimension 'nMesh_node' can be created => Store the 'nMesh_node' dimension */
-  if (t8_cmesh_is_partitioned (cmesh)) {
-    context->nMesh_local_node = num;
-    t8_gloidx_t         num_nodes;
-    retval =
-      sc_MPI_Allreduce (&num, &num_nodes, 1, sc_MPI_LONG_LONG_INT, sc_MPI_SUM,
-                        sc_MPI_COMM_WORLD);
-    SC_CHECK_MPI (retval);
-    context->nMesh_node = num_nodes;
-  }
-  else {
-    context->nMesh_local_node = num;
-    context->nMesh_node = num;
-  }
+  context->nMesh_local_node = num;
+  retval =
+    sc_MPI_Allreduce (&num, &num_nodes, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
+  SC_CHECK_MPI (retval);
+  context->nMesh_node = num_nodes;
+
 #endif
 }
 
@@ -790,59 +771,77 @@ static void
 t8_cmesh_write_user_netcdf_data (t8_cmesh_t cmesh,
                                  t8_cmesh_netcdf_context_t * context,
                                  int num_extern_netcdf_vars,
-                                 t8_netcdf_variable_t * ext_variables[])
+                                 t8_netcdf_variable_t * ext_variables[],
+                                 sc_MPI_Comm comm)
 {
 #if T8_WITH_NETCDF
-  t8_gloidx_t         gtree_id;
-  t8_locidx_t         num_local_trees;
-  t8_locidx_t         ltree_id;
-  t8_locidx_t         local_tree_offset;
-  int                 retval;
-  size_t              start_ptr;
-  size_t              count_ptr;
+  if (num_extern_netcdf_vars > 0 && ext_variables != NULL) {
+    t8_locidx_t         num_local_trees;
+    t8_locidx_t         local_tree_offset;
+    int                 retval, i;
+    size_t              start_ptr;
+    size_t              count_ptr;
 
-  /* Allocate pointers for possible variables */
-  //int                *var_user_int;
-  //double             *var_user_double;
+    /* Allocate pointers for possible variables */
+    //int                *var_user_int;
+    //double             *var_user_double;
 
-  /* Number of process local trees */
-  num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
+    /* Number of process local trees */
+    num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
 
-  /* Get the local tree offset */
-  local_tree_offset = t8_cmesh_get_first_treeid (cmesh);
+    /* Get the local tree offset */
+    local_tree_offset = t8_cmesh_get_first_treeid (cmesh);
 
-  /* Iterate over the amount of user-defined variables */
-  for (int i = 0; i < num_extern_netcdf_vars; i++) {
-    /* Check if exactly one value per element is given , a number of entries variable or something is needed */
-    /* No check so far */
+    /* Iterate over the amount of user-defined variables */
+    for (i = 0; i < num_extern_netcdf_vars; i++) {
 
-    /* Counters which imply the position in the NetCDF-variable where the data will be written, */
-    start_ptr = local_tree_offset;
-    count_ptr = num_local_trees;
+      /* Check if exactly one value per element is given */
+      T8_ASSERT (num_local_trees ==
+                 ext_variables[i]->var_user_data->elem_count);
 
-    /* Fill the NetCDF-variable with the data */
-    if (ext_variables[i]->datatype == 0) {
-      /* If it is a Integer NetCDF-variable */
-      if ((retval =
-           nc_put_vara_int (context->ncid, ext_variables[i]->var_user_dimid,
-                            &start_ptr, &count_ptr,
-                            &((ext_variables[i]->netcdf_data_int)[0])))) {
-        ERR (retval);
+      /* Counters which imply the position in the NetCDF-variable where the data will be written, */
+      start_ptr = local_tree_offset;
+      count_ptr = num_local_trees;
+
+      /* Fill the NetCDF-variable with the data */
+      if (ext_variables[i]->datatype == 0) {
+        /* If it is a Integer NetCDF-variable */
+        if ((int) ext_variables[i]->var_user_data->elem_size == 4) {
+          /* If it is a 32bit Integer variable */
+          if ((retval =
+               nc_put_vara_int (context->ncid,
+                                ext_variables[i]->var_user_dimid, &start_ptr,
+                                &count_ptr, (t8_nc_int32_t *)
+                                sc_array_index (ext_variables
+                                                [i]->var_user_data, 0)))) {
+            ERR (retval);
+          }
+        }
+        else if ((int) ext_variables[i]->var_user_data->elem_size == 8) {
+          /* If it is a 64bit Integer variable */
+          if ((retval =
+               nc_put_vara_long (context->ncid,
+                                 ext_variables[i]->var_user_dimid, &start_ptr,
+                                 &count_ptr, (t8_nc_int64_t *)
+                                 sc_array_index (ext_variables
+                                                 [i]->var_user_data, 0)))) {
+            ERR (retval);
+          }
+        }
       }
-    }
-    else if (ext_variables[i]->datatype == 1) {
-      /* If it is a Double NetCDF-variable */
-      if ((retval =
-           nc_put_vara_double (context->ncid,
-                               ext_variables[i]->var_user_dimid, &start_ptr,
-                               &count_ptr,
-                               &((ext_variables[i]->netcdf_data_double)[0]))))
-      {
-        ERR (retval);
+      else if (ext_variables[i]->datatype == 1) {
+        /* If it is a Double NetCDF-variable */
+        if ((retval =
+             nc_put_vara_double (context->ncid,
+                                 ext_variables[i]->var_user_dimid, &start_ptr,
+                                 &count_ptr, (double *)
+                                 sc_array_index (ext_variables
+                                                 [i]->var_user_data, 0)))) {
+          ERR (retval);
+        }
       }
     }
   }
-
 #endif
 }
 
@@ -852,12 +851,13 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
                             t8_cmesh_netcdf_context_t * context,
                             t8_cmesh_netcdf_ugrid_namespace_t *
                             namespace_context, int num_extern_netcdf_vars,
-                            t8_netcdf_variable_t * ext_variables[])
+                            t8_netcdf_variable_t * ext_variables[],
+                            sc_MPI_Comm comm)
 {
 #if T8_WITH_NETCDF
   t8_gloidx_t         num_global_trees;
   int                 retval;
-  t8_global_productionf ("Funktion wurde aufgerufen\n");
+
   /* Check if the cmesh was committed. */
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
@@ -868,20 +868,12 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
   context->nMesh_elem = num_global_trees;
 
   /* Create the NetCDF file, the NC_CLOBBER parameter tells netCDF to overwrite this file, if it already exists. Leaves the file in 'define-mode'. */
-  if (t8_cmesh_is_partitioned (cmesh)) {
-    if ((retval =
-         nc_create_par (context->filename, NC_CLOBBER | NC_NETCDF4
-                        | NC_MPIIO, sc_MPI_COMM_WORLD, sc_MPI_INFO_NULL,
-                        &context->ncid))) {
-      ERR (retval);
-    }
+  /* Since NetCDF version 4.6.2 NC_MPIIO seems to be redundant/not necessary */
+  if ((retval =
+       nc_create_par (context->filename, NC_CLOBBER | NC_NETCDF4
+                      | NC_MPIIO, comm, sc_MPI_INFO_NULL, &context->ncid))) {
+    ERR (retval);
   }
-  else {
-    if ((retval = nc_create (context->filename, NC_CLOBBER, &context->ncid))) {
-      ERR (retval);
-    }
-  }
-
   t8_debugf ("NetCDf-file has been created.\n");
 
   /* Define the first NetCDF-dimensions (nMesh_node is not known yet) */
@@ -912,7 +904,7 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
   }
 
   /* MPI-Barrier */
-  retval = sc_MPI_Barrier (sc_MPI_COMM_WORLD);
+  retval = sc_MPI_Barrier (comm);
   SC_CHECK_MPI (retval);
 
   /* End define-mode. NetCDF-file enters data-mode. */
@@ -921,7 +913,7 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
   }
 
   /* Fill the already defined NetCDF-variables and calculate the 'nMesh_node' (global number of nodes) -dimension */
-  t8_cmesh_write_netcdf_data (cmesh, context);
+  t8_cmesh_write_netcdf_data (cmesh, context, comm);
 
   /* Leave the NetCDF-data-mode and re-enter the define-mode. */
   if ((retval = nc_redef (context->ncid))) {
@@ -936,7 +928,8 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
 
   /* Eventuallay declare user-defined elementwise NetCDF-variables, if some were passed */
   t8_cmesh_write_user_netcdf_vars (context, namespace_context,
-                                   num_extern_netcdf_vars, ext_variables);
+                                   num_extern_netcdf_vars, ext_variables,
+                                   comm);
 
   /* Disable the default fill-value-mode. */
   if ((retval =
@@ -945,7 +938,7 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
   }
 
   /* MPI-Barrier */
-  retval = sc_MPI_Barrier (sc_MPI_COMM_WORLD);
+  retval = sc_MPI_Barrier (comm);
   SC_CHECK_MPI (retval);
 
   /* End define-mode. NetCDF-file enters data-mode. */
@@ -954,11 +947,11 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
   }
 
   /* Write the NetCDF-coordinate variable data */
-  t8_cmesh_write_netcdf_coordinate_data (cmesh, context);
+  t8_cmesh_write_netcdf_coordinate_data (cmesh, context, comm);
 
   /* Eventually write user-defined variable data */
   t8_cmesh_write_user_netcdf_data (cmesh, context, num_extern_netcdf_vars,
-                                   ext_variables);
+                                   ext_variables, comm);
 
   /* All data has been written to the NetCDF-file, therefore, close the file. */
   if ((retval = nc_close (context->ncid))) {
@@ -973,12 +966,12 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh,
 /* Function that gets called if a cmesh schould be written in NetCDF-Format */
 void
 t8_cmesh_write_netcdf (t8_cmesh_t cmesh, const char *file_prefix,
-                       const char *file_title, int dim,
+                       char *file_title, int dim,
                        int num_extern_netcdf_vars,
-                       t8_netcdf_variable_t * ext_variables[])
+                       t8_netcdf_variable_t * ext_variables[],
+                       sc_MPI_Comm comm)
 {
 #if T8_WITH_NETCDF
-  int                 mpiret;
   t8_cmesh_netcdf_context_t context;
   /* Check whether pointers are not NULL */
   T8_ASSERT (file_title != NULL);
@@ -990,7 +983,8 @@ t8_cmesh_write_netcdf (t8_cmesh_t cmesh, const char *file_prefix,
   context.filename = file_name;
   context.filetitle = file_title;
   context.dim = dim;
-  context.fillvalue = -1;
+  context.fillvalue32 = -1;
+  context.fillvalue64 = -1;
   context.start_index = 0;
   context.convention = "UGRID v1.0";
   /* Get the max number of corners for elements in a specific dimension */
@@ -1004,13 +998,13 @@ t8_cmesh_write_netcdf (t8_cmesh_t cmesh, const char *file_prefix,
     t8_debugf ("Writing 2D cmesh to NetCDF.\n");
     /* Actually writing the NetCDF dimensions, variables and data */
     t8_cmesh_write_netcdf_file (cmesh, &context, &namespace_context,
-                                num_extern_netcdf_vars, ext_variables);
+                                num_extern_netcdf_vars, ext_variables, comm);
     break;
   case 3:
     t8_debugf ("Writing 3D cmesh to NetCDF.\n");
     /* Actually writing the NetCDF dimensions, variables and data */
     t8_cmesh_write_netcdf_file (cmesh, &context, &namespace_context,
-                                num_extern_netcdf_vars, ext_variables);
+                                num_extern_netcdf_vars, ext_variables, comm);
     break;
   default:
     t8_global_errorf
