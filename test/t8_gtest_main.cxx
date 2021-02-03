@@ -1,4 +1,3 @@
-#include <mpi.h>
 #include <gtest/gtest.h>
 #include <t8.h>
 
@@ -23,7 +22,7 @@ int main(int argc, char** argv)
   int retval = RUN_ALL_TESTS ();
 
   sc_finalize ();
-  MPI_Finalize ();
-
+  mpiret = sc_MPI_Finalize();
+  SC_CHECK_MPI(mpiret);
   return retval;
 }
