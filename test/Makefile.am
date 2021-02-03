@@ -52,14 +52,24 @@ test_t8_gtest_main_SOURCES = test/t8_gtest_main.cxx \
   test/t8_gtest_refcount.cxx
 test_t8_gtest_main_LDADD = $(LDADD) test/libgtest.la
 test_t8_gtest_main_LDFLAGS = $(AM_LDFLAGS) -pthread
-test_t8_gtest_main_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/thirdparty/googletest/ \
+test_t8_gtest_main_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/thirdparty/googletest-mpi/ \
 	-pthread \
   -std=c++11
+# If we did not configure t8code with MPI we need to build Googletest
+# without MPI support.
+if !T8_ENABLE_MPI
+test_t8_gtest_main_CPPFLAGS += -DGTEST_HAS_MPI=0
+endif
 
 # Build Googletest library
 check_LTLIBRARIES = test/libgtest.la
-test_libgtest_la_SOURCES = thirdparty/googletest/gtest/gtest-all.cc
-test_libgtest_la_CPPFLAGS = -I$(top_srcdir)/thirdparty/googletest -std=c++11
+test_libgtest_la_SOURCES = thirdparty/googletest-mpi/gtest/gtest-all.cc
+test_libgtest_la_CPPFLAGS = -I$(top_srcdir)/thirdparty/googletest-mpi -std=c++11
+# If we did not configure t8code with MPI we need to build Googletest
+# without MPI support.
+if !T8_ENABLE_MPI
+test_libgtest_la_CPPFLAGS += -DGTEST_HAS_MPI=0
+endif
 test_libgtest_la_LDFLAGS = -pthread
 
 
