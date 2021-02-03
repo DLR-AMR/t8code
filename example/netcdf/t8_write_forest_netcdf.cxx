@@ -21,14 +21,21 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int mpirank)
   t8_forest_t         forest;
   t8_scheme_cxx_t    *default_scheme;
   t8_gloidx_t         num_elements;
+  t8_nc_int32_t      *var_rank;
+  double             *random_values;
+  sc_array_t         *var_ranks;
+  sc_array_t         *var_random_values;
+  t8_netcdf_variable_t *ext_var_mpirank;
+  t8_netcdf_variable_t *ext_var_random_values;
   int                 level = 0;
+  int                 j;
 
   /* Create a default scheme */
   default_scheme = t8_scheme_new_default_cxx ();
 
   /* Construct a cube coarse mesh */
-  //cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, comm, 0, 0, 0);
-  /*Construct a 3D hybrid hypercube as a cmesh */
+  /* cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, comm, 0, 0, 0); */
+  /* Construct a 3D hybrid hypercube as a cmesh */
   cmesh = t8_cmesh_new_hypercube_hybrid (3, comm, 0, 0);
 
   t8_global_productionf ("New cmesh was created\n");
@@ -40,29 +47,52 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int mpirank)
 
   /* Print out the number of local elements of each  process */
   num_elements = t8_forest_get_num_element (forest);
-  printf ("Rank %d has %ld elements\n", mpirank, num_elements);
+  printf ("[t8] Rank %d has %ld elements\n", mpirank, num_elements);
 
   /* *Example user-defined NetCDF variable* */
+  /* Currently, interger and double NetCDF variables are possible */
+
   /* Allocate the data which lays on the several processes */
   /* Those user-defined variables are currently only meant to maintain a single value per (process-local) element */
-  int                *var_rank = (int *) T8_ALLOC (int, num_elements);
-  for (int j = 0; j < num_elements; j++) {
+  var_rank = T8_ALLOC (t8_nc_int32_t, num_elements);
+  /* Write out the mpirank of each (process-local) element */
+  for (j = 0; j < num_elements; j++) {
     var_rank[j] = mpirank;
   }
-  /* Create an extern INT -NetCDF variable and receive the pointer to it */
-  /* Currently INT-NetCDF and DOUBLE-NetCDF variables are possible */
-  t8_netcdf_variable_t *ext_var_mpirank =
-    t8_netcdf_variable_int_init ("mpirank",
-                                 "Mpirank which the element lays on",
-                                 "integer", var_rank);
+  /* Create a new sc_array_t which provides the data for the NetCDF variables, in this case the Mpirank each elements lays on */
+  var_ranks =
+    sc_array_new_data (var_rank, sizeof (t8_nc_int32_t), num_elements);
+  /* Create the integer NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit, pointer to sc_array_t which provides the data) */
+  ext_var_mpirank =
+    t8_netcdf_create_integer_var ("mpirank",
+                                  "Mpirank which the element lays on",
+                                  "integer", var_ranks);
+
+  /* *Example user-defined NetCDF variable, random values* */
+  /* Create random values */
+  random_values = T8_ALLOC (double, num_elements);
+
+  for (j = 0; j < num_elements; j++) {
+    random_values[j] = rand () / (double) rand ();
+  }
+  /* Create a new sc_array_t which provides the data for the NetCDF variables, in this case just random values */
+  var_random_values =
+    sc_array_new_data (random_values, sizeof (double), num_elements);
+
+  /* Create the integer NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit (i.e. degrees Celsius), pointer to sc_array_t which provides the data) */
+  ext_var_random_values =
+    t8_netcdf_create_double_var ("random values", "Random values in [0,10)",
+                                 "double", var_random_values);
 
   /* Create an array of pointers to extern NetCDF-variables, further extern NetCDF-Variables could be created and appended to the array */
-  t8_netcdf_variable_t **ext_vars = new t8_netcdf_variable_t *[1];
+  t8_netcdf_variable_t **ext_vars = new t8_netcdf_variable_t *[2];
   ext_vars[0] = ext_var_mpirank;
+  ext_vars[1] = ext_var_random_values;
 
   /* Write the forest to NetCDF */
   t8_forest_write_netcdf (forest, "TryForestNetCDFParallelWithExtVar",
-                          "Example Uniform Forest", 3, 1, ext_vars);
+                          "Example Uniform Forest", 3, 2, ext_vars,
+                          sc_MPI_COMM_WORLD);
 
   t8_global_productionf ("The forest has been written to a NetCDF file\n");
 
@@ -74,9 +104,15 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int mpirank)
 
   /* Free the allocated memory of the extern NetCDF-variables which was created by calling the 'destroy' function */
   t8_netcdf_variable_destroy (ext_var_mpirank);
+  t8_netcdf_variable_destroy (ext_var_random_values);
+
+  /* Destroy the allocated sc_array_t */
+  sc_array_destroy (var_ranks);
+  sc_array_destroy (var_random_values);
 
   /* Free the data of the user-defined variable */
   T8_FREE (var_rank);
+  T8_FREE (random_values);
 
 #endif
 }
