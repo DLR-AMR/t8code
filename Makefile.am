@@ -116,7 +116,7 @@ doxygen: Doxyfile
 	doxygen
 
 gtest: 
-	make check
+	-make check
 	@grep "gtest" test/t8_gtest_main.log
 	@echo -e "\e[32m============================================================================\e[0m"
 	@echo -e "\e[32mGoogleTest summary\e[0m"
