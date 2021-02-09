@@ -83,6 +83,7 @@ typedef struct t8_messy_data {
   t8_latlon_data_chunk_t *chunk;
   t8_messy_coarsen_t *coarsen;
   t8_messy_interpolate_t *interpolation;
+  t8_forest_t *forest_test;
   t8_forest_t forest;
   t8_forest_t forest_adapt;
 } t8_messy_data_t;
@@ -90,24 +91,38 @@ typedef struct t8_messy_data {
 
 T8_EXTERN_C_BEGIN ();
 
-/* Initialize forest for messy reprensentation */
-t8_messy_data_t* t8_messy_initialize(
-  const char* description,
-  const char* axis,
-  int x_start, 
-  int y_start, 
-  int x_length, 
-  int y_length,
-  int z_length,
-  int dimensions);
 
+t8_messy_coarsen_t* t8_messy_new_coarsen_config(  
+  const char* method,
+  char* dimension,
+  int z_layer,
+  double threshold,
+  int (*func)(t8_messy_custom_func_t *)
+);
+
+t8_messy_interpolate_t* t8_messy_new_interpolate_config(
+  const char* method,
+  double (*func)(t8_messy_custom_func_t *)
+);
 
 t8_messy_custom_func_t* t8_messy_new_custom_func(int num_elements);
 
 void t8_messy_destroy_custom_func(t8_messy_custom_func_t* custom);
 
+/* Initialize forest for messy reprensentation */
+t8_messy_data_t* t8_messy_initialize(
+  const char* description,
+  const char* axis,
+  int* shape, 
+  int x_start, 
+  int y_start, 
+  int dimensions,
+  t8_messy_coarsen_t *coarsen,
+  t8_messy_interpolate_t *interpolation);
+
 /* Add channel object data to forest */
 void t8_messy_add_dimension(t8_messy_data_t *messy_data, char *dimension_name, double ****data);
+void t8_messy_set_dimension_values(t8_messy_data_t *messy_data, char* dimension_name, double *data);
 
 
 /* Bring input data into SFC format */

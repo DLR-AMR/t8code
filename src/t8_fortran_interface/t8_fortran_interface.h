@@ -67,7 +67,13 @@ void                t8_fortran_finalize ();
  * \note      t8code needs to be configured with MPI support to be able to use
  *            this function.
  */
-sc_MPI_Comm        *t8_fortran_MPI_Comm_new (MPI_Fint Fcomm);
+sc_MPI_Comm        *t8_fortran_MPI_Comm_new (  
+  #if T8_ENABLE_MPI
+     MPI_Fint 
+  #else
+    int 
+  #endif
+ Fcomm);
 
 /** Free the memory of a C MPI Communicator pointer that was created
  *  with \ref t8_fortran_MPI_Comm_new.

@@ -45,10 +45,12 @@ t8_fortran_init_all (sc_MPI_Comm * comm)
   int                 rank;
 
   printf ("Init all with comm %lu\n", (long unsigned) comm);
-  sc_MPI_Comm_rank (*comm, &rank);
-  printf ("rank = %i\n", rank);
+  t8_fortran_init_all_ (&comm);
+  if (comm != sc_MPI_COMM_NULL) {
+    sc_MPI_Comm_rank (*comm, &rank);
+    printf ("rank = %i\n", rank);
+  } 
 
-  t8_fortran_init_all_ (&comm2);
 }
 
 void
@@ -66,10 +68,16 @@ t8_fortran_finalize ()
 
 /* Build C MPI comm from Fortran MPI Comm. */
 sc_MPI_Comm        *
-t8_fortran_MPI_Comm_new (MPI_Fint Fcomm)
+t8_fortran_MPI_Comm_new (
+  #if T8_ENABLE_MPI
+     MPI_Fint 
+ #else
+    int 
+ #endif
+ Fcomm)
 {
 #if !T8_ENABLE_MPI
-  SC_ABORT ("t8code was not configured with MPI support.")
+  SC_ABORT ("t8code was not configured with MPI support.");
     return NULL;
 #endif
   /* We use malloc instead of T8_ALLOC since t8code may not be initialized
@@ -85,7 +93,7 @@ void
 t8_fortran_MPI_Comm_delete (sc_MPI_Comm * Ccomm)
 {
 #if! T8_ENABLE_MPI
-  SC_ABORT ("t8code was not configured with MPI support.")
+  SC_ABORT ("t8code was not configured with MPI support.");
 #endif
     free (Ccomm);
 }

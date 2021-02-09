@@ -124,8 +124,16 @@ main (int argc, char **argv)
       }
     }
 
+    int* shape = T8_ALLOC(int, 4);
+    shape[0] = x_length;
+    shape[1] = y_length;
+    shape[2] = 1;
+
+    t8_messy_coarsen_t *coarsen = t8_messy_new_coarsen_config("mean_higher", "vm1", 0, 0.8, nullptr);
+    t8_messy_interpolate_t *interpolation = t8_messy_new_interpolate_config("mean", nullptr);
+
     /* initialize forest and data chunk */
-    t8_messy_data_t* messy = t8_messy_initialize("test", "XYZ", 0, 0, x_length, y_length, 1, num_dims);
+    t8_messy_data_t* messy = t8_messy_initialize("test", "XYZ", shape, 0, 0, num_dims, coarsen, interpolation);
 
     /* set data for every dimension */
     //char name[BUFSIZ];

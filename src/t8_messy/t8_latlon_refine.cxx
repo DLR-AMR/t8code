@@ -261,7 +261,9 @@ void t8_latlon_refine_test (int x_length, int y_length, enum T8_LATLON_ADAPT_MOD
   int max_length = SC_MAX (x_length, y_length);
   int max_level = SC_LOG2_32 (max_length - 1) + 1;
 
+  int* shape = T8_ALLOC_ZERO(int, 3);
+
   /* This is only temporarily here for testing.  WIP. */
-  t8_latlon_data_test (0, 0, x_length, y_length, 3, 0, 1, 2, max_level,
-                       T8_LATLON_DATA_MESSY, x_length, y_length);
+  t8_latlon_data_test (0, 0, x_length, y_length, shape, 3, 0, 1, 2, max_level,
+                       T8_LATLON_DATA_MESSY, 0, 0);
 }
