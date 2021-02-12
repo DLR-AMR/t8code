@@ -174,8 +174,7 @@ t8_latlon_data_index_to_latlon (t8_latlon_data_chunk_t * data_chunk,
 t8_latlon_data_chunk_t *
 t8_latlon_new_chunk (const char *description, t8_locidx_t x_start, t8_locidx_t y_start,
                      t8_locidx_t x_length, t8_locidx_t y_length, t8_locidx_t z_length,
-                     int *shape,
-                     int dimensions, int x_axis, int y_axis, int z_axis, int level,
+                     int *shape, int dimensions, int x_axis, int y_axis, int z_axis, int level,
                      T8_LATLON_DATA_NUMBERING numbering
                      )
 {
@@ -239,19 +238,6 @@ t8_latlon_chunk_destroy (t8_latlon_data_chunk_t ** pchunk)
   int d1 = chunk->x_axis == 0 ? chunk->x_length : (chunk->y_axis == 0 ? chunk->y_length : chunk->z_length);
   int d2 = chunk->x_axis == 1 ? chunk->x_length : (chunk->y_axis == 1 ? chunk->y_length : chunk->z_length);
   int d3 = chunk->x_axis == 2 ? chunk->x_length : (chunk->y_axis == 2 ? chunk->y_length : chunk->z_length);
-
-  /* free input data */
-  int i = 0, j = 0, k = 0;
-  for (i = 0; i < d1; ++i) {
-      for (j = 0; j < d2; ++j) {
-          for(k = 0; k < d3; ++k) {
-            T8_FREE(chunk->in[i][j][k]);
-          }
-          T8_FREE(chunk->in[i][j]);
-      }
-      T8_FREE(chunk->in[i]);
-  }
-  T8_FREE(chunk->in);
 
   T8_FREE (chunk);
 
@@ -388,128 +374,62 @@ void t8_latlon_set_dimension_value(int axis, double ****data, int x_coord,
 
 /* Change the numbering of a data chunk to morton numbering. 
  * 
- * @author Holke Johannes, Spataro Luca
+ * @author Spataro Luca
  */
 void
-t8_latlon_data_apply_morton_order (t8_latlon_data_chunk_t * data_chunk)
+t8_latlon_data_apply_morton_order (t8_forest_t *forest, t8_latlon_data_chunk_t * data_chunk)
 {
   t8_debugf ("Applying morton order\n");
-  //return;
+  
   if (data_chunk->numbering == T8_LATLON_DATA_MORTON) {
     /* This data is already in Morton order. */
     return;
   }
 
-  size_t             *permutation;
-  /* Allocate array to store morton indices of the data items. */
-  /* T8_ASSERT (data_chunk->data_ids == NULL); */
   int num_dimension = data_chunk->dimensions;
   int z_length = data_chunk->z_length;
   int element_length = z_length * num_dimension;
-  int num_grid_elements = data_chunk->x_length * data_chunk->y_length;
-  int num_data_elements = num_grid_elements * element_length;
+  int num_elements = t8_forest_get_num_element(*forest);
+  int num_data_elements = num_elements * element_length;
 
-  permutation = T8_ALLOC (size_t, num_grid_elements);
-  /* Fill permutation array 0 - num_grid_elements */
-  //{
-  //  t8_locidx_t index;
-  //  t8_gloidx_t         x_coord, y_coord;
-  //
-  //  for (index = 0; index < num_grid_elements; ++index) {
-  //    t8_latlon_data_index_to_latlon (data_chunk, index, &x_coord, &y_coord);
-  //    permutation[index] = index;
-  //  }
-  //}
+  int coords[2];
+  int old;
+  t8_gloidx_t x, y, index;
 
-   {
-    t8_locidx_t         index;
-    t8_locidx_t         d, z, i;
-    t8_gloidx_t         x_coord, y_coord;
-    t8_debugf ("Building Morton ids:\n");
-    for (index = 0; index < num_grid_elements; ++index) {
-      /* Compute x and y coordinate in whole grid for array index. */
-      t8_latlon_data_index_to_latlon (data_chunk, index, &x_coord, &y_coord);
+  t8_element_t *elem;
+  t8_default_scheme_quad_c quad_scheme;
 
-      /* Retrive value from input data */
-      //for (z = 0; z < z_length; ++z) {
-      //  for (d = 0; d < num_dimension; ++d) {
-      //    i = index * element_length + z * num_dimension + d;
-      //    //data_chunk->data[i] = t8_latlon_get_dimension_value(data_chunk->axis, //data_chunk->in, x_coord, y_coord, z, d);
-      //    t8_debugf ("(%d)[%d, %d, %d][%d]\n", index, x_coord, y_coord, z, d);
-      //  }
-      //}
+  double             *data_new = T8_ALLOC_ZERO (double, num_data_elements);
+  t8_linearidx_t     *data_ids_new = T8_ALLOC_ZERO (t8_linearidx_t, num_elements);
 
-      data_chunk->data_ids[index] = t8_latlon_to_linear_id (x_coord, y_coord, data_chunk->level);
-      permutation[index] = index;
-      t8_debugf ("(%d)[%d, %d] %d \n", index, x_coord, y_coord, data_chunk->data_ids[index]);
-    }
-
-  t8_debugf ("created permutations\n");
-  }
-
-  /* We now sort the data according to the data_ids.
-   * We do this by sorting the permutation array and them applying
-   * this permutation to the data_ids and data arrays. */
-  qsort_r (permutation, num_grid_elements, sizeof (size_t),
-           t8_latlon_compare_indices, data_chunk->data_ids);
-  /* Now the correct order of the data_ids is
-   * data_ids[permutation[0]]
-   * data_ids[permutation[1]]
-   * data_ids[permutation[2]]
-   *    ...
-   */
-  {
-    t8_locidx_t         index;
-    t8_debugf ("newindices:\n");
-    for (index = 0; index < num_grid_elements; ++index) {
-      t8_debugf ("%zd\n", permutation[index]);
-    }
-  }
-  {
-    /* Reorder the data and the ids.
-     * To do so, we create a new array and copy the data 
-     * over in the correct order. */
-    /* NOTE: We could use sc_array_permute, but this would require the inverse of
-     *       permutation and currently we did not figure out how to compute it.
-     */
-    t8_locidx_t         index;
-    double             *data_new = T8_ALLOC (double, num_data_elements);
-    t8_linearidx_t     *data_ids_new = T8_ALLOC (t8_linearidx_t, num_grid_elements);
+  for (index = 0; index < num_elements; ++index) {
+    elem = t8_forest_get_element_in_tree(*forest, 0, index);
+    quad_scheme.t8_element_vertex_coords(elem, 0, coords);
     
-    /* Copy the data */
-    for (index = 0; index < num_grid_elements; ++index) {
-      data_ids_new[index] = data_chunk->data_ids[permutation[index]];
+    x = coords[0] >> (P4EST_MAXLEVEL - data_chunk->level);
+    y = coords[1] >> (P4EST_MAXLEVEL - data_chunk->level);
+    if(x < data_chunk->x_length && y < data_chunk->y_length) {
+      old = y * data_chunk->x_length * element_length + x * element_length;
+
       /* Copy dim many doubles over */
       memcpy (data_new + index * element_length,
-              data_chunk->data + permutation[index] * element_length,
+              data_chunk->data + old,
               element_length * sizeof (double));
     }
-    
-    /* Replace the original arrays */
-    T8_FREE (data_chunk->data);
-    T8_FREE (data_chunk->data_ids);
-    
-    data_chunk->data_ids = data_ids_new;
-    data_chunk->data = data_new;
   }
 
-    /* print z0 */
-  {
-    int index = 0;
-    int x, y;
-    int num_els = data_chunk->x_length * data_chunk->y_length * data_chunk->z_length * data_chunk->dimensions;
-    while(index < num_els) {
-      t8_debugf("(%d) %.4f \n", index, data_chunk->data[index]);
-
-      index += element_length;
-    }
-  }
+  /* Replace the original arrays */
+  T8_FREE (data_chunk->data);
+  T8_FREE (data_chunk->data_ids);
+  
+  data_chunk->data_ids = data_ids_new;
+  data_chunk->data = data_new;
 
   data_chunk->numbering = T8_LATLON_DATA_MORTON;
 
-  T8_FREE (permutation);
   t8_debugf ("Morton order applied\n");
 }
+
 
 /* WIP: Given a subgrid in a global grid that is represented in a partitioned forest,
  * determine those processes that have elements in the forest that lie in the
@@ -537,7 +457,7 @@ t8_latlon_data_determine_process_bounds (t8_forest_t forest,
 {
   if (chunk->numbering != T8_LATLON_DATA_MORTON) {
     /* Apply Morton order if not already set. */
-    t8_latlon_data_apply_morton_order (chunk);
+    t8_latlon_data_apply_morton_order (NULL, chunk);
   }
   /* TODO: We need to perform a multiple binary search to identify
    * the process borders.
@@ -611,7 +531,7 @@ t8_latlon_data_test (t8_locidx_t x_start, t8_locidx_t y_start,
       t8_debugf ("%.2f\n", chunk->data[index]);
     }*/
     /* Change to Morton order */
-    t8_latlon_data_apply_morton_order (chunk);
+    t8_latlon_data_apply_morton_order (NULL, chunk);
     t8_debugf ("Applied Morton order:\n");
     for (index = 0; index < num_grid_items; ++index) {
       t8_debugf ("%.2f %.2f %.2f (%li)\n", chunk->data[dimension * index],

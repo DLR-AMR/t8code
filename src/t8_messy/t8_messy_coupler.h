@@ -133,6 +133,8 @@ void t8_messy_coarsen(t8_messy_data_t *messy_data);
 
 void t8_messy_write_forest(t8_forest_t forest, const char* prefix, t8_latlon_data_chunk_t *chunk);
 
+void t8_messy_destroy(t8_messy_data_t* messy_data);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_MESSY_COUPLER_H */

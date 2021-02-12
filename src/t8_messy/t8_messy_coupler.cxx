@@ -24,40 +24,38 @@
 #include <t8_forest.h>
 #include <t8_forest_vtk.h>
 #include <t8_forest/t8_forest_iterate.h>
+#include <t8_schemes/t8_default/t8_default_quad_cxx.hxx>
 #include "t8_latlon_refine.h"
 #include "t8_latlon_data.h"
 #include "t8_messy_coupler.h"
 
 inline 
-double get_mean(int first, int num_elements, int element_length, int dimension, double* data) {
+double get_mean(double* values, int num_elements) {
   double mean_value = 0.0;
-  int offset, i;
+  int i;
   for (i=0; i < num_elements; ++i) {
-    offset = first + i * element_length + dimension;
-    mean_value += data[offset];
+    mean_value += values[i];
   }
   mean_value /= num_elements;
   return mean_value;
 }
 
 inline 
-double get_max(int first, int num_elements, int element_length, int dimension, double* data) {
+double get_max(double* values, int num_elements) {
   double max_value = LONG_MIN;
-  int offset, i;
+  int i;
   for (i=0; i < num_elements; ++i) {
-    offset = first + i * element_length + dimension;
-    max_value = fmax(max_value, data[offset]);
+    max_value = fmax(max_value, values[i]);
   }
   return max_value;
 }
 
 inline 
-double get_min(int first, int num_elements, int element_length, int dimension, double* data) {
+double get_min(double* values, int num_elements) {
   double min_value = LONG_MAX;
-  int offset, i;
+  int i;
   for (i=0; i < num_elements; ++i) {
-    offset = first + i * element_length + dimension;
-    min_value = fmin(min_value, data[offset]);
+    min_value = fmin(min_value, values[i]);
   }
   return min_value;
 }
@@ -125,11 +123,40 @@ t8_messy_coarsen_callback (t8_forest_t forest,
   /* calculate offset for z_layer */
   int z_offset = coarsen->z_layer * data_chunk->dimensions;
   /* calculate start index for first element */
-  int start = lelement_id * data_chunk->z_length * data_chunk->dimensions + z_offset;
+  int start = lelement_id * data_chunk->z_length * data_chunk->dimensions;
   /* get dimension index */
   int dimension = t8_latlon_get_dimension_idx(data_chunk, coarsen->dimension, false);
 
   
+  double values[num_elements];
+
+  /* if we get an negative z-layer we min / max / mean over all layers first
+      -1 = mean
+      -2 = max
+      -3 = min
+   */
+  if(coarsen->z_layer < 0) {
+    //+ z_offset
+    double temps[data_chunk->z_length];
+    
+    for (int e = 0; e < num_elements; ++e) {
+      get_values(start, data_chunk->z_length, data_chunk->dimensions, dimension, temps, data_chunk->data);
+      switch(coarsen->z_layer) {
+        case -1:
+          values[e] = get_mean(temps, data_chunk->z_length);
+          break;
+        case -2:
+          values[e] = get_max(temps, data_chunk->z_length);
+          break;
+        case -3:
+          values[e] = get_min(temps, data_chunk->z_length);
+          break;
+      }
+    }
+  } else {
+    /* otherwise grab the values for given z-layer */
+    get_values(start + z_offset, num_elements, element_length, dimension, values, data_chunk->data);
+  }
 
   double value;
   switch(coarsen->method) {
@@ -153,27 +180,27 @@ t8_messy_coarsen_callback (t8_forest_t forest,
       /* TODO: area coarsening */
       break;
     case T8_MESSY_COARSEN_THRESHOLD_MIN_LOWER:
-      value = get_min(start, num_elements, element_length, dimension, data_chunk->data);
+      value = get_min(values, num_elements);
       ret = value < coarsen->threshold ? -1 : 0;
       break;
     case T8_MESSY_COARSEN_THRESHOLD_MIN_HIGHER:
-      value = get_min(start, num_elements, element_length, dimension, data_chunk->data);
+      value = get_min(values, num_elements);
       ret = value > coarsen->threshold ? -1 : 0;
       break;
     case T8_MESSY_COARSEN_THRESHOLD_MAX_LOWER:
-      value = get_max(start, num_elements, element_length, dimension, data_chunk->data);
+      value = get_max(values, num_elements);
       ret = value < coarsen->threshold ? -1 : 0;
       break;
     case T8_MESSY_COARSEN_THRESHOLD_MAX_HIGHER:
-      value = get_max(start, num_elements, element_length, dimension, data_chunk->data);
+      value = get_max(values, num_elements);
       ret = value > coarsen->threshold ? -1 : 0;
       break;
     case T8_MESSY_COARSEN_THRESHOLD_MEAN_LOWER:
-      value = get_mean(start, num_elements, element_length, dimension, data_chunk->data);
+      value = get_mean(values, num_elements);
       ret = value < coarsen->threshold ? -1 : 0;
       break;
     case T8_MESSY_COARSEN_THRESHOLD_MEAN_HIGHER:
-      value = get_mean(start, num_elements, element_length, dimension, data_chunk->data);
+      value = get_mean(values, num_elements);
       ret = value > coarsen->threshold ? -1 : 0;
       break;
   }
@@ -197,26 +224,24 @@ t8_messy_interpolate_callback (t8_forest_t forest_old,
   t8_messy_interpolate_t *interpolation = messy_data->interpolation;
   t8_latlon_data_chunk_t *data_chunk = messy_data->chunk;
 
-  int num_dimensions, z_length, element_data_length;
   int index_incoming, index_outgoing;
 
-  num_dimensions = data_chunk->dimensions;
-  z_length = data_chunk->z_length;
-  element_data_length = num_dimensions * z_length;
+  int num_dimensions = data_chunk->dimensions;
+  int z_length = data_chunk->z_length;
+  int element_data_length = num_dimensions * z_length;
 
   index_incoming = first_incoming * element_data_length;
   index_outgoing = first_outgoing * element_data_length;
 
-  // t8_debugf("num_out %i, num_in %i\n", num_outgoing, num_incoming);
-
   if(num_outgoing > num_incoming) {
-    // t8_debugf("interpolating\n");
+    
     /* when the number of previous elements (num_outgoing) is larger than the number of created cell from it (num_incoming)
      * we interpolate,
      */
     t8_messy_custom_func_t* func_data = NULL;
 
     int d, z, z_offset, start;
+    double values[num_outgoing];
     double value;
     
     switch(interpolation->method) {
@@ -250,8 +275,8 @@ t8_messy_interpolate_callback (t8_forest_t forest_old,
           /* calculate start index for first element */
           start = index_outgoing + z_offset;
           for(d = 0; d < num_dimensions; ++d) {
-            value = get_min(start, num_outgoing, element_data_length, d, data_chunk->data);
-            data_chunk->data_adapt[index_incoming + z_offset + d] = value;
+            get_values(start, num_outgoing, element_data_length, d, values, data_chunk->data);
+            data_chunk->data_adapt[index_incoming + z_offset + d] = get_min(values, num_outgoing);
           }
         }
         break;
@@ -263,8 +288,8 @@ t8_messy_interpolate_callback (t8_forest_t forest_old,
           /* calculate start index for first element */
           start = index_outgoing + z_offset;
           for(d = 0; d < num_dimensions; ++d) {
-            value = get_max(start, num_outgoing, element_data_length, d, data_chunk->data);
-            data_chunk->data_adapt[index_incoming + z_offset + d] = value;
+            get_values(start, num_outgoing, element_data_length, d, values, data_chunk->data);
+            data_chunk->data_adapt[index_incoming + z_offset + d] = get_max(values, num_outgoing);
           }
         }
         break;
@@ -276,15 +301,14 @@ t8_messy_interpolate_callback (t8_forest_t forest_old,
           /* calculate start index for first element */
           start = index_outgoing + z_offset;
           for(d = 0; d < num_dimensions; ++d) {
-            value = get_mean(start, num_outgoing, element_data_length, d, data_chunk->data);
-            data_chunk->data_adapt[index_incoming + z_offset + d] = value;
+            get_values(start, num_outgoing, element_data_length, d, values, data_chunk->data);
+            data_chunk->data_adapt[index_incoming + z_offset + d] = get_mean(values, num_outgoing);
           }
         }
         break;
     }
 
   } else {
-    t8_debugf("not interpolating\n");
     /* else just copy data over to new array */
     memcpy (data_chunk->data_adapt + index_incoming,
             data_chunk->data       + index_outgoing,
@@ -406,18 +430,13 @@ t8_messy_data_t* t8_messy_initialize(
   #endif
 
   /* create forest for smallest mesh which completely contains given messy mesh */
-  t8_forest_t forest = t8_latlon_refine(fmax(x_length, y_length), fmax(x_length, y_length), T8_LATLON_COARSEN, 0);
+  t8_forest_t forest = t8_latlon_refine(x_length, y_length, T8_LATLON_COARSEN, 0);
   t8_latlon_adapt_data_t *adapt_data =
     (t8_latlon_adapt_data_t *) t8_forest_get_user_data (forest);
   
-  x_length = adapt_data->x_length;
-  y_length = adapt_data->y_length;
-
   int* lshape = T8_ALLOC_ZERO(int, 3);
   memcpy(lshape, shape, sizeof(int) * 3);
 
-  lshape[x_axis] = x_length;
-  lshape[y_axis] = y_length;
 
   /* create data chunk */
   t8_latlon_data_chunk_t *chunk = t8_latlon_new_chunk(
@@ -454,7 +473,7 @@ void t8_messy_set_dimension_values(t8_messy_data_t *messy_data, char* dimension_
 
   int size = data_chunk->x_length * data_chunk->y_length * data_chunk->z_length;
   int len = data_chunk->shape[0] * data_chunk->shape[1];
-  int i, l, x, y, z, cell_index, data_index;
+  int i, l, x, y, z, data_index;
   int *idx = T8_ALLOC_ZERO(int, 3);
 
   for(i=0; i<size; ++i) {
@@ -463,33 +482,21 @@ void t8_messy_set_dimension_values(t8_messy_data_t *messy_data, char* dimension_
     idx[1] = l / data_chunk->shape[0];
     idx[2] = l % data_chunk->shape[0];
     
+    /* set correct coordinates */
     x = idx[2 - data_chunk->x_axis];
-    y = idx[2 - data_chunk->y_axis];
+    y = (data_chunk->y_length - 1) - idx[2 - data_chunk->y_axis];
     z = idx[2 - data_chunk->z_axis];
 
-    /* TODO!!!!!!! you know what */
-    if(x < 64 && y < 32) {
-      cell_index = y * data_chunk->x_length + x;
-      data_index = ((y * data_chunk->z_length * data_chunk->x_length + x * data_chunk->z_length + z) * data_chunk->dimensions) + dimension_index;
+    /* calculate index in data array */
+    data_index = ((y * data_chunk->z_length * data_chunk->x_length + x * data_chunk->z_length + z) * data_chunk->dimensions) + dimension_index;
 
-      if(data_index >= 38912) {
-        t8_debugf("(%d)[%d, %d, %d][%d] cell index: %d linear id: %d data index: %d \n", i, x, y, z, dimension_index, cell_index, t8_latlon_to_linear_id (x, y, data_chunk->level), data_index);
-        
-      }
-
-      /* set data and morton id */
-      //data_chunk->data[data_index] = 1; //data[i];
-      //t8_debugf("(%d)[%d, %d, %d][%d] cell index: %d linear id: %d data index: %d \n", i, x, y, z, dimension_index, cell_index, t8_latlon_to_linear_id (x, y, data_chunk->level), data_index);
-      memcpy((data_chunk->data) + data_index, data + i, sizeof(double));
-    }
-    
-    //data_chunk->data_ids[cell_index] = t8_latlon_to_linear_id (x, y, data_chunk->level);
+    /* copy data */
+    memcpy((data_chunk->data) + data_index, data + i, sizeof(double));
   }
 }
 
 void t8_messy_apply_sfc(t8_messy_data_t *messy_data) {
-  t8_latlon_data_chunk_t *data_chunk = messy_data->chunk;
-  t8_latlon_data_apply_morton_order(data_chunk);
+  t8_latlon_data_apply_morton_order(&(messy_data->forest), messy_data->chunk);
 }
 
 void t8_messy_coarsen(t8_messy_data_t *messy_data) {
@@ -501,84 +508,91 @@ void t8_messy_coarsen(t8_messy_data_t *messy_data) {
   T8_ASSERT(messy_data->coarsen != NULL);
   T8_ASSERT(messy_data->interpolation != NULL);
 
-  t8_debugf("check if custom coarsen function is supplied \n");
+  /* check if custom coarsen function is supplied */
   if(messy_data->coarsen->method == T8_MESSY_COARSEN_FUNCTION) {
     /* if coarsening method is custom function, check one is given */
     T8_ASSERT(messy_data->coarsen->func != NULL);
   }
 
-  t8_debugf("check if custom interpolation function is supplied \n");
+  /* check if custom interpolation function is supplied */
   if(messy_data->interpolation->method == T8_MESSY_INTERPOLATE_FUNCTION) {
     /* if interpolation method is custom function, check one is given */
     T8_ASSERT(messy_data->interpolation->func != NULL);
   }
 
-  t8_debugf("extract pieces \n");
+  
   t8_latlon_data_chunk_t *data_chunk = messy_data->chunk;
 
   t8_forest_t forest = messy_data->forest;
-  t8_forest_t* forest_adapt = T8_ALLOC(t8_forest_t, 1);
-
-  //messy_data->forest_adapt = forest_adapt;
-
-  t8_debugf("ref forest \n");
-  t8_forest_ref(forest);
-  t8_debugf("init forest \n");
-  t8_forest_init(forest_adapt);
+  t8_forest_t forest_adapt;
 
   #ifdef T8_ENABLE_DEBUG
     /* In debugging mode write the forest */
-    t8_debugf("write forest \n");
     snprintf (vtu_prefix, BUFSIZ, "t8_messy_grid");
     t8_messy_write_forest(forest, vtu_prefix, data_chunk);
   #endif
 
-  t8_debugf("set user data \n");
-  t8_forest_set_user_data(*forest_adapt, messy_data);
-  t8_debugf("set adapt callback \n");
-  t8_forest_set_adapt(*forest_adapt, forest, t8_messy_coarsen_callback, 0);
 
-  t8_forest_set_partition (*forest_adapt, NULL, 0);
+  int last_num_elements = 0, num_elements = 0, r;
+  for(r=0; r < 5; ++r) {
 
-  t8_debugf("set commit forest \n");
-  t8_forest_commit(*forest_adapt);
-  t8_global_productionf("MESSy coarsen done\n");
+    t8_forest_ref(forest);
+    forest_adapt = t8_forest_new_adapt(forest, t8_messy_coarsen_callback, 0, 0, messy_data);
 
-  t8_global_productionf("MESSy interpolate grid \n");
+    num_elements = t8_forest_get_num_element(forest_adapt);
 
-  int num_element = t8_forest_get_num_element(*forest_adapt);
+    /* check if anything changed */
+    if(num_elements == last_num_elements) {
+      /* adapt step did not change anything so we can already stop loop*/
+      break;
+    }
+    last_num_elements = num_elements;
 
-  data_chunk->data_ids_adapt = T8_ALLOC(t8_linearidx_t, num_element);
-  data_chunk->data_adapt = T8_ALLOC(double, num_element * data_chunk->z_length * data_chunk->dimensions);
+    data_chunk->data_ids_adapt = T8_ALLOC(t8_linearidx_t, num_elements);
+    data_chunk->data_adapt = T8_ALLOC(double, num_elements * data_chunk->z_length * data_chunk->dimensions);
 
-  t8_forest_iterate_replace(*forest_adapt, forest, t8_messy_interpolate_callback);
+    t8_forest_iterate_replace(forest_adapt, forest, t8_messy_interpolate_callback);
 
-  T8_FREE(data_chunk->data_ids);
-  T8_FREE(data_chunk->data);
+    T8_FREE(data_chunk->data_ids);
+    T8_FREE(data_chunk->data);
 
-  data_chunk->data_ids = data_chunk->data_ids_adapt;
-  data_chunk->data = data_chunk->data_adapt;
+    data_chunk->data_ids = data_chunk->data_ids_adapt;
+    data_chunk->data = data_chunk->data_adapt;
 
-  data_chunk->data_ids_adapt = NULL;
-  data_chunk->data_adapt = NULL;
+    data_chunk->data_ids_adapt = NULL;
+    data_chunk->data_adapt = NULL;
 
-  #ifdef T8_ENABLE_DEBUG
-    /* In debugging mode write the forest */
-    snprintf (vtu_prefix, BUFSIZ, "t8_messy_grid_interpolated");
-    t8_messy_write_forest(*forest_adapt, vtu_prefix, data_chunk);
-  #endif
+    forest = forest_adapt;
 
-  t8_forest_unref (&forest);
-  t8_global_productionf("MESSy grid interpolated \n");
+    #ifdef T8_ENABLE_DEBUG
+      /* In debugging mode write the forest */
+      snprintf (vtu_prefix, BUFSIZ, "t8_messy_grid_interpolated_%d", r);
+      t8_messy_write_forest(forest_adapt, vtu_prefix, data_chunk);
+    #endif
 
+  }
+  
+  t8_forest_unref (&forest_adapt);
+  
+  t8_global_productionf("MESSy grid coarsening done (%d rounds) \n", r);
+
+}
+
+void t8_messy_destroy(t8_messy_data_t* messy_data) {
+  t8_latlon_chunk_destroy(&(messy_data->chunk));
+  t8_forest_unref(&(messy_data->forest));
+  T8_FREE(messy_data->coarsen);
+  T8_FREE(messy_data->interpolation);
+  T8_FREE(messy_data);
 }
 
 void t8_messy_write_forest(t8_forest_t forest, const char* prefix, t8_latlon_data_chunk_t *data_chunk) {
 
   int num_elements = t8_forest_get_num_element(forest);
   int num_data = data_chunk->dimensions * data_chunk->z_length;
-
-  t8_debugf("num elements %d, num data %d \n", num_elements, num_data);
+ 
+ 
+  t8_debugf("num elements %d, num data %d\n", num_elements, num_data);
   /* TODO: Do not use static array with variable as length */
   t8_vtk_data_field_t vtk_data[num_data];
   double *dim_data_array[num_data];
@@ -590,7 +604,6 @@ void t8_messy_write_forest(t8_forest_t forest, const char* prefix, t8_latlon_dat
       
       dim_data_array[offset] = T8_ALLOC_ZERO (double, num_elements);
       for(e = 0; e < num_elements; ++e) {
-        t8_debugf("el %d, index %d, value %.4f \n", e, e * num_data + z * data_chunk->dimensions + d, data_chunk->data[e * num_data + z * data_chunk->dimensions + d]);
         dim_data_array[offset][e] = data_chunk->data[e * num_data + z * data_chunk->dimensions + d];
       }
       snprintf (vtk_data[offset].description, BUFSIZ, "z%d_%s", z, data_chunk->dimension_names + d * BUFSIZ);

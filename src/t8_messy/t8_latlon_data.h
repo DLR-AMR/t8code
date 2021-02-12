@@ -49,6 +49,7 @@ typedef struct
   t8_locidx_t         x_length;     /* Number of subgrid cells in x dimension. */
   t8_locidx_t         y_length;     /* Number of subgrid cells in y dimension. */
   t8_locidx_t         z_length;     /* Number of subgrid cells in z dimension. */
+  int                 num_elements; /* Number of elements of forest */
   int                 axis;         /* Internal flag to distinguish between different axis configurations e.g. XYZ, YZX, ... */
   int                 x_axis;       /* X axis index in data vector */
   int                 y_axis;       /* Y axis index in data vector */
@@ -78,8 +79,7 @@ T8_EXTERN_C_BEGIN ();
 t8_latlon_data_chunk_t *
 t8_latlon_new_chunk (const char *description, t8_locidx_t x_start, t8_locidx_t y_start,
                      t8_locidx_t x_length, t8_locidx_t y_length, t8_locidx_t z_length,
-                     int* shape,
-                     int dimensions, int x_axis, int y_axis, int z_axis, int level,
+                     int* shape, int dimensions, int x_axis, int y_axis, int z_axis, int level,
                      T8_LATLON_DATA_NUMBERING numbering);
 
 /**
@@ -121,7 +121,7 @@ void t8_latlon_set_dimension_value(int axis, double ****data, int x_coord, int y
 
 
 void
-t8_latlon_data_apply_morton_order (t8_latlon_data_chunk_t * data_chunk);
+t8_latlon_data_apply_morton_order (t8_forest_t *forest, t8_latlon_data_chunk_t * data_chunk);
 
 
 /* Create a data chunk with given dimensions and numbering,

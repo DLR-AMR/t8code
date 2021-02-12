@@ -130,12 +130,12 @@ module t8code_messy_coupler_interface
     end Interface
 
     Interface
-        subroutine t8_latlon_chunk_destroy_f (pchunk) &
-                                bind (c, name = 't8_latlon_chunk_destroy')
+        subroutine t8_messy_destroy_f (pdata) &
+                                bind (c, name = 't8_messy_destroy')
             use, intrinsic :: ISO_C_BINDING, only: c_ptr
             implicit NONE
-            type (c_ptr), value :: pchunk
-        end subroutine t8_latlon_chunk_destroy_f
+            type (c_ptr), value :: pdata
+        end subroutine t8_messy_destroy_f
     end Interface
 
     !struct coarsen_config
