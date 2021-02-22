@@ -46,7 +46,7 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int mpirank)
 
   /* Print out the number of local elements of each  process */
   num_elements = t8_forest_get_num_element (forest);
-  printf ("[t8] Rank %d has %ld elements\n", mpirank, num_elements);
+  t8debugf ("[t8] Rank %d has %ld elements\n", mpirank, num_elements);
 
   /* *Example user-defined NetCDF variable* */
   /* Currently, interger and double NetCDF variables are possible */
