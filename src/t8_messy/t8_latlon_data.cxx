@@ -235,9 +235,7 @@ t8_latlon_chunk_destroy (t8_latlon_data_chunk_t ** pchunk)
 
   T8_FREE (chunk->dimension_names);
 
-  int d1 = chunk->x_axis == 0 ? chunk->x_length : (chunk->y_axis == 0 ? chunk->y_length : chunk->z_length);
-  int d2 = chunk->x_axis == 1 ? chunk->x_length : (chunk->y_axis == 1 ? chunk->y_length : chunk->z_length);
-  int d3 = chunk->x_axis == 2 ? chunk->x_length : (chunk->y_axis == 2 ? chunk->y_length : chunk->z_length);
+  T8_FREE (chunk->shape);
 
   T8_FREE (chunk);
 

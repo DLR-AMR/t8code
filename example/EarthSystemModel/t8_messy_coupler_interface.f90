@@ -138,6 +138,17 @@ module t8code_messy_coupler_interface
         end subroutine t8_messy_destroy_f
     end Interface
 
+    Interface
+        subroutine t8_messy_reset_f (pdata) &
+                                bind (c, name = 't8_messy_reset')
+            use, intrinsic :: ISO_C_BINDING, only: c_ptr
+            implicit NONE
+            type (c_ptr), value :: pdata
+        end subroutine t8_messy_reset_f
+    end Interface
+
+    
+
     !struct coarsen_config
 End module t8code_messy_coupler_interface
 

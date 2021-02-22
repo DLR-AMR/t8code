@@ -452,12 +452,23 @@ t8_messy_data_t* t8_messy_initialize(
   messy_data->forest = forest;
   messy_data->coarsen = coarsen;
   messy_data->interpolation = interpolation;
+  messy_data->counter = 0;
 
   #ifdef T8_ENABLE_DEBUG
     t8_global_productionf("MESSy coupler initialized\n");
   #endif
 
   return messy_data;
+}
+
+void t8_messy_reset(t8_messy_data_t* messy_data) {
+  t8_latlon_data_chunk_t *chunk = messy_data->chunk;
+  if(chunk->numbering == T8_LATLON_DATA_MORTON) {
+    /* reset data chunk if we already applied morton order */
+    T8_FREE(chunk->data);
+    chunk->data = T8_ALLOC_ZERO(double,chunk->x_length * chunk->y_length * chunk->z_length * chunk->dimensions);
+    chunk->numbering = T8_LATLON_DATA_MESSY;
+  }
 }
 
 
@@ -493,6 +504,8 @@ void t8_messy_set_dimension_values(t8_messy_data_t *messy_data, char* dimension_
     /* copy data */
     memcpy((data_chunk->data) + data_index, data + i, sizeof(double));
   }
+
+  T8_FREE(idx);
 }
 
 void t8_messy_apply_sfc(t8_messy_data_t *messy_data) {
@@ -523,12 +536,18 @@ void t8_messy_coarsen(t8_messy_data_t *messy_data) {
   
   t8_latlon_data_chunk_t *data_chunk = messy_data->chunk;
 
-  t8_forest_t forest = messy_data->forest;
+  t8_forest_t forest;
   t8_forest_t forest_adapt;
+
+  t8_forest_ref(messy_data->forest);
+
+  t8_forest_init(&forest);
+  t8_forest_set_copy(forest, messy_data->forest);
+  t8_forest_commit(forest);
 
   #ifdef T8_ENABLE_DEBUG
     /* In debugging mode write the forest */
-    snprintf (vtu_prefix, BUFSIZ, "t8_messy_grid");
+    snprintf (vtu_prefix, BUFSIZ, "t8_messy_grid_step_%d", messy_data->counter);
     t8_messy_write_forest(forest, vtu_prefix, data_chunk);
   #endif
 
@@ -562,11 +581,13 @@ void t8_messy_coarsen(t8_messy_data_t *messy_data) {
     data_chunk->data_ids_adapt = NULL;
     data_chunk->data_adapt = NULL;
 
+    t8_forest_unref(&forest);
+
     forest = forest_adapt;
 
     #ifdef T8_ENABLE_DEBUG
       /* In debugging mode write the forest */
-      snprintf (vtu_prefix, BUFSIZ, "t8_messy_grid_interpolated_%d", r);
+      snprintf (vtu_prefix, BUFSIZ, "t8_messy_grid_interpolated_step_%d_%d", messy_data->counter, r);
       t8_messy_write_forest(forest_adapt, vtu_prefix, data_chunk);
     #endif
 
@@ -575,6 +596,8 @@ void t8_messy_coarsen(t8_messy_data_t *messy_data) {
   t8_forest_unref (&forest_adapt);
   
   t8_global_productionf("MESSy grid coarsening done (%d rounds) \n", r);
+
+  messy_data->counter = messy_data->counter + 1;
 
 }
 
@@ -617,4 +640,5 @@ void t8_messy_write_forest(t8_forest_t forest, const char* prefix, t8_latlon_dat
   for(offset = 0; offset < num_data; ++offset) {
     T8_FREE(dim_data_array[offset]);
   }
+  
 }

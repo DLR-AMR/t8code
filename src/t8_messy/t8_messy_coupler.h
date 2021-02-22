@@ -83,9 +83,9 @@ typedef struct t8_messy_data {
   t8_latlon_data_chunk_t *chunk;
   t8_messy_coarsen_t *coarsen;
   t8_messy_interpolate_t *interpolation;
-  t8_forest_t *forest_test;
   t8_forest_t forest;
   t8_forest_t forest_adapt;
+  int counter;
 } t8_messy_data_t;
 
 
@@ -119,6 +119,8 @@ t8_messy_data_t* t8_messy_initialize(
   int dimensions,
   t8_messy_coarsen_t *coarsen,
   t8_messy_interpolate_t *interpolation);
+
+void t8_messy_reset(t8_messy_data_t* messy_data);
 
 /* Add channel object data to forest */
 void t8_messy_add_dimension(t8_messy_data_t *messy_data, char *dimension_name, double ****data);
