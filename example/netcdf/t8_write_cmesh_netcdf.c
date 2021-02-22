@@ -108,7 +108,7 @@ t8_example_netcdf_write_cmesh (int mpirank)
   t8_cmesh_write_netcdf (cmesh, mesh_name, "Example 3D parallel cmesh", 3, 2,
                          ext_vars, sc_MPI_COMM_WORLD);
 
-  t8_global_productionf ("NetCDF output of the cmesh has been written\n");
+  t8_global_productionf ("NetCDF output of the cmesh has been written.\n");
 
   /* Destroy the cmesh */
   t8_cmesh_destroy (&cmesh);
