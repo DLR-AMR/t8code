@@ -49,7 +49,7 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int mpirank)
   t8debugf ("[t8] Rank %d has %ld elements\n", mpirank, num_elements);
 
   /* *Example user-defined NetCDF variable* */
-  /* Currently, interger and double NetCDF variables are possible */
+  /* Currently, integer and double NetCDF variables are possible */
 
   /* Allocate the data which lays on the several processes */
   /* Those user-defined variables are currently only meant to maintain a single value per (process-local) element */
