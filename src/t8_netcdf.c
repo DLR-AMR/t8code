@@ -50,7 +50,6 @@ t8_netcdf_variable_double_init (const char *var_name,
   netcdf_variable->variable_long_name = var_long_name;
   netcdf_variable->datatype = 1;
   netcdf_variable->variable_units = var_unit;
-  //netcdf_variable->netcdf_data_double = var_data;
   return netcdf_variable;
 }
 #endif
