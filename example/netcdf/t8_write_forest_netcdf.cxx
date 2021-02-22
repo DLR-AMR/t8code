@@ -34,7 +34,6 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int mpirank)
   default_scheme = t8_scheme_new_default_cxx ();
 
   /* Construct a cube coarse mesh */
-  /* cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, comm, 0, 0, 0); */
   /* Construct a 3D hybrid hypercube as a cmesh */
   cmesh = t8_cmesh_new_hypercube_hybrid (3, comm, 0, 0);
 
