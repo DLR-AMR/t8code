@@ -70,7 +70,7 @@ t8_example_netcdf_write_cmesh (int mpirank)
     var_rank[j] = mpirank;
   }
 
-  /* Create a new sc_array_t which provides the data for the NetCDF variables, in this case the Mpirank each elements lays on */
+  /* Create a new sc_array_t which provides the data for the NetCDF variables, in this case the mpirank each element lays on */
   var_ranks =
     sc_array_new_data (var_rank, sizeof (t8_nc_int32_t),
                        t8_cmesh_get_num_local_trees (cmesh));
