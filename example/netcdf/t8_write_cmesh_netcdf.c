@@ -105,7 +105,7 @@ t8_example_netcdf_write_cmesh (int mpirank)
   char               *mesh_name = "NewCmesh3DParallel";
 
   /* Write the cmesh to NetCDF */
-  t8_cmesh_write_netcdf (cmesh, mesh_name, "Beispiel 3D Parallel Cmesh", 3, 2,
+  t8_cmesh_write_netcdf (cmesh, mesh_name, "Example 3D parallel cmesh", 3, 2,
                          ext_vars, sc_MPI_COMM_WORLD);
 
   t8_global_productionf ("NetCDF output of the cmesh has been written\n");
