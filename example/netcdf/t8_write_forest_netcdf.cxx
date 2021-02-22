@@ -58,7 +58,7 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int mpirank)
   for (j = 0; j < num_elements; j++) {
     var_rank[j] = mpirank;
   }
-  /* Create a new sc_array_t which provides the data for the NetCDF variables, in this case the Mpirank each elements lays on */
+  /* Create a new sc_array_t which provides the data for the NetCDF variables, in this case the mpirank each element lays on */
   var_ranks =
     sc_array_new_data (var_rank, sizeof (t8_nc_int32_t), num_elements);
   /* Create the integer NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit, pointer to sc_array_t which provides the data) */
