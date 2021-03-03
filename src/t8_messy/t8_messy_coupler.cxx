@@ -69,6 +69,50 @@ void get_values(int first, int num_elements, int element_length, int dimension, 
   }
 }
 
+double mult_sum(int num_elements, double* a, double* b) {
+  double sum = 0.0;
+  for(int i=0; i<num_elements; ++i) {
+    sum += (a[i] * b[i]);
+  }
+  return sum;
+}
+
+double sum(int num_elements, double* a) {
+  double sum = 0.0;
+  for(int i=0; i<num_elements; ++i) {
+    sum += a[i];
+  }
+  return sum;
+}
+
+void calculate_errors(int num_elements, double* values, double* errors, double value) {
+  for(int i=0; i < num_elements; ++i) {
+    errors[i] = fabs(values[i] - value);
+    // t8_debugf("%.12f \n", errors[i]);
+  }
+}
+
+int check_errors(int num_elements, double* errors, double max_error) {
+  for(int i=0; i<num_elements; ++i) {
+    if (errors[i] > max_error) {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+int check_errors2(int num_elements, double* errors, double* values) {
+  for(int i=0; i<num_elements; ++i) {
+    if (errors[i] > values[i] * 0.05) {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+
 t8_messy_custom_func_t* t8_messy_new_custom_func(int num_elements) {
   t8_messy_custom_func_t* func_data = T8_ALLOC(t8_messy_custom_func_t, 1);
   func_data->num_elements = num_elements;
@@ -93,8 +137,93 @@ void t8_messy_destroy_custom_func(t8_messy_custom_func_t* custom) {
 }
 
 /**
- * Simple coarsening test.
- * If the AVG of the first dimension of all four cells is even we coarsen.
+ * Callback function determening weather 4 cells can be combined.
+ * 
+ * This callback function calculates the error that would be produced by interpolating
+ * and only allowes if the generated error for every dimension is below a certain error tolerance.
+ */
+int
+t8_messy_coarsen_by_error_tol_callback(t8_forest_t forest,
+                          t8_forest_t forest_from,
+                          int which_tree,
+                          int lelement_id,
+                          t8_eclass_scheme_c * ts,
+                          int num_elements, t8_element_t * elements[]) 
+{
+  int ret = 0;
+
+  /* since we don't want to refine, 
+     we can stop if we only have one element */
+  if (num_elements == 1) {
+    return ret;
+  }
+
+  t8_messy_data_t *messy_data = (t8_messy_data_t*) t8_forest_get_user_data(forest);
+  t8_messy_coarsen_t *coarsen = messy_data->coarsen;
+  t8_latlon_data_chunk_t *data_chunk = messy_data->chunk;
+
+  double max_error = 1e-6;
+
+  /* calculate how many values one element has */
+  int element_length = data_chunk->z_length * data_chunk->dimensions;
+  /* calculate start index for first element */
+  int start = lelement_id * data_chunk->z_length * data_chunk->dimensions;
+
+  int error_index = messy_data->error_dimension;
+
+  /* extract mass information */
+  int mass_index = messy_data->mass_dimension;
+  double mass[num_elements];
+  double total_mass, interpolated, max;
+
+  get_values(start, num_elements, element_length, mass_index, mass, data_chunk->data);
+  total_mass = sum(num_elements, mass);
+
+
+  int z, z_offset, d, status;
+  double values[num_elements];
+  double errors[num_elements];
+
+  /* loop over z-levels */
+  for (z = 0; z < data_chunk->z_length; ++z) {
+    /* loop over dimensions */
+    for(d = 0; d < data_chunk->dimensions; ++d) {
+      /* do not consider mass */
+      if(d != mass_index && d != error_index) {
+        /* calculate offset to z-layer in element */
+        z_offset = z * data_chunk->dimensions;
+
+        /* extract values for the elements */
+        get_values(start + z_offset, num_elements, element_length, d, values, data_chunk->data);
+
+        /* calculate interpolated values */
+        interpolated = (mult_sum(num_elements, values, mass) / total_mass);
+
+        /* calculate errors */
+        calculate_errors(num_elements, values, errors, interpolated);
+
+        status = check_errors2(num_elements, errors, values);
+
+        /* retrive largest error */
+        max = get_max(errors, num_elements);
+
+        /* if largest error is larger than tol, we do not coarsen*/
+        // if(max > max_error) {
+        if(status == 1){
+          //t8_debugf("error to large for z: %d, d: %d, error: %.12f \n", z, d, max);
+          return 0;          
+        }
+      }
+    }
+  }
+
+  return -1;
+}
+
+/**
+ * Callback function determening weather 4 cells can be combined.
+ * 
+ * 
  */
 int
 t8_messy_coarsen_callback (t8_forest_t forest,
@@ -207,6 +336,101 @@ t8_messy_coarsen_callback (t8_forest_t forest,
 
 
   return ret;
+}
+
+static void
+t8_messy_interpolate_callback2 (t8_forest_t forest_old,
+                   t8_forest_t forest_new,
+                   t8_locidx_t which_tree,
+                   t8_eclass_scheme_c * ts,
+                   int num_outgoing, /* previously number of cells, only interesting when 4 */
+                   t8_locidx_t first_outgoing, /* index  of first cell in forest_old */
+                   int num_incoming, /* number of cells to be.., should be 1 */
+                   t8_locidx_t first_incoming) /* index of new cell in forest_new */
+{
+
+  t8_messy_data_t *messy_data = (t8_messy_data_t *) t8_forest_get_user_data(forest_new);
+  t8_messy_interpolate_t *interpolation = messy_data->interpolation;
+  t8_latlon_data_chunk_t *data_chunk = messy_data->chunk;
+
+  int num_dimensions = data_chunk->dimensions;
+  int z_length = data_chunk->z_length;
+  int element_length = num_dimensions * z_length;
+  int index_incoming, index_outgoing;
+
+  index_incoming = first_incoming * element_length;
+  index_outgoing = first_outgoing * element_length;
+
+  if(num_outgoing > num_incoming) {
+    
+    /* when the number of previous elements (num_outgoing) is larger than the number of created cell from it (num_incoming)
+     * we interpolate,
+     */
+
+
+    /* extract mass information */
+    int mass_index = messy_data->mass_dimension;
+    double mass[num_outgoing];
+    double total_mass, interpolated;
+    get_values(index_outgoing, num_outgoing, element_length, mass_index, mass, data_chunk->data);
+    total_mass = sum(num_outgoing, mass);
+
+    double max_local, max_global, max;
+    int error_index = messy_data->error_dimension;
+    double errors[num_outgoing];
+    double local_errors[num_outgoing];
+
+    
+    int d, z, z_offset, start;
+    double values[num_outgoing];
+
+    for(z = 0; z < z_length; ++z) {
+      /* calculate offset for z_layer */
+      z_offset = z * num_dimensions;
+      /* calculate start index for first element */
+      start = index_outgoing + z_offset;
+
+      for(d = 0; d < num_dimensions; ++d) {
+        if(d != mass_index) {
+          if(d != error_index) {
+            /* extract values for the elements */
+            get_values(start, num_outgoing, element_length, d, values, data_chunk->data);
+
+            /* calculate interpolated values */
+            interpolated = (mult_sum(num_outgoing, values, mass) / total_mass);
+
+            /* set interpolated value*/
+            data_chunk->data_adapt[index_incoming + z_offset + d] = interpolated;
+
+            /* set error value */
+            /* calculate errors */
+            calculate_errors(num_outgoing, values, local_errors, interpolated);
+
+            /* retrieve largest error */
+            max_local = get_max(local_errors, num_outgoing);
+
+            /* retrieve previous errors*/
+            get_values(start, num_outgoing, element_length, error_index, errors, data_chunk->data);
+
+            max_global = get_max(errors, num_outgoing);
+
+            max = fmax(max, max_global + max_local);
+          }
+        } else {
+          data_chunk->data_adapt[index_incoming + z_offset + d] = total_mass;
+        }
+      }
+      t8_debugf("z: %d, max error %.16f \n", z, max);
+      data_chunk->data_adapt[index_incoming + z_offset + error_index] = max;
+    }
+        
+  } else {
+    /* else just copy data over to new array */
+    memcpy (data_chunk->data_adapt + index_incoming,
+            data_chunk->data       + index_outgoing,
+              element_length * sizeof (double));
+  }
+
 }
 
 static void
@@ -435,8 +659,10 @@ t8_messy_data_t* t8_messy_initialize(
     (t8_latlon_adapt_data_t *) t8_forest_get_user_data (forest);
   
   int* lshape = T8_ALLOC_ZERO(int, 3);
-  memcpy(lshape, shape, sizeof(int) * 3);
+  //memcpy(lshape, shape, sizeof(int) * 3);
 
+  /* we need to add one dimension for the error */
+  dimensions += 1;
 
   /* create data chunk */
   t8_latlon_data_chunk_t *chunk = t8_latlon_new_chunk(
@@ -446,6 +672,9 @@ t8_messy_data_t* t8_messy_initialize(
     lshape,
     dimensions, x_axis, y_axis, z_axis, adapt_data->max_level,
     T8_LATLON_DATA_MESSY);
+
+  /* add error dimension */
+  t8_latlon_get_dimension_idx(chunk, "error", true);
 
   t8_messy_data_t* messy_data = T8_ALLOC(t8_messy_data_t, 1);
   messy_data->chunk = chunk;
@@ -476,18 +705,61 @@ void t8_messy_add_dimension(t8_messy_data_t *messy_data, char* dimension_name, d
   t8_latlon_set_dimension(messy_data->chunk, dimension_name, data);
 }
 
+// Stores the trimmed input string into the given output buffer, which must be
+// large enough to store the result.  If it is too small, the output is
+// truncated.
+size_t trimwhitespace(char *out, size_t len, const char *str)
+{
+  if(len == 0)
+    return 0;
+
+  const char *end;
+  size_t out_size;
+
+  // Trim leading space
+  while(isspace((unsigned char)*str)) str++;
+
+  if(*str == 0)  // All spaces?
+  {
+    *out = 0;
+    return 1;
+  }
+
+  // Trim trailing space
+  end = str + strlen(str) - 1;
+  while(end > str && isspace((unsigned char)*end)) end--;
+  end++;
+
+  // Set output size to minimum of trimmed string length and buffer size minus 1
+  out_size = (end - str) < len-1 ? (end - str) : len-1;
+
+  // Copy trimmed string and add null terminator
+  memcpy(out, str, out_size);
+  out[out_size] = 0;
+
+  return out_size;
+}
+
 void t8_messy_set_dimension_values(t8_messy_data_t *messy_data, char* dimension_name, double *data) {
   t8_latlon_data_chunk_t *data_chunk = messy_data->chunk;
-  int dimension_index = t8_latlon_get_dimension_idx(data_chunk, dimension_name, true);
+  char* name = T8_ALLOC(char, BUFSIZ);
+
+  trimwhitespace(name, BUFSIZ, dimension_name);
+
+  int dimension_index = t8_latlon_get_dimension_idx(data_chunk, name, data_chunk->dimension_names_size < data_chunk->dimensions);
   
-  t8_debugf("set values for dimension %s at index %d\n", dimension_name, dimension_index);
+  T8_ASSERT(dimension_index > -1);
+
+  t8_debugf("set values for dimension %s at index %d\n", name, dimension_index);
 
   int size = data_chunk->x_length * data_chunk->y_length * data_chunk->z_length;
   int len = data_chunk->shape[0] * data_chunk->shape[1];
   int i, l, x, y, z, data_index;
   int *idx = T8_ALLOC_ZERO(int, 3);
 
-  for(i=0; i<size; ++i) {
+  // t8_debugf("[%d, %d, %d]\n", data_chunk->shape[0], data_chunk->shape[1], data_chunk->shape[2]);
+
+  for(i=0; i<size; i++) {
     idx[0] = i / len;
     l      = i % len;
     idx[1] = l / data_chunk->shape[0];
@@ -498,13 +770,16 @@ void t8_messy_set_dimension_values(t8_messy_data_t *messy_data, char* dimension_
     y = (data_chunk->y_length - 1) - idx[2 - data_chunk->y_axis];
     z = idx[2 - data_chunk->z_axis];
 
+
     /* calculate index in data array */
     data_index = ((y * data_chunk->z_length * data_chunk->x_length + x * data_chunk->z_length + z) * data_chunk->dimensions) + dimension_index;
 
     /* copy data */
+    // t8_debugf("(%d)[%d, %d, %d](%d): %.16f\n", i, x, y, z, data_index, data[i]);
     memcpy((data_chunk->data) + data_index, data + i, sizeof(double));
   }
 
+  T8_FREE(name);
   T8_FREE(idx);
 }
 
@@ -536,14 +811,20 @@ void t8_messy_coarsen(t8_messy_data_t *messy_data) {
   
   t8_latlon_data_chunk_t *data_chunk = messy_data->chunk;
 
+  /* add error dimension as last dimension */
+  messy_data->error_dimension = t8_latlon_get_dimension_idx(data_chunk, "error", false);
+
+  /* TODO: make definition of grmassdry somewhat configurable and add safe guards */
+  messy_data->mass_dimension = t8_latlon_get_dimension_idx(data_chunk, "grmassdry", false);
+
+  t8_debugf("error index %d, mass index %d \n", messy_data->error_dimension, messy_data->mass_dimension);
+
   t8_forest_t forest;
   t8_forest_t forest_adapt;
 
-  t8_forest_ref(messy_data->forest);
-
-  t8_forest_init(&forest);
-  t8_forest_set_copy(forest, messy_data->forest);
-  t8_forest_commit(forest);
+  forest = messy_data->forest;
+  t8_forest_ref(forest);
+  
 
   #ifdef T8_ENABLE_DEBUG
     /* In debugging mode write the forest */
@@ -556,7 +837,7 @@ void t8_messy_coarsen(t8_messy_data_t *messy_data) {
   for(r=0; r < 5; ++r) {
 
     t8_forest_ref(forest);
-    forest_adapt = t8_forest_new_adapt(forest, t8_messy_coarsen_callback, 0, 0, messy_data);
+    forest_adapt = t8_forest_new_adapt(forest, t8_messy_coarsen_by_error_tol_callback, 0, 0, messy_data);
 
     num_elements = t8_forest_get_num_element(forest_adapt);
 
@@ -570,7 +851,7 @@ void t8_messy_coarsen(t8_messy_data_t *messy_data) {
     data_chunk->data_ids_adapt = T8_ALLOC(t8_linearidx_t, num_elements);
     data_chunk->data_adapt = T8_ALLOC(double, num_elements * data_chunk->z_length * data_chunk->dimensions);
 
-    t8_forest_iterate_replace(forest_adapt, forest, t8_messy_interpolate_callback);
+    t8_forest_iterate_replace(forest_adapt, forest, t8_messy_interpolate_callback2);
 
     T8_FREE(data_chunk->data_ids);
     T8_FREE(data_chunk->data);
@@ -582,7 +863,6 @@ void t8_messy_coarsen(t8_messy_data_t *messy_data) {
     data_chunk->data_adapt = NULL;
 
     t8_forest_unref(&forest);
-
     forest = forest_adapt;
 
     #ifdef T8_ENABLE_DEBUG
@@ -593,7 +873,7 @@ void t8_messy_coarsen(t8_messy_data_t *messy_data) {
 
   }
   
-  t8_forest_unref (&forest_adapt);
+  t8_forest_unref (&forest);
   
   t8_global_productionf("MESSy grid coarsening done (%d rounds) \n", r);
 
@@ -615,7 +895,7 @@ void t8_messy_write_forest(t8_forest_t forest, const char* prefix, t8_latlon_dat
   int num_data = data_chunk->dimensions * data_chunk->z_length;
  
  
-  t8_debugf("num elements %d, num data %d\n", num_elements, num_data);
+  t8_debugf("dims %d, z_len %d, num elements %d, num data %d\n", data_chunk->dimensions, data_chunk->z_length, num_elements, num_data);
   /* TODO: Do not use static array with variable as length */
   t8_vtk_data_field_t vtk_data[num_data];
   double *dim_data_array[num_data];

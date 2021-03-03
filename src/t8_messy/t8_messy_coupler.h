@@ -84,7 +84,8 @@ typedef struct t8_messy_data {
   t8_messy_coarsen_t *coarsen;
   t8_messy_interpolate_t *interpolation;
   t8_forest_t forest;
-  t8_forest_t forest_adapt;
+  int mass_dimension;
+  int error_dimension;
   int counter;
 } t8_messy_data_t;
 
