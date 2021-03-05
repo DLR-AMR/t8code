@@ -49,7 +49,7 @@ module t8code_messy_coupler_interface
 
     Interface
         type (c_ptr) function t8_messy_initialize_f (description, axis, shape, x_start, y_start, &
-                dimensions, coarsen, interpolation) &
+                num_tracers, coarsen, interpolation) &
                 bind (c, name = 't8_messy_initialize')
             use, intrinsic :: ISO_C_BINDING, only: c_int, c_char, c_ptr
             IMPLICIT NONE
@@ -59,7 +59,7 @@ module t8code_messy_coupler_interface
             integer (c_int), value :: x_start
             integer (c_int), value :: y_start
             
-            integer (c_int), value :: dimensions
+            integer (c_int), value :: num_tracers
             type (c_ptr), value :: coarsen
             type (c_ptr), value :: interpolation
 
@@ -89,14 +89,14 @@ module t8code_messy_coupler_interface
     end Interface
 
     Interface
-        subroutine t8_messy_set_dimension_values_f (messy_data, dimension_name, data) &
-                                bind (c, name = 't8_messy_set_dimension_values')
+        subroutine t8_messy_set_tracer_values_f (messy_data, tracer_name, data) &
+                                bind (c, name = 't8_messy_set_tracer_values')
             use, intrinsic :: ISO_C_BINDING, only: c_char, c_ptr, c_int
             implicit NONE
             type (c_ptr), value :: messy_data
-            character (c_char) :: dimension_name
+            character (c_char) :: tracer_name
             type (c_ptr), value :: data
-        end subroutine t8_messy_set_dimension_values_f
+        end subroutine t8_messy_set_tracer_values_f
     end Interface
 
     Interface

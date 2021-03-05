@@ -140,11 +140,11 @@ main (int argc, char **argv)
 
     t8_messy_gaussian(data, x_length, y_length);
     //sprintf(name, "gaussian");
-    t8_messy_add_dimension(messy, "gaussian", data);
+    // t8_messy_add_dimension(messy, "gaussian", data);
     
-    t8_messy_sine_2d(data, x_length, y_length);
+    // t8_messy_sine_2d(data, x_length, y_length);
     //sprintf(name, );
-    t8_messy_add_dimension(messy, "sine_2d", data);
+    // t8_messy_add_dimension(messy, "sine_2d", data);
 
     /* bring input data into SFC format */
     t8_messy_apply_sfc(messy);
@@ -156,7 +156,7 @@ main (int argc, char **argv)
     // coarsen_config->func = custom_coarsening;
     coarsen_config->method = T8_MESSY_COARSEN_THRESHOLD_MIN_HIGHER;
     coarsen_config->z_layer = 0;
-    coarsen_config->dimension = "gaussian";
+    coarsen_config->tracer = "gaussian";
     coarsen_config->threshold = 0.8;
 
     //interpolate_config->method = T8_MESSY_INTERPOLATE_MEAN;
