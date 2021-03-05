@@ -299,11 +299,11 @@ t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm)
   mpiret = sc_MPI_Comm_size (comm, &mpisize_debug);
   SC_CHECK_MPI (mpiret);
   T8_ASSERT (mpisize == mpisize_debug);
-  t8_debugf ("Allocating shared array with type %s\n",
-             sc_shmem_type_to_string[sc_shmem_get_type (comm)]);
 #endif
 
   t8_shmem_array_init (&offsets, sizeof (t8_gloidx_t), mpisize + 1, comm);
+  t8_debugf ("Allocating shared array with type %s\n",
+             sc_shmem_type_to_string[sc_shmem_get_type (comm)]);
   return offsets;
 }
 
