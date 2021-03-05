@@ -1776,11 +1776,12 @@ t8_cmesh_new_from_class (t8_eclass_t eclass, sc_MPI_Comm comm)
 }
 
 t8_cmesh_t
-t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition)
+t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition, int dimension)
 {
   t8_cmesh_t          cmesh;
 
   t8_cmesh_init (&cmesh);
+  t8_cmesh_set_dimension (cmesh, dimension);
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }
