@@ -337,6 +337,12 @@ void                t8_cmesh_set_profiling (t8_cmesh_t cmesh,
 int                 t8_cmesh_is_equal (t8_cmesh_t cmesh_a,
                                        t8_cmesh_t cmesh_b);
 
+/** Check whether a cmesh is empty on all processes.
+ * \param [in]  cmesh           A committed cmesh.
+ * \return                      True (non-zero) if and only if the cmesh has trees at all.
+ */
+int                 t8_cmesh_is_empty (t8_cmesh_t cmesh);
+
 /** Broadcast a cmesh structure that exists only on one process to all
  *  processes in the cmesh's communicator.
  *  TODO: Input structure must be replicated, not parallelized.

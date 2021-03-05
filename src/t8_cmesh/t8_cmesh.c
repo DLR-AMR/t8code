@@ -94,6 +94,8 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
    * This variable lives beyond one execution of t8_cmesh_is_committed.
    * We use it as a form of lock to prevent entering an infinite recursion.
    */
+  /* TODO: This is_checking is not thread safe. If two threads call cmesh routines
+   *       that call t8_cmesh_is_committed, only one of them will correctly check the cmesh. */
   if (!is_checking) {
     is_checking = 1;
 
@@ -108,6 +110,10 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
     if ((!t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) ||
         (!t8_cmesh_no_negative_volume (cmesh))
         || (!t8_cmesh_check_trees_per_eclass (cmesh))) {
+      is_checking = 0;
+      return 0;
+    }
+    if (t8_cmesh_get_num_local_trees (cmesh) > 0 && t8_cmesh_is_empty (cmesh)) {
       is_checking = 0;
       return 0;
     }
@@ -894,6 +900,12 @@ t8_cmesh_bcast_attributes (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   }
 }
 #endif
+
+int
+t8_cmesh_is_empty (t8_cmesh_t cmesh)
+{
+  return cmesh->num_trees == 0;
+}
 
 t8_cmesh_t
 t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
@@ -1783,6 +1795,7 @@ t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition, int dimension)
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_dimension (cmesh, dimension);
   t8_cmesh_commit (cmesh, comm);
+  T8_ASSERT (t8_cmesh_is_empty (cmesh));
   return cmesh;
 }
 
