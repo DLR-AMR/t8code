@@ -125,7 +125,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
     T8_ASSERT (0 <= last_global_child
                && last_global_child <= global_num_children);
     *first_local_tree = first_global_child / children_per_tree;
-    *child_in_tree_begin_temp =
+    child_in_tree_begin_temp =
       first_global_child - *first_local_tree * children_per_tree;
     if (child_in_tree_begin != NULL) {
       *child_in_tree_begin = child_in_tree_begin_temp;
