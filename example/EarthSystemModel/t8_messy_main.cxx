@@ -133,7 +133,7 @@ main (int argc, char **argv)
     t8_messy_interpolate_t *interpolation = t8_messy_new_interpolate_config("mean", nullptr);
 
     /* initialize forest and data chunk */
-    t8_messy_data_t* messy = t8_messy_initialize("test", "XYZ", shape, 0, 0, num_dims, coarsen, interpolation);
+    t8_messy_data_t* messy = t8_messy_initialize("test", "XYZ", shape, 0, 0, num_dims, -1.0, coarsen, interpolation);
 
     /* set data for every dimension */
     //char name[BUFSIZ];

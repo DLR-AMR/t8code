@@ -49,9 +49,9 @@ module t8code_messy_coupler_interface
 
     Interface
         type (c_ptr) function t8_messy_initialize_f (description, axis, shape, x_start, y_start, &
-                num_tracers, coarsen, interpolation) &
+                num_tracers, missing_value, coarsen, interpolation) &
                 bind (c, name = 't8_messy_initialize')
-            use, intrinsic :: ISO_C_BINDING, only: c_int, c_char, c_ptr
+            use, intrinsic :: ISO_C_BINDING, only: c_int, c_char, c_ptr, c_double
             IMPLICIT NONE
             character (c_char) :: description
             character (c_char) :: axis
@@ -60,6 +60,7 @@ module t8code_messy_coupler_interface
             integer (c_int), value :: y_start
             
             integer (c_int), value :: num_tracers
+            real (c_double), value :: missing_value
             type (c_ptr), value :: coarsen
             type (c_ptr), value :: interpolation
 
@@ -76,6 +77,16 @@ module t8code_messy_coupler_interface
             integer (c_int), value :: y_length
         end subroutine t8_messy_gaussian_f
     end Interface
+
+    Interface
+        integer (c_int) function t8_messy_get_max_number_elements_f (messy_data) &
+                                bind (c, name = 't8_messy_get_max_number_elements')
+            use, intrinsic :: ISO_C_BINDING, only: c_int, c_ptr
+            implicit NONE
+            type (c_ptr), value :: messy_data
+        end function t8_messy_get_max_number_elements_f
+    end Interface
+    
 
     Interface
         subroutine t8_messy_add_dimension_f (messy_data, dimension_name, data) &
@@ -97,6 +108,17 @@ module t8code_messy_coupler_interface
             character (c_char) :: tracer_name
             type (c_ptr), value :: data
         end subroutine t8_messy_set_tracer_values_f
+    end Interface
+
+    Interface
+        subroutine t8_messy_write_tracer_values_f (messy_data, tracer_name, data) &
+                                bind (c, name = 't8_messy_write_tracer_values')
+            use, intrinsic :: ISO_C_BINDING, only: c_char, c_ptr, c_int
+            implicit NONE
+            type (c_ptr), value :: messy_data
+            character (c_char) :: tracer_name
+            type (c_ptr), value :: data
+        end subroutine t8_messy_write_tracer_values_f
     end Interface
 
     Interface
@@ -167,6 +189,7 @@ Program MessyTest
       Integer (c_int) num_dims, x, y, z
       Integer (c_int) x_length, y_length
       Integer (c_int) c_zero, z_one
+      real (c_double) missing_value
       real (c_double), dimension (0:4, 0:4, 1, 1) :: data
       integer, dimension(4), target :: shape
       
@@ -191,9 +214,10 @@ Program MessyTest
       num_dims = 2
       c_zero = 0
       z_one = 1
+      missing_value = 0.0
       shape = (/ 4, 4, 1, 1/)
       coarsen = c_loc(shape(1))
-      coupler = t8_messy_initialize_f ("test", "XYZ", c_loc(shape(1)), c_zero, c_zero, num_dims, coarsen, coarsen);
+      coupler = t8_messy_initialize_f ("test", "XYZ", c_loc(shape(1)), c_zero, c_zero, num_dims, missing_value, coarsen, coarsen);
 
     !   call t8_messy_add_dimension_f (messy, "gaussian", data);
     !   call t8_messy_sine_2d_f (data, x_length, y_length);

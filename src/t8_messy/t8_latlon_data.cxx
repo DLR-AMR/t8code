@@ -175,8 +175,7 @@ t8_latlon_data_chunk_t *
 t8_latlon_new_chunk (const char *description, t8_locidx_t x_start, t8_locidx_t y_start,
                      t8_locidx_t x_length, t8_locidx_t y_length, t8_locidx_t z_length,
                      int *shape, int num_tracers, int x_axis, int y_axis, int z_axis, int level,
-                     T8_LATLON_DATA_NUMBERING numbering
-                     )
+                     double missing_value, T8_LATLON_DATA_NUMBERING numbering)
 {
   t8_latlon_data_chunk_t *chunk = T8_ALLOC (t8_latlon_data_chunk_t, 1);
 
@@ -199,6 +198,7 @@ t8_latlon_new_chunk (const char *description, t8_locidx_t x_start, t8_locidx_t y
   chunk->x_axis = x_axis;
   chunk->y_axis = y_axis;
   chunk->z_axis = z_axis;
+  chunk->missing_value = missing_value;
 
   chunk->data = T8_ALLOC_ZERO(double, x_length * y_length * z_length * num_tracers);
   chunk->data_ids = T8_ALLOC_ZERO(t8_linearidx_t, x_length * y_length);
@@ -382,7 +382,7 @@ t8_latlon_data_apply_morton_order (t8_forest_t *forest, t8_latlon_data_chunk_t *
 
   t8_debugf("num_data_elements: %d, num_element: %d \n", num_data_elements, num_elements);
 
-  double             *data_new = T8_ALLOC_ZERO (double, num_data_elements);
+  double             *data_new = T8_ALLOC (double, num_data_elements);
   t8_linearidx_t     *data_ids_new = T8_ALLOC_ZERO (t8_linearidx_t, num_elements);
 
   for (index = 0; index < num_elements; ++index) {
@@ -398,6 +398,10 @@ t8_latlon_data_apply_morton_order (t8_forest_t *forest, t8_latlon_data_chunk_t *
       memcpy (data_new + index * element_length,
               data_chunk->data + old,
               element_length * sizeof (double));
+    } else {
+      for(int i=0; i<element_length; ++i) {
+        data_new[index * element_length + i] = data_chunk->missing_value;
+      }
     }
   }
 
@@ -461,7 +465,7 @@ t8_latlon_data_test (t8_locidx_t x_start, t8_locidx_t y_start,
   T8_ASSERT (y_start + y_length <= y_length_global);
   t8_latlon_data_chunk_t *chunk =
     t8_latlon_new_chunk ("test_chunk", x_start, y_start, x_length, y_length, 1, shape, dimension,
-                         x_axis, y_axis, z_axis, level, numbering);
+                         x_axis, y_axis, z_axis, level, 0.0, numbering);
   t8_locidx_t         num_grid_items = x_length * y_length;
   T8_ASSERT (numbering != T8_LATLON_DATA_MORTON);
   {

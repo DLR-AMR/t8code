@@ -63,32 +63,43 @@ double get_min(double* values, int num_elements) {
 inline
 void get_values(int first, int num_elements, int element_length, int tracer, double* values, double* data) {
   int offset, i;
+  double value;
   for (i=0; i < num_elements; ++i) {
     offset = first + i * element_length + tracer;
     values[i] = data[offset];
   }
 }
 
-double mult_sum(int num_elements, double* a, double* b) {
+double mult_sum(int num_elements, double* a, double* b, double missing_value) {
   double sum = 0.0;
   for(int i=0; i<num_elements; ++i) {
+    if(a[i] == missing_value && b[i] == missing_value) continue;
     sum += (a[i] * b[i]);
   }
   return sum;
 }
 
-double sum(int num_elements, double* a) {
+double sum(int num_elements, double* a, double missing_value) {
   double sum = 0.0;
   for(int i=0; i<num_elements; ++i) {
+    if(a[i] == missing_value) continue;
     sum = sum + a[i];
   }
   return sum;
 }
 
-void calculate_errors(int num_elements, double* values, double* errors, double value) {
+void calculate_errors(int num_elements, double* values, double* errors, double value, double missing_value) {
   for(int i=0; i < num_elements; ++i) {
-    errors[i] = fabs(values[i] - value);
-    // t8_debugf("%.12f \n", errors[i]);
+    errors[i] = values[i] == missing_value ? 0 : fabs(values[i] - value);
+  }
+}
+
+void calculate_error_ratios(int num_elements, double* values, double* errors, double value, double missing_value) {
+  for(int i=0; i < num_elements; ++i) {
+    if(values[i] == missing_value || values[i] == 0) errors[i] = 0;
+    else {
+      errors[i] =  fabs(values[i] - value) / values[i];
+    }
   }
 }
 
@@ -102,9 +113,10 @@ int check_errors(int num_elements, double* errors, double max_error) {
   return 0;
 }
 
-int check_errors2(int num_elements, double* errors, double* values) {
+int check_errors_by_ratio(int num_elements, double ratio, double* errors, double* values, double missing_value) {
   for(int i=0; i<num_elements; ++i) {
-    if (errors[i] > values[i] * 0.1) {
+    if (values[i] == missing_value) continue;
+    if (errors[i] > values[i] * ratio) {
       return 1;
     }
   }
@@ -175,38 +187,36 @@ t8_messy_coarsen_by_error_tol_callback(t8_forest_t forest,
   double total_mass, interpolated, max;
 
 
-
   int z, z_offset, d, status;
   double values[num_elements];
   double errors[num_elements];
 
   /* loop over z-levels */
   for (z = 0; z < data_chunk->z_length; ++z) {
+    /* calculate offset to z-layer in element */
+    z_offset = z * data_chunk->num_tracers;
+
+    /* calculate total mass of elements*/
+    get_values(start + z_offset, num_elements, element_length, mass_index, mass, data_chunk->data);
+    total_mass = sum(num_elements, mass, data_chunk->missing_value);
+
     /* loop over dimensions, but do not consider mass tracer */
     for(d = 0; d < data_chunk->num_tracers - 1; ++d) {
-      /* calculate offset to z-layer in element */
-      z_offset = z * data_chunk->num_tracers;
-
-      get_values(start + z_offset, num_elements, element_length, mass_index, mass, data_chunk->data);
-      total_mass = sum(num_elements, mass);
 
       /* extract values for the elements */
       get_values(start + z_offset, num_elements, element_length, d, values, data_chunk->data);
 
       /* calculate interpolated values */
-      interpolated = (mult_sum(num_elements, values, mass) / total_mass);
+      interpolated = (mult_sum(num_elements, values, mass, data_chunk->missing_value) / total_mass);
 
       /* calculate errors */
-      calculate_errors(num_elements, values, errors, interpolated);
+      calculate_error_ratios(num_elements, values, errors, interpolated, data_chunk->missing_value);
 
-      status = check_errors2(num_elements, errors, values);
+      /* get largest error ratio */
+      max = get_max(errors, num_elements);
 
-      /* retrive largest error */
-      // max = get_max(errors, num_elements);
-
-      /* if largest error is larger than tol, we do not coarsen*/
-      // if(max > max_error) {
-      if(status == 1){
+      /* if largest error ratio is larger than max ratio, we do not coarsen */
+      if(max > 0.10) {
         //t8_debugf("error to large for z: %d, d: %d, error: %.12f \n", z, d, max);
         return 0;          
       }
@@ -371,7 +381,7 @@ t8_messy_interpolate_callback2 (t8_forest_t forest_old,
     double mass[num_outgoing];
     double total_mass, interpolated;
 
-    double max_local, max_global, max;
+    double max_local, global, max;
     double errors[num_outgoing];
     double local_errors[num_outgoing];
 
@@ -385,8 +395,9 @@ t8_messy_interpolate_callback2 (t8_forest_t forest_old,
       /* calculate start index for first element */
       start = index_outgoing + z_offset;
 
+      /* calculate total mass of elements*/
       get_values(start, num_outgoing, element_length, mass_index, mass, data_chunk->data);
-      total_mass = sum(num_outgoing, mass);
+      total_mass = sum(num_outgoing, mass, data_chunk->missing_value);
 
       /* set new mass */
       data_chunk->data_adapt[index_incoming + z_offset + mass_index] = total_mass;
@@ -396,26 +407,27 @@ t8_messy_interpolate_callback2 (t8_forest_t forest_old,
         get_values(start, num_outgoing, element_length, d, values, data_chunk->data);
 
         /* calculate interpolated values */
-        interpolated = (mult_sum(num_outgoing, values, mass) / total_mass);
+        interpolated = (mult_sum(num_outgoing, values, mass, data_chunk->missing_value) / total_mass);
 
         /* set interpolated value*/
         data_chunk->data_adapt[index_incoming + z_offset + d] = interpolated;
 
-        /* set error value */
-        /* calculate errors */
-        calculate_errors(num_outgoing, values, local_errors, interpolated);
+        /* set error values */
 
-        /* retrieve largest error */
-        max_local = get_max(local_errors, num_outgoing);
+        /* calculate error ratios */
+        calculate_error_ratios(num_outgoing, values, local_errors, interpolated, data_chunk->missing_value);
 
-        /* retrieve previous errors*/
-        //get_values(start, num_outgoing, element_length, error_index, errors, data_chunk->data);
+        /* find largest local error ratio over all z-layers*/
+        max_local = messy_data->errors_adapt[first_incoming * (num_tracers - 1) + d];
+        max_local = fmax(max_local, get_max(local_errors, num_outgoing));
 
+        /* set local error */
+        messy_data->errors_adapt[first_incoming * (num_tracers - 1) + d] = max_local;
 
-        max_global = messy_data->errors_adapt[first_incoming * (num_tracers - 1) + d];
-        max_global = fmax(max_global, max_local);
+        /* set global error */
+        global = messy_data->errors_global[first_incoming * (num_tracers - 1) + d];
+        messy_data->errors_adapt_global[first_incoming * (num_tracers - 1) + d] = global + max_local;
 
-        messy_data->errors_adapt[first_incoming * (num_tracers - 1) + d] = max_global;
       }
       
     }
@@ -426,9 +438,13 @@ t8_messy_interpolate_callback2 (t8_forest_t forest_old,
             data_chunk->data       + index_outgoing,
               element_length * sizeof (double));
 
-    /* copy over  */
+    /* copy errors over  */
     memcpy (messy_data->errors_adapt + first_incoming * (num_tracers - 1),
             messy_data->errors       + first_outgoing * (num_tracers - 1),
+              (num_tracers - 1) * sizeof (double));
+    
+    memcpy (messy_data->errors_adapt_global + first_incoming * (num_tracers - 1),
+            messy_data->errors_global       + first_outgoing * (num_tracers - 1),
               (num_tracers - 1) * sizeof (double));
   }
 
@@ -611,6 +627,7 @@ t8_messy_data_t* t8_messy_initialize(
   int x_start, 
   int y_start,
   int num_tracers,
+  double missing_value,
   t8_messy_coarsen_t *coarsen,
   t8_messy_interpolate_t *interpolation
   ) {
@@ -618,6 +635,8 @@ t8_messy_data_t* t8_messy_initialize(
   #ifdef T8_ENABLE_DEBUG
     t8_global_productionf("Initializing MESSy coupler\n");
   #endif
+
+  t8_debugf("missing_value %.14f", missing_value);
 
   /* determine axes */
   int x, y, z;
@@ -670,6 +689,7 @@ t8_messy_data_t* t8_messy_initialize(
     lshape,
     num_tracers, x_axis, y_axis, z_axis, 
     adapt_data->max_level,
+    missing_value,
     T8_LATLON_DATA_MESSY);
 
   t8_messy_data_t* messy_data = T8_ALLOC(t8_messy_data_t, 1);
@@ -680,6 +700,8 @@ t8_messy_data_t* t8_messy_initialize(
   messy_data->counter = 0;
   messy_data->errors = NULL;
   messy_data->errors_adapt = NULL;
+  messy_data->errors_global = NULL;
+  messy_data->errors_adapt_global = NULL;
 
   #ifdef T8_ENABLE_DEBUG
     t8_global_productionf("MESSy coupler initialized\n");
@@ -691,9 +713,13 @@ t8_messy_data_t* t8_messy_initialize(
 void t8_messy_reset(t8_messy_data_t* messy_data) {
   T8_FREE(messy_data->errors);
   T8_FREE(messy_data->errors_adapt);
+  T8_FREE(messy_data->errors_global);
+  T8_FREE(messy_data->errors_adapt_global);
+  
   messy_data->errors = NULL;
   messy_data->errors_adapt = NULL;
-
+  messy_data->errors_global = NULL;
+  messy_data->errors_adapt_global = NULL;
 
   t8_latlon_data_chunk_t *chunk = messy_data->chunk;
   if(chunk->numbering == T8_LATLON_DATA_MORTON) {
@@ -709,6 +735,9 @@ void t8_messy_reset(t8_messy_data_t* messy_data) {
   t8_debugf("messy data resetted \n");
 }
 
+int t8_messy_get_max_number_elements(t8_messy_data_t* messy_data) {
+  return t8_forest_get_num_element(messy_data->forest);
+}
 
 void t8_messy_add_dimension(t8_messy_data_t *messy_data, char* dimension_name, double ****data) {
   t8_latlon_set_dimension(messy_data->chunk, dimension_name, data);
@@ -826,12 +855,13 @@ void t8_messy_coarsen(t8_messy_data_t *messy_data) {
 
   forest = messy_data->forest;
   t8_forest_ref(forest);
-  
+  // forest ref = 2
   int last_num_elements = 0, num_elements = 0, r;
   
   num_elements = t8_forest_get_num_element(forest);
 
   messy_data->errors = T8_ALLOC_ZERO(double, num_elements * (data_chunk->num_tracers - 1));
+  messy_data->errors_global = T8_ALLOC_ZERO(double, num_elements * (data_chunk->num_tracers - 1));
 
   #ifdef T8_ENABLE_DEBUG
     /* In debugging mode write the forest */
@@ -839,12 +869,14 @@ void t8_messy_coarsen(t8_messy_data_t *messy_data) {
     t8_messy_write_forest(forest, vtu_prefix, messy_data);
   #endif
 
-
-
   for(r=0; r < 10; ++r) {
 
     t8_forest_ref(forest);
+    // forest ref = 2
+    // adapt ref = 2
     forest_adapt = t8_forest_new_adapt(forest, t8_messy_coarsen_by_error_tol_callback, 0, 0, messy_data);
+    // forest ref = 1
+    // adapt ref = 1
 
     num_elements = t8_forest_get_num_element(forest_adapt);
 
@@ -855,26 +887,34 @@ void t8_messy_coarsen(t8_messy_data_t *messy_data) {
     }
     last_num_elements = num_elements;
 
-    data_chunk->data_ids_adapt = T8_ALLOC(t8_linearidx_t, num_elements);
-    data_chunk->data_adapt = T8_ALLOC(double, num_elements * data_chunk->z_length * data_chunk->num_tracers);
-    messy_data->errors_adapt = T8_ALLOC(double, num_elements * (data_chunk->num_tracers - 1));
+    data_chunk->data_ids_adapt = T8_ALLOC_ZERO(t8_linearidx_t, num_elements);
+    data_chunk->data_adapt = T8_ALLOC_ZERO(double, num_elements * data_chunk->z_length * data_chunk->num_tracers);
+    messy_data->errors_adapt = T8_ALLOC_ZERO(double, num_elements * (data_chunk->num_tracers - 1));
+    messy_data->errors_adapt_global = T8_ALLOC_ZERO(double, num_elements * (data_chunk->num_tracers - 1));
 
     t8_forest_iterate_replace(forest_adapt, forest, t8_messy_interpolate_callback2);
 
     T8_FREE(data_chunk->data_ids);
     T8_FREE(data_chunk->data);
     T8_FREE(messy_data->errors);
+    T8_FREE(messy_data->errors_global);
 
     data_chunk->data_ids = data_chunk->data_ids_adapt;
     data_chunk->data = data_chunk->data_adapt;
     messy_data->errors = messy_data->errors_adapt;
+    messy_data->errors_global = messy_data->errors_adapt_global;
 
     data_chunk->data_ids_adapt = NULL;
     data_chunk->data_adapt = NULL;
     messy_data->errors_adapt = NULL;
+    messy_data->errors_adapt_global = NULL;
 
     t8_forest_unref(&forest);
+    // forest ref = 0
+    // adapt ref = 1
     forest = forest_adapt;
+    // forest ref = 1
+    // adapt ref = 1
 
     #ifdef T8_ENABLE_DEBUG
       /* In debugging mode write the forest */
@@ -884,11 +924,35 @@ void t8_messy_coarsen(t8_messy_data_t *messy_data) {
 
   }
   
-  //t8_forest_unref (&forest);
-  
+  t8_forest_unref(&forest_adapt);
+  t8_forest_unref(&forest);
+
+  messy_data->num_elements = last_num_elements;
+  messy_data->counter = messy_data->counter + 1;
+
   t8_global_productionf("MESSy grid coarsening done (%d rounds) \n", r);
 
-  messy_data->counter = messy_data->counter + 1;
+}
+
+
+void t8_messy_write_tracer_values(t8_messy_data_t* messy_data, const char* tracer_name, double* data) {
+  t8_latlon_data_chunk_t *data_chunk = messy_data->chunk;
+  
+  char* name = T8_ALLOC(char, BUFSIZ);
+  trimwhitespace(name, BUFSIZ, tracer_name);
+
+  int num_elements = messy_data->num_elements;
+  int tracer_index = t8_latlon_get_tracer_idx(data_chunk, name, false);
+  int num_data = data_chunk->z_length * data_chunk->num_tracers;
+
+  int element, z, offset, index = 0;
+  for(z=0; z<data_chunk->z_length; ++z) {
+    for(element=0; element<num_elements; ++element) {
+      offset = element * num_data + z * data_chunk->num_tracers + tracer_index;
+
+      data[index++] = data_chunk->data[offset];
+    }
+  }
 
 }
 
@@ -899,6 +963,8 @@ void t8_messy_destroy(t8_messy_data_t* messy_data) {
   T8_FREE(messy_data->interpolation);
   T8_FREE(messy_data->errors);
   T8_FREE(messy_data->errors_adapt);
+  T8_FREE(messy_data->errors_global);
+  T8_FREE(messy_data->errors_adapt_global);
   T8_FREE(messy_data);
 }
 
@@ -907,7 +973,7 @@ void t8_messy_write_forest(t8_forest_t forest, const char* prefix, t8_messy_data
   t8_latlon_data_chunk_t *data_chunk = messy_data->chunk;
   int num_elements = t8_forest_get_num_element(forest);
   int num_data = data_chunk->num_tracers * data_chunk->z_length;
-  int num_data_out = num_data + (data_chunk->num_tracers - 1);
+  int num_data_out = num_data + (data_chunk->num_tracers - 1) * 2;
  
  
   t8_debugf("dims %d, z_len %d, num elements %d, num data %d\n", data_chunk->num_tracers, data_chunk->z_length, num_elements, num_data);
@@ -919,7 +985,6 @@ void t8_messy_write_forest(t8_forest_t forest, const char* prefix, t8_messy_data
   for(z = 0; z < data_chunk->z_length; ++z) { 
     for(d = 0; d < data_chunk->num_tracers; ++d) {
       offset = z * data_chunk->num_tracers + d;
-
       dim_data_array[offset] = T8_ALLOC_ZERO (double, num_elements);
       for(e = 0; e < num_elements; ++e) {
         dim_data_array[offset][e] = data_chunk->data[e * num_data + z * data_chunk->num_tracers + d];
@@ -931,13 +996,25 @@ void t8_messy_write_forest(t8_forest_t forest, const char* prefix, t8_messy_data
     }
   }
 
-  /* add error layers */
+  /* add local error layers */
   for(offset+=1, j=0; j < (data_chunk->num_tracers-1); ++offset, ++j) {
     dim_data_array[offset] = T8_ALLOC_ZERO (double, num_elements);
     for(e = 0; e < num_elements; ++e) {
       dim_data_array[offset][e] = messy_data->errors[e * (data_chunk->num_tracers-1) + j];
     }
-    snprintf (vtk_data[offset].description, BUFSIZ, "error_%s", data_chunk->tracer_names + j * BUFSIZ);
+    snprintf (vtk_data[offset].description, BUFSIZ, "local_error_%s", data_chunk->tracer_names + j * BUFSIZ);
+
+    vtk_data[offset].type = T8_VTK_SCALAR;
+    vtk_data[offset].data = (double*) dim_data_array[offset];
+  }
+
+  /* add global error layers */
+  for(j=0; j < (data_chunk->num_tracers-1); ++offset, ++j) {
+    dim_data_array[offset] = T8_ALLOC_ZERO (double, num_elements);
+    for(e = 0; e < num_elements; ++e) {
+      dim_data_array[offset][e] = messy_data->errors_global[e * (data_chunk->num_tracers-1) + j];
+    }
+    snprintf (vtk_data[offset].description, BUFSIZ, "global_error_%s", data_chunk->tracer_names + j * BUFSIZ);
 
     vtk_data[offset].type = T8_VTK_SCALAR;
     vtk_data[offset].data = (double*) dim_data_array[offset];

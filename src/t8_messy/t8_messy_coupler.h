@@ -85,8 +85,14 @@ typedef struct t8_messy_data {
   t8_messy_interpolate_t *interpolation;
   t8_forest_t forest;
   double* errors;
+  double* errors_global;
   double* errors_adapt;
+  double* errors_adapt_global;
+  double missing_value;
+  double max_local_error; /* percentage for local error [0,1] */
+  double max_global_error; /* percentage for global error [0,1] */
   int counter;
+  int num_elements;
 } t8_messy_data_t;
 
 
@@ -118,10 +124,13 @@ t8_messy_data_t* t8_messy_initialize(
   int x_start, 
   int y_start, 
   int num_tracers,
+  double missing_value,
   t8_messy_coarsen_t *coarsen,
   t8_messy_interpolate_t *interpolation);
 
 void t8_messy_reset(t8_messy_data_t* messy_data);
+
+int t8_messy_get_max_number_elements(t8_messy_data_t* messy_data);
 
 /* set tracer values */
 void t8_messy_set_tracer_values(t8_messy_data_t *messy_data, char* tracer_name, double *data);
@@ -132,6 +141,8 @@ void t8_messy_apply_sfc(t8_messy_data_t *messy_data);
 
 /* coarsen grid with given callback */
 void t8_messy_coarsen(t8_messy_data_t *messy_data);
+
+void t8_messy_write_tracer_values(t8_messy_data_t* messy_data, const char* tracer_name, double* data);
 
 void t8_messy_write_forest(t8_forest_t forest, const char* prefix, t8_messy_data_t* messy_data);
 
