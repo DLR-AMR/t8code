@@ -24,6 +24,7 @@
 
 #include <t8.h>
 #include <t8_forest.h>
+#include "t8_latlon_refine.h"
 #include "t8_latlon_data.h"
 
 typedef struct {
@@ -80,6 +81,7 @@ typedef struct {
 
 /* MESSy coupling object */
 typedef struct t8_messy_data {
+  t8_latlon_adapt_data_t *adapt_data;
   t8_latlon_data_chunk_t *chunk;
   t8_messy_coarsen_t *coarsen;
   t8_messy_interpolate_t *interpolation;
@@ -87,7 +89,6 @@ typedef struct t8_messy_data {
   double* errors;
   double* errors_global;
   double* errors_adapt;
-  double* errors_adapt_global;
   double missing_value;
   double max_local_error; /* percentage for local error [0,1] */
   double max_global_error; /* percentage for global error [0,1] */
@@ -95,6 +96,11 @@ typedef struct t8_messy_data {
   int num_elements;
 } t8_messy_data_t;
 
+typedef struct t8_messy_interpolation_data {
+  double* data;
+  double* adapt;
+  int element_length;
+} t8_messy_interpolation_data_t;
 
 T8_EXTERN_C_BEGIN ();
 
