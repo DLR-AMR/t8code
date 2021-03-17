@@ -98,7 +98,7 @@ void calculate_error_ratios(int num_elements, double* values, double* errors, do
   for(int i=0; i < num_elements; ++i) {
     if(values[i] == missing_value || values[i] == 0) errors[i] = 0;
     else {
-      errors[i] =  fabs(values[i] - value) / values[i];
+      errors[i] =  fabs(values[i] - value) / fabs(values[i]);
     }
   }
 }
@@ -215,8 +215,10 @@ t8_messy_coarsen_by_error_tol_callback(t8_forest_t forest,
       max = get_max(errors, num_elements);
 
       /* if largest error ratio is larger than max ratio, we do not coarsen */
-      if(max > 0.20) {
-        //t8_debugf("error to large for z: %d, d: %d, error: %.12f \n", z, d, max);
+      if(max > messy_data->max_local_error) {
+        char name[BUFSIZ];
+        strcpy(name, data_chunk->tracer_names + d * BUFSIZ);
+        t8_debugf("error to large for tracer %s on z-lazer %d, error: %.12f \n", name, z, max);
         ret = 0;
         break;
       }
@@ -747,6 +749,7 @@ t8_messy_data_t* t8_messy_initialize(
   messy_data->counter = 0;
   messy_data->errors = NULL;
   messy_data->errors_adapt = NULL;
+  messy_data->max_local_error = 0.40;
 
   #ifdef T8_ENABLE_DEBUG
     t8_global_productionf("MESSy coupler initialized\n");
@@ -912,7 +915,7 @@ void t8_messy_coarsen(t8_messy_data_t *messy_data) {
     t8_messy_write_forest(forest, vtu_prefix, messy_data);
   #endif
 
-  for(r=0; r < 10; ++r) {
+  for(r=0; r < data_chunk->level; ++r) {
 
     t8_forest_ref(forest);
     forest_adapt = t8_forest_new_adapt(forest, t8_messy_coarsen_by_error_tol_callback, 0, 0, messy_data);
@@ -937,13 +940,11 @@ void t8_messy_coarsen(t8_messy_data_t *messy_data) {
     T8_FREE(data_chunk->data_ids);
     T8_FREE(data_chunk->data);
     T8_FREE(messy_data->errors);
-    // T8_FREE(messy_data->errors_global);
-
+    
     data_chunk->data_ids = data_chunk->data_ids_adapt;
     data_chunk->data = data_chunk->data_adapt;
     messy_data->errors = messy_data->errors_adapt;
-    // messy_data->errors_global = T8_ALLOC_ZERO(double, num_elements * (data_chunk->num_tracers - 1));
-
+    
     data_chunk->data_ids_adapt = NULL;
     data_chunk->data_adapt = NULL;
     messy_data->errors_adapt = NULL;
