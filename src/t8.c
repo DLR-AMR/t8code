@@ -109,16 +109,6 @@ t8_infof (const char *fmt, ...)
 }
 
 void
-t8_productionf (const char *fmt, ...)
-{
-  va_list             ap;
-
-  va_start (ap, fmt);
-  t8_logv (SC_LC_NORMAL, SC_LP_PRODUCTION, fmt, ap);
-  va_end (ap);
-}
-
-void
 t8_debugf (const char *fmt, ...)
 {
 #ifdef T8_ENABLE_DEBUG
