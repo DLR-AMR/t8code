@@ -989,6 +989,218 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
   }
 }
 
+int
+t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
+                                const t8_element_t * element,
+                                const double *tree_vertices,
+                                const double point[3], const double tolerance)
+{
+  t8_eclass_t         tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree_class);
+  t8_element_shape_t  element_shape = ts->t8_element_shape (element);
+  int                 num_faces = ts->t8_element_num_faces (element);
+  int                 iface;
+  int                 afacecorner;
+  double              face_normal[3];
+  double              dot_product;
+  double              point_on_face[3];
+
+  switch (element_shape) {
+  case T8_ECLASS_VERTEX:
+    {
+      /* A point is 'inside' a vertex if they have the same coordinates */
+      double              vertex_coords[3];
+      /* Get the vertex coordinates */
+      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+                                    0, vertex_coords);
+      /* Check whether the point and the vertex are within tolerance distance
+       * to each other */
+      if (t8_vec_dist (vertex_coords, point) > tolerance) {
+        return 0;
+      }
+      return 1;
+    }
+  case T8_ECLASS_LINE:
+    {
+      /* A point p is inside a line that is defined by the edge nodes
+       * p_0 and p_1
+       * if and only if the linear system
+       * (p_1 - p_0)x = p - p_0
+       * has a solution x with 0 <= x <= 1
+       */
+      double              p_0[3], v[3], b[3];
+      double              x;
+      int                 i;
+
+      /* Compute the vertex coordinates of the line */
+      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+                                    0, p_0);
+      /* v = p_1 */
+      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+                                    1, v);
+      /* v = p_1 - p_0 */
+      t8_vec_axpy (p_0, v, -1);
+      /* b = p - p_0 */
+      t8_vec_axpyz (p_0, point, b, -1);
+
+      /* So x is the solution to
+       * vx = b.
+       * We can compute it as
+       * x = b[i] / v[i]
+       * if any v[i] is not 0.
+       *
+       * Otherwise the line is degenerated (which should not happen).
+       */
+      for (i = 0; i < 3; ++i) {
+        if (v[i] != 0) {
+          x = b[i] / v[i];
+          break;                /* found a non-zero coordinate. We can stop now. */
+        }
+      }
+
+      /* If i == 3 here, then v = 0 and hence the line is degenerated. */
+      SC_CHECK_ABORT (i < 3,
+                      "Degenerated line element. Both endpoints are the same.");
+
+      if (x < -tolerance || x > 1 + tolerance) {
+        /* x is not an admissible solution. */
+        return 0;
+      }
+      /* we can check whether x gives us a solution by
+       * checking whether
+       *  vx = b
+       * is actually true.
+       */
+      t8_vec_ax (v, x);
+      if (t8_vec_dist (v, b) > tolerance) {
+        /* Point does not lie on the line. */
+        return 0;
+      }
+      /* The point is on the line. */
+      return 1;
+    }
+  case T8_ECLASS_TRIANGLE:
+    {
+      /* A point p is inside the triangle that is spanned
+       * by the vectors p_0 p_1 p_2 if and only if the linear system
+       * (p_1 - p_0)x + (p_2 - p_0)y = p - p_0
+       * has a solution with 0 <= x,y and x + y <= 1.
+       *
+       * We check whether such a solution exists by computing
+       * certain determinants of 2x2 submatrizes of the 3x3 matrix
+       *
+       *  | v w e_3 | with v = p_1 - p_0, w = p_2 - p_0, and e_3 = (0 0 1)^t (third unit vector)
+       */
+      double              p_0[3], v[3], w[3], b[3];
+      double              det_vwe3;
+      double              x, y, z;
+      T8_ASSERT (tolerance > 0);        /* negative values and zero are not allowed */
+
+      /* Compute the vertex coordinates of the triangle */
+      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+                                    0, p_0);
+      /* v = p_1 */
+      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+                                    1, v);
+      /* w = p_2 */
+      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+                                    2, w);
+      /* v = v - p_0 = p_1 - p_0 */
+      t8_vec_axpy (p_0, v, -1);
+      /* w = w - p_0 = p_2 - p_0 */
+      t8_vec_axpy (p_0, w, -1);
+      /* b = p - p_0 */
+      t8_vec_axpyz (p_0, point, b, -1);
+
+      /* Let d = det (v w e_3) */
+      det_vwe3 = v[0] * w[1] - v[1] * w[0];
+
+      /* The system has a solution, we need to compute it and
+       * check whether 0 <= x,y and x + y <= 1 */
+      /* x = det (b w e_3) / d
+       * y = det (v b e_3) / d
+       */
+      x = b[0] * w[1] - b[1] * w[0];
+      x /= det_vwe3;
+      y = v[0] * b[1] - v[1] * b[0];
+      y /= det_vwe3;
+
+      if (x < -tolerance || y < -tolerance || x + y > 1 + tolerance) {
+        /* The solution is not admissible.
+         * x < 0 or y < 0 or x + y > 1 */
+        return 0;
+      }
+      /* The solution may be admissible, but we have to
+       * check whether the result of
+       *  (p_1 - p_0)x + (p_2 - p_0)y ( = vx + wy)
+       * id actually p - p_0.
+       * Since the system of equations is overrepresented (3 equations, 2 variables)
+       * this may actually break.
+       * If it breaks, it will break in the z coordinate of the result.
+       */
+      z = v[2] * x + w[2] * y;
+      /* Must match the last coordinate of b = p - p_0 */
+      if (fabs (z - b[2]) > tolerance) {
+        /* Does not match. Point lies outside. */
+        return 0;
+      }
+      /* All checks passed. Point lies inside. */
+      return 1;
+    }
+    break;
+  case T8_ECLASS_TET:
+  case T8_ECLASS_HEX:
+  case T8_ECLASS_PRISM:
+  case T8_ECLASS_PYRAMID:
+
+    /* For bilinearly interpolated volume elements, a point is inside an element
+     * if and only if it lies on the inner side of each face.
+     * The inner side is defined as the side where the outside normal vector does not
+     * point to.
+     * The point is on this inner side if and only if the scalar product of
+     * a point on the plane minus the point
+     *                with
+     * the outer normal of the face
+     * is >= 0.
+     *
+     * In other words, let p be the point to check, n the outer normal and x a point
+     * on the plane, then p is on the inner side if and only if
+     *  <x - p, n> >= 0
+     **/
+
+    for (iface = 0; iface < num_faces; ++iface) {
+      /* Compute the outer normal n of the face */
+      t8_forest_element_face_normal (forest, ltreeid, element, iface,
+                                     tree_vertices, face_normal);
+      /* Compute a point x on the face */
+      afacecorner = ts->t8_element_get_face_corner (element, iface, 0);
+      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+                                    afacecorner, point_on_face);
+
+      /* Set x = x - p */
+      t8_vec_axpy (point, point_on_face, -1);
+      /* Compute <x-p,n> */
+      dot_product = t8_vec_dot (point_on_face, face_normal);
+      if (dot_product < 0) {
+        /* The point is outside of the element */
+        return 0;
+      }
+    }
+    /* For all faces the dot product with the outer normal is <= 0.
+     * The point is inside the element. */
+    return 1;
+  T8_ECLASS_QUAD:              /* TODO: implement. If implemented activate the test
+                                   in test/t8_test_point_inside.cxx. */
+  default:
+    /* Point inside element check is currently not implemented for
+     *  - T8_ECLASS_QUAD
+     */
+    SC_ABORTF
+      ("Point inside check not implemented for elements of shape %s.\n",
+       t8_eclass_to_string[element_shape]);
+  }
+}
+
 /* For each tree in a forest compute its first and last descendant */
 void
 t8_forest_compute_desc (t8_forest_t forest)
