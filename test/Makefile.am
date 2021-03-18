@@ -14,7 +14,6 @@ t8code_test_programs = \
 	test/t8_test_forest_commit \
 	test/t8_test_transform \
 	test/t8_test_half_neighbors \
-	test/t8_test_point_inside \
 	test/t8_test_element_count_leafs \
 	test/t8_test_search \
 	test/t8_test_find_parent \
@@ -37,7 +36,6 @@ test_t8_test_transform_SOURCES = test/t8_test_transform.cxx
 test_t8_test_half_neighbors_SOURCES = test/t8_test_half_neighbors.cxx
 test_t8_test_element_count_leafs_SOURCES = test/t8_test_element_count_leafs.cxx
 test_t8_test_search_SOURCES = test/t8_test_search.cxx
-test_t8_test_point_inside_SOURCES = test/t8_test_point_inside.cxx
 test_t8_test_find_parent_SOURCES = test/t8_test_find_parent.cpp
 test_t8_test_cmesh_face_is_boundary_SOURCES = test/t8_test_cmesh_face_is_boundary.cxx
 test_t8_test_element_general_function_SOURCES = test/t8_test_element_general_function.cxx
