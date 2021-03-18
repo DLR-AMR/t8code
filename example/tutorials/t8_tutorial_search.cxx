@@ -224,7 +224,6 @@ t8_tutorial_search_query_callback (t8_forest_t forest,
     }
     /* The particles is inside the element. This query should remain active.
      * If this element is not a leaf the search will continue with its children. */
-    user_data->count++;
     return 1;
   }
   /* The particle is not inside the element. Deactivate this query.
@@ -371,8 +370,8 @@ t8_tutorial_search_build_particles (size_t num_particles, unsigned int seed,
 
   if (mpirank == 0) {
     /* Rank 0 fills this array with random particles. */
+    size_t              iparticle;
     srand (seed);
-    int                 iparticle;
     for (iparticle = 0; iparticle < num_particles; ++iparticle) {
       int                 dim;
       /* Get this particles pointer. */
