@@ -8,8 +8,7 @@ bin_PROGRAMS += \
 	example/tutorials/t8_step2_uniform_forest \
 	example/tutorials/t8_step3_adapt_forest \
 	example/tutorials/t8_step4_partition_balance_ghost \
-	example/tutorials/t8_step5_element_data \
-	example/tutorials/t8_tutorial_search
+	example/tutorials/t8_step5_element_data
 
 example_tutorials_t8_step0_helloworld_SOURCES = \
 	example/tutorials/t8_step0_helloworld.c
@@ -28,8 +27,5 @@ example_tutorials_t8_step5_element_data_SOURCES = \
 	example/tutorials/t8_step3_adapt_forest.cxx \
 	example/tutorials/t8_step5_element_data.cxx \
 	example/tutorials/t8_step5_main.cxx
-example_tutorials_t8_tutorial_search_SOURCES = \
-	example/tutorials/t8_tutorial_search.cxx \
-	example/tutorials/t8_step3_adapt_forest.cxx
 
 
