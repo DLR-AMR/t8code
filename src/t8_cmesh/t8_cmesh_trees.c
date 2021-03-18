@@ -1278,8 +1278,8 @@ t8_cmesh_trees_is_equal (t8_cmesh_t cmesh, t8_cmesh_trees_t trees_a,
     eclass = ghosta->eclass;
     /* Compare face neighbors */
     is_equal =
-      !memcmp (face_neighborsa, face_neighborsb,
-               t8_eclass_num_faces[eclass] * sizeof (t8_locidx_t))
+      !memcmp (gface_neighborsa, gface_neighborsb,
+               t8_eclass_num_faces[eclass] * sizeof (t8_gloidx_t))
       && !memcmp (ttfa, ttfb, t8_eclass_num_faces[eclass] * sizeof (int8_t));
     if (!is_equal) {
       return 0;

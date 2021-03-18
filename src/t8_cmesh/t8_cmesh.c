@@ -94,6 +94,8 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
    * This variable lives beyond one execution of t8_cmesh_is_committed.
    * We use it as a form of lock to prevent entering an infinite recursion.
    */
+  /* TODO: This is_checking is not thread safe. If two threads call cmesh routines
+   *       that call t8_cmesh_is_committed, only one of them will correctly check the cmesh. */
   if (!is_checking) {
     is_checking = 1;
 
@@ -108,6 +110,10 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
     if ((!t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) ||
         (!t8_cmesh_no_negative_volume (cmesh))
         || (!t8_cmesh_check_trees_per_eclass (cmesh))) {
+      is_checking = 0;
+      return 0;
+    }
+    if (t8_cmesh_get_num_local_trees (cmesh) > 0 && t8_cmesh_is_empty (cmesh)) {
       is_checking = 0;
       return 0;
     }
@@ -299,11 +305,11 @@ t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm)
   mpiret = sc_MPI_Comm_size (comm, &mpisize_debug);
   SC_CHECK_MPI (mpiret);
   T8_ASSERT (mpisize == mpisize_debug);
-  t8_debugf ("Allocating shared array with type %s\n",
-             sc_shmem_type_to_string[sc_shmem_get_type (comm)]);
 #endif
 
   t8_shmem_array_init (&offsets, sizeof (t8_gloidx_t), mpisize + 1, comm);
+  t8_debugf ("Allocating shared array with type %s\n",
+             sc_shmem_type_to_string[sc_shmem_get_type (comm)]);
   return offsets;
 }
 
@@ -895,12 +901,18 @@ t8_cmesh_bcast_attributes (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 }
 #endif
 
+int
+t8_cmesh_is_empty (t8_cmesh_t cmesh)
+{
+  return cmesh->num_trees == 0;
+}
+
 t8_cmesh_t
 t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 {
   int                 mpirank, mpisize, mpiret;
   int                 iclass;
-  t8_cmesh_t          cmesh_out;
+  t8_cmesh_t          cmesh_out = NULL; /* NULL initializer prevents compiler warning. */
 
   struct
   {
@@ -1776,12 +1788,14 @@ t8_cmesh_new_from_class (t8_eclass_t eclass, sc_MPI_Comm comm)
 }
 
 t8_cmesh_t
-t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition)
+t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition, int dimension)
 {
   t8_cmesh_t          cmesh;
 
   t8_cmesh_init (&cmesh);
+  t8_cmesh_set_dimension (cmesh, dimension);
   t8_cmesh_commit (cmesh, comm);
+  T8_ASSERT (t8_cmesh_is_empty (cmesh));
   return cmesh;
 }
 

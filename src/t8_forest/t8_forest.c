@@ -323,6 +323,22 @@ t8_forest_get_user_data (t8_forest_t forest)
 }
 
 void
+t8_forest_set_user_function (t8_forest_t forest,
+                             t8_generic_function_pointer function)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest)
+             || t8_forest_is_committed (forest));
+  forest->user_function = function;
+}
+
+t8_generic_function_pointer
+t8_forest_get_user_function (t8_forest_t forest)
+{
+  //T8_ASSERT (t8_forest_is_initialized (forest) || t8_forest_is_committed (forest));
+  return forest->user_function;
+}
+
+void
 t8_forest_comm_global_num_elements (t8_forest_t forest)
 {
   int                 mpiret;
@@ -609,7 +625,7 @@ t8_forest_commit (t8_forest_t forest)
         SC_ABORT ("Invalid choice of ghost algorithm");
       }
     }
-  forest->do_ghost = 0;
+    forest->do_ghost = 0;
   }
 }
 
