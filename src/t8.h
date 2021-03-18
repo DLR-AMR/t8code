@@ -206,6 +206,15 @@ void                t8_infof (const char *fmt, ...)
 #endif
   ;
 
+/** Log a message, no matter what rank, with priority SC_LP_PRODUCTION.
+ * \param [in] fmt          Printf-style format string.
+ */
+void                t8_productionf (const char *fmt, ...)
+#ifndef T8_DOXYGEN
+  __attribute__ ((format (printf, 1, 2)))
+#endif
+  ;
+
 /** Log a message, no matter what rank, with priority SC_LP_DEBUG.
  * \param [in] fmt          Printf-style format string.
  * \note This function does not print anything unless t8code was compiled
