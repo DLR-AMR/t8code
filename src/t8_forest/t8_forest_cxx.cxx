@@ -838,8 +838,37 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
 
   switch (face_shape) {
   case T8_ECLASS_VERTEX:
-    /* TODO: normal of a line */
-    SC_ABORT_NOT_REACHED ();
+    /* Let our line be between the vertices v_0 and v_1:
+     *   x ----- x
+     *  v_0      v_1
+     *
+     * Then the outward pointing normal vector at v_0 is v_0-v_1
+     * and the one at v_1 is v_1-v_0
+     * (divided by their norm.)
+     */
+    double              v_0[3];
+    double              norm;
+    int                 sign;
+
+    /* Get the coordinates of v_0 and v_1 */
+    t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+                                  0, v_0);
+    t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+                                  1, normal);
+
+    /* Compute normal = v_1 - v_0 */
+    t8_vec_axpy (v_0, normal, -1);
+
+    /* Compute the norm */
+    norm = t8_vec_norm (normal);
+
+    /* Compute normal =  normal/norm if face = 1
+     *         normal = -normal/norm if face = 0
+     */
+    sign = face == 0 ? -1 : 1;
+    t8_vec_ax (normal, sign / norm);
+
+    return;
   case T8_ECLASS_LINE:
     {
       int                 corner_a, corner_b;
