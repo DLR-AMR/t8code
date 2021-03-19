@@ -232,7 +232,6 @@ t8_step5_main (int argc, char **argv)
 {
   int                 mpiret;
   sc_MPI_Comm         comm;
-  t8_cmesh_t          cmesh;
   t8_forest_t         forest;
   /* The prefix for our output files. */
   const char         *prefix_forest = "t8_step5_forest";
