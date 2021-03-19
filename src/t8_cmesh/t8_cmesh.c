@@ -979,7 +979,8 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 
   SC_CHECK_MPI (mpiret);
 #ifdef T8_ENABLE_DEBUG
-  sc_MPI_Comm_dup (comm, &(meta_info.comm));
+  mpiret = sc_MPI_Comm_dup (comm, &(meta_info.comm));
+  SC_CHECK_MPI (mpiret);
 #endif
 
   SC_CHECK_MPI (mpiret);
