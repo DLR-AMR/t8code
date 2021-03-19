@@ -1010,7 +1010,8 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     }
 #ifdef T8_ENABLE_DEBUG
     int                 result;
-    sc_MPI_Comm_compare (comm, meta_info.comm, &result);
+    mpiret = sc_MPI_Comm_compare (comm, meta_info.comm, &result);
+    SC_CHECK_MPI (mpiret);
     T8_ASSERT (result == sc_MPI_CONGRUENT);
 #endif
   }
