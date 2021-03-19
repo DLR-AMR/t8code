@@ -995,10 +995,10 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
                                 const double *tree_vertices,
                                 const double point[3], const double tolerance)
 {
-  t8_eclass_t         tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_eclass_t   tree_class = t8_forest_get_tree_class (forest, ltreeid);
   t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree_class);
-  t8_element_shape_t  element_shape = ts->t8_element_shape (element);
-  int                 num_faces = ts->t8_element_num_faces (element);
+  const t8_element_shape_t element_shape = ts->t8_element_shape (element);
+  const int           num_faces = ts->t8_element_num_faces (element);
   int                 iface;
   int                 afacecorner;
   double              face_normal[3];
