@@ -118,7 +118,6 @@ t8_cmesh_commit_replicated_new (t8_cmesh_t cmesh)
   int8_t             *ttf, *ttf2;
   t8_stash_joinface_struct_t *joinface;
   t8_ctree_t          tree1;
-  int                 F;
   size_t              si;
 
   if (cmesh->stash != NULL && cmesh->stash->classes.elem_count > 0) {
@@ -165,15 +164,21 @@ t8_cmesh_commit_replicated_new (t8_cmesh_t cmesh)
     for (si = 0; si < cmesh->stash->joinfaces.elem_count; si++) {
       joinface = (t8_stash_joinface_struct_t *)
         sc_array_index (&cmesh->stash->joinfaces, si);
-      F = t8_eclass_max_num_faces[cmesh->dimension];
       (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, joinface->id1,
                                           &face_neigh, &ttf);
       (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, joinface->id2,
                                           &face_neigh2, &ttf2);
+      /* Set the correct face neighbors and tree_fo_face values */
       face_neigh[joinface->face1] = (t8_locidx_t) joinface->id2;
-      ttf[joinface->face1] = joinface->orientation * F + joinface->face2;
+      ttf[joinface->face1] =
+        t8_cmesh_tree_to_face_encode (cmesh->dimension,
+                                      (t8_locidx_t) joinface->face2,
+                                      joinface->orientation);
       face_neigh2[joinface->face2] = (t8_locidx_t) joinface->id1;
-      ttf2[joinface->face2] = joinface->orientation * F + joinface->face1;
+      ttf2[joinface->face2] =
+        t8_cmesh_tree_to_face_encode (cmesh->dimension,
+                                      (t8_locidx_t) joinface->face1,
+                                      joinface->orientation);
     }
   }
 }
@@ -501,6 +506,13 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   sc_mempool_destroy (ghost_facejoin_mempool);
 
   id1 = cmesh->num_local_trees;
+  /* We must not count shared trees. Thus, we subtract one if
+   * the first tree is shared. However, we exclude the case where
+   * this cmesh has no trees but nevertheless the first tree is marked
+   * as shared. */
+  if (cmesh->first_tree_shared && id1 > 0) {
+    id1--;
+  }
   sc_MPI_Allreduce (&id1, &cmesh->num_trees, 1, T8_MPI_GLOIDX,
                     sc_MPI_SUM, comm);
 

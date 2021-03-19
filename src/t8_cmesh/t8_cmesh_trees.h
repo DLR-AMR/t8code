@@ -309,7 +309,7 @@ t8_ctree_t          t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees,
 
 /** Return a pointer to a specific tree in a trees struct plus pointers to
  * its face_neighbor and tree_to_face arrays.
- * \param [in]      trees The tress structure where the tree is to be looked up.
+ * \param [in]      trees The trees structure where the tree is to be looked up.
  * \param [in]      ltree_id  The local id of the tree.
  * \param [out]     face_neigh If not NULL a pointer to the trees face_neighbor
  *                             array is stored here on return.
@@ -322,12 +322,49 @@ t8_ctree_t          t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees,
                                                  t8_locidx_t ** face_neigh,
                                                  int8_t ** ttf);
 
+/** Return the face neigbor of a tree at a given face and return the tree_to_face info
+ * \param [in]      trees The trees structure where the tree is to be looked up.
+ * \param [in]      ltreeid  The local id of the tree.
+ * \param [in]      face  A face of the tree.
+ * \param [out]     ttf   If not NULL the tree_to_face value of the face connection.
+ * \return          The face neighbor that is stored for this face
+ */
+t8_locidx_t         t8_cmesh_trees_get_face_info (t8_cmesh_trees_t trees,
+                                                  t8_locidx_t ltreeid,
+                                                  int face, int8_t * ttf);
+
 /** Given a coarse tree and a face number, return the local id of the neighbor tree.
  * \param [in]      tree.     The coarse tree.
  * \param [in]      face.     The face number.
  * \return                    The local id of the neighbor tree. */
-t8_locidx_t         t8_cmesh_trees_get_face_neighbor (t8_ctree_t tree,
-                                                      int face);
+t8_locidx_t         t8_cmesh_trees_get_face_neighbor (const t8_ctree_t tree,
+                                                      const int face);
+
+/** Given a coarse tree and a face number, return the local id of the neighbor tree
+ * together with its tree-to-face info.
+ * \param [in]   tree         The coarse tree.
+ * \param [in]   face         The face number.
+ * \param [out]  ttf          If not NULL it is filled with the tree-to-face value
+ *                            for this face.
+ * \return                    The local id of the neighbor tree. */
+t8_locidx_t         t8_cmesh_trees_get_face_neighbor_ext (const t8_ctree_t
+                                                          tree,
+                                                          const int face,
+                                                          int8_t * ttf);
+
+/** Given a coarse ghost and a face number, return the local id of the neighbor tree
+ * together with its tree-to-face info.
+ * \param [in]   ghost        The coarse ghost.
+ * \param [in]   face         The face number.
+ * \param [out]  ttf          If not NULL it is filled with the tree-to-face value
+ *                            for this face.
+ * \return                    The global id of the neighbor tree. */
+t8_gloidx_t         t8_cmesh_trees_get_ghost_face_neighbor_ext (const
+                                                                t8_cghost_t
+                                                                ghost,
+                                                                const int
+                                                                face,
+                                                                int8_t * ttf);
 
 /* TODO: This function return NULL if the ghost is not present.
  *       So far no error checking is done here. */
@@ -441,6 +478,33 @@ void                t8_cmesh_trees_add_attribute (t8_cmesh_trees_t trees,
  * \return            The number of parts in \a trees.
  */
 size_t              t8_cmesh_trees_get_numproc (t8_cmesh_trees_t trees);
+
+/** Compute the tree-to-face information given a face and orientation value
+ *  of a face connection.
+ * \param [in]        dimension The dimension of the corresponding eclasses.
+ * \param [in]        face      A face number
+ * \param [in]        orientation A face-to-face orientation.
+ * \return            The tree-to-face entry corresponding to the face/orientation combination.
+ * It is computed as t8_eclass_max_num_faces[dimension] * orientation + face
+ */
+int8_t              t8_cmesh_tree_to_face_encode (const int dimension,
+                                                  const t8_locidx_t face,
+                                                  const int orientation);
+
+/** Given a tree-to-face value, get its encoded face number and orientation.
+ * \param [in]        dimension The dimension of the corresponding eclasses.
+ * \param [in]        tree_to_face A tree-to-face value
+ * \param [out]       face      On output filled with the stored face value.
+ * \param [out]       orientation On output filled with the stored orientation value.
+ * \note This function is the invers operation of \ref t8_cmesh_tree_to_face_encode
+ * If F = t8_eclass_max_num_faces[dimension], we get
+ *  orientation = tree_to_face / F
+ *  face = tree_to_face % F
+ */
+void                t8_cmesh_tree_to_face_decode (const int dimension,
+                                                  const int8_t tree_to_face,
+                                                  int *face,
+                                                  int *orientation);
 
 /* TODO: To fit to the interface a trees struct is given as parameter here,
  *       however we could just take the one associated to the cmesh given.*/

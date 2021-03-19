@@ -987,6 +987,7 @@ t8_forest_vtk_write_points (t8_forest_t forest, FILE * vtufile,
                             int num_data, t8_vtk_data_field_t * data)
 {
   int                 freturn;
+  int                 sreturn;
   int                 idata;
   char                description[BUFSIZ];
 
@@ -1019,8 +1020,17 @@ t8_forest_vtk_write_points (t8_forest_t forest, FILE * vtufile,
     freturn = fprintf (vtufile, "      <PointData>\n");
     for (idata = 0; idata < num_data; idata++) {
       if (data[idata].type == T8_VTK_SCALAR) {
-        snprintf (description, BUFSIZ, "%s_%s", data[idata].description,
-                  "points");
+        /* Write the description string. */
+        sreturn =
+          snprintf (description, BUFSIZ, "%s_%s", data[idata].description,
+                    "points");
+
+        if (sreturn >= BUFSIZ) {
+          /* The output was truncated */
+          t8_debugf
+            ("Warning: Truncated vtk point data description to '%s'\n",
+             description);
+        }
         freturn =
           t8_forest_vtk_write_cell_data (forest, vtufile, description,
                                          T8_VTK_FLOAT_NAME, "", 8,
@@ -1031,8 +1041,20 @@ t8_forest_vtk_write_points (t8_forest_t forest, FILE * vtufile,
         char                component_string[BUFSIZ];
         T8_ASSERT (data[idata].type == T8_VTK_VECTOR);
         snprintf (component_string, BUFSIZ, "NumberOfComponents=\"3\"");
-        snprintf (description, BUFSIZ, "%s_%s", data[idata].description,
-                  "points");
+        /* Write the description string. */
+        sreturn =
+          snprintf (description, BUFSIZ, "%s_%s", data[idata].description,
+                    "points");
+
+        if (sreturn >= BUFSIZ) {
+          /* The output was truncated */
+          /* Note: gcc >= 7.1 prints a warning if we 
+           * do not check the return value of snprintf. */
+          t8_debugf
+            ("Warning: Truncated vtk point data description to '%s'\n",
+             description);
+        }
+
         freturn =
           t8_forest_vtk_write_cell_data (forest, vtufile, description,
                                          T8_VTK_FLOAT_NAME, component_string,

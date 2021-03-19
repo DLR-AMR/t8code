@@ -20,7 +20,7 @@ echo "o---------------------------------------"
 echo "| Checking options"
 echo "o---------------------------------------"
 
-P4EST_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
+T8_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
                  [DEBUG])
 
 echo "o---------------------------------------"
@@ -67,6 +67,15 @@ export P4EST_SC_SOURCE=../sc
 P4EST_AS_SUBPACKAGE([T8])
 AM_CONDITIONAL([T8_DIST_DENY], [test "x$T8_DIST_DENY" != x])
 AC_SUBST([T8_DISTCLEAN])
+
+echo "o---------------------------------------"
+echo "| Copying files"
+echo "o---------------------------------------"
+
+AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers2_ascii.msh:test/testfiles/test_msh_file_vers2_ascii.msh])
+AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers2_bin.msh:test/testfiles/test_msh_file_vers2_bin.msh])
+AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers4_ascii.msh:test/testfiles/test_msh_file_vers4_ascii.msh])
+AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers4_bin.msh:test/testfiles/test_msh_file_vers4_bin.msh])
 
 # Print summary.
 
