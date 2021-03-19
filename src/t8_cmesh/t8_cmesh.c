@@ -2107,9 +2107,8 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
   SC_CHECK_ABORT (eclass != T8_ECLASS_PYRAMID || !periodic,
                   "The pyramid cube mesh cannot be periodic.\n");
 
-  SC_CHECK_ABORT (do_bcast
-                  && do_partition,
-                  "Broadcasting and partitioning the hypercube cmesh is currently not supported.\n");
+  SC_CHECK_ABORT (do_partition,
+                  "Partitioning the hypercube cmesh is currently not supported.\n");
 
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
