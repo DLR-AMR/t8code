@@ -2105,7 +2105,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
   };
 
   SC_CHECK_ABORT (eclass != T8_ECLASS_PYRAMID || !periodic,
-                  "The pyramid cube mesh cannot be periodic.");
+                  "The pyramid cube mesh cannot be periodic.\n");
 
   SC_CHECK_ABORT (do_bcast
                   && do_partition,
