@@ -22,7 +22,7 @@
 
 /* This file is part of the step3 example of t8code.
  * Here, we only wrap the main function. See t8_step3.cxx for the documentation of 
- * the step3 example.
+ * the step4 example.
  */
 
 #include <example/tutorials/t8_step4.h>
