@@ -1032,8 +1032,8 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   cmesh_out->mpisize = mpisize;
   /* Final checks */
 #ifdef T8_ENABLE_DEBUG
+  sc_MPI_Comm_free (&meta_info.comm);
   if (!meta_info.pre_commit) {
-    sc_MPI_Comm_free (&meta_info.comm);
     T8_ASSERT (t8_cmesh_is_committed (cmesh_out));
     T8_ASSERT (t8_cmesh_comm_is_valid (cmesh_out, comm));
   }
