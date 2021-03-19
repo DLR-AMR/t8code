@@ -1189,7 +1189,7 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
     /* For all faces the dot product with the outer normal is <= 0.
      * The point is inside the element. */
     return 1;
-  T8_ECLASS_QUAD:              /* TODO: implement. If implemented activate the test
+  case T8_ECLASS_QUAD:         /* TODO: implement. If implemented activate the test
                                    in test/t8_test_point_inside.cxx. */
   default:
     /* Point inside element check is currently not implemented for
