@@ -969,15 +969,20 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
       meta_info.stash_elem_counts[1] = cmesh_in->stash->classes.elem_count;
       meta_info.stash_elem_counts[2] = cmesh_in->stash->joinfaces.elem_count;
     }
-#ifdef T8_ENABLE_DEBUG
-    meta_info.comm = comm;
-#endif
+
     /* Root returns the input cmesh */
     cmesh_out = cmesh_in;
   }
   /* TODO: we could optimize this by using IBcast */
   mpiret = sc_MPI_Bcast (&meta_info, sizeof (meta_info), sc_MPI_BYTE, root,
                          comm);
+
+  SC_CHECK_MPI (mpiret);
+#ifdef T8_ENABLE_DEBUG
+  mpiret = sc_MPI_Comm_dup (comm, &(meta_info.comm));
+  SC_CHECK_MPI (mpiret);
+#endif
+
   SC_CHECK_MPI (mpiret);
 
   /* If not root store information in new cmesh and allocate memory for arrays. */
@@ -1004,7 +1009,10 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
         meta_info.num_trees_per_eclass[iclass];
     }
 #ifdef T8_ENABLE_DEBUG
-    T8_ASSERT (meta_info.comm == comm);
+    int                 result;
+    mpiret = sc_MPI_Comm_compare (comm, meta_info.comm, &result);
+    SC_CHECK_MPI (mpiret);
+    T8_ASSERT (result == sc_MPI_CONGRUENT);
 #endif
   }
   if (meta_info.pre_commit) {
@@ -1026,6 +1034,8 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   cmesh_out->mpisize = mpisize;
   /* Final checks */
 #ifdef T8_ENABLE_DEBUG
+  mpiret = sc_MPI_Comm_free (&meta_info.comm);
+  SC_CHECK_MPI (mpiret);
   if (!meta_info.pre_commit) {
     T8_ASSERT (t8_cmesh_is_committed (cmesh_out));
     T8_ASSERT (t8_cmesh_comm_is_valid (cmesh_out, comm));
