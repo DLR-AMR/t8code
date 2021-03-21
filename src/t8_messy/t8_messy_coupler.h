@@ -131,6 +131,7 @@ t8_messy_data_t* t8_messy_initialize(
   int y_start, 
   int num_tracers,
   double missing_value,
+  double max_local_error,
   t8_messy_coarsen_t *coarsen,
   t8_messy_interpolate_t *interpolation);
 

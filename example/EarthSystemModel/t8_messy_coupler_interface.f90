@@ -49,7 +49,7 @@ module t8code_messy_coupler_interface
 
     Interface
         type (c_ptr) function t8_messy_initialize_f (description, axis, shape, x_start, y_start, &
-                num_tracers, missing_value, coarsen, interpolation) &
+                num_tracers, missing_value, max_error, coarsen, interpolation) &
                 bind (c, name = 't8_messy_initialize')
             use, intrinsic :: ISO_C_BINDING, only: c_int, c_char, c_ptr, c_double
             IMPLICIT NONE
@@ -61,6 +61,7 @@ module t8code_messy_coupler_interface
             
             integer (c_int), value :: num_tracers
             real (c_double), value :: missing_value
+            real (c_double), value :: max_error
             type (c_ptr), value :: coarsen
             type (c_ptr), value :: interpolation
 
@@ -217,7 +218,8 @@ Program MessyTest
       missing_value = 0.0
       shape = (/ 4, 4, 1, 1/)
       coarsen = c_loc(shape(1))
-      coupler = t8_messy_initialize_f ("test", "XYZ", c_loc(shape(1)), c_zero, c_zero, num_dims, missing_value, coarsen, coarsen);
+      coupler = t8_messy_initialize_f ("test", "XYZ", c_loc(shape(1)), c_zero, c_zero, num_dims, &
+                                        missing_value, missing_value, coarsen, coarsen);
 
     !   call t8_messy_add_dimension_f (messy, "gaussian", data);
     !   call t8_messy_sine_2d_f (data, x_length, y_length);

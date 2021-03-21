@@ -675,6 +675,7 @@ t8_messy_data_t* t8_messy_initialize(
   int y_start,
   int num_tracers,
   double missing_value,
+  double max_local_error,
   t8_messy_coarsen_t *coarsen,
   t8_messy_interpolate_t *interpolation
   ) {
@@ -741,6 +742,8 @@ t8_messy_data_t* t8_messy_initialize(
     missing_value,
     T8_LATLON_DATA_MESSY);
 
+  int num_elements = t8_forest_get_num_element(forest);
+
   t8_messy_data_t* messy_data = T8_ALLOC(t8_messy_data_t, 1);
   messy_data->chunk = chunk;
   messy_data->forest = forest;
@@ -749,7 +752,10 @@ t8_messy_data_t* t8_messy_initialize(
   messy_data->counter = 0;
   messy_data->errors = NULL;
   messy_data->errors_adapt = NULL;
-  messy_data->max_local_error = 0.40;
+  messy_data->num_elements = num_elements;
+  messy_data->max_local_error = max_local_error;
+
+  t8_debugf("max_local_error: %.5f", max_local_error);
 
   #ifdef T8_ENABLE_DEBUG
     t8_global_productionf("MESSy coupler initialized\n");
