@@ -21,16 +21,21 @@
 */
 
 /** file t8_netcdf.h
- * File description
+ * This Header-File holds two typedef integer datatypes for the data of NetCDF integer variables, as well as a struct and functions to create extern elementwise data-variables which should be written additionally to a Forest or Cmesh NetCDF-File.
  */
 
 #ifndef T8_NETCDF_H
 #define T8_NETCDF_H
 
 #include <t8.h>
-//#include <t8_cmesh_netcdf.h>
-//#include <t8_forest_netcdf.h>
 
+/* Datatype for 64 bit NetCDF Data */
+typedef int64_t     t8_nc_int64_t;
+
+/* Datatype for 32 bit NetCDF Data */
+typedef int32_t     t8_nc_int32_t;
+
+/* Struct for elementwise data variable for a NetCDF file */
 typedef struct
 {
   const char         *variable_name;
@@ -38,26 +43,39 @@ typedef struct
   const char         *variable_units;
   int                 datatype;
   int                 var_user_dimid;
-  union
-  {
-    int                *netcdf_data_int;
-    double             *netcdf_data_double;
-  };
+  sc_array_t         *var_user_data;
 } t8_netcdf_variable_t;
 
 T8_EXTERN_C_BEGIN ();
 
-t8_netcdf_variable_t *t8_netcdf_variable_int_init (const char *var_name,
+/** Create an extern integer variable which additionally should be put out to the NetCDF File (The disctinction if it wille be a NC_INT or NC_INT64 variable is based on the elementsize of the given sc_array_t)
+ * \param [in]  var_name    A String which will be the name of the created variable.
+ * \param [in]  var_long_name    A string describing the variable a bit more and what it is about.
+ * \param [in]  var_unit    The units in which the data is provided.
+ * \param [in]  var_data    A sc_array_t holding the elementwise data of the variable.
+ * \param [in]  num_extern_netcdf_vars    The number of extern user-defined variables which hold elementwise data (if none, set it to 0).
+ */
+t8_netcdf_variable_t *t8_netcdf_create_integer_var (const char *var_name,
+                                                    const char *var_long_name,
+                                                    const char *var_unit,
+                                                    sc_array_t * var_data);
+
+/** Create an extern double variable which additionally should be put out to the NetCDF File
+ * \param [in]  var_name    A String which will be the name of the created variable.
+ * \param [in]  var_long_name    A string describing the variable a bit more and what it is about.
+ * \param [in]  var_unit    The units in which the data is provided.
+ * \param [in]  var_data    A sc_array_t holding the elementwise data of the variable.
+ * \param [in]  num_extern_netcdf_vars    The number of extern user-defined variables which hold elementwise data (if none, set it to 0).
+ */
+t8_netcdf_variable_t *t8_netcdf_create_double_var (const char *var_name,
                                                    const char *var_long_name,
                                                    const char *var_unit,
-                                                   int *var_data);
+                                                   sc_array_t * var_data);
 
-t8_netcdf_variable_t *t8_netcdf_variable_double_init (const char *var_name,
-                                                      const char
-                                                      *var_long_name,
-                                                      const char *var_unit,
-                                                      double *var_data);
-
+/** Free the allocated memory of the a t8_netcdf_variable_t
+ * \param [in]  var_destroy    A t8_netcdf_t variable whose allocated memory should be freed.
+ */
+/* Free the allocated NetCDF variable */
 void                t8_netcdf_variable_destroy (t8_netcdf_variable_t *
                                                 var_destroy);
 

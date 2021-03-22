@@ -23,9 +23,10 @@
 /** file t8_netcdf.h
  * File description
  */
-
+#include <t8.h>
 #include <t8_netcdf.h>
 
+#if 0
 t8_netcdf_variable_t *
 t8_netcdf_variable_int_init (const char *var_name, const char *var_long_name,
                              const char *var_unit, int var_data[])
@@ -35,7 +36,7 @@ t8_netcdf_variable_int_init (const char *var_name, const char *var_long_name,
   netcdf_variable->variable_long_name = var_long_name;
   netcdf_variable->datatype = 0;
   netcdf_variable->variable_units = var_unit;
-  netcdf_variable->netcdf_data_int = var_data;
+  //netcdf_variable->netcdf_data_int = var_data;
   return netcdf_variable;
 }
 
@@ -49,10 +50,38 @@ t8_netcdf_variable_double_init (const char *var_name,
   netcdf_variable->variable_long_name = var_long_name;
   netcdf_variable->datatype = 1;
   netcdf_variable->variable_units = var_unit;
-  netcdf_variable->netcdf_data_double = var_data;
+  return netcdf_variable;
+}
+#endif
+/* Create an extern NetCDF integer variable */
+t8_netcdf_variable_t *
+t8_netcdf_create_integer_var (const char *var_name, const char *var_long_name,
+                              const char *var_unit, sc_array_t * var_data)
+{
+  t8_netcdf_variable_t *netcdf_variable = T8_ALLOC (t8_netcdf_variable_t, 1);
+  netcdf_variable->variable_name = var_name;
+  netcdf_variable->variable_long_name = var_long_name;
+  netcdf_variable->datatype = 0;
+  netcdf_variable->variable_units = var_unit;
+  netcdf_variable->var_user_data = var_data;
   return netcdf_variable;
 }
 
+/* Create an extern NetCDF double variable */
+t8_netcdf_variable_t *
+t8_netcdf_create_double_var (const char *var_name, const char *var_long_name,
+                             const char *var_unit, sc_array_t * var_data)
+{
+  t8_netcdf_variable_t *netcdf_variable = T8_ALLOC (t8_netcdf_variable_t, 1);
+  netcdf_variable->variable_name = var_name;
+  netcdf_variable->variable_long_name = var_long_name;
+  netcdf_variable->datatype = 1;
+  netcdf_variable->variable_units = var_unit;
+  netcdf_variable->var_user_data = var_data;
+  return netcdf_variable;
+}
+
+/* Free the memory of the allocated NetCDF variable */
 void
 t8_netcdf_variable_destroy (t8_netcdf_variable_t * var_destroy)
 {

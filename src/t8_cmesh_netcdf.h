@@ -20,7 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* TODO: document this file */
+/** \file t8_cmesh_netcdf.h
+ * The Header-File providing a function to write out a cmesh in a NetCDF-4 file.
+ */
 
 #ifndef T8_CMESH_NETCDF_H
 #define T8_CMESH_NETCDF_H
@@ -30,13 +32,21 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/* TODO: Comment */
+/** Creates a netCDF-4 file containing the (geometrical) information about the given cmesh and additional elementwise data variables
+ * \param [in]  cmesh    A cmesh.
+ * \param [in]  file_prefix    A string which holds the file's name (output file will be 'file_prefix.nc').
+ * \param [in]  file_title    A string to caption the NetCDF-File.
+ * \param [in]  dim    The Dimension of the cmesh (2D or 3D).
+ * \param [in]  num_extern_netcdf_vars    The number of extern user-defined variables which hold elementwise data (if none, set it to 0).
+ * \param [in]  ext_variables An array of pointers of the herein before mentioned user-defined variables (if none, set it to NULL).
+ * \param [in]  comm The sc_MPI_Communicator to use.
+ */
 void                t8_cmesh_write_netcdf (t8_cmesh_t cmesh,
                                            const char *file_prefix,
-                                           const char *file_title, int dim,
+                                           char *file_title, int dim,
                                            int num_extern_netcdf_vars,
                                            t8_netcdf_variable_t *
-                                           variables[]);
+                                           variables[], sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 
