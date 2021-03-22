@@ -20,7 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* After we learned how to create a cmesh in step1, we will
+/* See also: https://github.com/holke/t8code/wiki/Step-2---Creating-a-uniform-forest
+ *
+ * After we learned how to create a cmesh in step1, we will
  * now build our first partitioned forest, get its local and global
  * element count, and output it into .vtu files.
  * 

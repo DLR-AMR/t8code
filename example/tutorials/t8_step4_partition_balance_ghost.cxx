@@ -20,7 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* This is step4 of the t8code tutorials.
+/* See also: https://github.com/holke/t8code/wiki/Step-4---Partition,-Balance,-Ghost
+ *
+ * This is step4 of the t8code tutorials.
  * After generating a coarse mesh (step1), building a uniform forest
  * on it (step2) and adapting this forest (step3) 
  * we will now lear how to control the forest creation in more detail,

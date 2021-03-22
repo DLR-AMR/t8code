@@ -20,7 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* In this example we build a coarse mesh with a cube geometry.
+/* See also: https://github.com/holke/t8code/wiki/Step-1---Creating-a-coarse-mesh
+ *
+ * In this example we build a coarse mesh with a cube geometry.
  * The cube is meshed with 6 coarse tetrahedra.
  * We then output it in vtu format and destroy it.
  * 

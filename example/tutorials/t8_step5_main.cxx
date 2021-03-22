@@ -23,8 +23,6 @@
 /* This file is part of the step5 example of t8code.
  * Here, we only wrap the main function. See t8_step5_element_data.cxx for the documentation of
  * the step5 example.
- * Here, we only wrap the main function. See t8_step3.cxx for the documentation of 
- * the step3 example.
  */
 
 #include <example/tutorials/t8_step5.h>

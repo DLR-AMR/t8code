@@ -20,7 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* In this example we initialize t8code and print a small welcome message.
+/* See also: https://github.com/holke/t8code/wiki/Step-0---Hello-World
+ *
+ * In this example we initialize t8code and print a small welcome message.
  * This is the t8code equivalent of HelloWorld. */
 
 #include <t8.h>
