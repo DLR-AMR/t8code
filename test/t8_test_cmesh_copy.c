@@ -27,7 +27,7 @@
 /* Test if a cmesh is committed properly and perform the
  * face consistency check. */
 static void
-test_cmesh_committed (t8_cmesh_t cmesh)
+t8_test_cmesh_committed (t8_cmesh_t cmesh)
 {
   int                 retval;
 
@@ -38,7 +38,7 @@ test_cmesh_committed (t8_cmesh_t cmesh)
 }
 
 static void
-test_cmesh_copy (sc_MPI_Comm comm)
+t8_test_cmesh_copy (sc_MPI_Comm comm)
 {
   int                 eci, retval;
   t8_cmesh_t          cmesh_original, cmesh_copy;
@@ -49,7 +49,7 @@ test_cmesh_copy (sc_MPI_Comm comm)
     /* Create new hypercube cmesh */
     cmesh_original =
       t8_cmesh_new_hypercube ((t8_eclass_t) eci, comm, 0, 0, 0);
-    test_cmesh_committed (cmesh_original);
+    t8_test_cmesh_committed (cmesh_original);
     /* Set up the cmesh copy */
     t8_cmesh_init (&cmesh_copy);
     /* We need the original cmesh later, so we ref it */
@@ -57,7 +57,7 @@ test_cmesh_copy (sc_MPI_Comm comm)
     t8_cmesh_set_derive (cmesh_copy, cmesh_original);
     /* Commit and check commit */
     t8_cmesh_commit (cmesh_copy, comm);
-    test_cmesh_committed (cmesh_copy);
+    t8_test_cmesh_committed (cmesh_copy);
     /* Check for equality */
     retval = t8_cmesh_is_equal (cmesh_copy, cmesh_original);
     SC_CHECK_ABORT (retval == 1, "Cmesh copy failed.");
@@ -82,7 +82,7 @@ main (int argc, char **argv)
   t8_init (SC_LP_DEFAULT);
 
   t8_global_productionf ("Testing cmesh copy.\n");
-  test_cmesh_copy (comm);
+  t8_test_cmesh_copy (comm);
   t8_global_productionf ("Done testing cmesh copy.\n");
 
   sc_finalize ();
