@@ -92,6 +92,8 @@ main (int argc, char **argv)
   t8_cmesh_t          cmesh;
   /* The prefix for our output files. */
   char               *prefix = "t8_step1_tetcube";
+  t8_locidx_t         local_num_trees;
+  t8_gloidx_t         global_num_trees;
 
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -111,12 +113,21 @@ main (int argc, char **argv)
     (" [step1] In this example we build our first coarse mesh and output it to vtu files.\n");
   t8_global_productionf (" [step1] \n");
 
+  /* Build the coarse mesh */
   cmesh = t8_step1_build_tetcube_coarse_mesh (sc_MPI_COMM_WORLD);
-  t8_global_productionf (" [step1] Created cmesh with 6 tetrahedra.\n");
+  /* Compute local and global number of trees. */
+  local_num_trees = t8_cmesh_get_num_local_trees (cmesh);
+  global_num_trees = t8_cmesh_get_num_trees (cmesh);
+  t8_global_productionf (" [step1] Created coarse mesh.\n");
+  t8_global_productionf (" [step2] Local number of trees:\t%i\n",
+                         local_num_trees);
+  t8_global_productionf (" [step2] Global number of trees:\t%li\n",
+                         global_num_trees);
   t8_step1_write_cmesh_vtk (cmesh, prefix);
-  t8_global_productionf (" [step1] Wrote cmesh to vtu files: %s*\n", prefix);
+  t8_global_productionf (" [step1] Wrote coarse mesh to vtu files: %s*\n",
+                         prefix);
   t8_step1_destroy_cmesh (cmesh);
-  t8_global_productionf (" [step1] Destroyed cmesh.\n");
+  t8_global_productionf (" [step1] Destroyed coarse mesh.\n");
 
   sc_finalize ();
 
