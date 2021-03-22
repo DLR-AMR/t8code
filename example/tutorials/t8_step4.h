@@ -26,7 +26,7 @@
  * In this example we discuss the forest creation process in more detail including
  * partitioning and balancing a forest and creating a ghost layer.
  * The main program is t8_step4_main.
- * See \ref t8_step4.cxx for more details.
+ * See \ref t8_step4_partition_balance_ghost.cxx for more details.
  */
 
 #ifndef T8_STEP4_H

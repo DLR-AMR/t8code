@@ -25,7 +25,7 @@
  * functions of t8_step3 that we reuse in other examples.
  * In this example we discuss how to adapt a forest.
  * The main program is t8_step3_main.
- * See \ref t8_step3.cxx for more details.
+ * See \ref t8_step3_adapt_forest.cxx for more details.
  */
 
 #ifndef T8_STEP3_H
