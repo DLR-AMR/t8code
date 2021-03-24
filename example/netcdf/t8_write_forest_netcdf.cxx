@@ -13,6 +13,99 @@
 
 T8_EXTERN_C_BEGIN ();
 
+/* Function that times the duration of writing out the netCDF File, given a specific variable storage and access pattern */
+static void
+t8_example_time_netcdf_writing_operation (t8_forest_t forest,
+                                          sc_MPI_Comm comm,
+                                          int netcdf_var_storage_mode,
+                                          int netcdf_var_mpi_access,
+                                          const char *title)
+{
+#if T8_WITH_NETCDF
+  double              start_time, end_time, duration, global;
+  int                 retval;
+  sc_MPI_Barrier (comm);
+  start_time = sc_MPI_Wtime ();
+  t8_forest_write_netcdf_ext (forest, title,
+                              "Performance Test: uniformly refined Forest", 3,
+                              0, NULL, comm, netcdf_var_storage_mode,
+                              netcdf_var_mpi_access);
+
+  sc_MPI_Barrier (comm);
+  end_time = sc_MPI_Wtime ();
+  duration = end_time - start_time;
+  retval =
+    sc_MPI_Reduce (&duration, &global, 1, sc_MPI_DOUBLE, sc_MPI_MAX, 0, comm);
+  SC_CHECK_MPI (retval);
+  t8_global_productionf
+    ("The time elapsed to write the netCDF-4 File is: %f\n\n", global);
+#endif
+}
+
+/* Function that stores the given forest in a netCDF-4 File using the different netCDF variable storage and mpi-access patterns */
+void
+t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm,
+                                                      int
+                                                      forest_refinement_level)
+{
+#if T8_WITH_NETCDF
+  t8_cmesh_t          cmesh;
+  t8_forest_t         forest;
+  t8_scheme_cxx_t    *default_scheme;
+
+  /* Create a default scheme */
+  default_scheme = t8_scheme_new_default_cxx ();
+
+  /* Construct a 3D hybrid hypercube as a cmesh */
+  cmesh = t8_cmesh_new_hypercube_hybrid (3, comm, 0, 0);
+
+  /* Build a (partioined) uniform forest */
+  forest =
+    t8_forest_new_uniform (cmesh, default_scheme, forest_refinement_level, 0,
+                           comm);
+
+  t8_global_productionf
+    ("The uniformly refined forest (refinement level = %d) has %ld global elements.\n",
+     forest_refinement_level, t8_forest_get_global_num_elements (forest));
+
+  t8_global_productionf
+    ("The different netCDF variale storage patterns and mpi variable access patterns are getting tested/timed...\n");
+
+  /* First Case */
+  t8_global_productionf
+    ("Variable-Storage: NC_CHUNKED, Variable-Access: NC_COLLECTIVE:\n");
+  t8_example_time_netcdf_writing_operation (forest, comm, NC_CHUNKED,
+                                            NC_COLLECTIVE,
+                                            "T8_Example_NetCDF_Performance_Chunked_Collective");
+
+  /* Second Case */
+  t8_global_productionf
+    ("Variable-Storage: NC_CHUNKED, Variable-Access: NC_INDEPENDENT:\n");
+  t8_example_time_netcdf_writing_operation (forest, comm, NC_CHUNKED,
+                                            NC_INDEPENDENT,
+                                            "T8_Example_NetCDF_Performance_Chunked_Independent");
+
+  /* Third Case */
+  t8_global_productionf
+    ("Variable-Storage: NC_CONTIGUOUS, Variable-Access: NC_COLLECTIVE:\n");
+  t8_example_time_netcdf_writing_operation (forest, comm, NC_CONTIGUOUS,
+                                            NC_COLLECTIVE,
+                                            "T8_Example_NetCDF_Performance_Contiguous_Collective");
+
+  /* Fourth Case */
+  t8_global_productionf
+    ("Variable-Storage: NC_CONTIGUOUS, Variable-Access: NC_INDEPENDENT:\n");
+  t8_example_time_netcdf_writing_operation (forest, comm, NC_CONTIGUOUS,
+                                            NC_INDEPENDENT,
+                                            "T8_Example_NetCDF_Performance_Contiguous_Independent");
+
+  /* Destroy the forest */
+  t8_forest_unref (&forest);
+
+#endif
+}
+
+/* An example functions that writes out a netCDF-4 File containing the information of the forest and some user-defined/random-value variables */
 void
 t8_example_netcdf_write_forest (sc_MPI_Comm comm, int mpirank)
 {
@@ -90,9 +183,8 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int mpirank)
   ext_vars[1] = ext_var_random_values;
 
   /* Write the forest to NetCDF */
-  t8_forest_write_netcdf (forest, "TryForestNetCDFParallelWithExtVar",
-                          "Example Uniform Forest", 3, 2, ext_vars,
-                          sc_MPI_COMM_WORLD);
+  t8_forest_write_netcdf (forest, "HalTryForestNetCDFParallelWithExtVar",
+                          "Example Uniform Forest", 3, 2, ext_vars, comm);
 
   t8_global_productionf ("The forest has been written to a NetCDF file\n");
 
@@ -139,6 +231,9 @@ main (int argc, char **argv)
 
   /* Call to an example function which writes out a forest in NetCDF-Format */
   t8_example_netcdf_write_forest (sc_MPI_COMM_WORLD, mpirank);
+
+  /* This functions times the different performances of the available variable storage and mpi access patterns */
+  t8_example_compare_performance_netcdf_var_properties (sc_MPI_COMM_WORLD, 3);
 
   /* Finalize sc */
   sc_finalize ();
