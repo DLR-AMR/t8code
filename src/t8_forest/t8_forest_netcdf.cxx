@@ -71,6 +71,8 @@ typedef struct
   t8_nc_int64_t       fillvalue64;
   t8_nc_int32_t       start_index;
   const char         *convention;
+  int                 netcdf_var_storage_mode;
+  int                 netcdf_mpi_access;
   /* Stores the old NetCDF-FillMode if it gets changed */
   int                 old_fill_mode;
 
@@ -253,6 +255,18 @@ t8_forest_write_netcdf_variables (t8_forest_netcdf_context_t * context,
                    &context->var_elem_types_id))) {
     ERR (retval);
   }
+  /* Define whether a contiguous or chunked storage is used for the variable */
+  if ((retval =
+       nc_def_var_chunking (context->ncid, context->var_elem_types_id,
+                            context->netcdf_var_storage_mode, NULL))) {
+    ERR (retval);
+  }
+  /* Define whether an independent or collective variable access is used */
+  if ((retval =
+       nc_var_par_access (context->ncid, context->var_elem_types_id,
+                          context->netcdf_mpi_access))) {
+    ERR (retval);
+  }
   /* Define cf_role attribute */
   if ((retval =
        nc_put_att_text (context->ncid, context->var_elem_types_id, "cf_role",
@@ -290,6 +304,18 @@ t8_forest_write_netcdf_variables (t8_forest_netcdf_context_t * context,
                    &context->var_elem_tree_id))) {
     ERR (retval);
   }
+  /* Define whether a contiguous or chunked storage is used for the variable */
+  if ((retval =
+       nc_def_var_chunking (context->ncid, context->var_elem_tree_id,
+                            context->netcdf_var_storage_mode, NULL))) {
+    ERR (retval);
+  }
+  /* Define whether an independent or collective variable access is used */
+  if ((retval =
+       nc_var_par_access (context->ncid, context->var_elem_tree_id,
+                          context->netcdf_mpi_access))) {
+    ERR (retval);
+  }
   /* Define cf_role attribute */
   if ((retval =
        nc_put_att_text (context->ncid, context->var_elem_tree_id, "cf_role",
@@ -324,6 +350,18 @@ t8_forest_write_netcdf_variables (t8_forest_netcdf_context_t * context,
        nc_def_var (context->ncid, namespace_context->var_Mesh_elem_node,
                    NC_INT64, 2, context->dimids,
                    &context->var_elem_nodes_id))) {
+    ERR (retval);
+  }
+  /* Define whether a contiguous or chunked storage is used for the variable */
+  if ((retval =
+       nc_def_var_chunking (context->ncid, context->var_elem_nodes_id,
+                            context->netcdf_var_storage_mode, NULL))) {
+    ERR (retval);
+  }
+  /* Define whether an independent or collective variable access is used */
+  if ((retval =
+       nc_var_par_access (context->ncid, context->var_elem_nodes_id,
+                          context->netcdf_mpi_access))) {
     ERR (retval);
   }
   /* Define cf_role attribute */
@@ -494,6 +532,18 @@ t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
                    &context->var_node_x_id))) {
     ERR (retval);
   }
+  /* Define whether contiguous or chunked storage is used for the variable */
+  if ((retval =
+       nc_def_var_chunking (context->ncid, context->var_node_x_id,
+                            context->netcdf_var_storage_mode, NULL))) {
+    ERR (retval);
+  }
+  /* Define whether an independent or collective variable access is used */
+  if ((retval =
+       nc_var_par_access (context->ncid, context->var_node_x_id,
+                          context->netcdf_mpi_access))) {
+    ERR (retval);
+  }
   /* Define standard_name attribute. */
   const char         *standard_node_x = "Longitude";
   if ((retval =
@@ -526,6 +576,18 @@ t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
                    &context->var_node_y_id))) {
     ERR (retval);
   }
+  /* Define whether contiguous or chunked storage is used for the variable */
+  if ((retval =
+       nc_def_var_chunking (context->ncid, context->var_node_y_id,
+                            context->netcdf_var_storage_mode, NULL))) {
+    ERR (retval);
+  }
+  /* Define whether an independent or collective variable access is used */
+  if ((retval =
+       nc_var_par_access (context->ncid, context->var_node_y_id,
+                          context->netcdf_mpi_access))) {
+    ERR (retval);
+  }
   /* Define standard_name attribute. */
   const char         *standard_node_y = "Latitude";
   if ((retval =
@@ -556,6 +618,18 @@ t8_forest_write_netcdf_coordinate_variables (t8_forest_netcdf_context_t *
        nc_def_var (context->ncid, namespace_context->var_Mesh_node_z,
                    NC_DOUBLE, 1, &context->nMesh_node_dimid,
                    &context->var_node_z_id))) {
+    ERR (retval);
+  }
+  /* Define whether contiguous or chunked storage is used for the variable */
+  if ((retval =
+       nc_def_var_chunking (context->ncid, context->var_node_z_id,
+                            context->netcdf_var_storage_mode, NULL))) {
+    ERR (retval);
+  }
+  /* Define whether an independent or collective variable access is used */
+  if ((retval =
+       nc_var_par_access (context->ncid, context->var_node_z_id,
+                          context->netcdf_mpi_access))) {
     ERR (retval);
   }
   /* Define standard_name attribute. */
@@ -625,6 +699,21 @@ t8_forest_write_user_netcdf_vars (t8_forest_netcdf_context_t * context,
                            &(ext_variables[i]->var_user_dimid)))) {
             ERR (retval);
           }
+          /* Define whether contiguous or chunked storage is used for the variable */
+          if ((retval =
+               nc_def_var_chunking (context->ncid,
+                                    ext_variables[i]->var_user_dimid,
+                                    context->netcdf_var_storage_mode,
+                                    NULL))) {
+            ERR (retval);
+          }
+          /* Define whether an independent or collective variable access is used */
+          if ((retval =
+               nc_var_par_access (context->ncid,
+                                  ext_variables[i]->var_user_dimid,
+                                  context->netcdf_mpi_access))) {
+            ERR (retval);
+          }
         }
         else if (int_mode == 8) {
           /* In case it is a 64bit integer variable */
@@ -632,6 +721,21 @@ t8_forest_write_user_netcdf_vars (t8_forest_netcdf_context_t * context,
                nc_def_var (context->ncid, ext_variables[i]->variable_name,
                            NC_INT64, 1, &context->nMesh_elem_dimid,
                            &(ext_variables[i]->var_user_dimid)))) {
+            ERR (retval);
+          }
+          /* Define whether contiguous or chunked storage is used for the variable */
+          if ((retval =
+               nc_def_var_chunking (context->ncid,
+                                    ext_variables[i]->var_user_dimid,
+                                    context->netcdf_var_storage_mode,
+                                    NULL))) {
+            ERR (retval);
+          }
+          /* Define whether an independent or collective variable access is used */
+          if ((retval =
+               nc_var_par_access (context->ncid,
+                                  ext_variables[i]->var_user_dimid,
+                                  context->netcdf_mpi_access))) {
             ERR (retval);
           }
         }
@@ -648,6 +752,21 @@ t8_forest_write_user_netcdf_vars (t8_forest_netcdf_context_t * context,
                          NC_DOUBLE, 1, &context->nMesh_elem_dimid,
                          &(ext_variables[i]->var_user_dimid)))) {
           ERR (retval);
+          /* Define whether contiguous or chunked storage is used for the variable */
+          if ((retval =
+               nc_def_var_chunking (context->ncid,
+                                    ext_variables[i]->var_user_dimid,
+                                    context->netcdf_var_storage_mode,
+                                    NULL))) {
+            ERR (retval);
+          }
+          /* Define whether an independent or collective variable access is used */
+          if ((retval =
+               nc_var_par_access (context->ncid,
+                                  ext_variables[i]->var_user_dimid,
+                                  context->netcdf_mpi_access))) {
+            ERR (retval);
+          }
         }
         break;
       default:
@@ -934,12 +1053,7 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
 
   /* Assign global number of elements. */
   context->nMesh_elem = num_glo_elem;
-#if 0
-  /* Create the NetCDF file, the NC_CLOBBER parameter tells netCDF to overwrite this file, if it already exists. Leaves the file in 'define-mode'. */
-  if ((retval = nc_create (context->filename, NC_CLOBBER, &context->ncid))) {
-    ERR (retval);
-  }
-#endif
+
   /* Create a parallel NetCDF-File (NetCDF-4/HDF5 file) */
   /* NC_MPIIO seems to be redundant since NetCDF version 4.6.2 */
   if ((retval =
@@ -976,9 +1090,6 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
     ERR (retval);
   }
 
-  /* MPI-Barrier */
-  retval = sc_MPI_Barrier (comm);
-
   /* End define-mode. NetCDF-file enters data-mode. */
   if ((retval = nc_enddef (context->ncid))) {
     ERR (retval);
@@ -1009,10 +1120,6 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
     ERR (retval);
   }
 
-  /* MPI-Barrier */
-  retval = sc_MPI_Barrier (comm);
-  SC_CHECK_MPI (retval);
-
   /* End define-mode. NetCDF-file enters data-mode. */
   if ((retval = nc_enddef (context->ncid))) {
     ERR (retval);
@@ -1030,17 +1137,18 @@ t8_forest_write_netcdf_file (t8_forest_t forest,
     ERR (retval);
   }
 
-  t8_global_productionf ("The NetCDF-File has been written and closed.\n");
+  t8_debugf ("The NetCDF-File has been written and closed.\n");
 #endif
 }
 
-/* Function that gets called if a cmesh schould be written in NetCDF-Format */
+/* Function that gets called if a forest schould be written in NetCDF-Format */
 void
-t8_forest_write_netcdf (t8_forest_t forest, const char *file_prefix,
-                        const char *file_title, int dim,
-                        int num_extern_netcdf_vars,
-                        t8_netcdf_variable_t * ext_variables[],
-                        sc_MPI_Comm comm)
+t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix,
+                            const char *file_title, int dim,
+                            int num_extern_netcdf_vars,
+                            t8_netcdf_variable_t * ext_variables[],
+                            sc_MPI_Comm comm, int netcdf_var_storage_mode,
+                            int netcdf_mpi_access)
 {
 #if T8_WITH_NETCDF
   t8_forest_netcdf_context_t context;
@@ -1051,6 +1159,7 @@ t8_forest_write_netcdf (t8_forest_t forest, const char *file_prefix,
   /* Create the NetCDF-Filname */
   snprintf (file_name, BUFSIZ, "%s.nc", file_prefix);
   /* Initialize first variables for NetCDF purposes. */
+  /* Therefore, create a 'context' and initialize it with given properties */
   context.filename = file_name;
   context.filetitle = file_title;
   context.dim = dim;
@@ -1059,6 +1168,21 @@ t8_forest_write_netcdf (t8_forest_t forest, const char *file_prefix,
   context.fillvalue64 = -1;
   context.start_index = 0;
   context.convention = "UGRID v1.0";
+  /* Check the given 'netcdf_storage_mode' and 'netcdf_mpi_access' */
+  if ((netcdf_var_storage_mode != NC_CONTIGUOUS
+       && netcdf_var_storage_mode != NC_CHUNKED)
+      || (netcdf_mpi_access != NC_INDEPENDENT
+          && netcdf_mpi_access != NC_COLLECTIVE)) {
+    t8_global_productionf
+      ("Illegal input parameters for either the storage-mode (NC_CONTIGUOUS or NC_CHUNKED) or the netcdf variable mpi-access (NC_INDEPENDENT or NC_COLLECTIVE) were given.\nTherefore, default values (NC_CONTIGUOUS, NC_INDEPENDENT) will be used.\n");
+    context.netcdf_var_storage_mode = NC_CONTIGUOUS;
+    context.netcdf_mpi_access = NC_INDEPENDENT;
+  }
+  else {
+    context.netcdf_var_storage_mode = netcdf_var_storage_mode;
+    context.netcdf_mpi_access = netcdf_mpi_access;
+  }
+  /* Create and initialize the 'namespace_context' which holds the names of the variables, they vary depending on the given dimension */
   t8_forest_netcdf_ugrid_namespace_t namespace_context;
   t8_forest_init_ugrid_namespace_context (&namespace_context, dim);
   /* Check which dimension of cmesh should be written. */
@@ -1078,6 +1202,24 @@ t8_forest_write_netcdf (t8_forest_t forest, const char *file_prefix,
       ("Only writing 2D and 3D NetCDF forest data is supported.\n");
     break;
   }
+#else
+  t8_global_errorf
+    ("This version of t8code is not compiled with netcdf support.\n");
+#endif
+}
+
+/* Function calls the extended method with reasonable default values */
+void
+t8_forest_write_netcdf (t8_forest_t forest, const char *file_prefix,
+                        const char *file_title, int dim,
+                        int num_extern_netcdf_vars,
+                        t8_netcdf_variable_t * ext_variables[],
+                        sc_MPI_Comm comm)
+{
+#if T8_WITH_NETCDF
+  t8_forest_write_netcdf_ext (forest, file_prefix, file_title, dim,
+                              num_extern_netcdf_vars, ext_variables, comm,
+                              NC_CONTIGUOUS, NC_INDEPENDENT);
 #else
   t8_global_errorf
     ("This version of t8code is not compiled with netcdf support.\n");
