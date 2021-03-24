@@ -127,7 +127,6 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int mpirank)
   default_scheme = t8_scheme_new_default_cxx ();
 
   /* Construct a cube coarse mesh */
-  /* cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, comm, 0, 0, 0); */
   /* Construct a 3D hybrid hypercube as a cmesh */
   cmesh = t8_cmesh_new_hypercube_hybrid (3, comm, 0, 0);
 
@@ -140,10 +139,10 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int mpirank)
 
   /* Print out the number of local elements of each  process */
   num_elements = t8_forest_get_num_element (forest);
-  printf ("[t8] Rank %d has %ld elements\n", mpirank, num_elements);
+  t8debugf ("[t8] Rank %d has %ld elements\n", mpirank, num_elements);
 
   /* *Example user-defined NetCDF variable* */
-  /* Currently, interger and double NetCDF variables are possible */
+  /* Currently, integer and double NetCDF variables are possible */
 
   /* Allocate the data which lays on the several processes */
   /* Those user-defined variables are currently only meant to maintain a single value per (process-local) element */
@@ -152,7 +151,7 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int mpirank)
   for (j = 0; j < num_elements; j++) {
     var_rank[j] = mpirank;
   }
-  /* Create a new sc_array_t which provides the data for the NetCDF variables, in this case the Mpirank each elements lays on */
+  /* Create a new sc_array_t which provides the data for the NetCDF variables, in this case the mpirank each element lays on */
   var_ranks =
     sc_array_new_data (var_rank, sizeof (t8_nc_int32_t), num_elements);
   /* Create the integer NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit, pointer to sc_array_t which provides the data) */

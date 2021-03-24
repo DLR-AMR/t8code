@@ -70,7 +70,7 @@ t8_example_netcdf_write_cmesh (int mpirank)
     var_rank[j] = mpirank;
   }
 
-  /* Create a new sc_array_t which provides the data for the NetCDF variables, in this case the Mpirank each elements lays on */
+  /* Create a new sc_array_t which provides the data for the NetCDF variables, in this case the mpirank each element lays on */
   var_ranks =
     sc_array_new_data (var_rank, sizeof (t8_nc_int32_t),
                        t8_cmesh_get_num_local_trees (cmesh));
@@ -105,10 +105,10 @@ t8_example_netcdf_write_cmesh (int mpirank)
   char               *mesh_name = "NewCmesh3DParallel";
 
   /* Write the cmesh to NetCDF */
-  t8_cmesh_write_netcdf (cmesh, mesh_name, "Beispiel 3D Parallel Cmesh", 3, 2,
+  t8_cmesh_write_netcdf (cmesh, mesh_name, "Example 3D parallel cmesh", 3, 2,
                          ext_vars, sc_MPI_COMM_WORLD);
 
-  t8_global_productionf ("NetCDF output of the cmesh has been written\n");
+  t8_global_productionf ("NetCDF output of the cmesh has been written.\n");
 
   /* Destroy the cmesh */
   t8_cmesh_destroy (&cmesh);
