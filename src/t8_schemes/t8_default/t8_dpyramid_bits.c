@@ -1258,10 +1258,10 @@ t8_dpyramid_face_child_face (const t8_dpyramid_t * p, const int face,
     return t8_dtet_face_child_face (p, face, face_child);
   }
   else {
-    int                 i =
+    int                 child_face =
       t8_dpyramid_type_face_to_child_face[p->type - 6][face][face_child];
-    T8_ASSERT (i >= 0 && i <= T8_DPYRAMID_FACES);
-    return i;
+    T8_ASSERT (child_face >= 0 && child_face <= T8_DPYRAMID_FACES);
+    return child_face;
   }
 }
 
