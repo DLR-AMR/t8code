@@ -35,7 +35,8 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] level  level of uniform grid to be considered.
  */
 void                t8_dpyramid_init_linear_id (t8_dpyramid_t * p,
-                                                const int level, uint64_t id);
+                                                const int level,
+                                                t8_linearidx_t id);
 
 /** Compute the level of a pyramid.
  * \param [in] p    Pyramid whose level is computed.

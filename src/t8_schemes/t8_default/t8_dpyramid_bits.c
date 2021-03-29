@@ -34,7 +34,7 @@ typedef int8_t      t8_dpyramid_cube_id_t;
 static              t8_dpyramid_cube_id_t
 compute_cubeid (const t8_dpyramid_t * p, const int level)
 {
-  t8_dpyramid_cube_id_t id = 0;
+  t8_dpyramid_cube_id_t cid = 0;
   t8_dpyramid_coord_t h;
 
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
@@ -44,11 +44,11 @@ compute_cubeid (const t8_dpyramid_t * p, const int level)
     return 0;
   }
 
-  id |= ((p->x & h) ? 0x01 : 0);
-  id |= ((p->y & h) ? 0x02 : 0);
-  id |= ((p->z & h) ? 0x04 : 0);
+  cid |= ((p->x & h) ? 0x01 : 0);
+  cid |= ((p->y & h) ? 0x02 : 0);
+  cid |= ((p->z & h) ? 0x04 : 0);
 
-  return id;
+  return cid;
 }
 
 t8_dpyramid_type_t
@@ -266,7 +266,7 @@ int
 t8_dpyramid_compare (const t8_dpyramid_t * p1, const t8_dpyramid_t * p2)
 {
   int                 maxlvl;
-  uint64_t            id1, id2;
+  t8_linearidx_t      id1, id2;
   T8_ASSERT (p1->x >= 0 && p1->y >= 0 && p1->z >= 0 &&
              p1->level >= 0 && p1->level <= T8_DPYRAMID_MAXLEVEL);
   T8_ASSERT (p2->x >= 0 && p2->y >= 0 && p2->z >= 0 &&
@@ -293,7 +293,7 @@ t8_dpyramid_get_level (const t8_dpyramid_t * p)
 }
 
 int
-t8_dpyramid_custom_mod (uint64_t * id, const t8_dpyramid_type_t type,
+t8_dpyramid_custom_mod (t8_linearidx_t * id, const t8_dpyramid_type_t type,
                         const t8_linearidx_t pyra, const t8_linearidx_t tet)
 {
   t8_linearidx_t      test = 0, shift;
@@ -317,7 +317,8 @@ t8_dpyramid_custom_mod (uint64_t * id, const t8_dpyramid_type_t type,
 }
 
 void
-t8_dpyramid_init_linear_id (t8_dpyramid_t * p, const int level, uint64_t id)
+t8_dpyramid_init_linear_id (t8_dpyramid_t * p, const int level,
+                            t8_linearidx_t id)
 {
   t8_dpyramid_type_t  type;
   t8_linearidx_t      local_index,
@@ -694,8 +695,8 @@ t8_dpyramid_tet_boundary (const t8_dpyramid_t * p, const int face)
 {
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
   t8_dpyramid_t       anc;
-  int                 level = t8_dpyramid_is_inside_tet (p, p->level, &anc);
-  int                 id, i, type_temp, valid_touch;
+  const int           level = t8_dpyramid_is_inside_tet (p, p->level, &anc);
+  int                 bey_id, i, type_temp, valid_touch;
   t8_dpyramid_cube_id_t cid;
   if (level == 0) {
     /*Check if the face is connecting to a tet or to a pyra */
@@ -709,8 +710,8 @@ t8_dpyramid_tet_boundary (const t8_dpyramid_t * p, const int face)
      * Otherwise, the neighbor is a tet*/
     for (i = p->level; i > anc.level; i--) {
       cid = compute_cubeid (p, i);
-      id = t8_dtet_type_cid_to_beyid[type_temp][cid];
-      if (t8_dpyramid_face_childid_to_is_inside[face][id] == -1) {
+      bey_id = t8_dtet_type_cid_to_beyid[type_temp][cid];
+      if (t8_dpyramid_face_childid_to_is_inside[face][bey_id] == -1) {
         return 0;
       }
       type_temp = t8_dtet_cid_type_to_parenttype[cid][type_temp];
