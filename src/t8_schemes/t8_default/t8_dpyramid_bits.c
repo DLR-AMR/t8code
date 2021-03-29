@@ -815,8 +815,7 @@ void
 t8_dpyramid_corner_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * d,
                                const int corner, const int level)
 {
-  t8_linearidx_t      child_id;
-  int                 i;
+  int      child_id, i;
   T8_ASSERT (p->level <= level && level <= T8_DPYRAMID_MAXLEVEL);
   T8_ASSERT (t8_dpyramid_shape (p) == T8_ECLASS_TET);
   T8_ASSERT (0 <= corner && corner < T8_DTET_CORNERS);
