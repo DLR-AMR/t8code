@@ -209,7 +209,7 @@ void
 t8_default_scheme_pyramid_c::t8_element_set_linear_id (t8_element_t * elem,
                                                        int level, uint64_t id)
 {
-  t8_dpyramid_init_linear_id ((t8_dpyramid_t *) elem, level, (t8_linearidx_t) id);
+  t8_dpyramid_init_linear_id ((t8_dpyramid_t *) elem, level, id);
 }
 
 int

@@ -34,7 +34,7 @@ typedef int8_t      t8_dpyramid_cube_id_t;
 static              t8_dpyramid_cube_id_t
 compute_cubeid (const t8_dpyramid_t * p, const int level)
 {
-  t8_dpyramid_cube_id_t cid = 0;
+  t8_dpyramid_cube_id_t cube_id = 0;
   t8_dpyramid_coord_t h;
 
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
@@ -44,18 +44,18 @@ compute_cubeid (const t8_dpyramid_t * p, const int level)
     return 0;
   }
 
-  cid |= ((p->x & h) ? 0x01 : 0);
-  cid |= ((p->y & h) ? 0x02 : 0);
-  cid |= ((p->z & h) ? 0x04 : 0);
+  cube_id |= ((p->x & h) ? 0x01 : 0);
+  cube_id |= ((p->y & h) ? 0x02 : 0);
+  cube_id |= ((p->z & h) ? 0x04 : 0);
 
-  return cid;
+  return cube_id;
 }
 
 t8_dpyramid_type_t
 compute_type_ext (const t8_dpyramid_t * p, const int level,
                   const t8_dpyramid_type_t known_type, const int known_level)
 {
-  t8_dpyramid_cube_id_t cid;
+  t8_dpyramid_cube_id_t cube_id;
   t8_dpyramid_type_t  type = known_type;
   int                 i;
 
@@ -70,8 +70,8 @@ compute_type_ext (const t8_dpyramid_t * p, const int level,
     return T8_DPYRAMID_ROOT_TPYE;
   }
   for (i = known_level; i > level; i--) {
-    cid = compute_cubeid (p, i);
-    type = t8_dpyramid_cid_type_to_parenttype[cid][type];
+    cube_id = compute_cubeid (p, i);
+    type = t8_dpyramid_cid_type_to_parenttype[cube_id][type];
   }
   return type;
 }
@@ -326,7 +326,7 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t * p, const int level,
   t8_linearidx_t      local_index,
     p_sum1 = ((t8_linearidx_t) 1) << (3 * level),
     p_sum2 = sc_intpow64u (6, level);
-  t8_dpyramid_cube_id_t cid;
+  t8_dpyramid_cube_id_t cube_id;
   int                 i;
   int                 offset_coords;
 
@@ -352,13 +352,13 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t * p, const int level,
      * a different number of children.*/
     local_index = t8_dpyramid_custom_mod (&id, type, 2 * p_sum1 - p_sum2,
                                           p_sum1);
-    cid = t8_dpyramid_parenttype_Iloc_to_cid[type][local_index];
-    T8_ASSERT (cid >= 0);
+    cube_id = t8_dpyramid_parenttype_Iloc_to_cid[type][local_index];
+    T8_ASSERT (cube_id >= 0);
     /* Set the element in its cube */
-    p->x |= (cid % 2 == 1) ? 1 << offset_coords : 0;
-    p->y |= (cid == 2 || cid == 3 || cid == 6 || cid == 7) ?
+    p->x |= (cube_id % 2 == 1) ? 1 << offset_coords : 0;
+    p->y |= (cube_id == 2 || cube_id == 3 || cube_id == 6 || cube_id == 7) ?
       1 << offset_coords : 0;
-    p->z |= (cid > 3) ? 1 << offset_coords : 0;
+    p->z |= (cube_id > 3) ? 1 << offset_coords : 0;
     /*Compute the type */
     type = t8_dpyramid_parenttype_Iloc_to_type[type][local_index];
     T8_ASSERT (type >= 0);
@@ -375,7 +375,7 @@ int
 t8_dpyramid_set_type_at_level (const t8_dpyramid_t * p, const int level)
 {
   int                 i, start, type = p->type;
-  t8_dpyramid_cube_id_t cid;
+  t8_dpyramid_cube_id_t cube_id;
   T8_ASSERT (0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
 
   if (level >= p->level) {
@@ -384,8 +384,8 @@ t8_dpyramid_set_type_at_level (const t8_dpyramid_t * p, const int level)
   if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID) {
     /*all ancs are pyramids */
     for (i = p->level; i > level; i--) {
-      cid = compute_cubeid (p, i);
-      type = t8_dpyramid_type_cid_to_parenttype[type - 6][cid];
+      cube_id = compute_cubeid (p, i);
+      type = t8_dpyramid_type_cid_to_parenttype[type - 6][cube_id];
     }
     return type;
   }
@@ -394,8 +394,8 @@ t8_dpyramid_set_type_at_level (const t8_dpyramid_t * p, const int level)
     t8_dpyramid_t       helper;
     for (i = p->level; i > level && type != 0 && type != 3; i--) {
       /*all anc fullfilling the above cond are not pyramids */
-      cid = compute_cubeid (p, i);
-      type = t8_dtet_cid_type_to_parenttype[cid][type];
+      cube_id = compute_cubeid (p, i);
+      type = t8_dtet_cid_type_to_parenttype[cube_id][type];
     }
     if (i == level) {
       return type;
@@ -414,8 +414,8 @@ t8_dpyramid_set_type_at_level (const t8_dpyramid_t * p, const int level)
     if (level >= max_tet_lvl && max_tet_lvl != 0) {
       for (i = start; i > level; i--) {
         /*Up to this level all anc are tets */
-        cid = compute_cubeid (p, i);
-        type = t8_dtet_cid_type_to_parenttype[cid][type];
+        cube_id = compute_cubeid (p, i);
+        type = t8_dtet_cid_type_to_parenttype[cube_id][type];
       }
     }
     else {
@@ -425,17 +425,17 @@ t8_dpyramid_set_type_at_level (const t8_dpyramid_t * p, const int level)
       }
       for (i = helper.level; i > max_tet_lvl; i--) {
         /*from current level on until max-tet-lvl all ancs are tet */
-        cid = compute_cubeid (p, i);
-        type = t8_dtet_cid_type_to_parenttype[cid][type];
+        cube_id = compute_cubeid (p, i);
+        type = t8_dtet_cid_type_to_parenttype[cube_id][type];
       }
-      cid = compute_cubeid (p, max_tet_lvl);
-      type = t8_dtet_type_cid_to_pyramid_parenttype[type][cid];
+      cube_id = compute_cubeid (p, max_tet_lvl);
+      type = t8_dtet_type_cid_to_pyramid_parenttype[type][cube_id];
       /*compute type of pyramidal tet parent */
       T8_ASSERT (type == 6 || type == 7);
       for (i = max_tet_lvl - 1; i > level; i--) {
         /*remaining ancs are pyramids */
-        cid = compute_cubeid (p, i);
-        type = t8_dpyramid_type_cid_to_parenttype[type - 6][cid];
+        cube_id = compute_cubeid (p, i);
+        type = t8_dpyramid_type_cid_to_parenttype[type - 6][cube_id];
       }
     }
     return type;
@@ -674,17 +674,17 @@ t8_dpyramid_tet_pyra_face_connection (const t8_dpyramid_t * p, const int face)
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
   /* Depending on its cube-id at its level and its type,
    * 3 faces of a tet connect to a pyramid, one is connecting to a tet*/
-  t8_dpyramid_cube_id_t cid = compute_cubeid (p, p->level);
-  if ((cid == 2 && face != 1) || (cid == 6 && face != 2)) {
+  t8_dpyramid_cube_id_t cube_id = compute_cubeid (p, p->level);
+  if ((cube_id == 2 && face != 1) || (cube_id == 6 && face != 2)) {
     return p->type == 0;
   }
-  else if ((cid == 1 && face != 1) || (cid == 5 && face != 2)) {
+  else if ((cube_id == 1 && face != 1) || (cube_id == 5 && face != 2)) {
     return p->type == 3;
   }
-  else if (cid == 3) {
+  else if (cube_id == 3) {
     return face != 0;
   }
-  else if (cid == 4) {
+  else if (cube_id == 4) {
     return face != 3;
   }
   else {
@@ -699,7 +699,7 @@ t8_dpyramid_tet_boundary (const t8_dpyramid_t * p, const int face)
   t8_dpyramid_t       anc;
   const int           level = t8_dpyramid_is_inside_tet (p, p->level, &anc);
   int                 bey_id, i, type_temp, valid_touch;
-  t8_dpyramid_cube_id_t cid;
+  t8_dpyramid_cube_id_t cube_id;
   if (level == 0) {
     /*Check if the face is connecting to a tet or to a pyra */
     return t8_dpyramid_tet_pyra_face_connection (p, face);
@@ -711,12 +711,12 @@ t8_dpyramid_tet_boundary (const t8_dpyramid_t * p, const int face)
     /* If so, check if the tet always lies in the corner of of its parent at this face.
      * Otherwise, the neighbor is a tet*/
     for (i = p->level; i > anc.level; i--) {
-      cid = compute_cubeid (p, i);
-      bey_id = t8_dtet_type_cid_to_beyid[type_temp][cid];
+      cube_id = compute_cubeid (p, i);
+      bey_id = t8_dtet_type_cid_to_beyid[type_temp][cube_id];
       if (t8_dpyramid_face_childid_to_is_inside[face][bey_id] == -1) {
         return 0;
       }
-      type_temp = t8_dtet_cid_type_to_parenttype[cid][type_temp];
+      type_temp = t8_dtet_cid_type_to_parenttype[cube_id][type_temp];
     }
   }
   /*Return if anc-face is connecting to a tet */
@@ -1091,8 +1091,9 @@ t8_dpyramid_extrude_face (const t8_element_t * face, t8_dpyramid_t * p,
      * scale the coordinates, since a quad and a pyra can have different root-len,
      * depending on their maxlvl.*/
     p4est_quadrant_t   *q = (p4est_quadrant_t *) face;
-    p->x = ((t8_dpyramid_coord_t) q->x * T8_DPYRAMID_ROOT_LEN) / P4EST_ROOT_LEN;
-    p->y = ((t8_dpyramid_coord_t) q->y * T8_DPYRAMID_ROOT_LEN) / P4EST_ROOT_LEN;
+    /*Typecast to int64, we multiply two (possible at max) int32*/
+    p->x = ((int64_t) q->x * T8_DPYRAMID_ROOT_LEN) / P4EST_ROOT_LEN;
+    p->y = ((int64_t) q->y * T8_DPYRAMID_ROOT_LEN) / P4EST_ROOT_LEN;
     p->z = 0;
     p->type = T8_DPYRAMID_ROOT_TPYE;
     p->level = q->level;
@@ -1102,24 +1103,25 @@ t8_dpyramid_extrude_face (const t8_element_t * face, t8_dpyramid_t * p,
     /*t->y gives the height of the pyramid, t->x gives the p->x or p->y, depending on
      * the root_face. The other coordinate is determined by the root_face.*/
     t8_dtri_t          *t = (t8_dtri_t *) face;
-    p->z = ((t8_dpyramid_coord_t) t->y * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+    p->z = ((int64_t) t->y * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
     /* level is the same */
     p->level = t->level;
     switch (root_face) {
     case 0:
       p->x = p->z;
-      p->y = ( t->x * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+      /*Typecast to int64, we multiply two (possible at max) int32*/
+      p->y = ( (int64_t)t->x * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
       break;
     case 1:
       p->x = T8_DPYRAMID_ROOT_LEN - T8_DPYRAMID_LEN (p->level);
-      p->y = (t->x * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+      p->y = ((int64_t)t->x * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
       break;
     case 2:
-      p->x = ( t->x * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+      p->x = ( (int64_t)t->x * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
       p->y = p->z;
       break;
     case 3:
-      p->x = ( t->x * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+      p->x = ( (int64_t)t->x * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
       p->y = T8_DPYRAMID_ROOT_LEN - T8_DPYRAMID_LEN (p->level);
       break;
     default:
@@ -1158,10 +1160,10 @@ int
 t8_dpyramid_child_id_known_parent (const t8_dpyramid_t * p,
                                    t8_dpyramid_t * parent)
 {
-  t8_dpyramid_cube_id_t cid = compute_cubeid (p, p->level);
+  t8_dpyramid_cube_id_t cube_id = compute_cubeid (p, p->level);
   if (t8_dpyramid_shape (parent) == T8_ECLASS_PYRAMID) {
-    T8_ASSERT (t8_dpyramid_type_cid_to_Iloc[p->type][cid] >= 0);
-    return t8_dpyramid_type_cid_to_Iloc[p->type][cid];
+    T8_ASSERT (t8_dpyramid_type_cid_to_Iloc[p->type][cube_id] >= 0);
+    return t8_dpyramid_type_cid_to_Iloc[p->type][cube_id];
   }
   else {
     return t8_dtet_child_id ((const t8_dtet_t *) p);
