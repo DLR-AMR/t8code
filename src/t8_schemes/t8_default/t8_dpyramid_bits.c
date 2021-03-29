@@ -1184,7 +1184,7 @@ t8_dpyramid_child (const t8_dpyramid_t * elem, const int child_id,
 {
 
   t8_dpyramid_cube_id_t cube_id;
-  t8_dpyramid_coord_t h = T8_DPYRAMID_LEN (elem->level + 1);
+  t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (elem->level + 1);
   T8_ASSERT (0 <= child_id && child_id < T8_DPYRAMID_CHILDREN);
   T8_ASSERT (0 <= elem->level && elem->level <= T8_DPYRAMID_MAXLEVEL);
 
@@ -1196,9 +1196,9 @@ t8_dpyramid_child (const t8_dpyramid_t * elem, const int child_id,
     cube_id = t8_dpyramid_parenttype_Iloc_to_cid[elem->type][child_id];
     T8_ASSERT (cube_id >= 0);;
     child->level = elem->level + 1;
-    child->x = elem->x + ((cube_id & 0x01) ? h : 0);
-    child->y = elem->y + ((cube_id & 0x02) ? h : 0);
-    child->z = elem->z + ((cube_id & 0x04) ? h : 0);
+    child->x = elem->x + ((cube_id & 0x01) ? length : 0);
+    child->y = elem->y + ((cube_id & 0x02) ? length : 0);
+    child->z = elem->z + ((cube_id & 0x04) ? length : 0);
     child->type = t8_dpyramid_parenttype_Iloc_to_type[elem->type][child_id];
   }
   T8_ASSERT (child->type >= 0);
