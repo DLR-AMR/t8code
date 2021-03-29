@@ -143,7 +143,7 @@ t8_dpyramid_is_family (const t8_dpyramid_t ** fam)
 {
 
   const int           level = fam[0]->level;
-  int                 i, ptype;
+  int                 i, type_of_first;
   t8_dpyramid_coord_t inc = T8_DPYRAMID_LEN (level), x_inc, y_inc;
   if (t8_dpyramid_shape (fam[0]) == T8_ECLASS_TET) {
     return t8_dtet_is_familypv ((const t8_dtet_t **) fam);
@@ -153,15 +153,15 @@ t8_dpyramid_is_family (const t8_dpyramid_t ** fam)
       return 0;
     }
     /*The type of parent is the type of the first child in z-curve-order */
-    ptype = fam[0]->type;
-    T8_ASSERT (ptype == 6 || ptype == 7);
+    type_of_first = fam[0]->type;
+    T8_ASSERT (type_of_first == 6 || type_of_first == 7);
     for (i = 1; i < T8_DPYRAMID_CHILDREN; i++) {
       /*All elements must have the same level to be a family */
       if (fam[i]->level != level) {
         return 0;
       }
       /*Check if every family-member has the correct type */
-      if (t8_dpyramid_parenttype_Iloc_to_type[ptype][i] != fam[i]->type) {
+      if (t8_dpyramid_parenttype_Iloc_to_type[type_of_first][i] != fam[i]->type) {
         return 0;
       }
     }
@@ -169,7 +169,7 @@ t8_dpyramid_is_family (const t8_dpyramid_t ** fam)
     x_inc = fam[0]->x + inc;
     y_inc = fam[0]->y + inc;
     /*Check the coordinates of the anchor-coordinate */
-    if (ptype == 6) {
+    if (type_of_first == 6) {
       return fam[0]->z == fam[1]->z && fam[0]->z == fam[2]->z
         && fam[0]->z == fam[3]->z && fam[0]->z == fam[4]->z
         && fam[0]->z == fam[5]->z && fam[0]->z == fam[6]->z
