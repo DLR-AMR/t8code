@@ -448,6 +448,7 @@ t8_dpyramid_linear_id (const t8_dpyramid_t * p, const int level)
   t8_linearidx_t      id = 0, pyra_shift, sum_1 = 1, sum_2 = 1, local_id;
   t8_dpyramid_t       parent, copy;
   int                 i, num_pyra, num_tet;
+
   t8_dpyramid_copy (p, &copy);
   copy.type = t8_dpyramid_set_type_at_level (p, level);
   copy.level = level;
@@ -498,7 +499,7 @@ t8_dpyramid_face_neighbour (const t8_dpyramid_t * p, const int face,
 {
   T8_ASSERT (0 <= face && face < T8_DPYRAMID_FACES);
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
-  t8_dpyramid_coord_t len = T8_DPYRAMID_LEN (p->level);
+  t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (p->level);
   neigh->x = p->x;
   neigh->y = p->y;
   neigh->z = p->z;
@@ -519,15 +520,15 @@ t8_dpyramid_face_neighbour (const t8_dpyramid_t * p, const int face,
     /*Compute the coords of the neighbour */
     /*Do nothing for face == 0 || face == 2 */
     if (face == 1) {
-      neigh->x += ((p->type == 6) ? len : 0);
-      neigh->y += ((p->type == 6) ? 0 : -len);
+      neigh->x += ((p->type == 6) ? length : 0);
+      neigh->y += ((p->type == 6) ? 0 : -length);
     }
     else if (face == 3) {
-      neigh->x += ((p->type == 6) ? 0 : -len);
-      neigh->y += ((p->type == 6) ? len : 0);
+      neigh->x += ((p->type == 6) ? 0 : -length);
+      neigh->y += ((p->type == 6) ? length : 0);
     }
     else if (face == 4) {
-      neigh->z += ((p->type == 6) ? -len : len);
+      neigh->z += ((p->type == 6) ? -length : length);
     }
 
     return t8_dpyramid_type_face_to_nface[p->type - 6][face];
@@ -543,7 +544,7 @@ t8_dpyramid_face_neighbour (const t8_dpyramid_t * p, const int face,
       if (p->type == 0) {
         switch (face) {
         case 0:
-          neigh->x += len;
+          neigh->x += length;
           neigh->type = 7;
           return 3;
         case 1:
@@ -553,7 +554,7 @@ t8_dpyramid_face_neighbour (const t8_dpyramid_t * p, const int face,
           neigh->type = 6;
           return 2;
         case 3:
-          neigh->y -= len;
+          neigh->y -= length;
           neigh->type = 6;
           return 3;
         default:
@@ -564,7 +565,7 @@ t8_dpyramid_face_neighbour (const t8_dpyramid_t * p, const int face,
         /*p->type == 3 */
         switch (face) {
         case 0:
-          neigh->y += len;
+          neigh->y += length;
           neigh->type = 7;
           return 1;
         case 1:
@@ -574,7 +575,7 @@ t8_dpyramid_face_neighbour (const t8_dpyramid_t * p, const int face,
           neigh->type = 6;
           return 0;
         case 3:
-          neigh->x -= len;
+          neigh->x -= length;
           neigh->type = 6;
           return 1;
         default:
