@@ -1469,16 +1469,16 @@ t8_dpyramid_compute_coords (const t8_dpyramid_t * p, const int vertex,
       coords[2] += (p->type == 7) ? length : 0;
       break;
     case 1:
-      coords[0] += h;
+      coords[0] += length;
       coords[2] += (p->type == 7) ? length : 0;
       break;
     case 2:
-      coords[1] += h;
+      coords[1] += length;
       coords[2] += (p->type == 7) ? length : 0;
       break;
     case 3:
-      coords[0] += h;
-      coords[1] += h;
+      coords[0] += length;
+      coords[1] += length;
       coords[2] += (p->type == 7) ? length : 0;
       break;
     case 4:
