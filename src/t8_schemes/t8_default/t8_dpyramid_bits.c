@@ -83,6 +83,15 @@ compute_type (const t8_dpyramid_t * p, const int level)
   return compute_type_ext (p, level, p->type, p->level);
 }
 
+/* sets the shift last bits of every coordinate to zero*/
+void
+pyramid_cut_coords(t8_dpyramid_t * p, const int shift)
+{
+    p->x = (p->x >> shift) << shift;
+    p->y = (p->y >> shift) << shift;
+    p->z = (p->z >> shift) << shift;
+}
+
 int
 t8_dpyramid_ancestor_id (const t8_dpyramid_t * p, const int level)
 {
@@ -452,12 +461,7 @@ t8_dpyramid_linear_id (const t8_dpyramid_t * p, const int level)
   t8_dpyramid_copy (p, &copy);
   copy.type = t8_dpyramid_set_type_at_level (p, level);
   copy.level = level;
-  copy.x = (copy.x >> (T8_DPYRAMID_MAXLEVEL - level)) <<
-    (T8_DPYRAMID_MAXLEVEL - level);
-  copy.y = (copy.y >> (T8_DPYRAMID_MAXLEVEL - level)) <<
-    (T8_DPYRAMID_MAXLEVEL - level);
-  copy.z = (copy.z >> (T8_DPYRAMID_MAXLEVEL - level)) <<
-    (T8_DPYRAMID_MAXLEVEL - level);
+  pyramid_cut_coords(&copy, T8_DPYRAMID_MAXLEVEL - level);
 
   for (i = level; i > 0; i--) {
     /* Compute the number of pyramids with level maxlvl that are in a pyramid
@@ -1433,9 +1437,7 @@ t8_dpyramid_successor_recursion (const t8_dpyramid_t * elem,
     t8_dpyramid_successor_recursion (succ, succ, parent, level - 1);
     succ->level = level;
     /* bits auf level auf child 0 setzen */
-    succ->x = (succ->x >> shift) << shift;
-    succ->y = (succ->y >> shift) << shift;
-    succ->z = (succ->z >> shift) << shift;
+    pyramid_cut_coords(succ, shift);
   }
   else {
     /* Not the last element. Compute child with local ID child_id+1 */
