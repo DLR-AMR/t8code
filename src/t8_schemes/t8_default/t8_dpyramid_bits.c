@@ -1083,7 +1083,7 @@ t8_dpyramid_extrude_face (const t8_element_t * face, t8_dpyramid_t * p,
 {
   T8_ASSERT (0 <= root_face && root_face < T8_DPYRAMID_FACES);
 
-  int                 p_face;
+  int                 extruded_face;
   if (root_face == 4) {
     /* Pyramids on the bottom are always type 6 pyramids at the bottom. We need to
      * scale the coordinates, since a quad and a pyra can have different root-len,
@@ -1129,17 +1129,17 @@ t8_dpyramid_extrude_face (const t8_element_t * face, t8_dpyramid_t * p,
     if ((t->y == (t->x & t->y)) && t->type == 0) {
       /*type zero in a pyramid extend to a pyramid */
       p->type = 6;
-      p_face = root_face;
+      extruded_face = root_face;
     }
     else {
       /*type 0 not in a pyramid extend to a tetrahedron */
       p->type = t8_dpyramid_tritype_rootface_to_tettype[t->type][root_face];
-      p_face = t8_dpyramid_tritype_rootface_to_face[t->type][root_face];
+      extruded_face = t8_dpyramid_tritype_rootface_to_face[t->type][root_face];
     }
   }
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
   /*return the face-number of the extruded face */
-  return p_face;
+  return extruded_face;
 }
 
 int
