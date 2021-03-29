@@ -113,6 +113,8 @@ typedef void        (*t8_forest_replace_t) (t8_forest_t forest_old,
  *         smaller zero if the family \a elements shall be coarsened,
  *         zero else.
  */
+/* TODO: Do we really need the forest argument? Since the forest is not committed yet it
+ *       seems dangerous to expose to the user. */
 typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
                                           t8_forest_t forest_from,
                                           t8_locidx_t which_tree,
@@ -132,7 +134,7 @@ typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
  * \param [in,out] pforest      On input, this pointer must be non-NULL.
  *                              On return, this pointer set to the new forest.
  */
-void                t8_forest_init (t8_forest_t * pforest);
+void                t8_forest_init (t8_forest_t *pforest);
 
 /** Check whether a forest is not NULL, initialized and not committed.
  * In addition, it asserts that the forest is consistent as much as possible.
@@ -244,6 +246,7 @@ void                t8_forest_set_copy (t8_forest_t forest,
  * \note This setting may not be combined with \ref t8_forest_set_copy and overwrites
  * this setting.
  */
+/* TODO: make recursive flag to int specifying the number of recursions? */
 void                t8_forest_set_adapt (t8_forest_t forest,
                                          const t8_forest_t set_from,
                                          t8_forest_adapt_t adapt_fn,
@@ -1001,6 +1004,7 @@ t8_forest_t         t8_forest_new_uniform (t8_cmesh_t cmesh,
  * \note This is equivalent to calling \ref t8_forest_init, \ref t8_forest_set_adapt,
  * \red t8_forest_set_ghost, and \ref t8_forest_commit
  */
+/* TODO: make user_data const. */
 t8_forest_t         t8_forest_new_adapt (t8_forest_t forest_from,
                                          t8_forest_adapt_t adapt_fn,
                                          int recursive, int do_face_ghost,
@@ -1023,7 +1027,7 @@ void                t8_forest_ref (t8_forest_t forest);
  *                              Otherwise, the pointer is not changed and
  *                              the forest is not modified in other ways.
  */
-void                t8_forest_unref (t8_forest_t * pforest);
+void                t8_forest_unref (t8_forest_t *pforest);
 
 T8_EXTERN_C_END ();
 
