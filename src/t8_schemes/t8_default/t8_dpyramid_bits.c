@@ -327,8 +327,7 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t * p, const int level,
     p_sum1 = ((t8_linearidx_t) 1) << (3 * level),
     p_sum2 = sc_intpow64u (6, level);
   t8_dpyramid_cube_id_t cube_id;
-  int                 i;
-  int                 offset_coords;
+  int                 i, offset_expo;
 
   T8_ASSERT (0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
   T8_ASSERT (0 <= id && id <= 2 * p_sum1 - p_sum2);
@@ -339,7 +338,7 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t * p, const int level,
   p->z = 0;
   type = 6;                     /*This is the type of the root pyramid */
   for (i = 1; i <= level; i++) {
-    offset_coords = T8_DPYRAMID_MAXLEVEL - i;
+    offset_expo = T8_DPYRAMID_MAXLEVEL - i;
     p_sum1 >>= 3;
     p_sum2 /= 6;
     // Thy types of the tetrahedron children of pyramid are always 0 or 3
@@ -355,10 +354,10 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t * p, const int level,
     cube_id = t8_dpyramid_parenttype_Iloc_to_cid[type][local_index];
     T8_ASSERT (cube_id >= 0);
     /* Set the element in its cube */
-    p->x |= (cube_id % 2 == 1) ? 1 << offset_coords : 0;
+    p->x |= (cube_id % 2 == 1) ? 1 << offset_expo : 0;
     p->y |= (cube_id == 2 || cube_id == 3 || cube_id == 6 || cube_id == 7) ?
-      1 << offset_coords : 0;
-    p->z |= (cube_id > 3) ? 1 << offset_coords : 0;
+      1 << offset_expo : 0;
+    p->z |= (cube_id > 3) ? 1 << offset_expo : 0;
     /*Compute the type */
     type = t8_dpyramid_parenttype_Iloc_to_type[type][local_index];
     T8_ASSERT (type >= 0);
