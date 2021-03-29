@@ -1269,15 +1269,15 @@ int
 t8_dpyramid_is_inside_pyra (const t8_dpyramid_t * p,
                             const t8_dpyramid_t * check)
 {
-  t8_dpyramid_coord_t len = T8_DPYRAMID_LEN (check->level);
+  t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (check->level);
   t8_dpyramid_coord_t diff = p->z - check->z;
 
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
 
   /*test if p is inside check of type 6 */
-  if (((check->x + diff) <= p->x && p->x < (check->x + len)) &&
-      ((check->y + diff) <= p->y && p->y < (check->y + len)) &&
-      (check->z <= p->z && p->z < (check->z + len))) {
+  if (((check->x + diff) <= p->x && p->x < (check->x + length)) &&
+      ((check->y + diff) <= p->y && p->y < (check->y + length)) &&
+      (check->z <= p->z && p->z < (check->z + length))) {
     if ((check->x + diff == p->x && (p->type == 3 || p->type == 1)) ||
         (check->y + diff == p->y && (p->type == 0 || p->type == 2))) {
       /*tet touches face of pyra but is outside of pyra */
@@ -1290,7 +1290,7 @@ t8_dpyramid_is_inside_pyra (const t8_dpyramid_t * p,
   }
   else if ((check->x <= p->x && p->x <= (check->x + diff)) &&
            (check->y <= p->y && p->y <= (check->y + diff)) &&
-           (check->z <= p->z && p->z < (check->z + len))) {
+           (check->z <= p->z && p->z < (check->z + length))) {
     if ((check->x + diff == p->x && (p->type == 0 || p->type == 2)) ||
         (check->y + diff == p->y && (p->type == 3 || p->type == 1))) {
       /*tet touches face of pyra, but is outside of pyra */
