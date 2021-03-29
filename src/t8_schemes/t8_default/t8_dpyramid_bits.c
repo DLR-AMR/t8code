@@ -205,6 +205,8 @@ t8_dpyramid_is_root_boundary (const t8_dpyramid_t * p, const int face)
 {
   T8_ASSERT (0 <= face && face <= T8_DPYRAMID_FACES);
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
+  t8_dpyramid_coord_t   coord_touching_root = T8_DPYRAMID_ROOT_LEN -
+                                   T8_DPYRAMID_LEN (p->level);
   if (!t8_dpyramid_is_inside_root (p)) {
     return 0;
   }
@@ -213,19 +215,19 @@ t8_dpyramid_is_root_boundary (const t8_dpyramid_t * p, const int face)
   case 0:
     return (face == 1 && p->x == p->z) ||
       (face == 0
-       && p->x == T8_DPYRAMID_ROOT_LEN - T8_DPYRAMID_LEN (p->level));
+       && p->x == coord_touching_root);
   case 1:
     return (face == 2 && p->y == p->z) ||
       (face == 0
-       && p->x == T8_DPYRAMID_ROOT_LEN - T8_DPYRAMID_LEN (p->level));
+       && p->x == coord_touching_root);
   case 2:
     return (face == 2 && p->x == p->z) ||
       (face == 0
-       && p->y == T8_DPYRAMID_ROOT_LEN - T8_DPYRAMID_LEN (p->level));
+       && p->y == coord_touching_root);
   case 3:
     return (face == 1 && p->y == p->z) ||
       (face == 0
-       && p->y == T8_DPYRAMID_ROOT_LEN - T8_DPYRAMID_LEN (p->level));
+       && p->y == coord_touching_root);
   case 4:
     return 0;                   /*type 4 tets never touch a root boundary */
   case 5:
@@ -235,11 +237,11 @@ t8_dpyramid_is_root_boundary (const t8_dpyramid_t * p, const int face)
     case 0:
       return p->x == p->z;
     case 1:
-      return p->x == T8_DPYRAMID_ROOT_LEN - T8_DPYRAMID_LEN (p->level);
+      return p->x == coord_touching_root;
     case 2:
       return p->y == p->z;
     case 3:
-      return p->y == T8_DPYRAMID_ROOT_LEN - T8_DPYRAMID_LEN (p->level);
+      return p->y == coord_touching_root;
     case 4:
       return p->z == 0;
     default:
@@ -844,8 +846,9 @@ t8_dpyramid_first_descendant_face (const t8_dpyramid_t * p, const int face,
                                    t8_dpyramid_t * first_desc,
                                    const int level)
 {
-  int                 corner,
-    off_set = T8_DPYRAMID_LEN (p->level) - T8_DPYRAMID_LEN (level);
+  int                   corner;
+  t8_dpyramid_coord_t   off_set = T8_DPYRAMID_LEN (p->level) -
+                                  T8_DPYRAMID_LEN (level);
   T8_ASSERT (0 <= face && face < T8_DPYRAMID_FACES);
   T8_ASSERT (0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
   T8_ASSERT (p->level <= level);
@@ -894,7 +897,7 @@ t8_dpyramid_last_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * desc,
     desc->level = level;
     /* Shift the coords to the eights cube. The type of the last descendant is
      * is the type of the input pyramid*/
-    int                 coord_offset =
+    t8_dpyramid_coord_t coord_offset =
       T8_DPYRAMID_LEN (p->level) - T8_DPYRAMID_LEN (level);
     desc->x |= coord_offset;
     desc->y |= coord_offset;
@@ -917,7 +920,8 @@ t8_dpyramid_last_descendant_face (const t8_dpyramid_t * p,
                                   const int level)
 {
   /*Computation is similar to first-descendant-face */
-  int                 corner, off_set =
+  int                 corner;
+  t8_dpyramid_coord_t off_set =
     T8_DPYRAMID_LEN (p->level) - T8_DPYRAMID_LEN (level);
 
   T8_ASSERT (0 <= face && face < T8_DPYRAMID_FACES);
@@ -1087,8 +1091,8 @@ t8_dpyramid_extrude_face (const t8_element_t * face, t8_dpyramid_t * p,
      * scale the coordinates, since a quad and a pyra can have different root-len,
      * depending on their maxlvl.*/
     p4est_quadrant_t   *q = (p4est_quadrant_t *) face;
-    p->x = ((int64_t) q->x * T8_DPYRAMID_ROOT_LEN) / P4EST_ROOT_LEN;
-    p->y = ((int64_t) q->y * T8_DPYRAMID_ROOT_LEN) / P4EST_ROOT_LEN;
+    p->x = ((t8_dpyramid_coord_t) q->x * T8_DPYRAMID_ROOT_LEN) / P4EST_ROOT_LEN;
+    p->y = ((t8_dpyramid_coord_t) q->y * T8_DPYRAMID_ROOT_LEN) / P4EST_ROOT_LEN;
     p->z = 0;
     p->type = T8_DPYRAMID_ROOT_TPYE;
     p->level = q->level;
@@ -1098,24 +1102,24 @@ t8_dpyramid_extrude_face (const t8_element_t * face, t8_dpyramid_t * p,
     /*t->y gives the height of the pyramid, t->x gives the p->x or p->y, depending on
      * the root_face. The other coordinate is determined by the root_face.*/
     t8_dtri_t          *t = (t8_dtri_t *) face;
-    p->z = ((int64_t) t->y * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+    p->z = ((t8_dpyramid_coord_t) t->y * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
     /* level is the same */
     p->level = t->level;
     switch (root_face) {
     case 0:
       p->x = p->z;
-      p->y = ((int64_t) t->x * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+      p->y = ( t->x * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
       break;
     case 1:
       p->x = T8_DPYRAMID_ROOT_LEN - T8_DPYRAMID_LEN (p->level);
-      p->y = ((int64_t) t->x * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+      p->y = (t->x * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
       break;
     case 2:
-      p->x = ((int64_t) t->x * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+      p->x = ( t->x * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
       p->y = p->z;
       break;
     case 3:
-      p->x = ((int64_t) t->x * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
+      p->x = ( t->x * T8_DPYRAMID_ROOT_LEN) / T8_DTRI_ROOT_LEN;
       p->y = T8_DPYRAMID_ROOT_LEN - T8_DPYRAMID_LEN (p->level);
       break;
     default:
@@ -1180,7 +1184,7 @@ t8_dpyramid_child (const t8_dpyramid_t * elem, const int child_id,
 {
 
   t8_dpyramid_cube_id_t cube_id;
-  t8_dpyramid_coord_t h;
+  t8_dpyramid_coord_t h = T8_DPYRAMID_LEN (elem->level + 1);
   T8_ASSERT (0 <= child_id && child_id < T8_DPYRAMID_CHILDREN);
   T8_ASSERT (0 <= elem->level && elem->level <= T8_DPYRAMID_MAXLEVEL);
 
@@ -1192,7 +1196,6 @@ t8_dpyramid_child (const t8_dpyramid_t * elem, const int child_id,
     cube_id = t8_dpyramid_parenttype_Iloc_to_cid[elem->type][child_id];
     T8_ASSERT (cube_id >= 0);;
     child->level = elem->level + 1;
-    h = T8_DPYRAMID_LEN (child->level);
     child->x = elem->x + ((cube_id & 0x01) ? h : 0);
     child->y = elem->y + ((cube_id & 0x02) ? h : 0);
     child->z = elem->z + ((cube_id & 0x04) ? h : 0);
@@ -1224,8 +1227,7 @@ t8_dpyramid_children_at_face (const t8_dpyramid_t * p, const int face,
     t8_dtet_children_at_face (p, face, children, num_children, child_indices);
   }
   else {
-    int                *child_ids, child_ids_local[T8_DPYRAMID_FACE_CHILDREN],
-      i;
+    int                *child_ids, child_ids_local[T8_DPYRAMID_FACE_CHILDREN], i;
     if (child_indices != NULL) {
       child_ids = child_indices;
     }
@@ -1266,8 +1268,8 @@ int
 t8_dpyramid_is_inside_pyra (const t8_dpyramid_t * p,
                             const t8_dpyramid_t * check)
 {
-  int                 len = T8_DPYRAMID_LEN (check->level);
-  int                 diff = p->z - check->z;
+  t8_dpyramid_coord_t len = T8_DPYRAMID_LEN (check->level);
+  t8_dpyramid_coord_t diff = p->z - check->z;
 
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
 
@@ -1315,6 +1317,7 @@ t8_dpyramid_is_inside_tet (const t8_dpyramid_t * p, const int level,
   T8_ASSERT (t8_dpyramid_shape (p) == T8_ECLASS_TET);
   T8_ASSERT (p->type == 0 || p->type == 3);
   int                 i;
+  t8_dpyramid_coord_t coord_at_level;
   /*the tet is initialized, the ancestor will be computed */
   t8_dtet_t           tet;
   tet.x = 0;
@@ -1322,9 +1325,10 @@ t8_dpyramid_is_inside_tet (const t8_dpyramid_t * p, const int level,
   tet.z = 0;
   for (i = 1; i < level; i++) {
     /*Update the coordinate of tet to i first bits */
-    tet.x = tet.x | (p->x & (1 << (T8_DPYRAMID_MAXLEVEL - i)));
-    tet.y = tet.y | (p->y & (1 << (T8_DPYRAMID_MAXLEVEL - i)));
-    tet.z = tet.z | (p->z & (1 << (T8_DPYRAMID_MAXLEVEL - i)));
+    coord_at_level = (1 << (T8_DPYRAMID_MAXLEVEL - i));
+    tet.x = tet.x | (p->x & coord_at_level);
+    tet.y = tet.y | (p->y & coord_at_level);
+    tet.z = tet.z | (p->z & coord_at_level);
     tet.level = i;
     if (t8_dpyramid_is_inside_pyra (p, &tet) == 0) {
       /*p is inside a tet */
