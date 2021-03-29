@@ -353,8 +353,8 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t * p, const int level, uint64_t id)
     T8_ASSERT (cid >= 0);
     /* Set the element in its cube */
     p->x |= (cid % 2 == 1) ? 1 << offset_coords : 0;
-    p->y |= (cid == 2 || cid == 3 || cid == 6|| cid == 7) ?
-                1 << offset_coords : 0;
+    p->y |= (cid == 2 || cid == 3 || cid == 6 || cid == 7) ?
+      1 << offset_coords : 0;
     p->z |= (cid > 3) ? 1 << offset_coords : 0;
     /*Compute the type */
     type = t8_dpyramid_parenttype_Iloc_to_type[type][local_index];
@@ -371,7 +371,7 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t * p, const int level, uint64_t id)
 int
 t8_dpyramid_set_type_at_level (const t8_dpyramid_t * p, const int level)
 {
-  int                   i, start, type = p->type;
+  int                 i, start, type = p->type;
   t8_dpyramid_cube_id_t cid;
   T8_ASSERT (0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
 
@@ -450,11 +450,11 @@ t8_dpyramid_linear_id (const t8_dpyramid_t * p, const int level)
   copy.type = t8_dpyramid_set_type_at_level (p, level);
   copy.level = level;
   copy.x = (copy.x >> (T8_DPYRAMID_MAXLEVEL - level)) <<
-                        (T8_DPYRAMID_MAXLEVEL - level);
+    (T8_DPYRAMID_MAXLEVEL - level);
   copy.y = (copy.y >> (T8_DPYRAMID_MAXLEVEL - level)) <<
-                        (T8_DPYRAMID_MAXLEVEL - level);
+    (T8_DPYRAMID_MAXLEVEL - level);
   copy.z = (copy.z >> (T8_DPYRAMID_MAXLEVEL - level)) <<
-                        (T8_DPYRAMID_MAXLEVEL - level);
+    (T8_DPYRAMID_MAXLEVEL - level);
 
   for (i = level; i > 0; i--) {
     /* Compute the number of pyramids with level maxlvl that are in a pyramid
@@ -491,7 +491,7 @@ t8_dpyramid_linear_id (const t8_dpyramid_t * p, const int level)
 }
 
 int
-t8_dpyramid_face_neighbour (const t8_dpyramid_t * p, int face,
+t8_dpyramid_face_neighbour (const t8_dpyramid_t * p, const int face,
                             t8_dpyramid_t * neigh)
 {
   T8_ASSERT (0 <= face && face < T8_DPYRAMID_FACES);
@@ -588,7 +588,7 @@ t8_dpyramid_face_neighbour (const t8_dpyramid_t * p, int face,
 }
 
 int
-t8_dpyramid_face_parent_face (const t8_dpyramid_t * elem, int face)
+t8_dpyramid_face_parent_face (const t8_dpyramid_t * elem, const int face)
 {
   t8_dpyramid_t       parent;
   int                 chid;
@@ -665,7 +665,7 @@ t8_dpyramid_face_parent_face (const t8_dpyramid_t * elem, int face)
 }
 
 int
-t8_dpyramid_tet_pyra_face_connection (const t8_dpyramid_t * p, int face)
+t8_dpyramid_tet_pyra_face_connection (const t8_dpyramid_t * p, const int face)
 {
   T8_ASSERT (p->type == 0 || p->type == 3);
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
@@ -690,7 +690,7 @@ t8_dpyramid_tet_pyra_face_connection (const t8_dpyramid_t * p, int face)
 }
 
 int
-t8_dpyramid_tet_boundary (const t8_dpyramid_t * p, int face)
+t8_dpyramid_tet_boundary (const t8_dpyramid_t * p, const int face)
 {
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
   t8_dpyramid_t       anc;
@@ -721,7 +721,7 @@ t8_dpyramid_tet_boundary (const t8_dpyramid_t * p, int face)
 }
 
 int
-t8_dpyramid_tree_face (const t8_dpyramid_t * p, int face)
+t8_dpyramid_tree_face (const t8_dpyramid_t * p, const int face)
 {
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
   if (t8_dpyramid_is_root_boundary (p, face)) {
@@ -779,7 +779,7 @@ t8_dpyramid_is_inside_root (const t8_dpyramid_t * p)
 int
 t8_dpyramid_face_neighbor_inside (const t8_dpyramid_t * p,
                                   t8_dpyramid_t * neigh,
-                                  int face, int *neigh_face)
+                                  const int face, int *neigh_face)
 {
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
   /*Compute the face-neighbor, then check if it is inside root */
@@ -789,7 +789,7 @@ t8_dpyramid_face_neighbor_inside (const t8_dpyramid_t * p,
 
 void
 t8_dpyramid_first_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * desc,
-                              int level)
+                              const int level)
 {
   t8_linearidx_t      id;
   T8_ASSERT (level >= p->level);
@@ -811,7 +811,7 @@ t8_dpyramid_first_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * desc,
   computation of tet, which if different to the linear id for pyras. */
 void
 t8_dpyramid_corner_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * d,
-                               int corner, int level)
+                               const int corner, const int level)
 {
   t8_linearidx_t      child_id;
   int                 i;
@@ -839,8 +839,9 @@ t8_dpyramid_corner_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * d,
 }
 
 void
-t8_dpyramid_first_descendant_face (const t8_dpyramid_t * p, int face,
-                                   t8_dpyramid_t * first_desc, int level)
+t8_dpyramid_first_descendant_face (const t8_dpyramid_t * p, const int face,
+                                   t8_dpyramid_t * first_desc,
+                                   const int level)
 {
   int                 corner,
     off_set = T8_DPYRAMID_LEN (p->level) - T8_DPYRAMID_LEN (level);
@@ -882,7 +883,7 @@ t8_dpyramid_first_descendant_face (const t8_dpyramid_t * p, int face,
 
 void
 t8_dpyramid_last_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * desc,
-                             int level)
+                             const int level)
 {
   t8_linearidx_t      id = 0, t_id;
   int                 exponent;
@@ -911,8 +912,8 @@ t8_dpyramid_last_descendant (const t8_dpyramid_t * p, t8_dpyramid_t * desc,
 
 void
 t8_dpyramid_last_descendant_face (const t8_dpyramid_t * p,
-                                  int face, t8_dpyramid_t * last_desc,
-                                  int level)
+                                  const int face, t8_dpyramid_t * last_desc,
+                                  const int level)
 {
   /*Computation is similar to first-descendant-face */
   int                 corner, off_set =
@@ -1009,7 +1010,7 @@ t8_dpyramid_max_num_faces (const t8_dpyramid_t * p)
 }
 
 void
-t8_dpyramid_boundary_face (const t8_dpyramid_t * p, int face,
+t8_dpyramid_boundary_face (const t8_dpyramid_t * p, const int face,
                            t8_element_t * boundary)
 {
   /*face is face of of p */
@@ -1075,7 +1076,7 @@ t8_dpyramid_boundary_face (const t8_dpyramid_t * p, int face,
 
 int
 t8_dpyramid_extrude_face (const t8_element_t * face, t8_dpyramid_t * p,
-                          int root_face)
+                          const int root_face)
 {
   T8_ASSERT (0 <= root_face && root_face < T8_DPYRAMID_FACES);
 
@@ -1173,7 +1174,7 @@ t8_dpyramid_child_id (const t8_dpyramid_t * p)
 }
 
 void
-t8_dpyramid_child (const t8_dpyramid_t * elem, int child_id,
+t8_dpyramid_child (const t8_dpyramid_t * elem, const int child_id,
                    t8_dpyramid_t * child)
 {
 
@@ -1200,7 +1201,7 @@ t8_dpyramid_child (const t8_dpyramid_t * elem, int child_id,
 }
 
 void
-t8_dpyramid_children (const t8_dpyramid_t * p, int length, t8_dpyramid_t ** c)
+t8_dpyramid_children (const t8_dpyramid_t * p, t8_dpyramid_t ** c)
 {
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
   int                 i, num_children;
@@ -1211,9 +1212,9 @@ t8_dpyramid_children (const t8_dpyramid_t * p, int length, t8_dpyramid_t ** c)
 }
 
 void
-t8_dpyramid_children_at_face (const t8_dpyramid_t * p, int face,
-                              t8_dpyramid_t * children[], int num_children,
-                              int *child_indices)
+t8_dpyramid_children_at_face (const t8_dpyramid_t * p, const int face,
+                              t8_dpyramid_t * children[],
+                              const int num_children, int *child_indices)
 {
   T8_ASSERT (num_children == T8_DPYRAMID_FACE_CHILDREN);
   T8_ASSERT (0 <= face && face < T8_DPYRAMID_FACES);
@@ -1244,8 +1245,8 @@ t8_dpyramid_children_at_face (const t8_dpyramid_t * p, int face,
 }
 
 int
-t8_dpyramid_face_child_face (const t8_dpyramid_t * p, int face,
-                             int face_child)
+t8_dpyramid_face_child_face (const t8_dpyramid_t * p, const int face,
+                             const int face_child)
 {
   T8_ASSERT (0 <= face && face < T8_DPYRAMID_FACES);
   T8_ASSERT (0 <= face_child && face_child < T8_DPYRAMID_CHILDREN);
@@ -1307,7 +1308,7 @@ t8_dpyramid_is_inside_pyra (const t8_dpyramid_t * p,
  * for p.
  * We can store the last tetrahedra ancestor in anc.*/
 int
-t8_dpyramid_is_inside_tet (const t8_dpyramid_t * p, int level,
+t8_dpyramid_is_inside_tet (const t8_dpyramid_t * p, const int level,
                            t8_dpyramid_t * anc)
 {
   T8_ASSERT (t8_dpyramid_shape (p) == T8_ECLASS_TET);
@@ -1358,7 +1359,7 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
   if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID) {
     /*The parent of a pyramid is a pyramid, maybe of different type */
 
-    t8_dpyramid_cube_id_t   cube_id = compute_cubeid (p, p->level);
+    t8_dpyramid_cube_id_t cube_id = compute_cubeid (p, p->level);
 
     parent->type = t8_dpyramid_type_cid_to_parenttype[p->type - 6][cube_id];
     parent->x = p->x & ~h;
@@ -1407,7 +1408,7 @@ t8_dpyramid_shape (const t8_dpyramid_t * p)
 void
 t8_dpyramid_successor_recursion (const t8_dpyramid_t * elem,
                                  t8_dpyramid_t * succ, t8_dpyramid_t * parent,
-                                 int level)
+                                 const int level)
 {
   int                 child_id, num_children;
   t8_dpyramid_copy (elem, succ);
@@ -1441,14 +1442,15 @@ t8_dpyramid_successor_recursion (const t8_dpyramid_t * elem,
 
 void
 t8_dpyramid_successor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
-                       int level)
+                       const int level)
 {
   t8_dpyramid_t       parent;
   t8_dpyramid_successor_recursion (elem, succ, &parent, level);
 }
 
 void
-t8_dpyramid_compute_coords (const t8_dpyramid_t * p, int vertex, int coords[])
+t8_dpyramid_compute_coords (const t8_dpyramid_t * p, const int vertex,
+                            int coords[])
 {
   t8_dpyramid_coord_t h;
   T8_ASSERT (0 <= vertex && vertex < T8_DPYRAMID_CORNERS);
