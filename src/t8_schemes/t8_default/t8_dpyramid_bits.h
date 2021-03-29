@@ -34,7 +34,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] id     Index to be considered.
  * \param [in] level  level of uniform grid to be considered.
  */
-void                t8_dpyramid_init_linear_id (t8_dpyramid_t * p, int level,
+void                t8_dpyramid_init_linear_id (t8_dpyramid_t * p, const int level,
                                                 uint64_t id);
 
 /** Compute the level of a pyramid.
@@ -55,7 +55,7 @@ void                t8_dpyramid_copy (const t8_dpyramid_t * source,
  * \return Returns the linear position of this pyramid on a grid.
  */
 t8_linearidx_t      t8_dpyramid_linear_id (const t8_dpyramid_t * p,
-                                           int level);
+                                           const int level);
 
 /** Compute the childid-th child in Morton order of a pyramid.
  * \param [in] t    Input pyramid.
@@ -133,7 +133,7 @@ int                 t8_dpyramid_is_family (const t8_dpyramid_t ** fam);
  * \return              True, if \a is a subface of the pyramid root element.
  */
 int                 t8_dpyramid_is_root_boundary (const t8_dpyramid_t * p,
-                                                  int face);
+                                                  const int face);
 
 /** Compute the neighbor of p along a given face and the number of the dual face if
  * the neighbor is inside the root pyramid. Return 0 if the neighbor is not inside, 1 ow.
@@ -322,7 +322,7 @@ int                 t8_dpyramid_face_parent_face (const t8_dpyramid_t * elem,
  * \param [in] level The ancestor-level
  * \return          The child-id of the ancestor*/
 int                 t8_dpyramid_ancestor_id (const t8_dpyramid_t * p,
-                                             int level);
+                                             const int level);
 
 /** Returns the shape of the pyramid (pyramid or tetrahedron)
  * \param [in] p    Input pyramid.
