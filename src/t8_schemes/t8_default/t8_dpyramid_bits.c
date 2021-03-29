@@ -1227,21 +1227,22 @@ t8_dpyramid_children_at_face (const t8_dpyramid_t * p, const int face,
     t8_dtet_children_at_face (p, face, children, num_children, child_indices);
   }
   else {
-    int                *child_ids, child_ids_local[T8_DPYRAMID_FACE_CHILDREN], i;
+    int                *children_at_face_id,
+            children_at_face_id_local[T8_DPYRAMID_FACE_CHILDREN], i;
     if (child_indices != NULL) {
-      child_ids = child_indices;
+      children_at_face_id = child_indices;
     }
     else {
-      child_ids = child_ids_local;
+      children_at_face_id = children_at_face_id_local;
     }
     /*Fill the child ids with the child-ids at the face */
     for (i = 0; i < T8_DPYRAMID_FACE_CHILDREN; i++) {
-      child_ids[i] =
+      children_at_face_id[i] =
         t8_dpyramid_type_face_to_children_at_face[p->type - 6][face][i];
     }
     /*Compute the children */
     for (i = T8_DPYRAMID_FACE_CHILDREN - 1; i >= 0; i--) {
-      t8_dpyramid_child (p, child_ids[i], children[i]);
+      t8_dpyramid_child (p, children_at_face_id[i], children[i]);
     }
 
   }
