@@ -594,19 +594,18 @@ int
 t8_dpyramid_face_parent_face (const t8_dpyramid_t * elem, const int face)
 {
   t8_dpyramid_t       parent;
-  int                 chid;
+  int                 child_id;
   T8_ASSERT (0 <= elem->level && elem->level <= T8_DPYRAMID_MAXLEVEL);
   T8_ASSERT (0 <= face && face < T8_DPYRAMID_FACES);
   /*parent is a pyramid */
   if (t8_dpyramid_shape (elem) == T8_ECLASS_PYRAMID) {
-    int                 chid =
-      t8_dpyramid_child_id_unknown_parent (elem, &parent);
+    child_id = t8_dpyramid_child_id_unknown_parent (elem, &parent);
     int                 i;
     /*If the pyramid is one of the children in the array, its face-num and the face-num
      * of the parent are the same*/
     for (i = 0; i < 4; i++) {
       if (t8_dpyramid_type_face_to_children_at_face[parent.type - 6][face][i]
-          == chid) {
+          == child_id) {
         return face;
       }
     }
@@ -614,7 +613,7 @@ t8_dpyramid_face_parent_face (const t8_dpyramid_t * elem, const int face)
     return -1;
   }
   else {
-    chid = t8_dpyramid_child_id_unknown_parent (elem, &parent);
+    child_id = t8_dpyramid_child_id_unknown_parent (elem, &parent);
     /*Parent is also a tet, we can call the tet-routine */
     if (t8_dpyramid_shape (&parent) == T8_ECLASS_TET) {
       return t8_dtet_face_parent_face (elem, face);
@@ -623,40 +622,40 @@ t8_dpyramid_face_parent_face (const t8_dpyramid_t * elem, const int face)
     else {
       /*Only tets of type 0 or 3 have a pyra-parent. Parent can have type 6 or 7 */
       if (elem->type == 0 && parent.type == 6) {
-        if (chid == 3 && face == 1) {
+        if (child_id == 3 && face == 1) {
           return 0;
         }
-        else if (chid == 5 && face == 0) {
+        else if (child_id == 5 && face == 0) {
           return 1;
         }
         else
           return -1;
       }
       else if (elem->type == 3 && parent.type == 6) {
-        if (chid == 1 && face == 1) {
+        if (child_id == 1 && face == 1) {
           return 2;
         }
-        else if (chid == 6 && face == 0) {
+        else if (child_id == 6 && face == 0) {
           return 3;
         }
         else
           return -1;
       }
       else if (elem->type == 0 && parent.type == 7) {
-        if (chid == 1 && face == 3) {
+        if (child_id == 1 && face == 3) {
           return 1;
         }
-        else if (chid == 7 && face == 2) {
+        else if (child_id == 7 && face == 2) {
           return 0;
         }
         else
           return -1;
       }
       else if (elem->type == 3 && parent.type == 7) {
-        if (chid == 2 && face == 3) {
+        if (child_id == 2 && face == 3) {
           return 3;
         }
-        else if (chid == 5 && face == 2) {
+        else if (child_id == 5 && face == 2) {
           return 2;
         }
         else
