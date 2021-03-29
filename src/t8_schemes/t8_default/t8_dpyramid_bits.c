@@ -1427,17 +1427,15 @@ t8_dpyramid_successor_recursion (const t8_dpyramid_t * elem,
   num_children = t8_dpyramid_num_children (parent);
   T8_ASSERT (0 <= child_id && child_id < num_children);
   if (child_id == num_children - 1) {
+    int shift = T8_DPYRAMID_MAXLEVEL - level + 1;
     /* Last-child-case. The successor is the successor of the parent element,
      * but with the given level */
     t8_dpyramid_successor_recursion (succ, succ, parent, level - 1);
     succ->level = level;
     /* bits auf level auf child 0 setzen */
-    succ->x = (succ->x >> (T8_DPYRAMID_MAXLEVEL - level + 1))
-      << (T8_DPYRAMID_MAXLEVEL - level + 1);
-    succ->y = (succ->y >> (T8_DPYRAMID_MAXLEVEL - level + 1))
-      << (T8_DPYRAMID_MAXLEVEL - level + 1);
-    succ->z = (succ->z >> (T8_DPYRAMID_MAXLEVEL - level + 1))
-      << (T8_DPYRAMID_MAXLEVEL - level + 1);
+    succ->x = (succ->x >> shift) << shift;
+    succ->y = (succ->y >> shift) << shift;
+    succ->z = (succ->z >> shift) << shift;
   }
   else {
     /* Not the last element. Compute child with local ID child_id+1 */
