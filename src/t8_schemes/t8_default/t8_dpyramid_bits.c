@@ -1456,35 +1456,35 @@ void
 t8_dpyramid_compute_coords (const t8_dpyramid_t * p, const int vertex,
                             int coords[])
 {
-  t8_dpyramid_coord_t h;
+  t8_dpyramid_coord_t length;
   T8_ASSERT (0 <= vertex && vertex < T8_DPYRAMID_CORNERS);
 
   if (t8_dpyramid_shape (p) == T8_ECLASS_PYRAMID) {
-    h = T8_DPYRAMID_LEN (p->level);
+    length = T8_DPYRAMID_LEN (p->level);
     coords[0] = p->x;
     coords[1] = p->y;
     coords[2] = p->z;
     switch (vertex) {
     case 0:
-      coords[2] += (p->type == 7) ? h : 0;
+      coords[2] += (p->type == 7) ? length : 0;
       break;
     case 1:
       coords[0] += h;
-      coords[2] += (p->type == 7) ? h : 0;
+      coords[2] += (p->type == 7) ? length : 0;
       break;
     case 2:
       coords[1] += h;
-      coords[2] += (p->type == 7) ? h : 0;
+      coords[2] += (p->type == 7) ? length : 0;
       break;
     case 3:
       coords[0] += h;
       coords[1] += h;
-      coords[2] += (p->type == 7) ? h : 0;
+      coords[2] += (p->type == 7) ? length : 0;
       break;
     case 4:
-      coords[0] += (p->type == 6) ? h : 0;
-      coords[1] += (p->type == 6) ? h : 0;
-      coords[2] += (p->type == 6) ? h : 0;
+      coords[0] += (p->type == 6) ? length : 0;
+      coords[1] += (p->type == 6) ? length : 0;
+      coords[2] += (p->type == 6) ? length : 0;
       break;
     }
   }
