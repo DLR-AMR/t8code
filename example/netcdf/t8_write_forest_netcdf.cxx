@@ -19,7 +19,9 @@ t8_example_time_netcdf_writing_operation (t8_forest_t forest,
                                           sc_MPI_Comm comm,
                                           int netcdf_var_storage_mode,
                                           int netcdf_var_mpi_access,
-                                          const char *title)
+                                          const char *title,
+                                          int num_additional_vars,
+                                          t8_netcdf_variable_t * ext_vars[])
 {
 #if T8_WITH_NETCDF
   double              start_time, end_time, duration, global;
@@ -28,8 +30,8 @@ t8_example_time_netcdf_writing_operation (t8_forest_t forest,
   start_time = sc_MPI_Wtime ();
   t8_forest_write_netcdf_ext (forest, title,
                               "Performance Test: uniformly refined Forest", 3,
-                              0, NULL, comm, netcdf_var_storage_mode,
-                              netcdf_var_mpi_access);
+                              num_additional_vars, ext_vars, comm,
+                              netcdf_var_storage_mode, netcdf_var_mpi_access);
 
   sc_MPI_Barrier (comm);
   end_time = sc_MPI_Wtime ();
@@ -42,16 +44,33 @@ t8_example_time_netcdf_writing_operation (t8_forest_t forest,
 #endif
 }
 
-/* Function that stores the given forest in a netCDF-4 File using the different netCDF variable storage and mpi-access patterns */
+/** Function that stores the given forest in a netCDF-4 File using the different netCDF variable storage and mpi-access patterns 
+* \param [in]   forest_refinement_level   The refinement level of the forest.
+* \param [in]   with_additional_data  If two additional variables should be written to the netCDF File =1, if no additional variables should be written =0.
+*/
+
 void
 t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm,
                                                       int
-                                                      forest_refinement_level)
+                                                      forest_refinement_level,
+                                                      int
+                                                      with_additional_data,
+                                                      int mpirank)
 {
 #if T8_WITH_NETCDF
   t8_cmesh_t          cmesh;
   t8_forest_t         forest;
   t8_scheme_cxx_t    *default_scheme;
+  t8_gloidx_t         num_elements;
+  t8_nc_int32_t      *var_rank;
+  double             *random_values;
+  sc_array_t         *var_ranks;
+  sc_array_t         *var_random_values;
+  t8_netcdf_variable_t *ext_var_mpirank;
+  t8_netcdf_variable_t *ext_var_random_values;
+  t8_netcdf_variable_t **ext_vars = new t8_netcdf_variable_t *[2];
+  int                 num_additional_vars = 0;
+  int                 j;
 
   /* Create a default scheme */
   default_scheme = t8_scheme_new_default_cxx ();
@@ -64,40 +83,100 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm,
     t8_forest_new_uniform (cmesh, default_scheme, forest_refinement_level, 0,
                            comm);
 
+  if (with_additional_data) {
+    /* Get the number of process-local elements */
+    num_elements = t8_forest_get_num_element (forest);
+    /* Create an Integer variable (j* MPI_Rank) which holds the rank each element lays on multiplied with j */
+    var_rank = T8_ALLOC (t8_nc_int32_t, num_elements);
+    /* Write out the mpirank of each (process-local) element */
+    for (j = 0; j < num_elements; ++j) {
+      var_rank[j] = mpirank * j;
+    }
+    /* Create a new sc_array_t which provides the data for the NetCDF variables */
+    var_ranks =
+      sc_array_new_data (var_rank, sizeof (t8_nc_int32_t), num_elements);
+    /* Create the integer NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit, pointer to sc_array_t which provides the data) */
+    ext_var_mpirank =
+      t8_netcdf_create_integer_var ("mpirank",
+                                    "Mpirank which the element lays on",
+                                    "integer", var_ranks);
+
+    /* Create a random value variable */
+    random_values = T8_ALLOC (double, num_elements);
+
+    for (j = 0; j < num_elements; ++j) {
+      random_values[j] = rand () / (double) rand ();
+    }
+    /* Create a new sc_array_t which provides the data for the NetCDF variables, in this case just random values */
+    var_random_values =
+      sc_array_new_data (random_values, sizeof (double), num_elements);
+
+    /* Create the integer NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit (i.e. degrees Celsius), pointer to sc_array_t which provides the data) */
+    ext_var_random_values =
+      t8_netcdf_create_double_var ("random values", "Random values in [0,10)",
+                                   "double", var_random_values);
+
+    ext_vars[0] = ext_var_mpirank;
+    ext_vars[1] = ext_var_random_values;
+
+    num_additional_vars = 2;
+  }
+
   t8_global_productionf
     ("The uniformly refined forest (refinement level = %d) has %ld global elements.\n",
      forest_refinement_level, t8_forest_get_global_num_elements (forest));
 
   t8_global_productionf
-    ("The different netCDF variale storage patterns and mpi variable access patterns are getting tested/timed...\n");
+    ("The different netCDF variable storage patterns and mpi variable access patterns are getting tested/timed...\n");
 
   /* First Case */
   t8_global_productionf
     ("Variable-Storage: NC_CHUNKED, Variable-Access: NC_COLLECTIVE:\n");
   t8_example_time_netcdf_writing_operation (forest, comm, NC_CHUNKED,
                                             NC_COLLECTIVE,
-                                            "T8_Example_NetCDF_Performance_Chunked_Collective");
+                                            "T8_Example_NetCDF_Performance_Chunked_Collective",
+                                            num_additional_vars, ext_vars);
 
   /* Second Case */
   t8_global_productionf
     ("Variable-Storage: NC_CHUNKED, Variable-Access: NC_INDEPENDENT:\n");
   t8_example_time_netcdf_writing_operation (forest, comm, NC_CHUNKED,
                                             NC_INDEPENDENT,
-                                            "T8_Example_NetCDF_Performance_Chunked_Independent");
+                                            "T8_Example_NetCDF_Performance_Chunked_Independent",
+                                            num_additional_vars, ext_vars);
 
   /* Third Case */
   t8_global_productionf
     ("Variable-Storage: NC_CONTIGUOUS, Variable-Access: NC_COLLECTIVE:\n");
   t8_example_time_netcdf_writing_operation (forest, comm, NC_CONTIGUOUS,
                                             NC_COLLECTIVE,
-                                            "T8_Example_NetCDF_Performance_Contiguous_Collective");
+                                            "T8_Example_NetCDF_Performance_Contiguous_Collective",
+                                            num_additional_vars, ext_vars);
 
   /* Fourth Case */
   t8_global_productionf
     ("Variable-Storage: NC_CONTIGUOUS, Variable-Access: NC_INDEPENDENT:\n");
   t8_example_time_netcdf_writing_operation (forest, comm, NC_CONTIGUOUS,
                                             NC_INDEPENDENT,
-                                            "T8_Example_NetCDF_Performance_Contiguous_Independent");
+                                            "T8_Example_NetCDF_Performance_Contiguous_Independent",
+                                            num_additional_vars, ext_vars);
+
+  if (with_additional_data) {
+    /* Free the allocated array of pointers to extern NetCDF-variables */
+    delete[]ext_vars;
+
+    /* Free the allocated memory of the extern NetCDF-variables which was created by calling the 'destroy' function */
+    t8_netcdf_variable_destroy (ext_var_mpirank);
+    t8_netcdf_variable_destroy (ext_var_random_values);
+
+    /* Destroy the allocated sc_array_t */
+    sc_array_destroy (var_ranks);
+    sc_array_destroy (var_random_values);
+
+    /* Free the data of the user-defined variable */
+    T8_FREE (var_rank);
+    T8_FREE (random_values);
+  }
 
   /* Destroy the forest */
   t8_forest_unref (&forest);
@@ -213,6 +292,8 @@ main (int argc, char **argv)
 {
 #if T8_WITH_NETCDF
   int                 mpiret, mpisize, mpirank;
+  int                 time_with_additional_data = 1;
+  int                 forest_refinement_level = 4;
 
   /* Initialize MPI */
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -232,7 +313,10 @@ main (int argc, char **argv)
   t8_example_netcdf_write_forest (sc_MPI_COMM_WORLD, mpirank);
 
   /* This functions times the different performances of the available variable storage and mpi access patterns */
-  t8_example_compare_performance_netcdf_var_properties (sc_MPI_COMM_WORLD, 3);
+  t8_example_compare_performance_netcdf_var_properties (sc_MPI_COMM_WORLD,
+                                                        forest_refinement_level,
+                                                        time_with_additional_data,
+                                                        mpirank);
 
   /* Finalize sc */
   sc_finalize ();
