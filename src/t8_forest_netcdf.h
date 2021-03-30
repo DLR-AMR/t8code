@@ -42,6 +42,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]  comm The sc_MPI_Communicator to use.
  * \param [in]  netcdf_var_storage_mode This defines whether the variables in the netCDF-4 File are stored contiguously (NC_CONTIGUOUS) or in chunks (NC_CHUNKED (in this case netCDF's default chunking scheme is used)).
  * \param [in]  netcdf_var_mpi_access This defines whether the mpi processes are writing the variables' data collectively or independently.
+ * \note Only use this extended version of \ref t8_forest_write_netcdf if you know exactly what you are doing. In all other cases, we recommend using \ref t8_forest_write_netcdf instead.
  */
 void                t8_forest_write_netcdf_ext (t8_forest_t forest,
                                                 const char *file_prefix,
