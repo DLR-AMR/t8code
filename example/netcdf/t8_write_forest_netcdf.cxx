@@ -48,7 +48,6 @@ t8_example_time_netcdf_writing_operation (t8_forest_t forest,
 * \param [in]   forest_refinement_level   The refinement level of the forest.
 * \param [in]   with_additional_data  If two additional variables should be written to the netCDF File =1, if no additional variables should be written =0.
 */
-
 void
 t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm,
                                                       int
@@ -62,7 +61,7 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm,
   t8_forest_t         forest;
   t8_scheme_cxx_t    *default_scheme;
   t8_gloidx_t         num_elements;
-  t8_nc_int32_t      *var_rank;
+  t8_nc_int64_t      *var_rank;
   double             *random_values;
   sc_array_t         *var_ranks;
   sc_array_t         *var_random_values;
@@ -86,16 +85,16 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm,
   if (with_additional_data) {
     /* Get the number of process-local elements */
     num_elements = t8_forest_get_num_element (forest);
-    /* Create an Integer variable (j* MPI_Rank) which holds the rank each element lays on multiplied with j */
-    var_rank = T8_ALLOC (t8_nc_int32_t, num_elements);
+    /* Create an 64-bit Integer variable (j* MPI_Rank) which holds the rank each element lays on multiplied with j */
+    var_rank = T8_ALLOC (t8_nc_int64_t, num_elements);
     /* Write out the mpirank of each (process-local) element */
     for (j = 0; j < num_elements; ++j) {
       var_rank[j] = mpirank * j;
     }
     /* Create a new sc_array_t which provides the data for the NetCDF variables */
     var_ranks =
-      sc_array_new_data (var_rank, sizeof (t8_nc_int32_t), num_elements);
-    /* Create the integer NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit, pointer to sc_array_t which provides the data) */
+      sc_array_new_data (var_rank, sizeof (t8_nc_int64_t), num_elements);
+    /* Create the 64-bit integer NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit, pointer to sc_array_t which provides the data) */
     ext_var_mpirank =
       t8_netcdf_create_integer_var ("mpirank",
                                     "Mpirank which the element lays on",
@@ -111,7 +110,7 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm,
     var_random_values =
       sc_array_new_data (random_values, sizeof (double), num_elements);
 
-    /* Create the integer NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit (i.e. degrees Celsius), pointer to sc_array_t which provides the data) */
+    /* Create the double NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit (i.e. degrees Celsius), pointer to sc_array_t which provides the data) */
     ext_var_random_values =
       t8_netcdf_create_double_var ("random values", "Random values in [0,10)",
                                    "double", var_random_values);
@@ -250,7 +249,7 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int mpirank)
   var_random_values =
     sc_array_new_data (random_values, sizeof (double), num_elements);
 
-  /* Create the integer NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit (i.e. degrees Celsius), pointer to sc_array_t which provides the data) */
+  /* Create the double NetCDF variable; parameters are (name of the variable, descriptive long name of the variable, description of the data's unit (i.e. degrees Celsius), pointer to sc_array_t which provides the data) */
   ext_var_random_values =
     t8_netcdf_create_double_var ("random values", "Random values in [0,10)",
                                  "double", var_random_values);
