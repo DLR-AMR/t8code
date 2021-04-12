@@ -54,65 +54,87 @@ test_cmesh_committed (t8_cmesh_t cmesh)
 
 
 /* The functions t8_get_*_cmesh_testcases return the number of 
- * testcases for a given cmesh type. */
+ * testcases for a given cmesh type. To get all possible inputs, we multiply 
+ * the number of different inputs of all variables. The function t8_get_comm_only_cmesh_testcases()
+ * returns the number of testcases for all cmeshes that only take a comm as input all added together. */
 static  int  t8_get_comm_only_cmesh_testcases()
 {
-  /* Number of functions that only take communicator as input * Number of communicators */
+  /* Number of testcases = Number of functions that only take communicator as input * Number of communicators */
   return T8_CMESH_NUM_ONLY_COMM_FUNC*T8_CMESH_TEST_NUM_COMMS;
 }
 
+/* The function t8_get_new_hypercube_cmesh_testcases() returns the number of testcases for 
+ * the hypercube cmesh. */
 static  int  t8_get_new_hypercube_cmesh_testcases()
 {
-  /* number of element types * number of comm * 3 T8_CMESH_BINARY variables(do_bcast, 
-   * do_partition,periodic) */
+  /* Number of testcases = number of element types * number of comm * 
+   * 3 T8_CMESH_BINARY variables(do_bcast, do_partition,periodic) */
   return T8_ECLASS_COUNT*T8_CMESH_TEST_NUM_COMMS*T8_CMESH_BINARY*T8_CMESH_BINARY*T8_CMESH_BINARY;
 }
 
+/* The function t8_get_new_empty_cmesh_testcases() returns the number of testcases for 
+ * the empty cmesh. */
 static  int  t8_get_new_empty_cmesh_testcases()
 {
-  /* number of comm* 1 binary (do_partition)* possible dimensions(check dim 0 to 4)*/
+  /* Number of testcases = number of comm * 1 binary (do_partition)* possible dimensions(check dim 0 to 4)*/
   return T8_CMESH_TEST_NUM_COMMS*T8_CMESH_BINARY*T8_CMESH_DIM_RANGE_EMPTY;
 }
 
+/* The function t8_get_new_from_class_cmesh_testcases() returns the number of testcases for 
+ * the new_from_class cmesh. */
 static  int  t8_get_new_from_class_cmesh_testcases()
 {
-  /* number of element types * number of comm */
+  /* Number of testcases = number of element types * number of comm */
   return T8_ECLASS_COUNT*T8_CMESH_TEST_NUM_COMMS;
 }
 
+/* The function t8_get_new_hypercube_hybrid_cmesh_testcases() returns the number of testcases for 
+ * the new_hypercube_hybrid cmesh. */
 static  int  t8_get_new_hypercube_hybrid_cmesh_testcases()
 {
-  /* possible dim * number of comm*2 binary variables(do_partition,periodic) */
+  /* Number of testcases = possible dim * number of comm*2 binary variables(do_partition,periodic) */
   return T8_CMESH_TEST_DIMS*T8_CMESH_TEST_NUM_COMMS*T8_CMESH_BINARY*T8_CMESH_BINARY;
 }
 
+/* The function t8_get_new_periodic_cmesh_testcases() returns the number of testcases for 
+ * the new_periodic cmesh. */
 static  int t8_get_new_periodic_cmesh_testcases()
 {
-  /*  number of comm * possible dim */
+  /* Number of testcases = number of comm * possible dim */
   return T8_CMESH_TEST_NUM_COMMS*T8_CMESH_TEST_DIMS;
 }
 
+/* The function t8_get_new_bigmesh_cmesh_testcases() returns the number of testcases for 
+ * the new_bigmesh cmesh. */
 static  int  t8_get_new_bigmesh_cmesh_testcases()
 {
-  /*  number of element types * number of trees * number of comm */
+  /* Number of testcases = number of element types * number of trees * number of comm */
   return T8_ECLASS_COUNT*T8_CMESH_MAX_NUM_OF_TREES*T8_CMESH_TEST_NUM_COMMS;
 }
 
+/* The function t8_get_new_prism_cake_cmesh_testcases() returns the number of testcases for 
+ * the new_prism_cake cmesh. */
 static  int  t8_get_new_prism_cake_cmesh_testcases()
 {
-  /*  number of comm * number of prisms */
+  /* Number of testcases = number of comm * number of prisms */
   return T8_CMESH_TEST_NUM_COMMS*T8_CMESH_MAX_NUM_OF_PRISMS;
 }
 
+/* The function t8_get_new_disjoint_bricks_cmesh_testcases() returns the number of testcases for 
+ * the new_disjoint_bricks cmesh. */
 static  int t8_get_new_disjoint_bricks_cmesh_testcases()
 {
-  /*  TO DO: add comment*/
+  /* Number of testcases = num trees in x direction * num trees in y direction * num trees in z direction 
+   * 3 binary variables (x_periodic, y_periodic, z_periodic)*num of comm */
   return T8_CMESH_MAX_NUM_XYZ_TREES*T8_CMESH_MAX_NUM_XYZ_TREES*T8_CMESH_MAX_NUM_XYZ_TREES*T8_CMESH_BINARY*T8_CMESH_BINARY*T8_CMESH_BINARY*T8_CMESH_TEST_NUM_COMMS;
 }
 
+/* The function t8_get_all_testcases() returns the number of testcases for 
+ * all cmesh types. We need to know this, because test_cmesh_copy_all needs to know how 
+ * many ids to check. */
 static int t8_get_all_testcases()
 {
-  /* The number of all tests for all cmesh types.*/
+  /* The number of all tests for all cmesh types is the sum of all individual testcase numbers.*/
   return (t8_get_comm_only_cmesh_testcases()+t8_get_new_hypercube_cmesh_testcases()
          +t8_get_new_empty_cmesh_testcases()+t8_get_new_from_class_cmesh_testcases()
          +t8_get_new_hypercube_hybrid_cmesh_testcases()+t8_get_new_periodic_cmesh_testcases()
@@ -120,7 +142,12 @@ static int t8_get_all_testcases()
          +t8_get_new_disjoint_bricks_cmesh_testcases());
 }
 
+/* The functions t8_test_create_*_cmesh create a cmesh of a given type with a unique input depending on the id. */
 
+
+/* The function t8_test_create_comm_only_cmesh(int cmesh_id) returns the wanted cmesh with the wanted comm for the given id. 
+ * The comm is taken from the t8_comm_list. The switch inside t8_test_create_comm_only_cmesh(int cmesh_id)
+ * chooses the function. */
 static              t8_cmesh_t
 t8_test_create_comm_only_cmesh(int cmesh_id)
 {
@@ -150,6 +177,8 @@ t8_test_create_comm_only_cmesh(int cmesh_id)
   }
 }
 
+/* The function t8_test_create_new_hypercube_cmesh(int cmesh_id) returns a new hypercube cmesh with a unique input for every given id. 
+ * The comm is taken from the t8_comm_list. */
 static              t8_cmesh_t
 t8_test_create_new_hypercube_cmesh(int cmesh_id)
 {
@@ -161,6 +190,8 @@ t8_test_create_new_hypercube_cmesh(int cmesh_id)
   return t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition, periodic);
 }
 
+/* The function t8_test_create_new_empty_cmesh(int cmesh_id) returns a new empty cmesh with a unique input for every given id. 
+ * The comm is taken from the t8_comm_list. */
 static              t8_cmesh_t
 t8_test_create_new_empty_cmesh(int cmesh_id)
 {
@@ -170,6 +201,8 @@ t8_test_create_new_empty_cmesh(int cmesh_id)
   return t8_cmesh_new_empty (comm, do_partition, dim);
 }
 
+/* The function t8_test_create_new_from_class_cmesh(int cmesh_id) returns a new create_new_from_class cmesh with a unique input for every given id. 
+ * The comm is taken from the t8_comm_list. */
 static              t8_cmesh_t
 t8_test_create_new_from_class_cmesh(int cmesh_id)
 {
@@ -178,6 +211,8 @@ t8_test_create_new_from_class_cmesh(int cmesh_id)
   return t8_cmesh_new_from_class (eclass, comm);
 }
 
+/* The function t8_test_create_new_hypercube_hybrid_cmesh(int cmesh_id) returns a new_hypercube_hybrid cmesh with a unique input for every given id. 
+ * The comm is taken from the t8_comm_list. */
 static              t8_cmesh_t
 t8_test_create_new_hypercube_hybrid_cmesh(int cmesh_id)
 {
@@ -188,7 +223,8 @@ t8_test_create_new_hypercube_hybrid_cmesh(int cmesh_id)
   return t8_cmesh_new_hypercube_hybrid (dim, comm, do_partition, periodic);
 }
 
-
+/* The function t8_test_create_new_periodic_cmesh(int cmesh_id) returns a new_periodic cmesh with a unique input for every given id. 
+ * The comm is taken from the t8_comm_list. */
 static              t8_cmesh_t
 t8_test_create_new_periodic_cmesh(int cmesh_id)
 {
@@ -265,11 +301,11 @@ t8_test_create_cmesh(int cmesh_id)
   if(0<=cmesh_id && cmesh_id <t8_get_new_disjoint_bricks_cmesh_testcases()){
     return t8_test_create_new_disjoint_bricks_cmesh(cmesh_id);
   }
-  else{
-    return t8_test_create_comm_only_cmesh(cmesh_id);
-  }
+  return t8_test_create_comm_only_cmesh(cmesh_id);
 }
 
+/* The function test_cmesh_copy (int cmesh_id,sc_MPI_Comm comm) runs the cmesh_copy test for one given cmesh,
+ * that we get through its id by caling t8_test_create_cmesh (cmesh_id). */
 static void
 test_cmesh_copy (int cmesh_id,sc_MPI_Comm comm)
 {
@@ -295,6 +331,8 @@ test_cmesh_copy (int cmesh_id,sc_MPI_Comm comm)
       t8_cmesh_destroy (&cmesh_original);
 }
 
+/* The function test_cmesh_copy_all(sc_MPI_Comm comm) runs the cmesh_copy test for all cmeshes we want to test.
+ * We run over all testcases using t8_get_all_testcases() to know how many to check. */
 static void
 test_cmesh_copy_all(sc_MPI_Comm comm)
 {
