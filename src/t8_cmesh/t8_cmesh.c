@@ -2771,20 +2771,21 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
       }
     }
   }
-  vertices[126] = cos (300 * M_PI / 180);
-  vertices[127] = sin (300 * M_PI / 180);
+
+  vertices[126] = 1;
+  vertices[127] = 0;
   vertices[128] = 1;
-  vertices[129] = 1;
-  vertices[130] = 0;
+  vertices[129] = cos (300 * M_PI / 180);
+  vertices[130] = sin (300 * M_PI / 180);
   vertices[131] = 1;
   vertices[132] = cos (300 * M_PI / 180) + 1;
   vertices[133] = sin (300 * M_PI / 180);
   vertices[134] = 1;
-  vertices[135] = cos (300 * M_PI / 180);
-  vertices[136] = sin (300 * M_PI / 180);
+  vertices[135] = 1;
+  vertices[136] = 0;
   vertices[137] = 2;
-  vertices[138] = 1;
-  vertices[139] = 0;
+  vertices[138] = cos (300 * M_PI / 180);
+  vertices[139] = sin (300 * M_PI / 180);
   vertices[140] = 2;
   vertices[141] = cos (300 * M_PI / 180) + 1;
   vertices[142] = sin (300 * M_PI / 180);
