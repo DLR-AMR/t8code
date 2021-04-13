@@ -20,12 +20,13 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/* ,sc_MPI_COMM_NULL*/
 #include <t8_cmesh.h>
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_partition.h"
 
-#define T8_CMESH_TEST_NUM_COMMS 3
-sc_MPI_Comm  t8_comm_list[T8_CMESH_TEST_NUM_COMMS]={sc_MPI_COMM_WORLD,sc_MPI_COMM_SELF,sc_MPI_COMM_NULL};
+#define T8_CMESH_TEST_NUM_COMMS 2
+sc_MPI_Comm  t8_comm_list[T8_CMESH_TEST_NUM_COMMS]={sc_MPI_COMM_WORLD,sc_MPI_COMM_SELF};
 #define T8_CMESH_TEST_DIMS 3
 #define T8_CMESH_MIN_DIM 1
 #define T8_CMESH_DIM_RANGE_EMPTY 5
@@ -198,6 +199,7 @@ t8_test_create_new_empty_cmesh(int cmesh_id)
   sc_MPI_Comm comm = t8_comm_list[((cmesh_id/(T8_CMESH_BINARY*T8_CMESH_DIM_RANGE_EMPTY))%T8_CMESH_TEST_NUM_COMMS)];
   int do_partition = (cmesh_id/T8_CMESH_DIM_RANGE_EMPTY)%T8_CMESH_BINARY;
   int dim = cmesh_id % T8_CMESH_DIM_RANGE_EMPTY;
+  t8_debugf("Creating new empty cmesh. do_partition=%i, dim=%i \n", do_partition, dim);
   return t8_cmesh_new_empty (comm, do_partition, dim);
 }
 
@@ -337,7 +339,7 @@ static void
 test_cmesh_copy_all(sc_MPI_Comm comm)
 {
   /* Test all cmeshes over all different inputs we get through their id */
-  for (int cmesh_id = 0; cmesh_id < t8_get_all_testcases(); cmesh_id++) {
+  for (int cmesh_id = 80; cmesh_id < t8_get_all_testcases(); cmesh_id++) {
     test_cmesh_copy (cmesh_id,comm);
   }
 }
