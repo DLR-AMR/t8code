@@ -2722,6 +2722,12 @@ t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_Comm comm)
   return cmesh;
 }
 
+/* Creates a mesh consisting of 8 prisms. The first 6 prisms are constructed, by
+ * approximating the first 3 chunks of 60 degrees of the unit-circle via prisms.
+ * The next four prisms use the same principle, but are shifted by one along the
+ * z-axis. The first of these prisms is connected to the third prism via its tri-
+ * angular bottom. The last prisms is out of this circle. Some prisms are rotated,
+ * such that we get a variaty of face-connections. */
 t8_cmesh_t
 t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
 {
@@ -2729,7 +2735,7 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
   /*8 Prism a 6 vertices a 3 coords */
   double              vertices[144];
   t8_cmesh_t          cmesh;
-
+  /*The first three prisms */
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 6; j++) {
       /*Get the edges at the unit circle */
@@ -2750,6 +2756,7 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
       }
     }
   }
+  /*Four prisms, bottom starts at z = 1 */
   for (i = 2; i < 6; i++) {
     for (j = 0; j < 6; j++) {
       /*Get the edges at the unit circle */
@@ -2771,24 +2778,26 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
       }
     }
   }
-  vertices[126] = cos (300 * M_PI / 180);
-  vertices[127] = sin (300 * M_PI / 180);
+  /*The last prism, breaking out of the unit-circle */
+  vertices[126] = 1;
+  vertices[127] = 0;
   vertices[128] = 1;
-  vertices[129] = 1;
-  vertices[130] = 0;
+  vertices[129] = cos (300 * M_PI / 180);
+  vertices[130] = sin (300 * M_PI / 180);
   vertices[131] = 1;
   vertices[132] = cos (300 * M_PI / 180) + 1;
   vertices[133] = sin (300 * M_PI / 180);
   vertices[134] = 1;
-  vertices[135] = cos (300 * M_PI / 180);
-  vertices[136] = sin (300 * M_PI / 180);
+  vertices[135] = 1;
+  vertices[136] = 0;
   vertices[137] = 2;
-  vertices[138] = 1;
-  vertices[139] = 0;
+  vertices[138] = cos (300 * M_PI / 180);
+  vertices[139] = sin (300 * M_PI / 180);
   vertices[140] = 2;
   vertices[141] = cos (300 * M_PI / 180) + 1;
   vertices[142] = sin (300 * M_PI / 180);
   vertices[143] = 2;
+  /*Rotate the second, third and the fifth prism */
   prism_rotate (vertices + 18, 2);
   prism_rotate (vertices + 36, 1);
   prism_rotate (vertices + 72, 2);
