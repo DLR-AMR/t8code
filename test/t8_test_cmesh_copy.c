@@ -26,13 +26,9 @@
 #include <t8_eclass.h>
 
 #define T8_CMESH_TEST_NUM_COMMS 2
-sc_MPI_Comm         t8_comm_list[T8_CMESH_TEST_NUM_COMMS] =
-  { sc_MPI_COMM_WORLD, sc_MPI_COMM_SELF };
-char                t8_comm_string_list[2][18] =
-  { "sc_MPI_COMM_WORLD", "sc_MPI_COMM_SELF" };
 #define T8_CMESH_TEST_DIMS 3
 #define T8_CMESH_MIN_DIM 1
-#define T8_CMESH_DIM_RANGE_EMPTY 5
+#define T8_CMESH_DIM_RANGE_EMPTY 4
 #define T8_CMESH_DIM_RANGE_HYPERCUBE_HYBRID 4
 #define T8_CMESH_BINARY 2
 #define T8_CMESH_MAX_NUM_OF_TREES 100
@@ -40,6 +36,10 @@ char                t8_comm_string_list[2][18] =
 #define T8_CMESH_MIN_NUM_OF_PRISMS 3
 #define T8_CMESH_MAX_NUM_XYZ_TREES 20
 #define T8_CMESH_NUM_ONLY_COMM_FUNC 10
+sc_MPI_Comm         t8_comm_list[T8_CMESH_TEST_NUM_COMMS] =
+  { sc_MPI_COMM_WORLD, sc_MPI_COMM_SELF };
+char                t8_comm_string_list[2][18] =
+  { "sc_MPI_COMM_WORLD", "sc_MPI_COMM_SELF" };
 
 /* Test if a cmesh is committed properly and perform the
  * face consistency check. */
@@ -60,7 +60,7 @@ test_cmesh_committed (t8_cmesh_t cmesh)
  * the number of different inputs of all variables. The function t8_get_comm_only_cmesh_testcases()
  * returns the number of testcases for all cmeshes that only take a comm as input all added together. */
 static int
-t8_get_comm_only_cmesh_testcases ()
+t8_get_number_of_comm_only_cmesh_testcases ()
 {
   /* Number of testcases = Number of functions that only take communicator as input * Number of communicators */
   return T8_CMESH_NUM_ONLY_COMM_FUNC * T8_CMESH_TEST_NUM_COMMS;
@@ -69,7 +69,7 @@ t8_get_comm_only_cmesh_testcases ()
 /* The function t8_get_new_hypercube_cmesh_testcases() returns the number of testcases for 
  * the hypercube cmesh. */
 static int
-t8_get_new_hypercube_cmesh_testcases ()
+t8_get_number_of_new_hypercube_cmesh_testcases ()
 {
   /* Number of testcases = number of element types * number of comm * 
    * 3 T8_CMESH_BINARY variables(do_bcast, do_partition,periodic) */
@@ -80,7 +80,7 @@ t8_get_new_hypercube_cmesh_testcases ()
 /* The function t8_get_new_empty_cmesh_testcases() returns the number of testcases for 
  * the empty cmesh. */
 static int
-t8_get_new_empty_cmesh_testcases ()
+t8_get_number_of_new_empty_cmesh_testcases ()
 {
   /* Number of testcases = number of comm * 1 binary (do_partition)* possible dimensions(check dim 0 to 4) */
   return T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY * T8_CMESH_DIM_RANGE_EMPTY;
@@ -89,7 +89,7 @@ t8_get_new_empty_cmesh_testcases ()
 /* The function t8_get_new_from_class_cmesh_testcases() returns the number of testcases for 
  * the new_from_class cmesh. */
 static int
-t8_get_new_from_class_cmesh_testcases ()
+t8_get_number_of_new_from_class_cmesh_testcases ()
 {
   /* Number of testcases = number of element types * number of comm */
   return T8_ECLASS_COUNT * T8_CMESH_TEST_NUM_COMMS;
@@ -98,7 +98,7 @@ t8_get_new_from_class_cmesh_testcases ()
 /* The function t8_get_new_hypercube_hybrid_cmesh_testcases() returns the number of testcases for 
  * the new_hypercube_hybrid cmesh. */
 static int
-t8_get_new_hypercube_hybrid_cmesh_testcases ()
+t8_get_number_of_new_hypercube_hybrid_cmesh_testcases ()
 {
   /* Number of testcases = possible dim * number of comm*2 binary variables(do_partition,periodic) */
   return T8_CMESH_TEST_DIMS * T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY *
@@ -108,7 +108,7 @@ t8_get_new_hypercube_hybrid_cmesh_testcases ()
 /* The function t8_get_new_periodic_cmesh_testcases() returns the number of testcases for 
  * the new_periodic cmesh. */
 static int
-t8_get_new_periodic_cmesh_testcases ()
+t8_get_number_of_new_periodic_cmesh_testcases ()
 {
   /* Number of testcases = number of comm * possible dim */
   return T8_CMESH_TEST_NUM_COMMS * T8_CMESH_TEST_DIMS;
@@ -117,7 +117,7 @@ t8_get_new_periodic_cmesh_testcases ()
 /* The function t8_get_new_bigmesh_cmesh_testcases() returns the number of testcases for 
  * the new_bigmesh cmesh. */
 static int
-t8_get_new_bigmesh_cmesh_testcases ()
+t8_get_number_of_new_bigmesh_cmesh_testcases ()
 {
   /* Number of testcases = number of element types * number of trees * number of comm */
   return T8_ECLASS_COUNT * T8_CMESH_MAX_NUM_OF_TREES *
@@ -127,7 +127,7 @@ t8_get_new_bigmesh_cmesh_testcases ()
 /* The function t8_get_new_prism_cake_cmesh_testcases() returns the number of testcases for 
  * the new_prism_cake cmesh. */
 static int
-t8_get_new_prism_cake_cmesh_testcases ()
+t8_get_number_of_new_prism_cake_cmesh_testcases ()
 {
   /* Number of testcases = number of comm * number of prisms */
   return T8_CMESH_TEST_NUM_COMMS * T8_CMESH_MAX_NUM_OF_PRISMS;
@@ -136,7 +136,7 @@ t8_get_new_prism_cake_cmesh_testcases ()
 /* The function t8_get_new_disjoint_bricks_cmesh_testcases() returns the number of testcases for 
  * the new_disjoint_bricks cmesh. */
 static int
-t8_get_new_disjoint_bricks_cmesh_testcases ()
+t8_get_number_of_new_disjoint_bricks_cmesh_testcases ()
 {
   /* Number of testcases = num trees in x direction * num trees in y direction * num trees in z direction 
    * 3 binary variables (x_periodic, y_periodic, z_periodic)*num of comm */
@@ -149,18 +149,18 @@ t8_get_new_disjoint_bricks_cmesh_testcases ()
  * all cmesh types. We need to know this, because test_cmesh_copy_all needs to know how 
  * many ids to check. */
 static int
-t8_get_all_testcases ()
+t8_get_number_of_all_testcases ()
 {
   /* The number of all tests for all cmesh types is the sum of all individual testcase numbers. */
-  return (t8_get_comm_only_cmesh_testcases () +
-          t8_get_new_hypercube_cmesh_testcases ()
-          + t8_get_new_empty_cmesh_testcases () +
-          t8_get_new_from_class_cmesh_testcases ()
-          + t8_get_new_hypercube_hybrid_cmesh_testcases () +
-          t8_get_new_periodic_cmesh_testcases ()
-          + t8_get_new_bigmesh_cmesh_testcases () +
-          t8_get_new_prism_cake_cmesh_testcases ()
-          + t8_get_new_disjoint_bricks_cmesh_testcases ());
+  return (t8_get_number_of_comm_only_cmesh_testcases () +
+          t8_get_number_of_new_hypercube_cmesh_testcases ()
+          + t8_get_number_of_new_empty_cmesh_testcases () +
+          t8_get_number_of_new_from_class_cmesh_testcases ()
+          + t8_get_number_of_new_hypercube_hybrid_cmesh_testcases () +
+          t8_get_number_of_new_periodic_cmesh_testcases ()
+          + t8_get_number_of_new_bigmesh_cmesh_testcases () +
+          t8_get_number_of_new_prism_cake_cmesh_testcases ()
+          + t8_get_number_of_new_disjoint_bricks_cmesh_testcases ());
 }
 
 /* The functions t8_test_create_*_cmesh create a cmesh of a given type with a unique input depending on the cmesh_id. */
@@ -226,25 +226,28 @@ t8_test_create_comm_only_cmesh (int cmesh_id)
 static              t8_cmesh_t
 t8_test_create_new_hypercube_cmesh (int cmesh_id)
 {
+  int                 comm_num = (cmesh_id /
+                                  (T8_CMESH_BINARY * T8_CMESH_BINARY *
+                                   T8_CMESH_BINARY)) %
+    (T8_CMESH_TEST_NUM_COMMS);
   t8_eclass_t         eclass =
     (cmesh_id /
      (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY * T8_CMESH_BINARY *
       T8_CMESH_BINARY)) % (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY *
                            T8_CMESH_BINARY * T8_CMESH_BINARY);
-  sc_MPI_Comm         comm =
-    t8_comm_list[(cmesh_id /
-                  (T8_CMESH_BINARY * T8_CMESH_BINARY * T8_CMESH_BINARY)) %
-                 (T8_CMESH_BINARY * T8_CMESH_BINARY)];
+  sc_MPI_Comm         comm = t8_comm_list[comm_num];
   int                 do_bcast =
-    (cmesh_id % T8_CMESH_BINARY * T8_CMESH_BINARY * T8_CMESH_BINARY) /
+    (cmesh_id % (T8_CMESH_BINARY * T8_CMESH_BINARY * T8_CMESH_BINARY)) /
     (T8_CMESH_BINARY * T8_CMESH_BINARY);
-  int                 do_partition =
-    (cmesh_id / T8_CMESH_BINARY) % T8_CMESH_BINARY;
+  int                 do_partition = 0; /*(cmesh_id / T8_CMESH_BINARY) % T8_CMESH_BINARY */
   int                 periodic = cmesh_id % T8_CMESH_BINARY;
   t8_debugf
     ("Creating new hypercube cmesh. eclass=%s, comm=%s , do_bcast=%i , do_partition=%i, periodic=%i \n",
-     t8_eclass_to_string[eclass] t8_comm_string_list[comm_num], do_bcast,
+     t8_eclass_to_string[eclass], t8_comm_string_list[comm_num], do_bcast,
      do_partition, periodic);
+  if ((int) eclass == 7 && periodic == 1) {
+    return t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition, 0);
+  }
   return t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition,
                                  periodic);
 }
@@ -254,14 +257,15 @@ t8_test_create_new_hypercube_cmesh (int cmesh_id)
 static              t8_cmesh_t
 t8_test_create_new_empty_cmesh (int cmesh_id)
 {
-  sc_MPI_Comm         comm =
-    t8_comm_list[((cmesh_id / (T8_CMESH_BINARY * T8_CMESH_DIM_RANGE_EMPTY)) %
-                  T8_CMESH_TEST_NUM_COMMS)];
+  int                 comm_num =
+    ((cmesh_id / (T8_CMESH_BINARY * T8_CMESH_DIM_RANGE_EMPTY)) %
+     T8_CMESH_TEST_NUM_COMMS);
+  sc_MPI_Comm         comm = t8_comm_list[comm_num];
   int                 do_partition =
     (cmesh_id / T8_CMESH_DIM_RANGE_EMPTY) % T8_CMESH_BINARY;
   int                 dim = cmesh_id % T8_CMESH_DIM_RANGE_EMPTY;
-  t8_debugf ("Creating new empty cmesh. do_partition=%i, dim=%i \n",
-             do_partition, dim);
+  t8_debugf ("Creating new empty cmesh. comm=%s , do_partition=%i, dim=%i \n",
+             t8_comm_string_list[comm_num], do_partition, dim);
   return t8_cmesh_new_empty (comm, do_partition, dim);
 }
 
@@ -270,9 +274,13 @@ t8_test_create_new_empty_cmesh (int cmesh_id)
 static              t8_cmesh_t
 t8_test_create_new_from_class_cmesh (int cmesh_id)
 {
+  int                 comm_num = cmesh_id % T8_CMESH_TEST_NUM_COMMS;
   t8_eclass_t         eclass =
     (cmesh_id / T8_CMESH_TEST_NUM_COMMS) % T8_ECLASS_COUNT;
-  sc_MPI_Comm         comm = t8_comm_list[cmesh_id % T8_CMESH_TEST_NUM_COMMS];
+  sc_MPI_Comm         comm = t8_comm_list[comm_num];
+  t8_debugf
+    ("Creating new_from_class cmesh. eclass=%s, comm=%s \n",
+     t8_eclass_to_string[eclass], t8_comm_string_list[comm_num]);
   return t8_cmesh_new_from_class (eclass, comm);
 }
 
@@ -281,17 +289,20 @@ t8_test_create_new_from_class_cmesh (int cmesh_id)
 static              t8_cmesh_t
 t8_test_create_new_hypercube_hybrid_cmesh (int cmesh_id)
 {
+  int                 comm_num =
+    (cmesh_id / T8_CMESH_BINARY * T8_CMESH_BINARY) % T8_CMESH_TEST_NUM_COMMS;
   int                 dim =
     ((cmesh_id /
       (T8_CMESH_BINARY * T8_CMESH_BINARY * T8_CMESH_TEST_NUM_COMMS)) %
      (T8_CMESH_BINARY * T8_CMESH_BINARY * T8_CMESH_TEST_NUM_COMMS)) %
     (T8_CMESH_DIM_RANGE_HYPERCUBE_HYBRID);
-  sc_MPI_Comm         comm =
-    t8_comm_list[(cmesh_id / T8_CMESH_BINARY * T8_CMESH_BINARY) %
-                 T8_CMESH_TEST_NUM_COMMS];
+  sc_MPI_Comm         comm = t8_comm_list[comm_num];
   int                 do_partition =
     (cmesh_id / T8_CMESH_BINARY) % T8_CMESH_BINARY;
   int                 periodic = cmesh_id % T8_CMESH_BINARY;
+  t8_debugf
+    ("Creating new hypercube hybrid cmesh. dim=%i, comm=%s , do_partition=%i, periodic=%i \n",
+     dim, t8_comm_string_list[comm_num], do_partition, periodic);
   return t8_cmesh_new_hypercube_hybrid (dim, comm, do_partition, periodic);
 }
 
@@ -300,11 +311,14 @@ t8_test_create_new_hypercube_hybrid_cmesh (int cmesh_id)
 static              t8_cmesh_t
 t8_test_create_new_periodic_cmesh (int cmesh_id)
 {
-  sc_MPI_Comm         comm =
-    t8_comm_list[(cmesh_id / T8_CMESH_TEST_NUM_COMMS) %
-                 T8_CMESH_TEST_NUM_COMMS];
+  int                 comm_num = (cmesh_id / T8_CMESH_TEST_NUM_COMMS) %
+    T8_CMESH_TEST_NUM_COMMS;
+  sc_MPI_Comm         comm = t8_comm_list[comm_num];
   int                 dim =
     (cmesh_id % T8_CMESH_TEST_DIMS) + T8_CMESH_MIN_DIM;
+  t8_debugf
+    ("Creating new periodic cmesh. comm=%s,dim=%i \n",
+     t8_comm_string_list[comm_num], dim);
   return t8_cmesh_new_periodic (comm, dim);
 }
 
@@ -313,30 +327,38 @@ t8_test_create_new_periodic_cmesh (int cmesh_id)
 static              t8_cmesh_t
 t8_test_create_new_bigmesh_cmesh (int cmesh_id)
 {
-  sc_MPI_Comm         comm = t8_comm_list[cmesh_id % T8_CMESH_BINARY];
-  int                 num_trees =
+  int                 comm_num = cmesh_id % T8_CMESH_BINARY;
+  sc_MPI_Comm         comm = t8_comm_list[comm_num];
+  int                 num_trees = 1 +
     ((cmesh_id / T8_CMESH_TEST_NUM_COMMS) % T8_CMESH_MAX_NUM_OF_TREES);
   t8_eclass_t         eclass =
     (cmesh_id / (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_MAX_NUM_OF_TREES)) %
     (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_MAX_NUM_OF_TREES);
+  t8_debugf
+    ("Creating new bigmesh cmesh. eclass=%s,num_trees=%i, comm=%s  \n",
+     t8_eclass_to_string[eclass], num_trees, t8_comm_string_list[comm_num]);
   return t8_cmesh_new_bigmesh (eclass, num_trees, comm);
 }
 
 static              t8_cmesh_t
 t8_test_create_new_prism_cake_cmesh (int cmesh_id)
 {
-  sc_MPI_Comm         comm =
-    t8_comm_list[(cmesh_id / T8_CMESH_MAX_NUM_OF_PRISMS) %
-                 T8_CMESH_TEST_NUM_COMMS];
+  int                 comm_num = (cmesh_id / T8_CMESH_MAX_NUM_OF_PRISMS) %
+    T8_CMESH_TEST_NUM_COMMS;
+  sc_MPI_Comm         comm = t8_comm_list[comm_num];
   int                 num_of_prisms =
     (cmesh_id % T8_CMESH_MAX_NUM_OF_PRISMS) + T8_CMESH_MIN_NUM_OF_PRISMS;
+  t8_debugf
+    ("Creating new prism cake cmesh. comm=%s, num_of_prisms=%i \n",
+     t8_comm_string_list[comm_num], num_of_prisms);
   return t8_cmesh_new_prism_cake (comm, num_of_prisms);
 }
 
 static              t8_cmesh_t
 t8_test_create_new_disjoint_bricks_cmesh (int cmesh_id)
 {
-  sc_MPI_Comm         comm = t8_comm_list[cmesh_id % T8_CMESH_TEST_NUM_COMMS];
+  int                 comm_num = cmesh_id % T8_CMESH_TEST_NUM_COMMS;
+  sc_MPI_Comm         comm = t8_comm_list[comm_num];
   int                 z_periodic =
     (cmesh_id / T8_CMESH_TEST_NUM_COMMS) % T8_CMESH_BINARY;
   int                 y_periodic =
@@ -360,6 +382,10 @@ t8_test_create_new_disjoint_bricks_cmesh (int cmesh_id)
      (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY * T8_CMESH_BINARY *
       T8_CMESH_BINARY * T8_CMESH_MAX_NUM_XYZ_TREES *
       T8_CMESH_MAX_NUM_XYZ_TREES)) % T8_CMESH_MAX_NUM_XYZ_TREES;
+  t8_debugf
+    ("Creating new disjoint bricks cmesh. num_x=%li, num_y=%li , num_z=%li , x_periodic=%i, y_periodic=%i, z_periodic=%i, comm=%s \n",
+     num_x, num_y, num_z, x_periodic, y_periodic, z_periodic,
+     t8_comm_string_list[comm_num]);
   return t8_cmesh_new_disjoint_bricks (num_x, num_y, num_z, x_periodic,
                                        y_periodic, z_periodic, comm);
 }
@@ -367,41 +393,49 @@ t8_test_create_new_disjoint_bricks_cmesh (int cmesh_id)
 static              t8_cmesh_t
 t8_test_create_cmesh (int cmesh_id)
 {
-  if (0 <= cmesh_id && cmesh_id < t8_get_comm_only_cmesh_testcases ()) {
+  if (0 <= cmesh_id
+      && cmesh_id < t8_get_number_of_comm_only_cmesh_testcases ()) {
     return t8_test_create_comm_only_cmesh (cmesh_id);
   }
-  cmesh_id -= t8_get_comm_only_cmesh_testcases ();
-  if (0 <= cmesh_id && cmesh_id < t8_get_new_hypercube_cmesh_testcases ()) {
+  cmesh_id -= t8_get_number_of_comm_only_cmesh_testcases ();
+  if (0 <= cmesh_id
+      && cmesh_id < t8_get_number_of_new_hypercube_cmesh_testcases ()) {
     return t8_test_create_new_hypercube_cmesh (cmesh_id);
   }
-  cmesh_id -= t8_get_new_hypercube_cmesh_testcases ();
-  if (0 <= cmesh_id && cmesh_id < t8_get_new_empty_cmesh_testcases ()) {
+  cmesh_id -= t8_get_number_of_new_hypercube_cmesh_testcases ();
+  if (0 <= cmesh_id
+      && cmesh_id < t8_get_number_of_new_empty_cmesh_testcases ()) {
     return t8_test_create_new_empty_cmesh (cmesh_id);
   }
-  cmesh_id -= t8_get_new_empty_cmesh_testcases ();
-  if (0 <= cmesh_id && cmesh_id < t8_get_new_from_class_cmesh_testcases ()) {
+  cmesh_id -= t8_get_number_of_new_empty_cmesh_testcases ();
+  if (0 <= cmesh_id
+      && cmesh_id < t8_get_number_of_new_from_class_cmesh_testcases ()) {
     return t8_test_create_new_from_class_cmesh (cmesh_id);
   }
-  cmesh_id -= t8_get_new_from_class_cmesh_testcases ();
+  cmesh_id -= t8_get_number_of_new_from_class_cmesh_testcases ();
   if (0 <= cmesh_id
-      && cmesh_id < t8_get_new_hypercube_hybrid_cmesh_testcases ()) {
+      && cmesh_id <
+      t8_get_number_of_new_hypercube_hybrid_cmesh_testcases ()) {
     return t8_test_create_new_hypercube_hybrid_cmesh (cmesh_id);
   }
-  cmesh_id -= t8_get_new_hypercube_hybrid_cmesh_testcases ();
-  if (0 <= cmesh_id && cmesh_id < t8_get_new_periodic_cmesh_testcases ()) {
+  cmesh_id -= t8_get_number_of_new_hypercube_hybrid_cmesh_testcases ();
+  if (0 <= cmesh_id
+      && cmesh_id < t8_get_number_of_new_periodic_cmesh_testcases ()) {
     return t8_test_create_new_periodic_cmesh (cmesh_id);
   }
-  cmesh_id -= t8_get_new_periodic_cmesh_testcases ();
-  if (0 <= cmesh_id && cmesh_id < t8_get_new_bigmesh_cmesh_testcases ()) {
+  cmesh_id -= t8_get_number_of_new_periodic_cmesh_testcases ();
+  if (0 <= cmesh_id
+      && cmesh_id < t8_get_number_of_new_bigmesh_cmesh_testcases ()) {
     return t8_test_create_new_bigmesh_cmesh (cmesh_id);
   }
-  cmesh_id -= t8_get_new_bigmesh_cmesh_testcases ();
-  if (0 <= cmesh_id && cmesh_id < t8_get_new_prism_cake_cmesh_testcases ()) {
+  cmesh_id -= t8_get_number_of_new_bigmesh_cmesh_testcases ();
+  if (0 <= cmesh_id
+      && cmesh_id < t8_get_number_of_new_prism_cake_cmesh_testcases ()) {
     return t8_test_create_new_prism_cake_cmesh (cmesh_id);
   }
-  cmesh_id -= t8_get_new_prism_cake_cmesh_testcases ();
+  cmesh_id -= t8_get_number_of_new_prism_cake_cmesh_testcases ();
   if (0 <= cmesh_id
-      && cmesh_id < t8_get_new_disjoint_bricks_cmesh_testcases ()) {
+      && cmesh_id < t8_get_number_of_new_disjoint_bricks_cmesh_testcases ()) {
     return t8_test_create_new_disjoint_bricks_cmesh (cmesh_id);
   }
   return t8_test_create_comm_only_cmesh (cmesh_id);
@@ -440,7 +474,8 @@ static void
 test_cmesh_copy_all (sc_MPI_Comm comm)
 {
   /* Test all cmeshes over all different inputs we get through their id */
-  for (int cmesh_id = 0; cmesh_id < t8_get_all_testcases (); cmesh_id++) {
+  for (int cmesh_id = 0; cmesh_id < t8_get_number_of_all_testcases ();
+       cmesh_id++) {
     test_cmesh_copy (cmesh_id, comm);
   }
 }
