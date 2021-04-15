@@ -28,7 +28,6 @@
  * again the input element. Then call this function for every child, until maxlevel is
  * reached.
  */
-
 static void
 t8_recursive_child_find_parent (t8_element_t * element, t8_element_t * child,
                                 t8_element_t * test_parent, t8_eclass_scheme_c * ts,
