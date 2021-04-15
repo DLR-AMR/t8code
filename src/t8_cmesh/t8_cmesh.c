@@ -2722,7 +2722,7 @@ t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_Comm comm)
   return cmesh;
 }
 
-/*Creates a mesh consisting of 8 prisms. The first 6 prisms are constructed, by
+/* Creates a mesh consisting of 8 prisms. The first 6 prisms are constructed, by
  * approximating the first 3 chunks of 60 degrees of the unit-circle via prisms.
  * The next four prisms use the same principle, but are shifted by one along the
  * z-axis. The first of these prisms is connected to the third prism via its tri-
