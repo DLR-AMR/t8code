@@ -27,8 +27,8 @@
 
 #define T8_CMESH_TEST_NUM_COMMS 2
 #define T8_CMESH_BINARY 2
-#define T8_CMESH_DIM_RANGE 4 /* this is the dim range for hypercube hybrid and empty cmesh*/
-#define T8_CMESH_MAX_TEST_DIMS 3 
+#define T8_CMESH_DIM_RANGE 4    /* this is the dim range for hypercube hybrid and empty cmesh */
+#define T8_CMESH_MAX_TEST_DIMS 3
 #define T8_CMESH_MAX_NUM_OF_TREES 100
 #define T8_CMESH_MAX_NUM_OF_PRISMS 100
 #define T8_CMESH_MAX_NUM_XYZ_TREES 20
@@ -59,7 +59,7 @@ test_cmesh_committed (t8_cmesh_t cmesh)
 static int
 t8_get_number_of_comm_only_cmesh_testcases ()
 {
-  int num_of_comm_only_func = 10;
+  const int           num_of_comm_only_func = 10;
   /* Number of testcases = Number of functions that only take communicator as input * Number of communicators */
   return num_of_comm_only_func * T8_CMESH_TEST_NUM_COMMS;
 }
@@ -221,6 +221,8 @@ t8_test_create_comm_only_cmesh (int cmesh_id)
   }
 }
 
+/* *INDENT-OFF* */
+
 /* The function t8_test_create_new_hypercube_cmesh(int cmesh_id) returns a new hypercube cmesh with a unique input for every given id. 
  * The comm is taken from the t8_comm_list. It avoids the case (eclass = pyramid & periodic=1) since this is not allowed. 
  * \param [in] cmesh_id The cmesh_id is used to create a unique new_hypercube cmesh.
@@ -228,30 +230,27 @@ t8_test_create_comm_only_cmesh (int cmesh_id)
 static              t8_cmesh_t
 t8_test_create_new_hypercube_cmesh (int cmesh_id)
 {
-  int                 comm_num = (cmesh_id /
-                                  (T8_CMESH_BINARY * T8_CMESH_BINARY *
-                                   T8_CMESH_BINARY)) %
-    (T8_CMESH_TEST_NUM_COMMS);
-  t8_eclass_t         eclass =
-    (cmesh_id /
-     (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY * T8_CMESH_BINARY *
-      T8_CMESH_BINARY)) % (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY *
-                           T8_CMESH_BINARY * T8_CMESH_BINARY);
-  sc_MPI_Comm         comm = t8_comm_list[comm_num];
-  int                 do_bcast =
-    (cmesh_id % (T8_CMESH_BINARY * T8_CMESH_BINARY * T8_CMESH_BINARY)) /
-    (T8_CMESH_BINARY * T8_CMESH_BINARY);
-  int                 do_partition = (cmesh_id / T8_CMESH_BINARY) % T8_CMESH_BINARY; 
-  int                 periodic = cmesh_id % T8_CMESH_BINARY;
-  t8_debugf
-    ("Creating new hypercube cmesh. eclass=%s, comm=%s , do_bcast=%i , do_partition=%i, periodic=%i \n",
-     t8_eclass_to_string[eclass], t8_comm_string_list[comm_num], do_bcast,
-     do_partition, periodic);
+  int        comm_num = (cmesh_id 
+                      / (T8_CMESH_BINARY * T8_CMESH_BINARY *T8_CMESH_BINARY)) 
+                      % (T8_CMESH_TEST_NUM_COMMS);
+  t8_eclass_t  eclass = (cmesh_id 
+                      / (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY * T8_CMESH_BINARY * T8_CMESH_BINARY)) 
+                      % (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY * T8_CMESH_BINARY * T8_CMESH_BINARY);
+  sc_MPI_Comm    comm = t8_comm_list[comm_num];
+  int        do_bcast = (cmesh_id 
+                      % (T8_CMESH_BINARY * T8_CMESH_BINARY * T8_CMESH_BINARY)) 
+                      / (T8_CMESH_BINARY * T8_CMESH_BINARY);
+  int    do_partition = (cmesh_id / T8_CMESH_BINARY) % T8_CMESH_BINARY; 
+  int        periodic = cmesh_id % T8_CMESH_BINARY;
+
+  t8_debugf ("Creating new hypercube cmesh. eclass=%s, comm=%s, do_bcast=%i, do_partition=%i, periodic=%i \n",
+            t8_eclass_to_string[eclass], t8_comm_string_list[comm_num], do_bcast, do_partition, periodic);
+
   if ((int) eclass == 7 && periodic == 1) {
     return t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition, 0);
   }
-  return t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition,
-                                 periodic);
+
+  return t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition, periodic);
 }
 
 /* The function t8_test_create_new_empty_cmesh(int cmesh_id) returns a new empty cmesh with a unique input for every given id. 
@@ -261,15 +260,16 @@ t8_test_create_new_hypercube_cmesh (int cmesh_id)
 static              t8_cmesh_t
 t8_test_create_new_empty_cmesh (int cmesh_id)
 {
-  int                 comm_num =
-    ((cmesh_id / (T8_CMESH_BINARY * T8_CMESH_DIM_RANGE)) %
-     T8_CMESH_TEST_NUM_COMMS);
-  sc_MPI_Comm         comm = t8_comm_list[comm_num];
-  int                 do_partition =
-    (cmesh_id / T8_CMESH_DIM_RANGE) % T8_CMESH_BINARY;
-  int                 dim = cmesh_id % T8_CMESH_DIM_RANGE;
+  int      comm_num = ((cmesh_id 
+                    / (T8_CMESH_BINARY * T8_CMESH_DIM_RANGE)) 
+                    % T8_CMESH_TEST_NUM_COMMS);
+  sc_MPI_Comm  comm = t8_comm_list[comm_num];
+  int  do_partition = (cmesh_id / T8_CMESH_DIM_RANGE) % T8_CMESH_BINARY;
+  int           dim = cmesh_id % T8_CMESH_DIM_RANGE;
+
   t8_debugf ("Creating new empty cmesh. comm=%s , do_partition=%i, dim=%i \n",
              t8_comm_string_list[comm_num], do_partition, dim);
+
   return t8_cmesh_new_empty (comm, do_partition, dim);
 }
 
@@ -280,13 +280,13 @@ t8_test_create_new_empty_cmesh (int cmesh_id)
 static              t8_cmesh_t
 t8_test_create_new_from_class_cmesh (int cmesh_id)
 {
-  int                 comm_num = cmesh_id % T8_CMESH_TEST_NUM_COMMS;
-  t8_eclass_t         eclass =
-    (cmesh_id / T8_CMESH_TEST_NUM_COMMS) % T8_ECLASS_COUNT;
-  sc_MPI_Comm         comm = t8_comm_list[comm_num];
-  t8_debugf
-    ("Creating new_from_class cmesh. eclass=%s, comm=%s \n",
-     t8_eclass_to_string[eclass], t8_comm_string_list[comm_num]);
+  int        comm_num = cmesh_id % T8_CMESH_TEST_NUM_COMMS;
+  t8_eclass_t  eclass = (cmesh_id / T8_CMESH_TEST_NUM_COMMS) % T8_ECLASS_COUNT;
+  sc_MPI_Comm    comm = t8_comm_list[comm_num];
+
+  t8_debugf ("Creating new_from_class cmesh. eclass=%s, comm=%s \n",
+            t8_eclass_to_string[eclass], t8_comm_string_list[comm_num]);
+
   return t8_cmesh_new_from_class (eclass, comm);
 }
 
@@ -297,20 +297,20 @@ t8_test_create_new_from_class_cmesh (int cmesh_id)
 static              t8_cmesh_t
 t8_test_create_new_hypercube_hybrid_cmesh (int cmesh_id)
 {
-  int                 comm_num =
-    (cmesh_id / T8_CMESH_BINARY * T8_CMESH_BINARY) % T8_CMESH_TEST_NUM_COMMS;
-  int                 dim =
-    ((cmesh_id /
-      (T8_CMESH_BINARY * T8_CMESH_BINARY * T8_CMESH_TEST_NUM_COMMS)) %
-     (T8_CMESH_BINARY * T8_CMESH_BINARY * T8_CMESH_TEST_NUM_COMMS)) %
-    (T8_CMESH_DIM_RANGE);
-  sc_MPI_Comm         comm = t8_comm_list[comm_num];
-  int                 do_partition =
-    (cmesh_id / T8_CMESH_BINARY) % T8_CMESH_BINARY;
-  int                 periodic = cmesh_id % T8_CMESH_BINARY;
-  t8_debugf
-    ("Creating new hypercube hybrid cmesh. dim=%i, comm=%s , do_partition=%i, periodic=%i \n",
-     dim, t8_comm_string_list[comm_num], do_partition, periodic);
+  int      comm_num = (cmesh_id 
+                    / T8_CMESH_BINARY * T8_CMESH_BINARY) 
+                    % T8_CMESH_TEST_NUM_COMMS;
+  int           dim = ((cmesh_id 
+                    / (T8_CMESH_BINARY * T8_CMESH_BINARY * T8_CMESH_TEST_NUM_COMMS)) 
+                    % (T8_CMESH_BINARY * T8_CMESH_BINARY * T8_CMESH_TEST_NUM_COMMS)) 
+                    % (T8_CMESH_DIM_RANGE);
+  sc_MPI_Comm  comm = t8_comm_list[comm_num];
+  int  do_partition = (cmesh_id / T8_CMESH_BINARY) % T8_CMESH_BINARY;
+  int      periodic =  cmesh_id % T8_CMESH_BINARY;
+
+  t8_debugf ("Creating new hypercube hybrid cmesh. dim=%i, comm=%s , do_partition=%i, periodic=%i \n",
+            dim, t8_comm_string_list[comm_num], do_partition, periodic);
+
   return t8_cmesh_new_hypercube_hybrid (dim, comm, do_partition, periodic);
 }
 
@@ -321,15 +321,16 @@ t8_test_create_new_hypercube_hybrid_cmesh (int cmesh_id)
 static              t8_cmesh_t
 t8_test_create_new_periodic_cmesh (int cmesh_id)
 {
-  int min_dim = 1;
-  int                 comm_num = (cmesh_id / T8_CMESH_TEST_NUM_COMMS) %
-    T8_CMESH_TEST_NUM_COMMS;
-  sc_MPI_Comm         comm = t8_comm_list[comm_num];
-  int                 dim =
-    (cmesh_id % T8_CMESH_MAX_TEST_DIMS) + min_dim;
-  t8_debugf
-    ("Creating new periodic cmesh. comm=%s,dim=%i \n",
-     t8_comm_string_list[comm_num], dim);
+  const int min_dim = 1;
+  int      comm_num = (cmesh_id 
+                    / T8_CMESH_TEST_NUM_COMMS) 
+                    % T8_CMESH_TEST_NUM_COMMS;
+  sc_MPI_Comm  comm = t8_comm_list[comm_num];
+  int           dim = (cmesh_id % T8_CMESH_MAX_TEST_DIMS) + min_dim;
+
+  t8_debugf("Creating new periodic cmesh. comm=%s,dim=%i \n",
+           t8_comm_string_list[comm_num], dim);
+
   return t8_cmesh_new_periodic (comm, dim);
 }
 
@@ -340,17 +341,19 @@ t8_test_create_new_periodic_cmesh (int cmesh_id)
 static              t8_cmesh_t
 t8_test_create_new_bigmesh_cmesh (int cmesh_id)
 {
-  int min_num_trees = 1;
-  int                 comm_num = cmesh_id % T8_CMESH_BINARY;
-  sc_MPI_Comm         comm = t8_comm_list[comm_num];
-  int                 num_trees = min_num_trees +
-    ((cmesh_id / T8_CMESH_TEST_NUM_COMMS) % T8_CMESH_MAX_NUM_OF_TREES);
-  t8_eclass_t         eclass =
-    (cmesh_id / (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_MAX_NUM_OF_TREES)) %
-    (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_MAX_NUM_OF_TREES);
-  t8_debugf
-    ("Creating new bigmesh cmesh. eclass=%s,num_trees=%i, comm=%s  \n",
-     t8_eclass_to_string[eclass], num_trees, t8_comm_string_list[comm_num]);
+  const int min_num_trees = 1;
+  int            comm_num = cmesh_id % T8_CMESH_BINARY;
+  sc_MPI_Comm        comm = t8_comm_list[comm_num];
+  int           num_trees = min_num_trees 
+                          + ((cmesh_id / T8_CMESH_TEST_NUM_COMMS) 
+                          % T8_CMESH_MAX_NUM_OF_TREES);
+  t8_eclass_t      eclass = (cmesh_id 
+                          / (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_MAX_NUM_OF_TREES)) 
+                          % (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_MAX_NUM_OF_TREES);
+
+  t8_debugf("Creating new bigmesh cmesh. eclass=%s,num_trees=%i, comm=%s  \n",
+           t8_eclass_to_string[eclass], num_trees, t8_comm_string_list[comm_num]);
+
   return t8_cmesh_new_bigmesh (eclass, num_trees, comm);
 }
 
@@ -361,15 +364,16 @@ t8_test_create_new_bigmesh_cmesh (int cmesh_id)
 static              t8_cmesh_t
 t8_test_create_new_prism_cake_cmesh (int cmesh_id)
 {
-  int min_num_of_prisms =  3;
-  int                 comm_num = (cmesh_id / T8_CMESH_MAX_NUM_OF_PRISMS) %
-    T8_CMESH_TEST_NUM_COMMS;
-  sc_MPI_Comm         comm = t8_comm_list[comm_num];
-  int                 num_of_prisms = min_num_of_prisms +
-    (cmesh_id % T8_CMESH_MAX_NUM_OF_PRISMS);
-  t8_debugf
-    ("Creating new prism cake cmesh. comm=%s, num_of_prisms=%i \n",
-     t8_comm_string_list[comm_num], num_of_prisms);
+  const int min_num_of_prisms =  3;
+  int                comm_num = (cmesh_id / T8_CMESH_MAX_NUM_OF_PRISMS) 
+                              % T8_CMESH_TEST_NUM_COMMS;
+  sc_MPI_Comm            comm = t8_comm_list[comm_num];
+  int           num_of_prisms = min_num_of_prisms 
+                              + (cmesh_id % T8_CMESH_MAX_NUM_OF_PRISMS);
+
+  t8_debugf("Creating new prism cake cmesh. comm=%s, num_of_prisms=%i \n",
+            t8_comm_string_list[comm_num], num_of_prisms);
+
   return t8_cmesh_new_prism_cake (comm, num_of_prisms);
 }
 
@@ -380,38 +384,44 @@ t8_test_create_new_prism_cake_cmesh (int cmesh_id)
 static              t8_cmesh_t
 t8_test_create_new_disjoint_bricks_cmesh (int cmesh_id)
 {
-  int                 comm_num = cmesh_id % T8_CMESH_TEST_NUM_COMMS;
-  sc_MPI_Comm         comm = t8_comm_list[comm_num];
-  int                 z_periodic =
-    (cmesh_id / T8_CMESH_TEST_NUM_COMMS) % T8_CMESH_BINARY;
-  int                 y_periodic =
-    (cmesh_id / (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY)) %
-    T8_CMESH_BINARY;
-  int                 x_periodic =
-    (cmesh_id /
-     (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY * T8_CMESH_BINARY)) %
-    T8_CMESH_BINARY;
-  t8_gloidx_t         num_z =
-    (cmesh_id /
-     (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY * T8_CMESH_BINARY *
-      T8_CMESH_BINARY)) % T8_CMESH_MAX_NUM_XYZ_TREES;
-  t8_gloidx_t         num_y =
-    (cmesh_id /
-     (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY * T8_CMESH_BINARY *
-      T8_CMESH_BINARY * T8_CMESH_MAX_NUM_XYZ_TREES)) %
-    T8_CMESH_MAX_NUM_XYZ_TREES;
-  t8_gloidx_t         num_x =
-    (cmesh_id /
-     (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY * T8_CMESH_BINARY *
-      T8_CMESH_BINARY * T8_CMESH_MAX_NUM_XYZ_TREES *
-      T8_CMESH_MAX_NUM_XYZ_TREES)) % T8_CMESH_MAX_NUM_XYZ_TREES;
-  t8_debugf
-    ("Creating new disjoint bricks cmesh. num_x=%li, num_y=%li , num_z=%li , x_periodic=%i, y_periodic=%i, z_periodic=%i, comm=%s \n",
-     num_x, num_y, num_z, x_periodic, y_periodic, z_periodic,
-     t8_comm_string_list[comm_num]);
-  return t8_cmesh_new_disjoint_bricks (num_x, num_y, num_z, x_periodic,
-                                       y_periodic, z_periodic, comm);
+  int       comm_num = cmesh_id % T8_CMESH_TEST_NUM_COMMS;
+
+  sc_MPI_Comm   comm = t8_comm_list[comm_num];
+
+  int     z_periodic = (cmesh_id / T8_CMESH_TEST_NUM_COMMS) 
+                     %  T8_CMESH_BINARY;
+
+  int     y_periodic = (cmesh_id 
+                     / (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY)) 
+                     %  T8_CMESH_BINARY;
+
+  int     x_periodic = (cmesh_id 
+                     / (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY 
+                     * T8_CMESH_BINARY)) 
+                     %  T8_CMESH_BINARY;
+
+  t8_gloidx_t  num_z = (cmesh_id 
+                     / (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY 
+                     *  T8_CMESH_BINARY * T8_CMESH_BINARY)) 
+                     %  T8_CMESH_MAX_NUM_XYZ_TREES;
+
+  t8_gloidx_t  num_y = (cmesh_id 
+                     / (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY 
+                     *  T8_CMESH_BINARY * T8_CMESH_BINARY * T8_CMESH_MAX_NUM_XYZ_TREES)) 
+                     %  T8_CMESH_MAX_NUM_XYZ_TREES;
+                     
+  t8_gloidx_t  num_x = (cmesh_id 
+                     / (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY 
+                     *  T8_CMESH_BINARY * T8_CMESH_BINARY 
+                     * T8_CMESH_MAX_NUM_XYZ_TREES * T8_CMESH_MAX_NUM_XYZ_TREES)) 
+                     % T8_CMESH_MAX_NUM_XYZ_TREES;
+
+  t8_debugf ("Creating new disjoint bricks cmesh. num_x=%li, num_y=%li , num_z=%li , x_periodic=%i, y_periodic=%i, z_periodic=%i, comm=%s \n",
+            num_x, num_y, num_z, x_periodic, y_periodic, z_periodic,t8_comm_string_list[comm_num]);
+
+  return t8_cmesh_new_disjoint_bricks (num_x, num_y, num_z, x_periodic, y_periodic, z_periodic, comm);
 }
+/* *INDENT-ON* */
 
 /* The function t8_test_create_cmesh (int cmesh_id) combines all t8_test_create_*_cmesh functions 
  * so that depending on the range the id is in, we get another cmesh type by calling its 
