@@ -165,7 +165,9 @@ t8_get_number_of_all_testcases ()
 
 /* The function t8_test_create_comm_only_cmesh(int cmesh_id) returns the wanted cmesh with the wanted comm for the given id. 
  * The comm is taken from the t8_comm_list. The switch inside t8_test_create_comm_only_cmesh(int cmesh_id)
- * chooses the function. */
+ * chooses the cmesh-type. 
+ * \param [in] cmesh_id The cmesh_id is used to create a unique cmesh which only takes comm as input.
+ */
 static              t8_cmesh_t
 t8_test_create_comm_only_cmesh (int cmesh_id)
 {
@@ -220,7 +222,9 @@ t8_test_create_comm_only_cmesh (int cmesh_id)
 }
 
 /* The function t8_test_create_new_hypercube_cmesh(int cmesh_id) returns a new hypercube cmesh with a unique input for every given id. 
- * The comm is taken from the t8_comm_list. It avoids the case (eclass = pyramid & periodic=1) since this is not allowed. */
+ * The comm is taken from the t8_comm_list. It avoids the case (eclass = pyramid & periodic=1) since this is not allowed. 
+ * \param [in] cmesh_id The cmesh_id is used to create a unique new_hypercube cmesh.
+ */
 static              t8_cmesh_t
 t8_test_create_new_hypercube_cmesh (int cmesh_id)
 {
@@ -251,7 +255,9 @@ t8_test_create_new_hypercube_cmesh (int cmesh_id)
 }
 
 /* The function t8_test_create_new_empty_cmesh(int cmesh_id) returns a new empty cmesh with a unique input for every given id. 
- * The comm is taken from the t8_comm_list. */
+ * The comm is taken from the t8_comm_list. 
+ * \param [in] cmesh_id The cmesh_id is used to create a unique new_empty cmesh.
+ */
 static              t8_cmesh_t
 t8_test_create_new_empty_cmesh (int cmesh_id)
 {
@@ -268,7 +274,9 @@ t8_test_create_new_empty_cmesh (int cmesh_id)
 }
 
 /* The function t8_test_create_new_from_class_cmesh(int cmesh_id) returns a new create_new_from_class cmesh with a unique input for every given id. 
- * The comm is taken from the t8_comm_list. */
+ * The comm is taken from the t8_comm_list. 
+ * \param [in] cmesh_id The cmesh_id is used to create a unique new_from_class cmesh.
+ */
 static              t8_cmesh_t
 t8_test_create_new_from_class_cmesh (int cmesh_id)
 {
@@ -283,7 +291,9 @@ t8_test_create_new_from_class_cmesh (int cmesh_id)
 }
 
 /* The function t8_test_create_new_hypercube_hybrid_cmesh(int cmesh_id) returns a new_hypercube_hybrid cmesh with a unique input for every given id. 
- * The comm is taken from the t8_comm_list. */
+ * The comm is taken from the t8_comm_list. 
+ * \param [in] cmesh_id The cmesh_id is used to create a unique new_hypercube_hybrid cmesh. 
+ */
 static              t8_cmesh_t
 t8_test_create_new_hypercube_hybrid_cmesh (int cmesh_id)
 {
@@ -305,7 +315,9 @@ t8_test_create_new_hypercube_hybrid_cmesh (int cmesh_id)
 }
 
 /* The function t8_test_create_new_periodic_cmesh(int cmesh_id) returns a new_periodic cmesh with a unique input for every given id. 
- * The comm is taken from the t8_comm_list. The minimal dimension is 1.*/
+ * The comm is taken from the t8_comm_list. The minimal dimension is 1.
+ * \param [in] cmesh_id The cmesh_id is used to create a unique new_periodic cmesh. 
+ */
 static              t8_cmesh_t
 t8_test_create_new_periodic_cmesh (int cmesh_id)
 {
@@ -322,7 +334,9 @@ t8_test_create_new_periodic_cmesh (int cmesh_id)
 }
 
 /* The function t8_test_create_new_bigmesh_cmesh(int cmesh_id) returns a new_bigmesh cmesh with a unique input for every given id. 
- * The comm is taken from the t8_comm_list. The minimal number of trees is 1. */
+ * The comm is taken from the t8_comm_list. The minimal number of trees is 1. 
+ * \param [in] cmesh_id The cmesh_id is used to create a unique new_bigmesh cmesh.
+ */
 static              t8_cmesh_t
 t8_test_create_new_bigmesh_cmesh (int cmesh_id)
 {
@@ -341,7 +355,9 @@ t8_test_create_new_bigmesh_cmesh (int cmesh_id)
 }
 
 /* The function t8_test_create_new_prism_cake_cmesh (int cmesh_id) returns a new_prism_cake cmesh with a unique input for every given id. 
- * The comm is taken from the t8_comm_list. The minimal number of trees is 3. */
+ * The comm is taken from the t8_comm_list. The minimal number of trees is 3. 
+ * \param [in] cmesh_id The cmesh_id is used to create a unique new_prism_cake cmesh.
+ */
 static              t8_cmesh_t
 t8_test_create_new_prism_cake_cmesh (int cmesh_id)
 {
@@ -358,7 +374,9 @@ t8_test_create_new_prism_cake_cmesh (int cmesh_id)
 }
 
 /* The function t8_test_create_new_disjoint_bricks_cmesh (int cmesh_id) returns a new_disjoint_bricks cmesh with a unique input for every given id. 
- * The comm is taken from the t8_comm_list. */
+ * The comm is taken from the t8_comm_list. 
+ * \param [in] cmesh_id The cmesh_id is used to create a unique new_disjoint_bricks cmesh.
+ */
 static              t8_cmesh_t
 t8_test_create_new_disjoint_bricks_cmesh (int cmesh_id)
 {
@@ -397,7 +415,9 @@ t8_test_create_new_disjoint_bricks_cmesh (int cmesh_id)
 
 /* The function t8_test_create_cmesh (int cmesh_id) combines all t8_test_create_*_cmesh functions 
  * so that depending on the range the id is in, we get another cmesh type by calling its 
- * t8_test_create_*_cmesh function. */
+ * t8_test_create_*_cmesh function. 
+ * \param [in] cmesh_id The cmesh_id is used to create a unique cmesh.
+ */
 static              t8_cmesh_t
 t8_test_create_cmesh (int cmesh_id)
 {
@@ -450,7 +470,10 @@ t8_test_create_cmesh (int cmesh_id)
 }
 
 /* The function test_cmesh_copy (int cmesh_id,sc_MPI_Comm comm) runs the cmesh_copy test for one given cmesh,
- * that we get through its id by caling t8_test_create_cmesh (cmesh_id). */
+ * that we get through its id by caling t8_test_create_cmesh (cmesh_id). 
+ * \param [in] cmesh_id The cmesh_id which is used to create a unique cmesh with t8_test_create_cmesh.
+ * \param [in] comm The communicator used to commit the cmesh_copy.
+ */
 static void
 test_cmesh_copy (int cmesh_id, sc_MPI_Comm comm)
 {
@@ -477,7 +500,9 @@ test_cmesh_copy (int cmesh_id, sc_MPI_Comm comm)
 }
 
 /* The function test_cmesh_copy_all(sc_MPI_Comm comm) runs the cmesh_copy test for all cmeshes we want to test.
- * We run over all testcases using t8_get_all_testcases() to know how many to check. */
+ * We run over all testcases using t8_get_all_testcases() to know how many to check. 
+ * \param [in] comm The communicator used in test_cmesh_copy to commit the cmesh copy.
+ */
 static void
 test_cmesh_copy_all (sc_MPI_Comm comm)
 {
