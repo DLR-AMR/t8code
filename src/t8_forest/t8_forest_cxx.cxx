@@ -2498,7 +2498,6 @@ t8_forest_element_find_owner_old (t8_forest_t forest,
   }
   if (owners_of_tree->elem_count == 0) {
     /* Compute the owners and store them (sorted) in owners_of_tree */
-    /* *INDENT-OFF* */
     /* TODO: This is only useful, if cmesh is partitioned */
     /* TODO: Isnt it better to only store the first and the last owner? */
     t8_offset_all_owners_of_tree (forest->mpisize, gtreeid,
