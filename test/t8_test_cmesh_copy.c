@@ -31,7 +31,7 @@
  * face consistency check. */
 
 static void
-test_cmesh_committed (t8_cmesh_t cmesh)
+t8_test_cmesh_committed (t8_cmesh_t cmesh)
 {
   int                 retval;
 
@@ -48,13 +48,13 @@ test_cmesh_committed (t8_cmesh_t cmesh)
  */
 static void
 test_cmesh_copy (int cmesh_id, sc_MPI_Comm comm)
+
 {
   int                 retval;
   t8_cmesh_t          cmesh_original, cmesh_copy;
-
   /* Create new cmesh */
   cmesh_original = t8_test_create_cmesh (cmesh_id);
-  test_cmesh_committed (cmesh_original);
+  t8_test_cmesh_committed (cmesh_original);
   /* Set up the cmesh copy */
   t8_cmesh_init (&cmesh_copy);
   /* We need the original cmesh later, so we ref it */
@@ -62,7 +62,7 @@ test_cmesh_copy (int cmesh_id, sc_MPI_Comm comm)
   t8_cmesh_set_derive (cmesh_copy, cmesh_original);
   /* Commit and check commit */
   t8_cmesh_commit (cmesh_copy, comm);
-  test_cmesh_committed (cmesh_copy);
+  t8_test_cmesh_committed (cmesh_copy);
   /* Check for equality */
   retval = t8_cmesh_is_equal (cmesh_copy, cmesh_original);
   SC_CHECK_ABORT (retval == 1, "Cmesh copy failed.");
@@ -82,6 +82,7 @@ test_cmesh_copy_all (sc_MPI_Comm comm)
   for (int cmesh_id = 0; cmesh_id < t8_get_number_of_all_testcases ();
        cmesh_id++) {
     test_cmesh_copy (cmesh_id, comm);
+
   }
 }
 
@@ -101,6 +102,7 @@ main (int argc, char **argv)
 
   t8_global_productionf ("Testing cmesh copy.\n");
   test_cmesh_copy_all (comm);
+
   t8_global_productionf ("Done testing cmesh copy.\n");
   sc_finalize ();
 
