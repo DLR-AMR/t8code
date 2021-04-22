@@ -143,4 +143,3 @@ t8_get_number_of_all_testcases ()
           t8_get_number_of_new_prism_cake_cmesh_testcases ()
           + t8_get_number_of_new_disjoint_bricks_cmesh_testcases ());
 }
-

@@ -36,54 +36,44 @@ T8_EXTERN_C_BEGIN ();
  * testcases for a given cmesh type. To get all possible inputs, we multiply 
  * the number of different inputs of all variables. The function t8_get_comm_only_cmesh_testcases()
  * returns the number of testcases for all cmeshes that only take a comm as input all added together. */
-int
-t8_get_number_of_comm_only_cmesh_testcases ();
+int                 t8_get_number_of_comm_only_cmesh_testcases ();
 
 /* The function t8_get_new_hypercube_cmesh_testcases() returns the number of testcases for 
  * the hypercube cmesh. */
-int
-t8_get_number_of_new_hypercube_cmesh_testcases ();
+int                 t8_get_number_of_new_hypercube_cmesh_testcases ();
 
 /* The function t8_get_new_empty_cmesh_testcases() returns the number of testcases for 
  * the empty cmesh. */
-int
-t8_get_number_of_new_empty_cmesh_testcases ();
+int                 t8_get_number_of_new_empty_cmesh_testcases ();
 
 /* The function t8_get_new_from_class_cmesh_testcases() returns the number of testcases for 
  * the new_from_class cmesh. */
-int
-t8_get_number_of_new_from_class_cmesh_testcases ();
+int                 t8_get_number_of_new_from_class_cmesh_testcases ();
 
 /* The function t8_get_new_hypercube_hybrid_cmesh_testcases() returns the number of testcases for 
  * the new_hypercube_hybrid cmesh. */
-int
-t8_get_number_of_new_hypercube_hybrid_cmesh_testcases ();
+int                 t8_get_number_of_new_hypercube_hybrid_cmesh_testcases ();
 
 /* The function t8_get_new_periodic_cmesh_testcases() returns the number of testcases for 
  * the new_periodic cmesh. */
-int
-t8_get_number_of_new_periodic_cmesh_testcases ();
+int                 t8_get_number_of_new_periodic_cmesh_testcases ();
 
 /* The function t8_get_new_bigmesh_cmesh_testcases() returns the number of testcases for 
  * the new_bigmesh cmesh. */
-int
-t8_get_number_of_new_bigmesh_cmesh_testcases ();
+int                 t8_get_number_of_new_bigmesh_cmesh_testcases ();
 
 /* The function t8_get_new_prism_cake_cmesh_testcases() returns the number of testcases for 
  * the new_prism_cake cmesh. */
-int
-t8_get_number_of_new_prism_cake_cmesh_testcases ();
+int                 t8_get_number_of_new_prism_cake_cmesh_testcases ();
 
 /* The function t8_get_new_disjoint_bricks_cmesh_testcases() returns the number of testcases for 
  * the new_disjoint_bricks cmesh. */
-int
-t8_get_number_of_new_disjoint_bricks_cmesh_testcases ();
+int                 t8_get_number_of_new_disjoint_bricks_cmesh_testcases ();
 
 /* The function t8_get_all_testcases() returns the number of testcases for 
  * all cmesh types. We need to know this, because test_cmesh_copy_all needs to know how 
  * many ids to check. */
-int
-t8_get_number_of_all_testcases ();
+int                 t8_get_number_of_all_testcases ();
 
 T8_EXTERN_C_END ();
 

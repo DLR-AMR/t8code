@@ -40,65 +40,56 @@ T8_EXTERN_C_BEGIN ();
  * chooses the cmesh-type. 
  * \param [in] cmesh_id The cmesh_id is used to create a unique cmesh which only takes comm as input.
  */
-t8_cmesh_t
-t8_test_create_comm_only_cmesh (int cmesh_id);
+t8_cmesh_t t8_test_create_comm_only_cmesh (int cmesh_id);
 
 /* The function t8_test_create_new_hypercube_cmesh(int cmesh_id) returns a new hypercube cmesh with a unique input for every given id. 
  * The comm is taken from the t8_comm_list. It avoids the case (eclass = pyramid & periodic=1) since this is not allowed. 
  * \param [in] cmesh_id The cmesh_id is used to create a unique new_hypercube cmesh.
  */
-t8_cmesh_t
-t8_test_create_new_hypercube_cmesh (int cmesh_id);
+t8_cmesh_t          t8_test_create_new_hypercube_cmesh (int cmesh_id);
 
 /* The function t8_test_create_new_empty_cmesh(int cmesh_id) returns a new empty cmesh with a unique input for every given id. 
  * The comm is taken from the t8_comm_list. 
  * \param [in] cmesh_id The cmesh_id is used to create a unique new_empty cmesh.
  */
-t8_cmesh_t
-t8_test_create_new_empty_cmesh (int cmesh_id);
+t8_cmesh_t          t8_test_create_new_empty_cmesh (int cmesh_id);
 
 /* The function t8_test_create_new_from_class_cmesh(int cmesh_id) returns a new create_new_from_class cmesh with a unique input for every given id. 
  * The comm is taken from the t8_comm_list. 
  * \param [in] cmesh_id The cmesh_id is used to create a unique new_from_class cmesh.
  */
-t8_cmesh_t
-t8_test_create_new_from_class_cmesh (int cmesh_id);
+t8_cmesh_t          t8_test_create_new_from_class_cmesh (int cmesh_id);
 
 /* The function t8_test_create_new_hypercube_hybrid_cmesh(int cmesh_id) returns a new_hypercube_hybrid cmesh with a unique input for every given id. 
  * The comm is taken from the t8_comm_list. 
  * \param [in] cmesh_id The cmesh_id is used to create a unique new_hypercube_hybrid cmesh. 
  */
-t8_cmesh_t
-t8_test_create_new_hypercube_hybrid_cmesh (int cmesh_id);
+t8_cmesh_t          t8_test_create_new_hypercube_hybrid_cmesh (int cmesh_id);
 
 /* The function t8_test_create_new_periodic_cmesh(int cmesh_id) returns a new_periodic cmesh with a unique input for every given id. 
  * The comm is taken from the t8_comm_list. The minimal dimension is 1.
  * \param [in] cmesh_id The cmesh_id is used to create a unique new_periodic cmesh. 
  */
-t8_cmesh_t
-t8_test_create_new_periodic_cmesh (int cmesh_id);
+t8_cmesh_t          t8_test_create_new_periodic_cmesh (int cmesh_id);
 
 /* The function t8_test_create_new_bigmesh_cmesh(int cmesh_id) returns a new_bigmesh cmesh with a unique input for every given id. 
  * The comm is taken from the t8_comm_list. The minimal number of trees is 1. 
  * \param [in] cmesh_id The cmesh_id is used to create a unique new_bigmesh cmesh.
  */
-t8_cmesh_t
-t8_test_create_new_bigmesh_cmesh (int cmesh_id);
+t8_cmesh_t          t8_test_create_new_bigmesh_cmesh (int cmesh_id);
 
 /* The function t8_test_create_new_prism_cake_cmesh (int cmesh_id) returns a new_prism_cake cmesh with a unique input for every given id. 
  * The comm is taken from the t8_comm_list. The minimal number of trees is 3. 
  * \param [in] cmesh_id The cmesh_id is used to create a unique new_prism_cake cmesh.
  */
-t8_cmesh_t
-t8_test_create_new_prism_cake_cmesh (int cmesh_id);
+t8_cmesh_t          t8_test_create_new_prism_cake_cmesh (int cmesh_id);
 
 /* The function t8_test_create_cmesh (int cmesh_id) combines all t8_test_create_*_cmesh functions 
  * so that depending on the range the id is in, we get another cmesh type by calling its 
  * t8_test_create_*_cmesh function. 
  * \param [in] cmesh_id The cmesh_id is used to create a unique cmesh.
  */
-t8_cmesh_t
-t8_test_create_cmesh (int cmesh_id);
+t8_cmesh_t          t8_test_create_cmesh (int cmesh_id);
 
 T8_EXTERN_C_END ();
 

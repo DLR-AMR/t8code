@@ -48,7 +48,6 @@ t8_test_cmesh_committed (t8_cmesh_t cmesh)
  */
 static void
 test_cmesh_copy (int cmesh_id, sc_MPI_Comm comm)
-
 {
   int                 retval;
   t8_cmesh_t          cmesh_original, cmesh_copy;

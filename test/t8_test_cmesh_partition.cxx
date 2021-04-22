@@ -115,7 +115,7 @@ test_cmesh_partition_concentrate (t8_cmesh_t cmesh_partition_uniform,
 static void
 test_cmesh_partition (int cmesh_id, sc_MPI_Comm comm)
 {
-  int                 level=11;
+  int                 level = 11;
   int                 mpisize, mpiret;
   int                 i;
   t8_cmesh_t          cmesh_original, cmesh_partition;
@@ -123,7 +123,7 @@ test_cmesh_partition (int cmesh_id, sc_MPI_Comm comm)
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
   cmesh_original = t8_test_create_cmesh (cmesh_id);
-  
+
   test_cmesh_committed (cmesh_original);
   for (i = 0; i < 2; i++) {
     /* Set up the partitioned cmesh */
@@ -131,15 +131,15 @@ test_cmesh_partition (int cmesh_id, sc_MPI_Comm comm)
     t8_cmesh_set_derive (cmesh_partition, cmesh_original);
     /* Uniform partition according to level */
     t8_cmesh_set_partition_uniform (cmesh_partition, level,
-                              t8_scheme_new_default_cxx ());
+                                    t8_scheme_new_default_cxx ());
     t8_cmesh_commit (cmesh_partition, comm);
     test_cmesh_committed (cmesh_partition);
     cmesh_original = cmesh_partition;
-    }
-    /* Perform the concentrate test */
-    test_cmesh_partition_concentrate (cmesh_partition, comm, level);
-    /* Clean-up */
-    t8_cmesh_destroy (&cmesh_partition);
+  }
+  /* Perform the concentrate test */
+  test_cmesh_partition_concentrate (cmesh_partition, comm, level);
+  /* Clean-up */
+  t8_cmesh_destroy (&cmesh_partition);
 }
 
 /* The function test_cmesh_copy_all(sc_MPI_Comm comm) runs the cmesh_copy test for all cmeshes we want to test.
@@ -152,8 +152,7 @@ test_cmesh_partition_all (sc_MPI_Comm comm)
   /* Test all cmeshes over all different inputs we get through their id */
   for (int cmesh_id = 0; cmesh_id < t8_get_number_of_all_testcases ();
        cmesh_id++) {
-     t8_debugf ("Cmesh_id=%i \n",
-            cmesh_id);
+    t8_debugf ("Cmesh_id=%i \n", cmesh_id);
     test_cmesh_partition (cmesh_id, comm);
 
   }
