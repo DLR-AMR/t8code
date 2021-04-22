@@ -24,7 +24,6 @@
 #include <t8_cmesh.h>
 #include "t8_cmesh_types.h"
 #include "t8_cmesh/t8_cmesh_trees.h"
-#include "t8_cmesh/t8_cmesh_partition.h"
 #include <t8_eclass.h>
 #include "t8_cmesh/t8_cmesh_testcases.h"
 
