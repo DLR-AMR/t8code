@@ -49,6 +49,7 @@ t8_geometry_bspline::t8_geom_evaluate (t8_cmesh_t cmesh,
                                         double out_coords[3]) const
 {
   gp_Pnt pnt;
+  T8_ASSERT (!bspline.IsNull());
   bspline->D0(ref_coords[0], ref_coords[1], pnt);
 
   out_coords[0] = pnt.X();
@@ -78,13 +79,4 @@ t8_geometry_bspline::t8_geom_load_tree_data (t8_cmesh_t cmesh,
     /* Otherwise it is NULL. */
     tree_data = NULL;
   }
-}
-
-void
-t8_geom_load_tree_data_vertices (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
-                                 const void **vertices_out)
-{
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
-  *vertices_out = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
 }

@@ -135,11 +135,4 @@ private:
                                          * and modified via \ref t8_geom_analytic_get_user_data. */
 };
 
-/* TODO: Document */
-void                t8_geom_load_tree_data_vertices (t8_cmesh_t cmesh,
-                                                     t8_gloidx_t gtreeid,
-                                                     const void
-                                                     **vertices_out);
-
-
 #endif /* !T8_GEOMETRY_BSPLINE_HXX! */
