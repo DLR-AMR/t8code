@@ -25,7 +25,8 @@
 t8_geometry_bspline::t8_geometry_bspline (int dim, const char *name_in,
                                             t8_geom_load_tree_data_fn
                                             load_tree_data_in,
-                                            const Handle_Geom_BSplineSurface bspline_in)
+                                            const Handle_Geom_BSplineSurface &bspline_in)
+: bspline(bspline_in)
 {
   T8_ASSERT (0 <= dim && dim <= 3);
 
@@ -33,7 +34,6 @@ t8_geometry_bspline::t8_geometry_bspline (int dim, const char *name_in,
   dimension = dim;
 
   load_tree_data = load_tree_data_in;
-  const Handle_Geom_BSplineSurface bspline = bspline_in;
 }
 
 /**

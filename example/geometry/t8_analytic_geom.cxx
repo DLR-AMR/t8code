@@ -312,35 +312,42 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
   case T8_GEOM_BSPLINE:
     {
       Handle_Geom_BSplineSurface bspline_surface;
-      TColgp_Array2OfPnt point_array(1, 3, 1, 3);
+      TColgp_Array2OfPnt point_array(1, 5, 1, 5);
       
       t8_global_productionf
       ("Creating uniform level %i forest with a bspline geometry.\n",
        level);
     
-      //for (int x = 0; x < 5; ++x)
-      //{
-      //  for (int y = 0; y < 4; ++y)
-      //  {
-      //    point_array(x + 1, y + 1) = gp_Pnt(x * 0.25, y * 0.25, rand() % 10 / 100 - 0.05);
-      //  }
-      //}
-      //for (int x = 0; x < 4; ++x)
-      //{
-      //  point_array(x + 1, 5) = gp_Pnt(x * 0.25, 1 + rand() % 10 / 100 - 0.05, rand() % 10 / 100 - 0.05);
-      //}
+      for (int x = 0; x < 5; ++x)
+      {
+        for (int y = 0; y < 5; ++y)
+        {
+          if (y != 4)
+          {
+            point_array(x + 1, y + 1) = gp_Pnt(x * 0.25, y * 0.25, rand() % 10 * 0.01 - 0.05);
+          }
+          else
+          {
+            point_array(x + 1, y + 1) = gp_Pnt(x * 0.25, 1 + rand() % 10 *0.01 - 0.05, rand() % 10 * 0.01 - 0.05);
+          }
+        }
+      }
+      // for (int x = 0; x < 4; ++x)
+      // {
+      //   point_array(x + 1, 5) = gp_Pnt(x * 0.25, 1 + rand() % 10 / 100 - 0.05, rand() % 10 / 100 - 0.05);
+      // }
       
-      point_array(1, 1) = gp_Pnt(0, 0, 0);
-      point_array(2, 1) = gp_Pnt(0.5, 0, 0);
-      point_array(3, 1) = gp_Pnt(1, 0, 0);
+      // point_array(1, 1) = gp_Pnt(0, 0, 0);
+      // point_array(2, 1) = gp_Pnt(0.5, 0, 0);
+      // point_array(3, 1) = gp_Pnt(1, 0, 0);
 
-      point_array(1, 2) = gp_Pnt(0, 0.5, -0.1);
-      point_array(2, 2) = gp_Pnt(0.5, 0.5, 0);
-      point_array(3, 2) = gp_Pnt(1, 0.5, -0.1);
+      // point_array(1, 2) = gp_Pnt(0, 0.5, -0.1);
+      // point_array(2, 2) = gp_Pnt(0.5, 0.5, 0);
+      // point_array(3, 2) = gp_Pnt(1, 0.5, -0.1);
 
-      point_array(1, 3) = gp_Pnt(0, 1, 0);
-      point_array(2, 3) = gp_Pnt(0.5, 1.2, 0.1);
-      point_array(3, 3) = gp_Pnt(1, 1, 0);
+      // point_array(1, 3) = gp_Pnt(0, 1, 0);
+      // point_array(2, 3) = gp_Pnt(0.5, 1.2, 0.1);
+      // point_array(3, 3) = gp_Pnt(1, 1, 0);
 
       bspline_surface = GeomAPI_PointsToBSplineSurface(point_array).Surface();
       

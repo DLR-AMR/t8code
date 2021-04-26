@@ -69,7 +69,7 @@ public:
    */
   t8_geometry_bspline (int dimension, const char *name,
                         t8_geom_load_tree_data_fn load_tree_data,
-                        const Handle_Geom_BSplineSurface bspline_in);
+                        const Handle_Geom_BSplineSurface &bspline_in);
 
   /** The destructor. 
    * Clears the allocated memory.
