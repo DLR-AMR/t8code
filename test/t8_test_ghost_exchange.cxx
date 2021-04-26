@@ -26,6 +26,8 @@
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_cmesh.h>
+#include "t8_cmesh/t8_cmesh_new.h"
+#include "t8_cmesh/t8_cmesh_testcases.h"
 
 /* This test program tests the forest ghost exchange routine.
  * Given a forest for which the ghost layer was created and an array
@@ -190,28 +192,24 @@ t8_test_ghost_exchange_data_int (t8_forest_t forest)
 }
 
 static void
-t8_test_ghost_exchange ()
+t8_test_ghost_exchange (int cmesh_id)
 {
-  int                 ctype, level, min_level, maxlevel;
-  int                 eclass;
+  int                 level, min_level, maxlevel;
   t8_cmesh_t          cmesh;
   t8_forest_t         forest, forest_adapt;
   t8_scheme_cxx_t    *scheme;
 
   scheme = t8_scheme_new_default_cxx ();
-  for (eclass = T8_ECLASS_LINE; eclass <= T8_ECLASS_PRISM; eclass++) {
-    /* TODO: Activate the other eclass as soon as they support ghosts */
-    for (ctype = 0; ctype < 3; ctype++) {
       /* Construct a cmesh */
       cmesh =
-        t8_test_create_cmesh (ctype, (t8_eclass_t) eclass, sc_MPI_COMM_WORLD);
+        t8_test_create_cmesh (cmesh_id);
       /* Compute the minimum level, such that the forest is nonempty */
       min_level = t8_forest_min_nonempty_level (cmesh, scheme);
       /* we start with an empty level */
       min_level = SC_MAX (min_level - 1, 0);
       t8_global_productionf
-        ("Testing ghost exchange with eclass %s, start level %i\n",
-         t8_eclass_to_string[eclass], min_level);
+        ("Testing ghost exchange start level %i\n",
+          min_level);
       for (level = min_level; level < min_level + 3; level++) {
         /* ref the scheme since we reuse it */
         t8_scheme_cxx_ref (scheme);
@@ -233,9 +231,23 @@ t8_test_ghost_exchange ()
         t8_forest_unref (&forest_adapt);
       }
       t8_cmesh_destroy (&cmesh);
-    }
-  }
   t8_scheme_cxx_unref (&scheme);
+}
+
+
+/* The function test_cmesh_ghost_exchange_all () runs the ghost_exchange test for all cmeshes we want to test.
+ * We run over all testcases using t8_get_all_testcases() to know how many to check. 
+ */
+static void
+test_cmesh_ghost_exchange_all ()
+{
+  /* Test all cmeshes over all different inputs we get through their id */
+  for (int cmesh_id = 0; cmesh_id < t8_get_number_of_all_testcases ();
+       cmesh_id++) {
+    t8_global_productionf ("Testing cmesh_id=%i.\n", cmesh_id);     
+    t8_test_ghost_exchange (cmesh_id);
+
+  }
 }
 
 int
@@ -252,7 +264,7 @@ main (int argc, char **argv)
   p4est_init (NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  t8_test_ghost_exchange ();
+  test_cmesh_ghost_exchange_all ();
 
   sc_finalize ();
 
