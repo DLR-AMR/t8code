@@ -43,7 +43,8 @@ typedef enum
   T8_GEOM_CIRCLE,
   T8_GEOM_3D,
   T8_GEOM_MOVING,
-  T8_GEOM_BSPLINE,
+  T8_GEOM_BSPLINE_SURFACE,
+  T8_GEOM_BSPLINE_CUBE,
   T8_GEOM_COUNT
 } t8_analytic_geom_type;
 
@@ -309,8 +310,9 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     snprintf (vtuname, BUFSIZ, "forest_moving_lvl_%i", level);
     break;
-  case T8_GEOM_BSPLINE:
+  case T8_GEOM_BSPLINE_SURFACE:
     {
+      /* Creating a bspline surface with random control points */
       Handle_Geom_BSplineSurface bspline_surface;
       TColgp_Array2OfPnt point_array(1, 5, 1, 5);
       
@@ -332,22 +334,6 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
           }
         }
       }
-      // for (int x = 0; x < 4; ++x)
-      // {
-      //   point_array(x + 1, 5) = gp_Pnt(x * 0.25, 1 + rand() % 10 / 100 - 0.05, rand() % 10 / 100 - 0.05);
-      // }
-      
-      // point_array(1, 1) = gp_Pnt(0, 0, 0);
-      // point_array(2, 1) = gp_Pnt(0.5, 0, 0);
-      // point_array(3, 1) = gp_Pnt(1, 0, 0);
-
-      // point_array(1, 2) = gp_Pnt(0, 0.5, -0.1);
-      // point_array(2, 2) = gp_Pnt(0.5, 0.5, 0);
-      // point_array(3, 2) = gp_Pnt(1, 0.5, -0.1);
-
-      // point_array(1, 3) = gp_Pnt(0, 1, 0);
-      // point_array(2, 3) = gp_Pnt(0.5, 1.2, 0.1);
-      // point_array(3, 3) = gp_Pnt(1, 1, 0);
 
       bspline_surface = GeomAPI_PointsToBSplineSurface(point_array).Surface();
       
@@ -355,7 +341,41 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
       t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
       t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_QUAD);
       t8_cmesh_set_join (cmesh, 0, 1, 1, 0, 0);
-      snprintf (vtuname, BUFSIZ, "forest_bspline_lvl_%i", level);
+      snprintf (vtuname, BUFSIZ, "forest_bspline_surface_lvl_%i", level);
+      break;
+    }
+  case T8_GEOM_BSPLINE_CUBE:
+    {
+      /* Creating a bspline surface with random control points */
+      Handle_Geom_BSplineSurface bspline_surface;
+      TColgp_Array2OfPnt point_array(1, 4, 1, 4);
+      
+      t8_global_productionf
+      ("Creating uniform level %i forest with a bspline geometry.\n",
+       level);
+    
+      for (int x = 0; x < 4; ++x)
+      {
+        for (int y = 0; y < 4; ++y)
+        {
+          if (y != 3)
+          {
+            point_array(x + 1, y + 1) = gp_Pnt(x / 3.0, y / 3.0, rand() % 11 * 0.02 - 0.1);
+          }
+          else
+          {
+            point_array(x + 1, y + 1) = gp_Pnt(x / 3.0, 1 + rand() % 11 * 0.02 - 0.1, rand() % 11 * 0.02 - 0.1);
+          }
+        }
+      }
+
+      bspline_surface = GeomAPI_PointsToBSplineSurface(point_array).Surface();
+      
+      geometry = new t8_geometry_bspline (3, "bspline dim=3", NULL, bspline_surface);
+      t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
+      t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_HEX);
+      t8_cmesh_set_join (cmesh, 0, 1, 1, 0, 0);
+      snprintf (vtuname, BUFSIZ, "forest_bspline_cube_lvl_%i", level);
       break;
     }
   default:

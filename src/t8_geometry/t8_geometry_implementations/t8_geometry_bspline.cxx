@@ -52,9 +52,9 @@ t8_geometry_bspline::t8_geom_evaluate (t8_cmesh_t cmesh,
   T8_ASSERT (!bspline.IsNull());
   bspline->D0(ref_coords[0], ref_coords[1], pnt);
 
-  out_coords[0] = pnt.X();
-  out_coords[2] = pnt.Z();
-  out_coords[1] = pnt.Y();
+  out_coords[0] = (1 - ref_coords[2]) * pnt.X() + ref_coords[2] * ref_coords[0];
+  out_coords[1] = (1 - ref_coords[2]) * pnt.Y() + ref_coords[2] * ref_coords[1];
+  out_coords[2] = (1 - ref_coords[2]) * pnt.Z() + ref_coords[2];
 }
 
 void
