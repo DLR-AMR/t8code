@@ -24,8 +24,11 @@
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_partition.h"
 #include <t8_eclass.h>
-#include "t8_cmesh/t8_cmesh_new.h"
 #include "t8_cmesh/t8_cmesh_testcases.h"
+
+/* int t8_cmesh_id_list[] =
+  { 23,27,30,31,34,35,39,43,46,47,50,51,55,59,62,63,66,67,71,75,78,79,82,83,87,91,94,95,98,99,103,107,110,111,114,115,119,123,126,127,130,131,135,139,142,143,
+  146, };*/
 
 /* Test if a cmesh is committed properly and perform the
  * face consistency check. */
@@ -81,7 +84,6 @@ test_cmesh_copy_all (sc_MPI_Comm comm)
   for (int cmesh_id = 0; cmesh_id < t8_get_number_of_all_testcases ();
        cmesh_id++) {
     test_cmesh_copy (cmesh_id, comm);
-
   }
 }
 
