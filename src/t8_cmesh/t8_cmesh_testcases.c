@@ -308,7 +308,7 @@ t8_test_create_new_hypercube_cmesh (int cmesh_id)
      t8_eclass_to_string[eclass], t8_comm_string_list[comm_num], do_bcast,
      do_partition, periodic);
 
-  if ((int) eclass == 7) {
+  if (eclass == T8_ECLASS_PYRAMID) {
      t8_debugf
     ("Pyramids are not implemented (in this branch), therefore the eclass is changed to T8_ECLASS_HEX");
     return t8_cmesh_new_hypercube (T8_ECLASS_HEX, comm, do_bcast, do_partition, 0);
