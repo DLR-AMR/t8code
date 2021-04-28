@@ -26,10 +26,6 @@
 #include <t8_eclass.h>
 #include "t8_cmesh/t8_cmesh_testcases.h"
 
-/* int t8_cmesh_id_list[] =
-  { 23,27,30,31,34,35,39,43,46,47,50,51,55,59,62,63,66,67,71,75,78,79,82,83,87,91,94,95,98,99,103,107,110,111,114,115,119,123,126,127,130,131,135,139,142,143,
-  146, };*/
-
 /* Test if a cmesh is committed properly and perform the
  * face consistency check. */
 
@@ -44,7 +40,7 @@ t8_test_cmesh_committed (t8_cmesh_t cmesh)
   SC_CHECK_ABORT (retval == 1, "Cmesh face consistency failed.");
 }
 
-/* The function test_cmesh_copy (int cmesh_id,sc_MPI_Comm comm) runs the cmesh_copy test for one given cmesh,
+/** The function test_cmesh_copy (int cmesh_id,sc_MPI_Comm comm) runs the cmesh_copy test for one given cmesh,
  * that we get through its id by caling t8_test_create_cmesh (cmesh_id). 
  * \param [in] cmesh_id The cmesh_id which is used to create a unique cmesh with t8_test_create_cmesh.
  * \param [in] comm The communicator used to commit the cmesh_copy.
@@ -73,7 +69,7 @@ test_cmesh_copy (int cmesh_id, sc_MPI_Comm comm)
   t8_cmesh_destroy (&cmesh_original);
 }
 
-/* The function test_cmesh_copy_all(sc_MPI_Comm comm) runs the cmesh_copy test for all cmeshes we want to test.
+/** The function test_cmesh_copy_all(sc_MPI_Comm comm) runs the cmesh_copy test for all cmeshes we want to test.
  * We run over all testcases using t8_get_all_testcases() to know how many to check. 
  * \param [in] comm The communicator used in test_cmesh_copy to commit the cmesh copy.
  */

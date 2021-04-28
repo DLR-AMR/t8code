@@ -37,7 +37,7 @@
 
 sc_MPI_Comm         t8_comm_list[T8_CMESH_TEST_NUM_COMMS] =
   { sc_MPI_COMM_WORLD};
-char                t8_comm_string_list[2][18] =
+char                t8_comm_string_list[T8_CMESH_TEST_NUM_COMMS][18] =
   { "sc_MPI_COMM_WORLD" };
 
 /* TODO: - when disjoint bricks issues are done remove comment from t8_get_number_ of_all_testcases

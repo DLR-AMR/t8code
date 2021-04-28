@@ -144,7 +144,7 @@ test_cmesh_partition (int cmesh_id, sc_MPI_Comm comm)
   t8_cmesh_destroy (&cmesh_partition);
 }
 
-/* The function test_cmesh_copy_all(sc_MPI_Comm comm) runs the cmesh_copy test for all cmeshes we want to test.
+/** The function test_cmesh_copy_all(sc_MPI_Comm comm) runs the cmesh_copy test for all cmeshes we want to test.
  * We run over all testcases using t8_get_all_testcases() to know how many to check. 
  * \param [in] comm The communicator used in test_cmesh_copy to commit the cmesh copy.
  */

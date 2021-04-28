@@ -39,98 +39,108 @@ T8_EXTERN_C_BEGIN ();
  * returns the number of testcases for all cmeshes that only take a comm as input all added together. */
 int                 t8_get_number_of_comm_only_cmesh_testcases ();
 
-/* The function t8_get_new_hypercube_cmesh_testcases() returns the number of testcases for 
- * the hypercube cmesh. */
+/** The function t8_get_new_hypercube_cmesh_testcases()
+ * \return the number of testcases for the hypercube cmesh. */
 int                 t8_get_number_of_new_hypercube_cmesh_testcases ();
 
-/* The function t8_get_new_empty_cmesh_testcases() returns the number of testcases for 
- * the empty cmesh. */
+/** The function t8_get_new_empty_cmesh_testcases() 
+ * \return the number of testcases for the empty cmesh. */
 int                 t8_get_number_of_new_empty_cmesh_testcases ();
 
-/* The function t8_get_new_from_class_cmesh_testcases() returns the number of testcases for 
- * the new_from_class cmesh. */
+/** The function t8_get_new_from_class_cmesh_testcases()
+ * \return the number of testcases for the new_from_class cmesh. */
 int                 t8_get_number_of_new_from_class_cmesh_testcases ();
 
-/* The function t8_get_new_hypercube_hybrid_cmesh_testcases() returns the number of testcases for 
- * the new_hypercube_hybrid cmesh. */
+/** The function t8_get_new_hypercube_hybrid_cmesh_testcases() 
+ * \return the number of testcases for the new_hypercube_hybrid cmesh. */
 int                 t8_get_number_of_new_hypercube_hybrid_cmesh_testcases ();
 
-/* The function t8_get_new_periodic_cmesh_testcases() returns the number of testcases for 
- * the new_periodic cmesh. */
+/** The function t8_get_new_periodic_cmesh_testcases() 
+ * \return the number of testcases for the new_periodic cmesh. */
 int                 t8_get_number_of_new_periodic_cmesh_testcases ();
 
-/* The function t8_get_new_bigmesh_cmesh_testcases() returns the number of testcases for 
- * the new_bigmesh cmesh. */
+/** The function t8_get_new_bigmesh_cmesh_testcases()
+ *  \return the number of testcases for the new_bigmesh cmesh. */
 int                 t8_get_number_of_new_bigmesh_cmesh_testcases ();
 
-/* The function t8_get_new_prism_cake_cmesh_testcases() returns the number of testcases for 
- * the new_prism_cake cmesh. */
+/** The function t8_get_new_prism_cake_cmesh_testcases() 
+ * \return the number of testcases for the new_prism_cake cmesh. */
 int                 t8_get_number_of_new_prism_cake_cmesh_testcases ();
 
-/* The function t8_get_new_disjoint_bricks_cmesh_testcases() returns the number of testcases for 
- * the new_disjoint_bricks cmesh. */
+/** The function t8_get_new_disjoint_bricks_cmesh_testcases() 
+ * \return the number of testcases for the new_disjoint_bricks cmesh. */
 int                 t8_get_number_of_new_disjoint_bricks_cmesh_testcases ();
 
-/* The function t8_get_all_testcases() returns the number of testcases for 
- * all cmesh types. We need to know this, because test_cmesh_copy_all needs to know how 
+/** The function t8_get_all_testcases() 
+ * \return the number of testcases for all cmesh types. 
+ * We need to know this, because test_cmesh_copy_all needs to know how 
  * many ids to check. */
 int                 t8_get_number_of_all_testcases ();
 
 /* The functions t8_test_create_*_cmesh create a cmesh of a given type with a unique input depending on the cmesh_id. */
 
-/* The function t8_test_create_comm_only_cmesh(int cmesh_id) returns the wanted cmesh with the wanted comm for the given id. 
+/** The function t8_test_create_comm_only_cmesh(int cmesh_id):
  * The comm is taken from the t8_comm_list. The switch inside t8_test_create_comm_only_cmesh(int cmesh_id)
  * chooses the cmesh-type. 
  * \param [in] cmesh_id The cmesh_id is used to create a unique cmesh which only takes comm as input.
+ * \return the wanted cmesh with the wanted comm for the given id. 
  */
 t8_cmesh_t t8_test_create_comm_only_cmesh (int cmesh_id);
 
-/* The function t8_test_create_new_hypercube_cmesh(int cmesh_id) returns a new hypercube cmesh with a unique input for every given id. 
+/** The function t8_test_create_new_hypercube_cmesh(int cmesh_id):
  * The comm is taken from the t8_comm_list. It avoids the case (eclass = pyramid & periodic=1) since this is not allowed. 
  * \param [in] cmesh_id The cmesh_id is used to create a unique new_hypercube cmesh.
+ * \return a new hypercube cmesh with a unique input for every given id. 
  */
 t8_cmesh_t          t8_test_create_new_hypercube_cmesh (int cmesh_id);
 
-/* The function t8_test_create_new_empty_cmesh(int cmesh_id) returns a new empty cmesh with a unique input for every given id. 
+/** The function t8_test_create_new_empty_cmesh(int cmesh_id):
  * The comm is taken from the t8_comm_list. 
  * \param [in] cmesh_id The cmesh_id is used to create a unique new_empty cmesh.
+ * \return a new empty cmesh with a unique input for every given id. 
  */
 t8_cmesh_t          t8_test_create_new_empty_cmesh (int cmesh_id);
 
-/* The function t8_test_create_new_from_class_cmesh(int cmesh_id) returns a new create_new_from_class cmesh with a unique input for every given id. 
+/** The function t8_test_create_new_from_class_cmesh(int cmesh_id): 
  * The comm is taken from the t8_comm_list. 
  * \param [in] cmesh_id The cmesh_id is used to create a unique new_from_class cmesh.
+ * \return a new create_new_from_class cmesh with a unique input for every given id.
  */
 t8_cmesh_t          t8_test_create_new_from_class_cmesh (int cmesh_id);
 
-/* The function t8_test_create_new_hypercube_hybrid_cmesh(int cmesh_id) returns a new_hypercube_hybrid cmesh with a unique input for every given id. 
+/** The function t8_test_create_new_hypercube_hybrid_cmesh(int cmesh_id):
  * The comm is taken from the t8_comm_list. 
  * \param [in] cmesh_id The cmesh_id is used to create a unique new_hypercube_hybrid cmesh. 
+ * \return a new_hypercube_hybrid cmesh with a unique input for every given id. 
  */
 t8_cmesh_t          t8_test_create_new_hypercube_hybrid_cmesh (int cmesh_id);
 
-/* The function t8_test_create_new_periodic_cmesh(int cmesh_id) returns a new_periodic cmesh with a unique input for every given id. 
+/** The function t8_test_create_new_periodic_cmesh(int cmesh_id):
  * The comm is taken from the t8_comm_list. The minimal dimension is 1.
  * \param [in] cmesh_id The cmesh_id is used to create a unique new_periodic cmesh. 
+ * \return a new_periodic cmesh with a unique input for every given id. 
  */
 t8_cmesh_t          t8_test_create_new_periodic_cmesh (int cmesh_id);
 
-/* The function t8_test_create_new_bigmesh_cmesh(int cmesh_id) returns a new_bigmesh cmesh with a unique input for every given id. 
+/** The function t8_test_create_new_bigmesh_cmesh(int cmesh_id): 
  * The comm is taken from the t8_comm_list. The minimal number of trees is 1. 
  * \param [in] cmesh_id The cmesh_id is used to create a unique new_bigmesh cmesh.
+ * \return a new_bigmesh cmesh with a unique input for every given id.
  */
 t8_cmesh_t          t8_test_create_new_bigmesh_cmesh (int cmesh_id);
 
-/* The function t8_test_create_new_prism_cake_cmesh (int cmesh_id) returns a new_prism_cake cmesh with a unique input for every given id. 
+/** The function t8_test_create_new_prism_cake_cmesh (int cmesh_id):
  * The comm is taken from the t8_comm_list. The minimal number of trees is 3. 
  * \param [in] cmesh_id The cmesh_id is used to create a unique new_prism_cake cmesh.
+ * \return a new_prism_cake cmesh with a unique input for every given id. 
  */
 t8_cmesh_t          t8_test_create_new_prism_cake_cmesh (int cmesh_id);
 
-/* The function t8_test_create_cmesh (int cmesh_id) combines all t8_test_create_*_cmesh functions 
+/** The function t8_test_create_cmesh (int cmesh_id) combines all t8_test_create_*_cmesh functions 
  * so that depending on the range the id is in, we get another cmesh type by calling its 
  * t8_test_create_*_cmesh function. 
  * \param [in] cmesh_id The cmesh_id is used to create a unique cmesh.
+ * \return A cmesh specified by its cmesh_id.
  */
 t8_cmesh_t          t8_test_create_cmesh (int cmesh_id);
 
