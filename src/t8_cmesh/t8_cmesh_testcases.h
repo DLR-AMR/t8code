@@ -32,8 +32,9 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/* The functions t8_get_*_cmesh_testcases return the number of 
- * testcases for a given cmesh type. To get all possible inputs, we multiply 
+/** The functions t8_get_*_cmesh_testcases 
+ * \return the number of testcases for a given cmesh type. 
+ * To get all possible inputs, we multiply 
  * the number of different inputs of all variables. The function t8_get_comm_only_cmesh_testcases()
  * returns the number of testcases for all cmeshes that only take a comm as input all added together. */
 int                 t8_get_number_of_comm_only_cmesh_testcases ();
