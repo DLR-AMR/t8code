@@ -23,9 +23,12 @@
 #include <t8_cmesh.h>
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_partition.h"
+#include <t8_eclass.h>
+#include "t8_cmesh/t8_cmesh_testcases.h"
 
 /* Test if a cmesh is committed properly and perform the
  * face consistency check. */
+
 static void
 t8_test_cmesh_committed (t8_cmesh_t cmesh)
 {
@@ -37,33 +40,46 @@ t8_test_cmesh_committed (t8_cmesh_t cmesh)
   SC_CHECK_ABORT (retval == 1, "Cmesh face consistency failed.");
 }
 
+/** The function test_cmesh_copy (int cmesh_id,sc_MPI_Comm comm) runs the cmesh_copy test for one given cmesh,
+ * that we get through its id by caling t8_test_create_cmesh (cmesh_id). 
+ * \param [in] cmesh_id The cmesh_id which is used to create a unique cmesh with t8_test_create_cmesh.
+ * \param [in] comm The communicator used to commit the cmesh_copy.
+ */
 static void
-t8_test_cmesh_copy (sc_MPI_Comm comm)
+test_cmesh_copy (int cmesh_id, sc_MPI_Comm comm)
 {
-  int                 eci, retval;
+  int                 retval;
   t8_cmesh_t          cmesh_original, cmesh_copy;
+  /* Create new cmesh */
+  cmesh_original = t8_test_create_cmesh (cmesh_id);
+  t8_test_cmesh_committed (cmesh_original);
+  /* Set up the cmesh copy */
+  t8_cmesh_init (&cmesh_copy);
+  /* We need the original cmesh later, so we ref it */
+  t8_cmesh_ref (cmesh_original);
+  t8_cmesh_set_derive (cmesh_copy, cmesh_original);
+  /* Commit and check commit */
+  t8_cmesh_commit (cmesh_copy, comm);
+  t8_test_cmesh_committed (cmesh_copy);
+  /* Check for equality */
+  retval = t8_cmesh_is_equal (cmesh_copy, cmesh_original);
+  SC_CHECK_ABORT (retval == 1, "Cmesh copy failed.");
+  /* Clean-up */
+  t8_cmesh_destroy (&cmesh_copy);
+  t8_cmesh_destroy (&cmesh_original);
+}
 
-  for (eci = T8_ECLASS_ZERO; eci < T8_ECLASS_COUNT; ++eci) {
-    t8_global_productionf ("Testing eclass %s.\n", t8_eclass_to_string[eci]);
-
-    /* Create new hypercube cmesh */
-    cmesh_original =
-      t8_cmesh_new_hypercube ((t8_eclass_t) eci, comm, 0, 0, 0);
-    t8_test_cmesh_committed (cmesh_original);
-    /* Set up the cmesh copy */
-    t8_cmesh_init (&cmesh_copy);
-    /* We need the original cmesh later, so we ref it */
-    t8_cmesh_ref (cmesh_original);
-    t8_cmesh_set_derive (cmesh_copy, cmesh_original);
-    /* Commit and check commit */
-    t8_cmesh_commit (cmesh_copy, comm);
-    t8_test_cmesh_committed (cmesh_copy);
-    /* Check for equality */
-    retval = t8_cmesh_is_equal (cmesh_copy, cmesh_original);
-    SC_CHECK_ABORT (retval == 1, "Cmesh copy failed.");
-    /* Clean-up */
-    t8_cmesh_destroy (&cmesh_copy);
-    t8_cmesh_destroy (&cmesh_original);
+/** The function test_cmesh_copy_all(sc_MPI_Comm comm) runs the cmesh_copy test for all cmeshes we want to test.
+ * We run over all testcases using t8_get_all_testcases() to know how many to check. 
+ * \param [in] comm The communicator used in test_cmesh_copy to commit the cmesh copy.
+ */
+static void
+test_cmesh_copy_all (sc_MPI_Comm comm)
+{
+  /* Test all cmeshes over all different inputs we get through their id */
+  for (int cmesh_id = 0; cmesh_id < t8_get_number_of_all_testcases ();
+       cmesh_id++) {
+    test_cmesh_copy (cmesh_id, comm);
   }
 }
 
@@ -82,9 +98,9 @@ main (int argc, char **argv)
   t8_init (SC_LP_DEFAULT);
 
   t8_global_productionf ("Testing cmesh copy.\n");
-  t8_test_cmesh_copy (comm);
-  t8_global_productionf ("Done testing cmesh copy.\n");
+  test_cmesh_copy_all (comm);
 
+  t8_global_productionf ("Done testing cmesh copy.\n");
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();
