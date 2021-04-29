@@ -26,6 +26,7 @@
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_partition.h"
 #include <t8_eclass.h>
+#include "t8_cmesh/t8_cmesh_testcases.h"
 
 #define T8_CMESH_TEST_NUM_COMMS 1
 #define T8_CMESH_BINARY 2
@@ -290,10 +291,11 @@ t8_test_create_new_hypercube_cmesh (int cmesh_id)
                                   / (T8_CMESH_BINARY * T8_CMESH_BINARY *
                                      T8_CMESH_BINARY))
     % (T8_CMESH_TEST_NUM_COMMS);
-  const t8_eclass_t         eclass = (t8_eclass_t)((cmesh_id
+  const int      eclass_int = (cmesh_id
                                 / (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY *
-                                   T8_CMESH_BINARY * T8_CMESH_BINARY)))
+                                   T8_CMESH_BINARY * T8_CMESH_BINARY))
     % T8_ECLASS_COUNT;
+  const t8_eclass_t eclass = (t8_eclass_t)eclass_int;
   const sc_MPI_Comm         comm = t8_comm_list[comm_num];
   const int                 do_bcast = (cmesh_id
                                   % (T8_CMESH_BINARY * T8_CMESH_BINARY *
@@ -319,7 +321,7 @@ t8_test_create_new_hypercube_cmesh (int cmesh_id)
     return t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition, 0);
   }*/
 
-  return t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition,
+  return t8_cmesh_new_hypercube ( eclass, comm, do_bcast, do_partition,
                                  periodic);
 }
 
@@ -401,8 +403,8 @@ t8_test_create_new_from_class_cmesh (int cmesh_id)
   *              7                 |                1         
   */
   const int                 comm_num = cmesh_id % T8_CMESH_TEST_NUM_COMMS;
-  const t8_eclass_t         eclass = (t8_eclass_t)
-    ((cmesh_id / T8_CMESH_TEST_NUM_COMMS) % T8_ECLASS_COUNT);
+  const int      eclass_int = (cmesh_id / T8_CMESH_TEST_NUM_COMMS) % T8_ECLASS_COUNT;
+  const t8_eclass_t eclass = (t8_eclass_t)eclass_int;
   const sc_MPI_Comm         comm = t8_comm_list[comm_num];
 
   t8_debugf ("Creating new_from_class cmesh. eclass=%s, comm=%s \n",
@@ -519,10 +521,11 @@ t8_test_create_new_bigmesh_cmesh (int cmesh_id)
   const int                 num_trees = min_num_trees
     + ((cmesh_id / T8_CMESH_TEST_NUM_COMMS)
        % T8_CMESH_MAX_NUM_OF_TREES);
-  const t8_eclass_t         eclass = (t8_eclass_t)((cmesh_id
+  const int      eclass_int = (cmesh_id
                                 / (T8_CMESH_TEST_NUM_COMMS *
                                    T8_CMESH_MAX_NUM_OF_TREES))
-    % (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_MAX_NUM_OF_TREES));
+    % (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_MAX_NUM_OF_TREES);
+  const t8_eclass_t eclass = (t8_eclass_t)eclass_int;
 
   t8_debugf
     ("Creating new bigmesh cmesh. eclass=%s,num_trees=%i, comm=%s  \n",
