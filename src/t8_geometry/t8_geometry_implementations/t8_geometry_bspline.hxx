@@ -29,10 +29,16 @@
 
 #include <t8.h>
 #include <t8_geometry/t8_geometry_base.hxx>
+#include <t8_eclass.h>
+#include <t8_cmesh/t8_cmesh_types.h>
 
 #include <gp_Pnt.hxx>
 #include <Geom_BSplineCurve.hxx>
 #include <Geom_BSplineSurface.hxx>
+
+
+
+extern Handle_Geom_BSplineSurface t8_global_bspline;
 
 /**
  * Definition of an bspline geometry function.
@@ -43,19 +49,14 @@
  * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
  * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
  * \param [in]  tree_data   The data of the current tree as loaded by a \ref t8_geom_load_tree_data_fn.
- * \param [in]  bspline     The unterlying bspline geometry for the cell.
+ * \param [in]  user_data   The user data pointer stored in the geometry.
  */
 typedef void        (*t8_geom_bspline_fn) (t8_cmesh_t cmesh,
                                             t8_gloidx_t gtreeid,
                                             const double *ref_coords,
                                             double out_coords[3],
                                             const void *tree_data,
-                                            const Handle_Geom_BSplineSurface bspline);
-
-/* TODO: Document. */
-typedef void        (*t8_geom_load_tree_data_fn) (t8_cmesh_t cmesh,
-                                                  t8_gloidx_t gtreeid,
-                                                  const void **tree_data);
+                                            const void *user_data);
 
 struct t8_geometry_bspline:public t8_geometry
 {
@@ -68,8 +69,7 @@ public:
    * \param [in] load_tree_data The function that is used to load a tree's data.
    */
   t8_geometry_bspline (int dimension, const char *name,
-                        t8_geom_load_tree_data_fn load_tree_data,
-                        const Handle_Geom_BSplineSurface &bspline_in);
+                       const void *user_data_in);
 
   /** The destructor. 
    * Clears the allocated memory.
@@ -120,19 +120,75 @@ public:
   virtual void        t8_geom_load_tree_data (t8_cmesh_t cmesh,
                                               t8_gloidx_t gtreeid);
 
-  inline const void  *t8_geom_get_bspline ()
+  inline const void  *t8_geom_analytic_get_user_data ()
   {
-    return bspline;
+    return user_data;
   }
 
 private:
-  t8_geom_load_tree_data_fn load_tree_data; /**< The function to load the tree data. */
 
   const void         *tree_data;        /** Tree data pointer that can be set in \a load_tree_data and 
                                            is passed onto \a analytical_function and \a jacobian. */
 
-  const Handle_Geom_BSplineSurface         bspline;        /** Additional user data pointer that can be set in constructor
+  const void         *user_data;        /** Additional user data pointer that can be set in constructor
                                          * and modified via \ref t8_geom_analytic_get_user_data. */
+
+  protected:
+  
+    t8_gloidx_t active_tree;
+    t8_eclass_t active_tree_class;
+    const double *active_tree_vertices;
 };
 
+
+/*    cmesh
+          tree0  -> Attribute   
+                 pAtt -> | --  Att1 (ptr) -- |  -- Att2 -- | -- Att3 -- |
+                                      |
+                                   | --- |
+
+          tree1
+ *
+ *  
+ */
+
+struct t8_cmesh_attribute_bspline
+{
+  public:
+    
+    /**
+   * Document
+   */
+  t8_cmesh_attribute_bspline (const int bspline_index_in,
+                              const int face_in);
+
+  /** The destructor. 
+   * Clears the allocated memory.
+   */
+                      virtual ~ t8_cmesh_attribute_bspline ()
+  {
+    /* Nothing to do */
+  }
+
+  inline Handle_Geom_BSplineSurface t8_cmesh_attribute_bspline_get_bspline ()
+  {
+    return t8_global_bspline;
+  }
+
+  inline int t8_cmesh_attribute_bspline_get_face ()
+  {
+    return face;
+  }
+
+  inline int t8_cmesh_attribute_bspline_get_index ()
+  {
+    return bspline_index;
+  }
+
+
+  private:
+    
+    int bspline_index;
+    int face;
+};
 #endif /* !T8_GEOMETRY_BSPLINE_HXX! */

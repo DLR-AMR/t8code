@@ -61,8 +61,11 @@ t8_cmesh_from_t;
 
 /* Definitions for attribute identifiers that are reserved 
  * for a special purpose. */
-#define T8_CMESH_VERTICES_ATTRIBUTE_KEY 0       /* Used to store vertex coordinates. */
-#define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY 1       /* Used to store the name of a tree's geometry. */
+#define T8_CMESH_VERTICES_ATTRIBUTE_KEY   0       /* Used to store vertex coordinates. */
+#define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY   1       /* Used to store the name of a tree's geometry. */
+#define T8_CMESH_BSPLINE_ATTRIBUTE_KEY    2       /* Used to store bsplines curves and surfaces */
+#define T8_CMESH_BSPLINE_PARAMETERS_ATTRIBUTE_KEY    3       /* Used to store bsplines curves and surfaces */ /* TODO: Document, one for each possible face */
+#define T8_CMESH_NEXT_POSSIBLE_KEY T8_CMESH_BSPLINE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_FACES /* The next free value for a t8code attribute key */
 
 /** This structure holds the connectivity data of the coarse mesh.
  *  It can either be replicated, then each process stores a copy of the whole

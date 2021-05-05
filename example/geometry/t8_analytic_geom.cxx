@@ -27,12 +27,17 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_bspline.hxx>
 #include <t8_geometry/t8_geometry_helpers.h>
+#include <t8_cmesh_vtk.h>
 
 #include <GeomAPI_PointsToBSplineSurface.hxx>
 #include <gp_Pnt.hxx>
 #include <NCollection_Array2.hxx>
 #include <TColgp_Array2OfPnt.hxx>
 #include <Geom_BSplineSurface.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
+#include <TopoDS_Face.hxx>
+#include <StlAPI.hxx>
+#include <Precision.hxx>
 
 typedef enum
 {
@@ -43,8 +48,7 @@ typedef enum
   T8_GEOM_CIRCLE,
   T8_GEOM_3D,
   T8_GEOM_MOVING,
-  T8_GEOM_BSPLINE_SURFACE,
-  T8_GEOM_BSPLINE_CUBE,
+  T8_GEOM_BSPLINE_CUBES,
   T8_GEOM_COUNT
 } t8_analytic_geom_type;
 
@@ -310,72 +314,99 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     snprintf (vtuname, BUFSIZ, "forest_moving_lvl_%i", level);
     break;
-  case T8_GEOM_BSPLINE_SURFACE:
+  case T8_GEOM_BSPLINE_CUBES:
     {
-      /* Creating a bspline surface with random control points */
-      Handle_Geom_BSplineSurface bspline_surface;
-      TColgp_Array2OfPnt point_array(1, 5, 1, 5);
-      
       t8_global_productionf
-      ("Creating uniform level %i forest with a bspline geometry.\n",
+      ("Creating uniform level %i forests with a bspline geometry.\n",
        level);
-    
-      for (int x = 0; x < 5; ++x)
-      {
-        for (int y = 0; y < 5; ++y)
-        {
-          if (y != 4)
-          {
-            point_array(x + 1, y + 1) = gp_Pnt(x * 0.25, y * 0.25, rand() % 10 * 0.01 - 0.05);
-          }
-          else
-          {
-            point_array(x + 1, y + 1) = gp_Pnt(x * 0.25, 1 + rand() % 10 *0.01 - 0.05, rand() % 10 * 0.01 - 0.05);
-          }
-        }
-      }
+
+      /* Create a bspline surface */
+      Handle_Geom_BSplineSurface bspline_surface;
+      TColgp_Array2OfPnt point_array(1, 5, 1, 3);
+      
+      point_array(1, 1) = gp_Pnt(-0.2, 0.1, 1.2);
+      point_array(2, 1) = gp_Pnt(0.5, 0, 1.4);
+      point_array(3, 1) = gp_Pnt(1.0, -0.2, 1.1);
+      point_array(4, 1) = gp_Pnt(1.5, 0, 1.0);
+      point_array(5, 1) = gp_Pnt(2.1, -0.2, 0.9);
+
+      point_array(1, 2) = gp_Pnt(0.0, 0.5, 1.0);
+      point_array(2, 2) = gp_Pnt(0.5, 0.5, 1.2);
+      point_array(3, 2) = gp_Pnt(1.0, 0.5, 1.0);
+      point_array(4, 2) = gp_Pnt(1.5, 0.5, 0.8);
+      point_array(5, 2) = gp_Pnt(2.2, 0.5, 0.6);
+
+      point_array(1, 3) = gp_Pnt(0.0, 1, 0.8);
+      point_array(2, 3) = gp_Pnt(0.5, 1, 0.8);
+      point_array(3, 3) = gp_Pnt(1.0, 0.85, 0.9);
+      point_array(4, 3) = gp_Pnt(1.5, 1, 1.1);
+      point_array(5, 3) = gp_Pnt(2.0, 1.1, 1.2);
 
       bspline_surface = GeomAPI_PointsToBSplineSurface(point_array).Surface();
-      
-      geometry = new t8_geometry_bspline (2, "bspline dim=2", NULL, bspline_surface);
-      t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
-      t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_QUAD);
-      t8_cmesh_set_join (cmesh, 0, 1, 1, 0, 0);
-      snprintf (vtuname, BUFSIZ, "forest_bspline_surface_lvl_%i", level);
-      break;
-    }
-  case T8_GEOM_BSPLINE_CUBE:
-    {
-      /* Creating a bspline surface with random control points */
-      Handle_Geom_BSplineSurface bspline_surface;
-      TColgp_Array2OfPnt point_array(1, 4, 1, 4);
-      
-      t8_global_productionf
-      ("Creating uniform level %i forest with a bspline geometry.\n",
-       level);
-    
-      for (int x = 0; x < 4; ++x)
-      {
-        for (int y = 0; y < 4; ++y)
-        {
-          if (y != 3)
-          {
-            point_array(x + 1, y + 1) = gp_Pnt(x / 3.0, y / 3.0, rand() % 11 * 0.02 - 0.1);
-          }
-          else
-          {
-            point_array(x + 1, y + 1) = gp_Pnt(x / 3.0, 1 + rand() % 11 * 0.02 - 0.1, rand() % 11 * 0.02 - 0.1);
-          }
-        }
-      }
+      t8_global_bspline = bspline_surface;
 
-      bspline_surface = GeomAPI_PointsToBSplineSurface(point_array).Surface();
+      /* Save surface as stl */
+      BRepBuilderAPI_MakeFace mkface = BRepBuilderAPI_MakeFace(bspline_surface, Precision::Approximation());
+      T8_ASSERT(StlAPI::Write(mkface.Face(), "bspline.stl"));
+
+      geometry = new t8_geometry_bspline (3, "bspline dim=3", NULL);
       
-      geometry = new t8_geometry_bspline (3, "bspline dim=3", NULL, bspline_surface);
+      /* Create tree 0*/
       t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
+      double vertices0[24] = {
+        -0.5, 0, 0,
+        1, 0, 0,
+        -0.25, 1.25, 0,
+        1, 1, 0,
+        0, 0, 1,
+        1, 0, 1,
+        0, 1, 1,
+        1, 1, 1
+      };
+      t8_cmesh_set_tree_vertices (cmesh, 0, vertices0, 24);
+
+      /* Give tree 1 information about its surface and the parameters of the vertices*/
+      double parameters0[8] = {0, 0,
+                              0.5, 0,
+                              0, 1,
+                              0.5, 1};
+      int face0 = 5;
+      t8_cmesh_attribute_bspline bspline_attribute0(0, face0);
+      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_BSPLINE_ATTRIBUTE_KEY, 
+                              &bspline_attribute0, sizeof(bspline_attribute0), 0);
+      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_BSPLINE_PARAMETERS_ATTRIBUTE_KEY + face0, 
+                              parameters0, 8 * sizeof(double), 0);
+
+      /* Create tree 1 */
       t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_HEX);
+      double vertices1[24] = {
+        1, 0, 0,
+        2, 0, 0,
+        1, 1, 0,
+        2, 1, 0,
+        1, 0, 1,
+        2, 0, 1,
+        1, 1, 1,
+        2, 1, 1
+      };
+      t8_cmesh_set_tree_vertices (cmesh, 1, vertices1, 24);
+
+      /* Give tree 1 information about its surface and the parameters of the vertices */
+      double parameters1[8] = {0.5, 0,
+                              1, 0,
+                              0.5, 1,
+                              1, 1};
+      int face1 = 5;
+      t8_cmesh_attribute_bspline bspline_attribute1(0, face1);
+      t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id(), T8_CMESH_BSPLINE_ATTRIBUTE_KEY, 
+                              &bspline_attribute1, sizeof(bspline_attribute1), 0);
+      t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id(), T8_CMESH_BSPLINE_PARAMETERS_ATTRIBUTE_KEY + face1, 
+                              parameters1, 8 * sizeof(double), 0);
+
+      /* Join tree 0 and tree 1 together */
       t8_cmesh_set_join (cmesh, 0, 1, 1, 0, 0);
-      snprintf (vtuname, BUFSIZ, "forest_bspline_cube_lvl_%i", level);
+      
+      snprintf (vtuname, BUFSIZ, "forest_bspline_cubes_lvl_%i", level);
       break;
     }
   default:
