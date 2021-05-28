@@ -39,11 +39,13 @@ t8_scheme_new_default_cxx (void)
 
   s->eclass_schemes[T8_ECLASS_VERTEX] = NULL;
   s->eclass_schemes[T8_ECLASS_LINE] = NULL;
-  s->eclass_schemes[T8_ECLASS_QUAD] = new t8_default_scheme_quad_c ();
+  s->eclass_schemes[T8_ECLASS_QUAD] = new t8_default_scheme_sub_c ();
   s->eclass_schemes[T8_ECLASS_HEX] = NULL;
   s->eclass_schemes[T8_ECLASS_TRIANGLE] = NULL;
   s->eclass_schemes[T8_ECLASS_TET] = NULL;
   s->eclass_schemes[T8_ECLASS_PRISM] = NULL;
+  /* s->eclass_schemes[T8_ECLASS_SUB] = new t8_default_scheme_sub_c (); */
+  /* should be implemented in the future -> change t8_eclass.c ? */
 
   return s;
 }
@@ -53,7 +55,7 @@ t8_eclass_scheme_is_default (t8_eclass_scheme_c * ts)
 {
   switch (ts->eclass) {
   case T8_ECLASS_QUAD:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_quad_c *);
+    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_sub_c *);
   default:
     SC_ABORT_NOT_REACHED ();
     /* TODO: Add pyramid as soon as pyramid scheme is implemented */
