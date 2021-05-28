@@ -28,11 +28,10 @@ if test "x$T8_WITH_NETCDF" != xno ; then
   LIBS="$LIBS $T8_NETCDF_LIBS"
   AC_LINK_IFELSE([AC_LANG_PROGRAM(
 [[
-]],[[
   #include <netcdf.h>
   #include <netcdf_par.h>
   #include <mpi.h>
-
+]],[[
   int ncid;
   nc_open_par (NULL, NC_NOWRITE, MPI_COMM_SELF, MPI_INFO_NULL, &ncid);
 ]])],,
