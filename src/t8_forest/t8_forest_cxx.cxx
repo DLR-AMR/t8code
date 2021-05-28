@@ -1921,7 +1921,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
          * of local elements. */
         element_index +=
           t8_forest_ghost_get_tree_element_offset (forest, lghost_treeid);
-        element_index += t8_forest_get_num_element (forest);
+        element_index += t8_forest_get_local_num_elements (forest);
         T8_ASSERT (forest->local_num_elements <= element_index
                    && element_index <
                    forest->local_num_elements +
@@ -2065,7 +2065,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         element_indices[ineigh] +=
           t8_forest_ghost_get_tree_element_offset (forest, lghost_treeid);
         /* Add the number of all local elements to this index */
-        element_indices[ineigh] += t8_forest_get_num_element (forest);
+        element_indices[ineigh] += t8_forest_get_local_num_elements (forest);
       }
     }                           /* End for loop over neighbor leafs */
     T8_FREE (owners);
@@ -2102,7 +2102,7 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
     allocate_el_offset = 1;
     t8_forest_partition_create_offsets (forest);
   }
-  for (ielem = 0; ielem < t8_forest_get_num_element (forest); ielem++) {
+  for (ielem = 0; ielem < t8_forest_get_local_num_elements (forest); ielem++) {
     /* Get a pointer to the ielem-th element, its eclass, treeid and scheme */
     leaf = t8_forest_get_element (forest, ielem, &ltree);
     eclass = t8_forest_get_tree_class (forest, ltree);
