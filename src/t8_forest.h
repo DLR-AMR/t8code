@@ -396,7 +396,7 @@ void                t8_forest_commit (t8_forest_t forest);
  */
 int                 t8_forest_get_maxlevel (t8_forest_t forest);
 
-t8_locidx_t         t8_forest_get_num_element (t8_forest_t forest);
+t8_locidx_t         t8_forest_get_local_num_elements (t8_forest_t forest);
 
 t8_gloidx_t         t8_forest_get_global_num_elements (t8_forest_t forest);
 

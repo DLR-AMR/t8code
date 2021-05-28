@@ -1112,7 +1112,7 @@ t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix,
   }
 
   /* The local number of elements */
-  num_elements = t8_forest_get_num_element (forest);
+  num_elements = t8_forest_get_local_num_elements (forest);
   if (write_ghosts) {
     num_elements += t8_forest_get_num_ghosts (forest);
   }

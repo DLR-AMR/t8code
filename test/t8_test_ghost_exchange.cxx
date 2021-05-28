@@ -76,7 +76,7 @@ t8_test_ghost_exchange_data_id (t8_forest_t forest)
   size_t              array_pos = 0;
   sc_array_t          element_data;
 
-  num_elements = t8_forest_get_num_element (forest);
+  num_elements = t8_forest_get_local_num_elements (forest);
   num_ghosts = t8_forest_get_num_ghosts (forest);
   /* Allocate a uin64_t as data for each element and each ghost */
   sc_array_init_size (&element_data, sizeof (t8_linearidx_t),
@@ -144,7 +144,7 @@ t8_test_ghost_exchange_data_int (t8_forest_t forest)
   t8_locidx_t         num_elements, ielem, num_ghosts;
   int                 ghost_int;
 
-  num_elements = t8_forest_get_num_element (forest);
+  num_elements = t8_forest_get_local_num_elements (forest);
   num_ghosts = t8_forest_get_num_ghosts (forest);
   /* Allocate an integer as data for each element and each ghost */
   sc_array_init_size (&element_data, sizeof (int), num_elements + num_ghosts);
