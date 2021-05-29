@@ -34,7 +34,7 @@
 T8_EXTERN_C_BEGIN ();
 
 /** Return the default element implementation of t8code. */
-t8_scheme_cxx_t    *t8_scheme_new_default_cxx (void);
+t8_scheme_cxx_t    *t8_scheme_new_subelement_cxx (void);
 
 /** Check whether a given eclass_scheme is on of the default schemes.
  * \param [in] ts   A (pointer to a) scheme

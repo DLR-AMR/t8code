@@ -25,6 +25,7 @@
 #include <p4est_connectivity.h>
 #include <p8est_connectivity.h>
 #include <t8_schemes/t8_new_feature/t8_subelements_cxx.hxx>
+#include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest.h>
 #include <t8_cmesh_vtk.h>
@@ -54,8 +55,9 @@ t8_basic_refine_test (t8_eclass_t eclass)
   t8_forest_t         forest_adapt;
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
-  int                 maxlevel = 6;
-  int                 minlevel = 3;
+  int                 initlevel = 0;                
+  int                 minlevel = initlevel; // do not want coarsening here
+  int                 maxlevel = 1;
 
   t8_forest_init (&forest);
   t8_forest_init (&forest_adapt);
@@ -82,8 +84,16 @@ t8_basic_refine_test (t8_eclass_t eclass)
   }
 
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
-  t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
-  t8_forest_set_level (forest, minlevel);
+  
+  if (eclass == T8_ECLASS_QUAD) {
+    t8_forest_set_scheme (forest, t8_scheme_new_subelement_cxx ());
+  }
+  else {
+    // should run with new_default but somehow there is a declaration error
+    t8_forest_set_scheme (forest, t8_scheme_new_subelement_cxx ());
+  }
+  
+  t8_forest_set_level (forest, initlevel);
   t8_forest_commit (forest);
 
   /* Output to vtk */
@@ -101,7 +111,7 @@ t8_basic_refine_test (t8_eclass_t eclass)
 
     ls_data.band_width = 1.5;
     ls_data.L = t8_basic_level_set_sphere;
-    ls_data.min_level = 3;
+    ls_data.min_level = minlevel;
     ls_data.max_level = maxlevel;
     ls_data.udata = &sdata;
     t8_forest_set_user_data (forest_adapt, &ls_data);

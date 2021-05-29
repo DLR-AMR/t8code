@@ -30,7 +30,7 @@
 T8_EXTERN_C_BEGIN ();
 
 t8_scheme_cxx_t    *
-t8_scheme_new_default_cxx (void)
+t8_scheme_new_subelement_cxx (void)
 {
   t8_scheme_cxx_t    *s;
 
