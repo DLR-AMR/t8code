@@ -20,28 +20,32 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_geometry_bspline.hxx
+/** \file t8_geometry_occ.hxx
  * TODO: Add description
  */
 
-#ifndef T8_GEOMETRY_BSPLINE_HXX
-#define T8_GEOMETRY_BSPLINE_HXX
+#ifndef T8_GEOMETRY_OCC_HXX
+#define T8_GEOMETRY_OCC_HXX
+
+#define T8_WITH_OCC 1
+#if T8_WITH_OCC
 
 #include <t8.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_geometry/t8_geometry_helpers.h>
 
 #include <gp_Pnt.hxx>
-#include <Geom_BSplineCurve.hxx>
-#include <Geom_BSplineSurface.hxx>
+#include <Geom_Curve.hxx>
+#include <Geom_Surface.hxx>
 
 
 
-extern Handle_Geom_BSplineSurface t8_global_bspline;
+extern Handle_Geom_Surface t8_global_occ_surface[];
 
 /**
- * Definition of an bspline geometry function.
+ * Definition of an occ geometry function.
  * This function maps reference coordinates to physical
  * coordinates.
  * \param [in]  cmesh       The cmesh.
@@ -51,14 +55,14 @@ extern Handle_Geom_BSplineSurface t8_global_bspline;
  * \param [in]  tree_data   The data of the current tree as loaded by a \ref t8_geom_load_tree_data_fn.
  * \param [in]  user_data   The user data pointer stored in the geometry.
  */
-typedef void        (*t8_geom_bspline_fn) (t8_cmesh_t cmesh,
-                                            t8_gloidx_t gtreeid,
-                                            const double *ref_coords,
-                                            double out_coords[3],
-                                            const void *tree_data,
-                                            const void *user_data);
+typedef void        (*t8_geom_occ_fn) (t8_cmesh_t cmesh,
+                                      t8_gloidx_t gtreeid,
+                                      const double *ref_coords,
+                                      double out_coords[3],
+                                      const void *tree_data,
+                                      const void *user_data);
 
-struct t8_geometry_bspline:public t8_geometry
+struct t8_geometry_occ:public t8_geometry
 {
 public:
 
@@ -68,13 +72,13 @@ public:
    * \param [in] name       The name to give this geometry.
    * \param [in] load_tree_data The function that is used to load a tree's data.
    */
-  t8_geometry_bspline (int dimension, const char *name,
-                       const void *user_data_in);
+  t8_geometry_occ (int dimension, const char *name,
+                  const void *user_data_in);
 
   /** The destructor. 
    * Clears the allocated memory.
    */
-                      virtual ~ t8_geometry_bspline ()
+                      virtual ~ t8_geometry_occ ()
   {
     /* Nothing to do */
   }
@@ -152,43 +156,46 @@ private:
  *  
  */
 
-struct t8_cmesh_attribute_bspline
+struct t8_cmesh_attribute_occ_surface
 {
   public:
     
     /**
    * Document
    */
-  t8_cmesh_attribute_bspline (const int bspline_index_in,
-                              const int face_in);
+  t8_cmesh_attribute_occ_surface (const int occ_surface_index_in,
+                                  const int face_in);
 
   /** The destructor. 
    * Clears the allocated memory.
    */
-                      virtual ~ t8_cmesh_attribute_bspline ()
+                      virtual ~ t8_cmesh_attribute_occ_surface ()
   {
     /* Nothing to do */
   }
 
-  inline Handle_Geom_BSplineSurface t8_cmesh_attribute_bspline_get_bspline ()
+  /*inline Handle_Geom_Surface t8_cmesh_attribute_occ_get_occ_surface ()
   {
-    return t8_global_bspline;
-  }
+    return t8_global_occ_surface;
+  }*/
 
-  inline int t8_cmesh_attribute_bspline_get_face ()
+  inline int t8_cmesh_attribute_occ_surface_get_face ()
   {
     return face;
   }
 
-  inline int t8_cmesh_attribute_bspline_get_index ()
+  inline int t8_cmesh_attribute_occ_surface_get_index ()
   {
-    return bspline_index;
+    return occ_surface_index;
   }
 
 
   private:
     
-    int bspline_index;
+    int occ_surface_index;
     int face;
 };
-#endif /* !T8_GEOMETRY_BSPLINE_HXX! */
+
+#endif /* T8_WITH_OCC */
+
+#endif /* !T8_GEOMETRY_OCC_HXX! */
