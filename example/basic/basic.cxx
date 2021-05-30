@@ -83,6 +83,8 @@ t8_basic_refine_test (t8_eclass_t eclass)
   t8_forest_t         forest_adapt;
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
+  int                 initlevel = 2;
+  int                 minlevel = 0;
   int                 maxlevel = 5;
 
   t8_forest_init (&forest);
@@ -109,7 +111,7 @@ t8_basic_refine_test (t8_eclass_t eclass)
   }
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
-  t8_forest_set_level (forest, 3);
+  t8_forest_set_level (forest, initlevel);
   t8_forest_commit (forest);
   /* Output to vtk */
   snprintf (filename, BUFSIZ, "forest_uniform_%s",
@@ -123,19 +125,19 @@ t8_basic_refine_test (t8_eclass_t eclass)
     t8_example_level_set_struct_t ls_data;
     t8_basic_sphere_data_t sdata;
 
-    sdata.mid_point[0] = 0;
-    sdata.mid_point[1] = 1;
+    sdata.mid_point[0] = 0.5;
+    sdata.mid_point[1] = 0.5;
     sdata.mid_point[2] = 0;
-    sdata.radius = 0.85;
+    sdata.radius = 0.3;
 
     ls_data.band_width = 1.5;
     ls_data.L = t8_basic_level_set_sphere;
-    ls_data.min_level = 3;
+    ls_data.min_level = minlevel;
     ls_data.max_level = maxlevel;
     ls_data.udata = &sdata;
     t8_forest_set_user_data (forest_adapt, &ls_data);
     t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
-    t8_forest_set_balance (forest_adapt, NULL, 0);
+    // t8_forest_set_balance (forest_adapt, NULL, 0);
   }
 #endif
   t8_forest_commit (forest_adapt);
@@ -483,6 +485,7 @@ main (int argc, char **argv)
   //t8_basic_hypercube (T8_ECLASS_TET, 1, 1, 0);
   //t8_basic_balance_test (T8_ECLASS_TET);
   t8_basic_refine_test (T8_ECLASS_QUAD);
+  // t8_basic_refine_test (T8_ECLASS_TET);
 #if 0
   t8_basic_forest_partition ();
   t8_global_productionf ("Testing hypercube cmesh.\n");
