@@ -25,7 +25,7 @@
 #include <p4est_connectivity.h>
 #include <p8est_connectivity.h>
 #include <t8_schemes/t8_new_feature/t8_subelements_cxx.hxx>
-#include <t8_schemes/t8_default_cxx.hxx>
+// #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest.h>
 #include <t8_cmesh_vtk.h>
@@ -55,9 +55,9 @@ t8_basic_refine_test (t8_eclass_t eclass)
   t8_forest_t         forest_adapt;
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
-  int                 initlevel = 0;                
+  int                 initlevel = 3;                
   int                 minlevel = initlevel; // do not want coarsening here
-  int                 maxlevel = 1;
+  int                 maxlevel = 4;
 
   t8_forest_init (&forest);
   t8_forest_init (&forest_adapt);
@@ -104,12 +104,12 @@ t8_basic_refine_test (t8_eclass_t eclass)
     t8_example_level_set_struct_t ls_data;
     t8_basic_sphere_data_t sdata;
 
-    sdata.mid_point[0] = 0;
-    sdata.mid_point[1] = 1;
+    sdata.mid_point[0] = 0.4375;
+    sdata.mid_point[1] = 0.4375;
     sdata.mid_point[2] = 0;
-    sdata.radius = 0.85;
+    sdata.radius = 0;
 
-    ls_data.band_width = 1.5;
+    ls_data.band_width = 0.1;
     ls_data.L = t8_basic_level_set_sphere;
     ls_data.min_level = minlevel;
     ls_data.max_level = maxlevel;
