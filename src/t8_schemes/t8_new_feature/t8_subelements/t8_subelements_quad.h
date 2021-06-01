@@ -39,12 +39,17 @@
  * We might want to put this into a private, scheme-specific header file.
  */
 
-typedef p4est_quadrant_t t8_pquad_t;
+//typedef p4est_quadrant_t t8_pquad_t;
 
-// typedef struct {
-//   p4est_quadrant_t q;
-//   int subelement_id;
-// } t8_quad_with_subelements;
+typedef struct
+{
+  p4est_quadrant_t    q;        // quaddrant
+  int                 dummy_is_subelement;      // sind wir ein subelement?
+  int                 dummy_use_subelement;     // wollen wir subelement werden?
+  int                 subelement_id;    // welches subelement sind wir?
+} t8_quad_with_subelements;
+
+typedef t8_quad_with_subelements t8_pquad_t;
 
 /** Return the toplevel dimension. */
 #define T8_QUAD_GET_TDIM(quad) ((int) (quad)->pad8)
