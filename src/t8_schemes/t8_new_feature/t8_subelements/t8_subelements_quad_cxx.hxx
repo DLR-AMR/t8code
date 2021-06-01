@@ -42,14 +42,17 @@
  * We might want to put this into a private, scheme-specific header file.
  */
 
-typedef p4est_quadrant_t t8_pquad_t;
+//typedef p4est_quadrant_t t8_pquad_t;
 
-//typedef struct {
-//  p4est_quadrant_t q; // quaddrant
-//  int dummy_is_subelement = 0; // sind wir ein subelement?
-//  int dummy_use_subelement = 0; // wollen wir subelement werden?
-//  int subelement_id = 0; // welches subelement sind wir?
-//} t8_quad_with_subelements;
+typedef struct
+{
+  p4est_quadrant_t    q;        // quaddrant
+  int                 dummy_is_subelement;      // sind wir ein subelement?
+  int                 dummy_use_subelement;     // wollen wir subelement werden?
+  int                 subelement_id;    // welches subelement sind wir?
+} t8_quad_with_subelements;
+
+typedef t8_quad_with_subelements t8_pquad_t;
 
 /* TODO t8_quad_with_subelements richtig einbinden */
 
