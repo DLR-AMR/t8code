@@ -788,9 +788,12 @@ t8_default_scheme_sub_c::t8_element_root_len (const t8_element_t * elem)
 
 void
 t8_default_scheme_sub_c::t8_element_vertex_coords (const t8_element_t * t,
-                                                    int vertex, int coords[])
+                                                   int vertex, int coords[])
 {
-  const p4est_quadrant_t *q1 = (const p4est_quadrant_t *) t;
+  const t8_quad_with_subelements *pquad_w_sub =
+    (const t8_quad_with_subelements *) t;
+
+  const p4est_quadrant_t *q1 = &pquad_w_sub->q;
   int                 len;
 
   T8_ASSERT (t8_element_is_valid (t));
@@ -806,33 +809,53 @@ t8_default_scheme_sub_c::t8_element_vertex_coords (const t8_element_t * t,
 void
 t8_default_scheme_sub_c::t8_element_new (int length, t8_element_t ** elem)
 {
-  /* allocate memory for a quad */
+  /* allocate memory for a quad with subelements */
   t8_default_scheme_common_c::t8_element_new (length, elem);
 
   /* in debug mode, set sensible default values. */
   {
     int                 i;
     for (i = 0; i < length; i++) {
+      t8_quad_with_subelements *pquad_w_sub =
+        (t8_quad_with_subelements *) elem[i];
       t8_element_init (1, elem[i], 0);
-      T8_QUAD_SET_TDIM ((p4est_quadrant_t *) elem[i], 2);
+      /* Set dimension of quad to 2 */
+      T8_QUAD_SET_TDIM ((p4est_quadrant_t *) & pquad_w_sub->q, 2);
     }
   }
 
 }
 
+/* | t8_quad... {q, dummy_is_subelement,...} | Elem1 | Elem2 | ... | 
+ *    ^
+ *    |
+ *   elem (sieht das nicht)
+ *      = 
+ *   pquad_w_sub {q, dummy_is_subelement, ...}
+ * 
+ * TODO: remove this comment if you do not need it anymore.
+ */
+
 void
 t8_default_scheme_sub_c::t8_element_init (int length, t8_element_t * elem,
-                                           int new_called)
+                                          int new_called)
 {
+  t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem;
+  /* Initalize subelement identifiers to 0 (no subelement) */
+  pquad_w_sub->dummy_is_subelement = 0;
+  pquad_w_sub->dummy_use_subelement = 0;
+  pquad_w_sub->subelement_id = 0;
 #ifdef T8_ENABLE_DEBUG
+  /* In debugging mode we iterate over all length many elements and 
+   * set their quad to the leve 0 quad with ID 0. */
   if (!new_called) {
     int                 i;
-    p4est_quadrant_t   *quads = (p4est_quadrant_t *) elem;
     /* Set all values to 0 */
     for (i = 0; i < length; i++) {
-      p4est_quadrant_set_morton (quads + i, 0, 0);
-      T8_QUAD_SET_TDIM (quads + i, 2);
-      T8_ASSERT (p4est_quadrant_is_extended (quads + i));
+      p4est_quadrant_t   *quad = &pquad_w_sub[i].q;
+      p4est_quadrant_set_morton (quad, 0, 0);
+      T8_QUAD_SET_TDIM (quad + i, 2);
+      T8_ASSERT (p4est_quadrant_is_extended (quad + i));
     }
   }
 #endif
@@ -845,7 +868,8 @@ int
 t8_default_scheme_sub_c::t8_element_is_valid (const t8_element_t * elem) const
 /* *INDENT-ON* */
 {
-  /* TODO: additional checks? do we set pad8 or similar?
+  /* TODO: Check that the subelement variables are in valid ranges.
+     i.e. 0 <= subelement_id < num_sebelement_ids
    */
   return p4est_quadrant_is_extended ((const p4est_quadrant_t *) elem);
 }
@@ -855,7 +879,7 @@ t8_default_scheme_sub_c::t8_element_is_valid (const t8_element_t * elem) const
 t8_default_scheme_sub_c::t8_default_scheme_sub_c (void)
 {
   eclass = T8_ECLASS_QUAD;
-  element_size = sizeof (t8_pquad_t);
+  element_size = sizeof (t8_quad_with_subelements);
   ts_context = sc_mempool_new (element_size);
 }
 
