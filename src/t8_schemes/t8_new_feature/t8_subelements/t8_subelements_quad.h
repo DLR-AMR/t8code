@@ -38,7 +38,13 @@
  * We make this definition public for interoperability of element classes.
  * We might want to put this into a private, scheme-specific header file.
  */
+
 typedef p4est_quadrant_t t8_pquad_t;
+
+// typedef struct {
+//   p4est_quadrant_t q;
+//   int subelement_id;
+// } t8_quad_with_subelements;
 
 /** Return the toplevel dimension. */
 #define T8_QUAD_GET_TDIM(quad) ((int) (quad)->pad8)

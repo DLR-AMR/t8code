@@ -214,7 +214,8 @@ t8_default_scheme_sub_c::t8_element_child (const t8_element_t * elem,
   T8_ASSERT (p4est_quadrant_is_extended (q));
   T8_ASSERT (q->level < P4EST_QMAXLEVEL);
   T8_ASSERT (childid >= 0 && childid < P4EST_CHILDREN);
-
+  
+  // hier wird der p4est quadrant angepasst (je nach child id werden die koordinaten verändert und das level wird um eins erhöht)
   r->x = childid & 0x01 ? (q->x | shift) : q->x;
   r->y = childid & 0x02 ? (q->y | shift) : q->y;
   r->level = q->level + 1;

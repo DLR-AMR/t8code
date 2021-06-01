@@ -41,7 +41,29 @@
  * We make this definition public for interoperability of element classes.
  * We might want to put this into a private, scheme-specific header file.
  */
+
 typedef p4est_quadrant_t t8_pquad_t;
+
+//typedef struct {
+//  p4est_quadrant_t q; // quaddrant
+//  int dummy_is_subelement = 0; // sind wir ein subelement?
+//  int dummy_use_subelement = 0; // wollen wir subelement werden?
+//  int subelement_id = 0; // welches subelement sind wir?
+//} t8_quad_with_subelements;
+
+/* TODO t8_quad_with_subelements richtig einbinden */
+
+/* -> Infos über subelemente an Funktionen übergeben und if Abfragen definieren, wie bspw.:
+ *
+ * if      (dummy_is_subelement == 1) 
+ *         {wir sind ein bestimmtes Subelement -> wir wollen uns nicht weiter verfeinern, sondern nur Nachbarschaftsstrukturen etc. bestimmen}
+ * else if (dummy_is_subelement == 0) 
+ *         {wir sind kein subelement, wollen wir eins werden?
+ *          if (dummy_use_subelement == 0) {nein -> alles bleibt wie gehabt}
+ *          else if (dummy_use_subelement == 1) {ja, baue alle Subelemente (subelement_id = 1 oder 2 für den Fall von halbieren)}
+ *         } 
+ */
+ 
 
 /** Return the toplevel dimension. */
 #define T8_QUAD_GET_TDIM(quad) ((int) (quad)->pad8)
@@ -102,7 +124,7 @@ public:
   virtual int         t8_element_maxlevel (void);
 
 /** Return the type of each child in the ordering of the implementation. */
-  virtual t8_eclass_t t8_element_child_eclass (int childid);
+  virtual t8_eclass_t t8_element_child_eclass (int childid); // if subelement_id is unequal zero: child_eclass = subelement
 
 /** Return the refinement level of an element. */
   virtual int         t8_element_level (const t8_element_t * elem);
@@ -120,14 +142,14 @@ public:
 
 /** Construct the parent of a given element. */
   virtual void        t8_element_parent (const t8_element_t * elem,
-                                         t8_element_t * parent);
+                                         t8_element_t * parent); 
 
 /** Construct a same-size sibling of a given element. */
   virtual void        t8_element_sibling (const t8_element_t * elem,
                                           int sibid, t8_element_t * sibling);
 
   /** Compute the number of face of a given element. */
-  virtual int         t8_element_num_faces (const t8_element_t * elem);
+  virtual int         t8_element_num_faces (const t8_element_t * elem); // if subelement_id = 0: nothing changes, else determine the number of the subelement
 
   /** Compute the maximum number of faces of a given element and all of its
    *  descendants.
@@ -159,7 +181,7 @@ public:
 
 /** Construct all children of a given element. */
   virtual void        t8_element_children (const t8_element_t * elem,
-                                           int length, t8_element_t * c[]);
+                                           int length, t8_element_t * c[]); // how to construct subelements
 
 /** Return the child id of an element */
   virtual int         t8_element_child_id (const t8_element_t * elem);
