@@ -43,7 +43,7 @@
 
 typedef struct
 {
-  p4est_quadrant_t    q;        // quaddrant
+  p4est_quadrant_t    quad;        // quaddrant
   int                 dummy_is_subelement;      // sind wir ein subelement?
   int                 dummy_use_subelement;     // wollen wir subelement werden?
   int                 subelement_id;    // welches subelement sind wir?

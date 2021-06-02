@@ -73,10 +73,13 @@ t8_default_scheme_sub_c::t8_element_child_eclass (int childid)
 int
 t8_default_scheme_sub_c::t8_element_level (const t8_element_t * elem)
 {
+  const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
+  /* NOTE t8_element_is_valid muss mit neuem struct umgehen können */
   T8_ASSERT (t8_element_is_valid (elem));
-  return (int) ((const p4est_quadrant_t *) elem)->level;
+  return (int) ((const t8_quad_with_subelements *) pquad_w_sub)->p4q.level;
 }
 
+/* NOTE function should use a t8_quad_with_subelements as input?! */
 static void
 t8_element_copy_surround (const p4est_quadrant_t * q, p4est_quadrant_t * r)
 {
@@ -91,12 +94,16 @@ void
 t8_default_scheme_sub_c::t8_element_copy (const t8_element_t * source,
                                            t8_element_t * dest)
 {
-  const p4est_quadrant_t *q = (const p4est_quadrant_t *) source;
-  p4est_quadrant_t   *r = (p4est_quadrant_t *) dest;
+  const t8_quad_with_subelements *pquad_w_sub_source = (const t8_quad_with_subelements *) source;
+  t8_quad_with_subelements *pquad_w_sub_dest = (t8_quad_with_subelements *) dest;
 
+  const p4est_quadrant_t *q = &pquad_w_sub_source->p4q;
+  p4est_quadrant_t   *r = &pquad_w_sub_dest->p4q;
+
+  /* NOTE t8_element_is_valid muss mit neuem struct umgehen können */
   T8_ASSERT (t8_element_is_valid (source));
   T8_ASSERT (t8_element_is_valid (dest));
-  if (r == q) {
+  if (q == r) {
     /* Do nothing if they are already the same quadrant. */
     return;
   }
@@ -108,22 +115,33 @@ int
 t8_default_scheme_sub_c::t8_element_compare (const t8_element_t * elem1,
                                               const t8_element_t * elem2)
 {
+  const t8_quad_with_subelements *pquad_w_sub1 = (const t8_quad_with_subelements *) elem1;
+  const t8_quad_with_subelements *pquad_w_sub2 = (const t8_quad_with_subelements *) elem2;
+
+  const p4est_quadrant_t *q = &pquad_w_sub1->p4q;
+  const p4est_quadrant_t   *r = &pquad_w_sub2->p4q;
+
+  /* NOTE t8_element_is_valid muss mit neuem struct umgehen können */
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
 
-  return p4est_quadrant_compare ((const p4est_quadrant_t *) elem1,
-                                 (const p4est_quadrant_t *) elem2);
+  return p4est_quadrant_compare (q, r);
 }
 
 void
 t8_default_scheme_sub_c::t8_element_parent (const t8_element_t * elem,
                                              t8_element_t * parent)
 {
-  const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
-  p4est_quadrant_t   *r = (p4est_quadrant_t *) parent;
+  const t8_quad_with_subelements *pquad_w_sub_elem = (const t8_quad_with_subelements *) elem;
+  t8_quad_with_subelements *pquad_w_sub_parent = (t8_quad_with_subelements *) parent;
 
+  const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
+  p4est_quadrant_t   *r = &pquad_w_sub_parent->p4q;
+
+  /* NOTE t8_element_is_valid muss mit neuem struct umgehen können */
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (parent));
+
   p4est_quadrant_parent (q, r);
   t8_element_copy_surround (q, r);
 }
@@ -793,7 +811,7 @@ t8_default_scheme_sub_c::t8_element_vertex_coords (const t8_element_t * t,
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) t;
 
-  const p4est_quadrant_t *q1 = &pquad_w_sub->q;
+  const p4est_quadrant_t *q1 = &pquad_w_sub->p4q;
   int                 len;
 
   T8_ASSERT (t8_element_is_valid (t));
@@ -820,7 +838,7 @@ t8_default_scheme_sub_c::t8_element_new (int length, t8_element_t ** elem)
         (t8_quad_with_subelements *) elem[i];
       t8_element_init (1, elem[i], 0);
       /* Set dimension of quad to 2 */
-      T8_QUAD_SET_TDIM ((p4est_quadrant_t *) & pquad_w_sub->q, 2);
+      T8_QUAD_SET_TDIM ((p4est_quadrant_t *) & pquad_w_sub->p4q, 2);
     }
   }
 
@@ -852,7 +870,7 @@ t8_default_scheme_sub_c::t8_element_init (int length, t8_element_t * elem,
     int                 i;
     /* Set all values to 0 */
     for (i = 0; i < length; i++) {
-      p4est_quadrant_t   *quad = &pquad_w_sub[i].q;
+      p4est_quadrant_t   *quad = &pquad_w_sub[i].p4q;
       p4est_quadrant_set_morton (quad, 0, 0);
       T8_QUAD_SET_TDIM (quad + i, 2);
       T8_ASSERT (p4est_quadrant_is_extended (quad + i));
