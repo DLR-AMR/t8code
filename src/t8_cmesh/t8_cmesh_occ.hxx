@@ -30,6 +30,8 @@
 #include <t8_cmesh.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
+#include <t8_cmesh_vtk.h>
+
 #if T8_WITH_OCC
 #include <gp_Pnt.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>

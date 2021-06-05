@@ -25,7 +25,7 @@
  * TODO: document this file
  */
 
-#include <t8_cmesh_occ.hxx>
+#include <t8_cmesh/t8_cmesh_occ.hxx>
 
 t8_cmesh_t
 t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, 
@@ -68,22 +68,16 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
     geometry = t8_geometry_linear_new (3);
   }
   
-  double *vertices;
+  double *vertices, *parameters;
   double radius_outer = 0.5, radius_inner = 0.25;
   vertices = T8_ALLOC(double, num_tangential_trees * num_axial_trees * 24);
-  if (with_occ_geometry)
-  {
-    #if T8_WITH_OCC
-    double *parameters;
-    parameters = T8_ALLOC(double, num_tangential_trees * num_axial_trees * 8);
-    int faces[6] = {0, 1, -1, -1, -1, -1};
-    #endif /* T8_WITH_OCC */
-  }
+  parameters = T8_ALLOC(double, num_tangential_trees * num_axial_trees * 8);
+  int faces[6] = {0, 1, -1, -1, -1, -1};
   for (int i = 0; i < num_tangential_trees; ++i)
   {
     for (int j = 0; j < num_axial_trees; ++j)
     {
-      t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_HEX);
+      t8_cmesh_set_tree_class (cmesh, i * num_axial_trees + j, T8_ECLASS_HEX);
       vertices[(i * num_axial_trees + j) * 24 + 0] = cos((i + 1) * 2 * M_PI / num_tangential_trees) * radius_outer;
       vertices[(i * num_axial_trees + j) * 24 + 1] = sin((i + 1) * 2 * M_PI / num_tangential_trees) * radius_outer;
       vertices[(i * num_axial_trees + j) * 24 + 2] = j / num_axial_trees;

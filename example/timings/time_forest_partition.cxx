@@ -28,6 +28,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh_vtk.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
+#include <t8_cmesh/t8_cmesh_occ.hxx>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_forest.h>
 #include <t8_schemes/t8_default_cxx.hxx>
@@ -331,7 +332,7 @@ main (int argc, char *argv[])
   int                 level, level_diff;
   int                 help = 0, no_vtk, do_ghost, do_balance;
   int                 dim, num_files;
-  int                 test_tet;
+  int                 test_tet, test_linear_cylinder, test_occ_cylinder;
   int                 stride;
   double              T, delta_t, cfl;
   sc_options_t       *opt;
@@ -382,6 +383,14 @@ main (int argc, char *argv[])
                          "Use a cmesh that tests all tet face-to-face connections."
                          " If this option is used -o is enabled automatically."
                          " Diables -f and -c.");
+  sc_options_add_switch (opt, 'L', "test-linear-cylinder", &test_linear_cylinder,
+                         "Use a linear cmesh to compare linear and occ geometry performance."
+                         " If this option is used -o is enabled automatically."
+                         " Diables -f and -c.");
+  sc_options_add_switch (opt, 'O', "test-occ-cylinder", &test_occ_cylinder,
+                         "Use a occ cmesh to compare linear and occ geometry performance."
+                         " If this option is used -o is enabled automatically."
+                         " Diables -f and -c.");
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The initial uniform "
                       "refinement level of the forest.");
@@ -413,8 +422,9 @@ main (int argc, char *argv[])
   /* check for wrong usage of arguments */
   if (first_argc < 0 || first_argc != argc || dim < 2 || dim > 3
       || (cmeshfileprefix == NULL && mshfileprefix == NULL
-          && test_tet == 0) || stride <= 0
-      || (num_files - 1) * stride >= mpisize || cfl < 0) {
+          && test_tet == 0 && test_occ_cylinder == 0 && test_linear_cylinder == 0) 
+      || stride <= 0 || (num_files - 1) * stride >= mpisize || cfl < 0 
+      || test_tet + test_linear_cylinder + test_occ_cylinder > 1) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
@@ -440,6 +450,15 @@ main (int argc, char *argv[])
     else if (test_tet) {
       cmesh = t8_cmesh_new_tet_orientation_test (sc_MPI_COMM_WORLD);
       vtu_prefix = "test_tet";
+    }
+    else if (test_linear_cylinder) {
+      cmesh = t8_cmesh_new_hollow_cylinder (sc_MPI_COMM_WORLD, 20, 10, 0, 1);
+      vtu_prefix = "test_linear_cylinder";
+    }
+    else if (test_occ_cylinder) {
+      cmesh = t8_cmesh_new_hollow_cylinder (sc_MPI_COMM_WORLD, 3, 1, 1, 1);
+      vtu_prefix = "test_occ_cylinder";
+
     }
     else {
       T8_ASSERT (cmeshfileprefix != NULL);

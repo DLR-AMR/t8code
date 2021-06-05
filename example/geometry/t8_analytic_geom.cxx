@@ -55,7 +55,6 @@
 #include <BRep_Tool.hxx>
 #include <GeomConvert.hxx>
 #include <Geom_Surface.hxx>
-
 #endif
 
 typedef enum
