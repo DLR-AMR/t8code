@@ -55,6 +55,7 @@
 #include <t8_schemes/t8_default_cxx.hxx>        /* default refinement scheme. */
 #include <t8_vec.h>             /* Basic operations on 3D vectors. */
 #include <example/tutorials/t8_step3.h>
+#include <t8_forest_vtk.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -245,7 +246,7 @@ t8_step3_main (int argc, char **argv)
   t8_step3_print_forest_information (forest);
 
   /* Write forest to vtu files. */
-  t8_forest_write_vtk (forest, prefix_uniform);
+  t8_write_vtk_via_API (forest, prefix_uniform);
   t8_global_productionf (" [step3] Wrote uniform forest to vtu files: %s*\n",
                          prefix_uniform);
 
@@ -267,8 +268,8 @@ t8_step3_main (int argc, char **argv)
   t8_step3_print_forest_information (forest);
 
   /* Write forest to vtu files. */
-  t8_forest_write_vtk (forest, prefix_adapt);
-  t8_global_productionf (" [step3] Wrote adapted forest to vtu files: %s*\n",
+  t8_write_vtk_via_API (forest, prefix_adapt);
+  t8_global_productionf (" [step3] Wrote adapted forest to vtu files: %s*\n",   /*hier */
                          prefix_adapt);
 
   /*
@@ -278,11 +279,16 @@ t8_step3_main (int argc, char **argv)
   /* Destroy the forest. */
   t8_forest_unref (&forest);
   t8_global_productionf (" [step3] Destroyed forest.\n");
-
+/*
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
+*/
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Finalize ();
+  sc_finalize ();
+  return EXIT_SUCCESS;
 
   return 0;
 }

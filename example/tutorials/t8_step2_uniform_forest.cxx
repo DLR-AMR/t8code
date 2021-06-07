@@ -48,13 +48,15 @@
 #include <t8_cmesh.h>
 #include <t8_forest.h>
 #include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_forest_vtk.h>
+#include <t8.h>
 
 /* Builds cmesh of 2 prisms that build up a unit cube. 
  * See step1 for a detailed description.
  * \param [in] comm   MPI Communicator to use.
  * \return            The coarse mesh.
  */
-static t8_cmesh_t
+static              t8_cmesh_t
 t8_step2_build_prismcube_coarse_mesh (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -75,7 +77,7 @@ t8_step2_build_prismcube_coarse_mesh (sc_MPI_Comm comm)
  * \return            A uniform forest with the given refinement level that is
  *                    partitioned across the processes in \a comm.
  */
-static t8_forest_t
+static              t8_forest_t
 t8_step2_build_uniform_forest (sc_MPI_Comm comm, t8_cmesh_t cmesh, int level)
 {
   t8_forest_t         forest;
@@ -168,7 +170,7 @@ main (int argc, char **argv)
                          global_num_elements);
 
   /* Write forest to vtu files. */
-  t8_step2_write_forest_vtk (forest, prefix);
+  t8_write_vtk_via_API (forest, prefix);
   t8_global_productionf (" [step2] Wrote forest to vtu files:\t%s*\n",
                          prefix);
 

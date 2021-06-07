@@ -28,6 +28,27 @@
 #include <t8_vec.h>
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_forest_types.h"
+#include <vtkActor.h>
+#include <vtkCellArray.h>
+#include <vtkDataSetMapper.h>
+#include <vtkNew.h>
+#include <vtkPointData.h>
+#include <vtkProperty.h>
+#include <vtkTetra.h>
+#include <vtkHexahedron.h>
+#include <vtkVertex.h>
+#include <vtkLine.h>
+#include <vtkQuad.h>
+#include <vtkTriangle.h>
+#include <vtkPyramid.h>
+#include <vtkWedge.h>
+#include <vtkUnstructuredGrid.h>
+#include <vtkVertexGlyphFilter.h>
+#include <vtkXMLPUnstructuredGridWriter.h>
+#include <vtkUnsignedCharArray.h>
+#include <t8.h>
+#include <t8_forest.h>
+#include <t8_schemes/t8_default_cxx.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -94,6 +115,149 @@ typedef int         (*t8_forest_vtk_cell_data_kernel) (t8_forest_t forest,
                                                        void **data,
                                                        T8_VTK_KERNEL_MODUS
                                                        modus);
+
+void
+t8_write_vtk_via_API (t8_forest_t forest, const char *filename)
+{
+  T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
+  T8_ASSERT (forest->committed);
+  T8_ASSERT (filename != NULL);
+
+  long int            point_id = 0;
+  t8_cmesh_t          cmesh;
+  t8_locidx_t         ielement;
+  t8_tree_t           tree;
+  t8_locidx_t         itree, ivertex;
+  t8_ctree_t          ctree;
+  double             *vertices;
+  double              coordinates[3];
+  double              x, y, z;
+  int                 elem_id = 0;
+
+  vtkNew < vtkPoints > points;
+  vtkNew < vtkCellArray > cellArray;
+  vtkNew < vtkHexahedron > hexa;
+  vtkNew < vtkVertex > vertex;
+  vtkNew < vtkLine > line;
+  vtkNew < vtkQuad > quad;
+  vtkNew < vtkTriangle > tri;
+  vtkNew < vtkPyramid > pyramid;
+  vtkNew < vtkWedge > prism;
+  vtkNew < vtkTetra > tet;
+
+  cmesh = t8_forest_get_cmesh (forest);
+  static int         *cellTypes =
+    T8_ALLOC (int, t8_forest_get_num_element (forest));
+
+  for (itree = 0;
+       (int) itree < t8_forest_get_num_local_trees (forest); itree++) {
+
+    ctree = t8_cmesh_get_tree (cmesh,
+                               t8_forest_ltreeid_to_cmesh_ltreeid (forest,
+                                                                   itree));
+    vertices = ((double *)
+                t8_cmesh_get_attribute (cmesh, t8_get_package_id (), 0,
+                                        ctree->treeid));
+    tree = t8_forest_get_tree (forest, itree);
+    t8_eclass_scheme_c *scheme =
+      t8_forest_get_eclass_scheme (forest, tree->eclass);
+    for (ielement = 0;
+         ielement < (int) t8_forest_get_tree_num_elements (forest,
+                                                           itree);
+         ielement++) {
+      t8_element_t       *element =
+        t8_forest_get_element_in_tree (forest, itree, ielement);
+      t8_element_shape_t  element_shape = scheme->t8_element_shape (element);
+
+      for (ivertex = 0; ivertex < t8_eclass_num_vertices[tree->eclass];
+           ivertex++, point_id++) {
+
+        t8_forest_element_coordinate (forest, itree, element,
+                                      vertices,
+                                      t8_eclass_vtk_corner_number
+                                      [tree->eclass]
+                                      [ivertex], coordinates);
+        x = coordinates[0];     /*hier */
+        y = coordinates[1];
+        z = coordinates[2];
+        points->InsertNextPoint (x, y, z);
+
+        switch (element_shape) {
+        case T8_ECLASS_VERTEX:
+          vertex->GetPointIds ()->SetId (ivertex, point_id);
+          break;
+        case T8_ECLASS_LINE:
+          line->GetPointIds ()->SetId (ivertex, point_id);
+          break;
+        case T8_ECLASS_QUAD:
+          quad->GetPointIds ()->SetId (ivertex, point_id);
+          break;
+        case T8_ECLASS_TRIANGLE:
+          tri->GetPointIds ()->SetId (ivertex, point_id);
+          break;
+        case T8_ECLASS_HEX:
+          hexa->GetPointIds ()->SetId (ivertex, point_id);
+          break;
+        case T8_ECLASS_TET:
+          tet->GetPointIds ()->SetId (ivertex, point_id);
+          break;
+        case T8_ECLASS_PRISM:
+          prism->GetPointIds ()->SetId (ivertex, point_id);
+          break;
+        case T8_ECLASS_PYRAMID:
+          pyramid->GetPointIds ()->SetId (ivertex, point_id);
+          break;
+        default:
+          printf ("Kein Elementtyp.\n");
+          break;
+        }
+
+      }
+      switch (element_shape) {
+      case T8_ECLASS_VERTEX:
+        cellArray->InsertNextCell (vertex);
+        break;
+      case T8_ECLASS_LINE:
+        cellArray->InsertNextCell (line);
+        break;
+      case T8_ECLASS_QUAD:
+        cellArray->InsertNextCell (quad);
+        break;
+      case T8_ECLASS_TRIANGLE:
+        cellArray->InsertNextCell (tri);
+        break;
+      case T8_ECLASS_HEX:
+        cellArray->InsertNextCell (hexa);
+        break;
+      case T8_ECLASS_TET:
+        cellArray->InsertNextCell (tet);
+        break;
+      case T8_ECLASS_PRISM:
+        cellArray->InsertNextCell (prism);
+        break;
+      case T8_ECLASS_PYRAMID:
+        cellArray->InsertNextCell (pyramid);
+        break;
+      default:
+        printf ("Kein Elementtyp.\n");
+        break;
+      }
+      cellTypes[elem_id] = t8_eclass_vtk_type[tree->eclass];
+      elem_id++;
+    }                           /*hier */
+  }
+  // Write file
+  vtkNew < vtkUnstructuredGrid > unstructuredGrid;
+  unstructuredGrid->SetPoints (points);
+  unstructuredGrid->SetCells (cellTypes, cellArray);
+  vtkNew < vtkXMLPUnstructuredGridWriter > writer;
+  writer->SetFileName (filename);       /*filename.c_str () */
+  writer->SetInputData (unstructuredGrid);
+  writer->Write ();
+
+  T8_FREE (cellTypes);
+}
 
 static              t8_locidx_t
 t8_forest_num_points (t8_forest_t forest, int count_ghosts)
