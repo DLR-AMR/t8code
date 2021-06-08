@@ -1417,6 +1417,10 @@ t8_cmesh_print_profile (t8_cmesh_t cmesh)
                    "cmesh: Partition runtime.");
     sc_stats_set1 (&stats[8], profile->commit_runtime,
                    "cmesh: Commit runtime.");
+    sc_stats_set1 (&stats[9], profile->geometry_evaluate_num_calls,
+                   "cmesh: Number of geometry evaluations.");
+    sc_stats_set1 (&stats[10], profile->geometry_evaluate_runtime,
+                   "cmesh: Accumulated geometry evaluation runtime.");
     /* compute stats */
     sc_stats_compute (sc_MPI_COMM_WORLD, T8_CPROFILE_NUM_STATS, stats);
     /* print stats */
