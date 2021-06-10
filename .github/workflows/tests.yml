@@ -1,5 +1,9 @@
 name: Tests
 
+# TODO
+# 1. activate -Werror
+# 2. use steps for sc/p4est/t8code
+
 on:
   push:
     branches:
