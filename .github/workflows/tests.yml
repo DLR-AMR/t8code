@@ -44,7 +44,7 @@ jobs:
               SC_DEBUG: $PWD/sc/build_debug
               SC_NONDEBUG: $PWD/sc/build_nondebug
     - name: build debug
-      run: make -j V=0 && make -j V=0 install
+      run: cd sc/build_debug && make -j V=0 && make -j V=0 install
     - name: configure and build nondebug
       run: cd ../build_nondebug && ../configure --enable-mpi --enable-debug --prefix=$PWD/install
     - name: build nondebug
