@@ -11,6 +11,7 @@ on:
     branches:
       - master
       - develop
+  workflow_dispatch: # Be able to trigger this manually on github.com
 
 jobs:
   build:
