@@ -74,6 +74,7 @@ include src/t8_schemes/t8_default/Makefile.am
 include src/t8_schemes/t8_new_feature/t8_subelements/Makefile.am
 include test/Makefile.am
 include example/basic/Makefile.am
+include example/subelements/Makefile.am
 include example/ghost/Makefile.am
 include example/timings/Makefile.am
 include example/triangle/Makefile.am
