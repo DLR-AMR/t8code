@@ -29,17 +29,16 @@ jobs:
       run: git submodule update
     - name: bootstrap
       run: ./bootstrap
-# install sc-debug and sc-non-debug
+      ## install sc-debug and sc-non-debug
     - name: install sc
       run: echo "Install sc"
     - name: make folders
       run: mkdir sc/build_debug && mkdir sc/build_nondebug
-    - name: create environment vars
+    - name: configure debug
+      run: cd sc/build_debug && ./configure --enable-mpi --enable-debug --prefix=$PWD/install
       env:
               SC_DEBUG: $PWD/sc/build_debug
               SC_NONDEBUG: $PWD/sc/build_nondebug
-    - name: configure debug
-      run: cd sc/build_debug && ./configure --enable-mpi --enable-debug --prefix=$PWD/install
     - name: build debug
       run: make -j V=0 && make -j V=0 install
     - name: configure and build nondebug
@@ -51,12 +50,11 @@ jobs:
       run: echo "Install p4est"
     - name: make folders
       run: mkdir p4est/build_debug && mkdir p4est/build_nondebug
-    - name: create environment vars
+    - name: configure debug
+      run: cd p4est/build_debug && ./configure --enable-mpi --enable-debug --prefix=$PWD/install --with-sc=$SC_DEBUG
       env:
               P4EST_DEBUG: $PWD/sc/build_debug
               P4EST_NONDEBUG: $PWD/sc/build_nondebug
-    - name: configure debug
-      run: cd p4est/build_debug && ./configure --enable-mpi --enable-debug --prefix=$PWD/install --with-sc=$SC_DEBUG
     - name: build debug
       run: make -j V=0 && make -j V=0 install
     - name: configure and build nondebug
@@ -64,7 +62,6 @@ jobs:
     - name: build nondebug
       run: make -j V=0 && make -j V=0 install
 # define helper variables
-    - name: define variables
       env:
             CONFIG_OPTIONS: --without-blas
             CONFIG_DEBUG: $CONFIG_OPTIONS --enable-debug --with-sc=$SC_DEBUG --with-p4est=$P4EST_DEBUG
