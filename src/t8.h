@@ -64,7 +64,11 @@ T8_EXTERN_C_BEGIN ();
 /** Portable way to use the const keyword determined by configure. */
 #define t8_restrict _sc_restrict
 
+#ifdef T8_ENABLE_DEBUG
 #define T8_ASSERT P4EST_ASSERT          /**< TODO: write proper function. */
+#else
+#define T8_ASSERT(CONDITION)  do {} while(0)    /* In non-debug mode, T8_ASSERT does nothing. */
+#endif
 #define T8_ALLOC P4EST_ALLOC            /**< TODO: write proper function. */
 #define T8_ALLOC_ZERO P4EST_ALLOC_ZERO  /**< TODO: write proper function. */
 #define T8_FREE P4EST_FREE              /**< TODO: write proper function. */
