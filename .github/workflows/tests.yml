@@ -35,14 +35,14 @@ jobs:
     - name: make folders
       run: mkdir sc/build_debug && mkdir sc/build_nondebug
     - name: configure debug
-      run: cd sc/build_debug && ./configure --enable-mpi --enable-debug --prefix=$PWD/install
+      run: cd sc/build_debug && ../configure --enable-mpi --enable-debug --prefix=$PWD/install
       env:
               SC_DEBUG: $PWD/sc/build_debug
               SC_NONDEBUG: $PWD/sc/build_nondebug
     - name: build debug
       run: make -j V=0 && make -j V=0 install
     - name: configure and build nondebug
-      run: cd ../build_nondebug && ./configure --enable-mpi --enable-debug --prefix=$PWD/install
+      run: cd ../build_nondebug && ../configure --enable-mpi --enable-debug --prefix=$PWD/install
     - name: build nondebug
       run: make -j V=0 && make -j V=0 install
 # install p4est-debug and p4est-non-debug
@@ -51,14 +51,14 @@ jobs:
     - name: make folders
       run: mkdir p4est/build_debug && mkdir p4est/build_nondebug
     - name: configure debug
-      run: cd p4est/build_debug && ./configure --enable-mpi --enable-debug --prefix=$PWD/install --with-sc=$SC_DEBUG
+      run: cd p4est/build_debug && ../configure --enable-mpi --enable-debug --prefix=$PWD/install --with-sc=$SC_DEBUG
       env:
               P4EST_DEBUG: $PWD/sc/build_debug
               P4EST_NONDEBUG: $PWD/sc/build_nondebug
     - name: build debug
       run: make -j V=0 && make -j V=0 install
     - name: configure and build nondebug
-      run: cd ../build_nondebug && ./configure --enable-mpi --prefix=$PWD/install --with-sc=$SC_NONDEBUG
+      run: cd ../build_nondebug && ../configure --enable-mpi --prefix=$PWD/install --with-sc=$SC_NONDEBUG
     - name: build nondebug
       run: make -j V=0 && make -j V=0 install
 # define helper variables
