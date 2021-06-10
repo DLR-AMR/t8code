@@ -955,8 +955,8 @@ t8_default_scheme_sub_c::t8_element_init (int length, t8_element_t * elem,
     for (i = 0; i < length; i++) {
       p4est_quadrant_t   *quad = &pquad_w_sub[i].p4q;
       p4est_quadrant_set_morton (quad, 0, 0);
-      T8_QUAD_SET_TDIM (quad + i, 2);
-      T8_ASSERT (p4est_quadrant_is_extended (quad + i));
+      T8_QUAD_SET_TDIM (quad, 2);
+      T8_ASSERT (p4est_quadrant_is_extended (quad));
     }
   }
 #endif
@@ -973,6 +973,7 @@ t8_default_scheme_sub_c::t8_element_is_valid (const t8_element_t * elem) const
   const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
   const p4est_quadrant_t *q = &pquad_w_sub->p4q;
 
+  /* NOTE assertion here because some elements have random values */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement == 0 || pquad_w_sub->dummy_is_subelement == 1);
   T8_ASSERT (pquad_w_sub->dummy_use_subelement == 0 || pquad_w_sub->dummy_use_subelement == 1);
   T8_ASSERT (0 <= pquad_w_sub->subelement_id && pquad_w_sub->subelement_id <= pquad_w_sub->num_subelement_ids);
