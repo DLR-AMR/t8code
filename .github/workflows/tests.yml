@@ -6,6 +6,7 @@ on:
       - master
       - develop
       - feature-github_ci # for testing this script
+      - feature-CI_link_sc_p4est # for testing this script
   pull_request:
     branches:
       - master
@@ -27,11 +28,55 @@ jobs:
       run: git submodule update
     - name: bootstrap
       run: ./bootstrap
+# install sc-debug and sc-non-debug
+    - name: install sc
+      run: echo "Install sc"
+    - name: make folders
+      run: mkdir sc/build_debug && mkdir sc/build_nondebug
+    - name: create environment vars
+      env:
+              SC_DEBUG: $PWD/sc/build_debug
+              SC_NONDEBUG: $PWD/sc/build_nondebug
+    - name: configure debug
+      run: cd sc/build_debug && ./configure --enable-mpi --enable-debug --prefix=$PWD/install
+    - name: build debug
+      run: make -j V=0 && make -j V=0 install
+    - name: configure and build nondebug
+      run: cd ../build_nondebug && ./configure --enable-mpi --enable-debug --prefix=$PWD/install
+    - name: build nondebug
+      run: make -j V=0 && make -j V=0 install
+# install p4est-debug and p4est-non-debug
+    - name: install p4est
+      run: echo "Install p4est"
+    - name: make folders
+      run: mkdir p4est/build_debug && mkdir p4est/build_nondebug
+    - name: create environment vars
+      env:
+              P4EST_DEBUG: $PWD/sc/build_debug
+              P4EST_NONDEBUG: $PWD/sc/build_nondebug
+    - name: configure debug
+      run: cd p4est/build_debug && ./configure --enable-mpi --enable-debug --prefix=$PWD/install --with-sc=$SC_DEBUG
+    - name: build debug
+      run: make -j V=0 && make -j V=0 install
+    - name: configure and build nondebug
+      run: cd ../build_nondebug && ./configure --enable-mpi --prefix=$PWD/install --with-sc=$SC_NONDEBUG
+    - name: build nondebug
+      run: make -j V=0 && make -j V=0 install
+# define helper variables
+    - name: define variables
+      env:
+            CONFIG_OPTIONS: --without-blas
+            CONFIG_DEBUG: $CONFIG_OPTIONS --enable-debug --with-sc=$SC_DEBUG --with-p4est=$P4EST_DEBUG
+            CONFIG_RELEASE: $CONFIG_OPTIONS --with-sc=$SC_NONDEBUG --with-p4est=$P4EST_NONDEBUG
+            CONFIG_MPI_DEBUG: $CONFIG_DEBUG --enable-mpi 
+            CONFIG_MPI_RELEASE: $CONFIG_RELEASE --enable-mpi 
 # configure and test with MPI (release mode)
     - name: check release mode
       run: echo "Checking release mode (MPI)"
+    - name: change back to main dir
+      run: cd ../../
     - name: configure
-      run: ./configure --enable-mpi --without-blas
+      run: ./configure $CONFIG_MPI_RELEASE
     - name: OnFailPrintLog
       if: failure()
       run: cat config.log
@@ -45,7 +90,7 @@ jobs:
     - name: check debugging mode
       run: echo "Checking debug mode"
     - name: configure
-      run: ./configure --enable-mpi --without-blas --enable-debug
+      run: ./configure $CONFIG_MPI_DEBUG
     - name: OnFailPrintLog
       if: failure()
       run: cat config.log
@@ -59,7 +104,7 @@ jobs:
     - name: check C++ compiler
       run: echo "Checking C++, release mode (MPI)"
     - name: configure
-      run: ./configure CC=mpicxx CXX=mpicxx --enable-mpi --without-blas --enable-debug
+      run: ./configure CC=mpicxx CXX=mpicxx $CONFIG_MPI_RELEASE
     - name: OnFailPrintLog
       if: failure()
       run: cat config.log
@@ -73,7 +118,7 @@ jobs:
     - name: check serial
       run: echo "Checking serial release mode"
     - name: configure
-      run: ./configure --without-blas
+      run: ./configure $CONFIG_RELEASE
     - name: OnFailPrintLog
       if: failure()
       run: cat config.log
@@ -87,7 +132,7 @@ jobs:
     - name: check serial
       run: echo "Checking debugging mode"
     - name: configure
-      run: ./configure --without-blas --enable-debug
+      run: ./configure $CONFIG_DEBUG
     - name: OnFailPrintLog
       if: failure()
       run: cat config.log
@@ -101,7 +146,7 @@ jobs:
     - name: Install netcdf
       run: sudo apt-get install libnetcdf-dev
     - name: configure
-      run: ./configure --without-blas --with-netcdf --enable-mpi
+      run: ./configure $CONFIG_MPI_RELEASE --with-netcdf
     - name: OnFailPrintLog
       if: failure()
       run: cat config.log
