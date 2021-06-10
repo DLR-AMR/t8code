@@ -202,7 +202,7 @@ t8_default_scheme_sub_c::t8_element_get_face_corner (const t8_element_t *
    *   0    f_3    1
    */
 
-  /* NOTE T8_ASSERT (t8_element_is_valid (element)); missing? */
+  T8_ASSERT (t8_element_is_valid (element));
   T8_ASSERT (0 <= face && face < P4EST_FACES);
   T8_ASSERT (0 <= corner && corner < 2);
   return p4est_face_corners[face][corner];
@@ -246,16 +246,15 @@ t8_default_scheme_sub_c::t8_element_child (const t8_element_t * elem,
   t8_element_copy_surround (q, r);
 }
 
-/* NOTE c[] pointer */
+/* NOTE fct compiles but not sure if this is correct - check later */
 void
 t8_default_scheme_sub_c::t8_element_children (const t8_element_t * elem,
                                                int length, t8_element_t * c[])
 {
   const t8_quad_with_subelements *pquad_w_sub_elem = (const t8_quad_with_subelements *) elem;
-  t8_quad_with_subelements *pquad_w_sub_children = (t8_quad_with_subelements *) c;
+  t8_quad_with_subelements **pquad_w_sub_children = (t8_quad_with_subelements **) c;
 
   const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
-  p4est_quadrant_t *children = &pquad_w_sub_children->p4q;
 
   int i;
 
@@ -270,10 +269,9 @@ t8_default_scheme_sub_c::t8_element_children (const t8_element_t * elem,
 #endif
   T8_ASSERT (length == P4EST_CHILDREN);
 
-  /* NOTE ** pointer */
-  p4est_quadrant_childrenpv (q, (p4est_quadrant_t **) c);
   for (i = 0; i < P4EST_CHILDREN; ++i) {
-    t8_element_copy_surround (q, (p4est_quadrant_t *) c[i]);
+    p4est_quadrant_child (q, &pquad_w_sub_children[i]->p4q, i);
+    t8_element_copy_surround (q, &pquad_w_sub_children[i]->p4q);
   }
 }
 
@@ -297,17 +295,21 @@ t8_default_scheme_sub_c::t8_element_ancestor_id (const t8_element_t * elem,
   return p4est_quadrant_ancestor_id (q, level);
 }
 
-/* NOTE ** pointer? Nothing changed in this fct */
+/* NOTE fct compiles but not sure if this is correct - check later */
 int
 t8_default_scheme_sub_c::t8_element_is_family (t8_element_t ** fam)
 {
+  t8_quad_with_subelements **pquad_w_sub_family = (t8_quad_with_subelements **) fam;
 #ifdef T8_ENABLE_DEBUG
   int                 i;
   for (i = 0; i < P4EST_CHILDREN; i++) {
     T8_ASSERT (t8_element_is_valid (fam[i]));
   }
 #endif
-  return p4est_quadrant_is_familypv ((p4est_quadrant_t **) fam);
+  return p4est_quadrant_is_family (&pquad_w_sub_family[0]->p4q,
+                                   &pquad_w_sub_family[1]->p4q,
+                                   &pquad_w_sub_family[2]->p4q,
+                                   &pquad_w_sub_family[3]->p4q);
 }
 
 void
@@ -427,7 +429,6 @@ t8_default_scheme_sub_c::t8_element_nca (const t8_element_t * elem1,
   t8_element_copy_surround (q1, r);
 }
 
-/* NOTE Why int face? */
 t8_element_shape_t
   t8_default_scheme_sub_c::t8_element_face_shape (const t8_element_t * elem,
                                                    int face)
@@ -436,7 +437,7 @@ t8_element_shape_t
   return T8_ECLASS_LINE;
 }
 
-/* NOTE nothing changed in this fct */
+/* NOTE no chenages in this fct - check later if this works correctly */
 void
 t8_default_scheme_sub_c::t8_element_children_at_face (const t8_element_t *
                                                        elem, int face,
@@ -500,7 +501,6 @@ t8_default_scheme_sub_c::t8_element_children_at_face (const t8_element_t *
   /* We have to revert the order and compute second child first, since
    * the usage allows for elem == children[0].
    */
-  /* NOTE no changes here?! */
   this->t8_element_child (elem, second_child, children[1]);
   this->t8_element_child (elem, first_child, children[0]);
   if (child_indices != NULL) {
@@ -564,7 +564,7 @@ t8_default_scheme_sub_c::t8_element_transform_face (const t8_element_t *
   T8_ASSERT (t8_element_is_valid (elem2));
   T8_ASSERT (0 <= orientation && orientation < P4EST_FACES);
 
-  /* NOTE nothing changed below - check if that is right */
+  /* NOTE nothing changed below - check later if that is right */
   if (sign) {
     /* The tree faces have the same topological orientation, and
      * thus we have to perform a coordinate switch. */
@@ -639,7 +639,6 @@ t8_default_scheme_sub_c::t8_element_extrude_face (const t8_element_t * face,
   t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem;
   p4est_quadrant_t   *q = &pquad_w_sub->p4q;
 
-  /* NOTE nothing changed below, is that right? */
   const t8_dline_t   *l = (const t8_dline_t *) face;
 
   T8_ASSERT (t8_element_is_valid (elem));
@@ -871,8 +870,6 @@ t8_default_scheme_sub_c::t8_element_anchor (const t8_element_t * elem,
 
   T8_ASSERT (t8_element_is_valid (elem));
 
-  /* NOTE is q = (p4est_quadrant_t *) elem; still necessary? */
-  // q = (p4est_quadrant_t *) elem;
   coord[0] = q->x;
   coord[1] = q->y;
   coord[2] = 0;
@@ -900,6 +897,8 @@ t8_default_scheme_sub_c::t8_element_vertex_coords (const t8_element_t * t,
   len = P4EST_QUADRANT_LEN (q1->level);
   /* Compute the x and y coordinates of the vertex depending on the
    * vertex number */
+  
+  /* NOTE below notation? */
   coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
   coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
 }
@@ -933,19 +932,24 @@ t8_default_scheme_sub_c::t8_element_new (int length, t8_element_t ** elem)
  * TODO: remove this comment if you do not need it anymore.
  */
 
+/* NOTE p4est_quadrant_is_extended does not work here */
 void
 t8_default_scheme_sub_c::t8_element_init (int length, t8_element_t * elem,
                                           int new_called)
 {
   t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem;
-  /* Initalize subelement identifiers to 0 (no subelement) */
+
+  /* Initalize subelement identifiers (0 means there are no subelements) */
   pquad_w_sub->dummy_is_subelement = 0;
   pquad_w_sub->dummy_use_subelement = 0;
   pquad_w_sub->subelement_id = 0;
+  pquad_w_sub->num_subelement_ids = 2;
+
 #ifdef T8_ENABLE_DEBUG
   /* In debugging mode we iterate over all length many elements and 
    * set their quad to the leve 0 quad with ID 0. */
   if (!new_called) {
+    /* NOTE deleted "+i" behind quad in fcts in line 958 and 959 - check if that is correct */
     int                 i;
     /* Set all values to 0 */
     for (i = 0; i < length; i++) {
@@ -958,7 +962,7 @@ t8_default_scheme_sub_c::t8_element_init (int length, t8_element_t * elem,
 #endif
 }
 
-/* NOTE t8_element_is_valid muss mit neuem strut umgehen können. Aktuell nur Zwischenlösung */
+/* NOTE check if this functions works as it should */
 #ifdef T8_ENABLE_DEBUG
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */
@@ -969,9 +973,10 @@ t8_default_scheme_sub_c::t8_element_is_valid (const t8_element_t * elem) const
   const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
   const p4est_quadrant_t *q = &pquad_w_sub->p4q;
 
-  /* TODO: Check that the subelement variables are in valid ranges.
-     i.e. 0 <= subelement_id < num_sebelement_ids
-   */
+  T8_ASSERT (pquad_w_sub->dummy_is_subelement == 0 || pquad_w_sub->dummy_is_subelement == 1);
+  T8_ASSERT (pquad_w_sub->dummy_use_subelement == 0 || pquad_w_sub->dummy_use_subelement == 1);
+  T8_ASSERT (0 <= pquad_w_sub->subelement_id && pquad_w_sub->subelement_id <= pquad_w_sub->num_subelement_ids);
+
   return p4est_quadrant_is_extended (q);
 }
 #endif
@@ -980,7 +985,7 @@ t8_default_scheme_sub_c::t8_element_is_valid (const t8_element_t * elem) const
 t8_default_scheme_sub_c::t8_default_scheme_sub_c (void)
 {
   eclass = T8_ECLASS_QUAD;
-  element_size = sizeof (t8_quad_with_subelements);
+  element_size = sizeof (t8_pquad_t);
   ts_context = sc_mempool_new (element_size);
 }
 

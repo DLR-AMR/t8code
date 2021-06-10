@@ -50,6 +50,7 @@ typedef struct
   int                 dummy_is_subelement;      /* ist element ein subelement? */
   int                 dummy_use_subelement;     /* Soll subelement eingefügt werden? */
   int                 subelement_id;    /* welche Art von subelement (obere oder untere häfte)? */
+  int                 num_subelement_ids; /* # of subelements for the specific kind of subelement */
 } t8_quad_with_subelements;
 
 typedef t8_quad_with_subelements t8_pquad_t;
