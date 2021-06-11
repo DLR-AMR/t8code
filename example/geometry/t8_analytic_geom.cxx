@@ -708,7 +708,10 @@ main (int argc, char **argv)
                       "\t\t3 - A square of two triangles that is mapped into a circle.\n"
                       "\t\t    The mesh will not be uniform. Instead it is refined at the domain boundary.\n"
                       "\t\t4 - A cube that is distorted in z-direction with one 3D cube tree.\n"
-                      "\t\t5 - A moving mesh consisting of a single 2D quad tree.\n");
+                      "\t\t5 - A moving mesh consisting of a single 2D quad tree.\n"
+                      "\t\t5 - A cube with two occ curves as edges.\n"
+                      "\t\t5 - Two cubes with one occ surface as face.\n"
+                      "\t\t5 - A hollow cylinder with a occ surface on the in- and outside.\n");
 
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
