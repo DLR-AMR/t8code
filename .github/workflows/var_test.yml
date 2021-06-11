@@ -1,0 +1,21 @@
+name: Tests
+
+# TODO
+# 1. activate -Werror
+# 2. use steps for sc/p4est/t8code
+
+on:
+  push:
+    branches:
+      - feature-*CI* # for testing this script, all feature branches with "CI" in their name
+  workflow_dispatch: # Be able to trigger this manually on github.com
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      SC_DEBUG: sc/build_debug
+    steps:
+      - name: Test vars
+        run: echo "$SC_DEBUG"
+

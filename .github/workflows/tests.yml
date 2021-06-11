@@ -9,7 +9,7 @@ on:
     branches:
       - master
       - develop
-      - feature-*CI* # for testing this script, all feature branches with "CI" in their name
+#      - feature-*CI* # for testing this script, all feature branches with "CI" in their name
   pull_request:
     branches:
       - master
@@ -35,7 +35,8 @@ jobs:
 # Setup and bootstrap
     - uses: actions/checkout@v1
     - name: define vars
-      run: SC_DEBUG=$PWD/sc/build_debug
+      env: 
+	SC_DEBUG: sc/build_debug
     - name: Variable check 1 sc/p4est
       run: echo [${{ env.SC_DEBUG }}] [$SC_NONDEBUG] [$P4EST_DEBUG] [$P4EST_NONDEBUG]
     - name: Variable check 2 config options
