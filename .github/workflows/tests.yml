@@ -20,6 +20,11 @@ jobs:
   build:
 
     runs-on: ubuntu-18.04
+    env:
+      SC_DEBUG: env.GITHUB_ACTION_PATH/sc/build_debug
+      SC_NONDEBUG: env.GITHUB_ACTION_PATH/sc/build_nondebug
+      P4EST_DEBUG: env.GITHUB_ACTION_PATH/p4est/build_debug
+      P4EST_NONDEBUG: env.GITHUB_ACTION_PATH/p4est/build_nondebug
     
     steps:
 # Setup and bootstrap
@@ -39,9 +44,6 @@ jobs:
       run: mkdir sc/build_debug && mkdir sc/build_nondebug
     - name: sc configure debug
       run: cd sc/build_debug && ../configure --enable-mpi --enable-debug --prefix=$PWD/install
-      env:
-              SC_DEBUG: $PWD/sc/build_debug
-              SC_NONDEBUG: $PWD/sc/build_nondebug
     - name: sc build debug
       run: cd sc/build_debug && make -j V=0 && make -j V=0 install
     - name: sc configure and build nondebug
@@ -58,9 +60,6 @@ jobs:
       run: mkdir p4est/build_debug && mkdir p4est/build_nondebug
     - name: p4est configure debug
       run: cd p4est/build_debug && ../configure --enable-mpi --enable-debug --prefix=$PWD/install --with-sc=$SC_DEBUG
-      env:
-              P4EST_DEBUG: $PWD/sc/build_debug
-              P4EST_NONDEBUG: $PWD/sc/build_nondebug
     - name: p4est build debug
       run: make -j V=0 && make -j V=0 install
     - name: OnFailPrintLog
