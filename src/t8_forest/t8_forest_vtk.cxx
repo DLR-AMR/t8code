@@ -45,8 +45,14 @@
 #include <vtkUnstructuredGrid.h>
 #include <vtkVertexGlyphFilter.h>
 #include <vtkXMLPUnstructuredGridWriter.h>
+#include <vtkXMLUnstructuredGridWriter.h>
 #include <vtkUnsignedCharArray.h>
 #include <vtkSmartPointer.h>
+#if T8_ENABLE_MPI
+#include <vtkMPI.h>
+#include <vtkMPICommunicator.h>
+#include <vtkMPIController.h>
+#endif
 #include <t8.h>
 #include <t8_forest.h>
 #include <t8_schemes/t8_default_cxx.hxx>
@@ -149,7 +155,9 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
 
   std::string filename = fileprefix;
   // Append process number
-  filename += std::to_string(forest->mpirank);
+  filename += "_" + std::to_string(forest->mpirank);
+
+  t8_debugf ("Entering vtk API output with filename %s\n", fileprefix);
 
   filename += ".vtu";
   cmesh = t8_forest_get_cmesh (forest);
@@ -255,27 +263,37 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
   vtkNew < vtkUnstructuredGrid > unstructuredGrid;
   unstructuredGrid->SetPoints (points);
   unstructuredGrid->SetCells (cellTypes, cellArray);
-  vtkNew < vtkXMLPUnstructuredGridWriter > writer;
-  if(forest->mpirank==0)
-{
-    std::string mpifilename = fileprefix;
-    mpifilename+=".pvtu";
+
+  std::string mpifilename = fileprefix;
+  mpifilename+=".pvtu";
 
 
-    auto pwriterObj = vtkSmartPointer<vtkXMLPUnstructuredGridWriter>::New();
+//   auto pwriterObj = vtkSmartPointer<vtkXMLPUnstructuredGridWriter>::New();
+  vtkSmartPointer<vtkXMLPUnstructuredGridWriter> pwriterObj = vtkSmartPointer<vtkXMLPUnstructuredGridWriter>::New();
 
-    pwriterObj->EncodeAppendedDataOff();
-    pwriterObj->SetFileName(mpifilename.c_str());
-    pwriterObj->SetNumberOfPieces( forest->mpisize );
-    pwriterObj->SetStartPiece(0);
-    pwriterObj->SetEndPiece((int)(forest->mpisize)-1);
-    pwriterObj->SetInputData(unstructuredGrid);
-    pwriterObj->Update();
-    pwriterObj->Write();
-}
-  writer->SetFileName (filename.c_str());
-  writer->SetInputData (unstructuredGrid);
-  writer->Write ();
+
+  pwriterObj->EncodeAppendedDataOff();
+  pwriterObj->SetFileName(mpifilename.c_str());
+
+#if T8_ENABLE_MPI
+  vtkSmartPointer<vtkMPICommunicator> vtk_comm = vtkSmartPointer<vtkMPICommunicator>::New();
+  vtkMPICommunicatorOpaqueComm vtk_opaque_comm(&forest->mpicomm);
+  vtk_comm->InitializeExternal(&vtk_opaque_comm);
+
+  vtkSmartPointer<vtkMPIController> vtk_mpi_ctrl = vtkSmartPointer<vtkMPIController>::New();
+  vtk_mpi_ctrl->SetCommunicator(vtk_comm);
+
+  pwriterObj->SetController(vtk_mpi_ctrl);
+#endif
+
+  pwriterObj->SetNumberOfPieces(forest->mpisize);
+  pwriterObj->SetStartPiece(forest->mpirank);
+  pwriterObj->SetEndPiece(forest->mpirank);
+  pwriterObj->SetInputData(unstructuredGrid);
+  pwriterObj->Update();
+  pwriterObj->Write();
+  pwriterObj->Print(std::cout);
+  t8_debugf ("Wrote parallel file to %s.pvtu with %i pieces\n", fileprefix, forest->mpisize);
 
   T8_FREE (cellTypes);
 }
