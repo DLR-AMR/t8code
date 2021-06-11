@@ -270,7 +270,7 @@ t8_default_scheme_sub_c::t8_element_children (const t8_element_t * elem,
 
   for (i = 0; i < P4EST_CHILDREN; ++i) {
     /* NOTE bug here: somehow q and &pquad_w_sub_children[i]->p4q can get equal 
-     * which leads to an assertion in  */
+     * which leads to an assertion in p4est_quadrant_is_parent */
     p4est_quadrant_child (q, &pquad_w_sub_children[i]->p4q, i);
     t8_element_copy_surround (q, &pquad_w_sub_children[i]->p4q);
   }
