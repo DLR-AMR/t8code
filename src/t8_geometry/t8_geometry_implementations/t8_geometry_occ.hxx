@@ -42,6 +42,7 @@
 
 
 
+extern Handle_Geom_Curve t8_global_occ_curve[];
 extern Handle_Geom_Surface t8_global_occ_surface[];
 
 /**
@@ -142,58 +143,6 @@ private:
     t8_gloidx_t active_tree;
     t8_eclass_t active_tree_class;
     const double *active_tree_vertices;
-};
-
-
-/*    cmesh
-          tree0  -> Attribute   
-                 pAtt -> | --  Att1 (ptr) -- |  -- Att2 -- | -- Att3 -- |
-                                      |
-                                   | --- |
-
-          tree1
- *
- *  
- */
-
-struct t8_cmesh_attribute_occ_surface
-{
-  public:
-    
-    /**
-   * Document
-   */
-  t8_cmesh_attribute_occ_surface (const int occ_surface_index_in,
-                                  const int face_in);
-
-  /** The destructor. 
-   * Clears the allocated memory.
-   */
-                      virtual ~ t8_cmesh_attribute_occ_surface ()
-  {
-    /* Nothing to do */
-  }
-
-  /*inline Handle_Geom_Surface t8_cmesh_attribute_occ_get_occ_surface ()
-  {
-    return t8_global_occ_surface;
-  }*/
-
-  inline int t8_cmesh_attribute_occ_surface_get_face ()
-  {
-    return face;
-  }
-
-  inline int t8_cmesh_attribute_occ_surface_get_index ()
-  {
-    return occ_surface_index;
-  }
-
-
-  private:
-    
-    int occ_surface_index;
-    int face;
 };
 
 #endif /* T8_WITH_OCC */
