@@ -49,6 +49,9 @@ jobs:
       run: cd sc/build_nondebug && ../configure --enable-mpi --enable-debug --prefix=$PWD/install
     - name: sc build nondebug
       run: cd sc/build_nondebug && make -j V=0 && make -j V=0 install
+    - name: OnFailPrintLog
+      if: failure()
+      run: cat sc/build_nondebug/config.log && cat sc/build_debug/config.log
 # install p4est-debug and p4est-non-debug
     - name: install p4est
       run: echo "Install p4est"
@@ -61,10 +64,16 @@ jobs:
               P4EST_NONDEBUG: $PWD/sc/build_nondebug
     - name: p4est build debug
       run: make -j V=0 && make -j V=0 install
+    - name: OnFailPrintLog
+      if: failure()
+      run: cat p4est/build_debug/config.log
     - name: p4est configure and build nondebug
       run: cd p4est/build_nondebug && ../configure --enable-mpi --prefix=$PWD/install --with-sc=$SC_NONDEBUG
     - name: p4est build nondebug
       run: cd p4est/build_nondebug && make -j V=0 && make -j V=0 install
+    - name: OnFailPrintLog
+      if: failure()
+      run: cat p4est/build_nondebug/config.log
 # define helper variables
       env:
             CONFIG_OPTIONS: --without-blas
@@ -79,7 +88,7 @@ jobs:
       run: mkdir build_release && cd build_release && ./configure $CONFIG_MPI_RELEASE
     - name: OnFailPrintLog
       if: failure()
-      run: cat config.log
+      run: cat build_release/config.log
     - name: make
       run: cd build_release && make -j V=0
     - name: make check
