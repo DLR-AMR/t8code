@@ -21,14 +21,23 @@ jobs:
 
     runs-on: ubuntu-18.04
     env:
-      SC_DEBUG: env.GITHUB_ACTION_PATH/sc/build_debug
-      SC_NONDEBUG: env.GITHUB_ACTION_PATH/sc/build_nondebug
-      P4EST_DEBUG: env.GITHUB_ACTION_PATH/p4est/build_debug
-      P4EST_NONDEBUG: env.GITHUB_ACTION_PATH/p4est/build_nondebug
+      SC_DEBUG: '${{ env.GITHUB_ACTION_PATH }}/sc/build_debug'
+      SC_NONDEBUG: '${{ env.GITHUB_ACTION_PATH }}/sc/build_nondebug'
+      P4EST_DEBUG: '${{ env.GITHUB_ACTION_PATH }}/p4est/build_debug'
+      P4EST_NONDEBUG: '${{ env.GITHUB_ACTION_PATH }}/p4est/build_nondebug'
+      CONFIG_OPTIONS: --without-blas
+      CONFIG_DEBUG: $CONFIG_OPTIONS --enable-debug --with-sc=$SC_DEBUG --with-p4est=$P4EST_DEBUG
+      CONFIG_RELEASE: $CONFIG_OPTIONS --with-sc=$SC_NONDEBUG --with-p4est=$P4EST_NONDEBUG
+      CONFIG_MPI_DEBUG: $CONFIG_DEBUG --enable-mpi 
+      CONFIG_MPI_RELEASE: $CONFIG_RELEASE --enable-mpi 
     
     steps:
 # Setup and bootstrap
     - uses: actions/checkout@v1
+    - name: Variable check 1 sc/p4est
+      run: echo [$SC_DEBUG] [$SC_NONDEBUG] [$P4EST_DEBUG] [$P4EST_NONDEBUG]
+    - name: Variable check 2 config options
+      run: echo [$CONFIG_OPTIONS] [$CONFIG_DEBUG] [$CONFIG_RELEASE] [$CONFIG_MPI_DEBUG] [$CONFIG_MPI_RELEASE]
     - name: Install mpich
       run: sudo apt-get update && sudo apt-get install libmpich-dev
     - name: init submodules
@@ -72,13 +81,6 @@ jobs:
     - name: OnFailPrintLog
       if: failure()
       run: cat p4est/build_nondebug/config.log
-# define helper variables
-      env:
-            CONFIG_OPTIONS: --without-blas
-            CONFIG_DEBUG: $CONFIG_OPTIONS --enable-debug --with-sc=$SC_DEBUG --with-p4est=$P4EST_DEBUG
-            CONFIG_RELEASE: $CONFIG_OPTIONS --with-sc=$SC_NONDEBUG --with-p4est=$P4EST_NONDEBUG
-            CONFIG_MPI_DEBUG: $CONFIG_DEBUG --enable-mpi 
-            CONFIG_MPI_RELEASE: $CONFIG_RELEASE --enable-mpi 
 # configure and test with MPI (release mode)
     - name: check release mode
       run: echo "Checking release mode (MPI)"
