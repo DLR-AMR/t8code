@@ -246,6 +246,7 @@ t8_step3_main (int argc, char **argv)
   t8_step3_print_forest_information (forest);
 
   /* Write forest to vtu files. */
+  /*t8_forest_write_vtk (forest, prefix_uniform);*/
   t8_write_vtk_via_API (forest, prefix_uniform);
   t8_global_productionf (" [step3] Wrote uniform forest to vtu files: %s*\n",
                          prefix_uniform);
@@ -268,6 +269,7 @@ t8_step3_main (int argc, char **argv)
   t8_step3_print_forest_information (forest);
 
   /* Write forest to vtu files. */
+  /*t8_forest_write_vtk (forest, prefix_adapt);*/
   t8_write_vtk_via_API (forest, prefix_adapt);
   t8_global_productionf (" [step3] Wrote adapted forest to vtu files: %s*\n",   /*hier */
                          prefix_adapt);

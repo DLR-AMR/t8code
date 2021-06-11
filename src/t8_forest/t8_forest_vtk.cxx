@@ -46,6 +46,7 @@
 #include <vtkVertexGlyphFilter.h>
 #include <vtkXMLPUnstructuredGridWriter.h>
 #include <vtkUnsignedCharArray.h>
+#include <vtkSmartPointer.h>
 #include <t8.h>
 #include <t8_forest.h>
 #include <t8_schemes/t8_default_cxx.hxx>
@@ -117,12 +118,12 @@ typedef int         (*t8_forest_vtk_cell_data_kernel) (t8_forest_t forest,
                                                        modus);
 
 void
-t8_write_vtk_via_API (t8_forest_t forest, const char *filename)
+t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
-  T8_ASSERT (filename != NULL);
+  T8_ASSERT (fileprefix != NULL);
 
   long int            point_id = 0;
   t8_cmesh_t          cmesh;
@@ -146,28 +147,30 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *filename)
   vtkNew < vtkWedge > prism;
   vtkNew < vtkTetra > tet;
 
+  std::string filename = fileprefix;
+  // Append process number
+  filename += std::to_string(forest->mpirank);
+
+  filename += ".vtu";
   cmesh = t8_forest_get_cmesh (forest);
-  static int         *cellTypes =
-    T8_ALLOC (int, t8_forest_get_num_element (forest));
+  int         *cellTypes =
+    T8_ALLOC (int, t8_forest_get_num_element(forest));
 
   for (itree = 0;
        (int) itree < t8_forest_get_num_local_trees (forest); itree++) {
 
-    ctree = t8_cmesh_get_tree (cmesh,
-                               t8_forest_ltreeid_to_cmesh_ltreeid (forest,
-                                                                   itree));
-    vertices = ((double *)
-                t8_cmesh_get_attribute (cmesh, t8_get_package_id (), 0,
-                                        ctree->treeid));
+    vertices = t8_forest_get_tree_vertices(forest, itree);
     tree = t8_forest_get_tree (forest, itree);
     t8_eclass_scheme_c *scheme =
       t8_forest_get_eclass_scheme (forest, tree->eclass);
+    t8_locidx_t elems_in_tree =
+      (t8_locidx_t) t8_element_array_get_count (&tree->elements);
     for (ielement = 0;
-         ielement < (int) t8_forest_get_tree_num_elements (forest,
-                                                           itree);
+         ielement < elems_in_tree;
          ielement++) {
       t8_element_t       *element =
         t8_forest_get_element_in_tree (forest, itree, ielement);
+      T8_ASSERT(element!=NULL);
       t8_element_shape_t  element_shape = scheme->t8_element_shape (element);
 
       for (ivertex = 0; ivertex < t8_eclass_num_vertices[tree->eclass];
@@ -178,7 +181,7 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *filename)
                                       t8_eclass_vtk_corner_number
                                       [tree->eclass]
                                       [ivertex], coordinates);
-        x = coordinates[0];     /*hier */
+        x = coordinates[0];
         y = coordinates[1];
         z = coordinates[2];
         points->InsertNextPoint (x, y, z);
@@ -243,16 +246,34 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *filename)
         printf ("Kein Elementtyp.\n");
         break;
       }
-      cellTypes[elem_id] = t8_eclass_vtk_type[tree->eclass];
+      cellTypes[elem_id] = t8_eclass_vtk_type[element_shape];
       elem_id++;
-    }                           /*hier */
+    }
   }
+  
   // Write file
   vtkNew < vtkUnstructuredGrid > unstructuredGrid;
   unstructuredGrid->SetPoints (points);
   unstructuredGrid->SetCells (cellTypes, cellArray);
   vtkNew < vtkXMLPUnstructuredGridWriter > writer;
-  writer->SetFileName (filename);       /*filename.c_str () */
+  if(forest->mpirank==0)
+{
+    std::string mpifilename = fileprefix;
+    mpifilename+=".pvtu";
+
+
+    auto pwriterObj = vtkSmartPointer<vtkXMLPUnstructuredGridWriter>::New();
+
+    pwriterObj->EncodeAppendedDataOff();
+    pwriterObj->SetFileName(mpifilename.c_str());
+    pwriterObj->SetNumberOfPieces( forest->mpisize );
+    pwriterObj->SetStartPiece(0);
+    pwriterObj->SetEndPiece((int)(forest->mpisize)-1);
+    pwriterObj->SetInputData(unstructuredGrid);
+    pwriterObj->Update();
+    pwriterObj->Write();
+}
+  writer->SetFileName (filename.c_str());
   writer->SetInputData (unstructuredGrid);
   writer->Write ();
 
