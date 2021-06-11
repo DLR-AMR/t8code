@@ -38,33 +38,33 @@ jobs:
       run: echo "Install sc"
     - name: make folders
       run: mkdir sc/build_debug && mkdir sc/build_nondebug
-    - name: configure debug
+    - name: sc configure debug
       run: cd sc/build_debug && ../configure --enable-mpi --enable-debug --prefix=$PWD/install
       env:
               SC_DEBUG: $PWD/sc/build_debug
               SC_NONDEBUG: $PWD/sc/build_nondebug
-    - name: build debug
+    - name: sc build debug
       run: cd sc/build_debug && make -j V=0 && make -j V=0 install
-    - name: configure and build nondebug
-      run: cd ../build_nondebug && ../configure --enable-mpi --enable-debug --prefix=$PWD/install
-    - name: build nondebug
-      run: make -j V=0 && make -j V=0 install
+    - name: sc configure and build nondebug
+      run: cd sc/build_nondebug && ../configure --enable-mpi --enable-debug --prefix=$PWD/install
+    - name: sc build nondebug
+      run: cd sc/build_nondebug && make -j V=0 && make -j V=0 install
 # install p4est-debug and p4est-non-debug
     - name: install p4est
       run: echo "Install p4est"
     - name: make folders
       run: mkdir p4est/build_debug && mkdir p4est/build_nondebug
-    - name: configure debug
+    - name: p4est configure debug
       run: cd p4est/build_debug && ../configure --enable-mpi --enable-debug --prefix=$PWD/install --with-sc=$SC_DEBUG
       env:
               P4EST_DEBUG: $PWD/sc/build_debug
               P4EST_NONDEBUG: $PWD/sc/build_nondebug
-    - name: build debug
+    - name: p4est build debug
       run: make -j V=0 && make -j V=0 install
-    - name: configure and build nondebug
-      run: cd ../build_nondebug && ../configure --enable-mpi --prefix=$PWD/install --with-sc=$SC_NONDEBUG
-    - name: build nondebug
-      run: make -j V=0 && make -j V=0 install
+    - name: p4est configure and build nondebug
+      run: cd p4est/build_nondebug && ../configure --enable-mpi --prefix=$PWD/install --with-sc=$SC_NONDEBUG
+    - name: p4est build nondebug
+      run: cd p4est/build_nondebug && make -j V=0 && make -j V=0 install
 # define helper variables
       env:
             CONFIG_OPTIONS: --without-blas
@@ -75,86 +75,74 @@ jobs:
 # configure and test with MPI (release mode)
     - name: check release mode
       run: echo "Checking release mode (MPI)"
-    - name: change back to main dir
-      run: cd ../../
     - name: configure
-      run: ./configure $CONFIG_MPI_RELEASE
+      run: mkdir build_release && cd build_release && ./configure $CONFIG_MPI_RELEASE
     - name: OnFailPrintLog
       if: failure()
       run: cat config.log
     - name: make
-      run: make -j V=0
+      run: cd build_release && make -j V=0
     - name: make check
-      run: make check -j4 V=0
-    - name: clean up
-      run: make distclean
+      run: cd build_release && make check -j4 V=0
 # configure and test with MPI (debug mode)
     - name: check debugging mode
       run: echo "Checking debug mode"
     - name: configure
-      run: ./configure $CONFIG_MPI_DEBUG
+      run: mkdir build_debug && cd build_debug && ./configure $CONFIG_MPI_DEBUG
     - name: OnFailPrintLog
       if: failure()
       run: cat config.log
     - name: make
-      run: make -j V=0
+      run: cd build_debug && make -j V=0
     - name: make check
-      run: make check -j4 V=0
+      run: cd build_debug && make check -j4 V=0
     - name: clean up
       run: make distclean
 # configure and test with MPI (C++ compiler only, release mode)
     - name: check C++ compiler
       run: echo "Checking C++, release mode (MPI)"
     - name: configure
-      run: ./configure CC=mpicxx CXX=mpicxx $CONFIG_MPI_RELEASE
+      run: mkdir build_release_cpp &&cd build_release_cpp && ./configure CC=mpicxx CXX=mpicxx $CONFIG_MPI_RELEASE
     - name: OnFailPrintLog
       if: failure()
-      run: cat config.log
+      run: cat build_release_cpp/config.log
     - name: make
-      run: make -j V=0
+      run: cd build_release_cpp && make -j V=0
     - name: make check
       run: make check -j4 V=0
-    - name: clean up
-      run: make distclean
 # configure and test serial (release mode)
     - name: check serial
       run: echo "Checking serial release mode"
     - name: configure
-      run: ./configure $CONFIG_RELEASE
+      run: mkdir build_serial_release && cd build_serial_release && ./configure $CONFIG_RELEASE
     - name: OnFailPrintLog
       if: failure()
-      run: cat config.log
+      run: cat build_serial_release/config.log
     - name: make
-      run: make -j V=0
+      run: cd build_serial_release && make -j V=0
     - name: make check
-      run: make check -j4 V=0
-    - name: clean up
-      run: make distclean
+      run: cd build_serial_release && make check -j4 V=0
 # configure and test serial (debug mode)
     - name: check serial
       run: echo "Checking debugging mode"
     - name: configure
-      run: ./configure $CONFIG_DEBUG
+      run: mkdir build_serial_debug && ./configure $CONFIG_DEBUG
     - name: OnFailPrintLog
       if: failure()
-      run: cat config.log
+      run: cat build_serial_release/config.log
     - name: make
-      run: make -j V=0
+      run: cd build_serial_release && make -j V=0
     - name: make check
-      run: make check -j4 V=0
-    - name: clean up
-      run: make distclean
+      run: cd build_serial_release && make check -j4 V=0
 # configure and test with MPI and netcdf
     - name: Install netcdf
       run: sudo apt-get install libnetcdf-dev
     - name: configure
-      run: ./configure $CONFIG_MPI_RELEASE --with-netcdf
+      run: mkdir build_netcdf && ./configure $CONFIG_MPI_RELEASE --with-netcdf
     - name: OnFailPrintLog
       if: failure()
-      run: cat config.log
+      run: cat build_netcdf/config.log
     - name: make
-      run: make -j V=0
+      run: cd build_netcdf && make -j V=0
     - name: make check
-      run: make check -j4 V=0
-    - name: clean up
-      run: make distclean
+      run: cd build_netcdf && make check -j4 V=0
