@@ -11,11 +11,16 @@ on:
   workflow_dispatch: # Be able to trigger this manually on github.com
 
 jobs:
-  test:
+  test_vars:
     runs-on: ubuntu-latest
     env:
-      SC_DEBUG: sc/build_debug
+      SC_DEBUG: ../sc/build_debug
+      P4EST_DEBUG: ..//p4est/build_debug
     steps:
       - name: Test vars
-        run: echo "$SC_DEBUG"
+        run: echo "[$SC_DEBUG] [$P4EST_DEBUG]"
+      - name: New envs
+        run: echo NEW_VAR=blub >> $GITHUB_ENV
+      - name: Test vars
+        run: echo $NEW_VAR ${{ env.NEW_VAR }}
 
