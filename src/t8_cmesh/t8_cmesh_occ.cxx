@@ -72,7 +72,12 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
   double radius_outer = 0.5, radius_inner = 0.25;
   vertices = T8_ALLOC(double, num_tangential_trees * num_axial_trees * 24);
   parameters = T8_ALLOC(double, num_tangential_trees * num_axial_trees * 8);
+  
+  /* Assign occ geometries to the corresponding faces */
   int faces[6] = {0, 1, -1, -1, -1, -1};
+  int edges[12] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+  
+  /* Compute vertex coordinates and parameters */
   for (int i = 0; i < num_tangential_trees; ++i)
   {
     for (int j = 0; j < num_axial_trees; ++j)
@@ -115,8 +120,12 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
         parameters[(i * num_axial_trees + j) * 8 + 5] = -(j + 1) / num_axial_trees;
         parameters[(i * num_axial_trees + j) * 8 + 6] = i * 2 * M_PI / num_tangential_trees;
         parameters[(i * num_axial_trees + j) * 8 + 7] = -(j + 1) / num_axial_trees;
+        
+        /* Assign attributes to cmesh cells */
         t8_cmesh_set_attribute (cmesh, i * num_axial_trees + j, t8_get_package_id(), T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
                                 faces, 6 * sizeof(int), 1);
+        t8_cmesh_set_attribute (cmesh, i * num_axial_trees + j, t8_get_package_id(), T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
+                                edges, 12 * sizeof(int), 1);
         t8_cmesh_set_attribute (cmesh, i * num_axial_trees + j, t8_get_package_id(), T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + 0, 
                                 parameters + (i * num_axial_trees + j) * 8, 8 * sizeof(double), 1);
         t8_cmesh_set_attribute (cmesh, i * num_axial_trees + j, t8_get_package_id(), T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + 1, 
