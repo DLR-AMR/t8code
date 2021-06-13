@@ -340,7 +340,7 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     {
       #if T8_WITH_OCC
       t8_global_productionf
-      ("Creating uniform level %i forests with a occ curve geometries.\n",
+      ("Creating uniform level %i forests with occ curve geometries.\n",
        level);
 
       /* Create a OCC surface */
@@ -486,7 +486,7 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
                               1, 1};
       t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id(), T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
                               faces, 6 * sizeof(int), 0);
-      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
+      t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id(), T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
                               edges, 12 * sizeof(int), 0);
       t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id(), T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + 5, 
                               parameters1, 8 * sizeof(double), 0);
