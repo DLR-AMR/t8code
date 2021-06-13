@@ -72,7 +72,8 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
   const int
   t8_edge_vertex_to_tree_vertex[T8_ECLASS_MAX_EDGES][2] =
   {
-    {0, 1}, {0, 2}, {0, 4}, {2, 3}, {4, 6}, {2, 6}, {4, 5}, {1, 3}, {1, 5}, {6, 7}, {5, 7}, {3, 7}   /* hex */
+  //  {0, 1}, {0, 2}, {0, 4}, {2, 3}, {4, 6}, {2, 6}, {4, 5}, {1, 3}, {1, 5}, {6, 7}, {5, 7}, {3, 7}   /* hex */
+    {0, 1}, {2, 3}, {4, 5}, {6, 7}, {0, 2}, {4, 6}, {1, 3}, {5, 7}, {0, 4}, {1, 5}, {2, 6}, {3, 7}    /* hex */
   };
 
   double interpolated_coords[3], param[2], edge_delta[3]= {0, 0, 0}, cur_edge_delta[3], surface_deltas[6][3];
@@ -111,27 +112,27 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
       cur_edge_delta[2] = pnt.Z() - interpolated_coords[2];
       
       /* Multiply curve displacement with corresponding ref coords */
-      switch (i / 3)
+      switch (i % 4)
       {
       case 0:
-        cur_edge_delta[0] = cur_edge_delta[0] * (1 - ref_coords[(i % 3 + 1) % 3]) * (1 - ref_coords[(i % 3 + 2) % 3]);
-        cur_edge_delta[1] = cur_edge_delta[1] * (1 - ref_coords[(i % 3 + 1) % 3]) * (1 - ref_coords[(i % 3 + 2) % 3]);
-        cur_edge_delta[2] = cur_edge_delta[2] * (1 - ref_coords[(i % 3 + 1) % 3]) * (1 - ref_coords[(i % 3 + 2) % 3]);
+        cur_edge_delta[0] = cur_edge_delta[0] * (1 - ref_coords[(i / 4 + 1) % 3]) * (1 - ref_coords[(i / 4 + 2) % 3]);
+        cur_edge_delta[1] = cur_edge_delta[1] * (1 - ref_coords[(i / 4 + 1) % 3]) * (1 - ref_coords[(i / 4 + 2) % 3]);
+        cur_edge_delta[2] = cur_edge_delta[2] * (1 - ref_coords[(i / 4 + 1) % 3]) * (1 - ref_coords[(i / 4 + 2) % 3]);
         break;
       case 1:
-        cur_edge_delta[0] = cur_edge_delta[0] * ref_coords[(i % 3 + 1) % 3] * (1 - ref_coords[(i % 3 + 2) % 3]);
-        cur_edge_delta[1] = cur_edge_delta[1] * ref_coords[(i % 3 + 1) % 3] * (1 - ref_coords[(i % 3 + 2) % 3]);
-        cur_edge_delta[2] = cur_edge_delta[2] * ref_coords[(i % 3 + 1) % 3] * (1 - ref_coords[(i % 3 + 2) % 3]);
+        cur_edge_delta[0] = cur_edge_delta[0] * ref_coords[(i / 4 + 1) % 3] * (1 - ref_coords[(i / 4 + 2) % 3]);
+        cur_edge_delta[1] = cur_edge_delta[1] * ref_coords[(i / 4 + 1) % 3] * (1 - ref_coords[(i / 4 + 2) % 3]);
+        cur_edge_delta[2] = cur_edge_delta[2] * ref_coords[(i / 4 + 1) % 3] * (1 - ref_coords[(i / 4 + 2) % 3]);
         break;
       case 2:
-        cur_edge_delta[0] = cur_edge_delta[0] * (1 - ref_coords[(i % 3 + 1) % 3]) * ref_coords[(i % 3 + 2) % 3];
-        cur_edge_delta[1] = cur_edge_delta[1] * (1 - ref_coords[(i % 3 + 1) % 3]) * ref_coords[(i % 3 + 2) % 3];
-        cur_edge_delta[2] = cur_edge_delta[2] * (1 - ref_coords[(i % 3 + 1) % 3]) * ref_coords[(i % 3 + 2) % 3];        
+        cur_edge_delta[0] = cur_edge_delta[0] * (1 - ref_coords[(i / 4 + 1) % 3]) * ref_coords[(i / 4 + 2) % 3];
+        cur_edge_delta[1] = cur_edge_delta[1] * (1 - ref_coords[(i / 4 + 1) % 3]) * ref_coords[(i / 4 + 2) % 3];
+        cur_edge_delta[2] = cur_edge_delta[2] * (1 - ref_coords[(i / 4 + 1) % 3]) * ref_coords[(i / 4 + 2) % 3];        
         break;
       case 3:
-        cur_edge_delta[0] = cur_edge_delta[0] * ref_coords[(i % 3 + 1) % 3] * ref_coords[(i % 3 + 2) % 3];
-        cur_edge_delta[1] = cur_edge_delta[1] * ref_coords[(i % 3 + 1) % 3] * ref_coords[(i % 3 + 2) % 3];
-        cur_edge_delta[2] = cur_edge_delta[2] * ref_coords[(i % 3 + 1) % 3] * ref_coords[(i % 3 + 2) % 3];        
+        cur_edge_delta[0] = cur_edge_delta[0] * ref_coords[(i / 4 + 1) % 3] * ref_coords[(i / 4 + 2) % 3];
+        cur_edge_delta[1] = cur_edge_delta[1] * ref_coords[(i / 4 + 1) % 3] * ref_coords[(i / 4 + 2) % 3];
+        cur_edge_delta[2] = cur_edge_delta[2] * ref_coords[(i / 4 + 1) % 3] * ref_coords[(i / 4 + 2) % 3];        
         break;
       }
       

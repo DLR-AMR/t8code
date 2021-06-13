@@ -387,14 +387,14 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
       double parameters0[2] = {0, 1};
       double parameters1[2] = {0, 1};
       int faces[6] = {-1, -1, -1, -1, -1, -1};
-      int edges[12] = {0, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1};
+      int edges[12] = {0, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1};
       t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
                               faces, 6 * sizeof(int), 0);
       t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
                               edges, 12 * sizeof(int), 0);
       t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_CURVE_PARAMETERS_ATTRIBUTE_KEY + 0, 
                               parameters0, 2 * sizeof(double), 0);
-      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_CURVE_PARAMETERS_ATTRIBUTE_KEY + 9, 
+      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_CURVE_PARAMETERS_ATTRIBUTE_KEY + 3, 
                               parameters1, 2 * sizeof(double), 0);
       
       snprintf (vtuname, BUFSIZ, "forest_occ_curve_cube_lvl_%i", level);
