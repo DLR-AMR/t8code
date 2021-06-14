@@ -25,9 +25,9 @@ jobs:
       - name: Test vars
         run: echo $NEW_VAR ${{ env.NEW_VAR }}
       - name: Test var for if
-        run: echo IF_VAR=0 >> $GITHUB_ENV
-      - name: print if var == 1
-        if: ${{ env.IF_VAR }} == 1
+        run: echo IF_VAR='false' >> $GITHUB_ENV
+      - name: print if var true
+        if: ${{ env.IF_VAR }}
         run: echo $IF_VAR
       - name: print var
         run: echo $IF_VAR
