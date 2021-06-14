@@ -99,7 +99,7 @@ jobs:
       run: cd $SC_SERIAL_RELEASE && make -j V=0 && make -j V=0 install
       if: steps.sc_cache.outputs.cache-hit != 'true'
     - name: OnFailPrintLog
-      if: if: steps.sc_cache.outputs.cache-hit != 'true' && failure()
+      if: steps.sc_cache.outputs.cache-hit != 'true' && failure()
       run: cat $SC_SERIAL_RELEASE/config.log
 #
 # P4EST
