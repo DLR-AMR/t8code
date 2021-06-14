@@ -22,9 +22,9 @@ jobs:
         run: echo "[$SC_DEBUG] [$P4EST_DEBUG]"
       - name: New envs
         run: echo NEW_VAR=blub >> $GITHUB_ENV
-      - name: Test vars
+      - name: Test var
         run: echo $NEW_VAR ${{ env.NEW_VAR }}
-      - name: Test var for if
+      - name: Test var for if not set
         run: echo IF_VAR= >> $GITHUB_ENV
       - name: print if var set
         if: ${{ env.IF_VAR }}
@@ -37,9 +37,19 @@ jobs:
         run: echo 0 is true
       - name: print var
         run: echo $IF_VAR
-      - name: rubbish
-        if: ${{ env.BLUB }}
-        run: echo blub
+      - name: Test var for if set
+        run: echo IF_VAR2=1 >> $GITHUB_ENV
+      - name: print if var set
+        if: ${{ env.IF_VAR2 }}
+        run: echo $IF_VAR2
+      - name: print if 0 or var set
+        if: 0 || ${{ env.IF_VAR2 }}
+        run: echo $IF_VAR2
+      - name: print if 0
+        if: 0
+        run: echo 0 is true
+      - name: print var
+        run: echo $IF_VAR2
 
   test_cache:
     runs-on: ubuntu-latest    
