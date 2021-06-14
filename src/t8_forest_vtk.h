@@ -62,16 +62,16 @@
 T8_EXTERN_C_BEGIN ();
 /* function declarations */
 
-
 /** Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
  * \param [in]  forest    The forest.
  * \param [in]  fileprefix  The prefix of the output files.
  */
+#if T8_WITH_VTK
 void
  
              t8_write_vtk_via_API (t8_forest_t forest, const char *filename);
-
+#endif
 /** Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
  * \param [in]  forest    The forest.

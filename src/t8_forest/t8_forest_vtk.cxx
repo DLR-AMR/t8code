@@ -122,17 +122,17 @@ typedef int         (*t8_forest_vtk_cell_data_kernel) (t8_forest_t forest,
                                                        void **data,
                                                        T8_VTK_KERNEL_MODUS
                                                        modus);
-
+#if T8_WITH_VTK
 void
 t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
 {
-  /*Check assertions: forest and fileprefix are not NULL and forest is commited*/
+  /*Check assertions: forest and fileprefix are not NULL and forest is commited */
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
   T8_ASSERT (fileprefix != NULL);
 
-  long int            point_id = 0; /* The id of the point in the points Object.*/
+  long int            point_id = 0;     /* The id of the point in the points Object. */
   t8_cmesh_t          cmesh;
   t8_locidx_t         ielement;
   t8_tree_t           tree;
@@ -157,7 +157,7 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
   vtkNew < vtkTetra > tet;
 
   cmesh = t8_forest_get_cmesh (forest);
-  /* The cellTypes Array stores the element types as integers(see vtk doc)*/
+  /* The cellTypes Array stores the element types as integers(see vtk doc) */
   int                *cellTypes =
     T8_ALLOC (int, t8_forest_get_num_element (forest));
 /* We iterate over all local trees*/
@@ -170,16 +170,16 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
       t8_forest_get_eclass_scheme (forest, tree->eclass);
     t8_locidx_t         elems_in_tree =
       (t8_locidx_t) t8_element_array_get_count (&tree->elements);
-      /* We iterate over all elements in the tree*/
+    /* We iterate over all elements in the tree */
     for (ielement = 0; ielement < elems_in_tree; ielement++) {
       t8_element_t       *element =
         t8_forest_get_element_in_tree (forest, itree, ielement);
       T8_ASSERT (element != NULL);
       t8_element_shape_t  element_shape = scheme->t8_element_shape (element);
-      /* For each element we iterate over all points*/
+      /* For each element we iterate over all points */
       for (ivertex = 0; ivertex < t8_eclass_num_vertices[tree->eclass];
            ivertex++, point_id++) {
-        /* We take the element coordinates in vtk order*/
+        /* We take the element coordinates in vtk order */
         t8_forest_element_coordinate (forest, itree, element,
                                       vertices,
                                       t8_eclass_vtk_corner_number
@@ -188,9 +188,9 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
         x = coordinates[0];
         y = coordinates[1];
         z = coordinates[2];
-        /* Insert point in the points array*/
+        /* Insert point in the points array */
         points->InsertNextPoint (x, y, z);
-        /* depending on the type we add points to the correct element*/
+        /* depending on the type we add points to the correct element */
         switch (element_shape) {
         case T8_ECLASS_VERTEX:
           vertex->GetPointIds ()->SetId (ivertex, point_id);
@@ -222,7 +222,7 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
         }
 
       }
-      /* depending on the element type we insert next cell in the cell array*/
+      /* depending on the element type we insert next cell in the cell array */
       switch (element_shape) {
       case T8_ECLASS_VERTEX:
         cellArray->InsertNextCell (vertex);
@@ -264,31 +264,36 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
   std::string mpifilename = fileprefix;
   mpifilename += ".pvtu";
 
-  vtkSmartPointer<vtkXMLPUnstructuredGridWriter> pwriterObj = vtkSmartPointer<vtkXMLPUnstructuredGridWriter>::New();
+  vtkSmartPointer < vtkXMLPUnstructuredGridWriter > pwriterObj =
+    vtkSmartPointer < vtkXMLPUnstructuredGridWriter >::New ();
 
-  pwriterObj->EncodeAppendedDataOff();
-  pwriterObj->SetFileName(mpifilename.c_str());
+  pwriterObj->EncodeAppendedDataOff ();
+  pwriterObj->SetFileName (mpifilename.c_str ());
 /* We need a mpi comm so that the processes can communicate*/
 #if T8_ENABLE_MPI
-  vtkSmartPointer<vtkMPICommunicator> vtk_comm = vtkSmartPointer<vtkMPICommunicator>::New();
-  vtkMPICommunicatorOpaqueComm vtk_opaque_comm(&forest->mpicomm);
-  vtk_comm->InitializeExternal(&vtk_opaque_comm);
+  vtkSmartPointer < vtkMPICommunicator > vtk_comm =
+    vtkSmartPointer < vtkMPICommunicator >::New ();
+  vtkMPICommunicatorOpaqueComm vtk_opaque_comm (&forest->mpicomm);
+  vtk_comm->InitializeExternal (&vtk_opaque_comm);
 
-  vtkSmartPointer<vtkMPIController> vtk_mpi_ctrl = vtkSmartPointer<vtkMPIController>::New();
-  vtk_mpi_ctrl->SetCommunicator(vtk_comm);
+  vtkSmartPointer < vtkMPIController > vtk_mpi_ctrl =
+    vtkSmartPointer < vtkMPIController >::New ();
+  vtk_mpi_ctrl->SetCommunicator (vtk_comm);
 
-  pwriterObj->SetController(vtk_mpi_ctrl);
+  pwriterObj->SetController (vtk_mpi_ctrl);
 #endif
 
-  pwriterObj->SetNumberOfPieces(forest->mpisize);
-  pwriterObj->SetStartPiece(forest->mpirank);
-  pwriterObj->SetEndPiece(forest->mpirank);
-  pwriterObj->SetInputData(unstructuredGrid);
-  pwriterObj->Update();
-  pwriterObj->Write();
+  pwriterObj->SetNumberOfPieces (forest->mpisize);
+  pwriterObj->SetStartPiece (forest->mpirank);
+  pwriterObj->SetEndPiece (forest->mpirank);
+  pwriterObj->SetInputData (unstructuredGrid);
+  pwriterObj->Update ();
+  pwriterObj->Write ();
 
   T8_FREE (cellTypes);
 }
+
+#endif
 
 static              t8_locidx_t
 t8_forest_num_points (t8_forest_t forest, int count_ghosts)

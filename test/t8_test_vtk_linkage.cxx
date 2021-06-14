@@ -33,6 +33,7 @@
 #if T8_WITH_VTK
 #include <vtkUnstructuredGrid.h>
 #include <vtkVersionMacros.h>
+#include <vtkNew.h>
 #endif
 
 /* Check whether T8_VTK_VERSION_USED quals VTK_MAJOR_VERSION.VTK_MINOR_VERSION */
