@@ -30,7 +30,7 @@ jobs:
         if: ${{ env.IF_VAR }}
         run: echo $IF_VAR
       - name: print if 0 or var set
-        if: 0 || ${{ env.IF_VAR }}
+        if: 0 or ${{ env.IF_VAR }}
         run: echo $IF_VAR
       - name: print if 0
         if: 0
@@ -43,7 +43,7 @@ jobs:
         if: ${{ env.IF_VAR2 }}
         run: echo $IF_VAR2
       - name: print if 0 or var set
-        if: 0 || ${{ env.IF_VAR2 }}
+        if: 0 or ${{ env.IF_VAR2 }}
         run: echo $IF_VAR2
       - name: print if 0
         if: 0
