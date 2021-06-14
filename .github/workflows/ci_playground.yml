@@ -26,12 +26,21 @@ jobs:
 
   test_cache:
     runs-on: ubuntu-latest    
-    env:
-      p4est_commit: ../p4est/build_debug
     steps:
       - uses: actions/checkout@v1
-      - name: define var
+      - name: define sc var
+        run: hash=`git rev-parse HEAD:sc` && echo sc_commit=$hash >> $GITHUB_ENV
+      - name: define p4est var
         run: hash=`git rev-parse HEAD:sc` && echo sc_commit=$hash >> $GITHUB_ENV
       - name: Test var
-        run: echo $sc_commit
-
+        run: echo $sc_commit $p4est_commit
+      - name: Cache SC
+        uses: actions/cache@v2
+        with:
+          path: sc/build_test
+          key: sc-${{ env.sc_commit }}
+      - name: create build and write commit
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: mkdir sc/build_test && date >> sc/build_test/commit.log && echo $sc_commit >> sc/build_test/commit.log
+      - name: print file
+        run: cat sc/build_test/commit.log
