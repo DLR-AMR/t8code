@@ -123,52 +123,57 @@ jobs:
           $P4EST_SERIAL_DEBUG/install
           $P4EST_SERIAL_RELEASE/install        
         key: p4est-${{ env.p4est_commit }}
+    - name: Check if ignore cache
+      # If this variable is 1 the cache is ignored and sc is installed regardless of cache.
+      # If it is 0, sc is only installed if found in cache.
+      # We use this mostly for debugging this CI script.
+      run: echo P4EST_IGNORE_CACHE=1 >> $GITHUB_ENV
     ## p4est debug
     - name: install p4est
       run: echo "Install p4est"
-      if: steps.p4est_cache.outputs.cache-hit != 'true'
+      if: steps.p4est_cache.outputs.cache-hit != 'true' || ${{ env. P4EST_IGNORE_CACHE }} == 1
     - name: make folders
       run: mkdir $P4EST_DEBUG && mkdir $P4EST_RELEASE && mkdir $P4EST_SERIAL_RELEASE
           && mkdir $P4EST_SERIAL_DEBUG
-      if: steps.p4est_cache.outputs.cache-hit != 'true'
+      if: steps.p4est_cache.outputs.cache-hit != 'true' || ${{ env. P4EST_IGNORE_CACHE }} == 1
     - name: p4est configure debug
       run: cd $P4EST_DEBUG && ../configure --enable-mpi --enable-debug --prefix=$PWD/install --with-sc=$SC_DEBUG/install
-      if: steps.p4est_cache.outputs.cache-hit != 'true'
+      if: steps.p4est_cache.outputs.cache-hit != 'true' || ${{ env. P4EST_IGNORE_CACHE }} == 1
     - name: p4est build debug
       run: cd $P4EST_DEBUG && make -j V=0 && make -j V=0 install
-      if: steps.p4est_cache.outputs.cache-hit != 'true'
+      if: steps.p4est_cache.outputs.cache-hit != 'true' || ${{ env. P4EST_IGNORE_CACHE }} == 1
     - name: OnFailPrintLog
-      if: steps.p4est_cache.outputs.cache-hit != 'true' && failure()
+      if: (steps.p4est_cache.outputs.cache-hit != 'true' || ${{ env. P4EST_IGNORE_CACHE }} == 1) && failure()
       run: cat $P4EST_DEBUG/config.log
     ## p4est release
     - name: p4est configure and build release
       run: cd $P4EST_RELEASE && ../configure --enable-mpi --prefix=$PWD/install --with-sc=$SC_RELEASE/install
-      if: steps.p4est_cache.outputs.cache-hit != 'true'
+      if: steps.p4est_cache.outputs.cache-hit != 'true' || ${{ env. P4EST_IGNORE_CACHE }} == 1
     - name: p4est build release
       run: cd $P4EST_RELEASE && make -j V=0 && make -j V=0 install
-      if: steps.p4est_cache.outputs.cache-hit != 'true'
+      if: steps.p4est_cache.outputs.cache-hit != 'true' || ${{ env. P4EST_IGNORE_CACHE }} == 1
     - name: OnFailPrintLog
-      if: steps.p4est_cache.outputs.cache-hit != 'true' && failure()
+      if: (steps.p4est_cache.outputs.cache-hit != 'true' || ${{ env. P4EST_IGNORE_CACHE }} == 1) && failure()
       run: cat $P4EST_RELEASE/config.log
     - name: p4est configure and build serial release
       run: cd $P4EST_SERIAL_RELEASE && ../configure --prefix=$PWD/install --with-sc=$SC_SERIAL_RELEASE/install
-      if: steps.p4est_cache.outputs.cache-hit != 'true'
+      if: steps.p4est_cache.outputs.cache-hit != 'true' || ${{ env. P4EST_IGNORE_CACHE }} == 1
     ## p4est serial release
     - name: p4est build serial release
       run: cd $P4EST_SERIAL_RELEASE && make -j V=0 && make -j V=0 install
-      if: steps.p4est_cache.outputs.cache-hit != 'true'
+      if: steps.p4est_cache.outputs.cache-hit != 'true' || ${{ env. P4EST_IGNORE_CACHE }} == 1
     - name: OnFailPrintLog
-      if: steps.p4est_cache.outputs.cache-hit != 'true' && failure()
+      if: (steps.p4est_cache.outputs.cache-hit != 'true' || ${{ env. P4EST_IGNORE_CACHE }} == 1) && failure()
       run: cat $P4EST_SERIAL_RELEASE/config.log
     - name: p4est configure and build serial debug
       run: cd $P4EST_SERIAL_DEBUG && ../configure --enable-debug --prefix=$PWD/install --with-sc=$SC_SERIAL_DEBUG/install
-      if: steps.p4est_cache.outputs.cache-hit != 'true'
+      if: steps.p4est_cache.outputs.cache-hit != 'true' || ${{ env. P4EST_IGNORE_CACHE }} == 1
     ## p4est serial debug
     - name: p4est build serial debug
       run: cd $P4EST_SERIAL_DEBUG && make -j V=0 && make -j V=0 install
-      if: steps.p4est_cache.outputs.cache-hit != 'true'
+      if: steps.p4est_cache.outputs.cache-hit != 'true' || ${{ env. P4EST_IGNORE_CACHE }} == 1
     - name: OnFailPrintLog
-      if: steps.p4est_cache.outputs.cache-hit != 'true' && failure ()
+      if: (steps.p4est_cache.outputs.cache-hit != 'true' || ${{ env. P4EST_IGNORE_CACHE }} == 1) && failure ()
       run: cat $P4EST_SERIAL_DEBUG/config.log
 #  P4EST AND SC END
 #
