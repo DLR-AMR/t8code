@@ -2,8 +2,6 @@ name: t8code tests
 
 # TODO
 # 1. activate -Werror
-# 2. use steps for sc/p4est/t8code
-# 3. use var instead of "build_serial"
 
 on:
   push:
