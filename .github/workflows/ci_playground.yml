@@ -42,14 +42,15 @@ jobs:
           path: |
             sc/build_test
             sc/build_test_ci/install
-          key: sc-${{ env.sc_commit }}
+          # increase this number to trigger new caching
+          key: sc-0
       - name: create build and write commit
         if: steps.sc_cache.outputs.cache-hit != 'true'
         run: mkdir sc/build_test 
           && date >> sc/build_test/commit.log 
           && echo $sc_commit >> sc/build_test/commit.log
           && mkdir sc/build_test_ci && mkdir sc/build_test_ci/install
-          && date >> sc/build_test_ci/install/commit/log
+          && date >> sc/build_test_ci/install/commit.log
       - name: print files
         run: cat sc/build_test/commit.log
           && cat sc/build_test_ci/install/commit.log
