@@ -24,3 +24,14 @@ jobs:
       - name: Test vars
         run: echo $NEW_VAR ${{ env.NEW_VAR }}
 
+  test_cache:
+    runs-on: ubuntu-latest    
+    env:
+      p4est_commit: ../p4est/build_debug
+    steps:
+      - uses: actions/checkout@v1
+      - name: define var
+        run: hash=`git rev-parse HEAD:sc` && echo sc_commit=$hash >> $GITHUB_ENV
+      - name: Test var
+        run: echo $sc_commit
+
