@@ -36,12 +36,13 @@ jobs:
         run: echo $sc_commit $p4est_commit
        # Cache sc
       - name: Cache SC
+        id: sc_cache
         uses: actions/cache@v2
         with:
           path: sc/build_test
           key: sc-${{ env.sc_commit }}
       - name: create build and write commit
-        if: steps.cache-deps.outputs.cache-hit != 'true'
+        if: steps.sc_cache.outputs.cache-hit != 'true'
         run: mkdir sc/build_test && date >> sc/build_test/commit.log && echo $sc_commit >> sc/build_test/commit.log
       - name: print file
         run: cat sc/build_test/commit.log
