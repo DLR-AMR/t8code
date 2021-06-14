@@ -25,12 +25,15 @@ jobs:
       - name: Test vars
         run: echo $NEW_VAR ${{ env.NEW_VAR }}
       - name: Test var for if
-        run: echo IF_VAR='false' >> $GITHUB_ENV
+        run: echo IF_VAR= >> $GITHUB_ENV
       - name: print if var true
         if: ${{ env.IF_VAR }}
         run: echo $IF_VAR
       - name: print var
         run: echo $IF_VAR
+      - name: rubbish
+        if: ${{ env.BLUB }}
+        run: echo blub
 
   test_cache:
     runs-on: ubuntu-latest    
