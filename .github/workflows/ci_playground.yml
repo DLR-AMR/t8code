@@ -9,6 +9,8 @@ on:
     branches:
       - feature-*CI* # for testing this script, all feature branches with "CI" in their name
   workflow_dispatch: # Be able to trigger this manually on github.com
+    branches:
+      - feature-*CI* # for testing this script, all feature branches with "CI" in their name
 
 jobs:
   test_vars:
