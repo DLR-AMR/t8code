@@ -1,8 +1,8 @@
 name: Tests
 
-# TODO
-# 1. activate -Werror
-# 2. use steps for sc/p4est/t8code
+# The purpose of this script is for debugging and testing
+# the github CI without the need to trigger the whole workflow.
+# Its contents may change arbitrarily.
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SC_DEBUG: ../sc/build_debug
-      P4EST_DEBUG: ..//p4est/build_debug
+      P4EST_DEBUG: ../p4est/build_debug
     steps:
       - name: Test vars
         run: echo "[$SC_DEBUG] [$P4EST_DEBUG]"
