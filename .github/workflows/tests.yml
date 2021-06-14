@@ -10,7 +10,7 @@ on:
     branches:
       - master
       - develop
-        #      - feature-*CI* # for testing this script, all feature branches with "CI" in their name
+      - feature-*CI* # for testing this script, all feature branches with "CI" in their name
   pull_request:
     branches:
       - master
