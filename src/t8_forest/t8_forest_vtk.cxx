@@ -163,6 +163,8 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
   t8_debugf ("Entering vtk API output with filename %s\n", fileprefix);
 
   filename += ".vtu";
+  vtkUnsignedCharArray *mpirank = vtkUnsignedCharArray::New ();
+  mpirank->SetName ("mpirank"); // ... fill the colors array
   cmesh = t8_forest_get_cmesh (forest);
   /* The cellTypes Array stores the element types as integers(see vtk doc) */
   int                *cellTypes =
