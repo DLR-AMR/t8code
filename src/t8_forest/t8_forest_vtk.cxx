@@ -156,6 +156,13 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
   vtkNew < vtkWedge > prism;
   vtkNew < vtkTetra > tet;
 
+  std::string filename = fileprefix;
+  // Append process number
+  filename += "_" + std::to_string (forest->mpirank);
+
+  t8_debugf ("Entering vtk API output with filename %s\n", fileprefix);
+
+  filename += ".vtu";
   cmesh = t8_forest_get_cmesh (forest);
   /* The cellTypes Array stores the element types as integers(see vtk doc) */
   int                *cellTypes =
@@ -261,15 +268,17 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
   vtkNew < vtkUnstructuredGrid > unstructuredGrid;
   unstructuredGrid->SetPoints (points);
   unstructuredGrid->SetCells (cellTypes, cellArray);
+
   std::string mpifilename = fileprefix;
   mpifilename += ".pvtu";
 
+//   auto pwriterObj = vtkSmartPointer<vtkXMLPUnstructuredGridWriter>::New();
   vtkSmartPointer < vtkXMLPUnstructuredGridWriter > pwriterObj =
     vtkSmartPointer < vtkXMLPUnstructuredGridWriter >::New ();
 
   pwriterObj->EncodeAppendedDataOff ();
   pwriterObj->SetFileName (mpifilename.c_str ());
-/* We need a mpi comm so that the processes can communicate*/
+
 #if T8_ENABLE_MPI
   vtkSmartPointer < vtkMPICommunicator > vtk_comm =
     vtkSmartPointer < vtkMPICommunicator >::New ();
@@ -289,6 +298,9 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
   pwriterObj->SetInputData (unstructuredGrid);
   pwriterObj->Update ();
   pwriterObj->Write ();
+  pwriterObj->Print (std::cout);
+  t8_debugf ("Wrote parallel file to %s.pvtu with %i pieces\n", fileprefix,
+             forest->mpisize);
 
   T8_FREE (cellTypes);
 }
