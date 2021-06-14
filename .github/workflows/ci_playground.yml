@@ -34,6 +34,7 @@ jobs:
         run: hash=`git rev-parse HEAD:sc` && echo sc_commit=$hash >> $GITHUB_ENV
       - name: Test var
         run: echo $sc_commit $p4est_commit
+       # Cache sc
       - name: Cache SC
         uses: actions/cache@v2
         with:
