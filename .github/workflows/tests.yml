@@ -135,13 +135,13 @@ jobs:
     - name: Cache info
       if: steps.sc_cache.outputs.cache-hit != 'true' || ${{ env.SC_IGNORE_CACHE }}
       run: echo No cache found or cache will be ignored (SC_IGNORE_CACHE=$SC_IGNORE_CACHE)
+    - name: install p4est
+      run: echo "Install p4est"
+      if: steps.p4est_cache.outputs.cache-hit != 'true' || ${{ env.P4EST_IGNORE_CACHE }}
+    - name: make folders
+      run: mkdir $P4EST_DEBUG && mkdir $P4EST_RELEASE && mkdir $P4EST_SERIAL_RELEASE
+          && mkdir $P4EST_SERIAL_DEBUG
     ## p4est debug
-    #- name: install p4est
-    #  run: echo "Install p4est"
-    #  if: steps.p4est_cache.outputs.cache-hit != 'true' || ${{ env.P4EST_IGNORE_CACHE }}
-    #- name: make folders
-    #  run: mkdir $P4EST_DEBUG && mkdir $P4EST_RELEASE && mkdir $P4EST_SERIAL_RELEASE
-    #      && mkdir $P4EST_SERIAL_DEBUG
     #  if: steps.p4est_cache.outputs.cache-hit != 'true' || ${{ env.P4EST_IGNORE_CACHE }}
     #- name: p4est configure debug
     #  run: cd $P4EST_DEBUG && ../configure --enable-mpi --enable-debug --prefix=$PWD/install --with-sc=$SC_DEBUG/install
