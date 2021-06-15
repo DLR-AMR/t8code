@@ -56,6 +56,16 @@ jobs:
           $SC_SERIAL_DEBUG
           $SC_SERIAL_RELEASE
         key: sc-${{ env.sc_commit }}
+    - name: ls
+      run: ls && ls ../ 
+    - name: ls 2
+      run: ls ../sc/build_debug
+    - name: ls 3
+      run: ls sc/build_debug
+    - name: ls 4
+      run: ls ../sc
+    - name: ls 5
+      run: ls ./sc
     - name: Set ignore cache variable
       # If this variable is set 1
       # (i.e. SC_IGNORE_CACHE=1) then the cache will be ignored and
