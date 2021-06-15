@@ -57,7 +57,7 @@ jobs:
       # (i.e. SC_IGNORE_CACHE=1) then the cache will be ignored and
       # sc is always build.
       # We use this mostly for debugging this CI script.
-      run: echo SC_IGNORE_CACHE=1 >> $GITHUB_ENV
+      run: echo SC_IGNORE_CACHE=0 >> $GITHUB_ENV
     - name: Cache info
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' ||  env.SC_IGNORE_CACHE == 1 }}
       run: echo No cache found or cache will be ignored. SC_IGNORE_CACHE=$SC_IGNORE_CACHE
@@ -135,7 +135,7 @@ jobs:
       # If this variable is set to 1 then the cache is ignored and p4est is installed regardless of cache.
       # (set with i.e. P4EST_IGNORE_CACHE=1)
       # We use this mostly for debugging this CI script.
-      run: echo P4EST_IGNORE_CACHE=1 >> $GITHUB_ENV
+      run: echo P4EST_IGNORE_CACHE=0 >> $GITHUB_ENV
     - name: Cache info
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
       run: echo No cache found or cache will be ignored. P4EST_IGNORE_CACHE=$P4EST_IGNORE_CACHE
