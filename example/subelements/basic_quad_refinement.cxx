@@ -25,7 +25,8 @@
 #include <p4est_connectivity.h>
 #include <p8est_connectivity.h>
 #include <t8_schemes/t8_new_feature/t8_subelements_cxx.hxx>
-// #include <t8_schemes/t8_default_cxx.hxx>
+/* to validate the results with the original quad scheme */
+// #include <t8_schemes/t8_default_cxx.hxx> 
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest.h>
 #include <t8_cmesh_vtk.h>
@@ -55,43 +56,20 @@ t8_basic_refine_test (t8_eclass_t eclass)
   t8_forest_t         forest_adapt;
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
-  int                 initlevel = 3;                
-  int                 minlevel = 2; // do not want coarsening here
+  int                 initlevel = 2;                
+  int                 minlevel = 0; 
   int                 maxlevel = 5;
 
   t8_forest_init (&forest);
   t8_forest_init (&forest_adapt);
 
-  if (eclass == T8_ECLASS_LINE) {
-    cmesh = t8_cmesh_new_line_zigzag (sc_MPI_COMM_WORLD);
-  }
-  else if (eclass == T8_ECLASS_PRISM) {
-    //cmesh = t8_cmesh_new_prism_geometry (sc_MPI_COMM_WORLD);
-    //     cmesh = t8_cmesh_new_prism_deformed (sc_MPI_COMM_WORLD);
-    //    cmesh = t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_COMM_WORLD);
-    cmesh = t8_cmesh_new_prism_cake (sc_MPI_COMM_WORLD, 6);
-    //cmesh = t8_cmesh_new_from_class (T8_ECLASS_PRISM, sc_MPI_COMM_WORLD);
-  }
-  else if (eclass == T8_ECLASS_COUNT) {
-    /* TODO: This is just temporary. Replace ECLASS_COUNT with a
-     * sensible parameter. */
-    cmesh = t8_cmesh_new_hybrid_gate_deformed (sc_MPI_COMM_WORLD);
-    eclass = T8_ECLASS_HEX;
-    t8_cmesh_save (cmesh, "hybrid_gate_deformed");
-  }
-  else {
-    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
-  }
+  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
 
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
-  
-  if (eclass == T8_ECLASS_QUAD) {
-    t8_forest_set_scheme (forest, t8_scheme_new_subelement_cxx ());
-  }
-  else {
-    // should run with new_default but somehow there is a declaration error
-    t8_forest_set_scheme (forest, t8_scheme_new_subelement_cxx ());
-  }
+
+  t8_forest_set_scheme (forest, t8_scheme_new_subelement_cxx ());
+  /* to validate the results with the original quad scheme */
+  // t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
   
   t8_forest_set_level (forest, initlevel);
   t8_forest_commit (forest);
@@ -104,12 +82,12 @@ t8_basic_refine_test (t8_eclass_t eclass)
     t8_example_level_set_struct_t ls_data;
     t8_basic_sphere_data_t sdata;
 
-    sdata.mid_point[0] = 0;
-    sdata.mid_point[1] = 1;
+    sdata.mid_point[0] = 0.5;
+    sdata.mid_point[1] = 0.5;
     sdata.mid_point[2] = 0;
-    sdata.radius = 0.7;
+    sdata.radius = 0.3;
 
-    ls_data.band_width = 0.5;
+    ls_data.band_width = 1.5;
     ls_data.L = t8_basic_level_set_sphere;
     ls_data.min_level = minlevel;
     ls_data.max_level = maxlevel;
@@ -130,11 +108,6 @@ int
 main (int argc, char **argv)
 {
   int                 mpiret;
-#if 0
-  int                 level;
-  int                 eclass;
-  int                 dim;
-#endif
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
