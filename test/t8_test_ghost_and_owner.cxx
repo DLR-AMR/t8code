@@ -117,36 +117,34 @@ t8_test_ghost_owner (int cmesh_id)
   t8_scheme_cxx_t    *scheme;
 
   scheme = t8_scheme_new_default_cxx ();
-      /* Construct a cmesh */
-      cmesh =
-        t8_test_create_cmesh (cmesh_id);
-      /* Compute the minimum level, such that the forest is nonempty */
-      min_level = t8_forest_min_nonempty_level (cmesh, scheme);
-      /* start with an empty level */
-      min_level = SC_MAX (0, min_level - 1);
-      t8_global_productionf
-        ("Testing ghost exchange with start level %i\n",
-          min_level);
-      for (level = min_level; level < min_level + 3; level++) {
-        /* ref the scheme since we reuse it */
-        t8_scheme_cxx_ref (scheme);
-        /* ref the cmesh since we reuse it */
-        t8_cmesh_ref (cmesh);
-        /* Create a uniformly refined forest */
-        forest = t8_forest_new_uniform (cmesh, scheme, level, 1,
-                                        sc_MPI_COMM_WORLD);
-        /* Check the owners of the ghost elements */
-        t8_test_gao_check (forest);
-        /* Adapt the forest and exchange data again */
-        maxlevel = level + 2;
-        forest_adapt =
-          t8_forest_new_adapt (forest, t8_test_gao_adapt, 1, 1, &maxlevel);
-        /* Check the owners of the ghost elements */
-        t8_test_gao_check (forest_adapt);
-        t8_forest_unref (&forest_adapt);
-      }
-      t8_cmesh_destroy (&cmesh);
-    
+  /* Construct a cmesh */
+  cmesh = t8_test_create_cmesh (cmesh_id);
+  /* Compute the minimum level, such that the forest is nonempty */
+  min_level = t8_forest_min_nonempty_level (cmesh, scheme);
+  /* start with an empty level */
+  min_level = SC_MAX (0, min_level - 1);
+  t8_global_productionf
+    ("Testing ghost exchange with start level %i\n", min_level);
+  for (level = min_level; level < min_level + 3; level++) {
+    /* ref the scheme since we reuse it */
+    t8_scheme_cxx_ref (scheme);
+    /* ref the cmesh since we reuse it */
+    t8_cmesh_ref (cmesh);
+    /* Create a uniformly refined forest */
+    forest = t8_forest_new_uniform (cmesh, scheme, level, 1,
+                                    sc_MPI_COMM_WORLD);
+    /* Check the owners of the ghost elements */
+    t8_test_gao_check (forest);
+    /* Adapt the forest and exchange data again */
+    maxlevel = level + 2;
+    forest_adapt =
+      t8_forest_new_adapt (forest, t8_test_gao_adapt, 1, 1, &maxlevel);
+    /* Check the owners of the ghost elements */
+    t8_test_gao_check (forest_adapt);
+    t8_forest_unref (&forest_adapt);
+  }
+  t8_cmesh_destroy (&cmesh);
+
   t8_scheme_cxx_unref (&scheme);
 }
 
@@ -159,11 +157,12 @@ test_cmesh_ghost_owner_all ()
   /* Test all cmeshes over all different inputs we get through their id */
   for (int cmesh_id = 0; cmesh_id < t8_get_number_of_all_testcases ();
        cmesh_id++) {
-      /* This if statement is necessary to make the test work by avoiding specific cmeshes which do not work yet for this test.
-       * When the issues are gone, remove the if statement. */
-      if(cmesh_id !=6 && cmesh_id !=89 && !(cmesh_id <75 && cmesh_id >63)&&!(cmesh_id<266&&cmesh_id>=245)){   
-           t8_test_ghost_owner (cmesh_id);
-         } 
+    /* This if statement is necessary to make the test work by avoiding specific cmeshes which do not work yet for this test.
+     * When the issues are gone, remove the if statement. */
+    if (cmesh_id != 6 && cmesh_id != 89 && !(cmesh_id < 75 && cmesh_id > 63)
+        && !(cmesh_id < 266 && cmesh_id >= 245)) {
+      t8_test_ghost_owner (cmesh_id);
+    }
   }
 }
 

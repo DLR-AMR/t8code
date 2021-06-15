@@ -154,11 +154,12 @@ test_cmesh_partition_all (sc_MPI_Comm comm)
   /* Test all cmeshes over all different inputs we get through their id */
   for (int cmesh_id = 0; cmesh_id < t8_get_number_of_all_testcases ();
        cmesh_id++) {
-          /* This if statement is necessary to make the test work by avoiding specific cmeshes which do not work yet for this test.
-           * When the issues are gone, remove the if statement. */
-         if(cmesh_id !=89 && !(cmesh_id <75 && cmesh_id >63)&&!(cmesh_id<266&&cmesh_id>=245)){  
-           test_cmesh_partition (cmesh_id, comm);
-         } 
+    /* This if statement is necessary to make the test work by avoiding specific cmeshes which do not work yet for this test.
+     * When the issues are gone, remove the if statement. */
+    if (cmesh_id != 89 && !(cmesh_id < 75 && cmesh_id > 63)
+        && !(cmesh_id < 266 && cmesh_id >= 245)) {
+      test_cmesh_partition (cmesh_id, comm);
+    }
 
   }
 }
