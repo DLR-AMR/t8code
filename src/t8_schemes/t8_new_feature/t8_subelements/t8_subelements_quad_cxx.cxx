@@ -255,6 +255,9 @@ t8_default_scheme_sub_c::t8_element_children (const t8_element_t * elem,
 
   const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
 
+  // t8_quad_with_subelements copy;
+  // t8_element_copy (elem, &copy);
+
   int i;
 
   T8_ASSERT (t8_element_is_valid (elem));
@@ -268,11 +271,18 @@ t8_default_scheme_sub_c::t8_element_children (const t8_element_t * elem,
 #endif
   T8_ASSERT (length == P4EST_CHILDREN);
 
+  /* NOTE this solution works but its not general and might later lead to problemes 
+   * with subelements of != 4 children */ 
+  p4est_quadrant_children (q, &pquad_w_sub_children[0]->p4q,
+                              &pquad_w_sub_children[1]->p4q,
+                              &pquad_w_sub_children[2]->p4q,
+                              &pquad_w_sub_children[3]->p4q);
+
   for (i = 0; i < P4EST_CHILDREN; ++i) {
-    /* NOTE bug here: somehow q and &pquad_w_sub_children[i]->p4q can get equal 
+    /* NOTE bug here: somehow q and &pquad_w_sub_children[0]->p4q can get equal 
      * which leads to an assertion in p4est_quadrant_is_parent */
-    p4est_quadrant_child (q, &pquad_w_sub_children[i]->p4q, i);
-    t8_element_copy_surround (q, &pquad_w_sub_children[i]->p4q);
+    // p4est_quadrant_child (q, &pquad_w_sub_children[i]->p4q, i); // change input q?!
+    t8_element_copy_surround (q, &pquad_w_sub_children[i]->p4q); // change input q?!
   }
 }
 
