@@ -47,10 +47,10 @@ jobs:
       uses: actions/cache@v2
       with:
         path: |
-          ${{ env.SC_DEBUG/install }}
-          ${{ env.SC_RELEASE/install }}
-          ${{ env.SC_SERIAL_DEBUG/install }}
-          ${{ env.SC_SERIAL_RELEASE/install }}
+          ${{ env.SC_DEBUG }}/install
+          ${{ env.SC_RELEASE }}/install
+          ${{ env.SC_SERIAL_DEBUG }}/install
+          ${{ env.SC_SERIAL_RELEASE }}/install
         key: sc-${{ env.sc_commit }}
     - name: ls
       run: ls && ls ../ 
@@ -136,10 +136,10 @@ jobs:
       uses: actions/cache@v2
       with:
         path: |
-          ${{ env.P4EST_DEBUG/install }}
-          ${{ env.P4EST_RELEASE/install }}
-          ${{ env.P4EST_SERIAL_DEBUG/install }}
-          ${{ env.P4EST_SERIAL_RELEASE/install }}
+          ${{ env.P4EST_DEBUG }}/install
+          ${{ env.P4EST_RELEASE }}/install
+          ${{ env.P4EST_SERIAL_DEBUG }}/install
+          ${{ env.P4EST_SERIAL_RELEASE }}/install
         key: p4est-${{ env.p4est_commit }}
     - name: Set ignore cache variable
       # If this variable is set to 1 then the cache is ignored and p4est is installed regardless of cache.
