@@ -20,7 +20,6 @@ jobs:
   build:
 
     runs-on: ubuntu-18.04
-    continue-on-error: true
     
     steps:
 # Setup and bootstrap
@@ -60,12 +59,16 @@ jobs:
     - name: ls
       run: ls && ls ../ 
     - name: ls 2
+      if: always()
       run: ls ../sc/build_debug
     - name: ls 3
+      if: always()
       run: ls sc/build_debug
     - name: ls 4
+      if: always()
       run: ls ../sc
     - name: ls 5
+      if: always()
       run: ls ./sc
     - name: Set ignore cache variable
       # If this variable is set 1
