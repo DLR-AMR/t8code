@@ -982,10 +982,11 @@ t8_default_scheme_sub_c::t8_element_is_valid (const t8_element_t * elem) const
   const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
   const p4est_quadrant_t *q = &pquad_w_sub->p4q;
 
-  /* NOTE bug here: assertion, because some elements have random dummy-values */
-  // T8_ASSERT (pquad_w_sub->dummy_is_subelement == 0 || pquad_w_sub->dummy_is_subelement == 1);
-  // T8_ASSERT (pquad_w_sub->dummy_use_subelement == 0 || pquad_w_sub->dummy_use_subelement == 1);
-  // T8_ASSERT (0 <= pquad_w_sub->subelement_id && pquad_w_sub->subelement_id <= pquad_w_sub->num_subelement_ids);
+  /* NOTE bug here: assertion, if the balance fct is used and elements need to be refined 
+   * Code is still working but bug should be solved in the future to understand whats happening */
+  //T8_ASSERT (pquad_w_sub->dummy_is_subelement == 0 || pquad_w_sub->dummy_is_subelement == 1);
+  //T8_ASSERT (pquad_w_sub->dummy_use_subelement == 0 || pquad_w_sub->dummy_use_subelement == 1);
+  //T8_ASSERT (0 <= pquad_w_sub->subelement_id && pquad_w_sub->subelement_id <= pquad_w_sub->num_subelement_ids);
 
   return p4est_quadrant_is_extended (q);
 }
