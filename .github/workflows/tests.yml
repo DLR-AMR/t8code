@@ -47,10 +47,10 @@ jobs:
       uses: actions/cache@v2
       with:
         path: |
-          ${{ env.SC_DEBUG }}/install
-          ${{ env.SC_RELEASE }}/install
-          ${{ env.SC_SERIAL_DEBUG }}/install
-          ${{ env.SC_SERIAL_RELEASE }}/install
+          ${{ env.SC_DEBUG }}
+          ${{ env.SC_RELEASE }}
+          ${{ env.SC_SERIAL_DEBUG }}
+          ${{ env.SC_SERIAL_RELEASE }}
         # You can increase the counter at the end to force a new key and hence recomputing the cache
         key: sc-${{ env.sc_commit }}-000
     - name: Set ignore cache variable
@@ -127,10 +127,10 @@ jobs:
       uses: actions/cache@v2
       with:
         path: |
-          ${{ env.P4EST_DEBUG }}/install
-          ${{ env.P4EST_RELEASE }}/install
-          ${{ env.P4EST_SERIAL_DEBUG }}/install
-          ${{ env.P4EST_SERIAL_RELEASE }}/install
+          ${{ env.P4EST_DEBUG }}
+          ${{ env.P4EST_RELEASE }}
+          ${{ env.P4EST_SERIAL_DEBUG }}
+          ${{ env.P4EST_SERIAL_RELEASE }}
         # You can increase the counter at the end to force a new key and hence recomputing the cache
         key: p4est-${{ env.p4est_commit }}-000
     - name: Set ignore cache variable
