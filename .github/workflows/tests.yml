@@ -40,6 +40,7 @@ on:
       - master
       - develop
       - feature-*CI* # for testing this script, all feature branches with "CI" in their name
+      - feature-remove_all_warnings # temporarily to remove all warnings
   pull_request:
     branches:
       - master
@@ -231,7 +232,7 @@ jobs:
 #
     # build config vars
     - name: build config variables
-      run: export CONFIG_OPTIONS=--without-blas
+      run: export CONFIG_OPTIONS=--without-blas CFLAGS="-Wall -pedantic -Werror -O3" CXXFLAGS="-Wall -pedantic -Werror -O3"
            && export CONFIG_DEBUG="$CONFIG_OPTIONS --enable-debug --enable-mpi --with-sc=$SC_DEBUG/install --with-p4est=$P4EST_DEBUG/install"
            && export CONFIG_SERIAL_DEBUG="$CONFIG_OPTIONS --enable-debug --with-sc=$SC_SERIAL_DEBUG/install --with-p4est=$P4EST_SERIAL_DEBUG/install"
            && export CONFIG_RELEASE="$CONFIG_OPTIONS --enable-mpi --with-sc=$SC_RELEASE/install --with-p4est=$P4EST_RELEASE/install"
