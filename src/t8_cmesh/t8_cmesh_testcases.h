@@ -85,7 +85,7 @@ int                 t8_get_number_of_all_testcases ();
  * \param [in] cmesh_id The cmesh_id is used to create a unique cmesh which only takes comm as input.
  * \return the wanted cmesh with the wanted comm for the given id. 
  */
-t8_cmesh_t t8_test_create_comm_only_cmesh (int cmesh_id);
+t8_cmesh_t          t8_test_create_comm_only_cmesh (int cmesh_id);
 
 /** The function t8_test_create_new_hypercube_cmesh(int cmesh_id):
  * The comm is taken from the t8_comm_list. It avoids the case (eclass = pyramid & periodic=1) since this is not allowed. 

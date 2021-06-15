@@ -37,7 +37,7 @@
 #define T8_CMESH_MAX_NUM_XYZ_TREES 5
 
 sc_MPI_Comm         t8_comm_list[T8_CMESH_TEST_NUM_COMMS] =
-  { sc_MPI_COMM_WORLD};
+  { sc_MPI_COMM_WORLD };
 char                t8_comm_string_list[T8_CMESH_TEST_NUM_COMMS][18] =
   { "sc_MPI_COMM_WORLD" };
 
@@ -163,7 +163,7 @@ t8_get_number_of_new_disjoint_bricks_cmesh_testcases ()
 int
 t8_get_number_of_all_testcases ()
 {
-  /* The number of all tests for all cmesh types is the sum of all individual testcase numbers. When disjoint bricks issue is fixed, then remove comment*/
+  /* The number of all tests for all cmesh types is the sum of all individual testcase numbers. When disjoint bricks issue is fixed, then remove comment */
   return (t8_get_number_of_comm_only_cmesh_testcases () +
           t8_get_number_of_new_hypercube_cmesh_testcases ()
           + t8_get_number_of_new_empty_cmesh_testcases () +
@@ -172,7 +172,8 @@ t8_get_number_of_all_testcases ()
           t8_get_number_of_new_periodic_cmesh_testcases ()
           + t8_get_number_of_new_bigmesh_cmesh_testcases () +
           t8_get_number_of_new_prism_cake_cmesh_testcases ()
-          /*+ t8_get_number_of_new_disjoint_bricks_cmesh_testcases ()*/);
+          /*+ t8_get_number_of_new_disjoint_bricks_cmesh_testcases () */
+    );
 }
 
 /* The functions t8_test_create_*_cmesh create a cmesh of a given type with a unique input depending on the cmesh_id. 
@@ -221,8 +222,8 @@ t8_test_create_comm_only_cmesh (int cmesh_id)
    * This makes it possible to check every cmesh that takes only comm with every comm in t8_comm_list. 
    * Notice that each combination is unique.
    */
-  const int                 i = cmesh_id / T8_CMESH_TEST_NUM_COMMS;
-  const int                 comm_num = cmesh_id % T8_CMESH_TEST_NUM_COMMS;
+  const int           i = cmesh_id / T8_CMESH_TEST_NUM_COMMS;
+  const int           comm_num = cmesh_id % T8_CMESH_TEST_NUM_COMMS;
   switch (i) {
   case 0:
     t8_debugf ("Creating new periodic tri cmesh. comm=%s \n",
@@ -287,23 +288,24 @@ t8_test_create_new_hypercube_cmesh (int cmesh_id)
    * therefore we take modulo T8_ECLASS_COUNT. It should change every 16 steps because then the 
    * comm looped once. This way for every cmesh_id we get a unique combination of input variables.
    */
-  const int                 comm_num = (cmesh_id
+  const int           comm_num = (cmesh_id
                                   / (T8_CMESH_BINARY * T8_CMESH_BINARY *
                                      T8_CMESH_BINARY))
     % (T8_CMESH_TEST_NUM_COMMS);
-  const int      eclass_int = (cmesh_id
-                                / (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY *
-                                   T8_CMESH_BINARY * T8_CMESH_BINARY))
+  const int           eclass_int = (cmesh_id
+                                    / (T8_CMESH_TEST_NUM_COMMS *
+                                       T8_CMESH_BINARY * T8_CMESH_BINARY *
+                                       T8_CMESH_BINARY))
     % T8_ECLASS_COUNT;
-  const t8_eclass_t eclass = (t8_eclass_t)eclass_int;
-  const sc_MPI_Comm         comm = t8_comm_list[comm_num];
-  const int                 do_bcast = (cmesh_id
+  const t8_eclass_t   eclass = (t8_eclass_t) eclass_int;
+  const sc_MPI_Comm   comm = t8_comm_list[comm_num];
+  const int           do_bcast = (cmesh_id
                                   % (T8_CMESH_BINARY * T8_CMESH_BINARY *
                                      T8_CMESH_BINARY))
     / (T8_CMESH_BINARY * T8_CMESH_BINARY);
-  const int                 do_partition =0;
-    /*change when hypercube can be partitioned to:(cmesh_id / T8_CMESH_BINARY) % T8_CMESH_BINARY;*/
-  const int                 periodic = cmesh_id % T8_CMESH_BINARY;
+  const int           do_partition = 0;
+  /*change when hypercube can be partitioned to:(cmesh_id / T8_CMESH_BINARY) % T8_CMESH_BINARY; */
+  const int           periodic = cmesh_id % T8_CMESH_BINARY;
 
   t8_debugf
     ("Creating new hypercube cmesh. eclass=%s, comm=%s, do_bcast=%i, do_partition=%i, periodic=%i \n",
@@ -311,17 +313,18 @@ t8_test_create_new_hypercube_cmesh (int cmesh_id)
      do_partition, periodic);
 
   if (eclass == T8_ECLASS_PYRAMID) {
-     t8_debugf
-    ("Pyramids are not implemented (in this branch), therefore the eclass is changed to T8_ECLASS_HEX");
-    return t8_cmesh_new_hypercube (T8_ECLASS_HEX, comm, do_bcast, do_partition, 0);
+    t8_debugf
+      ("Pyramids are not implemented (in this branch), therefore the eclass is changed to T8_ECLASS_HEX");
+    return t8_cmesh_new_hypercube (T8_ECLASS_HEX, comm, do_bcast,
+                                   do_partition, 0);
   }
 
   /* change to  this when tests run with pyramidal elements: 
-  if ((int) eclass == 7 && periodic == 1) {
-    return t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition, 0);
-  }*/
+     if ((int) eclass == 7 && periodic == 1) {
+     return t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition, 0);
+     } */
 
-  return t8_cmesh_new_hypercube ( eclass, comm, do_bcast, do_partition,
+  return t8_cmesh_new_hypercube (eclass, comm, do_bcast, do_partition,
                                  periodic);
 }
 
@@ -357,13 +360,13 @@ t8_test_create_new_empty_cmesh (int cmesh_id)
    *              1                 |                1                   |    2     
    *              1                 |                1                   |    3   
    */
-  const int                 comm_num = ((cmesh_id
+  const int           comm_num = ((cmesh_id
                                    / (T8_CMESH_BINARY * T8_CMESH_DIM_RANGE))
                                   % T8_CMESH_TEST_NUM_COMMS);
-  const sc_MPI_Comm         comm = t8_comm_list[comm_num];
-  const int                 do_partition =
+  const sc_MPI_Comm   comm = t8_comm_list[comm_num];
+  const int           do_partition =
     (cmesh_id / T8_CMESH_DIM_RANGE) % T8_CMESH_BINARY;
-  const int                 dim = cmesh_id % T8_CMESH_DIM_RANGE;
+  const int           dim = cmesh_id % T8_CMESH_DIM_RANGE;
 
   t8_debugf ("Creating new empty cmesh. comm=%s , do_partition=%i, dim=%i \n",
              t8_comm_string_list[comm_num], do_partition, dim);
@@ -379,33 +382,34 @@ t8_test_create_new_empty_cmesh (int cmesh_id)
 t8_cmesh_t
 t8_test_create_new_from_class_cmesh (int cmesh_id)
 {
- /* The variable comm_num changes every step between 0 and T8_CMESH_TEST_NUM_COMMS(so 0,1,0,1,0,1,...), because these are all 
-  * cases for the comm_num variable. eclass should then change every T8_CMESH_TEST_NUM_COMMS steps, because 
-  * then comm_num looped once through all its values. That is why we dividie by T8_CMESH_TEST_NUM_COMMS.
-  * It also must be in range of T8_ECLASS_COUNT, so we take modulo T8_ECLASS_COUNT. 
-  * This way we get a unique input for every cmesh_id.
-  *            eclass              |              comm             
-  *              0                 |                0     
-  *              0                 |                1     
-  *              1                 |                0     
-  *              1                 |                1     
-  *              2                 |                0        
-  *              2                 |                1       
-  *              3                 |                0          
-  *              3                 |                1       
-  *              4                 |                0       
-  *              4                 |                1        
-  *              5                 |                0        
-  *              5                 |                1         
-  *              6                 |                0        
-  *              6                 |                1         
-  *              7                 |                0         
-  *              7                 |                1         
-  */
-  const int                 comm_num = cmesh_id % T8_CMESH_TEST_NUM_COMMS;
-  const int      eclass_int = (cmesh_id / T8_CMESH_TEST_NUM_COMMS) % T8_ECLASS_COUNT;
-  const t8_eclass_t eclass = (t8_eclass_t)eclass_int;
-  const sc_MPI_Comm         comm = t8_comm_list[comm_num];
+  /* The variable comm_num changes every step between 0 and T8_CMESH_TEST_NUM_COMMS(so 0,1,0,1,0,1,...), because these are all 
+   * cases for the comm_num variable. eclass should then change every T8_CMESH_TEST_NUM_COMMS steps, because 
+   * then comm_num looped once through all its values. That is why we dividie by T8_CMESH_TEST_NUM_COMMS.
+   * It also must be in range of T8_ECLASS_COUNT, so we take modulo T8_ECLASS_COUNT. 
+   * This way we get a unique input for every cmesh_id.
+   *            eclass              |              comm             
+   *              0                 |                0     
+   *              0                 |                1     
+   *              1                 |                0     
+   *              1                 |                1     
+   *              2                 |                0        
+   *              2                 |                1       
+   *              3                 |                0          
+   *              3                 |                1       
+   *              4                 |                0       
+   *              4                 |                1        
+   *              5                 |                0        
+   *              5                 |                1         
+   *              6                 |                0        
+   *              6                 |                1         
+   *              7                 |                0         
+   *              7                 |                1         
+   */
+  const int           comm_num = cmesh_id % T8_CMESH_TEST_NUM_COMMS;
+  const int           eclass_int =
+    (cmesh_id / T8_CMESH_TEST_NUM_COMMS) % T8_ECLASS_COUNT;
+  const t8_eclass_t   eclass = (t8_eclass_t) eclass_int;
+  const sc_MPI_Comm   comm = t8_comm_list[comm_num];
 
   t8_debugf ("Creating new_from_class cmesh. eclass=%s, comm=%s \n",
              t8_eclass_to_string[eclass], t8_comm_string_list[comm_num]);
@@ -421,41 +425,40 @@ t8_test_create_new_from_class_cmesh (int cmesh_id)
 t8_cmesh_t
 t8_test_create_new_hypercube_hybrid_cmesh (int cmesh_id)
 {
- /* The variable periodic changes every step between 0 and 1(so 0,1,0,1,0,1,...), because these are all 
-  * cases for a binary variable. do_partition should then change every second step, because 
-  * then periodic looped once through all its values. That is why we dividie by T8__CMESH_BINARY.
-  * It also must be in range of T8__CMESH_BINARY, so we take modulo T8__CMESH_BINARY(0,0,1,1,0,...). 
-  * comm_num should change every 4 steps, so we divide by 4 and for it to be in range 
-  * of T8_CMESH_TEST_NUM_COMMS, we take modulo T8_CMESH_TEST_NUM_COMMS. dim should change 
-  * every 8 steps, because then comm_num looped once through all its values,so we divide by 4 
-  * For it to be in range of T8_CMESH_DIM_RANGE, we take modulo T8_CMESH_DIM_RANGE.
-  * This way we get a unique input for every cmesh_id.
-  *    dim     |     comm    | do_partition | periodic
-  *     0      |       0     |       0      |     0
-  *     0      |       0     |       0      |     1
-  *     0      |       0     |       1      |     0
-  *     0      |       0     |       1      |     1
-  *     0      |       1     |       0      |     0
-  *     0      |       1     |       0      |     1
-  *     0      |       1     |       1      |     0
-  *     0      |       1     |       1      |     1
-  *     1      |       0     |       0      |     0
-  *    ...     |      ...    |      ...     |    ...     
-  *     3      |       1     |       1      |     1     
-  */
-  const int                 comm_num = (cmesh_id
-                                  /( T8_CMESH_BINARY * T8_CMESH_BINARY))
+  /* The variable periodic changes every step between 0 and 1(so 0,1,0,1,0,1,...), because these are all 
+   * cases for a binary variable. do_partition should then change every second step, because 
+   * then periodic looped once through all its values. That is why we dividie by T8__CMESH_BINARY.
+   * It also must be in range of T8__CMESH_BINARY, so we take modulo T8__CMESH_BINARY(0,0,1,1,0,...). 
+   * comm_num should change every 4 steps, so we divide by 4 and for it to be in range 
+   * of T8_CMESH_TEST_NUM_COMMS, we take modulo T8_CMESH_TEST_NUM_COMMS. dim should change 
+   * every 8 steps, because then comm_num looped once through all its values,so we divide by 4 
+   * For it to be in range of T8_CMESH_DIM_RANGE, we take modulo T8_CMESH_DIM_RANGE.
+   * This way we get a unique input for every cmesh_id.
+   *    dim     |     comm    | do_partition | periodic
+   *     0      |       0     |       0      |     0
+   *     0      |       0     |       0      |     1
+   *     0      |       0     |       1      |     0
+   *     0      |       0     |       1      |     1
+   *     0      |       1     |       0      |     0
+   *     0      |       1     |       0      |     1
+   *     0      |       1     |       1      |     0
+   *     0      |       1     |       1      |     1
+   *     1      |       0     |       0      |     0
+   *    ...     |      ...    |      ...     |    ...     
+   *     3      |       1     |       1      |     1     
+   */
+  const int           comm_num = (cmesh_id
+                                  / (T8_CMESH_BINARY * T8_CMESH_BINARY))
     % T8_CMESH_TEST_NUM_COMMS;
-  const int                 dim = (cmesh_id
-                              / (T8_CMESH_BINARY * T8_CMESH_BINARY *
-                                 T8_CMESH_TEST_NUM_COMMS))
-                             % (T8_CMESH_BINARY * T8_CMESH_BINARY *
-                                T8_CMESH_TEST_NUM_COMMS)
+  const int           dim = (cmesh_id
+                             / (T8_CMESH_BINARY * T8_CMESH_BINARY *
+                                T8_CMESH_TEST_NUM_COMMS))
+    % (T8_CMESH_BINARY * T8_CMESH_BINARY * T8_CMESH_TEST_NUM_COMMS)
     % (T8_CMESH_DIM_RANGE);
-  const sc_MPI_Comm         comm = t8_comm_list[comm_num];
-  const int                 do_partition =
+  const sc_MPI_Comm   comm = t8_comm_list[comm_num];
+  const int           do_partition =
     (cmesh_id / T8_CMESH_BINARY) % T8_CMESH_BINARY;
-  const int                 periodic = cmesh_id % T8_CMESH_BINARY;
+  const int           periodic = cmesh_id % T8_CMESH_BINARY;
 
   t8_debugf
     ("Creating new hypercube hybrid cmesh. dim=%i, comm=%s , do_partition=%i, periodic=%i \n",
@@ -471,21 +474,21 @@ t8_test_create_new_hypercube_hybrid_cmesh (int cmesh_id)
  */
 t8_cmesh_t
 t8_test_create_new_periodic_cmesh (int cmesh_id)
-{ 
- /*
-  *    comm    |      dim    
-  *     0      |       1     
-  *     0      |       2     
-  *     0      |       3    
-  *     1      |       1     
-  *     1      |       2    
-  *     1      |       3    
-  */
+{
+  /*
+   *    comm    |      dim    
+   *     0      |       1     
+   *     0      |       2     
+   *     0      |       3    
+   *     1      |       1     
+   *     1      |       2    
+   *     1      |       3    
+   */
   const int           min_dim = 1;
-  const int                 comm_num = (cmesh_id / T8_CMESH_TEST_NUM_COMMS)
+  const int           comm_num = (cmesh_id / T8_CMESH_TEST_NUM_COMMS)
     % T8_CMESH_TEST_NUM_COMMS;
-  const sc_MPI_Comm         comm = t8_comm_list[comm_num];
-  const int                 dim = (cmesh_id % T8_CMESH_MAX_TEST_DIMS) + min_dim;
+  const sc_MPI_Comm   comm = t8_comm_list[comm_num];
+  const int           dim = (cmesh_id % T8_CMESH_MAX_TEST_DIMS) + min_dim;
 
   t8_debugf ("Creating new periodic cmesh. comm=%s,dim=%i \n",
              t8_comm_string_list[comm_num], dim);
@@ -501,31 +504,31 @@ t8_test_create_new_periodic_cmesh (int cmesh_id)
 t8_cmesh_t
 t8_test_create_new_bigmesh_cmesh (int cmesh_id)
 {
- /*
-  *    eclass  |   num_trees |     comm   
-  *     0      |       0     |       0 
-  *     0      |       0     |       1  
-  *     0      |       1     |       0  
-  *     0      |       1     |       1  
-  *     0      |       2     |       0  
-  *     0      |       2     |       1    
-  *     0      |       3     |       0     
-  *     0      |       3     |       1    
-  *     0      |       4     |       0    
-  *    ...     |      ...    |      ...   
-  *     7      |      100    |       1    
-  */
+  /*
+   *    eclass  |   num_trees |     comm   
+   *     0      |       0     |       0 
+   *     0      |       0     |       1  
+   *     0      |       1     |       0  
+   *     0      |       1     |       1  
+   *     0      |       2     |       0  
+   *     0      |       2     |       1    
+   *     0      |       3     |       0     
+   *     0      |       3     |       1    
+   *     0      |       4     |       0    
+   *    ...     |      ...    |      ...   
+   *     7      |      100    |       1    
+   */
   const int           min_num_trees = 1;
-  const int                 comm_num = cmesh_id % T8_CMESH_TEST_NUM_COMMS;
-  const sc_MPI_Comm         comm = t8_comm_list[comm_num];
-  const int                 num_trees = min_num_trees
+  const int           comm_num = cmesh_id % T8_CMESH_TEST_NUM_COMMS;
+  const sc_MPI_Comm   comm = t8_comm_list[comm_num];
+  const int           num_trees = min_num_trees
     + ((cmesh_id / T8_CMESH_TEST_NUM_COMMS)
        % T8_CMESH_MAX_NUM_OF_TREES);
-  const int      eclass_int = (cmesh_id
-                                / (T8_CMESH_TEST_NUM_COMMS *
-                                   T8_CMESH_MAX_NUM_OF_TREES))
+  const int           eclass_int = (cmesh_id
+                                    / (T8_CMESH_TEST_NUM_COMMS *
+                                       T8_CMESH_MAX_NUM_OF_TREES))
     % (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_MAX_NUM_OF_TREES);
-  const t8_eclass_t eclass = (t8_eclass_t)eclass_int;
+  const t8_eclass_t   eclass = (t8_eclass_t) eclass_int;
 
   t8_debugf
     ("Creating new bigmesh cmesh. eclass=%s,num_trees=%i, comm=%s  \n",
@@ -542,22 +545,22 @@ t8_test_create_new_bigmesh_cmesh (int cmesh_id)
 t8_cmesh_t
 t8_test_create_new_prism_cake_cmesh (int cmesh_id)
 {
- /*
-  *    comm    |  num_of_prisms    
-  *     0      |       3     
-  *     0      |       4     
-  *     0      |      ...     
-  *     0      |      100     
-  *     1      |       3    
-  *     1      |       4    
-  *    ...     |      ...    
-  *     1      |      100  
-  */
+  /*
+   *    comm    |  num_of_prisms    
+   *     0      |       3     
+   *     0      |       4     
+   *     0      |      ...     
+   *     0      |      100     
+   *     1      |       3    
+   *     1      |       4    
+   *    ...     |      ...    
+   *     1      |      100  
+   */
   const int           min_num_of_prisms = 3;
-  const int                 comm_num = (cmesh_id / T8_CMESH_MAX_NUM_OF_PRISMS)
+  const int           comm_num = (cmesh_id / T8_CMESH_MAX_NUM_OF_PRISMS)
     % T8_CMESH_TEST_NUM_COMMS;
-  const sc_MPI_Comm         comm = t8_comm_list[comm_num];
-  const int                 num_of_prisms = min_num_of_prisms
+  const sc_MPI_Comm   comm = t8_comm_list[comm_num];
+  const int           num_of_prisms = min_num_of_prisms
     + (cmesh_id % T8_CMESH_MAX_NUM_OF_PRISMS);
 
   t8_debugf ("Creating new prism cake cmesh. comm=%s, num_of_prisms=%i \n",
@@ -574,35 +577,35 @@ t8_test_create_new_prism_cake_cmesh (int cmesh_id)
 t8_cmesh_t
 t8_test_create_new_disjoint_bricks_cmesh (int cmesh_id)
 {
-  const int                 comm_num = cmesh_id % T8_CMESH_TEST_NUM_COMMS;
+  const int           comm_num = cmesh_id % T8_CMESH_TEST_NUM_COMMS;
 
-  const sc_MPI_Comm         comm = t8_comm_list[comm_num];
+  const sc_MPI_Comm   comm = t8_comm_list[comm_num];
 
-  const int                 z_periodic = (cmesh_id / T8_CMESH_TEST_NUM_COMMS)
+  const int           z_periodic = (cmesh_id / T8_CMESH_TEST_NUM_COMMS)
     % T8_CMESH_BINARY;
 
-  const int                 y_periodic = (cmesh_id
+  const int           y_periodic = (cmesh_id
                                     / (T8_CMESH_TEST_NUM_COMMS *
                                        T8_CMESH_BINARY))
     % T8_CMESH_BINARY;
 
-  const int                 x_periodic = (cmesh_id
+  const int           x_periodic = (cmesh_id
                                     / (T8_CMESH_TEST_NUM_COMMS *
                                        T8_CMESH_BINARY * T8_CMESH_BINARY))
     % T8_CMESH_BINARY;
 
-  const t8_gloidx_t         num_z = (cmesh_id
+  const t8_gloidx_t   num_z = (cmesh_id
                                / (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY
                                   * T8_CMESH_BINARY * T8_CMESH_BINARY))
     % T8_CMESH_MAX_NUM_XYZ_TREES;
 
-  const t8_gloidx_t         num_y =  (cmesh_id
+  const t8_gloidx_t   num_y = (cmesh_id
                                / (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY
                                   * T8_CMESH_BINARY * T8_CMESH_BINARY *
                                   T8_CMESH_MAX_NUM_XYZ_TREES))
     % T8_CMESH_MAX_NUM_XYZ_TREES;
 
-  const t8_gloidx_t         num_x = (cmesh_id
+  const t8_gloidx_t   num_x = (cmesh_id
                                / (T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY
                                   * T8_CMESH_BINARY * T8_CMESH_BINARY
                                   * T8_CMESH_MAX_NUM_XYZ_TREES *
@@ -639,9 +642,9 @@ t8_test_create_cmesh (int cmesh_id)
   cmesh_id -= t8_get_number_of_new_hypercube_cmesh_testcases ();
   if (0 <= cmesh_id
       && cmesh_id < t8_get_number_of_new_empty_cmesh_testcases ()) {
-        t8_debugf
-    ("Empty cmesh does not work with the tests, there is a SEGV fault error. Therefore we replace it here with hypercube cmesh");
-        /*change when teh SEGV fault issue is closed to: t8_test_create_new_empty_cmesh (cmesh_id);*/
+    t8_debugf
+      ("Empty cmesh does not work with the tests, there is a SEGV fault error. Therefore we replace it here with hypercube cmesh");
+    /*change when teh SEGV fault issue is closed to: t8_test_create_new_empty_cmesh (cmesh_id); */
     return t8_test_create_new_hypercube_cmesh (cmesh_id);
   }
   cmesh_id -= t8_get_number_of_new_empty_cmesh_testcases ();
