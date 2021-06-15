@@ -52,7 +52,7 @@ jobs:
           ${{ env.SC_SERIAL_DEBUG }}
           ${{ env.SC_SERIAL_RELEASE }}
         # You can increase the counter at the end to force a new key and hence recomputing the cache
-        key: sc-${{ env.sc_commit }}-000
+        key: sc-${{ env.sc_commit }}-001
     - name: Set ignore cache variable
       # If this variable is set 1
       # (i.e. SC_IGNORE_CACHE=1) then the cache will be ignored and
@@ -132,7 +132,7 @@ jobs:
           ${{ env.P4EST_SERIAL_DEBUG }}
           ${{ env.P4EST_SERIAL_RELEASE }}
         # You can increase the counter at the end to force a new key and hence recomputing the cache
-        key: p4est-${{ env.p4est_commit }}-000
+        key: p4est-${{ env.p4est_commit }}-001
     - name: Set ignore cache variable
       # If this variable is set to 1 then the cache is ignored and p4est is installed regardless of cache.
       # (set with i.e. P4EST_IGNORE_CACHE=1)
