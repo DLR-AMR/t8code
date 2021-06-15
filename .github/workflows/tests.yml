@@ -257,6 +257,8 @@ jobs:
 # configure and test with MPI (release mode)
     - name: check release mode
       run: echo "Checking release mode (MPI)"
+    - name: echo configure line
+      run: echo configure $CONFIG_RELEASE
     - name: configure
       run: mkdir build_release && cd build_release && ../configure $CONFIG_RELEASE
     - name: OnFailPrintLog
