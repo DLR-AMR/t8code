@@ -62,6 +62,8 @@ jobs:
       - name: Test var
         run: echo $sc_commit $p4est_commit
        # Cache sc
+      - name: create folder var
+        run: echo test_path=$PWD/test_path >> $GITHUB_ENV
       - name: Cache SC
         id: sc_cache
         uses: actions/cache@v2
@@ -69,8 +71,9 @@ jobs:
           path: |
             sc/build_test
             sc/build_test_ci/install
+            ${{ env.test_path }}
           # increase this number to trigger new caching
-          key: sc-0
+          key: sc-3
       - name: create build and write commit
         if: steps.sc_cache.outputs.cache-hit != 'true'
         run: mkdir sc/build_test 
@@ -78,6 +81,9 @@ jobs:
           && echo $sc_commit >> sc/build_test/commit.log
           && mkdir sc/build_test_ci && mkdir sc/build_test_ci/install
           && date >> sc/build_test_ci/install/commit.log
+          && mkdir test_path
+          && date >> test_path/test.log
       - name: print files
         run: cat sc/build_test/commit.log
           && cat sc/build_test_ci/install/commit.log
+          && cat test_path/test.log
