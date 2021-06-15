@@ -67,16 +67,16 @@ jobs:
     - name: install sc
       run: echo "Install sc"
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
-#      ## sc debug
-#    - name: sc configure debug
-#      run: cd $SC_DEBUG && ../configure --enable-mpi --enable-debug --prefix=$PWD/install
-#      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
-#    - name: sc build debug
-#      run: cd $SC_DEBUG && make -j V=0 && make -j V=0 install
-#      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
-#    - name: OnFailPrintLog
-#      if: (${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}) && failure()
-#      run: cat $SC_DEBUG/config.log
+      ## sc debug
+    - name: sc configure debug
+      run: cd $SC_DEBUG && ../configure --enable-mpi --enable-debug --prefix=$PWD/install
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: sc build debug
+      run: cd $SC_DEBUG && make -j V=0 && make -j V=0 install
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: OnFailPrintLog
+      if: (${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}) && failure()
+      run: cat $SC_DEBUG/config.log
       ## sc release
     - name: sc configure and build release
       run: cd $SC_RELEASE && ../configure --enable-mpi --enable-debug --prefix=$PWD/install
@@ -88,25 +88,25 @@ jobs:
       if: (${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}) && failure()
       run: cat $SC_RELEASE/config.log
       ## sc serial debug
-#    - name: sc configure and build serial debug
-#      run: cd $SC_SERIAL_DEBUG && ../configure --enable-debug --prefix=$PWD/install
-#      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
-#    - name: sc build serial debug
-#      run: cd $SC_SERIAL_DEBUG && make -j V=0 && make -j V=0 install
-#      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
-#    - name: OnFailPrintLog
-#      if: (${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}) && failure()
-#      run: cat $SC_SERIAL_DEBUG/config.log
-#      ## sc serial release
-#    - name: sc configure and build serial release
-#      run: cd $SC_SERIAL_RELEASE && ../configure --prefix=$PWD/install
-#      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
-#    - name: sc build release serial
-#      run: cd $SC_SERIAL_RELEASE && make -j V=0 && make -j V=0 install
-#      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
-#    - name: OnFailPrintLog
-#      if: (${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}) && failure()
-#      run: cat $SC_SERIAL_RELEASE/config.log
+    - name: sc configure and build serial debug
+      run: cd $SC_SERIAL_DEBUG && ../configure --enable-debug --prefix=$PWD/install
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: sc build serial debug
+      run: cd $SC_SERIAL_DEBUG && make -j V=0 && make -j V=0 install
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: OnFailPrintLog
+      if: (${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}) && failure()
+      run: cat $SC_SERIAL_DEBUG/config.log
+      ## sc serial release
+    - name: sc configure and build serial release
+      run: cd $SC_SERIAL_RELEASE && ../configure --prefix=$PWD/install
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: sc build release serial
+      run: cd $SC_SERIAL_RELEASE && make -j V=0 && make -j V=0 install
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: OnFailPrintLog
+      if: (${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}) && failure()
+      run: cat $SC_SERIAL_RELEASE/config.log
 #
 # P4EST
 #
@@ -142,16 +142,16 @@ jobs:
       run: mkdir $P4EST_DEBUG && mkdir $P4EST_RELEASE && mkdir $P4EST_SERIAL_RELEASE
           && mkdir $P4EST_SERIAL_DEBUG
     ## p4est debug
-    #  if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
-    #- name: p4est configure debug
-    #  run: cd $P4EST_DEBUG && ../configure --enable-mpi --enable-debug --prefix=$PWD/install --with-sc=$SC_DEBUG/install
-    #  if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
-    #- name: p4est build debug
-    #  run: cd $P4EST_DEBUG && make -j V=0 && make -j V=0 install
-    #  if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
-    #- name: OnFailPrintLog
-    #  if: (${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}) && failure()
-    #  run: cat $P4EST_DEBUG/config.log
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: p4est configure debug
+      run: cd $P4EST_DEBUG && ../configure --enable-mpi --enable-debug --prefix=$PWD/install --with-sc=$SC_DEBUG/install
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: p4est build debug
+      run: cd $P4EST_DEBUG && make -j V=0 && make -j V=0 install
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: OnFailPrintLog
+      if: (${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}) && failure()
+      run: cat $P4EST_DEBUG/config.log
     ## p4est release
     - name: p4est configure and build release
       run: cd $P4EST_RELEASE && ../configure --enable-mpi --prefix=$PWD/install --with-sc=$SC_RELEASE/install
@@ -163,26 +163,26 @@ jobs:
       if: (${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}) && failure()
       run: cat $P4EST_RELEASE/config.log
     #### p4est serial release
-    #- name: p4est configure and build serial release
-    #  run: cd $P4EST_SERIAL_RELEASE && ../configure --prefix=$PWD/install --with-sc=$SC_SERIAL_RELEASE/install
-    #  if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
-    ##- name: p4est build serial release
-    ##  run: cd $P4EST_SERIAL_RELEASE && make -j V=0 && make -j V=0 install
-    ##  if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
-    ##- name: OnFailPrintLog
-    ##  if: (${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}) && failure()
-    ##  run: cat $P4EST_SERIAL_RELEASE/config.log
-    ##- name: p4est configure and build serial debug
-    #### p4est serial debug
-    ##  run: cd $P4EST_SERIAL_DEBUG && ../configure --enable-debug --prefix=$PWD/install --with-sc=$SC_SERIAL_DEBUG/install
-    ##  if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
-    ##- name: p4est build serial debug
-    ##  run: cd $P4EST_SERIAL_DEBUG && make -j V=0 && make -j V=0 install
-    ##  if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
-    ##- name: OnFailPrintLog
-    ##  if: (${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}) && failure ()
-    ##  run: cat $P4EST_SERIAL_DEBUG/config.log
-#  P##4EST AND SC END
+    - name: p4est configure and build serial release
+      run: cd $P4EST_SERIAL_RELEASE && ../configure --prefix=$PWD/install --with-sc=$SC_SERIAL_RELEASE/install
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: p4est build serial release
+      run: cd $P4EST_SERIAL_RELEASE && make -j V=0 && make -j V=0 install
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: OnFailPrintLog
+      if: (${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}) && failure()
+      run: cat $P4EST_SERIAL_RELEASE/config.log
+    - name: p4est configure and build serial debug
+    ### p4est serial debug
+      run: cd $P4EST_SERIAL_DEBUG && ../configure --enable-debug --prefix=$PWD/install --with-sc=$SC_SERIAL_DEBUG/install
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: p4est build serial debug
+      run: cd $P4EST_SERIAL_DEBUG && make -j V=0 && make -j V=0 install
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: OnFailPrintLog
+      if: (${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}) && failure ()
+      run: cat $P4EST_SERIAL_DEBUG/config.log
+#  P4EST AND SC END
 #
 #  T8CODE
 #
