@@ -1,15 +1,21 @@
-name: Tests
+name: t8code tests
+
+# TODO
+# 1. activate -Werror
+# 2. use steps for sc/p4est/t8code
+# 3. use var instead of "build_serial"
 
 on:
   push:
     branches:
       - master
       - develop
-      - feature-github_ci # for testing this script
+      - feature-*CI* # for testing this script, all feature branches with "CI" in their name
   pull_request:
     branches:
       - master
       - develop
+  workflow_dispatch: # Be able to trigger this manually on github.com
 
 jobs:
   build:
@@ -27,87 +33,186 @@ jobs:
       run: git submodule update
     - name: bootstrap
       run: ./bootstrap
+#
+#       SC installation
+#
+    - name: store sc folders in var
+      run: echo SC_DEBUG=$PWD/sc/build_debug >> $GITHUB_ENV
+       && echo SC_RELEASE=$PWD/sc/build_release >> $GITHUB_ENV
+       && echo SC_SERIAL_DEBUG=$PWD/sc/build_serial_debug >> $GITHUB_ENV
+       && echo SC_SERIAL_RELEASE=$PWD/sc/build_serial_release >> $GITHUB_ENV
+    - name: make folders
+      run: mkdir $SC_DEBUG && mkdir $SC_RELEASE && mkdir $SC_SERIAL_DEBUG && mkdir $SC_SERIAL_RELEASE
+      ## sc debug
+    - name: install sc
+      run: echo "Install sc"
+    - name: sc configure debug
+      run: cd $SC_DEBUG && ../configure --enable-mpi --enable-debug --prefix=$PWD/install
+    - name: sc build debug
+      run: cd $SC_DEBUG && make -j V=0 && make -j V=0 install
+    - name: OnFailPrintLog
+      if: failure()
+      run: cat $SC_DEBUG/config.log
+      ## sc release
+    - name: sc configure and build release
+      run: cd $SC_RELEASE && ../configure --enable-mpi --enable-debug --prefix=$PWD/install
+    - name: sc build release
+      run: cd $SC_RELEASE && make -j V=0 && make -j V=0 install
+    - name: OnFailPrintLog
+      if: failure()
+      run: cat $SC_RELEASE/config.log
+      ## sc serial debug
+    - name: sc configure and build serial debug
+      run: cd $SC_SERIAL_DEBUG && ../configure --enable-debug --prefix=$PWD/install
+    - name: sc build serial debug
+      run: cd $SC_SERIAL_DEBUG && make -j V=0 && make -j V=0 install
+    - name: OnFailPrintLog
+      if: failure()
+      run: cat $SC_SERIAL_DEBUG/config.log
+      ## sc serial release
+    - name: sc configure and build serial release
+      run: cd $SC_SERIAL_RELEASE && ../configure --prefix=$PWD/install
+    - name: sc build release serial
+      run: cd $SC_SERIAL_RELEASE && make -j V=0 && make -j V=0 install
+    - name: OnFailPrintLog
+      if: failure()
+      run: cat $SC_SERIAL_RELEASE/config.log
+#
+# P4EST
+#
+    - name: store p4est folders in var
+      run: echo P4EST_DEBUG=$PWD/p4est/build_debug >> $GITHUB_ENV
+       && echo P4EST_RELEASE=$PWD/p4est/build_release >> $GITHUB_ENV
+       && echo P4EST_SERIAL_DEBUG=$PWD/p4est/build_serial_debug >> $GITHUB_ENV
+       && echo P4EST_SERIAL_RELEASE=$PWD/p4est/build_serial_release >> $GITHUB_ENV
+    ## p4est debug
+    - name: install p4est
+      run: echo "Install p4est"
+    - name: make folders
+      run: mkdir $P4EST_DEBUG && mkdir $P4EST_RELEASE && mkdir $P4EST_SERIAL_RELEASE
+          && mkdir $P4EST_SERIAL_DEBUG 
+    - name: p4est configure debug
+      run: cd $P4EST_DEBUG && ../configure --enable-mpi --enable-debug --prefix=$PWD/install --with-sc=$SC_DEBUG/install
+    - name: p4est build debug
+      run: cd $P4EST_DEBUG && make -j V=0 && make -j V=0 install
+    - name: OnFailPrintLog
+      if: failure()
+      run: cat $P4EST_DEBUG/config.log
+    ## p4est release
+    - name: p4est configure and build release
+      run: cd $P4EST_RELEASE && ../configure --enable-mpi --prefix=$PWD/install --with-sc=$SC_RELEASE/install
+    - name: p4est build release
+      run: cd $P4EST_RELEASE && make -j V=0 && make -j V=0 install
+    - name: OnFailPrintLog
+      if: failure()
+      run: cat $P4EST_RELEASE/config.log
+    - name: p4est configure and build serial release
+      run: cd $P4EST_SERIAL_RELEASE && ../configure --prefix=$PWD/install --with-sc=$SC_SERIAL_RELEASE/install
+    ## p4est serial release
+    - name: p4est build serial release
+      run: cd $P4EST_SERIAL_RELEASE && make -j V=0 && make -j V=0 install
+    - name: OnFailPrintLog
+      if: failure()
+      run: cat $P4EST_SERIAL_RELEASE/config.log
+    - name: p4est configure and build serial debug
+      run: cd $P4EST_SERIAL_DEBUG && ../configure --enable-debug --prefix=$PWD/install --with-sc=$SC_SERIAL_DEBUG/install
+    ## p4est serial debug
+    - name: p4est build serial debug
+      run: cd $P4EST_SERIAL_DEBUG && make -j V=0 && make -j V=0 install
+    - name: OnFailPrintLog
+      if: failure()
+      run: cat $P4EST_SERIAL_DEBUG/config.log
+#  P4EST AND SC END
+#
+#  T8CODE
+#
+#
+    # build config vars
+    - name: build config variables
+      run: export CONFIG_OPTIONS=--without-blas
+           && export CONFIG_DEBUG="$CONFIG_OPTIONS --enable-debug --enable-mpi --with-sc=$SC_DEBUG/install --with-p4est=$P4EST_DEBUG/install"
+           && export CONFIG_SERIAL_DEBUG="$CONFIG_OPTIONS --enable-debug --with-sc=$SC_SERIAL_DEBUG/install --with-p4est=$P4EST_SERIAL_DEBUG/install"
+           && export CONFIG_RELEASE="$CONFIG_OPTIONS --enable-mpi --with-sc=$SC_RELEASE/install --with-p4est=$P4EST_RELEASE/install"
+           && export CONFIG_SERIAL_RELEASE="$CONFIG_OPTIONS --with-sc=$SC_SERIAL_RELEASE/install --with-p4est=$P4EST_SERIAL_RELEASE/install"
+           && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
+           && echo CONFIG_DEBUG="$CONFIG_DEBUG" >> $GITHUB_ENV
+           && echo CONFIG_SERIAL_DEBUG="$CONFIG_SERIAL_DEBUG" >> $GITHUB_ENV
+           && echo CONFIG_RELEASE="$CONFIG_RELEASE" >> $GITHUB_ENV
+           && echo CONFIG_SERIAL_RELEASE="$CONFIG_SERIAL_RELEASE" >> $GITHUB_ENV
+    - name: Check vars
+      run: echo "[$CONFIG_DEBUG]"
+            && echo "[$CONFIG_SERIAL_DEBUG]"
+            && echo "[$CONFIG_RELEASE]"
+            && echo "[$CONFIG_SERIAL_RELEASE]"
 # configure and test with MPI (release mode)
     - name: check release mode
       run: echo "Checking release mode (MPI)"
     - name: configure
-      run: ./configure --enable-mpi --without-blas
+      run: mkdir build_release && cd build_release && ../configure $CONFIG_RELEASE
     - name: OnFailPrintLog
       if: failure()
-      run: cat config.log
+      run: cat build_release/config.log
     - name: make
-      run: make -j V=0
+      run: cd build_release && make -j V=0
     - name: make check
-      run: make check -j4 V=0
-    - name: clean up
-      run: make distclean
+      run: cd build_release && make check -j4 V=0
 # configure and test with MPI (debug mode)
     - name: check debugging mode
       run: echo "Checking debug mode"
     - name: configure
-      run: ./configure --enable-mpi --without-blas --enable-debug
+      run: mkdir build_debug && cd build_debug && ../configure $CONFIG_DEBUG
     - name: OnFailPrintLog
       if: failure()
       run: cat config.log
     - name: make
-      run: make -j V=0
+      run: cd build_debug && make -j V=0
     - name: make check
-      run: make check -j4 V=0
-    - name: clean up
-      run: make distclean
+      run: cd build_debug && make check -j4 V=0
 # configure and test with MPI (C++ compiler only, release mode)
     - name: check C++ compiler
       run: echo "Checking C++, release mode (MPI)"
     - name: configure
-      run: ./configure CC=mpicxx CXX=mpicxx --enable-mpi --without-blas --enable-debug
+      run: mkdir build_release_cpp &&cd build_release_cpp && ../configure CC=mpicxx CXX=mpicxx $CONFIG_RELEASE
     - name: OnFailPrintLog
       if: failure()
-      run: cat config.log
+      run: cat build_release_cpp/config.log
     - name: make
-      run: make -j V=0
+      run: cd build_release_cpp && make -j V=0
     - name: make check
-      run: make check -j4 V=0
-    - name: clean up
-      run: make distclean
+      run: cd build_release_cpp && make check -j4 V=0
 # configure and test serial (release mode)
     - name: check serial
       run: echo "Checking serial release mode"
     - name: configure
-      run: ./configure --without-blas
+      run: mkdir build_serial_release && cd build_serial_release && ../configure $CONFIG_SERIAL_RELEASE
     - name: OnFailPrintLog
       if: failure()
-      run: cat config.log
+      run: cat build_serial_release/config.log
     - name: make
-      run: make -j V=0
+      run: cd build_serial_release && make -j V=0
     - name: make check
-      run: make check -j4 V=0
-    - name: clean up
-      run: make distclean
+      run: cd build_serial_release && make check -j4 V=0
 # configure and test serial (debug mode)
     - name: check serial
       run: echo "Checking debugging mode"
     - name: configure
-      run: ./configure --without-blas --enable-debug
+      run: mkdir build_serial_debug && cd build_serial_debug && ../configure $CONFIG_SERIAL_DEBUG
     - name: OnFailPrintLog
       if: failure()
-      run: cat config.log
+      run: cat build_serial_release/config.log
     - name: make
-      run: make -j V=0
+      run: cd build_serial_release && make -j V=0
     - name: make check
-      run: make check -j4 V=0
-    - name: clean up
-      run: make distclean
+      run: cd build_serial_release && make check -j4 V=0
 # configure and test with MPI and netcdf
     - name: Install netcdf
       run: sudo apt-get install libnetcdf-dev
     - name: configure
-      run: ./configure --without-blas --with-netcdf --enable-mpi
+      run: mkdir build_netcdf && cd build_netcdf && ../configure $CONFIG_RELEASE --with-netcdf
     - name: OnFailPrintLog
       if: failure()
-      run: cat config.log
+      run: cat build_netcdf/config.log
     - name: make
-      run: make -j V=0
+      run: cd build_netcdf && make -j V=0
     - name: make check
-      run: make check -j4 V=0
-    - name: clean up
-      run: make distclean
+      run: cd build_netcdf && make check -j4 V=0

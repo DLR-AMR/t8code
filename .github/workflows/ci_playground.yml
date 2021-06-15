@@ -1,0 +1,26 @@
+name: Tests
+
+# The purpose of this script is for debugging and testing
+# the github CI without the need to trigger the whole workflow.
+# Its contents may change arbitrarily.
+
+on:
+  push:
+    branches:
+      - feature-*CI* # for testing this script, all feature branches with "CI" in their name
+  workflow_dispatch: # Be able to trigger this manually on github.com
+
+jobs:
+  test_vars:
+    runs-on: ubuntu-latest
+    env:
+      SC_DEBUG: ../sc/build_debug
+      P4EST_DEBUG: ../p4est/build_debug
+    steps:
+      - name: Test vars
+        run: echo "[$SC_DEBUG] [$P4EST_DEBUG]"
+      - name: New envs
+        run: echo NEW_VAR=blub >> $GITHUB_ENV
+      - name: Test vars
+        run: echo $NEW_VAR ${{ env.NEW_VAR }}
+
