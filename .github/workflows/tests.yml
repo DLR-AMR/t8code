@@ -47,14 +47,10 @@ jobs:
       uses: actions/cache@v2
       with:
         path: |
-          $SC_DEBUG/install
-          $SC_RELEASE/install
-          $SC_SERIAL_DEBUG/install
-          $SC_SERIAL_RELEASE/install
-          $SC_DEBUG
-          $SC_RELEASE
-          $SC_SERIAL_DEBUG
-          $SC_SERIAL_RELEASE
+          ${{ env.SC_DEBUG/install }}
+          ${{ env.SC_RELEASE/install }}
+          ${{ env.SC_SERIAL_DEBUG/install }}
+          ${{ env.SC_SERIAL_RELEASE/install }}
         key: sc-${{ env.sc_commit }}
     - name: ls
       run: ls && ls ../ 
