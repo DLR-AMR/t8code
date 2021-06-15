@@ -234,6 +234,10 @@ jobs:
     - name: build CFLAGS and CXXFLAGS variables
       run: echo CFLAGS_var="-Wall -pedantic -O3" >> $GITHUB_ENV
         && echo CXXFLAGS_var="-Wall -pedantic -O3" >> $GITHUB_ENV
+    # Note: We want to use '-Werror', but if we already provide it at the configure step
+    #       we get errors in configure that we cannot remove (for example the autotools way
+    #       of checking for libm results in a compiler warning).
+    #       Thus, we add '-Werror' later at the make step.
     - name: build config variables
       run: export CONFIG_OPTIONS="--without-blas CFLAGS='$CFLAGS_var' CXXFLAGS='$CXXFLAGS_var'"
            && export CONFIG_DEBUG="$CONFIG_OPTIONS --enable-debug --enable-mpi --with-sc=$SC_DEBUG/install --with-p4est=$P4EST_DEBUG/install"
