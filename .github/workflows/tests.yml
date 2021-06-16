@@ -86,7 +86,7 @@ jobs:
           ${{ env.SC_SERIAL_DEBUG }}
           ${{ env.SC_SERIAL_RELEASE }}
         # You can increase the counter at the end to force a new key and hence recomputing the cache
-        key: sc-${{ env.sc_commit }}-002
+        key: sc-${{ env.sc_commit }}-003
     - name: Set ignore cache variable
       # If this variable is set 1
       # (i.e. SC_IGNORE_CACHE=1) then the cache will be ignored and
@@ -113,6 +113,9 @@ jobs:
     - name: sc build debug
       run: cd $SC_DEBUG && make -j V=0 && make -j V=0 install
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: sc debug check
+      run: cd $SC_DEBUG && make -j V=0 check
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
     - name: OnFailPrintLog
       if: (${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}) && failure()
       run: cat $SC_DEBUG/config.log
@@ -122,6 +125,9 @@ jobs:
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
     - name: sc build release
       run: cd $SC_RELEASE && make -j V=0 && make -j V=0 install
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: sc release check
+      run: cd $SC_RELEASE && make -j V=0 check
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
     - name: OnFailPrintLog
       if: (${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}) && failure()
@@ -133,6 +139,9 @@ jobs:
     - name: sc build serial debug
       run: cd $SC_SERIAL_DEBUG && make -j V=0 && make -j V=0 install
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: sc serial debug check
+      run: cd $SC_SERIAL_DEBUG && make -j V=0 check
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
     - name: OnFailPrintLog
       if: (${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}) && failure()
       run: cat $SC_SERIAL_DEBUG/config.log
@@ -142,6 +151,9 @@ jobs:
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
     - name: sc build release serial
       run: cd $SC_SERIAL_RELEASE && make -j V=0 && make -j V=0 install
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: sc release debug check
+      run: cd $SC_SERIAL_RELEASE && make -j V=0 check
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
     - name: OnFailPrintLog
       if: (${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}) && failure()
@@ -166,7 +178,7 @@ jobs:
           ${{ env.P4EST_SERIAL_DEBUG }}
           ${{ env.P4EST_SERIAL_RELEASE }}
         # You can increase the counter at the end to force a new key and hence recomputing the cache
-        key: p4est-${{ env.p4est_commit }}-002
+        key: p4est-${{ env.p4est_commit }}-003
     - name: Set ignore cache variable
       # If this variable is set to 1 then the cache is ignored and p4est is installed regardless of cache.
       # (set with i.e. P4EST_IGNORE_CACHE=1)
@@ -193,6 +205,9 @@ jobs:
     - name: p4est build debug
       run: cd $P4EST_DEBUG && make -j V=0 && make -j V=0 install
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: p4est debug check
+      run: cd $P4EST_DEBUG && make -j V=0 check
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: OnFailPrintLog
       if: (${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}) && failure()
       run: cat $P4EST_DEBUG/config.log
@@ -202,6 +217,9 @@ jobs:
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: p4est build release
       run: cd $P4EST_RELEASE && make -j V=0 && make -j V=0 install
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: p4est release check
+      run: cd $P4EST_RELEASE && make -j V=0 check
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: OnFailPrintLog
       if: (${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}) && failure()
@@ -213,6 +231,9 @@ jobs:
     - name: p4est build serial release
       run: cd $P4EST_SERIAL_RELEASE && make -j V=0 && make -j V=0 install
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: p4est serial release check
+      run: cd $P4EST_SERIAL_RELEASE && make -j V=0 check
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: OnFailPrintLog
       if: (${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}) && failure()
       run: cat $P4EST_SERIAL_RELEASE/config.log
@@ -222,6 +243,9 @@ jobs:
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: p4est build serial debug
       run: cd $P4EST_SERIAL_DEBUG && make -j V=0 && make -j V=0 install
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: p4est serial debug check
+      run: cd $P4EST_SERIAL_DEBUG && make -j V=0 check
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: OnFailPrintLog
       if: (${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}) && failure ()
