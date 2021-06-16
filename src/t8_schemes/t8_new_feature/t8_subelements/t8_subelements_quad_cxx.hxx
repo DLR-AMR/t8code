@@ -183,9 +183,13 @@ public:
   virtual void        t8_element_child (const t8_element_t * elem,
                                         int childid, t8_element_t * child);
 
+/** Construct a subelement */
+  virtual void        t8_element_subelements (const t8_element_t * elem,
+                                               int length, t8_element_t * c[]);
+
 /** Construct all children of a given element. */
   virtual void        t8_element_children (const t8_element_t * elem,
-                                           int length, t8_element_t * c[]); // how to construct subelements
+                                           int length, t8_element_t * c[]); 
 
 /** Return the child id of an element */
   virtual int         t8_element_child_id (const t8_element_t * elem);
