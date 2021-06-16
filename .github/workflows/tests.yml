@@ -58,6 +58,8 @@ jobs:
     - uses: actions/checkout@v1
     - name: Install mpich
       run: sudo apt-get update && sudo apt-get install libmpich-dev
+    - name: Install zlib
+      run: sudo apt-get install libz-dev
     - name: init submodules
       run: git submodule init
     - name: update submodules
