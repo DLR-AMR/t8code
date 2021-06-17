@@ -51,8 +51,6 @@ t8_test_point_inside_level0 (sc_MPI_Comm comm, t8_eclass_t eclass)
   t8_element_t       *element;
   double              test_point[3];
   int                 ipoint, icoord;   /* loop variables */
-  const int           num_points_per_dim = 5;   /* we construct num_points_per_dim^3 many test points */
-  const double        offset = 2.2 / (num_points_per_dim - 1);  /* used to calculate the coordinates of the test points */
   int                 point_is_recognized_as_inside;
   int                 num_corners, icorner;
   double             *tree_vertices;

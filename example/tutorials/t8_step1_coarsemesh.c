@@ -73,7 +73,7 @@ t8_step1_build_tetcube_coarse_mesh (sc_MPI_Comm comm)
  * and additionally one file prefix_MPIRANK.vtu per MPI rank.
  */
 static void
-t8_step1_write_cmesh_vtk (t8_cmesh_t cmesh, char *prefix)
+t8_step1_write_cmesh_vtk (t8_cmesh_t cmesh, const char *prefix)
 {
   t8_cmesh_vtk_write_file (cmesh, prefix, 1.0);
 }
@@ -93,7 +93,7 @@ main (int argc, char **argv)
   int                 mpiret;
   t8_cmesh_t          cmesh;
   /* The prefix for our output files. */
-  char               *prefix = "t8_step1_tetcube";
+  const char          prefix[BUFSIZ] = "t8_step1_tetcube";
   t8_locidx_t         local_num_trees;
   t8_gloidx_t         global_num_trees;
 
