@@ -40,7 +40,6 @@ on:
       - master
       - develop
       - feature-*CI* # for testing this script, all feature branches with "CI" in their name
-      - feature-remove_all_warnings # temporarily to remove all warnings
   pull_request:
     branches:
       - master
