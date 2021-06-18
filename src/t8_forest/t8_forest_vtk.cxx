@@ -138,7 +138,6 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
   long int            point_id = 0;     /* The id of the point in the points Object. */
   t8_cmesh_t          cmesh;
   t8_locidx_t         ielement; /* The iterator over elements in a tree. */
-  t8_tree_t           tree;
   t8_locidx_t         itree, ivertex;
   double             *vertices;
   double              coordinates[3];
@@ -178,9 +177,9 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
  * the number of elements in this to iterate over all of them.  
  */
     vertices = t8_forest_get_tree_vertices (forest, itree);
-    tree = t8_forest_get_tree (forest, itree);
     t8_eclass_scheme_c *scheme =
-      t8_forest_get_eclass_scheme (forest, tree->eclass);
+      t8_forest_get_eclass_scheme (forest, t8_forest_get_tree_class (forest,
+                                                                     itree));
     t8_locidx_t         elems_in_tree =
       t8_forest_get_tree_num_elements (forest, itree);
 
@@ -197,7 +196,9 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
            ivertex++, point_id++) {
         /* We take the element coordinates in vtk order */
         t8_forest_element_coordinate (forest, itree, element,
-                                      vertices, t8_eclass_vtk_corner_number[]
+                                      vertices,
+                                      t8_eclass_vtk_corner_number
+                                      [element_shape]
                                       [ivertex], coordinates);
 
         /* Insert point in the points array */
