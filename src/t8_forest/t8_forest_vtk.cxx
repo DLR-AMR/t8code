@@ -340,7 +340,7 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
 /* We have to free the allocated memory for the cellTypes Array. */
   T8_FREE (cellTypes);
 #else
-  t8_production_f
+  t8_productionf
     ("Warning: t8code is not linked against vtk library. Vtk output will not be generated.\n");
 #endif
 }
