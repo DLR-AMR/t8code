@@ -141,7 +141,6 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
   long int            point_id = 0;     /* The id of the point in the points Object. */
   t8_cmesh_t          cmesh;
   t8_locidx_t         ielement; /* The iterator over elements in a tree. */
-  t8_tree_t           tree;
   t8_locidx_t         itree, ivertex;
   double             *vertices;
   double              coordinates[3];
@@ -173,21 +172,21 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
     T8_ALLOC (int, t8_forest_get_num_element (forest));
 
   if (write_treeid == 1) {
-    int                *treeid =
+    int                *treeidArray =
       T8_ALLOC (int, t8_forest_get_num_element (forest));
-  };
+  }
   if (write_mpirank == 1) {
-    int                *mpirank =
+    int                *mpirankArray =
       T8_ALLOC (int, t8_forest_get_num_element (forest));
-  };
+  }
   if (write_level == 1) {
-    int                *level =
+    int                *levelArray =
       T8_ALLOC (int, t8_forest_get_num_element (forest));
-  };
+  }
   if (write_element_id == 1) {
-    int                *element_id =
+    int                *element_idArray =
       T8_ALLOC (int, t8_forest_get_num_element (forest));
-  };
+  }
 
 /* We iterate over all local trees*/
   for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
@@ -198,9 +197,10 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
  * the number of elements in this to iterate over all of them.  
  */
     vertices = t8_forest_get_tree_vertices (forest, itree);
-    tree = t8_forest_get_tree (forest, itree);
     t8_eclass_scheme_c *scheme =
-      t8_forest_get_eclass_scheme (forest, tree->eclass);
+      t8_forest_get_eclass_scheme (forest, t8_forest_get_tree_class (forest,
+                                                                     itree));
+
     t8_locidx_t         elems_in_tree =
       t8_forest_get_tree_num_elements (forest, itree);
 
@@ -286,6 +286,19 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
         SC_ABORT_NOT_REACHED ();
       }
       cellTypes[elem_id] = t8_eclass_vtk_type[element_shape];
+      if (write_treeid == 1) {
+        treeidArray[elem_id] = itree;
+      }
+      if (write_mpirank == 1) {
+        mpirankArray[elem_id] = forest->mpirank;
+      }
+      if (write_level == 1) {
+        levelArray[elem_id] = scheme->t8_element_level (element);
+      }
+      if (write_element_id == 1) {
+        element_idArray[elem_id] = elem_id + tree->elements_offset +
+          (long long) t8_forest_get_first_local_element_id (forest);
+      }
       elem_id++;
     }
   }
@@ -361,17 +374,17 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
 /* We have to free the allocated memory for the cellTypes Array. */
   T8_FREE (cellTypes);
   if (write_treeid == 1) {
-    T8_FREE (treeid);
-  };
+    T8_FREE (treeidArray);
+  }
   if (write_mpirank == 1) {
-    T8_FREE (mpirank);
-  };
+    T8_FREE (mpirankArray);
+  }
   if (write_level == 1) {
-    T8_FREE (level);
-  };
+    T8_FREE (levelArray);
+  }
   if (write_element_id == 1) {
-    T8_FREE (element_id);
-  };
+    T8_FREE (element_idArray);
+  }
 #else
   t8_production_f
     ("Warning: t8code is not linked against vtk library. Vtk output will not be generated.\n");
