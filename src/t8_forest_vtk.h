@@ -30,34 +30,6 @@
 
 #include <t8_vtk.h>
 #include <t8_forest.h>
-/*
-#include <vtkActor.h>
-#include <vtkCellArray.h>
-#include <vtkDataSetMapper.h>
-#include <vtkNew.h>
-#include <vtkPointData.h>
-#include <vtkProperty.h>
-#include <vtkTetra.h>
-#include <vtkHexahedron.h>
-#include <vtkVertex.h>
-#include <vtkLine.h>
-#include <vtkQuad.h>
-#include <vtkTriangle.h>
-#include <vtkPyramid.h>
-#include <vtkWedge.h>
-#include <vtkUnstructuredGrid.h>
-#include <vtkVertexGlyphFilter.h>
-#include <vtkXMLPUnstructuredGridWriter.h>
-#include <vtkUnsignedCharArray.h>
-#include <t8.h>
-#include <t8_cmesh.h>
-#include <t8_schemes/t8_default_cxx.hxx>
-#include <t8_forest_vtk.h>
-#include <t8_cmesh.h>
-#include <t8_element_cxx.hxx>
-#include <t8_forest/t8_forest_ghost.h>
-#include <t8_vec.h>
-#include "t8_cmesh/t8_cmesh_trees.h"*/
 
 T8_EXTERN_C_BEGIN ();
 /* function declarations */
@@ -68,10 +40,10 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]  fileprefix  The prefix of the output files.
  */
 #if T8_WITH_VTK
-void
- 
-             t8_write_vtk_via_API (t8_forest_t forest, const char *filename);
+void                t8_write_vtk_via_API (t8_forest_t forest,
+                                          const char *filename);
 #endif
+
 /** Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
  * \param [in]  forest    The forest.

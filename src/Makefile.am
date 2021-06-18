@@ -17,7 +17,7 @@ libt8_installed_headers = \
   src/t8_forest/t8_forest_adapt.h src/t8_forest_vtk.h \
   src/t8_geometry.h \
   src/t8_vec.h src/t8_vtk.h \
-  src/t8_forest/t8_forest_iterate.h src/t8_forest/t8_forest_partition.h 
+  src/t8_forest/t8_forest_iterate.h src/t8_forest/t8_forest_partition.h
 libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_stash.h src/t8_cmesh/t8_cmesh_trees.h \
   src/t8_cmesh/t8_cmesh_types.h src/t8_cmesh/t8_cmesh_partition.h \
