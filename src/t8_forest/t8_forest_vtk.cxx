@@ -306,7 +306,7 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
    * XMLP is important: We want to write a vtu file for each process.
    * This class enables us to do exactly that. 
    */
-  char                mpifilename[BUFSIZ] = fileprefix;
+  char                mpifilename[BUFSIZ];
   snprintf (mpifilename, BUFSIZ, "%s.pvtu", fileprefix);
 
   vtkSmartPointer < vtkXMLPUnstructuredGridWriter > pwriterObj =
