@@ -126,7 +126,10 @@ typedef int         (*t8_forest_vtk_cell_data_kernel) (t8_forest_t forest,
                                                        modus);
 
 void
-t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
+t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
+                      int write_treeid,
+                      int write_mpirank,
+                      int write_level, int write_element_id)
 {
 #if T8_WITH_VTK
   /*Check assertions: forest and fileprefix are not NULL and forest is commited */
@@ -159,9 +162,6 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
   vtkNew < vtkWedge > prism;
   vtkNew < vtkTetra > tet;
 
-/*  vtkUnsignedCharArray *mpirank = vtkUnsignedCharArray::New ();
-  mpirank->SetName ("mpirank");  ... fill the colors array */
-
   cmesh = t8_forest_get_cmesh (forest);
   /* 
    * The cellTypes Array stores the element types as integers(see vtk doc).
@@ -171,6 +171,23 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
    */
   int                *cellTypes =
     T8_ALLOC (int, t8_forest_get_num_element (forest));
+
+  if (write_treeid == 1) {
+    int                *treeid =
+      T8_ALLOC (int, t8_forest_get_num_element (forest));
+  };
+  if (write_mpirank == 1) {
+    int                *mpirank =
+      T8_ALLOC (int, t8_forest_get_num_element (forest));
+  };
+  if (write_level == 1) {
+    int                *level =
+      T8_ALLOC (int, t8_forest_get_num_element (forest));
+  };
+  if (write_element_id == 1) {
+    int                *element_id =
+      T8_ALLOC (int, t8_forest_get_num_element (forest));
+  };
 
 /* We iterate over all local trees*/
   for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
@@ -200,7 +217,9 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
            ivertex++, point_id++) {
         /* We take the element coordinates in vtk order */
         t8_forest_element_coordinate (forest, itree, element,
-                                      vertices, t8_eclass_vtk_corner_number[]
+                                      vertices,
+                                      t8_eclass_vtk_corner_number
+                                      [element_shape]
                                       [ivertex], coordinates);
 
         /* Insert point in the points array */
@@ -341,6 +360,18 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
   pwriterObj->Write ();
 /* We have to free the allocated memory for the cellTypes Array. */
   T8_FREE (cellTypes);
+  if (write_treeid == 1) {
+    T8_FREE (treeid);
+  };
+  if (write_mpirank == 1) {
+    T8_FREE (mpirank);
+  };
+  if (write_level == 1) {
+    T8_FREE (level);
+  };
+  if (write_element_id == 1) {
+    T8_FREE (element_id);
+  };
 #else
   t8_production_f
     ("Warning: t8code is not linked against vtk library. Vtk output will not be generated.\n");

@@ -170,7 +170,7 @@ main (int argc, char **argv)
                          global_num_elements);
 
   /* Write forest to vtu files. */
-  t8_write_vtk_via_API (forest, prefix);
+  t8_step2_write_forest_vtk (forest, prefix);
   t8_global_productionf (" [step2] Wrote forest to vtu files:\t%s*\n",
                          prefix);
 
