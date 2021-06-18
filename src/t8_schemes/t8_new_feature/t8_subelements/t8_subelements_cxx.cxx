@@ -53,25 +53,25 @@ t8_eclass_scheme_is_sub (t8_eclass_scheme_c * ts)
 {
   switch (ts->eclass) {
   case T8_ECLASS_VERTEX:
-    return NULL;
+    return 0;
   case T8_ECLASS_LINE:
-    return NULL;
+    return 0;
   case T8_ECLASS_QUAD:
     return T8_COMMON_IS_TYPE (ts, t8_default_scheme_sub_c *);
   case T8_ECLASS_TRIANGLE:
-    return NULL;
+    return 0;
   case T8_ECLASS_HEX:
-    return NULL;
+    return 0;
   case T8_ECLASS_TET:
-    return NULL;
+    return 0;
   case T8_ECLASS_PRISM:
-    return NULL;
+    return 0;
   default:
     SC_ABORT_NOT_REACHED ();
     /* TODO: Add pyramid as soon as pyramid scheme is implemented */
     /* TODO: Add a test for this function */
   }
-  return 0;                     /* Default return value false */
+  return 0; /* Default return value false */
 }
 
 T8_EXTERN_C_END ();

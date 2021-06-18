@@ -55,20 +55,6 @@ typedef struct
 
 typedef t8_quad_with_subelements t8_pquad_t;
 
-/* TODO t8_quad_with_subelements richtig einbinden */
-
-/* TODO Infos über subelemente an Funktionen übergeben und if Abfragen definieren, wie bspw.:
- *
- * if      (dummy_is_subelement == 1) 
- *         {wir sind ein bestimmtes Subelement -> wir wollen uns nicht weiter verfeinern, sondern nur Nachbarschaftsstrukturen etc. bestimmen}
- * else if (dummy_is_subelement == 0) 
- *         {wir sind kein subelement, wollen wir eins werden?
- *          if (dummy_use_subelement == 0) {nein -> alles bleibt wie gehabt}
- *          else if (dummy_use_subelement == 1) {ja, baue alle Subelemente (subelement_id = 1 oder 2 für den Fall von halbieren)}
- *         } 
- */
- 
-
 /** Return the toplevel dimension. */
 #define T8_QUAD_GET_TDIM(quad) ((int) (quad)->pad8)
 
@@ -128,7 +114,7 @@ public:
   virtual int         t8_element_maxlevel (void);
 
 /** Return the type of each child in the ordering of the implementation. */
-  virtual t8_eclass_t t8_element_child_eclass (int childid); // if subelement_id is unequal zero: child_eclass = subelement
+  virtual t8_eclass_t t8_element_child_eclass (int childid); 
 
 /** Return the refinement level of an element. */
   virtual int         t8_element_level (const t8_element_t * elem);
@@ -182,10 +168,6 @@ public:
 /** Construct the child element of a given number. */
   virtual void        t8_element_child (const t8_element_t * elem,
                                         int childid, t8_element_t * child);
-
-/** Construct a subelement */
-  virtual void        t8_element_subelements (const t8_element_t * elem,
-                                               int length, t8_element_t * c[]);
 
 /** Construct all children of a given element. */
   virtual void        t8_element_children (const t8_element_t * elem,
@@ -328,9 +310,17 @@ public:
  */
   virtual int         t8_element_root_len (const t8_element_t * elem);
 
-  /** Compute the integer coordinates of a given element vertex. */
+/** Compute the integer coordinates of a given element vertex. */
   virtual void        t8_element_vertex_coords (const t8_element_t * t,
                                                 int vertex, int coords[]);
+
+/** Construct a subelement */
+  virtual void        t8_element_to_subelement (const t8_element_t * elem,
+                                                t8_element_t * c[]);
+
+/** Determine the coordinates of a subelement */
+  virtual void        t8_element_vertex_coords_of_subelement (const t8_element_t * t,
+                                                              int vertex, int coords[]);
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether an element is valid */

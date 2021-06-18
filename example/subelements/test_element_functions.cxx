@@ -32,31 +32,44 @@
 #include <example/common/t8_example_common.h>
 
 static void
-t8_test_element_child ()
+t8_test_element_function ()
 {
   t8_scheme_cxx_t    *ts = t8_scheme_new_subelement_cxx ();
   t8_eclass_scheme_c *class_scheme;
-  t8_element_t       *element, *element_new;
-  int                 eclass, level;
+  t8_element_t       *element_1, *element_2; 
+  t8_element_t       **element_children;
+  int                eclass, i;
 
   /* Choose quad scheme */
   eclass = T8_ECLASS_QUAD;
   class_scheme = ts->eclass_schemes[eclass];
 
-  /* Allocate two elements */
-  class_scheme->t8_element_new (1, &element);
-  class_scheme->t8_element_new (1, &element_new);
+  /* Allocate new elements and initialize them */
+  class_scheme->t8_element_new (1, &element_1);
+  for (i = 0; i < P4EST_CHILDREN; ++i) {
+    class_scheme->t8_element_new (1, &element_children[i]); 
+  }
 
   /* Set the firs element to the level 0 quad */
-  class_scheme->t8_element_set_linear_id (element, 0, 0);
+  class_scheme->t8_element_set_linear_id (element_1, 0, 0);
 
-  /* Create the first child */
-  class_scheme->t8_element_child (element, 0, element_new);
+  /* Set the firs element to the level 0 quad */
+  class_scheme->t8_element_is_valid (element_1);
+
+  /* Create the child (element_2) of element_1 with id 0 */
+  // class_scheme->t8_element_child (element_1, 0, element_2);
+
+  /* Create all 4 p4est children of element_1 */
+  // class_scheme->t8_element_children (element_1, 4, element_children);
+
+  /* Test new subelement-related functions */
+  // class_scheme->t8_element_to_subelement (element_1, element_children);
+  // class_scheme->t8_element_vertex_coords_of_subelement (element_1, 0, 0);
 
   /* TODO: Do something */
 
-  class_scheme->t8_element_destroy (1, &element);
-  class_scheme->t8_element_destroy (1, &element_new);
+  class_scheme->t8_element_destroy (1, &element_1);
+  class_scheme->t8_element_destroy (1, element_children);
   t8_scheme_cxx_unref (&ts);
 }
 
@@ -71,7 +84,7 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  t8_test_element_child ();
+  t8_test_element_function ();
 
   sc_finalize ();
 

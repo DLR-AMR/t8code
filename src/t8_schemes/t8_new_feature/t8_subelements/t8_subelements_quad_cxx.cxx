@@ -246,44 +246,6 @@ t8_default_scheme_sub_c::t8_element_child (const t8_element_t * elem,
   t8_element_copy_surround (q, r);
 }
 
-/* NOTE think about how to construct subelements */
-void
-t8_default_scheme_sub_c::t8_element_subelements (const t8_element_t * elem,
-                                               int length, t8_element_t * c[])
-{
-  const t8_quad_with_subelements *pquad_w_sub_elem = (const t8_quad_with_subelements *) elem;
-  t8_quad_with_subelements **pquad_w_sub_children = (t8_quad_with_subelements **) c;
-
-  const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
-
-  int i;
-
-  T8_ASSERT (t8_element_is_valid (elem));
-#ifdef T8_ENABLE_DEBUG
-  {
-    int                 j;
-    for (j = 0; j < P4EST_CHILDREN; j++) {
-      T8_ASSERT (t8_element_is_valid (c[j]));
-    }
-  }
-#endif
-  T8_ASSERT (length == P4EST_CHILDREN);
-
-  /* NOTE this solution works but its not general and might later lead to problemes 
-   * with subelements of != 4 children */ 
-  p4est_quadrant_children (q, &pquad_w_sub_children[0]->p4q,
-                              &pquad_w_sub_children[1]->p4q,
-                              &pquad_w_sub_children[2]->p4q,
-                              &pquad_w_sub_children[3]->p4q);
-
-  for (i = 0; i < P4EST_CHILDREN; ++i) {
-    /* NOTE bug here: somehow q and &pquad_w_sub_children[0]->p4q can get equal 
-     * which leads to an assertion in p4est_quadrant_is_parent */
-    // p4est_quadrant_child (q, &pquad_w_sub_children[i]->p4q, i); 
-    t8_element_copy_surround (q, &pquad_w_sub_children[i]->p4q); 
-  }
-}
-
 void
 t8_default_scheme_sub_c::t8_element_children (const t8_element_t * elem,
                                                int length, t8_element_t * c[])
@@ -310,8 +272,7 @@ t8_default_scheme_sub_c::t8_element_children (const t8_element_t * elem,
 #endif
   T8_ASSERT (length == P4EST_CHILDREN);
 
-  /* NOTE this solution works but its not general and might later lead to problemes 
-   * with subelements of != 4 children */ 
+  /* NOTE this solution works but its not general */ 
   p4est_quadrant_children (q, &pquad_w_sub_children[0]->p4q,
                               &pquad_w_sub_children[1]->p4q,
                               &pquad_w_sub_children[2]->p4q,
@@ -953,6 +914,80 @@ t8_default_scheme_sub_c::t8_element_vertex_coords (const t8_element_t * t,
   coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
 }
 
+/* NOTE construct subelements */
+void
+t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
+                                                   t8_element_t * c[])
+{
+  const t8_quad_with_subelements *pquad_w_sub_elem = (const t8_quad_with_subelements *) elem;
+  t8_quad_with_subelements **pquad_w_sub_children = (t8_quad_with_subelements **) c;
+
+  const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
+
+  int i;
+
+  /* check that elem is not already a subelement */
+  T8_ASSERT (pquad_w_sub_elem->dummy_is_subelement == 0);
+
+  T8_ASSERT (t8_element_is_valid (elem));
+#ifdef T8_ENABLE_DEBUG
+  {
+    int                 j;
+    for (j = 0; j < pquad_w_sub_elem->num_subelement_ids; j++) {
+      T8_ASSERT (t8_element_is_valid (c[j]));
+    }
+  }
+#endif
+
+  const int8_t        level = (int8_t) (q->level + 1);
+  const p4est_qcoord_t inc = P4EST_QUADRANT_LEN (level);
+
+  T8_ASSERT (p4est_quadrant_is_extended (q));
+  T8_ASSERT (q->level < P4EST_QMAXLEVEL);
+
+  /* NOTE using subelement_id as input it could be possible to write the following code as
+   * r->y = childid & 0x02 ? (q->y | shift) : q->y; */
+
+  pquad_w_sub_children[0]->p4q.x = q->x;
+  pquad_w_sub_children[0]->p4q.y = q->y;
+  pquad_w_sub_children[0]->p4q.level = level;
+  pquad_w_sub_children[0]->dummy_is_subelement = 1;
+  pquad_w_sub_children[0]->subelement_id = 1;
+
+  pquad_w_sub_children[1]->p4q.x = pquad_w_sub_children[0]->p4q.x;
+  pquad_w_sub_children[1]->p4q.y = pquad_w_sub_children[0]->p4q.y | inc;
+  pquad_w_sub_children[1]->p4q.level = level;
+  pquad_w_sub_children[1]->dummy_is_subelement = 1;
+  pquad_w_sub_children[1]->subelement_id = 2;
+
+  for (i = 0; i < pquad_w_sub_elem->num_subelement_ids; ++i) {
+    T8_ASSERT (t8_element_is_valid(c[i]));
+    t8_element_copy_surround (q, &pquad_w_sub_children[i]->p4q); 
+  }
+}
+
+/* NOTE change thsis function */
+void
+t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_element_t * t,
+                                                                 int vertex, int coords[])
+{
+  const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) t;
+  const p4est_quadrant_t *q1 = &pquad_w_sub->p4q;
+
+  int                 len;
+
+  T8_ASSERT (t8_element_is_valid (t));
+  T8_ASSERT (0 <= vertex && vertex < 4);
+  /* Get the length of the quadrant */
+  len = P4EST_QUADRANT_LEN (q1->level);
+  /* Compute the x and y coordinates of the vertex depending on the
+   * vertex number */
+  
+  /* NOTE check below notation */
+  coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
+  coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
+}
+
 void
 t8_default_scheme_sub_c::t8_element_new (int length, t8_element_t ** elem)
 {
@@ -971,16 +1006,6 @@ t8_default_scheme_sub_c::t8_element_new (int length, t8_element_t ** elem)
   }
 
 }
-
-/* | t8_quad... {q, dummy_is_subelement,...} | Elem1 | Elem2 | ... | 
- *    ^
- *    |
- *   elem (sieht das nicht)
- *      = 
- *   pquad_w_sub {q, dummy_is_subelement, ...}
- * 
- * TODO: remove this comment if you do not need it anymore.
- */
 
 void
 t8_default_scheme_sub_c::t8_element_init (int length, t8_element_t * elem,
@@ -1014,8 +1039,9 @@ t8_default_scheme_sub_c::t8_element_init (int length, t8_element_t * elem,
 #ifdef T8_ENABLE_DEBUG
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */
+/* NOTE why is const behind function? */
 int
-t8_default_scheme_sub_c::t8_element_is_valid (const t8_element_t * elem) const
+t8_default_scheme_sub_c::t8_element_is_valid (const t8_element_t * elem) const 
 /* *INDENT-ON* */
 {
   const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
