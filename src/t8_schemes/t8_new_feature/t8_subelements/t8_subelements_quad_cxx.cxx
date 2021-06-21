@@ -966,7 +966,7 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
   }
 }
 
-/* NOTE change thsis function */
+/* NOTE change this function */
 void
 t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_element_t * t,
                                                                  int vertex, int coords[])
