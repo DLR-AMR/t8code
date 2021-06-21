@@ -293,6 +293,20 @@ t8_default_scheme_vertex_c::t8_element_vertex_coords (const t8_element_t *
   t8_dvertex_vertex_coords ((const t8_dvertex_t *) elem, vertex, coords);
 }
 
+void
+t8_default_scheme_vertex_c::t8_element_to_subelement (const t8_element_t * elem,
+                                              t8_element_t * c[])
+{
+  SC_ABORT ("This function is not implemented yet.\n");
+}
+
+void
+t8_default_scheme_vertex_c::t8_element_vertex_coords_of_subelement (const t8_element_t * t,
+                                                            int vertex, int coords[]) 
+{
+  SC_ABORT ("This function is not implemented yet.\n");
+}
+
 #ifdef T8_ENABLE_DEBUG
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */

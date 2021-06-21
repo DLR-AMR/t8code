@@ -634,6 +634,14 @@ public:
                                                    const void *indata,
                                                    void *outdata) = 0;
 
+  /** NOTE write comment */
+  virtual void        t8_element_to_subelement (const t8_element_t * elem,
+                                                t8_element_t * c[]) = 0;
+
+  /** NOTE write comment */
+  virtual void        t8_element_vertex_coords_of_subelement (const t8_element_t * t,
+                                                              int vertex, int coords[]) = 0;                                                  
+
 #ifdef T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.

@@ -269,6 +269,14 @@ public:
                                                    const void *indata,
                                                    void *outdata);
 
+  /** Construct a subelement */
+  virtual void        t8_element_to_subelement (const t8_element_t * elem,
+                                                t8_element_t * c[]);
+
+  /** Determine the coordinates of a subelement */
+  virtual void        t8_element_vertex_coords_of_subelement (const t8_element_t * t,
+                                                              int vertex, int coords[]);                                                 
+
 #ifdef T8_ENABLE_DEBUG
   /** Query whether an element is valid */
   virtual int         t8_element_is_valid (const t8_element_t * t) const;

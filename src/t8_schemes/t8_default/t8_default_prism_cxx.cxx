@@ -409,6 +409,20 @@ u_int64_t
   return t8_dprism_linear_id ((const t8_dprism_t *) elem, level);
 }
 
+void
+t8_default_scheme_prism_c::t8_element_to_subelement (const t8_element_t * elem,
+                                              t8_element_t * c[])
+{
+  SC_ABORT ("This function is not implemented yet.\n");
+}
+
+void
+t8_default_scheme_prism_c::t8_element_vertex_coords_of_subelement (const t8_element_t * t,
+                                                            int vertex, int coords[]) 
+{
+  SC_ABORT ("This function is not implemented yet.\n");
+}
+
 #ifdef T8_ENABLE_DEBUG
 /* *INDENT-OFF* */
 /* Indent bug, indent adds an additional const modifier at the end */

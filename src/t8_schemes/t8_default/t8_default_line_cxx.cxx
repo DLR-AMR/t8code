@@ -434,6 +434,20 @@ t8_default_scheme_line_c::t8_element_is_family (t8_element_t ** fam)
   return t8_dline_is_familypv ((const t8_dline_t **) fam);
 }
 
+void
+t8_default_scheme_line_c::t8_element_to_subelement (const t8_element_t * elem,
+                                              t8_element_t * c[])
+{
+  SC_ABORT ("This function is not implemented yet.\n");
+}
+
+void
+t8_default_scheme_line_c::t8_element_vertex_coords_of_subelement (const t8_element_t * t,
+                                                            int vertex, int coords[]) 
+{
+  SC_ABORT ("This function is not implemented yet.\n");
+}
+
 #ifdef T8_ENABLE_DEBUG
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */
