@@ -38,7 +38,12 @@ t8_test_element_function ()
   t8_eclass_scheme_c *class_scheme;
   t8_element_t       *element_1, *element_2; 
   t8_element_t       **element_children;
-  int                eclass, i;
+  int                eclass, i, j, k;
+
+  /* NOTE how to initialize coords for coords_of_subelements function? */
+  int test = 100;
+  int *coords;
+  coords = &test;
 
   /* Choose quad scheme */
   eclass = T8_ECLASS_QUAD;
@@ -63,10 +68,14 @@ t8_test_element_function ()
   // class_scheme->t8_element_children (element_1, 4, element_children);
 
   /* Test new subelement-related functions */
-  // class_scheme->t8_element_to_subelement (element_1, element_children);
-  // class_scheme->t8_element_vertex_coords_of_subelement (element_1, 0, 0);
+  class_scheme->t8_element_to_subelement (element_1, element_children);
+  for (j = 0; j < 2; ++j) {
+    for (k = 0; k < 4; ++k){
+      class_scheme->t8_element_vertex_coords_of_subelement (element_children[j], k, coords);
+    }
+  }
 
-  /* TODO: Do something */
+  /* NOTE try to print subelements in paraview */
 
   class_scheme->t8_element_destroy (1, &element_1);
   class_scheme->t8_element_destroy (1, element_children);

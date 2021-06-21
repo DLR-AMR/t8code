@@ -909,7 +909,6 @@ t8_default_scheme_sub_c::t8_element_vertex_coords (const t8_element_t * t,
   /* Compute the x and y coordinates of the vertex depending on the
    * vertex number */
   
-  /* NOTE check below notation */
   coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
   coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
 }
@@ -920,7 +919,7 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
                                                    t8_element_t * c[])
 {
   const t8_quad_with_subelements *pquad_w_sub_elem = (const t8_quad_with_subelements *) elem;
-  t8_quad_with_subelements **pquad_w_sub_children = (t8_quad_with_subelements **) c;
+  t8_quad_with_subelements **pquad_w_sub_subelement = (t8_quad_with_subelements **) c;
 
   const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
 
@@ -948,21 +947,21 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
   /* NOTE using subelement_id as input it could be possible to write the following code as
    * r->y = childid & 0x02 ? (q->y | shift) : q->y; */
 
-  pquad_w_sub_children[0]->p4q.x = q->x;
-  pquad_w_sub_children[0]->p4q.y = q->y;
-  pquad_w_sub_children[0]->p4q.level = level;
-  pquad_w_sub_children[0]->dummy_is_subelement = 1;
-  pquad_w_sub_children[0]->subelement_id = 1;
+  pquad_w_sub_subelement[0]->p4q.x = q->x;
+  pquad_w_sub_subelement[0]->p4q.y = q->y;
+  pquad_w_sub_subelement[0]->p4q.level = level;
+  pquad_w_sub_subelement[0]->dummy_is_subelement = 1;
+  pquad_w_sub_subelement[0]->subelement_id = 1;
 
-  pquad_w_sub_children[1]->p4q.x = pquad_w_sub_children[0]->p4q.x;
-  pquad_w_sub_children[1]->p4q.y = pquad_w_sub_children[0]->p4q.y | inc;
-  pquad_w_sub_children[1]->p4q.level = level;
-  pquad_w_sub_children[1]->dummy_is_subelement = 1;
-  pquad_w_sub_children[1]->subelement_id = 2;
+  pquad_w_sub_subelement[1]->p4q.x = pquad_w_sub_subelement[0]->p4q.x;
+  pquad_w_sub_subelement[1]->p4q.y = pquad_w_sub_subelement[0]->p4q.y | inc;
+  pquad_w_sub_subelement[1]->p4q.level = level;
+  pquad_w_sub_subelement[1]->dummy_is_subelement = 1;
+  pquad_w_sub_subelement[1]->subelement_id = 2;
 
   for (i = 0; i < pquad_w_sub_elem->num_subelement_ids; ++i) {
     T8_ASSERT (t8_element_is_valid(c[i]));
-    t8_element_copy_surround (q, &pquad_w_sub_children[i]->p4q); 
+    t8_element_copy_surround (q, &pquad_w_sub_subelement[i]->p4q); 
   }
 }
 
@@ -980,12 +979,10 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
   T8_ASSERT (0 <= vertex && vertex < 4);
   /* Get the length of the quadrant */
   len = P4EST_QUADRANT_LEN (q1->level);
-  /* Compute the x and y coordinates of the vertex depending on the
-   * vertex number */
+  /* Compute the x and y coordinates of the vertex depending on the vertex number */
   
-  /* NOTE check below notation */
   coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
-  coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
+  coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len * 1/2;
 }
 
 void
