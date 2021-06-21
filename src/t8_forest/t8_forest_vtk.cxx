@@ -174,18 +174,22 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
   if (write_treeid == 1) {
     int                *treeidArray =
       T8_ALLOC (int, t8_forest_get_num_element (forest));
+    vtkUnsignedCharArray *vtk_treeid = vtkUnsignedCharArray::New ();
   }
   if (write_mpirank == 1) {
     int                *mpirankArray =
       T8_ALLOC (int, t8_forest_get_num_element (forest));
+    vtkUnsignedCharArray *vtk_mpirank = vtkUnsignedCharArray::New ();
   }
   if (write_level == 1) {
     int                *levelArray =
       T8_ALLOC (int, t8_forest_get_num_element (forest));
+    vtkUnsignedCharArray *vtk_level = vtkUnsignedCharArray::New ();
   }
   if (write_element_id == 1) {
     int                *element_idArray =
       T8_ALLOC (int, t8_forest_get_num_element (forest));
+    vtkUnsignedCharArray *vtk_element_id = vtkUnsignedCharArray::New ();
   }
 
 /* We iterate over all local trees*/
@@ -285,6 +289,14 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
       default:
         SC_ABORT_NOT_REACHED ();
       }
+      /*
+       * Write current cell Type in the cell Types array at the elem_id index.
+       * Depending on the values of the binary inputs write_treeid, 
+       * write_mpirank and write_element_id we also fill the corresponding
+       * arrays with the data we want(treeid,mpirank,element_id).
+       * To get the element id, we have to add the local id in the tree 
+       * plus theo
+       * */
       cellTypes[elem_id] = t8_eclass_vtk_type[element_shape];
       if (write_treeid == 1) {
         treeidArray[elem_id] = itree;
@@ -296,7 +308,7 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
         levelArray[elem_id] = scheme->t8_element_level (element);
       }
       if (write_element_id == 1) {
-        element_idArray[elem_id] = elem_id + tree->elements_offset +
+        element_idArray[elem_id] = elem_id + t8_forest_get_tree_element_offset (forest, itree) +        /* is this the same as tree->elements_offset? */
           (long long) t8_forest_get_first_local_element_id (forest);
       }
       elem_id++;
@@ -368,6 +380,34 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
   pwriterObj->SetNumberOfPieces (forest->mpisize);
   pwriterObj->SetStartPiece (forest->mpirank);
   pwriterObj->SetEndPiece (forest->mpirank);
+  /* *INDENT-OFF* */
+  if (write_treeid == 1) {
+    vtk_treeid->SetNumberOfComponents (unstructuredGrid->GetNumberOfCells ());
+    vtk_treeid->SetName (treeid);
+    vtk_treeid->GetData (treeidArray);
+    unstructuredGrid->GetCellData ()->AddArray (vtk_treeid);
+  }
+  if (write_mpirank == 1) {
+    vtk_mpirank->SetNumberOfComponents (unstructuredGrid->
+                                        GetNumberOfCells ());
+    vtk_mpirank->SetName (mpirank);
+    vtk_mpirank->GetData (mpirankArray);
+    unstructuredGrid->GetCellData ()->AddArray (vtk_mpirank);
+  }
+  if (write_level == 1) {
+    vtk_level->SetNumberOfComponents (unstructuredGrid->GetNumberOfCells ());
+    vtk_level->SetName (level);
+    vtk_level->GetData (levelArray);
+    unstructuredGrid->GetCellData ()->AddArray (vtk_level);
+  }
+  if (write_element_id == 1) {
+    vtk_element_id->SetNumberOfComponents (unstructuredGrid->
+                                           GetNumberOfCells ());
+    vtk_element_id->SetName (element_id);
+    vtk_element_id->GetData (element_idArray);
+    unstructuredGrid->GetCellData ()->AddArray (vtk_element_id);
+  }
+  /* *INDENT-ON* */
   pwriterObj->SetInputData (unstructuredGrid);
   pwriterObj->Update ();
   pwriterObj->Write ();
