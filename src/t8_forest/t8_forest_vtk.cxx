@@ -185,10 +185,11 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
         t8_forest_get_element_in_tree (forest, itree, ielement);
       T8_ASSERT (element != NULL);
       t8_element_shape_t  element_shape = scheme->t8_element_shape (element);
+      int                 num_corners =
+        scheme->t8_element_num_corners (element);
 
       /* For each element we iterate over all points */
-      for (ivertex = 0; ivertex < scheme->t8_element_num_corners (element);
-           ivertex++, point_id++) {
+      for (ivertex = 0; ivertex < num_corners; ivertex++, point_id++) {
         /* We take the element coordinates in vtk order */
         t8_forest_element_coordinate (forest, itree, element,
                                       vertices,
