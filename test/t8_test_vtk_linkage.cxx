@@ -37,7 +37,7 @@
 #endif
 
 /* Test correct macro dependencies.
- * Will through a compile time error if T8_VTK_VERSION_USED
+ * Will throw a compile time error if T8_VTK_VERSION_USED
  * is defined but T8_WITH_VTK is not. */
 #ifndef T8_WITH_VTK
 #ifdef T8_VTK_VERSION_USED
