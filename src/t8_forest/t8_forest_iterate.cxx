@@ -185,7 +185,7 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid,
  * (Thus, if there are no active queries left, the recursion also stops.)
  * A query is active for an element if the query_fn callback returned true
  * for the parent element.
- * If the callback function (search_fn) returns false for an element, its
+ * If the callback function (search_fn) returns false for an element,
  * the query function is not called for this element.
  */
 static void
