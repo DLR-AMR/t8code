@@ -11,30 +11,29 @@ dnl   -lvtkCommonCore-9.0 -lvtkzlib-9.0"
 dnl
 AC_DEFUN([T8_CHECK_VTK], [
 
-
 T8_ARG_WITH([vtk_version_number],
   [vtk library version number --with-vtk_version_number=<MAJOR.MINOR>, defaults to 9.0 if not provided],
   [VTK_VERSION_MANUALLY_PROVIDED])
-  
-if test "x$T8_WITH_VTK_VERSION_MANUALLY_PROVIDED" != xno ; then
-  t8_vtk_version=$T8_WITH_VTK_VERSION_MANUALLY_PROVIDED
-else
-  t8_vtk_version=9.0
-fi
-AC_DEFINE_UNQUOTED([VTK_VERSION_USED], "$t8_vtk_version", [VTK version t8code is linked against])
 
 T8_ARG_WITH([vtk],
   [vtk library (optionally use --with-vtk=<VTK_LIBS>)],
   [VTK])
+
   
   if test "x$T8_WITH_VTK" != xno ; then
-    T8_VTK_LIBS="-lvtkIOXML-$t8_vtk_version \
-       	  -lvtkCommonExecutionModel-$t8_vtk_version \
-	       -lvtkCommonDataModel-$t8_vtk_version \
-	       -lvtkIOXMLParser-$t8_vtk_version \
-	       -lvtkIOParallelXML-$t8_vtk_version \
-	       -lvtkParallelMPI-$t8_vtk_version \
-	       -lvtkCommonCore-$t8_vtk_version -lvtkzlib-$t8_vtk_version"
+    if test "x$T8_WITH_VTK_VERSION_MANUALLY_PROVIDED" != xno ; then
+      t8_vtk_version=$T8_WITH_VTK_VERSION_MANUALLY_PROVIDED
+    else
+      t8_vtk_version=9.0
+    fi
+    AS_IF([test "x$T8_WITH_VTK" != "xno"], [
+      AC_DEFINE_UNQUOTED([VTK_VERSION_USED], "$t8_vtk_version", [VTK version t8code is linked against])
+    ])
+
+    T8_VTK_LIBS="-lvtkIOXML-$t8_vtk_version -lvtkCommonExecutionModel-$t8_vtk_version \
+-lvtkCommonDataModel-$t8_vtk_version -lvtkIOXMLParser-$t8_vtk_version \
+-lvtkIOParallelXML-$t8_vtk_version -lvtkParallelMPI-$t8_vtk_version \
+-lvtkCommonCore-$t8_vtk_version -lvtkzlib-$t8_vtk_version"
     if test "x$T8_WITH_VTK" != xyes ; then
       T8_VTK_LIBS="$T8_WITH_VTK"
       dnl AC_MSG_ERROR([Please provide --with-vtk without arguments])
