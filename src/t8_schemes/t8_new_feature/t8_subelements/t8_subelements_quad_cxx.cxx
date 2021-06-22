@@ -299,7 +299,6 @@ t8_default_scheme_sub_c::t8_element_ancestor_id (const t8_element_t * elem,
   return p4est_quadrant_ancestor_id (q, level);
 }
 
-/* NOTE fct compiles but not sure if this is correct - check later */
 int
 t8_default_scheme_sub_c::t8_element_is_family (t8_element_t ** fam)
 {
@@ -441,7 +440,6 @@ t8_element_shape_t
   return T8_ECLASS_LINE;
 }
 
-/* NOTE no chenages in this fct - check later if this works correctly */
 void
 t8_default_scheme_sub_c::t8_element_children_at_face (const t8_element_t *
                                                        elem, int face,
@@ -568,7 +566,6 @@ t8_default_scheme_sub_c::t8_element_transform_face (const t8_element_t *
   T8_ASSERT (t8_element_is_valid (elem2));
   T8_ASSERT (0 <= orientation && orientation < P4EST_FACES);
 
-  /* NOTE nothing changed below - check later if that is right */
   if (sign) {
     /* The tree faces have the same topological orientation, and
      * thus we have to perform a coordinate switch. */
@@ -940,13 +937,13 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
   /* This picture shows a quad, refinet into two subelements.
    * + represents the anchor nodes for both subelements.
    * 
-   *      x - - - - - - x           
-   *      |             |  -> subelement with id 1        
-   *      | 1           |          
-   *      + - - - - - - x           
-   *      |             |  -> subelement with id 0
-   *      | 0           |
-   *      + - - - - -   x
+   *      x - - - - - - x        x - - - - - - x           
+   *      |             |        |             |   -> subelement with id 1        
+   *      |             |        | 1           |    
+   *      |             |   ->   + - - - - - - x     
+   *      |             |        |             |   -> subelement with id 0
+   *      | elem        |        | 0           |
+   *      + - - - - - - x        + - - - - - - x
    *
    */
 
@@ -991,12 +988,12 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
    * 
    *      x - - - - - - x           
    *      |             |         
-   *      | 1           |         V2             V3
-   *      + - - - - - - x          x - - - - - - x                       
-   *      |             |    ->    |             |
-   *      | 0           |          | 0           |
-   *      + - - - - - - x          + - - - - - - x
-   *                              V0             V1
+   *      | 1           |       V2             V3
+   *      + - - - - - - x        x - - - - - - x                       
+   *      |             |   ->   |             |
+   *      | 0           |        | 0           |
+   *      + - - - - - - x        + - - - - - - x
+   *                            V0             V1
    * 
    */
 
@@ -1017,7 +1014,7 @@ t8_default_scheme_sub_c::t8_element_new (int length, t8_element_t ** elem)
     for (i = 0; i < length; i++) {
       t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem[i];
       t8_element_init (1, elem[i], 0);
-      /* Set dimension of quad to 2 */
+      /* set dimension of quad to 2 */
       T8_QUAD_SET_TDIM ((p4est_quadrant_t *) & pquad_w_sub->p4q, 2);
     }
   }
@@ -1040,9 +1037,8 @@ t8_default_scheme_sub_c::t8_element_init (int length, t8_element_t * elem,
   /* In debugging mode we iterate over all length many elements and 
    * set their quad to the leve 0 quad with ID 0. */
   if (!new_called) {
-    /* NOTE deleted "+i" behind quad in fcts in line 958 and 959 - check if that is correct */
     int                 i;
-    /* Set all values to 0 */
+    /* set all values to 0 */
     for (i = 0; i < length; i++) {
       p4est_quadrant_t   *quad = &pquad_w_sub[i].p4q;
       p4est_quadrant_set_morton (quad, 0, 0);
@@ -1056,7 +1052,6 @@ t8_default_scheme_sub_c::t8_element_init (int length, t8_element_t * elem,
 #ifdef T8_ENABLE_DEBUG
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */
-/* NOTE why is const behind function? */
 int
 t8_default_scheme_sub_c::t8_element_is_valid (const t8_element_t * elem) const 
 /* *INDENT-ON* */
