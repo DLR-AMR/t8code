@@ -39,11 +39,11 @@ T8_EXTERN_C_BEGIN ();
  * This function uses the vtk library. t8code must be configured with
  * "--with-vtk" in order to use it.
  * \param [in]  forest    The forest.
- * \param [in]  fileprefix  The prefix of the output files.
+ * \param [in]  fileprefix The prefix of the output files. The meta file will be named \a fileprefix.pvtu .
  * \note If t8code was not configured with vtk, use \ref t8_forest_vtk_write_file
  */
 void                t8_forest_write_vtk_via_API (t8_forest_t forest,
-                                                 const char *filename);
+                                                 const char *fileprefix);
 
 /** Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
