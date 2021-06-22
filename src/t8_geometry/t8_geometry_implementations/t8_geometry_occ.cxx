@@ -72,7 +72,6 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
   const int
   t8_edge_vertex_to_tree_vertex[T8_ECLASS_MAX_EDGES][2] =
   {
-  //  {0, 1}, {0, 2}, {0, 4}, {2, 3}, {4, 6}, {2, 6}, {4, 5}, {1, 3}, {1, 5}, {6, 7}, {5, 7}, {3, 7}   /* hex */
     {0, 1}, {2, 3}, {4, 5}, {6, 7}, {0, 2}, {4, 6}, {1, 3}, {5, 7}, {0, 4}, {1, 5}, {2, 6}, {3, 7}    /* hex */
   };
 
