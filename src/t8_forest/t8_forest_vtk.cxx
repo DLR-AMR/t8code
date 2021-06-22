@@ -161,7 +161,7 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
    * The cellTypes Array stores the element types as integers(see vtk doc).
    */
   int                *cellTypes =
-    T8_ALLOC (int, t8_forest_get_num_element (forest));
+    T8_ALLOC (int, t8_forest_get_local_num_elements (forest));
 
 /* We iterate over all local trees*/
   for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
