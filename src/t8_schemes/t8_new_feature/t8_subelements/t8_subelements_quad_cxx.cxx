@@ -906,7 +906,6 @@ t8_default_scheme_sub_c::t8_element_vertex_coords (const t8_element_t * t,
   coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
 }
 
-/* NOTE construct subelements */
 void
 t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
                                                    t8_element_t * c[])
@@ -941,13 +940,13 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
   /* This picture shows a quad, refinet into two subelements.
    * + represents the anchor nodes for both subelements.
    * 
-   *      x - - - - - x           
-   *      |           |  -> subelement with id 1        
-   *      | 1         |          
-   *      + - - - - - x           
-   *      |           |  -> subelement with id 0
-   *      | 0         |
-   *      + - - - - - x
+   *      x - - - - - - x           
+   *      |             |  -> subelement with id 1        
+   *      | 1           |          
+   *      + - - - - - - x           
+   *      |             |  -> subelement with id 0
+   *      | 0           |
+   *      + - - - - -   x
    *
    */
 
@@ -990,14 +989,14 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
   /* This picture shows a quad, refinet into two subelements.
    * V represents the vertex number for a subelement.
    * 
-   *      x - - - - - x           
-   *      |           |         
-   *      | 1         |         V2           V3
-   *      + - - - - - x          x - - - - - x                       
-   *      |           |    ->    |           |
-   *      | 0         |          | 0         |
-   *      + - - - - - x          + - - - - - x
-   *                            V0           V1
+   *      x - - - - - - x           
+   *      |             |         
+   *      | 1           |         V2             V3
+   *      + - - - - - - x          x - - - - - - x                       
+   *      |             |    ->    |             |
+   *      | 0           |          | 0           |
+   *      + - - - - - - x          + - - - - - - x
+   *                              V0             V1
    * 
    */
 
