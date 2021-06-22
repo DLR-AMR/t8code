@@ -41,7 +41,7 @@ t8_test_element_function ()
   t8_eclass_scheme_c *class_scheme;
   t8_element_t       *element_1, *element_2; 
   t8_element_t       *element_children[P4EST_CHILDREN], *element_subelements[T8_NUM_SUBELEMENTS];
-  int                eclass, i, j, k, coords[P4EST_DIM];
+  int                eclass, subelement_id, vertex_id, coords[P4EST_DIM];
 
   /* Choose quad scheme */
   eclass = T8_ECLASS_QUAD;
@@ -49,8 +49,8 @@ t8_test_element_function ()
 
   /* Allocate new elements and initialize them */
   class_scheme->t8_element_new (1, &element_1);
-  for (i = 0; i < T8_NUM_SUBELEMENTS; ++i) {
-    class_scheme->t8_element_new (1, &element_subelements[i]); 
+  for (subelement_id = 0; subelement_id < T8_NUM_SUBELEMENTS; ++subelement_id) {
+    class_scheme->t8_element_new (1, &element_subelements[subelement_id]); 
   }
 
   /* Set the firs element to the level 0 quad */
@@ -67,9 +67,9 @@ t8_test_element_function ()
 
   /* Test new subelement-related functions */
   class_scheme->t8_element_to_subelement (element_1, element_subelements);
-  for (j = 0; j < T8_NUM_SUBELEMENTS; ++j) {
-    for (k = 0; k < T8_NUM_VERTICIES_QUAD; ++k) {
-      class_scheme->t8_element_vertex_coords_of_subelement (element_subelements[j], k, coords);
+  for (subelement_id = 0; subelement_id < T8_NUM_SUBELEMENTS; ++subelement_id) {
+    for (vertex_id = 0; vertex_id < T8_NUM_VERTICIES_QUAD; ++vertex_id) {
+      class_scheme->t8_element_vertex_coords_of_subelement (element_subelements[subelement_id], vertex_id, coords);
     }
   }
 
