@@ -159,9 +159,6 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
 
   /* 
    * The cellTypes Array stores the element types as integers(see vtk doc).
-   * We have to Allocate memory since we do not know the size the array
-   * needs to be before running the code to evaluate the number of elements
-   * in the forest. We have to free the memory when we are done. 
    */
   int                *cellTypes =
     T8_ALLOC (int, t8_forest_get_num_element (forest));
@@ -172,7 +169,7 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
  * We get the vertices, the current tree, the scheme for this tree
  * and the number of elements in this tree. We need the vertices of
  * the tree to get the coordinates of the elements later. We need
- * the number of elements in this to iterate over all of them.  
+ * the number of elements in this tree to iterate over all of them.
  */
     vertices = t8_forest_get_tree_vertices (forest, itree);
     t8_eclass_scheme_c *scheme =
@@ -304,7 +301,7 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
 
 /*
  * Since we want to write multiple files, the processes 
- * have to communicate. Therefore we define the communicator
+ * have to communicate. Therefore, we define the communicator
  * vtk_comm and set it as the communicator. 
  * We have to set a controller for the pwriterObj, 
  * therefore we define the controller vtk_mpi_ctrl.
@@ -322,12 +319,14 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
   pwriterObj->SetController (vtk_mpi_ctrl);
 #endif
 /*
- * We set the number of pieces: The number of mpi processes,
+ * We set the number of pieces as the number of mpi processes,
  * since we want to write a file for each process. We also
- * need to define a Start and EndPiece, this is the current
+ * need to define a Start and EndPiece for the current
  * process. Then we can set the inputData for the writer:
  * We want to write the unstructured Grid, update the writer
  * and then write.
+ * 
+ * Note: We could write more than one file per process here, if desired.
  */
   pwriterObj->SetNumberOfPieces (forest->mpisize);
   pwriterObj->SetStartPiece (forest->mpirank);
