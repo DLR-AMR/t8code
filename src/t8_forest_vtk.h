@@ -42,8 +42,8 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]  fileprefix  The prefix of the output files.
  * \note If t8code was not configured with vtk, use \ref t8_forest_vtk_write_file
  */
-void                t8_write_vtk_via_API (t8_forest_t forest,
-                                          const char *filename);
+void                t8_forest_write_vtk_via_API (t8_forest_t forest,
+                                                 const char *filename);
 
 /** Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.

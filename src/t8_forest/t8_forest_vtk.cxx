@@ -126,7 +126,7 @@ typedef int         (*t8_forest_vtk_cell_data_kernel) (t8_forest_t forest,
                                                        modus);
 
 void
-t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
+t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
 {
 #if T8_WITH_VTK
   /*Check assertions: forest and fileprefix are not NULL and forest is commited */
