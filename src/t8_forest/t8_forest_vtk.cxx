@@ -136,7 +136,6 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
   T8_ASSERT (fileprefix != NULL);
 
   long int            point_id = 0;     /* The id of the point in the points Object. */
-  t8_cmesh_t          cmesh;
   t8_locidx_t         ielement; /* The iterator over elements in a tree. */
   t8_locidx_t         itree, ivertex;
   double             *vertices;
@@ -158,7 +157,6 @@ t8_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
   vtkNew < vtkWedge > prism;
   vtkNew < vtkTetra > tet;
 
-  cmesh = t8_forest_get_cmesh (forest);
   /* 
    * The cellTypes Array stores the element types as integers(see vtk doc).
    * We have to Allocate memory since we do not know the size the array
