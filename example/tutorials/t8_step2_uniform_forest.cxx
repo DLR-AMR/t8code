@@ -48,6 +48,8 @@
 #include <t8_cmesh.h>
 #include <t8_forest.h>
 #include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_forest_vtk.h>
+#include <t8.h>
 
 /* Builds cmesh of 2 prisms that build up a unit cube. 
  * See step1 for a detailed description.
