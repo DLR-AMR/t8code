@@ -52,20 +52,17 @@ t8_test_element_function ()
   for (subelement_id = 0; subelement_id < T8_NUM_SUBELEMENTS; ++subelement_id) {
     class_scheme->t8_element_new (1, &element_subelements[subelement_id]); 
   }
-
-  /* Set the firs element to the level 0 quad */
   class_scheme->t8_element_set_linear_id (element_1, 0, 0);
-
-  /* Set the firs element to the level 0 quad */
   class_scheme->t8_element_is_valid (element_1);
-
-  /* Create the child (element_2) of element_1 with id 0 */
+  
+  /* Test element functions */
   // class_scheme->t8_element_child (element_1, 0, element_2);
+  // class_scheme->t8_element_children (element_1, P4EST_CHILDREN, element_children);
+  // for (vertex_id = 0; vertex_id < T8_NUM_VERTICIES_QUAD; ++vertex_id) {
+    // class_scheme->t8_element_vertex_coords (element_1, vertex_id, coords);
+  // }
 
-  /* Create all 4 p4est children of element_1 */
-  // class_scheme->t8_element_children (element_1, 4, element_children);
-
-  /* Test new subelement-related functions */
+  /* Test subelement-related functions */
   class_scheme->t8_element_to_subelement (element_1, element_subelements);
   for (subelement_id = 0; subelement_id < T8_NUM_SUBELEMENTS; ++subelement_id) {
     for (vertex_id = 0; vertex_id < T8_NUM_VERTICIES_QUAD; ++vertex_id) {
@@ -75,6 +72,7 @@ t8_test_element_function ()
 
   /* NOTE try to print subelements in paraview */
 
+  /* free memory */
   class_scheme->t8_element_destroy (1, &element_1);
   class_scheme->t8_element_destroy (T8_NUM_SUBELEMENTS, element_subelements);
   t8_scheme_cxx_unref (&ts);
