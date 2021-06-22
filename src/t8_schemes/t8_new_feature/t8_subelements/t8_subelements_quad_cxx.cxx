@@ -896,9 +896,9 @@ t8_default_scheme_sub_c::t8_element_vertex_coords (const t8_element_t * t,
   T8_ASSERT (0 <= vertex && vertex < 4);
   /* Get the length of the quadrant */
   len = P4EST_QUADRANT_LEN (q1->level);
+
   /* Compute the x and y coordinates of the vertex depending on the
    * vertex number */
-  
   coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
   coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
 }
@@ -949,7 +949,6 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
 
   /* NOTE using subelement_id as input it could be possible to write the following code as
    * r->y = childid & 0x02 ? (q->y | shift) : q->y; */
-
   pquad_w_sub_subelement[0]->p4q.x = q->x;
   pquad_w_sub_subelement[0]->p4q.y = q->y;
   pquad_w_sub_subelement[0]->p4q.level = level;
@@ -977,6 +976,7 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
 
   int                 len;
 
+  T8_ASSERT (pquad_w_sub->dummy_is_subelement == 1);
   T8_ASSERT (t8_element_is_valid (t));
   T8_ASSERT (0 <= vertex && vertex < 4);
 
@@ -984,7 +984,7 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
   len = P4EST_QUADRANT_LEN (q1->level);
 
   /* This picture shows a quad, refinet into two subelements.
-   * V represents the vertex number for a subelement.
+   * V represents the vertex number of a subelement.
    * 
    *      x - - - - - - x           
    *      |             |         
@@ -1027,19 +1027,19 @@ t8_default_scheme_sub_c::t8_element_init (int length, t8_element_t * elem,
 {
   t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem;
 
-  /* Initalize subelement identifiers (0 means there are no subelements) */
-  pquad_w_sub->dummy_is_subelement = 0;
-  pquad_w_sub->dummy_use_subelement = 0;
-  pquad_w_sub->subelement_id = -1;
-  pquad_w_sub->num_subelement_ids = 2;
+  int                 i;
 
-#ifdef T8_ENABLE_DEBUG
-  /* In debugging mode we iterate over all length many elements and 
-   * set their quad to the leve 0 quad with ID 0. */
-  if (!new_called) {
-    int                 i;
-    /* set all values to 0 */
-    for (i = 0; i < length; i++) {
+  for (i = 0; i < length; i++) {
+    /* Initalize subelement identifiers (0 means there are no subelements) */
+    pquad_w_sub[i].dummy_is_subelement = 0;
+    pquad_w_sub[i].dummy_use_subelement = 0;
+    pquad_w_sub[i].subelement_id = -1;
+    pquad_w_sub[i].num_subelement_ids = 2;
+
+    #ifdef T8_ENABLE_DEBUG
+    /* In debugging mode we iterate over all length many elements and 
+     * set their quad to the leve 0 quad with ID 0. */
+    if (!new_called) {
       p4est_quadrant_t   *quad = &pquad_w_sub[i].p4q;
       p4est_quadrant_set_morton (quad, 0, 0);
       T8_QUAD_SET_TDIM (quad, 2);
@@ -1059,11 +1059,9 @@ t8_default_scheme_sub_c::t8_element_is_valid (const t8_element_t * elem) const
   const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
   const p4est_quadrant_t *q = &pquad_w_sub->p4q;
 
-  /* NOTE bug here: assertion, if the balance fct is used and elements need to be refined 
-   * Code is still working but bug should be solved in the future to understand whats happening */
-  //T8_ASSERT (pquad_w_sub->dummy_is_subelement == 0 || pquad_w_sub->dummy_is_subelement == 1);
-  //T8_ASSERT (pquad_w_sub->dummy_use_subelement == 0 || pquad_w_sub->dummy_use_subelement == 1);
-  //T8_ASSERT (0 <= pquad_w_sub->subelement_id && pquad_w_sub->subelement_id <= pquad_w_sub->num_subelement_ids);
+  T8_ASSERT (pquad_w_sub->dummy_is_subelement == 0 || pquad_w_sub->dummy_is_subelement == 1);
+  T8_ASSERT (pquad_w_sub->dummy_use_subelement == 0 || pquad_w_sub->dummy_use_subelement == 1);
+  T8_ASSERT (-1 <= pquad_w_sub->subelement_id && pquad_w_sub->subelement_id < pquad_w_sub->num_subelement_ids);
 
   return p4est_quadrant_is_extended (q);
 }
