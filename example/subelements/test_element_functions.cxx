@@ -31,19 +31,17 @@
 #include <t8_vec.h>
 #include <example/common/t8_example_common.h>
 
+#define T8_NUM_VERTICIES_QUAD 4
+#define T8_NUM_SUBELEMENTS 2
+
 static void
 t8_test_element_function ()
 {
   t8_scheme_cxx_t    *ts = t8_scheme_new_subelement_cxx ();
   t8_eclass_scheme_c *class_scheme;
   t8_element_t       *element_1, *element_2; 
-  t8_element_t       **element_children;
-  int                eclass, i, j, k;
-
-  /* NOTE how to initialize coords for coords_of_subelements function? */
-  int test = 100;
-  int *coords;
-  coords = &test;
+  t8_element_t       *element_children[P4EST_CHILDREN], *element_subelements[T8_NUM_SUBELEMENTS];
+  int                eclass, i, j, k, coords[P4EST_DIM];
 
   /* Choose quad scheme */
   eclass = T8_ECLASS_QUAD;
@@ -51,8 +49,8 @@ t8_test_element_function ()
 
   /* Allocate new elements and initialize them */
   class_scheme->t8_element_new (1, &element_1);
-  for (i = 0; i < P4EST_CHILDREN; ++i) {
-    class_scheme->t8_element_new (1, &element_children[i]); 
+  for (i = 0; i < T8_NUM_SUBELEMENTS; ++i) {
+    class_scheme->t8_element_new (1, &element_subelements[i]); 
   }
 
   /* Set the firs element to the level 0 quad */
@@ -68,17 +66,17 @@ t8_test_element_function ()
   // class_scheme->t8_element_children (element_1, 4, element_children);
 
   /* Test new subelement-related functions */
-  class_scheme->t8_element_to_subelement (element_1, element_children);
-  for (j = 0; j < 2; ++j) {
-    for (k = 0; k < 4; ++k){
-      class_scheme->t8_element_vertex_coords_of_subelement (element_children[j], k, coords);
+  class_scheme->t8_element_to_subelement (element_1, element_subelements);
+  for (j = 0; j < T8_NUM_SUBELEMENTS; ++j) {
+    for (k = 0; k < T8_NUM_VERTICIES_QUAD; ++k) {
+      class_scheme->t8_element_vertex_coords_of_subelement (element_subelements[j], k, coords);
     }
   }
 
   /* NOTE try to print subelements in paraview */
 
   class_scheme->t8_element_destroy (1, &element_1);
-  class_scheme->t8_element_destroy (1, element_children);
+  class_scheme->t8_element_destroy (T8_NUM_SUBELEMENTS, element_subelements);
   t8_scheme_cxx_unref (&ts);
 }
 
