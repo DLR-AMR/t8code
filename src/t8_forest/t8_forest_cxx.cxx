@@ -743,10 +743,8 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
     int                 sign;
 
     /* Get the coordinates of v_0 and v_1 */
-    t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
-                                  0, v_0);
-    t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
-                                  1, normal);
+    t8_forest_element_coordinate (forest, ltreeid, element, 0, v_0);
+    t8_forest_element_coordinate (forest, ltreeid, element, 1, normal);
 
     /* Compute normal = v_1 - v_0 */
     t8_vec_axpy (v_0, normal, -1);
@@ -881,7 +879,6 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
 int
 t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
                                 const t8_element_t * element,
-                                const double *tree_vertices,
                                 const double point[3], const double tolerance)
 {
   const t8_eclass_t   tree_class = t8_forest_get_tree_class (forest, ltreeid);
@@ -900,7 +897,7 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
       /* A point is 'inside' a vertex if they have the same coordinates */
       double              vertex_coords[3];
       /* Get the vertex coordinates */
-      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+      t8_forest_element_coordinate (forest, ltreeid, element,
                                     0, vertex_coords);
       /* Check whether the point and the vertex are within tolerance distance
        * to each other */
@@ -922,11 +919,9 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
       int                 i;
 
       /* Compute the vertex coordinates of the line */
-      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
-                                    0, p_0);
+      t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
       /* v = p_1 */
-      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
-                                    1, v);
+      t8_forest_element_coordinate (forest, ltreeid, element, 1, v);
       /* v = p_1 - p_0 */
       t8_vec_axpy (p_0, v, -1);
       /* b = p - p_0 */
@@ -986,14 +981,11 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
       T8_ASSERT (tolerance > 0);        /* negative values and zero are not allowed */
 
       /* Compute the vertex coordinates of the triangle */
-      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
-                                    0, p_0);
+      t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
       /* v = p_1 */
-      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
-                                    1, v);
+      t8_forest_element_coordinate (forest, ltreeid, element, 1, v);
       /* w = p_2 */
-      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
-                                    2, w);
+      t8_forest_element_coordinate (forest, ltreeid, element, 2, w);
       /* v = v - p_0 = p_1 - p_0 */
       t8_vec_axpy (p_0, v, -1);
       /* w = w - p_0 = p_2 - p_0 */
@@ -1060,10 +1052,10 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
     for (iface = 0; iface < num_faces; ++iface) {
       /* Compute the outer normal n of the face */
       t8_forest_element_face_normal (forest, ltreeid, element, iface,
-                                     tree_vertices, face_normal);
+                                     face_normal);
       /* Compute a point x on the face */
       afacecorner = ts->t8_element_get_face_corner (element, iface, 0);
-      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+      t8_forest_element_coordinate (forest, ltreeid, element,
                                     afacecorner, point_on_face);
 
       /* Set x = x - p */

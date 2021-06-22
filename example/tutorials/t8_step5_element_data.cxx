@@ -118,7 +118,6 @@ t8_step5_create_element_data (t8_forest_t forest)
     t8_eclass_t         tree_class;
     t8_eclass_scheme_c *eclass_scheme;
     const t8_element_t *element;
-    const double       *tree_vertices;
 
     /* Get the number of trees that have elements of this process. */
     num_local_trees = t8_forest_get_num_local_trees (forest);
@@ -129,9 +128,6 @@ t8_step5_create_element_data (t8_forest_t forest)
        * of a tree, we need to get its eclass_scheme, and in order to so we first get its eclass. */
       tree_class = t8_forest_get_tree_class (forest, itree);
       eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
-      /* Since we want to compute the volume of each element, we will need the coordinates
-       * of the vertices of this tree. */
-      tree_vertices = t8_forest_get_tree_vertices (forest, itree);
       /* Get the number of elements of this tree. */
       num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
       for (ielement = 0; ielement < num_elements_in_tree;
@@ -148,7 +144,7 @@ t8_step5_create_element_data (t8_forest_t forest)
         element_data[current_index].level =
           eclass_scheme->t8_element_level (element);
         element_data[current_index].volume =
-          t8_forest_element_volume (forest, itree, element, tree_vertices);
+          t8_forest_element_volume (forest, itree, element);
       }
     }
   }

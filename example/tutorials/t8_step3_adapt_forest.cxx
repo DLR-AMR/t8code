@@ -117,15 +117,8 @@ t8_step3_adapt_callback (t8_forest_t forest,
    */
   T8_ASSERT (adapt_data != NULL);
 
-  /* In order to compute the coordinates of the element, we first need to get the coordinates of
-   * the tree. t8code does not store the element's coordinates, since they can be interpolated from the
-   * tree's coordinates. */
-  const double       *tree_vertices =
-    t8_forest_get_tree_vertices (forest_from, which_tree);
-
   /* Compute the element's centroid coordinates. */
-  t8_forest_element_centroid (forest_from, which_tree, elements[0],
-                              tree_vertices, centroid);
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
 
   /* Compute the distance to our sphere midpoint. */
   dist = t8_vec_dist (centroid, adapt_data->midpoint);

@@ -138,7 +138,6 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
   long int            point_id = 0;     /* The id of the point in the points Object. */
   t8_locidx_t         ielement; /* The iterator over elements in a tree. */
   t8_locidx_t         itree, ivertex;
-  double             *vertices;
   double              coordinates[3];
   int                 elem_id = 0;
 
@@ -166,12 +165,11 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
 /* We iterate over all local trees*/
   for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
 /* 
- * We get the vertices, the current tree, the scheme for this tree
+ * We get the current tree, the scheme for this tree
  * and the number of elements in this tree. We need the vertices of
  * the tree to get the coordinates of the elements later. We need
  * the number of elements in this tree to iterate over all of them.
  */
-    vertices = t8_forest_get_tree_vertices (forest, itree);
     t8_eclass_scheme_c *scheme =
       t8_forest_get_eclass_scheme (forest, t8_forest_get_tree_class (forest,
                                                                      itree));
@@ -223,7 +221,6 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
       for (ivertex = 0; ivertex < num_corners; ivertex++, point_id++) {
         /* We take the element coordinates in vtk order */
         t8_forest_element_coordinate (forest, itree, element,
-                                      vertices,
                                       t8_eclass_vtk_corner_number
                                       [element_shape]
                                       [ivertex], coordinates);

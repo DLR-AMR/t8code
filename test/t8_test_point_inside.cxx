@@ -53,7 +53,6 @@ t8_test_point_inside_level0 (sc_MPI_Comm comm, t8_eclass_t eclass)
   int                 ipoint, icoord;   /* loop variables */
   int                 point_is_recognized_as_inside;
   int                 num_corners, icorner;
-  double             *tree_vertices;
   double              element_vertices[T8_ECLASS_MAX_CORNERS][3];
   double             *barycentric_coordinates;
   const double        barycentric_range_lower_bound = 0.001;    /* Must be > 0 */
@@ -73,8 +72,6 @@ t8_test_point_inside_level0 (sc_MPI_Comm comm, t8_eclass_t eclass)
 
     /* Get a pointer to the single element */
     element = t8_forest_get_element (forest, 0, NULL);
-    /* Get the vertices of the tree */
-    tree_vertices = t8_forest_get_tree_vertices (forest, 0);
 
     /* Get the associated eclass scheme */
     eclass_scheme = t8_forest_get_eclass_scheme (forest, eclass);
@@ -84,7 +81,7 @@ t8_test_point_inside_level0 (sc_MPI_Comm comm, t8_eclass_t eclass)
     T8_ASSERT (0 <= num_corners && num_corners <= T8_ECLASS_MAX_CORNERS);       /* Everything else is impossible */
     /* For each corner get its coordinates */
     for (icorner = 0; icorner < num_corners; ++icorner) {
-      t8_forest_element_coordinate (forest, 0, element, tree_vertices,
+      t8_forest_element_coordinate (forest, 0, element,
                                     icorner, element_vertices[icorner]);
     }
 
@@ -172,7 +169,7 @@ t8_test_point_inside_level0 (sc_MPI_Comm comm, t8_eclass_t eclass)
       /* We now check whether the point inside function correctly sees whether
        * the point is inside the element or not. */
       point_is_recognized_as_inside =
-        t8_forest_element_point_inside (forest, 0, element, tree_vertices,
+        t8_forest_element_point_inside (forest, 0, element,
                                         test_point, tolerance);
 
       SC_CHECK_ABORTF (!point_is_recognized_as_inside == !point_is_inside,
@@ -212,12 +209,11 @@ t8_test_point_inside_specific_triangle ()
     0.3, 0.3, 1
   };
   int                 point_is_inside;
-  double             *tree_vertices;
   const double        tolerance = 1e-12;        /* Numerical tolerance that we allow for the point inside check */
 
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
-  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 3);
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 3);
 
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   forest =
@@ -236,8 +232,7 @@ t8_test_point_inside_specific_triangle ()
 
   point_is_inside =
     t8_forest_element_point_inside (forest, 0,
-                                    element, tree_vertices, test_point,
-                                    tolerance);
+                                    element, test_point, tolerance);
 
   SC_CHECK_ABORT (!point_is_inside,
                   "The point is wrongly detected as inside the triangle.");

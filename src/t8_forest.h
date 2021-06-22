@@ -953,7 +953,6 @@ void                t8_forest_element_face_normal (t8_forest_t forest,
  * \param [in]      forest     The forest.
  * \param [in]      ltree_id   The forest local id of the tree in which the element is.
  * \param [in]      element    The element.
- * \param [in]      vertices   An array storing the vertex coordinates of the tree.
  * \param [in]      point      3-dimensional coordinates of the point to check
  * \param [in]      tolerance  tolerance that we allow the point to not exactly match the element.
  *                             If this value is larger we detect more points.
@@ -968,8 +967,6 @@ int                 t8_forest_element_point_inside (t8_forest_t forest,
                                                     t8_locidx_t ltreeid,
                                                     const t8_element_t *
                                                     element,
-                                                    const double
-                                                    *tree_vertices,
                                                     const double point[3],
                                                     const double tolerance);
 
