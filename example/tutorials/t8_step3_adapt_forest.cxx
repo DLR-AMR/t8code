@@ -227,7 +227,7 @@ t8_step3_main (int argc, char **argv)
    */
 
   /* Build a cube cmesh with tet, hex, and prism trees. */
-  cmesh = t8_cmesh_new_hypercube_hybrid (3, comm, 0, 0);
+  cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
   t8_global_productionf (" [step3] Created coarse mesh.\n");
   forest =
     t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0,
