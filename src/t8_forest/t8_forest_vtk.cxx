@@ -184,9 +184,40 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
       t8_element_t       *element =
         t8_forest_get_element_in_tree (forest, itree, ielement);
       T8_ASSERT (element != NULL);
+      vtkSmartPointer < vtkCell > pvtkCell = NULL;
       t8_element_shape_t  element_shape = scheme->t8_element_shape (element);
       int                 num_corners =
         scheme->t8_element_num_corners (element);
+
+      /* depending on the element type we choose the correct vtk cell to insert points to */
+      switch (element_shape) {
+      case T8_ECLASS_VERTEX:
+        pvtkCell = vertex;
+        break;
+      case T8_ECLASS_LINE:
+        pvtkCell = line;
+        break;
+      case T8_ECLASS_QUAD:
+        pvtkCell = quad;
+        break;
+      case T8_ECLASS_TRIANGLE:
+        pvtkCell = tri;
+        break;
+      case T8_ECLASS_HEX:
+        pvtkCell = hexa;
+        break;
+      case T8_ECLASS_TET:
+        pvtkCell = tet;
+        break;
+      case T8_ECLASS_PRISM:
+        pvtkCell = prism;
+        break;
+      case T8_ECLASS_PYRAMID:
+        pvtkCell = pyramid;
+        break;
+      default:
+        SC_ABORT_NOT_REACHED ();
+      }
 
       /* For each element we iterate over all points */
       for (ivertex = 0; ivertex < num_corners; ivertex++, point_id++) {
@@ -200,66 +231,12 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix)
         /* Insert point in the points array */
         points->InsertNextPoint (coordinates[0], coordinates[1],
                                  coordinates[2]);
-        /* depending on the type we add points to the correct element */
-        switch (element_shape) {
-        case T8_ECLASS_VERTEX:
-          vertex->GetPointIds ()->SetId (ivertex, point_id);
-          break;
-        case T8_ECLASS_LINE:
-          line->GetPointIds ()->SetId (ivertex, point_id);
-          break;
-        case T8_ECLASS_QUAD:
-          quad->GetPointIds ()->SetId (ivertex, point_id);
-          break;
-        case T8_ECLASS_TRIANGLE:
-          tri->GetPointIds ()->SetId (ivertex, point_id);
-          break;
-        case T8_ECLASS_HEX:
-          hexa->GetPointIds ()->SetId (ivertex, point_id);
-          break;
-        case T8_ECLASS_TET:
-          tet->GetPointIds ()->SetId (ivertex, point_id);
-          break;
-        case T8_ECLASS_PRISM:
-          prism->GetPointIds ()->SetId (ivertex, point_id);
-          break;
-        case T8_ECLASS_PYRAMID:
-          pyramid->GetPointIds ()->SetId (ivertex, point_id);
-          break;
-        default:
-          SC_ABORT_NOT_REACHED ();
-        }
+        /* Set the point ids to the vtk cell */
+        pvtkCell->GetPointIds ()->SetId (ivertex, point_id);
+      }
+      /* We insert the next cell in the cell array */
+      cellArray->InsertNextCell (pvtkCell);
 
-      }
-      /* depending on the element type we insert next cell in the cell array */
-      switch (element_shape) {
-      case T8_ECLASS_VERTEX:
-        cellArray->InsertNextCell (vertex);
-        break;
-      case T8_ECLASS_LINE:
-        cellArray->InsertNextCell (line);
-        break;
-      case T8_ECLASS_QUAD:
-        cellArray->InsertNextCell (quad);
-        break;
-      case T8_ECLASS_TRIANGLE:
-        cellArray->InsertNextCell (tri);
-        break;
-      case T8_ECLASS_HEX:
-        cellArray->InsertNextCell (hexa);
-        break;
-      case T8_ECLASS_TET:
-        cellArray->InsertNextCell (tet);
-        break;
-      case T8_ECLASS_PRISM:
-        cellArray->InsertNextCell (prism);
-        break;
-      case T8_ECLASS_PYRAMID:
-        cellArray->InsertNextCell (pyramid);
-        break;
-      default:
-        SC_ABORT_NOT_REACHED ();
-      }
       cellTypes[elem_id] = t8_eclass_vtk_type[element_shape];
       elem_id++;
     }
