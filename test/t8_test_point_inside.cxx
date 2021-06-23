@@ -29,6 +29,8 @@
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_element_cxx.hxx>
+#include <t8_cmesh/t8_cmesh_geometry.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 
 /* This function creates a single element of the specified element class.
  * It the creates a bunch of points, some of which lie whithin the element, some
@@ -210,10 +212,13 @@ t8_test_point_inside_specific_triangle ()
   };
   int                 point_is_inside;
   const double        tolerance = 1e-12;        /* Numerical tolerance that we allow for the point inside check */
+  t8_geometry_c      *linear_geom = new t8_geometry_linear (2);
 
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 3);
+  /* We use standard linear geometry */
+  t8_cmesh_register_geometry (cmesh, linear_geom);
 
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   forest =
@@ -226,9 +231,6 @@ t8_test_point_inside_specific_triangle ()
   }
 
   element = t8_forest_get_element (forest, 0, NULL);
-
-  /* Get the vertices of the tree */
-  tree_vertices = t8_forest_get_tree_vertices (forest, 0);
 
   point_is_inside =
     t8_forest_element_point_inside (forest, 0,
