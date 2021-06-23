@@ -56,9 +56,9 @@ t8_basic_refine_test (t8_eclass_t eclass)
   t8_forest_t         forest_adapt;
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
-  int                 initlevel = 1;                
-  int                 minlevel = 1; 
-  int                 maxlevel = 2;
+  int                 initlevel = 2;                
+  int                 minlevel = initlevel; 
+  int                 maxlevel = initlevel + 1;
 
   t8_forest_init (&forest);
   t8_forest_init (&forest_adapt);
@@ -101,6 +101,7 @@ t8_basic_refine_test (t8_eclass_t eclass)
   /* Output to vtk */
   snprintf (filename, BUFSIZ, "e_s_forest_adapt_%s", t8_eclass_to_string[eclass]);
   t8_forest_write_vtk (forest_adapt, filename);
+
   t8_forest_unref (&forest_adapt);
 }
 
