@@ -161,6 +161,7 @@ t8_geom_handler_compare_key (const void *name, const void *pgeom)
   return strcmp (geom_name, geometry->t8_geom_get_name ());
 }
 
+#ifdef T8_ENABLE_DEBUG
 /* Search for a geometry of a given name when the geometry
  * array is not sorted (yet). We use this in the registration
  * before the cmesh is committed in order to prevent multiple
@@ -189,6 +190,7 @@ t8_geom_handler_find_geometry_non_sorted (t8_geometry_handler_t *
   /* We did not find a geometry with the given name. */
   return NULL;
 }
+#endif
 
 void
 t8_geom_handler_register_geometry (t8_geometry_handler_t * geom_handler,
