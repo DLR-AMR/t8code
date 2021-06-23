@@ -49,9 +49,8 @@ t8_test_element_function ()
 
   /* Allocate new elements and initialize them */
   class_scheme->t8_element_new (1, &element_1);
-  for (subelement_id = 0; subelement_id < T8_NUM_SUBELEMENTS; ++subelement_id) {
-    class_scheme->t8_element_new (1, &element_subelements[subelement_id]); 
-  }
+  class_scheme->t8_element_new (T8_NUM_SUBELEMENTS, element_subelements); 
+
   class_scheme->t8_element_set_linear_id (element_1, 0, 0);
   class_scheme->t8_element_is_valid (element_1);
   
