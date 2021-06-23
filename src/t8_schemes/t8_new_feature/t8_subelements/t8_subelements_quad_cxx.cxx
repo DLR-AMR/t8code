@@ -949,6 +949,7 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
 
   /* NOTE using subelement_id as input it could be possible to write the following code as
    * r->y = childid & 0x02 ? (q->y | shift) : q->y; */
+  /* NOTE we should not change the p4est quadrant */
   pquad_w_sub_subelement[0]->p4q.x = q->x;
   pquad_w_sub_subelement[0]->p4q.y = q->y;
   pquad_w_sub_subelement[0]->p4q.level = level;
