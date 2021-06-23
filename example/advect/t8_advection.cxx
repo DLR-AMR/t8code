@@ -1989,7 +1989,7 @@ main (int argc, char *argv[])
                               mshfile, level, dim);
     u = t8_advect_choose_flow (flow_arg);
     if (!no_vtk) {
-      //t8_cmesh_vtk_write_file (cmesh, "advection_cmesh", 1.0);
+      t8_cmesh_vtk_write_file (cmesh, "advection_cmesh", 1.0);
     }
     /* Computation */
     t8_advect_solve (cmesh, u,
