@@ -884,6 +884,41 @@ t8_default_scheme_sub_c::t8_element_root_len (const t8_element_t * elem)
 }
 
 void
+t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_element_t * t,
+                                                                 int vertex, int coords[])
+{
+  const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) t;
+  const p4est_quadrant_t *q1 = &pquad_w_sub->p4q;
+
+  int                 len;
+
+  T8_ASSERT (pquad_w_sub->dummy_is_subelement == 1);
+  T8_ASSERT (t8_element_is_valid (t));
+  T8_ASSERT (0 <= vertex && vertex < 4);
+
+  /* get the length of a children-quadrant */
+  len = P4EST_QUADRANT_LEN (q1->level);
+
+  /* This picture shows a quad, refinet into two subelements.
+   * V represents the vertex number of a subelement.
+   * 
+   *      x - - - - - - x           
+   *      |             |         
+   *      | 1           |       V2             V3
+   *      + - - - - - - x        x - - - - - - x                       
+   *      |             |   ->   |             |
+   *      | 0           |        | 0           |
+   *      + - - - - - - x        + - - - - - - x
+   *                            V0             V1
+   * 
+   */
+
+  /* Compute the x and y coordinates of the vertex depending on the vertex number */
+  coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len * 2;
+  coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
+}
+
+void
 t8_default_scheme_sub_c::t8_element_vertex_coords (const t8_element_t * t,
                                                    int vertex, int coords[])
 {
@@ -897,10 +932,15 @@ t8_default_scheme_sub_c::t8_element_vertex_coords (const t8_element_t * t,
   /* Get the length of the quadrant */
   len = P4EST_QUADRANT_LEN (q1->level);
 
-  /* Compute the x and y coordinates of the vertex depending on the
-   * vertex number */
-  coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
-  coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
+  if (pquad_w_sub->dummy_is_subelement == 0) {
+    /* Compute the x and y coordinates of the vertex depending on the
+     * vertex number */
+    coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
+    coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
+  }
+  else {
+    t8_element_vertex_coords_of_subelement (t, vertex, coords);
+  }
 }
 
 void
@@ -966,41 +1006,6 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
     T8_ASSERT (t8_element_is_valid(c[i]));
     t8_element_copy_surround (q, &pquad_w_sub_subelement[i]->p4q); 
   }
-}
-
-void
-t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_element_t * t,
-                                                                 int vertex, int coords[])
-{
-  const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) t;
-  const p4est_quadrant_t *q1 = &pquad_w_sub->p4q;
-
-  int                 len;
-
-  T8_ASSERT (pquad_w_sub->dummy_is_subelement == 1);
-  T8_ASSERT (t8_element_is_valid (t));
-  T8_ASSERT (0 <= vertex && vertex < 4);
-
-  /* get the length of a children-quadrant */
-  len = P4EST_QUADRANT_LEN (q1->level);
-
-  /* This picture shows a quad, refinet into two subelements.
-   * V represents the vertex number of a subelement.
-   * 
-   *      x - - - - - - x           
-   *      |             |         
-   *      | 1           |       V2             V3
-   *      + - - - - - - x        x - - - - - - x                       
-   *      |             |   ->   |             |
-   *      | 0           |        | 0           |
-   *      + - - - - - - x        + - - - - - - x
-   *                            V0             V1
-   * 
-   */
-
-  /* Compute the x and y coordinates of the vertex depending on the vertex number */
-  coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len * 2;
-  coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
 }
 
 void

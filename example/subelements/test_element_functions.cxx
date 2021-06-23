@@ -65,7 +65,7 @@ t8_test_element_function ()
   class_scheme->t8_element_to_subelement (element_1, element_subelements);
   for (subelement_id = 0; subelement_id < T8_NUM_SUBELEMENTS; ++subelement_id) {
     for (vertex_id = 0; vertex_id < T8_NUM_VERTICIES_QUAD; ++vertex_id) {
-      class_scheme->t8_element_vertex_coords_of_subelement (element_subelements[subelement_id], vertex_id, coords);
+      class_scheme->t8_element_vertex_coords (element_subelements[subelement_id], vertex_id, coords);
     }
   }
 
