@@ -332,7 +332,7 @@ t8_dline_vertex_coords (const t8_dline_t * elem, int vertex, int coords[])
   if (vertex == 0) {
     coords[0] = elem->x;
   }
-  if (vertex == 1) {
+  else if (vertex == 1) {
     coords[0] = elem->x + T8_DLINE_LEN (elem->level);
   }
 }
@@ -341,9 +341,9 @@ void
 t8_dline_vertex_ref_coords (const t8_dline_t * elem, int vertex,
                             double coordinates[1])
 {
+  /* we need to set and initial value to prevent compiler warning. */
+  int                 coords_int = -1;
   T8_ASSERT (vertex == 0 || vertex == 1);
-
-  int                 coords_int;
 
   /* Compute integere coordinates and divide by root length. */
   t8_dline_vertex_coords (elem, vertex, &coords_int);
