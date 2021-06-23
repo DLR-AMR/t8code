@@ -292,12 +292,13 @@ t8_forest_adapt (t8_forest_t forest)
                               el_considered, tscheme, num_elements,
                               elements_from);
       T8_ASSERT (is_family || refine >= 0);
+      int num_subelements;
       if (refine > 0 && tscheme->t8_element_level (elements_from[0]) >=
           forest->maxlevel) {
         /* Only refine an element if it does not exceed the maximum level */
         refine = 0;
       }
-      if (refine > 0) {
+      if (refine == 1) {
         /* The first element is to be refined */
         if (forest->set_adapt_recursive) {
           /* Create the children of this element */
@@ -331,6 +332,20 @@ t8_forest_adapt (t8_forest_t forest)
                                         elements);
           el_inserted += num_children;
         }
+        el_considered++;
+      }
+      else if (refine == 2) {
+        /* The element should be refined and refinement is not recursive (Subelements). */
+        /* We add the children (subelements) to the element array of the current tree. */
+        /* NOTE need a rule to get the right value for num_new_elements */
+        num_subelements = 2;
+        (void) t8_element_array_push_count (telements, num_subelements);
+        for (zz = 0; zz < num_subelements; zz++) {
+          elements[zz] =
+            t8_element_array_index_locidx (telements, el_inserted + zz);
+        }
+        tscheme->t8_element_to_subelement (elements_from[0], elements);
+        el_inserted += num_subelements;
         el_considered++;
       }
       else if (refine < 0) {

@@ -57,8 +57,8 @@ t8_basic_refine_test (t8_eclass_t eclass)
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
   int                 initlevel = 1;                
-  int                 minlevel = 0; 
-  int                 maxlevel = 3;
+  int                 minlevel = 1; 
+  int                 maxlevel = 2;
 
   t8_forest_init (&forest);
   t8_forest_init (&forest_adapt);
@@ -94,7 +94,7 @@ t8_basic_refine_test (t8_eclass_t eclass)
     ls_data.udata = &sdata;
     t8_forest_set_user_data (forest_adapt, &ls_data);
     t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
-    t8_forest_set_balance (forest_adapt, NULL, 0);
+    // t8_forest_set_balance (forest_adapt, NULL, 0);
 
   t8_forest_commit (forest_adapt);
 
@@ -115,7 +115,7 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  /* use T8_ECLASS_QUAD */
+  /* use T8_ECLASS_QUAD (our quad_w_sub scheme) */
   t8_basic_refine_test (T8_ECLASS_QUAD);
 
   sc_finalize ();
