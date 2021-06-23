@@ -913,9 +913,15 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
    * 
    */
 
-  /* Compute the x and y coordinates of the vertex depending on the vertex number */
-  coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len * 2;
-  coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
+  /* Compute the x and y coordinates of the vertex depending on the vertex number and the subelement_id */
+  if (pquad_w_sub->subelement_id == 0) {
+    coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
+    coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len * 1/2;
+  }
+  else {
+    coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
+    coords[1] = q1->y + len * 1/2 + (vertex & 2 ? 1 : 0) * len * 1/2;
+  }
 }
 
 void
@@ -968,8 +974,7 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
 #endif
   
   /* get the length of a children-quadrant */
-  const int8_t        level = (int8_t) (q->level + 1);
-  const p4est_qcoord_t inc = P4EST_QUADRANT_LEN (level);
+  const int8_t        level = (int8_t) (q->level);
 
   T8_ASSERT (p4est_quadrant_is_extended (q));
   T8_ASSERT (q->level < P4EST_QMAXLEVEL);
@@ -989,7 +994,6 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
 
   /* NOTE using subelement_id as input it could be possible to write the following code as
    * r->y = childid & 0x02 ? (q->y | shift) : q->y; */
-  /* NOTE we should not change the p4est quadrant */
   pquad_w_sub_subelement[0]->p4q.x = q->x;
   pquad_w_sub_subelement[0]->p4q.y = q->y;
   pquad_w_sub_subelement[0]->p4q.level = level;
@@ -997,7 +1001,7 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
   pquad_w_sub_subelement[0]->subelement_id = 0;
 
   pquad_w_sub_subelement[1]->p4q.x = pquad_w_sub_subelement[0]->p4q.x;
-  pquad_w_sub_subelement[1]->p4q.y = pquad_w_sub_subelement[0]->p4q.y | inc;
+  pquad_w_sub_subelement[1]->p4q.y = pquad_w_sub_subelement[0]->p4q.y;
   pquad_w_sub_subelement[1]->p4q.level = level;
   pquad_w_sub_subelement[1]->dummy_is_subelement = 1;
   pquad_w_sub_subelement[1]->subelement_id = 1;
