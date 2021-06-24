@@ -899,13 +899,13 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
   /* get the length of a children-quadrant */
   len = P4EST_QUADRANT_LEN (q1->level);
 
-  /* Compute the x and y coordinates of the vertex depending on the subelement type, id and vertex number */
+  /* Compute the x and y coordinates of subelement vertices, depending on the subelement type, id and vertex number */
   if (pquad_w_sub->subelement_type == 1) {
     /* 
      *      x - - - - - - - x           
      *      |               |                            
      *      | sub _id 1     |        V2               V3
-     *      + - - - - - - - x         x - - - - - - - x                       
+     *      x - - - - - - - x         x - - - - - - - x                       
      *      |               |   -->   |               |
      *      | sub_id 0      |         | sub_id 0      |
      *      + - - - - - - - x         + - - - - - - - x
@@ -1000,7 +1000,7 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
   T8_ASSERT (p4est_quadrant_is_extended (q));
   T8_ASSERT (q->level < P4EST_QMAXLEVEL);
   
-  /* Set the parameter values for the subelements */
+  /* set the parameter values for different subelements (depending on x and y coordinates) */
   if (pquad_w_sub_elem->p4q.x > pquad_w_sub_elem->p4q.y) {
     /* subelement type 1:
      *                               
@@ -1088,7 +1088,7 @@ t8_default_scheme_sub_c::t8_element_init (int length, t8_element_t * elem,
   int                 i;
 
   for (i = 0; i < length; i++) {
-    /* Initalize subelement identifiers (0 means there are no subelements) */
+    /* initalize subelement parameters */
     pquad_w_sub[i].dummy_is_subelement = 0;
     pquad_w_sub[i].subelement_type = -1;
     pquad_w_sub[i].num_subelement_types = 2;
@@ -1097,7 +1097,7 @@ t8_default_scheme_sub_c::t8_element_init (int length, t8_element_t * elem,
 
     #ifdef T8_ENABLE_DEBUG
     /* In debugging mode we iterate over all length many elements and 
-     * set their quad to the leve 0 quad with ID 0. */
+     * set their quad to the level 0 quad with ID 0. */
     if (!new_called) {
       p4est_quadrant_t   *quad = &pquad_w_sub[i].p4q;
       p4est_quadrant_set_morton (quad, 0, 0);
