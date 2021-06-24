@@ -915,9 +915,12 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
       coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
       coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len * 1/2;
     }
-    else {
+    else if (pquad_w_sub->subelement_id == 1) {
       coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
       coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len * 1/2 + len * 1/2;
+    }
+    else {
+      T8_ASSERT (printf("No valid subelement id!"));
     }
   }
   else if (pquad_w_sub->subelement_type == 2) {
@@ -936,13 +939,16 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
       coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len * 1/2;
       coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
     }
-    else {
+    else if (pquad_w_sub->subelement_id == 1) {
       coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len * 1/2 + len * 1/2;
       coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
     }
+    else {
+      T8_ASSERT (printf("No valid subelement id!"));
+    }
   }
   else {
-    T8_ASSERT (1 == 2);
+    T8_ASSERT (printf("No valid subelement type!"));
   }
 }
 
