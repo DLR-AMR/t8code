@@ -44,10 +44,11 @@
 typedef struct
 {
   p4est_quadrant_t    p4q;        /* p4est quadrant */
-  int                 dummy_is_subelement;      /* ist element ein subelement? */
-  int                 dummy_use_subelement;     /* Soll subelement eingefügt werden? */
-  int                 subelement_id;    /* welche Art von subelement (obere oder untere häfte)? */
-  int                 num_subelement_ids; /* # of subelements for the specific kind of subelement */
+  int                 dummy_is_subelement;      /* is element a subelement? */
+  int                 subelement_type;     /* which type of subelement to use? */
+  int                 num_subelement_types; /* # of parts for the specific kind of subelement */
+  int                 subelement_id;    /* which part of subelement? */
+  int                 num_subelement_ids; /* # of parts for the specific kind of subelement */
 } t8_quad_with_subelements;
 
 typedef t8_quad_with_subelements t8_pquad_t;

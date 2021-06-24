@@ -899,28 +899,50 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
   /* get the length of a children-quadrant */
   len = P4EST_QUADRANT_LEN (q1->level);
 
-  /* This picture shows a quad, refinet into two subelements.
-   * V represents the vertex number of a subelement.
-   * 
-   *      x - - - - - - x           
-   *      |             |         
-   *      | 1           |       V2             V3
-   *      + - - - - - - x        x - - - - - - x                       
-   *      |             |   ->   |             |
-   *      | 0           |        | 0           |
-   *      + - - - - - - x        + - - - - - - x
-   *                            V0             V1
-   * 
-   */
-
-  /* Compute the x and y coordinates of the vertex depending on the vertex number and the subelement_id */
-  if (pquad_w_sub->subelement_id == 0) {
-    coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
-    coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len * 1/2;
+  /* Compute the x and y coordinates of the vertex depending on the subelement type, id and vertex number */
+  if (pquad_w_sub->subelement_type == 1) {
+    /* 
+     *      x - - - - - - - x           
+     *      |               |                            
+     *      | sub _id 1     |        V2               V3
+     *      + - - - - - - - x         x - - - - - - - x                       
+     *      |               |   -->   |               |
+     *      | sub_id 0      |         | sub_id 0      |
+     *      + - - - - - - - x         + - - - - - - - x
+     *                               V0               V1
+     */
+    if (pquad_w_sub->subelement_id == 0) {
+      coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
+      coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len * 1/2;
+    }
+    else {
+      coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
+      coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len * 1/2 + len * 1/2;
+    }
+  }
+  else if (pquad_w_sub->subelement_type == 2) {
+    /* 
+     *                               V2       V3
+     *      x - - - x - - - x         x - - - x   
+     *      |       |       |         |       |
+     *      |       |       |         |       |
+     *      | sub_  | sub_  |   -->   | sub_  |                       
+     *      | id    | id    |         | id    |
+     *      | 0     | 1     |         | 0     |
+     *      + - - - x - - - x         + - - - x
+     *                               V0       V1
+     */
+    if (pquad_w_sub->subelement_id == 0) {
+      coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len * 1/2;
+      coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
+    }
+    else {
+      coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len * 1/2 + len * 1/2;
+      coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
+    }
   }
   else {
-    coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
-    coords[1] = q1->y + len * 1/2 + (vertex & 2 ? 1 : 0) * len * 1/2;
+    T8_ASSERT (1 == 2);
   }
 }
 
@@ -962,7 +984,6 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
 
   /* check that elem is not already a subelement */
   T8_ASSERT (pquad_w_sub_elem->dummy_is_subelement == 0);
-
   T8_ASSERT (t8_element_is_valid (elem));
 #ifdef T8_ENABLE_DEBUG
   {
@@ -978,33 +999,60 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
 
   T8_ASSERT (p4est_quadrant_is_extended (q));
   T8_ASSERT (q->level < P4EST_QMAXLEVEL);
-
-  /* This picture shows a quad, refinet into two subelements.
-   * + represents the anchor nodes for both subelements.
-   * 
-   *      x - - - - - - x        x - - - - - - x           
-   *      |             |        |             |   -> subelement with id 1        
-   *      |             |        | 1           |    
-   *      |             |   ->   + - - - - - - x     
-   *      |             |        |             |   -> subelement with id 0
-   *      | elem        |        | 0           |
-   *      + - - - - - - x        + - - - - - - x
-   *
-   */
-
-  /* NOTE using subelement_id as input it could be possible to write the following code as
-   * r->y = childid & 0x02 ? (q->y | shift) : q->y; */
-  pquad_w_sub_subelement[0]->p4q.x = q->x;
-  pquad_w_sub_subelement[0]->p4q.y = q->y;
-  pquad_w_sub_subelement[0]->p4q.level = level;
-  pquad_w_sub_subelement[0]->dummy_is_subelement = 1;
-  pquad_w_sub_subelement[0]->subelement_id = 0;
-
-  pquad_w_sub_subelement[1]->p4q.x = pquad_w_sub_subelement[0]->p4q.x;
-  pquad_w_sub_subelement[1]->p4q.y = pquad_w_sub_subelement[0]->p4q.y;
-  pquad_w_sub_subelement[1]->p4q.level = level;
-  pquad_w_sub_subelement[1]->dummy_is_subelement = 1;
-  pquad_w_sub_subelement[1]->subelement_id = 1;
+  
+  /* Set the parameter values for the subelements */
+  if (pquad_w_sub_elem->p4q.x > pquad_w_sub_elem->p4q.y) {
+    /* subelement type 1:
+     *                               
+     *      x - - - - - - - x         x - - - - - - - x          
+     *      |               |         |               |          
+     *      |               |         | sub_id 1      |    
+     *      |               |   -->   x - - - - - - - x     
+     *      |               |         |               |  
+     *      | elem          |         | sub_id 0      |
+     *      + - - - - - - - x         x - - - - - - - x
+     *
+     * we do not change the p4est quadrant */
+    pquad_w_sub_subelement[0]->p4q.x = q->x;
+    pquad_w_sub_subelement[0]->p4q.y = q->y;
+    pquad_w_sub_subelement[0]->p4q.level = level;
+    pquad_w_sub_subelement[0]->dummy_is_subelement = 1;
+    pquad_w_sub_subelement[0]->subelement_type = 1;
+    pquad_w_sub_subelement[0]->subelement_id = 0;
+  
+    pquad_w_sub_subelement[1]->p4q.x = pquad_w_sub_subelement[0]->p4q.x;
+    pquad_w_sub_subelement[1]->p4q.y = pquad_w_sub_subelement[0]->p4q.y;
+    pquad_w_sub_subelement[1]->p4q.level = level;
+    pquad_w_sub_subelement[1]->dummy_is_subelement = 1;
+    pquad_w_sub_subelement[1]->subelement_type = 1;
+    pquad_w_sub_subelement[1]->subelement_id = 1;
+  }
+  else {
+   /* subelement type 2:
+    *                               
+    *      x - - - - - - - x         x - - - x - - - x           
+    *      |               |         |       |       |          
+    *      |               |         |       |       |    
+    *      |               |   -->   | sub_  | sub_  |     
+    *      |               |         | id    | id    |   
+    *      | elem          |         | 0     | 1     |
+    *      + - - - - - - - x         x - - - x - - - x
+    *
+    * we do not change the p4est quadrant */
+    pquad_w_sub_subelement[0]->p4q.x = q->x;
+    pquad_w_sub_subelement[0]->p4q.y = q->y;
+    pquad_w_sub_subelement[0]->p4q.level = level;
+    pquad_w_sub_subelement[0]->dummy_is_subelement = 1;
+    pquad_w_sub_subelement[0]->subelement_type = 2;
+    pquad_w_sub_subelement[0]->subelement_id = 0;
+  
+    pquad_w_sub_subelement[1]->p4q.x = pquad_w_sub_subelement[0]->p4q.x;
+    pquad_w_sub_subelement[1]->p4q.y = pquad_w_sub_subelement[0]->p4q.y;
+    pquad_w_sub_subelement[1]->p4q.level = level;
+    pquad_w_sub_subelement[1]->dummy_is_subelement = 1;
+    pquad_w_sub_subelement[1]->subelement_type = 2;
+    pquad_w_sub_subelement[1]->subelement_id = 1;
+  } 
 
   for (i = 0; i < pquad_w_sub_elem->num_subelement_ids; ++i) {
     T8_ASSERT (t8_element_is_valid(c[i]));
@@ -1042,7 +1090,8 @@ t8_default_scheme_sub_c::t8_element_init (int length, t8_element_t * elem,
   for (i = 0; i < length; i++) {
     /* Initalize subelement identifiers (0 means there are no subelements) */
     pquad_w_sub[i].dummy_is_subelement = 0;
-    pquad_w_sub[i].dummy_use_subelement = 0;
+    pquad_w_sub[i].subelement_type = -1;
+    pquad_w_sub[i].num_subelement_types = 2;
     pquad_w_sub[i].subelement_id = -1;
     pquad_w_sub[i].num_subelement_ids = 2;
 
@@ -1070,8 +1119,10 @@ t8_default_scheme_sub_c::t8_element_is_valid (const t8_element_t * elem) const
   const p4est_quadrant_t *q = &pquad_w_sub->p4q;
 
   T8_ASSERT (pquad_w_sub->dummy_is_subelement == 0 || pquad_w_sub->dummy_is_subelement == 1);
-  T8_ASSERT (pquad_w_sub->dummy_use_subelement == 0 || pquad_w_sub->dummy_use_subelement == 1);
-  T8_ASSERT (-1 <= pquad_w_sub->subelement_id && pquad_w_sub->subelement_id < pquad_w_sub->num_subelement_ids);
+  T8_ASSERT (pquad_w_sub->num_subelement_types == 2);
+  T8_ASSERT (pquad_w_sub->subelement_type >= -1 && pquad_w_sub->subelement_type <= pquad_w_sub->num_subelement_types);
+  T8_ASSERT (pquad_w_sub->num_subelement_ids == 2);
+  T8_ASSERT (pquad_w_sub->subelement_id >= -1 && pquad_w_sub->subelement_id <= pquad_w_sub->num_subelement_ids);
 
   return p4est_quadrant_is_extended (q);
 }
