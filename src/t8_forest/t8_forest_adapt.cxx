@@ -348,6 +348,20 @@ t8_forest_adapt (t8_forest_t forest)
         el_inserted += num_subelements;
         el_considered++;
       }
+      else if (refine == 3) {
+        /* The element should be refined and refinement is not recursive (Subelements). */
+        /* We add the children (subelements) to the element array of the current tree. */
+        /* NOTE need a rule to get the right value for num_new_elements */
+        num_subelements = 2;
+        (void) t8_element_array_push_count (telements, num_subelements);
+        for (zz = 0; zz < num_subelements; zz++) {
+          elements[zz] =
+            t8_element_array_index_locidx (telements, el_inserted + zz);
+        }
+        tscheme->t8_element_to_subelement (elements_from[0], elements);
+        el_inserted += num_subelements;
+        el_considered++;
+      }
       else if (refine < 0) {
         /* The elements form a family and are to be coarsened. */
         /* Make room for one more new element. */

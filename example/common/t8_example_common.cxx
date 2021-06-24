@@ -181,18 +181,27 @@ t8_common_adapt_level_set (t8_forest_t forest,
   if (level < data->min_level) {
     return 1;
   }
+
   within_band =
     t8_common_within_levelset (forest_from, which_tree, elements[0],
                                ts, tree_vertices, data->L,
                                data->band_width / 2, data->t, data->udata);
-  //if (within_band && level < data->max_level) {
+  
+  #if 0
+  if (within_band && level < data->max_level) {
     /* The element can be refined and lies inside the refinement region */
-    //return 1;
-  //}
-  /* NOTE to test subelements */
+    return 1;
+  }
+  /* NOTE testing subelements */
+  /* NOTE this if statement should test whether there are neighbor elements with a +1 higher level */
   if (within_band && level < data->max_level) {
     /* The element can be refined and lies inside the refinement region */
     return 2;
+  }
+  #endif
+  if (within_band && level < data->max_level) {
+    /* The element can be refined and lies inside the refinement region */
+    return 3;
   }
   else if (num_elements > 1 && level > data->min_level && !within_band) {
     /* If element lies out of the refinement region and a family was given
