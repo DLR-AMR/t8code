@@ -36,7 +36,17 @@
 #include <vtkNew.h>
 #endif
 
-/* Check whether T8_VTK_VERSION_USED quals VTK_MAJOR_VERSION.VTK_MINOR_VERSION */
+/* Test correct macro dependencies.
+ * Will throw a compile time error if T8_VTK_VERSION_USED
+ * is defined but T8_WITH_VTK is not. */
+#ifndef T8_WITH_VTK
+#ifdef T8_VTK_VERSION_USED
+#error Configuration error: T8_VTK_VERSION_USED is defined despite \
+ T8_WITH_VTK not being defined.
+#endif
+#endif
+
+/* Check whether T8_VTK_VERSION_USED equals VTK_MAJOR_VERSION.VTK_MINOR_VERSION */
 static void
 t8_test_vtk_version_number ()
 {

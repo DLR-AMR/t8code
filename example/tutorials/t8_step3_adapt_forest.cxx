@@ -185,7 +185,7 @@ t8_step3_print_forest_information (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   /* Get the local number of elements. */
-  local_num_elements = t8_forest_get_num_element (forest);
+  local_num_elements = t8_forest_get_local_num_elements (forest);
   /* Get the global number of elements. */
   global_num_elements = t8_forest_get_global_num_elements (forest);
   t8_global_productionf (" [step3] Local number of elements:\t\t%i\n",

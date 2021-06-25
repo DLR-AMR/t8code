@@ -46,7 +46,6 @@ t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
                        t8_locidx_t which_tree, t8_locidx_t lelement_id,
                        t8_eclass_scheme_c * ts, int num_elements,
                        t8_element_t * elements[])
-
 {
   int                 level;
   int                 maxlevel, child_id;
@@ -121,46 +120,44 @@ t8_test_forest_commit (int cmesh_id)
   t8_forest_t         forest, forest_ada_bal_part, forest_abp_3part;
   t8_scheme_cxx_t    *scheme;
 
-      scheme = t8_scheme_new_default_cxx ();
-      /* Construct a cmesh */
-      cmesh =
-        t8_test_create_cmesh (cmesh_id);
-      /* Compute the first level, such that no process is empty */
-      min_level = t8_forest_min_nonempty_level (cmesh, scheme);
-      /* Use one level with empty processes */
-      min_level = SC_MAX (min_level - 1, 0);
-      for (level = min_level; level < min_level + 3; level++) {
-        t8_global_productionf
-          ("Testing forest commit level %i\n", level);
-        maxlevel = level + 3;
-        /* ref the cmesh since we reuse it */
-        t8_cmesh_ref (cmesh);
-        /* Create a uniformly refined forest */
-        forest = t8_forest_new_uniform (cmesh, scheme, level, 1,
-                                        sc_MPI_COMM_WORLD);
-        /* We need to use forest twice, so we ref it */
-        t8_forest_ref (forest);
-        /* Adapt, balance and partition the forest */
-        forest_ada_bal_part = t8_test_forest_commit_abp (forest, maxlevel);
-        /* Adapt, balance and partition the forest using three seperate steps */
-        forest_abp_3part = t8_test_forest_commit_abp_3step (forest, maxlevel);
+  scheme = t8_scheme_new_default_cxx ();
+  /* Construct a cmesh */
+  cmesh = t8_test_create_cmesh (cmesh_id);
+  /* Compute the first level, such that no process is empty */
+  min_level = t8_forest_min_nonempty_level (cmesh, scheme);
+  /* Use one level with empty processes */
+  min_level = SC_MAX (min_level - 1, 0);
+  for (level = min_level; level < min_level + 3; level++) {
+    t8_global_productionf ("Testing forest commit level %i\n", level);
+    maxlevel = level + 3;
+    /* ref the cmesh since we reuse it */
+    t8_cmesh_ref (cmesh);
+    /* Create a uniformly refined forest */
+    forest = t8_forest_new_uniform (cmesh, scheme, level, 1,
+                                    sc_MPI_COMM_WORLD);
+    /* We need to use forest twice, so we ref it */
+    t8_forest_ref (forest);
+    /* Adapt, balance and partition the forest */
+    forest_ada_bal_part = t8_test_forest_commit_abp (forest, maxlevel);
+    /* Adapt, balance and partition the forest using three seperate steps */
+    forest_abp_3part = t8_test_forest_commit_abp_3step (forest, maxlevel);
 /*
         if (ctype != 2) {
           t8_forest_write_vtk (forest_ada_bal_part, "test_1step");
           t8_forest_write_vtk (forest_abp_3part, "test_3step");
         }
 */
-        SC_CHECK_ABORT (t8_forest_is_equal
-                        (forest_abp_3part, forest_ada_bal_part),
-                        "The forests are not equal");
-        t8_scheme_cxx_ref (scheme);
-        t8_forest_unref (&forest_ada_bal_part);
-        t8_forest_unref (&forest_abp_3part);
+    SC_CHECK_ABORT (t8_forest_is_equal
+                    (forest_abp_3part, forest_ada_bal_part),
+                    "The forests are not equal");
+    t8_scheme_cxx_ref (scheme);
+    t8_forest_unref (&forest_ada_bal_part);
+    t8_forest_unref (&forest_abp_3part);
 
-      }
-      t8_scheme_cxx_unref (&scheme);
-      t8_cmesh_destroy (&cmesh);
-      t8_debugf ("Done testing forest commit.");
+  }
+  t8_scheme_cxx_unref (&scheme);
+  t8_cmesh_destroy (&cmesh);
+  t8_debugf ("Done testing forest commit.");
 }
 
 /* The function test_cmesh_forest_commit_all () runs the forest commit test for all cmeshes we want to test.
@@ -172,11 +169,12 @@ test_cmesh_forest_commit_all ()
   /* Test all cmeshes over all different inputs we get through their id */
   for (int cmesh_id = 0; cmesh_id < t8_get_number_of_all_testcases ();
        cmesh_id++) {
-      /* This if statement is necessary to make the test work by avoiding specific cmeshes which do not work yet for this test.
-       * When the issues are gone, remove the if statement. */
-         if(cmesh_id !=6 && cmesh_id !=89 &&!(cmesh_id<265&&cmesh_id>=245)){    
-           t8_test_forest_commit (cmesh_id);
-         }
+    /* This if statement is necessary to make the test work by avoiding specific cmeshes which do not work yet for this test.
+     * When the issues are gone, remove the if statement. */
+    if (cmesh_id != 6 && cmesh_id != 89
+        && !(cmesh_id < 265 && cmesh_id >= 245)) {
+      t8_test_forest_commit (cmesh_id);
+    }
   }
 }
 
