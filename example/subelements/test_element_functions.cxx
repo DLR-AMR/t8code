@@ -62,7 +62,8 @@ t8_test_element_function ()
   // }
 
   /* Test subelement-related functions */
-  class_scheme->t8_element_to_subelement (element_1, element_subelements);
+  int type = 3;
+  class_scheme->t8_element_to_subelement (element_1, element_subelements, type);
   for (subelement_id = 0; subelement_id < T8_NUM_SUBELEMENTS; ++subelement_id) {
     for (vertex_id = 0; vertex_id < T8_NUM_VERTICIES_QUAD; ++vertex_id) {
       class_scheme->t8_element_vertex_coords (element_subelements[subelement_id], vertex_id, coords);

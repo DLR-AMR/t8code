@@ -56,7 +56,7 @@ t8_basic_refine_test (t8_eclass_t eclass)
   t8_forest_t         forest_adapt;
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
-  int                 initlevel = 3;                
+  int                 initlevel = 0;                
   int                 minlevel = initlevel; 
   int                 maxlevel = initlevel + 1;
 

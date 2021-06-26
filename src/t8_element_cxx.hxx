@@ -636,7 +636,8 @@ public:
 
   /** NOTE write comment */
   virtual void        t8_element_to_subelement (const t8_element_t * elem,
-                                                t8_element_t * c[]) = 0;
+                                                t8_element_t * c[],
+                                                int type) = 0;
 
   /** NOTE write comment */
   virtual void        t8_element_vertex_coords_of_subelement (const t8_element_t * t,

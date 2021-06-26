@@ -549,7 +549,7 @@ t8_default_scheme_tet_c::t8_element_general_function (const t8_element_t *
 
 void
 t8_default_scheme_tet_c::t8_element_to_subelement (const t8_element_t * elem,
-                                              t8_element_t * c[])
+                                              t8_element_t * c[], int type)
 {
   SC_ABORT ("This function is not implemented yet.\n");
 }

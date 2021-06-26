@@ -293,6 +293,7 @@ t8_forest_adapt (t8_forest_t forest)
                               elements_from);
       T8_ASSERT (is_family || refine >= 0);
       int num_subelements;
+      int subelement_type;
       if (refine > 0 && tscheme->t8_element_level (elements_from[0]) >=
           forest->maxlevel) {
         /* Only refine an element if it does not exceed the maximum level */
@@ -338,13 +339,26 @@ t8_forest_adapt (t8_forest_t forest)
         /* The element should be refined and refinement is not recursive (Subelements). */
         /* We add the children (subelements) to the element array of the current tree. */
         /* NOTE need a rule to get the right value for num_new_elements */
-        num_subelements = 2;
+        subelement_type = 3;
+        if (subelement_type == 1) {
+          num_subelements = 2;
+        }
+        else if (subelement_type == 2) {
+          num_subelements = 2;
+        }
+        else if (subelement_type == 3) {
+          num_subelements = 4;
+        }
+        else {
+          T8_ASSERT(printf("No valid subelement_type"));
+        }
+       
         (void) t8_element_array_push_count (telements, num_subelements);
         for (zz = 0; zz < num_subelements; zz++) {
           elements[zz] =
             t8_element_array_index_locidx (telements, el_inserted + zz);
         }
-        tscheme->t8_element_to_subelement (elements_from[0], elements);
+        tscheme->t8_element_to_subelement (elements_from[0], elements, subelement_type);
         el_inserted += num_subelements;
         el_considered++;
       }
@@ -352,13 +366,26 @@ t8_forest_adapt (t8_forest_t forest)
         /* The element should be refined and refinement is not recursive (Subelements). */
         /* We add the children (subelements) to the element array of the current tree. */
         /* NOTE need a rule to get the right value for num_new_elements */
-        num_subelements = 2;
+        subelement_type = 3;
+        if (subelement_type == 1) {
+          num_subelements = 2;
+        }
+        else if (subelement_type == 2) {
+          num_subelements = 2;
+        }
+        else if (subelement_type == 3) {
+          num_subelements = 4;
+        }
+        else {
+          T8_ASSERT(printf("No valid subelement_type"));
+        }
+        
         (void) t8_element_array_push_count (telements, num_subelements);
         for (zz = 0; zz < num_subelements; zz++) {
           elements[zz] =
             t8_element_array_index_locidx (telements, el_inserted + zz);
         }
-        tscheme->t8_element_to_subelement (elements_from[0], elements);
+        tscheme->t8_element_to_subelement (elements_from[0], elements, subelement_type);
         el_inserted += num_subelements;
         el_considered++;
       }

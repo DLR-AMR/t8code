@@ -268,7 +268,8 @@ public:
 
   /** Construct a subelement */
   virtual void        t8_element_to_subelement (const t8_element_t * elem,
-                                                t8_element_t * c[]);
+                                                t8_element_t * c[],
+                                                int type);
 
   /** Determine the coordinates of a subelement */
   virtual void        t8_element_vertex_coords_of_subelement (const t8_element_t * t,
