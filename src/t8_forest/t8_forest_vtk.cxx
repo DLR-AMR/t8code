@@ -34,6 +34,7 @@
 #include <vtkDataSetMapper.h>
 #include <vtkNew.h>
 #include <vtkPointData.h>
+#include <vtkCellData.h>
 #include <vtkProperty.h>
 #include <vtkTetra.h>
 #include <vtkHexahedron.h>
@@ -127,9 +128,9 @@ typedef int         (*t8_forest_vtk_cell_data_kernel) (t8_forest_t forest,
 
 void
 t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
-                      int write_treeid,
-                      int write_mpirank,
-                      int write_level, int write_element_id)
+                             int write_treeid,
+                             int write_mpirank,
+                             int write_level, int write_element_id)
 {
 #if T8_WITH_VTK
   /*Check assertions: forest and fileprefix are not NULL and forest is commited */
@@ -144,6 +145,7 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
   double             *vertices;
   double              coordinates[3];
   int                 elem_id = 0;
+  t8_locidx_t         num_elements;
 
 /* Since we want to use different element types and a points Array and cellArray 
  * we have to declare these vtk objects. The cellArray stores the Elements.
@@ -163,29 +165,16 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
   /* 
    * The cellTypes Array stores the element types as integers(see vtk doc).
    */
-  int                *cellTypes =
-    T8_ALLOC (int, t8_forest_get_local_num_elements (forest));
-
-  if (write_treeid == 1) {
-    int                *treeidArray =
-      T8_ALLOC (int, t8_forest_get_num_element (forest));
-    vtkUnsignedCharArray *vtk_treeid = vtkUnsignedCharArray::New ();
-  }
-  if (write_mpirank == 1) {
-    int                *mpirankArray =
-      T8_ALLOC (int, t8_forest_get_num_element (forest));
-    vtkUnsignedCharArray *vtk_mpirank = vtkUnsignedCharArray::New ();
-  }
-  if (write_level == 1) {
-    int                *levelArray =
-      T8_ALLOC (int, t8_forest_get_num_element (forest));
-    vtkUnsignedCharArray *vtk_level = vtkUnsignedCharArray::New ();
-  }
-  if (write_element_id == 1) {
-    int                *element_idArray =
-      T8_ALLOC (int, t8_forest_get_num_element (forest));
-    vtkUnsignedCharArray *vtk_element_id = vtkUnsignedCharArray::New ();
-  }
+  num_elements = t8_forest_get_local_num_elements (forest);
+  int                *cellTypes = T8_ALLOC (int, num_elements);
+  /*
+   * We have to define the vtk UnvtkUnsignedCharArrays that hold 
+   * metadata if wanted. 
+   */
+  vtkUnsignedCharArray *vtk_treeid = vtkUnsignedCharArray::New ();
+  vtkUnsignedCharArray *vtk_mpirank = vtkUnsignedCharArray::New ();
+  vtkUnsignedCharArray *vtk_level = vtkUnsignedCharArray::New ();
+  vtkUnsignedCharArray *vtk_element_id = vtkUnsignedCharArray::New ();
 
 /* We iterate over all local trees*/
   for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
@@ -201,7 +190,8 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
                                                                      itree));
     t8_locidx_t         elems_in_tree =
       t8_forest_get_tree_num_elements (forest, itree);
-
+    t8_locidx_t         offset =
+      t8_forest_get_tree_element_offset (forest, itree);
     /* We iterate over all elements in the tree */
     for (ielement = 0; ielement < elems_in_tree; ielement++) {
 
@@ -268,23 +258,27 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
        * To get the element id, we have to add the local id in the tree 
        * plus theo
        */
+
+      /* *INDENT-OFF* */
       cellTypes[elem_id] = t8_eclass_vtk_type[element_shape];
       if (write_treeid == 1) {
-        treeidArray[elem_id] = itree;
+        vtk_treeid->InsertNextValue (itree);
       }
       if (write_mpirank == 1) {
-        mpirankArray[elem_id] = forest->mpirank;
+        vtk_mpirank->InsertNextValue (forest->mpirank);
       }
       if (write_level == 1) {
-        levelArray[elem_id] = scheme->t8_element_level (element);
+        vtk_level->InsertNextValue (scheme->t8_element_level (element));
       }
       if (write_element_id == 1) {
-        element_idArray[elem_id] = elem_id + t8_forest_get_tree_element_offset (forest, itree) +        /* is this the same as tree->elements_offset? */
-          (long long) t8_forest_get_first_local_element_id (forest);
-      }
-      elem_id++;
+        vtk_element_id->InsertNextValue (elem_id + offset + (long long)
+                                         t8_forest_get_first_local_element_id
+                                         (forest));
+      /* *INDENT-ON* */
     }
+    elem_id++;
   }
+}
 
   /* 
    * Write file: First we construct the unstructured Grid 
@@ -293,20 +287,20 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
    * and the cells(cellTypes and which points belong to this cell) 
    */
 
-  vtkNew < vtkUnstructuredGrid > unstructuredGrid;
-  unstructuredGrid->SetPoints (points);
-  unstructuredGrid->SetCells (cellTypes, cellArray);
+vtkNew < vtkUnstructuredGrid > unstructuredGrid;
+unstructuredGrid->SetPoints (points);
+unstructuredGrid->SetCells (cellTypes, cellArray);
   /*
    * We define the filename used to write the pvtu and the vtu files.
    * The pwriterObj is of class XMLPUnstructuredGridWriter, the P in
    * XMLP is important: We want to write a vtu file for each process.
    * This class enables us to do exactly that. 
    */
-  char                mpifilename[BUFSIZ];
-  snprintf (mpifilename, BUFSIZ, "%s.pvtu", fileprefix);
+char                mpifilename[BUFSIZ];
+snprintf (mpifilename, BUFSIZ, "%s.pvtu", fileprefix);
 
-  vtkSmartPointer < vtkXMLPUnstructuredGridWriter > pwriterObj =
-    vtkSmartPointer < vtkXMLPUnstructuredGridWriter >::New ();
+vtkSmartPointer < vtkXMLPUnstructuredGridWriter > pwriterObj =
+  vtkSmartPointer < vtkXMLPUnstructuredGridWriter >::New ();
 /*
  * Get/Set whether the appended data section is base64 encoded. 
  * If encoded, reading and writing will be slower, but the file 
@@ -318,8 +312,8 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
  * We set the filename of the pvtu file. The filenames of the vtu files
  * are given based on the name of the pvtu file and the process number.
  */
-  pwriterObj->EncodeAppendedDataOff ();
-  pwriterObj->SetFileName (mpifilename);
+pwriterObj->EncodeAppendedDataOff ();
+pwriterObj->SetFileName (mpifilename);
 
 /*
  * Since we want to write multiple files, the processes 
@@ -329,16 +323,16 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
  * therefore we define the controller vtk_mpi_ctrl.
  */
 #if T8_ENABLE_MPI
-  vtkSmartPointer < vtkMPICommunicator > vtk_comm =
-    vtkSmartPointer < vtkMPICommunicator >::New ();
-  vtkMPICommunicatorOpaqueComm vtk_opaque_comm (&forest->mpicomm);
-  vtk_comm->InitializeExternal (&vtk_opaque_comm);
+vtkSmartPointer < vtkMPICommunicator > vtk_comm =
+  vtkSmartPointer < vtkMPICommunicator >::New ();
+vtkMPICommunicatorOpaqueComm vtk_opaque_comm (&forest->mpicomm);
+vtk_comm->InitializeExternal (&vtk_opaque_comm);
 
-  vtkSmartPointer < vtkMPIController > vtk_mpi_ctrl =
-    vtkSmartPointer < vtkMPIController >::New ();
-  vtk_mpi_ctrl->SetCommunicator (vtk_comm);
+vtkSmartPointer < vtkMPIController > vtk_mpi_ctrl =
+  vtkSmartPointer < vtkMPIController >::New ();
+vtk_mpi_ctrl->SetCommunicator (vtk_comm);
 
-  pwriterObj->SetController (vtk_mpi_ctrl);
+pwriterObj->SetController (vtk_mpi_ctrl);
 #endif
 /*
  * We set the number of pieces as the number of mpi processes,
@@ -350,54 +344,32 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
  * 
  * Note: We could write more than one file per process here, if desired.
  */
-  pwriterObj->SetNumberOfPieces (forest->mpisize);
-  pwriterObj->SetStartPiece (forest->mpirank);
-  pwriterObj->SetEndPiece (forest->mpirank);
+pwriterObj->SetNumberOfPieces (forest->mpisize);
+pwriterObj->SetStartPiece (forest->mpirank);
+pwriterObj->SetEndPiece (forest->mpirank);
   /* *INDENT-OFF* */
   if (write_treeid == 1) {
-    vtk_treeid->SetNumberOfComponents (unstructuredGrid->GetNumberOfCells ());
-    vtk_treeid->SetName (treeid);
-    vtk_treeid->GetData (treeidArray);
-    unstructuredGrid->GetCellData ()->AddArray (vtk_treeid);
+    vtk_treeid->SetName ("treeid");
+    unstructuredGrid->GetCellData()->AddArray(vtk_treeid);
   }
   if (write_mpirank == 1) {
-    vtk_mpirank->SetNumberOfComponents (unstructuredGrid->
-                                        GetNumberOfCells ());
-    vtk_mpirank->SetName (mpirank);
-    vtk_mpirank->GetData (mpirankArray);
-    unstructuredGrid->GetCellData ()->AddArray (vtk_mpirank);
+    vtk_mpirank->SetName ("mpirank");
+    unstructuredGrid->GetCellData()->AddArray(vtk_mpirank);
   }
   if (write_level == 1) {
-    vtk_level->SetNumberOfComponents (unstructuredGrid->GetNumberOfCells ());
-    vtk_level->SetName (level);
-    vtk_level->GetData (levelArray);
-    unstructuredGrid->GetCellData ()->AddArray (vtk_level);
+    vtk_level->SetName ("level");
+    unstructuredGrid->GetCellData()->AddArray(vtk_level);
   }
   if (write_element_id == 1) {
-    vtk_element_id->SetNumberOfComponents (unstructuredGrid->
-                                           GetNumberOfCells ());
-    vtk_element_id->SetName (element_id);
-    vtk_element_id->GetData (element_idArray);
-    unstructuredGrid->GetCellData ()->AddArray (vtk_element_id);
+    vtk_element_id->SetName ("element_id");
+    unstructuredGrid->GetCellData()->AddArray(vtk_element_id);
   }
   /* *INDENT-ON* */
-  pwriterObj->SetInputData (unstructuredGrid);
-  pwriterObj->Update ();
-  pwriterObj->Write ();
+pwriterObj->SetInputData (unstructuredGrid);
+pwriterObj->Update ();
+pwriterObj->Write ();
 /* We have to free the allocated memory for the cellTypes Array. */
-  T8_FREE (cellTypes);
-  if (write_treeid == 1) {
-    T8_FREE (treeidArray);
-  }
-  if (write_mpirank == 1) {
-    T8_FREE (mpirankArray);
-  }
-  if (write_level == 1) {
-    T8_FREE (levelArray);
-  }
-  if (write_element_id == 1) {
-    T8_FREE (element_idArray);
-  }
+T8_FREE (cellTypes);
 #else
   t8_global_errorf
     ("Warning: t8code is not linked against vtk library. Vtk output will not be generated.\n");
