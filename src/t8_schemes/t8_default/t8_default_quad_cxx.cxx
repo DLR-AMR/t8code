@@ -35,6 +35,9 @@ t8_linearidx_t      t8_element_get_linear_id (const t8_element_t * elem,
 
 #ifdef T8_ENABLE_DEBUG
 
+#if 0
+/* TODO: Used in one assertion in t8_element_nca, but wrongly triggers error there.
+         Investigate and decide whether we really need this. */
 static int
 t8_element_surround_matches (const p4est_quadrant_t * q,
                              const p4est_quadrant_t * r)
@@ -44,6 +47,7 @@ t8_element_surround_matches (const p4est_quadrant_t * q,
      (T8_QUAD_GET_TNORMAL (q) == T8_QUAD_GET_TNORMAL (r) &&
       T8_QUAD_GET_TCOORD (q) == T8_QUAD_GET_TCOORD (r)));
 }
+#endif
 
 #endif /* T8_ENABLE_DEBUG */
 

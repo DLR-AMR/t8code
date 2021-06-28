@@ -6,6 +6,8 @@ libt8_generated_headers = src/t8_config.h
 libt8_installed_headers = \
   src/t8.h src/t8_eclass.h src/t8_mesh.h \
   src/t8_element_cxx.hxx src/t8_element.h \
+  src/t8_cmesh/t8_cmesh_testcases.h \
+  src/t8_element_c_interface.h \
   src/t8_refcount.h src/t8_cmesh.h src/t8_cmesh_triangle.h \
   src/t8_data/t8_shmem.h src/t8_data/t8_element_array.h \
   src/t8_data/t8_locidx_list.h \
@@ -29,6 +31,7 @@ libt8_internal_headers = \
 libt8_compiled_sources = \
   src/t8.c src/t8_eclass.c src/t8_mesh.c \
   src/t8_element.c src/t8_element_cxx.cxx \
+  src/t8_element_c_interface.cxx \
   src/t8_refcount.c src/t8_cmesh/t8_cmesh.c \
   src/t8_cmesh/t8_cmesh_cxx.cxx src/t8_cmesh/t8_cmesh_triangle.c \
   src/t8_cmesh/t8_cmesh_vtk.c src/t8_cmesh/t8_cmesh_stash.c \
@@ -44,7 +47,8 @@ libt8_compiled_sources = \
   src/t8_forest/t8_forest_private.c src/t8_forest/t8_forest_vtk.cxx \
   src/t8_forest/t8_forest_ghost.cxx src/t8_forest/t8_forest_iterate.cxx \
   src/t8_vtk.c src/t8_forest/t8_forest_balance.cxx src/t8_vec.c \
-  src/t8_data/t8_face_neighbor_hash_table.cxx
+  src/t8_data/t8_face_neighbor_hash_table.cxx \
+  src/t8_cmesh/t8_cmesh_testcases.c 
 
 # this variable is used for headers that are not publicly installed
 T8_CPPFLAGS =

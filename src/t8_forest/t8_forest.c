@@ -342,6 +342,22 @@ t8_forest_get_user_data (t8_forest_t forest)
 }
 
 void
+t8_forest_set_user_function (t8_forest_t forest,
+                             t8_generic_function_pointer function)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest)
+             || t8_forest_is_committed (forest));
+  forest->user_function = function;
+}
+
+t8_generic_function_pointer
+t8_forest_get_user_function (t8_forest_t forest)
+{
+  //T8_ASSERT (t8_forest_is_initialized (forest) || t8_forest_is_committed (forest));
+  return forest->user_function;
+}
+
+void
 t8_forest_comm_global_num_elements (t8_forest_t forest)
 {
   int                 mpiret;
@@ -712,7 +728,7 @@ t8_forest_commit (t8_forest_t forest)
 }
 
 t8_locidx_t
-t8_forest_get_num_element (t8_forest_t forest)
+t8_forest_get_local_num_elements (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -957,7 +973,7 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id,
 
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (lelement_id >= 0);
-  if (lelement_id >= t8_forest_get_num_element (forest)) {
+  if (lelement_id >= t8_forest_get_local_num_elements (forest)) {
     return NULL;
   }
   /* We optimized the binary search out by using sc_bsearch,
