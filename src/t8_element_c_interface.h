@@ -174,7 +174,7 @@ int                 t8_element_child_id (t8_eclass_scheme_c * ts,
  * \return              Zero if \b fam is not a family, nonzero if it is.
  */
 int                 t8_element_is_family (t8_eclass_scheme_c * ts,
-                                          t8_element_t ** fam);
+                                          const t8_element_t ** fam);
 
 /** Compute the nearest common ancestor of two elements. That is,
  * the element with highest level that still has both given elements as
