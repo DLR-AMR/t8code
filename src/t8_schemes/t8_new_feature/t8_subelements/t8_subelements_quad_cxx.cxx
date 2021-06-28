@@ -956,14 +956,16 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
     /* 
      *          =len
      *      |-----------| 
-     *                               
+     *     
+     *                           V1                          
      *      x - - - - - x         x  
      *      | \   1   / |         | \
      *      |   \   /   |         |   \
-     *      | 0   X   2 |   -->   | 0   x             
+     *      | 0   X   2 |   -->   | 0   x V2             
      *      |   /   \   |         |   /
      *      | /   3   \ |         | /
      *      + - - - - - x         x
+     *                           V0
      *                               
      * testwise (vertex goes from 0 to 3 but should go from 0 to 2) 
      * there should also be a better way of determing the vertex coordinates */
@@ -1173,15 +1175,15 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
     pquad_w_sub_subelement[1]->subelement_id = 1;
     pquad_w_sub_subelement[1]->num_subelement_ids = 2;
   } 
-  else {
+  else if (type == 3) {
     /* subelement type 3:
      *                               
      *      x - - - - - - x         x - - - - - x            
-     *      |             |         | \   2   / |         
+     *      |             |         | \   1   / |         
      *      |             |         |   \   /   |         
-     *      |             |   -->   | 1   X   3 |                    
+     *      |             |   -->   | 0   X   2 |                    
      *      |             |         |   /   \   |   
-     *      | elem        |         | /   0   \ |   
+     *      | elem        |         | /   3   \ |   
      *      + - - - - - - x         x - - - - - x      
      *                               
      */
@@ -1216,6 +1218,9 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
     pquad_w_sub_subelement[3]->subelement_type = 3;
     pquad_w_sub_subelement[3]->subelement_id = 3;
     pquad_w_sub_subelement[3]->num_subelement_ids = 4;
+  }
+  else {
+    T8_ASSERT (printf("No valid subelement type!"));
   }
 
   for (i = 0; i < pquad_w_sub_elem->num_subelement_ids; ++i) {

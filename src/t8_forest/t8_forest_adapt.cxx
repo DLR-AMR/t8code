@@ -339,7 +339,7 @@ t8_forest_adapt (t8_forest_t forest)
         /* The element should be refined and refinement is not recursive (Subelements). */
         /* We add the children (subelements) to the element array of the current tree. */
         /* NOTE need a rule to get the right value for num_new_elements */
-        subelement_type = 3;
+        subelement_type = 1;
         if (subelement_type == 1) {
           num_subelements = 2;
         }
@@ -363,6 +363,33 @@ t8_forest_adapt (t8_forest_t forest)
         el_considered++;
       }
       else if (refine == 3) {
+        /* The element should be refined and refinement is not recursive (Subelements). */
+        /* We add the children (subelements) to the element array of the current tree. */
+        /* NOTE need a rule to get the right value for num_new_elements */
+        subelement_type = 2;
+        if (subelement_type == 1) {
+          num_subelements = 2;
+        }
+        else if (subelement_type == 2) {
+          num_subelements = 2;
+        }
+        else if (subelement_type == 3) {
+          num_subelements = 4;
+        }
+        else {
+          T8_ASSERT(printf("No valid subelement_type"));
+        }
+        
+        (void) t8_element_array_push_count (telements, num_subelements);
+        for (zz = 0; zz < num_subelements; zz++) {
+          elements[zz] =
+            t8_element_array_index_locidx (telements, el_inserted + zz);
+        }
+        tscheme->t8_element_to_subelement (elements_from[0], elements, subelement_type);
+        el_inserted += num_subelements;
+        el_considered++;
+      }
+      else if (refine == 4) {
         /* The element should be refined and refinement is not recursive (Subelements). */
         /* We add the children (subelements) to the element array of the current tree. */
         /* NOTE need a rule to get the right value for num_new_elements */

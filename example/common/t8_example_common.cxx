@@ -187,22 +187,31 @@ t8_common_adapt_level_set (t8_forest_t forest,
                                ts, tree_vertices, data->L,
                                data->band_width / 2, data->t, data->udata);
   
-  #if 0
   if (within_band && level < data->max_level) {
     /* The element can be refined and lies inside the refinement region */
     return 1;
   }
+  #if 0
   /* NOTE testing subelements */
   /* NOTE this if statement should test whether there are neighbor elements with a +1 higher level */
   if (within_band && level < data->max_level) {
     /* The element can be refined and lies inside the refinement region */
     return 2;
   }
-  #endif
   if (within_band && level < data->max_level) {
     /* The element can be refined and lies inside the refinement region */
     return 3;
   }
+  if (within_band && level < data->max_level) {
+    /* The element can be refined and lies inside the refinement region */
+    return 4;
+  }
+  /* use refine = -2 to delete subelements?! */
+  if (within_band && level < data->max_level) {
+    /* The element can be refined and lies inside the refinement region */
+    return -2;
+  }
+  #endif
   else if (num_elements > 1 && level > data->min_level && !within_band) {
     /* If element lies out of the refinement region and a family was given
      * as argument, we coarsen to level base level */

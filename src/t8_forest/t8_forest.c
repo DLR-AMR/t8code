@@ -29,6 +29,7 @@
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_balance.h>
+#include <t8_forest/t8_forest_eliminate_hanging_nodes.h>
 #include <t8_forest_vtk.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
@@ -214,7 +215,7 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from,
                        int no_repartition)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
-
+  
   if (no_repartition) {
     /* We do not repartition the forest during balance */
     forest->set_balance = T8_FOREST_BALANCE_NO_REPART;
@@ -223,6 +224,32 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from,
     /* Repartition during balance */
     forest->set_balance = T8_FOREST_BALANCE_REPART;
   }
+
+  if (set_from != NULL) {
+    /* If set_from = NULL, we assume a previous forest_from was set */
+    forest->set_from = set_from;
+  }
+
+  /* Add BALANCE to the from_method.
+   * This overwrites T8_FOREST_FROM_COPY */
+  if (forest->from_method == T8_FOREST_FROM_LAST) {
+    forest->from_method = T8_FOREST_FROM_BALANCE;
+  }
+  else {
+    forest->from_method |= T8_FOREST_FROM_BALANCE;
+  }
+}
+
+void
+t8_forest_set_eliminate_hanging_nodes (t8_forest_t forest, const t8_forest_t set_from,
+                                   t8_eclass_t eclass)
+{
+  /* should add a is_balanced assertion to check whether the forest got balanced before */
+  T8_ASSERT (t8_forest_is_initialized (forest));
+  /* check, that we are useing the quad scheme */
+  T8_ASSERT (eclass == T8_ECLASS_QUAD);
+
+  forest->set_eliminate_hanging_nodes = 1;
 
   if (set_from != NULL) {
     /* If set_from = NULL, we assume a previous forest_from was set */
@@ -541,6 +568,10 @@ t8_forest_commit (t8_forest_t forest)
       else {
         /* balance with repartition */
         t8_forest_balance (forest, 1);
+      }
+
+      if (forest->set_eliminate_hanging_nodes == 1) {
+        t8_forest_eliminate_hanging_nodes (forest);
       }
     }
 
