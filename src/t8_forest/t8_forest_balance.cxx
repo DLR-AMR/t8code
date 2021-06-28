@@ -356,7 +356,7 @@ t8_forest_balance_and_adapt (t8_forest_t forest)
   /* We assume that we have ghost elements in forest_from. */
   T8_ASSERT (t8_forest_get_ghost_type (forest_from) == T8_GHOST_FACES);
   const t8_locidx_t   num_local_elements =
-    t8_forest_get_num_element (forest_from);
+    t8_forest_get_local_num_elements (forest_from);
   const t8_locidx_t   num_ghosts = t8_forest_get_num_ghosts (forest_from);
   sc_array_t          markers;
   t8_locidx_list_t    elements_that_do_not_refine;

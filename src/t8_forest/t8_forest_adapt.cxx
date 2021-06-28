@@ -446,7 +446,7 @@ t8_forest_adapt_marker_array_callback (t8_forest_t forest,
    * function. For example for marker values for the ghost elements.
    */
   T8_ASSERT ((t8_locidx_t) markers->elem_count >=
-             t8_forest_get_num_element (forest_from));
+             t8_forest_get_local_num_elements (forest_from));
   T8_ASSERT (markers->elem_size == sizeof (short));
 
   /* Get the (process local) index of the current element by adding the tree offset
@@ -511,7 +511,8 @@ t8_forest_adapt_build_marker_array (t8_forest_t forest, sc_array_t * markers,
   T8_ASSERT (forest_from->maxlevel_existing == maxlevel_existing);
   const t8_locidx_t   num_trees = t8_forest_get_num_local_trees (forest_from);
   t8_locidx_t         ltreeid, ielement;
-  const t8_locidx_t   num_elements = t8_forest_get_num_element (forest_from);
+  const t8_locidx_t   num_elements =
+    t8_forest_get_local_num_elements (forest_from);
   /* Flags that we need to compute the new maxlevel in the forest. */
   int                 have_element_at_maxlevelp1 = 0;
   int                 have_element_at_maxlevel = 0;
