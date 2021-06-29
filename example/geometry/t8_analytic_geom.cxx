@@ -337,258 +337,258 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     snprintf (vtuname, BUFSIZ, "forest_moving_lvl_%i", level);
     break;
   case T8_GEOM_OCC_CURVE_CUBE:
-    {
-      #if T8_WITH_OCC
-      t8_global_productionf
-      ("Creating uniform level %i forests with occ curve geometries.\n",
-       level);
+  {
+    #if T8_WITH_OCC
+    t8_global_productionf
+    ("Creating uniform level %i forests with occ curve geometries.\n",
+    level);
 
-      /* Create a OCC surface */
-      Handle_Geom_Curve occ_curve0;
-      Handle_Geom_Curve occ_curve1;
-      TColgp_Array1OfPnt point_array0(1, 5);
-      TColgp_Array1OfPnt point_array1(1, 5);
+    /* Create a OCC surface */
+    Handle_Geom_Curve occ_curve0;
+    Handle_Geom_Curve occ_curve1;
+    TColgp_Array1OfPnt point_array0(1, 5);
+    TColgp_Array1OfPnt point_array1(1, 5);
       
-      point_array0(1) = gp_Pnt(0, 0, 0);
-      point_array0(2) = gp_Pnt(0.25, 0.1, 0.1);
-      point_array0(3) = gp_Pnt(0.5, 0, 0);
-      point_array0(4) = gp_Pnt(0.75, -0.1, -0.1);
-      point_array0(5) = gp_Pnt(1, 0, 0);
+    point_array0(1) = gp_Pnt(0, 0, 0);
+    point_array0(2) = gp_Pnt(0.25, 0.1, 0.1);
+    point_array0(3) = gp_Pnt(0.5, 0, 0);
+    point_array0(4) = gp_Pnt(0.75, -0.1, -0.1);
+    point_array0(5) = gp_Pnt(1, 0, 0);
 
-      point_array1(1) = gp_Pnt(0, 1, 1);
-      point_array1(2) = gp_Pnt(0.25, 0.9, 1.1);
-      point_array1(3) = gp_Pnt(0.5, 1, 1);
-      point_array1(4) = gp_Pnt(0.9, 1.1, 0.9);
-      point_array1(5) = gp_Pnt(1, 1, 1);
+    point_array1(1) = gp_Pnt(0, 1, 1);
+    point_array1(2) = gp_Pnt(0.25, 0.9, 1.1);
+    point_array1(3) = gp_Pnt(0.5, 1, 1);
+    point_array1(4) = gp_Pnt(0.9, 1.1, 0.9);
+    point_array1(5) = gp_Pnt(1, 1, 1);
 
-      occ_curve0 = GeomAPI_PointsToBSpline(point_array0).Curve();
-      occ_curve1 = GeomAPI_PointsToBSpline(point_array1).Curve();
+    occ_curve0 = GeomAPI_PointsToBSpline(point_array0).Curve();
+    occ_curve1 = GeomAPI_PointsToBSpline(point_array1).Curve();
       
-      t8_global_occ_curve[0] = occ_curve0;
-      t8_global_occ_curve[1] = occ_curve1;
+    t8_global_occ_curve[0] = occ_curve0;
+    t8_global_occ_curve[1] = occ_curve1;
 
-      geometry = new t8_geometry_occ (3, "occ curve dim=3", NULL);
+    geometry = new t8_geometry_occ (3, "occ curve dim=3", NULL);
       
-      /* Create tree 0*/
-      t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
-      double vertices[24] = {
-        0, 0, 0,
-        1, 0, 0,
-        0, 1, 0,
-        1, 1, 0,
-        0, 0, 1,
-        1, 0, 1,
-        0, 1, 1,
-        1, 1, 1
-      };
-      t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 24);
+    /* Create tree 0*/
+    t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
+    double vertices[24] = {
+      0, 0, 0,
+      1, 0, 0,
+      0, 1, 0,
+      1, 1, 0,
+      0, 0, 1,
+      1, 0, 1,
+      0, 1, 1,
+      1, 1, 1
+    };
+    t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 24);
 
-      /* Give tree information about its curves and the parameters of the vertices*/
-      double parameters0[2] = {0, 1};
-      double parameters1[2] = {0, 1};
-      int faces[6] = {-1, -1, -1, -1, -1, -1};
-      int edges[12] = {0, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1};
-      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
-                              faces, 6 * sizeof(int), 0);
-      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
-                              edges, 12 * sizeof(int), 0);
-      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_CURVE_PARAMETERS_ATTRIBUTE_KEY + 0, 
-                              parameters0, 2 * sizeof(double), 0);
-      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_CURVE_PARAMETERS_ATTRIBUTE_KEY + 3, 
-                              parameters1, 2 * sizeof(double), 0);
+    /* Give tree information about its curves and the parameters of the vertices*/
+    double parameters0[2] = {0, 1};
+    double parameters1[2] = {0, 1};
+    int faces[6] = {-1, -1, -1, -1, -1, -1};
+    int edges[12] = {0, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1};
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
+                            faces, 6 * sizeof(int), 0);
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
+                            edges, 12 * sizeof(int), 0);
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_CURVE_PARAMETERS_ATTRIBUTE_KEY + 0, 
+                            parameters0, 2 * sizeof(double), 0);
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_CURVE_PARAMETERS_ATTRIBUTE_KEY + 3, 
+                            parameters1, 2 * sizeof(double), 0);
       
-      snprintf (vtuname, BUFSIZ, "forest_occ_curve_cube_lvl_%i", level);
-      break;
-      #else /* !T8_WITH_OCC */
-      SC_ABORTF("OCC not linked");
-      #endif /* T8_WITH_OCC */
-    }
+    snprintf (vtuname, BUFSIZ, "forest_occ_curve_cube_lvl_%i", level);
+    break;
+    #else /* !T8_WITH_OCC */
+    SC_ABORTF("OCC not linked");
+    #endif /* T8_WITH_OCC */
+  }
   case T8_GEOM_OCC_SURFACE_CUBES:
-    {
-      #if T8_WITH_OCC
-      t8_global_productionf
-      ("Creating uniform level %i forests with a occ surface geometry.\n",
-       level);
+  {
+    #if T8_WITH_OCC
+    t8_global_productionf
+    ("Creating uniform level %i forests with a occ surface geometry.\n",
+    level);
 
-      /* Create a OCC surface */
-      Handle_Geom_Surface occ_surface;
-      TColgp_Array2OfPnt point_array(1, 5, 1, 3);
+    /* Create a OCC surface */
+    Handle_Geom_Surface occ_surface;
+    TColgp_Array2OfPnt point_array(1, 5, 1, 3);
+    
+    point_array(1, 1) = gp_Pnt(-0.2, 0.1, 1.2);
+    point_array(2, 1) = gp_Pnt(0.5, 0, 1.4);
+    point_array(3, 1) = gp_Pnt(1.0, -0.2, 1.1);
+    point_array(4, 1) = gp_Pnt(1.5, 0, 1.0);
+    point_array(5, 1) = gp_Pnt(2.1, -0.2, 0.9);
+
+    point_array(1, 2) = gp_Pnt(0.0, 0.5, 1.0);
+    point_array(2, 2) = gp_Pnt(0.5, 0.5, 1.2);
+    point_array(3, 2) = gp_Pnt(1.0, 0.5, 1.0);
+    point_array(4, 2) = gp_Pnt(1.5, 0.5, 0.8);
+    point_array(5, 2) = gp_Pnt(2.2, 0.5, 0.6);
+
+    point_array(1, 3) = gp_Pnt(0.0, 1, 0.8);
+    point_array(2, 3) = gp_Pnt(0.5, 1, 0.8);
+    point_array(3, 3) = gp_Pnt(1.0, 0.85, 0.9);
+    point_array(4, 3) = gp_Pnt(1.5, 1, 1.1);
+    point_array(5, 3) = gp_Pnt(2.0, 1.1, 1.2);
+
+    occ_surface = GeomAPI_PointsToBSplineSurface(point_array).Surface();
+    t8_global_occ_surface[0] = occ_surface;
+
+    geometry = new t8_geometry_occ (3, "occ surface dim=3", NULL);
       
-      point_array(1, 1) = gp_Pnt(-0.2, 0.1, 1.2);
-      point_array(2, 1) = gp_Pnt(0.5, 0, 1.4);
-      point_array(3, 1) = gp_Pnt(1.0, -0.2, 1.1);
-      point_array(4, 1) = gp_Pnt(1.5, 0, 1.0);
-      point_array(5, 1) = gp_Pnt(2.1, -0.2, 0.9);
+    /* Create tree 0*/
+    t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
+    double vertices0[24] = {
+      -0.5, 0, 0,
+      1, 0, 0,
+      -0.25, 1.25, 0,
+      1, 1, 0,
+      0, 0, 1,
+      1, 0, 1,
+      0, 1, 1,
+      1, 1, 1
+    };
+    t8_cmesh_set_tree_vertices (cmesh, 0, vertices0, 24);
 
-      point_array(1, 2) = gp_Pnt(0.0, 0.5, 1.0);
-      point_array(2, 2) = gp_Pnt(0.5, 0.5, 1.2);
-      point_array(3, 2) = gp_Pnt(1.0, 0.5, 1.0);
-      point_array(4, 2) = gp_Pnt(1.5, 0.5, 0.8);
-      point_array(5, 2) = gp_Pnt(2.2, 0.5, 0.6);
+    /* Give tree 0 information about its surface and the parameters of the vertices*/
+    double parameters0[8] = {0, 0,
+                            0.5, 0,
+                            0, 1,
+                            0.5, 1};
+    int faces[6] = {-1, -1, -1, -1, -1, 0};
+    int edges[12] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
+                            faces, 6 * sizeof(int), 0);
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
+                            edges, 12 * sizeof(int), 0);
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + 5, 
+                            parameters0, 8 * sizeof(double), 0);
 
-      point_array(1, 3) = gp_Pnt(0.0, 1, 0.8);
-      point_array(2, 3) = gp_Pnt(0.5, 1, 0.8);
-      point_array(3, 3) = gp_Pnt(1.0, 0.85, 0.9);
-      point_array(4, 3) = gp_Pnt(1.5, 1, 1.1);
-      point_array(5, 3) = gp_Pnt(2.0, 1.1, 1.2);
+    /* Create tree 1 */
+    t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_HEX);
+    double vertices1[24] = {
+      1, 0, 0,
+      2, 0, 0,
+      1, 1, 0,
+      2, 1, 0,
+      1, 0, 1,
+      2, 0, 1,
+      1, 1, 1,
+      2, 1, 1
+    };
+    t8_cmesh_set_tree_vertices (cmesh, 1, vertices1, 24);
 
-      occ_surface = GeomAPI_PointsToBSplineSurface(point_array).Surface();
-      t8_global_occ_surface[0] = occ_surface;
+    /* Give tree 1 information about its surface and the parameters of the vertices */
+    double parameters1[8] = {0.5, 0,
+                            1, 0,
+                            0.5, 1,
+                            1, 1};
+    t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id(), T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
+                            faces, 6 * sizeof(int), 0);
+    t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id(), T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
+                            edges, 12 * sizeof(int), 0);
+    t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id(), T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + 5, 
+                            parameters1, 8 * sizeof(double), 0);
 
-      geometry = new t8_geometry_occ (3, "occ surface dim=3", NULL);
+    /* Join tree 0 and tree 1 together */
+    t8_cmesh_set_join (cmesh, 0, 1, 1, 0, 0);
       
-      /* Create tree 0*/
-      t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
-      double vertices0[24] = {
-        -0.5, 0, 0,
-        1, 0, 0,
-        -0.25, 1.25, 0,
-        1, 1, 0,
-        0, 0, 1,
-        1, 0, 1,
-        0, 1, 1,
-        1, 1, 1
-      };
-      t8_cmesh_set_tree_vertices (cmesh, 0, vertices0, 24);
-
-      /* Give tree 0 information about its surface and the parameters of the vertices*/
-      double parameters0[8] = {0, 0,
-                              0.5, 0,
-                              0, 1,
-                              0.5, 1};
-      int faces[6] = {-1, -1, -1, -1, -1, 0};
-      int edges[12] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
-      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
-                              faces, 6 * sizeof(int), 0);
-      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
-                              edges, 12 * sizeof(int), 0);
-      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + 5, 
-                              parameters0, 8 * sizeof(double), 0);
-
-      /* Create tree 1 */
-      t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_HEX);
-      double vertices1[24] = {
-        1, 0, 0,
-        2, 0, 0,
-        1, 1, 0,
-        2, 1, 0,
-        1, 0, 1,
-        2, 0, 1,
-        1, 1, 1,
-        2, 1, 1
-      };
-      t8_cmesh_set_tree_vertices (cmesh, 1, vertices1, 24);
-
-      /* Give tree 1 information about its surface and the parameters of the vertices */
-      double parameters1[8] = {0.5, 0,
-                              1, 0,
-                              0.5, 1,
-                              1, 1};
-      t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id(), T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
-                              faces, 6 * sizeof(int), 0);
-      t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id(), T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
-                              edges, 12 * sizeof(int), 0);
-      t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id(), T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + 5, 
-                              parameters1, 8 * sizeof(double), 0);
-
-      /* Join tree 0 and tree 1 together */
-      t8_cmesh_set_join (cmesh, 0, 1, 1, 0, 0);
-      
-      snprintf (vtuname, BUFSIZ, "forest_occ_surface_cubes_lvl_%i", level);
-      break;
-      #else /* !T8_WITH_OCC */
-      SC_ABORTF("OCC not linked");
-      #endif /* T8_WITH_OCC */
-    }
+    snprintf (vtuname, BUFSIZ, "forest_occ_surface_cubes_lvl_%i", level);
+    break;
+    #else /* !T8_WITH_OCC */
+    SC_ABORTF("OCC not linked");
+    #endif /* T8_WITH_OCC */
+  }
   case T8_GEOM_OCC_SURFACE_CYLINDER:
+  {
+    #if T8_WITH_OCC
+    t8_global_productionf
+    ("Creating uniform level %i forests with a occ cylinder geometry.\n",
+     level);
+
+    /* Create occ cylinder surfaces */
+    double radius_inner = 0.25;
+    double radius_outer = 0.5;
+    gp_Pnt origin(0, 0, 0);
+    gp_Dir z_dir(0, 0, 1);
+    gp_Ax2 axis(origin, z_dir);
+    gp_Vec height(0, 0, 1);
+    gp_Circ circle_outer(axis, radius_outer);
+    gp_Circ circle_inner(axis, radius_inner);
+    BRepBuilderAPI_MakeEdge make_outer_edge(circle_outer);
+    TopoDS_Edge edge_outer = make_outer_edge.Edge();
+    TopoDS_Face face_outer = TopoDS::Face(BRepPrimAPI_MakePrism(edge_outer, height));
+    Handle_Geom_Surface cylinder_outer = BRep_Tool::Surface(face_outer);
+    BRepBuilderAPI_MakeEdge make_inner_edge(circle_inner);
+    TopoDS_Edge edge_inner = make_inner_edge.Edge();
+    TopoDS_Face face_inner = TopoDS::Face(BRepPrimAPI_MakePrism(edge_inner, height));
+    Handle_Geom_Surface cylinder_inner = BRep_Tool::Surface(face_inner);
+    t8_global_occ_surface[0] = cylinder_outer;
+    t8_global_occ_surface[1] = cylinder_inner;
+
+    geometry = new t8_geometry_occ (3, "occ surface dim=3", NULL);      
+      
+    int num = 4;
+    double *vertices, *parameters;
+    vertices = T8_ALLOC(double, num * 24);
+    parameters = T8_ALLOC(double, num * 8);
+    int faces[6] = {0, 1, -1, -1, -1, -1};
+    int edges[12] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+    for (int i = 0; i < num; ++i)
     {
-      #if T8_WITH_OCC
-      t8_global_productionf
-      ("Creating uniform level %i forests with a occ cylinder geometry.\n",
-       level);
-
-      /* Create occ cylinder surfaces */
-      double radius_inner = 0.5;
-      double radius_outer = 1.0;
-      gp_Pnt origin(0, 0, 0);
-      gp_Dir z_dir(0, 0, 1);
-      gp_Ax2 axis(origin, z_dir);
-      gp_Vec height(0, 0, 1);
-      gp_Circ circle_outer(axis, radius_outer);
-      gp_Circ circle_inner(axis, radius_inner);
-      BRepBuilderAPI_MakeEdge make_outer_edge(circle_outer);
-      TopoDS_Edge edge_outer = make_outer_edge.Edge();
-      TopoDS_Face face_outer = TopoDS::Face(BRepPrimAPI_MakePrism(edge_outer, height));
-      Handle_Geom_Surface cylinder_outer = BRep_Tool::Surface(face_outer);
-      BRepBuilderAPI_MakeEdge make_inner_edge(circle_inner);
-      TopoDS_Edge edge_inner = make_inner_edge.Edge();
-      TopoDS_Face face_inner = TopoDS::Face(BRepPrimAPI_MakePrism(edge_inner, height));
-      Handle_Geom_Surface cylinder_inner = BRep_Tool::Surface(face_inner);
-      t8_global_occ_surface[0] = cylinder_outer;
-      t8_global_occ_surface[1] = cylinder_inner;
-
-      geometry = new t8_geometry_occ (3, "occ surface dim=3", NULL);      
-      
-      int num = 4;
-      double *vertices, *parameters;
-      vertices = T8_ALLOC(double, num * 24);
-      parameters = T8_ALLOC(double, num * 8);
-      int faces[6] = {0, 1, -1, -1, -1, -1};
-      int edges[12] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
-      for (int i = 0; i < num; ++i)
-      {
-        t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_HEX);
-        vertices[i * 24 + 0] = cos((i + 1) * 2 * M_PI / num) * radius_outer;
-        vertices[i * 24 + 1] = sin((i + 1) * 2 * M_PI / num) * radius_outer;
-        vertices[i * 24 + 2] = 0;
-        vertices[i * 24 + 3] = cos((i + 1) * 2 * M_PI / num) * radius_inner;
-        vertices[i * 24 + 4] = sin((i + 1) * 2 * M_PI / num) * radius_inner;
-        vertices[i * 24 + 5] = 0;
-        vertices[i * 24 + 6] = cos(i * 2 * M_PI / num) * radius_outer;
-        vertices[i * 24 + 7] = sin((i) * 2 * M_PI / num) * radius_outer;
-        vertices[i * 24 + 8] = 0;
-        vertices[i * 24 + 9] = cos(i * 2 * M_PI / num) * radius_inner;
-        vertices[i * 24 + 10] = sin(i * 2 * M_PI / num) * radius_inner;
-        vertices[i * 24 + 11] = 0;
-        vertices[i * 24 + 12] = cos((i + 1) * 2 * M_PI / num) * radius_outer;
-        vertices[i * 24 + 13] = sin((i + 1) * 2 * M_PI / num) * radius_outer;
-        vertices[i * 24 + 14] = 1;
-        vertices[i * 24 + 15] = cos((i + 1) * 2 * M_PI / num) * radius_inner;
-        vertices[i * 24 + 16] = sin((i + 1) * 2 * M_PI / num) * radius_inner;
-        vertices[i * 24 + 17] = 1;
-        vertices[i * 24 + 18] = cos(i * 2 * M_PI / num) * radius_outer;
-        vertices[i * 24 + 19] = sin((i) * 2 * M_PI / num) * radius_outer;
-        vertices[i * 24 + 20] = 1;
-        vertices[i * 24 + 21] = cos(i * 2 * M_PI / num) * radius_inner;
-        vertices[i * 24 + 22] = sin(i * 2 * M_PI / num) * radius_inner;
-        vertices[i * 24 + 23] = 1;
-        t8_cmesh_set_tree_vertices (cmesh, i, vertices + i * 24, 24);
-        parameters[i * 8 + 0] = (i + 1) * 2 * M_PI / num;
-        parameters[i * 8 + 1] = 0;
-        parameters[i * 8 + 2] = i * 2 * M_PI / num;
-        parameters[i * 8 + 3] = 0;
-        parameters[i * 8 + 4] = (i + 1) * 2 * M_PI / num;
-        parameters[i * 8 + 5] = -1;
-        parameters[i * 8 + 6] = i * 2 * M_PI / num;
-        parameters[i * 8 + 7] = -1;
-        t8_cmesh_set_attribute (cmesh, i, t8_get_package_id(), T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
-                                faces, 6 * sizeof(int), 1);
-        t8_cmesh_set_attribute (cmesh, i, t8_get_package_id(), T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
-                                edges, 12 * sizeof(int), 1);
-        t8_cmesh_set_attribute (cmesh, i, t8_get_package_id(), T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + 0, 
-                                parameters + i * 8, 8 * sizeof(double), 1);
-        t8_cmesh_set_attribute (cmesh, i, t8_get_package_id(), T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + 1, 
-                                parameters + i * 8, 8 * sizeof(double), 1);
-      }
-      
-      T8_FREE(vertices);
-      T8_FREE(parameters);
-      snprintf (vtuname, BUFSIZ, "forest_geometry_cylinder_lvl_%i", level);
-      break;
-      #else /* !T8_WITH_OCC */
-      SC_ABORTF("OCC not linked");
-      #endif /* T8_WITH_OCC */
+      t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_HEX);
+      vertices[i * 24 + 0] = cos((i + 1) * 2 * M_PI / num) * radius_outer;
+      vertices[i * 24 + 1] = sin((i + 1) * 2 * M_PI / num) * radius_outer;
+      vertices[i * 24 + 2] = 0;
+      vertices[i * 24 + 3] = cos((i + 1) * 2 * M_PI / num) * radius_inner;
+      vertices[i * 24 + 4] = sin((i + 1) * 2 * M_PI / num) * radius_inner;
+      vertices[i * 24 + 5] = 0;
+      vertices[i * 24 + 6] = cos(i * 2 * M_PI / num) * radius_outer;
+      vertices[i * 24 + 7] = sin((i) * 2 * M_PI / num) * radius_outer;
+      vertices[i * 24 + 8] = 0;
+      vertices[i * 24 + 9] = cos(i * 2 * M_PI / num) * radius_inner;
+      vertices[i * 24 + 10] = sin(i * 2 * M_PI / num) * radius_inner;
+      vertices[i * 24 + 11] = 0;
+      vertices[i * 24 + 12] = cos((i + 1) * 2 * M_PI / num) * radius_outer;
+      vertices[i * 24 + 13] = sin((i + 1) * 2 * M_PI / num) * radius_outer;
+      vertices[i * 24 + 14] = 1;
+      vertices[i * 24 + 15] = cos((i + 1) * 2 * M_PI / num) * radius_inner;
+      vertices[i * 24 + 16] = sin((i + 1) * 2 * M_PI / num) * radius_inner;
+      vertices[i * 24 + 17] = 1;
+      vertices[i * 24 + 18] = cos(i * 2 * M_PI / num) * radius_outer;
+      vertices[i * 24 + 19] = sin((i) * 2 * M_PI / num) * radius_outer;
+      vertices[i * 24 + 20] = 1;
+      vertices[i * 24 + 21] = cos(i * 2 * M_PI / num) * radius_inner;
+      vertices[i * 24 + 22] = sin(i * 2 * M_PI / num) * radius_inner;
+      vertices[i * 24 + 23] = 1;
+      t8_cmesh_set_tree_vertices (cmesh, i, vertices + i * 24, 24);
+      parameters[i * 8 + 0] = (i + 1) * 2 * M_PI / num;
+      parameters[i * 8 + 1] = 0;
+      parameters[i * 8 + 2] = i * 2 * M_PI / num;
+      parameters[i * 8 + 3] = 0;
+      parameters[i * 8 + 4] = (i + 1) * 2 * M_PI / num;
+      parameters[i * 8 + 5] = -1;
+      parameters[i * 8 + 6] = i * 2 * M_PI / num;
+      parameters[i * 8 + 7] = -1;
+      t8_cmesh_set_attribute (cmesh, i, t8_get_package_id(), T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
+                              faces, 6 * sizeof(int), 1);
+      t8_cmesh_set_attribute (cmesh, i, t8_get_package_id(), T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
+                              edges, 12 * sizeof(int), 1);
+      t8_cmesh_set_attribute (cmesh, i, t8_get_package_id(), T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + 0, 
+                              parameters + i * 8, 8 * sizeof(double), 1);
+      t8_cmesh_set_attribute (cmesh, i, t8_get_package_id(), T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + 1, 
+                              parameters + i * 8, 8 * sizeof(double), 1);
     }
+      
+    T8_FREE(vertices);
+    T8_FREE(parameters);
+    snprintf (vtuname, BUFSIZ, "forest_geometry_cylinder_lvl_%i", level);
+    break;
+    #else /* !T8_WITH_OCC */
+    SC_ABORTF("OCC not linked");
+    #endif /* T8_WITH_OCC */
+  }
   default:
     SC_ABORT_NOT_REACHED ();
   }
@@ -709,9 +709,9 @@ main (int argc, char **argv)
                       "\t\t    The mesh will not be uniform. Instead it is refined at the domain boundary.\n"
                       "\t\t4 - A cube that is distorted in z-direction with one 3D cube tree.\n"
                       "\t\t5 - A moving mesh consisting of a single 2D quad tree.\n"
-                      "\t\t5 - A cube with two occ curves as edges.\n"
-                      "\t\t5 - Two cubes with one occ surface as face.\n"
-                      "\t\t5 - A hollow cylinder with a occ surface on the in- and outside.\n");
+                      "\t\t6 - A cube with two occ curves as edges.\n"
+                      "\t\t7 - Two cubes with one occ surface as face.\n"
+                      "\t\t8 - A hollow cylinder with a occ surface on the in- and outside.\n");
 
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
