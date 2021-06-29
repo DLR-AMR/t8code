@@ -452,11 +452,11 @@ main (int argc, char *argv[])
       vtu_prefix = "test_tet";
     }
     else if (test_linear_cylinder) {
-      cmesh = t8_cmesh_new_hollow_cylinder (sc_MPI_COMM_WORLD, 20, 10, 0, 1);
+      cmesh = t8_cmesh_new_hollow_cylinder (sc_MPI_COMM_WORLD, 256, 64, 64, 0, 1);
       vtu_prefix = "test_linear_cylinder";
     }
     else if (test_occ_cylinder) {
-      cmesh = t8_cmesh_new_hollow_cylinder (sc_MPI_COMM_WORLD, 3, 1, 1, 1);
+      cmesh = t8_cmesh_new_hollow_cylinder (sc_MPI_COMM_WORLD, 4, 1, 1, 1, 1);
       vtu_prefix = "test_occ_cylinder";
 
     }
@@ -474,5 +474,7 @@ main (int argc, char *argv[])
   }
   sc_options_destroy (opt);
   sc_finalize ();
+  mpiret = sc_MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
   return 0;
 }
