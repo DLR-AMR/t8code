@@ -30,7 +30,7 @@
 t8_cmesh_t
 t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, 
                               int num_axial_trees, int num_radial_trees, 
-                              int with_occ_geometry, int do_partition)
+                              int with_occ_geometry)
 {  
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
@@ -86,40 +86,40 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
         t8_cmesh_set_tree_class (cmesh, (i * num_axial_trees + j) * num_radial_trees + k, T8_ECLASS_HEX);
         vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 0] = cos((i + 1) * dphi) * (radius_inner + (k + 1) * dr);
         vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 1] = sin((i + 1) * dphi) * (radius_inner + (k + 1) * dr);
-        vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 2] = j * dh;
+        vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 2] = -0.5 + j * dh;
         vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 3] = cos((i + 1) * dphi) * (radius_inner + k * dr);
         vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 4] = sin((i + 1) * dphi) * (radius_inner + k * dr);
-        vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 5] = j * dh;
+        vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 5] = -0.5 + j * dh;
         vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 6] = cos(i * dphi) * (radius_inner + (k + 1) * dr);
         vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 7] = sin(i * dphi) * (radius_inner + (k + 1) * dr);
-        vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 8] = j * dh;
+        vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 8] = -0.5 + j * dh;
         vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 9] = cos(i * dphi) * (radius_inner + k * dr);
         vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 10] = sin(i * dphi) * (radius_inner + k * dr);
-        vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 11] = j * dh;
+        vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 11] = -0.5 + j * dh;
         vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 12] = cos((i + 1) * dphi) * (radius_inner + (k + 1) * dr);
         vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 13] = sin((i + 1) * dphi) * (radius_inner + (k + 1) * dr);
-        vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 14] = (j + 1) * dh;
+        vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 14] = -0.5 + (j + 1) * dh;
         vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 15] = cos((i + 1) * dphi) * (radius_inner + k * dr);
         vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 16] = sin((i + 1) * dphi) * (radius_inner + k * dr);
-        vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 17] = (j + 1) * dh;
+        vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 17] = -0.5 + (j + 1) * dh;
         vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 18] = cos(i * dphi) * (radius_inner + (k + 1) * dr);
         vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 19] = sin(i * dphi) * (radius_inner + (k + 1) * dr);
-        vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 20] = (j + 1) * dh;
+        vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 20] = -0.5 + (j + 1) * dh;
         vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 21] = cos(i * dphi) * (radius_inner + k * dr);
         vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 22] = sin(i * dphi) * (radius_inner + k * dr);
-        vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 23] = (j + 1) * dh;
+        vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 23] = -0.5 + (j + 1) * dh;
         t8_cmesh_set_tree_vertices (cmesh, (i * num_axial_trees + j) * num_radial_trees + k, vertices + ((i * num_axial_trees + j) * num_radial_trees + k) * 24, 24);
 
         if (with_occ_geometry && (k == 0 || k == num_radial_trees))
         {
           parameters[(i * num_axial_trees + j) * 8 + 0] = (i + 1) * dphi;
-          parameters[(i * num_axial_trees + j) * 8 + 1] = j * dh;
+          parameters[(i * num_axial_trees + j) * 8 + 1] = 0.5 - j * dh;
           parameters[(i * num_axial_trees + j) * 8 + 2] = i * dphi;
-          parameters[(i * num_axial_trees + j) * 8 + 3] = j * dh;
+          parameters[(i * num_axial_trees + j) * 8 + 3] = 0.5 - j * dh;
           parameters[(i * num_axial_trees + j) * 8 + 4] = (i + 1) * dphi;
-          parameters[(i * num_axial_trees + j) * 8 + 5] = -(j + 1) * dh;
+          parameters[(i * num_axial_trees + j) * 8 + 5] = 0.5 + -(j + 1) * dh;
           parameters[(i * num_axial_trees + j) * 8 + 6] = i * dphi;
-          parameters[(i * num_axial_trees + j) * 8 + 7] = -(j + 1) * dh;
+          parameters[(i * num_axial_trees + j) * 8 + 7] = 0.5 -(j + 1) * dh;
 
           int edges[12] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
@@ -236,19 +236,6 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
   }
   
   t8_cmesh_register_geometry (cmesh, geometry);
- 
-  if (do_partition) 
-  {
-    int                 mpirank, mpisize, mpiret;
-    int                 first_tree, last_tree;
-    mpiret = sc_MPI_Comm_rank (comm, &mpirank);
-    SC_CHECK_MPI (mpiret);
-    mpiret = sc_MPI_Comm_size (comm, &mpisize);
-    SC_CHECK_MPI (mpiret);
-    first_tree = (mpirank * num_axial_trees * num_tangential_trees) / mpisize;
-    last_tree = ((mpirank + 1) * num_axial_trees * num_tangential_trees) / mpisize - 1;
-    t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
-  }
   t8_cmesh_commit (cmesh, comm);
   T8_FREE(vertices);
   T8_FREE(parameters);

@@ -59,14 +59,12 @@
  * \param [in] num_axial_trees        Number of trees distributed along the height of the cylinder.
  * \param [in] num_radial_trees       Number of trees distributed along the thickness of the cylinder.
  * \param [in] with_occ_geometry      Link the cylinder to a occ geometry, 0 or 1.
- * \param [in] do_partition           Partition the mesh, 0 or 1.
  * \return                            A valid cmesh, as if _init and _commit had been called.
  */
 t8_cmesh_t          t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, 
                                                   int num_tangential_trees, 
                                                   int num_axial_trees,
                                                   int num_radial_trees,
-                                                  int with_occ_geometry,
-                                                  int do_partition);
+                                                  int with_occ_geometry);
 
 #endif /* !T8_CMESH_H */
