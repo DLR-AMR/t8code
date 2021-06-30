@@ -191,6 +191,8 @@ t8_forest_adapt (t8_forest_t forest)
   int                 refine;
   int                 ci;
   int                 num_elements;
+  int                 subelement_type;
+  int                 num_subelements;
 #ifdef T8_ENABLE_DEBUG
   int                 is_family;
 #endif
@@ -224,6 +226,7 @@ t8_forest_adapt (t8_forest_t forest)
   forest->local_num_elements = 0;
   el_offset = 0;
   num_trees = t8_forest_get_num_local_trees (forest);
+
   /* Iterate over the trees and build the new element arrays for each one. */
   for (ltree_id = 0; ltree_id < num_trees; ltree_id++) {
     /* Get the new and old tree and the new and old element arrays */
@@ -253,6 +256,7 @@ t8_forest_adapt (t8_forest_t forest)
     /* Buffer for a family of old elements */
     elements_from = T8_ALLOC (t8_element_t *, num_children);
     /* We now iterate over all elements in this tree and check them for refinement/coarsening. */
+
     while (el_considered < num_el_from) {
 #ifdef T8_ENABLE_DEBUG
       /* Will get set to 0 later if this is not a family */
@@ -281,184 +285,119 @@ t8_forest_adapt (t8_forest_t forest)
         is_family = 0;
 #endif
       }
-      T8_ASSERT (!is_family || tscheme->t8_element_is_family (elements_from));
+      T8_ASSERT (!is_family || tscheme->t8_element_is_family (elements_from));     
       /* Pass the element, or the family to the adapt callback.
-       * The output will be > 0 if the element should be refined
+       * The output will be > 1 if we use subelements
+       *                    = 1 if the element should be refined
        *                    = 0 if the element should remain as is
        *                    < 0 if we passed a family and it should get coarsened.
        */
-      refine =
-        forest->set_adapt_fn (forest, forest->set_from, ltree_id,
-                              el_considered, tscheme, num_elements,
-                              elements_from);
-      T8_ASSERT (is_family || refine >= 0);
-      int num_subelements;
-      int subelement_type;
-      if (refine > 0 && tscheme->t8_element_level (elements_from[0]) >=
-          forest->maxlevel) {
-        /* Only refine an element if it does not exceed the maximum level */
-        refine = 0;
-      }
-      if (refine == 1) {
-        /* The first element is to be refined */
-        if (forest->set_adapt_recursive) {
-          /* Create the children of this element */
-          tscheme->t8_element_new (num_children, elements);
-          tscheme->t8_element_children (elements_from[0], num_children,
-                                        elements);
-          for (ci = num_children - 1; ci >= 0; ci--) {
-            /* Prepend the children to the refine_list.
-             * These should now be the only elements in the list.
-             */
-            (void) sc_list_prepend (refine_list, elements[ci]);
-          }
-          /* We now recursively check the newly created elements for refinement. */
-          t8_forest_adapt_refine_recursive (forest, ltree_id, el_considered,
+      refine = forest->set_adapt_fn (forest, forest->set_from, ltree_id,
+                                     el_considered, tscheme, num_elements,
+                                     elements_from);
+      
+      /* use subelements */
+      if (forest->use_subelements == 1) {
+        subelement_type = 2;
+        num_subelements = 2;
+
+        (void) t8_element_array_push_count (telements, num_subelements);
+        for (zz = 0; zz < num_subelements; zz++) {
+          elements[zz] =
+          t8_element_array_index_locidx (telements, el_inserted + zz);
+        }
+        tscheme->t8_element_to_subelement (elements_from[0], elements, subelement_type);
+        el_inserted += num_subelements;
+        el_considered++;
+      } // end of use subelements
+
+      /* use standard refinement scheme */
+      else {
+        T8_ASSERT (is_family || refine >= 0);
+        if (refine > 0 && tscheme->t8_element_level (elements_from[0]) >= forest->maxlevel) {
+          /* Only refine an element if it does not exceed the maximum level */
+          refine = 0;
+        }
+        if (refine == 1) {
+          /* The first element is to be refined */
+          if (forest->set_adapt_recursive) {
+            /* Create the children of this element */
+            tscheme->t8_element_new (num_children, elements);
+            tscheme->t8_element_children (elements_from[0], num_children,
+                                          elements);
+            for (ci = num_children - 1; ci >= 0; ci--) {
+              /* Prepend the children to the refine_list.
+               * These should now be the only elements in the list.
+               */
+              (void) sc_list_prepend (refine_list, elements[ci]);
+            }
+            /* We now recursively check the newly created elements for refinement. */
+            t8_forest_adapt_refine_recursive (forest, ltree_id, el_considered,
                                             tscheme, refine_list, telements,
                                             &el_inserted, elements);
-          /* el_coarsen is the index of the first element in the new element
-           * array which could be coarsened recursively.
-           * We can set this here to the next element after the current family, since a family that emerges from a refinement will never be coarsened */
-          el_coarsen = el_inserted + num_children;
-        }
-        else {
-          /* The element should be refined and refinement is not recursive. */
-          /* We add the children to the element array of the current tree. */
-          (void) t8_element_array_push_count (telements, num_children);
-          for (zz = 0; zz < num_children; zz++) {
-            elements[zz] =
-              t8_element_array_index_locidx (telements, el_inserted + zz);
+            /* el_coarsen is the index of the first element in the new element
+             * array which could be coarsened recursively.
+             * We can set this here to the next element after the current family, since a family that emerges from a refinement will never be coarsened */
+            el_coarsen = el_inserted + num_children;
           }
-          tscheme->t8_element_children (elements_from[0], num_children,
-                                        elements);
-          el_inserted += num_children;
+          else {
+            /* The element should be refined and refinement is not recursive. */
+            /* We add the children to the element array of the current tree. */
+            (void) t8_element_array_push_count (telements, num_children);
+            for (zz = 0; zz < num_children; zz++) {
+              elements[zz] =
+                t8_element_array_index_locidx (telements, el_inserted + zz);
+            }
+            tscheme->t8_element_children (elements_from[0], num_children,
+                                          elements);
+            el_inserted += num_children;
+          }
+          el_considered++;
         }
-        el_considered++;
-      }
-      else if (refine == 2) {
-        /* The element should be refined and refinement is not recursive (Subelements). */
-        /* We add the children (subelements) to the element array of the current tree. */
-        /* NOTE need a rule to get the right value for num_new_elements */
-        subelement_type = 1;
-        if (subelement_type == 1) {
-          num_subelements = 2;
-        }
-        else if (subelement_type == 2) {
-          num_subelements = 2;
-        }
-        else if (subelement_type == 3) {
-          num_subelements = 4;
-        }
-        else {
-          T8_ASSERT(printf("No valid subelement_type"));
-        }
-       
-        (void) t8_element_array_push_count (telements, num_subelements);
-        for (zz = 0; zz < num_subelements; zz++) {
-          elements[zz] =
-            t8_element_array_index_locidx (telements, el_inserted + zz);
-        }
-        tscheme->t8_element_to_subelement (elements_from[0], elements, subelement_type);
-        el_inserted += num_subelements;
-        el_considered++;
-      }
-      else if (refine == 3) {
-        /* The element should be refined and refinement is not recursive (Subelements). */
-        /* We add the children (subelements) to the element array of the current tree. */
-        /* NOTE need a rule to get the right value for num_new_elements */
-        subelement_type = 2;
-        if (subelement_type == 1) {
-          num_subelements = 2;
-        }
-        else if (subelement_type == 2) {
-          num_subelements = 2;
-        }
-        else if (subelement_type == 3) {
-          num_subelements = 4;
+        else if (refine < 0) {
+          /* The elements form a family and are to be coarsened. */
+          /* Make room for one more new element. */
+          elements[0] = t8_element_array_push (telements);
+          /* Compute the parent of the current family.
+           * This parent is now inserted in telements. */
+          tscheme->t8_element_parent (elements_from[0], elements[0]);
+          el_inserted++;
+          if (forest->set_adapt_recursive) {
+            /* Adaptation is recursive.
+             * We check whether the just generated parent is the last in its
+             * family.
+             * If so, we check this family for recursive coarsening. */
+            if ((size_t) tscheme->t8_element_child_id (elements[0]) == num_children - 1) {
+              t8_forest_adapt_coarsen_recursive (forest, ltree_id,
+                                                 el_considered, tscheme,
+                                                 telements, el_coarsen,
+                                                 &el_inserted, elements);
+            }
+          }
+          el_considered += num_children;
         }
         else {
-          T8_ASSERT(printf("No valid subelement_type"));
-        }
-        
-        (void) t8_element_array_push_count (telements, num_subelements);
-        for (zz = 0; zz < num_subelements; zz++) {
-          elements[zz] =
-            t8_element_array_index_locidx (telements, el_inserted + zz);
-        }
-        tscheme->t8_element_to_subelement (elements_from[0], elements, subelement_type);
-        el_inserted += num_subelements;
-        el_considered++;
-      }
-      else if (refine == 4) {
-        /* The element should be refined and refinement is not recursive (Subelements). */
-        /* We add the children (subelements) to the element array of the current tree. */
-        /* NOTE need a rule to get the right value for num_new_elements */
-        subelement_type = 3;
-        if (subelement_type == 1) {
-          num_subelements = 2;
-        }
-        else if (subelement_type == 2) {
-          num_subelements = 2;
-        }
-        else if (subelement_type == 3) {
-          num_subelements = 4;
-        }
-        else {
-          T8_ASSERT(printf("No valid subelement_type"));
-        }
-        
-        (void) t8_element_array_push_count (telements, num_subelements);
-        for (zz = 0; zz < num_subelements; zz++) {
-          elements[zz] =
-            t8_element_array_index_locidx (telements, el_inserted + zz);
-        }
-        tscheme->t8_element_to_subelement (elements_from[0], elements, subelement_type);
-        el_inserted += num_subelements;
-        el_considered++;
-      }
-      else if (refine < 0) {
-        /* The elements form a family and are to be coarsened. */
-        /* Make room for one more new element. */
-        elements[0] = t8_element_array_push (telements);
-        /* Compute the parent of the current family.
-         * This parent is now inserted in telements. */
-        tscheme->t8_element_parent (elements_from[0], elements[0]);
-        el_inserted++;
-        if (forest->set_adapt_recursive) {
-          /* Adaptation is recursive.
-           * We check whether the just generated parent is the last in its
-           * family.
-           * If so, we check this family for recursive coarsening. */
-          if ((size_t) tscheme->t8_element_child_id (elements[0])
+          /* The considered elements are neither to be coarsened nor is the first
+           * one to be refined.
+           * We copy the element to the new element array. */
+          T8_ASSERT (refine == 0);
+          elements[0] = t8_element_array_push (telements);
+          tscheme->t8_element_copy (elements_from[0], elements[0]);
+          el_inserted++;
+          if (forest->set_adapt_recursive &&
+              (size_t) tscheme->t8_element_child_id (elements[0])
               == num_children - 1) {
-            t8_forest_adapt_coarsen_recursive (forest, ltree_id,
-                                               el_considered, tscheme,
-                                               telements, el_coarsen,
+            /* If adaptation is recursive and this was the last element in its
+             * family, we need to check for recursive coarsening. */
+            t8_forest_adapt_coarsen_recursive (forest, ltree_id, el_considered,
+                                               tscheme, telements, el_coarsen,
                                                &el_inserted, elements);
           }
+          el_considered++;
         }
-        el_considered += num_children;
-      }
-      else {
-        /* The considered elements are neither to be coarsened nor is the first
-         * one to be refined.
-         * We copy the element to the new element array. */
-        T8_ASSERT (refine == 0);
-        elements[0] = t8_element_array_push (telements);
-        tscheme->t8_element_copy (elements_from[0], elements[0]);
-        el_inserted++;
-        if (forest->set_adapt_recursive &&
-            (size_t) tscheme->t8_element_child_id (elements[0])
-            == num_children - 1) {
-          /* If adaptation is recursive and this was the last element in its
-           * family, we need to check for recursive coarsening. */
-          t8_forest_adapt_coarsen_recursive (forest, ltree_id, el_considered,
-                                             tscheme, telements, el_coarsen,
-                                             &el_inserted, elements);
-        }
-        el_considered++;
-      }
-    }
+      } // end of standard refinement scheme
+    } // end of while loop over elements
+
     /* Check that if we had recursive adaptation, the refine list is now empty. */
     T8_ASSERT (!forest->set_adapt_recursive || refine_list->elem_count == 0);
     /* Set the new element offset of this tree */
@@ -472,7 +411,8 @@ t8_forest_adapt (t8_forest_t forest)
     /* clean up */
     T8_FREE (elements);
     T8_FREE (elements_from);
-  }
+  } // end of for loop over trees
+  
   if (forest->set_adapt_recursive) {
     /* clean up */
     sc_list_destroy (refine_list);

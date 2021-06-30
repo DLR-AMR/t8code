@@ -342,7 +342,7 @@ void                t8_forest_set_balance (t8_forest_t forest,
                                            const t8_forest_t set_from,
                                            int no_repartition);
 
-void                t8_forest_set_eliminate_hanging_nodes (t8_forest_t forest,
+void                t8_forest_set_subelements (t8_forest_t forest,
                                                        const t8_forest_t set_from,
                                                        t8_eclass_t eclass);
 

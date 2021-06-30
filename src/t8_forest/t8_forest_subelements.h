@@ -38,10 +38,10 @@ T8_EXTERN_C_BEGIN ();
 
 /* TODO: document
  * only temporary and will be replaced in future */
-void                t8_forest_eliminate_hanging_nodes (t8_forest_t forest);
+void                t8_forest_subelements (t8_forest_t forest);
 
 /* Check whether the local elements of a forest are balanced. */
-int                 t8_forest_hanging_nodes_eliminated (t8_forest_t forest);
+int                 t8_forest_subelements_used (t8_forest_t forest);
 
 T8_EXTERN_C_END ();
 

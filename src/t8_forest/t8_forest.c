@@ -29,7 +29,7 @@
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_balance.h>
-#include <t8_forest/t8_forest_eliminate_hanging_nodes.h>
+#include <t8_forest/t8_forest_subelements.h>
 #include <t8_forest_vtk.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
@@ -241,16 +241,15 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from,
 }
 
 void
-t8_forest_set_eliminate_hanging_nodes (t8_forest_t forest, const t8_forest_t set_from,
+t8_forest_set_subelements (t8_forest_t forest, const t8_forest_t set_from,
                                    t8_eclass_t eclass)
 {
-  /* should add a is_balanced assertion to check whether the forest got balanced before */
   T8_ASSERT (t8_forest_is_initialized (forest));
-  /* check, that we are useing the quad scheme */
   T8_ASSERT (eclass == T8_ECLASS_QUAD);
 
-  forest->set_eliminate_hanging_nodes = 1;
+  forest->set_subelements = T8_FOREST_SUBELEMENTS;
 
+  /* NOTE what happens here? */
   if (set_from != NULL) {
     /* If set_from = NULL, we assume a previous forest_from was set */
     forest->set_from = set_from;
@@ -569,10 +568,10 @@ t8_forest_commit (t8_forest_t forest)
         /* balance with repartition */
         t8_forest_balance (forest, 1);
       }
+    }
 
-      if (forest->set_eliminate_hanging_nodes == 1) {
-        t8_forest_eliminate_hanging_nodes (forest);
-      }
+    if (forest->set_subelements == T8_FOREST_SUBELEMENTS) {
+        t8_forest_subelements (forest);
     }
 
     if (forest_from != forest->set_from) {
