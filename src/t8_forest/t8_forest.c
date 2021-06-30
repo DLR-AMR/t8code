@@ -247,21 +247,18 @@ t8_forest_set_subelements (t8_forest_t forest, const t8_forest_t set_from,
   T8_ASSERT (t8_forest_is_initialized (forest));
   T8_ASSERT (eclass == T8_ECLASS_QUAD);
 
-  forest->set_subelements = T8_FOREST_SUBELEMENTS;
-
-  /* NOTE what happens here? */
   if (set_from != NULL) {
     /* If set_from = NULL, we assume a previous forest_from was set */
     forest->set_from = set_from;
   }
 
-  /* Add BALANCE to the from_method.
+  /* Add SUBELEMENTS to the from_method.
    * This overwrites T8_FOREST_FROM_COPY */
   if (forest->from_method == T8_FOREST_FROM_LAST) {
-    forest->from_method = T8_FOREST_FROM_BALANCE;
+    forest->from_method = T8_FOREST_FROM_SUBELEMENTS;
   }
   else {
-    forest->from_method |= T8_FOREST_FROM_BALANCE;
+    forest->from_method |= T8_FOREST_FROM_SUBELEMENTS;
   }
 }
 
@@ -555,10 +552,6 @@ t8_forest_commit (t8_forest_t forest)
     if (forest->from_method & T8_FOREST_FROM_BALANCE) {
       /* balance the forest */
       forest->from_method -= T8_FOREST_FROM_BALANCE;
-      /* This is the last from method that we execute,
-       * nothing should be left todo */
-      T8_ASSERT (forest->from_method == 0);
-
       /* This forest should only be balanced */
       if (forest->set_balance == T8_FOREST_BALANCE_NO_REPART) {
         /* balance without repartition */
@@ -569,9 +562,14 @@ t8_forest_commit (t8_forest_t forest)
         t8_forest_balance (forest, 1);
       }
     }
-
-    if (forest->set_subelements == T8_FOREST_SUBELEMENTS) {
-        t8_forest_subelements (forest);
+    if (forest->from_method & T8_FOREST_FROM_SUBELEMENTS) {
+      /* refine the forest with subelements */
+      forest->from_method -= T8_FOREST_FROM_SUBELEMENTS;
+      /* This is the last from method that we execute,
+       * nothing should be left todo */
+      T8_ASSERT (forest->from_method == 0);
+      /* use subelements */
+      t8_forest_subelements (forest);
     }
 
     if (forest_from != forest->set_from) {

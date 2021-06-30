@@ -25,8 +25,6 @@
 #include <p4est_connectivity.h>
 #include <p8est_connectivity.h>
 #include <t8_schemes/t8_new_feature/t8_subelements_cxx.hxx>
-/* to validate the results with the original quad scheme */
-// #include <t8_schemes/t8_default_cxx.hxx> 
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest.h>
 #include <t8_cmesh_vtk.h>
@@ -63,21 +61,19 @@ t8_basic_refine_test (t8_eclass_t eclass)
   t8_forest_init (&forest);
   t8_forest_init (&forest_adapt);
 
+  /* building the cmesh, using the initlevel */
   cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_scheme (forest, t8_scheme_new_subelement_cxx ());
-  /* to validate the results with the original quad scheme */
-  // t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
-  
-
   t8_forest_set_level (forest, initlevel);
+
   t8_forest_commit (forest);
-  /* cmesh to vtk */
+
   snprintf (filename, BUFSIZ, "e_s_forest_uniform_%s",
             t8_eclass_to_string[eclass]);
   t8_forest_write_vtk (forest, filename);
 
-
+  /* adapting the cmesh, using user-data */
   t8_example_level_set_struct_t ls_data;
   t8_basic_sphere_data_t sdata;
 
@@ -91,13 +87,16 @@ t8_basic_refine_test (t8_eclass_t eclass)
   ls_data.min_level = minlevel;
   ls_data.max_level = maxlevel;
   ls_data.udata = &sdata;
+
   t8_forest_set_user_data (forest_adapt, &ls_data);
   t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
-  t8_forest_set_balance (forest_adapt, NULL, 0);
+  /* NOTE set_balance does not work with set_subelements */
+  // t8_forest_set_balance (forest_adapt, NULL, 0);
+  // t8_forest_set_ghost (forest_adapt, 1, T8_GHOST_FACES);
   t8_forest_set_subelements (forest_adapt, NULL, eclass);
 
   t8_forest_commit (forest_adapt);
-  /* balanced mesh to vtk */
+
   snprintf (filename, BUFSIZ, "e_s_forest_adapt_%s", t8_eclass_to_string[eclass]);
   t8_forest_write_vtk (forest_adapt, filename);
 
