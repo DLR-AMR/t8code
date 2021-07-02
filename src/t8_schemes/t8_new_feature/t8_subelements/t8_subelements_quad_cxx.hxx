@@ -140,7 +140,7 @@ public:
                                           int sibid, t8_element_t * sibling);
 
   /** Compute the number of face of a given element. */
-  virtual int         t8_element_num_faces (const t8_element_t * elem); // if subelement_id = 0: nothing changes, else determine the number of the subelement
+  virtual int         t8_element_num_faces (const t8_element_t * elem); 
 
   /** Compute the maximum number of faces of a given element and all of its
    *  descendants.

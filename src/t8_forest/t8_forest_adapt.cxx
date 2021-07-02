@@ -336,6 +336,9 @@ t8_forest_adapt (t8_forest_t forest)
         }
         el_considered++;
       }
+      /* NOTE only refine == 2 defined. Do do: define a callback function that determines different refine values,  
+       * depending on the number and location of neighbor elements with a higher level. each refine value will then 
+       * correspond to a specific subelement_type that is defined in the quad_w_sub scheme. */
       else if (refine == 2) {
         subelement_type = 1;
         num_subelements = 2;

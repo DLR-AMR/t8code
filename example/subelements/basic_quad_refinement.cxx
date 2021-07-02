@@ -90,9 +90,7 @@ t8_basic_refine_test (t8_eclass_t eclass)
 
   t8_forest_set_user_data (forest_adapt, &ls_data);
   t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
-  /* NOTE set_balance does not work with set_subelements */
   // t8_forest_set_balance (forest_adapt, NULL, 0);
-  // t8_forest_set_ghost (forest_adapt, 1, T8_GHOST_FACES);
   t8_forest_set_subelements (forest_adapt, NULL, eclass);
 
   t8_forest_commit (forest_adapt);

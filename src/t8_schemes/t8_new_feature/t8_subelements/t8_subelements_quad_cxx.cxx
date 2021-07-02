@@ -955,8 +955,7 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
   else if (pquad_w_sub->subelement_type == 3) {
     /* 
      *          =len
-     *      |-----------| 
-     *     
+     *      |-----------|      
      *                           V1                          
      *      x - - - - - x         x  
      *      | \   1   / |         | \

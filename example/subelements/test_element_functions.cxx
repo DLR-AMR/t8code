@@ -39,8 +39,8 @@ t8_test_element_function ()
 {
   t8_scheme_cxx_t    *ts = t8_scheme_new_subelement_cxx ();
   t8_eclass_scheme_c *class_scheme;
-  t8_element_t       *element_1, *element_2; 
-  t8_element_t       *element_children[P4EST_CHILDREN], *element_subelements[T8_NUM_SUBELEMENTS];
+  t8_element_t       *element_1; 
+  t8_element_t       *element_subelements[T8_NUM_SUBELEMENTS];
   int                eclass, subelement_id, vertex_id, coords[P4EST_DIM];
 
   /* Choose quad scheme */
