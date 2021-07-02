@@ -160,7 +160,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     /* Profiling is enable, so we measure the runtime of balance */
     forest->profile->balance_runtime = -sc_MPI_Wtime ();
     /* We store the individual adapt, ghost, and partition runtimes */
-    num_stats = 5;
+    num_stats = 20;
     adap_stats = T8_ALLOC_ZERO (sc_statinfo_t, num_stats);
     ghost_stats = T8_ALLOC_ZERO (sc_statinfo_t, num_stats);
     if (repartition) {
