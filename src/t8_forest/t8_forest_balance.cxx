@@ -147,7 +147,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   int                 count_rounds = 0;
   /* The following variables are only required if profiling is
    * enabled. */
-  int                 num_stats_allocated, i;
+  int                 num_stats_allocated, istats;
   const int           stat_alloc_chunk_size = 10;       /* How many stats we allocate (and add if we need more) */
   int                 count_adapt_stats = 0, count_ghost_stats = 0;
   int                 count_partition_stats = 0;
@@ -300,15 +300,15 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     /* Print the runtime of adapt/ghost/partition */
     /* Compute the overall runtime and store in last entry */
     ada_time = ghost_time = part_time = 0;
-    for (i = 0; i < count_adapt_stats; i++) {
-      ada_time += adap_stats[i].sum_values;
+    for (istats = 0; istats < count_adapt_stats; istats++) {
+      ada_time += adap_stats[istats].sum_values;
     }
-    for (i = 0; i < count_ghost_stats; i++) {
-      ghost_time += ghost_stats[i].sum_values;
+    for (istats = 0; istats < count_ghost_stats; istats++) {
+      ghost_time += ghost_stats[istats].sum_values;
     }
     if (repartition) {
-      for (i = 0; i < count_partition_stats; i++) {
-        part_time += partition_stats[i].sum_values;
+      for (istats = 0; istats < count_partition_stats; istats++) {
+        part_time += partition_stats[istats].sum_values;
       }
     }
     sc_stats_set1 (&adap_stats[count_adapt_stats], ada_time,
