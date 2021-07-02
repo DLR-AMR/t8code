@@ -49,6 +49,8 @@
 #include <vtkXMLPUnstructuredGridWriter.h>
 #include <vtkXMLUnstructuredGridWriter.h>
 #include <vtkUnsignedCharArray.h>
+#include <vtkDoubleArray.h>
+#include <vtkTypeInt64Array.h>
 #include <vtkSmartPointer.h>
 #if T8_ENABLE_MPI
 #include <vtkMPI.h>
@@ -130,7 +132,9 @@ void
 t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
                              int write_treeid,
                              int write_mpirank,
-                             int write_level, int write_element_id)
+                             int write_level,
+                             int write_element_id,
+                             int num_data, t8_vtk_data_field_t * data)
 {
 #if T8_WITH_VTK
   /*Check assertions: forest and fileprefix are not NULL and forest is commited */
@@ -168,13 +172,13 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
   num_elements = t8_forest_get_local_num_elements (forest);
   int                *cellTypes = T8_ALLOC (int, num_elements);
   /*
-   * We have to define the vtk UnvtkUnsignedCharArrays that hold 
+   * We have to define the vtkTypeInt64Array that hold 
    * metadata if wanted. 
    */
-  vtkUnsignedCharArray *vtk_treeid = vtkUnsignedCharArray::New ();
-  vtkUnsignedCharArray *vtk_mpirank = vtkUnsignedCharArray::New ();
-  vtkUnsignedCharArray *vtk_level = vtkUnsignedCharArray::New ();
-  vtkUnsignedCharArray *vtk_element_id = vtkUnsignedCharArray::New ();
+  vtkTypeInt64Array  *vtk_treeid = vtkTypeInt64Array::New ();
+  vtkTypeInt64Array  *vtk_mpirank = vtkTypeInt64Array::New ();
+  vtkTypeInt64Array  *vtk_level = vtkTypeInt64Array::New ();
+  vtkTypeInt64Array  *vtk_element_id = vtkTypeInt64Array::New ();
 
 /* We iterate over all local trees*/
   for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
@@ -271,7 +275,7 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
         vtk_level->InsertNextValue (scheme->t8_element_level (element));
       }
       if (write_element_id == 1) {
-        vtk_element_id->InsertNextValue (elem_id + offset + (long long)
+        vtk_element_id->InsertNextValue (elem_id + offset +
                                          t8_forest_get_first_local_element_id
                                          (forest));
       /* *INDENT-ON* */
@@ -365,6 +369,19 @@ pwriterObj->SetEndPiece (forest->mpirank);
     unstructuredGrid->GetCellData()->AddArray(vtk_element_id);
   }
   /* *INDENT-ON* */
+
+/*vtkDataArray *array = vtkDoubleArray::New();[idata].data
+array->SetNumberOfComponents(b->ndims);
+array->SetVoidArray(data, b->ndims * b->dims[0], 1);
+
+vtkPoints *points = vtkPoints::New();
+points->SetData(array);
+array->Delete();
+
+vtkUnstructuredGrid *ugrid = vtkUnstructuredGrid::New();
+ugrid->SetPoints(points);
+points->Delete();*/
+
 pwriterObj->SetInputData (unstructuredGrid);
 pwriterObj->Update ();
 pwriterObj->Write ();
