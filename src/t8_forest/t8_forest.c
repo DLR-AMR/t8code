@@ -1189,7 +1189,7 @@ t8_forest_print_profile (t8_forest_t forest)
     sc_stats_set1 (&stats[10], profile->ghost_runtime,
                    "forest: Ghost runtime.");
     sc_stats_set1 (&stats[11], profile->ghost_waittime,
-                   "forest: Ghost runtime.");
+                   "forest: Ghost waittime.");
     sc_stats_set1 (&stats[12], profile->balance_runtime,
                    "forest: Balance runtime.");
     sc_stats_set1 (&stats[13], profile->balance_rounds,
