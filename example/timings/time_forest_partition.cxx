@@ -334,6 +334,7 @@ main (int argc, char *argv[])
   int                 dim, num_files;
   int                 test_tet, test_linear_cylinder, test_occ_cylinder;
   int                 stride;
+  int                 cmesh_level;
   double              T, delta_t, cfl;
   sc_options_t       *opt;
   t8_cmesh_t          cmesh;
@@ -397,6 +398,8 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 'r', "rlevel", &level_diff, 1,
                       "The number of levels that the forest is refined "
                       "from the initial level.");
+  sc_options_add_int (opt, 'C', "cmesh-level", &cmesh_level, 0,
+                      "Starting level of the linear cmesh");
   sc_options_add_double (opt, 'x', "xmin", x_min_max, 0,
                          "The minimum x coordinate " "in the mesh.");
   sc_options_add_double (opt, 'X', "xmax", x_min_max + 1, 1,
@@ -452,7 +455,8 @@ main (int argc, char *argv[])
       vtu_prefix = "test_tet";
     }
     else if (test_linear_cylinder) {
-      cmesh = t8_cmesh_new_hollow_cylinder (sc_MPI_COMM_WORLD, 16, 4, 4, 0);
+      cmesh_level++;
+      cmesh = t8_cmesh_new_hollow_cylinder (sc_MPI_COMM_WORLD, 4 * cmesh_level, cmesh_level, cmesh_level, 0);
       vtu_prefix = "test_linear_cylinder";
     }
     else if (test_occ_cylinder) {
