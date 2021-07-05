@@ -398,8 +398,9 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 'r', "rlevel", &level_diff, 1,
                       "The number of levels that the forest is refined "
                       "from the initial level.");
-  sc_options_add_int (opt, 'C', "cmesh-level", &cmesh_level, 0,
-                      "Starting level of the linear cmesh");
+  sc_options_add_int (opt, 'C', "cmesh-level", &cmesh_level, -1,
+                      "Starting level of the linear cmesh, default is 2. The occ cmesh starts at level 0."
+                      " Only viable with -L.");
   sc_options_add_double (opt, 'x', "xmin", x_min_max, 0,
                          "The minimum x coordinate " "in the mesh.");
   sc_options_add_double (opt, 'X', "xmax", x_min_max + 1, 1,
@@ -427,7 +428,8 @@ main (int argc, char *argv[])
       || (cmeshfileprefix == NULL && mshfileprefix == NULL
           && test_tet == 0 && test_occ_cylinder == 0 && test_linear_cylinder == 0) 
       || stride <= 0 || (num_files - 1) * stride >= mpisize || cfl < 0 
-      || test_tet + test_linear_cylinder + test_occ_cylinder > 1) {
+      || test_tet + test_linear_cylinder + test_occ_cylinder > 1 
+      || (cmesh_level >= 0 && !test_linear_cylinder)) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
@@ -455,8 +457,11 @@ main (int argc, char *argv[])
       vtu_prefix = "test_tet";
     }
     else if (test_linear_cylinder) {
-      cmesh_level++;
-      cmesh = t8_cmesh_new_hollow_cylinder (sc_MPI_COMM_WORLD, 4 * cmesh_level, cmesh_level, cmesh_level, 0);
+      if (cmesh_level < 0)
+      {
+        cmesh_level = 2;
+      }
+      cmesh = t8_cmesh_new_hollow_cylinder (sc_MPI_COMM_WORLD, 4 * (cmesh_level + 1), cmesh_level + 1, cmesh_level + 1, 0);
       vtu_prefix = "test_linear_cylinder";
     }
     else if (test_occ_cylinder) {
