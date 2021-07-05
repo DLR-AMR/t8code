@@ -55,6 +55,7 @@ t8_forest_init (t8_forest_t * pforest)
   forest->set_adapt_recursive = -1;
   forest->set_balance = -1;
   forest->maxlevel_existing = -1;
+  forest->stats_computed = 0;
 }
 
 int
@@ -1157,50 +1158,116 @@ t8_forest_set_profiling (t8_forest_t forest, int set_profiling)
 }
 
 void
-t8_forest_print_profile (t8_forest_t forest)
+t8_forest_compute_profile (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   if (forest->profile != NULL) {
     /* Only print something if profiling is enabled */
-    sc_statinfo_t       stats[T8_PROFILE_NUM_STATS];
     t8_profile_t       *profile = forest->profile;
 
     /* Set the stats */
-    sc_stats_set1 (&stats[0], profile->partition_elements_shipped,
+    sc_stats_set1 (&forest->stats[0], profile->partition_elements_shipped,
                    "forest: Number of elements sent.");
-    sc_stats_set1 (&stats[1], profile->partition_elements_recv,
+    sc_stats_set1 (&forest->stats[1], profile->partition_elements_recv,
                    "forest: Number of elements received.");
-    sc_stats_set1 (&stats[2], profile->partition_bytes_sent,
+    sc_stats_set1 (&forest->stats[2], profile->partition_bytes_sent,
                    "forest: Number of bytes sent.");
-    sc_stats_set1 (&stats[3], profile->partition_procs_sent,
+    sc_stats_set1 (&forest->stats[3], profile->partition_procs_sent,
                    "forest: Number of processes sent to.");
-    sc_stats_set1 (&stats[4], profile->ghosts_shipped,
+    sc_stats_set1 (&forest->stats[4], profile->ghosts_shipped,
                    "forest: Number of ghost elements sent.");
-    sc_stats_set1 (&stats[5], profile->ghosts_received,
+    sc_stats_set1 (&forest->stats[5], profile->ghosts_received,
                    "forest: Number of ghost elements received.");
-    sc_stats_set1 (&stats[6], profile->ghosts_remotes,
+    sc_stats_set1 (&forest->stats[6], profile->ghosts_remotes,
                    "forest: Number of processes we sent ghosts to/received from.");
-    sc_stats_set1 (&stats[7], profile->adapt_runtime,
+    sc_stats_set1 (&forest->stats[7], profile->adapt_runtime,
                    "forest: Adapt runtime.");
-    sc_stats_set1 (&stats[8], profile->partition_runtime,
+    sc_stats_set1 (&forest->stats[8], profile->partition_runtime,
                    "forest: Partition runtime.");
-    sc_stats_set1 (&stats[9], profile->commit_runtime,
+    sc_stats_set1 (&forest->stats[9], profile->commit_runtime,
                    "forest: Commit runtime.");
-    sc_stats_set1 (&stats[10], profile->ghost_runtime,
+    sc_stats_set1 (&forest->stats[10], profile->ghost_runtime,
                    "forest: Ghost runtime.");
-    sc_stats_set1 (&stats[11], profile->ghost_waittime,
+    sc_stats_set1 (&forest->stats[11], profile->ghost_waittime,
                    "forest: Ghost waittime.");
-    sc_stats_set1 (&stats[12], profile->balance_runtime,
+    sc_stats_set1 (&forest->stats[12], profile->balance_runtime,
                    "forest: Balance runtime.");
-    sc_stats_set1 (&stats[13], profile->balance_rounds,
+    sc_stats_set1 (&forest->stats[13], profile->balance_rounds,
                    "forest: Balance rounds.");
     /* compute stats */
-    sc_stats_compute (sc_MPI_COMM_WORLD, T8_PROFILE_NUM_STATS, stats);
+    sc_stats_compute (sc_MPI_COMM_WORLD, T8_PROFILE_NUM_STATS, forest->stats);
+    forest->stats_computed = 1;
+  }
+}
+
+void
+t8_forest_print_profile (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  if (forest->profile != NULL) {
+    /* Compute the stats if not already computed. */
+    if (!forest->stats_computed) {
+      t8_forest_compute_profile (forest);
+    }
     /* print stats */
     t8_logf (SC_LC_GLOBAL, SC_LP_STATISTICS, "Printing stats for forest.\n");
     sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS,
-                    T8_PROFILE_NUM_STATS, stats, 1, 1);
+                    T8_PROFILE_NUM_STATS, forest->stats, 1, 1);
   }
+}
+
+const sc_statinfo_t *
+t8_forest_profile_get_adapt_stats (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->profile != NULL);
+  T8_ASSERT (forest->stats_computed);
+  return &forest->stats[7];
+}
+
+const sc_statinfo_t *
+t8_forest_profile_get_ghost_stats (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->profile != NULL);
+  T8_ASSERT (forest->stats_computed);
+  return &forest->stats[10];
+}
+
+const sc_statinfo_t *
+t8_forest_profile_get_partition_stats (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->profile != NULL);
+  T8_ASSERT (forest->stats_computed);
+  return &forest->stats[8];
+}
+
+const sc_statinfo_t *
+t8_forest_profile_get_commit_stats (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->profile != NULL);
+  T8_ASSERT (forest->stats_computed);
+  return &forest->stats[9];
+}
+
+const sc_statinfo_t *
+t8_forest_profile_get_balance_stats (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->profile != NULL);
+  T8_ASSERT (forest->stats_computed);
+  return &forest->stats[12];
+}
+
+const sc_statinfo_t *
+t8_forest_profile_get_balance_rounds_stats (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->profile != NULL);
+  T8_ASSERT (forest->stats_computed);
+  return &forest->stats[13];
 }
 
 double
