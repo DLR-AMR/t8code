@@ -318,6 +318,7 @@ void
 t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
                       const double *ref_coords, double *out_coords)
 {
+  double              start_wtime = 0;  /* Used for profiling. */
   /* The cmesh must be committed */
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   /* Get the geometry handler of the cmesh. */
@@ -325,6 +326,11 @@ t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
   /* The handler must be committed. */
   T8_ASSERT (t8_geom_handler_is_committed (geom_handler));
 
+  if (cmesh->profile != NULL) {
+    /* Measure the runtime of geometry evaluation.
+     * We accumulate the runtime over all calls. */
+    start_wtime = sc_MPI_Wtime ();
+  }
   /* Detect whether we call this function for the first time in a row for 
    * this tree and if so update the active tree and geometry. */
   t8_geom_handler_update_tree (geom_handler, cmesh, gtreeid);
@@ -335,6 +341,14 @@ t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
   geom_handler->active_geometry->t8_geom_evaluate (cmesh,
                                                    geom_handler->active_tree,
                                                    ref_coords, out_coords);
+
+  if (cmesh->profile != NULL) {
+    /* If profiling is enabled, add the runtime to the profiling
+     * variable. */
+    cmesh->profile->geometry_evaluate_runtime +=
+      sc_MPI_Wtime () - start_wtime;
+    cmesh->profile->geometry_evaluate_num_calls++;
+  }
 }
 
 void
