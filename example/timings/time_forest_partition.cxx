@@ -225,39 +225,41 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   for (t = 0, time_step = 0; t < T; t += delta_t, time_step++) {
     /* Adapt the forest */
     //for (r = 0; r < refine_rounds; r++) {
-      /* TODO: profiling */
-      t8_forest_init (&forest_adapt);
-      t8_forest_set_adapt (forest_adapt, forest, t8_band_adapt, 1);
-      t8_forest_set_profiling (forest_adapt, 1);
-      /* Set the minimum and maximum x-coordinates as user data */
-      adapt_data.c_min = x_min_max[0] + t;
-      adapt_data.c_max = x_min_max[1] + t;
-      t8_forest_set_user_data (forest_adapt, (void *) &adapt_data);
-      t8_forest_commit (forest_adapt);
-      t8_forest_compute_profile (forest_adapt);
-      t8_forest_ref (forest_adapt);
-      adapt_stats = t8_forest_profile_get_adapt_stats (forest_adapt);
-      t8_global_productionf ("[Sandro] Adapt runtime: %f  variance: %f max: %f\n", adapt_stats->average, adapt_stats->standev_mean, adapt_stats->max);
+    /* TODO: profiling */
+    t8_forest_init (&forest_adapt);
+    t8_forest_set_adapt (forest_adapt, forest, t8_band_adapt, 1);
+    t8_forest_set_profiling (forest_adapt, 1);
+    /* Set the minimum and maximum x-coordinates as user data */
+    adapt_data.c_min = x_min_max[0] + t;
+    adapt_data.c_max = x_min_max[1] + t;
+    t8_forest_set_user_data (forest_adapt, (void *) &adapt_data);
+    t8_forest_commit (forest_adapt);
+    t8_forest_compute_profile (forest_adapt);
+    t8_forest_ref (forest_adapt);
+    adapt_stats = t8_forest_profile_get_adapt_stats (forest_adapt);
+    t8_global_productionf
+      ("[Sandro] Adapt runtime: %f  variance: %f max: %f\n",
+       adapt_stats->average, adapt_stats->standev_mean, adapt_stats->max);
 
-      /* partition the adapted forest */
-      /* TODO: profiling */
-      t8_forest_init (&forest_partition);
-      /* partition the adapted forest */
-      t8_forest_set_partition (forest_partition, forest_adapt, 0);
+    /* partition the adapted forest */
+    /* TODO: profiling */
+    t8_forest_init (&forest_partition);
+    /* partition the adapted forest */
+    t8_forest_set_partition (forest_partition, forest_adapt, 0);
 
-      /* If desired, create ghost elements and balance after last step */
+    /* If desired, create ghost elements and balance after last step */
     //  if (r == refine_rounds - 1) {
-        t8_forest_set_profiling (forest_partition, 1);
-        if (do_ghost) {
-          t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
-        }
-        if (do_balance) {
-          t8_forest_set_balance (forest_partition, NULL, 0);
-        }
+    t8_forest_set_profiling (forest_partition, 1);
+    if (do_ghost) {
+      t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
+    }
+    if (do_balance) {
+      t8_forest_set_balance (forest_partition, NULL, 0);
+    }
     //  }
-      t8_forest_commit (forest_partition);
-      forest = forest_partition;
-  //  }
+    t8_forest_commit (forest_partition);
+    forest = forest_partition;
+    //  }
 
     /* Set the vtu output name */
     if (!no_vtk) {
@@ -270,13 +272,19 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
                                cmesh_vtu, 1.0);
       t8_debugf ("Wrote partitioned forest and cmesh\n");
     }
-      /* Print runtimes and statistics of forest and cmesh partition */
-      t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
+    /* Print runtimes and statistics of forest and cmesh partition */
+    t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
     //t8_forest_print_profile (forest_partition);
     t8_forest_compute_profile (forest_partition);
-    partition_stats = t8_forest_profile_get_partition_stats (forest_partition);
-    t8_global_productionf ("[Sandro] Adapt runtime: %f  variance: %f max: %f\n", adapt_stats->average, adapt_stats->standev_mean, adapt_stats->max);
-    t8_global_productionf ("[Sandro] Partition runtime: %f  variance: %f max: %f\n", partition_stats->average, partition_stats->standev_mean, partition_stats->max);
+    partition_stats =
+      t8_forest_profile_get_partition_stats (forest_partition);
+    t8_global_productionf
+      ("[Sandro] Adapt runtime: %f  variance: %f max: %f\n",
+       adapt_stats->average, adapt_stats->standev_mean, adapt_stats->max);
+    t8_global_productionf
+      ("[Sandro] Partition runtime: %f  variance: %f max: %f\n",
+       partition_stats->average, partition_stats->standev_mean,
+       partition_stats->max);
     /* Set forest to the partitioned forest, so it gets adapted
      * in the next time step. */
     forest = forest_partition;
@@ -395,7 +403,8 @@ main (int argc, char *argv[])
                          "Use a cmesh that tests all tet face-to-face connections."
                          " If this option is used -o is enabled automatically."
                          " Diables -f and -c.");
-  sc_options_add_switch (opt, 'L', "test-linear-cylinder", &test_linear_cylinder,
+  sc_options_add_switch (opt, 'L', "test-linear-cylinder",
+                         &test_linear_cylinder,
                          "Use a linear cmesh to compare linear and occ geometry performance."
                          " If this option is used -o is enabled automatically."
                          " Diables -f and -c.");
@@ -437,9 +446,10 @@ main (int argc, char *argv[])
   /* check for wrong usage of arguments */
   if (first_argc < 0 || first_argc != argc || dim < 2 || dim > 3
       || (cmeshfileprefix == NULL && mshfileprefix == NULL
-          && test_tet == 0 && test_occ_cylinder == 0 && test_linear_cylinder == 0) 
-      || stride <= 0 || (num_files - 1) * stride >= mpisize || cfl < 0 
-      || test_tet + test_linear_cylinder + test_occ_cylinder > 1 
+          && test_tet == 0 && test_occ_cylinder == 0
+          && test_linear_cylinder == 0)
+      || stride <= 0 || (num_files - 1) * stride >= mpisize || cfl < 0
+      || test_tet + test_linear_cylinder + test_occ_cylinder > 1
       || (cmesh_level >= 0 && !test_linear_cylinder)) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
@@ -468,11 +478,13 @@ main (int argc, char *argv[])
       vtu_prefix = "test_tet";
     }
     else if (test_linear_cylinder) {
-      if (cmesh_level < 0)
-      {
+      if (cmesh_level < 0) {
         cmesh_level = 2;
       }
-      cmesh = t8_cmesh_new_hollow_cylinder (sc_MPI_COMM_WORLD, 4 * (cmesh_level + 1), cmesh_level + 1, cmesh_level + 1, 0);
+      cmesh =
+        t8_cmesh_new_hollow_cylinder (sc_MPI_COMM_WORLD,
+                                      4 * (cmesh_level + 1), cmesh_level + 1,
+                                      cmesh_level + 1, 0);
       vtu_prefix = "test_linear_cylinder";
     }
     else if (test_occ_cylinder) {
