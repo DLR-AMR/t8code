@@ -145,9 +145,9 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
 
   long int            point_id = 0;     /* The id of the point in the points Object. */
   t8_locidx_t         ielement; /* The iterator over elements in a tree. */
-  t8_locidx_t         itree, ivertex;
-  double             *vertices;
-  double              coordinates[3];
+  t8_locidx_t         itree, ivertex;   /* The iterator over the tree and the vertices. */
+  double             *vertices; /* Vertices of a tree */
+  double              coordinates[3];   /* coordinates of vertices */
   int                 elem_id = 0;
   t8_locidx_t         num_elements;
 
@@ -180,7 +180,14 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
   vtkTypeInt64Array  *vtk_level = vtkTypeInt64Array::New ();
   vtkTypeInt64Array  *vtk_element_id = vtkTypeInt64Array::New ();
 
-  vtkDataArray       *dataArrays[num_data];
+/*
+ * We need the dataArray for writing double valued user defined data in the vtu files.
+ * We want to write num_data many timesteps/arrays.
+ * We need num_data many vtkDoubleArrays, so we need to allocate storage.
+ * Later we call the constructor with: dataArrays[idata]=vtkDoubleArray::New()
+ */
+  vtkDoubleArray    **dataArrays;
+  dataArrays = T8_ALLOC (vtkDoubleArray *, num_data);
 /* We iterate over all local trees*/
   for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
 /* 
@@ -372,7 +379,13 @@ pwriterObj->SetEndPiece (forest->mpirank);
   }
   /* *INDENT-ON* */
 
+/* Write the user defined data fields. 
+ * For that we iterate over the idata, set the name, the array
+ * and then give this data to the unstructured Grid Object.
+ * We differentiate between scalar and vector data.
+ */
 for (int idata = 0; idata < num_data; idata++) {
+  dataArrays[idata] = vtkDoubleArray::New ();
   if (data[idata].type == T8_VTK_SCALAR) {
     dataArrays[idata]->SetName (data[idata].description);
     dataArrays[idata]->SetVoidArray (data[idata].data, num_elements, 1);
@@ -385,11 +398,23 @@ for (int idata = 0; idata < num_data; idata++) {
   }
 }
 
+/* We set the input data and write the vtu files. */
 pwriterObj->SetInputData (unstructuredGrid);
 pwriterObj->Update ();
 pwriterObj->Write ();
-/* We have to free the allocated memory for the cellTypes Array. */
+/* We have to free the allocated memory for the cellTypes Array and the other arrays we allocated memory for. */
+
+vtk_treeid->Delete ();
+vtk_mpirank->Delete ();
+vtk_level->Delete ();
+vtk_element_id->Delete ();
+for (int idata = 0; idata < num_data; idata++) {
+  dataArrays[idata]->Delete ();
+}
+
 T8_FREE (cellTypes);
+T8_FREE (dataArrays);
+
 #else
   t8_global_errorf
     ("Warning: t8code is not linked against vtk library. Vtk output will not be generated.\n");
