@@ -178,6 +178,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   int                 partition_cmesh, r;
   const int           refine_rounds = max_level - init_level;
   int                 time_step;
+  const sc_statinfo_t *partition_stats, *adapt_stats;
 
   t8_global_productionf ("Committed cmesh with"
                          " %lli global trees.\n",
@@ -223,15 +224,21 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
    * further through the domain */
   for (t = 0, time_step = 0; t < T; t += delta_t, time_step++) {
     /* Adapt the forest */
-    for (r = 0; r < refine_rounds; r++) {
+    //for (r = 0; r < refine_rounds; r++) {
       /* TODO: profiling */
       t8_forest_init (&forest_adapt);
-      t8_forest_set_adapt (forest_adapt, forest, t8_band_adapt, 0);
+      t8_forest_set_adapt (forest_adapt, forest, t8_band_adapt, 1);
+      t8_forest_set_profiling (forest_adapt, 1);
       /* Set the minimum and maximum x-coordinates as user data */
       adapt_data.c_min = x_min_max[0] + t;
       adapt_data.c_max = x_min_max[1] + t;
       t8_forest_set_user_data (forest_adapt, (void *) &adapt_data);
       t8_forest_commit (forest_adapt);
+      t8_forest_compute_profile (forest_adapt);
+      t8_forest_ref (forest_adapt);
+      adapt_stats = t8_forest_profile_get_adapt_stats (forest_adapt);
+      t8_global_productionf ("[Sandro] Adapt runtime: %f  variance: %f max: %f\n", adapt_stats->average, adapt_stats->standev_mean, adapt_stats->max);
+
       /* partition the adapted forest */
       /* TODO: profiling */
       t8_forest_init (&forest_partition);
@@ -239,7 +246,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
       t8_forest_set_partition (forest_partition, forest_adapt, 0);
 
       /* If desired, create ghost elements and balance after last step */
-      if (r == refine_rounds - 1) {
+    //  if (r == refine_rounds - 1) {
         t8_forest_set_profiling (forest_partition, 1);
         if (do_ghost) {
           t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
@@ -247,10 +254,10 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
         if (do_balance) {
           t8_forest_set_balance (forest_partition, NULL, 0);
         }
-      }
+    //  }
       t8_forest_commit (forest_partition);
       forest = forest_partition;
-    }
+  //  }
 
     /* Set the vtu output name */
     if (!no_vtk) {
@@ -263,14 +270,18 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
                                cmesh_vtu, 1.0);
       t8_debugf ("Wrote partitioned forest and cmesh\n");
     }
-    if (partition_cmesh) {
       /* Print runtimes and statistics of forest and cmesh partition */
       t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
-    }
-    t8_forest_print_profile (forest_partition);
+    //t8_forest_print_profile (forest_partition);
+    t8_forest_compute_profile (forest_partition);
+    partition_stats = t8_forest_profile_get_partition_stats (forest_partition);
+    t8_global_productionf ("[Sandro] Adapt runtime: %f  variance: %f max: %f\n", adapt_stats->average, adapt_stats->standev_mean, adapt_stats->max);
+    t8_global_productionf ("[Sandro] Partition runtime: %f  variance: %f max: %f\n", partition_stats->average, partition_stats->standev_mean, partition_stats->max);
     /* Set forest to the partitioned forest, so it gets adapted
      * in the next time step. */
     forest = forest_partition;
+    /* clean-up */
+    t8_forest_unref (&forest_adapt);
     /* TIME-LOOP ends here */
   }
   /* memory clean-up */
