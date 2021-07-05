@@ -786,16 +786,36 @@ t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t gtree1, t8_gloidx_t gtree2,
                          orientation);
 }
 
+/* Allocate a cmesh profile if not yet present and set default
+ * values. */
+static void
+t8_cmesh_init_profile (t8_cmesh_t cmesh)
+{
+  if (cmesh->profile == NULL) {
+    /* Allocate new profile if it is not enabled already */
+    cmesh->profile = T8_ALLOC_ZERO (t8_cprofile_struct_t, 1);
+  }
+  /* Set default values */
+  cmesh->profile->commit_runtime = 0;
+  cmesh->profile->first_tree_shared = -1;       /* invalid until commit */
+  cmesh->profile->geometry_evaluate_runtime = 0;
+  cmesh->profile->geometry_evaluate_num_calls = 0;
+  cmesh->profile->partition_bytes_sent = 0;
+  cmesh->profile->partition_ghosts_recv = 0;
+  cmesh->profile->partition_ghosts_shipped = 0;
+  cmesh->profile->partition_procs_sent = 0;
+  cmesh->profile->partition_runtime = 0;
+  cmesh->profile->partition_trees_recv = 0;
+  cmesh->profile->partition_trees_shipped = 0;
+}
+
 void
 t8_cmesh_set_profiling (t8_cmesh_t cmesh, int set_profiling)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
   if (set_profiling) {
-    if (cmesh->profile == NULL) {
-      /* Only do something if profiling is not enabled already */
-      cmesh->profile = T8_ALLOC_ZERO (t8_cprofile_struct_t, 1);
-    }
+    t8_cmesh_init_profile (cmesh);
   }
   else {
     /* Free any profile that is already set */
@@ -1417,6 +1437,10 @@ t8_cmesh_print_profile (t8_cmesh_t cmesh)
                    "cmesh: Partition runtime.");
     sc_stats_set1 (&stats[8], profile->commit_runtime,
                    "cmesh: Commit runtime.");
+    sc_stats_set1 (&stats[9], profile->geometry_evaluate_num_calls,
+                   "cmesh: Number of geometry evaluations.");
+    sc_stats_set1 (&stats[10], profile->geometry_evaluate_runtime,
+                   "cmesh: Accumulated geometry evaluation runtime.");
     /* compute stats */
     sc_stats_compute (sc_MPI_COMM_WORLD, T8_CPROFILE_NUM_STATS, stats);
     /* print stats */
