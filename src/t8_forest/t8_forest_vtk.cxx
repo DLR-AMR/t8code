@@ -180,6 +180,7 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
   vtkTypeInt64Array  *vtk_level = vtkTypeInt64Array::New ();
   vtkTypeInt64Array  *vtk_element_id = vtkTypeInt64Array::New ();
 
+  vtkDataArray       *dataArrays[num_data];
 /* We iterate over all local trees*/
   for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
 /* 
@@ -251,7 +252,8 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
                                  coordinates[2]);
         /* Set the point ids to the vtk cell */
         pvtkCell->GetPointIds ()->SetId (ivertex, point_id);
-      }
+      }                         /* end loop over all vertices of the element */
+
       /* We insert the next cell in the cell array */
       cellArray->InsertNextCell (pvtkCell);
       /*
@@ -281,8 +283,8 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
       /* *INDENT-ON* */
     }
     elem_id++;
-  }
-}
+  }                             /* end of loop over elements */
+}                               /* end of loop over local trees */
 
   /* 
    * Write file: First we construct the unstructured Grid 
@@ -370,17 +372,18 @@ pwriterObj->SetEndPiece (forest->mpirank);
   }
   /* *INDENT-ON* */
 
-/*vtkDataArray *array = vtkDoubleArray::New();[idata].data
-array->SetNumberOfComponents(b->ndims);
-array->SetVoidArray(data, b->ndims * b->dims[0], 1);
-
-vtkPoints *points = vtkPoints::New();
-points->SetData(array);
-array->Delete();
-
-vtkUnstructuredGrid *ugrid = vtkUnstructuredGrid::New();
-ugrid->SetPoints(points);
-points->Delete();*/
+for (int idata = 0; idata < num_data; idata++) {
+  if (data[idata].type == T8_VTK_SCALAR) {
+    dataArrays[idata]->SetName (data[idata].description);
+    dataArrays[idata]->SetVoidArray (data[idata].data, num_elements, 1);
+    unstructuredGrid->GetCellData ()->AddArray (dataArrays[idata]);
+  }
+  else {
+    dataArrays[idata]->SetName (data[idata].description);
+    dataArrays[idata]->SetVoidArray (data[idata].data, num_elements * 3, 1);
+    unstructuredGrid->GetCellData ()->AddArray (dataArrays[idata]);
+  }
+}
 
 pwriterObj->SetInputData (unstructuredGrid);
 pwriterObj->Update ();
