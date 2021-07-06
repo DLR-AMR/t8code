@@ -34,6 +34,7 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
 {  
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
+  t8_cmesh_set_profiling(cmesh, 1);
   t8_geometry_c *geometry;
   
   if (with_occ_geometry)

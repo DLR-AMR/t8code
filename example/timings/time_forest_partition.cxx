@@ -178,7 +178,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   int                 partition_cmesh, r;
   const int           refine_rounds = max_level - init_level;
   int                 time_step;
-  const sc_statinfo_t *partition_stats, *adapt_stats;
+  const sc_statinfo_t *partition_stats, *adapt_stats, *balance_stats;
 
   t8_global_productionf ("Committed cmesh with"
                          " %lli global trees.\n",
@@ -198,6 +198,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
     /* The new cmesh is partitioned according to a uniform init_level refinement */
     t8_cmesh_set_partition_uniform (cmesh_partition, init_level,
                                     t8_scheme_new_default_cxx ());
+    t8_cmesh_set_profiling(cmesh_partition, 1);
     t8_cmesh_commit (cmesh_partition, comm);
   }
   else {
@@ -237,9 +238,9 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
     t8_forest_compute_profile (forest_adapt);
     t8_forest_ref (forest_adapt);
     adapt_stats = t8_forest_profile_get_adapt_stats (forest_adapt);
-    t8_global_productionf
-      ("[Sandro] Adapt runtime: %f  variance: %f max: %f\n",
-       adapt_stats->average, adapt_stats->standev_mean, adapt_stats->max);
+    //t8_global_productionf
+    //  ("[Sandro] Adapt runtime: %f  variance: %f max: %f\n",
+    //   adapt_stats->average, adapt_stats->standev_mean, adapt_stats->max);
 
     /* partition the adapted forest */
     /* TODO: profiling */
@@ -258,6 +259,9 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
     }
     //  }
     t8_forest_commit (forest_partition);
+    t8_forest_compute_profile (forest_partition);
+    balance_stats = t8_forest_profile_get_balance_stats (forest_partition);
+    //t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
     forest = forest_partition;
     //  }
 
@@ -285,6 +289,9 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
       ("[Sandro] Partition runtime: %f  variance: %f max: %f\n",
        partition_stats->average, partition_stats->standev_mean,
        partition_stats->max);
+    t8_global_productionf
+      ("[Sandro] Balance runtime: %f  variance: %f max: %f\n",
+       balance_stats->average, balance_stats->standev_mean, balance_stats->max);
     /* Set forest to the partitioned forest, so it gets adapted
      * in the next time step. */
     forest = forest_partition;
