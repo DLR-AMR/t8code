@@ -29,6 +29,7 @@
 #ifndef T8_FOREST_H
 #define T8_FOREST_H
 
+#include <sc_statistics.h>
 #include <t8_cmesh.h>
 #include <t8_element.h>
 #include <t8_data/t8_containers.h>
@@ -522,6 +523,23 @@ void                t8_forest_ghost_exchange_data (t8_forest_t forest,
  */
 void                t8_forest_set_profiling (t8_forest_t forest,
                                              int set_profiling);
+
+/* TODO: document */
+void                t8_forest_compute_profile (t8_forest_t forest);
+
+const sc_statinfo_t *t8_forest_profile_get_adapt_stats (t8_forest_t forest);
+
+const sc_statinfo_t *t8_forest_profile_get_ghost_stats (t8_forest_t forest);
+
+const sc_statinfo_t *t8_forest_profile_get_partition_stats (t8_forest_t
+                                                            forest);
+
+const sc_statinfo_t *t8_forest_profile_get_commit_stats (t8_forest_t forest);
+
+const sc_statinfo_t *t8_forest_profile_get_balance_stats (t8_forest_t forest);
+
+const sc_statinfo_t *t8_forest_profile_get_balance_rounds_stats (t8_forest_t
+                                                                 forest);
 
 /** Print the collected statistics from a forest profile.
  * \param [in]    forest        The forest.

@@ -28,6 +28,7 @@
  */
 
 #include <t8.h>
+#include <sc_statistics.h>
 #include <t8_refcount.h>
 #include <t8_cmesh.h>
 #include <t8_element.h>
@@ -59,6 +60,9 @@ typedef int8_t      t8_forest_from_t;
 
 #define T8_FOREST_BALANCE_REPART 1 /**< Value of forest->set_balance if balancing with repartitioning */
 #define T8_FOREST_BALANCE_NO_REPART 2 /**< Value of forest->set_balance if balancing without repartitioning */
+
+/** The number of statistics collected by a profile struct. */
+#define T8_PROFILE_NUM_STATS 14
 
 /** This structure is private to the implementation. */
 typedef struct t8_forest
@@ -126,7 +130,8 @@ typedef struct t8_forest
   t8_locidx_t         local_num_elements;  /**< Number of elements on this processor. */
   t8_gloidx_t         global_num_elements; /**< Number of elements on all processors. */
   t8_profile_t       *profile; /**< If not NULL, runtimes and statistics about forest_commit are stored here. */
-
+  sc_statinfo_t       stats[T8_PROFILE_NUM_STATS];
+  int                 stats_computed;
 }
 t8_forest_struct_t;
 
@@ -150,8 +155,6 @@ t8_tree_struct_t;
  * \see t8_cmesh_set_profiling and \see t8_cmesh_print_profile
  */
 
-/** The number of statistics collected by a profile struct. */
-#define T8_PROFILE_NUM_STATS 14
 typedef struct t8_profile
 {
   t8_locidx_t         partition_elements_shipped; /**< The number of elements this process has
