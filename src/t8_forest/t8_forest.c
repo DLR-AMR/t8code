@@ -551,20 +551,51 @@ t8_forest_commit (t8_forest_t forest)
       }
     }
     if (forest->from_method & T8_FOREST_FROM_BALANCE) {
-      /* balance the forest */
       forest->from_method -= T8_FOREST_FROM_BALANCE;
-      /* This forest should only be balanced */
-      if (forest->set_balance == T8_FOREST_BALANCE_NO_REPART) {
-        /* balance without repartition */
-        t8_forest_balance (forest, 0);
+      if (forest->from_method > 0) {
+        /* in this case, we will use subelements after balancing */
+        if (forest->set_balance == T8_FOREST_BALANCE_NO_REPART) {
+          /* balance without repartition */
+          t8_forest_t         forest_adapt;
+
+          t8_forest_init (&forest_adapt);
+          /* forest_adapt should not change ownership of forest->set_from */
+          t8_forest_ref (forest->set_from);
+          /* Construct an intermediate, adapted forest */
+          t8_forest_set_balance (forest_adapt, forest->set_from, 1);
+          t8_forest_commit (forest_adapt);
+          /* The new forest will be partitioned/balanced from forest_adapt */
+          forest->set_from = forest_adapt;
+        }
+        else {
+          /* balance with repartition */
+          t8_forest_t         forest_adapt;
+
+          t8_forest_init (&forest_adapt);
+          /* forest_adapt should not change ownership of forest->set_from */
+          t8_forest_ref (forest->set_from);
+          /* Construct an intermediate, adapted forest */
+          t8_forest_set_balance (forest_adapt, forest->set_from, 0);
+          t8_forest_commit (forest_adapt);
+          /* The new forest will be partitioned/balanced from forest_adapt */
+          forest->set_from = forest_adapt;
+        }
       }
       else {
-        /* balance with repartition */
-        t8_forest_balance (forest, 1);
+        /* in this case, this is the last from method that we execute,
+         * nothing should be left todo */
+        T8_ASSERT (forest->from_method == 0);
+        if (forest->set_balance == T8_FOREST_BALANCE_NO_REPART) {
+          /* balance without repartition */
+          t8_forest_balance (forest, 0);
+        }
+        else {
+          /* balance with repartition */
+          t8_forest_balance (forest, 1);
+        }
       }
-    }
+    } 
     if (forest->from_method & T8_FOREST_FROM_SUBELEMENTS) {
-      /* refine the forest with subelements */
       forest->from_method -= T8_FOREST_FROM_SUBELEMENTS;
       /* This is the last from method that we execute,
        * nothing should be left todo */

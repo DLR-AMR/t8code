@@ -51,21 +51,20 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
   /* NOTE we want the current element and its neighbors from forest, 
    * because this is the balanced forest if set_balance is called. 
    * Somehow, this is not possible because forest is not committed. */
-  #if 0
   int                num_faces, iface, *dual_faces, num_neighbors, subelement_type = 0;
   const t8_element_t *current_element;
   t8_element_t       **neighbor_leafs;
   t8_locidx_t        *element_indices;
   t8_eclass_scheme_c *neigh_scheme;
 
-  current_element = t8_forest_get_element_in_tree (forest, ltree_id, lelement_id);
+  current_element = t8_forest_get_element_in_tree (forest_from, ltree_id, lelement_id);
 
   num_faces = ts->t8_element_num_faces (current_element);
 
   for (iface = 0; iface < num_faces; iface++) {
-    t8_forest_leaf_face_neighbors (forest, ltree_id, current_element, &neighbor_leafs,
+    t8_forest_leaf_face_neighbors (forest_from, ltree_id, current_element, &neighbor_leafs,
                                      iface, &dual_faces, &num_neighbors,
-                                     &element_indices, &neigh_scheme, 0); 
+                                     &element_indices, &neigh_scheme, 1); 
     if (num_neighbors > 1) {
       subelement_type = subelement_type * 2 + 1;
     }
@@ -73,9 +72,13 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
       subelement_type = subelement_type *2;
     }
   }
-  #endif
-  /* refine using subelements related with callback-value 2 */
-  return 2;
+  printf("Element_id: %i; Subelement_Type: %i\n", lelement_id,subelement_type);
+  if (subelement_type != 0) {
+    return 2;
+  }
+  else {
+    return 0;
+  }
 }
 
 /* Collective function to compute the maximum occurring refinement level in a forest */
