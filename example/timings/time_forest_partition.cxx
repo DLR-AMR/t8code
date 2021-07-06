@@ -490,8 +490,8 @@ main (int argc, char *argv[])
       }
       cmesh =
         t8_cmesh_new_hollow_cylinder (sc_MPI_COMM_WORLD,
-                                      4 * (cmesh_level + 1), cmesh_level + 1,
-                                      cmesh_level + 1, 0);
+                                      4 * pow(2, cmesh_level), pow(2, cmesh_level),
+                                      pow(2, cmesh_level), 0);
       vtu_prefix = "test_linear_cylinder";
     }
     else if (test_occ_cylinder) {
