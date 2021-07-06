@@ -554,32 +554,23 @@ t8_forest_commit (t8_forest_t forest)
       forest->from_method -= T8_FOREST_FROM_BALANCE;
       if (forest->from_method > 0) {
         /* in this case, we will use subelements after balancing */
+        int flag_rep;
         if (forest->set_balance == T8_FOREST_BALANCE_NO_REPART) {
           /* balance without repartition */
-          t8_forest_t         forest_adapt;
-
-          t8_forest_init (&forest_adapt);
-          /* forest_adapt should not change ownership of forest->set_from */
-          t8_forest_ref (forest->set_from);
-          /* Construct an intermediate, adapted forest */
-          t8_forest_set_balance (forest_adapt, forest->set_from, 1);
-          t8_forest_commit (forest_adapt);
-          /* The new forest will be partitioned/balanced from forest_adapt */
-          forest->set_from = forest_adapt;
+          flag_rep = 1;
         }
         else {
           /* balance with repartition */
+          flag_rep = 0;
+        }
           t8_forest_t         forest_adapt;
 
           t8_forest_init (&forest_adapt);
           /* forest_adapt should not change ownership of forest->set_from */
-          t8_forest_ref (forest->set_from);
-          /* Construct an intermediate, adapted forest */
-          t8_forest_set_balance (forest_adapt, forest->set_from, 0);
+          t8_forest_set_balance (forest_adapt, forest->set_from, flag_rep);
           t8_forest_commit (forest_adapt);
           /* The new forest will be partitioned/balanced from forest_adapt */
           forest->set_from = forest_adapt;
-        }
       }
       else {
         /* in this case, this is the last from method that we execute,
@@ -597,7 +588,7 @@ t8_forest_commit (t8_forest_t forest)
     } 
     if (forest->from_method & T8_FOREST_FROM_SUBELEMENTS) {
       forest->from_method -= T8_FOREST_FROM_SUBELEMENTS;
-      /* This is the last from method that we execute,
+      /* this is the last from method that we execute,
        * nothing should be left todo */
       T8_ASSERT (forest->from_method == 0);
       /* use subelements */

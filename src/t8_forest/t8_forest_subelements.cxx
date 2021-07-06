@@ -42,15 +42,15 @@ T8_EXTERN_C_BEGIN ();
  * we pass forest_from as a parameter. But doing so is not valid anymore
  * if we refine recursively. */
 
-static int
+int
 t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
                              t8_locidx_t ltree_id, t8_locidx_t lelement_id,
                              t8_eclass_scheme_c * ts,
                              int num_elements, t8_element_t * elements[])
 {
-  /* NOTE we want the current element and its neighbors from forest, 
-   * because this is the balanced forest if set_balance is called. 
-   * Somehow, this is not possible because forest is not committed. */
+  /* this function determines whether a subelement (and which type) should be used for a specific 
+   * element of the forest. The return value depends on the neighbor elements and their 
+   * refinement level. */
   int                num_faces, iface, *dual_faces, num_neighbors, subelement_type = 0;
   const t8_element_t *current_element;
   t8_element_t       **neighbor_leafs;
@@ -71,13 +71,21 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
     else {
       subelement_type = subelement_type *2;
     }
+    if (num_neighbors > 0) {
+        neigh_scheme->t8_element_destroy (num_neighbors, neighbor_leafs);
+
+        T8_FREE (element_indices);
+        T8_FREE (neighbor_leafs);
+        T8_FREE (dual_faces);
+    }
   }
   printf("Element_id: %i; Subelement_Type: %i\n", lelement_id,subelement_type);
-  if (subelement_type != 0) {
-    return 2;
-  }
-  else {
+  if (subelement_type == 0) {
     return 0;
+  }
+  /* avoid refine = 1, since this value is for the recursive refinement scheme */
+  else {
+    return 2; // return subelement_type + 1;
   }
 }
 
@@ -113,27 +121,14 @@ t8_forest_compute_max_element_level (t8_forest_t forest)
 void
 t8_forest_subelements (t8_forest_t forest)
 {
-  t8_forest_t         forest_temp, forest_from; 
+  t8_global_productionf ("Into t8_forest_subelements.\n");
 
-  t8_global_productionf
-    ("Into t8_forest_subelements with %lli global elements.\n",
-    (long long) t8_forest_get_global_num_elements (forest->set_from));
+  forest->set_adapt_fn = t8_forest_subelements_adapt;
+  forest->set_adapt_recursive = 0;
+  t8_forest_copy_trees (forest, forest->set_from, 0);
+  t8_forest_adapt (forest);
 
-  forest_from = forest->set_from;
-  t8_forest_ref (forest_from);
-  
-  t8_forest_init (&forest_temp);
-  /* Adapt the forest with subelement CB */
-  t8_forest_set_adapt (forest_temp, forest_from, t8_forest_subelements_adapt, 0);
-  /* Adapt the forest */
-  t8_forest_commit (forest_temp);
-  t8_forest_copy_trees (forest, forest_temp, 1);
-
-  t8_global_productionf
-    ("Done t8_forest_subelements with %lli global elements.\n",
-    (long long) t8_forest_get_global_num_elements (forest_temp));
-
-  t8_forest_unref (&forest_temp);
+  t8_global_productionf ("Done t8_forest_subelements.\n");
 }
 
 /* Check whether all hanging nodes are eliminated. */

@@ -340,8 +340,8 @@ t8_forest_adapt (t8_forest_t forest)
        * depending on the number and location of neighbor elements with a higher level. each refine value will then 
        * correspond to a specific subelement_type that is defined in the quad_w_sub scheme. */
       else if (refine == 2) {
-        subelement_type = 1;
-        num_subelements = 2;
+        subelement_type = 3;
+        num_subelements = 4;
 
         (void) t8_element_array_push_count (telements, num_subelements);
         for (zz = 0; zz < num_subelements; zz++) {

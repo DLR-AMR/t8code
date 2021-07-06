@@ -112,7 +112,7 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  /* use T8_ECLASS_QUAD (our quad_w_sub scheme) */
+  /* use T8_ECLASS_QUAD */
   t8_basic_refine_test (T8_ECLASS_QUAD);
 
   sc_finalize ();

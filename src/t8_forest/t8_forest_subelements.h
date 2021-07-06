@@ -28,16 +28,19 @@
 
 /* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_balance */
 
-#ifndef T8_FOREST_BALANCE_H
-#define T8_FOREST_BALANCE_H
+#ifndef T8_FOREST_SUBELEMENTS_H
+#define T8_FOREST_SUBELEMENTS_H
 
 #include <t8.h>
 #include <t8_forest/t8_forest_types.h>
 
 T8_EXTERN_C_BEGIN ();
 
-/* TODO: document
- * only temporary and will be replaced in future */
+int                 t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
+                                                 t8_locidx_t ltree_id, t8_locidx_t lelement_id,
+                                                 t8_eclass_scheme_c * ts,
+                                                 int num_elements, t8_element_t * elements[]);
+
 void                t8_forest_subelements (t8_forest_t forest);
 
 /* Check whether the local elements of a forest are balanced. */
