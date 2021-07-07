@@ -73,7 +73,7 @@ t8_forest_from_cmesh (t8_cmesh_t cmesh, int level, const char *prefix)
   t8_forest_set_level (forest, level);
   t8_forest_commit (forest);
   t8_debugf ("Committed forest. Has %i elements.\n",
-             t8_forest_get_num_element (forest));
+             t8_forest_get_local_num_elements (forest));
   snprintf (fileprefix, BUFSIZ, "%s_t8_tetgen_forest", prefix);
   t8_forest_write_vtk (forest, fileprefix);
   t8_debugf ("Wrote to file %s\n", fileprefix);
@@ -88,14 +88,22 @@ main (int argc, char *argv[])
   const char         *prefix;
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
+  int                 sreturn;
 
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>",
             basename (argv[0]));
-  snprintf (help, BUFSIZ,
-            "This program reads a collection of .node, .ele and "
-            ".neigh files created by the TETGEN program and constructs a "
-            "t8code coarse mesh from them.\nAll three files must have the same prefix.\n\n%s\n\nExample: %s -f A1\nTo open the files A1.node, A1.ele and "
-            "A1.neigh.\n", usage, basename (argv[0]));
+  sreturn = snprintf (help, BUFSIZ,
+                      "This program reads a collection of .node, .ele and "
+                      ".neigh files created by the TETGEN program and constructs a "
+                      "t8code coarse mesh from them.\nAll three files must have the same prefix.\n\n%s\n\nExample: %s -f A1\nTo open the files A1.node, A1.ele and "
+                      "A1.neigh.\n", usage, basename (argv[0]));
+
+  if (sreturn >= BUFSIZ) {
+    /* The help message was truncated */
+    /* Note: gcc >= 7.1 prints a warning if we 
+     * do not check the return value of snprintf. */
+    t8_debugf ("Warning: Truncated help message to '%s'\n", help);
+  }
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);

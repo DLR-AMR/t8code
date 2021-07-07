@@ -196,17 +196,32 @@ main (int argc, char **argv)
   int                 level, do_partition, create_forest, do_balance, adapt;
   int                 eclass_int;
   int                 parsed, helpme;
+  int                 sreturn;
   t8_eclass_t         eclass;
 
   /* brief help message */
-  snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t"
-            "for a brief overview of all options.",
-            basename (argv[0]), basename (argv[0]));
+  sreturn = snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t"
+                      "for a brief overview of all options.",
+                      basename (argv[0]), basename (argv[0]));
+  if (sreturn >= BUFSIZ) {
+    /* Usage string was truncated. */
+    /* Note: gcc >= 7.1 prints a warning if we 
+     * do not check the return value of snprintf. */
+    t8_debugf ("Warning: Truncated usage string to '%s'\n", usage);
+  }
 
   /* long help message */
-  snprintf (help, BUFSIZ, "This program constructs a uniformly refined "
-            "cubical mesh.\nThe user can choose the type of mesh elements to "
-            "use and the refinement level of the mesh.\n\n%s\n", usage);
+  sreturn =
+    snprintf (help, BUFSIZ,
+              "This program constructs a uniformly refined "
+              "cubical mesh.\nThe user can choose the type of mesh elements to "
+              "use and the refinement level of the mesh.\n\n%s\n", usage);
+  if (sreturn >= BUFSIZ) {
+    /* help message was truncated. */
+    /* Note: gcc >= 7.1 prints a warning if we 
+     * do not check the return value of snprintf. */
+    t8_debugf ("Warning: Truncated help message to '%s'\n", help);
+  }
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);

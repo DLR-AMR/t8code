@@ -96,6 +96,8 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
    * This variable lives beyond one execution of t8_cmesh_is_committed.
    * We use it as a form of lock to prevent entering an infinite recursion.
    */
+  /* TODO: This is_checking is not thread safe. If two threads call cmesh routines
+   *       that call t8_cmesh_is_committed, only one of them will correctly check the cmesh. */
   if (!is_checking) {
     is_checking = 1;
 
@@ -110,6 +112,10 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
     if ((!t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) ||
         (!t8_cmesh_no_negative_volume (cmesh))
         || (!t8_cmesh_check_trees_per_eclass (cmesh))) {
+      is_checking = 0;
+      return 0;
+    }
+    if (t8_cmesh_get_num_local_trees (cmesh) > 0 && t8_cmesh_is_empty (cmesh)) {
       is_checking = 0;
       return 0;
     }
@@ -301,11 +307,11 @@ t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm)
   mpiret = sc_MPI_Comm_size (comm, &mpisize_debug);
   SC_CHECK_MPI (mpiret);
   T8_ASSERT (mpisize == mpisize_debug);
-  t8_debugf ("Allocating shared array with type %s\n",
-             sc_shmem_type_to_string[sc_shmem_get_type (comm)]);
 #endif
 
   t8_shmem_array_init (&offsets, sizeof (t8_gloidx_t), mpisize + 1, comm);
+  t8_debugf ("Allocating shared array with type %s\n",
+             sc_shmem_type_to_string[sc_shmem_get_type (comm)]);
   return offsets;
 }
 
@@ -896,12 +902,18 @@ t8_cmesh_bcast_attributes (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 }
 #endif
 
+int
+t8_cmesh_is_empty (t8_cmesh_t cmesh)
+{
+  return cmesh->num_trees == 0;
+}
+
 t8_cmesh_t
 t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 {
   int                 mpirank, mpisize, mpiret;
   int                 iclass;
-  t8_cmesh_t          cmesh_out;
+  t8_cmesh_t          cmesh_out = NULL; /* NULL initializer prevents compiler warning. */
 
   struct
   {
@@ -958,15 +970,20 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
       meta_info.stash_elem_counts[1] = cmesh_in->stash->classes.elem_count;
       meta_info.stash_elem_counts[2] = cmesh_in->stash->joinfaces.elem_count;
     }
-#ifdef T8_ENABLE_DEBUG
-    meta_info.comm = comm;
-#endif
+
     /* Root returns the input cmesh */
     cmesh_out = cmesh_in;
   }
   /* TODO: we could optimize this by using IBcast */
   mpiret = sc_MPI_Bcast (&meta_info, sizeof (meta_info), sc_MPI_BYTE, root,
                          comm);
+
+  SC_CHECK_MPI (mpiret);
+#ifdef T8_ENABLE_DEBUG
+  mpiret = sc_MPI_Comm_dup (comm, &(meta_info.comm));
+  SC_CHECK_MPI (mpiret);
+#endif
+
   SC_CHECK_MPI (mpiret);
 
   /* If not root store information in new cmesh and allocate memory for arrays. */
@@ -993,7 +1010,10 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
         meta_info.num_trees_per_eclass[iclass];
     }
 #ifdef T8_ENABLE_DEBUG
-    T8_ASSERT (meta_info.comm == comm);
+    int                 result;
+    mpiret = sc_MPI_Comm_compare (comm, meta_info.comm, &result);
+    SC_CHECK_MPI (mpiret);
+    T8_ASSERT (result == sc_MPI_CONGRUENT);
 #endif
   }
   if (meta_info.pre_commit) {
@@ -1015,6 +1035,8 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   cmesh_out->mpisize = mpisize;
   /* Final checks */
 #ifdef T8_ENABLE_DEBUG
+  mpiret = sc_MPI_Comm_free (&meta_info.comm);
+  SC_CHECK_MPI (mpiret);
   if (!meta_info.pre_commit) {
     T8_ASSERT (t8_cmesh_is_committed (cmesh_out));
     T8_ASSERT (t8_cmesh_comm_is_valid (cmesh_out, comm));
@@ -1945,12 +1967,14 @@ t8_cmesh_new_from_class (t8_eclass_t eclass, sc_MPI_Comm comm)
 }
 
 t8_cmesh_t
-t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition)
+t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition, int dimension)
 {
   t8_cmesh_t          cmesh;
 
   t8_cmesh_init (&cmesh);
+  t8_cmesh_set_dimension (cmesh, dimension);
   t8_cmesh_commit (cmesh, comm);
+  T8_ASSERT (t8_cmesh_is_empty (cmesh));
   return cmesh;
 }
 
@@ -2260,7 +2284,13 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
   };
 
   SC_CHECK_ABORT (eclass != T8_ECLASS_PYRAMID || !periodic,
-                  "The pyramid cube mesh cannot be periodic.");
+                  "The pyramid cube mesh cannot be periodic.\n");
+
+  if (do_partition) {
+    t8_global_errorf
+      ("WARNING: Partitioning the hypercube cmesh is currently not supported.\n"
+       "Using this cmesh will crash when vertices are used. See also https://github.com/holke/t8code/issues/79\n");
+  }
 
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -2861,6 +2891,12 @@ t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_Comm comm)
   return cmesh;
 }
 
+/* Creates a mesh consisting of 8 prisms. The first 6 prisms are constructed, by
+ * approximating the first 3 chunks of 60 degrees of the unit-circle via prisms.
+ * The next four prisms use the same principle, but are shifted by one along the
+ * z-axis. The first of these prisms is connected to the third prism via its tri-
+ * angular bottom. The last prisms is out of this circle. Some prisms are rotated,
+ * such that we get a variaty of face-connections. */
 t8_cmesh_t
 t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
 {
@@ -2868,7 +2904,7 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
   /*8 Prism a 6 vertices a 3 coords */
   double              vertices[144];
   t8_cmesh_t          cmesh;
-
+  /*The first three prisms */
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 6; j++) {
       /*Get the edges at the unit circle */
@@ -2889,6 +2925,7 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
       }
     }
   }
+  /*Four prisms, bottom starts at z = 1 */
   for (i = 2; i < 6; i++) {
     for (j = 0; j < 6; j++) {
       /*Get the edges at the unit circle */
@@ -2910,24 +2947,26 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
       }
     }
   }
-  vertices[126] = cos (300 * M_PI / 180);
-  vertices[127] = sin (300 * M_PI / 180);
+  /*The last prism, breaking out of the unit-circle */
+  vertices[126] = 1;
+  vertices[127] = 0;
   vertices[128] = 1;
-  vertices[129] = 1;
-  vertices[130] = 0;
+  vertices[129] = cos (300 * M_PI / 180);
+  vertices[130] = sin (300 * M_PI / 180);
   vertices[131] = 1;
   vertices[132] = cos (300 * M_PI / 180) + 1;
   vertices[133] = sin (300 * M_PI / 180);
   vertices[134] = 1;
-  vertices[135] = cos (300 * M_PI / 180);
-  vertices[136] = sin (300 * M_PI / 180);
+  vertices[135] = 1;
+  vertices[136] = 0;
   vertices[137] = 2;
-  vertices[138] = 1;
-  vertices[139] = 0;
+  vertices[138] = cos (300 * M_PI / 180);
+  vertices[139] = sin (300 * M_PI / 180);
   vertices[140] = 2;
   vertices[141] = cos (300 * M_PI / 180) + 1;
   vertices[142] = sin (300 * M_PI / 180);
   vertices[143] = 2;
+  /*Rotate the second, third and the fifth prism */
   prism_rotate (vertices + 18, 2);
   prism_rotate (vertices + 36, 1);
   prism_rotate (vertices + 72, 2);

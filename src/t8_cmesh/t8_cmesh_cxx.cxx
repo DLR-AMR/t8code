@@ -58,6 +58,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
 
     t8_gloidx_t         global_num_children;
     t8_gloidx_t         first_global_child;
+    t8_gloidx_t         child_in_tree_begin_temp;
     t8_gloidx_t         last_global_child;
     t8_gloidx_t         children_per_tree = 0;
     t8_gloidx_t         first_class_children_per_tree = -1;
@@ -129,9 +130,10 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
 
     *first_local_tree = trees;
     *first_local_tree = first_global_child / children_per_tree;
+    child_in_tree_begin_temp =
+      first_global_child - *first_local_tree * children_per_tree;
     if (child_in_tree_begin != NULL) {
-       *child_in_tree_begin =
-        first_global_child - *first_local_tree * children_per_tree;
+      *child_in_tree_begin = child_in_tree_begin_temp;
     }
 
     *last_local_tree = (last_global_child - 1) / children_per_tree;
@@ -143,7 +145,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
       prev_last_tree = (first_global_child - 1) / children_per_tree;
       T8_ASSERT (cmesh->mpirank > 0 || prev_last_tree <= 0);
 #endif
-      if (!is_empty && cmesh->mpirank > 0 && first_global_child > 0) {
+      if (!is_empty && cmesh->mpirank > 0 && child_in_tree_begin_temp > 0) {
         /* We exclude empty partitions here, by def their first_tree_shared flag is zero */
         /* We also exclude that the previous partition was empty at the beginning of the
          * partitions array */
