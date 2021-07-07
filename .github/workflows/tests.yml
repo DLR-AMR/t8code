@@ -282,7 +282,7 @@ jobs:
 # configure and test with MPI (release mode)
     - name: Printing MPI compiler info
       run: mpicc --version && mpirun --version
-    - name: Priting GCC compiler info
+    - name: Printing GCC compiler info
       run: gcc --version && g++ --version
     - name: check release mode
       run: echo "Checking release mode (MPI)"
