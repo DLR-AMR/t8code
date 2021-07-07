@@ -283,17 +283,9 @@ t8_forest_adapt (t8_forest_t forest)
       num_elements = num_children;      /*This has to remain num_children t8_element_array_index_locidx
                                            (telements_from, 0) */
 
-      if (tscheme->t8_element_level (t8_element_array_index_locidx
-                                     (telements_from, el_considered)) > 0) {
-        tscheme->t8_element_parent (t8_element_array_index_locidx
-                                    (telements_from, el_considered), parent);
-        num_siblings = tscheme->t8_element_num_children (parent);
-      }
-      else {
-        num_siblings =
-          tscheme->t8_element_num_children (t8_element_array_index_locidx
-                                            (telements_from, el_considered));
-      }
+      num_siblings =
+        tscheme->t8_element_num_siblings (t8_element_array_index_locidx
+                                          (telements_from, el_considered));
       /*change: num_children into num_siblings */
       for (zz = 0; zz < (unsigned int) num_siblings &&
            el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
@@ -402,15 +394,7 @@ t8_forest_adapt (t8_forest_t forest)
         T8_ASSERT (refine == 0);
         elements[0] = t8_element_array_push (telements);
         tscheme->t8_element_copy (elements_from[0], elements[0]);
-        /*T8_ASSERT(tscheme->t8_element_level(elements[0])> 0); */
-        if (tscheme->t8_element_level (elements[0]) > 0) {
-
-          tscheme->t8_element_parent (elements[0], parent);
-          num_siblings = tscheme->t8_element_num_children (parent);
-        }
-        else {
-          num_siblings = tscheme->t8_element_num_children (elements[0]);
-        }
+        num_siblings = tscheme->t8_element_num_siblings (elements[0]);
         el_inserted++;
         const int           child_id =
           tscheme->t8_element_child_id (elements[0]);
