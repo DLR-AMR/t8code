@@ -100,6 +100,8 @@ t8_basic_cake_refine (t8_forest_t forest, t8_forest_t forest_from,
   }
 }
 
+/* TODO: Deactivated since it is currently unused. */
+#if 0
 static int
 t8_basic_only_pyramid (t8_forest_t forest, t8_forest_t forest_from,
                        t8_locidx_t which_tree, t8_locidx_t lelement_id,
@@ -118,6 +120,7 @@ t8_basic_only_pyramid (t8_forest_t forest, t8_forest_t forest_from,
     return 0;
   }
 }
+#endif
 
 static void
 t8_basic_hybrid (int level, int endlvl, int do_vtk, t8_eclass_t eclass,
