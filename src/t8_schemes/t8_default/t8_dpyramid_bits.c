@@ -308,7 +308,8 @@ t8_dpyramid_custom_mod (t8_linearidx_t * id, const t8_dpyramid_type_t type,
                         const t8_linearidx_t pyra, const t8_linearidx_t tet)
 {
   t8_linearidx_t      test = 0, shift;
-  T8_ASSERT (id >= 0);
+  T8_ASSERT (id != NULL);
+  T8_ASSERT (*id >= 0);
   int                 remain = -1;
   do {
     /* Iterate through the local-id. Get the current shift by the type of the
