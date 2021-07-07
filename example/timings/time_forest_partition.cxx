@@ -341,7 +341,7 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
     partition = num_files > 1;
   }
   SC_CHECK_ABORT (cmesh != NULL, "Error when creating cmesh.\n");
-#if 0
+
   if (partition) {
     /* partition the cmesh uniformly */
     t8_cmesh_init (&cmesh_partition);
@@ -351,7 +351,6 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
     t8_cmesh_commit (cmesh_partition, comm);
     return cmesh_partition;
   }
-#endif
   return cmesh;
 }
 
