@@ -1872,6 +1872,8 @@ t8_cmesh_new_hex (sc_MPI_Comm comm)
   return cmesh;
 }
 
+/* TODO: This mesh is currently not used. Reactivate if it is used. */
+#if 0
 static              t8_cmesh_t
 t8_cmesh_new_pyramid_deformed (sc_MPI_Comm comm)
 {
@@ -1890,6 +1892,7 @@ t8_cmesh_new_pyramid_deformed (sc_MPI_Comm comm)
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }
+#endif
 
 static              t8_cmesh_t
 t8_cmesh_new_pyramid (sc_MPI_Comm comm)
