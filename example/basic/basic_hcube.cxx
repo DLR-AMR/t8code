@@ -31,51 +31,52 @@
 #include <t8_cmesh_vtk.h>
 
 static int
-t8_basic_hypercube_refine(t8_forest_t forest, t8_forest_t forest_from,
-                          t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                          t8_eclass_scheme_c * ts, int num_elements,
-                          t8_element_t * elements[])
+t8_basic_hypercube_refine (t8_forest_t forest, t8_forest_t forest_from,
+                           t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                           t8_eclass_scheme_c * ts, int num_elements,
+                           t8_element_t * elements[])
 {
-    int         type = -1, level;
-    level = ts->t8_element_level(elements[0]);
-    if (level >= *(int *) t8_forest_get_user_data (forest) || level == 0) {
-      return 0;
-    }
-    switch(ts->t8_element_shape(elements[0])){
-    case T8_ECLASS_TRIANGLE:
-    /* TODO: Use element general function here */
-        type = ((t8_dtri_t *)elements[0])->type;
-        break;
-    case T8_ECLASS_TET:
-        if(type == 0 || type == 2 || type == 4){
-            return 1;
-        }
-    case T8_ECLASS_PRISM:
-        type = ((t8_dprism_t *)elements[0])->tri.type;
-        break;
-    case T8_ECLASS_PYRAMID:
-        return 1;
-        break;
-    default:
-      SC_ABORTF("Invalid elemnent shape detected.\n");
-    }
-/*TODO: Implement a better refinement argument, one that effects all elements*/
-    if(type == 0 || type == 2 || type == 4){
-        return 1;
-    }
+  int                 type = -1, level;
+  level = ts->t8_element_level (elements[0]);
+  if (level >= *(int *) t8_forest_get_user_data (forest) || level == 0) {
     return 0;
+  }
+  switch (ts->t8_element_shape (elements[0])) {
+  case T8_ECLASS_TRIANGLE:
+    /* TODO: Use element general function here */
+    type = ((t8_dtri_t *) elements[0])->type;
+    break;
+  case T8_ECLASS_TET:
+    if (type == 0 || type == 2 || type == 4) {
+      return 1;
+    }
+  case T8_ECLASS_PRISM:
+    type = ((t8_dprism_t *) elements[0])->tri.type;
+    break;
+  case T8_ECLASS_PYRAMID:
+    return 1;
+    break;
+  default:
+    SC_ABORTF ("Invalid elemnent shape detected.\n");
+  }
+/*TODO: Implement a better refinement argument, one that effects all elements*/
+  if (type == 0 || type == 2 || type == 4) {
+    return 1;
+  }
+  return 0;
 }
 
 static int
-t8_basic_hypercube_coarsen(t8_forest_t forest, t8_forest_t forest_from,
-                          t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                          t8_eclass_scheme_c * ts, int num_elements,
-                          t8_element_t * elements[])
+t8_basic_hypercube_coarsen (t8_forest_t forest, t8_forest_t forest_from,
+                            t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                            t8_eclass_scheme_c * ts, int num_elements,
+                            t8_element_t * elements[])
 {
-    int         level;
-    level = ts->t8_element_level(elements[0]);
-    if(level > 1 && num_elements >1) return -1;
-    return 0;
+  int                 level;
+  level = ts->t8_element_level (elements[0]);
+  if (level > 1 && num_elements > 1)
+    return -1;
+  return 0;
 }
 
 static void
@@ -85,13 +86,13 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level, int do_adapt,
   t8_forest_t         forest, forest_adapt, forest_coarsen;
   t8_cmesh_t          cmesh, cmesh_partition;
   char                vtuname[BUFSIZ], cmesh_file[BUFSIZ];
-  int                 mpirank, mpiret, endlvl = set_level+3;
+  int                 mpirank, mpiret, endlvl = set_level + 3;
 
   t8_global_productionf ("Contructing hypercube mesh with element class %s\n",
                          t8_eclass_to_string[eclass]);
   cmesh =
-        t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, do_partition, 0);
-        //t8_cmesh_new_from_class(eclass, sc_MPI_COMM_WORLD);
+    t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, do_partition, 0);
+  //t8_cmesh_new_from_class(eclass, sc_MPI_COMM_WORLD);
 
   snprintf (cmesh_file, BUFSIZ, "cmesh_hcube_%s",
             t8_eclass_to_string[eclass]);
@@ -106,7 +107,6 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level, int do_adapt,
     t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
     cmesh = cmesh_partition;
   }
-
 
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -136,30 +136,32 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level, int do_adapt,
                 t8_eclass_to_string[eclass]);
       t8_forest_write_vtk (forest, vtuname);
       t8_debugf ("Output to %s\n", vtuname);
-      if(do_adapt){
-          t8_forest_init(&forest_adapt);
-          t8_forest_set_user_data(forest_adapt, &endlvl);
-          t8_forest_set_profiling(forest_adapt, 1);
-          t8_forest_set_adapt(forest_adapt, forest, t8_basic_hypercube_refine, 1);
-          t8_forest_set_ghost_ext(forest_adapt, 1, T8_GHOST_FACES, 2);
-          t8_forest_commit(forest_adapt);
-          t8_debugf ("Successfully adapted forest.\n");
-          snprintf (vtuname, BUFSIZ, "forest_hypercube_adapt_%s",
-                    t8_eclass_to_string[eclass]);
-          t8_forest_write_vtk (forest_adapt, vtuname);
-          t8_debugf ("Output to %s\n", vtuname);
-          /* Ensure that the correct forest is passed to unref later */
+      if (do_adapt) {
+        t8_forest_init (&forest_adapt);
+        t8_forest_set_user_data (forest_adapt, &endlvl);
+        t8_forest_set_profiling (forest_adapt, 1);
+        t8_forest_set_adapt (forest_adapt, forest, t8_basic_hypercube_refine,
+                             1);
+        t8_forest_set_ghost_ext (forest_adapt, 1, T8_GHOST_FACES, 2);
+        t8_forest_commit (forest_adapt);
+        t8_debugf ("Successfully adapted forest.\n");
+        snprintf (vtuname, BUFSIZ, "forest_hypercube_adapt_%s",
+                  t8_eclass_to_string[eclass]);
+        t8_forest_write_vtk (forest_adapt, vtuname);
+        t8_debugf ("Output to %s\n", vtuname);
+        /* Ensure that the correct forest is passed to unref later */
 
-          t8_forest_init(&forest_coarsen);
-          t8_forest_set_user_data(forest_coarsen, &endlvl);
-          t8_forest_set_profiling(forest_coarsen, 1);
-          t8_forest_set_adapt(forest_coarsen, forest_adapt, t8_basic_hypercube_coarsen, 0);
-          t8_forest_commit(forest_coarsen);
-          t8_debugf ("Successfully coarsened forest.\n");
-          snprintf (vtuname, BUFSIZ, "forest_hypercube_coarsen_%s",
-                    t8_eclass_to_string[eclass]);
-          t8_forest_write_vtk (forest_coarsen, vtuname);
-          t8_debugf ("Output to %s\n", vtuname);
+        t8_forest_init (&forest_coarsen);
+        t8_forest_set_user_data (forest_coarsen, &endlvl);
+        t8_forest_set_profiling (forest_coarsen, 1);
+        t8_forest_set_adapt (forest_coarsen, forest_adapt,
+                             t8_basic_hypercube_coarsen, 0);
+        t8_forest_commit (forest_coarsen);
+        t8_debugf ("Successfully coarsened forest.\n");
+        snprintf (vtuname, BUFSIZ, "forest_hypercube_coarsen_%s",
+                  t8_eclass_to_string[eclass]);
+        t8_forest_write_vtk (forest_coarsen, vtuname);
+        t8_debugf ("Output to %s\n", vtuname);
       }
       if (do_balance) {
         t8_forest_t         forest_balance;
@@ -177,11 +179,11 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level, int do_adapt,
         forest = forest_balance;
       }
     }
-    if(do_adapt){
-        t8_forest_unref(&forest_coarsen);
+    if (do_adapt) {
+      t8_forest_unref (&forest_coarsen);
     }
-    else{
-        t8_forest_unref (&forest);
+    else {
+      t8_forest_unref (&forest);
     }
   }
   else {
@@ -242,8 +244,8 @@ main (int argc, char **argv)
                          "Enable coarse mesh partitioning.");
   sc_options_add_switch (opt, 'b', "balance", &do_balance,
                          "Additionally balance the forest.");
-  sc_options_add_switch (opt, 'a', "adapt", &adapt, "Refine and coarsen the mesh "
-                                                    "adaptivly.");
+  sc_options_add_switch (opt, 'a', "adapt", &adapt,
+                         "Refine and coarsen the mesh " "adaptivly.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, 0,
                       "The type of elements to use.\n"
                       "\t\t0 - vertex\n\t\t1 - line\n\t\t2 - quad\n"
