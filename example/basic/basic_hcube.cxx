@@ -43,6 +43,7 @@ t8_basic_hypercube_refine(t8_forest_t forest, t8_forest_t forest_from,
     }
     switch(ts->t8_element_shape(elements[0])){
     case T8_ECLASS_TRIANGLE:
+    /* TODO: Use element general function here */
         type = ((t8_dtri_t *)elements[0])->type;
         break;
     case T8_ECLASS_TET:
