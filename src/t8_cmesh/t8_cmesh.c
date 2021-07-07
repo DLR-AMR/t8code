@@ -3159,9 +3159,12 @@ t8_cmesh_new_tet_orientation_test (sc_MPI_Comm comm)
   /* Set the coordinates. Each tet is just a translated version of
    * the root tet */
   for (i = 0; i < num_trees; i++) {
+    /* *INDENT-OFF* */
+    /* Indent changes '!!' not '! !' */
     translate[0] = (i & 1) + 2 * !!(i & 8);
     translate[1] = !!(i & 2) + 2 * !!(i & 16);
     translate[2] = !!(i & 4) + 2 * !!(i & 32);
+    /* *INDENT-ON* */
     t8_debugf ("%i  %.0f %.0f %.0f\n", i, translate[0], translate[1],
                translate[2]);
     t8_cmesh_translate_coordinates (vertices_coords, translated_coords, 4,
