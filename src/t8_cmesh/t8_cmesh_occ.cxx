@@ -111,16 +111,21 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
         vertices[((i * num_axial_trees + j) * num_radial_trees + k) * 24 + 23] = -0.5 + (j + 1) * dh;
         t8_cmesh_set_tree_vertices (cmesh, (i * num_axial_trees + j) * num_radial_trees + k, vertices + ((i * num_axial_trees + j) * num_radial_trees + k) * 24, 24);
 
-        if (with_occ_geometry && (k == 0 || k == num_radial_trees))
+        /* Assign parameters if occ is enabled */
+        if (with_occ_geometry)
         {
-          parameters[(i * num_axial_trees + j) * 8 + 0] = (i + 1) * dphi;
-          parameters[(i * num_axial_trees + j) * 8 + 1] = 0.5 - j * dh;
-          parameters[(i * num_axial_trees + j) * 8 + 2] = i * dphi;
-          parameters[(i * num_axial_trees + j) * 8 + 3] = 0.5 - j * dh;
-          parameters[(i * num_axial_trees + j) * 8 + 4] = (i + 1) * dphi;
-          parameters[(i * num_axial_trees + j) * 8 + 5] = 0.5 + -(j + 1) * dh;
-          parameters[(i * num_axial_trees + j) * 8 + 6] = i * dphi;
-          parameters[(i * num_axial_trees + j) * 8 + 7] = 0.5 -(j + 1) * dh;
+          /* Calculate parameters if cell lies on boundary */
+          if (k == 0 || k == num_radial_trees - 1)
+          {
+            parameters[(i * num_axial_trees + j) * 8 + 0] = (i + 1) * dphi;
+            parameters[(i * num_axial_trees + j) * 8 + 1] = 0.5 - j * dh;
+            parameters[(i * num_axial_trees + j) * 8 + 2] = i * dphi;
+            parameters[(i * num_axial_trees + j) * 8 + 3] = 0.5 - j * dh;
+            parameters[(i * num_axial_trees + j) * 8 + 4] = (i + 1) * dphi;
+            parameters[(i * num_axial_trees + j) * 8 + 5] = 0.5 + -(j + 1) * dh;
+            parameters[(i * num_axial_trees + j) * 8 + 6] = i * dphi;
+            parameters[(i * num_axial_trees + j) * 8 + 7] = 0.5 -(j + 1) * dh;
+          }
 
           int edges[12] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
@@ -130,6 +135,7 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
             #if T8_WITH_OCC
             /* Assign occ geometries to the corresponding faces */
             int faces[6] = {0, 1, -1, -1, -1, -1};
+            
 
             /* Assign attributes to cmesh cells */
             t8_cmesh_set_attribute (cmesh, (i * num_axial_trees + j) * num_radial_trees + k, t8_get_package_id(), 
@@ -166,7 +172,7 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
             #endif /* T8_WITH_OCC */
           }
           /* If geometry only on face 0 */
-          else if (k == num_radial_trees)
+          else if (k == num_radial_trees - 1)
           {
             #if T8_WITH_OCC
             /* Assign occ geometries to the corresponding faces */
@@ -182,6 +188,22 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
             t8_cmesh_set_attribute (cmesh, (i * num_axial_trees + j) * num_radial_trees + k, t8_get_package_id(), 
                                     T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + 0, 
                                     parameters + (i * num_axial_trees + j) * 8, 8 * sizeof(double), 1);
+            #endif /* T8_WITH_OCC */
+          }
+          /* If there is no geometry */
+          else
+          {
+            #if T8_WITH_OCC
+            /* Assign occ geometries to the corresponding faces */
+            int faces[6] = {-1, -1, -1, -1, -1, -1};
+
+            /* Assign attributes to cmesh cells */
+            t8_cmesh_set_attribute (cmesh, (i * num_axial_trees + j) * num_radial_trees + k, t8_get_package_id(), 
+                                    T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
+                                    faces, 6 * sizeof(int), 1);
+            t8_cmesh_set_attribute (cmesh, (i * num_axial_trees + j) * num_radial_trees + k, t8_get_package_id(), 
+                                    T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
+                                    edges, 12 * sizeof(int), 1);
             #endif /* T8_WITH_OCC */
           }
         }
