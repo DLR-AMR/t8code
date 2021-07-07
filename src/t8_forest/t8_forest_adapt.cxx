@@ -191,8 +191,8 @@ t8_forest_adapt (t8_forest_t forest)
   int                 refine;
   int                 ci;
   int                 num_elements;
-  int                 subelement_type;
-  int                 num_subelements;
+  unsigned int        subelement_type; 
+  unsigned int        num_subelements;
 #ifdef T8_ENABLE_DEBUG
   int                 is_family;
 #endif
@@ -286,11 +286,14 @@ t8_forest_adapt (t8_forest_t forest)
       }
       T8_ASSERT (!is_family || tscheme->t8_element_is_family (elements_from));     
       /* Pass the element, or the family to the adapt callback.
-       * The output will be > 1 if we use subelements
-       *                    = 1 if the element should be refined
-       *                    = 0 if the element should remain as is
-       *                    < 0 if we passed a family and it should get coarsened.
-       */
+       * The output will be 
+       *
+       *      < 0 if we passed a family and it should get coarsened                               } those three values will appear if we use 
+       *      = 0 if the element should remain as is                                              } the "standard" refinement scheme without 
+       *      = 1 if the element should be refined (using the chosen recursive refinement scheme) } "set_subelements".
+       *      > 1 if we use subelements } values between 2 and 65 are reserved for subelements that eliminate hanging nodes. All values above 65 are for free use.
+       *  
+       * */
       refine = forest->set_adapt_fn (forest, forest->set_from, ltree_id,
                                      el_considered, tscheme, num_elements,
                                      elements_from);
@@ -336,13 +339,16 @@ t8_forest_adapt (t8_forest_t forest)
         }
         el_considered++;
       }
-      /* NOTE only refine == 2 defined. Do do: define a callback function that determines different refine values,  
-       * depending on the number and location of neighbor elements with a higher level. each refine value will then 
-       * correspond to a specific subelement_type that is defined in the quad_w_sub scheme. */
-      else if (refine == 2) {
-        subelement_type = 3;
-        num_subelements = 4;
-
+      /* if refine > 1, use subelements of type refine - 1 */
+      else if (refine > 1) {
+        subelement_type = refine - 1;
+        if (tscheme->eclass == T8_ECLASS_QUAD){
+          /* NOTE need a scheme to determine num_subelements */
+          num_subelements = 2;
+        }
+        else {
+          T8_ASSERT (printf("No subelement implementation for the given eclass!"));
+        }
         (void) t8_element_array_push_count (telements, num_subelements);
         for (zz = 0; zz < num_subelements; zz++) {
           elements[zz] =

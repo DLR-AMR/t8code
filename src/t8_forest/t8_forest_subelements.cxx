@@ -79,13 +79,16 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
         T8_FREE (dual_faces);
     }
   }
-  printf("Element_id: %i; Subelement_Type: %i\n", lelement_id,subelement_type);
   if (subelement_type == 0) {
     return 0;
   }
-  /* avoid refine = 1, since this value is for the recursive refinement scheme */
+  else if (subelement_type == 15) {
+    /* if all four neihbors are refined, then use standard refinement for the given element */ 
+    return 1;
+  }
   else {
-    return 2; // return subelement_type + 1;
+    /* avoid refine = 1, since this value is for the recursive refinement scheme */
+    return subelement_type + 1;
   }
 }
 
