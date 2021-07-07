@@ -74,9 +74,12 @@ t8_default_scheme_pyramid_c::t8_element_num_children (const t8_element_t *
   return t8_dpyramid_num_children ((const t8_dpyramid_t *) elem);
 }
 
+/* *INDENT-OFF* */
+/* Indent adds second const, so we need to disable indent. */
 int
 t8_default_scheme_pyramid_c::t8_element_num_siblings (const t8_element_t *
-                                                      elem)
+                                                      elem) const
+/* *INDENT-ON* */
 {
   return t8_dpyramid_num_siblings ((const t8_dpyramid_t *) elem);
 }
