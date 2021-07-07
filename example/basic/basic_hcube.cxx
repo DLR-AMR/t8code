@@ -36,7 +36,7 @@ t8_basic_hypercube_refine(t8_forest_t forest, t8_forest_t forest_from,
                           t8_eclass_scheme_c * ts, int num_elements,
                           t8_element_t * elements[])
 {
-    int         type, level;
+    int         type = -1, level;
     level = ts->t8_element_level(elements[0]);
     if (level >= *(int *) t8_forest_get_user_data (forest) || level == 0) {
       return 0;
@@ -55,6 +55,8 @@ t8_basic_hypercube_refine(t8_forest_t forest, t8_forest_t forest_from,
     case T8_ECLASS_PYRAMID:
         return 1;
         break;
+    default:
+      SC_ABORTF("Invalid elemnent shape detected.\n");
     }
 /*TODO: Implement a better refinement argument, one that effects all elements*/
     if(type == 0 || type == 2 || type == 4){
@@ -69,7 +71,7 @@ t8_basic_hypercube_coarsen(t8_forest_t forest, t8_forest_t forest_from,
                           t8_eclass_scheme_c * ts, int num_elements,
                           t8_element_t * elements[])
 {
-    int         type, level;
+    int         level;
     level = ts->t8_element_level(elements[0]);
     if(level > 1 && num_elements >1) return -1;
     return 0;
