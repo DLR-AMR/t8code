@@ -92,6 +92,7 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
   }
 }
 
+#if 0
 /* Collective function to compute the maximum occurring refinement level in a forest */
 static void
 t8_forest_compute_max_element_level (t8_forest_t forest)
@@ -120,6 +121,7 @@ t8_forest_compute_max_element_level (t8_forest_t forest)
   sc_MPI_Allreduce (&local_max_level, &forest->maxlevel_existing, 1,
                     sc_MPI_INT, sc_MPI_MAX, forest->mpicomm);
 }
+#endif
 
 void
 t8_forest_subelements (t8_forest_t forest)
@@ -134,6 +136,7 @@ t8_forest_subelements (t8_forest_t forest)
   t8_global_productionf ("Done t8_forest_subelements.\n");
 }
 
+#if 0
 /* Check whether all hanging nodes are eliminated. */
 int
 t8_forest_subelements_used (t8_forest_t forest)
@@ -141,5 +144,6 @@ t8_forest_subelements_used (t8_forest_t forest)
   /* NOTE do something */
   return 0;
 }
+#endif
 
 T8_EXTERN_C_END ();
