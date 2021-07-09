@@ -175,10 +175,11 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
    * We have to define the vtkTypeInt64Array that hold 
    * metadata if wanted. 
    */
-  vtkTypeInt64Array  *vtk_treeid = vtkTypeInt64Array::New ();
-  vtkTypeInt64Array  *vtk_mpirank = vtkTypeInt64Array::New ();
-  vtkTypeInt64Array  *vtk_level = vtkTypeInt64Array::New ();
-  vtkTypeInt64Array  *vtk_element_id = vtkTypeInt64Array::New ();
+
+  t8_vtk_gloidx_array_type *vtk_treeid = t8_vtk_gloidx_array_type::New ();
+  t8_vtk_gloidx_array_type *vtk_mpirank = t8_vtk_gloidx_array_type::New ();
+  t8_vtk_gloidx_array_type *vtk_level = t8_vtk_gloidx_array_type::New ();
+  t8_vtk_gloidx_array_type *vtk_element_id = t8_vtk_gloidx_array_type::New ();
 
 /*
  * We need the dataArray for writing double valued user defined data in the vtu files.
@@ -387,14 +388,16 @@ pwriterObj->SetEndPiece (forest->mpirank);
 for (int idata = 0; idata < num_data; idata++) {
   dataArrays[idata] = vtkDoubleArray::New ();
   if (data[idata].type == T8_VTK_SCALAR) {
-    dataArrays[idata]->SetName (data[idata].description);
-    dataArrays[idata]->SetVoidArray (data[idata].data, num_elements, 1);
-    unstructuredGrid->GetCellData ()->AddArray (dataArrays[idata]);
+    dataArrays[idata]->SetName (data[idata].description);       /* Set the name of the array */
+    dataArrays[idata]->SetVoidArray (data[idata].data, num_elements, 1);        /* We write the data in the array from the input array */
+    unstructuredGrid->GetCellData ()->AddArray (dataArrays[idata]);     /* We add the array to the cell data object */
   }
   else {
-    dataArrays[idata]->SetName (data[idata].description);
-    dataArrays[idata]->SetVoidArray (data[idata].data, num_elements * 3, 1);
-    unstructuredGrid->GetCellData ()->AddArray (dataArrays[idata]);
+    dataArrays[idata]->SetName (data[idata].description);       /* Set the name of the array */
+    dataArrays[idata]->SetNumberOfTuples (num_elements);        /* We want number of tuples=number of elements */
+    dataArrays[idata]->SetNumberOfComponents (3);       /* Each tuples has 3 values */
+    dataArrays[idata]->SetVoidArray (data[idata].data, num_elements * 3, 1);    /*  */
+    unstructuredGrid->GetCellData ()->SetVectors (dataArrays[idata]);   /*  */
   }
 }
 
@@ -402,6 +405,7 @@ for (int idata = 0; idata < num_data; idata++) {
 pwriterObj->SetInputData (unstructuredGrid);
 pwriterObj->Update ();
 pwriterObj->Write ();
+
 /* We have to free the allocated memory for the cellTypes Array and the other arrays we allocated memory for. */
 
 vtk_treeid->Delete ();
