@@ -691,6 +691,12 @@ t8_default_scheme_hex_c::t8_element_vertex_coords_of_subelement (const t8_elemen
   SC_ABORT ("This function is not implemented yet.\n");
 }
 
+int
+t8_default_scheme_hex_c::t8_element_get_number_of_subelements (int subelement_type) 
+{
+  SC_ABORT ("This function is not implemented yet.\n");
+}
+
 void
 t8_default_scheme_hex_c::t8_element_new (int length, t8_element_t ** elem)
 {

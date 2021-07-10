@@ -22,6 +22,7 @@
 
 #include <sc_statistics.h>
 #include <t8_forest/t8_forest_subelements.h>
+#include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_ghost.h>
@@ -56,15 +57,34 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
   t8_element_t       **neighbor_leafs;
   t8_locidx_t        *element_indices;
   t8_eclass_scheme_c *neigh_scheme;
+  
+  /* at the moment, there is no implementation of subelements for unbalanced forests */
+  T8_ASSERT (t8_forest_is_balanced (forest_from));
 
   current_element = t8_forest_get_element_in_tree (forest_from, ltree_id, lelement_id);
-
   num_faces = ts->t8_element_num_faces (current_element);
-
+  
+  /* We use a binary encoding to determine which subelement type to use, 
+   * depending on the refinement levels of the neighbours. 
+   *               
+   *            |                                                                              subelement type 12 for quads
+   *      x - - x - - x                                                                               x - - x - - x       
+   *      |           |         In this example (for the quad scheme) are 2 neighbours                | \   |   / |
+   *      |           |         with a higher refinement level (left and above).                      |   \ | /   |
+   *    - x           |   -->   This neighbour structure corresponds to the binary code 1100,   -->   x - - x     |
+   *      |           |         which equals subelement type 12 in base 10.                           |   /   \   |
+   *      | elem      |                                                                               | /       \ |
+   *      x - - - - - x                                                                               x - - - - - x
+   *                      
+   * Note, that this procedure is independent of the eclass that is used. Each neighbour structure leads to a unique 
+   * binary code. Within the element file of the given eclass, this binary code is used, to construct the right subelement  
+   * type for example to remove hanging nodes from the mesh. */
   for (iface = 0; iface < num_faces; iface++) {
+    /* we are interested in the number of neighbours of a given element an a given face of the element */
     t8_forest_leaf_face_neighbors (forest_from, ltree_id, current_element, &neighbor_leafs,
                                      iface, &dual_faces, &num_neighbors,
                                      &element_indices, &neigh_scheme, 1); 
+    /* using the number of neighbours to determine the binary code */
     if (num_neighbors > 1) {
       subelement_type = subelement_type * 2 + 1;
     }
@@ -79,15 +99,18 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
         T8_FREE (dual_faces);
     }
   }
+  /* returning the right subelement types */
   if (subelement_type == 0) {
+    /* in this case, there are no hanging nodes and we do not need to do anything */
     return 0;
   }
   else if (subelement_type == 15) {
-    /* if all four neihbors are refined, then use standard refinement for the given element */ 
+    /* if all four neihbours are refined, we can use the standard refinement for the given element,
+     * which will automatically remove the hanging nodes in this case */ 
     return 1;
   }
   else {
-    /* avoid refine = 1, since this value is for the recursive refinement scheme */
+    /* shift every subelement type by one, to avoid refine = 1 */
     return subelement_type + 1;
   }
 }

@@ -343,9 +343,7 @@ void                t8_forest_set_balance (t8_forest_t forest,
                                            int no_repartition);
 
 /* NOTE write description */
-void                t8_forest_set_subelements (t8_forest_t forest,
-                                                       const t8_forest_t set_from,
-                                                       t8_eclass_t eclass);
+void                t8_forest_set_subelements (t8_forest_t forest, const t8_forest_t set_from);
 
 /** Enable or disable the creation of a layer of ghost elements.
  * On default no ghosts are created.

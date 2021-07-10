@@ -241,12 +241,9 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from,
 }
 
 void
-t8_forest_set_subelements (t8_forest_t forest, const t8_forest_t set_from,
-                           t8_eclass_t eclass)
+t8_forest_set_subelements (t8_forest_t forest, const t8_forest_t set_from)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
-  /* subelements only implemented for the quad scheme */
-  T8_ASSERT (eclass == T8_ECLASS_QUAD);
 
   if (set_from != NULL) {
     /* If set_from = NULL, we assume a previous forest_from was set */

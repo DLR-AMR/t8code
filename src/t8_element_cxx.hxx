@@ -641,7 +641,10 @@ public:
 
   /** NOTE write comment */
   virtual void        t8_element_vertex_coords_of_subelement (const t8_element_t * t,
-                                                              int vertex, int coords[]) = 0;                                                  
+                                                              int vertex, int coords[]) = 0; 
+
+  /** NOTE write comment */
+  virtual int         t8_element_get_number_of_subelements (int subelement_type) = 0;                                                 
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is

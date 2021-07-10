@@ -339,11 +339,15 @@ t8_forest_adapt (t8_forest_t forest)
         }
         el_considered++;
       }
-      /* if refine > 1, use subelements of type refine - 1 */
+      /* if refine > 1, use subelements */
       else if (refine > 1) {
+        /* refine starts at 2, subelement type should start at 1 */
         subelement_type = refine - 1;
+        /* determing the number of subelements of the given type for the quad scheme to remove hanging nodes */
         if (tscheme->eclass == T8_ECLASS_QUAD){
-          /* NOTE need a scheme to determine num_subelements */
+          #if 0
+          num_subelements = tscheme->t8_element_get_number_of_subelements (subelement_type);
+          #endif
           num_subelements = 2;
         }
         else {

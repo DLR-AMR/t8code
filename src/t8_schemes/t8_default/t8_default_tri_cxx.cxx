@@ -582,6 +582,12 @@ t8_default_scheme_tri_c::t8_element_vertex_coords_of_subelement (const t8_elemen
   SC_ABORT ("This function is not implemented yet.\n");
 }
 
+int
+t8_default_scheme_tri_c::t8_element_get_number_of_subelements (int subelement_type) 
+{
+  SC_ABORT ("This function is not implemented yet.\n");
+}
+
 #ifdef T8_ENABLE_DEBUG
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */
