@@ -65,13 +65,12 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
   num_faces = ts->t8_element_num_faces (current_element);
   
   /* We use a binary encoding to determine which subelement type to use, 
-   * depending on the refinement levels of the neighbours. 
-   *               
-   *            |                                                                              subelement type 12 for quads
+   * depending on the refinement levels of the neighbours.                
+   *                                                                                           subelement type 12 for quads
    *      x - - x - - x                                                                               x - - x - - x       
    *      |           |         In this example (for the quad scheme) are 2 neighbours                | \   |   / |
    *      |           |         with a higher refinement level (left and above).                      |   \ | /   |
-   *    - x           |   -->   This neighbour structure corresponds to the binary code 1100,   -->   x - - x     |
+   *      x           |   -->   This neighbour structure corresponds to the binary code 1100,   -->   x - - x     |
    *      |           |         which equals subelement type 12 in base 10.                           |   /   \   |
    *      | elem      |                                                                               | /       \ |
    *      x - - - - - x                                                                               x - - - - - x

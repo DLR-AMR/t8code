@@ -343,16 +343,11 @@ t8_forest_adapt (t8_forest_t forest)
       else if (refine > 1) {
         /* refine starts at 2, subelement type should start at 1 */
         subelement_type = refine - 1;
+        #if 0
         /* determing the number of subelements of the given type for the quad scheme to remove hanging nodes */
-        if (tscheme->eclass == T8_ECLASS_QUAD){
-          #if 0
-          num_subelements = tscheme->t8_element_get_number_of_subelements (subelement_type);
-          #endif
-          num_subelements = 2;
-        }
-        else {
-          T8_ASSERT (printf("No subelement implementation for the given eclass!"));
-        }
+        num_subelements = tscheme->t8_element_get_number_of_subelements (subelement_type);
+        #endif
+        num_subelements = 2;
         (void) t8_element_array_push_count (telements, num_subelements);
         for (zz = 0; zz < num_subelements; zz++) {
           elements[zz] =

@@ -947,17 +947,113 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
         }
         else if (vertex == 1) {
           coords[0] = q1->x + len * 1/2;
-          coords[1] = q1->y + len * 1/2 + len * 1/2;
+          coords[1] = q1->y + len;
         }
       }
     }
-  } /* end of vertex coordinates for subelements that border to face number 1 */
+  } /* end of vertex coordinates for subelements that border to the left */
   else if (face_number == 1) {
-  }
+    if (split == 0) {
+      if (vertex == 0) {
+        coords[0] = q1->x;
+        coords[1] = q1->y + len;
+      }
+      else if (vertex == 1) {
+        coords[0] = q1->x + len;
+        coords[1] = q1->y + len;
+      }
+    }
+    else if (split == 1) {
+      if (sub_face_id == 1) {
+        if (vertex == 0) {
+          coords[0] = q1->x;
+          coords[1] = q1->y + len;
+        }
+        else if (vertex == 1) {
+          coords[0] = q1->x + len * 1/2;
+          coords[1] = q1->y + len;
+        }
+      }
+      else if (sub_face_id == 2) {
+        if (vertex == 0) {
+          coords[0] = q1->x + len * 1/2;
+          coords[1] = q1->y + len;
+        }
+        else if (vertex == 1) {
+          coords[0] = q1->x + len;
+          coords[1] = q1->y + len;
+        }
+      }
+    }
+  } /* end of vertex coordinates for subelements that border to the upper face */
   else if (face_number == 2) {
-  }
+    if (split == 0) {
+      if (vertex == 0) {
+        coords[0] = q1->x + len;
+        coords[1] = q1->y + len;
+      }
+      else if (vertex == 1) {
+        coords[0] = q1->x + len;
+        coords[1] = q1->y;
+      }
+    }
+    else if (split == 1) {
+      if (sub_face_id == 1) {
+        if (vertex == 0) {
+          coords[0] = q1->x + len;
+          coords[1] = q1->y + len;
+        }
+        else if (vertex == 1) {
+          coords[0] = q1->x + len;
+          coords[1] = q1->y + len * 1/2;
+        }
+      }
+      else if (sub_face_id == 2) {
+        if (vertex == 0) {
+          coords[0] = q1->x + len;
+          coords[1] = q1->y + len * 1/2;
+        }
+        else if (vertex == 1) {
+          coords[0] = q1->x + len;
+          coords[1] = q1->y;
+        }
+      }
+    }
+  } /* end of vertex coordinates for subelements that border to the right face */
   else if (face_number == 3) {
-  }
+    if (split == 0) {
+      if (vertex == 0) {
+        coords[0] = q1->x + len;
+        coords[1] = q1->y;
+      }
+      else if (vertex == 1) {
+        coords[0] = q1->x;
+        coords[1] = q1->y;
+      }
+    }
+    else if (split == 1) {
+      if (sub_face_id == 1) {
+        if (vertex == 0) {
+          coords[0] = q1->x + len;
+          coords[1] = q1->y;
+        }
+        else if (vertex == 1) {
+          coords[0] = q1->x + len * 1/2;
+          coords[1] = q1->y + len;
+        }
+      }
+      else if (sub_face_id == 2) {
+        if (vertex == 0) {
+          coords[0] = q1->x + len * 1/2;
+          coords[1] = q1->y + len;
+        }
+        else if (vertex == 1) {
+          coords[0] = q1->x;
+          coords[1] = q1->y;
+        }
+      }
+    }
+  } /* end of vertex coordinates for subelements that border to the lower face */
   /* the third vertex equals the center of the element for all subelements */
   if (vertex == 2) {
     coords[0] = q1->x + len * 1/2;
@@ -1051,11 +1147,6 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
   T8_ASSERT (q->level < P4EST_QMAXLEVEL);
   
   #if 0
-  int sub_id_counter = 0;
-  int num_subelements;
-
-  num_subelements = t8_element_get_number_of_subelements (type);
-  /* NOTE determine num_subelements, depending on the subelement type using binary representation */
   /* set the parameter values for different subelements: 
    * all subelement types (up to rotation) are:
    *                               
@@ -1069,6 +1160,9 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
    *           
    * Sub_ids are counted clockwise, starting with the (lower) left subelement.                    
    * we do not change the p4est quadrant */
+  int sub_id_counter = 0;
+  int num_subelements;
+  num_subelements = t8_element_get_number_of_subelements (type);
   for (sub_id_counter = 0, sub_id_counter < num_subelements, sub_id_counter++) {
     pquad_w_sub_subelement[sub_id_counter]->p4q.x = q->x;
     pquad_w_sub_subelement[sub_id_counter]->p4q.y = q->y;
@@ -1142,6 +1236,38 @@ t8_default_scheme_sub_c::t8_element_get_number_of_subelements (int subelement_ty
   num_subelements = P4EST_FACES + digit_sum_of_binary;
   return num_subelements;
 }
+
+#if 0
+int 
+t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const t8_element_t * elem, int location[]) 
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+
+  const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
+  
+  /* 1) decimal to binary subelement type
+   * 2) rearrange the binary representation to be in clockwise order 
+   * 3) use the binary representation, and the sub_id to determine: 
+   *        - location[1] -> the face_id of the subelement 
+   *        - location[2] -> dummy, if the face is split or not
+   *        - location[3] -> if the face is split, is it the first or second subelemnt (counted clockwise) */
+}
+
+t8_element_shape_t
+t8_default_scheme_sub_c::t8_element_get_shape (const t8_element_t * elem)
+{
+  T8_ASSERT (t8_element_is_valid (elem));
+
+  const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
+
+  if (pquad_w_sub->dummy_is_subelement == 1) {
+    return T8_ECLASS_TRIANGLE;
+  }
+  else {
+    return T8_ECLASS_QUAD;
+  }
+}
+#endif 
 
 void
 t8_default_scheme_sub_c::t8_element_new (int length, t8_element_t ** elem)
