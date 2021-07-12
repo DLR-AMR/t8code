@@ -193,7 +193,7 @@ t8_forest_adapt (t8_forest_t forest)
   t8_locidx_t         el_coarsen;
   t8_locidx_t         num_el_from;
   t8_locidx_t         el_offset;
-  size_t              num_children, zz, max_num_siblings, num_siblings;
+  size_t              num_children, zz, max_num_siblings, num_siblings, curr_num_siblings;
   t8_tree_t           tree, tree_from;
   t8_eclass_scheme_c *tscheme;
   t8_element_t      **elements, **elements_from, *parent;
@@ -262,11 +262,14 @@ t8_forest_adapt (t8_forest_t forest)
     max_num_siblings =
       tscheme->t8_element_max_num_siblings (t8_element_array_index_locidx
                                             (telements_from, 0));
+    curr_num_siblings =
+      tscheme->t8_element_num_siblings (t8_element_array_index_locidx
+                                            (telements_from, 0));
     tscheme->t8_element_new (1, &parent);
     /* Buffer for a family of new elements */
     elements = T8_ALLOC (t8_element_t *, max_num_siblings);
     /* Buffer for a family of old elements */
-    elements_from = T8_ALLOC (t8_element_t *, max_num_siblings);
+    elements_from = T8_ALLOC (t8_element_t *, curr_num_siblings);
     /* We now iterate over all elements in this tree and check them for refinement/coarsening. */
     while (el_considered < num_el_from) {
 #ifdef T8_ENABLE_DEBUG
@@ -286,6 +289,9 @@ t8_forest_adapt (t8_forest_t forest)
       num_siblings =
         tscheme->t8_element_num_siblings (t8_element_array_index_locidx
                                           (telements_from, el_considered));
+      if(num_siblings > curr_num_siblings){
+          elements_from = T8_REALLOC(elements_from, t8_element_t *, num_siblings);
+      }
       /*change: num_children into num_siblings */
       for (zz = 0; zz < (unsigned int) num_siblings &&
            el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
