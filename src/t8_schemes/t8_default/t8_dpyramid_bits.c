@@ -989,8 +989,15 @@ t8_dpyramid_num_siblings (const t8_dpyramid_t * p)
 {
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
   t8_dpyramid_t       parent;
-  t8_dpyramid_parent (p, &parent);
-  return t8_dpyramid_num_children (&parent);
+  if(p->level == 0)
+  {
+      /*TODO: Fix this, such that for level 0 it should return 1*/
+      return T8_DPYRAMID_CHILDREN;
+  }
+  else{
+      t8_dpyramid_parent (p, &parent);
+      return t8_dpyramid_num_children (&parent);
+  }
 }
 
 int
