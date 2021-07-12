@@ -54,7 +54,7 @@ typedef int         (*t8_forest_iterate_face_fn) (t8_forest_t forest,
  *                 \ref t8_forest_search
  *
  * return          if \a query is not NULL: true if and only if the element 'matches' the query
- *                 if \a query is NULL: true if and only if the search should continue withe the
+ *                 if \a query is NULL: true if and only if the search should continue with the
  *                 children of \a element and the queries should be performed for this element.
  */
 typedef int         (*t8_forest_search_query_fn) (t8_forest_t forest,

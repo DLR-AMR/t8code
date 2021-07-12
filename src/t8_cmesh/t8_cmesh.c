@@ -96,6 +96,8 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
    * This variable lives beyond one execution of t8_cmesh_is_committed.
    * We use it as a form of lock to prevent entering an infinite recursion.
    */
+  /* TODO: This is_checking is not thread safe. If two threads call cmesh routines
+   *       that call t8_cmesh_is_committed, only one of them will correctly check the cmesh. */
   if (!is_checking) {
     is_checking = 1;
 
@@ -110,6 +112,10 @@ t8_cmesh_is_committed (t8_cmesh_t cmesh)
     if ((!t8_cmesh_trees_is_face_consistend (cmesh, cmesh->trees)) ||
         (!t8_cmesh_no_negative_volume (cmesh))
         || (!t8_cmesh_check_trees_per_eclass (cmesh))) {
+      is_checking = 0;
+      return 0;
+    }
+    if (t8_cmesh_get_num_local_trees (cmesh) > 0 && t8_cmesh_is_empty (cmesh)) {
       is_checking = 0;
       return 0;
     }
@@ -301,11 +307,11 @@ t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm)
   mpiret = sc_MPI_Comm_size (comm, &mpisize_debug);
   SC_CHECK_MPI (mpiret);
   T8_ASSERT (mpisize == mpisize_debug);
-  t8_debugf ("Allocating shared array with type %s\n",
-             sc_shmem_type_to_string[sc_shmem_get_type (comm)]);
 #endif
 
   t8_shmem_array_init (&offsets, sizeof (t8_gloidx_t), mpisize + 1, comm);
+  t8_debugf ("Allocating shared array with type %s\n",
+             sc_shmem_type_to_string[sc_shmem_get_type (comm)]);
   return offsets;
 }
 
@@ -896,12 +902,18 @@ t8_cmesh_bcast_attributes (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 }
 #endif
 
+int
+t8_cmesh_is_empty (t8_cmesh_t cmesh)
+{
+  return cmesh->num_trees == 0;
+}
+
 t8_cmesh_t
 t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
 {
   int                 mpirank, mpisize, mpiret;
   int                 iclass;
-  t8_cmesh_t          cmesh_out;
+  t8_cmesh_t          cmesh_out = NULL; /* NULL initializer prevents compiler warning. */
 
   struct
   {
@@ -958,15 +970,20 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
       meta_info.stash_elem_counts[1] = cmesh_in->stash->classes.elem_count;
       meta_info.stash_elem_counts[2] = cmesh_in->stash->joinfaces.elem_count;
     }
-#ifdef T8_ENABLE_DEBUG
-    meta_info.comm = comm;
-#endif
+
     /* Root returns the input cmesh */
     cmesh_out = cmesh_in;
   }
   /* TODO: we could optimize this by using IBcast */
   mpiret = sc_MPI_Bcast (&meta_info, sizeof (meta_info), sc_MPI_BYTE, root,
                          comm);
+
+  SC_CHECK_MPI (mpiret);
+#ifdef T8_ENABLE_DEBUG
+  mpiret = sc_MPI_Comm_dup (comm, &(meta_info.comm));
+  SC_CHECK_MPI (mpiret);
+#endif
+
   SC_CHECK_MPI (mpiret);
 
   /* If not root store information in new cmesh and allocate memory for arrays. */
@@ -993,7 +1010,10 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
         meta_info.num_trees_per_eclass[iclass];
     }
 #ifdef T8_ENABLE_DEBUG
-    T8_ASSERT (meta_info.comm == comm);
+    int                 result;
+    mpiret = sc_MPI_Comm_compare (comm, meta_info.comm, &result);
+    SC_CHECK_MPI (mpiret);
+    T8_ASSERT (result == sc_MPI_CONGRUENT);
 #endif
   }
   if (meta_info.pre_commit) {
@@ -1015,6 +1035,8 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   cmesh_out->mpisize = mpisize;
   /* Final checks */
 #ifdef T8_ENABLE_DEBUG
+  mpiret = sc_MPI_Comm_free (&meta_info.comm);
+  SC_CHECK_MPI (mpiret);
   if (!meta_info.pre_commit) {
     T8_ASSERT (t8_cmesh_is_committed (cmesh_out));
     T8_ASSERT (t8_cmesh_comm_is_valid (cmesh_out, comm));
@@ -1427,120 +1449,120 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
   }
 
   //if (cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] == 0 || level == 0) {
-    t8_gloidx_t         global_num_children;
-    t8_gloidx_t         first_global_child;
-    t8_gloidx_t         last_global_child;
-    t8_gloidx_t         children_per_tree;
+  t8_gloidx_t         global_num_children;
+  t8_gloidx_t         first_global_child;
+  t8_gloidx_t         last_global_child;
+  t8_gloidx_t         children_per_tree;
 #ifdef T8_ENABLE_DEBUG
-    t8_gloidx_t         prev_last_tree = -1;
+  t8_gloidx_t         prev_last_tree = -1;
 #endif
-    const t8_linearidx_t one = 1;
+  const t8_linearidx_t one = 1;
 
-    if (cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] != 0){
-        if(cmesh->num_trees_per_eclass[T8_ECLASS_TET] != 0 || cmesh->num_trees_per_eclass[T8_ECLASS_HEX] != 0)
-        {
-            SC_ABORT("Different numbers of elements per tree not yet supported");
-        }
-        children_per_tree = 2 * (one << 3*level) - sc_intpow64u(6,level);
-        global_num_children = cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] * children_per_tree;
+  if (cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] != 0) {
+    if (cmesh->num_trees_per_eclass[T8_ECLASS_TET] != 0
+        || cmesh->num_trees_per_eclass[T8_ECLASS_HEX] != 0) {
+      SC_ABORT ("Different numbers of elements per tree not yet supported");
     }
-
-    else{
-        children_per_tree = one << cmesh->dimension * level;
-        global_num_children = cmesh->num_trees * children_per_tree;
-    }
-    if (cmesh->mpirank == 0) {
-      first_global_child = 0;
-      if (child_in_tree_begin != NULL) {
-        *child_in_tree_begin = 0;
-      }
-    }
-    else {
-      /* The first global child of processor p
-       * with P total processor is (the biggest int smaller than)
-       * (total_num_children * p) / P
-       * We cast to long double and double first to prevent integer overflow.
-       */
-      first_global_child =
-        ((long double) global_num_children *
-         cmesh->mpirank) / (double) cmesh->mpisize;
-    }
-    if (cmesh->mpirank != cmesh->mpisize - 1) {
-      last_global_child =
-        ((long double) global_num_children *
-         (cmesh->mpirank + 1)) / (double) cmesh->mpisize;
-    }
-    else {
-      last_global_child = global_num_children;
-    }
-    T8_ASSERT (0 <= first_global_child
-               && first_global_child <= global_num_children);
-    T8_ASSERT (0 <= last_global_child
-               && last_global_child <= global_num_children);
-    *first_local_tree = first_global_child / children_per_tree;
-    if (child_in_tree_begin != NULL) {
-      *child_in_tree_begin =
-        first_global_child - *first_local_tree * children_per_tree;
-    }
-
-    *last_local_tree = (last_global_child - 1) / children_per_tree;
-
-    is_empty = *first_local_tree >= *last_local_tree
-      && first_global_child >= last_global_child;
-    if (first_tree_shared != NULL) {
-#ifdef T8_ENABLE_DEBUG
-      prev_last_tree = (first_global_child - 1) / children_per_tree;
-      T8_ASSERT (cmesh->mpirank > 0 || prev_last_tree <= 0);
-#endif
-      if (!is_empty && cmesh->mpirank > 0 && first_global_child > 0) {
-        /* We exclude empty partitions here, by def their first_tree_shared flag is zero */
-        /* We also exclude that the previous partition was empty at the beginning of the
-         * partitions array */
-        /* We also exclude the case that we have the first global element but
-         * are not rank 0. */
-        *first_tree_shared = 1;
-      }
-      else {
-        *first_tree_shared = 0;
-      }
-    }
-    if (child_in_tree_end != NULL) {
-      if (*last_local_tree > 0) {
-        *child_in_tree_end =
-          last_global_child - *last_local_tree * children_per_tree;
-      }
-      else {
-        *child_in_tree_end = last_global_child;
-      }
-    }
-    if (is_empty) {
-      /* This process is empty */
-      /* We now set the first local tree to the first local tree on the
-       * next nonempty rank, and the last local tree to first - 1 */
-      *first_local_tree = last_global_child / children_per_tree;
-      if (first_global_child % children_per_tree != 0) {
-        /* The next nonempty process shares this tree. */
-        (*first_local_tree)++;
-      }
-
-      *last_local_tree = *first_local_tree - 1;
-    }
-
-#if 0
-    if (first_global_child >= last_global_child && cmesh->mpirank != 0) {
-      /* This process is empty */
-      *first_local_tree = prev_last_tree + 1;
-    }
-#endif
- /* }
+    children_per_tree = 2 * (one << 3 * level) - sc_intpow64u (6, level);
+    global_num_children =
+      cmesh->num_trees_per_eclass[T8_ECLASS_PYRAMID] * children_per_tree;
+  }
 
   else {
-    SC_ABORT ("Partition with level > 0 "
-              "does not support pyramidal elements yet.");
-  }*/
+    children_per_tree = one << cmesh->dimension * level;
+    global_num_children = cmesh->num_trees * children_per_tree;
+  }
+  if (cmesh->mpirank == 0) {
+    first_global_child = 0;
+    if (child_in_tree_begin != NULL) {
+      *child_in_tree_begin = 0;
+    }
+  }
+  else {
+    /* The first global child of processor p
+     * with P total processor is (the biggest int smaller than)
+     * (total_num_children * p) / P
+     * We cast to long double and double first to prevent integer overflow.
+     */
+    first_global_child =
+      ((long double) global_num_children *
+       cmesh->mpirank) / (double) cmesh->mpisize;
+  }
+  if (cmesh->mpirank != cmesh->mpisize - 1) {
+    last_global_child =
+      ((long double) global_num_children *
+       (cmesh->mpirank + 1)) / (double) cmesh->mpisize;
+  }
+  else {
+    last_global_child = global_num_children;
+  }
+  T8_ASSERT (0 <= first_global_child
+             && first_global_child <= global_num_children);
+  T8_ASSERT (0 <= last_global_child
+             && last_global_child <= global_num_children);
+  *first_local_tree = first_global_child / children_per_tree;
+  if (child_in_tree_begin != NULL) {
+    *child_in_tree_begin =
+      first_global_child - *first_local_tree * children_per_tree;
+  }
+
+  *last_local_tree = (last_global_child - 1) / children_per_tree;
+
+  is_empty = *first_local_tree >= *last_local_tree
+    && first_global_child >= last_global_child;
+  if (first_tree_shared != NULL) {
+#ifdef T8_ENABLE_DEBUG
+    prev_last_tree = (first_global_child - 1) / children_per_tree;
+    T8_ASSERT (cmesh->mpirank > 0 || prev_last_tree <= 0);
+#endif
+    if (!is_empty && cmesh->mpirank > 0 && first_global_child > 0) {
+      /* We exclude empty partitions here, by def their first_tree_shared flag is zero */
+      /* We also exclude that the previous partition was empty at the beginning of the
+       * partitions array */
+      /* We also exclude the case that we have the first global element but
+       * are not rank 0. */
+      *first_tree_shared = 1;
+    }
+    else {
+      *first_tree_shared = 0;
+    }
+  }
+  if (child_in_tree_end != NULL) {
+    if (*last_local_tree > 0) {
+      *child_in_tree_end =
+        last_global_child - *last_local_tree * children_per_tree;
+    }
+    else {
+      *child_in_tree_end = last_global_child;
+    }
+  }
+  if (is_empty) {
+    /* This process is empty */
+    /* We now set the first local tree to the first local tree on the
+     * next nonempty rank, and the last local tree to first - 1 */
+    *first_local_tree = last_global_child / children_per_tree;
+    if (first_global_child % children_per_tree != 0) {
+      /* The next nonempty process shares this tree. */
+      (*first_local_tree)++;
+    }
+
+    *last_local_tree = *first_local_tree - 1;
+  }
+
+#if 0
+  if (first_global_child >= last_global_child && cmesh->mpirank != 0) {
+    /* This process is empty */
+    *first_local_tree = prev_last_tree + 1;
+  }
+#endif
+  /* }
+
+     else {
+     SC_ABORT ("Partition with level > 0 "
+     "does not support pyramidal elements yet.");
+     } */
 }
 #endif
-
 
 static void
 t8_cmesh_reset (t8_cmesh_t * pcmesh)
@@ -1850,6 +1872,8 @@ t8_cmesh_new_hex (sc_MPI_Comm comm)
   return cmesh;
 }
 
+/* TODO: This mesh is currently not used. Reactivate if it is used. */
+#if 0
 static              t8_cmesh_t
 t8_cmesh_new_pyramid_deformed (sc_MPI_Comm comm)
 {
@@ -1859,34 +1883,33 @@ t8_cmesh_new_pyramid_deformed (sc_MPI_Comm comm)
     2, -1, 0,
     -1, 2, -0.5,
     2, 2, 0,
-    3, 3, sqrt(3)
+    3, 3, sqrt (3)
   };
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);
-  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0,
-                              vertices, 5);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 5);
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }
+#endif
 
 static              t8_cmesh_t
 t8_cmesh_new_pyramid (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
   double              vertices[15] = {
-    #if 0
+#if 0
     -1, -1, 0,
     1, -1, 0,
     -1, 1, 0,
     1, 1, 0,
     1, 1, 2
-    #endif
-      0,0,0, 1,0,0 ,0,1,0, 1,1,0, 1,1,1
+#endif
+    0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1
   };
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);
-  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0,
-                              vertices, 5);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 5);
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }
@@ -1945,12 +1968,14 @@ t8_cmesh_new_from_class (t8_eclass_t eclass, sc_MPI_Comm comm)
 }
 
 t8_cmesh_t
-t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition)
+t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition, int dimension)
 {
   t8_cmesh_t          cmesh;
 
   t8_cmesh_init (&cmesh);
+  t8_cmesh_set_dimension (cmesh, dimension);
   t8_cmesh_commit (cmesh, comm);
+  T8_ASSERT (t8_cmesh_is_empty (cmesh));
   return cmesh;
 }
 
@@ -2260,7 +2285,13 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
   };
 
   SC_CHECK_ABORT (eclass != T8_ECLASS_PYRAMID || !periodic,
-                  "The pyramid cube mesh cannot be periodic.");
+                  "The pyramid cube mesh cannot be periodic.\n");
+
+  if (do_partition) {
+    t8_global_errorf
+      ("WARNING: Partitioning the hypercube cmesh is currently not supported.\n"
+       "Using this cmesh will crash when vertices are used. See also https://github.com/holke/t8code/issues/79\n");
+  }
 
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -2861,6 +2892,12 @@ t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_Comm comm)
   return cmesh;
 }
 
+/* Creates a mesh consisting of 8 prisms. The first 6 prisms are constructed, by
+ * approximating the first 3 chunks of 60 degrees of the unit-circle via prisms.
+ * The next four prisms use the same principle, but are shifted by one along the
+ * z-axis. The first of these prisms is connected to the third prism via its tri-
+ * angular bottom. The last prisms is out of this circle. Some prisms are rotated,
+ * such that we get a variaty of face-connections. */
 t8_cmesh_t
 t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
 {
@@ -2868,7 +2905,7 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
   /*8 Prism a 6 vertices a 3 coords */
   double              vertices[144];
   t8_cmesh_t          cmesh;
-
+  /*The first three prisms */
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 6; j++) {
       /*Get the edges at the unit circle */
@@ -2889,6 +2926,7 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
       }
     }
   }
+  /*Four prisms, bottom starts at z = 1 */
   for (i = 2; i < 6; i++) {
     for (j = 0; j < 6; j++) {
       /*Get the edges at the unit circle */
@@ -2910,24 +2948,26 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
       }
     }
   }
-  vertices[126] = cos (300 * M_PI / 180);
-  vertices[127] = sin (300 * M_PI / 180);
+  /*The last prism, breaking out of the unit-circle */
+  vertices[126] = 1;
+  vertices[127] = 0;
   vertices[128] = 1;
-  vertices[129] = 1;
-  vertices[130] = 0;
+  vertices[129] = cos (300 * M_PI / 180);
+  vertices[130] = sin (300 * M_PI / 180);
   vertices[131] = 1;
   vertices[132] = cos (300 * M_PI / 180) + 1;
   vertices[133] = sin (300 * M_PI / 180);
   vertices[134] = 1;
-  vertices[135] = cos (300 * M_PI / 180);
-  vertices[136] = sin (300 * M_PI / 180);
+  vertices[135] = 1;
+  vertices[136] = 0;
   vertices[137] = 2;
-  vertices[138] = 1;
-  vertices[139] = 0;
+  vertices[138] = cos (300 * M_PI / 180);
+  vertices[139] = sin (300 * M_PI / 180);
   vertices[140] = 2;
   vertices[141] = cos (300 * M_PI / 180) + 1;
   vertices[142] = sin (300 * M_PI / 180);
   vertices[143] = 2;
+  /*Rotate the second, third and the fifth prism */
   prism_rotate (vertices + 18, 2);
   prism_rotate (vertices + 36, 1);
   prism_rotate (vertices + 72, 2);
@@ -3119,9 +3159,12 @@ t8_cmesh_new_tet_orientation_test (sc_MPI_Comm comm)
   /* Set the coordinates. Each tet is just a translated version of
    * the root tet */
   for (i = 0; i < num_trees; i++) {
+    /* *INDENT-OFF* */
+    /* Indent changes '!!' not '! !' */
     translate[0] = (i & 1) + 2 * !!(i & 8);
     translate[1] = !!(i & 2) + 2 * !!(i & 16);
     translate[2] = !!(i & 4) + 2 * !!(i & 32);
+    /* *INDENT-ON* */
     t8_debugf ("%i  %.0f %.0f %.0f\n", i, translate[0], translate[1],
                translate[2]);
     t8_cmesh_translate_coordinates (vertices_coords, translated_coords, 4,
@@ -3132,7 +3175,6 @@ t8_cmesh_new_tet_orientation_test (sc_MPI_Comm comm)
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }
-
 
 t8_cmesh_t
 t8_cmesh_new_hybrid_gate (sc_MPI_Comm comm)
@@ -3411,149 +3453,148 @@ t8_cmesh_new_hybrid_gate_deformed (sc_MPI_Comm comm)
 }
 
 t8_cmesh_t
-t8_cmesh_new_full_hybrid(sc_MPI_Comm comm)
+t8_cmesh_new_full_hybrid (sc_MPI_Comm comm)
 {
-    t8_cmesh_t      cmesh;
-    double          vertices[24];
-    int             i;
+  t8_cmesh_t          cmesh;
+  double              vertices[24];
+  int                 i;
 
-    t8_cmesh_init(&cmesh);
-    t8_cmesh_set_tree_class(cmesh, 0, T8_ECLASS_HEX);
-    t8_cmesh_set_tree_class(cmesh, 1, T8_ECLASS_PYRAMID);
-    t8_cmesh_set_tree_class(cmesh, 2, T8_ECLASS_TET);
-    t8_cmesh_set_tree_class(cmesh, 3, T8_ECLASS_PRISM);
-    t8_cmesh_set_join(cmesh, 0,1,5,4,0);
-    t8_cmesh_set_join(cmesh, 1,2,0,1,0);
-    t8_cmesh_set_join(cmesh, 1,3,3,3,0);
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
+  t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_PYRAMID);
+  t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_TET);
+  t8_cmesh_set_tree_class (cmesh, 3, T8_ECLASS_PRISM);
+  t8_cmesh_set_join (cmesh, 0, 1, 5, 4, 0);
+  t8_cmesh_set_join (cmesh, 1, 2, 0, 1, 0);
+  t8_cmesh_set_join (cmesh, 1, 3, 3, 3, 0);
 
-    /*Hex vertices*/
-    vertices[0] = 0;
-    vertices[1] = 0;
-    vertices[2] = 0;
+  /*Hex vertices */
+  vertices[0] = 0;
+  vertices[1] = 0;
+  vertices[2] = 0;
 
-    vertices[3] = 1;
-    vertices[4] = 0;
-    vertices[5] = 0;
+  vertices[3] = 1;
+  vertices[4] = 0;
+  vertices[5] = 0;
 
-    vertices[6] = 0;
-    vertices[7] = 1;
-    vertices[8] = 0;
+  vertices[6] = 0;
+  vertices[7] = 1;
+  vertices[8] = 0;
 
-    vertices[9] = 1;
-    vertices[10] = 1;
-    vertices[11] = 0;
+  vertices[9] = 1;
+  vertices[10] = 1;
+  vertices[11] = 0;
 
-    vertices[12] = 0;
-    vertices[13] = 0;
-    vertices[14] = 1;
+  vertices[12] = 0;
+  vertices[13] = 0;
+  vertices[14] = 1;
 
-    vertices[15] = 1;
-    vertices[16] = 0;
-    vertices[17] = 1;
+  vertices[15] = 1;
+  vertices[16] = 0;
+  vertices[17] = 1;
 
-    vertices[18] = 0;
-    vertices[19] = 1;
-    vertices[20] = 1;
+  vertices[18] = 0;
+  vertices[19] = 1;
+  vertices[20] = 1;
 
-    vertices[21] = 1;
-    vertices[22] = 1;
-    vertices[23] = 1;
-    t8_cmesh_set_tree_vertices(cmesh, 0,t8_get_package_id(),0,vertices,8);
+  vertices[21] = 1;
+  vertices[22] = 1;
+  vertices[23] = 1;
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_get_package_id (), 0, vertices, 8);
 
-    /*pyra vertices*/
-    for(i = 0; i<4; i++)
-    {
-        vertices[i*3] = vertices[i*3 + 12];
-        vertices[i*3+1] = vertices[i*3 + 12+1];
-        vertices[i*3+2] = vertices[i*3 + 12+2];
-    }
-    vertices[12] = 1;
-    vertices[13] = 1;
-    vertices[14] = 2;
-    t8_cmesh_set_tree_vertices(cmesh, 1, t8_get_package_id(), 0, vertices, 5);
+  /*pyra vertices */
+  for (i = 0; i < 4; i++) {
+    vertices[i * 3] = vertices[i * 3 + 12];
+    vertices[i * 3 + 1] = vertices[i * 3 + 12 + 1];
+    vertices[i * 3 + 2] = vertices[i * 3 + 12 + 2];
+  }
+  vertices[12] = 1;
+  vertices[13] = 1;
+  vertices[14] = 2;
+  t8_cmesh_set_tree_vertices (cmesh, 1, t8_get_package_id (), 0, vertices, 5);
 
-     /*tet vertices*/
-    vertices[0] = 0;
-    vertices[1] = 0;
-    vertices[2] = 1;
+  /*tet vertices */
+  vertices[0] = 0;
+  vertices[1] = 0;
+  vertices[2] = 1;
 
-    vertices[3] = 0;
-    vertices[4] = 1;
-    vertices[5] = 2;
+  vertices[3] = 0;
+  vertices[4] = 1;
+  vertices[5] = 2;
 
-    vertices[6] = 0;
-    vertices[7] = 1;
-    vertices[8] = 1;
+  vertices[6] = 0;
+  vertices[7] = 1;
+  vertices[8] = 1;
 
-    vertices[9] = 1;
-    vertices[10] = 1;
-    vertices[11] = 2;
-    t8_cmesh_set_tree_vertices(cmesh, 2, t8_get_package_id(), 0, vertices, 4);
+  vertices[9] = 1;
+  vertices[10] = 1;
+  vertices[11] = 2;
+  t8_cmesh_set_tree_vertices (cmesh, 2, t8_get_package_id (), 0, vertices, 4);
 
-    /*prism vertices*/
-    vertices[0] = 1;
-    vertices[1] = 1;
-    vertices[2] = 1;
+  /*prism vertices */
+  vertices[0] = 1;
+  vertices[1] = 1;
+  vertices[2] = 1;
 
-    vertices[3] = 0;
-    vertices[4] = 1;
-    vertices[5] = 1;
+  vertices[3] = 0;
+  vertices[4] = 1;
+  vertices[5] = 1;
 
-    vertices[6] = 1;
-    vertices[7] = 1;
-    vertices[8] = 2;
+  vertices[6] = 1;
+  vertices[7] = 1;
+  vertices[8] = 2;
 
-    vertices[9] = 1;
-    vertices[10] = 2;
-    vertices[11] = 1;
+  vertices[9] = 1;
+  vertices[10] = 2;
+  vertices[11] = 1;
 
-    vertices[12] = 0;
-    vertices[13] = 2;
-    vertices[14] = 1;
+  vertices[12] = 0;
+  vertices[13] = 2;
+  vertices[14] = 1;
 
-    vertices[15] = 1;
-    vertices[16] = 2;
-    vertices[17] = 2;
+  vertices[15] = 1;
+  vertices[16] = 2;
+  vertices[17] = 2;
 
-    t8_cmesh_set_tree_vertices(cmesh, 3, t8_get_package_id(), 0, vertices, 6);
+  t8_cmesh_set_tree_vertices (cmesh, 3, t8_get_package_id (), 0, vertices, 6);
 
-    t8_cmesh_commit(cmesh, comm);
-    return cmesh;
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
 }
 
 t8_cmesh_t
 t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra)
 {
-    /*num_of_pyra pyras a 5 vertices a 3 coords */
-    /* TODO: This seems too be a lot of memory, can we also get by with only
-    5 * 3 doubles? */
-    int                 i, j;
+  /*num_of_pyra pyras a 5 vertices a 3 coords */
+  /* TODO: This seems too be a lot of memory, can we also get by with only
+     5 * 3 doubles? */
+  int                 i, j;
   double             *vertices = T8_ALLOC (double, num_of_pyra * 5 * 3);
   t8_cmesh_t          cmesh;
   double              degrees = 360. / num_of_pyra;
-  if(vertices )
-  T8_ASSERT (num_of_pyra > 2);
+  if (vertices)
+    T8_ASSERT (num_of_pyra > 2);
 
   for (i = 0; i < num_of_pyra; i++) {
     for (j = 0; j < 5; j++) {
       /*Get the edges at the unit circle */
-        if(j == 4){
-            vertices[i*5*3 + j*3] = 0;
-            vertices[i*5*3 + j*3+1] = 0;
-            vertices[i*5*3 + j*3+2] = 0;
-        }
-        else if (j == 1 || j == 3) {
-          vertices[i * 5 * 3 + j * 3] = cos (i * degrees * M_PI / 180);
-          vertices[i * 5 * 3 + j * 3 + 1] = sin (i * degrees * M_PI / 180);
-          vertices[i * 5 * 3 + j * 3 + 2] = (j == 3 ? 0.5 : -0.5);
-        }
-        else if(j == 0 || j == 2){
-            vertices[i * 5 * 3 + j * 3] =
-              cos ((i * degrees + degrees) * M_PI / 180);
-            vertices[i * 5 * 3 + j * 3 + 1] =
-              sin ((i * degrees + degrees) * M_PI / 180);
-            vertices[i * 5 * 3 + j * 3 + 2] = (j == 2 ? 0.5 : -0.5);
-        }
+      if (j == 4) {
+        vertices[i * 5 * 3 + j * 3] = 0;
+        vertices[i * 5 * 3 + j * 3 + 1] = 0;
+        vertices[i * 5 * 3 + j * 3 + 2] = 0;
+      }
+      else if (j == 1 || j == 3) {
+        vertices[i * 5 * 3 + j * 3] = cos (i * degrees * M_PI / 180);
+        vertices[i * 5 * 3 + j * 3 + 1] = sin (i * degrees * M_PI / 180);
+        vertices[i * 5 * 3 + j * 3 + 2] = (j == 3 ? 0.5 : -0.5);
+      }
+      else if (j == 0 || j == 2) {
+        vertices[i * 5 * 3 + j * 3] =
+          cos ((i * degrees + degrees) * M_PI / 180);
+        vertices[i * 5 * 3 + j * 3 + 1] =
+          sin ((i * degrees + degrees) * M_PI / 180);
+        vertices[i * 5 * 3 + j * 3 + 2] = (j == 2 ? 0.5 : -0.5);
+      }
     }
   }
   t8_cmesh_init (&cmesh);
@@ -3576,86 +3617,85 @@ t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra)
 }
 
 t8_cmesh_t
-t8_cmesh_new_long_brick_pyramid(sc_MPI_Comm comm, int num_cubes)
+t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes)
 {
-    double              vertices_coords[24] = {
-      0, 0, 0,
-      1, 0, 0,
-      0, 1, 0,
-      1, 1, 0,
-      0, 0, 1,
-      1, 0, 1,
-      0, 1, 1,
-      1, 1, 1
-    };
-    t8_topidx_t     vertices[5];
-    double          attr_vertices[15];
-    int i,j;
-    t8_cmesh_t      cmesh;
-    T8_ASSERT(num_cubes > 0);
-    t8_cmesh_init(&cmesh);
-    for(i = 0; i < num_cubes; i++){
-        for(j = 0; j<3; j++){
-            t8_cmesh_set_tree_class(cmesh, i*3+j, T8_ECLASS_PYRAMID);
-        }
-        /*in-cube face connection*/
-        if(i%2==0){
-            t8_cmesh_set_join(cmesh, i*3, i*3+1, 3,2,0);
-            t8_cmesh_set_join(cmesh, i*3+1, i*3+2, 0,1,0);
-            t8_cmesh_set_join(cmesh, i*3+2, i*3, 2,0,0);
-        }
-        else{
-            t8_cmesh_set_join(cmesh, i*3, i*3+1, 2,2,0);
-            t8_cmesh_set_join(cmesh, i*3+1, i*3+2, 1,0,0);
-            t8_cmesh_set_join(cmesh, i*3+2, i*3, 2,3,0);
-        }
+  double              vertices_coords[24] = {
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0,
+    1, 1, 0,
+    0, 0, 1,
+    1, 0, 1,
+    0, 1, 1,
+    1, 1, 1
+  };
+  t8_topidx_t         vertices[5];
+  double              attr_vertices[15];
+  int                 i, j;
+  t8_cmesh_t          cmesh;
+  T8_ASSERT (num_cubes > 0);
+  t8_cmesh_init (&cmesh);
+  for (i = 0; i < num_cubes; i++) {
+    for (j = 0; j < 3; j++) {
+      t8_cmesh_set_tree_class (cmesh, i * 3 + j, T8_ECLASS_PYRAMID);
     }
-    /*over cube face connection*/
-    for(i = 0; i < num_cubes-1; i++){
-        if(i%2 == 0)
-        {
-            t8_cmesh_set_join(cmesh, i*3, (i+1)*3, 2,0,0);
-            t8_cmesh_set_join(cmesh, i*3+1, (i+1)*3+2, 3,3,0);
-        }
-        else{
-            t8_cmesh_set_join(cmesh, i*3+1, (i+1)*3+2, 4,4,0);
-        }
+    /*in-cube face connection */
+    if (i % 2 == 0) {
+      t8_cmesh_set_join (cmesh, i * 3, i * 3 + 1, 3, 2, 0);
+      t8_cmesh_set_join (cmesh, i * 3 + 1, i * 3 + 2, 0, 1, 0);
+      t8_cmesh_set_join (cmesh, i * 3 + 2, i * 3, 2, 0, 0);
     }
-    /*vertices*/
-    for(i = 0; i < num_cubes; i++){
-        vertices[0] = 1;
-        vertices[1] = 3;
-        vertices[2] = 0;
-        vertices[3] = 2;
-        vertices[4] = i%2 == 0 ?7:5;
-        t8_cmesh_new_translate_vertices_to_attributes (vertices,
-                                                       vertices_coords,
-                                                       attr_vertices, 5);
-        t8_cmesh_set_tree_vertices (cmesh, i*3, t8_get_package_id (), 0,
-                                    attr_vertices, 5);
-        vertices[0] = i%2 == 0 ?0:2;
-        vertices[1] = i%2 == 0 ?2:3;
-        vertices[2] = i%2 == 0 ?4:6;
-        vertices[3] = i%2 == 0 ?6:7;
-        t8_cmesh_new_translate_vertices_to_attributes (vertices,
-                                                       vertices_coords,
-                                                       attr_vertices, 5);
-        t8_cmesh_set_tree_vertices (cmesh, i*3 + 1, t8_get_package_id (), 0,
-                                    attr_vertices, 5);
-        vertices[0] = i%2 == 0 ?1:0;
-        vertices[1] = i%2 == 0 ?0:2;
-        vertices[2] = i%2 == 0 ?5:4;
-        vertices[3] = i%2 == 0 ?4:6;
-        t8_cmesh_new_translate_vertices_to_attributes (vertices,
-                                                       vertices_coords,
-                                                       attr_vertices, 5);
-        t8_cmesh_set_tree_vertices (cmesh, i*3+2, t8_get_package_id (), 0,
-                                    attr_vertices, 5);
-        for(j = 0; j<8; j++){
-            vertices_coords[j*3+1]+=1;
-        }
+    else {
+      t8_cmesh_set_join (cmesh, i * 3, i * 3 + 1, 2, 2, 0);
+      t8_cmesh_set_join (cmesh, i * 3 + 1, i * 3 + 2, 1, 0, 0);
+      t8_cmesh_set_join (cmesh, i * 3 + 2, i * 3, 2, 3, 0);
+    }
+  }
+  /*over cube face connection */
+  for (i = 0; i < num_cubes - 1; i++) {
+    if (i % 2 == 0) {
+      t8_cmesh_set_join (cmesh, i * 3, (i + 1) * 3, 2, 0, 0);
+      t8_cmesh_set_join (cmesh, i * 3 + 1, (i + 1) * 3 + 2, 3, 3, 0);
+    }
+    else {
+      t8_cmesh_set_join (cmesh, i * 3 + 1, (i + 1) * 3 + 2, 4, 4, 0);
+    }
+  }
+  /*vertices */
+  for (i = 0; i < num_cubes; i++) {
+    vertices[0] = 1;
+    vertices[1] = 3;
+    vertices[2] = 0;
+    vertices[3] = 2;
+    vertices[4] = i % 2 == 0 ? 7 : 5;
+    t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                   vertices_coords,
+                                                   attr_vertices, 5);
+    t8_cmesh_set_tree_vertices (cmesh, i * 3, t8_get_package_id (), 0,
+                                attr_vertices, 5);
+    vertices[0] = i % 2 == 0 ? 0 : 2;
+    vertices[1] = i % 2 == 0 ? 2 : 3;
+    vertices[2] = i % 2 == 0 ? 4 : 6;
+    vertices[3] = i % 2 == 0 ? 6 : 7;
+    t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                   vertices_coords,
+                                                   attr_vertices, 5);
+    t8_cmesh_set_tree_vertices (cmesh, i * 3 + 1, t8_get_package_id (), 0,
+                                attr_vertices, 5);
+    vertices[0] = i % 2 == 0 ? 1 : 0;
+    vertices[1] = i % 2 == 0 ? 0 : 2;
+    vertices[2] = i % 2 == 0 ? 5 : 4;
+    vertices[3] = i % 2 == 0 ? 4 : 6;
+    t8_cmesh_new_translate_vertices_to_attributes (vertices,
+                                                   vertices_coords,
+                                                   attr_vertices, 5);
+    t8_cmesh_set_tree_vertices (cmesh, i * 3 + 2, t8_get_package_id (), 0,
+                                attr_vertices, 5);
+    for (j = 0; j < 8; j++) {
+      vertices_coords[j * 3 + 1] += 1;
+    }
 
-    }
-    t8_cmesh_commit(cmesh, comm);
-    return cmesh;
+  }
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
 }

@@ -1,6 +1,7 @@
 The programs here are a collection of examples on the usage of t8code.
 A brief description of the folders and programs:
 
+ stepa  --  Step by step examples on how to build an application with t8code.
  basic  --  Programs generating and modifying a cube mesh.
             Call './t8_basic_hcube -h' for usage details.
  
@@ -17,3 +18,6 @@ A brief description of the folders and programs:
              It works in 2D and 3D with all supported element types and
              hybrid meshes.
              Call './t8_advection -h' for usage details
+ netcdf   -- Eventually writing out meshes to netcdf format.
+	     Currently, only a test program that prints a message whether or
+	     not t8code was succesfully linked with netcdf.

@@ -125,13 +125,22 @@ public:
   virtual void        t8_element_parent (const t8_element_t * elem,
                                          t8_element_t * parent) = 0;
 
+  /** Compute the maximum number of siblings of an element or any descendants of it. That is the number of 
+   * Children of its parent.
+   * \param [in] elem The element.
+   * \return          The maximum number of siblings of \a element.
+   * Note that this number is >= 1, since we count the element itself as a sibling.
+   */
+  virtual int         t8_element_max_num_siblings (const t8_element_t *
+                                                   elem) const = 0;
+
   /** Compute the number of siblings of an element. That is the number of 
    * Children of its parent.
    * \param [in] elem The element.
    * \return          The number of siblings of \a element.
    * Note that this number is >= 1, since we count the element itself as a sibling.
    */
-  virtual int         t8_element_max_num_siblings (const t8_element_t *
+  virtual int         t8_element_num_siblings (const t8_element_t *
                                                elem) const = 0;
 
   /** Compute a specific sibling of a given element \b elem and store it in \b sibling.
@@ -576,7 +585,6 @@ public:
   virtual int         t8_element_root_len (const t8_element_t * elem) = 0;
 
   /** Compute the integer coordinates of a given element vertex.
-   *   \param [in] ts     The virtual table for this element class.
    *   \param [in] t      The element to be considered.
    *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords An array of at least as many integers as the element's dimension
@@ -698,7 +706,6 @@ public:
                                        int called_new) = 0;
 
   /** Deallocate an array of elements.
-   * \param [in] ts       The virtual table for this element class.
    * \param [in] length   The number of elements in the array.
    * \param [in,out] elems On input an array of \b length many allocated
    *                      element pointers.

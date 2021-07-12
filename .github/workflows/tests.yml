@@ -1,99 +1,360 @@
-name: Tests
+name: t8code tests
+
+
+#  This file is part of t8code.
+#  t8code is a C library to manage a collection (a forest) of multiple
+#  connected adaptive space-trees of general element types in parallel.
+#
+#  Copyright (C) 2015 the developers
+#
+#  t8code is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  t8code is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with t8code; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+#
+# This github CI script installs t8code and runs its tests for various configurations.
+# We compile sc and p4est as thirdparty libraries and use caching to only trigger a
+# new installation of them when their versions have changed in t8code.
+#
+# Note: To manually enforce sc and p4est installation, either increase the counter
+#       in the "key:" entries of the sc and p4est steps or set the variables
+#       SC_IGNORE_CACHE and P4EST_IGNORE_CACHE to 1 in the respective steps.
+
+
+# TODO
+# 1. activate -Werror
 
 on:
   push:
     branches:
       - master
       - develop
-      - feature-github_ci # for testing this script
+      - feature-*CI* # for testing this script, all feature branches with "CI" in their name
+      - feature-pyramid_element
   pull_request:
     branches:
       - master
       - develop
+  workflow_dispatch: # Be able to trigger this manually on github.com
 
 jobs:
   build:
 
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     
     steps:
+#
 # Setup and bootstrap
+#
     - uses: actions/checkout@v1
     - name: Install mpich
       run: sudo apt-get update && sudo apt-get install libmpich-dev
+    - name: Install zlib
+      run: sudo apt-get install libz-dev
     - name: init submodules
       run: git submodule init
     - name: update submodules
       run: git submodule update
     - name: bootstrap
       run: ./bootstrap
+#
+#       SC installation
+#
+    - name: store sc folders in var
+      run: echo SC_DEBUG=$PWD/sc/build_debug >> $GITHUB_ENV
+       && echo SC_RELEASE=$PWD/sc/build_release >> $GITHUB_ENV
+       && echo SC_SERIAL_DEBUG=$PWD/sc/build_serial_debug >> $GITHUB_ENV
+       && echo SC_SERIAL_RELEASE=$PWD/sc/build_serial_release >> $GITHUB_ENV  
+    - name: Get sc commit hash
+      run: hash=`git rev-parse HEAD:sc` && echo sc_commit=$hash >> $GITHUB_ENV
+    - name: Check cache for previous sc installation
+      id: sc_cache
+      uses: actions/cache@v2
+      with:
+        path: |
+          ${{ env.SC_DEBUG }}
+          ${{ env.SC_RELEASE }}
+          ${{ env.SC_SERIAL_DEBUG }}
+          ${{ env.SC_SERIAL_RELEASE }}
+        # You can increase the counter at the end to force a new key and hence recomputing the cache
+        key: sc-${{ env.sc_commit }}-003
+    - name: Set ignore cache variable
+      # If this variable is set 1
+      # (i.e. SC_IGNORE_CACHE=1) then the cache will be ignored and
+      # sc is always build.
+      # We use this mostly for debugging this CI script.
+      run: echo SC_IGNORE_CACHE=0 >> $GITHUB_ENV
+    - name: Cache info
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' ||  env.SC_IGNORE_CACHE == 1 }}
+      run: echo No cache found or cache will be ignored. SC_IGNORE_CACHE=$SC_IGNORE_CACHE
+    - name: if ignore cache, delete folders
+      if: ${{ env.SC_IGNORE_CACHE == 1 }}
+      # The true at the end is to ignore errors that i.e. occur when the folders do not exist
+      run: rm -r $SC_DEBUG $SC_RELEASE $SC_SERIAL_DEBUG $SC_SERIAL_RELEASE || true
+    - name: make folders
+      run: mkdir $SC_DEBUG && mkdir $SC_RELEASE && mkdir $SC_SERIAL_DEBUG && mkdir $SC_SERIAL_RELEASE
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: install sc
+      run: echo "Install sc"
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+      ## sc debug
+    - name: sc configure debug
+      run: cd $SC_DEBUG && ../configure --enable-mpi --enable-debug --prefix=$PWD/install
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: sc build debug
+      run: cd $SC_DEBUG && make -j V=0 && make -j V=0 install
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: sc debug check
+      run: cd $SC_DEBUG && make -j V=0 check
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: OnFailPrintLog
+      if: (${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}) && failure()
+      run: cat $SC_DEBUG/config.log
+      ## sc release
+    - name: sc configure and build release
+      run: cd $SC_RELEASE && ../configure --enable-mpi --enable-debug --prefix=$PWD/install
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: sc build release
+      run: cd $SC_RELEASE && make -j V=0 && make -j V=0 install
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: sc release check
+      run: cd $SC_RELEASE && make -j V=0 check
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: OnFailPrintLog
+      if: (${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}) && failure()
+      run: cat $SC_RELEASE/config.log
+      ## sc serial debug
+    - name: sc configure and build serial debug
+      run: cd $SC_SERIAL_DEBUG && ../configure --enable-debug --prefix=$PWD/install
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: sc build serial debug
+      run: cd $SC_SERIAL_DEBUG && make -j V=0 && make -j V=0 install
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: sc serial debug check
+      run: cd $SC_SERIAL_DEBUG && make -j V=0 check
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: OnFailPrintLog
+      if: (${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}) && failure()
+      run: cat $SC_SERIAL_DEBUG/config.log
+      ## sc serial release
+    - name: sc configure and build serial release
+      run: cd $SC_SERIAL_RELEASE && ../configure --prefix=$PWD/install
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: sc build release serial
+      run: cd $SC_SERIAL_RELEASE && make -j V=0 && make -j V=0 install
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: sc release debug check
+      run: cd $SC_SERIAL_RELEASE && make -j V=0 check
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+    - name: OnFailPrintLog
+      if: (${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}) && failure()
+      run: cat $SC_SERIAL_RELEASE/config.log
+#
+# P4EST
+#
+    - name: store p4est folders in var
+      run: echo P4EST_DEBUG=$PWD/p4est/build_debug >> $GITHUB_ENV
+       && echo P4EST_RELEASE=$PWD/p4est/build_release >> $GITHUB_ENV
+       && echo P4EST_SERIAL_DEBUG=$PWD/p4est/build_serial_debug >> $GITHUB_ENV
+       && echo P4EST_SERIAL_RELEASE=$PWD/p4est/build_serial_release >> $GITHUB_ENV
+    - name: Get p4est commit hash
+      run: hash=`git rev-parse HEAD:p4est` && echo p4est_commit=$hash >> $GITHUB_ENV
+    - name: Check cache for previous p4est installation
+      id: p4est_cache
+      uses: actions/cache@v2
+      with:
+        path: |
+          ${{ env.P4EST_DEBUG }}
+          ${{ env.P4EST_RELEASE }}
+          ${{ env.P4EST_SERIAL_DEBUG }}
+          ${{ env.P4EST_SERIAL_RELEASE }}
+        # You can increase the counter at the end to force a new key and hence recomputing the cache
+        key: p4est-${{ env.p4est_commit }}-003
+    - name: Set ignore cache variable
+      # If this variable is set to 1 then the cache is ignored and p4est is installed regardless of cache.
+      # (set with i.e. P4EST_IGNORE_CACHE=1)
+      # We use this mostly for debugging this CI script.
+      run: echo P4EST_IGNORE_CACHE=0 >> $GITHUB_ENV
+    - name: Cache info
+      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+      run: echo No cache found or cache will be ignored. P4EST_IGNORE_CACHE=$P4EST_IGNORE_CACHE
+    - name: install p4est
+      run: echo "Install p4est"
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: if ignore cache, delete folders
+      if: ${{ env.P4EST_IGNORE_CACHE == 1 }}
+      # The true at the end is to ignore errors that i.e. occur when the folders do not exist      
+      run: rm -r $P4EST_DEBUG $P4EST_RELEASE $P4EST_SERIAL_DEBUG $P4EST_SERIAL_RELEASE || true 
+    - name: make folders
+      run: mkdir $P4EST_DEBUG && mkdir $P4EST_RELEASE && mkdir $P4EST_SERIAL_RELEASE
+          && mkdir $P4EST_SERIAL_DEBUG
+    ## p4est debug
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: p4est configure debug
+      run: cd $P4EST_DEBUG && ../configure --enable-mpi --enable-debug --prefix=$PWD/install --with-sc=$SC_DEBUG/install
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: p4est build debug
+      run: cd $P4EST_DEBUG && make -j V=0 && make -j V=0 install
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: p4est debug check
+      run: cd $P4EST_DEBUG && make -j V=0 check
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: OnFailPrintLog
+      if: (${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}) && failure()
+      run: cat $P4EST_DEBUG/config.log
+    ## p4est release
+    - name: p4est configure and build release
+      run: cd $P4EST_RELEASE && ../configure --enable-mpi --prefix=$PWD/install --with-sc=$SC_RELEASE/install
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: p4est build release
+      run: cd $P4EST_RELEASE && make -j V=0 && make -j V=0 install
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: p4est release check
+      run: cd $P4EST_RELEASE && make -j V=0 check
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: OnFailPrintLog
+      if: (${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}) && failure()
+      run: cat $P4EST_RELEASE/config.log
+    ## p4est serial release
+    - name: p4est configure and build serial release
+      run: cd $P4EST_SERIAL_RELEASE && ../configure --prefix=$PWD/install --with-sc=$SC_SERIAL_RELEASE/install
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: p4est build serial release
+      run: cd $P4EST_SERIAL_RELEASE && make -j V=0 && make -j V=0 install
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: p4est serial release check
+      run: cd $P4EST_SERIAL_RELEASE && make -j V=0 check
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: OnFailPrintLog
+      if: (${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}) && failure()
+      run: cat $P4EST_SERIAL_RELEASE/config.log
+    - name: p4est configure and build serial debug
+    ## p4est serial debug
+      run: cd $P4EST_SERIAL_DEBUG && ../configure --enable-debug --prefix=$PWD/install --with-sc=$SC_SERIAL_DEBUG/install
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: p4est build serial debug
+      run: cd $P4EST_SERIAL_DEBUG && make -j V=0 && make -j V=0 install
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: p4est serial debug check
+      run: cd $P4EST_SERIAL_DEBUG && make -j V=0 check
+      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    - name: OnFailPrintLog
+      if: (${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}) && failure ()
+      run: cat $P4EST_SERIAL_DEBUG/config.log
+#  P4EST AND SC END
+#
+#  T8CODE
+#
+#
+    # build config vars
+    - name: build CFLAGS and CXXFLAGS variables
+      run: echo CFLAGS_var="-Wall -pedantic -O3" >> $GITHUB_ENV
+        && echo CXXFLAGS_var="-Wall -pedantic -O3" >> $GITHUB_ENV
+    # Note: We want to use '-Werror', but if we already provide it at the configure step
+    #       we get errors in configure that we cannot remove (for example the autotools way
+    #       of checking for libm results in a compiler warning).
+    #       Thus, we add '-Werror' later at the make step.
+    - name: build config variables
+      run: export CONFIG_OPTIONS="--without-blas"
+           && export CONFIG_DEBUG="$CONFIG_OPTIONS --enable-debug --enable-mpi --with-sc=$SC_DEBUG/install --with-p4est=$P4EST_DEBUG/install"
+           && export CONFIG_SERIAL_DEBUG="$CONFIG_OPTIONS --enable-debug --with-sc=$SC_SERIAL_DEBUG/install --with-p4est=$P4EST_SERIAL_DEBUG/install"
+           && export CONFIG_RELEASE="$CONFIG_OPTIONS --enable-mpi --with-sc=$SC_RELEASE/install --with-p4est=$P4EST_RELEASE/install"
+           && export CONFIG_SERIAL_RELEASE="$CONFIG_OPTIONS --with-sc=$SC_SERIAL_RELEASE/install --with-p4est=$P4EST_SERIAL_RELEASE/install"
+           && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
+           && echo CONFIG_DEBUG="$CONFIG_DEBUG" >> $GITHUB_ENV
+           && echo CONFIG_SERIAL_DEBUG="$CONFIG_SERIAL_DEBUG" >> $GITHUB_ENV
+           && echo CONFIG_RELEASE="$CONFIG_RELEASE" >> $GITHUB_ENV
+           && echo CONFIG_SERIAL_RELEASE="$CONFIG_SERIAL_RELEASE" >> $GITHUB_ENV
+    - name: Check vars
+      run: echo "[$CONFIG_DEBUG]"
+            && echo "[$CONFIG_SERIAL_DEBUG]"
+            && echo "[$CONFIG_RELEASE]"
+            && echo "[$CONFIG_SERIAL_RELEASE]"
 # configure and test with MPI (release mode)
+    - name: Printing MPI compiler info
+      run: mpicc --version && mpirun --version
+    - name: Printing GCC compiler info
+      run: gcc --version && g++ --version
     - name: check release mode
       run: echo "Checking release mode (MPI)"
+    - name: echo configure line
+      run: echo configure $CONFIG_RELEASE
     - name: configure
-      run: ./configure --enable-mpi --without-blas
+      run: mkdir build_release && cd build_release && ../configure $CONFIG_RELEASE CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
     - name: OnFailPrintLog
       if: failure()
-      run: cat config.log
+      run: cat build_release/config.log
     - name: make
-      run: make -j V=0
+      run: cd build_release && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: make check
-      run: make check -j4 V=0
-    - name: clean up
-      run: make distclean
+      run: cd build_release && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
 # configure and test with MPI (debug mode)
     - name: check debugging mode
       run: echo "Checking debug mode"
     - name: configure
-      run: ./configure --enable-mpi --without-blas --enable-debug
+      run: mkdir build_debug && cd build_debug && ../configure $CONFIG_DEBUG CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
     - name: OnFailPrintLog
       if: failure()
       run: cat config.log
     - name: make
-      run: make -j V=0
+      run: cd build_debug && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: make check
-      run: make check -j4 V=0
-    - name: clean up
-      run: make distclean
+      run: cd build_debug && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
 # configure and test with MPI (C++ compiler only, release mode)
     - name: check C++ compiler
       run: echo "Checking C++, release mode (MPI)"
     - name: configure
-      run: ./configure CC=mpicxx CXX=mpicxx --enable-mpi --without-blas --enable-debug
+      run: mkdir build_release_cpp &&cd build_release_cpp && ../configure CC=mpicxx CXX=mpicxx $CONFIG_RELEASE CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
     - name: OnFailPrintLog
       if: failure()
-      run: cat config.log
+      run: cat build_release_cpp/config.log
     - name: make
-      run: make -j V=0
+      run: cd build_release_cpp && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: make check
-      run: make check -j4 V=0
-    - name: clean up
-      run: make distclean
+      run: cd build_release_cpp && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
 # configure and test serial (release mode)
     - name: check serial
       run: echo "Checking serial release mode"
     - name: configure
-      run: ./configure --without-blas
+      run: mkdir build_serial_release && cd build_serial_release && ../configure $CONFIG_SERIAL_RELEASE CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
     - name: OnFailPrintLog
       if: failure()
-      run: cat config.log
+      run: cat build_serial_release/config.log
     - name: make
-      run: make -j V=0
+      run: cd build_serial_release && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: make check
-      run: make check -j4 V=0
-    - name: clean up
-      run: make distclean
+      run: cd build_serial_release && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
 # configure and test serial (debug mode)
     - name: check serial
       run: echo "Checking debugging mode"
     - name: configure
-      run: ./configure --without-blas --enable-debug
+      run: mkdir build_serial_debug && cd build_serial_debug && ../configure $CONFIG_SERIAL_DEBUG CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
     - name: OnFailPrintLog
       if: failure()
-      run: cat config.log
+      run: cat build_serial_release/config.log
     - name: make
-      run: make -j V=0
+      run: cd build_serial_release && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: make check
-      run: make check -j4 V=0
-    - name: clean up
-      run: make distclean
+      run: cd build_serial_release && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+# configure and test with MPI and netcdf
+    - name: Install netcdf
+      run: sudo apt-get install libnetcdf-dev
+    - name: configure
+      run: mkdir build_netcdf && cd build_netcdf && ../configure $CONFIG_RELEASE --with-netcdf CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
+    - name: OnFailPrintLog
+      if: failure()
+      run: cat build_netcdf/config.log
+    - name: make
+      run: cd build_netcdf && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+    - name: make check
+      run: cd build_netcdf && make check -j4 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
