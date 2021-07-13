@@ -65,7 +65,8 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
   num_faces = ts->t8_element_num_faces (current_element);
   
   /* We use a binary encoding (depending on the face enumeration), to determine which subelement type to use. 
-   * The flag parameter is set to 1, if there is a neighbour with a higher level and 0, if the level of the neighbour is at most the level of the element.   
+   * Every face has a flag parameter, wich is set to 1, if there is a neighbour with a higher level 
+   * and to 0, if the level of the neighbour is at most the level of the element.   
    *             
    *              f0                         1
    *        x - - x - - x              x - - x - - x       
@@ -77,7 +78,8 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
    *        x - - - - - x              x - - - - - x
    *              f1                         0 
    *                      
-   * Note, that this procedure is independent of the eclass (we only show an example for the quad scheme). Each neighbour-structure will lead to a unique binary code. 
+   * Note, that this procedure is independent of the eclass (we only show an example for the quad scheme). 
+   * Each neighbour-structure will lead to a unique binary code. 
    * Within the element scheme of the given eclass, this binary code is used to construct the right subelement type,
    * in order to remove hanging nodes from the mesh. */
 
