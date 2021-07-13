@@ -339,13 +339,12 @@ t8_forest_adapt (t8_forest_t forest)
         }
         el_considered++;
       }
-      /* if refine > 1, use subelements */
-      else if (refine > 1) {
-        /* The subelement-callback function returns refine = subelement_type + 1 to avoid subelement_type = 1.
+      else if (refine > 1) { /* if refine > 1, use subelements */
+        /* The subelement-callback function returns refine = subelement_type + 1, to avoid subelement_type = 1.
          * We can now undo this to use the "true" subelement_type-values in the tscheme functions */
         subelement_type = refine - 1;
         #if 0
-        /* determing the number of subelements of the given type for the quad scheme to remove hanging nodes */
+        /* determing the number of subelements of the given type for memory allocation */
         num_subelements = tscheme->t8_element_get_number_of_subelements (subelement_type);
         #endif
         num_subelements = 2;

@@ -65,7 +65,7 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
   num_faces = ts->t8_element_num_faces (current_element);
   
   /* We use a binary encoding (depending on the face enumeration), to determine which subelement type to use. 
-   * The flag parameter is set to 1, if there is a neighbour with a higher level and 0, if the level of the neighbour is at least the level of the element.   
+   * The flag parameter is set to 1, if there is a neighbour with a higher level and 0, if the level of the neighbour is at most the level of the element.   
    *             
    *              f0                         1
    *        x - - x - - x              x - - x - - x       
@@ -77,23 +77,24 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
    *        x - - - - - x              x - - - - - x
    *              f1                         0 
    *                      
-   * Note, that this procedure is independent of the eclass (we only show an example for the quad scheme). Each neighbour structure leads to a unique binary code. 
-   * Within the element file of the given eclass, this binary code is used, to construct the right subelement type,
-   * for example to remove hanging nodes from the mesh. */
+   * Note, that this procedure is independent of the eclass (we only show an example for the quad scheme). Each neighbour-structure will lead to a unique binary code. 
+   * Within the element scheme of the given eclass, this binary code is used to construct the right subelement type,
+   * in order to remove hanging nodes from the mesh. */
 
   for (iface = 0; iface < num_faces; iface++) {
-    /* we are interested in the number of neighbours of a given element an a given face of the element */
+    /* We are interested in the number of neighbours of a given element and a given face of the element. */
     t8_forest_leaf_face_neighbors (forest_from, ltree_id, current_element, &neighbor_leafs,
                                      iface, &dual_faces, &num_neighbors,
                                      &element_indices, &neigh_scheme, 1); 
-    /* using the number of neighbours to determine the binary code */
+    /* If the number of neighbours of a face is higher than 1, we know that there must be a hanging node,
+     * set the flag parameter for the face to 1 and in the end, determine the decimal subelement type. */
     if (num_neighbors > 1) {
       subelement_type = subelement_type * 2 + 1;
     }
     else {
       subelement_type = subelement_type *2;
     }
-    if (num_neighbors > 0) {
+    if (num_neighbors > 0) { /* free memory */
         neigh_scheme->t8_element_destroy (num_neighbors, neighbor_leafs);
 
         T8_FREE (element_indices);
@@ -102,20 +103,18 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
     }
   }
 
-  printf("Id: %i    Type: %i\n", lelement_id, subelement_type);
+  #if 0
+  printf("Id: %i  Type: %i\n", lelement_id, subelement_type);
+  #endif
 
   /* returning the right subelement types */
-  if (subelement_type == 0) {
-    /* in this case, there are no hanging nodes and we do not need to do anything */
+  if (subelement_type == 0) { /* in this case, there are no hanging nodes and we do not need to do anything */
     return 0;
   }
-  else if (subelement_type == 15) {
-    /* if all four neihbours are refined, we can use the standard refinement for the given element,
-     * which will automatically remove the hanging nodes in this case */ 
+  else if (subelement_type == pow (2, num_faces) - 1) { /* if all neihbours are refined, we use the standard refinement for element */ 
     return 1;
   }
-  else {
-    /* shift every subelement type by one, to avoid refine = 1 */
+  else { /* use subelements and add 1 to every type, to avoid refine = 1 */
     return subelement_type + 1;
   }
 }
