@@ -341,7 +341,8 @@ t8_forest_adapt (t8_forest_t forest)
       }
       /* if refine > 1, use subelements */
       else if (refine > 1) {
-        /* refine starts at 2, subelement type should start at 1 */
+        /* The subelement-callback function returns refine = subelement_type + 1 to avoid subelement_type = 1.
+         * We can now undo this to use the "true" subelement_type-values in the tscheme functions */
         subelement_type = refine - 1;
         #if 0
         /* determing the number of subelements of the given type for the quad scheme to remove hanging nodes */

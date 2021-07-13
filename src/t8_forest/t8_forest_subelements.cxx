@@ -64,20 +64,23 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
   current_element = t8_forest_get_element_in_tree (forest_from, ltree_id, lelement_id);
   num_faces = ts->t8_element_num_faces (current_element);
   
-  /* We use a binary encoding to determine which subelement type to use, 
-   * depending on the refinement levels of the neighbours.                
-   *                                                                                           subelement type 12 for quads
-   *      x - - x - - x                                                                               x - - x - - x       
-   *      |           |         In this example (for the quad scheme) are 2 neighbours                | \   |   / |
-   *      |           |         with a higher refinement level (left and above).                      |   \ | /   |
-   *      x           |   -->   This neighbour structure corresponds to the binary code 1100,   -->   x - - x     |
-   *      |           |         which equals subelement type 12 in base 10.                           |   /   \   |
-   *      | elem      |                                                                               | /       \ |
-   *      x - - - - - x                                                                               x - - - - - x
+  /* We use a binary encoding (depending on the face enumeration), to determine which subelement type to use. 
+   * The flag parameter is set to 1, if there is a neighbour with a higher level and 0, if the level of the neighbour is at least the level of the element.   
+   *             
+   *              f0                         1
+   *        x - - x - - x              x - - x - - x       
+   *        |           |              | \   |   / |
+   *        |           |              |   \ | /   |                                                            | f3 | f2 | f1 | f0 |
+   *    f3  x           | f2   -->   1 x - - x     | 0   -->   binary code (according to the face enumeration): |  1 |  0 |  0 |  1 | = 9 in base 10  
+   *        |           |              |   /   \   |
+   *        | elem      |              | /       \ |
+   *        x - - - - - x              x - - - - - x
+   *              f1                         0 
    *                      
-   * Note, that this procedure is independent of the eclass that is used. Each neighbour structure leads to a unique 
-   * binary code. Within the element file of the given eclass, this binary code is used, to construct the right subelement  
-   * type for example to remove hanging nodes from the mesh. */
+   * Note, that this procedure is independent of the eclass (we only show an example for the quad scheme). Each neighbour structure leads to a unique binary code. 
+   * Within the element file of the given eclass, this binary code is used, to construct the right subelement type,
+   * for example to remove hanging nodes from the mesh. */
+
   for (iface = 0; iface < num_faces; iface++) {
     /* we are interested in the number of neighbours of a given element an a given face of the element */
     t8_forest_leaf_face_neighbors (forest_from, ltree_id, current_element, &neighbor_leafs,
@@ -98,6 +101,9 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
         T8_FREE (dual_faces);
     }
   }
+
+  printf("Id: %i    Type: %i\n", lelement_id, subelement_type);
+
   /* returning the right subelement types */
   if (subelement_type == 0) {
     /* in this case, there are no hanging nodes and we do not need to do anything */

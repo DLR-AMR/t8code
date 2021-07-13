@@ -899,166 +899,159 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
   /* get the length of the current quadrant */
   len = P4EST_QUADRANT_LEN (q1->level);
 
-  /* Compute the x and y coordinates of subelement vertices, depending on the subelement type, id and vertex number */
+  /* Compute the x and y coordinates of subelement vertices, depending on the subelement type, id and vertex number (faces enumerated clockwise here) */
   #if 0
-  /* consider the following subelement of type 11:
-   *
-   *           =len
-   *      |-------------|
-   *                                     1
-   *      x - - - - - - x          x - - x - - x 
-   *      |             |          | \ 3 | 4 / |
-   *      |             |          | 2 \ | / 5 |                                                                            rearranging binaries:   1   1   1   0
-   *      |             |   -->  1 x - - x - - x 1   -->   binary representation: 1011 (be careful, in which order   -->    number subelements:     2   2   2   1
-   *      |             |          | 1 /   \ 6 |           the faces are enumerated). Now, consider sub_id : 3              where is our sub?           x -> first sub on upper face
-   *      | elem        |          | /   7   \ |
-   *      + - - - - - - x          x - - - - - x
-   *                                     0
-   *           
-   * we will use the binary representation of the to automatically determine the vertex coordinates of a given subelement type. */
-  /* need to know: face number of anchor node and whether it is split in half and if we are the first or second subelement */
-  [face_number, split, sub_face_id] = t8_element_get_location_of_subelement(t); 
-  if (face_number == 0) {
-    if (split == 0) {
-      if (vertex == 0) {
-        coords[0] = q1->x;
-        coords[1] = q1->y;
-      }
-      else if (vertex == 1) {
-        coords[0] = q1->x;
-        coords[1] = q1->y + len;
-      }
-    }
-    else if (split == 1) {
-      if (sub_face_id == 1) {
+  int location[3] = {};
+  location = t8_element_get_location_of_subelement(t); 
+  face_number = location[0];
+  split = location[1];
+  sub_face_id = location[2];
+  if (pquad_w_sub->subelement_type >= 1 && pquad_w_sub->subelement_type <= 14) {
+    if (face_number == 0) {
+      if (split == 0) {
         if (vertex == 0) {
           coords[0] = q1->x;
           coords[1] = q1->y;
         }
         else if (vertex == 1) {
           coords[0] = q1->x;
-          coords[1] = q1->y + len * 1/2;
-        }
-      }
-      else if (sub_face_id == 2) {
-        if (vertex == 0) {
-          coords[0] = q1->x + len * 1/2;
-          coords[1] = q1->y + len * 1/2;
-        }
-        else if (vertex == 1) {
-          coords[0] = q1->x + len * 1/2;
           coords[1] = q1->y + len;
         }
       }
-    }
-  } /* end of vertex coordinates for subelements that border to the left */
-  else if (face_number == 1) {
-    if (split == 0) {
-      if (vertex == 0) {
-        coords[0] = q1->x;
-        coords[1] = q1->y + len;
+      else if (split == 1) {
+        if (sub_face_id == 1) {
+          if (vertex == 0) {
+            coords[0] = q1->x;
+            coords[1] = q1->y;
+          }
+          else if (vertex == 1) {
+            coords[0] = q1->x;
+            coords[1] = q1->y + len * 1/2;
+          }
+        }
+        else if (sub_face_id == 2) {
+          if (vertex == 0) {
+            coords[0] = q1->x + len * 1/2;
+            coords[1] = q1->y + len * 1/2;
+          }
+          else if (vertex == 1) {
+            coords[0] = q1->x + len * 1/2;
+            coords[1] = q1->y + len;
+          }
+        }
       }
-      else if (vertex == 1) {
-        coords[0] = q1->x + len;
-        coords[1] = q1->y + len;
-      }
-    }
-    else if (split == 1) {
-      if (sub_face_id == 1) {
+    } /* end of vertex coordinates for subelements that border to the left face */
+    else if (face_number == 1) {
+      if (split == 0) {
         if (vertex == 0) {
           coords[0] = q1->x;
           coords[1] = q1->y + len;
         }
         else if (vertex == 1) {
-          coords[0] = q1->x + len * 1/2;
-          coords[1] = q1->y + len;
-        }
-      }
-      else if (sub_face_id == 2) {
-        if (vertex == 0) {
-          coords[0] = q1->x + len * 1/2;
-          coords[1] = q1->y + len;
-        }
-        else if (vertex == 1) {
           coords[0] = q1->x + len;
           coords[1] = q1->y + len;
         }
       }
-    }
-  } /* end of vertex coordinates for subelements that border to the upper face */
-  else if (face_number == 2) {
-    if (split == 0) {
-      if (vertex == 0) {
-        coords[0] = q1->x + len;
-        coords[1] = q1->y + len;
-      }
-      else if (vertex == 1) {
-        coords[0] = q1->x + len;
-        coords[1] = q1->y;
-      }
-    }
-    else if (split == 1) {
-      if (sub_face_id == 1) {
-        if (vertex == 0) {
-          coords[0] = q1->x + len;
-          coords[1] = q1->y + len;
+      else if (split == 1) {
+        if (sub_face_id == 1) {
+          if (vertex == 0) {
+            coords[0] = q1->x;
+            coords[1] = q1->y + len;
+          }
+          else if (vertex == 1) {
+            coords[0] = q1->x + len * 1/2;
+            coords[1] = q1->y + len;
+          }
         }
-        else if (vertex == 1) {
-          coords[0] = q1->x + len;
-          coords[1] = q1->y + len * 1/2;
+        else if (sub_face_id == 2) {
+          if (vertex == 0) {
+            coords[0] = q1->x + len * 1/2;
+            coords[1] = q1->y + len;
+          }
+          else if (vertex == 1) {
+            coords[0] = q1->x + len;
+            coords[1] = q1->y + len;
+          }
         }
       }
-      else if (sub_face_id == 2) {
+    } /* end of vertex coordinates for subelements that border to the upper face */
+    else if (face_number == 2) {
+      if (split == 0) {
         if (vertex == 0) {
           coords[0] = q1->x + len;
-          coords[1] = q1->y + len * 1/2;
+          coords[1] = q1->y + len;
         }
         else if (vertex == 1) {
           coords[0] = q1->x + len;
           coords[1] = q1->y;
         }
       }
-    }
-  } /* end of vertex coordinates for subelements that border to the right face */
-  else if (face_number == 3) {
-    if (split == 0) {
-      if (vertex == 0) {
-        coords[0] = q1->x + len;
-        coords[1] = q1->y;
+      else if (split == 1) {
+        if (sub_face_id == 1) {
+          if (vertex == 0) {
+            coords[0] = q1->x + len;
+            coords[1] = q1->y + len;
+          }
+          else if (vertex == 1) {
+            coords[0] = q1->x + len;
+            coords[1] = q1->y + len * 1/2;
+          }
+        }
+        else if (sub_face_id == 2) {
+          if (vertex == 0) {
+            coords[0] = q1->x + len;
+            coords[1] = q1->y + len * 1/2;
+          }
+          else if (vertex == 1) {
+            coords[0] = q1->x + len;
+            coords[1] = q1->y;
+          }
+        }
       }
-      else if (vertex == 1) {
-        coords[0] = q1->x;
-        coords[1] = q1->y;
-      }
-    }
-    else if (split == 1) {
-      if (sub_face_id == 1) {
+    } /* end of vertex coordinates for subelements that border to the right face */
+    else if (face_number == 3) {
+      if (split == 0) {
         if (vertex == 0) {
           coords[0] = q1->x + len;
           coords[1] = q1->y;
-        }
-        else if (vertex == 1) {
-          coords[0] = q1->x + len * 1/2;
-          coords[1] = q1->y + len;
-        }
-      }
-      else if (sub_face_id == 2) {
-        if (vertex == 0) {
-          coords[0] = q1->x + len * 1/2;
-          coords[1] = q1->y + len;
         }
         else if (vertex == 1) {
           coords[0] = q1->x;
           coords[1] = q1->y;
         }
       }
-    }
-  } /* end of vertex coordinates for subelements that border to the lower face */
-  /* the third vertex equals the center of the element for all subelements */
-  if (vertex == 2) {
-    coords[0] = q1->x + len * 1/2;
-    coords[1] = q1->y + len * 1/2;
-  } 
+      else if (split == 1) {
+        if (sub_face_id == 1) {
+          if (vertex == 0) {
+            coords[0] = q1->x + len;
+            coords[1] = q1->y;
+          }
+          else if (vertex == 1) {
+            coords[0] = q1->x + len * 1/2;
+            coords[1] = q1->y + len;
+          }
+        }
+        else if (sub_face_id == 2) {
+          if (vertex == 0) {
+            coords[0] = q1->x + len * 1/2;
+            coords[1] = q1->y + len;
+          }
+          else if (vertex == 1) {
+            coords[0] = q1->x;
+            coords[1] = q1->y;
+          }
+        }
+      }
+    } /* end of vertex coordinates for subelements that border to the lower face */
+    /* using this subelement scheme, the third vertex always equals the center of the element */
+    if (vertex == 2) {
+      coords[0] = q1->x + len * 1/2;
+      coords[1] = q1->y + len * 1/2;
+    } 
+  }
+  else {
+    T8_ASSERT (printf("No valid subelement type!"));
+  }
   #endif
   if (pquad_w_sub->subelement_type >= 0 && pquad_w_sub->subelement_type <= 14) {
     /* 
@@ -1147,8 +1140,8 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
   T8_ASSERT (q->level < P4EST_QMAXLEVEL);
   
   #if 0
-  /* set the parameter values for different subelements: 
-   * all subelement types (up to rotation) are:
+  /* Setting the parameter values for different subelements. 
+   * The different subelement types (up to rotation) are:
    *                               
    *      x - - - - - - x         x - - - - - x        x - - - - - x        x - - - - - x        x - - x - - x 
    *      |             |         | \   2   / |        | \       / |        | \       / |        | \   |   / |
@@ -1159,18 +1152,23 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
    *      + - - - - - - x         x - - - - - x        x - - x - - x        x - - - - - x        x - - - - - x
    *           
    * Sub_ids are counted clockwise, starting with the (lower) left subelement.                    
-   * we do not change the p4est quadrant */
+   * We do not change the p4est quadrant. */
   int sub_id_counter = 0;
   int num_subelements;
-  num_subelements = t8_element_get_number_of_subelements (type);
-  for (sub_id_counter = 0, sub_id_counter < num_subelements, sub_id_counter++) {
-    pquad_w_sub_subelement[sub_id_counter]->p4q.x = q->x;
-    pquad_w_sub_subelement[sub_id_counter]->p4q.y = q->y;
-    pquad_w_sub_subelement[sub_id_counter]->p4q.level = level;
-    pquad_w_sub_subelement[sub_id_counter]->dummy_is_subelement = 1;
-    pquad_w_sub_subelement[sub_id_counter]->subelement_type = type;
-    pquad_w_sub_subelement[sub_id_counter]->subelement_id = sub_id_counter;
-    pquad_w_sub_subelement[sub_id_counter]->num_subelement_ids = num_subelements;
+  if (type >= 1 && type <= 14) { /* type 0 and type 15 do not matter here, since they correspond to refine = 0 or refine =1 */
+    num_subelements = t8_element_get_number_of_subelements (type);
+    for (sub_id_counter = 0, sub_id_counter < num_subelements, sub_id_counter++) {
+      pquad_w_sub_subelement[sub_id_counter]->p4q.x = q->x;
+      pquad_w_sub_subelement[sub_id_counter]->p4q.y = q->y;
+      pquad_w_sub_subelement[sub_id_counter]->p4q.level = level;
+      pquad_w_sub_subelement[sub_id_counter]->dummy_is_subelement = 1;
+      pquad_w_sub_subelement[sub_id_counter]->subelement_type = type;
+      pquad_w_sub_subelement[sub_id_counter]->subelement_id = sub_id_counter;
+      pquad_w_sub_subelement[sub_id_counter]->num_subelement_ids = num_subelements;
+   }
+  }
+  else {
+    T8_ASSERT (printf("No valid subelement type!"));
   }
   #endif
   if (type >= 0 && type <= 15) {
@@ -1213,26 +1211,21 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
 int
 t8_default_scheme_sub_c::t8_element_get_number_of_subelements (int subelement_type)
 {
+  /* consider subelement_type 13 = 1101 in base two -> there are 4 + (1+1+0+1) = 7 subelements */
   int num_subelements;
   int digit_sum_of_binary = 0;
   int subelement_type_temp = subelement_type;
-  if (8 <= subelement_type_temp) {
+  int i = 0;
+  while (subelement_type_temp > 0) {
     digit_sum_of_binary += 1;
-    subelement_type_temp -= 8;
+    if (pow (2, (P4EST_FACES - 1) - i) <= subelement_type_temp) {
+      subelement_type_temp -= pow (2, (P4EST_FACES - 1) - i);
+      i++;
+    }
+    else {
+      i++;
+    } 
   }
-  if (4 <= subelement_type_temp) {
-    digit_sum_of_binary += 1;
-    subelement_type_temp -= 4;
-  }
-  if (2 <= subelement_type_temp) {
-    digit_sum_of_binary += 1;
-    subelement_type_temp -= 2;
-  }
-  if (1 <= subelement_type_temp) {
-    digit_sum_of_binary += 1;
-    subelement_type_temp -= 1;
-  }
-  /* consider subelement_type 13 = 1101 in base two -> there are 4 + (1+1+0+1) = 7 subelements needed to remove hanging nodes */
   num_subelements = P4EST_FACES + digit_sum_of_binary;
   return num_subelements;
 }
@@ -1244,13 +1237,99 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const t8_element
   T8_ASSERT (t8_element_is_valid (elem));
 
   const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
+
+  /* consider the following subelement of type 13:
+   *
+   *             =len
+   *        |-----------|
+   *              f0                         1
+   *        x - - x - - x              x - - x - - x           
+   *        |           |              | \ 3 | 4 / |           face ids:                       f3   f2   f1   f0
+   *        |           |              | 2 \ | / 5 |           binary code:                     1    1    0    1   (=13)
+   *     f3 x           x f2   -->   1 x - - x - - x 1   -->   rearrange binaries (clockwise):  1    1    1    0
+   *        |           |              | 1 /   \ 6 |           number subelements at face:      2    2    2    1
+   *        | elem      |              | /   7   \ |           consider sub_id: 3                    x -> first subelement on upper face
+   *        + - - - - - x              x - - - - - x
+   *              f1                         0
+   *           
+   * We will use the binary representation to automatically determine the vertex coordinates of a given subelement type.
+   * We need to know: 
+   *     i)   face number of the first vertex  
+   *     ii)  whether this face is split in half 
+   *     iii) and if it is split in half, if the subelement is the first or second subelement 
+   * These informations are then saved in the location array. */
   
-  /* 1) decimal to binary subelement type
-   * 2) rearrange the binary representation to be in clockwise order 
-   * 3) use the binary representation, and the sub_id to determine: 
-   *        - location[1] -> the face_id of the subelement 
-   *        - location[2] -> dummy, if the face is split or not
-   *        - location[3] -> if the face is split, is it the first or second subelemnt (counted clockwise) */
+  /* 1) convert the subelement type from a decimal to a binary representation */
+  int type = pquad_w_sub->subelement_type;
+  int binary[P4EST_FACES] = {};
+  int rest;
+  int i;
+  for (i = 0; i < P4EST_FACES; i++) { /* need an array with 4 elements to store all subelement types of the quad scheme from 1 to 16 ({0,0,0,0} to {1,1,1,1}) */
+    if (type == 1) {
+      binary[P4EST_FACES-1] = 1;
+      break;
+    }
+    else {
+      rest = type % 2; 
+      binary[i] = rest;
+      type -= pow (2, (P4EST_FACES - 1) - i); 
+    }
+  } /* we now got a binary represenation of the subelement type, bitwise stored in an array */
+
+  /* 2) rearrange the binary representation to be in clockwise order */
+  int binary_temp[P4EST_FACES] = {};
+  int j;
+  for (j = 0; j < P4EST_FACES; j++) { /* copying the binary array */
+    binary_temp[j] = binary[j];
+  }
+  binary[0] = binary_temp[0]; /* f3 <- f3 */
+  binary[1] = binary_temp[3]; /* f2 <- f0 */
+  binary[2] = binary_temp[1]; /* f1 <- f2 */
+  binary[3] = binary_temp[2]; /* f0 <- f1 */
+
+  /* 3) use the rearranged binary representation, and the sub_id to determine the location of the subelement */
+  /* 3.1) location[0] -> the face_number, the subelement is adjacent to */
+  /* 3.2) location[1] -> dummy, if the face is split or not */
+  /* 3.3) location[2] -> is the subelement the first or second subelement of the face (always the first, if the face is not split) */
+  T8_ASSERT (pquad_w_sub->subelement_id < pquad_w_sub->num_subelement_ids);
+
+  int sub_id = pquad_w_sub->subelement_id;
+  int sub_face_id = 2;
+  int face_number = 0;
+  int split;
+
+  int k = 0;
+
+  if (sub_id == 0) {
+    sub_face_id = 1; /* in this case, the subelement is the first element of the face */
+  }
+
+  while (sub_id >= 0 && k < P4EST_FACES) {
+    if (binary[k] == 1) {
+      sub_id -= 2; /* two subelements adjacent a face k */
+    }
+    else {
+      sub_id -= 1; /* one subelement adjacent to face k */
+    }
+
+    if (sub_id == 0) {
+      sub_face_id = 1; /* in this case, the subelement is the first element of the face */
+    }
+
+    k++;
+  }
+  face_number = k - 1;
+
+  if (binary[face_number] == 0) {
+    split = 0; /* the face is not split */ 
+  }
+  else {
+    split = 1; /* the face is split */
+  }
+
+  location[0] = face_number;
+  location[1] = split;
+  location[2] = sub_face_id;
 }
 
 t8_element_shape_t
