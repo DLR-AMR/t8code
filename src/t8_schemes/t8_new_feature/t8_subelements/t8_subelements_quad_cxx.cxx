@@ -893,8 +893,7 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
   int                 len;
 
   T8_ASSERT (pquad_w_sub->dummy_is_subelement == 1);
-  T8_ASSERT (t8_element_is_valid (t));
-  // T8_ASSERT (vertex == 0 || vertex == 1 || vertex == 2); 
+  // T8_ASSERT (vertex >= 0 && vertex < 3); 
 
   /* get the length of the current quadrant */
   len = P4EST_QUADRANT_LEN (q1->level);
@@ -986,14 +985,15 @@ t8_default_scheme_sub_c::t8_element_vertex_coords (const t8_element_t * t,
   const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) t;
   const p4est_quadrant_t *q1 = &pquad_w_sub->p4q;
 
-  int                 len;
-
   T8_ASSERT (t8_element_is_valid (t));
-  T8_ASSERT (0 <= vertex && vertex < 4);
-  /* Get the length of the quadrant */
-  len = P4EST_QUADRANT_LEN (q1->level);
 
   if (pquad_w_sub->dummy_is_subelement == 0) {
+    int                 len;
+    
+    T8_ASSERT (0 <= vertex && vertex < 4);
+    /* Get the length of the quadrant */
+    len = P4EST_QUADRANT_LEN (q1->level);
+
     /* Compute the x and y coordinates of the vertex depending on the
      * vertex number */
     coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
