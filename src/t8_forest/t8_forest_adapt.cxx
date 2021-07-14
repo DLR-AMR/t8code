@@ -291,9 +291,11 @@ t8_forest_adapt (t8_forest_t forest)
        *      < 0 if we passed a family and it should get coarsened                               } those three values will appear if we use 
        *      = 0 if the element should remain as is                                              } the "standard" refinement scheme without 
        *      = 1 if the element should be refined (using the chosen recursive refinement scheme) } "set_subelements".
-       *      > 1 if we use subelements } values between 2 and 65 are reserved for subelements that eliminate hanging nodes. All values above 65 are for free use.
+       *      > 1 if we use subelements } values between 2 and 65 are reserved for subelements that remove hanging nodes.
        *  
-       * */
+       * For example the refine values for the 2D Quad scheme will be between -1 and 16. The values -1, 0 and 1 are for the standard refinement
+       * and the values 2 to 16 correspond to the subelement types 1 to 15 (0001 to 1111 in base 2) and will be used by the element files of the quad 
+       * scheme in order to remove hanging nodes */ 
       refine = forest->set_adapt_fn (forest, forest->set_from, ltree_id,
                                      el_considered, tscheme, num_elements,
                                      elements_from);

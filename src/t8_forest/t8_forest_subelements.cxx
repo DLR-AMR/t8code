@@ -113,9 +113,6 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
   if (subelement_type == 0) { /* in this case, there are no hanging nodes and we do not need to do anything */
     return 0;
   }
-  else if (subelement_type == pow (2, num_faces) - 1) { /* if all neihbours are refined, we use the standard refinement for element */ 
-    return 1;
-  }
   else { /* use subelements and add 1 to every type, to avoid refine = 1 */
     return subelement_type + 1;
   }

@@ -884,6 +884,32 @@ t8_default_scheme_sub_c::t8_element_root_len (const t8_element_t * elem)
 }
 
 void
+t8_default_scheme_sub_c::t8_element_vertex_coords (const t8_element_t * t,
+                                                   int vertex, int coords[])
+{
+  const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) t;
+  const p4est_quadrant_t *q1 = &pquad_w_sub->p4q;
+
+  T8_ASSERT (t8_element_is_valid (t));
+
+  if (pquad_w_sub->dummy_is_subelement == 0) {
+    int                 len;
+    
+    T8_ASSERT (0 <= vertex && vertex < 4);
+    /* Get the length of the quadrant */
+    len = P4EST_QUADRANT_LEN (q1->level);
+
+    /* Compute the x and y coordinates of the vertex depending on the
+     * vertex number */
+    coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
+    coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
+  }
+  else {
+    t8_element_vertex_coords_of_subelement (t, vertex, coords);
+  }
+}
+
+void
 t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_element_t * t,
                                                                  int vertex, int coords[])
 {
@@ -892,8 +918,9 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
 
   int                 len;
 
+  T8_ASSERT (t8_element_is_valid (t));
   T8_ASSERT (pquad_w_sub->dummy_is_subelement == 1);
-  // T8_ASSERT (vertex >= 0 && vertex < 3); 
+  // T8_ASSERT (vertex >= 0 && vertex < 3); /* all subelements are triangles */
 
   /* get the length of the current quadrant */
   len = P4EST_QUADRANT_LEN (q1->level);
@@ -947,7 +974,7 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
   }
   #endif
 
-  if (pquad_w_sub->subelement_type >= 0 && pquad_w_sub->subelement_type <= 14) {
+  if (pquad_w_sub->subelement_type >= 0 && pquad_w_sub->subelement_type <= 15) {
     /* 
      *            =len
      *      |---------------| 
@@ -979,32 +1006,6 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
 }
 
 void
-t8_default_scheme_sub_c::t8_element_vertex_coords (const t8_element_t * t,
-                                                   int vertex, int coords[])
-{
-  const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) t;
-  const p4est_quadrant_t *q1 = &pquad_w_sub->p4q;
-
-  T8_ASSERT (t8_element_is_valid (t));
-
-  if (pquad_w_sub->dummy_is_subelement == 0) {
-    int                 len;
-    
-    T8_ASSERT (0 <= vertex && vertex < 4);
-    /* Get the length of the quadrant */
-    len = P4EST_QUADRANT_LEN (q1->level);
-
-    /* Compute the x and y coordinates of the vertex depending on the
-     * vertex number */
-    coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
-    coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
-  }
-  else {
-    t8_element_vertex_coords_of_subelement (t, vertex, coords);
-  }
-}
-
-void
 t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
                                                    t8_element_t * c[],
                                                    int type)
@@ -1016,6 +1017,7 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
 
   int i;
 
+  T8_ASSERT (type >= 1 && type <= 15); 
   T8_ASSERT (pquad_w_sub_elem->dummy_is_subelement == 0);
   T8_ASSERT (t8_element_is_valid (elem));
 #ifdef T8_ENABLE_DEBUG
@@ -1037,34 +1039,32 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
   /* Setting the parameter values for different subelements. 
    * The different subelement types (up to rotation) are:
    *                               
-   *      x - - - - - - x         x - - - - - x        x - - - - - x        x - - - - - x        x - - x - - x 
-   *      |             |         | \   2   / |        | \       / |        | \       / |        | \   |   / |
-   *      |             |         | 1 \   /   |        |   \   /   |        |   \   /   |        |   \ | /   |
-   *      |             |   -->   x - - X   3 |   or   x - - x     |   or   x - - x - - x   or   x - - x - - x    
-   *      |             |         | 0 /   \   |        |   / | \   |        |   /   \   |        |   /   \   |
-   *      | elem        |         | /   4   \ |        | /   |   \ |        | /       \ |        | /       \ |
-   *      + - - - - - - x         x - - - - - x        x - - x - - x        x - - - - - x        x - - - - - x
+   *      x - - - - - - x         x - - - - - x        x - - - - - x        x - - - - - x        x - - x - - x        x - - x - - x
+   *      |             |         | \   2   / |        | \       / |        | \       / |        | \   |   / |        | \   |   / |
+   *      |             |         | 1 \   /   |        |   \   /   |        |   \   /   |        |   \ | /   |        |   \ | /   |
+   *      |             |   -->   x - - X   3 |   or   x - - x     |   or   x - - x - - x   or   x - - x - - x   or   x - - x - - x
+   *      |             |         | 0 /   \   |        |   / | \   |        |   /   \   |        |   /   \   |        |   / | \   |
+   *      | elem        |         | /   4   \ |        | /   |   \ |        | /       \ |        | /       \ |        | /   |   \ |
+   *      + - - - - - - x         x - - - - - x        x - - x - - x        x - - - - - x        x - - - - - x        x - - x - - x
    *           
    * Sub_ids are counted clockwise, starting with the (lower) left subelement with id 0.                    
    * Note, that we do not change the p4est quadrant. */
   int sub_id_counter = 0;
   int num_subelements;
-  if (type >= 1 && type <= 14) { /* type 0 and type 15 do not matter here, since they correspond to refine = 0 or refine =1 */
-    num_subelements = t8_element_get_number_of_subelements (type);
-    for (sub_id_counter = 0, sub_id_counter < num_subelements, sub_id_counter++) {
-      pquad_w_sub_subelement[sub_id_counter]->p4q.x = q->x;
-      pquad_w_sub_subelement[sub_id_counter]->p4q.y = q->y;
-      pquad_w_sub_subelement[sub_id_counter]->p4q.level = level;
-      pquad_w_sub_subelement[sub_id_counter]->dummy_is_subelement = 1;
-      pquad_w_sub_subelement[sub_id_counter]->subelement_type = type;
-      pquad_w_sub_subelement[sub_id_counter]->subelement_id = sub_id_counter;
-      pquad_w_sub_subelement[sub_id_counter]->num_subelement_ids = num_subelements;
-   }
-  }
-  else {
-    T8_ASSERT (printf("No valid subelement type!"));
+
+  num_subelements = t8_element_get_number_of_subelements (type);
+
+  for (sub_id_counter = 0, sub_id_counter < num_subelements, sub_id_counter++) {
+    pquad_w_sub_subelement[sub_id_counter]->p4q.x = q->x;
+    pquad_w_sub_subelement[sub_id_counter]->p4q.y = q->y;
+    pquad_w_sub_subelement[sub_id_counter]->p4q.level = level;
+    pquad_w_sub_subelement[sub_id_counter]->dummy_is_subelement = 1;
+    pquad_w_sub_subelement[sub_id_counter]->subelement_type = type;
+    pquad_w_sub_subelement[sub_id_counter]->subelement_id = sub_id_counter;
+    pquad_w_sub_subelement[sub_id_counter]->num_subelement_ids = num_subelements;
   }
   #endif
+
   if (type >= 0 && type <= 15) {
     /* temporary subelement type:
     *                               
@@ -1105,7 +1105,7 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
 int
 t8_default_scheme_sub_c::t8_element_get_number_of_subelements (int subelement_type)
 {
-  T8_ASSERT (subelement_type >= 0 && subelement_type <= 15);
+  T8_ASSERT (subelement_type >= 1 && subelement_type <= 15);
 
   /* consider subelement_type 13 = 1101 in base two -> there are 4 + (1+1+0+1) = 7 subelements */
   int num_subelements;
