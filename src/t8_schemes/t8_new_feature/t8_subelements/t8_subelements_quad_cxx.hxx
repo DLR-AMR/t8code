@@ -42,16 +42,31 @@
  * We might want to put this into a private, scheme-specific header file.
  */
 
-//typedef p4est_quadrant_t t8_pquad_t;
+/* Define the struct, that stores all information needed for the quad scheme and subelements.
+ * 
+ *         p4est quadrant        recursive quad       refinement, using a transition 
+ *                                 refinement             cell with subelements
+ *         x - - - - - x         x - - x - - x                x - - - - - x
+ *         |           |         |     |     |                | \   2   / |       
+ *         |           |         |     |     |                | 1 \   /   |
+ *         |           |   -->   x - - x - - x       or       x - - x   3 |
+ *         |           |         |     |     |                | 0 / | \   |
+ *         |           |         |     |     |                | / 5 | 4 \ |
+ *         x - - - - - x         x - - x - - x                x - - x - - x 
+ * 
+ * A p4est quadrant can be refined, using either the standard quad scheme, or a transition cell, consisting of different subelements. 
+ * The quad refinement scheme is recursive, whereas a transition cell can only be used once, for example to remove hanging nodes, after the mesh has been adapted and balanced. 
+ * There are different types of transition cells possible, which we will refer to as subelement_type. 
+ * Each transition cell consists of different subelements. The given example consists of 6 different subelements, whose ids range from 0 to 5.
+ * A dummy variable will store the information, whether a given element is a subelement or a standard quad element. */ 
 
 typedef struct
 {
-  p4est_quadrant_t    p4q;        /* p4est quadrant */
-  int                 dummy_is_subelement;      /* is element a subelement? */
-  int                 subelement_type;     /* which type of subelement to use? */
-  int                 num_subelement_types; /* # of parts for the specific kind of subelement */
-  int                 subelement_id;    /* which part of subelement? */
-  int                 num_subelement_ids; /* # of parts for the specific kind of subelement */
+  p4est_quadrant_t    p4q;                    /* p4est quadrant */                                                  
+  int                 dummy_is_subelement;    /* is a given element a subelement? */                                
+  int                 subelement_type;        /* which type of subelement to use? */                                 
+  int                 subelement_id;          /* what specific subelement of a given type? */                       
+  int                 num_subelement_ids;     /* number of subelements for a specific type of subelement */ 
 } t8_quad_with_subelements;
 
 typedef t8_quad_with_subelements t8_pquad_t;
