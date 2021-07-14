@@ -894,7 +894,7 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
 
   T8_ASSERT (pquad_w_sub->dummy_is_subelement == 1);
   T8_ASSERT (t8_element_is_valid (t));
-  T8_ASSERT (0 <= vertex && vertex < 4); /* diese assertion macht für dreieckige subelemente keinen sinn mehr */
+  // T8_ASSERT (vertex == 0 || vertex == 1 || vertex == 2); 
 
   /* get the length of the current quadrant */
   len = P4EST_QUADRANT_LEN (q1->level);
@@ -902,12 +902,12 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
   #if 0
   /* Compute the x and y coordinates of subelement vertices, depending on the subelement type, id and vertex number (faces enumerated clockwise): 
    *
-   *               f1                      V1
+   *               f1                      V0
    *         x - - - - - x                 x
    *         | \   2   / |               / |
    *         | 1 \   / 3 |             / 3 |
    *      f0 x - - x - - x f2  -->   x - - x 
-   *         | 0 / | \ 4 |           V3    V2
+   *         | 0 / | \ 4 |           V2    V1
    *         | / 6 | 5 \ | 
    *         x - - x - - x
    *               f3
@@ -1016,7 +1016,6 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
 
   int i;
 
-  /* check that elem is not already a subelement */
   T8_ASSERT (pquad_w_sub_elem->dummy_is_subelement == 0);
   T8_ASSERT (t8_element_is_valid (elem));
 #ifdef T8_ENABLE_DEBUG
@@ -1106,6 +1105,8 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
 int
 t8_default_scheme_sub_c::t8_element_get_number_of_subelements (int subelement_type)
 {
+  T8_ASSERT (subelement_type >= 0 && subelement_type <= 15);
+
   /* consider subelement_type 13 = 1101 in base two -> there are 4 + (1+1+0+1) = 7 subelements */
   int num_subelements;
   int digit_sum_of_binary = 0;
@@ -1131,9 +1132,10 @@ t8_default_scheme_sub_c::t8_element_get_number_of_subelements (int subelement_ty
 int 
 t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const t8_element_t * elem, int location[]) 
 {
-  T8_ASSERT (t8_element_is_valid (elem));
-
   const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
+
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (pquad_w_sub->dummy_is_subelement == 1);
 
   /* Consider the following subelement of type 13:
    *            
@@ -1211,11 +1213,9 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const t8_element
     else {
       sub_id -= 1; /* one subelement adjacent to face k */
     }
-
     if (sub_id == 0) {
       sub_face_id = 0; /* in this case, the subelement is the first element of the face */
     }
-
     k++;
   }
   face_number = k - 1;
@@ -1235,9 +1235,9 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const t8_element
 t8_element_shape_t
 t8_default_scheme_sub_c::t8_element_get_shape (const t8_element_t * elem)
 {
-  T8_ASSERT (t8_element_is_valid (elem));
+   const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
 
-  const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
+  T8_ASSERT (t8_element_is_valid (elem));
 
   if (pquad_w_sub->dummy_is_subelement == 1) { /* for quads, all subelements are triangles */
     return T8_ECLASS_TRIANGLE;
