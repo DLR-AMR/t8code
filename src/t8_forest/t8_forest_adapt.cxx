@@ -285,6 +285,7 @@ t8_forest_adapt (t8_forest_t forest)
 #endif
       }
       T8_ASSERT (!is_family || tscheme->t8_element_is_family (elements_from));     
+      
       /* Pass the element, or the family to the adapt callback.
        * The output will be 
        *
@@ -296,6 +297,7 @@ t8_forest_adapt (t8_forest_t forest)
        * For example the refine values for the 2D Quad scheme will be between -1 and 16. The values -1, 0 and 1 are for the standard refinement
        * and the values 2 to 16 correspond to the subelement types 1 to 15 (0001 to 1111 in base 2) and will be used by the element files of the quad 
        * scheme in order to remove hanging nodes */ 
+
       refine = forest->set_adapt_fn (forest, forest->set_from, ltree_id,
                                      el_considered, tscheme, num_elements,
                                      elements_from);

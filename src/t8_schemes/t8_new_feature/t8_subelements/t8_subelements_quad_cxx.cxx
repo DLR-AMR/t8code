@@ -974,34 +974,27 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
   }
   #endif
 
-  if (pquad_w_sub->subelement_type >= 0 && pquad_w_sub->subelement_type <= 15) {
-    /* 
-     *            =len
-     *      |---------------| 
-     *                               V2       V3
-     *      x - - - x - - - x         x - - - x   
-     *      |       |       |         |       |
-     *      |       |       |         |       |
-     *      | sub_  | sub_  |   -->   | sub_  |                       
-     *      | id    | id    |         | id    |
-     *      | 0     | 1     |         | 0     |
-     *      + - - - x - - - x         + - - - x
-     *                               V0       V1
-     */
-    if (pquad_w_sub->subelement_id == 0) {
-      coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len * 1/2;
-      coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
-    }
-    else if (pquad_w_sub->subelement_id == 1) {
-      coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len * 1/2 + len * 1/2;
-      coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
-    }
-    else {
-      T8_ASSERT (printf("No valid subelement id!"));
-    }
+  /* 
+   *            =len
+   *      |---------------| 
+   *                               V2       V3
+   *      x - - - x - - - x         x - - - x   
+   *      |       |       |         |       |
+   *      |       |       |         |       |
+   *      | sub_  | sub_  |   -->   | sub_  |                       
+   *      | id    | id    |         | id    |
+   *      | 0     | 1     |         | 0     |
+   *      + - - - x - - - x         + - - - x
+   *                               V0       V1
+   */
+
+  if (pquad_w_sub->subelement_id == 0) {
+    coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len * 1/2;
+    coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
   }
-  else {
-    T8_ASSERT (printf("No valid subelement type!"));
+  else if (pquad_w_sub->subelement_id == 1) {
+    coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len * 1/2 + len * 1/2;
+    coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
   }
 }
 
@@ -1049,6 +1042,7 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
    *           
    * Sub_ids are counted clockwise, starting with the (lower) left subelement with id 0.                    
    * Note, that we do not change the p4est quadrant. */
+
   int sub_id_counter = 0;
   int num_subelements;
 
@@ -1065,37 +1059,34 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
   }
   #endif
 
-  if (type >= 0 && type <= 15) {
-    /* temporary subelement type:
-    *                               
-    *      x - - - - - - - x         x - - - x - - - x           
-    *      |               |         |       |       |          
-    *      |               |         |       |       |    
-    *      |               |   -->   | sub_  | sub_  |     
-    *      |               |         | id    | id    |   
-    *      | elem          |         | 0     | 1     |
-    *      + - - - - - - - x         x - - - x - - - x
-    *
-    * we do not change the p4est quadrant */
-    pquad_w_sub_subelement[0]->p4q.x = q->x;
-    pquad_w_sub_subelement[0]->p4q.y = q->y;
-    pquad_w_sub_subelement[0]->p4q.level = level;
-    pquad_w_sub_subelement[0]->dummy_is_subelement = 1;
-    pquad_w_sub_subelement[0]->subelement_type = type;
-    pquad_w_sub_subelement[0]->subelement_id = 0;
-    pquad_w_sub_subelement[0]->num_subelement_ids = 2;
-  
-    pquad_w_sub_subelement[1]->p4q.x = pquad_w_sub_subelement[0]->p4q.x;
-    pquad_w_sub_subelement[1]->p4q.y = pquad_w_sub_subelement[0]->p4q.y;
-    pquad_w_sub_subelement[1]->p4q.level = level;
-    pquad_w_sub_subelement[1]->dummy_is_subelement = 1;
-    pquad_w_sub_subelement[1]->subelement_type = type;
-    pquad_w_sub_subelement[1]->subelement_id = 1;
-    pquad_w_sub_subelement[1]->num_subelement_ids = 2;
-  }
-  else {
-    T8_ASSERT (printf("No valid subelement type!"));
-  }
+  /* temporary subelement type:
+  *                               
+  *      x - - - - - - - x         x - - - x - - - x           
+  *      |               |         |       |       |          
+  *      |               |         |       |       |    
+  *      |               |   -->   | sub_  | sub_  |     
+  *      |               |         | id    | id    |   
+  *      | elem          |         | 0     | 1     |
+  *      + - - - - - - - x         x - - - x - - - x
+  *
+  * we do not change the p4est quadrant */
+ 
+  pquad_w_sub_subelement[0]->p4q.x = q->x;
+  pquad_w_sub_subelement[0]->p4q.y = q->y;
+  pquad_w_sub_subelement[0]->p4q.level = level;
+  pquad_w_sub_subelement[0]->dummy_is_subelement = 1;
+  pquad_w_sub_subelement[0]->subelement_type = type;
+  pquad_w_sub_subelement[0]->subelement_id = 0;
+  pquad_w_sub_subelement[0]->num_subelement_ids = 2;
+
+  pquad_w_sub_subelement[1]->p4q.x = pquad_w_sub_subelement[0]->p4q.x;
+  pquad_w_sub_subelement[1]->p4q.y = pquad_w_sub_subelement[0]->p4q.y;
+  pquad_w_sub_subelement[1]->p4q.level = level;
+  pquad_w_sub_subelement[1]->dummy_is_subelement = 1;
+  pquad_w_sub_subelement[1]->subelement_type = type;
+  pquad_w_sub_subelement[1]->subelement_id = 1;
+  pquad_w_sub_subelement[1]->num_subelement_ids = 2;
+
   for (i = 0; i < pquad_w_sub_elem->num_subelement_ids; ++i) {
     T8_ASSERT (t8_element_is_valid(c[i]));
     t8_element_copy_surround (q, &pquad_w_sub_subelement[i]->p4q); 
@@ -1235,7 +1226,7 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const t8_element
 t8_element_shape_t
 t8_default_scheme_sub_c::t8_element_get_shape (const t8_element_t * elem)
 {
-   const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
+  const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
 
   T8_ASSERT (t8_element_is_valid (elem));
 

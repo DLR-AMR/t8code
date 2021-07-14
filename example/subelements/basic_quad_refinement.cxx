@@ -73,7 +73,7 @@ t8_basic_refine_test (t8_eclass_t eclass)
             t8_eclass_to_string[eclass]);
   t8_forest_write_vtk (forest, filename);
 
-  /* adapting the cmesh, using user-data */
+  /* adapting the cmesh, using user-data, up to a given max and min level */
   t8_example_level_set_struct_t ls_data;
   t8_basic_sphere_data_t sdata;
 
@@ -112,7 +112,6 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  /* use T8_ECLASS_QUAD */
   t8_basic_refine_test (T8_ECLASS_QUAD);
 
   sc_finalize ();
