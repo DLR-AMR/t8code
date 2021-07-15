@@ -156,7 +156,7 @@ main (int argc, char **argv)
 #ifdef T8_ENABLE_DEBUG
   const int           maxlvl = 8;
 #else
-  const int           maxlvl = 9;
+  const int           maxlvl = 8;
 #endif
 
   mpiret = sc_MPI_Init (&argc, &argv);
