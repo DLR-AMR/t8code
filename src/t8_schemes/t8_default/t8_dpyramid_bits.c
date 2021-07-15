@@ -1152,8 +1152,17 @@ t8_dpyramid_child_id_unknown_parent (const t8_dpyramid_t * p,
                                      t8_dpyramid_t * parent)
 {
   T8_ASSERT (p->level >= 0);
-  if (p->level == 0)
+  if (p->level == 0) {
+    /* P has no parent. We deliberately set the type of the parent to -1,
+     * because a) parent should not be used and setting the type to an invalid
+     *            value improves chances of catching a non-allowed use of it in an assertion later.
+     *         b) t8_dpyramid_successor caused a compiler warning of parent.type may be used uninitialize
+     *            in a subsequent call to t8_dpyramid_shape. This case is actually never executed, but the
+     *            compiler doesn't know about it. To prevent this warning, we set the type here.
+     */
+    parent->type = -1;
     return 0;
+  }
   t8_dpyramid_parent (p, parent);
   return t8_dpyramid_child_id_known_parent (p, parent);
 
