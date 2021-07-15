@@ -292,12 +292,19 @@ t8_forest_adapt (t8_forest_t forest)
         elements_from[zz] = t8_element_array_index_locidx (telements_from,
                                                            el_considered +
                                                            zz);
+        /* This is a quick check whether we build up a family here and could
+         * abort early if not.
+         * If the child id of the current element is not zz, then it cannot
+         * be part of a family (Since we can only have a family if child ids
+         * are 0, 1, 2, ... zz, ... num_siblings-1).
+         * This check is however not sufficient - therefore, we call is_family later. */
         if ((size_t) tscheme->t8_element_child_id (elements_from[zz]) != zz) {
           break;
         }
       }
 
-      if (zz != num_siblings) {
+      if (zz != num_siblings
+          || !tscheme->t8_element_is_family (elements_from)) {
         /* We are certain that the elements do not form a family.
          * So we will only pass the first element to the adapt callback. */
         num_elements = 1;
