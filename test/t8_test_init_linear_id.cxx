@@ -154,7 +154,7 @@ main (int argc, char **argv)
 {
   int                 mpiret;
 #ifdef T8_ENABLE_DEBUG
-  const int           maxlvl = 8;
+  const int           maxlvl = 6;
 #else
   const int           maxlvl = 8;
 #endif
