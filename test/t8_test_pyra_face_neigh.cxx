@@ -189,9 +189,9 @@ main (int argc, char **argv)
 {
   int                 mpiret;
 #ifdef T8_ENABLE_DEBUG
-  const int           maxlvl = 9;
+  const int           maxlvl = 7;
 #else
-  const int           maxlvl = 10;
+  const int           maxlvl = 8;
 #endif
 
   mpiret = sc_MPI_Init (&argc, &argv);
