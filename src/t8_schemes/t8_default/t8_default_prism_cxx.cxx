@@ -429,6 +429,18 @@ t8_default_scheme_prism_c::t8_element_get_number_of_subelements (int subelement_
   SC_ABORT ("This function is not implemented yet.\n");
 }
 
+int 
+t8_default_scheme_prism_c::t8_element_get_location_of_subelement (const t8_element_t * elem, int location[]) 
+{
+  SC_ABORT ("This function is not implemented yet.\n");
+}
+
+t8_element_shape_t
+t8_default_scheme_prism_c::t8_element_get_shape (const t8_element_t * elem) 
+{
+  SC_ABORT ("This function is not implemented yet.\n");
+}
+
 #ifdef T8_ENABLE_DEBUG
 /* *INDENT-OFF* */
 /* Indent bug, indent adds an additional const modifier at the end */

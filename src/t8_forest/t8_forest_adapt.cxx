@@ -289,10 +289,14 @@ t8_forest_adapt (t8_forest_t forest)
       /* Pass the element, or the family to the adapt callback.
        * The output will be 
        *
-       *      < 0 if we passed a family and it should get coarsened                               } those three values will appear if we use 
-       *      = 0 if the element should remain as is                                              } the "standard" refinement scheme without 
-       *      = 1 if the element should be refined (using the chosen recursive refinement scheme) } "set_subelements".
-       *      > 1 if we use subelements } values between 2 and 65 are reserved for subelements that remove hanging nodes.
+       *      < 0 if we passed a family and it should get coarsened 
+       *      = 0 if the element should remain as is 
+       *      = 1 if the element should be refined (using the chosen recursive refinement scheme)
+       *      > 1 if we use subelements
+       * 
+       * The values -1,0 and 1 will appear, if we use the standard refinement scheme of the given eclass.
+       * 
+       * Values above 1 will correspond to specific subelement types. The values from 2 to 65 are reserved for subelement types that can remove hanging nodes from a given scheme.
        *  
        * For example the refine values for the 2D Quad scheme will be between -1 and 16. The values -1, 0 and 1 are for the standard refinement
        * and the values 2 to 16 correspond to the subelement types 1 to 15 (0001 to 1111 in base 2) and will be used by the element files of the quad 
@@ -343,7 +347,7 @@ t8_forest_adapt (t8_forest_t forest)
         }
         el_considered++;
       }
-      else if (refine > 1) { /* if refine > 1, use subelements */
+      else if (refine > 1) { /* use subelements in this case */
         /* The subelement-callback function returns refine = subelement_type + 1, to avoid subelement_type = 1.
          * We can now undo this to use the "true" subelement_type-values in the tscheme functions */
         subelement_type = refine - 1;

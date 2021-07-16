@@ -973,7 +973,7 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
     }
   }
   #endif
-
+  
   /* 
    *            =len
    *      |---------------| 
@@ -1070,7 +1070,7 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
   *      + - - - - - - - x         x - - - x - - - x
   *
   * we do not change the p4est quadrant */
- 
+
   pquad_w_sub_subelement[0]->p4q.x = q->x;
   pquad_w_sub_subelement[0]->p4q.y = q->y;
   pquad_w_sub_subelement[0]->p4q.level = level;
@@ -1119,7 +1119,6 @@ t8_default_scheme_sub_c::t8_element_get_number_of_subelements (int subelement_ty
   return num_subelements;
 }
 
-#if 0
 int 
 t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const t8_element_t * elem, int location[]) 
 {
@@ -1236,8 +1235,7 @@ t8_default_scheme_sub_c::t8_element_get_shape (const t8_element_t * elem)
   else {
     return T8_ECLASS_QUAD;
   }
-}
-#endif 
+} 
 
 void
 t8_default_scheme_sub_c::t8_element_new (int length, t8_element_t ** elem)
