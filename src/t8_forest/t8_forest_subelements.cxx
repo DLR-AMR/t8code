@@ -94,7 +94,7 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
       subelement_type = subelement_type * 2 + 1;
     }
     else {
-      subelement_type = subelement_type *2;
+      subelement_type = subelement_type * 2;
     }
     if (num_neighbors > 0) { /* free memory */
         neigh_scheme->t8_element_destroy (num_neighbors, neighbor_leafs);
