@@ -150,6 +150,12 @@ int                 t8_dpyramid_face_neighbor_inside (const t8_dpyramid_t * p,
                                                       const int face,
                                                       int *neigh_face);
 
+/** Compute the child_id of a pyramid with an unknown parent. Returns -1 if
+ * p->level == 0.
+ * \param[in] p     Input pyramid
+ * \param[in, out] parent An uninitialized but allocated pyramid to compute the
+ *                   parent of p
+ * \return          The child-id of p */
 int                 t8_dpyramid_child_id_unknown_parent (const t8_dpyramid_t *
                                                          p,
                                                          t8_dpyramid_t *
