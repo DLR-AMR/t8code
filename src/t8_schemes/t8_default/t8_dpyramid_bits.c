@@ -155,7 +155,7 @@ t8_dpyramid_is_family (const t8_dpyramid_t ** fam)
   int                 i, type_of_first;
   t8_dpyramid_coord_t inc = T8_DPYRAMID_LEN (level), x_inc, y_inc;
   if (t8_dpyramid_shape (fam[0]) == T8_ECLASS_TET) {
-    return t8_dtet_is_familypv ((const t8_dtet_t **) fam);
+    return t8_dtet_is_familypv (fam);
   }
   else {
     if (level == 0) {
@@ -353,7 +353,7 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t * p, const int level,
     p_sum2 /= 6;
     // Thy types of the tetrahedron children of pyramid are always 0 or 3
     if (type == 0 || type == 3) {
-      t8_dtet_init_linear_id_with_level ((t8_dtet_t *) p, id, i, level, type);
+      t8_dtet_init_linear_id_with_level (p, id, i, level, type);
       return;
     }
     /* The local index depends on the alternating number of predecessors
@@ -1182,7 +1182,7 @@ t8_dpyramid_child_id_known_parent (const t8_dpyramid_t * p,
     return t8_dpyramid_type_cid_to_Iloc[p->type][cube_id];
   }
   else {
-    return t8_dtet_child_id ((const t8_dtet_t *) p);
+    return t8_dtet_child_id (p);
   }
 }
 
@@ -1207,7 +1207,7 @@ t8_dpyramid_child (const t8_dpyramid_t * elem, const int child_id,
   T8_ASSERT (0 <= elem->level && elem->level <= T8_DPYRAMID_MAXLEVEL);
 
   if (t8_dpyramid_shape (elem) == T8_ECLASS_TET) {
-    t8_dtet_child ((t8_dtet_t *) elem, child_id, (t8_dtet_t *) child);
+    t8_dtet_child ( elem, child_id, child);
   }
   else {
     /* Compute the cube id and shift the coordinates accordingly */
@@ -1352,7 +1352,7 @@ t8_dpyramid_is_inside_tet (const t8_dpyramid_t * p, const int level,
     if (t8_dpyramid_is_inside_pyra (p, &tet) == 0) {
       /*p is inside a tet */
       if (anc != NULL) {
-        t8_dtet_ancestor ((const t8_dtet_t *) p, i, anc);
+        t8_dtet_ancestor (p, i, anc);
       }
       return i;
     }
@@ -1395,14 +1395,14 @@ t8_dpyramid_parent (const t8_dpyramid_t * p, t8_dpyramid_t * parent)
   else if (p->type != 0 && p->type != 3) {
     /* The direct tet-child of a pyra has type 0 or type 3, therefore
      * in this case the parent is a tetrahedron*/
-    t8_dtet_parent ((t8_dtet_t *) p, (t8_dtet_t *) parent);
+    t8_dtet_parent ( p, parent);
 
   }
   else if (t8_dpyramid_is_inside_tet (p, p->level, NULL) != 0) {
     /*Pyramid- / tetparent detection */
     /*If a tetrahedron does not reach a "significant point" its parent is a tet */
     /*Tetcase */ ;
-    t8_dtet_parent ((t8_dtet_t *) p, (t8_dtet_t *) parent);
+    t8_dtet_parent (p, parent);
   }
   else {
     /*p does not lie in larger tet => parent is pyra */
@@ -1506,6 +1506,6 @@ t8_dpyramid_compute_coords (const t8_dpyramid_t * p, const int vertex,
   }
   else {
     T8_ASSERT (0 <= vertex && vertex < T8_DTET_CORNERS);
-    t8_dtet_compute_coords ((const t8_dtet_t *) p, vertex, coords);
+    t8_dtet_compute_coords (p, vertex, coords);
   }
 }
