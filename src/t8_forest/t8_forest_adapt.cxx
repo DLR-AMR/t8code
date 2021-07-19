@@ -286,7 +286,10 @@ t8_forest_adapt (t8_forest_t forest)
         tscheme->t8_element_num_siblings (t8_element_array_index_locidx
                                           (telements_from, el_considered));
       if(num_siblings > curr_num_siblings){
+          t8_debugf("num_siblings %i, curr_num_siblings %i\n", num_siblings, curr_num_siblings);
           elements_from = T8_REALLOC(elements_from, t8_element_t *, num_siblings);
+          tscheme->t8_element_new(num_siblings, elements_from);
+          curr_num_siblings = num_siblings;
       }
       /*change: num_children into num_siblings */
       for (zz = 0; zz < (unsigned int) num_siblings &&
