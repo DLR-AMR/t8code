@@ -24,7 +24,10 @@
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default_cxx.hxx>
 
+/*This program tests the descendant function of an element.*/
 
+/* Test recursively if the first and last descendant of an element is
+ * computed correctly. Only the descendant of elem->level + 1 is tested.*/
 static void
 t8_recursive_descendant(t8_element_t *elem, t8_element_t * desc, t8_element_t * test,
                         t8_eclass_scheme_c * ts, int maxlvl)
@@ -35,12 +38,14 @@ t8_recursive_descendant(t8_element_t *elem, t8_element_t * desc, t8_element_t * 
     for(i = 0; i < num_children; i++)
     {
         ts->t8_element_child(elem, i, desc);
+        /*first child == first descendant*/
         if(i == 0)
         {
             ts->t8_element_first_descendant(elem, test, level + 1);
             SC_CHECK_ABORT(!ts->t8_element_compare(desc, test),
                            "Wrong first descendant\n");
         }
+        /*last child == last descendant*/
         else if(i == num_children - 1)
         {
             ts->t8_element_last_descendant(elem, test, level+1);
@@ -54,6 +59,8 @@ t8_recursive_descendant(t8_element_t *elem, t8_element_t * desc, t8_element_t * 
     }
 }
 
+/* Test, if the first descendant of an element is computed correctly over a range
+ * of levels*/
 static void
 t8_deep_first_descendant(t8_element_t *elem, t8_element_t * desc, t8_element_t *test,
                          t8_eclass_scheme_c * ts, int level)
@@ -69,22 +76,28 @@ t8_deep_first_descendant(t8_element_t *elem, t8_element_t * desc, t8_element_t *
                    "Wrong deep first descendant\n");
 }
 
+/* Test, if the last descendant of an element is computed correctly over a range
+ * of levels*/
 static void
 t8_deep_last_descendant(t8_element_t *elem, t8_element_t * desc, t8_element_t *test,
                          t8_eclass_scheme_c * ts, int level)
 {
     int num_children, i ;
     ts->t8_element_copy(elem, test);
+    /*Compute the correct element*/
     for(i = ts->t8_element_level(elem); i < level; i++){
         num_children = ts->t8_element_num_children(test);
         ts->t8_element_child(test, num_children - 1, desc);
         ts->t8_element_copy(desc, test);
     }
+    /*Check for equality*/
     ts->t8_element_last_descendant(elem, test, level);
     SC_CHECK_ABORT(!ts->t8_element_compare(desc, test),
                    "Wrong deep last descendant\n");
 }
 
+/* Test if the first and last descendant of an element are computed correctly.
+ * The level between the element and the descendant is larger or equal to one */
 static void
 t8_large_step_descendant(t8_element_t *elem, t8_element_t * desc, t8_element_t * test,
                          t8_eclass_scheme_c * ts, int maxlvl)
@@ -92,6 +105,7 @@ t8_large_step_descendant(t8_element_t *elem, t8_element_t * desc, t8_element_t *
     int num_children = ts->t8_element_num_children(elem);
     int i,j;
     for(i = ts->t8_element_level(elem); i < maxlvl; i++){
+        /*Use these functions to perform the actual test*/
         t8_deep_first_descendant(elem, desc, test, ts, maxlvl);
         t8_deep_last_descendant(elem, desc, test, ts, maxlvl);
         for(j = 0; j<num_children; j++){
