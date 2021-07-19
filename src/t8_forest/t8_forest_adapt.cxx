@@ -193,7 +193,8 @@ t8_forest_adapt (t8_forest_t forest)
   t8_locidx_t         el_coarsen;
   t8_locidx_t         num_el_from;
   t8_locidx_t         el_offset;
-  size_t              num_children, zz, max_num_siblings, num_siblings;
+  size_t              num_children, zz, num_siblings,
+    curr_num_siblings, curr_num_children;
   t8_tree_t           tree, tree_from;
   t8_eclass_scheme_c *tscheme;
   t8_element_t      **elements, **elements_from, *parent;
@@ -253,20 +254,18 @@ t8_forest_adapt (t8_forest_t forest)
     /* el_coarsen is the index of the first element in the new element
      * array which could be coarsened recursively. */
     el_coarsen = 0;
-    /* TODO: this will generate problems with pyramidal elements */
-
-    /*Use num_siblings */
     num_children =
       tscheme->t8_element_num_children (t8_element_array_index_locidx
                                         (telements_from, 0));
-    max_num_siblings =
-      tscheme->t8_element_max_num_siblings (t8_element_array_index_locidx
-                                            (telements_from, 0));
+    curr_num_children = num_children;
+    curr_num_siblings =
+      tscheme->t8_element_num_siblings (t8_element_array_index_locidx
+                                        (telements_from, 0));
     tscheme->t8_element_new (1, &parent);
     /* Buffer for a family of new elements */
-    elements = T8_ALLOC (t8_element_t *, max_num_siblings);
+    elements = T8_ALLOC (t8_element_t *, num_children);
     /* Buffer for a family of old elements */
-    elements_from = T8_ALLOC (t8_element_t *, max_num_siblings);
+    elements_from = T8_ALLOC (t8_element_t *, curr_num_siblings);
     /* We now iterate over all elements in this tree and check them for refinement/coarsening. */
     while (el_considered < num_el_from) {
 #ifdef T8_ENABLE_DEBUG
@@ -286,6 +285,11 @@ t8_forest_adapt (t8_forest_t forest)
       num_siblings =
         tscheme->t8_element_num_siblings (t8_element_array_index_locidx
                                           (telements_from, el_considered));
+      if (num_siblings > curr_num_siblings) {
+        elements_from =
+          T8_REALLOC (elements_from, t8_element_t *, num_siblings);
+        curr_num_siblings = num_siblings;
+      }
       /*change: num_children into num_siblings */
       for (zz = 0; zz < (unsigned int) num_siblings &&
            el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
@@ -330,10 +334,13 @@ t8_forest_adapt (t8_forest_t forest)
       }
       if (refine > 0) {
         /* The first element is to be refined */
+        num_children = tscheme->t8_element_num_children (elements_from[0]);
+        if (num_children > curr_num_children) {
+          elements = T8_REALLOC (elements, t8_element_t *, num_children);
+          curr_num_children = num_children;
+        }
         if (forest->set_adapt_recursive) {
-
           /* Create the children of this element */
-          num_children = tscheme->t8_element_num_children (elements_from[0]);
           tscheme->t8_element_new (num_children, elements);     /*num_children or num_siblings? */
           tscheme->t8_element_children (elements_from[0], num_children,
                                         elements);
@@ -353,7 +360,6 @@ t8_forest_adapt (t8_forest_t forest)
           el_coarsen = el_inserted + num_children;
         }
         else {
-          num_children = tscheme->t8_element_num_children (elements_from[0]);
           (void) t8_element_array_push_count (telements, num_children); /*num_children or num_siblings? */
           for (zz = 0; zz < num_children; zz++) {
             elements[zz] =

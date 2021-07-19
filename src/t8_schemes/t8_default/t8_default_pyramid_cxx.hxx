@@ -160,7 +160,8 @@ public:
    * \return          The number of siblings of \a element.
    * Note that this number is >= 1, since we count the element itself as a sibling.
    */
-  virtual int         t8_element_num_siblings (const t8_element_t * elem) const;
+  virtual int         t8_element_num_siblings (const t8_element_t *
+                                               elem) const;
 
   /** Construct the boundary element at a specific face. */
   virtual void        t8_element_boundary_face (const t8_element_t * elem,
@@ -236,7 +237,8 @@ public:
   virtual void        t8_element_first_descendant_face (const t8_element_t *
                                                         elem, int face,
                                                         t8_element_t *
-                                                        first_desc, int level);
+                                                        first_desc,
+                                                        int level);
 
 /** Return the face numbers of the faces sharing an element's corner. */
   virtual int         t8_element_get_corner_face (const t8_element_t *
