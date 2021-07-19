@@ -57,12 +57,11 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
   t8_element_t       **neighbor_leafs;
   t8_locidx_t        *element_indices;
   t8_eclass_scheme_c *neigh_scheme;
-  
-  /* at the moment, there is no implementation of subelements for unbalanced forests */
-  T8_ASSERT (t8_forest_is_balanced (forest_from));
 
   current_element = t8_forest_get_element_in_tree (forest_from, ltree_id, lelement_id);
   num_faces = ts->t8_element_num_faces (current_element);
+
+  printf("Element ID = %i\n", lelement_id);
   
   /* We use a binary encoding (depending on the face enumeration), to determine which subelement type to use. 
    * Every face has a flag parameter, wich is set to 1, if there is a neighbour with a higher level 

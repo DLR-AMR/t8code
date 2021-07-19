@@ -673,7 +673,7 @@ public:
    *  \param [out] An array, whose entries will be filled with location information of the subelement 
    *  All information in the location array will be needed to determine the verticies of any subelement.
    */
-  virtual int         t8_element_get_location_of_subelement (const t8_element_t * elem, int location[]) = 0;
+  virtual void         t8_element_get_location_of_subelement (const t8_element_t * elem, int location[]) = 0;
 
   /** We allow, that subelements can have a different shape, than the given eclass scheme. 
    *  For example, subelements, that remove hanging nodes from the quad scheme, are triangles.

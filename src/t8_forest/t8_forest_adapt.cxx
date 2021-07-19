@@ -355,7 +355,11 @@ t8_forest_adapt (t8_forest_t forest)
         /* determing the number of subelements of the given type for memory allocation */
         num_subelements = tscheme->t8_element_get_number_of_subelements (subelement_type);
         #endif
+        
+        #if 1
         num_subelements = 2;
+        #endif
+
         (void) t8_element_array_push_count (telements, num_subelements);
         for (zz = 0; zz < num_subelements; zz++) {
           elements[zz] =

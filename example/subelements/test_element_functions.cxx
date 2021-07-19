@@ -31,8 +31,7 @@
 #include <t8_vec.h>
 #include <example/common/t8_example_common.h>
 
-#define T8_NUM_VERTICIES_QUAD 4
-#define T8_NUM_SUBELEMENTS 2
+#define T8_NUM_VERTICIES_SUBELEMENT 3
 
 static void
 t8_test_element_function ()
@@ -40,33 +39,29 @@ t8_test_element_function ()
   t8_scheme_cxx_t    *ts = t8_scheme_new_subelement_cxx ();
   t8_eclass_scheme_c *class_scheme;
   t8_element_t       *element_1; 
-  t8_element_t       *element_subelements[T8_NUM_SUBELEMENTS];
-  int                eclass, subelement_id, vertex_id, coords[P4EST_DIM];
+  int                eclass, subelement_id, vertex_id, coords[P4EST_DIM], num_subelements;
+  int type = 3;
 
   /* Choose quad scheme */
   eclass = T8_ECLASS_QUAD;
   class_scheme = ts->eclass_schemes[eclass];
 
-  /* Allocate new elements and initialize them */
+  /* Allocate memory for a quad element and initialize it */
   class_scheme->t8_element_new (1, &element_1);
-  class_scheme->t8_element_new (T8_NUM_SUBELEMENTS, element_subelements); 
-
   class_scheme->t8_element_set_linear_id (element_1, 0, 0);
   class_scheme->t8_element_is_valid (element_1);
-  
-  /* Test element functions */
-  // class_scheme->t8_element_child (element_1, 0, element_2);
-  // class_scheme->t8_element_children (element_1, P4EST_CHILDREN, element_children);
-  // for (vertex_id = 0; vertex_id < T8_NUM_VERTICIES_QUAD; ++vertex_id) {
-    // class_scheme->t8_element_vertex_coords (element_1, vertex_id, coords);
-  // }
 
-  /* Test subelement-related functions */
-  int type = 3;
+  /* Allocate memory for subelements of type 3 and initialize them */
+  num_subelements = class_scheme->t8_element_get_number_of_subelements(type);  
+  t8_element_t       *element_subelements[num_subelements];
+  class_scheme->t8_element_new (num_subelements, element_subelements); 
+
+  /* Create subelements and determine their verticies */
   class_scheme->t8_element_to_subelement (element_1, element_subelements, type);
-  for (subelement_id = 0; subelement_id < T8_NUM_SUBELEMENTS; ++subelement_id) {
-    for (vertex_id = 0; vertex_id < T8_NUM_VERTICIES_QUAD; ++vertex_id) {
+  for (subelement_id = 0; subelement_id < num_subelements; ++subelement_id) {
+    for (vertex_id = 0; vertex_id < T8_NUM_VERTICIES_SUBELEMENT; ++vertex_id) {
       class_scheme->t8_element_vertex_coords (element_subelements[subelement_id], vertex_id, coords);
+      printf("Sub_id = %i; Vertex = %i; Coordinates = (%i,%i)\n", subelement_id, vertex_id, coords[0], coords[1]);
     }
   }
 
@@ -74,7 +69,7 @@ t8_test_element_function ()
 
   /* free memory */
   class_scheme->t8_element_destroy (1, &element_1);
-  class_scheme->t8_element_destroy (T8_NUM_SUBELEMENTS, element_subelements);
+  class_scheme->t8_element_destroy (num_subelements, element_subelements);
   t8_scheme_cxx_unref (&ts);
 }
 

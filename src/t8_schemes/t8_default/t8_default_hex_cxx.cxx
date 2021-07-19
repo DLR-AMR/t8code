@@ -697,7 +697,7 @@ t8_default_scheme_hex_c::t8_element_get_number_of_subelements (int subelement_ty
   SC_ABORT ("This function is not implemented yet.\n");
 }
 
-int 
+void
 t8_default_scheme_hex_c::t8_element_get_location_of_subelement (const t8_element_t * elem, int location[]) 
 {
   SC_ABORT ("This function is not implemented yet.\n");

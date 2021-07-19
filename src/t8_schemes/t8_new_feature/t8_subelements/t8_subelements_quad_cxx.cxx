@@ -174,7 +174,7 @@ t8_default_scheme_sub_c::t8_element_max_num_faces (const t8_element_t * elem)
 
 int
 t8_default_scheme_sub_c::t8_element_num_children (const t8_element_t * elem)
-{
+{ 
   T8_ASSERT (t8_element_is_valid (elem));
   return P4EST_CHILDREN;
 }
@@ -947,9 +947,9 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
   int sub_face_id = location[2];
 
   T8_ASSERT (face_number == 0 || face_number == 1 || face_number == 2 || face_number == 3);
-  T8_ASSERT (split == 0 || split == 1);
-  T8_ASSERT (sub_face_id == 0 || sub_face_id == 1);
+  T8_ASSERT ((split == 0 && sub_face_id == 0) || (split == 1 && (sub_face_id == 0 || sub_face_id == 1))); 
 
+  /* there were problems with 1/2 * int(1) = 0. Therefore, we always determine len * 1/2 first */
   if (vertex == 2) { /* the third vertex allways equals the center of the element */
     coords[0] = q1->x + len * 1/2;
     coords[1] = q1->y + len * 1/2;
@@ -957,23 +957,24 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
   else { /* all other verticies can be determined, using the flag parameters sub_face_id, split and vertex, whose values are either 0 or 1 */
     if (face_number == 0) {
       coords[0] = q1->x;
-      coords[1] = q1->y + len * 1/2 * sub_face_id + len * (1 - 1/2 * split) * vertex;
+      coords[1] = q1->y + len * 1/2 * sub_face_id + len * vertex - len * 1/2 * split * vertex;
     }
     else if (face_number == 1) {
-      coords[0] = q1->x + len * 1/2 * sub_face_id + len * (1 - 1/2 * split) * vertex;
+      coords[0] = q1->x + len * 1/2 * sub_face_id + len * vertex - len * 1/2 * split * vertex;
       coords[1] = q1->y + len;
     }
     else if (face_number == 2) {
       coords[0] = q1->x + len;
-      coords[1] = q1->y + len - len * 1/2 * sub_face_id - len * (1 - 1/2 * split) * vertex;
+      coords[1] = q1->y + len - len * 1/2 * sub_face_id - (len * vertex - len * 1/2 * split * vertex);
     }
     else if (face_number == 3) {
-      coords[0] = q1->x + len - len * 1/2 * sub_face_id - len * (1 - 1/2 * split) * vertex;
+      coords[0] = q1->x + len - len * 1/2 * sub_face_id - (len * vertex - len * 1/2 * split * vertex);
       coords[1] = q1->y;
     }
   }
   #endif
   
+  #if 1
   /* 
    *            =len
    *      |---------------| 
@@ -996,6 +997,7 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
     coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len * 1/2 + len * 1/2;
     coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
   }
+  #endif
 }
 
 void
@@ -1048,7 +1050,7 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
 
   num_subelements = t8_element_get_number_of_subelements (type);
 
-  for (sub_id_counter = 0, sub_id_counter < num_subelements, sub_id_counter++) {
+  for (sub_id_counter = 0; sub_id_counter < num_subelements; sub_id_counter++) {
     pquad_w_sub_subelement[sub_id_counter]->p4q.x = q->x;
     pquad_w_sub_subelement[sub_id_counter]->p4q.y = q->y;
     pquad_w_sub_subelement[sub_id_counter]->p4q.level = level;
@@ -1058,7 +1060,8 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
     pquad_w_sub_subelement[sub_id_counter]->num_subelement_ids = num_subelements;
   }
   #endif
-
+  
+  #if 1
   /* temporary subelement type:
   *                               
   *      x - - - - - - - x         x - - - x - - - x           
@@ -1086,6 +1089,7 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
   pquad_w_sub_subelement[1]->subelement_type = type;
   pquad_w_sub_subelement[1]->subelement_id = 1;
   pquad_w_sub_subelement[1]->num_subelement_ids = 2;
+  #endif
 
   for (i = 0; i < pquad_w_sub_elem->num_subelement_ids; ++i) {
     T8_ASSERT (t8_element_is_valid(c[i]));
@@ -1100,26 +1104,29 @@ t8_default_scheme_sub_c::t8_element_get_number_of_subelements (int subelement_ty
 
   /* consider subelement_type 13 = 1101 in base two -> there are 4 + (1+1+0+1) = 7 subelements */
   int num_subelements;
+  int type = subelement_type;
   int digit_sum_of_binary = 0;
-  int subelement_type_temp = subelement_type;
+  int binary_array[P4EST_FACES] = {};
 
-  int i = 0;
+  int i;
+  int j;
 
-  while (subelement_type_temp > 0) {
-    digit_sum_of_binary += 1;
-    if (pow (2, (P4EST_FACES - 1) - i) <= subelement_type_temp) {
-      subelement_type_temp -= pow (2, (P4EST_FACES - 1) - i);
-      i++;
+  for (i = 0; i < P4EST_FACES; i++) { /* need an array with 4 elements to store all subelement types of the quad scheme from 1 to 15 ({0,0,0,1} to {1,1,1,1}) */
+    if (type >= pow (2, (P4EST_FACES - 1) - i)) {
+      binary_array[i] = 1;
+      type -= pow (2, (P4EST_FACES - 1) - i);
     }
-    else {
-      i++;
-    } 
+  } /* we now got a binary represenation of the subelement type, bitwise stored in an array */
+
+  for (j = 0; j < P4EST_FACES; j++) {
+    digit_sum_of_binary += binary_array[j];
   }
+
   num_subelements = P4EST_FACES + digit_sum_of_binary;
   return num_subelements;
 }
 
-int 
+void 
 t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const t8_element_t * elem, int location[]) 
 {
   const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
@@ -1142,42 +1149,41 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const t8_element
    * We will use the binary representation to determine the location of the given subelement. 
    * 
    * We need to know: 
-   *     i)   the face number of the first vertex (one could say the anchor vertex of the subelement). Values: {0,1,2,3}
-   *     ii)  whether this face is split in half (or whether there is a hanging node). Values {0,1}
+   *     i)   the face number of the first vertex. Values: {0,1,2,3}
+   *     ii)  whether this face is split in half. Values {0,1}
    *     iii) if the subelement is the first or second subelement at the face. Values: {0,1}
    * 
    * These informations are then saved in the location array which will be used by the element_vertex function, 
    * to automatically determine the vertex coordinates of the given subelement. 
    * 
-   * The location array for the above example would be {2,1,1} (upper face, split = true, second subelement at the upper face). */
+   * The location array for the above example would be {1,1,1} (upper face, split = true, second subelement at the upper face). */
   
   /* 1) convert the subelement type from a decimal to a binary representation */
   int type = pquad_w_sub->subelement_type;
-  int binary[P4EST_FACES] = {};
-  int rest;
+  int binary_array[P4EST_FACES] = {};
+
   int i;
+
   for (i = 0; i < P4EST_FACES; i++) { /* need an array with 4 elements to store all subelement types of the quad scheme from 1 to 15 ({0,0,0,1} to {1,1,1,1}) */
-    if (type == 1) {
-      binary[P4EST_FACES-1] = 1;
-      break;
-    }
-    else {
-      rest = type % 2; 
-      binary[i] = rest;
-      type -= pow (2, (P4EST_FACES - 1) - i); 
+    if (type >= pow (2, (P4EST_FACES - 1) - i)) {
+      binary_array[i] = 1;
+      type -= pow (2, (P4EST_FACES - 1) - i);
     }
   } /* we now got a binary represenation of the subelement type, bitwise stored in an array */
 
   /* 2) rearrange the binary representation to be in clockwise order */
-  int binary_temp[P4EST_FACES] = {};
+  int binary_array_temp[P4EST_FACES] = {};
+
   int j;
+
   for (j = 0; j < P4EST_FACES; j++) { /* copying the binary array */
-    binary_temp[j] = binary[j];
+    binary_array_temp[j] = binary_array[j];
   }
-  binary[0] = binary_temp[0]; /* f3 <- f3 */
-  binary[1] = binary_temp[3]; /* f2 <- f0 */
-  binary[2] = binary_temp[1]; /* f1 <- f2 */
-  binary[3] = binary_temp[2]; /* f0 <- f1 */
+
+  binary_array[0] = binary_array_temp[0]; /* f3 <- f3 */
+  binary_array[1] = binary_array_temp[3]; /* f2 <- f0 */
+  binary_array[2] = binary_array_temp[1]; /* f1 <- f2 */
+  binary_array[3] = binary_array_temp[2]; /* f0 <- f1 */
 
   /* 3) use the rearranged binary representation, and the sub_id to determine the location of the subelement and store these information in an array */
   /* 3.1) location[0] -> the face_number, the subelement is adjacent to */
@@ -1197,7 +1203,7 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const t8_element
   }
 
   while (sub_id >= 0 && k < P4EST_FACES) {
-    if (binary[k] == 1) {
+    if (binary_array[k] == 1) {
       sub_id -= 2; /* two subelements adjacent to face k */
     }
     else {
@@ -1210,7 +1216,7 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const t8_element
   }
   face_number = k - 1;
 
-  if (binary[face_number] == 0) {
+  if (binary_array[face_number] == 0) {
     split = 0; /* the face is not split */ 
   }
   else {
@@ -1229,11 +1235,11 @@ t8_default_scheme_sub_c::t8_element_get_shape (const t8_element_t * elem)
 
   T8_ASSERT (t8_element_is_valid (elem));
 
-  if (pquad_w_sub->dummy_is_subelement == 1) { /* for quads, all subelements are triangles */
-    return T8_ECLASS_TRIANGLE;
-  }
-  else {
+  if (pquad_w_sub->dummy_is_subelement != 1) { 
     return T8_ECLASS_QUAD;
+  }
+  else { /* for quads, all subelements are triangles */
+    return T8_ECLASS_TRIANGLE;
   }
 } 
 
