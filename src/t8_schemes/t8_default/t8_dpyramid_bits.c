@@ -142,7 +142,9 @@ t8_dpyramid_ancestor_id (const t8_dpyramid_t * p, const int level)
 #endif
   t8_linearidx_t      id;
   t8_dpyramid_t       helper;
+  /*Compute the id of p at the given level*/
   id = t8_dpyramid_linear_id (p, level);
+  /*Compute the child id of the ancestor of p at the given level*/
   t8_dpyramid_init_linear_id (&helper, level, id);
   return t8_dpyramid_child_id (&helper);
 }
