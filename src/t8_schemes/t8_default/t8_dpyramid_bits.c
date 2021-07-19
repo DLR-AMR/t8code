@@ -1192,7 +1192,7 @@ t8_dpyramid_child_id (const t8_dpyramid_t * p)
   T8_ASSERT (p->level >= 0);
   t8_dpyramid_t       parent;
   if (p->level == 0)
-    return 0;
+    return -1;
   return t8_dpyramid_child_id_unknown_parent (p, &parent);
 }
 
