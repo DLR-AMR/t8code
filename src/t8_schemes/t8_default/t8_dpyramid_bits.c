@@ -1429,7 +1429,7 @@ t8_dpyramid_shape (const t8_dpyramid_t * p)
 
 }
 
-void
+static void
 t8_dpyramid_successor_recursion (const t8_dpyramid_t * elem,
                                  t8_dpyramid_t * succ, t8_dpyramid_t * parent,
                                  const int level)
