@@ -254,8 +254,6 @@ t8_forest_adapt (t8_forest_t forest)
     /* el_coarsen is the index of the first element in the new element
      * array which could be coarsened recursively. */
     el_coarsen = 0;
-    /* TODO: this will generate problems with pyramidal elements */
-
     num_children =
       tscheme->t8_element_num_children (t8_element_array_index_locidx
                                         (telements_from, 0));
