@@ -120,6 +120,9 @@ t8_test_forest_commit (int cmesh_id)
   t8_forest_t         forest, forest_ada_bal_part, forest_abp_3part;
   t8_scheme_cxx_t    *scheme;
 
+  t8_global_productionf ("Testing forest commit with cmesh_id = %i\n",
+                         cmesh_id);
+
   scheme = t8_scheme_new_default_cxx ();
   /* Construct a cmesh */
   cmesh = t8_test_create_cmesh (cmesh_id);
