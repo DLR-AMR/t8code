@@ -112,8 +112,9 @@ t8_check_descendant(const int maxlvl)
     t8_eclass_t         eclass;
     t8_element_t        *elem, *desc, *test;
     scheme = t8_scheme_new_default_cxx();
-    for(eclassi = T8_ECLASS_PYRAMID; eclassi < T8_ECLASS_COUNT; eclassi++)
+    for(eclassi = T8_ECLASS_ZERO; eclassi < T8_ECLASS_COUNT; eclassi++)
     {
+        t8_productionf ("Checking descendants for eclass %s\n", t8_eclass_to_string[eclassi]);
         eclass = (t8_eclass_t) eclassi;
         ts = scheme->eclass_schemes[eclass];
         ts->t8_element_new(1, &elem);
@@ -139,9 +140,9 @@ main (int argc, char **argv)
 {
   int                 mpiret;
 #ifdef T8_ENABLE_DEBUG
-  const int           maxlvl = 6;
+  const int           maxlvl = 5;
 #else
-  const int           maxlvl = 9;
+  const int           maxlvl = 6;
 #endif
 
   mpiret = sc_MPI_Init (&argc, &argv);

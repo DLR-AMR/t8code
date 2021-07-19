@@ -69,6 +69,8 @@ t8_compute_child_find_parent (const int maxlvl)
   t8_eclass_t         eclass;
   scheme = t8_scheme_new_default_cxx ();
   for (eclassi = T8_ECLASS_ZERO; eclassi < T8_ECLASS_COUNT; eclassi++) {
+    t8_productionf ("Testing child find parent for eclass %s\n",
+                    t8_eclass_to_string[eclassi]);
     eclass = (t8_eclass_t) eclassi;
     /* Get scheme for eclass */
     ts = scheme->eclass_schemes[eclass];
@@ -95,9 +97,9 @@ main (int argc, char **argv)
 {
   int     mpiret;
 #ifdef T8_ENABLE_DEBUG
-  const int maxlvl = 8;
+  const int maxlvl = 7;
 #else
-  const int maxlvl = 9;
+  const int maxlvl = 7;
 #endif
 
 
