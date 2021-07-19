@@ -50,7 +50,7 @@ t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
   int                 level;
   int                 maxlevel, child_id;
   T8_ASSERT (num_elements == 1 || (num_elements > 1 && num_elements ==
-                                   ts->t8_element_num_children (elements
+                                   ts->t8_element_num_siblings (elements
                                                                 [0])));
 
   level = ts->t8_element_level (elements[0]);
