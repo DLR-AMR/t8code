@@ -50,7 +50,7 @@ t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
   int                 level;
   int                 maxlevel, child_id;
   T8_ASSERT (num_elements == 1 || (num_elements > 1 && num_elements ==
-                                   ts->t8_element_num_children (elements
+                                   ts->t8_element_num_siblings (elements
                                                                 [0])));
 
   level = ts->t8_element_level (elements[0]);
@@ -119,6 +119,9 @@ t8_test_forest_commit (int cmesh_id)
   t8_cmesh_t          cmesh;
   t8_forest_t         forest, forest_ada_bal_part, forest_abp_3part;
   t8_scheme_cxx_t    *scheme;
+
+  t8_global_productionf ("Testing forest commit with cmesh_id = %i\n",
+                         cmesh_id);
 
   scheme = t8_scheme_new_default_cxx ();
   /* Construct a cmesh */
