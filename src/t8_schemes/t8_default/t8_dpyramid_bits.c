@@ -988,6 +988,7 @@ t8_dpyramid_num_siblings (const t8_dpyramid_t * p)
 {
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
   t8_dpyramid_t       parent;
+  parent.level = p->level - 1;
   if (p->level == 0) {
     /* A level zero pyramid has only itself as sibling. */
     return 1;
