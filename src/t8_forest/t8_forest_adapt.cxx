@@ -200,7 +200,6 @@ t8_forest_adapt (t8_forest_t forest)
   t8_element_t      **elements, **elements_from, *parent;
   int                 refine;
   int                 ci;
-  int                 num_elements;
 #ifdef T8_ENABLE_DEBUG
   int                 is_family;
 #endif
@@ -268,6 +267,7 @@ t8_forest_adapt (t8_forest_t forest)
     elements_from = T8_ALLOC (t8_element_t *, curr_num_siblings);
     /* We now iterate over all elements in this tree and check them for refinement/coarsening. */
     while (el_considered < num_el_from) {
+      int                 num_elements_to_adapt_fn;
 #ifdef T8_ENABLE_DEBUG
       /* Will get set to 0 later if this is not a family */
       is_family = 1;
@@ -279,12 +279,10 @@ t8_forest_adapt (t8_forest_t forest)
        * At the end is_family will be true, if these elements form a family.
        */
 
-      num_elements = num_children;      /*This has to remain num_children t8_element_array_index_locidx
-                                           (telements_from, 0) */
-
       num_siblings =
         tscheme->t8_element_num_siblings (t8_element_array_index_locidx
                                           (telements_from, el_considered));
+
       if (num_siblings > curr_num_siblings) {
         elements_from =
           T8_REALLOC (elements_from, t8_element_t *, num_siblings);
@@ -311,10 +309,14 @@ t8_forest_adapt (t8_forest_t forest)
           || !tscheme->t8_element_is_family (elements_from)) {
         /* We are certain that the elements do not form a family.
          * So we will only pass the first element to the adapt callback. */
-        num_elements = 1;
+        num_elements_to_adapt_fn = 1;
 #ifdef T8_ENABLE_DEBUG
         is_family = 0;
 #endif
+      }
+      else {
+        /* We will pass a family to the adapt callback */
+        num_elements_to_adapt_fn = num_siblings;
       }
       T8_ASSERT (!is_family || tscheme->t8_element_is_family (elements_from));
       /* Pass the element, or the family to the adapt callback.
@@ -324,8 +326,8 @@ t8_forest_adapt (t8_forest_t forest)
        */
       refine =
         forest->set_adapt_fn (forest, forest->set_from, ltree_id,
-                              el_considered, tscheme, num_elements,
-                              elements_from);
+                              el_considered, tscheme,
+                              num_elements_to_adapt_fn, elements_from);
       T8_ASSERT (is_family || refine >= 0);
       if (refine > 0 && tscheme->t8_element_level (elements_from[0]) >=
           forest->maxlevel) {
