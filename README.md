@@ -1,3 +1,5 @@
+[![t8code tests](https://github.com/holke/t8code/actions/workflows/tests.yml/badge.svg)](https://github.com/holke/t8code/actions/workflows/tests.yml)
+
 ### Introduction
 
 t8code (spoken as "tetcode") is a C/C++ library to manage parallel adaptive meshes with various element types.
