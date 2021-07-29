@@ -16,7 +16,7 @@ t8code, or T8 for short, supports the following element types (also different ty
 - 2D: quadrilaterals and triangles
 - 3D: hexahedra, tetrahedra, prisms (pyramids currently in development).
 
-t8code offers the following functionalities:
+Among others, t8code offers the following functionalities:
 
 - Create distributed adaptive meshes over complex domain geometries
 - Adapt meshes according to user given refinement/coarsening criteria
