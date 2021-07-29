@@ -42,8 +42,21 @@ We provide a short guide to install t8code.
 
 For a more detailed description, please see the [Installation guide](https://github.com/holke/t8code/wiki/Installation) in our Wiki.
 
+#### Requirements
+
+- [libsc](https://github.com/cburstedde/libsc) (Included in t8code's git repository)
+- [p4est](https://github.com/cburstedde/p4est) (Included in t8code's git repository)
+- automake
+- libtool
+- make
+
+Optional
+- The VTK library for advanced VTK output (basic VTK output is provided without linking against VTK)
+- The netcdf library for netcdf file output
+
   
-  To setup the project perform the following steps
+#### Steps
+To setup the project perform the following steps
   
     1.) If you cloned from github, initialize and download the git submodules
        p4est and sc.
@@ -80,7 +93,7 @@ Most commonly used for t8code are
   ### Publications
   
   An (incomplete) list of publications related to t8code:
-  
+    
   [1] Johannes Holke, Scalable algorithms for parallel tree-based adaptive mesh refinement with general element types, PhD thesis at University of Bonn, 2018,
       [Full text available](https://bonndoc.ulb.uni-bonn.de/xmlui/handle/20.500.11811/7661)
       
@@ -92,7 +105,7 @@ Most commonly used for t8code are
   
   ### Citing t8code
   
-  If you use t8code in any of your publications, please cite [1]. For publications specifically related to 
+  If you use t8code in any of your publications, please cite the [github repository](https://github.com/holke/t8code) and [1]. For publications specifically related to 
 - the TM index, please cite [2].
 - coarse mesh partitioning, please cite [3].
 - construction and handling of the ghost layer, please cite [4].
