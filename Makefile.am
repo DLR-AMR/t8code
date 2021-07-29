@@ -114,6 +114,11 @@ clean-local:
 maintainer-clean-local:
 	rm -rf doxygen
 
+# We are using a README.md and not a README file. However, autotools forces us
+# to use a README file. With this rule, we trick autotools in thinking that we
+# provide a README.
+README: README.md
+
 doxygen: Doxyfile
 	doxygen
 
