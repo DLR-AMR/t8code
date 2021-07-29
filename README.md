@@ -31,7 +31,7 @@ Currently,
   - quadrilateral/hexahedral elements are inherited from the p4est submodule, using the Morton curve 1:4, 1:8 refinement; 
   - triangular/tetrahedral are implemented using the Tetrahedral Morton curve, 1:4, 1:8 refinement;
   - prisms are implemented using the triangular TM curve and a line curve, 1:8 refinement.
-  - The code supports hybrid meshes including any of the above element types.
+  - The code supports hybrid meshes including any of the above element types (of the same dimension).
 
 You find more information on t8code in the [t8code Wiki](https://github.com/holke/t8code/wiki).
 
