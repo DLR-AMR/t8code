@@ -90,6 +90,8 @@ Most commonly used for t8code are
   To get familiar with t8code and its algorithms and data structures we recommend excuting the tutorial examples in `example/tutorials`
   and read the corresponding Wiki pages starting with [Step 0 - Helloworld](https://github.com/holke/t8code/wiki/Step-0---Hello-World).
   
+  A sophisticated example of a complete numerical simulation is our finite volume solver of the advection equation in `example/advection`.
+  
   ### Publications
   
   An (incomplete) list of publications related to t8code:
