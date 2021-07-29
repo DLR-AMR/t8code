@@ -118,6 +118,7 @@ maintainer-clean-local:
 # to use a README file. With this rule, we trick autotools in thinking that we
 # provide a README.
 README: README.md
+	pandoc -f markdown -t plain --wrap=none $< -o $@
 
 doxygen: Doxyfile
 	doxygen
