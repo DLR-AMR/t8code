@@ -3,9 +3,7 @@
 The t8code is a C/C++ library to manage parallel adaptive meshes with various element types.
 t8code uses a collection (a forest) of multiple connected adaptive space-trees 
 of general element types in parallel. t8code scales to at least one million MPI ranks and over 1 Trillion mesh elements.
-It is licensed under the GNU General Public License 2.0 or later.
-
-Copyright (c) 2015 the developers
+It is licensed under the GNU General Public License 2.0 or later. Copyright (c) 2015 the developers.
 
 The t8code, or T8 for short, supports the following element types (also different types in the same mesh):
 
@@ -35,24 +33,37 @@ Currently,
   - prisms are implemented using the triangular TM curve and a line curve, 1:8 refinement.
   - The code supports hybrid meshes including any of the above element types.
 
-Setup:
+You find more information on t8code in the [t8code Wiki](https://github.com/holke/t8code/wiki).
+
+### Setup
+
+We provide a short guide to install t8code. 
+
+For a more detailed description, please see the [Installation guide](https://github.com/holke/t8code/wiki/Installation) in our Wiki.
+
+  
   To setup the project perform the following steps
+  
     1.) If you cloned from github, initialize and download the git submodules
        p4est and sc.
-      a.) git submodule init
-      b.) git submodule update
+      - git submodule init
+      - git submodule update      
     2.) Call the bootstrap script in the source directory
-        ./bootstrap
+      - ./bootstrap        
     3.) Goto your installation folder and call configure and make
-      a.) cd /path/to/install
-      b.) /path/to/source/configure [OPTIONS]
-      c.) make 
-      d.) make install
+      - cd /path/to/install
+      - /path/to/source/configure [OPTIONS]
+      - make 
+      - make check
+      - make install
 
 To see a list of possible configure options, call
+ 
  ./configure -h
+
+or visit [the Wiki](https://github.com/holke/t8code/wiki/Configure-Options).
 
 Most commonly used for t8code are
   --enable-mpi    (enables MPI parallelization)
-  --enable-debug  (enables debugging mode)
+  --enable-debug  (enables debugging mode - massively reduces performance)
   --with-LIB/--without-LIB (enable/disable linking with LIB)
