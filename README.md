@@ -90,7 +90,17 @@ Most commonly used for t8code are
   
   --with-LIB/--without-LIB (enable/disable linking with LIB)
   
-  ### Getting started
+#### Example configurations
+
+For a parallel release mode with local installation path `$HOME/t8code_install`:
+
+`configure --enable-mpi CFLAGS=-O3 CXXFLAGS=-O3 --prefix=$HOME/t8code_install`
+
+For a debugging mode with static linkage (makes using gdb and valgrind more comfortable):
+
+`configure --enable-mpi --enable-debug --enable-static --disable-shared CFLAGS="-Wall -O0 -g" CXXFLAGS="-Wall -O0 -g"`
+  
+### Getting started
   
   To get familiar with t8code and its algorithms and data structures we recommend excuting the tutorial examples in `example/tutorials`
   and read the corresponding Wiki pages starting with [Step 0 - Helloworld](https://github.com/holke/t8code/wiki/Step-0---Hello-World).
