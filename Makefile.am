@@ -24,6 +24,7 @@ check_PROGRAMS =
 include_HEADERS =
 lib_LTLIBRARIES =
 nodist_include_HEADERS =
+nobase_dist_include_HEADERS =
 noinst_HEADERS =
 noinst_PROGRAMS =
 sysconf_DATA =
@@ -39,7 +40,10 @@ Makefile.t8.mk : Makefile.t8.pre
 
 # install T8 m4 macros in the correct directory
 t8aclocaldir = $(datadir)/aclocal
-dist_t8aclocal_DATA = config/t8_include.m4 config/t8_stdpp.m4
+dist_t8aclocal_DATA = config/t8_include.m4 \
+                      config/t8_stdpp.m4 \
+                      config/t8_netcdf.m4 \
+                      config/t8_vtk.m4
 
 # install t8 data in the correct directory
 t8datadir = $(datadir)/data
@@ -67,7 +71,7 @@ DISTCLEANFILES += \
 
 # non-recursive build
 include src/Makefile.am
-include src/t8_default/Makefile.am
+include src/t8_schemes/t8_default/Makefile.am
 include test/Makefile.am
 include example/basic/Makefile.am
 include example/ghost/Makefile.am
@@ -78,6 +82,8 @@ include example/gmsh/Makefile.am
 include example/cmesh/Makefile.am
 include example/common/Makefile.am
 include example/advect/Makefile.am
+include example/netcdf/Makefile.am
+include example/tutorials/Makefile.am
 #include example/cxx/Makefile.am
 #include example/ExtremeScaling/Makefile.am
 
@@ -107,6 +113,12 @@ clean-local:
 
 maintainer-clean-local:
 	rm -rf doxygen
+
+# We are using a README.md and not a README file. However, autotools forces us
+# to use a README file. With this rule, we trick autotools in thinking that we
+# provide a README.
+README: README.md
+	pandoc -f markdown -t plain --wrap=none $< -o $@
 
 doxygen: Doxyfile
 	doxygen

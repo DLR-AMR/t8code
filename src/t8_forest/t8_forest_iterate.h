@@ -41,15 +41,33 @@ typedef int         (*t8_forest_iterate_face_fn) (t8_forest_t forest,
                                                   t8_locidx_t
                                                   tree_leaf_index);
 
+/*
+ * forest          the forest
+ * ltreeid         the local tree id of the current tree
+ * element         the element for which the query is executed
+ * is_leaf         true if and only if \a element is a leaf element
+ * leaf_elements   the leaf elements in \a forest that are descendants of \a element
+ *                 (or the element itself if \a is_leaf is true)
+ * tree_leaf_index the local index of the first leaf in \a leaf_elements
+ * query           if not NULL, a query that is passed through from the search function
+ * query_index     if \a query is not NULL the index of \a query in the queries array from
+ *                 \ref t8_forest_search
+ *
+ * return          if \a query is not NULL: true if and only if the element 'matches' the query
+ *                 if \a query is NULL: true if and only if the search should continue with the
+ *                 children of \a element and the queries should be performed for this element.
+ */
 typedef int         (*t8_forest_search_query_fn) (t8_forest_t forest,
                                                   t8_locidx_t ltreeid,
                                                   const t8_element_t *
                                                   element,
+                                                  const int is_leaf,
                                                   t8_element_array_t *
                                                   leaf_elements,
-                                                  void *user_data,
                                                   t8_locidx_t
-                                                  tree_leaf_index);
+                                                  tree_leaf_index,
+                                                  void *query,
+                                                  size_t query_index);
 
 T8_EXTERN_C_BEGIN ();
 
@@ -81,14 +99,16 @@ void                t8_forest_iterate_faces (t8_forest_t forest,
  * intermediate element. The search will enter each tree at least once.
  * If the callback returns false for an element, its descendants
  * are not further searched.
+ * To pass user data to the search_fn function use \ref t8_forest_set_user_data
  */
 void                t8_forest_search (t8_forest_t forest,
                                       t8_forest_search_query_fn search_fn,
-                                      void *user_data);
+                                      t8_forest_search_query_fn query_fn,
+                                      sc_array_t * queries);
 
 /** Given two forest where the elemnts in one forest are either direct children or
- * parents of the elements in the other forest.
- * Compare the two forests and for each refined element or coarsened
+ * parents of the elements in the other forest
+ * compare the two forests and for each refined element or coarsened
  * family in the old one, call a callback function providing the local indices
  * of the old and new elements.
  * \param [in]  forest_new  A forest, each element is a parent or child of an element in \a forest_old.

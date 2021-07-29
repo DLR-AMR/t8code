@@ -30,7 +30,7 @@
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_forest.h>
-#include <t8_default_cxx.hxx>
+#include <t8_schemes/t8_default_cxx.hxx>
 #include <example/common/t8_example_common.h>
 
 /* This is the user defined data used to define the
@@ -194,7 +194,8 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh);
     /* The new cmesh is partitioned according to a uniform init_level refinement */
-    t8_cmesh_set_partition_uniform (cmesh_partition, init_level);
+    t8_cmesh_set_partition_uniform (cmesh_partition, init_level,
+                                    t8_scheme_new_default_cxx ());
     t8_cmesh_commit (cmesh_partition, comm);
   }
   else {
@@ -314,7 +315,8 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim,
     /* partition the cmesh uniformly */
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh);
-    t8_cmesh_set_partition_uniform (cmesh_partition, init_level);
+    t8_cmesh_set_partition_uniform (cmesh_partition, init_level,
+                                    t8_scheme_new_default_cxx ());
     t8_cmesh_commit (cmesh_partition, comm);
     return cmesh_partition;
   }

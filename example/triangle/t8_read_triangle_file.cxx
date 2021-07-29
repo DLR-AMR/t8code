@@ -25,7 +25,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh_triangle.h>
 #include <t8_cmesh_vtk.h>
-#include <t8_default_cxx.hxx>
+#include <t8_schemes/t8_default_cxx.hxx>
 
 void
 t8_read_triangle_file_build_cmesh (const char *prefix, int do_dup,
@@ -82,14 +82,22 @@ main (int argc, char *argv[])
   const char         *prefix;
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
+  int                 sreturn;
 
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>",
             basename (argv[0]));
-  snprintf (help, BUFSIZ,
-            "This program reads a collection of .node, .ele and "
-            ".neigh files created by the TRIANGLE program and constructs a "
-            "t8code coarse mesh from them.\nAll three files must have the same prefix.\n\n%s\n\nExample: %s -f A1\nTo open the files A1.node, A1.ele and "
-            "A1.neigh.\n", usage, basename (argv[0]));
+  sreturn = snprintf (help, BUFSIZ,
+                      "This program reads a collection of .node, .ele and "
+                      ".neigh files created by the TRIANGLE program and constructs a "
+                      "t8code coarse mesh from them.\nAll three files must have the same prefix.\n\n%s\n\nExample: %s -f A1\nTo open the files A1.node, A1.ele and "
+                      "A1.neigh.\n", usage, basename (argv[0]));
+
+  if (sreturn >= BUFSIZ) {
+    /* The help message was truncated */
+    /* Note: gcc >= 7.1 prints a warning if we 
+     * do not check the return value of snprintf. */
+    t8_debugf ("Warning: Truncated help message to '%s'\n", help);
+  }
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);

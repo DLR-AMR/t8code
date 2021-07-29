@@ -22,7 +22,7 @@
 
 #include <sc_options.h>
 #include <sc_refcount.h>
-#include <t8_default_cxx.hxx>
+#include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_cmesh_vtk.h>
 
@@ -46,7 +46,8 @@ t8_basic_hypercube (t8_eclass_t eclass, int set_level,
   if (do_partition) {
     /* repartition the cmesh to match the desired forest partition */
     t8_cmesh_init (&cmesh_partition);
-    t8_cmesh_set_partition_uniform (cmesh_partition, set_level);
+    t8_cmesh_set_partition_uniform (cmesh_partition, set_level,
+                                    t8_scheme_new_default_cxx ());
     t8_cmesh_set_derive (cmesh_partition, cmesh);
     t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
     cmesh = cmesh_partition;
@@ -112,17 +113,32 @@ main (int argc, char **argv)
   int                 level, do_partition, create_forest, do_balance;
   int                 eclass_int;
   int                 parsed, helpme;
+  int                 sreturn;
   t8_eclass_t         eclass;
 
   /* brief help message */
-  snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t"
-            "for a brief overview of all options.",
-            basename (argv[0]), basename (argv[0]));
+  sreturn = snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t"
+                      "for a brief overview of all options.",
+                      basename (argv[0]), basename (argv[0]));
+  if (sreturn >= BUFSIZ) {
+    /* Usage string was truncated. */
+    /* Note: gcc >= 7.1 prints a warning if we 
+     * do not check the return value of snprintf. */
+    t8_debugf ("Warning: Truncated usage string to '%s'\n", usage);
+  }
 
   /* long help message */
-  snprintf (help, BUFSIZ, "This program constructs a uniformly refined "
-            "cubical mesh.\nThe user can choose the type of mesh elements to "
-            "use and the refinement level of the mesh.\n\n%s\n", usage);
+  sreturn =
+    snprintf (help, BUFSIZ,
+              "This program constructs a uniformly refined "
+              "cubical mesh.\nThe user can choose the type of mesh elements to "
+              "use and the refinement level of the mesh.\n\n%s\n", usage);
+  if (sreturn >= BUFSIZ) {
+    /* help message was truncated. */
+    /* Note: gcc >= 7.1 prints a warning if we 
+     * do not check the return value of snprintf. */
+    t8_debugf ("Warning: Truncated help message to '%s'\n", help);
+  }
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);

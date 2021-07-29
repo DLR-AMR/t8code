@@ -21,20 +21,24 @@
 */
 
 #include <t8_cmesh.h>
-#include <t8_default_cxx.hxx>
+#include <t8_schemes/t8_default_cxx.hxx>
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_partition.h"
+#include "t8_cmesh/t8_cmesh_testcases.h"
 
 /* We create a cmesh, partition it and repartition it several times.
  * At the end we result in the same partition as at the beginning and we
  * compare this cmesh with the initial one. If they are equal the test is
  * passed.
  *
- * TODO: Currently the test is not passed. This is probably because the
- *       cmesh_is_equal function is too strict and does not allow, for example,
- *       the order of the ghosts to change.
- *       We should implement a lighter version of cmesh_is_equal in order
- *       to account for this.
+ * TODO: - Currently the test is not passed. This is probably because the
+ *         cmesh_is_equal function is too strict and does not allow, for example,
+ *         the order of the ghosts to change.
+ *         We should implement a lighter version of cmesh_is_equal in order
+ *         to account for this.
+ * 
+ *       - when this test works for all cmeshes remove if statement in 
+ *         test_cmesh_partition_all () 
  */
 
 /* Test if a cmesh is committed properly and perform the
@@ -98,7 +102,8 @@ test_cmesh_partition_concentrate (t8_cmesh_t cmesh_partition_uniform,
   for (i = 0; i < 2; i++) {
     t8_cmesh_init (&cmesh_partition_new2);
     t8_cmesh_set_derive (cmesh_partition_new2, cmesh_partition_new1);
-    t8_cmesh_set_partition_uniform (cmesh_partition_new2, level);
+    t8_cmesh_set_partition_uniform (cmesh_partition_new2, level,
+                                    t8_scheme_new_default_cxx ());
     t8_cmesh_commit (cmesh_partition_new2, comm);
     cmesh_partition_new1 = cmesh_partition_new2;
   }
@@ -110,74 +115,52 @@ test_cmesh_partition_concentrate (t8_cmesh_t cmesh_partition_uniform,
 }
 
 static void
-test_cmesh_partition (sc_MPI_Comm comm)
+test_cmesh_partition (int cmesh_id, sc_MPI_Comm comm)
 {
-  int                 eci, level, maxlevel, minlevel;
+  int                 level = 11;
   int                 mpisize, mpiret;
   int                 i;
   t8_cmesh_t          cmesh_original, cmesh_partition;
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
+  cmesh_original = t8_test_create_cmesh (cmesh_id);
 
-  for (eci = T8_ECLASS_VERTEX; eci < T8_ECLASS_COUNT; ++eci) {
-    t8_global_productionf ("\n\nTesting eclass %s.\n",
-                           t8_eclass_to_string[eci]);
+  test_cmesh_committed (cmesh_original);
+  for (i = 0; i < 2; i++) {
+    /* Set up the partitioned cmesh */
+    t8_cmesh_init (&cmesh_partition);
+    t8_cmesh_set_derive (cmesh_partition, cmesh_original);
+    /* Uniform partition according to level */
+    t8_cmesh_set_partition_uniform (cmesh_partition, level,
+                                    t8_scheme_new_default_cxx ());
+    t8_cmesh_commit (cmesh_partition, comm);
+    test_cmesh_committed (cmesh_partition);
+    cmesh_original = cmesh_partition;
+  }
+  /* Perform the concentrate test */
+  test_cmesh_partition_concentrate (cmesh_partition, comm, level);
+  /* Clean-up */
+  t8_cmesh_destroy (&cmesh_partition);
+}
 
-    if (eci != T8_ECLASS_PYRAMID) {
-      /* TODO: cmesh_partition does not work with pyramids yet.
-       *       as soon as it does, activate the test for pyramids.
-       */
-
-      /* We do not support empty forest processes for cmesh uniform partition
-       * yet, thus we must ensure that the number of forest elements in a
-       * uniform refinement would be equal to or exceed the number of processes.
-       * We compute here the number of forest elements per level and set as
-       * minimum refinement level the first level where the condition is
-       * fulfilled. */
-      /* For eclass vertex the forest always has 1 element when using the hypercube mesh
-       * and thus we use a disjoint copy of at least mpisize many coarse cells. */
-
-      minlevel = 0;
-      maxlevel = minlevel + 8;
-      for (level = minlevel; level < maxlevel; level++) {
-        t8_global_productionf ("\n\tTesting refinement level %i\n", level);
-        if (eci != T8_ECLASS_VERTEX && level != maxlevel - 1) {
-          /* Take the hypercube as coarse mesh */
-          cmesh_original =
-            t8_cmesh_new_hypercube ((t8_eclass_t) eci, comm, 0, 0, 0);
-        }
-        else {
-          /* If the eclass is vertex we choose a mesh consisting of disjoint
-           * vertices.
-           * We also choose this mesh for all eclasses in the last case.
-           * We do this to test different mesh sizes. */
-          double              num_trees = 11;   /* prime number */
-          cmesh_original =
-            t8_cmesh_new_bigmesh ((t8_eclass_t) eci, num_trees, comm);
-        }
-        test_cmesh_committed (cmesh_original);
-        for (i = 0; i < 2; i++) {
-          /* Set up the partitioned cmesh */
-          t8_cmesh_init (&cmesh_partition);
-          t8_cmesh_set_derive (cmesh_partition, cmesh_original);
-          /* Uniform partition according to level */
-          t8_cmesh_set_partition_uniform (cmesh_partition, level);
-          t8_cmesh_commit (cmesh_partition, comm);
-          test_cmesh_committed (cmesh_partition);
-          cmesh_original = cmesh_partition;
-        }
-
-        /* Perform the concentrate test */
-        test_cmesh_partition_concentrate (cmesh_partition, comm, level);
-        /* Clean-up */
-        t8_cmesh_destroy (&cmesh_partition);
-      }
+/** The function test_cmesh_copy_all(sc_MPI_Comm comm) runs the cmesh_copy test for all cmeshes we want to test.
+ * We run over all testcases using t8_get_all_testcases() to know how many to check. 
+ * \param [in] comm The communicator used in test_cmesh_copy to commit the cmesh copy.
+ */
+static void
+test_cmesh_partition_all (sc_MPI_Comm comm)
+{
+  /* Test all cmeshes over all different inputs we get through their id */
+  for (int cmesh_id = 0; cmesh_id < t8_get_number_of_all_testcases ();
+       cmesh_id++) {
+    /* This if statement is necessary to make the test work by avoiding specific cmeshes which do not work yet for this test.
+     * When the issues are gone, remove the if statement. */
+    if (cmesh_id != 89 && !(cmesh_id < 75 && cmesh_id > 63)
+        && !(cmesh_id < 266 && cmesh_id >= 245)) {
+      test_cmesh_partition (cmesh_id, comm);
     }
-    else {
-      t8_global_productionf ("Skipping test for %s.\n",
-                             t8_eclass_to_string[eci]);
-    }
+
   }
 }
 
@@ -196,7 +179,7 @@ main (int argc, char **argv)
   t8_init (SC_LP_DEFAULT);
 
   t8_global_productionf ("Testing cmesh partition.\n");
-  test_cmesh_partition (comm);
+  test_cmesh_partition_all (comm);
   t8_global_productionf ("Done testing cmesh partition.\n");
 
   sc_finalize ();

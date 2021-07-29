@@ -101,7 +101,7 @@ t8_forest_partition_create_offsets (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   T8_ASSERT (forest->element_offsets == NULL);
-  t8_debugf ("Building offsets for forest %p\n", forest);
+  t8_debugf ("Building offsets for forest %p\n", (void *) forest);
   comm = forest->mpicomm;
   /* Set the shmem array type of comm */
   t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
@@ -170,7 +170,8 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   T8_ASSERT (forest->global_first_desc == NULL);
-  t8_debugf ("Building global first descendants for forest %p\n", forest);
+  t8_debugf ("Building global first descendants for forest %p\n",
+             (void *) forest);
   comm = forest->mpicomm;
 
   if (forest->global_first_desc == NULL) {
@@ -255,7 +256,7 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
   tree_offset =
     t8_forest_first_tree_shared (forest) ?
         -forest->first_local_tree - 1 : forest->first_local_tree;
-  if (t8_forest_get_num_element(forest) <= 0) {
+  if (t8_forest_get_local_num_elements(forest) <= 0) {
     /* This forest is empty */
     is_empty = 1;
     /* Set the global number of trees as offset (temporarily) */
@@ -1152,7 +1153,7 @@ t8_forest_partition_given (t8_forest_t forest, const int send_data,
       - t8_shmem_array_get_gloidx (forest->element_offsets, forest->mpirank);
   }
   else {
-    num_new_elements = t8_forest_get_num_element (forest);
+    num_new_elements = t8_forest_get_local_num_elements (forest);
   }
 
   if (num_new_elements > 0) {

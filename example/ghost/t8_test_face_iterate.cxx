@@ -25,7 +25,7 @@
 #include <sc_refcount.h>
 #include <t8_eclass.h>
 #include <t8_element_cxx.hxx>
-#include <t8_default_cxx.hxx>
+#include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
@@ -132,7 +132,8 @@ t8_test_fiterate_refine_and_partition (t8_cmesh_t cmesh, int level,
     /* partition the initial cmesh according to a uniform forest */
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh);
-    t8_cmesh_set_partition_uniform (cmesh_partition, level);
+    t8_cmesh_set_partition_uniform (cmesh_partition, level,
+                                    t8_scheme_new_default_cxx ());
     t8_cmesh_commit (cmesh_partition, comm);
   }
   else {
@@ -235,9 +236,20 @@ main (int argc, char **argv)
   const char         *prefix;
   char                usage[BUFSIZ];
   char                help[BUFSIZ];
+  int                 sreturnA, sreturnB;
 
-  snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>", basename (argv[0]));
-  snprintf (help, BUFSIZ, "help string\n%s\n", usage);
+  sreturnA =
+    snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>", basename (argv[0]));
+  sreturnB = snprintf (help, BUFSIZ, "help string\n%s\n", usage);
+
+  if (sreturnA > BUFSIZ || sreturnB > BUFSIZ) {
+    /* The usage string or help message was truncated */
+    /* Note: gcc >= 7.1 prints a warning if we 
+     * do not check the return value of snprintf. */
+    t8_debugf
+      ("Warning: Truncated usage string and help message to '%s' and '%s'\n",
+       usage, help);
+  }
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);

@@ -109,6 +109,7 @@ int                 t8_cmesh_no_negative_volume (t8_cmesh_t cmesh);
  * Returns true if a tree of the given eclass with the given vertex
  * coordinates does have negative volume.
  */
+/* TODO: write a test for this function */
 int                 t8_cmesh_tree_vertices_negative_volume (t8_eclass_t
                                                             eclass,
                                                             double *vertices,
@@ -170,6 +171,7 @@ t8_shmem_array_t    t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
  *                                  must be strictly smaller than \a first_local_tree.
  *
  * \see t8_cmesh_set_partition_offset \see t8_cmesh_set_partition_uniform
+ * \note A value of \a set_face_knowledge other than -1 or 3 is not yet supported.
  */
 void                t8_cmesh_set_partition_range (t8_cmesh_t cmesh,
                                                   int set_face_knowledge,
@@ -201,9 +203,13 @@ void                t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh,
  * to \ref t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
  * \param [in]     element_level The refinement_level.
+ * \param [in]     ts           The element scheme describing the refinement pattern.
+ *                              We take ownership. This can be prevented by
+ *                              referencing \b ts before calling this function.
  */
 void                t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh,
-                                                    int element_level);
+                                                    int element_level,
+                                                    t8_scheme_cxx_t * ts);
 
 /* TODO: This function is no longer needed.  Scavenge documentation if helpful. */
 #if 0
@@ -331,6 +337,12 @@ void                t8_cmesh_set_profiling (t8_cmesh_t cmesh,
 int                 t8_cmesh_is_equal (t8_cmesh_t cmesh_a,
                                        t8_cmesh_t cmesh_b);
 
+/** Check whether a cmesh is empty on all processes.
+ * \param [in]  cmesh           A committed cmesh.
+ * \return                      True (non-zero) if and only if the cmesh has trees at all.
+ */
+int                 t8_cmesh_is_empty (t8_cmesh_t cmesh);
+
 /** Broadcast a cmesh structure that exists only on one process to all
  *  processes in the cmesh's communicator.
  *  TODO: Input structure must be replicated, not parallelized.
@@ -432,6 +444,37 @@ t8_locidx_t         t8_cmesh_get_num_ghosts (t8_cmesh_t cmesh);
  */
 t8_gloidx_t         t8_cmesh_get_first_treeid (t8_cmesh_t cmesh);
 
+/** Query whether a given t8_locidx_t belongs to a local tree of a cmesh.
+ * \param [in] cmesh       The cmesh to be considered.
+ * \param [in] ltreeid     An (possible) tree index.
+ * \return                 True if \a ltreeid matches the range of local trees of \a cmesh.
+ *                         False if not.
+ * \a cmesh must be committed before calling this function.
+ */
+int                 t8_cmesh_treeid_is_local_tree (const t8_cmesh_t cmesh,
+                                                   const t8_locidx_t ltreeid);
+
+/** Query whether a given t8_locidx_t belongs to a ghost of a cmesh.
+ * \param [in] cmesh       The cmesh to be considered.
+ * \param [in] ltreeid     An (possible) ghost index.
+ * \return                 True if \a ltreeid matches the range of ghost trees of \a cmesh.
+ *                         False if not.
+ * \a cmesh must be committed before calling this function.
+ */
+int                 t8_cmesh_treeid_is_ghost (const t8_cmesh_t cmesh,
+                                              const t8_locidx_t ltreeid);
+
+/** Given a local tree id that belongs to a ghost, return the index of the ghost.
+ * \param [in] cmesh       The cmesh to be considered.
+ * \param [in] ltreeid     The local id of a ghost, satisfying \ref t8_cmesh_treeid_is_ghost,
+ *                         thus num_trees <= \a ltreeid < num_trees + num_ghosts
+ * \return                 The index of the ghost whithin all ghosts, thus an index
+ *                         0 <= index < num_ghosts
+ * \a cmesh must be committed before calling this function.
+ */
+t8_locidx_t         t8_cmesh_ltreeid_to_ghostid (const t8_cmesh_t cmesh,
+                                                 const t8_locidx_t ltreeid);
+
 /* TODO: Replace this iterator with a new one that does not need the
  *        treeid to be part of the ctree struct */
 /* TODO: should this and the next function be part of the interface? */
@@ -479,7 +522,7 @@ t8_ctree_t          t8_cmesh_get_tree (t8_cmesh_t cmesh,
 t8_eclass_t         t8_cmesh_get_tree_class (t8_cmesh_t cmesh,
                                              t8_locidx_t ltree_id);
 
-/** Query whether a face of a local tree is at the domain boundary.
+/** Query whether a face of a local tree or ghost is at the domain boundary.
  * \param [in]    cmesh         The cmesh to be considered.
  * \param [in]    ltree_id       The local id of a tree.
  * \param [in]    face          The number of a face of the tree.
@@ -525,6 +568,26 @@ t8_gloidx_t         t8_cmesh_get_global_id (t8_cmesh_t cmesh,
  */
 t8_locidx_t         t8_cmesh_get_local_id (t8_cmesh_t cmesh,
                                            t8_gloidx_t global_id);
+
+/** Given a local tree id and a face number, get information about the face neighbor tree.
+ * \param [in]      cmesh     The cmesh to be considered.
+ * \param [in]      ltreeid   The local id of a tree or a ghost.
+ * \param [in]      face      A face number of the tree/ghost.
+ * \param [out]     dual_face If not NULL, the face number of the neighbor tree at this connection.
+ * \param [out]     orientation If not NULL, the face orientation of the connection.
+ * \return                    If non-negative: The local id of the neighbor tree or ghost.
+ *                            If negative: There is no neighbor across this face. \a dual_face and
+ *                            \a orientation remain unchanged.
+ * \note If \a ltreeid is a ghost and it has a neighbor which is neither a local tree or ghost,
+ *       then the return value will be negative.
+ *       Thus, a negative return value does not necessarily mean that this is a domain boundary.
+ *       To find out whether a tree is a domain boundary or not \see t8_cmesh_tree_face_is_boundary.
+ */
+t8_locidx_t         t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh,
+                                                const t8_locidx_t ltreeid,
+                                                const int face,
+                                                int *dual_face,
+                                                int *orientation);
 
 /** Print the collected statistics from a cmesh profile.
  * \param [in]    cmesh         The cmesh.
@@ -575,16 +638,18 @@ t8_shmem_array_t    t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
 /** Calculate the section of a uniform forest for the current rank.
  * \param [in]    cmesh         The cmesh to be considered.
  * \param [in]    level         The uniform refinement level to be created.
+ * \param [in]    ts            The element scheme for which to compute the bounds.
  * \param [out]   first_local_tree  The first tree that contains elements belonging to the calling processor.
  * \param [out]   child_in_tree_begin The global index of the first element belonging to the calling processor. Not computed if NULL.
  * \param [out]   last_local_tree  The last tree that contains elements belonging to the calling processor.
  * \param [out]   child_in_tree_end The global index of the first element that does not belonging to
  *                                  the calling processor anymore. Not computed if NULL.
- * \param [out[   first_tree_shared If not NULL, 1 or 0 is stored here depending on whether \a first_local_tree is the
+ * \param [out]   first_tree_shared If not NULL, 1 or 0 is stored here depending on whether \a first_local_tree is the
  *                                 same as \a last_local_tree on the next process.
  * \a cmesh must be committed before calling this function. *
  */
 void                t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level,
+                                             t8_scheme_cxx_t * ts,
                                              t8_gloidx_t * first_local_tree,
                                              t8_gloidx_t *
                                              child_in_tree_begin,
@@ -654,9 +719,11 @@ t8_cmesh_t          t8_cmesh_new_from_p8est (p8est_connectivity_t * conn,
  * this function is merely for debugging and to show the possibility.
  * \param [in]      comm       mpi communicator to be used with the new cmesh.
  * \param [in]      do_partition Flag whether the cmesh should be partitioned or not.
+ * \param [in]      dimension  An empty cmesh requires a dimension nevertheless 0 <= \a dimension <= 4.
  * \return                     A committed t8_cmesh structure that has no trees.
  */
-t8_cmesh_t          t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition);
+t8_cmesh_t          t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition,
+                                        int dimension);
 
 /** Constructs a cmesh that consists only of one tree of a given element class.
  * \param [in]      eclass     The element class.
@@ -813,8 +880,7 @@ t8_cmesh_t          t8_cmesh_new_hybrid_gate (sc_MPI_Comm comm);
  * \param [in] comm        The MPI communicator used to commit the cmesh.
  * \return                 A committed and replicated hybrid cmesh of 5 trees.
  */
-t8_cmesh_t
-t8_cmesh_new_hybrid_gate_deformed (sc_MPI_Comm comm);
+t8_cmesh_t          t8_cmesh_new_hybrid_gate_deformed (sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 

@@ -28,9 +28,8 @@
 
 #include <t8.h>
 #include <t8_element.h>
-#include <t8_default.h>
 #include <t8_element_cxx.hxx>
-#include <t8_default_cxx.hxx>
+#include <t8_schemes/t8_default_cxx.hxx>
 #include <sc_statistics.h>
 #include <sc_flops.h>
 
@@ -111,14 +110,12 @@ t8_cxx_timing ()
   sc_statinfo_t       stats[2];
   char                c_string[BUFSIZ], cxx_string[BUFSIZ];
 
-
   /* Check if the element and levels fit together */
-  SC_CHECK_ABORT ((1 << 2 * LEVEL) > NUM_ELEMENTS, "Refinement level is too small.\n");
+  SC_CHECK_ABORT ((1 << 2 * LEVEL) > NUM_ELEMENTS,
+                  "Refinement level is too small.\n");
 
-  snprintf (c_string, BUFSIZ, "C Version - %g elements",
-            NUM_ELEMENTS);
-  snprintf (cxx_string, BUFSIZ, "C++ Version - %g elements",
-            NUM_ELEMENTS);
+  snprintf (c_string, BUFSIZ, "C Version - %g elements", NUM_ELEMENTS);
+  snprintf (cxx_string, BUFSIZ, "C++ Version - %g elements", NUM_ELEMENTS);
 
   /* init timer */
   sc_flops_start (&fi);

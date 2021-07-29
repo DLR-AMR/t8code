@@ -22,10 +22,8 @@
 
 #include <sc_options.h>
 #include <sc_statistics.h>
-#include <t8_default_cxx.hxx>
+#include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest.h>
-#include <t8_forest/t8_forest_private.h>        /* TODO: remove */
-#include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest_vtk.h>
@@ -318,7 +316,7 @@ t8_advect_level_set_volume (const t8_advect_problem_t * problem)
   double              volume = 0, global_volume = 0;
   double              phi;
 
-  num_local_elements = t8_forest_get_num_element (problem->forest);
+  num_local_elements = t8_forest_get_local_num_elements (problem->forest);
 
   for (ielem = 0; ielem < num_local_elements; ielem++) {
     elem_data = (t8_advect_element_data_t *)
@@ -348,7 +346,7 @@ t8_advect_l_infty_rel (const t8_advect_problem_t * problem,
     -1, 0
   }, el_error, global_error[2];
 
-  num_local_elements = t8_forest_get_num_element (problem->forest);
+  num_local_elements = t8_forest_get_local_num_elements (problem->forest);
   for (ielem = 0; ielem < num_local_elements; ielem++) {
     elem_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data, ielem);
@@ -391,7 +389,7 @@ t8_advect_l_2_rel (const t8_advect_problem_t * problem,
     0, 0
   }, el_error, global_error[2];
 
-  num_local_elements = t8_forest_get_num_element (problem->forest);
+  num_local_elements = t8_forest_get_local_num_elements (problem->forest);
   for (ielem = 0; ielem < num_local_elements; ielem++) {
     elem_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data, ielem);
@@ -595,7 +593,8 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
     neigh_id = el_hang->neighs[face][i];
     neigh_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data, neigh_id);
-    neigh_is_ghost = neigh_id >= t8_forest_get_num_element (problem->forest);
+    neigh_is_ghost =
+      neigh_id >= t8_forest_get_local_num_elements (problem->forest);
     phi_minus = t8_advect_element_get_phi (problem, neigh_id);
     /* Compute the flux */
     el_hang->fluxes[face][i] =
@@ -900,7 +899,7 @@ t8_advect_problem_elements_destroy (t8_advect_problem_t * problem)
   int                 iface;
   t8_advect_element_data_t *elem_data;
 
-  num_local_elem = t8_forest_get_num_element (problem->forest);
+  num_local_elem = t8_forest_get_local_num_elements (problem->forest);
   T8_ASSERT (num_local_elem <=
              (t8_locidx_t) problem->element_data->elem_count);
   /* destroy all elements */
@@ -982,7 +981,7 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time)
   }
 
   /* Allocate new memory for the element_data of the advected forest */
-  num_elems = t8_forest_get_num_element (problem->forest_adapt);
+  num_elems = t8_forest_get_local_num_elements (problem->forest_adapt);
   num_elems_p_ghosts = num_elems +
     t8_forest_get_num_ghosts (problem->forest_adapt);
   problem->element_data_adapt =
@@ -1061,8 +1060,9 @@ t8_advect_problem_partition (t8_advect_problem_t * problem, int measure_time)
     problem->stats[ADVECT_GHOST].count = 1;
   }
   /* Partition the data */
-  num_local_elements = t8_forest_get_num_element (problem->forest);
-  num_local_elements_new = t8_forest_get_num_element (forest_partition);
+  num_local_elements = t8_forest_get_local_num_elements (problem->forest);
+  num_local_elements_new =
+    t8_forest_get_local_num_elements (forest_partition);
   num_ghosts_new = t8_forest_get_num_ghosts (forest_partition);
   /* Create a view array of the entries for the local elements */
   sc_array_init_view (&data_view, problem->element_data, 0,
@@ -1116,7 +1116,8 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, t8_eclass_t eclass,
     cmesh = t8_cmesh_from_msh_file (mshfile, 1, comm, dim, 0);
     /* partition this cmesh according to the initial refinement level */
     t8_cmesh_init (&cmesh_partition);
-    t8_cmesh_set_partition_uniform (cmesh_partition, level);
+    t8_cmesh_set_partition_uniform (cmesh_partition, level,
+                                    t8_scheme_new_default_cxx ());
     t8_cmesh_set_derive (cmesh_partition, cmesh);
     t8_cmesh_commit (cmesh_partition, comm);
     return cmesh_partition;
@@ -1215,13 +1216,13 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
 
   problem->element_data =
     sc_array_new_count (sizeof (t8_advect_element_data_t),
-                        t8_forest_get_num_element (problem->forest));
+                        t8_forest_get_local_num_elements (problem->forest));
   problem->element_data_adapt = NULL;
 
   /* initialize the phi array */
   problem->phi_values =
     sc_array_new_count ((dummy_op ? 2 : 1) * sizeof (double),
-                        t8_forest_get_num_element (problem->forest) +
+                        t8_forest_get_local_num_elements (problem->forest) +
                         t8_forest_get_num_ghosts (problem->forest));
   problem->phi_values_adapt = NULL;
   return problem;
@@ -1236,7 +1237,7 @@ t8_advect_project_element_data (t8_advect_problem_t * problem)
   t8_advect_element_data_t *elem_data;
   int                 iface;
 
-  num_local_elements = t8_forest_get_num_element (problem->forest);
+  num_local_elements = t8_forest_get_local_num_elements (problem->forest);
   for (ielem = 0; ielem < num_local_elements; ielem++) {
     elem_data = (t8_advect_element_data_t *)
       t8_sc_array_index_locidx (problem->element_data, ielem);
@@ -1375,7 +1376,7 @@ t8_advect_write_vtk (t8_advect_problem_t * problem)
   double              phi;
 
   /* Allocate num_local_elements doubles to store u and phi values */
-  num_local_elements = t8_forest_get_num_element (problem->forest);
+  num_local_elements = t8_forest_get_local_num_elements (problem->forest);
   /* phi */
   u_and_phi_array[0] = T8_ALLOC_ZERO (double, num_local_elements);
   /* phi_0 */
@@ -1447,7 +1448,7 @@ t8_advect_print_phi (t8_advect_problem_t * problem)
   char                buffer[BUFSIZ] = "";
   double              phi;
 
-  num_local_els = t8_forest_get_num_element (problem->forest);
+  num_local_els = t8_forest_get_local_num_elements (problem->forest);
   for (ielement = 0;
        ielement <
        (t8_locidx_t) problem->element_data->elem_count; ielement++) {
@@ -1660,7 +1661,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 
               neigh_index = elem_data->neighs[iface][0];
               neigh_is_ghost = neigh_index >=
-                t8_forest_get_num_element (problem->forest);
+                t8_forest_get_local_num_elements (problem->forest);
               hanging = elem_data->level != elem_data->neigh_level[iface];
             }
             else {
@@ -1951,14 +1952,17 @@ main (int argc, char *argv[])
                          "In each iteration, useless dummy operations\n "
                          "\t\t\t\t     are performed per element. Decreases the "
                          "performance!");
-  sc_options_add_double(opt, 'X', "Xcoord", &ls_data.M[0],0.6,"The X-Coordinate of the middlepoint"
-                           "of the sphere. Default is 0.6.");
-  sc_options_add_double(opt, 'Y', "Ycoord", &ls_data.M[1],0.6,"The Y-Coordinate of the middlepoint"
-                           "of the sphere. Default is 0.6.");
-  sc_options_add_double(opt, 'Z', "Zcoord", &ls_data.M[2],0.6,"The Z-Coordinate of the middlepoint"
-                           "of the sphere. Default is 0.6.");
-  sc_options_add_double(opt, 'R', "Radius", &ls_data.radius, 0.25, "The radius of the Sphere."
-                        "Default is 0.25.");
+  sc_options_add_double (opt, 'X', "Xcoord", &ls_data.M[0], 0.6,
+                         "The X-Coordinate of the middlepoint"
+                         "of the sphere. Default is 0.6.");
+  sc_options_add_double (opt, 'Y', "Ycoord", &ls_data.M[1], 0.6,
+                         "The Y-Coordinate of the middlepoint"
+                         "of the sphere. Default is 0.6.");
+  sc_options_add_double (opt, 'Z', "Zcoord", &ls_data.M[2], 0.6,
+                         "The Z-Coordinate of the middlepoint"
+                         "of the sphere. Default is 0.6.");
+  sc_options_add_double (opt, 'R', "Radius", &ls_data.radius, 0.25,
+                         "The radius of the Sphere." "Default is 0.25.");
 
   sc_options_add_int (opt, 'V', "volume-refine", &volume_refine, -1,
                       "Refine elements close to the 0 level-set only "

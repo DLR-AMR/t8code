@@ -32,7 +32,7 @@
 #include <t8_cmesh_readmshfile.h>
 #include <t8_forest.h>
 #include <t8_forest_vtk.h>
-#include <t8_default_cxx.hxx>
+#include <t8_schemes/t8_default_cxx.hxx>
 
 /* Simple 3 dimensional vector product */
 static double
@@ -167,7 +167,8 @@ t8_load_refine_build_forest (t8_cmesh_t cmesh, sc_MPI_Comm comm, int level)
   t8_cmesh_t          cmesh_partition;
 
   t8_cmesh_init (&cmesh_partition);
-  t8_cmesh_set_partition_uniform (cmesh_partition, level);
+  t8_cmesh_set_partition_uniform (cmesh_partition, level,
+                                  t8_scheme_new_default_cxx ());
   t8_cmesh_set_derive (cmesh_partition, cmesh);
   t8_cmesh_commit (cmesh_partition, comm);
 

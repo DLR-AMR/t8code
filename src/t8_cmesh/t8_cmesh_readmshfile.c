@@ -48,7 +48,8 @@ const t8_eclass_t   t8_msh_tree_type_to_eclass[T8_NUM_GMSH_ELEM_CLASSES + 1] = {
   T8_ECLASS_VERTEX              /* 15 */
 };
 
-/* translate the msh file vertex number to the t8code vertex number */
+/* translate the msh file vertex number to the t8code vertex number.
+ * See also http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering */
 /* TODO: Check if these are correct */
 const int           t8_msh_tree_vertex_to_t8_vertex_num[T8_ECLASS_COUNT][8]
   = {
@@ -62,7 +63,8 @@ const int           t8_msh_tree_vertex_to_t8_vertex_num[T8_ECLASS_COUNT][8]
   {0, 1, 3, 2, 4}               /* PYRAMID */
 };
 
-/* translate the t8code vertex number to the .msh file vertex number */
+/* translate the t8code vertex number to the .msh file vertex number.
+ * See also http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering */
 /* TODO: Check if these are correct */
 const int           t8_vertex_to_msh_vertex_num[T8_ECLASS_COUNT][8]
   = {
@@ -70,7 +72,7 @@ const int           t8_vertex_to_msh_vertex_num[T8_ECLASS_COUNT][8]
   {0, 1},                       /* LINE */
   {0, 1, 3, 2},                 /* QUAD */
   {0, 1, 2},                    /* TRIANGLE */
-  {0, 1, 4, 5, 3, 2, 7, 6},     /* HEX */
+  {0, 1, 4, 5, 3, 2, 6, 7},     /* HEX */
   {0, 1, 2, 3},                 /* TET */
   {0, 1, 2, 3, 4, 5, 6},        /* PRISM */
   {0, 1, 3, 2, 4}               /* PYRAMID */
@@ -169,6 +171,79 @@ t8_msh_file_node_compare (const void *node_a, const void *node_b,
   Node_b = (t8_msh_file_node_t *) node_b;
 
   return Node_a->index == Node_b->index;
+}
+
+/* Reads an open msh-file and checks whether the MeshFormat-Version is supported by t8code or not. */
+static int
+t8_cmesh_check_version_of_msh_file (FILE * fp)
+{
+  char               *line = (char *) malloc (1024);
+  char                first_word[2048] = "\0";
+  size_t              linen = 1024;
+  int                 retval;
+  int                 version_number, sub_version_number;
+  int                 check_format;
+
+  T8_ASSERT (fp != NULL);
+
+  /* Go to the beginning of the file. */
+  fseek (fp, 0, SEEK_SET);
+
+  /* Search for the line starting with "$MeshFormat". */
+  while (!feof (fp) && strcmp (first_word, "$MeshFormat")) {
+    (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
+    retval = sscanf (line, "%2048s", first_word);
+
+    /* Checking for read/write error */
+    if (retval != 1) {
+      t8_global_errorf
+        ("Reading the msh-file in order to check the MeshFormat-number failed.\n");
+      goto die_format;
+    }
+  }
+
+  /* Got to the next line containing the MeshFormat. */
+  (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
+  /* Get the MeshFormat number of the file */
+  retval =
+    sscanf (line, "%d.%d %d", &version_number, &sub_version_number,
+            &check_format);
+
+  /*Checking for read/write error. */
+  if (retval != 3) {
+    t8_debugf ("Reading of the MeshFormat-number failed.\n");
+    goto die_format;
+  }
+
+  /* Checks if the file is of Binary-type. */
+  if (check_format) {
+    t8_global_errorf
+      ("Incompatible file-type. t8code works with ASCII-type msh-files of version %d.\n",
+       T8_CMESH_SUPPORTED_FILE_VERSION);
+    goto die_format;
+  }
+
+  /* Check if MeshFormat-number is compatible. */
+  if (version_number == T8_CMESH_SUPPORTED_FILE_VERSION) {
+    t8_debugf ("This version of msh-file (%d.%d) is supported.\n",
+               version_number, sub_version_number);
+    free (line);
+    return 1;
+  }
+  else {
+    t8_global_errorf
+      ("This version of msh-file (%d.%d) is currently not supported by t8code, please provide an ASCII-type msh-file of version %d.X.\n",
+       version_number, sub_version_number, T8_CMESH_SUPPORTED_FILE_VERSION);
+    free (line);
+    return 0;
+  }
+
+/* Will be executed, if reading the MeshFormat failed. */
+die_format:
+  /* Free memory. */
+  free (line);
+  /* Returning as error code. */
+  return -1;
 }
 
 /* Read an open .msh file and parse the nodes into a hash table.
@@ -396,22 +471,59 @@ t8_cmesh_msh_file_read_eles (t8_cmesh_t cmesh, FILE * fp,
         tree_vertices[3 * t8_vertex_num + 1] = (*found_node)->coordinates[1];
         tree_vertices[3 * t8_vertex_num + 2] = (*found_node)->coordinates[2];
       }
+      /* Detect and correct negative volumes */
       if (t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices,
                                                   num_nodes)) {
-        /* The volume described is negative. We need to switch two
-         * vertices. */
+        /* The volume described is negative. We need to change vertices.
+         * For tets we switch 0 and 3.
+         * For prisms we switch 0 and 3, 1 and 4, 2 and 5.
+         * For hexahedra we switch 0 and 4, 1 and 5, 2 and 6, 3 and 7.
+         * For pyramids we switch 0 and 4 */
         double              temp;
+        int                 num_switches = 0;
+        int                 switch_indices[4] = { 0 };
+        int                 iswitch;
         T8_ASSERT (t8_eclass_to_dimension[eclass] == 3);
         t8_debugf ("Correcting negative volume of tree %li\n", tree_count);
-        /* We switch vertex 0 and vertex 1 */
-        for (i = 0; i < 3; i++) {
-          temp = tree_vertices[i];
-          tree_vertices[i] = tree_vertices[3 + i];
-          tree_vertices[3 + i] = temp;
+        switch (eclass) {
+        case T8_ECLASS_TET:
+          /* We switch vertex 0 and vertex 3 */
+          num_switches = 1;
+          switch_indices[0] = 3;
+          break;
+        case T8_ECLASS_PRISM:
+          num_switches = 3;
+          switch_indices[0] = 3;
+          switch_indices[1] = 4;
+          switch_indices[2] = 5;
+          break;
+        case T8_ECLASS_HEX:
+          num_switches = 4;
+          switch_indices[0] = 4;
+          switch_indices[1] = 5;
+          switch_indices[2] = 6;
+          switch_indices[3] = 7;
+          break;
+        case T8_ECLASS_PYRAMID:
+          num_switches = 1;
+          switch_indices[0] = 4;
+          break;
+        default:
+          SC_ABORT_NOT_REACHED ();
+        }
+
+        for (iswitch = 0; iswitch < num_switches; ++iswitch) {
+          /* We switch vertex 0 + iswitch and vertex switch_indices[iswitch] */
+          for (i = 0; i < 3; i++) {
+            temp = tree_vertices[3 * iswitch + i];
+            tree_vertices[3 * iswitch + i] =
+              tree_vertices[3 * switch_indices[iswitch] + i];
+            tree_vertices[3 * switch_indices[iswitch] + i] = temp;
+          }
         }
         T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume
                    (eclass, tree_vertices, num_nodes));
-      }
+      }                         /* End of negative volume handling */
       /* Set the vertices of this tree */
       t8_cmesh_set_tree_vertices (cmesh, tree_count, t8_get_package_id (),
                                   0, tree_vertices, num_nodes);
@@ -699,7 +811,7 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh,
 
 t8_cmesh_t
 t8_cmesh_from_msh_file (const char *fileprefix, int partition,
-                        sc_MPI_Comm comm, int dim, int master)
+                        sc_MPI_Comm comm, int dim, int main_proc)
 {
   int                 mpirank, mpisize, mpiret;
   t8_cmesh_t          cmesh;
@@ -711,6 +823,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   char                current_file[BUFSIZ];
   FILE               *file;
   t8_gloidx_t         num_trees, first_tree, last_tree = -1;
+  int                 main_proc_read_successful = 0;
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -720,7 +833,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   /* TODO: implement partitioned input using gmesh's
    * partitioned files.
    * Or using a single file and computing the partition on the run. */
-  T8_ASSERT (partition == 0 || (master >= 0 && master < mpisize));
+  T8_ASSERT (partition == 0 || (main_proc >= 0 && main_proc < mpisize));
 
   /* initialize cmesh structure */
   t8_cmesh_init (&cmesh);
@@ -728,13 +841,37 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
    * commit, since there are process without any trees. So the cmesh would
    * not know its dimension on these processes. */
   t8_cmesh_set_dimension (cmesh, dim);
-  if (!partition || mpirank == master) {
+  if (!partition || mpirank == main_proc) {
     snprintf (current_file, BUFSIZ, "%s.msh", fileprefix);
     /* Open the file */
     t8_debugf ("Opening file %s\n", current_file);
     file = fopen (current_file, "r");
     if (file == NULL) {
       t8_global_errorf ("Could not open file %s\n", current_file);
+      t8_cmesh_destroy (&cmesh);
+
+      if (partition) {
+        /* Communicate to the other processes that reading failed. */
+        main_proc_read_successful = 0;
+        sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc,
+                      comm);
+      }
+      return NULL;
+    }
+    /* Check if msh-file version is compatible. */
+    if (t8_cmesh_check_version_of_msh_file (file) != 1) {
+      /* If reading the MeshFormat-number failed or the version is incompatible, close the file */
+      fclose (file);
+      t8_debugf
+        ("The reading process of the msh-file has failed and the file has been closed.\n");
+      t8_cmesh_destroy (&cmesh);
+
+      if (partition) {
+        /* Communicate to the other processes that reading failed. */
+        main_proc_read_successful = 0;
+        sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc,
+                      comm);
+      }
       return NULL;
     }
     /* read nodes from the file */
@@ -752,27 +889,39 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
       T8_FREE (indices_entry);
     }
     sc_array_destroy (vertex_indices);
+
+    main_proc_read_successful = 1;
   }
+
   if (partition) {
+    /* Communicate whether main proc read the cmesh succesful.
+     * If the main process failed then it called this Bcast already and
+     * terminated. If it was successful, it calls the Bcast now. */
+    sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
+    if (!main_proc_read_successful) {
+      t8_debugf ("Main process could not read cmesh successfully.\n");
+      t8_cmesh_destroy (&cmesh);
+      return NULL;
+    }
     /* The cmesh is not yet committed, since we set the partitioning before */
-    if (mpirank == master) {
-      /* The master process sends the number of trees to
+    if (mpirank == main_proc) {
+      /* The main_proc process sends the number of trees to
        * all processes. This is used to fill the partition table
-       * that says that all trees are on master and zero on everybody else. */
+       * that says that all trees are on main_proc and zero on everybody else. */
       num_trees = cmesh->stash->classes.elem_count;
       first_tree = 0;
       last_tree = num_trees - 1;
       T8_ASSERT (cmesh->dimension == dim);
     }
     /* bcast the global number of trees */
-    sc_MPI_Bcast (&num_trees, 1, T8_MPI_GLOIDX, master, comm);
+    sc_MPI_Bcast (&num_trees, 1, T8_MPI_GLOIDX, main_proc, comm);
     /* Set the first and last trees on this rank.
-     * No rank has any trees except the master */
-    if (mpirank < master) {
+     * No rank has any trees except the main_proc */
+    if (mpirank < main_proc) {
       first_tree = 0;
       last_tree = -1;
     }
-    else if (mpirank > master) {
+    else if (mpirank > main_proc) {
       first_tree = num_trees;
       last_tree = num_trees - 1;
     }
