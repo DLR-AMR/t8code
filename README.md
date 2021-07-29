@@ -64,6 +64,15 @@ To see a list of possible configure options, call
 or visit [the Wiki](https://github.com/holke/t8code/wiki/Configure-Options).
 
 Most commonly used for t8code are
+
   --enable-mpi    (enables MPI parallelization)
+  
   --enable-debug  (enables debugging mode - massively reduces performance)
+  
   --with-LIB/--without-LIB (enable/disable linking with LIB)
+  
+  ### Getting started
+  
+  To get familiar with t8code and its algorithms and data structures we recommend excuting the tutorial examples in `example/tutorials`
+  and read the corresponding Wiki pages starting with [Step 0 - Helloworld](https://github.com/holke/t8code/wiki/Step-0---Hello-World).
+  
