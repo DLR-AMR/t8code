@@ -4,16 +4,18 @@ t8code (spoken as "tetcode") is a C/C++ library to manage parallel adaptive mesh
 t8code uses a collection (a forest) of multiple connected adaptive space-trees in parallel and scales to at least one million MPI ranks and over 1 Trillion mesh elements.
 It is licensed under the GNU General Public License 2.0 or later. Copyright (c) 2015 the developers.
 
+t8code is intended to be used as a thirdparty library for numerical simulation codes or any other applications that require meshes.
+
 The t8code, or T8 for short, supports the following element types (also different types in the same mesh):
 
-0D: vertices
-1D: lines
-2D: quadrilaterals and triangles
-3D: hexahedra, tetrahedra, prisms (pyramids currently in development).
+- 0D: vertices
+- 1D: lines
+- 2D: quadrilaterals and triangles
+- 3D: hexahedra, tetrahedra, prisms (pyramids currently in development).
 
 t8code offers the following functionalities:
 
-- Create distributed adaptive meshes
+- Create distributed adaptive meshes over complex domain geometries
 - Adapt meshes according to user given refinement/coarsening criteria
 - Establish a 2:1 balance
 - (Re-)partition a mesh (and associated data) among MPI ranks
@@ -21,7 +23,7 @@ t8code offers the following functionalities:
 - Hierarchical search in the mesh
 
 
-t8code uses space-filling curves (SFCs) to manage the adaptive refinement and efficiently.
+t8code uses space-filling curves (SFCs) to manage the adaptive refinement and efficiently store the mesh elements and associated data.
 A modular approach makes it possible to exchange the underlying SFC without changing the high-level algorithms.
 Thus, we can use and compare different refinement schemes and users can implement their own refinement rules if so desired.
 
