@@ -75,3 +75,22 @@ Most commonly used for t8code are
   To get familiar with t8code and its algorithms and data structures we recommend excuting the tutorial examples in `example/tutorials`
   and read the corresponding Wiki pages starting with [Step 0 - Helloworld](https://github.com/holke/t8code/wiki/Step-0---Hello-World).
   
+  ### Publications
+  
+  An (incomplete) list of publications related to t8code:
+  
+  [1] Johannes Holke, Scalable algorithms for parallel tree-based adaptive mesh refinement with general element types, PhD thesis at University of Bonn, 2018,
+      [Full text available](https://bonndoc.ulb.uni-bonn.de/xmlui/handle/20.500.11811/7661)
+      
+  [2] Carsten Burstedde and Johannes Holke, A Tetrahedral Space-Filling Curve for Nonconforming Adaptive Meshes, SIAM Journal on Scientific Computing, 2016, 10.1137/15M1040049
+  
+  [3] Carsten Burstedde and Johannes Holke, Coarse mesh partitioning for tree-based AMR, SIAM Journal on Scientific Computing, 2017, 10.1137/16M1103518
+  
+  [4] Johannes Holke and David Knapp and Carsten Burstedde, An Optimized, Parallel Computation of the Ghost Layer for Adaptive Hybrid Forest Meshes, Submitted to SIAM Journal on Scientific Computing, [Preprint available](https://arxiv.org/abs/1910.10641) 2019
+  
+  ### Citing t8code
+  
+  If you use t8code in any of your publications, please cite [1]. For publications specifically related to 
+- the TM index, please cite [2].
+- coarse mesh partitioning, please cite [3].
+- construction and handling of the ghost layer, please cite [4].
