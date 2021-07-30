@@ -58,15 +58,15 @@
  * The quad refinement scheme is recursive, whereas a transition cell can only be used once, for example to remove hanging nodes, after the mesh has been adapted and balanced. 
  * There are different types of transition cells possible, which we will refer to as subelement_type. 
  * Each transition cell consists of different subelements. The given example consists of 6 different subelements, whose ids range from 0 to 5.
- * A dummy variable will store the information, whether a given element is a subelement or a standard quad element. */ 
+ * A dummy variable will store the information, whether a given element is a subelement or a standard quad element. */
 
 typedef struct
 {
-  p4est_quadrant_t    p4q;                    /* p4est quadrant */                                                  
-  int                 dummy_is_subelement;    /* is a given element a subelement? */                                
-  int                 subelement_type;        /* which type of subelement to use? */                                 
-  int                 subelement_id;          /* what specific subelement of a given type? */                       
-  int                 num_subelement_ids;     /* number of subelements for a specific type of subelement */ 
+  p4est_quadrant_t    p4q;      /* p4est quadrant */
+  int                 dummy_is_subelement;      /* is a given element a subelement? */
+  int                 subelement_type;  /* which type of subelement to use? */
+  int                 subelement_id;    /* what specific subelement of a given type? */
+  int                 num_subelement_ids;       /* number of subelements for a specific type of subelement */
 } t8_quad_with_subelements;
 
 typedef t8_quad_with_subelements t8_pquad_t;
@@ -130,7 +130,7 @@ public:
   virtual int         t8_element_maxlevel (void);
 
 /** Return the type of each child in the ordering of the implementation. */
-  virtual t8_eclass_t t8_element_child_eclass (int childid); 
+  virtual t8_eclass_t t8_element_child_eclass (int childid);
 
 /** Return the refinement level of an element. */
   virtual int         t8_element_level (const t8_element_t * elem);
@@ -148,14 +148,14 @@ public:
 
 /** Construct the parent of a given element. */
   virtual void        t8_element_parent (const t8_element_t * elem,
-                                         t8_element_t * parent); 
+                                         t8_element_t * parent);
 
 /** Construct a same-size sibling of a given element. */
   virtual void        t8_element_sibling (const t8_element_t * elem,
                                           int sibid, t8_element_t * sibling);
 
   /** Compute the number of face of a given element. */
-  virtual int         t8_element_num_faces (const t8_element_t * elem); 
+  virtual int         t8_element_num_faces (const t8_element_t * elem);
 
   /** Compute the maximum number of faces of a given element and all of its
    *  descendants.
@@ -187,7 +187,7 @@ public:
 
 /** Construct all children of a given element. */
   virtual void        t8_element_children (const t8_element_t * elem,
-                                           int length, t8_element_t * c[]); 
+                                           int length, t8_element_t * c[]);
 
 /** Return the child id of an element */
   virtual int         t8_element_child_id (const t8_element_t * elem);
