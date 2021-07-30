@@ -82,7 +82,7 @@ t8_step5_create_element_data (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   /* Get the number of local elements of forest. */
-  num_local_elements = t8_forest_get_num_element (forest);
+  num_local_elements = t8_forest_get_local_num_elements (forest);
   /* Get the number of ghost elements of forest. */
   num_ghost_elements = t8_forest_get_num_ghosts (forest);
 
@@ -164,7 +164,8 @@ t8_step5_exchange_ghost_data (t8_forest_t forest,
                               struct t8_step5_data_per_element *data)
 {
   sc_array           *sc_array_wrapper;
-  t8_locidx_t         num_elements = t8_forest_get_num_element (forest);
+  t8_locidx_t         num_elements =
+    t8_forest_get_local_num_elements (forest);
   t8_locidx_t         num_ghosts = t8_forest_get_num_ghosts (forest);
 
   /* t8_forest_ghost_exchange_data expects an sc_array (of length num_local_elements + num_ghosts).
@@ -194,7 +195,8 @@ t8_step5_output_data_to_vtu (t8_forest_t forest,
                              struct t8_step5_data_per_element *data,
                              const char *prefix)
 {
-  t8_locidx_t         num_elements = t8_forest_get_num_element (forest);
+  t8_locidx_t         num_elements =
+    t8_forest_get_local_num_elements (forest);
   t8_locidx_t         ielem;
   /* We need to allocate a new array to store the volumes on their own.
    * This array has one entry per local element. */
@@ -286,7 +288,7 @@ t8_step5_main (int argc, char **argv)
 
   t8_global_productionf
     (" [step5] Computed level and volume data for local elements.\n");
-  if (t8_forest_get_num_element (forest) > 0) {
+  if (t8_forest_get_local_num_elements (forest) > 0) {
     /* Output the stored data of the first local element (if it exists). */
     t8_global_productionf (" [step5] Element 0 has level %i and volume %e.\n",
                            data[0].level, data[0].volume);
@@ -301,7 +303,7 @@ t8_step5_main (int argc, char **argv)
   if (t8_forest_get_num_ghosts (forest) > 0) {
     /* output the data of the first ghost element (if it exists) */
     t8_locidx_t         first_ghost_index =
-      t8_forest_get_num_element (forest);
+      t8_forest_get_local_num_elements (forest);
     t8_global_productionf (" [step5] Ghost 0 has level %i and volume %e.\n",
                            data[first_ghost_index].level,
                            data[first_ghost_index].volume);

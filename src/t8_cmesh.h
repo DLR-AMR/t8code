@@ -831,6 +831,7 @@ t8_cmesh_t          t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_Comm comm);
   */
 t8_cmesh_t          t8_cmesh_new_prism_geometry (sc_MPI_Comm comm);
 
+
 /** Create a partitoned cmesh of quads whose local trees are given by an
  * num_x by num_y brick connectivity from p4est
  * or a num_x by num_y by num_z brick connectivity from p8est.
@@ -882,6 +883,26 @@ t8_cmesh_t          t8_cmesh_new_hybrid_gate (sc_MPI_Comm comm);
  */
 t8_cmesh_t          t8_cmesh_new_hybrid_gate_deformed (sc_MPI_Comm comm);
 
+/** Construct a full hybrig cmesh, with 1 hex, 1 pyra, 1 prism and 1 tet
+ * This cmesh is used for testing and debugging.
+ * \param [in] comm        The MPI communicator used to commit the cmesh.
+ * \return                 A committed and replicated hybrid cmesh of 4 trees.
+ */
+t8_cmesh_t          t8_cmesh_new_full_hybrid(sc_MPI_Comm comm);
+
+/** Construct a mesh out of num_of_pyra many pyramids. They form a circle, face 0 is
+ * connected with face 1 of the next pyramid.
+ * \param [in] comm         The MPI communicator used to commit the cmesh
+ * \param [in] num_of_pyra  The number of pyramids to construct. Should be larger than 2
+ * \return                  A cmesh with num_of_pyra many pyramids
+*/
+t8_cmesh_t          t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra);
+
+/** Construct a bigger mesh, consisting of many cubes made by pyramids
+ * \param [in] comm         The MPI communicator used to commit the cmesh
+ * \param [in] num_cubes    The number of cubes of pyramids
+ * return                   A cmesh with \a num_cubes many hypercubes*/
+t8_cmesh_t          t8_cmesh_new_long_brick_pyramid(sc_MPI_Comm comm, int num_cubes);
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_H */

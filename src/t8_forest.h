@@ -399,8 +399,18 @@ void                t8_forest_commit (t8_forest_t forest);
  */
 int                 t8_forest_get_maxlevel (t8_forest_t forest);
 
-t8_locidx_t         t8_forest_get_num_element (t8_forest_t forest);
+/** Return the number of process local elements in the forest.
+  * \param [in]  forest    A forest.
+  * \return                The number of elements on this process in \a forest.
+ * \a forest must be committed before calling this function.
+  */
+t8_locidx_t         t8_forest_get_local_num_elements (t8_forest_t forest);
 
+/** Return the number of global elements in the forest.
+  * \param [in]  forest    A forest.
+  * \return                The number of elements (summed over all processes) in \a forest.
+ * \a forest must be committed before calling this function.
+  */
 t8_gloidx_t         t8_forest_get_global_num_elements (t8_forest_t forest);
 
 /** Return the number of ghost elements of a forest.

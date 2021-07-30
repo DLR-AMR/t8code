@@ -48,6 +48,8 @@
 #include <t8_cmesh.h>
 #include <t8_forest.h>
 #include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_forest_vtk.h>
+#include <t8.h>
 
 /* Builds cmesh of 2 prisms that build up a unit cube. 
  * See step1 for a detailed description.
@@ -155,7 +157,7 @@ main (int argc, char **argv)
   /* Build the uniform forest, it is automatically partitioned among the processes. */
   forest = t8_step2_build_uniform_forest (comm, cmesh, level);
   /* Get the local number of elements. */
-  local_num_elements = t8_forest_get_num_element (forest);
+  local_num_elements = t8_forest_get_local_num_elements (forest);
   /* Get the global number of elements. */
   global_num_elements = t8_forest_get_global_num_elements (forest);
 

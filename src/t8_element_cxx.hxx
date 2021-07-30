@@ -125,6 +125,15 @@ public:
   virtual void        t8_element_parent (const t8_element_t * elem,
                                          t8_element_t * parent) = 0;
 
+  /** Compute the maximum number of siblings of an element or any descendants of it. That is the number of 
+   * Children of its parent.
+   * \param [in] elem The element.
+   * \return          The maximum number of siblings of \a element.
+   * Note that this number is >= 1, since we count the element itself as a sibling.
+   */
+  virtual int         t8_element_max_num_siblings (const t8_element_t *
+                                                   elem) const = 0;
+
   /** Compute the number of siblings of an element. That is the number of 
    * Children of its parent.
    * \param [in] elem The element.
@@ -522,7 +531,7 @@ public:
     *  \param [in] elem     The element to be considered
     *  \return              The shape of the element as an eclass
    */
-  virtual t8_element_shape_t t8_element_shape (const t8_element_t * elem) = 0;
+  virtual t8_eclass_t        t8_element_shape(const t8_element_t * elem) = 0;
 
   /** Compute the linear id of a given element in a hypothetical uniform
    * refinement of a given level.

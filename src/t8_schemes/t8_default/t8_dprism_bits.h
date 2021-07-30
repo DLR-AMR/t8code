@@ -93,6 +93,7 @@ void                t8_dprism_parent (const t8_dprism_t * p,
 void                t8_dprism_first_descendant (const t8_dprism_t * p,
                                                 t8_dprism_t * desc,
                                                 int level);
+
 /** Compute the position of the ancestor of this child at level \a level within
  * its siblings.
  * \param [in] p  prism to be considered.
@@ -183,8 +184,8 @@ int                 t8_dprism_get_face_corner (const t8_dprism_t * p,
 
 /** Compute the 8 children of a prism, array version.
  * \param [in]     p  Input prism.
- * \param [in,out] c  Pointers to the 2 computed children in Morton order.
- *                    t may point to the same quadrant as c[0].
+ * \param [in,out] c  Pointers to the 8 computed children in Morton order.
+ *
  */
 void                t8_dprism_childrenpv (const t8_dprism_t * p,
                                           int length, t8_dprism_t * c[]);

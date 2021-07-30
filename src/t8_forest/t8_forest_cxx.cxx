@@ -34,6 +34,8 @@
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 
+#include <t8_schemes/t8_default/t8_dpyramid.h>
+
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
@@ -234,7 +236,6 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   double              vertex_coords[3];
   t8_eclass_scheme_c *ts;
   t8_eclass_t         tree_class;
-  t8_element_shape_t  element_shape;
   double              len;
   int                 dim;
 
@@ -247,18 +248,18 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   dim = t8_eclass_to_dimension[tree_class];
   len = 1. / ts->t8_element_root_len (element);
   ts->t8_element_vertex_coords (element, corner_number, corner_coords);
-  /* Get the element's shape */
-  element_shape = ts->t8_element_shape (element);
-  /* Check whether we support this element shape */
-  T8_ASSERT (element_shape == T8_ECLASS_VERTEX
-             || element_shape == T8_ECLASS_TRIANGLE
-             || element_shape == T8_ECLASS_TET
-             || element_shape == T8_ECLASS_QUAD
-             || element_shape == T8_ECLASS_HEX
-             || element_shape == T8_ECLASS_LINE
-             || element_shape == T8_ECLASS_PRISM);
-  /* Compute the coordinates, depending on the shape of the element */
-  switch (element_shape) {
+  /* Check whether we support this tree_class */
+  T8_ASSERT (tree_class == T8_ECLASS_VERTEX
+             || tree_class == T8_ECLASS_TRIANGLE
+             || tree_class == T8_ECLASS_TET
+             || tree_class == T8_ECLASS_QUAD
+             || tree_class == T8_ECLASS_HEX
+             || tree_class == T8_ECLASS_LINE
+             || tree_class == T8_ECLASS_PRISM
+             || tree_class == T8_ECLASS_PYRAMID);
+  /* Compute the coordinates, depending on the class of the tree */
+
+  switch (tree_class) {
   case T8_ECLASS_VERTEX:
     T8_ASSERT (corner_number == 0);
     /* A vertex has exactly one corner, and we already know its coordinates, since they are
@@ -298,6 +299,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
         len * (vertices[9 + i] - vertices[i]) * corner_coords[2] +
         vertices[i];
     }
+    /*And interpolate on the triangle*/
     for (i = 0; i < 3; i++) {
       coordinates[i] =
         len * (tri_vertices[3 + i] - tri_vertices[i]) * corner_coords[0] +
@@ -316,9 +318,51 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
     t8_forest_bilinear_interpolation ((const double *) vertex_coords,
                                       vertices, dim, coordinates);
     break;
+  case T8_ECLASS_PYRAMID:
+      double ray[3], lambda, quad_coords[3], length, length2;
+      length = 0;
+      length2 = 0;
+      quad_coords[2] = 0;
+
+      for(i = 0; i<3; i++){
+          vertex_coords[i] =  len * corner_coords[i];
+      }
+      /*In this case, thex vertex is the tip of the parentpyramid and we don't have to compute
+       * anything.*/
+      if(vertex_coords[0] == 1. && vertex_coords[1] == 1. && vertex_coords[2] == 1.){
+          for(i = 0; i<3; i++){
+              coordinates[i] = vertices[12 + i];
+          }
+          break;
+      }
+       /* Project vertex_coord onto x-y-plane*/
+      for(i = 0; i < 3; i++){
+          ray[i] = 1-vertex_coords[i];
+      }
+      lambda = vertex_coords[2] / ray[2];
+      for(i = 0; i < 2; i++){
+          /*Compute coords of vertex in the plane*/
+          quad_coords[i] = vertex_coords[i] - lambda * ray[i];
+          length += (1-quad_coords[i]) * (1-quad_coords[i]);
+      }
+      length += 1;
+      /*compute the ratio*/
+      for(i = 0; i<3; i++){
+          length2 += (vertex_coords[i]-quad_coords[i]) *(vertex_coords[i]-quad_coords[i]);
+      }
+      lambda = sqrt(length2) / sqrt(length);;
+
+      /*Interpolate on quad*/
+      t8_forest_bilinear_interpolation((const double *) quad_coords, vertices, 2, coordinates);
+      /*Project it back*/
+      for(i = 0; i<3; i++){
+          coordinates[i] += (vertices[12 + i] - coordinates[i]) * lambda;
+      }
+       break;
+
   default:
     SC_ABORT ("Forest coordinate computation is supported only for "
-              "vertices/lines/triangles/tets/quads/prisms/hexes.");
+              "vertices/lines/triangles/tets/quads/prisms/hexes/pyramids.");
   }
   return;
 }
@@ -386,6 +430,9 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
   memset (coordinates, 0, 3 * sizeof (double));
   /* get the number of corners of element */
   num_corners = ts->t8_element_num_corners (element);
+  if(ts->t8_element_shape(element) == T8_ECLASS_TET){
+      num_corners = 4;
+  }
   for (icorner = 0; icorner < num_corners; icorner++) {
     /* For each corner, add its coordinates to the centroids coordinates. */
     t8_forest_element_coordinate (forest, ltreeid, element, vertices, icorner,
@@ -1029,7 +1076,7 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
        * has a solution x with 0 <= x <= 1
        */
       double              p_0[3], v[3], b[3];
-      double              x;
+      double              x = 0;        /* Initialized to prevent compiler warning. */
       int                 i;
 
       /* Compute the vertex coordinates of the line */
@@ -1398,7 +1445,6 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
   ts->t8_element_destroy (1, &desc);
   /* If the descendants are the same then ret is zero and we return false.
    * We return true otherwise */
-  t8_debugf ("[D] tree shared: %i\n", ret);
   return ret;
 }
 
@@ -1921,7 +1967,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
          * of local elements. */
         element_index +=
           t8_forest_ghost_get_tree_element_offset (forest, lghost_treeid);
-        element_index += t8_forest_get_num_element (forest);
+        element_index += t8_forest_get_local_num_elements (forest);
         T8_ASSERT (forest->local_num_elements <= element_index
                    && element_index <
                    forest->local_num_elements +
@@ -2065,7 +2111,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         element_indices[ineigh] +=
           t8_forest_ghost_get_tree_element_offset (forest, lghost_treeid);
         /* Add the number of all local elements to this index */
-        element_indices[ineigh] += t8_forest_get_num_element (forest);
+        element_indices[ineigh] += t8_forest_get_local_num_elements (forest);
       }
     }                           /* End for loop over neighbor leafs */
     T8_FREE (owners);
@@ -2102,7 +2148,7 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
     allocate_el_offset = 1;
     t8_forest_partition_create_offsets (forest);
   }
-  for (ielem = 0; ielem < t8_forest_get_num_element (forest); ielem++) {
+  for (ielem = 0; ielem < t8_forest_get_local_num_elements (forest); ielem++) {
     /* Get a pointer to the ielem-th element, its eclass, treeid and scheme */
     leaf = t8_forest_get_element (forest, ielem, &ltree);
     eclass = t8_forest_get_tree_class (forest, ltree);
@@ -2310,7 +2356,6 @@ t8_forest_element_find_owner_ext (t8_forest_t forest,
   if (upper_bound == lower_bound) {
     return upper_bound;
   }
-
   ts = t8_forest_get_eclass_scheme (forest, eclass);
   if (element_is_desc) {
     /* The element is already its own first_descendant */
@@ -2721,7 +2766,6 @@ t8_forest_element_owners_at_face (t8_forest_t forest, t8_gloidx_t gtreeid,
     upper_bound = forest->mpisize - 1;
   }
   T8_ASSERT (0 <= lower_bound && upper_bound < forest->mpisize);
-
   if (lower_bound == upper_bound) {
     /* There is no need to search, the owner is unique */
     T8_ASSERT (0 <= lower_bound && lower_bound < forest->mpisize);
@@ -2818,6 +2862,7 @@ t8_forest_element_owners_at_neigh_face (t8_forest_t forest,
    * the neighbor element */
   neigh_class =
     t8_forest_element_neighbor_eclass (forest, ltreeid, element, face);
+  T8_ASSERT(neigh_class>= T8_ECLASS_ZERO && neigh_class < T8_ECLASS_COUNT);
   neigh_scheme = t8_forest_get_eclass_scheme (forest, neigh_class);
   neigh_scheme->t8_element_new (1, &face_neighbor);
   neigh_tree =

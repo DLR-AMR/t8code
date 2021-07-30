@@ -152,7 +152,6 @@ t8_forest_partition_test_desc (t8_forest_t forest)
     level = ts->t8_element_level (elem_desc);
     T8_ASSERT (level == ts->t8_element_level (elem_desc));
     T8_ASSERT (level == forest->maxlevel);
-
     T8_ASSERT (ts->t8_element_get_linear_id (elem_desc, level) >=
                first_desc_id);
   }
@@ -256,7 +255,7 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
   tree_offset =
     t8_forest_first_tree_shared (forest) ?
         -forest->first_local_tree - 1 : forest->first_local_tree;
-  if (t8_forest_get_num_element(forest) <= 0) {
+  if (t8_forest_get_local_num_elements(forest) <= 0) {
     /* This forest is empty */
     is_empty = 1;
     /* Set the global number of trees as offset (temporarily) */
@@ -535,9 +534,9 @@ t8_forest_partition_fill_buffer (t8_forest_t forest_from,
                                               *current_tree,
                                               &first_tree_element,
                                               &last_tree_element);
-    SC_CHECK_ABORT (tree->eclass != T8_ECLASS_PYRAMID,
+    /*SC_CHECK_ABORT (tree->eclass != T8_ECLASS_PYRAMID,
                     "Forest partition"
-                    " is not implement for pyramidal elements.");
+                    " is not implement for pyramidal elements.");*/
     /* We now know how many elements this tree will send */
     num_elements_send = last_tree_element - first_tree_element + 1;
     T8_ASSERT (num_elements_send > 0);
@@ -1155,7 +1154,7 @@ t8_forest_partition_given (t8_forest_t forest, const int send_data,
       - t8_shmem_array_get_gloidx (forest->element_offsets, forest->mpirank);
   }
   else {
-    num_new_elements = t8_forest_get_num_element (forest);
+    num_new_elements = t8_forest_get_local_num_elements (forest);
   }
 
   if (num_new_elements > 0) {

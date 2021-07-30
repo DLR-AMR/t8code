@@ -159,7 +159,6 @@ main (int argc, char **argv)
 
   for (ieclass = T8_ECLASS_VERTEX; ieclass < T8_ECLASS_COUNT; ieclass++) {
     if (ieclass != T8_ECLASS_PYRAMID && ieclass != T8_ECLASS_VERTEX) {
-      /* TODO: activate prism test as soon as prism can create a uniform forest. */
       /* TODO: does not work with pyramids yet */
       t8_test_half_neighbors (mpic, (t8_eclass_t) ieclass);
     }

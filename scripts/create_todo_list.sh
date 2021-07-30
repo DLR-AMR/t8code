@@ -9,5 +9,9 @@ PROJECT_DIR=".."
 SEARCH_PATH="$PROJECT_DIR/src/*.h $PROJECT_DIR/src/*.c \
 	     $PROJECT_DIR/src/*/*.h $PROJECT_DIR/src/*/*.c \
 	     $PROJECT_DIR/example/*/*.h $PROJECT_DIR/example/*/*.c \
-	     $PROJECT_DIR/test/*.h $PROJECT_DIR/test/*.c"
+             $PROJECT_DIR/test/*.h $PROJECT_DIR/test/*.c
+             $PROJECT_DIR/src/*.h $PROJECT_DIR/src/*.cxx \
+             $PROJECT_DIR/src/*/*.h $PROJECT_DIR/src/*/*.cxx \
+             $PROJECT_DIR/example/*/*.h $PROJECT_DIR/example/*/*.cxx \
+             $PROJECT_DIR/test/*.h $PROJECT_DIR/test/*.cxx"
 grep TODO $SEARCH_PATH -n -A20 | awk '/TODO/,/*\//'

@@ -98,6 +98,15 @@ void                t8_element_parent (t8_eclass_scheme_c * ts,
                                        const t8_element_t * elem,
                                        t8_element_t * parent);
 
+  /** Compute the maximum number of siblings of an element or any descendants of it. That is the number of 
+   * Children of its parent.
+   * \param [in] elem The element.
+   * \return          The maximum number of siblings of \a element.
+   * Note that this number is >= 1, since we count the element itself as a sibling.
+   */
+int                 t8_element_max_num_siblings (t8_eclass_scheme_c * ts,
+                                                 const t8_element_t * elem);
+
 /** Compute the number of siblings of an element. That is the number of 
  * Children of its parent.
  * \param [in] ts             Implementation of a class scheme.

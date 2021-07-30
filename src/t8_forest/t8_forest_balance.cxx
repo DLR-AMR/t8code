@@ -143,7 +143,13 @@ t8_forest_balance (t8_forest_t forest, int repartition)
 {
   t8_forest_t         forest_temp, forest_from, forest_partition;
   int                 done = 0, done_global = 0;
-  int                 count = 0, num_stats, i;
+  int                 count_rounds = 0;
+  /* The following variables are only required if profiling is
+   * enabled. */
+  int                 num_stats_allocated, istats;
+  const int           stat_alloc_chunk_size = 10;       /* How many stats we allocate (and add if we need more) */
+  int                 count_adapt_stats = 0, count_ghost_stats = 0;
+  int                 count_partition_stats = 0;
   double              ada_time, ghost_time, part_time;
   sc_statinfo_t      *adap_stats, *ghost_stats, *partition_stats;
 
@@ -159,11 +165,15 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     /* Profiling is enable, so we measure the runtime of balance */
     forest->profile->balance_runtime = -sc_MPI_Wtime ();
     /* We store the individual adapt, ghost, and partition runtimes */
-    num_stats = 5;
-    adap_stats = T8_ALLOC_ZERO (sc_statinfo_t, num_stats);
-    ghost_stats = T8_ALLOC_ZERO (sc_statinfo_t, num_stats);
+    /* We reserve memory for stat_alloc_chunk_size - 1 many balance rounds
+     * (the extra entry is required for the total sum).
+     * We will grow the statistics arrays dynamically if more rounds are required. */
+    T8_ASSERT (stat_alloc_chunk_size > 0);
+    num_stats_allocated = stat_alloc_chunk_size;
+    adap_stats = T8_ALLOC_ZERO (sc_statinfo_t, num_stats_allocated);
+    ghost_stats = T8_ALLOC_ZERO (sc_statinfo_t, num_stats_allocated);
     if (repartition) {
-      partition_stats = T8_ALLOC_ZERO (sc_statinfo_t, num_stats);
+      partition_stats = T8_ALLOC_ZERO (sc_statinfo_t, num_stats_allocated);
     }
   }
 
@@ -204,22 +214,30 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     t8_forest_commit (forest_temp);
     /* Store the runtimes of adapt and ghost */
     if (forest->profile != NULL) {
-      while (count >= num_stats - 2) {
+      if (count_rounds > num_stats_allocated - 2) {
+        T8_ASSERT (count_adapt_stats <= count_rounds);
+        T8_ASSERT (count_ghost_stats <= count_rounds);
+        T8_ASSERT (count_partition_stats <= count_rounds);
         /* re-allocate memory for stats */
-        num_stats += 2;
-        adap_stats = T8_REALLOC (adap_stats, sc_statinfo_t, num_stats);
-        ghost_stats = T8_REALLOC (ghost_stats, sc_statinfo_t, num_stats);
+        num_stats_allocated += stat_alloc_chunk_size;
+        adap_stats =
+          T8_REALLOC (adap_stats, sc_statinfo_t, num_stats_allocated);
+        ghost_stats =
+          T8_REALLOC (ghost_stats, sc_statinfo_t, num_stats_allocated);
         if (repartition) {
           partition_stats =
-            T8_REALLOC (partition_stats, sc_statinfo_t, num_stats);
+            T8_REALLOC (partition_stats, sc_statinfo_t, num_stats_allocated);
         }
       }
-      sc_stats_set1 (&adap_stats[count], forest_temp->profile->adapt_runtime,
+      sc_stats_set1 (&adap_stats[count_adapt_stats],
+                     forest_temp->profile->adapt_runtime,
                      "forest balance: Adapt time");
+      count_adapt_stats++;
       if (!repartition) {
-        sc_stats_set1 (&ghost_stats[count],
+        sc_stats_set1 (&ghost_stats[count_ghost_stats],
                        forest_temp->profile->ghost_runtime,
                        "forest balance: Ghost time");
+        count_ghost_stats++;
       }
     }
 
@@ -243,12 +261,14 @@ t8_forest_balance (t8_forest_t forest, int repartition)
 
       /* Store the runtimes of partition */
       if (forest->profile != NULL) {
-        sc_stats_set1 (&partition_stats[count],
+        sc_stats_set1 (&partition_stats[count_partition_stats],
                        forest_partition->profile->partition_runtime,
                        "forest balance: Partition time");
-        sc_stats_set1 (&ghost_stats[count],
+        count_partition_stats++;
+        sc_stats_set1 (&ghost_stats[count_ghost_stats],
                        forest_partition->profile->ghost_runtime,
                        "forest balance: Ghost time");
+        count_ghost_stats++;
       }
 
       forest_temp = forest_partition;
@@ -256,7 +276,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     }
     /* Adapt forest_temp in the next round */
     forest_from = forest_temp;
-    count++;
+    count_rounds++;
   }
 
   T8_ASSERT (t8_forest_is_balanced (forest_temp));
@@ -268,47 +288,52 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   t8_global_productionf
     ("Done t8_forest_balance with %lli global elements.\n",
      (long long) t8_forest_get_global_num_elements (forest_temp));
-  t8_debugf ("t8_forest_balance needed %i rounds.\n", count);
+  t8_debugf ("t8_forest_balance needed %i rounds.\n", count_rounds);
   /* clean-up */
   t8_forest_unref (&forest_temp);
 
   if (forest->profile != NULL) {
     /* Profiling is enabled, so we measure the runtime of balance. */
     forest->profile->balance_runtime += sc_MPI_Wtime ();
-    forest->profile->balance_rounds = count;
+    forest->profile->balance_rounds = count_rounds;
     /* Print the runtime of adapt/ghost/partition */
     /* Compute the overall runtime and store in last entry */
     ada_time = ghost_time = part_time = 0;
-    t8_debugf ("ada stats %f\n", adap_stats[count].sum_values);
-    for (i = 0; i < count; i++) {
-      ada_time += adap_stats[i].sum_values;
-      ghost_time += ghost_stats[i].sum_values;
-      if (repartition) {
-        part_time += partition_stats[i].sum_values;
+    for (istats = 0; istats < count_adapt_stats; istats++) {
+      ada_time += adap_stats[istats].sum_values;
+    }
+    for (istats = 0; istats < count_ghost_stats; istats++) {
+      ghost_time += ghost_stats[istats].sum_values;
+    }
+    if (repartition) {
+      for (istats = 0; istats < count_partition_stats; istats++) {
+        part_time += partition_stats[istats].sum_values;
       }
     }
-    sc_stats_set1 (&adap_stats[count], ada_time,
+    sc_stats_set1 (&adap_stats[count_adapt_stats], ada_time,
                    "forest balance: Total adapt time");
-    sc_stats_set1 (&ghost_stats[count], ghost_time,
+    sc_stats_set1 (&ghost_stats[count_ghost_stats], ghost_time,
                    "forest balance: Total ghost time");
     if (repartition) {
-      sc_stats_set1 (&partition_stats[count], part_time,
+      sc_stats_set1 (&partition_stats[count_partition_stats], part_time,
                      "forest balance: Total partition time");
     }
 
     /* Compute and print the intermediate stats */
-    sc_stats_compute (forest->mpicomm, count + 1, adap_stats);
-    sc_stats_compute (forest->mpicomm, count + 1, ghost_stats);
+    T8_ASSERT (count_rounds + 1 <= num_stats_allocated);
+    sc_stats_compute (forest->mpicomm, count_adapt_stats + 1, adap_stats);
+    sc_stats_compute (forest->mpicomm, count_ghost_stats + 1, ghost_stats);
     if (repartition) {
-      sc_stats_compute (forest->mpicomm, count + 1, partition_stats);
+      sc_stats_compute (forest->mpicomm, count_partition_stats + 1,
+                        partition_stats);
     }
-    sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, count + 1,
-                    adap_stats, 1, 1);
-    sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, count + 1,
-                    ghost_stats, 1, 1);
+    sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS,
+                    count_adapt_stats + 1, adap_stats, 1, 1);
+    sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS,
+                    count_ghost_stats + 1, ghost_stats, 1, 1);
     if (repartition) {
-      sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, count + 1,
-                      partition_stats, 1, 1);
+      sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS,
+                      count_partition_stats + 1, partition_stats, 1, 1);
     }
     T8_FREE (adap_stats);
     T8_FREE (ghost_stats);

@@ -55,6 +55,7 @@
 #include <t8_schemes/t8_default_cxx.hxx>        /* default refinement scheme. */
 #include <t8_vec.h>             /* Basic operations on 3D vectors. */
 #include <example/tutorials/t8_step3.h>
+#include <t8_forest_vtk.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -184,7 +185,7 @@ t8_step3_print_forest_information (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   /* Get the local number of elements. */
-  local_num_elements = t8_forest_get_num_element (forest);
+  local_num_elements = t8_forest_get_local_num_elements (forest);
   /* Get the global number of elements. */
   global_num_elements = t8_forest_get_global_num_elements (forest);
   t8_global_productionf (" [step3] Local number of elements:\t\t%i\n",
