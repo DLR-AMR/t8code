@@ -682,15 +682,11 @@ public:
    *  \param [out] An array, whose entries will be filled with location information of the subelement 
    *  All information in the location array will be needed to determine the verticies of any subelement.
    */
-  virtual void         t8_element_get_location_of_subelement (const t8_element_t * elem, int location[]) = 0;
-
-  /** We allow, that subelements can have a different shape, than the given eclass scheme. 
-   *  For example, subelements, that remove hanging nodes from the quad scheme, are triangles.
-   *  \param [in] elem A valid element
-   *  \return the shape of the element. If it is not a subelement, the shape equals the shape 
-   *  of the given eclass. Else, the shape can differ an is dependend on the specific case.  
-   */
-  virtual t8_element_shape_t t8_element_get_shape (const t8_element_t * elem) = 0;                                               
+  virtual void        t8_element_get_location_of_subelement (const
+                                                             t8_element_t *
+                                                             elem,
+                                                             int location[]) =
+    0;
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
