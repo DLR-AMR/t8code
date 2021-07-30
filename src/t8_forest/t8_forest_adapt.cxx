@@ -200,7 +200,7 @@ t8_forest_adapt (t8_forest_t forest)
   t8_element_t      **elements, **elements_from, *parent;
   int                 refine;
   int                 ci;
-  unsigned int        subelement_type; 
+  unsigned int        subelement_type;
   unsigned int        num_subelements;
 #ifdef T8_ENABLE_DEBUG
   int                 is_family;
@@ -245,7 +245,8 @@ t8_forest_adapt (t8_forest_t forest)
     telements_from = &tree_from->elements;
     /* Number of elements in the old tree */
     num_el_from = (t8_locidx_t) t8_element_array_get_count (telements_from);
-    T8_ASSERT (num_el_from == t8_forest_get_tree_num_elements (forest_from, ltree_id));
+    T8_ASSERT (num_el_from ==
+               t8_forest_get_tree_num_elements (forest_from, ltree_id));
     /* Get the element scheme for this tree */
     tscheme = t8_forest_get_eclass_scheme (forest_from, tree->eclass);
     /* Index of the element we currently consider for refinement/coarsening. */
@@ -321,8 +322,8 @@ t8_forest_adapt (t8_forest_t forest)
         /* We will pass a family to the adapt callback */
         num_elements_to_adapt_fn = num_siblings;
       }
-      T8_ASSERT (!is_family || tscheme->t8_element_is_family (elements_from));     
-      
+      T8_ASSERT (!is_family || tscheme->t8_element_is_family (elements_from));
+
       /* Pass the element, or the family to the adapt callback.
        * The output will be 
        *
@@ -337,15 +338,16 @@ t8_forest_adapt (t8_forest_t forest)
        *  
        * For example the refine values for the 2D Quad scheme will be between -1 and 16. The values -1, 0 and 1 are for the standard refinement
        * and the values 2 to 16 correspond to the subelement types 1 to 15 (0001 to 1111 in base 2) and will be used by the element files of the quad 
-       * scheme in order to remove hanging nodes */ 
+       * scheme in order to remove hanging nodes */
 
       refine = forest->set_adapt_fn (forest, forest->set_from, ltree_id,
-                                     el_considered, tscheme, num_elements_to_adapt_fn,
-                                     elements_from);
-      
+                                     el_considered, tscheme,
+                                     num_elements_to_adapt_fn, elements_from);
 
       T8_ASSERT (is_family || refine >= 0);
-      if (refine > 0 && tscheme->t8_element_level (elements_from[0]) >= forest->maxlevel) {
+      if (refine > 0
+          && tscheme->t8_element_level (elements_from[0]) >=
+          forest->maxlevel) {
         /* Only refine an element if it does not exceed the maximum level */
         refine = 0;
       }
@@ -369,8 +371,8 @@ t8_forest_adapt (t8_forest_t forest)
           }
           /* We now recursively check the newly created elements for refinement. */
           t8_forest_adapt_refine_recursive (forest, ltree_id, el_considered,
-                                          tscheme, refine_list, telements,
-                                          &el_inserted, elements);
+                                            tscheme, refine_list, telements,
+                                            &el_inserted, elements);
           /* el_coarsen is the index of the first element in the new element
            * array which could be coarsened recursively.
            * We can set this here to the next element after the current family, since a family that emerges from a refinement will never be coarsened */
@@ -462,7 +464,7 @@ t8_forest_adapt (t8_forest_t forest)
         }
         el_considered++;
       }
-    } // end of while loop over elements
+    }                           // end of while loop over elements
 
     /* Check that if we had recursive adaptation, the refine list is now empty. */
     T8_ASSERT (!forest->set_adapt_recursive || refine_list->elem_count == 0);
