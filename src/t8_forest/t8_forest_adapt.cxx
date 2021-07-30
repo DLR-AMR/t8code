@@ -389,25 +389,26 @@ t8_forest_adapt (t8_forest_t forest)
         }
         el_considered++;
       }
-      else if (refine > 1) { /* use subelements in this case */
+      else if (refine > 1) {    /* use subelements in this case */
         /* The subelement-callback function returns refine = subelement_type + 1, to avoid subelement_type = 1.
          * We can now undo this to use the "true" subelement_type-values in the tscheme functions */
         subelement_type = refine - 1;
-        #if 0
+
         /* determing the number of subelements of the given type for memory allocation */
-        num_subelements = tscheme->t8_element_get_number_of_subelements (subelement_type);
-        #endif
-        
-        #if 1
-        num_subelements = 2;
-        #endif
+        num_subelements =
+          tscheme->t8_element_get_number_of_subelements (subelement_type);
+        if (num_subelements > curr_num_children) {
+          elements = T8_REALLOC (elements, t8_element_t *, num_subelements);
+          curr_num_children = num_subelements;
+        }
 
         (void) t8_element_array_push_count (telements, num_subelements);
         for (zz = 0; zz < num_subelements; zz++) {
           elements[zz] =
-          t8_element_array_index_locidx (telements, el_inserted + zz);
+            t8_element_array_index_locidx (telements, el_inserted + zz);
         }
-        tscheme->t8_element_to_subelement (elements_from[0], elements, subelement_type);
+        tscheme->t8_element_to_subelement (elements_from[0], elements,
+                                           subelement_type);
         el_inserted += num_subelements;
         el_considered++;
       }
