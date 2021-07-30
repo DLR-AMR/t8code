@@ -59,6 +59,7 @@
 #include <t8.h>
 #include <t8_forest.h>
 #include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_eclass.h>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -330,27 +331,22 @@ t8_forest_num_points (t8_forest_t forest, int count_ghosts)
   t8_tree_t           tree;
   t8_eclass_t         ghost_class;
   size_t              num_elements;
-  t8_dpyramid_t *      pyra;
-  t8_element_array_t * ghost_elem;
+  t8_dpyramid_t      *pyra;
+  t8_element_array_t *ghost_elem;
 
   num_points = 0;
   for (itree = 0; itree < (t8_locidx_t) forest->trees->elem_count; itree++) {
     /* Get the tree that stores the elements */
-    tree = (t8_tree_t) t8_sc_array_index_topidx (forest->trees, itree);
-    /* TODO: This will cause problems when pyramids are introduced. */
-    if(t8_forest_get_tree_class(forest, itree) == T8_ECLASS_PYRAMID)
-         {
-        num_elements = t8_element_array_get_count(&tree->elements);
-        for(ielem = 0; ielem < (t8_locidx_t) num_elements; ielem++){
-            pyra = (t8_dpyramid_t *)t8_element_array_index_locidx(&tree->elements, ielem);
-            num_points += t8_dpyramid_num_vertices(pyra);
-        }
-    }
-    else{
-        num_points += t8_eclass_num_vertices[tree->eclass] *
-          t8_element_array_get_count (&tree->elements);
-    }
+    const t8_eclass_t   eclass = t8_forest_get_tree_class (forest, itree);
+    t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, eclass);
+    num_elements = t8_forest_get_tree_num_elements (forest, itree);
 
+    for (ielem = 0; ielem < (t8_locidx_t) num_elements; ielem++) {
+      const t8_element_t *element =
+        t8_forest_get_element_in_tree (forest, itree, ielem);
+      const t8_element_shape_t shape = scheme->t8_element_shape (element);
+      num_points += t8_eclass_num_vertices[shape];
+    }
   }
   if (count_ghosts) {
     T8_ASSERT (forest->ghosts != NULL);
