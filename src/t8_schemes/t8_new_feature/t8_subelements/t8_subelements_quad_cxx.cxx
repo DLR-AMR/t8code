@@ -925,7 +925,7 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
   /* get the length of the current quadrant */
   len = P4EST_QUADRANT_LEN (q1->level);
 
-  #if 0
+#if 1
   /* Compute the x and y coordinates of subelement vertices, depending on the subelement type, id and vertex number (faces enumerated clockwise): 
    *
    *               f1                      V0
@@ -939,42 +939,52 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
    *               f3
    */
 
-  int location[3] = {};
-  t8_element_get_location_of_subelement(t, location); 
+  int                 location[3] = { };
+  t8_element_get_location_of_subelement (t, location);
 
-  int face_number = location[0];
-  int split = location[1];
-  int sub_face_id = location[2];
+  int                 face_number = location[0];
+  int                 split = location[1];
+  int                 sub_face_id = location[2];
 
-  T8_ASSERT (face_number == 0 || face_number == 1 || face_number == 2 || face_number == 3);
-  T8_ASSERT ((split == 0 && sub_face_id == 0) || (split == 1 && (sub_face_id == 0 || sub_face_id == 1))); 
+  T8_ASSERT (face_number == 0 || face_number == 1 || face_number == 2
+             || face_number == 3);
+  T8_ASSERT ((split == 0 && sub_face_id == 0)
+             || (split == 1 && (sub_face_id == 0 || sub_face_id == 1)));
 
   /* there were problems with 1/2 * int(1) = 0. Therefore, we always determine len * 1/2 first */
-  if (vertex == 2) { /* the third vertex allways equals the center of the element */
-    coords[0] = q1->x + len * 1/2;
-    coords[1] = q1->y + len * 1/2;
+  if (vertex == 2) {            /* the third vertex allways equals the center of the element */
+    coords[0] = q1->x + len / 2;
+    coords[1] = q1->y + len / 2;
   }
-  else { /* all other verticies can be determined, using the flag parameters sub_face_id, split and vertex, whose values are either 0 or 1 */
+  else {                        /* all other verticies can be determined, using the flag parameters sub_face_id, split and vertex, whose values are either 0 or 1 */
     if (face_number == 0) {
       coords[0] = q1->x;
-      coords[1] = q1->y + len * 1/2 * sub_face_id + len * vertex - len * 1/2 * split * vertex;
+      coords[1] =
+        q1->y + len / 2 * sub_face_id + len * vertex -
+        len / 2 * split * vertex;
     }
     else if (face_number == 1) {
-      coords[0] = q1->x + len * 1/2 * sub_face_id + len * vertex - len * 1/2 * split * vertex;
+      coords[0] =
+        q1->x + len / 2 * sub_face_id + len * vertex -
+        len / 2 * split * vertex;
       coords[1] = q1->y + len;
     }
     else if (face_number == 2) {
       coords[0] = q1->x + len;
-      coords[1] = q1->y + len - len * 1/2 * sub_face_id - (len * vertex - len * 1/2 * split * vertex);
+      coords[1] =
+        q1->y + len - len / 2 * sub_face_id - (len * vertex -
+                                               len / 2 * split * vertex);
     }
     else if (face_number == 3) {
-      coords[0] = q1->x + len - len * 1/2 * sub_face_id - (len * vertex - len * 1/2 * split * vertex);
+      coords[0] =
+        q1->x + len - len / 2 * sub_face_id - (len * vertex -
+                                               len / 2 * split * vertex);
       coords[1] = q1->y;
     }
   }
-  #endif
-  
-  #if 1
+#endif
+
+#if 0
   /* 
    *            =len
    *      |---------------| 
@@ -990,14 +1000,14 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_elemen
    */
 
   if (pquad_w_sub->subelement_id == 0) {
-    coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len * 1/2;
+    coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len * 1 / 2;
     coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
   }
   else if (pquad_w_sub->subelement_id == 1) {
-    coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len * 1/2 + len * 1/2;
+    coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len * 1 / 2 + len * 1 / 2;
     coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
   }
-  #endif
+#endif
 }
 
 void
@@ -1023,14 +1033,14 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
     }
   }
 #endif
-  
+
   /* get the length of a children-quadrant */
   const int8_t        level = (int8_t) (q->level);
 
   T8_ASSERT (p4est_quadrant_is_extended (q));
   T8_ASSERT (q->level < P4EST_QMAXLEVEL);
-  
-  #if 0
+
+#if 1
   /* Setting the parameter values for different subelements. 
    * The different subelement types (up to rotation) are:
    *                               
