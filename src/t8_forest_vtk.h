@@ -52,7 +52,7 @@ T8_EXTERN_C_BEGIN ();
  * \return  True if succesful, false if not (process local).
  * \note If t8code was not configured with vtk, use \ref t8_forest_vtk_write_file
  */
-int                t8_forest_write_vtk_via_API (t8_forest_t forest,
+int                 t8_forest_write_vtk_via_API (t8_forest_t forest,
                                                  const char *fileprefix,
                                                  int write_treeid,
                                                  int write_mpirank,
