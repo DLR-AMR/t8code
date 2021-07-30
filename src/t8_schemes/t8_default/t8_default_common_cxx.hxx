@@ -101,6 +101,26 @@ public:
   virtual void        t8_element_general_function (const t8_element_t * elem,
                                                    const void *indata,
                                                    void *outdata);
+
+  /** Construct a subelement */
+  virtual void        t8_element_to_subelement (const t8_element_t * elem,
+                                                t8_element_t * c[], int type);
+
+  /** Determine the coordinates of a subelement */
+  virtual void        t8_element_vertex_coords_of_subelement (const
+                                                              t8_element_t *
+                                                              t, int vertex,
+                                                              int coords[]);
+
+  /** Determine the number of subelements, used to remove hanging nodes from a element of a given type */
+  virtual int         t8_element_get_number_of_subelements (int
+                                                            subelement_type);
+
+  /** Get the location of a given subelement within the parent quad element */
+  virtual void        t8_element_get_location_of_subelement (const
+                                                             t8_element_t *
+                                                             elem,
+                                                             int location[]);
 };
 
 #endif /* !T8_DEFAULT_COMMON_CXX_HXX */

@@ -190,4 +190,36 @@ t8_default_scheme_common_c::t8_element_general_function (const t8_element_t *
   /* This function is intentionally left blank. */
 }
 
+void
+t8_default_scheme_common_c::t8_element_to_subelement (const t8_element_t *
+                                                      elem,
+                                                      t8_element_t * c[],
+                                                      int type)
+{
+  SC_ABORT ("This function is not implemented yet.\n");
+}
+
+void
+t8_default_scheme_common_c::
+t8_element_vertex_coords_of_subelement (const t8_element_t * t, int vertex,
+                                        int coords[])
+{
+  SC_ABORT ("This function is not implemented yet.\n");
+}
+
+int
+t8_default_scheme_common_c::
+t8_element_get_number_of_subelements (int subelement_type)
+{
+  SC_ABORT ("This function is not implemented yet.\n");
+}
+
+void
+t8_default_scheme_common_c::
+t8_element_get_location_of_subelement (const t8_element_t * elem,
+                                       int location[])
+{
+  SC_ABORT ("This function is not implemented yet.\n");
+}
+
 T8_EXTERN_C_END ();
