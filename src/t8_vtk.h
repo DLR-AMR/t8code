@@ -57,8 +57,8 @@
 #endif
 
 #if T8_WITH_VTK
-#define t8_vtk_locidx_array_type vtkTypeInt32Array
-#define t8_vtk_gloidx_array_type vtkTypeInt64Array
+#define t8_vtk_locidx_array_type_t vtkTypeInt32Array
+#define t8_vtk_gloidx_array_type_t vtkTypeInt64Array
 #endif
 
 /* TODO: Add support for integer data type. */
