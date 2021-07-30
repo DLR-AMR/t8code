@@ -531,7 +531,7 @@ public:
     *  \param [in] elem     The element to be considered
     *  \return              The shape of the element as an eclass
    */
-  virtual t8_eclass_t        t8_element_shape(const t8_element_t * elem) = 0;
+  virtual t8_eclass_t t8_element_shape (const t8_element_t * elem) = 0;
 
   /** Compute the linear id of a given element in a hypothetical uniform
    * refinement of a given level.
@@ -663,8 +663,11 @@ public:
    * eclass scheme. For example, subelements, that remove hanging nodes from the quad scheme,
    * are triangles with 3 instead of 4 verticies.           
    */
-  virtual void        t8_element_vertex_coords_of_subelement (const t8_element_t * t,
-                                                              int vertex, int coords[]) = 0; 
+  virtual void        t8_element_vertex_coords_of_subelement (const
+                                                              t8_element_t *
+                                                              t, int vertex,
+                                                              int coords[]) =
+    0;
 
   /** This function will determine the number of children subelements, depending on the 
    *  subelement type. 
@@ -673,7 +676,9 @@ public:
    *  This function can be used, to allocate enough memory before transforming an element
    *  into subelements.  
    */
-  virtual int         t8_element_get_number_of_subelements (int subelement_type) = 0;  
+  virtual int         t8_element_get_number_of_subelements (int
+                                                            subelement_type) =
+    0;
 
   /** This function will determine the location of a specific subelement in the parent element.
    *  Since different subelement types are possible, it is apriori not known, where for example the
