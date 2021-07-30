@@ -73,7 +73,8 @@ t8_default_scheme_sub_c::t8_element_child_eclass (int childid)
 int
 t8_default_scheme_sub_c::t8_element_level (const t8_element_t * elem)
 {
-  const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
+  const t8_quad_with_subelements *pquad_w_sub =
+    (const t8_quad_with_subelements *) elem;
   T8_ASSERT (t8_element_is_valid (elem));
   return (int) ((const t8_quad_with_subelements *) pquad_w_sub)->p4q.level;
 }
@@ -90,10 +91,12 @@ t8_element_copy_surround (const p4est_quadrant_t * q, p4est_quadrant_t * r)
 
 void
 t8_default_scheme_sub_c::t8_element_copy (const t8_element_t * source,
-                                           t8_element_t * dest)
+                                          t8_element_t * dest)
 {
-  const t8_quad_with_subelements *pquad_w_sub_source = (const t8_quad_with_subelements *) source;
-  t8_quad_with_subelements *pquad_w_sub_dest = (t8_quad_with_subelements *) dest;
+  const t8_quad_with_subelements *pquad_w_sub_source =
+    (const t8_quad_with_subelements *) source;
+  t8_quad_with_subelements *pquad_w_sub_dest =
+    (t8_quad_with_subelements *) dest;
 
   const p4est_quadrant_t *q = &pquad_w_sub_source->p4q;
   p4est_quadrant_t   *r = &pquad_w_sub_dest->p4q;
@@ -110,13 +113,15 @@ t8_default_scheme_sub_c::t8_element_copy (const t8_element_t * source,
 
 int
 t8_default_scheme_sub_c::t8_element_compare (const t8_element_t * elem1,
-                                              const t8_element_t * elem2)
+                                             const t8_element_t * elem2)
 {
-  const t8_quad_with_subelements *pquad_w_sub1 = (const t8_quad_with_subelements *) elem1;
-  const t8_quad_with_subelements *pquad_w_sub2 = (const t8_quad_with_subelements *) elem2;
+  const t8_quad_with_subelements *pquad_w_sub1 =
+    (const t8_quad_with_subelements *) elem1;
+  const t8_quad_with_subelements *pquad_w_sub2 =
+    (const t8_quad_with_subelements *) elem2;
 
   const p4est_quadrant_t *q = &pquad_w_sub1->p4q;
-  const p4est_quadrant_t   *r = &pquad_w_sub2->p4q;
+  const p4est_quadrant_t *r = &pquad_w_sub2->p4q;
 
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
@@ -126,10 +131,12 @@ t8_default_scheme_sub_c::t8_element_compare (const t8_element_t * elem1,
 
 void
 t8_default_scheme_sub_c::t8_element_parent (const t8_element_t * elem,
-                                             t8_element_t * parent)
+                                            t8_element_t * parent)
 {
-  const t8_quad_with_subelements *pquad_w_sub_elem = (const t8_quad_with_subelements *) elem;
-  t8_quad_with_subelements *pquad_w_sub_parent = (t8_quad_with_subelements *) parent;
+  const t8_quad_with_subelements *pquad_w_sub_elem =
+    (const t8_quad_with_subelements *) elem;
+  t8_quad_with_subelements *pquad_w_sub_parent =
+    (t8_quad_with_subelements *) parent;
 
   const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
   p4est_quadrant_t   *r = &pquad_w_sub_parent->p4q;
@@ -143,11 +150,13 @@ t8_default_scheme_sub_c::t8_element_parent (const t8_element_t * elem,
 
 void
 t8_default_scheme_sub_c::t8_element_sibling (const t8_element_t * elem,
-                                              int sibid,
-                                              t8_element_t * sibling)
+                                             int sibid,
+                                             t8_element_t * sibling)
 {
-  const t8_quad_with_subelements *pquad_w_sub_elem = (const t8_quad_with_subelements *) elem;
-  t8_quad_with_subelements *pquad_w_sub_sibling = (t8_quad_with_subelements *) sibling;
+  const t8_quad_with_subelements *pquad_w_sub_elem =
+    (const t8_quad_with_subelements *) elem;
+  t8_quad_with_subelements *pquad_w_sub_sibling =
+    (t8_quad_with_subelements *) sibling;
 
   const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
   p4est_quadrant_t   *r = &pquad_w_sub_sibling->p4q;
@@ -174,14 +183,14 @@ t8_default_scheme_sub_c::t8_element_max_num_faces (const t8_element_t * elem)
 
 int
 t8_default_scheme_sub_c::t8_element_num_children (const t8_element_t * elem)
-{ 
+{
   T8_ASSERT (t8_element_is_valid (elem));
   return P4EST_CHILDREN;
 }
 
 int
 t8_default_scheme_sub_c::t8_element_num_face_children (const t8_element_t *
-                                                        elem, int face)
+                                                       elem, int face)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   return 2;
@@ -189,8 +198,8 @@ t8_default_scheme_sub_c::t8_element_num_face_children (const t8_element_t *
 
 int
 t8_default_scheme_sub_c::t8_element_get_face_corner (const t8_element_t *
-                                                      element, int face,
-                                                      int corner)
+                                                     element, int face,
+                                                     int corner)
 {
   /*
    *   2    f_2    3
@@ -210,8 +219,8 @@ t8_default_scheme_sub_c::t8_element_get_face_corner (const t8_element_t *
 
 int
 t8_default_scheme_sub_c::t8_element_get_corner_face (const t8_element_t *
-                                                      element, int corner,
-                                                      int face)
+                                                     element, int corner,
+                                                     int face)
 {
   T8_ASSERT (t8_element_is_valid (element));
   T8_ASSERT (0 <= corner && corner < P4EST_CHILDREN);
@@ -221,10 +230,12 @@ t8_default_scheme_sub_c::t8_element_get_corner_face (const t8_element_t *
 
 void
 t8_default_scheme_sub_c::t8_element_child (const t8_element_t * elem,
-                                            int childid, t8_element_t * child)
+                                           int childid, t8_element_t * child)
 {
-  const t8_quad_with_subelements *pquad_w_sub_elem = (const t8_quad_with_subelements *) elem;
-  t8_quad_with_subelements *pquad_w_sub_child = (t8_quad_with_subelements *) child;
+  const t8_quad_with_subelements *pquad_w_sub_elem =
+    (const t8_quad_with_subelements *) elem;
+  t8_quad_with_subelements *pquad_w_sub_child =
+    (t8_quad_with_subelements *) child;
 
   const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
   p4est_quadrant_t   *r = &pquad_w_sub_child->p4q;
@@ -236,11 +247,11 @@ t8_default_scheme_sub_c::t8_element_child (const t8_element_t * elem,
   T8_ASSERT (p4est_quadrant_is_extended (q));
   T8_ASSERT (q->level < P4EST_QMAXLEVEL);
   T8_ASSERT (childid >= 0 && childid < P4EST_CHILDREN);
-  
+
   r->x = childid & 0x01 ? (q->x | shift) : q->x;
   r->y = childid & 0x02 ? (q->y | shift) : q->y;
   r->level = q->level + 1;
-  
+
   T8_ASSERT (p4est_quadrant_is_parent (q, r));
 
   t8_element_copy_surround (q, r);
@@ -248,14 +259,16 @@ t8_default_scheme_sub_c::t8_element_child (const t8_element_t * elem,
 
 void
 t8_default_scheme_sub_c::t8_element_children (const t8_element_t * elem,
-                                               int length, t8_element_t * c[])
+                                              int length, t8_element_t * c[])
 {
-  const t8_quad_with_subelements *pquad_w_sub_elem = (const t8_quad_with_subelements *) elem;
-  t8_quad_with_subelements **pquad_w_sub_children = (t8_quad_with_subelements **) c;
+  const t8_quad_with_subelements *pquad_w_sub_elem =
+    (const t8_quad_with_subelements *) elem;
+  t8_quad_with_subelements **pquad_w_sub_children =
+    (t8_quad_with_subelements **) c;
 
   const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
 
-  int i;
+  int                 i;
 
   T8_ASSERT (t8_element_is_valid (elem));
 #ifdef T8_ENABLE_DEBUG
@@ -268,21 +281,22 @@ t8_default_scheme_sub_c::t8_element_children (const t8_element_t * elem,
 #endif
   T8_ASSERT (length == P4EST_CHILDREN);
 
-  /* set coordinates and levels of the children */ 
+  /* set coordinates and levels of the children */
   p4est_quadrant_children (q, &pquad_w_sub_children[0]->p4q,
-                              &pquad_w_sub_children[1]->p4q,
-                              &pquad_w_sub_children[2]->p4q,
-                              &pquad_w_sub_children[3]->p4q);
+                           &pquad_w_sub_children[1]->p4q,
+                           &pquad_w_sub_children[2]->p4q,
+                           &pquad_w_sub_children[3]->p4q);
 
   for (i = 0; i < P4EST_CHILDREN; ++i) {
-    t8_element_copy_surround (q, &pquad_w_sub_children[i]->p4q); 
+    t8_element_copy_surround (q, &pquad_w_sub_children[i]->p4q);
   }
 }
 
 int
 t8_default_scheme_sub_c::t8_element_child_id (const t8_element_t * elem)
 {
-  const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
+  const t8_quad_with_subelements *pquad_w_sub =
+    (const t8_quad_with_subelements *) elem;
   const p4est_quadrant_t *q = &pquad_w_sub->p4q;
 
   T8_ASSERT (t8_element_is_valid (elem));
@@ -291,9 +305,10 @@ t8_default_scheme_sub_c::t8_element_child_id (const t8_element_t * elem)
 
 int
 t8_default_scheme_sub_c::t8_element_ancestor_id (const t8_element_t * elem,
-                                                  int level)
+                                                 int level)
 {
-  const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
+  const t8_quad_with_subelements *pquad_w_sub =
+    (const t8_quad_with_subelements *) elem;
   const p4est_quadrant_t *q = &pquad_w_sub->p4q;
 
   return p4est_quadrant_ancestor_id (q, level);
@@ -302,7 +317,8 @@ t8_default_scheme_sub_c::t8_element_ancestor_id (const t8_element_t * elem,
 int
 t8_default_scheme_sub_c::t8_element_is_family (t8_element_t ** fam)
 {
-  t8_quad_with_subelements **pquad_w_sub_family = (t8_quad_with_subelements **) fam;
+  t8_quad_with_subelements **pquad_w_sub_family =
+    (t8_quad_with_subelements **) fam;
 #ifdef T8_ENABLE_DEBUG
   int                 i;
   for (i = 0; i < P4EST_CHILDREN; i++) {
@@ -317,11 +333,11 @@ t8_default_scheme_sub_c::t8_element_is_family (t8_element_t ** fam)
 
 void
 t8_default_scheme_sub_c::t8_element_set_linear_id (t8_element_t * elem,
-                                                    int level,
-                                                    t8_linearidx_t id)
+                                                   int level,
+                                                   t8_linearidx_t id)
 {
   t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem;
-  p4est_quadrant_t *q = &pquad_w_sub->p4q;
+  p4est_quadrant_t   *q = &pquad_w_sub->p4q;
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
@@ -332,11 +348,11 @@ t8_default_scheme_sub_c::t8_element_set_linear_id (t8_element_t * elem,
 }
 
 t8_linearidx_t
-t8_default_scheme_sub_c::t8_element_get_linear_id (const t8_element_t *
-                                                      elem, int level)
+  t8_default_scheme_sub_c::t8_element_get_linear_id (const t8_element_t *
+                                                     elem, int level)
 {
   t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem;
-  p4est_quadrant_t *q = &pquad_w_sub->p4q;
+  p4est_quadrant_t   *q = &pquad_w_sub->p4q;
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
@@ -346,15 +362,17 @@ t8_default_scheme_sub_c::t8_element_get_linear_id (const t8_element_t *
 
 void
 t8_default_scheme_sub_c::t8_element_first_descendant (const t8_element_t *
-                                                       elem,
-                                                       t8_element_t * desc,
-                                                       int level)
+                                                      elem,
+                                                      t8_element_t * desc,
+                                                      int level)
 {
-  const t8_quad_with_subelements *pquad_w_sub_elem = (const t8_quad_with_subelements *) elem;
-  t8_quad_with_subelements *pquad_w_sub_desc = (t8_quad_with_subelements *) desc;
+  const t8_quad_with_subelements *pquad_w_sub_elem =
+    (const t8_quad_with_subelements *) elem;
+  t8_quad_with_subelements *pquad_w_sub_desc =
+    (t8_quad_with_subelements *) desc;
 
   const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
-  p4est_quadrant_t *r = &pquad_w_sub_desc->p4q;
+  p4est_quadrant_t   *r = &pquad_w_sub_desc->p4q;
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
@@ -366,15 +384,17 @@ t8_default_scheme_sub_c::t8_element_first_descendant (const t8_element_t *
 
 void
 t8_default_scheme_sub_c::t8_element_last_descendant (const t8_element_t *
-                                                      elem,
-                                                      t8_element_t * desc,
-                                                      int level)
+                                                     elem,
+                                                     t8_element_t * desc,
+                                                     int level)
 {
-  const t8_quad_with_subelements *pquad_w_sub_elem = (const t8_quad_with_subelements *) elem;
-  t8_quad_with_subelements *pquad_w_sub_desc = (t8_quad_with_subelements *) desc;
+  const t8_quad_with_subelements *pquad_w_sub_elem =
+    (const t8_quad_with_subelements *) elem;
+  t8_quad_with_subelements *pquad_w_sub_desc =
+    (t8_quad_with_subelements *) desc;
 
   const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
-  p4est_quadrant_t *r = &pquad_w_sub_desc->p4q;
+  p4est_quadrant_t   *r = &pquad_w_sub_desc->p4q;
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
@@ -386,14 +406,16 @@ t8_default_scheme_sub_c::t8_element_last_descendant (const t8_element_t *
 
 void
 t8_default_scheme_sub_c::t8_element_successor (const t8_element_t * elem1,
-                                                t8_element_t * elem2,
-                                                int level)
+                                               t8_element_t * elem2,
+                                               int level)
 {
-  const t8_quad_with_subelements *pquad_w_sub_elem1 = (const t8_quad_with_subelements *) elem1;
-  t8_quad_with_subelements *pquad_w_sub_elem2 = (t8_quad_with_subelements *) elem2;
+  const t8_quad_with_subelements *pquad_w_sub_elem1 =
+    (const t8_quad_with_subelements *) elem1;
+  t8_quad_with_subelements *pquad_w_sub_elem2 =
+    (t8_quad_with_subelements *) elem2;
 
   const p4est_quadrant_t *q = &pquad_w_sub_elem1->p4q;
-  p4est_quadrant_t *r = &pquad_w_sub_elem2->p4q;
+  p4est_quadrant_t   *r = &pquad_w_sub_elem2->p4q;
 
   t8_linearidx_t      id;
 
@@ -409,16 +431,19 @@ t8_default_scheme_sub_c::t8_element_successor (const t8_element_t * elem1,
 
 void
 t8_default_scheme_sub_c::t8_element_nca (const t8_element_t * elem1,
-                                          const t8_element_t * elem2,
-                                          t8_element_t * nca)
+                                         const t8_element_t * elem2,
+                                         t8_element_t * nca)
 {
-  const t8_quad_with_subelements *pquad_w_sub_elem1 = (const t8_quad_with_subelements *) elem1;
-  const t8_quad_with_subelements *pquad_w_sub_elem2 = (const t8_quad_with_subelements *) elem2;
-  t8_quad_with_subelements *pquad_w_sub_nca = (t8_quad_with_subelements *) nca;
+  const t8_quad_with_subelements *pquad_w_sub_elem1 =
+    (const t8_quad_with_subelements *) elem1;
+  const t8_quad_with_subelements *pquad_w_sub_elem2 =
+    (const t8_quad_with_subelements *) elem2;
+  t8_quad_with_subelements *pquad_w_sub_nca =
+    (t8_quad_with_subelements *) nca;
 
   const p4est_quadrant_t *q1 = &pquad_w_sub_elem1->p4q;
   const p4est_quadrant_t *q2 = &pquad_w_sub_elem2->p4q;
-  p4est_quadrant_t *r = &pquad_w_sub_nca->p4q;
+  p4est_quadrant_t   *r = &pquad_w_sub_nca->p4q;
 
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
@@ -434,7 +459,7 @@ t8_default_scheme_sub_c::t8_element_nca (const t8_element_t * elem1,
 
 t8_element_shape_t
   t8_default_scheme_sub_c::t8_element_face_shape (const t8_element_t * elem,
-                                                   int face)
+                                                  int face)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   return T8_ECLASS_LINE;
@@ -442,11 +467,11 @@ t8_element_shape_t
 
 void
 t8_default_scheme_sub_c::t8_element_children_at_face (const t8_element_t *
-                                                       elem, int face,
-                                                       t8_element_t *
-                                                       children[],
-                                                       int num_children,
-                                                       int *child_indices)
+                                                      elem, int face,
+                                                      t8_element_t *
+                                                      children[],
+                                                      int num_children,
+                                                      int *child_indices)
 {
   int                 first_child, second_child;
 
@@ -513,8 +538,8 @@ t8_default_scheme_sub_c::t8_element_children_at_face (const t8_element_t *
 
 int
 t8_default_scheme_sub_c::t8_element_face_child_face (const t8_element_t *
-                                                      elem, int face,
-                                                      int face_child)
+                                                     elem, int face,
+                                                     int face_child)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   /* For quadrants the face enumeration of children is the same as for the parent. */
@@ -523,9 +548,10 @@ t8_default_scheme_sub_c::t8_element_face_child_face (const t8_element_t *
 
 int
 t8_default_scheme_sub_c::t8_element_face_parent_face (const t8_element_t *
-                                                       elem, int face)
+                                                      elem, int face)
 {
-  const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
+  const t8_quad_with_subelements *pquad_w_sub =
+    (const t8_quad_with_subelements *) elem;
   const p4est_quadrant_t *q = &pquad_w_sub->p4q;
   int                 child_id;
 
@@ -546,17 +572,19 @@ t8_default_scheme_sub_c::t8_element_face_parent_face (const t8_element_t *
 
 void
 t8_default_scheme_sub_c::t8_element_transform_face (const t8_element_t *
-                                                     elem1,
-                                                     t8_element_t * elem2,
-                                                     int orientation,
-                                                     int sign,
-                                                     int is_smaller_face)
+                                                    elem1,
+                                                    t8_element_t * elem2,
+                                                    int orientation,
+                                                    int sign,
+                                                    int is_smaller_face)
 {
-  const t8_quad_with_subelements *pquad_w_sub_elem1 = (const t8_quad_with_subelements *) elem1;
-  t8_quad_with_subelements *pquad_w_sub_elem2 = (t8_quad_with_subelements *) elem2;
+  const t8_quad_with_subelements *pquad_w_sub_elem1 =
+    (const t8_quad_with_subelements *) elem1;
+  t8_quad_with_subelements *pquad_w_sub_elem2 =
+    (t8_quad_with_subelements *) elem2;
 
   const p4est_quadrant_t *qin = &pquad_w_sub_elem1->p4q;
-  p4est_quadrant_t *p = &pquad_w_sub_elem2->p4q;
+  p4est_quadrant_t   *p = &pquad_w_sub_elem2->p4q;
 
   const p4est_quadrant_t *q;
   p4est_qcoord_t      h = P4EST_QUADRANT_LEN (qin->level);
@@ -632,10 +660,10 @@ t8_default_scheme_sub_c::t8_element_transform_face (const t8_element_t *
 
 int
 t8_default_scheme_sub_c::t8_element_extrude_face (const t8_element_t * face,
-                                                   const t8_eclass_scheme_c *
-                                                   face_scheme,
-                                                   t8_element_t * elem,
-                                                   int root_face)
+                                                  const t8_eclass_scheme_c *
+                                                  face_scheme,
+                                                  t8_element_t * elem,
+                                                  int root_face)
 {
   t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem;
   p4est_quadrant_t   *q = &pquad_w_sub->p4q;
@@ -648,7 +676,7 @@ t8_default_scheme_sub_c::t8_element_extrude_face (const t8_element_t * face,
   T8_ASSERT (face_scheme->eclass == T8_ECLASS_LINE);
   T8_ASSERT (face_scheme->t8_element_is_valid (elem));
   T8_ASSERT (0 <= root_face && root_face < P4EST_FACES);
-  
+
   /*
    * The faces of the root quadrant are enumerated like this:
    *
@@ -692,7 +720,7 @@ t8_default_scheme_sub_c::t8_element_extrude_face (const t8_element_t * face,
 
 int
 t8_default_scheme_sub_c::t8_element_tree_face (const t8_element_t * elem,
-                                                int face)
+                                               int face)
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= face && face < P4EST_FACES);
@@ -703,16 +731,18 @@ t8_default_scheme_sub_c::t8_element_tree_face (const t8_element_t * elem,
 /** Construct the first descendant of an element that touches a given face.   */
 void
 t8_default_scheme_sub_c::t8_element_first_descendant_face (const t8_element_t
-                                                            * elem, int face,
-                                                            t8_element_t *
-                                                            first_desc,
-                                                            int level)
+                                                           * elem, int face,
+                                                           t8_element_t *
+                                                           first_desc,
+                                                           int level)
 {
-  const t8_quad_with_subelements *pquad_w_sub_elem = (const t8_quad_with_subelements *) elem;
-  t8_quad_with_subelements *pquad_w_sub_first_desc = (t8_quad_with_subelements *) first_desc;
+  const t8_quad_with_subelements *pquad_w_sub_elem =
+    (const t8_quad_with_subelements *) elem;
+  t8_quad_with_subelements *pquad_w_sub_first_desc =
+    (t8_quad_with_subelements *) first_desc;
 
   const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
-  p4est_quadrant_t *desc = &pquad_w_sub_first_desc->p4q;
+  p4est_quadrant_t   *desc = &pquad_w_sub_first_desc->p4q;
 
   int                 first_face_corner;
 
@@ -728,13 +758,15 @@ t8_default_scheme_sub_c::t8_element_first_descendant_face (const t8_element_t
 /** Construct the last descendant of an element that touches a given face.   */
 void
 t8_default_scheme_sub_c::t8_element_last_descendant_face (const t8_element_t
-                                                           * elem, int face,
-                                                           t8_element_t *
-                                                           last_desc,
-                                                           int level)
+                                                          * elem, int face,
+                                                          t8_element_t *
+                                                          last_desc,
+                                                          int level)
 {
-  const t8_quad_with_subelements *pquad_w_sub_elem = (const t8_quad_with_subelements *) elem;
-  t8_quad_with_subelements *pquad_w_sub_last_desc = (t8_quad_with_subelements *) last_desc;
+  const t8_quad_with_subelements *pquad_w_sub_elem =
+    (const t8_quad_with_subelements *) elem;
+  t8_quad_with_subelements *pquad_w_sub_last_desc =
+    (t8_quad_with_subelements *) last_desc;
 
   const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
   p4est_quadrant_t   *desc = &pquad_w_sub_last_desc->p4q;
@@ -752,12 +784,13 @@ t8_default_scheme_sub_c::t8_element_last_descendant_face (const t8_element_t
 
 void
 t8_default_scheme_sub_c::t8_element_boundary_face (const t8_element_t * elem,
-                                                    int face,
-                                                    t8_element_t * boundary,
-                                                    const t8_eclass_scheme_c *
-                                                    boundary_scheme)
+                                                   int face,
+                                                   t8_element_t * boundary,
+                                                   const t8_eclass_scheme_c *
+                                                   boundary_scheme)
 {
-  const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
+  const t8_quad_with_subelements *pquad_w_sub =
+    (const t8_quad_with_subelements *) elem;
   const p4est_quadrant_t *q = &pquad_w_sub->p4q;
 
   t8_dline_t         *l = (t8_dline_t *) boundary;
@@ -788,8 +821,8 @@ t8_default_scheme_sub_c::t8_element_boundary_face (const t8_element_t * elem,
 
 void
 t8_default_scheme_sub_c::t8_element_boundary (const t8_element_t * elem,
-                                               int min_dim, int length,
-                                               t8_element_t ** boundary)
+                                              int min_dim, int length,
+                                              t8_element_t ** boundary)
 {
   SC_ABORT ("Not implemented\n");
 #if 0
@@ -810,9 +843,10 @@ t8_default_scheme_sub_c::t8_element_boundary (const t8_element_t * elem,
 
 int
 t8_default_scheme_sub_c::t8_element_is_root_boundary (const t8_element_t *
-                                                       elem, int face)
+                                                      elem, int face)
 {
-  const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
+  const t8_quad_with_subelements *pquad_w_sub =
+    (const t8_quad_with_subelements *) elem;
   const p4est_quadrant_t *q = &pquad_w_sub->p4q;
 
   p4est_qcoord_t      coord;
@@ -831,13 +865,15 @@ t8_default_scheme_sub_c::t8_element_is_root_boundary (const t8_element_t *
 
 int
 t8_default_scheme_sub_c::t8_element_face_neighbor_inside (const t8_element_t
-                                                           * elem,
-                                                           t8_element_t *
-                                                           neigh, int face,
-                                                           int *neigh_face)
+                                                          * elem,
+                                                          t8_element_t *
+                                                          neigh, int face,
+                                                          int *neigh_face)
 {
-  const t8_quad_with_subelements *pquad_w_sub_elem = (const t8_quad_with_subelements *) elem;
-  t8_quad_with_subelements *pquad_w_sub_neigh = (t8_quad_with_subelements *) neigh;
+  const t8_quad_with_subelements *pquad_w_sub_elem =
+    (const t8_quad_with_subelements *) elem;
+  t8_quad_with_subelements *pquad_w_sub_neigh =
+    (t8_quad_with_subelements *) neigh;
 
   const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
   p4est_quadrant_t   *n = &pquad_w_sub_neigh->p4q;
@@ -864,7 +900,7 @@ t8_default_scheme_sub_c::t8_element_face_neighbor_inside (const t8_element_t
 
 void
 t8_default_scheme_sub_c::t8_element_anchor (const t8_element_t * elem,
-                                             int coord[3])
+                                            int coord[3])
 {
   t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem;
   p4est_quadrant_t   *q = &pquad_w_sub->p4q;
@@ -887,14 +923,15 @@ void
 t8_default_scheme_sub_c::t8_element_vertex_coords (const t8_element_t * t,
                                                    int vertex, int coords[])
 {
-  const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) t;
+  const t8_quad_with_subelements *pquad_w_sub =
+    (const t8_quad_with_subelements *) t;
   const p4est_quadrant_t *q1 = &pquad_w_sub->p4q;
 
   T8_ASSERT (t8_element_is_valid (t));
 
   if (pquad_w_sub->dummy_is_subelement == 0) {
     int                 len;
-    
+
     T8_ASSERT (0 <= vertex && vertex < 4);
     /* Get the length of the quadrant */
     len = P4EST_QUADRANT_LEN (q1->level);
@@ -910,10 +947,14 @@ t8_default_scheme_sub_c::t8_element_vertex_coords (const t8_element_t * t,
 }
 
 void
-t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const t8_element_t * t,
-                                                                 int vertex, int coords[])
+t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const
+                                                                 t8_element_t
+                                                                 * t,
+                                                                 int vertex,
+                                                                 int coords[])
 {
-  const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) t;
+  const t8_quad_with_subelements *pquad_w_sub =
+    (const t8_quad_with_subelements *) t;
   const p4est_quadrant_t *q1 = &pquad_w_sub->p4q;
 
   int                 len;
@@ -1015,14 +1056,16 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
                                                    t8_element_t * c[],
                                                    int type)
 {
-  const t8_quad_with_subelements *pquad_w_sub_elem = (const t8_quad_with_subelements *) elem;
-  t8_quad_with_subelements **pquad_w_sub_subelement = (t8_quad_with_subelements **) c;
+  const t8_quad_with_subelements *pquad_w_sub_elem =
+    (const t8_quad_with_subelements *) elem;
+  t8_quad_with_subelements **pquad_w_sub_subelement =
+    (t8_quad_with_subelements **) c;
 
   const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
 
-  int i;
+  int                 i;
 
-  T8_ASSERT (type >= 1 && type <= 15); 
+  T8_ASSERT (type >= 1 && type <= 15);
   T8_ASSERT (pquad_w_sub_elem->dummy_is_subelement == 0);
   T8_ASSERT (t8_element_is_valid (elem));
 #ifdef T8_ENABLE_DEBUG
@@ -1055,8 +1098,8 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
    * Sub_ids are counted clockwise, starting with the (lower) left subelement with id 0.                    
    * Note, that we do not change the p4est quadrant. */
 
-  int sub_id_counter = 0;
-  int num_subelements;
+  int                 sub_id_counter = 0;
+  int                 num_subelements;
 
   num_subelements = t8_element_get_number_of_subelements (type);
 
@@ -1067,22 +1110,23 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
     pquad_w_sub_subelement[sub_id_counter]->dummy_is_subelement = 1;
     pquad_w_sub_subelement[sub_id_counter]->subelement_type = type;
     pquad_w_sub_subelement[sub_id_counter]->subelement_id = sub_id_counter;
-    pquad_w_sub_subelement[sub_id_counter]->num_subelement_ids = num_subelements;
+    pquad_w_sub_subelement[sub_id_counter]->num_subelement_ids =
+      num_subelements;
   }
-  #endif
-  
-  #if 1
+#endif
+
+#if 0
   /* temporary subelement type:
-  *                               
-  *      x - - - - - - - x         x - - - x - - - x           
-  *      |               |         |       |       |          
-  *      |               |         |       |       |    
-  *      |               |   -->   | sub_  | sub_  |     
-  *      |               |         | id    | id    |   
-  *      | elem          |         | 0     | 1     |
-  *      + - - - - - - - x         x - - - x - - - x
-  *
-  * we do not change the p4est quadrant */
+   *                               
+   *      x - - - - - - - x         x - - - x - - - x           
+   *      |               |         |       |       |          
+   *      |               |         |       |       |    
+   *      |               |   -->   | sub_  | sub_  |     
+   *      |               |         | id    | id    |   
+   *      | elem          |         | 0     | 1     |
+   *      + - - - - - - - x         x - - - x - - - x
+   *
+   * we do not change the p4est quadrant */
 
   pquad_w_sub_subelement[0]->p4q.x = q->x;
   pquad_w_sub_subelement[0]->p4q.y = q->y;
@@ -1099,34 +1143,35 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
   pquad_w_sub_subelement[1]->subelement_type = type;
   pquad_w_sub_subelement[1]->subelement_id = 1;
   pquad_w_sub_subelement[1]->num_subelement_ids = 2;
-  #endif
+#endif
 
   for (i = 0; i < pquad_w_sub_elem->num_subelement_ids; ++i) {
-    T8_ASSERT (t8_element_is_valid(c[i]));
-    t8_element_copy_surround (q, &pquad_w_sub_subelement[i]->p4q); 
+    T8_ASSERT (t8_element_is_valid (c[i]));
+    t8_element_copy_surround (q, &pquad_w_sub_subelement[i]->p4q);
   }
 }
 
 int
-t8_default_scheme_sub_c::t8_element_get_number_of_subelements (int subelement_type)
+t8_default_scheme_sub_c::t8_element_get_number_of_subelements (int
+                                                               subelement_type)
 {
   T8_ASSERT (subelement_type >= 1 && subelement_type <= 15);
 
   /* consider subelement_type 13 = 1101 in base two -> there are 4 + (1+1+0+1) = 7 subelements */
-  int num_subelements;
-  int type = subelement_type;
-  int digit_sum_of_binary = 0;
-  int binary_array[P4EST_FACES] = {};
+  int                 num_subelements;
+  int                 type = subelement_type;
+  int                 digit_sum_of_binary = 0;
+  int                 binary_array[P4EST_FACES] = { };
 
-  int i;
-  int j;
+  int                 i;
+  int                 j;
 
-  for (i = 0; i < P4EST_FACES; i++) { /* need an array with 4 elements to store all subelement types of the quad scheme from 1 to 15 ({0,0,0,1} to {1,1,1,1}) */
+  for (i = 0; i < P4EST_FACES; i++) {   /* need an array with 4 elements to store all subelement types of the quad scheme from 1 to 15 ({0,0,0,1} to {1,1,1,1}) */
     if (type >= pow (2, (P4EST_FACES - 1) - i)) {
       binary_array[i] = 1;
       type -= pow (2, (P4EST_FACES - 1) - i);
     }
-  } /* we now got a binary represenation of the subelement type, bitwise stored in an array */
+  }                             /* we now got a binary represenation of the subelement type, bitwise stored in an array */
 
   for (j = 0; j < P4EST_FACES; j++) {
     digit_sum_of_binary += binary_array[j];
@@ -1136,10 +1181,15 @@ t8_default_scheme_sub_c::t8_element_get_number_of_subelements (int subelement_ty
   return num_subelements;
 }
 
-void 
-t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const t8_element_t * elem, int location[]) 
+void
+t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const
+                                                                t8_element_t *
+                                                                elem,
+                                                                int
+                                                                location[])
 {
-  const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
+  const t8_quad_with_subelements *pquad_w_sub =
+    (const t8_quad_with_subelements *) elem;
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (pquad_w_sub->dummy_is_subelement == 1);
@@ -1159,41 +1209,41 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const t8_element
    * We will use the binary representation to determine the location of the given subelement. 
    * 
    * We need to know: 
-   *     i)   the face number of the first vertex. Values: {0,1,2,3}
-   *     ii)  whether this face is split in half. Values {0,1}
-   *     iii) if the subelement is the first or second subelement at the face. Values: {0,1}
+   *     i)   the face number of the first vertex (values: {0,1,2,3}).
+   *     ii)  whether this face is split in half (values: {0,1}).
+   *     iii) if the subelement is the first or second subelement at the face (values: {0,1}).
    * 
    * These informations are then saved in the location array which will be used by the element_vertex function, 
    * to automatically determine the vertex coordinates of the given subelement. 
    * 
    * The location array for the above example would be {1,1,1} (upper face, split = true, second subelement at the upper face). */
-  
+
   /* 1) convert the subelement type from a decimal to a binary representation */
-  int type = pquad_w_sub->subelement_type;
-  int binary_array[P4EST_FACES] = {};
+  int                 type = pquad_w_sub->subelement_type;
+  int                 binary_array[P4EST_FACES] = { };
 
-  int i;
+  int                 i;
 
-  for (i = 0; i < P4EST_FACES; i++) { /* need an array with 4 elements to store all subelement types of the quad scheme from 1 to 15 ({0,0,0,1} to {1,1,1,1}) */
+  for (i = 0; i < P4EST_FACES; i++) {   /* need an array with 4 elements to store all subelement types of the quad scheme from 1 to 15 ({0,0,0,1} to {1,1,1,1}) */
     if (type >= pow (2, (P4EST_FACES - 1) - i)) {
       binary_array[i] = 1;
       type -= pow (2, (P4EST_FACES - 1) - i);
     }
-  } /* we now got a binary represenation of the subelement type, bitwise stored in an array */
+  }                             /* we now got a binary represenation of the subelement type, bitwise stored in an array */
 
   /* 2) rearrange the binary representation to be in clockwise order */
-  int binary_array_temp[P4EST_FACES] = {};
+  int                 binary_array_temp[P4EST_FACES] = { };
 
-  int j;
+  int                 j;
 
-  for (j = 0; j < P4EST_FACES; j++) { /* copying the binary array */
+  for (j = 0; j < P4EST_FACES; j++) {   /* copying the binary array */
     binary_array_temp[j] = binary_array[j];
   }
 
-  binary_array[0] = binary_array_temp[0]; /* f3 <- f3 */
-  binary_array[1] = binary_array_temp[3]; /* f2 <- f0 */
-  binary_array[2] = binary_array_temp[1]; /* f1 <- f2 */
-  binary_array[3] = binary_array_temp[2]; /* f0 <- f1 */
+  binary_array[0] = binary_array_temp[0];       /* f3 <- f3 */
+  binary_array[1] = binary_array_temp[3];       /* f2 <- f0 */
+  binary_array[2] = binary_array_temp[1];       /* f1 <- f2 */
+  binary_array[3] = binary_array_temp[2];       /* f0 <- f1 */
 
   /* 3) use the rearranged binary representation, and the sub_id to determine the location of the subelement and store these information in an array */
   /* 3.1) location[0] -> the face_number, the subelement is adjacent to */
@@ -1201,36 +1251,36 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const t8_element
   /* 3.3) location[2] -> is the subelement the first or second subelement of the face (always the first, if the face is not split) */
   T8_ASSERT (pquad_w_sub->subelement_id < pquad_w_sub->num_subelement_ids);
 
-  int sub_id = pquad_w_sub->subelement_id;
-  int sub_face_id = 1; /* initialize the sub_face_id as the second subelement of a face and change that if it is not true */
-  int face_number = 0;
-  int split;
+  int                 sub_id = pquad_w_sub->subelement_id;
+  int                 sub_face_id = 1;  /* initialize the sub_face_id as the second subelement of a face and change that if it is not true */
+  int                 face_number = 0;
+  int                 split;
 
-  int k = 0;
+  int                 k = 0;
 
   if (sub_id == 0) {
-    sub_face_id = 0; /* in this case, the subelement is the first element of the face */
+    sub_face_id = 0;            /* in this case, the subelement is the first element of the face */
   }
 
   while (sub_id >= 0 && k < P4EST_FACES) {
     if (binary_array[k] == 1) {
-      sub_id -= 2; /* two subelements adjacent to face k */
+      sub_id -= 2;              /* two subelements adjacent to face k */
     }
     else {
-      sub_id -= 1; /* one subelement adjacent to face k */
+      sub_id -= 1;              /* one subelement adjacent to face k */
     }
     if (sub_id == 0) {
-      sub_face_id = 0; /* in this case, the subelement is the first element of the face */
+      sub_face_id = 0;          /* in this case, the subelement is the first element of the face */
     }
     k++;
   }
   face_number = k - 1;
 
   if (binary_array[face_number] == 0) {
-    split = 0; /* the face is not split */ 
+    split = 0;                  /* the face is not split */
   }
   else {
-    split = 1; /* the face is split */
+    split = 1;                  /* the face is split */
   }
 
   location[0] = face_number;
@@ -1239,19 +1289,20 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const t8_element
 }
 
 t8_element_shape_t
-t8_default_scheme_sub_c::t8_element_get_shape (const t8_element_t * elem)
+  t8_default_scheme_sub_c::t8_element_shape (const t8_element_t * elem)
 {
-  const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
+  const t8_quad_with_subelements *pquad_w_sub =
+    (const t8_quad_with_subelements *) elem;
 
   T8_ASSERT (t8_element_is_valid (elem));
 
-  if (pquad_w_sub->dummy_is_subelement != 1) { 
+  if (pquad_w_sub->dummy_is_subelement != 1) {
     return T8_ECLASS_QUAD;
   }
-  else { /* for quads, all subelements are triangles */
+  else {                        /* for quads, all subelements are triangles */
     return T8_ECLASS_TRIANGLE;
   }
-} 
+}
 
 void
 t8_default_scheme_sub_c::t8_element_new (int length, t8_element_t ** elem)
@@ -1261,7 +1312,8 @@ t8_default_scheme_sub_c::t8_element_new (int length, t8_element_t ** elem)
 
   int                 i;
   for (i = 0; i < length; i++) {
-    t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem[i];
+    t8_quad_with_subelements *pquad_w_sub =
+      (t8_quad_with_subelements *) elem[i];
     t8_element_init (1, elem[i], 0);
     /* set dimension of quad to 2 */
     T8_QUAD_SET_TDIM ((p4est_quadrant_t *) & pquad_w_sub->p4q, 2);
@@ -1283,7 +1335,7 @@ t8_default_scheme_sub_c::t8_element_init (int length, t8_element_t * elem,
     pquad_w_sub[i].subelement_id = -1;
     pquad_w_sub[i].num_subelement_ids = -1;
 
-    #ifdef T8_ENABLE_DEBUG
+#ifdef T8_ENABLE_DEBUG
     /* In debugging mode we iterate over all length many elements and 
      * set their quad to the level 0 quad with ID 0. */
     if (!new_called) {
@@ -1303,13 +1355,19 @@ int
 t8_default_scheme_sub_c::t8_element_is_valid (const t8_element_t * elem) const 
 /* *INDENT-ON* */
 {
-  const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
+  const t8_quad_with_subelements *pquad_w_sub =
+    (const t8_quad_with_subelements *) elem;
   const p4est_quadrant_t *q = &pquad_w_sub->p4q;
 
-  T8_ASSERT (pquad_w_sub->dummy_is_subelement == 0 || pquad_w_sub->dummy_is_subelement == 1);
-  T8_ASSERT ((pquad_w_sub->subelement_type >= 0 && pquad_w_sub->subelement_type <= 15) || pquad_w_sub->subelement_type == -1);
+  T8_ASSERT (pquad_w_sub->dummy_is_subelement == 0
+             || pquad_w_sub->dummy_is_subelement == 1);
+  T8_ASSERT ((pquad_w_sub->subelement_type >= 0
+              && pquad_w_sub->subelement_type <= 15)
+             || pquad_w_sub->subelement_type == -1);
   // T8_ASSERT ((pquad_w_sub->num_subelement_ids >= 4 && pquad_w_sub->num_subelement_ids <= 8) || pquad_w_sub->num_subelement_ids == -1); 
-  T8_ASSERT ((pquad_w_sub->subelement_id >= 0 && pquad_w_sub->subelement_id <= 7) || pquad_w_sub->subelement_id == -1);
+  T8_ASSERT ((pquad_w_sub->subelement_id >= 0
+              && pquad_w_sub->subelement_id <= 7)
+             || pquad_w_sub->subelement_id == -1);
 
   return p4est_quadrant_is_extended (q);
 }
