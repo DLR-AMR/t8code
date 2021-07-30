@@ -442,6 +442,7 @@ return 0;
     ("Warning: t8code is not linked against vtk library. Vtk output will not be generated.\n");
   t8_global_productionf
     ("Consider calling 't8_forest_write_vtk' or 't8_forest_vtk_write_file' instead.\n");
+  return 0;
 #endif
 }
 
