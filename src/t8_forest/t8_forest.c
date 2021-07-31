@@ -599,14 +599,14 @@ t8_forest_commit (t8_forest_t forest)
           /* balance with repartition */
           flag_rep = 0;
         }
-          t8_forest_t         forest_adapt;
+          t8_forest_t         forest_balance;
 
-          t8_forest_init (&forest_adapt);
+          t8_forest_init (&forest_balance);
           /* forest_adapt should not change ownership of forest->set_from */
-          t8_forest_set_balance (forest_adapt, forest->set_from, flag_rep);
-          t8_forest_commit (forest_adapt);
+          t8_forest_set_balance (forest_balance, forest->set_from, flag_rep);
+          t8_forest_commit (forest_balance);
           /* The new forest will be partitioned/balanced from forest_adapt */
-          forest->set_from = forest_adapt;
+          forest->set_from = forest_balance;
       }
       else {
         /* in this case, this is the last from method that we execute,
