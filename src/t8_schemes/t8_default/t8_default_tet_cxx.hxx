@@ -276,23 +276,6 @@ public:
                                                    const void *indata,
                                                    void *outdata);
 
-  /** Construct a subelement */
-  virtual void        t8_element_to_subelement (const t8_element_t * elem,
-                                                t8_element_t * c[], int type);
-
-  /** Determine the coordinates of a subelement */
-  virtual void        t8_element_vertex_coords_of_subelement (const
-                                                              t8_element_t *
-                                                              t, int vertex,
-                                                              int coords[]);
-
-  /** Determine the number of subelements, used to remove hanging nodes from a element of a given type */
-  virtual int         t8_element_get_number_of_subelements (int
-                                                            subelement_type);
-
-  /** Get the shape of a given element. Subelements are triangles */
-  virtual t8_element_shape_t t8_element_get_shape (const t8_element_t * elem);
-
 #ifdef T8_ENABLE_DEBUG
   /** Query whether an element is valid */
   virtual int         t8_element_is_valid (const t8_element_t * t) const;

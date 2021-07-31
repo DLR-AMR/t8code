@@ -678,37 +678,6 @@ t8_default_scheme_hex_c::t8_element_vertex_coords (const t8_element_t * t,
 }
 
 void
-t8_default_scheme_hex_c::t8_element_to_subelement (const t8_element_t * elem,
-                                                   t8_element_t * c[],
-                                                   int type)
-{
-  SC_ABORT ("This function is not implemented yet.\n");
-}
-
-void
-t8_default_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
-                                                                 t8_element_t
-                                                                 * t,
-                                                                 int vertex,
-                                                                 int coords[])
-{
-  SC_ABORT ("This function is not implemented yet.\n");
-}
-
-int
-t8_default_scheme_hex_c::t8_element_get_number_of_subelements (int
-                                                               subelement_type)
-{
-  SC_ABORT ("This function is not implemented yet.\n");
-}
-
-t8_element_shape_t
-  t8_default_scheme_hex_c::t8_element_get_shape (const t8_element_t * elem)
-{
-  SC_ABORT ("This function is not implemented yet.\n");
-}
-
-void
 t8_default_scheme_hex_c::t8_element_new (int length, t8_element_t ** elem)
 {
   /* allocate memory for a hex */
