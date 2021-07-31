@@ -215,14 +215,4 @@ t8_default_scheme_common_c::t8_element_get_number_of_subelements (int
   SC_ABORT ("This function is not yet implemented for the given scheme.\n");
 }
 
-void
-t8_default_scheme_common_c::t8_element_get_location_of_subelement (const
-                                                                   t8_element_t
-                                                                   * elem,
-                                                                   int
-                                                                   location[])
-{
-  SC_ABORT ("This function is not yet implemented for the given scheme.\n");
-}
-
 T8_EXTERN_C_END ();

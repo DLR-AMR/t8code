@@ -116,11 +116,6 @@ public:
   virtual int         t8_element_get_number_of_subelements (int
                                                             subelement_type);
 
-  /** Get the location of a given subelement within the parent quad element */
-  virtual void        t8_element_get_location_of_subelement (const
-                                                             t8_element_t *
-                                                             elem,
-                                                             int location[]);
 };
 
 #endif /* !T8_DEFAULT_COMMON_CXX_HXX */

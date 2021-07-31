@@ -288,9 +288,6 @@ public:
   /** Determine the number of subelements, used to remove hanging nodes from a element of a given type */
   virtual int         t8_element_get_number_of_subelements (int subelement_type);         
 
-  /** Get the location of a given subelement within the parent quad element */
-  virtual void         t8_element_get_location_of_subelement (const t8_element_t * elem, int location[]) ;
-
   /** Get the shape of a given element. Subelements are triangles */
   virtual t8_element_shape_t t8_element_get_shape (const t8_element_t * elem);                                       
 

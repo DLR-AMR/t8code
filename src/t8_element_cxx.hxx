@@ -681,19 +681,6 @@ public:
                                                             subelement_type) =
     0;
 
-  /** This function will determine the location of a specific subelement in the parent element.
-   *  Since different subelement types are possible, it is apriori not known, where for example the
-   *  subelement with id 3 is located. 
-   *  \param [in] elem A valid subelement
-   *  \param [out] An array, whose entries will be filled with location information of the subelement 
-   *  All information in the location array will be needed to determine the verticies of any subelement.
-   */
-  virtual void        t8_element_get_location_of_subelement (const
-                                                             t8_element_t *
-                                                             elem,
-                                                             int location[]) =
-    0;
-
 #ifdef T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
