@@ -31,13 +31,20 @@
 #include <t8_vec.h>
 #include <example/common/t8_example_common.h>
 
+/* In this example, subelements are used to remove hanging nodes from a refined 2D quad scheme. 
+ * At first, a cmesh is adapted using the standard 2D refinement scheme AND balance. 
+ * In the following step, the new subelement functions are used to identify elements that have hanging nodes, 
+ * which are then adapted once more, using transition cells with subelements in order to remove the hanging nodes. */
+
+/* Define the data structure for the refinement criteria of this example (a circle with some user given midpoint and radius).
+ * Elements, whos anchor node is closer to the circle will be refined to a higher level, than elements, whos anchor node is farther away. */
 typedef struct
 {
   double              mid_point[3];
   double              radius;
 } t8_basic_sphere_data_t;
 
-/* Compute the distance to a sphere arount a mid_point with given radius. */
+/* Compute the distance to a sphere around a mid_point with given radius. */
 static double
 t8_basic_level_set_sphere (const double x[3], double t, void *data)
 {
@@ -48,15 +55,15 @@ t8_basic_level_set_sphere (const double x[3], double t, void *data)
 }
 
 static void
-t8_basic_refine_test (t8_eclass_t eclass)
+t8_refine_with_subelements (t8_eclass_t eclass)
 {
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
-  int                 initlevel = 2;
-  int                 minlevel = 1;
-  int                 maxlevel = 3;
+  int                 initlevel = 2;    /* level of the cmesh */
+  int                 minlevel = 1;     /* lowest level allowed for coarsening */
+  int                 maxlevel = 3;     /* highest level allowed for refining */
 
   t8_forest_init (&forest);
   t8_forest_init (&forest_adapt);
@@ -69,7 +76,7 @@ t8_basic_refine_test (t8_eclass_t eclass)
 
   t8_forest_commit (forest);
 
-  snprintf (filename, BUFSIZ, "e_s_forest_uniform_%s",
+  snprintf (filename, BUFSIZ, "forest_uniform_%s",
             t8_eclass_to_string[eclass]);
   t8_forest_write_vtk (forest, filename);
 
@@ -88,14 +95,20 @@ t8_basic_refine_test (t8_eclass_t eclass)
   ls_data.max_level = maxlevel;
   ls_data.udata = &sdata;
 
+  /* Adapt the mesh according to the user data. At the moment, balancing the adapted mesh afterwards is important for 
+   * the subelement functions to work. */
   t8_forest_set_user_data (forest_adapt, &ls_data);
   t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
   t8_forest_set_balance (forest_adapt, NULL, 0);
+
+  /* This function is the point of entry for the subelements.
+   * Analogue to the other set-functions, we add subelements to the from_method and will therefore 
+   * use the corresponding functions later during the adaption. */
   t8_forest_set_subelements (forest_adapt, NULL);
 
   t8_forest_commit (forest_adapt);
 
-  snprintf (filename, BUFSIZ, "e_s_forest_adapt_%s",
+  snprintf (filename, BUFSIZ, "forest_adapt_no_hanging_nodes_%s",
             t8_eclass_to_string[eclass]);
   t8_forest_write_vtk (forest_adapt, filename);
 
@@ -113,7 +126,8 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEFAULT);
 
-  t8_basic_refine_test (T8_ECLASS_QUAD);
+  /* At the moment, subelements are only implemented for the quad scheme */
+  t8_refine_with_subelements (T8_ECLASS_QUAD);
 
   sc_finalize ();
 
