@@ -57,6 +57,8 @@ t8_basic_level_set_sphere (const double x[3], double t, void *data)
 static void
 t8_refine_with_subelements (t8_eclass_t eclass)
 {
+  t8_productionf ("Into the t8_refine_with_subelements function");
+
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
   t8_cmesh_t          cmesh;
