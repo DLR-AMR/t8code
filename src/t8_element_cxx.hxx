@@ -652,7 +652,8 @@ public:
    */
   virtual void        t8_element_to_subelement (const t8_element_t * elem,
                                                 int type,
-                                                t8_element_t * subelements[]) = 0;
+                                                t8_element_t *
+                                                subelements[]) = 0;
 
   /** This function determines the vertex coordinates of subelements.
    *  \param [in] elem A valid subelement 
