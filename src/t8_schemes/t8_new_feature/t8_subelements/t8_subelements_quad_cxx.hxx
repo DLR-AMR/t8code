@@ -352,7 +352,7 @@ public:
   virtual int         t8_element_is_valid (const t8_element_t * t) const;
 #endif
 
-protected: 
+protected:
 /** This function will determine the location of a specific subelement in the parent element.
    *  Since different subelement types are possible, it is apriori not known, where for example the
    *  subelement with id 3 is located. 
@@ -367,10 +367,10 @@ protected:
    *  The information in the location can be used to automatically determine the verticies of any subelement.
    *  Since this function is only used to determine the vertices of subelements, it can be declared as a private/protected function.
    */
-  void        t8_element_get_location_of_subelement (const
-                                                     t8_element_t *
-                                                     elem,
-                                                     int location[]);
+  void                t8_element_get_location_of_subelement (const
+                                                             t8_element_t *
+                                                             elem,
+                                                             int location[]);
 };
 
 #endif /* !T8_DEFAULT_QUAD_CXX_HXX */
