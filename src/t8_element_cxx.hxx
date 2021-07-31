@@ -674,8 +674,6 @@ public:
    *  subelement type. 
    *  \param [in] subelement_type The subelement type as an integer
    *  \return the number of subelements a parent element is split into
-   *  This function can be used to allocate enough memory before transforming an element
-   *  into subelements.  
    */
   virtual int         t8_element_get_number_of_subelements (int
                                                             subelement_type) =
