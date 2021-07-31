@@ -134,7 +134,7 @@ typedef int         (*t8_forest_adapt_t) (t8_forest_t forest,
  * \param [in,out] pforest      On input, this pointer must be non-NULL.
  *                              On return, this pointer set to the new forest.
  */
-void                t8_forest_init (t8_forest_t *pforest);
+void                t8_forest_init (t8_forest_t * pforest);
 
 /** Check whether a forest is not NULL, initialized and not committed.
  * In addition, it asserts that the forest is consistent as much as possible.
@@ -351,7 +351,8 @@ void                t8_forest_set_balance (t8_forest_t forest,
  * In general, it should be able to use subelements on arbitrary forests. This depends on the specific implementation.
  * \note Subelements, that remove hanging nodes from the forest, are only implemented for the 2D quad scheme. 
  */
-void                t8_forest_set_subelements (t8_forest_t forest, const t8_forest_t set_from);
+void                t8_forest_set_subelements (t8_forest_t forest,
+                                               const t8_forest_t set_from);
 
 /** Enable or disable the creation of a layer of ghost elements.
  * On default no ghosts are created.
@@ -1048,7 +1049,7 @@ void                t8_forest_ref (t8_forest_t forest);
  *                              Otherwise, the pointer is not changed and
  *                              the forest is not modified in other ways.
  */
-void                t8_forest_unref (t8_forest_t *pforest);
+void                t8_forest_unref (t8_forest_t * pforest);
 
 T8_EXTERN_C_END ();
 
