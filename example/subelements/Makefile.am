@@ -6,5 +6,5 @@ bin_PROGRAMS += \
 	example/subelements/t8_basic_quad_refinement \
 	example/subelements/t8_test_element_functions
 
-example_subelements_t8_basic_quad_refinement_SOURCES = example/subelements/basic_quad_refinement.cxx
-example_subelements_t8_test_element_functions_SOURCES = example/subelements/test_element_functions.cxx
+example_subelements_t8_basic_quad_refinement_SOURCES = example/subelements/t8_basic_quad_refinement.cxx
+example_subelements_t8_test_element_functions_SOURCES = example/subelements/t8_test_element_functions.cxx
