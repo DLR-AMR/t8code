@@ -643,21 +643,21 @@ public:
                                                    const void *indata,
                                                    void *outdata) = 0;
 
-  /** This function transforms a parent element into children subelements.
-   *  Depending on the subelement type, the number of subelements, 
+  /** This function refines a parent element into subelements.
+   *  Depending on the subelement type, the number of subelements 
    *  to fill the parent element, can differ.
    *  \param [in] elem A valid element
    *  \param [in] type The subelement type
-   *  \param [out] c An array of all children subelements of the parent quad element elem
+   *  \param [out] subelements An array of all subelements of the parent quad element elem
    */
   virtual void        t8_element_to_subelement (const t8_element_t * elem,
-                                                t8_element_t * c[],
-                                                int type) = 0;
+                                                int type,
+                                                t8_element_t * subelements[]) = 0;
 
   /** This function determines the vertex coordinates of subelements.
    *  \param [in] elem A valid subelement 
    *  \param [in] vertex the number of the vertex, whose coordinates should be determined
-   *  \param [out] c An array, whose entries will be filled with the coordinates of the
+   *  \param [out] coords An array, whose entries will be filled with the coordinates of the
    *                 subelement. 
    * Note, that subelements can have another number of vertecies, compared to the used
    * eclass scheme. For example, subelements, that remove hanging nodes from the quad scheme,
@@ -672,8 +672,8 @@ public:
   /** This function will determine the number of children subelements, depending on the 
    *  subelement type. 
    *  \param [in] subelement_type The subelement type as an integer
-   *  \return the number of subelements, a parent element is split into, as an integer.
-   *  This function can be used, to allocate enough memory before transforming an element
+   *  \return the number of subelements a parent element is split into
+   *  This function can be used to allocate enough memory before transforming an element
    *  into subelements.  
    */
   virtual int         t8_element_get_number_of_subelements (int

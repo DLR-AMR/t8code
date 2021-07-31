@@ -328,7 +328,6 @@ static              t8_locidx_t
 t8_forest_num_points (t8_forest_t forest, int count_ghosts)
 {
   t8_locidx_t         itree, num_points, num_ghosts, ielem;
-  t8_tree_t           tree;
   t8_eclass_t         ghost_class;
   size_t              num_elements;
   t8_dpyramid_t      *pyra;

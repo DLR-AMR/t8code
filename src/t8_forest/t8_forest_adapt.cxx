@@ -409,8 +409,8 @@ t8_forest_adapt (t8_forest_t forest)
           elements[zz] =
             t8_element_array_index_locidx (telements, el_inserted + zz);
         }
-        tscheme->t8_element_to_subelement (elements_from[0], elements,
-                                           subelement_type);
+        tscheme->t8_element_to_subelement (elements_from[0], subelement_type,
+                                           elements);
         el_inserted += num_subelements;
         el_considered++;
       }

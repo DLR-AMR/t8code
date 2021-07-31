@@ -1053,8 +1053,8 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const
 
 void
 t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
-                                                   t8_element_t * c[],
-                                                   int type)
+                                                   int type,
+                                                   t8_element_t * c[])
 {
   const t8_quad_with_subelements *pquad_w_sub_elem =
     (const t8_quad_with_subelements *) elem;
