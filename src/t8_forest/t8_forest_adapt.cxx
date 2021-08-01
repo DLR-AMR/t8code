@@ -202,6 +202,7 @@ t8_forest_adapt (t8_forest_t forest)
   int                 ci;
   unsigned int        subelement_type;
   unsigned int        num_subelements;
+  int                 count_subelements = 0;
 #ifdef T8_ENABLE_DEBUG
   int                 is_family;
 #endif
@@ -413,6 +414,10 @@ t8_forest_adapt (t8_forest_t forest)
                                            elements);
         el_inserted += num_subelements;
         el_considered++;
+
+        /* each time we entry this case, a parent element is split into subelements.
+         * We will count the global number of constructed subelements and give this number as additional output. */
+        count_subelements += num_subelements;
       }
       else if (refine < 0) {
 
@@ -489,8 +494,15 @@ t8_forest_adapt (t8_forest_t forest)
   /* We now adapted all local trees */
   /* Compute the new global number of elements */
   t8_forest_comm_global_num_elements (forest);
-  t8_global_productionf ("Done t8_forest_adapt with %lld total elements\n",
-                         (long long) forest->global_num_elements);
+  /* If any subelement is constructed, give output this number as an additional information. */
+  if (count_subelements > 0) {
+    t8_global_productionf ("Done t8_forest_adapt with %lld total elements, %i of which are subelements.\n",
+                           (long long) forest->global_num_elements, count_subelements);
+  }
+  else {
+    t8_global_productionf ("Done t8_forest_adapt with %lld total elements.\n",
+                           (long long) forest->global_num_elements);
+  }
 
   /* if profiling is enabled, measure runtime */
   if (forest->profile != NULL) {
