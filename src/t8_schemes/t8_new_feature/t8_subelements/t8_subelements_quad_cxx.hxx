@@ -342,7 +342,10 @@ public:
 
 /** Determine the number of subelements, used to remove hanging nodes from a element of a given type */
   virtual int         t8_element_get_number_of_subelements (int
-                                                            subelement_type);
+                                                            subelement_type,
+                                                            const
+                                                            t8_element *
+                                                            elem);
 
 /** Get the shape of a given element. Subelements are triangles */
   virtual t8_element_shape_t t8_element_shape (const t8_element_t * elem);

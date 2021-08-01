@@ -114,7 +114,10 @@ public:
 
   /** Determine the number of subelements, used to remove hanging nodes from a element of a given type */
   virtual int         t8_element_get_number_of_subelements (int
-                                                            subelement_type);
+                                                            subelement_type,
+                                                            const
+                                                            t8_element_t *
+                                                            elem);
 
 };
 

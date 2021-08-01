@@ -400,7 +400,7 @@ t8_forest_adapt (t8_forest_t forest)
 
         /* determing the number of subelements of the given type for memory allocation */
         num_subelements =
-          tscheme->t8_element_get_number_of_subelements (subelement_type);
+          tscheme->t8_element_get_number_of_subelements (subelement_type, elements_from[0]);
         if (num_subelements > curr_num_children) {
           elements = T8_REALLOC (elements, t8_element_t *, num_subelements);
           curr_num_children = num_subelements;

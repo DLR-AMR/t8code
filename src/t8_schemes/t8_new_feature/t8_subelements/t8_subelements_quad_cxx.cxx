@@ -1101,7 +1101,7 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
   int                 sub_id_counter = 0;
   int                 num_subelements;
 
-  num_subelements = t8_element_get_number_of_subelements (type);
+  num_subelements = t8_element_get_number_of_subelements (type, elem);
 
   for (sub_id_counter = 0; sub_id_counter < num_subelements; sub_id_counter++) {
     pquad_w_sub_subelement[sub_id_counter]->p4q.x = q->x;
@@ -1153,7 +1153,10 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
 
 int
 t8_default_scheme_sub_c::t8_element_get_number_of_subelements (int
-                                                               subelement_type)
+                                                               subelement_type,
+                                                               const 
+                                                               t8_element *
+                                                               elem)
 {
   T8_ASSERT (subelement_type >= 1 && subelement_type <= 15);
 
