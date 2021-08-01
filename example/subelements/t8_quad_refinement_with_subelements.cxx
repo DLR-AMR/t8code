@@ -20,14 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <sc_refcount.h>
-#include <sc_shmem.h>
-#include <p4est_connectivity.h>
-#include <p8est_connectivity.h>
 #include <t8_schemes/t8_new_feature/t8_subelements_cxx.hxx>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest.h>
-#include <t8_cmesh_vtk.h>
 #include <t8_vec.h>
 #include <example/common/t8_example_common.h>
 
