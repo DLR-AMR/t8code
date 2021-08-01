@@ -50,18 +50,20 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
   /* this function determines whether a subelement (and which type) should be used for a specific 
    * element of the forest. The return value depends on the neighbor elements and their 
    * refinement level. */
-  int                num_faces, iface, *dual_faces, num_neighbors, subelement_type = 0;
+  int                 num_faces, iface, *dual_faces, num_neighbors,
+    subelement_type = 0;
   const t8_element_t *current_element;
-  t8_element_t       **neighbor_leafs;
+  t8_element_t      **neighbor_leafs;
   t8_locidx_t        *element_indices;
   t8_eclass_scheme_c *neigh_scheme;
 
   /* In order to remove al hanging nodes, the forest must be balanced */
   T8_ASSERT (t8_forest_is_balanced (forest_from));
 
-  current_element = t8_forest_get_element_in_tree (forest_from, ltree_id, lelement_id);
+  current_element =
+    t8_forest_get_element_in_tree (forest_from, ltree_id, lelement_id);
   num_faces = ts->t8_element_num_faces (current_element);
-  
+
   /* We use a binary encoding (depending on the face enumeration), to determine which subelement type to use. 
    * Every face has a flag parameter, wich is set to 1, if there is a neighbour with a higher level 
    * and to 0, if the level of the neighbour is at most the level of the element.   
@@ -83,9 +85,10 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
 
   for (iface = 0; iface < num_faces; iface++) {
     /* We are interested in the number of neighbours of a given element and a given face of the element. */
-    t8_forest_leaf_face_neighbors (forest_from, ltree_id, current_element, &neighbor_leafs,
-                                     iface, &dual_faces, &num_neighbors,
-                                     &element_indices, &neigh_scheme, 1); 
+    t8_forest_leaf_face_neighbors (forest_from, ltree_id, current_element,
+                                   &neighbor_leafs, iface, &dual_faces,
+                                   &num_neighbors, &element_indices,
+                                   &neigh_scheme, 1);
     /* If the number of neighbours of a face is higher than 1, then we know that there must be a hanging node. */
 
     /* This procedure determines the decimal value of the binary representation of the neighbour structure. 
@@ -94,7 +97,7 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
      *    decimal:     1*2^3  +  0*2^2  +  1*2^1  +  0*2^0  =  10
      *  
      */
-    int coefficient;
+    int                 coefficient;
     if (num_neighbors == 0 || num_neighbors == 1) {
       coefficient = 0;
     }
@@ -102,27 +105,29 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
       coefficient = 1;
     }
     else {
-      T8_ASSERT ("A non valid number of neighbours appeared. The forest might not be balanced.");
+      T8_ASSERT
+        ("A non valid number of neighbours appeared. The forest might not be balanced.");
     }
-    subelement_type += coefficient * pow (2, (num_faces - 1) - iface); 
+    subelement_type += coefficient * pow (2, (num_faces - 1) - iface);
 
-    if (num_neighbors > 0) { /* free memory */
-        neigh_scheme->t8_element_destroy (num_neighbors, neighbor_leafs);
+    if (num_neighbors > 0) {    /* free memory */
+      neigh_scheme->t8_element_destroy (num_neighbors, neighbor_leafs);
 
-        T8_FREE (element_indices);
-        T8_FREE (neighbor_leafs);
-        T8_FREE (dual_faces);
+      T8_FREE (element_indices);
+      T8_FREE (neighbor_leafs);
+      T8_FREE (dual_faces);
     }
   }
 
   /* Print some useful output in debug mode */
-  t8_debugf ("element id: %i    subelement type: %i\n", lelement_id, subelement_type);
+  t8_debugf ("element id: %i    subelement type: %i\n", lelement_id,
+             subelement_type);
 
   /* returning the right subelement types */
-  if (subelement_type == 0) { /* in this case, there are no hanging nodes and we do not need to do anything */
+  if (subelement_type == 0) {   /* in this case, there are no hanging nodes and we do not need to do anything */
     return 0;
   }
-  else { /* use subelements and add 1 to every type, to avoid refine = 1 */
+  else {                        /* use subelements and add 1 to every type, to avoid refine = 1 */
     return subelement_type + 1;
   }
 }
