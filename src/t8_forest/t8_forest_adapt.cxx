@@ -487,7 +487,7 @@ t8_forest_adapt (t8_forest_t forest)
     T8_FREE (elements);
     T8_FREE (elements_from);
     tscheme->t8_element_destroy (1, &parent);
-  } /* end of for loop over trees */
+  }                             /* end of for loop over trees */
   if (forest->set_adapt_recursive) {
     /* clean up */
     sc_list_destroy (refine_list);
