@@ -471,7 +471,7 @@ t8_forest_adapt (t8_forest_t forest)
         }
         el_considered++;
       }
-    }                           // end of while loop over elements
+    }                           /* end of while loop over elements */
 
     /* Check that if we had recursive adaptation, the refine list is now empty. */
     T8_ASSERT (!forest->set_adapt_recursive || refine_list->elem_count == 0);
@@ -487,7 +487,7 @@ t8_forest_adapt (t8_forest_t forest)
     T8_FREE (elements);
     T8_FREE (elements_from);
     tscheme->t8_element_destroy (1, &parent);
-  }
+  } /* end of for loop over trees */
   if (forest->set_adapt_recursive) {
     /* clean up */
     sc_list_destroy (refine_list);
