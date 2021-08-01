@@ -54,10 +54,13 @@ T8_EXTERN_C_BEGIN ();
  * Each neighbour-structure will lead to a unique binary code. 
  * Within the element scheme of the given eclass, this binary code is used to construct the right subelement type,
  * in order to remove hanging nodes from the mesh. */
-int                 t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
-                                                 t8_locidx_t ltree_id, t8_locidx_t lelement_id,
+int                 t8_forest_subelements_adapt (t8_forest_t forest,
+                                                 t8_forest_t forest_from,
+                                                 t8_locidx_t ltree_id,
+                                                 t8_locidx_t lelement_id,
                                                  t8_eclass_scheme_c * ts,
-                                                 int num_elements, t8_element_t * elements[]);
+                                                 int num_elements,
+                                                 t8_element_t * elements[]);
 
 void                t8_forest_subelements (t8_forest_t forest);
 
