@@ -211,8 +211,8 @@ t8_default_scheme_common_c::t8_element_vertex_coords_of_subelement (const
 int
 t8_default_scheme_common_c::t8_element_get_number_of_subelements (int
                                                                   subelement_type,
-                                                                  const 
-                                                                  t8_element * 
+                                                                  const
+                                                                  t8_element *
                                                                   elem)
 {
   SC_ABORT ("This function is not yet implemented for the given scheme.\n");

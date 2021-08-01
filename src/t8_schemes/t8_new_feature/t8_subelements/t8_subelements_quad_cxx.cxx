@@ -1154,7 +1154,7 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
 int
 t8_default_scheme_sub_c::t8_element_get_number_of_subelements (int
                                                                subelement_type,
-                                                               const 
+                                                               const
                                                                t8_element *
                                                                elem)
 {

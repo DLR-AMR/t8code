@@ -680,8 +680,7 @@ public:
                                                             subelement_type,
                                                             const
                                                             t8_element_t *
-                                                            elem) =
-    0;
+                                                            elem) = 0;
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
