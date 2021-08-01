@@ -393,8 +393,9 @@ t8_forest_adapt (t8_forest_t forest)
         el_considered++;
       }
       else if (refine > 1) {    /* use subelements in this case */
-        /* The subelement-callback function returns refine = subelement_type + 1, to avoid subelement_type = 1.
-         * We can now undo this to use the "true" subelement_type-values in the tscheme functions */
+        /* The subelement-callback function returns refine = subelement_type + 1 to avoid subelement_type = 1.
+         * We can now undo this to use the subelement_type-values that match the binary encoding of the neighbour structure
+         * (0001 should correspond to 1 and not to 2). */
         subelement_type = refine - 1;
 
         /* determing the number of subelements of the given type for memory allocation */
