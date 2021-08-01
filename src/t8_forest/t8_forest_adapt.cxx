@@ -496,8 +496,9 @@ t8_forest_adapt (t8_forest_t forest)
   t8_forest_comm_global_num_elements (forest);
   /* If any subelement is constructed, give output this number as an additional information. */
   if (count_subelements > 0) {
-    t8_global_productionf ("Done t8_forest_adapt with %lld total elements, %i of which are subelements.\n",
-                           (long long) forest->global_num_elements, count_subelements);
+    t8_global_productionf
+      ("Done t8_forest_adapt with %lld total elements, %i of which are subelements.\n",
+       (long long) forest->global_num_elements, count_subelements);
   }
   else {
     t8_global_productionf ("Done t8_forest_adapt with %lld total elements.\n",
