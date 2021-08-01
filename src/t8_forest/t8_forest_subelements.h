@@ -20,10 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_forest_eliminate_hanging_nodes.h
- * We define the eliminate_hanging_nodes routine to transform a 1:2 balanced, nonconformal forest
+/** \file t8_forest_remove_hanging_nodes.h
+ * We define the eliminate_hanging_nodes routine to transform a 2:1 balanced, nonconformal forest
  * into a conformal forest. The routine relies on a 2D quad-scheme that has been balanced, such that 
- * there is a 1:2 balance between all elements.
+ * there is a 2:1 balance between all elements.
  */
 
 /* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_balance */
@@ -36,6 +36,24 @@
 
 T8_EXTERN_C_BEGIN ();
 
+/* In this function, use a binary encoding (depending on the face enumeration), to determine which subelement type to use. 
+ * Every face has a flag parameter, wich is set to 1, if there is a neighbour with a higher level 
+ * and to 0, if the level of the neighbour is at most the level of the element.   
+ *             
+ *              f0                         1
+ *        x - - x - - x              x - - x - - x       
+ *        |           |              | \   |   / |
+ *        |           |              |   \ | /   |                                                            | f3 | f2 | f1 | f0 |
+ *    f3  x           | f2   -->   1 x - - x     | 0   -->   binary code (according to the face enumeration): |  1 |  0 |  0 |  1 | = 9 in base 10  
+ *        |           |              |   /   \   |
+ *        | elem      |              | /       \ |
+ *        x - - - - - x              x - - - - - x
+ *              f1                         0 
+ *                      
+ * Note, that this procedure is independent of the eclass (we only show an example for the quad scheme). 
+ * Each neighbour-structure will lead to a unique binary code. 
+ * Within the element scheme of the given eclass, this binary code is used to construct the right subelement type,
+ * in order to remove hanging nodes from the mesh. */
 int                 t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
                                                  t8_locidx_t ltree_id, t8_locidx_t lelement_id,
                                                  t8_eclass_scheme_c * ts,
@@ -43,7 +61,7 @@ int                 t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t
 
 void                t8_forest_subelements (t8_forest_t forest);
 
-/* Check whether the local elements of a forest are balanced. */
+/* Check whether the forest has no hanging nodes left. */
 int                 t8_forest_subelements_used (t8_forest_t forest);
 
 T8_EXTERN_C_END ();
