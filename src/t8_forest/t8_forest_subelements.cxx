@@ -20,8 +20,6 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <sc_statistics.h>
-#include <t8_forest/t8_forest_subelements.h>
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
@@ -58,10 +56,11 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
   t8_locidx_t        *element_indices;
   t8_eclass_scheme_c *neigh_scheme;
 
+  /* In order to remove al hanging nodes, the forest must be balanced */
+  T8_ASSERT (t8_forest_is_balanced (forest_from));
+
   current_element = t8_forest_get_element_in_tree (forest_from, ltree_id, lelement_id);
   num_faces = ts->t8_element_num_faces (current_element);
-
-  printf("Element ID = %i\n", lelement_id);
   
   /* We use a binary encoding (depending on the face enumeration), to determine which subelement type to use. 
    * Every face has a flag parameter, wich is set to 1, if there is a neighbour with a higher level 
@@ -87,14 +86,26 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
     t8_forest_leaf_face_neighbors (forest_from, ltree_id, current_element, &neighbor_leafs,
                                      iface, &dual_faces, &num_neighbors,
                                      &element_indices, &neigh_scheme, 1); 
-    /* If the number of neighbours of a face is higher than 1, we know that there must be a hanging node,
-     * set the flag parameter for the face to 1 and in the end, determine the decimal subelement type. */
-    if (num_neighbors > 1) {
-      subelement_type = subelement_type * 2 + 1;
+    /* If the number of neighbours of a face is higher than 1, then we know that there must be a hanging node. */
+
+    /* This procedure determines the decimal value of the binary representation of the neighbour structure. 
+     *     
+     *    binary:   |    1    |    0    |    1    |    0    |
+     *    decimal:     1*2^3  +  0*2^2  +  1*2^1  +  0*2^0  =  10
+     *  
+     */
+    int coefficient;
+    if (num_neighbors == 0 || num_neighbors == 1) {
+      coefficient = 0;
+    }
+    else if (num_neighbors == 2) {
+      coefficient = 1;
     }
     else {
-      subelement_type = subelement_type * 2;
+      T8_ASSERT ("A non valid number of neighbours appeared. The forest might not be balanced.");
     }
+    subelement_type += coefficient * pow (2, (num_faces - 1) - iface); 
+
     if (num_neighbors > 0) { /* free memory */
         neigh_scheme->t8_element_destroy (num_neighbors, neighbor_leafs);
 
@@ -104,9 +115,8 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
     }
   }
 
-  #if 0
-  printf("Id: %i  Type: %i\n", lelement_id, subelement_type);
-  #endif
+  /* Print some useful output in debug mode */
+  t8_debugf ("element id: %i    subelement type: %i\n", lelement_id, subelement_type);
 
   /* returning the right subelement types */
   if (subelement_type == 0) { /* in this case, there are no hanging nodes and we do not need to do anything */
@@ -116,37 +126,6 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
     return subelement_type + 1;
   }
 }
-
-#if 0
-/* Collective function to compute the maximum occurring refinement level in a forest */
-static void
-t8_forest_compute_max_element_level (t8_forest_t forest)
-{
-  t8_locidx_t         ielement, elem_in_tree;
-  t8_locidx_t         itree, num_trees;
-  t8_element_t       *elem;
-  t8_eclass_scheme_c *scheme;
-  int                 local_max_level = 0, elem_level;
-
-  /* Iterate over all local trees and all local elements and comupte the maximum occurring level */
-  num_trees = t8_forest_get_num_local_trees (forest);
-  for (itree = 0; itree < num_trees; itree++) {
-    elem_in_tree = t8_forest_get_tree_num_elements (forest, itree);
-    scheme =
-      t8_forest_get_eclass_scheme (forest,
-                                   t8_forest_get_tree_class (forest, itree));
-    for (ielement = 0; ielement < elem_in_tree; ielement++) {
-      /* Get the element and compute its level */
-      elem = t8_forest_get_element_in_tree (forest, itree, ielement);
-      elem_level = scheme->t8_element_level (elem);
-      local_max_level = SC_MAX (local_max_level, elem_level);
-    }
-  }
-  /* Communicate the local maximum levels */
-  sc_MPI_Allreduce (&local_max_level, &forest->maxlevel_existing, 1,
-                    sc_MPI_INT, sc_MPI_MAX, forest->mpicomm);
-}
-#endif
 
 void
 t8_forest_subelements (t8_forest_t forest)
@@ -166,7 +145,7 @@ t8_forest_subelements (t8_forest_t forest)
 int
 t8_forest_subelements_used (t8_forest_t forest)
 {
-  /* NOTE do something */
+  /* TODO: implement this function in the future */
   return 0;
 }
 #endif
