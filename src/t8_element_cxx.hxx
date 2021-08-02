@@ -655,21 +655,6 @@ public:
                                                 t8_element_t *
                                                 subelements[]) = 0;
 
-  /** This function determines the vertex coordinates of subelements.
-   *  \param [in] elem A valid subelement 
-   *  \param [in] vertex the number of the vertex, whose coordinates should be determined
-   *  \param [out] coords An array, whose entries will be filled with the coordinates of the
-   *                 subelement. 
-   * Note, that subelements can have another number of vertecies, compared to the used
-   * eclass scheme. For example, subelements, that remove hanging nodes from the quad scheme,
-   * are triangles with 3 instead of 4 verticies.           
-   */
-  virtual void        t8_element_vertex_coords_of_subelement (const
-                                                              t8_element_t *
-                                                              t, int vertex,
-                                                              int coords[]) =
-    0;
-
   /** This function will determine the number of children subelements, depending on the 
    *  subelement type. 
    *  \param [in] subelement_type The subelement type as an integer

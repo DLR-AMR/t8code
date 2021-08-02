@@ -334,12 +334,6 @@ public:
   virtual void        t8_element_to_subelement (const t8_element_t * elem,
                                                 int type, t8_element_t * c[]);
 
-/** Determine the coordinates of a subelement */
-  virtual void        t8_element_vertex_coords_of_subelement (const
-                                                              t8_element_t *
-                                                              t, int vertex,
-                                                              int coords[]);
-
 /** Determine the number of subelements, used to remove hanging nodes from a element of a given type */
   virtual int         t8_element_get_number_of_subelements (int
                                                             subelement_type,
@@ -374,6 +368,20 @@ protected:
                                                              t8_element_t *
                                                              elem,
                                                              int location[]);
+
+  /** This function determines the vertex coordinates of subelements.
+   *  \param [in] elem A valid subelement 
+   *  \param [in] vertex the number of the vertex, whose coordinates should be determined
+   *  \param [out] coords An array, whose entries will be filled with the coordinates of the
+   *                 subelement. 
+   * Note, that subelements can have another number of vertecies, compared to the used
+   * eclass scheme. For example, subelements, that remove hanging nodes from the quad scheme,
+   * are triangles with 3 instead of 4 verticies.           
+   */
+  void        t8_element_vertex_coords_of_subelement (const
+                                                      t8_element_t *
+                                                      t, int vertex,
+                                                      int coords[]);
 };
 
 #endif /* !T8_DEFAULT_QUAD_CXX_HXX */
