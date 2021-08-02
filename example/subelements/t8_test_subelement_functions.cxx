@@ -83,8 +83,6 @@ t8_refine_quad_to_subelements ()
     }
   }
 
-  /* TODO: Print the transition cell in Paraview. */
-
   /* free memory */
   class_scheme->t8_element_destroy (1, &element);
   class_scheme->t8_element_destroy (num_subelements, element_subelements);
