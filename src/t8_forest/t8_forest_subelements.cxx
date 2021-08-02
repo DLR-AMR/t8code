@@ -101,12 +101,8 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
     if (num_neighbors == 0 || num_neighbors == 1) {
       coefficient = 0;
     }
-    else if (num_neighbors == 2) {
-      coefficient = 1;
-    }
     else {
-      T8_ASSERT
-        ("A non valid number of neighbours appeared. The forest might not be balanced.");
+      coefficient = 1;
     }
     subelement_type += coefficient * pow (2, (num_faces - 1) - iface);
 
