@@ -114,21 +114,6 @@ int                 t8_common_adapt_level_set (t8_forest_t forest,
                                                int num_elements,
                                                t8_element_t * elements[]);
 
-/** Compute the coordinates of the midpoint of an element.
- * \param [in]  forest  The forest in which the element is in (must be committed).
- * \param [in]  which_tree The local tree id of tree in which the element is in.
- * \param [in]  ts      The eclass scheme associated to the element.
- * \param [in]  element The element.
- * \param [in,out] elem_midpoint_f An array of 3 doubles. On output the coordinates
- *              of the midpoint of \a element are stored.
- * \note \a forest must be committed before calling this function.
- */
-void                t8_common_midpoint (t8_forest_t forest,
-                                        t8_locidx_t which_tree,
-                                        t8_eclass_scheme_c * ts,
-                                        t8_element_t * element,
-                                        double elem_midpoint_f[3]);
-
 /** Real valued functions defined in t8_example_common_functions.h */
 
 typedef struct

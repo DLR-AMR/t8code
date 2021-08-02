@@ -63,15 +63,6 @@ t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
   return 0;
 }
 
-/* Get the coordinates of the midpoint of an element */
-void
-t8_common_midpoint (t8_forest_t forest, t8_locidx_t which_tree,
-                    t8_eclass_scheme_c * ts, t8_element_t * element,
-                    double elem_midpoint_f[3])
-{
-  t8_forest_element_centroid (forest, which_tree, element, elem_midpoint_f);
-}
-
 int
 t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid,
                            t8_element_t * element,
