@@ -24,7 +24,9 @@
 #include <sc_refcount.h>
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_forest.h>
+#include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_helpers.h>
 
 typedef enum
@@ -39,84 +41,234 @@ typedef enum
   T8_GEOM_COUNT
 } t8_analytic_geom_type;
 
-static void
-t8_analytic_sincos (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
-                    const double *ref_coords, double out_coords[3],
-                    const void *tree_data, const void *user_data)
+/** This geometry maps a point (x,y) in R^2 
+ * to the point (x,y, 0.2 * sin(2PI X) * cos(2PI Y)).
+ * It should only be used for 2 dimensional forests.
+ * 
+ * This geometry does not provide a jacobian.
+ */
+class               t8_geometry_sincos:public t8_geometry
 {
-  double              x = ref_coords[0];
-  if (gtreeid == 1) {
-    /* Translate ref coordinates by +1 in x direction. */
-    x += 1;
+public:
+  /* Basic constructor that sets the dimension and the name. */
+  t8_geometry_sincos ():t8_geometry (2, "t8_sincos_geometry")
+  {
   }
-  out_coords[0] = x;
-  out_coords[1] = ref_coords[1];
-  out_coords[2] =
-    0.2 * sin (ref_coords[0] * 2 * M_PI) * cos (ref_coords[1] * 2 * M_PI);
-}
 
-static void
-t8_analytic_cylinder (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
-                      const double *ref_coords, double out_coords[3],
-                      const void *tree_data, const void *user_data)
+  /**
+   * Map a point in  a point (x,y) in R^2 
+   * to the point (x,y, 0.2 * sin(2PI X) * cos(2PI Y)).
+   * It is specifically designed to work on two tree cmeshes and 
+   * models the rectangle [0,2] x [0,1].
+   * \param [in]  cmesh      The cmesh in which the point lies.
+   * \param [in]  gtreeid    The glocal tree (of the cmesh) in which the reference point is.
+   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \note Since this is the identity geometry, \a out_coords will be equal to \a ref_coords.
+   */
+  void                t8_geom_evaluate (t8_cmesh_t cmesh,
+                                        t8_gloidx_t gtreeid,
+                                        const double *ref_coords,
+                                        double out_coords[3]) const
+  {
+    double              x = ref_coords[0];
+    if                  (gtreeid == 1) {
+      /* Translate ref coordinates by +1 in x direction for the second tree. */
+      x += 1;
+    }
+    out_coords[0] = x;
+    out_coords[1] = ref_coords[1];
+    out_coords[2] =
+      0.2 * sin (ref_coords[0] * 2 * M_PI) * cos (ref_coords[1] * 2 * M_PI);
+  }
+
+  /* Jacobian, not implemented. */
+  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
+                                                t8_gloidx_t gtreeid,
+                                                const double *ref_coords,
+                                                double *jacobian) const
+  {
+    SC_ABORT_NOT_REACHED ();
+  }
+
+  /* Load tree data is empty since we have no tree data.
+   * We need to provide an implementation anyways. */
+  void                t8_geom_load_tree_data (t8_cmesh_t cmesh,
+                                              t8_gloidx_t gtreeid)
+  {
+    /* Do nothing */
+  }
+};
+
+/** This geometry maps the unit square [0,1]^2 to the moebius strip.
+ * The unit square can be modelled with any cmesh (consisting of any number of trees).
+ * 
+ * It inherits from the w_vertices geometry since we use the tree's vertex coordinates.
+ * This geometry does not provide a jacobian.
+ */
+class               t8_geometry_moebius:public t8_geometry_w_vertices
 {
-  out_coords[0] = cos (ref_coords[0] * 2 * M_PI);
-  out_coords[1] = ref_coords[1];
-  out_coords[2] = sin (ref_coords[0] * 2 * M_PI);
-}
+public:
+  /* Basic constructor that sets the dimension and the name. */
+  t8_geometry_moebius ():t8_geometry_w_vertices (2, "t8_moebius_geometry")
+  {
+  }
 
-static void
-t8_analytic_moebius (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
-                     const double *ref_coords, double out_coords[3],
-                     const void *tree_vertices, const void *user_data)
+  /**
+   * Map a point in  a point (x,y) in R^2 
+   * to the point (x,y, 0.2 * sin(2PI X) * cos(2PI Y)).
+   * It is specifically designed to work on two tree cmeshes and 
+   * models the rectangle [0,2] x [0,1].
+   * \param [in]  cmesh      The cmesh in which the point lies.
+   * \param [in]  gtreeid    The glocal tree (of the cmesh) in which the reference point is.
+   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \note Since this is the identity geometry, \a out_coords will be equal to \a ref_coords.
+   */
+  void                t8_geom_evaluate (t8_cmesh_t cmesh,
+                                        t8_gloidx_t gtreeid,
+                                        const double *ref_coords,
+                                        double out_coords[3]) const
+  {
+    double              t;
+    double              phi;
+
+    t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+    t8_eclass_t         tree_class = t8_cmesh_get_tree_class (cmesh, ltreeid);
+    /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store
+    * in out_coords. */
+    t8_geom_compute_linear_geometry (tree_class, active_tree_vertices, ref_coords,
+                                    out_coords);
+
+    /* At first, we map x from [0,1] to [-.5,.5]
+     * and y to [0, 2*PI] */
+                        t = out_coords[0] - .5;
+                        phi = out_coords[1] * 2 * M_PI;
+
+    /* We now apply the parametrization for the moebius strip. */
+                        out_coords[0] = (1 - t * sin (phi / 2)) * cos (phi);
+                        out_coords[1] = (1 - t * sin (phi / 2)) * sin (phi);
+                        out_coords[2] = t * cos (phi / 2);
+  }
+
+  /* Jacobian, not implemented. */
+  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
+                                                t8_gloidx_t gtreeid,
+                                                const double *ref_coords,
+                                                double *jacobian) const
+  {
+    SC_ABORT_NOT_REACHED ();
+  }
+
+  /* Load tree data is inherited from vertices geometry. */
+};
+
+/** This geometry maps the unit square to a cylinder.
+ * It should only be used for cmeshes with a single quad tree.
+ * 
+ * This geometry does not provide a jacobian.
+ */
+class               t8_geometry_cylinder:public t8_geometry
 {
-  const double       *tree_v = (const double *) tree_vertices;
-  double              t;
-  double              phi;
+public:
+  /* Basic constructor that sets the dimension and the name. */
+  t8_geometry_cylinder ():t8_geometry (2, "t8_cylinder_geometry")
+  {
+  }
 
-  t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
-  t8_eclass_t         tree_class = t8_cmesh_get_tree_class (cmesh, ltreeid);
-  /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store
-   * in out_coords. */
-  t8_geom_compute_linear_geometry (tree_class, tree_v, ref_coords,
-                                   out_coords);
+  /**
+   * Map a reference point in the unit square to a cylinder.
+   * \param [in]  cmesh      The cmesh in which the point lies.
+   * \param [in]  gtreeid    The glocal tree (of the cmesh) in which the reference point is.
+   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \note Since this is the identity geometry, \a out_coords will be equal to \a ref_coords.
+   */
+  void                t8_geom_evaluate (t8_cmesh_t cmesh,
+                                        t8_gloidx_t gtreeid,
+                                        const double *ref_coords,
+                                        double out_coords[3]) const
+  {
+    out_coords[0] = cos (ref_coords[0] * 2 * M_PI);
+    out_coords[1] = ref_coords[1];
+    out_coords[2] = sin (ref_coords[0] * 2 * M_PI);
+  }
 
-  /* At first, we map x from [0,1] to [-.5,.5]
-   * and y to [0, 2*PI] */
-  t = out_coords[0] - .5;
-  phi = out_coords[1] * 2 * M_PI;
+  /* Jacobian, not implemented. */
+  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
+                                                t8_gloidx_t gtreeid,
+                                                const double *ref_coords,
+                                                double *jacobian) const
+  {
+    SC_ABORT_NOT_REACHED ();
+  }
 
-  /* We now apply the parametrization for the moebius strip. */
-  out_coords[0] = (1 - t * sin (phi / 2)) * cos (phi);
-  out_coords[1] = (1 - t * sin (phi / 2)) * sin (phi);
-  out_coords[2] = t * cos (phi / 2);
-}
+  /* Load tree data is empty since we have no tree data.
+   * We need to provide an implementation anyways. */
+  void                t8_geom_load_tree_data (t8_cmesh_t cmesh,
+                                              t8_gloidx_t gtreeid)
+  {
+    /* Do nothing */
+  }
+};
 
-static void
-t8_analytic_circle (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
-                    const double *ref_coords, double out_coords[3],
-                    const void *tree_vertices, const void *user_data)
+class               t8_geometry_circle:public t8_geometry_w_vertices
 {
-  const double       *tree_v = (const double *) tree_vertices;
-  double              x;
-  double              y;
+public:
+  /* Basic constructor that sets the dimension and the name. */
+  t8_geometry_cylinder ():t8_geometry (2, "t8_circle_geometry")
+  {
+  }
 
-  t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
-  t8_eclass_t         tree_class = t8_cmesh_get_tree_class (cmesh, ltreeid);
-  /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store
-   * in out_coords. */
-  t8_geom_compute_linear_geometry (tree_class, tree_v, ref_coords,
-                                   out_coords);
+  /**
+   * Map a reference point in the unit square to a cylinder.
+   * \param [in]  cmesh      The cmesh in which the point lies.
+   * \param [in]  gtreeid    The glocal tree (of the cmesh) in which the reference point is.
+   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   * \note Since this is the identity geometry, \a out_coords will be equal to \a ref_coords.
+   */
+  void                t8_geom_evaluate (t8_cmesh_t cmesh,
+                                        t8_gloidx_t gtreeid,
+                                        const double *ref_coords,
+                                        double out_coords[3]) const
+  {
+    double              x;
+    double              y;
 
-  /* We now remap the coords to match the square [-1,1]^2 */
-  x = out_coords[0] * 2 - 1;
-  y = out_coords[1] * 2 - 1;
+    t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+    /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store
+     * in out_coords. */
+    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords,
+                                     out_coords);
 
-  /* An now we apply the formula that projects the square to the circle. */
-  out_coords[0] = x * sqrt (1 - y * y / 2);
-  out_coords[1] = y * sqrt (1 - x * x / 2);
-  out_coords[2] = 0;
-}
+    /* We now remap the coords to match the square [-1,1]^2 */
+                        x = out_coords[0] * 2 - 1;
+                        y = out_coords[1] * 2 - 1;
+
+    /* An now we apply the formula that projects the square to the circle. */
+                        out_coords[0] = x * sqrt (1 - y * y / 2);
+                        out_coords[1] = y * sqrt (1 - x * x / 2);
+                        out_coords[2] = 0;
+  }
+
+  /* Jacobian, not implemented. */
+  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
+                                                t8_gloidx_t gtreeid,
+                                                const double *ref_coords,
+                                                double *jacobian) const
+  {
+    SC_ABORT_NOT_REACHED ();
+  }
+
+  /* Load tree data is empty since we have no tree data.
+   * We need to provide an implementation anyways. */
+  void                t8_geom_load_tree_data (t8_cmesh_t cmesh,
+                                              t8_gloidx_t gtreeid)
+  {
+    /* Do nothing */
+  }
+};
 
 /* This geometry rotates with time around the origin.
  * The rotation direction is reversed after 2 seconds.
@@ -229,24 +381,20 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
       ("Creating uniform level %i forest with a sinus/cosinus geometry.\n",
        level);
     /* Sin/cos geometry. Has two quad trees. */
-    geometry =
-      new t8_geometry_analytic (2, "analytic sinus cosinus dim=2",
-                                t8_analytic_sincos, NULL, NULL, NULL);
+    geometry = new t8_geometry_sincos;
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_QUAD);
     t8_cmesh_set_join (cmesh, 0, 1, 1, 0, 0);
-    snprintf (vtuname, BUFSIZ, "forest_analytic_sincos_lvl_%i", level);
+    snprintf (vtuname, BUFSIZ, "forest_sincos_lvl_%i", level);
     break;
   case T8_GEOM_CYLINDER:
     t8_global_productionf
       ("Creating uniform level %i forest with a cylinder geometry.\n", level);
     /* Cylinder geometry. Has one quad tree that is periodic in x direction. */
-    geometry =
-      new t8_geometry_analytic (2, "analytic geometry cylinder",
-                                t8_analytic_cylinder, NULL, NULL, NULL);
+    geometry = new t8_geometry_cylinder;
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     t8_cmesh_set_join (cmesh, 0, 0, 0, 1, 0);
-    snprintf (vtuname, BUFSIZ, "forest_analytic_cylinder_lvl_%i", level);
+    snprintf (vtuname, BUFSIZ, "forest_cylinder_lvl_%i", level);
     break;
   case T8_GEOM_MOEBIUS:
     t8_global_productionf
@@ -256,11 +404,8 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
       t8_cmesh_t          hybrid_square =
         t8_cmesh_new_periodic_hybrid (sc_MPI_COMM_WORLD);
       t8_cmesh_set_derive (cmesh, hybrid_square);
-      geometry =
-        new t8_geometry_analytic (2, "analytic moebius", t8_analytic_moebius,
-                                  NULL, t8_geom_load_tree_data_vertices,
-                                  NULL);
-      snprintf (vtuname, BUFSIZ, "forest_analytic_moebius_lvl_%i", level);
+      geometry = new t8_geometry_moebius;
+      snprintf (vtuname, BUFSIZ, "forest_moebius_lvl_%i", level);
     }
     break;
   case T8_GEOM_CIRCLE:

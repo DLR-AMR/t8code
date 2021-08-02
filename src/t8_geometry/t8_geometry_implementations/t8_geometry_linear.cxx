@@ -49,11 +49,14 @@ t8_geometry_linear::~t8_geometry_linear ()
  * \note Since this is the identity geometry, \a out_coords will be equal to \a ref_coords in
  *       the first d entries and 0 in the remaining 3-d entries.
  */
+/* *INDENT-OFF* */
+/* indent adds second const */
 void
 t8_geometry_linear::t8_geom_evaluate (t8_cmesh_t cmesh,
                                       t8_gloidx_t gtreeid,
                                       const double *ref_coords,
                                       double out_coords[3]) const
+/* *INDENT-ON* */
 {
   t8_geom_compute_linear_geometry (active_tree_class,
                                    active_tree_vertices, ref_coords,
@@ -68,12 +71,15 @@ t8_geometry_linear::t8_geom_evaluate (t8_cmesh_t cmesh,
  * \param [out] jacobian    The jacobian at \a ref_coords. Array of size dimension x 3. Indices 3*i, 3*i+1, 3*i+2
  *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
  */
+/* *INDENT-OFF* */
+/* indent adds second const */
 void
 t8_geometry_linear::t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
                                               t8_gloidx_t gtreeid,
                                               const double
                                               *ref_coords,
                                               double *jacobian) const
+/* *INDENT-ON* */
 {
   SC_ABORT ("Not implemented.");
 }
