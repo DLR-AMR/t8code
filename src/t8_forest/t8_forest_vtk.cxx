@@ -150,6 +150,7 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
   double              coordinates[3];   /* coordinates of vertices */
   int                 elem_id = 0;
   t8_locidx_t         num_elements;
+  int                 freturn = 0;
 
 /* Since we want to use different element types and a points Array and cellArray 
  * we have to declare these vtk objects. The cellArray stores the Elements.
@@ -406,9 +407,12 @@ for (int idata = 0; idata < num_data; idata++) {
 /* We set the input data and write the vtu files. */
 pwriterObj->SetInputData (unstructuredGrid);
 pwriterObj->Update ();
-if (pwriterObj->Write () == 0) {
+if (pwriterObj->Write ()) {
   /* Writing failed */
-  goto t8_forest_vtk_failure;
+  freturn = 1;
+}
+else {
+  t8_errorf ("Error when writing vtk file.\n");
 }
 
 /* We have to free the allocated memory for the cellTypes Array and the other arrays we allocated memory for. */
@@ -423,20 +427,9 @@ for (int idata = 0; idata < num_data; idata++) {
 
 T8_FREE (cellTypes);
 T8_FREE (dataArrays);
-/* Writing was successful */
-return 1;
+/* Return wether writing was successful */
+return freturn;
 
-t8_forest_vtk_failure:
-t8_errorf ("Error when writing vtk file.\n");
-vtk_treeid->Delete ();
-vtk_mpirank->Delete ();
-vtk_level->Delete ();
-vtk_element_id->Delete ();
-for (int idata = 0; idata < num_data; idata++) {
-  dataArrays[idata]->Delete ();
-}
-
-return 0;
 #else
   t8_global_errorf
     ("Warning: t8code is not linked against vtk library. Vtk output will not be generated.\n");
