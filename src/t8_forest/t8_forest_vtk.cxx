@@ -427,7 +427,7 @@ for (int idata = 0; idata < num_data; idata++) {
 
 T8_FREE (cellTypes);
 T8_FREE (dataArrays);
-/* Return wether writing was successful */
+/* Return whether writing was successful */
 return freturn;
 
 #else
