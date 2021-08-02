@@ -32,7 +32,7 @@
  * which are then adapted once more, using transition cells with subelements in order to remove the hanging nodes. */
 
 /* Define the data structure for the refinement criteria of this example (a circle with some user given midpoint and radius).
- * Elements, whos anchor node is closer to the circle will be refined to a higher level, than elements, whos anchor node is farther away. */
+ * Elements whose anchor node is closer to the circle will be refined to a higher level than elements whose anchor node is farther away. */
 typedef struct
 {
   double              mid_point[3];
