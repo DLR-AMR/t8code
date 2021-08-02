@@ -107,7 +107,7 @@ t8_forest_remove_hanging_nodes_adapt (t8_forest_t forest,
     else {
       coefficient = 1;
     }
-    subelement_type += coefficient * pow (2, (num_faces - 1) - iface);
+    subelement_type += coefficient * 1 << ((num_faces - 1) - iface);
 
     if (num_neighbors > 0) {    /* free memory */
       neigh_scheme->t8_element_destroy (num_neighbors, neighbor_leafs);
