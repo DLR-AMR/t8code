@@ -63,10 +63,10 @@
 typedef struct
 {
   p4est_quadrant_t    p4q;      /* p4est quadrant */
-  int                 dummy_is_subelement;      /* is a given element a subelement? */
-  int                 subelement_type;  /* which type of subelement to use? */
-  int                 subelement_id;    /* what specific subelement of a given type? */
-  int                 num_subelement_ids;       /* number of subelements for a specific type of subelement */
+  int                 dummy_is_subelement;      /* saves the information, whether an element is a subelement */
+  int                 subelement_type;  /* saves the information, which type of transition cell a subelement is associated to */
+  int                 subelement_id;    /* saves the information, what children subelement the given element is */
+  int                 num_subelement_ids;       /* saves the number of siblings of the subelement */
 } t8_quad_with_subelements;
 
 typedef t8_quad_with_subelements t8_pquad_t;
