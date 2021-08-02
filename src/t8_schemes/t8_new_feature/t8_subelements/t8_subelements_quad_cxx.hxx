@@ -378,10 +378,10 @@ protected:
    * eclass scheme. For example, subelements, that remove hanging nodes from the quad scheme,
    * are triangles with 3 instead of 4 verticies.           
    */
-  void        t8_element_vertex_coords_of_subelement (const
-                                                      t8_element_t *
-                                                      t, int vertex,
-                                                      int coords[]);
+  void                t8_element_vertex_coords_of_subelement (const
+                                                              t8_element_t *
+                                                              t, int vertex,
+                                                              int coords[]);
 };
 
 #endif /* !T8_DEFAULT_QUAD_CXX_HXX */
