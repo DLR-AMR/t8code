@@ -49,7 +49,7 @@ T8_EXTERN_C_BEGIN ();
  *                        providing the used defined per element data.
  *                        If scalar and vector fields are used, all scalar fields
  *                        must come first in the array.
- * \return  True if succesful, false if not (process local).
+ * \return  True if successful, false if not (process local).
  * \note If t8code was not configured with vtk, use \ref t8_forest_vtk_write_file
  */
 int                 t8_forest_write_vtk_via_API (t8_forest_t forest,
