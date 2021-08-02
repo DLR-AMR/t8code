@@ -23,9 +23,18 @@
 #include <t8_schemes/t8_new_feature/t8_subelements_cxx.hxx>
 #include <example/common/t8_example_common.h>
 
-/* In this example, a single quad element is refined into a transition cell of a specific type. 
- * At the moment, subelements are only implemented for the quad scheme. 
- * Valid types range from 1 to 15. */
+/* In this test, a single quad element is refined into a transition cell of a specific type. 
+ * In order to do so, relevant subelement functions like 
+ *
+ *       i) t8_element_get_number_of_subelements
+ *      ii) t8_element_to_subelement
+ *     iii) t8_element_shape
+ *      iv) t8_element_vertex_coords -> t8_element_vertex_coords_of_subelement
+ * 
+ * are used and it is easy to follow them step by step using a debugger like gdb. 
+ * Additionally, the resulting coordinates of all subelements, the parent element is split into, are printed as output.
+ * This can be used, to see if the chosen subelement type is working as intendet. 
+ * At the moment, subelements are only implemented for the quad scheme, with valid subelement types from 1 to 15. */
 static void
 t8_refine_quad_to_subelements ()
 {
