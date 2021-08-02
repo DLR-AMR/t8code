@@ -966,7 +966,6 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const
   /* get the length of the current quadrant */
   len = P4EST_QUADRANT_LEN (q1->level);
 
-#if 1
   /* Compute the x and y coordinates of subelement vertices, depending on the subelement type, id and vertex number (faces enumerated clockwise): 
    *
    *               f1                      V0
@@ -1023,32 +1022,6 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const
       coords[1] = q1->y;
     }
   }
-#endif
-
-#if 0
-  /* 
-   *            =len
-   *      |---------------| 
-   *                               V2       V3
-   *      x - - - x - - - x         x - - - x   
-   *      |       |       |         |       |
-   *      |       |       |         |       |
-   *      | sub_  | sub_  |   -->   | sub_  |                       
-   *      | id    | id    |         | id    |
-   *      | 0     | 1     |         | 0     |
-   *      + - - - x - - - x         + - - - x
-   *                               V0       V1
-   */
-
-  if (pquad_w_sub->subelement_id == 0) {
-    coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len * 1 / 2;
-    coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
-  }
-  else if (pquad_w_sub->subelement_id == 1) {
-    coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len * 1 / 2 + len * 1 / 2;
-    coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
-  }
-#endif
 }
 
 void
@@ -1083,7 +1056,6 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
   T8_ASSERT (p4est_quadrant_is_extended (q));
   T8_ASSERT (q->level < P4EST_QMAXLEVEL);
 
-#if 1
   /* Setting the parameter values for different subelements. 
    * The different subelement types (up to rotation) are:
    *                               
@@ -1113,37 +1085,6 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
     pquad_w_sub_subelement[sub_id_counter]->num_subelement_ids =
       num_subelements;
   }
-#endif
-
-#if 0
-  /* temporary subelement type:
-   *                               
-   *      x - - - - - - - x         x - - - x - - - x           
-   *      |               |         |       |       |          
-   *      |               |         |       |       |    
-   *      |               |   -->   | sub_  | sub_  |     
-   *      |               |         | id    | id    |   
-   *      | elem          |         | 0     | 1     |
-   *      + - - - - - - - x         x - - - x - - - x
-   *
-   * we do not change the p4est quadrant */
-
-  pquad_w_sub_subelement[0]->p4q.x = q->x;
-  pquad_w_sub_subelement[0]->p4q.y = q->y;
-  pquad_w_sub_subelement[0]->p4q.level = level;
-  pquad_w_sub_subelement[0]->dummy_is_subelement = 1;
-  pquad_w_sub_subelement[0]->subelement_type = type;
-  pquad_w_sub_subelement[0]->subelement_id = 0;
-  pquad_w_sub_subelement[0]->num_subelement_ids = 2;
-
-  pquad_w_sub_subelement[1]->p4q.x = pquad_w_sub_subelement[0]->p4q.x;
-  pquad_w_sub_subelement[1]->p4q.y = pquad_w_sub_subelement[0]->p4q.y;
-  pquad_w_sub_subelement[1]->p4q.level = level;
-  pquad_w_sub_subelement[1]->dummy_is_subelement = 1;
-  pquad_w_sub_subelement[1]->subelement_type = type;
-  pquad_w_sub_subelement[1]->subelement_id = 1;
-  pquad_w_sub_subelement[1]->num_subelement_ids = 2;
-#endif
 
   for (i = 0; i < pquad_w_sub_elem->num_subelement_ids; ++i) {
     T8_ASSERT (t8_element_is_valid (c[i]));
