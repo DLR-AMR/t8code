@@ -39,7 +39,6 @@
  * We might want to put this into a private, scheme-specific header file.
  */
 
-//typedef p4est_quadrant_t t8_pquad_t;
 
 typedef struct
 {
