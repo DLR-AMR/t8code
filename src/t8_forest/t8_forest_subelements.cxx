@@ -93,8 +93,8 @@ t8_forest_subelements_adapt (t8_forest_t forest, t8_forest_t forest_from,
 
     /* This procedure determines the decimal value of the binary representation of the neighbour structure. 
      *     
-     *    binary:   |    1    |    0    |    1    |    0    |
-     *    decimal:     1*2^3  +  0*2^2  +  1*2^1  +  0*2^0  =  10
+     *    binary:   |    1    |    0    |    0    |    1    |
+     *    decimal:     1*2^3  +  0*2^2  +  0*2^1  +  1*2^0  =  9
      *  
      */
     int                 coefficient;
