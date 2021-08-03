@@ -1036,7 +1036,8 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
 
   const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
 
-  int num_subelements = t8_element_get_number_of_subelements (type, elem);
+  int                 num_subelements =
+    t8_element_get_number_of_subelements (type, elem);
 
   T8_ASSERT (type >= 1 && type <= 15);
   T8_ASSERT (pquad_w_sub_elem->dummy_is_subelement == 0);
@@ -1069,7 +1070,7 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
    *           
    * Sub_ids are counted clockwise, starting with the (lower) left subelement with id 0.                    
    * Note, that we do not change the p4est quadrant. */
-  
+
   int                 sub_id_counter = 0;
   for (sub_id_counter = 0; sub_id_counter < num_subelements; sub_id_counter++) {
     pquad_w_sub_subelement[sub_id_counter]->p4q.x = q->x;
@@ -1188,7 +1189,8 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const
   /* 3.1) location[0] -> the face_number, the subelement is adjacent to */
   /* 3.2) location[1] -> dummy, if the face is split or not */
   /* 3.3) location[2] -> is the subelement the first or second subelement of the face (always the first, if the face is not split) */
-  int num_subelements = t8_element_get_number_of_subelements (pquad_w_sub->subelement_type, elem);
+  int                 num_subelements =
+    t8_element_get_number_of_subelements (pquad_w_sub->subelement_type, elem);
   T8_ASSERT (pquad_w_sub->subelement_id < num_subelements);
 
   int                 sub_id = pquad_w_sub->subelement_id;
