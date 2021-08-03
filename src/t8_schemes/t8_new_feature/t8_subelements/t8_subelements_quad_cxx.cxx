@@ -680,7 +680,6 @@ t8_default_scheme_sub_c::t8_element_transform_face (const t8_element_t *
 
   /* at the moment, this function is only implemented for standard quad elements */
   T8_ASSERT (pquad_w_sub_elem1->dummy_is_subelement == 0);
-  T8_ASSERT (pquad_w_sub_elem2->dummy_is_subelement == 0);
 
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
@@ -1097,15 +1096,22 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const
    *         | / 6 | 5 \ | 
    *         x - - x - - x
    *               f3
-   */
+   * 
+   * In this example, the below location array would contain the values [2, 1, 1] 
+   * (second face, split, first subelement at the second face) */
 
+  /* get location information of the given subelement */
   int                 location[3] = { };
   t8_element_get_location_of_subelement (t, location);
 
+  /* the face number, the subelement is adjacent to */
   int                 face_number = location[0];
+  /* = 1, if the adjacent face is split and = 0, if not */
   int                 split = location[1];
+  /* = 0, if the subelement is the first (of two) subelements, at the adjacent face and = 1 if it is the second */
   int                 sub_face_id = location[2];
 
+  /* Check, whether the get_location function provides meaningful location data */
   T8_ASSERT (face_number == 0 || face_number == 1 || face_number == 2
              || face_number == 3);
   T8_ASSERT ((split == 0 && sub_face_id == 0)
