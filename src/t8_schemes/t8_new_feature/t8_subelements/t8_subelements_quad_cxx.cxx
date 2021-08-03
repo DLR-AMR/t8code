@@ -23,7 +23,6 @@
 #include <p4est_bits.h>
 #include <t8_schemes/t8_default/t8_dline_bits.h>
 #include <t8_schemes/t8_default/t8_default_common_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_vertex_cxx.hxx>
 
 #include "t8_subelements_quad_cxx.hxx"
 
