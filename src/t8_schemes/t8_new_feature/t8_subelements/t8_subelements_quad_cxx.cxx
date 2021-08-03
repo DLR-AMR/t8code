@@ -137,10 +137,10 @@ t8_default_scheme_sub_c::t8_element_parent (const t8_element_t * elem,
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (parent));
 
-  /* reset subelement parameters for the parent element */
-    pquad_w_sub_parent->dummy_is_subelement = 0;
-    pquad_w_sub_parent->subelement_type = -1;
-    pquad_w_sub_parent->subelement_id = -1;
+  /* resetting the subelement infos and ensuring that a parent element can never be a subelement */
+  pquad_w_sub_parent->dummy_is_subelement = 0;
+  pquad_w_sub_parent->subelement_type = -1;
+  pquad_w_sub_parent->subelement_id = -1;
 
   p4est_quadrant_parent (q, r);
   t8_element_copy_surround (q, r);
