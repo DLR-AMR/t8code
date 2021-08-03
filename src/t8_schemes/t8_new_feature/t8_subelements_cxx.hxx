@@ -20,23 +20,23 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_cxx.hxx
- * This file is the point of entry for our default element implementation.
+/** \file t8_subelements_cxx.hxx
+ * This file is the point of entry for our subelement implementation.
  *
  * This scheme points to a consistent implementation of all element classes.
  */
 
-#ifndef T8_DEFAULT_CXX_HXX
-#define T8_DEFAULT_CXX_HXX
+#ifndef T8_SUBELEMENTS_CXX_HXX
+#define T8_SUBELEMENTS_CXX_HXX
 
 #include <t8_element_cxx.hxx>
 
 T8_EXTERN_C_BEGIN ();
 
-/** Return the default element implementation of t8code. */
+/** Return the subelement element implementation of t8code. */
 t8_scheme_cxx_t    *t8_scheme_new_subelement_cxx (void);
 
-/** Check whether a given eclass_scheme is on of the default schemes.
+/** Check whether a given eclass_scheme is one of the subelement schemes.
  * \param [in] ts   A (pointer to a) scheme
  * \return          True (non-zero) if \a ts is one of the default schemes,
  *                  false (zero) otherwise.
@@ -45,4 +45,4 @@ int                 t8_eclass_scheme_is_sub (t8_eclass_scheme_c *ts);
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_DEFAULT_H */
+#endif /* !T8_SUBELEMENTS_H */
