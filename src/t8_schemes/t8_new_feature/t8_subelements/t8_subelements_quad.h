@@ -20,13 +20,18 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_quad.h
+/** \file t8_subelement_quad.h
  * We use a p4est_quadrant_t object as storage for the T8 quadrant.
- * To record if and if yes, how this quadrant is part of a 3D octant, we use
- * the member pad8 for the surrounding toplevel dimension (2 or 3), pad16 for
- * the direction of its normal relative to a toplevel octant (0, 1, or 2), and
- * p.user_long for the p4est_qcoord_t coordinate in the normal direction.
- */
+ * Additionally, we store some more information to use subelements on top 
+ * of some recursive quad refinement. This information is 
+ * 
+ *     dummy_is_subelement (is a given element a subelement?)
+ *     subelement_type (what type of transition cell is used?)
+ *     subelement_id (what subelement of the transition cell is the given subelement?)
+ * 
+ * In order to refine a quad element using subelements, it is important to know these additional information. 
+ * We can use them for example to determine the coordinates of the subelement vertices, 
+ * since they can differ for subelements of the same id but a different subelement type. */
 
 #ifndef T8_DEFAULT_QUAD_H
 #define T8_DEFAULT_QUAD_H
@@ -39,15 +44,30 @@
  * We might want to put this into a private, scheme-specific header file.
  */
 
+/* Define the struct, that stores all information needed for the quad scheme and subelements.
+ * 
+ *         p4est quadrant        recursive quad       refinement, using a transition 
+ *                                 refinement             cell with subelements
+ *         x - - - - - x         x - - x - - x                x - - - - - x
+ *         |           |         |     |     |                | \   2   / |       
+ *         |           |         |     |     |                | 1 \   /   |
+ *         |           |   -->   x - - x - - x       or       x - - x   3 |
+ *         |           |         |     |     |                | 0 / | \   |
+ *         |           |         |     |     |                | / 5 | 4 \ |
+ *         x - - - - - x         x - - x - - x                x - - x - - x 
+ * 
+ * A p4est quadrant can be refined, using either the standard quad scheme, or a transition cell, consisting of different subelements. 
+ * The quad refinement scheme is recursive, whereas a transition cell can only be used once, for example to remove hanging nodes, after the mesh has been adapted and balanced. 
+ * There are different types of transition cells possible, which we will refer to as subelement_type. 
+ * Each transition cell consists of different subelements. The given example consists of 6 different subelements, whose ids range from 0 to 5.
+ * A dummy variable will store the information, whether a given element is a subelement or a standard quad element. */
 
 typedef struct
 {
-  p4est_quadrant_t    p4q;        /* p4est quadrant */
-  int                 dummy_is_subelement;      /* is element a subelement? */
-  int                 subelement_type;     /* which type of subelement to use? */
-  int                 num_subelement_types; /* # of parts for the specific kind of subelement */
-  int                 subelement_id;    /* which part of subelement? */
-  int                 num_subelement_ids; /* # of parts for the specific kind of subelement */
+  p4est_quadrant_t    p4q;      /* p4est quadrant */
+  int                 dummy_is_subelement;      /* saves the information, whether an element is a subelement */
+  int                 subelement_type;  /* saves the information, which type of transition cell a subelement is associated to */
+  int                 subelement_id;    /* saves the information, what children subelement the given element is */
 } t8_quad_with_subelements;
 
 typedef t8_quad_with_subelements t8_pquad_t;
