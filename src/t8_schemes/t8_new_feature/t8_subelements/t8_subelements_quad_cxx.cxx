@@ -82,14 +82,14 @@ t8_default_scheme_sub_c::t8_element_copy (const t8_element_t * source,
   const p4est_quadrant_t *q = &pquad_w_sub_source->p4q;
   p4est_quadrant_t   *r = &pquad_w_sub_dest->p4q;
 
-  const int *dummy_q = &pquad_w_sub_source->dummy_is_subelement;
-  int   *dummy_r = &pquad_w_sub_dest->dummy_is_subelement;
+  const int          *dummy_q = &pquad_w_sub_source->dummy_is_subelement;
+  int                *dummy_r = &pquad_w_sub_dest->dummy_is_subelement;
 
-  const int *type_q = &pquad_w_sub_source->subelement_type;
-  int   *type_r = &pquad_w_sub_dest->subelement_type;
+  const int          *type_q = &pquad_w_sub_source->subelement_type;
+  int                *type_r = &pquad_w_sub_dest->subelement_type;
 
-  const int *id_q = &pquad_w_sub_source->subelement_id;
-  int   *id_r = &pquad_w_sub_dest->subelement_id; 
+  const int          *id_q = &pquad_w_sub_source->subelement_id;
+  int                *id_r = &pquad_w_sub_dest->subelement_id;
 
   T8_ASSERT (t8_element_is_valid (source));
   T8_ASSERT (t8_element_is_valid (dest));
