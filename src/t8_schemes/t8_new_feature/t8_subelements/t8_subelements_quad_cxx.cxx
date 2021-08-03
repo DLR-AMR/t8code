@@ -1036,7 +1036,7 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
 
   const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
 
-  int                 i;
+  int num_subelements = t8_element_get_number_of_subelements (type, elem);
 
   T8_ASSERT (type >= 1 && type <= 15);
   T8_ASSERT (pquad_w_sub_elem->dummy_is_subelement == 0);
@@ -1044,7 +1044,7 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
 #ifdef T8_ENABLE_DEBUG
   {
     int                 j;
-    for (j = 0; j < pquad_w_sub_elem->num_subelement_ids; j++) {
+    for (j = 0; j < num_subelements; j++) {
       T8_ASSERT (t8_element_is_valid (c[j]));
     }
   }
@@ -1069,12 +1069,8 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
    *           
    * Sub_ids are counted clockwise, starting with the (lower) left subelement with id 0.                    
    * Note, that we do not change the p4est quadrant. */
-
+  
   int                 sub_id_counter = 0;
-  int                 num_subelements;
-
-  num_subelements = t8_element_get_number_of_subelements (type, elem);
-
   for (sub_id_counter = 0; sub_id_counter < num_subelements; sub_id_counter++) {
     pquad_w_sub_subelement[sub_id_counter]->p4q.x = q->x;
     pquad_w_sub_subelement[sub_id_counter]->p4q.y = q->y;
@@ -1082,11 +1078,10 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
     pquad_w_sub_subelement[sub_id_counter]->dummy_is_subelement = 1;
     pquad_w_sub_subelement[sub_id_counter]->subelement_type = type;
     pquad_w_sub_subelement[sub_id_counter]->subelement_id = sub_id_counter;
-    pquad_w_sub_subelement[sub_id_counter]->num_subelement_ids =
-      num_subelements;
   }
 
-  for (i = 0; i < pquad_w_sub_elem->num_subelement_ids; ++i) {
+  int                 i;
+  for (i = 0; i < num_subelements; ++i) {
     T8_ASSERT (t8_element_is_valid (c[i]));
     t8_element_copy_surround (q, &pquad_w_sub_subelement[i]->p4q);
   }
@@ -1193,7 +1188,8 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const
   /* 3.1) location[0] -> the face_number, the subelement is adjacent to */
   /* 3.2) location[1] -> dummy, if the face is split or not */
   /* 3.3) location[2] -> is the subelement the first or second subelement of the face (always the first, if the face is not split) */
-  T8_ASSERT (pquad_w_sub->subelement_id < pquad_w_sub->num_subelement_ids);
+  int num_subelements = t8_element_get_number_of_subelements (pquad_w_sub->subelement_type, elem);
+  T8_ASSERT (pquad_w_sub->subelement_id < num_subelements);
 
   int                 sub_id = pquad_w_sub->subelement_id;
   int                 sub_face_id = 1;  /* initialize the sub_face_id as the second subelement of a face and change that if it is not true */
@@ -1277,7 +1273,6 @@ t8_default_scheme_sub_c::t8_element_init (int length, t8_element_t * elem,
     pquad_w_sub[i].dummy_is_subelement = 0;
     pquad_w_sub[i].subelement_type = -1;
     pquad_w_sub[i].subelement_id = -1;
-    pquad_w_sub[i].num_subelement_ids = -1;
 
 #ifdef T8_ENABLE_DEBUG
     /* In debugging mode we iterate over all length many elements and 
@@ -1308,7 +1303,6 @@ t8_default_scheme_sub_c::t8_element_is_valid (const t8_element_t * elem) const
   T8_ASSERT ((pquad_w_sub->subelement_type >= 0
               && pquad_w_sub->subelement_type <= 15)
              || pquad_w_sub->subelement_type == -1);
-  // T8_ASSERT ((pquad_w_sub->num_subelement_ids >= 4 && pquad_w_sub->num_subelement_ids <= 8) || pquad_w_sub->num_subelement_ids == -1); 
   T8_ASSERT ((pquad_w_sub->subelement_id >= 0
               && pquad_w_sub->subelement_id <= 7)
              || pquad_w_sub->subelement_id == -1);

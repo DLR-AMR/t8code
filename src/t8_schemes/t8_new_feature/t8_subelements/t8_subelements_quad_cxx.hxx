@@ -66,7 +66,6 @@ typedef struct
   int                 dummy_is_subelement;      /* saves the information, whether an element is a subelement */
   int                 subelement_type;  /* saves the information, which type of transition cell a subelement is associated to */
   int                 subelement_id;    /* saves the information, what children subelement the given element is */
-  int                 num_subelement_ids;       /* saves the number of siblings of the subelement */
 } t8_quad_with_subelements;
 
 typedef t8_quad_with_subelements t8_pquad_t;
@@ -334,7 +333,7 @@ public:
   virtual void        t8_element_to_subelement (const t8_element_t * elem,
                                                 int type, t8_element_t * c[]);
 
-/** Determine the number of subelements, used to remove hanging nodes from a element of a given type */
+/** Determine the number of sibling subelements, of a transition cell of a specific type */
   virtual int         t8_element_get_number_of_subelements (int
                                                             subelement_type,
                                                             const
