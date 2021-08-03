@@ -34,24 +34,6 @@ T8_EXTERN_C_BEGIN ();
 t8_linearidx_t      t8_element_get_linear_id (const t8_element_t * elem,
                                               int level);
 
-#ifdef T8_ENABLE_DEBUG
-
-#if 0
-/* TODO: Used in one assertion in t8_element_nca, but wrongly triggers error there.
-         Investigate and decide whether we really need this. */
-static int
-t8_element_surround_matches (const p4est_quadrant_t * q,
-                             const p4est_quadrant_t * r)
-{
-  return T8_QUAD_GET_TDIM (q) == T8_QUAD_GET_TDIM (r) &&
-    (T8_QUAD_GET_TDIM (q) == -1 ||
-     (T8_QUAD_GET_TNORMAL (q) == T8_QUAD_GET_TNORMAL (r) &&
-      T8_QUAD_GET_TCOORD (q) == T8_QUAD_GET_TCOORD (r)));
-}
-#endif
-
-#endif /* T8_ENABLE_DEBUG */
-
 int
 t8_default_scheme_sub_c::t8_element_maxlevel (void)
 {
@@ -100,13 +82,25 @@ t8_default_scheme_sub_c::t8_element_copy (const t8_element_t * source,
   const p4est_quadrant_t *q = &pquad_w_sub_source->p4q;
   p4est_quadrant_t   *r = &pquad_w_sub_dest->p4q;
 
+  const int *dummy_q = &pquad_w_sub_source->dummy_is_subelement;
+  int   *dummy_r = &pquad_w_sub_dest->dummy_is_subelement;
+
+  const int *type_q = &pquad_w_sub_source->subelement_type;
+  int   *type_r = &pquad_w_sub_dest->subelement_type;
+
+  const int *id_q = &pquad_w_sub_source->subelement_id;
+  int   *id_r = &pquad_w_sub_dest->subelement_id; 
+
   T8_ASSERT (t8_element_is_valid (source));
   T8_ASSERT (t8_element_is_valid (dest));
-  if (q == r) {
+  if (q == r && dummy_q == dummy_r && type_q == type_r && id_q == id_r) {
     /* Do nothing if they are already the same quadrant. */
     return;
   }
   *r = *q;
+  *dummy_r = *dummy_q;
+  *type_r = *type_q;
+  *id_r = *id_q;
   t8_element_copy_surround (q, r);
 }
 
