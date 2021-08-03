@@ -33,11 +33,12 @@
  * We can use them for example to determine the coordinates of the subelement vertices, 
  * since they can differ for subelements of the same id but a different subelement type. */
 
-#ifndef T8_DEFAULT_QUAD_H
-#define T8_DEFAULT_QUAD_H
+#ifndef T8_SUBELEMENT_QUAD_H
+#define T8_SUBELEMENT_QUAD_H
 
 #include <p4est.h>
 #include <t8_element.h>
+#include <t8_default.h>
 
 /** The structure holding a quadrilateral element in the default scheme.
  * We make this definition public for interoperability of element classes.
@@ -72,38 +73,7 @@ typedef struct
 
 typedef t8_quad_with_subelements t8_pquad_t;
 
-/** Return the toplevel dimension. */
-#define T8_QUAD_GET_TDIM(quad) ((int) (quad)->pad8)
+/** Provide an implementation for the quadrilateral element class with subelements. */
+t8_eclass_scheme_t *t8_subelement_scheme_new_quad (void);
 
-/** Return the direction of the third dimension.
- * This is only valid to call if the toplevel dimension is three.
- */
-#define T8_QUAD_GET_TNORMAL(quad)                               \
-  ( T8_ASSERT (T8_QUAD_GET_TDIM(quad) == 3),                    \
-    ((int) (quad)->pad16) )
-
-/** Return the coordinate in the third dimension.
- * This is only valid to call if the toplevel dimension is three.
- */
-#define T8_QUAD_GET_TCOORD(quad)                                \
-  ( T8_ASSERT (T8_QUAD_GET_TDIM(quad) == 3),                    \
-    ((int) (quad)->p.user_long) )
-
-/** Set the toplevel dimension of a quadrilateral. */
-#define T8_QUAD_SET_TDIM(quad,dim)                              \
-  do { T8_ASSERT ((dim) == 2 || (dim) == 3);                    \
-       (quad)->pad8 = (int8_t) (dim); } while (0)
-
-/** Set the direction of the third demension. */
-#define T8_QUAD_SET_TNORMAL(quad,normal)                        \
-  do { T8_ASSERT ((normal) >= 0 && (normal) < 3);               \
-       (quad)->pad16 = (int16_t) (normal); } while (0)
-
-/** Set the coordinate in the third dimension. */
-#define T8_QUAD_SET_TCOORD(quad,coord)                          \
-  do { (quad)->p.user_long = (long) (coord); } while (0)
-
-/** Provide an implementation for the quadrilateral element class. */
-t8_eclass_scheme_t *t8_default_scheme_new_quad (void);
-
-#endif /* !T8_DEFAULT_QUAD_H */
+#endif /* !T8_SUBELEMENT_QUAD_H */
