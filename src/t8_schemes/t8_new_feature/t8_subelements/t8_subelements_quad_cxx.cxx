@@ -1221,7 +1221,7 @@ t8_default_scheme_sub_c::t8_element_get_number_of_subelements (int
                                                                t8_element *
                                                                elem)
 {
-  T8_ASSERT (subelement_type >= 1 && subelement_type <= 15);
+  T8_ASSERT (t8_element_is_valid (elem));
 
   /* consider subelement_type 13 = 1101 in base two -> there are 4 + (1+1+0+1) = 7 subelements */
   int                 num_subelements;
