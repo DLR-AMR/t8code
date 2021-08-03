@@ -20,16 +20,21 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_quad.h
+/** \file t8_subelements_quad_cxx.hxx
  * We use a p4est_quadrant_t object as storage for the T8 quadrant.
- * To record if and if yes, how this quadrant is part of a 3D octant, we use
- * the member pad8 for the surrounding toplevel dimension (2 or 3), pad16 for
- * the direction of its normal relative to a toplevel octant (0, 1, or 2), and
- * p.user_long for the p4est_qcoord_t coordinate in the normal direction.
- */
+ * Additionally, we store some more information to use subelements on top 
+ * of some recursive quad refinement. This information is 
+ * 
+ *     dummy_is_subelement (is a given element a subelement?)
+ *     subelement_type (what type of transition cell is used?)
+ *     subelement_id (what subelement of the transition cell is the given subelement?)
+ * 
+ * In order to refine a quad element using subelements, it is important to know these additional information. 
+ * We can use them for example to determine the coordinates of the subelement vertices, 
+ * since they can differ for subelements of the same id but a different subelement type. */
 
-#ifndef T8_DEFAULT_QUAD_CXX_HXX
-#define T8_DEFAULT_QUAD_CXX_HXX
+#ifndef T8_SUBELEMENTS_QUAD_CXX_HXX
+#define T8_SUBELEMENTS_QUAD_CXX_HXX
 
 #include <p4est.h>
 #include <t8_element_cxx.hxx>
@@ -102,8 +107,8 @@ typedef t8_quad_with_subelements t8_pquad_t;
   do { (quad)->p.user_long = (long) (coord); } while (0)
 
 #if 0
-/** Provide an implementation for the quadrilateral element class. */
-t8_eclass_scheme_t *t8_default_scheme_new_quad (void);
+/** Provide an implementation for the quadrilateral element class with subelements. */
+t8_eclass_scheme_t *t8_subelement_scheme_new_quad (void);
 #endif
 
 struct t8_default_scheme_sub_c:public t8_default_scheme_common_c
@@ -383,4 +388,4 @@ protected:
                                                               int coords[]);
 };
 
-#endif /* !T8_DEFAULT_QUAD_CXX_HXX */
+#endif /* !T8_SUBELEMENTS_QUAD_CXX_HXX */
