@@ -292,6 +292,8 @@ t8_default_scheme_sub_c::t8_element_child (const t8_element_t * elem,
 
   T8_ASSERT (p4est_quadrant_is_parent (q, r));
 
+  t8_element_reset_subelement_values (child);
+
   t8_element_copy_surround (q, r);
 }
 
