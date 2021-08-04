@@ -68,12 +68,20 @@
 typedef struct
 {
   p4est_quadrant_t    p4q;      /* p4est quadrant */
-  int                 dummy_is_subelement;      /* saves the information, whether an element is a subelement */
+  int                 dummy_is_subelement;      /* saves the information, whether an element is a subelement (1: is subelement, -1: is no subelement) */
   int                 subelement_type;  /* saves the information, which type of transition cell a subelement is associated to */
   int                 subelement_id;    /* saves the information, what children subelement the given element is */
 } t8_quad_with_subelements;
 
 typedef t8_quad_with_subelements t8_pquad_t;
+
+/** define some subelement related constants */
+#define T8_MAX_SUBELEMENT_TYPE 15
+#define T8_MIN_SUBELEMENT_TYPE 1
+#define T8_MAX_SUBELEMENT_ID 7
+#define T8_MIN_SUBELEMENT_ID 0
+#define T8_IS_SUBELEMENT 1
+#define T8_IS_NO_SUBELEMENT -1
 
 /** Return the toplevel dimension. */
 #define T8_QUAD_GET_TDIM(quad) ((int) (quad)->pad8)
