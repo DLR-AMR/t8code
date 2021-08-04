@@ -136,19 +136,22 @@ public:
     t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
     t8_eclass_t         tree_class = t8_cmesh_get_tree_class (cmesh, ltreeid);
     /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store
-    * in out_coords. */
-    t8_geom_compute_linear_geometry (tree_class, active_tree_vertices, ref_coords,
-                                    out_coords);
+     * in out_coords. */
+    /* *INDENT-OFF* */
+    /* No idea why, but indent insert a lot of newlines here */
+    t8_geom_compute_linear_geometry (tree_class, active_tree_vertices,
+                                     ref_coords, out_coords);
 
     /* At first, we map x from [0,1] to [-.5,.5]
      * and y to [0, 2*PI] */
-                        t = out_coords[0] - .5;
-                        phi = out_coords[1] * 2 * M_PI;
+    t = out_coords[0] - .5;
+    phi = out_coords[1] * 2 * M_PI;
 
     /* We now apply the parametrization for the moebius strip. */
-                        out_coords[0] = (1 - t * sin (phi / 2)) * cos (phi);
-                        out_coords[1] = (1 - t * sin (phi / 2)) * sin (phi);
-                        out_coords[2] = t * cos (phi / 2);
+    out_coords[0] = (1 - t * sin (phi / 2)) * cos (phi);
+    out_coords[1] = (1 - t * sin (phi / 2)) * sin (phi);
+    out_coords[2] = t * cos (phi / 2);
+    /* *INDENT-ON* */
   }
 
   /* Jacobian, not implemented. */
@@ -239,17 +242,21 @@ public:
     t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
     /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store
      * in out_coords. */
-    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords,
-                                     out_coords);
+
+    /* *INDENT-OFF* */
+    /* No idea why, but indent insert a lot of newlines here */
+    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices,
+                                     ref_coords, out_coords);
 
     /* We now remap the coords to match the square [-1,1]^2 */
-                        x = out_coords[0] * 2 - 1;
-                        y = out_coords[1] * 2 - 1;
+    x = out_coords[0] * 2 - 1;
+    y = out_coords[1] * 2 - 1;
 
     /* An now we apply the formula that projects the square to the circle. */
-                        out_coords[0] = x * sqrt (1 - y * y / 2);
-                        out_coords[1] = y * sqrt (1 - x * x / 2);
-                        out_coords[2] = 0;
+    out_coords[0] = x * sqrt (1 - y * y / 2);
+    out_coords[1] = y * sqrt (1 - x * x / 2);
+    out_coords[2] = 0;
+    /* *INDENT-ON* */
   }
 
   /* Jacobian, not implemented. */
