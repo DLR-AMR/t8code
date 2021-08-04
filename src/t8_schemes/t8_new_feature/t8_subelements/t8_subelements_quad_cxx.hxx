@@ -396,14 +396,14 @@ protected:
                                                               int coords[]);
 
   /** This function resets the subelement values of an element to the default value -1.
-   *  \param [in, out] elem A valid element, whose subelement values have been resetted. 
+   *  \param [in,out] elem A valid element, whose subelement values have been resetted. 
    */
   void                t8_element_reset_subelement_values (t8_element_t *
                                                           elem);
 
   /** This function copies the subelement values from source to dest.
    *  \param [in] source A valid element 
-   *  \param [in, out] dest A valid element, whose subelement values are equal to those of source
+   *  \param [in,out] dest A valid element, whose subelement values are equal to those of source
    */
   void                t8_element_copy_subelement_values (const
                                                          t8_element_t *
