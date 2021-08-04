@@ -331,6 +331,7 @@ t8_default_scheme_sub_c::t8_element_children (const t8_element_t * elem,
                            &pquad_w_sub_children[3]->p4q);
 
   for (i = 0; i < P4EST_CHILDREN; ++i) {
+    t8_element_reset_subelement_values (c[i]);
     t8_element_copy_surround (q, &pquad_w_sub_children[i]->p4q);
   }
 }
