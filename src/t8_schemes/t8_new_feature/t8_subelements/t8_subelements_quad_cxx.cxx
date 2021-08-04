@@ -104,13 +104,17 @@ int
 t8_default_scheme_sub_c::t8_element_compare (const t8_element_t * elem1,
                                              const t8_element_t * elem2)
 {
-  const t8_quad_with_subelements *pquad_w_sub1 =
+  const t8_quad_with_subelements *pquad_w_sub_elem1 =
     (const t8_quad_with_subelements *) elem1;
-  const t8_quad_with_subelements *pquad_w_sub2 =
+  const t8_quad_with_subelements *pquad_w_sub_elem2 =
     (const t8_quad_with_subelements *) elem2;
 
-  const p4est_quadrant_t *q = &pquad_w_sub1->p4q;
-  const p4est_quadrant_t *r = &pquad_w_sub2->p4q;
+  const p4est_quadrant_t *q = &pquad_w_sub_elem1->p4q;
+  const p4est_quadrant_t *r = &pquad_w_sub_elem2->p4q;
+
+  /* at the moment, this function is not optimized for subelements */
+  T8_ASSERT (pquad_w_sub_elem1->dummy_is_subelement == T8_IS_NO_SUBELEMENT);
+  T8_ASSERT (pquad_w_sub_elem2->dummy_is_subelement == T8_IS_NO_SUBELEMENT);
 
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
