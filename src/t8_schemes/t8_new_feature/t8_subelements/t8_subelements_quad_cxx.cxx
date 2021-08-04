@@ -1332,7 +1332,7 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const
     sub_face_id = 0;            /* in this case, the subelement is the first element of the face */
   }
 
-  while (sub_id >= 0 && k < P4EST_FACES) {
+  for (k = 0; sub_id >= 0 && k < P4EST_FACES;++k) {
     if (binary_array[k] == 1) {
       sub_id -= 2;              /* two subelements adjacent to face k */
     }
