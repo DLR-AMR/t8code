@@ -70,7 +70,7 @@ int                 t8_forest_remove_hanging_nodes_adapt (t8_forest_t forest,
 void                t8_forest_subelements (t8_forest_t forest);
 
 /* Check whether the forest has no hanging nodes left. */
-int                 t8_forest_subelements_used (t8_forest_t forest);
+int                 t8_forest_hanging_nodes_removed (t8_forest_t forest);
 
 T8_EXTERN_C_END ();
 

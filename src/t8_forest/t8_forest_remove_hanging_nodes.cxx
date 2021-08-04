@@ -147,7 +147,7 @@ t8_forest_subelements (t8_forest_t forest)
 #if 0
 /* Check whether all hanging nodes are eliminated. */
 int
-t8_forest_subelements_used (t8_forest_t forest)
+t8_forest_hanging_nodes_removed (t8_forest_t forest)
 {
   /* TODO: implement this function in the future */
   return 0;
