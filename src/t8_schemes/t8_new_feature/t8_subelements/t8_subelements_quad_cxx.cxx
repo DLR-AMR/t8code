@@ -373,7 +373,8 @@ t8_default_scheme_sub_c::t8_element_is_family (t8_element_t ** fam)
   int                 i;
   for (i = 0; i < P4EST_CHILDREN; i++) {
     /* at the moment, this function is only implemented for standard quad elements */
-    T8_ASSERT (pquad_w_sub_family[i]->dummy_is_subelement == T8_IS_NO_SUBELEMENT);
+    T8_ASSERT (pquad_w_sub_family[i]->dummy_is_subelement ==
+               T8_IS_NO_SUBELEMENT);
 
     T8_ASSERT (t8_element_is_valid (fam[i]));
   }
@@ -877,7 +878,8 @@ t8_default_scheme_sub_c::t8_element_last_descendant_face (const t8_element_t
 
   /* at the moment, this function is only implemented for standard quad elements */
   T8_ASSERT (pquad_w_sub_elem->dummy_is_subelement == T8_IS_NO_SUBELEMENT);
-  T8_ASSERT (pquad_w_sub_last_desc->dummy_is_subelement == T8_IS_NO_SUBELEMENT);
+  T8_ASSERT (pquad_w_sub_last_desc->dummy_is_subelement ==
+             T8_IS_NO_SUBELEMENT);
 
   T8_ASSERT (0 <= face && face < P4EST_FACES);
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
@@ -1165,7 +1167,8 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
   int                 num_subelements =
     t8_element_get_number_of_subelements (type, elem);
 
-  T8_ASSERT (type >= T8_MIN_SUBELEMENT_TYPE && type <= T8_MAX_SUBELEMENT_TYPE);
+  T8_ASSERT (type >= T8_MIN_SUBELEMENT_TYPE
+             && type <= T8_MAX_SUBELEMENT_TYPE);
   T8_ASSERT (pquad_w_sub_elem->dummy_is_subelement == T8_IS_NO_SUBELEMENT);
   T8_ASSERT (t8_element_is_valid (elem));
 #ifdef T8_ENABLE_DEBUG
@@ -1202,7 +1205,8 @@ t8_default_scheme_sub_c::t8_element_to_subelement (const t8_element_t * elem,
     pquad_w_sub_subelement[sub_id_counter]->p4q.x = q->x;
     pquad_w_sub_subelement[sub_id_counter]->p4q.y = q->y;
     pquad_w_sub_subelement[sub_id_counter]->p4q.level = level;
-    pquad_w_sub_subelement[sub_id_counter]->dummy_is_subelement = T8_IS_SUBELEMENT;
+    pquad_w_sub_subelement[sub_id_counter]->dummy_is_subelement =
+      T8_IS_SUBELEMENT;
     pquad_w_sub_subelement[sub_id_counter]->subelement_type = type;
     pquad_w_sub_subelement[sub_id_counter]->subelement_id = sub_id_counter;
   }
