@@ -528,6 +528,7 @@ t8_default_scheme_sub_c::t8_element_nca (const t8_element_t * elem1,
   T8_ASSERT (t8_element_surround_matches (q1, q2));
 #endif
 
+  t8_element_reset_subelement_values (nca);
   p4est_nearest_common_ancestor (q1, q2, r);
   t8_element_copy_surround (q1, r);
 }
@@ -750,6 +751,8 @@ t8_default_scheme_sub_c::t8_element_transform_face (const t8_element_t *
     SC_ABORT_NOT_REACHED ();
   }
   T8_QUAD_SET_TDIM (p, 2);
+
+  t8_element_reset_subelement_values (elem2);
 }
 
 int
@@ -810,6 +813,7 @@ t8_default_scheme_sub_c::t8_element_extrude_face (const t8_element_t * face,
   default:
     SC_ABORT_NOT_REACHED ();
   }
+  t8_element_reset_subelement_values (elem);
   /* We return the face of q at which we extruded. This is the same number
    * as root_face. */
   return root_face;
@@ -858,6 +862,7 @@ t8_default_scheme_sub_c::t8_element_first_descendant_face (const t8_element_t
   first_face_corner = p4est_face_corners[face][0];
   /* Construce the descendant in that corner */
   p4est_quadrant_corner_descendant (q, desc, first_face_corner, level);
+  t8_element_reset_subelement_values (first_desc);
 }
 
 /** Construct the last descendant of an element that touches a given face.   */
@@ -890,6 +895,7 @@ t8_default_scheme_sub_c::t8_element_last_descendant_face (const t8_element_t
   last_face_corner = p4est_face_corners[face][1];
   /* Construce the descendant in that corner */
   p4est_quadrant_corner_descendant (q, desc, last_face_corner, level);
+  t8_element_reset_subelement_values (last_desc);
 }
 
 void
@@ -1004,6 +1010,8 @@ t8_default_scheme_sub_c::t8_element_face_neighbor_inside (const t8_element_t
 
   /* Construct the face neighbor */
   p4est_quadrant_face_neighbor (q, face, n);
+
+  t8_element_reset_subelement_values (neigh);
 
   T8_QUAD_SET_TDIM (n, 2);
   /* Compute the face number as seen from q.
