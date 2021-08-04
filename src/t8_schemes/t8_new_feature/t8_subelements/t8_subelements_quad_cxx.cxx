@@ -138,9 +138,7 @@ t8_default_scheme_sub_c::t8_element_parent (const t8_element_t * elem,
   T8_ASSERT (t8_element_is_valid (parent));
 
   /* resetting the subelement infos and ensuring that a parent element can never be a subelement */
-  pquad_w_sub_parent->dummy_is_subelement = T8_IS_NO_SUBELEMENT;
-  pquad_w_sub_parent->subelement_type = -1;
-  pquad_w_sub_parent->subelement_id = -1;
+  t8_element_reset_subelement_values (parent);
 
   p4est_quadrant_parent (q, r);
   t8_element_copy_surround (q, r);
@@ -1360,6 +1358,17 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const
   location[0] = face_number;
   location[1] = split;
   location[2] = sub_face_id;
+}
+
+void
+t8_default_scheme_sub_c::t8_element_reset_subelement_values (t8_element * elem)
+{
+  t8_quad_with_subelements *pquad_w_sub =
+    (t8_quad_with_subelements *) elem;
+
+  pquad_w_sub->dummy_is_subelement = T8_IS_NO_SUBELEMENT;
+  pquad_w_sub->subelement_type = T8_IS_NO_SUBELEMENT;
+  pquad_w_sub->subelement_id = T8_IS_NO_SUBELEMENT;
 }
 
 t8_element_shape_t
