@@ -402,6 +402,16 @@ protected:
   void                t8_element_reset_subelement_values (t8_element_t *
                                                           elem);
 
+  /** This function copies the subelement values from source to dest.
+   *  \param [in] source A valid element 
+   *  \param [in] dest A valid element
+   *  \return dest with subelement values equal to those of source.   
+   */
+  void                t8_element_copy_subelement_values (const 
+                                                         t8_element_t *
+                                                         source,
+                                                         t8_element_t *
+                                                         dest);
 };
 
 #endif /* !T8_SUBELEMENTS_QUAD_CXX_HXX */

@@ -82,25 +82,18 @@ t8_default_scheme_sub_c::t8_element_copy (const t8_element_t * source,
   const p4est_quadrant_t *q = &pquad_w_sub_source->p4q;
   p4est_quadrant_t   *r = &pquad_w_sub_dest->p4q;
 
-  const int          *dummy_q = &pquad_w_sub_source->dummy_is_subelement;
-  int                *dummy_r = &pquad_w_sub_dest->dummy_is_subelement;
-
-  const int          *type_q = &pquad_w_sub_source->subelement_type;
-  int                *type_r = &pquad_w_sub_dest->subelement_type;
-
-  const int          *id_q = &pquad_w_sub_source->subelement_id;
-  int                *id_r = &pquad_w_sub_dest->subelement_id;
-
   T8_ASSERT (t8_element_is_valid (source));
   T8_ASSERT (t8_element_is_valid (dest));
-  if (q == r && dummy_q == dummy_r && type_q == type_r && id_q == id_r) {
+  if (q == r && 
+      pquad_w_sub_source->dummy_is_subelement == pquad_w_sub_dest->dummy_is_subelement &&
+      pquad_w_sub_source->subelement_type == pquad_w_sub_dest->subelement_type &&
+      pquad_w_sub_source->subelement_id == pquad_w_sub_dest->subelement_id) {
     /* Do nothing if they are already the same quadrant. */
     return;
   }
   *r = *q;
-  *dummy_r = *dummy_q;
-  *type_r = *type_q;
-  *id_r = *id_q;
+
+  t8_element_copy_subelement_values (source, dest);
   t8_element_copy_surround (q, r);
 }
 
@@ -1369,6 +1362,21 @@ t8_default_scheme_sub_c::t8_element_reset_subelement_values (t8_element *
   pquad_w_sub->dummy_is_subelement = T8_IS_NO_SUBELEMENT;
   pquad_w_sub->subelement_type = T8_IS_NO_SUBELEMENT;
   pquad_w_sub->subelement_id = T8_IS_NO_SUBELEMENT;
+}
+
+void
+t8_default_scheme_sub_c::t8_element_copy_subelement_values (const 
+                                                            t8_element *
+                                                            source,
+                                                            t8_element *
+                                                            dest)                                                       
+{
+  const t8_quad_with_subelements *pquad_w_sub_source = (const t8_quad_with_subelements *) source;
+  t8_quad_with_subelements *pquad_w_sub_dest = (t8_quad_with_subelements *) dest;
+
+  pquad_w_sub_dest->dummy_is_subelement = pquad_w_sub_source->dummy_is_subelement;
+  pquad_w_sub_dest->subelement_type = pquad_w_sub_source->subelement_type;
+  pquad_w_sub_dest->subelement_id = pquad_w_sub_source->subelement_id;
 }
 
 t8_element_shape_t
