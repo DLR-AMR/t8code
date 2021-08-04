@@ -394,7 +394,7 @@ protected:
                                                               t8_element_t *
                                                               t, int vertex,
                                                               int coords[]);
- 
+
   /** This function resets the subelement values of an element to the default value -1.
    *  \param [in] elem A valid element 
    *  \return the element, but with resetted subelement values      

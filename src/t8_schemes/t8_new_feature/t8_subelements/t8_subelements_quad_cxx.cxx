@@ -1361,10 +1361,10 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const
 }
 
 void
-t8_default_scheme_sub_c::t8_element_reset_subelement_values (t8_element * elem)
+t8_default_scheme_sub_c::t8_element_reset_subelement_values (t8_element *
+                                                             elem)
 {
-  t8_quad_with_subelements *pquad_w_sub =
-    (t8_quad_with_subelements *) elem;
+  t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem;
 
   pquad_w_sub->dummy_is_subelement = T8_IS_NO_SUBELEMENT;
   pquad_w_sub->subelement_type = T8_IS_NO_SUBELEMENT;
