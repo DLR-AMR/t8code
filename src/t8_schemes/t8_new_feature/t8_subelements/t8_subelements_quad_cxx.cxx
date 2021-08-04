@@ -495,6 +495,7 @@ t8_default_scheme_sub_c::t8_element_successor (const t8_element_t * elem1,
 
   id = p4est_quadrant_linear_id (q, level);
   T8_ASSERT (id + 1 < ((t8_linearidx_t) 1) << P4EST_DIM * level);
+  t8_element_reset_subelement_values (elem2);
   p4est_quadrant_set_morton (r, level, id + 1);
   t8_element_copy_surround (q, r);
 }
