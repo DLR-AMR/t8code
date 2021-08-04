@@ -21,7 +21,7 @@
 */
 
 #include <new>
-#include <t8_schemes/t8_new_feature/t8_subelements_cxx.hxx>
+#include <t8_schemes/t8_quads_w_rectangular_subelements/t8_subelements_cxx.hxx>
 #include <t8_refcount.h>
 
 #include "t8_subelements_quad_cxx.hxx"
@@ -71,7 +71,7 @@ t8_eclass_scheme_is_sub (t8_eclass_scheme_c * ts)
     /* TODO: Add pyramid as soon as pyramid scheme is implemented */
     /* TODO: Add a test for this function */
   }
-  return 0; /* Default return value false */
+  return 0;                     /* Default return value false */
 }
 
 T8_EXTERN_C_END ();

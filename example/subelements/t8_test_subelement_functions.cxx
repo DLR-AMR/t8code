@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_schemes/t8_new_feature/t8_subelements_cxx.hxx>
+#include <t8_schemes/t8_quads_w_rectangular_subelements/t8_subelements_cxx.hxx>
 #include <example/common/t8_example_common.h>
 
 /* In this test, a single quad element is refined into a transition cell of a specific type. 

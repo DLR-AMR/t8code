@@ -27,7 +27,7 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest.h>
 #include <t8_element_cxx.hxx>
-#include <t8_schemes/t8_new_feature/t8_subelements/t8_subelements_quad_cxx.hxx>
+#include <t8_schemes/t8_quads_w_rectangular_subelements/t8_subelements/t8_subelements_quad_cxx.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
