@@ -407,11 +407,10 @@ protected:
    *  \param [in] dest A valid element
    *  \return dest with subelement values equal to those of source.   
    */
-  void                t8_element_copy_subelement_values (const 
+  void                t8_element_copy_subelement_values (const
                                                          t8_element_t *
                                                          source,
-                                                         t8_element_t *
-                                                         dest);
+                                                         t8_element_t * dest);
 };
 
 #endif /* !T8_SUBELEMENTS_QUAD_CXX_HXX */

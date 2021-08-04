@@ -84,10 +84,13 @@ t8_default_scheme_sub_c::t8_element_copy (const t8_element_t * source,
 
   T8_ASSERT (t8_element_is_valid (source));
   T8_ASSERT (t8_element_is_valid (dest));
-  if (q == r && 
-      pquad_w_sub_source->dummy_is_subelement == pquad_w_sub_dest->dummy_is_subelement &&
-      pquad_w_sub_source->subelement_type == pquad_w_sub_dest->subelement_type &&
-      pquad_w_sub_source->subelement_id == pquad_w_sub_dest->subelement_id) {
+  if (q == r &&
+      pquad_w_sub_source->dummy_is_subelement ==
+      pquad_w_sub_dest->dummy_is_subelement
+      && pquad_w_sub_source->subelement_type ==
+      pquad_w_sub_dest->subelement_type
+      && pquad_w_sub_source->subelement_id ==
+      pquad_w_sub_dest->subelement_id) {
     /* Do nothing if they are already the same quadrant. */
     return;
   }
@@ -1365,16 +1368,18 @@ t8_default_scheme_sub_c::t8_element_reset_subelement_values (t8_element *
 }
 
 void
-t8_default_scheme_sub_c::t8_element_copy_subelement_values (const 
+t8_default_scheme_sub_c::t8_element_copy_subelement_values (const
                                                             t8_element *
                                                             source,
-                                                            t8_element *
-                                                            dest)                                                       
+                                                            t8_element * dest)
 {
-  const t8_quad_with_subelements *pquad_w_sub_source = (const t8_quad_with_subelements *) source;
-  t8_quad_with_subelements *pquad_w_sub_dest = (t8_quad_with_subelements *) dest;
+  const t8_quad_with_subelements *pquad_w_sub_source =
+    (const t8_quad_with_subelements *) source;
+  t8_quad_with_subelements *pquad_w_sub_dest =
+    (t8_quad_with_subelements *) dest;
 
-  pquad_w_sub_dest->dummy_is_subelement = pquad_w_sub_source->dummy_is_subelement;
+  pquad_w_sub_dest->dummy_is_subelement =
+    pquad_w_sub_source->dummy_is_subelement;
   pquad_w_sub_dest->subelement_type = pquad_w_sub_source->subelement_type;
   pquad_w_sub_dest->subelement_id = pquad_w_sub_source->subelement_id;
 }
