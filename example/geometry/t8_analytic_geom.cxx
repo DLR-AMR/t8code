@@ -283,7 +283,9 @@ class               t8_geometry_moving:public t8_geometry
 {
 public:
   /* Basic constructor that sets the dimension the name and the time pointer. */
-  t8_geometry_moving (const double *time):t8_geometry (2, "t8_moving_geometry"), ptime (time)
+  t8_geometry_moving (const double *time):t8_geometry (2,
+                                                       "t8_moving_geometry"),
+    ptime (time)
   {
   }
 
@@ -306,11 +308,12 @@ public:
     double              phi = radius_sqr * (time > 2 ? 4 - time : time);
 
     /* Change gridlines by applying a 4th order polynomial mapping
-    * [0,1]^2 -> [0,1]^2.
-    * And then map this to [-0.5,-0.5]^2 */
+     * [0,1]^2 -> [0,1]^2.
+     * And then map this to [-0.5,-0.5]^2 */
     //x = x*x*x*x - 3.5*x*x*x + 3.5 * x;
     int                 sign = x < 0 ? 1 : -1;
     double              rho = 0.5 - time / 10;
+    /* *INDENT-OFF* */
     x = sign * (1 - exp (-fabs (-x) / rho)) / (2 * (1 - exp (-0.5 / rho)));
     sign = y < 0 ? 1 : -1;
     y = sign * (1 - exp (-fabs (-y) / rho)) / (2 * (1 - exp (-0.5 / rho)));
@@ -320,10 +323,11 @@ public:
     out_coords[0] = x * (cos (phi)) - y * sin (phi);
     out_coords[1] = y * (cos (phi)) + x * sin (phi);
     out_coords[2] = 0;
+    /* *INDENT-ON* */
     //sin(2*M_PI * time) * 0.2 * sin (out_coords[0] * 2 * M_PI) * cos (out_coords[1] * 2 * M_PI);
   }
 
-    /* Jacobian, not implemented. */
+  /* Jacobian, not implemented. */
   void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
                                                 t8_gloidx_t gtreeid,
                                                 const double *ref_coords,
@@ -341,7 +345,7 @@ public:
   }
 
 protected:
-  const double *ptime; /* Time pointer to outside time variable */
+  const double       *ptime;    /* Time pointer to outside time variable */
 };
 
 /** Map the unit cube [0,1]^3 onto a cube that is distorted
@@ -352,7 +356,8 @@ class               t8_geometry_cube_zdistorted:public t8_geometry
 {
 public:
   /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_cube_zdistorted ():t8_geometry (3, "t8_cube_zdistorted_geometry")
+  t8_geometry_cube_zdistorted ():t8_geometry (3,
+                                              "t8_cube_zdistorted_geometry")
   {
   }
   /**
@@ -370,11 +375,11 @@ public:
     out_coords[0] = ref_coords[0];
     out_coords[1] = ref_coords[1];
     out_coords[2] = ref_coords[2] * (0.8 +
-                                    0.2 * sin (ref_coords[0] * 2 * M_PI) *
-                                    cos (ref_coords[1] * 2 * M_PI));
+                                     0.2 * sin (ref_coords[0] * 2 * M_PI) *
+                                     cos (ref_coords[1] * 2 * M_PI));
   }
 
-    /* Jacobian, not implemented. */
+  /* Jacobian, not implemented. */
   void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
                                                 t8_gloidx_t gtreeid,
                                                 const double *ref_coords,
@@ -499,8 +504,7 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
       ("Creating uniform level %i forest with a 3D function graph geometry.\n",
        level);
     /* Cube geometry with sincos on top. Has one hexahedron tree. */
-    geometry =
-      new t8_geometry_cube_zdistorted;
+    geometry = new t8_geometry_cube_zdistorted;
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
     snprintf (vtuname, BUFSIZ, "forest_cube_3D_lvl_%i", level);
     break;
@@ -508,8 +512,7 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     t8_global_productionf
       ("Creating uniform level %i forest with a moving geometry.\n", level);
     /* Quad geometry that rotates with time. */
-    geometry =
-      new t8_geometry_moving (&time);
+    geometry = new t8_geometry_moving (&time);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     snprintf (vtuname, BUFSIZ, "forest_moving_lvl_%i", level);
     break;
