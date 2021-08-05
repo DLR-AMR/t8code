@@ -62,9 +62,8 @@ public:
    * models the rectangle [0,2] x [0,1].
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The glocal tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
+   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^2.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
-   * \note Since this is the identity geometry, \a out_coords will be equal to \a ref_coords.
    */
   void                t8_geom_evaluate (t8_cmesh_t cmesh,
                                         t8_gloidx_t gtreeid,
@@ -115,15 +114,11 @@ public:
   }
 
   /**
-   * Map a point in  a point (x,y) in R^2 
-   * to the point (x,y, 0.2 * sin(2PI X) * cos(2PI Y)).
-   * It is specifically designed to work on two tree cmeshes and 
-   * models the rectangle [0,2] x [0,1].
+   * Map a point in a point in [0,1]^2 to the moebius band.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The glocal tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
+   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^2.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
-   * \note Since this is the identity geometry, \a out_coords will be equal to \a ref_coords.
    */
   void                t8_geom_evaluate (t8_cmesh_t cmesh,
                                         t8_gloidx_t gtreeid,
@@ -180,10 +175,9 @@ public:
   /**
    * Map a reference point in the unit square to a cylinder.
    * \param [in]  cmesh      The cmesh in which the point lies.
-   * \param [in]  gtreeid    The glocal tree (of the cmesh) in which the reference point is.
+   * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
-   * \note Since this is the identity geometry, \a out_coords will be equal to \a ref_coords.
    */
   void                t8_geom_evaluate (t8_cmesh_t cmesh,
                                         t8_gloidx_t gtreeid,
@@ -230,12 +224,11 @@ public:
   }
 
   /**
-   * Map a reference point in the unit square to a cylinder.
+   * Map a reference point in the unit square to a circle.
    * \param [in]  cmesh      The cmesh in which the point lies.
-   * \param [in]  gtreeid    The glocal tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
+   * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
+   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^2.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
-   * \note Since this is the identity geometry, \a out_coords will be equal to \a ref_coords.
    */
   void                t8_geom_evaluate (t8_cmesh_t cmesh,
                                         t8_gloidx_t gtreeid,
