@@ -435,15 +435,19 @@ t8_default_scheme_sub_c::t8_element_first_descendant (const t8_element_t *
   const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
   p4est_quadrant_t   *r = &pquad_w_sub_desc->p4q;
 
-  /* at the moment, this function is only implemented for standard quad elements */
-  T8_ASSERT (pquad_w_sub_elem->dummy_is_subelement == T8_IS_NO_SUBELEMENT);
-
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
 
   p4est_quadrant_first_descendant (q, r, level);
   T8_QUAD_SET_TDIM (r, 2);
+
+  /* We allow constructing a last descendant from a subelement. 
+   * Keep in mind, that transforming a quad element to a subelement does not change the 
+   * p4est quadrant. Therefore, we are constructing the last descendant of the parent 
+   * quad element of the given subelement. Since the last descendant is not meant to be 
+   * a subelement, we reset the corresponding subelement values. */
+  t8_element_reset_subelement_values (desc);
 }
 
 void
@@ -460,15 +464,19 @@ t8_default_scheme_sub_c::t8_element_last_descendant (const t8_element_t *
   const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
   p4est_quadrant_t   *r = &pquad_w_sub_desc->p4q;
 
-  /* at the moment, this function is only implemented for standard quad elements */
-  T8_ASSERT (pquad_w_sub_elem->dummy_is_subelement == T8_IS_NO_SUBELEMENT);
-
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
 
   p4est_quadrant_last_descendant (q, r, level);
   T8_QUAD_SET_TDIM (r, 2);
+
+  /* We allow constructing a last descendant from a subelement. 
+   * Keep in mind, that transforming a quad element to a subelement does not change the 
+   * p4est quadrant. Therefore, we are constructing the last descendant of the parent 
+   * quad element of the given subelement. Since the last descendant is not meant to be 
+   * a subelement, we reset the corresponding subelement values. */
+  t8_element_reset_subelement_values (desc);
 }
 
 void
