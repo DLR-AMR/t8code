@@ -1344,13 +1344,13 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const
   T8_ASSERT (pquad_w_sub->subelement_id < num_subelements);
 
   int                 sub_id = pquad_w_sub->subelement_id;
-  int                 sub_face_id;  
+  int                 sub_face_id;
   int                 face_number;
   int                 split;
 
   int                 k;
 
-  int                cum_neigh_array[P4EST_FACES] = { };
+  int                 cum_neigh_array[P4EST_FACES] = { };
 
   /* construct a cumulative array of the number of neighbors from face 0 to face 3 */
   cum_neigh_array[0] = binary_array[0] + 1;
@@ -1363,14 +1363,14 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const
     face_number = 0;
   }
   else {
-    for (k = 0; k < P4EST_FACES - 1; ++k) { 
-      if (sub_id >= cum_neigh_array[k] && sub_id < cum_neigh_array[k+1]) {
-       face_number = k + 1;
-       break;
+    for (k = 0; k < P4EST_FACES - 1; ++k) {
+      if (sub_id >= cum_neigh_array[k] && sub_id < cum_neigh_array[k + 1]) {
+        face_number = k + 1;
+        break;
       }
     }
   }
- 
+
   /* determine, whether the face is split or not */
   if (binary_array[face_number] == 0) {
     split = 0;                  /* the face is not split */
@@ -1380,7 +1380,7 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const
   }
 
   /* determine, whether the subelement is the first or the second subelement at the face */
-  if (sub_id + 1  == cum_neigh_array[face_number] && split == 1) {
+  if (sub_id + 1 == cum_neigh_array[face_number] && split == 1) {
     sub_face_id = 1;            /* second subelement */
   }
   else {
