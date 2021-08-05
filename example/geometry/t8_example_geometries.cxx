@@ -39,7 +39,7 @@ typedef enum
   T8_GEOM_3D,
   T8_GEOM_MOVING,
   T8_GEOM_COUNT
-} t8_analytic_geom_type;
+} t8_example_geom_type;
 
 /** This geometry maps a point (x,y) in R^2 
  * to the point (x,y, 0.2 * sin(2PI X) * cos(2PI Y)).
@@ -439,7 +439,7 @@ t8_geom_adapt_boundary (t8_forest_t forest, t8_forest_t forest_from,
 }
 
 static void
-t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
+t8_analytic_geom (int level, t8_example_geom_type geom_type)
 {
   t8_forest_t         forest;
   t8_cmesh_t          cmesh;
@@ -647,7 +647,7 @@ main (int argc, char **argv)
   }
   else if (parsed >= 0 && 0 <= level && T8_GEOM_ZERO <= geom_type
            && geom_type < T8_GEOM_COUNT) {
-    t8_analytic_geom (level, (t8_analytic_geom_type) geom_type);
+    t8_analytic_geom (level, (t8_example_geom_type) geom_type);
   }
   else {
     /* wrong usage */
