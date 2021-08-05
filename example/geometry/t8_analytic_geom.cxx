@@ -213,11 +213,19 @@ public:
   }
 };
 
+/**
+ * This geometry map a unit square [0,1]^2 cmesh to a circle with midpoint 0
+ * and radius 1.
+ * This geometry massively distorts elements near the boundary and should not be
+ * used for actual numerical experiments.
+ * 
+ * This geometry does not provide a jacobian.
+ */
 class               t8_geometry_circle:public t8_geometry_w_vertices
 {
 public:
   /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_cylinder ():t8_geometry (2, "t8_circle_geometry")
+  t8_geometry_circle ():t8_geometry_w_vertices (2, "t8_circle_geometry")
   {
   }
 
@@ -237,7 +245,6 @@ public:
     double              x;
     double              y;
 
-    t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
     /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store
      * in out_coords. */
 
@@ -266,13 +273,7 @@ public:
     SC_ABORT_NOT_REACHED ();
   }
 
-  /* Load tree data is empty since we have no tree data.
-   * We need to provide an implementation anyways. */
-  void                t8_geom_load_tree_data (t8_cmesh_t cmesh,
-                                              t8_gloidx_t gtreeid)
-  {
-    /* Do nothing */
-  }
+  /* Load tree data is inherited from vertices geometry. */
 };
 
 /* This geometry rotates with time around the origin.
@@ -423,11 +424,8 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
         t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0,
                                 0);
       t8_cmesh_set_derive (cmesh, tri_square);
-      geometry =
-        new t8_geometry_analytic (2, "analytic circle", t8_analytic_circle,
-                                  NULL, t8_geom_load_tree_data_vertices,
-                                  NULL);
-      snprintf (vtuname, BUFSIZ, "forest_analytic_circle_lvl_%i", level);
+      geometry = new t8_geometry_circle;
+      snprintf (vtuname, BUFSIZ, "forest_circle_lvl_%i", level);
     }
     break;
   case T8_GEOM_3D:
