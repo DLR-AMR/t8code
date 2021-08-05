@@ -1336,9 +1336,9 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const
   binary_array[3] = binary_array_temp[2];       /* f0 <- f1 */
 
   /* 3) use the rearranged binary representation, and the sub_id to determine the location of the subelement and store these information in an array */
-  /* 3.1) location[0] -> the face_number, the subelement is adjacent to */
-  /* 3.2) location[1] -> dummy, if the face is split or not */
-  /* 3.3) location[2] -> is the subelement the first or second subelement of the face (always the first, if the face is not split) */
+  /*     3.1) location[0] -> the face_number, the subelement is adjacent to */
+  /*     3.2) location[1] -> if the face is split or not */
+  /*     3.3) location[2] -> if the subelement is the first or second subelement of the face (always the first, if the face is not split) */
   int                 num_subelements =
     t8_element_get_number_of_subelements (pquad_w_sub->subelement_type, elem);
   T8_ASSERT (pquad_w_sub->subelement_id < num_subelements);
@@ -1358,7 +1358,7 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const
   cum_neigh_array[2] = cum_neigh_array[1] + binary_array[2] + 1;
   cum_neigh_array[3] = cum_neigh_array[2] + binary_array[3] + 1;
 
-  /* we can use the cumulative array to determine the face number of the given subelement */
+  /* 3.1) we can use the cumulative array to determine the face number of the given subelement */
   if (sub_id < cum_neigh_array[0]) {
     face_number = 0;
   }
@@ -1371,7 +1371,7 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const
     }
   }
 
-  /* determine, whether the face is split or not */
+  /* 3.2) determine, whether the face is split or not */
   if (binary_array[face_number] == 0) {
     split = 0;                  /* the face is not split */
   }
@@ -1379,7 +1379,7 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const
     split = 1;                  /* the face is split */
   }
 
-  /* determine, whether the subelement is the first or the second subelement at the face */
+  /* 3.3) determine, whether the subelement is the first or the second subelement at the face */
   if (sub_id + 1 == cum_neigh_array[face_number] && split == 1) {
     sub_face_id = 1;            /* second subelement */
   }
