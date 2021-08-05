@@ -599,13 +599,13 @@ main (int argc, char **argv)
   int                 sreturn;
 
   /* brief help message */
-  snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t"
+  snprintf (usage, BUFSIZ, "\t%s <OPTIONS>\n\t%s -h\t"
             "for a brief overview of all options.",
             basename (argv[0]), basename (argv[0]));
 
   /* long help message */
   sreturn = snprintf (help, BUFSIZ,
-                      "Demonstrates the analytic geometry capabitlities of t8code.\n"
+                      "Demonstrates the some of the geometry capabitlities of t8code.\n"
                       "You can choose from different geometries on which to build a uniform forest.\n"
                       "Usage: %s\n", usage);
 
@@ -627,7 +627,7 @@ main (int argc, char **argv)
   sc_options_add_switch (opt, 'h', "help", &helpme,
                          "Display a short help message.");
   sc_options_add_int (opt, 'l', "level", &level, 0,
-                      "The refinement level of the mesh.");
+                      "The uniform refinement level of the mesh.");
   sc_options_add_int (opt, 'g', "geometry", &geom_type, 0,
                       "Specify the geometry to use.\n"
                       "\t\t0 - The graph of sin(x) * cos (y) with two 2D quad trees.\n"

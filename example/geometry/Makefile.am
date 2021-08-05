@@ -3,7 +3,7 @@
 # Included from toplevel directory
 
 bin_PROGRAMS += \
-	example/geometry/t8_analytic_geom
+	example/geometry/t8_example_geometries
 
-example_geometry_t8_analytic_geom_SOURCES = \
-	example/geometry/t8_analytic_geom.cxx 
+example_geometry_t8_example_geometries_SOURCES = \
+	example/geometry/t8_example_geometries.cxx 
