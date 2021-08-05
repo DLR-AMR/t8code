@@ -1344,35 +1344,47 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const
   T8_ASSERT (pquad_w_sub->subelement_id < num_subelements);
 
   int                 sub_id = pquad_w_sub->subelement_id;
-  int                 sub_face_id = 1;  /* initialize the sub_face_id as the second subelement of a face and change that if it is not true */
-  int                 face_number = 0;
+  int                 sub_face_id;  
+  int                 face_number;
   int                 split;
 
-  int                 k = 0;
+  int                 k;
 
-  if (sub_id == 0) {
-    sub_face_id = 0;            /* in this case, the subelement is the first element of the face */
+  int                cum_neigh_array[P4EST_FACES] = { };
+
+  /* construct a cumulative array of the number of neighbors from face 0 to face 3 */
+  cum_neigh_array[0] = binary_array[0] + 1;
+  cum_neigh_array[1] = cum_neigh_array[0] + binary_array[1] + 1;
+  cum_neigh_array[2] = cum_neigh_array[1] + binary_array[2] + 1;
+  cum_neigh_array[3] = cum_neigh_array[2] + binary_array[3] + 1;
+
+  /* we can use the cumulative array to determine the face number of the given subelement */
+  if (sub_id < cum_neigh_array[0]) {
+    face_number = 0;
   }
-
-  for (k = 0; sub_id >= 0 && k < P4EST_FACES; ++k) {
-    if (binary_array[k] == 1) {
-      sub_id -= 2;              /* two subelements adjacent to face k */
+  else {
+    for (k = 0; k < P4EST_FACES - 1; ++k) { 
+      if (sub_id >= cum_neigh_array[k] && sub_id < cum_neigh_array[k+1]) {
+       face_number = k + 1;
+       break;
+      }
     }
-    else {
-      sub_id -= 1;              /* one subelement adjacent to face k */
-    }
-    if (sub_id == 0) {
-      sub_face_id = 0;          /* in this case, the subelement is the first element of the face */
-    }
-    k++;
   }
-  face_number = k - 1;
-
+ 
+  /* determine, whether the face is split or not */
   if (binary_array[face_number] == 0) {
     split = 0;                  /* the face is not split */
   }
   else {
     split = 1;                  /* the face is split */
+  }
+
+  /* determine, whether the subelement is the first or the second subelement at the face */
+  if (sub_id + 1  == cum_neigh_array[face_number] && split == 1) {
+    sub_face_id = 1;            /* second subelement */
+  }
+  else {
+    sub_face_id = 0;            /* first subelement */
   }
 
   location[0] = face_number;
