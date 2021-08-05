@@ -133,13 +133,11 @@ public:
     double              t;
     double              phi;
 
-    t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
-    t8_eclass_t         tree_class = t8_cmesh_get_tree_class (cmesh, ltreeid);
     /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store
      * in out_coords. */
     /* *INDENT-OFF* */
     /* No idea why, but indent insert a lot of newlines here */
-    t8_geom_compute_linear_geometry (tree_class, active_tree_vertices,
+    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices,
                                      ref_coords, out_coords);
 
     /* At first, we map x from [0,1] to [-.5,.5]
