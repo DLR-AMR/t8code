@@ -269,55 +269,128 @@ public:
   /* Load tree data is inherited from vertices geometry. */
 };
 
-/* This geometry rotates with time around the origin.
+/* This geometry rotates [0,1]^2 with time around the origin.
  * The rotation direction is reversed after 2 seconds.
  * Additionally, the z coordinate is modifyied according to the
  * sincos function and multiplied with the current time.
- * To use this, a double variable time has to be set as the geometries
- * user data.
+ * To use this, a pointer to a double variable time is added to the geometry.
+ * This variable can be modified from outside.
+ * 
+ * The geometry can only be used with single tree cmeshes (unit square).
  */
-static void
-t8_analytic_moving (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
-                    const double *ref_coords, double out_coords[3],
-                    const void *tree_data, const void *user_data)
+
+class               t8_geometry_moving:public t8_geometry
 {
-  double              x = ref_coords[0] - .5;
-  double              y = ref_coords[1] - .5;
-  T8_ASSERT (tree_data == NULL);
-  T8_ASSERT (user_data != NULL);
-  const double        time = *(double *) user_data;
-  double              radius_sqr = x * x + y * y;
-  double              phi = radius_sqr * (time > 2 ? 4 - time : time);
+public:
+  /* Basic constructor that sets the dimension the name and the time pointer. */
+  t8_geometry_moving (const double *time):t8_geometry (2, "t8_moving_geometry"), ptime (time)
+  {
+  }
 
-  /* Change gridlines by applying a 4th order polynomial mapping
-   * [0,1]^2 -> [0,1]^2.
-   * And then map this to [-0.5,-0.5]^2 */
-  //x = x*x*x*x - 3.5*x*x*x + 3.5 * x;
-  int                 sign = x < 0 ? 1 : -1;
-  double              rho = 0.5 - time / 10;
-  x = sign * (1 - exp (-fabs (-x) / rho)) / (2 * (1 - exp (-0.5 / rho)));
-  sign = y < 0 ? 1 : -1;
-  y = sign * (1 - exp (-fabs (-y) / rho)) / (2 * (1 - exp (-0.5 / rho)));
-  //y = y*y*y - 3.5*y*y + 2.5 * y - 0.5;
+  /**
+   * Map a reference point in the unit square to a square distorted with time.
+   * \param [in]  cmesh      The cmesh in which the point lies.
+   * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
+   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^2.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   */
+  void                t8_geom_evaluate (t8_cmesh_t cmesh,
+                                        t8_gloidx_t gtreeid,
+                                        const double *ref_coords,
+                                        double out_coords[3]) const
+  {
+    double              x = ref_coords[0] - .5;
+    double              y = ref_coords[1] - .5;
+    const double        time = *ptime;
+    double              radius_sqr = x * x + y * y;
+    double              phi = radius_sqr * (time > 2 ? 4 - time : time);
 
-  /* Rotate the x-y axis and add sincon in z axis. */
-  out_coords[0] = x * (cos (phi)) - y * sin (phi);
-  out_coords[1] = y * (cos (phi)) + x * sin (phi);
-  out_coords[2] = 0;
-  //sin(2*M_PI * time) * 0.2 * sin (out_coords[0] * 2 * M_PI) * cos (out_coords[1] * 2 * M_PI);
-}
+    /* Change gridlines by applying a 4th order polynomial mapping
+    * [0,1]^2 -> [0,1]^2.
+    * And then map this to [-0.5,-0.5]^2 */
+    //x = x*x*x*x - 3.5*x*x*x + 3.5 * x;
+    int                 sign = x < 0 ? 1 : -1;
+    double              rho = 0.5 - time / 10;
+    x = sign * (1 - exp (-fabs (-x) / rho)) / (2 * (1 - exp (-0.5 / rho)));
+    sign = y < 0 ? 1 : -1;
+    y = sign * (1 - exp (-fabs (-y) / rho)) / (2 * (1 - exp (-0.5 / rho)));
+    //y = y*y*y - 3.5*y*y + 2.5 * y - 0.5;
 
-static void
-t8_analytic_3D_cube (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
-                     const double *ref_coords, double out_coords[3],
-                     const void *tree_data, const void *user_data)
+    /* Rotate the x-y axis and add sincon in z axis. */
+    out_coords[0] = x * (cos (phi)) - y * sin (phi);
+    out_coords[1] = y * (cos (phi)) + x * sin (phi);
+    out_coords[2] = 0;
+    //sin(2*M_PI * time) * 0.2 * sin (out_coords[0] * 2 * M_PI) * cos (out_coords[1] * 2 * M_PI);
+  }
+
+    /* Jacobian, not implemented. */
+  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
+                                                t8_gloidx_t gtreeid,
+                                                const double *ref_coords,
+                                                double *jacobian) const
+  {
+    SC_ABORT_NOT_REACHED ();
+  }
+
+  /* Load tree data is empty since we have no tree data.
+   * We need to provide an implementation anyways. */
+  void                t8_geom_load_tree_data (t8_cmesh_t cmesh,
+                                              t8_gloidx_t gtreeid)
+  {
+    /* Do nothing */
+  }
+
+protected:
+  const double *ptime; /* Time pointer to outside time variable */
+};
+
+/** Map the unit cube [0,1]^3 onto a cube that is distorted
+ * in z direction.
+ * Can be used with 1 tree unit cube cmesh only.
+ */
+class               t8_geometry_cube_zdistorted:public t8_geometry
 {
-  out_coords[0] = ref_coords[0];
-  out_coords[1] = ref_coords[1];
-  out_coords[2] = ref_coords[2] * (0.8 +
-                                   0.2 * sin (ref_coords[0] * 2 * M_PI) *
-                                   cos (ref_coords[1] * 2 * M_PI));
-}
+public:
+  /* Basic constructor that sets the dimension and the name. */
+  t8_geometry_cube_zdistorted ():t8_geometry (3, "t8_cube_zdistorted_geometry")
+  {
+  }
+  /**
+   * Map a reference point in the unit cube to a cube distorted in the z axis.
+   * \param [in]  cmesh      The cmesh in which the point lies.
+   * \param [in]  gtreeid    The glocal tree (of the cmesh) in which the reference point is.
+   * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^3.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   */
+  void                t8_geom_evaluate (t8_cmesh_t cmesh,
+                                        t8_gloidx_t gtreeid,
+                                        const double *ref_coords,
+                                        double out_coords[3]) const
+  {
+    out_coords[0] = ref_coords[0];
+    out_coords[1] = ref_coords[1];
+    out_coords[2] = ref_coords[2] * (0.8 +
+                                    0.2 * sin (ref_coords[0] * 2 * M_PI) *
+                                    cos (ref_coords[1] * 2 * M_PI));
+  }
+
+    /* Jacobian, not implemented. */
+  void                t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
+                                                t8_gloidx_t gtreeid,
+                                                const double *ref_coords,
+                                                double *jacobian) const
+  {
+    SC_ABORT_NOT_REACHED ();
+  }
+
+  /* Load tree data is empty since we have no tree data.
+   * We need to provide an implementation anyways. */
+  void                t8_geom_load_tree_data (t8_cmesh_t cmesh,
+                                              t8_gloidx_t gtreeid)
+  {
+    /* Do nothing */
+  }
+};
 
 /* This adapt callback function will refine all elements at the
  * domain boundary up to a given maximum refinement level. */
@@ -427,18 +500,16 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
        level);
     /* Cube geometry with sincos on top. Has one hexahedron tree. */
     geometry =
-      new t8_geometry_analytic (3, "cube geom", t8_analytic_3D_cube, NULL,
-                                NULL, NULL);
+      new t8_geometry_cube_zdistorted;
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
-    snprintf (vtuname, BUFSIZ, "forest_analytic_3D_lvl_%i", level);
+    snprintf (vtuname, BUFSIZ, "forest_cube_3D_lvl_%i", level);
     break;
   case T8_GEOM_MOVING:
     t8_global_productionf
       ("Creating uniform level %i forest with a moving geometry.\n", level);
     /* Quad geometry that rotates with time. */
     geometry =
-      new t8_geometry_analytic (2, "analytic moving dim=2",
-                                t8_analytic_moving, NULL, NULL, &time);
+      new t8_geometry_moving (&time);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     snprintf (vtuname, BUFSIZ, "forest_moving_lvl_%i", level);
     break;
@@ -489,7 +560,7 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     char                vtuname_with_timestep[BUFSIZ];
 
     for (timestep = 0; timestep < num_timesteps; ++timestep) {
-      /* Modify the time. Note that the user_data pointer of our
+      /* Modify the time. Note that a pointer of our
        * geometry points to this entry, which changes the shape of the tree. */
       time += ((double) end_time) / num_timesteps;
       /* At the time step to the output filename */
@@ -505,6 +576,7 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
       }
 
       t8_forest_write_vtk (forest, vtuname_with_timestep);
+      t8_debugf ("Wrote vtu file %s\n", vtuname_with_timestep);
     }
   }
 
