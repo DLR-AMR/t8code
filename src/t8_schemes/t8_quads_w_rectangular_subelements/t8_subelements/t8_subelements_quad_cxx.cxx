@@ -1137,7 +1137,7 @@ t8_default_scheme_sub_c::t8_element_vertex_coords_of_subelement (const
   T8_ASSERT ((split == 0 && sub_face_id == 0)
              || (split == 1 && (sub_face_id == 0 || sub_face_id == 1)));
 
-  /* there were problems with 1/2 * int(1) = 0. Therefore, we always determine len * 1/2 first */
+  /* using the location data to determine vertex coordinates */
   if (vertex == 2) {            /* the third vertex allways equals the center of the element */
     coords[0] = q1->x + len / 2;
     coords[1] = q1->y + len / 2;
