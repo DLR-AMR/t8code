@@ -1490,16 +1490,31 @@ t8_default_scheme_sub_c::t8_element_is_valid (const t8_element_t * elem) const
     (const t8_quad_with_subelements *) elem;
   const p4est_quadrant_t *q = &pquad_w_sub->p4q;
 
-  T8_ASSERT (pquad_w_sub->dummy_is_subelement == T8_IS_NO_SUBELEMENT
-             || pquad_w_sub->dummy_is_subelement == T8_IS_SUBELEMENT);
-  T8_ASSERT ((pquad_w_sub->subelement_type >= T8_MIN_SUBELEMENT_TYPE
-              && pquad_w_sub->subelement_type <= T8_MAX_SUBELEMENT_TYPE)
-             || pquad_w_sub->subelement_type == T8_IS_NO_SUBELEMENT);
-  T8_ASSERT ((pquad_w_sub->subelement_id >= T8_MIN_SUBELEMENT_ID
-              && pquad_w_sub->subelement_id <= T8_MAX_SUBELEMENT_ID)
-             || pquad_w_sub->subelement_id == T8_IS_NO_SUBELEMENT);
+  /* the 4pest quadrant AND the subelement values must be valid such that the whole element is valid */
+  return (p4est_quadrant_is_extended (q)
+          && t8_element_subelement_values_are_valid (elem));
+}
 
-  return p4est_quadrant_is_extended (q);
+/* *INDENT-OFF* */
+/* indent bug, indent adds a second "const" modifier */
+int
+t8_default_scheme_sub_c::t8_element_subelement_values_are_valid (const
+                                                                 t8_element_t *
+                                                                 elem) const
+/* *INDENT-ON* */
+
+{
+  const t8_quad_with_subelements *pquad_w_sub =
+    (const t8_quad_with_subelements *) elem;
+
+  return (pquad_w_sub->dummy_is_subelement == T8_IS_NO_SUBELEMENT
+          || pquad_w_sub->dummy_is_subelement == T8_IS_SUBELEMENT) &&
+    ((pquad_w_sub->subelement_type >= T8_MIN_SUBELEMENT_TYPE
+      && pquad_w_sub->subelement_type <= T8_MAX_SUBELEMENT_TYPE)
+     || pquad_w_sub->subelement_type == T8_IS_NO_SUBELEMENT) &&
+    ((pquad_w_sub->subelement_id >= T8_MIN_SUBELEMENT_ID
+      && pquad_w_sub->subelement_id <= T8_MAX_SUBELEMENT_ID)
+     || pquad_w_sub->subelement_id == T8_IS_NO_SUBELEMENT);
 }
 #endif
 
