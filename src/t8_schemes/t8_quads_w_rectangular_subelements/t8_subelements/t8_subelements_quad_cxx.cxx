@@ -1306,10 +1306,7 @@ t8_default_scheme_sub_c::t8_element_get_location_of_subelement (const
   int                 i;
 
   for (i = 0; i < P4EST_FACES; i++) {   /* need an array with 4 elements to store all subelement types of the quad scheme from 1 to 15 ({0,0,0,1} to {1,1,1,1}) */
-    if (type >= pow (2, (P4EST_FACES - 1) - i)) {
-      binary_array[i] = 1;
-      type -= pow (2, (P4EST_FACES - 1) - i);
-    }
+    binary_array[(P4EST_FACES - 1) - i] = (type & (1 << i)) >> i;
   }                             /* we now got a binary represenation of the subelement type, bitwise stored in an array */
 
   /* 2) rearrange the binary representation to be in clockwise order */
