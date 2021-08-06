@@ -185,6 +185,15 @@ void                t8_dvertex_last_descendant (const t8_dvertex_t * v,
 void                t8_dvertex_vertex_coords (const t8_dvertex_t * elem,
                                               int vertex, int coords[]);
 
+/** Compute the coordinates of a vertex (always 0) inside the [0,1]^0 reference space.
+ * \param [in] elem     vertex whose vertex is computed.
+ * \param [in] vertex   The number of the vertex of \a elem (must be 0).
+ * \param [out] coords  The coordinates of the computed vertex, must have one entry (will be set to 0).
+ */
+void                t8_dvertex_vertex_ref_coords (const t8_dvertex_t * elem,
+                                                  int vertex,
+                                                  double coords[]);
+
 /** Computes the linear position of a vertex in an uniform grid.
  * \param [in] vertex  vertex whose id will be computed.
  * \return Returns the linear position of this vertex on a grid.
