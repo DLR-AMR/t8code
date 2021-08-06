@@ -111,9 +111,8 @@ t8_get_number_of_new_from_class_cmesh_testcases ()
 int
 t8_get_number_of_new_hypercube_hybrid_cmesh_testcases ()
 {
-  /* Number of testcases = possible dim * number of comm*2 binary variables(do_partition,periodic) */
-  return T8_CMESH_MAX_TEST_DIMS * T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY *
-    T8_CMESH_BINARY;
+  /* Number of testcases = number of comm*2 binary variables(do_partition,periodic) */
+  return T8_CMESH_TEST_NUM_COMMS * T8_CMESH_BINARY * T8_CMESH_BINARY;
 }
 
 /** The function t8_get_new_periodic_cmesh_testcases() 
@@ -434,37 +433,32 @@ t8_test_create_new_hypercube_hybrid_cmesh (int cmesh_id)
    * every 8 steps, because then comm_num looped once through all its values,so we divide by 4 
    * For it to be in range of T8_CMESH_DIM_RANGE, we take modulo T8_CMESH_DIM_RANGE.
    * This way we get a unique input for every cmesh_id.
-   *    dim     |     comm    | do_partition | periodic
-   *     0      |       0     |       0      |     0
-   *     0      |       0     |       0      |     1
-   *     0      |       0     |       1      |     0
-   *     0      |       0     |       1      |     1
-   *     0      |       1     |       0      |     0
-   *     0      |       1     |       0      |     1
-   *     0      |       1     |       1      |     0
-   *     0      |       1     |       1      |     1
-   *     1      |       0     |       0      |     0
-   *    ...     |      ...    |      ...     |    ...     
-   *     3      |       1     |       1      |     1     
+   *        comm    | do_partition | periodic
+   *          0     |       0      |     0
+   *          0     |       0      |     1
+   *          0     |       1      |     0
+   *          0     |       1      |     1
+   *          1     |       0      |     0
+   *          1     |       0      |     1
+   *          1     |       1      |     0
+   *          1     |       1      |     1
+   *          0     |       0      |     0
+   *         ...    |      ...     |    ...     
+   *          1     |       1      |     1     
    */
   const int           comm_num = (cmesh_id
                                   / (T8_CMESH_BINARY * T8_CMESH_BINARY))
     % T8_CMESH_TEST_NUM_COMMS;
-  const int           dim = (cmesh_id
-                             / (T8_CMESH_BINARY * T8_CMESH_BINARY *
-                                T8_CMESH_TEST_NUM_COMMS))
-    % (T8_CMESH_BINARY * T8_CMESH_BINARY * T8_CMESH_TEST_NUM_COMMS)
-    % (T8_CMESH_DIM_RANGE);
   const sc_MPI_Comm   comm = t8_comm_list[comm_num];
   const int           do_partition =
     (cmesh_id / T8_CMESH_BINARY) % T8_CMESH_BINARY;
   const int           periodic = cmesh_id % T8_CMESH_BINARY;
 
   t8_debugf
-    ("Creating new hypercube hybrid cmesh. dim=%i, comm=%s , do_partition=%i, periodic=%i \n",
-     dim, t8_comm_string_list[comm_num], do_partition, periodic);
+    ("Creating new hypercube hybrid cmesh. comm=%s , do_partition=%i, periodic=%i \n",
+     t8_comm_string_list[comm_num], do_partition, periodic);
 
-  return t8_cmesh_new_hypercube_hybrid (dim, comm, do_partition, periodic);
+  return t8_cmesh_new_hypercube_hybrid (comm, do_partition, periodic);
 }
 
 /** The function t8_test_create_new_periodic_cmesh(int cmesh_id):  

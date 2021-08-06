@@ -11,6 +11,8 @@
 
 # This is the indent script in the project's directory
 INDENT=./p4estindent
+# This is the script to remove duplicate const after indent (bug of indent)
+REMOVE_D_CONST=./scripts/remove_double_const.scp
 
 if git rev-parse --verify HEAD >/dev/null 2>&1
 then
@@ -44,6 +46,8 @@ do
     echo "Checking file $file"
     # indent the source file and store temporarily
     $INDENT -o $TMP_FILE $file 
+    # For .cxx files we need to correct a bug in indent
+    $REMOVE_D_CONST $TMP_FILE
     # Check whether the indented file and the original differ
     # We are only interested in the exit status of diff so we throw away its output.
     diff -q $TMP_FILE $file > /dev/null

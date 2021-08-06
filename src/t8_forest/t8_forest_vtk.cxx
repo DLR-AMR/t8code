@@ -145,9 +145,14 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
 
   long int            point_id = 0;     /* The id of the point in the points Object. */
   t8_locidx_t         ielement; /* The iterator over elements in a tree. */
+<<<<<<< HEAD
   t8_locidx_t         itree, ivertex;   /* The iterator over the tree and the vertices. */
   double             *vertices; /* Vertices of a tree */
   double              coordinates[3];   /* coordinates of vertices */
+=======
+  t8_locidx_t         itree, ivertex;
+  double              coordinates[3];
+>>>>>>> origin/feature-geometry
   int                 elem_id = 0;
   t8_locidx_t         num_elements;
   int                 freturn = 0;
@@ -195,12 +200,11 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
 /* We iterate over all local trees*/
   for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
 /* 
- * We get the vertices, the current tree, the scheme for this tree
+ * We get the current tree, the scheme for this tree
  * and the number of elements in this tree. We need the vertices of
  * the tree to get the coordinates of the elements later. We need
  * the number of elements in this tree to iterate over all of them.
  */
-    vertices = t8_forest_get_tree_vertices (forest, itree);
     t8_eclass_scheme_c *scheme =
       t8_forest_get_eclass_scheme (forest, t8_forest_get_tree_class (forest,
                                                                      itree));
@@ -253,7 +257,6 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
       for (ivertex = 0; ivertex < num_corners; ivertex++, point_id++) {
         /* We take the element coordinates in vtk order */
         t8_forest_element_coordinate (forest, itree, element,
-                                      vertices,
                                       t8_eclass_vtk_corner_number
                                       [element_shape]
                                       [ivertex], coordinates);
@@ -481,57 +484,17 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
                                      FILE * vtufile, int *columns,
                                      void **data, T8_VTK_KERNEL_MODUS modus)
 {
-  struct t8_forest_vtk_vertices_t
-  {
-    t8_locidx_t         ltreeid;        /* Store the last treeid with which the lernel was called.
-                                           This is either a local tree id or a local ghost tree id */
-    double              tree_vertices[T8_ECLASS_MAX_CORNERS * 3];       /* Stores the vertex coordinates of the tree */
-  }                  *vertex_data;
-
 #if 0
   /* if we eventually implement scaling the elements, activate this line */
   double              midpoint[3];
 #endif
   double              element_coordinates[3];
-  int                 num_tree_vertices, ivertex;
+  int                 ivertex;
   int                 freturn;
 
-  if (modus == T8_VTK_KERNEL_INIT) {
-    /* We initialize the user data to store NULL as the current tree */
-    *data = T8_ALLOC_ZERO (struct t8_forest_vtk_vertices_t, 1);
-    vertex_data = (struct t8_forest_vtk_vertices_t *) *data;
-    /* Set an invalid tree id as first tree id */
-    vertex_data->ltreeid = -1;
+  if (modus != T8_VTK_KERNEL_EXECUTE) {
+    /* Nothing to do if we are in Init or clean up mode */
     return 1;
-  }
-  else if (modus == T8_VTK_KERNEL_CLEANUP) {
-    T8_FREE (*data);
-    return 1;
-  }
-
-  T8_ASSERT (modus == T8_VTK_KERNEL_EXECUTE);
-  vertex_data = (struct t8_forest_vtk_vertices_t *) *data;
-  if (ltree_id != vertex_data->ltreeid) {
-    t8_cmesh_t          cmesh;
-    t8_locidx_t         cmesh_local_id;
-    double             *temp_vertices;
-
-    /* The current tree is not the tree that we stored from
-     * the last call to this function */
-    vertex_data->ltreeid = ltree_id;
-    /* get the coarse mesh tree */
-    cmesh = t8_forest_get_cmesh (forest);
-    /* Comput the cmesh local id of the tree */
-    cmesh_local_id = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltree_id);
-    /* Get the vertex coordinates of this tree */
-    temp_vertices = ((double *) t8_cmesh_get_attribute (cmesh,
-                                                        t8_get_package_id (),
-                                                        0, cmesh_local_id));
-
-    /* Copy the tree's vertex coordinates into the struct of the data pointer */
-    num_tree_vertices = t8_eclass_num_vertices[ts->eclass];
-    memcpy (vertex_data->tree_vertices, temp_vertices, sizeof (*temp_vertices)
-            * num_tree_vertices * 3);
   }
 
   /* TODO: be careful with pyramid class here.
@@ -540,12 +503,13 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, t8_locidx_t ltree_id,
 
 #if 0
   /* if we eventually implement scaling the elements, activate this line */
-  t8_forest_element_centroid (forest, ltree_id, element,
-                              vertex_data->tree_vertices, midpoint);
+  t8_forest_element_centroid (forest, ltree_id, element, midpoint);
 #endif
+/* TODO: THis will break if we have an element that is not the same shape as its tree. 
+ *       Maybe this was fixed in the pyramid branch. (Need number of vertices of the element, not
+ *        of the tree) */
   for (ivertex = 0; ivertex < t8_eclass_num_vertices[ts->eclass]; ivertex++) {
     t8_forest_element_coordinate (forest, ltree_id, element,
-                                  vertex_data->tree_vertices,
                                   t8_eclass_vtk_corner_number[ts->eclass]
                                   [ivertex], element_coordinates);
 #if 0
