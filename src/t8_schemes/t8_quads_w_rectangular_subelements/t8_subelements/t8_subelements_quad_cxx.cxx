@@ -1253,7 +1253,7 @@ t8_default_scheme_sub_c::t8_element_get_number_of_subelements (int
 
   for (i = 0; i < P4EST_FACES; i++) {   /* Count the number of ones of the binary subelement type. This number equals the number of hanging faces. */
     num_hanging_faces += (subelement_type & (1 << i)) >> i;
-  }  
+  }
 
   /* The number of subelements equals the number of neighbours: */
   num_subelements = P4EST_FACES + num_hanging_faces;
