@@ -1461,6 +1461,7 @@ t8_default_scheme_sub_c::t8_element_init (int length, t8_element_t * elem,
   int                 i;
 
   for (i = 0; i < length; i++) {
+    /* TODO: use the reset_subelement_values function after * elem has changed to ** elem */
     /* initalize subelement parameters */
     pquad_w_sub[i].dummy_is_subelement = T8_IS_NO_SUBELEMENT;
     pquad_w_sub[i].subelement_type = T8_IS_NO_SUBELEMENT;
