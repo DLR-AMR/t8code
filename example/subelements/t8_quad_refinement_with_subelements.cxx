@@ -100,7 +100,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   /* This function is the point of entry for the subelements.
    * Analogue to the other set-functions, we add subelements to the from_method and will therefore 
    * use the corresponding functions later during the adaption. */
-  t8_forest_set_subelements (forest_adapt, NULL);
+  t8_forest_set_remove_hanging_faces (forest_adapt, NULL);
 
   t8_forest_commit (forest_adapt);
 

@@ -342,17 +342,13 @@ void                t8_forest_set_balance (t8_forest_t forest,
                                            const t8_forest_t set_from,
                                            int no_repartition);
 
-/* Set a source forest to use subelements during commit.
- * Various usecases of subelements can be imagined. 
- * One usecase is to remove hanging nodes from a forest by refining the right elements with the right subelements. 
+/* Set a source forest to use subelements during commit, that will remove hanging faces from the adapted mesh.
  * \param [in, out] forest  The forest.
- * \param [in]      set_from A second forest that should have subelements.
- * \note At the moment, this function only works on a balanced forest, since the goal is to remove hanging nodes. 
- * In general, it should be able to use subelements on arbitrary forests. This depends on the specific implementation.
- * \note Subelements, that remove hanging nodes from the forest, are only implemented for the 2D quad scheme. 
+ * \param [in]      set_from A second forest that should use hanging-faces-removing subelements.
+ * \note Currently, subelements that remove hanging faces from the forest are only implemented for the 2D quad scheme. 
  */
-void                t8_forest_set_subelements (t8_forest_t forest,
-                                               const t8_forest_t set_from);
+void                t8_forest_set_remove_hanging_faces (t8_forest_t forest,
+                                                        const t8_forest_t set_from);
 
 /** Enable or disable the creation of a layer of ghost elements.
  * On default no ghosts are created.
