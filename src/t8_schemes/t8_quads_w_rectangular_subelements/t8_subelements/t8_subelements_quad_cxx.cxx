@@ -1247,25 +1247,16 @@ t8_default_scheme_sub_c::t8_element_get_number_of_subelements (int
 
   /* consider subelement_type 13 = 1101 in base two -> there are 4 + (1+1+0+1) = 7 subelements */
   int                 num_subelements;
-  int                 type = subelement_type;
-  int                 digit_sum_of_binary = 0;
-  int                 binary_array[P4EST_FACES] = { };
+  int                 num_hanging_faces = 0;
 
   int                 i;
-  int                 j;
 
-  for (i = 0; i < P4EST_FACES; i++) {   /* need an array with 4 elements to store all subelement types of the quad scheme from 1 to 15 ({0,0,0,1} to {1,1,1,1}) */
-    if (type >= pow (2, (P4EST_FACES - 1) - i)) {
-      binary_array[i] = 1;
-      type -= pow (2, (P4EST_FACES - 1) - i);
-    }
-  }                             /* we now got a binary represenation of the subelement type, bitwise stored in an array */
+  for (i = 0; i < P4EST_FACES; i++) {   /* Count the number of ones of the binary subelement type. This number equals the number of hanging faces. */
+    num_hanging_faces += (subelement_type & (1 << i)) >> i;
+  }  
 
-  for (j = 0; j < P4EST_FACES; j++) {
-    digit_sum_of_binary += binary_array[j];
-  }
-
-  num_subelements = P4EST_FACES + digit_sum_of_binary;
+  /* The number of subelements equals the number of neighbours: */
+  num_subelements = P4EST_FACES + num_hanging_faces;
   return num_subelements;
 }
 
