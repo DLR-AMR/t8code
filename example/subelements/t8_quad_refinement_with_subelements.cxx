@@ -96,7 +96,6 @@ t8_refine_with_subelements (t8_eclass_t eclass)
    * the subelement functions to work. */
   t8_forest_set_user_data (forest_adapt, &ls_data);
   t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
-  t8_forest_set_balance (forest_adapt, NULL, 0);
 
   /* This function is the point of entry for the subelements.
    * Analogue to the other set-functions, we add subelements to the from_method and will therefore 

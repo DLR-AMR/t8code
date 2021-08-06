@@ -245,6 +245,16 @@ t8_forest_set_subelements (t8_forest_t forest, const t8_forest_t set_from)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
 
+  /* If forest is not balanced, balance now. 
+   * This binary operation checks, whether the third bit from the right from 
+   * forest->from_method is unequal to one. If so, set balanced is not set yet. */
+  if ((forest->from_method & (1 << 2)) >> 2 != 1) {
+    t8_productionf
+      ("Forest was not balanced yet. The set_remove_hanging_faces function will set balance with repartition now.\n");
+    /* balance with repartition */
+    t8_forest_set_balance (forest, NULL, 0);
+  }
+
   if (set_from != NULL) {
     /* If set_from = NULL, we assume a previous forest_from was set */
     forest->set_from = set_from;
