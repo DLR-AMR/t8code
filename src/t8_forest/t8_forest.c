@@ -638,7 +638,7 @@ t8_forest_commit (t8_forest_t forest)
        * nothing should be left todo */
       T8_ASSERT (forest->from_method == 0);
       /* use subelements */
-      t8_forest_subelements (forest);
+      t8_forest_remove_hanging_faces (forest);
     }
 
     if (forest_from != forest->set_from) {
