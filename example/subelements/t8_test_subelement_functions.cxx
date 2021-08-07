@@ -32,7 +32,7 @@
  *      iv) t8_element_vertex_coords -> t8_element_vertex_coords_of_subelement
  * 
  * are used and it is easy to follow them step by step using a debugger like gdb. 
- * Additionally, the resulting coordinates of all subelements, the parent element is split into, are printed as output.
+ * Additionally, the resulting coordinates of all subelements, the parent element is split into are printed as output.
  * This can be used, to see if the chosen subelement type is working as intendet. 
  * At the moment, subelements are only implemented for the quad scheme, with valid subelement types from 1 to 15. */
 static void
