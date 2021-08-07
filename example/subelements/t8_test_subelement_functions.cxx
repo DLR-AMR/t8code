@@ -82,7 +82,7 @@ t8_refine_quad_to_subelements ()
       class_scheme->t8_element_shape (element_subelements[subelement_id]);
     num_vertices = t8_eclass_num_vertices[shape];
 
-    /* Iterate over all vertices of the subelement and, determine their coordinates and print them */
+    /* Iterate over all vertices of the subelement and determine their coordinates and print them */
     for (vertex_id = 0; vertex_id < num_vertices; ++vertex_id) {
       class_scheme->t8_element_vertex_coords (element_subelements
                                               [subelement_id], vertex_id,
