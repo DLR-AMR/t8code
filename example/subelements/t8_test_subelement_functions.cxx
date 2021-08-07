@@ -50,7 +50,7 @@ t8_refine_quad_to_subelements ()
   /* Chose a type between 1 and 15 */
   int                 type = 15;
 
-  /* At the moment, subelements are only implemented for the wuad scheme. */
+  /* At the moment, subelements are only implemented for the quad scheme. */
   eclass = T8_ECLASS_QUAD;
   class_scheme = ts->eclass_schemes[eclass];
 
