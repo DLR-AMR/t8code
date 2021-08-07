@@ -69,7 +69,9 @@ int                 t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
 
 void                t8_forest_remove_hanging_faces (t8_forest_t forest);
 
-/* Check whether the forest has no hanging nodes left. */
+/* Check whether the forest has no hanging nodes left. 
+ *
+ * This function is not implemented yet. */
 int                 t8_forest_hanging_faces_removed (t8_forest_t forest);
 
 T8_EXTERN_C_END ();
