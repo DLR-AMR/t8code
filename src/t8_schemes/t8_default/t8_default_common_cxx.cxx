@@ -193,7 +193,7 @@ t8_default_scheme_common_c::t8_element_to_subelement (const t8_element_t *
                                                       int type,
                                                       t8_element_t * c[])
 {
-  SC_ABORT ("This function is not yet implemented for the given scheme.\n");
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
 
 int
