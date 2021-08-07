@@ -67,6 +67,9 @@ int                 t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
                                                           t8_element_t *
                                                           elements[]);
 
+/* This function is the point of entry for the hanging-faces-removing subelements. 
+ * In this function, the corresponding callback function for the refine value in forest_adapt is set
+ * and the forest is adapted. */
 void                t8_forest_remove_hanging_faces (t8_forest_t forest);
 
 /* Check whether the forest has no hanging nodes left. 
