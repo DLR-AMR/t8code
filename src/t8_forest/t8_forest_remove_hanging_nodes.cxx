@@ -36,10 +36,6 @@ T8_EXTERN_C_BEGIN ();
  * We refine an element if it has any face neighbor with a level larger
  * than the element's level + 1.
  */
-/* TODO: We currently do not adapt recursively since some functions such
- * as half neighbor computation require the forest to be committed. Thus,
- * we pass forest_from as a parameter. But doing so is not valid anymore
- * if we refine recursively. */
 
 int
 t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
