@@ -387,7 +387,7 @@ protected:
    *  \param [out] coords An array whose entries will be filled with the coordinates of the
    *                 subelement. 
    * Note that subelements can have another number of vertices compared to the used
-   * eclass scheme. For example, subelements, that remove hanging nodes from the quad scheme,
+   * eclass scheme. For example, subelements that remove hanging nodes from the quad scheme
    * are triangles with 3 instead of 4 verticies.           
    */
   void                t8_element_vertex_coords_of_subelement (const
