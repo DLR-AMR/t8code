@@ -363,7 +363,7 @@ public:
 
 protected:
 /** This function will determine the location of a specific subelement in the parent element.
-   *  Since different subelement types are possible, it is apriori not known, where for example the
+   *  Since different subelement types are possible, it is a priori not known where for example the
    *  subelement with id 3 is located. 
    *  \param [in] elem A valid subelement
    *  \param [out] An array, whose entries are face_number, split and sub_face_id
