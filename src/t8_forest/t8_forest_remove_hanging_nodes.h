@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_forest_remove_hanging_nodes.h
+/** \file t8_forest_remove_hanging_faces.h
  * We define the eliminate_hanging_nodes routine to transform a 2:1 balanced, nonconformal forest
  * into a conformal forest. The routine relies on a 2D quad-scheme that has been balanced, such that 
  * there is a 2:1 balance between all elements.
@@ -28,8 +28,8 @@
 
 /* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_balance */
 
-#ifndef T8_FOREST_REMOVE_HANGING_NODES_H
-#define T8_FOREST_REMOVE_HANGING_NODES_H
+#ifndef T8_FOREST_REMOVE_HANGING_FACES_H
+#define T8_FOREST_REMOVE_HANGING_FACES_H
 
 #include <t8.h>
 #include <t8_forest/t8_forest_types.h>
@@ -79,4 +79,4 @@ int                 t8_forest_hanging_faces_removed (t8_forest_t forest);
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_FOREST_BALANCE_H! */
+#endif /* !T8_FOREST_REMOVE_HANGING_FACES_H! */
