@@ -39,7 +39,7 @@ t8_scheme_new_subelement_cxx (void)
 
   s->eclass_schemes[T8_ECLASS_VERTEX] = NULL;
   s->eclass_schemes[T8_ECLASS_LINE] = NULL;
-  s->eclass_schemes[T8_ECLASS_QUAD] = new t8_default_scheme_sub_c ();
+  s->eclass_schemes[T8_ECLASS_QUAD] = new t8_subelement_scheme_quad_c ();
   s->eclass_schemes[T8_ECLASS_HEX] = NULL;
   s->eclass_schemes[T8_ECLASS_TRIANGLE] = NULL;
   s->eclass_schemes[T8_ECLASS_TET] = NULL;
@@ -57,7 +57,7 @@ t8_eclass_scheme_is_sub (t8_eclass_scheme_c * ts)
   case T8_ECLASS_LINE:
     return 0;
   case T8_ECLASS_QUAD:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_sub_c *);
+    return T8_COMMON_IS_TYPE (ts, t8_subelement_scheme_quad_c *);
   case T8_ECLASS_TRIANGLE:
     return 0;
   case T8_ECLASS_HEX:

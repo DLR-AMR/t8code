@@ -119,15 +119,15 @@ typedef t8_quad_with_subelements t8_pquad_t;
 t8_eclass_scheme_t *t8_subelement_scheme_new_quad (void);
 #endif
 
-struct t8_default_scheme_sub_c:public t8_default_scheme_common_c
+struct t8_subelement_scheme_quad_c:public t8_default_scheme_common_c
 {
 public:
   /** The virtual table for a particular implementation of an element class. */
 
   /** Constructor. */
-  t8_default_scheme_sub_c ();
+  t8_subelement_scheme_quad_c ();
 
-  ~t8_default_scheme_sub_c ();
+  ~t8_subelement_scheme_quad_c ();
 
   /** Allocate memory for a given number of elements.
    * In debugging mode, ensure that all elements are valid \ref t8_element_is_valid.
