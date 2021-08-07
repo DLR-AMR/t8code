@@ -28,8 +28,8 @@
 
 /* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_balance */
 
-#ifndef T8_FOREST_SUBELEMENTS_H
-#define T8_FOREST_SUBELEMENTS_H
+#ifndef T8_FOREST_REMOVE_HANGING_NODES_H
+#define T8_FOREST_REMOVE_HANGING_NODES_H
 
 #include <t8.h>
 #include <t8_forest/t8_forest_types.h>
