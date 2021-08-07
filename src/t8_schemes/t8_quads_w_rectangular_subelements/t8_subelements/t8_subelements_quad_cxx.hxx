@@ -386,7 +386,7 @@ protected:
    *  \param [in] vertex the number of the vertex whose coordinates should be determined
    *  \param [out] coords An array whose entries will be filled with the coordinates of the
    *                 subelement. 
-   * Note, that subelements can have another number of vertecies, compared to the used
+   * Note that subelements can have another number of vertices compared to the used
    * eclass scheme. For example, subelements, that remove hanging nodes from the quad scheme,
    * are triangles with 3 instead of 4 verticies.           
    */
