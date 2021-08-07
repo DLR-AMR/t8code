@@ -383,7 +383,7 @@ protected:
 
   /** This function determines the vertex coordinates of subelements.
    *  \param [in] elem A valid subelement 
-   *  \param [in] vertex the number of the vertex, whose coordinates should be determined
+   *  \param [in] vertex the number of the vertex whose coordinates should be determined
    *  \param [out] coords An array, whose entries will be filled with the coordinates of the
    *                 subelement. 
    * Note, that subelements can have another number of vertecies, compared to the used
