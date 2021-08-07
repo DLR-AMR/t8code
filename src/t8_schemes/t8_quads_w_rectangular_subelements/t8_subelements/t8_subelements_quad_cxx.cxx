@@ -1497,7 +1497,9 @@ t8_subelement_scheme_quad_c::t8_element_init (int length, t8_element_t * elem,
 
   for (i = 0; i < length; i++) {
     /* initalize subelement parameters */
-    t8_element_reset_subelement_values (elem);
+    pquad_w_sub[i].dummy_is_subelement = T8_SUB_QUAD_IS_NO_SUBELEMENT;
+    pquad_w_sub[i].subelement_type = T8_SUB_QUAD_IS_NO_SUBELEMENT;
+    pquad_w_sub[i].subelement_id = T8_SUB_QUAD_IS_NO_SUBELEMENT;
 
 #ifdef T8_ENABLE_DEBUG
     /* In debugging mode we iterate over all length many elements and 
