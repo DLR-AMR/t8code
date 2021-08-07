@@ -58,7 +58,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   t8_forest_t         forest_adapt;
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
-  int                 initlevel = 2;    /* level of the cmesh */
+  int                 initlevel = 2;    /* initial uniform refinement level */
   int                 minlevel = 1;     /* lowest level allowed for coarsening */
   int                 maxlevel = 3;     /* highest level allowed for refining */
 
