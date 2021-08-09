@@ -598,6 +598,7 @@ int
 t8_dpyramid_face_parent_face (const t8_dpyramid_t * elem, const int face)
 {
   t8_dpyramid_t       parent;
+  parent.level = -1;
   int                 child_id;
   T8_ASSERT (0 <= elem->level && elem->level <= T8_DPYRAMID_MAXLEVEL);
   T8_ASSERT (0 <= face && face < T8_DPYRAMID_FACES);
@@ -988,7 +989,6 @@ t8_dpyramid_num_siblings (const t8_dpyramid_t * p)
 {
   T8_ASSERT (0 <= p->level && p->level <= T8_DPYRAMID_MAXLEVEL);
   t8_dpyramid_t       parent;
-  parent.level = p->level - 1;
   if (p->level == 0) {
     /* A level zero pyramid has only itself as sibling. */
     return 1;
@@ -1466,6 +1466,8 @@ t8_dpyramid_successor (const t8_dpyramid_t * elem, t8_dpyramid_t * succ,
                        const int level)
 {
   t8_dpyramid_t       parent;
+  /*Suppress Compilerwarnings by setting the level*/
+  parent.level = -1;
   t8_dpyramid_successor_recursion (elem, succ, &parent, level);
 }
 
