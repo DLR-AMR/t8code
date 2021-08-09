@@ -104,7 +104,36 @@ t8_refine_with_subelements (t8_eclass_t eclass)
 
   t8_forest_commit (forest_adapt);
 
-  snprintf (filename, BUFSIZ, "forest_adapt_no_hanging_nodes_%s",
+  /* print to vtk */
+  snprintf (filename, BUFSIZ, "forest_adapt_no_hanging_nodes_timestep1_%s",
+            t8_eclass_to_string[eclass]);
+  t8_forest_write_vtk (forest_adapt, filename);
+
+  /* Set forest to the partitioned forest, so it gets adapted
+   * in the next time step. */
+  forest = forest_adapt;
+
+  /* Set new user data for the second timestep */
+  sdata.mid_point[0] = 0.5;
+  sdata.mid_point[1] = 0.5;
+  sdata.mid_point[2] = 0;
+  sdata.radius = 0.5;
+
+  ls_data.band_width = 1;
+  ls_data.L = t8_basic_level_set_sphere;
+  ls_data.min_level = minlevel;
+  ls_data.max_level = maxlevel;
+  ls_data.udata = &sdata;
+
+  /* set and adapt the forest */
+  t8_forest_init (&forest_adapt);
+  t8_forest_set_user_data (forest_adapt, &ls_data);
+  t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
+  t8_forest_set_remove_hanging_faces (forest_adapt, NULL);
+  t8_forest_commit (forest_adapt);
+
+  /* print to vtk */
+  snprintf (filename, BUFSIZ, "forest_adapt_no_hanging_nodes_timestep2_%s",
             t8_eclass_to_string[eclass]);
   t8_forest_write_vtk (forest_adapt, filename);
 

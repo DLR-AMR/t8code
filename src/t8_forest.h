@@ -248,7 +248,7 @@ void                t8_forest_set_copy (t8_forest_t forest,
  */
 /* TODO: make recursive flag to int specifying the number of recursions? */
 void                t8_forest_set_adapt (t8_forest_t forest,
-                                         const t8_forest_t set_from,
+                                         t8_forest_t set_from,
                                          t8_forest_adapt_t adapt_fn,
                                          int recursive);
 

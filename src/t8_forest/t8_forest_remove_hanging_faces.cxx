@@ -130,14 +130,14 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
 void
 t8_forest_remove_hanging_faces (t8_forest_t forest)
 {
-  t8_global_productionf ("Into t8_forest_subelements.\n");
+  t8_global_productionf ("Into t8_forest_remove_hanging_faces.\n");
 
   forest->set_adapt_fn = t8_forest_remove_hanging_faces_adapt;
   forest->set_adapt_recursive = 0;
   t8_forest_copy_trees (forest, forest->set_from, 0);
   t8_forest_adapt (forest);
 
-  t8_global_productionf ("Done t8_forest_subelements.\n");
+  t8_global_productionf ("Done t8_forest_hanging_faces.\n");
 }
 
 #if 0
@@ -149,5 +149,45 @@ t8_forest_hanging_faces_removed (t8_forest_t forest)
   return 0;
 }
 #endif
+
+int
+t8_forest_remove_subelements_adapt (t8_forest_t forest,
+                                    t8_forest_t forest_from,
+                                    t8_locidx_t ltree_id,
+                                    t8_locidx_t lelement_id,
+                                    t8_eclass_scheme_c * ts,
+                                    int num_elements,
+                                    t8_element_t * elements[])
+{
+  const t8_element_t *current_element;
+
+  current_element =
+    t8_forest_get_element_in_tree (forest_from, ltree_id, lelement_id);
+
+  t8_quad_with_subelements *pquad_w_sub =
+      (t8_quad_with_subelements *) current_element;
+
+  if (pquad_w_sub->dummy_is_subelement == 1) {
+    return -1;
+  }
+  else {
+    return 0;
+  }
+}
+
+void 
+t8_forest_remove_subelements (t8_forest_t forest) 
+{
+  t8_global_productionf ("Into t8_forest_remove_subelements.\n");
+
+  forest->set_from = forest;
+  forest->set_adapt_fn = t8_forest_remove_subelements_adapt;
+  forest->set_adapt_recursive = 0;
+  t8_forest_adapt (forest);
+
+  forest->set_subelements = 0;
+
+  t8_global_productionf ("Done t8_forest_remove_subelements.\n");
+}
 
 T8_EXTERN_C_END ();

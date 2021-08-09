@@ -56,6 +56,7 @@ t8_forest_init (t8_forest_t * pforest)
   forest->set_adapt_recursive = -1;
   forest->set_balance = -1;
   forest->maxlevel_existing = -1;
+  forest->set_subelements = 0;
 }
 
 int
@@ -269,6 +270,8 @@ t8_forest_set_remove_hanging_faces (t8_forest_t forest,
   else {
     forest->from_method |= T8_FOREST_FROM_SUBELEMENTS;
   }
+
+  forest->set_subelements = 1;
 }
 
 void
@@ -304,7 +307,7 @@ t8_forest_set_ghost (t8_forest_t forest, int do_ghost,
 }
 
 void
-t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from,
+t8_forest_set_adapt (t8_forest_t forest, t8_forest_t set_from,
                      t8_forest_adapt_t adapt_fn, int recursive)
 {
   T8_ASSERT (forest != NULL);
@@ -318,6 +321,11 @@ t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from,
 
   forest->set_adapt_fn = adapt_fn;
   forest->set_adapt_recursive = recursive != 0;
+
+  if (set_from->set_subelements == 1) {
+    t8_productionf ("This is t8_forest_set_adapt. Remove possible subelements from the mesh for adapting.\n");
+    t8_forest_remove_subelements (set_from);
+  }
 
   if (set_from != NULL) {
     /* If set_from = NULL, we assume a previous forest_from was set */
