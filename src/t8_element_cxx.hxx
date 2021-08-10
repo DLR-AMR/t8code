@@ -668,14 +668,12 @@ public:
                                                             elem) = 0;
 
   /* TODO: comment */
-  virtual int                 t8_element_test_if_subelement (const 
-                                                             t8_element *
-                                                             elem) = 0;
+  virtual int         t8_element_test_if_subelement (const
+                                                     t8_element * elem) = 0;
 
   /* TODO: comment */
-  virtual int                 t8_element_get_subelement_type (const 
-                                                              t8_element *
-                                                              elem) = 0;
+  virtual int         t8_element_get_subelement_type (const
+                                                      t8_element * elem) = 0;
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is

@@ -354,14 +354,11 @@ public:
                                                             elem);
 
 /** TODO: comment */
-  virtual int                 t8_element_test_if_subelement (const 
-                                                             t8_element *
-                                                             elem);
+  virtual int         t8_element_test_if_subelement (const t8_element * elem);
 
 /** TODO: comment */
-  virtual int                 t8_element_get_subelement_type (const 
-                                                              t8_element *
-                                                              elem);
+  virtual int         t8_element_get_subelement_type (const
+                                                      t8_element * elem);
 
 /** Get the shape of a given element. Subelements are triangles */
   virtual t8_element_shape_t t8_element_shape (const t8_element_t * elem);

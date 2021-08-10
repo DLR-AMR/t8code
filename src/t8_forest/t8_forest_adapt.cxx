@@ -283,15 +283,18 @@ t8_forest_adapt (t8_forest_t forest)
        * a family.
        * At the end is_family will be true, if these elements form a family.
        */
-      t8_element_t * current_element = t8_element_array_index_locidx (telements_from, el_considered);
+      t8_element_t       *current_element =
+        t8_element_array_index_locidx (telements_from, el_considered);
 
       if (tscheme->t8_element_test_if_subelement (current_element) == 1) {
-        int subelement_type = tscheme->t8_element_get_subelement_type (current_element);
-        num_siblings = tscheme->t8_element_get_number_of_subelements (subelement_type, current_element);
+        int                 subelement_type =
+          tscheme->t8_element_get_subelement_type (current_element);
+        num_siblings =
+          tscheme->t8_element_get_number_of_subelements (subelement_type,
+                                                         current_element);
       }
       else {
-        num_siblings =
-        tscheme->t8_element_num_siblings (current_element);
+        num_siblings = tscheme->t8_element_num_siblings (current_element);
       }
 
       if (num_siblings > curr_num_siblings) {
