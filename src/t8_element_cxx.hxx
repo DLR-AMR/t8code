@@ -531,7 +531,7 @@ public:
     *  \param [in] elem     The element to be considered
     *  \return              The shape of the element as an eclass
    */
-  virtual t8_eclass_t        t8_element_shape(const t8_element_t * elem) = 0;
+  virtual t8_eclass_t t8_element_shape (const t8_element_t * elem) = 0;
 
   /** Compute the linear id of a given element in a hypothetical uniform
    * refinement of a given level.
@@ -642,6 +642,30 @@ public:
   virtual void        t8_element_general_function (const t8_element_t * elem,
                                                    const void *indata,
                                                    void *outdata) = 0;
+
+  /** This function refines a parent element into subelements.
+   *  Depending on the subelement type, the number of subelements 
+   *  to fill the parent element, can differ.
+   *  \param [in] elem A valid element
+   *  \param [in] type The subelement type
+   *  \param [out] subelements An array of all subelements of the parent quad element elem
+   */
+  virtual void        t8_element_to_subelement (const t8_element_t * elem,
+                                                int type,
+                                                t8_element_t *
+                                                subelements[]) = 0;
+
+  /** This function will determine the number of children subelements, depending on the 
+   *  subelement type. 
+   *  \param [in] subelement_type The subelement type as an integer
+   *  \param [in] element The current element. Subelements might vary for different element shapes etc.
+   *  \return the number of subelements a parent element is split into
+   */
+  virtual int         t8_element_get_number_of_subelements (int
+                                                            subelement_type,
+                                                            const
+                                                            t8_element_t *
+                                                            elem) = 0;
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is

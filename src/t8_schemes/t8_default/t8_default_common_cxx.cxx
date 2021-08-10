@@ -128,15 +128,12 @@ t8_gloidx_t
                                                       int level)
 {
 
-
-
   int                 element_level = t8_element_level (t);
   int                 dim = t8_eclass_to_dimension[eclass];
   if (eclass == T8_ECLASS_PYRAMID) {
-      int level_diff = level - element_level;
-      return element_level > level ? 0 :
-                                     2 * sc_intpow64(8,level_diff) -
-                                     sc_intpow64(6, level_diff);
+    int                 level_diff = level - element_level;
+    return element_level > level ? 0 :
+      2 * sc_intpow64 (8, level_diff) - sc_intpow64 (6, level_diff);
   }
   return count_leafs_from_level (element_level, level, dim);
 }
@@ -151,8 +148,8 @@ t8_default_scheme_common_c::t8_element_max_num_siblings (const t8_element_t * el
 /* *INDENT-ON* */
 {
   const int           dim = t8_eclass_to_dimension[eclass];
-  if(eclass == T8_ECLASS_PYRAMID){
-      return 10;
+  if (eclass == T8_ECLASS_PYRAMID) {
+    return 10;
   }
   return sc_intpow (2, dim);
 }
@@ -175,7 +172,7 @@ t8_gloidx_t
   t8_default_scheme_common_c::t8_element_count_leafs_from_root (int level)
 {
   if (eclass == T8_ECLASS_PYRAMID) {
-    return 2 * sc_intpow64u(8,level) -  sc_intpow64u(6, level);
+    return 2 * sc_intpow64u (8, level) - sc_intpow64u (6, level);
   }
   int                 dim = t8_eclass_to_dimension[eclass];
   return count_leafs_from_level (0, level, dim);
@@ -188,6 +185,25 @@ t8_default_scheme_common_c::t8_element_general_function (const t8_element_t *
                                                          void *outdata)
 {
   /* This function is intentionally left blank. */
+}
+
+void
+t8_default_scheme_common_c::t8_element_to_subelement (const t8_element_t *
+                                                      elem,
+                                                      int type,
+                                                      t8_element_t * c[])
+{
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
+}
+
+int
+t8_default_scheme_common_c::t8_element_get_number_of_subelements (int
+                                                                  subelement_type,
+                                                                  const
+                                                                  t8_element *
+                                                                  elem)
+{
+  SC_ABORT ("This function is yet implemented for the given scheme.\n");
 }
 
 T8_EXTERN_C_END ();

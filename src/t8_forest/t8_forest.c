@@ -29,10 +29,10 @@
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_balance.h>
+#include <t8_forest/t8_forest_remove_hanging_faces.h>
 #include <t8_forest_vtk.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
-
 
 void
 t8_forest_init (t8_forest_t * pforest)
@@ -241,6 +241,37 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from,
 }
 
 void
+t8_forest_set_remove_hanging_faces (t8_forest_t forest,
+                                    const t8_forest_t set_from)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+
+  /* If forest is not balanced, balance now. 
+   * This binary operation checks, whether the third bit from the right from 
+   * forest->from_method is unequal to one. If so, set balanced is not set yet. */
+  if ((forest->from_method & (1 << 2)) >> 2 != 1) {
+    t8_productionf
+      ("Forest was not balanced yet. The set_remove_hanging_faces function will set balance with repartition now.\n");
+    /* balance with repartition */
+    t8_forest_set_balance (forest, NULL, 0);
+  }
+
+  if (set_from != NULL) {
+    /* If set_from = NULL, we assume a previous forest_from was set */
+    forest->set_from = set_from;
+  }
+
+  /* Add SUBELEMENTS to the from_method.
+   * This overwrites T8_FOREST_FROM_COPY */
+  if (forest->from_method == T8_FOREST_FROM_LAST) {
+    forest->from_method = T8_FOREST_FROM_SUBELEMENTS;
+  }
+  else {
+    forest->from_method |= T8_FOREST_FROM_SUBELEMENTS;
+  }
+}
+
+void
 t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost,
                          t8_ghost_type_t ghost_type, int ghost_version)
 {
@@ -353,15 +384,14 @@ t8_forest_comm_global_num_elements (t8_forest_t forest)
   forest->global_num_elements = global_num_el;
 }
 
-
 static int
-t8_forest_new_refine(t8_forest_t forest, t8_forest_t forest_from,
-                          t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                          t8_eclass_scheme_c * ts, int num_elements,
-                          t8_element_t * elements[])
+t8_forest_new_refine (t8_forest_t forest, t8_forest_t forest_from,
+                      t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                      t8_eclass_scheme_c * ts, int num_elements,
+                      t8_element_t * elements[])
 {
 
-    return 1;
+  return 1;
 }
 
 void
@@ -404,34 +434,35 @@ t8_forest_commit (t8_forest_t forest)
     t8_forest_compute_maxlevel (forest);
     T8_ASSERT (forest->set_level <= forest->maxlevel);
     /* populate a new forest with tree and quadrant objects */
-    if(forest->set_level == 0){
-        t8_forest_populate (forest);
+    if (forest->set_level == 0) {
+      t8_forest_populate (forest);
     }
-    else{
-        t8_forest_t     forest_zero, forest_tmp, forest_tmp_partition;
+    else {
+      t8_forest_t         forest_zero, forest_tmp, forest_tmp_partition;
 
-        t8_cmesh_ref(forest->cmesh);
-        t8_scheme_cxx_ref(forest->scheme_cxx);
-        t8_forest_init(&forest_zero);
-        t8_forest_set_level(forest_zero, 0);
-        t8_forest_set_cmesh(forest_zero, forest->cmesh, forest->mpicomm);
-        t8_forest_set_scheme(forest_zero, forest->scheme_cxx);
-        t8_forest_commit(forest_zero);
+      t8_cmesh_ref (forest->cmesh);
+      t8_scheme_cxx_ref (forest->scheme_cxx);
+      t8_forest_init (&forest_zero);
+      t8_forest_set_level (forest_zero, 0);
+      t8_forest_set_cmesh (forest_zero, forest->cmesh, forest->mpicomm);
+      t8_forest_set_scheme (forest_zero, forest->scheme_cxx);
+      t8_forest_commit (forest_zero);
 
-        for(i = 1; i<=forest->set_level; i++){
-            t8_forest_init(&forest_tmp);
-            t8_forest_set_level(forest_tmp, i);
-            t8_forest_set_adapt(forest_tmp, forest_zero, t8_forest_new_refine, 0);
-            t8_forest_commit(forest_tmp);
-            t8_forest_init(&forest_tmp_partition);
-            t8_forest_set_partition(forest_tmp_partition, forest_tmp, 0);
-            t8_forest_commit(forest_tmp_partition);
-            forest_zero = forest_tmp_partition;
-            //t8_forest_ref(forest);
-            //t8_forest_copy_trees(forest_tmp, forest_zero,1);
-        }
-        t8_forest_copy_trees(forest, forest_tmp_partition, 1);
-        t8_forest_unref(&forest_tmp_partition);
+      for (i = 1; i <= forest->set_level; i++) {
+        t8_forest_init (&forest_tmp);
+        t8_forest_set_level (forest_tmp, i);
+        t8_forest_set_adapt (forest_tmp, forest_zero, t8_forest_new_refine,
+                             0);
+        t8_forest_commit (forest_tmp);
+        t8_forest_init (&forest_tmp_partition);
+        t8_forest_set_partition (forest_tmp_partition, forest_tmp, 0);
+        t8_forest_commit (forest_tmp_partition);
+        forest_zero = forest_tmp_partition;
+        //t8_forest_ref(forest);
+        //t8_forest_copy_trees(forest_tmp, forest_zero,1);
+      }
+      t8_forest_copy_trees (forest, forest_tmp_partition, 1);
+      t8_forest_unref (&forest_tmp_partition);
     }
     forest->global_num_trees = t8_cmesh_get_num_trees (forest->cmesh);
   }
@@ -566,21 +597,48 @@ t8_forest_commit (t8_forest_t forest)
       }
     }
     if (forest->from_method & T8_FOREST_FROM_BALANCE) {
-      /* balance the forest */
       forest->from_method -= T8_FOREST_FROM_BALANCE;
-      /* This is the last from method that we execute,
-       * nothing should be left todo */
-      T8_ASSERT (forest->from_method == 0);
+      if (forest->from_method > 0) {
+        /* in this case, we will use subelements after balancing */
+        int                 flag_rep;
+        if (forest->set_balance == T8_FOREST_BALANCE_NO_REPART) {
+          /* balance without repartition */
+          flag_rep = 1;
+        }
+        else {
+          /* balance with repartition */
+          flag_rep = 0;
+        }
+        t8_forest_t         forest_balance;
 
-      /* This forest should only be balanced */
-      if (forest->set_balance == T8_FOREST_BALANCE_NO_REPART) {
-        /* balance without repartition */
-        t8_forest_balance (forest, 0);
+        t8_forest_init (&forest_balance);
+        /* forest_adapt should not change ownership of forest->set_from */
+        t8_forest_set_balance (forest_balance, forest->set_from, flag_rep);
+        t8_forest_commit (forest_balance);
+        /* The new forest will be partitioned/balanced from forest_adapt */
+        forest->set_from = forest_balance;
       }
       else {
-        /* balance with repartition */
-        t8_forest_balance (forest, 1);
+        /* in this case, this is the last from method that we execute,
+         * nothing should be left todo */
+        T8_ASSERT (forest->from_method == 0);
+        if (forest->set_balance == T8_FOREST_BALANCE_NO_REPART) {
+          /* balance without repartition */
+          t8_forest_balance (forest, 0);
+        }
+        else {
+          /* balance with repartition */
+          t8_forest_balance (forest, 1);
+        }
       }
+    }
+    if (forest->from_method & T8_FOREST_FROM_SUBELEMENTS) {
+      forest->from_method -= T8_FOREST_FROM_SUBELEMENTS;
+      /* this is the last from method that we execute,
+       * nothing should be left todo */
+      T8_ASSERT (forest->from_method == 0);
+      /* use subelements */
+      t8_forest_remove_hanging_faces (forest);
     }
 
     if (forest_from != forest->set_from) {

@@ -101,6 +101,18 @@ public:
   virtual void        t8_element_general_function (const t8_element_t * elem,
                                                    const void *indata,
                                                    void *outdata);
+
+  /** Construct a subelement */
+  virtual void        t8_element_to_subelement (const t8_element_t * elem,
+                                                int type, t8_element_t * c[]);
+
+  /** Determine the number of subelements, used to remove hanging nodes from a element of a given type */
+  virtual int         t8_element_get_number_of_subelements (int
+                                                            subelement_type,
+                                                            const
+                                                            t8_element_t *
+                                                            elem);
+
 };
 
 #endif /* !T8_DEFAULT_COMMON_CXX_HXX */
