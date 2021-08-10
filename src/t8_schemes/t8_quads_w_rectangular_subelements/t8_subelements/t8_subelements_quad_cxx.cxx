@@ -139,10 +139,16 @@ t8_subelement_scheme_quad_c::t8_element_parent (const t8_element_t * elem,
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (parent));
 
+  if (pquad_w_sub_elem->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
+    pquad_w_sub_parent->p4q = pquad_w_sub_elem->p4q;
+  }
+  else {
+    p4est_quadrant_parent (q, r);
+  }
+
   /* resetting the subelement infos and ensuring that a parent element can never be a subelement */
   t8_element_reset_subelement_values (parent);
-
-  p4est_quadrant_parent (q, r);
+  
   t8_element_copy_surround (q, r);
 }
 

@@ -119,7 +119,6 @@ public:
   /* TODO: comment */
   virtual int         t8_element_get_subelement_type (const
                                                       t8_element * elem);
-
 };
 
 #endif /* !T8_DEFAULT_COMMON_CXX_HXX */
