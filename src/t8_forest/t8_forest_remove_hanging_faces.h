@@ -92,8 +92,7 @@ int                 t8_forest_remove_subelements_adapt (t8_forest_t forest,
                                                         elements[]);
 
 /* TODO comment */
-void                t8_forest_remove_subelements (t8_forest_t 
-                                                  forest);
+void                t8_forest_remove_subelements (t8_forest_t forest);
 
 T8_EXTERN_C_END ();
 

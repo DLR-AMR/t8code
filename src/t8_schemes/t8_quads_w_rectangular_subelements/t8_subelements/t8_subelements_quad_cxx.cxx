@@ -358,11 +358,10 @@ t8_subelement_scheme_quad_c::t8_element_child_id (const t8_element_t * elem)
     (const t8_quad_with_subelements *) elem;
   const p4est_quadrant_t *q = &pquad_w_sub->p4q;
 
-  /* at the moment, this function is only implemented for standard quad elements */
-  T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
-             T8_SUB_QUAD_IS_NO_SUBELEMENT);
-
   T8_ASSERT (t8_element_is_valid (elem));
+
+  /* Note that for all subelements of the same transition cell 
+   * the child_id stays the same. */
   return p4est_quadrant_child_id (q);
 }
 
@@ -389,18 +388,23 @@ t8_subelement_scheme_quad_c::t8_element_is_family (t8_element_t ** fam)
 
 #ifdef T8_ENABLE_DEBUG
   int                 i;
-  for (i = 0; i < P4EST_CHILDREN; i++) {
-    /* at the moment, this function is only implemented for standard quad elements */
-    T8_ASSERT (pquad_w_sub_family[i]->dummy_is_subelement ==
-               T8_SUB_QUAD_IS_NO_SUBELEMENT);
 
+  /* TODO: this loop goes from 0 to 3 but with subelements there can be more elements in fam */
+  for (i = 0; i < P4EST_CHILDREN; i++) {
     T8_ASSERT (t8_element_is_valid (fam[i]));
   }
 #endif
-  return p4est_quadrant_is_family (&pquad_w_sub_family[0]->p4q,
-                                   &pquad_w_sub_family[1]->p4q,
-                                   &pquad_w_sub_family[2]->p4q,
-                                   &pquad_w_sub_family[3]->p4q);
+
+  /* TODO: this is a test and no sufficient check */
+  if (pquad_w_sub_family[0]->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
+    return 1;
+  }
+  else {
+    return p4est_quadrant_is_family (&pquad_w_sub_family[0]->p4q,
+                                     &pquad_w_sub_family[1]->p4q,
+                                     &pquad_w_sub_family[2]->p4q,
+                                     &pquad_w_sub_family[3]->p4q);
+  }
 }
 
 void
@@ -1453,6 +1457,38 @@ t8_subelement_scheme_quad_c::t8_element_copy_subelement_values (const
     pquad_w_sub_source->dummy_is_subelement;
   pquad_w_sub_dest->subelement_type = pquad_w_sub_source->subelement_type;
   pquad_w_sub_dest->subelement_id = pquad_w_sub_source->subelement_id;
+}
+
+int
+t8_subelement_scheme_quad_c::t8_element_test_if_subelement (const 
+                                                            t8_element *
+                                                            elem)
+{
+  const t8_quad_with_subelements *pquad_w_sub =
+    (const t8_quad_with_subelements *) elem;
+
+  if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
+    return T8_SUB_QUAD_IS_SUBELEMENT;
+  }
+  else {
+    return T8_SUB_QUAD_IS_NO_SUBELEMENT;
+  }
+}
+
+int
+t8_subelement_scheme_quad_c::t8_element_get_subelement_type (const 
+                                                             t8_element *
+                                                             elem)
+{
+  const t8_quad_with_subelements *pquad_w_sub =
+    (const t8_quad_with_subelements *) elem;
+
+  if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_NO_SUBELEMENT) {
+    return 0;
+  }
+  else {
+    return pquad_w_sub->subelement_type;
+  }
 }
 
 t8_element_shape_t

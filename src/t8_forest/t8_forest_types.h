@@ -55,7 +55,7 @@ typedef int8_t      t8_forest_from_t;
 #define T8_FOREST_FROM_PARTITION 0x2
 #define T8_FOREST_FROM_BALANCE 0x4
 #define T8_FOREST_FROM_SUBELEMENTS 0x8
-#define T8_FOREST_FROM_NONE 0x10 /* A value that is not reached by adding up the other values. No from method used */
+#define T8_FOREST_FROM_NONE 0x10        /* A value that is not reached by adding up the other values. No from method used */
 #define T8_FOREST_FROM_LAST T8_FOREST_FROM_NONE
 
 #define T8_FOREST_BALANCE_REPART 1 /**< Value of forest->set_balance if balancing with repartitioning */

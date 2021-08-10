@@ -206,4 +206,20 @@ t8_default_scheme_common_c::t8_element_get_number_of_subelements (int
   SC_ABORT ("This function is yet implemented for the given scheme.\n");
 }
 
+int                
+t8_default_scheme_common_c::t8_element_test_if_subelement (const 
+                                                           t8_element *
+                                                           elem)
+{
+  SC_ABORT ("This function is yet implemented for the given scheme.\n");
+}
+
+int                
+t8_default_scheme_common_c::t8_element_get_subelement_type (const 
+                                                            t8_element *
+                                                            elem)
+{
+  SC_ABORT ("This function is yet implemented for the given scheme.\n");
+}
+
 T8_EXTERN_C_END ();

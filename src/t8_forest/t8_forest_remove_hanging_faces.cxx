@@ -165,7 +165,7 @@ t8_forest_remove_subelements_adapt (t8_forest_t forest,
     t8_forest_get_element_in_tree (forest_from, ltree_id, lelement_id);
 
   t8_quad_with_subelements *pquad_w_sub =
-      (t8_quad_with_subelements *) current_element;
+    (t8_quad_with_subelements *) current_element;
 
   if (pquad_w_sub->dummy_is_subelement == 1) {
     return -1;
@@ -175,8 +175,8 @@ t8_forest_remove_subelements_adapt (t8_forest_t forest,
   }
 }
 
-void 
-t8_forest_remove_subelements (t8_forest_t forest) 
+void
+t8_forest_remove_subelements (t8_forest_t forest)
 {
   t8_global_productionf ("Into t8_forest_remove_subelements.\n");
 
