@@ -160,12 +160,12 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
       /* Interpolate coordinates without between face vertices */
       for (int j = 0; j < 3; ++j)
       {
-        interpolated_coords[j] = ((1 - ref_coords[normal_sequence[int(i / 2.0)][0]]) * active_tree_vertices[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][i][0] * 3 + j]
-                                + ref_coords[normal_sequence[int(i / 2.0)][0]] * active_tree_vertices[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][i][1] * 3 + j])
-                                * (1 - ref_coords[normal_sequence[int(i / 2.0)][1]]);
-        interpolated_coords[j] += ((1 - ref_coords[normal_sequence[int(i / 2.0)][0]]) * active_tree_vertices[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][i][2] * 3 + j]
-                                + ref_coords[normal_sequence[int(i / 2.0)][0]] * active_tree_vertices[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][i][3] * 3 + j])
-                                * ref_coords[normal_sequence[int(i / 2.0)][1]];
+        interpolated_coords[j] = ((1 - ref_coords[normal_sequence[i / 2][0]]) * active_tree_vertices[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][i][0] * 3 + j]
+                                + ref_coords[normal_sequence[i / 2][0]] * active_tree_vertices[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][i][1] * 3 + j])
+                                * (1 - ref_coords[normal_sequence[i / 2][1]]);
+        interpolated_coords[j] += ((1 - ref_coords[normal_sequence[i / 2][0]]) * active_tree_vertices[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][i][2] * 3 + j]
+                                + ref_coords[normal_sequence[i / 2][0]] * active_tree_vertices[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][i][3] * 3 + j])
+                                * ref_coords[normal_sequence[i / 2][1]];
       }
       
       /* Interpolate parameters between face vertices */
@@ -174,12 +174,12 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
                                                       gtreeid);
       for (int j = 0; j < 2; ++j)
       {
-        param[j] = (parameters[0 + j] * (1 - ref_coords[normal_sequence[(int)(i / 2.0)][0]])
-                  + parameters[2 + j] * (ref_coords[normal_sequence[(int)(i / 2.0)][0]]))
-                  * (1 - ref_coords[normal_sequence[(int)(i / 2.0)][1]]);
-        param[j] += (parameters[4 + j] * (1 - ref_coords[normal_sequence[(int)(i / 2.0)][0]])
-                    +parameters[6 + j] * (ref_coords[normal_sequence[(int)(i / 2.0)][0]]))
-                    *(ref_coords[normal_sequence[(int)(i / 2.0)][1]]);
+        param[j] = (parameters[0 + j] * (1 - ref_coords[normal_sequence[i / 2][0]])
+                  + parameters[2 + j] * (ref_coords[normal_sequence[i / 2][0]]))
+                  * (1 - ref_coords[normal_sequence[i / 2][1]]);
+        param[j] += (parameters[4 + j] * (1 - ref_coords[normal_sequence[i / 2][0]])
+                    +parameters[6 + j] * (ref_coords[normal_sequence[i / 2][0]]))
+                    *(ref_coords[normal_sequence[i / 2][1]]);
       }
       
       /* Check if calculated parameters are valid */
