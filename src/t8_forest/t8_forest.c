@@ -252,7 +252,8 @@ t8_forest_set_remove_hanging_faces (t8_forest_t forest,
    * forest->from_method is unequal to one. If so, set balanced is not set yet. */
   if ((forest->from_method & (1 << 2)) >> 2 != 1) {
     t8_productionf
-      ("Forest was not balanced yet. The set_remove_hanging_faces function will set balance with repartition now.\n");
+      ("This is forest_set_remove_hanging_faces.\n"
+       "The forest might not be balanced and set_balance is not set yet. The set_remove_hanging_faces function will set balance with repartition now.\n");
     /* balance with repartition */
     t8_forest_set_balance (forest, NULL, 0);
   }
@@ -324,7 +325,8 @@ t8_forest_set_adapt (t8_forest_t forest, t8_forest_t set_from,
 
   if (set_from->set_subelements == 1) {
     t8_productionf
-      ("This is t8_forest_set_adapt. Remove possible subelements from the mesh for adapting.\n");
+      ("This is t8_forest_set_adapt.\n"
+       "There might be subelements in the forest. The set_adapt function will remove all subelements from the mesh now.\n");
     t8_forest_remove_subelements (set_from);
   }
 
