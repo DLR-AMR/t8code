@@ -117,7 +117,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   sdata.mid_point[0] = 0.5;
   sdata.mid_point[1] = 0.5;
   sdata.mid_point[2] = 0;
-  sdata.radius = 0.5;
+  sdata.radius = 0.3;
 
   ls_data.band_width = 1;
   ls_data.L = t8_basic_level_set_sphere;

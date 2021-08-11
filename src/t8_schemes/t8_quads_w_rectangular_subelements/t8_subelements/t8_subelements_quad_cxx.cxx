@@ -148,7 +148,7 @@ t8_subelement_scheme_quad_c::t8_element_parent (const t8_element_t * elem,
 
   /* resetting the subelement infos and ensuring that a parent element can never be a subelement */
   t8_element_reset_subelement_values (parent);
-  
+
   t8_element_copy_surround (q, r);
 }
 
