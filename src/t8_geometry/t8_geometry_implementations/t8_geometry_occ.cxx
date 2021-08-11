@@ -20,7 +20,12 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <t8.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
+#include <t8_eclass.h>
+#include <t8_geometry/t8_geometry_helpers.h>
+
+#include <gp_Pnt.hxx>
 
 #if T8_WITH_OCC
 

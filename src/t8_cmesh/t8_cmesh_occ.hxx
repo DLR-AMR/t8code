@@ -28,24 +28,6 @@
 #define T8_CMESH_OCC_HXX
 
 #include <t8_cmesh.h>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
-#include <t8_cmesh_vtk.h>
-
-#if T8_WITH_OCC
-#include <gp_Pnt.hxx>
-#include <BRepBuilderAPI_MakeEdge.hxx>
-#include <BRepPrimAPI_MakePrism.hxx>
-#include <TopoDS_Face.hxx>
-#include <TopoDS_Edge.hxx>
-#include <TopoDS.hxx>
-#include <gp_Ax2.hxx>
-#include <gp_Dir.hxx>
-#include <gp_Circ.hxx>
-#include <gp_Vec.hxx>
-#include <BRep_Tool.hxx>
-#include <Geom_Surface.hxx>
-#endif
 
 /* Forward pointer reference to hidden cmesh implementation.
  * This reference needs to be known by t8_geometry, hence we 

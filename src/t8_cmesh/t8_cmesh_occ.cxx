@@ -26,6 +26,24 @@
  */
 
 #include <t8_cmesh/t8_cmesh_occ.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
+#include <t8_cmesh_vtk.h>
+
+#if T8_WITH_OCC
+#include <gp_Pnt.hxx>
+#include <BRepBuilderAPI_MakeEdge.hxx>
+#include <BRepPrimAPI_MakePrism.hxx>
+#include <TopoDS_Face.hxx>
+#include <TopoDS_Edge.hxx>
+#include <TopoDS.hxx>
+#include <gp_Ax2.hxx>
+#include <gp_Dir.hxx>
+#include <gp_Circ.hxx>
+#include <gp_Vec.hxx>
+#include <BRep_Tool.hxx>
+#include <Geom_Surface.hxx>
+#endif
 
 t8_cmesh_t
 t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, 

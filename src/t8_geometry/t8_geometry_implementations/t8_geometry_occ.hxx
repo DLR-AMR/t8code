@@ -30,13 +30,9 @@
 #define T8_WITH_OCC 1
 #if T8_WITH_OCC
 
-#include <t8.h>
 #include <t8_geometry/t8_geometry_base.hxx>
-#include <t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_types.h>
-#include <t8_geometry/t8_geometry_helpers.h>
 
-#include <gp_Pnt.hxx>
 #include <Geom_Curve.hxx>
 #include <Geom_Surface.hxx>
 
