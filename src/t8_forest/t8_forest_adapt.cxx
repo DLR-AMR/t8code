@@ -308,9 +308,9 @@ t8_forest_adapt (t8_forest_t forest)
         elements_from[zz] = t8_element_array_index_locidx (telements_from,
                                                            el_considered +
                                                            zz);
- 
+
         /* Dont use this check for noe since it might be problematic with removing subelements */
-        #if 0
+#if 0
         /* This is a quick check whether we build up a family here and could
          * abort early if not.
          * If the child id of the current element is not zz, then it cannot
@@ -320,7 +320,7 @@ t8_forest_adapt (t8_forest_t forest)
         if ((size_t) tscheme->t8_element_child_id (elements_from[zz]) != zz) {
           break;
         }
-        #endif
+#endif
       }
 
       if (zz != num_siblings
@@ -452,10 +452,10 @@ t8_forest_adapt (t8_forest_t forest)
 
         if (tscheme->t8_element_test_if_subelement (current_element) == 1) {
           int                 subelement_type =
-          tscheme->t8_element_get_subelement_type (current_element);
+            tscheme->t8_element_get_subelement_type (current_element);
           num_siblings =
             tscheme->t8_element_get_number_of_subelements (subelement_type,
-                                                           current_element);   
+                                                           current_element);
         }
         else {
           num_siblings = tscheme->t8_element_num_children (elements[0]);
