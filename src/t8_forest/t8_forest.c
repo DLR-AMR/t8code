@@ -323,12 +323,14 @@ t8_forest_set_adapt (t8_forest_t forest, t8_forest_t set_from,
   forest->set_adapt_fn = adapt_fn;
   forest->set_adapt_recursive = recursive != 0;
 
+  #if 0 
   if (set_from->set_subelements == 1) {
     t8_productionf
       ("This is t8_forest_set_adapt.\n"
        "There might be subelements in the forest. The set_adapt function will remove all subelements from the mesh now.\n");
     t8_forest_remove_subelements (set_from);
   }
+  #endif
 
   if (set_from != NULL) {
     /* If set_from = NULL, we assume a previous forest_from was set */
