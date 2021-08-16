@@ -179,6 +179,9 @@ public:
   /** Return the number of children of an element when it is refined. */
   virtual int         t8_element_num_children (const t8_element_t * elem);
 
+  /** Return the number of siblings of an element */
+  virtual int         t8_element_num_siblings (const t8_element_t * elem) const;
+
   /** Return the number of children of an element's face when the element is refined. */
   virtual int         t8_element_num_face_children (const t8_element_t *
                                                     elem, int face);
