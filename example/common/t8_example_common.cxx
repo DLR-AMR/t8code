@@ -45,7 +45,7 @@ t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
   int                 level;
   int                 maxlevel, child_id;
   T8_ASSERT (num_elements == 1 || num_elements ==
-             ts->t8_element_num_children (elements[0]));
+             ts->t8_element_num_siblings (elements[0]));
   level = ts->t8_element_level (elements[0]);
 
   /* we set a maximum refinement level as forest user data */
@@ -157,7 +157,7 @@ t8_common_adapt_level_set (t8_forest_t forest,
   double             *tree_vertices;
 
   T8_ASSERT (num_elements == 1 || num_elements ==
-             ts->t8_element_num_children (elements[0]));
+             ts->t8_element_num_siblings (elements[0]));
 
   data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest);
   level = ts->t8_element_level (elements[0]);
@@ -174,9 +174,12 @@ t8_common_adapt_level_set (t8_forest_t forest,
   if (level > data->max_level && num_elements > 1) {
     return -1;
   }
+  /* the following case is not reasonable if we use multiple timesteps */
+  #if 0
   if (level >= data->max_level) {
     return 0;
   }
+  #endif
   /* Refine at least until min level */
   if (level < data->min_level) {
     return 1;
