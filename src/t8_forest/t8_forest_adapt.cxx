@@ -286,7 +286,7 @@ t8_forest_adapt (t8_forest_t forest)
       t8_element_t       *current_element =
         t8_element_array_index_locidx (telements_from, el_considered);
 
-      int current_element_is_subelement = 0;
+      int                 current_element_is_subelement = 0;
       if (tscheme->t8_element_test_if_subelement (current_element) == 1) {
         current_element_is_subelement = 1;
         int                 subelement_type =

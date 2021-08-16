@@ -169,17 +169,17 @@ t8_common_adapt_level_set (t8_forest_t forest,
 
   /* Get the minimum and maximum x-coordinate from the user data pointer of forest */
   data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest);
-  
+
   /* If maxlevel is exceeded, coarsen or do not refine */
   if (level > data->max_level && num_elements > 1) {
     return -1;
   }
   /* the following case is not reasonable if we use multiple timesteps */
-  #if 0
+#if 0
   if (level >= data->max_level) {
     return 0;
   }
-  #endif
+#endif
   /* Refine at least until min level */
   if (level < data->min_level) {
     return 1;
@@ -189,7 +189,7 @@ t8_common_adapt_level_set (t8_forest_t forest,
     t8_common_within_levelset (forest_from, which_tree, elements[0],
                                ts, tree_vertices, data->L,
                                data->band_width / 2, data->t, data->udata);
-  
+
   if (within_band && level < data->max_level) {
     /* The element can be refined and lies inside the refinement region */
     return 1;

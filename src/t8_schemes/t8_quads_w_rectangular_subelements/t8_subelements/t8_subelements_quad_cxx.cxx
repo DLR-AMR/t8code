@@ -113,13 +113,13 @@ t8_subelement_scheme_quad_c::t8_element_compare (const t8_element_t * elem1,
   const p4est_quadrant_t *r = &pquad_w_sub_elem2->p4q;
 
   /* TODO: check */
-  #if 0
+#if 0
   /* at the moment, this function is not optimized for subelements */
   T8_ASSERT (pquad_w_sub_elem1->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
   T8_ASSERT (pquad_w_sub_elem2->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
-  #endif
+#endif
 
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
@@ -186,11 +186,11 @@ t8_subelement_scheme_quad_c::t8_element_num_faces (const t8_element_t * elem)
     (const t8_quad_with_subelements *) elem;
 
   /* TODO: check if an assertion is needed here */
-  #if 0
+#if 0
   /* at the moment, this function is only implemented for standard quad elements */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
-  #endif
+#endif
 
   T8_ASSERT (t8_element_is_valid (elem));
   return P4EST_FACES;
@@ -217,11 +217,11 @@ t8_subelement_scheme_quad_c::t8_element_num_children (const t8_element_t *
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
 
-  #if 0
+#if 0
   /* at the moment, this function is only implemented for standard quad elements */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
-  #endif
+#endif
 
   T8_ASSERT (t8_element_is_valid (elem));
   return P4EST_CHILDREN;
@@ -233,24 +233,25 @@ int
 t8_subelement_scheme_quad_c::t8_element_num_siblings (const t8_element_t *
                                                       elem) const
 /* *INDENT-ON* */
+
 {
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
 
   if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
-    int type = pquad_w_sub->subelement_type;
-    int num_hanging_faces = 0;
-    int num_siblings;
-    int i;
-    
+    int                 type = pquad_w_sub->subelement_type;
+    int                 num_hanging_faces = 0;
+    int                 num_siblings;
+    int                 i;
+
     /* TODO: use t8_element_get_number_of_subelements instead */
-    for (i = 0; i < P4EST_FACES; i++) {   /* Count the number of ones of the binary subelement type. This number equals the number of hanging faces. */
+    for (i = 0; i < P4EST_FACES; i++) { /* Count the number of ones of the binary subelement type. This number equals the number of hanging faces. */
       num_hanging_faces += (type & (1 << i)) >> i;
     }
 
-   /* The number of subelements equals the number of neighbours: */
-   num_siblings = P4EST_FACES + num_hanging_faces;
-   return num_siblings;
+    /* The number of subelements equals the number of neighbours: */
+    num_siblings = P4EST_FACES + num_hanging_faces;
+    return num_siblings;
   }
   else {
     return P4EST_CHILDREN;
@@ -263,13 +264,13 @@ t8_subelement_scheme_quad_c::t8_element_num_face_children (const t8_element_t
 {
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
-  
+
   /* TODO: check */
-  #if 0
+#if 0
   /* at the moment, this function is only implemented for standard quad elements */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
-  #endif
+#endif
 
   T8_ASSERT (t8_element_is_valid (elem));
   return 2;
@@ -337,11 +338,11 @@ t8_subelement_scheme_quad_c::t8_element_child (const t8_element_t * elem,
   const p4est_qcoord_t shift = P4EST_QUADRANT_LEN (q->level + 1);
 
   /* TODO: check */
-  #if 0
+#if 0
   /* at the moment, this function is only implemented for standard quad elements */
   T8_ASSERT (pquad_w_sub_elem->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
-  #endif
+#endif
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (child));
@@ -482,11 +483,11 @@ t8_linearidx_t
   p4est_quadrant_t   *q = &pquad_w_sub->p4q;
 
   /* TODO: check, if we need dont need an assertion here */
-  #if 0
+#if 0
   /* at the moment, this function is only implemented for standard quad elements */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
-  #endif
+#endif
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
@@ -637,11 +638,11 @@ t8_subelement_scheme_quad_c::t8_element_children_at_face (const t8_element_t *
     (const t8_quad_with_subelements *) elem;
 
   /* TODO: check */
-  #if 0
+#if 0
   /* at the moment, this function is only implemented for standard quad elements */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
-  #endif
+#endif
 
   int                 first_child, second_child;
 
@@ -715,11 +716,11 @@ t8_subelement_scheme_quad_c::t8_element_face_child_face (const t8_element_t *
     (const t8_quad_with_subelements *) elem;
 
   /* TODO: check */
-  #if 0
+#if 0
   /* at the moment, this function is only implemented for standard quad elements */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
-  #endif
+#endif
 
   T8_ASSERT (t8_element_is_valid (elem));
   /* For quadrants the face enumeration of children is the same as for the parent. */
@@ -922,11 +923,11 @@ t8_subelement_scheme_quad_c::t8_element_tree_face (const t8_element_t * elem,
   t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem;
 
   /* TODO: check */
-  #if 0
+#if 0
   /* at the moment, this function is only implemented for standard quad elements */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
-  #endif
+#endif
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= face && face < P4EST_FACES);
@@ -1078,11 +1079,11 @@ t8_subelement_scheme_quad_c::t8_element_is_root_boundary (const t8_element_t *
   p4est_qcoord_t      coord;
 
   /* TODO: check this */
-  #if 0
+#if 0
   /* at the moment, this function is only implemented for standard quad elements */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
-  #endif
+#endif
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= face && face < P4EST_FACES);
@@ -1298,10 +1299,10 @@ t8_subelement_scheme_quad_c::t8_element_to_subelement (const t8_element_t *
   T8_ASSERT (type >= T8_SUB_QUAD_MIN_SUBELEMENT_TYPE
              && type <= T8_SUB_QUAD_MAX_SUBELEMENT_TYPE);
   /* TODO: check */
-  #if 0
+#if 0
   T8_ASSERT (pquad_w_sub_elem->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
-  #endif
+#endif
   T8_ASSERT (t8_element_is_valid (elem));
 #ifdef T8_ENABLE_DEBUG
   {
