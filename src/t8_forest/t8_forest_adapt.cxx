@@ -311,7 +311,7 @@ t8_forest_adapt (t8_forest_t forest)
                                                            el_considered +
                                                            zz);
 
-        /* Dont use this check for noe since it might be problematic with removing subelements */
+        /* TODO: modify this check for subelements */
 #if 0
         /* This is a quick check whether we build up a family here and could
          * abort early if not.
@@ -415,9 +415,12 @@ t8_forest_adapt (t8_forest_t forest)
                                         elements);
           el_inserted += num_children;
         }
+        /* In case of a subelement, the parent quadrant is refined. 
+         * Therfore, we can skip all siblings as they are not needed anymore. */
         if (current_element_is_subelement == 1) {
           el_considered += num_siblings;
         }
+        /* In case of a non-subelement element, we directly refine the quadrant and move on to the next element */
         else {
           el_considered++;
         }
@@ -447,6 +450,7 @@ t8_forest_adapt (t8_forest_t forest)
         el_inserted += num_subelements;
         el_considered++;
 
+        /* TODO: this procedure might not be correct for multiple timesteps. Maybe construct a function that iterates through the whole mesh in the end */
         /* each time we entry this case, a parent element is split into subelements.
          * We will count the global number of constructed subelements and give this number as additional output. */
         count_subelements += num_subelements;
@@ -462,16 +466,7 @@ t8_forest_adapt (t8_forest_t forest)
         tscheme->t8_element_parent (elements_from[0], elements[0]);
         el_inserted++;
 
-        if (tscheme->t8_element_test_if_subelement (current_element) == 1) {
-          int                 subelement_type =
-            tscheme->t8_element_get_subelement_type (current_element);
-          num_siblings =
-            tscheme->t8_element_get_number_of_subelements (subelement_type,
-                                                           current_element);
-        }
-        else {
-          num_siblings = tscheme->t8_element_num_children (elements[0]);
-        }
+        num_siblings = tscheme->t8_element_num_siblings (current_element);
 
         if (forest->set_adapt_recursive) {
           /* Adaptation is recursive.
@@ -487,6 +482,7 @@ t8_forest_adapt (t8_forest_t forest)
                                                &el_inserted, elements);
           }
         }
+        /* We coarsen a family of num_siblings many elements, skip them and move to the next element that is not part of this family */
         el_considered += num_siblings;
       }
       else {
@@ -501,6 +497,7 @@ t8_forest_adapt (t8_forest_t forest)
         el_inserted++;
         const int           child_id =
           tscheme->t8_element_child_id (elements[0]);
+        /* TODO: problems here with multiple subelement refinement */
         if (forest->set_adapt_recursive && child_id > 0
             && (size_t) tscheme->t8_element_child_id (elements[0])
             == num_children - 1) {
