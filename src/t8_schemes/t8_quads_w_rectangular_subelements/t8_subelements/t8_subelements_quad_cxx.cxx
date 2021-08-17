@@ -443,9 +443,14 @@ t8_subelement_scheme_quad_c::t8_element_is_family (t8_element_t ** fam)
   }
 #endif
 
-  /* TODO: this is a test and no sufficient check */
+  /* TODO: this might not be a sufficient check */
   if (pquad_w_sub_family[0]->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
     return 1;
+  }
+  else if (pquad_w_sub_family[1]->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT
+           || pquad_w_sub_family[2]->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT
+           || pquad_w_sub_family[3]->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
+    return 0;
   }
   else {
     return p4est_quadrant_is_family (&pquad_w_sub_family[0]->p4q,
