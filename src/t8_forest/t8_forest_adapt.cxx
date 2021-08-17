@@ -366,7 +366,9 @@ t8_forest_adapt (t8_forest_t forest)
                                      num_elements_to_adapt_fn, elements_from);
 
       /* Some output for debugging */
-      t8_debugf ("el_considered: %i  refine: %i  is_family: %i  num_siblings: %i\n", el_considered, refine, is_family, num_siblings);
+      t8_debugf
+        ("el_considered: %i  refine: %i  is_family: %i  num_siblings: %i\n",
+         el_considered, refine, is_family, num_siblings);
 
       T8_ASSERT (is_family || refine >= 0);
       if (refine > 0
