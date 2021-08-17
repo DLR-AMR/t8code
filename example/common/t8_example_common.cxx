@@ -156,8 +156,10 @@ t8_common_adapt_level_set (t8_forest_t forest,
   int                 level;
   double             *tree_vertices;
 
+  /* TODO: check if this assertion makes sense */
   T8_ASSERT (num_elements == 1 || num_elements ==
-             ts->t8_element_num_siblings (elements[0]));
+             ts->t8_element_num_siblings (elements[0])
+             || num_elements == ts->t8_element_num_children (elements[0]));
 
   data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest);
   level = ts->t8_element_level (elements[0]);
@@ -174,7 +176,7 @@ t8_common_adapt_level_set (t8_forest_t forest,
   if (level > data->max_level && num_elements > 1) {
     return -1;
   }
-  /* the following case is not reasonable if we use multiple timesteps */
+  /* The following case is somehow not reasonable and leads to problems for multiple timesteps */
 #if 0
   if (level >= data->max_level) {
     return 0;
@@ -194,7 +196,9 @@ t8_common_adapt_level_set (t8_forest_t forest,
     /* The element can be refined and lies inside the refinement region */
     return 1;
   }
-  else if (num_elements > 1 && level > data->min_level && !within_band) {
+  else if (num_elements > 1 
+           && (level > data->min_level || ts->t8_element_test_if_subelement (elements[0]) == 1 && level >= data->min_level) 
+           && !within_band) {
     /* If element lies out of the refinement region and a family was given
      * as argument, we coarsen to level base level */
     return -1;
