@@ -59,11 +59,11 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
   /* init_level >= 3 is recommended for this example. It is also recommended to use min = init. */
-  int                 initlevel = 3;            /* initial uniform refinement level */
+  int                 initlevel = 3;    /* initial uniform refinement level */
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening */
-  int                 maxlevel = 6;             /* highest level allowed for refining */
+  int                 maxlevel = 6;     /* highest level allowed for refining */
 
-  int                 timesteps = 4;            /* Number of times, the mesh is refined */
+  int                 timesteps = 4;    /* Number of times, the mesh is refined */
   int                 i;
 
   t8_forest_init (&forest);
