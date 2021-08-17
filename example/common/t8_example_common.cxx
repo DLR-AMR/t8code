@@ -196,8 +196,10 @@ t8_common_adapt_level_set (t8_forest_t forest,
     /* The element can be refined and lies inside the refinement region */
     return 1;
   }
-  else if (num_elements > 1 
-           && (level > data->min_level || ts->t8_element_test_if_subelement (elements[0]) == 1 && level >= data->min_level) 
+  else if (num_elements > 1
+           && (level > data->min_level
+               || (ts->t8_element_test_if_subelement (elements[0]) == 1
+               && level >= data->min_level))
            && !within_band) {
     /* If element lies out of the refinement region and a family was given
      * as argument, we coarsen to level base level */
