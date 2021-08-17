@@ -77,23 +77,6 @@ void                t8_forest_remove_hanging_faces (t8_forest_t forest);
  * This function is not implemented yet. */
 int                 t8_forest_hanging_faces_removed (t8_forest_t forest);
 
-/* TODO comment */
-int                 t8_forest_remove_subelements_adapt (t8_forest_t forest,
-                                                        t8_forest_t
-                                                        forest_from,
-                                                        t8_locidx_t
-                                                        ltree_id,
-                                                        t8_locidx_t
-                                                        lelement_id,
-                                                        t8_eclass_scheme_c *
-                                                        ts,
-                                                        int num_elements,
-                                                        t8_element_t *
-                                                        elements[]);
-
-/* TODO comment */
-void                t8_forest_remove_subelements (t8_forest_t forest);
-
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_REMOVE_HANGING_FACES_H! */
