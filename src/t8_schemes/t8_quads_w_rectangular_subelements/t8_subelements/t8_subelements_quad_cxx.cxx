@@ -606,13 +606,17 @@ t8_subelement_scheme_quad_c::t8_element_nca (const t8_element_t * elem1,
   const p4est_quadrant_t *q1 = &pquad_w_sub_elem1->p4q;
   const p4est_quadrant_t *q2 = &pquad_w_sub_elem2->p4q;
   p4est_quadrant_t   *r = &pquad_w_sub_nca->p4q;
-
+  
+  /* In case of subelements, we use the parent quadrant and construct nca of the parent quadrant */
+  /* TODO: check this */
+  #if 0
   /* at the moment, this function is only implemented for standard quad elements */
   T8_ASSERT (pquad_w_sub_elem1->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
   T8_ASSERT (pquad_w_sub_elem2->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
-
+  #endif
+  
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
 #if 0
