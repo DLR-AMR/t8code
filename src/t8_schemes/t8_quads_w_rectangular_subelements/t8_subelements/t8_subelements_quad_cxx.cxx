@@ -447,9 +447,12 @@ t8_subelement_scheme_quad_c::t8_element_is_family (t8_element_t ** fam)
   if (pquad_w_sub_family[0]->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
     return 1;
   }
-  else if (pquad_w_sub_family[1]->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT
-           || pquad_w_sub_family[2]->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT
-           || pquad_w_sub_family[3]->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
+  else if (pquad_w_sub_family[1]->dummy_is_subelement ==
+           T8_SUB_QUAD_IS_SUBELEMENT
+           || pquad_w_sub_family[2]->dummy_is_subelement ==
+           T8_SUB_QUAD_IS_SUBELEMENT
+           || pquad_w_sub_family[3]->dummy_is_subelement ==
+           T8_SUB_QUAD_IS_SUBELEMENT) {
     return 0;
   }
   else {
