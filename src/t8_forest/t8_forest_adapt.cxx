@@ -286,18 +286,7 @@ t8_forest_adapt (t8_forest_t forest)
       t8_element_t       *current_element =
         t8_element_array_index_locidx (telements_from, el_considered);
 
-      int                 current_element_is_subelement = 0;
-      if (tscheme->t8_element_test_if_subelement (current_element) == 1) {
-        current_element_is_subelement = 1;
-        int                 subelement_type =
-          tscheme->t8_element_get_subelement_type (current_element);
-        num_siblings =
-          tscheme->t8_element_get_number_of_subelements (subelement_type,
-                                                         current_element);
-      }
-      else {
-        num_siblings = tscheme->t8_element_num_siblings (current_element);
-      }
+      num_siblings = tscheme->t8_element_num_siblings (current_element);
 
       if (num_siblings > curr_num_siblings) {
         elements_from =
@@ -311,18 +300,19 @@ t8_forest_adapt (t8_forest_t forest)
                                                            el_considered +
                                                            zz);
 
-        /* TODO: modify this check for subelements */
-#if 0
+        /* TODO: At the moment, the following check only works for non-subelement 
+         * elements. A similar check for subelements should be added in the future. */
+
         /* This is a quick check whether we build up a family here and could
          * abort early if not.
          * If the child id of the current element is not zz, then it cannot
          * be part of a family (Since we can only have a family if child ids
          * are 0, 1, 2, ... zz, ... num_siblings-1).
          * This check is however not sufficient - therefore, we call is_family later. */
-        if ((size_t) tscheme->t8_element_child_id (elements_from[zz]) != zz) {
+        if ((size_t) tscheme->t8_element_child_id (elements_from[zz]) != zz
+            && tscheme->t8_element_test_if_subelement (elements_from[zz]) != 1) {
           break;
         }
-#endif
       }
 
       if (zz != num_siblings
@@ -365,10 +355,12 @@ t8_forest_adapt (t8_forest_t forest)
                                      el_considered, tscheme,
                                      num_elements_to_adapt_fn, elements_from);
 
+#ifdef T8_ENABLE_DEBUG
       /* Some output for debugging */
       t8_debugf
-        ("el_considered: %i  refine: %i  is_family: %i  num_siblings: %i\n",
-         el_considered, refine, is_family, num_siblings);
+        ("el_considered: %i/%i  refine: %i  is_family: %i  num_siblings: %i\n",
+         el_considered, num_el_from ,refine, is_family, num_siblings);
+#endif
 
       T8_ASSERT (is_family || refine >= 0);
       if (refine > 0
@@ -417,7 +409,7 @@ t8_forest_adapt (t8_forest_t forest)
         }
         /* In case of a subelement, the parent quadrant is refined. 
          * Therfore, we can skip all siblings as they are not needed anymore. */
-        if (current_element_is_subelement == 1) {
+        if (tscheme->t8_element_test_if_subelement (current_element) == 1) {
           el_considered += num_siblings;
         }
         /* In case of a non-subelement element, we directly refine the quadrant and move on to the next element */
