@@ -310,7 +310,8 @@ t8_forest_adapt (t8_forest_t forest)
          * are 0, 1, 2, ... zz, ... num_siblings-1).
          * This check is however not sufficient - therefore, we call is_family later. */
         if ((size_t) tscheme->t8_element_child_id (elements_from[zz]) != zz
-            && tscheme->t8_element_test_if_subelement (elements_from[zz]) != 1) {
+            && tscheme->t8_element_test_if_subelement (elements_from[zz]) !=
+            1) {
           break;
         }
       }
@@ -359,7 +360,7 @@ t8_forest_adapt (t8_forest_t forest)
       /* Some output for debugging */
       t8_debugf
         ("el_considered: %i/%i  refine: %i  is_family: %i  num_siblings: %i\n",
-         el_considered, num_el_from ,refine, is_family, num_siblings);
+         el_considered, num_el_from, refine, is_family, num_siblings);
 #endif
 
       T8_ASSERT (is_family || refine >= 0);

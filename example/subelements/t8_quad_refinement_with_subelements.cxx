@@ -63,13 +63,13 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   char                filename[BUFSIZ];
 
   /* init_level >= 3 is recommended for this example. It is also recommended to use min = init. */
-  int                 initlevel = 3;            /* initial uniform refinement level */
+  int                 initlevel = 3;    /* initial uniform refinement level */
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening */
-  int                 maxlevel = 5;             /* highest level allowed for refining */
-  
+  int                 maxlevel = 5;     /* highest level allowed for refining */
+
   /* values for multiple timesteps */
-  int                 timesteps = 3;            /* Number of times, the mesh is refined */
-  double              delta = 0.2;             /* The value, the radius increases after each timestep */
+  int                 timesteps = 3;    /* Number of times, the mesh is refined */
+  double              delta = 0.2;      /* The value, the radius increases after each timestep */
   int                 i;
 
   t8_forest_init (&forest);
@@ -105,7 +105,9 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   /* Iterate over different timesteps */
   for (i = 0; i < timesteps; i++) {
 
-    t8_productionf ("This is t8_refine_with_subelements. Into timestep %i of %i\n", i+1, timesteps);
+    t8_productionf
+      ("This is t8_refine_with_subelements. Into timestep %i of %i\n", i + 1,
+       timesteps);
 
     /* Adapt the mesh according to the user data. At the moment, balancing the adapted mesh afterwards is important for 
      * the subelement functions to work. */
