@@ -27,9 +27,12 @@
 #include <example/common/t8_example_common.h>
 
 /* In this example, subelements are used to remove hanging nodes from a refined 2D quad scheme. 
- * At first, a cmesh is adapted using the standard 2D refinement scheme AND balance. 
- * In the following step, the new subelement functions are used to identify elements that have hanging nodes, 
- * which are then adapted once more, using transition cells with subelements in order to remove the hanging nodes. */
+ * At first, a cmesh is adapted using the standard 2D refinement scheme AND balance (where balance is 
+ * automatically set in set_remove_hanging_faces if not done before). 
+ * In the following step, the new subelement functions are used to identify elements that have hanging faces, 
+ * which are then adapted once more, using transition cells with subelements in order to remove the hanging faces. 
+ * The integer value "timesteps" determines the number of times, the mesh is adapted. During this process, 
+ * a circle spreads within the mesh and elements near this circle will be refined to a higher level. */
 
 /* Define the data structure for the refinement criteria of this example (a circle with some user given midpoint and radius).
  * Elements whose anchor node is closer to the circle will be refined to a higher level than elements whose anchor node is farther away. */
@@ -58,12 +61,15 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   t8_forest_t         forest_adapt;
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
-  /* init_level >= 3 is recommended for this example. It is also recommended to use min = init. */
-  int                 initlevel = 3;    /* initial uniform refinement level */
-  int                 minlevel = initlevel;     /* lowest level allowed for coarsening */
-  int                 maxlevel = 6;     /* highest level allowed for refining */
 
-  int                 timesteps = 4;    /* Number of times, the mesh is refined */
+  /* init_level >= 3 is recommended for this example. It is also recommended to use min = init. */
+  int                 initlevel = 3;            /* initial uniform refinement level */
+  int                 minlevel = initlevel;     /* lowest level allowed for coarsening */
+  int                 maxlevel = 5;             /* highest level allowed for refining */
+  
+  /* values for multiple timesteps */
+  int                 timesteps = 3;            /* Number of times, the mesh is refined */
+  double              delta = 0.2;             /* The value, the radius increases after each timestep */
   int                 i;
 
   t8_forest_init (&forest);
@@ -85,12 +91,12 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   t8_example_level_set_struct_t ls_data;
   t8_basic_sphere_data_t sdata;
 
-  sdata.mid_point[0] = 0;
-  sdata.mid_point[1] = 0;
+  sdata.mid_point[0] = 0.2;
+  sdata.mid_point[1] = 0.2;
   sdata.mid_point[2] = 0;
-  sdata.radius = 0.2;
+  sdata.radius = 0.0;
 
-  ls_data.band_width = 1;
+  ls_data.band_width = 1.5;
   ls_data.L = t8_basic_level_set_sphere;
   ls_data.min_level = minlevel;
   ls_data.max_level = maxlevel;
@@ -98,6 +104,8 @@ t8_refine_with_subelements (t8_eclass_t eclass)
 
   /* Iterate over different timesteps */
   for (i = 0; i < timesteps; i++) {
+
+    t8_productionf ("This is t8_refine_with_subelements. Into timestep %i of %i\n", i+1, timesteps);
 
     /* Adapt the mesh according to the user data. At the moment, balancing the adapted mesh afterwards is important for 
      * the subelement functions to work. */
@@ -127,7 +135,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
     t8_forest_init (&forest_adapt);
 
     /* Set new user data for the next timestep */
-    sdata.radius += 0.25;
+    sdata.radius += delta;
   }
   t8_forest_unref (&forest_adapt);
 }
