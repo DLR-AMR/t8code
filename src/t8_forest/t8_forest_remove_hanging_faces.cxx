@@ -114,10 +114,6 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
     }
   }
 
-  /* Print some useful output in debug mode */
-  t8_debugf ("element id: %i    subelement type: %i\n", lelement_id,
-             subelement_type);
-
   /* returning the right subelement types */
   if (subelement_type == 0) {   /* in this case, there are no hanging nodes and we do not need to do anything */
     return 0;
