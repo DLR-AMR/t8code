@@ -156,10 +156,8 @@ t8_common_adapt_level_set (t8_forest_t forest,
   int                 level;
   double             *tree_vertices;
 
-  /* TODO: check if this assertion makes sense */
   T8_ASSERT (num_elements == 1 || num_elements ==
-             ts->t8_element_num_siblings (elements[0])
-             || num_elements == ts->t8_element_num_children (elements[0]));
+             ts->t8_element_num_siblings (elements[0]));
 
   data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest);
   level = ts->t8_element_level (elements[0]);
@@ -176,7 +174,8 @@ t8_common_adapt_level_set (t8_forest_t forest,
   if (level > data->max_level && num_elements > 1) {
     return -1;
   }
-  /* The following case is somehow not reasonable and leads to problems for multiple timesteps */
+  /* The following case is not reasonable for multiple timesteps.
+   * Elements of the highest level will not be coarsended again. */
 #if 0
   if (level >= data->max_level) {
     return 0;
@@ -195,7 +194,10 @@ t8_common_adapt_level_set (t8_forest_t forest,
   if (within_band && level < data->max_level) {
     /* The element can be refined and lies inside the refinement region */
     return 1;
-  }
+  } 
+  /* At this point a special condition for subelements is added. 
+   * Otherwise, subelements of the lowest level would never be coarsended back to their parent quadrant again,
+   * since their level is the same. */
   else if (num_elements > 1
            && (level > data->min_level
                || (ts->t8_element_test_if_subelement (elements[0]) == 1
