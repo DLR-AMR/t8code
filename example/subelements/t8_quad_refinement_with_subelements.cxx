@@ -62,16 +62,17 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
 
-  /* init_level >= 3 is recommended for this example. It is also recommended to use min = init. */
+  /* Values for the mesh refinement */
   int                 initlevel = 3;    /* initial uniform refinement level */
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening */
   int                 maxlevel = 5;     /* highest level allowed for refining */
 
-  /* values for multiple timesteps */
+  /* Values for multiple timesteps */
   int                 timesteps = 3;    /* Number of times, the mesh is refined */
   double              delta = 0.2;      /* The value, the radius increases after each timestep */
   int                 i;
 
+  /* Initialize the forests */
   t8_forest_init (&forest);
   t8_forest_init (&forest_adapt);
 
@@ -83,41 +84,42 @@ t8_refine_with_subelements (t8_eclass_t eclass)
 
   t8_forest_commit (forest);
 
+  /* print vtk file */
   snprintf (filename, BUFSIZ, "forest_uniform_%s",
             t8_eclass_to_string[eclass]);
   t8_forest_write_vtk (forest, filename);
 
-  /* adapting the cmesh, using user-data, up to a given max and min level */
+  /* user-data */
   t8_example_level_set_struct_t ls_data;
   t8_basic_sphere_data_t sdata;
 
+  /* midpoint and radius of a sphere */
   sdata.mid_point[0] = 0.2;
-  sdata.mid_point[1] = 0.2;
+  sdata.mid_point[1] = 0.4;
   sdata.mid_point[2] = 0;
-  sdata.radius = 0.0;
+  sdata.radius = 0.2;
 
+  /* refinement parameter */
   ls_data.band_width = 1.5;
   ls_data.L = t8_basic_level_set_sphere;
   ls_data.min_level = minlevel;
   ls_data.max_level = maxlevel;
   ls_data.udata = &sdata;
 
-  /* Iterate over different timesteps */
+  /* Adapting the mesh for different timesteps */
   for (i = 0; i < timesteps; i++) {
 
     t8_productionf
       ("This is t8_refine_with_subelements. Into timestep %i of %i\n", i + 1,
        timesteps);
 
-    /* Adapt the mesh according to the user data. At the moment, balancing the adapted mesh afterwards is important for 
-     * the subelement functions to work. */
+    /* Adapt the mesh according to the user data */
     t8_forest_set_user_data (forest_adapt, &ls_data);
     t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
     //t8_forest_set_balance (forest_adapt, forest, 0);
 
-    /* This function is the point of entry for the subelements.
-     * Analogue to the other set-functions, we add subelements to the from_method and will therefore 
-     * use the corresponding functions later during the adaption. */
+    /* Analogue to the other set-functions, this function adds subelements to the from_method. 
+     * The forest will therefore use subelements while adapting in order to remove hanging faces from the mesh. */
     t8_forest_set_remove_hanging_faces (forest_adapt, NULL);
 
     t8_forest_commit (forest_adapt);
@@ -127,16 +129,17 @@ t8_refine_with_subelements (t8_eclass_t eclass)
               i, t8_eclass_to_string[eclass]);
     t8_forest_write_vtk (forest_adapt, filename);
 
+    /* initializing forest_adapt is not necessary after the last timestep */
     if (i == timesteps - 1) {
       break;
     }
     /* Set forest to the partitioned forest, so it gets adapted
-     * in the next time step. */
+     * in the next timestep. */
     forest = forest_adapt;
 
     t8_forest_init (&forest_adapt);
 
-    /* Set new user data for the next timestep */
+    /* Increasing the radius of the sphere for the next timestep */
     sdata.radius += delta;
   }
   t8_forest_unref (&forest_adapt);
