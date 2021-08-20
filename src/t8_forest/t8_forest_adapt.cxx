@@ -480,8 +480,11 @@ t8_forest_adapt (t8_forest_t forest)
          * We copy the element to the new element array. */
         T8_ASSERT (refine == 0);
         elements[0] = t8_element_array_push (telements);
+        /* Note that it should not be allowed to copy a subelement at this point. 
+         * Subelements should always be coarsened to their parent quadrant or their parent quadrant 
+         * should be refined such that no subelements are left after calling the adapt function. */ 
+        T8_ASSERT (tscheme->t8_element_test_if_subelement (elements[0]) == -1);
         tscheme->t8_element_copy (elements_from[0], elements[0]);
-        num_siblings = tscheme->t8_element_num_siblings (elements[0]);
         el_inserted++;
         const int           child_id =
           tscheme->t8_element_child_id (elements[0]);
