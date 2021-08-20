@@ -202,7 +202,7 @@ t8_forest_adapt (t8_forest_t forest)
   int                 ci;
   unsigned int        subelement_type;
   unsigned int        num_subelements;
-  int                 count_subelements = 0;
+  long long int       count_subelements = 0;
 #ifdef T8_ENABLE_DEBUG
   int                 is_family;
 #endif
@@ -269,8 +269,7 @@ t8_forest_adapt (t8_forest_t forest)
     elements = T8_ALLOC (t8_element_t *, num_children);
     /* Buffer for a family of old elements */
     elements_from = T8_ALLOC (t8_element_t *, curr_num_siblings);
-    /* We now iterate over all elements in this tree and check them for refinement/coarsening. */
-
+    /* We now iterate over all elements in this tree and check them for refinement/coarsening/subelements. */
     while (el_considered < num_el_from) {
       int                 num_elements_to_adapt_fn;
 #ifdef T8_ENABLE_DEBUG
@@ -278,7 +277,7 @@ t8_forest_adapt (t8_forest_t forest)
       is_family = 1;
 #endif
 
-      /* Load the current element and at most num_children-1 many others into
+      /* Load the current element and at most num_siblings-1 many others into
        * the elements_from buffer. Stop when we are certain that they cannot from
        * a family.
        * At the end is_family will be true, if these elements form a family.
@@ -293,15 +292,12 @@ t8_forest_adapt (t8_forest_t forest)
           T8_REALLOC (elements_from, t8_element_t *, num_siblings);
         curr_num_siblings = num_siblings;
       }
-      /*change: num_children into num_siblings */
+      /* change: num_children into num_siblings */
       for (zz = 0; zz < (unsigned int) num_siblings &&
            el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
         elements_from[zz] = t8_element_array_index_locidx (telements_from,
                                                            el_considered +
                                                            zz);
-
-        /* TODO: At the moment, the following check only works for non-subelement 
-         * elements. A similar check for subelements should be added in the future. */
 
         /* This is a quick check whether we build up a family here and could
          * abort early if not.
@@ -309,9 +305,7 @@ t8_forest_adapt (t8_forest_t forest)
          * be part of a family (Since we can only have a family if child ids
          * are 0, 1, 2, ... zz, ... num_siblings-1).
          * This check is however not sufficient - therefore, we call is_family later. */
-        if ((size_t) tscheme->t8_element_child_id (elements_from[zz]) != zz
-            && tscheme->t8_element_test_if_subelement (elements_from[zz]) !=
-            1) {
+        if ((size_t) tscheme->t8_element_child_id (elements_from[zz]) != zz) {
           break;
         }
       }
@@ -357,7 +351,9 @@ t8_forest_adapt (t8_forest_t forest)
                                      num_elements_to_adapt_fn, elements_from);
 
 #ifdef T8_ENABLE_DEBUG
-      /* Some output for debugging */
+      /* TODO: warning because of size_t instead of int */
+      
+      /* output for debugging */
       t8_debugf
         ("el_considered: %i/%i  refine: %i  is_family: %i  num_siblings: %i\n",
          el_considered, num_el_from, refine, is_family, num_siblings);
@@ -371,7 +367,7 @@ t8_forest_adapt (t8_forest_t forest)
         refine = 0;
       }
       if (refine == 1) {
-        /* The first element is to be refined */
+        /* The first element is to be refined using the standard quad scheme */
         num_children = tscheme->t8_element_num_children (elements_from[0]);
         if (num_children > curr_num_children) {
           elements = T8_REALLOC (elements, t8_element_t *, num_children);
@@ -409,7 +405,7 @@ t8_forest_adapt (t8_forest_t forest)
           el_inserted += num_children;
         }
         /* In case of a subelement, the parent quadrant is refined. 
-         * Therfore, we can skip all siblings as they are not needed anymore. */
+         * Therfore, we can skip all subelement siblings as they are not needed anymore. */
         if (tscheme->t8_element_test_if_subelement (current_element) == 1) {
           el_considered += num_siblings;
         }
@@ -443,8 +439,7 @@ t8_forest_adapt (t8_forest_t forest)
         el_inserted += num_subelements;
         el_considered++;
 
-        /* TODO: this procedure might not be correct for multiple timesteps. Maybe construct a function that iterates through the whole mesh in the end */
-        /* each time we entry this case, a parent element is split into subelements.
+        /* Each time we entry this case, a parent element is refined into subelements.
          * We will count the global number of constructed subelements and give this number as additional output. */
         count_subelements += num_subelements;
       }
@@ -490,7 +485,6 @@ t8_forest_adapt (t8_forest_t forest)
         el_inserted++;
         const int           child_id =
           tscheme->t8_element_child_id (elements[0]);
-        /* TODO: problems here with multiple subelement refinement */
         if (forest->set_adapt_recursive && child_id > 0
             && (size_t) tscheme->t8_element_child_id (elements[0])
             == num_children - 1) {
@@ -500,6 +494,7 @@ t8_forest_adapt (t8_forest_t forest)
                                              tscheme, telements, el_coarsen,
                                              &el_inserted, elements);
         }
+        /* In this case the current element stays unchanged (gets copied) and we move on to the next element */
         el_considered++;
       }
     }                           /* end of while loop over elements */
@@ -530,7 +525,7 @@ t8_forest_adapt (t8_forest_t forest)
   /* If any subelement is constructed, give output this number as an additional information. */
   if (count_subelements > 0) {
     t8_global_productionf
-      ("Done t8_forest_adapt with %lld total elements, %i of which are subelements.\n",
+      ("Done t8_forest_adapt with %lld total elements, %lld of which are subelements.\n",
        (long long) forest->global_num_elements, count_subelements);
   }
   else {
