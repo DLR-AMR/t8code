@@ -352,7 +352,7 @@ t8_forest_adapt (t8_forest_t forest)
 
 #ifdef T8_ENABLE_DEBUG
       /* TODO: warning because of size_t instead of int */
-      
+
       /* output for debugging */
       t8_debugf
         ("el_considered: %i/%i  refine: %i  is_family: %i  num_siblings: %i\n",

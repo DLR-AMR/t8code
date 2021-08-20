@@ -194,7 +194,7 @@ t8_common_adapt_level_set (t8_forest_t forest,
   if (within_band && level < data->max_level) {
     /* The element can be refined and lies inside the refinement region */
     return 1;
-  } 
+  }
   /* At this point a special condition for subelements is added. 
    * Otherwise, subelements of the lowest level would never be coarsended back to their parent quadrant again,
    * since their level is the same. */

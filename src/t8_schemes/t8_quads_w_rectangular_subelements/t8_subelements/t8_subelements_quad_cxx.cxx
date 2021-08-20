@@ -436,8 +436,8 @@ t8_subelement_scheme_quad_c::t8_element_is_family (t8_element_t ** fam)
         || pquad_w_sub_family[2]->dummy_is_subelement ==
         T8_SUB_QUAD_IS_SUBELEMENT
         || pquad_w_sub_family[3]->dummy_is_subelement ==
-        T8_SUB_QUAD_IS_SUBELEMENT) { 
-      return 0;    
+        T8_SUB_QUAD_IS_SUBELEMENT) {
+      return 0;
     }
     /* If all elements of fam are no subelements, then we can use the p4est check is_family */
     else {
