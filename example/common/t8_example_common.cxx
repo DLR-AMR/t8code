@@ -208,9 +208,9 @@ t8_common_adapt_level_set (t8_forest_t forest,
     return -1;
   }
   else if (ts->t8_element_test_if_subelement (elements[0]) == 1) {
-    /* every subelement should be coarsened to its parent quadrant 
-     * such that there are no subelements left before entering the 
-     * remove_hanging_faces function */
+    /* Every subelement should at least be coarsened to its parent quadrant, 
+     * if all other cases did not come into effect, such that there are no subelements left
+     * before entering the remove_hanging_faces function. */
     return -1;
   }
   else {
