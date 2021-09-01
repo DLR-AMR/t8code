@@ -28,6 +28,7 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_helpers.h>
+#include <t8_forest_vtk.h>
 
 typedef enum
 {
@@ -543,7 +544,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
   }
 
   /* Write to vtk */
-  t8_forest_write_vtk (forest, vtuname);
+  /*t8_forest_write_vtk (forest, vtuname); */
+  t8_forest_write_vtk_via_API (forest, vtuname, 1, 1, 1, 1, 1, 0, NULL);
   /* Output */
   t8_global_productionf ("Wrote forest to vtu files %s.*\n", vtuname);
   if (geom_type == T8_GEOM_CIRCLE) {

@@ -45,6 +45,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]  write_level If true, the refinement level is written for each element.
  * \param [in]  write_element_id If true, the global element id is written for each element.
  * \param [in]  num_data  Number of user defined double valued data fields to write.
+ * \param [in]  curved_flag If true, write the elements as curved element types from vtk.
  * \param [in]  data      Array of t8_vtk_data_field_t of length \a num_data
  *                        providing the used defined per element data.
  *                        If scalar and vector fields are used, all scalar fields
@@ -59,6 +60,7 @@ int                 t8_forest_write_vtk_via_API (t8_forest_t forest,
                                                  int write_level,
                                                  int write_element_id,
                                                  int num_data,
+                                                 int curved_flag,
                                                  t8_vtk_data_field_t * data);
 
 /** Write the forest in .pvtu file format. Writes one .vtu file per
