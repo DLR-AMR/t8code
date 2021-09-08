@@ -33,30 +33,18 @@
 #include <GeomAPI_PointsToBSpline.hxx>
 #include <GeomAPI_PointsToBSplineSurface.hxx>
 #include <gp_Pnt.hxx>
-#include <NCollection_Array2.hxx>
 #include <TColgp_Array1OfPnt.hxx>
 #include <TColgp_Array2OfPnt.hxx>
-#include <Geom_BSplineSurface.hxx>
-#include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
 #include <TopoDS_Face.hxx>
 #include <TopoDS_Edge.hxx>
-#include <TopoDS_Shape.hxx>
 #include <TopoDS.hxx>
-#include <StlAPI.hxx>
-#include <Precision.hxx>
-#include <TopExp_Explorer.hxx>
-#include <TopAbs_ShapeEnum.hxx>
-#include <BRepSweep_Prism.hxx>
-
 #include <gp_Ax2.hxx>
 #include <gp_Dir.hxx>
 #include <gp_Circ.hxx>
 #include <gp_Vec.hxx>
 #include <BRep_Tool.hxx>
-#include <GeomConvert.hxx>
-#include <Geom_Surface.hxx>
 #endif
 
 typedef enum
