@@ -105,7 +105,7 @@ main (int argc, char **argv)
   else if (parsed >= 0 && 0 < x_length && 0 < y_length && mode_int >= 0
            && mode_int <= 1) {
     mode = mode_int == 0 ? T8_LATLON_REFINE : T8_LATLON_COARSEN;
-    t8_latlon_refine_test(x_length, y_length, mode, partition);
+    t8_latlon_refine_test (x_length, y_length, mode, partition);
   }
   else {
     /* wrong usage */

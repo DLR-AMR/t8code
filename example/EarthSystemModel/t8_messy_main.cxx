@@ -44,13 +44,17 @@
 
 /* TODO: Rename those functions to t8_messy_NAME */
 
-int custom_coarsening(t8_messy_custom_func_t* arguments) {
-  t8_debugf("custom coarsening\n");
+int
+custom_coarsening (t8_messy_custom_func_t * arguments)
+{
+  t8_debugf ("custom coarsening\n");
   return -1;
 }
 
-double custom_interpolation(t8_messy_custom_func_t* arguments) {
-  t8_debugf("custom interpolating\n");
+double
+custom_interpolation (t8_messy_custom_func_t * arguments)
+{
+  t8_debugf ("custom interpolating\n");
   return 100.0;
 }
 
@@ -125,48 +129,51 @@ main (int argc, char **argv)
   else if (parsed >= 0 && 0 < x_length && 0 < y_length && mode_int >= 0
            && mode_int <= 1) {
 
-
     /* number of datapoints per grid cell */
-    int num_dims = 2, x, y;
-
+    int                 num_dims = 2, x, y;
 
     /* allocate data array */
-    double ****data = T8_ALLOC(double***, x_length);
-    for(x=0; x<x_length; ++x) {
-      data[x] = T8_ALLOC(double**, y_length);
-      for(y=0; y<y_length; ++y) {
-        data[x][y] = T8_ALLOC(double*, 1);
-        data[x][y][0] = T8_ALLOC(double, 1);
+    double          ****data = T8_ALLOC (double ***, x_length);
+    for (x = 0; x < x_length; ++x) {
+      data[x] = T8_ALLOC (double **, y_length);
+      for (y = 0; y < y_length; ++y) {
+        data[x][y] = T8_ALLOC (double *, 1);
+        data[x][y][0] = T8_ALLOC (double, 1);
       }
     }
 
-    int* shape = T8_ALLOC(int, 4);
+    int                *shape = T8_ALLOC (int, 4);
     shape[0] = x_length;
     shape[1] = y_length;
     shape[2] = 1;
 
-    t8_messy_coarsen_t *coarsen = t8_messy_new_coarsen_config("mean_higher", "vm1", 0, 0.8, NULL);
-    t8_messy_interpolate_t *interpolation = t8_messy_new_interpolate_config("mean", NULL);
+    t8_messy_coarsen_t *coarsen =
+      t8_messy_new_coarsen_config ("mean_higher", "vm1", 0, 0.8, NULL);
+    t8_messy_interpolate_t *interpolation =
+      t8_messy_new_interpolate_config ("mean", NULL);
 
     /* initialize forest and data chunk */
-    t8_messy_data_t* messy = t8_messy_initialize("test", "XYZ", shape, 0, 0, num_dims, -1.0, 0.0, coarsen, interpolation);
+    t8_messy_data_t    *messy =
+      t8_messy_initialize ("test", "XYZ", shape, 0, 0, num_dims, -1.0, 0.0,
+                           coarsen, interpolation);
 
     /* set data for every dimension */
     //char name[BUFSIZ];
 
-    t8_messy_gaussian(data, x_length, y_length);
+    t8_messy_gaussian (data, x_length, y_length);
     //sprintf(name, "gaussian");
     // t8_messy_add_dimension(messy, "gaussian", data);
-    
+
     // t8_messy_sine_2d(data, x_length, y_length);
     //sprintf(name, );
     // t8_messy_add_dimension(messy, "sine_2d", data);
 
     /* bring input data into SFC format */
-    t8_messy_apply_sfc(messy);
+    t8_messy_apply_sfc (messy);
 
-    t8_messy_coarsen_t *coarsen_config = T8_ALLOC(t8_messy_coarsen_t, 1);
-    t8_messy_interpolate_t *interpolate_config = T8_ALLOC(t8_messy_interpolate_t, 1);
+    t8_messy_coarsen_t *coarsen_config = T8_ALLOC (t8_messy_coarsen_t, 1);
+    t8_messy_interpolate_t *interpolate_config =
+      T8_ALLOC (t8_messy_interpolate_t, 1);
 
     // coarsen_config->method = T8_MESSY_COARSEN_FUNCTION;
     // coarsen_config->func = custom_coarsening;
@@ -183,12 +190,11 @@ main (int argc, char **argv)
     messy->interpolation = interpolate_config;
 
     /* coarsen data */
-    t8_messy_coarsen(messy);
+    t8_messy_coarsen (messy);
 
     t8_forest_unref (&(messy->forest));
     /* t8_forest_unref (&(messy->forest_adapt)); */
-    t8_latlon_chunk_destroy(&(messy->chunk));
-
+    t8_latlon_chunk_destroy (&(messy->chunk));
 
   }
   else {
@@ -205,8 +211,3 @@ main (int argc, char **argv)
 
   return 0;
 }
-
-
-
-
-
