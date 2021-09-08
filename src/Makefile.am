@@ -55,7 +55,8 @@ libt8_compiled_sources = \
   src/t8_messy/t8_messy_coupler.cxx \
   src/t8_messy/t8_latlon_data.cxx \
   src/t8_messy/t8_latlon_refine.cxx \
-  src/t8_cmesh/t8_cmesh_testcases.c 
+  src/t8_cmesh/t8_cmesh_testcases.c \
+  src/t8_fortran_interface/t8code_fortran_interface.f90
 
 # this variable is used for headers that are not publicly installed
 T8_CPPFLAGS =
