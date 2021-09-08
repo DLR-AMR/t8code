@@ -659,7 +659,7 @@ t8_messy_interpolate_callback_old (t8_forest_t forest_old, t8_forest_t forest_ne
 
 t8_messy_coarsen_t *
 t8_messy_new_coarsen_config (const char *method,
-                             char *tracer,
+                             const char *tracer,
                              int z_layer,
                              double threshold,
                              int (*func) (t8_messy_custom_func_t *)
