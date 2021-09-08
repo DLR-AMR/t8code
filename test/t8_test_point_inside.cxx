@@ -272,7 +272,6 @@ t8_test_point_outside_quick_check_level0 (sc_MPI_Comm comm,
   const double        offset = 2.2 / (num_points_per_dim - 1);  /* used to calculate the coordinates of the test points */
   int                 point_is_definitely_outside;
   double             *tree_vertices;
-  const double        tolerance = 1e-12;        /* Numerical tolerance that we allow for the point inside check */
 
   default_scheme = t8_scheme_new_default_cxx ();
   /* Construct a cube coarse mesh */
