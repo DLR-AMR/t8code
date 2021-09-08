@@ -27,12 +27,14 @@
 
 T8_EXTERN_C_BEGIN ();
 
-void t8_messy_generate_data(double ****data, int x_length, int y_length, double value);
+void                t8_messy_generate_data (double ****data, int x_length,
+                                            int y_length, double value);
 
-void t8_messy_sine_2d(double ****data, int x_length, int y_length);
+void                t8_messy_sine_2d (double ****data, int x_length,
+                                      int y_length);
 
-void t8_messy_gaussian(double ****data, int x_length, int y_length);
-
+void                t8_messy_gaussian (double ****data, int x_length,
+                                       int y_length);
 
 T8_EXTERN_C_END ();
 

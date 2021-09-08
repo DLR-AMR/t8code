@@ -251,17 +251,21 @@ t8_latlon_refine (int x_length, int y_length, enum T8_LATLON_ADAPT_MODE mode,
   return forest_adapt;
 }
 
-void t8_latlon_refine_test (int x_length, int y_length, enum T8_LATLON_ADAPT_MODE mode, int repartition) {
+void
+t8_latlon_refine_test (int x_length, int y_length,
+                       enum T8_LATLON_ADAPT_MODE mode, int repartition)
+{
 
-  t8_forest_t forest_adapt = t8_latlon_refine(x_length, y_length, mode, repartition);
+  t8_forest_t         forest_adapt =
+    t8_latlon_refine (x_length, y_length, mode, repartition);
 
   /* Destroy the forest */
   t8_forest_unref (&forest_adapt);
 
-  int max_length = SC_MAX (x_length, y_length);
-  int max_level = SC_LOG2_32 (max_length - 1) + 1;
+  int                 max_length = SC_MAX (x_length, y_length);
+  int                 max_level = SC_LOG2_32 (max_length - 1) + 1;
 
-  int* shape = T8_ALLOC_ZERO(int, 3);
+  int                *shape = T8_ALLOC_ZERO (int, 3);
 
   /* This is only temporarily here for testing.  WIP. */
   t8_latlon_data_test (0, 0, x_length, y_length, shape, 3, 0, 1, 2, max_level,
