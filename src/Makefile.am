@@ -6,6 +6,7 @@ libt8_generated_headers = src/t8_config.h
 libt8_installed_headers = \
   src/t8.h src/t8_eclass.h src/t8_mesh.h \
   src/t8_element_cxx.hxx src/t8_element.h \
+  src/t8_cmesh/t8_cmesh_testcases.h \
   src/t8_element_c_interface.h \
   src/t8_refcount.h src/t8_cmesh.h src/t8_cmesh_triangle.h \
   src/t8_data/t8_shmem.h src/t8_data/t8_containers.h \
@@ -53,7 +54,8 @@ libt8_compiled_sources = \
   src/t8_messy/t8_messy_helper.c \
   src/t8_messy/t8_messy_coupler.cxx \
   src/t8_messy/t8_latlon_data.cxx \
-  src/t8_messy/t8_latlon_refine.cxx
+  src/t8_messy/t8_latlon_refine.cxx \
+  src/t8_cmesh/t8_cmesh_testcases.c 
 
 # this variable is used for headers that are not publicly installed
 T8_CPPFLAGS =

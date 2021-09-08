@@ -42,7 +42,8 @@ Makefile.t8.mk : Makefile.t8.pre
 t8aclocaldir = $(datadir)/aclocal
 dist_t8aclocal_DATA = config/t8_include.m4 \
                       config/t8_stdpp.m4 \
-                      config/t8_netcdf.m4
+                      config/t8_netcdf.m4 \
+                      config/t8_vtk.m4
 
 # install t8 data in the correct directory
 t8datadir = $(datadir)/data
@@ -85,6 +86,7 @@ include example/advect/Makefile.am
 include example/EarthSystemModel/Makefile.am
 include example/netcdf/Makefile.am
 include example/fortran/Makefile.am
+include example/tutorials/Makefile.am
 #include example/cxx/Makefile.am
 #include example/ExtremeScaling/Makefile.am
 
@@ -114,6 +116,12 @@ clean-local:
 
 maintainer-clean-local:
 	rm -rf doxygen
+
+# We are using a README.md and not a README file. However, autotools forces us
+# to use a README file. With this rule, we trick autotools in thinking that we
+# provide a README.
+README: README.md
+	pandoc -f markdown -t plain --wrap=none $< -o $@
 
 doxygen: Doxyfile
 	doxygen

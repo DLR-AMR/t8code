@@ -51,8 +51,6 @@ t8_test_point_inside_level0 (sc_MPI_Comm comm, t8_eclass_t eclass)
   t8_element_t       *element;
   double              test_point[3];
   int                 ipoint, icoord;   /* loop variables */
-  const int           num_points_per_dim = 5;   /* we construct num_points_per_dim^3 many test points */
-  const double        offset = 2.2 / (num_points_per_dim - 1);  /* used to calculate the coordinates of the test points */
   int                 point_is_recognized_as_inside;
   int                 num_corners, icorner;
   double             *tree_vertices;
@@ -71,7 +69,7 @@ t8_test_point_inside_level0 (sc_MPI_Comm comm, t8_eclass_t eclass)
   /* Build a uniform level 0 forest */
   forest = t8_forest_new_uniform (cmesh, default_scheme, 0, 0, comm);
 
-  if (t8_forest_get_num_element (forest) > 0) { /* Skip empty forests (occur when executed in parallel) */
+  if (t8_forest_get_local_num_elements (forest) > 0) {  /* Skip empty forests (occur when executed in parallel) */
 
     /* Get a pointer to the single element */
     element = t8_forest_get_element (forest, 0, NULL);
@@ -226,7 +224,7 @@ t8_test_point_inside_specific_triangle ()
     t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0,
                            sc_MPI_COMM_WORLD);
 
-  if (t8_forest_get_num_element (forest) <= 0) {        /* Skip empty forests (occur when executed in parallel) */
+  if (t8_forest_get_local_num_elements (forest) <= 0) { /* Skip empty forests (occur when executed in parallel) */
     t8_forest_unref (&forest);
     return;
   }

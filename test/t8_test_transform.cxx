@@ -174,7 +174,8 @@ t8_test_transform (sc_MPI_Comm comm)
       t8_forest_set_scheme (forest, default_scheme);
       t8_forest_commit (forest);
 
-      for (ielem = 0; ielem < t8_forest_get_num_element (forest); ielem++) {
+      for (ielem = 0; ielem < t8_forest_get_local_num_elements (forest);
+           ielem++) {
         /* Get a pointer to the element */
         element = t8_forest_get_element (forest, ielem, NULL);
         /* perform the transform test */

@@ -20,10 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** file t8_vtk.h
- * This header file collects macros that are needed for
- * the forest and cmesh vtk routines.
- * \see t8_forest_vtk.h \see t8_cmesh_vtk.h
+/** file t8_example_common.h
+ * This header declares datatypes and functions that are used by multiple
+ * examples of t8code. This includes adaptation function to adapt at a zero
+ * level-set of a level-set function and various 2 and 3 dimensional vector
+ * fields that can serve as fluid velocities.
  */
 
 #ifndef T8_EXAMPLE_COMMON_H

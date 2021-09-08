@@ -4,7 +4,7 @@ dnl
 
 AC_INIT([t8],
         [m4_esyscmd([build-aux/git-version-gen .tarball-version])],
-        [burstedde@ins.uni-bonn.de, johannes.holke@dlr.de])
+        [johannes.holke@dlr.de, burstedde@ins.uni-bonn.de])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([src/pre_config.h])
 AC_CONFIG_SRCDIR([src/t8.h])
@@ -67,6 +67,15 @@ export P4EST_SC_SOURCE=../sc
 P4EST_AS_SUBPACKAGE([T8])
 AM_CONDITIONAL([T8_DIST_DENY], [test "x$T8_DIST_DENY" != x])
 AC_SUBST([T8_DISTCLEAN])
+
+echo "o---------------------------------------"
+echo "| Copying files"
+echo "o---------------------------------------"
+
+AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers2_ascii.msh:test/testfiles/test_msh_file_vers2_ascii.msh])
+AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers2_bin.msh:test/testfiles/test_msh_file_vers2_bin.msh])
+AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers4_ascii.msh:test/testfiles/test_msh_file_vers4_ascii.msh])
+AC_CONFIG_LINKS([test/testfiles/test_msh_file_vers4_bin.msh:test/testfiles/test_msh_file_vers4_bin.msh])
 
 # Print summary.
 

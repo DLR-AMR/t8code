@@ -73,7 +73,7 @@ t8_forest_from_cmesh (t8_cmesh_t cmesh, int level, const char *prefix)
   t8_forest_set_level (forest, level);
   t8_forest_commit (forest);
   t8_debugf ("Committed forest. Has %i elements.\n",
-             t8_forest_get_num_element (forest));
+             t8_forest_get_local_num_elements (forest));
   snprintf (fileprefix, BUFSIZ, "%s_t8_tetgen_forest", prefix);
   t8_forest_write_vtk (forest, fileprefix);
   t8_debugf ("Wrote to file %s\n", fileprefix);
