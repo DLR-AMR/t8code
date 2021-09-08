@@ -34,7 +34,7 @@
  */
 typedef enum
 {
-  T8_LATLON_DATA_MESSY,       /* Row-wise storage data[y * X + x] gives data of (x,y). */
+  T8_LATLON_DATA_MESSY,         /* Row-wise storage data[y * X + x] gives data of (x,y). */
   T8_LATLON_DATA_MORTON         /* Morton SFC storage. The data is sorted according to the 
                                  * Morton SFC index in the surrounding quad forest (not the subgrid). */
 } T8_LATLON_DATA_NUMBERING;
@@ -43,29 +43,29 @@ typedef enum
  * data on it. */
 typedef struct
 {
-  const char         *description;  /* The name of this dataset. */
-  t8_locidx_t         x_start;      /* Starting x coordinate. */
-  t8_locidx_t         y_start;      /* Starting y coordinate. */
-  t8_locidx_t         x_length;     /* Number of subgrid cells in x tracer. */
-  t8_locidx_t         y_length;     /* Number of subgrid cells in y tracer. */
-  t8_locidx_t         z_length;     /* Number of subgrid cells in z tracer. */
-  int                 axis;         /* Internal flag to distinguish between different axis configurations e.g. XYZ, YZX, ... */
-  int                 x_axis;       /* X axis index in data vector */
-  int                 y_axis;       /* Y axis index in data vector */
-  int                 z_axis;       /* Z axis index in data vector */
-  int                 num_tracers;    /* Dimensionality of the data (1, 2, 3). */
-  int                 level;        /* The smallest uniform refinement level of a forest that can have the grid (not the subgrid) as submesh. */
-  int                tracer_names_size;
+  const char         *description;      /* The name of this dataset. */
+  t8_locidx_t         x_start;  /* Starting x coordinate. */
+  t8_locidx_t         y_start;  /* Starting y coordinate. */
+  t8_locidx_t         x_length; /* Number of subgrid cells in x tracer. */
+  t8_locidx_t         y_length; /* Number of subgrid cells in y tracer. */
+  t8_locidx_t         z_length; /* Number of subgrid cells in z tracer. */
+  int                 axis;     /* Internal flag to distinguish between different axis configurations e.g. XYZ, YZX, ... */
+  int                 x_axis;   /* X axis index in data vector */
+  int                 y_axis;   /* Y axis index in data vector */
+  int                 z_axis;   /* Z axis index in data vector */
+  int                 num_tracers;      /* Dimensionality of the data (1, 2, 3). */
+  int                 level;    /* The smallest uniform refinement level of a forest that can have the grid (not the subgrid) as submesh. */
+  int                 tracer_names_size;
   int                *shape;
   char               *tracer_names;
-  double             *data;         /* x_length x y_length x z_length x tracer many data items. For each data item tracer many entries. */
-  t8_linearidx_t     *data_ids;     /* Morton index for each grid cells. 
-                                     * At first we have (x_lenght x y_length) elements, but when coarsening the number of elements  reduce. */
+  double             *data;     /* x_length x y_length x z_length x tracer many data items. For each data item tracer many entries. */
+  t8_linearidx_t     *data_ids; /* Morton index for each grid cells. 
+                                 * At first we have (x_lenght x y_length) elements, but when coarsening the number of elements  reduce. */
 
   double             *data_adapt;
   t8_linearidx_t     *data_ids_adapt;
   double              missing_value;
-  T8_LATLON_DATA_NUMBERING numbering; /* Numbering scheme */
+  T8_LATLON_DATA_NUMBERING numbering;   /* Numbering scheme */
 } t8_latlon_data_chunk_t;
 
 T8_EXTERN_C_BEGIN ();
@@ -75,16 +75,23 @@ T8_EXTERN_C_BEGIN ();
 /**
  * TODO: add doc
  */
-t8_latlon_data_chunk_t *
-t8_latlon_new_chunk (const char *description, t8_locidx_t x_start, t8_locidx_t y_start,
-                     t8_locidx_t x_length, t8_locidx_t y_length, t8_locidx_t z_length,
-                     int* shape, int num_tracers, int x_axis, int y_axis, int z_axis, int level,
-                     double missing_value, T8_LATLON_DATA_NUMBERING numbering);
+t8_latlon_data_chunk_t *t8_latlon_new_chunk (const char *description,
+                                             t8_locidx_t x_start,
+                                             t8_locidx_t y_start,
+                                             t8_locidx_t x_length,
+                                             t8_locidx_t y_length,
+                                             t8_locidx_t z_length, int *shape,
+                                             int num_tracers, int x_axis,
+                                             int y_axis, int z_axis,
+                                             int level, double missing_value,
+                                             T8_LATLON_DATA_NUMBERING
+                                             numbering);
 
 /**
  * TODO: add doc
  */
-void t8_latlon_chunk_destroy (t8_latlon_data_chunk_t ** pchunk);
+void                t8_latlon_chunk_destroy (t8_latlon_data_chunk_t **
+                                             pchunk);
 
 /** Given x and y coordinates in an X by Y grid compute
  * the Morton linear id according to a given level of the 
@@ -110,13 +117,17 @@ void                t8_latlon_linear_id_to_latlon (t8_linearidx_t linear_id,
                                                    int level, t8_gloidx_t * x,
                                                    t8_gloidx_t * y);
 
-int t8_latlon_get_tracer_idx(t8_latlon_data_chunk_t * data_chunk, const char* tracer, bool add_if_missing);
+int                 t8_latlon_get_tracer_idx (t8_latlon_data_chunk_t *
+                                              data_chunk, const char *tracer,
+                                              bool add_if_missing);
 
-void  t8_latlon_set_dimension(t8_latlon_data_chunk_t * data_chunk, char* tracer, double**** data);
+void                t8_latlon_set_dimension (t8_latlon_data_chunk_t *
+                                             data_chunk, char *tracer,
+                                             double ****data);
 
-void
-t8_latlon_data_apply_morton_order (t8_forest_t *forest, t8_latlon_data_chunk_t * data_chunk);
-
+void                t8_latlon_data_apply_morton_order (t8_forest_t * forest,
+                                                       t8_latlon_data_chunk_t
+                                                       * data_chunk);
 
 /* Create a data chunk with given num_tracers and numbering,
  * fill it with data and then change the numbering to Morton.
@@ -125,8 +136,8 @@ void                t8_latlon_data_test (t8_locidx_t x_start,
                                          t8_locidx_t y_start,
                                          t8_locidx_t x_length,
                                          t8_locidx_t y_length,
-                                         int* shape,
-                                         int tracer, int x_axis, 
+                                         int *shape,
+                                         int tracer, int x_axis,
                                          int y_axis, int z_axis, int level,
                                          T8_LATLON_DATA_NUMBERING
                                          numbering,
