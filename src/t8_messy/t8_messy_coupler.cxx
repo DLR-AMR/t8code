@@ -742,7 +742,7 @@ t8_messy_data_t* t8_messy_initialize(
     missing_value,
     T8_LATLON_DATA_MESSY);
 
-  int num_elements = t8_forest_get_num_element(forest);
+  int num_elements = t8_forest_get_local_num_elements(forest);
 
   t8_messy_data_t* messy_data = T8_ALLOC(t8_messy_data_t, 1);
   messy_data->chunk = chunk;
@@ -786,7 +786,7 @@ void t8_messy_reset(t8_messy_data_t* messy_data) {
 }
 
 int t8_messy_get_max_number_elements(t8_messy_data_t* messy_data) {
-  return t8_forest_get_num_element(messy_data->forest);
+  return t8_forest_get_local_num_elements(messy_data->forest);
 }
 
 void t8_messy_add_dimension(t8_messy_data_t *messy_data, char* dimension_name, double ****data) {
@@ -908,7 +908,7 @@ void t8_messy_coarsen(t8_messy_data_t *messy_data) {
   
   int last_num_elements = 0, num_elements = 0, r, i;
   
-  num_elements = t8_forest_get_num_element(forest);
+  num_elements = t8_forest_get_local_num_elements(forest);
 
   double* original = T8_ALLOC(double, num_elements * data_chunk->num_tracers * data_chunk->z_length);
   memcpy(original, data_chunk->data, sizeof(double) * num_elements * data_chunk->num_tracers * data_chunk->z_length);
@@ -927,7 +927,7 @@ void t8_messy_coarsen(t8_messy_data_t *messy_data) {
     t8_forest_ref(forest);
     forest_adapt = t8_forest_new_adapt(forest, t8_messy_coarsen_by_error_tol_callback, 0, 0, messy_data);
     
-    num_elements = t8_forest_get_num_element(forest_adapt);
+    num_elements = t8_forest_get_local_num_elements(forest_adapt);
 
     /* check if anything changed */
     if(num_elements == last_num_elements) {
@@ -988,7 +988,7 @@ void t8_messy_coarsen(t8_messy_data_t *messy_data) {
     t8_forest_ref(forest);
 
     forest_adapt = t8_forest_new_adapt(forest, t8_latlon_adapt_callback, 0, 0, adapt_data);
-    num_elements = t8_forest_get_num_element(forest_adapt);
+    num_elements = t8_forest_get_local_num_elements(forest_adapt);
     interpolation_data->adapt = T8_ALLOC(double, num_elements * interpolation_data->element_length);
 
     t8_forest_set_user_data(forest_adapt, interpolation_data);
@@ -1011,7 +1011,7 @@ void t8_messy_coarsen(t8_messy_data_t *messy_data) {
 
   T8_FREE(adapt_data);
 
-  T8_ASSERT(t8_forest_get_num_element(messy_data->forest) == num_elements);
+  T8_ASSERT(t8_forest_get_local_num_elements(messy_data->forest) == num_elements);
   
   /* calculate global error */
   int element_length_in = data_chunk->z_length * data_chunk->num_tracers;
@@ -1114,7 +1114,7 @@ void t8_messy_destroy(t8_messy_data_t* messy_data) {
 void t8_messy_write_forest(t8_forest_t forest, const char* prefix, t8_messy_data_t* messy_data) {
 
   t8_latlon_data_chunk_t *data_chunk = messy_data->chunk;
-  int num_elements = t8_forest_get_num_element(forest);
+  int num_elements = t8_forest_get_local_num_elements(forest);
   int num_data = data_chunk->num_tracers * data_chunk->z_length;
   int num_data_out = num_data;
   

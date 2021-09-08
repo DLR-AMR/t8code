@@ -370,7 +370,7 @@ t8_latlon_data_apply_morton_order (t8_forest_t *forest, t8_latlon_data_chunk_t *
 
   int z_length = data_chunk->z_length;
   int element_length = z_length * data_chunk->num_tracers;
-  int num_elements = t8_forest_get_num_element(*forest);
+  int num_elements = t8_forest_get_local_num_elements(*forest);
   int num_data_elements = num_elements * element_length;
 
   int coords[2];
