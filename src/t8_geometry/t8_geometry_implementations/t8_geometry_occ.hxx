@@ -118,7 +118,7 @@ public:
    * evaluated. You can use it for example to load the vertex coordinates of the 
    * tree into an internal buffer (as is done in the linear geometry).
    * \param [in]  cmesh      The cmesh.
-   * \param [in]  gtreeid    The glocal tree.
+   * \param [in]  gtreeid    The global tree.
    */
   virtual void        t8_geom_load_tree_data (t8_cmesh_t cmesh,
                                               t8_gloidx_t gtreeid);
