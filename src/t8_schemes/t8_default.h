@@ -20,18 +20,31 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_cxx.hxx
- * This file is the point of entry for our default element implementation if used in C++ code.
- * See t8_default.h for the available functions.
+/** \file t8_default.h
+ * This file is the point of entry for our default element implementation.
+ *
  * This scheme points to a consistent implementation of all element classes.
- * If you want to use the C scheme interface instead, you need to 
- * use t8_defuault.h and t8_element_c_interface.h.
+ * If you want to use the C++ scheme interface, include t8_default_cxx.hxx instead.
+ * If you want to use the C scheme interface, you need to additionally include t8_element_c_interface.h
  */
 
-#ifndef T8_DEFAULT_CXX_HXX
-#define T8_DEFAULT_CXX_HXX
+#ifndef T8_DEFAULT_H
+#define T8_DEFAULT_H
 
-#include <t8_schemes/t8_default.h>
-#include <t8_element_cxx.hxx>
+#include <t8_element.h>
 
-#endif /* !T8_DEFAULT_CXX_HXX */
+T8_EXTERN_C_BEGIN ();
+
+/** Return the default element implementation of t8code. */
+t8_scheme_cxx_t    *t8_scheme_new_default_cxx (void);
+
+/** Check whether a given eclass_scheme is on of the default schemes.
+ * \param [in] ts   A (pointer to a) scheme
+ * \return          True (non-zero) if \a ts is one of the default schemes,
+ *                  false (zero) otherwise.
+ */
+int                 t8_eclass_scheme_is_default (t8_eclass_scheme_c * ts);
+
+T8_EXTERN_C_END ();
+
+#endif /* !T8_DEFAULT_H */
