@@ -244,8 +244,8 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   ts = t8_forest_get_eclass_scheme (forest, tree_class);
   /* Get the dimension */
   dim = t8_eclass_to_dimension[tree_class];
-  len = 1. / ts->t8_element_root_len (element);
-  ts->t8_element_vertex_coords (element, corner_number, corner_coords);
+  ts->t8_element_vertex_reference_coords (element, corner_number,
+                                          vertex_coords);
   /* Check whether we support this tree_class */
   T8_ASSERT (tree_class == T8_ECLASS_VERTEX
              || tree_class == T8_ECLASS_TRIANGLE
@@ -1015,7 +1015,7 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
        * has a solution x with 0 <= x <= 1
        */
       double              p_0[3], v[3], b[3];
-      double              x = -1; /* Default value that definitely fails the check later. */
+      double              x = -1;       /* Default value that definitely fails the check later. */
       int                 i;
 
       /* Compute the vertex coordinates of the line */
