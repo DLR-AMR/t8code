@@ -497,6 +497,8 @@ t8_messy_interpolate_callback (t8_forest_t forest_old,
   }
 }
 
+/* TODO: This function is currently not used. */
+#if 0
 static void
 t8_messy_interpolate_callback_old (t8_forest_t forest_old,
                    t8_forest_t forest_new,
@@ -604,6 +606,7 @@ t8_messy_interpolate_callback_old (t8_forest_t forest_old,
               element_data_length * sizeof (double));
   }
 }
+#endif
 
 t8_messy_coarsen_t* t8_messy_new_coarsen_config(
   const char* method,

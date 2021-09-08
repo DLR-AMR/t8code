@@ -56,7 +56,7 @@ typedef enum {
 
 typedef struct {
   T8_MESSY_COARSEN_METHOD method; /* method used for coarsen */
-  char* tracer;  /* tracer by which to coarsen */
+  const char* tracer;  /* tracer by which to coarsen */
   int z_layer;
   double threshold; /* threshold for threshold coarsening */
   double *points;   /* points array for area coarsening */

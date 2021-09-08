@@ -32,6 +32,7 @@
 #include <t8_forest.h>          /* forest definition and basic interface. */
 #include <t8_schemes/t8_default_cxx.hxx>        /* default refinement scheme. */
 #include <t8_forest_vtk.h>      /* Additional vtk functions to output arbitrary user data. */
+#include <t8_element_cxx.hxx>
 #include <example/tutorials/t8_step3.h>
 
 T8_EXTERN_C_BEGIN ();

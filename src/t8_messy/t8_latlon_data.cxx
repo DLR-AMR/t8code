@@ -253,6 +253,7 @@ t8_latlon_chunk_destroy (t8_latlon_data_chunk_t ** pchunk)
  * 
  * @author Holke Johannes
  * */
+#if 0 /* TODO: This function is currently unused */
 static int
 t8_latlon_compare_indices (const void *index1, const void *index2,
                            void *data_ids)
@@ -267,6 +268,7 @@ t8_latlon_compare_indices (const void *index1, const void *index2,
     ? -1 : data_ids_idx[index1_value] == data_ids_idx[index2_value]
     ? 0 : 1;
 }
+#endif
 
 /* Retrive value from input data on given (x_coord, y_coord, z_coord, dim) coordinate 
 
@@ -300,7 +302,7 @@ double t8_latlon_get_dimension_value(int axis, double ****data, int x_coord,
   return value;
 }
 
-int t8_latlon_get_tracer_idx(t8_latlon_data_chunk_t * data_chunk, char* dimension, bool add_if_missing) {
+int t8_latlon_get_tracer_idx(t8_latlon_data_chunk_t * data_chunk, const char* dimension, bool add_if_missing) {
   int idx;
   
   /* search for dimension name */
@@ -469,6 +471,8 @@ t8_latlon_data_test (t8_locidx_t x_start, t8_locidx_t y_start,
   t8_locidx_t         num_grid_items = x_length * y_length;
   T8_ASSERT (numbering != T8_LATLON_DATA_MORTON);
   {
+    #if 0
+    /* TODO: This code part is unused. What was its purpose? Can we delete it? */
     int d1 = x_axis == 0 ? x_length : (y_axis == 0 ? y_length : 1);
     int d2 = x_axis == 1 ? x_length : (y_axis == 1 ? y_length : 1);
     int d3 = x_axis == 2 ? x_length : (y_axis == 2 ? y_length : 1);
@@ -488,6 +492,7 @@ t8_latlon_data_test (t8_locidx_t x_start, t8_locidx_t y_start,
         chunk->data[dimension * index + 2] = dimension * index;
       }
     }*/
+    #endif
   }
   {
     /* Print data. */

@@ -110,7 +110,7 @@ void                t8_latlon_linear_id_to_latlon (t8_linearidx_t linear_id,
                                                    int level, t8_gloidx_t * x,
                                                    t8_gloidx_t * y);
 
-int t8_latlon_get_tracer_idx(t8_latlon_data_chunk_t * data_chunk, char* tracer, bool add_if_missing);
+int t8_latlon_get_tracer_idx(t8_latlon_data_chunk_t * data_chunk, const char* tracer, bool add_if_missing);
 
 void  t8_latlon_set_dimension(t8_latlon_data_chunk_t * data_chunk, char* tracer, double**** data);
 

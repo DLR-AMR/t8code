@@ -234,7 +234,6 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
   double              vertex_coords[3];
   t8_eclass_scheme_c *ts;
   t8_eclass_t         tree_class;
-  double              len;
   int                 dim;
 
   T8_ASSERT (forest != NULL);

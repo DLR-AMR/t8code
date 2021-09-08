@@ -41,12 +41,11 @@ t8_fortran_init_all_ (sc_MPI_Comm * comm)
 void
 t8_fortran_init_all (sc_MPI_Comm * comm)
 {
-  sc_MPI_Comm         comm2 = sc_MPI_COMM_WORLD;
   int                 rank;
 
   printf ("Init all with comm %lu\n", (long unsigned) comm);
-  t8_fortran_init_all_ (&comm);
-  if (comm != sc_MPI_COMM_NULL) {
+  t8_fortran_init_all_ (comm);
+  if (*comm != sc_MPI_COMM_NULL) {
     sc_MPI_Comm_rank (*comm, &rank);
     printf ("rank = %i\n", rank);
   } 
@@ -56,7 +55,8 @@ t8_fortran_init_all (sc_MPI_Comm * comm)
 void
 t8_fortran_init_all_noMPI ()
 {
-  t8_fortran_init_all (sc_MPI_COMM_NULL);
+  sc_MPI_Comm commnull = sc_MPI_COMM_NULL;
+  t8_fortran_init_all (&commnull);
 }
 
 /* Wrapper around sc_finalize */

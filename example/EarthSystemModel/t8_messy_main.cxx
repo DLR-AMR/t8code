@@ -111,7 +111,7 @@ main (int argc, char **argv)
 
 
     /* number of datapoints per grid cell */
-    int num_dims = 2, x, y, z;
+    int num_dims = 2, x, y;
 
 
     /* allocate data array */
@@ -129,8 +129,8 @@ main (int argc, char **argv)
     shape[1] = y_length;
     shape[2] = 1;
 
-    t8_messy_coarsen_t *coarsen = t8_messy_new_coarsen_config("mean_higher", "vm1", 0, 0.8, nullptr);
-    t8_messy_interpolate_t *interpolation = t8_messy_new_interpolate_config("mean", nullptr);
+    t8_messy_coarsen_t *coarsen = t8_messy_new_coarsen_config("mean_higher", "vm1", 0, 0.8, NULL);
+    t8_messy_interpolate_t *interpolation = t8_messy_new_interpolate_config("mean", NULL);
 
     /* initialize forest and data chunk */
     t8_messy_data_t* messy = t8_messy_initialize("test", "XYZ", shape, 0, 0, num_dims, -1.0, 0.0, coarsen, interpolation);
