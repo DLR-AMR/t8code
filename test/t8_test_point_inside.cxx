@@ -279,7 +279,7 @@ t8_test_point_outside_quick_check_level0 (sc_MPI_Comm comm,
   /* Build a uniform level 0 forest */
   forest = t8_forest_new_uniform (cmesh, default_scheme, 0, 0, comm);
 
-  if (t8_forest_get_local_num_elements (forest) > 0) { /* Skip empty forests (occur when executed in parallel) */
+  if (t8_forest_get_local_num_elements (forest) > 0) {  /* Skip empty forests (occur when executed in parallel) */
 
     /* Get a pointer to the single element */
     element = t8_forest_get_element (forest, 0, NULL);
