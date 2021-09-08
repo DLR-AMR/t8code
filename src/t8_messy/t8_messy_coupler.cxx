@@ -865,6 +865,7 @@ void t8_messy_set_tracer_values(t8_messy_data_t *messy_data, char* tracer_name, 
 
     /* copy data */
     // t8_debugf("(%d)[%d, %d, %d](%d): %.16f\n", i, x, y, z, data_index, data[i]);
+    // TODO: Can we do this in one call after the loop? Rather inefficient to call memcpy size times.
     memcpy((data_chunk->data) + data_index, data + i, sizeof(double));
   }
 
