@@ -30,6 +30,7 @@
 #define T8_WITH_OCC 1
 #if T8_WITH_OCC
 
+#include <t8.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_cmesh/t8_cmesh_types.h>
 
@@ -94,6 +95,7 @@ public:
                                         double out_coords[3]) const;
 
   /**
+   * Not yet implemented.
    * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space $$[0,1]^dimension$$.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The glocal tree (of the cmesh) in which the reference point is.
