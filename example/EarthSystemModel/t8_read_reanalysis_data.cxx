@@ -681,7 +681,7 @@ t8_netcdf_init_search_data (t8_forest_t forest, const double *points,
     sc_array_init (matching_elements + ipoint, sizeof (t8_locidx_t));
   }
   /* Allocate the points per element arrays */
-  num_elements = t8_forest_get_num_element (forest);
+  num_elements = t8_forest_get_local_num_elements (forest);
   points_per_elements = T8_ALLOC (sc_array_t, num_elements);
   /* Initialize these arrays */
   for (ielement = 0; ielement < num_elements; ++ielement) {
@@ -1133,7 +1133,7 @@ t8_netcdf_read_data_to_forest (const char *filename, t8_forest_t forest,
 #endif
 
   /* We now fill the per element array with the data */
-  num_elements = t8_forest_get_num_element (forest);
+  num_elements = t8_forest_get_local_num_elements (forest);
   u10_data_per_element = T8_ALLOC_ZERO (double, num_elements);
   v10_data_per_element = T8_ALLOC_ZERO (double, num_elements);
 
@@ -1516,7 +1516,8 @@ t8_netcdf_read_data_and_adapt (const char *netcdf_filename,
       t8_forest_init (&forest_partition);
       t8_forest_set_partition (forest_partition, forest_adapt2, 0);
       t8_forest_commit (forest_partition);
-      num_elements_partitioned = t8_forest_get_num_element (forest_partition);
+      num_elements_partitioned =
+        t8_forest_get_local_num_elements (forest_partition);
       u10data_new = T8_ALLOC (double, num_elements_partitioned);
       v10data_new = T8_ALLOC (double, num_elements_partitioned);
       sc_array_init_data (&u10data_new_view, u10data_new, sizeof (double),
