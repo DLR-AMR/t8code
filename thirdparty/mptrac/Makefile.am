@@ -2,25 +2,22 @@
 # Non-recursive Makefile.am in thirdparty/mptrac
 # Included from toplevel directory
 
-libmptrac_installed_headers = \
-  thirdparty/libtrac.h
+libt8mptrac_installed_headers = \
+  thirdparty/mptrac/libtrac.h
 
-libmptrac_compiled_sources = \
-  thirdparty/libtrac.c
+libt8mptrac_compiled_sources = \
+  thirdparty/mptrac/libtrac.c
 
-# this variable is used for headers that are not publicly installed
-T8_CPPFLAGS =
+lib_LTLIBRARIES += thirdparty/mptrac/libt8mptrac.la
+thirdparty_mptrac_libt8mptrac_la_SOURCES = \
+	$(libt8mptrac_internal_headers) \
+	$(libt8mptrac_compiled_sources)
+thirdparty_mptrac_libt8mptrac_la_CPPFLAGS = $(AM_CPPFLAGS) $(T8_CPPFLAGS)
+thirdparty_mptrac_libt8mptrac_la_LDFLAGS = -release $(VERSION)
+LDADD += @top_builddir@/thirdparty/mptrac/libt8mptrac.la
+EXTRA_thirdparty_mptrac_libt8mptrac_la_DEPENDENCIES = 
 
-lib_LTLIBRARIES += src/libmptrac.la
-src_libmptrac_la_SOURCES = \
-	$(libmptrac_internal_headers) \
-	$(libmptrac_compiled_sources)
-src_libmptrac_la_CPPFLAGS = $(AM_CPPFLAGS) $(T8_CPPFLAGS)
-src_libmptrac_la_LDFLAGS = -release $(VERSION)
-LDADD += @top_builddir@/src/libmptrac.la
-EXTRA_src_libmptrac_la_DEPENDENCIES = 
-
-nodist_include_HEADERS += $(libmptrac_generated_headers)
-nobase_dist_include_HEADERS += $(libmptrac_installed_headers)
+nodist_include_HEADERS += $(libt8mptrac_generated_headers)
+nobase_dist_include_HEADERS += $(libt8mptrac_installed_headers)
 
 AM_CPPFLAGS += -I@top_srcdir@/thirdparty/mptrac
