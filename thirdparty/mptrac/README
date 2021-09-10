@@ -1,0 +1,30 @@
+These source files are part of the MPTRAC project.
+It is licenced under GNU GPL 3.0.
+
+For further information, see https://github.com/slcs-jsc/mptrac
+
+To use mptrac with t8code you need to
+
+ - link t8code against netcdf using --with-netcdf
+ - manually link t8code against gsl and gslcblas using LDFLAGS (-L), LIBS (-l) and CPPFLAGS (-I)
+ - enable openmp
+
+Here is an example configure line in debugging mode using MPI:
+
+configure \
+	CFLAGS="-Wall -O0 -g -pedantic" \
+	CXXFLAGS="-Wall -O0 -g -pedantic" \
+	--enable-mpi --enable-debug \
+	--enable-static --disable-shared \
+	CC=mpicc CXX=mpicxx \
+	LDFLAGS="-L/path/to/gsl/lib -L/optional/path/to/netcdf/lib" \
+	CPPFLAGS="-I/path/to/gsl/include -I/optional/path/to/netcdf/include" \
+	LIBS="-lgsl -lgslcblas" \
+	--with-netcdf \
+	--enable-openmp \
+	--prefix=/path/to/t8code/install_target
+
+Note that the netcdf lib and include paths need to be provided if they are in a non-standard directory.
+
+An application must add libtrac as additional dependency.
+See also example/mptrac/Makefile.am and the example codes in example/mptrac.

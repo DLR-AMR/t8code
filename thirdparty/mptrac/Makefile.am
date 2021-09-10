@@ -14,8 +14,6 @@ thirdparty_mptrac_libt8mptrac_la_SOURCES = \
 	$(libt8mptrac_compiled_sources)
 thirdparty_mptrac_libt8mptrac_la_CPPFLAGS = $(AM_CPPFLAGS) $(T8_CPPFLAGS)
 thirdparty_mptrac_libt8mptrac_la_LDFLAGS =
-LDADD += @top_builddir@/thirdparty/mptrac/libt8mptrac.la
-thirdparty_mptrac_libt8mptrac_la_LDFLAGS = -lnetcdf -lgsl
 EXTRA_thirdparty_mptrac_libt8mptrac_la_DEPENDENCIES =
 
 nodist_include_HEADERS += $(libt8mptrac_generated_headers)
