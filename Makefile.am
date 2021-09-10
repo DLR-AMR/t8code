@@ -87,6 +87,7 @@ include example/EarthSystemModel/Makefile.am
 include example/netcdf/Makefile.am
 include example/fortran/Makefile.am
 include example/tutorials/Makefile.am
+include example/mptrac/Makefile.am
 #include example/cxx/Makefile.am
 #include example/ExtremeScaling/Makefile.am
 
