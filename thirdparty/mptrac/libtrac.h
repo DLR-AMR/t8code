@@ -22,6 +22,9 @@
   MPTRAC library declarations.
 */
 
+#ifndef LIBTRAC_H
+#define LIBTRAC_H
+
 /* ------------------------------------------------------------
    Includes...
    ------------------------------------------------------------ */
@@ -1623,3 +1626,5 @@ void write_station(
   ctl_t * ctl,
   atm_t * atm,
   double t);
+
+#endif
