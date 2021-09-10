@@ -67,8 +67,7 @@ t8_mptrac_split_input_string (const char *input_string, char ***output,
   }
 
   /* Split the input string */
-  t8_global_productionf ("Splitting string \"%s\" into tokens:\n",
-                         input_string);
+  t8_debugf ("Splitting string \"%s\" into tokens:\n", input_string);
   /* Allocate buffer_size many tokens */
   *output = T8_ALLOC (char *, buffer_size);
   next_token = strtok (copy_of_input, " ");
@@ -80,12 +79,11 @@ t8_mptrac_split_input_string (const char *input_string, char ***output,
       buffer_size *= 2;
       *output = T8_REALLOC (*output, char *, buffer_size);
     }
-    t8_global_productionf ("%s\n", next_token);
+    t8_debugf ("%s\n", next_token);
     next_token = strtok (NULL, " ");
     (*output)[num_tokens_read] = next_token;
   }
   *num_output = num_tokens_read;
-  t8_global_productionf ("Input: %s\n", input_string);
 }
 
 void
@@ -97,7 +95,6 @@ t8_mptrac_read_nc (const char *filename, char *mptrac_input)
   int                 num_arguments;
   char              **output;
 
-  t8_global_productionf ("Input: %s\n", mptrac_input);
   /* Split command line argument string to be passed to mptrac routines. */
   t8_mptrac_split_input_string (mptrac_input, &output, &num_arguments);
   t8_global_productionf ("Input: %s\n", mptrac_input);
