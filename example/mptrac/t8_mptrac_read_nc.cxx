@@ -97,7 +97,8 @@ t8_mptrac_read_nc (const char *filename, char *mptrac_input)
 
   /* Split command line argument string to be passed to mptrac routines. */
   t8_mptrac_split_input_string (mptrac_input, &output, &num_arguments);
-  t8_global_productionf ("Input: %s\n", mptrac_input);
+
+  read_ctl (filename, num_arguments, output, &mptrac_control);
 
   T8_FREE (mptrac_meteo);
   T8_FREE (output);
