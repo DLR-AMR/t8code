@@ -45,6 +45,7 @@
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
+#include <t8.h> /* Required for the T8_EXTERN_C macro */
 
 #ifdef MPI
 #include "mpi.h"
@@ -1219,6 +1220,9 @@ typedef struct {
    Functions...
    ------------------------------------------------------------ */
 
+/* Added by t8code to make the functions callable from C++ */
+T8_EXTERN_C_BEGIN ();
+
 /*! Convert Cartesian coordinates to geolocation. */
 void cart2geo(
   double *x,
@@ -1626,5 +1630,7 @@ void write_station(
   ctl_t * ctl,
   atm_t * atm,
   double t);
+
+T8_EXTERN_C_END ();
 
 #endif
