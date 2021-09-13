@@ -256,7 +256,7 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
   tree_offset =
     t8_forest_first_tree_shared (forest) ?
         -forest->first_local_tree - 1 : forest->first_local_tree;
-  if (t8_forest_get_num_element(forest) <= 0) {
+  if (t8_forest_get_local_num_elements(forest) <= 0) {
     /* This forest is empty */
     is_empty = 1;
     /* Set the global number of trees as offset (temporarily) */
@@ -1153,7 +1153,7 @@ t8_forest_partition_given (t8_forest_t forest, const int send_data,
       - t8_shmem_array_get_gloidx (forest->element_offsets, forest->mpirank);
   }
   else {
-    num_new_elements = t8_forest_get_num_element (forest);
+    num_new_elements = t8_forest_get_local_num_elements (forest);
   }
 
   if (num_new_elements > 0) {

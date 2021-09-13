@@ -23,7 +23,8 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_helpers.h>
 
-t8_geometry_linear::t8_geometry_linear (int dim)
+t8_geometry_linear::t8_geometry_linear (int dim):
+t8_geometry_w_vertices (dim, "")
 {
   T8_ASSERT (0 <= dim && dim <= 3);
   size_t              num_chars = 100;
@@ -48,11 +49,14 @@ t8_geometry_linear::~t8_geometry_linear ()
  * \note Since this is the identity geometry, \a out_coords will be equal to \a ref_coords in
  *       the first d entries and 0 in the remaining 3-d entries.
  */
+/* *INDENT-OFF* */
+/* indent adds second const */
 void
 t8_geometry_linear::t8_geom_evaluate (t8_cmesh_t cmesh,
                                       t8_gloidx_t gtreeid,
                                       const double *ref_coords,
                                       double out_coords[3]) const
+/* *INDENT-ON* */
 {
   t8_geom_compute_linear_geometry (active_tree_class,
                                    active_tree_vertices, ref_coords,
@@ -67,37 +71,17 @@ t8_geometry_linear::t8_geom_evaluate (t8_cmesh_t cmesh,
  * \param [out] jacobian    The jacobian at \a ref_coords. Array of size dimension x 3. Indices 3*i, 3*i+1, 3*i+2
  *                          correspond to the i-th column of the jacobian (Entry 3*i + j is del f_j/del x_i).
  */
+/* *INDENT-OFF* */
+/* indent adds second const */
 void
 t8_geometry_linear::t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
                                               t8_gloidx_t gtreeid,
                                               const double
                                               *ref_coords,
                                               double *jacobian) const
+/* *INDENT-ON* */
 {
   SC_ABORT ("Not implemented.");
-}
-
-inline void
-t8_geometry_linear::t8_geom_load_tree_data (t8_cmesh_t cmesh,
-                                            t8_gloidx_t gtreeid)
-{
-  /* Set active id and eclass */
-  t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
-  active_tree = gtreeid;
-  active_tree_class = t8_cmesh_get_tree_class (cmesh, ltreeid);
-  /* Load this trees vertices. */
-  active_tree_vertices = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
-
-  T8_ASSERT (t8_eclass_to_dimension[active_tree_class] == dimension);
-
-  /* Check whether we support this class */
-  T8_ASSERT (active_tree_class == T8_ECLASS_VERTEX
-             || active_tree_class == T8_ECLASS_TRIANGLE
-             || active_tree_class == T8_ECLASS_TET
-             || active_tree_class == T8_ECLASS_QUAD
-             || active_tree_class == T8_ECLASS_HEX
-             || active_tree_class == T8_ECLASS_LINE
-             || active_tree_class == T8_ECLASS_PRISM);
 }
 
 /* This part should be callable from C */

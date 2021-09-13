@@ -736,7 +736,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     if (cmesh->geometry_handler == NULL) {
       t8_geom_handler_init (&cmesh->geometry_handler);
     }
-    /* We also need to commit this handler. */
+    /* We also need to commit the handler. */
     commit_geom_handler = 1;
   }
 

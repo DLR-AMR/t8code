@@ -30,7 +30,7 @@
 #include <t8.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 
-struct t8_geometry_linear:public t8_geometry
+struct t8_geometry_linear:public t8_geometry_w_vertices
 {
 public:
 
@@ -38,10 +38,17 @@ public:
    * to "t8_geom_linear_{dimension}" */
   t8_geometry_linear (int dimension);
 
+  /* Base constructor with no arguments. We need this since it
+   * is called from derived class constructors.
+   * Sets dimension and name to invalid values. */
+                      t8_geometry_linear ():t8_geometry_w_vertices ()
+  {
+  }
+
   /** The destructor. 
    * Clears the allocated memory.
    */
-                      virtual ~ t8_geometry_linear ();
+  virtual ~           t8_geometry_linear ();
 
   /**
    * Map a point in the reference space $$[0,1]^dimension$$ to $$\mathbb R^3$$
@@ -68,21 +75,8 @@ public:
                                                 const double *ref_coords,
                                                 double *jacobian) const;
 
-  /** Update a possible internal data buffer for per tree data.
-   * This function is called before the first coordinates in a new tree are
-   * evaluated.
-   * In this implementation we use it to load the tree's vertex coordinates and class
-   * to the internal member variables \a active_tree_class and \a active_tree_vertices.
-   * \param [in]  cmesh      The cmesh.
-   * \param [in]  gtreeid    The glocal tree.
-   */
-  virtual inline void t8_geom_load_tree_data (t8_cmesh_t cmesh,
-                                              t8_gloidx_t gtreeid);
+  /* Load tree data is inherited from t8_geometry_w_vertices. */
 
-protected:
-                      t8_gloidx_t active_tree;
-  t8_eclass_t         active_tree_class;
-  const double       *active_tree_vertices;
 };
 
 #endif /* !T8_GEOMETRY_LINEAR_HXX! */

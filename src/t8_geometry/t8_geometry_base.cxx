@@ -49,3 +49,28 @@ t8_geom_get_name (const t8_geometry_c * geom)
 
   return geom->t8_geom_get_name ();
 }
+
+/* Load the coordinates of the newly active tree to the active_tree_vertices
+ * variable. */
+void
+t8_geometry_w_vertices::t8_geom_load_tree_data (t8_cmesh_t cmesh,
+                                                t8_gloidx_t gtreeid)
+{
+  /* Set active id and eclass */
+  t8_locidx_t         ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+  active_tree = gtreeid;
+  active_tree_class = t8_cmesh_get_tree_class (cmesh, ltreeid);
+  /* Load this trees vertices. */
+  active_tree_vertices = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
+
+  T8_ASSERT (t8_eclass_to_dimension[active_tree_class] == dimension);
+
+  /* Check whether we support this class */
+  T8_ASSERT (active_tree_class == T8_ECLASS_VERTEX
+             || active_tree_class == T8_ECLASS_TRIANGLE
+             || active_tree_class == T8_ECLASS_TET
+             || active_tree_class == T8_ECLASS_QUAD
+             || active_tree_class == T8_ECLASS_HEX
+             || active_tree_class == T8_ECLASS_LINE
+             || active_tree_class == T8_ECLASS_PRISM);
+}

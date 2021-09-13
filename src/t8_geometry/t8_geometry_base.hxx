@@ -21,7 +21,9 @@
 */
 
 /** \file t8_geometry_base.hxx
- * TODO: Add description
+ * Implements the base pure virtual class t8_geometry and the inherited class t8_geometry_w_vertices.
+ * The first provides a general template for all geometries while the latter one can be used for geoemtries
+ * that use vertex coordinate information of the cmesh.
  */
 
 #ifndef T8_GEOMETRY_BASE_HXX
@@ -117,6 +119,51 @@ protected:
 
   const char         *name;
                     /**< The name of this geometry. */
+};
+
+class               t8_geometry_w_vertices:public t8_geometry
+{
+public:
+  /* Basic constructor that sets the dimension, the name, and the name for the attribute. */
+  t8_geometry_w_vertices (int dimension, const char *name,
+                          const char *attribute_name = NULL)
+:  t8_geometry (dimension, name, attribute_name) {
+    active_tree_vertices = NULL;
+    active_tree = -1;
+  }
+
+  /* Base constructor with no arguments. We need this since it
+   * is called from derived class constructors.
+   * Sets dimension and name to invalid values. */
+  t8_geometry_w_vertices ():t8_geometry_w_vertices (-1, "Invalid")
+  {
+    active_tree_vertices = NULL;
+    active_tree = -1;
+  }
+
+  /** The destructor. It does nothing but has to be defined since
+   * we may want to delete geometry that is actually inherited
+   * and providing an implementation
+   * for the destructor ensures that the
+   * destructor of the child class will be executed. */
+  virtual ~ t8_geometry_w_vertices () {
+  }
+
+  /** Update a possible internal data buffer for per tree data.
+   * This function is called before the first coordinates in a new tree are
+   * evaluated.
+   * In this implementation we use it to load the tree's vertex coordinates and class
+   * to the internal member variables \a active_tree_class and \a active_tree_vertices.
+   * \param [in]  cmesh      The cmesh.
+   * \param [in]  gtreeid    The glocal tree.
+   */
+  virtual void        t8_geom_load_tree_data (t8_cmesh_t cmesh,
+                                              t8_gloidx_t gtreeid);
+
+protected:
+  t8_gloidx_t active_tree;      /*< The tree of which currently vertices are loaded. */
+  t8_eclass_t         active_tree_class;        /*< The class of the currently active tree. */
+  const double       *active_tree_vertices;     /*< The vertices of the currently active tree. */
 };
 
 T8_EXTERN_C_END ();

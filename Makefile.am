@@ -42,7 +42,8 @@ Makefile.t8.mk : Makefile.t8.pre
 t8aclocaldir = $(datadir)/aclocal
 dist_t8aclocal_DATA = config/t8_include.m4 \
                       config/t8_stdpp.m4 \
-                      config/t8_netcdf.m4
+                      config/t8_netcdf.m4 \
+                      config/t8_vtk.m4
 
 # install t8 data in the correct directory
 t8datadir = $(datadir)/data
@@ -83,6 +84,7 @@ include example/cmesh/Makefile.am
 include example/common/Makefile.am
 include example/advect/Makefile.am
 include example/netcdf/Makefile.am
+include example/tutorials/Makefile.am
 #include example/cxx/Makefile.am
 #include example/ExtremeScaling/Makefile.am
 
