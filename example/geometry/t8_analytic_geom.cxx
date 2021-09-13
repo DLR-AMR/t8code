@@ -333,12 +333,13 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     ("Creating uniform level %i forests with occ curve geometries.\n",
     level);
 
-    /* Create a OCC surface */
-    Handle_Geom_Curve occ_curve0;
-    Handle_Geom_Curve occ_curve1;
-    TColgp_Array1OfPnt point_array0(1, 5);
-    TColgp_Array1OfPnt point_array1(1, 5);
-      
+    /* Create two occ splines which oscillate along the x-axis */
+    Handle_Geom_Curve       occ_curve0;
+    Handle_Geom_Curve       occ_curve1;
+    TColgp_Array1OfPnt      point_array0(1, 5);
+    TColgp_Array1OfPnt      point_array1(1, 5);
+
+    /* Define knots along the splines */ 
     point_array0(1) = gp_Pnt(0, 0, 0);
     point_array0(2) = gp_Pnt(0.25, 0.1, 0.1);
     point_array0(3) = gp_Pnt(0.5, 0, 0);
@@ -353,13 +354,15 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
 
     occ_curve0 = GeomAPI_PointsToBSpline(point_array0).Curve();
     occ_curve1 = GeomAPI_PointsToBSpline(point_array1).Curve();
-      
+    
+    /* Add the curves to global occ arrays */
     t8_global_occ_curve[0] = occ_curve0;
     t8_global_occ_curve[1] = occ_curve1;
 
+    /* Create occ geometry. */
     geometry = new t8_geometry_occ (3, "occ curve dim=3", NULL);
       
-    /* Create tree 0*/
+    /* Create tree 0 */
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
     double vertices[24] = {
       0, 0, 0,
@@ -373,19 +376,26 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     };
     t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 24);
 
-    /* Give tree information about its curves and the parameters of the vertices*/
-    double parameters0[2] = {0, 1};
-    double parameters1[2] = {0, 1};
+    /* The valid parameter range for bsplines is [0, 1]. We defined the bsplines in such a way, 
+    *  that parameter 0 and 1 resemble the two vertices of the connected edge. */
+    double parameters[2] = {0, 1};
+
+    /* The arrays indicate which face/edge carries a geometry. 
+    * -1 means no geometry and any other number indicates the position of the geometry 
+    * in the global geometry array. Here edge 0 carries geometry #0 and edge 3 carries geometry #1. */
     int faces[6] = {-1, -1, -1, -1, -1, -1};
     int edges[12] = {0, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1};
+    
+    /* Give tree information about its curves and the parameters of the vertices. 
+    *  Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. */
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
                             faces, 6 * sizeof(int), 0);
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
                             edges, 12 * sizeof(int), 0);
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_CURVE_PARAMETERS_ATTRIBUTE_KEY + 0, 
-                            parameters0, 2 * sizeof(double), 0);
+                            parameters, 2 * sizeof(double), 0);
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_CURVE_PARAMETERS_ATTRIBUTE_KEY + 3, 
-                            parameters1, 2 * sizeof(double), 0);
+                            parameters, 2 * sizeof(double), 0);
       
     snprintf (vtuname, BUFSIZ, "forest_occ_curve_cube_lvl_%i", level);
     break;
@@ -400,9 +410,9 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     ("Creating uniform level %i forests with a occ surface geometry.\n",
     level);
 
-    /* Create a OCC surface */
-    Handle_Geom_Surface occ_surface;
-    TColgp_Array2OfPnt point_array(1, 5, 1, 3);
+    /* Create a occ bspline surface with knots */
+    Handle_Geom_Surface       occ_surface;
+    TColgp_Array2OfPnt        point_array(1, 5, 1, 3);
     
     point_array(1, 1) = gp_Pnt(-0.2, 0.1, 1.2);
     point_array(2, 1) = gp_Pnt(0.5, 0, 1.4);
@@ -423,8 +433,11 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     point_array(5, 3) = gp_Pnt(2.0, 1.1, 1.2);
 
     occ_surface = GeomAPI_PointsToBSplineSurface(point_array).Surface();
+
+    /* Add the surface to global occ array */
     t8_global_occ_surface[0] = occ_surface;
 
+    /* Create occ geometry. */
     geometry = new t8_geometry_occ (3, "occ surface dim=3", NULL);
       
     /* Create tree 0*/
@@ -441,13 +454,21 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     };
     t8_cmesh_set_tree_vertices (cmesh, 0, vertices0, 24);
 
-    /* Give tree 0 information about its surface and the parameters of the vertices*/
+    /* The valid parameter range for bspline surfaces is [0, 1]^2. We defined the bspline surface in such a way, 
+    *  that parameters 0, 0.5 and 1 resemble the vertices of the connected surface. */
     double parameters0[8] = {0, 0,
                             0.5, 0,
                             0, 1,
                             0.5, 1};
+
+    /* The arrays indicate which face/edge carries a geometry. 
+    * -1 means no geometry and any other number indicates the position of the geometry 
+    * in the global geometry array. Here face 5 carries geometry #0. */
     int faces[6] = {-1, -1, -1, -1, -1, 0};
     int edges[12] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+    
+    /* Give tree 0 information about its surface and the parameters of the vertices. 
+    *  Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. */
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
                             faces, 6 * sizeof(int), 0);
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
@@ -469,11 +490,16 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     };
     t8_cmesh_set_tree_vertices (cmesh, 1, vertices1, 24);
 
-    /* Give tree 1 information about its surface and the parameters of the vertices */
+    /* The valid parameter range for bspline surfaces is [0, 1]^2. We defined the bspline surface in such a way, 
+    *  that parameters 0, 0.5 and 1 resemble the vertices of the connected surface. */
     double parameters1[8] = {0.5, 0,
                             1, 0,
                             0.5, 1,
                             1, 1};
+    
+    /* Give tree 1 information about its surface and the parameters of the vertices. 
+    *  Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. 
+    *  We can use the same edges and faces array, because we link the surface to the same face on tree 1.*/
     t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id(), T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
                             faces, 6 * sizeof(int), 0);
     t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id(), T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
@@ -497,13 +523,17 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     ("Creating uniform level %i forests with a occ cylinder geometry.\n",
      level);
 
-    /* Create occ cylinder surfaces */
+    /* Create occ cylinder surfaces. We use an outer radius of 0.5 to get a diameter of 1.*/
     double radius_inner = 0.25;
     double radius_outer = 0.5;
+    
+    /* Define origin, z-axis and height vector for creating and extruding circles. */
     gp_Pnt origin(0, 0, 0);
     gp_Dir z_dir(0, 0, 1);
     gp_Ax2 axis(origin, z_dir);
     gp_Vec height(0, 0, 1);
+
+    /* Create inner and outer cylinder mantles. */
     gp_Circ circle_outer(axis, radius_outer);
     gp_Circ circle_inner(axis, radius_inner);
     BRepBuilderAPI_MakeEdge make_outer_edge(circle_outer);
@@ -514,20 +544,30 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     TopoDS_Edge edge_inner = make_inner_edge.Edge();
     TopoDS_Face face_inner = TopoDS::Face(BRepPrimAPI_MakePrism(edge_inner, height));
     Handle_Geom_Surface cylinder_inner = BRep_Tool::Surface(face_inner);
+
+    /* Add the surface to global occ array. */
     t8_global_occ_surface[0] = cylinder_outer;
     t8_global_occ_surface[1] = cylinder_inner;
 
+    /* Create occ geometry. */
     geometry = new t8_geometry_occ (3, "occ surface dim=3", NULL);      
-      
+    
+    /* The arrays indicate which face/edge carries a geometry. 
+    * -1 means no geometry and any other number indicates the position of the geometry 
+    * in the global geometry array. Here face 5 carries geometry #0. */
+    int faces[6] = {0, 1, -1, -1, -1, -1};
+    int edges[12] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+    
+    /* Create corresponding trees and parameters. 
+    *  Here we create num trees by a coordinate transformation from cylinder to cartesian coordinates. */
     int num = 4;
     double *vertices, *parameters;
     vertices = T8_ALLOC(double, num * 24);
     parameters = T8_ALLOC(double, num * 8);
-    int faces[6] = {0, 1, -1, -1, -1, -1};
-    int edges[12] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
     for (int i = 0; i < num; ++i)
     {
       t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_HEX);
+      /* Coordinate transformation. */
       vertices[i * 24 + 0] = cos((i + 1) * 2 * M_PI / num) * radius_outer;
       vertices[i * 24 + 1] = sin((i + 1) * 2 * M_PI / num) * radius_outer;
       vertices[i * 24 + 2] = 0;
@@ -553,6 +593,8 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
       vertices[i * 24 + 22] = sin(i * 2 * M_PI / num) * radius_inner;
       vertices[i * 24 + 23] = 1;
       t8_cmesh_set_tree_vertices (cmesh, i, vertices + i * 24, 24);
+      
+      /* Create corresponding parameters for the cylinders. The parameter range of the cylinders is u ∈ [0, 2 * M_PI] and v ∈ ]inf, -inf[ */
       parameters[i * 8 + 0] = (i + 1) * 2 * M_PI / num;
       parameters[i * 8 + 1] = 0;
       parameters[i * 8 + 2] = i * 2 * M_PI / num;
@@ -561,6 +603,10 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
       parameters[i * 8 + 5] = -1;
       parameters[i * 8 + 6] = i * 2 * M_PI / num;
       parameters[i * 8 + 7] = -1;
+      
+      /* Give the trees information about their surfaces and the parameters of the vertices. 
+      *  Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. 
+      *  We can use the same edges and faces array, because we link the surface to the same faces on every tree.*/
       t8_cmesh_set_attribute (cmesh, i, t8_get_package_id(), T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
                               faces, 6 * sizeof(int), 1);
       t8_cmesh_set_attribute (cmesh, i, t8_get_package_id(), T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
