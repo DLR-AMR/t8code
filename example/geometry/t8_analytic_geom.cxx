@@ -333,13 +333,14 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     ("Creating uniform level %i forests with occ curve geometries.\n",
     level);
 
-    /* Create two occ splines which oscillate along the x-axis */
+    /* Create two occ bsplines which oscillate along the x-axis. 
+    *  For this we need to define two arrays from which we create the bsplines. */
     Handle_Geom_Curve       occ_curve0;
     Handle_Geom_Curve       occ_curve1;
     TColgp_Array1OfPnt      point_array0(1, 5);
     TColgp_Array1OfPnt      point_array1(1, 5);
 
-    /* Define knots along the splines */ 
+    /* Define knots along the bsplines. */ 
     point_array0(1) = gp_Pnt(0, 0, 0);
     point_array0(2) = gp_Pnt(0.25, 0.1, 0.1);
     point_array0(3) = gp_Pnt(0.5, 0, 0);
@@ -352,6 +353,7 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     point_array1(4) = gp_Pnt(0.9, 1.1, 0.9);
     point_array1(5) = gp_Pnt(1, 1, 1);
 
+    /* Generate bsplines from arrays. */
     occ_curve0 = GeomAPI_PointsToBSpline(point_array0).Curve();
     occ_curve1 = GeomAPI_PointsToBSpline(point_array1).Curve();
     
@@ -410,10 +412,11 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     ("Creating uniform level %i forests with a occ surface geometry.\n",
     level);
 
-    /* Create a occ bspline surface with knots */
+    /* Create a occ bspline surface with 2D array of knots */
     Handle_Geom_Surface       occ_surface;
     TColgp_Array2OfPnt        point_array(1, 5, 1, 3);
     
+    /* Fill array with knots. */
     point_array(1, 1) = gp_Pnt(-0.2, 0.1, 1.2);
     point_array(2, 1) = gp_Pnt(0.5, 0, 1.4);
     point_array(3, 1) = gp_Pnt(1.0, -0.2, 1.1);
@@ -432,6 +435,7 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     point_array(4, 3) = gp_Pnt(1.5, 1, 1.1);
     point_array(5, 3) = gp_Pnt(2.0, 1.1, 1.2);
 
+    /* Generate bspline surface from array. */
     occ_surface = GeomAPI_PointsToBSplineSurface(point_array).Surface();
 
     /* Add the surface to global occ array */
@@ -557,7 +561,7 @@ t8_analytic_geom (int level, t8_analytic_geom_type geom_type)
     * in the global geometry array. Here face 5 carries geometry #0. */
     int faces[6] = {0, 1, -1, -1, -1, -1};
     int edges[12] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
-    
+
     /* Create corresponding trees and parameters. 
     *  Here we create num trees by a coordinate transformation from cylinder to cartesian coordinates. */
     int num = 4;
