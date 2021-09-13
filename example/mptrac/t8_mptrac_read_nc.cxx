@@ -90,8 +90,8 @@ void
 t8_mptrac_read_nc (const char *filename, char *mptrac_input)
 {
   ctl_t               mptrac_control;
-  met_t              *mptrac_meteo;
-  mptrac_meteo = T8_ALLOC (met_t, 1);
+  met_t              *mptrac_meteo1, *mptrac_meteo2;
+ // mptrac_meteo = T8_ALLOC (met_t, 1);
   int                 num_arguments;
   char              **output;
 
@@ -99,8 +99,9 @@ t8_mptrac_read_nc (const char *filename, char *mptrac_input)
   t8_mptrac_split_input_string (mptrac_input, &output, &num_arguments);
 
   read_ctl (filename, num_arguments, output, &mptrac_control);
+  get_met (&mptrac_control, 0, &mptrac_meteo1, &mptrac_meteo2);
 
-  T8_FREE (mptrac_meteo);
+//T8_FREE (mptrac_meteo);
   T8_FREE (output);
 }
 
