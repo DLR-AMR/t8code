@@ -858,9 +858,9 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       t8_cmesh_set_attribute (cmesh, i, t8_get_package_id(), T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
                               edges, 12 * sizeof(int), 1);
       t8_cmesh_set_attribute (cmesh, i, t8_get_package_id(), T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + 0, 
-                              parameters + i * 8, 8 * sizeof(double), 1);
+                              parameters + i * 8, 8 * sizeof(double), 0);
       t8_cmesh_set_attribute (cmesh, i, t8_get_package_id(), T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + 1, 
-                              parameters + i * 8, 8 * sizeof(double), 1);
+                              parameters + i * 8, 8 * sizeof(double), 0);
     }
       
     T8_FREE(vertices);
