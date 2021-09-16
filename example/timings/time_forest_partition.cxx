@@ -225,7 +225,6 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
    * further through the domain */
   for (t = 0, time_step = 0; t < T; t += delta_t, time_step++) {
     /* Adapt the forest */
-    //for (r = 0; r < refine_rounds; r++) {
     /* TODO: profiling */
     t8_forest_init (&forest_adapt);
     t8_forest_set_adapt (forest_adapt, forest, t8_band_adapt, 1);
