@@ -22,6 +22,7 @@
 
 #include <sc_refcount.h>
 #include <sc_flops.h>
+#include <sc_functions.h>
 #include <sc_statistics.h>
 #include <sc_options.h>
 #include <p4est_connectivity.h>
@@ -486,8 +487,8 @@ main (int argc, char *argv[])
       }
       cmesh =
         t8_cmesh_new_hollow_cylinder (sc_MPI_COMM_WORLD,
-                                      4 * pow(2, cmesh_level), pow(2, cmesh_level),
-                                      pow(2, cmesh_level), test_occ_cylinder);
+                                      4 * sc_intpow(2, cmesh_level), sc_intpow(2, cmesh_level),
+                                      sc_intpow(2, cmesh_level), test_occ_cylinder);
       test_linear_cylinder ? vtu_prefix = "test_linear_cylinder" : vtu_prefix = "test_occ_cylinder";
     }
     else {
