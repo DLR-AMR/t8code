@@ -252,7 +252,6 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
     if (do_balance) {
       t8_forest_set_balance (forest_partition, NULL, 0);
     }
-    //  }
     t8_forest_commit (forest_partition);
     t8_forest_compute_profile (forest_partition);
     balance_stats = t8_forest_profile_get_balance_stats (forest_partition);
