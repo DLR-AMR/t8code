@@ -60,7 +60,7 @@ typedef void        (*t8_geom_occ_fn) (t8_cmesh_t cmesh,
                                       const void *tree_data,
                                       const void *user_data);
 
-struct t8_geometry_occ:public t8_geometry
+struct t8_geometry_occ:public t8_geometry_w_vertices
 {
 public:
 
@@ -135,12 +135,6 @@ private:
 
   const void         *user_data;        /** Additional user data pointer that can be set in constructor
                                          * and modified via \ref t8_geom_analytic_get_user_data. */
-
-  protected:
-  
-    t8_gloidx_t active_tree;
-    t8_eclass_t active_tree_class;
-    const double *active_tree_vertices;
 };
 
 #endif /* T8_WITH_OCC */

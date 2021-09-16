@@ -61,6 +61,7 @@ typedef enum
   T8_GEOM_MOVING,
   T8_GEOM_OCC_CURVE_CUBE,
   T8_GEOM_OCC_SURFACE_CUBES,
+  T8_GEOM_OCC_SURFACE_CUBE_TEST,
   T8_GEOM_OCC_SURFACE_CYLINDER,
   T8_GEOM_COUNT
 } t8_example_geom_type;
@@ -752,6 +753,75 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     t8_cmesh_set_join (cmesh, 0, 1, 1, 0, 0);
       
     snprintf (vtuname, BUFSIZ, "forest_occ_surface_cubes_lvl_%i", level);
+    break;
+    #else /* !T8_WITH_OCC */
+    SC_ABORTF("OCC not linked");
+    #endif /* T8_WITH_OCC */
+  }
+  case T8_GEOM_OCC_SURFACE_CUBE_TEST:
+  {
+    #if T8_WITH_OCC
+    t8_global_productionf
+    ("Creating uniform level %i forests with a occ surface geometry.\n",
+    level);
+
+    /* Create a OCC surface */
+    Handle_Geom_Surface occ_surface;
+    TColgp_Array2OfPnt point_array(1, 3, 1, 3);
+    
+    point_array(1, 1) = gp_Pnt(0, 0, 0);
+    point_array(2, 1) = gp_Pnt(-0.2, 0.2, 0.5);
+    point_array(3, 1) = gp_Pnt(0, 0, 1);
+
+    point_array(1, 2) = gp_Pnt(0.5, 0.2, -0.2);
+    point_array(2, 2) = gp_Pnt(0.5, 0, 0.5);
+    point_array(3, 2) = gp_Pnt(0.5, -0.2, 1.2);
+
+    point_array(1, 3) = gp_Pnt(1, 0, 0);
+    point_array(2, 3) = gp_Pnt(1.2, -0.2, 0.5);
+    point_array(3, 3) = gp_Pnt(1, 0, 1);
+
+    occ_surface = GeomAPI_PointsToBSplineSurface(point_array).Surface();
+    gp_Pnt pnt;
+    occ_surface->D0(0, 0, pnt);
+    printf("u0 v0 = %f %f %f \n", pnt.X(), pnt.Y(), pnt.Z());
+    occ_surface->D0(1, 0, pnt);
+    printf("u1 v0 = %f %f %f \n", pnt.X(), pnt.Y(), pnt.Z());
+    occ_surface->D0(0, 1, pnt);
+    printf("u0 v1 = %f %f %f \n", pnt.X(), pnt.Y(), pnt.Z());
+    t8_global_occ_surface[0] = occ_surface;
+
+    geometry = new t8_geometry_occ (3, "occ surface dim=3", NULL);
+      
+    /* Create tree 0*/
+    t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
+    double vertices0[24] = {
+      0, 0, 0,
+      1, 0, 0,
+      0, 1, 0,
+      1, 1, 0,
+      0, 0, 1,
+      1, 0, 1,
+      0, 1, 1,
+      1, 1, 1
+    };
+    t8_cmesh_set_tree_vertices (cmesh, 0, vertices0, 24);
+
+    /* Give tree 0 information about its surface and the parameters of the vertices*/
+    double parameters0[8] = {0, 0,
+                            0, 1,
+                            1, 0,
+                            1, 1};
+    int faces[6] = {-1, -1, 0, -1, -1, -1};
+    int edges[12] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
+                            faces, 6 * sizeof(int), 0);
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
+                            edges, 12 * sizeof(int), 0);
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + 2, 
+                            parameters0, 8 * sizeof(double), 0);
+      
+    snprintf (vtuname, BUFSIZ, "forest_occ_surface_cube_test_lvl_%i", level);
     break;
     #else /* !T8_WITH_OCC */
     SC_ABORTF("OCC not linked");
