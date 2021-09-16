@@ -237,9 +237,6 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
     t8_forest_compute_profile (forest_adapt);
     t8_forest_ref (forest_adapt);
     adapt_stats = t8_forest_profile_get_adapt_stats (forest_adapt);
-    //t8_global_productionf
-    //  ("[Sandro] Adapt runtime: %f  variance: %f max: %f\n",
-    //   adapt_stats->average, adapt_stats->standev_mean, adapt_stats->max);
 
     /* partition the adapted forest */
     /* TODO: profiling */
