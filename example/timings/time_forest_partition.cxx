@@ -271,7 +271,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
     }
     /* Print runtimes and statistics of forest and cmesh partition */
     t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
-    //t8_forest_print_profile (forest_partition);
+    t8_forest_print_profile (forest_partition);
     t8_forest_compute_profile (forest_partition);
     partition_stats =
       t8_forest_profile_get_partition_stats (forest_partition);
