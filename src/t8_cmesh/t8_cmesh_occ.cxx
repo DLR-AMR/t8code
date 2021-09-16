@@ -59,22 +59,22 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
   {
     #if T8_WITH_OCC
     /* Create occ cylinder surfaces */
-    double radius_inner = 0.25;
-    double radius_outer = 0.5;
-    gp_Pnt origin(0, 0, 0);
-    gp_Dir z_dir(0, 0, 1);
-    gp_Ax2 axis(origin, z_dir);
-    gp_Vec height(0, 0, 1);
-    gp_Circ circle_outer(axis, radius_outer);
-    gp_Circ circle_inner(axis, radius_inner);
+    const double radius_inner = 0.25;
+    const double radius_outer = 0.5;
+    const gp_Pnt origin(0, 0, 0);
+    const gp_Dir z_dir(0, 0, 1);
+    const gp_Ax2 axis(origin, z_dir);
+    const gp_Vec height(0, 0, 1);
+    const gp_Circ circle_outer(axis, radius_outer);
+    const gp_Circ circle_inner(axis, radius_inner);
     BRepBuilderAPI_MakeEdge make_outer_edge(circle_outer);
-    TopoDS_Edge edge_outer = make_outer_edge.Edge();
-    TopoDS_Face face_outer = TopoDS::Face(BRepPrimAPI_MakePrism(edge_outer, height));
-    Handle_Geom_Surface cylinder_outer = BRep_Tool::Surface(face_outer);
+    const TopoDS_Edge edge_outer = make_outer_edge.Edge();
+    const TopoDS_Face face_outer = TopoDS::Face(BRepPrimAPI_MakePrism(edge_outer, height));
+    const Handle_Geom_Surface cylinder_outer = BRep_Tool::Surface(face_outer);
     BRepBuilderAPI_MakeEdge make_inner_edge(circle_inner);
-    TopoDS_Edge edge_inner = make_inner_edge.Edge();
-    TopoDS_Face face_inner = TopoDS::Face(BRepPrimAPI_MakePrism(edge_inner, height));
-    Handle_Geom_Surface cylinder_inner = BRep_Tool::Surface(face_inner);
+    const TopoDS_Edge edge_inner = make_inner_edge.Edge();
+    const TopoDS_Face face_inner = TopoDS::Face(BRepPrimAPI_MakePrism(edge_inner, height));
+    const Handle_Geom_Surface cylinder_inner = BRep_Tool::Surface(face_inner);
     t8_global_occ_surface[0] = cylinder_outer;
     t8_global_occ_surface[1] = cylinder_inner;
     geometry = new t8_geometry_occ (3, "occ surface dim=3", NULL);
@@ -88,10 +88,10 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
   }
   
   double *vertices, *parameters;
-  double radius_outer = 0.5, radius_inner = 0.25;
-  double dr = (radius_outer - radius_inner) / num_radial_trees;
-  double dphi = 2.0 * M_PI / num_tangential_trees;
-  double dh = 1.0 / num_axial_trees;
+  const double radius_outer = 0.5, radius_inner = 0.25;
+  const double dr = (radius_outer - radius_inner) / num_radial_trees;
+  const double dphi = 2.0 * M_PI / num_tangential_trees;
+  const double dh = 1.0 / num_axial_trees;
   vertices = T8_ALLOC(double, num_tangential_trees * num_axial_trees * num_radial_trees * 24);
   parameters = T8_ALLOC(double, num_tangential_trees * num_axial_trees * 8);
   
