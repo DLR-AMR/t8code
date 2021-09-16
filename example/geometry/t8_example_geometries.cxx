@@ -798,7 +798,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     
     /* The arrays indicate which face/edge carries a geometry. 
      * -1 means no geometry and any other number indicates the position of the geometry 
-     * in the global geometry array. Here face 5 carries geometry #0. */
+     * in the global geometry array. Here face 0 carries geometry #0 and face 1 carries geometry #1. 
+     * The edges do not have any geometries, hence all entries are -1. */
     int faces[6] = {0, 1, -1, -1, -1, -1};
     int edges[12] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
