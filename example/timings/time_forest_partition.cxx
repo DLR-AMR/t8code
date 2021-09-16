@@ -257,7 +257,6 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
     ghost_stats = t8_forest_profile_get_ghost_stats (forest_partition);
     t8_cmesh_print_profile (t8_forest_get_cmesh (forest_partition));
     forest = forest_partition;
-    //  }
 
     /* Set the vtu output name */
     if (!no_vtk) {
