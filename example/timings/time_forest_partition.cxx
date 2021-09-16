@@ -245,7 +245,6 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
     t8_forest_set_partition (forest_partition, forest_adapt, 0);
 
     /* If desired, create ghost elements and balance after last step */
-    //  if (r == refine_rounds - 1) {
     t8_forest_set_profiling (forest_partition, 1);
     if (do_ghost) {
       t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
