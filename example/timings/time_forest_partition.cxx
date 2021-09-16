@@ -404,15 +404,15 @@ main (int argc, char *argv[])
   sc_options_add_switch (opt, 't', "test-tet", &test_tet,
                          "Use a cmesh that tests all tet face-to-face connections."
                          " If this option is used -o is enabled automatically."
-                         " Diables -f and -c.");
+                         " Not allowed with -f and -c.");
   sc_options_add_switch (opt, 'L', "test-linear-cylinder", &test_linear_cylinder,
                          "Use a linear cmesh to compare linear and occ geometry performance."
                          " If this option is used -o is enabled automatically."
-                         " Diables -f and -c.");
+                         " Not allowed with -f and -c.");
   sc_options_add_switch (opt, 'O', "test-occ-cylinder", &test_occ_cylinder,
                          "Use a occ cmesh to compare linear and occ geometry performance."
                          " If this option is used -o is enabled automatically."
-                         " Diables -f and -c.");
+                         " Not allowed with -f and -c.");
   sc_options_add_int (opt, 'l', "level", &level, 0,
                       "The initial uniform "
                       "refinement level of the forest.");
@@ -451,7 +451,9 @@ main (int argc, char *argv[])
           && test_linear_cylinder == 0)
       || stride <= 0 || (num_files - 1) * stride >= mpisize || cfl < 0
       || test_tet + test_linear_cylinder + test_occ_cylinder > 1
-      || (cmesh_level >= 0 && (!test_linear_cylinder && !test_occ_cylinder))) {
+      || (cmesh_level >= 0 && (!test_linear_cylinder && !test_occ_cylinder)) ||
+      ((mshfileprefix != NULL || cmeshfileprefix != NULL) && (test_linear_cylinder 
+      || test_occ_cylinder || test_tet))) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
