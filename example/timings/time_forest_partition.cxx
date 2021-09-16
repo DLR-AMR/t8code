@@ -239,7 +239,6 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
     adapt_stats = t8_forest_profile_get_adapt_stats (forest_adapt);
 
     /* partition the adapted forest */
-    /* TODO: profiling */
     t8_forest_init (&forest_partition);
     /* partition the adapted forest */
     t8_forest_set_partition (forest_partition, forest_adapt, 0);
