@@ -175,7 +175,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix,
   adapt_data_t        adapt_data;
   t8_forest_t         forest, forest_adapt, forest_partition;
   double              t;
-  int                 partition_cmesh, r;
+  int                 partition_cmesh;
   int                 time_step;
   const sc_statinfo_t *partition_stats, *adapt_stats, *balance_stats, *ghost_stats;
 
