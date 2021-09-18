@@ -158,16 +158,16 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
             /* Assign attributes to cmesh cells */
             t8_cmesh_set_attribute (cmesh, (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees, t8_get_package_id(), 
                                     T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
-                                    faces, 6 * sizeof(int), 1);
+                                    faces, 6 * sizeof(int), 0);
             t8_cmesh_set_attribute (cmesh, (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees, t8_get_package_id(), 
                                     T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
-                                    edges, 12 * sizeof(int), 1);
+                                    edges, 12 * sizeof(int), 0);
             t8_cmesh_set_attribute (cmesh, (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees, t8_get_package_id(), 
                                     T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + 0, 
-                                    parameters + (i_tangential_trees * num_axial_trees + i_axial_trees) * 8, 8 * sizeof(double), 1);
+                                    parameters + (i_tangential_trees * num_axial_trees + i_axial_trees) * 8, 8 * sizeof(double), 0);
             t8_cmesh_set_attribute (cmesh, (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees, t8_get_package_id(), 
                                     T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + 1, 
-                                    parameters + (i_tangential_trees * num_axial_trees + i_axial_trees) * 8, 8 * sizeof(double), 1);
+                                    parameters + (i_tangential_trees * num_axial_trees + i_axial_trees) * 8, 8 * sizeof(double), 0);
             #endif /* T8_WITH_OCC */
           }
           /* If geometry only on face 1 */
@@ -180,13 +180,13 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
             /* Assign attributes to cmesh cells */
             t8_cmesh_set_attribute (cmesh, (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees, t8_get_package_id(), 
                                     T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
-                                    faces, 6 * sizeof(int), 1);
+                                    faces, 6 * sizeof(int), 0);
             t8_cmesh_set_attribute (cmesh, (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees, t8_get_package_id(), 
                                     T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
-                                    edges, 12 * sizeof(int), 1);
+                                    edges, 12 * sizeof(int), 0);
             t8_cmesh_set_attribute (cmesh, (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees, t8_get_package_id(), 
                                     T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + 1, 
-                                    parameters + (i_tangential_trees * num_axial_trees + i_axial_trees) * 8, 8 * sizeof(double), 1);
+                                    parameters + (i_tangential_trees * num_axial_trees + i_axial_trees) * 8, 8 * sizeof(double), 0);
             #endif /* T8_WITH_OCC */
           }
           /* If geometry only on face 0 */
@@ -199,13 +199,13 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
             /* Assign attributes to cmesh cells */
             t8_cmesh_set_attribute (cmesh, (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees, t8_get_package_id(), 
                                     T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
-                                    faces, 6 * sizeof(int), 1);
+                                    faces, 6 * sizeof(int), 0);
             t8_cmesh_set_attribute (cmesh, (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees, t8_get_package_id(), 
                                     T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
-                                    edges, 12 * sizeof(int), 1);
+                                    edges, 12 * sizeof(int), 0);
             t8_cmesh_set_attribute (cmesh, (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees, t8_get_package_id(), 
                                     T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + 0, 
-                                    parameters + (i_tangential_trees * num_axial_trees + i_axial_trees) * 8, 8 * sizeof(double), 1);
+                                    parameters + (i_tangential_trees * num_axial_trees + i_axial_trees) * 8, 8 * sizeof(double), 0);
             #endif /* T8_WITH_OCC */
           }
           /* If there is no geometry */
@@ -218,10 +218,10 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
             /* Assign attributes to cmesh cells */
             t8_cmesh_set_attribute (cmesh, (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees, t8_get_package_id(), 
                                     T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
-                                    faces, 6 * sizeof(int), 1);
+                                    faces, 6 * sizeof(int), 0);
             t8_cmesh_set_attribute (cmesh, (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees, t8_get_package_id(), 
                                     T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
-                                    edges, 12 * sizeof(int), 1);
+                                    edges, 12 * sizeof(int), 0);
             #endif /* T8_WITH_OCC */
           }
         }
