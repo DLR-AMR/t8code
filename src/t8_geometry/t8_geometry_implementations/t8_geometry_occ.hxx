@@ -21,7 +21,9 @@
 */
 
 /** \file t8_geometry_occ.hxx
- * TODO: Add description
+ * This gometry implements OpenCASCADE geometries. It enables the option to link different 
+ * 1 and 2 dimensional occ geometries to the edges and faces of refinement trees. 
+ * The geometry of the refinement tree gets bent accordingly.
  */
 
 #ifndef T8_GEOMETRY_OCC_HXX
