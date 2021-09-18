@@ -72,16 +72,16 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
     {0, 1}, {2, 3}, {4, 5}, {6, 7}, {0, 2}, {4, 6}, {1, 3}, {5, 7}, {0, 4}, {1, 5}, {2, 6}, {3, 7}    /* hex */
   };
 
-  double interpolated_coords[3], param[2], edge_delta[3]= {0, 0, 0}, cur_edge_delta[3], surface_deltas[6][3];
+  double interpolated_coords[3], param[2], cur_delta[3];
   gp_Pnt pnt;
   
   /* Check each edge for geometry */
-  for (int i = 0; i < 12; ++i)
+  for (int i_edges = 0; i_edges < 12; ++i_edges)
   {
-    if (edges[i] >= 0)
+    if (edges[i_edges] >= 0)
     {
-      /* Interpolate coordinates between edge vertices. Due to the indices i of the edges, the edges point in
-      * direction of ref_coord i % 3. Therefore, we can use ref_coords[i % 3] for the interpolation.              
+      /* Interpolate coordinates between edge vertices. Due to the indices i_edges of the edges, the edges point in
+      * direction of ref_coord i_edges % 3. Therefore, we can use ref_coords[i_edges % 3] for the interpolation.              
       *          6 -------E3------- 7
       *         /|                 /|
       *       E5 |               E7 |
@@ -97,76 +97,71 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
       *     0 -------E0------- 1
       *        
       */
-      for (int j = 0; j < 3; ++j)
+      for (int i_coord_dim = 0; i_coord_dim < 3; ++i_coord_dim)
       {
-        interpolated_coords[j] = (1 - ref_coords[i % 3]) * active_tree_vertices[t8_edge_vertex_to_tree_vertex[i][0] * 3 + j]
-                                + ref_coords[i % 3] * active_tree_vertices[t8_edge_vertex_to_tree_vertex[i][1] * 3 + j];
+        interpolated_coords[i_coord_dim] = (1 - ref_coords[i_edges % 3]) * active_tree_vertices[t8_edge_vertex_to_tree_vertex[i_edges][0] * 3 + i_coord_dim]
+                                + ref_coords[i_edges % 3] * active_tree_vertices[t8_edge_vertex_to_tree_vertex[i_edges][1] * 3 + i_coord_dim];
       }
 
       /* Interpolate parameters between edge vertices. Same procedure as above. */
       const double *parameters = (double *) t8_cmesh_get_attribute(cmesh, t8_get_package_id (),
-                                                                  T8_CMESH_OCC_CURVE_PARAMETERS_ATTRIBUTE_KEY + i,
+                                                                  T8_CMESH_OCC_CURVE_PARAMETERS_ATTRIBUTE_KEY + i_edges,
                                                                   gtreeid);
-      param[0] = (1 - ref_coords[i % 3]) * parameters[0]
-                  + ref_coords[i % 3] * parameters[1];
+      param[0] = (1 - ref_coords[i_edges % 3]) * parameters[0]
+                  + ref_coords[i_edges % 3] * parameters[1];
       
       /* Check if calculated parameters are valid */
-      T8_ASSERT(!t8_global_occ_curve[edges[i]].IsNull());
+      T8_ASSERT(!t8_global_occ_curve[edges[i_edges]].IsNull());
       double u1, u2;
-      u1 = t8_global_occ_curve[edges[i]]->FirstParameter();
-      u2 = t8_global_occ_curve[edges[i]]->LastParameter();
+      u1 = t8_global_occ_curve[edges[i_edges]]->FirstParameter();
+      u2 = t8_global_occ_curve[edges[i_edges]]->LastParameter();
       T8_ASSERT((u1 <= param[0] && param[0] <= u2) || (u2 <= param[0] && param[0] <= u1));
 
       /* Compute displacement between vertex interpolation and curve evaluation with interpolated parameters */
-      t8_global_occ_curve[edges[i]]->D0(param[0], pnt);
-      cur_edge_delta[0] = pnt.X() - interpolated_coords[0];
-      cur_edge_delta[1] = pnt.Y() - interpolated_coords[1];
-      cur_edge_delta[2] = pnt.Z() - interpolated_coords[2];
+      t8_global_occ_curve[edges[i_edges]]->D0(param[0], pnt);
+      cur_delta[0] = pnt.X() - interpolated_coords[0];
+      cur_delta[1] = pnt.Y() - interpolated_coords[1];
+      cur_delta[2] = pnt.Z() - interpolated_coords[2];
       
       /* Multiply curve displacement with corresponding ref coords.
-      *  The edges are indexed so that all edges which satisfy i % 4 == 0 have to multiplied with the inversed (1 - ref_coord) 
-      *  coordinate. All edges which satisfy i % 4 == 1 have to multiplied with one inversed ref_coord and so forth...
+      *  The edges are indexed so that all edges which satisfy i_edges % 4 == 0 have to multiplied with the inversed (1 - ref_coord) 
+      *  coordinate. All edges which satisfy i_edges % 4 == 1 have to multiplied with one inversed ref_coord and so forth...
       */
-      switch (i % 4)
+      switch (i_edges % 4)
       {
       case 0:
-        cur_edge_delta[0] = cur_edge_delta[0] * (1 - ref_coords[(i / 4 + 1) % 3]) * (1 - ref_coords[(i / 4 + 2) % 3]);
-        cur_edge_delta[1] = cur_edge_delta[1] * (1 - ref_coords[(i / 4 + 1) % 3]) * (1 - ref_coords[(i / 4 + 2) % 3]);
-        cur_edge_delta[2] = cur_edge_delta[2] * (1 - ref_coords[(i / 4 + 1) % 3]) * (1 - ref_coords[(i / 4 + 2) % 3]);
+        cur_delta[0] = cur_delta[0] * (1 - ref_coords[(i_edges / 4 + 1) % 3]) * (1 - ref_coords[(i_edges / 4 + 2) % 3]);
+        cur_delta[1] = cur_delta[1] * (1 - ref_coords[(i_edges / 4 + 1) % 3]) * (1 - ref_coords[(i_edges / 4 + 2) % 3]);
+        cur_delta[2] = cur_delta[2] * (1 - ref_coords[(i_edges / 4 + 1) % 3]) * (1 - ref_coords[(i_edges / 4 + 2) % 3]);
         break;
       case 1:
-        cur_edge_delta[0] = cur_edge_delta[0] * ref_coords[(i / 4 + 1) % 3] * (1 - ref_coords[(i / 4 + 2) % 3]);
-        cur_edge_delta[1] = cur_edge_delta[1] * ref_coords[(i / 4 + 1) % 3] * (1 - ref_coords[(i / 4 + 2) % 3]);
-        cur_edge_delta[2] = cur_edge_delta[2] * ref_coords[(i / 4 + 1) % 3] * (1 - ref_coords[(i / 4 + 2) % 3]);
+        cur_delta[0] = cur_delta[0] * ref_coords[(i_edges / 4 + 1) % 3] * (1 - ref_coords[(i_edges / 4 + 2) % 3]);
+        cur_delta[1] = cur_delta[1] * ref_coords[(i_edges / 4 + 1) % 3] * (1 - ref_coords[(i_edges / 4 + 2) % 3]);
+        cur_delta[2] = cur_delta[2] * ref_coords[(i_edges / 4 + 1) % 3] * (1 - ref_coords[(i_edges / 4 + 2) % 3]);
         break;
       case 2:
-        cur_edge_delta[0] = cur_edge_delta[0] * (1 - ref_coords[(i / 4 + 1) % 3]) * ref_coords[(i / 4 + 2) % 3];
-        cur_edge_delta[1] = cur_edge_delta[1] * (1 - ref_coords[(i / 4 + 1) % 3]) * ref_coords[(i / 4 + 2) % 3];
-        cur_edge_delta[2] = cur_edge_delta[2] * (1 - ref_coords[(i / 4 + 1) % 3]) * ref_coords[(i / 4 + 2) % 3];        
+        cur_delta[0] = cur_delta[0] * (1 - ref_coords[(i_edges / 4 + 1) % 3]) * ref_coords[(i_edges / 4 + 2) % 3];
+        cur_delta[1] = cur_delta[1] * (1 - ref_coords[(i_edges / 4 + 1) % 3]) * ref_coords[(i_edges / 4 + 2) % 3];
+        cur_delta[2] = cur_delta[2] * (1 - ref_coords[(i_edges / 4 + 1) % 3]) * ref_coords[(i_edges / 4 + 2) % 3];        
         break;
       case 3:
-        cur_edge_delta[0] = cur_edge_delta[0] * ref_coords[(i / 4 + 1) % 3] * ref_coords[(i / 4 + 2) % 3];
-        cur_edge_delta[1] = cur_edge_delta[1] * ref_coords[(i / 4 + 1) % 3] * ref_coords[(i / 4 + 2) % 3];
-        cur_edge_delta[2] = cur_edge_delta[2] * ref_coords[(i / 4 + 1) % 3] * ref_coords[(i / 4 + 2) % 3];        
+        cur_delta[0] = cur_delta[0] * ref_coords[(i_edges / 4 + 1) % 3] * ref_coords[(i_edges / 4 + 2) % 3];
+        cur_delta[1] = cur_delta[1] * ref_coords[(i_edges / 4 + 1) % 3] * ref_coords[(i_edges / 4 + 2) % 3];
+        cur_delta[2] = cur_delta[2] * ref_coords[(i_edges / 4 + 1) % 3] * ref_coords[(i_edges / 4 + 2) % 3];        
         break;
       }
       
-      /* Accumulate all edge displacements */
-      edge_delta[0] += cur_edge_delta[0];
-      edge_delta[1] += cur_edge_delta[1];
-      edge_delta[2] += cur_edge_delta[2];
+      /* Add edge displacements to out_coords */
+      out_coords[0] += cur_delta[0];
+      out_coords[1] += cur_delta[1];
+      out_coords[2] += cur_delta[2];
     }
   }
   
-  /* Add edge displacements to out_coords */
-  out_coords[0] += edge_delta[0];
-  out_coords[1] += edge_delta[1];
-  out_coords[2] += edge_delta[2];
-  
   /* Check each face for geometry */
-  for (int i = 0; i < 6; ++i)
+  for (int i_faces = 0; i_faces < 6; ++i_faces)
   {
-    if (faces[i] >= 0)
+    if (faces[i_faces] >= 0)
     {      
       /* Interpolate coordinates between face vertices
       *   
@@ -184,65 +179,58 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
       *          |/      (bottom)   |/
       *          0 ---------------- 1
       *                 
-      *  ref_coords[(i / 2 + 1) % 3] and ref_coords[(i / 2 + 2) % 3] always returns a ref_coord perpendicular to face i
+      *  ref_coords[(i_faces / 2 + 1) % 3] and ref_coords[(i_faces / 2 + 2) % 3] always returns a ref_coord perpendicular to face i_faces
       *  
       *  The order in which the interpolations are computed is not consistent with the vertex indices.
-      *  Therefore, we need to switch the vertices 1 and 2 when calculating face 2 and 3. This is done with [i / 2 == 1 ? 2 : 1]
+      *  Therefore, we need to switch the vertices 1 and 2 when calculating face 2 and 3. This is done with [i_faces / 2 == 1 ? 2 : 1]
       */
-      for (int j = 0; j < 3; ++j)
+      for (int i_coord_dim = 0; i_coord_dim < 3; ++i_coord_dim)
       {
-        interpolated_coords[j] = ((1 - ref_coords[(i / 2 + 1) % 3]) * active_tree_vertices[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][i][0] * 3 + j]
-                                + ref_coords[(i / 2 + 1) % 3] * active_tree_vertices[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][i][i / 2 == 1 ? 2 : 1] * 3 + j])
-                                * (1 - ref_coords[(i / 2 + 2) % 3]);
-        interpolated_coords[j] += ((1 - ref_coords[(i / 2 + 1) % 3]) * active_tree_vertices[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][i][i / 2 == 1 ? 1 : 2] * 3 + j]
-                                + ref_coords[(i / 2 + 1) % 3] * active_tree_vertices[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][i][3] * 3 + j])
-                                * ref_coords[(i / 2 + 2) % 3];
+        interpolated_coords[i_coord_dim] = ((1 - ref_coords[(i_faces / 2 + 1) % 3]) * active_tree_vertices[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][i_faces][0] * 3 + i_coord_dim]
+                                + ref_coords[(i_faces / 2 + 1) % 3] * active_tree_vertices[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][i_faces][i_faces / 2 == 1 ? 2 : 1] * 3 + i_coord_dim])
+                                * (1 - ref_coords[(i_faces / 2 + 2) % 3]);
+        interpolated_coords[i_coord_dim] += ((1 - ref_coords[(i_faces / 2 + 1) % 3]) * active_tree_vertices[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][i_faces][i_faces / 2 == 1 ? 1 : 2] * 3 + i_coord_dim]
+                                + ref_coords[(i_faces / 2 + 1) % 3] * active_tree_vertices[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][i_faces][3] * 3 + i_coord_dim])
+                                * ref_coords[(i_faces / 2 + 2) % 3];
       }
 
       /* Interpolate parameters between face vertices. Same procedure as above. */
       const double *parameters = (double *) t8_cmesh_get_attribute(cmesh, t8_get_package_id (),
-                                                      T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + i,
+                                                      T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + i_faces,
                                                       gtreeid);
-      for (int j = 0; j < 2; ++j)
+      for (int i_param_dim = 0; i_param_dim < 2; ++i_param_dim)
       {
-        param[j] = (parameters[0 + j] * (1 - ref_coords[(i / 2 + 1) % 3])
-                  + parameters[(i / 2 == 1 ? 4 : 2) + j] * (ref_coords[(i / 2 + 1) % 3]))
-                  * (1 - ref_coords[(i / 2 + 2) % 3]);
-        param[j] += (parameters[(i / 2 == 1 ? 2 : 4) + j] * (1 - ref_coords[(i / 2 + 1) % 3])
-                    +parameters[6 + j] * (ref_coords[(i / 2 + 1) % 3]))
-                    *(ref_coords[(i / 2 + 2) % 3]);
+        param[i_param_dim] = (parameters[0 + i_param_dim] * (1 - ref_coords[(i_faces / 2 + 1) % 3])
+                  + parameters[(i_faces / 2 == 1 ? 4 : 2) + i_param_dim] * (ref_coords[(i_faces / 2 + 1) % 3]))
+                  * (1 - ref_coords[(i_faces / 2 + 2) % 3]);
+        param[i_param_dim] += (parameters[(i_faces / 2 == 1 ? 2 : 4) + i_param_dim] * (1 - ref_coords[(i_faces / 2 + 1) % 3])
+                    +parameters[6 + i_param_dim] * (ref_coords[(i_faces / 2 + 1) % 3]))
+                    *(ref_coords[(i_faces / 2 + 2) % 3]);
       }
       
       /* Check if calculated parameters are valid */
-      T8_ASSERT(!t8_global_occ_surface[faces[i]].IsNull());
+      T8_ASSERT(!t8_global_occ_surface[faces[i_faces]].IsNull());
       double u1, u2, v1, v2;
-      t8_global_occ_surface[faces[i]]->Bounds(u1, u2, v1, v2);
+      t8_global_occ_surface[faces[i_faces]]->Bounds(u1, u2, v1, v2);
       T8_ASSERT(((u1 <= param[0] && param[0] <= u2) || (u2 <= param[0] && param[0] <= u1))
                 && ((v1 <= param[1] && param[1] <= v2) || (v2 <= param[1] && param[1] <= v1)));
 
       /* Compute displacement between vertex interpolation and surface evaluation with interpolated parameters */
-      t8_global_occ_surface[faces[i]]->D0(param[0], param[1], pnt);
-      surface_deltas[i][0] = pnt.X() - interpolated_coords[0];
-      surface_deltas[i][1] = pnt.Y() - interpolated_coords[1];
-      surface_deltas[i][2] = pnt.Z() - interpolated_coords[2]; 
-    }
-  }  
+      t8_global_occ_surface[faces[i_faces]]->D0(param[0], param[1], pnt);
 
-  /* Multiply surface displacements with corresponding ref coords and add them to the out coords */
-  for (int i = 0; i < 3; ++i)
-  {
-    if (faces[i * 2] >= 0)
-    {
-      for (int j = 0; j < 3; ++j)
+      /* Compute delta between geometry and interpolated coords, scale them with the appropriate ref_coord 
+       * and add them to the out_coords*/
+      if (i_faces % 2 == 0)
       {
-        out_coords[j] += surface_deltas[i * 2][j] * (1 - ref_coords[i]);
+        out_coords[0] += (pnt.X() - interpolated_coords[0]) * (1 - ref_coords[i_faces / 2]);
+        out_coords[1] += (pnt.Y() - interpolated_coords[1]) * (1 - ref_coords[i_faces / 2]);
+        out_coords[2] += (pnt.Z() - interpolated_coords[2]) * (1 - ref_coords[i_faces / 2]);
       }
-    }
-    if (faces[i * 2 + 1] >= 0)
-    {
-      for (int j = 0; j < 3; ++j)
+      else
       {
-        out_coords[j] += surface_deltas[i * 2 + 1][j] * ref_coords[i];
+        out_coords[0] += (pnt.X() - interpolated_coords[0]) * ref_coords[i_faces / 2];
+        out_coords[1] += (pnt.Y() - interpolated_coords[1]) * ref_coords[i_faces / 2];
+        out_coords[2] += (pnt.Z() - interpolated_coords[2]) * ref_coords[i_faces / 2];
       }
     }
   }
