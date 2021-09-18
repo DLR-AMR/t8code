@@ -75,7 +75,7 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
   double interpolated_coords[3], param[2], cur_delta[3];
   gp_Pnt pnt;
   
-  /* Check each edge for geometry */
+  /* Check each edge for geometry. Currently, only hexes with 12 edges are supported. */
   for (int i_edges = 0; i_edges < 12; ++i_edges)
   {
     if (edges[i_edges] >= 0)
@@ -158,7 +158,7 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
     }
   }
   
-  /* Check each face for geometry */
+  /* Check each face for geometry. Currently, only hexes with 6 faces are supported. */
   for (int i_faces = 0; i_faces < 6; ++i_faces)
   {
     if (faces[i_faces] >= 0)
