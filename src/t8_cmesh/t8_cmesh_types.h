@@ -59,8 +59,8 @@ typedef enum t8_cmesh_from
 t8_cmesh_from_t;
 #endif
 
-/* Definitions for attribute identifiers that are reserved 
- * for a special purpose. */
+/* Definitions for attribute identifiers that are reserved for a special purpose. 
+ * T8_CMESH_NEXT_POSSIBLE_KEY is the first unused key, hence it can be repurposed for different attributes.*/
 #define T8_CMESH_VERTICES_ATTRIBUTE_KEY   0       /* Used to store vertex coordinates. */
 #define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY   1       /* Used to store the name of a tree's geometry. */
 #define T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY    2       /* Used to store occ curves */
