@@ -29,11 +29,6 @@
 
 #include <t8_cmesh.h>
 
-/* Forward pointer reference to hidden cmesh implementation.
- * This reference needs to be known by t8_geometry, hence we 
- * put it before the include. */
-//typedef struct t8_cmesh *t8_cmesh_t;
-
 /** Construct a hollow cylinder out of hexes with with inner diameter of 0.5, 
  * outer diameter of 1 and a height of 1. 
  * \param [in] comm                   The mpi communicator to use.
