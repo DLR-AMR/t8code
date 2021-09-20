@@ -59,7 +59,6 @@
 #include <vtkQuadraticWedge.h>
 #include <vtkQuadraticPyramid.h>
 #include <vtkUnstructuredGrid.h>
-#include <vtkVertexGlyphFilter.h>
 #include <vtkXMLPUnstructuredGridWriter.h>
 #include <vtkXMLUnstructuredGridWriter.h>
 #include <vtkUnsignedCharArray.h>
@@ -141,13 +140,18 @@ typedef int         (*t8_forest_vtk_cell_data_kernel) (t8_forest_t forest,
                                                        void **data,
                                                        T8_VTK_KERNEL_MODUS
                                                        modus);
-
+/* lookup table for number of nodes for curved eclasses. */
 const int           t8_curved_eclass_num_nodes[T8_ECLASS_COUNT] =
   { 1, 3, 8, 6, 20, 10, 15, 13 };
 
+/* lookup table for number of vtk types of curved elements */
 const int           t8_curved_eclass_vtk_type[T8_ECLASS_COUNT] =
   { 1, 21, 23, 22, 25, 24, 26, 27 };
 
+/* 
+ * depending on wether we want to write curved or non-curved elements
+ * we need the right number of points, so we choose the right lookup table
+ */
 int
 t8_get_number_of_vtk_nodes (t8_element_shape_t eclass, int curved_flag)
 {
@@ -158,7 +162,7 @@ t8_get_number_of_vtk_nodes (t8_element_shape_t eclass, int curved_flag)
   return t8_eclass_num_vertices[eclass];
 }
 
-/* y = y + alpha * x */
+/* y = y + alpha * x for two dim arrays*/
 void
 t8_vec_axpy_2 (const double vec_x[2], double vec_y[2], double alpha)
 {
@@ -169,7 +173,7 @@ t8_vec_axpy_2 (const double vec_x[2], double vec_y[2], double alpha)
   }
 }
 
-/* y = y + alpha * x */
+/* y = y + alpha * x for 1 dim arrays*/
 void
 t8_vec_axpy_1 (const double vec_x[1], double vec_y[1], double alpha)
 {
@@ -180,6 +184,7 @@ t8_vec_axpy_1 (const double vec_x[1], double vec_y[1], double alpha)
   }
 }
 
+/* 2 dim vectors times alpha */
 void
 t8_vec_ax_2 (double vec_x[2], double alpha)
 {
@@ -190,6 +195,7 @@ t8_vec_ax_2 (double vec_x[2], double alpha)
   }
 }
 
+/* 1 dim vectors times alpha */
 void
 t8_vec_ax_1 (double vec_x[1], double alpha)
 {
@@ -200,6 +206,17 @@ t8_vec_ax_1 (double vec_x[1], double alpha)
   }
 }
 
+/* If we want to write curved elements, we need to calculate 
+ * the reference coordinates. For the vertices(end points)
+ * of the elements, we can use t8_element_vertex_reference_coords 
+ * to get them. But for curved elements, we also need nodes at the 
+ * middle points of lines of elements. We get those coordinates by 
+ * adding the vertices and multiplying by 0.5. To get the 
+ * correct node, we use e.g. (vertex - 3) % 4, for each 
+ * element there is a correct order, therefore we have those
+ * formulas. For more information look into the vtk documentation.
+ * TODO: Add Pyramids when they are merged into the dev branch.
+ * */
 void
 t8_curved_element_get_reference_node_coords (const t8_element_t *
                                              elem,
@@ -237,9 +254,7 @@ t8_curved_element_get_reference_node_coords (const t8_element_t *
                                                   [eclass][vertex - 2],
                                                   coords);
       /* Compute the average of those coordinates */
-      /* centroid = centroid + vertex_a */
       t8_vec_axpy_1 (vertex_coords, coords, 1);
-      /* centroid /= 2 */
       t8_vec_ax_1 (coords, 0.5);
     }
     break;
@@ -255,9 +270,7 @@ t8_curved_element_get_reference_node_coords (const t8_element_t *
       scheme->t8_element_vertex_reference_coords (elem, i, vertex_coords);
       scheme->t8_element_vertex_reference_coords (elem, j, coords);
       /* Compute the average of those coordinates */
-      /* centroid = centroid + vertex_a */
       t8_vec_axpy_2 (vertex_coords, coords, 1);
-      /* centroid /= 2 */
       t8_vec_ax_2 (coords, 0.5);
     }
 
@@ -274,9 +287,7 @@ t8_curved_element_get_reference_node_coords (const t8_element_t *
       scheme->t8_element_vertex_reference_coords (elem, i, vertex_coords);
       scheme->t8_element_vertex_reference_coords (elem, j, coords);
       /* Compute the average of those coordinates */
-      /* centroid = centroid + vertex_a */
       t8_vec_axpy_2 (vertex_coords, coords, 1);
-      /* centroid /= 2 */
       t8_vec_ax_2 (coords, 0.5);
     }
     break;
@@ -292,9 +303,7 @@ t8_curved_element_get_reference_node_coords (const t8_element_t *
       scheme->t8_element_vertex_reference_coords (elem, i, vertex_coords);
       scheme->t8_element_vertex_reference_coords (elem, j, coords);
       /* Compute the average of those coordinates */
-      /* centroid = centroid + vertex_a */
       t8_vec_axpy (vertex_coords, coords, 1);
-      /* centroid /= 2 */
       t8_vec_ax (coords, 0.5);
     }
     else if (11 < vertex && vertex < 16) {
@@ -303,9 +312,7 @@ t8_curved_element_get_reference_node_coords (const t8_element_t *
       scheme->t8_element_vertex_reference_coords (elem, i, vertex_coords);
       scheme->t8_element_vertex_reference_coords (elem, j, coords);
       /* Compute the average of those coordinates */
-      /* centroid = centroid + vertex_a */
       t8_vec_axpy (vertex_coords, coords, 1);
-      /* centroid /= 2 */
       t8_vec_ax (coords, 0.5);
     }
     else {
@@ -314,9 +321,7 @@ t8_curved_element_get_reference_node_coords (const t8_element_t *
       scheme->t8_element_vertex_reference_coords (elem, i, vertex_coords);
       scheme->t8_element_vertex_reference_coords (elem, j, coords);
       /* Compute the average of those coordinates */
-      /* centroid = centroid + vertex_a */
       t8_vec_axpy (vertex_coords, coords, 1);
-      /* centroid /= 2 */
       t8_vec_ax (coords, 0.5);
     }
 
@@ -333,9 +338,7 @@ t8_curved_element_get_reference_node_coords (const t8_element_t *
       scheme->t8_element_vertex_reference_coords (elem, i, vertex_coords);
       scheme->t8_element_vertex_reference_coords (elem, j, coords);
       /* Compute the average of those coordinates */
-      /* centroid = centroid + vertex_a */
       t8_vec_axpy (vertex_coords, coords, 1);
-      /* centroid /= 2 */
       t8_vec_ax (coords, 0.5);
     }
     else {
@@ -344,9 +347,7 @@ t8_curved_element_get_reference_node_coords (const t8_element_t *
       scheme->t8_element_vertex_reference_coords (elem, i, vertex_coords);
       scheme->t8_element_vertex_reference_coords (elem, j, coords);
       /* Compute the average of those coordinates */
-      /* centroid = centroid + vertex_a */
       t8_vec_axpy (vertex_coords, coords, 1);
-      /* centroid /= 2 */
       t8_vec_ax (coords, 0.5);
     }
     break;
@@ -362,9 +363,7 @@ t8_curved_element_get_reference_node_coords (const t8_element_t *
       scheme->t8_element_vertex_reference_coords (elem, i, vertex_coords);
       scheme->t8_element_vertex_reference_coords (elem, j, coords);
       /* Compute the average of those coordinates */
-      /* centroid = centroid + vertex_a */
       t8_vec_axpy (vertex_coords, coords, 1);
-      /* centroid /= 2 */
       t8_vec_ax (coords, 0.5);
     }
     else if (8 < vertex && vertex < 12) {
@@ -373,9 +372,7 @@ t8_curved_element_get_reference_node_coords (const t8_element_t *
       scheme->t8_element_vertex_reference_coords (elem, i, vertex_coords);
       scheme->t8_element_vertex_reference_coords (elem, j, coords);
       /* Compute the average of those coordinates */
-      /* centroid = centroid + vertex_a */
       t8_vec_axpy (vertex_coords, coords, 1);
-      /* centroid /= 2 */
       t8_vec_ax (coords, 0.5);
     }
     else {
@@ -384,9 +381,7 @@ t8_curved_element_get_reference_node_coords (const t8_element_t *
       scheme->t8_element_vertex_reference_coords (elem, i, vertex_coords);
       scheme->t8_element_vertex_reference_coords (elem, j, coords);
       /* Compute the average of those coordinates */
-      /* centroid = centroid + vertex_a */
       t8_vec_axpy (vertex_coords, coords, 1);
-      /* centroid /= 2 */
       t8_vec_ax (coords, 0.5);
     }
     break;
@@ -456,8 +451,13 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
   int                *cellTypes = T8_ALLOC (int, num_elements);
 
   /*
-   * We have to define the vtkTypeInt64Array that hold 
-   * metadata if wanted. 
+   * We need the vertex coords array to be of the 
+   * correct dim. Since it is always the same
+   * in one mesh, we take the dim of one element.
+   * We add 1 if we look at a vertext(dim=0) because 
+   * an array of size 0 is not allowed. 
+   * Then we allocate memory, because we do not know
+   * beforehand how many entries the array needs.
    */
 
   t8_eclass_scheme_c *scheme_1 =
@@ -474,6 +474,11 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
     dim = dim + 1;
   }
   double             *vertex_coords = T8_ALLOC (double, dim);
+
+  /*
+   * We have to define the vtkTypeInt64Array that hold 
+   * metadata if wanted. 
+   */
 
   t8_vtk_gloidx_array_type_t *vtk_treeid = t8_vtk_gloidx_array_type_t::New ();
   t8_vtk_gloidx_array_type_t *vtk_mpirank =
@@ -524,7 +529,7 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
           pvtkCell = vertex;
           break;
         case T8_ECLASS_LINE:
-          pvtkCell = line;      /*(curved_flag==0)? line:quadraticedge Notation verwenden */
+          pvtkCell = line;
           break;
         case T8_ECLASS_QUAD:
           pvtkCell = quad;
@@ -541,9 +546,9 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
         case T8_ECLASS_PRISM:
           pvtkCell = prism;
           break;
-        case T8_ECLASS_PYRAMID:
-          pvtkCell = pyramid;
-          break;
+          /* case T8_ECLASS_PYRAMID:
+             pvtkCell = pyramid;
+             break; */
         default:
           SC_ABORT_NOT_REACHED ();
         }
@@ -571,9 +576,9 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
         case T8_ECLASS_PRISM:
           pvtkCell = quadraticprism;
           break;
-        case T8_ECLASS_PYRAMID:
-          pvtkCell = quadraticpyramid;
-          break;
+          /* case T8_ECLASS_PYRAMID:
+             pvtkCell = quadraticpyramid;
+             break; */
         default:
           SC_ABORT_NOT_REACHED ();
         }
@@ -588,7 +593,10 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
                                                        vertex_coords);
         }
         else {
-          scheme->t8_element_vertex_reference_coords (element, ivertex,
+          scheme->t8_element_vertex_reference_coords (element,
+                                                      t8_eclass_vtk_corner_number
+                                                      [element_shape]
+                                                      [ivertex],
                                                       vertex_coords);
         }
 
@@ -614,7 +622,12 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
        */
 
       /* *INDENT-OFF* */
-      cellTypes[elem_id] = t8_eclass_vtk_type[element_shape];
+      if(curved_flag==0){
+        cellTypes[elem_id] = t8_eclass_vtk_type[element_shape];
+      }
+      else{
+        cellTypes[elem_id] = t8_curved_eclass_vtk_type[element_shape];
+      }
       if (write_treeid == 1) {
         vtk_treeid->InsertNextValue (itree);
       }
