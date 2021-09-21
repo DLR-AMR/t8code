@@ -356,10 +356,11 @@ t8_forest_adapt (t8_forest_t forest)
        * Therefore, all subelements that "survive" the adaptation will be coarsened back to their parent quadrant. 
        * Note, that this is always valid for subelements in terms of the minimum level,
        * since subelements have the same level as their parent quadrant. */
-      if (tscheme->t8_element_test_if_subelement (elements_from[0]) == 1 && refine == 0) {
+      if (tscheme->t8_element_test_if_subelement (elements_from[0]) == 1
+          && refine == 0) {
         refine = -1;
       }
-      
+
 #ifdef T8_ENABLE_DEBUG
       /* TODO: warning because of size_t instead of int */
 
