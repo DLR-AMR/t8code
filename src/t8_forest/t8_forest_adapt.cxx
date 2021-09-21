@@ -328,10 +328,10 @@ t8_forest_adapt (t8_forest_t forest)
       /* Pass the element, or the family to the adapt callback.
        * The output will be 
        *
-       *      < 0 if we passed a family and it should get coarsened 
-       *      = 0 if the element should remain as is 
-       *      = 1 if the element should be refined (using the chosen recursive refinement scheme)
-       *      > 1 if we use subelements
+       *      = -1 if we passed a family and it should get coarsened 
+       *      =  0 if the element should remain as is 
+       *      =  1 if the element should be refined (using the chosen recursive refinement scheme)
+       *      >  1 if we use subelements
        * 
        * The values -1,0 and 1 will appear, if we use the standard refinement scheme of the given eclass.
        * 
@@ -350,6 +350,16 @@ t8_forest_adapt (t8_forest_t forest)
                                      el_considered, tscheme,
                                      num_elements_to_adapt_fn, elements_from);
 
+      /* We need to add a special condition for subelements that is independent of the refinement criteria:
+       * After the adapt procedure, no subelements should be left in order to ensure that following modifications 
+       * such as balance or remove_hanigng_faces work properly. 
+       * Therefore, all subelements that "survive" the adaptation will be coarsened back to their parent quadrant. 
+       * Note, that this is always valid for subelements in terms of the minimum level,
+       * since subelements have the same level as their parent quadrant. */
+      if (tscheme->t8_element_test_if_subelement (elements_from[0]) == 1 && refine == 0) {
+        refine = -1;
+      }
+      
 #ifdef T8_ENABLE_DEBUG
       /* TODO: warning because of size_t instead of int */
 

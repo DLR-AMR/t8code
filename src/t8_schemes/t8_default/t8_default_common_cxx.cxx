@@ -210,7 +210,8 @@ int
 t8_default_scheme_common_c::t8_element_test_if_subelement (const
                                                            t8_element * elem)
 {
-  SC_ABORT ("This function is not implemented for the given scheme.\n");
+  /* no subelements are implemented and therefore we return -1 meaning "is no subelement" */
+  return -1;
 }
 
 int

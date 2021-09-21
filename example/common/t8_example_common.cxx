@@ -195,22 +195,9 @@ t8_common_adapt_level_set (t8_forest_t forest,
     /* The element can be refined and lies inside the refinement region */
     return 1;
   }
-  /* At this point a special condition for subelements is added. 
-   * Otherwise, subelements of the lowest level would never be coarsended back to their parent quadrant again,
-   * since their level is the same. */
-  else if (num_elements > 1
-           && (level > data->min_level
-               || (ts->t8_element_test_if_subelement (elements[0]) == 1
-                   && level >= data->min_level))
-           && !within_band) {
+  else if (num_elements > 1 && level > data->min_level && !within_band) {
     /* If element lies out of the refinement region and a family was given
      * as argument, we coarsen to level base level */
-    return -1;
-  }
-  else if (ts->t8_element_test_if_subelement (elements[0]) == 1) {
-    /* Every subelement should at least be coarsened to its parent quadrant, 
-     * if all other cases did not come into effect, such that there are no subelements left
-     * before entering the remove_hanging_faces function. */
     return -1;
   }
   else {

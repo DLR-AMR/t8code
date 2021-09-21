@@ -264,7 +264,7 @@ t8_subelement_scheme_quad_c::t8_element_get_face_corner (const t8_element_t *
   /* at the moment, this function is only implemented for standard quad elements */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
-
+  /* TODO: check whether this enumeration of the faces is right. It might be f_3 and f_2 switched */
   /*
    *   2    f_2    3
    *     x -->-- x
@@ -314,7 +314,7 @@ t8_subelement_scheme_quad_c::t8_element_child (const t8_element_t * elem,
 
   const p4est_qcoord_t shift = P4EST_QUADRANT_LEN (q->level + 1);
 
-  /* at the moment, this function is only implemented for standard quad elements */
+  /* it should not be possible to construct a child of a subelement */
   T8_ASSERT (pquad_w_sub_elem->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
 

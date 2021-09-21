@@ -65,10 +65,10 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   /* Values for the mesh refinement */
   int                 initlevel = 3;    /* initial uniform refinement level */
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening */
-  int                 maxlevel = 5;     /* highest level allowed for refining */
+  int                 maxlevel = 6;     /* highest level allowed for refining */
 
   /* Values for multiple timesteps */
-  int                 timesteps = 3;    /* Number of times, the mesh is refined */
+  int                 timesteps = 1;    /* Number of times, the mesh is refined */
   double              delta = 0.2;      /* The value, the radius increases after each timestep */
   int                 i;
 
@@ -97,7 +97,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   sdata.mid_point[0] = 0.2;
   sdata.mid_point[1] = 0.4;
   sdata.mid_point[2] = 0;
-  sdata.radius = 0.2;
+  sdata.radius = 0.6;
 
   /* refinement parameter */
   ls_data.band_width = 1.5;
@@ -116,11 +116,11 @@ t8_refine_with_subelements (t8_eclass_t eclass)
     /* Adapt the mesh according to the user data */
     t8_forest_set_user_data (forest_adapt, &ls_data);
     t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
-    //t8_forest_set_balance (forest_adapt, forest, 0);
+    t8_forest_set_balance (forest_adapt, forest, 0);
 
     /* Analogue to the other set-functions, this function adds subelements to the from_method. 
      * The forest will therefore use subelements while adapting in order to remove hanging faces from the mesh. */
-    t8_forest_set_remove_hanging_faces (forest_adapt, NULL);
+    // t8_forest_set_remove_hanging_faces (forest_adapt, NULL);
 
     t8_forest_commit (forest_adapt);
 
