@@ -149,9 +149,9 @@ t8_refine_with_subelements (t8_eclass_t eclass)
     t8_productionf
       ("This is t8_refine_with_subelements. Done timestep %i of %i\n", i + 1,
        timesteps);
-  } /* end of time-loop */
+  }                             /* end of time-loop */
   t8_forest_unref (&forest_adapt);
-} /* end of function */
+}                               /* end of function */
 
 int
 main (int argc, char **argv)
