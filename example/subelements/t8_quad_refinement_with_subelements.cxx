@@ -68,7 +68,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   int                 maxlevel = 6;     /* highest level allowed for refining */
 
   /* Values for multiple timesteps */
-  int                 timesteps = 1;    /* Number of times, the mesh is refined */
+  int                 timesteps = 4;    /* Number of times, the mesh is refined */
   double              delta = 0.2;      /* The value, the radius increases after each timestep */
   int                 i;
 
@@ -97,7 +97,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   sdata.mid_point[0] = 0.2;
   sdata.mid_point[1] = 0.4;
   sdata.mid_point[2] = 0;
-  sdata.radius = 0.6;
+  sdata.radius = 0.2;
 
   /* refinement parameter */
   ls_data.band_width = 1.5;
@@ -105,6 +105,10 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   ls_data.min_level = minlevel;
   ls_data.max_level = maxlevel;
   ls_data.udata = &sdata;
+
+  /* TODO: the time_forest examples use several refine_rounds within each time-loop. 
+   * This might resolve the problem with appearing artifacts during adaptation with multiple timesteps.
+   * This does not seem to be a problem of subelements but of the timestep scheme implemented in this example. */
 
   /* Adapting the mesh for different timesteps */
   for (i = 0; i < timesteps; i++) {
@@ -116,11 +120,11 @@ t8_refine_with_subelements (t8_eclass_t eclass)
     /* Adapt the mesh according to the user data */
     t8_forest_set_user_data (forest_adapt, &ls_data);
     t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
-    t8_forest_set_balance (forest_adapt, forest, 0);
+    // t8_forest_set_balance (forest_adapt, forest, 0);
 
     /* Analogue to the other set-functions, this function adds subelements to the from_method. 
      * The forest will therefore use subelements while adapting in order to remove hanging faces from the mesh. */
-    // t8_forest_set_remove_hanging_faces (forest_adapt, NULL);
+    t8_forest_set_remove_hanging_faces (forest_adapt, NULL);
 
     t8_forest_commit (forest_adapt);
 
@@ -141,9 +145,13 @@ t8_refine_with_subelements (t8_eclass_t eclass)
 
     /* Increasing the radius of the sphere for the next timestep */
     sdata.radius += delta;
-  }
+
+    t8_productionf
+      ("This is t8_refine_with_subelements. Done timestep %i of %i\n", i + 1,
+       timesteps);
+  } /* end of time-loop */
   t8_forest_unref (&forest_adapt);
-}
+} /* end of function */
 
 int
 main (int argc, char **argv)
