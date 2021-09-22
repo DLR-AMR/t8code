@@ -181,7 +181,13 @@ t8_subelement_scheme_quad_c::t8_element_num_faces (const t8_element_t * elem)
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
 
   T8_ASSERT (t8_element_is_valid (elem));
-  return P4EST_FACES;
+
+  if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
+    return T8_SUBELEMENT_FACES;
+  }
+  else {
+    return P4EST_FACES;
+  }
 }
 
 int
@@ -322,6 +328,7 @@ t8_subelement_scheme_quad_c::t8_element_child (const t8_element_t * elem,
   T8_ASSERT (t8_element_is_valid (child));
   T8_ASSERT (p4est_quadrant_is_extended (q));
   T8_ASSERT (q->level < P4EST_QMAXLEVEL);
+  
   T8_ASSERT (childid >= 0 && childid < P4EST_CHILDREN);
 
   r->x = childid & 0x01 ? (q->x | shift) : q->x;
@@ -476,10 +483,12 @@ t8_linearidx_t
   t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem;
   p4est_quadrant_t   *q = &pquad_w_sub->p4q;
 
-  /* at the moment, this function is only implemented for standard quad elements */
+  /* the id of a subelement equals the id of the parent quadrant */
+  #if 0
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
-
+  #endif
+ 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
 
@@ -854,6 +863,7 @@ t8_subelement_scheme_quad_c::t8_element_extrude_face (const t8_element_t *
   T8_ASSERT (face_scheme->t8_element_is_valid (elem));
   T8_ASSERT (0 <= root_face && root_face < P4EST_FACES);
 
+  /* TODO: check if this enumeration is right (maybe f_2 and f_3 switched) */
   /*
    * The faces of the root quadrant are enumerated like this:
    *

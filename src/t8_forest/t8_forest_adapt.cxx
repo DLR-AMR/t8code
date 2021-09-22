@@ -356,8 +356,7 @@ t8_forest_adapt (t8_forest_t forest)
        * Therefore, all subelements that "survive" the adaptation will be coarsened back to their parent quadrant. 
        * Note, that this is always valid for subelements in terms of the minimum level,
        * since subelements have the same level as their parent quadrant. */
-      if (tscheme->t8_element_test_if_subelement (elements_from[0]) == 1
-          && refine == 0) {
+      if (tscheme->t8_element_test_if_subelement (elements_from[0]) == 1 && refine == 0) {
         refine = -1;
       }
 
@@ -454,7 +453,7 @@ t8_forest_adapt (t8_forest_t forest)
          * We will count the global number of constructed subelements and give this number as additional output. */
         count_subelements += num_subelements;
       }
-      else if (refine < 0) {
+      else if (refine == -1) {
 
         /* The elements form a family and are to be coarsened. */
         /* Make room for one more new element. */
@@ -473,7 +472,7 @@ t8_forest_adapt (t8_forest_t forest)
            * family (and not the only one).
            * If so, we check this family for recursive coarsening. */
           const int           child_id =
-            tscheme->t8_element_child_id (elements[0]);
+            tscheme->t8_element_child_id (elements[0]); /* elements[0] is the just constructed parent */
           if (child_id > 0 && (size_t) child_id == num_children - 1) {
             t8_forest_adapt_coarsen_recursive (forest, ltree_id,
                                                el_considered, tscheme,

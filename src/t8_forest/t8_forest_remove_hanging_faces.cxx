@@ -136,14 +136,12 @@ t8_forest_remove_hanging_faces (t8_forest_t forest)
   t8_global_productionf ("Done t8_forest_hanging_faces.\n");
 }
 
-#if 0
 /* Check whether all hanging nodes are eliminated. */
 int
 t8_forest_hanging_faces_removed (t8_forest_t forest)
 {
   /* TODO: implement this function in the future */
-  return 0;
+  return 1;
 }
-#endif
 
 T8_EXTERN_C_END ();

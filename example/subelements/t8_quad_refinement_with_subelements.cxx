@@ -68,13 +68,12 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   int                 maxlevel = 6;     /* highest level allowed for refining */
 
   /* Values for multiple timesteps */
-  int                 timesteps = 4;    /* Number of times, the mesh is refined */
-  double              delta = 0.2;      /* The value, the radius increases after each timestep */
+  int                 timesteps = 3;    /* Number of times, the mesh is refined */
+  double              delta = 0.3;      /* The value, the radius increases after each timestep */
   int                 i;
 
   /* Initialize the forests */
   t8_forest_init (&forest);
-  t8_forest_init (&forest_adapt);
 
   /* building the cmesh, using the initlevel */
   cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
@@ -117,6 +116,8 @@ t8_refine_with_subelements (t8_eclass_t eclass)
       ("This is t8_refine_with_subelements. Into timestep %i of %i\n", i + 1,
        timesteps);
 
+    t8_forest_init (&forest_adapt);
+
     /* Adapt the mesh according to the user data */
     t8_forest_set_user_data (forest_adapt, &ls_data);
     t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
@@ -133,19 +134,13 @@ t8_refine_with_subelements (t8_eclass_t eclass)
               i, t8_eclass_to_string[eclass]);
     t8_forest_write_vtk (forest_adapt, filename);
 
-    /* initializing forest_adapt is not necessary after the last timestep */
-    if (i == timesteps - 1) {
-      break;
-    }
     /* Set forest to the partitioned forest, so it gets adapted
      * in the next timestep. */
     forest = forest_adapt;
 
-    t8_forest_init (&forest_adapt);
-
     /* Increasing the radius of the sphere for the next timestep */
     sdata.radius += delta;
-
+    
     t8_productionf
       ("This is t8_refine_with_subelements. Done timestep %i of %i\n", i + 1,
        timesteps);
