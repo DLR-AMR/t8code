@@ -140,7 +140,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
 
     /* Increasing the radius of the sphere for the next timestep */
     sdata.radius += delta;
-    
+
     t8_productionf
       ("This is t8_refine_with_subelements. Done timestep %i of %i\n", i + 1,
        timesteps);

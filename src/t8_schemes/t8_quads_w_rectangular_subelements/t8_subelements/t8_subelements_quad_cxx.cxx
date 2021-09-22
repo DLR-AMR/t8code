@@ -328,7 +328,7 @@ t8_subelement_scheme_quad_c::t8_element_child (const t8_element_t * elem,
   T8_ASSERT (t8_element_is_valid (child));
   T8_ASSERT (p4est_quadrant_is_extended (q));
   T8_ASSERT (q->level < P4EST_QMAXLEVEL);
-  
+
   T8_ASSERT (childid >= 0 && childid < P4EST_CHILDREN);
 
   r->x = childid & 0x01 ? (q->x | shift) : q->x;
@@ -484,11 +484,11 @@ t8_linearidx_t
   p4est_quadrant_t   *q = &pquad_w_sub->p4q;
 
   /* the id of a subelement equals the id of the parent quadrant */
-  #if 0
+#if 0
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
-  #endif
- 
+#endif
+
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
 

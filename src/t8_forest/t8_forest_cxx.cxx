@@ -299,7 +299,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
         len * (vertices[9 + i] - vertices[i]) * corner_coords[2] +
         vertices[i];
     }
-    /*And interpolate on the triangle*/
+    /*And interpolate on the triangle */
     for (i = 0; i < 3; i++) {
       coordinates[i] =
         len * (tri_vertices[3 + i] - tri_vertices[i]) * corner_coords[0] +
@@ -319,46 +319,50 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
                                       vertices, dim, coordinates);
     break;
   case T8_ECLASS_PYRAMID:
-      double ray[3], lambda, quad_coords[3], length, length2;
-      length = 0;
-      length2 = 0;
-      quad_coords[2] = 0;
+    double              ray[3], lambda, quad_coords[3], length, length2;
+    length = 0;
+    length2 = 0;
+    quad_coords[2] = 0;
 
-      for(i = 0; i<3; i++){
-          vertex_coords[i] =  len * corner_coords[i];
+    for (i = 0; i < 3; i++) {
+      vertex_coords[i] = len * corner_coords[i];
+    }
+    /*In this case, thex vertex is the tip of the parentpyramid and we don't have to compute
+     * anything.*/
+    if (vertex_coords[0] == 1. && vertex_coords[1] == 1.
+        && vertex_coords[2] == 1.) {
+      for (i = 0; i < 3; i++) {
+        coordinates[i] = vertices[12 + i];
       }
-      /*In this case, thex vertex is the tip of the parentpyramid and we don't have to compute
-       * anything.*/
-      if(vertex_coords[0] == 1. && vertex_coords[1] == 1. && vertex_coords[2] == 1.){
-          for(i = 0; i<3; i++){
-              coordinates[i] = vertices[12 + i];
-          }
-          break;
-      }
-       /* Project vertex_coord onto x-y-plane*/
-      for(i = 0; i < 3; i++){
-          ray[i] = 1-vertex_coords[i];
-      }
-      lambda = vertex_coords[2] / ray[2];
-      for(i = 0; i < 2; i++){
-          /*Compute coords of vertex in the plane*/
-          quad_coords[i] = vertex_coords[i] - lambda * ray[i];
-          length += (1-quad_coords[i]) * (1-quad_coords[i]);
-      }
-      length += 1;
-      /*compute the ratio*/
-      for(i = 0; i<3; i++){
-          length2 += (vertex_coords[i]-quad_coords[i]) *(vertex_coords[i]-quad_coords[i]);
-      }
-      lambda = sqrt(length2) / sqrt(length);;
+      break;
+    }
+    /* Project vertex_coord onto x-y-plane */
+    for (i = 0; i < 3; i++) {
+      ray[i] = 1 - vertex_coords[i];
+    }
+    lambda = vertex_coords[2] / ray[2];
+    for (i = 0; i < 2; i++) {
+      /*Compute coords of vertex in the plane */
+      quad_coords[i] = vertex_coords[i] - lambda * ray[i];
+      length += (1 - quad_coords[i]) * (1 - quad_coords[i]);
+    }
+    length += 1;
+    /*compute the ratio */
+    for (i = 0; i < 3; i++) {
+      length2 +=
+        (vertex_coords[i] - quad_coords[i]) * (vertex_coords[i] -
+                                               quad_coords[i]);
+    }
+    lambda = sqrt (length2) / sqrt (length);;
 
-      /*Interpolate on quad*/
-      t8_forest_bilinear_interpolation((const double *) quad_coords, vertices, 2, coordinates);
-      /*Project it back*/
-      for(i = 0; i<3; i++){
-          coordinates[i] += (vertices[12 + i] - coordinates[i]) * lambda;
-      }
-       break;
+    /*Interpolate on quad */
+    t8_forest_bilinear_interpolation ((const double *) quad_coords, vertices,
+                                      2, coordinates);
+    /*Project it back */
+    for (i = 0; i < 3; i++) {
+      coordinates[i] += (vertices[12 + i] - coordinates[i]) * lambda;
+    }
+    break;
 
   default:
     SC_ABORT ("Forest coordinate computation is supported only for "
@@ -430,8 +434,8 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
   memset (coordinates, 0, 3 * sizeof (double));
   /* get the number of corners of element */
   num_corners = ts->t8_element_num_corners (element);
-  if(ts->t8_element_shape(element) == T8_ECLASS_TET){
-      num_corners = 4;
+  if (ts->t8_element_shape (element) == T8_ECLASS_TET) {
+    num_corners = 4;
   }
   for (icorner = 0; icorner < num_corners; icorner++) {
     /* For each corner, add its coordinates to the centroids coordinates. */
@@ -1523,7 +1527,7 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
  * If no such i exists, return -1.
  */
 /* TODO: should return t8_locidx_t */
-static t8_locidx_t
+static              t8_locidx_t
 t8_forest_bin_search_lower (t8_element_array_t * elements,
                             t8_linearidx_t element_id, int maxlevel)
 {
@@ -1848,9 +1852,9 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
   T8_ASSERT (t8_forest_is_committed (forest));
   /* the is_balanced check does not work for a mesh with subelements at this point. 
    * We will skip this test for now as it is apriori known that our forest is balanced. */
-  #if 0
+#if 0
   T8_ASSERT (!forest_is_balanced || t8_forest_is_balanced (forest));
-  #endif
+#endif
   SC_CHECK_ABORT (forest_is_balanced, "leaf face neighbors is not implemented " "for unbalanced forests.\n");   /* TODO: write version for unbalanced forests */
   SC_CHECK_ABORT (forest->mpisize == 1 || forest->ghosts != NULL,
                   "Ghost structure is needed for t8_forest_leaf_face_neighbors "
@@ -2866,7 +2870,7 @@ t8_forest_element_owners_at_neigh_face (t8_forest_t forest,
    * the neighbor element */
   neigh_class =
     t8_forest_element_neighbor_eclass (forest, ltreeid, element, face);
-  T8_ASSERT(neigh_class>= T8_ECLASS_ZERO && neigh_class < T8_ECLASS_COUNT);
+  T8_ASSERT (neigh_class >= T8_ECLASS_ZERO && neigh_class < T8_ECLASS_COUNT);
   neigh_scheme = t8_forest_get_eclass_scheme (forest, neigh_class);
   neigh_scheme->t8_element_new (1, &face_neighbor);
   neigh_tree =
