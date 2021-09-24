@@ -2071,9 +2071,9 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
 
           /* Iterate through the family of subelements of the neighboring transition cell and compoare them to leaf in order to identify the right subelement  */
           int                 num_subelements =
-            neigh_scheme->
-            t8_element_get_number_of_subelements (subelement_data[1],
-                                                  neighbor_leafs[0]);
+            neigh_scheme->t8_element_get_number_of_subelements
+            (subelement_data[1],
+             neighbor_leafs[0]);
           int                 i;
           for (i = 0; i < num_subelements; i++) {
             /* Get the first subelement of this family */
