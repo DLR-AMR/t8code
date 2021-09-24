@@ -119,6 +119,12 @@ public:
   /* TODO: comment */
   virtual int         t8_element_get_subelement_type (const
                                                       t8_element * elem);
+
+  /* TODO: comment */
+  virtual void        t8_element_get_element_data (const t8_element * elem,
+                                                   int anchor_node[],
+                                                   int level[],
+                                                   int subelement_data[]);
 };
 
 #endif /* !T8_DEFAULT_COMMON_CXX_HXX */

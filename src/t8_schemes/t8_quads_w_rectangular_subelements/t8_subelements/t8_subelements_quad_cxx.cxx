@@ -177,9 +177,6 @@ t8_subelement_scheme_quad_c::t8_element_num_faces (const t8_element_t * elem)
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
 
-  T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
-             T8_SUB_QUAD_IS_NO_SUBELEMENT);
-
   T8_ASSERT (t8_element_is_valid (elem));
 
   if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
@@ -1477,6 +1474,25 @@ t8_subelement_scheme_quad_c::t8_element_get_location_of_subelement (const
   location[0] = face_number;
   location[1] = split;
   location[2] = sub_face_id;
+}
+
+void
+t8_subelement_scheme_quad_c::t8_element_get_element_data (const t8_element_t * elem,
+                                                          int anchor_node[],
+                                                          int level[],
+                                                          int subelement_data[])
+{
+  const t8_quad_with_subelements *pquad_w_sub =
+    (const t8_quad_with_subelements *) elem;
+
+  anchor_node[0] = pquad_w_sub->p4q.x;
+  anchor_node[1] = pquad_w_sub->p4q.y;
+
+  level[0] = pquad_w_sub->p4q.level;
+
+  subelement_data[0] = pquad_w_sub->dummy_is_subelement;
+  subelement_data[1] = pquad_w_sub->subelement_type;
+  subelement_data[2] = pquad_w_sub->subelement_id;
 }
 
 void

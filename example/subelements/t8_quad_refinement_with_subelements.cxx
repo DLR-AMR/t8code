@@ -52,6 +52,11 @@ t8_basic_level_set_sphere (const double x[3], double t, void *data)
   return t8_vec_dist (M, x) - sdata->radius;
 }
 
+/* Recommended settings for the refinement test with subelements: 
+ *   initlevel = 1
+ *   minlevel = initlevel 
+ *   maxlevel = 3
+ *   do_subelements = 1 */
 static void
 t8_refine_with_subelements (t8_eclass_t eclass)
 {
@@ -62,17 +67,21 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
 
-  /* Values for the mesh refinement */
+  /* refinement settings */
   int                 initlevel = 3;    /* initial uniform refinement level */
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening */
   int                 maxlevel = 6;     /* highest level allowed for refining */
 
-  /* Values for multiple timesteps */
+  /* adaptation setting */
+  int do_balance = 0;
+  int do_subelements = 1;
+
+  /* timestep settings */
   int                 timesteps = 3;    /* Number of times, the mesh is refined */
   double              delta = 0.3;      /* The value, the radius increases after each timestep */
   int                 i;
 
-  /* Initialize the forests */
+  /* initializing the forest */
   t8_forest_init (&forest);
 
   /* building the cmesh, using the initlevel */
@@ -121,11 +130,15 @@ t8_refine_with_subelements (t8_eclass_t eclass)
     /* Adapt the mesh according to the user data */
     t8_forest_set_user_data (forest_adapt, &ls_data);
     t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
-    // t8_forest_set_balance (forest_adapt, forest, 0);
 
-    /* Analogue to the other set-functions, this function adds subelements to the from_method. 
-     * The forest will therefore use subelements while adapting in order to remove hanging faces from the mesh. */
-    t8_forest_set_remove_hanging_faces (forest_adapt, NULL);
+    if (do_balance) {
+      t8_forest_set_balance (forest_adapt, forest, 0);
+    }
+    if (do_subelements) {
+      /* Analogue to the other set-functions, this function adds subelements to the from_method. 
+       * The forest will therefore use subelements while adapting in order to remove hanging faces from the mesh. */
+      t8_forest_set_remove_hanging_faces (forest_adapt, NULL);
+    }
 
     t8_forest_commit (forest_adapt);
 

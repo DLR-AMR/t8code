@@ -72,7 +72,7 @@ t8_test_neighbor_function (const t8_forest_t forest_adapt,
   int                 global_num_trees =
     t8_forest_get_num_global_trees (forest_adapt);
   const t8_element_t *current_element;
-  t8_locidx_t         ltree_id = 0, forest_is_balanced = 1;
+  t8_locidx_t         ltree_id = 0, forest_is_balanced = 1, hanging_faces_removed = 1;
   int                *dual_faces, num_neighbors;
   t8_element_t      **neighbor_leafs;
   t8_locidx_t        *element_indices;
@@ -97,16 +97,17 @@ t8_test_neighbor_function (const t8_forest_t forest_adapt,
   t8_forest_leaf_face_neighbors (forest_adapt, ltree_id, current_element,
                                  &neighbor_leafs, iface, &dual_faces,
                                  &num_neighbors, &element_indices,
-                                 &neigh_scheme, forest_is_balanced);
+                                 &neigh_scheme, forest_is_balanced, hanging_faces_removed);
 
-  /* after using subelements, there can only be one neighbor for each element and each face */
-  T8_ASSERT (num_neighbors == 1);
-
-  /* print the neighbor element */
-  t8_productionf ("\nThe neighbor element has the following data\n");
-  t8_print_element_data (neighbor_leafs[0]);
-  t8_productionf ("    Element id:            %i \n", element_indices[0]);
-
+  /* note, that after using subelements, there can only be one neighbor for each element and each face */
+  int i;
+  for (i = 0; i < num_neighbors; i++) {
+    /* print the neighbor element */
+    t8_productionf ("\nThe neighbor element number %i of %i has the following data\n", i + 1, num_neighbors);
+    t8_print_element_data (neighbor_leafs[i]);
+    t8_productionf ("    Element id:            %i \n", element_indices[i]);
+  }
+  
   /* free memory */
   if (num_neighbors > 0) {
     neigh_scheme->t8_element_destroy (num_neighbors, neighbor_leafs);
@@ -150,8 +151,14 @@ t8_simple_refinement_criteria (t8_forest_t forest,
   if (level < data->min_level) {
     return 1;
   }
+  /* TODO: understand why the following case refines the first element of the uniform mesh up to maxlevel. 
+   * Shouldnt it be that if the first element is refined into four children, only the first of these children should be refined again following this rule?
+   * But here, all children are refined again. This is not problematic for the example but it shows that the refine/coarsen recursive procedure does not work 
+   * as I would expect it to. */
 
-  /* refine the first element in the forest up to maxlevel */
+  /* Note that this simple scheme can be used to refine specific elements of a mesh. 
+   * Via do_balance = 0 and do_subelements = 0 it is also possible to refine the uniform mesh with arbitrary subelements
+   * by returning values > 1. */
   if (lelement_id == 0) {
     return 1;
   }
@@ -160,6 +167,12 @@ t8_simple_refinement_criteria (t8_forest_t forest,
   }
 }
 
+/* Recommended settings for the refinement test with subelements: 
+ *   initlevel = 1
+ *   minlevel = initlevel 
+ *   maxlevel = 3
+ *   do_subelements = 1
+ *   refinement criteria: if (lelement_id == 0) {return 1} will refine the first element of the uniform mesh up to maxlevel */
 static void
 t8_refine_with_subelements (t8_eclass_t eclass)
 {
@@ -170,12 +183,16 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   t8_cmesh_t          cmesh;
   char                filename[BUFSIZ];
 
-  /* Values for the mesh refinement */
+  /* refinement setting */
   int                 initlevel = 1;    /* initial uniform refinement level */
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening */
   int                 maxlevel = 3;     /* highest level allowed for refining */
 
-  /* Initialize the forests */
+  /* adaptation setting */
+  int do_balance = 0;
+  int do_subelements = 1;
+
+  /* initializing the forests */
   t8_forest_init (&forest);
   t8_forest_init (&forest_adapt);
 
@@ -198,11 +215,13 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   t8_forest_set_user_data (forest_adapt, &ls_data);
   t8_forest_set_adapt (forest_adapt, forest, t8_simple_refinement_criteria,
                        1);
-  // t8_forest_set_balance (forest_adapt, forest, 0);
 
-  /* Analogue to the other set-functions, this function adds subelements to the from_method. 
-   * The forest will therefore use subelements while adapting in order to remove hanging faces from the mesh. */
-  t8_forest_set_remove_hanging_faces (forest_adapt, NULL);
+  if (do_balance) {
+    t8_forest_set_balance (forest_adapt, forest, 0);
+  }
+  if (do_subelements) {
+    t8_forest_set_remove_hanging_faces (forest_adapt, NULL);
+  }
 
   t8_forest_commit (forest_adapt);
 
@@ -211,7 +230,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
             t8_eclass_to_string[eclass]);
   t8_forest_write_vtk (forest_adapt, filename);
 
-  /* testing the neighbor function below. The faces are enumerated as follows:
+  /* Testing the neighbor function below. The faces are enumerated as follows:
    * 
    *             f_3
    *        x - - - - - x
@@ -223,13 +242,13 @@ t8_refine_with_subelements (t8_eclass_t eclass)
    *        x - - - - - x
    *             f_2
    *    
-   */
+   * Choose the current element and its face: */
+  t8_locidx_t         element_id_in_tree = 15; /* index of the element in the forest (not the Morton index but its enumeration) */
+  int                 face_id = 3;        /* the face f_i which determines the direction in which we are looking for neighbors */
 
-  /* choose the current element and its face */
-  t8_locidx_t         leid_in_tree = 7; /* index of the element in the forest (not the Morton index but its enumeration) */
-  int                 iface = 1;        /* the face which determines the direction in which we are looking for neighbors */
+  t8_productionf ("Computing the neighbor of element %i, face %i\n", element_id_in_tree, face_id);
 
-  t8_test_neighbor_function (forest_adapt, leid_in_tree, iface);
+  t8_test_neighbor_function (forest_adapt, element_id_in_tree, face_id);
 
   t8_forest_unref (&forest_adapt);
 }                               /* end of function */
