@@ -115,9 +115,16 @@ t8_subelement_scheme_quad_c::t8_element_compare (const t8_element_t * elem1,
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
 
-  if (p4est_quadrant_compare (q, r) == 0
-      && t8_element_test_if_subelement (elem1) == 1) {
-    return -1;
+  if (p4est_quadrant_compare (q, r) == 0) {
+    if (t8_element_test_if_subelement (elem1) == 1 && t8_element_test_if_subelement (elem2) == 1) {
+      SC_ABORT ("Both elements are subelements. Specify what the compare function should do in this case");
+    }
+    else if (t8_element_test_if_subelement (elem1) == 1) {
+      return -1; /* elem1 is subelement and therefore smaller */
+    }
+    else if (t8_element_test_if_subelement (elem2) == 1) {
+      return 1; /* elem2 is subelement and therefore smaller */
+    }
   }
 
   /* Note that for subelements, their parent quadrant is compared at this point */

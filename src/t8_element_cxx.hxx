@@ -682,6 +682,25 @@ public:
                                                    int level[],
                                                    int subelement_data[]) = 0;
 
+  /** This function will determine the location of a specific subelement in the parent element.
+   *  Since different subelement types are possible, it is a priori not known where for example the
+   *  subelement with id 3 is located. 
+   *  \param [in] elem A valid subelement
+   *  \param [out] An array, whose entries are face_number, split and sub_face_id
+   *                      face_number: the face number, the given subelement is adjacent to (value between 0 and 3)
+   *                      split: whether there is a hanging node at the face, the subelement is adjacent to 
+   *                             (value 0 if there is not hanging node and 1 if there is one)
+   *                      sub_face_id: if there is a hanging node at the face, it is important to know if the given 
+   *                                   subelement is the first or the second subelement at this face
+   *                                   (value 0 if it is the first and 1 if it is the second)
+   *  The information in the location can be used to automatically determine the verticies of any subelement.
+   *  Since this function is only used to determine the vertices of subelements, it can be declared as a private/protected function.
+   */
+  virtual void                t8_element_get_location_of_subelement (const
+                                                                     t8_element_t *
+                                                                     elem,
+                                                                     int location[]) = 0;
+
 #ifdef T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
