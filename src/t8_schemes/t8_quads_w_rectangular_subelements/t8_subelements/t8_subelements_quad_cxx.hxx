@@ -366,10 +366,10 @@ public:
                                                       t8_element * elem);
 
 /** TODO: comment */
-  virtual void                t8_element_get_element_data (const t8_element_t * elem,
-                                                           int anchor_node[],
-                                                           int level[],
-                                                           int subelement_data[]);
+  virtual void        t8_element_get_element_data (const t8_element_t * elem,
+                                                   int anchor_node[],
+                                                   int level[],
+                                                   int subelement_data[]);
 
 /** Get the shape of a given element. Subelements are triangles */
   virtual t8_element_shape_t t8_element_shape (const t8_element_t * elem);
@@ -421,7 +421,7 @@ protected:
                                                          t8_element_t *
                                                          source,
                                                          t8_element_t * dest);
- 
+
   /** This function resets the subelement values of an element to the default value -1.
    *  \param [in,out] elem A valid element, whose subelement values have been resetted. 
    */

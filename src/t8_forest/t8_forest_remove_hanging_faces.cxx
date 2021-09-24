@@ -81,15 +81,16 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
    * Each neighbour-structure will lead to a unique binary code. 
    * Within the element scheme of the given eclass, this binary code is used to construct the right subelement type,
    * in order to remove hanging nodes from the mesh. */
-  
-  int is_balanced = 1;
-  int hangin_faces_removed = 0;
+
+  int                 is_balanced = 1;
+  int                 hangin_faces_removed = 0;
   for (iface = 0; iface < num_faces; iface++) {
     /* We are interested in the number of neighbours of a given element and a given face of the element. */
     t8_forest_leaf_face_neighbors (forest_from, ltree_id, current_element,
                                    &neighbor_leafs, iface, &dual_faces,
                                    &num_neighbors, &element_indices,
-                                   &neigh_scheme, is_balanced, hangin_faces_removed);
+                                   &neigh_scheme, is_balanced,
+                                   hangin_faces_removed);
     /* If the number of neighbours of a face is higher than 1, then we know that there must be a hanging node. */
 
     /* This procedure determines the decimal value of the binary representation of the neighbour structure. 

@@ -73,8 +73,8 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   int                 maxlevel = 6;     /* highest level allowed for refining */
 
   /* adaptation setting */
-  int do_balance = 0;
-  int do_subelements = 1;
+  int                 do_balance = 0;
+  int                 do_subelements = 1;
 
   /* timestep settings */
   int                 timesteps = 3;    /* Number of times, the mesh is refined */

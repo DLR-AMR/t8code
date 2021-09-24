@@ -1477,10 +1477,12 @@ t8_subelement_scheme_quad_c::t8_element_get_location_of_subelement (const
 }
 
 void
-t8_subelement_scheme_quad_c::t8_element_get_element_data (const t8_element_t * elem,
+t8_subelement_scheme_quad_c::t8_element_get_element_data (const t8_element_t *
+                                                          elem,
                                                           int anchor_node[],
                                                           int level[],
-                                                          int subelement_data[])
+                                                          int
+                                                          subelement_data[])
 {
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;

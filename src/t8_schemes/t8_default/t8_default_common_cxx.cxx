@@ -221,13 +221,15 @@ t8_default_scheme_common_c::t8_element_get_subelement_type (const
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
 
-void 
-t8_default_scheme_common_c::t8_element_get_element_data (const t8_element * elem,
+void
+t8_default_scheme_common_c::t8_element_get_element_data (const t8_element *
+                                                         elem,
                                                          int anchor_node[],
                                                          int level[],
-                                                         int subelement_data[])
+                                                         int
+                                                         subelement_data[])
 {
-  SC_ABORT ("This function is not implemented for the given scheme.\n"); 
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
 
 T8_EXTERN_C_END ();

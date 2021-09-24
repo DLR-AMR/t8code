@@ -2052,9 +2052,11 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
 
         /* At this point, the neighbor is found. 
          * If the neighbor is a subelement, then the identified neighbor might be wrong 
-         * and we need to modify the neighbor information (neighbor_leaf[0] and the element index). */ 
-        if (neigh_scheme->t8_element_test_if_subelement (neighbor_leafs[0]) == 1) {
-          t8_productionf ("\nThis is t8_forest_leaf_face_neighbor. The neighbor element is a subelement.\n");
+         * and we need to modify the neighbor information (neighbor_leaf[0] and the element index). */
+        if (neigh_scheme->t8_element_test_if_subelement (neighbor_leafs[0]) ==
+            1) {
+          t8_productionf
+            ("\nThis is t8_forest_leaf_face_neighbor. The neighbor element is a subelement.\n");
 
           /* Get the information of the neighbor elemement. 
            * In this case, the right transition cell is identified,  
@@ -2063,8 +2065,10 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
           int                 anchor_node[2] = { };
           int                 level[1] = { };
           int                 subelement_data[3] = { };
-          neigh_scheme->t8_element_get_element_data (neighbor_leafs[0], anchor_node, level, subelement_data);
-          
+          neigh_scheme->t8_element_get_element_data (neighbor_leafs[0],
+                                                     anchor_node, level,
+                                                     subelement_data);
+
           /* Iterate through the family of subelements of the neighboring transition cell and compoare them to leaf in order to identify the right subelement  */
 
         }
@@ -2189,7 +2193,7 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
      * It would make sense to run a is_balanced check and a hanging_faces_removed check on forest 
      * in order to set these values. */
     t8_debugf
-        ("This is t8_forest_print_all_leaf_neighbors. For the next step, we assume forest to not have any subelements.\n");
+      ("This is t8_forest_print_all_leaf_neighbors. For the next step, we assume forest to not have any subelements.\n");
     /* Iterate over all faces */
     for (iface = 0; iface < ts->t8_element_num_faces (leaf); iface++) {
       t8_forest_leaf_face_neighbors (forest, ltree, leaf, &neighbor_leafs,

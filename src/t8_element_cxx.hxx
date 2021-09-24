@@ -676,11 +676,11 @@ public:
                                                       t8_element * elem) = 0;
 
   /* TODO: comment */
-  virtual void         t8_element_get_element_data (const
-                                                    t8_element * elem,
-                                                    int anchor_node[],
-                                                    int level[],
-                                                    int subelement_data[]) = 0;
+  virtual void        t8_element_get_element_data (const
+                                                   t8_element * elem,
+                                                   int anchor_node[],
+                                                   int level[],
+                                                   int subelement_data[]) = 0;
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is

@@ -72,7 +72,8 @@ t8_test_neighbor_function (const t8_forest_t forest_adapt,
   int                 global_num_trees =
     t8_forest_get_num_global_trees (forest_adapt);
   const t8_element_t *current_element;
-  t8_locidx_t         ltree_id = 0, forest_is_balanced = 1, hanging_faces_removed = 1;
+  t8_locidx_t         ltree_id = 0, forest_is_balanced =
+    1, hanging_faces_removed = 1;
   int                *dual_faces, num_neighbors;
   t8_element_t      **neighbor_leafs;
   t8_locidx_t        *element_indices;
@@ -97,17 +98,20 @@ t8_test_neighbor_function (const t8_forest_t forest_adapt,
   t8_forest_leaf_face_neighbors (forest_adapt, ltree_id, current_element,
                                  &neighbor_leafs, iface, &dual_faces,
                                  &num_neighbors, &element_indices,
-                                 &neigh_scheme, forest_is_balanced, hanging_faces_removed);
+                                 &neigh_scheme, forest_is_balanced,
+                                 hanging_faces_removed);
 
   /* note, that after using subelements, there can only be one neighbor for each element and each face */
-  int i;
+  int                 i;
   for (i = 0; i < num_neighbors; i++) {
     /* print the neighbor element */
-    t8_productionf ("\nThe neighbor element number %i of %i has the following data\n", i + 1, num_neighbors);
+    t8_productionf
+      ("\nThe neighbor element number %i of %i has the following data\n",
+       i + 1, num_neighbors);
     t8_print_element_data (neighbor_leafs[i]);
     t8_productionf ("    Element id:            %i \n", element_indices[i]);
   }
-  
+
   /* free memory */
   if (num_neighbors > 0) {
     neigh_scheme->t8_element_destroy (num_neighbors, neighbor_leafs);
@@ -189,8 +193,8 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   int                 maxlevel = 3;     /* highest level allowed for refining */
 
   /* adaptation setting */
-  int do_balance = 0;
-  int do_subelements = 1;
+  int                 do_balance = 0;
+  int                 do_subelements = 1;
 
   /* initializing the forests */
   t8_forest_init (&forest);
@@ -243,10 +247,11 @@ t8_refine_with_subelements (t8_eclass_t eclass)
    *             f_2
    *    
    * Choose the current element and its face: */
-  t8_locidx_t         element_id_in_tree = 15; /* index of the element in the forest (not the Morton index but its enumeration) */
-  int                 face_id = 3;        /* the face f_i which determines the direction in which we are looking for neighbors */
+  t8_locidx_t         element_id_in_tree = 15;  /* index of the element in the forest (not the Morton index but its enumeration) */
+  int                 face_id = 3;      /* the face f_i which determines the direction in which we are looking for neighbors */
 
-  t8_productionf ("Computing the neighbor of element %i, face %i\n", element_id_in_tree, face_id);
+  t8_productionf ("Computing the neighbor of element %i, face %i\n",
+                  element_id_in_tree, face_id);
 
   t8_test_neighbor_function (forest_adapt, element_id_in_tree, face_id);
 
