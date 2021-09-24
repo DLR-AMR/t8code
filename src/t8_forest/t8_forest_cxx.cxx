@@ -2062,14 +2062,39 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
            * In this case, the right transition cell is identified,  
            * but the neighbor elemenmt neighbor_leafs[0] is a random subelement of the transition cell, which might not be the right neighbor. 
            * In the following, we are going to identify the subelement that is the real neighbor of leaf. */
-          int                 anchor_node[2] = { };
+          int                 anchor_node[2] = { };     /* (x,y) */
           int                 level[1] = { };
-          int                 subelement_data[3] = { };
+          int                 subelement_data[3] = { }; /* {is_subelement, subelement_type, subelement_id} */
           neigh_scheme->t8_element_get_element_data (neighbor_leafs[0],
                                                      anchor_node, level,
                                                      subelement_data);
 
           /* Iterate through the family of subelements of the neighboring transition cell and compoare them to leaf in order to identify the right subelement  */
+          int                 num_subelements =
+            neigh_scheme->
+            t8_element_get_number_of_subelements (subelement_data[1],
+                                                  neighbor_leafs[0]);
+          int                 i;
+          for (i = 0; i < num_subelements; i++) {
+            /* Get the first subelement of this family */
+            int                 index_of_subelement =
+              element_index - subelement_data[2] + i;
+            const t8_element_t *subelement;
+            subelement =
+              t8_forest_get_tree_element (t8_forest_get_tree
+                                          (forest, lneigh_treeid),
+                                          index_of_subelement);
+
+            int                 anchor_node_sub[2] = { };       /* (x,y) */
+            int                 level_sub[1] = { };
+            int                 subelement_data_sub[3] = { };   /* {is_subelement, subelement_type, subelement_id} */
+            neigh_scheme->t8_element_get_element_data (subelement,
+                                                       anchor_node_sub,
+                                                       level_sub,
+                                                       subelement_data_sub);
+
+            int                 debugging = 2;
+          }
 
         }
 
