@@ -2086,10 +2086,11 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
                                                        anchor_node_sub,
                                                        level_sub,
                                                        subelement_data_sub);
-            
-            int location_of_subelement[3] = { }; /* {face (enumerated clockwise), face split, first or second subelement at face} */
-            neigh_scheme->t8_element_get_location_of_subelement (subelement, location_of_subelement);
-            
+
+            int                 location_of_subelement[3] = { };        /* {face (enumerated clockwise), face split, first or second subelement at face} */
+            neigh_scheme->t8_element_get_location_of_subelement (subelement,
+                                                                 location_of_subelement);
+
             /* Note that the following cases are especially for the quad scheme with subelements.
              * 
              *             f_3
@@ -2104,73 +2105,81 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
              *    
              * */
 
-            if (face == 0) { /* searching for a left neighbor */
+            if (face == 0) {    /* searching for a left neighbor */
               if (location_of_subelement[0] == 2) {
-                if (ts->t8_element_level (leaf) == level_sub[0]) { 
+                if (ts->t8_element_level (leaf) == level_sub[0]) {
                   t8_productionf ("\n Neighbor subelement found.\n");
                 }
                 else {
-                  if (anchor_node[1] != anchor_node_sub[1] && location_of_subelement[2] == 0) {
+                  if (anchor_node[1] != anchor_node_sub[1]
+                      && location_of_subelement[2] == 0) {
                     t8_productionf ("\n Neighbor subelement found.\n");
                   }
-                  else if (anchor_node[1] == anchor_node_sub[1] && location_of_subelement[2] == 1) {
+                  else if (anchor_node[1] == anchor_node_sub[1]
+                           && location_of_subelement[2] == 1) {
                     t8_productionf ("\n Neighbor subelement found.\n");
                   }
                 }
               }
-            } /* end of face == 0 */
+            }                   /* end of face == 0 */
 
-            else if (face == 1) { /* searching for a right neighbor */
+            else if (face == 1) {       /* searching for a right neighbor */
               if (location_of_subelement[0] == 0) {
-                if (ts->t8_element_level (leaf) == level_sub[0]) { 
+                if (ts->t8_element_level (leaf) == level_sub[0]) {
                   t8_productionf ("\n Neighbor subelement found.\n");
                 }
                 else {
-                  if (anchor_node[1] == anchor_node_sub[1] && location_of_subelement[2] == 0) {
+                  if (anchor_node[1] == anchor_node_sub[1]
+                      && location_of_subelement[2] == 0) {
                     t8_productionf ("\n Neighbor subelement found.\n");
                   }
-                  else if (anchor_node[1] != anchor_node_sub[1] && location_of_subelement[2] == 1) {
+                  else if (anchor_node[1] != anchor_node_sub[1]
+                           && location_of_subelement[2] == 1) {
                     t8_productionf ("\n Neighbor subelement found.\n");
                   }
                 }
               }
-            } /* end of face == 1 */
+            }                   /* end of face == 1 */
 
-            else if (face == 2) { /* searching for a lower neighbor */
+            else if (face == 2) {       /* searching for a lower neighbor */
               if (location_of_subelement[0] == 1) {
-                if (ts->t8_element_level (leaf) == level_sub[0]) { 
+                if (ts->t8_element_level (leaf) == level_sub[0]) {
                   t8_productionf ("\n Neighbor subelement found.\n");
                 }
                 else {
-                  if (anchor_node[0] == anchor_node_sub[0] && location_of_subelement[2] == 0) {
+                  if (anchor_node[0] == anchor_node_sub[0]
+                      && location_of_subelement[2] == 0) {
                     t8_productionf ("\n Neighbor subelement found.\n");
                   }
-                  else if (anchor_node[0] != anchor_node_sub[0] && location_of_subelement[2] == 1) {
+                  else if (anchor_node[0] != anchor_node_sub[0]
+                           && location_of_subelement[2] == 1) {
                     t8_productionf ("\n Neighbor subelement found.\n");
                   }
                 }
               }
-            } /* end of face == 2 */
+            }                   /* end of face == 2 */
 
-            else if (face == 3) { /* searching for an upper neighbor */
+            else if (face == 3) {       /* searching for an upper neighbor */
               if (location_of_subelement[0] == 3) {
-                if (ts->t8_element_level (leaf) == level_sub[0]) { 
+                if (ts->t8_element_level (leaf) == level_sub[0]) {
                   t8_productionf ("\n Neighbor subelement found.\n");
                 }
                 else {
-                  if (anchor_node[0] != anchor_node_sub[0] && location_of_subelement[2] == 0) {
+                  if (anchor_node[0] != anchor_node_sub[0]
+                      && location_of_subelement[2] == 0) {
                     t8_productionf ("\n Neighbor subelement found.\n");
                   }
-                  else if (anchor_node[0] == anchor_node_sub[0] && location_of_subelement[2] == 1) {
+                  else if (anchor_node[0] == anchor_node_sub[0]
+                           && location_of_subelement[2] == 1) {
                     t8_productionf ("\n Neighbor subelement found.\n");
                   }
                 }
               }
-            } /* end of face == 3 */
+            }                   /* end of face == 3 */
 
-          } /* end of for loop over all subelements in the transition cell */
+          }                     /* end of for loop over all subelements in the transition cell */
 
-        } /* end of if neighbor is subelement case */
+        }                       /* end of if neighbor is subelement case */
 
         /* set return values */
         *num_neighbors = 1;

@@ -140,10 +140,10 @@ public:
    *  The information in the location can be used to automatically determine the verticies of any subelement.
    *  Since this function is only used to determine the vertices of subelements, it can be declared as a private/protected function.
    */
-  virtual void                t8_element_get_location_of_subelement (const
-                                                                     t8_element_t *
-                                                                     elem,
-                                                                     int location[]);
+  virtual void        t8_element_get_location_of_subelement (const
+                                                             t8_element_t *
+                                                             elem,
+                                                             int location[]);
 };
 
 #endif /* !T8_DEFAULT_COMMON_CXX_HXX */
