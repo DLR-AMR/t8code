@@ -764,7 +764,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
   {
     #if T8_WITH_OCC
     t8_global_productionf
-    ("Creating uniform level %i forests with a occ cylinder geometry.\n",
+    ("Creating uniform level %i forests with an occ cylinder geometry.\n",
      level);
 
     /* Create occ cylinder surfaces. We use an outer radius of 0.5 to get a diameter of 1.*/
