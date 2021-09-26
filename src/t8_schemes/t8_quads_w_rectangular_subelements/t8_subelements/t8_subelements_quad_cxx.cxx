@@ -737,7 +737,7 @@ t8_subelement_scheme_quad_c::t8_element_face_parent_face (const t8_element_t *
 
   int                 child_id;
 
-  /* at the moment, this function is only implemented for standard quad elements */
+  /* at the moment, this function is not implemented for subelements */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
 
