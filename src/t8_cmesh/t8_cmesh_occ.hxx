@@ -29,8 +29,8 @@
 
 #include <t8_cmesh.h>
 
-/** Construct a hollow cylinder out of hexes with with inner diameter of 0.5, 
- * outer diameter of 1 and a height of 1. 
+/** Construct a hollow cylinder out of hexes with an inner diameter of 0.5, 
+ * an outer diameter of 1 and a height of 1. 
  * \param [in] comm                   The mpi communicator to use.
  * \param [in] num_tangential_trees   Number of trees distributed around the cylinder.
  * \param [in] num_axial_trees        Number of trees distributed along the height of the cylinder.
