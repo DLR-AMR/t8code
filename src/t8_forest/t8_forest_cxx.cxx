@@ -2041,8 +2041,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         /* At this point, the neighbor is found. 
          * If the neighbor is a subelement, then the identified neighbor might be wrong 
          * and we need to modify the neighbor information (neighbor_leaf[0] and the element index). */
-        if (neigh_scheme->t8_element_test_if_subelement (ancestor) ==
-            1) {
+        if (neigh_scheme->t8_element_test_if_subelement (ancestor) == 1) {
           t8_productionf
             ("\nThis is t8_forest_leaf_face_neighbor. The neighbor element is a subelement.\n");
 
@@ -2060,7 +2059,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
            * but the neighbor elemenmt neighbor_leafs[0] is a random subelement of the transition cell, which might not be the right neighbor. 
            * In the following, we are going to identify the subelement that is the real neighbor of the current element "leaf". */
           int                 anchor_node[2] = { };     /* (x,y) */
-          int                 level[1] = { }; /* level */
+          int                 level[1] = { };   /* level */
           int                 subelement_data[3] = { }; /* {is_subelement, subelement_type, subelement_id} */
           neigh_scheme->t8_element_get_element_data (ancestor,
                                                      anchor_node, level,
@@ -2120,16 +2119,14 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
                 if (anchor_node_leaf[1] != anchor_node_sub[1]
                     && location_of_subelement[2] == 0) {
                   /* copy the subelement to the output pointer */
-                  neigh_scheme->t8_element_copy (subelement,
-                                                 ancestor);
+                  neigh_scheme->t8_element_copy (subelement, ancestor);
                   element_index = index_of_subelement;
                   break;
                 }
                 else if (anchor_node_leaf[1] == anchor_node_sub[1]
                          && location_of_subelement[2] == 1) {
                   /* copy the subelement to the output pointer */
-                  neigh_scheme->t8_element_copy (subelement,
-                                                 ancestor);
+                  neigh_scheme->t8_element_copy (subelement, ancestor);
                   element_index = index_of_subelement;
                   break;
                 }
@@ -2147,16 +2144,14 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
                 if (anchor_node_leaf[1] == anchor_node_sub[1]
                     && location_of_subelement[2] == 0) {
                   /* copy the subelement to the output pointer */
-                  neigh_scheme->t8_element_copy (subelement,
-                                                 ancestor);
+                  neigh_scheme->t8_element_copy (subelement, ancestor);
                   element_index = index_of_subelement;
                   break;
                 }
                 else if (anchor_node_leaf[1] != anchor_node_sub[1]
                          && location_of_subelement[2] == 1) {
                   /* copy the ancestor */
-                  neigh_scheme->t8_element_copy (subelement,
-                                                 ancestor);
+                  neigh_scheme->t8_element_copy (subelement, ancestor);
                   element_index = index_of_subelement;
                   break;
                 }
@@ -2174,16 +2169,14 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
                 if (anchor_node_leaf[0] == anchor_node_sub[0]
                     && location_of_subelement[2] == 0) {
                   /* copy the subelement to the output pointer */
-                  neigh_scheme->t8_element_copy (subelement,
-                                                 ancestor);
+                  neigh_scheme->t8_element_copy (subelement, ancestor);
                   element_index = index_of_subelement;
                   break;
                 }
                 else if (anchor_node_leaf[0] != anchor_node_sub[0]
                          && location_of_subelement[2] == 1) {
                   /* copy the subelement to the output pointer */
-                  neigh_scheme->t8_element_copy (subelement,
-                                                 ancestor);
+                  neigh_scheme->t8_element_copy (subelement, ancestor);
                   element_index = index_of_subelement;
                   break;
                 }
@@ -2201,16 +2194,14 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
                 if (anchor_node_leaf[0] != anchor_node_sub[0]
                     && location_of_subelement[2] == 0) {
                   /* copy the subelement to the output pointer */
-                  neigh_scheme->t8_element_copy (subelement,
-                                                 ancestor);
+                  neigh_scheme->t8_element_copy (subelement, ancestor);
                   element_index = index_of_subelement;
                   break;
                 }
                 else if (anchor_node_leaf[0] == anchor_node_sub[0]
                          && location_of_subelement[2] == 1) {
                   /* copy the subelement to the output pointer */
-                  neigh_scheme->t8_element_copy (subelement,
-                                                 ancestor);
+                  neigh_scheme->t8_element_copy (subelement, ancestor);
                   element_index = index_of_subelement;
                   break;
                 }
