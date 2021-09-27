@@ -234,23 +234,25 @@ t8_refine_with_subelements (t8_eclass_t eclass)
             t8_eclass_to_string[eclass]);
   t8_forest_write_vtk (forest_adapt, filename);
 
-  /* Testing the neighbor function below. The faces are enumerated as follows:
+  /* Testing the neighbor function below. The faces are enumerated as follows: 
+   * Note, that for subelements we enumerste the faces starting from the center node (+) clockwise for every subelement.
    * 
    *             f_3
-   *        x - - - - - x
-   *        |           | 
-   *        |           |
-   *    f_0 |           | f_1
-   *        |           |
-   *        |           |
-   *        x - - - - - x
-   *             f_2
+   *        x - - - - - x           x - - - x - - - x
+   *        |           |           | \     |     / |
+   *        |           |           |   \   |   /   |
+   *   f_0  |           | f_1       | f_2 \ | /     |
+   *        |           |           x - - - + - - - x
+   *        |           |           |     / | \     |
+   *        x - - - - - x       f_1 |   /   |   \   |
+   *             f_2                 | /f_0 |     \ |
+   *                                x - - - x - - - x
    *    
    * Choose the current element and its face: */
-  t8_locidx_t         element_id_in_tree = 39;  /* index of the element in the forest (not the Morton index but its enumeration) */
+  t8_locidx_t         element_id_in_tree = 15;  /* index of the element in the forest (not the Morton index but its enumeration) */
   int                 face_id = 1;      /* the face f_i, determing the direction in which we are looking for neighbors */
 
-  t8_productionf ("Computing the neighbor of element %i, face %i\n",
+  t8_productionf ("Computing the neighbor of element %i at face %i\n",
                   element_id_in_tree, face_id);
 
   t8_test_neighbor_function (forest_adapt, element_id_in_tree, face_id);
