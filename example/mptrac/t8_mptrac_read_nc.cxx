@@ -269,48 +269,31 @@ t8_mptrac_build_latlon_data_for_uvw (t8_mptrac_context_t * context,
               "mptrac_test1_%i", itracer);
   }
 
-#if 0
-  int                 ci;       /* unused interpolation weights. */
-  double              cw;
+#if 1
+  int                 ci[3];    /* unused interpolation weights. */
+  double              cw[3];
 #endif
 
   /* Copy the data over to the chunk */
-  int                 xprev = -1;
-  int                 yprev = -1;
-  int                 pprev = -1;
   for (int ix = 0; ix < nx; ++ix) {
-    //  t8_productionf ("\n%i/%i\n", ix, nx);
-
     const double        lat = context->mptrac_meteo1->lat[ix];
-    yprev = -1;
     for (int iy = 0; iy < ny; ++iy) {
       const double        lon = context->mptrac_meteo1->lon[iy];
-      pprev = -1;
       for (int iz = 0; iz < np; ++iz) {
         const double        pressure = context->mptrac_meteo1->p[iz];
-#if 0
-        t8_productionf ("\n%i %i %i\n", ix, iy, iz);
-        t8_productionf ("%i %i %i\n", nx, ny, np);
-#endif
-        xprev = ix;
-        yprev = iy;
-        pprev = iz;
+
         double              value;
-        // intpol_met_time_3d (context->mptrac_meteo1, context->mptrac_meteo1->u,
-        //     context->mptrac_meteo2, context->mptrac_meteo2->u,
-        //     time, pressure, lon, lat, &value, &ci, &cw, 1);
-        // wtf, this crashes bc ix is overwritten???
-#if 0
-        t8_productionf ("\n%i %i %i\n", ix, iy, iz);
-        t8_productionf ("%i %i %i\n-----------------------\n", nx, ny, np);
-#endif
-        T8_ASSERT (ix == xprev);
-        T8_ASSERT (iy == yprev);
-        T8_ASSERT (iz == pprev);
+        /* Compute interpolation of zonal wind. */
+        intpol_met_time_3d (context->mptrac_meteo1, context->mptrac_meteo1->u,
+                            context->mptrac_meteo2, context->mptrac_meteo2->u,
+                            time, pressure, lon, lat, &value, ci, cw, 1);
+
         /* Copy zonal wind */
-        chunk->data[(iy * nx + ix) * np + iz] =
-          (1 - time) * context->mptrac_meteo1->u[ix][iy][iz]
+        chunk->data[(iy * nx + ix) * np + iz] = value;
+#if 0                           /* Old manual interpolation routine. */
+        (1 - time) * context->mptrac_meteo1->u[ix][iy][iz]
           + time * context->mptrac_meteo2->u[ix][iy][iz];
+#endif
         if (ix == 10 && iy == 10 && iz == 10) {
           t8_global_productionf ("%f %f %f %f\n", time,
                                  context->mptrac_meteo1->u[ix][iy][iz],
