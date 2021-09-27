@@ -2091,7 +2091,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
 
           adjust =
             ((subelement_data_leaf[2] + shift) +
-             (number_of_subelements)) % (number_of_subelements);
+             number_of_subelements) % number_of_subelements;
           element_index = leaf_index + adjust;
 
           neighbor_subelement =
