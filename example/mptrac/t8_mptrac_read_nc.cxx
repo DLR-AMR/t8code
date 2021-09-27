@@ -405,6 +405,12 @@ t8_mptrac_compute_2d_example (const char *filename, char *mptrac_input,
     itime++;
     time_since_last_six_hours += deltat;
   }
+
+  /* clean-up */
+  T8_FREE (context.mptrac_meteo1);
+  T8_FREE (context.mptrac_meteo2);
+  T8_FREE (context.mptrac_control);
+  t8_forest_unref (&context.forest);
 }
 
 int
