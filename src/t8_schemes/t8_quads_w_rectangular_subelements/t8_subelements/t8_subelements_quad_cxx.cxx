@@ -917,12 +917,36 @@ int
 t8_subelement_scheme_quad_c::t8_element_tree_face (const t8_element_t * elem,
                                                    int face)
 {
-  /* For a subelement we consider its parent quad */
-
   T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (0 <= face && face < P4EST_FACES);
-  /* For quadrants the face and the tree face number are the same. */
-  return face;
+  
+  const t8_quad_with_subelements *pquad_w_sub =
+    (const t8_quad_with_subelements *) elem;
+
+  if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
+    T8_ASSERT (face == 1); /* this function does only make sense for subelements at face 1 */
+
+    int location [3] = { };
+    t8_element_get_location_of_subelement (elem, location);
+    
+    /* subelements are enumerated clockwise (not as quadrant faces) */
+    if (location[1] == 0) {
+      return 0;
+    }
+    else if (location[0] == 1) {
+      return 3;
+    }
+    else if (location[0] == 2) {
+      return 1;
+    }
+    else {
+      return 2;
+    }
+  }
+  else {
+    T8_ASSERT (0 <= face && face < P4EST_FACES);
+    /* For quadrants the face and the tree face number are the same. */
+    return face;
+  }
 }
 
 /** Construct the first descendant of an element that touches a given face.   */
