@@ -268,21 +268,18 @@ t8_mptrac_build_latlon_data_for_uvw (t8_mptrac_context_t * context,
               "mptrac_test1_%i", itracer);
   }
 
-#if 1
-  int                 ci[3];    /* unused interpolation weights. */
-  double              cw[3];
-#endif
-
   /* Copy the data over to the chunk */
   for (int ix = 0; ix < nx; ++ix) {
-    const double        lat = context->mptrac_meteo1->lat[ix];
+    const double        lon = context->mptrac_meteo1->lon[ix];
     for (int iy = 0; iy < ny; ++iy) {
-      const double        lon = context->mptrac_meteo1->lon[iy];
+      const double        lat = context->mptrac_meteo1->lat[iy];
       for (int iz = 0; iz < np; ++iz) {
         const double        pressure = context->mptrac_meteo1->p[iz];
 
         double              value;
         /* Compute interpolation of zonal wind. */
+        int                 ci[3];
+        double              cw[3];
         intpol_met_time_3d (context->mptrac_meteo1, context->mptrac_meteo1->u,
                             context->mptrac_meteo2, context->mptrac_meteo2->u,
                             time, pressure, lon, lat, &value, ci, cw, 1);
