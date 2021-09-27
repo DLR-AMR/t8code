@@ -2029,7 +2029,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         /* A subelement is triangular and has three faces. 
          * Face 0 borders to a sibling as well as face 2. Face 1 borders to some other elmenent that is not in this family of subelements. */
 
-        /* The following graph schows a possible subelemet "leaf" in a transition cell (family of subelements).
+        /* The following graph shows a possible subelemet "leaf" in a transition cell (family of subelements).
          * Nf0 and Nf2 are its neighbors at face f0 repsectively f2.
          * 
          *      x - - - - - - - x
@@ -2043,7 +2043,8 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
          *      x - - - - - - - x
          *    
          */
-        if (face == 0 || face == 2) {   /* sibling neighbor */
+
+        if (face == 0 || face == 2) {   /* in this case we have a sibling neighbor */
 
           const t8_element_t *neighbor_subelement;
           neighbor_subelement =
@@ -2073,34 +2074,22 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
            * We are searching for Nf0 or Nf2 of leaf but leaf_index corresponds to a random subelement "neigh_sub" of the transition cell instead of leaf itself
            * (this is a problem of the index function with subelements but we can solve this without modifying this function).
            * Depending on whether we are searching Nf0 or Nf2, we can now use leaf_index, and the sub_ids of leaf and neigh_sub 
-           * in order to adjust leaf_index and to get the right neighbor by just shifting it by +-1. 
-           * The adjustement follows in the next lines: */
-          int                 adjust;
+           * in order to adjust leaf_index and to get the right neighbor by just shifting it by +-1: */
+          int                 adjust, shift;
           int                 number_of_subelements =
-            ts->t8_element_get_number_of_subelements (subelement_data_leaf[1],
-                                                      leaf);
+          ts->t8_element_get_number_of_subelements (subelement_data_leaf[1],
+                                                    leaf);
+
+          leaf_index -= subelement_data_neighbor_sub[2]; /* now we have the index of the first subelement of this transition cell */
+
           if (face == 0) {      /* counter clockwise neighbor */
-            if (subelement_data_leaf[2] != 0) { /* if the current element is not the first subelement of this family */
-              adjust =
-                (subelement_data_leaf[2] - subelement_data_neighbor_sub[2]) -
-                1;
-            }
-            else {
-              adjust =
-                number_of_subelements - 1 - subelement_data_neighbor_sub[2];
-            }
+            shift = -1;
           }
-          else {                /* clockwise neighbor */
-            if (subelement_data_leaf[2] != number_of_subelements - 1) { /* if the current element is not the last subelement of this family */
-              adjust =
-                (subelement_data_leaf[2] - subelement_data_neighbor_sub[2]) +
-                1;
-            }
-            else {
-              adjust = -subelement_data_neighbor_sub[2];
-            }
+          if (face == 2) {                /* clockwise neighbor */
+            shift = 1;
           }
 
+          adjust = ((subelement_data_leaf[2] + shift) + (number_of_subelements)) % (number_of_subelements);
           element_index = leaf_index + adjust;
 
           neighbor_subelement =
