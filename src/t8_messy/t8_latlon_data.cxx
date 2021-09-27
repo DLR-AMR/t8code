@@ -374,7 +374,7 @@ t8_latlon_set_dimension_value (int axis, double ****data, int x_coord,
  * @author Spataro Luca
  */
 void
-t8_latlon_data_apply_morton_order (t8_forest_t * forest,
+t8_latlon_data_apply_morton_order (t8_forest_t forest,
                                    t8_latlon_data_chunk_t * data_chunk)
 {
   t8_debugf ("Applying morton order\n");
@@ -387,7 +387,7 @@ t8_latlon_data_apply_morton_order (t8_forest_t * forest,
   int                 z_length = data_chunk->z_length;
   int                 element_length = z_length * data_chunk->num_tracers;
   int                 num_elements =
-    t8_forest_get_local_num_elements (*forest);
+    t8_forest_get_local_num_elements (forest);
   int                 num_data_elements = num_elements * element_length;
 
   int                 coords[2];
@@ -405,7 +405,7 @@ t8_latlon_data_apply_morton_order (t8_forest_t * forest,
     T8_ALLOC_ZERO (t8_linearidx_t, num_elements);
 
   for (index = 0; index < num_elements; ++index) {
-    elem = t8_forest_get_element_in_tree (*forest, 0, index);
+    elem = t8_forest_get_element_in_tree (forest, 0, index);
     quad_scheme.t8_element_vertex_coords (elem, 0, coords);
 
     x = coords[0] >> (P4EST_MAXLEVEL - data_chunk->level);

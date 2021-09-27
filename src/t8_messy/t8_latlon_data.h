@@ -125,7 +125,7 @@ void                t8_latlon_set_dimension (t8_latlon_data_chunk_t *
                                              data_chunk, char *tracer,
                                              double ****data);
 
-void                t8_latlon_data_apply_morton_order (t8_forest_t * forest,
+void                t8_latlon_data_apply_morton_order (t8_forest_t forest,
                                                        t8_latlon_data_chunk_t
                                                        * data_chunk);
 
