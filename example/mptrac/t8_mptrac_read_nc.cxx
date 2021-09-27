@@ -27,7 +27,113 @@
 
 #include <t8.h>
 #include <sc_options.h>
+#include <t8_messy/t8_latlon_data.h>
+#include <t8_messy/t8_latlon_refine.h>
+#include <t8_messy/t8_messy_coupler.h>
+#include <t8_forest.h>
+#include <t8_forest_vtk.h>
 #include "libtrac.h"
+
+typedef struct
+{
+  const char         *filename;
+  char               *mptrac_input;
+  ctl_t              *mptrac_control;
+  met_t              *mptrac_meteo1;
+  met_t              *mptrac_meteo2;
+  t8_forest_t         forest;
+  int                 level;    /*< The maximum refinement level in \a forest. */
+  double              missing_value;    /*< The constant we use to denote an invalid data value. */
+  t8_latlon_data_chunk_t *data; /*< The actual data that we store here. */
+} t8_mptrac_context_t;
+
+typedef struct
+{
+  int                 z_layer;  /*< The z-layer to consider. */
+  double              threshold_coarsen;        /*< Elements with u values lower will get coarsened. */
+  double              threshold_refine; /*< Elements with u values larger will get refined. */
+  const t8_mptrac_context_t *context;   /*< t8_mptrac context. */
+} t8_mptrac_adapt_context_t;
+
+/* Refine mesh when z layer value is large.
+ * coarsen if small. */
+int
+t8_mptrac_adapt_callback (t8_forest_t forest,
+                          t8_forest_t forest_from,
+                          int which_tree,
+                          int lelement_id,
+                          t8_eclass_scheme_c * ts,
+                          int num_elements, t8_element_t * elements[])
+{
+  const t8_mptrac_adapt_context_t *adapt_ctx =
+    (const t8_mptrac_adapt_context_t *) t8_forest_get_user_data (forest);
+  T8_ASSERT (adapt_ctx != NULL);
+  T8_ASSERT (adapt_ctx->context != NULL);
+  T8_ASSERT (adapt_ctx->z_layer >= 0);
+  T8_ASSERT (adapt_ctx->z_layer <= adapt_ctx->context->data->z_length);
+
+  /* Get the absolute value of the current element at the requested z layer */
+  const int           num_tracers = adapt_ctx->context->data->num_tracers;
+  const int           entries_per_element =
+    num_tracers * adapt_ctx->context->data->z_length;
+  const double        value =
+    fabs (adapt_ctx->context->data->data[lelement_id * entries_per_element +
+                                         adapt_ctx->z_layer * num_tracers]);
+
+  if (value < adapt_ctx->threshold_coarsen) {
+    /* If we are a family and lower than the coarsen threshhold, we coarsen (return -1).
+     * Otherwise, do nothing (return 0). */
+    return num_elements > 1 ? -1 : 0;
+  }
+  else if (value > adapt_ctx->threshold_refine) {
+    /* We are larger than the refine threshold. This element gets refined. */
+    return 1;
+  }
+  /* Keep the element. */
+  return 0;
+}
+
+#if 0
+/* TODO: This is a modified copy of t8_messy_interpolate_callback.
+ * make it publicly available?
+ * Interpolate, but only copy value/use value of first family member.
+ */
+static void
+t8_mptrac_onlycopy_interpolate_callback (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, t8_eclass_scheme_c * ts, int num_outgoing,     /* previously number of cells, only interesting when 4 */
+                                         t8_locidx_t first_outgoing,    /* index  of first cell in forest_old */
+                                         int num_incoming,      /* number of cells to be.., should be 1 */
+                                         t8_locidx_t first_incoming)
+{                               /* index of new cell in forest_new */
+
+  t8_messy_interpolation_data_t *data =
+    (t8_messy_interpolation_data_t *) t8_forest_get_user_data (forest_new);
+
+  int                 index_incoming, index_outgoing;
+  int                 element_data_length = data->element_length;
+
+  index_incoming = first_incoming * element_data_length;
+  index_outgoing = first_outgoing * element_data_length;
+
+  if (num_outgoing == num_incoming) {
+    // no refining was done, just copy data over
+    memcpy (data->adapt + index_incoming,
+            data->data + index_outgoing,
+            element_data_length * sizeof (double));
+    return;
+  }
+
+  if (num_outgoing < num_incoming) {
+    // cell is being split, so copy data to all new cells
+    for (int i = 0; i < num_incoming; ++i) {
+      // no refining was done, just copy data over
+      memcpy (data->adapt + index_incoming + i * element_data_length,
+              data->data + index_outgoing,
+              element_data_length * sizeof (double));
+    }
+    return;
+  }
+}
+#endif
 
 /** Split a string that contains command line parameters for MPTRAC into individual
  *  tokens.
@@ -87,22 +193,240 @@ t8_mptrac_split_input_string (const char *input_string, char ***output,
 }
 
 void
-t8_mptrac_read_nc (const char *filename, char *mptrac_input)
+t8_mptrac_read_nc (t8_mptrac_context_t * mptrac_context, double seconds)
 {
-  ctl_t               mptrac_control;
-  met_t              *mptrac_meteo1, *mptrac_meteo2;
- // mptrac_meteo = T8_ALLOC (met_t, 1);
   int                 num_arguments;
   char              **output;
 
   /* Split command line argument string to be passed to mptrac routines. */
-  t8_mptrac_split_input_string (mptrac_input, &output, &num_arguments);
+  t8_mptrac_split_input_string (mptrac_context->mptrac_input, &output,
+                                &num_arguments);
 
-  read_ctl (filename, num_arguments, output, &mptrac_control);
-  get_met (&mptrac_control, 0, &mptrac_meteo1, &mptrac_meteo2);
+  read_ctl ("-", num_arguments, output, mptrac_context->mptrac_control);
+  //seconds = mptrac_context->mptrac_control->t_start;
+  /* TODO: This is a hardcoded workaround to get it done.
+   * I do not understand why, buet metbase is '-' instead of the fileprefix. */
+  //strcpy (mptrac_context->mptrac_control->metbase, "ei");
+  get_met (mptrac_context->mptrac_control, seconds,
+           &mptrac_context->mptrac_meteo1, &mptrac_context->mptrac_meteo2);
 
-//T8_FREE (mptrac_meteo);
+  /* Set the missing value. 1e30 seems to be one of the largest values that Paraview can
+   * still except as input. */
+  mptrac_context->missing_value = -1e30;
+  mptrac_context->data = NULL;
+
   T8_FREE (output);
+}
+
+/* Build a 2D quad forest matching the x and y extend of mptrac meteo data. */
+void
+t8_mptrac_build_2d_forest (t8_mptrac_context_t * mptrac_context)
+{
+  mptrac_context->forest =
+    t8_latlon_refine (mptrac_context->mptrac_meteo1->nx,
+                      mptrac_context->mptrac_meteo1->ny, T8_LATLON_REFINE, 1,
+                      &mptrac_context->level);
+
+  T8_ASSERT (mptrac_context->forest != NULL);
+  /* Write to vtk */
+  t8_forest_write_vtk (mptrac_context->forest, "test_mptrac_forest");
+}
+
+/* Extract 2D slice from specific level into latlon_data chunk.
+ * Currenty, we copy only the zonal wind */
+void
+t8_mptrac_build_latlon_data_for_uvw (t8_mptrac_context_t * context,
+                                     double time)
+{
+  T8_ASSERT (context != NULL);
+  T8_ASSERT (context->forest != NULL);
+  const int           num_tracers = 1;
+  const int           nx = context->mptrac_meteo1->nx;
+  const int           ny = context->mptrac_meteo1->ny;
+  const int           np = context->mptrac_meteo1->np;
+  int                *shape = T8_ALLOC (int, 4);
+  shape[0] = context->mptrac_meteo1->nx;
+  shape[1] = context->mptrac_meteo1->ny;
+  shape[2] = 1;                 /* Should this be z? */
+  shape[3] = 1;                 /* Uncertain about meaning of [3], probably time. */
+
+  if (context->data != NULL) {
+    t8_latlon_chunk_destroy (&context->data);
+  }
+  t8_latlon_data_chunk_t *chunk = t8_latlon_new_chunk ("MPTRAC-TESTCHUNK",
+                                                       0, 0, nx, ny, np,
+                                                       shape, num_tracers,
+                                                       'X',
+                                                       'Y', 'Z',
+                                                       context->level,
+                                                       context->missing_value,
+                                                       T8_LATLON_DATA_MESSY);
+
+/* TODO: VTK not shown properly, "the data array may be too short" */
+
+  for (int itracer = 0; itracer < num_tracers; ++itracer) {
+    snprintf (chunk->tracer_names + itracer * BUFSIZ, BUFSIZ,
+              "mptrac_test1_%i", itracer);
+  }
+
+#if 0
+  int                 ci;       /* unused interpolation weights. */
+  double              cw;
+#endif
+
+  /* Copy the data over to the chunk */
+  int                 xprev = -1;
+  int                 yprev = -1;
+  int                 pprev = -1;
+  for (int ix = 0; ix < nx; ++ix) {
+    //  t8_productionf ("\n%i/%i\n", ix, nx);
+
+    const double        lat = context->mptrac_meteo1->lat[ix];
+    yprev = -1;
+    for (int iy = 0; iy < ny; ++iy) {
+      const double        lon = context->mptrac_meteo1->lon[iy];
+      pprev = -1;
+      for (int iz = 0; iz < np; ++iz) {
+        const double        pressure = context->mptrac_meteo1->p[iz];
+#if 0
+        t8_productionf ("\n%i %i %i\n", ix, iy, iz);
+        t8_productionf ("%i %i %i\n", nx, ny, np);
+#endif
+        xprev = ix;
+        yprev = iy;
+        pprev = iz;
+        double              value;
+        // intpol_met_time_3d (context->mptrac_meteo1, context->mptrac_meteo1->u,
+        //     context->mptrac_meteo2, context->mptrac_meteo2->u,
+        //     time, pressure, lon, lat, &value, &ci, &cw, 1);
+        // wtf, this crashes bc ix is overwritten???
+#if 0
+        t8_productionf ("\n%i %i %i\n", ix, iy, iz);
+        t8_productionf ("%i %i %i\n-----------------------\n", nx, ny, np);
+#endif
+        T8_ASSERT (ix == xprev);
+        T8_ASSERT (iy == yprev);
+        T8_ASSERT (iz == pprev);
+        /* Copy zonal wind */
+        chunk->data[(iy * nx + ix) * np + iz] =
+          (1 - time) * context->mptrac_meteo1->u[ix][iy][iz]
+          + time * context->mptrac_meteo2->u[ix][iy][iz];
+        if (ix == 10 && iy == 10 && iz == 10) {
+          t8_global_productionf ("%f %f %f %f\n", time,
+                                 context->mptrac_meteo1->u[ix][iy][iz],
+                                 context->mptrac_meteo2->u[ix][iy][iz],
+                                 chunk->data[(iy * nx + ix) * np + iz]);
+        }
+      }
+    }
+  }
+  /* Convert to morton order */
+  t8_latlon_data_apply_morton_order (context->forest, chunk);
+  context->data = chunk;
+}
+
+void
+t8_mptrac_context_write_vtk (const t8_mptrac_context_t * context,
+                             const char *vtk_filename)
+{
+  T8_ASSERT (context != NULL);
+  T8_ASSERT (context->data != NULL);
+  /* temporarily create messy data struct and use its vtk output. */
+  t8_messy_data       data;
+  data.adapt_data = NULL;
+  data.chunk = context->data;
+  data.coarsen = NULL;
+  data.interpolation = NULL;
+  data.forest = context->forest;
+  data.errors = NULL;
+  data.errors_global = NULL;
+  data.errors_adapt = NULL;
+  data.missing_value = context->missing_value;
+  data.max_local_error = 0;
+  data.max_global_error = 0;
+  data.counter = 0;
+  data.num_elements = t8_forest_get_local_num_elements (data.forest);
+  t8_messy_write_forest (context->forest, vtk_filename, &data);
+}
+
+/* Refine the forest stored in context, but keep it alive */
+t8_forest_t
+t8_mptrac_refine_forest (const t8_mptrac_context_t * context, int z_level,
+                         const double threshold_coarsen,
+                         const double threshold_refine)
+{
+  t8_mptrac_adapt_context_t adapt_context;
+
+  adapt_context.context = context;
+  adapt_context.threshold_coarsen = threshold_coarsen;
+  adapt_context.threshold_refine = threshold_refine;
+  adapt_context.z_layer = z_level;
+  t8_forest_ref (context->forest);
+  t8_forest_t         forest_adapt =
+    t8_forest_new_adapt (context->forest, t8_mptrac_adapt_callback, 0, 0,
+                         &adapt_context);
+  t8_forest_t         forest_partition;
+  t8_forest_init (&forest_partition);
+  t8_forest_set_partition (forest_partition, forest_adapt, 0);
+  t8_forest_commit (forest_partition);
+  return forest_partition;
+}
+
+void
+t8_mptrac_compute_2d_example (const char *filename, char *mptrac_input,
+                              double simulation_hours)
+{
+  t8_mptrac_context_t context;
+  double              hours;
+  double              physical_time;
+
+  context.filename = filename;
+  context.mptrac_input = mptrac_input;
+
+  context.mptrac_meteo1 = T8_ALLOC (met_t, 1);
+  context.mptrac_meteo2 = T8_ALLOC (met_t, 1);
+  context.mptrac_control = T8_ALLOC (ctl_t, 1);
+  int                 start_six_hours = 0;
+  time2jsec (2011, 06, 05, start_six_hours, 00, 00, 00, &physical_time);
+  t8_mptrac_read_nc (&context, physical_time);
+#if 0
+  /* Modify extend by hand for testing */
+  context.mptrac_meteo1->nx = 2;
+  context.mptrac_meteo1->ny = 3;
+  context.mptrac_meteo1->np = 1;
+#endif
+  t8_mptrac_build_2d_forest (&context);
+
+  const double        deltat = 1;
+  T8_ASSERT (deltat < 6);
+  double              time_since_last_six_hours = 0;
+  int                 itime = 0;
+  int                 six_hours_passed = 0;
+  for (hours = 0; hours < simulation_hours; hours += deltat) {
+    if (time_since_last_six_hours > 6) {
+      time_since_last_six_hours -= 6;
+      six_hours_passed++;
+      time2jsec (2011, 06, 05, 6 * six_hours_passed + start_six_hours, 00, 00,
+                 00, &physical_time);
+      t8_mptrac_read_nc (&context, physical_time);
+    }
+    t8_global_productionf ("Interpolating time %f\n", hours);
+    char                vtk_filename[BUFSIZ];
+    t8_mptrac_build_latlon_data_for_uvw (&context,
+                                         time_since_last_six_hours / 6);
+    snprintf (vtk_filename, BUFSIZ, "MPTRAC_test_%04i", itime);
+    t8_mptrac_context_write_vtk (&context, vtk_filename);
+    t8_global_productionf ("Wrote file %s\n", vtk_filename);
+    t8_forest_t         forest_adapt =
+      t8_mptrac_refine_forest (&context, 20, 5, 15);
+    snprintf (vtk_filename, BUFSIZ, "MPTRAC_test_adapt_%04i", itime);
+    t8_forest_write_vtk_via_API (forest_adapt, vtk_filename, 1, 1, 1, 1, 0,
+                                 NULL);
+    t8_global_productionf ("Wrote file %s\n", vtk_filename);
+    t8_forest_unref (&forest_adapt);
+    itime++;
+    time_since_last_six_hours += deltat;
+  }
 }
 
 int
@@ -114,6 +438,7 @@ main (int argc, char **argv)
   const char         *netcdf_filename = NULL;
   char               *mptrac_input = NULL;
   int                 parsed, helpme;
+  double              simulation_hours;
 
   /* help message, prints when called with '-h' option */
   snprintf (help, BUFSIZ,
@@ -139,6 +464,8 @@ main (int argc, char **argv)
   sc_options_add_string (opt, 'm', "mptrac-input",
                          (const char **) &mptrac_input, NULL,
                          "String of command line arguments passed onto mptrac. Example \"INIT_T0 0 INIT_T1 1\".");
+  sc_options_add_double (opt, 'e', "simulation_hours", &simulation_hours,
+                         6, "Simulation time in hours.");
 
   /* Parse the command line arguments from the input */
   parsed =
@@ -152,7 +479,8 @@ main (int argc, char **argv)
   else if (netcdf_filename != NULL) {
     /* Read the netcdf file */
     t8_global_productionf ("Reading nc file %s.\n", netcdf_filename);
-    t8_mptrac_read_nc (netcdf_filename, mptrac_input);
+    t8_mptrac_compute_2d_example (netcdf_filename, mptrac_input,
+                                  simulation_hours);
   }
   else {
     /* Error when parsing the arguments */
