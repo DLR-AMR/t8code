@@ -193,20 +193,20 @@ t8_mptrac_split_input_string (const char *input_string, char ***output,
 }
 
 void
-t8_mptrac_read_nc (t8_mptrac_context_t * mptrac_context, double seconds)
+t8_mptrac_read_nc (t8_mptrac_context_t * mptrac_context,
+                   int read_ctl_parameters, double seconds)
 {
   int                 num_arguments;
   char              **output;
 
-  /* Split command line argument string to be passed to mptrac routines. */
-  t8_mptrac_split_input_string (mptrac_context->mptrac_input, &output,
-                                &num_arguments);
+  if (read_ctl_parameters) {
+    /* Split command line argument string to be passed to mptrac routines. */
+    t8_mptrac_split_input_string (mptrac_context->mptrac_input, &output,
+                                  &num_arguments);
 
-  read_ctl ("-", num_arguments, output, mptrac_context->mptrac_control);
-  //seconds = mptrac_context->mptrac_control->t_start;
-  /* TODO: This is a hardcoded workaround to get it done.
-   * I do not understand why, buet metbase is '-' instead of the fileprefix. */
-  //strcpy (mptrac_context->mptrac_control->metbase, "ei");
+    read_ctl ("-", num_arguments, output, mptrac_context->mptrac_control);
+    T8_FREE (output);
+  }
   get_met (mptrac_context->mptrac_control, seconds,
            &mptrac_context->mptrac_meteo1, &mptrac_context->mptrac_meteo2);
 
@@ -215,7 +215,6 @@ t8_mptrac_read_nc (t8_mptrac_context_t * mptrac_context, double seconds)
   mptrac_context->missing_value = -1e30;
   mptrac_context->data = NULL;
 
-  T8_FREE (output);
 }
 
 /* Build a 2D quad forest matching the x and y extend of mptrac meteo data. */
@@ -371,7 +370,7 @@ t8_mptrac_compute_2d_example (const char *filename, char *mptrac_input,
   context.mptrac_control = T8_ALLOC (ctl_t, 1);
   int                 start_six_hours = 0;
   time2jsec (2011, 06, 05, start_six_hours, 00, 00, 00, &physical_time);
-  t8_mptrac_read_nc (&context, physical_time);
+  t8_mptrac_read_nc (&context, 1, physical_time);
 #if 0
   /* Modify extend by hand for testing */
   context.mptrac_meteo1->nx = 2;
@@ -389,9 +388,7 @@ t8_mptrac_compute_2d_example (const char *filename, char *mptrac_input,
     if (time_since_last_six_hours > 6) {
       time_since_last_six_hours -= 6;
       six_hours_passed++;
-      time2jsec (2011, 06, 05, 6 * six_hours_passed + start_six_hours, 00, 00,
-                 00, &physical_time);
-      t8_mptrac_read_nc (&context, physical_time);
+      t8_mptrac_read_nc (&context, 0, physical_time);
     }
     t8_global_productionf ("Interpolating time %f\n", hours);
     char                vtk_filename[BUFSIZ];
