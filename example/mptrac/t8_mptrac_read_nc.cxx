@@ -382,6 +382,8 @@ t8_mptrac_compute_2d_example (const char *filename, char *mptrac_input,
   int                 itime = 0;
   int                 six_hours_passed = 0;
   for (hours = 0; hours < simulation_hours; hours += deltat) {
+    time2jsec (2011, 06, 05, start_six_hours + hours, 00, 00,
+               00, &physical_time);
     if (time_since_last_six_hours > 6) {
       time_since_last_six_hours -= 6;
       six_hours_passed++;
@@ -389,8 +391,7 @@ t8_mptrac_compute_2d_example (const char *filename, char *mptrac_input,
     }
     t8_global_productionf ("Interpolating time %f\n", hours);
     char                vtk_filename[BUFSIZ];
-    t8_mptrac_build_latlon_data_for_uvw (&context,
-                                         time_since_last_six_hours / 6);
+    t8_mptrac_build_latlon_data_for_uvw (&context, physical_time);
     snprintf (vtk_filename, BUFSIZ, "MPTRAC_test_%04i", itime);
     t8_mptrac_context_write_vtk (&context, vtk_filename);
     t8_global_productionf ("Wrote file %s\n", vtk_filename);
