@@ -494,11 +494,7 @@ t8_linearidx_t
   t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem;
   p4est_quadrant_t   *q = &pquad_w_sub->p4q;
 
-  /* the id of a subelement equals the id of the parent quadrant */
-#if 0
-  T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
-             T8_SUB_QUAD_IS_NO_SUBELEMENT);
-#endif
+  /* Note that the id of a subelement equals the id of its parent quadrant */
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
@@ -921,11 +917,7 @@ int
 t8_subelement_scheme_quad_c::t8_element_tree_face (const t8_element_t * elem,
                                                    int face)
 {
-  t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem;
-
-  /* at the moment, this function is only implemented for standard quad elements */
-  T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
-             T8_SUB_QUAD_IS_NO_SUBELEMENT);
+  /* For a subelement we consider its parent quad */
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= face && face < P4EST_FACES);
@@ -1076,9 +1068,7 @@ t8_subelement_scheme_quad_c::t8_element_is_root_boundary (const t8_element_t *
 
   p4est_qcoord_t      coord;
 
-  /* at the moment, this function is only implemented for standard quad elements */
-  T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
-             T8_SUB_QUAD_IS_NO_SUBELEMENT);
+  /* In case of subelements we consider their parent quad element */
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= face && face < P4EST_FACES);
@@ -1108,11 +1098,7 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
   const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
   p4est_quadrant_t   *n = &pquad_w_sub_neigh->p4q;
 
-  /* at the moment, this function is only implemented for standard quad elements */
-  T8_ASSERT (pquad_w_sub_elem->dummy_is_subelement ==
-             T8_SUB_QUAD_IS_NO_SUBELEMENT);
-  T8_ASSERT (pquad_w_sub_neigh->dummy_is_subelement ==
-             T8_SUB_QUAD_IS_NO_SUBELEMENT);
+  /* In the case of a subelement we construct the face neighbor of its parent quadrant */
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (neigh));
