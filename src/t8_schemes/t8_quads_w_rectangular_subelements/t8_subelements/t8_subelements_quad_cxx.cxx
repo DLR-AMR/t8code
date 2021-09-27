@@ -918,16 +918,16 @@ t8_subelement_scheme_quad_c::t8_element_tree_face (const t8_element_t * elem,
                                                    int face)
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  
+
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
 
   if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
-    T8_ASSERT (face == 1); /* this function does only make sense for subelements at face 1 */
+    T8_ASSERT (face == 1);      /* this function does only make sense for subelements at face 1 */
 
-    int location [3] = { };
+    int                 location[3] = { };
     t8_element_get_location_of_subelement (elem, location);
-    
+
     /* subelements are enumerated clockwise (not as quadrant faces) */
     if (location[1] == 0) {
       return 0;
