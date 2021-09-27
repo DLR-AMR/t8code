@@ -44,7 +44,9 @@ typedef struct
   t8_forest_t         forest;
   int                 level;    /*< The maximum refinement level in \a forest. */
   double              missing_value;    /*< The constant we use to denote an invalid data value. */
-  t8_latlon_data_chunk_t *data; /*< The actual data that we store here. */
+  int                 chunk_mode;       /*< True if data is stored as latlon_data_chunk_t. Otherwise data is stored in Z-order double array. */
+  t8_latlon_data_chunk_t *data; /*< The actual data that we store here, if in chunk mode. */
+  double             *data_array;       /*< The actual data that we store here, if not in chunk mode. */
 } t8_mptrac_context_t;
 
 typedef struct
@@ -234,8 +236,8 @@ t8_mptrac_build_2d_forest (t8_mptrac_context_t * mptrac_context)
 /* Extract 2D slice from specific level into latlon_data chunk.
  * Currenty, we copy only the zonal wind */
 void
-t8_mptrac_build_latlon_data_for_uvw (t8_mptrac_context_t * context,
-                                     double time)
+t8_mptrac_build_latlon_data_for_u_original_coords (t8_mptrac_context_t *
+                                                   context, double time)
 {
   T8_ASSERT (context != NULL);
   T8_ASSERT (context->forest != NULL);
@@ -248,6 +250,9 @@ t8_mptrac_build_latlon_data_for_uvw (t8_mptrac_context_t * context,
   shape[1] = context->mptrac_meteo1->ny;
   shape[2] = 1;                 /* Should this be z? */
   shape[3] = 1;                 /* Uncertain about meaning of [3], probably time. */
+
+  T8_ASSERT (context->chunk_mode);
+  T8_ASSERT (context->data_array == NULL);
 
   if (context->data != NULL) {
     t8_latlon_chunk_destroy (&context->data);
@@ -302,6 +307,84 @@ t8_mptrac_build_latlon_data_for_uvw (t8_mptrac_context_t * context,
   /* Convert to morton order */
   t8_latlon_data_apply_morton_order (context->forest, chunk);
   context->data = chunk;
+}
+
+/* Interpolate betwenn val1 and val2 at 0 <= interpol <= 1 */
+void
+t8_mptrac_interpol_helper (const double interpol, const double val1,
+                           const double val2, double *output)
+{
+  *output = (1 - interpol) * val1 + interpol * val2;
+}
+
+/* Convert 3D coordinates in [0,1]^3 to lat,lon,pressure coordinates. */
+void
+t8_mptrac_coords_to_latlonpressure (const t8_mptrac_context_t * context,
+                                    const double point[3], double *lat,
+                                    double *lon, double *pressure)
+{
+  /* Interpolate lon coordinate */
+  const int           max_lon_idx = context->mptrac_meteo1->nx;
+  T8_ASSERT (max_lon_idx >= 1);
+  t8_mptrac_interpol_helper (point[0], context->mptrac_meteo1->lon[0],
+                             context->mptrac_meteo1->lon[max_lon_idx - 1],
+                             lon);
+  /* Interpolate lat coordinate */
+  const int           max_lat_idx = context->mptrac_meteo1->ny;
+  T8_ASSERT (max_lat_idx >= 1);
+  t8_mptrac_interpol_helper (point[1], context->mptrac_meteo1->lat[0],
+                             context->mptrac_meteo1->lat[max_lat_idx - 1],
+                             lat);
+  /* Interpolate pressure coordinate */
+  const int           max_p_idx = context->mptrac_meteo1->np;
+  T8_ASSERT (max_p_idx >= 1);
+  t8_mptrac_interpol_helper (point[2], context->mptrac_meteo1->p[0],
+                             context->mptrac_meteo1->p[max_p_idx - 1],
+                             pressure);
+}
+
+/* Interpolate data form mptrac to a 3D forest.
+ * Currenty, we copy only the zonal wind */
+void
+t8_mptrac_build_latlon_data_for_u_3D (t8_mptrac_context_t * context,
+                                      double time)
+{
+  T8_ASSERT (context != NULL);
+  T8_ASSERT (context->forest != NULL);
+  const t8_locidx_t   num_elements =
+    t8_forest_get_local_num_elements (context->forest);
+  const t8_locidx_t   num_trees =
+    t8_forest_get_num_local_trees (context->forest);
+
+  T8_ASSERT (!context->chunk_mode);
+  T8_ASSERT (context->data == NULL);
+  T8_ASSERT (context->data_array != NULL);
+
+  t8_locidx_t         data_index = 0;
+  for (t8_locidx_t itree = 0; itree < num_trees; itree++) {
+    const double       *tree_vertices =
+      t8_forest_get_tree_vertices (context->forest, itree);
+    for (t8_locidx_t ielement = 0; ielement < num_elements; ielement++) {
+      double              midpoint[3];
+      const t8_element_t *element =
+        t8_forest_get_element_in_tree (context->forest, itree, ielement);
+      t8_forest_element_centroid (context->forest, itree, element,
+                                  tree_vertices, midpoint);
+      double              lat, lon, pressure;
+      t8_mptrac_coords_to_latlonpressure (context, midpoint, &lat, &lon,
+                                          &pressure);
+      double              interpol_value;
+      /* Compute interpolation of zonal wind. */
+      int                 ci[3];
+      double              cw[3];
+      intpol_met_time_3d (context->mptrac_meteo1, context->mptrac_meteo1->u,
+                          context->mptrac_meteo2, context->mptrac_meteo2->u,
+                          time, pressure, lon, lat, &interpol_value, ci, cw,
+                          1);
+
+      context->data_array[data_index++] = interpol_value;
+    }
+  }
 }
 
 void
@@ -391,7 +474,8 @@ t8_mptrac_compute_2d_example (const char *filename, char *mptrac_input,
     }
     t8_global_productionf ("Interpolating time %f\n", hours);
     char                vtk_filename[BUFSIZ];
-    t8_mptrac_build_latlon_data_for_uvw (&context, physical_time);
+    t8_mptrac_build_latlon_data_for_u_original_coords (&context,
+                                                       physical_time);
     snprintf (vtk_filename, BUFSIZ, "MPTRAC_test_%04i", itime);
     t8_mptrac_context_write_vtk (&context, vtk_filename);
     t8_global_productionf ("Wrote file %s\n", vtk_filename);
