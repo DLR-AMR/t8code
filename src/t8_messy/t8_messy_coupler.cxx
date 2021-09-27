@@ -788,7 +788,7 @@ t8_messy_initialize (const char *description,
 
   /* create forest for smallest mesh which completely contains given messy mesh */
   t8_forest_t         forest =
-    t8_latlon_refine (x_length, y_length, T8_LATLON_COARSEN, 0);
+    t8_latlon_refine (x_length, y_length, T8_LATLON_COARSEN, 0, NULL);
   t8_latlon_adapt_data_t *adapt_data =
     (t8_latlon_adapt_data_t *) t8_forest_get_user_data (forest);
 
@@ -1275,7 +1275,7 @@ t8_messy_write_forest (t8_forest_t forest, const char *prefix,
         dim_data_array[offset][e] =
           data_chunk->data[e * num_data + z * data_chunk->num_tracers + d];
       }
-      snprintf (vtk_data[offset].description, BUFSIZ, "z%d_%s", z,
+      snprintf (vtk_data[offset].description, BUFSIZ, "z%03d_%s", z,
                 data_chunk->tracer_names + d * BUFSIZ);
 
       vtk_data[offset].type = T8_VTK_SCALAR;
@@ -1317,8 +1317,8 @@ t8_messy_write_forest (t8_forest_t forest, const char *prefix,
     }
   }
 
-  t8_forest_vtk_write_file (forest, prefix, 1, 1, 1, 1, 0, num_data_out,
-                            vtk_data);
+  t8_forest_write_vtk_via_API (forest, prefix, 1, 1, 1, 1, num_data_out,
+                               vtk_data);
 
   T8_FREE (vtk_data);
 
