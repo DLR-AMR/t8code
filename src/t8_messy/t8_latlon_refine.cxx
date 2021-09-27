@@ -146,7 +146,7 @@ t8_latlon_adapt_callback (t8_forest_t forest,
  */
 t8_forest_t
 t8_latlon_refine (int x_length, int y_length, enum T8_LATLON_ADAPT_MODE mode,
-                  int repartition)
+                  int repartition, int *level)
 {
   t8_forest_t         forest, forest_adapt;
   t8_cmesh_t          cmesh;
@@ -172,6 +172,9 @@ t8_latlon_refine (int x_length, int y_length, enum T8_LATLON_ADAPT_MODE mode,
    */
   max_length = SC_MAX (x_length, y_length);
   adapt_data.max_level = SC_LOG2_32 (max_length - 1) + 1;
+  if (level != NULL) {
+    *level = adapt_data.max_level;
+  }
 
   t8_debugf ("Max of (%i,%i) is %i, level is %i (2**%i = %i).\n",
              x_length, y_length, max_length, adapt_data.max_level,
@@ -257,7 +260,7 @@ t8_latlon_refine_test (int x_length, int y_length,
 {
 
   t8_forest_t         forest_adapt =
-    t8_latlon_refine (x_length, y_length, mode, repartition);
+    t8_latlon_refine (x_length, y_length, mode, repartition, NULL);
 
   /* Destroy the forest */
   t8_forest_unref (&forest_adapt);

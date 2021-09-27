@@ -92,10 +92,12 @@ t8_locidx_t         t8_latlon_adapt_callback (t8_forest_t forest,
  *                           cut the grid.
  * \param [in]    repartition If true, the forest is repartitioned after each
  *                           level of adaptation.
+ * \param [out]   level      If not NULL, the maximum refinement level 
+ *                           (= level of the \a x_lenght times \a y_length grid) is stored here.
  */
 t8_forest_t         t8_latlon_refine (int x_length, int y_length,
                                       enum T8_LATLON_ADAPT_MODE mode,
-                                      int repartition);
+                                      int repartition, int *level);
 
 void                t8_latlon_refine_test (int x_length, int y_length,
                                            enum T8_LATLON_ADAPT_MODE mode,

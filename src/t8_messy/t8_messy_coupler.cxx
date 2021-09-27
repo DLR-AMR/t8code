@@ -969,8 +969,7 @@ t8_messy_set_tracer_values (t8_messy_data_t * messy_data, char *tracer_name,
 void
 t8_messy_apply_sfc (t8_messy_data_t * messy_data)
 {
-  t8_latlon_data_apply_morton_order (&(messy_data->forest),
-                                     messy_data->chunk);
+  t8_latlon_data_apply_morton_order (messy_data->forest, messy_data->chunk);
 }
 
 void
