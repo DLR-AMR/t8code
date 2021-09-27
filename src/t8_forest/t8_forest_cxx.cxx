@@ -2077,19 +2077,21 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
            * in order to adjust leaf_index and to get the right neighbor by just shifting it by +-1: */
           int                 adjust, shift;
           int                 number_of_subelements =
-          ts->t8_element_get_number_of_subelements (subelement_data_leaf[1],
-                                                    leaf);
+            ts->t8_element_get_number_of_subelements (subelement_data_leaf[1],
+                                                      leaf);
 
-          leaf_index -= subelement_data_neighbor_sub[2]; /* now we have the index of the first subelement of this transition cell */
+          leaf_index -= subelement_data_neighbor_sub[2];        /* now we have the index of the first subelement of this transition cell */
 
           if (face == 0) {      /* counter clockwise neighbor */
             shift = -1;
           }
-          if (face == 2) {                /* clockwise neighbor */
+          if (face == 2) {      /* clockwise neighbor */
             shift = 1;
           }
 
-          adjust = ((subelement_data_leaf[2] + shift) + (number_of_subelements)) % (number_of_subelements);
+          adjust =
+            ((subelement_data_leaf[2] + shift) +
+             (number_of_subelements)) % (number_of_subelements);
           element_index = leaf_index + adjust;
 
           neighbor_subelement =
