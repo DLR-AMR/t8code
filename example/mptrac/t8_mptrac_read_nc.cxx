@@ -62,11 +62,11 @@ typedef struct
  * coarsen if small. */
 int
 t8_mptrac_adapt_callback_2d (t8_forest_t forest,
-                          t8_forest_t forest_from,
-                          int which_tree,
-                          int lelement_id,
-                          t8_eclass_scheme_c * ts,
-                          int num_elements, t8_element_t * elements[])
+                             t8_forest_t forest_from,
+                             int which_tree,
+                             int lelement_id,
+                             t8_eclass_scheme_c * ts,
+                             int num_elements, t8_element_t * elements[])
 {
   const t8_mptrac_adapt_context_t *adapt_ctx =
     (const t8_mptrac_adapt_context_t *) t8_forest_get_user_data (forest);
@@ -179,7 +179,7 @@ t8_mptrac_split_input_string (const char *input_string, char ***poutput,
   t8_debugf ("Splitting string \"%s\" into tokens:\n", input_string);
   /* Allocate buffer_size many tokens */
   *poutput = T8_ALLOC (char *, buffer_size);
-  char **output = *poutput;
+  char              **output = *poutput;
   next_token = strtok (copy_of_input, " ");
   while (next_token != NULL) {
     /* Check if we need to allocate more strings */
@@ -215,7 +215,7 @@ t8_mptrac_read_nc (t8_mptrac_context_t * mptrac_context,
     /* We need to set the start time by hand. */
     mptrac_context->mptrac_control->t_start = seconds;
     /* Clean up split string. */
-    for (int i = 0;i < num_arguments;++i) {
+    for (int i = 0; i < num_arguments; ++i) {
       T8_FREE (output[i]);
     }
     T8_FREE (output);
@@ -246,12 +246,15 @@ t8_mptrac_build_2d_forest (t8_mptrac_context_t * mptrac_context)
 
 /* Build a 3D cube forest and store it at an mptrac_context */
 void
-t8_mptrac_build_3d_forest (t8_mptrac_context_t * mptrac_context, int level, sc_MPI_Comm comm)
+t8_mptrac_build_3d_forest (t8_mptrac_context_t * mptrac_context, int level,
+                           sc_MPI_Comm comm)
 {
   /* TODO: Add periodicity here */
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, comm, 0, 0, 0);
-  t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
-  mptrac_context->forest = t8_forest_new_uniform (cmesh, scheme, level, 1, comm);
+  t8_cmesh_t          cmesh =
+    t8_cmesh_new_hypercube (T8_ECLASS_HEX, comm, 0, 0, 0);
+  t8_scheme_cxx_t    *scheme = t8_scheme_new_default_cxx ();
+  mptrac_context->forest =
+    t8_forest_new_uniform (cmesh, scheme, level, 1, comm);
   /* Write to vtk */
   t8_forest_write_vtk (mptrac_context->forest, "test_mptrac_forest_3d");
 }
@@ -437,8 +440,8 @@ t8_mptrac_context_write_vtk (const t8_mptrac_context_t * context,
 /* Refine the forest stored in context, but keep it alive */
 t8_forest_t
 t8_mptrac_refine_forest_2d (const t8_mptrac_context_t * context, int z_level,
-                         const double threshold_coarsen,
-                         const double threshold_refine)
+                            const double threshold_coarsen,
+                            const double threshold_refine)
 {
   t8_mptrac_adapt_context_t adapt_context;
 
@@ -614,7 +617,7 @@ main (int argc, char **argv)
     /* Read the netcdf file */
     t8_global_productionf ("Reading nc file %s.\n", netcdf_filename);
     t8_mptrac_compute_example (netcdf_filename, mptrac_input,
-                                  simulation_hours, 2);
+                               simulation_hours, 2);
   }
   else {
     /* Error when parsing the arguments */
