@@ -144,7 +144,7 @@ t8_mptrac_onlycopy_interpolate_callback (t8_forest_t forest_old, t8_forest_t for
  * \param [in] input_string The string of command line arguments.
  */
 void
-t8_mptrac_split_input_string (const char *input_string, char ***output,
+t8_mptrac_split_input_string (const char *input_string, char ***poutput,
                               int *num_output)
 {
   char               *next_token;
@@ -153,14 +153,14 @@ t8_mptrac_split_input_string (const char *input_string, char ***output,
   int                 buffer_size = 10;
 
   /* Basic assertions for wrong usage */
-  T8_ASSERT (output != NULL);
+  T8_ASSERT (poutput != NULL);
   T8_ASSERT (num_output != NULL);
 
   /* Check if input is NULL */
   if (input_string == NULL) {
     /* No input, hence no output. */
     *num_output = 0;
-    *output = NULL;
+    *poutput = NULL;
     return;
   }
 
@@ -177,19 +177,22 @@ t8_mptrac_split_input_string (const char *input_string, char ***output,
   /* Split the input string */
   t8_debugf ("Splitting string \"%s\" into tokens:\n", input_string);
   /* Allocate buffer_size many tokens */
-  *output = T8_ALLOC (char *, buffer_size);
+  *poutput = T8_ALLOC (char *, buffer_size);
+  char **output = *poutput;
   next_token = strtok (copy_of_input, " ");
-  (*output)[0] = next_token;
   while (next_token != NULL) {
-    num_tokens_read++;
     /* Check if we need to allocate more strings */
     if (num_tokens_read >= buffer_size) {
       buffer_size *= 2;
-      *output = T8_REALLOC (*output, char *, buffer_size);
+      output = T8_REALLOC (output, char *, buffer_size);
     }
+    /* Copy current string */
+    output[num_tokens_read] = T8_ALLOC (char, BUFSIZ);
+    strcpy (output[num_tokens_read], next_token);
+    num_tokens_read++;
     t8_debugf ("%s\n", next_token);
+    /* Read next string */
     next_token = strtok (NULL, " ");
-    (*output)[num_tokens_read] = next_token;
   }
   *num_output = num_tokens_read;
 }
@@ -206,7 +209,14 @@ t8_mptrac_read_nc (t8_mptrac_context_t * mptrac_context,
     t8_mptrac_split_input_string (mptrac_context->mptrac_input, &output,
                                   &num_arguments);
 
+    T8_ASSERT (num_arguments > 0);
     read_ctl ("-", num_arguments, output, mptrac_context->mptrac_control);
+    /* We need to set the start time by hand. */
+    mptrac_context->mptrac_control->t_start = seconds;
+    /* Clean up split string. */
+    for (int i = 0;i < num_arguments;++i) {
+      T8_FREE (output[i]);
+    }
     T8_FREE (output);
   }
   get_met (mptrac_context->mptrac_control, seconds,
