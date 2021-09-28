@@ -739,7 +739,7 @@ t8_subelement_scheme_quad_c::t8_element_face_parent_face (const t8_element_t *
    * A subelements face is a subface of the parent quadrant if and only if the face number is 1. */
   if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
     if (face == 1) {
-      int location[3] = { };
+      int                 location[3] = { };
       t8_element_get_location_of_subelement (elem, location);
 
       if (location[0] == 0) {
@@ -764,7 +764,7 @@ t8_subelement_scheme_quad_c::t8_element_face_parent_face (const t8_element_t *
       return face;
     }
     /* Determine whether face is a subface of the parent.
-    * This is the case if the child_id matches one of the faces corners */
+     * This is the case if the child_id matches one of the faces corners */
     child_id = p4est_quadrant_child_id (q);
     if (child_id == p4est_face_corners[face][0]
         || child_id == p4est_face_corners[face][1]) {
