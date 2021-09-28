@@ -92,7 +92,7 @@ t8_test_neighbor_function (const t8_forest_t forest_adapt,
   /* print the current element */
   t8_productionf ("\nThe current element has the following data\n");
   t8_print_element_data (current_element);
-  t8_productionf ("    Element id:            %i \n", leid_in_tree);
+  t8_productionf ("    Element index in tree: %i \n", leid_in_tree);
 
   /* the leaf_face_neighbor function determins all neighbor elements in a balanced forest */
   t8_forest_leaf_face_neighbors (forest_adapt, ltree_id, current_element,
@@ -109,7 +109,7 @@ t8_test_neighbor_function (const t8_forest_t forest_adapt,
       ("\nThe neighbor element number %i of %i has the following data\n",
        i + 1, num_neighbors);
     t8_print_element_data (neighbor_leafs[i]);
-    t8_productionf ("    Element id:            %i \n", element_indices[i]);
+    t8_productionf ("    Element index in tree: %i \n", element_indices[i]);
   }
 
   /* free memory */
@@ -119,6 +119,10 @@ t8_test_neighbor_function (const t8_forest_t forest_adapt,
     T8_FREE (element_indices);
     T8_FREE (neighbor_leafs);
     T8_FREE (dual_faces);
+  }
+  else {
+    t8_productionf
+      ("\nThere is no neighbor at this face (edge of the tree/forest).\n");
   }
 }
 
@@ -176,7 +180,8 @@ t8_simple_refinement_criteria (t8_forest_t forest,
  *   minlevel = initlevel 
  *   maxlevel = 3
  *   do_subelements = 1
- *   refinement criteria: if (lelement_id == 0) {return 1} will refine the first element of the uniform mesh up to maxlevel */
+ *   refinement criteria: if (lelement_id == 0) {return 1} will refine the first element of the uniform mesh up to maxlevel. 
+ * These settings will lead to a tree with 46 elements (element indices from 0 to 45), 26 of which are subelements. */
 static void
 t8_refine_with_subelements (t8_eclass_t eclass)
 {
@@ -245,12 +250,12 @@ t8_refine_with_subelements (t8_eclass_t eclass)
    *        |           |           x - - - + - - - x
    *        |           |           |     / | \     |
    *        x - - - - - x       f_1 |   /   |   \   |
-   *             f_2                 | /f_0 |     \ |
+   *             f_2                | /f_0  |     \ |
    *                                x - - - x - - - x
    *    
    * Choose the current element and its face: */
-  t8_locidx_t         element_id_in_tree = 16;  /* index of the element in the forest (not the Morton index but its enumeration) */
-  int                 face_id = 0;      /* the face f_i, determing the direction in which we are looking for neighbors */
+  t8_locidx_t         element_id_in_tree = 15;  /* index of the element in the forest (not the Morton index but its enumeration) */
+  int                 face_id = 1;      /* the face f_i, determing the direction in which we are looking for neighbors */
 
   t8_productionf ("Computing the neighbor of element %i at face %i\n",
                   element_id_in_tree, face_id);
