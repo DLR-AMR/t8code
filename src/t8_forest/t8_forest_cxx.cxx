@@ -2196,11 +2196,12 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
            * In this case, the right transition cell is identified,  
            * but the neighbor elemenmt neighbor_leafs[0] is a random subelement of the transition cell, which might not be the right neighbor. 
            * In the following, we are going to identify the subelement that is the real neighbor of the current element "leaf". */
-          int                 anchor_node_curr_neigh[2] = { };     /* (x,y) */
-          int                 level_curr_neigh[1] = { };   /* level */
-          int                 subelement_data_curr_neigh[3] = { }; /* {is_subelement, subelement_type, subelement_id} */
+          int                 anchor_node_curr_neigh[2] = { };  /* (x,y) */
+          int                 level_curr_neigh[1] = { };        /* level */
+          int                 subelement_data_curr_neigh[3] = { };      /* {is_subelement, subelement_type, subelement_id} */
           neigh_scheme->t8_element_get_element_data (ancestor,
-                                                     anchor_node_curr_neigh, level_curr_neigh,
+                                                     anchor_node_curr_neigh,
+                                                     level_curr_neigh,
                                                      subelement_data_curr_neigh);
 
           /* Iterate through the family of subelements of the neighboring transition cell and compoare them to leaf in order to identify the right subelement  */
@@ -2246,10 +2247,10 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
                *             f0
                *    
                * */
-              int                 location_of_leaf[3] = { };        /* {face (enumerated clockwise), face split, first or second subelement at face} */
+              int                 location_of_leaf[3] = { };    /* {face (enumerated clockwise), face split, first or second subelement at face} */
               neigh_scheme->t8_element_get_location_of_subelement (leaf,
                                                                    location_of_leaf);
-              if (level_leaf[0] == level_curr_neigh[0]) { /* the following is only valid if both transition cells have the same level */
+              if (level_leaf[0] == level_curr_neigh[0]) {       /* the following is only valid if both transition cells have the same level */
                 if (location_of_leaf[0] == 0) { /* face 0 */
                   if (location_of_subelement[0] == 2 &&
                       location_of_leaf[1] == 0) {
@@ -2278,7 +2279,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
                     element_index = index_of_subelement;
                     break;
                   }
-                } /* end of face 0 */
+                }               /* end of face 0 */
                 if (location_of_leaf[0] == 1) { /* face 1 */
                   if (location_of_subelement[0] == 3 &&
                       location_of_leaf[1] == 0) {
@@ -2307,7 +2308,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
                     element_index = index_of_subelement;
                     break;
                   }
-                } /* end of face 1 */
+                }               /* end of face 1 */
                 if (location_of_leaf[0] == 2) { /* face 2 */
                   if (location_of_subelement[0] == 0 &&
                       location_of_leaf[1] == 0) {
@@ -2336,7 +2337,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
                     element_index = index_of_subelement;
                     break;
                   }
-                } /* end of face 2 */
+                }               /* end of face 2 */
                 if (location_of_leaf[0] == 3) { /* face 3 */
                   if (location_of_subelement[0] == 1 &&
                       location_of_leaf[1] == 0) {
@@ -2365,10 +2366,10 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
                     element_index = index_of_subelement;
                     break;
                   }
-                } /* end of face 3 */
-              } /* end of if both transition cells have the same level */
+                }               /* end of face 3 */
+              }                 /* end of if both transition cells have the same level */
               else {
-                SC_ABORT("Not implemented yet.");
+                SC_ABORT ("Not implemented yet.");
               }
             }                   /* end of leaf is a subelement */
             else {
