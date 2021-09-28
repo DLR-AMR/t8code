@@ -32,12 +32,13 @@
 #include <t8_messy/t8_messy_coupler.h>
 #include <t8_forest.h>
 #include <t8_forest_vtk.h>
+#include <t8_schemes/t8_default_cxx.hxx>
 #include "libtrac.h"
 
 typedef struct
 {
   const char         *filename;
-  char               *mptrac_input;
+  const char         *mptrac_input;
   ctl_t              *mptrac_control;
   met_t              *mptrac_meteo1;
   met_t              *mptrac_meteo2;
@@ -446,7 +447,7 @@ t8_mptrac_refine_forest (const t8_mptrac_context_t * context, int z_level,
 
 t8_mptrac_context_t *
 t8_mptrac_context_new (const int chunk_mode, const char *filename,
-                       char *mptrac_input)
+                       const char *mptrac_input)
 {
   t8_mptrac_context_t *context =
     (t8_mptrac_context_t *) T8_ALLOC (t8_mptrac_context_t, 1);
