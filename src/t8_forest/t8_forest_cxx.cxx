@@ -2126,7 +2126,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
           return;
         }
         else if (face == 1) {   /* no sibling neighbor */
-          // SC_ABORT ("Not implemented yet.");
+          /* do nothing here */
         }
         else {
           SC_ABORT ("No valid face number for a subelement.");
@@ -2192,7 +2192,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
                                                      level_leaf,
                                                      subelement_data_leaf);
 
-          /* Get the information of the neighbor elemement. 
+          /* Get the information of the current neighbor elemement (which might be a false subelement). 
            * In this case, the right transition cell is identified,  
            * but the neighbor elemenmt neighbor_leafs[0] is a random subelement of the transition cell, which might not be the right neighbor. 
            * In the following, we are going to identify the subelement that is the real neighbor of the current element "leaf". */
@@ -2232,120 +2232,140 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
             neigh_scheme->t8_element_get_location_of_subelement (subelement,
                                                                  location_of_subelement);
 
-            /* Note that the following cases are especially for the quad scheme with subelements.
-             * 
-             *             f_3
-             *        x - - - - - x
-             *        |           | 
-             *        |           |
-             *    f_0 |   leaf    | f_1
-             *        |           |
-             *        |           |
-             *        x - - - - - x
-             *             f_2
-             *    
-             * */
+            if (subelement_data_leaf[0] == 1) {
+              /* This is the case of a subelement leaf.
+              * 
+              *            
+              *        x
+              *        | \        
+              *        |   \     
+              *    f_1 |     \ f_2
+              *        |       \
+              *        |         \
+              *        x - - - - - x
+              *             f0
+              *    
+              * */
+              SC_ABORT ("Not implemented yet.");
+            } /* end of leaf is a subelement */
 
-            if (location_of_subelement[0] == 2 && face == 0) {  /* searching for a left neighbor */
-              if (level_leaf[0] == level_sub[0]) {      /* comparing the level of leaf and subelement */
-                /* copy the subelement to the output pointer */
-                neigh_scheme->t8_element_copy (subelement, ancestor);
-                element_index = index_of_subelement;
-                break;
-              }
-              else {
-                if (anchor_node_leaf[1] != anchor_node_sub[1]
-                    && location_of_subelement[2] == 0) {
-                  /* copy the subelement to the output pointer */
-                  neigh_scheme->t8_element_copy (subelement, ancestor);
-                  element_index = index_of_subelement;
-                  break;
-                }
-                else if (anchor_node_leaf[1] == anchor_node_sub[1]
-                         && location_of_subelement[2] == 1) {
-                  /* copy the subelement to the output pointer */
-                  neigh_scheme->t8_element_copy (subelement, ancestor);
-                  element_index = index_of_subelement;
-                  break;
-                }
-              }
-            }                   /* end of face == 0 */
+            else {
+              /* This is the case of a quad leaf.
+               * 
+               *             f_3
+               *        x - - - - - x
+               *        |           | 
+               *        |           |
+               *    f_0 |   leaf    | f_1
+               *        |           |
+               *        |           |
+               *        x - - - - - x
+               *             f_2
+               *    
+               * */
 
-            if (location_of_subelement[0] == 0 && face == 1) {  /* searching for a right neighbor */
-              if (level_leaf[0] == level_sub[0]) {
-                /* copy the subelement to the output pointer */
-                neigh_scheme->t8_element_copy (subelement, ancestor);
-                element_index = index_of_subelement;
-                break;
-              }
-              else {
-                if (anchor_node_leaf[1] == anchor_node_sub[1]
-                    && location_of_subelement[2] == 0) {
+              if (location_of_subelement[0] == 2 && face == 0) {  /* searching for a left neighbor */
+                if (level_leaf[0] == level_sub[0]) {      /* comparing the level of leaf and subelement */
                   /* copy the subelement to the output pointer */
                   neigh_scheme->t8_element_copy (subelement, ancestor);
                   element_index = index_of_subelement;
                   break;
                 }
-                else if (anchor_node_leaf[1] != anchor_node_sub[1]
-                         && location_of_subelement[2] == 1) {
-                  /* copy the ancestor */
-                  neigh_scheme->t8_element_copy (subelement, ancestor);
-                  element_index = index_of_subelement;
-                  break;
+                else {
+                  if (anchor_node_leaf[1] != anchor_node_sub[1]
+                      && location_of_subelement[2] == 0) {
+                    /* copy the subelement to the output pointer */
+                    neigh_scheme->t8_element_copy (subelement, ancestor);
+                    element_index = index_of_subelement;
+                    break;
+                  }
+                  else if (anchor_node_leaf[1] == anchor_node_sub[1]
+                          && location_of_subelement[2] == 1) {
+                    /* copy the subelement to the output pointer */
+                    neigh_scheme->t8_element_copy (subelement, ancestor);
+                    element_index = index_of_subelement;
+                    break;
+                  }
                 }
-              }
-            }                   /* end of face == 1 */
+              }                   /* end of face == 0 */
 
-            if (location_of_subelement[0] == 1 && face == 2) {  /* searching for a lower neighbor */
-              if (level_leaf[0] == level_sub[0]) {
-                /* copy the subelement to the output pointer */
-                neigh_scheme->t8_element_copy (subelement, ancestor);
-                element_index = index_of_subelement;
-                break;
-              }
-              else {
-                if (anchor_node_leaf[0] == anchor_node_sub[0]
-                    && location_of_subelement[2] == 0) {
+              if (location_of_subelement[0] == 0 && face == 1) {  /* searching for a right neighbor */
+                if (level_leaf[0] == level_sub[0]) {
                   /* copy the subelement to the output pointer */
                   neigh_scheme->t8_element_copy (subelement, ancestor);
                   element_index = index_of_subelement;
                   break;
                 }
-                else if (anchor_node_leaf[0] != anchor_node_sub[0]
-                         && location_of_subelement[2] == 1) {
-                  /* copy the subelement to the output pointer */
-                  neigh_scheme->t8_element_copy (subelement, ancestor);
-                  element_index = index_of_subelement;
-                  break;
+                else {
+                  if (anchor_node_leaf[1] == anchor_node_sub[1]
+                      && location_of_subelement[2] == 0) {
+                    /* copy the subelement to the output pointer */
+                    neigh_scheme->t8_element_copy (subelement, ancestor);
+                    element_index = index_of_subelement;
+                    break;
+                  }
+                  else if (anchor_node_leaf[1] != anchor_node_sub[1]
+                          && location_of_subelement[2] == 1) {
+                    /* copy the ancestor */
+                    neigh_scheme->t8_element_copy (subelement, ancestor);
+                    element_index = index_of_subelement;
+                    break;
+                  }
                 }
-              }
-            }                   /* end of face == 2 */
+              }                   /* end of face == 1 */
 
-            else if (location_of_subelement[0] == 3 && face == 3) {     /* searching for an upper neighbor */
-              if (level_leaf[0] == level_sub[0]) {
-                /* copy the subelement to the output pointer */
-                neigh_scheme->t8_element_copy (subelement, ancestor);
-                element_index = index_of_subelement;
-                break;
-              }
-              else {
-                if (anchor_node_leaf[0] != anchor_node_sub[0]
-                    && location_of_subelement[2] == 0) {
+              if (location_of_subelement[0] == 1 && face == 2) {  /* searching for a lower neighbor */
+                if (level_leaf[0] == level_sub[0]) {
                   /* copy the subelement to the output pointer */
                   neigh_scheme->t8_element_copy (subelement, ancestor);
                   element_index = index_of_subelement;
                   break;
                 }
-                else if (anchor_node_leaf[0] == anchor_node_sub[0]
-                         && location_of_subelement[2] == 1) {
-                  /* copy the subelement to the output pointer */
-                  neigh_scheme->t8_element_copy (subelement, ancestor);
-                  element_index = index_of_subelement;
-                  break;
+                else {
+                  if (anchor_node_leaf[0] == anchor_node_sub[0]
+                      && location_of_subelement[2] == 0) {
+                    /* copy the subelement to the output pointer */
+                    neigh_scheme->t8_element_copy (subelement, ancestor);
+                    element_index = index_of_subelement;
+                    break;
+                  }
+                  else if (anchor_node_leaf[0] != anchor_node_sub[0]
+                          && location_of_subelement[2] == 1) {
+                    /* copy the subelement to the output pointer */
+                    neigh_scheme->t8_element_copy (subelement, ancestor);
+                    element_index = index_of_subelement;
+                    break;
+                  }
                 }
-              }
-            }                   /* end of face == 3 */
+              }                   /* end of face == 2 */
 
+              else if (location_of_subelement[0] == 3 && face == 3) {     /* searching for an upper neighbor */
+                if (level_leaf[0] == level_sub[0]) {
+                  /* copy the subelement to the output pointer */
+                  neigh_scheme->t8_element_copy (subelement, ancestor);
+                  element_index = index_of_subelement;
+                  break;
+                }
+                else {
+                  if (anchor_node_leaf[0] != anchor_node_sub[0]
+                      && location_of_subelement[2] == 0) {
+                    /* copy the subelement to the output pointer */
+                    neigh_scheme->t8_element_copy (subelement, ancestor);
+                    element_index = index_of_subelement;
+                    break;
+                  }
+                  else if (anchor_node_leaf[0] == anchor_node_sub[0]
+                          && location_of_subelement[2] == 1) {
+                    /* copy the subelement to the output pointer */
+                    neigh_scheme->t8_element_copy (subelement, ancestor);
+                    element_index = index_of_subelement;
+                    break;
+                  }
+                }
+              }                   /* end of face == 3 */
+
+            } /* end of if leaf is no subelement */
+            
           }                     /* end of for loop over all subelements in the transition cell */
 
         }                       /* end of if neighbor is subelement case */
