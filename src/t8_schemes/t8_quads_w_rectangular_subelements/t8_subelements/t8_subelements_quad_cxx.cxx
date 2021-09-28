@@ -727,29 +727,51 @@ int
 t8_subelement_scheme_quad_c::t8_element_face_parent_face (const t8_element_t *
                                                           elem, int face)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
+
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
   const p4est_quadrant_t *q = &pquad_w_sub->p4q;
 
   int                 child_id;
 
-  /* at the moment, this function is not implemented for subelements */
-  T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
-             T8_SUB_QUAD_IS_NO_SUBELEMENT);
+  /* for subelements qe need to adjust the output of this function.
+   * A subelements face is a subface of the parent quadrant if and only if the face number is 1. */
+  if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
+    if (face == 1) {
+      int location[3] = { };
+      t8_element_get_location_of_subelement (elem, location);
 
-  T8_ASSERT (t8_element_is_valid (elem));
-
-  if (q->level == 0) {
-    return face;
+      if (location[0] == 0) {
+        return 0;
+      }
+      else if (location[0] == 1) {
+        return 3;
+      }
+      else if (location[0] == 2) {
+        return 1;
+      }
+      else if (location[0] == 3) {
+        return 2;
+      }
+    }
+    else {
+      return -1;
+    }
   }
-  /* Determine whether face is a subface of the parent.
-   * This is the case if the child_id matches one of the faces corners */
-  child_id = p4est_quadrant_child_id (q);
-  if (child_id == p4est_face_corners[face][0]
-      || child_id == p4est_face_corners[face][1]) {
-    return face;
+  else {
+    if (q->level == 0) {
+      return face;
+    }
+    /* Determine whether face is a subface of the parent.
+    * This is the case if the child_id matches one of the faces corners */
+    child_id = p4est_quadrant_child_id (q);
+    if (child_id == p4est_face_corners[face][0]
+        || child_id == p4est_face_corners[face][1]) {
+      return face;
+    }
+    return -1;
   }
-  return -1;
 }
 
 void
@@ -923,7 +945,7 @@ t8_subelement_scheme_quad_c::t8_element_tree_face (const t8_element_t * elem,
     (const t8_quad_with_subelements *) elem;
 
   if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
-    T8_ASSERT (face == 1);      /* this function does only make sense for subelements at face 1 */
+    T8_ASSERT (face != 1);      /* this function does only make sense for subelements at face 1 */
 
     int                 location[3] = { };
     t8_element_get_location_of_subelement (elem, location);
@@ -1123,6 +1145,9 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
   p4est_quadrant_t   *n = &pquad_w_sub_neigh->p4q;
 
   /* In the case of a subelement we construct the face neighbor of its parent quadrant */
+
+  /* TODO: in case of a subelement, one should construct the face neighbor of the face-corresponding child quadrant
+   * of the subelements parent quadrant. */
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (neigh));
