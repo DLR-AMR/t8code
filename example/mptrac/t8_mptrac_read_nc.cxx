@@ -434,30 +434,71 @@ t8_mptrac_refine_forest (const t8_mptrac_context_t * context, int z_level,
   return forest_partition;
 }
 
+t8_mptrac_context_t *
+t8_mptrac_context_new (const int chunk_mode, const char *filename,
+                       char *mptrac_input)
+{
+  t8_mptrac_context_t *context =
+    (t8_mptrac_context_t *) T8_ALLOC (t8_mptrac_context_t, 1);
+
+  context->mptrac_meteo1 = T8_ALLOC (met_t, 1);
+  context->mptrac_meteo2 = T8_ALLOC (met_t, 1);
+  context->mptrac_control = T8_ALLOC (ctl_t, 1);
+  context->mptrac_input = mptrac_input;
+
+  /* Set filename */
+  context->filename = filename;
+  /* Set chunk_mode to 1 or 0 */
+  context->chunk_mode = chunk_mode ? 1 : 0;
+  /* Set default values */
+  context->data = NULL;
+  context->data_array = NULL;
+  context->forest = NULL;
+  context->level = -1;
+  context->missing_value = DBL_MAX;
+
+  return context;
+}
+
+void
+t8_mptrac_context_destroy (t8_mptrac_context_t ** pcontext)
+{
+  T8_ASSERT (pcontext != NULL);
+  T8_ASSERT (*pcontext != NULL);
+
+  t8_mptrac_context_t *context = *pcontext;
+
+  T8_FREE (context->mptrac_meteo1);
+  T8_FREE (context->mptrac_meteo2);
+  T8_FREE (context->mptrac_control);
+  if (!context->chunk_mode && context->data_array != NULL) {
+    T8_FREE (context->data_array);
+  }
+  if (context->chunk_mode && context->data != NULL) {
+    t8_latlon_chunk_destroy (&context->data);
+  }
+  T8_FREE (context);
+  *pcontext = NULL;
+}
+
 void
 t8_mptrac_compute_2d_example (const char *filename, char *mptrac_input,
                               double simulation_hours)
 {
-  t8_mptrac_context_t context;
+  t8_mptrac_context_t *context;
   double              hours;
   double              physical_time;
-
-  context.filename = filename;
-  context.mptrac_input = mptrac_input;
-
-  context.mptrac_meteo1 = T8_ALLOC (met_t, 1);
-  context.mptrac_meteo2 = T8_ALLOC (met_t, 1);
-  context.mptrac_control = T8_ALLOC (ctl_t, 1);
+  const int           chunk_mode = 1;
   int                 start_six_hours = 0;
+
+  /* build context */
+  context = t8_mptrac_context_new (chunk_mode, filename, mptrac_input);
+  /* Compute start time */
   time2jsec (2011, 06, 05, start_six_hours, 00, 00, 00, &physical_time);
-  t8_mptrac_read_nc (&context, 1, physical_time);
-#if 0
-  /* Modify extend by hand for testing */
-  context.mptrac_meteo1->nx = 2;
-  context.mptrac_meteo1->ny = 3;
-  context.mptrac_meteo1->np = 1;
-#endif
-  t8_mptrac_build_2d_forest (&context);
+  /* Read NC files to context */
+  t8_mptrac_read_nc (context, 1, physical_time);
+  /* Build the 2D forest */
+  t8_mptrac_build_2d_forest (context);
 
   const double        deltat = 1;
   T8_ASSERT (deltat < 6);
@@ -470,17 +511,17 @@ t8_mptrac_compute_2d_example (const char *filename, char *mptrac_input,
     if (time_since_last_six_hours > 6) {
       time_since_last_six_hours -= 6;
       six_hours_passed++;
-      t8_mptrac_read_nc (&context, 0, physical_time);
+      t8_mptrac_read_nc (context, 0, physical_time);
     }
     t8_global_productionf ("Interpolating time %f\n", hours);
     char                vtk_filename[BUFSIZ];
-    t8_mptrac_build_latlon_data_for_u_original_coords (&context,
+    t8_mptrac_build_latlon_data_for_u_original_coords (context,
                                                        physical_time);
     snprintf (vtk_filename, BUFSIZ, "MPTRAC_test_%04i", itime);
-    t8_mptrac_context_write_vtk (&context, vtk_filename);
+    t8_mptrac_context_write_vtk (context, vtk_filename);
     t8_global_productionf ("Wrote file %s\n", vtk_filename);
     t8_forest_t         forest_adapt =
-      t8_mptrac_refine_forest (&context, 20, 5, 15);
+      t8_mptrac_refine_forest (context, 20, 5, 15);
     snprintf (vtk_filename, BUFSIZ, "MPTRAC_test_adapt_%04i", itime);
     t8_forest_write_vtk_via_API (forest_adapt, vtk_filename, 1, 1, 1, 1, 0,
                                  NULL);
@@ -491,10 +532,7 @@ t8_mptrac_compute_2d_example (const char *filename, char *mptrac_input,
   }
 
   /* clean-up */
-  T8_FREE (context.mptrac_meteo1);
-  T8_FREE (context.mptrac_meteo2);
-  T8_FREE (context.mptrac_control);
-  t8_forest_unref (&context.forest);
+  t8_mptrac_context_destroy (&context);
 }
 
 int
