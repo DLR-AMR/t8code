@@ -61,7 +61,7 @@ typedef struct
 /* Refine mesh when z layer value is large.
  * coarsen if small. */
 int
-t8_mptrac_adapt_callback (t8_forest_t forest,
+t8_mptrac_adapt_callback_2d (t8_forest_t forest,
                           t8_forest_t forest_from,
                           int which_tree,
                           int lelement_id,
@@ -241,7 +241,19 @@ t8_mptrac_build_2d_forest (t8_mptrac_context_t * mptrac_context)
 
   T8_ASSERT (mptrac_context->forest != NULL);
   /* Write to vtk */
-  t8_forest_write_vtk (mptrac_context->forest, "test_mptrac_forest");
+  t8_forest_write_vtk (mptrac_context->forest, "test_mptrac_forest_2d");
+}
+
+/* Build a 3D cube forest and store it at an mptrac_context */
+void
+t8_mptrac_build_3d_forest (t8_mptrac_context_t * mptrac_context, int level, sc_MPI_Comm comm)
+{
+  /* TODO: Add periodicity here */
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, comm, 0, 0, 0);
+  t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
+  mptrac_context->forest = t8_forest_new_uniform (cmesh, scheme, level, 1, comm);
+  /* Write to vtk */
+  t8_forest_write_vtk (mptrac_context->forest, "test_mptrac_forest_3d");
 }
 
 /* Extract 2D slice from specific level into latlon_data chunk.
@@ -424,7 +436,7 @@ t8_mptrac_context_write_vtk (const t8_mptrac_context_t * context,
 
 /* Refine the forest stored in context, but keep it alive */
 t8_forest_t
-t8_mptrac_refine_forest (const t8_mptrac_context_t * context, int z_level,
+t8_mptrac_refine_forest_2d (const t8_mptrac_context_t * context, int z_level,
                          const double threshold_coarsen,
                          const double threshold_refine)
 {
@@ -436,7 +448,7 @@ t8_mptrac_refine_forest (const t8_mptrac_context_t * context, int z_level,
   adapt_context.z_layer = z_level;
   t8_forest_ref (context->forest);
   t8_forest_t         forest_adapt =
-    t8_forest_new_adapt (context->forest, t8_mptrac_adapt_callback, 0, 0,
+    t8_forest_new_adapt (context->forest, t8_mptrac_adapt_callback_2d, 0, 0,
                          &adapt_context);
   t8_forest_t         forest_partition;
   t8_forest_init (&forest_partition);
@@ -488,13 +500,14 @@ t8_mptrac_context_destroy (t8_mptrac_context_t ** pcontext)
   if (context->chunk_mode && context->data != NULL) {
     t8_latlon_chunk_destroy (&context->data);
   }
+  t8_forest_unref (&context->forest);
   T8_FREE (context);
   *pcontext = NULL;
 }
 
 void
-t8_mptrac_compute_2d_example (const char *filename, char *mptrac_input,
-                              double simulation_hours)
+t8_mptrac_compute_example (const char *filename, const char *mptrac_input,
+                           const double simulation_hours, const int dimension)
 {
   t8_mptrac_context_t *context;
   double              hours;
@@ -502,14 +515,18 @@ t8_mptrac_compute_2d_example (const char *filename, char *mptrac_input,
   const int           chunk_mode = 1;
   int                 start_six_hours = 0;
 
+  T8_ASSERT (dimension == 2 || dimension == 3);
+
   /* build context */
   context = t8_mptrac_context_new (chunk_mode, filename, mptrac_input);
   /* Compute start time */
   time2jsec (2011, 06, 05, start_six_hours, 00, 00, 00, &physical_time);
   /* Read NC files to context */
   t8_mptrac_read_nc (context, 1, physical_time);
-  /* Build the 2D forest */
-  t8_mptrac_build_2d_forest (context);
+  /* Build the forest */
+  if (dimension == 2) {
+    t8_mptrac_build_2d_forest (context);
+  }
 
   const double        deltat = 1;
   T8_ASSERT (deltat < 6);
@@ -532,7 +549,7 @@ t8_mptrac_compute_2d_example (const char *filename, char *mptrac_input,
     t8_mptrac_context_write_vtk (context, vtk_filename);
     t8_global_productionf ("Wrote file %s\n", vtk_filename);
     t8_forest_t         forest_adapt =
-      t8_mptrac_refine_forest (context, 20, 5, 15);
+      t8_mptrac_refine_forest_2d (context, 20, 5, 15);
     snprintf (vtk_filename, BUFSIZ, "MPTRAC_test_adapt_%04i", itime);
     t8_forest_write_vtk_via_API (forest_adapt, vtk_filename, 1, 1, 1, 1, 0,
                                  NULL);
@@ -596,8 +613,8 @@ main (int argc, char **argv)
   else if (netcdf_filename != NULL) {
     /* Read the netcdf file */
     t8_global_productionf ("Reading nc file %s.\n", netcdf_filename);
-    t8_mptrac_compute_2d_example (netcdf_filename, mptrac_input,
-                                  simulation_hours);
+    t8_mptrac_compute_example (netcdf_filename, mptrac_input,
+                                  simulation_hours, 2);
   }
   else {
     /* Error when parsing the arguments */
