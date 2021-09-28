@@ -47,7 +47,8 @@ typedef struct
   double              missing_value;    /*< The constant we use to denote an invalid data value. */
   int                 chunk_mode;       /*< True if data is stored as latlon_data_chunk_t. Otherwise data is stored in Z-order double array. */
   t8_latlon_data_chunk_t *data; /*< The actual data that we store here, if in chunk mode. */
-  double             *data_array;       /*< The actual data that we store here, if not in chunk mode. */
+  int                 data_per_element; /*< If not in chunk mode the number of values we store per element. Must be 1 (SCALAR) or 3 (VECTOR) */
+  double             *data_array;       /*< The actual data that we store here, if not in chunk mode. Has lenght num_local_elements * data_per_element */
 } t8_mptrac_context_t;
 
 typedef struct
@@ -372,8 +373,8 @@ t8_mptrac_coords_to_latlonpressure (const t8_mptrac_context_t * context,
 /* Interpolate data form mptrac to a 3D forest.
  * Currenty, we copy only the zonal wind */
 void
-t8_mptrac_build_latlon_data_for_u_3D (t8_mptrac_context_t * context,
-                                      double time)
+t8_mptrac_build_latlon_data_for_uvw_3D (t8_mptrac_context_t * context,
+                                        double time)
 {
   T8_ASSERT (context != NULL);
   T8_ASSERT (context->forest != NULL);
@@ -381,10 +382,18 @@ t8_mptrac_build_latlon_data_for_u_3D (t8_mptrac_context_t * context,
     t8_forest_get_local_num_elements (context->forest);
   const t8_locidx_t   num_trees =
     t8_forest_get_num_local_trees (context->forest);
+  context->data_per_element = 3;        /* We store u,v,w per element */
 
   T8_ASSERT (!context->chunk_mode);
   T8_ASSERT (context->data == NULL);
-  T8_ASSERT (context->data_array != NULL);
+
+  if (context->data_array == NULL) {
+    /* First time that we touch data_array, we allocate a new
+     * array with count num_elements. */
+    /* TODO: When we want ghosts, we need to add num ghosts here as well. */
+    context->data_array =
+      (double *) T8_ALLOC (double, context->data_per_element * num_elements);
+  }
 
   t8_locidx_t         data_index = 0;
   for (t8_locidx_t itree = 0; itree < num_trees; itree++) {
@@ -400,15 +409,21 @@ t8_mptrac_build_latlon_data_for_u_3D (t8_mptrac_context_t * context,
       t8_mptrac_coords_to_latlonpressure (context, midpoint, &lat, &lon,
                                           &pressure);
       double              interpol_value;
-      /* Compute interpolation of zonal wind. */
       int                 ci[3];
       double              cw[3];
+      /* Compute interpolation of u */
       intpol_met_time_3d (context->mptrac_meteo1, context->mptrac_meteo1->u,
                           context->mptrac_meteo2, context->mptrac_meteo2->u,
                           time, pressure, lon, lat, &interpol_value, ci, cw,
                           1);
-
       context->data_array[data_index++] = interpol_value;
+      /* Compute interpolation of v */
+      intpol_met_time_3d (context->mptrac_meteo1, context->mptrac_meteo1->v, context->mptrac_meteo2, context->mptrac_meteo2->v, time, pressure, lon, lat, &interpol_value, ci, cw, 0);  /* 0 here since we can reuse the interpolation weights */
+      context->data_array[data_index++] = interpol_value;
+      /* Compute interpolation of w */
+      intpol_met_time_3d (context->mptrac_meteo1, context->mptrac_meteo1->w, context->mptrac_meteo2, context->mptrac_meteo2->w, time, pressure, lon, lat, &interpol_value, ci, cw, 0);  /* 0 here since we can reuse the interpolation weights */
+      context->data_array[data_index++] = interpol_value;
+
     }
   }
 }
@@ -418,23 +433,46 @@ t8_mptrac_context_write_vtk (const t8_mptrac_context_t * context,
                              const char *vtk_filename)
 {
   T8_ASSERT (context != NULL);
-  T8_ASSERT (context->data != NULL);
-  /* temporarily create messy data struct and use its vtk output. */
-  t8_messy_data       data;
-  data.adapt_data = NULL;
-  data.chunk = context->data;
-  data.coarsen = NULL;
-  data.interpolation = NULL;
-  data.forest = context->forest;
-  data.errors = NULL;
-  data.errors_global = NULL;
-  data.errors_adapt = NULL;
-  data.missing_value = context->missing_value;
-  data.max_local_error = 0;
-  data.max_global_error = 0;
-  data.counter = 0;
-  data.num_elements = t8_forest_get_local_num_elements (data.forest);
-  t8_messy_write_forest (context->forest, vtk_filename, &data);
+
+  if (context->chunk_mode) {
+    T8_ASSERT (context->data != NULL);
+    /* temporarily create messy data struct and use its vtk output. */
+    t8_messy_data       data;
+    data.adapt_data = NULL;
+    data.chunk = context->data;
+    data.coarsen = NULL;
+    data.interpolation = NULL;
+    data.forest = context->forest;
+    data.errors = NULL;
+    data.errors_global = NULL;
+    data.errors_adapt = NULL;
+    data.missing_value = context->missing_value;
+    data.max_local_error = 0;
+    data.max_global_error = 0;
+    data.counter = 0;
+    data.num_elements = t8_forest_get_local_num_elements (data.forest);
+    t8_messy_write_forest (context->forest, vtk_filename, &data);
+  }
+  else {
+    /* Not in chunk mode, write data by hand. */
+    T8_ASSERT (context->data_array != NULL);
+    int                 num_data = 1;
+    t8_vtk_data_field_t *vtk_data =
+      (t8_vtk_data_field_t *) T8_ALLOC (t8_vtk_data_field_t, num_data);
+    vtk_data->data = context->data_array;
+    if (context->data_per_element == 1) {
+      vtk_data->type = T8_VTK_SCALAR;
+      strncpy (vtk_data->description, "mptext_test_3d_u", BUFSIZ);
+    }
+    else {
+      T8_ASSERT (context->data_per_element == 3);
+      vtk_data->type = T8_VTK_VECTOR;
+      strncpy (vtk_data->description, "mptext_test_3d_uvw", BUFSIZ);
+    }
+    t8_forest_write_vtk_via_API (context->forest, vtk_filename, 1, 1, 1, 1,
+                                 num_data, vtk_data);
+    T8_FREE (vtk_data);
+  }
 }
 
 /* Refine the forest stored in context, but keep it alive */
@@ -510,12 +548,13 @@ t8_mptrac_context_destroy (t8_mptrac_context_t ** pcontext)
 
 void
 t8_mptrac_compute_example (const char *filename, const char *mptrac_input,
-                           const double simulation_hours, const int dimension)
+                           const double simulation_hours, const int dimension,
+                           const int level_3d)
 {
   t8_mptrac_context_t *context;
   double              hours;
   double              physical_time;
-  const int           chunk_mode = 1;
+  const int           chunk_mode = dimension == 2 ? 1 : 0;
   int                 start_six_hours = 0;
 
   T8_ASSERT (dimension == 2 || dimension == 3);
@@ -529,6 +568,9 @@ t8_mptrac_compute_example (const char *filename, const char *mptrac_input,
   /* Build the forest */
   if (dimension == 2) {
     t8_mptrac_build_2d_forest (context);
+  }
+  else {
+    t8_mptrac_build_3d_forest (context, level_3d, sc_MPI_COMM_WORLD);
   }
 
   const double        deltat = 1;
@@ -546,18 +588,25 @@ t8_mptrac_compute_example (const char *filename, const char *mptrac_input,
     }
     t8_global_productionf ("Interpolating time %f\n", hours);
     char                vtk_filename[BUFSIZ];
-    t8_mptrac_build_latlon_data_for_u_original_coords (context,
-                                                       physical_time);
+    if (dimension == 2) {
+      t8_mptrac_build_latlon_data_for_u_original_coords (context,
+                                                         physical_time);
+    }
+    else {
+      t8_mptrac_build_latlon_data_for_uvw_3D (context, physical_time);
+    }
     snprintf (vtk_filename, BUFSIZ, "MPTRAC_test_%04i", itime);
     t8_mptrac_context_write_vtk (context, vtk_filename);
     t8_global_productionf ("Wrote file %s\n", vtk_filename);
-    t8_forest_t         forest_adapt =
-      t8_mptrac_refine_forest_2d (context, 20, 5, 15);
-    snprintf (vtk_filename, BUFSIZ, "MPTRAC_test_adapt_%04i", itime);
-    t8_forest_write_vtk_via_API (forest_adapt, vtk_filename, 1, 1, 1, 1, 0,
-                                 NULL);
-    t8_global_productionf ("Wrote file %s\n", vtk_filename);
-    t8_forest_unref (&forest_adapt);
+    if (dimension == 2) {
+      t8_forest_t         forest_adapt =
+        t8_mptrac_refine_forest_2d (context, 20, 5, 15);
+      snprintf (vtk_filename, BUFSIZ, "MPTRAC_test_adapt_%04i", itime);
+      t8_forest_write_vtk_via_API (forest_adapt, vtk_filename, 1, 1, 1, 1, 0,
+                                   NULL);
+      t8_global_productionf ("Wrote file %s\n", vtk_filename);
+      t8_forest_unref (&forest_adapt);
+    }
     itime++;
     time_since_last_six_hours += deltat;
   }
@@ -576,6 +625,8 @@ main (int argc, char **argv)
   char               *mptrac_input = NULL;
   int                 parsed, helpme;
   double              simulation_hours;
+  int                 dimension;
+  int                 level_3d;
 
   /* help message, prints when called with '-h' option */
   snprintf (help, BUFSIZ,
@@ -603,6 +654,10 @@ main (int argc, char **argv)
                          "String of command line arguments passed onto mptrac. Example \"INIT_T0 0 INIT_T1 1\".");
   sc_options_add_double (opt, 'e', "simulation_hours", &simulation_hours,
                          6, "Simulation time in hours.");
+  sc_options_add_int (opt, 'd', "dimension", &dimension, 2,
+                      "The dimension of forest to build. Either 2 or 3 (Default = 2).");
+  sc_options_add_int (opt, 'l', "level", &level_3d, 3,
+                      "If dimension = 3, the initial level of the 3D forest (Default = 3).");
 
   /* Parse the command line arguments from the input */
   parsed =
@@ -613,11 +668,12 @@ main (int argc, char **argv)
     t8_global_essentialf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (netcdf_filename != NULL) {
+  else if (netcdf_filename != NULL && (dimension == 2 || dimension == 3)
+           && simulation_hours >= 0 && level_3d >= 0) {
     /* Read the netcdf file */
     t8_global_productionf ("Reading nc file %s.\n", netcdf_filename);
     t8_mptrac_compute_example (netcdf_filename, mptrac_input,
-                               simulation_hours, 2);
+                               simulation_hours, dimension, level_3d);
   }
   else {
     /* Error when parsing the arguments */
