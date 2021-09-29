@@ -362,10 +362,10 @@ public:
   virtual int         t8_element_test_if_subelement (const t8_element * elem);
 
 /** TODO: comment */
-  virtual int        t8_element_test_if_face_neighbor_is_sibling (const
-                                                                  t8_element_t *
-                                                                  elem,
-                                                                  int face);
+  virtual int         t8_element_test_if_face_neighbor_is_sibling (const
+                                                                   t8_element_t
+                                                                   * elem,
+                                                                   int face);
 
 /** TODO: comment */
   virtual int         t8_element_get_subelement_type (const
@@ -383,10 +383,16 @@ public:
                                                              elem,
                                                              int location[]);
 /** TODO: comment */
-  virtual int         t8_element_adjust_subelement_neighbor_index (const t8_element_t * elem, 
-                                                                   const t8_element_t * neigh,
-                                                                   int elem_index,
-                                                                   int elem_face);
+  virtual int         t8_element_adjust_subelement_neighbor_index (const
+                                                                   t8_element_t
+                                                                   * elem,
+                                                                   const
+                                                                   t8_element_t
+                                                                   * neigh,
+                                                                   int
+                                                                   elem_index,
+                                                                   int
+                                                                   elem_face);
 
 /** Get the shape of a given element. Subelements are triangles */
   virtual t8_element_shape_t t8_element_shape (const t8_element_t * elem);

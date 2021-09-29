@@ -219,7 +219,11 @@ t8_default_scheme_common_c::t8_element_test_if_subelement (const
 
 int
 t8_default_scheme_common_c::t8_element_test_if_face_neighbor_is_sibling (const
-                                                                         t8_element * elem, int face)
+                                                                         t8_element
+                                                                         *
+                                                                         elem,
+                                                                         int
+                                                                         face)
 {
   return 0;
 }
@@ -231,11 +235,19 @@ t8_default_scheme_common_c::t8_element_get_subelement_type (const
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
 
-int 
-t8_default_scheme_common_c::t8_element_adjust_subelement_neighbor_index (const t8_element_t * elem, 
-                                                                         const t8_element_t * neigh,
-                                                                         int elem_index,
-                                                                         int elem_face)
+int
+t8_default_scheme_common_c::t8_element_adjust_subelement_neighbor_index (const
+                                                                         t8_element_t
+                                                                         *
+                                                                         elem,
+                                                                         const
+                                                                         t8_element_t
+                                                                         *
+                                                                         neigh,
+                                                                         int
+                                                                         elem_index,
+                                                                         int
+                                                                         elem_face)
 {
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }

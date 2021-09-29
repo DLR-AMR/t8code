@@ -1870,8 +1870,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
     /* At first we compute these children of the face neighbor elements of leaf. For this, we need the
      * neighbor tree's eclass, scheme, and tree id */
     neigh_class =
-      t8_forest_element_neighbor_eclass (forest, ltreeid, leaf,
-                                         face);
+      t8_forest_element_neighbor_eclass (forest, ltreeid, leaf, face);
     neigh_scheme = *pneigh_scheme =
       t8_forest_get_eclass_scheme (forest, neigh_class);
     /* If we are at the maximum refinement level, we compute the neighbor instead */
@@ -2005,37 +2004,38 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         element_index +=
           t8_forest_get_tree_element_offset (forest, lneigh_treeid);
       }
-      if (ts->t8_element_test_if_subelement (leaf) == 1 &&
-      ts->t8_element_test_if_face_neighbor_is_sibling (leaf, face) == 1) { /* leaf is a subelement and its face neighbor a sibling */
-          
+      if (ts->t8_element_test_if_subelement (leaf) == 1 && ts->t8_element_test_if_face_neighbor_is_sibling (leaf, face) == 1) { /* leaf is a subelement and its face neighbor a sibling */
+
         t8_locidx_t         leaf_index;
         t8_linearidx_t      leaf_id;
 
         /* Note that all subelements of a family have the same anchor node and thus the same linear id
-        * if it is defined via the anchor node (as the Morton index) */
+         * if it is defined via the anchor node (as the Morton index) */
         leaf_id = ts->t8_element_get_linear_id (leaf, forest->maxlevel);
         leaf_index =
           t8_forest_bin_search_lower (element_array, leaf_id,
                                       forest->maxlevel);
-        
+
         /* construct the element with leaf_index (possibly a random subelement sibling of leaf) */
         const t8_element_t *neighbor_subelement;
         neighbor_subelement =
           t8_forest_get_tree_element (t8_forest_get_tree
                                       (forest, lneigh_treeid), leaf_index);
 
-        int adjusted_index = ts->t8_element_adjust_subelement_neighbor_index (leaf, neighbor_subelement, leaf_index, face);
+        int                 adjusted_index =
+          ts->t8_element_adjust_subelement_neighbor_index (leaf,
+                                                           neighbor_subelement,
+                                                           leaf_index, face);
 
         element_index = adjusted_index;
 
         neighbor_subelement =
           t8_forest_get_tree_element (t8_forest_get_tree
-                                      (forest, lneigh_treeid),
-                                      element_index);
+                                      (forest, lneigh_treeid), element_index);
 
         /* Copy the found element for output. */
         neigh_scheme->t8_element_copy (neighbor_subelement,
-                                        neighbor_leafs[0]);
+                                       neighbor_leafs[0]);
 
         /* free memory */
         neigh_scheme->t8_element_destroy (num_children_at_face - 1,
@@ -2051,14 +2051,16 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         return;
       }
       /* TODO: this else case does nothing but I leave it here for for a better overview of what happens */
-      else { 
+      else {
         /* if the subelements face neighbor is no sibling, we will go on and determine its neighbor in the following steps */
       }
-        
+
       /* In this case leaf is either no subelement or a subelement with a non sibling neighbor */
       if ((neigh_scheme->t8_element_compare (ancestor, neighbor_leafs[0]) <
            0) || (ts->t8_element_test_if_subelement (leaf) == 1
-                  && ts->t8_element_test_if_face_neighbor_is_sibling (leaf, face) != 1)) {
+                  && ts->t8_element_test_if_face_neighbor_is_sibling (leaf,
+                                                                      face) !=
+                  1)) {
         /* ancestor is a real ancestor, and thus the neighbor is either the
          * parent or grandparent of the half neighbors. we can return it and
          * the indices. */
