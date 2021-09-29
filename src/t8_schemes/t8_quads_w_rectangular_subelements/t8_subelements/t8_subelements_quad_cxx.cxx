@@ -1151,7 +1151,7 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
   /* In case of a subelement one should construct the face neighbor of the face-corresponding child quadrant
    * of the subelements parent quadrant. Therefore we need to increase the subelements level by one and adapt its
    * anchor node to its specific child_id. */
-  if (t8_element_test_if_subelement (elem) == T8_SUB_QUAD_IS_SUBELEMENT) { /* if elem is a subelement */
+  if (t8_element_test_if_subelement (elem) == T8_SUB_QUAD_IS_SUBELEMENT) {      /* if elem is a subelement */
     int                 location[3] = { };
     t8_element_get_location_of_subelement (elem, location);
 
@@ -1163,7 +1163,7 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
     const p4est_qcoord_t shift = P4EST_QUADRANT_LEN (q->level + 1);
 
     /* We need to take into account whether the subelement is split or not */
-    if (location[1] == 1) { /* split */
+    if (location[1] == 1) {     /* split */
 
       /* adjust the level of the neighbor of the element */
       n->level = q->level + 1;
@@ -1207,7 +1207,7 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
       }
     }
 
-    else { /* not split */
+    else {                      /* not split */
       /* adjust the level of the neighbor of the subelement */
       n->level = q->level;
 
@@ -1227,7 +1227,7 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
     }
   }
 
-  else { /* if elem is no subelement */
+  else {                        /* if elem is no subelement */
     /* Directly construct the face neighbor */
     p4est_quadrant_face_neighbor (q, face, n);
   }
