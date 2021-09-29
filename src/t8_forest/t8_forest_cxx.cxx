@@ -1869,15 +1869,9 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
     ts = t8_forest_get_eclass_scheme (forest, eclass);
     /* At first we compute these children of the face neighbor elements of leaf. For this, we need the
      * neighbor tree's eclass, scheme, and tree id */
-    int                 face_parent_face = face;
-    if (ts->t8_element_test_if_subelement (leaf) == 1 && face == 1) {
-      /* in case of a subelement with face 1, we need to adjust the face to match the 
-       * enumeration of its parent quadrant. */
-      face_parent_face = ts->t8_element_face_parent_face (leaf, face);
-    }
     neigh_class =
       t8_forest_element_neighbor_eclass (forest, ltreeid, leaf,
-                                         face_parent_face);
+                                         face);
     neigh_scheme = *pneigh_scheme =
       t8_forest_get_eclass_scheme (forest, neigh_class);
     /* If we are at the maximum refinement level, we compute the neighbor instead */
@@ -1893,15 +1887,10 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
       /* Compute neighbor element and global treeid of the neighbor */
       /* Subelement neighbors at faces 0 or 2 will always be in the same tree
        * since they belong to the same transition cell. */
-      if (ts->t8_element_test_if_subelement (leaf) == 1 && face != 1) {
-        gneigh_treeid = ltreeid;
-      }
-      else {
-        gneigh_treeid =
-          t8_forest_element_face_neighbor (forest, ltreeid, leaf,
-                                           neighbor_leafs[0], neigh_scheme,
-                                           face_parent_face, *dual_faces);
-      }
+      gneigh_treeid =
+        t8_forest_element_face_neighbor (forest, ltreeid, leaf,
+                                         neighbor_leafs[0], neigh_scheme,
+                                         face, *dual_faces);
     }
     else {
       /* Allocate neighbor element */
@@ -2016,126 +2005,60 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         element_index +=
           t8_forest_get_tree_element_offset (forest, lneigh_treeid);
       }
-      if (ts->t8_element_test_if_subelement (leaf) == 1) {
-        /* In this case the current element is a subelement. */
-        /* Get information of the current element "leaf" */
-        int                 anchor_node_leaf[2] = { };  /* (x,y) */
-        int                 level_leaf[1] = { };
-        int                 subelement_data_leaf[3] = { };      /* {is_subelement, subelement_type, subelement_id} */
-        ts->t8_element_get_element_data (leaf,
-                                         anchor_node_leaf,
-                                         level_leaf, subelement_data_leaf);
+      if (ts->t8_element_test_if_subelement (leaf) == 1 &&
+      ts->t8_element_test_if_face_neighbor_is_sibling (leaf, face) == 1) { /* leaf is a subelement and its face neighbor a sibling */
+          
         t8_locidx_t         leaf_index;
         t8_linearidx_t      leaf_id;
 
+        /* Note that all subelements of a family have the same anchor node and thus the same linear id
+        * if it is defined via the anchor node (as the Morton index) */
         leaf_id = ts->t8_element_get_linear_id (leaf, forest->maxlevel);
-
         leaf_index =
           t8_forest_bin_search_lower (element_array, leaf_id,
                                       forest->maxlevel);
+        
+        /* construct the element with leaf_index (possibly a random subelement sibling of leaf) */
+        const t8_element_t *neighbor_subelement;
+        neighbor_subelement =
+          t8_forest_get_tree_element (t8_forest_get_tree
+                                      (forest, lneigh_treeid), leaf_index);
 
-        /* A subelement is triangular and has three faces. 
-         * Face 0 borders to a sibling as well as face 2. Face 1 borders to some other elmenent that is not in this family of subelements. */
+        int adjusted_index = ts->t8_element_adjust_subelement_neighbor_index (leaf, neighbor_subelement, leaf_index, face);
 
-        /* The following graph shows a possible subelemet "leaf" in a transition cell (family of subelements).
-         * Nf0 and Nf2 are its neighbors at face f0 repsectively f2.
-         * 
-         *      x - - - - - - - x
-         *      | \    leaf   / |
-         *      |   \       /   |
-         *      | Nf0 \   / Nf2 |
-         *      x - - - + - - - x
-         *      |     /   \     |
-         *      |   /       \   |
-         *      | /           \ |
-         *      x - - - - - - - x
-         *    
-         */
+        element_index = adjusted_index;
 
-        if (face == 0 || face == 2) {   /* in this case we have a sibling neighbor */
+        neighbor_subelement =
+          t8_forest_get_tree_element (t8_forest_get_tree
+                                      (forest, lneigh_treeid),
+                                      element_index);
 
-          const t8_element_t *neighbor_subelement;
-          neighbor_subelement =
-            t8_forest_get_tree_element (t8_forest_get_tree
-                                        (forest, lneigh_treeid), leaf_index);
+        /* Copy the found element for output. */
+        neigh_scheme->t8_element_copy (neighbor_subelement,
+                                        neighbor_leafs[0]);
 
-          int                 anchor_node_neighbor_sub[2] = { };        /* (x,y) */
-          int                 level_neighbor_sub[1] = { };
-          int                 subelement_data_neighbor_sub[3] = { };    /* {is_subelement, subelement_type, subelement_id} */
-          ts->t8_element_get_element_data (neighbor_subelement,
-                                           anchor_node_neighbor_sub,
-                                           level_neighbor_sub,
-                                           subelement_data_neighbor_sub);
+        /* free memory */
+        neigh_scheme->t8_element_destroy (num_children_at_face - 1,
+                                          neighbor_leafs + 1);
 
-          /* At this point we have the following situation:
-           * 
-           *      x - - - - - - - x
-           *      | \    leaf   / |
-           *      |   \       /   |
-           *      | Nf0 \   / Nf2 |
-           *      x - - - + - - - x
-           *      |     /   \     |
-           *      |   /       \   |
-           *      | / neigh_sub \ |
-           *      x - - - - - - - x
-           * 
-           * We are searching for Nf0 or Nf2 of leaf but leaf_index corresponds to a random subelement "neigh_sub" of the transition cell instead of leaf itself
-           * (this is a problem of the index function with subelements but we can solve this without modifying this function).
-           * Depending on whether we are searching Nf0 or Nf2, we can now use leaf_index, and the sub_ids of leaf and neigh_sub 
-           * in order to adjust leaf_index and to get the right neighbor by just shifting it by +-1: */
-          int                 adjust, shift;
-          int                 number_of_subelements =
-            ts->t8_element_get_number_of_subelements (subelement_data_leaf[1],
-                                                      leaf);
+        /* set return values */
+        *num_neighbors = 1;
+        *pelement_indices = T8_ALLOC (t8_locidx_t, 1);
+        (*pelement_indices)[0] = element_index;
 
-          leaf_index -= subelement_data_neighbor_sub[2];        /* now we have the index of the first subelement of this transition cell */
+        T8_FREE (owners);
 
-          if (face == 0) {      /* counter clockwise neighbor */
-            shift = -1;
-          }
-          if (face == 2) {      /* clockwise neighbor */
-            shift = 1;
-          }
-
-          adjust =
-            ((subelement_data_leaf[2] + shift) +
-             number_of_subelements) % number_of_subelements;
-
-          element_index = leaf_index + adjust;
-
-          neighbor_subelement =
-            t8_forest_get_tree_element (t8_forest_get_tree
-                                        (forest, lneigh_treeid),
-                                        element_index);
-
-          /* Copy the found element for output. */
-          neigh_scheme->t8_element_copy (neighbor_subelement,
-                                         neighbor_leafs[0]);
-
-          /* free memory */
-          neigh_scheme->t8_element_destroy (num_children_at_face - 1,
-                                            neighbor_leafs + 1);
-
-          /* set return values */
-          *num_neighbors = 1;
-          *pelement_indices = T8_ALLOC (t8_locidx_t, 1);
-          (*pelement_indices)[0] = element_index;
-
-          T8_FREE (owners);
-
-          return;
-        }
-        else if (face == 1) {   /* no sibling neighbor */
-          /* do nothing here */
-        }
-        else {
-          SC_ABORT ("No valid face number for a subelement.");
-        }
+        return;
       }
-      /* In this case leaf is either no subelement or a subelement with face == 1 */
+      /* TODO: this else case does nothing but I leave it here for for a better overview of what happens */
+      else { 
+        /* if the subelements face neighbor is no sibling, we will go on and determine its neighbor in the following steps */
+      }
+        
+      /* In this case leaf is either no subelement or a subelement with a non sibling neighbor */
       if ((neigh_scheme->t8_element_compare (ancestor, neighbor_leafs[0]) <
            0) || (ts->t8_element_test_if_subelement (leaf) == 1
-                  && face == 1)) {
+                  && ts->t8_element_test_if_face_neighbor_is_sibling (leaf, face) != 1)) {
         /* ancestor is a real ancestor, and thus the neighbor is either the
          * parent or grandparent of the half neighbors. we can return it and
          * the indices. */

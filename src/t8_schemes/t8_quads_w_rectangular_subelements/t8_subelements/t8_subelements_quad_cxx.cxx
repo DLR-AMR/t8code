@@ -26,6 +26,10 @@
 
 #include "t8_subelements_quad_cxx.hxx"
 
+/* *INDENT-OFF* */
+const int           subelement_face_dual[3] = { 2, 1, 0};
+/* *INDENT-ON* */
+
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
@@ -494,7 +498,9 @@ t8_linearidx_t
   t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem;
   p4est_quadrant_t   *q = &pquad_w_sub->p4q;
 
-  /* Note that the id of a subelement equals the id of its parent quadrant */
+  /* Note that the id of a subelement equals the id of its parent quadrant.
+   * Therefore, the binary search (for example used in the leaf_face_neighbor function) 
+   * will find a random subelement of the parent transition cell which might not be the desired neighbor of a given element. */
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
@@ -945,7 +951,8 @@ t8_subelement_scheme_quad_c::t8_element_tree_face (const t8_element_t * elem,
     (const t8_quad_with_subelements *) elem;
 
   if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
-    T8_ASSERT (face != 1);      /* this function does only make sense for subelements at face 1 */
+    T8_ASSERT (face != 1);      /* this function does only make sense for subelements at face 1 */ 
+    T8_ASSERT (0 <= face && face < T8_SUBELEMENT_FACES);
 
     int                 location[3] = { };
     t8_element_get_location_of_subelement (elem, location);
@@ -1108,24 +1115,49 @@ int
 t8_subelement_scheme_quad_c::t8_element_is_root_boundary (const t8_element_t *
                                                           elem, int face)
 {
+  T8_ASSERT (t8_element_is_valid (elem));
+
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
   const p4est_quadrant_t *q = &pquad_w_sub->p4q;
 
   p4est_qcoord_t      coord;
 
-  /* In case of subelements we consider their parent quad element */
+  /* in case of a subelement we might adjust its face number with its parents face number */
+  int adjusted_face_in_case_of_subelement = face;
 
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (0 <= face && face < P4EST_FACES);
+  if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
+    if (face == 1) {
+      int location[3] = { };
+      t8_element_get_location_of_subelement (elem, location);
+
+      if (location[0] == 0) {
+        adjusted_face_in_case_of_subelement = 0;
+      }
+      else if (location[0] == 1) {
+        adjusted_face_in_case_of_subelement = 3;
+      }
+      else if (location[0] == 2) {
+        adjusted_face_in_case_of_subelement = 1;
+      }
+      else if (location[0] == 3) {
+        adjusted_face_in_case_of_subelement = 2;
+      }
+    }
+    else { /* in case of a subelement and face 0 or 2 the face is no subface of the root boundary */
+      return false;
+    }   
+  }
+
+  T8_ASSERT (0 <= adjusted_face_in_case_of_subelement && adjusted_face_in_case_of_subelement < P4EST_FACES);
 
   /* if face is 0 or 1 q->x
-   *            2 or 3 q->y
-   */
-  coord = face >> 1 ? q->y : q->x;
+  *            2 or 3 q->y
+  */
+  coord = adjusted_face_in_case_of_subelement >> 1 ? q->y : q->x;
   /* If face is 0 or 2 check against 0.
-   * If face is 1 or 3  check against LAST_OFFSET */
-  return coord == (face & 1 ? P4EST_LAST_OFFSET (q->level) : 0);
+  * If face is 1 or 3  check against LAST_OFFSET */
+  return coord == (adjusted_face_in_case_of_subelement & 1 ? P4EST_LAST_OFFSET (q->level) : 0);
 }
 
 int
@@ -1152,77 +1184,94 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
    * of the subelements parent quadrant. Therefore we need to increase the subelements level by one and adapt its
    * anchor node to its specific child_id. */
   if (t8_element_test_if_subelement (elem) == T8_SUB_QUAD_IS_SUBELEMENT) {      /* if elem is a subelement */
-    int                 location[3] = { };
-    t8_element_get_location_of_subelement (elem, location);
 
-    /* setting the anchor node of the neighbor element */
-    n->x = q->x;
-    n->y = q->y;
-
-    /* length of a subelements cathete */
-    const p4est_qcoord_t shift = P4EST_QUADRANT_LEN (q->level + 1);
-
-    /* We need to take into account whether the subelement is split or not */
-    if (location[1] == 1) {     /* split */
-
-      /* adjust the level of the neighbor of the element */
-      n->level = q->level + 1;
-
-      /* adjust the anchor node of the neighbor of the subelement depending on its location at the parent quad */
-      if (face == 0) {          /* left face */
-        if (location[2] == 0) {
-          n->x = q->x - shift;
-        }
-        else {
-          n->x = q->x - shift;
-          n->y = q->y + shift;
-        }
-      }
-      else if (face == 1) {     /* right face */
-        if (location[2] == 0) {
-          n->x = q->x + 2 * shift;
-          n->y = q->y + shift;
-        }
-        else {
-          n->x = q->x + 2 * shift;
-        }
-      }
-      else if (face == 2) {     /* lower face */
-        if (location[2] == 0) {
-          n->x = q->x + shift;
-          n->y = q->y - shift;
-        }
-        else {
-          n->y = q->y - shift;
-        }
-      }
-      else {                    /* upper face */
-        if (location[2] == 0) {
-          n->y = q->y + shift;
-        }
-        else {
-          n->x = q->x + shift;
-          n->y = q->y + shift;
-        }
-      }
-    }
-
-    else {                      /* not split */
-      /* adjust the level of the neighbor of the subelement */
+    T8_ASSERT (0 <= face && face <= T8_SUBELEMENT_FACES);  
+  
+    if (face == 0) {
+      /* level and anchor stay the same */
+      n->x = q->x;
+      n->y = q->y;
       n->level = q->level;
+    }
+    if (face == 2) {
+      /* level and anchor stay the same */
+      n->x = q->x;
+      n->y = q->y;
+      n->level = q->level;
+    }
+    if (face == 1) {
+      int                 location[3] = { };
+      t8_element_get_location_of_subelement (elem, location);
 
-      /* adjust the anchor node of the neighbor of the subelement depending on its location at the parent quad */
-      if (face == 0) {          /* left face */
-        n->x = q->x - 2 * shift;
+      /* setting the anchor node of the neighbor element */
+      n->x = q->x;
+      n->y = q->y;
+
+      /* length of a subelements cathete */
+      const p4est_qcoord_t shift = P4EST_QUADRANT_LEN (q->level + 1);
+
+      /* We need to take into account whether the subelement is split or not */
+      if (location[1] == 1) {     /* split */
+
+        /* adjust the level of the neighbor of the element */
+        n->level = q->level + 1;
+
+        /* adjust the anchor node of the neighbor of the subelement depending on its location at the parent quad */
+        if (location[0] == 0) {          /* left face */
+          if (location[2] == 0) {
+            n->x = q->x - shift;
+          }
+          else {
+            n->x = q->x - shift;
+            n->y = q->y + shift;
+          }
+        }
+        else if (location[0] == 2) {     /* right face */
+          if (location[2] == 0) {
+            n->x = q->x + 2 * shift;
+            n->y = q->y + shift;
+          }
+          else {
+            n->x = q->x + 2 * shift;
+          }
+        }
+        else if (location[0] == 3) {     /* lower face */
+          if (location[2] == 0) {
+            n->x = q->x + shift;
+            n->y = q->y - shift;
+          }
+          else {
+            n->y = q->y - shift;
+          }
+        }
+        else {                    /* upper face */
+          if (location[2] == 0) {
+            n->y = q->y + shift;
+          }
+          else {
+            n->x = q->x + shift;
+            n->y = q->y + shift;
+          }
+        }
       }
-      else if (face == 1) {     /* right face */
-        n->x = q->x + 2 * shift;
-      }
-      else if (face == 2) {     /* lower face */
-        n->y = q->y - 2 * shift;
-      }
-      else {                    /* upper face */
-        n->y = q->y + 2 * shift;
+
+      else {                      /* not split */
+        /* adjust the level of the neighbor of the subelement */
+        n->level = q->level;
+
+        /* adjust the anchor node of the neighbor of the subelement depending on its location at the parent quad */
+        if (location[0] == 0) {          /* left face */
+          n->x = q->x - 2 * shift;
+        }
+        else if (location[0] == 2) {     /* right face */
+          n->x = q->x + 2 * shift;
+        }
+        else if (location[0] == 3) {     /* lower face */
+          n->y = q->y - 2 * shift;
+        }
+        else {                    /* upper face */
+          n->y = q->y + 2 * shift;
+        }
       }
     }
   }
@@ -1235,13 +1284,24 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
   t8_element_reset_subelement_values (neigh);
 
   T8_QUAD_SET_TDIM (n, 2);
-  /* Compute the face number as seen from q.
-   *  0 -> 1    2 -> 3
-   *  1 -> 0    3 -> 2
-   */
-  T8_ASSERT (neigh_face != NULL);
 
-  *neigh_face = p4est_face_dual[face];
+  /* In the following we set the dual faces of our element at the given face. 
+   * This does only make sense if the neighbor element at face is of the same type as the 
+   * current element (either subelement or non subelement) */
+  if (t8_element_test_if_subelement (elem) == T8_SUB_QUAD_IS_SUBELEMENT) {
+    /* Compute the face number as seen from q.
+     *  0 -> 2    2 -> 0    1 -> 1
+     */
+    *neigh_face = subelement_face_dual[face];
+  }
+  else {
+    /* Compute the face number as seen from q.
+     *  0 -> 1    2 -> 3
+     *  1 -> 0    3 -> 2
+     */
+    T8_ASSERT (neigh_face != NULL);
+    *neigh_face = p4est_face_dual[face];
+  }
 
   /* return true if neigh is inside the root */
   return p4est_quadrant_is_inside_root (n);
@@ -1683,7 +1743,7 @@ t8_subelement_scheme_quad_c::t8_element_get_subelement_type (const
 }
 
 t8_element_shape_t
-  t8_subelement_scheme_quad_c::t8_element_shape (const t8_element_t * elem)
+t8_subelement_scheme_quad_c::t8_element_shape (const t8_element_t * elem)
 {
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
@@ -1696,6 +1756,83 @@ t8_element_shape_t
   else {                        /* for quads, all subelements are triangles */
     return T8_ECLASS_TRIANGLE;
   }
+}
+
+int
+t8_subelement_scheme_quad_c::t8_element_test_if_face_neighbor_is_sibling (const t8_element_t * elem, int face)
+{
+  /* This test does only make sense for a subelement and should not be used else */
+  T8_ASSERT (t8_element_test_if_subelement (elem) == T8_SUB_QUAD_IS_SUBELEMENT);
+
+  /* Considering the triangular subelement scheme, we know that its face neighbors at face 0 and 2 are siblings within the same transition cell.
+   * 
+   *       x - - - x - - - x
+   *       | \     |     / |
+   *       |   \   |   /   |
+   *       | f_2 \ | /     |
+   *       x - - - + - - - x
+   *       |     / | \     |
+   *   f_1 |   /   |   \   |
+   *       | /f_0  |     \ |
+   *       x - - - x - - - x
+   *    
+   */
+
+  if (face == 0 || face == 2) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
+}
+
+int
+t8_subelement_scheme_quad_c::t8_element_adjust_subelement_neighbor_index (const t8_element_t * elem, 
+                                                                          const t8_element_t * neigh,
+                                                                          int elem_index,
+                                                                          int elem_face)
+{
+  const t8_quad_with_subelements *pquad_w_sub_elem =
+    (const t8_quad_with_subelements *) elem;
+  const t8_quad_with_subelements *pquad_w_sub_neigh =
+    (const t8_quad_with_subelements *) neigh;
+
+  /* The purpose of this function is to solve the following problem:
+   * 
+   *      x - - - - - - - x
+   *      | \    elem   / |
+   *      |   \       /   |
+   *      |N_f0 \   / N_f2|
+   *      x - - - + - - - x
+   *      |     /   \     |
+   *      |   /       \   |
+   *      | /   neigh   \ |
+   *      x - - - - - - - x
+   * 
+   * We are searching for the sibling neighbors N_f0 or N_f2 of a subelement elem but elem_index corresponds to a random sibling subelement neigh
+   * instead of elem itself (this is a problem of the index function that is not unique for subelements).
+   * Depending on whether we are searching N_f0 or N_f2, we can now use elem_index, and the sub_ids of elem and neigh 
+   * in order to adjust elem_index and to get the right neighbor indices by just shifting it by +-1. */
+
+  int                 adjust, shift, adjusted_index;
+  int                 number_of_subelements = 
+  t8_element_get_number_of_subelements (pquad_w_sub_elem->subelement_type,
+                                        elem);
+
+  elem_index -= pquad_w_sub_neigh->subelement_id;        /* now we have the index of the first subelement of this transition cell */
+
+  if (elem_face == 0) {      /* counter clockwise neighbor */
+    shift = -1;
+  }
+  if (elem_face == 2) {      /* clockwise neighbor */
+    shift = 1;
+  }
+
+  adjust =
+    ((pquad_w_sub_elem->subelement_id + shift) +
+      number_of_subelements) % number_of_subelements;
+
+  return adjusted_index = elem_index + adjust;
 }
 
 void

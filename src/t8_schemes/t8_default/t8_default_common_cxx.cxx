@@ -210,13 +210,32 @@ int
 t8_default_scheme_common_c::t8_element_test_if_subelement (const
                                                            t8_element * elem)
 {
-  /* no subelements are implemented and therefore we return -1 meaning "is no subelement" */
+  /* We implement this function since it is a "test" function and 
+   * should not abort the code even if no subelements are implemented in the given scheme. */
+
+  /* No subelements are implemented and therefore we return -1 meaning "is no subelement". */
   return -1;
+}
+
+int
+t8_default_scheme_common_c::t8_element_test_if_face_neighbor_is_sibling (const
+                                                                         t8_element * elem, int face)
+{
+  return 0;
 }
 
 int
 t8_default_scheme_common_c::t8_element_get_subelement_type (const
                                                             t8_element * elem)
+{
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
+}
+
+int 
+t8_default_scheme_common_c::t8_element_adjust_subelement_neighbor_index (const t8_element_t * elem, 
+                                                                         const t8_element_t * neigh,
+                                                                         int elem_index,
+                                                                         int elem_face)
 {
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
