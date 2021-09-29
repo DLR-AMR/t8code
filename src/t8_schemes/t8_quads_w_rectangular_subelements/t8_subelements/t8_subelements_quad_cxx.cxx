@@ -1151,7 +1151,7 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
   /* In case of a subelement one should construct the face neighbor of the face-corresponding child quadrant
    * of the subelements parent quadrant. Therefore we need to increase the subelements level by one and adapt its
    * anchor node to its specific child_id. */
-  if (t8_element_test_if_subelement (elem) == T8_SUB_QUAD_IS_SUBELEMENT) {
+  if (t8_element_test_if_subelement (elem) == T8_SUB_QUAD_IS_SUBELEMENT) { /* if elem is a subelement */
     int                 location[3] = { };
     t8_element_get_location_of_subelement (elem, location);
 
@@ -1163,8 +1163,9 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
     const p4est_qcoord_t shift = P4EST_QUADRANT_LEN (q->level + 1);
 
     /* We need to take into account whether the subelement is split or not */
-    if (location[1] == 1) {
-      /* adjust the level of the neighbor of the subelement */
+    if (location[1] == 1) { /* split */
+
+      /* adjust the level of the neighbor of the element */
       n->level = q->level + 1;
 
       /* adjust the anchor node of the neighbor of the subelement depending on its location at the parent quad */
@@ -1188,11 +1189,11 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
       }
       else if (face == 2) {     /* lower face */
         if (location[2] == 0) {
+          n->x = q->x + shift;
           n->y = q->y - shift;
         }
         else {
-          n->x = q->x - shift;
-          n->y = q->y + shift;
+          n->y = q->y - shift;
         }
       }
       else {                    /* upper face */
@@ -1205,7 +1206,8 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
         }
       }
     }
-    else {
+
+    else { /* not split */
       /* adjust the level of the neighbor of the subelement */
       n->level = q->level;
 
@@ -1224,7 +1226,8 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
       }
     }
   }
-  else {
+
+  else { /* if elem is no subelement */
     /* Directly construct the face neighbor */
     p4est_quadrant_face_neighbor (q, face, n);
   }
