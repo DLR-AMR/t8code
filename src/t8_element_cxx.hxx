@@ -655,6 +655,10 @@ public:
                                                 t8_element_t *
                                                 subelements[]) = 0;
 
+  /* TODO: comment */
+  virtual int         t8_element_test_if_subelement (const
+                                                     t8_element * elem) = 0;
+
   /** This function will determine the number of children subelements, depending on the 
    *  subelement type. 
    *  \param [in] subelement_type The subelement type as an integer
@@ -668,19 +672,24 @@ public:
                                                             elem) = 0;
 
   /* TODO: comment */
-  virtual int         t8_element_test_if_subelement (const
-                                                     t8_element * elem) = 0;
-
-  /* TODO: comment */
-  virtual int         t8_element_test_if_face_neighbor_is_sibling (const
-                                                                   t8_element
-                                                                   * elem,
-                                                                   int face) =
-    0;
-
-  /* TODO: comment */
   virtual int         t8_element_get_subelement_type (const
                                                       t8_element * elem) = 0;
+  
+  /* TODO: comment */
+  virtual int         t8_element_get_subelement_id (const
+                                                    t8_element * elem) = 0;
+
+  /* TODO: comment */
+  virtual void        t8_element_get_element_data (const
+                                                   t8_element * elem,
+                                                   int anchor_node[],
+                                                   int level[],
+                                                   int subelement_data[]) = 0;
+
+  /** TODO: comment */
+  virtual int         t8_element_find_neighbor_in_transition_cell (const t8_element_t * elem, 
+                                                                   const t8_element_t *neigh, 
+                                                                   int elem_face) = 0;
 
   /** TODO: comment */
   virtual int         t8_element_adjust_subelement_neighbor_index (const
@@ -694,13 +703,6 @@ public:
                                                                    int
                                                                    elem_face)
     = 0;
-
-  /* TODO: comment */
-  virtual void        t8_element_get_element_data (const
-                                                   t8_element * elem,
-                                                   int anchor_node[],
-                                                   int level[],
-                                                   int subelement_data[]) = 0;
 
   /** This function will determine the location of a specific subelement in the parent element.
    *  Since different subelement types are possible, it is a priori not known where for example the

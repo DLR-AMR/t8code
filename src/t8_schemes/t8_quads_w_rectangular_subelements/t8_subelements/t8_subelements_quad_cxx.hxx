@@ -362,14 +362,18 @@ public:
   virtual int         t8_element_test_if_subelement (const t8_element * elem);
 
 /** TODO: comment */
-  virtual int         t8_element_test_if_face_neighbor_is_sibling (const
-                                                                   t8_element_t
-                                                                   * elem,
-                                                                   int face);
-
-/** TODO: comment */
   virtual int         t8_element_get_subelement_type (const
                                                       t8_element * elem);
+
+/** TODO: comment */
+  virtual int         t8_element_get_subelement_id (const
+                                                    t8_element * elem);
+
+/** TODO: comment */
+  virtual void        t8_element_get_location_of_subelement (const
+                                                             t8_element_t *
+                                                             elem,
+                                                             int location[]);
 
 /** TODO: comment */
   virtual void        t8_element_get_element_data (const t8_element_t * elem,
@@ -378,10 +382,10 @@ public:
                                                    int subelement_data[]);
 
 /** TODO: comment */
-  virtual void        t8_element_get_location_of_subelement (const
-                                                             t8_element_t *
-                                                             elem,
-                                                             int location[]);
+  virtual int         t8_element_find_neighbor_in_transition_cell (const t8_element_t * elem, 
+                                                                   const t8_element_t *neigh, 
+                                                                   int elem_face);
+
 /** TODO: comment */
   virtual int         t8_element_adjust_subelement_neighbor_index (const
                                                                    t8_element_t

@@ -197,16 +197,6 @@ t8_default_scheme_common_c::t8_element_to_subelement (const t8_element_t *
 }
 
 int
-t8_default_scheme_common_c::t8_element_get_number_of_subelements (int
-                                                                  subelement_type,
-                                                                  const
-                                                                  t8_element *
-                                                                  elem)
-{
-  SC_ABORT ("This function is not implemented for the given scheme.\n");
-}
-
-int
 t8_default_scheme_common_c::t8_element_test_if_subelement (const
                                                            t8_element * elem)
 {
@@ -218,19 +208,44 @@ t8_default_scheme_common_c::t8_element_test_if_subelement (const
 }
 
 int
-t8_default_scheme_common_c::t8_element_test_if_face_neighbor_is_sibling (const
-                                                                         t8_element
-                                                                         *
-                                                                         elem,
-                                                                         int
-                                                                         face)
+t8_default_scheme_common_c::t8_element_get_number_of_subelements (int
+                                                                  subelement_type,
+                                                                  const
+                                                                  t8_element *
+                                                                  elem)
 {
-  return 0;
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
 
 int
 t8_default_scheme_common_c::t8_element_get_subelement_type (const
                                                             t8_element * elem)
+{
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
+}
+
+int
+t8_default_scheme_common_c::t8_element_get_subelement_id (const
+                                                          t8_element * elem)
+{
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
+}
+
+void
+t8_default_scheme_common_c::t8_element_get_element_data (const t8_element *
+                                                         elem,
+                                                         int anchor_node[],
+                                                         int level[],
+                                                         int
+                                                         subelement_data[])
+{
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
+}
+
+int 
+t8_default_scheme_common_c::t8_element_find_neighbor_in_transition_cell (const t8_element_t * elem, 
+                                                                         const t8_element_t *neigh, 
+                                                                         int elem_face) 
 {
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
@@ -248,17 +263,6 @@ t8_default_scheme_common_c::t8_element_adjust_subelement_neighbor_index (const
                                                                          elem_index,
                                                                          int
                                                                          elem_face)
-{
-  SC_ABORT ("This function is not implemented for the given scheme.\n");
-}
-
-void
-t8_default_scheme_common_c::t8_element_get_element_data (const t8_element *
-                                                         elem,
-                                                         int anchor_node[],
-                                                         int level[],
-                                                         int
-                                                         subelement_data[])
 {
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }

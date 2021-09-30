@@ -106,6 +106,9 @@ public:
   virtual void        t8_element_to_subelement (const t8_element_t * elem,
                                                 int type, t8_element_t * c[]);
 
+  /* TODO: comment */
+  virtual int         t8_element_test_if_subelement (const t8_element * elem);
+
   /** Determine the number of subelements, used to remove hanging nodes from a element of a given type */
   virtual int         t8_element_get_number_of_subelements (int
                                                             subelement_type,
@@ -114,17 +117,23 @@ public:
                                                             elem);
 
   /* TODO: comment */
-  virtual int         t8_element_test_if_subelement (const t8_element * elem);
-
-  /** TODO: comment */
-  virtual int         t8_element_test_if_face_neighbor_is_sibling (const
-                                                                   t8_element_t
-                                                                   * elem,
-                                                                   int face);
-
-  /* TODO: comment */
   virtual int         t8_element_get_subelement_type (const
                                                       t8_element * elem);
+
+  /** TODO: comment */
+  virtual int         t8_element_get_subelement_id (const
+                                                    t8_element * elem);
+
+  /* TODO: comment */
+  virtual void        t8_element_get_element_data (const t8_element * elem,
+                                                   int anchor_node[],
+                                                   int level[],
+                                                   int subelement_data[]);
+
+  /** TODO: comment */
+  virtual int         t8_element_find_neighbor_in_transition_cell (const t8_element_t * elem, 
+                                                                   const t8_element_t *neigh, 
+                                                                   int elem_face);
 
   /** TODO: comment */
   virtual int         t8_element_adjust_subelement_neighbor_index (const
@@ -137,12 +146,6 @@ public:
                                                                    elem_index,
                                                                    int
                                                                    elem_face);
-
-  /* TODO: comment */
-  virtual void        t8_element_get_element_data (const t8_element * elem,
-                                                   int anchor_node[],
-                                                   int level[],
-                                                   int subelement_data[]);
 
   /** This function will determine the location of a specific subelement in the parent element.
    *  Since different subelement types are possible, it is a priori not known where for example the
