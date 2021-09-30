@@ -674,7 +674,7 @@ public:
   /* TODO: comment */
   virtual int         t8_element_get_subelement_type (const
                                                       t8_element * elem) = 0;
-  
+
   /* TODO: comment */
   virtual int         t8_element_get_subelement_id (const
                                                     t8_element * elem) = 0;
@@ -687,9 +687,15 @@ public:
                                                    int subelement_data[]) = 0;
 
   /** TODO: comment */
-  virtual int         t8_element_find_neighbor_in_transition_cell (const t8_element_t * elem, 
-                                                                   const t8_element_t *neigh, 
-                                                                   int elem_face) = 0;
+  virtual int         t8_element_find_neighbor_in_transition_cell (const
+                                                                   t8_element_t
+                                                                   * elem,
+                                                                   const
+                                                                   t8_element_t
+                                                                   * neigh,
+                                                                   int
+                                                                   elem_face)
+    = 0;
 
   /** TODO: comment */
   virtual int         t8_element_adjust_subelement_neighbor_index (const

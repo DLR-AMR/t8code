@@ -242,10 +242,17 @@ t8_default_scheme_common_c::t8_element_get_element_data (const t8_element *
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
 
-int 
-t8_default_scheme_common_c::t8_element_find_neighbor_in_transition_cell (const t8_element_t * elem, 
-                                                                         const t8_element_t *neigh, 
-                                                                         int elem_face) 
+int
+t8_default_scheme_common_c::t8_element_find_neighbor_in_transition_cell (const
+                                                                         t8_element_t
+                                                                         *
+                                                                         elem,
+                                                                         const
+                                                                         t8_element_t
+                                                                         *
+                                                                         neigh,
+                                                                         int
+                                                                         elem_face)
 {
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }

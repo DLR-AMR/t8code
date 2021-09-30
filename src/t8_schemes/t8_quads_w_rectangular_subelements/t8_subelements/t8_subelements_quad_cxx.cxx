@@ -951,7 +951,7 @@ t8_subelement_scheme_quad_c::t8_element_tree_face (const t8_element_t * elem,
     (const t8_quad_with_subelements *) elem;
 
   if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
-    T8_ASSERT (face != 1);      /* this function does only make sense for subelements at face 1 */ 
+    T8_ASSERT (face != 1);      /* this function does only make sense for subelements at face 1 */
     T8_ASSERT (0 <= face && face < T8_SUBELEMENT_FACES);
 
     int                 location[3] = { };
@@ -1124,11 +1124,11 @@ t8_subelement_scheme_quad_c::t8_element_is_root_boundary (const t8_element_t *
   p4est_qcoord_t      coord;
 
   /* in case of a subelement we might adjust its face number with its parents face number */
-  int adjusted_face_in_case_of_subelement = face;
+  int                 adjusted_face_in_case_of_subelement = face;
 
   if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
     if (face == 1) {
-      int location[3] = { };
+      int                 location[3] = { };
       t8_element_get_location_of_subelement (elem, location);
 
       if (location[0] == 0) {
@@ -1144,20 +1144,23 @@ t8_subelement_scheme_quad_c::t8_element_is_root_boundary (const t8_element_t *
         adjusted_face_in_case_of_subelement = 2;
       }
     }
-    else { /* in case of a subelement and face 0 or 2 the face is no subface of the root boundary */
+    else {                      /* in case of a subelement and face 0 or 2 the face is no subface of the root boundary */
       return false;
-    }   
+    }
   }
 
-  T8_ASSERT (0 <= adjusted_face_in_case_of_subelement && adjusted_face_in_case_of_subelement < P4EST_FACES);
+  T8_ASSERT (0 <= adjusted_face_in_case_of_subelement
+             && adjusted_face_in_case_of_subelement < P4EST_FACES);
 
   /* if face is 0 or 1 q->x
-  *            2 or 3 q->y
-  */
+   *            2 or 3 q->y
+   */
   coord = adjusted_face_in_case_of_subelement >> 1 ? q->y : q->x;
   /* If face is 0 or 2 check against 0.
-  * If face is 1 or 3  check against LAST_OFFSET */
-  return coord == (adjusted_face_in_case_of_subelement & 1 ? P4EST_LAST_OFFSET (q->level) : 0);
+   * If face is 1 or 3  check against LAST_OFFSET */
+  return coord ==
+    (adjusted_face_in_case_of_subelement & 1 ? P4EST_LAST_OFFSET (q->level) :
+     0);
 }
 
 int
@@ -1185,8 +1188,8 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
    * anchor node to its specific child_id. */
   if (t8_element_test_if_subelement (elem) == T8_SUB_QUAD_IS_SUBELEMENT) {      /* if elem is a subelement */
 
-    T8_ASSERT (0 <= face && face <= T8_SUBELEMENT_FACES);  
-  
+    T8_ASSERT (0 <= face && face <= T8_SUBELEMENT_FACES);
+
     if (face == 0) {
       /* level and anchor stay the same */
       n->x = q->x;
@@ -1211,13 +1214,13 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
       const p4est_qcoord_t shift = P4EST_QUADRANT_LEN (q->level + 1);
 
       /* We need to take into account whether the subelement is split or not */
-      if (location[1] == 1) {     /* split */
+      if (location[1] == 1) {   /* split */
 
         /* adjust the level of the neighbor of the element */
         n->level = q->level + 1;
 
         /* adjust the anchor node of the neighbor of the subelement depending on its location at the parent quad */
-        if (location[0] == 0) {          /* left face */
+        if (location[0] == 0) { /* left face */
           if (location[2] == 0) {
             n->x = q->x - shift;
           }
@@ -1226,7 +1229,7 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
             n->y = q->y + shift;
           }
         }
-        else if (location[0] == 2) {     /* right face */
+        else if (location[0] == 2) {    /* right face */
           if (location[2] == 0) {
             n->x = q->x + 2 * shift;
             n->y = q->y + shift;
@@ -1235,7 +1238,7 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
             n->x = q->x + 2 * shift;
           }
         }
-        else if (location[0] == 3) {     /* lower face */
+        else if (location[0] == 3) {    /* lower face */
           if (location[2] == 0) {
             n->x = q->x + shift;
             n->y = q->y - shift;
@@ -1244,7 +1247,7 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
             n->y = q->y - shift;
           }
         }
-        else {                    /* upper face */
+        else {                  /* upper face */
           if (location[2] == 0) {
             n->y = q->y + shift;
           }
@@ -1255,21 +1258,21 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
         }
       }
 
-      else {                      /* not split */
+      else {                    /* not split */
         /* adjust the level of the neighbor of the subelement */
         n->level = q->level;
 
         /* adjust the anchor node of the neighbor of the subelement depending on its location at the parent quad */
-        if (location[0] == 0) {          /* left face */
+        if (location[0] == 0) { /* left face */
           n->x = q->x - 2 * shift;
         }
-        else if (location[0] == 2) {     /* right face */
+        else if (location[0] == 2) {    /* right face */
           n->x = q->x + 2 * shift;
         }
-        else if (location[0] == 3) {     /* lower face */
+        else if (location[0] == 3) {    /* lower face */
           n->y = q->y - 2 * shift;
         }
-        else {                    /* upper face */
+        else {                  /* upper face */
           n->y = q->y + 2 * shift;
         }
       }
@@ -1744,8 +1747,7 @@ t8_subelement_scheme_quad_c::t8_element_get_subelement_type (const
 
 int
 t8_subelement_scheme_quad_c::t8_element_get_subelement_id (const
-                                                           t8_element *
-                                                           elem)
+                                                           t8_element * elem)
 {
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
@@ -1754,7 +1756,7 @@ t8_subelement_scheme_quad_c::t8_element_get_subelement_id (const
 }
 
 t8_element_shape_t
-t8_subelement_scheme_quad_c::t8_element_shape (const t8_element_t * elem)
+  t8_subelement_scheme_quad_c::t8_element_shape (const t8_element_t * elem)
 {
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
@@ -1769,59 +1771,64 @@ t8_subelement_scheme_quad_c::t8_element_shape (const t8_element_t * elem)
   }
 }
 
-int 
-t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell (const t8_element_t * elem, 
-                                                                          const t8_element_t *neigh, 
-                                                                          int elem_face)
+int
+t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
+  (const t8_element_t * elem, const t8_element_t * neigh, int elem_face)
 {
   t8_element_is_valid (elem);
   t8_element_is_valid (neigh);
 
   /* we expect the neigh to be a element in a transition cell, thus a subelement */
-  T8_ASSERT(t8_element_test_if_subelement (neigh) == T8_SUB_QUAD_IS_SUBELEMENT);
+  T8_ASSERT (t8_element_test_if_subelement (neigh) ==
+             T8_SUB_QUAD_IS_SUBELEMENT);
 
-  const t8_quad_with_subelements *pquad_w_sub_elem =
-    (const t8_quad_with_subelements *) elem;
-  const t8_quad_with_subelements *pquad_w_sub_neigh =
-    (const t8_quad_with_subelements *) neigh;
-  
-  if (pquad_w_sub_elem->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT && (elem_face == 0 || elem_face == 2)) { /* we search for a neighbor within the transition cell of elem */
+  const t8_quad_with_subelements *
+    pquad_w_sub_elem = (const t8_quad_with_subelements *) elem;
+  const t8_quad_with_subelements *
+    pquad_w_sub_neigh = (const t8_quad_with_subelements *) neigh;
+
+  if (pquad_w_sub_elem->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT && (elem_face == 0 || elem_face == 2)) {       /* we search for a neighbor within the transition cell of elem */
     return 1;
   }
-  else { /* in this case we search a neighbor within a transition cell that is a neighbor of elems parent */
+  else {                        /* in this case we search a neighbor within a transition cell that is a neighbor of elems parent */
     return -1;
   }
- 
-  #if 0
-  int neighbor_found = 0;
-        int i;
-        for (for i = 0; i < num_subelements; i++) {
-          /* get the i-th subelement of the transition cell */
-          const t8_element_t *subelement_iterate;
-          subelement_iterate =
-          t8_forest_get_tree_element (t8_forest_get_tree
-                                      (forest, lneigh_treeid), leaf_index);
 
-          neighbor_found = ts->t8_element_find_neighbor_in_transition_cell (leaf, subelement_iterate, face);
+#if 0
+  int
+    neighbor_found = 0;
+  int
+    i;
+  for (for i = 0; i < num_subelements; i++) {
+    /* get the i-th subelement of the transition cell */
+    const t8_element_t *
+      subelement_iterate;
+    subelement_iterate =
+      t8_forest_get_tree_element (t8_forest_get_tree
+                                  (forest, lneigh_treeid), leaf_index);
 
-          if (neighbor_found == 1) {
-            leaf_index += i;
-            i = num_subelements;
-          }
-        }
-  #endif
-}                                              
+    neighbor_found =
+      ts->t8_element_find_neighbor_in_transition_cell (leaf,
+                                                       subelement_iterate,
+                                                       face);
+
+    if (neighbor_found == 1) {
+      leaf_index += i;
+      i = num_subelements;
+    }
+  }
+#endif
+}
 
 int
-t8_subelement_scheme_quad_c::t8_element_adjust_subelement_neighbor_index (const t8_element_t * elem, 
-                                                                          const t8_element_t * neigh,
-                                                                          int elem_index,
-                                                                          int elem_face)
+t8_subelement_scheme_quad_c::t8_element_adjust_subelement_neighbor_index
+  (const t8_element_t * elem, const t8_element_t * neigh, int elem_index,
+   int elem_face)
 {
-  const t8_quad_with_subelements *pquad_w_sub_elem =
-    (const t8_quad_with_subelements *) elem;
-  const t8_quad_with_subelements *pquad_w_sub_neigh =
-    (const t8_quad_with_subelements *) neigh;
+  const t8_quad_with_subelements *
+    pquad_w_sub_elem = (const t8_quad_with_subelements *) elem;
+  const t8_quad_with_subelements *
+    pquad_w_sub_neigh = (const t8_quad_with_subelements *) neigh;
 
   /* The purpose of this function is to solve the following problem:
    * 
@@ -1840,23 +1847,27 @@ t8_subelement_scheme_quad_c::t8_element_adjust_subelement_neighbor_index (const 
    * Depending on whether we are searching N_f0 or N_f2, we can now use elem_index, and the sub_ids of elem and neigh 
    * in order to adjust elem_index and to get the right neighbor indices by just shifting it by +-1. */
 
-  int                 adjust, shift, adjusted_index;
-  int                 number_of_subelements = 
-  t8_element_get_number_of_subelements (pquad_w_sub_elem->subelement_type,
-                                        elem);
+  int
+    adjust,
+    shift,
+    adjusted_index;
+  int
+    number_of_subelements =
+    t8_element_get_number_of_subelements (pquad_w_sub_elem->subelement_type,
+                                          elem);
 
-  elem_index -= pquad_w_sub_neigh->subelement_id;        /* now we have the index of the first subelement of this transition cell */
+  elem_index -= pquad_w_sub_neigh->subelement_id;       /* now we have the index of the first subelement of this transition cell */
 
-  if (elem_face == 0) {      /* counter clockwise neighbor */
+  if (elem_face == 0) {         /* counter clockwise neighbor */
     shift = -1;
   }
-  if (elem_face == 2) {      /* clockwise neighbor */
+  if (elem_face == 2) {         /* clockwise neighbor */
     shift = 1;
   }
 
   adjust =
     ((pquad_w_sub_elem->subelement_id + shift) +
-      number_of_subelements) % number_of_subelements;
+     number_of_subelements) % number_of_subelements;
 
   return adjusted_index = elem_index + adjust;
 }

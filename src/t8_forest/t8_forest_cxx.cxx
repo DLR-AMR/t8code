@@ -2004,10 +2004,10 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         element_index +=
           t8_forest_get_tree_element_offset (forest, lneigh_treeid);
       }
-      if (ts->t8_element_test_if_subelement (leaf) == 1) { 
-      /* if leaf is a subelement, then there is a chance that the neighbor is a 
-       * a sibling element within the same transition cell. We check this at this point and 
-       * might directly find the neighbor. */
+      if (ts->t8_element_test_if_subelement (leaf) == 1) {
+        /* if leaf is a subelement, then there is a chance that the neighbor is a 
+         * a sibling element within the same transition cell. We check this at this point and 
+         * might directly find the neighbor. */
 
         t8_locidx_t         leaf_index;
         t8_linearidx_t      leaf_id;
@@ -2024,25 +2024,31 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         curr_neighbor_sub =
           t8_forest_get_tree_element (t8_forest_get_tree
                                       (forest, lneigh_treeid), leaf_index);
-        
-        /* get the subelement id of the current neighbor element */
-        int curr_neighbor_sub_id = ts->t8_element_get_subelement_id (curr_neighbor_sub);
 
-        T8_ASSERT (curr_neighbor_sub_id >= 0); /* this will only hold for subelements */
+        /* get the subelement id of the current neighbor element */
+        int                 curr_neighbor_sub_id =
+          ts->t8_element_get_subelement_id (curr_neighbor_sub);
+
+        T8_ASSERT (curr_neighbor_sub_id >= 0);  /* this will only hold for subelements */
 
         /* get the number of subelements */
-        int sub_id_of_neighbor = ts->t8_element_find_neighbor_in_transition_cell (leaf, curr_neighbor_sub, face);
+        int                 sub_id_of_neighbor =
+          ts->t8_element_find_neighbor_in_transition_cell (leaf,
+                                                           curr_neighbor_sub,
+                                                           face);
 
-        if (sub_id_of_neighbor >= 0) { /* neighbor found */
-          element_index = leaf_index - curr_neighbor_sub_id + sub_id_of_neighbor;
+        if (sub_id_of_neighbor >= 0) {  /* neighbor found */
+          element_index =
+            leaf_index - curr_neighbor_sub_id + sub_id_of_neighbor;
 
           curr_neighbor_sub =
             t8_forest_get_tree_element (t8_forest_get_tree
-                                        (forest, lneigh_treeid), element_index);
+                                        (forest, lneigh_treeid),
+                                        element_index);
 
           /* Copy the found element for output. */
           neigh_scheme->t8_element_copy (curr_neighbor_sub,
-                                        neighbor_leafs[0]);
+                                         neighbor_leafs[0]);
 
           /* free memory */
           neigh_scheme->t8_element_destroy (num_children_at_face - 1,
