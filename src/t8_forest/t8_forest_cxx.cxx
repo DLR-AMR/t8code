@@ -2062,23 +2062,24 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
 
           const t8_element_t *pseudo_neighbor;
           pseudo_neighbor =
-          t8_forest_get_tree_element (t8_forest_get_tree
-                                      (forest, lneigh_treeid), element_index);
+            t8_forest_get_tree_element (t8_forest_get_tree
+                                        (forest, lneigh_treeid),
+                                        element_index);
 
           t8_locidx_t         pseudo_neigh_index = element_index;
-          
+
           /* get the subelement id of the pseudo neighbor */
           int                 pseudo_neighbor_sub_id =
             ts->t8_element_get_subelement_id (pseudo_neighbor);
 
-          T8_ASSERT (pseudo_neighbor_sub_id >= 0);  /* this will only hold for subelements */
+          T8_ASSERT (pseudo_neighbor_sub_id >= 0);      /* this will only hold for subelements */
 
           /* get the subelement id of the real neighbor of leaf */
           int                 sub_id_of_neighbor =
             ts->t8_element_find_neighbor_in_transition_cell (leaf,
                                                              pseudo_neighbor,
                                                              face);
-        
+
           element_index =
             pseudo_neigh_index - pseudo_neighbor_sub_id + sub_id_of_neighbor;
 
@@ -2089,12 +2090,11 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
                                         element_index);
 
           /* Copy the neighbor element to ancestor, following the notation for the standard procedure. */
-          neigh_scheme->t8_element_copy (neighbor,
-                                         ancestor);
+          neigh_scheme->t8_element_copy (neighbor, ancestor);
 
-        } /* end of the if neighbor is subelement case */
-      
-      } /* end of t8_element_compare < 0 */
+        }                       /* end of the if neighbor is subelement case */
+
+      }                         /* end of t8_element_compare < 0 */
 
       /* free memory */
       neigh_scheme->t8_element_destroy (num_children_at_face - 1,
