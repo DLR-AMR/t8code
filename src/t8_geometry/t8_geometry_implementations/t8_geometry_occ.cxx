@@ -81,7 +81,7 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
     if (edges[i_edges] >= 0)
     {
       /* Interpolate coordinates between edge vertices. Due to the indices i_edges of the edges, the edges point in
-      * direction of ref_coord i_edges % 3. Therefore, we can use ref_coords[i_edges % 3] for the interpolation.              
+      * direction of ref_coord i_edges / 4. Therefore, we can use ref_coords[i_edges / 4] for the interpolation.              
       *          6 -------E3------- 7
       *         /|                 /|
       *       E5 |               E7 |
@@ -99,16 +99,16 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
       */
       for (int i_coord_dim = 0; i_coord_dim < 3; ++i_coord_dim)
       {
-        interpolated_coords[i_coord_dim] = (1 - ref_coords[i_edges % 3]) * active_tree_vertices[t8_edge_vertex_to_tree_vertex[i_edges][0] * 3 + i_coord_dim]
-                                + ref_coords[i_edges % 3] * active_tree_vertices[t8_edge_vertex_to_tree_vertex[i_edges][1] * 3 + i_coord_dim];
+        interpolated_coords[i_coord_dim] = (1 - ref_coords[i_edges / 4]) * active_tree_vertices[t8_edge_vertex_to_tree_vertex[i_edges][0] * 3 + i_coord_dim]
+                                + ref_coords[i_edges / 4] * active_tree_vertices[t8_edge_vertex_to_tree_vertex[i_edges][1] * 3 + i_coord_dim];
       }
 
       /* Interpolate parameters between edge vertices. Same procedure as above. */
       const double *parameters = (double *) t8_cmesh_get_attribute(cmesh, t8_get_package_id (),
                                                                   T8_CMESH_OCC_CURVE_PARAMETERS_ATTRIBUTE_KEY + i_edges,
                                                                   gtreeid);
-      param[0] = (1 - ref_coords[i_edges % 3]) * parameters[0]
-                  + ref_coords[i_edges % 3] * parameters[1];
+      param[0] = (1 - ref_coords[i_edges / 4]) * parameters[0]
+                  + ref_coords[i_edges / 4] * parameters[1];
       
       /* Check if calculated parameters are valid */
       T8_ASSERT(!t8_global_occ_curve[edges[i_edges]].IsNull());
