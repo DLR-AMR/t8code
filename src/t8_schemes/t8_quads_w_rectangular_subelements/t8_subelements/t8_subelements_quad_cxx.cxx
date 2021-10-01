@@ -765,19 +765,18 @@ t8_subelement_scheme_quad_c::t8_element_face_parent_face (const t8_element_t *
       return -1;
     }
   }
-  else {
-    if (q->level == 0) {
-      return face;
-    }
-    /* Determine whether face is a subface of the parent.
-     * This is the case if the child_id matches one of the faces corners */
-    child_id = p4est_quadrant_child_id (q);
-    if (child_id == p4est_face_corners[face][0]
-        || child_id == p4est_face_corners[face][1]) {
-      return face;
-    }
-    return -1;
+
+  if (q->level == 0) {
+    return face;
   }
+  /* Determine whether face is a subface of the parent.
+    * This is the case if the child_id matches one of the faces corners */
+  child_id = p4est_quadrant_child_id (q);
+  if (child_id == p4est_face_corners[face][0]
+      || child_id == p4est_face_corners[face][1]) {
+    return face;
+  }
+  return -1;
 }
 
 void
@@ -1772,52 +1771,184 @@ t8_element_shape_t
 }
 
 int
-t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
-  (const t8_element_t * elem, const t8_element_t * neigh, int elem_face)
+t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell (const t8_element_t * elem, 
+                                                                          const t8_element_t * pseudo_neigh, 
+                                                                          int elem_face)
 {
+  /* In this function, we assume pseudo_neigh to be a random subelement of a transition cell that includes
+   * the real neighbor of elem. This function will output the subelement_id of the neighbor of elem. */
   t8_element_is_valid (elem);
-  t8_element_is_valid (neigh);
+  t8_element_is_valid (pseudo_neigh);
 
-  /* we expect the neigh to be a element in a transition cell, thus a subelement */
-  T8_ASSERT (t8_element_test_if_subelement (neigh) ==
+  /* we expect neigh to be a element in a transition cell, thus a subelement */
+  T8_ASSERT (t8_element_test_if_subelement (pseudo_neigh) ==
              T8_SUB_QUAD_IS_SUBELEMENT);
 
   const t8_quad_with_subelements *
     pquad_w_sub_elem = (const t8_quad_with_subelements *) elem;
   const t8_quad_with_subelements *
-    pquad_w_sub_neigh = (const t8_quad_with_subelements *) neigh;
+    pquad_w_sub_pseudo_neigh = (const t8_quad_with_subelements *) pseudo_neigh;
 
   if (pquad_w_sub_elem->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT && (elem_face == 0 || elem_face == 2)) {       /* we search for a neighbor within the transition cell of elem */
-    return 1;
+    /* In this case, we have the following situation:
+     * 
+     *      x - - - - - - - x
+     *      | \    elem   / |
+     *      |   \       /   |
+     *      |N_f0 \   / N_f2|
+     *      x - - - + - - - x
+     *      |     /   \     |
+     *      |   /pseudo \   |
+     *      | /   neigh   \ |
+     *      x - - - - - - - x
+     *
+     * Elem and face 0 or face 2 is given and a random sibling subelement neigh is given, too. 
+     * We are searching for the subelement id of the real neighbor N_f0 or N_f2, depending on the face number. */ 
+    int shift;
+    if (elem_face == 0) {
+      shift = -1;
+    }
+    if (elem_face == 2) {
+      shift = 1;
+    }
+    int num_subelements = t8_element_get_number_of_subelements (pquad_w_sub_elem->subelement_type, elem);
+    return ((pquad_w_sub_elem->subelement_id + shift) + num_subelements) % num_subelements; /* the neighbor is directly before or after elem modulo the number of subelements in the transition cell */
   }
-  else {                        /* in this case we search a neighbor within a transition cell that is a neighbor of elems parent */
-    return -1;
+  /* Below are the cases in which the neighbor can not be identified as simple as above. 
+   * The idea is to fill a location array with the desired properties of the real neighbor. 
+   * Togehter with the type of the transition cell of pseudo_neigh, we can identify the sub_id of the right neighbor. */ 
+
+  if (pquad_w_sub_elem->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT && elem_face == 1) { /* elem is a subelement and pseudo_neigh is a subelement of a neighboring trnaisiton cell */
+    /* In this case, we have the following situation:
+     * 
+     *      x - - - - - - - x - - - - - - - x
+     *      | \           / | \           / |
+     *      |   \       /   |   \       /   |
+     *      |     \   /     |     \   /     |
+     *      x - - - x  N_f1 | elem  x       |
+     *      |     /   \     |     / | \     |
+     *      |   /pseudo \   |   /   |   \   |
+     *      | /   neigh   \ | /     |     \ |
+     *      x - - - - - - - x - - - x - - - x
+     *
+     * A subelement elem and face 1 is given as well as a random subelement pseudo_neigh from a neighboring transition cell. 
+     * We are searching for the subelement id of the real neighbor N_f1. 
+     * Note that both transition cells can have different levels. */
+
+    /* get the location of elem */
+    int location_elem[3] = { }; /* {face, is_split, number of subelement at face} */
+    t8_element_get_location_of_subelement (elem, location_elem);
+    
+    /* declare the location array of the real neighbor which will be filled depending on the following cases */
+    int location_neigh[3] = { };
+
+    /* the pseudo_neigh tranaition cell has a lower level than the elem transition cell */
+    if (pquad_w_sub_pseudo_neigh->p4q.level < pquad_w_sub_elem->p4q.level) {
+      if (location_elem[0] == 0) { /* left face of transition cell */
+        if (pquad_w_sub_pseudo_neigh->p4q.y == pquad_w_sub_elem->p4q.y) { 
+          location_neigh[0] = 2; /* face */
+          location_neigh[1] = 1; /* split */
+          location_neigh[2] = 1; /* first or second subelement at face */
+        }
+        if (pquad_w_sub_pseudo_neigh->p4q.y != pquad_w_sub_elem->p4q.y) {
+
+        }
+      }
+      if (location_elem[0] == 1) { /* upper face of transition cell */
+
+      }
+      if (location_elem[0] == 2) { /* right face of transition cell */
+
+      }
+      if (location_elem[0] == 3) { /* lower face of transition cell */
+
+      }
+    } 
+    /* the pseudo_neigh tranaition cell has not a lower level than the elem transition cell */
+    if (pquad_w_sub_pseudo_neigh->p4q.level >= pquad_w_sub_elem->p4q.level) {
+
+    }   
+
+    /* Depending on the location of elem, we have filled location_neigh with the data of the real neighbor.
+     * This data will be used to determine the sub_id of the neighbor within the transition cell of pseudo_neigh. */
+    return t8_element_get_id_from_location (t8_element_get_subelement_type (pseudo_neigh), location_neigh);
+  }
+  if (pquad_w_sub_elem->dummy_is_subelement == T8_SUB_QUAD_IS_NO_SUBELEMENT) { /* elem is no subelement but its neighbor is a subelement from a neighboring transition cell. */
+    /* In this case, we have the following situation:
+     * 
+     *      x - - - - - - - x - - - - - - - x
+     *      | \           / |               |
+     *      |   \       /   |               |
+     *      |     \   /     |               |
+     *      x - - - x  N_f1 |     elem      |
+     *      |     /   \     |               |
+     *      |   /pseudo \   |               |
+     *      | /   neigh   \ |               |
+     *      x - - - - - - - x - - - - - - - x
+     *
+     * Subelement Elem and face 1 is given and a random subelement neigh from a neighboring transition cell. 
+     * We are searching for the subelement id of the real neighbor N_f1. */
+
+    /* declare the location array of the real neighbor which will be filled depending on the following cases */
+    int location_neigh[3] = { };
+
+    return t8_element_get_id_from_location (t8_element_get_subelement_type (pseudo_neigh), location_neigh);
+  }
+  T8_ASSERT ("A neighbor sub_id should have been found");
+}
+
+int 
+t8_subelement_scheme_quad_c::t8_element_get_id_from_location (int type, int location[])
+{
+  T8_ASSERT (T8_SUB_QUAD_MIN_SUBELEMENT_TYPE <= type && type <= T8_SUB_QUAD_MAX_SUBELEMENT_TYPE);
+
+  int sub_id = 0;
+  int type_temp = type;
+  int binary_type[4] = { };
+  int binary_type_clockwise[4] = { };
+  
+  /* get the type as a binary array */
+  int i;
+  for (i = 0; i < 4; i++) {
+    if (type_temp >= pow (2,4 - (i + 1))) {
+      binary_type[i] = 1;
+    }
+    else {
+      binary_type[i] = 0;
+    }
+    type_temp -= pow (2,4 - (i + 1));
   }
 
-#if 0
-  int
-    neighbor_found = 0;
-  int
-    i;
-  for (for i = 0; i < num_subelements; i++) {
-    /* get the i-th subelement of the transition cell */
-    const t8_element_t *
-      subelement_iterate;
-    subelement_iterate =
-      t8_forest_get_tree_element (t8_forest_get_tree
-                                  (forest, lneigh_treeid), leaf_index);
+  /* rearrange the binary type to be in clockwise order of the faces, starting with the left face */
+  binary_type_clockwise[0] = binary_type[0];
+  binary_type_clockwise[1] = binary_type[3];
+  binary_type_clockwise[2] = binary_type[1];
+  binary_type_clockwise[3] = binary_type[2];
 
-    neighbor_found =
-      ts->t8_element_find_neighbor_in_transition_cell (leaf,
-                                                       subelement_iterate,
-                                                       face);
-
-    if (neighbor_found == 1) {
-      leaf_index += i;
-      i = num_subelements;
+  /* count the number of elements up to the given location */
+  for (i = 0; i <= location[0]; i++) {
+    if (i == location[0]) {
+      if (location[1] == 0) {
+        sub_id += 1;
+      }
+      else {
+        if (location[2] == 0) {
+          sub_id += 1;
+        }
+        else {
+          sub_id += 2;
+        }
+      }
+    }
+    else {
+      sub_id += binary_type_clockwise[i] + 1;
     }
   }
-#endif
+
+  /* get the sub_id */
+  sub_id -= 1;
+
+  return sub_id;
 }
 
 int

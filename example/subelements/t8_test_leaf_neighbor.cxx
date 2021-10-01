@@ -261,8 +261,8 @@ t8_refine_with_subelements (t8_eclass_t eclass)
    * Note, that for subelements we enumerste the faces starting from the center node (+) clockwise for every subelement. */
 
   /* Choose the current element and its face: */
-  t8_locidx_t         element_id_in_tree = 18;  /* index of the element in the forest (not the Morton index but its enumeration) */
-  int                 face_id = 2;      /* the face f_i, determing the direction in which we are looking for neighbors */
+  t8_locidx_t         element_id_in_tree = 23;  /* index of the element in the forest (not the Morton index but its enumeration) */
+  int                 face_id = 0;      /* the face f_i, determing the direction in which we are looking for neighbors */
 
   t8_productionf ("Computing the neighbor of element %i at face %i\n",
                   element_id_in_tree, face_id);

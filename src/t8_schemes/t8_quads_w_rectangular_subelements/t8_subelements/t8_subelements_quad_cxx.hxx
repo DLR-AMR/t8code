@@ -425,6 +425,10 @@ protected:
                                                               t, int vertex,
                                                               int coords[]);
 
+  /** TODO: comment */
+  int                 t8_element_get_id_from_location (int type,
+                                                       int location[]);
+
   /** This function copies the subelement values from source to dest.
    *  \param [in] source A valid element 
    *  \param [in,out] dest A valid element, whose subelement values are equal to those of source
