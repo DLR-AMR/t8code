@@ -67,8 +67,7 @@ t8_print_element_data (const t8_element_t * element)
 
 /* Using the user data element_index and face number in order to find the neighbor element */
 void
-t8_test_neighbor_function (const t8_forest_t forest_adapt,
-                           t8_locidx_t leid_in_tree, int iface)
+t8_test_neighbor_function (const t8_forest_t forest_adapt)
 {
   /* Collecting data of the adapted forest */
   int                 global_num_elements =
@@ -83,27 +82,49 @@ t8_test_neighbor_function (const t8_forest_t forest_adapt,
   t8_locidx_t        *element_indices;
   t8_eclass_scheme_c *neigh_scheme;
 
+  /* Testing the leaf_face_neighbor function for a tree with subelements. The faces are enumerated as follows:
+   * 
+   *             f_3
+   *        x - - - - - x           x - - - x - - - x
+   *        |           |           | \     |     / |
+   *        |           |           |   \   |   /   |
+   *   f_0  |           | f_1       | f_2 \ | /     |
+   *        |           |           x - - - + - - - x
+   *        |           |           |     / | \     |
+   *        x - - - - - x       f_1 |   /   |   \   |
+   *             f_2                | /f_0  |     \ |
+   *                                x - - - x - - - x
+   *    
+   * Note, that for subelements we enumerste the faces starting from the center node (+) clockwise for every subelement. */
+
+  /* Choose the current element and the face: */
+  t8_locidx_t         element_id_in_tree = 27;  /* index of the element in the forest (not the Morton index but its enumeration) */
+  int                 face_id = 3;      /* the face f_i, determing the direction in which we are looking for neighbors */ 
+
+  t8_productionf ("\nComputing the neighbor of element %i at face %i\n",
+                element_id_in_tree, face_id); 
+
   /* we only allow one tree with id 0 and the current element must come from a valid index within the forest (as well as its face index) */
   T8_ASSERT (global_num_trees == 1);
   T8_ASSERT (ltree_id == 0);
-  T8_ASSERT (0 <= leid_in_tree && leid_in_tree < global_num_elements);
-  T8_ASSERT (0 <= iface && iface < 4);
+  T8_ASSERT (0 <= element_id_in_tree && element_id_in_tree < global_num_elements);
+  T8_ASSERT (0 <= face_id && face_id < 4);
 
   /* determing the current element according to the given tree id and element id within the tree */
   current_element =
-    t8_forest_get_element_in_tree (forest_adapt, ltree_id, leid_in_tree);
-
+    t8_forest_get_element_in_tree (forest_adapt, ltree_id, element_id_in_tree);
+  
   /* print the current element */
   t8_productionf ("\nThe current element has the following data\n");
   t8_print_element_data (current_element);
-  t8_productionf ("    Element index in tree: %i \n", leid_in_tree);
+  t8_productionf ("    Element index in tree: %i \n", element_id_in_tree);
 
   /* the leaf_face_neighbor function determins all neighbor elements in a balanced forest */
   t8_forest_leaf_face_neighbors (forest_adapt, ltree_id, current_element,
-                                 &neighbor_leafs, iface, &dual_faces,
-                                 &num_neighbors, &element_indices,
-                                 &neigh_scheme, forest_is_balanced,
-                                 hanging_faces_removed);
+                                &neighbor_leafs, face_id, &dual_faces,
+                                &num_neighbors, &element_indices,
+                                &neigh_scheme, forest_is_balanced,
+                                hanging_faces_removed);
 
   /* note, that after using subelements, there can only be one neighbor for each element and each face */
   int                 i;
@@ -111,7 +132,7 @@ t8_test_neighbor_function (const t8_forest_t forest_adapt,
     /* print the neighbor element */
     t8_productionf
       ("\nThe neighbor element number %i of %i has the following data\n",
-       i + 1, num_neighbors);
+      i + 1, num_neighbors);
     t8_print_element_data (neighbor_leafs[i]);
     t8_productionf ("    Element index in tree: %i \n", element_indices[i]);
   }
@@ -245,32 +266,11 @@ t8_refine_with_subelements (t8_eclass_t eclass)
             t8_eclass_to_string[eclass]);
   t8_forest_write_vtk (forest_adapt, filename);
 
-  /* Testing the leaf_face_neighbor function for a tree with subelements. The faces are enumerated as follows:
-   * 
-   *             f_3
-   *        x - - - - - x           x - - - x - - - x
-   *        |           |           | \     |     / |
-   *        |           |           |   \   |   /   |
-   *   f_0  |           | f_1       | f_2 \ | /     |
-   *        |           |           x - - - + - - - x
-   *        |           |           |     / | \     |
-   *        x - - - - - x       f_1 |   /   |   \   |
-   *             f_2                | /f_0  |     \ |
-   *                                x - - - x - - - x
-   *    
-   * Note, that for subelements we enumerste the faces starting from the center node (+) clockwise for every subelement. */
-
-  /* Choose the current element and its face: */
-  t8_locidx_t         element_id_in_tree = 23;  /* index of the element in the forest (not the Morton index but its enumeration) */
-  int                 face_id = 0;      /* the face f_i, determing the direction in which we are looking for neighbors */
-
-  t8_productionf ("Computing the neighbor of element %i at face %i\n",
-                  element_id_in_tree, face_id);
-
-  t8_test_neighbor_function (forest_adapt, element_id_in_tree, face_id);
+  /* print the neighbor of one element of forest_adapt at one face */
+  t8_test_neighbor_function (forest_adapt);
 
   t8_forest_unref (&forest_adapt);
-}                               /* end of function */
+}
 
 int
 main (int argc, char **argv)

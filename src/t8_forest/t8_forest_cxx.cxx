@@ -1851,10 +1851,9 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
 
   /* TODO: implement is_leaf check to apply to leaf */
   T8_ASSERT (t8_forest_is_committed (forest));
-  /* TODO: the is_balanced check does not work for a mesh with subelements at this point. 
-   * We will skip this test for now as it is apriori known that our forest is balanced. */
-  /* TODO: why do we need the is_balance flag if we can check this property via the is_balanced function? */
+  /* TODO: the is_balanced check does not work for a mesh with subelements at this point. */
   if (hanging_faces_removed != 1) {
+    /* TODO: why do we need the is_balance flag if we can check this property via the is_balanced function? */
     T8_ASSERT (!forest_is_balanced || t8_forest_is_balanced (forest));
   }
   SC_CHECK_ABORT (forest_is_balanced, "leaf face neighbors is not implemented " "for unbalanced forests.\n");   /* TODO: write version for unbalanced forests */
@@ -2094,23 +2093,23 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
 
         }                       /* end of the if neighbor is subelement case */
 
+        /* free memory */
+        neigh_scheme->t8_element_destroy (num_children_at_face - 1,
+                                          neighbor_leafs + 1);
+        /* copy the ancestor */
+        neigh_scheme->t8_element_copy (ancestor, neighbor_leafs[0]);
+
+        /* set return values */
+        *num_neighbors = 1; /* if subelements are involved, every element has only one face neighbor */
+        *pelement_indices = T8_ALLOC (t8_locidx_t, 1);
+        (*pelement_indices)[0] = element_index;
+
+        T8_FREE (owners);
+
+        return;
       }                         /* end of t8_element_compare < 0 */
 
-      /* free memory */
-      neigh_scheme->t8_element_destroy (num_children_at_face - 1,
-                                        neighbor_leafs + 1);
-      /* copy the ancestor */
-      neigh_scheme->t8_element_copy (ancestor, neighbor_leafs[0]);
-
-      /* set return values */
-      *num_neighbors = 1;
-      *pelement_indices = T8_ALLOC (t8_locidx_t, 1);
-      (*pelement_indices)[0] = element_index;
-
-      T8_FREE (owners);
-
-      return;
-    }
+    } /* end of if !different owner */
 
     /* The leafs are the face neighbors that we are looking for. */
     /* The face neighbors either belong to different processes and thus must be leafs
