@@ -2100,7 +2100,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         neigh_scheme->t8_element_copy (ancestor, neighbor_leafs[0]);
 
         /* set return values */
-        *num_neighbors = 1; /* if subelements are involved, every element has only one face neighbor */
+        *num_neighbors = 1;     /* if subelements are involved, every element has only one face neighbor */
         *pelement_indices = T8_ALLOC (t8_locidx_t, 1);
         (*pelement_indices)[0] = element_index;
 
@@ -2109,7 +2109,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         return;
       }                         /* end of t8_element_compare < 0 */
 
-    } /* end of if !different owner */
+    }                           /* end of if !different owner */
 
     /* The leafs are the face neighbors that we are looking for. */
     /* The face neighbors either belong to different processes and thus must be leafs

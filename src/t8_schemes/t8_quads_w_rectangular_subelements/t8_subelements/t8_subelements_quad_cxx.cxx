@@ -1790,7 +1790,8 @@ t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
     pquad_w_sub_pseudo_neigh =
     (const t8_quad_with_subelements *) pseudo_neigh;
 
-  if (pquad_w_sub_elem->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT && (elem_face == 0 || elem_face == 2)) {
+  if (pquad_w_sub_elem->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT
+      && (elem_face == 0 || elem_face == 2)) {
     /* In this case, we have the following situation:
      * 
      *      x - - - - - - - x
@@ -1823,7 +1824,8 @@ t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
    * The idea is to fill a location array with the desired properties of the real neighbor. 
    * Togehter with the type of the transition cell of pseudo_neigh, we can identify the sub_id of the right neighbor. */
 
-  if (pquad_w_sub_elem->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT && elem_face == 1) {
+  if (pquad_w_sub_elem->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT
+      && elem_face == 1) {
     /* In this case, we have the following situation:
      * 
      *      x - - - - - - - x - - - - - - - x
@@ -1847,7 +1849,7 @@ t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
 
     /* Declare the location array of the real neighbor which will be filled depending on the following cases. */
     int
-    location_neigh[3] = {-1, -1, -1}; 
+    location_neigh[3] = { -1, -1, -1 };
 
     /* the pseudo_neigh tranaition cell has a lower level than the elem transition cell */
     if (pquad_w_sub_pseudo_neigh->p4q.level < pquad_w_sub_elem->p4q.level) {
@@ -1903,29 +1905,30 @@ t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
     /* the pseudo_neigh tranaition cell has not a lower level than the elem transition cell */
     if (pquad_w_sub_pseudo_neigh->p4q.level >= pquad_w_sub_elem->p4q.level) {
       if (location_elem[0] == 0) {      /* left face of transition cell */
-        location_neigh[0] = 2;        /* face */
-        location_neigh[1] = 0;        /* not split */
-        location_neigh[2] = 0;        /* first (only) subelement at face */
+        location_neigh[0] = 2;  /* face */
+        location_neigh[1] = 0;  /* not split */
+        location_neigh[2] = 0;  /* first (only) subelement at face */
       }
       if (location_elem[0] == 1) {      /* upper face of transition cell */
-        location_neigh[0] = 3;        /* face */
-        location_neigh[1] = 0;        /* not split */
-        location_neigh[2] = 0;        /* first (only) subelement at face */
+        location_neigh[0] = 3;  /* face */
+        location_neigh[1] = 0;  /* not split */
+        location_neigh[2] = 0;  /* first (only) subelement at face */
       }
       if (location_elem[0] == 2) {      /* right face of transition cell */
-        location_neigh[0] = 0;        /* face */
-        location_neigh[1] = 0;        /* not split */
-        location_neigh[2] = 0;        /* first (only) subelement at face */
+        location_neigh[0] = 0;  /* face */
+        location_neigh[1] = 0;  /* not split */
+        location_neigh[2] = 0;  /* first (only) subelement at face */
       }
       if (location_elem[0] == 3) {      /* lower face of transition cell */
-        location_neigh[0] = 1;        /* face */
-        location_neigh[1] = 0;        /* not split */
-        location_neigh[2] = 0;        /* first (only) subelement at face */
+        location_neigh[0] = 1;  /* face */
+        location_neigh[1] = 0;  /* not split */
+        location_neigh[2] = 0;  /* first (only) subelement at face */
       }
     }
 
     /* check, that a neighbor is found and the location array is adjusted */
-    T8_ASSERT (location_neigh[0] >= 0 && location_neigh[1] >= 0 && location_neigh[2] >= 0);
+    T8_ASSERT (location_neigh[0] >= 0 && location_neigh[1] >= 0
+               && location_neigh[2] >= 0);
 
     /* Depending on the location of elem, we have filled location_neigh with the data of the real neighbor.
      * This data will be used to determine the sub_id of the neighbor within the transition cell of pseudo_neigh. */
@@ -1952,10 +1955,10 @@ t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
 
     /* Declare the location array of the real neighbor which will be filled depending on the following cases. */
     int
-    location_neigh[3] = {-1, -1, -1}; 
+    location_neigh[3] = { -1, -1, -1 };
 
     if (pquad_w_sub_pseudo_neigh->p4q.level < pquad_w_sub_elem->p4q.level) {
-      if (elem_face == 0) { /* left face */
+      if (elem_face == 0) {     /* left face */
         if (pquad_w_sub_pseudo_neigh->p4q.y == pquad_w_sub_elem->p4q.y) {
           location_neigh[0] = 2;        /* face */
           location_neigh[1] = 1;        /* split */
@@ -1967,7 +1970,7 @@ t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
           location_neigh[2] = 0;        /* first subelement at face */
         }
       }
-      if (elem_face == 1) { /* right face */
+      if (elem_face == 1) {     /* right face */
         if (pquad_w_sub_pseudo_neigh->p4q.y == pquad_w_sub_elem->p4q.y) {
           location_neigh[0] = 0;        /* face */
           location_neigh[1] = 1;        /* split */
@@ -1979,7 +1982,7 @@ t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
           location_neigh[2] = 1;        /* first or second subelement at face */
         }
       }
-      if (elem_face == 2) { /* lower face */
+      if (elem_face == 2) {     /* lower face */
         if (pquad_w_sub_pseudo_neigh->p4q.x == pquad_w_sub_elem->p4q.x) {
           location_neigh[0] = 1;        /* face */
           location_neigh[1] = 1;        /* split */
@@ -1991,7 +1994,7 @@ t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
           location_neigh[2] = 1;        /* second subelement at face */
         }
       }
-      if (elem_face == 3) { /* upper face */
+      if (elem_face == 3) {     /* upper face */
         if (pquad_w_sub_pseudo_neigh->p4q.x == pquad_w_sub_elem->p4q.x) {
           location_neigh[0] = 3;        /* face */
           location_neigh[1] = 1;        /* split */
@@ -2005,30 +2008,31 @@ t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
       }
     }
     if (pquad_w_sub_pseudo_neigh->p4q.level == pquad_w_sub_elem->p4q.level) {
-      if (elem_face == 0) { /* left face */
-        location_neigh[0] = 2;        /* face */
-        location_neigh[1] = 0;        /* not split */
-        location_neigh[2] = 0;        /* first (only) subelement at face */
+      if (elem_face == 0) {     /* left face */
+        location_neigh[0] = 2;  /* face */
+        location_neigh[1] = 0;  /* not split */
+        location_neigh[2] = 0;  /* first (only) subelement at face */
       }
-      if (elem_face == 1) { /* right face */
-        location_neigh[0] = 0;        /* face */
-        location_neigh[1] = 0;        /* not split */
-        location_neigh[2] = 0;        /* first (only) subelement at face */
+      if (elem_face == 1) {     /* right face */
+        location_neigh[0] = 0;  /* face */
+        location_neigh[1] = 0;  /* not split */
+        location_neigh[2] = 0;  /* first (only) subelement at face */
       }
-      if (elem_face == 2) { /* lower face */
-        location_neigh[0] = 1;        /* face */
-        location_neigh[1] = 0;        /* not split */
-        location_neigh[2] = 0;        /* first (only) subelement at face */
+      if (elem_face == 2) {     /* lower face */
+        location_neigh[0] = 1;  /* face */
+        location_neigh[1] = 0;  /* not split */
+        location_neigh[2] = 0;  /* first (only) subelement at face */
       }
-      if (elem_face == 3) { /* upper face */
-        location_neigh[0] = 3;        /* face */
-        location_neigh[1] = 0;        /* not split */
-        location_neigh[2] = 0;        /* first (only) subelement at face */
+      if (elem_face == 3) {     /* upper face */
+        location_neigh[0] = 3;  /* face */
+        location_neigh[1] = 0;  /* not split */
+        location_neigh[2] = 0;  /* first (only) subelement at face */
       }
     }
-    
+
     /* check, that a neighbor is found and the location array is adjusted */
-    T8_ASSERT (location_neigh[0] >= 0 && location_neigh[1] >= 0 && location_neigh[2] >= 0);
+    T8_ASSERT (location_neigh[0] >= 0 && location_neigh[1] >= 0
+               && location_neigh[2] >= 0);
 
     /* Depending on the location of elem, we have filled location_neigh with the data of the real neighbor.
      * This data will be used to determine the sub_id of the neighbor within the transition cell of pseudo_neigh. */
@@ -2036,7 +2040,7 @@ t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
       t8_element_get_id_from_location (t8_element_get_subelement_type
                                        (pseudo_neigh), location_neigh);
   }
-  return -1; /* return negative if no neighbor element could be found */
+  return -1;                    /* return negative if no neighbor element could be found */
 }
 
 int
