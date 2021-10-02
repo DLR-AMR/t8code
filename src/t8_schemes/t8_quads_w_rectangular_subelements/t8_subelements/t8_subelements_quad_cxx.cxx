@@ -1664,27 +1664,6 @@ t8_subelement_scheme_quad_c::t8_element_get_location_of_subelement (const
 }
 
 void
-t8_subelement_scheme_quad_c::t8_element_get_element_data (const t8_element_t *
-                                                          elem,
-                                                          int anchor_node[],
-                                                          int level[],
-                                                          int
-                                                          subelement_data[])
-{
-  const t8_quad_with_subelements *pquad_w_sub =
-    (const t8_quad_with_subelements *) elem;
-
-  anchor_node[0] = pquad_w_sub->p4q.x;
-  anchor_node[1] = pquad_w_sub->p4q.y;
-
-  level[0] = pquad_w_sub->p4q.level;
-
-  subelement_data[0] = pquad_w_sub->dummy_is_subelement;
-  subelement_data[1] = pquad_w_sub->subelement_type;
-  subelement_data[2] = pquad_w_sub->subelement_id;
-}
-
-void
 t8_subelement_scheme_quad_c::t8_element_reset_subelement_values (t8_element *
                                                                  elem)
 {
@@ -2097,58 +2076,6 @@ t8_subelement_scheme_quad_c::t8_element_get_id_from_location (int type,
   sub_id -= 1;
 
   return sub_id;
-}
-
-int
-t8_subelement_scheme_quad_c::t8_element_adjust_subelement_neighbor_index
-  (const t8_element_t * elem, const t8_element_t * neigh, int elem_index,
-   int elem_face)
-{
-  const t8_quad_with_subelements *
-    pquad_w_sub_elem = (const t8_quad_with_subelements *) elem;
-  const t8_quad_with_subelements *
-    pquad_w_sub_neigh = (const t8_quad_with_subelements *) neigh;
-
-  /* The purpose of this function is to solve the following problem:
-   * 
-   *      x - - - - - - - x
-   *      | \    elem   / |
-   *      |   \       /   |
-   *      |N_f0 \   / N_f2|
-   *      x - - - + - - - x
-   *      |     /   \     |
-   *      |   /       \   |
-   *      | /   neigh   \ |
-   *      x - - - - - - - x
-   * 
-   * We are searching for the sibling neighbors N_f0 or N_f2 of a subelement elem but elem_index corresponds to a random sibling subelement neigh
-   * instead of elem itself (this is a problem of the index function that is not unique for subelements).
-   * Depending on whether we are searching N_f0 or N_f2, we can now use elem_index, and the sub_ids of elem and neigh 
-   * in order to adjust elem_index and to get the right neighbor indices by just shifting it by +-1. */
-
-  int
-    adjust,
-    shift,
-    adjusted_index;
-  int
-    number_of_subelements =
-    t8_element_get_number_of_subelements (pquad_w_sub_elem->subelement_type,
-                                          elem);
-
-  elem_index -= pquad_w_sub_neigh->subelement_id;       /* now we have the index of the first subelement of this transition cell */
-
-  if (elem_face == 0) {         /* counter clockwise neighbor */
-    shift = -1;
-  }
-  if (elem_face == 2) {         /* clockwise neighbor */
-    shift = 1;
-  }
-
-  adjust =
-    ((pquad_w_sub_elem->subelement_id + shift) +
-     number_of_subelements) % number_of_subelements;
-
-  return adjusted_index = elem_index + adjust;
 }
 
 void
