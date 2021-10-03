@@ -67,7 +67,8 @@ t8_print_element_data (const t8_element_t * element)
 
 /* determing neighbor elements of the element in forest_adapt with index element_index_in_tree at face face_id and printing the element data */
 void
-t8_test_neighbor_function (const t8_forest_t forest_adapt, t8_locidx_t element_index_in_tree, int face_id)
+t8_test_neighbor_function (const t8_forest_t forest_adapt,
+                           t8_locidx_t element_index_in_tree, int face_id)
 {
   /* Collecting data of the adapted forest */
   int                 global_num_elements =
@@ -126,8 +127,7 @@ t8_test_neighbor_function (const t8_forest_t forest_adapt, t8_locidx_t element_i
   else {
     /* no neighbor in this case */
     t8_productionf ("\nNeighbor at face %i:\n", face_id);
-    t8_productionf
-      ("    There is no neighbor (edge of the tree/forest).\n");
+    t8_productionf ("    There is no neighbor (edge of the tree/forest).\n");
   }
 }
 
@@ -261,7 +261,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
    * Note, that for subelements we enumerate the faces starting from the center node (+) clockwise for every subelement. */
 
   /* Choose the current element and the face: */
-  t8_locidx_t         element_index_in_tree = 30;  /* index of the element in the forest */
+  t8_locidx_t         element_index_in_tree = 30;       /* index of the element in the forest */
   int                 face_id = 1;      /* the face f_i, determing the direction in which we are looking for neighbors */
 
   /* determine the neighbor element and printing the element data */

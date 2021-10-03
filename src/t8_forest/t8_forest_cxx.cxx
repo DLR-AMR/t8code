@@ -2049,17 +2049,17 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         /* At this point, the neighbor "ancestor" is found. */
 
         if (neigh_scheme->t8_element_test_if_subelement (ancestor) == 1) {
-        /* If ancestor is a subelement it is possible that it is not the real neighbor of leaf
-         * but rather a random subelement of the transition cell, the real neighbor lives in.
-         * Therefore, we need to find the right subelement within the family of subelements of ancestor. */
+          /* If ancestor is a subelement it is possible that it is not the real neighbor of leaf
+           * but rather a random subelement of the transition cell, the real neighbor lives in.
+           * Therefore, we need to find the right subelement within the family of subelements of ancestor. */
 
-         /* we will call the current neighbor "pseudo_neighbor" here in order to stress that it might not be the real neighbor */
+          /* we will call the current neighbor "pseudo_neighbor" here in order to stress that it might not be the real neighbor */
           const t8_element_t *pseudo_neighbor;
           pseudo_neighbor =
             t8_forest_get_tree_element (t8_forest_get_tree
                                         (forest, lneigh_treeid),
                                         element_index);
-  
+
           /* analogue, call its index "pseudo_neighbor_index" */
           t8_locidx_t         pseudo_neigh_index = element_index;
 
@@ -2073,7 +2073,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
             ts->t8_element_find_neighbor_in_transition_cell (leaf,
                                                              pseudo_neighbor,
                                                              face);
-          
+
           /* adjust the index of the pseudo neighbo to equal the index of the real neighbor */
           element_index =
             pseudo_neigh_index - pseudo_neighbor_sub_id + sub_id_of_neighbor;

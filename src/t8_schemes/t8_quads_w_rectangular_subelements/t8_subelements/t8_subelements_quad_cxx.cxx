@@ -957,14 +957,14 @@ t8_subelement_scheme_quad_c::t8_element_tree_face (const t8_element_t * elem,
   if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
     T8_ASSERT (face == 1);
     T8_ASSERT (0 <= face && face < T8_SUBELEMENT_FACES);
-    
+
     /* We use the location function in order to get the face of the tree that 
      * is intersecting the face of the subelement elem */
     int                 location[3] = { };
     t8_element_get_location_of_subelement (elem, location);
 
     /* subelements are enumerated clockwise (not as quadrant faces) */
-      return subelement_location_to_parent_face[location[0]];
+    return subelement_location_to_parent_face[location[0]];
   }
   else {
     T8_ASSERT (0 <= face && face < P4EST_FACES);
@@ -1123,7 +1123,7 @@ t8_subelement_scheme_quad_c::t8_element_is_root_boundary (const t8_element_t *
     if (face == 1) {
       int                 location[3] = { };
       t8_element_get_location_of_subelement (elem, location);
-      
+
       /* adjust face of subelement to face of parent */
       face = subelement_location_to_parent_face[location[0]];
     }
@@ -1140,9 +1140,7 @@ t8_subelement_scheme_quad_c::t8_element_is_root_boundary (const t8_element_t *
   coord = face >> 1 ? q->y : q->x;
   /* If face is 0 or 2 check against 0.
    * If face is 1 or 3  check against LAST_OFFSET */
-  return coord ==
-    (face & 1 ? P4EST_LAST_OFFSET (q->level) :
-     0);
+  return coord == (face & 1 ? P4EST_LAST_OFFSET (q->level) : 0);
 }
 
 int
@@ -1172,19 +1170,19 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
 
     T8_ASSERT (0 <= face && face < T8_SUBELEMENT_FACES);
 
-    if (face == 0) { /* in this case the face neighbor of the subelement is a sibling */
+    if (face == 0) {            /* in this case the face neighbor of the subelement is a sibling */
       /* level and anchor stay the same */
       n->x = q->x;
       n->y = q->y;
       n->level = q->level;
     }
-    if (face == 2) { /* in this case the face neighbor of the subelement is a sibling */
+    if (face == 2) {            /* in this case the face neighbor of the subelement is a sibling */
       /* level and anchor stay the same */
       n->x = q->x;
       n->y = q->y;
       n->level = q->level;
     }
-    if (face == 1) { /* in this case the face neighbor is no sibling */
+    if (face == 1) {            /* in this case the face neighbor is no sibling */
       int                 location[3] = { };
       t8_element_get_location_of_subelement (elem, location);
 
@@ -1583,9 +1581,10 @@ t8_subelement_scheme_quad_c::t8_element_get_location_of_subelement (const
   for (j = 0; j < P4EST_FACES; j++) {   /* copying the binary array */
     binary_array_temp[j] = binary_array[j];
   }
-  
-  for (j = 0; j < P4EST_FACES; j++) { /* bringing the entries of binary array into clockwise order */
-    binary_array[j] = binary_array_temp[subelement_location_to_parent_face[j]];
+
+  for (j = 0; j < P4EST_FACES; j++) {   /* bringing the entries of binary array into clockwise order */
+    binary_array[j] =
+      binary_array_temp[subelement_location_to_parent_face[j]];
   }
 
   /* 3) use the rearranged binary representation, and the sub_id to determine the location of the subelement and store these information in an array */
@@ -2034,9 +2033,10 @@ t8_subelement_scheme_quad_c::t8_element_get_id_from_location (int type,
     }
   }
 
-  int j;
+  int                 j;
   for (j = 0; j < P4EST_FACES; j++) {   /* rearrange the binary type to be in clockwise order of the faces, starting with the left face */
-    binary_type_clockwise[j] = binary_type[subelement_location_to_parent_face[j]];
+    binary_type_clockwise[j] =
+      binary_type[subelement_location_to_parent_face[j]];
   }
 
   /* count the number of elements up to the given location */
