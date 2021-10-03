@@ -358,17 +358,19 @@ public:
                                                             t8_element *
                                                             elem);
 
-/** TODO: comment */
+/** Test wheter a given element is a subelement or not */
   virtual int         t8_element_test_if_subelement (const t8_element * elem);
 
-/** TODO: comment */
+/** Get the subelement type of elem */
   virtual int         t8_element_get_subelement_type (const
                                                       t8_element * elem);
 
-/** TODO: comment */
+/** Get the subelement id of elem */
   virtual int         t8_element_get_subelement_id (const t8_element * elem);
 
-/** TODO: comment */
+/** Get the subelement id of the neighbor subelement of elem at face elem_face
+ * that is a sibling of the subelement neigh. 
+ */
   virtual int         t8_element_find_neighbor_in_transition_cell (const
                                                                    t8_element_t
                                                                    * elem,
@@ -415,7 +417,7 @@ protected:
    *  The information in the location can be used to automatically determine the verticies of any subelement.
    *  Since this function is only used to determine the vertices of subelements, it can be declared as a private/protected function.
    */
-  virtual void        t8_element_get_location_of_subelement (const
+   void        t8_element_get_location_of_subelement (const
                                                              t8_element_t *
                                                              elem,
                                                              int location[]);
