@@ -66,11 +66,15 @@ t8_euler_rotation (double *pos_vec,
 }
 
 /** Constructs an occ surface for testing purpsoes. Surface is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
- * Saves the surface in the geometry surface array. */
-static void
-t8_create_occ_surface ()
+ * Saves the surface in the geometry surface array.
+ * \param [in] geometry               A geometry to save the occ surface in.
+ * \return                            The index of the surface in the geometry.
+ */
+int
+t8_create_occ_surface (t8_geometry_c &geometry)
 {
   #if T8_WITH_OCC
+  int surface_index;
   TColgp_Array2OfPnt point_array(1, 3, 1, 3);
 
   point_array(1, 1) = gp_Pnt(0, 0, 0);
@@ -85,7 +89,8 @@ t8_create_occ_surface ()
   point_array(2, 3) = gp_Pnt(1.2, -0.2, 0.5);
   point_array(3, 3) = gp_Pnt(1, 0, 1);
 
-  t8_global_occ_surface[0] = GeomAPI_PointsToBSplineSurface(point_array).Surface();
+  geometry->t8_geom_push_occ_surface(GeomAPI_PointsToBSplineSurface(point_array).Surface(), surface_index);
+  return surface_index;
 
   #else /* !T8_WITH_OCC */
   SC_ABORTF("OCC not linked");
@@ -93,11 +98,15 @@ t8_create_occ_surface ()
 }
 
 /** Constructs an occ curve for testing purpsoes. Curve is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
- * Saves the curve in the geometry curve array. */
-static void
-t8_create_occ_curve ()
+ * Saves the curve in the geometry curve array.
+ * \param [in] geometry               A geometry to save the occ curve in.
+ * \return                            The index of the curve in the geometry.
+ */
+int
+t8_create_occ_curve (t8_geometry_c &geometry)
 {
   #if T8_WITH_OCC
+  int curve_index;
   TColgp_Array1OfPnt point_array(1, 5);
 
   point_array(1) = gp_Pnt(0.00, 0.00, 0.00);
@@ -106,7 +115,8 @@ t8_create_occ_curve ()
   point_array(4) = gp_Pnt(0.75,-0.20, 0.20);
   point_array(5) = gp_Pnt(1.00, 0.00, 0.00);
 
-  t8_global_occ_curve[0] = GeomAPI_PointsToBSpline(point_array).Curve();
+  geometry->t8_geom_push_occ_curve(GeomAPI_PointsToBSpline(point_array).Curve(), curve_index);
+  return curve_index
 
   #else /* !T8_WITH_OCC */
   SC_ABORTF("OCC not linked");
@@ -124,7 +134,7 @@ t8_create_occ_curve ()
 t8_cmesh_t
 t8_create_occ_hypercube (double *rot_vec, 
                         int face,
-                        int edge, 
+                        int edge,
                         double *parameters, 
                         sc_MPI_Comm mpic)
 {
@@ -138,7 +148,7 @@ t8_create_occ_hypercube (double *rot_vec,
   t8_cmesh_init     (&cmesh);
   t8_geometry_c     *geometry;
   
-  geometry = new t8_geometry_occ (3, "occ dim=3", NULL);
+  geometry = new t8_geometry_occ (3, "occ dim=3");
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
   
   double rotated_vertices[24], vertices[24] = 
@@ -160,24 +170,25 @@ t8_create_occ_hypercube (double *rot_vec,
   int faces[6] = {-1, -1, -1, -1, -1, -1};
   if (face >= 0)
   {
-    faces[face] = 0;
+    faces[face] =  = t8_create_occ_surface(geometry);
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), 
-                            T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + face, 
+                            T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + face, 
                             parameters, 8 * sizeof(double), 0);
   }
   
-  int edges[12] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+  int edges[24] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+                   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
   if (edge >= 0)
   {
-    edges[edge] = 0;
+    edges[edge] = t8_create_occ_curve(geometry);
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), 
-                            T8_CMESH_OCC_CURVE_PARAMETERS_ATTRIBUTE_KEY + edge, 
+                            T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + edge, 
                             parameters, 2 * sizeof(double), 0);
   }
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
                           faces, 6 * sizeof(int), 0);
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
-                          edges, 12 * sizeof(int), 0);
+                          edges, 24 * sizeof(int), 0);
   t8_cmesh_register_geometry (cmesh, geometry);
   t8_cmesh_commit (cmesh, mpic);
   return cmesh;
@@ -212,7 +223,8 @@ t8_test_geometry_occ (double *rot_vec,
   double          rotation_origin[3] = {0.5, 0.5, 0.5};
   double          inversed_rot_vec[3];
   double          tol = DBL_EPSILON > 1e-10 ? DBL_EPSILON : 1e-10;
-  t8_cmesh_t cmesh = t8_create_occ_hypercube(rot_vec, face, edge, parameters, mpic);
+  t8_cmesh_t      cmesh = t8_create_occ_hypercube(rot_vec, face, edge, parameters, mpic);
+
   for (int i_coord = 0; i_coord < 3; ++i_coord)
   {
     inversed_rot_vec[2 - i_coord] = -rot_vec[i_coord];

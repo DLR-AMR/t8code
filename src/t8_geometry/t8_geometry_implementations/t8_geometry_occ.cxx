@@ -32,14 +32,14 @@
 Handle_Geom_Curve t8_global_occ_curve[10];
 Handle_Geom_Surface t8_global_occ_surface[10];
 
-t8_geometry_occ::t8_geometry_occ (int dim, const char *name_in,
-                                  const void *user_data_in)
+t8_geometry_occ::t8_geometry_occ (int dim, const char *name_in)
 {
   T8_ASSERT (0 <= dim && dim <= 3);
 
   name = name_in;
   dimension = dim;
-  user_data = user_data_in;
+  sc_array_init(occ_curves, sizeof(Handle_Geom_Curve));
+  sc_array_init(occ_surfaces, sizeof(Handle_Geom_Surface));
 }
 
 /**
@@ -55,10 +55,10 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
                                   double out_coords[3]) const
 {
   const int *edges = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
-                                                          T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY,
+                                                          T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY,
                                                           gtreeid);
   const int *faces = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
-                                                          T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY,
+                                                          T8_CMESH_OCC_FACE_ATTRIBUTE_KEY,
                                                           gtreeid);
   
   /* Compute coordinates via trilinear interpolation */
@@ -74,12 +74,18 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
 
   double interpolated_coords[3], param[2], cur_delta[3];
   gp_Pnt pnt;
+  Handle_Geom_Curve curve;
+  Handle_Geom_Surface surface;
   
   /* Check each edge for geometry. Currently, only hexes with 12 edges are supported. */
   for (int i_edges = 0; i_edges < 12; ++i_edges)
   {
-    if (edges[i_edges] >= 0)
+    /* We have to check for curves as well as surfaces. Linked curves are stored in the first half of the array, surfaces in the second. */
+    if (edges[i_edges] >= 0 || edges[i_edges + 12] >= 0)
     {
+      /* Check if only a surface or an edge is present. Abort if both is true. */ 
+      T8_ASSERT(!(edges[i_edges] >= 0) != !(edges[i_edges + 12] >= 0));
+      
       /* Interpolate coordinates between edge vertices. Due to the indices i_edges of the edges, the edges point in
       * direction of ref_coord i_edges / 4. Therefore, we can use ref_coords[i_edges / 4] for the interpolation.              
       *          6 -------E3------- 7
@@ -105,20 +111,45 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
 
       /* Interpolate parameters between edge vertices. Same procedure as above. */
       const double *parameters = (double *) t8_cmesh_get_attribute(cmesh, t8_get_package_id (),
-                                                                  T8_CMESH_OCC_CURVE_PARAMETERS_ATTRIBUTE_KEY + i_edges,
+                                                                  T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edges,
                                                                   gtreeid);
-      param[0] = (1 - ref_coords[i_edges / 4]) * parameters[0]
-                  + ref_coords[i_edges / 4] * parameters[1];
-      
-      /* Check if calculated parameters are valid */
-      T8_ASSERT(!t8_global_occ_curve[edges[i_edges]].IsNull());
-      double u1, u2;
-      u1 = t8_global_occ_curve[edges[i_edges]]->FirstParameter();
-      u2 = t8_global_occ_curve[edges[i_edges]]->LastParameter();
-      T8_ASSERT((u1 <= param[0] && param[0] <= u2) || (u2 <= param[0] && param[0] <= u1));
+      /* Edges have only one parameter u, surfaces have two, u and v. */
+      if (edges[i_edges] >= 0)
+      {
+        param[0] = (1 - ref_coords[i_edges / 4]) * parameters[0]
+                    + ref_coords[i_edges / 4] * parameters[1];
+        
+        /* Check if calculated parameters are valid */
+        curve = *(Handle_Geom_Curve *) sc_array_index_int (occ_curves, edges[i_edges]);
+        T8_ASSERT(!curve.IsNull());
+        double u1, u2;
+        u1 = curve->FirstParameter();
+        u2 = curve->LastParameter();
+        T8_ASSERT((u1 <= param[0] && param[0] <= u2) || (u2 <= param[0] && param[0] <= u1));
 
+        /* Calculate point on curve with interpolated parameters. */
+        curve->D0(param[0], pnt);
+      }
+      else
+      {
+        param[0] = (1 - ref_coords[i_edges / 4]) * parameters[0]
+                    + ref_coords[i_edges / 4] * parameters[2];
+        param[1] = (1 - ref_coords[i_edges / 4]) * parameters[1]
+                    + ref_coords[i_edges / 4] * parameters[3];
+        
+        /* Check if calculated parameters are valid */
+        surface = *(Handle_Geom_Surface *) sc_array_index_int (occ_surfaces, edges[i_edges + 12]);
+        T8_ASSERT(!surface.IsNull());
+        double u1, u2, v1, v2;
+        surface->Bounds(u1, u2, v1, v2);
+        T8_ASSERT(((u1 <= param[0] && param[0] <= u2) || (u2 <= param[0] && param[0] <= u1))
+                  && ((v1 <= param[1] && param[1] <= v2) || (v2 <= param[1] && param[1] <= v1)));
+
+        /* Compute point on surface with interpolated parameters */
+        surface->D0(param[0], param[1], pnt);
+      }
+      
       /* Compute displacement between vertex interpolation and curve evaluation with interpolated parameters */
-      t8_global_occ_curve[edges[i_edges]]->D0(param[0], pnt);
       cur_delta[0] = pnt.X() - interpolated_coords[0];
       cur_delta[1] = pnt.Y() - interpolated_coords[1];
       cur_delta[2] = pnt.Z() - interpolated_coords[2];
@@ -196,7 +227,7 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
 
       /* Interpolate parameters between face vertices. Same procedure as above. */
       const double *parameters = (double *) t8_cmesh_get_attribute(cmesh, t8_get_package_id (),
-                                                      T8_CMESH_OCC_SURFACE_PARAMETERS_ATTRIBUTE_KEY + i_faces,
+                                                      T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + i_faces,
                                                       gtreeid);
       for (int i_param_dim = 0; i_param_dim < 2; ++i_param_dim)
       {
@@ -209,14 +240,15 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
       }
       
       /* Check if calculated parameters are valid */
-      T8_ASSERT(!t8_global_occ_surface[faces[i_faces]].IsNull());
+      surface = *(Handle_Geom_Surface *) sc_array_index_int (occ_surfaces, edges[i_faces]);
+      T8_ASSERT(!surface.IsNull());
       double u1, u2, v1, v2;
-      t8_global_occ_surface[faces[i_faces]]->Bounds(u1, u2, v1, v2);
+      surface->Bounds(u1, u2, v1, v2);
       T8_ASSERT(((u1 <= param[0] && param[0] <= u2) || (u2 <= param[0] && param[0] <= u1))
                 && ((v1 <= param[1] && param[1] <= v2) || (v2 <= param[1] && param[1] <= v1)));
 
-      /* Compute displacement between vertex interpolation and surface evaluation with interpolated parameters */
-      t8_global_occ_surface[faces[i_faces]]->D0(param[0], param[1], pnt);
+      /* Compute point on surface with interpolated parameters */
+      surface->D0(param[0], param[1], pnt);
 
       /* Compute delta between geometry and interpolated coords, scale them with the appropriate ref_coord 
        * and add them to the out_coords*/
@@ -251,6 +283,26 @@ t8_geometry_occ::t8_geom_load_tree_data (t8_cmesh_t cmesh,
                                         t8_gloidx_t gtreeid)
 {
   t8_geometry_w_vertices::t8_geom_load_tree_data(cmesh, gtreeid);
+}
+
+void
+t8_geometry_occ::t8_geom_push_occ_curve (Handle_Geom_Curve curve, 
+                                        int index) const
+{
+  Handle_Geom_Curve *array_ptr;
+  array_ptr = (Handle_Geom_Curve *) sc_array_push (occ_curves);
+  *array_ptr = curve;
+  index = occ_curves->elem_count;
+}
+
+void 
+t8_geometry_occ::t8_geom_push_occ_surface (Handle_Geom_Surface surface, 
+                                          int index) const
+{
+  Handle_Geom_Surface *array_ptr;
+  array_ptr = (Handle_Geom_Surface *) sc_array_push (occ_surfaces);
+  *array_ptr = surface;
+  index = occ_surfaces->elem_count;
 }
 
 #endif /* T8_WITH_OCC */

@@ -38,6 +38,7 @@
 
 #include <Geom_Curve.hxx>
 #include <Geom_Surface.hxx>
+#include <Standard_Handle.hxx>
 
 
 
@@ -72,8 +73,7 @@ public:
    * \param [in] name       The name to give this geometry.
    * \param [in] load_tree_data The function that is used to load a tree's data.
    */
-  t8_geometry_occ (int dimension, const char *name,
-                  const void *user_data_in);
+  t8_geometry_occ (int dimension, const char *name);
 
   /** The destructor. 
    * Clears the allocated memory.
@@ -124,18 +124,28 @@ public:
   virtual void        t8_geom_load_tree_data (t8_cmesh_t cmesh,
                                               t8_gloidx_t gtreeid);
 
-  inline const void  *t8_geom_analytic_get_user_data ()
-  {
-    return user_data;
-  }
+  /** Push a new occ curve into the occ_curves array. The position gets saved in index.
+   * \param [in]  curve      The occ curve.
+   * \param [out] index      The index of the curve in the occ_curves array.
+   */
+  virtual void        t8_geom_push_occ_curve (Handle_Geom_Curve curve, 
+                                              int index) const;
+
+  /** Push a new occ surface into the occ_surfaces array. The position gets saved in index.
+   * \param [in]  surface    The occ surface.
+   * \param [out] index      The index of the surface in the occ_surfaces array.
+   */
+  virtual void        t8_geom_push_occ_surface (Handle_Geom_Surface surface, 
+                                              int index) const;
 
 private:
 
   const void         *tree_data;        /** Tree data pointer that can be set in \a load_tree_data and 
                                            is passed onto \a analytical_function and \a jacobian. */
 
-  const void         *user_data;        /** Additional user data pointer that can be set in constructor
-                                         * and modified via \ref t8_geom_analytic_get_user_data. */
+  sc_array_t         *occ_curves;       /** Occ curve geometry pointer. Curves can be pushed with t8_push_occ_curve(). */
+
+  sc_array_t         *occ_surfaces;     /** Occ surface geometry pointer. Curves can be pushed with t8_push_occ_surface(). */
 };
 
 #endif /* T8_WITH_OCC */
