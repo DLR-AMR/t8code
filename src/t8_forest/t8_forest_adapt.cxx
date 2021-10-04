@@ -416,7 +416,7 @@ t8_forest_adapt (t8_forest_t forest)
           el_inserted += num_children;
         }
         /* In case of a subelement, the parent quadrant is refined. 
-         * Therfore, we can skip all subelement siblings as they are not needed anymore. */
+         * Therefore, we can skip all subelement siblings as they are not needed anymore. */
         if (tscheme->t8_element_test_if_subelement (current_element) == 1) {
           el_considered += num_siblings;
         }
