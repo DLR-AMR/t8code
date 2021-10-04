@@ -202,7 +202,7 @@ t8_forest_adapt (t8_forest_t forest)
   int                 ci;
   unsigned int        subelement_type;
   unsigned int        num_subelements;
-  t8_locidx_t       count_subelements = 0;
+  t8_locidx_t         count_subelements = 0;
 #ifdef T8_ENABLE_DEBUG
   int                 is_family;
 #endif
@@ -432,7 +432,8 @@ t8_forest_adapt (t8_forest_t forest)
         subelement_type = refine - 1;
 
         /* Subelements are not able to be refined by subelements again */
-        T8_ASSERT (tscheme->t8_element_test_if_subelement (elements_from[0]) == 0);
+        T8_ASSERT (tscheme->t8_element_test_if_subelement (elements_from[0])
+                   == 0);
 
         /* determing the number of subelements of the given type for memory allocation */
         num_subelements =
