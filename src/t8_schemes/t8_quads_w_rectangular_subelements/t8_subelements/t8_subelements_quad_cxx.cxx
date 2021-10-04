@@ -1476,8 +1476,8 @@ t8_subelement_scheme_quad_c::t8_element_reset_subelement_values (t8_element *
   t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem;
 
   pquad_w_sub->dummy_is_subelement = T8_SUB_QUAD_IS_NO_SUBELEMENT;
-  pquad_w_sub->subelement_type = T8_SUB_QUAD_IS_NO_SUBELEMENT;
-  pquad_w_sub->subelement_id = T8_SUB_QUAD_IS_NO_SUBELEMENT;
+  pquad_w_sub->subelement_type = T8_SUB_QUAD_NO_SUBELEMENT_TYPE;
+  pquad_w_sub->subelement_id = T8_SUB_QUAD_NO_SUBELEMENT_ID;
 }
 
 void
@@ -1572,8 +1572,8 @@ t8_subelement_scheme_quad_c::t8_element_init (int length, t8_element_t * elem,
   for (i = 0; i < length; i++) {
     /* initalize subelement parameters */
     pquad_w_sub[i].dummy_is_subelement = T8_SUB_QUAD_IS_NO_SUBELEMENT;
-    pquad_w_sub[i].subelement_type = T8_SUB_QUAD_IS_NO_SUBELEMENT;
-    pquad_w_sub[i].subelement_id = T8_SUB_QUAD_IS_NO_SUBELEMENT;
+    pquad_w_sub[i].subelement_type = T8_SUB_QUAD_NO_SUBELEMENT_TYPE;
+    pquad_w_sub[i].subelement_id = T8_SUB_QUAD_NO_SUBELEMENT_ID;
 
 #ifdef T8_ENABLE_DEBUG
     /* In debugging mode we iterate over all length many elements and 
@@ -1620,10 +1620,10 @@ t8_subelement_scheme_quad_c::t8_element_subelement_values_are_valid (const
           || pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) &&
     ((pquad_w_sub->subelement_type >= T8_SUB_QUAD_MIN_SUBELEMENT_TYPE
       && pquad_w_sub->subelement_type <= T8_SUB_QUAD_MAX_SUBELEMENT_TYPE)
-     || pquad_w_sub->subelement_type == T8_SUB_QUAD_IS_NO_SUBELEMENT) &&
+     || pquad_w_sub->subelement_type == T8_SUB_QUAD_NO_SUBELEMENT_TYPE) &&
     ((pquad_w_sub->subelement_id >= T8_SUB_QUAD_MIN_SUBELEMENT_ID
       && pquad_w_sub->subelement_id <= T8_SUB_QUAD_MAX_SUBELEMENT_ID)
-     || pquad_w_sub->subelement_id == T8_SUB_QUAD_IS_NO_SUBELEMENT);
+     || pquad_w_sub->subelement_id == T8_SUB_QUAD_NO_SUBELEMENT_ID);
 }
 #endif
 

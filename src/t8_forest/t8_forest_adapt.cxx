@@ -202,7 +202,7 @@ t8_forest_adapt (t8_forest_t forest)
   int                 ci;
   unsigned int        subelement_type;
   unsigned int        num_subelements;
-  long long int       count_subelements = 0;
+  t8_locidx_t       count_subelements = 0;
 #ifdef T8_ENABLE_DEBUG
   int                 is_family;
 #endif
@@ -366,7 +366,7 @@ t8_forest_adapt (t8_forest_t forest)
 
       /* output for debugging */
       t8_debugf
-        ("el_considered: %i/%i  refine: %i  is_family: %i  num_siblings: %i\n",
+        ("el_considered: %i/%i  refine: %i  is_family: %i  num_siblings: %zd\n",
          el_considered, num_el_from, refine, is_family, num_siblings);
 #endif
 
@@ -431,6 +431,9 @@ t8_forest_adapt (t8_forest_t forest)
          * (0001 should correspond to 1 and not to 2). */
         subelement_type = refine - 1;
 
+        /* Subelements are not able to be refined by subelements again */
+        T8_ASSERT (tscheme->t8_element_test_if_subelement (elements_from[0]) == 0);
+
         /* determing the number of subelements of the given type for memory allocation */
         num_subelements =
           tscheme->t8_element_get_number_of_subelements (subelement_type,
@@ -494,8 +497,7 @@ t8_forest_adapt (t8_forest_t forest)
         /* Note that it should not be allowed to copy a subelement at this point. 
          * Subelements should always be coarsened to their parent quadrant or their parent quadrant 
          * should be refined such that no subelements are left after calling the adapt function. */
-        T8_ASSERT (tscheme->t8_element_test_if_subelement (elements[0]) ==
-                   -1);
+        T8_ASSERT (tscheme->t8_element_test_if_subelement (elements[0]) == 0);
         tscheme->t8_element_copy (elements_from[0], elements[0]);
         el_inserted++;
         const int           child_id =
@@ -540,12 +542,12 @@ t8_forest_adapt (t8_forest_t forest)
   /* If any subelement is constructed, give output this number as an additional information. */
   if (count_subelements > 0) {
     t8_global_productionf
-      ("Done t8_forest_adapt with %lld total elements, %lld of which are subelements.\n",
-       (long long) forest->global_num_elements, count_subelements);
+      ("Done t8_forest_adapt with %li total elements, %i of which are subelements.\n",
+       forest->global_num_elements, count_subelements);
   }
   else {
-    t8_global_productionf ("Done t8_forest_adapt with %lld total elements.\n",
-                           (long long) forest->global_num_elements);
+    t8_global_productionf ("Done t8_forest_adapt with %li total elements.\n",
+                           forest->global_num_elements);
   }
 
   /* if profiling is enabled, measure runtime */

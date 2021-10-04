@@ -81,7 +81,9 @@ typedef t8_quad_with_subelements t8_pquad_t;
 #define T8_SUB_QUAD_MAX_SUBELEMENT_ID 7
 #define T8_SUB_QUAD_MIN_SUBELEMENT_ID 0
 #define T8_SUB_QUAD_IS_SUBELEMENT 1
-#define T8_SUB_QUAD_IS_NO_SUBELEMENT -1
+#define T8_SUB_QUAD_IS_NO_SUBELEMENT 0
+#define T8_SUB_QUAD_NO_SUBELEMENT_ID -1
+#define T8_SUB_QUAD_NO_SUBELEMENT_TYPE -1
 
 /** Return the toplevel dimension. */
 #define T8_QUAD_GET_TDIM(quad) ((int) (quad)->pad8)
