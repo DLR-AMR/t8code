@@ -75,7 +75,7 @@ t8_refine_quad_to_subelements ()
   t8_productionf ("The coordinates of these subelements are:\n");
 
   /* test the is_family function for subelements */
-  T8_ASSERT (class_scheme->t8_element_is_family (element_subelements));
+  SC_CHECK_ABORT (class_scheme->t8_element_is_family (element_subelements), "Expected element family, but is_family check fails.");
 
   /* Iterate through all subelements and determine their vertex coordinates */
   for (subelement_id = 0; subelement_id < num_subelements; ++subelement_id) {
