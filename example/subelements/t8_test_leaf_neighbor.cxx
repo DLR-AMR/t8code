@@ -264,22 +264,22 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   t8_locidx_t         element_index_in_tree = 30;       /* index of the element in the forest */
   int                 face_id = 1;      /* the face f_i, determing the direction in which we are looking for neighbors */
 
-  #if 1
+#if 1
   /* determine the neighbor element and printing the element data */
   t8_test_neighbor_function (forest_adapt, element_index_in_tree, face_id);
-  #endif
+#endif
 
   /* Using the following if-case, a weird bug appears where the neighbor function 
    * or the forest is corrupted when iterating over the elements (or the faces of one element). WHY DOES THIS HAPPEN? 
    * Note that everything seems to work when we execute the function for only one specific element and one specific face. 
    * TODO: remove this case when the bug is observed in more detail */
-  #if 0
-  int i;
-  for (i = 0; i < 46; i++){
+#if 0
+  int                 i;
+  for (i = 0; i < 46; i++) {
     /* determine the neighbor element and printing the element data */
     t8_test_neighbor_function (forest_adapt, i, face_id);
   }
-  #endif
+#endif
 
   t8_forest_unref (&forest_adapt);
 }
