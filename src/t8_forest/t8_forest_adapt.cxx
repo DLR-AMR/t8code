@@ -223,8 +223,8 @@ t8_forest_adapt (t8_forest_t forest)
   }
 
   forest_from = forest->set_from;
-  t8_global_productionf ("Into t8_forest_adapt from %lld total elements\n",
-                         (long long) forest_from->global_num_elements);
+  t8_global_productionf ("Into t8_forest_adapt from %li local elements\n",
+                         (long) forest_from->local_num_elements);
 
   /* TODO: Allocate memory for the trees of forest.
    * Will we do this here or in an extra function? */
@@ -543,12 +543,12 @@ t8_forest_adapt (t8_forest_t forest)
   /* If any subelement is constructed, give output this number as an additional information. */
   if (count_subelements > 0) {
     t8_global_productionf
-      ("Done t8_forest_adapt with %li total elements, %i of which are subelements.\n",
-       forest->global_num_elements, count_subelements);
+      ("Done t8_forest_adapt with %li local elements, %i of which are subelements.\n",
+       (long) forest->local_num_elements, count_subelements);
   }
   else {
-    t8_global_productionf ("Done t8_forest_adapt with %li total elements.\n",
-                           forest->global_num_elements);
+    t8_global_productionf ("Done t8_forest_adapt with %li local elements.\n",
+                           (long) forest->local_num_elements);
   }
 
   /* if profiling is enabled, measure runtime */
