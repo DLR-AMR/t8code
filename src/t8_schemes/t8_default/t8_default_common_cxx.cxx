@@ -210,7 +210,7 @@ int
 t8_default_scheme_common_c::t8_element_test_if_subelement (const
                                                            t8_element * elem)
 {
-  /* no subelements are implemented and therefore we return -1 meaning "is no subelement" */
+  /* no subelements are implemented and therefore we return 0 meaning "is no subelement" */
   return 0;
 }
 
