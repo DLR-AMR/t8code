@@ -666,6 +666,7 @@ t8_forest_commit (t8_forest_t forest)
   forest->set_for_coarsening = 0;
   forest->set_from = NULL;
   forest->committed = 1;
+  /* TODO print global number of subelements */
   t8_debugf ("Committed forest with %li local elements and %lli "
              "global elements.\n\tTree range ist from %lli to %lli.\n",
              (long) forest->local_num_elements,

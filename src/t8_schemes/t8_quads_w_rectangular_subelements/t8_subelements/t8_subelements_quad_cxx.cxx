@@ -189,7 +189,7 @@ t8_subelement_scheme_quad_c::t8_element_sibling (const t8_element_t * elem,
   const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
   p4est_quadrant_t   *r = &pquad_w_sub_sibling->p4q;
 
-  /* at the moment, this function is only implemented for standard quad elements */
+  /* this function is not implemented for subelements */
   T8_ASSERT (pquad_w_sub_elem->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
 
@@ -223,7 +223,7 @@ t8_subelement_scheme_quad_c::t8_element_max_num_faces (const t8_element_t *
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
 
-  /* at the moment, this function is only implemented for standard quad elements */
+  /* this function is not implemented for subelements */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
 
@@ -277,7 +277,7 @@ t8_subelement_scheme_quad_c::t8_element_num_face_children (const t8_element_t
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
 
-  /* at the moment, this function is only implemented for standard quad elements */
+  /* this function is not implemented for subelements */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
 
@@ -293,7 +293,7 @@ t8_subelement_scheme_quad_c::t8_element_get_face_corner (const t8_element_t *
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) element;
 
-  /* at the moment, this function is only implemented for standard quad elements */
+  /* this function is not implemented for subelements */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
   /* TODO: check whether this enumeration of the faces is right. It might be f_3 and f_2 switched */
@@ -321,7 +321,7 @@ t8_subelement_scheme_quad_c::t8_element_get_corner_face (const t8_element_t *
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) element;
 
-  /* at the moment, this function is only implemented for standard quad elements */
+  /* this function is not implemented for subelements */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
 
@@ -433,7 +433,7 @@ t8_subelement_scheme_quad_c::t8_element_ancestor_id (const t8_element_t *
     (const t8_quad_with_subelements *) elem;
   const p4est_quadrant_t *q = &pquad_w_sub->p4q;
 
-  /* at the moment, this function is only implemented for standard quad elements */
+  /* this function is not implemented for subelements */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
 
@@ -490,7 +490,7 @@ t8_subelement_scheme_quad_c::t8_element_set_linear_id (t8_element_t * elem,
   t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem;
   p4est_quadrant_t   *q = &pquad_w_sub->p4q;
 
-  /* at the moment, this function is only implemented for standard quad elements */
+  /* this function is not implemented for subelements */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
 
@@ -592,7 +592,7 @@ t8_subelement_scheme_quad_c::t8_element_successor (const t8_element_t * elem1,
 
   t8_linearidx_t      id;
 
-  /* at the moment, this function is only implemented for standard quad elements */
+  /* this function is not implemented for subelements */
   T8_ASSERT (pquad_w_sub_elem1->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
 
@@ -656,7 +656,7 @@ t8_subelement_scheme_quad_c::t8_element_children_at_face (const t8_element_t *
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
 
-  /* at the moment, this function is only implemented for standard quad elements */
+  /* this function is not implemented for subelements */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
 
@@ -731,7 +731,7 @@ t8_subelement_scheme_quad_c::t8_element_face_child_face (const t8_element_t *
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
 
-  /* at the moment, this function is only implemented for standard quad elements */
+  /* this function is not implemented for subelements */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
 
@@ -802,7 +802,7 @@ t8_subelement_scheme_quad_c::t8_element_transform_face (const t8_element_t *
   p4est_qcoord_t      h = P4EST_QUADRANT_LEN (qin->level);
   p4est_qcoord_t      x = qin->x;       /* temp storage for x coordinate in case elem1 = elem 2 */
 
-  /* at the moment, this function is only implemented for standard quad elements */
+  /* this function is not implemented for subelements */
   T8_ASSERT (pquad_w_sub_elem1->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
 
@@ -889,7 +889,7 @@ t8_subelement_scheme_quad_c::t8_element_extrude_face (const t8_element_t *
 
   const t8_dline_t   *l = (const t8_dline_t *) face;
 
-  /* at the moment, this function is only implemented for standard quad elements */
+  /* this function is not implemented for subelements */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
 
@@ -992,7 +992,7 @@ t8_subelement_scheme_quad_c::t8_element_first_descendant_face (const
 
   int                 first_face_corner;
 
-  /* at the moment, this function is only implemented for standard quad elements */
+  /* this function is not implemented for subelements */
   T8_ASSERT (pquad_w_sub_elem->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
 
@@ -1025,7 +1025,7 @@ t8_subelement_scheme_quad_c::t8_element_last_descendant_face (const
 
   int                 last_face_corner;
 
-  /* at the moment, this function is only implemented for standard quad elements */
+  /* this function is not implemented for subelements */
   T8_ASSERT (pquad_w_sub_elem->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
   T8_ASSERT (pquad_w_sub_last_desc->dummy_is_subelement ==
@@ -1056,7 +1056,7 @@ t8_subelement_scheme_quad_c::t8_element_boundary_face (const t8_element_t *
 
   t8_dline_t         *l = (t8_dline_t *) boundary;
 
-  /* at the moment, this function is only implemented for standard quad elements */
+  /* this function is not implemented for subelements */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
 
@@ -1297,7 +1297,7 @@ t8_subelement_scheme_quad_c::t8_element_anchor (const t8_element_t * elem,
   t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem;
   p4est_quadrant_t   *q = &pquad_w_sub->p4q;
 
-  /* at the moment, this function is only implemented for standard quad elements */
+  /* this function is not implemented for subelements */
   T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
              T8_SUB_QUAD_IS_NO_SUBELEMENT);
 
