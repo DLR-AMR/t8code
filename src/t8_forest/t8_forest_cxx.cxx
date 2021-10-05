@@ -2009,7 +2009,8 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         /* ancestor is a real ancestor, and thus the neighbor is either the
          * parent or grandparent of the half neighbors. we can return it and
          * the indices. 
-         * In case, that subelements are used, ancestor might also be a subelement. */
+         * If subelements are used it is possible that leaf or ancestor are subelements. 
+         * In both cases we might need to adjust ancestor. */
         /* We need to determine the dual face */
         if (neigh_scheme->t8_element_level (ancestor) ==
             ts->t8_element_level (leaf)) {
