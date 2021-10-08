@@ -94,7 +94,7 @@ t8_test_cmesh_geometry_linear (sc_MPI_Comm comm)
   /* TODO: Add a test for the jacobian, as soon as its implemented. */
 
   /* Create random points in [0,1]^d and check if they are mapped correctly. */
-  for (dim = 0; dim < 3; ++dim) {
+  for (dim = 0; dim <= 3; ++dim) {
     t8_geometry_linear  linear_geom (dim);
     t8_cmesh_t          cmesh;
 
