@@ -396,7 +396,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset,
        * or -1 if there is no neighbor */
       if (element != -1 - element_offset && tit < element) {
         for (face2 = 0; face2 < 3; face2++) {
-          /* Find the face number of triangle which is connected to it */
+          /* Find the face number of triangle which is connected to tit */
           if (tneighbors[num_faces * element + face2] == tit + element_offset) {
             break;
           }

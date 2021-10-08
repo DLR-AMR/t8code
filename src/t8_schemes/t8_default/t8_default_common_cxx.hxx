@@ -69,7 +69,7 @@ public:
   /** Count how many leaf descendants of a given uniform level the root element will produce.
    * \param [in] level A refinement level.
    * \return The value of \ref t8_element_count_leafs if the input element
-   *      is th52e root (level 0) element.
+   *      is the root (level 0) element.
    */
   virtual t8_gloidx_t t8_element_count_leafs_from_root (int level);
 
