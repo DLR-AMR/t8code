@@ -317,7 +317,7 @@ public:
     sign = y < 0 ? 1 : -1;
     y = sign * (1 - exp (-fabs (-y) / rho)) / (2 * (1 - exp (-0.5 / rho)));
 
-    /* Rotate the x-y axis and add sincon in z axis. */
+    /* Rotate the x-y axis and add sincos in z axis. */
     out_coords[0] = x * (cos (phi)) - y * sin (phi);
     out_coords[1] = y * (cos (phi)) + x * sin (phi);
     out_coords[2] = 0;
@@ -556,13 +556,13 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
      * after each time step. */
     int                 timestep = 0;
     const int           num_timesteps = 100;
-    const int           end_time = 4;
+    const double        end_time = 4;
     char                vtuname_with_timestep[BUFSIZ];
 
     for (timestep = 0; timestep < num_timesteps; ++timestep) {
       /* Modify the time. Note that a pointer of our
        * geometry points to this entry, which changes the shape of the tree. */
-      time += ((double) end_time) / num_timesteps;
+      time += end_time / num_timesteps;
       /* At the time step to the output filename */
       sreturn =
         snprintf (vtuname_with_timestep, BUFSIZ, "%s_%04i", vtuname,
