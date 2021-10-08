@@ -67,7 +67,7 @@ void                t8_geom_handler_init (t8_geometry_handler_t **
 
 /** 
  * Increase the reference counter of a geometry handler.
- * \param [in] geom_handler An initialize geometry handler.
+ * \param [in] geom_handler An initialized geometry handler.
  */
 void                t8_geom_handler_ref (t8_geometry_handler_t *
                                          geom_handler);
