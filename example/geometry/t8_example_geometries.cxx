@@ -61,7 +61,7 @@ public:
    * It is specifically designed to work on two tree cmeshes and 
    * models the rectangle [0,2] x [0,1].
    * \param [in]  cmesh      The cmesh in which the point lies.
-   * \param [in]  gtreeid    The glocal tree (of the cmesh) in which the reference point is.
+   * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^2.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
@@ -116,7 +116,7 @@ public:
   /**
    * Map a point in a point in [0,1]^2 to the moebius band.
    * \param [in]  cmesh      The cmesh in which the point lies.
-   * \param [in]  gtreeid    The glocal tree (of the cmesh) in which the reference point is.
+   * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^2.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
@@ -360,7 +360,7 @@ public:
   /**
    * Map a reference point in the unit cube to a cube distorted in the z axis.
    * \param [in]  cmesh      The cmesh in which the point lies.
-   * \param [in]  gtreeid    The glocal tree (of the cmesh) in which the reference point is.
+   * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^3.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
