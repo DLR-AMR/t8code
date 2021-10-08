@@ -250,7 +250,7 @@ t8_test_geom_handler_register (sc_MPI_Comm comm)
 
   /* For each dimension build the zero geometry and register it.
    * We then commit the handler and check that we can find the geometries. */
-  for (idim = 0; idim < 3; ++idim) {
+  for (idim = 0; idim <= 3; ++idim) {
     t8_geometry_zero   *zero_geom = new t8_geometry_zero (idim);
     /* Register the geometry. */
     t8_geom_handler_register_geometry (geom_handler, zero_geom);
