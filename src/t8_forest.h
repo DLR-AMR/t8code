@@ -877,6 +877,7 @@ void                t8_forest_element_centroid (t8_forest_t forest,
 
 /** Compute the diameter of an element if a geometry
  * for this tree is registered in the forest's cmesh.
+ * This is only an approximation.
  * \param [in]      forest     The forest.
  * \param [in]      ltree_id   The forest local id of the tree in which the element is.
  * \param [in]      element    The element.
