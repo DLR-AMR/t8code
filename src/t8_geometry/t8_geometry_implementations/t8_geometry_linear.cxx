@@ -84,6 +84,8 @@ t8_geometry_linear::t8_geom_evalute_jacobian (t8_cmesh_t cmesh,
   SC_ABORT ("Not implemented.");
 }
 
+T8_EXTERN_C_BEGIN ();
+
 /* Satisfy the C interface from t8_geometry_linear.h.
  * Create a new geometry with given dimension. */
 t8_geometry_c      *
@@ -104,3 +106,5 @@ t8_geometry_linear_destroy (t8_geometry_c ** geom)
   delete             *geom;
   *geom = NULL;
 }
+
+T8_EXTERN_C_END ();
