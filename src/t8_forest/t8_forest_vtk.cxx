@@ -145,14 +145,8 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
 
   long int            point_id = 0;     /* The id of the point in the points Object. */
   t8_locidx_t         ielement; /* The iterator over elements in a tree. */
-<<<<<<< HEAD
   t8_locidx_t         itree, ivertex;
   double              coordinates[3];
-=======
-  t8_locidx_t         itree, ivertex;   /* The iterator over the tree and the vertices. */
-  double             *vertices; /* Vertices of a tree */
-  double              coordinates[3];   /* coordinates of vertices */
->>>>>>> origin/develop
   int                 elem_id = 0;
   t8_locidx_t         num_elements;
   int                 freturn = 0;
