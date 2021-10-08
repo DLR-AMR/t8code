@@ -99,7 +99,7 @@ public:
   /**
    * Map a point in the reference space $$[0,1]^dimension$$ to $$\mathbb R^3$$
    * \param [in]  cmesh      The cmesh in which the point lies.
-   * \param [in]  gtreeid    The glocal tree (of the cmesh) in which the reference point is.
+   * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension many entries, specifying a point in [0,1]^dimension.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    * \note Since this is the identity geometry, \a out_coords will be equal to \a ref_coords.
