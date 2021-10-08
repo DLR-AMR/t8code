@@ -71,10 +71,11 @@ t8_euler_rotation (double *pos_vec,
  * \return                            The index of the surface in the geometry.
  */
 int
-t8_create_occ_surface (t8_geometry_c &geometry)
+t8_create_occ_surface (t8_geometry_occ *geometry)
 {
   #if T8_WITH_OCC
   int surface_index;
+  Handle_Geom_Surface surface;
   TColgp_Array2OfPnt point_array(1, 3, 1, 3);
 
   point_array(1, 1) = gp_Pnt(0, 0, 0);
@@ -89,7 +90,8 @@ t8_create_occ_surface (t8_geometry_c &geometry)
   point_array(2, 3) = gp_Pnt(1.2, -0.2, 0.5);
   point_array(3, 3) = gp_Pnt(1, 0, 1);
 
-  geometry->t8_geom_push_occ_surface(GeomAPI_PointsToBSplineSurface(point_array).Surface(), surface_index);
+  surface = GeomAPI_PointsToBSplineSurface(point_array).Surface();
+  geometry->t8_geom_push_occ_surface(surface, surface_index);
   return surface_index;
 
   #else /* !T8_WITH_OCC */
@@ -103,10 +105,11 @@ t8_create_occ_surface (t8_geometry_c &geometry)
  * \return                            The index of the curve in the geometry.
  */
 int
-t8_create_occ_curve (t8_geometry_c &geometry)
+t8_create_occ_curve (t8_geometry_occ *geometry)
 {
   #if T8_WITH_OCC
   int curve_index;
+  Handle_Geom_Curve curve;
   TColgp_Array1OfPnt point_array(1, 5);
 
   point_array(1) = gp_Pnt(0.00, 0.00, 0.00);
@@ -115,8 +118,9 @@ t8_create_occ_curve (t8_geometry_c &geometry)
   point_array(4) = gp_Pnt(0.75,-0.20, 0.20);
   point_array(5) = gp_Pnt(1.00, 0.00, 0.00);
 
-  geometry->t8_geom_push_occ_curve(GeomAPI_PointsToBSpline(point_array).Curve(), curve_index);
-  return curve_index
+  curve = GeomAPI_PointsToBSpline(point_array).Curve();
+  geometry->t8_geom_push_occ_curve(curve, curve_index);
+  return curve_index;
 
   #else /* !T8_WITH_OCC */
   SC_ABORTF("OCC not linked");
@@ -146,9 +150,7 @@ t8_create_occ_hypercube (double *rot_vec,
 
   t8_cmesh_t        cmesh;
   t8_cmesh_init     (&cmesh);
-  t8_geometry_c     *geometry;
-  
-  geometry = new t8_geometry_occ (3, "occ dim=3");
+  t8_geometry_occ   *geometry = new t8_geometry_occ (3, "occ dim=3");
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
   
   double rotated_vertices[24], vertices[24] = 
@@ -170,7 +172,7 @@ t8_create_occ_hypercube (double *rot_vec,
   int faces[6] = {-1, -1, -1, -1, -1, -1};
   if (face >= 0)
   {
-    faces[face] =  = t8_create_occ_surface(geometry);
+    faces[face] = t8_create_occ_surface(geometry);
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), 
                             T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + face, 
                             parameters, 8 * sizeof(double), 0);
@@ -185,9 +187,9 @@ t8_create_occ_hypercube (double *rot_vec,
                             T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + edge, 
                             parameters, 2 * sizeof(double), 0);
   }
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_SURFACE_ATTRIBUTE_KEY, 
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, 
                           faces, 6 * sizeof(int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_CURVE_ATTRIBUTE_KEY, 
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, 
                           edges, 24 * sizeof(int), 0);
   t8_cmesh_register_geometry (cmesh, geometry);
   t8_cmesh_commit (cmesh, mpic);
@@ -346,7 +348,6 @@ main (int argc, char **argv)
     0, 1    // Edge 11
   };
 
-  t8_create_occ_surface();
   for (int i_faces = 0; i_faces < 6; ++i_faces)
   {
     SC_CHECK_ABORTF(t8_test_geometry_occ (surface_rot_vecs + i_faces * 3, 
@@ -359,7 +360,6 @@ main (int argc, char **argv)
                     "Failed check for face %i.", i_faces);
   }
 
-  t8_create_occ_curve();
   for (int i_edges = 0; i_edges < 12; ++i_edges)
   {
     SC_CHECK_ABORTF(t8_test_geometry_occ (curve_rot_vecs + i_edges * 3,

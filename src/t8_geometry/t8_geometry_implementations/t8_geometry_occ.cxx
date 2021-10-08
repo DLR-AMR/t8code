@@ -29,17 +29,14 @@
 
 #if T8_WITH_OCC
 
-Handle_Geom_Curve t8_global_occ_curve[10];
-Handle_Geom_Surface t8_global_occ_surface[10];
-
 t8_geometry_occ::t8_geometry_occ (int dim, const char *name_in)
 {
   T8_ASSERT (0 <= dim && dim <= 3);
 
   name = name_in;
   dimension = dim;
-  sc_array_init(occ_curves, sizeof(Handle_Geom_Curve));
-  sc_array_init(occ_surfaces, sizeof(Handle_Geom_Surface));
+  sc_array_init(&occ_curves, sizeof(Handle_Geom_Curve));
+  sc_array_init(&occ_surfaces, sizeof(Handle_Geom_Surface));
 }
 
 /**
@@ -120,7 +117,7 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
                     + ref_coords[i_edges / 4] * parameters[1];
         
         /* Check if calculated parameters are valid */
-        curve = *(Handle_Geom_Curve *) sc_array_index_int (occ_curves, edges[i_edges]);
+        curve = *(Handle_Geom_Curve *) sc_array_index_int (&occ_curves, edges[i_edges]);
         T8_ASSERT(!curve.IsNull());
         double u1, u2;
         u1 = curve->FirstParameter();
@@ -138,7 +135,7 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
                     + ref_coords[i_edges / 4] * parameters[3];
         
         /* Check if calculated parameters are valid */
-        surface = *(Handle_Geom_Surface *) sc_array_index_int (occ_surfaces, edges[i_edges + 12]);
+        surface = *(Handle_Geom_Surface *) sc_array_index_int (&occ_surfaces, edges[i_edges + 12]);
         T8_ASSERT(!surface.IsNull());
         double u1, u2, v1, v2;
         surface->Bounds(u1, u2, v1, v2);
@@ -240,7 +237,7 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
       }
       
       /* Check if calculated parameters are valid */
-      surface = *(Handle_Geom_Surface *) sc_array_index_int (occ_surfaces, edges[i_faces]);
+      surface = *(Handle_Geom_Surface *) sc_array_index_int (&occ_surfaces, edges[i_faces]);
       T8_ASSERT(!surface.IsNull());
       double u1, u2, v1, v2;
       surface->Bounds(u1, u2, v1, v2);
@@ -292,7 +289,7 @@ t8_geometry_occ::t8_geom_push_occ_curve (Handle_Geom_Curve curve,
   Handle_Geom_Curve *array_ptr;
   array_ptr = (Handle_Geom_Curve *) sc_array_push (occ_curves);
   *array_ptr = curve;
-  index = occ_curves->elem_count;
+  index = occ_curves.elem_count;
 }
 
 void 
@@ -302,7 +299,7 @@ t8_geometry_occ::t8_geom_push_occ_surface (Handle_Geom_Surface surface,
   Handle_Geom_Surface *array_ptr;
   array_ptr = (Handle_Geom_Surface *) sc_array_push (occ_surfaces);
   *array_ptr = surface;
-  index = occ_surfaces->elem_count;
+  index = occ_surfaces.elem_count;
 }
 
 #endif /* T8_WITH_OCC */

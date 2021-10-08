@@ -549,7 +549,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     level);
 
     /* Create occ geometry. */
-    geometry = new t8_geometry_occ (3, "occ curve dim=3");
+    t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, "occ curve dim=3");
 
     /* Create two occ bsplines which oscillate along the x-axis. 
      * For this we need to define two arrays from which we create the bsplines. */
@@ -584,8 +584,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
                      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
     
     /* Add the curves to the geometry occ arrays */
-    geometry->t8_geom_push_occ_curve(occ_curve1, edges[0]);
-    geometry->t8_geom_push_occ_curve(occ_curve1, edges[3]);
+    geometry_occ->t8_geom_push_occ_curve(occ_curve1, edges[0]);
+    geometry_occ->t8_geom_push_occ_curve(occ_curve1, edges[3]);
       
     /* Create tree 0 */
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
@@ -615,7 +615,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
                             parameters, 2 * sizeof(double), 0);
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id(), T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + 3, 
                             parameters, 2 * sizeof(double), 0);
-      
+    
+    geometry = geometry_occ;
     snprintf (vtuname, BUFSIZ, "forest_occ_curve_cube_lvl_%i", level);
     break;
     #else /* !T8_WITH_OCC */
@@ -630,7 +631,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     level);
 
     /* Create occ geometry. */
-    geometry = new t8_geometry_occ (3, "occ surface dim=3");
+    t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, "occ surface dim=3");
 
     /* Create a occ bspline surface with 2D array of knots */
     Handle_Geom_Surface       occ_surface;
@@ -690,7 +691,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
                      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
     
     /* Add the surface to the geometry occ array */
-    geometry->t8_geom_push_occ_surface(occ_surface, faces[5]);
+    geometry_occ->t8_geom_push_occ_surface(occ_surface, faces[5]);
       
     /* Create tree 0*/
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
@@ -756,7 +757,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
 
     /* Join tree 0 and tree 1 together */
     t8_cmesh_set_join (cmesh, 0, 1, 1, 0, 0);
-      
+    
+    geometry = geometry_occ;
     snprintf (vtuname, BUFSIZ, "forest_occ_surface_cubes_lvl_%i", level);
     break;
     #else /* !T8_WITH_OCC */
@@ -771,7 +773,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
      level);
 
     /* Create occ geometry. */
-    geometry = new t8_geometry_occ (3, "occ surface dim=3");    
+    t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, "occ surface dim=3"); 
 
     /* Create occ cylinder surfaces. We use an outer radius of 0.5 to get a diameter of 1.*/
     double radius_inner = 0.25;
@@ -804,8 +806,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
                      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
     
     /* Add the surfaces to the geometry occ array */
-    geometry->t8_geom_push_occ_surface(cylinder_outer, faces[0]);
-    geometry->t8_geom_push_occ_surface(cylinder_inner, faces[1]);
+    geometry_occ->t8_geom_push_occ_surface(cylinder_outer, faces[0]);
+    geometry_occ->t8_geom_push_occ_surface(cylinder_inner, faces[1]);
 
     /* Create corresponding trees and parameters. 
      * Here we create num trees by a coordinate transformation from cylinder to cartesian coordinates. */
@@ -866,7 +868,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       t8_cmesh_set_attribute (cmesh, i, t8_get_package_id(), T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + 1, 
                               parameters + i * 8, 8 * sizeof(double), 0);
     }
-      
+    
+    geometry = geometry_occ;
     T8_FREE(vertices);
     T8_FREE(parameters);
     snprintf (vtuname, BUFSIZ, "forest_geometry_cylinder_lvl_%i", level);

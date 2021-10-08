@@ -143,9 +143,9 @@ private:
   const void         *tree_data;        /** Tree data pointer that can be set in \a load_tree_data and 
                                            is passed onto \a analytical_function and \a jacobian. */
 
-  sc_array_t         *occ_curves;       /** Occ curve geometry pointer. Curves can be pushed with t8_push_occ_curve(). */
+  sc_array_t         occ_curves;       /** Occ curve geometry pointer. Curves can be pushed with t8_push_occ_curve(). */
 
-  sc_array_t         *occ_surfaces;     /** Occ surface geometry pointer. Curves can be pushed with t8_push_occ_surface(). */
+  sc_array_t         occ_surfaces;     /** Occ surface geometry pointer. Curves can be pushed with t8_push_occ_surface(). */
 };
 
 #endif /* T8_WITH_OCC */

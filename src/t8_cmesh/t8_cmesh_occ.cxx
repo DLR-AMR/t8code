@@ -53,7 +53,8 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_profiling(cmesh, 1);
-  t8_geometry_c *geometry;
+  t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, "occ surface dim=3");
+  t8_geometry_c *geometry_linear = t8_geometry_linear_new (3);
   int cylinder_outer_index, cylinder_inner_index;
   
   if (with_occ_geometry)
@@ -76,16 +77,11 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
     const TopoDS_Edge edge_inner = make_inner_edge.Edge();
     const TopoDS_Face face_inner = TopoDS::Face(BRepPrimAPI_MakePrism(edge_inner, height));
     const Handle_Geom_Surface cylinder_inner = BRep_Tool::Surface(face_inner);
-    geometry = new t8_geometry_occ (3, "occ surface dim=3");
-    geometry->t8_geom_push_occ_surface(cylinder_outer, cylinder_outer_index);
-    geometry->t8_geom_push_occ_surface(cylinder_inner, cylinder_inner_index);
+    geometry_occ->t8_geom_push_occ_surface(cylinder_outer, cylinder_outer_index);
+    geometry_occ->t8_geom_push_occ_surface(cylinder_inner, cylinder_inner_index);
     #else /* !T8_WITH_OCC */
     SC_ABORTF("OCC not linked");
     #endif /* T8_WITH_OCC */ 
-  }
-  else
-  {
-    geometry = t8_geometry_linear_new (3);
   }
   
   double *vertices, *parameters;
@@ -282,7 +278,14 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
     }
   }
   
-  t8_cmesh_register_geometry (cmesh, geometry);
+  if (with_occ_geometry)
+  {
+    t8_cmesh_register_geometry (cmesh, geometry_occ);
+  }
+  else
+  {
+    t8_cmesh_register_geometry (cmesh, geometry_linear);
+  }
   t8_cmesh_commit (cmesh, comm);
   T8_FREE(vertices);
   T8_FREE(parameters);
