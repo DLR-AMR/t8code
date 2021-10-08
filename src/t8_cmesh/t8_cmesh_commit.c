@@ -645,6 +645,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
       /* Reference and copy the geometry handler. */
       t8_geom_handler_ref (cmesh->set_from->geometry_handler);
       cmesh->geometry_handler = cmesh->set_from->geometry_handler;
+      /* Mark that we do not have to commit the geometry handler. */
+      commit_geom_handler = 0;
     }
     else {
       /* Set flag that we need to commit the geometry handler. */
