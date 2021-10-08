@@ -30,7 +30,7 @@
 
 #include <t8.h>
 #include <t8_cmesh.h>
-#include "t8_cmesh_types.h"
+#include <t8_cmesh_types.h>
 
 T8_EXTERN_C_BEGIN ();
 
