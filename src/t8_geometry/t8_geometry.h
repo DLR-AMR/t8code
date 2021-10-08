@@ -133,7 +133,7 @@ const t8_geometry_c *t8_geom_handler_get_unique_geometry (const
                                                           * geom_handler);
 
 /**
- * Given a geometries name find that geometry in the geometry handler
+ * Given a geometry's name find that geometry in the geometry handler
  * and return it.
  * \param [in] geom_handler A committed geometry handler.
  * \param [in] name         The name of a geometry.
