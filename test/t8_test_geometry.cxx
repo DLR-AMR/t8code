@@ -67,7 +67,7 @@ t8_test_geometry_zero ()
 {
   int                 dim;
   t8_debugf ("Testing zero geometry dim and name.\n");
-  for (dim = 0; dim < 3; ++dim) {
+  for (dim = 0; dim <= 3; ++dim) {
     t8_geometry_zero    zero_geom (dim);
     char                name[BUFSIZ];
     snprintf (name, BUFSIZ, "t8_geom_zero_%i", dim);
