@@ -33,6 +33,9 @@
 #include <t8_cmesh/t8_cmesh_save.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
+#include <t8_geometry/t8_geometry.h>
+#include <t8_geometry/t8_geometry_base.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 
 /* This macro is called to check a condition and if not fulfilled
  * close the file and exit the function */
@@ -552,11 +555,34 @@ t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix)
 {
   FILE               *fp;
   char                filename[BUFSIZ];
+  int                 has_linear_geom = 0;
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   if (!cmesh->set_partition && cmesh->mpirank != 0) {
     /* If the cmesh is replicated, only rank 0 writes it */
     return 1;
+  }
+
+  /* Check that the only registered geometry is the linear geometry and
+   * that this geometry is used for all trees. */
+  if (t8_geom_handler_get_num_geometries (cmesh->geometry_handler) == 1) {
+    /* Get the stored geometry and the linear geometry and compare their names. */
+    const t8_geometry_c *geom =
+      t8_geom_handler_get_unique_geometry (cmesh->geometry_handler);
+    t8_geometry_c      *linear_geom =
+      t8_geometry_linear_new (cmesh->dimension);
+
+    if (!strcmp (t8_geom_get_name (geom), t8_geom_get_name (linear_geom))) {
+      /* The two geometries are equal. */
+      has_linear_geom = 1;
+    }
+    t8_geometry_linear_destroy (&linear_geom);
+  }
+  if (!has_linear_geom) {
+    /* This cmesh does not have the linear geometry for all trees. */
+    t8_errorf
+      ("Error when saving cmesh. Cmesh does not have linear geometry.\n");
+    return 0;
   }
 
   /* Create the output filename as fileprefix_RANK.cmesh,
