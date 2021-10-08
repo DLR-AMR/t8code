@@ -52,7 +52,9 @@ t8_geometry_zero::t8_geom_evaluate (t8_cmesh_t cmesh,
                                     double out_coords[3]) const
 {
   /* Set the out_coords to 0 */
-  memset (out_coords, 0, sizeof (double) * 3);
+  out_coords[0] = 0;
+  out_coords[1] = 0;
+  out_coords[2] = 0;
 }
 
 /**
