@@ -995,7 +995,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
   /* At first we broadcast all meta information. */
   if (mpirank == root) {
     /* Check whether geometries are set. If so, abort.
-     * We cannot broadcast he geometries, since they are pointers to derived 
+     * We cannot broadcast the geometries, since they are pointers to derived 
      * classes that we cannot know of on the receiving process.
      * Geometries must therefore be added after broadcasting. */
     SC_CHECK_ABORT (cmesh_in->geometry_handler == NULL,
@@ -2388,7 +2388,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast,
 
   /* Use linear geometry */
   /* We need to set the geometry after broadcasting, since we
-   * cannot bcast he geometries. */
+   * cannot bcast the geometries. */
   t8_cmesh_register_geometry (cmesh, linear_geom);
 
   if (do_partition) {
