@@ -907,6 +907,7 @@ double              t8_forest_element_volume (t8_forest_t forest,
 /** Compute the area of an element's face if a geometry
  * for this tree is registered in the forest's cmesh.
  * Currently implemented for 2D elements only.
+ * This is only an approximation.
  * \param [in]      forest     The forest.
  * \param [in]      ltree_id   The forest local id of the tree in which the element is.
  * \param [in]      element    The element.
