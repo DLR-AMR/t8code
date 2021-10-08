@@ -300,7 +300,7 @@ void                t8_cmesh_set_attribute (t8_cmesh_t cmesh,
                                             void *data, size_t data_size,
                                             int data_persists);
 
-/** Store a string as an attribute at a trree in a cmesh.
+/** Store a string as an attribute at a tree in a cmesh.
  * \param [in, out] cmesh       The cmesh to be updated.
  * \param [in]      tree_id     The global id of the tree.
  * \param [in]      package_id  Unique identifier of a valid software package. \see sc_package_register
