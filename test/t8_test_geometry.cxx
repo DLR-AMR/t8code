@@ -35,7 +35,7 @@
  *                                   is computed correctly.
  *  - t8_test_cmesh_geometry_unique: Check that we can acces the geometry via the tree id if
  *                                   we only use one geometry and did not specify tree ids for it.
- *                                   In this case t8code should automatically associate this geometry to all tree.
+ *                                   In this case t8code should automatically associate this geometry to all trees.
  *  - t8_test_geom_handler_register: Tests the geometry_handler register and find interface.
  */
 
