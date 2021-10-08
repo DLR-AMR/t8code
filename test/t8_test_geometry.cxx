@@ -219,7 +219,7 @@ t8_test_cmesh_geometry_unique (sc_MPI_Comm comm)
   /* Build a simple 2 tree cmesh and set geometries for the trees. */
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
-  /* Register the id_geometry to this cmesh. */
+  /* Register the linear_geometry to this cmesh. */
   t8_cmesh_register_geometry (cmesh, linear_geom);
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, comm);
