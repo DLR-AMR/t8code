@@ -310,21 +310,18 @@ public:
     /* Change gridlines by applying a 4th order polynomial mapping
      * [0,1]^2 -> [0,1]^2.
      * And then map this to [-0.5,-0.5]^2 */
-    //x = x*x*x*x - 3.5*x*x*x + 3.5 * x;
     int                 sign = x < 0 ? 1 : -1;
     double              rho = 0.5 - time / 10;
     /* *INDENT-OFF* */
     x = sign * (1 - exp (-fabs (-x) / rho)) / (2 * (1 - exp (-0.5 / rho)));
     sign = y < 0 ? 1 : -1;
     y = sign * (1 - exp (-fabs (-y) / rho)) / (2 * (1 - exp (-0.5 / rho)));
-    //y = y*y*y - 3.5*y*y + 2.5 * y - 0.5;
 
     /* Rotate the x-y axis and add sincon in z axis. */
     out_coords[0] = x * (cos (phi)) - y * sin (phi);
     out_coords[1] = y * (cos (phi)) + x * sin (phi);
     out_coords[2] = 0;
     /* *INDENT-ON* */
-    //sin(2*M_PI * time) * 0.2 * sin (out_coords[0] * 2 * M_PI) * cos (out_coords[1] * 2 * M_PI);
   }
 
   /* Jacobian, not implemented. */
