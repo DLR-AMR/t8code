@@ -421,31 +421,49 @@ t8_subelement_scheme_quad_c::t8_element_is_family (t8_element_t ** fam)
     T8_ASSERT (t8_element_is_valid (fam[i]));
   }
 #endif
+  
+  /* num_siblings is the expected number of elements, fam points to */
+  int num_siblings = t8_element_num_siblings (fam[0]);
+  int j, check_count = 0;
 
-  /* Subelements can not be refined into other elements of a higher level. 
-   * So, if the first element of fam is a subelement, we assume that the following num_siblings 
-   * many elements are its siblings and therefore form a family. */
+  /* if the first element of fam is a subelement */
   if (pquad_w_sub_family[0]->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
-    return 1;
-  }
-  /* If the first element of fam is no subelement we check the following elements of fam */
-  else {
-    /* If any of the following elements is a subelement, then they can not form a family */
-    if (pquad_w_sub_family[1]->dummy_is_subelement ==
-        T8_SUB_QUAD_IS_SUBELEMENT
-        || pquad_w_sub_family[2]->dummy_is_subelement ==
-        T8_SUB_QUAD_IS_SUBELEMENT
-        || pquad_w_sub_family[3]->dummy_is_subelement ==
-        T8_SUB_QUAD_IS_SUBELEMENT) {
+    int anchor[2] = {pquad_w_sub_family[0]->p4q.x, pquad_w_sub_family[0]->p4q.y};
+    int type = pquad_w_sub_family[0]->subelement_type;
+
+    /* for every sibling, we check whether it is a subelement of the same type, whether the subelement ids are in increasing 
+     * order and all subelements have the same anchor node */
+    for (j = 0; j < num_siblings; j++) {
+      if (pquad_w_sub_family[j]->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT &&
+          pquad_w_sub_family[j]->subelement_type == type &&
+          pquad_w_sub_family[j]->subelement_id == j &&
+          pquad_w_sub_family[j]->p4q.x == anchor[0] && pquad_w_sub_family[j]->p4q.y == anchor[1]) {
+        check_count++;
+      }
+    }
+    /* ich all checks have been successful, then a family of subelements is given */
+    if (check_count == num_siblings) {
+      return 1;
+    }
+    else {
       return 0;
     }
-    /* If all elements of fam are no subelements, then we can use the p4est check is_family */
-    else {
-      return p4est_quadrant_is_family (&pquad_w_sub_family[0]->p4q,
+  }
+
+  /* if the first element of fam is not a subelement */
+  else {
+    T8_ASSERT (num_siblings == P4EST_CHILDREN);
+    /* if any sibling is a subelement, then the elements do not form a family */
+    for (j = 0; j < num_siblings; j++) {
+      if (pquad_w_sub_family[j]->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {
+        return 0;
+      }
+    }
+    /* else, we can check for a family of quads using the p4est check */
+    return p4est_quadrant_is_family (&pquad_w_sub_family[0]->p4q,
                                        &pquad_w_sub_family[1]->p4q,
                                        &pquad_w_sub_family[2]->p4q,
                                        &pquad_w_sub_family[3]->p4q);
-    }
   }
 }
 
