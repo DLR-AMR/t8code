@@ -223,8 +223,8 @@ t8_forest_adapt (t8_forest_t forest)
   }
 
   forest_from = forest->set_from;
-  t8_global_productionf ("Into t8_forest_adapt from %li local elements\n",
-                         (long) forest_from->local_num_elements);
+  t8_global_productionf ("Into t8_forest_adapt from %li total elements\n",
+                         forest_from->global_num_elements);
 
   /* TODO: Allocate memory for the trees of forest.
    * Will we do this here or in an extra function? */
@@ -234,6 +234,7 @@ t8_forest_adapt (t8_forest_t forest)
     refine_list = sc_list_new (NULL);
   }
   forest->local_num_elements = 0;
+  forest->local_num_subelements = 0;
   el_offset = 0;
   num_trees = t8_forest_get_num_local_trees (forest);
 
@@ -524,6 +525,8 @@ t8_forest_adapt (t8_forest_t forest)
     el_offset += el_inserted;
     /* Add to the new number of local elements. */
     forest->local_num_elements += el_inserted;
+    /* Add to the new number of local subelements */
+    forest->local_num_subelements += count_subelements;
     /* Possibly shrink the telements array to the correct size */
     t8_element_array_resize (telements, el_inserted);
 
@@ -538,17 +541,18 @@ t8_forest_adapt (t8_forest_t forest)
   }
 
   /* We now adapted all local trees */
-  /* Compute the new global number of elements */
+  /* Compute the new global number of elements and subelements*/
   t8_forest_comm_global_num_elements (forest);
+  t8_forest_comm_global_num_subelements (forest);
   /* If any subelement is constructed, give output this number as an additional information. */
   if (count_subelements > 0) {
     t8_global_productionf
-      ("Done t8_forest_adapt with %li local elements, %i of which are subelements.\n",
-       (long) forest->local_num_elements, count_subelements);
+      ("Done t8_forest_adapt with %li total elements, %li of which are subelements.\n",
+       forest->global_num_elements, forest->global_num_subelements);
   }
   else {
-    t8_global_productionf ("Done t8_forest_adapt with %li local elements.\n",
-                           (long) forest->local_num_elements);
+    t8_global_productionf ("Done t8_forest_adapt with %li total elements.\n",
+                           forest->global_num_elements);
   }
 
   /* if profiling is enabled, measure runtime */

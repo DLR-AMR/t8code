@@ -385,6 +385,12 @@ void                t8_forest_set_load (t8_forest_t forest,
  */
 void                t8_forest_comm_global_num_elements (t8_forest_t forest);
 
+/** Compute the global number of subelements in a forest as the sum
+ *  of the local subelement counts.
+ *  \param [in] forest    The forest.
+ */
+void                t8_forest_comm_global_num_subelements (t8_forest_t forest);
+
 /** After allocating and adding properties to a forest, commit the changes.
  * This call sets up the internal state of the forest.
  * \param [in,out] forest       Must be created with \ref t8_forest_init and

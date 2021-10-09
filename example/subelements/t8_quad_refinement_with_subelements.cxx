@@ -65,7 +65,7 @@ t8_refine_with_subelements (t8_eclass_t eclass)
   /* Values for the mesh refinement */
   int                 initlevel = 3;    /* initial uniform refinement level */
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening */
-  int                 maxlevel = 6;     /* highest level allowed for refining */
+  int                 maxlevel = 4;     /* highest level allowed for refining */
 
   /* Values for multiple timesteps */
   int                 timesteps = 4;    /* Number of times, the mesh is refined */
