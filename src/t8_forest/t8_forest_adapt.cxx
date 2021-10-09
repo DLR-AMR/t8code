@@ -202,7 +202,7 @@ t8_forest_adapt (t8_forest_t forest)
   int                 ci;
   unsigned int        subelement_type;
   unsigned int        num_subelements;
-  t8_locidx_t         count_subelements = 0;
+  t8_locidx_t         subel_inserted = 0;
 #ifdef T8_ENABLE_DEBUG
   int                 is_family;
 #endif
@@ -457,7 +457,7 @@ t8_forest_adapt (t8_forest_t forest)
 
         /* Each time we entry this case, a parent element is refined into subelements.
          * We will count the global number of constructed subelements and give this number as additional output. */
-        count_subelements += num_subelements;
+        subel_inserted += num_subelements;
       }
       else if (refine < 0) {
 
@@ -526,7 +526,7 @@ t8_forest_adapt (t8_forest_t forest)
     /* Add to the new number of local elements. */
     forest->local_num_elements += el_inserted;
     /* Add to the new number of local subelements */
-    forest->local_num_subelements += count_subelements;
+    forest->local_num_subelements += subel_inserted;
     /* Possibly shrink the telements array to the correct size */
     t8_element_array_resize (telements, el_inserted);
 
@@ -545,7 +545,7 @@ t8_forest_adapt (t8_forest_t forest)
   t8_forest_comm_global_num_elements (forest);
   t8_forest_comm_global_num_subelements (forest);
   /* If any subelement is constructed, give output this number as an additional information. */
-  if (count_subelements > 0) {
+  if (forest->global_num_subelements > 0) {
     t8_global_productionf
       ("Done t8_forest_adapt with %li total elements, %li of which are subelements.\n",
        forest->global_num_elements, forest->global_num_subelements);
