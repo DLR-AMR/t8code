@@ -541,7 +541,7 @@ t8_forest_adapt (t8_forest_t forest)
   }
 
   /* We now adapted all local trees */
-  /* Compute the new global number of elements and subelements*/
+  /* Compute the new global number of elements and subelements */
   t8_forest_comm_global_num_elements (forest);
   t8_forest_comm_global_num_subelements (forest);
   /* If any subelement is constructed, give output this number as an additional information. */
