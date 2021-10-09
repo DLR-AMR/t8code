@@ -511,7 +511,7 @@ t8_linearidx_t
 
   /* Note that the id of a subelement equals the id of its parent quadrant.
    * Therefore, the binary search (for example used in the leaf_face_neighbor function) 
-   * will find a random subelement of the parent transition cell which might not be the desired neighbor of a given element. */
+   * will find a random subelement of transition cell which might not be the desired neighbor of a given element. */
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
