@@ -129,11 +129,9 @@ t8_fortran_adapt_by_coordinates_callback (t8_forest_t forest,
   t8_fortran_adapt_coordinate_callback callback =
     (t8_fortran_adapt_coordinate_callback)
     t8_forest_get_user_function (forest);
-  const double       *tree_vertices =
-    t8_forest_get_tree_vertices (forest_from, which_tree);
   double              midpoint[3];
   t8_forest_element_centroid (forest_from, which_tree, elements[0],
-                              tree_vertices, midpoint);
+                              midpoint);
   t8_debugf ("Coord: %.2f\n", midpoint[0]);
   int                 ret =
     callback (midpoint[0], midpoint[1], midpoint[2], num_elements > 0);
@@ -148,7 +146,7 @@ t8_fortran_adapt_by_coordinates_callback (t8_forest_t forest,
     t8_element_parent (ts, elements[0], parent);
     /* Get the coordinates of the parent. */
     t8_forest_element_centroid (forest_from, which_tree, parent,
-                                tree_vertices, midpoint);
+                                midpoint);
 
     ret = callback (midpoint[0], midpoint[1], midpoint[2], 1);
   }
@@ -156,7 +154,7 @@ t8_fortran_adapt_by_coordinates_callback (t8_forest_t forest,
     /* The elements do not form a family. */
     /* Get the coordinates of the first element and call callback */
     t8_forest_element_centroid (forest_from, which_tree, elements[0],
-                                tree_vertices, midpoint);
+                                midpoint);
     ret = callback (midpoint[0], midpoint[1], midpoint[2], 0);
     T8_ASSERT (ret >= 0);
   }

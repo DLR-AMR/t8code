@@ -627,7 +627,7 @@ t8_netcdf_find_mesh_elements_query (t8_forest_t forest,
     (t8_netcdf_search_data_t *) t8_forest_get_user_data (forest);
   /* The point may be inside the element. Do a proper check. */
   if (t8_forest_element_point_inside
-      (forest, ltreeid, element, tree_vertices, double_point,
+      (forest, ltreeid, element, double_point,
        user_data->point_finding_tolerance)) {
     T8_ASSERT (!is_definitely_outside); /* Should never happen */
     /* This point is contained in this element */
@@ -871,8 +871,6 @@ t8_netcdf_interpolate_to_refined_forest (t8_forest_t forest_old,
   size_t              ipoint, point_index;
   const double       *point;
   t8_element_t       *child, *element;
-  double             *tree_vertices =
-    t8_forest_get_tree_vertices (forest_new, which_tree);
 
   /* Loop over all points */
   for (ipoint = 0; ipoint < points_per_element_old->elem_count; ++ipoint) {
@@ -890,7 +888,7 @@ t8_netcdf_interpolate_to_refined_forest (t8_forest_t forest_old,
         t8_forest_get_element_in_tree (forest_new, which_tree,
                                        first_incoming);
       if (t8_forest_element_point_inside
-          (forest_new, which_tree, element, tree_vertices, point,
+          (forest_new, which_tree, element, point,
            search_data_new->point_finding_tolerance)) {
         /* This point is in this element, we add it to the new list */
         *(size_t *) sc_array_push (points_per_element_new) = point_index;
@@ -907,7 +905,7 @@ t8_netcdf_interpolate_to_refined_forest (t8_forest_t forest_old,
           t8_forest_get_element_in_tree (forest_new, which_tree,
                                          first_incoming + ichild);
         if (t8_forest_element_point_inside
-            (forest_new, which_tree, child, tree_vertices, point,
+            (forest_new, which_tree, child, point,
              search_data_new->point_finding_tolerance)) {
           t8_debugf ("found on child %i\n", ichild);
           /* This point is in this element, we add it to the new list */
@@ -1504,7 +1502,6 @@ t8_netcdf_read_data_and_adapt (const char *netcdf_filename,
       sc_array_t          v10data_new_view;
       t8_locidx_t         num_elements_partitioned;
       double             *u10data_new, *v10data_new;
-      t8_netcdf_search_data_t search_result_partiioned;
       sc_array_init_data (&u10data_old_view,
                           (void *) search_result->u10_data_per_element,
                           sizeof (*search_result->u10_data_per_element),

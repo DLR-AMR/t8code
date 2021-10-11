@@ -112,6 +112,7 @@ public:
   virtual void        t8_element_general_function (const t8_element_t * elem,
                                                    const void *indata,
                                                    void *outdata);
+
 };
 
 #endif /* !T8_DEFAULT_COMMON_CXX_HXX */

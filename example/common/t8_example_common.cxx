@@ -64,27 +64,10 @@ t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
   return 0;
 }
 
-/* Get the coordinates of the midpoint of an element */
-void
-t8_common_midpoint (t8_forest_t forest, t8_locidx_t which_tree,
-                    t8_eclass_scheme_c * ts, t8_element_t * element,
-                    double elem_midpoint_f[3])
-{
-  double             *tree_vertices;
-
-  tree_vertices = t8_cmesh_get_tree_vertices (t8_forest_get_cmesh (forest),
-                                              t8_forest_ltreeid_to_cmesh_ltreeid
-                                              (forest, which_tree));
-
-  t8_forest_element_centroid (forest, which_tree, element, tree_vertices,
-                              elem_midpoint_f);
-}
-
 int
 t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid,
                            t8_element_t * element,
                            t8_eclass_scheme_c * ts,
-                           const double *tree_vertices,
                            t8_example_level_set_fn levelset,
                            double band_width, double t, void *udata)
 {
@@ -100,8 +83,7 @@ t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid,
     double              coords[3];
 
     /* Compute LS function at first corner */
-    t8_forest_element_coordinate (forest, ltreeid, element,
-                                  tree_vertices, 0, coords);
+    t8_forest_element_coordinate (forest, ltreeid, element, 0, coords);
     /* compute the level-set function at this corner */
     value = levelset (coords, t, udata);
     /* sign = 1 if value > 0, -1 if value < 0, 0 if value = 0 */
@@ -109,7 +91,7 @@ t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid,
     /* iterate over all corners */
     for (icorner = 1; icorner < num_corners; icorner++) {
       t8_forest_element_coordinate (forest, ltreeid, element,
-                                    tree_vertices, icorner, coords);
+                                    icorner, coords);
       /* compute the level-set function at this corner */
       value = levelset (coords, t, udata);
       if ((value > 0 && sign <= 0)
@@ -123,11 +105,9 @@ t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid,
   }
 
   /* Compute the coordinates of the anchor node X. */
-  t8_forest_element_centroid (forest, ltreeid, element,
-                              tree_vertices, elem_midpoint);
+  t8_forest_element_centroid (forest, ltreeid, element, elem_midpoint);
   /* Compute the element's diameter */
-  elem_diam =
-    t8_forest_element_diam (forest, ltreeid, element, tree_vertices);
+  elem_diam = t8_forest_element_diam (forest, ltreeid, element);
   /* Compute L(X) */
   value = levelset (elem_midpoint, t, udata);
 
@@ -155,18 +135,12 @@ t8_common_adapt_level_set (t8_forest_t forest,
   t8_example_level_set_struct_t *data;
   int                 within_band;
   int                 level;
-  double             *tree_vertices;
 
   T8_ASSERT (num_elements == 1 || num_elements ==
              ts->t8_element_num_children (elements[0]));
 
   data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest);
   level = ts->t8_element_level (elements[0]);
-
-  tree_vertices =
-    t8_cmesh_get_tree_vertices (t8_forest_get_cmesh (forest_from),
-                                t8_forest_ltreeid_to_cmesh_ltreeid
-                                (forest_from, which_tree));
 
   /* Get the minimum and maximum x-coordinate from the user data pointer of forest */
   data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest);
@@ -184,7 +158,7 @@ t8_common_adapt_level_set (t8_forest_t forest,
   }
   within_band =
     t8_common_within_levelset (forest_from, which_tree, elements[0],
-                               ts, tree_vertices, data->L,
+                               ts, data->L,
                                data->band_width / 2, data->t, data->udata);
   if (within_band && level < data->max_level) {
     /* The element can be refined and lies inside the refinement region */
@@ -228,13 +202,11 @@ t8_common_adapt_union_of_spheres (t8_forest_t forest,
   T8_ASSERT (spheres != NULL);
   T8_ASSERT (spheres->elem_size == sizeof (t8_example_sphere_t));
 
-  const double       *tree_vertices =
-    t8_forest_get_tree_vertices (forest_from, which_tree);
   double              elem_midpoint[3];
   /* get the element's level */
   int                 level = ts->t8_element_level (elements[0]);
   t8_forest_element_centroid (forest_from, which_tree, elements[0],
-                              tree_vertices, elem_midpoint);
+                              elem_midpoint);
   for (isphere = 0; isphere < spheres->elem_count; isphere++) {
     const t8_example_sphere_t *sphere =
       (const t8_example_sphere_t *) sc_array_index ((sc_array_t *) spheres,

@@ -397,14 +397,12 @@ t8_mptrac_build_latlon_data_for_uvw_3D (t8_mptrac_context_t * context,
 
   t8_locidx_t         data_index = 0;
   for (t8_locidx_t itree = 0; itree < num_trees; itree++) {
-    const double       *tree_vertices =
-      t8_forest_get_tree_vertices (context->forest, itree);
     for (t8_locidx_t ielement = 0; ielement < num_elements; ielement++) {
       double              midpoint[3];
       const t8_element_t *element =
         t8_forest_get_element_in_tree (context->forest, itree, ielement);
       t8_forest_element_centroid (context->forest, itree, element,
-                                  tree_vertices, midpoint);
+                                  midpoint);
       double              lat, lon, pressure;
       t8_mptrac_coords_to_latlonpressure (context, midpoint, &lat, &lon,
                                           &pressure);

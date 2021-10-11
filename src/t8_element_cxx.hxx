@@ -56,7 +56,7 @@ public:
 
   /** The destructor. It does nothing but has to be defined since
    * we may want to delete an eclass_scheme that is actually inherited
-   * (for example t8_default_scheme_quad) and providing and implementation
+   * (for example t8_default_scheme_quad) and providing an implementation
    * for the destructor ensures that the
    * destructor of the child class will be executed. */
                       virtual ~ t8_eclass_scheme ()

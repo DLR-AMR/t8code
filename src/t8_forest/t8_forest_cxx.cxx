@@ -33,6 +33,7 @@
 #include <t8_element_cxx.hxx>
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
+#include <t8_geometry/t8_geometry_base.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -186,39 +187,6 @@ t8_forest_is_equal (t8_forest_t forest_a, t8_forest_t forest_b)
   return 1;
 }
 
-/* Given function values at the four edge points of a unit square and
- * a point within that square, interpolate the function value at this point.
- * \param [in]    vertex  An array of size at least dim giving the coordinates of the vertex to interpolate
- * \param [in]    corner_values An array of size 2^dim * 3, giving for each corner (in zorder) of
- *                        the unit square/cube its function values in 3D space.
- * \param [out]   evaluated_function An array of size 3, on output the function values
- *                        at \a vertex are stored here.
- */
-static void
-t8_forest_bilinear_interpolation (const double *vertex,
-                                  const double *corner_values,
-                                  int dim, double *evaluated_function)
-{
-  int                 i;
-  double              temp[3] = { 0 };
-
-  for (i = 0; i < 3; i++) {
-    temp[i] = corner_values[0 * 3 + i] * (1 - vertex[0]) * (1 - vertex[1])      /* x=0 y=0 */
-      +corner_values[1 * 3 + i] * vertex[0] * (1 - vertex[1])   /* x=1 y=0 */
-      +corner_values[2 * 3 + i] * (1 - vertex[0]) * vertex[1]   /* x=0 y=1 */
-      +corner_values[3 * 3 + i] * vertex[0] * vertex[1];        /* x=1 y=1 */
-    if (dim == 3) {
-      temp[i] *= (1 - vertex[2]);
-      temp[i] += (corner_values[4 * 3 + i] * (1 - vertex[0]) * (1 - vertex[1])  /* x=0 y=0 z=1 */
-                  +corner_values[5 * 3 + i] * vertex[0] * (1 - vertex[1])       /* x=1 y=0 z=1 */
-                  +corner_values[6 * 3 + i] * (1 - vertex[0]) * vertex[1]       /* x=0 y=1 z=1 */
-                  +corner_values[7 * 3 + i] * vertex[0] * vertex[1])    /* x=1 y=1 z=1 */
-        *vertex[2];
-    }
-    evaluated_function[i] = temp[i];
-  }
-}
-
 /* given an element in a coarse tree, the corner coordinates of the coarse tree
  * and a corner number of the element compute the coordinates of that corner
  * within the coarse tree.
@@ -226,92 +194,36 @@ t8_forest_bilinear_interpolation (const double *vertex,
 /* TODO: replace ltree_id argument with ts argument. */
 void
 t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
-                              const t8_element_t * element,
-                              const double *vertices, int corner_number,
+                              const t8_element_t * element, int corner_number,
                               double *coordinates)
 {
-  int                 i;
   double              vertex_coords[3];
   t8_eclass_scheme_c *ts;
   t8_eclass_t         tree_class;
-  int                 dim;
+  t8_gloidx_t         gtreeid;
+  t8_cmesh_t          cmesh;
 
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->scheme_cxx != NULL);
   /* Get the tree's class and scheme */
   tree_class = t8_forest_get_tree_class (forest, ltree_id);
   ts = t8_forest_get_eclass_scheme (forest, tree_class);
-  /* Get the dimension */
-  dim = t8_eclass_to_dimension[tree_class];
+  /* Compute the vertex coordinates inside [0,1]^dim reference cube. */
   ts->t8_element_vertex_reference_coords (element, corner_number,
                                           vertex_coords);
-  /* Check whether we support this tree_class */
-  T8_ASSERT (tree_class == T8_ECLASS_VERTEX
-             || tree_class == T8_ECLASS_TRIANGLE
-             || tree_class == T8_ECLASS_TET
-             || tree_class == T8_ECLASS_QUAD
-             || tree_class == T8_ECLASS_HEX
-             || tree_class == T8_ECLASS_LINE
-             || tree_class == T8_ECLASS_PRISM);
-  /* Compute the coordinates, depending on the class of the tree */
-  switch (tree_class) {
-  case T8_ECLASS_VERTEX:
-    T8_ASSERT (corner_number == 0);
-    /* A vertex has exactly one corner, and we already know its coordinates, since they are
-     * the same as the trees coordinates. */
-    for (i = 0; i < 3; i++) {
-      coordinates[i] = vertices[i];
-    }
-    break;
-  case T8_ECLASS_LINE:
-    for (i = 0; i < 3; i++) {
-      coordinates[i] =
-        (vertices[3 + i] - vertices[i]) * vertex_coords[0] + vertices[i];
-    }
-    break;
-  case T8_ECLASS_TRIANGLE:
-  case T8_ECLASS_TET:
-    for (i = 0; i < 3; i++) {
-      coordinates[i] =
-        (vertices[3 + i] - vertices[i]) * vertex_coords[0] +
-        (dim == 3 ? (vertices[9 + i] - vertices[6 + i]) * vertex_coords[1]
-         : 0.)
-        + (vertices[6 + i] - vertices[3 + i]) * vertex_coords[dim - 1]
-        + vertices[i];
-    }
-    break;
-  case T8_ECLASS_PRISM:
-    /*Prisminterpolation, via height, and triangle */
-    /*Get a triangle at the specific height */
-    double              tri_vertices[9];
-    for (i = 0; i < 9; i++) {
-      tri_vertices[i] =
-        (vertices[9 + i] - vertices[i]) * vertex_coords[2] + vertices[i];
-    }
-    for (i = 0; i < 3; i++) {
-      coordinates[i] =
-        (tri_vertices[3 + i] - tri_vertices[i]) * vertex_coords[0] +
-        (tri_vertices[6 + i] - tri_vertices[3 + i]) * vertex_coords[1]
-        + tri_vertices[i];
-    }
-    break;
-  case T8_ECLASS_QUAD:
-    vertex_coords[2] = 0;
-  case T8_ECLASS_HEX:
-    t8_forest_bilinear_interpolation ((const double *) vertex_coords,
-                                      vertices, dim, coordinates);
-    break;
-  default:
-    SC_ABORT ("Forest coordinate computation is supported only for "
-              "vertices/lines/triangles/tets/quads/prisms/hexes.");
-  }
-  return;
+
+  /* Compute the global tree id */
+  gtreeid = t8_forest_global_tree_id (forest, ltree_id);
+  /* Get the cmesh */
+  cmesh = t8_forest_get_cmesh (forest);
+  /* Evalute the geometry */
+  t8_geometry_evaluate (cmesh, gtreeid, vertex_coords, coordinates);
 }
 
 /* Compute the diameter of an element. */
 double
 t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid,
-                        const t8_element_t * element, const double *vertices)
+                        const t8_element_t * element)
 {
   t8_eclass_t         tree_class;
   t8_eclass_scheme_c *ts;
@@ -332,12 +244,11 @@ t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid,
   num_corners = ts->t8_element_num_corners (element);
 
   /* Compute the centroid */
-  t8_forest_element_centroid (forest, ltreeid, element, vertices, centroid);
+  t8_forest_element_centroid (forest, ltreeid, element, centroid);
   dist = 0;
   for (i = 0; i < num_corners; i++) {
     /* Compute coordinates of this corner */
-    t8_forest_element_coordinate (forest, ltreeid, element, vertices, i,
-                                  coordinates);
+    t8_forest_element_coordinate (forest, ltreeid, element, i, coordinates);
     /* Compute the distance to the midpoint */
     dist += t8_vec_dist (coordinates, centroid);
   }
@@ -352,8 +263,7 @@ t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid,
  */
 void
 t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
-                            const t8_element_t * element,
-                            const double *vertices, double *coordinates)
+                            const t8_element_t * element, double *coordinates)
 {
   double              corner_coords[3];
   int                 num_corners, icorner;
@@ -373,7 +283,7 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
   num_corners = ts->t8_element_num_corners (element);
   for (icorner = 0; icorner < num_corners; icorner++) {
     /* For each corner, add its coordinates to the centroids coordinates. */
-    t8_forest_element_coordinate (forest, ltreeid, element, vertices, icorner,
+    t8_forest_element_coordinate (forest, ltreeid, element, icorner,
                                   corner_coords);
     /* coordinates = coordinates + corner_coords */
     t8_vec_axpy (corner_coords, coordinates, 1);
@@ -385,16 +295,15 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
 /* Compute the length of the line from one corner to a second corner in an element */
 static double
 t8_forest_element_line_length (t8_forest_t forest, t8_locidx_t ltreeid,
-                               const t8_element_t * element,
-                               const double *vertices, int corner_a,
+                               const t8_element_t * element, int corner_a,
                                int corner_b)
 {
   double              coordinates_a[3], coordinates_b[3];
   double              length;
 
-  t8_forest_element_coordinate (forest, ltreeid, element, vertices, corner_a,
+  t8_forest_element_coordinate (forest, ltreeid, element, corner_a,
                                 coordinates_a);
-  t8_forest_element_coordinate (forest, ltreeid, element, vertices, corner_b,
+  t8_forest_element_coordinate (forest, ltreeid, element, corner_b,
                                 coordinates_b);
 
   /* Compute the euclidean distance */
@@ -451,8 +360,7 @@ t8_forest_element_tet_volume (double coordinates[4][3])
 /* Compute an element's volume */
 double
 t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
-                          const t8_element_t * element,
-                          const double *vertices)
+                          const t8_element_t * element)
 {
   t8_eclass_t         tree_class;
   t8_element_shape_t  element_shape;
@@ -472,7 +380,7 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
     return 0;
   case T8_ECLASS_LINE:
     /* for line, the volume equals the diameter */
-    return t8_forest_element_diam (forest, ltreeid, element, vertices);
+    return t8_forest_element_diam (forest, ltreeid, element);
   case T8_ECLASS_QUAD:
     {
       int                 face_a, face_b, corner_a, corner_b;
@@ -500,11 +408,11 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
       T8_ASSERT (corner_a != 0 && corner_b != 0);
       T8_ASSERT (corner_a != corner_b);
       /* Compute the coordinates of vertex 0, a and b */
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+      t8_forest_element_coordinate (forest, ltreeid, element,
                                     0, coordinates[0]);
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+      t8_forest_element_coordinate (forest, ltreeid, element,
                                     corner_a, coordinates[1]);
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+      t8_forest_element_coordinate (forest, ltreeid, element,
                                     corner_b, coordinates[2]);
       return 2 * t8_forest_element_triangle_area (coordinates);
     }
@@ -526,7 +434,7 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
        * triangle always spans a parallelogram.
        */
       for (i = 0; i < 3; i++) {
-        t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+        t8_forest_element_coordinate (forest, ltreeid, element,
                                       i, coordinates[i]);
       }
       return t8_forest_element_triangle_area (coordinates);
@@ -546,7 +454,7 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
 
       /* Compute the 4 corner coordinates */
       for (i = 0; i < 4; i++) {
-        t8_forest_element_coordinate (forest, ltreeid, element, vertices, i,
+        t8_forest_element_coordinate (forest, ltreeid, element, i,
                                       coordinates[i]);
       }
 
@@ -562,13 +470,13 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
       int                 i;
 
       /* Get the coordinates of the four corners */
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 0,
+      t8_forest_element_coordinate (forest, ltreeid, element, 0,
                                     coordinates[0]);
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 1,
+      t8_forest_element_coordinate (forest, ltreeid, element, 1,
                                     coordinates[1]);
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 2,
+      t8_forest_element_coordinate (forest, ltreeid, element, 2,
                                     coordinates[2]);
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 4,
+      t8_forest_element_coordinate (forest, ltreeid, element, 4,
                                     coordinates[3]);
 
       /* Compute the difference of each corner with corner 0 */
@@ -590,35 +498,35 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
       double              coordinates[4][3], volume;
 
       /* The first tetrahedron has prism vertices 0, 1, 2, and 4 */
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 0,
+      t8_forest_element_coordinate (forest, ltreeid, element, 0,
                                     coordinates[0]);
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 1,
+      t8_forest_element_coordinate (forest, ltreeid, element, 1,
                                     coordinates[1]);
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 2,
+      t8_forest_element_coordinate (forest, ltreeid, element, 2,
                                     coordinates[2]);
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 4,
+      t8_forest_element_coordinate (forest, ltreeid, element, 4,
                                     coordinates[3]);
       volume = t8_forest_element_tet_volume (coordinates);
 
       /* The second tetrahedron has prism vertices 0, 2, 3, and 4 */
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 0,
+      t8_forest_element_coordinate (forest, ltreeid, element, 0,
                                     coordinates[0]);
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 2,
+      t8_forest_element_coordinate (forest, ltreeid, element, 2,
                                     coordinates[1]);
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 3,
+      t8_forest_element_coordinate (forest, ltreeid, element, 3,
                                     coordinates[2]);
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 4,
+      t8_forest_element_coordinate (forest, ltreeid, element, 4,
                                     coordinates[3]);
       volume += t8_forest_element_tet_volume (coordinates);
 
       /* The third tetrahedron has prism vertices 2, 3, 4, and 5 */
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 2,
+      t8_forest_element_coordinate (forest, ltreeid, element, 2,
                                     coordinates[0]);
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 3,
+      t8_forest_element_coordinate (forest, ltreeid, element, 3,
                                     coordinates[1]);
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 4,
+      t8_forest_element_coordinate (forest, ltreeid, element, 4,
                                     coordinates[2]);
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices, 5,
+      t8_forest_element_coordinate (forest, ltreeid, element, 5,
                                     coordinates[3]);
       volume += t8_forest_element_tet_volume (coordinates);
 
@@ -633,8 +541,7 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
 /* Compute the area of an element's face */
 double
 t8_forest_element_face_area (t8_forest_t forest, t8_locidx_t ltreeid,
-                             const t8_element_t * element, int face,
-                             const double *vertices)
+                             const t8_element_t * element, int face)
 {
 
   t8_eclass_t         tree_class;
@@ -664,7 +571,7 @@ t8_forest_element_face_area (t8_forest_t forest, t8_locidx_t ltreeid,
 
       /* Compute the length of this line */
       return t8_forest_element_line_length (forest, ltreeid, element,
-                                            vertices, corner_a, corner_b);
+                                            corner_a, corner_b);
     }
     break;
   case T8_ECLASS_TRIANGLE:
@@ -675,7 +582,7 @@ t8_forest_element_face_area (t8_forest_t forest, t8_locidx_t ltreeid,
       /* Compute the coordinates of the triangle's vertices */
       for (i = 0; i < 3; i++) {
         face_corner = ts->t8_element_get_face_corner (element, face, i);
-        t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+        t8_forest_element_coordinate (forest, ltreeid, element,
                                       face_corner, coordinates[i]);
       }
 
@@ -700,7 +607,7 @@ t8_forest_element_face_area (t8_forest_t forest, t8_locidx_t ltreeid,
       /* Compute the coordinates of the first triangle's vertices */
       for (i = 0; i < 3; i++) {
         face_corner = ts->t8_element_get_face_corner (element, face, i);
-        t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+        t8_forest_element_coordinate (forest, ltreeid, element,
                                       face_corner, coordinates[i]);
       }
       /* Compute the first triangle's area */
@@ -711,7 +618,7 @@ t8_forest_element_face_area (t8_forest_t forest, t8_locidx_t ltreeid,
        * we recompute all corner coordinates for the second triangle. */
       for (i = 0; i < 3; i++) {
         face_corner = ts->t8_element_get_face_corner (element, face, i + 1);
-        t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+        t8_forest_element_coordinate (forest, ltreeid, element,
                                       face_corner, coordinates[i]);
       }
 
@@ -727,7 +634,7 @@ t8_forest_element_face_area (t8_forest_t forest, t8_locidx_t ltreeid,
 void
 t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
                                  const t8_element_t * element, int face,
-                                 const double *vertices, double centroid[3])
+                                 double centroid[3])
 {
   t8_eclass_t         tree_class;
   t8_element_shape_t  face_shape;
@@ -748,7 +655,7 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
       /* Get the index of the corner that is the face */
       corner = ts->t8_element_get_face_corner (element, face, 0);
       /* Compute the coordinates of this corner */
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+      t8_forest_element_coordinate (forest, ltreeid, element,
                                     corner, centroid);
       return;
     }
@@ -762,9 +669,9 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
       corner_a = ts->t8_element_get_face_corner (element, face, 0);
       corner_b = ts->t8_element_get_face_corner (element, face, 1);
       /* Compute the vertex coordinates of these corners */
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+      t8_forest_element_coordinate (forest, ltreeid, element,
                                     corner_a, vertex_a);
-      t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+      t8_forest_element_coordinate (forest, ltreeid, element,
                                     corner_b, centroid);
 
       /* Compute the average of those coordinates */
@@ -785,7 +692,7 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
       num_corners = face_shape == T8_ECLASS_TRIANGLE ? 3 : 4;
       for (i = 0; i < num_corners; i++) {
         corner = ts->t8_element_get_face_corner (element, face, i);
-        t8_forest_element_coordinate (forest, ltreeid, element, vertices,
+        t8_forest_element_coordinate (forest, ltreeid, element,
                                       corner, coordinates[i]);
       }
 
@@ -808,7 +715,7 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid,
 void
 t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
                                const t8_element_t * element, int face,
-                               const double *tree_vertices, double normal[3])
+                               double normal[3])
 {
   t8_eclass_t         tree_class;
   t8_element_shape_t  face_shape;
@@ -836,10 +743,8 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
     int                 sign;
 
     /* Get the coordinates of v_0 and v_1 */
-    t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
-                                  0, v_0);
-    t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
-                                  1, normal);
+    t8_forest_element_coordinate (forest, ltreeid, element, 0, v_0);
+    t8_forest_element_coordinate (forest, ltreeid, element, 1, normal);
 
     /* Compute normal = v_1 - v_0 */
     t8_vec_axpy (v_0, normal, -1);
@@ -879,13 +784,12 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
       corner_a = ts->t8_element_get_face_corner (element, face, 0);
       corner_b = ts->t8_element_get_face_corner (element, face, 1);
       /* Compute the coordinates of the endnotes */
-      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+      t8_forest_element_coordinate (forest, ltreeid, element,
                                     corner_a, vertex_a);
-      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+      t8_forest_element_coordinate (forest, ltreeid, element,
                                     corner_b, vertex_b);
       /* Compute the center */
-      t8_forest_element_centroid (forest, ltreeid, element, tree_vertices,
-                                  center);
+      t8_forest_element_centroid (forest, ltreeid, element, center);
 
       /* Compute the difference with V_a.
        * Compute the dot products */
@@ -942,8 +846,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
         corner = ts->t8_element_get_face_corner (element, face, i);
         /* Compute the coordinates of this corner */
         t8_forest_element_coordinate (forest, ltreeid, element,
-                                      tree_vertices, corner,
-                                      corner_vertices[i]);
+                                      corner, corner_vertices[i]);
       }
       /* Subtract vertex 0 from the other two */
       t8_vec_axpy (corner_vertices[0], corner_vertices[1], -1);
@@ -955,8 +858,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
       norm = t8_vec_norm (normal);
       T8_ASSERT (norm > 1e-14);
       /* Compute the coordinates of the center of the element */
-      t8_forest_element_centroid (forest, ltreeid, element, tree_vertices,
-                                  center);
+      t8_forest_element_centroid (forest, ltreeid, element, center);
       /* Compute center = center - vertex_0 */
       t8_vec_axpy (corner_vertices[0], center, -1);
       /* Compute the dot-product of normal and center */
@@ -977,7 +879,6 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
 int
 t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
                                 const t8_element_t * element,
-                                const double *tree_vertices,
                                 const double point[3], const double tolerance)
 {
   const t8_eclass_t   tree_class = t8_forest_get_tree_class (forest, ltreeid);
@@ -996,7 +897,7 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
       /* A point is 'inside' a vertex if they have the same coordinates */
       double              vertex_coords[3];
       /* Get the vertex coordinates */
-      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+      t8_forest_element_coordinate (forest, ltreeid, element,
                                     0, vertex_coords);
       /* Check whether the point and the vertex are within tolerance distance
        * to each other */
@@ -1018,11 +919,9 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
       int                 i;
 
       /* Compute the vertex coordinates of the line */
-      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
-                                    0, p_0);
+      t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
       /* v = p_1 */
-      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
-                                    1, v);
+      t8_forest_element_coordinate (forest, ltreeid, element, 1, v);
       /* v = p_1 - p_0 */
       t8_vec_axpy (p_0, v, -1);
       /* b = p - p_0 */
@@ -1082,14 +981,11 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
       T8_ASSERT (tolerance > 0);        /* negative values and zero are not allowed */
 
       /* Compute the vertex coordinates of the triangle */
-      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
-                                    0, p_0);
+      t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
       /* v = p_1 */
-      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
-                                    1, v);
+      t8_forest_element_coordinate (forest, ltreeid, element, 1, v);
       /* w = p_2 */
-      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
-                                    2, w);
+      t8_forest_element_coordinate (forest, ltreeid, element, 2, w);
       /* v = v - p_0 = p_1 - p_0 */
       t8_vec_axpy (p_0, v, -1);
       /* w = w - p_0 = p_2 - p_0 */
@@ -1156,10 +1052,10 @@ t8_forest_element_point_inside (t8_forest_t forest, t8_locidx_t ltreeid,
     for (iface = 0; iface < num_faces; ++iface) {
       /* Compute the outer normal n of the face */
       t8_forest_element_face_normal (forest, ltreeid, element, iface,
-                                     tree_vertices, face_normal);
+                                     face_normal);
       /* Compute a point x on the face */
       afacecorner = ts->t8_element_get_face_corner (element, iface, 0);
-      t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+      t8_forest_element_coordinate (forest, ltreeid, element,
                                     afacecorner, point_on_face);
       /* Set x = x - p */
       t8_vec_axpy (point, point_on_face, -1);
@@ -1217,13 +1113,13 @@ t8_forest_element_point_outside_quick_estimate (t8_forest_t forest,
    **/
 
   /* Compute the coordinates of the centroid */
-  t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+  t8_forest_element_coordinate (forest, ltreeid, element,
                                 0, centroid);
 
   num_corners = ts->t8_element_num_corners (element);
 
   for (icorner = 1; icorner < num_corners; ++icorner) {
-    t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
+    t8_forest_element_coordinate (forest, ltreeid, element,
                                   icorner, corner_coordinates);
     dist = t8_vec_dist (centroid, corner_coordinates);
     max_dist = SC_MAX (dist, max_dist);

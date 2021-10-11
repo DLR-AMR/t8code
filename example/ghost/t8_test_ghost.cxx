@@ -267,7 +267,7 @@ t8_test_ghost_hypercube (t8_eclass_t eclass, int level, sc_MPI_Comm comm,
   }
   else if (eclass == T8_ECLASS_COUNT) {
     // Build a 3D hybrid hypercube with tets, hexes and prisms
-    cmesh = t8_cmesh_new_hypercube_hybrid (3, comm, 0, 0);
+    cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
   }
 
   if (eclass != T8_ECLASS_VERTEX && eclass != T8_ECLASS_PYRAMID) {

@@ -60,19 +60,9 @@ t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree,
              t8_eclass_scheme_c * ts,
              t8_element_t * element, double elem_mid_point[3], double *h)
 {
-  double             *vertices;
-  t8_cmesh_t          cmesh;
-  t8_locidx_t         cmesh_ltreeid;
   double             *corner[3];
   int                 i, j;
 
-  /* Calculate the local treeid of the tree in the cmesh */
-  cmesh = t8_forest_get_cmesh (forest);
-  cmesh_ltreeid = t8_forest_ltreeid_to_cmesh_ltreeid (forest, which_tree);
-  /* Get the vertex coordinates of the tree */
-  vertices =
-    (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), 0,
-                                       cmesh_ltreeid);
   /* We compute the midpoint as mean of all vertices */
   /* We compute the size as the medium distance of a vertex to the
    * midpoint */
@@ -84,11 +74,9 @@ t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree,
     /* We approximate the midpoint of a square as the middle of
      * the diagonale from vertex 0 to vertex 3 */
     /* Get the coordinates of the elements  0-th vertex */
-    t8_forest_element_coordinate (forest, which_tree, element, vertices,
-                                  0, corner[0]);
+    t8_forest_element_coordinate (forest, which_tree, element, 0, corner[0]);
     /* Get the coordinates of the elements  3rd vertex */
-    t8_forest_element_coordinate (forest, which_tree, element, vertices,
-                                  3, corner[1]);
+    t8_forest_element_coordinate (forest, which_tree, element, 3, corner[1]);
 
     for (j = 0; j < 3; j++) {
       elem_mid_point[j] += corner[0][j] / 2.;
@@ -108,7 +96,7 @@ t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree,
     for (i = 0; i < 3; i++) {
       corner[i] = T8_ALLOC (double, 3);
       /* Get the coordinates of the elements  i-th vertex */
-      t8_forest_element_coordinate (forest, which_tree, element, vertices,
+      t8_forest_element_coordinate (forest, which_tree, element,
                                     i, corner[i]);
       /* At a third of the vertex coordinates to the midpoint coordinates */
       for (j = 0; j < 3; j++) {

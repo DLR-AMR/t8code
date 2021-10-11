@@ -108,13 +108,14 @@ main (int argc, char *argv[])
 
   opt = sc_options_new (argv[0]);
   sc_options_add_string (opt, 'f', "prefix", &prefix, "", "The prefix of the"
-                         "triangle files.");
+                         " triangle files.");
   sc_options_add_bool (opt, 'p', "Partition", &partition, 0, "If true"
-                       "the generated cmesh is partitioned.");
+                       " the generated cmesh is partitioned.");
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (parsed < 0 || strcmp (prefix, "") == 0) {
-    fprintf (stderr, "%s", help);
+    fprintf (stderr, "%s\n", help);
+    sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
   else {
