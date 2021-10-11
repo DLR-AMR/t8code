@@ -33,6 +33,7 @@
 #include <t8_forest.h>
 #include <t8_forest_vtk.h>
 #include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_vec.h>
 #include "libtrac.h"
 
 typedef struct
@@ -42,8 +43,9 @@ typedef struct
   ctl_t              *mptrac_control;
   met_t              *mptrac_meteo1;
   met_t              *mptrac_meteo2;
+  int                 dimension;        /*< 2 or 3. The dimension of the created forest. */
   t8_forest_t         forest;
-  int                 level;    /*< The maximum refinement level in \a forest. */
+  int                 level;    /*< The initial uniform refinement level in \a forest. */
   double              missing_value;    /*< The constant we use to denote an invalid data value. */
   int                 chunk_mode;       /*< True if data is stored as latlon_data_chunk_t. Otherwise data is stored in Z-order double array. */
   t8_latlon_data_chunk_t *data; /*< The actual data that we store here, if in chunk mode. */
@@ -64,7 +66,7 @@ typedef struct
 int
 t8_mptrac_adapt_callback_2d (t8_forest_t forest,
                              t8_forest_t forest_from,
-                             int which_tree,
+                             int itree,
                              int lelement_id,
                              t8_eclass_scheme_c * ts,
                              int num_elements, t8_element_t * elements[])
@@ -84,14 +86,64 @@ t8_mptrac_adapt_callback_2d (t8_forest_t forest,
     fabs (adapt_ctx->context->data->data[lelement_id * entries_per_element +
                                          adapt_ctx->z_layer * num_tracers]);
 
-  if (value < adapt_ctx->threshold_coarsen) {
-    /* If we are a family and lower than the coarsen threshhold, we coarsen (return -1).
-     * Otherwise, do nothing (return 0). */
-    return num_elements > 1 ? -1 : 0;
-  }
-  else if (value > adapt_ctx->threshold_refine) {
+  if (value > adapt_ctx->threshold_refine) {
     /* We are larger than the refine threshold. This element gets refined. */
     return 1;
+  }
+  if (num_elements > 1 && value < adapt_ctx->threshold_coarsen) {
+    /* If we are a family and lower than the coarsen threshhold, we coarsen (return -1).
+     * Otherwise, do nothing (return 0). */
+    return -1;
+  }
+  /* Keep the element. */
+  return 0;
+}
+
+/* Refine mesh when u,v,w absolute value is large.
+ * coarsen if small. */
+int
+t8_mptrac_adapt_callback_3d (t8_forest_t forest,
+                             t8_forest_t forest_from,
+                             int itree,
+                             int lelement_id,
+                             t8_eclass_scheme_c * ts,
+                             int num_elements, t8_element_t * elements[])
+{
+  const t8_mptrac_adapt_context_t *adapt_ctx =
+    (const t8_mptrac_adapt_context_t *) t8_forest_get_user_data (forest);
+  T8_ASSERT (adapt_ctx != NULL);
+  T8_ASSERT (adapt_ctx->context != NULL);
+
+  /* Get the absolute value of the current element at the requested z layer */
+  const int           entries_per_element =
+    adapt_ctx->context->data_per_element;
+  const int           element_level = ts->t8_element_level (elements[0]);
+  const t8_locidx_t   element_offset =
+    t8_forest_get_tree_element_offset (forest_from, itree);
+  const t8_locidx_t   local_element_id = element_offset + lelement_id;  /* The index of the element in the forest. */
+  /* Get a pointer to the u,v,w values */
+  const double       *values =
+    &adapt_ctx->context->data_array[local_element_id * entries_per_element];
+
+  const double        norm = t8_vec_norm (values);
+
+  /* How many levels we refine/coarsen beyond the initial uniform level. */
+  T8_ASSERT (adapt_ctx->context->level >= 0);
+  const int           number_of_additional_levels = 1;
+  const int           maxlevel =
+    adapt_ctx->context->level + number_of_additional_levels;
+  const int           minlevel =
+    adapt_ctx->context->level - number_of_additional_levels;
+
+  if (norm > adapt_ctx->threshold_refine && element_level < maxlevel) {
+    /* We are larger than the refine threshold. This element gets refined. */
+    return 1;
+  }
+  if (num_elements > 1 && norm < adapt_ctx->threshold_coarsen
+      && element_level > minlevel) {
+    /* If we are a family and lower than the coarsen threshhold, we coarsen (return -1).
+     * Otherwise, do nothing (return 0). */
+    return -1;
   }
   /* Keep the element. */
   return 0;
@@ -103,7 +155,7 @@ t8_mptrac_adapt_callback_2d (t8_forest_t forest,
  * Interpolate, but only copy value/use value of first family member.
  */
 static void
-t8_mptrac_onlycopy_interpolate_callback (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, t8_eclass_scheme_c * ts, int num_outgoing,     /* previously number of cells, only interesting when 4 */
+t8_mptrac_onlycopy_interpolate_callback (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t itree, t8_eclass_scheme_c * ts, int num_outgoing,  /* previously number of cells, only interesting when 4 */
                                          t8_locidx_t first_outgoing,    /* index  of first cell in forest_old */
                                          int num_incoming,      /* number of cells to be.., should be 1 */
                                          t8_locidx_t first_incoming)
@@ -387,13 +439,11 @@ t8_mptrac_build_latlon_data_for_uvw_3D (t8_mptrac_context_t * context,
   T8_ASSERT (!context->chunk_mode);
   T8_ASSERT (context->data == NULL);
 
-  if (context->data_array == NULL) {
-    /* First time that we touch data_array, we allocate a new
-     * array with count num_elements. */
-    /* TODO: When we want ghosts, we need to add num ghosts here as well. */
-    context->data_array =
-      (double *) T8_ALLOC (double, context->data_per_element * num_elements);
-  }
+  /* Assure that we have num_elements many entries in our data array */
+  /* TODO: When we want ghosts, we need to add num ghosts here as well. */
+  context->data_array =
+    (double *) T8_REALLOC (context->data_array, double,
+                           context->data_per_element * num_elements);
 
   t8_locidx_t         data_index = 0;
   for (t8_locidx_t itree = 0; itree < num_trees; itree++) {
@@ -401,8 +451,7 @@ t8_mptrac_build_latlon_data_for_uvw_3D (t8_mptrac_context_t * context,
       double              midpoint[3];
       const t8_element_t *element =
         t8_forest_get_element_in_tree (context->forest, itree, ielement);
-      t8_forest_element_centroid (context->forest, itree, element,
-                                  midpoint);
+      t8_forest_element_centroid (context->forest, itree, element, midpoint);
       double              lat, lon, pressure;
       t8_mptrac_coords_to_latlonpressure (context, midpoint, &lat, &lon,
                                           &pressure);
@@ -473,11 +522,15 @@ t8_mptrac_context_write_vtk (const t8_mptrac_context_t * context,
   }
 }
 
-/* Refine the forest stored in context, but keep it alive */
+/* Refine the forest stored in context, but keep it alive.
+ * If the dimension is 2 than the z_level input specifies the z_level
+ * to consider for refinement.
+ * If the dimension is 3 than z_level input is ignored, since all levels
+ * are present in the mesh. */
 t8_forest_t
-t8_mptrac_refine_forest_2d (const t8_mptrac_context_t * context, int z_level,
-                            const double threshold_coarsen,
-                            const double threshold_refine)
+t8_mptrac_refine_forest (const t8_mptrac_context_t * context, int z_level,
+                         const double threshold_coarsen,
+                         const double threshold_refine)
 {
   t8_mptrac_adapt_context_t adapt_context;
 
@@ -486,22 +539,35 @@ t8_mptrac_refine_forest_2d (const t8_mptrac_context_t * context, int z_level,
   adapt_context.threshold_refine = threshold_refine;
   adapt_context.z_layer = z_level;
   t8_forest_ref (context->forest);
-  t8_forest_t         forest_adapt =
-    t8_forest_new_adapt (context->forest, t8_mptrac_adapt_callback_2d, 0, 0,
-                         &adapt_context);
+  /* Adapt the forest. Use 2d or 3d callback depending on dimension. */
+  t8_forest_t         forest_adapt = NULL;
+  if (context->dimension == 2) {
+    forest_adapt =
+      t8_forest_new_adapt (context->forest, t8_mptrac_adapt_callback_2d, 0, 0,
+                           &adapt_context);
+  }
+  else {
+    forest_adapt =
+      t8_forest_new_adapt (context->forest, t8_mptrac_adapt_callback_3d, 0, 0,
+                           &adapt_context);
+  }
   t8_forest_t         forest_partition;
   t8_forest_init (&forest_partition);
   t8_forest_set_partition (forest_partition, forest_adapt, 0);
+  t8_forest_set_balance (forest_partition, forest_adapt, 0);
   t8_forest_commit (forest_partition);
   return forest_partition;
 }
 
 t8_mptrac_context_t *
 t8_mptrac_context_new (const int chunk_mode, const char *filename,
-                       const char *mptrac_input)
+                       const char *mptrac_input, int dimension,
+                       int uniform_level)
 {
   t8_mptrac_context_t *context =
     (t8_mptrac_context_t *) T8_ALLOC (t8_mptrac_context_t, 1);
+
+  T8_ASSERT (dimension == 2 || dimension == 3);
 
   context->mptrac_meteo1 = T8_ALLOC (met_t, 1);
   context->mptrac_meteo2 = T8_ALLOC (met_t, 1);
@@ -512,11 +578,13 @@ t8_mptrac_context_new (const int chunk_mode, const char *filename,
   context->filename = filename;
   /* Set chunk_mode to 1 or 0 */
   context->chunk_mode = chunk_mode ? 1 : 0;
+  /* Set dimension */
+  context->dimension = dimension;
   /* Set default values */
   context->data = NULL;
   context->data_array = NULL;
   context->forest = NULL;
-  context->level = -1;
+  context->level = uniform_level;
   context->missing_value = DBL_MAX;
 
   return context;
@@ -558,7 +626,9 @@ t8_mptrac_compute_example (const char *filename, const char *mptrac_input,
   T8_ASSERT (dimension == 2 || dimension == 3);
 
   /* build context */
-  context = t8_mptrac_context_new (chunk_mode, filename, mptrac_input);
+  context =
+    t8_mptrac_context_new (chunk_mode, filename, mptrac_input, dimension,
+                           level_3d);
   /* Compute start time */
   time2jsec (2011, 06, 05, start_six_hours, 00, 00, 00, &physical_time);
   /* Read NC files to context */
@@ -580,6 +650,7 @@ t8_mptrac_compute_example (const char *filename, const char *mptrac_input,
     time2jsec (2011, 06, 05, start_six_hours + hours, 00, 00,
                00, &physical_time);
     if (time_since_last_six_hours > 6) {
+      /* TODO: Can we call read_nc in every time step, but it wont do anything if no file update? */
       time_since_last_six_hours -= 6;
       six_hours_passed++;
       t8_mptrac_read_nc (context, 0, physical_time);
@@ -596,14 +667,22 @@ t8_mptrac_compute_example (const char *filename, const char *mptrac_input,
     snprintf (vtk_filename, BUFSIZ, "MPTRAC_test_%04i", itime);
     t8_mptrac_context_write_vtk (context, vtk_filename);
     t8_global_productionf ("Wrote file %s\n", vtk_filename);
+    t8_forest_t         forest_adapt =
+      t8_mptrac_refine_forest (context, 50, 15, 15);
+    snprintf (vtk_filename, BUFSIZ, "MPTRAC_test_adapt_%04i", itime);
+    t8_forest_write_vtk_via_API (forest_adapt, vtk_filename, 1, 1, 1, 1, 0,
+                                 NULL);
+    t8_global_productionf ("Wrote file %s\n", vtk_filename);
     if (dimension == 2) {
-      t8_forest_t         forest_adapt =
-        t8_mptrac_refine_forest_2d (context, 20, 5, 15);
-      snprintf (vtk_filename, BUFSIZ, "MPTRAC_test_adapt_%04i", itime);
-      t8_forest_write_vtk_via_API (forest_adapt, vtk_filename, 1, 1, 1, 1, 0,
-                                   NULL);
-      t8_global_productionf ("Wrote file %s\n", vtk_filename);
+      /* In 2D mode, we need to go back to the uniform forest, because
+       * we require the uniform grid for the interpolation. */
       t8_forest_unref (&forest_adapt);
+    }
+    else {
+      /* In 3D mode, we can continue with the adapted forest, since we interpolate
+       * according to physical coordinates (and not the logical grid). */
+      t8_forest_unref (&context->forest);
+      context->forest = forest_adapt;
     }
     itime++;
     time_since_last_six_hours += deltat;
