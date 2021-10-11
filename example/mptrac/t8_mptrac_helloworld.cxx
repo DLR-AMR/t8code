@@ -26,7 +26,7 @@
  * This is the t8code equivalent of HelloWorld. */
 
 #include <t8.h>
-#include "libtrac.h"
+#include "thirdparty/mptrac/libtrac.h"
 
 int
 main (int argc, char **argv)

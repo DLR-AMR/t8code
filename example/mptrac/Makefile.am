@@ -2,6 +2,8 @@
 # Non-recursive Makefile.am in example/mptrac
 # Included from toplevel directory
 
+include example/mptrac/thirdparty/mptrac/Makefile.am
+
 bin_PROGRAMS += \
 	example/mptrac/t8_mptrac_helloworld \
 	example/mptrac/t8_mptrac_read_nc

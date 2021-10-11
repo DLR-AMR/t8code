@@ -138,12 +138,12 @@
 
 /*! Maximum number of longitudes for gridded data. */
 #ifndef GX
-#define GX 720
+#define GX 450
 #endif
 
 /*! Maximum number of latitudes for gridded data. */
 #ifndef GY
-#define GY 360
+#define GY 250
 #endif
 
 /*! Maximum number of altitudes for gridded data. */
