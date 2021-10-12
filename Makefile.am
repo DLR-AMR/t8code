@@ -24,7 +24,6 @@ check_PROGRAMS =
 include_HEADERS =
 lib_LTLIBRARIES =
 nodist_include_HEADERS =
-nobase_dist_include_HEADERS =
 noinst_HEADERS =
 noinst_PROGRAMS =
 sysconf_DATA =
