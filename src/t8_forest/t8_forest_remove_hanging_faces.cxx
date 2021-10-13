@@ -114,10 +114,6 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
     }
   }
 
-  /* Print some useful output in debug mode */
-  t8_debugf ("element id: %i    subelement type: %i\n", lelement_id,
-             subelement_type);
-
   /* returning the right subelement types */
   if (subelement_type == 0) {   /* in this case, there are no hanging nodes and we do not need to do anything */
     return 0;
@@ -130,14 +126,14 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
 void
 t8_forest_remove_hanging_faces (t8_forest_t forest)
 {
-  t8_global_productionf ("Into t8_forest_subelements.\n");
+  t8_global_productionf ("Into t8_forest_remove_hanging_faces.\n");
 
   forest->set_adapt_fn = t8_forest_remove_hanging_faces_adapt;
   forest->set_adapt_recursive = 0;
   t8_forest_copy_trees (forest, forest->set_from, 0);
   t8_forest_adapt (forest);
 
-  t8_global_productionf ("Done t8_forest_subelements.\n");
+  t8_global_productionf ("Done t8_forest_hanging_faces.\n");
 }
 
 #if 0

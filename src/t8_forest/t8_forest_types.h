@@ -55,7 +55,7 @@ typedef int8_t      t8_forest_from_t;
 #define T8_FOREST_FROM_PARTITION 0x2
 #define T8_FOREST_FROM_BALANCE 0x4
 #define T8_FOREST_FROM_SUBELEMENTS 0x8
-#define T8_FOREST_FROM_NONE 0x10 /* A value that is not reached by adding up the other values. No from method used */
+#define T8_FOREST_FROM_NONE 0x10        /* A value that is not reached by adding up the other values. No from method used */
 #define T8_FOREST_FROM_LAST T8_FOREST_FROM_NONE
 
 #define T8_FOREST_BALANCE_REPART 1 /**< Value of forest->set_balance if balancing with repartitioning */
@@ -94,6 +94,7 @@ typedef struct t8_forest
                                              See \ref t8_forest_set_balance.
                                              If 0, no balance. If 1 balance with repartitioning, if 2 balance without
                                              repartitioning, \see t8_forest_balance */
+  int                 set_subelements;
   int                 do_ghost;         /**< If True, a ghost layer will be created when the forest is committed. */
   t8_ghost_type_t     ghost_type;       /**< If a ghost layer will be created, the type of neighbors that count as ghost. */
   int                 ghost_algorithm;  /**< Controls the algorithm used for ghost. 1 = balanced only. 2 = also unbalanced
@@ -126,6 +127,8 @@ typedef struct t8_forest
 
   t8_locidx_t         local_num_elements;  /**< Number of elements on this processor. */
   t8_gloidx_t         global_num_elements; /**< Number of elements on all processors. */
+  t8_locidx_t         local_num_subelements;  /**< Number of subelements on this processor. */
+  t8_gloidx_t         global_num_subelements; /**< Number of subelements on all processors. */
   t8_profile_t       *profile; /**< If not NULL, runtimes and statistics about forest_commit are stored here. */
 
 }

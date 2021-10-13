@@ -202,7 +202,7 @@ t8_forest_adapt (t8_forest_t forest)
   int                 ci;
   unsigned int        subelement_type;
   unsigned int        num_subelements;
-  int                 count_subelements = 0;
+  t8_locidx_t         subel_inserted = 0;
 #ifdef T8_ENABLE_DEBUG
   int                 is_family;
 #endif
@@ -223,8 +223,8 @@ t8_forest_adapt (t8_forest_t forest)
   }
 
   forest_from = forest->set_from;
-  t8_global_productionf ("Into t8_forest_adapt from %lld total elements\n",
-                         (long long) forest_from->global_num_elements);
+  t8_global_productionf ("Into t8_forest_adapt from %li total elements\n",
+                         forest_from->global_num_elements);
 
   /* TODO: Allocate memory for the trees of forest.
    * Will we do this here or in an extra function? */
@@ -234,6 +234,7 @@ t8_forest_adapt (t8_forest_t forest)
     refine_list = sc_list_new (NULL);
   }
   forest->local_num_elements = 0;
+  forest->local_num_subelements = 0;
   el_offset = 0;
   num_trees = t8_forest_get_num_local_trees (forest);
 
@@ -269,8 +270,7 @@ t8_forest_adapt (t8_forest_t forest)
     elements = T8_ALLOC (t8_element_t *, num_children);
     /* Buffer for a family of old elements */
     elements_from = T8_ALLOC (t8_element_t *, curr_num_siblings);
-    /* We now iterate over all elements in this tree and check them for refinement/coarsening. */
-
+    /* We now iterate over all elements in this tree and check them for refinement/coarsening/subelements. */
     while (el_considered < num_el_from) {
       int                 num_elements_to_adapt_fn;
 #ifdef T8_ENABLE_DEBUG
@@ -278,27 +278,28 @@ t8_forest_adapt (t8_forest_t forest)
       is_family = 1;
 #endif
 
-      /* Load the current element and at most num_children-1 many others into
+      /* Load the current element and at most num_siblings-1 many others into
        * the elements_from buffer. Stop when we are certain that they cannot from
        * a family.
        * At the end is_family will be true, if these elements form a family.
        */
+      t8_element_t       *current_element =
+        t8_element_array_index_locidx (telements_from, el_considered);
 
-      num_siblings =
-        tscheme->t8_element_num_siblings (t8_element_array_index_locidx
-                                          (telements_from, el_considered));
+      num_siblings = tscheme->t8_element_num_siblings (current_element);
 
       if (num_siblings > curr_num_siblings) {
         elements_from =
           T8_REALLOC (elements_from, t8_element_t *, num_siblings);
         curr_num_siblings = num_siblings;
       }
-      /*change: num_children into num_siblings */
+      /* change: num_children into num_siblings */
       for (zz = 0; zz < (unsigned int) num_siblings &&
            el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
         elements_from[zz] = t8_element_array_index_locidx (telements_from,
                                                            el_considered +
                                                            zz);
+
         /* This is a quick check whether we build up a family here and could
          * abort early if not.
          * If the child id of the current element is not zz, then it cannot
@@ -328,10 +329,10 @@ t8_forest_adapt (t8_forest_t forest)
       /* Pass the element, or the family to the adapt callback.
        * The output will be 
        *
-       *      < 0 if we passed a family and it should get coarsened 
-       *      = 0 if the element should remain as is 
-       *      = 1 if the element should be refined (using the chosen recursive refinement scheme)
-       *      > 1 if we use subelements
+       *      = -1 if we passed a family and it should get coarsened 
+       *      =  0 if the element should remain as is 
+       *      =  1 if the element should be refined (using the chosen recursive refinement scheme)
+       *      >  1 if we use subelements
        * 
        * The values -1,0 and 1 will appear, if we use the standard refinement scheme of the given eclass.
        * 
@@ -350,6 +351,26 @@ t8_forest_adapt (t8_forest_t forest)
                                      el_considered, tscheme,
                                      num_elements_to_adapt_fn, elements_from);
 
+      /* We need to add a special condition for subelements that is independent of the refinement criteria:
+       * After the adapt procedure, no subelements should be left in order to ensure that following modifications 
+       * such as balance or remove_hanigng_faces work properly. 
+       * Therefore, all subelements that "survive" the adaptation will be coarsened back to their parent quadrant. 
+       * Note, that this is always valid for subelements in terms of the minimum level,
+       * since subelements have the same level as their parent quadrant. */
+      if (tscheme->t8_element_test_if_subelement (elements_from[0]) == 1
+          && refine == 0) {
+        refine = -1;
+      }
+
+#ifdef T8_ENABLE_DEBUG
+      /* TODO: warning because of size_t instead of int */
+
+      /* output for debugging */
+      t8_debugf
+        ("el_considered: %i/%i  refine: %i  is_family: %i  num_siblings: %zd\n",
+         el_considered, num_el_from, refine, is_family, num_siblings);
+#endif
+
       T8_ASSERT (is_family || refine >= 0);
       if (refine > 0
           && tscheme->t8_element_level (elements_from[0]) >=
@@ -358,7 +379,7 @@ t8_forest_adapt (t8_forest_t forest)
         refine = 0;
       }
       if (refine == 1) {
-        /* The first element is to be refined */
+        /* The first element is to be refined using the standard quad scheme */
         num_children = tscheme->t8_element_num_children (elements_from[0]);
         if (num_children > curr_num_children) {
           elements = T8_REALLOC (elements, t8_element_t *, num_children);
@@ -395,13 +416,25 @@ t8_forest_adapt (t8_forest_t forest)
                                         elements);
           el_inserted += num_children;
         }
-        el_considered++;
+        /* In case of a subelement, the parent quadrant is refined. 
+         * Therefore, we can skip all subelement siblings as they are not needed anymore. */
+        if (tscheme->t8_element_test_if_subelement (current_element) == 1) {
+          el_considered += num_siblings;
+        }
+        /* In case of a non-subelement element, we directly refine the quadrant and move on to the next element */
+        else {
+          el_considered++;
+        }
       }
       else if (refine > 1) {    /* use subelements in this case */
         /* The subelement-callback function returns refine = subelement_type + 1 to avoid subelement_type = 1.
          * We can now undo this to use the subelement_type-values that match the binary encoding of the neighbour structure
          * (0001 should correspond to 1 and not to 2). */
         subelement_type = refine - 1;
+
+        /* Subelements are not able to be refined by subelements again */
+        T8_ASSERT (tscheme->t8_element_test_if_subelement (elements_from[0])
+                   == 0);
 
         /* determing the number of subelements of the given type for memory allocation */
         num_subelements =
@@ -422,9 +455,9 @@ t8_forest_adapt (t8_forest_t forest)
         el_inserted += num_subelements;
         el_considered++;
 
-        /* each time we entry this case, a parent element is split into subelements.
+        /* Each time we entry this case, a parent element is refined into subelements.
          * We will count the global number of constructed subelements and give this number as additional output. */
-        count_subelements += num_subelements;
+        subel_inserted += num_subelements;
       }
       else if (refine < 0) {
 
@@ -436,7 +469,9 @@ t8_forest_adapt (t8_forest_t forest)
         T8_ASSERT (tscheme->t8_element_level (elements_from[0]) > 0);
         tscheme->t8_element_parent (elements_from[0], elements[0]);
         el_inserted++;
-        num_siblings = tscheme->t8_element_num_children (elements[0]);
+
+        num_siblings = tscheme->t8_element_num_siblings (current_element);
+
         if (forest->set_adapt_recursive) {
           /* Adaptation is recursive.
            * We check whether the just generated parent is the last in its
@@ -451,6 +486,7 @@ t8_forest_adapt (t8_forest_t forest)
                                                &el_inserted, elements);
           }
         }
+        /* We coarsen a family of num_siblings many elements, skip them and move to the next element that is not part of this family */
         el_considered += num_siblings;
       }
       else {
@@ -460,8 +496,11 @@ t8_forest_adapt (t8_forest_t forest)
          * We copy the element to the new element array. */
         T8_ASSERT (refine == 0);
         elements[0] = t8_element_array_push (telements);
+        /* Note that it should not be allowed to copy a subelement at this point. 
+         * Subelements should always be coarsened to their parent quadrant or their parent quadrant 
+         * should be refined such that no subelements are left after calling the adapt function. */
+        T8_ASSERT (tscheme->t8_element_test_if_subelement (elements[0]) == 0);
         tscheme->t8_element_copy (elements_from[0], elements[0]);
-        num_siblings = tscheme->t8_element_num_siblings (elements[0]);
         el_inserted++;
         const int           child_id =
           tscheme->t8_element_child_id (elements[0]);
@@ -474,6 +513,7 @@ t8_forest_adapt (t8_forest_t forest)
                                              tscheme, telements, el_coarsen,
                                              &el_inserted, elements);
         }
+        /* In this case the current element stays unchanged (gets copied) and we move on to the next element */
         el_considered++;
       }
     }                           /* end of while loop over elements */
@@ -485,6 +525,8 @@ t8_forest_adapt (t8_forest_t forest)
     el_offset += el_inserted;
     /* Add to the new number of local elements. */
     forest->local_num_elements += el_inserted;
+    /* Add to the new number of local subelements */
+    forest->local_num_subelements += subel_inserted;
     /* Possibly shrink the telements array to the correct size */
     t8_element_array_resize (telements, el_inserted);
 
@@ -499,17 +541,18 @@ t8_forest_adapt (t8_forest_t forest)
   }
 
   /* We now adapted all local trees */
-  /* Compute the new global number of elements */
+  /* Compute the new global number of elements and subelements */
   t8_forest_comm_global_num_elements (forest);
+  t8_forest_comm_global_num_subelements (forest);
   /* If any subelement is constructed, give output this number as an additional information. */
-  if (count_subelements > 0) {
+  if (forest->global_num_subelements > 0) {
     t8_global_productionf
-      ("Done t8_forest_adapt with %lld total elements, %i of which are subelements.\n",
-       (long long) forest->global_num_elements, count_subelements);
+      ("Done t8_forest_adapt with %li total elements, %li of which are subelements.\n",
+       forest->global_num_elements, forest->global_num_subelements);
   }
   else {
-    t8_global_productionf ("Done t8_forest_adapt with %lld total elements.\n",
-                           (long long) forest->global_num_elements);
+    t8_global_productionf ("Done t8_forest_adapt with %li total elements.\n",
+                           forest->global_num_elements);
   }
 
   /* if profiling is enabled, measure runtime */

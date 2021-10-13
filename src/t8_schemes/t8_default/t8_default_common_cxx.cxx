@@ -203,7 +203,22 @@ t8_default_scheme_common_c::t8_element_get_number_of_subelements (int
                                                                   t8_element *
                                                                   elem)
 {
-  SC_ABORT ("This function is yet implemented for the given scheme.\n");
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
+}
+
+int
+t8_default_scheme_common_c::t8_element_test_if_subelement (const
+                                                           t8_element * elem)
+{
+  /* no subelements are implemented and therefore we return 0 meaning "is no subelement" */
+  return 0;
+}
+
+int
+t8_default_scheme_common_c::t8_element_get_subelement_type (const
+                                                            t8_element * elem)
+{
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
 
 T8_EXTERN_C_END ();

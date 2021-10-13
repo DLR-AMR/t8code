@@ -56,6 +56,7 @@ t8_forest_init (t8_forest_t * pforest)
   forest->set_adapt_recursive = -1;
   forest->set_balance = -1;
   forest->maxlevel_existing = -1;
+  forest->set_subelements = 0;
 }
 
 int
@@ -251,7 +252,8 @@ t8_forest_set_remove_hanging_faces (t8_forest_t forest,
    * forest->from_method is unequal to one. If so, set balanced is not set yet. */
   if ((forest->from_method & (1 << 2)) >> 2 != 1) {
     t8_productionf
-      ("Forest was not balanced yet. The set_remove_hanging_faces function will set balance with repartition now.\n");
+      ("This is forest_set_remove_hanging_faces.\n"
+       "The forest might not be balanced and set_balance is not set yet. The set_remove_hanging_faces function will set balance with repartition now.\n");
     /* balance with repartition */
     t8_forest_set_balance (forest, NULL, 0);
   }
@@ -269,6 +271,8 @@ t8_forest_set_remove_hanging_faces (t8_forest_t forest,
   else {
     forest->from_method |= T8_FOREST_FROM_SUBELEMENTS;
   }
+
+  forest->set_subelements = 1;
 }
 
 void
@@ -382,6 +386,20 @@ t8_forest_comm_global_num_elements (t8_forest_t forest)
                              T8_MPI_GLOIDX, sc_MPI_SUM, forest->mpicomm);
   SC_CHECK_MPI (mpiret);
   forest->global_num_elements = global_num_el;
+}
+
+void
+t8_forest_comm_global_num_subelements (t8_forest_t forest)
+{
+  int                 mpiret;
+  t8_gloidx_t         local_num_subel;
+  t8_gloidx_t         global_num_subel;
+
+  local_num_subel = (t8_gloidx_t) forest->local_num_subelements;
+  mpiret = sc_MPI_Allreduce (&local_num_subel, &global_num_subel, 1,
+                             T8_MPI_GLOIDX, sc_MPI_SUM, forest->mpicomm);
+  SC_CHECK_MPI (mpiret);
+  forest->global_num_subelements = global_num_subel;
 }
 
 static int

@@ -81,7 +81,9 @@ typedef t8_quad_with_subelements t8_pquad_t;
 #define T8_SUB_QUAD_MAX_SUBELEMENT_ID 7
 #define T8_SUB_QUAD_MIN_SUBELEMENT_ID 0
 #define T8_SUB_QUAD_IS_SUBELEMENT 1
-#define T8_SUB_QUAD_IS_NO_SUBELEMENT -1
+#define T8_SUB_QUAD_IS_NO_SUBELEMENT 0
+#define T8_SUB_QUAD_NO_SUBELEMENT_ID -1
+#define T8_SUB_QUAD_NO_SUBELEMENT_TYPE -1
 
 /** Return the toplevel dimension. */
 #define T8_QUAD_GET_TDIM(quad) ((int) (quad)->pad8)
@@ -178,6 +180,10 @@ public:
 
   /** Return the number of children of an element when it is refined. */
   virtual int         t8_element_num_children (const t8_element_t * elem);
+
+  /** Return the number of siblings of an element */
+  virtual int         t8_element_num_siblings (const t8_element_t *
+                                               elem) const;
 
   /** Return the number of children of an element's face when the element is refined. */
   virtual int         t8_element_num_face_children (const t8_element_t *
@@ -353,6 +359,13 @@ public:
                                                             t8_element *
                                                             elem);
 
+/** TODO: comment */
+  virtual int         t8_element_test_if_subelement (const t8_element * elem);
+
+/** TODO: comment */
+  virtual int         t8_element_get_subelement_type (const
+                                                      t8_element * elem);
+
 /** Get the shape of a given element. Subelements are triangles */
   virtual t8_element_shape_t t8_element_shape (const t8_element_t * elem);
 
@@ -395,12 +408,6 @@ protected:
                                                               t, int vertex,
                                                               int coords[]);
 
-  /** This function resets the subelement values of an element to the default value -1.
-   *  \param [in,out] elem A valid element, whose subelement values have been resetted. 
-   */
-  void                t8_element_reset_subelement_values (t8_element_t *
-                                                          elem);
-
   /** This function copies the subelement values from source to dest.
    *  \param [in] source A valid element 
    *  \param [in,out] dest A valid element, whose subelement values are equal to those of source
@@ -409,6 +416,12 @@ protected:
                                                          t8_element_t *
                                                          source,
                                                          t8_element_t * dest);
+
+  /** This function resets the subelement values of an element to the default value -1.
+   *  \param [in,out] elem A valid element, whose subelement values have been resetted. 
+   */
+  void                t8_element_reset_subelement_values (t8_element_t *
+                                                          elem);
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether an elements subelement values are valid

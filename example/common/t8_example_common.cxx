@@ -45,7 +45,7 @@ t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from,
   int                 level;
   int                 maxlevel, child_id;
   T8_ASSERT (num_elements == 1 || num_elements ==
-             ts->t8_element_num_children (elements[0]));
+             ts->t8_element_num_siblings (elements[0]));
   level = ts->t8_element_level (elements[0]);
 
   /* we set a maximum refinement level as forest user data */
@@ -157,7 +157,7 @@ t8_common_adapt_level_set (t8_forest_t forest,
   double             *tree_vertices;
 
   T8_ASSERT (num_elements == 1 || num_elements ==
-             ts->t8_element_num_children (elements[0]));
+             ts->t8_element_num_siblings (elements[0]));
 
   data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest);
   level = ts->t8_element_level (elements[0]);
@@ -169,14 +169,18 @@ t8_common_adapt_level_set (t8_forest_t forest,
 
   /* Get the minimum and maximum x-coordinate from the user data pointer of forest */
   data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest);
-  
+
   /* If maxlevel is exceeded, coarsen or do not refine */
   if (level > data->max_level && num_elements > 1) {
     return -1;
   }
+  /* The following case is not reasonable for multiple timesteps.
+   * Elements of the highest level will not be coarsended again. */
+#if 0
   if (level >= data->max_level) {
     return 0;
   }
+#endif
   /* Refine at least until min level */
   if (level < data->min_level) {
     return 1;
@@ -186,7 +190,7 @@ t8_common_adapt_level_set (t8_forest_t forest,
     t8_common_within_levelset (forest_from, which_tree, elements[0],
                                ts, tree_vertices, data->L,
                                data->band_width / 2, data->t, data->udata);
-  
+
   if (within_band && level < data->max_level) {
     /* The element can be refined and lies inside the refinement region */
     return 1;
@@ -196,7 +200,9 @@ t8_common_adapt_level_set (t8_forest_t forest,
      * as argument, we coarsen to level base level */
     return -1;
   }
-  return 0;
+  else {
+    return 0;
+  }
 }
 
 #if 0
