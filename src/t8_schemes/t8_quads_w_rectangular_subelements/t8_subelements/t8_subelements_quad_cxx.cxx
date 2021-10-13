@@ -444,7 +444,7 @@ t8_subelement_scheme_quad_c::t8_element_is_family (t8_element_t ** fam)
         check_count++;
       }
     }
-    /* ich all checks have been successful, then a family of subelements is given */
+    /* if all checks have been successful, then a family of subelements is given */
     if (check_count == num_siblings) {
       return 1;
     }
