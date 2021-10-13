@@ -1606,8 +1606,8 @@ t8_subelement_scheme_quad_c::t8_element_init (int length, t8_element_t * elem,
       T8_QUAD_SET_TDIM (quad, 2);
       T8_ASSERT (p4est_quadrant_is_extended (quad));
     }
-  }
 #endif
+  }
 }
 
 #ifdef T8_ENABLE_DEBUG
