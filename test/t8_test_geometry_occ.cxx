@@ -91,7 +91,7 @@ t8_create_occ_surface (t8_geometry_occ *geometry)
   point_array(3, 3) = gp_Pnt(1, 0, 1);
 
   surface = GeomAPI_PointsToBSplineSurface(point_array).Surface();
-  geometry->t8_geom_push_occ_surface(surface, surface_index);
+  surface_index = geometry->t8_geom_push_occ_surface(surface);
   return surface_index;
 
   #else /* !T8_WITH_OCC */
@@ -119,7 +119,7 @@ t8_create_occ_curve (t8_geometry_occ *geometry)
   point_array(5) = gp_Pnt(1.00, 0.00, 0.00);
 
   curve = GeomAPI_PointsToBSpline(point_array).Curve();
-  geometry->t8_geom_push_occ_curve(curve, curve_index);
+  curve_index = geometry->t8_geom_push_occ_curve(curve);
   return curve_index;
 
   #else /* !T8_WITH_OCC */
@@ -178,7 +178,7 @@ t8_create_occ_hypercube (double *rot_vec,
                             parameters, 8 * sizeof(double), 0);
   }
   
-  int edges[24] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+  int edges[24] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
                    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
   if (edge >= 0)
   {

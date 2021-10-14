@@ -38,12 +38,8 @@
 
 #include <Geom_Curve.hxx>
 #include <Geom_Surface.hxx>
-#include <Standard_Handle.hxx>
 
-
-
-extern Handle_Geom_Curve t8_global_occ_curve[];
-extern Handle_Geom_Surface t8_global_occ_surface[];
+#include <vector>
 
 /**
  * Definition of an occ geometry function.
@@ -68,7 +64,7 @@ struct t8_geometry_occ:public t8_geometry_w_vertices
 public:
 
   /**
-   * Constructor with analytical and jacobian functions.
+   * Constructor of the occ geometry class.
    * \param [in] dimension  The dimension of this geometry.
    * \param [in] name       The name to give this geometry.
    * \param [in] load_tree_data The function that is used to load a tree's data.
@@ -80,7 +76,7 @@ public:
    */
                       virtual ~ t8_geometry_occ ()
   {
-    /* Nothing to do */
+    /* Nothing to do. */
   }
 
   /**
@@ -128,24 +124,22 @@ public:
    * \param [in]  curve      The occ curve.
    * \param [out] index      The index of the curve in the occ_curves array.
    */
-  virtual void        t8_geom_push_occ_curve (Handle_Geom_Curve curve, 
-                                              int index) const;
+  int        t8_geom_push_occ_curve (Handle_Geom_Curve curve);
 
   /** Push a new occ surface into the occ_surfaces array. The position gets saved in index.
    * \param [in]  surface    The occ surface.
    * \param [out] index      The index of the surface in the occ_surfaces array.
    */
-  virtual void        t8_geom_push_occ_surface (Handle_Geom_Surface surface, 
-                                              int index) const;
+  int        t8_geom_push_occ_surface (Handle_Geom_Surface surface);
 
 private:
 
-  const void         *tree_data;        /** Tree data pointer that can be set in \a load_tree_data and 
-                                           is passed onto \a analytical_function and \a jacobian. */
+  const void                       *tree_data;        /** Tree data pointer that can be set in \a load_tree_data and 
+                                                        is passed onto \a analytical_function and \a jacobian. */
 
-  sc_array_t         occ_curves;       /** Occ curve geometry pointer. Curves can be pushed with t8_push_occ_curve(). */
+  std::vector<Handle_Geom_Curve>    occ_curves;       /** Occ curve geometry pointer. Curves can be pushed with t8_push_occ_curve(). */
 
-  sc_array_t         occ_surfaces;     /** Occ surface geometry pointer. Curves can be pushed with t8_push_occ_surface(). */
+  std::vector<Handle_Geom_Surface>  occ_surfaces;     /** Occ surface geometry pointer. Curves can be pushed with t8_push_occ_surface(). */
 };
 
 #endif /* T8_WITH_OCC */

@@ -77,8 +77,8 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees,
     const TopoDS_Edge edge_inner = make_inner_edge.Edge();
     const TopoDS_Face face_inner = TopoDS::Face(BRepPrimAPI_MakePrism(edge_inner, height));
     const Handle_Geom_Surface cylinder_inner = BRep_Tool::Surface(face_inner);
-    geometry_occ->t8_geom_push_occ_surface(cylinder_outer, cylinder_outer_index);
-    geometry_occ->t8_geom_push_occ_surface(cylinder_inner, cylinder_inner_index);
+    cylinder_outer_index = geometry_occ->t8_geom_push_occ_surface(cylinder_outer);
+    cylinder_inner_index = geometry_occ->t8_geom_push_occ_surface(cylinder_inner);
     #else /* !T8_WITH_OCC */
     SC_ABORTF("OCC not linked");
     #endif /* T8_WITH_OCC */ 

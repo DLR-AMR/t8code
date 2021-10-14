@@ -584,8 +584,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
                      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
     
     /* Add the curves to the geometry occ arrays */
-    geometry_occ->t8_geom_push_occ_curve(occ_curve1, edges[0]);
-    geometry_occ->t8_geom_push_occ_curve(occ_curve1, edges[3]);
+    edges[0] = geometry_occ->t8_geom_push_occ_curve(occ_curve0);
+    edges[3] = geometry_occ->t8_geom_push_occ_curve(occ_curve1);
       
     /* Create tree 0 */
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
@@ -691,7 +691,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
                      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
     
     /* Add the surface to the geometry occ array */
-    geometry_occ->t8_geom_push_occ_surface(occ_surface, faces[5]);
+    faces[5] = geometry_occ->t8_geom_push_occ_surface(occ_surface);
       
     /* Create tree 0*/
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
@@ -806,8 +806,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
                      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
     
     /* Add the surfaces to the geometry occ array */
-    geometry_occ->t8_geom_push_occ_surface(cylinder_outer, faces[0]);
-    geometry_occ->t8_geom_push_occ_surface(cylinder_inner, faces[1]);
+    faces[0] = geometry_occ->t8_geom_push_occ_surface(cylinder_outer);
+    faces[1] = geometry_occ->t8_geom_push_occ_surface(cylinder_inner);
 
     /* Create corresponding trees and parameters. 
      * Here we create num trees by a coordinate transformation from cylinder to cartesian coordinates. */
