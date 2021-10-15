@@ -20,11 +20,6 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* See also: https://github.com/holke/t8code/wiki/Step-0---Hello-World
- *
- * In this example we initialize t8code and print a small welcome message.
- * This is the t8code equivalent of HelloWorld. */
-
 #include <t8.h>
 #include <sc_options.h>
 #include <t8_messy/t8_latlon_data.h>
@@ -34,24 +29,8 @@
 #include <t8_forest_vtk.h>
 #include <t8_schemes/t8_default_cxx.hxx>
 #include <t8_vec.h>
+#include "t8_mptrac_interpolate.h"
 #include "thirdparty/mptrac/libtrac.h"
-
-typedef struct
-{
-  const char         *filename;
-  const char         *mptrac_input;
-  ctl_t              *mptrac_control;
-  met_t              *mptrac_meteo1;
-  met_t              *mptrac_meteo2;
-  int                 dimension;        /*< 2 or 3. The dimension of the created forest. */
-  t8_forest_t         forest;
-  int                 level;    /*< The initial uniform refinement level in \a forest. */
-  double              missing_value;    /*< The constant we use to denote an invalid data value. */
-  int                 chunk_mode;       /*< True if data is stored as latlon_data_chunk_t. Otherwise data is stored in Z-order double array. */
-  t8_latlon_data_chunk_t *data; /*< The actual data that we store here, if in chunk mode. */
-  int                 data_per_element; /*< If not in chunk mode the number of values we store per element. Must be 1 (SCALAR) or 3 (VECTOR) */
-  double             *data_array;       /*< The actual data that we store here, if not in chunk mode. Has lenght num_local_elements * data_per_element */
-} t8_mptrac_context_t;
 
 typedef struct
 {
@@ -191,98 +170,6 @@ t8_mptrac_onlycopy_interpolate_callback (t8_forest_t forest_old, t8_forest_t for
 }
 #endif
 
-/** Split a string that contains command line parameters for MPTRAC into individual
- *  tokens.
- *  Example Input: "INIT_T0 0 INIT_T1 1"
- *          Output: "INIT_T0" "0" "INIT_T1" "1" as output and 4 as num_output.
- * \param [in] input_string The string of command line arguments.
- */
-void
-t8_mptrac_split_input_string (const char *input_string, char ***poutput,
-                              int *num_output)
-{
-  char               *next_token;
-  char                copy_of_input[BUFSIZ];
-  int                 num_tokens_read = 0;
-  int                 buffer_size = 10;
-
-  /* Basic assertions for wrong usage */
-  T8_ASSERT (poutput != NULL);
-  T8_ASSERT (num_output != NULL);
-
-  /* Check if input is NULL */
-  if (input_string == NULL) {
-    /* No input, hence no output. */
-    *num_output = 0;
-    *poutput = NULL;
-    return;
-  }
-
-  /* Copy the input string since using strtok will modify it. */
-  strncpy (copy_of_input, input_string, BUFSIZ - 1);
-  /* If input string is too long, then no terminating \0 will be written, so
-   * we do it by hand. */
-  copy_of_input[BUFSIZ - 1] = '\0';
-  if (strlen (copy_of_input) != strlen (input_string)) {
-    SC_ABORTF ("Error: Input string was truncated to %s. Aborting.\n",
-               copy_of_input);
-  }
-
-  /* Split the input string */
-  t8_debugf ("Splitting string \"%s\" into tokens:\n", input_string);
-  /* Allocate buffer_size many tokens */
-  *poutput = T8_ALLOC (char *, buffer_size);
-  char              **output = *poutput;
-  next_token = strtok (copy_of_input, " ");
-  while (next_token != NULL) {
-    /* Check if we need to allocate more strings */
-    if (num_tokens_read >= buffer_size) {
-      buffer_size *= 2;
-      output = T8_REALLOC (output, char *, buffer_size);
-    }
-    /* Copy current string */
-    output[num_tokens_read] = T8_ALLOC (char, BUFSIZ);
-    strcpy (output[num_tokens_read], next_token);
-    num_tokens_read++;
-    t8_debugf ("%s\n", next_token);
-    /* Read next string */
-    next_token = strtok (NULL, " ");
-  }
-  *num_output = num_tokens_read;
-}
-
-void
-t8_mptrac_read_nc (t8_mptrac_context_t * mptrac_context,
-                   int read_ctl_parameters, double seconds)
-{
-  int                 num_arguments;
-  char              **output;
-
-  if (read_ctl_parameters) {
-    /* Split command line argument string to be passed to mptrac routines. */
-    t8_mptrac_split_input_string (mptrac_context->mptrac_input, &output,
-                                  &num_arguments);
-
-    T8_ASSERT (num_arguments > 0);
-    read_ctl ("-", num_arguments, output, mptrac_context->mptrac_control);
-    /* We need to set the start time by hand. */
-    mptrac_context->mptrac_control->t_start = seconds;
-    /* Clean up split string. */
-    for (int i = 0; i < num_arguments; ++i) {
-      T8_FREE (output[i]);
-    }
-    T8_FREE (output);
-  }
-  get_met (mptrac_context->mptrac_control, seconds,
-           &mptrac_context->mptrac_meteo1, &mptrac_context->mptrac_meteo2);
-
-  /* Set the missing value. 1e30 seems to be one of the largest values that Paraview can
-   * still except as input. */
-  mptrac_context->missing_value = -1e30;
-  mptrac_context->data = NULL;
-
-}
-
 /* Build a 2D quad forest matching the x and y extend of mptrac meteo data. */
 void
 t8_mptrac_build_2d_forest (t8_mptrac_context_t * mptrac_context)
@@ -388,41 +275,7 @@ t8_mptrac_build_latlon_data_for_u_original_coords (t8_mptrac_context_t *
   context->data = chunk;
 }
 
-/* Interpolate betwenn val1 and val2 at 0 <= interpol <= 1 */
-void
-t8_mptrac_interpol_helper (const double interpol, const double val1,
-                           const double val2, double *output)
-{
-  *output = (1 - interpol) * val1 + interpol * val2;
-}
-
-/* Convert 3D coordinates in [0,1]^3 to lat,lon,pressure coordinates. */
-void
-t8_mptrac_coords_to_latlonpressure (const t8_mptrac_context_t * context,
-                                    const double point[3], double *lat,
-                                    double *lon, double *pressure)
-{
-  /* Interpolate lon coordinate */
-  const int           max_lon_idx = context->mptrac_meteo1->nx;
-  T8_ASSERT (max_lon_idx >= 1);
-  t8_mptrac_interpol_helper (point[0], context->mptrac_meteo1->lon[0],
-                             context->mptrac_meteo1->lon[max_lon_idx - 1],
-                             lon);
-  /* Interpolate lat coordinate */
-  const int           max_lat_idx = context->mptrac_meteo1->ny;
-  T8_ASSERT (max_lat_idx >= 1);
-  t8_mptrac_interpol_helper (point[1], context->mptrac_meteo1->lat[0],
-                             context->mptrac_meteo1->lat[max_lat_idx - 1],
-                             lat);
-  /* Interpolate pressure coordinate */
-  const int           max_p_idx = context->mptrac_meteo1->np;
-  T8_ASSERT (max_p_idx >= 1);
-  t8_mptrac_interpol_helper (point[2], context->mptrac_meteo1->p[0],
-                             context->mptrac_meteo1->p[max_p_idx - 1],
-                             pressure);
-}
-
-/* Interpolate data form mptrac to a 3D forest.
+/* Interpolate data from mptrac to a 3D forest.
  * Currenty, we copy only the zonal wind */
 void
 t8_mptrac_build_latlon_data_for_uvw_3D (t8_mptrac_context_t * context,
@@ -557,59 +410,6 @@ t8_mptrac_refine_forest (const t8_mptrac_context_t * context, int z_level,
   t8_forest_set_balance (forest_partition, forest_adapt, 0);
   t8_forest_commit (forest_partition);
   return forest_partition;
-}
-
-t8_mptrac_context_t *
-t8_mptrac_context_new (const int chunk_mode, const char *filename,
-                       const char *mptrac_input, int dimension,
-                       int uniform_level)
-{
-  t8_mptrac_context_t *context =
-    (t8_mptrac_context_t *) T8_ALLOC (t8_mptrac_context_t, 1);
-
-  T8_ASSERT (dimension == 2 || dimension == 3);
-
-  context->mptrac_meteo1 = T8_ALLOC (met_t, 1);
-  context->mptrac_meteo2 = T8_ALLOC (met_t, 1);
-  context->mptrac_control = T8_ALLOC (ctl_t, 1);
-  context->mptrac_input = mptrac_input;
-
-  /* Set filename */
-  context->filename = filename;
-  /* Set chunk_mode to 1 or 0 */
-  context->chunk_mode = chunk_mode ? 1 : 0;
-  /* Set dimension */
-  context->dimension = dimension;
-  /* Set default values */
-  context->data = NULL;
-  context->data_array = NULL;
-  context->forest = NULL;
-  context->level = uniform_level;
-  context->missing_value = DBL_MAX;
-
-  return context;
-}
-
-void
-t8_mptrac_context_destroy (t8_mptrac_context_t ** pcontext)
-{
-  T8_ASSERT (pcontext != NULL);
-  T8_ASSERT (*pcontext != NULL);
-
-  t8_mptrac_context_t *context = *pcontext;
-
-  T8_FREE (context->mptrac_meteo1);
-  T8_FREE (context->mptrac_meteo2);
-  T8_FREE (context->mptrac_control);
-  if (!context->chunk_mode && context->data_array != NULL) {
-    T8_FREE (context->data_array);
-  }
-  if (context->chunk_mode && context->data != NULL) {
-    t8_latlon_chunk_destroy (&context->data);
-  }
-  t8_forest_unref (&context->forest);
-  T8_FREE (context);
-  *pcontext = NULL;
 }
 
 void
