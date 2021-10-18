@@ -1884,8 +1884,6 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
       *dual_faces = T8_ALLOC (int, 1);
       neigh_scheme->t8_element_new (num_children_at_face, neighbor_leafs);
       /* Compute neighbor element and global treeid of the neighbor */
-      /* Subelement neighbors at faces 0 or 2 will always be in the same tree
-       * since they belong to the same transition cell. */
       gneigh_treeid =
         t8_forest_element_face_neighbor (forest, ltreeid, leaf,
                                          neighbor_leafs[0], neigh_scheme,

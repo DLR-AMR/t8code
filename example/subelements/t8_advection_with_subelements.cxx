@@ -188,7 +188,6 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
                  t8_eclass_scheme_c * ts, int num_elements,
                  t8_element_t * elements[])
 {
-#if 0
   t8_advect_problem_t *problem;
   t8_advect_element_data_t *elem_data;
   double              band_width, elem_diam;
@@ -239,8 +238,17 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
     /* refine if level is not too large */
     return level < problem->maxlevel;
   }
-#endif
-  return 0;                     /* keep the adaptation static for the first tests */
+  return 0;
+}
+
+/* static adapt scheme that does nothing */
+static int
+t8_advect_adapt_static (t8_forest_t forest, t8_forest_t forest_from,
+                        t8_locidx_t ltree_id, t8_locidx_t lelement_id,
+                        t8_eclass_scheme_c * ts, int num_elements,
+                        t8_element_t * elements[])
+{
+  return 0; /* keep the adaptation static for the first tests */
 }
 
 /* Initial adapt scheme */
@@ -892,9 +900,14 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time)
   t8_forest_set_profiling (problem->forest_adapt, 1);
   /* Set the user data pointer of the new forest */
   t8_forest_set_user_data (problem->forest_adapt, problem);
+  #if 0 /* do not use the dynamic adapt scheme for now */
   /* Set the adapt function */
   t8_forest_set_adapt (problem->forest_adapt, problem->forest,
                        t8_advect_adapt, 0);
+  #endif
+  /* use a static scheme */
+  t8_forest_set_adapt (problem->forest_adapt, problem->forest,
+                       t8_advect_adapt_static, 0);
   if (problem->maxlevel - problem->level > 1) {
     /* We also want to balance the forest
      * if the difference in refinement levels is
