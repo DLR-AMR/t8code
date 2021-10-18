@@ -22,7 +22,8 @@
 
 #include <sc_options.h>
 #include <sc_statistics.h>
-#include <t8_schemes/t8_default_cxx.hxx>
+#include <t8_schemes/t8_quads_w_rectangular_subelements/t8_subelements/t8_subelements_quad_cxx.hxx>
+#include <t8_schemes/t8_quads_w_rectangular_subelements/t8_subelements_cxx.hxx>
 #include <t8_forest.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_partition.h>
@@ -179,73 +180,6 @@ t8_advect_element_set_phi_adapt (const t8_advect_problem_t * problem,
     = phi;
 }
 
-#if 0
-/* Decide whether an element should be refined or coarsened to match the cfl number */
-/* TODO: use t8_advect_element_get_phi */
-static int
-t8_advect_adapt_cfl (t8_advect_problem_t * problem,
-                     t8_advect_element_data_t * elem_data)
-{
-  double              u[3], speed;
-  double              range = 0.2;
-
-  /* Compute the flow at this element */
-  problem->u (elem_data->midpoint, problem->t, u);
-  /* Compute the speed of the flow */
-  speed = t8_vec_norm (u);
-  speed = sqrt (speed);
-  if (speed * problem->delta_t / elem_data->vol <=
-      problem->cfl - range * problem->cfl) {
-    /* refine if the element is too large */
-    return 1;
-  }
-  else if (speed * problem->delta_t / elem_data->vol >
-           problem->cfl + range * problem->cfl) {
-    /* coarsen if the element is too small */
-    return -1;
-  }
-  return 0;
-}
-#endif
-
-#if 0
-/* estimate the absolute value of the gradient of phi at an element.
- * We compute the gradient as finite difference with the left and right
- * neighbor element and take the maximum (absolute value) of both values */
-/* TODO: use t8_advect_element_get_phi */
-static double
-t8_advect_gradient_phi (t8_advect_problem_t * problem,
-                        t8_advect_element_data_t * elem_data)
-{
-  t8_advect_element_data_t *neigh;
-  double              phi_neigh;
-  double              vol;
-  double              max_gradient = 0, gradient_abs;
-  int                 iface;
-
-  for (iface = 0; iface < 2; iface++) {
-    if (elem_data->num_neighbors[iface] >= 0) {
-      /* Get the neighbor element */
-      neigh = (t8_advect_element_data_t *)
-        t8_sc_array_index_locidx (problem->element_data,
-                                  elem_data->neighs[iface][0]);
-      /* Get the phi value of the neighbor */
-      phi_neigh = neigh->phi;
-      /* Compute the distance of the midpoints of the element and its neighbor */
-      /* |---x---|--x--|  (size of left element + size of right element)/2 */
-      vol = (elem_data->vol + neigh->vol) / 2;
-      /* compute the absolute value of the gradient */
-      gradient_abs = fabs ((phi_neigh - elem_data->phi) / vol);
-      /* compute the maximum */
-      max_gradient = SC_MAX (max_gradient, gradient_abs);
-    }
-    /* If there is no neighbor at this face (boundary element), we do not compute the
-     * gradient. If there is no neighbor at any face, the max_gradient is 0 */
-  }
-  return max_gradient;
-}
-#endif
-
 /* Adapt the forest. We refine if the level-set function is close to zero
  * and coarsen if it is larger than a given threshhold. */
 static int
@@ -254,6 +188,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
                  t8_eclass_scheme_c * ts, int num_elements,
                  t8_element_t * elements[])
 {
+  #if 0
   t8_advect_problem_t *problem;
   t8_advect_element_data_t *elem_data;
   double              band_width, elem_diam;
@@ -304,6 +239,23 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
     /* refine if level is not too large */
     return level < problem->maxlevel;
   }
+  #endif
+  return 0; /* keep the adaptation static for the first tests */
+}
+
+/* Initial adapt scheme */
+static int
+t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
+                      t8_locidx_t ltree_id, t8_locidx_t lelement_id,
+                      t8_eclass_scheme_c * ts, int num_elements,
+                      t8_element_t * elements[])
+{
+  int coord[3] = {}; 
+  ts->t8_element_anchor(elements[0], coord);
+  if (coord[0] > coord[1]) {
+    return 1;
+  }
+
   return 0;
 }
 
@@ -733,7 +685,7 @@ t8_advect_advance_element (t8_advect_problem_t * problem,
   }
   /* Phi^t = dt/dx * (f_(j-1/2) - f_(j+1/2)) + Phi^(t-1) */
   elem->phi_new = (problem->delta_t / elem->vol) * flux_sum + phi;
-#if 0
+#if 1
   t8_debugf
     ("[advect] advance el with delta_t %f vol %f phi %f  flux %f to %f\n",
      problem->delta_t, elem->vol, phi, flux_sum, elem->phi_new);
@@ -950,6 +902,110 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time)
     t8_forest_set_balance (problem->forest_adapt, NULL, 1);
     did_balance = 1;
   }
+  /* either way we want to remove the hanging faces from the forest */
+  t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
+  /* We also want ghost elements in the new forest */
+  t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
+  /* Commit the forest, adaptation and balance happens here */
+  t8_forest_commit (problem->forest_adapt);
+
+  /* Store the runtimes in problems stats */
+  if (measure_time) {
+    adapt_time = t8_forest_profile_get_adapt_time (problem->forest_adapt);
+    ghost_time =
+      t8_forest_profile_get_ghost_time (problem->forest_adapt, &ghost_sent);
+    if (did_balance) {
+      balance_time =
+        t8_forest_profile_get_balance_time (problem->forest_adapt,
+                                            &balance_rounds);
+    }
+    sc_stats_accumulate (&problem->stats[ADVECT_ADAPT], adapt_time);
+    sc_stats_accumulate (&problem->stats[ADVECT_GHOST], ghost_time);
+    sc_stats_accumulate (&problem->stats[ADVECT_GHOST_SENT], ghost_sent);
+    if (did_balance) {
+      sc_stats_accumulate (&problem->stats[ADVECT_BALANCE], balance_time);
+      sc_stats_accumulate (&problem->stats[ADVECT_BALANCE_ROUNDS],
+                           balance_rounds);
+    }
+    /* We want to count all runs over the solver time as one */
+    problem->stats[ADVECT_ADAPT].count = 1;
+    problem->stats[ADVECT_BALANCE].count = 1;
+    problem->stats[ADVECT_GHOST].count = 1;
+    problem->stats[ADVECT_GHOST_SENT].count = 1;
+  }
+
+  /* Allocate new memory for the element_data of the advected forest */
+  num_elems = t8_forest_get_local_num_elements (problem->forest_adapt);
+  num_elems_p_ghosts = num_elems +
+    t8_forest_get_num_ghosts (problem->forest_adapt);
+  problem->element_data_adapt =
+    sc_array_new_count (sizeof (t8_advect_element_data_t), num_elems);
+  problem->phi_values_adapt =
+    sc_array_new_count ((problem->dummy_op ? 2 : 1) * sizeof (double),
+                        num_elems_p_ghosts);
+  /* We now call iterate_replace in which we interpolate the new element data.
+   * It is necessary that the old and new forest only differ by at most one level.
+   * We guarantee this by calling adapt non-recursively and calling balance without
+   * repartitioning. */
+  replace_time = -sc_MPI_Wtime ();
+  t8_forest_iterate_replace (problem->forest_adapt, problem->forest,
+                             t8_advect_replace);
+  replace_time += sc_MPI_Wtime ();
+  if (measure_time) {
+    sc_stats_accumulate (&problem->stats[ADVECT_REPLACE], replace_time);
+    sc_stats_accumulate (&problem->stats[ADVECT_AMR],
+                         ghost_time + adapt_time + balance_time +
+                         replace_time);
+    problem->stats[ADVECT_REPLACE].count = 1;
+    problem->stats[ADVECT_AMR].count = 1;
+  }
+  /* clean the old element data */
+  t8_advect_problem_elements_destroy (problem);
+  sc_array_destroy (problem->element_data);
+  sc_array_destroy (problem->phi_values);
+  /* Free memory for the forest */
+  t8_forest_unref (&problem->forest);
+  /* Set the forest to the adapted one */
+  problem->forest = problem->forest_adapt;
+  problem->forest_adapt = NULL;
+  /* Set the elem data to the adapted elem data */
+  problem->element_data = problem->element_data_adapt;
+  problem->element_data_adapt = NULL;
+  /* Set the phi values to the adapted phi values */
+  problem->phi_values = problem->phi_values_adapt;
+  problem->phi_values_adapt = NULL;
+}
+
+/* Adapt the forest and interpolate the phi values to the new grid,
+ * compute the new u values on the grid */
+static void
+t8_advect_problem_adapt_init (t8_advect_problem_t * problem, int measure_time)
+{
+  t8_locidx_t         num_elems_p_ghosts, num_elems;
+  double              adapt_time, balance_time = 0, ghost_time;
+  t8_locidx_t         ghost_sent;
+  int                 balance_rounds, did_balance = 0;
+  double              replace_time;
+
+  /* Adapt the forest, but keep the old one */
+  t8_forest_ref (problem->forest);
+  t8_forest_init (&problem->forest_adapt);
+  /* Enable profiling to measure the runtime */
+  t8_forest_set_profiling (problem->forest_adapt, 1);
+  /* Set the user data pointer of the new forest */
+  t8_forest_set_user_data (problem->forest_adapt, problem);
+  /* Set the adapt function */
+  t8_forest_set_adapt (problem->forest_adapt, problem->forest,
+                       t8_advect_adapt_init, 0);
+  if (problem->maxlevel - problem->level > 1) {
+    /* We also want to balance the forest
+     * if the difference in refinement levels is
+     * greater 1 */
+    t8_forest_set_balance (problem->forest_adapt, NULL, 1);
+    did_balance = 1;
+  }
+  /* either way we want to remove the hanging faces from the forest */
+  t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
@@ -1117,7 +1173,7 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, t8_eclass_t eclass,
     /* partition this cmesh according to the initial refinement level */
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_partition_uniform (cmesh_partition, level,
-                                    t8_scheme_new_default_cxx ());
+                                    t8_scheme_new_subelement_cxx ());
     t8_cmesh_set_derive (cmesh_partition, cmesh);
     t8_cmesh_commit (cmesh_partition, comm);
     return cmesh_partition;
@@ -1207,7 +1263,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
   }
 
   /* Contruct uniform forest with ghosts */
-  default_scheme = t8_scheme_new_default_cxx ();
+  default_scheme = t8_scheme_new_subelement_cxx ();
 
   problem->forest =
     t8_forest_new_uniform (cmesh, default_scheme, level, 1, comm);
@@ -1322,7 +1378,8 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
       for (iface = 0; iface < elem_data->num_faces; iface++) {
         /* Compute the indices of the face neighbors */
 
-        t8_forest_leaf_face_neighbors (problem->forest, itree, element, &neighbors, iface, &elem_data->dual_faces[iface], &elem_data->num_neighbors[iface], &elem_data->neighs[iface], &neigh_scheme, 1, 0);    /* note that we assume the forest to not habe subelements */
+        /* note that we assume the forest to not habe subelements */
+        t8_forest_leaf_face_neighbors (problem->forest, itree, element, &neighbors, iface, &elem_data->dual_faces[iface], &elem_data->num_neighbors[iface], &elem_data->neighs[iface], &neigh_scheme, 1, 0);    
         for (ineigh = 0; ineigh < elem_data->num_neighbors[iface]; ineigh++) {
           elem_data->neigh_level[iface] =
             neigh_scheme->t8_element_level (neighbors[ineigh]);
@@ -1531,7 +1588,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 
     for (ilevel = problem->level; ilevel < problem->maxlevel; ilevel++) {
       /* initial adapt */
-      t8_advect_problem_adapt (problem, 0);
+      t8_advect_problem_adapt_init (problem, 0);
       /* repartition */
       t8_advect_problem_partition (problem, 0);
       /* Re initialize the elements */
@@ -1886,7 +1943,7 @@ main (int argc, char *argv[])
 
   sc_options_add_switch (opt, 'h', "help", &helpme,
                          "Display a short help message.");
-  sc_options_add_int (opt, 'u', "flow", &flow_arg, 0,
+  sc_options_add_int (opt, 'u', "flow", &flow_arg, 1,
                       "Choose the flow field u.\n"
                       "\t\t1 - Constant 1 in x-direction.\n"
                       "\t\t2 - Constant 1 in x,y, and z.\n"
@@ -1895,11 +1952,11 @@ main (int argc, char *argv[])
                       "\t\t4 - 2D rotation around (0.5,0.5).\n"
                       "\t\t5 - 2D flow around circle at (0.5,0.5)"
                       "with radius 0.15.\n)");
-  sc_options_add_int (opt, 'l', "level", &level, 0,
+  sc_options_add_int (opt, 'l', "level", &level, 1,
                       "The minimum refinement level of the mesh.");
-  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 0,
+  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 1,
                       "The number of adaptive refinement levels.");
-  sc_options_add_int (opt, 'e', "elements", &eclass_int, -1,
+  sc_options_add_int (opt, 'e', "elements", &eclass_int, T8_ECLASS_QUAD,
                       "If specified the coarse mesh is a hypercube\n\t\t\t\t     consisting of the"
                       " following elements:\n"
                       "\t\t1 - line\n\t\t2 - quad\n"
@@ -1918,7 +1975,7 @@ main (int argc, char *argv[])
                          "The duration of the simulation. Default: 1");
 
   sc_options_add_double (opt, 'C', "CFL", &cfl,
-                         1, "The cfl number to use. Default: 1");
+                         0.4, "The cfl number to use. Default: 1");
   sc_options_add_double (opt, 'b', "band-width", &band_width,
                          1,
                          "Control the width of the refinement band around\n"
@@ -1942,13 +1999,13 @@ main (int argc, char *argv[])
                          "In each iteration, useless dummy operations\n "
                          "\t\t\t\t     are performed per element. Decreases the "
                          "performance!");
-  sc_options_add_double (opt, 'X', "Xcoord", &ls_data.M[0], 0.6,
+  sc_options_add_double (opt, 'X', "Xcoord", &ls_data.M[0], 0.5,
                          "The X-Coordinate of the middlepoint"
                          "of the sphere. Default is 0.6.");
-  sc_options_add_double (opt, 'Y', "Ycoord", &ls_data.M[1], 0.6,
+  sc_options_add_double (opt, 'Y', "Ycoord", &ls_data.M[1], 0.5,
                          "The Y-Coordinate of the middlepoint"
                          "of the sphere. Default is 0.6.");
-  sc_options_add_double (opt, 'Z', "Zcoord", &ls_data.M[2], 0.6,
+  sc_options_add_double (opt, 'Z', "Zcoord", &ls_data.M[2], 0.5,
                          "The Z-Coordinate of the middlepoint"
                          "of the sphere. Default is 0.6.");
   sc_options_add_double (opt, 'R', "Radius", &ls_data.radius, 0.25,
