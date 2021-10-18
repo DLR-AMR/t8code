@@ -579,7 +579,7 @@ t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix)
     t8_geometry_linear_destroy (&linear_geom);
   }
   if (!has_linear_geom) {
-    /* This cmesh does not have the linear geometry for all tree. */
+    /* This cmesh does not have the linear geometry for all trees. */
     t8_errorf
       ("Error when saving cmesh. Cmesh does not have linear geometry.\n");
     return 0;

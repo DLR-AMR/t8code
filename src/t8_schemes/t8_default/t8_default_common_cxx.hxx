@@ -69,7 +69,7 @@ public:
   /** Count how many leaf descendants of a given uniform level the root element will produce.
    * \param [in] level A refinement level.
    * \return The value of \ref t8_element_count_leafs if the input element
-   *      is th52e root (level 0) element.
+   *      is the root (level 0) element.
    */
   virtual t8_gloidx_t t8_element_count_leafs_from_root (int level);
 
@@ -86,7 +86,7 @@ public:
   virtual void        t8_element_general_function (const t8_element_t * elem,
                                                    const void *indata,
                                                    void *outdata);
-                                                   
+
   /** Compute the integer coordinates of a given element vertex.
    * The default scheme implements the Morton type SFCs. In these SFCs the
    * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 

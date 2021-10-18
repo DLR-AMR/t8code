@@ -64,7 +64,7 @@ t8_cmesh_get_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 
   if (t8_geom_handler_get_num_geometries (geom_handler) == 1) {
     /* The geometry handler only has one geometry and the trees 
-     * thus do not need to store their geometries name 
+     * thus do not need to store their geometry's name 
      * (we assume all trees have this geometry).
      */
     return t8_geom_handler_get_unique_geometry (geom_handler);

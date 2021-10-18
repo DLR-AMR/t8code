@@ -216,7 +216,7 @@ t8_geom_handler_commit (t8_geometry_handler_t * geom_handler)
   /* Must not be committed */
   T8_ASSERT (!t8_geom_handler_is_committed (geom_handler));
   /* If we only have one geometry (which is a standard use case).
-   * We set this to be the active geometry and now that we will not
+   * We set this to be the active geometry and know that we will not
    * have to look for any other geometry in t8_geom_handler_update_tree.
    * If we have more than one geometry, we set the active geometry to
    * NULL, sort the geometries array and will search for a tree's geometry
@@ -248,7 +248,7 @@ t8_geom_handler_commit (t8_geometry_handler_t * geom_handler)
   T8_ASSERT (t8_geom_handler_is_committed (geom_handler));
 }
 
-t8_geometry_c *
+t8_geometry_c      *
 t8_geom_handler_find_geometry (const t8_geometry_handler_t * geom_handler,
                                const char *name)
 {

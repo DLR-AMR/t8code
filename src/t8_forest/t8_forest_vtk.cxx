@@ -170,7 +170,7 @@ t8_curved_element_get_reference_node_coords (const t8_element_t *
                                              t8_eclass_scheme_c * scheme,
                                              int vertex, double *coords)
 {
-  double vertex_coords[3]={0,0,0};
+  double              vertex_coords[3] = { 0, 0, 0 };
   int                 i;
   int                 j;
 
@@ -355,8 +355,8 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
   t8_locidx_t         ielement; /* The iterator over elements in a tree. */
   t8_locidx_t         itree, ivertex;
   double              coordinates[3];
-  double              vertex_coords[3]={0,0,0};
-  int                 elem_id = 0;
+  <<<<<<<HEAD double  vertex_coords[3] = { 0, 0, 0 };
+  == == == = >>>>>>>origin / develop int elem_id = 0;
   t8_locidx_t         num_elements;
   int                 freturn = 0;
   t8_gloidx_t         gtreeid;
@@ -473,7 +473,7 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
           break;
         case T8_ECLASS_PYRAMID:
           SC_CHECK_ABORT (element_shape != T8_ECLASS_PYRAMID,
-                "Pyramids are not supported in vtk output");
+                          "Pyramids are not supported in vtk output");
         default:
           SC_ABORT_NOT_REACHED ();
         }
@@ -503,7 +503,7 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
           break;
         case T8_ECLASS_PYRAMID:
           SC_CHECK_ABORT (element_shape != T8_ECLASS_PYRAMID,
-                "Pyramids are not supported in vtk output");
+                          "Pyramids are not supported in vtk output");
         default:
           SC_ABORT_NOT_REACHED ();
         }
@@ -699,9 +699,10 @@ vtk_element_id->Delete ();
 for (int idata = 0; idata < num_data; idata++) {
   dataArrays[idata]->Delete ();
 }
+
 T8_FREE (cellTypes);
 T8_FREE (dataArrays);
-/* Return wether writing was successful */
+/* Return whether writing was successful */
 return freturn;
 
 #else

@@ -38,7 +38,7 @@ void                t8_geom_compute_linear_geometry (t8_eclass_t tree_class,
                                                      const double *ref_coords,
                                                      double out_coords[3]);
 
-/* Given function values at the four edge points of a unit square and
+/** Given function values at the four edge points of a unit square and
  * a point within that square, interpolate the function value at this point.
  * \param [in]    vertex  An array of size at least dim giving the coordinates of the vertex to interpolate
  * \param [in]    corner_values An array of size 2^dim * 3, giving for each corner (in zorder) of

@@ -56,7 +56,7 @@
  * \param [in] comm   MPI Communicator to use.
  * \return            The coarse mesh.
  */
-static t8_cmesh_t
+static              t8_cmesh_t
 t8_step2_build_prismcube_coarse_mesh (sc_MPI_Comm comm)
 {
   t8_cmesh_t          cmesh;
@@ -77,7 +77,7 @@ t8_step2_build_prismcube_coarse_mesh (sc_MPI_Comm comm)
  * \return            A uniform forest with the given refinement level that is
  *                    partitioned across the processes in \a comm.
  */
-static t8_forest_t
+static              t8_forest_t
 t8_step2_build_uniform_forest (sc_MPI_Comm comm, t8_cmesh_t cmesh, int level)
 {
   t8_forest_t         forest;
@@ -138,7 +138,7 @@ main (int argc, char **argv)
 
   /* Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the leg levels. */
+  /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
   t8_init (SC_LP_PRODUCTION);
 
   /* Print a message on the root process. */
