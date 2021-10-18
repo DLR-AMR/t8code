@@ -188,7 +188,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
                  t8_eclass_scheme_c * ts, int num_elements,
                  t8_element_t * elements[])
 {
-  #if 0
+#if 0
   t8_advect_problem_t *problem;
   t8_advect_element_data_t *elem_data;
   double              band_width, elem_diam;
@@ -239,8 +239,8 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
     /* refine if level is not too large */
     return level < problem->maxlevel;
   }
-  #endif
-  return 0; /* keep the adaptation static for the first tests */
+#endif
+  return 0;                     /* keep the adaptation static for the first tests */
 }
 
 /* Initial adapt scheme */
@@ -250,8 +250,8 @@ t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
                       t8_eclass_scheme_c * ts, int num_elements,
                       t8_element_t * elements[])
 {
-  int coord[3] = {}; 
-  ts->t8_element_anchor(elements[0], coord);
+  int                 coord[3] = { };
+  ts->t8_element_anchor (elements[0], coord);
   if (coord[0] > coord[1]) {
     return 1;
   }
@@ -1379,7 +1379,12 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
         /* Compute the indices of the face neighbors */
 
         /* note that we assume the forest to not habe subelements */
-        t8_forest_leaf_face_neighbors (problem->forest, itree, element, &neighbors, iface, &elem_data->dual_faces[iface], &elem_data->num_neighbors[iface], &elem_data->neighs[iface], &neigh_scheme, 1, 0);    
+        t8_forest_leaf_face_neighbors (problem->forest, itree, element,
+                                       &neighbors, iface,
+                                       &elem_data->dual_faces[iface],
+                                       &elem_data->num_neighbors[iface],
+                                       &elem_data->neighs[iface],
+                                       &neigh_scheme, 1, 0);
         for (ineigh = 0; ineigh < elem_data->num_neighbors[iface]; ineigh++) {
           elem_data->neigh_level[iface] =
             neigh_scheme->t8_element_level (neighbors[ineigh]);
