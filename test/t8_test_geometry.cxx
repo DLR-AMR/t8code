@@ -35,7 +35,7 @@
  *                                   is computed correctly.
  *  - t8_test_cmesh_geometry_unique: Check that we can acces the geometry via the tree id if
  *                                   we only use one geometry and did not specify tree ids for it.
- *                                   In this case t8code should automatically associate this geometry to all tree.
+ *                                   In this case t8code should automatically associate this geometry to all trees.
  *  - t8_test_geom_handler_register: Tests the geometry_handler register and find interface.
  */
 
@@ -67,7 +67,7 @@ t8_test_geometry_zero ()
 {
   int                 dim;
   t8_debugf ("Testing zero geometry dim and name.\n");
-  for (dim = 0; dim < 3; ++dim) {
+  for (dim = 0; dim <= 3; ++dim) {
     t8_geometry_zero    zero_geom (dim);
     char                name[BUFSIZ];
     snprintf (name, BUFSIZ, "t8_geom_zero_%i", dim);
@@ -94,7 +94,7 @@ t8_test_cmesh_geometry_linear (sc_MPI_Comm comm)
   /* TODO: Add a test for the jacobian, as soon as its implemented. */
 
   /* Create random points in [0,1]^d and check if they are mapped correctly. */
-  for (dim = 0; dim < 3; ++dim) {
+  for (dim = 0; dim <= 3; ++dim) {
     t8_geometry_linear  linear_geom (dim);
     t8_cmesh_t          cmesh;
 
@@ -219,7 +219,7 @@ t8_test_cmesh_geometry_unique (sc_MPI_Comm comm)
   /* Build a simple 2 tree cmesh and set geometries for the trees. */
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
-  /* Register the id_geometry to this cmesh. */
+  /* Register the linear_geometry to this cmesh. */
   t8_cmesh_register_geometry (cmesh, linear_geom);
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, comm);
@@ -250,7 +250,7 @@ t8_test_geom_handler_register (sc_MPI_Comm comm)
 
   /* For each dimension build the zero geometry and register it.
    * We then commit the handler and check that we can find the geometries. */
-  for (idim = 0; idim < 3; ++idim) {
+  for (idim = 0; idim <= 3; ++idim) {
     t8_geometry_zero   *zero_geom = new t8_geometry_zero (idim);
     /* Register the geometry. */
     t8_geom_handler_register_geometry (geom_handler, zero_geom);
