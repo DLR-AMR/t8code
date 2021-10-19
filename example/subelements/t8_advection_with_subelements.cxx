@@ -1687,8 +1687,12 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
               }
               T8_FREE (elem_data->fluxes[iface]);
               neighbor_time = -sc_MPI_Wtime ();
-              t8_forest_leaf_face_neighbors (problem->forest, itree, elem, &neighs, iface, &elem_data->dual_faces[iface], 
-                                             &elem_data->num_neighbors[iface], &elem_data->neighs[iface], &neigh_scheme, 1); 
+              t8_forest_leaf_face_neighbors (problem->forest, itree, elem,
+                                             &neighs, iface,
+                                             &elem_data->dual_faces[iface],
+                                             &elem_data->num_neighbors[iface],
+                                             &elem_data->neighs[iface],
+                                             &neigh_scheme, 1);
               for (ineigh = 0; ineigh < elem_data->num_neighbors[iface];
                    ineigh++) {
                 elem_data->neigh_level[iface] =
