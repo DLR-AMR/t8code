@@ -76,8 +76,7 @@ t8_test_neighbor_function (const t8_forest_t forest_adapt,
   int                 global_num_trees =
     t8_forest_get_num_global_trees (forest_adapt);
   const t8_element_t *current_element;
-  t8_locidx_t         ltree_id = 0, forest_is_balanced =
-    1, hanging_faces_removed = 1;
+  t8_locidx_t         ltree_id = 0, forest_is_balanced = 1;
   int                *dual_faces, num_neighbors;
   t8_element_t      **neighbor_leafs;
   t8_locidx_t        *element_indices;
@@ -104,8 +103,7 @@ t8_test_neighbor_function (const t8_forest_t forest_adapt,
   t8_forest_leaf_face_neighbors (forest_adapt, ltree_id, current_element,
                                  &neighbor_leafs, face_id, &dual_faces,
                                  &num_neighbors, &element_indices,
-                                 &neigh_scheme, forest_is_balanced,
-                                 hanging_faces_removed);
+                                 &neigh_scheme, forest_is_balanced);
 
   /* note, that after using subelements, there will only be one neighbor for each element and each face */
   int                 i;

@@ -514,8 +514,7 @@ void                t8_forest_leaf_face_neighbors (t8_forest_t forest,
                                                    pelement_indices,
                                                    t8_eclass_scheme_c **
                                                    pneigh_scheme,
-                                                   int forest_is_balanced,
-                                                   int hangin_faces_removed);
+                                                   int forest_is_balanced);
 
 /** Exchange ghost information of user defined element data.
  * \param[in] forest       The forest. Must be committed.

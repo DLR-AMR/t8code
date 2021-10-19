@@ -83,14 +83,12 @@ t8_forest_remove_hanging_faces_adapt (t8_forest_t forest,
    * in order to remove hanging nodes from the mesh. */
 
   int                 is_balanced = 1;
-  int                 hangin_faces_removed = 0;
   for (iface = 0; iface < num_faces; iface++) {
     /* We are interested in the number of neighbours of a given element and a given face of the element. */
     t8_forest_leaf_face_neighbors (forest_from, ltree_id, current_element,
                                    &neighbor_leafs, iface, &dual_faces,
                                    &num_neighbors, &element_indices,
-                                   &neigh_scheme, is_balanced,
-                                   hangin_faces_removed);
+                                   &neigh_scheme, is_balanced);
     /* If the number of neighbours of a face is higher than 1, then we know that there must be a hanging node. */
 
     /* This procedure determines the decimal value of the binary representation of the neighbour structure. 
@@ -139,12 +137,15 @@ t8_forest_remove_hanging_faces (t8_forest_t forest)
   t8_global_productionf ("Done t8_forest_hanging_faces.\n");
 }
 
-/* Check whether all hanging nodes are eliminated. */
+/* Check whether subelements are used */
+/* TODO: it would be better to have a proper test if all hanging nodes are removed */
 int
 t8_forest_hanging_faces_removed (t8_forest_t forest)
 {
-  /* TODO: implement this function in the future */
-  return 1;
+  if (forest->set_subelements == 1) {
+    return 1;
+  }
+  return 0;
 }
 
 T8_EXTERN_C_END ();

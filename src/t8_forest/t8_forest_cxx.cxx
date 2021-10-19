@@ -30,6 +30,7 @@
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_balance.h>
+#include <t8_forest/t8_forest_remove_hanging_faces.h>
 #include <t8_element_cxx.hxx>
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
@@ -1835,8 +1836,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
                                int *num_neighbors,
                                t8_locidx_t ** pelement_indices,
                                t8_eclass_scheme_c ** pneigh_scheme,
-                               int forest_is_balanced,
-                               int hanging_faces_removed)
+                               int forest_is_balanced)
 {
   t8_eclass_t         neigh_class, eclass;
   t8_gloidx_t         gneigh_treeid;
@@ -1846,11 +1846,13 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
   t8_element_array_t *element_array;
   t8_element_t       *ancestor, **neighbor_leafs;
   t8_linearidx_t      neigh_id;
+  int                 hanging_faces_removed;
   int                 num_children_at_face, at_maxlevel;
   int                 ineigh, *owners, different_owners, have_ghosts;
 
   /* TODO: implement is_leaf check to apply to leaf */
   T8_ASSERT (t8_forest_is_committed (forest));
+  hanging_faces_removed = t8_forest_hanging_faces_removed (forest);
   /* TODO: the is_balanced check does not work for a mesh with subelements at this point. */
   if (hanging_faces_removed != 1) {
     /* TODO: why do we need the is_balance flag if we can check this property via the is_balanced function? */
@@ -2229,7 +2231,7 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
     for (iface = 0; iface < ts->t8_element_num_faces (leaf); iface++) {
       t8_forest_leaf_face_neighbors (forest, ltree, leaf, &neighbor_leafs,
                                      iface, &dual_faces, &num_neighbors,
-                                     &element_indices, &neigh_scheme, 1, 0);
+                                     &element_indices, &neigh_scheme, 1);
       t8_debugf
         ("Element %li across face %i has %i leaf neighbors (with dual faces).\n",
          (long) ielem, iface, num_neighbors);
