@@ -1404,10 +1404,10 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
 
 #ifdef T8_ENABLE_DEBUG
         /* for debugging */
-        //t8_productionf ("Current element (tree: %i, element_index: %i):\n", itree, ielement);
-        //ts->t8_element_print_element (element);
-        //t8_productionf ("Neighbor at face %i:\n", iface);
-        //neigh_scheme->t8_element_print_element (neighbors[0]);
+        t8_productionf ("Current element (tree: %i, element_index: %i):\n", itree, ielement);
+        ts->t8_element_print_element (element);
+        t8_productionf ("Neighbor at face %i:\n", iface);
+        neigh_scheme->t8_element_print_element (neighbors[0]);
 #endif
 
         for (ineigh = 0; ineigh < elem_data->num_neighbors[iface]; ineigh++) {

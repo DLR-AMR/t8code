@@ -293,24 +293,43 @@ t8_subelement_scheme_quad_c::t8_element_get_face_corner (const t8_element_t *
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) element;
 
-  /* this function is not implemented for subelements */
-  T8_ASSERT (pquad_w_sub->dummy_is_subelement ==
-             T8_SUB_QUAD_IS_NO_SUBELEMENT);
-  /* TODO: check whether this enumeration of the faces is right. It might be f_3 and f_2 switched */
-  /*
-   *   2    f_2    3
-   *     x -->-- x
-   *     |       |
-   *     ^       ^
-   * f_0 |       | f_1
-   *     x -->-- x
-   *   0    f_3    1
-   */
+  if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_NO_SUBELEMENT) {
+    /* TODO: check whether this enumeration of the faces is right. It might be f_3 and f_2 switched */
+    /*
+    *   2    f_2    3
+    *     x -->-- x
+    *     |       |
+    *     ^       ^
+    * f_0 |       | f_1
+    *     x -->-- x
+    *   0    f_3    1
+    */
 
-  T8_ASSERT (t8_element_is_valid (element));
-  T8_ASSERT (0 <= face && face < P4EST_FACES);
-  T8_ASSERT (0 <= corner && corner < 2);
-  return p4est_face_corners[face][corner];
+    T8_ASSERT (t8_element_is_valid (element));
+    T8_ASSERT (0 <= face && face < P4EST_FACES);
+    T8_ASSERT (0 <= corner && corner < 2);
+    return p4est_face_corners[face][corner];
+  }
+  else {
+    int t8_face_corners_subelement[3][2] = {
+      {0, 1}, 
+      {1, 2}, 
+      {2, 0}
+      };
+    /*
+     *
+     *         x - - - - - x 1
+     *         | \    f0 / |
+     *         |   \ 0 /   |
+     *         x - - x  el | f1
+     *         |   /   \   |
+     *         | /    f2 \ |
+     *         x - - x - - x 2
+     *               
+     * The vertecies of a subelement are enumerated clockwise, starting with the center vertex of the transition cell 
+     */
+    return t8_face_corners_subelement[face][corner];
+  }
 }
 
 int
@@ -1233,15 +1252,18 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
       /* half the side length of the transition cell of the subelement */
       const p4est_qcoord_t shift = P4EST_QUADRANT_LEN (q->level + 1);
 
+      int split = location[1]; 
+      int second = location[2];
+      
       /* we need to take into account whether the subelement is split or not */
-      if (location[1] == 1) {   /* split */
+      if (split) {   /* split */
 
         /* increase the level by one */
         n->level = q->level + 1;
 
         /* adjust the anchor node of the neighbor of the subelement depending on its location */
         if (location[0] == 0) { /* left face */
-          if (location[2] == 0) {
+          if (!second) {
             n->x = q->x - shift;
           }
           else {
@@ -1250,7 +1272,7 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
           }
         }
         else if (location[0] == 2) {    /* right face */
-          if (location[2] == 0) {
+          if (!second) {
             n->x = q->x + 2 * shift;
             n->y = q->y + shift;
           }
@@ -1259,7 +1281,7 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
           }
         }
         else if (location[0] == 3) {    /* lower face */
-          if (location[2] == 0) {
+          if (!second) {
             n->x = q->x + shift;
             n->y = q->y - shift;
           }
@@ -1268,7 +1290,7 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
           }
         }
         else {                  /* upper face */
-          if (location[2] == 0) {
+          if (!second) {
             n->y = q->y + 2 * shift;
           }
           else {
@@ -1312,10 +1334,19 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
    * This does only make sense if the neighbor element at face is of the same type as the 
    * current element (either subelement or non subelement) */
   if (t8_element_test_if_subelement (elem) == T8_SUB_QUAD_IS_SUBELEMENT) {
-    /* Compute the face number as seen from q.
-     *  0 -> 2    2 -> 0    1 -> 1
-     */
-    *neigh_face = subelement_face_dual[face];
+    if (face == 1) {
+      int                 location[3] = { };
+      t8_element_get_location_of_subelement (elem, location);
+      /* if the face is pointing outwards, then we set the face equal to the transition cell face and determine its dual face */
+      int face_adj = location[0];
+      *neigh_face = subelement_face_dual[face_adj];
+    }
+    else {
+      /* Compute the face number as seen from q.
+      *  0 -> 2    2 -> 0    1 -> 1
+      */
+      *neigh_face = subelement_face_dual[face];
+    }
   }
   else {
     /* Compute the face number as seen from q.
@@ -1400,25 +1431,26 @@ t8_subelement_scheme_quad_c::t8_element_vertex_coords_of_subelement (const
 
   T8_ASSERT (t8_element_is_valid (t));
   T8_ASSERT (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT);
-  // T8_ASSERT (vertex >= 0 && vertex < 3); /* all subelements are triangles */
+  T8_ASSERT (vertex >= 0 && vertex < T8_SUBELEMENT_FACES); /* all subelements are triangles */
 
   /* get the length of the current quadrant */
   len = P4EST_QUADRANT_LEN (q1->level);
 
-  /* Compute the x and y coordinates of subelement vertices, depending on the subelement type, id and vertex number (faces enumerated clockwise): 
+  /* Compute the x and y coordinates of subelement vertices, depending on the subelement type, id and vertex number 
+   * (faces enumerated clockwise, starting at the center of the transition cell): 
    *
-   *               f1                      V0
+   *               f1                      V1
    *         x - - - - - x                 x
    *         | \   2   / |               / |
    *         | 1 \   / 3 |             / 3 |
-   *      f0 x - - x - - x f2  -->   x - - x 
-   *         | 0 / | \ 4 |           V2    V1
+   *      f0 x - - + - - x f2  -->   + - - x 
+   *         | 0 / | \ 4 |           V0    V2
    *         | / 6 | 5 \ | 
    *         x - - x - - x
    *               f3
    * 
    * In this example, the below location array would contain the values [2, 1, 1] 
-   * (second face, split, first subelement at the second face) */
+   * (second face, split, first subelement at this face) */
 
   /* get location information of the given subelement */
   int                 location[3] = { };
@@ -1437,37 +1469,66 @@ t8_subelement_scheme_quad_c::t8_element_vertex_coords_of_subelement (const
   T8_ASSERT ((split == 0 && sub_face_id == 0)
              || (split == 1 && (sub_face_id == 0 || sub_face_id == 1)));
 
+  coords[0] = q1->x;
+  coords[1] = q1->y;
+
   /* using the location data to determine vertex coordinates */
-  if (vertex == 2) {            /* the third vertex allways equals the center of the element */
-    coords[0] = q1->x + len / 2;
-    coords[1] = q1->y + len / 2;
-  }
-  else {                        /* all other verticies can be determined, using the flag parameters sub_face_id, split and vertex, whose values are either 0 or 1 */
+  if (vertex == 0) {            /* vertex 0 (the first vertex allways equals the center of the element) */
+    coords[0] += len / 2;
+    coords[1] += len / 2;
+  } /* end of vertex == 0 */
+  else if (vertex == 1) {       /* vertex 1 */
     if (face_number == 0) {
-      coords[0] = q1->x;
-      coords[1] =
-        q1->y + len / 2 * sub_face_id + len * vertex -
-        len / 2 * split * vertex;
+      if (split && sub_face_id) {
+        coords[1] += len / 2;
+      }
     }
     else if (face_number == 1) {
-      coords[0] =
-        q1->x + len / 2 * sub_face_id + len * vertex -
-        len / 2 * split * vertex;
-      coords[1] = q1->y + len;
+      coords[1] += len;
+      if (split && sub_face_id) {
+        coords[0] += len / 2;
+      }
     }
     else if (face_number == 2) {
-      coords[0] = q1->x + len;
-      coords[1] =
-        q1->y + len - len / 2 * sub_face_id - (len * vertex -
-                                               len / 2 * split * vertex);
+      coords[0] += len;
+      coords[1] += len;
+      if (split && sub_face_id) {
+        coords[1] -= len / 2;
+      }
     }
-    else if (face_number == 3) {
-      coords[0] =
-        q1->x + len - len / 2 * sub_face_id - (len * vertex -
-                                               len / 2 * split * vertex);
-      coords[1] = q1->y;
+    else {
+      coords[0] += len;
+      if (split && sub_face_id) {
+        coords[0] -= len / 2;
+      }
     }
-  }
+  } /* end of vertex == 1 */
+  else { /* vertex 2 */
+    if (face_number == 0) {
+      coords[1] += len;
+      if (split && !sub_face_id) {
+        coords[1] -= len / 2;
+      }
+    }
+    else if (face_number == 1) {
+      coords[0] += len;
+      coords[1] += len;
+      if (split && sub_face_id) {
+        coords[0] -= len / 2;
+      }
+    }
+    else if (face_number == 2) {
+      coords[0] += len;
+      if (split && !sub_face_id) {
+        coords[1] += len / 2;
+      }
+    }
+    else {
+      if (split && !sub_face_id) {
+        coords[0] += len / 2;
+      }
+    }
+  } /* end of vertex == 2 */
 }
 
 void
