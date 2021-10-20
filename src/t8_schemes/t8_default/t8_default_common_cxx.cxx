@@ -197,7 +197,8 @@ t8_default_scheme_common_c::t8_element_to_subelement (const t8_element_t *
 }
 
 void
-t8_default_scheme_common_c::t8_element_print_element (const t8_element_t * elem)
+t8_default_scheme_common_c::t8_element_print_element (const t8_element_t *
+                                                      elem)
 {
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }

@@ -353,11 +353,11 @@ t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid,
   /* Compute their nearest common ancestor */
   ts->t8_element_new (1, &nca);
   //ts->t8_element_nca (first_el, last_el, nca);
-  if(eclass == T8_ECLASS_PYRAMID){
-      ts->t8_element_set_linear_id(nca,0,0);
+  if (eclass == T8_ECLASS_PYRAMID) {
+    ts->t8_element_set_linear_id (nca, 0, 0);
   }
-  else{
-      ts->t8_element_nca(first_el, last_el, nca);
+  else {
+    ts->t8_element_nca (first_el, last_el, nca);
   }
 
   /* If we have queries build a list of all active queries,
@@ -436,7 +436,8 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
       level_new = ts->t8_element_level (elem_new);
       level_old = ts->t8_element_level (elem_old);
       /* if both elements are not subelements, then we can use the standard replacement function */
-      if (!ts->t8_element_test_if_subelement (elem_old) && !ts->t8_element_test_if_subelement (elem_new)) {
+      if (!ts->t8_element_test_if_subelement (elem_old)
+          && !ts->t8_element_test_if_subelement (elem_new)) {
         /* If the levels differ, elem_new was refined or its family coarsened */
         if (level_old < level_new) {
           T8_ASSERT (level_new == level_old + 1);
@@ -452,8 +453,8 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
           T8_ASSERT (level_new == level_old - 1);
           /* elem_old was coarsened */
           family_size = ts->t8_element_num_children (elem_new);
-          replace_fn (forest_old, forest_new, itree, ts, family_size, ielem_old,
-                      1, ielem_new);
+          replace_fn (forest_old, forest_new, itree, ts, family_size,
+                      ielem_old, 1, ielem_new);
           /* Advance to the next element */
           ielem_new++;
           ielem_old += family_size;
@@ -469,9 +470,10 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
         }
       }
       /* if any of both elements is subelement, then another replace scheme has to be used */
-      else { 
+      else {
         T8_ASSERT (level_new == level_old);
-        if (!ts->t8_element_test_if_subelement (elem_old) && ts->t8_element_test_if_subelement (elem_new)) {
+        if (!ts->t8_element_test_if_subelement (elem_old)
+            && ts->t8_element_test_if_subelement (elem_new)) {
           /* elem_old is refined into subelements */
           family_size = ts->t8_element_num_siblings (elem_new);
           replace_fn (forest_old, forest_new, itree, ts, 1, ielem_old,
@@ -480,11 +482,12 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
           ielem_new += family_size;
           ielem_old++;
         }
-        else if (ts->t8_element_test_if_subelement (elem_old) && !ts->t8_element_test_if_subelement (elem_new)) {
+        else if (ts->t8_element_test_if_subelement (elem_old)
+                 && !ts->t8_element_test_if_subelement (elem_new)) {
           /* the subelement elem_old was coarsened into a quad */
           family_size = ts->t8_element_num_siblings (elem_old);
-          replace_fn (forest_old, forest_new, itree, ts, family_size, ielem_old,
-                      1, ielem_new);
+          replace_fn (forest_old, forest_new, itree, ts, family_size,
+                      ielem_old, 1, ielem_new);
           /* Advance to the next element */
           ielem_new++;
           ielem_old += family_size;

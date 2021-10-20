@@ -391,7 +391,6 @@ public:
   virtual int         t8_element_is_valid (const t8_element_t * t) const;
 #endif
 
-
 protected:
   /** This function determines the vertex coordinates of subelements.
    *  \param [in] elem A valid subelement 

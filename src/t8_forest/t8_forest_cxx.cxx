@@ -2088,7 +2088,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
 
           /* free memory */
           neigh_scheme->t8_element_destroy (num_children_at_face - 1,
-                                          neighbor_leafs + 1);
+                                            neighbor_leafs + 1);
           /* copy the neighbor */
           neigh_scheme->t8_element_copy (neighbor, neighbor_leafs[0]);
 

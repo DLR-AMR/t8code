@@ -1062,8 +1062,7 @@ t8_subelement_scheme_quad_c::t8_element_boundary_face (const t8_element_t *
   T8_ASSERT (boundary_scheme->eclass == T8_ECLASS_LINE);
   T8_ASSERT (boundary_scheme->t8_element_is_valid (boundary));
 
-  if (pquad_w_sub->dummy_is_subelement ==
-             T8_SUB_QUAD_IS_NO_SUBELEMENT) {
+  if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_NO_SUBELEMENT) {
     T8_ASSERT (0 <= face && face < P4EST_FACES);
     /* The level of the boundary element is the same as the quadrant's level */
     l->level = q->level;
@@ -1098,15 +1097,16 @@ t8_subelement_scheme_quad_c::t8_element_boundary_face (const t8_element_t *
      * for a split subelement (e1), the boundary face has a higher level
      * for a non split element (e2), the boundary face has the same level. 
      */
-    
-    int location[3] = {}; /* location = {location of subelement (face number of transition cell), split, first or second element if split} */
-    t8_element_get_location_of_subelement (elem, location);
-    int split = location[1];
-    int first = location[2];
 
-    if (split && !first) { /* if the subelement lies at a split face */
+    int                 location[3] = { };      /* location = {location of subelement (face number of transition cell), split, first or second element if split} */
+    t8_element_get_location_of_subelement (elem, location);
+    int                 split = location[1];
+    int                 first = location[2];
+
+    if (split && !first) {      /* if the subelement lies at a split face */
       l->level = q->level + 1;
-      int len = P4EST_QUADRANT_LEN (pquad_w_sub->p4q.level + 1);
+      int                 len =
+        P4EST_QUADRANT_LEN (pquad_w_sub->p4q.level + 1);
       if (location[0] == 0 || location[0] == 1) {
         l->x = q->y + len;
       }
@@ -1114,12 +1114,12 @@ t8_subelement_scheme_quad_c::t8_element_boundary_face (const t8_element_t *
         l->x = q->x + len;
       }
     }
-    else { /* if the subelement is not split */
+    else {                      /* if the subelement is not split */
       l->level = q->level;
       /* we can determine the anchor node of the boundary via identifying the subelements location with the transition cells faces */
-      int face_adj = location[0];
+      int                 face_adj = location[0];
       l->x = ((face_adj >> 1 ? q->x : q->y) *
-            ((int64_t) T8_DLINE_ROOT_LEN) / P4EST_ROOT_LEN);
+              ((int64_t) T8_DLINE_ROOT_LEN) / P4EST_ROOT_LEN);
     }
   }
 }
@@ -2148,16 +2148,18 @@ t8_subelement_scheme_quad_c::t8_element_init (int length, t8_element_t * elem,
 #endif
 }
 
-void 
-t8_subelement_scheme_quad_c::t8_element_print_element (const t8_element_t *elem)
+void
+t8_subelement_scheme_quad_c::t8_element_print_element (const t8_element_t *
+                                                       elem)
 {
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
-  
+
   t8_productionf ("Is subelement:   %i\n", pquad_w_sub->dummy_is_subelement);
   t8_productionf ("Subelement Type: %i\n", pquad_w_sub->subelement_type);
   t8_productionf ("Subelement ID:   %i\n", pquad_w_sub->subelement_id);
-  t8_productionf ("Anchor:          (%i,%i)\n", pquad_w_sub->p4q.x, pquad_w_sub->p4q.y);
+  t8_productionf ("Anchor:          (%i,%i)\n", pquad_w_sub->p4q.x,
+                  pquad_w_sub->p4q.y);
   t8_productionf ("Level:           %i\n\n", pquad_w_sub->p4q.level);
 }
 

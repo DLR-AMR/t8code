@@ -145,15 +145,17 @@ t8_forest_hanging_faces_removed (t8_forest_t forest)
   t8_eclass_t         eclass;
   const t8_element_t *current_element;
   t8_eclass_scheme_c *ts;
-  int ltree_id, lelement_id;
+  int                 ltree_id, lelement_id;
 
   for (ltree_id = 0; ltree_id < forest->global_num_trees; ltree_id++) {
-    for (lelement_id = 0; lelement_id < forest->global_num_elements; lelement_id++) {
+    for (lelement_id = 0; lelement_id < forest->global_num_elements;
+         lelement_id++) {
       eclass = t8_forest_get_tree_class (forest, ltree_id);
       ts = t8_forest_get_eclass_scheme (forest, eclass);
-      current_element = t8_forest_get_element_in_tree (forest, ltree_id, lelement_id);
+      current_element =
+        t8_forest_get_element_in_tree (forest, ltree_id, lelement_id);
       if (ts->t8_element_test_if_subelement (current_element)) {
-      return 1;
+        return 1;
       }
     }
   }

@@ -691,7 +691,8 @@ public:
     = 0;
 
   /* TODO comment or delete function if not needed anymore */
-  virtual void        t8_element_print_element (const t8_element_t * elem) = 0;
+  virtual void        t8_element_print_element (const t8_element_t * elem) =
+    0;
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
