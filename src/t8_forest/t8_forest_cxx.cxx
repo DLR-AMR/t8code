@@ -1856,7 +1856,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
   /* TODO: the is_balanced check does not work for a mesh with subelements at this point. */
   if (hanging_faces_removed != 1) {
     /* TODO: why do we need the is_balance flag if we can check this property via the is_balanced function? */
-    T8_ASSERT (!forest_is_balanced || t8_forest_is_balanced (forest));
+    //T8_ASSERT (!forest_is_balanced || t8_forest_is_balanced (forest));
   }
   SC_CHECK_ABORT (forest_is_balanced, "leaf face neighbors is not implemented " "for unbalanced forests.\n");   /* TODO: write version for unbalanced forests */
   SC_CHECK_ABORT (forest->mpisize == 1 || forest->ghosts != NULL,
@@ -2005,7 +2005,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
           t8_forest_get_tree_element_offset (forest, lneigh_treeid);
       }
       if ((neigh_scheme->t8_element_compare (ancestor, neighbor_leafs[0]) <
-           0) || ts->t8_element_test_if_subelement (leaf) == 1) {
+           0) || ts->t8_element_test_if_subelement (leaf)) {
         /* ancestor is a real ancestor, and thus the neighbor is either the
          * parent or grandparent of the half neighbors. we can return it and
          * the indices. 
@@ -2049,7 +2049,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
         }
         /* At this point, the neighbor "ancestor" is found. */
 
-        if (neigh_scheme->t8_element_test_if_subelement (ancestor) == 1) {
+        if (neigh_scheme->t8_element_test_if_subelement (ancestor)) {
           /* If ancestor is a subelement it is possible that it is not the real neighbor of leaf
            * but rather a random subelement of the transition cell, the real neighbor lives in.
            * Therefore, we need to find the right subelement within the family of subelements of ancestor. */
@@ -2086,9 +2086,20 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid,
                                         (forest, lneigh_treeid),
                                         element_index);
 
-          /* Copy the neighbor to ancestor, in order to get back to the standard notation. */
-          neigh_scheme->t8_element_copy (neighbor, ancestor);
+          /* free memory */
+          neigh_scheme->t8_element_destroy (num_children_at_face - 1,
+                                          neighbor_leafs + 1);
+          /* copy the neighbor */
+          neigh_scheme->t8_element_copy (neighbor, neighbor_leafs[0]);
 
+          /* set return values */
+          *num_neighbors = 1;
+          *pelement_indices = T8_ALLOC (t8_locidx_t, 1);
+          (*pelement_indices)[0] = element_index;
+
+          T8_FREE (owners);
+
+          return;
         }                       /* end of the if neighbor is subelement case */
 
         /* free memory */

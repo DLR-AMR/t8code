@@ -196,6 +196,12 @@ t8_default_scheme_common_c::t8_element_to_subelement (const t8_element_t *
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
 
+void
+t8_default_scheme_common_c::t8_element_print_element (const t8_element_t * elem)
+{
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
+}
+
 int
 t8_default_scheme_common_c::t8_element_test_if_subelement (const
                                                            t8_element * elem)
@@ -204,7 +210,7 @@ t8_default_scheme_common_c::t8_element_test_if_subelement (const
    * should not abort the code even if no subelements are implemented in the given scheme. */
 
   /* No subelements are implemented and therefore we return -1 meaning "is no subelement". */
-  return -1;
+  return 0;
 }
 
 int

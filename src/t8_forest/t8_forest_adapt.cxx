@@ -356,7 +356,7 @@ t8_forest_adapt (t8_forest_t forest)
        * Therefore, all subelements that "survive" the adaptation will be coarsened back to their parent quadrant. 
        * Note, that this is always valid for subelements in terms of the minimum level,
        * since subelements have the same level as their parent quadrant. */
-      if (tscheme->t8_element_test_if_subelement (elements_from[0]) == 1
+      if (tscheme->t8_element_test_if_subelement (elements_from[0])
           && refine == 0) {
         refine = -1;
       }
@@ -417,7 +417,7 @@ t8_forest_adapt (t8_forest_t forest)
         }
         /* In case of a subelement, the parent quadrant is refined. 
          * Therfore, we can skip all subelement siblings as they are not needed anymore. */
-        if (tscheme->t8_element_test_if_subelement (current_element) == 1) {
+        if (tscheme->t8_element_test_if_subelement (current_element)) {
           el_considered += num_siblings;
         }
         /* In case of a non-subelement element, we directly refine the quadrant and move on to the next element */
@@ -493,8 +493,7 @@ t8_forest_adapt (t8_forest_t forest)
         /* Note that it should not be allowed to copy a subelement at this point. 
          * Subelements should always be coarsened to their parent quadrant or their parent quadrant 
          * should be refined such that no subelements are left after calling the adapt function. */
-        T8_ASSERT (tscheme->t8_element_test_if_subelement (elements[0]) ==
-                   -1);
+        T8_ASSERT (!tscheme->t8_element_test_if_subelement (elements[0]));
         tscheme->t8_element_copy (elements_from[0], elements[0]);
         el_inserted++;
         const int           child_id =

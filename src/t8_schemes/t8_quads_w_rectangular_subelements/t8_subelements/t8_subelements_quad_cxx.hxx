@@ -81,7 +81,7 @@ typedef t8_quad_with_subelements t8_pquad_t;
 #define T8_SUB_QUAD_MAX_SUBELEMENT_ID 7
 #define T8_SUB_QUAD_MIN_SUBELEMENT_ID 0
 #define T8_SUB_QUAD_IS_SUBELEMENT 1
-#define T8_SUB_QUAD_IS_NO_SUBELEMENT -1
+#define T8_SUB_QUAD_IS_NO_SUBELEMENT 0
 #define T8_SUBELEMENT_FACES 3
 
 /** Return the toplevel dimension. */
@@ -383,10 +383,14 @@ public:
 /** Get the shape of a given element. Subelements are triangles */
   virtual t8_element_shape_t t8_element_shape (const t8_element_t * elem);
 
+/** print element values for debugging */
+  virtual void        t8_element_print_element (const t8_element_t * elem);
+
 #ifdef T8_ENABLE_DEBUG
   /** Query whether an element is valid */
   virtual int         t8_element_is_valid (const t8_element_t * t) const;
 #endif
+
 
 protected:
   /** This function determines the vertex coordinates of subelements.

@@ -120,6 +120,10 @@ public:
   virtual int         t8_element_get_subelement_type (const
                                                       t8_element * elem);
 
+  /* TODO: comment */
+  virtual void         t8_element_print_element (const
+                                                 t8_element * elem);
+
   /** TODO: comment */
   virtual int         t8_element_get_subelement_id (const t8_element * elem);
 

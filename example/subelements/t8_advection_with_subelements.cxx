@@ -790,7 +790,10 @@ t8_advect_replace (t8_forest_t forest_old,
     }
   }
   else if (num_outgoing == 1) {
+    /* TODO: this assertion does not work anymore for subelements */
+    #if 0
     T8_ASSERT (num_incoming == 1 << problem->dim);
+    #endif
     /* The old element is refined, we copy the phi values and compute the new midpoints */
     for (i = 0; i < num_incoming; i++) {
       /* Get a pointer to the new element */
@@ -805,7 +808,7 @@ t8_advect_replace (t8_forest_t forest_old,
       /* Set the neighbor entries to uninitialized */
       elem_data_in[i].num_faces = elem_data_out->num_faces;
       T8_ASSERT (elem_data_in[i].num_faces ==
-                 ts->t8_element_num_faces (element));
+                 ts->t8_element_num_faces (element) || ts->t8_element_test_if_subelement (element));
       for (iface = 0; iface < elem_data_in[i].num_faces; iface++) {
         elem_data_in[i].num_neighbors[iface] = 0;
         elem_data_in[i].flux_valid[iface] = -1;
@@ -1390,13 +1393,22 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
       elem_data->num_faces = ts->t8_element_num_faces (element);
       for (iface = 0; iface < elem_data->num_faces; iface++) {
         /* Compute the indices of the face neighbors */
-
+        t8_productionf ("element_index: %i\n\n", ielement);
         t8_forest_leaf_face_neighbors (problem->forest, itree, element,
                                        &neighbors, iface,
                                        &elem_data->dual_faces[iface],
                                        &elem_data->num_neighbors[iface],
                                        &elem_data->neighs[iface],
                                        &neigh_scheme, 1);
+
+        #ifdef T8_ENABLE_DEBUG
+        /* for debugging */
+        //t8_productionf ("Current element (tree: %i, element_index: %i):\n", itree, ielement);
+        //ts->t8_element_print_element (element);
+        //t8_productionf ("Neighbor at face %i:\n", iface);
+        //neigh_scheme->t8_element_print_element (neighbors[0]);
+        #endif
+
         for (ineigh = 0; ineigh < elem_data->num_neighbors[iface]; ineigh++) {
           elem_data->neigh_level[iface] =
             neigh_scheme->t8_element_level (neighbors[ineigh]);
