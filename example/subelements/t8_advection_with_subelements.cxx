@@ -258,7 +258,7 @@ t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
                       t8_eclass_scheme_c * ts, int num_elements,
                       t8_element_t * elements[])
 {
-  #if 0  /* refine all lower right elements */
+#if 0                           /* refine all lower right elements */
   int                 coord[3] = { };
   ts->t8_element_anchor (elements[0], coord);
 
@@ -266,24 +266,24 @@ t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
     return 1;
   }
   return 0;
-  #endif
+#endif
 
-  #if 1 /* refinement every second element */
+#if 1                           /* refinement every second element */
   if (lelement_id % 2 == 0) {
     return 1;
   }
   return 0;
-  #endif
+#endif
 
-  #if 0 /* refinement all left elements */
+#if 0                           /* refinement all left elements */
   int                 coord[3] = { };
   ts->t8_element_anchor (elements[0], coord);
-  int len = ts->t8_element_root_len (elements[0]);
+  int                 len = ts->t8_element_root_len (elements[0]);
   if (coord[0] < len / 2) {
     return 1;
   }
   return 0;
-  #endif
+#endif
 }
 
 /* Compute the total volume of the elements with negative phi value */
