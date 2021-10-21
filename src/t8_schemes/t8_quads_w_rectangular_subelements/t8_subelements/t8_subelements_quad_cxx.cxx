@@ -530,7 +530,7 @@ t8_linearidx_t
 
   /* Note that the id of a subelement equals the id of its parent quadrant.
    * Therefore, the binary search (for example used in the leaf_face_neighbor function) 
-   * will find a random subelement of transition cell which might not be the desired neighbor of a given element. */
+   * will find a random subelement of the transition cell which might not be the desired neighbor of a given element. */
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
@@ -1120,17 +1120,27 @@ t8_subelement_scheme_quad_c::t8_element_boundary_face (const t8_element_t *
     int                 location[3] = { };      /* location = {location of subelement (face number of transition cell), split, first or second element if split} */
     t8_element_get_location_of_subelement (elem, location);
     int                 split = location[1];
-    int                 first = location[2];
+    int                 second = location[2];
 
-    if (split && !first) {      /* if the subelement lies at a split face */
+    if (split) {      /* if the subelement lies at a split face */
       l->level = q->level + 1;
       int                 len =
         P4EST_QUADRANT_LEN (pquad_w_sub->p4q.level + 1);
-      if (location[0] == 0 || location[0] == 1) {
-        l->x = q->y + len;
+      if (second) { /* second subelement */
+        if (location[0] == 0 || location[0] == 1) {
+          l->x = q->y + len;
+        }
+        if (location[0] == 2 || location[0] == 3) {
+          l->x = q->x + len;
+        }
       }
-      if (location[0] == 2 || location[0] == 3) {
-        l->x = q->x + len;
+      else { /* first subelement */
+        if (location[0] == 0 || location[0] == 1) {
+          l->x = q->y;
+        }
+        if (location[0] == 2 || location[0] == 3) {
+          l->x = q->x;
+        }
       }
     }
     else {                      /* if the subelement is not split */
@@ -1330,9 +1340,7 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
 
   T8_QUAD_SET_TDIM (n, 2);
 
-  /* In the following we set the dual faces of our element at the given face. 
-   * This does only make sense if the neighbor element at face is of the same type as the 
-   * current element (either subelement or non subelement) */
+  /* In the following we set the dual faces of our element at the given face. */
   if (t8_element_test_if_subelement (elem) == T8_SUB_QUAD_IS_SUBELEMENT) {
     if (face == 1) {
       int                 location[3] = { };

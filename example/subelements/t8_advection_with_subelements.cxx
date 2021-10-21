@@ -1394,7 +1394,12 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
       elem_data->num_faces = ts->t8_element_num_faces (element);
       for (iface = 0; iface < elem_data->num_faces; iface++) {
         /* Compute the indices of the face neighbors */
-        t8_productionf ("element_index: %i\n\n", ielement);
+#ifdef T8_ENABLE_DEBUG
+        /* for debugging */
+        t8_debugf ("Current element (tree: %i, element_index: %i, face: %i\n",
+                        itree, ielement, iface);
+        ts->t8_element_print_element (element);
+#endif
         t8_forest_leaf_face_neighbors (problem->forest, itree, element,
                                        &neighbors, iface,
                                        &elem_data->dual_faces[iface],
@@ -1404,10 +1409,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
 
 #ifdef T8_ENABLE_DEBUG
         /* for debugging */
-        t8_productionf ("Current element (tree: %i, element_index: %i):\n",
-                        itree, ielement);
-        ts->t8_element_print_element (element);
-        t8_productionf ("Neighbor at face %i:\n", iface);
+        t8_debugf ("Neighbor at face %i:\n", iface);
         neigh_scheme->t8_element_print_element (neighbors[0]);
 #endif
 
