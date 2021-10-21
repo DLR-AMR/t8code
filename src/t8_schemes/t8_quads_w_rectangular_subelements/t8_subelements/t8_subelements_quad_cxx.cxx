@@ -2167,18 +2167,20 @@ t8_subelement_scheme_quad_c::t8_element_get_id_from_location (int type,
 }
 
 int
-t8_subelement_scheme_quad_c::t8_element_get_face_number_of_hypotenuse (const t8_element_t * elem)
+t8_subelement_scheme_quad_c::t8_element_get_face_number_of_hypotenuse (const
+                                                                       t8_element_t
+                                                                       * elem)
 {
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
 
-  int location[3] = {};
+  int                 location[3] = { };
   t8_element_get_location_of_subelement (elem, location);
 
-  int split = location[1];
-  int second = location [2];
+  int                 split = location[1];
+  int                 second = location[2];
 
-  if (!split) { /* if the face is not split, then the hypotenuse is always face number one */
+  if (!split) {                 /* if the face is not split, then the hypotenuse is always face number one */
     return 1;
   }
   else {

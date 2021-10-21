@@ -927,7 +927,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
       double              vertex_a[3], vertex_b[3], center[3];
       double              vb_vb, c_vb, c_n;
       double              norm;
-      
+
       /* This construction does not work for subelements */
       /* We approximate the normal vector via this geometric construction:
        *
@@ -955,27 +955,32 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
       t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
                                     corner_b, vertex_b);
 
-      if (ts->t8_element_test_if_subelement (element)) { /* the recent element is a subelement and we need an adjustement of the construction of C */
-        int long_face = ts->t8_element_get_face_number_of_hypotenuse (element);
+      if (ts->t8_element_test_if_subelement (element)) {        /* the recent element is a subelement and we need an adjustement of the construction of C */
+        int                 long_face =
+          ts->t8_element_get_face_number_of_hypotenuse (element);
 
-        if (long_face == face) { /* the recent face is the hypotenuse. We use the opposite vertex as C in this case. */
-          double vertex_c[3];
-          int corner_c = (corner_b + 1) % 3;
-          t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
-                                        corner_c, vertex_c);
+        if (long_face == face) {        /* the recent face is the hypotenuse. We use the opposite vertex as C in this case. */
+          double              vertex_c[3];
+          int                 corner_c = (corner_b + 1) % 3;
+          t8_forest_element_coordinate (forest, ltreeid, element,
+                                        tree_vertices, corner_c, vertex_c);
           center[0] = vertex_c[0];
           center[1] = vertex_c[1];
         }
-        else { /* the recent face is not the hypotenuse and we use the centroid of the hypotenuse as C */
-          double vertex_a_long[3], vertex_b_long[3];
-          int                 corner_a_long, corner_b_long; 
-          corner_a_long = ts->t8_element_get_face_corner (element, long_face, 0);
-          corner_b_long = ts->t8_element_get_face_corner (element, long_face, 1);
+        else {                  /* the recent face is not the hypotenuse and we use the centroid of the hypotenuse as C */
+          double              vertex_a_long[3], vertex_b_long[3];
+          int                 corner_a_long, corner_b_long;
+          corner_a_long =
+            ts->t8_element_get_face_corner (element, long_face, 0);
+          corner_b_long =
+            ts->t8_element_get_face_corner (element, long_face, 1);
           /* Compute the coordinates of the endnotes */
-          t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
-                                        corner_a_long, vertex_a_long);
-          t8_forest_element_coordinate (forest, ltreeid, element, tree_vertices,
-                                        corner_b_long, vertex_b_long);
+          t8_forest_element_coordinate (forest, ltreeid, element,
+                                        tree_vertices, corner_a_long,
+                                        vertex_a_long);
+          t8_forest_element_coordinate (forest, ltreeid, element,
+                                        tree_vertices, corner_b_long,
+                                        vertex_b_long);
 
           /* Compute the average of those coordinates */
           t8_vec_axpy (vertex_a_long, vertex_b_long, 1);
@@ -985,7 +990,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
           center[1] = vertex_b_long[1];
         }
       }
-      else { /* the recent element is no subelement */
+      else {                    /* the recent element is no subelement */
         /* Compute the center */
         t8_forest_element_centroid (forest, ltreeid, element, tree_vertices,
                                     center);
@@ -993,11 +998,11 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
 
       t8_productionf
         ("Corner_a: %i, Corner_b: %i, vertex_a: (%f,%f), vertex_b: (%f,%f)\n, center: (%f,%f)\n",
-        corner_a, corner_b, vertex_a[0], vertex_a[1], vertex_b[0],
-        vertex_b[1], center[0], center[1]);
+         corner_a, corner_b, vertex_a[0], vertex_a[1], vertex_b[0],
+         vertex_b[1], center[0], center[1]);
 
       /* Compute the difference with V_a.
-      * Compute the dot products */
+       * Compute the dot products */
       vb_vb = c_vb = 0;
       /* vertex_b = vertex_b - vertex_a */
       t8_vec_axpy (vertex_a, vertex_b, -1);
@@ -1009,13 +1014,13 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
       c_vb = t8_vec_dot (center, vertex_b);
 
       /* Compute N = C - <C,V>/<V,V> V
-      * compute the norm of N
-      * compute N*C */
+       * compute the norm of N
+       * compute N*C */
       t8_vec_axpyz (vertex_b, center, normal, -1 * c_vb / vb_vb);
       norm = t8_vec_norm (normal);
 
       t8_productionf
-        ("normal: (%f,%f), norm: %f\n",normal[0], normal[1], norm);
+        ("normal: (%f,%f), norm: %f\n", normal[0], normal[1], norm);
 
       T8_ASSERT (norm != 0);
       c_n = t8_vec_dot (center, normal);

@@ -227,7 +227,8 @@ t8_default_scheme_common_c::t8_element_test_if_subelement (const
 
 int
 t8_default_scheme_common_c::t8_element_get_face_number_of_hypotenuse (const
-                                                           t8_element * elem)
+                                                                      t8_element
+                                                                      * elem)
 {
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }

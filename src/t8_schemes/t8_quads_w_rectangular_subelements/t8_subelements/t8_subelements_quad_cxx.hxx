@@ -381,7 +381,9 @@ public:
                                                                    elem_face);
 
 /** TODO: write comment */
-  virtual int        t8_element_get_face_number_of_hypotenuse (const t8_element_t * elem);
+  virtual int         t8_element_get_face_number_of_hypotenuse (const
+                                                                t8_element_t *
+                                                                elem);
 
 /** Get the shape of a given element. Subelements are triangles */
   virtual t8_element_shape_t t8_element_shape (const t8_element_t * elem);
