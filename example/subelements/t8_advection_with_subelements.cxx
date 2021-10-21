@@ -258,13 +258,32 @@ t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
                       t8_eclass_scheme_c * ts, int num_elements,
                       t8_element_t * elements[])
 {
+  #if 0  /* refine all lower right elements */
   int                 coord[3] = { };
   ts->t8_element_anchor (elements[0], coord);
+
   if (coord[0] > coord[1]) {
     return 1;
   }
-
   return 0;
+  #endif
+
+  #if 1 /* refinement every second element */
+  if (lelement_id % 2 == 0) {
+    return 1;
+  }
+  return 0;
+  #endif
+
+  #if 0 /* refinement all left elements */
+  int                 coord[3] = { };
+  ts->t8_element_anchor (elements[0], coord);
+  int len = ts->t8_element_root_len (elements[0]);
+  if (coord[0] < len / 2) {
+    return 1;
+  }
+  return 0;
+  #endif
 }
 
 /* Compute the total volume of the elements with negative phi value */
@@ -720,7 +739,7 @@ t8_advect_compute_element_data (t8_advect_problem_t * problem,
   /* Compute the midpoint coordinates of element */
   t8_forest_element_centroid (problem->forest, ltreeid, element,
                               tree_vertices, elem_data->midpoint);
-  /* Compute the length of this element */
+  /* Compute the volume (length in case of line) of this element */
   elem_data->vol =
     t8_forest_element_volume (problem->forest, ltreeid, element,
                               tree_vertices);
@@ -1394,10 +1413,10 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
       elem_data->num_faces = ts->t8_element_num_faces (element);
       for (iface = 0; iface < elem_data->num_faces; iface++) {
         /* Compute the indices of the face neighbors */
-#ifdef T8_ENABLE_DEBUG
+#if 0
         /* for debugging */
         t8_debugf ("Current element (tree: %i, element_index: %i, face: %i\n",
-                        itree, ielement, iface);
+                   itree, ielement, iface);
         ts->t8_element_print_element (element);
 #endif
         t8_forest_leaf_face_neighbors (problem->forest, itree, element,
@@ -1407,7 +1426,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
                                        &elem_data->neighs[iface],
                                        &neigh_scheme, 1);
 
-#ifdef T8_ENABLE_DEBUG
+#if 0
         /* for debugging */
         t8_debugf ("Neighbor at face %i:\n", iface);
         neigh_scheme->t8_element_print_element (neighbors[0]);
@@ -1990,7 +2009,7 @@ main (int argc, char *argv[])
                       "\t\t4 - 2D rotation around (0.5,0.5).\n"
                       "\t\t5 - 2D flow around circle at (0.5,0.5)"
                       "with radius 0.15.\n)");
-  sc_options_add_int (opt, 'l', "level", &level, 1,
+  sc_options_add_int (opt, 'l', "level", &level, 4,
                       "The minimum refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 1,
                       "The number of adaptive refinement levels.");
@@ -2013,7 +2032,7 @@ main (int argc, char *argv[])
                          "The duration of the simulation. Default: 1");
 
   sc_options_add_double (opt, 'C', "CFL", &cfl,
-                         0.4, "The cfl number to use. Default: 1");
+                         0.3, "The cfl number to use. Default: 1");
   sc_options_add_double (opt, 'b', "band-width", &band_width,
                          1,
                          "Control the width of the refinement band around\n"
@@ -2023,7 +2042,7 @@ main (int argc, char *argv[])
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 1,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 5,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");

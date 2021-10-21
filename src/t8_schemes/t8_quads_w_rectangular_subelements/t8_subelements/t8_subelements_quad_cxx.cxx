@@ -1122,11 +1122,11 @@ t8_subelement_scheme_quad_c::t8_element_boundary_face (const t8_element_t *
     int                 split = location[1];
     int                 second = location[2];
 
-    if (split) {      /* if the subelement lies at a split face */
+    if (split) {                /* if the subelement lies at a split face */
       l->level = q->level + 1;
       int                 len =
         P4EST_QUADRANT_LEN (pquad_w_sub->p4q.level + 1);
-      if (second) { /* second subelement */
+      if (second) {             /* second subelement */
         if (location[0] == 0 || location[0] == 1) {
           l->x = q->y + len;
         }
@@ -1134,7 +1134,7 @@ t8_subelement_scheme_quad_c::t8_element_boundary_face (const t8_element_t *
           l->x = q->x + len;
         }
       }
-      else { /* first subelement */
+      else {                    /* first subelement */
         if (location[0] == 0 || location[0] == 1) {
           l->x = q->y;
         }

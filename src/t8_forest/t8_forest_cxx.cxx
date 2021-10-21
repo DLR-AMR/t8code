@@ -945,11 +945,9 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
        */
       /* Compute the two endnotes of the face line */
 
-      #if 0
-        #ifdef T8_ENABLE_DEBUG
-          ts->t8_element_print_element (element);
-        #endif
-      #endif
+#if 0
+      ts->t8_element_print_element (element);
+#endif
 
       corner_a = ts->t8_element_get_face_corner (element, face, 0);
       corner_b = ts->t8_element_get_face_corner (element, face, 1);
@@ -999,12 +997,12 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
         t8_forest_element_centroid (forest, ltreeid, element, tree_vertices,
                                     center);
       }
-      #if 0
-        t8_debugf
-          ("Corner_a: %i, Corner_b: %i, vertex_a: (%f,%f), vertex_b: (%f,%f)\n, center: (%f,%f)\n",
-          corner_a, corner_b, vertex_a[0], vertex_a[1], vertex_b[0],
-          vertex_b[1], center[0], center[1]);
-      #endif
+#if 0
+      t8_debugf
+        ("Corner_a: %i, Corner_b: %i, vertex_a: (%f,%f), vertex_b: (%f,%f)\n, center: (%f,%f)\n",
+         corner_a, corner_b, vertex_a[0], vertex_a[1], vertex_b[0],
+         vertex_b[1], center[0], center[1]);
+#endif
 
       /* Compute the difference with V_a.
        * Compute the dot products */
@@ -1024,8 +1022,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
       t8_vec_axpyz (vertex_b, center, normal, -1 * c_vb / vb_vb);
       norm = t8_vec_norm (normal);
 
-      t8_debugf
-        ("normal: (%f,%f), norm: %f\n", normal[0], normal[1], norm);
+      t8_debugf ("normal: (%f,%f), norm: %f\n", normal[0], normal[1], norm);
 
       T8_ASSERT (norm != 0);
       c_n = t8_vec_dot (center, normal);
@@ -1799,14 +1796,10 @@ t8_forest_element_face_neighbor (t8_forest_t forest,
                                                 is_smaller);
     /* And now we extrude the face to the new neighbor element */
     neighbor_scheme = forest->scheme_cxx->eclass_schemes[neigh_eclass];
-    t8_debugf ("Initial neigh:\n");
-    neighbor_scheme->t8_element_print_element (neigh);
     *neigh_face =
       neighbor_scheme->t8_element_extrude_face (face_element,
                                                 boundary_scheme, neigh,
                                                 tree_neigh_face);
-    t8_debugf ("Adapted neigh:\n");
-    neighbor_scheme->t8_element_print_element (neigh);
 
     return global_neigh_id;
   }
