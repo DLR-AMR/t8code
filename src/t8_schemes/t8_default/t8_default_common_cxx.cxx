@@ -59,7 +59,7 @@ t8_default_scheme_common_c::~t8_default_scheme_common_c ()
 int
 t8_default_scheme_common_c::t8_element_num_corners (const t8_element_t * elem)
 {
-  #if 1
+#if 1
   /* TODO: this is just a hotfix, replace it by a function in the subelement scheme soon */
   if (t8_element_test_if_subelement (elem)) {
     /* at the moment, subelements are only implemented for the quad scheme and 
@@ -71,7 +71,7 @@ t8_default_scheme_common_c::t8_element_num_corners (const t8_element_t * elem)
      * Pyramids should implement their own version of this function. */
     return t8_eclass_num_vertices[eclass];
   }
-  #endif
+#endif
   //return t8_eclass_num_vertices[eclass];
 }
 
@@ -223,6 +223,13 @@ t8_default_scheme_common_c::t8_element_test_if_subelement (const
 
   /* No subelements are implemented and therefore we return -1 meaning "is no subelement". */
   return 0;
+}
+
+int
+t8_default_scheme_common_c::t8_element_get_face_number_of_hypotenuse (const
+                                                           t8_element * elem)
+{
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
 
 int

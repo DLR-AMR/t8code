@@ -296,14 +296,14 @@ t8_subelement_scheme_quad_c::t8_element_get_face_corner (const t8_element_t *
   if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_NO_SUBELEMENT) {
     /* TODO: check whether this enumeration of the faces is right. It might be f_3 and f_2 switched */
     /*
-    *   2    f_2    3
-    *     x -->-- x
-    *     |       |
-    *     ^       ^
-    * f_0 |       | f_1
-    *     x -->-- x
-    *   0    f_3    1
-    */
+     *   2    f_2    3
+     *     x -->-- x
+     *     |       |
+     *     ^       ^
+     * f_0 |       | f_1
+     *     x -->-- x
+     *   0    f_3    1
+     */
 
     T8_ASSERT (t8_element_is_valid (element));
     T8_ASSERT (0 <= face && face < P4EST_FACES);
@@ -311,11 +311,11 @@ t8_subelement_scheme_quad_c::t8_element_get_face_corner (const t8_element_t *
     return p4est_face_corners[face][corner];
   }
   else {
-    int t8_face_corners_subelement[3][2] = {
-      {0, 1}, 
-      {1, 2}, 
+    int                 t8_face_corners_subelement[3][2] = {
+      {0, 1},
+      {1, 2},
       {2, 0}
-      };
+    };
     /*
      *
      *         x - - - - - x 1
@@ -1252,11 +1252,11 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
       /* half the side length of the transition cell of the subelement */
       const p4est_qcoord_t shift = P4EST_QUADRANT_LEN (q->level + 1);
 
-      int split = location[1]; 
-      int second = location[2];
-      
+      int                 split = location[1];
+      int                 second = location[2];
+
       /* we need to take into account whether the subelement is split or not */
-      if (split) {   /* split */
+      if (split) {              /* split */
 
         /* increase the level by one */
         n->level = q->level + 1;
@@ -1338,13 +1338,13 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
       int                 location[3] = { };
       t8_element_get_location_of_subelement (elem, location);
       /* if the face is pointing outwards, then we set the face equal to the transition cell face and determine its dual face */
-      int face_adj = location[0];
+      int                 face_adj = location[0];
       *neigh_face = subelement_face_dual[face_adj];
     }
     else {
       /* Compute the face number as seen from q.
-      *  0 -> 2    2 -> 0    1 -> 1
-      */
+       *  0 -> 2    2 -> 0    1 -> 1
+       */
       *neigh_face = subelement_face_dual[face];
     }
   }
@@ -1431,7 +1431,7 @@ t8_subelement_scheme_quad_c::t8_element_vertex_coords_of_subelement (const
 
   T8_ASSERT (t8_element_is_valid (t));
   T8_ASSERT (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT);
-  T8_ASSERT (vertex >= 0 && vertex < T8_SUBELEMENT_FACES); /* all subelements are triangles */
+  T8_ASSERT (vertex >= 0 && vertex < T8_SUBELEMENT_FACES);      /* all subelements are triangles */
 
   /* get the length of the current quadrant */
   len = P4EST_QUADRANT_LEN (q1->level);
@@ -1476,7 +1476,7 @@ t8_subelement_scheme_quad_c::t8_element_vertex_coords_of_subelement (const
   if (vertex == 0) {            /* vertex 0 (the first vertex allways equals the center of the element) */
     coords[0] += len / 2;
     coords[1] += len / 2;
-  } /* end of vertex == 0 */
+  }                             /* end of vertex == 0 */
   else if (vertex == 1) {       /* vertex 1 */
     if (face_number == 0) {
       if (split && sub_face_id) {
@@ -1502,8 +1502,8 @@ t8_subelement_scheme_quad_c::t8_element_vertex_coords_of_subelement (const
         coords[0] -= len / 2;
       }
     }
-  } /* end of vertex == 1 */
-  else { /* vertex 2 */
+  }                             /* end of vertex == 1 */
+  else {                        /* vertex 2 */
     if (face_number == 0) {
       coords[1] += len;
       if (split && !sub_face_id) {
@@ -1513,7 +1513,7 @@ t8_subelement_scheme_quad_c::t8_element_vertex_coords_of_subelement (const
     else if (face_number == 1) {
       coords[0] += len;
       coords[1] += len;
-      if (split && sub_face_id) {
+      if (split && !sub_face_id) {
         coords[0] -= len / 2;
       }
     }
@@ -1528,7 +1528,7 @@ t8_subelement_scheme_quad_c::t8_element_vertex_coords_of_subelement (const
         coords[0] += len / 2;
       }
     }
-  } /* end of vertex == 2 */
+  }                             /* end of vertex == 2 */
 }
 
 void
@@ -2164,6 +2164,31 @@ t8_subelement_scheme_quad_c::t8_element_get_id_from_location (int type,
   sub_id = subelements_count - 1;
 
   return sub_id;
+}
+
+int
+t8_subelement_scheme_quad_c::t8_element_get_face_number_of_hypotenuse (const t8_element_t * elem)
+{
+  const t8_quad_with_subelements *pquad_w_sub =
+    (const t8_quad_with_subelements *) elem;
+
+  int location[3] = {};
+  t8_element_get_location_of_subelement (elem, location);
+
+  int split = location[1];
+  int second = location [2];
+
+  if (!split) { /* if the face is not split, then the hypotenuse is always face number one */
+    return 1;
+  }
+  else {
+    if (!second) {
+      return 0;
+    }
+    else {
+      return 2;
+    }
+  }
 }
 
 void

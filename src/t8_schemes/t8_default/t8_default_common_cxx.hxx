@@ -121,6 +121,10 @@ public:
                                                       t8_element * elem);
 
   /* TODO: comment */
+  virtual int         t8_element_get_face_number_of_hypotenuse (const
+                                                      t8_element * elem);
+
+  /* TODO: comment */
   virtual void        t8_element_print_element (const t8_element * elem);
 
   /** TODO: comment */
