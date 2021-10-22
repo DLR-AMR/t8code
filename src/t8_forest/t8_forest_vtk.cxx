@@ -355,8 +355,8 @@ t8_forest_write_vtk_via_API (t8_forest_t forest, const char *fileprefix,
   t8_locidx_t         ielement; /* The iterator over elements in a tree. */
   t8_locidx_t         itree, ivertex;
   double              coordinates[3];
-  <<<<<<<HEAD double  vertex_coords[3] = { 0, 0, 0 };
-  == == == = >>>>>>>origin / develop int elem_id = 0;
+  double              vertex_coords[3] = { 0, 0, 0 };
+  int                 elem_id = 0;
   t8_locidx_t         num_elements;
   int                 freturn = 0;
   t8_gloidx_t         gtreeid;
