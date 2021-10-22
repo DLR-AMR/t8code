@@ -147,7 +147,8 @@ t8_forest_hanging_faces_removed (t8_forest_t forest)
   t8_eclass_scheme_c *ts;
   int                 ltree_id, lelement_id;
 
-  for (ltree_id = 0; ltree_id < t8_forest_get_num_local_trees (forest); ltree_id++) {
+  for (ltree_id = 0; ltree_id < t8_forest_get_num_local_trees (forest);
+       ltree_id++) {
     for (lelement_id = 0; lelement_id < forest->global_num_elements;
          lelement_id++) {
       eclass = t8_forest_get_tree_class (forest, ltree_id);
