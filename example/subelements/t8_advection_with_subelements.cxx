@@ -268,7 +268,7 @@ t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
   return 0;
 #endif
 
-#if 1                           /* refinement diag */
+#if 0                           /* refinement diag */
   int                 coord[3] = { };
   ts->t8_element_anchor (elements[0], coord);
 
@@ -285,7 +285,7 @@ t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
   return 0;
 #endif
 
-#if 0                           /* refinement all left elements */
+#if 1                           /* refinement all left elements */
   int                 coord[3] = { };
   ts->t8_element_anchor (elements[0], coord);
   int                 len = ts->t8_element_root_len (elements[0]);
@@ -949,7 +949,7 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time)
     did_balance = 1;
   }
   /* either way we want to remove the hanging faces from the forest */
-  //t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
+  t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
@@ -1051,7 +1051,7 @@ t8_advect_problem_adapt_init (t8_advect_problem_t * problem, int measure_time)
     did_balance = 1;
   }
   /* either way we want to remove the hanging faces from the forest */
-  //t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
+  t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
@@ -1425,7 +1425,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
       elem_data->num_faces = ts->t8_element_num_faces (element);
       for (iface = 0; iface < elem_data->num_faces; iface++) {
         /* Compute the indices of the face neighbors */
-#if 0
+#if 1
         /* for debugging */
         t8_debugf ("Current element (tree: %i, element_index: %i, face: %i\n",
                    itree, ielement, iface);
@@ -1438,7 +1438,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
                                        &elem_data->neighs[iface],
                                        &neigh_scheme, 1);
 
-#if 0
+#if 1
         /* for debugging */
         t8_debugf ("Neighbor at face %i:\n", iface);
         neigh_scheme->t8_element_print_element (neighbors[0]);
@@ -2021,7 +2021,7 @@ main (int argc, char *argv[])
                       "\t\t4 - 2D rotation around (0.5,0.5).\n"
                       "\t\t5 - 2D flow around circle at (0.5,0.5)"
                       "with radius 0.15.\n)");
-  sc_options_add_int (opt, 'l', "level", &level, 4,
+  sc_options_add_int (opt, 'l', "level", &level, 1,
                       "The minimum refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 1,
                       "The number of adaptive refinement levels.");
