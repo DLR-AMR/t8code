@@ -232,6 +232,10 @@ void                t8_flow_constant_one_vec (const double x[3], double t,
 void                t8_flow_constant_one_x_vec (const double x[3], double t,
                                                 double x_out[3]);
 
+/** Sets the coordinates to exemplary constant values. */
+void                t8_flow_constant_exemplary (const double x[3], double t,
+                                                double x_out[3]);
+
 /** Sets the first and second coordinate to 1, the third to 0. */
 void                t8_flow_constant_one_xy_vec (const double x[3], double t,
                                                  double x_out[3]);

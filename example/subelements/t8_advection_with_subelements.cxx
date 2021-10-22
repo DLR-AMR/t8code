@@ -268,7 +268,17 @@ t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
   return 0;
 #endif
 
-#if 1                           /* refinement every second element */
+#if 1                           /* refinement diag */
+  int                 coord[3] = { };
+  ts->t8_element_anchor (elements[0], coord);
+
+  if (coord[0] == coord[1]) {
+    return 1;
+  }
+  return 0;
+#endif
+
+#if 0                           /* refinement every second element */
   if (lelement_id % 2 == 0) {
     return 1;
   }
@@ -939,7 +949,7 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time)
     did_balance = 1;
   }
   /* either way we want to remove the hanging faces from the forest */
-  t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
+  //t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
@@ -1041,7 +1051,7 @@ t8_advect_problem_adapt_init (t8_advect_problem_t * problem, int measure_time)
     did_balance = 1;
   }
   /* either way we want to remove the hanging faces from the forest */
-  t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
+  //t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
@@ -1247,6 +1257,8 @@ t8_advect_choose_flow (int flow_arg)
     return t8_flow_around_circle;
   case 6:
     return t8_flow_stokes_flow_sphere_shell;
+  case 7:
+    return t8_flow_constant_exemplary;
   default:
     SC_ABORT ("Wrong argument for flow parameter.\n");
   }
@@ -2080,7 +2092,7 @@ main (int argc, char *argv[])
     t8_global_essentialf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed >= 0 && 1 <= flow_arg && flow_arg <= 6 && 0 <= level
+  else if (parsed >= 0 && 1 <= flow_arg && flow_arg <= 7 && 0 <= level
            && 0 <= reflevel && 0 <= vtk_freq
            && ((mshfile != NULL && 0 < dim && dim <= 3)
                || (1 <= eclass_int && eclass_int <= 8)) && band_width >= 0) {
