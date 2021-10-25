@@ -715,7 +715,7 @@ return freturn;
 }
 
 int
-t8_write_vtk_only (vtkUnstructuredGrid unstructuredGrid,
+t8_write_vtk_only (vtkUnstructuredGrid * unstructuredGrid,
                    const char *fileprefix, t8_forest_t forest)
 {
 #if T8_WITH_VTK
@@ -807,7 +807,6 @@ t8_build_vtk_unstructured_grid (t8_forest_t forest, int write_treeid,
                                 int write_element_id, int curved_flag,
                                 int num_data, t8_vtk_data_field_t * data)
 {
-#if T8_WITH_VTK
   /*Check assertions: forest and fileprefix are not NULL and forest is commited */
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
@@ -1095,13 +1094,6 @@ T8_FREE (cellTypes);
 T8_FREE (dataArrays);
 /* Return whether writing was successful */
 return unstructuredGrid;
-
-#else
-  t8_global_errorf
-    ("Warning: t8code is not linked against vtk library. Vtk output will not be generated.\n");
-  t8_global_productionf
-    ("Consider calling 't8_forest_write_vtk' or 't8_forest_vtk_write_file' instead.\n");
-#endif
 }
 
 static              t8_locidx_t
