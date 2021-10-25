@@ -605,7 +605,8 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
         /* We need to allocate the fluxes */
         neigh_data->fluxes[dual_face] = T8_ALLOC (double, 1);
       }
-      printf ("face %i neigh %i df %i, neigh_data->num_faces: %i\n", face, neigh_id, dual_face, neigh_data->num_faces);
+      printf ("face %i neigh %i df %i, neigh_data->num_faces: %i\n", face,
+              neigh_id, dual_face, neigh_data->num_faces);
       SC_CHECK_ABORT (dual_face < neigh_data->num_faces, "num\n");
       // SC_CHECK_ABORT (neigh_data->num_neighbors[dual_face] == 1, "entry\n");
       neigh_data->num_neighbors[dual_face] = 1;
@@ -842,8 +843,7 @@ t8_advect_replace (t8_forest_t forest_old,
       t8_advect_element_set_phi_adapt (problem, first_incoming_data + i,
                                        phi_old);
       /* Set the neighbor entries to uninitialized */
-      elem_data_in[i].num_faces ==
-                 ts->t8_element_num_faces (element);
+      elem_data_in[i].num_faces == ts->t8_element_num_faces (element);
       for (iface = 0; iface < elem_data_in[i].num_faces; iface++) {
         elem_data_in[i].num_neighbors[iface] = 0;
         elem_data_in[i].flux_valid[iface] = -1;
@@ -858,9 +858,9 @@ t8_advect_replace (t8_forest_t forest_old,
   else {
     double              phi = 0;
     /* TODO: this assertion does not work anymore for subelements */
-  #if 0
+#if 0
     T8_ASSERT (num_outgoing == 1 << problem->dim && num_incoming == 1);
-  #endif
+#endif
     /* The old elements form a family which is coarsened. We compute the average
      * phi value and set it as the new phi value */
     /* Get a pointer to the new element */
@@ -1043,7 +1043,7 @@ t8_advect_problem_adapt_init (t8_advect_problem_t * problem, int measure_time)
   /* Set the user data pointer of the new forest */
   t8_forest_set_user_data (problem->forest_adapt, problem);
   /* Set the adapt function */
-#if 1 /* initialize according to numerical values */
+#if 1                           /* initialize according to numerical values */
   t8_forest_set_adapt (problem->forest_adapt, problem->forest,
                        t8_advect_adapt, 0);
 #else /* initialize according to a simple geometric refinement scheme */
@@ -1658,12 +1658,12 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     int                 ilevel;
 
     for (ilevel = problem->level; ilevel < problem->maxlevel; ilevel++) {
-      #if 1 /* initialoze according to the adapt_init scheme (for experimenting with different initial meshes)
-      /* initial adapt */
+#if 1                           /* initialoze according to the adapt_init scheme (for experimenting with different initial meshes)
+                                   /* initial adapt */
       t8_advect_problem_adapt_init (problem, 0);
-      #else /* standard refinement according to nuemrical values */
+#else /* standard refinement according to nuemrical values */
       t8_advect_problem_adapt (problem, 0);
-      #endif
+#endif
       /* repartition */
       t8_advect_problem_partition (problem, 0);
       /* Re initialize the elements */
@@ -1731,7 +1731,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
           t8_forest_get_element_in_tree (problem->forest, itree, ielement);
         num_faces = elem_data->num_faces;
         /* Compute left and right flux */
-        for (iface = 0; iface < num_faces; iface++) { /* face loop */
+        for (iface = 0; iface < num_faces; iface++) {   /* face loop */
           if (elem_data->flux_valid[iface] <= 0 || adapted_or_partitioned) {
 
             /* Compute flux at this face */
@@ -1837,11 +1837,11 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 
                 elem_data->flux_valid[iface] = 1;
                 elem_data->fluxes[iface][0] = flux;
- 
-                 /* NOTE: The following part saves computations but does not work for subelements 
-                  * it relies on the fact that elem_data->dual_face and neigh_data->face 
-                  * are not changing which is not true for subelements with a differetn number of faces. */
-# if 0
+
+                /* NOTE: The following part saves computations but does not work for subelements 
+                 * it relies on the fact that elem_data->dual_face and neigh_data->face 
+                 * are not changing which is not true for subelements with a differetn number of faces. */
+#if 0
                 /* If this face is not hanging, we can set the
                  * flux of the neighbor element as well */
                 if (!adapted_or_partitioned && !neigh_is_ghost && !hanging) {
@@ -1857,7 +1857,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                   neigh_data->neighs[dual_face][0] = lelement;
                   neigh_data->flux_valid[dual_face] = 1;
                 }
-# endif
+#endif
               }
               else if (elem_data->num_neighbors[iface] > 1) {
                 flux =
@@ -1885,7 +1885,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
             /* We want to count all runs over the solver time as one */
             problem->stats[ADVECT_FLUX].count = 1;
           }
-        } /* end face loop */
+        }                       /* end face loop */
         if (problem->dummy_op) {
           /* simulate more load per element */
           int                 i, j;
@@ -1908,8 +1908,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
         /* Compute time step */
         //      printf ("advance %i\n", ielement);
         t8_advect_advance_element (problem, lelement);
-      } /* end element loop */
-    } /* end tree loop */
+      }                         /* end element loop */
+    }                           /* end tree loop */
     adapted_or_partitioned = 0;
     /* Store the advanced phi value in each element */
     t8_advect_project_element_data (problem);

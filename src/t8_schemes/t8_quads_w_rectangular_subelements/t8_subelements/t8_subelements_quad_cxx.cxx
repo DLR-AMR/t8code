@@ -130,7 +130,7 @@ t8_subelement_scheme_quad_c::t8_element_compare (const t8_element_t * elem1,
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
 
-  int compare = p4est_quadrant_compare (q, r);
+  int                 compare = p4est_quadrant_compare (q, r);
 
   if (compare == 0) {
     if (t8_element_test_if_subelement (elem1)

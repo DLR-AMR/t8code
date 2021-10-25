@@ -437,25 +437,30 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
       level_new = ts->t8_element_level (elem_new);
       level_old = ts->t8_element_level (elem_old);
 
-# if 1 /* new scheme for subelements */
-  # if 1
-        t8_debugf ("Using the subelement iterate_replace scheme:\n");
-        t8_debugf ("elem_old (index: %i):\n", ielem_old);
-        ts->t8_element_print_element (elem_old);
-        t8_debugf ("elem_new (index: %i):\n", ielem_new);
-        ts->t8_element_print_element (elem_new);
-  # endif
-      if (ts->t8_element_level (elem_old) < ts->t8_element_level (elem_new)) { /* the old element got refined */
-        T8_ASSERT (ts->t8_element_level (elem_old) + 1 == ts->t8_element_level (elem_new));
-        int number_new_elements, number_old_elements;
-        int element_count;
+#if 1                           /* new scheme for subelements */
+#if 1
+      t8_debugf ("Using the subelement iterate_replace scheme:\n");
+      t8_debugf ("elem_old (index: %i):\n", ielem_old);
+      ts->t8_element_print_element (elem_old);
+      t8_debugf ("elem_new (index: %i):\n", ielem_new);
+      ts->t8_element_print_element (elem_new);
+#endif
+      if (ts->t8_element_level (elem_old) < ts->t8_element_level (elem_new)) {  /* the old element got refined */
+        T8_ASSERT (ts->t8_element_level (elem_old) + 1 ==
+                   ts->t8_element_level (elem_new));
+        int                 number_new_elements, number_old_elements;
+        int                 element_count;
         family_size = ts->t8_element_num_children (elem_new);
         for (element_count = 0; element_count < family_size; element_count++) {
           t8_element_t       *elem_in_refinement;
-          elem_in_refinement = t8_forest_get_element_in_tree (forest_new, itree, ielem_new + element_count);
+          elem_in_refinement =
+            t8_forest_get_element_in_tree (forest_new, itree,
+                                           ielem_new + element_count);
           if (ts->t8_element_test_if_subelement (elem_in_refinement)) {
-            family_size += ts->t8_element_num_siblings (elem_in_refinement) - 1;
-            element_count += ts->t8_element_num_siblings (elem_in_refinement) - 1;
+            family_size +=
+              ts->t8_element_num_siblings (elem_in_refinement) - 1;
+            element_count +=
+              ts->t8_element_num_siblings (elem_in_refinement) - 1;
           }
         }
         number_new_elements = family_size;
@@ -471,9 +476,10 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
         ielem_new += number_new_elements;
         ielem_old += number_old_elements;
       }
-      else if (ts->t8_element_level (elem_old) > ts->t8_element_level (elem_new)) { /* the old element got coarsened */
-        T8_ASSERT (ts->t8_element_level (elem_old) == ts->t8_element_level (elem_new) + 1);
-        int number_new_elements, number_old_elements = 0;
+      else if (ts->t8_element_level (elem_old) > ts->t8_element_level (elem_new)) {     /* the old element got coarsened */
+        T8_ASSERT (ts->t8_element_level (elem_old) ==
+                   ts->t8_element_level (elem_new) + 1);
+        int                 number_new_elements, number_old_elements = 0;
         if (ts->t8_element_test_if_subelement (elem_new)) {
           number_new_elements = ts->t8_element_num_siblings (elem_new);
         }
@@ -482,12 +488,14 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
         }
         replace_fn (forest_old, forest_new, itree, ts, 1, ielem_old,
                     number_new_elements, ielem_new);
-        int element_count;
+        int                 element_count;
         family_size = ts->t8_element_num_children (elem_old);
         for (element_count = 0; element_count < family_size; element_count++) {
           t8_element_t       *elem_in_family;
-          int subelement_number;
-          elem_in_family = t8_forest_get_element_in_tree (forest_old, itree, ielem_old + element_count);
+          int                 subelement_number;
+          elem_in_family =
+            t8_forest_get_element_in_tree (forest_old, itree,
+                                           ielem_old + element_count);
           if (ts->t8_element_test_if_subelement (elem_in_family)) {
             element_count += ts->t8_element_num_siblings (elem_in_family) - 1;
             family_size += ts->t8_element_num_siblings (elem_in_family) - 1;
@@ -498,9 +506,10 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
         ielem_new += number_new_elements;
         ielem_old += number_old_elements;
       }
-      else { /* the old element stayed unchanged but might be refined into subelements (which have the the same level as their parent quad) */
-        T8_ASSERT (ts->t8_element_level (elem_old) == ts->t8_element_level (elem_new));
-        int number_new_elements, number_old_elements;
+      else {                    /* the old element stayed unchanged but might be refined into subelements (which have the the same level as their parent quad) */
+        T8_ASSERT (ts->t8_element_level (elem_old) ==
+                   ts->t8_element_level (elem_new));
+        int                 number_new_elements, number_old_elements;
         if (ts->t8_element_test_if_subelement (elem_new)) {
           number_new_elements = ts->t8_element_num_siblings (elem_new);
         }
@@ -524,7 +533,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
       if (level_old < level_new) {
         T8_ASSERT (level_new == level_old + 1);
         /* elem_old was refined */
-        family_size = ts->t8_element_num_children (elem_old); /* we can use this function as no subelements are involved here */
+        family_size = ts->t8_element_num_children (elem_old);   /* we can use this function as no subelements are involved here */
         replace_fn (forest_old, forest_new, itree, ts, 1, ielem_old,
                     family_size, ielem_new);
         /* Advance to the next element */
