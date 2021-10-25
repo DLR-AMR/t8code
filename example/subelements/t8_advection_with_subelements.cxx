@@ -20,6 +20,19 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/* In this example, we solve the linear advection equation for the 2D quad scheme with subelements. There are the following configurations that can 
+ * be used to investigate the behavior of subelements in an examplary application. 
+ * 
+ *  1) Use an geometric initial refinement scheme: 
+ *         - turn on "t8_advect_adapt_init" in "t8_advect_problem_adapt_init"
+ *  2) Use a static mesh that wont change during an application:
+ *         - use the argument -adapt_freq = big_number such that the adapt function will not be called during computation. In order to work properly for 
+ *           meshes with subelements, we need to turn of "if (!adapted_or_partitioned && !neigh_is_ghost && !hanging)". This shortcut wont work for 
+ *           subelements because of different face numbers etc. All fluxes need to be computed in the case that subelements are in the mesh.
+ *  3) The standard procedure will use a dynamic mesh that will adapt after each or several time steps. 
+ *         - work in progress for subelements.. (does also not work for non subelement meshes at the moment)
+ */
+
 #include <sc_options.h>
 #include <sc_statistics.h>
 #include <t8_schemes/t8_quads_w_rectangular_subelements/t8_subelements/t8_subelements_quad_cxx.hxx>
@@ -241,16 +254,6 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from,
   return 0;
 }
 
-/* static adapt scheme that does nothing */
-static int
-t8_advect_adapt_static (t8_forest_t forest, t8_forest_t forest_from,
-                        t8_locidx_t ltree_id, t8_locidx_t lelement_id,
-                        t8_eclass_scheme_c * ts, int num_elements,
-                        t8_element_t * elements[])
-{
-  return 0;                     /* keep the adaptation static for the first tests */
-}
-
 /* Initial adapt scheme */
 static int
 t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
@@ -293,6 +296,10 @@ t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
     return 1;
   }
   return 0;
+#endif
+
+#if 0                           /* refinement all elements with subelement type 15 */
+  return 16;
 #endif
 }
 
@@ -598,7 +605,7 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t * problem,
         /* We need to allocate the fluxes */
         neigh_data->fluxes[dual_face] = T8_ALLOC (double, 1);
       }
-      // printf ("face %i neigh %i df %i\n", face, neigh_id, dual_face);
+      printf ("face %i neigh %i df %i, neigh_data->num_faces: %i\n", face, neigh_id, dual_face, neigh_data->num_faces);
       SC_CHECK_ABORT (dual_face < neigh_data->num_faces, "num\n");
       // SC_CHECK_ABORT (neigh_data->num_neighbors[dual_face] == 1, "entry\n");
       neigh_data->num_neighbors[dual_face] = 1;
@@ -809,7 +816,7 @@ t8_advect_replace (t8_forest_t forest_old,
       t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
                                      first_incoming);
     /* Set the neighbor entries to uninitialized */
-    T8_ASSERT (elem_data_in->num_faces == ts->t8_element_num_faces (element));
+    //T8_ASSERT (elem_data_in->num_faces == ts->t8_element_num_faces (element));
     for (iface = 0; iface < elem_data_in->num_faces; iface++) {
       elem_data_in->num_neighbors[iface] = 0;
       elem_data_in->flux_valid[iface] = -1;
@@ -835,10 +842,8 @@ t8_advect_replace (t8_forest_t forest_old,
       t8_advect_element_set_phi_adapt (problem, first_incoming_data + i,
                                        phi_old);
       /* Set the neighbor entries to uninitialized */
-      elem_data_in[i].num_faces = elem_data_out->num_faces;
-      T8_ASSERT (elem_data_in[i].num_faces ==
-                 ts->t8_element_num_faces (element)
-                 || ts->t8_element_test_if_subelement (element));
+      elem_data_in[i].num_faces ==
+                 ts->t8_element_num_faces (element);
       for (iface = 0; iface < elem_data_in[i].num_faces; iface++) {
         elem_data_in[i].num_neighbors[iface] = 0;
         elem_data_in[i].flux_valid[iface] = -1;
@@ -852,7 +857,10 @@ t8_advect_replace (t8_forest_t forest_old,
   }
   else {
     double              phi = 0;
+    /* TODO: this assertion does not work anymore for subelements */
+  #if 0
     T8_ASSERT (num_outgoing == 1 << problem->dim && num_incoming == 1);
+  #endif
     /* The old elements form a family which is coarsened. We compute the average
      * phi value and set it as the new phi value */
     /* Get a pointer to the new element */
@@ -870,8 +878,7 @@ t8_advect_replace (t8_forest_t forest_old,
     phi /= num_outgoing;
     t8_advect_element_set_phi_adapt (problem, first_incoming_data, phi);
     /* Set the neighbor entries to uninitialized */
-    elem_data_in->num_faces = elem_data_out[0].num_faces;
-    T8_ASSERT (elem_data_in->num_faces == ts->t8_element_num_faces (element));
+    elem_data_in->num_faces = ts->t8_element_num_faces (element);
     for (iface = 0; iface < elem_data_in->num_faces; iface++) {
       elem_data_in->num_neighbors[iface] = 0;
       elem_data_in->flux_valid[iface] = -1;
@@ -933,14 +940,9 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time)
   t8_forest_set_profiling (problem->forest_adapt, 1);
   /* Set the user data pointer of the new forest */
   t8_forest_set_user_data (problem->forest_adapt, problem);
-#if 0                           /* do not use the dynamic adapt scheme for now */
-  /* Set the adapt function */
+  /* Set the adapt function (it can be set to static via the argument adapt_freq, setting it to a higher number than timesteps) */
   t8_forest_set_adapt (problem->forest_adapt, problem->forest,
                        t8_advect_adapt, 0);
-#endif
-  /* use a static scheme */
-  t8_forest_set_adapt (problem->forest_adapt, problem->forest,
-                       t8_advect_adapt_static, 0);
   if (problem->maxlevel - problem->level > 1) {
     /* We also want to balance the forest
      * if the difference in refinement levels is
@@ -949,7 +951,7 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time)
     did_balance = 1;
   }
   /* either way we want to remove the hanging faces from the forest */
-  t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
+  // t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
@@ -1041,8 +1043,13 @@ t8_advect_problem_adapt_init (t8_advect_problem_t * problem, int measure_time)
   /* Set the user data pointer of the new forest */
   t8_forest_set_user_data (problem->forest_adapt, problem);
   /* Set the adapt function */
+#if 1 /* initialize according to numerical values */
+  t8_forest_set_adapt (problem->forest_adapt, problem->forest,
+                       t8_advect_adapt, 0);
+#else /* initialize according to a simple geometric refinement scheme */
   t8_forest_set_adapt (problem->forest_adapt, problem->forest,
                        t8_advect_adapt_init, 0);
+#endif
   if (problem->maxlevel - problem->level > 1) {
     /* We also want to balance the forest
      * if the difference in refinement levels is
@@ -1051,7 +1058,7 @@ t8_advect_problem_adapt_init (t8_advect_problem_t * problem, int measure_time)
     did_balance = 1;
   }
   /* either way we want to remove the hanging faces from the forest */
-  t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
+  // t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
@@ -1425,7 +1432,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
       elem_data->num_faces = ts->t8_element_num_faces (element);
       for (iface = 0; iface < elem_data->num_faces; iface++) {
         /* Compute the indices of the face neighbors */
-#if 1
+#if 0
         /* for debugging */
         t8_debugf ("Current element (tree: %i, element_index: %i, face: %i\n",
                    itree, ielement, iface);
@@ -1438,7 +1445,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
                                        &elem_data->neighs[iface],
                                        &neigh_scheme, 1);
 
-#if 1
+#if 0
         /* for debugging */
         t8_debugf ("Neighbor at face %i:\n", iface);
         neigh_scheme->t8_element_print_element (neighbors[0]);
@@ -1651,8 +1658,12 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     int                 ilevel;
 
     for (ilevel = problem->level; ilevel < problem->maxlevel; ilevel++) {
+      #if 1 /* initialoze according to the adapt_init scheme (for experimenting with different initial meshes)
       /* initial adapt */
       t8_advect_problem_adapt_init (problem, 0);
+      #else /* standard refinement according to nuemrical values */
+      t8_advect_problem_adapt (problem, 0);
+      #endif
       /* repartition */
       t8_advect_problem_partition (problem, 0);
       /* Re initialize the elements */
@@ -1720,7 +1731,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
           t8_forest_get_element_in_tree (problem->forest, itree, ielement);
         num_faces = elem_data->num_faces;
         /* Compute left and right flux */
-        for (iface = 0; iface < num_faces; iface++) {
+        for (iface = 0; iface < num_faces; iface++) { /* face loop */
           if (elem_data->flux_valid[iface] <= 0 || adapted_or_partitioned) {
 
             /* Compute flux at this face */
@@ -1826,7 +1837,11 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
 
                 elem_data->flux_valid[iface] = 1;
                 elem_data->fluxes[iface][0] = flux;
-
+ 
+                 /* NOTE: The following part saves computations but does not work for subelements 
+                  * it relies on the fact that elem_data->dual_face and neigh_data->face 
+                  * are not changing which is not true for subelements with a differetn number of faces. */
+# if 0
                 /* If this face is not hanging, we can set the
                  * flux of the neighbor element as well */
                 if (!adapted_or_partitioned && !neigh_is_ghost && !hanging) {
@@ -1842,6 +1857,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                   neigh_data->neighs[dual_face][0] = lelement;
                   neigh_data->flux_valid[dual_face] = 1;
                 }
+# endif
               }
               else if (elem_data->num_neighbors[iface] > 1) {
                 flux =
@@ -1869,7 +1885,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
             /* We want to count all runs over the solver time as one */
             problem->stats[ADVECT_FLUX].count = 1;
           }
-        }
+        } /* end face loop */
         if (problem->dummy_op) {
           /* simulate more load per element */
           int                 i, j;
@@ -1892,8 +1908,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
         /* Compute time step */
         //      printf ("advance %i\n", ielement);
         t8_advect_advance_element (problem, lelement);
-      }
-    }
+      } /* end element loop */
+    } /* end tree loop */
     adapted_or_partitioned = 0;
     /* Store the advanced phi value in each element */
     t8_advect_project_element_data (problem);
@@ -2021,7 +2037,7 @@ main (int argc, char *argv[])
                       "\t\t4 - 2D rotation around (0.5,0.5).\n"
                       "\t\t5 - 2D flow around circle at (0.5,0.5)"
                       "with radius 0.15.\n)");
-  sc_options_add_int (opt, 'l', "level", &level, 1,
+  sc_options_add_int (opt, 'l', "level", &level, 5,
                       "The minimum refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 1,
                       "The number of adaptive refinement levels.");
@@ -2054,7 +2070,7 @@ main (int argc, char *argv[])
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 5,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 1,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
@@ -2077,7 +2093,7 @@ main (int argc, char *argv[])
   sc_options_add_double (opt, 'Z', "Zcoord", &ls_data.M[2], 0.5,
                          "The Z-Coordinate of the middlepoint"
                          "of the sphere. Default is 0.6.");
-  sc_options_add_double (opt, 'R', "Radius", &ls_data.radius, 0.25,
+  sc_options_add_double (opt, 'R', "Radius", &ls_data.radius, 0.2,
                          "The radius of the Sphere." "Default is 0.25.");
 
   sc_options_add_int (opt, 'V', "volume-refine", &volume_refine, -1,
