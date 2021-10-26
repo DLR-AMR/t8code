@@ -388,6 +388,9 @@ public:
 /** Get the shape of a given element. Subelements are triangles */
   virtual t8_element_shape_t t8_element_shape (const t8_element_t * elem);
 
+/** TODO: comment */
+  virtual int          t8_element_num_corners (const t8_element_t * elem);
+
 /** print element values for debugging */
   virtual void        t8_element_print_element (const t8_element_t * elem);
 

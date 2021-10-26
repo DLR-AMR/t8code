@@ -59,20 +59,9 @@ t8_default_scheme_common_c::~t8_default_scheme_common_c ()
 int
 t8_default_scheme_common_c::t8_element_num_corners (const t8_element_t * elem)
 {
-#if 1
-  /* TODO: this is just a hotfix, replace it by a function in the subelement scheme soon */
-  if (t8_element_test_if_subelement (elem)) {
-    /* at the moment, subelements are only implemented for the quad scheme and 
-     * its subelements are triangles with 3 corners */
-    return 3;
-  }
-  else {
-    /* use the lookup table of the eclasses.
-     * Pyramids should implement their own version of this function. */
-    return t8_eclass_num_vertices[eclass];
-  }
-#endif
-  //return t8_eclass_num_vertices[eclass];
+  /* use the lookup table of the eclasses.
+    * Pyramids and schemes with subelements should implement their own version of this function. */
+  return t8_eclass_num_vertices[eclass];
 }
 
 void

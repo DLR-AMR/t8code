@@ -557,10 +557,22 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
        *  x --- x
        * 0       v_2
        */
+
+      /* Note that for triangular subelements we need to identify the corner at the right angle to start with */
+
       /* Compute the faces meeting at vertex 0 */
       ts = t8_forest_get_eclass_scheme (forest, T8_ECLASS_QUAD);
-      face_a = ts->t8_element_get_corner_face (element, 0, 0);
-      face_b = ts->t8_element_get_corner_face (element, 0, 1);
+      int start_corner;
+      if (ts->t8_element_test_if_subelement (element)) { /* adjust the starting corner */
+        int face_num_hypotenuse = ts->t8_element_get_face_number_of_hypotenuse (element);
+        start_corner = face_num_hypotenuse + 2 % 3;
+      }
+      else {
+        start_corner = 0;
+      }
+
+      face_a = ts->t8_element_get_corner_face (element, start_corner, 0);
+      face_b = ts->t8_element_get_corner_face (element, start_corner, 1);
       /* Compute the other corners of these faces */
       corner_a = ts->t8_element_get_face_corner (element, face_a, 1);
       corner_b = ts->t8_element_get_face_corner (element, face_b, 1);
@@ -568,12 +580,18 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
       T8_ASSERT (corner_a != corner_b);
       /* Compute the coordinates of vertex 0, a and b */
       t8_forest_element_coordinate (forest, ltreeid, element, vertices,
-                                    0, coordinates[0]);
+                                    start_corner, coordinates[0]);
       t8_forest_element_coordinate (forest, ltreeid, element, vertices,
                                     corner_a, coordinates[1]);
       t8_forest_element_coordinate (forest, ltreeid, element, vertices,
                                     corner_b, coordinates[2]);
-      return 2 * t8_forest_element_triangle_area (coordinates);
+
+      if (ts->t8_element_test_if_subelement (element)) {
+        return t8_forest_element_triangle_area (coordinates);
+      }
+      else {
+        return 2 * t8_forest_element_triangle_area (coordinates);
+      }
     }
     break;
   case T8_ECLASS_TRIANGLE:
@@ -1021,9 +1039,9 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid,
        * compute N*C */
       t8_vec_axpyz (vertex_b, center, normal, -1 * c_vb / vb_vb);
       norm = t8_vec_norm (normal);
-
+#if 0
       t8_debugf ("normal: (%f,%f), norm: %f\n", normal[0], normal[1], norm);
-
+#endif
       T8_ASSERT (norm != 0);
       c_n = t8_vec_dot (center, normal);
 

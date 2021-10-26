@@ -292,24 +292,26 @@ t8_subelement_scheme_quad_c::t8_element_get_face_corner (const t8_element_t *
                                                          element, int face,
                                                          int corner)
 {
+  T8_ASSERT (t8_element_is_valid (element));
+  
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) element;
 
   if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_NO_SUBELEMENT) {
     /* TODO: check whether this enumeration of the faces is right. It might be f_3 and f_2 switched */
     /*
-     *   2    f_2    3
+     *   2    f_3    3
      *     x -->-- x
      *     |       |
      *     ^       ^
      * f_0 |       | f_1
      *     x -->-- x
-     *   0    f_3    1
+     *   0    f_2    1
      */
 
-    T8_ASSERT (t8_element_is_valid (element));
     T8_ASSERT (0 <= face && face < P4EST_FACES);
-    T8_ASSERT (0 <= corner && corner < 2);
+    T8_ASSERT (0 <= corner && corner < 4);
+
     return p4est_face_corners[face][corner];
   }
   else {
@@ -330,6 +332,10 @@ t8_subelement_scheme_quad_c::t8_element_get_face_corner (const t8_element_t *
      *               
      * The vertecies of a subelement are enumerated clockwise, starting with the center vertex of the transition cell 
      */
+
+    T8_ASSERT (0 <= face && face < T8_SUBELEMENT_FACES);
+    T8_ASSERT (0 <= corner && corner < 3);
+
     return t8_face_corners_subelement[face][corner];
   }
 }
@@ -1844,6 +1850,22 @@ t8_element_shape_t
 }
 
 int
+  t8_subelement_scheme_quad_c::t8_element_num_corners (const t8_element_t * elem)
+{
+  const t8_quad_with_subelements *pquad_w_sub =
+    (const t8_quad_with_subelements *) elem;
+
+  T8_ASSERT (t8_element_is_valid (elem));
+
+  if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) { /* elem is triangular subelement */
+    return T8_SUBELEMENT_FACES;
+  }
+  else {                        /* elem is quad */
+    return P4EST_FACES;
+  }
+}
+
+int
 t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
   (const t8_element_t * elem, const t8_element_t * pseudo_neigh,
    int elem_face)
@@ -2181,8 +2203,7 @@ t8_subelement_scheme_quad_c::t8_element_get_face_number_of_hypotenuse (const
                                                                        t8_element_t
                                                                        * elem)
 {
-  const t8_quad_with_subelements *pquad_w_sub =
-    (const t8_quad_with_subelements *) elem;
+  T8_ASSERT (t8_element_is_valid (elem));
 
   int                 location[3] = { };
   t8_element_get_location_of_subelement (elem, location);
