@@ -809,17 +809,17 @@ t8_advect_replace (t8_forest_t forest_old,
   /* Get the old phi value (used in the cases with num_outgoing = 1) */
   phi_old = t8_advect_element_get_phi (problem, first_outgoing_data);
 
-# if 0 /* the new replacement for subelements */
-  if () { /* refined */
-   
-  }
-  else if { /* unchanged */
+#if 0                           /* the new replacement for subelements */
+  if () {                       /* refined */
 
   }
-  else { /* coarsened */
+  else if {                     /* unchanged */
 
   }
-# else /* the standard replacement */
+  else {                        /* coarsened */
+
+  }
+#else /* the standard replacement */
   if (num_incoming == num_outgoing && num_incoming == 1) {
     /* The element is not changed, copy phi and vol */
     memcpy (elem_data_in, elem_data_out, sizeof (t8_advect_element_data_t));
@@ -900,7 +900,7 @@ t8_advect_replace (t8_forest_t forest_old,
     /* update the level */
     elem_data_in->level = elem_data_out->level - 1;
   }
-# endif
+#endif
 }
 
 static void
