@@ -293,7 +293,7 @@ t8_subelement_scheme_quad_c::t8_element_get_face_corner (const t8_element_t *
                                                          int corner)
 {
   T8_ASSERT (t8_element_is_valid (element));
-  
+
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) element;
 
@@ -1850,14 +1850,15 @@ t8_element_shape_t
 }
 
 int
-  t8_subelement_scheme_quad_c::t8_element_num_corners (const t8_element_t * elem)
+t8_subelement_scheme_quad_c::t8_element_num_corners (const t8_element_t *
+                                                     elem)
 {
   const t8_quad_with_subelements *pquad_w_sub =
     (const t8_quad_with_subelements *) elem;
 
   T8_ASSERT (t8_element_is_valid (elem));
 
-  if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) { /* elem is triangular subelement */
+  if (pquad_w_sub->dummy_is_subelement == T8_SUB_QUAD_IS_SUBELEMENT) {  /* elem is triangular subelement */
     return T8_SUBELEMENT_FACES;
   }
   else {                        /* elem is quad */

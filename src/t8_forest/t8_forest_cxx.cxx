@@ -562,9 +562,10 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
 
       /* Compute the faces meeting at vertex 0 */
       ts = t8_forest_get_eclass_scheme (forest, T8_ECLASS_QUAD);
-      int start_corner;
-      if (ts->t8_element_test_if_subelement (element)) { /* adjust the starting corner */
-        int face_num_hypotenuse = ts->t8_element_get_face_number_of_hypotenuse (element);
+      int                 start_corner;
+      if (ts->t8_element_test_if_subelement (element)) {        /* adjust the starting corner */
+        int                 face_num_hypotenuse =
+          ts->t8_element_get_face_number_of_hypotenuse (element);
         start_corner = face_num_hypotenuse + 2 % 3;
       }
       else {

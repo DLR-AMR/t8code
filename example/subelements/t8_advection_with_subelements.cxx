@@ -817,8 +817,7 @@ t8_advect_replace (t8_forest_t forest_old,
       t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
                                      first_incoming);
     /* Set the neighbor entries to uninitialized */
-    //T8_ASSERT (elem_data_in->num_faces == ts->t8_element_num_faces (element));
-    for (iface = 0; iface < elem_data_in->num_faces; iface++) {
+    for (iface = 0; iface < ts->t8_element_num_faces (element); iface++) {
       elem_data_in->num_neighbors[iface] = 0;
       elem_data_in->flux_valid[iface] = -1;
       elem_data_in->dual_faces[iface] = NULL;
@@ -827,7 +826,7 @@ t8_advect_replace (t8_forest_t forest_old,
     }
   }
   else if (num_outgoing == 1) {
-    /* TODO: this assertion does not work anymore for subelements */
+    /* NOTE: this assertion does not work anymore for subelements */
 #if 0
     T8_ASSERT (num_incoming == 1 << problem->dim);
 #endif
@@ -843,7 +842,7 @@ t8_advect_replace (t8_forest_t forest_old,
       t8_advect_element_set_phi_adapt (problem, first_incoming_data + i,
                                        phi_old);
       /* Set the neighbor entries to uninitialized */
-      elem_data_in[i].num_faces == ts->t8_element_num_faces (element);
+      elem_data_in[i].num_faces = ts->t8_element_num_faces (element);
       for (iface = 0; iface < elem_data_in[i].num_faces; iface++) {
         elem_data_in[i].num_neighbors[iface] = 0;
         elem_data_in[i].flux_valid[iface] = -1;
@@ -857,7 +856,7 @@ t8_advect_replace (t8_forest_t forest_old,
   }
   else {
     double              phi = 0;
-    /* TODO: this assertion does not work anymore for subelements */
+    /* NOTE: this assertion does not work anymore for subelements */
 #if 0
     T8_ASSERT (num_outgoing == 1 << problem->dim && num_incoming == 1);
 #endif
@@ -1043,7 +1042,7 @@ t8_advect_problem_adapt_init (t8_advect_problem_t * problem, int measure_time)
   /* Set the user data pointer of the new forest */
   t8_forest_set_user_data (problem->forest_adapt, problem);
   /* Set the adapt function */
-#if 0                           /* initialize according to numerical values */
+#if 1                           /* initialize according to numerical values */
   t8_forest_set_adapt (problem->forest_adapt, problem->forest,
                        t8_advect_adapt, 0);
 #else /* initialize according to a simple geometric refinement scheme */
@@ -1658,11 +1657,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     int                 ilevel;
 
     for (ilevel = problem->level; ilevel < problem->maxlevel; ilevel++) {
-#if 1 /* initialize according to the adapt_init scheme (for experimenting with different initial meshes) */
+      /* initialize according to some adapt_init scheme (for experimenting with different initial meshes) */
       t8_advect_problem_adapt_init (problem, 0);
-#else /* standard refinement according to nuemrical values */
-      t8_advect_problem_adapt (problem, 0);
-#endif
       /* repartition */
       t8_advect_problem_partition (problem, 0);
       /* Re initialize the elements */
@@ -1837,7 +1833,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                   t8_advect_flux_upwind (problem, phi_plus, phi_minus,
                                          itree, elem, tree_vertices, iface);
 
-                printf ("flux (one face neigh): %i\n", flux);
+                printf ("flux (one face neigh): %f\n", flux);
 
                 elem_data->flux_valid[iface] = 1;
                 elem_data->fluxes[iface][0] = flux;
@@ -1868,8 +1864,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                   t8_advect_flux_upwind_hanging (problem, lelement, itree,
                                                  elem, tree_vertices, iface,
                                                  adapted_or_partitioned);
-            
-                printf ("flux (multiple neighs): %i\n", flux);
+
+                printf ("flux (multiple neighs): %f\n", flux);
               }
               else {
                 /* This element is at the domain boundary */
@@ -1881,7 +1877,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                   t8_advect_flux_upwind (problem, phi_plus, phi_minus,
                                          itree, elem, tree_vertices, iface);
 
-                printf ("flux (else): %i\n", flux);
+                printf ("flux (else): %f\n", flux);
 
                 elem_data->flux_valid[iface] = 1;
                 elem_data->fluxes[iface][0] = flux;
@@ -1959,7 +1955,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
     if (problem->t >= problem->T) {
       done = 1;
     }
-  }                             /* End element loop */
+  }                             /* End time loop */
   if (!no_vtk) {
     vtk_time -= sc_MPI_Wtime ();
     /* Print last time step vtk */
@@ -2045,7 +2041,7 @@ main (int argc, char *argv[])
                       "\t\t4 - 2D rotation around (0.5,0.5).\n"
                       "\t\t5 - 2D flow around circle at (0.5,0.5)"
                       "with radius 0.15.\n)");
-  sc_options_add_int (opt, 'l', "level", &level, 5,
+  sc_options_add_int (opt, 'l', "level", &level, 2,
                       "The minimum refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 1,
                       "The number of adaptive refinement levels.");
@@ -2074,11 +2070,11 @@ main (int argc, char *argv[])
                          "Control the width of the refinement band around\n"
                          " the zero level-set. Default 1.");
 
-  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 1000,
+  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 1,
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 10,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 1,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");

@@ -60,7 +60,7 @@ int
 t8_default_scheme_common_c::t8_element_num_corners (const t8_element_t * elem)
 {
   /* use the lookup table of the eclasses.
-    * Pyramids and schemes with subelements should implement their own version of this function. */
+   * Pyramids and schemes with subelements should implement their own version of this function. */
   return t8_eclass_num_vertices[eclass];
 }
 
