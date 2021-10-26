@@ -30,7 +30,7 @@
  *           meshes with subelements, we need to turn of "if (!adapted_or_partitioned && !neigh_is_ghost && !hanging)". This shortcut wont work for 
  *           subelements because of different face numbers etc. All fluxes need to be computed in the case that subelements are in the mesh.
  *  3) The standard procedure will use a dynamic mesh that will adapt after each or several time steps. 
- *         - work in progress for subelements.. (does also not work for non subelement meshes at the moment)
+ *         - work in progress for subelements..
  */
 
 #include <sc_options.h>
@@ -808,6 +808,18 @@ t8_advect_replace (t8_forest_t forest_old,
 
   /* Get the old phi value (used in the cases with num_outgoing = 1) */
   phi_old = t8_advect_element_get_phi (problem, first_outgoing_data);
+
+# if 0 /* the new replacement for subelements */
+  if () { /* refined */
+   
+  }
+  else if { /* unchanged */
+
+  }
+  else { /* coarsened */
+
+  }
+# else /* the standard replacement */
   if (num_incoming == num_outgoing && num_incoming == 1) {
     /* The element is not changed, copy phi and vol */
     memcpy (elem_data_in, elem_data_out, sizeof (t8_advect_element_data_t));
@@ -888,6 +900,7 @@ t8_advect_replace (t8_forest_t forest_old,
     /* update the level */
     elem_data_in->level = elem_data_out->level - 1;
   }
+# endif
 }
 
 static void
