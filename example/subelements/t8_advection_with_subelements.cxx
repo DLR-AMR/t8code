@@ -805,35 +805,46 @@ t8_advect_replace (t8_forest_t forest_old,
   elem_data_in = (t8_advect_element_data_t *)
     t8_sc_array_index_locidx (problem->element_data_adapt,
                               first_incoming_data);
-                            
+
   /* get the first incoming and outgoing elements */
   first_outgoing_elem =
-      t8_forest_get_element_in_tree (problem->forest, which_tree,
-                                      first_outgoing);
+    t8_forest_get_element_in_tree (problem->forest, which_tree,
+                                   first_outgoing);
   first_incoming_elem =
-      t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
-                                      first_incoming);
-  
+    t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
+                                   first_incoming);
+
+  ts->t8_element_print_element (first_outgoing_elem);
+  ts->t8_element_print_element (first_incoming_elem);
+
   /* check whether the old element stayed unchanged during the adapting process */
-  int same_subelement = 0;
-  if (ts->t8_element_level (first_outgoing_elem) == ts->t8_element_level (first_incoming_elem) &&
-      ts->t8_element_get_subelement_type (first_outgoing_elem) == ts->t8_element_get_subelement_type (first_incoming_elem)) {
-    same_subelement = 1;
+  int                 same_element = 0;
+  if (ts->t8_element_level (first_outgoing_elem) ==
+      ts->t8_element_level (first_incoming_elem) && 
+      (ts->t8_element_get_subelement_type (first_outgoing_elem) ==
+      ts->t8_element_get_subelement_type (first_incoming_elem) || 
+      !ts->t8_element_test_if_subelement (first_outgoing_elem) &&
+      !ts->t8_element_test_if_subelement (first_incoming_elem))) {
+    if (ts->t8_element_get_subelement_type (first_outgoing_elem) == 9) {
+      int a = 4;
+    }
+    same_element = 1;
   }
 
   /* if the element stayed unchanged, then we copy its values */
-  if (same_subelement) {
+  if (same_element) {
     T8_ASSERT (num_outgoing == num_incoming);
     for (i = 0; i < num_incoming; i++) {
-      phi_old = t8_advect_element_get_phi (problem,
-                                  first_outgoing_data +
-                                  i);
+      phi_old = t8_advect_element_get_phi (problem, first_outgoing_data + i);
       /* The element is not changed, copy phi and vol */
-      memcpy (elem_data_in + i, elem_data_out + i, sizeof (t8_advect_element_data_t));
-      t8_advect_element_set_phi_adapt (problem, first_incoming_data + i, phi_old);
+      memcpy (elem_data_in + i, elem_data_out + i,
+              sizeof (t8_advect_element_data_t));
+      t8_advect_element_set_phi_adapt (problem, first_incoming_data + i,
+                                       phi_old);
 
       /* Set the neighbor entries to uninitialized */
-      elem_data_in[i].num_faces = ts->t8_element_num_faces (first_incoming_elem);
+      elem_data_in[i].num_faces =
+        ts->t8_element_num_faces (first_incoming_elem);
       for (iface = 0; iface < elem_data_in[i].num_faces; iface++) {
         elem_data_in[i].num_neighbors[iface] = 0;
         elem_data_in[i].flux_valid[iface] = -1;
@@ -853,8 +864,8 @@ t8_advect_replace (t8_forest_t forest_old,
     for (i = 0; i < num_outgoing; i++) {
       phi +=
         t8_advect_element_get_phi (problem,
-                                  first_outgoing_data +
-                                  i) * elem_data_out[i].vol;
+                                   first_outgoing_data +
+                                   i) * elem_data_out[i].vol;
       total_volume += elem_data_out[i].vol;
     }
     phi /= total_volume;
@@ -863,7 +874,7 @@ t8_advect_replace (t8_forest_t forest_old,
       /* Get a pointer to the new element */
       element =
         t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
-                                      first_incoming + j);
+                                       first_incoming + j);
       /* Compute midpoint and vol of the new element */
       t8_advect_compute_element_data (problem, elem_data_in + j, element,
                                       which_tree, ts, NULL);
