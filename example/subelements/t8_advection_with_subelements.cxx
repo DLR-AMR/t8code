@@ -806,28 +806,25 @@ t8_advect_replace (t8_forest_t forest_old,
     t8_sc_array_index_locidx (problem->element_data_adapt,
                               first_incoming_data);
 
-  /* Get the old phi value (used in the cases with num_outgoing = 1) */
-  phi_old = t8_advect_element_get_phi (problem, first_outgoing_data);
-
   /* TODO: Consider the volume of the elements which can differ for subelements in order to compute a proper mean */
   /* get the mean value of all subelements of the transition cell */
-  double phi = 0;
+  double              phi = 0, total_volume = 0;
   /* Compute average of phi (important in case that a transition cell goes out) */
   for (i = 0; i < num_outgoing; i++) {
-    phi += t8_advect_element_get_phi (problem, first_outgoing_data + i);
+    phi += t8_advect_element_get_phi (problem, first_outgoing_data + i) * elem_data_out[i].vol;
+    total_volume += elem_data_out[i].vol;
   }
-  phi /= num_outgoing;
+  phi /= total_volume;
   /* iterate through all incoming elements and set the new phi value */
   for (j = 0; j < num_incoming; j++) {
     /* Get a pointer to the new element */
     element =
       t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
-                                    first_incoming + j);
+                                     first_incoming + j);
     /* Compute midpoint and vol of the new element */
     t8_advect_compute_element_data (problem, elem_data_in + j, element,
                                     which_tree, ts, NULL);
-    t8_advect_element_set_phi_adapt (problem, first_incoming_data + j,
-                                    phi);
+    t8_advect_element_set_phi_adapt (problem, first_incoming_data + j, phi);
     /* Set the neighbor entries to uninitialized */
     elem_data_in[j].num_faces = ts->t8_element_num_faces (element);
     for (iface = 0; iface < elem_data_in[j].num_faces; iface++) {
@@ -909,7 +906,7 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time)
     did_balance = 1;
   }
   /* either way we want to remove the hanging faces from the forest */
-  // t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
+  t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
@@ -1016,7 +1013,7 @@ t8_advect_problem_adapt_init (t8_advect_problem_t * problem, int measure_time)
     did_balance = 1;
   }
   /* either way we want to remove the hanging faces from the forest */
-  // t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
+  t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
@@ -2019,7 +2016,7 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 'd', "dim", &dim, -1,
                       "In combination with -f: The dimension of the mesh. 1 <= d <= 3.");
 
-  sc_options_add_double (opt, 'T', "end-time", &T, 1,
+  sc_options_add_double (opt, 'T', "end-time", &T, 1.5,
                          "The duration of the simulation. Default: 1");
 
   sc_options_add_double (opt, 'C', "CFL", &cfl,
