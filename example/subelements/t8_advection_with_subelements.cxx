@@ -811,7 +811,10 @@ t8_advect_replace (t8_forest_t forest_old,
   double              phi = 0, total_volume = 0;
   /* Compute average of phi (important in case that a transition cell goes out) */
   for (i = 0; i < num_outgoing; i++) {
-    phi += t8_advect_element_get_phi (problem, first_outgoing_data + i) * elem_data_out[i].vol;
+    phi +=
+      t8_advect_element_get_phi (problem,
+                                 first_outgoing_data +
+                                 i) * elem_data_out[i].vol;
     total_volume += elem_data_out[i].vol;
   }
   phi /= total_volume;
