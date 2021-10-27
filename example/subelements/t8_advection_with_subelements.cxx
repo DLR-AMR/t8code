@@ -820,14 +820,11 @@ t8_advect_replace (t8_forest_t forest_old,
   /* check whether the old element stayed unchanged during the adapting process */
   int                 same_element = 0;
   if (ts->t8_element_level (first_outgoing_elem) ==
-      ts->t8_element_level (first_incoming_elem) && 
+      ts->t8_element_level (first_incoming_elem) &&
       (ts->t8_element_get_subelement_type (first_outgoing_elem) ==
-      ts->t8_element_get_subelement_type (first_incoming_elem) || 
-      !ts->t8_element_test_if_subelement (first_outgoing_elem) &&
-      !ts->t8_element_test_if_subelement (first_incoming_elem))) {
-    if (ts->t8_element_get_subelement_type (first_outgoing_elem) == 9) {
-      int a = 4;
-    }
+       ts->t8_element_get_subelement_type (first_incoming_elem) ||
+       !ts->t8_element_test_if_subelement (first_outgoing_elem) &&
+       !ts->t8_element_test_if_subelement (first_incoming_elem))) {
     same_element = 1;
   }
 
