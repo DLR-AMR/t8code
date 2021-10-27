@@ -437,8 +437,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
       level_new = ts->t8_element_level (elem_new);
       level_old = ts->t8_element_level (elem_old);
 
-#if 1                           /* new scheme for subelements */
-#if 0
+#if 0 /* output for debugging */
       t8_debugf ("Using the subelement iterate_replace scheme:\n");
       t8_debugf ("elem_old (index: %i):\n", ielem_old);
       ts->t8_element_print_element (elem_old);
@@ -528,38 +527,6 @@ t8_forest_iterate_replace (t8_forest_t forest_new,
         ielem_new += number_new_elements;
         ielem_old += number_old_elements;
       }
-#else /* old scheme without subelements */
-      /* If the levels differ, elem_new was refined or its family coarsened */
-      if (level_old < level_new) {
-        T8_ASSERT (level_new == level_old + 1);
-        /* elem_old was refined */
-        family_size = ts->t8_element_num_children (elem_old);   /* we can use this function as no subelements are involved here */
-        replace_fn (forest_old, forest_new, itree, ts, 1, ielem_old,
-                    family_size, ielem_new);
-        /* Advance to the next element */
-        ielem_new += family_size;
-        ielem_old++;
-      }
-      else if (level_old > level_new) {
-        T8_ASSERT (level_new == level_old - 1);
-        /* elem_old was coarsened */
-        family_size = ts->t8_element_num_children (elem_new);
-        replace_fn (forest_old, forest_new, itree, ts, family_size,
-                    ielem_old, 1, ielem_new);
-        /* Advance to the next element */
-        ielem_new++;
-        ielem_old += family_size;
-      }
-      else {
-        /* elem_new = elem_old */
-        T8_ASSERT (!ts->t8_element_compare (elem_new, elem_old));
-        replace_fn (forest_old, forest_new, itree, ts, 1, ielem_old, 1,
-                    ielem_new);
-        /* Advance to the next element */
-        ielem_new++;
-        ielem_old++;
-      }
-#endif
     }                           /* element loop */
     T8_ASSERT (ielem_new ==
                t8_forest_get_tree_num_elements (forest_new, itree));

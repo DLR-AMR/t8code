@@ -785,7 +785,7 @@ t8_advect_replace (t8_forest_t forest_old,
   t8_advect_element_data_t *elem_data_in, *elem_data_out;
   t8_locidx_t         first_incoming_data, first_outgoing_data;
   t8_element_t       *element;
-  int                 i, iface;
+  int                 i, j, iface;
   double              phi_old;
 
   /* Get the problem description */
@@ -809,98 +809,44 @@ t8_advect_replace (t8_forest_t forest_old,
   /* Get the old phi value (used in the cases with num_outgoing = 1) */
   phi_old = t8_advect_element_get_phi (problem, first_outgoing_data);
 
-#if 0                           /* the new replacement for subelements */
-  if () {                       /* refined */
-
+  /* TODO: Consider the volume of the elements which can differ for subelements in order to compute a proper mean */
+  /* get the mean value of all subelements of the transition cell */
+  double phi = 0;
+  /* Compute average of phi (important in case that a transition cell goes out) */
+  for (i = 0; i < num_outgoing; i++) {
+    phi += t8_advect_element_get_phi (problem, first_outgoing_data + i);
   }
-  else if {                     /* unchanged */
-
-  }
-  else {                        /* coarsened */
-
-  }
-#else /* the standard replacement */
-  if (num_incoming == num_outgoing && num_incoming == 1) {
-    /* The element is not changed, copy phi and vol */
-    memcpy (elem_data_in, elem_data_out, sizeof (t8_advect_element_data_t));
-    t8_advect_element_set_phi_adapt (problem, first_incoming_data, phi_old);
+  phi /= num_outgoing;
+  /* iterate through all incoming elements and set the new phi value */
+  for (j = 0; j < num_incoming; j++) {
     /* Get a pointer to the new element */
     element =
       t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
-                                     first_incoming);
-    /* Set the neighbor entries to uninitialized */
-    for (iface = 0; iface < ts->t8_element_num_faces (element); iface++) {
-      elem_data_in->num_neighbors[iface] = 0;
-      elem_data_in->flux_valid[iface] = -1;
-      elem_data_in->dual_faces[iface] = NULL;
-      elem_data_in->fluxes[iface] = NULL;
-      elem_data_in->neighs[iface] = NULL;
-    }
-  }
-  else if (num_outgoing == 1) {
-    /* NOTE: this assertion does not work anymore for subelements */
-#if 0
-    T8_ASSERT (num_incoming == 1 << problem->dim);
-#endif
-    /* The old element is refined, we copy the phi values and compute the new midpoints */
-    for (i = 0; i < num_incoming; i++) {
-      /* Get a pointer to the new element */
-      element =
-        t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
-                                       first_incoming + i);
-      /* Compute midpoint and vol of the new element */
-      t8_advect_compute_element_data (problem, elem_data_in + i, element,
-                                      which_tree, ts, NULL);
-      t8_advect_element_set_phi_adapt (problem, first_incoming_data + i,
-                                       phi_old);
-      /* Set the neighbor entries to uninitialized */
-      elem_data_in[i].num_faces = ts->t8_element_num_faces (element);
-      for (iface = 0; iface < elem_data_in[i].num_faces; iface++) {
-        elem_data_in[i].num_neighbors[iface] = 0;
-        elem_data_in[i].flux_valid[iface] = -1;
-        elem_data_in[i].dual_faces[iface] = NULL;
-        elem_data_in[i].fluxes[iface] = NULL;
-        elem_data_in[i].neighs[iface] = NULL;
-      }
-      /* Update the level */
-      elem_data_in[i].level = elem_data_out->level + 1;
-    }
-  }
-  else {
-    double              phi = 0;
-    /* NOTE: this assertion does not work anymore for subelements */
-#if 0
-    T8_ASSERT (num_outgoing == 1 << problem->dim && num_incoming == 1);
-#endif
-    /* The old elements form a family which is coarsened. We compute the average
-     * phi value and set it as the new phi value */
-    /* Get a pointer to the new element */
-    element =
-      t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
-                                     first_incoming);
+                                    first_incoming + j);
     /* Compute midpoint and vol of the new element */
-    t8_advect_compute_element_data (problem, elem_data_in, element,
+    t8_advect_compute_element_data (problem, elem_data_in + j, element,
                                     which_tree, ts, NULL);
-
-    /* Compute average of phi */
-    for (i = 0; i < num_outgoing; i++) {
-      phi += t8_advect_element_get_phi (problem, first_outgoing_data + i);
-    }
-    phi /= num_outgoing;
-    t8_advect_element_set_phi_adapt (problem, first_incoming_data, phi);
+    t8_advect_element_set_phi_adapt (problem, first_incoming_data + j,
+                                    phi);
     /* Set the neighbor entries to uninitialized */
-    elem_data_in->num_faces = ts->t8_element_num_faces (element);
-    for (iface = 0; iface < elem_data_in->num_faces; iface++) {
-      elem_data_in->num_neighbors[iface] = 0;
-      elem_data_in->flux_valid[iface] = -1;
-      elem_data_in->dual_faces[iface] = NULL;
-      elem_data_in->fluxes[iface] = NULL;
-      elem_data_in->neighs[iface] = NULL;
+    elem_data_in[j].num_faces = ts->t8_element_num_faces (element);
+    for (iface = 0; iface < elem_data_in[j].num_faces; iface++) {
+      elem_data_in[j].num_neighbors[iface] = 0;
+      elem_data_in[j].flux_valid[iface] = -1;
+      elem_data_in[j].dual_faces[iface] = NULL;
+      elem_data_in[j].fluxes[iface] = NULL;
+      elem_data_in[j].neighs[iface] = NULL;
     }
-    /* update the level */
-    elem_data_in->level = elem_data_out->level - 1;
+    if (elem_data_out->level == elem_data_in->level) {
+      elem_data_in[j].level = elem_data_out->level;
+    }
+    else if (elem_data_out->level < elem_data_in->level) {
+      elem_data_in[j].level = elem_data_out->level + 1;
+    }
+    else {
+      elem_data_in[j].level = elem_data_out->level - 1;
+    }
   }
-#endif
 }
 
 static void
@@ -963,7 +909,7 @@ t8_advect_problem_adapt (t8_advect_problem_t * problem, int measure_time)
     did_balance = 1;
   }
   /* either way we want to remove the hanging faces from the forest */
-  t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
+  // t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
@@ -1070,7 +1016,7 @@ t8_advect_problem_adapt_init (t8_advect_problem_t * problem, int measure_time)
     did_balance = 1;
   }
   /* either way we want to remove the hanging faces from the forest */
-  t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
+  // t8_forest_set_remove_hanging_faces (problem->forest_adapt, NULL);
   /* We also want ghost elements in the new forest */
   t8_forest_set_ghost (problem->forest_adapt, 1, T8_GHOST_FACES);
   /* Commit the forest, adaptation and balance happens here */
@@ -2054,9 +2000,9 @@ main (int argc, char *argv[])
                       "\t\t4 - 2D rotation around (0.5,0.5).\n"
                       "\t\t5 - 2D flow around circle at (0.5,0.5)"
                       "with radius 0.15.\n)");
-  sc_options_add_int (opt, 'l', "level", &level, 2,
+  sc_options_add_int (opt, 'l', "level", &level, 4,
                       "The minimum refinement level of the mesh.");
-  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 1,
+  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 2,
                       "The number of adaptive refinement levels.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, T8_ECLASS_QUAD,
                       "If specified the coarse mesh is a hypercube\n\t\t\t\t     consisting of the"
@@ -2083,11 +2029,11 @@ main (int argc, char *argv[])
                          "Control the width of the refinement band around\n"
                          " the zero level-set. Default 1.");
 
-  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 1,
+  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 12,
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 1,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 3,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
