@@ -784,7 +784,7 @@ t8_advect_replace (t8_forest_t forest_old,
   t8_advect_problem_t *problem;
   t8_advect_element_data_t *elem_data_in, *elem_data_out;
   t8_locidx_t         first_incoming_data, first_outgoing_data;
-  t8_element_t       *element;
+  t8_element_t       *element, *first_outgoing_elem, *first_incoming_elem;
   int                 i, j, iface;
   double              phi_old;
 
@@ -805,46 +805,87 @@ t8_advect_replace (t8_forest_t forest_old,
   elem_data_in = (t8_advect_element_data_t *)
     t8_sc_array_index_locidx (problem->element_data_adapt,
                               first_incoming_data);
-
-  /* TODO: Consider the volume of the elements which can differ for subelements in order to compute a proper mean */
-  /* get the mean value of all subelements of the transition cell */
-  double              phi = 0, total_volume = 0;
-  /* Compute average of phi (important in case that a transition cell goes out) */
-  for (i = 0; i < num_outgoing; i++) {
-    phi +=
-      t8_advect_element_get_phi (problem,
-                                 first_outgoing_data +
-                                 i) * elem_data_out[i].vol;
-    total_volume += elem_data_out[i].vol;
-  }
-  phi /= total_volume;
-  /* iterate through all incoming elements and set the new phi value */
-  for (j = 0; j < num_incoming; j++) {
-    /* Get a pointer to the new element */
-    element =
+                            
+  /* get the first incoming and outgoing elements */
+  first_outgoing_elem =
+      t8_forest_get_element_in_tree (problem->forest, which_tree,
+                                      first_outgoing);
+  first_incoming_elem =
       t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
-                                     first_incoming + j);
-    /* Compute midpoint and vol of the new element */
-    t8_advect_compute_element_data (problem, elem_data_in + j, element,
-                                    which_tree, ts, NULL);
-    t8_advect_element_set_phi_adapt (problem, first_incoming_data + j, phi);
-    /* Set the neighbor entries to uninitialized */
-    elem_data_in[j].num_faces = ts->t8_element_num_faces (element);
-    for (iface = 0; iface < elem_data_in[j].num_faces; iface++) {
-      elem_data_in[j].num_neighbors[iface] = 0;
-      elem_data_in[j].flux_valid[iface] = -1;
-      elem_data_in[j].dual_faces[iface] = NULL;
-      elem_data_in[j].fluxes[iface] = NULL;
-      elem_data_in[j].neighs[iface] = NULL;
+                                      first_incoming);
+  
+  /* check whether the old element stayed unchanged during the adapting process */
+  int same_subelement = 0;
+  if (ts->t8_element_level (first_outgoing_elem) == ts->t8_element_level (first_incoming_elem) &&
+      ts->t8_element_get_subelement_type (first_outgoing_elem) == ts->t8_element_get_subelement_type (first_incoming_elem)) {
+    same_subelement = 1;
+  }
+
+  /* if the element stayed unchanged, then we copy its values */
+  if (same_subelement) {
+    T8_ASSERT (num_outgoing == num_incoming);
+    for (i = 0; i < num_incoming; i++) {
+      phi_old = t8_advect_element_get_phi (problem,
+                                  first_outgoing_data +
+                                  i);
+      /* The element is not changed, copy phi and vol */
+      memcpy (elem_data_in + i, elem_data_out + i, sizeof (t8_advect_element_data_t));
+      t8_advect_element_set_phi_adapt (problem, first_incoming_data + i, phi_old);
+
+      /* Set the neighbor entries to uninitialized */
+      elem_data_in[i].num_faces = ts->t8_element_num_faces (first_incoming_elem);
+      for (iface = 0; iface < elem_data_in[i].num_faces; iface++) {
+        elem_data_in[i].num_neighbors[iface] = 0;
+        elem_data_in[i].flux_valid[iface] = -1;
+        elem_data_in[i].dual_faces[iface] = NULL;
+        elem_data_in[i].fluxes[iface] = NULL;
+        elem_data_in[i].neighs[iface] = NULL;
+      }
+      elem_data_in[i].level = elem_data_out[i].level;
     }
-    if (elem_data_out->level == elem_data_in->level) {
-      elem_data_in[j].level = elem_data_out->level;
+  }
+  /* in the following case, the old element changed due to adaptation */
+  else {
+    /* TODO: Consider the volume of the elements which can differ for subelements in order to compute a proper mean */
+    /* get the mean value of all subelements of the transition cell */
+    double              phi = 0, total_volume = 0;
+    /* Compute average of phi (important in case that a transition cell goes out) */
+    for (i = 0; i < num_outgoing; i++) {
+      phi +=
+        t8_advect_element_get_phi (problem,
+                                  first_outgoing_data +
+                                  i) * elem_data_out[i].vol;
+      total_volume += elem_data_out[i].vol;
     }
-    else if (elem_data_out->level < elem_data_in->level) {
-      elem_data_in[j].level = elem_data_out->level + 1;
-    }
-    else {
-      elem_data_in[j].level = elem_data_out->level - 1;
+    phi /= total_volume;
+    /* iterate through all incoming elements and set the new phi value */
+    for (j = 0; j < num_incoming; j++) {
+      /* Get a pointer to the new element */
+      element =
+        t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
+                                      first_incoming + j);
+      /* Compute midpoint and vol of the new element */
+      t8_advect_compute_element_data (problem, elem_data_in + j, element,
+                                      which_tree, ts, NULL);
+      t8_advect_element_set_phi_adapt (problem, first_incoming_data + j, phi);
+      /* Set the neighbor entries to uninitialized */
+      elem_data_in[j].num_faces = ts->t8_element_num_faces (element);
+      for (iface = 0; iface < elem_data_in[j].num_faces; iface++) {
+        elem_data_in[j].num_neighbors[iface] = 0;
+        elem_data_in[j].flux_valid[iface] = -1;
+        elem_data_in[j].dual_faces[iface] = NULL;
+        elem_data_in[j].fluxes[iface] = NULL;
+        elem_data_in[j].neighs[iface] = NULL;
+      }
+      if (elem_data_out->level == elem_data_in->level) {
+        elem_data_in[j].level = elem_data_out->level;
+      }
+      else if (elem_data_out->level < elem_data_in->level) {
+        elem_data_in[j].level = elem_data_out->level + 1;
+      }
+      else {
+        elem_data_in[j].level = elem_data_out->level - 1;
+      }
     }
   }
 }
@@ -2019,7 +2060,7 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 'd', "dim", &dim, -1,
                       "In combination with -f: The dimension of the mesh. 1 <= d <= 3.");
 
-  sc_options_add_double (opt, 'T', "end-time", &T, 1.5,
+  sc_options_add_double (opt, 'T', "end-time", &T, 1,
                          "The duration of the simulation. Default: 1");
 
   sc_options_add_double (opt, 'C', "CFL", &cfl,
