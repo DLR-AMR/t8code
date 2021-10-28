@@ -22,6 +22,7 @@
 
 #include <t8.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.h>
 #include <t8_eclass.h>
 #include <t8_geometry/t8_geometry_helpers.h>
 
@@ -299,5 +300,31 @@ t8_geometry_occ::t8_geom_push_occ_surface (Handle_Geom_Surface surface)
   occ_surfaces.push_back(surface);
   return (int)occ_surfaces.size() - 1;
 }
+
+/* This part should be callable from C */
+T8_EXTERN_C_BEGIN ();
+
+/* Satisfy the C interface from t8_geometry_occ.h.
+ * Create a new geometry with given dimension. */
+t8_geometry_occ_c      *
+t8_geometry_occ_new (int dimension, const char *name_in)
+{
+  t8_geometry_occ *geom = new t8_geometry_occ (dimension, name_in);
+  return (t8_geometry_occ_c *) geom;
+}
+
+void
+t8_geometry_occ_destroy (t8_geometry_occ_c ** geom)
+{
+#ifdef T8_ENABLE_DEBUG
+  t8_geometry_occ_c      *pgeom = *geom;
+  T8_ASSERT (dynamic_cast < t8_geometry_occ * >(pgeom) != NULL);
+#endif
+
+  delete             *geom;
+  *geom = NULL;
+}
+
+T8_EXTERN_C_END ();
 
 #endif /* T8_WITH_OCC */
