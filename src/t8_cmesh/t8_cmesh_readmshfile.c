@@ -117,25 +117,6 @@ t8_cmesh_msh_read_next_line (char **line, size_t * n, FILE * fp)
   return retval;
 }
 
-/* The nodes are stored in the .msh file in the format
- *
- * $Nodes
- * n_nodes     // The number of nodes
- * i x_i y_i z_i  // the node index and the node coordinates
- * j x_j y_j z_j
- * .....
- * $EndNodes
- *
- * The node indices do not need to be in consecutive order.
- * We thus use a hash table to read all node indices and coordinates.
- * The hash value is the node index modulo the number of nodes.
- */
-typedef struct
-{
-  t8_locidx_t         index;
-  double              coordinates[3];
-} t8_msh_file_node_t;
-
 /* Return the hash value of a node.
  * \param [in]  node    The node whose hash value should be computed.
  * \param [in]  num_nodes A pointer to a locidx_t storing the total number of nodes.
@@ -184,6 +165,7 @@ t8_cmesh_check_version_of_msh_file (FILE * fp)
   int                 retval;
   int                 version_number, sub_version_number;
   int                 check_format;
+  int                 check_version = 0;
 
   T8_ASSERT (fp != NULL);
 
@@ -219,22 +201,34 @@ t8_cmesh_check_version_of_msh_file (FILE * fp)
   /* Checks if the file is of Binary-type. */
   if (check_format) {
     t8_global_errorf
-      ("Incompatible file-type. t8code works with ASCII-type msh-files of version %d.\n",
-       T8_CMESH_SUPPORTED_FILE_VERSION);
+      ("Incompatible file-type. t8code works with ASCII-type msh-files with the versions:\n");
+    for (int n_versions = 0; n_versions < T8_CMESH_N_SUPPORTED_MSH_FILE_VERSIONS; ++n_versions) {
+      t8_global_errorf
+        ("%d.X\n", t8_cmesh_supported_msh_file_versions[n_versions]);
+    }
     goto die_format;
   }
 
   /* Check if MeshFormat-number is compatible. */
-  if (version_number == T8_CMESH_SUPPORTED_FILE_VERSION) {
+  for (int n_versions = 0; n_versions < T8_CMESH_N_SUPPORTED_MSH_FILE_VERSIONS; ++n_versions) {
+    if (version_number == t8_cmesh_supported_msh_file_versions[n_versions]) {
+      check_version = 1;
+    }
+  }
+  if (check_version) {
     t8_debugf ("This version of msh-file (%d.%d) is supported.\n",
                version_number, sub_version_number);
     free (line);
-    return 1;
+    return version_number;
   }
   else {
     t8_global_errorf
-      ("This version of msh-file (%d.%d) is currently not supported by t8code, please provide an ASCII-type msh-file of version %d.X.\n",
-       version_number, sub_version_number, T8_CMESH_SUPPORTED_FILE_VERSION);
+      ("This version of msh-file (%d.%d) is currently not supported by t8code, t8code supports ASCII files with the versions:\n",
+       version_number, sub_version_number);
+    for (int n_versions = 0; n_versions < T8_CMESH_N_SUPPORTED_MSH_FILE_VERSIONS; ++n_versions) {
+      t8_global_errorf
+        ("%d.X\n", t8_cmesh_supported_msh_file_versions[n_versions]);
+    }
     free (line);
     return 0;
   }
@@ -247,10 +241,9 @@ die_format:
   return -1;
 }
 
-/* Read an open .msh file and parse the nodes into a hash table.
- */
+/* Read an open .msh file of version 2 and parse the nodes into a hash table. */
 static sc_hash_t   *
-t8_msh_file_read_nodes (FILE * fp, t8_locidx_t * num_nodes,
+t8_msh_file_2_read_nodes (FILE * fp, t8_locidx_t * num_nodes,
                         sc_mempool_t ** node_mempool)
 {
   t8_msh_file_node_t *Node;
@@ -351,12 +344,186 @@ die_node:
   return NULL;
 }
 
+/* Read an open .msh file of version 4 and parse the nodes into a hash table. */
+static sc_hash_t   *
+t8_msh_file_4_read_nodes (FILE * fp,
+                        t8_locidx_t * num_nodes,
+                        sc_mempool_t ** node_mempool)
+{
+  t8_msh_file_node_parametric_t  *Node;
+  sc_hash_t                      *node_table = NULL;
+  t8_locidx_t                     ln, last_index, num_blocks;
+  char                           *line = (char *) malloc (1024);
+  char                            first_word[2048] = "\0";
+  size_t                          linen = 1024;
+  int                             retval, entity_dim, parametric;
+  long                            entity_tag, num_nodes_in_block, lnum_nodes, lnum_blocks;
+  long                           *index_buffer;
+
+  T8_ASSERT (fp != NULL);
+  /* Go to the beginning of the file */
+  fseek (fp, 0, SEEK_SET);
+  /* Search for the line beginning with "$Nodes" */
+  while (!feof (fp) && strcmp (first_word, "$Nodes")) {
+    (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
+    /* Get the first word of this line */
+    retval = sscanf (line, "%2048s", first_word);
+    /* Checking for read/write error */
+    if (retval != 1) {
+      t8_global_errorf ("Premature end of line while reading nodes.\n");
+      t8_debugf ("The line is %s", line);
+      goto die_node;
+    }
+  }
+
+  /* Read the line containing the number of entity block and nodes */
+  (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
+  /* Read the number of nodes in a long int before converting it
+   * to t8_locidx_t. */
+  retval = sscanf (line, "%li %li %*i %*i", &lnum_blocks, &lnum_nodes);
+  /* Checking for read/write error */
+  if (retval != 2) {
+    t8_global_errorf ("Premature end of line while reading num nodes and num blocks.\n");
+    t8_debugf ("The line is %s", line);
+    goto die_node;
+  }
+  num_blocks = lnum_blocks;
+  *num_nodes = lnum_nodes;
+  /* Check for type conversion error. */
+  T8_ASSERT (num_blocks == lnum_blocks);
+  T8_ASSERT (*num_nodes == lnum_nodes);
+
+  /* Create the mempool for the nodes */
+  *node_mempool = sc_mempool_new (sizeof (t8_msh_file_node_parametric_t));
+  /* Create the hash table */
+  node_table = sc_hash_new (t8_msh_file_node_hash, t8_msh_file_node_compare,
+                            num_nodes, NULL);
+
+  /* read each node and add it to the hash table */
+  last_index = 0;
+  for (long n_block = 0; n_block < num_blocks; ++n_block) {
+    retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
+      if (retval < 0) {
+        t8_global_errorf ("Error reading node file\n");
+        goto die_node;
+      }
+    retval = sscanf (line, "%i %li %i %li", 
+                    &entity_dim, &entity_tag, 
+                    &parametric, &num_nodes_in_block);
+    if (retval != 4) {
+      t8_global_errorf ("Error reading block after node %li in nodes section \n",
+                        (long) last_index);
+      goto die_node;
+    }
+    /* Read all node indices in this block */
+    index_buffer = T8_ALLOC(long, num_nodes_in_block);
+    for (ln = 0; ln < num_nodes_in_block; ++ln) {
+      retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
+      if (retval < 0) {
+        t8_global_errorf ("Error reading node file\n");
+        goto die_node;
+      }
+      retval = sscanf (line, "%li", &index_buffer[ln]);
+      if (retval != 1) {
+        t8_global_errorf ("Error reading node file after node %li\n",
+                          (long) last_index);
+        goto die_node;
+      }
+    }
+    /* Read all coordinates and parameters in this block */
+    for (ln = 0; ln < num_nodes_in_block; ++ln) {
+      /* Read the next line. Its format should be
+       * %f %f %f         if not parametrized,
+       * %f %f %f %f      if parametrized and entity_dim == 1,
+       * %f %f %f %f %f   if parametrized and entity_dim == 2.
+       * The coordinates followed by their parameters. */
+      retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
+      if (retval < 0) {
+        t8_global_errorf ("Error reading node file\n");
+        goto die_node;
+      }
+      /* Allocate a new node */
+      Node = (t8_msh_file_node_parametric_t *) sc_mempool_alloc (*node_mempool);
+      /* Fill the node with the entries in the file */
+      if (!parametric) {
+        retval = sscanf (line, "%lf %lf %lf",
+                       &Node->coordinates[0], 
+                       &Node->coordinates[1],
+                       &Node->coordinates[2]);
+        if (retval != 3) {
+          t8_global_errorf ("Error reading node file after node %li\n",
+                            (long) last_index);
+          goto die_node;
+        }
+      }
+      else {
+        /* Check for entity_dim and retrieve parameters accordingly */
+        switch (entity_dim)
+        {
+        case 1:
+          retval = sscanf (line, "%lf %lf %lf %lf",
+                       &Node->coordinates[0], 
+                       &Node->coordinates[1],
+                       &Node->coordinates[2],
+                       &Node->parameters[0]);
+          if (retval == 4) {
+            break;
+          }
+        case 2:
+          retval = sscanf (line, "%lf %lf %lf %lf %lf",
+                       &Node->coordinates[0], 
+                       &Node->coordinates[1],
+                       &Node->coordinates[2],
+                       &Node->parameters[0],
+                       &Node->parameters[1]);
+          if (retval == 5) {
+            break;
+          }
+        default:
+          t8_global_errorf ("Error reading node file after node %li\n",
+                            (long) last_index);
+          goto die_node;
+        }
+      }
+      Node->index = index_buffer[ln];
+      Node->entity_dim = entity_dim;
+      Node->entity_tag = entity_tag;
+      /* Check for type conversion error */
+      T8_ASSERT (Node->index == index_buffer[ln]);
+      /* Insert the node in the hash table */
+      retval = sc_hash_insert_unique (node_table, Node, NULL);
+      /* If retval is zero then the node was already in the hash table.
+       * This case should not occur. */
+      T8_ASSERT (retval);
+      last_index = Node->index;
+    }
+    T8_FREE(index_buffer);
+  }
+  free (line);
+  t8_debugf ("Successfully read all Nodes.\n");
+  return node_table;
+  /* If everything went well, the function ends here. */
+
+  /* This code is execute when a read/write error occurs */
+die_node:
+  /* If we allocated the hash table, destroy it */
+  if (node_table != NULL) {
+    sc_hash_destroy (node_table);
+    sc_mempool_destroy (*node_mempool);
+    node_mempool = NULL;
+  }
+  /* Free memory */
+  free (line);
+  /* Return NULL as error code */
+  return NULL;
+}
+
 /* fp should be set after the Nodes section, right before the tree section.
  * If vertex_indices is not NULL, it is allocated and will store
  * for each tree the indices of its vertices.
  * They are stored as arrays of long ints. */
 int
-t8_cmesh_msh_file_read_eles (t8_cmesh_t cmesh, FILE * fp,
+t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE * fp,
                              sc_hash_t * vertices,
                              sc_array_t ** vertex_indices, int dim)
 {
@@ -542,6 +709,229 @@ t8_cmesh_msh_file_read_eles (t8_cmesh_t cmesh, FILE * fp,
       }
       /* advance the tree counter */
       tree_count++;
+    }
+  }
+  free (line);
+  return 0;
+die_ele:
+  /* Error handling */
+  free (line);
+  t8_cmesh_destroy (&cmesh);
+  return -1;
+}
+
+/* fp should be set after the Nodes section, right before the tree section.
+ * If vertex_indices is not NULL, it is allocated and will store
+ * for each tree the indices of its vertices.
+ * They are stored as arrays of long ints. */
+int
+t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE * fp,
+                             sc_hash_t * vertices,
+                             sc_array_t ** vertex_indices, 
+                             int dim, int brep)
+{
+  char               *line = (char *) malloc (1024), *line_modify;
+  char                first_word[2048] = "\0";
+  size_t              linen = 1024;
+  t8_locidx_t         num_trees, tree_loop, block_loop;
+  t8_gloidx_t         tree_count;
+  t8_eclass_t         eclass;
+  t8_msh_file_node_t  Node, **found_node;
+  long                lnum_trees, lnum_blocks, entity_tag;
+  int                 retval, i;
+  int                 ele_type;
+  int                 num_nodes, t8_vertex_num;
+  int                 entity_dim;
+  long                node_indices[8], *stored_indices, num_ele_in_block;
+  double              tree_vertices[24];
+
+  T8_ASSERT (fp != NULL);
+  /* Search for the line beginning with "$Elements" */
+  while (!feof (fp) && strcmp (first_word, "$Elements")) {
+    (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
+    /* Get the first word of this line */
+    retval = sscanf (line, "%2048s", first_word);
+
+    /* Checking for read/write error */
+    if (retval != 1) {
+      t8_global_errorf ("Premature end of line while reading num trees.\n");
+      t8_debugf ("The line is %s", line);
+      goto die_ele;
+    }
+  }
+
+  /* Read the line containing the number of blocks and trees */
+  (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
+  /* Since t8_locidx_t could be int32 or int64, we first read the
+   * number of trees in a long int and store it as t8_locidx_t later. */
+  retval = sscanf (line, "%li %li %*i %*i", &lnum_blocks, &lnum_trees);
+  /* Checking for read/write error */
+  if (retval != 2) {
+    t8_global_errorf ("Premature end of line while reading num trees and num blocks.\n");
+    t8_debugf ("The line is %s", line);
+    goto die_ele;
+  }
+  num_trees = lnum_trees;
+  /* Check for type conversion error */
+  T8_ASSERT (num_trees == lnum_trees);
+
+  if (vertex_indices != NULL) {
+    /* We store a list of the vertex indices for each element */
+    *vertex_indices = sc_array_new (sizeof (long *));
+  }
+  tree_count = 0;               /* The index of the next tree to insert */
+  for (block_loop = 0; block_loop < lnum_blocks; block_loop++) {
+    /* The line describing the block information looks like
+     * entityDim entityTag elementType numElementsInBlock */
+    retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
+    if (retval < 0) {
+      t8_global_errorf ("Premature end of line while reading trees.\n");
+      goto die_ele;
+    }
+    retval = sscanf (line, "%i %li %i %li", 
+                    &entity_dim, &entity_tag,
+                    &ele_type, &num_ele_in_block);
+    /* Checking for read/write error */
+    if (retval != 4) {
+      t8_global_errorf ("Error while reading element block information.\n");
+      t8_debugf ("The line is %s", line);
+      goto die_ele;
+    }
+    /* Check if the tree type is supported */
+    if (ele_type > T8_NUM_GMSH_ELEM_CLASSES || ele_type < 0
+        || t8_msh_tree_type_to_eclass[ele_type] == T8_ECLASS_COUNT) {
+      t8_global_errorf ("tree type %i is not supported by t8code.\n",
+                        ele_type);
+      goto die_ele;
+    }
+    eclass = t8_msh_tree_type_to_eclass[ele_type];
+    T8_ASSERT (eclass != T8_ECLASS_COUNT);
+    /* Check if the tree is of the correct dimension */
+    if (t8_eclass_to_dimension[eclass] != dim) {
+      /* The trees are not of the correct dimension.
+       * Thus, we skip them. */
+      for (tree_loop = 0; tree_loop < num_ele_in_block; tree_loop++) {
+        retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
+        if (retval < 0) {
+          t8_global_errorf ("Premature end of line while reading trees.\n");
+          goto die_ele;
+        }
+      }
+    }
+    else {
+      for (tree_loop = 0; tree_loop < num_ele_in_block; tree_loop++) {
+        /* Read the next line containing tree information */
+        retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
+        if (retval < 0) {
+          t8_global_errorf ("Premature end of line while reading trees.\n");
+          goto die_ele;
+        }
+        t8_cmesh_set_tree_class (cmesh, tree_count, eclass);
+        /* The line describing the tree looks like
+         * tree_number(every ele type has its own numeration) Node_1 ... Node_m
+         *
+         * We ignore the tree number and read the nodes.
+         */
+        line_modify = line;
+        T8_ASSERT (strcmp (line_modify, "\0"));
+        /* move line_modify to the next word in the line */
+        (void) strsep (&line_modify, " ");
+        
+        /* At this point line_modify contains only the node indices. */
+        num_nodes = t8_eclass_num_vertices[eclass];
+        for (i = 0; i < num_nodes; i++) {
+          T8_ASSERT (strcmp (line_modify, "\0"));
+          retval = sscanf (line_modify, "%li", node_indices + i);
+          if (retval != 1) {
+            t8_global_errorf ("Premature end of line while reading tree.\n");
+            t8_debugf ("The line is %s", line);
+            goto die_ele;
+          }
+          /* move line_modify to the next word in the line */
+          (void) strsep (&line_modify, " ");
+        }
+        /* Now the nodes are read and we get their coordinates from
+         * the stored nodes */
+        for (i = 0; i < num_nodes; i++) {
+          Node.index = node_indices[i];
+          sc_hash_lookup (vertices, (void *) &Node, (void ***) &found_node);
+          /* Add node coordinates to the tree vertices */
+          t8_vertex_num = t8_msh_tree_vertex_to_t8_vertex_num[eclass][i];
+          tree_vertices[3 * t8_vertex_num] = (*found_node)->coordinates[0];
+          tree_vertices[3 * t8_vertex_num + 1] = (*found_node)->coordinates[1];
+          tree_vertices[3 * t8_vertex_num + 2] = (*found_node)->coordinates[2];
+        }
+        /* Detect and correct negative volumes */
+        if (t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices,
+                                                    num_nodes)) {
+          /* The volume described is negative. We need to change vertices.
+           * For tets we switch 0 and 3.
+           * For prisms we switch 0 and 3, 1 and 4, 2 and 5.
+           * For hexahedra we switch 0 and 4, 1 and 5, 2 and 6, 3 and 7.
+           * For pyramids we switch 0 and 4 */
+          double              temp;
+          int                 num_switches = 0;
+          int                 switch_indices[4] = { 0 };
+          int                 iswitch;
+          T8_ASSERT (t8_eclass_to_dimension[eclass] == 3);
+          t8_debugf ("Correcting negative volume of tree %li\n", tree_count);
+          switch (eclass) {
+          case T8_ECLASS_TET:
+            /* We switch vertex 0 and vertex 3 */
+            num_switches = 1;
+            switch_indices[0] = 3;
+            break;
+          case T8_ECLASS_PRISM:
+            num_switches = 3;
+            switch_indices[0] = 3;
+            switch_indices[1] = 4;
+            switch_indices[2] = 5;
+            break;
+          case T8_ECLASS_HEX:
+            num_switches = 4;
+            switch_indices[0] = 4;
+            switch_indices[1] = 5;
+            switch_indices[2] = 6;
+            switch_indices[3] = 7;
+            break;
+          case T8_ECLASS_PYRAMID:
+            num_switches = 1;
+            switch_indices[0] = 4;
+            break;
+          default:
+            SC_ABORT_NOT_REACHED ();
+          }
+
+          for (iswitch = 0; iswitch < num_switches; ++iswitch) {
+            /* We switch vertex 0 + iswitch and vertex switch_indices[iswitch] */
+            for (i = 0; i < 3; i++) {
+              temp = tree_vertices[3 * iswitch + i];
+              tree_vertices[3 * iswitch + i] =
+                tree_vertices[3 * switch_indices[iswitch] + i];
+              tree_vertices[3 * switch_indices[iswitch] + i] = temp;
+            }
+          }
+          T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume
+                     (eclass, tree_vertices, num_nodes));
+        }                         /* End of negative volume handling */
+        /* Set the vertices of this tree */
+        t8_cmesh_set_tree_vertices (cmesh, tree_count, tree_vertices,
+                                    num_nodes);
+        /* If wished, we store the vertex indices of that tree. */
+        if (vertex_indices != NULL) {
+          /* Allocate memory for the inices */
+          stored_indices = T8_ALLOC (long, t8_eclass_num_vertices[eclass]);
+          for (i = 0; i < t8_eclass_num_vertices[eclass]; i++) {
+            /* Get the i-th node index in t8code order and store it. */
+            stored_indices[i] =
+              node_indices[t8_vertex_to_msh_vertex_num[eclass][i]];
+          }
+          /* Set the index array as a new entry in the array */
+          *(long **) sc_array_push (*vertex_indices) = stored_indices;
+        }
+        /* advance the tree counter */
+        tree_count++;
+      }
     }
   }
   free (line);
@@ -826,6 +1216,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   t8_gloidx_t         num_trees, first_tree, last_tree = -1;
   t8_geometry_c      *geom_linear = t8_geometry_linear_new (dim);
   int                 main_proc_read_successful = 0;
+  int                 msh_version;
+  int                 brep = 0;
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -863,7 +1255,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
       return NULL;
     }
     /* Check if msh-file version is compatible. */
-    if (t8_cmesh_check_version_of_msh_file (file) != 1) {
+    msh_version = t8_cmesh_check_version_of_msh_file (file);
+    if (msh_version < 1) {
       /* If reading the MeshFormat-number failed or the version is incompatible, close the file */
       fclose (file);
       t8_debugf
@@ -879,8 +1272,21 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
       return NULL;
     }
     /* read nodes from the file */
-    vertices = t8_msh_file_read_nodes (file, &num_vertices, &node_mempool);
-    t8_cmesh_msh_file_read_eles (cmesh, file, vertices, &vertex_indices, dim);
+    switch (msh_version)
+    {
+    case 2:
+      vertices = t8_msh_file_2_read_nodes (file, &num_vertices, &node_mempool);
+      t8_cmesh_msh_file_2_read_eles (cmesh, file, vertices, &vertex_indices, dim);
+      break;
+    
+    case 4:
+      vertices = t8_msh_file_4_read_nodes (file, &num_vertices, &node_mempool);
+      t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices, dim, brep);
+      break;
+    
+    default:
+      break;
+    }
     /* close the file and free the memory for the nodes */
     fclose (file);
     t8_cmesh_msh_file_find_neighbors (cmesh, vertex_indices);
@@ -931,6 +1337,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
     }
     t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
   }
+
   /* Commit the cmesh */
   T8_ASSERT (cmesh != NULL);
   if (cmesh != NULL) {

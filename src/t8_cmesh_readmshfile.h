@@ -32,12 +32,46 @@
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 
-/* The maximum supported .msh file version.
- * Currently, we support gmsh's file version 2 in ASCII format.
+/* The supported .msh file versions.
+ * Currently, we support gmsh's file version 2 and 4 in ASCII format.
  */
-#define T8_CMESH_SUPPORTED_FILE_VERSION 2
+#define T8_CMESH_N_SUPPORTED_MSH_FILE_VERSIONS 2
+
+const int 
+t8_cmesh_supported_msh_file_versions[T8_CMESH_N_SUPPORTED_MSH_FILE_VERSIONS] =
+{
+  2, 4
+};
 
 /* put typedefs here */
+
+/* The nodes are stored in the .msh file in the format
+ *
+ * $Nodes
+ * n_nodes     // The number of nodes
+ * i x_i y_i z_i  // the node index and the node coordinates
+ * j x_j y_j z_j
+ * .....
+ * $EndNodes
+ *
+ * The node indices do not need to be in consecutive order.
+ * We thus use a hash table to read all node indices and coordinates.
+ * The hash value is the node index modulo the number of nodes.
+ */
+typedef struct
+{
+  t8_locidx_t         index;
+  double              coordinates[3];
+} t8_msh_file_node_t;
+
+typedef struct
+{
+  t8_locidx_t         index;
+  double              coordinates[3];
+  double              parameters[2];
+  int                 entity_dim;
+  t8_locidx_t         entity_tag;
+} t8_msh_file_node_parametric_t;
 
 T8_EXTERN_C_BEGIN ();
 
@@ -50,6 +84,9 @@ T8_EXTERN_C_BEGIN ();
  *                              specified by the \a master argument and saved as
  *                              a partitioned cmesh where each other process does not
  *                              have any trees.
+ * \param [in]    parametric    If true the file will be checked if parameters and
+ *                              a brep geometry are present. If yes they will be read and
+ *                              saved in an occ geometry.
  * \param [in]    comm          The MPI communicator with which the cmesh is to be committed.
  * \param [in]    dim           The dimension to read from the .msh files. The .msh format
  *                              can store several dimensions of the mesh and therefore the
