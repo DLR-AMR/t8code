@@ -15,8 +15,8 @@ example_mptrac_t8_mptrac_read_nc_SOURCES = \
 	example/mptrac/t8_mptrac_read_nc.cxx \
 	example/mptrac/t8_mptrac_interpolate.cxx
 
-example_mptrac_t8_mptrac_helloworld_LDADD = $(LDADD) thirdparty/mptrac/libt8mptrac.la
-example_mptrac_t8_mptrac_read_nc_LDADD = $(LDADD) thirdparty/mptrac/libt8mptrac.la
+example_mptrac_t8_mptrac_helloworld_LDADD = $(LDADD) example/mptrac/thirdparty/mptrac/libt8mptrac.la
+example_mptrac_t8_mptrac_read_nc_LDADD = $(LDADD) example/mptrac/thirdparty/mptrac/libt8mptrac.la
 
 # Add these as compiled sources, since we use it in t8dg
 libt8_compiled_sources += \
