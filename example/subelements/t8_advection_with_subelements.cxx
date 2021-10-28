@@ -782,9 +782,9 @@ t8_advect_replace (t8_forest_t forest_old,
                    int num_incoming, t8_locidx_t first_incoming)
 {
   t8_advect_problem_t *problem;
-  t8_advect_element_data_t *elem_data_in, *elem_data_out;
+  t8_advect_element_data_t *elem_data_in, *elem_data_out, *elem_data_in_mem, *elem_data_out_mem;
   t8_locidx_t         first_incoming_data, first_outgoing_data;
-  t8_element_t       *element, *first_outgoing_elem, *first_incoming_elem;
+  t8_element_t       *element, *first_outgoing_elem, *first_incoming_elem, *elem_out_iterate, *elem_in_iterate;;
   int                 i, j, iface;
   double              phi_old;
 
@@ -814,28 +814,85 @@ t8_advect_replace (t8_forest_t forest_old,
     t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
                                    first_incoming);
 
+#if 1 /* for debugging */
+  t8_debugf ("first Element out:\n");
   ts->t8_element_print_element (first_outgoing_elem);
+  t8_debugf ("first Element in:\n");
   ts->t8_element_print_element (first_incoming_elem);
+#endif
 
-  /* check whether the old element stayed unchanged during the adapting process */
-  int                 same_element = 0;
-  if (ts->t8_element_level (first_outgoing_elem) ==
-      ts->t8_element_level (first_incoming_elem) &&
-      (ts->t8_element_get_subelement_type (first_outgoing_elem) ==
-       ts->t8_element_get_subelement_type (first_incoming_elem) ||
-       !ts->t8_element_test_if_subelement (first_outgoing_elem) &&
-       !ts->t8_element_test_if_subelement (first_incoming_elem))) {
-    same_element = 1;
+  int                 elem_to_elem = 0;
+  int                 tranition_to_transition_same = 0;
+  int                 transition_to_transition_diff = 0;
+  int                 transition_refined = 0;
+  int                 coarsened_to_transition = 0;
+
+  /* We check the following cases for the quad scheme with subelements. 
+   * Otherwise we will use the standard interpolation. */
+  if (t8_forest_get_tree_class (problem->forest, which_tree) == T8_ECLASS_QUAD) {
+    /* check whether the old element stayed unchanged during the adapting process */
+    if (ts->t8_element_level (first_outgoing_elem) ==
+        ts->t8_element_level (first_incoming_elem)) {
+
+      if (ts->t8_element_test_if_subelement (first_outgoing_elem) &&
+          ts->t8_element_test_if_subelement (first_incoming_elem)) {
+
+        if (ts->t8_element_get_subelement_type (first_outgoing_elem) ==
+            ts->t8_element_get_subelement_type (first_incoming_elem)) {
+          tranition_to_transition_same = 1;
+        }
+        else {
+          transition_to_transition_diff = 1;
+        }
+      }
+      
+      if (!ts->t8_element_test_if_subelement (first_outgoing_elem) &&
+          !ts->t8_element_test_if_subelement (first_incoming_elem)) {
+        elem_to_elem = 1;  
+      }
+    }
+    /* check whether a transition cell is refined */
+    if (ts->t8_element_level (first_outgoing_elem) <
+        ts->t8_element_level (first_incoming_elem)) {
+
+      T8_ASSERT (ts->t8_element_level (first_outgoing_elem) + 1 == ts->t8_element_level (first_incoming_elem));
+
+      if (ts->t8_element_test_if_subelement (first_outgoing_elem)) {
+        transition_refined = 1;
+      }
+    }
+    #if 0
+    /* check whether a set of elements is coarsened to a transition cell */
+    if (ts->t8_element_level (first_outgoing_elem) >
+        ts->t8_element_level (first_incoming_elem)) {
+
+      T8_ASSERT (ts->t8_element_level (first_outgoing_elem) == ts->t8_element_level (first_incoming_elem) + 1);
+
+      if (ts->t8_element_test_if_subelement (first_incoming_elem)) {
+        coarsened_to_transition = 1;
+      }
+    }
+    #endif
   }
 
-  /* if the element stayed unchanged, then we copy its values */
-  if (same_element) {
+  /*
+   *
+   * START OF THE INTERPOLATION SCHEME
+   *
+   */
+
+  /* elem_old equals elem_new (either transition cell or standard element, same level) */
+  if (elem_to_elem || tranition_to_transition_same) {
     T8_ASSERT (num_outgoing == num_incoming);
     for (i = 0; i < num_incoming; i++) {
       phi_old = t8_advect_element_get_phi (problem, first_outgoing_data + i);
       /* The element is not changed, copy phi and vol */
-      memcpy (elem_data_in + i, elem_data_out + i,
-              sizeof (t8_advect_element_data_t));
+      elem_data_out_mem = (t8_advect_element_data_t *)
+        t8_sc_array_index_locidx (problem->element_data, first_outgoing_data + i);
+      elem_data_in_mem = (t8_advect_element_data_t *)
+        t8_sc_array_index_locidx (problem->element_data_adapt, first_incoming_data + i);
+      memcpy (elem_data_in_mem, elem_data_out_mem, sizeof (t8_advect_element_data_t));
+
       t8_advect_element_set_phi_adapt (problem, first_incoming_data + i,
                                        phi_old);
 
@@ -852,9 +909,269 @@ t8_advect_replace (t8_forest_t forest_old,
       elem_data_in[i].level = elem_data_out[i].level;
     }
   }
-  /* in the following case, the old element changed due to adaptation */
+
+  /* elem_old is a transition element and elem_new is a transition element of an ohter type (same level) */
+  else if (transition_to_transition_diff) {
+    int subelem_out_count = 0;
+    int subelem_in_count = 0;
+    /* Iterate over the of subelements. Copy when they are equal and interpolate when they differ. */
+    for (subelem_in_count = 0; subelem_in_count < num_incoming; subelem_in_count++) {
+      /* get the recent elements */
+      elem_out_iterate =
+        t8_forest_get_element_in_tree (problem->forest, which_tree,
+                                       first_outgoing + subelem_out_count);
+      elem_in_iterate =
+        t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
+                                       first_incoming + subelem_in_count);
+      
+      #if 0 /* for debugging */
+      t8_debugf ("Out count: %i, In count: %i\n", subelem_out_count, subelem_in_count);
+      t8_debugf ("Element out:\n");
+      ts->t8_element_print_element (elem_out_iterate);
+      t8_debugf ("Element in:\n");
+      ts->t8_element_print_element (elem_in_iterate);
+      #endif
+
+      T8_ASSERT (ts->t8_element_test_if_subelement (elem_out_iterate));
+      T8_ASSERT (ts->t8_element_test_if_subelement (elem_in_iterate));
+
+      if (ts->t8_element_get_face_number_of_hypotenuse (elem_out_iterate) == 
+          ts->t8_element_get_face_number_of_hypotenuse (elem_in_iterate)) { /* both subelements are identically */
+          
+        phi_old = t8_advect_element_get_phi (problem, first_outgoing_data + subelem_out_count);
+        /* The element is not changed, copy phi and vol */
+        elem_data_out_mem = (t8_advect_element_data_t *)
+        t8_sc_array_index_locidx (problem->element_data, first_outgoing_data + subelem_out_count);
+        elem_data_in_mem = (t8_advect_element_data_t *)
+        t8_sc_array_index_locidx (problem->element_data_adapt, first_incoming_data + subelem_in_count);
+        memcpy (elem_data_in_mem, elem_data_out_mem, sizeof (t8_advect_element_data_t));
+        t8_advect_element_set_phi_adapt (problem, first_incoming_data + subelem_in_count,
+                                         phi_old);
+
+        /* Set the neighbor entries to uninitialized */
+        elem_data_in[subelem_in_count].num_faces =
+          ts->t8_element_num_faces (first_incoming_elem);
+        for (iface = 0; iface < elem_data_in[subelem_in_count].num_faces; iface++) {
+          elem_data_in[subelem_in_count].num_neighbors[iface] = 0;
+          elem_data_in[subelem_in_count].flux_valid[iface] = -1;
+          elem_data_in[subelem_in_count].dual_faces[iface] = NULL;
+          elem_data_in[subelem_in_count].fluxes[iface] = NULL;
+          elem_data_in[subelem_in_count].neighs[iface] = NULL;
+        }
+        elem_data_in[subelem_in_count].level = elem_data_out[subelem_in_count].level;
+
+        subelem_out_count++;
+      }
+      else if (ts->t8_element_get_face_number_of_hypotenuse (elem_out_iterate) != 1) { /* subelement outgoing is split and subelement in is not */
+
+        T8_ASSERT (ts->t8_element_get_face_number_of_hypotenuse (elem_in_iterate) == 1);
+
+        /* interpolate the recent outgoing subelement and the following to the incoming one */
+        double              phi = 0, total_volume = 0;
+        int k;
+        /* Compute average of phi (important in case that a transition cell goes out) */
+        for (k = 0; k < 2; k++) {
+          phi +=
+            t8_advect_element_get_phi (problem,
+                                      first_outgoing_data +
+                                      subelem_out_count + k) * elem_data_out[subelem_out_count + k].vol;
+            total_volume += elem_data_out[subelem_out_count + k].vol;
+        }
+        phi /= total_volume;
+
+        element =
+            t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
+                                       first_incoming + subelem_in_count);
+        /* Compute midpoint and vol of the new element */
+        t8_advect_compute_element_data (problem, elem_data_in + subelem_in_count, element,
+                                      which_tree, ts, NULL);
+
+        t8_advect_element_set_phi_adapt (problem, first_incoming_data + subelem_in_count, phi);
+
+        /* Set the neighbor entries to uninitialized */
+        elem_data_in[subelem_in_count].num_faces =
+          ts->t8_element_num_faces (first_incoming_elem);
+        for (iface = 0; iface < elem_data_in[subelem_in_count].num_faces; iface++) {
+          elem_data_in[subelem_in_count].num_neighbors[iface] = 0;
+          elem_data_in[subelem_in_count].flux_valid[iface] = -1;
+          elem_data_in[subelem_in_count].dual_faces[iface] = NULL;
+          elem_data_in[subelem_in_count].fluxes[iface] = NULL;
+          elem_data_in[subelem_in_count].neighs[iface] = NULL;
+        }
+        elem_data_in[subelem_in_count].level = elem_data_out[subelem_in_count].level;
+
+        subelem_out_count += 2;
+      }
+      else { /* subelement outgoing is not split and subelement in is */
+        T8_ASSERT (ts->t8_element_get_face_number_of_hypotenuse (elem_out_iterate) == 1);
+        T8_ASSERT (ts->t8_element_get_face_number_of_hypotenuse (elem_in_iterate) == 0);
+
+        /* copy the value of the outgoing subelement to the recent incoming one and the following */
+        phi_old = t8_advect_element_get_phi (problem, first_outgoing_data + subelem_out_count);
+        int k;
+        for (k = 0; k < 2; k++) {
+          element =
+            t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
+                                       first_incoming + subelem_in_count + k);
+          /* Compute midpoint and vol of the new element */
+          t8_advect_compute_element_data (problem, elem_data_in + subelem_in_count + k, element,
+                                      which_tree, ts, NULL);
+          t8_advect_element_set_phi_adapt (problem, first_incoming_data + subelem_in_count + k, phi_old);
+        }
+
+        /* Set the neighbor entries to uninitialized */
+        elem_data_in[subelem_in_count].num_faces =
+          ts->t8_element_num_faces (first_incoming_elem);
+        for (iface = 0; iface < elem_data_in[subelem_in_count].num_faces; iface++) {
+          elem_data_in[subelem_in_count].num_neighbors[iface] = 0;
+          elem_data_in[subelem_in_count].flux_valid[iface] = -1;
+          elem_data_in[subelem_in_count].dual_faces[iface] = NULL;
+          elem_data_in[subelem_in_count].fluxes[iface] = NULL;
+          elem_data_in[subelem_in_count].neighs[iface] = NULL;
+        }
+        elem_data_in[subelem_in_count].level = elem_data_out[subelem_in_count].level;
+
+        subelem_out_count++;
+        subelem_in_count++;
+      }
+    }
+  }
+
+  /* elem_old is transition cell and is refined */
+  else if (transition_refined) {
+    for (i = 0; i < num_incoming; i++) {
+      /* get the recent incoming element */
+      elem_in_iterate =
+        t8_forest_get_element_in_tree (problem->forest_adapt, which_tree,
+                                       first_incoming + i);
+
+      /* compute the vertices of the recent incoming element */
+      int corner_coords_in_x[ts->t8_element_num_faces (elem_in_iterate)] = {};
+      int corner_coords_in_y[ts->t8_element_num_faces (elem_in_iterate)] = {};
+
+      int corner_iterate_in;
+      for (corner_iterate_in = 0; corner_iterate_in < ts->t8_element_num_faces (elem_in_iterate); corner_iterate_in++) {
+        int                 corner_coords[2] = {};
+        ts->t8_element_vertex_coords (elem_in_iterate, corner_iterate_in, corner_coords);
+        corner_coords_in_x[corner_iterate_in] = corner_coords[0];
+        corner_coords_in_y[corner_iterate_in] = corner_coords[1];
+      }
+
+      int cap[num_outgoing] = {};
+      for (j = 0; j < num_outgoing; j++) {
+        cap[j] = 0;
+        /* get the recent incoming element */
+        elem_out_iterate =
+          t8_forest_get_element_in_tree (problem->forest, which_tree, first_outgoing + j);
+
+        T8_ASSERT (ts->t8_element_test_if_subelement (elem_out_iterate));
+
+        /* compute the vertices and quater face points of the recent outgoing element */
+        int corner_coords_out_x[12] = {};
+        int corner_coords_out_y[12] = {};
+
+        int corner_iterate_out;
+        for (corner_iterate_out = 0; corner_iterate_out < ts->t8_element_num_faces (elem_out_iterate); corner_iterate_out++) { /* iterate over the corners */
+          int                 corner_coords[2] = {};
+          ts->t8_element_vertex_coords (elem_out_iterate, corner_iterate_out, corner_coords);
+          corner_coords_out_x[corner_iterate_out] = corner_coords[0];
+          corner_coords_out_y[corner_iterate_out] = corner_coords[1];
+        }
+        
+        /* TODO think of a better way */
+        corner_coords_out_x[3] = (corner_coords_out_x[0] + corner_coords_out_x[1]) / 2;
+        corner_coords_out_y[3] = (corner_coords_out_y[0] + corner_coords_out_y[1]) / 2;
+
+        corner_coords_out_x[4] = (corner_coords_out_x[1] + corner_coords_out_x[2]) / 2;
+        corner_coords_out_y[4] = (corner_coords_out_y[1] + corner_coords_out_y[2]) / 2;
+
+        corner_coords_out_x[5] = (corner_coords_out_x[2] + corner_coords_out_x[0]) / 2;
+        corner_coords_out_y[5] = (corner_coords_out_y[2] + corner_coords_out_y[0]) / 2;
+
+        corner_coords_out_x[6] = (corner_coords_out_x[0] + corner_coords_out_x[3]) / 2;
+        corner_coords_out_y[6] = (corner_coords_out_y[0] + corner_coords_out_y[3]) / 2;
+
+        corner_coords_out_x[7] = (corner_coords_out_x[3] + corner_coords_out_x[1]) / 2;
+        corner_coords_out_y[7] = (corner_coords_out_y[3] + corner_coords_out_y[1]) / 2;
+
+        corner_coords_out_x[8] = (corner_coords_out_x[1] + corner_coords_out_x[4]) / 2;
+        corner_coords_out_y[8] = (corner_coords_out_y[1] + corner_coords_out_y[4]) / 2;
+
+        corner_coords_out_x[9] = (corner_coords_out_x[4] + corner_coords_out_x[2]) / 2;
+        corner_coords_out_y[9] = (corner_coords_out_y[4] + corner_coords_out_y[2]) / 2;
+
+        corner_coords_out_x[10] = (corner_coords_out_x[2] + corner_coords_out_x[5]) / 2;
+        corner_coords_out_y[10] = (corner_coords_out_y[2] + corner_coords_out_y[5]) / 2;
+
+        corner_coords_out_x[11] = (corner_coords_out_x[5] + corner_coords_out_x[0]) / 2;
+        corner_coords_out_y[11] = (corner_coords_out_y[5] + corner_coords_out_y[0]) / 2;
+
+
+        /* compare the vertices and midpoints of the recent outgoing element and the recent incoming one */
+        int corner_check = 0;
+        int coord_iterate_in, coord_iterate_out;
+        for (coord_iterate_in = 0; coord_iterate_in < ts->t8_element_num_faces (elem_in_iterate); coord_iterate_in++) {
+          for (coord_iterate_out = 0; coord_iterate_out < 12; coord_iterate_out++) {
+            if (corner_coords_out_x[coord_iterate_out] == corner_coords_in_x[coord_iterate_in] &&
+                corner_coords_out_y[coord_iterate_out] == corner_coords_in_y[coord_iterate_in]) {
+              /* in this case a matching coordinate is found */
+              corner_check++;
+            }
+          }
+        }
+        if (corner_check > 2) {
+          T8_ASSERT (corner_check == 3);
+          /* in this case we have three matching coordinates -> recent elem_out must intersect recent elem_in */
+          cap[j] = 1;
+        }
+      } /* end of loop over outcoming subelements */
+
+      double phi = 0;
+      int k, cap_sum = 0;
+      for (k = 0; k < num_outgoing; k++) {
+        if (cap[k] == 1) {
+          /* get the phi value of the k-th outgoing element */
+          phi +=
+            t8_advect_element_get_phi (problem, first_outgoing_data + k);
+          cap_sum += 1;
+        }
+      } 
+
+      T8_ASSERT (cap_sum == 1 || cap_sum == 2);
+
+      phi /= cap_sum;
+      
+      /* Compute midpoint and vol of the new element */
+      t8_advect_compute_element_data (problem, elem_data_in + i, elem_in_iterate,
+                                      which_tree, ts, NULL);
+
+      t8_advect_element_set_phi_adapt (problem, first_incoming_data + i, phi);
+
+      /* Set the neighbor entries to uninitialized */
+      elem_data_in[i].num_faces =
+        ts->t8_element_num_faces (first_incoming_elem);
+      for (iface = 0; iface < elem_data_in[i].num_faces; iface++) {
+        elem_data_in[i].num_neighbors[iface] = 0;
+        elem_data_in[i].flux_valid[iface] = -1;
+        elem_data_in[i].dual_faces[iface] = NULL;
+        elem_data_in[i].fluxes[iface] = NULL;
+        elem_data_in[i].neighs[iface] = NULL;
+      }
+      elem_data_in[i].level = elem_data_out[i].level;
+    }
+  }
+
+  /* elem_old is a set of elements that is coarsened into a transition cell elem_new */
+  else if (coarsened_to_transition) {
+
+  }
+
+  /* In every other case we will eihter copy the old value to the new elements or compute the mean of old values and copy it to the new element(s).
+   * The other cases are:
+   *   1) elem_old is a standard element and is refined into higher level elements
+   *   2) elem_old is standard element and is refined to a transition cell of the same level
+   *   3) elem_old is a set of elements that are coarsened to a standard element */
   else {
-    /* TODO: Consider the volume of the elements which can differ for subelements in order to compute a proper mean */
     /* get the mean value of all subelements of the transition cell */
     double              phi = 0, total_volume = 0;
     /* Compute average of phi (important in case that a transition cell goes out) */
@@ -1841,8 +2158,6 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                   t8_advect_flux_upwind (problem, phi_plus, phi_minus,
                                          itree, elem, tree_vertices, iface);
 
-                printf ("flux (one face neigh): %f\n", flux);
-
                 elem_data->flux_valid[iface] = 1;
                 elem_data->fluxes[iface][0] = flux;
 
@@ -1872,8 +2187,6 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                   t8_advect_flux_upwind_hanging (problem, lelement, itree,
                                                  elem, tree_vertices, iface,
                                                  adapted_or_partitioned);
-
-                printf ("flux (multiple neighs): %f\n", flux);
               }
               else {
                 /* This element is at the domain boundary */
@@ -1884,8 +2197,6 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
                 flux =
                   t8_advect_flux_upwind (problem, phi_plus, phi_minus,
                                          itree, elem, tree_vertices, iface);
-
-                printf ("flux (else): %f\n", flux);
 
                 elem_data->flux_valid[iface] = 1;
                 elem_data->fluxes[iface][0] = flux;
@@ -2049,9 +2360,9 @@ main (int argc, char *argv[])
                       "\t\t4 - 2D rotation around (0.5,0.5).\n"
                       "\t\t5 - 2D flow around circle at (0.5,0.5)"
                       "with radius 0.15.\n)");
-  sc_options_add_int (opt, 'l', "level", &level, 4,
+  sc_options_add_int (opt, 'l', "level", &level, 2,
                       "The minimum refinement level of the mesh.");
-  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 2,
+  sc_options_add_int (opt, 'r', "rlevel", &reflevel, 1,
                       "The number of adaptive refinement levels.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, T8_ECLASS_QUAD,
                       "If specified the coarse mesh is a hypercube\n\t\t\t\t     consisting of the"
@@ -2068,7 +2379,7 @@ main (int argc, char *argv[])
   sc_options_add_int (opt, 'd', "dim", &dim, -1,
                       "In combination with -f: The dimension of the mesh. 1 <= d <= 3.");
 
-  sc_options_add_double (opt, 'T', "end-time", &T, 1,
+  sc_options_add_double (opt, 'T', "end-time", &T, 0.2,
                          "The duration of the simulation. Default: 1");
 
   sc_options_add_double (opt, 'C', "CFL", &cfl,
@@ -2078,11 +2389,11 @@ main (int argc, char *argv[])
                          "Control the width of the refinement band around\n"
                          " the zero level-set. Default 1.");
 
-  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 12,
+  sc_options_add_int (opt, 'a', "adapt-freq", &adapt_freq, 1,
                       "Controls how often the mesh is readapted. "
                       "A value of i means, every i-th time step.");
 
-  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 3,
+  sc_options_add_int (opt, 'v', "vtk-freq", &vtk_freq, 1,
                       "How often the vtk output is produced "
                       "\n\t\t\t\t     (after how many time steps). "
                       "A value of 0 is equivalent to using -o.");
