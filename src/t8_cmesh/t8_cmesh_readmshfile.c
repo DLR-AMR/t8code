@@ -23,7 +23,9 @@
 #include <t8_eclass.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh_vtk.h>
+#include <t8_geometry/t8_geometry_readbrepfile.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.h>
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_stash.h"
 
@@ -1214,7 +1216,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
   char                current_file[BUFSIZ];
   FILE               *file;
   t8_gloidx_t         num_trees, first_tree, last_tree = -1;
-  t8_geometry_c      *geom_linear = t8_geometry_linear_new (dim);
+  t8_geometry_c      *geometry;
   int                 main_proc_read_successful = 0;
   int                 msh_version;
   int                 brep = 0;
@@ -1231,8 +1233,6 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
 
   /* initialize cmesh structure */
   t8_cmesh_init (&cmesh);
-  /* We will use linear geometry. */
-  t8_cmesh_register_geometry (cmesh, geom_linear);
   /* Setting the dimension by hand is neccessary for partitioned
    * commit, since there are process without any trees. So the cmesh would
    * not know its dimension on these processes. */
@@ -1276,11 +1276,21 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
     {
     case 2:
       vertices = t8_msh_file_2_read_nodes (file, &num_vertices, &node_mempool);
+      geometry = t8_geometry_linear_new (dim);
       t8_cmesh_msh_file_2_read_eles (cmesh, file, vertices, &vertex_indices, dim);
       break;
     
     case 4:
       vertices = t8_msh_file_4_read_nodes (file, &num_vertices, &node_mempool);
+      if (1)
+      {
+        t8_geometry_occ_c *geometry_occ = t8_geometry_from_brep_file (fileprefix, vertices, dim, 1);
+        geometry = geometry_occ;
+      }
+      else
+      {
+        geometry = t8_geometry_linear_new (dim);
+      }
       t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices, dim, brep);
       break;
     
@@ -1337,6 +1347,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, int partition,
     }
     t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
   }
+  /* Register geometry */
+  t8_cmesh_register_geometry (cmesh, geometry);
 
   /* Commit the cmesh */
   T8_ASSERT (cmesh != NULL);
