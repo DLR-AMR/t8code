@@ -29,6 +29,12 @@
 
 #if T8_WITH_OCC
 
+const int
+t8_edge_vertex_to_tree_vertex[T8_ECLASS_MAX_EDGES][2] =
+{
+  {0, 1}, {2, 3}, {4, 5}, {6, 7}, {0, 2}, {4, 6}, {1, 3}, {5, 7}, {0, 4}, {1, 5}, {2, 6}, {3, 7}    /* hex */
+};
+
 t8_geometry_occ::t8_geometry_occ (int dim, const char *name_in)
 {
   T8_ASSERT (0 <= dim && dim <= 3);
@@ -60,12 +66,6 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
   t8_geom_compute_linear_geometry (active_tree_class,
                                    active_tree_vertices, ref_coords,
                                    out_coords);
-  
-  const int
-  t8_edge_vertex_to_tree_vertex[T8_ECLASS_MAX_EDGES][2] =
-  {
-    {0, 1}, {2, 3}, {4, 5}, {6, 7}, {0, 2}, {4, 6}, {1, 3}, {5, 7}, {0, 4}, {1, 5}, {2, 6}, {3, 7}    /* hex */
-  };
 
   double interpolated_coords[3], param[2], cur_delta[3];
   gp_Pnt pnt;

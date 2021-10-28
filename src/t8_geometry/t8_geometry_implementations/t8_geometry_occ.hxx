@@ -41,6 +41,10 @@
 
 #include <vector>
 
+/* Gives the vertices of each edge of a hexahedron. Used in the occ geometry. */
+extern const int
+t8_edge_vertex_to_tree_vertex[T8_ECLASS_MAX_EDGES][2];
+
 /**
  * Definition of an occ geometry function.
  * This function maps reference coordinates to physical
@@ -67,7 +71,6 @@ public:
    * Constructor of the occ geometry class.
    * \param [in] dimension  The dimension of this geometry.
    * \param [in] name       The name to give this geometry.
-   * \param [in] load_tree_data The function that is used to load a tree's data.
    */
   t8_geometry_occ (int dimension, const char *name);
 
