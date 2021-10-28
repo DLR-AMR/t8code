@@ -117,11 +117,13 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
                     + ref_coords[i_edges / 4] * parameters[1];
         
         /* Check if calculated parameters are valid */
+        #ifdef T8_ENABLE_DEBUG
         T8_ASSERT(!occ_curves[edges[i_edges]].IsNull());
         double u1, u2;
         u1 = occ_curves[edges[i_edges]]->FirstParameter();
         u2 = occ_curves[edges[i_edges]]->LastParameter();
         T8_ASSERT((u1 <= param[0] && param[0] <= u2) || (u2 <= param[0] && param[0] <= u1));
+        #endif
 
         /* Calculate point on curve with interpolated parameters. */
         occ_curves[edges[i_edges]]->D0(param[0], pnt);
@@ -135,11 +137,13 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
                     + ref_coords[i_edges / 4] * parameters[3];
         
         /* Check if calculated parameters are valid */
+        #ifdef T8_ENABLE_DEBUG
         T8_ASSERT(!occ_surfaces[edges[i_edges + 12]].IsNull());
         double u1, u2, v1, v2;
         occ_surfaces[edges[i_edges + 12]]->Bounds(u1, u2, v1, v2);
         T8_ASSERT(((u1 <= param[0] && param[0] <= u2) || (u2 <= param[0] && param[0] <= u1))
                   && ((v1 <= param[1] && param[1] <= v2) || (v2 <= param[1] && param[1] <= v1)));
+        #endif
 
         /* Compute point on surface with interpolated parameters */
         occ_surfaces[edges[i_edges + 12]]->D0(param[0], param[1], pnt);
@@ -236,11 +240,13 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
       }
       
       /* Check if calculated parameters are valid */
+      #ifdef T8_ENABLE_DEBUG
       T8_ASSERT(!occ_surfaces[faces[i_faces]].IsNull());
       double u1, u2, v1, v2;
       occ_surfaces[faces[i_faces]]->Bounds(u1, u2, v1, v2);
       T8_ASSERT(((u1 <= param[0] && param[0] <= u2) || (u2 <= param[0] && param[0] <= u1))
                 && ((v1 <= param[1] && param[1] <= v2) || (v2 <= param[1] && param[1] <= v1)));
+      #endif
 
       /* Compute point on surface with interpolated parameters */
       occ_surfaces[faces[i_faces]]->D0(param[0], param[1], pnt);
