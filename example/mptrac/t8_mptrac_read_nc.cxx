@@ -306,7 +306,7 @@ t8_mptrac_build_latlon_data_for_uvw_3D (t8_mptrac_context_t * context,
         t8_forest_get_element_in_tree (context->forest, itree, ielement);
       t8_forest_element_centroid (context->forest, itree, element, midpoint);
       double              lat, lon, pressure;
-      t8_mptrac_coords_to_latlonpressure (context, midpoint, &lat, &lon,
+      t8_mptrac_coords_to_lonlatpressure (context, midpoint, &lon, &lat,
                                           &pressure);
       double              interpol_value;
       int                 ci[3];

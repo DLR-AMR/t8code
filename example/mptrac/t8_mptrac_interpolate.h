@@ -63,12 +63,12 @@ void                t8_mptrac_read_nc (t8_mptrac_context_t * mptrac_context,
                                        double seconds);
 
 /* Convert 3D coordinates in [0,1]^3 to lat,lon,pressure coordinates. */
-void                t8_mptrac_coords_to_latlonpressure (const
+void                t8_mptrac_coords_to_lonlatpressure (const
                                                         t8_mptrac_context_t *
                                                         context,
                                                         const double point[3],
-                                                        double *lat,
                                                         double *lon,
+                                                        double *lat,
                                                         double *pressure);
 
 T8_EXTERN_C_END ();
