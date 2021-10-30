@@ -2005,7 +2005,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t * problem)
 
       if (ielement == 8 || ielement == 9) {
         ts->t8_element_print_element (element);
-        int a = 2;
+        int                 a = 2;
       }
       /* Set the level */
       elem_data->level = ts->t8_element_level (element);
@@ -2313,13 +2313,13 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u,
          * It remains to check where this bug comes from. */
         if (1) {
           t8_eclass_scheme_c *ts;
-          t8_element_t *element_test;
+          t8_element_t       *element_test;
           element_test =
-            t8_forest_get_element_in_tree (problem->forest, 0,
-                                          lelement);
+            t8_forest_get_element_in_tree (problem->forest, 0, lelement);
           ts =
-              t8_forest_get_eclass_scheme (problem->forest,
-                                          t8_forest_get_tree_class (problem->forest, 0));
+            t8_forest_get_eclass_scheme (problem->forest,
+                                         t8_forest_get_tree_class
+                                         (problem->forest, 0));
           elem_data->num_faces = ts->t8_element_num_faces (element_test);
           elem_data->level = ts->t8_element_level (element_test);
         }
